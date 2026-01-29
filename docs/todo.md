@@ -1,9 +1,6 @@
 Next:
-- Functions rather than DSL
 - Unify table
-- Move to repo
 - Flexbasis / columns / etc - nightmare.
-
 
 Theme:
 - Pixel perfect theme / Footer too big

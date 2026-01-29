@@ -1,7 +1,7 @@
 // Divider Component
-// Renders a horizontal line
+// Renders a horizontal or vertical line
 
-import { SHAPE, type AlignContext, type Component, type Drawer, type Bounds, type Theme } from '../core/types.js';
+import { DIRECTION, SHAPE, type AlignContext, type Component, type Drawer, type Bounds, type Theme } from '../core/types.js';
 
 export interface DividerProps {
   color?: string;
@@ -16,25 +16,26 @@ export class Divider implements Component {
     return this.theme.spacing.gapSmall;
   }
 
+  getMinimumWidth(_height: number): number {
+    return this.theme.spacing.gapSmall;
+  }
+
   getMaximumHeight(_width: number): number {
     return this.getMinimumHeight(_width);  // Divider is fixed height
   }
 
-  prepare(bounds: Bounds, _alignContext?: AlignContext): Drawer {
+  prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
     const color = this.props.color ?? this.theme.colors.textMuted;
     const thickness = this.props.thickness ?? this.theme.borders.width;
 
-    // Center the line vertically in the bounds
-    const lineY = bounds.y + bounds.h / 2;
+    const vertical = alignContext?.direction === DIRECTION.ROW;
+    const x = vertical ? bounds.x + bounds.w / 2 : bounds.x;
+    const y = vertical ? bounds.y : bounds.y + bounds.h / 2;
+    const w = vertical ? 0 : bounds.w;
+    const h = vertical ? bounds.h : 0;
 
     return (canvas) => {
-      canvas.addShape(SHAPE.LINE, {
-        x: bounds.x,
-        y: lineY,
-        w: bounds.w,
-        h: 0,
-        line: { color, width: thickness },
-      });
+      canvas.addShape(SHAPE.LINE, { x, y, w, h, line: { color, width: thickness } });
     };
   }
 }
