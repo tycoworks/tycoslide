@@ -1,8 +1,8 @@
 // Table Component
-// Renders a table using lines for borders and components for cell content
-// Uses fontkit-based measurement for precise dimension control
+// Renders a table using Box layout for cells with line-drawn borders
 
-import { BORDER_STYLE, SHAPE, type AlignContext, type BorderStyle, type Component, type Drawer, type Bounds, type Theme } from '../core/types.js';
+import { DIRECTION, ALIGN, BORDER_STYLE, SHAPE, type AlignContext, type BorderStyle, type Component, type Drawer, type Bounds, type Theme } from '../core/types.js';
+import { box, type Box } from '../core/box.js';
 import { Text } from './text.js';
 
 // Cells can be Components or strings (strings auto-wrapped in text())
@@ -18,7 +18,45 @@ export interface TableProps {
   columnWidths?: number[];  // Flex ratios for column widths (e.g., [1, 3, 3])
 }
 
+// ============================================
+// PADDED CONTENT WRAPPER
+// ============================================
+
+class PaddedContent implements Component {
+  constructor(private content: Component, private padding: number) {}
+
+  getMinimumHeight(width: number): number {
+    return this.padding * 2 + (this.content.getMinimumHeight?.(width - this.padding * 2) ?? 0);
+  }
+
+  getMaximumHeight(width: number): number {
+    return this.getMinimumHeight(width);  // Cells are fixed height
+  }
+
+  getMinimumWidth(height: number): number {
+    const innerH = height - this.padding * 2;
+    return this.padding * 2 + (this.content.getMinimumWidth?.(innerH) ?? 0);
+  }
+
+  prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
+    const inner: Bounds = {
+      x: bounds.x + this.padding,
+      y: bounds.y + this.padding,
+      w: bounds.w - this.padding * 2,
+      h: bounds.h - this.padding * 2,
+    };
+    return this.content.prepare(inner, alignContext);
+  }
+}
+
+// ============================================
+// TABLE CLASS
+// ============================================
+
 export class Table implements Component {
+  private _box?: Box;
+  private _rowBoxes?: Box[];
+
   constructor(private theme: Theme, private data: TableData, private props: TableProps = {}) {}
 
   private normalizeCell(cell: TableCell, headerColor?: string): Component {
@@ -32,42 +70,60 @@ export class Table implements Component {
     return this.data[0]?.length ?? 0;
   }
 
+  private getFlexRatios(): number[] {
+    const numCols = this.getNumCols();
+    const ratios = this.props.columnWidths;
+    if (ratios && ratios.length === numCols) return ratios;
+    return Array(numCols).fill(1);
+  }
+
   /**
-   * Get the visual width of each column (including internal padding)
+   * Get the visual width of each column (for border drawing)
    */
   private getColumnWidths(tableWidth: number): number[] {
-    const numCols = this.getNumCols();
-    if (numCols === 0) return [];
-
-    const ratios = this.props.columnWidths;
-    if (!ratios || ratios.length !== numCols) {
-      // Default: equal widths
-      return Array(numCols).fill(tableWidth / numCols);
-    }
-
+    const ratios = this.getFlexRatios();
     const total = ratios.reduce((sum, r) => sum + r, 0);
     return ratios.map(r => (r / total) * tableWidth);
   }
 
-  getMinimumHeight(width: number): number {
-    const padding = this.props.cellPadding ?? this.theme.spacing.cellPadding;
-    const columnWidths = this.getColumnWidths(width);
-    const useHeaderRow = this.props.headerRow ?? true;
-    let totalHeight = 0;
+  private getBox(): { tableBox: Box; rowBoxes: Box[] } {
+    if (!this._box) {
+      const padding = this.props.cellPadding ?? this.theme.spacing.cellPadding;
+      const useHeaderRow = this.props.headerRow ?? true;
+      const ratios = this.getFlexRatios();
 
-    for (let rowIndex = 0; rowIndex < this.data.length; rowIndex++) {
-      const row = this.data[rowIndex];
-      const headerColor = (rowIndex === 0 && useHeaderRow) ? this.theme.colors.secondary : undefined;
-      let maxCellHeight = 0;
-      for (let col = 0; col < row.length; col++) {
-        const contentWidth = columnWidths[col] - padding * 2;
-        const component = this.normalizeCell(row[col], headerColor);
-        const h = component.getMinimumHeight?.(contentWidth) ?? 0;
-        maxCellHeight = Math.max(maxCellHeight, h);
+      const rowBoxes: Box[] = [];
+      for (let rowIndex = 0; rowIndex < this.data.length; rowIndex++) {
+        const row = this.data[rowIndex];
+        const headerColor = (rowIndex === 0 && useHeaderRow) ? this.theme.colors.secondary : undefined;
+
+        const cellBoxes: Box[] = [];
+        for (let col = 0; col < row.length; col++) {
+          const component = this.normalizeCell(row[col], headerColor);
+          cellBoxes.push(box({
+            flex: ratios[col],
+            content: new PaddedContent(component, padding),
+          }));
+        }
+
+        rowBoxes.push(box({
+          direction: DIRECTION.ROW,
+          align: ALIGN.CENTER,
+          children: cellBoxes,
+        }));
       }
-      totalHeight += maxCellHeight + padding * 2;
+
+      this._box = box({
+        direction: DIRECTION.COLUMN,
+        children: rowBoxes,
+      });
+      this._rowBoxes = rowBoxes;
     }
-    return totalHeight;
+    return { tableBox: this._box, rowBoxes: this._rowBoxes! };
+  }
+
+  getMinimumHeight(width: number): number {
+    return this.getBox().tableBox.getMinimumHeight(width);
   }
 
   getMaximumHeight(width: number): number {
@@ -75,53 +131,25 @@ export class Table implements Component {
   }
 
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
-    const padding = this.props.cellPadding ?? this.theme.spacing.cellPadding;
-    const columnWidths = this.getColumnWidths(bounds.w);
-    const useHeaderRow = this.props.headerRow ?? true;
+    const { tableBox, rowBoxes } = this.getBox();
 
-    const cellDrawers: Drawer[] = [];
+    // Compute row Y positions for border drawing
     const rowYPositions: number[] = [];
     let y = bounds.y;
-
-    for (let rowIndex = 0; rowIndex < this.data.length; rowIndex++) {
-      const row = this.data[rowIndex];
-      const headerColor = (rowIndex === 0 && useHeaderRow) ? this.theme.colors.secondary : undefined;
+    for (const rowBox of rowBoxes) {
       rowYPositions.push(y);
-
-      // Find max cell height for this row
-      let maxCellHeight = 0;
-      for (let col = 0; col < row.length; col++) {
-        const contentWidth = columnWidths[col] - padding * 2;
-        const component = this.normalizeCell(row[col], headerColor);
-        const h = component.getMinimumHeight?.(contentWidth) ?? 0;
-        maxCellHeight = Math.max(maxCellHeight, h);
-      }
-
-      // Prepare each cell in the row (vertically centered)
-      let x = bounds.x;
-      for (let col = 0; col < row.length; col++) {
-        const colWidth = columnWidths[col];
-        const contentWidth = colWidth - padding * 2;
-        const component = this.normalizeCell(row[col], headerColor);
-        const contentHeight = component.getMinimumHeight?.(contentWidth) ?? 0;
-        const verticalOffset = (maxCellHeight - contentHeight) / 2;
-        const cellBounds = {
-          x: x + padding,
-          y: y + padding + verticalOffset,
-          w: contentWidth,
-          h: contentHeight,
-        };
-        cellDrawers.push(component.prepare(cellBounds, alignContext));
-        x += colWidth;
-      }
-
-      y += maxCellHeight + padding * 2;
+      y += rowBox.getMinimumHeight(bounds.w);
     }
-
     const bottomY = y;
 
+    // Compute column widths for border drawing
+    const columnWidths = this.getColumnWidths(bounds.w);
+
+    // Delegate content layout to Box
+    const contentDrawer = tableBox.prepare(bounds, alignContext);
+
     return (canvas) => {
-      for (const drawer of cellDrawers) drawer(canvas);
+      contentDrawer(canvas);
       this.drawBorders(canvas, bounds, rowYPositions, bottomY, columnWidths);
     };
   }
