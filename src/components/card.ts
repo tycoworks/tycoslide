@@ -89,7 +89,7 @@ export class Card implements Component {
 
     // Chrome properties from props or theme defaults
     const fill = this.props.fill ?? this.theme.colors.secondary;
-    const fillOpacity = this.props.fillOpacity ?? this.theme.opacity.subtle;
+    const fillOpacity = this.props.fillOpacity ?? this.theme.colors.subtleOpacity;
     const borderColor = this.props.borderColor ?? this.theme.colors.secondary;
     const borderWidth = this.props.borderWidth ?? this.theme.borders.width;
     const cornerRadius = this.props.cornerRadius ?? this.theme.borders.radius;

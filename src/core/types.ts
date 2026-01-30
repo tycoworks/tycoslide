@@ -137,6 +137,7 @@ export interface ColorScheme {
   accent3: string;      // Accent color 3
   accent4: string;      // Accent color 4
   accent5: string;      // Accent color 5
+  subtleOpacity: number; // Opacity for muted fills (0-100)
 }
 
 // ============================================
@@ -231,29 +232,25 @@ export interface Slide {
 // THEME TYPES
 // ============================================
 
+/** All spacing/dimension values are in inches. */
 export interface Theme {
   colors: ColorScheme;
   highlights: HighlightScheme;
   slide: {
-    width: number;
-    height: number;
+    width: number;   // inches
+    height: number;  // inches
   };
   spacing: {
-    margin: number;
-    gap: number;
-    gapSmall: number;
-    cellPadding: number;
-    bulletSpacing: number;
-    footerHeight?: number;  // Space reserved for footer row (if footer enabled)
-    minImageHeight: number; // Minimum height for fixed images
+    margin: number;         // Inset from all 4 edges
+    gap: number;            // Standard gap between elements
+    gapSmall: number;       // Small gap between elements
+    cellPadding: number;    // Padding inside table cells
+    bulletSpacing: number;  // Line spacing multiple for lists
+    minImageHeight: number; // Minimum height floor for images
   };
-  // Visual tokens
   borders: {
     width: number;   // Border width in points
     radius: number;  // Corner radius in inches
-  };
-  opacity: {
-    subtle: number;  // For muted fills (0-100)
   };
   textStyles: { [K in TextStyleName]: TextStyle };
 }
