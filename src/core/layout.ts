@@ -25,6 +25,7 @@ export interface LayoutOptions {
   gap?: GapSize | number;  // default: GAP.NORMAL
   align?: Align;
   justify?: Justify;
+  flex?: number;           // flex-grow for the layout container itself
 }
 
 function resolveGap(gap: LayoutOptions['gap'], theme: Theme): number {
@@ -47,12 +48,14 @@ export class RowLayout implements Component {
     private gap: number,
     private align: Align,
     private justify: Justify | undefined,
+    private flex: number | undefined,
   ) {}
 
   private getBox(): Box {
     if (!this._box) {
       this._box = box({
         direction: DIRECTION.ROW,
+        flex: this.flex,
         gap: this.gap,
         align: this.align,
         justify: this.justify,
@@ -91,20 +94,26 @@ export class ColumnLayout implements Component {
 
   constructor(
     private children: Component[],
+    private proportions: number[] | undefined,
     private gap: number,
     private align: Align,
     private justify: Justify | undefined,
+    private flex: number | undefined,
   ) {}
 
   private getBox(): Box {
     if (!this._box) {
       this._box = box({
         direction: DIRECTION.COLUMN,
+        flex: this.flex,
         gap: this.gap,
         align: this.align,
         justify: this.justify,
-        children: this.children.map(child => {
+        children: this.children.map((child, i) => {
           if (child instanceof Box) return child;
+          if (this.proportions) {
+            return box({ flex: this.proportions[i], content: child });
+          }
           return box({ content: child });
         }),
       });
@@ -172,8 +181,9 @@ export function row(theme: Theme, ...args: any[]): RowLayout {
   const gap = resolveGap(options.gap, theme);
   const align = options.align ?? ALIGN.STRETCH;
   const justify = options.justify;
+  const flex = options.flex;
 
-  return new RowLayout(children, proportions, gap, align, justify);
+  return new RowLayout(children, proportions, gap, align, justify, flex);
 }
 
 /**
@@ -182,17 +192,26 @@ export function row(theme: Theme, ...args: any[]): RowLayout {
  *
  *   column(theme, title, subtitle, cardRow)
  *   column(theme, { gap: 'small' }, title, expand(cardRow))
+ *
+ * Proportional heights:
+ *   column(theme, [1, 2], [header, content])
  */
+export function column(theme: Theme, proportions: number[], children: Component[], options?: LayoutOptions): ColumnLayout;
 export function column(theme: Theme, options: LayoutOptions, ...children: Component[]): ColumnLayout;
 export function column(theme: Theme, ...children: Component[]): ColumnLayout;
-export function column(theme: Theme, ...args: (Component | LayoutOptions)[]): ColumnLayout {
+export function column(theme: Theme, ...args: any[]): ColumnLayout {
   let children: Component[];
+  let proportions: number[] | undefined;
   let options: LayoutOptions = {};
 
-  const first = args[0];
-  if (first && !('prepare' in first)) {
+  if (Array.isArray(args[0])) {
+    // Proportional: column(theme, [1, 2], [child1, child2], options?)
+    proportions = args[0] as number[];
+    children = args[1] as Component[];
+    if (args[2]) options = args[2] as LayoutOptions;
+  } else if (args[0] && !('prepare' in args[0])) {
     // Options-first: column(theme, { justify: JUSTIFY.CENTER }, child1, child2)
-    options = first as LayoutOptions;
+    options = args[0] as LayoutOptions;
     children = args.slice(1) as Component[];
   } else {
     // Children only: column(theme, child1, child2)
@@ -202,7 +221,8 @@ export function column(theme: Theme, ...args: (Component | LayoutOptions)[]): Co
   const gap = resolveGap(options.gap, theme);
   const align = options.align ?? ALIGN.STRETCH;
   const justify = options.justify;
+  const flex = options.flex;
 
-  return new ColumnLayout(children, gap, align, justify);
+  return new ColumnLayout(children, proportions, gap, align, justify, flex);
 }
 

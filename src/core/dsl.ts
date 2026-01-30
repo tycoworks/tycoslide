@@ -112,6 +112,7 @@ export interface DSL {
   row(proportions: number[], children: Component[], options?: LayoutOptions): RowLayout;
   row(options: LayoutOptions, ...children: Component[]): RowLayout;
   row(...children: Component[]): RowLayout;
+  column(proportions: number[], children: Component[], options?: LayoutOptions): ColumnLayout;
   column(options: LayoutOptions, ...children: Component[]): ColumnLayout;
   column(...children: Component[]): ColumnLayout;
 }

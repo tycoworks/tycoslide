@@ -53,6 +53,7 @@ describe('RowLayout', () => {
       0,
       ALIGN.STRETCH,
       undefined,
+      undefined,
     );
     assert.strictEqual(r.getMaximumHeight(10), 2);
   });
@@ -69,6 +70,7 @@ describe('RowLayout', () => {
       [1, 1, 1],
       0,
       ALIGN.STRETCH,
+      undefined,
       undefined,
     );
     r.prepare({ x: 0, y: 0, w: 9, h: 5 });
@@ -88,6 +90,7 @@ describe('RowLayout', () => {
       0,
       ALIGN.STRETCH,
       undefined,
+      undefined,
     );
     r.prepare({ x: 0, y: 0, w: 10, h: 5 });
     approx(t1.bounds[0].h, 5, 'child height');
@@ -104,6 +107,7 @@ describe('RowLayout', () => {
       [1, 2],
       0,
       ALIGN.STRETCH,
+      undefined,
       undefined,
     );
     r.prepare({ x: 0, y: 0, w: 9, h: 5 });
@@ -123,6 +127,7 @@ describe('RowLayout', () => {
       [1, 1, 1],
       0.5,
       ALIGN.STRETCH,
+      undefined,
       undefined,
     );
     // Total width 10, gap 0.5 × 2 = 1.0, remaining 9.0, each child 3.0
