@@ -315,3 +315,11 @@ export class Box implements Component {
 export function box(props: BoxProps = {}): Box {
   return new Box(props);
 }
+
+/**
+ * expand() — Mark a component as expandable.
+ * Nothing expands unless wrapped in expand(). This is the only expansion mechanism.
+ */
+export function expand(component: Component): Box {
+  return box({ flex: 1, content: component });
+}

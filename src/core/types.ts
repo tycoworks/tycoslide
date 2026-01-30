@@ -24,6 +24,7 @@ export const VALIGN = {
 export type VerticalAlignment = typeof VALIGN[keyof typeof VALIGN];
 
 export const GAP = {
+  NONE: 'none',
   SMALL: 'small',
   NORMAL: 'normal',
 } as const;
