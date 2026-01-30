@@ -1,5 +1,4 @@
 Next:
-- Unify table
 - Flexbasis / columns / etc - nightmare.
 
 Theme:
@@ -9,7 +8,6 @@ Theme:
 Code quality:
 - Logging & testing
 - Proper speaker notes
-- How to install patch?
 - Make canvas typesafe
 - Settings in core vs Materialize (layouts vs theme too)
 
