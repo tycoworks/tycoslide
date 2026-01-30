@@ -3,6 +3,7 @@
 
 import { VALIGN, FONT_WEIGHT, DIRECTION, ALIGN, type Component, type Drawer, type Bounds, type Theme, type TextStyle, type TextContent, type FontWeight, type VerticalAlignment, type AlignContext, type Align } from '../core/types.js';
 import { getLineHeight, wrapText, getFontFromFamily, normalizeContent, buildSegments, splitRunsIntoLines } from '../utils/font-utils.js';
+import type { TextFragment, TextFragmentOptions } from '../core/canvas.js';
 
 export const LIST_TYPE = {
   BULLET: 'bullet',
@@ -75,7 +76,7 @@ export class List implements Component {
     }
 
     // Pre-wrap each item using fontkit
-    const textObjects: Array<{ text: string; options: Record<string, unknown> }> = [];
+    const textObjects: TextFragment[] = [];
 
     for (const item of this.items) {
       const lines = this.wrapItem(item, textStyle, defaultWeight, bounds.w);
@@ -94,7 +95,7 @@ export class List implements Component {
           const runWeight = run.weight ?? defaultWeight;
           const runFont = getFontFromFamily(textStyle.fontFamily, runWeight);
 
-          const options: Record<string, unknown> = {
+          const options: TextFragmentOptions = {
             color: run.color ?? run.highlight?.text ?? defaultColor,
             fontSize: textStyle.fontSize,
             fontFace: runFont.name,

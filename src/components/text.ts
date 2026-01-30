@@ -3,6 +3,7 @@
 
 import { VALIGN, FONT_WEIGHT, TEXT_STYLE, DIRECTION, ALIGN, type Component, type Drawer, type Bounds, type Theme, type TextStyle, type TextStyleName, type TextAlignment, type VerticalAlignment, type FontWeight, type TextContent, type AlignContext, type Align } from '../core/types.js';
 import { getLineHeight, wrapText, getFontFromFamily, normalizeContent, buildSegments, splitRunsIntoLines } from '../utils/font-utils.js';
+import type { TextFragment, TextFragmentOptions } from '../core/canvas.js';
 
 // Re-export types for backward compatibility
 export type { TextRun, TextContent } from '../core/types.js';
@@ -70,11 +71,11 @@ export class Text implements Component {
     // Get wrapped lines using correct fonts for measurement
     const lines = this.wrapContent(style, defaultWeight, bounds.w);
 
-    // Build pptxgenjs content with wrapping
+    // Build styled content with wrapping
     // Normalize to runs and split across wrapped lines (works for both string and array)
     const normalized = normalizeContent(this.content);
     const lineRuns = splitRunsIntoLines(normalized, lines);
-    const pptxContent: Array<{ text: string; options: Record<string, unknown> }> = [];
+    const pptxContent: TextFragment[] = [];
 
     for (let lineIndex = 0; lineIndex < lineRuns.length; lineIndex++) {
       const runsInLine = lineRuns[lineIndex];
@@ -83,7 +84,7 @@ export class Text implements Component {
         const runWeight = run.weight ?? defaultWeight;
         const runFont = getFontFromFamily(style.fontFamily, runWeight);
 
-        const options: Record<string, unknown> = {
+        const options: TextFragmentOptions = {
           color: run.color ?? run.highlight?.text ?? defaultColor,
           fontFace: runFont.name,
         };

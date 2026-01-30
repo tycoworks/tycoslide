@@ -238,7 +238,7 @@ export class ColumnLayout implements Component {
  * With options:
  *   row(theme, card1, card2, { gap: 'small' })
  */
-export function row(theme: Theme, ...args: unknown[]): RowLayout {
+export function row(theme: Theme, ...args: (Component | number[] | Component[] | LayoutOptions)[]): RowLayout {
   let children: Component[];
   let proportions: number[];
   let options: LayoutOptions = {};
@@ -272,7 +272,7 @@ export function row(theme: Theme, ...args: unknown[]): RowLayout {
  *   column(theme, title, subtitle, cardRow)
  *   column(theme, title, cardRow, { justify: 'center', gap: 'small' })
  */
-export function column(theme: Theme, ...args: unknown[]): ColumnLayout {
+export function column(theme: Theme, ...args: (Component | LayoutOptions)[]): ColumnLayout {
   let children: Component[];
   let options: LayoutOptions = {};
 
@@ -321,8 +321,9 @@ export interface DSL {
   table(data: TableData, props?: TableProps): Table;
   divider(props?: DividerProps): Divider;
   card(props?: CardProps): Card;
-  row(...args: unknown[]): RowLayout;
-  column(...args: unknown[]): ColumnLayout;
+  row(proportions: number[], children: Component[], options?: LayoutOptions): RowLayout;
+  row(...children: Component[]): RowLayout;
+  column(...children: Component[]): ColumnLayout;
 }
 
 /**
@@ -349,7 +350,7 @@ export function createDSL(theme: Theme): DSL {
     table: (data, props?) => table(theme, data, props),
     divider: (props?) => divider(theme, props),
     card: (props?) => card(theme, props),
-    row: (...args) => row(theme, ...args),
-    column: (...args) => column(theme, ...args),
+    row: ((...args: (Component | number[] | Component[] | LayoutOptions)[]) => row(theme, ...args)) as DSL['row'],
+    column: ((...args: (Component | LayoutOptions)[]) => column(theme, ...args)) as DSL['column'],
   };
 }

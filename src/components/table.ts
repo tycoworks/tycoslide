@@ -4,6 +4,7 @@
 import { DIRECTION, ALIGN, BORDER_STYLE, SHAPE, type AlignContext, type BorderStyle, type Component, type Drawer, type Bounds, type Theme } from '../core/types.js';
 import { box, type Box } from '../core/box.js';
 import { Text } from './text.js';
+import type { Canvas } from '../core/canvas.js';
 
 // Cells can be Components or strings (strings auto-wrapped in text())
 export type TableCell = Component | string;
@@ -150,7 +151,7 @@ export class Table implements Component {
   }
 
   private drawBorders(
-    canvas: { addShape: (type: string, opts: Record<string, unknown>) => void },
+    canvas: Canvas,
     bounds: Bounds,
     rowYPositions: number[],
     bottomY: number,
