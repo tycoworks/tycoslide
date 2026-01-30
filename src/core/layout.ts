@@ -22,17 +22,16 @@ import { box, Box } from './box.js';
 // ============================================
 
 export interface LayoutOptions {
-  gap?: GapSize | number;  // default: GAP.NORMAL
+  gap?: GapSize;   // default: GAP.NORMAL
   align?: Align;
   justify?: Justify;
-  flex?: number;           // flex-grow for the layout container itself
+  flex?: number;   // flex-grow for the layout container itself
 }
 
-function resolveGap(gap: LayoutOptions['gap'], theme: Theme): number {
+function resolveGap(gap: GapSize | undefined, theme: Theme): number {
   if (gap === undefined || gap === GAP.NORMAL) return theme.spacing.gap;
   if (gap === GAP.SMALL) return theme.spacing.gapSmall;
-  if (gap === GAP.NONE) return 0;
-  return gap;  // raw number = inches
+  return 0;  // GAP.NONE
 }
 
 // ============================================
