@@ -22,6 +22,10 @@ function mockContent(minH: number, opts?: { maxH?: number; minW?: number }): Com
 
 const bounds: Bounds = { x: 0, y: 0, w: 10, h: 5 };
 
+function approx(actual: number, expected: number, msg: string, tolerance = 0.01): void {
+  assert.ok(Math.abs(actual - expected) < tolerance, `${msg}: expected ~${expected}, got ${actual}`);
+}
+
 // ============================================
 // TESTS
 // ============================================
@@ -206,6 +210,71 @@ describe('Box', () => {
   test('getChildBounds returns empty array for leaf node', () => {
     const b = box({ content: mockContent(1) });
     assert.deepStrictEqual(b.getChildBounds({ x: 0, y: 0, w: 10, h: 1 }), []);
+  });
+
+  // ------------------------------------------
+  // 9. Explicit height pins both min and max
+  // ------------------------------------------
+  test('explicit height: getMinimumHeight returns height', () => {
+    const b = box({ height: 3, content: mockContent(1) });
+    approx(b.getMinimumHeight(10), 3, 'min height pinned to explicit height');
+  });
+
+  test('explicit height: getMaximumHeight returns height', () => {
+    const b = box({ height: 3, content: mockContent(1, { maxH: 10 }) });
+    assert.strictEqual(b.getMaximumHeight(10), 3);
+  });
+
+  test('height normalizes maxHeight (height wins over maxHeight)', () => {
+    const b = box({ height: 5, maxHeight: 3, content: mockContent(1) });
+    assert.strictEqual(b.getMaximumHeight(10), 5);
+  });
+
+  // ------------------------------------------
+  // 10. maxHeight caps expansion
+  // ------------------------------------------
+  test('maxHeight caps getMaximumHeight', () => {
+    const b = box({ maxHeight: 2, content: mockContent(1, { maxH: 10 }) });
+    assert.strictEqual(b.getMaximumHeight(10), 2);
+  });
+
+  // ------------------------------------------
+  // 11. Height constraint in layout
+  // ------------------------------------------
+  test('height box gets exact height in column layout', () => {
+    const b = box({
+      children: [
+        box({ height: 2, content: mockContent(1) }),
+        box({ content: mockContent(1) }),
+      ],
+    });
+    const childBounds = b.getChildBounds({ x: 0, y: 0, w: 10, h: 10 });
+    approx(childBounds[0].h, 2, 'fixed-height child');
+    approx(childBounds[1].h, 1, 'content-sized child');
+  });
+
+  test('height box does not expand beyond explicit height', () => {
+    const b = box({
+      children: [
+        box({ height: 2, content: mockContent(1) }),
+        box({ flex: 1 }),
+      ],
+    });
+    const childBounds = b.getChildBounds({ x: 0, y: 0, w: 10, h: 10 });
+    approx(childBounds[0].h, 2, 'height-constrained child');
+    approx(childBounds[1].h, 8, 'flex spacer fills rest');
+  });
+
+  test('maxHeight caps flex child, remainder redistributed', () => {
+    const b = box({
+      children: [
+        box({ flex: 1, maxHeight: 3, content: mockContent(1) }),
+        box({ flex: 1, content: mockContent(1) }),
+      ],
+    });
+    const childBounds = b.getChildBounds({ x: 0, y: 0, w: 10, h: 10 });
+    approx(childBounds[0].h, 3, 'capped child');
+    approx(childBounds[1].h, 7, 'uncapped child gets remainder');
   });
 
 });

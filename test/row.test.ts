@@ -5,7 +5,7 @@ import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import { row, column } from '../src/core/layout.js';
 import { expand } from '../src/core/box.js';
-import { type Component, type Bounds, type Theme } from '../src/core/types.js';
+import { ALIGN, DIRECTION, type Component, type Bounds, type Theme, type AlignContext } from '../src/core/types.js';
 
 // ============================================
 // MOCK HELPERS
@@ -42,6 +42,28 @@ function trackingContent(minH: number, opts?: { maxH?: number }): { component: C
 
 function approx(actual: number, expected: number, msg: string, tolerance = 0.1): void {
   assert.ok(Math.abs(actual - expected) < tolerance, `${msg}: expected ~${expected}, got ${actual}`);
+}
+
+/** Creates a component that records bounds and alignContext from prepare() */
+function trackingContentWithAlign(minH: number, opts?: { maxH?: number }): {
+  component: Component; bounds: Bounds[]; aligns: AlignContext[];
+} {
+  const bounds: Bounds[] = [];
+  const aligns: AlignContext[] = [];
+  return {
+    bounds,
+    aligns,
+    component: {
+      prepare: (b: Bounds, ac?: AlignContext) => {
+        bounds.push({ ...b });
+        if (ac) aligns.push({ ...ac });
+        return () => {};
+      },
+      getMinimumHeight: () => minH,
+      getMaximumHeight: () => opts?.maxH ?? minH,
+      getMinimumWidth: () => 0,
+    },
+  };
 }
 
 // ============================================
@@ -143,6 +165,42 @@ describe('RowLayout', () => {
     approx(tContent.bounds[0].w, 3, 'content-sized child width');
     // Expanded child should fill the remaining space (~7)
     approx(tExpand.bounds[0].w, 7, 'expanded child width');
+  });
+
+  // ------------------------------------------
+  // 8. height option on LayoutOptions
+  // ------------------------------------------
+  test('height option makes row exact height', () => {
+    const r = row(T, { height: 2 }, mockContent(1), mockContent(1));
+    approx(r.getMinimumHeight(10), 2, 'row min height pinned');
+    assert.strictEqual(r.getMaximumHeight(10), 2);
+  });
+
+  // ------------------------------------------
+  // 9. Alignment context
+  // ------------------------------------------
+  test('alignment context defaults to ROW direction with CENTER align', () => {
+    const t1 = trackingContentWithAlign(1);
+    const r = row(T, t1.component);
+    r.prepare({ x: 0, y: 0, w: 10, h: 5 });
+    assert.strictEqual(t1.aligns[0].direction, DIRECTION.ROW);
+    assert.strictEqual(t1.aligns[0].align, ALIGN.CENTER);
+  });
+
+  test('alignment context respects ALIGN.START option', () => {
+    const t1 = trackingContentWithAlign(1);
+    const r = row(T, { align: ALIGN.START }, t1.component);
+    r.prepare({ x: 0, y: 0, w: 10, h: 5 });
+    assert.strictEqual(t1.aligns[0].direction, DIRECTION.ROW);
+    assert.strictEqual(t1.aligns[0].align, ALIGN.START);
+  });
+
+  test('alignment context respects ALIGN.END option', () => {
+    const t1 = trackingContentWithAlign(1);
+    const r = row(T, { align: ALIGN.END }, t1.component);
+    r.prepare({ x: 0, y: 0, w: 10, h: 5 });
+    assert.strictEqual(t1.aligns[0].direction, DIRECTION.ROW);
+    assert.strictEqual(t1.aligns[0].align, ALIGN.END);
   });
 
 });
