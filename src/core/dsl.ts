@@ -27,6 +27,18 @@ import { Card, type CardProps } from '../components/card.js';
 export { box } from './box.js';
 
 // ============================================
+// EXPAND — Explicit expansion wrapper
+// ============================================
+
+/**
+ * expand() — Mark a component as expandable.
+ * Nothing expands unless wrapped in expand(). This is the only expansion mechanism.
+ */
+export function expand(component: Component): Box {
+  return box({ flex: 1, content: component });
+}
+
+// ============================================
 // TEXT FACTORIES
 // ============================================
 
@@ -139,7 +151,6 @@ export class RowLayout implements Component {
   private getBox(): Box {
     if (!this._box) {
       this._box = box({
-        flex: 1,  // rows fill available space by default
         direction: DIRECTION.ROW,
         gap: this.gap,
         align: this.align,
@@ -157,8 +168,8 @@ export class RowLayout implements Component {
     return this.getBox().getMinimumHeight(width);
   }
 
-  getMaximumHeight(_width: number): number {
-    return Infinity;  // rows always expand to fill available space
+  getMaximumHeight(width: number): number {
+    return this.getBox().getMaximumHeight(width);
   }
 
   getMinimumWidth(height: number): number {
@@ -193,12 +204,7 @@ export class ColumnLayout implements Component {
         justify: this.justify,
         children: this.children.map(child => {
           if (child instanceof Box) return child;
-          // Auto-expand: children with infinite maxHeight get flex: 1
-          const expandable = child.getMaximumHeight?.(Infinity) === Infinity;
-          return box({
-            flex: expandable ? 1 : undefined,
-            content: child,
-          });
+          return box({ content: child });
         }),
       });
     }
@@ -267,10 +273,10 @@ export function row(theme: Theme, ...args: (Component | number[] | Component[] |
 
 /**
  * column() — Arrange children vertically.
- * Expandable children (maxHeight = Infinity) auto-expand to fill space.
+ * Children are content-sized by default. Use expand() to fill available space.
  *
  *   column(theme, title, subtitle, cardRow)
- *   column(theme, title, cardRow, { justify: 'center', gap: 'small' })
+ *   column(theme, title, expand(cardRow), { gap: 'small' })
  */
 export function column(theme: Theme, ...args: (Component | LayoutOptions)[]): ColumnLayout {
   let children: Component[];
@@ -321,9 +327,10 @@ export interface DSL {
   table(data: TableData, props?: TableProps): Table;
   divider(props?: DividerProps): Divider;
   card(props?: CardProps): Card;
+  expand(component: Component): Box;
   row(proportions: number[], children: Component[], options?: LayoutOptions): RowLayout;
-  row(...children: Component[]): RowLayout;
-  column(...children: Component[]): ColumnLayout;
+  row(...args: (Component | LayoutOptions)[]): RowLayout;
+  column(...args: (Component | LayoutOptions)[]): ColumnLayout;
 }
 
 /**
@@ -350,6 +357,7 @@ export function createDSL(theme: Theme): DSL {
     table: (data, props?) => table(theme, data, props),
     divider: (props?) => divider(theme, props),
     card: (props?) => card(theme, props),
+    expand: (component) => expand(component),
     row: ((...args: (Component | number[] | Component[] | LayoutOptions)[]) => row(theme, ...args)) as DSL['row'],
     column: ((...args: (Component | LayoutOptions)[]) => column(theme, ...args)) as DSL['column'],
   };

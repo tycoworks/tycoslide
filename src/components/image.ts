@@ -21,7 +21,7 @@ export class Image implements Component {
   }
 
   getMaximumHeight(width: number): number {
-    return width / this.aspectRatio;
+    return width / this.aspectRatio;  // Natural height at given width
   }
 
   getMinimumWidth(height: number): number {

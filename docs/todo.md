@@ -8,7 +8,6 @@ Theme:
 Code quality:
 - Logging & testing
 - Proper speaker notes
-- Make canvas typesafe
 - Settings in core vs Materialize (layouts vs theme too)
 
 Spacing / layouts:

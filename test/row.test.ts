@@ -44,17 +44,17 @@ function approx(actual: number, expected: number, msg: string, tolerance = 0.1):
 describe('RowLayout', () => {
 
   // ------------------------------------------
-  // 1. Row expands to fill space (flex: 1)
+  // 1. Row is content-sized by default (use expand() to stretch)
   // ------------------------------------------
-  test('getMaximumHeight returns Infinity (row expands to fill space)', () => {
+  test('getMaximumHeight returns tallest child max (row is content-sized)', () => {
     const r = new RowLayout(
-      [mockContent(1), mockContent(1), mockContent(1)],
+      [mockContent(1), mockContent(2), mockContent(1)],
       [1, 1, 1],
       0,
       ALIGN.STRETCH,
       undefined,
     );
-    assert.strictEqual(r.getMaximumHeight(10), Infinity);
+    assert.strictEqual(r.getMaximumHeight(10), 2);
   });
 
   // ------------------------------------------

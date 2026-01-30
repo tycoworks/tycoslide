@@ -91,6 +91,7 @@ export {
   table,
   divider,
   card,
+  expand,
   row,
   column,
   RowLayout,
