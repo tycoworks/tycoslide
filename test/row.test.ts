@@ -4,6 +4,7 @@
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import { row, column } from '../src/core/layout.js';
+import { expand } from '../src/core/box.js';
 import { type Component, type Bounds, type Theme } from '../src/core/types.js';
 
 // ============================================
@@ -122,6 +123,26 @@ describe('RowLayout', () => {
     // Both children should get equal width (5 each)
     approx(t1.bounds[0].w, 5, 'column child width');
     approx(t2.bounds[0].w, 5, 'plain child width');
+  });
+
+  // ------------------------------------------
+  // 7. expand() suppresses equal-flex — siblings become content-sized
+  // ------------------------------------------
+  test('expand() in row makes non-expanded siblings content-sized', () => {
+    // Content child with known minimum width
+    const tContent = trackingContent(2, { maxH: 2 });
+    tContent.component.getMinimumWidth = () => 3;  // reports 3" content width
+
+    const tExpand = trackingContent(1);
+
+    // row(contentChild, expand(expandChild))
+    const r = row(T, tContent.component, expand(tExpand.component));
+    r.prepare({ x: 0, y: 0, w: 10, h: 5 });
+
+    // Content child should get its content width (~3), not half (5)
+    approx(tContent.bounds[0].w, 3, 'content-sized child width');
+    // Expanded child should fill the remaining space (~7)
+    approx(tExpand.bounds[0].w, 7, 'expanded child width');
   });
 
 });
