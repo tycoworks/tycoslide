@@ -63,13 +63,19 @@ export class Presentation {
       const masterCanvas = new Canvas();
       render(masterCanvas);
 
+      // Extract slide number from master canvas (if any) — passed as a top-level property to defineSlideMaster, not in objects array
+      const masterObjects = masterCanvas.getObjects(LAYER.SLIDE);
+      const slideNumberObj = masterObjects.find(obj => obj.type === CANVAS_OBJECT_TYPE.SLIDE_NUMBER);
+      const regularObjects = masterObjects.filter(obj => obj.type !== CANVAS_OBJECT_TYPE.SLIDE_NUMBER);
+
       // Define pptx master (background required - use color fallback)
       this.pres.defineSlideMaster({
         title: master.name,
         background: master.background
           ? { path: master.background }
           : { color: this._theme.colors.background },
-        objects: masterCanvas.getObjects(LAYER.SLIDE).map(obj => this.formatForMaster(obj)),
+        objects: regularObjects.map(obj => this.formatForMaster(obj)),
+        ...(slideNumberObj ? { slideNumber: slideNumberObj.options } : {}),
       });
 
       this.masters.set(master.name, { render, contentBounds });
@@ -141,6 +147,8 @@ export class Presentation {
         slide.addShape(obj.shapeType, obj.options);
       } else if (obj.type === CANVAS_OBJECT_TYPE.IMAGE) {
         slide.addImage(obj.options);
+      } else if (obj.type === CANVAS_OBJECT_TYPE.SLIDE_NUMBER) {
+        slide.slideNumber = obj.options;
       }
     }
   }
@@ -153,6 +161,10 @@ export class Presentation {
     if (obj.type === CANVAS_OBJECT_TYPE.IMAGE) {
       return { image: obj.options };
     }
-    return { [String(obj.shapeType)]: obj.options };
+    if (obj.type === CANVAS_OBJECT_TYPE.SHAPE) {
+      return { [String(obj.shapeType)]: obj.options };
+    }
+    // SlideNumber objects are handled separately, not as master objects
+    return {};
   }
 }

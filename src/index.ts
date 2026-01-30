@@ -71,6 +71,8 @@ export {
   type TableCell,
   type DividerProps,
   type CardProps,
+  type SlideNumberProps,
+  SlideNumber,
   LIST_TYPE,
 } from './components/index.js';
 
@@ -90,6 +92,7 @@ export {
   numberedList,
   table,
   divider,
+  slideNumber,
   card,
   expand,
   row,

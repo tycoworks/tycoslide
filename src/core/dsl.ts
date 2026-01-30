@@ -15,6 +15,7 @@ import { List, LIST_TYPE, type ListProps } from '../components/list.js';
 import { Table, type TableData, type TableProps } from '../components/table.js';
 import { Divider, type DividerProps } from '../components/divider.js';
 import { Card, type CardProps } from '../components/card.js';
+import { SlideNumber, type SlideNumberProps } from '../components/slide-number.js';
 import { row, column, type LayoutOptions } from './layout.js';
 
 // Re-export box primitives and layout factories
@@ -91,6 +92,14 @@ export function card(theme: Theme, titleOrProps?: string | CardProps, descriptio
 }
 
 // ============================================
+// SLIDE NUMBER FACTORY
+// ============================================
+
+export function slideNumber(theme: Theme, props: SlideNumberProps = {}): SlideNumber {
+  return new SlideNumber(theme, props);
+}
+
+// ============================================
 // DSL FACTORY
 // ============================================
 
@@ -112,6 +121,7 @@ export interface DSL {
   numberedList(items: TextContent[], props?: ListProps): List;
   table(data: TableData, props?: TableProps): Table;
   divider(props?: DividerProps): Divider;
+  slideNumber(props?: SlideNumberProps): SlideNumber;
   card(title: string, description: string): Card;
   card(props?: CardProps): Card;
   expand(component: Component): Box;
@@ -146,6 +156,7 @@ export function createDSL(theme: Theme): DSL {
     numberedList: (items, props?) => numberedList(theme, items, props),
     table: (data, props?) => table(theme, data, props),
     divider: (props?) => divider(theme, props),
+    slideNumber: (props?) => slideNumber(theme, props),
     card: ((...args: any[]) => (card as Function)(theme, ...args)) as DSL['card'],
     expand: (component) => expand(component),
     row: ((...args: any[]) => row(theme, ...args)) as DSL['row'],

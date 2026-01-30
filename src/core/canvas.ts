@@ -71,6 +71,20 @@ export interface ImageOptions {
   h: number;
 }
 
+/** Slide number positioning + styling (passed through to PPTXGen.js native slideNumber) */
+export interface SlideNumberOptions {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  fontFace?: string;
+  fontSize?: number;
+  color?: string;
+  bold?: boolean;
+  align?: TextAlignment;
+  valign?: VerticalAlignment;
+}
+
 // ============================================
 // CANVAS OBJECT TYPE CONSTANT
 // ============================================
@@ -79,6 +93,7 @@ export const CANVAS_OBJECT_TYPE = {
   TEXT: 'text',
   SHAPE: 'shape',
   IMAGE: 'image',
+  SLIDE_NUMBER: 'slideNumber',
 } as const;
 
 export type CanvasObjectType = typeof CANVAS_OBJECT_TYPE[keyof typeof CANVAS_OBJECT_TYPE];
@@ -107,7 +122,13 @@ export interface ImageObject {
   options: ImageOptions;
 }
 
-export type CanvasObject = TextObject | ShapeObject | ImageObject;
+export interface SlideNumberObject {
+  type: typeof CANVAS_OBJECT_TYPE.SLIDE_NUMBER;
+  layer: Layer;
+  options: SlideNumberOptions;
+}
+
+export type CanvasObject = TextObject | ShapeObject | ImageObject | SlideNumberObject;
 
 // ============================================
 // CANVAS CLASS
@@ -134,6 +155,10 @@ export class Canvas {
 
   addImage(options: ImageOptions): void {
     this.objects.push({ type: CANVAS_OBJECT_TYPE.IMAGE, options, layer: this.currentLayer });
+  }
+
+  addSlideNumber(options: SlideNumberOptions): void {
+    this.objects.push({ type: CANVAS_OBJECT_TYPE.SLIDE_NUMBER, options, layer: this.currentLayer });
   }
 
   getObjects(layer?: Layer): CanvasObject[] {
