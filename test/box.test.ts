@@ -152,4 +152,31 @@ describe('Box', () => {
     assert.strictEqual(layers[0], LAYER.SLIDE);
   });
 
+  // ------------------------------------------
+  // 7. Caching consistency: getMinimumHeight then prepare
+  // ------------------------------------------
+  test('getMinimumHeight then prepare with same width does not overflow', () => {
+    // Build a multi-level tree where Yoga rounding could produce
+    // different results between independent builds
+    const b = box({
+      gap: 0.1,
+      children: [
+        box({ content: mockContent(0.7) }),
+        box({ content: mockContent(0.8) }),
+        box({ content: mockContent(0.9) }),
+        box({ content: mockContent(0.6) }),
+        box({ content: mockContent(0.5) }),
+      ],
+    });
+
+    const width = 9.5;
+    const minH = b.getMinimumHeight(width);
+
+    // prepare should not throw — if caching is broken, Yoga could
+    // compute a slightly different height on a fresh tree, causing overflow
+    assert.doesNotThrow(() => {
+      b.prepare({ x: 0, y: 0, w: width, h: minH });
+    });
+  });
+
 });

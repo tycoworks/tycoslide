@@ -66,9 +66,28 @@ interface TraversalContext {
 
 export class Box implements Component {
   private props: BoxProps;
+  private _cachedNode: YogaNode | null = null;
+  private _cachedWidth: number = -1;
 
   constructor(props: BoxProps = {}) {
     this.props = props;
+  }
+
+  /**
+   * Get or build a Yoga tree for this Box, cached by width.
+   * Reusing the same tree between getMinimumHeight and prepare ensures
+   * Yoga's point-rounding is consistent across measurement and layout.
+   */
+  private getOrBuildTree(width: number): YogaNode {
+    if (this._cachedNode && this._cachedWidth === width) {
+      return this._cachedNode;
+    }
+    if (this._cachedNode) {
+      freeNode(this._cachedNode);
+    }
+    this._cachedNode = this.buildYogaTree(width);
+    this._cachedWidth = width;
+    return this._cachedNode;
   }
 
   private buildYogaTree(width: number): YogaNode {
@@ -137,13 +156,11 @@ export class Box implements Component {
   }
 
   getMinimumHeight(width: number): number {
-    const node = this.buildYogaTree(width);
+    const node = this.getOrBuildTree(width);
     node.setWidth(toYoga(width));
     node.calculateLayout(toYoga(width), undefined, Yoga.DIRECTION_LTR);
 
-    const height = fromYoga(node.getComputedHeight());
-    freeNode(node);
-    return height;
+    return fromYoga(node.getComputedHeight());
   }
 
   getMaximumHeight(width: number): number {
@@ -183,7 +200,7 @@ export class Box implements Component {
   }
 
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
-    const rootNode = this.buildYogaTree(bounds.w);
+    const rootNode = this.getOrBuildTree(bounds.w);
     rootNode.setWidth(toYoga(bounds.w));
     rootNode.setHeight(toYoga(bounds.h));
     rootNode.calculateLayout(toYoga(bounds.w), toYoga(bounds.h), Yoga.DIRECTION_LTR);
@@ -194,7 +211,6 @@ export class Box implements Component {
       path: '',
     };
     this.collectDrawers(rootNode, bounds.x, bounds.y, alignContext, this.props.layer ?? LAYER.SLIDE, ctx);
-    freeNode(rootNode);
 
     return (canvas) => {
       for (const { drawer, layer } of ctx.drawers) {
