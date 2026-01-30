@@ -3,7 +3,7 @@
 // Box is a pure layout engine — it has no theme dependency.
 // Children carry their own theme references.
 
-import { Yoga, createNode, freeNode, toYoga, fromYoga, type YogaNode } from '../utils/yoga-utils.js';
+import { Yoga, createNode, freeNode, toYoga, fromYoga, YOGA_EPSILON, type YogaNode } from '../utils/yoga-utils.js';
 import {
   DIRECTION,
   JUSTIFY,
@@ -199,6 +199,22 @@ export class Box implements Component {
     return width;
   }
 
+  /**
+   * Run layout and return the computed bounds of each direct child.
+   * Uses the cached Yoga tree so results are consistent with prepare().
+   */
+  getChildBounds(bounds: Bounds): Bounds[] {
+    if (!this.props.children) return [];
+    const node = this.getOrBuildTree(bounds.w);
+    node.setWidth(toYoga(bounds.w));
+    node.setHeight(toYoga(bounds.h));
+    node.calculateLayout(toYoga(bounds.w), toYoga(bounds.h), Yoga.DIRECTION_LTR);
+
+    return this.props.children.map((_, i) =>
+      this.extractBounds(node.getChild(i), bounds.x, bounds.y)
+    );
+  }
+
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
     const rootNode = this.getOrBuildTree(bounds.w);
     rootNode.setWidth(toYoga(bounds.w));
@@ -261,7 +277,7 @@ export class Box implements Component {
   }
 
   private checkOverflow(bounds: Bounds, ctx: TraversalContext): void {
-    const epsilon = 0.02;
+    const epsilon = YOGA_EPSILON;
     const contentName = this.props.content!.constructor.name;
     const fullPath = ctx.path ? `${ctx.path} > ${contentName}` : contentName;
 

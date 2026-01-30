@@ -12,6 +12,9 @@ export const inToPt = (inches: number): number => inches * POINTS_PER_INCH;
 export const toYoga = inToPt;
 export const fromYoga = ptToIn;
 
+/** Overflow tolerance for Yoga's integer point rounding (2 pts + float margin) */
+export const YOGA_EPSILON = 2.5 / POINTS_PER_INCH;  // ~0.035"
+
 /**
  * Create a new Yoga node
  */

@@ -179,4 +179,33 @@ describe('Box', () => {
     });
   });
 
+  // ------------------------------------------
+  // 8. getChildBounds returns computed positions
+  // ------------------------------------------
+  test('getChildBounds returns correct positions for column children', () => {
+    const b = box({
+      children: [
+        box({ content: mockContent(1) }),
+        box({ content: mockContent(2) }),
+      ],
+    });
+
+    const childBounds = b.getChildBounds({ x: 1, y: 2, w: 10, h: 3 });
+
+    assert.strictEqual(childBounds.length, 2);
+    // First child at top of container
+    assert.ok(Math.abs(childBounds[0].x - 1) < 0.01);
+    assert.ok(Math.abs(childBounds[0].y - 2) < 0.01);
+    assert.ok(Math.abs(childBounds[0].w - 10) < 0.01);
+    assert.ok(Math.abs(childBounds[0].h - 1) < 0.01);
+    // Second child below first
+    assert.ok(Math.abs(childBounds[1].y - 3) < 0.01);
+    assert.ok(Math.abs(childBounds[1].h - 2) < 0.01);
+  });
+
+  test('getChildBounds returns empty array for leaf node', () => {
+    const b = box({ content: mockContent(1) });
+    assert.deepStrictEqual(b.getChildBounds({ x: 0, y: 0, w: 10, h: 1 }), []);
+  });
+
 });

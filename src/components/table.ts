@@ -55,7 +55,6 @@ class PaddedContent implements Component {
 
 export class Table implements Component {
   private _box?: Box;
-  private _rowBoxes?: Box[];
 
   constructor(private theme: Theme, private data: TableData, private props: TableProps = {}) {}
 
@@ -86,7 +85,7 @@ export class Table implements Component {
     return ratios.map(r => (r / total) * tableWidth);
   }
 
-  private getBox(): { tableBox: Box; rowBoxes: Box[] } {
+  private getBox(): Box {
     if (!this._box) {
       const padding = this.props.cellPadding ?? this.theme.spacing.cellPadding;
       const useHeaderRow = this.props.headerRow ?? true;
@@ -117,13 +116,12 @@ export class Table implements Component {
         direction: DIRECTION.COLUMN,
         children: rowBoxes,
       });
-      this._rowBoxes = rowBoxes;
     }
-    return { tableBox: this._box, rowBoxes: this._rowBoxes! };
+    return this._box;
   }
 
   getMinimumHeight(width: number): number {
-    return this.getBox().tableBox.getMinimumHeight(width);
+    return this.getBox().getMinimumHeight(width);
   }
 
   getMaximumHeight(width: number): number {
@@ -131,16 +129,13 @@ export class Table implements Component {
   }
 
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
-    const { tableBox, rowBoxes } = this.getBox();
+    const tableBox = this.getBox();
 
-    // Compute row Y positions for border drawing
-    const rowYPositions: number[] = [];
-    let y = bounds.y;
-    for (const rowBox of rowBoxes) {
-      rowYPositions.push(y);
-      y += rowBox.getMinimumHeight(bounds.w);
-    }
-    const bottomY = y;
+    // Get row positions from the Yoga layout (single tree, consistent rounding)
+    const rowBounds = tableBox.getChildBounds(bounds);
+    const rowYPositions = rowBounds.map(b => b.y);
+    const lastRow = rowBounds[rowBounds.length - 1];
+    const bottomY = lastRow.y + lastRow.h;
 
     // Compute column widths for border drawing
     const columnWidths = this.getColumnWidths(bounds.w);
