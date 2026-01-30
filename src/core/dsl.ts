@@ -81,8 +81,13 @@ export function divider(theme: Theme, props: DividerProps = {}): Divider {
 // CARD FACTORY
 // ============================================
 
-export function card(theme: Theme, props: CardProps = {}): Card {
-  return new Card(theme, props);
+export function card(theme: Theme, title: string, description: string): Card;
+export function card(theme: Theme, props?: CardProps): Card;
+export function card(theme: Theme, titleOrProps?: string | CardProps, description?: string): Card {
+  if (typeof titleOrProps === 'string') {
+    return new Card(theme, { title: titleOrProps, description: description! });
+  }
+  return new Card(theme, titleOrProps ?? {});
 }
 
 // ============================================
@@ -107,6 +112,7 @@ export interface DSL {
   numberedList(items: TextContent[], props?: ListProps): List;
   table(data: TableData, props?: TableProps): Table;
   divider(props?: DividerProps): Divider;
+  card(title: string, description: string): Card;
   card(props?: CardProps): Card;
   expand(component: Component): Box;
   row(proportions: number[], children: Component[], options?: LayoutOptions): Box;
@@ -140,7 +146,7 @@ export function createDSL(theme: Theme): DSL {
     numberedList: (items, props?) => numberedList(theme, items, props),
     table: (data, props?) => table(theme, data, props),
     divider: (props?) => divider(theme, props),
-    card: (props?) => card(theme, props),
+    card: ((...args: any[]) => (card as Function)(theme, ...args)) as DSL['card'],
     expand: (component) => expand(component),
     row: ((...args: any[]) => row(theme, ...args)) as DSL['row'],
     column: ((...args: any[]) => column(theme, ...args)) as DSL['column'],

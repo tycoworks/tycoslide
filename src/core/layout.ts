@@ -22,7 +22,8 @@ export interface LayoutOptions {
   gap?: GapSize;   // default: GAP.NORMAL
   align?: Align;
   justify?: Justify;
-  maxHeight?: number;
+  height?: number;     // explicit height in inches
+  maxHeight?: number;  // cap on height in inches
 }
 
 function resolveGap(gap: GapSize | undefined, theme: Theme): number {
@@ -68,6 +69,7 @@ function layout(direction: Direction, equalFlex: boolean, theme: Theme, args: an
     gap: resolveGap(options.gap, theme),
     align: options.align ?? ALIGN.STRETCH,
     justify: options.justify,
+    height: options.height,
     maxHeight: options.maxHeight,
     children: children.map((child, i) => {
       if (child instanceof Box && child.flex !== undefined) return child;

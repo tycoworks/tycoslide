@@ -1,5 +1,6 @@
 Spacing / layouts:
 - Page numbers
+- Card sizes
 
 Text:
 - Word wrapping in messaging.md

@@ -224,7 +224,8 @@ export interface Master {
 
 // Slide combines a master (optional) with content drawing function
 export interface Slide {
-  master?: Master;  // Which master to use (or none for full-slide layouts)
+  master?: Master;       // Which master to use (or none for full-slide layouts)
+  background?: string;   // Background image path (overrides master background)
   draw: (canvas: Canvas, bounds: Bounds) => void;  // Draw content within bounds
 }
 

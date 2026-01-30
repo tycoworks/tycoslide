@@ -70,7 +70,11 @@ export class Box implements Component {
   private _cachedWidth: number = -1;
 
   constructor(props: BoxProps = {}) {
-    this.props = props;
+    if (props.height !== undefined) {
+      this.props = { ...props, maxHeight: props.height };
+    } else {
+      this.props = props;
+    }
   }
 
   /** Flex-grow value, if set. Used by row/column to detect pre-flexed children. */
@@ -116,8 +120,13 @@ export class Box implements Component {
 
   private configureDimensions(node: YogaNode): void {
     if (this.props.width !== undefined) node.setWidth(toYoga(this.props.width));
-    if (this.props.height !== undefined) node.setHeight(toYoga(this.props.height));
-    if (this.props.maxHeight !== undefined) node.setMaxHeight(toYoga(this.props.maxHeight));
+    if (this.props.height !== undefined) {
+      const h = toYoga(this.props.height);
+      node.setMinHeight(h);
+      node.setMaxHeight(h);
+    } else if (this.props.maxHeight !== undefined) {
+      node.setMaxHeight(toYoga(this.props.maxHeight));
+    }
 
     if (this.props.flex !== undefined && this.props.flex > 0) {
       node.setFlexGrow(this.props.flex);

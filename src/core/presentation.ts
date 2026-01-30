@@ -96,8 +96,10 @@ export class Presentation {
       master ? { masterName: master.name } : undefined
     );
 
-    // Apply background only for slides without a master
-    if (!master) {
+    // Slide background overrides master background
+    if (slide.background) {
+      pptxSlide.background = { path: slide.background };
+    } else if (!master) {
       pptxSlide.background = { color: this._theme.colors.background };
     }
 
