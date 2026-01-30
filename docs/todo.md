@@ -1,15 +1,5 @@
-Theme:
-- Pixel perfect theme / Footer too big
-- Dark mode
-
-Code quality:
-- Logging & testing
-- Proper speaker notes
-- Settings in core vs Materialize (layouts vs theme too)
-
 Spacing / layouts:
-- Relative spacing / unify numbers
-- Make component sizes correct in the ppt.
+- Page numbers
 
 Text:
 - Word wrapping in messaging.md
@@ -17,7 +7,9 @@ Text:
 - Bullet point spacing / indent
 
 Components:
-- Page numbers
+- Logging & testing
+- Proper speaker notes
+- Dark mode
 - Quote component
 - Image to the left of the card
 - Groups
