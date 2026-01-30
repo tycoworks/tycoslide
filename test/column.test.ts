@@ -3,12 +3,18 @@
 
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
-import { ColumnLayout } from '../src/core/dsl.js';
-import { ALIGN, type Component, type Bounds } from '../src/core/types.js';
+import { column } from '../src/core/layout.js';
+import { type Component, type Bounds, type Theme } from '../src/core/types.js';
 
 // ============================================
 // MOCK HELPERS
 // ============================================
+
+function mockTheme(gap = 0, gapSmall = 0): Theme {
+  return { spacing: { gap, gapSmall } } as any;
+}
+
+const T = mockTheme();
 
 function mockContent(minH: number, opts?: { maxH?: number; minW?: number }): Component {
   return {
@@ -49,14 +55,7 @@ describe('ColumnLayout', () => {
   test('children are content-sized by default (no proportions)', () => {
     const t1 = trackingContent(1);
     const t2 = trackingContent(2);
-    const col = new ColumnLayout(
-      [t1.component, t2.component],
-      undefined,  // no proportions
-      0,
-      ALIGN.STRETCH,
-      undefined,
-      undefined,
-    );
+    const col = column(T, t1.component, t2.component);
     col.prepare({ x: 0, y: 0, w: 10, h: 10 });
     approx(t1.bounds[0].h, 1, 'child 1 height (content-sized)');
     approx(t2.bounds[0].h, 2, 'child 2 height (content-sized)');
@@ -68,14 +67,7 @@ describe('ColumnLayout', () => {
   test('proportional heights (1:2 split)', () => {
     const t1 = trackingContent(1);
     const t2 = trackingContent(1);
-    const col = new ColumnLayout(
-      [t1.component, t2.component],
-      [1, 2],
-      0,
-      ALIGN.STRETCH,
-      undefined,
-      undefined,
-    );
+    const col = column(T, [1, 2], [t1.component, t2.component]);
     col.prepare({ x: 0, y: 0, w: 10, h: 9 });
     approx(t1.bounds[0].h, 3, 'narrow child height');
     approx(t2.bounds[0].h, 6, 'tall child height');
@@ -86,14 +78,7 @@ describe('ColumnLayout', () => {
   // ------------------------------------------
   test('children fill available width', () => {
     const t1 = trackingContent(1);
-    const col = new ColumnLayout(
-      [t1.component],
-      undefined,
-      0,
-      ALIGN.STRETCH,
-      undefined,
-      undefined,
-    );
+    const col = column(T, t1.component);
     col.prepare({ x: 0, y: 0, w: 10, h: 5 });
     approx(t1.bounds[0].w, 10, 'child width');
   });
@@ -105,14 +90,8 @@ describe('ColumnLayout', () => {
     const t1 = trackingContent(1);
     const t2 = trackingContent(1);
     const t3 = trackingContent(1);
-    const col = new ColumnLayout(
-      [t1.component, t2.component, t3.component],
-      [1, 1, 1],
-      0.5,
-      ALIGN.STRETCH,
-      undefined,
-      undefined,
-    );
+    // gap=0.5 via theme.spacing.gap (GAP.NORMAL is default)
+    const col = column(mockTheme(0.5), [1, 1, 1], [t1.component, t2.component, t3.component]);
     // Total height 10, gap 0.5 × 2 = 1.0, remaining 9.0, each child 3.0
     col.prepare({ x: 0, y: 0, w: 10, h: 10 });
     approx(t1.bounds[0].h, 3, 'child 1 height with gap');
@@ -124,14 +103,7 @@ describe('ColumnLayout', () => {
   // 5. getMaximumHeight sums children for content-sized
   // ------------------------------------------
   test('getMaximumHeight sums child max heights (content-sized)', () => {
-    const col = new ColumnLayout(
-      [mockContent(1, { maxH: 3 }), mockContent(2, { maxH: 4 })],
-      undefined,
-      0,
-      ALIGN.STRETCH,
-      undefined,
-      undefined,
-    );
+    const col = column(T, mockContent(1, { maxH: 3 }), mockContent(2, { maxH: 4 }));
     assert.strictEqual(col.getMaximumHeight(10), 7);
   });
 
@@ -140,14 +112,7 @@ describe('ColumnLayout', () => {
   //    (flex children still report their content's max, not Infinity)
   // ------------------------------------------
   test('getMaximumHeight sums content max heights for proportional column', () => {
-    const col = new ColumnLayout(
-      [mockContent(1, { maxH: 3 }), mockContent(1, { maxH: 4 })],
-      [1, 1],
-      0,
-      ALIGN.STRETCH,
-      undefined,
-      undefined,
-    );
+    const col = column(T, [1, 1], [mockContent(1, { maxH: 3 }), mockContent(1, { maxH: 4 })]);
     assert.strictEqual(col.getMaximumHeight(10), 7);
   });
 

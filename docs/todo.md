@@ -1,6 +1,3 @@
-Next:
-- Flexbasis / columns / etc - nightmare.
-
 Theme:
 - Pixel perfect theme / Footer too big
 - Dark mode
@@ -21,7 +18,6 @@ Text:
 
 Components:
 - Page numbers
-- Divider doesn't work?
 - Quote component
 - Image to the left of the card
 - Groups

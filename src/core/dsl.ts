@@ -15,11 +15,11 @@ import { List, LIST_TYPE, type ListProps } from '../components/list.js';
 import { Table, type TableData, type TableProps } from '../components/table.js';
 import { Divider, type DividerProps } from '../components/divider.js';
 import { Card, type CardProps } from '../components/card.js';
-import { row, column, RowLayout, ColumnLayout, type LayoutOptions } from './layout.js';
+import { row, column, type LayoutOptions } from './layout.js';
 
-// Re-export box primitives and layout containers
+// Re-export box primitives and layout factories
 export { box, expand } from './box.js';
-export { row, column, RowLayout, ColumnLayout, type LayoutOptions } from './layout.js';
+export { row, column, type LayoutOptions } from './layout.js';
 
 // ============================================
 // TEXT FACTORIES
@@ -109,12 +109,12 @@ export interface DSL {
   divider(props?: DividerProps): Divider;
   card(props?: CardProps): Card;
   expand(component: Component): Box;
-  row(proportions: number[], children: Component[], options?: LayoutOptions): RowLayout;
-  row(options: LayoutOptions, ...children: Component[]): RowLayout;
-  row(...children: Component[]): RowLayout;
-  column(proportions: number[], children: Component[], options?: LayoutOptions): ColumnLayout;
-  column(options: LayoutOptions, ...children: Component[]): ColumnLayout;
-  column(...children: Component[]): ColumnLayout;
+  row(proportions: number[], children: Component[], options?: LayoutOptions): Box;
+  row(options: LayoutOptions, ...children: Component[]): Box;
+  row(...children: Component[]): Box;
+  column(proportions: number[], children: Component[], options?: LayoutOptions): Box;
+  column(options: LayoutOptions, ...children: Component[]): Box;
+  column(...children: Component[]): Box;
 }
 
 /**

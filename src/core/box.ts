@@ -73,6 +73,9 @@ export class Box implements Component {
     this.props = props;
   }
 
+  /** Flex-grow value, if set. Used by row/column to detect pre-flexed children. */
+  get flex(): number | undefined { return this.props.flex; }
+
   /**
    * Get or build a Yoga tree for this Box, cached by width.
    * Reusing the same tree between getMinimumHeight and prepare ensures

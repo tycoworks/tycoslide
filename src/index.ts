@@ -94,8 +94,6 @@ export {
   expand,
   row,
   column,
-  RowLayout,
-  ColumnLayout,
   type LayoutOptions,
   createDSL,
   type DSL,
