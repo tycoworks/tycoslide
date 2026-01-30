@@ -70,7 +70,6 @@ export class List implements Component {
         [ALIGN.START]: VALIGN.TOP,
         [ALIGN.CENTER]: VALIGN.MIDDLE,
         [ALIGN.END]: VALIGN.BOTTOM,
-        [ALIGN.STRETCH]: VALIGN.TOP,
       };
       valign = valignMap[alignContext.align];
     }

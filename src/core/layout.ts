@@ -67,7 +67,7 @@ function layout(direction: Direction, equalFlex: boolean, theme: Theme, args: an
   return box({
     direction,
     gap: resolveGap(options.gap, theme),
-    align: options.align ?? ALIGN.STRETCH,
+    align: options.align ?? ALIGN.CENTER,
     justify: options.justify,
     height: options.height,
     maxHeight: options.maxHeight,

@@ -50,7 +50,6 @@ export const ALIGN = {
   START: 'flex-start',
   CENTER: 'center',
   END: 'flex-end',
-  STRETCH: 'stretch',
 } as const;
 
 export type Align = typeof ALIGN[keyof typeof ALIGN];

@@ -23,13 +23,6 @@ import {
 // YOGA LOOKUP TABLES
 // ============================================
 
-const YOGA_ALIGN: Record<string, number> = {
-  [ALIGN.START]: Yoga.ALIGN_FLEX_START,
-  [ALIGN.CENTER]: Yoga.ALIGN_CENTER,
-  [ALIGN.END]: Yoga.ALIGN_FLEX_END,
-  [ALIGN.STRETCH]: Yoga.ALIGN_STRETCH,
-};
-
 const YOGA_JUSTIFY: Record<string, number> = {
   [JUSTIFY.CENTER]: Yoga.JUSTIFY_CENTER,
   [JUSTIFY.SPACE_BETWEEN]: Yoga.JUSTIFY_SPACE_BETWEEN,
@@ -109,7 +102,8 @@ export class Box implements Component {
     const direction = this.props.direction === DIRECTION.ROW
       ? Yoga.FLEX_DIRECTION_ROW : Yoga.FLEX_DIRECTION_COLUMN;
     node.setFlexDirection(direction);
-    node.setAlignItems(YOGA_ALIGN[this.props.align ?? ALIGN.STRETCH]);
+    // Always stretch on cross-axis — align controls positioning, not sizing
+    node.setAlignItems(Yoga.ALIGN_STRETCH);
 
     const gap = this.props.gap ?? 0;
     if (gap > 0) node.setGap(Yoga.GUTTER_ALL, toYoga(gap));
@@ -270,7 +264,7 @@ export class Box implements Component {
   ): void {
     const alignContext: AlignContext = {
       direction: this.props.direction ?? DIRECTION.COLUMN,
-      align: this.props.align ?? ALIGN.STRETCH,
+      align: this.props.align ?? ALIGN.CENTER,
     };
     const dir = this.props.direction === DIRECTION.ROW ? 'Row' : 'Col';
     const childPath = ctx.path
