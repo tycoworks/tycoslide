@@ -17,7 +17,11 @@ export class Image implements Component {
   }
 
   getMinimumHeight(_width: number): number {
-    return this.theme.spacing.minImageHeight;
+    return 0;  // Images can shrink to nothing if layout demands it
+  }
+
+  getPreferredHeight(width: number): number {
+    return width / this.aspectRatio;  // Natural height preserving aspect ratio
   }
 
   getMaximumHeight(width: number): number {

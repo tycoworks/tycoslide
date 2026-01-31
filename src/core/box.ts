@@ -140,12 +140,20 @@ export class Box implements Component {
 
   private setMeasureFunc(node: YogaNode, width: number): void {
     const content = this.props.content!;
-    node.setMeasureFunc((yogaWidth, widthMode) => {
+    node.setMeasureFunc((yogaWidth, widthMode, yogaHeight, heightMode) => {
       const measuredWidth = widthMode === Yoga.MEASURE_MODE_UNDEFINED
         ? width : fromYoga(yogaWidth);
-      const minH = content.getMinimumHeight?.(measuredWidth) ?? 0;
-      const minW = content.getMinimumWidth?.(minH) ?? 0;
-      return { width: toYoga(minW), height: toYoga(minH) };
+      let h = content.getPreferredHeight?.(measuredWidth)
+           ?? content.getMinimumHeight?.(measuredWidth)
+           ?? 0;
+      // Respect height constraints from parent (e.g. row with maxHeight)
+      if (heightMode === Yoga.MEASURE_MODE_AT_MOST) {
+        h = Math.min(h, fromYoga(yogaHeight));
+      } else if (heightMode === Yoga.MEASURE_MODE_EXACTLY) {
+        h = fromYoga(yogaHeight);
+      }
+      const w = content.getMinimumWidth?.(h) ?? 0;
+      return { width: toYoga(w), height: toYoga(h) };
     });
   }
 
@@ -167,6 +175,10 @@ export class Box implements Component {
     node.calculateLayout(toYoga(width), undefined, Yoga.DIRECTION_LTR);
 
     return fromYoga(node.getComputedHeight());
+  }
+
+  getPreferredHeight(width: number): number {
+    return this.getMinimumHeight(width);
   }
 
   getMaximumHeight(width: number): number {

@@ -214,9 +214,10 @@ export type Drawer = (canvas: Canvas) => void;
 // Theme is provided at construction time, not method-call time
 export interface Component {
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer;
-  getMinimumHeight?(width: number): number;  // Floor - minimum height needed
-  getMaximumHeight?(width: number): number;  // Ceiling - max useful height (Infinity = unbounded)
-  getMinimumWidth?(height: number): number;   // For intrinsic width (e.g., images in ROW layouts)
+  getMinimumHeight?(width: number): number;    // Floor - minimum height needed
+  getPreferredHeight?(width: number): number;  // Design-aware preferred height
+  getMaximumHeight?(width: number): number;    // Ceiling - max useful height (Infinity = unbounded)
+  getMinimumWidth?(height: number): number;    // For intrinsic width (e.g., images in ROW layouts)
 }
 
 // ============================================
@@ -257,7 +258,6 @@ export interface Theme {
     gapSmall: number;       // Small gap between elements
     cellPadding: number;    // Padding inside table cells
     bulletSpacing: number;  // Line spacing multiple for lists
-    minImageHeight: number; // Minimum height floor for images
   };
   borders: {
     width: number;   // Border width in points

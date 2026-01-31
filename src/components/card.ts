@@ -73,8 +73,16 @@ export class Card implements Component {
     return padding * 2 + this.getBox().getMinimumHeight(innerW);
   }
 
+  getPreferredHeight(width: number): number {
+    const padding = this.getPadding();
+    const innerW = width - padding * 2;
+    return padding * 2 + this.getBox().getPreferredHeight(innerW);
+  }
+
   getMaximumHeight(width: number): number {
-    return this.getMinimumHeight(width);  // Cards are content-sized. Use expand() to stretch.
+    const padding = this.getPadding();
+    const innerW = width - padding * 2;
+    return padding * 2 + this.getBox().getMaximumHeight(innerW);
   }
 
   getMinimumWidth(height: number): number {

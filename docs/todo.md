@@ -9,8 +9,6 @@ Text:
 Core:
 - Escape hatch
 - Nest or some other CLI framework?
-- Slide / presentation object
-- Proper speaker notes
 - Logging & testing
 - Dark mode
 - Groups
