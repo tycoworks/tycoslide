@@ -1,7 +1,7 @@
 // SlideNumber Component
 // Renders a native PowerPoint slide number field via PPTXGen.js
 
-import { TEXT_STYLE, FONT_WEIGHT, type AlignContext, type Component, type Drawer, type Bounds, type Theme, type TextAlignment, type VerticalAlignment, type FontWeight } from '../core/types.js';
+import { TEXT_STYLE, FONT_WEIGHT, VALIGN, DIRECTION, ALIGN, type AlignContext, type Component, type Drawer, type Bounds, type Theme, type TextAlignment, type VerticalAlignment, type FontWeight, type Align } from '../core/types.js';
 import { getFontFromFamily, getLineHeight } from '../utils/font-utils.js';
 
 export interface SlideNumberProps {
@@ -39,8 +39,19 @@ export class SlideNumber implements Component {
     return getLineHeight(font.path, fontSize) * 2;
   }
 
-  prepare(bounds: Bounds, _alignContext?: AlignContext): Drawer {
+  prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
     const { style, font, fontSize } = this.getStyleAndFont();
+
+    // Map cross-axis alignment to valign when parent direction is ROW
+    let valign: VerticalAlignment = this.props.valign ?? VALIGN.TOP;
+    if (!this.props.valign && alignContext?.direction === DIRECTION.ROW) {
+      const valignMap: Record<Align, VerticalAlignment> = {
+        [ALIGN.START]: VALIGN.TOP,
+        [ALIGN.CENTER]: VALIGN.MIDDLE,
+        [ALIGN.END]: VALIGN.BOTTOM,
+      };
+      valign = valignMap[alignContext.align];
+    }
 
     return (canvas) => {
       canvas.addSlideNumber({
@@ -53,7 +64,8 @@ export class SlideNumber implements Component {
         color: this.props.color ?? style.color ?? this.theme.colors.textMuted,
         bold: this.props.bold,
         align: this.props.align,
-        valign: this.props.valign,
+        valign,
+        margin: 0,
       });
     };
   }

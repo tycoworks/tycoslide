@@ -225,6 +225,7 @@ export interface Master {
 export interface Slide {
   master?: Master;       // Which master to use (or none for full-slide layouts)
   background?: string;   // Background image path (overrides master background)
+  notes?: string;        // Speaker notes (plain text)
   draw: (canvas: Canvas, bounds: Bounds) => void;  // Draw content within bounds
 }
 

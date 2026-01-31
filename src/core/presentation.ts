@@ -1,33 +1,24 @@
 // Presentation Class
 // Main public API for creating themed presentations
 
-import PptxGenJSDefault from 'pptxgenjs';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const PptxGenJS = (PptxGenJSDefault as any).default || PptxGenJSDefault;
-type PptxSlide = ReturnType<InstanceType<typeof PptxGenJS>['addSlide']>;
-
-import { LAYER, type Theme, type Drawer, type Bounds, type Slide } from './types.js';
-import { Canvas, CANVAS_OBJECT_TYPE, type CanvasObject } from './canvas.js';
-
-// Extend PptxGenJS type to include slides array (exists at runtime but not in types)
-type PptxGenJSExtended = InstanceType<typeof PptxGenJS> & {
-  slides: PptxSlide[];
-};
+import { type Theme, type Bounds, type Slide } from './types.js';
+import { Canvas } from './canvas.js';
+import { PptxRenderer } from './renderer.js';
 
 // ============================================
 // PRESENTATION CLASS
 // ============================================
 
 export class Presentation {
-  private pres: InstanceType<typeof PptxGenJS>;
+  private renderer: PptxRenderer;
   private _theme: Theme;
-  private masters = new Map<string, { render: Drawer; contentBounds: Bounds }>();
+  private masters = new Map<string, { contentBounds: Bounds; canvas: Canvas }>();
   private fullBounds: Bounds;
   private slideCount = 0;
 
   constructor(theme: Theme) {
     this._theme = theme;
-    this.pres = new PptxGenJS();
+    this.renderer = new PptxRenderer(theme);
 
     // Calculate full slide bounds (no master - just margins)
     const { margin } = theme.spacing;
@@ -38,20 +29,13 @@ export class Presentation {
       w: width - margin * 2,
       h: height - margin * 2,
     };
-
-    this.pres.defineLayout({
-      name: 'CUSTOM',
-      width: theme.slide.width,
-      height: theme.slide.height,
-    });
-    this.pres.layout = 'CUSTOM';
   }
 
   get theme(): Theme {
     return this._theme;
   }
 
-  add(slide: Slide): PptxSlide {
+  add(slide: Slide): void {
     this.slideCount++;
     const { master, draw } = slide;
 
@@ -63,22 +47,8 @@ export class Presentation {
       const masterCanvas = new Canvas();
       render(masterCanvas);
 
-      // Extract slide number from master canvas (if any) — passed as a top-level property to defineSlideMaster, not in objects array
-      const masterObjects = masterCanvas.getObjects(LAYER.SLIDE);
-      const slideNumberObj = masterObjects.find(obj => obj.type === CANVAS_OBJECT_TYPE.SLIDE_NUMBER);
-      const regularObjects = masterObjects.filter(obj => obj.type !== CANVAS_OBJECT_TYPE.SLIDE_NUMBER);
-
-      // Define pptx master (background required - use color fallback)
-      this.pres.defineSlideMaster({
-        title: master.name,
-        background: master.background
-          ? { path: master.background }
-          : { color: this._theme.colors.background },
-        objects: regularObjects.map(obj => this.formatForMaster(obj)),
-        ...(slideNumberObj ? { slideNumber: slideNumberObj.options } : {}),
-      });
-
-      this.masters.set(master.name, { render, contentBounds });
+      this.renderer.defineMaster(master.name, master.background, masterCanvas, this._theme);
+      this.masters.set(master.name, { contentBounds, canvas: masterCanvas });
     }
 
     // Get content bounds from master or use full bounds
@@ -97,74 +67,16 @@ export class Presentation {
       throw error;
     }
 
-    // Create pptx slide (with master if specified)
-    const pptxSlide = this.pres.addSlide(
-      master ? { masterName: master.name } : undefined
-    );
-
-    // Slide background overrides master background
-    if (slide.background) {
-      pptxSlide.background = { path: slide.background };
-    } else if (!master) {
-      pptxSlide.background = { color: this._theme.colors.background };
-    }
-
-    // Set escape hatch for speaker notes, etc.
-    canvas.raw = pptxSlide;
-
-    // Render slide-layer objects
-    this.renderToSlide(canvas.getObjects(LAYER.SLIDE), pptxSlide);
-
-    return pptxSlide;
+    // Render to pptx
+    this.renderer.renderSlide(canvas, {
+      masterName: master?.name,
+      masterCanvas: master ? this.masters.get(master.name)!.canvas : undefined,
+      background: slide.background,
+      notes: slide.notes,
+    }, this._theme);
   }
 
   writeFile(fileName: string, options: { includeNotes?: boolean } = {}): Promise<void> {
-    const { includeNotes = true } = options;
-
-    // Strip speaker notes if requested
-    if (!includeNotes) {
-      for (const slide of (this.pres as PptxGenJSExtended).slides) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (slide as any)._slideObjects = (slide as any)._slideObjects?.filter(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (obj: any) => obj._type !== 'notes'
-        );
-      }
-    }
-
-    return this.pres.writeFile({ fileName }).then(() => {});
-  }
-
-  // ============================================
-  // PRIVATE METHODS
-  // ============================================
-
-  private renderToSlide(objects: CanvasObject[], slide: PptxSlide): void {
-    for (const obj of objects) {
-      if (obj.type === CANVAS_OBJECT_TYPE.TEXT) {
-        slide.addText(obj.content, obj.options);
-      } else if (obj.type === CANVAS_OBJECT_TYPE.SHAPE) {
-        slide.addShape(obj.shapeType, obj.options);
-      } else if (obj.type === CANVAS_OBJECT_TYPE.IMAGE) {
-        slide.addImage(obj.options);
-      } else if (obj.type === CANVAS_OBJECT_TYPE.SLIDE_NUMBER) {
-        slide.slideNumber = obj.options;
-      }
-    }
-  }
-
-  private formatForMaster(obj: CanvasObject): Record<string, unknown> {
-    if (obj.type === CANVAS_OBJECT_TYPE.TEXT) {
-      // With patch-package fix, pptxgenjs masters now support rich text arrays
-      return { text: { text: obj.content, options: obj.options } };
-    }
-    if (obj.type === CANVAS_OBJECT_TYPE.IMAGE) {
-      return { image: obj.options };
-    }
-    if (obj.type === CANVAS_OBJECT_TYPE.SHAPE) {
-      return { [String(obj.shapeType)]: obj.options };
-    }
-    // SlideNumber objects are handled separately, not as master objects
-    return {};
+    return this.renderer.writeFile(fileName, options);
   }
 }

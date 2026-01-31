@@ -7,10 +7,15 @@ Text:
 - Text estimation
 - Bullet point spacing / indent
 
-Components:
-- Logging & testing
+Core:
+- Escape hatch
+- Nest or some other framework?
+- Slide / presentation object
 - Proper speaker notes
+- Logging & testing
 - Dark mode
+- Groups
+
+Components:
 - Quote component
 - Image to the left of the card
-- Groups

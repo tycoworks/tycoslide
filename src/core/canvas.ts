@@ -83,6 +83,7 @@ export interface SlideNumberOptions {
   bold?: boolean;
   align?: TextAlignment;
   valign?: VerticalAlignment;
+  margin?: number;
 }
 
 // ============================================
@@ -139,11 +140,6 @@ export class Canvas {
 
   // Current layer - Box sets this before calling child drawers
   currentLayer: Layer = LAYER.SLIDE;
-
-  // Escape hatch for direct slide access (e.g., speaker notes)
-  // Set by Presentation when rendering to slide
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  raw: any = null;
 
   addText(content: TextFragment[], options: TextOptions): void {
     this.objects.push({ type: CANVAS_OBJECT_TYPE.TEXT, content, options, layer: this.currentLayer });
