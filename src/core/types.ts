@@ -79,6 +79,23 @@ export const LAYER = {
 
 export type Layer = typeof LAYER[keyof typeof LAYER];
 
+export const SLIDE_SIZE = {
+  S16x9:  { layout: 'LAYOUT_16x9',  width: 10,    height: 5.625 },
+  S16x10: { layout: 'LAYOUT_16x10', width: 10,    height: 6.25 },
+  S4x3:   { layout: 'LAYOUT_4x3',   width: 10,    height: 7.5 },
+  WIDE:   { layout: 'LAYOUT_WIDE',  width: 13.33, height: 7.5 },
+} as const;
+
+export type SlideSize = typeof SLIDE_SIZE[keyof typeof SLIDE_SIZE];
+
+export const CUSTOM_LAYOUT = 'CUSTOM' as const;
+
+export interface CustomSlideSize {
+  layout: typeof CUSTOM_LAYOUT;
+  width: number;
+  height: number;
+}
+
 // ============================================
 // STYLING TYPES
 // ============================================
@@ -233,10 +250,7 @@ export interface Slide {
 export interface Theme {
   colors: ColorScheme;
   highlights: HighlightScheme;
-  slide: {
-    width: number;   // inches
-    height: number;  // inches
-  };
+  slide: SlideSize | CustomSlideSize;
   spacing: {
     margin: number;         // Inset from all 4 edges
     gap: number;            // Standard gap between elements

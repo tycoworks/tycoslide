@@ -6,7 +6,7 @@ import PptxGenJSDefault from 'pptxgenjs';
 const PptxGenJS = (PptxGenJSDefault as any).default || PptxGenJSDefault;
 type PptxSlide = ReturnType<InstanceType<typeof PptxGenJS>['addSlide']>;
 
-import { LAYER, type Theme } from './types.js';
+import { LAYER, CUSTOM_LAYOUT, type Theme } from './types.js';
 import { Canvas, CANVAS_OBJECT_TYPE, type CanvasObject } from './canvas.js';
 
 // Extend PptxGenJS type to include slides array (exists at runtime but not in types)
@@ -26,12 +26,11 @@ export class PptxRenderer {
 
   constructor(theme: Theme) {
     this.pres = new PptxGenJS();
-    this.pres.defineLayout({
-      name: 'CUSTOM',
-      width: theme.slide.width,
-      height: theme.slide.height,
-    });
-    this.pres.layout = 'CUSTOM';
+    const { layout, width, height } = theme.slide;
+    if (layout === CUSTOM_LAYOUT) {
+      this.pres.defineLayout({ name: CUSTOM_LAYOUT, width, height });
+    }
+    this.pres.layout = layout;
   }
 
   defineMaster(name: string, background: string | undefined, canvas: Canvas, theme: Theme): void {

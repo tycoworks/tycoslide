@@ -18,6 +18,8 @@ export {
   FONT_WEIGHT,
   TEXT_STYLE,
   LAYER,
+  SLIDE_SIZE,
+  CUSTOM_LAYOUT,
 
   // Type aliases
   type TextAlignment,
@@ -33,6 +35,8 @@ export {
   type Font,
   type TextStyleName,
   type Layer,
+  type SlideSize,
+  type CustomSlideSize,
 
   // Theme types
   type Theme,
