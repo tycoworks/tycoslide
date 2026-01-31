@@ -1,7 +1,7 @@
 // Presentation Class
 // Main public API for creating themed presentations
 
-import { type Theme, type Bounds, type Slide } from './types.js';
+import { type Theme, Bounds, type Slide } from './types.js';
 import { Canvas } from './canvas.js';
 import { PptxRenderer } from './renderer.js';
 
@@ -23,12 +23,7 @@ export class Presentation {
     // Calculate full slide bounds (no master - just margins)
     const { margin } = theme.spacing;
     const { width, height } = theme.slide;
-    this.fullBounds = {
-      x: margin,
-      y: margin,
-      w: width - margin * 2,
-      h: height - margin * 2,
-    };
+    this.fullBounds = new Bounds(width, height, margin);
   }
 
   get theme(): Theme {

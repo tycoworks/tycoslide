@@ -3,7 +3,7 @@
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import { Table, type TableData } from '../src/components/table.js';
-import { BORDER_STYLE, DIRECTION, ALIGN, type Component, type Bounds, type Theme } from '../src/core/types.js';
+import { BORDER_STYLE, DIRECTION, ALIGN, type Component, Bounds, type Theme } from '../src/core/types.js';
 
 // ============================================
 // MOCK HELPERS
@@ -64,7 +64,7 @@ describe('Table', () => {
     const table = new Table(mockTheme, data, { headerRow: false });
     const h = table.getMinimumHeight(10);
     assert.doesNotThrow(() => {
-      table.prepare({ x: 0, y: 0, w: 10, h });
+      table.prepare(new Bounds(10, h));
     });
   });
 
@@ -98,7 +98,7 @@ describe('Table', () => {
 
     // Table should report enough height for all rows
     assert.doesNotThrow(() => {
-      table.prepare({ x: 0.25, y: 1.5278, w: 9.5, h: minH });
+      table.prepare(new Bounds(0.25, 1.5278, 9.5, minH));
     }, 'prepare should not overflow when given getMinimumHeight as bounds.h');
   });
 
@@ -117,7 +117,7 @@ describe('Table', () => {
     const h = table.getMinimumHeight(10);
     assert.ok(h > 0);
     assert.doesNotThrow(() => {
-      table.prepare({ x: 0, y: 0, w: 10, h });
+      table.prepare(new Bounds(10, h));
     });
   });
 

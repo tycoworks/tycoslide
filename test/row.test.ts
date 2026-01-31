@@ -5,7 +5,7 @@ import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import { row, column } from '../src/core/layout.js';
 import { expand } from '../src/core/box.js';
-import { ALIGN, DIRECTION, type Component, type Bounds, type Theme, type AlignContext } from '../src/core/types.js';
+import { ALIGN, DIRECTION, type Component, Bounds, type Theme, type AlignContext } from '../src/core/types.js';
 
 // ============================================
 // MOCK HELPERS
@@ -32,7 +32,7 @@ function trackingContent(minH: number, opts?: { maxH?: number }): { component: C
   return {
     bounds,
     component: {
-      prepare: (b: Bounds) => { bounds.push({ ...b }); return () => {}; },
+      prepare: (b: Bounds) => { bounds.push(b); return () => {}; },
       getMinimumHeight: () => minH,
       getMaximumHeight: () => opts?.maxH ?? minH,
       getMinimumWidth: () => 0,
@@ -55,7 +55,7 @@ function trackingContentWithAlign(minH: number, opts?: { maxH?: number }): {
     aligns,
     component: {
       prepare: (b: Bounds, ac?: AlignContext) => {
-        bounds.push({ ...b });
+        bounds.push(b);
         if (ac) aligns.push({ ...ac });
         return () => {};
       },
@@ -88,7 +88,7 @@ describe('RowLayout', () => {
     const t2 = trackingContent(1);
     const t3 = trackingContent(1);
     const r = row(T, t1.component, t2.component, t3.component);
-    r.prepare({ x: 0, y: 0, w: 9, h: 5 });
+    r.prepare(new Bounds(9, 5));
     approx(t1.bounds[0].w, 3, 'child 1 width');
     approx(t2.bounds[0].w, 3, 'child 2 width');
     approx(t3.bounds[0].w, 3, 'child 3 width');
@@ -100,7 +100,7 @@ describe('RowLayout', () => {
   test('children fill available height', () => {
     const t1 = trackingContent(1);
     const r = row(T, t1.component);
-    r.prepare({ x: 0, y: 0, w: 10, h: 5 });
+    r.prepare(new Bounds(10, 5));
     approx(t1.bounds[0].h, 5, 'child height');
   });
 
@@ -111,7 +111,7 @@ describe('RowLayout', () => {
     const t1 = trackingContent(1);
     const t2 = trackingContent(1);
     const r = row(T, [1, 2], [t1.component, t2.component]);
-    r.prepare({ x: 0, y: 0, w: 9, h: 5 });
+    r.prepare(new Bounds(9, 5));
     approx(t1.bounds[0].w, 3, 'narrow child width');
     approx(t2.bounds[0].w, 6, 'wide child width');
   });
@@ -126,7 +126,7 @@ describe('RowLayout', () => {
     // gap=0.5 via theme.spacing.gap (GAP.NORMAL is default)
     const r = row(mockTheme(0.5), t1.component, t2.component, t3.component);
     // Total width 10, gap 0.5 × 2 = 1.0, remaining 9.0, each child 3.0
-    r.prepare({ x: 0, y: 0, w: 10, h: 5 });
+    r.prepare(new Bounds(10, 5));
     approx(t1.bounds[0].w, 3, 'child 1 width with gap');
     approx(t2.bounds[0].w, 3, 'child 2 width with gap');
     approx(t3.bounds[0].w, 3, 'child 3 width with gap');
@@ -141,7 +141,7 @@ describe('RowLayout', () => {
     // column() returns Box — it must still get flex in the row
     const col = column(T, t1.component);
     const r = row(T, col, t2.component);
-    r.prepare({ x: 0, y: 0, w: 10, h: 5 });
+    r.prepare(new Bounds(10, 5));
     // Both children should get equal width (5 each)
     approx(t1.bounds[0].w, 5, 'column child width');
     approx(t2.bounds[0].w, 5, 'plain child width');
@@ -159,7 +159,7 @@ describe('RowLayout', () => {
 
     // row(contentChild, expand(expandChild))
     const r = row(T, tContent.component, expand(tExpand.component));
-    r.prepare({ x: 0, y: 0, w: 10, h: 5 });
+    r.prepare(new Bounds(10, 5));
 
     // Content child should get its content width (~3), not half (5)
     approx(tContent.bounds[0].w, 3, 'content-sized child width');
@@ -182,7 +182,7 @@ describe('RowLayout', () => {
   test('alignment context defaults to ROW direction with CENTER align', () => {
     const t1 = trackingContentWithAlign(1);
     const r = row(T, t1.component);
-    r.prepare({ x: 0, y: 0, w: 10, h: 5 });
+    r.prepare(new Bounds(10, 5));
     assert.strictEqual(t1.aligns[0].direction, DIRECTION.ROW);
     assert.strictEqual(t1.aligns[0].align, ALIGN.CENTER);
   });
@@ -190,7 +190,7 @@ describe('RowLayout', () => {
   test('alignment context respects ALIGN.START option', () => {
     const t1 = trackingContentWithAlign(1);
     const r = row(T, { align: ALIGN.START }, t1.component);
-    r.prepare({ x: 0, y: 0, w: 10, h: 5 });
+    r.prepare(new Bounds(10, 5));
     assert.strictEqual(t1.aligns[0].direction, DIRECTION.ROW);
     assert.strictEqual(t1.aligns[0].align, ALIGN.START);
   });
@@ -198,7 +198,7 @@ describe('RowLayout', () => {
   test('alignment context respects ALIGN.END option', () => {
     const t1 = trackingContentWithAlign(1);
     const r = row(T, { align: ALIGN.END }, t1.component);
-    r.prepare({ x: 0, y: 0, w: 10, h: 5 });
+    r.prepare(new Bounds(10, 5));
     assert.strictEqual(t1.aligns[0].direction, DIRECTION.ROW);
     assert.strictEqual(t1.aligns[0].align, ALIGN.END);
   });

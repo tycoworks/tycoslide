@@ -5,7 +5,7 @@ import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import { column } from '../src/core/layout.js';
 import { expand } from '../src/core/box.js';
-import { ALIGN, DIRECTION, type Component, type Bounds, type Theme, type AlignContext } from '../src/core/types.js';
+import { ALIGN, DIRECTION, type Component, Bounds, type Theme, type AlignContext } from '../src/core/types.js';
 
 // ============================================
 // MOCK HELPERS
@@ -32,7 +32,7 @@ function trackingContent(minH: number, opts?: { maxH?: number }): { component: C
   return {
     bounds,
     component: {
-      prepare: (b: Bounds) => { bounds.push({ ...b }); return () => {}; },
+      prepare: (b: Bounds) => { bounds.push(b); return () => {}; },
       getMinimumHeight: () => minH,
       getMaximumHeight: () => opts?.maxH ?? minH,
       getMinimumWidth: () => 0,
@@ -55,7 +55,7 @@ function trackingContentWithAlign(minH: number, opts?: { maxH?: number }): {
     aligns,
     component: {
       prepare: (b: Bounds, ac?: AlignContext) => {
-        bounds.push({ ...b });
+        bounds.push(b);
         if (ac) aligns.push({ ...ac });
         return () => {};
       },
@@ -79,7 +79,7 @@ describe('ColumnLayout', () => {
     const t1 = trackingContent(1);
     const t2 = trackingContent(2);
     const col = column(T, t1.component, t2.component);
-    col.prepare({ x: 0, y: 0, w: 10, h: 10 });
+    col.prepare(new Bounds(10, 10));
     approx(t1.bounds[0].h, 1, 'child 1 height (content-sized)');
     approx(t2.bounds[0].h, 2, 'child 2 height (content-sized)');
   });
@@ -91,7 +91,7 @@ describe('ColumnLayout', () => {
     const t1 = trackingContent(1);
     const t2 = trackingContent(1);
     const col = column(T, [1, 2], [t1.component, t2.component]);
-    col.prepare({ x: 0, y: 0, w: 10, h: 9 });
+    col.prepare(new Bounds(10, 9));
     approx(t1.bounds[0].h, 3, 'narrow child height');
     approx(t2.bounds[0].h, 6, 'tall child height');
   });
@@ -102,7 +102,7 @@ describe('ColumnLayout', () => {
   test('children fill available width', () => {
     const t1 = trackingContent(1);
     const col = column(T, t1.component);
-    col.prepare({ x: 0, y: 0, w: 10, h: 5 });
+    col.prepare(new Bounds(10, 5));
     approx(t1.bounds[0].w, 10, 'child width');
   });
 
@@ -116,7 +116,7 @@ describe('ColumnLayout', () => {
     // gap=0.5 via theme.spacing.gap (GAP.NORMAL is default)
     const col = column(mockTheme(0.5), [1, 1, 1], [t1.component, t2.component, t3.component]);
     // Total height 10, gap 0.5 × 2 = 1.0, remaining 9.0, each child 3.0
-    col.prepare({ x: 0, y: 0, w: 10, h: 10 });
+    col.prepare(new Bounds(10, 10));
     approx(t1.bounds[0].h, 3, 'child 1 height with gap');
     approx(t2.bounds[0].h, 3, 'child 2 height with gap');
     approx(t3.bounds[0].h, 3, 'child 3 height with gap');
@@ -146,7 +146,7 @@ describe('ColumnLayout', () => {
     const tContent = trackingContent(1);
     const tExpand = trackingContent(1);
     const col = column(T, tContent.component, expand(tExpand.component));
-    col.prepare({ x: 0, y: 0, w: 10, h: 5 });
+    col.prepare(new Bounds(10, 5));
     approx(tContent.bounds[0].h, 1, 'content-sized child height');
     approx(tExpand.bounds[0].h, 4, 'expanded child fills remaining');
   });
@@ -159,7 +159,7 @@ describe('ColumnLayout', () => {
     const tExpand1 = trackingContent(0.5);
     const tExpand2 = trackingContent(0.5);
     const col = column(T, tContent.component, expand(tExpand1.component), expand(tExpand2.component));
-    col.prepare({ x: 0, y: 0, w: 10, h: 5 });
+    col.prepare(new Bounds(10, 5));
     approx(tContent.bounds[0].h, 1, 'content-sized child');
     approx(tExpand1.bounds[0].h, 2, 'first expanded child');
     approx(tExpand2.bounds[0].h, 2, 'second expanded child');
@@ -178,7 +178,7 @@ describe('ColumnLayout', () => {
     const tContent = trackingContent(1);
     const tExpand = trackingContent(0.5);
     const col = column(T, { height: 4 }, tContent.component, expand(tExpand.component));
-    col.prepare({ x: 0, y: 0, w: 10, h: 10 });
+    col.prepare(new Bounds(10, 10));
     approx(tContent.bounds[0].h, 1, 'content-sized child');
     approx(tExpand.bounds[0].h, 3, 'expanded child fills remaining in fixed-height column');
   });
@@ -197,7 +197,7 @@ describe('ColumnLayout', () => {
   test('alignment context defaults to COLUMN direction with CENTER align', () => {
     const t1 = trackingContentWithAlign(1);
     const col = column(T, t1.component);
-    col.prepare({ x: 0, y: 0, w: 10, h: 5 });
+    col.prepare(new Bounds(10, 5));
     assert.strictEqual(t1.aligns[0].direction, DIRECTION.COLUMN);
     assert.strictEqual(t1.aligns[0].align, ALIGN.CENTER);
   });
@@ -205,7 +205,7 @@ describe('ColumnLayout', () => {
   test('alignment context respects ALIGN.START option', () => {
     const t1 = trackingContentWithAlign(1);
     const col = column(T, { align: ALIGN.START }, t1.component);
-    col.prepare({ x: 0, y: 0, w: 10, h: 5 });
+    col.prepare(new Bounds(10, 5));
     assert.strictEqual(t1.aligns[0].direction, DIRECTION.COLUMN);
     assert.strictEqual(t1.aligns[0].align, ALIGN.START);
   });
@@ -213,7 +213,7 @@ describe('ColumnLayout', () => {
   test('alignment context respects ALIGN.END option', () => {
     const t1 = trackingContentWithAlign(1);
     const col = column(T, { align: ALIGN.END }, t1.component);
-    col.prepare({ x: 0, y: 0, w: 10, h: 5 });
+    col.prepare(new Bounds(10, 5));
     assert.strictEqual(t1.aligns[0].direction, DIRECTION.COLUMN);
     assert.strictEqual(t1.aligns[0].align, ALIGN.END);
   });

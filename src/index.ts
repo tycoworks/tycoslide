@@ -38,7 +38,7 @@ export {
   type Theme,
   type Component,
   type Drawer,
-  type Bounds,
+  Bounds,
   type ColorScheme,
   type TextStyle,
   type HighlightPair,

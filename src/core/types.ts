@@ -2,6 +2,7 @@
 // External-facing interfaces and type aliases
 
 import type { Canvas } from './canvas.js';
+import { Bounds } from './bounds.js';
 
 // ============================================
 // CONSTANTS
@@ -174,12 +175,7 @@ export type TextContent = string | TextRun[];
 // BOUNDS
 // ============================================
 
-export interface Bounds {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
+export { Bounds } from './bounds.js';
 
 // ============================================
 // ALIGNMENT CONTEXT

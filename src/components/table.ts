@@ -40,12 +40,7 @@ class PaddedContent implements Component {
   }
 
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
-    const inner: Bounds = {
-      x: bounds.x + this.padding,
-      y: bounds.y + this.padding,
-      w: bounds.w - this.padding * 2,
-      h: bounds.h - this.padding * 2,
-    };
+    const inner = bounds.inset(this.padding);
     return this.content.prepare(inner, alignContext);
   }
 }

@@ -4,7 +4,7 @@
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import { box } from '../src/core/box.js';
-import { DIRECTION, LAYER, type Component, type Bounds } from '../src/core/types.js';
+import { DIRECTION, LAYER, type Component, Bounds } from '../src/core/types.js';
 import { Canvas } from '../src/core/canvas.js';
 
 // ============================================
@@ -20,7 +20,7 @@ function mockContent(minH: number, opts?: { maxH?: number; minW?: number }): Com
   };
 }
 
-const bounds: Bounds = { x: 0, y: 0, w: 10, h: 5 };
+const bounds = new Bounds(10, 5);
 
 function approx(actual: number, expected: number, msg: string, tolerance = 0.01): void {
   assert.ok(Math.abs(actual - expected) < tolerance, `${msg}: expected ~${expected}, got ${actual}`);
@@ -103,7 +103,7 @@ describe('Box', () => {
       ],
     });
     assert.throws(
-      () => b.prepare({ x: 0, y: 0, w: 10, h: 5 }),
+      () => b.prepare(new Bounds(10, 5)),
       (err: Error) => {
         assert.ok(err.message.includes('Vertical overflow'), `Expected "Vertical overflow", got: ${err.message}`);
         return true;
@@ -179,7 +179,7 @@ describe('Box', () => {
     // prepare should not throw — if caching is broken, Yoga could
     // compute a slightly different height on a fresh tree, causing overflow
     assert.doesNotThrow(() => {
-      b.prepare({ x: 0, y: 0, w: width, h: minH });
+      b.prepare(new Bounds(width, minH));
     });
   });
 
@@ -194,7 +194,7 @@ describe('Box', () => {
       ],
     });
 
-    const childBounds = b.getChildBounds({ x: 1, y: 2, w: 10, h: 3 });
+    const childBounds = b.getChildBounds(new Bounds(1, 2, 10, 3));
 
     assert.strictEqual(childBounds.length, 2);
     // First child at top of container
@@ -209,7 +209,7 @@ describe('Box', () => {
 
   test('getChildBounds returns empty array for leaf node', () => {
     const b = box({ content: mockContent(1) });
-    assert.deepStrictEqual(b.getChildBounds({ x: 0, y: 0, w: 10, h: 1 }), []);
+    assert.deepStrictEqual(b.getChildBounds(new Bounds(10, 1)), []);
   });
 
   // ------------------------------------------
@@ -248,7 +248,7 @@ describe('Box', () => {
         box({ content: mockContent(1) }),
       ],
     });
-    const childBounds = b.getChildBounds({ x: 0, y: 0, w: 10, h: 10 });
+    const childBounds = b.getChildBounds(new Bounds(10, 10));
     approx(childBounds[0].h, 2, 'fixed-height child');
     approx(childBounds[1].h, 1, 'content-sized child');
   });
@@ -260,7 +260,7 @@ describe('Box', () => {
         box({ flex: 1 }),
       ],
     });
-    const childBounds = b.getChildBounds({ x: 0, y: 0, w: 10, h: 10 });
+    const childBounds = b.getChildBounds(new Bounds(10, 10));
     approx(childBounds[0].h, 2, 'height-constrained child');
     approx(childBounds[1].h, 8, 'flex spacer fills rest');
   });
@@ -272,7 +272,7 @@ describe('Box', () => {
         box({ flex: 1, content: mockContent(1) }),
       ],
     });
-    const childBounds = b.getChildBounds({ x: 0, y: 0, w: 10, h: 10 });
+    const childBounds = b.getChildBounds(new Bounds(10, 10));
     approx(childBounds[0].h, 3, 'capped child');
     approx(childBounds[1].h, 7, 'uncapped child gets remainder');
   });

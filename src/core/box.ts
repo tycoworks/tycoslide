@@ -11,7 +11,7 @@ import {
   LAYER,
   type Component,
   type Drawer,
-  type Bounds,
+  Bounds,
   type Direction,
   type Justify,
   type Align,
@@ -153,12 +153,12 @@ export class Box implements Component {
    * Extract computed bounds from Yoga layout
    */
   private extractBounds(node: YogaNode, offsetX: number, offsetY: number): Bounds {
-    return {
-      x: offsetX + fromYoga(node.getComputedLeft()),
-      y: offsetY + fromYoga(node.getComputedTop()),
-      w: fromYoga(node.getComputedWidth()),
-      h: fromYoga(node.getComputedHeight()),
-    };
+    return new Bounds(
+      offsetX + fromYoga(node.getComputedLeft()),
+      offsetY + fromYoga(node.getComputedTop()),
+      fromYoga(node.getComputedWidth()),
+      fromYoga(node.getComputedHeight()),
+    );
   }
 
   getMinimumHeight(width: number): number {

@@ -1,5 +1,4 @@
 Spacing / layouts:
-- Page numbers
 - Card sizes
 
 Text:
@@ -9,7 +8,7 @@ Text:
 
 Core:
 - Escape hatch
-- Nest or some other framework?
+- Nest or some other CLI framework?
 - Slide / presentation object
 - Proper speaker notes
 - Logging & testing

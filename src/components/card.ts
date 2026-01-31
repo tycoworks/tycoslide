@@ -95,12 +95,7 @@ export class Card implements Component {
     const cornerRadius = this.props.cornerRadius ?? this.theme.borders.radius;
 
     // Inner bounds for content (after padding)
-    const innerBounds: Bounds = {
-      x: bounds.x + padding,
-      y: bounds.y + padding,
-      w: bounds.w - padding * 2,
-      h: bounds.h - padding * 2,
-    };
+    const innerBounds = bounds.inset(padding);
 
     // Get content drawer from Box
     const contentDrawer = this.getBox().prepare(innerBounds, alignContext);
