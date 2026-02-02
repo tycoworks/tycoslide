@@ -3,7 +3,7 @@
 // Implemented using Box with Yoga layout
 
 import { DIRECTION, SHAPE, TEXT_STYLE, type AlignContext, type Component, type Drawer, type Bounds, type Theme, type TextStyleName } from '../core/types.js';
-import { box, expand, type Box } from '../core/box.js';
+import { box, type Box } from '../core/box.js';
 import { Text } from './text.js';
 import { Image } from './image.js';
 
@@ -36,7 +36,7 @@ export class Card implements Component {
 
       // Image at top (expands to fill available card height)
       if (this.props.image) {
-        children.push(expand(new Image(this.theme, this.props.image)));
+        children.push(box({ content: new Image(this.theme, this.props.image) }));
       }
 
       // Title (fixed height)

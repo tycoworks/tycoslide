@@ -55,13 +55,9 @@ function layout(direction: Direction, equalFlex: boolean, theme: Theme, args: an
   }
 
   // Row defaults to equal flex; column defaults to content-sized.
-  // If any child already has flex (via expand()), skip equal-flex —
-  // only flex children grow, the rest stay content-sized.
+  // Use explicit proportions (e.g. [0, 1, 0]) for unequal sizing.
   if (!proportions && equalFlex) {
-    const hasExpandedChild = children.some(c => c instanceof Box && c.flex !== undefined);
-    if (!hasExpandedChild) {
-      proportions = children.map(() => 1);
-    }
+    proportions = children.map(() => 1);
   }
 
   return box({
@@ -100,11 +96,11 @@ export function row(theme: Theme, ...args: any[]): Box {
 
 /**
  * column() — Arrange children vertically. Returns a Box.
- * Children are content-sized by default. Use expand() to fill available space.
+ * Children are content-sized by default. Use proportions for flex sizing.
  *
  *   column(theme, title, subtitle, cardRow)
- *   column(theme, { gap: 'small' }, title, expand(cardRow))
- *   column(theme, [1, 2], [header, content])
+ *   column(theme, [0, 1], [header, content])      // header content-sized, content fills rest
+ *   column(theme, [1, 2], [top, bottom])           // 1:2 ratio
  */
 export function column(theme: Theme, proportions: number[], children: Component[], options?: LayoutOptions): Box;
 export function column(theme: Theme, options: LayoutOptions, ...children: Component[]): Box;

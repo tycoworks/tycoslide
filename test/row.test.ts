@@ -4,7 +4,7 @@
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import { row, column } from '../src/core/layout.js';
-import { expand } from '../src/core/box.js';
+
 import { ALIGN, DIRECTION, type Component, Bounds, type Theme, type AlignContext } from '../src/core/types.js';
 
 // ============================================
@@ -137,23 +137,23 @@ describe('RowLayout', () => {
   });
 
   // ------------------------------------------
-  // 7. expand() suppresses equal-flex — siblings become content-sized
+  // 7. proportions give unequal sizing — [0, 1] makes first child content-sized
   // ------------------------------------------
-  test('expand() in row makes non-expanded siblings content-sized', () => {
+  test('proportions [0, 1] in row makes first child content-sized', () => {
     // Content child with known minimum width
     const tContent = trackingContent(2);
     tContent.component.getWidth = () => 3;  // reports 3" content width
 
-    const tExpand = trackingContent(1);
+    const tFlex = trackingContent(1);
 
-    // row(contentChild, expand(expandChild))
-    const r = row(T, tContent.component, expand(tExpand.component));
+    // row([0, 1], [contentChild, flexChild])
+    const r = row(T, [0, 1], [tContent.component, tFlex.component]);
     r.prepare(new Bounds(10, 5));
 
     // Content child should get its content width (~3), not half (5)
     approx(tContent.bounds[0].w, 3, 'content-sized child width');
-    // Expanded child should fill the remaining space (~7)
-    approx(tExpand.bounds[0].w, 7, 'expanded child width');
+    // Flex child should fill the remaining space (~7)
+    approx(tFlex.bounds[0].w, 7, 'flex child width');
   });
 
   // ------------------------------------------
