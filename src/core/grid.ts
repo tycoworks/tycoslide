@@ -177,13 +177,28 @@ function stack(
   const freeSpace = available - totalUsed;
 
   if (justify === STACK_JUSTIFY.SPACE_EVENLY) {
-    const spacer = freeSpace / (n + 1);
-    let pos = spacer;
-    return sizes.map((size) => {
-      const b = makeBounds(pos, size);
-      pos += size + spacer;
-      return b;
-    });
+    // Spacers replace gaps — compute from total content only, not freeSpace
+    const totalSizes = sizes.reduce((sum, s) => sum + s, 0);
+    const spacer = (available - totalSizes) / (n + 1);
+    if (spacer >= gap) {
+      // Enough free space — distribute evenly
+      let pos = spacer;
+      return sizes.map((size) => {
+        const b = makeBounds(pos, size);
+        pos += size + spacer;
+        return b;
+      });
+    } else {
+      // Not enough — use gap between items, center the block
+      const totalWithGaps = sizes.reduce((sum, s) => sum + s, 0) + gap * Math.max(0, n - 1);
+      const offset = Math.max(0, (available - totalWithGaps) / 2);
+      let pos = offset;
+      return sizes.map((size, i) => {
+        const b = makeBounds(pos, size);
+        pos += size + (i < n - 1 ? gap : 0);
+        return b;
+      });
+    }
   }
 
   if (justify === STACK_JUSTIFY.SPACE_BETWEEN) {

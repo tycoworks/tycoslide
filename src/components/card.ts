@@ -52,7 +52,7 @@ export class Card implements Component {
 
   private getPadding(): number {
     const showBackground = this.props.background !== false;
-    return showBackground ? (this.props.padding ?? this.theme.spacing.gap) : 0;
+    return showBackground ? (this.props.padding ?? this.theme.spacing.gapSmall) : 0;
   }
 
   private measure(width: number, min: boolean): number {
