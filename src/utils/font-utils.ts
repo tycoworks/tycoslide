@@ -1,9 +1,9 @@
 // Font Utilities Module
-// Provides text measurement, word wrapping, and rich text processing using fontkit
+// Provides text measurement and rich text processing using fontkit
 
 import { openSync, type Font as FontkitFont } from 'fontkit';
 import { ptToIn } from './units.js';
-import type { Font, FontFamily, FontWeight, TextContent, TextRun, NormalizedRun } from '../core/types.js';
+import { FONT_WEIGHT, type Font, type FontFamily, type FontWeight, type TextStyle, type TextContent, type TextRun, type NormalizedRun } from '../core/types.js';
 
 const fontCache: Map<string, FontkitFont> = new Map();
 
@@ -50,110 +50,33 @@ export function getLineHeight(fontPath: string, fontSize: number): number {
   return ptToIn(lineHeightPoints);
 }
 
+// ============================================
+// TEXT STYLE HELPERS
+// ============================================
+
 /**
- * A text segment with its font for measurement
+ * Get the line height in inches for a TextStyle
  */
-export interface TextSegment {
-  text: string;
-  fontPath: string;
+export function getStyleLineHeight(style: TextStyle): number {
+  const defaultWeight = style.defaultWeight ?? FONT_WEIGHT.NORMAL;
+  const defaultFont = getFontFromFamily(style.fontFamily, defaultWeight);
+  return getLineHeight(defaultFont.path, style.fontSize);
 }
 
 /**
- * Measure width of multiple segments, each with its own font
+ * Estimate the number of wrapped lines for content at a given width.
+ * Uses total text width / available width — same heuristic PowerPoint uses.
  */
-function measureSegments(segments: TextSegment[], fontSize: number, start: number, end: number): number {
+export function estimateLines(content: TextContent, style: TextStyle, availableWidth: number): number {
+  const defaultWeight = style.defaultWeight ?? FONT_WEIGHT.NORMAL;
+  const runs = normalizeContent(content);
   let totalWidth = 0;
-  let pos = 0;
-
-  for (const segment of segments) {
-    const segStart = pos;
-    const segEnd = pos + segment.text.length;
-
-    // Check if this segment overlaps with our range
-    if (segEnd > start && segStart < end) {
-      const sliceStart = Math.max(0, start - segStart);
-      const sliceEnd = Math.min(segment.text.length, end - segStart);
-      const slice = segment.text.slice(sliceStart, sliceEnd);
-      if (slice) {
-        totalWidth += measureText(slice, segment.fontPath, fontSize);
-      }
-    }
-
-    pos = segEnd;
+  for (const run of runs) {
+    const weight = run.weight ?? defaultWeight;
+    const font = getFontFromFamily(style.fontFamily, weight);
+    totalWidth += measureText(run.text, font.path, style.fontSize);
   }
-
-  return totalWidth;
-}
-
-/**
- * Word wrap text to fit within width, returns array of lines
- * Overloaded: accepts either plain text + font, or rich text segments
- */
-export function wrapText(text: string, fontPath: string, fontSize: number, width: number): string[];
-export function wrapText(segments: TextSegment[], fontSize: number, width: number): string[];
-export function wrapText(
-  textOrSegments: string | TextSegment[],
-  fontPathOrFontSize: string | number,
-  fontSizeOrWidth: number,
-  width?: number
-): string[] {
-  // Normalize to segments array
-  const segments: TextSegment[] = typeof textOrSegments === 'string'
-    ? [{ text: textOrSegments, fontPath: fontPathOrFontSize as string }]
-    : textOrSegments;
-  const fontSize = typeof textOrSegments === 'string' ? fontSizeOrWidth : (fontPathOrFontSize as number);
-  const actualWidth = typeof textOrSegments === 'string' ? width! : fontSizeOrWidth;
-
-  // Combine all text for word boundary detection
-  const fullText = segments.map(s => s.text).join('');
-  if (!fullText) return [''];
-
-  // Find word boundaries
-  const wordBoundaries: Array<{ start: number; end: number }> = [];
-  const wordRegex = /\S+/g;
-  let match;
-  while ((match = wordRegex.exec(fullText)) !== null) {
-    wordBoundaries.push({ start: match.index, end: match.index + match[0].length });
-  }
-
-  if (wordBoundaries.length === 0) return [''];
-
-  const lines: string[] = [];
-  let lineStart = 0;
-  let lineEndWord = 0;
-
-  for (let i = 0; i < wordBoundaries.length; i++) {
-    const testEnd = wordBoundaries[i].end;
-    const testWidth = measureSegments(segments, fontSize, lineStart, testEnd);
-
-    if (testWidth > actualWidth && i > lineEndWord) {
-      const prevWordEnd = wordBoundaries[i - 1].end;
-      lines.push(fullText.slice(lineStart, prevWordEnd));
-      lineStart = wordBoundaries[i].start;
-      lineEndWord = i;
-    } else {
-      lineEndWord = i;
-    }
-  }
-
-  const lastWordEnd = wordBoundaries[wordBoundaries.length - 1].end;
-  lines.push(fullText.slice(lineStart, lastWordEnd));
-
-  return lines.length > 0 ? lines : [''];
-}
-
-/**
- * Calculate text height in inches for wrapped text
- */
-export function measureTextHeight(
-  text: string,
-  fontPath: string,
-  fontSize: number,
-  width: number,
-  lineHeight: number
-): number {
-  const lines = wrapText(text, fontPath, fontSize, width);
-  return ptToIn(fontSize) * lineHeight * lines.length;
+  return Math.max(1, Math.ceil(totalWidth / availableWidth));
 }
 
 // ============================================
@@ -173,77 +96,4 @@ export function normalizeContent(content: TextContent): NormalizedRun[] {
     }
     return run;
   });
-}
-
-/**
- * Build measurement segments from normalized runs with resolved fonts
- */
-export function buildSegments(
-  runs: NormalizedRun[],
-  fontFamily: FontFamily,
-  defaultWeight: FontWeight
-): TextSegment[] {
-  return runs.map(run => {
-    const weight = run.weight ?? defaultWeight;
-    const font = getFontFromFamily(fontFamily, weight);
-    return { text: run.text, fontPath: font.path };
-  });
-}
-
-/**
- * Split runs across wrapped lines, preserving formatting
- * Takes normalized runs and line strings, returns runs grouped by line
- */
-export function splitRunsIntoLines(
-  runs: NormalizedRun[],
-  lines: string[]
-): NormalizedRun[][] {
-  const result: NormalizedRun[][] = [];
-  let runIndex = 0;
-  let charInRun = 0;
-
-  for (const line of lines) {
-    const lineRuns: NormalizedRun[] = [];
-    let remaining = line.length;
-
-    while (remaining > 0 && runIndex < runs.length) {
-      const run = runs[runIndex];
-      const availableInRun = run.text.length - charInRun;
-      const takeChars = Math.min(remaining, availableInRun);
-
-      if (takeChars > 0) {
-        lineRuns.push({
-          text: run.text.slice(charInRun, charInRun + takeChars),
-          color: run.color,
-          highlight: run.highlight,
-          weight: run.weight,
-        });
-      }
-
-      charInRun += takeChars;
-      remaining -= takeChars;
-
-      // Move to next run if we've consumed this one
-      if (charInRun >= run.text.length) {
-        runIndex++;
-        charInRun = 0;
-      }
-    }
-
-    // Skip whitespace between lines (the space that became the line break)
-    if (runIndex < runs.length) {
-      const run = runs[runIndex];
-      while (charInRun < run.text.length && run.text[charInRun] === ' ') {
-        charInRun++;
-      }
-      if (charInRun >= run.text.length) {
-        runIndex++;
-        charInRun = 0;
-      }
-    }
-
-    result.push(lineRuns);
-  }
-
-  return result;
 }

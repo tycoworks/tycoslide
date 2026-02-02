@@ -1,8 +1,9 @@
 // List Component
 // Renders a bulleted or numbered list with theme-aware defaults, supports rich text items
+// Height is estimated from font metrics; PowerPoint handles wrapping (wrap: true)
 
-import { VALIGN, FONT_WEIGHT, DIRECTION, ALIGN, type Component, type Drawer, type Bounds, type Theme, type TextStyle, type TextContent, type FontWeight, type VerticalAlignment, type AlignContext, type Align } from '../core/types.js';
-import { getLineHeight, wrapText, getFontFromFamily, normalizeContent, buildSegments, splitRunsIntoLines } from '../utils/font-utils.js';
+import { VALIGN, FONT_WEIGHT, DIRECTION, ALIGN, type Component, type Drawer, type Bounds, type Theme, type TextStyle, type TextContent, type VerticalAlignment, type AlignContext, type Align } from '../core/types.js';
+import { getFontFromFamily, normalizeContent, getStyleLineHeight, estimateLines } from '../utils/font-utils.js';
 import type { TextFragment, TextFragmentOptions } from '../core/canvas.js';
 
 export const LIST_TYPE = {
@@ -22,30 +23,14 @@ export interface ListProps {
 export class List implements Component {
   constructor(private theme: Theme, private items: TextContent[], private props: ListProps = {}) {}
 
-  private wrapItem(item: TextContent, style: TextStyle, defaultWeight: FontWeight, width: number): string[] {
-    if (typeof item === 'string') {
-      const font = getFontFromFamily(style.fontFamily, defaultWeight);
-      return wrapText(item, font.path, style.fontSize, width);
-    }
-
-    // Rich text - build segments with correct font paths
-    const runs = normalizeContent(item);
-    const segments = buildSegments(runs, style.fontFamily, defaultWeight);
-    return wrapText(segments, style.fontSize, width);
-  }
-
   getHeight(width: number): number {
     const textStyle = this.props.textStyle ?? this.theme.textStyles.body;
-    const defaultWeight = textStyle.defaultWeight ?? FONT_WEIGHT.NORMAL;
-    const defaultFont = getFontFromFamily(textStyle.fontFamily, defaultWeight);
+    const lineHeight = getStyleLineHeight(textStyle);
     const bulletSpacing = this.theme.spacing.bulletSpacing;
-    const lineHeight = getLineHeight(defaultFont.path, textStyle.fontSize);
 
-    // Count total lines including wrapped continuations
     let totalLines = 0;
     for (const item of this.items) {
-      const lines = this.wrapItem(item, textStyle, defaultWeight, width);
-      totalLines += lines.length;
+      totalLines += estimateLines(item, textStyle, width);
     }
 
     return lineHeight * bulletSpacing * totalLines;
@@ -70,47 +55,34 @@ export class List implements Component {
       valign = valignMap[alignContext.align];
     }
 
-    // Pre-wrap each item using fontkit
+    // Build text fragments — each item is a bulleted paragraph
+    // PowerPoint handles wrapping within each item
     const textObjects: TextFragment[] = [];
 
     for (const item of this.items) {
-      const lines = this.wrapItem(item, textStyle, defaultWeight, bounds.w);
-
-      // Normalize to runs and split across wrapped lines
-      // Works for both plain strings and rich text arrays
       const normalized = normalizeContent(item);
-      const lineRuns = splitRunsIntoLines(normalized, lines);
 
-      for (let lineIndex = 0; lineIndex < lineRuns.length; lineIndex++) {
-        const runsInLine = lineRuns[lineIndex];
-        const isFirstLine = lineIndex === 0;
+      for (let runIndex = 0; runIndex < normalized.length; runIndex++) {
+        const run = normalized[runIndex];
+        const runWeight = run.weight ?? defaultWeight;
+        const runFont = getFontFromFamily(textStyle.fontFamily, runWeight);
 
-        for (let runIndex = 0; runIndex < runsInLine.length; runIndex++) {
-          const run = runsInLine[runIndex];
-          const runWeight = run.weight ?? defaultWeight;
-          const runFont = getFontFromFamily(textStyle.fontFamily, runWeight);
+        const options: TextFragmentOptions = {
+          color: run.color ?? run.highlight?.text ?? defaultColor,
+          fontSize: textStyle.fontSize,
+          fontFace: runFont.name,
+        };
 
-          const options: TextFragmentOptions = {
-            color: run.color ?? run.highlight?.text ?? defaultColor,
-            fontSize: textStyle.fontSize,
-            fontFace: runFont.name,
-          };
+        if (run.highlight) options.highlight = run.highlight.bg;
 
-          if (run.highlight) options.highlight = run.highlight.bg;
-
-          // First run of first line gets bullet
-          if (isFirstLine && runIndex === 0) {
-            options.bullet = listType === LIST_TYPE.NUMBER
-              ? { type: LIST_TYPE.NUMBER, color: markerColor }
-              : { color: markerColor };
-          }
-          // First run of continuation lines gets soft break
-          if (!isFirstLine && runIndex === 0) {
-            options.softBreakBefore = true;
-          }
-
-          textObjects.push({ text: run.text, options });
+        // First run of each item gets bullet (starts a new paragraph)
+        if (runIndex === 0) {
+          options.bullet = listType === LIST_TYPE.NUMBER
+            ? { type: LIST_TYPE.NUMBER, color: markerColor }
+            : { color: markerColor };
         }
+
+        textObjects.push({ text: run.text, options });
       }
     }
 
@@ -121,7 +93,7 @@ export class List implements Component {
         w: bounds.w,
         h: bounds.h,
         margin: 0,
-        wrap: false,
+        wrap: true,
         lineSpacingMultiple: bulletSpacing,
         valign,
       });

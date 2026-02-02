@@ -1,8 +1,9 @@
 // Text Component
 // Renders text with theme-aware defaults, supports rich text with per-run styling
+// Height is estimated from font metrics; PowerPoint handles wrapping (wrap: true)
 
 import { VALIGN, FONT_WEIGHT, TEXT_STYLE, DIRECTION, ALIGN, type Component, type Drawer, type Bounds, type Theme, type TextStyle, type TextStyleName, type TextAlignment, type VerticalAlignment, type FontWeight, type TextContent, type AlignContext, type Align } from '../core/types.js';
-import { getLineHeight, wrapText, getFontFromFamily, normalizeContent, buildSegments, splitRunsIntoLines } from '../utils/font-utils.js';
+import { getFontFromFamily, normalizeContent, getStyleLineHeight, estimateLines } from '../utils/font-utils.js';
 import type { TextFragment, TextFragmentOptions } from '../core/canvas.js';
 import { log } from '../utils/log.js';
 
@@ -24,30 +25,11 @@ export class Text implements Component {
 
   getHeight(width: number): number {
     const style = this.getStyle();
-    const defaultWeight: FontWeight = style.defaultWeight ?? FONT_WEIGHT.NORMAL;
-    const defaultFont = getFontFromFamily(style.fontFamily, defaultWeight);
-    const lineHeight = getLineHeight(defaultFont.path, style.fontSize);
-    const lines = this.wrapContent(style, defaultWeight, width);
-    const h = lineHeight * lines.length;
-    const preview = typeof this.content === 'string' ? this.content.slice(0, 40) : '[rich]';
-    log('text getHeight: w=%f lines=%d lineH=%f → h=%f "%s"',
-      width, lines.length, lineHeight, h, preview);
+    const lineHeight = getStyleLineHeight(style);
+    const lines = estimateLines(this.content, style, width);
+    const h = lineHeight * lines;
+    log('text getHeight: w=%f lines=%d lineH=%f → h=%f', width, lines, lineHeight, h);
     return h;
-  }
-
-  /**
-   * Wrap content using correct fonts for each segment
-   */
-  private wrapContent(style: TextStyle, defaultWeight: FontWeight, width: number): string[] {
-    if (typeof this.content === 'string') {
-      const font = getFontFromFamily(style.fontFamily, defaultWeight);
-      return wrapText(this.content, font.path, style.fontSize, width);
-    }
-
-    // Rich text - build segments with correct font paths
-    const runs = normalizeContent(this.content);
-    const segments = buildSegments(runs, style.fontFamily, defaultWeight);
-    return wrapText(segments, style.fontSize, width);
   }
 
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
@@ -68,34 +50,19 @@ export class Text implements Component {
       valign = valignMap[alignContext.align];
     }
 
-    // Get wrapped lines using correct fonts for measurement
-    const lines = this.wrapContent(style, defaultWeight, bounds.w);
-
-    // Build styled content with wrapping
-    // Normalize to runs and split across wrapped lines (works for both string and array)
+    // Build text fragments — no wrapping, no splitting across lines
+    // PowerPoint handles wrapping with wrap: true
     const normalized = normalizeContent(this.content);
-    const lineRuns = splitRunsIntoLines(normalized, lines);
-    const pptxContent: TextFragment[] = [];
-
-    for (let lineIndex = 0; lineIndex < lineRuns.length; lineIndex++) {
-      const runsInLine = lineRuns[lineIndex];
-      for (let runIndex = 0; runIndex < runsInLine.length; runIndex++) {
-        const run = runsInLine[runIndex];
-        const runWeight = run.weight ?? defaultWeight;
-        const runFont = getFontFromFamily(style.fontFamily, runWeight);
-
-        const options: TextFragmentOptions = {
-          color: run.color ?? run.highlight?.text ?? defaultColor,
-          fontFace: runFont.name,
-        };
-        if (run.highlight) options.highlight = run.highlight.bg;
-        // First run of each line after the first gets softBreakBefore
-        if (lineIndex > 0 && runIndex === 0) {
-          options.softBreakBefore = true;
-        }
-        pptxContent.push({ text: run.text, options });
-      }
-    }
+    const pptxContent: TextFragment[] = normalized.map(run => {
+      const runWeight = run.weight ?? defaultWeight;
+      const runFont = getFontFromFamily(style.fontFamily, runWeight);
+      const options: TextFragmentOptions = {
+        color: run.color ?? run.highlight?.text ?? defaultColor,
+        fontFace: runFont.name,
+      };
+      if (run.highlight) options.highlight = run.highlight.bg;
+      return { text: run.text, options };
+    });
 
     return (canvas) => {
       canvas.addText(pptxContent, {
@@ -107,7 +74,7 @@ export class Text implements Component {
         fontFace: defaultFont.name,
         color: defaultColor,
         margin: 0,
-        wrap: false,
+        wrap: true,
         lineSpacingMultiple: 1.0,
         align,
         valign,
