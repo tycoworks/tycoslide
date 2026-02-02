@@ -18,10 +18,12 @@ interface GridSpec {
 }
 
 /** Justify controls positioning of items along the stacking axis. */
-const STACK_JUSTIFY = {
+export const STACK_JUSTIFY = {
   START: 'start',
   CENTER: 'center',
   END: 'end',
+  SPACE_BETWEEN: 'space-between',
+  SPACE_EVENLY: 'space-evenly',
 } as const;
 
 export type StackJustify = typeof STACK_JUSTIFY[keyof typeof STACK_JUSTIFY];
@@ -142,121 +144,97 @@ export function fitHeights(
 // ============================================
 
 /**
- * Stack items vertically at absolute heights, top-to-bottom.
- * Unlike splitV (equal) or splitRatio (proportional), stackV takes
- * pre-measured heights — the bridge between content measurement and grid.
- *
- *   const titleH = snapUp(title.getHeight(bounds.w), unit);
- *   const bodyH  = bounds.h - titleH - gap;
- *   const [titleBounds, bodyBounds] = stackV(bounds, [titleH, bodyH], gap);
- *
- * Throws if total heights + gaps exceed bounds.h.
+ * Internal axis-generic stack implementation.
+ * Places items along one axis at pre-measured sizes with justify support.
+ * Throws if total sizes + gaps exceed the available dimension.
  */
-export function stackV(
+function stack(
   bounds: Bounds,
-  heights: number[],
-  gap = 0,
+  sizes: number[],
+  gap: number,
+  direction: SplitDirection,
   options?: StackOptions,
 ): Bounds[] {
-  const n = heights.length;
-  const totalGap = gap * Math.max(0, n - 1);
-  const totalUsed = heights.reduce((sum, h) => sum + h, 0) + totalGap;
+  const isVertical = direction === SPLIT_DIRECTION.VERTICAL;
+  const axis = isVertical ? 'height' : 'width';
+  const available = isVertical ? bounds.h : bounds.w;
 
-  if (totalUsed > bounds.h + 1e-9) {
+  const n = sizes.length;
+  const totalGap = gap * Math.max(0, n - 1);
+  const totalUsed = sizes.reduce((sum, s) => sum + s, 0) + totalGap;
+
+  if (totalUsed > available + 1e-9) {
     throw new Error(
-      `stackV overflow: items need ${totalUsed.toFixed(4)}" but bounds.h is ${bounds.h.toFixed(4)}"`,
+      `stack overflow (${axis}): items need ${totalUsed.toFixed(4)}" but ${axis} is ${available.toFixed(4)}"`,
     );
   }
 
+  const makeBounds = isVertical
+    ? (pos: number, size: number) => new Bounds(bounds.x, bounds.y + pos, bounds.w, size)
+    : (pos: number, size: number) => new Bounds(bounds.x + pos, bounds.y, size, bounds.h);
+
   const justify = options?.justify ?? STACK_JUSTIFY.START;
+  const freeSpace = available - totalUsed;
+
+  if (justify === STACK_JUSTIFY.SPACE_EVENLY) {
+    const spacer = freeSpace / (n + 1);
+    let pos = spacer;
+    return sizes.map((size) => {
+      const b = makeBounds(pos, size);
+      pos += size + spacer;
+      return b;
+    });
+  }
+
+  if (justify === STACK_JUSTIFY.SPACE_BETWEEN) {
+    const between = n > 1 ? freeSpace / (n - 1) : 0;
+    let pos = 0;
+    return sizes.map((size, i) => {
+      const b = makeBounds(pos, size);
+      pos += size + (i < n - 1 ? between : 0);
+      return b;
+    });
+  }
+
   let offset: number;
   if (justify === STACK_JUSTIFY.CENTER) {
-    offset = (bounds.h - totalUsed) / 2;
+    offset = freeSpace / 2;
   } else if (justify === STACK_JUSTIFY.END) {
-    offset = bounds.h - totalUsed;
+    offset = freeSpace;
   } else {
     offset = 0;
   }
 
-  return heights.map((h, i) => {
-    const y = bounds.y + offset;
-    offset += h + (i < n - 1 ? gap : 0);
-    return new Bounds(bounds.x, y, bounds.w, h);
+  return sizes.map((size, i) => {
+    const b = makeBounds(offset, size);
+    offset += size + (i < n - 1 ? gap : 0);
+    return b;
   });
 }
 
 /**
- * Stack items horizontally at absolute widths, left-to-right.
- * Horizontal counterpart of stackV.
+ * Stack items vertically at absolute heights, top-to-bottom.
+ * Throws if total heights + gaps exceed bounds.h.
  *
- *   const iconW = 0.5;
- *   const textW = bounds.w - iconW - gap;
- *   const [iconBounds, textBounds] = stackH(bounds, [iconW, textW], gap);
- *
- * Throws if total widths + gaps exceed bounds.w.
+ *   const [titleBounds, bodyBounds] = stackV(bounds, [titleH, bodyH], gap);
  */
-export function stackH(
-  bounds: Bounds,
-  widths: number[],
-  gap = 0,
-  options?: StackOptions,
-): Bounds[] {
-  const n = widths.length;
-  const totalGap = gap * Math.max(0, n - 1);
-  const totalUsed = widths.reduce((sum, w) => sum + w, 0) + totalGap;
+export function stackV(bounds: Bounds, heights: number[], gap = 0, options?: StackOptions): Bounds[] {
+  return stack(bounds, heights, gap, SPLIT_DIRECTION.VERTICAL, options);
+}
 
-  if (totalUsed > bounds.w + 1e-9) {
-    throw new Error(
-      `stackH overflow: items need ${totalUsed.toFixed(4)}" but bounds.w is ${bounds.w.toFixed(4)}"`,
-    );
-  }
-
-  const justify = options?.justify ?? STACK_JUSTIFY.START;
-  let offset: number;
-  if (justify === STACK_JUSTIFY.CENTER) {
-    offset = (bounds.w - totalUsed) / 2;
-  } else if (justify === STACK_JUSTIFY.END) {
-    offset = bounds.w - totalUsed;
-  } else {
-    offset = 0;
-  }
-
-  return widths.map((w, i) => {
-    const x = bounds.x + offset;
-    offset += w + (i < n - 1 ? gap : 0);
-    return new Bounds(x, bounds.y, w, bounds.h);
-  });
+/**
+ * Stack items horizontally at absolute widths, left-to-right.
+ * Throws if total widths + gaps exceed bounds.w.
+ *
+ *   const [iconBounds, textBounds] = stackH(bounds, [iconW, textW], gap);
+ */
+export function stackH(bounds: Bounds, widths: number[], gap = 0, options?: StackOptions): Bounds[] {
+  return stack(bounds, widths, gap, SPLIT_DIRECTION.HORIZONTAL, options);
 }
 
 // ============================================
 // SPLIT FUNCTIONS
 // ============================================
-
-/**
- * Split a Bounds vertically into N equal rows.
- *
- *   splitV(bounds, 3, 0.125)  → 3 rows with 0.125" gap between
- */
-function splitV(bounds: Bounds, n: number, gap = 0): Bounds[] {
-  const totalGap = gap * Math.max(0, n - 1);
-  const cellH = (bounds.h - totalGap) / n;
-  return Array.from({ length: n }, (_, i) =>
-    new Bounds(bounds.x, bounds.y + i * (cellH + gap), bounds.w, cellH),
-  );
-}
-
-/**
- * Split a Bounds horizontally into N equal columns.
- *
- *   splitH(bounds, 2, 0.125)  → 2 columns with 0.125" gap between
- */
-function splitH(bounds: Bounds, n: number, gap = 0): Bounds[] {
-  const totalGap = gap * Math.max(0, n - 1);
-  const cellW = (bounds.w - totalGap) / n;
-  return Array.from({ length: n }, (_, i) =>
-    new Bounds(bounds.x + i * (cellW + gap), bounds.y, cellW, bounds.h),
-  );
-}
 
 /**
  * Split a Bounds along an axis by proportional ratios.

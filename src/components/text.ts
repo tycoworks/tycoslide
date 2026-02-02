@@ -32,6 +32,8 @@ export class Text implements Component {
     return h;
   }
 
+  getMinHeight(width: number): number { return this.getHeight(width); }
+
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
     const style = this.getStyle();
     const defaultColor = this.props.color ?? style.color ?? this.theme.colors.text;

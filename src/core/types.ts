@@ -215,8 +215,8 @@ export type Drawer = (canvas: Canvas) => void;
 export interface Component {
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer;
   getHeight(width: number): number;      // "At this width, how tall is my content?"
+  getMinHeight(width: number): number;   // Incompressible floor (return getHeight for rigid components)
   getWidth?(height: number): number;     // For intrinsic width (e.g., images in ROW layouts)
-  getMinHeight?(width: number): number;  // Incompressible floor (default: getHeight = incompressible)
 }
 
 // ============================================

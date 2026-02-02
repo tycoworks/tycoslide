@@ -15,6 +15,8 @@ export class Divider implements Component {
     return this.theme.spacing.gapSmall;
   }
 
+  getMinHeight(width: number): number { return this.getHeight(width); }
+
   getWidth(_height: number): number {
     return this.theme.spacing.gapSmall;
   }

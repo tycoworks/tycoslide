@@ -2,7 +2,7 @@
 // Renders a table using grid primitives for cells with line-drawn borders
 
 import { BORDER_STYLE, SHAPE, ALIGN, type AlignContext, type BorderStyle, type Component, type Drawer, type Bounds, type Theme } from '../core/types.js';
-import { GridColumn, GridRow } from '../core/grid-layout.js';
+import { GridColumn, GridRow } from '../core/layout.js';
 import { Text } from './text.js';
 import type { Canvas } from '../core/canvas.js';
 
@@ -26,9 +26,13 @@ export interface TableProps {
 class PaddedContent implements Component {
   constructor(private content: Component, private padding: number) {}
 
-  getHeight(width: number): number {
-    return this.padding * 2 + this.content.getHeight(width - this.padding * 2);
+  private measure(width: number, min: boolean): number {
+    const innerW = width - this.padding * 2;
+    return this.padding * 2 + (min ? this.content.getMinHeight(innerW) : this.content.getHeight(innerW));
   }
+
+  getHeight(width: number): number { return this.measure(width, false); }
+  getMinHeight(width: number): number { return this.measure(width, true); }
 
   getWidth(height: number): number {
     const innerH = height - this.padding * 2;
@@ -72,9 +76,8 @@ export class Table implements Component {
     this.column = new GridColumn(this.rows, undefined, 0, ALIGN.START);
   }
 
-  getHeight(width: number): number {
-    return this.column.getHeight(width);
-  }
+  getHeight(width: number): number { return this.column.getHeight(width); }
+  getMinHeight(width: number): number { return this.column.getMinHeight(width); }
 
   prepare(bounds: Bounds, _alignContext?: AlignContext): Drawer {
     // Get computed positions from grid for border drawing

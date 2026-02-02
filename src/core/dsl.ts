@@ -1,6 +1,6 @@
 // DSL — Factory functions for creating themed components
 // This is the primary authoring API. Component classes live in components/;
-// layout containers live in layout.ts; box primitives live in box.ts.
+// layout containers live in layout.ts.
 
 import {
   TEXT_STYLE,
@@ -8,7 +8,6 @@ import {
   type Component,
   type TextContent,
 } from './types.js';
-import { expand, Box } from './box.js';
 import { Text, type TextProps } from '../components/text.js';
 import { Image } from '../components/image.js';
 import { List, LIST_TYPE, type ListProps } from '../components/list.js';
@@ -16,11 +15,10 @@ import { Table, type TableData, type TableProps } from '../components/table.js';
 import { Divider, type DividerProps } from '../components/divider.js';
 import { Card, type CardProps } from '../components/card.js';
 import { SlideNumber, type SlideNumberProps } from '../components/slide-number.js';
-import { row, column, type LayoutOptions } from './layout.js';
+import { row, column, expand, type LayoutOptions } from './layout.js';
 
-// Re-export box primitives and layout factories
-export { box, expand } from './box.js';
-export { row, column, type LayoutOptions } from './layout.js';
+// Re-export layout factories
+export { row, column, expand, type LayoutOptions } from './layout.js';
 
 // ============================================
 // TEXT FACTORIES
@@ -124,13 +122,13 @@ export interface DSL {
   slideNumber(props?: SlideNumberProps): SlideNumber;
   card(title: string, description: string): Card;
   card(props?: CardProps): Card;
-  expand(component: Component): Box;
-  row(proportions: number[], children: Component[], options?: LayoutOptions): Box;
-  row(options: LayoutOptions, ...children: Component[]): Box;
-  row(...children: Component[]): Box;
-  column(proportions: number[], children: Component[], options?: LayoutOptions): Box;
-  column(options: LayoutOptions, ...children: Component[]): Box;
-  column(...children: Component[]): Box;
+  expand(component: Component): Component;
+  row(proportions: number[], children: Component[], options?: LayoutOptions): Component;
+  row(options: LayoutOptions, ...children: Component[]): Component;
+  row(...children: Component[]): Component;
+  column(proportions: number[], children: Component[], options?: LayoutOptions): Component;
+  column(options: LayoutOptions, ...children: Component[]): Component;
+  column(...children: Component[]): Component;
 }
 
 /**

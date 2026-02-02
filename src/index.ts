@@ -106,8 +106,5 @@ export {
   type DSL,
 } from './core/dsl.js';
 
-// Layout engine
-export { box, Box, type BoxProps } from './core/box.js';
-
-// Grid layout
-export { gridRow, gridColumn, GridRow, GridColumn } from './core/grid-layout.js';
+// Grid layout classes
+export { GridRow, GridColumn } from './core/layout.js';

@@ -13,6 +13,7 @@ function mockContent(h: number, opts?: { minW?: number }): Component {
   return {
     prepare: () => () => {},
     getHeight: () => h,
+    getMinHeight: () => h,
     getWidth: () => opts?.minW ?? 0,
   };
 }

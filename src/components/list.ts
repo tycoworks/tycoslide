@@ -36,6 +36,8 @@ export class List implements Component {
     return lineHeight * bulletSpacing * totalLines;
   }
 
+  getMinHeight(width: number): number { return this.getHeight(width); }
+
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
     const listType = this.props.type ?? LIST_TYPE.BULLET;
     const textStyle = this.props.textStyle ?? this.theme.textStyles.body;

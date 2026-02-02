@@ -3,10 +3,9 @@ Spacing / layouts:
 -- Direction is opposite to container?
 -- Content rules
 -- Image cover
+- Min width...
 
 Text:
-- Word wrapping in messaging.md
-- Text estimation
 - Bullet point spacing / indent
 
 Core:

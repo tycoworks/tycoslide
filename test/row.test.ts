@@ -21,6 +21,7 @@ function mockContent(h: number, opts?: { minW?: number }): Component {
   return {
     prepare: () => () => {},
     getHeight: () => h,
+    getMinHeight: () => h,
     getWidth: () => opts?.minW ?? 0,
   };
 }
@@ -33,6 +34,7 @@ function trackingContent(h: number): { component: Component; bounds: Bounds[] } 
     component: {
       prepare: (b: Bounds) => { bounds.push(b); return () => {}; },
       getHeight: () => h,
+      getMinHeight: () => h,
       getWidth: () => 0,
     },
   };
@@ -58,6 +60,7 @@ function trackingContentWithAlign(h: number): {
         return () => {};
       },
       getHeight: () => h,
+      getMinHeight: () => h,
       getWidth: () => 0,
     },
   };

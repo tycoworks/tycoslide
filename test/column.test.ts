@@ -3,8 +3,7 @@
 
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
-import { column } from '../src/core/layout.js';
-import { expand } from '../src/core/box.js';
+import { column, expand } from '../src/core/layout.js';
 import { ALIGN, DIRECTION, type Component, Bounds, type Theme, type AlignContext } from '../src/core/types.js';
 
 // ============================================
@@ -21,6 +20,7 @@ function mockContent(h: number, opts?: { minW?: number }): Component {
   return {
     prepare: () => () => {},
     getHeight: () => h,
+    getMinHeight: () => h,
     getWidth: () => opts?.minW ?? 0,
   };
 }
@@ -33,6 +33,7 @@ function trackingContent(h: number): { component: Component; bounds: Bounds[] } 
     component: {
       prepare: (b: Bounds) => { bounds.push(b); return () => {}; },
       getHeight: () => h,
+      getMinHeight: () => h,
       getWidth: () => 0,
     },
   };
@@ -58,6 +59,7 @@ function trackingContentWithAlign(h: number): {
         return () => {};
       },
       getHeight: () => h,
+      getMinHeight: () => h,
       getWidth: () => 0,
     },
   };

@@ -1,7 +1,7 @@
 // Grid layout tests — validates GridColumn and GridRow public API
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
-import { GridColumn, GridRow } from '../src/core/grid-layout.js';
+import { GridColumn, GridRow } from '../src/core/layout.js';
 import { Bounds, ALIGN, type Component } from '../src/core/types.js';
 
 function approx(actual: number, expected: number, msg: string, tolerance = 0.001): void {
@@ -12,6 +12,7 @@ function approx(actual: number, expected: number, msg: string, tolerance = 0.001
 function stub(height: number): Component {
   return {
     getHeight: () => height,
+    getMinHeight: () => height,
     prepare: () => () => {},
   };
 }
@@ -75,6 +76,40 @@ describe('GridColumn', () => {
     const slots = col.getSlots(new Bounds(0, 0, 10, 2.5));
     approx(slots[0].h, 2, 'compressible shrinks');
     approx(slots[1].h, 0.5, 'fixed preserved');
+  });
+
+  test('nested compression: row with compressible children in constrained column', () => {
+    // Simulates Slide 4: column contains a fixed header + a row of cards with images.
+    // The row's natural height (6") exceeds available space (3.5" - 0.5" header = 3").
+    // Compression must propagate: Column → Row → compressible children.
+    const compressible = {
+      getHeight: () => 3,
+      getMinHeight: () => 0,
+      prepare: () => () => {},
+    };
+    const rowOfTwo = new GridRow([compressible, compressible], undefined, 0, ALIGN.START);
+    const header = stub(0.5);
+    const col = new GridColumn([header, rowOfTwo], undefined, 0, ALIGN.START);
+    // Available 3.5" < natural 6.5" (0.5 header + 6.0 row)
+    // Row should compress from 6" to 3" (images shrink), no throw
+    const slots = col.getSlots(new Bounds(0, 0, 10, 3.5));
+    approx(slots[0].h, 0.5, 'header preserved');
+    approx(slots[1].h, 3, 'row compressed to fit');
+  });
+
+  test('getMinHeight propagates through nested column and row', () => {
+    const compressible = {
+      getHeight: () => 4,
+      getMinHeight: () => 0,
+      prepare: () => () => {},
+    };
+    const innerCol = new GridColumn([compressible, stub(0.5)], undefined, 0, ALIGN.START);
+    // innerCol.getMinHeight should be 0 + 0.5 = 0.5
+    approx(innerCol.getMinHeight(10), 0.5, 'column minHeight = sum of children minHeights');
+
+    const row = new GridRow([innerCol, innerCol], undefined, 0, ALIGN.START);
+    // row.getMinHeight should be max(0.5, 0.5) = 0.5
+    approx(row.getMinHeight(10), 0.5, 'row minHeight = max of children minHeights');
   });
 });
 

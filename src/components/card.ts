@@ -3,7 +3,7 @@
 // Uses grid primitives (stackV) instead of Box
 
 import { SHAPE, TEXT_STYLE, GAP, type Component, type Drawer, type Bounds, type Theme, type TextStyleName, type AlignContext } from '../core/types.js';
-import { gridColumn } from '../core/grid-layout.js';
+import { column } from '../core/layout.js';
 import { Text } from './text.js';
 import { Image } from './image.js';
 import { log } from '../utils/log.js';
@@ -47,7 +47,7 @@ export class Card implements Component {
       }));
     }
 
-    this.column = gridColumn(theme, { gap: GAP.SMALL }, ...children);
+    this.column = column(theme, { gap: GAP.SMALL }, ...children);
   }
 
   private getPadding(): number {
@@ -55,15 +55,18 @@ export class Card implements Component {
     return showBackground ? (this.props.padding ?? this.theme.spacing.gap) : 0;
   }
 
-  getHeight(width: number): number {
+  private measure(width: number, min: boolean): number {
     const padding = this.getPadding();
     const innerW = width - padding * 2;
-    const contentH = this.column.getHeight(innerW);
+    const contentH = min ? this.column.getMinHeight(innerW) : this.column.getHeight(innerW);
 
-    log('card getHeight: w=%f padding=%f innerW=%f contentH=%f total=%f',
-      width, padding, innerW, contentH, padding * 2 + contentH);
+    log('card %s: w=%f padding=%f innerW=%f contentH=%f total=%f',
+      min ? 'getMinHeight' : 'getHeight', width, padding, innerW, contentH, padding * 2 + contentH);
     return padding * 2 + contentH;
   }
+
+  getHeight(width: number): number { return this.measure(width, false); }
+  getMinHeight(width: number): number { return this.measure(width, true); }
 
   getWidth(height: number): number {
     const padding = this.getPadding();

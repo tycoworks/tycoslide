@@ -29,6 +29,8 @@ export class SlideNumber implements Component {
     return getLineHeight(font.path, fontSize);
   }
 
+  getMinHeight(width: number): number { return this.getHeight(width); }
+
   getWidth(_height: number): number {
     // Enough for "99" in footer font size
     const { font, fontSize } = this.getStyleAndFont();
