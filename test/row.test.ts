@@ -17,25 +17,23 @@ function mockTheme(gap = 0, gapSmall = 0): Theme {
 
 const T = mockTheme();
 
-function mockContent(minH: number, opts?: { maxH?: number; minW?: number }): Component {
+function mockContent(h: number, opts?: { minW?: number }): Component {
   return {
     prepare: () => () => {},
-    getMinimumHeight: () => minH,
-    getMaximumHeight: () => opts?.maxH ?? minH,
-    getMinimumWidth: () => opts?.minW ?? 0,
+    getHeight: () => h,
+    getWidth: () => opts?.minW ?? 0,
   };
 }
 
 /** Creates a component that records the bounds it receives in prepare() */
-function trackingContent(minH: number, opts?: { maxH?: number }): { component: Component; bounds: Bounds[] } {
+function trackingContent(h: number): { component: Component; bounds: Bounds[] } {
   const bounds: Bounds[] = [];
   return {
     bounds,
     component: {
       prepare: (b: Bounds) => { bounds.push(b); return () => {}; },
-      getMinimumHeight: () => minH,
-      getMaximumHeight: () => opts?.maxH ?? minH,
-      getMinimumWidth: () => 0,
+      getHeight: () => h,
+      getWidth: () => 0,
     },
   };
 }
@@ -45,7 +43,7 @@ function approx(actual: number, expected: number, msg: string, tolerance = 0.1):
 }
 
 /** Creates a component that records bounds and alignContext from prepare() */
-function trackingContentWithAlign(minH: number, opts?: { maxH?: number }): {
+function trackingContentWithAlign(h: number): {
   component: Component; bounds: Bounds[]; aligns: AlignContext[];
 } {
   const bounds: Bounds[] = [];
@@ -59,9 +57,8 @@ function trackingContentWithAlign(minH: number, opts?: { maxH?: number }): {
         if (ac) aligns.push({ ...ac });
         return () => {};
       },
-      getMinimumHeight: () => minH,
-      getMaximumHeight: () => opts?.maxH ?? minH,
-      getMinimumWidth: () => 0,
+      getHeight: () => h,
+      getWidth: () => 0,
     },
   };
 }
@@ -73,15 +70,7 @@ function trackingContentWithAlign(minH: number, opts?: { maxH?: number }): {
 describe('RowLayout', () => {
 
   // ------------------------------------------
-  // 1. Row is content-sized by default (use expand() to stretch)
-  // ------------------------------------------
-  test('getMaximumHeight returns tallest child max (row is content-sized)', () => {
-    const r = row(T, mockContent(1), mockContent(2), mockContent(1));
-    assert.strictEqual(r.getMaximumHeight(10), 2);
-  });
-
-  // ------------------------------------------
-  // 2. Three equal children get equal widths
+  // 1. Three equal children get equal widths
   // ------------------------------------------
   test('three equal children get equal widths', () => {
     const t1 = trackingContent(1);
@@ -152,8 +141,8 @@ describe('RowLayout', () => {
   // ------------------------------------------
   test('expand() in row makes non-expanded siblings content-sized', () => {
     // Content child with known minimum width
-    const tContent = trackingContent(2, { maxH: 2 });
-    tContent.component.getMinimumWidth = () => 3;  // reports 3" content width
+    const tContent = trackingContent(2);
+    tContent.component.getWidth = () => 3;  // reports 3" content width
 
     const tExpand = trackingContent(1);
 
@@ -168,12 +157,11 @@ describe('RowLayout', () => {
   });
 
   // ------------------------------------------
-  // 8. height option on LayoutOptions
+  // 7. height option on LayoutOptions
   // ------------------------------------------
   test('height option makes row exact height', () => {
     const r = row(T, { height: 2 }, mockContent(1), mockContent(1));
-    approx(r.getMinimumHeight(10), 2, 'row min height pinned');
-    assert.strictEqual(r.getMaximumHeight(10), 2);
+    approx(r.getHeight(10), 2, 'row intrinsic height pinned');
   });
 
   // ------------------------------------------

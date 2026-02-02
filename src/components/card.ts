@@ -67,28 +67,16 @@ export class Card implements Component {
     return showBackground ? (this.props.padding ?? this.theme.spacing.gap) : 0;
   }
 
-  getMinimumHeight(width: number): number {
+  getHeight(width: number): number {
     const padding = this.getPadding();
     const innerW = width - padding * 2;
-    return padding * 2 + this.getBox().getMinimumHeight(innerW);
+    return padding * 2 + this.getBox().getHeight(innerW);
   }
 
-  getPreferredHeight(width: number): number {
-    const padding = this.getPadding();
-    const innerW = width - padding * 2;
-    return padding * 2 + this.getBox().getPreferredHeight(innerW);
-  }
-
-  getMaximumHeight(width: number): number {
-    const padding = this.getPadding();
-    const innerW = width - padding * 2;
-    return padding * 2 + this.getBox().getMaximumHeight(innerW);
-  }
-
-  getMinimumWidth(height: number): number {
+  getWidth(height: number): number {
     const padding = this.getPadding();
     const innerH = height - padding * 2;
-    return padding * 2 + (this.getBox().getMinimumWidth?.(innerH) ?? 0);
+    return padding * 2 + (this.getBox().getWidth?.(innerH) ?? 0);
   }
 
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {

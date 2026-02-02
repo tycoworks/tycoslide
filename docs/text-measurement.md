@@ -68,7 +68,7 @@ const pptxContent = normalized.map(run => ({
 slide.addText(pptxContent, { wrap: true, ... });
 ```
 
-`getMinimumHeight()` still uses fontkit to estimate - this is needed for layout.
+`getHeight()` still uses fontkit to estimate - this is needed for layout.
 
 ### List.ts - Same simplification
 
@@ -91,7 +91,7 @@ slide.addText(textObjects, { wrap: true, ... });
 Even with native wrapping, we need to account for bullet indent in height estimation:
 
 ```typescript
-// In List.getMinimumHeight:
+// In List.getHeight:
 const bulletIndent = theme.spacing.bulletIndent;
 const lines = this.wrapItem(item, textStyle, defaultWeight, width - bulletIndent);
 ```
@@ -115,7 +115,7 @@ spacing: {
 A global `measurementBuffer` (0.0-1.0) that scales all width measurements:
 
 ```typescript
-// In getMinimumHeight / wrapContent:
+// In getHeight / wrapContent:
 const effectiveWidth = width * theme.spacing.measurementBuffer;
 const lines = wrapText(text, font, fontSize, effectiveWidth);
 ```
@@ -199,17 +199,17 @@ Native pptxgenjs tables (`slide.addTable()`) do NOT support images in cells - on
 
 ---
 
-## getMinimumWidth for Text Components
+## getWidth for Text Components
 
 ### The Dual Constraint Problem
 
 Components have two sizing methods:
-- `getMinimumHeight(width)` - given width, return minimum height needed
-- `getMinimumWidth(height)` - given height, return minimum width needed
+- `getHeight(width)` - given width, how tall is my content?
+- `getWidth(height)` - given height, how wide do I need to be?
 
 For Image, this is straightforward: aspect ratio gives direct conversion.
 
-For text-based components (Text, List, Divider), `getMinimumWidth(height)` is solvable:
+For text-based components (Text, List, Divider), `getWidth(height)` is solvable:
 
 ### Algorithm
 
@@ -219,7 +219,7 @@ Given a height constraint:
 
 Step 2 is a binary search:
 ```typescript
-getMinimumWidth(height: number, theme: Theme): number {
+getWidth(height: number): number {
   const lineHeight = getLineHeight(fontPath, fontSize);
   const maxLines = Math.floor(height / lineHeight);
 

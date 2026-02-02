@@ -24,16 +24,12 @@ export class SlideNumber implements Component {
     return { style, font, fontSize };
   }
 
-  getMinimumHeight(_width: number): number {
+  getHeight(_width: number): number {
     const { font, fontSize } = this.getStyleAndFont();
     return getLineHeight(font.path, fontSize);
   }
 
-  getMaximumHeight(width: number): number {
-    return this.getMinimumHeight(width);
-  }
-
-  getMinimumWidth(_height: number): number {
+  getWidth(_height: number): number {
     // Enough for "99" in footer font size
     const { font, fontSize } = this.getStyleAndFont();
     return getLineHeight(font.path, fontSize) * 2;

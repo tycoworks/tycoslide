@@ -3,18 +3,17 @@
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import { Table, type TableData } from '../src/components/table.js';
-import { BORDER_STYLE, DIRECTION, ALIGN, type Component, Bounds, type Theme } from '../src/core/types.js';
+import { type Component, Bounds, type Theme } from '../src/core/types.js';
 
 // ============================================
 // MOCK HELPERS
 // ============================================
 
-function mockContent(minH: number, opts?: { maxH?: number; minW?: number }): Component {
+function mockContent(h: number, opts?: { minW?: number }): Component {
   return {
     prepare: () => () => {},
-    getMinimumHeight: () => minH,
-    getMaximumHeight: () => opts?.maxH ?? minH,
-    getMinimumWidth: () => opts?.minW ?? 0,
+    getHeight: () => h,
+    getWidth: () => opts?.minW ?? 0,
   };
 }
 
@@ -34,23 +33,15 @@ describe('Table', () => {
   // ------------------------------------------
   // 1. Basic sizing
   // ------------------------------------------
-  test('getMinimumHeight sums row heights', () => {
+  test('getHeight sums row heights', () => {
     const data: TableData = [
       [mockContent(0.5), mockContent(0.5)],
       [mockContent(0.5), mockContent(0.5)],
     ];
     const table = new Table(mockTheme, data, { headerRow: false });
-    const h = table.getMinimumHeight(10);
+    const h = table.getHeight(10);
     // 2 rows × (0.5 + 2×padding) = 2 × 0.625 = 1.25
     assert.ok(Math.abs(h - 1.25) < 0.02, `Expected ~1.25, got ${h}`);
-  });
-
-  test('getMaximumHeight equals getMinimumHeight (fixed)', () => {
-    const data: TableData = [
-      [mockContent(0.5), mockContent(0.5)],
-    ];
-    const table = new Table(mockTheme, data, { headerRow: false });
-    assert.strictEqual(table.getMaximumHeight(10), table.getMinimumHeight(10));
   });
 
   // ------------------------------------------
@@ -62,7 +53,7 @@ describe('Table', () => {
       [mockContent(0.3), mockContent(0.3)],
     ];
     const table = new Table(mockTheme, data, { headerRow: false });
-    const h = table.getMinimumHeight(10);
+    const h = table.getHeight(10);
     assert.doesNotThrow(() => {
       table.prepare(new Bounds(10, h));
     });
@@ -94,12 +85,12 @@ describe('Table', () => {
     ];
 
     const table = new Table(mockTheme, data, { headerRow: true });
-    const minH = table.getMinimumHeight(9.5);
+    const minH = table.getHeight(9.5);
 
     // Table should report enough height for all rows
     assert.doesNotThrow(() => {
       table.prepare(new Bounds(0.25, 1.5278, 9.5, minH));
-    }, 'prepare should not overflow when given getMinimumHeight as bounds.h');
+    }, 'prepare should not overflow when given getHeight as bounds.h');
   });
 
   // ------------------------------------------
@@ -114,7 +105,7 @@ describe('Table', () => {
       columnWidths: [1, 2, 1],
     });
     // Should not throw — just verifies the flex ratios are accepted
-    const h = table.getMinimumHeight(10);
+    const h = table.getHeight(10);
     assert.ok(h > 0);
     assert.doesNotThrow(() => {
       table.prepare(new Bounds(10, h));
@@ -132,7 +123,7 @@ describe('Table', () => {
       [mockContent(0.3), mockContent(0.3)],
     ];
     const table = new Table(mockTheme, data, { headerRow: false });
-    assert.ok(table.getMinimumHeight(10) > 0);
+    assert.ok(table.getHeight(10) > 0);
   });
 
 });

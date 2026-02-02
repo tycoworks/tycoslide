@@ -26,17 +26,13 @@ export interface TableProps {
 class PaddedContent implements Component {
   constructor(private content: Component, private padding: number) {}
 
-  getMinimumHeight(width: number): number {
-    return this.padding * 2 + (this.content.getMinimumHeight?.(width - this.padding * 2) ?? 0);
+  getHeight(width: number): number {
+    return this.padding * 2 + this.content.getHeight(width - this.padding * 2);
   }
 
-  getMaximumHeight(width: number): number {
-    return this.getMinimumHeight(width);  // Cells are fixed height
-  }
-
-  getMinimumWidth(height: number): number {
+  getWidth(height: number): number {
     const innerH = height - this.padding * 2;
-    return this.padding * 2 + (this.content.getMinimumWidth?.(innerH) ?? 0);
+    return this.padding * 2 + (this.content.getWidth?.(innerH) ?? 0);
   }
 
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
@@ -116,12 +112,8 @@ export class Table implements Component {
     return this._box;
   }
 
-  getMinimumHeight(width: number): number {
-    return this.getBox().getMinimumHeight(width);
-  }
-
-  getMaximumHeight(width: number): number {
-    return this.getMinimumHeight(width);  // Fixed height
+  getHeight(width: number): number {
+    return this.getBox().getHeight(width);
   }
 
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {

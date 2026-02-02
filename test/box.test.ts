@@ -4,19 +4,18 @@
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import { box } from '../src/core/box.js';
-import { DIRECTION, LAYER, type Component, Bounds } from '../src/core/types.js';
+import { LAYER, type Component, Bounds } from '../src/core/types.js';
 import { Canvas } from '../src/core/canvas.js';
 
 // ============================================
 // MOCK HELPERS
 // ============================================
 
-function mockContent(minH: number, opts?: { maxH?: number; minW?: number }): Component {
+function mockContent(h: number, opts?: { minW?: number }): Component {
   return {
     prepare: () => () => {},
-    getMinimumHeight: () => minH,
-    getMaximumHeight: () => opts?.maxH ?? minH,
-    getMinimumWidth: () => opts?.minW ?? 0,
+    getHeight: () => h,
+    getWidth: () => opts?.minW ?? 0,
   };
 }
 
@@ -33,16 +32,16 @@ function approx(actual: number, expected: number, msg: string, tolerance = 0.01)
 describe('Box', () => {
 
   // ------------------------------------------
-  // 1. Leaf node getMinimumHeight
+  // 1. Leaf node getHeight
   // ------------------------------------------
-  test('leaf node returns content minimum height', () => {
+  test('leaf node returns content intrinsic height', () => {
     const b = box({ content: mockContent(1.5) });
-    const h = b.getMinimumHeight(10);
+    const h = b.getHeight(10);
     assert.strictEqual(h, 1.5);
   });
 
   // ------------------------------------------
-  // 2. Container getMinimumHeight (column with gap)
+  // 2. Container getHeight (column with gap)
   // ------------------------------------------
   test('column of two children sums heights plus gap', () => {
     const b = box({
@@ -52,54 +51,20 @@ describe('Box', () => {
         box({ content: mockContent(2) }),
       ],
     });
-    const h = b.getMinimumHeight(10);
+    const h = b.getHeight(10);
     // 1 + 2 + 0.25 gap = 3.25
     assert.ok(Math.abs(h - 3.25) < 0.01, `Expected ~3.25, got ${h}`);
-  });
-
-  // ------------------------------------------
-  // 3. Row vs column getMaximumHeight
-  // ------------------------------------------
-  test('row getMaximumHeight returns tallest child', () => {
-    const b = box({
-      direction: DIRECTION.ROW,
-      children: [
-        box({ content: mockContent(1, { maxH: 2 }) }),
-        box({ content: mockContent(1, { maxH: 3 }) }),
-      ],
-    });
-    assert.strictEqual(b.getMaximumHeight(10), 3);
-  });
-
-  test('column getMaximumHeight returns sum plus gaps', () => {
-    const b = box({
-      gap: 0.5,
-      children: [
-        box({ content: mockContent(1, { maxH: 2 }) }),
-        box({ content: mockContent(1, { maxH: 3 }) }),
-      ],
-    });
-    // 2 + 3 + 0.5 gap = 5.5
-    assert.strictEqual(b.getMaximumHeight(10), 5.5);
-  });
-
-  // ------------------------------------------
-  // 4. Flex spacer returns Infinity
-  // ------------------------------------------
-  test('empty box with flex returns Infinity for getMaximumHeight', () => {
-    const b = box({ flex: 1 });
-    assert.strictEqual(b.getMaximumHeight(10), Infinity);
   });
 
   // ------------------------------------------
   // 5. Overflow detection throws
   // ------------------------------------------
   test('vertical overflow throws with descriptive error', () => {
-    // Two children each needing 3" in a 5" container = 6" total, triggers overflow
+    // Two children with explicit height (pinned, can't shrink) in a 5" container
     const b = box({
       children: [
-        box({ content: mockContent(3) }),
-        box({ content: mockContent(3) }),
+        box({ height: 3, content: mockContent(3) }),
+        box({ height: 3, content: mockContent(3) }),
       ],
     });
     assert.throws(
@@ -118,9 +83,8 @@ describe('Box', () => {
     const layers: string[] = [];
     const trackingContent: Component = {
       prepare: () => (canvas: any) => { layers.push(canvas.currentLayer); },
-      getMinimumHeight: () => 1,
-      getMaximumHeight: () => 1,
-      getMinimumWidth: () => 0,
+      getHeight: () => 1,
+      getWidth: () => 0,
     };
 
     const b = box({
@@ -139,9 +103,8 @@ describe('Box', () => {
     const layers: string[] = [];
     const trackingContent: Component = {
       prepare: () => (canvas: any) => { layers.push(canvas.currentLayer); },
-      getMinimumHeight: () => 1,
-      getMaximumHeight: () => 1,
-      getMinimumWidth: () => 0,
+      getHeight: () => 1,
+      getWidth: () => 0,
     };
 
     const b = box({
@@ -157,9 +120,9 @@ describe('Box', () => {
   });
 
   // ------------------------------------------
-  // 7. Caching consistency: getMinimumHeight then prepare
+  // 7. Caching consistency: getHeight then prepare
   // ------------------------------------------
-  test('getMinimumHeight then prepare with same width does not overflow', () => {
+  test('getHeight then prepare with same width does not overflow', () => {
     // Build a multi-level tree where Yoga rounding could produce
     // different results between independent builds
     const b = box({
@@ -174,7 +137,7 @@ describe('Box', () => {
     });
 
     const width = 9.5;
-    const minH = b.getMinimumHeight(width);
+    const minH = b.getHeight(width);
 
     // prepare should not throw — if caching is broken, Yoga could
     // compute a slightly different height on a fresh tree, causing overflow
@@ -213,29 +176,11 @@ describe('Box', () => {
   });
 
   // ------------------------------------------
-  // 9. Explicit height pins both min and max
+  // 9. Explicit height pins intrinsic height
   // ------------------------------------------
-  test('explicit height: getMinimumHeight returns height', () => {
+  test('explicit height: getHeight returns height', () => {
     const b = box({ height: 3, content: mockContent(1) });
-    approx(b.getMinimumHeight(10), 3, 'min height pinned to explicit height');
-  });
-
-  test('explicit height: getMaximumHeight returns height', () => {
-    const b = box({ height: 3, content: mockContent(1, { maxH: 10 }) });
-    assert.strictEqual(b.getMaximumHeight(10), 3);
-  });
-
-  test('height normalizes maxHeight (height wins over maxHeight)', () => {
-    const b = box({ height: 5, maxHeight: 3, content: mockContent(1) });
-    assert.strictEqual(b.getMaximumHeight(10), 5);
-  });
-
-  // ------------------------------------------
-  // 10. maxHeight caps expansion
-  // ------------------------------------------
-  test('maxHeight caps getMaximumHeight', () => {
-    const b = box({ maxHeight: 2, content: mockContent(1, { maxH: 10 }) });
-    assert.strictEqual(b.getMaximumHeight(10), 2);
+    approx(b.getHeight(10), 3, 'intrinsic height pinned to explicit height');
   });
 
   // ------------------------------------------
@@ -275,6 +220,42 @@ describe('Box', () => {
     const childBounds = b.getChildBounds(new Bounds(10, 10));
     approx(childBounds[0].h, 3, 'capped child');
     approx(childBounds[1].h, 7, 'uncapped child gets remainder');
+  });
+
+  // ------------------------------------------
+  // 12. CSS-like defaults: children shrink to fit
+  // ------------------------------------------
+  test('unpinned children shrink when content exceeds container', () => {
+    // Two children each reporting getHeight=3, but container is only 5" tall.
+    // With flex-shrink:1 and min-height:0, they should shrink to fit (not overflow).
+    const b = box({
+      children: [
+        box({ content: mockContent(3) }),
+        box({ content: mockContent(3) }),
+      ],
+    });
+    assert.doesNotThrow(() => {
+      b.prepare(new Bounds(10, 5));
+    }, 'unpinned children should shrink to fit container');
+
+    const childBounds = b.getChildBounds(new Bounds(10, 5));
+    approx(childBounds[0].h, 2.5, 'first child shrinks to half container');
+    approx(childBounds[1].h, 2.5, 'second child shrinks to half container');
+  });
+
+  test('pinned children overflow when content exceeds container', () => {
+    // Same scenario but with explicit height — children can't shrink, so overflow.
+    const b = box({
+      children: [
+        box({ height: 3, content: mockContent(3) }),
+        box({ height: 3, content: mockContent(3) }),
+      ],
+    });
+    assert.throws(
+      () => b.prepare(new Bounds(10, 5)),
+      (err: Error) => err.message.includes('Vertical overflow'),
+      'pinned children should overflow',
+    );
   });
 
 });

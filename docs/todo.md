@@ -1,5 +1,9 @@
 Spacing / layouts:
 - Card sizes
+- Design principles
+-- Direction is opposite to container?
+-- Content rules
+-- Image cover
 
 Text:
 - Word wrapping in messaging.md

@@ -11,17 +11,12 @@ export interface DividerProps {
 export class Divider implements Component {
   constructor(private theme: Theme, private props: DividerProps = {}) {}
 
-  getMinimumHeight(_width: number): number {
-    // Small fixed height - just enough for the line plus breathing room
+  getHeight(_width: number): number {
     return this.theme.spacing.gapSmall;
   }
 
-  getMinimumWidth(_height: number): number {
+  getWidth(_height: number): number {
     return this.theme.spacing.gapSmall;
-  }
-
-  getMaximumHeight(_width: number): number {
-    return this.getMinimumHeight(_width);  // Divider is fixed height
   }
 
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {

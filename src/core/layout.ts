@@ -56,7 +56,7 @@ function layout(direction: Direction, equalFlex: boolean, theme: Theme, args: an
 
   // Row defaults to equal flex; column defaults to content-sized.
   // If any child already has flex (via expand()), skip equal-flex —
-  // only expanded children grow, the rest stay content-sized.
+  // only flex children grow, the rest stay content-sized.
   if (!proportions && equalFlex) {
     const hasExpandedChild = children.some(c => c instanceof Box && c.flex !== undefined);
     if (!hasExpandedChild) {

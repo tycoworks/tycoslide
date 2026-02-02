@@ -17,25 +17,23 @@ function mockTheme(gap = 0, gapSmall = 0): Theme {
 
 const T = mockTheme();
 
-function mockContent(minH: number, opts?: { maxH?: number; minW?: number }): Component {
+function mockContent(h: number, opts?: { minW?: number }): Component {
   return {
     prepare: () => () => {},
-    getMinimumHeight: () => minH,
-    getMaximumHeight: () => opts?.maxH ?? minH,
-    getMinimumWidth: () => opts?.minW ?? 0,
+    getHeight: () => h,
+    getWidth: () => opts?.minW ?? 0,
   };
 }
 
 /** Creates a component that records the bounds it receives in prepare() */
-function trackingContent(minH: number, opts?: { maxH?: number }): { component: Component; bounds: Bounds[] } {
+function trackingContent(h: number): { component: Component; bounds: Bounds[] } {
   const bounds: Bounds[] = [];
   return {
     bounds,
     component: {
       prepare: (b: Bounds) => { bounds.push(b); return () => {}; },
-      getMinimumHeight: () => minH,
-      getMaximumHeight: () => opts?.maxH ?? minH,
-      getMinimumWidth: () => 0,
+      getHeight: () => h,
+      getWidth: () => 0,
     },
   };
 }
@@ -45,7 +43,7 @@ function approx(actual: number, expected: number, msg: string, tolerance = 0.1):
 }
 
 /** Creates a component that records bounds and alignContext from prepare() */
-function trackingContentWithAlign(minH: number, opts?: { maxH?: number }): {
+function trackingContentWithAlign(h: number): {
   component: Component; bounds: Bounds[]; aligns: AlignContext[];
 } {
   const bounds: Bounds[] = [];
@@ -59,9 +57,8 @@ function trackingContentWithAlign(minH: number, opts?: { maxH?: number }): {
         if (ac) aligns.push({ ...ac });
         return () => {};
       },
-      getMinimumHeight: () => minH,
-      getMaximumHeight: () => opts?.maxH ?? minH,
-      getMinimumWidth: () => 0,
+      getHeight: () => h,
+      getWidth: () => 0,
     },
   };
 }
@@ -123,24 +120,7 @@ describe('ColumnLayout', () => {
   });
 
   // ------------------------------------------
-  // 5. getMaximumHeight sums children for content-sized
-  // ------------------------------------------
-  test('getMaximumHeight sums child max heights (content-sized)', () => {
-    const col = column(T, mockContent(1, { maxH: 3 }), mockContent(2, { maxH: 4 }));
-    assert.strictEqual(col.getMaximumHeight(10), 7);
-  });
-
-  // ------------------------------------------
-  // 6. Proportional column getMaximumHeight sums content max heights
-  //    (flex children still report their content's max, not Infinity)
-  // ------------------------------------------
-  test('getMaximumHeight sums content max heights for proportional column', () => {
-    const col = column(T, [1, 1], [mockContent(1, { maxH: 3 }), mockContent(1, { maxH: 4 })]);
-    assert.strictEqual(col.getMaximumHeight(10), 7);
-  });
-
-  // ------------------------------------------
-  // 7. expand() in column fills remaining space
+  // 5. expand() in column fills remaining space
   // ------------------------------------------
   test('expand() in column fills remaining space', () => {
     const tContent = trackingContent(1);
@@ -166,12 +146,11 @@ describe('ColumnLayout', () => {
   });
 
   // ------------------------------------------
-  // 9. height option on LayoutOptions
+  // 7. height option on LayoutOptions
   // ------------------------------------------
   test('height option makes column exact height', () => {
     const col = column(T, { height: 3 }, mockContent(1));
-    approx(col.getMinimumHeight(10), 3, 'column min height pinned');
-    assert.strictEqual(col.getMaximumHeight(10), 3);
+    approx(col.getHeight(10), 3, 'column intrinsic height pinned');
   });
 
   test('height option with expand: exact height, expanded child fills remainder', () => {
@@ -184,15 +163,7 @@ describe('ColumnLayout', () => {
   });
 
   // ------------------------------------------
-  // 10. maxHeight option on LayoutOptions
-  // ------------------------------------------
-  test('maxHeight option caps column height', () => {
-    const col = column(T, { maxHeight: 2 }, mockContent(1, { maxH: 5 }));
-    assert.strictEqual(col.getMaximumHeight(10), 2);
-  });
-
-  // ------------------------------------------
-  // 11. Alignment context
+  // 8. Alignment context
   // ------------------------------------------
   test('alignment context defaults to COLUMN direction with CENTER align', () => {
     const t1 = trackingContentWithAlign(1);

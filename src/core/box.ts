@@ -75,7 +75,7 @@ export class Box implements Component {
 
   /**
    * Get or build a Yoga tree for this Box, cached by width.
-   * Reusing the same tree between getMinimumHeight and prepare ensures
+   * Reusing the same tree between getHeight and prepare ensures
    * Yoga's point-rounding is consistent across measurement and layout.
    */
   private getOrBuildTree(width: number): YogaNode {
@@ -92,10 +92,21 @@ export class Box implements Component {
 
   private buildYogaTree(width: number): YogaNode {
     const node = createNode();
+    this.applySlideDefaults(node);
     this.configureFlexLayout(node);
     this.configureDimensions(node);
     this.configureChildren(node, width);
     return node;
+  }
+
+  /**
+   * Yoga assumes web (scrollable, overflow OK). Slides are fixed-size:
+   * no scrollbars, no wrapping, no overflow. Override accordingly.
+   */
+  private applySlideDefaults(node: YogaNode): void {
+    node.setFlexShrink(1);   // Shrink to fit (Yoga default: 0 = overflow)
+    node.setMinHeight(0);    // Allow shrinking below content size (no scroll to save us)
+    node.setMinWidth(0);
   }
 
   private configureFlexLayout(node: YogaNode): void {
@@ -143,16 +154,13 @@ export class Box implements Component {
     node.setMeasureFunc((yogaWidth, widthMode, yogaHeight, heightMode) => {
       const measuredWidth = widthMode === Yoga.MEASURE_MODE_UNDEFINED
         ? width : fromYoga(yogaWidth);
-      let h = content.getPreferredHeight?.(measuredWidth)
-           ?? content.getMinimumHeight?.(measuredWidth)
-           ?? 0;
-      // Respect height constraints from parent (e.g. row with maxHeight)
+      let h = content.getHeight(measuredWidth);
       if (heightMode === Yoga.MEASURE_MODE_AT_MOST) {
         h = Math.min(h, fromYoga(yogaHeight));
       } else if (heightMode === Yoga.MEASURE_MODE_EXACTLY) {
         h = fromYoga(yogaHeight);
       }
-      const w = content.getMinimumWidth?.(h) ?? 0;
+      const w = content.getWidth?.(h) ?? 0;
       return { width: toYoga(w), height: toYoga(h) };
     });
   }
@@ -169,7 +177,7 @@ export class Box implements Component {
     );
   }
 
-  getMinimumHeight(width: number): number {
+  getHeight(width: number): number {
     const node = this.getOrBuildTree(width);
     node.setWidth(toYoga(width));
     node.calculateLayout(toYoga(width), undefined, Yoga.DIRECTION_LTR);
@@ -177,36 +185,7 @@ export class Box implements Component {
     return fromYoga(node.getComputedHeight());
   }
 
-  getPreferredHeight(width: number): number {
-    return this.getMinimumHeight(width);
-  }
-
-  getMaximumHeight(width: number): number {
-    if (this.props.height !== undefined) return this.props.height;
-    if (this.props.maxHeight !== undefined) return this.props.maxHeight;
-    if (this.props.content) return this.contentMaxHeight(width);
-    if (this.props.children) return this.childrenMaxHeight(width);
-    if (this.props.flex && this.props.flex > 0) return Infinity;
-    return this.getMinimumHeight(width);
-  }
-
-  private contentMaxHeight(width: number): number {
-    return this.props.content!.getMaximumHeight?.(width)
-      ?? this.getMinimumHeight(width);
-  }
-
-  private childrenMaxHeight(width: number): number {
-    const maxHeights = this.props.children!.map(c => c.getMaximumHeight(width));
-    if (maxHeights.some(h => !Number.isFinite(h))) return Infinity;
-
-    if (this.props.direction === DIRECTION.ROW) return Math.max(...maxHeights);
-
-    const gap = this.props.gap ?? 0;
-    const totalGaps = Math.max(0, this.props.children!.length - 1) * gap;
-    return maxHeights.reduce((sum, h) => sum + h, 0) + totalGaps;
-  }
-
-  getMinimumWidth(height: number): number {
+  getWidth(height: number): number {
     // Use a large width so measureFunc gets UNDEFINED widthMode
     const node = this.buildYogaTree(Infinity);
     node.setHeight(toYoga(height));
@@ -335,8 +314,9 @@ export function box(props: BoxProps = {}): Box {
 }
 
 /**
- * expand() — Mark a component as expandable.
- * Nothing expands unless wrapped in expand(). This is the only expansion mechanism.
+ * expand() — Mark a component as a flex grower.
+ * Flex children grow to fill available space proportionally.
+ * (All children already shrink by default via CSS-like defaults.)
  */
 export function expand(component: Component): Box {
   return box({ flex: 1, content: component });

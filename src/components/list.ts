@@ -34,7 +34,7 @@ export class List implements Component {
     return wrapText(segments, style.fontSize, width);
   }
 
-  getMinimumHeight(width: number): number {
+  getHeight(width: number): number {
     const textStyle = this.props.textStyle ?? this.theme.textStyles.body;
     const defaultWeight = textStyle.defaultWeight ?? FONT_WEIGHT.NORMAL;
     const defaultFont = getFontFromFamily(textStyle.fontFamily, defaultWeight);
@@ -49,10 +49,6 @@ export class List implements Component {
     }
 
     return lineHeight * bulletSpacing * totalLines;
-  }
-
-  getMaximumHeight(width: number): number {
-    return this.getMinimumHeight(width);  // List is fixed height
   }
 
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {

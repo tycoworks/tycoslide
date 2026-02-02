@@ -2,7 +2,7 @@
 // Renders an image with aspect ratio preservation, centered within bounds
 
 import imageSizeDefault from 'image-size';
-import { DIRECTION, ALIGN, type Component, type Drawer, type Bounds, type Theme, type AlignContext } from '../core/types.js';
+import { DIRECTION, ALIGN, type Component, type Drawer, type Bounds, type Theme, type AlignContext, type Align } from '../core/types.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sizeOfFn = (imageSizeDefault as any).default || imageSizeDefault;
@@ -10,67 +10,52 @@ export const sizeOf = sizeOfFn;
 
 export class Image implements Component {
   readonly aspectRatio: number;
+  readonly pixelWidth: number;
+  readonly pixelHeight: number;
 
   constructor(private theme: Theme, private path: string) {
     const dimensions = sizeOf(this.path);
-    this.aspectRatio = (dimensions.width ?? 1) / (dimensions.height ?? 1);
+    if (!dimensions.width || !dimensions.height) {
+      throw new Error(`Cannot determine dimensions of image: ${this.path}`);
+    }
+    this.pixelWidth = dimensions.width;
+    this.pixelHeight = dimensions.height;
+    this.aspectRatio = this.pixelWidth / this.pixelHeight;
   }
 
-  getMinimumHeight(_width: number): number {
-    return 0;  // Images can shrink to nothing if layout demands it
+  getHeight(width: number): number {
+    const naturalHeight = width / this.aspectRatio;
+    const maxFromQuality = this.pixelHeight / this.theme.spacing.minDisplayDPI;
+    return Math.min(naturalHeight, maxFromQuality);
   }
 
-  getPreferredHeight(width: number): number {
-    return width / this.aspectRatio;  // Natural height preserving aspect ratio
-  }
-
-  getMaximumHeight(width: number): number {
-    return width / this.aspectRatio;  // Natural height at given width
-  }
-
-  getMinimumWidth(height: number): number {
+  getWidth(height: number): number {
     // Width needed to display at given height, preserving aspect ratio
     return height * this.aspectRatio;
   }
 
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
-    // Calculate image dimensions maintaining aspect ratio
-    const boxAspect = bounds.w / bounds.h;
-    let imgW: number, imgH: number;
+    const imgW = Math.min(bounds.w, bounds.h * this.aspectRatio);
+    const imgH = imgW / this.aspectRatio;
 
-    if (this.aspectRatio > boxAspect) {
-      // Image is wider than box - fit to width
-      imgW = bounds.w;
-      imgH = bounds.w / this.aspectRatio;
-    } else {
-      // Image is taller than box - fit to height
-      imgH = bounds.h;
-      imgW = bounds.h * this.aspectRatio;
+    function alignOffset(total: number, content: number, align?: Align): number {
+      if (align === ALIGN.START) return 0;
+      if (align === ALIGN.END) return total - content;
+      return (total - content) / 2;
     }
 
-    // Position based on alignment context (default: center)
-    let horizontalOffset = (bounds.w - imgW) / 2;
-    let verticalOffset = (bounds.h - imgH) / 2;
+    const crossAlign = alignContext?.align;
+    const hAlign = alignContext?.direction === DIRECTION.COLUMN ? crossAlign : undefined;
+    const vAlign = alignContext?.direction === DIRECTION.ROW ? crossAlign : undefined;
 
-    if (alignContext) {
-      if (alignContext.direction === DIRECTION.ROW) {
-        // Cross-axis is vertical
-        verticalOffset = alignContext.align === ALIGN.START ? 0
-                       : alignContext.align === ALIGN.END ? bounds.h - imgH
-                       : (bounds.h - imgH) / 2;
-      } else {
-        // Cross-axis is horizontal
-        horizontalOffset = alignContext.align === ALIGN.START ? 0
-                         : alignContext.align === ALIGN.END ? bounds.w - imgW
-                         : (bounds.w - imgW) / 2;
-      }
-    }
+    const horizontalOffset = alignOffset(bounds.w, imgW, hAlign);
+    const verticalOffset = alignOffset(bounds.h, imgH, vAlign);
 
-    const path = this.path;
+    const imgPath = this.path;
 
     return (canvas) => {
       canvas.addImage({
-        path,
+        path: imgPath,
         x: bounds.x + horizontalOffset,
         y: bounds.y + verticalOffset,
         w: imgW,

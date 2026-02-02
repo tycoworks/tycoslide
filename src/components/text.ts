@@ -21,7 +21,7 @@ export class Text implements Component {
     return this.theme.textStyles[this.props.style ?? TEXT_STYLE.BODY];
   }
 
-  getMinimumHeight(width: number): number {
+  getHeight(width: number): number {
     const style = this.getStyle();
     const defaultWeight: FontWeight = style.defaultWeight ?? FONT_WEIGHT.NORMAL;
     const defaultFont = getFontFromFamily(style.fontFamily, defaultWeight);
@@ -43,10 +43,6 @@ export class Text implements Component {
     const runs = normalizeContent(this.content);
     const segments = buildSegments(runs, style.fontFamily, defaultWeight);
     return wrapText(segments, style.fontSize, width);
-  }
-
-  getMaximumHeight(width: number): number {
-    return this.getMinimumHeight(width);  // Text is fixed height
   }
 
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
