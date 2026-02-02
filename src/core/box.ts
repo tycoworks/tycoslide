@@ -37,6 +37,7 @@ const YOGA_JUSTIFY: Record<string, number> = {
 export interface BoxProps {
   direction?: Direction;    // default: DIRECTION.COLUMN
   flex?: number;            // flex-grow ratio (default: 0 = sized to content)
+  flexShrink?: number;      // override slide default shrink (1). Higher = absorbs more shrink.
   width?: number;           // explicit width in inches
   height?: number;          // explicit height in inches
   gap?: number;             // gap in inches (default: 0)
@@ -137,6 +138,10 @@ export class Box implements Component {
     if (this.props.flex !== undefined && this.props.flex > 0) {
       node.setFlexGrow(this.props.flex);
       node.setFlexBasis(0);
+    }
+
+    if (this.props.flexShrink !== undefined) {
+      node.setFlexShrink(this.props.flexShrink);
     }
   }
 

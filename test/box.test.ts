@@ -243,6 +243,20 @@ describe('Box', () => {
     approx(childBounds[1].h, 2.5, 'second child shrinks to half container');
   });
 
+  test('flexShrink:0 protects child from shrinkage, sibling absorbs all', () => {
+    // Image (3") + text (1") in 3" container. Text has flexShrink:0.
+    // Image should absorb all 1" of shrinkage → image=2", text=1".
+    const b = box({
+      children: [
+        box({ content: mockContent(3) }),                  // image: default shrink
+        box({ flexShrink: 0, content: mockContent(1) }),   // text: won't shrink
+      ],
+    });
+    const childBounds = b.getChildBounds(new Bounds(10, 3));
+    approx(childBounds[0].h, 2, 'shrinkable child absorbs all shrinkage');
+    approx(childBounds[1].h, 1, 'flexShrink:0 child stays at content height');
+  });
+
   test('pinned children overflow when content exceeds container', () => {
     // Same scenario but with explicit height — children can't shrink, so overflow.
     const b = box({

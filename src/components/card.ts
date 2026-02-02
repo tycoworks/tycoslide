@@ -35,23 +35,23 @@ export class Card implements Component {
       const gapSmall = this.theme.spacing.gapSmall;
       const children: Box[] = [];
 
-      // Image at top — flex:1 so it fills remaining card height after text
+      // Image at top — content-sized (default flexShrink:1 absorbs all shrinkage)
       if (this.props.image) {
-        children.push(box({ flex: 1, content: new Image(this.theme, this.props.image) }));
+        children.push(box({ content: new Image(this.theme, this.props.image) }));
       }
 
-      // Title (fixed height)
+      // Title (won't shrink — text is always preserved)
       if (this.props.title) {
         const style = this.props.titleStyle ?? TEXT_STYLE.H4;
         const color = this.props.titleColor ?? this.theme.colors.accent1;
-        children.push(box({ content: new Text(this.theme, this.props.title, { style, color }) }));
+        children.push(box({ flexShrink: 0, content: new Text(this.theme, this.props.title, { style, color }) }));
       }
 
-      // Description (fixed height)
+      // Description (won't shrink — text is always preserved)
       if (this.props.description) {
         const style = this.props.descriptionStyle ?? TEXT_STYLE.SMALL;
         const color = this.props.descriptionColor ?? this.theme.colors.text;
-        children.push(box({ content: new Text(this.theme, this.props.description, { style, color }) }));
+        children.push(box({ flexShrink: 0, content: new Text(this.theme, this.props.description, { style, color }) }));
       }
 
       this._box = box({
