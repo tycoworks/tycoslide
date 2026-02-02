@@ -3,6 +3,7 @@
 
 import imageSizeDefault from 'image-size';
 import { DIRECTION, ALIGN, type Component, type Drawer, type Bounds, type Theme, type AlignContext, type Align } from '../core/types.js';
+import { log } from '../utils/log.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sizeOfFn = (imageSizeDefault as any).default || imageSizeDefault;
@@ -26,7 +27,10 @@ export class Image implements Component {
   getHeight(width: number): number {
     const naturalHeight = width / this.aspectRatio;
     const maxFromQuality = this.pixelHeight / this.theme.spacing.minDisplayDPI;
-    return Math.min(naturalHeight, maxFromQuality);
+    const h = Math.min(naturalHeight, maxFromQuality);
+    log('image getHeight: w=%f natural=%f dpiCap=%f → h=%f (%dx%d ar=%f)',
+      width, naturalHeight, maxFromQuality, h, this.pixelWidth, this.pixelHeight, this.aspectRatio);
+    return h;
   }
 
   getWidth(height: number): number {

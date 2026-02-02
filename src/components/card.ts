@@ -6,6 +6,7 @@ import { DIRECTION, SHAPE, TEXT_STYLE, type AlignContext, type Component, type D
 import { box, type Box } from '../core/box.js';
 import { Text } from './text.js';
 import { Image } from './image.js';
+import { log } from '../utils/log.js';
 
 export interface CardProps {
   image?: string;              // Path to image rendered above text
@@ -34,9 +35,9 @@ export class Card implements Component {
       const gapSmall = this.theme.spacing.gapSmall;
       const children: Box[] = [];
 
-      // Image at top (expands to fill available card height)
+      // Image at top — flex:1 so it fills remaining card height after text
       if (this.props.image) {
-        children.push(box({ content: new Image(this.theme, this.props.image) }));
+        children.push(box({ flex: 1, content: new Image(this.theme, this.props.image) }));
       }
 
       // Title (fixed height)
@@ -70,7 +71,9 @@ export class Card implements Component {
   getHeight(width: number): number {
     const padding = this.getPadding();
     const innerW = width - padding * 2;
-    return padding * 2 + this.getBox().getHeight(innerW);
+    const contentH = this.getBox().getHeight(innerW);
+    log('card getHeight: w=%f padding=%f innerW=%f contentH=%f total=%f', width, padding, innerW, contentH, padding * 2 + contentH);
+    return padding * 2 + contentH;
   }
 
   getWidth(height: number): number {
@@ -92,6 +95,10 @@ export class Card implements Component {
 
     // Inner bounds for content (after padding)
     const innerBounds = bounds.inset(padding);
+
+    log('card prepare: bounds=[%f,%f %fx%f] padding=%f inner=[%f,%f %fx%f]',
+      bounds.x, bounds.y, bounds.w, bounds.h, padding,
+      innerBounds.x, innerBounds.y, innerBounds.w, innerBounds.h);
 
     // Get content drawer from Box
     const contentDrawer = this.getBox().prepare(innerBounds, alignContext);

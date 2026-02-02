@@ -18,6 +18,7 @@ import {
   type AlignContext,
   type Layer,
 } from '../core/types.js';
+import { log } from '../utils/log.js';
 
 // ============================================
 // YOGA LOOKUP TABLES
@@ -160,6 +161,7 @@ export class Box implements Component {
       } else if (heightMode === Yoga.MEASURE_MODE_EXACTLY) {
         h = fromYoga(yogaHeight);
       }
+      log('box measure %s: w=%f h=%f', content.constructor.name, measuredWidth, h);
       const w = content.getWidth?.(h) ?? 0;
       return { width: toYoga(w), height: toYoga(h) };
     });
@@ -242,6 +244,9 @@ export class Box implements Component {
     const layer = this.props.layer ?? parentLayer;
 
     if (this.props.content) {
+      const contentName = this.props.content.constructor.name;
+      const fullPath = ctx.path ? ctx.path + ' > ' + contentName : contentName;
+      log('box leaf %s: x=%f y=%f w=%f h=%f', fullPath, bounds.x, bounds.y, bounds.w, bounds.h);
       this.checkOverflow(bounds, ctx);
       const drawer = this.props.content.prepare(bounds, parentAlignContext);
       ctx.drawers.push({ drawer, bounds, layer });
@@ -261,6 +266,8 @@ export class Box implements Component {
     const childPath = ctx.path
       ? `${ctx.path} > ${dir}(${this.props.children!.length})`
       : `${dir}(${this.props.children!.length})`;
+
+    log('box %s children=%d: x=%f y=%f w=%f h=%f', childPath, this.props.children!.length, bounds.x, bounds.y, bounds.w, bounds.h);
 
     for (let i = 0; i < this.props.children!.length; i++) {
       const child = this.props.children![i];

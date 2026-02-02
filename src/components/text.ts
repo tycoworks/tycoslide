@@ -4,6 +4,7 @@
 import { VALIGN, FONT_WEIGHT, TEXT_STYLE, DIRECTION, ALIGN, type Component, type Drawer, type Bounds, type Theme, type TextStyle, type TextStyleName, type TextAlignment, type VerticalAlignment, type FontWeight, type TextContent, type AlignContext, type Align } from '../core/types.js';
 import { getLineHeight, wrapText, getFontFromFamily, normalizeContent, buildSegments, splitRunsIntoLines } from '../utils/font-utils.js';
 import type { TextFragment, TextFragmentOptions } from '../core/canvas.js';
+import { log } from '../utils/log.js';
 
 // Re-export types for backward compatibility
 export type { TextRun, TextContent } from '../core/types.js';
@@ -27,7 +28,11 @@ export class Text implements Component {
     const defaultFont = getFontFromFamily(style.fontFamily, defaultWeight);
     const lineHeight = getLineHeight(defaultFont.path, style.fontSize);
     const lines = this.wrapContent(style, defaultWeight, width);
-    return lineHeight * lines.length;
+    const h = lineHeight * lines.length;
+    const preview = typeof this.content === 'string' ? this.content.slice(0, 40) : '[rich]';
+    log('text getHeight: w=%f lines=%d lineH=%f → h=%f "%s"',
+      width, lines.length, lineHeight, h, preview);
+    return h;
   }
 
   /**

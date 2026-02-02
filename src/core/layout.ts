@@ -13,6 +13,7 @@ import {
   type Align,
 } from './types.js';
 import { box, Box } from './box.js';
+import { log } from '../utils/log.js';
 
 // ============================================
 // LAYOUT OPTIONS
@@ -59,6 +60,10 @@ function layout(direction: Direction, equalFlex: boolean, theme: Theme, args: an
   if (!proportions && equalFlex) {
     proportions = children.map(() => 1);
   }
+
+  const dir = direction === DIRECTION.ROW ? 'row' : 'column';
+  log('layout %s: children=%d proportions=%s gap=%f',
+    dir, children.length, proportions ? JSON.stringify(proportions) : 'none', resolveGap(options.gap, theme));
 
   return box({
     direction,
