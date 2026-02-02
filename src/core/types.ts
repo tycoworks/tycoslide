@@ -252,6 +252,7 @@ export interface Theme {
   highlights: HighlightScheme;
   slide: SlideSize | CustomSlideSize;
   spacing: {
+    unit?: number;          // Grid quantum in inches (e.g. 0.125 = 1/8")
     margin: number;         // Inset from all 4 edges
     gap: number;            // Standard gap between elements
     gapSmall: number;       // Small gap between elements

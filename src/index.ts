@@ -110,4 +110,4 @@ export {
 export { box, Box, type BoxProps } from './core/box.js';
 
 // Grid primitives
-export { slotGrid, splitV, splitH, splitRatio, type GridSpec } from './core/grid.js';
+export { slotGrid, splitV, splitH, splitRatio, stackV, stackH, snapUp, STACK_JUSTIFY, SPLIT_DIRECTION, type GridSpec, type StackOptions, type StackJustify, type SplitDirection } from './core/grid.js';

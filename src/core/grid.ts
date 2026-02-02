@@ -17,6 +17,43 @@ export interface GridSpec {
   colGap?: number;    // override gap for columns
 }
 
+/** Justify controls positioning of items along the stacking axis. */
+export const STACK_JUSTIFY = {
+  START: 'start',
+  CENTER: 'center',
+  END: 'end',
+} as const;
+
+export type StackJustify = typeof STACK_JUSTIFY[keyof typeof STACK_JUSTIFY];
+
+/** Direction for splitRatio. */
+export const SPLIT_DIRECTION = {
+  VERTICAL: 'vertical',
+  HORIZONTAL: 'horizontal',
+} as const;
+
+export type SplitDirection = typeof SPLIT_DIRECTION[keyof typeof SPLIT_DIRECTION];
+
+/** Options for stackV / stackH. */
+export interface StackOptions {
+  justify?: StackJustify;  // default: STACK_JUSTIFY.START
+}
+
+// ============================================
+// SNAP
+// ============================================
+
+/**
+ * Round a value up to the next multiple of unit.
+ * Used to snap content estimates to the grid quantum.
+ *
+ *   snapUp(0.28, 0.125) → 0.375   (3 units)
+ *   snapUp(0.5, 0.125)  → 0.5     (already aligned)
+ */
+export function snapUp(value: number, unit: number): number {
+  return Math.ceil(value / unit) * unit;
+}
+
 // ============================================
 // SLOT GRID
 // ============================================
@@ -50,6 +87,97 @@ export function slotGrid(bounds: Bounds, spec: GridSpec): Bounds[] {
     }
   }
   return cells;
+}
+
+// ============================================
+// STACK FUNCTIONS
+// ============================================
+
+/**
+ * Stack items vertically at absolute heights, top-to-bottom.
+ * Unlike splitV (equal) or splitRatio (proportional), stackV takes
+ * pre-measured heights — the bridge between content measurement and grid.
+ *
+ *   const titleH = snapUp(title.getHeight(bounds.w), unit);
+ *   const bodyH  = bounds.h - titleH - gap;
+ *   const [titleBounds, bodyBounds] = stackV(bounds, [titleH, bodyH], gap);
+ *
+ * Throws if total heights + gaps exceed bounds.h.
+ */
+export function stackV(
+  bounds: Bounds,
+  heights: number[],
+  gap = 0,
+  options?: StackOptions,
+): Bounds[] {
+  const n = heights.length;
+  const totalGap = gap * Math.max(0, n - 1);
+  const totalUsed = heights.reduce((sum, h) => sum + h, 0) + totalGap;
+
+  if (totalUsed > bounds.h + 1e-9) {
+    throw new Error(
+      `stackV overflow: items need ${totalUsed.toFixed(4)}" but bounds.h is ${bounds.h.toFixed(4)}"`,
+    );
+  }
+
+  const justify = options?.justify ?? STACK_JUSTIFY.START;
+  let offset: number;
+  if (justify === STACK_JUSTIFY.CENTER) {
+    offset = (bounds.h - totalUsed) / 2;
+  } else if (justify === STACK_JUSTIFY.END) {
+    offset = bounds.h - totalUsed;
+  } else {
+    offset = 0;
+  }
+
+  return heights.map((h, i) => {
+    const y = bounds.y + offset;
+    offset += h + (i < n - 1 ? gap : 0);
+    return new Bounds(bounds.x, y, bounds.w, h);
+  });
+}
+
+/**
+ * Stack items horizontally at absolute widths, left-to-right.
+ * Horizontal counterpart of stackV.
+ *
+ *   const iconW = 0.5;
+ *   const textW = bounds.w - iconW - gap;
+ *   const [iconBounds, textBounds] = stackH(bounds, [iconW, textW], gap);
+ *
+ * Throws if total widths + gaps exceed bounds.w.
+ */
+export function stackH(
+  bounds: Bounds,
+  widths: number[],
+  gap = 0,
+  options?: StackOptions,
+): Bounds[] {
+  const n = widths.length;
+  const totalGap = gap * Math.max(0, n - 1);
+  const totalUsed = widths.reduce((sum, w) => sum + w, 0) + totalGap;
+
+  if (totalUsed > bounds.w + 1e-9) {
+    throw new Error(
+      `stackH overflow: items need ${totalUsed.toFixed(4)}" but bounds.w is ${bounds.w.toFixed(4)}"`,
+    );
+  }
+
+  const justify = options?.justify ?? STACK_JUSTIFY.START;
+  let offset: number;
+  if (justify === STACK_JUSTIFY.CENTER) {
+    offset = (bounds.w - totalUsed) / 2;
+  } else if (justify === STACK_JUSTIFY.END) {
+    offset = bounds.w - totalUsed;
+  } else {
+    offset = 0;
+  }
+
+  return widths.map((w, i) => {
+    const x = bounds.x + offset;
+    offset += w + (i < n - 1 ? gap : 0);
+    return new Bounds(x, bounds.y, w, bounds.h);
+  });
 }
 
 // ============================================
@@ -87,22 +215,22 @@ export function splitH(bounds: Bounds, n: number, gap = 0): Bounds[] {
  * Ratios are normalized (e.g., [1, 2] → 1/3 and 2/3).
  * A ratio of 0 means that slot gets 0 size.
  *
- *   splitRatio(bounds, [1, 2], 'vertical', 0.125)
+ *   splitRatio(bounds, [1, 2], SPLIT_DIRECTION.VERTICAL, 0.125)
  *   → top gets 1/3 of height, bottom gets 2/3, with 0.125" gap
  *
- *   splitRatio(bounds, [0, 1], 'horizontal')
+ *   splitRatio(bounds, [0, 1], SPLIT_DIRECTION.HORIZONTAL)
  *   → left gets 0 width, right gets full width
  */
 export function splitRatio(
   bounds: Bounds,
   ratios: number[],
-  direction: 'vertical' | 'horizontal' = 'vertical',
+  direction: SplitDirection = SPLIT_DIRECTION.VERTICAL,
   gap = 0,
 ): Bounds[] {
   const n = ratios.length;
   const totalGap = gap * Math.max(0, n - 1);
   const totalRatio = ratios.reduce((sum, r) => sum + r, 0);
-  const isVertical = direction === 'vertical';
+  const isVertical = direction === SPLIT_DIRECTION.VERTICAL;
   const available = (isVertical ? bounds.h : bounds.w) - totalGap;
 
   let offset = 0;
