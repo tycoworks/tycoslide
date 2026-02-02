@@ -1,9 +1,9 @@
 // Card Component
 // Styled container with optional background, border, image, and title/description
-// Implemented using Box with arithmetic layout
+// Uses grid primitives (stackV) instead of Box
 
-import { DIRECTION, SHAPE, TEXT_STYLE, type AlignContext, type Component, type Drawer, type Bounds, type Theme, type TextStyleName } from '../core/types.js';
-import { box, type Box } from '../core/box.js';
+import { SHAPE, TEXT_STYLE, GAP, type Component, type Drawer, type Bounds, type Theme, type TextStyleName, type AlignContext } from '../core/types.js';
+import { gridColumn } from '../core/grid-layout.js';
 import { Text } from './text.js';
 import { Image } from './image.js';
 import { log } from '../utils/log.js';
@@ -26,41 +26,28 @@ export interface CardProps {
 }
 
 export class Card implements Component {
-  private _box?: Box;
+  private column: Component;
 
-  constructor(private theme: Theme, private props: CardProps = {}) {}
+  constructor(private theme: Theme, private props: CardProps = {}) {
+    const children: Component[] = [];
 
-  private getBox(): Box {
-    if (!this._box) {
-      const gapSmall = this.theme.spacing.gapSmall;
-      const children: Box[] = [];
+    if (props.image) children.push(new Image(theme, props.image));
 
-      // Image at top — content-sized (default flexShrink:1 absorbs all shrinkage)
-      if (this.props.image) {
-        children.push(box({ content: new Image(this.theme, this.props.image) }));
-      }
-
-      // Title (won't shrink — text is always preserved)
-      if (this.props.title) {
-        const style = this.props.titleStyle ?? TEXT_STYLE.H4;
-        const color = this.props.titleColor ?? this.theme.colors.accent1;
-        children.push(box({ flexShrink: 0, content: new Text(this.theme, this.props.title, { style, color }) }));
-      }
-
-      // Description (won't shrink — text is always preserved)
-      if (this.props.description) {
-        const style = this.props.descriptionStyle ?? TEXT_STYLE.SMALL;
-        const color = this.props.descriptionColor ?? this.theme.colors.text;
-        children.push(box({ flexShrink: 0, content: new Text(this.theme, this.props.description, { style, color }) }));
-      }
-
-      this._box = box({
-        direction: DIRECTION.COLUMN,
-        gap: gapSmall,
-        children,
-      });
+    if (props.title) {
+      children.push(new Text(theme, props.title, {
+        style: props.titleStyle ?? TEXT_STYLE.H4,
+        color: props.titleColor ?? theme.colors.accent1,
+      }));
     }
-    return this._box;
+
+    if (props.description) {
+      children.push(new Text(theme, props.description, {
+        style: props.descriptionStyle ?? TEXT_STYLE.SMALL,
+        color: props.descriptionColor ?? theme.colors.text,
+      }));
+    }
+
+    this.column = gridColumn(theme, { gap: GAP.SMALL }, ...children);
   }
 
   private getPadding(): number {
@@ -71,25 +58,20 @@ export class Card implements Component {
   getHeight(width: number): number {
     const padding = this.getPadding();
     const innerW = width - padding * 2;
-    const contentH = this.getBox().getHeight(innerW);
-    log('card getHeight: w=%f padding=%f innerW=%f contentH=%f total=%f', width, padding, innerW, contentH, padding * 2 + contentH);
-    return padding * 2 + contentH;
-  }
+    const contentH = this.column.getHeight(innerW);
 
-  getMinHeight(width: number): number {
-    const padding = this.getPadding();
-    const innerW = width - padding * 2;
-    const contentMinH = this.getBox().getMinHeight?.(innerW) ?? this.getBox().getHeight(innerW);
-    return padding * 2 + contentMinH;
+    log('card getHeight: w=%f padding=%f innerW=%f contentH=%f total=%f',
+      width, padding, innerW, contentH, padding * 2 + contentH);
+    return padding * 2 + contentH;
   }
 
   getWidth(height: number): number {
     const padding = this.getPadding();
     const innerH = height - padding * 2;
-    return padding * 2 + (this.getBox().getWidth?.(innerH) ?? 0);
+    return padding * 2 + (this.column.getWidth?.(innerH) ?? 0);
   }
 
-  prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
+  prepare(bounds: Bounds, _alignContext?: AlignContext): Drawer {
     const showBackground = this.props.background !== false;
     const padding = this.getPadding();
 
@@ -107,11 +89,10 @@ export class Card implements Component {
       bounds.x, bounds.y, bounds.w, bounds.h, padding,
       innerBounds.x, innerBounds.y, innerBounds.w, innerBounds.h);
 
-    // Get content drawer from Box
-    const contentDrawer = this.getBox().prepare(innerBounds, alignContext);
+    // Column handles measuring, fitting, and positioning children
+    const drawColumn = this.column.prepare(innerBounds);
 
     return (canvas) => {
-      // Draw background chrome
       if (showBackground) {
         canvas.addShape(SHAPE.ROUND_RECT, {
           x: bounds.x,
@@ -123,9 +104,7 @@ export class Card implements Component {
           rectRadius: cornerRadius,
         });
       }
-
-      // Draw content
-      contentDrawer(canvas);
+      drawColumn(canvas);
     };
   }
 }

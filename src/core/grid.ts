@@ -9,7 +9,7 @@ import { Bounds } from './bounds.js';
 // ============================================
 
 /** Grid specification: rows × columns with optional gap. */
-export interface GridSpec {
+interface GridSpec {
   rows: number;
   cols: number;
   gap?: number;       // gap between cells in inches (default: 0)
@@ -18,7 +18,7 @@ export interface GridSpec {
 }
 
 /** Justify controls positioning of items along the stacking axis. */
-export const STACK_JUSTIFY = {
+const STACK_JUSTIFY = {
   START: 'start',
   CENTER: 'center',
   END: 'end',
@@ -32,10 +32,10 @@ export const SPLIT_DIRECTION = {
   HORIZONTAL: 'horizontal',
 } as const;
 
-export type SplitDirection = typeof SPLIT_DIRECTION[keyof typeof SPLIT_DIRECTION];
+type SplitDirection = typeof SPLIT_DIRECTION[keyof typeof SPLIT_DIRECTION];
 
 /** Options for stackV / stackH. */
-export interface StackOptions {
+interface StackOptions {
   justify?: StackJustify;  // default: STACK_JUSTIFY.START
 }
 
@@ -50,7 +50,7 @@ export interface StackOptions {
  *   snapUp(0.28, 0.125) → 0.375   (3 units)
  *   snapUp(0.5, 0.125)  → 0.5     (already aligned)
  */
-export function snapUp(value: number, unit: number): number {
+function snapUp(value: number, unit: number): number {
   return Math.ceil(value / unit) * unit;
 }
 
@@ -65,7 +65,7 @@ export function snapUp(value: number, unit: number): number {
  *   slotGrid(bounds, { rows: 2, cols: 3, gap: 0.125 })
  *   → 6 cells, each (boundsW - 2*gap) / 3 wide, (boundsH - gap) / 2 tall
  */
-export function slotGrid(bounds: Bounds, spec: GridSpec): Bounds[] {
+function slotGrid(bounds: Bounds, spec: GridSpec): Bounds[] {
   const { rows, cols } = spec;
   const rGap = spec.rowGap ?? spec.gap ?? 0;
   const cGap = spec.colGap ?? spec.gap ?? 0;
@@ -87,6 +87,54 @@ export function slotGrid(bounds: Bounds, spec: GridSpec): Bounds[] {
     }
   }
   return cells;
+}
+
+// ============================================
+// FIT FUNCTIONS
+// ============================================
+
+/**
+ * Adjust sizes to fit within available space.
+ * Each item shrinks proportionally to its compressible budget
+ * (the difference between its natural height and its minimum height).
+ * Items with no budget (minHeight === height) are incompressible.
+ *
+ *   // Image: natural 3.0, min 0.0 (fully compressible)
+ *   // Text items: natural = min (incompressible)
+ *   fitHeights([3.0, 0.4, 0.3], 2.5, 0.1, [0.0, 0.4, 0.3])
+ *   → [1.6, 0.4, 0.3]  (image shrinks, text preserved, 2 gaps)
+ *
+ * If everything fits, returns sizes unchanged.
+ * If no minHeights provided, all items are fully compressible (min = 0).
+ */
+export function fitHeights(
+  heights: number[],
+  available: number,
+  gap = 0,
+  minHeights?: number[],
+): number[] {
+  const n = heights.length;
+  const totalGap = gap * Math.max(0, n - 1);
+  const totalUsed = heights.reduce((sum, h) => sum + h, 0) + totalGap;
+
+  // Fits already — return as-is
+  if (totalUsed <= available + 1e-9) return heights;
+
+  const excess = totalUsed - available;
+
+  // Compute each item's shrinkable budget
+  const budgets = heights.map((h, i) => {
+    const min = minHeights ? (minHeights[i] ?? 0) : 0;
+    return Math.max(0, h - min);
+  });
+  const totalBudget = budgets.reduce((sum, b) => sum + b, 0);
+
+  // Nothing can shrink — return unchanged
+  if (totalBudget <= 0) return heights;
+
+  // Shrink proportionally, clamped to each item's budget
+  const scale = Math.min(1, excess / totalBudget);
+  return heights.map((h, i) => h - budgets[i] * scale);
 }
 
 // ============================================
@@ -189,7 +237,7 @@ export function stackH(
  *
  *   splitV(bounds, 3, 0.125)  → 3 rows with 0.125" gap between
  */
-export function splitV(bounds: Bounds, n: number, gap = 0): Bounds[] {
+function splitV(bounds: Bounds, n: number, gap = 0): Bounds[] {
   const totalGap = gap * Math.max(0, n - 1);
   const cellH = (bounds.h - totalGap) / n;
   return Array.from({ length: n }, (_, i) =>
@@ -202,7 +250,7 @@ export function splitV(bounds: Bounds, n: number, gap = 0): Bounds[] {
  *
  *   splitH(bounds, 2, 0.125)  → 2 columns with 0.125" gap between
  */
-export function splitH(bounds: Bounds, n: number, gap = 0): Bounds[] {
+function splitH(bounds: Bounds, n: number, gap = 0): Bounds[] {
   const totalGap = gap * Math.max(0, n - 1);
   const cellW = (bounds.w - totalGap) / n;
   return Array.from({ length: n }, (_, i) =>

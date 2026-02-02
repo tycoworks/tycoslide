@@ -15,7 +15,7 @@ import {
   type Align,
   type AlignContext,
 } from './types.js';
-import { stackV, stackH, splitRatio, SPLIT_DIRECTION, type StackJustify } from './grid.js';
+import { stackV, stackH, splitRatio, fitHeights, SPLIT_DIRECTION, type StackJustify } from './grid.js';
 import { log } from '../utils/log.js';
 
 // ============================================
@@ -65,13 +65,10 @@ export class GridColumn implements Component {
     return heights.reduce((sum, h) => sum + h, 0) + totalGap;
   }
 
-  prepare(bounds: Bounds): Drawer {
+  getSlots(bounds: Bounds): Bounds[] {
     const n = this.children.length;
-    const alignContext: AlignContext = { direction: DIRECTION.COLUMN, align: this.align };
-    let slots: Bounds[];
 
     if (this.proportions) {
-      // Mixed content-sized + proportional layout
       const contentHeights = this.children.map((c, i) =>
         this.proportions![i] === 0 ? c.getHeight(bounds.w) : 0,
       );
@@ -85,13 +82,19 @@ export class GridColumn implements Component {
         return flexTotal > 0 ? remaining * (this.proportions![i] / flexTotal) : 0;
       });
 
-      slots = stackV(bounds, finalHeights, this.gap);
-    } else {
-      // Content-sized: measure each child, stack top-to-bottom
-      const heights = this.children.map(c => c.getHeight(bounds.w));
-      slots = stackV(bounds, heights, this.gap);
+      return stackV(bounds, finalHeights, this.gap);
     }
 
+    // Content-sized: measure, fit compressible children, stack
+    const heights = this.children.map(c => c.getHeight(bounds.w));
+    const minHeights = this.children.map(c => c.getMinHeight?.(bounds.w) ?? c.getHeight(bounds.w));
+    const fitted = fitHeights(heights, bounds.h, this.gap, minHeights);
+    return stackV(bounds, fitted, this.gap);
+  }
+
+  prepare(bounds: Bounds): Drawer {
+    const alignContext: AlignContext = { direction: DIRECTION.COLUMN, align: this.align };
+    const slots = this.getSlots(bounds);
     const drawers = this.children.map((c, i) => c.prepare(slots[i], alignContext));
     return (canvas) => drawers.forEach(d => d(canvas));
   }
@@ -124,19 +127,16 @@ export class GridRow implements Component {
     return Math.max(...this.children.map(c => c.getHeight(childWidth)));
   }
 
-  prepare(bounds: Bounds): Drawer {
+  getSlots(bounds: Bounds): Bounds[] {
     const n = this.children.length;
-    const alignContext: AlignContext = { direction: DIRECTION.ROW, align: this.align };
-    let slots: Bounds[];
 
     if (this.proportions) {
-      // Mixed content-sized + proportional layout
       const hasContentSized = this.proportions.some(p => p === 0);
 
       if (hasContentSized) {
         const contentWidths = this.children.map((c, i) => {
           if (this.proportions![i] === 0 && c.getWidth) return c.getWidth(bounds.h);
-          if (this.proportions![i] === 0) return c.getHeight(bounds.h); // fallback estimate
+          if (this.proportions![i] === 0) return c.getHeight(bounds.h);
           return 0;
         });
         const contentTotal = contentWidths.reduce((sum, w) => sum + w, 0);
@@ -149,21 +149,25 @@ export class GridRow implements Component {
           return flexTotal > 0 ? remaining * (this.proportions![i] / flexTotal) : 0;
         });
 
-        slots = stackH(bounds, finalWidths, this.gap);
-      } else {
-        // Pure proportional — use splitRatio
-        slots = splitRatio(bounds, this.proportions, SPLIT_DIRECTION.HORIZONTAL, this.gap);
+        return stackH(bounds, finalWidths, this.gap);
       }
-    } else {
-      // Default: equal widths
-      slots = splitRatio(
-        bounds,
-        this.children.map(() => 1),
-        SPLIT_DIRECTION.HORIZONTAL,
-        this.gap,
-      );
+
+      // Pure proportional — use splitRatio
+      return splitRatio(bounds, this.proportions, SPLIT_DIRECTION.HORIZONTAL, this.gap);
     }
 
+    // Default: equal widths
+    return splitRatio(
+      bounds,
+      this.children.map(() => 1),
+      SPLIT_DIRECTION.HORIZONTAL,
+      this.gap,
+    );
+  }
+
+  prepare(bounds: Bounds): Drawer {
+    const alignContext: AlignContext = { direction: DIRECTION.ROW, align: this.align };
+    const slots = this.getSlots(bounds);
     const drawers = this.children.map((c, i) => c.prepare(slots[i], alignContext));
     return (canvas) => drawers.forEach(d => d(canvas));
   }

@@ -1,8 +1,8 @@
 // Table Component
-// Renders a table using Box layout for cells with line-drawn borders
+// Renders a table using grid primitives for cells with line-drawn borders
 
-import { DIRECTION, ALIGN, BORDER_STYLE, SHAPE, type AlignContext, type BorderStyle, type Component, type Drawer, type Bounds, type Theme } from '../core/types.js';
-import { box, type Box } from '../core/box.js';
+import { BORDER_STYLE, SHAPE, ALIGN, type AlignContext, type BorderStyle, type Component, type Drawer, type Bounds, type Theme } from '../core/types.js';
+import { GridColumn, GridRow } from '../core/grid-layout.js';
 import { Text } from './text.js';
 import type { Canvas } from '../core/canvas.js';
 
@@ -46,94 +46,52 @@ class PaddedContent implements Component {
 // ============================================
 
 export class Table implements Component {
-  private _box?: Box;
+  private rows: GridRow[];
+  private column: GridColumn;
+  private ratios: number[];
 
-  constructor(private theme: Theme, private data: TableData, private props: TableProps = {}) {}
+  constructor(private theme: Theme, data: TableData, private props: TableProps = {}) {
+    const padding = props.cellPadding ?? theme.spacing.cellPadding;
+    const useHeaderRow = props.headerRow ?? true;
+    const numCols = data[0]?.length ?? 0;
 
-  private normalizeCell(cell: TableCell, headerColor?: string): Component {
-    if (typeof cell === 'string') {
-      return headerColor ? new Text(this.theme, cell, { color: headerColor }) : new Text(this.theme, cell);
-    }
-    return cell;
-  }
+    this.ratios = (props.columnWidths?.length === numCols)
+      ? props.columnWidths : Array(numCols).fill(1);
 
-  private getNumCols(): number {
-    return this.data[0]?.length ?? 0;
-  }
-
-  private getFlexRatios(): number[] {
-    const numCols = this.getNumCols();
-    const ratios = this.props.columnWidths;
-    if (ratios && ratios.length === numCols) return ratios;
-    return Array(numCols).fill(1);
-  }
-
-  /**
-   * Get the visual width of each column (for border drawing)
-   */
-  private getColumnWidths(tableWidth: number): number[] {
-    const ratios = this.getFlexRatios();
-    const total = ratios.reduce((sum, r) => sum + r, 0);
-    return ratios.map(r => (r / total) * tableWidth);
-  }
-
-  private getBox(): Box {
-    if (!this._box) {
-      const padding = this.props.cellPadding ?? this.theme.spacing.cellPadding;
-      const useHeaderRow = this.props.headerRow ?? true;
-      const ratios = this.getFlexRatios();
-
-      const rowBoxes: Box[] = [];
-      for (let rowIndex = 0; rowIndex < this.data.length; rowIndex++) {
-        const row = this.data[rowIndex];
-        const headerColor = (rowIndex === 0 && useHeaderRow) ? this.theme.colors.secondary : undefined;
-
-        const cellBoxes: Box[] = [];
-        for (let col = 0; col < row.length; col++) {
-          const component = this.normalizeCell(row[col], headerColor);
-          cellBoxes.push(box({
-            flex: ratios[col],
-            content: new PaddedContent(component, padding),
-          }));
-        }
-
-        rowBoxes.push(box({
-          direction: DIRECTION.ROW,
-          align: ALIGN.CENTER,
-          children: cellBoxes,
-        }));
-      }
-
-      this._box = box({
-        direction: DIRECTION.COLUMN,
-        children: rowBoxes,
+    this.rows = data.map((row, rowIndex) => {
+      const headerColor = (rowIndex === 0 && useHeaderRow) ? theme.colors.secondary : undefined;
+      const cells = row.map(cell => {
+        const component = typeof cell === 'string'
+          ? (headerColor ? new Text(theme, cell, { color: headerColor }) : new Text(theme, cell))
+          : cell;
+        return new PaddedContent(component, padding);
       });
-    }
-    return this._box;
+      return new GridRow(cells, this.ratios, 0, ALIGN.START);
+    });
+
+    this.column = new GridColumn(this.rows, undefined, 0, ALIGN.START);
   }
 
   getHeight(width: number): number {
-    return this.getBox().getHeight(width);
+    return this.column.getHeight(width);
   }
 
-  prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
-    const tableBox = this.getBox();
+  prepare(bounds: Bounds, _alignContext?: AlignContext): Drawer {
+    // Get computed positions from grid for border drawing
+    const rowSlots = this.column.getSlots(bounds);
+    const colSlots = this.rows[0].getSlots(rowSlots[0]);
 
-    // Get row positions from Box layout (single tree, consistent positioning)
-    const rowBounds = tableBox.getChildBounds(bounds);
-    const rowYPositions = rowBounds.map(b => b.y);
-    const lastRow = rowBounds[rowBounds.length - 1];
+    const rowYPositions = rowSlots.map(b => b.y);
+    const lastRow = rowSlots[rowSlots.length - 1];
     const bottomY = lastRow.y + lastRow.h;
+    const colWidths = colSlots.map(b => b.w);
 
-    // Compute column widths for border drawing
-    const columnWidths = this.getColumnWidths(bounds.w);
-
-    // Delegate content layout to Box
-    const contentDrawer = tableBox.prepare(bounds, alignContext);
+    // Column handles all child measurement and positioning
+    const drawContent = this.column.prepare(bounds);
 
     return (canvas) => {
-      contentDrawer(canvas);
-      this.drawBorders(canvas, bounds, rowYPositions, bottomY, columnWidths);
+      drawContent(canvas);
+      this.drawBorders(canvas, bounds, rowYPositions, bottomY, colWidths);
     };
   }
 
