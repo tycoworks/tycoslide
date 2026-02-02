@@ -7,6 +7,7 @@ Spacing / layouts:
 
 Text:
 - Bullet point spacing / indent
+- Slide number align
 
 Core:
 - Escape hatch
