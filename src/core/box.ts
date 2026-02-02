@@ -1,9 +1,8 @@
 // Box Component
-// Flexbox-style layout container powered by Yoga
+// Flexbox-style layout container — pure arithmetic, no external dependencies.
 // Box is a pure layout engine — it has no theme dependency.
 // Children carry their own theme references.
 
-import { Yoga, createNode, freeNode, toYoga, fromYoga, YOGA_EPSILON, type YogaNode } from '../utils/yoga-utils.js';
 import {
   DIRECTION,
   JUSTIFY,
@@ -20,15 +19,10 @@ import {
 } from '../core/types.js';
 import { log } from '../utils/log.js';
 
-// ============================================
-// YOGA LOOKUP TABLES
-// ============================================
-
-const YOGA_JUSTIFY: Record<string, number> = {
-  [JUSTIFY.CENTER]: Yoga.JUSTIFY_CENTER,
-  [JUSTIFY.SPACE_BETWEEN]: Yoga.JUSTIFY_SPACE_BETWEEN,
-  [JUSTIFY.SPACE_EVENLY]: Yoga.JUSTIFY_SPACE_EVENLY,
-};
+// Overflow tolerance — matches the old Yoga tolerance (0.035").
+// Some layouts have content that slightly exceeds container bounds due to
+// font metric rounding. This will be eliminated by the grid+snap architecture.
+const EPSILON = 0.035;
 
 // ============================================
 // BOX PROPS
@@ -49,20 +43,12 @@ export interface BoxProps {
   layer?: Layer;            // Render layer (slide or master) - inherited by children
 }
 
-interface TraversalContext {
-  drawers: Array<{ drawer: Drawer; bounds: Bounds; layer: Layer }>;
-  containerBounds: Bounds;
-  path: string;
-}
-
 // ============================================
 // BOX CLASS
 // ============================================
 
 export class Box implements Component {
   private props: BoxProps;
-  private _cachedNode: YogaNode | null = null;
-  private _cachedWidth: number = -1;
 
   constructor(props: BoxProps = {}) {
     if (props.height !== undefined) {
@@ -75,229 +61,347 @@ export class Box implements Component {
   /** Flex-grow value, if set. Used by row/column to detect pre-flexed children. */
   get flex(): number | undefined { return this.props.flex; }
 
-  /**
-   * Get or build a Yoga tree for this Box, cached by width.
-   * Reusing the same tree between getHeight and prepare ensures
-   * Yoga's point-rounding is consistent across measurement and layout.
-   */
-  private getOrBuildTree(width: number): YogaNode {
-    if (this._cachedNode && this._cachedWidth === width) {
-      return this._cachedNode;
-    }
-    if (this._cachedNode) {
-      freeNode(this._cachedNode);
-    }
-    this._cachedNode = this.buildYogaTree(width);
-    this._cachedWidth = width;
-    return this._cachedNode;
+  private isRow(): boolean {
+    return this.props.direction === DIRECTION.ROW;
   }
 
-  private buildYogaTree(width: number): YogaNode {
-    const node = createNode();
-    this.applySlideDefaults(node);
-    this.configureFlexLayout(node);
-    this.configureDimensions(node);
-    this.configureChildren(node, width);
-    return node;
-  }
-
-  /**
-   * Yoga assumes web (scrollable, overflow OK). Slides are fixed-size:
-   * no scrollbars, no wrapping, no overflow. Override accordingly.
-   */
-  private applySlideDefaults(node: YogaNode): void {
-    node.setFlexShrink(1);   // Shrink to fit (Yoga default: 0 = overflow)
-    node.setMinHeight(0);    // Allow shrinking below content size (no scroll to save us)
-    node.setMinWidth(0);
-  }
-
-  private configureFlexLayout(node: YogaNode): void {
-    const direction = this.props.direction === DIRECTION.ROW
-      ? Yoga.FLEX_DIRECTION_ROW : Yoga.FLEX_DIRECTION_COLUMN;
-    node.setFlexDirection(direction);
-    // Always stretch on cross-axis — align controls positioning, not sizing
-    node.setAlignItems(Yoga.ALIGN_STRETCH);
-
-    const gap = this.props.gap ?? 0;
-    if (gap > 0) node.setGap(Yoga.GUTTER_ALL, toYoga(gap));
-
-    const justify = this.props.justify;
-    if (justify) node.setJustifyContent(YOGA_JUSTIFY[justify]);
-  }
-
-  private configureDimensions(node: YogaNode): void {
-    if (this.props.width !== undefined) node.setWidth(toYoga(this.props.width));
-    if (this.props.height !== undefined) {
-      const h = toYoga(this.props.height);
-      node.setMinHeight(h);
-      node.setMaxHeight(h);
-    } else if (this.props.maxHeight !== undefined) {
-      node.setMaxHeight(toYoga(this.props.maxHeight));
-    }
-
-    if (this.props.flex !== undefined && this.props.flex > 0) {
-      node.setFlexGrow(this.props.flex);
-      node.setFlexBasis(0);
-    }
-
-    if (this.props.flexShrink !== undefined) {
-      node.setFlexShrink(this.props.flexShrink);
-    }
-  }
-
-  private configureChildren(node: YogaNode, width: number): void {
-    if (this.props.content) {
-      this.setMeasureFunc(node, width);
-    } else if (this.props.children) {
-      for (const child of this.props.children) {
-        node.insertChild(child.buildYogaTree(width), node.getChildCount());
-      }
-    }
-  }
-
-  private setMeasureFunc(node: YogaNode, width: number): void {
-    const content = this.props.content!;
-    node.setMeasureFunc((yogaWidth, widthMode, yogaHeight, heightMode) => {
-      const measuredWidth = widthMode === Yoga.MEASURE_MODE_UNDEFINED
-        ? width : fromYoga(yogaWidth);
-      let h = content.getHeight(measuredWidth);
-      if (heightMode === Yoga.MEASURE_MODE_AT_MOST) {
-        h = Math.min(h, fromYoga(yogaHeight));
-      } else if (heightMode === Yoga.MEASURE_MODE_EXACTLY) {
-        h = fromYoga(yogaHeight);
-      }
-      log('box measure %s: w=%f h=%f', content.constructor.name, measuredWidth, h);
-      const w = content.getWidth?.(h) ?? 0;
-      return { width: toYoga(w), height: toYoga(h) };
-    });
-  }
-
-  /**
-   * Extract computed bounds from Yoga layout
-   */
-  private extractBounds(node: YogaNode, offsetX: number, offsetY: number): Bounds {
-    return new Bounds(
-      offsetX + fromYoga(node.getComputedLeft()),
-      offsetY + fromYoga(node.getComputedTop()),
-      fromYoga(node.getComputedWidth()),
-      fromYoga(node.getComputedHeight()),
-    );
-  }
+  // ============================================
+  // MEASUREMENT
+  // ============================================
 
   getHeight(width: number): number {
-    const node = this.getOrBuildTree(width);
-    node.setWidth(toYoga(width));
-    node.calculateLayout(toYoga(width), undefined, Yoga.DIRECTION_LTR);
+    if (this.props.height !== undefined) return this.props.height;
 
-    return fromYoga(node.getComputedHeight());
+    let h: number;
+    if (this.props.content) {
+      h = this.props.content.getHeight(width);
+    } else if (this.props.children?.length) {
+      h = this.isRow()
+        ? this.rowNaturalHeight(width)
+        : this.columnNaturalHeight(width);
+    } else {
+      h = 0;
+    }
+
+    if (this.props.maxHeight !== undefined) h = Math.min(h, this.props.maxHeight);
+    return h;
+  }
+
+  getMinHeight(width: number): number {
+    if (this.props.content) {
+      return this.props.content.getMinHeight?.(width) ?? this.props.content.getHeight(width);
+    }
+    if (!this.props.children) return 0;
+
+    const gap = this.props.gap ?? 0;
+    if (this.isRow()) {
+      return Math.max(0, ...this.props.children.map(c => c.getMinHeight(width)));
+    }
+    const totalGap = gap * Math.max(0, this.props.children.length - 1);
+    return this.props.children.reduce((sum, c) => sum + c.getMinHeight(width), 0) + totalGap;
   }
 
   getWidth(height: number): number {
-    // Use a large width so measureFunc gets UNDEFINED widthMode
-    const node = this.buildYogaTree(Infinity);
-    node.setHeight(toYoga(height));
-    node.calculateLayout(undefined, toYoga(height), Yoga.DIRECTION_LTR);
+    if (this.props.width !== undefined) return this.props.width;
+    if (this.props.content) return this.props.content.getWidth?.(height) ?? 0;
+    if (!this.props.children?.length) return 0;
 
-    const width = fromYoga(node.getComputedWidth());
-    freeNode(node);
-    return width;
+    const gap = this.props.gap ?? 0;
+    const totalGap = gap * Math.max(0, this.props.children.length - 1);
+    if (this.isRow()) {
+      return this.props.children.reduce((sum, c) => sum + c.getWidth(height), 0) + totalGap;
+    }
+    return Math.max(0, ...this.props.children.map(c => c.getWidth(height)));
   }
+
+  // ============================================
+  // LAYOUT
+  // ============================================
 
   /**
    * Run layout and return the computed bounds of each direct child.
-   * Uses the cached Yoga tree so results are consistent with prepare().
    */
   getChildBounds(bounds: Bounds): Bounds[] {
     if (!this.props.children) return [];
-    const node = this.getOrBuildTree(bounds.w);
-    node.setWidth(toYoga(bounds.w));
-    node.setHeight(toYoga(bounds.h));
-    node.calculateLayout(toYoga(bounds.w), toYoga(bounds.h), Yoga.DIRECTION_LTR);
-
-    return this.props.children.map((_, i) =>
-      this.extractBounds(node.getChild(i), bounds.x, bounds.y)
-    );
+    return this.layoutChildren(bounds);
   }
 
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
-    const rootNode = this.getOrBuildTree(bounds.w);
-    rootNode.setWidth(toYoga(bounds.w));
-    rootNode.setHeight(toYoga(bounds.h));
-    rootNode.calculateLayout(toYoga(bounds.w), toYoga(bounds.h), Yoga.DIRECTION_LTR);
-
-    const ctx: TraversalContext = {
-      drawers: [],
-      containerBounds: bounds,
-      path: '',
-    };
-    this.collectDrawers(rootNode, bounds.x, bounds.y, alignContext, this.props.layer ?? LAYER.SLIDE, ctx);
-
+    const drawers: Array<{ drawer: Drawer; layer: Layer }> = [];
+    this.collectDrawers(bounds, alignContext, this.props.layer ?? LAYER.SLIDE, bounds, drawers, '');
     return (canvas) => {
-      for (const { drawer, layer } of ctx.drawers) {
+      for (const { drawer, layer } of drawers) {
         canvas.currentLayer = layer;
         drawer(canvas);
       }
     };
   }
 
+  // ============================================
+  // PRIVATE: Natural size measurement
+  // ============================================
+
+  private columnNaturalHeight(width: number): number {
+    const children = this.props.children!;
+    const gap = this.props.gap ?? 0;
+    const totalGap = gap * Math.max(0, children.length - 1);
+    return children.reduce((sum, c) => sum + c.getHeight(width), 0) + totalGap;
+  }
+
+  private rowNaturalHeight(width: number): number {
+    const children = this.props.children!;
+    const gap = this.props.gap ?? 0;
+    const totalGap = gap * Math.max(0, children.length - 1);
+    const childWidths = this.distributeWidths(width - totalGap, children);
+    return Math.max(0, ...children.map((c, i) => c.getHeight(childWidths[i])));
+  }
+
+  /** Compute child widths for a row (used by rowNaturalHeight for measurement). */
+  private distributeWidths(availableWidth: number, children: Box[]): number[] {
+    const flexValues = children.map(c =>
+      c.props.height !== undefined ? 0 : (c.props.flex ?? 0),
+    );
+    const contentWidths = children.map((c, i) =>
+      flexValues[i] > 0 ? 0 : c.getWidth(0),
+    );
+    const fixedTotal = contentWidths.reduce((sum, w) => sum + w, 0);
+    const remaining = Math.max(0, availableWidth - fixedTotal);
+    const totalFlex = flexValues.reduce((sum, f) => sum + (f > 0 ? f : 0), 0);
+
+    return children.map((_, i) => {
+      if (flexValues[i] > 0 && totalFlex > 0) {
+        return remaining * (flexValues[i] / totalFlex);
+      }
+      return contentWidths[i];
+    });
+  }
+
+  // ============================================
+  // PRIVATE: Child layout computation
+  // ============================================
+
+  private layoutChildren(bounds: Bounds): Bounds[] {
+    const children = this.props.children!;
+    const isRow = this.isRow();
+    const gap = this.props.gap ?? 0;
+
+    // Apply own constraints — the parent may give us more space than we need
+    let mainSize = isRow ? bounds.w : bounds.h;
+    let crossSize = isRow ? bounds.h : bounds.w;
+    if (!isRow && this.props.maxHeight !== undefined) {
+      mainSize = Math.min(mainSize, this.props.maxHeight);
+    }
+    if (isRow && this.props.width !== undefined) {
+      mainSize = Math.min(mainSize, this.props.width);
+    }
+
+    // Compute child sizes along main axis
+    const sizes = this.computeMainSizes(children, mainSize, crossSize, gap, isRow, bounds.w);
+
+    // Compute offsets along main axis (respecting justify)
+    const offsets = this.computeOffsets(sizes, mainSize, gap, children.length);
+
+    return children.map((_, i) => {
+      if (isRow) {
+        return new Bounds(bounds.x + offsets[i], bounds.y, sizes[i], crossSize);
+      }
+      return new Bounds(bounds.x, bounds.y + offsets[i], crossSize, sizes[i]);
+    });
+  }
+
+  /**
+   * Compute main-axis sizes for each child within a container.
+   * Handles flex distribution, maxHeight caps, shrinkage, and overflow.
+   */
+  private computeMainSizes(
+    children: Box[], mainSize: number, crossSize: number,
+    gap: number, isRow: boolean, containerWidth: number,
+  ): number[] {
+    const totalGap = gap * Math.max(0, children.length - 1);
+
+    // Children with explicit height are pinned — ignore their flex value
+    const flexValues = children.map(c =>
+      c.props.height !== undefined ? 0 : (c.props.flex ?? 0),
+    );
+
+    // Step 1: Measure natural sizes
+    const naturals = children.map((c, i) => {
+      if (flexValues[i] > 0) return 0; // flex children start from basis 0
+      return isRow ? c.getWidth(crossSize) : c.getHeight(containerWidth);
+    });
+
+    // Step 2: Distribute flex space
+    const fixedTotal = naturals.reduce((sum, n) => sum + n, 0);
+    const available = Math.max(0, mainSize - fixedTotal - totalGap);
+    let totalFlex = flexValues.reduce((sum, f) => sum + (f > 0 ? f : 0), 0);
+
+    const sizes = children.map((_, i) => {
+      if (flexValues[i] > 0 && totalFlex > 0) {
+        return available * (flexValues[i] / totalFlex);
+      }
+      return naturals[i];
+    });
+
+    // Step 3: Apply maxHeight caps on flex children (iterate until stable)
+    const activeFlexes = [...flexValues];
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (let i = 0; i < children.length; i++) {
+        if (activeFlexes[i] <= 0) continue;
+        const cap = isRow ? children[i].props.width : children[i].props.maxHeight;
+        if (cap !== undefined && sizes[i] > cap + EPSILON) {
+          const excess = sizes[i] - cap;
+          sizes[i] = cap;
+          activeFlexes[i] = 0;
+          const remainingFlex = activeFlexes.reduce((s, f) => s + (f > 0 ? f : 0), 0);
+          if (remainingFlex > 0) {
+            for (let j = 0; j < children.length; j++) {
+              if (activeFlexes[j] > 0) {
+                sizes[j] += excess * (activeFlexes[j] / remainingFlex);
+              }
+            }
+          }
+          changed = true;
+          break; // restart
+        }
+      }
+    }
+
+    // Step 4: Shrink if content exceeds container
+    const totalContent = sizes.reduce((sum, s) => sum + s, 0);
+    if (totalContent + totalGap > mainSize + EPSILON) {
+      this.shrinkToFit(children, sizes, totalContent + totalGap - mainSize);
+    }
+
+    return sizes;
+  }
+
+  /**
+   * Shrink children to fit within container.
+   * Uses CSS-like weighted shrinkage: shrinkFactor × basisSize.
+   * Children with explicit height cannot shrink.
+   */
+  private shrinkToFit(children: Box[], sizes: number[], excess: number): void {
+    const shrinkWeights = children.map((c, i) => {
+      if (c.props.height !== undefined) return 0; // pinned
+      const factor = c.props.flexShrink ?? 1;
+      return factor * sizes[i];
+    });
+    const totalWeight = shrinkWeights.reduce((sum, w) => sum + w, 0);
+
+    if (totalWeight > 0) {
+      for (let i = 0; i < children.length; i++) {
+        sizes[i] -= excess * (shrinkWeights[i] / totalWeight);
+      }
+    }
+    // If totalWeight is 0, no children can shrink → overflow will be caught in checkOverflow
+  }
+
+  /**
+   * Compute positional offsets along main axis, respecting justify mode.
+   */
+  private computeOffsets(sizes: number[], mainSize: number, gap: number, n: number): number[] {
+    const totalContent = sizes.reduce((sum, s) => sum + s, 0);
+    const totalGap = gap * Math.max(0, n - 1);
+    const freeSpace = Math.max(0, mainSize - totalContent - totalGap);
+    const offsets: number[] = [];
+    let pos = 0;
+
+    switch (this.props.justify) {
+      case JUSTIFY.CENTER:
+        pos = freeSpace / 2;
+        for (let i = 0; i < n; i++) {
+          offsets.push(pos);
+          pos += sizes[i] + (i < n - 1 ? gap : 0);
+        }
+        break;
+
+      case JUSTIFY.SPACE_BETWEEN:
+        if (n <= 1) {
+          offsets.push(0);
+        } else {
+          const between = freeSpace / (n - 1);
+          for (let i = 0; i < n; i++) {
+            offsets.push(pos);
+            pos += sizes[i] + gap + (i < n - 1 ? between : 0);
+          }
+        }
+        break;
+
+      case JUSTIFY.SPACE_EVENLY: {
+        const slot = freeSpace / (n + 1);
+        pos = slot;
+        for (let i = 0; i < n; i++) {
+          offsets.push(pos);
+          pos += sizes[i] + (i < n - 1 ? gap + slot : 0);
+        }
+        break;
+      }
+
+      default:
+        // Start (default) — children pack from the start
+        for (let i = 0; i < n; i++) {
+          offsets.push(pos);
+          pos += sizes[i] + (i < n - 1 ? gap : 0);
+        }
+    }
+
+    return offsets;
+  }
+
+  // ============================================
+  // PRIVATE: Drawing traversal
+  // ============================================
+
   private collectDrawers(
-    node: YogaNode, offsetX: number, offsetY: number,
-    parentAlignContext: AlignContext | undefined,
-    parentLayer: Layer, ctx: TraversalContext,
+    bounds: Bounds,
+    alignContext: AlignContext | undefined,
+    parentLayer: Layer,
+    containerBounds: Bounds,
+    drawers: Array<{ drawer: Drawer; layer: Layer }>,
+    path: string,
   ): void {
-    const bounds = this.extractBounds(node, offsetX, offsetY);
     const layer = this.props.layer ?? parentLayer;
 
     if (this.props.content) {
       const contentName = this.props.content.constructor.name;
-      const fullPath = ctx.path ? ctx.path + ' > ' + contentName : contentName;
+      const fullPath = path ? `${path} > ${contentName}` : contentName;
       log('box leaf %s: x=%f y=%f w=%f h=%f', fullPath, bounds.x, bounds.y, bounds.w, bounds.h);
-      this.checkOverflow(bounds, ctx);
-      const drawer = this.props.content.prepare(bounds, parentAlignContext);
-      ctx.drawers.push({ drawer, bounds, layer });
-    } else if (this.props.children) {
-      this.collectChildDrawers(node, bounds, layer, ctx);
+      this.checkOverflow(bounds, containerBounds, fullPath);
+      const drawer = this.props.content.prepare(bounds, alignContext);
+      drawers.push({ drawer, layer });
+    } else if (this.props.children?.length) {
+      const childBounds = this.layoutChildren(bounds);
+      const dir = this.isRow() ? 'Row' : 'Col';
+      const childPath = path
+        ? `${path} > ${dir}(${this.props.children.length})`
+        : `${dir}(${this.props.children.length})`;
+
+      log('box %s children=%d: x=%f y=%f w=%f h=%f',
+        childPath, this.props.children.length, bounds.x, bounds.y, bounds.w, bounds.h);
+
+      const childAlignContext: AlignContext = {
+        direction: this.props.direction ?? DIRECTION.COLUMN,
+        align: this.props.align ?? ALIGN.CENTER,
+      };
+
+      for (let i = 0; i < this.props.children.length; i++) {
+        this.props.children[i].collectDrawers(
+          childBounds[i], childAlignContext, layer, containerBounds, drawers, childPath,
+        );
+      }
     }
   }
 
-  private collectChildDrawers(
-    node: YogaNode, bounds: Bounds, layer: Layer, ctx: TraversalContext,
-  ): void {
-    const alignContext: AlignContext = {
-      direction: this.props.direction ?? DIRECTION.COLUMN,
-      align: this.props.align ?? ALIGN.CENTER,
-    };
-    const dir = this.props.direction === DIRECTION.ROW ? 'Row' : 'Col';
-    const childPath = ctx.path
-      ? `${ctx.path} > ${dir}(${this.props.children!.length})`
-      : `${dir}(${this.props.children!.length})`;
-
-    log('box %s children=%d: x=%f y=%f w=%f h=%f', childPath, this.props.children!.length, bounds.x, bounds.y, bounds.w, bounds.h);
-
-    for (let i = 0; i < this.props.children!.length; i++) {
-      const child = this.props.children![i];
-      const childNode = node.getChild(i);
-      child.collectDrawers(
-        childNode, bounds.x, bounds.y,
-        alignContext, layer,
-        { ...ctx, path: childPath },
-      );
+  private checkOverflow(bounds: Bounds, container: Bounds, path: string): void {
+    const vOverflow = (bounds.y + bounds.h) - (container.y + container.h);
+    if (vOverflow > EPSILON) {
+      throw this.overflowError('Vertical', path, bounds, container, vOverflow);
     }
-  }
-
-  private checkOverflow(bounds: Bounds, ctx: TraversalContext): void {
-    const epsilon = YOGA_EPSILON;
-    const contentName = this.props.content!.constructor.name;
-    const fullPath = ctx.path ? `${ctx.path} > ${contentName}` : contentName;
-
-    const vOverflow = (bounds.y + bounds.h) - (ctx.containerBounds.y + ctx.containerBounds.h);
-    if (vOverflow > epsilon) {
-      throw this.overflowError('Vertical', fullPath, bounds, ctx.containerBounds, vOverflow);
-    }
-
-    const hOverflow = (bounds.x + bounds.w) - (ctx.containerBounds.x + ctx.containerBounds.w);
-    if (hOverflow > epsilon) {
-      throw this.overflowError('Horizontal', fullPath, bounds, ctx.containerBounds, hOverflow);
+    const hOverflow = (bounds.x + bounds.w) - (container.x + container.w);
+    if (hOverflow > EPSILON) {
+      throw this.overflowError('Horizontal', path, bounds, container, hOverflow);
     }
   }
 

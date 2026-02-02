@@ -1,164 +1,233 @@
-# Card & Content Sizing Vision
+# Layout System Design
 
-## The Problem
+## Goals
 
-Content in tycoslide fills 100% of available vertical space. A three-card row with images balloons to occupy the entire slide body. The cards look inflated rather than elegant. This is a general problem — any component whose natural content height exceeds the available space will be shrunk to exactly fit, leaving zero breathing room.
+1. **Structural determinism** — Same template structure produces same element dimensions, regardless of content. Two 3-card slides have identical card slot sizes even with different images and text.
 
-**Concrete symptoms (showcase slides 4 & 5):**
-- Cards stretch to fill the full body height (~3.7" after header/margins)
-- Portrait images get surrounded by dead whitespace inside cards
-- Small icon images (64×64 px) get the same card height as large illustrations
-- Cards feel like walls, not content objects floating in space
+2. **Grid-based thinking** — The slide is a fixed canvas divided into slots. The grid determines sizes; content fits within slots. Layout is "layout-in" (structure determines size), not "content-out" (content determines size).
 
-## Design Principles
+3. **Text preservation** — Text never shrinks or clips. Images absorb all compression within a slot.
 
-These principles come from established layout and typography systems.
+4. **No manual tuning** — Slot sizes derive from the grid specification and theme constants (gap, margin), not from content measurement or hardcoded values.
 
-### 1. Content Hugging (Apple Human Interface Guidelines)
+5. **Simplicity** — No native dependencies. No unit conversion layers. Layout is transparent arithmetic on inches. A developer can trace any dimension by hand.
 
-Elements should resist expanding beyond their intrinsic content size. A card with a 200×150px image and two lines of text should be exactly that tall, plus padding — not inflated to fill a 3.7" container.
+## Architecture
 
-### 2. Whitespace Distribution (TeX Badness Model)
+### Two levels
 
-TeX penalizes layout "looseness" cubically: `badness = 100r³`, where `r` is the stretch ratio. This means:
-- Small amounts of distributed whitespace (between cards via SPACE_EVENLY) look fine
-- Large amounts of whitespace stuffed inside cards looks terrible
+**Slide level: Grid (arithmetic).** Divide the content bounds into slots. Pure rectangle subdivision — no content measurement. Deterministic by construction.
 
-**The whitespace should be between cards, not inside them.**
+**Slot level: Box (arithmetic).** Stack children within a slot. Measure text (`getHeight`), give images the remaining space. Simple column/row stacking with gaps.
 
-### 3. The 60/40 Rule (Golden Ratio)
+Both levels are arithmetic. No Yoga. No flex solver. The `Component` interface (`getHeight`, `getMinHeight`, `prepare`, `Bounds`) is unchanged.
 
-Content should occupy roughly 60-65% of available space, with 35-40% as breathing room. When content fills 100% of the body, there's no breathing room. SPACE_EVENLY handles this naturally — but only if children report a reasonable content height.
+### Why not Yoga?
 
-### 4. Material Design Card Patterns
+Yoga is a content-out flex engine designed for scrollable web UIs. Slides are fixed-size canvases. The mismatch shows up as:
 
-Cards are "surfaces that display content and actions on a single topic." They are content-sized containers with consistent internal padding, not space-filling blocks.
+- Continuous height variance across slides with the same structure (the original problem)
+- Unit conversion rounding requiring epsilon tolerances (YOGA_EPSILON = 0.035")
+- A native C++ dependency for operations that are trivial arithmetic
+- 420 lines of wrapper code to adapt a web layout engine to a print layout context
 
-### 5. Discrete Sizing
+Every Yoga operation used in the current codebase maps to simple arithmetic:
 
-Given fixed text sizes (fontSize 12, 14, 18, 20) and fixed line heights, cards already land on a discrete set of heights. This is natural — we don't need to engineer discrete sizes.
+| Yoga operation | Arithmetic equivalent |
+|---------------|----------------------|
+| flexShrink (image absorbs compression) | `imageH = slotH - textH - gaps` |
+| Cross-axis stretch | `childW = containerW` |
+| Gap distribution | `usable = available - (N-1) * gap` |
+| Proportional flex | `childW = (ratio / totalRatio) * available` |
+| Measure functions | Call `getHeight(width)` directly |
+| SPACE_EVENLY | `spacing = freeSpace / (N + 1)` |
 
-## The Vision
+Text, Image, and List already compute their own sizes without Yoga. Card and Table use Yoga via Box, but only for single-unknown problems (one shrinkable image in a column of fixed-height text).
 
-**Content should be honestly sized, and the layout should manage whitespace.**
+## Grid System
 
-```
-Current (wrong):
-┌──────────────────────────────────────────┐
-│ Header                                    │
-│ ┌──────────┐ ┌──────────┐ ┌──────────┐  │
-│ │ ▓▓▓▓▓▓▓▓ │ │ ▓▓▓▓▓▓▓▓ │ │ ▓▓▓▓▓▓▓▓ │  │
-│ │ ▓▓▓▓▓▓▓▓ │ │ ▓▓▓▓▓▓▓▓ │ │ ▓▓▓▓▓▓▓▓ │  │
-│ │ ▓ image ▓ │ │ ▓ image ▓ │ │ ▓ image ▓ │  │
-│ │ ▓▓▓▓▓▓▓▓ │ │ ▓▓▓▓▓▓▓▓ │ │ ▓▓▓▓▓▓▓▓ │  │  ← cards fill 100%
-│ │ ▓▓▓▓▓▓▓▓ │ │ ▓▓▓▓▓▓▓▓ │ │ ▓▓▓▓▓▓▓▓ │  │
-│ │ Title    │ │ Title    │ │ Title    │  │
-│ │ Desc...  │ │ Desc...  │ │ Desc...  │  │
-│ └──────────┘ └──────────┘ └──────────┘  │
-└──────────────────────────────────────────┘
-
-Target (correct):
-┌──────────────────────────────────────────┐
-│ Header                                    │
-│                                           │
-│ ┌──────────┐ ┌──────────┐ ┌──────────┐  │
-│ │ ▓▓▓▓▓▓▓▓ │ │ ▓▓▓▓▓▓▓▓ │ │ ▓▓▓▓▓▓▓▓ │  │
-│ │ ▓ image ▓ │ │ ▓ image ▓ │ │ ▓ image ▓ │  │  ← cards are content-sized
-│ │ Title    │ │ Title    │ │ Title    │  │
-│ │ Desc...  │ │ Desc...  │ │ Desc...  │  │
-│ └──────────┘ └──────────┘ └──────────┘  │
-│                                           │
-└──────────────────────────────────────────┘
-             whitespace lives here ^
-         (managed by SPACE_EVENLY layout)
-```
-
-## Completed: Text preservation via flexShrink
-
-### The problem
-
-`applySlideDefaults()` sets `flexShrink: 1` on every Yoga node so children shrink to fit the slide. But this means all children shrink at equal rates. In a card with image + title + description, text gets crushed proportionally alongside the image.
-
-A previous fix (`flex: 1` on the card image) masked this by setting the image's flex basis to 0 — the image contributed nothing to measurement, then expanded to fill all remaining space during layout. This "fixed" text crushing but made cards as tall as their container.
-
-### The fix (implemented)
-
-Added `flexShrink` as a `BoxProps` property. Card text boxes now have `flexShrink: 0` — they refuse to shrink. The image keeps the default `flexShrink: 1` from `applySlideDefaults`. Since the image is the only child that *can* shrink, it absorbs 100% of any shrinkage. No magic numbers, no tuning.
+### Core primitive
 
 ```typescript
-// Image: content-sized, default flexShrink:1 absorbs all shrinkage
-children.push(box({ content: new Image(this.theme, this.props.image) }));
-
-// Title: won't shrink — text is always preserved
-children.push(box({ flexShrink: 0, content: new Text(...) }));
-
-// Description: won't shrink — text is always preserved
-children.push(box({ flexShrink: 0, content: new Text(...) }));
+function slotGrid(bounds: Bounds, spec: GridSpec): Bounds[]
 ```
 
-This is a hard constraint (text never shrinks) rather than a soft ratio (image shrinks more). It's deterministic regardless of child count or sizes.
+Given a rectangle and a grid specification, returns an array of slot rectangles. Pure function. No side effects. No content measurement.
 
-### Status
+```typescript
+interface GridSpec {
+  columns: number;      // equal-width column count
+  rows: number;         // equal-height row count
+  gap: number;          // uniform gap in inches
+  columnGap?: number;   // override horizontal gap
+  rowGap?: number;      // override vertical gap
+}
+```
 
-- `flexShrink` prop added to `BoxProps` in `box.ts`
-- `flex: 1` removed from card image box
-- `flexShrink: 0` added to card title and description boxes
-- Test added: "flexShrink:0 protects child from shrinkage, sibling absorbs all"
-- All 62 tests pass
-- Text is no longer crushed in any card layout
+### Helper primitives
 
-## Remaining Problem: Content exceeds available space
+```typescript
+// Split bounds vertically: content-sized top + remainder bottom
+function splitV(bounds: Bounds, topHeight: number, gap: number): [Bounds, Bounds]
 
-The text preservation fix works, but cards are still full-height. This is because the images' natural DPI-capped heights are enormous:
+// Split bounds horizontally: content-sized left + remainder right
+function splitH(bounds: Bounds, leftWidth: number, gap: number): [Bounds, Bounds]
 
-| Image | Pixels | At card width | Natural height |
-|-------|--------|---------------|----------------|
-| Portrait illustration | 1436×1624 | 4.19" | **4.74"** |
-| Landscape illustration | 1244×1043 | 4.19" | **3.52"** |
-| Square illustration | 651×622 | 2.67" | **2.55"** |
+// Split bounds by proportional ratios with gaps
+function splitRatio(bounds: Bounds, ratios: number[], gap: number, direction: 'row' | 'column'): Bounds[]
+```
 
-The slide body is only ~3.8". A card with a 4.74" image plus text totals ~6". Yoga shrinks it to fit the available space (text protected, image absorbs shrinkage). The result: the card fills exactly 100% of its container. There's no whitespace to distribute.
+### Usage in layout templates
 
-**This is not a card-specific problem.** A bare image on a slide would behave identically — it reports 4.7" of natural height, gets shrunk to 3.8", fills the body.
+```
+cardSlide("Title", "EYEBROW", "Intro", [card1, card2, card3])
 
-### The general problem
+  1. splitV(contentBounds, headerHeight, gapSmall)
+     → [headerBounds, bodyBounds]
 
-The system has no concept of "this is too much content for this space, so request less." Every component reports its full natural height honestly. When natural height exceeds the container, shrinking produces a layout that fills 100% — no breathing room.
+  2. slotGrid(bodyBounds, { columns: 3, rows: 1, gap })
+     → [slot1, slot2, slot3]
 
-The missing piece is at the layout level, not the component level. Components report honest content heights. The layout should decide how much space to allocate.
+  3. card1.prepare(slot1), card2.prepare(slot2), card3.prepare(slot3)
+```
 
-## Next Step: Layout-level content budgeting
+The header height is measured from content (`eyebrow.getHeight() + gap + h3.getHeight()`). The card slots are pure grid arithmetic. Cards fit themselves into their slots using Box.
 
-The slide body uses `SPACE_EVENLY` to distribute whitespace around children. But when children are taller than the body, SPACE_EVENLY can't add whitespace — there's nothing left to distribute.
+### What the grid gives us
 
-The layout needs a way to say: "children, you have a budget. Don't request more than your fair share."
+- **Cross-slide consistency** — `slotGrid` with the same inputs always returns identical `Bounds[]`. Content cannot influence slot sizes. This is the primary goal, achieved as a free consequence of the model.
 
-### Possible approaches
+- **Breathing room** — After `splitV` allocates the header, the body bounds are the remaining space. The grid fills a portion of it; SPACE_EVENLY-style distribution is just arithmetic on the leftover.
 
-**Option A: maxHeight on the body column's children**
+- **Content-type-specific layouts** — Different templates use different grid specs. `cardSlide` uses a grid. `imageSlide` gives the image the full body bounds. `bulletSlide` stacks text without a grid. Each template is a function that calls the right primitives.
 
-The SPACE_EVENLY column could cap each child's height at `bodyHeight / N * contentRatio` where N is the child count and contentRatio is ~0.6-0.7. This is explicit but requires the layout to know about content budgeting.
+## Box (Arithmetic)
 
-**Option B: A new justify mode (SPACE_EVENLY_CAPPED)**
+### What Box becomes
 
-Like SPACE_EVENLY but with built-in content budgeting. Each child gets at most `bodyHeight * contentRatio / N` of main-axis space. Remaining space becomes the SPACE_EVENLY gutters.
+Box is a simple container that stacks children vertically or horizontally within given bounds, respecting gaps and shrink priorities. ~60-80 lines replacing the current ~420.
 
-**Option C: Slide-level height budget propagation**
+**Column layout algorithm:**
 
-The slide knows its total height. It could compute a height budget for the body, and the body could propagate per-child budgets. This is the most general but also the most complex.
+1. Measure each child: `naturalH[i] = child.getHeight(width)`
+2. Sum: `totalNatural = sum(naturalH) + (N-1) * gap`
+3. If fits: position top-to-bottom with gaps
+4. If overflows: compute excess, subtract from shrinkable children (those with `flexShrink > 0`), floored at `getMinHeight()`
+5. If children have flex-grow: distribute remaining space proportionally
 
-**Option D: Image self-capping relative to container**
+**Row layout algorithm:** Same on the horizontal axis.
 
-Images could be aware of their context and self-cap. But this breaks the clean "getHeight answers one question" model — components would need to know about their container.
+### What stays the same
 
-### Recommendation
+The `Component` interface is unchanged:
 
-Option A is the simplest and most transparent. The layout template (e.g., `cardSlide`) knows it has N cards in a body. It can compute a reasonable maxHeight for the card row. This doesn't require any framework changes — just smarter use of existing `maxHeight` in the layout factories.
+```typescript
+interface Component {
+  getHeight(width: number): number;
+  getMinHeight?(width: number): number;
+  getWidth?(height: number): number;
+  prepare(bounds: Bounds, alignContext?: AlignContext): Drawer;
+}
+```
 
-The key insight: **the layout template is where the knowledge lives** — it knows the slide structure, the number of children, and the intent. The components shouldn't need to know about the slide. The framework shouldn't impose opinions. The layout template bridges the two.
+Text, Image, List, Card, Table — all keep their existing measurement and rendering logic. They receive `Bounds` and don't care whether those bounds came from a grid, a Box, or were hardcoded.
 
-### Open questions
+### What goes away
 
-1. Should maxHeight be computed per-template (e.g., `cardSlide` calculates it) or should `contentSlide` compute it generically for all its children?
-2. How does this interact with rows of cards where the row has equal-flex children? The row's height is what matters, not individual card heights.
-3. What's the right content ratio? 60%? 70%? Should it be a theme constant?
+- `yoga-layout` dependency (native C++)
+- `yoga-utils.ts` (unit conversion, node management)
+- `contentBudget` two-pass system (the grid replaces it)
+- YOGA_EPSILON overflow tolerance (no rounding mismatch without unit conversion)
+- `checkOverflow` (arithmetic doesn't accumulate rounding errors)
+
+## Migration Path
+
+### Strategy: Replace Box internals, keep the interface
+
+Box's public API (`getHeight`, `getMinHeight`, `prepare`, `getChildBounds`) stays identical. Only the implementation changes from Yoga to arithmetic. This means:
+
+- **Card, Table** — zero changes. They call `box(...)` and get a Box back. The Box works the same way.
+- **Layout factories (row, column)** — zero changes. They create Boxes. The Boxes work the same way.
+- **Layout templates** — migrate incrementally from nested Box trees to grid + Box.
+- **Tests** — existing Box/layout tests become the regression suite. If the arithmetic Box produces the same results, tests pass.
+
+### Steps
+
+**Phase 1: Arithmetic Box**
+
+Replace Box internals with arithmetic. Keep the same file (`box.ts`), same class, same public API. Delete `yoga-utils.ts`. Remove `yoga-layout` dependency.
+
+Validation: all existing tests pass. The showcase generates identically (or with sub-epsilon differences from removing Yoga rounding).
+
+**Phase 2: Grid module**
+
+Add `grid.ts` with `slotGrid`, `splitV`, `splitH`, `splitRatio`. Pure functions, easy to test in isolation.
+
+Validation: unit tests for grid arithmetic.
+
+**Phase 3: Migrate layout templates**
+
+Rewrite layout templates (in the Materialize theme) to use grid primitives instead of deeply nested Box trees. This is where the structural determinism goal is realized.
+
+Before:
+```
+column([0, 1], [header, column({ contentBudget: 0.65, justify: SPACE_EVENLY }, intro, row(cards))])
+```
+
+After:
+```
+const [headerBounds, bodyBounds] = splitV(contentBounds, headerH, gap)
+const slots = slotGrid(bodyBounds, { columns: 3, rows: 1, gap })
+// render header into headerBounds, cards into slots
+```
+
+Validation: showcase generates with consistent card heights across slides.
+
+### What does NOT change
+
+- Component interface
+- Text, Image, List, Divider, SlideNumber components
+- Canvas, Renderer, Presentation
+- The DSL factory functions (text, h3, eyebrow, image, card, etc.)
+- The theme structure
+- The master structure
+
+## Open Questions
+
+1. **Breathing room mechanism** — Without contentBudget, how does the grid ensure ~35% whitespace? Options: (a) the grid spec itself defines the content area as a fraction of bounds, (b) `splitV` with a measured content region and the remainder is whitespace, (c) leave it to template authors to size the grid appropriately.
+
+2. **Grid quantum / snapping** — Should slot sizes snap to a grid unit (e.g., 0.25")? The grid is already deterministic without snapping, but snapping to a visible grid could improve visual rhythm. This is optional and can be added later.
+
+3. **SPACE_EVENLY equivalent** — Current card slides use SPACE_EVENLY to distribute whitespace around content groups. With the grid model, is this handled by (a) explicit whitespace rows in the grid spec, (b) centering content within a larger bounds, or (c) not needed because the grid itself provides the structure?
+
+---
+
+## Decision Log
+
+### Yoga as layout engine — removing
+
+Yoga is a content-out flexbox engine for scrollable web UIs. Slides are fixed canvases. Every Yoga operation used in tycoslide maps to trivial arithmetic. The native dependency, unit conversion layer, and epsilon tolerance add complexity without value. Components already implement their own measurement (`getHeight`, `getMinHeight`) — Yoga's measure protocol just calls these same methods through an indirection layer.
+
+### contentBudget two-pass — removing
+
+Pre-Yoga constraint system that scaled children to fit within a budget fraction. Replaced by the grid model, which determines slot sizes from structure rather than scaling content sizes.
+
+### Post-layout height snapping — rejected
+
+Quantize computed bounds after layout. Unsafe in fixed containers — any upward snap accumulates overflow. Not needed with grid (slot sizes are deterministic without snapping).
+
+### Pre-layout input snapping — rejected
+
+Quantize `getHeight()` inputs before layout. Double-quantization with Yoga's point grid. Not needed with grid (no Yoga means no competing quantization).
+
+### Arithmetic Layout class (v1) — rejected, then reconsidered
+
+First attempt replaced Yoga with ~350 lines reimplementing 6/7 flex operations. Rejected as "a worse Yoga." The new approach is different: the grid handles structure (not flex), and the arithmetic Box handles only intra-slot stacking (~60-80 lines). This is not reimplementing Yoga — it's recognizing that the problem was never a flex problem.
+
+### contentBudget wrapper node — rejected
+
+Grouped children under a wrapper node. Broke SPACE_EVENLY. Moot with grid model.
+
+### Card-specific computed heights — superseded
+
+`computeCardRowHeight()` in layout templates. Solved the right problem (deterministic sizing from structure) at the wrong level (card-specific, not general). The grid system generalizes this: `slotGrid` computes deterministic slot sizes for any template.

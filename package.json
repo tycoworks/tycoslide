@@ -24,8 +24,7 @@
     "debug": "^4.4.3",
     "fontkit": "^2.0.4",
     "image-size": "^1.1.1",
-    "pptxgenjs": "^4.0.1",
-    "yoga-layout": "^3.2.1"
+    "pptxgenjs": "^4.0.1"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",

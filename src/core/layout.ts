@@ -20,11 +20,11 @@ import { log } from '../utils/log.js';
 // ============================================
 
 export interface LayoutOptions {
-  gap?: GapSize;   // default: GAP.NORMAL
+  gap?: GapSize;          // default: GAP.NORMAL
   align?: Align;
   justify?: Justify;
-  height?: number;     // explicit height in inches
-  maxHeight?: number;  // cap on height in inches
+  height?: number;        // explicit height in inches
+  maxHeight?: number;     // cap on height in inches
 }
 
 function resolveGap(gap: GapSize | undefined, theme: Theme): number {
@@ -59,6 +59,19 @@ function layout(direction: Direction, equalFlex: boolean, theme: Theme, args: an
   // Use explicit proportions (e.g. [0, 1, 0]) for unequal sizing.
   if (!proportions && equalFlex) {
     proportions = children.map(() => 1);
+  }
+
+  // Detect expand()'ed children: Box instances with flex set
+  if (!proportions) {
+    const hasFlexChild = children.some(
+      c => c instanceof Box && c.flex !== undefined,
+    );
+    if (hasFlexChild) {
+      proportions = children.map(c => {
+        if (c instanceof Box && c.flex !== undefined) return c.flex;
+        return 0;  // content-sized
+      });
+    }
   }
 
   const dir = direction === DIRECTION.ROW ? 'row' : 'column';

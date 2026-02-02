@@ -2,7 +2,7 @@
 // Provides text measurement, word wrapping, and rich text processing using fontkit
 
 import { openSync, type Font as FontkitFont } from 'fontkit';
-import { ptToIn } from './yoga-utils.js';
+import { ptToIn } from './units.js';
 import type { Font, FontFamily, FontWeight, TextContent, TextRun, NormalizedRun } from '../core/types.js';
 
 const fontCache: Map<string, FontkitFont> = new Map();

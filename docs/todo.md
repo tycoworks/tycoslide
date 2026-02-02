@@ -1,5 +1,4 @@
 Spacing / layouts:
-- Card sizes
 - Design principles
 -- Direction is opposite to container?
 -- Content rules
@@ -12,11 +11,13 @@ Text:
 
 Core:
 - Escape hatch
+- Portrait mode
 - Nest or some other CLI framework?
-- Logging & testing
-- Dark mode
+- Dark mode & design token integration
 - Groups
 
 Components:
+- Image to the left of the card / direction and justify
 - Quote component
-- Image to the left of the card
+- Code component
+- Mermaid diagrams

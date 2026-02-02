@@ -1,6 +1,6 @@
 // Card Component
 // Styled container with optional background, border, image, and title/description
-// Implemented using Box with Yoga layout
+// Implemented using Box with arithmetic layout
 
 import { DIRECTION, SHAPE, TEXT_STYLE, type AlignContext, type Component, type Drawer, type Bounds, type Theme, type TextStyleName } from '../core/types.js';
 import { box, type Box } from '../core/box.js';
@@ -74,6 +74,13 @@ export class Card implements Component {
     const contentH = this.getBox().getHeight(innerW);
     log('card getHeight: w=%f padding=%f innerW=%f contentH=%f total=%f', width, padding, innerW, contentH, padding * 2 + contentH);
     return padding * 2 + contentH;
+  }
+
+  getMinHeight(width: number): number {
+    const padding = this.getPadding();
+    const innerW = width - padding * 2;
+    const contentMinH = this.getBox().getMinHeight?.(innerW) ?? this.getBox().getHeight(innerW);
+    return padding * 2 + contentMinH;
   }
 
   getWidth(height: number): number {

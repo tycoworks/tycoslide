@@ -55,7 +55,7 @@ export {
 
 // Layout utilities
 export { sizeOf } from './components/index.js';
-export { POINTS_PER_INCH } from './utils/yoga-utils.js';
+export { POINTS_PER_INCH } from './utils/units.js';
 
 // Component classes and types
 export {
@@ -108,3 +108,6 @@ export {
 
 // Layout engine
 export { box, Box, type BoxProps } from './core/box.js';
+
+// Grid primitives
+export { slotGrid, splitV, splitH, splitRatio, type GridSpec } from './core/grid.js';

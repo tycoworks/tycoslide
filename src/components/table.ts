@@ -119,7 +119,7 @@ export class Table implements Component {
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
     const tableBox = this.getBox();
 
-    // Get row positions from the Yoga layout (single tree, consistent rounding)
+    // Get row positions from Box layout (single tree, consistent positioning)
     const rowBounds = tableBox.getChildBounds(bounds);
     const rowYPositions = rowBounds.map(b => b.y);
     const lastRow = rowBounds[rowBounds.length - 1];

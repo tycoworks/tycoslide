@@ -33,6 +33,10 @@ export class Image implements Component {
     return h;
   }
 
+  getMinHeight(_width: number): number {
+    return 0;  // Images are fully compressible from the layout's perspective
+  }
+
   getWidth(height: number): number {
     // Width needed to display at given height, preserving aspect ratio
     return height * this.aspectRatio;
