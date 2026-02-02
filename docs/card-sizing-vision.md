@@ -1,48 +1,14 @@
-# Card Sizing Vision
+# Card & Content Sizing Vision
 
 ## The Problem
 
-Card slides in tycoslide currently fill 100% of available vertical space. A three-card row with small images and short text balloons to occupy the entire slide body, creating oversized cards with excessive internal whitespace. The cards look inflated rather than elegant.
+Content in tycoslide fills 100% of available vertical space. A three-card row with images balloons to occupy the entire slide body. The cards look inflated rather than elegant. This is a general problem — any component whose natural content height exceeds the available space will be shrunk to exactly fit, leaving zero breathing room.
 
 **Concrete symptoms (showcase slides 4 & 5):**
 - Cards stretch to fill the full body height (~3.7" after header/margins)
-- Portrait images get surrounded by dead whitespace
+- Portrait images get surrounded by dead whitespace inside cards
 - Small icon images (64×64 px) get the same card height as large illustrations
 - Cards feel like walls, not content objects floating in space
-
-## Root Cause Analysis
-
-### The flex:1 trap
-
-The card image box currently has `flex: 1` (in `card.ts` line 40):
-
-```typescript
-children.push(box({ flex: 1, content: new Image(this.theme, this.props.image) }));
-```
-
-This was added to prevent text from being crushed when cards are constrained. But it introduces the opposite problem: **images expand to fill all remaining space**, making cards as tall as the container allows.
-
-### Why flex:1 was added (and why it's wrong)
-
-Without `flex: 1`, when a card is placed in a constrained container (e.g., a STRETCH row inside a SPACE_EVENLY column), Yoga shrinks all children proportionally. The `applySlideDefaults()` in `box.ts` sets:
-
-```typescript
-node.setFlexShrink(1);   // All children shrink equally
-node.setMinHeight(0);    // No minimum — children can shrink to zero
-```
-
-This means text and image shrink at the same rate. Text gets crushed to unreadable heights while the image still has plenty of room to spare. Adding `flex: 1` to the image "fixed" this by setting `flexBasis: 0` — the image contributes zero to the card's measured height, so during `getHeight()` the card measures as text-only height. During `prepare()`, the image expands to fill remaining space.
-
-**This is masking the real bug.** The real bug is that `flexShrink: 1` on all children means proportional shrinking, and proportional shrinking is wrong for cards where the image is the expendable element and text must be preserved.
-
-### The measurement vs. layout mismatch
-
-| Phase | With `flex: 1` | Without `flex: 1` |
-|-------|----------------|-------------------|
-| `getHeight()` | Image basis = 0, card measures as **text-only** height | Image reports full natural height, card is **honestly sized** |
-| `prepare()` | Image **grows** to fill all remaining container space | Image **shrinks** proportionally, crushing text |
-
-Neither behavior is correct. We need: honest measurement (without flex:1) + smart shrinking (image absorbs shrinkage first).
 
 ## Design Principles
 
@@ -56,25 +22,25 @@ Elements should resist expanding beyond their intrinsic content size. A card wit
 
 TeX penalizes layout "looseness" cubically: `badness = 100r³`, where `r` is the stretch ratio. This means:
 - Small amounts of distributed whitespace (between cards via SPACE_EVENLY) look fine
-- Large amounts of whitespace stuffed inside cards look terrible
+- Large amounts of whitespace stuffed inside cards looks terrible
 
 **The whitespace should be between cards, not inside them.**
 
 ### 3. The 60/40 Rule (Golden Ratio)
 
-Content should occupy roughly 60-65% of available space, with 35-40% as breathing room. When cards fill 100% of the body, there's no breathing room. SPACE_EVENLY handles this naturally — but only if cards report their honest content height.
+Content should occupy roughly 60-65% of available space, with 35-40% as breathing room. When content fills 100% of the body, there's no breathing room. SPACE_EVENLY handles this naturally — but only if children report a reasonable content height.
 
 ### 4. Material Design Card Patterns
 
-Cards are "surfaces that display content and actions on a single topic." They are content-sized containers with consistent internal padding, not space-filling blocks. Google's Material Design uses 8dp grid spacing between cards, not inside them.
+Cards are "surfaces that display content and actions on a single topic." They are content-sized containers with consistent internal padding, not space-filling blocks.
 
 ### 5. Discrete Sizing
 
-Given fixed text sizes (fontSize 12, 14, 18, 20) and fixed line heights, cards already land on a discrete set of heights. A card with one H4 title + two lines of SMALL description will always be the same height. This is natural — we don't need to engineer discrete sizes, we just need to stop inflating cards beyond their content.
+Given fixed text sizes (fontSize 12, 14, 18, 20) and fixed line heights, cards already land on a discrete set of heights. This is natural — we don't need to engineer discrete sizes.
 
 ## The Vision
 
-**Cards should be content-hugging objects that float in managed whitespace.**
+**Content should be honestly sized, and the layout should manage whitespace.**
 
 ```
 Current (wrong):
@@ -107,140 +73,92 @@ Target (correct):
          (managed by SPACE_EVENLY layout)
 ```
 
-The existing `SPACE_EVENLY` in `contentSlide` already handles whitespace distribution perfectly — it just needs cards to report their honest height instead of growing to fill everything.
+## Completed: Text preservation via flexShrink
 
-## The Fix: `flexShrink` as a BoxProps property
+### The problem
 
-### What's missing
+`applySlideDefaults()` sets `flexShrink: 1` on every Yoga node so children shrink to fit the slide. But this means all children shrink at equal rates. In a card with image + title + description, text gets crushed proportionally alongside the image.
 
-`BoxProps` currently supports `flex` (which sets `flexGrow` + `flexBasis: 0`) but has no way to control `flexShrink` independently. The `applySlideDefaults()` sets `flexShrink: 1` on every node, which means all children shrink at equal rates.
+A previous fix (`flex: 1` on the card image) masked this by setting the image's flex basis to 0 — the image contributed nothing to measurement, then expanded to fill all remaining space during layout. This "fixed" text crushing but made cards as tall as their container.
 
-For cards, we need the image to absorb virtually all shrinkage while text is preserved. This requires per-node `flexShrink` control.
+### The fix (implemented)
 
-### The solution
-
-Add `flexShrink` to `BoxProps`:
+Added `flexShrink` as a `BoxProps` property. Card text boxes now have `flexShrink: 0` — they refuse to shrink. The image keeps the default `flexShrink: 1` from `applySlideDefaults`. Since the image is the only child that *can* shrink, it absorbs 100% of any shrinkage. No magic numbers, no tuning.
 
 ```typescript
-// box.ts — BoxProps
-export interface BoxProps {
-  // ... existing props ...
-  flexShrink?: number;    // Override slide default (1). Higher = absorbs more shrink.
-}
+// Image: content-sized, default flexShrink:1 absorbs all shrinkage
+children.push(box({ content: new Image(this.theme, this.props.image) }));
+
+// Title: won't shrink — text is always preserved
+children.push(box({ flexShrink: 0, content: new Text(...) }));
+
+// Description: won't shrink — text is always preserved
+children.push(box({ flexShrink: 0, content: new Text(...) }));
 ```
 
-Apply it in `configureDimensions()`:
+This is a hard constraint (text never shrinks) rather than a soft ratio (image shrinks more). It's deterministic regardless of child count or sizes.
 
-```typescript
-private configureDimensions(node: YogaNode): void {
-  // ... existing dimension logic ...
+### Status
 
-  if (this.props.flexShrink !== undefined) {
-    node.setFlexShrink(this.props.flexShrink);
-  }
-}
-```
+- `flexShrink` prop added to `BoxProps` in `box.ts`
+- `flex: 1` removed from card image box
+- `flexShrink: 0` added to card title and description boxes
+- Test added: "flexShrink:0 protects child from shrinkage, sibling absorbs all"
+- All 62 tests pass
+- Text is no longer crushed in any card layout
 
-Then in `card.ts`, replace `flex: 1` with `flexShrink: 100`:
+## Remaining Problem: Content exceeds available space
 
-```typescript
-// Before (wrong — makes image basis 0, then expands):
-children.push(box({ flex: 1, content: new Image(this.theme, this.props.image) }));
+The text preservation fix works, but cards are still full-height. This is because the images' natural DPI-capped heights are enormous:
 
-// After (correct — image measures honestly, but yields space first):
-children.push(box({ flexShrink: 100, content: new Image(this.theme, this.props.image) }));
-```
+| Image | Pixels | At card width | Natural height |
+|-------|--------|---------------|----------------|
+| Portrait illustration | 1436×1624 | 4.19" | **4.74"** |
+| Landscape illustration | 1244×1043 | 4.19" | **3.52"** |
+| Square illustration | 651×622 | 2.67" | **2.55"** |
 
-### How flexShrink: 100 works
+The slide body is only ~3.8". A card with a 4.74" image plus text totals ~6". Yoga shrinks it to fit the available space (text protected, image absorbs shrinkage). The result: the card fills exactly 100% of its container. There's no whitespace to distribute.
 
-When a card is unconstrained (during `getHeight()`):
-- Image reports its full DPI-capped natural height
-- Card measures as `padding*2 + image + gap + title + gap + description`
-- This is the **honest** content height
+**This is not a card-specific problem.** A bare image on a slide would behave identically — it reports 4.7" of natural height, gets shrunk to 3.8", fills the body.
 
-When a card is constrained (during `prepare()`, e.g., in a STRETCH row):
-- Yoga needs to shrink children to fit the available height
-- Shrink is distributed proportionally to `flexShrink` values
-- Image has `flexShrink: 100`, text boxes have `flexShrink: 1` (the default)
-- Image absorbs ~100/102 of the shrinkage; text is virtually untouched
-- Semantically correct: the image is the expendable element
+### The general problem
 
-### Why this is better than flex:1
+The system has no concept of "this is too much content for this space, so request less." Every component reports its full natural height honestly. When natural height exceeds the container, shrinking produces a layout that fills 100% — no breathing room.
 
-| Behavior | `flex: 1` (current) | `flexShrink: 100` (proposed) |
-|----------|---------------------|------------------------------|
-| Measurement | Image basis = 0 (dishonest) | Image at natural height (honest) |
-| Growth | Image expands to fill space | No growth — content-sized |
-| Shrink | All children equal | Image absorbs ~98% of shrinkage |
-| Card height | As tall as container allows | As tall as content requires |
-| Whitespace | Inside cards (bad) | Between cards via SPACE_EVENLY (good) |
+The missing piece is at the layout level, not the component level. Components report honest content heights. The layout should decide how much space to allocate.
 
-## Additional: cardImageMaxHeight theme constant
+## Next Step: Layout-level content budgeting
 
-Large illustrations (e.g., 800×600px at 96 DPI) report a natural height of 6.25" — taller than the entire slide. The DPI cap helps, but for cards specifically we may want a tighter cap.
+The slide body uses `SPACE_EVENLY` to distribute whitespace around children. But when children are taller than the body, SPACE_EVENLY can't add whitespace — there's nothing left to distribute.
 
-Add to theme spacing:
+The layout needs a way to say: "children, you have a budget. Don't request more than your fair share."
 
-```typescript
-spacing: {
-  // ... existing ...
-  cardImageMaxHeight: 2.5,  // Maximum image height within cards (inches)
-}
-```
+### Possible approaches
 
-This is a theme-level constant, not a magic number in a component. Different themes can set different values. The card component would apply it as `maxHeight` on the image box:
+**Option A: maxHeight on the body column's children**
 
-```typescript
-children.push(box({
-  flexShrink: 100,
-  maxHeight: this.theme.spacing.cardImageMaxHeight,
-  content: new Image(this.theme, this.props.image),
-}));
-```
+The SPACE_EVENLY column could cap each child's height at `bodyHeight / N * contentRatio` where N is the child count and contentRatio is ~0.6-0.7. This is explicit but requires the layout to know about content budgeting.
 
-This prevents pathologically large images from dominating the card while still allowing the image to be content-sized within reasonable bounds.
+**Option B: A new justify mode (SPACE_EVENLY_CAPPED)**
 
-## Implementation Plan
+Like SPACE_EVENLY but with built-in content budgeting. Each child gets at most `bodyHeight * contentRatio / N` of main-axis space. Remaining space becomes the SPACE_EVENLY gutters.
 
-### Phase 1: Add flexShrink to BoxProps
+**Option C: Slide-level height budget propagation**
 
-**Files:** `src/core/box.ts`
+The slide knows its total height. It could compute a height budget for the body, and the body could propagate per-child budgets. This is the most general but also the most complex.
 
-1. Add `flexShrink?: number` to `BoxProps` interface
-2. In `configureDimensions()`, apply `flexShrink` if set: `node.setFlexShrink(props.flexShrink)`
+**Option D: Image self-capping relative to container**
 
-This is a non-breaking change. No existing behavior changes because no existing code sets `flexShrink`.
+Images could be aware of their context and self-cap. But this breaks the clean "getHeight answers one question" model — components would need to know about their container.
 
-### Phase 2: Fix card image sizing
+### Recommendation
 
-**Files:** `src/components/card.ts`
+Option A is the simplest and most transparent. The layout template (e.g., `cardSlide`) knows it has N cards in a body. It can compute a reasonable maxHeight for the card row. This doesn't require any framework changes — just smarter use of existing `maxHeight` in the layout factories.
 
-1. Replace `box({ flex: 1, content: new Image(...) })` with `box({ flexShrink: 100, content: new Image(...) })`
-2. The image now measures at natural height but yields space first when constrained
+The key insight: **the layout template is where the knowledge lives** — it knows the slide structure, the number of children, and the intent. The components shouldn't need to know about the slide. The framework shouldn't impose opinions. The layout template bridges the two.
 
-### Phase 3: Add cardImageMaxHeight (if needed)
+### Open questions
 
-**Files:** `src/core/types.ts` (Spacing interface), theme files
-
-1. Add `cardImageMaxHeight?: number` to the Spacing interface
-2. Set a reasonable default (e.g., 2.5") in themes
-3. Apply in `card.ts` as `maxHeight` on the image box
-
-This phase may not be needed if Phase 2 alone produces good results. Test first.
-
-### Phase 4: Validate
-
-- Regenerate showcase.pptx
-- Check slides 4 & 5 (two-card with images, three-card with images)
-- Check slide 6 (cards with small icon images)
-- Check slides 13-14 (two-column with cards + images)
-- Verify no text crushing in any layout
-- Verify cards are content-sized, not container-filling
-
-## Open Questions
-
-1. **Row STRETCH interaction:** Cards in a row use `alignItems: STRETCH`, which makes all cards match the tallest card's height. With content-sized cards, the tallest card sets the row height and shorter cards stretch to match. This is correct behavior (equal-height cards in a row look right). But does the `flexShrink: 100` image still work correctly when the card is stretched taller than its content? (The image should grow into the extra space since it's within the card, not the slide.)
-
-2. **Text-only cards:** Cards without images have no high-shrink element. Under extreme constraint, text could still crush. But text-only cards are much shorter, so they're less likely to overflow. Monitor but don't prematurely optimize.
-
-3. **cardImageMaxHeight value:** The right value depends on typical slide layouts. 2.5" is a guess. May need adjustment after testing with real content. Could also be derived (e.g., `slideHeight * 0.4`) rather than absolute.
+1. Should maxHeight be computed per-template (e.g., `cardSlide` calculates it) or should `contentSlide` compute it generically for all its children?
+2. How does this interact with rows of cards where the row has equal-flex children? The row's height is what matters, not individual card heights.
+3. What's the right content ratio? 60%? 70%? Should it be a theme constant?
