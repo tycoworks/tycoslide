@@ -21,6 +21,7 @@
   "dependencies": {
     "@fontsource/host-grotesk": "^5.2.8",
     "@fontsource/inter": "^5.2.8",
+    "@mermaid-js/mermaid-cli": "^11.12.0",
     "debug": "^4.4.3",
     "fontkit": "^2.0.4",
     "image-size": "^1.1.1",

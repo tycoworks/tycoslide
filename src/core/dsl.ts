@@ -15,6 +15,7 @@ import { Table, type TableData, type TableProps } from '../components/table.js';
 import { Divider, type DividerProps } from '../components/divider.js';
 import { Card, type CardProps } from '../components/card.js';
 import { SlideNumber, type SlideNumberProps } from '../components/slide-number.js';
+import { Mermaid, type MermaidProps } from '../components/mermaid.js';
 import { row, column, group, type LayoutOptions } from './layout.js';
 
 // Re-export layout factories
@@ -98,6 +99,14 @@ export function slideNumber(theme: Theme, props: SlideNumberProps = {}): SlideNu
 }
 
 // ============================================
+// MERMAID FACTORY
+// ============================================
+
+export function mermaid(theme: Theme, definition: string, props?: MermaidProps): Mermaid {
+  return new Mermaid(theme, definition, props);
+}
+
+// ============================================
 // DSL FACTORY
 // ============================================
 
@@ -120,6 +129,7 @@ export interface DSL {
   table(data: TableData, props?: TableProps): Table;
   divider(props?: DividerProps): Divider;
   slideNumber(props?: SlideNumberProps): SlideNumber;
+  mermaid(definition: string, props?: MermaidProps): Mermaid;
   card(title: string, description: string): Card;
   card(props?: CardProps): Card;
   group(columns: number, options: LayoutOptions, ...children: Component[]): Component;
@@ -158,6 +168,7 @@ export function createDSL(theme: Theme): DSL {
     table: (data, props?) => table(theme, data, props),
     divider: (props?) => divider(theme, props),
     slideNumber: (props?) => slideNumber(theme, props),
+    mermaid: (definition, props?) => mermaid(theme, definition, props),
     card: ((...args: any[]) => (card as Function)(theme, ...args)) as DSL['card'],
     group: ((first: Component | number, ...rest: any[]) => (group as Function)(theme, first, ...rest)) as DSL['group'],
     row: ((...args: any[]) => row(theme, ...args)) as DSL['row'],

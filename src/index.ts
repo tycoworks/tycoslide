@@ -78,6 +78,8 @@ export {
   type SlideNumberProps,
   SlideNumber,
   LIST_TYPE,
+  Mermaid,
+  type MermaidProps,
 } from './components/index.js';
 
 // DSL — Factory functions and layout primitives
@@ -97,6 +99,7 @@ export {
   table,
   divider,
   slideNumber,
+  mermaid,
   card,
   group,
   row,
