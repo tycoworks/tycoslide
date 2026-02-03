@@ -9,8 +9,19 @@ export const POINTS_PER_INCH = 72;
 export const ptToIn = (pt: number): number => pt / POINTS_PER_INCH;
 export const inToPt = (inches: number): number => inches * POINTS_PER_INCH;
 
-// Word-boundary wrapping leaves lines partially empty; 85% is a conservative estimate
-const PACKING_EFFICIENCY = 0.85;
+// Fontkit and PowerPoint measure text differently (kerning, hinting, platform).
+// We use a two-tier approach:
+//
+// 1. SINGLE_LINE_THRESHOLD: If measured ratio is at or below this, text fits on
+//    one line. Packing efficiency doesn't apply to unwrapped text.
+//
+// 2. PACKING_EFFICIENCY: For multi-line text, word-boundary wrapping leaves lines
+//    partially empty. 75% is conservative to avoid overflow.
+//
+// The key insight: packing efficiency only matters for WRAPPED text. If fontkit
+// says text fits (ratio ≤ 1.0), the packing penalty shouldn't apply.
+const SINGLE_LINE_THRESHOLD = 1.0;
+const PACKING_EFFICIENCY = 0.75;
 
 const fontCache: Map<string, FontkitFont> = new Map();
 
@@ -72,6 +83,12 @@ export function getStyleLineHeight(style: TextStyle): number {
 
 /**
  * Estimate the number of wrapped lines for content at a given width.
+ *
+ * Two-tier conservative approach:
+ * 1. If text clearly fits on one line (ratio < threshold), return 1
+ * 2. For longer text, use conservative packing efficiency
+ *
+ * Extra whitespace is preferable to text overflow.
  */
 export function estimateLines(content: TextContent, style: TextStyle, availableWidth: number): number {
   const defaultWeight = style.defaultWeight ?? FONT_WEIGHT.NORMAL;
@@ -82,7 +99,15 @@ export function estimateLines(content: TextContent, style: TextStyle, availableW
     const font = getFontFromFamily(style.fontFamily, weight);
     totalWidth += measureText(run.text, font.path, style.fontSize);
   }
-  // Account for word-boundary wrapping inefficiency
+
+  const ratio = totalWidth / availableWidth;
+
+  // Tier 1: Text fits on one line - no packing penalty applies
+  if (ratio <= SINGLE_LINE_THRESHOLD) {
+    return 1;
+  }
+
+  // Tier 2: Text wraps - apply conservative packing efficiency
   const effectiveWidth = availableWidth * PACKING_EFFICIENCY;
   return Math.max(1, Math.ceil(totalWidth / effectiveWidth));
 }
