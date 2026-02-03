@@ -1,5 +1,4 @@
 Spacing / layouts:
-- Cenetering snap to grid
 - DPI
 - Design principles
 -- Direction is opposite to container?

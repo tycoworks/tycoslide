@@ -14,7 +14,7 @@ import {
   type Align,
   type AlignContext,
 } from './types.js';
-import { stackV, stackH, splitRatio, fitHeights, snapUp, SPLIT_DIRECTION, type StackJustify } from './grid.js';
+import { stackV, stackH, splitRatio, fitHeights, snapUp, snapDown, SPLIT_DIRECTION, type StackJustify } from './grid.js';
 import { log } from '../utils/log.js';
 
 // ============================================
@@ -226,15 +226,19 @@ export class GridColumn implements Component {
         return this.unit ? snapUp(raw, this.unit) : raw;
       });
       const finalHeights = resolveProportions(this.proportions, contentHeights, h, this.gap);
-      return stackV(bounds, finalHeights, this.gap, { justify: this.justify });
+      return stackV(bounds, finalHeights, this.gap, { justify: this.justify }, this.unit);
     }
 
-    // Content-sized: measure, snap, fit compressible children, stack
+    // Content-sized: measure, snap up, fit compressible children, snap down (floored at min), stack
     const raw = this.children.map(c => c.getHeight(bounds.w));
     const heights = this.unit ? raw.map(v => snapUp(v, this.unit!)) : raw;
     const minHeights = this.children.map(c => c.getMinHeight(bounds.w));
     const fitted = fitHeights(heights, h, this.gap, minHeights);
-    return stackV(bounds, fitted, this.gap, { justify: this.justify });
+    // Snap down to grid, but never below minHeight (to avoid content overflow)
+    const snapped = this.unit
+      ? fitted.map((v, i) => Math.max(snapDown(v, this.unit!), minHeights[i]))
+      : fitted;
+    return stackV(bounds, snapped, this.gap, { justify: this.justify }, this.unit);
   }
 
   prepare(bounds: Bounds): Drawer {
@@ -260,6 +264,7 @@ export class GridRow implements Component {
     private align: Align,
     private explicitHeight?: number,
     private justify?: StackJustify,
+    private unit?: number,
   ) {}
 
   private measure(width: number, min: boolean): number {
@@ -284,7 +289,7 @@ export class GridRow implements Component {
           return 0;
         });
         const finalWidths = resolveProportions(this.proportions, contentWidths, bounds.w, this.gap);
-        return stackH(bounds, finalWidths, this.gap, { justify: this.justify });
+        return stackH(bounds, finalWidths, this.gap, { justify: this.justify }, this.unit);
       }
 
       // Pure proportional — use splitRatio
@@ -353,7 +358,7 @@ export function row(theme: Theme, ...args: any[]): GridRow {
   log('row: children=%d proportions=%s gap=%f',
     children.length, proportions ? JSON.stringify(proportions) : 'equal', gap);
 
-  return new GridRow(children, proportions, gap, align, options.height, options.justify as StackJustify);
+  return new GridRow(children, proportions, gap, align, options.height, options.justify as StackJustify, theme.spacing.unit);
 }
 
 /**

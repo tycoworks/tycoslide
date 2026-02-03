@@ -3,6 +3,7 @@
 // No Yoga, no Box dependency. Input: Bounds + spec → Bounds[].
 
 import { Bounds } from './bounds.js';
+import { log } from '../utils/log.js';
 
 // ============================================
 // TYPES
@@ -43,6 +44,18 @@ interface StackOptions {
  */
 export function snapUp(value: number, unit: number): number {
   return Math.ceil(value / unit) * unit;
+}
+
+/**
+ * Round a value down to the nearest multiple of unit.
+ * Used after fitHeights to restore grid alignment while staying within bounds.
+ *
+ *   snapDown(0.241, 0.125) → 0.125   (1 unit)
+ *   snapDown(0.250, 0.125) → 0.250   (2 units, already aligned)
+ *   snapDown(0.374, 0.125) → 0.250   (2 units)
+ */
+export function snapDown(value: number, unit: number): number {
+  return Math.floor(value / unit) * unit;
 }
 
 // ============================================
@@ -108,6 +121,7 @@ function stack(
   gap: number,
   direction: SplitDirection,
   options?: StackOptions,
+  unit?: number,
 ): Bounds[] {
   const isVertical = direction === SPLIT_DIRECTION.VERTICAL;
   const axis = isVertical ? 'height' : 'width';
@@ -131,13 +145,25 @@ function stack(
   const freeSpace = available - totalUsed;
 
   let offset: number;
+  let rawOffset: number;
   if (justify === STACK_JUSTIFY.CENTER) {
-    offset = freeSpace / 2;
+    rawOffset = freeSpace / 2;
+    // Snap centering offset down to grid to keep Y positions aligned
+    offset = unit ? snapDown(rawOffset, unit) : rawOffset;
   } else if (justify === STACK_JUSTIFY.END) {
-    offset = freeSpace;
+    rawOffset = freeSpace;
+    // Snap end offset down to grid
+    offset = unit ? snapDown(rawOffset, unit) : rawOffset;
   } else {
+    rawOffset = 0;
     offset = 0;
   }
+
+  const snapped = unit && rawOffset !== offset;
+  log('stack %s: justify=%s n=%d available=%f used=%f free=%f rawOffset=%f offset=%f%s sizes=%s',
+    axis, justify, n, available, totalUsed, freeSpace, rawOffset, offset,
+    snapped ? ` (snapped from ${rawOffset.toFixed(4)})` : '',
+    JSON.stringify(sizes.map(s => s.toFixed(3))));
 
   return sizes.map((size, i) => {
     const b = makeBounds(offset, size);
@@ -152,8 +178,8 @@ function stack(
  *
  *   const [titleBounds, bodyBounds] = stackV(bounds, [titleH, bodyH], gap);
  */
-export function stackV(bounds: Bounds, heights: number[], gap = 0, options?: StackOptions): Bounds[] {
-  return stack(bounds, heights, gap, SPLIT_DIRECTION.VERTICAL, options);
+export function stackV(bounds: Bounds, heights: number[], gap = 0, options?: StackOptions, unit?: number): Bounds[] {
+  return stack(bounds, heights, gap, SPLIT_DIRECTION.VERTICAL, options, unit);
 }
 
 /**
@@ -162,8 +188,8 @@ export function stackV(bounds: Bounds, heights: number[], gap = 0, options?: Sta
  *
  *   const [iconBounds, textBounds] = stackH(bounds, [iconW, textW], gap);
  */
-export function stackH(bounds: Bounds, widths: number[], gap = 0, options?: StackOptions): Bounds[] {
-  return stack(bounds, widths, gap, SPLIT_DIRECTION.HORIZONTAL, options);
+export function stackH(bounds: Bounds, widths: number[], gap = 0, options?: StackOptions, unit?: number): Bounds[] {
+  return stack(bounds, widths, gap, SPLIT_DIRECTION.HORIZONTAL, options, unit);
 }
 
 // ============================================
