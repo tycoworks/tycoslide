@@ -106,55 +106,79 @@ class Group implements Component {
 /**
  * group() — Semantic grouping with optional padding and grid layout.
  *
- * Single component mode:
- *   group(theme, component)           — wrap component (no padding by default)
- *   group(theme, component, padding)  — wrap with explicit padding
+ * Single component mode (gap interpreted as padding):
+ *   group(theme, component)                      — wrap component (no padding)
+ *   group(theme, { gap: GAP.NORMAL }, component) — wrap with gap as padding
+ *
+ * Multi-component mode (auto-row):
+ *   group(theme, c1, c2, c3)                     — auto-row children
+ *   group(theme, { gap: GAP.SMALL }, c1, c2)    — with options
  *
  * Grid mode:
- *   group(theme, columns, c1, c2, c3, c4, c5)  — auto-layout into rows of N columns
- *   group(theme, columns, ...components)       — creates column(row(...), row(...), ...)
- *
- * Padding defaults to 0. Use explicit padding for breathing room:
- *   group(theme, component, 0.25)  — adds 0.25" padding
+ *   group(theme, 3, c1, c2, c3, c4, c5, c6)     — 3 columns, auto-rows
+ *   group(theme, 2, { gap: GAP.SMALL }, c1..c4) — 2 columns with options
  */
-export function group(theme: Theme, component: Component, padding?: number): Component;
-export function group(theme: Theme, columns: number, ...components: Component[]): Component;
-export function group(
-  theme: Theme,
-  first: Component | number,
-  ...rest: any[]
-): Component {
-  const { unit, gap } = theme.spacing;
+export function group(theme: Theme, columns: number, options: LayoutOptions, ...children: Component[]): Component;
+export function group(theme: Theme, columns: number, ...children: Component[]): Component;
+export function group(theme: Theme, options: LayoutOptions, ...children: Component[]): Component;
+export function group(theme: Theme, ...children: Component[]): Component;
+export function group(theme: Theme, ...args: any[]): Component {
+  const { unit } = theme.spacing;
 
-  // Grid mode: first arg after theme is number of columns
-  if (typeof first === 'number') {
-    const columns = first;
-    const components = rest as Component[];
+  // Parse arguments manually (group has unique shape: columns | options | children)
+  let columns: number | undefined;
+  let options: LayoutOptions = {};
+  let children: Component[];
 
-    // Chunk components into rows
-    const rows: Component[][] = [];
-    for (let i = 0; i < components.length; i += columns) {
-      rows.push(components.slice(i, i + columns));
+  if (typeof args[0] === 'number') {
+    // Grid mode: first arg is column count
+    columns = args[0];
+    if (args[1] && typeof args[1] === 'object' && !('prepare' in args[1])) {
+      options = args[1] as LayoutOptions;
+      children = args.slice(2) as Component[];
+    } else {
+      children = args.slice(1) as Component[];
     }
+  } else if (args[0] && typeof args[0] === 'object' && !('prepare' in args[0])) {
+    // Options first: group({ gap: ... }, c1, c2)
+    options = args[0] as LayoutOptions;
+    children = args.slice(1) as Component[];
+  } else {
+    // All children: group(c1, c2, c3)
+    children = args as Component[];
+  }
 
-    // Build the grid structure
+  const gap = resolveGap(options.gap, theme);
+  const align = options.align ?? ALIGN.CENTER;
+
+  // Grid mode: chunk into rows
+  if (columns !== undefined) {
+    const rows: Component[][] = [];
+    for (let i = 0; i < children.length; i += columns) {
+      rows.push(children.slice(i, i + columns));
+    }
     const rowComponents = rows.map(rowItems =>
-      new GridRow(rowItems, undefined, gap, ALIGN.CENTER)
+      new GridRow(rowItems, undefined, gap, align)
     );
     const grid = rows.length === 1
       ? rowComponents[0]
-      : new GridColumn(rowComponents, undefined, gap, ALIGN.CENTER);
+      : new GridColumn(rowComponents, undefined, gap, align);
 
-    log('group grid: columns=%d items=%d rows=%d',
-      columns, components.length, rows.length);
-
+    log('group grid: columns=%d items=%d rows=%d gap=%f',
+      columns, children.length, rows.length, gap);
     return grid;
   }
 
-  // Single component mode — padding defaults to 0
-  const component = first;
-  const padding = rest[0] as number | undefined;
-  return new Group(component, padding ?? 0, unit);
+  // Single component mode: gap interpreted as padding (default: 0)
+  if (children.length === 1) {
+    const padding = options.gap !== undefined ? gap : 0;
+    log('group single: padding=%f', padding);
+    return new Group(children[0], padding, unit);
+  }
+
+  // Multi-component mode: auto-row
+  log('group auto-row: %d items gap=%f', children.length, gap);
+  return new GridRow(children, undefined, gap, align);
 }
 
 // ============================================

@@ -122,8 +122,10 @@ export interface DSL {
   slideNumber(props?: SlideNumberProps): SlideNumber;
   card(title: string, description: string): Card;
   card(props?: CardProps): Card;
-  group(component: Component, padding?: number): Component;
-  group(columns: number, ...components: Component[]): Component;
+  group(columns: number, options: LayoutOptions, ...children: Component[]): Component;
+  group(columns: number, ...children: Component[]): Component;
+  group(options: LayoutOptions, ...children: Component[]): Component;
+  group(...children: Component[]): Component;
   row(proportions: number[], children: Component[], options?: LayoutOptions): Component;
   row(options: LayoutOptions, ...children: Component[]): Component;
   row(...children: Component[]): Component;

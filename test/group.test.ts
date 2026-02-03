@@ -2,7 +2,7 @@
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import { group, GridColumn } from '../src/core/layout.js';
-import { Bounds, ALIGN, type Component, type Theme } from '../src/core/types.js';
+import { Bounds, ALIGN, GAP, type Component, type Theme } from '../src/core/types.js';
 
 // Mock theme for testing
 const mockTheme = {
@@ -42,27 +42,27 @@ function trackingStub(height: number, minHeight?: number): { component: Componen
 describe('Group height reporting', () => {
   test('getHeight adds padding to child height', () => {
     const child = stub(2);
-    const g = group(mockTheme, child, 0.25);
+    const g = group(mockTheme, { gap: GAP.NORMAL }, child);
     // Child at inner width would be 2", plus 0.25*2 padding = 2.5"
     approx(g.getHeight(10), 2.5, 'height = child + padding*2');
   });
 
   test('getMinHeight excludes padding (fully compressible)', () => {
     const child = stub(2, 1); // natural 2", min 1"
-    const g = group(mockTheme, child, 0.25);
+    const g = group(mockTheme, { gap: GAP.NORMAL }, child);
     // Min height is child's min only - padding compresses to zero
     approx(g.getMinHeight(10), 1, 'minHeight = child minHeight only');
   });
 
   test('getMinHeight with incompressible child', () => {
     const child = stub(2); // natural = min = 2"
-    const g = group(mockTheme, child, 0.5);
+    const g = group(mockTheme, { gap: GAP.NORMAL }, child);
     approx(g.getMinHeight(10), 2, 'minHeight = child minHeight');
   });
 
   test('default padding is 0', () => {
     const child = stub(1);
-    const g = group(mockTheme, child, undefined);
+    const g = group(mockTheme, child);
     // Default padding = 0, height = child height
     approx(g.getHeight(10), 1, 'default padding = 0');
   });
@@ -75,7 +75,7 @@ describe('Group height reporting', () => {
 describe('Group padding compression', () => {
   test('full padding when plenty of room', () => {
     const tracker = trackingStub(2, 2);
-    const g = group(mockTheme, tracker.component, 0.25);
+    const g = group(mockTheme, { gap: GAP.NORMAL }, tracker.component);
     // Bounds: 10x4 - child needs 2", we have 4" → 2" excess → full padding
     g.prepare(new Bounds(0, 0, 10, 4));
     const inner = tracker.getBounds()!;
@@ -87,7 +87,7 @@ describe('Group padding compression', () => {
 
   test('compressed padding when tight (snaps to unit)', () => {
     const tracker = trackingStub(2, 2);
-    const g = group(mockTheme, tracker.component, 0.25);
+    const g = group(mockTheme, { gap: GAP.NORMAL }, tracker.component);
     // Bounds: 10x2.3 - child needs 2", excess = 0.3"
     // rawVPad = min(0.25, 0.3/2) = 0.15
     // vPad = floor(0.15/0.125)*0.125 = 0.125 (snaps down)
@@ -103,7 +103,7 @@ describe('Group padding compression', () => {
 
   test('zero padding when no room', () => {
     const tracker = trackingStub(2, 2);
-    const g = group(mockTheme, tracker.component, 0.25);
+    const g = group(mockTheme, { gap: GAP.NORMAL }, tracker.component);
     // Bounds: 10x2 - child needs exactly 2", no excess
     g.prepare(new Bounds(0, 0, 10, 2));
     const inner = tracker.getBounds()!;
@@ -115,7 +115,7 @@ describe('Group padding compression', () => {
 
   test('zero padding when child overflows', () => {
     const tracker = trackingStub(3, 3);
-    const g = group(mockTheme, tracker.component, 0.25);
+    const g = group(mockTheme, { gap: GAP.NORMAL }, tracker.component);
     // Bounds: 10x2 - child needs 3", negative excess
     g.prepare(new Bounds(0, 0, 10, 2));
     const inner = tracker.getBounds()!;
@@ -127,7 +127,7 @@ describe('Group padding compression', () => {
 
   test('respects bounds offset', () => {
     const tracker = trackingStub(2, 2);
-    const g = group(mockTheme, tracker.component, 0.25);
+    const g = group(mockTheme, { gap: GAP.NORMAL }, tracker.component);
     g.prepare(new Bounds(1, 2, 10, 4));
     const inner = tracker.getBounds()!;
     approx(inner.x, 1.25, 'offset x + padding');
@@ -144,7 +144,7 @@ describe('Group compression via GridColumn', () => {
     // Simulate: column with text + group + text that would overflow
     // without compression but fits when group padding compresses.
     const tracker = trackingStub(2, 2); // incompressible row
-    const g = group(mockTheme, tracker.component, 0.25);
+    const g = group(mockTheme, { gap: GAP.NORMAL }, tracker.component);
     // g.getHeight = 2 + 0.5 = 2.5"
     // g.getMinHeight = 2"
     // budget = 0.5"
@@ -173,7 +173,7 @@ describe('Group compression via GridColumn', () => {
     const text1 = stub(1);
     const text2 = stub(1);
     const tracker = trackingStub(2, 2);
-    const g = group(mockTheme, tracker.component, 0.25);
+    const g = group(mockTheme, { gap: GAP.NORMAL }, tracker.component);
 
     // Create column WITH unit to enable snapping + compression
     const col = new GridColumn([text1, g, text2], undefined, 0, ALIGN.CENTER, undefined, undefined);
@@ -237,9 +237,9 @@ describe('Group grid mode', () => {
 // ============================================
 
 describe('Group edge cases', () => {
-  test('zero padding requested', () => {
+  test('zero padding requested (GAP.NONE)', () => {
     const tracker = trackingStub(2, 2);
-    const g = group(mockTheme, tracker.component, 0);
+    const g = group(mockTheme, { gap: GAP.NONE }, tracker.component);
     g.prepare(new Bounds(0, 0, 10, 4));
     const inner = tracker.getBounds()!;
     approx(inner.x, 0, 'no padding');
@@ -250,7 +250,7 @@ describe('Group edge cases', () => {
 
   test('compressible child affects minHeight', () => {
     const child = stub(4, 1); // natural 4", min 1"
-    const g = group(mockTheme, child, 0.25);
+    const g = group(mockTheme, { gap: GAP.NORMAL }, child);
     // getHeight uses natural: 4 + 0.5 = 4.5
     approx(g.getHeight(10), 4.5, 'natural height');
     // getMinHeight uses min: 1 (no padding)
