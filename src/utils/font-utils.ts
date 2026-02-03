@@ -9,6 +9,9 @@ export const POINTS_PER_INCH = 72;
 export const ptToIn = (pt: number): number => pt / POINTS_PER_INCH;
 export const inToPt = (inches: number): number => inches * POINTS_PER_INCH;
 
+// Word-boundary wrapping leaves lines partially empty; 85% is a conservative estimate
+const PACKING_EFFICIENCY = 0.85;
+
 const fontCache: Map<string, FontkitFont> = new Map();
 
 function loadFont(fontPath: string): FontkitFont {
@@ -69,7 +72,6 @@ export function getStyleLineHeight(style: TextStyle): number {
 
 /**
  * Estimate the number of wrapped lines for content at a given width.
- * Uses total text width / available width — same heuristic PowerPoint uses.
  */
 export function estimateLines(content: TextContent, style: TextStyle, availableWidth: number): number {
   const defaultWeight = style.defaultWeight ?? FONT_WEIGHT.NORMAL;
@@ -80,7 +82,9 @@ export function estimateLines(content: TextContent, style: TextStyle, availableW
     const font = getFontFromFamily(style.fontFamily, weight);
     totalWidth += measureText(run.text, font.path, style.fontSize);
   }
-  return Math.max(1, Math.ceil(totalWidth / availableWidth));
+  // Account for word-boundary wrapping inefficiency
+  const effectiveWidth = availableWidth * PACKING_EFFICIENCY;
+  return Math.max(1, Math.ceil(totalWidth / effectiveWidth));
 }
 
 // ============================================
