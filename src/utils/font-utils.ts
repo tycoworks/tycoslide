@@ -2,8 +2,12 @@
 // Provides text measurement and rich text processing using fontkit
 
 import { openSync, type Font as FontkitFont } from 'fontkit';
-import { ptToIn } from './units.js';
 import { FONT_WEIGHT, type Font, type FontFamily, type FontWeight, type TextStyle, type TextContent, type TextRun, type NormalizedRun } from '../core/types.js';
+
+// Unit conversion constants
+export const POINTS_PER_INCH = 72;
+export const ptToIn = (pt: number): number => pt / POINTS_PER_INCH;
+export const inToPt = (inches: number): number => inches * POINTS_PER_INCH;
 
 const fontCache: Map<string, FontkitFont> = new Map();
 

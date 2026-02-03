@@ -3,7 +3,7 @@
 
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
-import { column, expand } from '../src/core/layout.js';
+import { column } from '../src/core/layout.js';
 import { ALIGN, DIRECTION, type Component, Bounds, type Theme, type AlignContext } from '../src/core/types.js';
 
 // ============================================
@@ -122,50 +122,15 @@ describe('ColumnLayout', () => {
   });
 
   // ------------------------------------------
-  // 5. expand() in column fills remaining space
-  // ------------------------------------------
-  test('expand() in column fills remaining space', () => {
-    const tContent = trackingContent(1);
-    const tExpand = trackingContent(1);
-    const col = column(T, tContent.component, expand(tExpand.component));
-    col.prepare(new Bounds(10, 5));
-    approx(tContent.bounds[0].h, 1, 'content-sized child height');
-    approx(tExpand.bounds[0].h, 4, 'expanded child fills remaining');
-  });
-
-  // ------------------------------------------
-  // 8. Multiple expand() children split equally
-  // ------------------------------------------
-  test('multiple expand() children split remaining space equally', () => {
-    const tContent = trackingContent(1);
-    const tExpand1 = trackingContent(0.5);
-    const tExpand2 = trackingContent(0.5);
-    const col = column(T, tContent.component, expand(tExpand1.component), expand(tExpand2.component));
-    col.prepare(new Bounds(10, 5));
-    approx(tContent.bounds[0].h, 1, 'content-sized child');
-    approx(tExpand1.bounds[0].h, 2, 'first expanded child');
-    approx(tExpand2.bounds[0].h, 2, 'second expanded child');
-  });
-
-  // ------------------------------------------
-  // 7. height option on LayoutOptions
+  // 5. height option on LayoutOptions
   // ------------------------------------------
   test('height option makes column exact height', () => {
     const col = column(T, { height: 3 }, mockContent(1));
     approx(col.getHeight(10), 3, 'column intrinsic height pinned');
   });
 
-  test('height option with expand: exact height, expanded child fills remainder', () => {
-    const tContent = trackingContent(1);
-    const tExpand = trackingContent(0.5);
-    const col = column(T, { height: 4 }, tContent.component, expand(tExpand.component));
-    col.prepare(new Bounds(10, 10));
-    approx(tContent.bounds[0].h, 1, 'content-sized child');
-    approx(tExpand.bounds[0].h, 3, 'expanded child fills remaining in fixed-height column');
-  });
-
   // ------------------------------------------
-  // 8. Alignment context
+  // 6. Alignment context
   // ------------------------------------------
   test('alignment context defaults to COLUMN direction with CENTER align', () => {
     const t1 = trackingContentWithAlign(1);

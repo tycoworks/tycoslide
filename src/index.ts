@@ -55,7 +55,7 @@ export {
 
 // Layout utilities
 export { sizeOf } from './components/index.js';
-export { POINTS_PER_INCH } from './utils/units.js';
+export { POINTS_PER_INCH } from './utils/font-utils.js';
 
 // Component classes and types
 export {
@@ -98,7 +98,6 @@ export {
   divider,
   slideNumber,
   card,
-  expand,
   group,
   row,
   column,

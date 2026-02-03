@@ -65,22 +65,6 @@ function resolveProportions(
 }
 
 // ============================================
-// EXPANDED MARKER
-// ============================================
-
-class Expanded implements Component {
-  constructor(public inner: Component, public flex = 1) {}
-  getHeight(w: number) { return this.inner.getHeight(w); }
-  getMinHeight(w: number) { return this.inner.getMinHeight(w); }
-  getWidth(h: number) { return this.inner.getWidth?.(h) ?? 0; }
-  prepare(b: Bounds, ac?: AlignContext) { return this.inner.prepare(b, ac); }
-}
-
-export function expand(component: Component): Component {
-  return new Expanded(component);
-}
-
-// ============================================
 // GROUP — semantic grouping with breathing room
 // ============================================
 
@@ -271,15 +255,6 @@ function parseArgs(args: FactoryArgs): {
     children = args.slice(1) as Component[];
   } else {
     children = args as Component[];
-  }
-
-  // Auto-detect expand() markers and generate proportions
-  if (!proportions) {
-    const hasExpanded = children.some(c => c instanceof Expanded);
-    if (hasExpanded) {
-      proportions = children.map(c => c instanceof Expanded ? c.flex : 0);
-      children = children.map(c => c instanceof Expanded ? c.inner : c);
-    }
   }
 
   return { children, proportions, options };

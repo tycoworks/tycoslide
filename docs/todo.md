@@ -4,7 +4,6 @@ Spacing / layouts:
 -- Content rules
 -- Image cover
 - DPI?
-- Expand
 
 Text:
 - Bullet point spacing / indent
