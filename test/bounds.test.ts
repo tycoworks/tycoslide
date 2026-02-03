@@ -92,4 +92,39 @@ describe('Bounds', () => {
     approx(b.w, 6, 'w');
     approx(b.h, 6, 'h');
   });
+
+  // ============================================
+  // OFFSET
+  // ============================================
+
+  test('offset translates position by dx/dy', () => {
+    const original = new Bounds(1, 2, 8, 6);
+    const moved = original.offset(3, 4);
+    approx(moved.x, 4, 'x');
+    approx(moved.y, 6, 'y');
+    approx(moved.w, 8, 'w unchanged');
+    approx(moved.h, 6, 'h unchanged');
+  });
+
+  test('offset does not mutate the original', () => {
+    const original = new Bounds(1, 2, 8, 6);
+    original.offset(3, 4);
+    assert.strictEqual(original.x, 1);
+    assert.strictEqual(original.y, 2);
+  });
+
+  test('offset with zero values returns equal bounds', () => {
+    const original = new Bounds(1, 2, 3, 4);
+    const same = original.offset(0, 0);
+    assert.strictEqual(same.x, original.x);
+    assert.strictEqual(same.y, original.y);
+    assert.strictEqual(same.w, original.w);
+    assert.strictEqual(same.h, original.h);
+  });
+
+  test('offset with negative values moves bounds up/left', () => {
+    const b = new Bounds(5, 5, 2, 2).offset(-3, -2);
+    approx(b.x, 2, 'x moved left');
+    approx(b.y, 3, 'y moved up');
+  });
 });

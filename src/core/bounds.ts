@@ -34,4 +34,9 @@ export class Bounds {
       this.h - padding * 2,
     );
   }
+
+  /** Translate position by dx/dy, keeping same dimensions */
+  offset(dx: number, dy: number): Bounds {
+    return new Bounds(this.x + dx, this.y + dy, this.w, this.h);
+  }
 }

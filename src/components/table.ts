@@ -1,7 +1,7 @@
 // Table Component
 // Renders a table using grid primitives for cells with line-drawn borders
 
-import { BORDER_STYLE, SHAPE, ALIGN, type AlignContext, type BorderStyle, type Component, type Drawer, type Bounds, type Theme } from '../core/types.js';
+import { BORDER_STYLE, SHAPE, ALIGN, DIRECTION, type AlignContext, type Align, type BorderStyle, type Component, type Drawer, type Bounds, type Theme } from '../core/types.js';
 import { GridColumn, GridRow } from '../core/layout.js';
 import { Text } from './text.js';
 import type { Canvas } from '../core/canvas.js';
@@ -79,9 +79,24 @@ export class Table implements Component {
   getHeight(width: number): number { return this.column.getHeight(width); }
   getMinHeight(width: number): number { return this.column.getMinHeight(width); }
 
-  prepare(bounds: Bounds, _alignContext?: AlignContext): Drawer {
+  prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
+    // Calculate vertical offset for cross-axis alignment when inside a row
+    let yOffset = 0;
+    const contentHeight = this.getHeight(bounds.w);
+    if (alignContext?.direction === DIRECTION.ROW && contentHeight < bounds.h) {
+      const offsetMap: Record<Align, number> = {
+        [ALIGN.START]: 0,
+        [ALIGN.CENTER]: (bounds.h - contentHeight) / 2,
+        [ALIGN.END]: bounds.h - contentHeight,
+      };
+      yOffset = offsetMap[alignContext.align];
+    }
+
+    // Apply offset to bounds
+    const adjustedBounds = bounds.offset(0, yOffset);
+
     // Get computed positions from grid for border drawing
-    const rowSlots = this.column.getSlots(bounds);
+    const rowSlots = this.column.getSlots(adjustedBounds);
     const colSlots = this.rows[0].getSlots(rowSlots[0]);
 
     const rowYPositions = rowSlots.map(b => b.y);
@@ -90,11 +105,11 @@ export class Table implements Component {
     const colWidths = colSlots.map(b => b.w);
 
     // Column handles all child measurement and positioning
-    const drawContent = this.column.prepare(bounds);
+    const drawContent = this.column.prepare(adjustedBounds);
 
     return (canvas) => {
       drawContent(canvas);
-      this.drawBorders(canvas, bounds, rowYPositions, bottomY, colWidths);
+      this.drawBorders(canvas, adjustedBounds, rowYPositions, bottomY, colWidths);
     };
   }
 
