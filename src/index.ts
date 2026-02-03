@@ -99,6 +99,7 @@ export {
   slideNumber,
   card,
   expand,
+  group,
   row,
   column,
   type LayoutOptions,

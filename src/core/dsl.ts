@@ -15,10 +15,10 @@ import { Table, type TableData, type TableProps } from '../components/table.js';
 import { Divider, type DividerProps } from '../components/divider.js';
 import { Card, type CardProps } from '../components/card.js';
 import { SlideNumber, type SlideNumberProps } from '../components/slide-number.js';
-import { row, column, expand, type LayoutOptions } from './layout.js';
+import { row, column, expand, group, type LayoutOptions } from './layout.js';
 
 // Re-export layout factories
-export { row, column, expand, type LayoutOptions } from './layout.js';
+export { row, column, expand, group, type LayoutOptions } from './layout.js';
 
 // ============================================
 // TEXT FACTORIES
@@ -123,6 +123,7 @@ export interface DSL {
   card(title: string, description: string): Card;
   card(props?: CardProps): Card;
   expand(component: Component): Component;
+  group(component: Component, padding?: number): Component;
   row(proportions: number[], children: Component[], options?: LayoutOptions): Component;
   row(options: LayoutOptions, ...children: Component[]): Component;
   row(...children: Component[]): Component;
@@ -157,6 +158,7 @@ export function createDSL(theme: Theme): DSL {
     slideNumber: (props?) => slideNumber(theme, props),
     card: ((...args: any[]) => (card as Function)(theme, ...args)) as DSL['card'],
     expand: (component) => expand(component),
+    group: (component, padding?) => group(component, padding, theme.spacing.unit),
     row: ((...args: any[]) => row(theme, ...args)) as DSL['row'],
     column: ((...args: any[]) => column(theme, ...args)) as DSL['column'],
   };

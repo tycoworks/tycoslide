@@ -40,9 +40,9 @@ export const DIRECTION = {
 export type Direction = typeof DIRECTION[keyof typeof DIRECTION];
 
 export const JUSTIFY = {
+  START: 'start',
   CENTER: 'center',
-  SPACE_BETWEEN: 'space-between',
-  SPACE_EVENLY: 'space-evenly',
+  END: 'end',
 } as const;
 
 export type Justify = typeof JUSTIFY[keyof typeof JUSTIFY];
@@ -252,7 +252,7 @@ export interface Theme {
   highlights: HighlightScheme;
   slide: SlideSize | CustomSlideSize;
   spacing: {
-    unit?: number;          // Grid quantum in inches (e.g. 0.125 = 1/8")
+    unit: number;           // Grid quantum in inches (e.g. 0.125 = 1/8")
     margin: number;         // Inset from all 4 edges
     gap: number;            // Standard gap between elements
     gapSmall: number;       // Small gap between elements

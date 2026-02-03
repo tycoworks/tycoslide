@@ -8,22 +8,11 @@ import { Bounds } from './bounds.js';
 // TYPES
 // ============================================
 
-/** Grid specification: rows × columns with optional gap. */
-interface GridSpec {
-  rows: number;
-  cols: number;
-  gap?: number;       // gap between cells in inches (default: 0)
-  rowGap?: number;    // override gap for rows
-  colGap?: number;    // override gap for columns
-}
-
 /** Justify controls positioning of items along the stacking axis. */
 export const STACK_JUSTIFY = {
   START: 'start',
   CENTER: 'center',
   END: 'end',
-  SPACE_BETWEEN: 'space-between',
-  SPACE_EVENLY: 'space-evenly',
 } as const;
 
 export type StackJustify = typeof STACK_JUSTIFY[keyof typeof STACK_JUSTIFY];
@@ -52,43 +41,8 @@ interface StackOptions {
  *   snapUp(0.28, 0.125) → 0.375   (3 units)
  *   snapUp(0.5, 0.125)  → 0.5     (already aligned)
  */
-function snapUp(value: number, unit: number): number {
+export function snapUp(value: number, unit: number): number {
   return Math.ceil(value / unit) * unit;
-}
-
-// ============================================
-// SLOT GRID
-// ============================================
-
-/**
- * Divide a Bounds into a uniform grid of cells.
- * Returns Bounds[] in row-major order (left-to-right, top-to-bottom).
- *
- *   slotGrid(bounds, { rows: 2, cols: 3, gap: 0.125 })
- *   → 6 cells, each (boundsW - 2*gap) / 3 wide, (boundsH - gap) / 2 tall
- */
-function slotGrid(bounds: Bounds, spec: GridSpec): Bounds[] {
-  const { rows, cols } = spec;
-  const rGap = spec.rowGap ?? spec.gap ?? 0;
-  const cGap = spec.colGap ?? spec.gap ?? 0;
-
-  const totalColGap = cGap * Math.max(0, cols - 1);
-  const totalRowGap = rGap * Math.max(0, rows - 1);
-  const cellW = (bounds.w - totalColGap) / cols;
-  const cellH = (bounds.h - totalRowGap) / rows;
-
-  const cells: Bounds[] = [];
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      cells.push(new Bounds(
-        bounds.x + c * (cellW + cGap),
-        bounds.y + r * (cellH + rGap),
-        cellW,
-        cellH,
-      ));
-    }
-  }
-  return cells;
 }
 
 // ============================================
@@ -175,41 +129,6 @@ function stack(
 
   const justify = options?.justify ?? STACK_JUSTIFY.START;
   const freeSpace = available - totalUsed;
-
-  if (justify === STACK_JUSTIFY.SPACE_EVENLY) {
-    // Spacers replace gaps — compute from total content only, not freeSpace
-    const totalSizes = sizes.reduce((sum, s) => sum + s, 0);
-    const spacer = (available - totalSizes) / (n + 1);
-    if (spacer >= gap) {
-      // Enough free space — distribute evenly
-      let pos = spacer;
-      return sizes.map((size) => {
-        const b = makeBounds(pos, size);
-        pos += size + spacer;
-        return b;
-      });
-    } else {
-      // Not enough — use gap between items, center the block
-      const totalWithGaps = sizes.reduce((sum, s) => sum + s, 0) + gap * Math.max(0, n - 1);
-      const offset = Math.max(0, (available - totalWithGaps) / 2);
-      let pos = offset;
-      return sizes.map((size, i) => {
-        const b = makeBounds(pos, size);
-        pos += size + (i < n - 1 ? gap : 0);
-        return b;
-      });
-    }
-  }
-
-  if (justify === STACK_JUSTIFY.SPACE_BETWEEN) {
-    const between = n > 1 ? freeSpace / (n - 1) : 0;
-    let pos = 0;
-    return sizes.map((size, i) => {
-      const b = makeBounds(pos, size);
-      pos += size + (i < n - 1 ? between : 0);
-      return b;
-    });
-  }
 
   let offset: number;
   if (justify === STACK_JUSTIFY.CENTER) {

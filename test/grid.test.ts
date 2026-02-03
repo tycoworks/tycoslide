@@ -2,7 +2,6 @@
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import { GridColumn, GridRow } from '../src/core/layout.js';
-import { stackV, STACK_JUSTIFY } from '../src/core/grid.js';
 import { Bounds, ALIGN, type Component } from '../src/core/types.js';
 
 function approx(actual: number, expected: number, msg: string, tolerance = 0.001): void {
@@ -202,57 +201,5 @@ describe('grid composition', () => {
     const colSlots = row.getSlots(rowSlots[0]);
     approx(colSlots[0].x, 1, 'cell 0 inherits x offset');
     approx(colSlots[1].x, 4, 'cell 1 at offset + cellW');
-  });
-});
-
-// ============================================
-// SPACE_EVENLY (stack primitive)
-// ============================================
-
-describe('stackV SPACE_EVENLY', () => {
-  test('equal spacing above, between, and below items', () => {
-    // 2 items of 1" each in 5" of space, gap=0.25
-    // spacer = (5 - 2) / 3 = 1.0 (well above gap)
-    // Layout: [1.0] [1.0 item] [1.0] [1.0 item] [1.0]
-    const bounds = new Bounds(0, 0, 10, 5);
-    const slots = stackV(bounds, [1, 1], 0.25, { justify: STACK_JUSTIFY.SPACE_EVENLY });
-    assert.strictEqual(slots.length, 2);
-    approx(slots[0].y, 1.0, 'top spacer');
-    approx(slots[0].h, 1.0, 'item 0 height');
-    approx(slots[1].y, 3.0, 'item 1 y = 1.0 spacer + 1.0 item + 1.0 spacer');
-    approx(slots[1].h, 1.0, 'item 1 height');
-    // Verify bottom spacer: 5 - (3.0 + 1.0) = 1.0
-    approx(5 - (slots[1].y + slots[1].h), 1.0, 'bottom spacer equals top spacer');
-  });
-
-  test('falls back to centered with gap when spacer < gap', () => {
-    // 2 items of 2" each in 4.5", gap=0.25
-    // spacer = (4.5 - 4) / 3 = 0.167 < gap 0.25 → fallback
-    // totalWithGaps = 4 + 0.25 = 4.25, offset = (4.5 - 4.25) / 2 = 0.125
-    const bounds = new Bounds(0, 0, 10, 4.5);
-    const slots = stackV(bounds, [2, 2], 0.25, { justify: STACK_JUSTIFY.SPACE_EVENLY });
-    approx(slots[0].y, 0.125, 'centered offset');
-    approx(slots[1].y, 2.375, 'item 1 y = 0.125 + 2 + 0.25 gap');
-    // Verify symmetric: bottom space = 4.5 - (2.375 + 2) = 0.125
-    approx(4.5 - (slots[1].y + slots[1].h), 0.125, 'bottom space equals top space');
-  });
-
-  test('three items with equal distribution', () => {
-    // 3 items of 1" each in 7", gap=0.25
-    // spacer = (7 - 3) / 4 = 1.0
-    const bounds = new Bounds(0, 0, 10, 7);
-    const slots = stackV(bounds, [1, 1, 1], 0.25, { justify: STACK_JUSTIFY.SPACE_EVENLY });
-    approx(slots[0].y, 1.0, 'top spacer');
-    approx(slots[1].y, 3.0, 'item 1 y');
-    approx(slots[2].y, 5.0, 'item 2 y');
-    approx(7 - (slots[2].y + slots[2].h), 1.0, 'bottom spacer');
-  });
-
-  test('respects bounds y offset', () => {
-    const bounds = new Bounds(0, 2, 10, 5);
-    const slots = stackV(bounds, [1, 1], 0.25, { justify: STACK_JUSTIFY.SPACE_EVENLY });
-    // spacer = (5 - 2) / 3 = 1.0
-    approx(slots[0].y, 3.0, 'first item at bounds.y + spacer');
-    approx(slots[1].y, 5.0, 'second item at bounds.y + spacer + item + spacer');
   });
 });

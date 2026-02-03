@@ -8,13 +8,13 @@ import {
   type Theme,
   type Component,
   type Drawer,
-  type Bounds,
+  Bounds,
   type GapSize,
   type Justify,
   type Align,
   type AlignContext,
 } from './types.js';
-import { stackV, stackH, splitRatio, fitHeights, SPLIT_DIRECTION, type StackJustify } from './grid.js';
+import { stackV, stackH, splitRatio, fitHeights, snapUp, SPLIT_DIRECTION, type StackJustify } from './grid.js';
 import { log } from '../utils/log.js';
 
 // ============================================
@@ -81,6 +81,49 @@ export function expand(component: Component): Component {
 }
 
 // ============================================
+// GROUP — semantic grouping with breathing room
+// ============================================
+
+class Group implements Component {
+  constructor(
+    private inner: Component,
+    private padding: number,
+    private unit: number,
+  ) {}
+
+  getHeight(w: number) {
+    return this.inner.getHeight(w - this.padding * 2) + this.padding * 2;
+  }
+  getMinHeight(w: number) {
+    return this.inner.getMinHeight(w - this.padding * 2);
+  }
+  getWidth(h: number) { return this.inner.getWidth?.(h) ?? 0; }
+
+  prepare(bounds: Bounds, ac?: AlignContext): Drawer {
+    const innerW = bounds.w - this.padding * 2;
+    const childMin = this.inner.getMinHeight(innerW);
+    const excess = bounds.h - childMin;
+    const rawVPad = Math.max(0, Math.min(this.padding, excess / 2));
+    const vPad = Math.floor(rawVPad / this.unit) * this.unit;
+    const ratio = this.padding > 0 ? vPad / this.padding : 0;
+    const hPad = this.padding * ratio;
+    log('Group: bounds=%fx%f padding=%f childMin=%f excess=%f vPad=%f hPad=%f',
+      bounds.w, bounds.h, this.padding, childMin, excess, vPad, hPad);
+    const inner = new Bounds(
+      bounds.x + hPad,
+      bounds.y + vPad,
+      bounds.w - hPad * 2,
+      bounds.h - vPad * 2,
+    );
+    return this.inner.prepare(inner, ac);
+  }
+}
+
+export function group(component: Component, padding?: number, unit = 0.125): Component {
+  return new Group(component, padding ?? unit * 2, unit);
+}
+
+// ============================================
 // GRID COLUMN
 // ============================================
 
@@ -102,6 +145,7 @@ export class GridColumn implements Component {
     private align: Align,
     private explicitHeight?: number,
     private justify?: StackJustify,
+    private unit?: number,
   ) {}
 
   private measure(width: number, min: boolean): number {
@@ -118,15 +162,18 @@ export class GridColumn implements Component {
     const h = this.explicitHeight !== undefined ? Math.min(bounds.h, this.explicitHeight) : bounds.h;
 
     if (this.proportions) {
-      const contentHeights = this.children.map((c, i) =>
-        this.proportions![i] === 0 ? c.getHeight(bounds.w) : 0,
-      );
+      const contentHeights = this.children.map((c, i) => {
+        if (this.proportions![i] !== 0) return 0;
+        const raw = c.getHeight(bounds.w);
+        return this.unit ? snapUp(raw, this.unit) : raw;
+      });
       const finalHeights = resolveProportions(this.proportions, contentHeights, h, this.gap);
       return stackV(bounds, finalHeights, this.gap, { justify: this.justify });
     }
 
-    // Content-sized: measure, fit compressible children, stack
-    const heights = this.children.map(c => c.getHeight(bounds.w));
+    // Content-sized: measure, snap, fit compressible children, stack
+    const raw = this.children.map(c => c.getHeight(bounds.w));
+    const heights = this.unit ? raw.map(v => snapUp(v, this.unit!)) : raw;
     const minHeights = this.children.map(c => c.getMinHeight(bounds.w));
     const fitted = fitHeights(heights, h, this.gap, minHeights);
     return stackV(bounds, fitted, this.gap, { justify: this.justify });
@@ -279,5 +326,6 @@ export function column(theme: Theme, ...args: any[]): GridColumn {
   log('column: children=%d proportions=%s gap=%f',
     children.length, proportions ? JSON.stringify(proportions) : 'content', gap);
 
-  return new GridColumn(children, proportions, gap, align, options.height, options.justify as StackJustify);
+  return new GridColumn(children, proportions, gap, align, options.height, options.justify as StackJustify, theme.spacing.unit);
 }
+

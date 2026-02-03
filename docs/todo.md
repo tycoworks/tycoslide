@@ -3,7 +3,8 @@ Spacing / layouts:
 -- Direction is opposite to container?
 -- Content rules
 -- Image cover
-- Min width...
+- DPI?
+- Expand
 
 Text:
 - Bullet point spacing / indent

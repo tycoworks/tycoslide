@@ -6,7 +6,7 @@
 ┌─────────────────────────────────────────┐
 │  Layer 3: Layouts (imperative draw)     │  Theme-specific slide templates
 │  Layer 2: Components (measure + render) │  Text, Image, Card, Table, List
-│  Layer 1: Grid (rectangle subdivision)  │  Bounds, slotGrid, stackV, splitRatio
+│  Layer 1: Grid (rectangle subdivision)  │  Bounds, stackV, stackH, splitRatio
 └─────────────────────────────────────────┘
 ```
 
@@ -17,7 +17,6 @@ Each layer depends only on the one below it. No circular dependencies.
 Pure rectangle math. No content awareness. No classes.
 
 - `Bounds` — immutable rectangle `{x, y, w, h}` with `inset(padding)`
-- `slotGrid(bounds, {rows, cols, gap})` — uniform grid → `Bounds[]`
 - `splitRatio(bounds, ratios, direction, gap)` — proportional split
 - `stackV(bounds, heights[], gap, options?)` — place items at absolute heights → `Bounds[]`
 - `stackH(bounds, widths[], gap, options?)` — place items at absolute widths → `Bounds[]`
@@ -72,13 +71,17 @@ function mySlide(title, content): Slide {
 **GridColumn** — vertical stacking with optional proportions `[0, 1]` for content-sized + flex slots
 - Content-sized slots (proportion 0) use their natural height
 - Flex slots (proportion > 0) share remaining space proportionally
-- Supports `justify` (CENTER, SPACE_EVENLY, START, END) and `align` (START, CENTER, END)
+- Supports `justify` (START, CENTER, END) and `align` (START, CENTER, END)
 
 **GridRow** — horizontal stacking with optional proportions
 - Content-sized slots (proportion 0) use `getWidth()` or natural size
 - Flex slots (proportion > 0) share remaining space proportionally
 
-**SPACE_EVENLY** distributes items with equal spacing above, between, and below. When there isn't enough room for spacers >= gap, it falls back to centering with gap between items. This guarantees minimum breathing room.
+**group(component, padding?)** — semantic grouping with compressible breathing room
+- Wraps content with uniform inset padding on all sides
+- Padding compresses gracefully when space is tight (snaps down to grid unit)
+- Default padding is `unit * 2` (0.25" = GAP.NORMAL)
+- Use to denote logically related content that should be treated as a unit
 
 **fitHeights** compresses items proportionally when they overflow available space. Each item shrinks in proportion to its compressible budget (`getHeight - getMinHeight`). Incompressible items (text, dividers) are preserved; compressible items (images) absorb the reduction.
 
@@ -104,9 +107,13 @@ footerH     = 2u       (0.25")   footer row height
 
 ### What gets snapped
 
-**Structural dimensions** — margins, gaps, padding, slot sizes, header/body/footer allocations.
+**Spacing** — margins, gaps, padding are grid-aligned by construction (defined as multiples of `unit` in the theme).
 
-**Content allocations** — measured then rounded up to the nearest unit via `snapUp(value, unit)`. A title that measures 0.28" snaps to 0.375" (3 units), providing breathing room for PowerPoint wrapping.
+**Content heights** — measured then rounded up to the nearest unit via `snapUp(value, unit)` inside `GridColumn.getSlots()`. A title that measures 0.28" snaps to 0.375" (3 units), providing breathing room for PowerPoint wrapping. If snapped heights exceed available space, `fitHeights` compresses proportionally.
+
+**Column widths are NOT snapped** — proportional width division produces precise fractional values. This matches Material Design practice: spacing snaps to the grid quantum, content areas flex to fill available space.
+
+**`unit` must evenly divide both usable slide dimensions** — e.g., 0.125" divides 9.0" (72u) and 4.625" (37u) exactly. This ensures no unusable fractional remainder at slide edges.
 
 ### Theme spacing definition
 
@@ -136,7 +143,7 @@ getHeight(width: number): number {
 
 ## Design Principles
 
-1. **Discrete, not continuous.** All structural dimensions snap to the grid unit. No fractional positioning.
+1. **Discrete, not continuous.** Content heights and spacing snap to the grid unit. Column widths are computed precisely via proportional division.
 
 2. **Estimate, don't predict.** Text height is estimated and snapped up. PowerPoint handles the precise rendering. The grid provides breathing room.
 
@@ -148,7 +155,7 @@ getHeight(width: number): number {
 
 ## Key Decisions
 
-**Snapping: callers snap, components estimate.** Components return raw estimates from `getHeight()`. Callers snap up to the grid unit. If snapped content exceeds available space, the system throws an overflow error — strict enforcement.
+**Snapping: callers snap, components estimate.** Components return raw estimates from `getHeight()`. `GridColumn.getSlots()` snaps content heights up to the grid unit before allocating space. If snapped heights exceed available space, `fitHeights` compresses proportionally — graceful degradation rather than strict errors.
 
 **Row/column: composable API on grid primitives.** `row()` and `column()` are authoring primitives. `column(a, b, c)` uses `stackV` internally. `column([1, 2], [a, b])` uses `splitRatio`. Same composability, grid underneath.
 
