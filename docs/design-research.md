@@ -125,3 +125,81 @@ This question was never resolved.
 - Optimal density varies by: user type (expert vs novice), cultural context, application domain
 - High-density interfaces fail when visual hierarchy is poor
 - Sources: nngroup.com/topic/information-density/, logrocket.com
+
+## Card Aspect Ratio Research (2026-02)
+
+### Professional Card Aspect Ratios
+
+Research indicates optimal card aspect ratios fall in the **1.2 to 1.6 range**:
+
+| Ratio | Name | Notes |
+|-------|------|-------|
+| 1.33 | 4:3 | Classic presentation ratio |
+| 1.50 | 3:2 | Photography standard |
+| 1.618 | Golden ratio | Aesthetically pleasing |
+
+Cards outside this range feel either:
+- **Too square** (< 1.2): Cramped, boxy
+- **Too wide/flat** (> 1.8): Stretched, empty
+
+### Inset vs Full-Width Observations
+
+User testing observations:
+
+| Layout | Observation | Hypothesis |
+|--------|-------------|------------|
+| 3 cards, 1 row | Inset looks good | Sparse layouts benefit from visual boundary |
+| 2×2 grid | Full width looks better | Dense grids are self-grouping |
+| 3×2 grid | Full width looks better | Multi-row layouts have internal structure |
+
+**Two factors at play:**
+
+1. **Aspect Ratio**: Fewer cards → wider individual cards → inset keeps them in elegant proportions
+2. **Edge Tension (Gestalt)**: Dense grids with consistent internal spacing are self-grouping; the eye perceives them as a unit without needing external padding
+
+### Future: Smart Layout System
+
+**Auto-Grid Detection** — Instead of requiring explicit column count, system could auto-detect optimal layout:
+
+```typescript
+// Future API
+group(card1, card2, card3, card4, card5, card6)  // System determines 3×2 is optimal
+```
+
+Heuristics for auto-detection:
+- Available width / target aspect ratio = ideal columns
+- Prefer layouts where cards land in 1.2-1.6 aspect ratio
+- Prefer fewer rows when aspect ratios are acceptable
+- Consider total item count (6 → 3×2 or 2×3, prefer wider)
+
+**Aspect-Ratio-Preserving Inset** — Instead of fixed padding, calculate inset to achieve target aspect ratio:
+
+```typescript
+// Future API
+group(row(card1, card2, card3), { aspectRatio: 1.5 })
+```
+
+**Global Design System** — Configuration at theme level:
+
+```typescript
+theme.design = {
+  targetCardAspectRatio: 1.5,      // Golden-ish
+  preferInsetForSparseLayouts: true,
+  maxCardsPerRow: 4,
+  gridGap: 0.25,
+}
+```
+
+### Current Implementation (v1)
+
+For now, `group()` provides:
+
+1. **Single component mode**: `group(component)` — wraps with optional padding (default: off)
+2. **Grid mode**: `group(columns, ...items)` — auto-arranges into rows
+
+Padding defaults to **off** (0). Users can explicitly add padding:
+```typescript
+group(component, 0.25)  // Explicit 0.25" padding
+```
+
+The grid mode creates structure but does not auto-inset. This keeps behavior predictable while we develop smarter layout algorithms.

@@ -103,8 +103,58 @@ class Group implements Component {
   }
 }
 
-export function group(component: Component, padding?: number, unit = 0.125): Component {
-  return new Group(component, padding ?? unit * 2, unit);
+/**
+ * group() — Semantic grouping with optional padding and grid layout.
+ *
+ * Single component mode:
+ *   group(theme, component)           — wrap component (no padding by default)
+ *   group(theme, component, padding)  — wrap with explicit padding
+ *
+ * Grid mode:
+ *   group(theme, columns, c1, c2, c3, c4, c5)  — auto-layout into rows of N columns
+ *   group(theme, columns, ...components)       — creates column(row(...), row(...), ...)
+ *
+ * Padding defaults to 0. Use explicit padding for breathing room:
+ *   group(theme, component, 0.25)  — adds 0.25" padding
+ */
+export function group(theme: Theme, component: Component, padding?: number): Component;
+export function group(theme: Theme, columns: number, ...components: Component[]): Component;
+export function group(
+  theme: Theme,
+  first: Component | number,
+  ...rest: any[]
+): Component {
+  const { unit, gap } = theme.spacing;
+
+  // Grid mode: first arg after theme is number of columns
+  if (typeof first === 'number') {
+    const columns = first;
+    const components = rest as Component[];
+
+    // Chunk components into rows
+    const rows: Component[][] = [];
+    for (let i = 0; i < components.length; i += columns) {
+      rows.push(components.slice(i, i + columns));
+    }
+
+    // Build the grid structure
+    const rowComponents = rows.map(rowItems =>
+      new GridRow(rowItems, undefined, gap, ALIGN.CENTER)
+    );
+    const grid = rows.length === 1
+      ? rowComponents[0]
+      : new GridColumn(rowComponents, undefined, gap, ALIGN.CENTER);
+
+    log('group grid: columns=%d items=%d rows=%d',
+      columns, components.length, rows.length);
+
+    return grid;
+  }
+
+  // Single component mode — padding defaults to 0
+  const component = first;
+  const padding = rest[0] as number | undefined;
+  return new Group(component, padding ?? 0, unit);
 }
 
 // ============================================

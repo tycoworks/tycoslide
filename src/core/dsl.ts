@@ -123,6 +123,7 @@ export interface DSL {
   card(title: string, description: string): Card;
   card(props?: CardProps): Card;
   group(component: Component, padding?: number): Component;
+  group(columns: number, ...components: Component[]): Component;
   row(proportions: number[], children: Component[], options?: LayoutOptions): Component;
   row(options: LayoutOptions, ...children: Component[]): Component;
   row(...children: Component[]): Component;
@@ -156,7 +157,7 @@ export function createDSL(theme: Theme): DSL {
     divider: (props?) => divider(theme, props),
     slideNumber: (props?) => slideNumber(theme, props),
     card: ((...args: any[]) => (card as Function)(theme, ...args)) as DSL['card'],
-    group: (component, padding?) => group(component, padding, theme.spacing.unit),
+    group: ((first: Component | number, ...rest: any[]) => (group as Function)(theme, first, ...rest)) as DSL['group'],
     row: ((...args: any[]) => row(theme, ...args)) as DSL['row'],
     column: ((...args: any[]) => column(theme, ...args)) as DSL['column'],
   };
