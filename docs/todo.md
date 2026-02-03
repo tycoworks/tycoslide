@@ -20,4 +20,3 @@ Components:
 - Image to the left of the card / direction and justify
 - Quote component
 - Code component
-- Mermaid diagrams
