@@ -140,22 +140,47 @@ export interface TextStyle {
 }
 
 // ============================================
-// COLOR SCHEME
+// COLOR NAMES (single source of truth)
 // ============================================
 
-export interface ColorScheme {
-  background: string;   // Background color
+/** Base color names shared by ColorScheme and NODE_STYLE */
+export const COLOR_NAME = {
+  PRIMARY: 'primary',
+  BACKGROUND: 'background',
+  SECONDARY: 'secondary',
+  ACCENT1: 'accent1',
+  ACCENT2: 'accent2',
+  ACCENT3: 'accent3',
+  ACCENT4: 'accent4',
+  ACCENT5: 'accent5',
+} as const;
+
+export type ColorName = typeof COLOR_NAME[keyof typeof COLOR_NAME];
+
+// ============================================
+// COLOR SCHEME (derived from COLOR_NAME)
+// ============================================
+
+/** Base colors derived from COLOR_NAME */
+type BaseColorScheme = {
+  [K in ColorName]: string;
+};
+
+/** Full color scheme with additional properties */
+export type ColorScheme = BaseColorScheme & {
   text: string;         // Main text color
   textMuted: string;    // Muted text for footers, captions
-  primary: string;      // Brand primary
-  secondary: string;    // Brand secondary
-  accent1: string;      // Accent color 1
-  accent2: string;      // Accent color 2
-  accent3: string;      // Accent color 3
-  accent4: string;      // Accent color 4
-  accent5: string;      // Accent color 5
   subtleOpacity: number; // Opacity for muted fills (0-100)
-}
+};
+
+// ============================================
+// NODE STYLES (alias for COLOR_NAME)
+// ============================================
+
+/** Style classes for diagram nodes. Same as COLOR_NAME for consistency with theme. */
+export const NODE_STYLE = COLOR_NAME;
+
+export type NodeStyle = ColorName;
 
 // ============================================
 // HIGHLIGHT PAIRS

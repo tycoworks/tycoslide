@@ -20,8 +20,12 @@ export {
   LAYER,
   SLIDE_SIZE,
   CUSTOM_LAYOUT,
+  COLOR_NAME,
+  NODE_STYLE,
 
   // Type aliases
+  type ColorName,
+  type NodeStyle,
   type TextAlignment,
   type VerticalAlignment,
   type GapSize,
@@ -78,8 +82,16 @@ export {
   type SlideNumberProps,
   SlideNumber,
   LIST_TYPE,
-  Mermaid,
-  type MermaidProps,
+  Diagram,
+  diagram,
+  DIAGRAM_DIRECTION,
+  NODE_SHAPE,
+  type DiagramProps,
+  type DiagramNode,
+  type DiagramDirection,
+  type NodeShape,
+  type EdgeOptions,
+  type SubgraphOptions,
 } from './components/index.js';
 
 // DSL — Factory functions and layout primitives
@@ -99,7 +111,6 @@ export {
   table,
   divider,
   slideNumber,
-  mermaid,
   card,
   group,
   row,

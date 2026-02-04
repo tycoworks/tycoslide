@@ -8,4 +8,15 @@ export { Table, type TableProps, type TableData, type TableCell } from './table.
 export { Divider, type DividerProps } from './divider.js';
 export { Card, type CardProps } from './card.js';
 export { SlideNumber, type SlideNumberProps } from './slide-number.js';
-export { Mermaid, type MermaidProps } from './mermaid.js';
+export {
+  Diagram,
+  diagram,
+  DIAGRAM_DIRECTION,
+  NODE_SHAPE,
+  type DiagramProps,
+  type DiagramNode,
+  type DiagramDirection,
+  type NodeShape,
+  type EdgeOptions,
+  type SubgraphOptions,
+} from './diagram.js';
