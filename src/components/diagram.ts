@@ -152,7 +152,11 @@ function buildClassDefs(theme: Theme): string {
 
   return Object.values(NODE_STYLE).map((styleName: NodeStyle) => {
     const baseColor = colors[styleName] as string;
-    return `classDef ${styleName} fill:#${baseColor}${alpha}`;
+    // PRIMARY uses full opacity; other styles use subtle alpha for emphasis contrast
+    const fill = styleName === NODE_STYLE.PRIMARY
+      ? `#${baseColor}`
+      : `#${baseColor}${alpha}`;
+    return `classDef ${styleName} fill:${fill}`;
   }).join('\n');
 }
 
