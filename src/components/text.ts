@@ -2,8 +2,8 @@
 // Renders text with theme-aware defaults, supports rich text with per-run styling
 // Height is estimated from font metrics; PowerPoint handles wrapping (wrap: true)
 
-import { VALIGN, FONT_WEIGHT, TEXT_STYLE, DIRECTION, ALIGN, type Component, type Drawer, type Bounds, type Theme, type TextStyle, type TextStyleName, type TextAlignment, type VerticalAlignment, type FontWeight, type TextContent, type AlignContext, type Align } from '../core/types.js';
-import { getFontFromFamily, normalizeContent, getStyleLineHeight, estimateLines } from '../utils/font-utils.js';
+import { VALIGN, FONT_WEIGHT, TEXT_STYLE, type Component, type Drawer, type Bounds, type Theme, type TextStyle, type TextStyleName, type TextAlignment, type VerticalAlignment, type FontWeight, type TextContent, type AlignContext } from '../core/types.js';
+import { getFontFromFamily, normalizeContent, getStyleLineHeight, estimateLines, getContentWidth } from '../utils/font-utils.js';
 import type { TextFragment, TextFragmentOptions } from '../core/canvas.js';
 import { log } from '../utils/log.js';
 
@@ -34,23 +34,21 @@ export class Text implements Component {
 
   getMinHeight(width: number): number { return this.getHeight(width); }
 
+  getWidth(_height: number): number {
+    return getContentWidth(this.content, this.getStyle());
+  }
+
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
     const style = this.getStyle();
     const defaultColor = this.props.color ?? style.color ?? this.theme.colors.text;
-    const align = this.props.align;
     const defaultWeight: FontWeight = style.defaultWeight ?? FONT_WEIGHT.NORMAL;
     const defaultFont = getFontFromFamily(style.fontFamily, defaultWeight);
 
-    // Map cross-axis alignment to valign when parent direction is ROW
-    let valign: VerticalAlignment = VALIGN.TOP;
-    if (alignContext?.direction === DIRECTION.ROW) {
-      const valignMap: Record<Align, VerticalAlignment> = {
-        [ALIGN.START]: VALIGN.TOP,
-        [ALIGN.CENTER]: VALIGN.MIDDLE,
-        [ALIGN.END]: VALIGN.BOTTOM,
-      };
-      valign = valignMap[alignContext.align];
-    }
+    // Text alignment is a content concern, not positional — must be explicit via props
+    const align = this.props.align;
+
+    // Vertical alignment: props would take precedence if we had it, else alignContext.vAlign
+    const valign: VerticalAlignment = alignContext?.vAlign ?? VALIGN.TOP;
 
     // Build text fragments — no wrapping, no splitting across lines
     // PowerPoint handles wrapping with wrap: true

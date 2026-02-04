@@ -1,7 +1,8 @@
 // Table Component
 // Renders a table using grid primitives for cells with line-drawn borders
 
-import { BORDER_STYLE, SHAPE, ALIGN, DIRECTION, type AlignContext, type Align, type BorderStyle, type Component, type Drawer, type Bounds, type Theme, type ColorName } from '../core/types.js';
+import { BORDER_STYLE, SHAPE, ALIGN, HALIGN, VALIGN, Bounds, type BorderStyle, type Component, type Drawer, type Theme, type ColorName, type HorizontalAlignment, type VerticalAlignment, type AlignContext } from '../core/types.js';
+import { alignOffset } from '../core/layout.js';
 import { GridColumn, GridRow } from '../core/layout.js';
 import { Text } from './text.js';
 import type { Canvas } from '../core/canvas.js';
@@ -35,18 +36,44 @@ export interface TableProps {
   headerRow?: boolean;     // Apply header styling to first row (default: true)
   headerColumn?: boolean;  // Apply header styling to first column (default: false)
   columnWidths?: number[];  // Flex ratios for column widths (e.g., [1, 3, 3])
+  hAlign?: HorizontalAlignment;  // Horizontal cell content alignment (default: HALIGN.LEFT)
+  vAlign?: VerticalAlignment;    // Vertical cell content alignment (default: VALIGN.TOP)
 }
 
 // ============================================
-// PADDED CONTENT WRAPPER
+// CELL CONTENT WRAPPER
 // ============================================
 
-class PaddedContent implements Component {
-  constructor(private content: Component, private padding: number) {}
+/**
+ * CellContent — The single interface between Table and cell content.
+ *
+ * Responsibilities:
+ * 1. String → Text conversion (Table never sees Text)
+ * 2. Padding
+ * 3. Passes full cell bounds to component; component handles its own alignment via alignContext
+ */
+class CellContent implements Component {
+  private inner: Component;
+
+  constructor(
+    theme: Theme,
+    content: Component | string,
+    private padding: number,
+    private hAlign: HorizontalAlignment,
+    private vAlign: VerticalAlignment,
+    textColor?: string,
+  ) {
+    // String content gets explicit text alignment from table props
+    if (typeof content === 'string') {
+      this.inner = new Text(theme, content, { color: textColor, align: hAlign });
+    } else {
+      this.inner = content;
+    }
+  }
 
   private measure(width: number, min: boolean): number {
     const innerW = width - this.padding * 2;
-    return this.padding * 2 + (min ? this.content.getMinHeight(innerW) : this.content.getHeight(innerW));
+    return this.padding * 2 + (min ? this.inner.getMinHeight(innerW) : this.inner.getHeight(innerW));
   }
 
   getHeight(width: number): number { return this.measure(width, false); }
@@ -54,14 +81,17 @@ class PaddedContent implements Component {
 
   getWidth(height: number): number {
     const innerH = height - this.padding * 2;
-    return this.padding * 2 + (this.content.getWidth?.(innerH) ?? 0);
+    return this.padding * 2 + this.inner.getWidth(innerH);
   }
 
-  prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
-    const inner = bounds.inset(this.padding);
-    return this.content.prepare(inner, alignContext);
+  prepare(bounds: Bounds): Drawer {
+    const cell = bounds.inset(this.padding);
+    const alignContext: AlignContext = { hAlign: this.hAlign, vAlign: this.vAlign };
+    // Give component full cell bounds; it handles alignment via alignContext
+    return this.inner.prepare(cell, alignContext);
   }
 }
+
 
 // ============================================
 // TABLE CLASS
@@ -81,6 +111,8 @@ export class Table implements Component {
 
   constructor(private theme: Theme, data: TableData, private props: TableProps = {}) {
     const padding = props.cellPadding ?? theme.spacing.cellPadding;
+    const hAlign = props.hAlign ?? HALIGN.LEFT;
+    const vAlign = props.vAlign ?? VALIGN.TOP;
     const useHeaderRow = props.headerRow ?? true;
     const useHeaderColumn = props.headerColumn ?? false;
     const numCols = data[0]?.length ?? 0;
@@ -95,7 +127,7 @@ export class Table implements Component {
       const rowFills: (CellFill | undefined)[] = [];
 
       const cells = row.map((cell, colIndex) => {
-        // Normalize cell: extract content, fill, and text color
+        // Extract content, fill, and text color from cell
         let content: Component | string;
         let fill: CellFill | undefined;
         let textColor: string | undefined;
@@ -123,12 +155,8 @@ export class Table implements Component {
 
         rowFills.push(fill);
 
-        // Convert string content to Text component
-        const component = typeof content === 'string'
-          ? (textColor ? new Text(theme, content, { color: textColor }) : new Text(theme, content))
-          : content;
-
-        return new PaddedContent(component, padding);
+        // CellContent handles string→Text conversion, padding, and alignment
+        return new CellContent(theme, content, padding, hAlign, vAlign, textColor);
       });
 
       this.cellFills.push(rowFills);
@@ -140,18 +168,14 @@ export class Table implements Component {
 
   getHeight(width: number): number { return this.column.getHeight(width); }
   getMinHeight(width: number): number { return this.column.getMinHeight(width); }
+  getWidth(height: number): number { return this.column.getWidth(height); }
 
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
     // Calculate vertical offset for cross-axis alignment when inside a row
     let yOffset = 0;
     const contentHeight = this.getHeight(bounds.w);
-    if (alignContext?.direction === DIRECTION.ROW && contentHeight < bounds.h) {
-      const offsetMap: Record<Align, number> = {
-        [ALIGN.START]: 0,
-        [ALIGN.CENTER]: (bounds.h - contentHeight) / 2,
-        [ALIGN.END]: bounds.h - contentHeight,
-      };
-      yOffset = offsetMap[alignContext.align];
+    if (alignContext?.vAlign && contentHeight < bounds.h) {
+      yOffset = alignOffset(bounds.h, contentHeight, alignContext.vAlign);
     }
 
     // Apply offset to bounds

@@ -5,7 +5,7 @@ import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import { row, column } from '../src/core/layout.js';
 
-import { ALIGN, DIRECTION, type Component, Bounds, type Theme, type AlignContext } from '../src/core/types.js';
+import { ALIGN, DIRECTION, VALIGN, type Component, Bounds, type Theme, type AlignContext } from '../src/core/types.js';
 
 // ============================================
 // MOCK HELPERS
@@ -170,28 +170,28 @@ describe('RowLayout', () => {
   // ------------------------------------------
   // 9. Alignment context
   // ------------------------------------------
-  test('alignment context defaults to ROW direction with CENTER align', () => {
+  test('alignment context defaults to ROW direction with CENTER vAlign', () => {
     const t1 = trackingContentWithAlign(1);
     const r = row(T, t1.component);
     r.prepare(new Bounds(10, 5));
-    assert.strictEqual(t1.aligns[0].direction, DIRECTION.ROW);
-    assert.strictEqual(t1.aligns[0].align, ALIGN.CENTER);
+    assert.strictEqual(t1.aligns[0].parentDirection, DIRECTION.ROW);
+    assert.strictEqual(t1.aligns[0].vAlign, VALIGN.MIDDLE);
   });
 
-  test('alignment context respects ALIGN.START option', () => {
+  test('alignment context respects ALIGN.START option (vAlign TOP)', () => {
     const t1 = trackingContentWithAlign(1);
     const r = row(T, { align: ALIGN.START }, t1.component);
     r.prepare(new Bounds(10, 5));
-    assert.strictEqual(t1.aligns[0].direction, DIRECTION.ROW);
-    assert.strictEqual(t1.aligns[0].align, ALIGN.START);
+    assert.strictEqual(t1.aligns[0].parentDirection, DIRECTION.ROW);
+    assert.strictEqual(t1.aligns[0].vAlign, VALIGN.TOP);
   });
 
-  test('alignment context respects ALIGN.END option', () => {
+  test('alignment context respects ALIGN.END option (vAlign BOTTOM)', () => {
     const t1 = trackingContentWithAlign(1);
     const r = row(T, { align: ALIGN.END }, t1.component);
     r.prepare(new Bounds(10, 5));
-    assert.strictEqual(t1.aligns[0].direction, DIRECTION.ROW);
-    assert.strictEqual(t1.aligns[0].align, ALIGN.END);
+    assert.strictEqual(t1.aligns[0].parentDirection, DIRECTION.ROW);
+    assert.strictEqual(t1.aligns[0].vAlign, VALIGN.BOTTOM);
   });
 
 });

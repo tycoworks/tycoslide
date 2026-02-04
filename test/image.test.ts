@@ -5,7 +5,7 @@ import { describe, test, before, after } from 'node:test';
 import * as assert from 'node:assert';
 import { writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { Image } from '../src/components/image.js';
-import { DIRECTION, ALIGN, type Theme, Bounds } from '../src/core/types.js';
+import { HALIGN, VALIGN, type Theme, Bounds } from '../src/core/types.js';
 
 // ============================================
 // MOCK HELPERS
@@ -180,14 +180,13 @@ describe('Image', () => {
   });
 
   // ------------------------------------------
-  // 11. prepare: ROW + ALIGN.START aligns image to top
+  // 11. prepare: vAlign TOP aligns image to top
   // ------------------------------------------
-  test('prepare: ROW + ALIGN.START aligns image to top', () => {
+  test('prepare: vAlign TOP aligns image to top', () => {
     const img = new Image(mockTheme(), `${FIXTURES_DIR}/test-400x200.png`);
     const { calls, canvas } = mockCanvas();
     const drawer = img.prepare(new Bounds(0, 0, 4, 4), {
-      direction: DIRECTION.ROW,
-      align: ALIGN.START,
+      vAlign: VALIGN.TOP,
     });
     drawer(canvas);
 
@@ -195,14 +194,13 @@ describe('Image', () => {
   });
 
   // ------------------------------------------
-  // 12. prepare: ROW + ALIGN.END aligns image to bottom
+  // 12. prepare: vAlign BOTTOM aligns image to bottom
   // ------------------------------------------
-  test('prepare: ROW + ALIGN.END aligns image to bottom', () => {
+  test('prepare: vAlign BOTTOM aligns image to bottom', () => {
     const img = new Image(mockTheme(), `${FIXTURES_DIR}/test-400x200.png`);
     const { calls, canvas } = mockCanvas();
     const drawer = img.prepare(new Bounds(0, 0, 4, 4), {
-      direction: DIRECTION.ROW,
-      align: ALIGN.END,
+      vAlign: VALIGN.BOTTOM,
     });
     drawer(canvas);
 
@@ -211,14 +209,13 @@ describe('Image', () => {
   });
 
   // ------------------------------------------
-  // 13. prepare: COLUMN + ALIGN.START aligns image to left
+  // 13. prepare: hAlign LEFT aligns image to left
   // ------------------------------------------
-  test('prepare: COLUMN + ALIGN.START aligns image to left', () => {
+  test('prepare: hAlign LEFT aligns image to left', () => {
     const img = new Image(mockTheme(), `${FIXTURES_DIR}/test-200x400.png`);
     const { calls, canvas } = mockCanvas();
     const drawer = img.prepare(new Bounds(0, 0, 4, 4), {
-      direction: DIRECTION.COLUMN,
-      align: ALIGN.START,
+      hAlign: HALIGN.LEFT,
     });
     drawer(canvas);
 
@@ -226,14 +223,13 @@ describe('Image', () => {
   });
 
   // ------------------------------------------
-  // 14. prepare: COLUMN + ALIGN.END aligns image to right
+  // 14. prepare: hAlign RIGHT aligns image to right
   // ------------------------------------------
-  test('prepare: COLUMN + ALIGN.END aligns image to right', () => {
+  test('prepare: hAlign RIGHT aligns image to right', () => {
     const img = new Image(mockTheme(), `${FIXTURES_DIR}/test-200x400.png`);
     const { calls, canvas } = mockCanvas();
     const drawer = img.prepare(new Bounds(0, 0, 4, 4), {
-      direction: DIRECTION.COLUMN,
-      align: ALIGN.END,
+      hAlign: HALIGN.RIGHT,
     });
     drawer(canvas);
 

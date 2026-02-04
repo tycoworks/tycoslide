@@ -71,7 +71,7 @@ export class Card implements Component {
   getWidth(height: number): number {
     const padding = this.getPadding();
     const innerH = height - padding * 2;
-    return padding * 2 + (this.column.getWidth?.(innerH) ?? 0);
+    return padding * 2 + this.column.getWidth(innerH);
   }
 
   prepare(bounds: Bounds, _alignContext?: AlignContext): Drawer {

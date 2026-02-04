@@ -10,6 +10,7 @@ Text:
 - Slide number align
 
 Core:
+- Align colors with design token standards
 - Escape hatch
 - Portrait mode
 - Nest or some other CLI framework?

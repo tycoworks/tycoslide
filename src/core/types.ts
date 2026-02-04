@@ -8,13 +8,17 @@ import { Bounds } from './bounds.js';
 // CONSTANTS
 // ============================================
 
-export const TEXT_ALIGN = {
+export const HALIGN = {
   LEFT: 'left',
   CENTER: 'center',
   RIGHT: 'right',
 } as const;
 
-export type TextAlignment = typeof TEXT_ALIGN[keyof typeof TEXT_ALIGN];
+export type HorizontalAlignment = typeof HALIGN[keyof typeof HALIGN];
+
+// Backward compatibility aliases
+export const TEXT_ALIGN = HALIGN;
+export type TextAlignment = HorizontalAlignment;
 
 export const VALIGN = {
   TOP: 'top',
@@ -224,8 +228,9 @@ export { Bounds } from './bounds.js';
 // ============================================
 
 export interface AlignContext {
-  direction: Direction;  // Parent's flex direction
-  align: Align;          // Parent's cross-axis alignment
+  hAlign?: HorizontalAlignment;  // Horizontal alignment (left/center/right)
+  vAlign?: VerticalAlignment;    // Vertical alignment (top/middle/bottom)
+  parentDirection?: Direction;   // Layout direction (for Divider orientation)
 }
 
 // ============================================
@@ -241,7 +246,7 @@ export interface Component {
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer;
   getHeight(width: number): number;      // "At this width, how tall is my content?"
   getMinHeight(width: number): number;   // Incompressible floor (return getHeight for rigid components)
-  getWidth?(height: number): number;     // For intrinsic width (e.g., images in ROW layouts)
+  getWidth(height: number): number;      // "At this height, how wide is my content?"
 }
 
 // ============================================

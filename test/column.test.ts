@@ -4,7 +4,7 @@
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import { column } from '../src/core/layout.js';
-import { ALIGN, DIRECTION, type Component, Bounds, type Theme, type AlignContext } from '../src/core/types.js';
+import { ALIGN, DIRECTION, HALIGN, type Component, Bounds, type Theme, type AlignContext } from '../src/core/types.js';
 
 // ============================================
 // MOCK HELPERS
@@ -132,28 +132,28 @@ describe('ColumnLayout', () => {
   // ------------------------------------------
   // 6. Alignment context
   // ------------------------------------------
-  test('alignment context defaults to COLUMN direction with CENTER align', () => {
+  test('alignment context defaults to COLUMN direction with CENTER hAlign', () => {
     const t1 = trackingContentWithAlign(1);
     const col = column(T, t1.component);
     col.prepare(new Bounds(10, 5));
-    assert.strictEqual(t1.aligns[0].direction, DIRECTION.COLUMN);
-    assert.strictEqual(t1.aligns[0].align, ALIGN.CENTER);
+    assert.strictEqual(t1.aligns[0].parentDirection, DIRECTION.COLUMN);
+    assert.strictEqual(t1.aligns[0].hAlign, HALIGN.CENTER);
   });
 
-  test('alignment context respects ALIGN.START option', () => {
+  test('alignment context respects ALIGN.START option (hAlign LEFT)', () => {
     const t1 = trackingContentWithAlign(1);
     const col = column(T, { align: ALIGN.START }, t1.component);
     col.prepare(new Bounds(10, 5));
-    assert.strictEqual(t1.aligns[0].direction, DIRECTION.COLUMN);
-    assert.strictEqual(t1.aligns[0].align, ALIGN.START);
+    assert.strictEqual(t1.aligns[0].parentDirection, DIRECTION.COLUMN);
+    assert.strictEqual(t1.aligns[0].hAlign, HALIGN.LEFT);
   });
 
-  test('alignment context respects ALIGN.END option', () => {
+  test('alignment context respects ALIGN.END option (hAlign RIGHT)', () => {
     const t1 = trackingContentWithAlign(1);
     const col = column(T, { align: ALIGN.END }, t1.component);
     col.prepare(new Bounds(10, 5));
-    assert.strictEqual(t1.aligns[0].direction, DIRECTION.COLUMN);
-    assert.strictEqual(t1.aligns[0].align, ALIGN.END);
+    assert.strictEqual(t1.aligns[0].parentDirection, DIRECTION.COLUMN);
+    assert.strictEqual(t1.aligns[0].hAlign, HALIGN.RIGHT);
   });
 
 });

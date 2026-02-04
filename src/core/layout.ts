@@ -5,6 +5,8 @@ import {
   GAP,
   DIRECTION,
   ALIGN,
+  HALIGN,
+  VALIGN,
   type Theme,
   type Component,
   type Drawer,
@@ -13,6 +15,8 @@ import {
   type Justify,
   type Align,
   type AlignContext,
+  type HorizontalAlignment,
+  type VerticalAlignment,
 } from './types.js';
 import { stackV, stackH, splitRatio, fitHeights, snapUp, snapDown, SPLIT_DIRECTION, type StackJustify } from './grid.js';
 import { log } from '../utils/log.js';
@@ -34,11 +38,45 @@ function resolveGap(gap: GapSize | undefined, theme: Theme): number {
   return 0;  // GAP.NONE
 }
 
+// ============================================
+// ALIGNMENT UTILITIES
+// ============================================
+
+/**
+ * Calculate offset for positioning content within a container.
+ * Works for both horizontal (left/center/right) and vertical (top/middle/bottom) alignment.
+ * @param total - Container size
+ * @param content - Content size
+ * @param align - Alignment value (HALIGN or VALIGN)
+ * @returns Offset from container start
+ */
+export function alignOffset(total: number, content: number, align?: string): number {
+  if (align === HALIGN.LEFT || align === VALIGN.TOP) return 0;
+  if (align === HALIGN.RIGHT || align === VALIGN.BOTTOM) return total - content;
+  return (total - content) / 2;  // CENTER/MIDDLE or undefined
+}
+
+// Convert Align (START/CENTER/END) to spatial alignment types
+const alignToHAlign: Record<Align, HorizontalAlignment> = {
+  [ALIGN.START]: HALIGN.LEFT,
+  [ALIGN.CENTER]: HALIGN.CENTER,
+  [ALIGN.END]: HALIGN.RIGHT,
+};
+
+const alignToVAlign: Record<Align, VerticalAlignment> = {
+  [ALIGN.START]: VALIGN.TOP,
+  [ALIGN.CENTER]: VALIGN.MIDDLE,
+  [ALIGN.END]: VALIGN.BOTTOM,
+};
+
 /** Shared prepare logic for GridColumn and GridRow. */
 function prepareLayout(
   children: Component[], slots: Bounds[], direction: typeof DIRECTION[keyof typeof DIRECTION], align: Align,
 ): Drawer {
-  const alignContext: AlignContext = { direction, align };
+  // Translate direction + cross-axis align into explicit hAlign/vAlign
+  const alignContext: AlignContext = direction === DIRECTION.ROW
+    ? { vAlign: alignToVAlign[align], parentDirection: direction }
+    : { hAlign: alignToHAlign[align], parentDirection: direction };
   const drawers = children.map((c, i) => c.prepare(slots[i], alignContext));
   return (canvas) => drawers.forEach(d => d(canvas));
 }
@@ -81,7 +119,7 @@ class Group implements Component {
   getMinHeight(w: number) {
     return this.inner.getMinHeight(w - this.padding * 2);
   }
-  getWidth(h: number) { return this.inner.getWidth?.(h) ?? 0; }
+  getWidth(h: number) { return this.inner.getWidth(h); }
 
   prepare(bounds: Bounds, ac?: AlignContext): Drawer {
     const innerW = bounds.w - this.padding * 2;
@@ -216,6 +254,11 @@ export class GridColumn implements Component {
   getHeight(width: number): number { return this.measure(width, false); }
   getMinHeight(width: number): number { return this.measure(width, true); }
 
+  getWidth(height: number): number {
+    // Column stacks vertically — width is max of children's widths
+    return Math.max(...this.children.map(c => c.getWidth(height)));
+  }
+
   getSlots(bounds: Bounds): Bounds[] {
     const h = this.explicitHeight !== undefined ? Math.min(bounds.h, this.explicitHeight) : bounds.h;
 
@@ -278,14 +321,19 @@ export class GridRow implements Component {
   getHeight(width: number): number { return this.measure(width, false); }
   getMinHeight(width: number): number { return this.measure(width, true); }
 
+  getWidth(height: number): number {
+    // Row stacks horizontally — width is sum of children's widths + gaps
+    const totalGap = this.gap * Math.max(0, this.children.length - 1);
+    return this.children.reduce((sum, c) => sum + c.getWidth(height), 0) + totalGap;
+  }
+
   getSlots(bounds: Bounds): Bounds[] {
     if (this.proportions) {
       const hasContentSized = this.proportions.some(p => p === 0);
 
       if (hasContentSized) {
         const contentWidths = this.children.map((c, i) => {
-          if (this.proportions![i] === 0 && c.getWidth) return c.getWidth(bounds.h);
-          if (this.proportions![i] === 0) return c.getHeight(bounds.h);
+          if (this.proportions![i] === 0) return c.getWidth(bounds.h);
           return 0;
         });
         const finalWidths = resolveProportions(this.proportions, contentWidths, bounds.w, this.gap);

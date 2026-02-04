@@ -2,8 +2,8 @@
 // Renders a bulleted or numbered list with theme-aware defaults, supports rich text items
 // Height is estimated from font metrics; PowerPoint handles wrapping (wrap: true)
 
-import { VALIGN, FONT_WEIGHT, DIRECTION, ALIGN, type Component, type Drawer, type Bounds, type Theme, type TextStyle, type TextContent, type VerticalAlignment, type AlignContext, type Align } from '../core/types.js';
-import { getFontFromFamily, normalizeContent, getStyleLineHeight, estimateLines } from '../utils/font-utils.js';
+import { VALIGN, FONT_WEIGHT, type Component, type Drawer, type Bounds, type Theme, type TextStyle, type TextContent, type VerticalAlignment, type AlignContext } from '../core/types.js';
+import { getFontFromFamily, normalizeContent, getStyleLineHeight, estimateLines, getContentWidth } from '../utils/font-utils.js';
 import type { TextFragment, TextFragmentOptions } from '../core/canvas.js';
 
 export const LIST_TYPE = {
@@ -38,6 +38,15 @@ export class List implements Component {
 
   getMinHeight(width: number): number { return this.getHeight(width); }
 
+  getWidth(_height: number): number {
+    const textStyle = this.props.textStyle ?? this.theme.textStyles.body;
+    let maxWidth = 0;
+    for (const item of this.items) {
+      maxWidth = Math.max(maxWidth, getContentWidth(item, textStyle));
+    }
+    return maxWidth;
+  }
+
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
     const listType = this.props.type ?? LIST_TYPE.BULLET;
     const textStyle = this.props.textStyle ?? this.theme.textStyles.body;
@@ -46,16 +55,8 @@ export class List implements Component {
     const markerColor = this.props.markerColor ?? this.theme.colors.textMuted;
     const bulletSpacing = this.theme.spacing.bulletSpacing;
 
-    // Map cross-axis alignment to valign when parent direction is ROW
-    let valign: VerticalAlignment = VALIGN.TOP;
-    if (alignContext?.direction === DIRECTION.ROW) {
-      const valignMap: Record<Align, VerticalAlignment> = {
-        [ALIGN.START]: VALIGN.TOP,
-        [ALIGN.CENTER]: VALIGN.MIDDLE,
-        [ALIGN.END]: VALIGN.BOTTOM,
-      };
-      valign = valignMap[alignContext.align];
-    }
+    // Vertical alignment from context
+    const valign: VerticalAlignment = alignContext?.vAlign ?? VALIGN.TOP;
 
     // Build text fragments — each item is a bulleted paragraph
     // PowerPoint handles wrapping within each item

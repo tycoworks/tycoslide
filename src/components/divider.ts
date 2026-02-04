@@ -25,7 +25,7 @@ export class Divider implements Component {
     const color = this.props.color ?? this.theme.colors.textMuted;
     const thickness = this.props.thickness ?? this.theme.borders.width;
 
-    const vertical = alignContext?.direction === DIRECTION.ROW;
+    const vertical = alignContext?.parentDirection === DIRECTION.ROW;
     const x = vertical ? bounds.x + bounds.w / 2 : bounds.x;
     const y = vertical ? bounds.y : bounds.y + bounds.h / 2;
     const w = vertical ? 0 : bounds.w;

@@ -10,18 +10,27 @@ export const ptToIn = (pt: number): number => pt / POINTS_PER_INCH;
 export const inToPt = (inches: number): number => inches * POINTS_PER_INCH;
 
 // Fontkit and PowerPoint measure text differently (kerning, hinting, platform).
-// We use a two-tier approach:
-//
-// 1. SINGLE_LINE_THRESHOLD: If measured ratio is at or below this, text fits on
-//    one line. Packing efficiency doesn't apply to unwrapped text.
-//
-// 2. PACKING_EFFICIENCY: For multi-line text, word-boundary wrapping leaves lines
-//    partially empty. 75% is conservative to avoid overflow.
-//
-// The key insight: packing efficiency only matters for WRAPPED text. If fontkit
-// says text fits (ratio ≤ 1.0), the packing penalty shouldn't apply.
-const SINGLE_LINE_THRESHOLD = 1.0;
+// PACKING_EFFICIENCY represents how much of fontkit's predicted space PowerPoint uses.
+// This constant is private - all usage goes through helper functions that enforce consistency.
 const PACKING_EFFICIENCY = 0.75;
+const SINGLE_LINE_THRESHOLD = 1.0;
+
+/**
+ * Apply packing buffer for height estimation.
+ * Shrinks available width to account for PowerPoint's tighter rendering.
+ */
+export function applyPackingForHeight(availableWidth: number): number {
+  return availableWidth * PACKING_EFFICIENCY;
+}
+
+/**
+ * Apply packing buffer for width reporting.
+ * Expands measured width to give PowerPoint headroom.
+ * This is the reciprocal of applyPackingForHeight - same constant, inverse operation.
+ */
+export function applyPackingForWidth(measuredWidth: number): number {
+  return measuredWidth / PACKING_EFFICIENCY;
+}
 
 const fontCache: Map<string, FontkitFont> = new Map();
 
@@ -82,6 +91,30 @@ export function getStyleLineHeight(style: TextStyle): number {
 }
 
 /**
+ * Measure the total unwrapped width of content (all runs on one line).
+ * Shared by estimateLines, Text.getWidth, List.getWidth.
+ */
+export function measureContentWidth(content: TextContent, style: TextStyle): number {
+  const defaultWeight = style.defaultWeight ?? FONT_WEIGHT.NORMAL;
+  const runs = normalizeContent(content);
+  let totalWidth = 0;
+  for (const run of runs) {
+    const weight = run.weight ?? defaultWeight;
+    const font = getFontFromFamily(style.fontFamily, weight);
+    totalWidth += measureText(run.text, font.path, style.fontSize);
+  }
+  return totalWidth;
+}
+
+/**
+ * Get the width needed to render content without wrapping.
+ * Includes packing buffer for PowerPoint rendering differences.
+ */
+export function getContentWidth(content: TextContent, style: TextStyle): number {
+  return applyPackingForWidth(measureContentWidth(content, style));
+}
+
+/**
  * Estimate the number of wrapped lines for content at a given width.
  *
  * Two-tier conservative approach:
@@ -91,15 +124,7 @@ export function getStyleLineHeight(style: TextStyle): number {
  * Extra whitespace is preferable to text overflow.
  */
 export function estimateLines(content: TextContent, style: TextStyle, availableWidth: number): number {
-  const defaultWeight = style.defaultWeight ?? FONT_WEIGHT.NORMAL;
-  const runs = normalizeContent(content);
-  let totalWidth = 0;
-  for (const run of runs) {
-    const weight = run.weight ?? defaultWeight;
-    const font = getFontFromFamily(style.fontFamily, weight);
-    totalWidth += measureText(run.text, font.path, style.fontSize);
-  }
-
+  const totalWidth = measureContentWidth(content, style);
   const ratio = totalWidth / availableWidth;
 
   // Tier 1: Text fits on one line - no packing penalty applies
@@ -107,8 +132,8 @@ export function estimateLines(content: TextContent, style: TextStyle, availableW
     return 1;
   }
 
-  // Tier 2: Text wraps - apply conservative packing efficiency
-  const effectiveWidth = availableWidth * PACKING_EFFICIENCY;
+  // Tier 2: Text wraps - apply packing buffer
+  const effectiveWidth = applyPackingForHeight(availableWidth);
   return Math.max(1, Math.ceil(totalWidth / effectiveWidth));
 }
 

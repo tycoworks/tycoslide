@@ -2,7 +2,8 @@
 // Renders an image with aspect ratio preservation, centered within bounds
 
 import imageSizeDefault from 'image-size';
-import { DIRECTION, ALIGN, type Component, type Drawer, type Bounds, type Theme, type AlignContext, type Align } from '../core/types.js';
+import { type Component, type Drawer, type Bounds, type Theme, type AlignContext } from '../core/types.js';
+import { alignOffset } from '../core/layout.js';
 import { log } from '../utils/log.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,18 +47,8 @@ export class Image implements Component {
     const imgW = Math.min(bounds.w, bounds.h * this.aspectRatio);
     const imgH = imgW / this.aspectRatio;
 
-    function alignOffset(total: number, content: number, align?: Align): number {
-      if (align === ALIGN.START) return 0;
-      if (align === ALIGN.END) return total - content;
-      return (total - content) / 2;
-    }
-
-    const crossAlign = alignContext?.align;
-    const hAlign = alignContext?.direction === DIRECTION.COLUMN ? crossAlign : undefined;
-    const vAlign = alignContext?.direction === DIRECTION.ROW ? crossAlign : undefined;
-
-    const horizontalOffset = alignOffset(bounds.w, imgW, hAlign);
-    const verticalOffset = alignOffset(bounds.h, imgH, vAlign);
+    const horizontalOffset = alignOffset(bounds.w, imgW, alignContext?.hAlign);
+    const verticalOffset = alignOffset(bounds.h, imgH, alignContext?.vAlign);
 
     const imgPath = this.path;
 
