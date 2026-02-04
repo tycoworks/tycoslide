@@ -286,9 +286,11 @@ export interface Theme {
     margin: number;         // Inset from all 4 edges
     gap: number;            // Standard gap between elements
     gapSmall: number;       // Small gap between elements
+    padding: number;        // Internal padding for containers (e.g. cards)
     cellPadding: number;    // Padding inside table cells
     bulletSpacing: number;  // Line spacing multiple for lists
-    minDisplayDPI: number;    // Minimum effective DPI for image display (e.g. 96)
+    bulletIndentMultiplier: number; // Multiplier for bullet indent (fontSize * multiplier = points)
+    minDisplayDPI: number;  // Minimum effective DPI for image display (e.g. 96)
   };
   borders: {
     width: number;   // Border width in points

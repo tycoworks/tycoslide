@@ -3,7 +3,7 @@
 // Height is estimated from font metrics; PowerPoint handles wrapping (wrap: true)
 
 import { VALIGN, FONT_WEIGHT, type Component, type Drawer, type Bounds, type Theme, type TextStyle, type TextContent, type VerticalAlignment, type AlignContext } from '../core/types.js';
-import { getFontFromFamily, normalizeContent, getStyleLineHeight, estimateLines, getContentWidth } from '../utils/font-utils.js';
+import { getFontFromFamily, normalizeContent, getStyleLineHeight, estimateLines, getContentWidth, ptToIn } from '../utils/font-utils.js';
 import type { TextFragment, TextFragmentOptions } from '../core/canvas.js';
 
 export const LIST_TYPE = {
@@ -27,13 +27,22 @@ export class List implements Component {
     const textStyle = this.props.textStyle ?? this.theme.textStyles.body;
     const lineHeight = getStyleLineHeight(textStyle);
     const bulletSpacing = this.theme.spacing.bulletSpacing;
+    // Compute bullet indent from font size: fontSize (pt) * multiplier → points → inches
+    const bulletIndent = ptToIn(textStyle.fontSize * this.theme.spacing.bulletIndentMultiplier);
+
+    // Subtract bullet indent from available width since PowerPoint reserves
+    // horizontal space for the bullet glyph and gap before text starts
+    const textWidth = width - bulletIndent;
 
     let totalLines = 0;
     for (const item of this.items) {
-      totalLines += estimateLines(item, textStyle, width);
+      totalLines += estimateLines(item, textStyle, textWidth);
     }
 
-    return lineHeight * bulletSpacing * totalLines;
+    // lineSpacingMultiple adds extra space *between* lines, not to each line.
+    // For N lines with spacing S: height = N*lineHeight + (N-1)*(S-1)*lineHeight
+    // Simplifies to: lineHeight * (S*N - (S-1))
+    return lineHeight * (bulletSpacing * totalLines - (bulletSpacing - 1));
   }
 
   getMinHeight(width: number): number { return this.getHeight(width); }

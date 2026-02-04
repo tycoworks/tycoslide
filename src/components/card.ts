@@ -29,30 +29,37 @@ export class Card implements Component {
   private column: Component;
 
   constructor(private theme: Theme, private props: CardProps = {}) {
-    const children: Component[] = [];
-
-    if (props.image) children.push(new Image(theme, props.image));
+    // Build text content (title + description) with small gap
+    const textChildren: Component[] = [];
 
     if (props.title) {
-      children.push(new Text(theme, props.title, {
+      textChildren.push(new Text(theme, props.title, {
         style: props.titleStyle ?? TEXT_STYLE.H4,
         color: props.titleColor ?? theme.colors.accent1,
       }));
     }
 
     if (props.description) {
-      children.push(new Text(theme, props.description, {
+      textChildren.push(new Text(theme, props.description, {
         style: props.descriptionStyle ?? TEXT_STYLE.SMALL,
         color: props.descriptionColor ?? theme.colors.text,
       }));
     }
 
-    this.column = column(theme, { gap: GAP.SMALL }, ...children);
+    // Build nested structure: outer column with optional image + text content
+    // GAP.NORMAL between image and text, GAP.SMALL between title and description
+    const textContent = column(theme, { gap: GAP.SMALL }, ...textChildren);
+    const children: Component[] = [];
+    if (props.image) {
+      children.push(new Image(theme, props.image));
+    }
+    children.push(textContent);
+    this.column = column(theme, { gap: GAP.NORMAL }, ...children);
   }
 
   private getPadding(): number {
     const showBackground = this.props.background !== false;
-    return showBackground ? (this.props.padding ?? this.theme.spacing.gapSmall) : 0;
+    return showBackground ? (this.props.padding ?? this.theme.spacing.padding) : 0;
   }
 
   private measure(width: number, min: boolean): number {

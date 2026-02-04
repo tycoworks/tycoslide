@@ -9,10 +9,17 @@ export const POINTS_PER_INCH = 72;
 export const ptToIn = (pt: number): number => pt / POINTS_PER_INCH;
 export const inToPt = (inches: number): number => inches * POINTS_PER_INCH;
 
-// Fontkit and PowerPoint measure text differently (kerning, hinting, platform).
-// PACKING_EFFICIENCY represents how much of fontkit's predicted space PowerPoint uses.
-// This constant is private - all usage goes through helper functions that enforce consistency.
-const PACKING_EFFICIENCY = 0.75;
+// Calibration Constants
+// Fontkit measures text using font metrics, but presentation software renders differently.
+// These calibration factors bridge fontkit's theoretical measurements to practical rendering.
+// Derived empirically by comparing fontkit estimates to actual output.
+
+// Width: Presentation software packs text ~25% tighter than fontkit predicts (kerning, hinting, platform differences)
+const WIDTH_CALIBRATION = 0.75;
+
+// Height: Presentation software renders lines ~12% shorter than fontkit's ascent+descent+lineGap suggests
+const HEIGHT_CALIBRATION = 0.88;
+
 const SINGLE_LINE_THRESHOLD = 1.0;
 
 /**
@@ -20,7 +27,7 @@ const SINGLE_LINE_THRESHOLD = 1.0;
  * Shrinks available width to account for PowerPoint's tighter rendering.
  */
 export function applyPackingForHeight(availableWidth: number): number {
-  return availableWidth * PACKING_EFFICIENCY;
+  return availableWidth * WIDTH_CALIBRATION;
 }
 
 /**
@@ -29,7 +36,7 @@ export function applyPackingForHeight(availableWidth: number): number {
  * This is the reciprocal of applyPackingForHeight - same constant, inverse operation.
  */
 export function applyPackingForWidth(measuredWidth: number): number {
-  return measuredWidth / PACKING_EFFICIENCY;
+  return measuredWidth / WIDTH_CALIBRATION;
 }
 
 const fontCache: Map<string, FontkitFont> = new Map();
@@ -67,14 +74,15 @@ export function measureText(text: string, fontPath: string, fontSize: number): n
 }
 
 /**
- * Get actual line height in inches based on font metrics (ascent + descent + lineGap)
+ * Get line height in inches based on font metrics, calibrated for PowerPoint rendering.
+ * Raw fontkit metrics (ascent + descent + lineGap) overestimate compared to PowerPoint.
  */
 export function getLineHeight(fontPath: string, fontSize: number): number {
   const font = loadFont(fontPath);
   // descent is typically negative, so we use Math.abs
   const lineHeightUnits = font.ascent + Math.abs(font.descent) + font.lineGap;
   const lineHeightPoints = (lineHeightUnits / font.unitsPerEm) * fontSize;
-  return ptToIn(lineHeightPoints);
+  return ptToIn(lineHeightPoints) * HEIGHT_CALIBRATION;
 }
 
 // ============================================
