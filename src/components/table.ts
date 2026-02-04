@@ -1,21 +1,39 @@
 // Table Component
 // Renders a table using grid primitives for cells with line-drawn borders
 
-import { BORDER_STYLE, SHAPE, ALIGN, DIRECTION, type AlignContext, type Align, type BorderStyle, type Component, type Drawer, type Bounds, type Theme } from '../core/types.js';
+import { BORDER_STYLE, SHAPE, ALIGN, DIRECTION, type AlignContext, type Align, type BorderStyle, type Component, type Drawer, type Bounds, type Theme, type ColorName } from '../core/types.js';
 import { GridColumn, GridRow } from '../core/layout.js';
 import { Text } from './text.js';
 import type { Canvas } from '../core/canvas.js';
 
-// Cells can be Components or strings (strings auto-wrapped in text())
-export type TableCell = Component | string;
+// ============================================
+// CELL TYPES
+// ============================================
+
+/** Props for a cell with optional background fill and text color */
+export interface CellProps {
+  content: Component | string;
+  fill?: ColorName;        // Theme color for background (e.g., COLOR_NAME.ACCENT1)
+  fillOpacity?: number;    // 0-100 (default: theme.colors.subtleOpacity)
+  textColor?: ColorName;   // Override text color (useful for contrast on bright fills)
+}
+
+// Cells can be Components, strings, or CellProps objects
+export type TableCell = Component | string | CellProps;
 export type TableData = TableCell[][];
+
+/** Type guard for CellProps */
+function isCellProps(cell: TableCell): cell is CellProps {
+  return typeof cell === 'object' && 'content' in cell;
+}
 
 export interface TableProps {
   borderStyle?: BorderStyle;
   borderColor?: string;
   borderWidth?: number;
   cellPadding?: number;
-  headerRow?: boolean;  // Apply header styling to first row (default: true)
+  headerRow?: boolean;     // Apply header styling to first row (default: true)
+  headerColumn?: boolean;  // Apply header styling to first column (default: false)
   columnWidths?: number[];  // Flex ratios for column widths (e.g., [1, 3, 3])
 }
 
@@ -49,27 +67,71 @@ class PaddedContent implements Component {
 // TABLE CLASS
 // ============================================
 
+/** Stored fill info for a cell */
+interface CellFill {
+  color: string;
+  opacity: number;
+}
+
 export class Table implements Component {
   private rows: GridRow[];
   private column: GridColumn;
   private ratios: number[];
+  private cellFills: (CellFill | undefined)[][];
 
   constructor(private theme: Theme, data: TableData, private props: TableProps = {}) {
     const padding = props.cellPadding ?? theme.spacing.cellPadding;
     const useHeaderRow = props.headerRow ?? true;
+    const useHeaderColumn = props.headerColumn ?? false;
     const numCols = data[0]?.length ?? 0;
 
     this.ratios = (props.columnWidths?.length === numCols)
       ? props.columnWidths : Array(numCols).fill(1);
 
+    // Initialize cell fills array
+    this.cellFills = [];
+
     this.rows = data.map((row, rowIndex) => {
-      const headerColor = (rowIndex === 0 && useHeaderRow) ? theme.colors.secondary : undefined;
-      const cells = row.map(cell => {
-        const component = typeof cell === 'string'
-          ? (headerColor ? new Text(theme, cell, { color: headerColor }) : new Text(theme, cell))
-          : cell;
+      const rowFills: (CellFill | undefined)[] = [];
+
+      const cells = row.map((cell, colIndex) => {
+        // Normalize cell: extract content, fill, and text color
+        let content: Component | string;
+        let fill: CellFill | undefined;
+        let textColor: string | undefined;
+
+        if (isCellProps(cell)) {
+          content = cell.content;
+          if (cell.fill) {
+            fill = {
+              color: theme.colors[cell.fill],
+              opacity: cell.fillOpacity ?? theme.colors.subtleOpacity,
+            };
+          }
+          if (cell.textColor) {
+            textColor = theme.colors[cell.textColor];
+          }
+        } else {
+          content = cell;
+        }
+
+        // Apply header styling if no explicit textColor and cell is in header row/column
+        const isHeaderCell = (rowIndex === 0 && useHeaderRow) || (colIndex === 0 && useHeaderColumn);
+        if (!textColor && isHeaderCell) {
+          textColor = theme.colors.secondary;
+        }
+
+        rowFills.push(fill);
+
+        // Convert string content to Text component
+        const component = typeof content === 'string'
+          ? (textColor ? new Text(theme, content, { color: textColor }) : new Text(theme, content))
+          : content;
+
         return new PaddedContent(component, padding);
       });
+
+      this.cellFills.push(rowFills);
       return new GridRow(cells, this.ratios, 0, ALIGN.START);
     });
 
@@ -108,9 +170,33 @@ export class Table implements Component {
     const drawContent = this.column.prepare(adjustedBounds);
 
     return (canvas) => {
+      this.drawCellFills(canvas, rowSlots, colWidths);
       drawContent(canvas);
       this.drawBorders(canvas, adjustedBounds, rowYPositions, bottomY, colWidths);
     };
+  }
+
+  private drawCellFills(
+    canvas: Canvas,
+    rowSlots: Bounds[],
+    columnWidths: number[],
+  ): void {
+    for (let r = 0; r < this.cellFills.length; r++) {
+      let x = rowSlots[r].x;
+      for (let c = 0; c < this.cellFills[r].length; c++) {
+        const fill = this.cellFills[r][c];
+        if (fill) {
+          canvas.addShape(SHAPE.RECT, {
+            x,
+            y: rowSlots[r].y,
+            w: columnWidths[c],
+            h: rowSlots[r].h,
+            fill: { color: fill.color, transparency: 100 - fill.opacity },
+          });
+        }
+        x += columnWidths[c];
+      }
+    }
   }
 
   private drawBorders(

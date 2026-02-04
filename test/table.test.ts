@@ -2,8 +2,8 @@
 
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
-import { Table, type TableData } from '../src/components/table.js';
-import { type Component, Bounds, type Theme } from '../src/core/types.js';
+import { Table, type TableData, type CellProps } from '../dist/components/table.js';
+import { type Component, Bounds, type Theme, COLOR_NAME } from '../dist/core/types.js';
 
 // ============================================
 // MOCK HELPERS
@@ -20,7 +20,19 @@ function mockContent(h: number, opts?: { minW?: number }): Component {
 
 // Minimal mock theme with only what Table uses
 const mockTheme = {
-  colors: { secondary: '#333' },
+  colors: {
+    primary: 'FF0000',
+    background: 'FFFFFF',
+    secondary: '333333',
+    accent1: '00FF00',
+    accent2: '0000FF',
+    accent3: 'FFFF00',
+    accent4: 'FF00FF',
+    accent5: '00FFFF',
+    text: '000000',
+    textMuted: '666666',
+    subtleOpacity: 20,
+  },
   spacing: { cellPadding: 0.0625 },
   borders: { width: 1 },
 } as unknown as Theme;
@@ -125,6 +137,105 @@ describe('Table', () => {
     ];
     const table = new Table(mockTheme, data, { headerRow: false });
     assert.ok(table.getHeight(10) > 0);
+  });
+
+  // ------------------------------------------
+  // 6. Cell highlighting with CellProps
+  // ------------------------------------------
+  test('CellProps cells are accepted without error', () => {
+    const data: TableData = [
+      [mockContent(0.3), { content: mockContent(0.3), fill: COLOR_NAME.ACCENT1 }],
+      [{ content: mockContent(0.3), fill: COLOR_NAME.ACCENT3, fillOpacity: 50 }, mockContent(0.3)],
+    ];
+    const table = new Table(mockTheme, data, { headerRow: false });
+    const h = table.getHeight(10);
+    assert.ok(h > 0, 'Table should have positive height');
+    assert.doesNotThrow(() => {
+      table.prepare(new Bounds(10, h));
+    });
+  });
+
+  test('CellProps with only content (no fill) works like plain cell', () => {
+    const data: TableData = [
+      [{ content: mockContent(0.3) }, mockContent(0.3)],
+    ];
+    const table = new Table(mockTheme, data, { headerRow: false });
+    const h = table.getHeight(10);
+    assert.ok(h > 0);
+    assert.doesNotThrow(() => {
+      table.prepare(new Bounds(10, h));
+    });
+  });
+
+  test('mixed cell types in same table', () => {
+    // Mix of: string (would need real theme), Component, and CellProps
+    const data: TableData = [
+      [mockContent(0.3), { content: mockContent(0.3), fill: COLOR_NAME.PRIMARY }],
+      [{ content: mockContent(0.3), fill: COLOR_NAME.ACCENT2, fillOpacity: 100 }, mockContent(0.3)],
+    ];
+    const table = new Table(mockTheme, data, { headerRow: false });
+    const h = table.getHeight(10);
+    assert.ok(h > 0);
+    assert.doesNotThrow(() => {
+      table.prepare(new Bounds(10, h));
+    });
+  });
+
+  // ------------------------------------------
+  // 7. headerColumn prop
+  // ------------------------------------------
+  test('headerColumn styles first column as headers', () => {
+    const data: TableData = [
+      [mockContent(0.3), mockContent(0.3)],
+      [mockContent(0.3), mockContent(0.3)],
+    ];
+    const table = new Table(mockTheme, data, { headerRow: false, headerColumn: true });
+    const h = table.getHeight(10);
+    assert.ok(h > 0);
+    assert.doesNotThrow(() => {
+      table.prepare(new Bounds(10, h));
+    });
+  });
+
+  test('headerRow and headerColumn can both be true', () => {
+    const data: TableData = [
+      [mockContent(0.3), mockContent(0.3)],
+      [mockContent(0.3), mockContent(0.3)],
+    ];
+    const table = new Table(mockTheme, data, { headerRow: true, headerColumn: true });
+    const h = table.getHeight(10);
+    assert.ok(h > 0);
+    assert.doesNotThrow(() => {
+      table.prepare(new Bounds(10, h));
+    });
+  });
+
+  // ------------------------------------------
+  // 8. textColor in CellProps
+  // ------------------------------------------
+  test('CellProps with textColor is accepted', () => {
+    const data: TableData = [
+      [mockContent(0.3), { content: mockContent(0.3), fill: COLOR_NAME.ACCENT1, textColor: COLOR_NAME.BACKGROUND }],
+    ];
+    const table = new Table(mockTheme, data, { headerRow: false });
+    const h = table.getHeight(10);
+    assert.ok(h > 0);
+    assert.doesNotThrow(() => {
+      table.prepare(new Bounds(10, h));
+    });
+  });
+
+  test('textColor overrides header styling', () => {
+    // Even in a header cell, explicit textColor should be used
+    const data: TableData = [
+      [{ content: mockContent(0.3), textColor: COLOR_NAME.ACCENT2 }, mockContent(0.3)],
+    ];
+    const table = new Table(mockTheme, data, { headerRow: true, headerColumn: true });
+    const h = table.getHeight(10);
+    assert.ok(h > 0);
+    assert.doesNotThrow(() => {
+      table.prepare(new Bounds(10, h));
+    });
   });
 
 });

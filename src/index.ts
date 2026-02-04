@@ -77,6 +77,7 @@ export {
   type TableProps,
   type TableData,
   type TableCell,
+  type CellProps,
   type DividerProps,
   type CardProps,
   type SlideNumberProps,
