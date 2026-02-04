@@ -122,7 +122,7 @@ function hexToRgba(hex: string, alpha: number): string {
 function buildMermaidConfig(theme: Theme): object {
   const { colors, textStyles } = theme;
   const fontFamily = textStyles.body.fontFamily.normal.name;
-  const alphaDecimal = (colors.subtleOpacity ?? 20) / 100;
+  const alphaDecimal = colors.subtleOpacity / 100;
 
   return {
     theme: 'base',
@@ -147,8 +147,7 @@ function buildMermaidConfig(theme: Theme): object {
 
 function buildClassDefs(theme: Theme): string {
   const { colors } = theme;
-  const alphaPercent = colors.subtleOpacity ?? 20;
-  const alpha = Math.round(alphaPercent / 100 * 255).toString(16).padStart(2, '0');
+  const alpha = Math.round(colors.subtleOpacity / 100 * 255).toString(16).padStart(2, '0');
 
   return Object.values(NODE_STYLE).map((styleName: NodeStyle) => {
     const baseColor = colors[styleName] as string;
@@ -162,8 +161,7 @@ function buildClassDefs(theme: Theme): string {
 
 function buildSubgraphStyles(definition: string, theme: Theme): string {
   const { colors } = theme;
-  const alphaPercent = colors.subtleOpacity ?? 20;
-  const alpha = Math.round(alphaPercent / 100 * 255).toString(16).padStart(2, '0');
+  const alpha = Math.round(colors.subtleOpacity / 100 * 255).toString(16).padStart(2, '0');
   const fillColor = `#${colors.secondary}${alpha}`;
 
   const subgraphPattern = /subgraph\s+(\w+)/g;
