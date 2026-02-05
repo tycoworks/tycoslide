@@ -2,7 +2,7 @@
 // Renders a bulleted or numbered list with theme-aware defaults, supports rich text items
 // Height is estimated from font metrics; PowerPoint handles wrapping (wrap: true)
 
-import { VALIGN, FONT_WEIGHT, type Component, type Drawer, type Bounds, type Theme, type TextStyle, type TextContent, type VerticalAlignment, type AlignContext } from '../core/types.js';
+import { VALIGN, FONT_WEIGHT, TEXT_STYLE, type Component, type Drawer, type Bounds, type Theme, type TextStyleName, type TextContent, type VerticalAlignment, type AlignContext } from '../core/types.js';
 import { getFontFromFamily, normalizeContent, ptToIn } from '../utils/font-utils.js';
 import type { TextMeasurer } from '../utils/text-measurer.js';
 import type { TextFragment, TextFragmentOptions } from '../core/canvas.js';
@@ -17,7 +17,7 @@ export type ListType = typeof LIST_TYPE[keyof typeof LIST_TYPE];
 
 export interface ListProps {
   type?: ListType;
-  textStyle?: TextStyle;
+  style?: TextStyleName;
   color?: string;
   markerColor?: string;
 }
@@ -25,8 +25,12 @@ export interface ListProps {
 export class List implements Component {
   constructor(private theme: Theme, private measurer: TextMeasurer, private items: TextContent[], private props: ListProps = {}) {}
 
+  private getTextStyle() {
+    return this.theme.textStyles[this.props.style ?? TEXT_STYLE.BODY];
+  }
+
   getHeight(width: number): number {
-    const textStyle = this.props.textStyle ?? this.theme.textStyles.body;
+    const textStyle = this.getTextStyle();
     const lineHeight = this.measurer.getStyleLineHeight(textStyle);
     const bulletSpacing = this.theme.spacing.bulletSpacing;
     // Compute bullet indent from font size: fontSize (pt) * multiplier → points → inches
@@ -55,7 +59,7 @@ export class List implements Component {
   getMinHeight(width: number): number { return this.getHeight(width); }
 
   getWidth(_height: number): number {
-    const textStyle = this.props.textStyle ?? this.theme.textStyles.body;
+    const textStyle = this.getTextStyle();
     let maxWidth = 0;
     for (const item of this.items) {
       maxWidth = Math.max(maxWidth, this.measurer.getContentWidth(item, textStyle));
@@ -65,7 +69,7 @@ export class List implements Component {
 
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
     const listType = this.props.type ?? LIST_TYPE.BULLET;
-    const textStyle = this.props.textStyle ?? this.theme.textStyles.body;
+    const textStyle = this.getTextStyle();
     const defaultWeight = textStyle.defaultWeight ?? FONT_WEIGHT.NORMAL;
     const defaultColor = this.props.color ?? this.theme.colors.text;
     const markerColor = this.props.markerColor ?? this.theme.colors.textMuted;
