@@ -7,7 +7,7 @@ export { Presentation } from './core/presentation.js';
 // Types
 export {
   // Constants
-  TEXT_ALIGN,
+  HALIGN,
   VALIGN,
   GAP,
   DIRECTION,
@@ -26,7 +26,7 @@ export {
   // Type aliases
   type ColorName,
   type NodeStyle,
-  type TextAlignment,
+  type HorizontalAlignment,
   type VerticalAlignment,
   type GapSize,
   type Direction,

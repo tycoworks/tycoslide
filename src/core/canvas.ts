@@ -1,7 +1,7 @@
 // Canvas - Collects drawing operations with layer tagging
 // Box controls currentLayer; Presentation separates by layer at render time
 
-import { LAYER, type Layer, type ShapeName, type TextAlignment, type VerticalAlignment } from './types.js';
+import { LAYER, type Layer, type ShapeName, type HorizontalAlignment, type VerticalAlignment } from './types.js';
 
 // ============================================
 // TYPED OPTION INTERFACES
@@ -35,7 +35,7 @@ export interface TextOptions {
   margin?: number;
   wrap?: boolean;
   lineSpacingMultiple?: number;
-  align?: TextAlignment;
+  align?: HorizontalAlignment;
   valign?: VerticalAlignment;
 }
 
@@ -81,7 +81,7 @@ export interface SlideNumberOptions {
   fontSize?: number;
   color?: string;
   bold?: boolean;
-  align?: TextAlignment;
+  align?: HorizontalAlignment;
   valign?: VerticalAlignment;
   margin?: number;
 }

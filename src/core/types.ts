@@ -16,10 +16,6 @@ export const HALIGN = {
 
 export type HorizontalAlignment = typeof HALIGN[keyof typeof HALIGN];
 
-// Backward compatibility aliases
-export const TEXT_ALIGN = HALIGN;
-export type TextAlignment = HorizontalAlignment;
-
 export const VALIGN = {
   TOP: 'top',
   MIDDLE: 'middle',

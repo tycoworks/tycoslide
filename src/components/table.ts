@@ -65,7 +65,7 @@ class CellContent implements Component {
   ) {
     // String content gets explicit text alignment from table props
     if (typeof content === 'string') {
-      this.inner = new Text(theme, content, { color: textColor, align: hAlign });
+      this.inner = new Text(theme, content, { color: textColor, hAlign });
     } else {
       this.inner = content;
     }

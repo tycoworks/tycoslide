@@ -1,48 +1,47 @@
 // SlideNumber Component
 // Renders a native PowerPoint slide number field via PPTXGen.js
+// Delegates measurement to Text component with "999" placeholder
 
-import { TEXT_STYLE, FONT_WEIGHT, VALIGN, type AlignContext, type Component, type Drawer, type Bounds, type Theme, type TextAlignment, type VerticalAlignment, type FontWeight } from '../core/types.js';
-import { getFontFromFamily, getLineHeight } from '../utils/font-utils.js';
+import { TEXT_STYLE, VALIGN, type AlignContext, type Component, type Drawer, type Bounds, type Theme, type HorizontalAlignment, type VerticalAlignment } from '../core/types.js';
+import { Text } from './text.js';
 
 export interface SlideNumberProps {
   color?: string;
-  fontSize?: number;
-  fontFace?: string;
-  bold?: boolean;
-  align?: TextAlignment;
-  valign?: VerticalAlignment;
+  hAlign?: HorizontalAlignment;
+  vAlign?: VerticalAlignment;
 }
 
 export class SlideNumber implements Component {
-  constructor(private theme: Theme, private props: SlideNumberProps = {}) {}
+  private placeholder: Text;
 
-  private getStyleAndFont() {
-    const style = this.theme.textStyles[TEXT_STYLE.FOOTER];
-    const weight: FontWeight = this.props.bold ? FONT_WEIGHT.BOLD : (style.defaultWeight ?? FONT_WEIGHT.NORMAL);
-    const font = getFontFromFamily(style.fontFamily, weight);
-    const fontSize = this.props.fontSize ?? style.fontSize;
-    return { style, font, fontSize };
+  constructor(private theme: Theme, private props: SlideNumberProps = {}) {
+    // Use "999" as placeholder for measurement (covers 3-digit slide counts)
+    this.placeholder = new Text(theme, '999', {
+      style: TEXT_STYLE.FOOTER,
+      color: props.color,
+      hAlign: props.hAlign,
+      vAlign: props.vAlign,
+    });
   }
 
-  getHeight(_width: number): number {
-    const { font, fontSize } = this.getStyleAndFont();
-    return getLineHeight(font.path, fontSize);
+  getHeight(width: number): number {
+    return this.placeholder.getHeight(width);
   }
 
-  getMinHeight(width: number): number { return this.getHeight(width); }
+  getMinHeight(width: number): number {
+    return this.placeholder.getMinHeight(width);
+  }
 
-  getWidth(_height: number): number {
-    // Enough for "99" in footer font size
-    const { font, fontSize } = this.getStyleAndFont();
-    return getLineHeight(font.path, fontSize) * 2;
+  getWidth(height: number): number {
+    return this.placeholder.getWidth(height);
   }
 
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
-    const { style, font, fontSize } = this.getStyleAndFont();
+    const style = this.theme.textStyles[TEXT_STYLE.FOOTER];
 
     // Alignment: props take precedence, then alignContext
-    const align = this.props.align ?? alignContext?.hAlign;
-    const valign: VerticalAlignment = this.props.valign ?? alignContext?.vAlign ?? VALIGN.TOP;
+    const align = this.props.hAlign ?? alignContext?.hAlign;
+    const valign: VerticalAlignment = this.props.vAlign ?? alignContext?.vAlign ?? VALIGN.TOP;
 
     return (canvas) => {
       canvas.addSlideNumber({
@@ -50,10 +49,8 @@ export class SlideNumber implements Component {
         y: bounds.y,
         w: bounds.w,
         h: bounds.h,
-        fontFace: this.props.fontFace ?? font.name,
-        fontSize,
+        fontSize: style.fontSize,
         color: this.props.color ?? style.color ?? this.theme.colors.textMuted,
-        bold: this.props.bold,
         align,
         valign,
         margin: 0,
