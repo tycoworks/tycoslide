@@ -6,7 +6,6 @@ Spacing / layouts:
 -- Image cover
 
 Text:
-- Bullet point spacing / indent
 - Slide number align
 
 Core:

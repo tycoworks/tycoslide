@@ -5,6 +5,7 @@
 import { VALIGN, FONT_WEIGHT, type Component, type Drawer, type Bounds, type Theme, type TextStyle, type TextContent, type VerticalAlignment, type AlignContext } from '../core/types.js';
 import { getFontFromFamily, normalizeContent, getStyleLineHeight, estimateLines, getContentWidth, ptToIn } from '../utils/font-utils.js';
 import type { TextFragment, TextFragmentOptions } from '../core/canvas.js';
+import { log } from '../utils/log.js';
 
 export const LIST_TYPE = {
   BULLET: 'bullet',
@@ -34,15 +35,20 @@ export class List implements Component {
     // horizontal space for the bullet glyph and gap before text starts
     const textWidth = width - bulletIndent;
 
-    let totalLines = 0;
+    const itemLines: number[] = [];
     for (const item of this.items) {
-      totalLines += estimateLines(item, textStyle, textWidth);
+      itemLines.push(estimateLines(item, textStyle, textWidth));
     }
+    const totalLines = itemLines.reduce((sum, n) => sum + n, 0);
 
-    // lineSpacingMultiple adds extra space *between* lines, not to each line.
-    // For N lines with spacing S: height = N*lineHeight + (N-1)*(S-1)*lineHeight
-    // Simplifies to: lineHeight * (S*N - (S-1))
-    return lineHeight * (bulletSpacing * totalLines - (bulletSpacing - 1));
+    // lineSpacingMultiple applies to each line's bounding box, including the last
+    const h = lineHeight * bulletSpacing * totalLines;
+
+    log('list getHeight: w=%f bulletIndent=%f textW=%f lineH=%f spacing=%f items=%d lines=%s total=%d → h=%f',
+      width, bulletIndent, textWidth, lineHeight, bulletSpacing,
+      this.items.length, JSON.stringify(itemLines), totalLines, h);
+
+    return h;
   }
 
   getMinHeight(width: number): number { return this.getHeight(width); }
@@ -99,6 +105,7 @@ export class List implements Component {
     }
 
     return (canvas) => {
+      // paraSpaceBefore/After are pptxgenjs options we pass through but don't expose in TextOptions
       canvas.addText(textObjects, {
         x: bounds.x,
         y: bounds.y,
@@ -107,8 +114,11 @@ export class List implements Component {
         margin: 0,
         wrap: true,
         lineSpacingMultiple: bulletSpacing,
+        paraSpaceBefore: 0,
+        paraSpaceAfter: 0,
         valign,
-      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
     };
   }
 }
