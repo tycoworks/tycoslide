@@ -6,7 +6,7 @@ import { Bounds, ALIGN, GAP, type Component, type Theme } from '../src/core/type
 
 // Mock theme for testing
 const mockTheme = {
-  spacing: { unit: 0.125, gap: 0.25, gapSmall: 0.125, margin: 0.5 },
+  spacing: { unit: 0.125, gap: 0.25, gapTight: 0.125, gapLoose: 0.5, margin: 0.5 },
 } as Theme;
 
 function approx(actual: number, expected: number, msg: string, tolerance = 0.001): void {
@@ -18,6 +18,7 @@ function stub(height: number, minHeight?: number): Component {
   return {
     getHeight: () => height,
     getMinHeight: () => minHeight ?? height,
+    getWidth: () => 1,
     prepare: () => () => {},
   };
 }
@@ -30,6 +31,7 @@ function trackingStub(height: number, minHeight?: number): { component: Componen
     component: {
       getHeight: () => height,
       getMinHeight: () => minHeight ?? height,
+      getWidth: () => 1,
       prepare: (b: Bounds) => { capturedBounds = b; return () => {}; },
     },
   };

@@ -43,7 +43,7 @@ When mixing prose and bullets:
 
 ```typescript
 // Current: THREE separate text boxes with layout gaps
-column({ gap: GAP.SMALL },
+column({ gap: GAP.TIGHT },
   text("Intro paragraph..."),
   bulletList(['Bullet 1', 'Bullet 2', 'Bullet 3']),
   text("Conclusion paragraph..."),
@@ -514,7 +514,7 @@ Available highlights: teal, pink, yellow, purple, orange
 ```typescript
 // Before: verbose, three components, three text boxes
 pres.add(layouts.contentSlide('Query Offload', 'PATTERN',
-  column({ gap: GAP.SMALL },
+  column({ gap: GAP.TIGHT },
     text("Move beyond slow queries and database overload.", { style: TEXT_STYLE.BODY }),
     bulletList([
       'Connect your database via CDC',

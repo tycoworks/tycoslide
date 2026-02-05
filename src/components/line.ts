@@ -15,13 +15,13 @@ export class Line implements Component {
   constructor(private theme: Theme, private props: LineProps = {}) {}
 
   getHeight(_width: number): number {
-    return this.theme.spacing.gapSmall;
+    return this.theme.spacing.gapTight;
   }
 
   getMinHeight(width: number): number { return this.getHeight(width); }
 
   getWidth(_height: number): number {
-    return this.theme.spacing.gapSmall;
+    return this.theme.spacing.gapTight;
   }
 
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {

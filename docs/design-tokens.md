@@ -28,7 +28,7 @@ export interface Theme {
     unit: number;
     margin: number;
     gap: number;
-    gapSmall: number;
+    gapTight: number;
     padding: number;
     // ...
   };
@@ -120,15 +120,16 @@ Once JSON is canonical:
 
 ## Part 2: Gap/Spacing Architecture
 
-### Current Design
+### Current Design (Implemented)
 
 Gap constants in `src/core/types.ts`:
 
 ```typescript
 export const GAP = {
   NONE: 'none',
-  SMALL: 'small',
-  NORMAL: 'normal',
+  TIGHT: 'tight',    // Related items (title→description)
+  NORMAL: 'normal',  // Structural separation
+  LOOSE: 'loose',    // Section breaks
 } as const;
 ```
 
@@ -137,7 +138,8 @@ Resolution in `src/core/layout.ts`:
 ```typescript
 function resolveGap(gap: GapSize | undefined, theme: Theme): number {
   if (gap === undefined || gap === GAP.NORMAL) return theme.spacing.gap;
-  if (gap === GAP.SMALL) return theme.spacing.gapSmall;
+  if (gap === GAP.TIGHT) return theme.spacing.gapTight;
+  if (gap === GAP.LOOSE) return theme.spacing.gapLoose;
   return 0;  // GAP.NONE
 }
 ```
@@ -147,14 +149,14 @@ function resolveGap(gap: GapSize | undefined, theme: Theme): number {
 | Context | Gap | Semantic Intent |
 |---------|-----|-----------------|
 | Card: image → text | `GAP.NORMAL` | Structural separation |
-| Card: title → description | `GAP.SMALL` | Related items |
+| Card: title → description | `GAP.TIGHT` | Related items |
 | Column/Row default | `GAP.NORMAL` | Structural separation |
 
 ### Design Review: Is This "Mixing Presentation with Intent"?
 
 **Verdict: The current design is appropriate.**
 
-Gap is already semantic (`GAP.SMALL`, `GAP.NORMAL`) rather than raw pixels. Components choose gap based on relationship type:
+Gap is already semantic (`GAP.TIGHT`, `GAP.NORMAL`) rather than raw pixels. Components choose gap based on relationship type:
 - `SMALL` = related items (eyebrow + title, title + description)
 - `NORMAL` = structural separation (header + body, rows of cards)
 
@@ -231,9 +233,9 @@ spacing: {
 
 ---
 
-## Implementation Priority
+## Implementation Status
 
-1. **Gap renaming** - Simple, improves clarity
+1. **Gap renaming** - ✅ DONE (SMALL→TIGHT, added LOOSE)
 2. **Design tokens JSON** - Foundation for tooling
 3. **Token build script** - Enables generation
 4. **Figma integration** - Designer workflow (future)

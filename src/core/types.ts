@@ -26,8 +26,9 @@ export type VerticalAlignment = typeof VALIGN[keyof typeof VALIGN];
 
 export const GAP = {
   NONE: 'none',
-  SMALL: 'small',
+  TIGHT: 'tight',
   NORMAL: 'normal',
+  LOOSE: 'loose',
 } as const;
 
 export type GapSize = typeof GAP[keyof typeof GAP];
@@ -304,7 +305,8 @@ export interface Theme {
     unit: number;           // Grid quantum in inches (e.g. 0.125 = 1/8")
     margin: number;         // Inset from all 4 edges
     gap: number;            // Standard gap between elements
-    gapSmall: number;       // Small gap between elements
+    gapTight: number;       // Tight gap for related items (title→description)
+    gapLoose: number;       // Loose gap for section breaks
     padding: number;        // Internal padding for containers (e.g. cards)
     cellPadding: number;    // Padding inside table cells
     bulletSpacing: number;  // Line spacing multiple for lists

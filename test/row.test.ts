@@ -11,8 +11,8 @@ import { ALIGN, DIRECTION, VALIGN, type Component, Bounds, type Theme, type Alig
 // MOCK HELPERS
 // ============================================
 
-function mockTheme(gap = 0, gapSmall = 0): Theme {
-  return { spacing: { gap, gapSmall } } as any;
+function mockTheme(gap = 0, gapTight = 0, gapLoose = 0): Theme {
+  return { spacing: { gap, gapTight, gapLoose } } as any;
 }
 
 const T = mockTheme();

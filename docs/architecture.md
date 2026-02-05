@@ -38,7 +38,7 @@ interface Component {
 | Component | `getHeight(width)` | `getMinHeight(width)` | Notes |
 |-----------|-------------------|----------------------|-------|
 | **Text** | Wrapped text height at `width` | Same as getHeight | Measured via fontkit |
-| **Divider** | `theme.spacing.gapSmall` | Same | Fixed |
+| **Divider** | `theme.spacing.gapTight` | Same | Fixed |
 | **List** | Sum of item heights at `width` | Same as getHeight | Deterministic |
 | **Table** | Row heights at `width` | Same as getHeight | Deterministic |
 | **Card** | `padding*2 + children heights + gaps` | Excludes optional image | Content-sized |
@@ -93,7 +93,7 @@ The theme defines a base unit — the smallest spacing increment. All structural
 
 ```
 unit        = 0.125"   (1u)   base quantum
-gapSmall    = 1u       (0.125")  within components: eyebrow→title, card internals
+gapTight    = 1u       (0.125")  within components: eyebrow→title, card internals
 gap         = 2u       (0.25")   between components: header→body, card rows
 margin      = 4u       (0.5")    slide edge inset
 cardPadding = 1u       (0.125")  inside card borders
@@ -102,7 +102,7 @@ footerH     = 2u       (0.25")   footer row height
 ```
 
 **GAP enum** resolves to theme spacing values:
-- `GAP.SMALL` → `gapSmall` (1u) — related items
+- `GAP.TIGHT` → `gapTight` (1u) — related items
 - `GAP.NORMAL` → `gap` (2u) — structural separation
 
 ### What gets snapped
@@ -122,7 +122,7 @@ spacing: {
   unit: 0.125,          // base grid quantum (1/8")
   margin: 0.5,          // 4u — slide edge inset
   gap: 0.25,            // 2u — between components
-  gapSmall: 0.125,      // 1u — within components
+  gapTight: 0.125,      // 1u — within components
   cellPadding: 0.0625,  // 0.5u — inside table cells
 }
 ```

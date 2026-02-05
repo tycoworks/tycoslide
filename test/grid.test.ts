@@ -14,6 +14,7 @@ function stub(height: number): Component {
   return {
     getHeight: () => height,
     getMinHeight: () => height,
+    getWidth: () => 1,
     prepare: () => () => {},
   };
 }
@@ -68,6 +69,7 @@ describe('GridColumn', () => {
     const compressible = {
       getHeight: () => 3,
       getMinHeight: () => 0,
+      getWidth: () => 1,
       prepare: () => () => {},
     };
     // Text-like: natural 0.5", incompressible
@@ -86,6 +88,7 @@ describe('GridColumn', () => {
     const compressible = {
       getHeight: () => 3,
       getMinHeight: () => 0,
+      getWidth: () => 1,
       prepare: () => () => {},
     };
     const rowOfTwo = new GridRow([compressible, compressible], undefined, 0, ALIGN.START);
@@ -102,6 +105,7 @@ describe('GridColumn', () => {
     const compressible = {
       getHeight: () => 4,
       getMinHeight: () => 0,
+      getWidth: () => 1,
       prepare: () => () => {},
     };
     const innerCol = new GridColumn([compressible, stub(0.5)], undefined, 0, ALIGN.START);
@@ -262,11 +266,13 @@ describe('GridColumn with grid snapping', () => {
     const text = {
       getHeight: () => 0.235, // Not on grid
       getMinHeight: () => 0.235, // Incompressible
+      getWidth: () => 1,
       prepare: () => () => {},
     };
     const image = {
       getHeight: () => 3.5,
       getMinHeight: () => 0, // Fully compressible
+      getWidth: () => 1,
       prepare: () => () => {},
     };
 
@@ -284,11 +290,13 @@ describe('GridColumn with grid snapping', () => {
     const makeText = (h: number) => ({
       getHeight: () => h,
       getMinHeight: () => h,
+      getWidth: () => 1,
       prepare: () => () => {},
     });
     const makeImage = () => ({
       getHeight: () => 3.5,
       getMinHeight: () => 0,
+      getWidth: () => 1,
       prepare: () => () => {},
     });
 
@@ -311,11 +319,13 @@ describe('GridColumn with grid snapping', () => {
     const text = {
       getHeight: () => 0.235,
       getMinHeight: () => 0.235,
+      getWidth: () => 1,
       prepare: () => () => {},
     };
     const image = {
       getHeight: () => 3.5,
       getMinHeight: () => 0,
+      getWidth: () => 1,
       prepare: () => () => {},
     };
 

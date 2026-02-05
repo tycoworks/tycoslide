@@ -34,7 +34,8 @@ export interface LayoutOptions {
 
 function resolveGap(gap: GapSize | undefined, theme: Theme): number {
   if (gap === undefined || gap === GAP.NORMAL) return theme.spacing.gap;
-  if (gap === GAP.SMALL) return theme.spacing.gapSmall;
+  if (gap === GAP.TIGHT) return theme.spacing.gapTight;
+  if (gap === GAP.LOOSE) return theme.spacing.gapLoose;
   return 0;  // GAP.NONE
 }
 

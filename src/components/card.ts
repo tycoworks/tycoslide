@@ -47,8 +47,8 @@ export class Card implements Component {
     }
 
     // Build nested structure: outer column with optional image + text content
-    // GAP.NORMAL between image and text, GAP.SMALL between title and description
-    const textContent = column(theme, { gap: GAP.SMALL }, ...textChildren);
+    // GAP.NORMAL between image and text, GAP.TIGHT between title and description
+    const textContent = column(theme, { gap: GAP.TIGHT }, ...textChildren);
     if (props.image) {
       // With image: use proportional layout [1, 0] so image fills space and text anchors at bottom
       // This ensures consistent text Y position across cards with different image aspect ratios
