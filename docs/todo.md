@@ -5,9 +5,6 @@ Spacing / layouts:
 -- Content rules
 -- Image cover
 
-Text:
-- Slide number align
-
 Core:
 - Align colors with design token standards
 - Escape hatch
@@ -15,6 +12,9 @@ Core:
 - Nest or some other CLI framework?
 - Dark mode & design token integration
 - Groups
+
+Cleanup:
+- Text heights etc
 
 Components:
 - Image to the left of the card / direction and justify
