@@ -2,7 +2,7 @@
 // Styled container with optional background, border, image, and title/description
 // Uses grid primitives (stackV) instead of Box
 
-import { SHAPE, TEXT_STYLE, GAP, type Component, type Drawer, type Bounds, type Theme, type TextStyleName, type AlignContext } from '../core/types.js';
+import { SHAPE, TEXT_STYLE, GAP, JUSTIFY, type Component, type Drawer, type Bounds, type Theme, type TextStyleName, type AlignContext } from '../core/types.js';
 import { column } from '../core/layout.js';
 import { Text } from './text.js';
 import { Image } from './image.js';
@@ -49,12 +49,17 @@ export class Card implements Component {
     // Build nested structure: outer column with optional image + text content
     // GAP.NORMAL between image and text, GAP.SMALL between title and description
     const textContent = column(theme, { gap: GAP.SMALL }, ...textChildren);
-    const children: Component[] = [];
     if (props.image) {
-      children.push(new Image(theme, props.image));
+      // With image: use proportional layout [1, 0] so image fills space and text anchors at bottom
+      // This ensures consistent text Y position across cards with different image aspect ratios
+      this.column = column(theme, [1, 0], [
+        new Image(theme, props.image),
+        textContent,
+      ], { gap: GAP.NORMAL });
+    } else {
+      // No image: just text content, centered
+      this.column = column(theme, { gap: GAP.NORMAL, justify: JUSTIFY.CENTER }, textContent);
     }
-    children.push(textContent);
-    this.column = column(theme, { gap: GAP.NORMAL }, ...children);
   }
 
   private getPadding(): number {

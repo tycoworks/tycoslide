@@ -14,8 +14,8 @@ export const inToPt = (inches: number): number => inches * POINTS_PER_INCH;
 // These calibration factors bridge fontkit's theoretical measurements to practical rendering.
 // Derived empirically by comparing fontkit estimates to actual output.
 
-// Width: Presentation software packs text ~25% tighter than fontkit predicts (kerning, hinting, platform differences)
-const WIDTH_CALIBRATION = 0.75;
+// Width: Presentation software packs text ~20% tighter than fontkit predicts (kerning, hinting, platform differences)
+const WIDTH_CALIBRATION = 0.80;
 
 // Height: Presentation software renders lines ~12% shorter than fontkit's ascent+descent+lineGap suggests
 const HEIGHT_CALIBRATION = 0.88;

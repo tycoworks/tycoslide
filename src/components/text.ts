@@ -41,6 +41,8 @@ export class Text implements Component {
 
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {
     const style = this.getStyle();
+    const preview = typeof this.content === 'string' ? this.content.slice(0, 20) : 'rich';
+    log('text prepare "%s": bounds=[%f,%f %fx%f]', preview, bounds.x, bounds.y, bounds.w, bounds.h);
     const defaultColor = this.props.color ?? style.color ?? this.theme.colors.text;
     const defaultWeight: FontWeight = style.defaultWeight ?? FONT_WEIGHT.NORMAL;
     const defaultFont = getFontFromFamily(style.fontFamily, defaultWeight);
