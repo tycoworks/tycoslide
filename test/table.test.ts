@@ -4,6 +4,14 @@ import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import { Table, type TableData, type CellProps } from '../dist/components/table.js';
 import { type Component, Bounds, type Theme, COLOR_NAME } from '../dist/core/types.js';
+import type { TextMeasurer } from '../dist/utils/text-measurer.js';
+
+// Mock measurer for tests
+const mockMeasurer: TextMeasurer = {
+  getStyleLineHeight: () => 0.25,
+  estimateLines: () => 1,
+  getContentWidth: () => 1,
+};
 
 // ============================================
 // MOCK HELPERS
@@ -51,7 +59,7 @@ describe('Table', () => {
       [mockContent(0.5), mockContent(0.5)],
       [mockContent(0.5), mockContent(0.5)],
     ];
-    const table = new Table(mockTheme, data, { headerRow: false });
+    const table = new Table(mockTheme, mockMeasurer, data, { headerRow: false });
     const h = table.getHeight(10);
     // 2 rows × (0.5 + 2×padding) = 2 × 0.625 = 1.25
     assert.ok(Math.abs(h - 1.25) < 0.02, `Expected ~1.25, got ${h}`);
@@ -65,7 +73,7 @@ describe('Table', () => {
       [mockContent(0.3), mockContent(0.3)],
       [mockContent(0.3), mockContent(0.3)],
     ];
-    const table = new Table(mockTheme, data, { headerRow: false });
+    const table = new Table(mockTheme, mockMeasurer, data, { headerRow: false });
     const h = table.getHeight(10);
     assert.doesNotThrow(() => {
       table.prepare(new Bounds(10, h));
@@ -97,7 +105,7 @@ describe('Table', () => {
       [shortContent, shortContent],                    // row 4
     ];
 
-    const table = new Table(mockTheme, data, { headerRow: true });
+    const table = new Table(mockTheme, mockMeasurer, data, { headerRow: true });
     const minH = table.getHeight(9.5);
 
     // Table should report enough height for all rows
@@ -113,7 +121,7 @@ describe('Table', () => {
     const data: TableData = [
       [mockContent(0.3), mockContent(0.3), mockContent(0.3)],
     ];
-    const table = new Table(mockTheme, data, {
+    const table = new Table(mockTheme, mockMeasurer, data, {
       headerRow: false,
       columnWidths: [1, 2, 1],
     });
@@ -135,7 +143,7 @@ describe('Table', () => {
     const data: TableData = [
       [mockContent(0.3), mockContent(0.3)],
     ];
-    const table = new Table(mockTheme, data, { headerRow: false });
+    const table = new Table(mockTheme, mockMeasurer, data, { headerRow: false });
     assert.ok(table.getHeight(10) > 0);
   });
 
@@ -147,7 +155,7 @@ describe('Table', () => {
       [mockContent(0.3), { content: mockContent(0.3), fill: COLOR_NAME.ACCENT1 }],
       [{ content: mockContent(0.3), fill: COLOR_NAME.ACCENT3, fillOpacity: 50 }, mockContent(0.3)],
     ];
-    const table = new Table(mockTheme, data, { headerRow: false });
+    const table = new Table(mockTheme, mockMeasurer, data, { headerRow: false });
     const h = table.getHeight(10);
     assert.ok(h > 0, 'Table should have positive height');
     assert.doesNotThrow(() => {
@@ -159,7 +167,7 @@ describe('Table', () => {
     const data: TableData = [
       [{ content: mockContent(0.3) }, mockContent(0.3)],
     ];
-    const table = new Table(mockTheme, data, { headerRow: false });
+    const table = new Table(mockTheme, mockMeasurer, data, { headerRow: false });
     const h = table.getHeight(10);
     assert.ok(h > 0);
     assert.doesNotThrow(() => {
@@ -173,7 +181,7 @@ describe('Table', () => {
       [mockContent(0.3), { content: mockContent(0.3), fill: COLOR_NAME.PRIMARY }],
       [{ content: mockContent(0.3), fill: COLOR_NAME.ACCENT2, fillOpacity: 100 }, mockContent(0.3)],
     ];
-    const table = new Table(mockTheme, data, { headerRow: false });
+    const table = new Table(mockTheme, mockMeasurer, data, { headerRow: false });
     const h = table.getHeight(10);
     assert.ok(h > 0);
     assert.doesNotThrow(() => {
@@ -189,7 +197,7 @@ describe('Table', () => {
       [mockContent(0.3), mockContent(0.3)],
       [mockContent(0.3), mockContent(0.3)],
     ];
-    const table = new Table(mockTheme, data, { headerRow: false, headerColumn: true });
+    const table = new Table(mockTheme, mockMeasurer, data, { headerRow: false, headerColumn: true });
     const h = table.getHeight(10);
     assert.ok(h > 0);
     assert.doesNotThrow(() => {
@@ -202,7 +210,7 @@ describe('Table', () => {
       [mockContent(0.3), mockContent(0.3)],
       [mockContent(0.3), mockContent(0.3)],
     ];
-    const table = new Table(mockTheme, data, { headerRow: true, headerColumn: true });
+    const table = new Table(mockTheme, mockMeasurer, data, { headerRow: true, headerColumn: true });
     const h = table.getHeight(10);
     assert.ok(h > 0);
     assert.doesNotThrow(() => {
@@ -217,7 +225,7 @@ describe('Table', () => {
     const data: TableData = [
       [mockContent(0.3), { content: mockContent(0.3), fill: COLOR_NAME.ACCENT1, textColor: COLOR_NAME.BACKGROUND }],
     ];
-    const table = new Table(mockTheme, data, { headerRow: false });
+    const table = new Table(mockTheme, mockMeasurer, data, { headerRow: false });
     const h = table.getHeight(10);
     assert.ok(h > 0);
     assert.doesNotThrow(() => {
@@ -230,7 +238,7 @@ describe('Table', () => {
     const data: TableData = [
       [{ content: mockContent(0.3), textColor: COLOR_NAME.ACCENT2 }, mockContent(0.3)],
     ];
-    const table = new Table(mockTheme, data, { headerRow: true, headerColumn: true });
+    const table = new Table(mockTheme, mockMeasurer, data, { headerRow: true, headerColumn: true });
     const h = table.getHeight(10);
     assert.ok(h > 0);
     assert.doesNotThrow(() => {

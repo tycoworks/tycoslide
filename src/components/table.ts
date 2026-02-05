@@ -6,6 +6,7 @@ import { alignOffset } from '../core/layout.js';
 import { GridColumn, GridRow } from '../core/layout.js';
 import { Text } from './text.js';
 import type { Canvas } from '../core/canvas.js';
+import type { TextMeasurer } from '../utils/text-measurer.js';
 
 // ============================================
 // CELL TYPES
@@ -57,6 +58,7 @@ class CellContent implements Component {
 
   constructor(
     theme: Theme,
+    measurer: TextMeasurer,
     content: Component | string,
     private padding: number,
     private hAlign: HorizontalAlignment,
@@ -65,7 +67,7 @@ class CellContent implements Component {
   ) {
     // String content gets explicit text alignment from table props
     if (typeof content === 'string') {
-      this.inner = new Text(theme, content, { color: textColor, hAlign });
+      this.inner = new Text(theme, measurer, content, { color: textColor, hAlign });
     } else {
       this.inner = content;
     }
@@ -109,7 +111,7 @@ export class Table implements Component {
   private ratios: number[];
   private cellFills: (CellFill | undefined)[][];
 
-  constructor(private theme: Theme, data: TableData, private props: TableProps = {}) {
+  constructor(private theme: Theme, private measurer: TextMeasurer, data: TableData, private props: TableProps = {}) {
     const padding = props.cellPadding ?? theme.spacing.cellPadding;
     const hAlign = props.hAlign ?? HALIGN.LEFT;
     const vAlign = props.vAlign ?? VALIGN.TOP;
@@ -156,7 +158,7 @@ export class Table implements Component {
         rowFills.push(fill);
 
         // CellContent handles string→Text conversion, padding, and alignment
-        return new CellContent(theme, content, padding, hAlign, vAlign, textColor);
+        return new CellContent(theme, this.measurer, content, padding, hAlign, vAlign, textColor);
       });
 
       this.cellFills.push(rowFills);

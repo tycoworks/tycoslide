@@ -8,6 +8,8 @@ import {
   type Component,
   type TextContent,
 } from './types.js';
+import type { TextMeasurer } from '../utils/text-measurer.js';
+import { fontkitMeasurer } from '../utils/fontkit-measurer.js';
 import { Text, type TextProps } from '../components/text.js';
 import { Image } from '../components/image.js';
 import { List, LIST_TYPE, type ListProps } from '../components/list.js';
@@ -25,17 +27,17 @@ export { row, column, group, type LayoutOptions } from './layout.js';
 // TEXT FACTORIES
 // ============================================
 
-export function text(theme: Theme, content: TextContent, props?: TextProps): Text {
-  return new Text(theme, content, props);
+export function text(theme: Theme, measurer: TextMeasurer, content: TextContent, props?: TextProps): Text {
+  return new Text(theme, measurer, content, props);
 }
 
-export const h1 = (theme: Theme, content: string) => text(theme, content, { style: TEXT_STYLE.H1 });
-export const h2 = (theme: Theme, content: string) => text(theme, content, { style: TEXT_STYLE.H2 });
-export const h3 = (theme: Theme, content: string) => text(theme, content, { style: TEXT_STYLE.H3 });
-export const h4 = (theme: Theme, content: string) => text(theme, content, { style: TEXT_STYLE.H4 });
-export const body = (theme: Theme, content: string) => text(theme, content, { style: TEXT_STYLE.BODY });
-export const small = (theme: Theme, content: string) => text(theme, content, { style: TEXT_STYLE.SMALL });
-export const eyebrow = (theme: Theme, content: string) => text(theme, content, { style: TEXT_STYLE.EYEBROW });
+export const h1 = (theme: Theme, measurer: TextMeasurer, content: string) => text(theme, measurer, content, { style: TEXT_STYLE.H1 });
+export const h2 = (theme: Theme, measurer: TextMeasurer, content: string) => text(theme, measurer, content, { style: TEXT_STYLE.H2 });
+export const h3 = (theme: Theme, measurer: TextMeasurer, content: string) => text(theme, measurer, content, { style: TEXT_STYLE.H3 });
+export const h4 = (theme: Theme, measurer: TextMeasurer, content: string) => text(theme, measurer, content, { style: TEXT_STYLE.H4 });
+export const body = (theme: Theme, measurer: TextMeasurer, content: string) => text(theme, measurer, content, { style: TEXT_STYLE.BODY });
+export const small = (theme: Theme, measurer: TextMeasurer, content: string) => text(theme, measurer, content, { style: TEXT_STYLE.SMALL });
+export const eyebrow = (theme: Theme, measurer: TextMeasurer, content: string) => text(theme, measurer, content, { style: TEXT_STYLE.EYEBROW });
 
 // ============================================
 // IMAGE FACTORY
@@ -49,24 +51,24 @@ export function image(theme: Theme, path: string): Image {
 // LIST FACTORIES
 // ============================================
 
-export function list(theme: Theme, items: TextContent[], props?: ListProps): List {
-  return new List(theme, items, props);
+export function list(theme: Theme, measurer: TextMeasurer, items: TextContent[], props?: ListProps): List {
+  return new List(theme, measurer, items, props);
 }
 
-export function bulletList(theme: Theme, items: TextContent[], props?: ListProps): List {
-  return new List(theme, items, { ...props, type: LIST_TYPE.BULLET });
+export function bulletList(theme: Theme, measurer: TextMeasurer, items: TextContent[], props?: ListProps): List {
+  return new List(theme, measurer, items, { ...props, type: LIST_TYPE.BULLET });
 }
 
-export function numberedList(theme: Theme, items: TextContent[], props?: ListProps): List {
-  return new List(theme, items, { ...props, type: LIST_TYPE.NUMBER });
+export function numberedList(theme: Theme, measurer: TextMeasurer, items: TextContent[], props?: ListProps): List {
+  return new List(theme, measurer, items, { ...props, type: LIST_TYPE.NUMBER });
 }
 
 // ============================================
 // TABLE FACTORY
 // ============================================
 
-export function table(theme: Theme, data: TableData, props: TableProps = {}): Table {
-  return new Table(theme, data, props);
+export function table(theme: Theme, measurer: TextMeasurer, data: TableData, props: TableProps = {}): Table {
+  return new Table(theme, measurer, data, props);
 }
 
 // ============================================
@@ -81,21 +83,21 @@ export function line(theme: Theme, props: LineProps = {}): Line {
 // CARD FACTORY
 // ============================================
 
-export function card(theme: Theme, title: string, description: string): Card;
-export function card(theme: Theme, props?: CardProps): Card;
-export function card(theme: Theme, titleOrProps?: string | CardProps, description?: string): Card {
+export function card(theme: Theme, measurer: TextMeasurer, title: string, description: string): Card;
+export function card(theme: Theme, measurer: TextMeasurer, props?: CardProps): Card;
+export function card(theme: Theme, measurer: TextMeasurer, titleOrProps?: string | CardProps, description?: string): Card {
   if (typeof titleOrProps === 'string') {
-    return new Card(theme, { title: titleOrProps, description: description! });
+    return new Card(theme, measurer, { title: titleOrProps, description: description! });
   }
-  return new Card(theme, titleOrProps ?? {});
+  return new Card(theme, measurer, titleOrProps ?? {});
 }
 
 // ============================================
 // SLIDE NUMBER FACTORY
 // ============================================
 
-export function slideNumber(theme: Theme, props: SlideNumberProps = {}): SlideNumber {
-  return new SlideNumber(theme, props);
+export function slideNumber(theme: Theme, measurer: TextMeasurer, props: SlideNumberProps = {}): SlideNumber {
+  return new SlideNumber(theme, measurer, props);
 }
 
 // ============================================
@@ -143,24 +145,24 @@ export interface DSL {
  *   const { text, h1, row, column, card } = createDSL(theme);
  *   pres.add(contentSlide('Title', 'EYEBROW', row(card({...}), card({...}))));
  */
-export function createDSL(theme: Theme): DSL {
+export function createDSL(theme: Theme, measurer: TextMeasurer = fontkitMeasurer): DSL {
   return {
-    text: (content, props?) => text(theme, content, props),
-    h1: (content) => h1(theme, content),
-    h2: (content) => h2(theme, content),
-    h3: (content) => h3(theme, content),
-    h4: (content) => h4(theme, content),
-    body: (content) => body(theme, content),
-    small: (content) => small(theme, content),
-    eyebrow: (content) => eyebrow(theme, content),
+    text: (content, props?) => text(theme, measurer, content, props),
+    h1: (content) => h1(theme, measurer, content),
+    h2: (content) => h2(theme, measurer, content),
+    h3: (content) => h3(theme, measurer, content),
+    h4: (content) => h4(theme, measurer, content),
+    body: (content) => body(theme, measurer, content),
+    small: (content) => small(theme, measurer, content),
+    eyebrow: (content) => eyebrow(theme, measurer, content),
     image: (path) => image(theme, path),
-    list: (items, props?) => list(theme, items, props),
-    bulletList: (items, props?) => bulletList(theme, items, props),
-    numberedList: (items, props?) => numberedList(theme, items, props),
-    table: (data, props?) => table(theme, data, props),
+    list: (items, props?) => list(theme, measurer, items, props),
+    bulletList: (items, props?) => bulletList(theme, measurer, items, props),
+    numberedList: (items, props?) => numberedList(theme, measurer, items, props),
+    table: (data, props?) => table(theme, measurer, data, props),
     line: (props?) => line(theme, props),
-    slideNumber: (props?) => slideNumber(theme, props),
-    card: ((...args: any[]) => (card as Function)(theme, ...args)) as DSL['card'],
+    slideNumber: (props?) => slideNumber(theme, measurer, props),
+    card: ((...args: any[]) => (card as Function)(theme, measurer, ...args)) as DSL['card'],
     group: ((first: Component | number, ...rest: any[]) => (group as Function)(theme, first, ...rest)) as DSL['group'],
     row: ((...args: any[]) => row(theme, ...args)) as DSL['row'],
     column: ((...args: any[]) => column(theme, ...args)) as DSL['column'],

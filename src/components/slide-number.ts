@@ -4,6 +4,7 @@
 
 import { TEXT_STYLE, VALIGN, type AlignContext, type Component, type Drawer, type Bounds, type Theme, type HorizontalAlignment, type VerticalAlignment } from '../core/types.js';
 import { Text } from './text.js';
+import type { TextMeasurer } from '../utils/text-measurer.js';
 
 export interface SlideNumberProps {
   color?: string;
@@ -14,9 +15,9 @@ export interface SlideNumberProps {
 export class SlideNumber implements Component {
   private placeholder: Text;
 
-  constructor(private theme: Theme, private props: SlideNumberProps = {}) {
+  constructor(private theme: Theme, private measurer: TextMeasurer, private props: SlideNumberProps = {}) {
     // Use "999" as placeholder for measurement (covers 3-digit slide counts)
-    this.placeholder = new Text(theme, '999', {
+    this.placeholder = new Text(theme, measurer, '999', {
       style: TEXT_STYLE.FOOTER,
       color: props.color,
       hAlign: props.hAlign,

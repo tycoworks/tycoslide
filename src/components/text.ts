@@ -3,7 +3,8 @@
 // Height is estimated from font metrics; PowerPoint handles wrapping (wrap: true)
 
 import { HALIGN, VALIGN, FONT_WEIGHT, TEXT_STYLE, type Component, type Drawer, type Bounds, type Theme, type TextStyle, type TextStyleName, type HorizontalAlignment, type VerticalAlignment, type FontWeight, type TextContent, type AlignContext } from '../core/types.js';
-import { getFontFromFamily, normalizeContent, getStyleLineHeight, estimateLines, getContentWidth } from '../utils/font-utils.js';
+import { getFontFromFamily, normalizeContent } from '../utils/font-utils.js';
+import type { TextMeasurer } from '../utils/text-measurer.js';
 import type { TextFragment, TextFragmentOptions } from '../core/canvas.js';
 import { log } from '../utils/log.js';
 
@@ -18,7 +19,7 @@ export interface TextProps {
 }
 
 export class Text implements Component {
-  constructor(private theme: Theme, private content: TextContent, private props: TextProps = {}) {}
+  constructor(private theme: Theme, private measurer: TextMeasurer, private content: TextContent, private props: TextProps = {}) {}
 
   private getStyle(): TextStyle {
     return this.theme.textStyles[this.props.style ?? TEXT_STYLE.BODY];
@@ -26,8 +27,8 @@ export class Text implements Component {
 
   getHeight(width: number): number {
     const style = this.getStyle();
-    const lineHeight = getStyleLineHeight(style);
-    const lines = estimateLines(this.content, style, width);
+    const lineHeight = this.measurer.getStyleLineHeight(style);
+    const lines = this.measurer.estimateLines(this.content, style, width);
     const h = lineHeight * lines;
     log('text getHeight: w=%f lines=%d lineH=%f → h=%f', width, lines, lineHeight, h);
     return h;
@@ -36,7 +37,7 @@ export class Text implements Component {
   getMinHeight(width: number): number { return this.getHeight(width); }
 
   getWidth(_height: number): number {
-    return getContentWidth(this.content, this.getStyle());
+    return this.measurer.getContentWidth(this.content, this.getStyle());
   }
 
   prepare(bounds: Bounds, alignContext?: AlignContext): Drawer {

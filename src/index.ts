@@ -65,6 +65,10 @@ export {
 export { sizeOf } from './components/index.js';
 export { POINTS_PER_INCH } from './utils/font-utils.js';
 
+// Text measurement abstraction
+export { type TextMeasurer } from './utils/text-measurer.js';
+export { FontkitTextMeasurer, fontkitMeasurer } from './utils/fontkit-measurer.js';
+
 // Component classes and types
 export {
   Text,

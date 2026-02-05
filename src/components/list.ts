@@ -3,7 +3,8 @@
 // Height is estimated from font metrics; PowerPoint handles wrapping (wrap: true)
 
 import { VALIGN, FONT_WEIGHT, type Component, type Drawer, type Bounds, type Theme, type TextStyle, type TextContent, type VerticalAlignment, type AlignContext } from '../core/types.js';
-import { getFontFromFamily, normalizeContent, getStyleLineHeight, estimateLines, getContentWidth, ptToIn } from '../utils/font-utils.js';
+import { getFontFromFamily, normalizeContent, ptToIn } from '../utils/font-utils.js';
+import type { TextMeasurer } from '../utils/text-measurer.js';
 import type { TextFragment, TextFragmentOptions } from '../core/canvas.js';
 import { log } from '../utils/log.js';
 
@@ -22,11 +23,11 @@ export interface ListProps {
 }
 
 export class List implements Component {
-  constructor(private theme: Theme, private items: TextContent[], private props: ListProps = {}) {}
+  constructor(private theme: Theme, private measurer: TextMeasurer, private items: TextContent[], private props: ListProps = {}) {}
 
   getHeight(width: number): number {
     const textStyle = this.props.textStyle ?? this.theme.textStyles.body;
-    const lineHeight = getStyleLineHeight(textStyle);
+    const lineHeight = this.measurer.getStyleLineHeight(textStyle);
     const bulletSpacing = this.theme.spacing.bulletSpacing;
     // Compute bullet indent from font size: fontSize (pt) * multiplier → points → inches
     const bulletIndent = ptToIn(textStyle.fontSize * this.theme.spacing.bulletIndentMultiplier);
@@ -37,7 +38,7 @@ export class List implements Component {
 
     const itemLines: number[] = [];
     for (const item of this.items) {
-      itemLines.push(estimateLines(item, textStyle, textWidth));
+      itemLines.push(this.measurer.estimateLines(item, textStyle, textWidth));
     }
     const totalLines = itemLines.reduce((sum, n) => sum + n, 0);
 
@@ -57,7 +58,7 @@ export class List implements Component {
     const textStyle = this.props.textStyle ?? this.theme.textStyles.body;
     let maxWidth = 0;
     for (const item of this.items) {
-      maxWidth = Math.max(maxWidth, getContentWidth(item, textStyle));
+      maxWidth = Math.max(maxWidth, this.measurer.getContentWidth(item, textStyle));
     }
     return maxWidth;
   }

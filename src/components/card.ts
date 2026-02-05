@@ -7,6 +7,7 @@ import { column } from '../core/layout.js';
 import { Text } from './text.js';
 import { Image } from './image.js';
 import { log } from '../utils/log.js';
+import type { TextMeasurer } from '../utils/text-measurer.js';
 
 export interface CardProps {
   image?: string;              // Path to image rendered above text
@@ -28,19 +29,19 @@ export interface CardProps {
 export class Card implements Component {
   private column: Component;
 
-  constructor(private theme: Theme, private props: CardProps = {}) {
+  constructor(private theme: Theme, private measurer: TextMeasurer, private props: CardProps = {}) {
     // Build text content (title + description) with small gap
     const textChildren: Component[] = [];
 
     if (props.title) {
-      textChildren.push(new Text(theme, props.title, {
+      textChildren.push(new Text(theme, measurer, props.title, {
         style: props.titleStyle ?? TEXT_STYLE.H4,
         color: props.titleColor ?? theme.colors.accent1,
       }));
     }
 
     if (props.description) {
-      textChildren.push(new Text(theme, props.description, {
+      textChildren.push(new Text(theme, measurer, props.description, {
         style: props.descriptionStyle ?? TEXT_STYLE.SMALL,
         color: props.descriptionColor ?? theme.colors.text,
       }));
