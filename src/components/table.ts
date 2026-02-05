@@ -24,9 +24,9 @@ export interface CellProps {
 export type TableCell = Component | string | CellProps;
 export type TableData = TableCell[][];
 
-/** Type guard for CellProps */
+/** Type guard for CellProps - exclude Components which also have a 'content' property */
 function isCellProps(cell: TableCell): cell is CellProps {
-  return typeof cell === 'object' && 'content' in cell;
+  return typeof cell === 'object' && cell !== null && 'content' in cell && typeof (cell as unknown as Component).getHeight !== 'function';
 }
 
 export interface TableProps {
