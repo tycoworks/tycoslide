@@ -131,3 +131,60 @@ export {
 
 // Grid layout classes
 export { GridRow, GridColumn } from './core/layout.js';
+
+// ============================================
+// DECLARATIVE API (v2)
+// ============================================
+
+// Declarative Presentation
+export { Presentation as DeclarativePresentation, type Slide as DeclarativeSlide } from './core/presentation-v2.js';
+
+// Node types and enum
+export { NODE_TYPE, DIAGRAM_LAYOUT } from './core/nodes.js';
+export type {
+  NodeType,
+  DiagramLayout,
+  ElementNode,
+  TextNode,
+  ImageNode,
+  LineNode,
+  SlideNumberNode,
+  RowNode,
+  ColumnNode,
+  GroupNode,
+  CardNode,
+  ListNode,
+  TableNode,
+  DiagramNode as DiagramElementNode,
+  PositionedNode,
+} from './core/nodes.js';
+
+// DSL v2 - Pure factory functions (no theme/measurer needed)
+export {
+  text as textNode,
+  h1 as h1Node,
+  h2 as h2Node,
+  h3 as h3Node,
+  h4 as h4Node,
+  body as bodyNode,
+  small as smallNode,
+  eyebrow as eyebrowNode,
+  image as imageNode,
+  line as lineNode,
+  slideNumber as slideNumberNode,
+  row as rowNode,
+  column as columnNode,
+  group as groupNode,
+  card as cardNode,
+  list as listNode,
+  bulletList as bulletListNode,
+  numberedList as numberedListNode,
+  table as tableNode,
+  diagram as diagramNode,
+} from './core/dsl-v2.js';
+
+// Layout computation
+export { computeLayout, getNodeHeight } from './core/compute-layout.js';
+
+// Render
+export { render as renderNode } from './core/render.js';
