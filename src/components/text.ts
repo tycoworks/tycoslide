@@ -2,7 +2,7 @@
 // Renders text with theme-aware defaults, supports rich text with per-run styling
 // Height is estimated from font metrics; PowerPoint handles wrapping (wrap: true)
 
-import { VALIGN, FONT_WEIGHT, TEXT_STYLE, type Component, type Drawer, type Bounds, type Theme, type TextStyle, type TextStyleName, type HorizontalAlignment, type VerticalAlignment, type FontWeight, type TextContent, type AlignContext } from '../core/types.js';
+import { HALIGN, VALIGN, FONT_WEIGHT, TEXT_STYLE, type Component, type Drawer, type Bounds, type Theme, type TextStyle, type TextStyleName, type HorizontalAlignment, type VerticalAlignment, type FontWeight, type TextContent, type AlignContext } from '../core/types.js';
 import { getFontFromFamily, normalizeContent, getStyleLineHeight, estimateLines, getContentWidth } from '../utils/font-utils.js';
 import type { TextFragment, TextFragmentOptions } from '../core/canvas.js';
 import { log } from '../utils/log.js';
@@ -45,8 +45,8 @@ export class Text implements Component {
     const defaultWeight: FontWeight = style.defaultWeight ?? FONT_WEIGHT.NORMAL;
     const defaultFont = getFontFromFamily(style.fontFamily, defaultWeight);
 
-    // Alignment: props take precedence, then alignContext
-    const align = this.props.hAlign ?? alignContext?.hAlign;
+    // Text alignment: only from explicit props, default left (layout's cross-axis align is for positioning, not text)
+    const align = this.props.hAlign ?? HALIGN.LEFT;
     const valign: VerticalAlignment = this.props.vAlign ?? alignContext?.vAlign ?? VALIGN.TOP;
 
     // Build text fragments — no wrapping, no splitting across lines
