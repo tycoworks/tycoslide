@@ -72,6 +72,29 @@ export const SHAPE = {
 
 export type ShapeName = typeof SHAPE[keyof typeof SHAPE];
 
+export const ARROW_TYPE = {
+  NONE: 'none',
+  ARROW: 'arrow',
+  DIAMOND: 'diamond',
+  OVAL: 'oval',
+  STEALTH: 'stealth',
+  TRIANGLE: 'triangle',
+} as const;
+
+export type ArrowType = typeof ARROW_TYPE[keyof typeof ARROW_TYPE];
+
+export const DASH_TYPE = {
+  SOLID: 'solid',
+  DASH: 'dash',
+  DASH_DOT: 'dashDot',
+  LG_DASH: 'lgDash',
+  LG_DASH_DOT: 'lgDashDot',
+  SYS_DASH: 'sysDash',
+  SYS_DOT: 'sysDot',
+} as const;
+
+export type DashType = typeof DASH_TYPE[keyof typeof DASH_TYPE];
+
 export const LAYER = {
   SLIDE: 'slide',
   MASTER: 'master',

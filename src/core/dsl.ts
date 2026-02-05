@@ -12,7 +12,7 @@ import { Text, type TextProps } from '../components/text.js';
 import { Image } from '../components/image.js';
 import { List, LIST_TYPE, type ListProps } from '../components/list.js';
 import { Table, type TableData, type TableProps } from '../components/table.js';
-import { Divider, type DividerProps } from '../components/divider.js';
+import { Line, type LineProps } from '../components/line.js';
 import { Card, type CardProps } from '../components/card.js';
 import { SlideNumber, type SlideNumberProps } from '../components/slide-number.js';
 import { Diagram, diagram as diagramFactory, DIAGRAM_DIRECTION, type DiagramDirection, type DiagramProps } from '../components/diagram.js';
@@ -70,11 +70,11 @@ export function table(theme: Theme, data: TableData, props: TableProps = {}): Ta
 }
 
 // ============================================
-// DIVIDER FACTORY
+// LINE FACTORY
 // ============================================
 
-export function divider(theme: Theme, props: DividerProps = {}): Divider {
-  return new Divider(theme, props);
+export function line(theme: Theme, props: LineProps = {}): Line {
+  return new Line(theme, props);
 }
 
 // ============================================
@@ -119,7 +119,7 @@ export interface DSL {
   bulletList(items: TextContent[], props?: ListProps): List;
   numberedList(items: TextContent[], props?: ListProps): List;
   table(data: TableData, props?: TableProps): Table;
-  divider(props?: DividerProps): Divider;
+  line(props?: LineProps): Line;
   slideNumber(props?: SlideNumberProps): SlideNumber;
   card(title: string, description: string): Card;
   card(props?: CardProps): Card;
@@ -158,7 +158,7 @@ export function createDSL(theme: Theme): DSL {
     bulletList: (items, props?) => bulletList(theme, items, props),
     numberedList: (items, props?) => numberedList(theme, items, props),
     table: (data, props?) => table(theme, data, props),
-    divider: (props?) => divider(theme, props),
+    line: (props?) => line(theme, props),
     slideNumber: (props?) => slideNumber(theme, props),
     card: ((...args: any[]) => (card as Function)(theme, ...args)) as DSL['card'],
     group: ((first: Component | number, ...rest: any[]) => (group as Function)(theme, first, ...rest)) as DSL['group'],

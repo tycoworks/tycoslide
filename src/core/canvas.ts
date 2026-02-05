@@ -1,7 +1,7 @@
 // Canvas - Collects drawing operations with layer tagging
 // Box controls currentLayer; Presentation separates by layer at render time
 
-import { LAYER, type Layer, type ShapeName, type HorizontalAlignment, type VerticalAlignment } from './types.js';
+import { LAYER, type Layer, type ShapeName, type HorizontalAlignment, type VerticalAlignment, type ArrowType, type DashType } from './types.js';
 
 // ============================================
 // TYPED OPTION INTERFACES
@@ -43,6 +43,9 @@ export interface TextOptions {
 export interface LineStyle {
   color: string;
   width: number;
+  dashType?: DashType;
+  beginArrowType?: ArrowType;
+  endArrowType?: ArrowType;
 }
 
 /** Fill style */
