@@ -1,171 +1,318 @@
-// DSL — Factory functions for creating themed components
-// This is the primary authoring API. Component classes live in components/;
-// layout containers live in layout.ts.
+// Declarative DSL
+// Simple factory functions that return pure data nodes
 
 import {
-  TEXT_STYLE,
-  type Theme,
-  type Component,
-  type TextContent,
+  NODE_TYPE,
+  type TextNode,
+  type ImageNode,
+  type LineNode,
+  type SlideNumberNode,
+  type RowNode,
+  type ColumnNode,
+  type GroupNode,
+  type CardNode,
+  type ListNode,
+  type TableNode,
+  type TableCellContent,
+  type ElementNode,
+} from './nodes.js';
+import type {
+  TextContent,
+  TextStyleName,
+  HorizontalAlignment,
+  VerticalAlignment,
+  GapSize,
+  Justify,
+  BorderStyle,
+  ArrowType,
+  DashType,
 } from './types.js';
-import type { TextMeasurer } from '../utils/text-measurer.js';
-import { fontkitMeasurer } from '../utils/fontkit-measurer.js';
-import { Text, type TextProps } from '../components/text.js';
-import { Image } from '../components/image.js';
-import { List, LIST_TYPE, type ListProps } from '../components/list.js';
-import { Table, type TableData, type TableProps } from '../components/table.js';
-import { Line, type LineProps } from '../components/line.js';
-import { Card, type CardProps } from '../components/card.js';
-import { SlideNumber, type SlideNumberProps } from '../components/slide-number.js';
-import { Diagram, diagram as diagramFactory, DIAGRAM_DIRECTION, type DiagramDirection, type DiagramProps } from '../components/diagram.js';
-import { row, column, group, type LayoutOptions } from './layout.js';
-
-// Re-export layout factories
-export { row, column, group, type LayoutOptions } from './layout.js';
+import { TEXT_STYLE } from './types.js';
 
 // ============================================
-// TEXT FACTORIES
+// TEXT
 // ============================================
 
-export function text(theme: Theme, measurer: TextMeasurer, content: TextContent, props?: TextProps): Text {
-  return new Text(theme, measurer, content, props);
+export interface TextProps {
+  style?: TextStyleName;
+  color?: string;
+  hAlign?: HorizontalAlignment;
+  vAlign?: VerticalAlignment;
 }
 
-export const h1 = (theme: Theme, measurer: TextMeasurer, content: string) => text(theme, measurer, content, { style: TEXT_STYLE.H1 });
-export const h2 = (theme: Theme, measurer: TextMeasurer, content: string) => text(theme, measurer, content, { style: TEXT_STYLE.H2 });
-export const h3 = (theme: Theme, measurer: TextMeasurer, content: string) => text(theme, measurer, content, { style: TEXT_STYLE.H3 });
-export const h4 = (theme: Theme, measurer: TextMeasurer, content: string) => text(theme, measurer, content, { style: TEXT_STYLE.H4 });
-export const body = (theme: Theme, measurer: TextMeasurer, content: string) => text(theme, measurer, content, { style: TEXT_STYLE.BODY });
-export const small = (theme: Theme, measurer: TextMeasurer, content: string) => text(theme, measurer, content, { style: TEXT_STYLE.SMALL });
-export const eyebrow = (theme: Theme, measurer: TextMeasurer, content: string) => text(theme, measurer, content, { style: TEXT_STYLE.EYEBROW });
-
-// ============================================
-// IMAGE FACTORY
-// ============================================
-
-export function image(theme: Theme, path: string): Image {
-  return new Image(theme, path);
-}
-
-// ============================================
-// LIST FACTORIES
-// ============================================
-
-export function list(theme: Theme, measurer: TextMeasurer, items: TextContent[], props?: ListProps): List {
-  return new List(theme, measurer, items, props);
-}
-
-export function bulletList(theme: Theme, measurer: TextMeasurer, items: TextContent[], props?: ListProps): List {
-  return new List(theme, measurer, items, { ...props, type: LIST_TYPE.BULLET });
-}
-
-export function numberedList(theme: Theme, measurer: TextMeasurer, items: TextContent[], props?: ListProps): List {
-  return new List(theme, measurer, items, { ...props, type: LIST_TYPE.NUMBER });
-}
-
-// ============================================
-// TABLE FACTORY
-// ============================================
-
-export function table(theme: Theme, measurer: TextMeasurer, data: TableData, props: TableProps = {}): Table {
-  return new Table(theme, measurer, data, props);
-}
-
-// ============================================
-// LINE FACTORY
-// ============================================
-
-export function line(theme: Theme, props: LineProps = {}): Line {
-  return new Line(theme, props);
-}
-
-// ============================================
-// CARD FACTORY
-// ============================================
-
-export function card(theme: Theme, measurer: TextMeasurer, title: string, description: string): Card;
-export function card(theme: Theme, measurer: TextMeasurer, props?: CardProps): Card;
-export function card(theme: Theme, measurer: TextMeasurer, titleOrProps?: string | CardProps, description?: string): Card {
-  if (typeof titleOrProps === 'string') {
-    return new Card(theme, measurer, { title: titleOrProps, description: description! });
-  }
-  return new Card(theme, measurer, titleOrProps ?? {});
-}
-
-// ============================================
-// SLIDE NUMBER FACTORY
-// ============================================
-
-export function slideNumber(theme: Theme, measurer: TextMeasurer, props: SlideNumberProps = {}): SlideNumber {
-  return new SlideNumber(theme, measurer, props);
-}
-
-// ============================================
-// DSL FACTORY
-// ============================================
-
-/**
- * A theme-bound DSL instance. All factory functions have the theme pre-applied.
- */
-export interface DSL {
-  text(content: TextContent, props?: TextProps): Text;
-  h1(content: string): Text;
-  h2(content: string): Text;
-  h3(content: string): Text;
-  h4(content: string): Text;
-  body(content: string): Text;
-  small(content: string): Text;
-  eyebrow(content: string): Text;
-  image(path: string): Image;
-  list(items: TextContent[], props?: ListProps): List;
-  bulletList(items: TextContent[], props?: ListProps): List;
-  numberedList(items: TextContent[], props?: ListProps): List;
-  table(data: TableData, props?: TableProps): Table;
-  line(props?: LineProps): Line;
-  slideNumber(props?: SlideNumberProps): SlideNumber;
-  card(title: string, description: string): Card;
-  card(props?: CardProps): Card;
-  group(columns: number, options: LayoutOptions, ...children: Component[]): Component;
-  group(columns: number, ...children: Component[]): Component;
-  group(options: LayoutOptions, ...children: Component[]): Component;
-  group(...children: Component[]): Component;
-  row(proportions: number[], children: Component[], options?: LayoutOptions): Component;
-  row(options: LayoutOptions, ...children: Component[]): Component;
-  row(...children: Component[]): Component;
-  column(proportions: number[], children: Component[], options?: LayoutOptions): Component;
-  column(options: LayoutOptions, ...children: Component[]): Component;
-  column(...children: Component[]): Component;
-  diagram(direction?: DiagramDirection, props?: DiagramProps): Diagram;
-}
-
-/**
- * Create a theme-bound DSL instance.
- * Returns an object with all factory functions pre-applied with the given theme.
- *
- *   const { text, h1, row, column, card } = createDSL(theme);
- *   pres.add(contentSlide('Title', 'EYEBROW', row(card({...}), card({...}))));
- */
-export function createDSL(theme: Theme, measurer: TextMeasurer = fontkitMeasurer): DSL {
+export function text(content: TextContent, props?: TextProps): TextNode {
   return {
-    text: (content, props?) => text(theme, measurer, content, props),
-    h1: (content) => h1(theme, measurer, content),
-    h2: (content) => h2(theme, measurer, content),
-    h3: (content) => h3(theme, measurer, content),
-    h4: (content) => h4(theme, measurer, content),
-    body: (content) => body(theme, measurer, content),
-    small: (content) => small(theme, measurer, content),
-    eyebrow: (content) => eyebrow(theme, measurer, content),
-    image: (path) => image(theme, path),
-    list: (items, props?) => list(theme, measurer, items, props),
-    bulletList: (items, props?) => bulletList(theme, measurer, items, props),
-    numberedList: (items, props?) => numberedList(theme, measurer, items, props),
-    table: (data, props?) => table(theme, measurer, data, props),
-    line: (props?) => line(theme, props),
-    slideNumber: (props?) => slideNumber(theme, measurer, props),
-    card: ((...args: any[]) => (card as Function)(theme, measurer, ...args)) as DSL['card'],
-    group: ((first: Component | number, ...rest: any[]) => (group as Function)(theme, first, ...rest)) as DSL['group'],
-    row: ((...args: any[]) => row(theme, ...args)) as DSL['row'],
-    column: ((...args: any[]) => column(theme, ...args)) as DSL['column'],
-    diagram: (direction?, props?) => diagramFactory(theme, direction ?? DIAGRAM_DIRECTION.LEFT_TO_RIGHT, props),
+    type: NODE_TYPE.TEXT,
+    content,
+    style: props?.style,
+    color: props?.color,
+    hAlign: props?.hAlign,
+    vAlign: props?.vAlign,
   };
 }
+
+// Convenience functions for common text styles
+export function h1(content: TextContent, props?: Omit<TextProps, 'style'>): TextNode {
+  return text(content, { ...props, style: TEXT_STYLE.H1 });
+}
+
+export function h2(content: TextContent, props?: Omit<TextProps, 'style'>): TextNode {
+  return text(content, { ...props, style: TEXT_STYLE.H2 });
+}
+
+export function h3(content: TextContent, props?: Omit<TextProps, 'style'>): TextNode {
+  return text(content, { ...props, style: TEXT_STYLE.H3 });
+}
+
+export function h4(content: TextContent, props?: Omit<TextProps, 'style'>): TextNode {
+  return text(content, { ...props, style: TEXT_STYLE.H4 });
+}
+
+export function body(content: TextContent, props?: Omit<TextProps, 'style'>): TextNode {
+  return text(content, { ...props, style: TEXT_STYLE.BODY });
+}
+
+export function small(content: TextContent, props?: Omit<TextProps, 'style'>): TextNode {
+  return text(content, { ...props, style: TEXT_STYLE.SMALL });
+}
+
+export function eyebrow(content: TextContent, props?: Omit<TextProps, 'style'>): TextNode {
+  return text(content, { ...props, style: TEXT_STYLE.EYEBROW });
+}
+
+// ============================================
+// IMAGE
+// ============================================
+
+export interface ImageProps {
+  alt?: string;
+  maxWidth?: number;
+  maxHeight?: number;
+}
+
+export function image(src: string, props?: ImageProps): ImageNode {
+  return {
+    type: NODE_TYPE.IMAGE,
+    src,
+    alt: props?.alt,
+    maxWidth: props?.maxWidth,
+    maxHeight: props?.maxHeight,
+  };
+}
+
+// ============================================
+// LINE
+// ============================================
+
+export interface LineProps {
+  color?: string;
+  width?: number;
+  dashType?: DashType;
+  beginArrow?: ArrowType;
+  endArrow?: ArrowType;
+}
+
+export function line(props?: LineProps): LineNode {
+  return {
+    type: NODE_TYPE.LINE,
+    color: props?.color,
+    width: props?.width,
+    dashType: props?.dashType,
+    beginArrow: props?.beginArrow,
+    endArrow: props?.endArrow,
+  };
+}
+
+// ============================================
+// SLIDE NUMBER
+// ============================================
+
+export function slideNumber(props?: { style?: TextStyleName; color?: string; hAlign?: HorizontalAlignment }): SlideNumberNode {
+  return {
+    type: NODE_TYPE.SLIDE_NUMBER,
+    style: props?.style,
+    color: props?.color,
+    hAlign: props?.hAlign,
+  };
+}
+
+// ============================================
+// CONTAINERS
+// ============================================
+
+export interface RowProps {
+  proportions?: number[];
+  gap?: GapSize;
+  vAlign?: VerticalAlignment;
+}
+
+export function row(props: RowProps, ...children: ElementNode[]): RowNode;
+export function row(...children: ElementNode[]): RowNode;
+export function row(...args: any[]): RowNode {
+  let props: RowProps = {};
+  let children: ElementNode[];
+
+  if (args[0] && typeof args[0] === 'object' && !('type' in args[0])) {
+    props = args[0];
+    children = args.slice(1);
+  } else {
+    children = args;
+  }
+
+  return {
+    type: NODE_TYPE.ROW,
+    children,
+    proportions: props.proportions,
+    gap: props.gap,
+    vAlign: props.vAlign,
+  };
+}
+
+export interface ColumnProps {
+  proportions?: number[];
+  gap?: GapSize;
+  justify?: Justify;
+  hAlign?: HorizontalAlignment;
+}
+
+export function column(props: ColumnProps, ...children: ElementNode[]): ColumnNode;
+export function column(...children: ElementNode[]): ColumnNode;
+export function column(...args: any[]): ColumnNode {
+  let props: ColumnProps = {};
+  let children: ElementNode[];
+
+  if (args[0] && typeof args[0] === 'object' && !('type' in args[0])) {
+    props = args[0];
+    children = args.slice(1);
+  } else {
+    children = args;
+  }
+
+  return {
+    type: NODE_TYPE.COLUMN,
+    children,
+    proportions: props.proportions,
+    gap: props.gap,
+    justify: props.justify,
+    hAlign: props.hAlign,
+  };
+}
+
+export interface GroupProps {
+  columns?: number;
+  gap?: GapSize;
+}
+
+export function group(props: GroupProps, ...children: ElementNode[]): GroupNode;
+export function group(...children: ElementNode[]): GroupNode;
+export function group(...args: any[]): GroupNode {
+  let props: GroupProps = {};
+  let children: ElementNode[];
+
+  if (args[0] && typeof args[0] === 'object' && !('type' in args[0])) {
+    props = args[0];
+    children = args.slice(1);
+  } else {
+    children = args;
+  }
+
+  return {
+    type: NODE_TYPE.GROUP,
+    children,
+    columns: props.columns,
+    gap: props.gap,
+  };
+}
+
+// ============================================
+// CARD
+// ============================================
+
+export interface CardProps {
+  image?: string;
+  icon?: string;
+  title?: string;
+  titleStyle?: TextStyleName;
+  titleColor?: string;
+  description?: string;
+  descriptionStyle?: TextStyleName;
+  descriptionColor?: string;
+  background?: boolean;          // Whether to show background (default: true)
+  backgroundColor?: string;
+  backgroundOpacity?: number;
+  borderColor?: string;
+  borderWidth?: number;
+  cornerRadius?: number;
+  padding?: number;
+}
+
+export function card(props: CardProps): CardNode {
+  return {
+    type: NODE_TYPE.CARD,
+    ...props,
+  };
+}
+
+// ============================================
+// LIST
+// ============================================
+
+export interface ListProps {
+  style?: TextStyleName;
+  ordered?: boolean;
+  color?: string;
+  markerColor?: string;
+}
+
+/** List items can be plain text, styled runs, or TextNode */
+export type ListItemContent = TextContent | TextNode;
+
+export function list(items: ListItemContent[], props?: ListProps): ListNode {
+  return {
+    type: NODE_TYPE.LIST,
+    items,
+    style: props?.style,
+    ordered: props?.ordered,
+    color: props?.color,
+    markerColor: props?.markerColor,
+  };
+}
+
+export function bulletList(items: ListItemContent[], props?: Omit<ListProps, 'ordered'>): ListNode {
+  return list(items, { ...props, ordered: false });
+}
+
+export function numberedList(items: ListItemContent[], props?: Omit<ListProps, 'ordered'>): ListNode {
+  return list(items, { ...props, ordered: true });
+}
+
+// ============================================
+// TABLE
+// ============================================
+
+export interface TableProps {
+  headerRow?: boolean;
+  headerColumn?: boolean;
+  borderStyle?: BorderStyle;
+  headerBackground?: string;
+  cellBackground?: string;
+  columnWidths?: number[];
+  hAlign?: HorizontalAlignment;
+  vAlign?: VerticalAlignment;
+}
+
+export function table(data: TableCellContent[][], props?: TableProps): TableNode {
+  return {
+    type: NODE_TYPE.TABLE,
+    data,
+    headerRow: props?.headerRow,
+    headerColumn: props?.headerColumn,
+    borderStyle: props?.borderStyle,
+    headerBackground: props?.headerBackground,
+    cellBackground: props?.cellBackground,
+    columnWidths: props?.columnWidths,
+    hAlign: props?.hAlign,
+    vAlign: props?.vAlign,
+  };
+}
+

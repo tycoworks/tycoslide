@@ -1,10 +1,11 @@
 // Measurement Collection
 // Traverses node tree to collect text measurement requests
 
-import type { ElementNode, TextNode, ListNode, CardNode, TableNode } from './nodes.js';
+import { NODE_TYPE, type ElementNode } from './nodes.js';
 import type { Theme, TextStyleName, TextContent, TextStyle } from './types.js';
 import { Bounds } from './bounds.js';
-import { TEXT_STYLE, GAP } from './types.js';
+import { TEXT_STYLE } from './types.js';
+import { toTextContent, resolveGap } from '../utils/node-utils.js';
 
 // ============================================
 // MEASUREMENT REQUEST TYPES
@@ -54,20 +55,6 @@ function makeStyleKey(styleName: TextStyleName): string {
 }
 
 // ============================================
-// GAP RESOLUTION
-// ============================================
-
-function resolveGap(gap: string | undefined, theme: Theme): number {
-  switch (gap) {
-    case GAP.NONE: return 0;
-    case GAP.TIGHT: return theme.spacing.gapTight;
-    case GAP.LOOSE: return theme.spacing.gapLoose;
-    case GAP.NORMAL:
-    default: return theme.spacing.gap;
-  }
-}
-
-// ============================================
 // MEASUREMENT COLLECTOR
 // ============================================
 
@@ -99,26 +86,26 @@ export function collectMeasurements(
 
   function collect(node: ElementNode, bounds: Bounds): void {
     switch (node.type) {
-      case 'text': {
+      case NODE_TYPE.TEXT: {
         const styleName = node.style ?? TEXT_STYLE.BODY;
         addTextRequest(node.content, styleName, bounds.w);
         addStyleRequest(styleName);
         break;
       }
 
-      case 'list': {
+      case NODE_TYPE.LIST: {
         const styleName = node.style ?? TEXT_STYLE.BODY;
         addStyleRequest(styleName);
         // Each list item needs measurement
         for (const item of node.items) {
           // Account for bullet indent (approximate)
           const indentedWidth = bounds.w - theme.spacing.gap;
-          addTextRequest(item, styleName, indentedWidth);
+          addTextRequest(toTextContent(item), styleName, indentedWidth);
         }
         break;
       }
 
-      case 'card': {
+      case NODE_TYPE.CARD: {
         const cardBounds = bounds.inset(theme.spacing.padding);
         // Image takes ~40% if present
         let contentBounds = cardBounds;
@@ -142,20 +129,20 @@ export function collectMeasurements(
         break;
       }
 
-      case 'table': {
+      case NODE_TYPE.TABLE: {
         // Table cells use BODY style
         addStyleRequest(TEXT_STYLE.BODY);
         const cellWidth = bounds.w / (node.data[0]?.length || 1);
         const cellContentWidth = cellWidth - theme.spacing.cellPadding * 2;
         for (const row of node.data) {
           for (const cell of row) {
-            addTextRequest(cell, TEXT_STYLE.BODY, cellContentWidth);
+            addTextRequest(toTextContent(cell), TEXT_STYLE.BODY, cellContentWidth);
           }
         }
         break;
       }
 
-      case 'row': {
+      case NODE_TYPE.ROW: {
         const gap = resolveGap(node.gap, theme);
         const n = node.children.length;
         const totalGap = gap * (n - 1);
@@ -175,7 +162,7 @@ export function collectMeasurements(
         break;
       }
 
-      case 'column': {
+      case NODE_TYPE.COLUMN: {
         const gap = resolveGap(node.gap, theme);
         // For measurement, we give each child the full width
         // Height will be computed in layout phase
@@ -185,7 +172,7 @@ export function collectMeasurements(
         break;
       }
 
-      case 'group': {
+      case NODE_TYPE.GROUP: {
         const gap = resolveGap(node.gap, theme);
         const cols = node.columns ?? node.children.length;
         const totalGap = gap * (cols - 1);
@@ -198,7 +185,7 @@ export function collectMeasurements(
         break;
       }
 
-      case 'diagram': {
+      case NODE_TYPE.DIAGRAM: {
         // Diagram text uses SMALL style
         addStyleRequest(TEXT_STYLE.SMALL);
         for (const box of node.nodes) {
@@ -208,9 +195,9 @@ export function collectMeasurements(
         break;
       }
 
-      case 'image':
-      case 'line':
-      case 'slideNumber':
+      case NODE_TYPE.IMAGE:
+      case NODE_TYPE.LINE:
+      case NODE_TYPE.SLIDE_NUMBER:
         // No text measurement needed
         break;
     }

@@ -1,12 +1,13 @@
 // Declarative Render
 // Renders positioned nodes to Canvas
 
-import { NODE_TYPE, type PositionedNode, type TextNode, type ImageNode, type CardNode, type ListNode, type TableNode, type DiagramNode } from './nodes.js';
+import { NODE_TYPE, type PositionedNode, type TextNode, type ImageNode, type CardNode, type ListNode, type TableNode, type DiagramNode, type DiagramShape } from './nodes.js';
 import type { Theme, TextStyleName, TextContent, NormalizedRun } from './types.js';
 import type { Canvas, TextFragment, TextFragmentOptions } from './canvas.js';
-import { SHAPE, TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT } from './types.js';
+import { SHAPE, TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT, NODE_STYLE } from './types.js';
 import { Bounds } from './bounds.js';
 import { getFontFromFamily, normalizeContent } from '../utils/font-utils.js';
+import { toTextContent } from '../utils/node-utils.js';
 
 // ============================================
 // TEXT RENDERING HELPERS
@@ -178,7 +179,8 @@ function renderListNode(canvas: Canvas, node: PositionedNode, theme: Theme): voi
   let y = node.y;
   listNode.items.forEach((item, i) => {
     const bullet = listNode.ordered ? `${i + 1}. ` : '• ';
-    const content: TextContent = typeof item === 'string' ? bullet + item : [bullet, ...normalizeContent(item).map(r => r.text)].join('');
+    const itemContent = toTextContent(item);
+    const content: TextContent = typeof itemContent === 'string' ? bullet + itemContent : [bullet, ...normalizeContent(itemContent).map(r => r.text)].join('');
 
     renderText(
       canvas,
@@ -218,7 +220,7 @@ function renderTableNode(canvas: Canvas, node: PositionedNode, theme: Theme): vo
       // Cell text
       renderText(
         canvas,
-        cell,
+        toTextContent(cell),
         TEXT_STYLE.BODY,
         theme,
         x + cellPadding, y + cellPadding,
@@ -262,35 +264,252 @@ function renderSlideNumberNode(canvas: Canvas, node: PositionedNode, theme: Them
   });
 }
 
-function renderDiagramNode(canvas: Canvas, node: PositionedNode, theme: Theme): void {
-  const diagramNode = node.node as DiagramNode;
-  // Simplified diagram rendering - just boxes in a row
-  const boxCount = diagramNode.nodes.length;
-  const gap = theme.spacing.gap;
-  const boxWidth = (node.width - gap * (boxCount - 1)) / boxCount;
-  const boxHeight = node.height * 0.6;
-  const boxY = node.y + (node.height - boxHeight) / 2;
+// ============================================
+// DIAGRAM RENDERER (flowcharts via external tool)
+// ============================================
 
-  diagramNode.nodes.forEach((box, i) => {
-    const x = node.x + i * (boxWidth + gap);
-    const style = box.style ?? 'primary';
-    const color = (theme.colors as any)[style] ?? theme.colors.primary;
+import { execSync } from 'child_process';
+import { writeFileSync, mkdtempSync, existsSync } from 'fs';
+import { join, dirname } from 'path';
+import { tmpdir } from 'os';
+import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
+import imageSizeDefault from 'image-size';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const imageSize = (imageSizeDefault as any).default || imageSizeDefault;
 
-    canvas.addShape(SHAPE.ROUND_RECT, {
-      x, y: boxY, w: boxWidth, h: boxHeight,
-      fill: { color },
-      rectRadius: theme.borders.radius,
-    });
+function findMmdcPath(): string {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
 
-    renderText(
-      canvas,
-      box.label,
-      TEXT_STYLE.SMALL,
-      theme,
-      x, boxY, boxWidth, boxHeight,
-      HALIGN.CENTER, VALIGN.MIDDLE,
-      theme.colors.background
+  let dir = __dirname;
+  for (let i = 0; i < 5; i++) {
+    const candidate = join(dir, 'node_modules', '.bin', 'mmdc');
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+    dir = dirname(dir);
+  }
+
+  try {
+    const require = createRequire(import.meta.url);
+    const cliPath = require.resolve('@mermaid-js/mermaid-cli/src/cli.js');
+    return `node "${cliPath}"`;
+  } catch {
+    return 'mmdc';
+  }
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function buildDiagramConfig(theme: Theme): object {
+  const { colors, textStyles } = theme;
+  const fontFamily = textStyles.body.fontFamily.normal.name;
+  const alphaDecimal = colors.subtleOpacity / 100;
+
+  return {
+    theme: 'base',
+    themeVariables: {
+      fontFamily,
+      background: `#${colors.background}`,
+      primaryColor: `#${colors.primary}`,
+      primaryTextColor: `#${colors.text}`,
+      primaryBorderColor: `#${colors.secondary}`,
+      lineColor: `#${colors.secondary}`,
+      secondaryColor: `#${colors.primary}`,
+      tertiaryColor: `#${colors.primary}`,
+      textColor: `#${colors.text}`,
+      titleColor: `#${colors.text}`,
+      nodeTextColor: `#${colors.text}`,
+      clusterBkg: hexToRgba(colors.secondary, alphaDecimal),
+      clusterBorder: `#${colors.secondary}`,
+      edgeLabelBackground: `#${colors.background}`,
+    },
+  };
+}
+
+function buildClassDefs(theme: Theme): string {
+  const { colors } = theme;
+  const alpha = Math.round(colors.subtleOpacity / 100 * 255).toString(16).padStart(2, '0');
+
+  return Object.values(NODE_STYLE).map((styleName) => {
+    // Access color by style name (e.g., 'primary', 'secondary', 'accent1')
+    const baseColor = (colors as unknown as Record<string, string>)[styleName];
+    if (!baseColor || typeof baseColor !== 'string') return null;
+    const fill = styleName === NODE_STYLE.PRIMARY
+      ? `#${baseColor}`
+      : `#${baseColor}${alpha}`;
+    return `classDef ${styleName} fill:${fill}`;
+  }).filter(Boolean).join('\n');
+}
+
+function buildSubgraphStyles(definition: string, theme: Theme): string {
+  const { colors } = theme;
+  const alpha = Math.round(colors.subtleOpacity / 100 * 255).toString(16).padStart(2, '0');
+  const fillColor = `#${colors.secondary}${alpha}`;
+
+  const subgraphPattern = /subgraph\s+(\w+)/g;
+  const ids: string[] = [];
+  let match;
+  while ((match = subgraphPattern.exec(definition)) !== null) {
+    ids.push(match[1]);
+  }
+
+  if (ids.length === 0) return '';
+  return ids.map(id => `style ${id} fill:${fillColor}`).join('\n');
+}
+
+function injectClassDefs(definition: string, theme: Theme): string {
+  const classDefs = buildClassDefs(theme);
+  const subgraphStyles = buildSubgraphStyles(definition, theme);
+
+  const diagramPattern = /^(\s*(?:flowchart|graph)\s+\w*\s*\n)/m;
+  const match = definition.match(diagramPattern);
+
+  if (match) {
+    const [fullMatch] = match;
+    let result = definition.replace(fullMatch, `${fullMatch}${classDefs}\n`);
+    if (subgraphStyles) {
+      result = result.trimEnd() + '\n' + subgraphStyles;
+    }
+    return result;
+  }
+
+  let result = `${classDefs}\n${definition}`;
+  if (subgraphStyles) {
+    result = result.trimEnd() + '\n' + subgraphStyles;
+  }
+  return result;
+}
+
+function buildDiagramDefinition(node: DiagramNode): string {
+  const lines: string[] = [];
+
+  lines.push(`%%{init: {"flowchart": {"curve": "linear"}}}%%`);
+  lines.push(`flowchart ${node.direction}`);
+
+  const renderedNodes = new Set<string>();
+
+  // Render subgraphs
+  for (const sg of node.subgraphs) {
+    const label = sg.label ? `${sg.id}[${sg.label}]` : sg.id;
+    lines.push(`    subgraph ${label}`);
+    if (sg.direction) {
+      lines.push(`        direction ${sg.direction}`);
+    }
+    for (const nodeId of sg.nodeIds) {
+      const nodeDef = node.nodes.find(n => n.id === nodeId);
+      if (nodeDef) {
+        lines.push(`        ${renderDiagramShapeNode(nodeDef)}`);
+        renderedNodes.add(nodeId);
+      }
+    }
+    lines.push(`    end`);
+  }
+
+  // Render remaining nodes
+  for (const nodeDef of node.nodes) {
+    if (!renderedNodes.has(nodeDef.id)) {
+      lines.push(`    ${renderDiagramShapeNode(nodeDef)}`);
+    }
+  }
+
+  // Render edges
+  for (const edge of node.edges) {
+    const fromStr = edge.from.length > 1 ? edge.from.join(' & ') : edge.from[0];
+    const toStr = edge.to.length > 1 ? edge.to.join(' & ') : edge.to[0];
+    const arrow = edge.label ? `-->|${edge.label}|` : '-->';
+    lines.push(`    ${fromStr} ${arrow} ${toStr}`);
+  }
+
+  // Render class assignments
+  const styleGroups = new Map<string, string[]>();
+  for (const cls of node.classes) {
+    if (!styleGroups.has(cls.style)) styleGroups.set(cls.style, []);
+    styleGroups.get(cls.style)!.push(cls.nodeId);
+  }
+  for (const [style, ids] of styleGroups) {
+    lines.push(`    class ${ids.join(',')} ${style}`);
+  }
+
+  return lines.join('\n');
+}
+
+function renderDiagramShapeNode(nodeDef: { id: string; label: string; shape: DiagramShape }): string {
+  const { id, label, shape } = nodeDef;
+  switch (shape) {
+    case 'cylinder': return `${id}[(${label})]`;
+    case 'hexagon': return `${id}{{${label}}}`;
+    case 'stadium': return `${id}([${label}])`;
+    case 'round': return `${id}(${label})`;
+    case 'diamond': return `${id}{${label}}`;
+    case 'parallelogram': return `${id}[/${label}/]`;
+    case 'subroutine': return `${id}[[${label}]]`;
+    case 'rect': return `${id}[${label}]`;
+  }
+}
+
+function renderDiagramNode(canvas: Canvas, positioned: PositionedNode, theme: Theme): void {
+  const diagramNode = positioned.node as DiagramNode;
+  const scale = diagramNode.scale ?? 2;
+
+  // Build mermaid definition from node data
+  const definition = buildDiagramDefinition(diagramNode);
+
+  // Create temp directory and files
+  const tmpDir = mkdtempSync(join(tmpdir(), 'diagram-'));
+  const inputPath = join(tmpDir, 'diagram.mmd');
+  const outputPath = join(tmpDir, 'diagram.png');
+  const configPath = join(tmpDir, 'config.json');
+
+  // Inject theme-based class definitions
+  const processedDefinition = injectClassDefs(definition, theme);
+  writeFileSync(inputPath, processedDefinition);
+
+  // Write mermaid config
+  const config = buildDiagramConfig(theme);
+  writeFileSync(configPath, JSON.stringify(config));
+
+  // Render via mermaid-cli
+  const mmdc = findMmdcPath();
+  try {
+    execSync(
+      `${mmdc} -i "${inputPath}" -o "${outputPath}" -c "${configPath}" -s ${scale} -b transparent`,
+      { stdio: 'pipe', timeout: 30000 },
     );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(`Diagram rendering failed: ${message}`);
+  }
+
+  // Get image dimensions for proper scaling
+  const dimensions = imageSize(outputPath);
+  const imgWidth = (dimensions.width ?? 100) / scale / 96; // Convert to inches (96 DPI base)
+  const imgHeight = (dimensions.height ?? 100) / scale / 96;
+
+  // Calculate scaling to fit bounds while maintaining aspect ratio
+  const scaleX = positioned.width / imgWidth;
+  const scaleY = positioned.height / imgHeight;
+  const fitScale = Math.min(scaleX, scaleY, 1); // Don't scale up
+
+  const finalWidth = imgWidth * fitScale;
+  const finalHeight = imgHeight * fitScale;
+
+  // Center in bounds
+  const x = positioned.x + (positioned.width - finalWidth) / 2;
+  const y = positioned.y + (positioned.height - finalHeight) / 2;
+
+  canvas.addImage({
+    path: outputPath,
+    x,
+    y,
+    w: finalWidth,
+    h: finalHeight,
   });
 }
 

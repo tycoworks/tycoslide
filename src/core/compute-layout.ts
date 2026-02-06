@@ -5,21 +5,8 @@ import { NODE_TYPE, type ElementNode, type PositionedNode } from './nodes.js';
 import type { Theme } from './types.js';
 import type { TextMeasurer } from '../utils/text-measurer.js';
 import { Bounds } from './bounds.js';
-import { TEXT_STYLE, GAP, VALIGN, JUSTIFY } from './types.js';
-
-// ============================================
-// GAP RESOLUTION
-// ============================================
-
-function resolveGap(gap: string | undefined, theme: Theme): number {
-  switch (gap) {
-    case GAP.NONE: return 0;
-    case GAP.TIGHT: return theme.spacing.gapTight;
-    case GAP.LOOSE: return theme.spacing.gapLoose;
-    case GAP.NORMAL:
-    default: return theme.spacing.gap;
-  }
-}
+import { TEXT_STYLE, VALIGN, JUSTIFY } from './types.js';
+import { toTextContent, resolveGap } from '../utils/node-utils.js';
 
 // ============================================
 // HEIGHT COMPUTATION
@@ -48,7 +35,7 @@ export function getNodeHeight(
       let totalHeight = 0;
       const indentedWidth = width - theme.spacing.gap;
       for (const item of node.items) {
-        const lines = measurer.estimateLines(item, style, indentedWidth);
+        const lines = measurer.estimateLines(toTextContent(item), style, indentedWidth);
         totalHeight += lineHeight * lines * bulletSpacing;
       }
       return totalHeight;
@@ -105,7 +92,7 @@ export function getNodeHeight(
     }
 
     case NODE_TYPE.DIAGRAM: {
-      return 1.5;
+      return 2.5; // Diagrams typically need more vertical space
     }
 
     case NODE_TYPE.ROW: {

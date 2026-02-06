@@ -109,58 +109,108 @@ export interface CardNode {
   image?: string;
   icon?: string;
   title?: string;
+  titleStyle?: TextStyleName;
   titleColor?: string;
   description?: string;
+  descriptionStyle?: TextStyleName;
   descriptionColor?: string;
+  background?: boolean;          // Whether to show background (default: true)
   backgroundColor?: string;
+  backgroundOpacity?: number;
   borderColor?: string;
+  borderWidth?: number;
+  cornerRadius?: number;
+  padding?: number;
 }
 
 export interface ListNode {
   type: typeof NODE_TYPE.LIST;
-  items: TextContent[];
+  items: (TextContent | TextNode)[];
   style?: TextStyleName;
   ordered?: boolean;
   color?: string;
+  markerColor?: string;
 }
+
+/** Table cell can be plain text, styled text runs, or a TextNode */
+export type TableCellContent = TextContent | TextNode;
 
 export interface TableNode {
   type: typeof NODE_TYPE.TABLE;
-  data: TextContent[][];
+  data: TableCellContent[][];
   headerRow?: boolean;
   headerColumn?: boolean;
   borderStyle?: BorderStyle;
   headerBackground?: string;
   cellBackground?: string;
+  columnWidths?: number[];
+  hAlign?: HorizontalAlignment;
+  vAlign?: VerticalAlignment;
 }
 
 // ============================================
-// DIAGRAM NODES
+// DIAGRAM NODE (flowchart builder)
 // ============================================
 
-export interface DiagramBoxNode {
+/** Diagram flow direction */
+export const DIAGRAM_DIRECTION = {
+  LEFT_TO_RIGHT: 'LR',
+  RIGHT_TO_LEFT: 'RL',
+  TOP_TO_BOTTOM: 'TB',
+  BOTTOM_TO_TOP: 'BT',
+} as const;
+export type DiagramDirection = typeof DIAGRAM_DIRECTION[keyof typeof DIAGRAM_DIRECTION];
+
+/** Diagram node shape */
+export const NODE_SHAPE = {
+  RECT: 'rect',
+  ROUND: 'round',
+  STADIUM: 'stadium',
+  CYLINDER: 'cylinder',
+  HEXAGON: 'hexagon',
+  DIAMOND: 'diamond',
+  PARALLELOGRAM: 'parallelogram',
+  SUBROUTINE: 'subroutine',
+} as const;
+export type DiagramShape = typeof NODE_SHAPE[keyof typeof NODE_SHAPE];
+
+/** A node in the diagram */
+export interface DiagramNodeDef {
+  id: string;
   label: string;
-  style?: NodeStyle;
+  shape: DiagramShape;
 }
 
-export interface DiagramEdge {
-  from: number;
-  to: number;
+/** A subgraph grouping */
+export interface DiagramSubgraphDef {
+  id: string;
+  label?: string;
+  direction?: DiagramDirection;
+  nodeIds: string[];
+}
+
+/** An edge between nodes */
+export interface DiagramEdgeDef {
+  from: string[];
+  to: string[];
   label?: string;
 }
 
-export const DIAGRAM_LAYOUT = {
-  HORIZONTAL: 'horizontal',
-  VERTICAL: 'vertical',
-} as const;
+/** Style class assignment */
+export interface DiagramClassDef {
+  nodeId: string;
+  style: NodeStyle;
+}
 
-export type DiagramLayout = typeof DIAGRAM_LAYOUT[keyof typeof DIAGRAM_LAYOUT];
-
+/** Diagram node - stores all builder state as pure data */
 export interface DiagramNode {
   type: typeof NODE_TYPE.DIAGRAM;
-  nodes: DiagramBoxNode[];
-  edges?: DiagramEdge[];
-  direction?: DiagramLayout;
+  direction: DiagramDirection;
+  nodes: DiagramNodeDef[];
+  subgraphs: DiagramSubgraphDef[];
+  edges: DiagramEdgeDef[];
+  classes: DiagramClassDef[];
+  scale?: number;
 }
 
 // ============================================
@@ -179,17 +229,6 @@ export type ElementNode =
   | ListNode
   | TableNode
   | DiagramNode;
-
-// ============================================
-// SLIDE (DECLARATIVE VERSION)
-// ============================================
-
-export interface DeclarativeSlide {
-  master?: string;           // Master name (resolved at render time)
-  background?: string;       // Background image path
-  notes?: string;            // Speaker notes
-  content: ElementNode;      // Root element (typically a Column)
-}
 
 // ============================================
 // POSITIONED NODE (after layout)

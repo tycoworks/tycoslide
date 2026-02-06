@@ -270,29 +270,6 @@ export interface Component {
 }
 
 // ============================================
-// MASTER AND SLIDE
-// ============================================
-
-// Master defines the visual foundation of slides:
-// background image, fixed elements (footer), margins, and content bounds
-export interface Master {
-  name: string;
-  background?: string;  // Background image path (overrides theme.backgroundImage)
-  init(theme: Theme): {
-    render: Drawer;        // Draws master elements (e.g., footer)
-    contentBounds: Bounds; // Where slide content goes
-  };
-}
-
-// Slide combines a master (optional) with content drawing function
-export interface Slide {
-  master?: Master;       // Which master to use (or none for full-slide layouts)
-  background?: string;   // Background image path (overrides master background)
-  notes?: string;        // Speaker notes (plain text)
-  draw: (canvas: Canvas, bounds: Bounds) => void;  // Draw content within bounds
-}
-
-// ============================================
 // THEME TYPES
 // ============================================
 
