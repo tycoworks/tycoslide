@@ -7,7 +7,8 @@
   "scripts": {
     "postinstall": "patch-package",
     "build": "tsc",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test": "tsx --test test/*.test.ts"
   },
   "keywords": [
     "powerpoint",
