@@ -5,7 +5,7 @@ import { componentRegistry, type ExpansionContext, type ComponentNode } from '..
 import { stack, row, column, rectangle, line, text } from '../core/dsl.js';
 import type { ElementNode, TextNode } from '../core/nodes.js';
 import type { TextContent, TextStyleName, HorizontalAlignment, VerticalAlignment, BorderStyle } from '../core/types.js';
-import { TEXT_STYLE, GAP } from '../core/types.js';
+import { TEXT_STYLE, GAP, SIZE } from '../core/types.js';
 import { toTextContent } from '../utils/node-utils.js';
 
 // ============================================
@@ -149,21 +149,20 @@ function createGridLines(numRows: number, numCols: number, context: ExpansionCon
   }
 
   // Build horizontal dividers (one between each row pair)
-  // Use empty columns as flex children - they share space equally
+  // Use empty rows as flex children - they match content rows and share space equally
   const horizontalDividers: ElementNode[] = [];
   for (let i = 0; i < numRows; i++) {
     if (i > 0) {
       horizontalDividers.push(line()); // Horizontal line (in column context)
     }
-    horizontalDividers.push(column()); // Spacer for row (flex child)
+    horizontalDividers.push(row()); // Spacer matching content row (flex child)
   }
 
   // Stack vertical and horizontal lines
+  // Row needs SIZE.FILL to stretch to stack's height (cross-axis fill)
   return stack(
-    // Vertical lines layer
-    row({ gap: GAP.NONE }, ...verticalDividers),
-    // Horizontal lines layer
-    column({ gap: GAP.NONE }, ...horizontalDividers)
+    row({ gap: GAP.NONE, height: SIZE.FILL }, ...verticalDividers),
+    column({ gap: GAP.NONE, height: SIZE.FILL }, ...horizontalDividers)
   );
 }
 

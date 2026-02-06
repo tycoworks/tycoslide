@@ -89,6 +89,11 @@ export function getNodeHeight(
         log.layout.row('HEIGHT row explicit height=%f', node.height);
         return node.height;
       }
+      // SIZE.FILL means "fill container bounds" - return 0 to defer to bounds
+      if (node.height === SIZE.FILL) {
+        log.layout.row('HEIGHT row fill -> 0 (will use bounds)');
+        return 0;
+      }
 
       const gap = resolveGap(node.gap, theme);
       const n = node.children.length;
@@ -397,7 +402,10 @@ export function computeLayout(
       const availableWidth = bounds.w - totalGap;
 
       // Calculate row height first (needed for intrinsic width calculation)
-      const rowHeight = bounds.h > 0 ? Math.min(height, bounds.h) : height;
+      // SIZE.FILL on row height means "fill container bounds"
+      const rowHeight = node.height === SIZE.FILL
+        ? bounds.h
+        : (bounds.h > 0 ? Math.min(height, bounds.h) : height);
 
       // Check if there's a fill child (need to know for intrinsic width calc)
       const hasFillChild = node.children.some((child) =>
@@ -414,6 +422,12 @@ export function computeLayout(
             return { fixedSize: child.width };
           }
         }
+
+        // LINE is fixed-size (takes exactly its border width, doesn't flex)
+        if (child.type === NODE_TYPE.LINE) {
+          return { fixedSize: ptToIn(theme.borders.width) };
+        }
+
         // Flex child - if there's a fill sibling, calculate intrinsic width
         if (hasFillChild) {
           return { intrinsicSize: getIntrinsicWidth(child, rowHeight, { theme, measurer }) };
@@ -470,6 +484,11 @@ export function computeLayout(
       const totalGap = gap * (n - 1);
       const availableHeight = innerH > 0 ? innerH - totalGap : Infinity;
 
+      // Check if there's a fill child (need to know for flex distribution)
+      const hasFillChild = node.children.some((child) =>
+        child.type === NODE_TYPE.COLUMN && child.height === SIZE.FILL
+      );
+
       // Build FlexChild array for height distribution with compression support
       const flexChildren: FlexChild[] = node.children.map((child, i) => {
         if (child.type === NODE_TYPE.COLUMN) {
@@ -481,10 +500,24 @@ export function computeLayout(
             return { fixedSize: child.height };
           }
         }
-        // Intrinsic child with compression support
+
+        // LINE is fixed-size (takes exactly its border width, doesn't flex)
+        if (child.type === NODE_TYPE.LINE) {
+          const h = getNodeHeight(child, innerW, theme, measurer);
+          log.layout.column('  child[%d] fixed line height=%f', i, h);
+          return { fixedSize: h };
+        }
+
+        // Calculate intrinsic height
         const h = getNodeHeight(child, innerW, theme, measurer);
         const minH = getMinNodeHeight(child, innerW, theme, measurer);
         log.layout.column('  child[%d] intrinsic height=%f minHeight=%f type=%s', i, h, minH, child.type);
+
+        // Empty children (h=0) share remaining equally when no fill sibling
+        // This matches Row behavior for flex distribution
+        if (!hasFillChild && h === 0) {
+          return {}; // Shares remaining equally
+        }
         return { intrinsicSize: h, minSize: minH };
       });
 
@@ -554,7 +587,8 @@ export function computeLayout(
     case NODE_TYPE.STACK: {
       // Stack: all children occupy the same bounds, rendered in order (z-order)
       // Child [0] is rendered first (back), child [n-1] is rendered last (front)
-      const stackHeight = bounds.h > 0 ? Math.min(height, bounds.h) : height;
+      // Stack fills both axes - use bounds when available, fall back to intrinsic
+      const stackHeight = bounds.h > 0 ? bounds.h : height;
 
       log.layout._('LAYOUT stack children=%d bounds={x=%f y=%f w=%f h=%f}',
         node.children.length, bounds.x, bounds.y, bounds.w, stackHeight);

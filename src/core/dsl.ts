@@ -137,7 +137,7 @@ export function slideNumber(props?: { style?: TextStyleName; color?: string; hAl
 
 export interface RowProps {
   width?: number | SizeValue;   // inches (number) or SIZE.FILL (when inside another Row)
-  height?: number;              // inches - constrains cross-axis height (children scaled to fit)
+  height?: number | SizeValue;  // inches (number) or SIZE.FILL to fill container height
   gap?: GapSize;
   vAlign?: VerticalAlignment;
 }

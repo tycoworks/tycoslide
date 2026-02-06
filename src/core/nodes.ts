@@ -79,7 +79,7 @@ export interface RowNode {
   type: typeof NODE_TYPE.ROW;
   children: ElementNode[];      // Post-expansion: always primitives (DSL accepts SlideContent)
   width?: number | SizeValue;   // inches (number) or SIZE.FILL to take remaining space (when inside another Row)
-  height?: number;              // inches - constrains cross-axis height (children scaled to fit)
+  height?: number | SizeValue;  // inches (number) or SIZE.FILL to fill available height
   gap?: GapSize;
   vAlign?: VerticalAlignment;
 }
