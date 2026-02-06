@@ -446,3 +446,450 @@ describe('Gap Values', () => {
     approx(positioned.children![0].width, 5, 'child 1 width with no gap');
   });
 });
+
+// ============================================
+// LEAF NODE TESTS
+// ============================================
+
+// ------------------------------------------
+// Helper Factories for Leaf Nodes
+// ------------------------------------------
+
+import type { ImageNode, LineNode, CardNode, ListNode, TableNode, DiagramNode } from '../src/core/nodes.js';
+import { DIAGRAM_DIRECTION, NODE_SHAPE } from '../src/core/nodes.js';
+
+function imageNode(src = 'test.png', options?: { maxHeight?: number }): ImageNode {
+  return {
+    type: NODE_TYPE.IMAGE,
+    src,
+    maxHeight: options?.maxHeight,
+  };
+}
+
+function lineNode(): LineNode {
+  return { type: NODE_TYPE.LINE };
+}
+
+function cardNode(options?: {
+  title?: string;
+  description?: string;
+  image?: string;
+  icon?: string;
+}): CardNode {
+  return {
+    type: NODE_TYPE.CARD,
+    title: options?.title,
+    description: options?.description,
+    image: options?.image,
+    icon: options?.icon,
+  };
+}
+
+function listNode(items: string[], options?: { ordered?: boolean }): ListNode {
+  return {
+    type: NODE_TYPE.LIST,
+    items,
+    ordered: options?.ordered,
+  };
+}
+
+function tableNode(data: string[][], options?: { headerRow?: boolean }): TableNode {
+  return {
+    type: NODE_TYPE.TABLE,
+    data,
+    headerRow: options?.headerRow,
+  };
+}
+
+function diagramNode(): DiagramNode {
+  return {
+    type: NODE_TYPE.DIAGRAM,
+    direction: DIAGRAM_DIRECTION.LEFT_TO_RIGHT,
+    nodes: [],
+    subgraphs: [],
+    edges: [],
+    classes: [],
+  };
+}
+
+// ============================================
+// TEXT NODE TESTS
+// ============================================
+
+describe('Text Node Layout', () => {
+  const theme = mockTheme();
+
+  test('single line text height calculation', () => {
+    const measurer = mockMeasurer({ lineHeight: 0.25, lines: 1 });
+    const node = textNode('Hello');
+    const height = getNodeHeight(node, 10, theme, measurer);
+
+    // lineHeight * lines = 0.25 * 1 = 0.25
+    approx(height, 0.25, 'single line text height');
+  });
+
+  test('multi-line text height calculation', () => {
+    const measurer = mockMeasurer({ lineHeight: 0.25, lines: 3 });
+    const node = textNode('Long text that wraps');
+    const height = getNodeHeight(node, 5, theme, measurer);
+
+    // lineHeight * lines = 0.25 * 3 = 0.75
+    approx(height, 0.75, 'multi-line text height');
+  });
+
+  test('text node layout positioning', () => {
+    const measurer = mockMeasurer({ lineHeight: 0.25, lines: 1 });
+    const node = textNode('Test');
+    const bounds = new Bounds(1, 2, 10, 5);
+    const positioned = computeLayout(node, bounds, theme, measurer);
+
+    approx(positioned.x, 1, 'x position');
+    approx(positioned.y, 2, 'y position');
+    approx(positioned.width, 10, 'width');
+    approx(positioned.height, 0.25, 'height');
+  });
+
+  test('empty text content', () => {
+    const measurer = mockMeasurer({ lineHeight: 0.25, lines: 1 });
+    const node = textNode('');
+    const height = getNodeHeight(node, 10, theme, measurer);
+
+    // Still returns lineHeight * lines even for empty
+    approx(height, 0.25, 'empty text height');
+  });
+});
+
+// ============================================
+// IMAGE NODE TESTS
+// ============================================
+
+describe('Image Node Layout', () => {
+  const theme = mockTheme();
+  const measurer = mockMeasurer();
+
+  test('default image height', () => {
+    const node = imageNode('photo.jpg');
+    const height = getNodeHeight(node, 10, theme, measurer);
+
+    // Default maxHeight = 2.0
+    approx(height, 2.0, 'default image height');
+  });
+
+  test('custom maxHeight', () => {
+    const node = imageNode('photo.jpg', { maxHeight: 3.5 });
+    const height = getNodeHeight(node, 10, theme, measurer);
+
+    approx(height, 3.5, 'custom image height');
+  });
+
+  test('image node layout positioning', () => {
+    const node = imageNode('photo.jpg', { maxHeight: 2.5 });
+    const bounds = new Bounds(1, 2, 8, 5);
+    const positioned = computeLayout(node, bounds, theme, measurer);
+
+    approx(positioned.x, 1, 'x position');
+    approx(positioned.y, 2, 'y position');
+    approx(positioned.width, 8, 'width');
+    approx(positioned.height, 2.5, 'height');
+  });
+
+  test('zero maxHeight', () => {
+    const node = imageNode('photo.jpg', { maxHeight: 0 });
+    const height = getNodeHeight(node, 10, theme, measurer);
+
+    // Uses 0 as specified
+    approx(height, 0, 'zero height image');
+  });
+});
+
+// ============================================
+// LINE NODE TESTS
+// ============================================
+
+describe('Line Node Layout', () => {
+  const theme = mockTheme();
+  const measurer = mockMeasurer();
+
+  test('line node has fixed tiny height', () => {
+    const node = lineNode();
+    const height = getNodeHeight(node, 10, theme, measurer);
+
+    // Lines are always 0.02" tall
+    approx(height, 0.02, 'line height');
+  });
+
+  test('line node layout positioning', () => {
+    const node = lineNode();
+    const bounds = new Bounds(0, 5, 10, 1);
+    const positioned = computeLayout(node, bounds, theme, measurer);
+
+    approx(positioned.x, 0, 'x position');
+    approx(positioned.y, 5, 'y position');
+    approx(positioned.width, 10, 'width fills bounds');
+    approx(positioned.height, 0.02, 'height is fixed');
+  });
+
+  test('line height independent of width', () => {
+    const node = lineNode();
+    const height1 = getNodeHeight(node, 5, theme, measurer);
+    const height2 = getNodeHeight(node, 100, theme, measurer);
+
+    // Height doesn't change with width
+    approx(height1, 0.02, 'narrow line height');
+    approx(height2, 0.02, 'wide line height');
+  });
+});
+
+// ============================================
+// CARD NODE TESTS
+// ============================================
+
+describe('Card Node Layout', () => {
+  const theme = mockTheme({ padding: 0.25, gapTight: 0.1 });
+  const measurer = mockMeasurer({ lineHeight: 0.25, lines: 1 });
+
+  test('card with only title', () => {
+    const node = cardNode({ title: 'Card Title' });
+    const height = getNodeHeight(node, 10, theme, measurer);
+
+    // padding * 2 + titleHeight = 0.5 + 0.25 = 0.75
+    approx(height, 0.75, 'card with title height');
+  });
+
+  test('card with title and description', () => {
+    const node = cardNode({ title: 'Title', description: 'Description' });
+    const height = getNodeHeight(node, 10, theme, measurer);
+
+    // padding * 2 + titleHeight + gapTight + descHeight
+    // = 0.5 + 0.25 + 0.1 + 0.25 = 1.1
+    approx(height, 1.1, 'card with title and description height');
+  });
+
+  test('card with image adds image height', () => {
+    const node = cardNode({ image: 'icon.png', title: 'Title' });
+    const height = getNodeHeight(node, 10, theme, measurer);
+
+    // padding * 2 + (1.5 + gapTight) + titleHeight
+    // = 0.5 + (1.5 + 0.1) + 0.25 = 2.35
+    approx(height, 2.35, 'card with image height');
+  });
+
+  test('card with icon adds icon height', () => {
+    const node = cardNode({ icon: 'star', title: 'Title' });
+    const height = getNodeHeight(node, 10, theme, measurer);
+
+    // Same as image: padding * 2 + (1.5 + gapTight) + titleHeight
+    approx(height, 2.35, 'card with icon height');
+  });
+
+  test('card with only description', () => {
+    const node = cardNode({ description: 'Just a description' });
+    const height = getNodeHeight(node, 10, theme, measurer);
+
+    // padding * 2 + descHeight = 0.5 + 0.25 = 0.75
+    approx(height, 0.75, 'card with description only height');
+  });
+
+  test('empty card has only padding', () => {
+    const node = cardNode();
+    const height = getNodeHeight(node, 10, theme, measurer);
+
+    // Just padding * 2 = 0.5
+    approx(height, 0.5, 'empty card height');
+  });
+
+  test('card layout positioning', () => {
+    const node = cardNode({ title: 'Test' });
+    const bounds = new Bounds(1, 2, 8, 5);
+    const positioned = computeLayout(node, bounds, theme, measurer);
+
+    approx(positioned.x, 1, 'x position');
+    approx(positioned.y, 2, 'y position');
+    approx(positioned.width, 8, 'width');
+    approx(positioned.height, 0.75, 'height');
+  });
+
+  test('card with multi-line title', () => {
+    const multiLineMeasurer = mockMeasurer({ lineHeight: 0.25, lines: 2 });
+    const node = cardNode({ title: 'Long title that wraps' });
+    const height = getNodeHeight(node, 5, theme, multiLineMeasurer);
+
+    // padding * 2 + (lineHeight * 2) = 0.5 + 0.5 = 1.0
+    approx(height, 1.0, 'card with multi-line title height');
+  });
+});
+
+// ============================================
+// LIST NODE TESTS
+// ============================================
+
+describe('List Node Layout', () => {
+  const theme = mockTheme({ bulletSpacing: 1.2, gap: 0.5 });
+  const measurer = mockMeasurer({ lineHeight: 0.25, lines: 1 });
+
+  test('list with single item', () => {
+    const node = listNode(['First item']);
+    const height = getNodeHeight(node, 10, theme, measurer);
+
+    // lineHeight * lines * bulletSpacing = 0.25 * 1 * 1.2 = 0.3
+    approx(height, 0.3, 'single item list height');
+  });
+
+  test('list with multiple items', () => {
+    const node = listNode(['First', 'Second', 'Third']);
+    const height = getNodeHeight(node, 10, theme, measurer);
+
+    // 3 items * (0.25 * 1 * 1.2) = 3 * 0.3 = 0.9
+    approx(height, 0.9, 'three item list height');
+  });
+
+  test('list with multi-line items', () => {
+    const multiLineMeasurer = mockMeasurer({ lineHeight: 0.25, lines: 2 });
+    const node = listNode(['Long item that wraps', 'Another long item']);
+    const height = getNodeHeight(node, 5, theme, multiLineMeasurer);
+
+    // 2 items * (0.25 * 2 * 1.2) = 2 * 0.6 = 1.2
+    approx(height, 1.2, 'multi-line list height');
+  });
+
+  test('empty list', () => {
+    const node = listNode([]);
+    const height = getNodeHeight(node, 10, theme, measurer);
+
+    // No items = 0 height
+    approx(height, 0, 'empty list height');
+  });
+
+  test('list layout positioning', () => {
+    const node = listNode(['Item 1', 'Item 2']);
+    const bounds = new Bounds(1, 2, 10, 5);
+    const positioned = computeLayout(node, bounds, theme, measurer);
+
+    approx(positioned.x, 1, 'x position');
+    approx(positioned.y, 2, 'y position');
+    approx(positioned.width, 10, 'width');
+    approx(positioned.height, 0.6, 'height'); // 2 * 0.3
+  });
+
+  test('ordered list has same height as unordered', () => {
+    const unordered = listNode(['A', 'B', 'C']);
+    const ordered = listNode(['A', 'B', 'C'], { ordered: true });
+    const height1 = getNodeHeight(unordered, 10, theme, measurer);
+    const height2 = getNodeHeight(ordered, 10, theme, measurer);
+
+    approx(height1, height2, 'ordered and unordered list heights match');
+  });
+});
+
+// ============================================
+// TABLE NODE TESTS
+// ============================================
+
+describe('Table Node Layout', () => {
+  const theme = mockTheme({ cellPadding: 0.1 });
+  const measurer = mockMeasurer({ lineHeight: 0.25 });
+
+  test('table with single row', () => {
+    const node = tableNode([['A', 'B', 'C']]);
+    const height = getNodeHeight(node, 10, theme, measurer);
+
+    // 1 row * (lineHeight + cellPadding * 2) = 1 * (0.25 + 0.2) = 0.45
+    approx(height, 0.45, 'single row table height');
+  });
+
+  test('table with multiple rows', () => {
+    const node = tableNode([
+      ['A', 'B', 'C'],
+      ['D', 'E', 'F'],
+      ['G', 'H', 'I'],
+    ]);
+    const height = getNodeHeight(node, 10, theme, measurer);
+
+    // 3 rows * 0.45 = 1.35
+    approx(height, 1.35, 'three row table height');
+  });
+
+  test('table with header row has same height calculation', () => {
+    const withHeader = tableNode([['H1', 'H2'], ['A', 'B']], { headerRow: true });
+    const withoutHeader = tableNode([['H1', 'H2'], ['A', 'B']]);
+    const height1 = getNodeHeight(withHeader, 10, theme, measurer);
+    const height2 = getNodeHeight(withoutHeader, 10, theme, measurer);
+
+    // Header styling doesn't affect height calculation
+    approx(height1, height2, 'header row height same as normal');
+  });
+
+  test('empty table', () => {
+    const node = tableNode([]);
+    const height = getNodeHeight(node, 10, theme, measurer);
+
+    // No rows = 0 height
+    approx(height, 0, 'empty table height');
+  });
+
+  test('table layout positioning', () => {
+    const node = tableNode([['A', 'B'], ['C', 'D']]);
+    const bounds = new Bounds(1, 2, 8, 5);
+    const positioned = computeLayout(node, bounds, theme, measurer);
+
+    approx(positioned.x, 1, 'x position');
+    approx(positioned.y, 2, 'y position');
+    approx(positioned.width, 8, 'width');
+    approx(positioned.height, 0.9, 'height'); // 2 * 0.45
+  });
+
+  test('table with different cellPadding', () => {
+    const customTheme = mockTheme({ cellPadding: 0.2 });
+    const node = tableNode([['A', 'B']]);
+    const height = getNodeHeight(node, 10, customTheme, measurer);
+
+    // lineHeight + cellPadding * 2 = 0.25 + 0.4 = 0.65
+    approx(height, 0.65, 'table with larger cell padding');
+  });
+});
+
+// ============================================
+// DIAGRAM NODE TESTS
+// ============================================
+
+describe('Diagram Node Layout', () => {
+  const theme = mockTheme();
+  const measurer = mockMeasurer();
+
+  test('diagram has fixed default height', () => {
+    const node = diagramNode();
+    const height = getNodeHeight(node, 10, theme, measurer);
+
+    // Diagrams default to 2.5" height
+    approx(height, 2.5, 'diagram default height');
+  });
+
+  test('diagram height independent of width', () => {
+    const node = diagramNode();
+    const height1 = getNodeHeight(node, 5, theme, measurer);
+    const height2 = getNodeHeight(node, 20, theme, measurer);
+
+    // Height doesn't change with width
+    approx(height1, 2.5, 'narrow diagram height');
+    approx(height2, 2.5, 'wide diagram height');
+  });
+
+  test('diagram layout positioning', () => {
+    const node = diagramNode();
+    const bounds = new Bounds(1, 2, 10, 8);
+    const positioned = computeLayout(node, bounds, theme, measurer);
+
+    approx(positioned.x, 1, 'x position');
+    approx(positioned.y, 2, 'y position');
+    approx(positioned.width, 10, 'width');
+    approx(positioned.height, 2.5, 'height');
+  });
+
+  test('empty diagram has same height as populated', () => {
+    const empty = diagramNode();
+    const height = getNodeHeight(empty, 10, theme, measurer);
+
+    // Height is fixed regardless of content
+    approx(height, 2.5, 'empty diagram height');
+  });
+});
