@@ -1,7 +1,7 @@
 // Declarative Layout Computation
 // Computes positions and sizes for all nodes in the tree
 
-import { NODE_TYPE, type ElementNode, type PositionedNode, type CardNode, type ImageNode, type RowNode, type ColumnNode } from './nodes.js';
+import { NODE_TYPE, type ElementNode, type PositionedNode, type CardNode, type ImageNode, type RowNode, type ColumnNode, type TextNode, type SlideNumberNode } from './nodes.js';
 import type { Theme } from './types.js';
 import type { TextMeasurer } from '../utils/text-measurer.js';
 import { Bounds } from './bounds.js';
@@ -633,16 +633,55 @@ export function computeLayout(
         }
       }
 
-      const remainingWidth = Math.max(0, availableWidth - fixedWidth);
+      // Calculate row height first (needed for intrinsic width calculation)
+      const rowHeight = bounds.h > 0 ? Math.min(height, bounds.h) : height;
 
+      // If there's a fill child, calculate intrinsic widths for flex children first
+      // so the fill child gets the true remaining space
       if (fillChildIndex !== -1) {
-        childWidths[fillChildIndex] = remainingWidth;
+        let flexTotalWidth = 0;
         for (let i = 0; i < n; i++) {
           if (childWidths[i] === -1) {
-            childWidths[i] = 0;
+            // Calculate intrinsic width based on node type
+            const child = node.children[i];
+            let intrinsicWidth = 0;
+
+            if (child.type === NODE_TYPE.IMAGE) {
+              // Image width from aspect ratio at row height
+              const dimensions = imageSize((child as ImageNode).src);
+              const aspectRatio = dimensions.width! / dimensions.height!;
+              intrinsicWidth = rowHeight * aspectRatio;
+            } else if (child.type === NODE_TYPE.TEXT) {
+              // Use measurer to get actual text width
+              const textNode = child as TextNode;
+              const styleName = textNode.style ?? TEXT_STYLE.BODY;
+              const style = theme.textStyles[styleName];
+              intrinsicWidth = measurer.getContentWidth(textNode.content, style);
+            } else if (child.type === NODE_TYPE.SLIDE_NUMBER) {
+              // Slide numbers: measure width for "99" as reasonable max
+              const slideNumNode = child as SlideNumberNode;
+              const styleName = slideNumNode.style ?? TEXT_STYLE.FOOTER;
+              const style = theme.textStyles[styleName];
+              intrinsicWidth = measurer.getContentWidth('99', style);
+            } else if (child.type === NODE_TYPE.LINE) {
+              // Lines expand to fill - give minimal width, container determines actual
+              intrinsicWidth = ptToIn(theme.borders.width);
+            } else {
+              // Other types (List, Table, etc.): give them equal share later
+              intrinsicWidth = 0;
+            }
+
+            childWidths[i] = intrinsicWidth;
+            flexTotalWidth += intrinsicWidth;
+            fixedWidth += intrinsicWidth;
           }
         }
+
+        // Fill child gets remaining space after flex children
+        const remainingForFill = Math.max(0, availableWidth - fixedWidth);
+        childWidths[fillChildIndex] = remainingForFill;
       } else if (flexChildCount > 0) {
+        const remainingWidth = Math.max(0, availableWidth - fixedWidth);
         const equalShare = remainingWidth / flexChildCount;
         for (let i = 0; i < n; i++) {
           if (childWidths[i] === -1) {
@@ -650,10 +689,6 @@ export function computeLayout(
           }
         }
       }
-
-      // Use bounds.h as the row height constraint (not intrinsic height)
-      // This ensures children are constrained to the row's allocated space
-      const rowHeight = bounds.h > 0 ? Math.min(height, bounds.h) : height;
 
       log.layout.row('LAYOUT row gap=%f availableWidth=%f vAlign=%s rowHeight=%f (bounds.h=%f)',
         gap, availableWidth, node.vAlign, rowHeight, bounds.h);
