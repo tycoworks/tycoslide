@@ -337,54 +337,6 @@ export function getMinNodeHeight(
 }
 
 // ============================================
-// HEIGHT FITTING (PROPORTIONAL COMPRESSION)
-// ============================================
-
-/**
- * Fit an array of heights into available space by proportionally compressing
- * compressible content. Incompressible content (where height === minHeight)
- * is preserved; compressible content shares the compression burden.
- *
- * @param heights - Intrinsic heights of each child
- * @param minHeights - Minimum heights of each child (0 = fully compressible)
- * @param availableHeight - Total height available (excluding gaps)
- * @param gap - Gap between children
- * @returns Fitted heights array
- */
-export function fitHeights(
-  heights: number[],
-  minHeights: number[],
-  availableHeight: number,
-  gap: number
-): number[] {
-  const n = heights.length;
-  const totalGap = gap * (n - 1);
-  const totalHeight = heights.reduce((a, b) => a + b, 0);
-  const spaceForContent = availableHeight - totalGap;
-
-  // If everything fits, return original heights
-  if (totalHeight <= spaceForContent) {
-    return heights;
-  }
-
-  // Calculate how much we can compress
-  const totalCompressible = heights.reduce((sum, h, i) => sum + (h - minHeights[i]), 0);
-  const overflow = totalHeight - spaceForContent;
-
-  // If we can't compress enough, compress maximally
-  if (overflow >= totalCompressible) {
-    return minHeights.slice();
-  }
-
-  // Proportionally compress each child based on its compressible portion
-  const compressionRatio = overflow / totalCompressible;
-  return heights.map((h, i) => {
-    const compressible = h - minHeights[i];
-    return h - (compressible * compressionRatio);
-  });
-}
-
-// ============================================
 // LAYOUT COMPUTATION
 // ============================================
 
@@ -495,28 +447,22 @@ export function computeLayout(
       log.layout.card('LAYOUT card children=%d padding=%f innerWidth=%f innerHeight=%f gap=%f',
         n, padding, innerWidth, innerHeight, gap);
 
-      // Compute intrinsic and minimum heights for all children
-      const intrinsicHeights: number[] = [];
-      const minHeights: number[] = [];
-      for (let i = 0; i < n; i++) {
-        const child = cardNode.children[i];
-        intrinsicHeights[i] = getNodeHeight(child, innerWidth, theme, measurer);
-        minHeights[i] = getMinNodeHeight(child, innerWidth, theme, measurer);
-        log.layout.card('  child[%d] intrinsic=%f min=%f type=%s',
-          i, intrinsicHeights[i], minHeights[i], child.type);
-      }
+      // Build FlexChild array with compression support
+      const totalGap = gap * (n - 1);
+      const availableHeight = innerHeight > 0 ? innerHeight - totalGap : Infinity;
+      const flexChildren: FlexChild[] = cardNode.children.map((child, i) => {
+        const h = getNodeHeight(child, innerWidth, theme, measurer);
+        const minH = getMinNodeHeight(child, innerWidth, theme, measurer);
+        log.layout.card('  child[%d] intrinsic=%f min=%f type=%s', i, h, minH, child.type);
+        return { intrinsicSize: h, minSize: minH };
+      });
 
       // Use proportional compression if content overflows
-      let childHeights: number[];
-      if (innerHeight > 0) {
-        childHeights = fitHeights(intrinsicHeights, minHeights, innerHeight, gap);
-        const totalIntrinsic = intrinsicHeights.reduce((a, b) => a + b, 0);
+      const { sizes: childHeights, wasCompressed } = distributeFlexSpace(flexChildren, availableHeight);
+      if (wasCompressed) {
+        const totalIntrinsic = flexChildren.reduce((sum, c) => sum + (c.intrinsicSize ?? 0), 0);
         const totalFitted = childHeights.reduce((a, b) => a + b, 0);
-        if (totalFitted < totalIntrinsic) {
-          log.layout.card('  COMPRESSED: %f -> %f (innerHeight=%f)', totalIntrinsic, totalFitted, innerHeight);
-        }
-      } else {
-        childHeights = intrinsicHeights.slice();
+        log.layout.card('  COMPRESSED: %f -> %f (innerHeight=%f)', totalIntrinsic, totalFitted, innerHeight);
       }
 
       // Layout children with fitted heights
@@ -617,103 +563,42 @@ export function computeLayout(
       const gap = resolveGap(node.gap, theme);
       const n = node.children.length;
       const totalGap = gap * (n - 1);
+      const availableHeight = bounds.h > 0 ? bounds.h - totalGap : Infinity;
 
-      // Calculate intrinsic and minimum heights for each child:
-      // - ColumnNode with height: SIZE.FILL -> takes remaining space (only one allowed)
-      // - ColumnNode with height: number -> explicit height in inches
-      // - All others -> intrinsic height (may be compressed if overflow)
-      let fillChildIndex = -1;
-      let fixedHeight = 0;
-      const intrinsicHeights: number[] = [];
-      const minHeights: number[] = [];
-
-      for (let i = 0; i < n; i++) {
-        const child = node.children[i];
-
-        // Check if child is a Column with explicit height
+      // Build FlexChild array for height distribution with compression support
+      const flexChildren: FlexChild[] = node.children.map((child, i) => {
         if (child.type === NODE_TYPE.COLUMN) {
           if (child.height === SIZE.FILL) {
-            if (fillChildIndex !== -1) {
-              throw new Error(
-                `Column has multiple children with height=SIZE.FILL (indices ${fillChildIndex} and ${i}). ` +
-                `Only one fill child is allowed.`
-              );
-            }
-            fillChildIndex = i;
-            intrinsicHeights[i] = 0; // Will be calculated after
-            minHeights[i] = 0; // Fill children can shrink to 0
             log.layout.column('  child[%d] fill (deferred)', i);
+            return { fillsRemaining: true };
           } else if (typeof child.height === 'number') {
-            intrinsicHeights[i] = child.height;
-            minHeights[i] = child.height; // Explicit height is fixed
-            fixedHeight += child.height;
             log.layout.column('  child[%d] explicit height=%f', i, child.height);
-          } else {
-            // Column without explicit height: use intrinsic
-            const h = getNodeHeight(child, bounds.w, theme, measurer);
-            const minH = getMinNodeHeight(child, bounds.w, theme, measurer);
-            intrinsicHeights[i] = h;
-            minHeights[i] = minH;
-            fixedHeight += h;
-            log.layout.column('  child[%d] intrinsic height=%f minHeight=%f', i, h, minH);
+            return { fixedSize: child.height };
           }
-        } else {
-          // Non-column child: use intrinsic height
-          const h = getNodeHeight(child, bounds.w, theme, measurer);
-          const minH = getMinNodeHeight(child, bounds.w, theme, measurer);
-          intrinsicHeights[i] = h;
-          minHeights[i] = minH;
-          fixedHeight += h;
-          log.layout.column('  child[%d] intrinsic height=%f minHeight=%f type=%s', i, h, minH, child.type);
         }
+        // Intrinsic child with compression support
+        const h = getNodeHeight(child, bounds.w, theme, measurer);
+        const minH = getMinNodeHeight(child, bounds.w, theme, measurer);
+        log.layout.column('  child[%d] intrinsic height=%f minHeight=%f type=%s', i, h, minH, child.type);
+        return { intrinsicSize: h, minSize: minH };
+      });
+
+      // Distribute height using unified algorithm with compression
+      const { sizes: childHeights, fillIndex, wasCompressed } = distributeFlexSpace(
+        flexChildren,
+        availableHeight
+      );
+
+      if (wasCompressed) {
+        const totalIntrinsic = flexChildren.reduce((sum, c) => sum + (c.intrinsicSize ?? c.fixedSize ?? 0), 0);
+        const totalFitted = childHeights.reduce((a, b) => a + b, 0);
+        log.layout.column('  COMPRESSED: %f -> %f (bounds.h=%f)', totalIntrinsic + totalGap, totalFitted + totalGap, bounds.h);
       }
 
-      // If there's a fill child, give it remaining space after fitting
-      // First, compress non-fill children if they overflow, then give remainder to fill
-      let childHeights: number[];
-      if (fillChildIndex !== -1) {
-        // Build arrays excluding the fill child for compression calculation
-        const nonFillIntrinsic: number[] = [];
-        const nonFillMin: number[] = [];
-        const nonFillIndices: number[] = [];
-        for (let i = 0; i < n; i++) {
-          if (i !== fillChildIndex) {
-            nonFillIntrinsic.push(intrinsicHeights[i]);
-            nonFillMin.push(minHeights[i]);
-            nonFillIndices.push(i);
-          }
-        }
-
-        // Compress non-fill children to fit within available space
-        const spaceForNonFill = bounds.h - totalGap; // All space except gaps (fill gets remainder)
-        const fittedNonFill = bounds.h > 0
-          ? fitHeights(nonFillIntrinsic, nonFillMin, spaceForNonFill, gap)
-          : nonFillIntrinsic;
-
-        // Build final heights array
-        childHeights = new Array(n);
-        for (let i = 0; i < nonFillIndices.length; i++) {
-          childHeights[nonFillIndices[i]] = fittedNonFill[i];
-        }
-
-        // Fill child gets remaining space after compressed non-fill children
-        const nonFillHeight = fittedNonFill.reduce((a, b) => a + b, 0);
-        const remainingHeight = Math.max(0, bounds.h - totalGap - nonFillHeight);
-        childHeights[fillChildIndex] = remainingHeight;
-
+      if (fillIndex !== -1) {
+        const nonFillHeight = childHeights.reduce((a, b) => a + b, 0) - childHeights[fillIndex];
         log.layout.column('  child[%d] fill resolved to height=%f (bounds.h=%f - gap=%f - nonFill=%f)',
-          fillChildIndex, remainingHeight, bounds.h, totalGap, nonFillHeight);
-      } else if (bounds.h > 0) {
-        // No fill child: use proportional compression if content overflows
-        childHeights = fitHeights(intrinsicHeights, minHeights, bounds.h, gap);
-        const totalIntrinsic = intrinsicHeights.reduce((a, b) => a + b, 0) + totalGap;
-        const totalFitted = childHeights.reduce((a, b) => a + b, 0) + totalGap;
-        if (totalFitted < totalIntrinsic) {
-          log.layout.column('  COMPRESSED: %f -> %f (bounds.h=%f)', totalIntrinsic, totalFitted, bounds.h);
-        }
-      } else {
-        // No bounds constraint: use intrinsic heights
-        childHeights = intrinsicHeights.slice();
+          fillIndex, childHeights[fillIndex], bounds.h, totalGap, nonFillHeight);
       }
 
       // Calculate content height for justify positioning
@@ -754,8 +639,7 @@ export function computeLayout(
         cols, numRows, gap, cellWidth);
 
       // First pass: calculate intrinsic and min heights for each row
-      const rowIntrinsicHeights: number[] = [];
-      const rowMinHeights: number[] = [];
+      const rowFlexChildren: FlexChild[] = [];
       for (let row = 0; row < numRows; row++) {
         let rowMaxIntrinsic = 0;
         let rowMaxMin = 0;
@@ -768,14 +652,13 @@ export function computeLayout(
             rowMaxMin = Math.max(rowMaxMin, minH);
           }
         }
-        rowIntrinsicHeights.push(rowMaxIntrinsic);
-        rowMinHeights.push(rowMaxMin);
+        rowFlexChildren.push({ intrinsicSize: rowMaxIntrinsic, minSize: rowMaxMin });
       }
 
       // Apply compression if content overflows bounds.h
-      const rowHeights = bounds.h > 0
-        ? fitHeights(rowIntrinsicHeights, rowMinHeights, bounds.h, gap)
-        : rowIntrinsicHeights;
+      const rowGapTotal = gap * (numRows - 1);
+      const availableRowHeight = bounds.h > 0 ? bounds.h - rowGapTotal : Infinity;
+      const { sizes: rowHeights } = distributeFlexSpace(rowFlexChildren, availableRowHeight);
 
       // Second pass: layout children with fitted row heights
       let y = bounds.y;
