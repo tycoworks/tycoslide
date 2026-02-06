@@ -8,6 +8,7 @@ import { SHAPE, TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT, NODE_STYLE } from './ty
 import { Bounds } from './bounds.js';
 import { getFontFromFamily, normalizeContent } from '../utils/font-utils.js';
 import { toTextContent } from '../utils/node-utils.js';
+import { log, contentPreview } from '../utils/log.js';
 
 // ============================================
 // TEXT RENDERING HELPERS
@@ -53,6 +54,9 @@ function renderText(
   const defaultFont = getFontFromFamily(style.fontFamily, style.defaultWeight ?? FONT_WEIGHT.NORMAL);
   const fragments = buildTextFragments(content, styleName, theme, colorOverride);
 
+  log.render.text('renderText style=%s x=%f y=%f w=%f h=%f align=%s/%s "%s"',
+    styleName, x, y, w, h, hAlign ?? 'left', vAlign ?? 'top', contentPreview(content));
+
   canvas.addText(fragments, {
     x, y, w, h,
     fontSize: style.fontSize,
@@ -72,6 +76,8 @@ function renderText(
 
 function renderTextNode(canvas: Canvas, node: PositionedNode, theme: Theme): void {
   const textNode = node.node as TextNode;
+  log.render.text('RENDER text x=%f y=%f w=%f h=%f "%s"',
+    node.x, node.y, node.width, node.height, contentPreview(textNode.content));
   renderText(
     canvas,
     textNode.content,
@@ -86,6 +92,8 @@ function renderTextNode(canvas: Canvas, node: PositionedNode, theme: Theme): voi
 
 function renderImageNode(canvas: Canvas, node: PositionedNode, theme: Theme): void {
   const imageNode = node.node as ImageNode;
+  log.render.image('RENDER image x=%f y=%f w=%f h=%f src=%s',
+    node.x, node.y, node.width, node.height, imageNode.src.split('/').pop());
   canvas.addImage({
     path: imageNode.src,
     x: node.x,
@@ -98,6 +106,9 @@ function renderImageNode(canvas: Canvas, node: PositionedNode, theme: Theme): vo
 function renderCardNode(canvas: Canvas, node: PositionedNode, theme: Theme): void {
   const cardNode = node.node as CardNode;
   const padding = theme.spacing.padding;
+
+  log.render.shape('RENDER card x=%f y=%f w=%f h=%f title="%s"',
+    node.x, node.y, node.width, node.height, contentPreview(cardNode.title ?? ''));
 
   // Draw background
   if (cardNode.backgroundColor !== 'none') {
@@ -176,6 +187,9 @@ function renderListNode(canvas: Canvas, node: PositionedNode, theme: Theme): voi
   const bulletSpacing = theme.spacing.bulletSpacing;
   const indent = theme.spacing.gap;
 
+  log.render.text('RENDER list x=%f y=%f w=%f h=%f items=%d ordered=%s',
+    node.x, node.y, node.width, node.height, listNode.items.length, listNode.ordered ?? false);
+
   let y = node.y;
   listNode.items.forEach((item, i) => {
     const bullet = listNode.ordered ? `${i + 1}. ` : '• ';
@@ -201,6 +215,10 @@ function renderTableNode(canvas: Canvas, node: PositionedNode, theme: Theme): vo
   const cellPadding = theme.spacing.cellPadding;
   const rowHeight = node.height / tableNode.data.length;
   const colWidth = node.width / (tableNode.data[0]?.length || 1);
+
+  log.render.shape('RENDER table x=%f y=%f w=%f h=%f rows=%d cols=%d rowHeight=%f colWidth=%f',
+    node.x, node.y, node.width, node.height, tableNode.data.length,
+    tableNode.data[0]?.length ?? 0, rowHeight, colWidth);
 
   tableNode.data.forEach((row, rowIndex) => {
     row.forEach((cell, colIndex) => {
@@ -232,6 +250,7 @@ function renderTableNode(canvas: Canvas, node: PositionedNode, theme: Theme): vo
 }
 
 function renderLineNode(canvas: Canvas, node: PositionedNode, theme: Theme): void {
+  log.render.shape('RENDER line x=%f y=%f w=%f', node.x, node.y, node.width);
   canvas.addShape(SHAPE.LINE, {
     x: node.x,
     y: node.y,
@@ -250,6 +269,7 @@ function renderSlideNumberNode(canvas: Canvas, node: PositionedNode, theme: Them
   const style = theme.textStyles[styleName as keyof typeof theme.textStyles];
   const font = getFontFromFamily(style.fontFamily, FONT_WEIGHT.NORMAL);
 
+  log.render.text('RENDER slideNumber x=%f y=%f w=%f h=%f', node.x, node.y, node.width, node.height);
   canvas.addSlideNumber({
     x: node.x,
     y: node.y,
@@ -458,6 +478,10 @@ function renderDiagramNode(canvas: Canvas, positioned: PositionedNode, theme: Th
   const diagramNode = positioned.node as DiagramNode;
   const scale = diagramNode.scale ?? 2;
 
+  log.render.diagram('RENDER diagram x=%f y=%f w=%f h=%f nodes=%d edges=%d scale=%d',
+    positioned.x, positioned.y, positioned.width, positioned.height,
+    diagramNode.nodes.length, diagramNode.edges.length, scale);
+
   // Build mermaid definition from node data
   const definition = buildDiagramDefinition(diagramNode);
 
@@ -504,6 +528,9 @@ function renderDiagramNode(canvas: Canvas, positioned: PositionedNode, theme: Th
   const x = positioned.x + (positioned.width - finalWidth) / 2;
   const y = positioned.y + (positioned.height - finalHeight) / 2;
 
+  log.render.diagram('  diagram rendered: imgSize=%dx%d -> %f x %f in, fitScale=%f, final=%f x %f at (%f, %f)',
+    dimensions.width, dimensions.height, imgWidth, imgHeight, fitScale, finalWidth, finalHeight, x, y);
+
   canvas.addImage({
     path: outputPath,
     x,
@@ -519,6 +546,9 @@ function renderDiagramNode(canvas: Canvas, positioned: PositionedNode, theme: Th
 
 export function render(positioned: PositionedNode, canvas: Canvas, theme: Theme): void {
   const { node } = positioned;
+
+  log.render._('render %s x=%f y=%f w=%f h=%f',
+    node.type, positioned.x, positioned.y, positioned.width, positioned.height);
 
   switch (node.type) {
     case NODE_TYPE.TEXT:
@@ -549,6 +579,7 @@ export function render(positioned: PositionedNode, canvas: Canvas, theme: Theme)
     case NODE_TYPE.COLUMN:
     case NODE_TYPE.GROUP:
       // Container nodes: just render children
+      log.render._('  container %s with %d children', node.type, positioned.children?.length ?? 0);
       if (positioned.children) {
         for (const child of positioned.children) {
           render(child, canvas, theme);

@@ -3,6 +3,7 @@
 
 import { openSync, type Font as FontkitFont } from 'fontkit';
 import { FONT_WEIGHT, type Font, type FontFamily, type FontWeight, type TextStyle, type TextContent, type TextRun, type NormalizedRun } from '../core/types.js';
+import { log, contentPreview } from './log.js';
 
 // Unit conversion constants
 export const POINTS_PER_INCH = 72;
@@ -70,7 +71,10 @@ export function measureText(text: string, fontPath: string, fontSize: number): n
   const run = font.layout(text);
   const widthInFontUnits = run.advanceWidth;
   const widthInPoints = (widthInFontUnits / font.unitsPerEm) * fontSize;
-  return ptToIn(widthInPoints);
+  const widthInInches = ptToIn(widthInPoints);
+  log.measure.width('measureText "%s" font=%s size=%f -> %f in',
+    contentPreview(text, 40), fontPath.split('/').pop(), fontSize, widthInInches);
+  return widthInInches;
 }
 
 /**
@@ -82,7 +86,11 @@ export function getLineHeight(fontPath: string, fontSize: number): number {
   // descent is typically negative, so we use Math.abs
   const lineHeightUnits = font.ascent + Math.abs(font.descent) + font.lineGap;
   const lineHeightPoints = (lineHeightUnits / font.unitsPerEm) * fontSize;
-  return ptToIn(lineHeightPoints) * HEIGHT_CALIBRATION;
+  const rawHeight = ptToIn(lineHeightPoints);
+  const calibratedHeight = rawHeight * HEIGHT_CALIBRATION;
+  log.measure.height('getLineHeight font=%s size=%f raw=%f calibrated=%f',
+    fontPath.split('/').pop(), fontSize, rawHeight, calibratedHeight);
+  return calibratedHeight;
 }
 
 // ============================================
@@ -135,14 +143,21 @@ export function estimateLines(content: TextContent, style: TextStyle, availableW
   const totalWidth = measureContentWidth(content, style);
   const ratio = totalWidth / availableWidth;
 
+  log.measure.lines('estimateLines available=%f totalWidth=%f ratio=%f threshold=%f',
+    availableWidth, totalWidth, ratio, SINGLE_LINE_THRESHOLD);
+  log.measure.lines('  content="%s"', contentPreview(content, 50));
+
   // Tier 1: Text fits on one line - no packing penalty applies
   if (ratio <= SINGLE_LINE_THRESHOLD) {
+    log.measure.lines('  -> 1 line (fits single line)');
     return 1;
   }
 
   // Tier 2: Text wraps - apply packing buffer
   const effectiveWidth = applyPackingForHeight(availableWidth);
-  return Math.max(1, Math.ceil(totalWidth / effectiveWidth));
+  const lines = Math.max(1, Math.ceil(totalWidth / effectiveWidth));
+  log.measure.lines('  effectiveWidth=%f (with packing) -> %d lines', effectiveWidth, lines);
+  return lines;
 }
 
 // ============================================
