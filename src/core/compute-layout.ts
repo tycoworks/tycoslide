@@ -1,7 +1,7 @@
 // Declarative Layout Computation
 // Computes positions and sizes for all nodes in the tree
 
-import { NODE_TYPE, type ElementNode, type PositionedNode, type CardNode, type ImageNode, type RowNode, type ColumnNode, type TextNode, type SlideNumberNode } from './nodes.js';
+import { NODE_TYPE, type ElementNode, type PositionedNode, type CardNode, type ImageNode, type RowNode, type ColumnNode } from './nodes.js';
 import type { Theme } from './types.js';
 import type { TextMeasurer } from '../utils/text-measurer.js';
 import { Bounds } from './bounds.js';
@@ -9,6 +9,7 @@ import { TEXT_STYLE, VALIGN, JUSTIFY, SIZE } from './types.js';
 import { toTextContent, resolveGap } from '../utils/node-utils.js';
 import { log, contentPreview } from '../utils/log.js';
 import { ptToIn } from '../utils/font-utils.js';
+import { distributeFlexSpace, type FlexChild, getIntrinsicWidth } from './layout/index.js';
 import imageSizeDefault from 'image-size';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const imageSize = (imageSizeDefault as any).default || imageSizeDefault;
@@ -142,68 +143,19 @@ export function getNodeHeight(
 
       log.layout.row('HEIGHT row children=%d gap=%f availableWidth=%f', n, gap, availableWidth);
 
-      // Calculate widths for each child:
-      // - Row/Column with width: SIZE.FILL -> takes remaining space (only one allowed)
-      // - Row/Column with width: number -> explicit width in inches
-      // - All others -> share remaining width equally
-      let fillChildIndex = -1;
-      let fixedWidth = 0;
-      let flexChildCount = 0;
-      const childWidths: number[] = [];
-
-      for (let i = 0; i < n; i++) {
-        const child = node.children[i];
-
-        // Check if child is a Row or Column with explicit width
+      // Build FlexChild array for width distribution
+      const flexChildren: FlexChild[] = node.children.map((child) => {
         if (child.type === NODE_TYPE.ROW || child.type === NODE_TYPE.COLUMN) {
           if (child.width === SIZE.FILL) {
-            if (fillChildIndex !== -1) {
-              throw new Error(
-                `Row has multiple children with width=SIZE.FILL (indices ${fillChildIndex} and ${i}). ` +
-                `Only one fill child is allowed.`
-              );
-            }
-            fillChildIndex = i;
-            childWidths[i] = 0; // Will be calculated after
-            log.layout.row('  child[%d] fill (deferred)', i);
+            return { fillsRemaining: true };
           } else if (typeof child.width === 'number') {
-            childWidths[i] = child.width;
-            fixedWidth += child.width;
-            log.layout.row('  child[%d] explicit width=%f', i, child.width);
-          } else {
-            childWidths[i] = -1; // Mark as flex
-            flexChildCount++;
-            log.layout.row('  child[%d] flex (deferred)', i);
+            return { fixedSize: child.width };
           }
-        } else {
-          childWidths[i] = -1; // Mark as flex
-          flexChildCount++;
-          log.layout.row('  child[%d] flex (deferred) type=%s', i, child.type);
         }
-      }
+        return {}; // Flex child - shares remaining equally
+      });
 
-      // Distribute remaining width
-      const remainingWidth = Math.max(0, availableWidth - fixedWidth);
-
-      if (fillChildIndex !== -1) {
-        // Fill child gets all remaining width, flex children get 0
-        childWidths[fillChildIndex] = remainingWidth;
-        log.layout.row('  child[%d] fill resolved to width=%f', fillChildIndex, remainingWidth);
-        for (let i = 0; i < n; i++) {
-          if (childWidths[i] === -1) {
-            childWidths[i] = 0;
-          }
-        }
-      } else if (flexChildCount > 0) {
-        // No fill child: distribute equally among flex children
-        const equalShare = remainingWidth / flexChildCount;
-        for (let i = 0; i < n; i++) {
-          if (childWidths[i] === -1) {
-            childWidths[i] = equalShare;
-            log.layout.row('  child[%d] equal share width=%f', i, equalShare);
-          }
-        }
-      }
+      const { sizes: childWidths } = distributeFlexSpace(flexChildren, availableWidth);
 
       // Calculate max height
       let maxHeight = 0;
@@ -601,94 +553,32 @@ export function computeLayout(
       const totalGap = gap * (n - 1);
       const availableWidth = bounds.w - totalGap;
 
-      // Calculate widths for each child (same logic as getNodeHeight)
-      let fillChildIndex = -1;
-      let fixedWidth = 0;
-      let flexChildCount = 0;
-      const childWidths: number[] = [];
-
-      for (let i = 0; i < n; i++) {
-        const child = node.children[i];
-
-        if (child.type === NODE_TYPE.ROW || child.type === NODE_TYPE.COLUMN) {
-          if (child.width === SIZE.FILL) {
-            if (fillChildIndex !== -1) {
-              throw new Error(
-                `Row has multiple children with width=SIZE.FILL (indices ${fillChildIndex} and ${i}). ` +
-                `Only one fill child is allowed.`
-              );
-            }
-            fillChildIndex = i;
-            childWidths[i] = 0;
-          } else if (typeof child.width === 'number') {
-            childWidths[i] = child.width;
-            fixedWidth += child.width;
-          } else {
-            childWidths[i] = -1;
-            flexChildCount++;
-          }
-        } else {
-          childWidths[i] = -1;
-          flexChildCount++;
-        }
-      }
-
       // Calculate row height first (needed for intrinsic width calculation)
       const rowHeight = bounds.h > 0 ? Math.min(height, bounds.h) : height;
 
-      // If there's a fill child, calculate intrinsic widths for flex children first
-      // so the fill child gets the true remaining space
-      if (fillChildIndex !== -1) {
-        let flexTotalWidth = 0;
-        for (let i = 0; i < n; i++) {
-          if (childWidths[i] === -1) {
-            // Calculate intrinsic width based on node type
-            const child = node.children[i];
-            let intrinsicWidth = 0;
+      // Check if there's a fill child (need to know for intrinsic width calc)
+      const hasFillChild = node.children.some((child) =>
+        (child.type === NODE_TYPE.ROW || child.type === NODE_TYPE.COLUMN) &&
+        child.width === SIZE.FILL
+      );
 
-            if (child.type === NODE_TYPE.IMAGE) {
-              // Image width from aspect ratio at row height
-              const dimensions = imageSize((child as ImageNode).src);
-              const aspectRatio = dimensions.width! / dimensions.height!;
-              intrinsicWidth = rowHeight * aspectRatio;
-            } else if (child.type === NODE_TYPE.TEXT) {
-              // Use measurer to get actual text width
-              const textNode = child as TextNode;
-              const styleName = textNode.style ?? TEXT_STYLE.BODY;
-              const style = theme.textStyles[styleName];
-              intrinsicWidth = measurer.getContentWidth(textNode.content, style);
-            } else if (child.type === NODE_TYPE.SLIDE_NUMBER) {
-              // Slide numbers: measure width for "99" as reasonable max
-              const slideNumNode = child as SlideNumberNode;
-              const styleName = slideNumNode.style ?? TEXT_STYLE.FOOTER;
-              const style = theme.textStyles[styleName];
-              intrinsicWidth = measurer.getContentWidth('99', style);
-            } else if (child.type === NODE_TYPE.LINE) {
-              // Lines expand to fill - give minimal width, container determines actual
-              intrinsicWidth = ptToIn(theme.borders.width);
-            } else {
-              // Other types (List, Table, etc.): give them equal share later
-              intrinsicWidth = 0;
-            }
-
-            childWidths[i] = intrinsicWidth;
-            flexTotalWidth += intrinsicWidth;
-            fixedWidth += intrinsicWidth;
+      // Build FlexChild array for width distribution
+      const flexChildren: FlexChild[] = node.children.map((child) => {
+        if (child.type === NODE_TYPE.ROW || child.type === NODE_TYPE.COLUMN) {
+          if (child.width === SIZE.FILL) {
+            return { fillsRemaining: true };
+          } else if (typeof child.width === 'number') {
+            return { fixedSize: child.width };
           }
         }
-
-        // Fill child gets remaining space after flex children
-        const remainingForFill = Math.max(0, availableWidth - fixedWidth);
-        childWidths[fillChildIndex] = remainingForFill;
-      } else if (flexChildCount > 0) {
-        const remainingWidth = Math.max(0, availableWidth - fixedWidth);
-        const equalShare = remainingWidth / flexChildCount;
-        for (let i = 0; i < n; i++) {
-          if (childWidths[i] === -1) {
-            childWidths[i] = equalShare;
-          }
+        // Flex child - if there's a fill sibling, calculate intrinsic width
+        if (hasFillChild) {
+          return { intrinsicSize: getIntrinsicWidth(child, rowHeight, { theme, measurer }) };
         }
-      }
+        return {}; // Shares remaining equally
+      });
+
+      const { sizes: childWidths } = distributeFlexSpace(flexChildren, availableWidth);
 
       log.layout.row('LAYOUT row gap=%f availableWidth=%f vAlign=%s rowHeight=%f (bounds.h=%f)',
         gap, availableWidth, node.vAlign, rowHeight, bounds.h);

@@ -6,6 +6,7 @@ import type { Theme, TextStyleName, TextContent, TextStyle } from './types.js';
 import { Bounds } from './bounds.js';
 import { TEXT_STYLE, SIZE } from './types.js';
 import { toTextContent, resolveGap } from '../utils/node-utils.js';
+import { distributeFlexSpace, type FlexChild } from './layout/index.js';
 import imageSizeDefault from 'image-size';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const imageSize = (imageSizeDefault as any).default || imageSizeDefault;
@@ -137,43 +138,19 @@ export function collectMeasurements(
         const totalGap = gap * (n - 1);
         const availableWidth = bounds.w - totalGap;
 
-        // Calculate widths: explicit widths, fill, or equal distribution
-        let fillChildIndex = -1;
-        let fixedWidth = 0;
-        let flexChildCount = 0;
-        const childWidths: number[] = [];
-
-        for (let i = 0; i < n; i++) {
-          const child = node.children[i];
+        // Build FlexChild array for width distribution
+        const flexChildren: FlexChild[] = node.children.map((child) => {
           if (child.type === NODE_TYPE.ROW || child.type === NODE_TYPE.COLUMN) {
             if (child.width === SIZE.FILL) {
-              fillChildIndex = i;
-              childWidths[i] = 0;
+              return { fillsRemaining: true };
             } else if (typeof child.width === 'number') {
-              childWidths[i] = child.width;
-              fixedWidth += child.width;
-            } else {
-              childWidths[i] = -1;
-              flexChildCount++;
+              return { fixedSize: child.width };
             }
-          } else {
-            childWidths[i] = -1;
-            flexChildCount++;
           }
-        }
+          return {}; // Flex child - shares remaining equally
+        });
 
-        const remainingWidth = Math.max(0, availableWidth - fixedWidth);
-        if (fillChildIndex !== -1) {
-          childWidths[fillChildIndex] = remainingWidth;
-          for (let i = 0; i < n; i++) {
-            if (childWidths[i] === -1) childWidths[i] = 0;
-          }
-        } else if (flexChildCount > 0) {
-          const equalShare = remainingWidth / flexChildCount;
-          for (let i = 0; i < n; i++) {
-            if (childWidths[i] === -1) childWidths[i] = equalShare;
-          }
-        }
+        const { sizes: childWidths } = distributeFlexSpace(flexChildren, availableWidth);
 
         let x = bounds.x;
         for (let i = 0; i < n; i++) {
