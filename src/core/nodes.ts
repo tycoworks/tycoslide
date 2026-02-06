@@ -21,16 +21,22 @@ import type {
 // ============================================
 
 export const NODE_TYPE = {
+  // Content primitives
   TEXT: 'text',
   IMAGE: 'image',
   LINE: 'line',
   SLIDE_NUMBER: 'slideNumber',
+  // Layout primitives
   ROW: 'row',
   COLUMN: 'column',
   GROUP: 'group',
+  // Visual primitive
+  BOX: 'box',
+  // Composites (will become expandable in future)
   CARD: 'card',
   LIST: 'list',
   TABLE: 'table',
+  // Special (external rendering)
   DIAGRAM: 'diagram',
 } as const;
 
@@ -99,6 +105,32 @@ export interface GroupNode {
   children: ElementNode[];
   gap?: GapSize;
   columns?: number;
+}
+
+// ============================================
+// VISUAL PRIMITIVE
+// ============================================
+
+/** Border configuration for Box - can be all sides or selective */
+export interface BoxBorder {
+  color?: string;
+  width?: number;
+  top?: boolean;     // If false, no top border (default: true when border specified)
+  right?: boolean;
+  bottom?: boolean;
+  left?: boolean;
+}
+
+/** Box is a visual container with fill, border, radius, and padding */
+export interface BoxNode {
+  type: typeof NODE_TYPE.BOX;
+  child?: ElementNode;           // Single child (typically Column for multiple children)
+  fill?: { color: string; opacity?: number };
+  border?: BoxBorder;
+  cornerRadius?: number;
+  padding?: number;
+  width?: number | SizeValue;
+  height?: number | SizeValue;
 }
 
 // ============================================
@@ -221,6 +253,7 @@ export type ElementNode =
   | RowNode
   | ColumnNode
   | GroupNode
+  | BoxNode
   | CardNode
   | ListNode
   | TableNode

@@ -10,6 +10,8 @@ import {
   type RowNode,
   type ColumnNode,
   type GroupNode,
+  type BoxNode,
+  type BoxBorder,
   type CardNode,
   type ListNode,
   type TableNode,
@@ -222,6 +224,49 @@ export function group(...args: any[]): GroupNode {
     children,
     columns: props.columns,
     gap: props.gap,
+  };
+}
+
+// ============================================
+// BOX (visual primitive)
+// ============================================
+
+export interface BoxProps {
+  fill?: { color: string; opacity?: number };
+  border?: BoxBorder;
+  cornerRadius?: number;
+  padding?: number;
+  width?: number | SizeValue;
+  height?: number | SizeValue;
+}
+
+/** Box with props and optional single child */
+export function box(props: BoxProps, child?: ElementNode): BoxNode;
+/** Box with just a child (no props) */
+export function box(child: ElementNode): BoxNode;
+/** Empty box with props */
+export function box(props: BoxProps): BoxNode;
+export function box(propsOrChild?: BoxProps | ElementNode, maybeChild?: ElementNode): BoxNode {
+  // Detect if first arg is a node (has 'type' property)
+  if (propsOrChild && typeof propsOrChild === 'object' && 'type' in propsOrChild) {
+    // box(child) - just a child, no props
+    return {
+      type: NODE_TYPE.BOX,
+      child: propsOrChild as ElementNode,
+    };
+  }
+
+  // box(props) or box(props, child)
+  const props = (propsOrChild as BoxProps) ?? {};
+  return {
+    type: NODE_TYPE.BOX,
+    child: maybeChild,
+    fill: props.fill,
+    border: props.border,
+    cornerRadius: props.cornerRadius,
+    padding: props.padding,
+    width: props.width,
+    height: props.height,
   };
 }
 

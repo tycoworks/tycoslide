@@ -85,6 +85,8 @@ export type {
   RowNode,
   ColumnNode,
   GroupNode,
+  BoxNode,
+  BoxBorder,
   CardNode,
   ListNode,
   TableNode,
@@ -118,6 +120,7 @@ export {
   row,
   column,
   group,
+  box,
   card,
   list,
   bulletList,
@@ -129,6 +132,7 @@ export {
   type RowProps,
   type ColumnProps,
   type GroupProps,
+  type BoxProps,
   type CardProps,
   type ListProps,
   type ListItemContent,
@@ -141,6 +145,19 @@ export {
 
 export { computeLayout, getNodeHeight } from './core/compute-layout.js';
 export { render } from './core/render.js';
+
+// ============================================
+// COMPONENT SYSTEM
+// ============================================
+
+export {
+  componentRegistry,
+  component,
+  isComponentNode,
+  type ComponentDefinition,
+  type ComponentNode,
+  type ExpansionContext,
+} from './core/component-registry.js';
 
 // ============================================
 // DIAGRAM BUILDER (declarative, no theme needed)

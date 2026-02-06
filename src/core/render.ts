@@ -1,7 +1,7 @@
 // Declarative Render
 // Renders positioned nodes to Canvas
 
-import { NODE_TYPE, type PositionedNode, type TextNode, type ImageNode, type CardNode, type ListNode, type TableNode, type DiagramNode, type DiagramShape } from './nodes.js';
+import { NODE_TYPE, type PositionedNode, type TextNode, type ImageNode, type CardNode, type BoxNode, type ListNode, type TableNode, type DiagramNode, type DiagramShape } from './nodes.js';
 import type { Theme, TextStyleName, TextContent, NormalizedRun } from './types.js';
 import type { Canvas, TextFragment, TextFragmentOptions } from './canvas.js';
 import { SHAPE, TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT, NODE_STYLE } from './types.js';
@@ -130,6 +130,64 @@ function renderCardNode(canvas: Canvas, node: PositionedNode, theme: Theme): voi
   }
 
   // Render children - they've been positioned by computeLayout
+  if (node.children) {
+    for (const child of node.children) {
+      render(child, canvas, theme);
+    }
+  }
+}
+
+function renderBoxNode(canvas: Canvas, node: PositionedNode, theme: Theme): void {
+  const boxNode = node.node as BoxNode;
+
+  log.render.shape('RENDER box x=%f y=%f w=%f h=%f',
+    node.x, node.y, node.width, node.height);
+
+  // Draw background/border if fill or border is specified
+  if (boxNode.fill || boxNode.border) {
+    const shapeType = boxNode.cornerRadius ? SHAPE.ROUND_RECT : SHAPE.RECT;
+
+    // Build shape options
+    const shapeOpts: Parameters<typeof canvas.addShape>[1] = {
+      x: node.x,
+      y: node.y,
+      w: node.width,
+      h: node.height,
+    };
+
+    // Fill
+    if (boxNode.fill) {
+      shapeOpts.fill = {
+        color: boxNode.fill.color,
+        transparency: boxNode.fill.opacity !== undefined ? 100 - boxNode.fill.opacity : 0,
+      };
+    }
+
+    // Border - check if any sides are explicitly disabled
+    if (boxNode.border) {
+      const border = boxNode.border;
+      const allSides = border.top !== false && border.right !== false &&
+                       border.bottom !== false && border.left !== false;
+
+      if (allSides) {
+        // All sides - use standard line
+        shapeOpts.line = {
+          color: border.color ?? theme.colors.secondary,
+          width: border.width ?? theme.borders.width,
+        };
+      }
+      // Per-side borders would need separate line shapes - not yet implemented
+    }
+
+    // Corner radius
+    if (boxNode.cornerRadius) {
+      shapeOpts.rectRadius = boxNode.cornerRadius;
+    }
+
+    canvas.addShape(shapeType, shapeOpts);
+  }
+
+  // Render child - already positioned by computeLayout
   if (node.children) {
     for (const child of node.children) {
       render(child, canvas, theme);
@@ -565,6 +623,9 @@ export function render(positioned: PositionedNode, canvas: Canvas, theme: Theme)
       break;
     case NODE_TYPE.DIAGRAM:
       renderDiagramNode(canvas, positioned, theme);
+      break;
+    case NODE_TYPE.BOX:
+      renderBoxNode(canvas, positioned, theme);
       break;
     case NODE_TYPE.ROW:
     case NODE_TYPE.COLUMN:

@@ -1,7 +1,7 @@
 // Declarative Layout Computation
 // Computes positions and sizes for all nodes in the tree
 
-import { NODE_TYPE, type ElementNode, type PositionedNode, type CardNode, type ImageNode, type RowNode, type ColumnNode } from './nodes.js';
+import { NODE_TYPE, type ElementNode, type PositionedNode, type CardNode, type ImageNode, type RowNode, type ColumnNode, type BoxNode } from './nodes.js';
 import type { Theme } from './types.js';
 import type { TextMeasurer } from '../utils/text-measurer.js';
 import { Bounds } from './bounds.js';
@@ -127,6 +127,27 @@ export function getNodeHeight(
       // Return 0; computeLayout will use bounds.h instead
       log.layout.height('HEIGHT diagram -> 0 (will use bounds)');
       return 0;
+    }
+
+    case NODE_TYPE.BOX: {
+      // If box has explicit height, use it
+      if (typeof node.height === 'number') {
+        log.layout.height('HEIGHT box explicit height=%f', node.height);
+        return node.height;
+      }
+      // SIZE.FILL boxes take remaining space from parent
+      if (node.height === SIZE.FILL) {
+        log.layout.height('HEIGHT box fill -> 0 (will use bounds)');
+        return 0;
+      }
+
+      // Compute from child + padding
+      const padding = node.padding ?? 0;
+      const innerWidth = width - padding * 2;
+      const childHeight = node.child ? getNodeHeight(node.child, innerWidth, theme, measurer) : 0;
+      const height = childHeight + padding * 2;
+      log.layout.height('HEIGHT box padding=%f childHeight=%f -> %f', padding, childHeight, height);
+      return height;
     }
 
     case NODE_TYPE.ROW: {
@@ -271,6 +292,22 @@ export function getMinNodeHeight(
         minContentHeight += getMinNodeHeight(node.children[i], innerWidth, theme, measurer);
       }
       return minContentHeight + padding * 2;
+    }
+
+    case NODE_TYPE.BOX: {
+      // If box has explicit height, that's the minimum
+      if (typeof node.height === 'number') {
+        return node.height;
+      }
+      // SIZE.FILL boxes can shrink to 0
+      if (node.height === SIZE.FILL) {
+        return 0;
+      }
+
+      const padding = node.padding ?? 0;
+      const innerWidth = width - padding * 2;
+      const minChildHeight = node.child ? getMinNodeHeight(node.child, innerWidth, theme, measurer) : 0;
+      return minChildHeight + padding * 2;
     }
 
     case NODE_TYPE.ROW: {
@@ -489,6 +526,41 @@ export function computeLayout(
         y: bounds.y,
         width: bounds.w,
         height: cardHeight,
+        children,
+      };
+    }
+
+    case NODE_TYPE.BOX: {
+      // Box is a visual container with optional padding and single child
+      const boxNode = node as BoxNode;
+      const padding = boxNode.padding ?? 0;
+      const innerWidth = bounds.w - padding * 2;
+      const innerHeight = bounds.h > 0 ? bounds.h - padding * 2 : 0;
+
+      log.layout._('LAYOUT box padding=%f innerWidth=%f innerHeight=%f', padding, innerWidth, innerHeight);
+
+      // Layout child if present
+      let children: PositionedNode[] | undefined;
+      if (boxNode.child) {
+        const childHeight = innerHeight > 0
+          ? innerHeight
+          : getNodeHeight(boxNode.child, innerWidth, theme, measurer);
+        const childBounds = new Bounds(bounds.x + padding, bounds.y + padding, innerWidth, childHeight);
+        children = [computeLayout(boxNode.child, childBounds, theme, measurer)];
+      }
+
+      // Use constrained height if bounds.h is meaningful
+      const boxHeight = bounds.h > 0 ? Math.min(height, bounds.h) : height;
+
+      log.layout._('  -> positioned box {x=%f y=%f w=%f h=%f}%s',
+        bounds.x, bounds.y, bounds.w, boxHeight,
+        children ? ' with child' : '');
+      return {
+        node,
+        x: bounds.x,
+        y: bounds.y,
+        width: bounds.w,
+        height: boxHeight,
         children,
       };
     }
