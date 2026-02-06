@@ -12,6 +12,9 @@ import { render } from './render.js';
 import { fontkitMeasurer } from '../utils/fontkit-measurer.js';
 import { log } from '../utils/log.js';
 
+// Footer height as proportion of margin (footer sits in bottom margin area)
+const FOOTER_HEIGHT_RATIO = 0.6;
+
 // ============================================
 // MASTER TYPE (declarative)
 // ============================================
@@ -130,7 +133,7 @@ export class Presentation {
   private getFooterBounds(contentBounds: Bounds): Bounds {
     const { margin } = this._theme.spacing;
     const { width, height } = this._theme.slide;
-    const footerHeight = margin * 0.6; // Footer takes ~60% of bottom margin
+    const footerHeight = margin * FOOTER_HEIGHT_RATIO;
     return new Bounds(
       margin,
       height - margin + (margin - footerHeight) / 2,

@@ -26,6 +26,7 @@ import type {
   BorderStyle,
   ArrowType,
   DashType,
+  SizeValue,
 } from './types.js';
 import { TEXT_STYLE } from './types.js';
 
@@ -86,8 +87,6 @@ export function eyebrow(content: TextContent, props?: Omit<TextProps, 'style'>):
 
 export interface ImageProps {
   alt?: string;
-  maxWidth?: number;
-  maxHeight?: number;
 }
 
 export function image(src: string, props?: ImageProps): ImageNode {
@@ -95,8 +94,6 @@ export function image(src: string, props?: ImageProps): ImageNode {
     type: NODE_TYPE.IMAGE,
     src,
     alt: props?.alt,
-    maxWidth: props?.maxWidth,
-    maxHeight: props?.maxHeight,
   };
 }
 
@@ -141,7 +138,8 @@ export function slideNumber(props?: { style?: TextStyleName; color?: string; hAl
 // ============================================
 
 export interface RowProps {
-  proportions?: number[];
+  width?: number | SizeValue;   // inches (number) or SIZE.FILL (when inside another Row)
+  height?: number;              // inches - constrains cross-axis height (children scaled to fit)
   gap?: GapSize;
   vAlign?: VerticalAlignment;
 }
@@ -162,14 +160,16 @@ export function row(...args: any[]): RowNode {
   return {
     type: NODE_TYPE.ROW,
     children,
-    proportions: props.proportions,
+    width: props.width,
+    height: props.height,
     gap: props.gap,
     vAlign: props.vAlign,
   };
 }
 
 export interface ColumnProps {
-  proportions?: number[];
+  width?: number | SizeValue;   // inches (number) or SIZE.FILL (when inside Row)
+  height?: number | SizeValue;  // inches (number) or SIZE.FILL (when inside Column)
   gap?: GapSize;
   justify?: Justify;
   hAlign?: HorizontalAlignment;
@@ -191,7 +191,8 @@ export function column(...args: any[]): ColumnNode {
   return {
     type: NODE_TYPE.COLUMN,
     children,
-    proportions: props.proportions,
+    width: props.width,
+    height: props.height,
     gap: props.gap,
     justify: props.justify,
     hAlign: props.hAlign,
@@ -244,12 +245,60 @@ export interface CardProps {
   borderWidth?: number;
   cornerRadius?: number;
   padding?: number;
+  gap?: GapSize;
+  /** Custom children - if provided, overrides image/title/description */
+  children?: ElementNode[];
 }
 
 export function card(props: CardProps): CardNode {
+  // If custom children provided, use them directly
+  if (props.children) {
+    return {
+      type: NODE_TYPE.CARD,
+      children: props.children,
+      gap: props.gap,
+      background: props.background,
+      backgroundColor: props.backgroundColor,
+      backgroundOpacity: props.backgroundOpacity,
+      borderColor: props.borderColor,
+      borderWidth: props.borderWidth,
+      cornerRadius: props.cornerRadius,
+      padding: props.padding,
+    };
+  }
+
+  // Build children from image/title/description props
+  const children: ElementNode[] = [];
+
+  if (props.image) {
+    children.push(image(props.image));
+  }
+
+  if (props.title) {
+    children.push(text(props.title, {
+      style: props.titleStyle ?? TEXT_STYLE.H4,
+      color: props.titleColor,
+    }));
+  }
+
+  if (props.description) {
+    children.push(text(props.description, {
+      style: props.descriptionStyle ?? TEXT_STYLE.SMALL,
+      color: props.descriptionColor,
+    }));
+  }
+
   return {
     type: NODE_TYPE.CARD,
-    ...props,
+    children,
+    gap: props.gap,
+    background: props.background,
+    backgroundColor: props.backgroundColor,
+    backgroundOpacity: props.backgroundOpacity,
+    borderColor: props.borderColor,
+    borderWidth: props.borderWidth,
+    cornerRadius: props.cornerRadius,
+    padding: props.padding,
   };
 }
 

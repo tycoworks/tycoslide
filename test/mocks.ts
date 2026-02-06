@@ -56,6 +56,9 @@ export function mockTheme(options?: {
   cellPadding?: number;
   bulletSpacing?: number;
   margin?: number;
+  minDisplayDPI?: number;
+  borderWidth?: number;
+  borderRadius?: number;
 }): Theme {
   const gap = options?.gap ?? 0.25;
   const gapTight = options?.gapTight ?? 0.125;
@@ -64,6 +67,9 @@ export function mockTheme(options?: {
   const cellPadding = options?.cellPadding ?? 0.1;
   const bulletSpacing = options?.bulletSpacing ?? 1.2;
   const margin = options?.margin ?? 0.5;
+  const minDisplayDPI = options?.minDisplayDPI ?? 96;
+  const borderWidth = options?.borderWidth ?? 1;
+  const borderRadius = options?.borderRadius ?? 0.1;
 
   return {
     slide: { width: 13.333, height: 7.5 },
@@ -88,6 +94,11 @@ export function mockTheme(options?: {
       cellPadding,
       bulletSpacing,
       margin,
+      minDisplayDPI,
+    },
+    borders: {
+      width: borderWidth,
+      radius: borderRadius,
     },
     textStyles: {
       [TEXT_STYLE.H1]: mockTextStyle,

@@ -105,13 +105,13 @@ function renderImageNode(canvas: Canvas, node: PositionedNode, theme: Theme): vo
 
 function renderCardNode(canvas: Canvas, node: PositionedNode, theme: Theme): void {
   const cardNode = node.node as CardNode;
-  const padding = theme.spacing.padding;
 
-  log.render.shape('RENDER card x=%f y=%f w=%f h=%f title="%s"',
-    node.x, node.y, node.width, node.height, contentPreview(cardNode.title ?? ''));
+  log.render.shape('RENDER card x=%f y=%f w=%f h=%f children=%d',
+    node.x, node.y, node.width, node.height, cardNode.children.length);
 
   // Draw background
-  if (cardNode.backgroundColor !== 'none') {
+  if (cardNode.background !== false && cardNode.backgroundColor !== 'none') {
+    const opacity = cardNode.backgroundOpacity ?? theme.colors.subtleOpacity;
     canvas.addShape(SHAPE.ROUND_RECT, {
       x: node.x,
       y: node.y,
@@ -119,63 +119,21 @@ function renderCardNode(canvas: Canvas, node: PositionedNode, theme: Theme): voi
       h: node.height,
       fill: {
         color: cardNode.backgroundColor ?? theme.colors.secondary,
-        transparency: 100 - theme.colors.subtleOpacity,
+        transparency: 100 - opacity,
       },
       line: {
         color: cardNode.borderColor ?? theme.colors.secondary,
-        width: theme.borders.width,
+        width: cardNode.borderWidth ?? theme.borders.width,
       },
-      rectRadius: theme.borders.radius,
+      rectRadius: cardNode.cornerRadius ?? theme.borders.radius,
     });
   }
 
-  // Inner content area
-  let contentY = node.y + padding;
-  const contentX = node.x + padding;
-  const contentWidth = node.width - padding * 2;
-
-  // Image
-  if (cardNode.image) {
-    const imageHeight = (node.height - padding * 2) * 0.4;
-    canvas.addImage({
-      path: cardNode.image,
-      x: contentX,
-      y: contentY,
-      w: contentWidth,
-      h: imageHeight,
-    });
-    contentY += imageHeight + theme.spacing.gapTight;
-  }
-
-  // Title
-  if (cardNode.title) {
-    const style = theme.textStyles[TEXT_STYLE.H4];
-    const titleHeight = style.fontSize / 72; // Approximate
-    renderText(
-      canvas,
-      cardNode.title,
-      TEXT_STYLE.H4,
-      theme,
-      contentX, contentY, contentWidth, titleHeight,
-      HALIGN.LEFT, VALIGN.TOP,
-      cardNode.titleColor
-    );
-    contentY += titleHeight + theme.spacing.gapTight;
-  }
-
-  // Description
-  if (cardNode.description) {
-    const style = theme.textStyles[TEXT_STYLE.BODY];
-    const descHeight = style.fontSize / 72;
-    renderText(
-      canvas,
-      cardNode.description,
-      TEXT_STYLE.BODY,
-      theme,
-      contentX, contentY, contentWidth, descHeight,
-      HALIGN.LEFT, VALIGN.TOP,
-      cardNode.descriptionColor
-    );
+  // Render children - they've been positioned by computeLayout
+  if (node.children) {
+    for (const child of node.children) {
+      render(child, canvas, theme);
+    }
   }
 }
 
@@ -183,29 +141,59 @@ function renderListNode(canvas: Canvas, node: PositionedNode, theme: Theme): voi
   const listNode = node.node as ListNode;
   const styleName = listNode.style ?? TEXT_STYLE.BODY;
   const style = theme.textStyles[styleName];
-  const lineHeight = style.fontSize / 72 * 1.2;
+  const defaultFont = getFontFromFamily(style.fontFamily, style.defaultWeight ?? FONT_WEIGHT.NORMAL);
   const bulletSpacing = theme.spacing.bulletSpacing;
   const indent = theme.spacing.gap;
 
   log.render.text('RENDER list x=%f y=%f w=%f h=%f items=%d ordered=%s',
     node.x, node.y, node.width, node.height, listNode.items.length, listNode.ordered ?? false);
 
-  let y = node.y;
-  listNode.items.forEach((item, i) => {
-    const bullet = listNode.ordered ? `${i + 1}. ` : '• ';
-    const itemContent = toTextContent(item);
-    const content: TextContent = typeof itemContent === 'string' ? bullet + itemContent : [bullet, ...normalizeContent(itemContent).map(r => r.text)].join('');
+  // Build all items as a single text block with bullets
+  const allFragments: TextFragment[] = [];
 
-    renderText(
-      canvas,
-      content,
-      styleName,
-      theme,
-      node.x, y, node.width, lineHeight,
-      HALIGN.LEFT, VALIGN.TOP,
-      listNode.color
-    );
-    y += lineHeight * bulletSpacing;
+  listNode.items.forEach((item, i) => {
+    const itemContent = toTextContent(item);
+    const normalized = normalizeContent(itemContent);
+
+    normalized.forEach((run, runIndex) => {
+      const runWeight = run.weight ?? (style.defaultWeight ?? FONT_WEIGHT.NORMAL);
+      const runFont = getFontFromFamily(style.fontFamily, runWeight);
+      const options: TextFragmentOptions = {
+        color: run.color ?? listNode.color ?? style.color ?? theme.colors.text,
+        fontFace: runFont.name,
+      };
+      if (run.highlight) options.highlight = run.highlight.bg;
+
+      // Apply bullet to first fragment of each item
+      if (runIndex === 0) {
+        options.bullet = {
+          type: listNode.ordered ? 'number' : 'bullet',
+          color: listNode.markerColor ?? listNode.color ?? style.color ?? theme.colors.text,
+        };
+      }
+
+      // Add line break between items (except first run of first item)
+      if (i > 0 && runIndex === 0) {
+        options.softBreakBefore = true;
+      }
+
+      allFragments.push({ text: run.text, options });
+    });
+  });
+
+  canvas.addText(allFragments, {
+    x: node.x,
+    y: node.y,
+    w: node.width,
+    h: node.height,
+    fontSize: style.fontSize,
+    fontFace: defaultFont.name,
+    color: listNode.color ?? style.color ?? theme.colors.text,
+    margin: 0,
+    wrap: true,
+    lineSpacingMultiple: bulletSpacing,
+    align: HALIGN.LEFT,
+    valign: VALIGN.TOP,
   });
 }
 
@@ -258,7 +246,7 @@ function renderLineNode(canvas: Canvas, node: PositionedNode, theme: Theme): voi
     h: 0,
     line: {
       color: theme.colors.secondary,
-      width: 1,
+      width: theme.borders.width,
     },
   });
 }
@@ -513,8 +501,11 @@ function renderDiagramNode(canvas: Canvas, positioned: PositionedNode, theme: Th
 
   // Get image dimensions for proper scaling
   const dimensions = imageSize(outputPath);
-  const imgWidth = (dimensions.width ?? 100) / scale / 96; // Convert to inches (96 DPI base)
-  const imgHeight = (dimensions.height ?? 100) / scale / 96;
+  if (!dimensions.width || !dimensions.height) {
+    throw new Error(`Cannot determine dimensions of rendered diagram: ${outputPath}`);
+  }
+  const imgWidth = dimensions.width / scale / theme.spacing.minDisplayDPI;
+  const imgHeight = dimensions.height / scale / theme.spacing.minDisplayDPI;
 
   // Calculate scaling to fit bounds while maintaining aspect ratio
   const scaleX = positioned.width / imgWidth;

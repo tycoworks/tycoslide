@@ -48,6 +48,12 @@ export const JUSTIFY = {
 
 export type Justify = typeof JUSTIFY[keyof typeof JUSTIFY];
 
+export const SIZE = {
+  FILL: 'fill',
+} as const;
+
+export type SizeValue = typeof SIZE[keyof typeof SIZE];
+
 export const ALIGN = {
   START: 'flex-start',
   CENTER: 'center',
@@ -161,6 +167,7 @@ export interface TextStyle {
   fontSize: number;
   defaultWeight?: FontWeight;  // default: 'normal'
   color?: string;              // default color for this style
+  lineHeightMultiplier?: number;  // default: 1.2
 }
 
 // ============================================

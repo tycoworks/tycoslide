@@ -4,8 +4,11 @@
 import { NODE_TYPE, type ElementNode } from './nodes.js';
 import type { Theme, TextStyleName, TextContent, TextStyle } from './types.js';
 import { Bounds } from './bounds.js';
-import { TEXT_STYLE } from './types.js';
+import { TEXT_STYLE, SIZE } from './types.js';
 import { toTextContent, resolveGap } from '../utils/node-utils.js';
+import imageSizeDefault from 'image-size';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const imageSize = (imageSizeDefault as any).default || imageSizeDefault;
 
 // ============================================
 // MEASUREMENT REQUEST TYPES
@@ -106,25 +109,11 @@ export function collectMeasurements(
       }
 
       case NODE_TYPE.CARD: {
-        const cardBounds = bounds.inset(theme.spacing.padding);
-        // Image takes ~40% if present
-        let contentBounds = cardBounds;
-        if (node.image || node.icon) {
-          const imageHeight = cardBounds.h * 0.4;
-          contentBounds = new Bounds(
-            cardBounds.x,
-            cardBounds.y + imageHeight + theme.spacing.gapTight,
-            cardBounds.w,
-            cardBounds.h - imageHeight - theme.spacing.gapTight
-          );
-        }
-        if (node.title) {
-          addTextRequest(node.title, TEXT_STYLE.H4, contentBounds.w);
-          addStyleRequest(TEXT_STYLE.H4);
-        }
-        if (node.description) {
-          addTextRequest(node.description, TEXT_STYLE.BODY, contentBounds.w);
-          addStyleRequest(TEXT_STYLE.BODY);
+        // Card is a container - recursively collect from children
+        const padding = node.padding ?? theme.spacing.padding;
+        const cardBounds = bounds.inset(padding);
+        for (const child of node.children) {
+          collect(child, cardBounds);
         }
         break;
       }
@@ -148,13 +137,47 @@ export function collectMeasurements(
         const totalGap = gap * (n - 1);
         const availableWidth = bounds.w - totalGap;
 
-        // Divide by proportions or equally
-        const proportions = node.proportions ?? node.children.map(() => 1);
-        const totalProp = proportions.reduce((a, b) => a + b, 0);
+        // Calculate widths: explicit widths, fill, or equal distribution
+        let fillChildIndex = -1;
+        let fixedWidth = 0;
+        let flexChildCount = 0;
+        const childWidths: number[] = [];
+
+        for (let i = 0; i < n; i++) {
+          const child = node.children[i];
+          if (child.type === NODE_TYPE.ROW || child.type === NODE_TYPE.COLUMN) {
+            if (child.width === SIZE.FILL) {
+              fillChildIndex = i;
+              childWidths[i] = 0;
+            } else if (typeof child.width === 'number') {
+              childWidths[i] = child.width;
+              fixedWidth += child.width;
+            } else {
+              childWidths[i] = -1;
+              flexChildCount++;
+            }
+          } else {
+            childWidths[i] = -1;
+            flexChildCount++;
+          }
+        }
+
+        const remainingWidth = Math.max(0, availableWidth - fixedWidth);
+        if (fillChildIndex !== -1) {
+          childWidths[fillChildIndex] = remainingWidth;
+          for (let i = 0; i < n; i++) {
+            if (childWidths[i] === -1) childWidths[i] = 0;
+          }
+        } else if (flexChildCount > 0) {
+          const equalShare = remainingWidth / flexChildCount;
+          for (let i = 0; i < n; i++) {
+            if (childWidths[i] === -1) childWidths[i] = equalShare;
+          }
+        }
 
         let x = bounds.x;
         for (let i = 0; i < n; i++) {
-          const childWidth = (proportions[i] / totalProp) * availableWidth;
+          const childWidth = childWidths[i];
           const childBounds = new Bounds(x, bounds.y, childWidth, bounds.h);
           collect(node.children[i], childBounds);
           x += childWidth + gap;

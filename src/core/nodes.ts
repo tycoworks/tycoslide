@@ -13,6 +13,7 @@ import type {
   ArrowType,
   DashType,
   NodeStyle,
+  SizeValue,
 } from './types.js';
 
 // ============================================
@@ -52,8 +53,6 @@ export interface ImageNode {
   type: typeof NODE_TYPE.IMAGE;
   src: string;
   alt?: string;
-  maxWidth?: number;
-  maxHeight?: number;
 }
 
 export interface LineNode {
@@ -79,7 +78,8 @@ export interface SlideNumberNode {
 export interface RowNode {
   type: typeof NODE_TYPE.ROW;
   children: ElementNode[];
-  proportions?: number[];
+  width?: number | SizeValue;   // inches (number) or SIZE.FILL to take remaining space (when inside another Row)
+  height?: number;              // inches - constrains cross-axis height (children scaled to fit)
   gap?: GapSize;
   vAlign?: VerticalAlignment;
 }
@@ -87,7 +87,8 @@ export interface RowNode {
 export interface ColumnNode {
   type: typeof NODE_TYPE.COLUMN;
   children: ElementNode[];
-  proportions?: number[];
+  width?: number | SizeValue;   // inches (number) or SIZE.FILL to take remaining space (when inside Row)
+  height?: number | SizeValue;  // inches (number) or SIZE.FILL to take remaining space (when inside Column)
   gap?: GapSize;
   justify?: Justify;
   hAlign?: HorizontalAlignment;
@@ -104,16 +105,11 @@ export interface GroupNode {
 // COMPOSITE NODES
 // ============================================
 
+/** Card is a container with children - the DSL builds children from props */
 export interface CardNode {
   type: typeof NODE_TYPE.CARD;
-  image?: string;
-  icon?: string;
-  title?: string;
-  titleStyle?: TextStyleName;
-  titleColor?: string;
-  description?: string;
-  descriptionStyle?: TextStyleName;
-  descriptionColor?: string;
+  children: ElementNode[];
+  gap?: GapSize;
   background?: boolean;          // Whether to show background (default: true)
   backgroundColor?: string;
   backgroundOpacity?: number;

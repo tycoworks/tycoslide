@@ -31,6 +31,7 @@ import {
   HALIGN,
   VALIGN,
   JUSTIFY,
+  SIZE,
   BORDER_STYLE,
   ARROW_TYPE,
   DASH_TYPE,
@@ -268,30 +269,11 @@ describe('image()', () => {
   test('applies no props by default', () => {
     const node = image('photo.jpg');
     assert.strictEqual(node.alt, undefined);
-    assert.strictEqual(node.maxWidth, undefined);
-    assert.strictEqual(node.maxHeight, undefined);
   });
 
   test('applies alt prop', () => {
     const node = image('photo.jpg', { alt: 'A beautiful photo' });
     assert.strictEqual(node.alt, 'A beautiful photo');
-  });
-
-  test('applies maxWidth prop', () => {
-    const node = image('photo.jpg', { maxWidth: 5 });
-    assert.strictEqual(node.maxWidth, 5);
-  });
-
-  test('applies maxHeight prop', () => {
-    const node = image('photo.jpg', { maxHeight: 3 });
-    assert.strictEqual(node.maxHeight, 3);
-  });
-
-  test('applies all props together', () => {
-    const node = image('photo.jpg', { alt: 'Test', maxWidth: 8, maxHeight: 4 });
-    assert.strictEqual(node.alt, 'Test');
-    assert.strictEqual(node.maxWidth, 8);
-    assert.strictEqual(node.maxHeight, 4);
   });
 });
 
@@ -421,7 +403,7 @@ describe('row()', () => {
 
   test('applies no props by default when no props provided', () => {
     const node = row(child1);
-    assert.strictEqual(node.proportions, undefined);
+    assert.strictEqual(node.width, undefined);
     assert.strictEqual(node.gap, undefined);
     assert.strictEqual(node.vAlign, undefined);
   });
@@ -430,11 +412,6 @@ describe('row()', () => {
     const node = row({ gap: GAP.TIGHT }, child1, child2);
     assert.strictEqual(node.children.length, 2);
     assert.strictEqual(node.gap, GAP.TIGHT);
-  });
-
-  test('applies proportions prop', () => {
-    const node = row({ proportions: [1, 2, 1] }, child1, child2, child3);
-    assert.deepStrictEqual(node.proportions, [1, 2, 1]);
   });
 
   test('applies gap prop', () => {
@@ -449,11 +426,10 @@ describe('row()', () => {
 
   test('applies all props together', () => {
     const node = row(
-      { proportions: [1, 2], gap: GAP.NORMAL, vAlign: VALIGN.MIDDLE },
+      { gap: GAP.NORMAL, vAlign: VALIGN.MIDDLE },
       child1,
       child2
     );
-    assert.deepStrictEqual(node.proportions, [1, 2]);
     assert.strictEqual(node.gap, GAP.NORMAL);
     assert.strictEqual(node.vAlign, VALIGN.MIDDLE);
     assert.strictEqual(node.children.length, 2);
@@ -500,7 +476,7 @@ describe('column()', () => {
 
   test('applies no props by default when no props provided', () => {
     const node = column(child1);
-    assert.strictEqual(node.proportions, undefined);
+    assert.strictEqual(node.height, undefined);
     assert.strictEqual(node.gap, undefined);
     assert.strictEqual(node.justify, undefined);
     assert.strictEqual(node.hAlign, undefined);
@@ -512,9 +488,14 @@ describe('column()', () => {
     assert.strictEqual(node.gap, GAP.LOOSE);
   });
 
-  test('applies proportions prop', () => {
-    const node = column({ proportions: [2, 1] }, child1, child2);
-    assert.deepStrictEqual(node.proportions, [2, 1]);
+  test('applies height: SIZE.FILL prop', () => {
+    const node = column({ height: SIZE.FILL }, child1, child2);
+    assert.strictEqual(node.height, SIZE.FILL);
+  });
+
+  test('applies height: number prop', () => {
+    const node = column({ height: 2.5 }, child1, child2);
+    assert.strictEqual(node.height, 2.5);
   });
 
   test('applies gap prop', () => {
@@ -535,7 +516,7 @@ describe('column()', () => {
   test('applies all props together', () => {
     const node = column(
       {
-        proportions: [1, 1, 2],
+        height: SIZE.FILL,
         gap: GAP.NORMAL,
         justify: JUSTIFY.END,
         hAlign: HALIGN.CENTER,
@@ -544,7 +525,7 @@ describe('column()', () => {
       child2,
       child3
     );
-    assert.deepStrictEqual(node.proportions, [1, 1, 2]);
+    assert.strictEqual(node.height, SIZE.FILL);
     assert.strictEqual(node.gap, GAP.NORMAL);
     assert.strictEqual(node.justify, JUSTIFY.END);
     assert.strictEqual(node.hAlign, HALIGN.CENTER);
@@ -649,50 +630,50 @@ describe('card()', () => {
 
   test('creates empty card with no props', () => {
     const node = card({});
-    assert.strictEqual(node.image, undefined);
-    assert.strictEqual(node.icon, undefined);
-    assert.strictEqual(node.title, undefined);
-    assert.strictEqual(node.description, undefined);
+    assert.strictEqual(node.children.length, 0);
   });
 
-  test('applies image prop', () => {
+  test('applies image prop - creates ImageNode child', () => {
     const node = card({ image: 'photo.jpg' });
-    assert.strictEqual(node.image, 'photo.jpg');
+    assert.strictEqual(node.children.length, 1);
+    assert.strictEqual(node.children[0].type, NODE_TYPE.IMAGE);
+    assert.strictEqual((node.children[0] as any).src, 'photo.jpg');
   });
 
-  test('applies icon prop', () => {
-    const node = card({ icon: 'star' });
-    assert.strictEqual(node.icon, 'star');
-  });
-
-  test('applies title prop', () => {
+  test('applies title prop - creates TextNode child', () => {
     const node = card({ title: 'Card Title' });
-    assert.strictEqual(node.title, 'Card Title');
+    assert.strictEqual(node.children.length, 1);
+    assert.strictEqual(node.children[0].type, NODE_TYPE.TEXT);
+    assert.strictEqual((node.children[0] as any).content, 'Card Title');
+    assert.strictEqual((node.children[0] as any).style, TEXT_STYLE.H4); // default
   });
 
   test('applies titleStyle prop', () => {
-    const node = card({ titleStyle: TEXT_STYLE.H3 });
-    assert.strictEqual(node.titleStyle, TEXT_STYLE.H3);
+    const node = card({ title: 'Title', titleStyle: TEXT_STYLE.H3 });
+    assert.strictEqual((node.children[0] as any).style, TEXT_STYLE.H3);
   });
 
   test('applies titleColor prop', () => {
-    const node = card({ titleColor: 'FF0000' });
-    assert.strictEqual(node.titleColor, 'FF0000');
+    const node = card({ title: 'Title', titleColor: 'FF0000' });
+    assert.strictEqual((node.children[0] as any).color, 'FF0000');
   });
 
-  test('applies description prop', () => {
+  test('applies description prop - creates TextNode child', () => {
     const node = card({ description: 'Card description' });
-    assert.strictEqual(node.description, 'Card description');
+    assert.strictEqual(node.children.length, 1);
+    assert.strictEqual(node.children[0].type, NODE_TYPE.TEXT);
+    assert.strictEqual((node.children[0] as any).content, 'Card description');
+    assert.strictEqual((node.children[0] as any).style, TEXT_STYLE.SMALL); // default
   });
 
   test('applies descriptionStyle prop', () => {
-    const node = card({ descriptionStyle: TEXT_STYLE.SMALL });
-    assert.strictEqual(node.descriptionStyle, TEXT_STYLE.SMALL);
+    const node = card({ description: 'Desc', descriptionStyle: TEXT_STYLE.BODY });
+    assert.strictEqual((node.children[0] as any).style, TEXT_STYLE.BODY);
   });
 
   test('applies descriptionColor prop', () => {
-    const node = card({ descriptionColor: '666666' });
-    assert.strictEqual(node.descriptionColor, '666666');
+    const node = card({ description: 'Desc', descriptionColor: '666666' });
+    assert.strictEqual((node.children[0] as any).color, '666666');
   });
 
   test('applies background prop', () => {
@@ -733,7 +714,6 @@ describe('card()', () => {
   test('applies all props together', () => {
     const node = card({
       image: 'hero.jpg',
-      icon: 'check',
       title: 'Title',
       titleStyle: TEXT_STYLE.H2,
       titleColor: 'FF0000',
@@ -748,14 +728,19 @@ describe('card()', () => {
       cornerRadius: 0.125,
       padding: 0.25,
     });
-    assert.strictEqual(node.image, 'hero.jpg');
-    assert.strictEqual(node.icon, 'check');
-    assert.strictEqual(node.title, 'Title');
-    assert.strictEqual(node.titleStyle, TEXT_STYLE.H2);
-    assert.strictEqual(node.titleColor, 'FF0000');
-    assert.strictEqual(node.description, 'Description');
-    assert.strictEqual(node.descriptionStyle, TEXT_STYLE.BODY);
-    assert.strictEqual(node.descriptionColor, '333333');
+    // Children: image, title, description (in order)
+    assert.strictEqual(node.children.length, 3);
+    assert.strictEqual(node.children[0].type, NODE_TYPE.IMAGE);
+    assert.strictEqual((node.children[0] as any).src, 'hero.jpg');
+    assert.strictEqual(node.children[1].type, NODE_TYPE.TEXT);
+    assert.strictEqual((node.children[1] as any).content, 'Title');
+    assert.strictEqual((node.children[1] as any).style, TEXT_STYLE.H2);
+    assert.strictEqual((node.children[1] as any).color, 'FF0000');
+    assert.strictEqual(node.children[2].type, NODE_TYPE.TEXT);
+    assert.strictEqual((node.children[2] as any).content, 'Description');
+    assert.strictEqual((node.children[2] as any).style, TEXT_STYLE.BODY);
+    assert.strictEqual((node.children[2] as any).color, '333333');
+    // Style props remain on the card
     assert.strictEqual(node.background, true);
     assert.strictEqual(node.backgroundColor, 'FFFFFF');
     assert.strictEqual(node.backgroundOpacity, 80);
@@ -763,6 +748,16 @@ describe('card()', () => {
     assert.strictEqual(node.borderWidth, 1);
     assert.strictEqual(node.cornerRadius, 0.125);
     assert.strictEqual(node.padding, 0.25);
+  });
+
+  test('custom children override image/title/description', () => {
+    const customChildren = [text('Custom content')];
+    const node = card({
+      children: customChildren,
+      title: 'Ignored', // should be ignored when children provided
+    });
+    assert.strictEqual(node.children.length, 1);
+    assert.strictEqual((node.children[0] as any).content, 'Custom content');
   });
 });
 
