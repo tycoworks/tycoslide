@@ -7,8 +7,6 @@ import type {
   HorizontalAlignment,
   VerticalAlignment,
   GapSize,
-  Justify,
-  BorderStyle,
   HighlightPair,
   ArrowType,
   DashType,
@@ -29,13 +27,9 @@ export const NODE_TYPE = {
   // Layout primitives
   ROW: 'row',
   COLUMN: 'column',
-  GROUP: 'group',
+  STACK: 'stack',  // Z-order composition: children overlap at same position
   // Visual primitive
-  BOX: 'box',
-  // Composites (will become expandable in future)
-  CARD: 'card',
-  LIST: 'list',
-  TABLE: 'table',
+  RECTANGLE: 'rectangle',
   // Special (external rendering)
   DIAGRAM: 'diagram',
 } as const;
@@ -83,7 +77,7 @@ export interface SlideNumberNode {
 
 export interface RowNode {
   type: typeof NODE_TYPE.ROW;
-  children: ElementNode[];
+  children: ElementNode[];      // Post-expansion: always primitives (DSL accepts SlideContent)
   width?: number | SizeValue;   // inches (number) or SIZE.FILL to take remaining space (when inside another Row)
   height?: number;              // inches - constrains cross-axis height (children scaled to fit)
   gap?: GapSize;
@@ -92,27 +86,27 @@ export interface RowNode {
 
 export interface ColumnNode {
   type: typeof NODE_TYPE.COLUMN;
-  children: ElementNode[];
+  children: ElementNode[];      // Post-expansion: always primitives (DSL accepts SlideContent)
   width?: number | SizeValue;   // inches (number) or SIZE.FILL to take remaining space (when inside Row)
   height?: number | SizeValue;  // inches (number) or SIZE.FILL to take remaining space (when inside Column)
   gap?: GapSize;
-  justify?: Justify;
+  vAlign?: VerticalAlignment;
   hAlign?: HorizontalAlignment;
+  padding?: number;             // inches - internal padding on all sides
 }
 
-export interface GroupNode {
-  type: typeof NODE_TYPE.GROUP;
-  children: ElementNode[];
-  gap?: GapSize;
-  columns?: number;
+/** Stack is a z-order container: all children occupy the same bounds, rendered in order */
+export interface StackNode {
+  type: typeof NODE_TYPE.STACK;
+  children: ElementNode[];  // Post-expansion: [0] first (back), [n-1] last (front)
 }
 
 // ============================================
 // VISUAL PRIMITIVE
 // ============================================
 
-/** Border configuration for Box - can be all sides or selective */
-export interface BoxBorder {
+/** Border configuration for Rectangle - can be all sides or selective */
+export interface RectangleBorder {
   color?: string;
   width?: number;
   top?: boolean;     // If false, no top border (default: true when border specified)
@@ -121,59 +115,12 @@ export interface BoxBorder {
   left?: boolean;
 }
 
-/** Box is a visual container with fill, border, radius, and padding */
-export interface BoxNode {
-  type: typeof NODE_TYPE.BOX;
-  child?: ElementNode;           // Single child (typically Column for multiple children)
+/** Rectangle is a pure visual shape with fill, border, and radius */
+export interface RectangleNode {
+  type: typeof NODE_TYPE.RECTANGLE;
   fill?: { color: string; opacity?: number };
-  border?: BoxBorder;
+  border?: RectangleBorder;
   cornerRadius?: number;
-  padding?: number;
-  width?: number | SizeValue;
-  height?: number | SizeValue;
-}
-
-// ============================================
-// COMPOSITE NODES
-// ============================================
-
-/** Card is a container with children - the DSL builds children from props */
-export interface CardNode {
-  type: typeof NODE_TYPE.CARD;
-  children: ElementNode[];
-  gap?: GapSize;
-  background?: boolean;          // Whether to show background (default: true)
-  backgroundColor?: string;
-  backgroundOpacity?: number;
-  borderColor?: string;
-  borderWidth?: number;
-  cornerRadius?: number;
-  padding?: number;
-}
-
-export interface ListNode {
-  type: typeof NODE_TYPE.LIST;
-  items: (TextContent | TextNode)[];
-  style?: TextStyleName;
-  ordered?: boolean;
-  color?: string;
-  markerColor?: string;
-}
-
-/** Table cell can be plain text, styled text runs, or a TextNode */
-export type TableCellContent = TextContent | TextNode;
-
-export interface TableNode {
-  type: typeof NODE_TYPE.TABLE;
-  data: TableCellContent[][];
-  headerRow?: boolean;
-  headerColumn?: boolean;
-  borderStyle?: BorderStyle;
-  headerBackground?: string;
-  cellBackground?: string;
-  columnWidths?: number[];
-  hAlign?: HorizontalAlignment;
-  vAlign?: VerticalAlignment;
 }
 
 // ============================================
@@ -242,9 +189,25 @@ export interface DiagramNode {
 }
 
 // ============================================
-// UNION TYPE
+// COMPONENT NODE (higher-level abstraction)
 // ============================================
 
+/**
+ * A component node before expansion.
+ * Components are higher-level abstractions (card, list, table) that expand
+ * into primitive ElementNodes at Presentation.add() time.
+ */
+export interface ComponentNode<TProps = unknown> {
+  type: 'component';
+  componentName: string;
+  props: TProps;
+}
+
+// ============================================
+// UNION TYPES
+// ============================================
+
+/** Primitive layout nodes - what layout/render systems work with */
 export type ElementNode =
   | TextNode
   | ImageNode
@@ -252,12 +215,12 @@ export type ElementNode =
   | SlideNumberNode
   | RowNode
   | ColumnNode
-  | GroupNode
-  | BoxNode
-  | CardNode
-  | ListNode
-  | TableNode
+  | StackNode
+  | RectangleNode
   | DiagramNode;
+
+/** Content that can appear in slides and containers - primitives or components */
+export type SlideContent = ElementNode | ComponentNode;
 
 // ============================================
 // POSITIONED NODE (after layout)

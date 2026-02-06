@@ -1,8 +1,11 @@
 // Component Registry
 // Mechanism for registering and expanding component nodes to primitives
 
-import type { ElementNode } from './nodes.js';
+import type { ElementNode, ComponentNode } from './nodes.js';
 import type { Theme } from './types.js';
+
+// Re-export ComponentNode for convenience
+export type { ComponentNode } from './nodes.js';
 
 // ============================================
 // TYPES
@@ -24,16 +27,6 @@ export interface ComponentDefinition<TProps = unknown> {
   name: string;
   /** Expand props into a primitive node tree */
   expand: (props: TProps, context: ExpansionContext) => ElementNode;
-}
-
-/**
- * A component node before expansion.
- * This is what the DSL produces; it gets expanded to primitives at Presentation.add() time.
- */
-export interface ComponentNode<TProps = unknown> {
-  type: 'component';
-  componentName: string;
-  props: TProps;
 }
 
 // ============================================
@@ -106,15 +99,6 @@ class ComponentRegistry {
       return {
         ...withChildren,
         children: withChildren.children.map(c => this.expandTree(c, context)),
-      } as ElementNode;
-    }
-
-    // Handle 'child' single element (Box)
-    if ('child' in elementNode && (elementNode as any).child) {
-      const withChild = elementNode as ElementNode & { child: ElementNode | ComponentNode };
-      return {
-        ...withChild,
-        child: this.expandTree(withChild.child, context),
       } as ElementNode;
     }
 

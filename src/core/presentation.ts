@@ -2,7 +2,7 @@
 // Main public API for creating presentations with declarative nodes
 
 import type { Theme } from './types.js';
-import type { ElementNode } from './nodes.js';
+import type { ElementNode, SlideContent } from './nodes.js';
 import type { TextMeasurer } from '../utils/text-measurer.js';
 import { Bounds } from './bounds.js';
 import { Canvas } from './canvas.js';
@@ -11,6 +11,7 @@ import { computeLayout } from './compute-layout.js';
 import { render } from './render.js';
 import { fontkitMeasurer } from '../utils/fontkit-measurer.js';
 import { log } from '../utils/log.js';
+import { componentRegistry } from './component-registry.js';
 
 // Footer height as proportion of margin (footer sits in bottom margin area)
 const FOOTER_HEIGHT_RATIO = 0.6;
@@ -36,7 +37,7 @@ export interface Slide {
   master?: Master;
   background?: string;
   notes?: string;
-  content: ElementNode;
+  content: SlideContent;
 }
 
 // ============================================
@@ -104,11 +105,15 @@ export class Presentation {
 
     try {
       // DECLARATIVE PIPELINE:
-      // 1. Compute layout (measures + positions all nodes)
-      log.pptx.slide('  computing layout...');
-      const positioned = computeLayout(content, bounds, this._theme, this.measurer);
+      // 1. Expand components to primitives
+      log.pptx.slide('  expanding components...');
+      const expanded = componentRegistry.expandTree(content, { theme: this._theme, slideIndex: this.slideCount });
 
-      // 2. Render to canvas
+      // 2. Compute layout (measures + positions all nodes)
+      log.pptx.slide('  computing layout...');
+      const positioned = computeLayout(expanded, bounds, this._theme, this.measurer);
+
+      // 3. Render to canvas
       log.pptx.slide('  rendering to canvas...');
       render(positioned, canvas, this._theme);
     } catch (error) {

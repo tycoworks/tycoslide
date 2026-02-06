@@ -1,6 +1,11 @@
 // Core Library Exports
 // Public API for the presentation library
 
+// Side-effect imports: register built-in components
+import './components/card.js';
+import './components/list.js';
+import './components/table.js';
+
 // Main class and types
 export { Presentation, type Slide, type Master } from './core/presentation.js';
 
@@ -11,7 +16,6 @@ export {
   VALIGN,
   GAP,
   DIRECTION,
-  JUSTIFY,
   SIZE,
   ALIGN,
   BORDER_STYLE,
@@ -33,7 +37,6 @@ export {
   type VerticalAlignment,
   type GapSize,
   type Direction,
-  type Justify,
   type SizeValue,
   type Align,
   type BorderStyle,
@@ -78,19 +81,17 @@ export { NODE_TYPE, DIAGRAM_DIRECTION, NODE_SHAPE } from './core/nodes.js';
 export type {
   NodeType,
   ElementNode,
+  SlideContent,
+  ComponentNode,
   TextNode,
   ImageNode,
   LineNode,
   SlideNumberNode,
   RowNode,
   ColumnNode,
-  GroupNode,
-  BoxNode,
-  BoxBorder,
-  CardNode,
-  ListNode,
-  TableNode,
-  TableCellContent,
+  StackNode,
+  RectangleNode,
+  RectangleBorder,
   DiagramNode,
   DiagramShape,
   DiagramDirection,
@@ -119,8 +120,8 @@ export {
   slideNumber,
   row,
   column,
-  group,
-  box,
+  stack,
+  rectangle,
   card,
   list,
   bulletList,
@@ -131,12 +132,12 @@ export {
   type LineProps,
   type RowProps,
   type ColumnProps,
-  type GroupProps,
-  type BoxProps,
+  type RectangleProps,
   type CardProps,
   type ListProps,
   type ListItemContent,
   type TableProps,
+  type TableCellContent,
 } from './core/dsl.js';
 
 // ============================================
@@ -145,6 +146,7 @@ export {
 
 export { computeLayout, getNodeHeight } from './core/compute-layout.js';
 export { render } from './core/render.js';
+export { LayoutOverflowError, type LayoutOptions, checkOverflow } from './core/errors.js';
 
 // ============================================
 // COMPONENT SYSTEM
@@ -155,7 +157,6 @@ export {
   component,
   isComponentNode,
   type ComponentDefinition,
-  type ComponentNode,
   type ExpansionContext,
 } from './core/component-registry.js';
 

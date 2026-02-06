@@ -9,14 +9,12 @@ import {
   type SlideNumberNode,
   type RowNode,
   type ColumnNode,
-  type GroupNode,
-  type BoxNode,
-  type BoxBorder,
-  type CardNode,
-  type ListNode,
-  type TableNode,
-  type TableCellContent,
+  type StackNode,
+  type RectangleNode,
+  type RectangleBorder,
   type ElementNode,
+  type SlideContent,
+  type ComponentNode,
 } from './nodes.js';
 import type {
   TextContent,
@@ -24,8 +22,6 @@ import type {
   HorizontalAlignment,
   VerticalAlignment,
   GapSize,
-  Justify,
-  BorderStyle,
   ArrowType,
   DashType,
   SizeValue,
@@ -146,11 +142,11 @@ export interface RowProps {
   vAlign?: VerticalAlignment;
 }
 
-export function row(props: RowProps, ...children: ElementNode[]): RowNode;
-export function row(...children: ElementNode[]): RowNode;
+export function row(props: RowProps, ...children: SlideContent[]): RowNode;
+export function row(...children: SlideContent[]): RowNode;
 export function row(...args: any[]): RowNode {
   let props: RowProps = {};
-  let children: ElementNode[];
+  let children: SlideContent[];
 
   if (args[0] && typeof args[0] === 'object' && !('type' in args[0])) {
     props = args[0];
@@ -161,7 +157,7 @@ export function row(...args: any[]): RowNode {
 
   return {
     type: NODE_TYPE.ROW,
-    children,
+    children: children as ElementNode[],  // Safe: expanded before layout
     width: props.width,
     height: props.height,
     gap: props.gap,
@@ -173,15 +169,16 @@ export interface ColumnProps {
   width?: number | SizeValue;   // inches (number) or SIZE.FILL (when inside Row)
   height?: number | SizeValue;  // inches (number) or SIZE.FILL (when inside Column)
   gap?: GapSize;
-  justify?: Justify;
+  vAlign?: VerticalAlignment;
   hAlign?: HorizontalAlignment;
+  padding?: number;             // inches - internal padding on all sides
 }
 
-export function column(props: ColumnProps, ...children: ElementNode[]): ColumnNode;
-export function column(...children: ElementNode[]): ColumnNode;
+export function column(props: ColumnProps, ...children: SlideContent[]): ColumnNode;
+export function column(...children: SlideContent[]): ColumnNode;
 export function column(...args: any[]): ColumnNode {
   let props: ColumnProps = {};
-  let children: ElementNode[];
+  let children: SlideContent[];
 
   if (args[0] && typeof args[0] === 'object' && !('type' in args[0])) {
     props = args[0];
@@ -192,81 +189,56 @@ export function column(...args: any[]): ColumnNode {
 
   return {
     type: NODE_TYPE.COLUMN,
-    children,
+    children: children as ElementNode[],  // Safe: expanded before layout
     width: props.width,
     height: props.height,
     gap: props.gap,
-    justify: props.justify,
+    vAlign: props.vAlign,
     hAlign: props.hAlign,
-  };
-}
-
-export interface GroupProps {
-  columns?: number;
-  gap?: GapSize;
-}
-
-export function group(props: GroupProps, ...children: ElementNode[]): GroupNode;
-export function group(...children: ElementNode[]): GroupNode;
-export function group(...args: any[]): GroupNode {
-  let props: GroupProps = {};
-  let children: ElementNode[];
-
-  if (args[0] && typeof args[0] === 'object' && !('type' in args[0])) {
-    props = args[0];
-    children = args.slice(1);
-  } else {
-    children = args;
-  }
-
-  return {
-    type: NODE_TYPE.GROUP,
-    children,
-    columns: props.columns,
-    gap: props.gap,
-  };
-}
-
-// ============================================
-// BOX (visual primitive)
-// ============================================
-
-export interface BoxProps {
-  fill?: { color: string; opacity?: number };
-  border?: BoxBorder;
-  cornerRadius?: number;
-  padding?: number;
-  width?: number | SizeValue;
-  height?: number | SizeValue;
-}
-
-/** Box with props and optional single child */
-export function box(props: BoxProps, child?: ElementNode): BoxNode;
-/** Box with just a child (no props) */
-export function box(child: ElementNode): BoxNode;
-/** Empty box with props */
-export function box(props: BoxProps): BoxNode;
-export function box(propsOrChild?: BoxProps | ElementNode, maybeChild?: ElementNode): BoxNode {
-  // Detect if first arg is a node (has 'type' property)
-  if (propsOrChild && typeof propsOrChild === 'object' && 'type' in propsOrChild) {
-    // box(child) - just a child, no props
-    return {
-      type: NODE_TYPE.BOX,
-      child: propsOrChild as ElementNode,
-    };
-  }
-
-  // box(props) or box(props, child)
-  const props = (propsOrChild as BoxProps) ?? {};
-  return {
-    type: NODE_TYPE.BOX,
-    child: maybeChild,
-    fill: props.fill,
-    border: props.border,
-    cornerRadius: props.cornerRadius,
     padding: props.padding,
-    width: props.width,
-    height: props.height,
+  };
+}
+
+// ============================================
+// STACK (z-order composition)
+// ============================================
+
+/**
+ * Stack is a z-order container: all children occupy the same bounds.
+ * Children are rendered in array order: [0] first (back), [n-1] last (front).
+ *
+ * Use Stack to overlay elements, e.g. grid lines behind content:
+ * ```
+ * stack(
+ *   gridLines,   // rendered first (behind)
+ *   content      // rendered last (in front)
+ * )
+ * ```
+ */
+export function stack(...children: SlideContent[]): StackNode {
+  return {
+    type: NODE_TYPE.STACK,
+    children: children as ElementNode[],  // Safe: expanded before layout
+  };
+}
+
+// ============================================
+// RECTANGLE (visual primitive - pure shape, no children)
+// ============================================
+
+export interface RectangleProps {
+  fill?: { color: string; opacity?: number };
+  border?: RectangleBorder;
+  cornerRadius?: number;
+}
+
+/** Rectangle is a pure visual shape - use stack() to layer content on top */
+export function rectangle(props?: RectangleProps): RectangleNode {
+  return {
+    type: NODE_TYPE.RECTANGLE,
+    fill: props?.fill,
+    border: props?.border,
+    cornerRadius: props?.cornerRadius,
   };
 }
 
@@ -292,58 +264,14 @@ export interface CardProps {
   padding?: number;
   gap?: GapSize;
   /** Custom children - if provided, overrides image/title/description */
-  children?: ElementNode[];
+  children?: SlideContent[];
 }
 
-export function card(props: CardProps): CardNode {
-  // If custom children provided, use them directly
-  if (props.children) {
-    return {
-      type: NODE_TYPE.CARD,
-      children: props.children,
-      gap: props.gap,
-      background: props.background,
-      backgroundColor: props.backgroundColor,
-      backgroundOpacity: props.backgroundOpacity,
-      borderColor: props.borderColor,
-      borderWidth: props.borderWidth,
-      cornerRadius: props.cornerRadius,
-      padding: props.padding,
-    };
-  }
-
-  // Build children from image/title/description props
-  const children: ElementNode[] = [];
-
-  if (props.image) {
-    children.push(image(props.image));
-  }
-
-  if (props.title) {
-    children.push(text(props.title, {
-      style: props.titleStyle ?? TEXT_STYLE.H4,
-      color: props.titleColor,
-    }));
-  }
-
-  if (props.description) {
-    children.push(text(props.description, {
-      style: props.descriptionStyle ?? TEXT_STYLE.SMALL,
-      color: props.descriptionColor,
-    }));
-  }
-
+export function card(props: CardProps): ComponentNode<CardProps> {
   return {
-    type: NODE_TYPE.CARD,
-    children,
-    gap: props.gap,
-    background: props.background,
-    backgroundColor: props.backgroundColor,
-    backgroundOpacity: props.backgroundOpacity,
-    borderColor: props.borderColor,
-    borderWidth: props.borderWidth,
-    cornerRadius: props.cornerRadius,
-    padding: props.padding,
+    type: 'component',
+    componentName: 'card',
+    props,
   };
 }
 
@@ -361,22 +289,24 @@ export interface ListProps {
 /** List items can be plain text, styled runs, or TextNode */
 export type ListItemContent = TextContent | TextNode;
 
-export function list(items: ListItemContent[], props?: ListProps): ListNode {
+/** Full list props including items for ComponentNode */
+interface ListComponentProps extends ListProps {
+  items: ListItemContent[];
+}
+
+export function list(items: ListItemContent[], props?: ListProps): ComponentNode<ListComponentProps> {
   return {
-    type: NODE_TYPE.LIST,
-    items,
-    style: props?.style,
-    ordered: props?.ordered,
-    color: props?.color,
-    markerColor: props?.markerColor,
+    type: 'component',
+    componentName: 'list',
+    props: { ...props, items },
   };
 }
 
-export function bulletList(items: ListItemContent[], props?: Omit<ListProps, 'ordered'>): ListNode {
+export function bulletList(items: ListItemContent[], props?: Omit<ListProps, 'ordered'>): ComponentNode<ListComponentProps> {
   return list(items, { ...props, ordered: false });
 }
 
-export function numberedList(items: ListItemContent[], props?: Omit<ListProps, 'ordered'>): ListNode {
+export function numberedList(items: ListItemContent[], props?: Omit<ListProps, 'ordered'>): ComponentNode<ListComponentProps> {
   return list(items, { ...props, ordered: true });
 }
 
@@ -384,29 +314,44 @@ export function numberedList(items: ListItemContent[], props?: Omit<ListProps, '
 // TABLE
 // ============================================
 
+import type { BorderStyle, HorizontalAlignment as HAlign, VerticalAlignment as VAlign } from './types.js';
+
+/** Table cell can be plain text, styled runs, or a TextNode */
+export type TableCellContent = TextContent | TextNode;
+
 export interface TableProps {
+  /** First row is header (different styling) */
   headerRow?: boolean;
+  /** First column is header (different styling) */
   headerColumn?: boolean;
+  /** Border style for grid lines */
   borderStyle?: BorderStyle;
+  /** Background color for header cells */
   headerBackground?: string;
+  /** Background color for regular cells */
   cellBackground?: string;
+  /** Explicit column widths (proportional) */
   columnWidths?: number[];
-  hAlign?: HorizontalAlignment;
-  vAlign?: VerticalAlignment;
+  /** Horizontal alignment for cell text */
+  hAlign?: HAlign;
+  /** Vertical alignment for cell text */
+  vAlign?: VAlign;
+  /** Text style for cells */
+  textStyle?: TextStyleName;
+  /** Text style for header cells */
+  headerTextStyle?: TextStyleName;
 }
 
-export function table(data: TableCellContent[][], props?: TableProps): TableNode {
+/** Full table props including data for ComponentNode */
+interface TableComponentProps extends TableProps {
+  data: TableCellContent[][];
+}
+
+export function table(data: TableCellContent[][], props?: TableProps): ComponentNode<TableComponentProps> {
   return {
-    type: NODE_TYPE.TABLE,
-    data,
-    headerRow: props?.headerRow,
-    headerColumn: props?.headerColumn,
-    borderStyle: props?.borderStyle,
-    headerBackground: props?.headerBackground,
-    cellBackground: props?.cellBackground,
-    columnWidths: props?.columnWidths,
-    hAlign: props?.hAlign,
-    vAlign: props?.vAlign,
+    type: 'component',
+    componentName: 'table',
+    props: { ...props, data },
   };
 }
 
