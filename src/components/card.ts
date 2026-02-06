@@ -5,7 +5,7 @@ import { componentRegistry, type ExpansionContext, type ComponentNode } from '..
 import { stack, column, rectangle, text, image } from '../core/dsl.js';
 import type { ElementNode } from '../core/nodes.js';
 import type { TextStyleName, GapSize } from '../core/types.js';
-import { TEXT_STYLE, GAP } from '../core/types.js';
+import { TEXT_STYLE, GAP, HALIGN } from '../core/types.js';
 
 // ============================================
 // TYPES
@@ -121,8 +121,8 @@ function expandCard(props: CardComponentProps, context: ExpansionContext): Eleme
     }
   }
 
-  // Build content layer
-  const contentLayer = column({ padding: cardPadding, gap }, ...children);
+  // Build content layer (centered horizontally for images/icons)
+  const contentLayer = column({ padding: cardPadding, gap, hAlign: HALIGN.CENTER }, ...children);
 
   // If no background, just return the content
   if (background === false || backgroundColor === 'none') {
