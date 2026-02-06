@@ -5,7 +5,7 @@ import { NODE_TYPE, type ElementNode } from './nodes.js';
 import type { Theme, TextStyleName, TextContent, TextStyle } from './types.js';
 import { Bounds } from './bounds.js';
 import { TEXT_STYLE, SIZE } from './types.js';
-import { toTextContent, resolveGap } from '../utils/node-utils.js';
+import { resolveGap } from '../utils/node-utils.js';
 import { distributeFlexSpace, type FlexChild } from './layout/index.js';
 import imageSizeDefault from 'image-size';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -97,41 +97,6 @@ export function collectMeasurements(
         break;
       }
 
-      case NODE_TYPE.LIST: {
-        const styleName = node.style ?? TEXT_STYLE.BODY;
-        addStyleRequest(styleName);
-        // Each list item needs measurement
-        for (const item of node.items) {
-          // Account for bullet indent (approximate)
-          const indentedWidth = bounds.w - theme.spacing.gap;
-          addTextRequest(toTextContent(item), styleName, indentedWidth);
-        }
-        break;
-      }
-
-      case NODE_TYPE.CARD: {
-        // Card is a container - recursively collect from children
-        const padding = node.padding ?? theme.spacing.padding;
-        const cardBounds = bounds.inset(padding);
-        for (const child of node.children) {
-          collect(child, cardBounds);
-        }
-        break;
-      }
-
-      case NODE_TYPE.TABLE: {
-        // Table cells use BODY style
-        addStyleRequest(TEXT_STYLE.BODY);
-        const cellWidth = bounds.w / (node.data[0]?.length || 1);
-        const cellContentWidth = cellWidth - theme.spacing.cellPadding * 2;
-        for (const row of node.data) {
-          for (const cell of row) {
-            addTextRequest(toTextContent(cell), TEXT_STYLE.BODY, cellContentWidth);
-          }
-        }
-        break;
-      }
-
       case NODE_TYPE.ROW: {
         const gap = resolveGap(node.gap, theme);
         const n = node.children.length;
@@ -168,19 +133,6 @@ export function collectMeasurements(
         // Height will be computed in layout phase
         for (const child of node.children) {
           collect(child, bounds);
-        }
-        break;
-      }
-
-      case NODE_TYPE.GROUP: {
-        const gap = resolveGap(node.gap, theme);
-        const cols = node.columns ?? node.children.length;
-        const totalGap = gap * (cols - 1);
-        const cellWidth = (bounds.w - totalGap) / cols;
-
-        for (const child of node.children) {
-          const childBounds = new Bounds(bounds.x, bounds.y, cellWidth, bounds.h);
-          collect(child, childBounds);
         }
         break;
       }

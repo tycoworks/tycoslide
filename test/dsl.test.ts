@@ -17,12 +17,10 @@ import {
   slideNumber,
   row,
   column,
-  group,
   card,
   list,
   bulletList,
   numberedList,
-  table,
 } from '../src/core/dsl.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import {
@@ -30,9 +28,7 @@ import {
   GAP,
   HALIGN,
   VALIGN,
-  JUSTIFY,
   SIZE,
-  BORDER_STYLE,
   ARROW_TYPE,
   DASH_TYPE,
 } from '../src/core/types.js';
@@ -478,7 +474,7 @@ describe('column()', () => {
     const node = column(child1);
     assert.strictEqual(node.height, undefined);
     assert.strictEqual(node.gap, undefined);
-    assert.strictEqual(node.justify, undefined);
+    assert.strictEqual(node.vAlign, undefined);
     assert.strictEqual(node.hAlign, undefined);
   });
 
@@ -503,9 +499,9 @@ describe('column()', () => {
     assert.strictEqual(node.gap, GAP.TIGHT);
   });
 
-  test('applies justify prop', () => {
-    const node = column({ justify: JUSTIFY.CENTER }, child1);
-    assert.strictEqual(node.justify, JUSTIFY.CENTER);
+  test('applies vAlign prop', () => {
+    const node = column({ vAlign: VALIGN.MIDDLE }, child1);
+    assert.strictEqual(node.vAlign, VALIGN.MIDDLE);
   });
 
   test('applies hAlign prop', () => {
@@ -518,7 +514,7 @@ describe('column()', () => {
       {
         height: SIZE.FILL,
         gap: GAP.NORMAL,
-        justify: JUSTIFY.END,
+        vAlign: VALIGN.BOTTOM,
         hAlign: HALIGN.CENTER,
       },
       child1,
@@ -527,7 +523,7 @@ describe('column()', () => {
     );
     assert.strictEqual(node.height, SIZE.FILL);
     assert.strictEqual(node.gap, GAP.NORMAL);
-    assert.strictEqual(node.justify, JUSTIFY.END);
+    assert.strictEqual(node.vAlign, VALIGN.BOTTOM);
     assert.strictEqual(node.hAlign, HALIGN.CENTER);
     assert.strictEqual(node.children.length, 3);
   });
@@ -543,9 +539,9 @@ describe('column()', () => {
   });
 
   test('distinguishes props from children', () => {
-    const propsObj = { justify: JUSTIFY.START };
+    const propsObj = { vAlign: VALIGN.TOP };
     const node = column(propsObj, child1);
-    assert.strictEqual(node.justify, JUSTIFY.START);
+    assert.strictEqual(node.vAlign, VALIGN.TOP);
     assert.strictEqual(node.children.length, 1);
   });
 });
@@ -553,166 +549,27 @@ describe('column()', () => {
 // ============================================
 // GROUP
 // ============================================
-
-describe('group()', () => {
-  const child1 = text('A');
-  const child2 = text('B');
-  const child3 = text('C');
-  const child4 = text('D');
-
-  test('returns correct NODE_TYPE', () => {
-    const node = group(child1);
-    assert.strictEqual(node.type, NODE_TYPE.GROUP);
-  });
-
-  test('accepts children without props', () => {
-    const node = group(child1, child2, child3);
-    assert.strictEqual(node.children.length, 3);
-    assert.deepStrictEqual(node.children, [child1, child2, child3]);
-  });
-
-  test('applies no props by default when no props provided', () => {
-    const node = group(child1);
-    assert.strictEqual(node.columns, undefined);
-    assert.strictEqual(node.gap, undefined);
-  });
-
-  test('accepts props with children (props first)', () => {
-    const node = group({ columns: 2 }, child1, child2, child3, child4);
-    assert.strictEqual(node.children.length, 4);
-    assert.strictEqual(node.columns, 2);
-  });
-
-  test('applies columns prop', () => {
-    const node = group({ columns: 3 }, child1, child2, child3);
-    assert.strictEqual(node.columns, 3);
-  });
-
-  test('applies gap prop', () => {
-    const node = group({ gap: GAP.LOOSE }, child1, child2);
-    assert.strictEqual(node.gap, GAP.LOOSE);
-  });
-
-  test('applies all props together', () => {
-    const node = group({ columns: 2, gap: GAP.TIGHT }, child1, child2, child3);
-    assert.strictEqual(node.columns, 2);
-    assert.strictEqual(node.gap, GAP.TIGHT);
-    assert.strictEqual(node.children.length, 3);
-  });
-
-  test('handles single child', () => {
-    const node = group(child1);
-    assert.strictEqual(node.children.length, 1);
-  });
-
-  test('handles empty children', () => {
-    const node = group();
-    assert.strictEqual(node.children.length, 0);
-  });
-
-  test('distinguishes props from children', () => {
-    const propsObj = { columns: 4 };
-    const node = group(propsObj, child1, child2);
-    assert.strictEqual(node.columns, 4);
-    assert.strictEqual(node.children.length, 2);
-  });
-});
-
-// ============================================
 // CARD
 // ============================================
 
 describe('card()', () => {
-  test('returns correct NODE_TYPE', () => {
+  test('returns ComponentNode with correct type', () => {
     const node = card({});
-    assert.strictEqual(node.type, NODE_TYPE.CARD);
+    assert.strictEqual(node.type, 'component');
+    assert.strictEqual(node.componentName, 'card');
   });
 
-  test('creates empty card with no props', () => {
-    const node = card({});
-    assert.strictEqual(node.children.length, 0);
-  });
-
-  test('applies image prop - creates ImageNode child', () => {
-    const node = card({ image: 'photo.jpg' });
-    assert.strictEqual(node.children.length, 1);
-    assert.strictEqual(node.children[0].type, NODE_TYPE.IMAGE);
-    assert.strictEqual((node.children[0] as any).src, 'photo.jpg');
-  });
-
-  test('applies title prop - creates TextNode child', () => {
-    const node = card({ title: 'Card Title' });
-    assert.strictEqual(node.children.length, 1);
-    assert.strictEqual(node.children[0].type, NODE_TYPE.TEXT);
-    assert.strictEqual((node.children[0] as any).content, 'Card Title');
-    assert.strictEqual((node.children[0] as any).style, TEXT_STYLE.H4); // default
-  });
-
-  test('applies titleStyle prop', () => {
-    const node = card({ title: 'Title', titleStyle: TEXT_STYLE.H3 });
-    assert.strictEqual((node.children[0] as any).style, TEXT_STYLE.H3);
-  });
-
-  test('applies titleColor prop', () => {
-    const node = card({ title: 'Title', titleColor: 'FF0000' });
-    assert.strictEqual((node.children[0] as any).color, 'FF0000');
-  });
-
-  test('applies description prop - creates TextNode child', () => {
-    const node = card({ description: 'Card description' });
-    assert.strictEqual(node.children.length, 1);
-    assert.strictEqual(node.children[0].type, NODE_TYPE.TEXT);
-    assert.strictEqual((node.children[0] as any).content, 'Card description');
-    assert.strictEqual((node.children[0] as any).style, TEXT_STYLE.SMALL); // default
-  });
-
-  test('applies descriptionStyle prop', () => {
-    const node = card({ description: 'Desc', descriptionStyle: TEXT_STYLE.BODY });
-    assert.strictEqual((node.children[0] as any).style, TEXT_STYLE.BODY);
-  });
-
-  test('applies descriptionColor prop', () => {
-    const node = card({ description: 'Desc', descriptionColor: '666666' });
-    assert.strictEqual((node.children[0] as any).color, '666666');
-  });
-
-  test('applies background prop', () => {
-    const node = card({ background: false });
-    assert.strictEqual(node.background, false);
-  });
-
-  test('applies backgroundColor prop', () => {
-    const node = card({ backgroundColor: 'EEEEEE' });
-    assert.strictEqual(node.backgroundColor, 'EEEEEE');
-  });
-
-  test('applies backgroundOpacity prop', () => {
-    const node = card({ backgroundOpacity: 50 });
-    assert.strictEqual(node.backgroundOpacity, 50);
-  });
-
-  test('applies borderColor prop', () => {
-    const node = card({ borderColor: '000000' });
-    assert.strictEqual(node.borderColor, '000000');
-  });
-
-  test('applies borderWidth prop', () => {
-    const node = card({ borderWidth: 2 });
-    assert.strictEqual(node.borderWidth, 2);
-  });
-
-  test('applies cornerRadius prop', () => {
-    const node = card({ cornerRadius: 0.25 });
-    assert.strictEqual(node.cornerRadius, 0.25);
-  });
-
-  test('applies padding prop', () => {
-    const node = card({ padding: 0.5 });
-    assert.strictEqual(node.padding, 0.5);
-  });
-
-  test('applies all props together', () => {
+  test('passes props to ComponentNode', () => {
     const node = card({
+      title: 'Test Title',
+      backgroundColor: 'EEEEEE',
+    });
+    assert.strictEqual(node.props.title, 'Test Title');
+    assert.strictEqual(node.props.backgroundColor, 'EEEEEE');
+  });
+
+  test('preserves all props', () => {
+    const props = {
       image: 'hero.jpg',
       title: 'Title',
       titleStyle: TEXT_STYLE.H2,
@@ -727,37 +584,34 @@ describe('card()', () => {
       borderWidth: 1,
       cornerRadius: 0.125,
       padding: 0.25,
-    });
-    // Children: image, title, description (in order)
-    assert.strictEqual(node.children.length, 3);
-    assert.strictEqual(node.children[0].type, NODE_TYPE.IMAGE);
-    assert.strictEqual((node.children[0] as any).src, 'hero.jpg');
-    assert.strictEqual(node.children[1].type, NODE_TYPE.TEXT);
-    assert.strictEqual((node.children[1] as any).content, 'Title');
-    assert.strictEqual((node.children[1] as any).style, TEXT_STYLE.H2);
-    assert.strictEqual((node.children[1] as any).color, 'FF0000');
-    assert.strictEqual(node.children[2].type, NODE_TYPE.TEXT);
-    assert.strictEqual((node.children[2] as any).content, 'Description');
-    assert.strictEqual((node.children[2] as any).style, TEXT_STYLE.BODY);
-    assert.strictEqual((node.children[2] as any).color, '333333');
-    // Style props remain on the card
-    assert.strictEqual(node.background, true);
-    assert.strictEqual(node.backgroundColor, 'FFFFFF');
-    assert.strictEqual(node.backgroundOpacity, 80);
-    assert.strictEqual(node.borderColor, '000000');
-    assert.strictEqual(node.borderWidth, 1);
-    assert.strictEqual(node.cornerRadius, 0.125);
-    assert.strictEqual(node.padding, 0.25);
+    };
+    const node = card(props);
+    assert.strictEqual(node.type, 'component');
+    assert.strictEqual(node.componentName, 'card');
+    assert.strictEqual(node.props.image, 'hero.jpg');
+    assert.strictEqual(node.props.title, 'Title');
+    assert.strictEqual(node.props.titleStyle, TEXT_STYLE.H2);
+    assert.strictEqual(node.props.titleColor, 'FF0000');
+    assert.strictEqual(node.props.description, 'Description');
+    assert.strictEqual(node.props.descriptionStyle, TEXT_STYLE.BODY);
+    assert.strictEqual(node.props.descriptionColor, '333333');
+    assert.strictEqual(node.props.background, true);
+    assert.strictEqual(node.props.backgroundColor, 'FFFFFF');
+    assert.strictEqual(node.props.backgroundOpacity, 80);
+    assert.strictEqual(node.props.borderColor, '000000');
+    assert.strictEqual(node.props.borderWidth, 1);
+    assert.strictEqual(node.props.cornerRadius, 0.125);
+    assert.strictEqual(node.props.padding, 0.25);
   });
 
-  test('custom children override image/title/description', () => {
+  test('preserves custom children in props', () => {
     const customChildren = [text('Custom content')];
     const node = card({
       children: customChildren,
-      title: 'Ignored', // should be ignored when children provided
+      title: 'Ignored',
     });
-    assert.strictEqual(node.children.length, 1);
-    assert.strictEqual((node.children[0] as any).content, 'Custom content');
+    assert.strictEqual(node.props.children?.length, 1);
+    assert.strictEqual(node.props.title, 'Ignored'); // Props are passed through, expansion handles logic
   });
 });
 
@@ -766,64 +620,65 @@ describe('card()', () => {
 // ============================================
 
 describe('list()', () => {
-  test('returns correct NODE_TYPE', () => {
+  test('returns ComponentNode with correct type', () => {
     const node = list(['Item 1']);
-    assert.strictEqual(node.type, NODE_TYPE.LIST);
+    assert.strictEqual(node.type, 'component');
+    assert.strictEqual(node.componentName, 'list');
   });
 
-  test('sets items correctly', () => {
+  test('sets items in props', () => {
     const items = ['First', 'Second', 'Third'];
     const node = list(items);
-    assert.deepStrictEqual(node.items, items);
+    assert.deepStrictEqual(node.props.items, items);
   });
 
   test('handles empty items array', () => {
     const node = list([]);
-    assert.strictEqual(node.items.length, 0);
+    assert.strictEqual(node.props.items.length, 0);
   });
 
   test('handles TextNode items', () => {
     const textItem = text('Styled item');
     const node = list([textItem]);
-    assert.strictEqual(node.items[0], textItem);
+    assert.strictEqual(node.props.items[0], textItem);
   });
 
   test('handles mixed string and TextNode items', () => {
     const textItem = text('Styled');
     const items = ['Plain', textItem, 'Another plain'];
     const node = list(items);
-    assert.strictEqual(node.items.length, 3);
-    assert.strictEqual(node.items[0], 'Plain');
-    assert.strictEqual(node.items[1], textItem);
-    assert.strictEqual(node.items[2], 'Another plain');
+    assert.strictEqual(node.props.items.length, 3);
+    assert.strictEqual(node.props.items[0], 'Plain');
+    assert.strictEqual(node.props.items[1], textItem);
+    assert.strictEqual(node.props.items[2], 'Another plain');
   });
 
   test('applies no props by default', () => {
     const node = list(['Item']);
-    assert.strictEqual(node.style, undefined);
-    assert.strictEqual(node.ordered, undefined);
-    assert.strictEqual(node.color, undefined);
-    assert.strictEqual(node.markerColor, undefined);
+    assert.strictEqual(node.props.style, undefined);
+    assert.strictEqual(node.props.ordered, undefined);
+    assert.strictEqual(node.props.color, undefined);
+    assert.strictEqual(node.props.markerColor, undefined);
   });
 
   test('applies style prop', () => {
     const node = list(['Item'], { style: TEXT_STYLE.BODY });
-    assert.strictEqual(node.style, TEXT_STYLE.BODY);
+    assert.strictEqual(node.props.style, TEXT_STYLE.BODY);
   });
 
   test('applies ordered prop', () => {
     const node = list(['Item'], { ordered: true });
-    assert.strictEqual(node.ordered, true);
+    assert.strictEqual(node.props.ordered, true);
   });
 
   test('applies color prop', () => {
     const node = list(['Item'], { color: '333333' });
-    assert.strictEqual(node.color, '333333');
+    assert.strictEqual(node.props.color, '333333');
   });
 
   test('applies markerColor prop', () => {
     const node = list(['Item'], { markerColor: 'FF0000' });
-    assert.strictEqual(node.markerColor, 'FF0000');
+    assert.strictEqual(node.props.markerColor, 'FF0000');
   });
 
   test('applies all props together', () => {
@@ -833,174 +688,70 @@ describe('list()', () => {
       color: '666666',
       markerColor: '0000FF',
     });
-    assert.strictEqual(node.style, TEXT_STYLE.SMALL);
-    assert.strictEqual(node.ordered, false);
-    assert.strictEqual(node.color, '666666');
-    assert.strictEqual(node.markerColor, '0000FF');
+    assert.strictEqual(node.props.style, TEXT_STYLE.SMALL);
+    assert.strictEqual(node.props.ordered, false);
+    assert.strictEqual(node.props.color, '666666');
+    assert.strictEqual(node.props.markerColor, '0000FF');
   });
 });
 
 describe('bulletList()', () => {
-  test('returns correct NODE_TYPE', () => {
+  test('returns ComponentNode with correct type', () => {
     const node = bulletList(['Item']);
-    assert.strictEqual(node.type, NODE_TYPE.LIST);
+    assert.strictEqual(node.type, 'component');
+    assert.strictEqual(node.componentName, 'list');
   });
 
   test('sets ordered to false', () => {
     const node = bulletList(['Item']);
-    assert.strictEqual(node.ordered, false);
+    assert.strictEqual(node.props.ordered, false);
   });
 
   test('sets items correctly', () => {
     const items = ['A', 'B', 'C'];
     const node = bulletList(items);
-    assert.deepStrictEqual(node.items, items);
+    assert.deepStrictEqual(node.props.items, items);
   });
 
   test('applies optional props', () => {
     const node = bulletList(['Item'], { color: 'FF0000' });
-    assert.strictEqual(node.color, 'FF0000');
-    assert.strictEqual(node.ordered, false);
+    assert.strictEqual(node.props.color, 'FF0000');
+    assert.strictEqual(node.props.ordered, false);
   });
 
   test('ordered cannot be overridden', () => {
     const node = bulletList(['Item'], {});
-    assert.strictEqual(node.ordered, false);
+    assert.strictEqual(node.props.ordered, false);
   });
 });
 
 describe('numberedList()', () => {
-  test('returns correct NODE_TYPE', () => {
+  test('returns ComponentNode with correct type', () => {
     const node = numberedList(['Item']);
-    assert.strictEqual(node.type, NODE_TYPE.LIST);
+    assert.strictEqual(node.type, 'component');
+    assert.strictEqual(node.componentName, 'list');
   });
 
   test('sets ordered to true', () => {
     const node = numberedList(['Item']);
-    assert.strictEqual(node.ordered, true);
+    assert.strictEqual(node.props.ordered, true);
   });
 
   test('sets items correctly', () => {
     const items = ['First', 'Second', 'Third'];
     const node = numberedList(items);
-    assert.deepStrictEqual(node.items, items);
+    assert.deepStrictEqual(node.props.items, items);
   });
 
   test('applies optional props', () => {
     const node = numberedList(['Item'], { color: '0000FF' });
-    assert.strictEqual(node.color, '0000FF');
-    assert.strictEqual(node.ordered, true);
+    assert.strictEqual(node.props.color, '0000FF');
+    assert.strictEqual(node.props.ordered, true);
   });
 
   test('ordered cannot be overridden', () => {
     const node = numberedList(['Item'], {});
-    assert.strictEqual(node.ordered, true);
+    assert.strictEqual(node.props.ordered, true);
   });
 });
 
-// ============================================
-// TABLE
-// ============================================
-
-describe('table()', () => {
-  const simpleData = [
-    ['A', 'B', 'C'],
-    ['D', 'E', 'F'],
-  ];
-
-  test('returns correct NODE_TYPE', () => {
-    const node = table(simpleData);
-    assert.strictEqual(node.type, NODE_TYPE.TABLE);
-  });
-
-  test('sets data correctly', () => {
-    const node = table(simpleData);
-    assert.deepStrictEqual(node.data, simpleData);
-  });
-
-  test('handles empty table', () => {
-    const node = table([]);
-    assert.strictEqual(node.data.length, 0);
-  });
-
-  test('handles TextNode cells', () => {
-    const textCell = text('Styled cell');
-    const data = [['Plain', textCell]];
-    const node = table(data);
-    assert.strictEqual(node.data[0][1], textCell);
-  });
-
-  test('applies no props by default', () => {
-    const node = table(simpleData);
-    assert.strictEqual(node.headerRow, undefined);
-    assert.strictEqual(node.headerColumn, undefined);
-    assert.strictEqual(node.borderStyle, undefined);
-    assert.strictEqual(node.headerBackground, undefined);
-    assert.strictEqual(node.cellBackground, undefined);
-    assert.strictEqual(node.columnWidths, undefined);
-    assert.strictEqual(node.hAlign, undefined);
-    assert.strictEqual(node.vAlign, undefined);
-  });
-
-  test('applies headerRow prop', () => {
-    const node = table(simpleData, { headerRow: true });
-    assert.strictEqual(node.headerRow, true);
-  });
-
-  test('applies headerColumn prop', () => {
-    const node = table(simpleData, { headerColumn: true });
-    assert.strictEqual(node.headerColumn, true);
-  });
-
-  test('applies borderStyle prop', () => {
-    const node = table(simpleData, { borderStyle: BORDER_STYLE.INTERNAL });
-    assert.strictEqual(node.borderStyle, BORDER_STYLE.INTERNAL);
-  });
-
-  test('applies headerBackground prop', () => {
-    const node = table(simpleData, { headerBackground: 'EEEEEE' });
-    assert.strictEqual(node.headerBackground, 'EEEEEE');
-  });
-
-  test('applies cellBackground prop', () => {
-    const node = table(simpleData, { cellBackground: 'FFFFFF' });
-    assert.strictEqual(node.cellBackground, 'FFFFFF');
-  });
-
-  test('applies columnWidths prop', () => {
-    const widths = [2, 3, 5];
-    const node = table(simpleData, { columnWidths: widths });
-    assert.deepStrictEqual(node.columnWidths, widths);
-  });
-
-  test('applies hAlign prop', () => {
-    const node = table(simpleData, { hAlign: HALIGN.CENTER });
-    assert.strictEqual(node.hAlign, HALIGN.CENTER);
-  });
-
-  test('applies vAlign prop', () => {
-    const node = table(simpleData, { vAlign: VALIGN.MIDDLE });
-    assert.strictEqual(node.vAlign, VALIGN.MIDDLE);
-  });
-
-  test('applies all props together', () => {
-    const node = table(simpleData, {
-      headerRow: true,
-      headerColumn: true,
-      borderStyle: BORDER_STYLE.FULL,
-      headerBackground: 'DDDDDD',
-      cellBackground: 'FAFAFA',
-      columnWidths: [1, 2, 3],
-      hAlign: HALIGN.RIGHT,
-      vAlign: VALIGN.BOTTOM,
-    });
-    assert.strictEqual(node.headerRow, true);
-    assert.strictEqual(node.headerColumn, true);
-    assert.strictEqual(node.borderStyle, BORDER_STYLE.FULL);
-    assert.strictEqual(node.headerBackground, 'DDDDDD');
-    assert.strictEqual(node.cellBackground, 'FAFAFA');
-    assert.deepStrictEqual(node.columnWidths, [1, 2, 3]);
-    assert.strictEqual(node.hAlign, HALIGN.RIGHT);
-    assert.strictEqual(node.vAlign, VALIGN.BOTTOM);
-  });
-});

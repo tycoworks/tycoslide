@@ -15,6 +15,7 @@ Core:
 
 Cleanup:
 - Text heights etc
+- Fixed percentages.
 
 Components:
 - Image to the left of the card / direction and justify

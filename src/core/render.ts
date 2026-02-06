@@ -1,13 +1,12 @@
 // Declarative Render
 // Renders positioned nodes to Canvas
 
-import { NODE_TYPE, type PositionedNode, type TextNode, type ImageNode, type CardNode, type BoxNode, type ListNode, type TableNode, type DiagramNode, type DiagramShape } from './nodes.js';
+import { NODE_TYPE, type PositionedNode, type TextNode, type ImageNode, type RectangleNode, type DiagramNode, type DiagramShape } from './nodes.js';
 import type { Theme, TextStyleName, TextContent, NormalizedRun } from './types.js';
 import type { Canvas, TextFragment, TextFragmentOptions } from './canvas.js';
 import { SHAPE, TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT, NODE_STYLE } from './types.js';
 import { Bounds } from './bounds.js';
 import { getFontFromFamily, normalizeContent } from '../utils/font-utils.js';
-import { toTextContent } from '../utils/node-utils.js';
 import { log, contentPreview } from '../utils/log.js';
 
 // ============================================
@@ -103,49 +102,15 @@ function renderImageNode(canvas: Canvas, node: PositionedNode, theme: Theme): vo
   });
 }
 
-function renderCardNode(canvas: Canvas, node: PositionedNode, theme: Theme): void {
-  const cardNode = node.node as CardNode;
+function renderRectangleNode(canvas: Canvas, node: PositionedNode, theme: Theme): void {
+  const rectNode = node.node as RectangleNode;
 
-  log.render.shape('RENDER card x=%f y=%f w=%f h=%f children=%d',
-    node.x, node.y, node.width, node.height, cardNode.children.length);
-
-  // Draw background
-  if (cardNode.background !== false && cardNode.backgroundColor !== 'none') {
-    const opacity = cardNode.backgroundOpacity ?? theme.colors.subtleOpacity;
-    canvas.addShape(SHAPE.ROUND_RECT, {
-      x: node.x,
-      y: node.y,
-      w: node.width,
-      h: node.height,
-      fill: {
-        color: cardNode.backgroundColor ?? theme.colors.secondary,
-        transparency: 100 - opacity,
-      },
-      line: {
-        color: cardNode.borderColor ?? theme.colors.secondary,
-        width: cardNode.borderWidth ?? theme.borders.width,
-      },
-      rectRadius: cardNode.cornerRadius ?? theme.borders.radius,
-    });
-  }
-
-  // Render children - they've been positioned by computeLayout
-  if (node.children) {
-    for (const child of node.children) {
-      render(child, canvas, theme);
-    }
-  }
-}
-
-function renderBoxNode(canvas: Canvas, node: PositionedNode, theme: Theme): void {
-  const boxNode = node.node as BoxNode;
-
-  log.render.shape('RENDER box x=%f y=%f w=%f h=%f',
+  log.render.shape('RENDER rectangle x=%f y=%f w=%f h=%f',
     node.x, node.y, node.width, node.height);
 
-  // Draw background/border if fill or border is specified
-  if (boxNode.fill || boxNode.border) {
-    const shapeType = boxNode.cornerRadius ? SHAPE.ROUND_RECT : SHAPE.RECT;
+  // Draw the shape if fill or border is specified
+  if (rectNode.fill || rectNode.border) {
+    const shapeType = rectNode.cornerRadius ? SHAPE.ROUND_RECT : SHAPE.RECT;
 
     // Build shape options
     const shapeOpts: Parameters<typeof canvas.addShape>[1] = {
@@ -156,16 +121,16 @@ function renderBoxNode(canvas: Canvas, node: PositionedNode, theme: Theme): void
     };
 
     // Fill
-    if (boxNode.fill) {
+    if (rectNode.fill) {
       shapeOpts.fill = {
-        color: boxNode.fill.color,
-        transparency: boxNode.fill.opacity !== undefined ? 100 - boxNode.fill.opacity : 0,
+        color: rectNode.fill.color,
+        transparency: rectNode.fill.opacity !== undefined ? 100 - rectNode.fill.opacity : 0,
       };
     }
 
     // Border - check if any sides are explicitly disabled
-    if (boxNode.border) {
-      const border = boxNode.border;
+    if (rectNode.border) {
+      const border = rectNode.border;
       const allSides = border.top !== false && border.right !== false &&
                        border.bottom !== false && border.left !== false;
 
@@ -180,133 +145,43 @@ function renderBoxNode(canvas: Canvas, node: PositionedNode, theme: Theme): void
     }
 
     // Corner radius
-    if (boxNode.cornerRadius) {
-      shapeOpts.rectRadius = boxNode.cornerRadius;
+    if (rectNode.cornerRadius) {
+      shapeOpts.rectRadius = rectNode.cornerRadius;
     }
 
     canvas.addShape(shapeType, shapeOpts);
   }
-
-  // Render child - already positioned by computeLayout
-  if (node.children) {
-    for (const child of node.children) {
-      render(child, canvas, theme);
-    }
-  }
-}
-
-function renderListNode(canvas: Canvas, node: PositionedNode, theme: Theme): void {
-  const listNode = node.node as ListNode;
-  const styleName = listNode.style ?? TEXT_STYLE.BODY;
-  const style = theme.textStyles[styleName];
-  const defaultFont = getFontFromFamily(style.fontFamily, style.defaultWeight ?? FONT_WEIGHT.NORMAL);
-  const bulletSpacing = theme.spacing.bulletSpacing;
-  const indent = theme.spacing.gap;
-
-  log.render.text('RENDER list x=%f y=%f w=%f h=%f items=%d ordered=%s',
-    node.x, node.y, node.width, node.height, listNode.items.length, listNode.ordered ?? false);
-
-  // Build all items as a single text block with bullets
-  const allFragments: TextFragment[] = [];
-
-  listNode.items.forEach((item, i) => {
-    const itemContent = toTextContent(item);
-    const normalized = normalizeContent(itemContent);
-
-    normalized.forEach((run, runIndex) => {
-      const runWeight = run.weight ?? (style.defaultWeight ?? FONT_WEIGHT.NORMAL);
-      const runFont = getFontFromFamily(style.fontFamily, runWeight);
-      const options: TextFragmentOptions = {
-        color: run.color ?? listNode.color ?? style.color ?? theme.colors.text,
-        fontFace: runFont.name,
-      };
-      if (run.highlight) options.highlight = run.highlight.bg;
-
-      // Apply bullet to first fragment of each item
-      if (runIndex === 0) {
-        options.bullet = {
-          type: listNode.ordered ? 'number' : 'bullet',
-          color: listNode.markerColor ?? listNode.color ?? style.color ?? theme.colors.text,
-        };
-      }
-
-      // Add line break between items (except first run of first item)
-      if (i > 0 && runIndex === 0) {
-        options.softBreakBefore = true;
-      }
-
-      allFragments.push({ text: run.text, options });
-    });
-  });
-
-  canvas.addText(allFragments, {
-    x: node.x,
-    y: node.y,
-    w: node.width,
-    h: node.height,
-    fontSize: style.fontSize,
-    fontFace: defaultFont.name,
-    color: listNode.color ?? style.color ?? theme.colors.text,
-    margin: 0,
-    wrap: true,
-    lineSpacingMultiple: bulletSpacing,
-    align: HALIGN.LEFT,
-    valign: VALIGN.TOP,
-  });
-}
-
-function renderTableNode(canvas: Canvas, node: PositionedNode, theme: Theme): void {
-  const tableNode = node.node as TableNode;
-  const style = theme.textStyles[TEXT_STYLE.BODY];
-  const cellPadding = theme.spacing.cellPadding;
-  const rowHeight = node.height / tableNode.data.length;
-  const colWidth = node.width / (tableNode.data[0]?.length || 1);
-
-  log.render.shape('RENDER table x=%f y=%f w=%f h=%f rows=%d cols=%d rowHeight=%f colWidth=%f',
-    node.x, node.y, node.width, node.height, tableNode.data.length,
-    tableNode.data[0]?.length ?? 0, rowHeight, colWidth);
-
-  tableNode.data.forEach((row, rowIndex) => {
-    row.forEach((cell, colIndex) => {
-      const x = node.x + colIndex * colWidth;
-      const y = node.y + rowIndex * rowHeight;
-
-      // Cell background for headers
-      const isHeader = (tableNode.headerRow && rowIndex === 0) ||
-                       (tableNode.headerColumn && colIndex === 0);
-      if (isHeader && tableNode.headerBackground) {
-        canvas.addShape(SHAPE.RECT, {
-          x, y, w: colWidth, h: rowHeight,
-          fill: { color: tableNode.headerBackground },
-        });
-      }
-
-      // Cell text
-      renderText(
-        canvas,
-        toTextContent(cell),
-        TEXT_STYLE.BODY,
-        theme,
-        x + cellPadding, y + cellPadding,
-        colWidth - cellPadding * 2, rowHeight - cellPadding * 2,
-        HALIGN.LEFT, VALIGN.MIDDLE
-      );
-    });
-  });
+  // Rectangle is a pure visual shape - no children to render
 }
 
 function renderLineNode(canvas: Canvas, node: PositionedNode, theme: Theme): void {
-  log.render.shape('RENDER line x=%f y=%f w=%f', node.x, node.y, node.width);
-  canvas.addShape(SHAPE.LINE, {
-    x: node.x,
-    y: node.y,
-    w: node.width,
-    h: 0,
-    line: {
-      color: theme.colors.secondary,
-      width: theme.borders.width,
-    },
-  });
+  const lineNode = node.node as import('./nodes.js').LineNode;
+  const color = lineNode.color ?? theme.colors.secondary;
+  const width = lineNode.width ?? theme.borders.width;
+
+  // Detect orientation from positioned dimensions
+  // Vertical if height > width, horizontal otherwise
+  const isVertical = node.height > node.width;
+
+  if (isVertical) {
+    log.render.shape('RENDER vertical line x=%f y=%f h=%f', node.x, node.y, node.height);
+    canvas.addShape(SHAPE.LINE, {
+      x: node.x,
+      y: node.y,
+      w: 0,
+      h: node.height,
+      line: { color, width },
+    });
+  } else {
+    log.render.shape('RENDER horizontal line x=%f y=%f w=%f', node.x, node.y, node.width);
+    canvas.addShape(SHAPE.LINE, {
+      x: node.x,
+      y: node.y,
+      w: node.width,
+      h: 0,
+      line: { color, width },
+    });
+  }
 }
 
 function renderSlideNumberNode(canvas: Canvas, node: PositionedNode, theme: Theme): void {
@@ -606,15 +481,6 @@ export function render(positioned: PositionedNode, canvas: Canvas, theme: Theme)
     case NODE_TYPE.IMAGE:
       renderImageNode(canvas, positioned, theme);
       break;
-    case NODE_TYPE.CARD:
-      renderCardNode(canvas, positioned, theme);
-      break;
-    case NODE_TYPE.LIST:
-      renderListNode(canvas, positioned, theme);
-      break;
-    case NODE_TYPE.TABLE:
-      renderTableNode(canvas, positioned, theme);
-      break;
     case NODE_TYPE.LINE:
       renderLineNode(canvas, positioned, theme);
       break;
@@ -624,13 +490,13 @@ export function render(positioned: PositionedNode, canvas: Canvas, theme: Theme)
     case NODE_TYPE.DIAGRAM:
       renderDiagramNode(canvas, positioned, theme);
       break;
-    case NODE_TYPE.BOX:
-      renderBoxNode(canvas, positioned, theme);
+    case NODE_TYPE.RECTANGLE:
+      renderRectangleNode(canvas, positioned, theme);
       break;
     case NODE_TYPE.ROW:
     case NODE_TYPE.COLUMN:
-    case NODE_TYPE.GROUP:
-      // Container nodes: just render children
+    case NODE_TYPE.STACK:
+      // Container nodes: just render children (Stack renders in z-order)
       log.render._('  container %s with %d children', node.type, positioned.children?.length ?? 0);
       if (positioned.children) {
         for (const child of positioned.children) {

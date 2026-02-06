@@ -11,7 +11,7 @@ import {
   card,
   GAP,
   TEXT_STYLE,
-  JUSTIFY,
+  VALIGN,
 } from '../src/index.js';
 
 // Use Materialize theme (has real font paths)
@@ -25,7 +25,7 @@ async function main() {
   // Slide 1: Simple text
   pres.add({
     content: column(
-      { gap: GAP.NORMAL, justify: JUSTIFY.CENTER },
+      { gap: GAP.NORMAL, vAlign: VALIGN.MIDDLE },
       h1('Welcome to Declarative TycoSlide'),
       text('This is the new architecture - pure data, clean pipeline.', { style: TEXT_STYLE.BODY }),
     ),
