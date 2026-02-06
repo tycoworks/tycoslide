@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { row, column, line, text } from '../src/core/dsl.js';
-import { computeLayout, getNodeHeight } from '../src/core/compute-layout.js';
+import { computeLayout, getNodeHeight } from '../src/core/layout.js';
 import { Bounds } from '../src/core/bounds.js';
 import { mockTheme, mockMeasurer } from './mocks.js';
 import { ptToIn } from '../src/utils/font-utils.js';

@@ -1,10 +1,9 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { text, row } from '../src/core/dsl.js';
-import { computeLayout } from '../src/core/compute-layout.js';
+import { computeLayout, LayoutOverflowError, checkOverflow } from '../src/core/layout.js';
 import { Bounds } from '../src/core/bounds.js';
 import { mockTheme, mockMeasurer } from './mocks.js';
-import { LayoutOverflowError, checkOverflow } from '../src/core/errors.js';
 
 describe('Overflow Error Checking', () => {
   const theme = mockTheme();

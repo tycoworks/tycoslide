@@ -144,9 +144,8 @@ export {
 // LAYOUT COMPUTATION & RENDERING
 // ============================================
 
-export { computeLayout, getNodeHeight } from './core/compute-layout.js';
-export { render } from './core/render.js';
-export { LayoutOverflowError, type LayoutOptions, checkOverflow } from './core/errors.js';
+export { computeLayout, getNodeHeight, LayoutOverflowError, type LayoutOptions, checkOverflow } from './core/layout.js';
+export { render } from './core/layout/index.js';
 
 // ============================================
 // COMPONENT SYSTEM

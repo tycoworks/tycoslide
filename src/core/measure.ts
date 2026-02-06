@@ -1,15 +1,15 @@
 // Measurement Collection
 // Traverses node tree to collect text measurement requests
+//
+// This module collects text measurements needed for browser-based layout.
+// Handlers provide collectMeasurements() for their specific node types.
 
 import { NODE_TYPE, type ElementNode } from './nodes.js';
 import type { Theme, TextStyleName, TextContent, TextStyle } from './types.js';
 import { Bounds } from './bounds.js';
-import { TEXT_STYLE, SIZE } from './types.js';
+import { SIZE } from './types.js';
 import { resolveGap } from '../utils/node-utils.js';
-import { distributeFlexSpace, type FlexChild } from './layout/index.js';
-import imageSizeDefault from 'image-size';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const imageSize = (imageSizeDefault as any).default || imageSizeDefault;
+import { distributeFlexSpace, type FlexChild, nodeHandlerRegistry } from './layout/index.js';
 
 // ============================================
 // MEASUREMENT REQUEST TYPES
@@ -62,6 +62,10 @@ function makeStyleKey(styleName: TextStyleName): string {
 // MEASUREMENT COLLECTOR
 // ============================================
 
+/**
+ * Collect all text measurement requests needed for a node tree.
+ * Recursively traverses containers and delegates to handlers.
+ */
 export function collectMeasurements(
   node: ElementNode,
   bounds: Bounds,
@@ -72,86 +76,60 @@ export function collectMeasurements(
   const seenTextIds = new Set<string>();
   const seenStyleIds = new Set<string>();
 
-  function addTextRequest(content: TextContent, styleName: TextStyleName, width: number) {
-    const id = makeTextKey(styleName, width, content);
-    if (!seenTextIds.has(id)) {
-      seenTextIds.add(id);
-      text.push({ id, content, style: theme.textStyles[styleName], availableWidth: width });
+  function mergeRequests(requests: MeasurementRequests): void {
+    for (const req of requests.text) {
+      if (!seenTextIds.has(req.id)) {
+        seenTextIds.add(req.id);
+        text.push(req);
+      }
     }
-  }
-
-  function addStyleRequest(styleName: TextStyleName) {
-    const id = makeStyleKey(styleName);
-    if (!seenStyleIds.has(id)) {
-      seenStyleIds.add(id);
-      styles.push({ id, style: theme.textStyles[styleName] });
+    for (const req of requests.styles) {
+      if (!seenStyleIds.has(req.id)) {
+        seenStyleIds.add(req.id);
+        styles.push(req);
+      }
     }
   }
 
   function collect(node: ElementNode, bounds: Bounds): void {
-    switch (node.type) {
-      case NODE_TYPE.TEXT: {
-        const styleName = node.style ?? TEXT_STYLE.BODY;
-        addTextRequest(node.content, styleName, bounds.w);
-        addStyleRequest(styleName);
-        break;
-      }
+    // First, check if the handler provides collectMeasurements
+    const handler = nodeHandlerRegistry.get(node.type);
+    if (handler?.collectMeasurements) {
+      const requests = handler.collectMeasurements(node, bounds, theme);
+      mergeRequests(requests);
+    }
 
-      case NODE_TYPE.ROW: {
-        const gap = resolveGap(node.gap, theme);
-        const n = node.children.length;
-        const totalGap = gap * (n - 1);
-        const availableWidth = bounds.w - totalGap;
+    // For containers, recursively collect from children
+    if (node.type === NODE_TYPE.ROW) {
+      const gap = resolveGap(node.gap, theme);
+      const n = node.children.length;
+      const totalGap = gap * (n - 1);
+      const availableWidth = bounds.w - totalGap;
 
-        // Build FlexChild array for width distribution
-        const flexChildren: FlexChild[] = node.children.map((child) => {
-          if (child.type === NODE_TYPE.ROW || child.type === NODE_TYPE.COLUMN) {
-            if (child.width === SIZE.FILL) {
-              return { fillsRemaining: true };
-            } else if (typeof child.width === 'number') {
-              return { fixedSize: child.width };
-            }
-          }
-          return {}; // Flex child - shares remaining equally
-        });
-
-        const { sizes: childWidths } = distributeFlexSpace(flexChildren, availableWidth);
-
-        let x = bounds.x;
-        for (let i = 0; i < n; i++) {
-          const childWidth = childWidths[i];
-          const childBounds = new Bounds(x, bounds.y, childWidth, bounds.h);
-          collect(node.children[i], childBounds);
-          x += childWidth + gap;
+      const flexChildren: FlexChild[] = node.children.map((child) => {
+        if (child.type === NODE_TYPE.ROW || child.type === NODE_TYPE.COLUMN) {
+          if (child.width === SIZE.FILL) return { fillsRemaining: true };
+          if (typeof child.width === 'number') return { fixedSize: child.width };
         }
-        break;
-      }
+        return {};
+      });
 
-      case NODE_TYPE.COLUMN: {
-        const gap = resolveGap(node.gap, theme);
-        // For measurement, we give each child the full width
-        // Height will be computed in layout phase
-        for (const child of node.children) {
-          collect(child, bounds);
-        }
-        break;
-      }
+      const { sizes: childWidths } = distributeFlexSpace(flexChildren, availableWidth);
 
-      case NODE_TYPE.DIAGRAM: {
-        // Diagram text uses SMALL style
-        addStyleRequest(TEXT_STYLE.SMALL);
-        for (const box of node.nodes) {
-          // Approximate box width
-          addTextRequest(box.label, TEXT_STYLE.SMALL, bounds.w / node.nodes.length);
-        }
-        break;
+      let x = bounds.x;
+      for (let i = 0; i < n; i++) {
+        const childBounds = new Bounds(x, bounds.y, childWidths[i], bounds.h);
+        collect(node.children[i], childBounds);
+        x += childWidths[i] + gap;
       }
-
-      case NODE_TYPE.IMAGE:
-      case NODE_TYPE.LINE:
-      case NODE_TYPE.SLIDE_NUMBER:
-        // No text measurement needed
-        break;
+    } else if (node.type === NODE_TYPE.COLUMN) {
+      for (const child of node.children) {
+        collect(child, bounds);
+      }
+    } else if (node.type === NODE_TYPE.STACK) {
+      for (const child of node.children) {
+        collect(child, bounds);
+      }
     }
   }
 
