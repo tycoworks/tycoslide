@@ -80,15 +80,6 @@ export interface ElementHandler<T extends ElementNode = ElementNode> {
   getIntrinsicWidth?(node: T, height: number, ctx: LayoutContext): number;
 }
 
-/**
- * Extended context for handlers that need additional information.
- * Used during rendering where slide index is needed.
- */
-export interface RenderContext {
-  theme: Theme;
-  slideIndex?: number;
-}
-
 // ============================================
 // REGISTRY CLASS
 // ============================================
