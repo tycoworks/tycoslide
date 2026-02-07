@@ -17,6 +17,7 @@ import type { Canvas } from '../core/canvas.js';
 import { elementHandlerRegistry, getIntrinsicWidth, type ElementHandler, type LayoutContext } from '../core/element-registry.js';
 import { distributeFlexSpace, type FlexChild } from '../core/flex.js';
 import { resolveGap } from '../utils/node-utils.js';
+import { buildRowFlexChildren } from '../utils/flex-utils.js';
 import { ptToIn } from '../utils/font-utils.js';
 import { log } from '../utils/log.js';
 
@@ -109,13 +110,7 @@ function createContainerHandler(config: ContainerConfig): ElementHandler<Contain
       if (isRow) {
         // ROW: max height of children
         const availableWidth = innerWidth - totalGap;
-        const flexChildren: FlexChild[] = node.children.map((child) => {
-          if (child.type === NODE_TYPE.ROW || child.type === NODE_TYPE.COLUMN) {
-            if (child.width === SIZE.FILL) return { fillsRemaining: true };
-            if (typeof child.width === 'number') return { fixedSize: child.width };
-          }
-          return {};
-        });
+        const flexChildren = buildRowFlexChildren(node.children);
         const { sizes: childWidths } = distributeFlexSpace(flexChildren, availableWidth);
 
         let maxHeight = 0;
@@ -219,18 +214,12 @@ function computeRowLayout(
   );
 
   // Build FlexChild array for width distribution
-  const flexChildren: FlexChild[] = node.children.map((child) => {
-    if (child.type === NODE_TYPE.ROW || child.type === NODE_TYPE.COLUMN) {
-      if (child.width === SIZE.FILL) return { fillsRemaining: true };
-      if (typeof child.width === 'number') return { fixedSize: child.width };
-    }
-    if (child.type === NODE_TYPE.LINE) {
-      return { fixedSize: ptToIn(ctx.theme.borders.width) };
-    }
-    if (hasFillChild) {
-      return { intrinsicSize: getIntrinsicWidth(child, rowHeight, ctx) };
-    }
-    return {};
+  const flexChildren = buildRowFlexChildren(node.children, {
+    getFixedSize: (child) =>
+      child.type === NODE_TYPE.LINE ? ptToIn(ctx.theme.borders.width) : undefined,
+    getIntrinsicSize: hasFillChild
+      ? (child) => getIntrinsicWidth(child, rowHeight, ctx)
+      : undefined,
   });
 
   const { sizes: childWidths } = distributeFlexSpace(flexChildren, availableWidth);

@@ -7,9 +7,9 @@
 import { NODE_TYPE, type ElementNode } from './nodes.js';
 import type { Theme, TextStyleName, TextContent, TextStyle } from './types.js';
 import { Bounds } from './bounds.js';
-import { SIZE } from './types.js';
 import { resolveGap } from '../utils/node-utils.js';
-import { distributeFlexSpace, type FlexChild } from './flex.js';
+import { distributeFlexSpace } from './flex.js';
+import { buildRowFlexChildren } from '../utils/flex-utils.js';
 import { elementHandlerRegistry } from './element-registry.js';
 
 // ============================================
@@ -107,14 +107,7 @@ export function collectMeasurements(
       const totalGap = gap * (n - 1);
       const availableWidth = bounds.w - totalGap;
 
-      const flexChildren: FlexChild[] = node.children.map((child) => {
-        if (child.type === NODE_TYPE.ROW || child.type === NODE_TYPE.COLUMN) {
-          if (child.width === SIZE.FILL) return { fillsRemaining: true };
-          if (typeof child.width === 'number') return { fixedSize: child.width };
-        }
-        return {};
-      });
-
+      const flexChildren = buildRowFlexChildren(node.children);
       const { sizes: childWidths } = distributeFlexSpace(flexChildren, availableWidth);
 
       let x = bounds.x;
