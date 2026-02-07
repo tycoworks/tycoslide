@@ -1,7 +1,7 @@
 // Text Measurer Interface
 // Abstracts text measurement to allow swappable implementations
 
-import type { TextContent, TextStyle } from '../core/types.js';
+import type { TextContent, TextStyle, Theme } from '../core/types.js';
 
 /**
  * TextMeasurer provides text measurement capabilities.
@@ -9,9 +9,10 @@ import type { TextContent, TextStyle } from '../core/types.js';
  */
 export interface TextMeasurer {
   /**
-   * Get the line height in inches for a TextStyle
+   * Get the line height in inches for a TextStyle.
+   * Uses style.lineHeightMultiplier if set, otherwise theme.spacing.lineSpacing.
    */
-  getStyleLineHeight(style: TextStyle): number;
+  getStyleLineHeight(style: TextStyle, theme: Theme): number;
 
   /**
    * Estimate the number of wrapped lines for content at a given width.

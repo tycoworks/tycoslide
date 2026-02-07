@@ -286,7 +286,7 @@ export interface Theme {
   highlights: HighlightScheme;
   slide: SlideSize | CustomSlideSize;
   spacing: {
-    unit: number;           // Grid quantum in inches (e.g. 0.125 = 1/8")
+    unit: number;           // Base spacing unit (grid quantum, e.g. 1/32 inch)
     margin: number;         // Inset from all 4 edges
     gap: number;            // Standard gap between elements
     gapTight: number;       // Tight gap for related items (title→description)
@@ -296,6 +296,7 @@ export interface Theme {
     bulletSpacing: number;  // Line spacing multiple for lists
     bulletIndentMultiplier: number; // Multiplier for bullet indent (fontSize * multiplier = points)
     minDisplayDPI: number;  // Minimum effective DPI for image display (e.g. 96)
+    lineSpacing: number;    // Default line height multiplier for text (e.g. 1.2)
   };
   borders: {
     width: number;   // Border width in points

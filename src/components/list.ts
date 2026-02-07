@@ -7,6 +7,7 @@ import { NODE_TYPE, type ElementNode, type TextNode } from '../core/nodes.js';
 import type { TextContent, TextStyleName } from '../core/types.js';
 import { TEXT_STYLE, GAP, VALIGN } from '../core/types.js';
 import { toTextContent } from '../utils/node-utils.js';
+import { ptToIn } from '../utils/font-utils.js';
 
 // ============================================
 // CONSTANTS
@@ -68,21 +69,25 @@ function expandList(props: ListComponentProps, context: ExpansionContext): Eleme
   }
 
   const theme = context.theme;
-  const bulletIndent = theme.spacing.gap; // Width for bullet column
+  const textStyle = theme.textStyles[style];
+  // Bullet indent: fontSize (in points) * multiplier, converted to inches
+  const bulletIndent = ptToIn(textStyle.fontSize * theme.spacing.bulletIndentMultiplier);
 
   // Create rows for each item
+  const bulletLineSpacing = theme.spacing.bulletSpacing;
   const itemRows = items.map((item, index) => {
     // Bullet or number marker
     const marker = ordered ? `${index + 1}.` : '•';
     const markerNode = text(marker, {
       style,
       color: markerColor ?? color,
+      lineHeightMultiplier: bulletLineSpacing,
     });
 
-    // Item content
+    // Item content - apply bulletSpacing for line height
     const itemContent = typeof item === 'object' && 'type' in item && item.type === NODE_TYPE.TEXT
-      ? item as TextNode
-      : text(toTextContent(item), { style, color });
+      ? { ...(item as TextNode), lineHeightMultiplier: (item as TextNode).lineHeightMultiplier ?? bulletLineSpacing }
+      : text(toTextContent(item), { style, color, lineHeightMultiplier: bulletLineSpacing });
 
     // Row: fixed-width bullet column + fill content
     return row(

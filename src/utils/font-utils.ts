@@ -2,7 +2,7 @@
 // Provides text measurement and rich text processing using fontkit
 
 import { openSync, type Font as FontkitFont } from 'fontkit';
-import { FONT_WEIGHT, type Font, type FontFamily, type FontWeight, type TextStyle, type TextContent, type TextRun, type NormalizedRun } from '../core/types.js';
+import { FONT_WEIGHT, type Font, type FontFamily, type FontWeight, type TextStyle, type TextContent, type TextRun, type NormalizedRun, type Theme } from '../core/types.js';
 import { log, contentPreview } from './log.js';
 
 // Unit conversion constants
@@ -98,12 +98,15 @@ export function getLineHeight(fontPath: string, fontSize: number): number {
 // ============================================
 
 /**
- * Get the line height in inches for a TextStyle
+ * Get the line height in inches for a TextStyle.
+ * Uses style.lineHeightMultiplier if set, otherwise theme.spacing.lineSpacing.
  */
-export function getStyleLineHeight(style: TextStyle): number {
+export function getStyleLineHeight(style: TextStyle, theme: Theme): number {
   const defaultWeight = style.defaultWeight ?? FONT_WEIGHT.NORMAL;
   const defaultFont = getFontFromFamily(style.fontFamily, defaultWeight);
-  return getLineHeight(defaultFont.path, style.fontSize);
+  const baseHeight = getLineHeight(defaultFont.path, style.fontSize);
+  const multiplier = style.lineHeightMultiplier ?? theme.spacing.lineSpacing;
+  return baseHeight * multiplier;
 }
 
 /**

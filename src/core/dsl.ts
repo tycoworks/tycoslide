@@ -37,6 +37,7 @@ export interface TextProps {
   color?: string;
   hAlign?: HorizontalAlignment;
   vAlign?: VerticalAlignment;
+  lineHeightMultiplier?: number;
 }
 
 export function text(content: TextContent, props?: TextProps): TextNode {
@@ -47,6 +48,7 @@ export function text(content: TextContent, props?: TextProps): TextNode {
     color: props?.color,
     hAlign: props?.hAlign,
     vAlign: props?.vAlign,
+    lineHeightMultiplier: props?.lineHeightMultiplier,
   };
 }
 

@@ -24,7 +24,7 @@ export function mockMeasurer(options?: {
   const contentWidth = options?.contentWidth ?? 1;
 
   return {
-    getStyleLineHeight: () => lineHeight,
+    getStyleLineHeight: (_style, _theme) => lineHeight,
     estimateLines: () => lines,
     getContentWidth: () => contentWidth,
   };
@@ -57,6 +57,7 @@ export function mockTheme(options?: {
   bulletSpacing?: number;
   margin?: number;
   minDisplayDPI?: number;
+  lineSpacing?: number;
   borderWidth?: number;
   borderRadius?: number;
 }): Theme {
@@ -68,6 +69,7 @@ export function mockTheme(options?: {
   const bulletSpacing = options?.bulletSpacing ?? 1.2;
   const margin = options?.margin ?? 0.5;
   const minDisplayDPI = options?.minDisplayDPI ?? 96;
+  const lineSpacing = options?.lineSpacing ?? 1.0;
   const borderWidth = options?.borderWidth ?? 1;
   const borderRadius = options?.borderRadius ?? 0.1;
 
@@ -95,6 +97,7 @@ export function mockTheme(options?: {
       bulletSpacing,
       margin,
       minDisplayDPI,
+      lineSpacing,
     },
     borders: {
       width: borderWidth,

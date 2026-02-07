@@ -49,6 +49,7 @@ export interface TextNode {
   color?: string;
   hAlign?: HorizontalAlignment;
   vAlign?: VerticalAlignment;
+  lineHeightMultiplier?: number;  // Overrides style's lineHeightMultiplier
 }
 
 export interface ImageNode {

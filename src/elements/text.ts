@@ -12,13 +12,6 @@ import { getFontFromFamily, normalizeContent } from '../utils/font-utils.js';
 import { log, contentPreview } from '../utils/log.js';
 
 // ============================================
-// CONSTANTS
-// ============================================
-
-/** Default line spacing multiplier for text rendering */
-const DEFAULT_LINE_SPACING_MULTIPLE = 1.0;
-
-// ============================================
 // TEXT RENDERING HELPERS
 // ============================================
 
@@ -56,7 +49,8 @@ function renderText(
   h: number,
   hAlign?: string,
   vAlign?: string,
-  colorOverride?: string
+  colorOverride?: string,
+  lineHeightMultiplier?: number
 ): void {
   const style = theme.textStyles[styleName];
   const defaultFont = getFontFromFamily(style.fontFamily, style.defaultWeight ?? FONT_WEIGHT.NORMAL);
@@ -65,6 +59,9 @@ function renderText(
   log.render.text('renderText style=%s x=%f y=%f w=%f h=%f align=%s/%s "%s"',
     styleName, x, y, w, h, hAlign ?? HALIGN.LEFT, vAlign ?? VALIGN.TOP, contentPreview(content));
 
+  // Priority: node override > style override > theme default
+  const lineSpacing = lineHeightMultiplier ?? style.lineHeightMultiplier ?? theme.spacing.lineSpacing;
+
   canvas.addText(fragments, {
     x, y, w, h,
     fontSize: style.fontSize,
@@ -72,7 +69,7 @@ function renderText(
     color: colorOverride ?? style.color ?? theme.colors.text,
     margin: 0,
     wrap: true,
-    lineSpacingMultiple: DEFAULT_LINE_SPACING_MULTIPLE,
+    lineSpacingMultiple: lineSpacing,
     align: (hAlign as any) ?? HALIGN.LEFT,
     valign: (vAlign as any) ?? VALIGN.TOP,
   });
@@ -91,7 +88,7 @@ export const textHandler: ElementHandler<TextNode> = {
   getHeight(node: TextNode, width: number, ctx: LayoutContext): number {
     const styleName = node.style ?? TEXT_STYLE.BODY;
     const style = ctx.theme.textStyles[styleName];
-    const lineHeight = ctx.measurer.getStyleLineHeight(style);
+    const lineHeight = ctx.measurer.getStyleLineHeight(style, ctx.theme);
     const lines = ctx.measurer.estimateLines(node.content, style, width);
     const height = lineHeight * lines;
     log.layout.text('HEIGHT text style=%s width=%f lineHeight=%f lines=%d -> %f "%s"',
@@ -149,7 +146,8 @@ export const textHandler: ElementHandler<TextNode> = {
       positioned.x, positioned.y, positioned.width, positioned.height,
       textNode.hAlign,
       textNode.vAlign,
-      textNode.color
+      textNode.color,
+      textNode.lineHeightMultiplier
     );
   },
 

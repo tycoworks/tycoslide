@@ -23,7 +23,7 @@ export const slideNumberHandler: ElementHandler<SlideNumberNode> = {
   getHeight(node: SlideNumberNode, _width: number, ctx: LayoutContext): number {
     const styleName = node.style ?? TEXT_STYLE.FOOTER;
     const style = ctx.theme.textStyles[styleName];
-    const height = ctx.measurer.getStyleLineHeight(style);
+    const height = ctx.measurer.getStyleLineHeight(style, ctx.theme);
     log.layout.height('HEIGHT slideNumber style=%s -> %f', styleName, height);
     return height;
   },
