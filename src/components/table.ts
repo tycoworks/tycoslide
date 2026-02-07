@@ -1,7 +1,7 @@
 // Table Component
 // Implements table as a component using primitives: stack, row, column, rectangle, line, text
 
-import { defineComponent, type ExpansionContext, type ComponentNode } from '../core/component-registry.js';
+import { defineComponent, type ExpansionContext } from '../core/component-registry.js';
 import { stack, row, column, rectangle, line, text } from '../core/dsl.js';
 import type { ElementNode, TextNode } from '../core/nodes.js';
 import type { TextContent, TextStyleName, HorizontalAlignment, VerticalAlignment, BorderStyle } from '../core/types.js';
@@ -178,28 +178,19 @@ function createGridLines(numRows: number, numCols: number, context: ExpansionCon
 // ============================================
 
 /**
- * Create a table component node (internal - uses defineComponent).
- */
-const tableComponentInternal = defineComponent<TableComponentProps>(TABLE_COMPONENT, expandTable);
-
-/**
  * Create a table component node.
  *
  * @example
  * ```typescript
- * tableComponent([
- *   ['Name', 'Role', 'Status'],
- *   ['Alice', 'Engineer', 'Active'],
- *   ['Bob', 'Designer', 'On leave'],
- * ], {
+ * tableComponent({
+ *   data: [
+ *     ['Name', 'Role', 'Status'],
+ *     ['Alice', 'Engineer', 'Active'],
+ *     ['Bob', 'Designer', 'On leave'],
+ *   ],
  *   headerRow: true,
  *   headerBackground: '#E0E0E0',
  * })
  * ```
  */
-export function tableComponent(
-  data: TableCellContent[][],
-  props?: Omit<TableComponentProps, 'data'>
-): ComponentNode<TableComponentProps> {
-  return tableComponentInternal({ ...props, data });
-}
+export const tableComponent = defineComponent<TableComponentProps>(TABLE_COMPONENT, expandTable);

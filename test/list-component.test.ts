@@ -18,19 +18,20 @@ describe('List Component', () => {
 
   describe('listComponent DSL function', () => {
     it('should create a component node with correct type', () => {
-      const node = listComponent(['Item 1', 'Item 2']);
+      const node = listComponent({ items: ['Item 1', 'Item 2'] });
       assert.strictEqual(node.type, 'component');
       assert.strictEqual(node.componentName, 'list');
     });
 
     it('should pass items in props', () => {
       const items = ['A', 'B', 'C'];
-      const node = listComponent(items);
+      const node = listComponent({ items });
       assert.deepStrictEqual(node.props.items, items);
     });
 
     it('should pass through optional props', () => {
-      const node = listComponent(['A'], {
+      const node = listComponent({
+        items: ['A'],
         ordered: true,
         style: TEXT_STYLE.SMALL,
         color: '#FF0000',
@@ -43,12 +44,12 @@ describe('List Component', () => {
 
   describe('bulletListComponent', () => {
     it('should set ordered to false', () => {
-      const node = bulletListComponent(['A', 'B']);
+      const node = bulletListComponent({ items: ['A', 'B'] });
       assert.strictEqual(node.props.ordered, false);
     });
 
     it('should pass through other props', () => {
-      const node = bulletListComponent(['A'], { color: '#00FF00' });
+      const node = bulletListComponent({ items: ['A'], color: '#00FF00' });
       assert.strictEqual(node.props.color, '#00FF00');
       assert.strictEqual(node.props.ordered, false);
     });
@@ -56,12 +57,12 @@ describe('List Component', () => {
 
   describe('numberedListComponent', () => {
     it('should set ordered to true', () => {
-      const node = numberedListComponent(['A', 'B']);
+      const node = numberedListComponent({ items: ['A', 'B'] });
       assert.strictEqual(node.props.ordered, true);
     });
 
     it('should pass through other props', () => {
-      const node = numberedListComponent(['A'], { color: '#0000FF' });
+      const node = numberedListComponent({ items: ['A'], color: '#0000FF' });
       assert.strictEqual(node.props.color, '#0000FF');
       assert.strictEqual(node.props.ordered, true);
     });
@@ -69,7 +70,7 @@ describe('List Component', () => {
 
   describe('expansion', () => {
     it('should expand to column with rows', () => {
-      const node = listComponent(['Item 1', 'Item 2']);
+      const node = listComponent({ items: ['Item 1', 'Item 2'] });
       const expanded = componentRegistry.expand(node, { theme, measurer }) as ColumnNode;
 
       assert.strictEqual(expanded.type, 'column');
@@ -79,7 +80,7 @@ describe('List Component', () => {
     });
 
     it('should return empty column for empty items', () => {
-      const node = listComponent([]);
+      const node = listComponent({ items: [] });
       const expanded = componentRegistry.expand(node, { theme, measurer }) as ColumnNode;
 
       assert.strictEqual(expanded.type, 'column');
@@ -87,7 +88,7 @@ describe('List Component', () => {
     });
 
     it('should create bullet markers for unordered list', () => {
-      const node = listComponent(['A', 'B'], { ordered: false });
+      const node = listComponent({ items: ['A', 'B'], ordered: false });
       const expanded = componentRegistry.expand(node, { theme, measurer }) as ColumnNode;
 
       // Each row has: column(bullet), text(content)
@@ -100,7 +101,7 @@ describe('List Component', () => {
     });
 
     it('should create numbered markers for ordered list', () => {
-      const node = listComponent(['A', 'B', 'C'], { ordered: true });
+      const node = listComponent({ items: ['A', 'B', 'C'], ordered: true });
       const expanded = componentRegistry.expand(node, { theme, measurer }) as ColumnNode;
 
       const row1 = expanded.children[0] as RowNode;
@@ -113,7 +114,7 @@ describe('List Component', () => {
     });
 
     it('should include item content as text node', () => {
-      const node = listComponent(['Hello World']);
+      const node = listComponent({ items: ['Hello World'] });
       const expanded = componentRegistry.expand(node, { theme, measurer }) as ColumnNode;
 
       const firstRow = expanded.children[0] as RowNode;
@@ -125,7 +126,7 @@ describe('List Component', () => {
 
     it('should pass through TextNode items', () => {
       const textNode = { type: 'text' as const, content: 'Styled text', style: TEXT_STYLE.H4 };
-      const node = listComponent([textNode]);
+      const node = listComponent({ items: [textNode] });
       const expanded = componentRegistry.expand(node, { theme, measurer }) as ColumnNode;
 
       const firstRow = expanded.children[0] as RowNode;
@@ -139,7 +140,7 @@ describe('List Component', () => {
 
   describe('styling options', () => {
     it('should apply color to items', () => {
-      const node = listComponent(['A'], { color: '#123456' });
+      const node = listComponent({ items: ['A'], color: '#123456' });
       const expanded = componentRegistry.expand(node, { theme, measurer }) as ColumnNode;
 
       const firstRow = expanded.children[0] as RowNode;
@@ -149,7 +150,7 @@ describe('List Component', () => {
     });
 
     it('should apply markerColor to bullets', () => {
-      const node = listComponent(['A'], { markerColor: '#AABBCC' });
+      const node = listComponent({ items: ['A'], markerColor: '#AABBCC' });
       const expanded = componentRegistry.expand(node, { theme, measurer }) as ColumnNode;
 
       const firstRow = expanded.children[0] as RowNode;
@@ -160,7 +161,7 @@ describe('List Component', () => {
     });
 
     it('should use color for marker when markerColor not specified', () => {
-      const node = listComponent(['A'], { color: '#FF0000' });
+      const node = listComponent({ items: ['A'], color: '#FF0000' });
       const expanded = componentRegistry.expand(node, { theme, measurer }) as ColumnNode;
 
       const firstRow = expanded.children[0] as RowNode;
@@ -171,7 +172,7 @@ describe('List Component', () => {
     });
 
     it('should apply text style', () => {
-      const node = listComponent(['A'], { style: TEXT_STYLE.SMALL });
+      const node = listComponent({ items: ['A'], style: TEXT_STYLE.SMALL });
       const expanded = componentRegistry.expand(node, { theme, measurer }) as ColumnNode;
 
       const firstRow = expanded.children[0] as RowNode;
@@ -184,7 +185,7 @@ describe('List Component', () => {
     });
 
     it('should apply gap between items', () => {
-      const node = listComponent(['A', 'B'], { gap: GAP.LOOSE });
+      const node = listComponent({ items: ['A', 'B'], gap: GAP.LOOSE });
       const expanded = componentRegistry.expand(node, { theme, measurer }) as ColumnNode;
 
       assert.strictEqual(expanded.gap, GAP.LOOSE);

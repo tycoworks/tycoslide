@@ -1,7 +1,7 @@
 // List Component
 // Implements list as a component using primitives: column, row, text
 
-import { defineComponent, type ExpansionContext, type ComponentNode } from '../core/component-registry.js';
+import { defineComponent, type ExpansionContext } from '../core/component-registry.js';
 import { column, row, text } from '../core/dsl.js';
 import type { ElementNode, TextNode } from '../core/nodes.js';
 import type { TextContent, TextStyleName } from '../core/types.js';
@@ -100,44 +100,33 @@ function expandList(props: ListComponentProps, context: ExpansionContext): Eleme
 // ============================================
 
 /**
- * Create a list component node (internal - uses defineComponent).
- */
-const listComponentInternal = defineComponent<ListComponentProps>(LIST_COMPONENT, expandList);
-
-/**
  * Create a list component node.
  *
  * @example
  * ```typescript
- * listComponent(['First item', 'Second item', 'Third item'], {
+ * listComponent({
+ *   items: ['First item', 'Second item', 'Third item'],
  *   ordered: true,
  *   style: TEXT_STYLE.BODY,
  * })
  * ```
  */
-export function listComponent(
-  items: ListItemContent[],
-  props?: Omit<ListComponentProps, 'items'>
-): ComponentNode<ListComponentProps> {
-  return listComponentInternal({ ...props, items });
-}
+export const listComponent = defineComponent<ListComponentProps>(LIST_COMPONENT, expandList);
 
 /**
  * Create a bullet (unordered) list component.
  */
 export function bulletListComponent(
-  items: ListItemContent[],
-  props?: Omit<ListComponentProps, 'items' | 'ordered'>
-): ComponentNode<ListComponentProps> {
-  return listComponent(items, { ...props, ordered: false });
+  props: Omit<ListComponentProps, 'ordered'>
+): ReturnType<typeof listComponent> {
+  return listComponent({ ...props, ordered: false });
 }
 
 /**
  * Create a numbered (ordered) list component.
  */
 export function numberedListComponent(
-  items: ListItemContent[],
-  props?: Omit<ListComponentProps, 'items' | 'ordered'>
-): ComponentNode<ListComponentProps> {
-  return listComponent(items, { ...props, ordered: true });
+  props: Omit<ListComponentProps, 'ordered'>
+): ReturnType<typeof listComponent> {
+  return listComponent({ ...props, ordered: true });
 }

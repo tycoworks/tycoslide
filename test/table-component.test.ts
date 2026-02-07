@@ -16,19 +16,20 @@ describe('Table Component', () => {
 
   describe('tableComponent DSL function', () => {
     it('should create a component node with correct type', () => {
-      const node = tableComponent([['A', 'B'], ['C', 'D']]);
+      const node = tableComponent({ data: [['A', 'B'], ['C', 'D']] });
       assert.strictEqual(node.type, 'component');
       assert.strictEqual(node.componentName, 'table');
     });
 
     it('should pass data in props', () => {
       const data = [['A', 'B'], ['C', 'D']];
-      const node = tableComponent(data);
+      const node = tableComponent({ data });
       assert.deepStrictEqual(node.props.data, data);
     });
 
     it('should pass through optional props', () => {
-      const node = tableComponent([['A']], {
+      const node = tableComponent({
+        data: [['A']],
         headerRow: true,
         headerBackground: '#E0E0E0',
         cellBackground: '#FFFFFF',
@@ -41,7 +42,7 @@ describe('Table Component', () => {
 
   describe('expansion', () => {
     it('should expand to stack with grid lines and content', () => {
-      const node = tableComponent([['A', 'B'], ['C', 'D']]);
+      const node = tableComponent({ data: [['A', 'B'], ['C', 'D']] });
       const expanded = componentRegistry.expand(node, { theme, measurer });
 
       assert.strictEqual(expanded.type, 'stack');
@@ -49,7 +50,7 @@ describe('Table Component', () => {
     });
 
     it('should return empty column for empty data', () => {
-      const node = tableComponent([]);
+      const node = tableComponent({ data: [] });
       const expanded = componentRegistry.expand(node, { theme, measurer });
 
       assert.strictEqual(expanded.type, 'column');
@@ -57,7 +58,7 @@ describe('Table Component', () => {
     });
 
     it('should create content rows with cells', () => {
-      const node = tableComponent([['A', 'B'], ['C', 'D']]);
+      const node = tableComponent({ data: [['A', 'B'], ['C', 'D']] });
       const expanded = componentRegistry.expand(node, { theme, measurer });
 
       // Content is the second child (stack children: gridLines, content)
@@ -72,7 +73,7 @@ describe('Table Component', () => {
     });
 
     it('should wrap cells in column with padding', () => {
-      const node = tableComponent([['A']]);
+      const node = tableComponent({ data: [['A']] });
       const expanded = componentRegistry.expand(node, { theme, measurer });
 
       const contentLayer = expanded.children[1];
@@ -85,7 +86,7 @@ describe('Table Component', () => {
     });
 
     it('should create grid lines layer with stack', () => {
-      const node = tableComponent([['A', 'B'], ['C', 'D']]);
+      const node = tableComponent({ data: [['A', 'B'], ['C', 'D']] });
       const expanded = componentRegistry.expand(node, { theme, measurer });
 
       // Grid lines is the first child
@@ -97,7 +98,8 @@ describe('Table Component', () => {
 
   describe('styling options', () => {
     it('should apply header background when headerRow is true', () => {
-      const node = tableComponent([['Header'], ['Data']], {
+      const node = tableComponent({
+        data: [['Header'], ['Data']],
         headerRow: true,
         headerBackground: '#CCCCCC',
       });
@@ -114,7 +116,8 @@ describe('Table Component', () => {
     });
 
     it('should apply cell background', () => {
-      const node = tableComponent([['Data']], {
+      const node = tableComponent({
+        data: [['Data']],
         cellBackground: '#FFFFFF',
       });
       const expanded = componentRegistry.expand(node, { theme, measurer });
@@ -130,7 +133,8 @@ describe('Table Component', () => {
     });
 
     it('should apply header column background', () => {
-      const node = tableComponent([['Row1', 'Data1'], ['Row2', 'Data2']], {
+      const node = tableComponent({
+        data: [['Row1', 'Data1'], ['Row2', 'Data2']],
         headerColumn: true,
         headerBackground: '#DDDDDD',
       });
