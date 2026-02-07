@@ -80,7 +80,7 @@ export class DiagramBuilder implements DiagramNode {
   readonly classes: DiagramClassDef[] = [];
   readonly scale?: number;
 
-  constructor(direction: DiagramDirection = 'LR', props?: DiagramProps) {
+  constructor(direction: DiagramDirection = DIAGRAM_DIRECTION.LEFT_TO_RIGHT, props?: DiagramProps) {
     this.direction = direction;
     this.scale = props?.scale;
   }
@@ -96,35 +96,35 @@ export class DiagramBuilder implements DiagramNode {
   }
 
   rect(id: string, label?: string): DiagramNodeRef {
-    return this.addNode(id, label, 'rect');
+    return this.addNode(id, label, NODE_SHAPE.RECT);
   }
 
   round(id: string, label?: string): DiagramNodeRef {
-    return this.addNode(id, label, 'round');
+    return this.addNode(id, label, NODE_SHAPE.ROUND);
   }
 
   stadium(id: string, label?: string): DiagramNodeRef {
-    return this.addNode(id, label, 'stadium');
+    return this.addNode(id, label, NODE_SHAPE.STADIUM);
   }
 
   cylinder(id: string, label?: string): DiagramNodeRef {
-    return this.addNode(id, label, 'cylinder');
+    return this.addNode(id, label, NODE_SHAPE.CYLINDER);
   }
 
   hexagon(id: string, label?: string): DiagramNodeRef {
-    return this.addNode(id, label, 'hexagon');
+    return this.addNode(id, label, NODE_SHAPE.HEXAGON);
   }
 
   diamond(id: string, label?: string): DiagramNodeRef {
-    return this.addNode(id, label, 'diamond');
+    return this.addNode(id, label, NODE_SHAPE.DIAMOND);
   }
 
   parallelogram(id: string, label?: string): DiagramNodeRef {
-    return this.addNode(id, label, 'parallelogram');
+    return this.addNode(id, label, NODE_SHAPE.PARALLELOGRAM);
   }
 
   subroutine(id: string, label?: string): DiagramNodeRef {
-    return this.addNode(id, label, 'subroutine');
+    return this.addNode(id, label, NODE_SHAPE.SUBROUTINE);
   }
 
   // ============================================
