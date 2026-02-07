@@ -1,7 +1,8 @@
 // Core Library Exports
 // Public API for the presentation library
 
-// Side-effect imports: register built-in components
+// Side-effect imports: register elements and components
+import './elements/index.js';
 import './components/card.js';
 import './components/list.js';
 import './components/table.js';
@@ -145,7 +146,7 @@ export {
 // ============================================
 
 export { computeLayout, getNodeHeight, LayoutOverflowError, type LayoutOptions, checkOverflow } from './core/layout.js';
-export { render } from './core/layout/index.js';
+export { render } from './core/element-registry.js';
 
 // ============================================
 // COMPONENT SYSTEM

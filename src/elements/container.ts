@@ -8,33 +8,33 @@ import {
   type ColumnNode,
   type StackNode,
   type PositionedNode,
-} from '../nodes.js';
-import type { Theme } from '../types.js';
-import { SIZE, DIRECTION, VALIGN, HALIGN } from '../types.js';
-import type { Bounds } from '../bounds.js';
-import { Bounds as BoundsClass } from '../bounds.js';
-import type { Canvas } from '../canvas.js';
-import { nodeHandlerRegistry, getIntrinsicWidth, type NodeHandler, type LayoutContext } from './registry.js';
-import { distributeFlexSpace, type FlexChild } from './flex.js';
-import { resolveGap } from '../../utils/node-utils.js';
-import { ptToIn } from '../../utils/font-utils.js';
-import { log } from '../../utils/log.js';
+} from '../core/nodes.js';
+import type { Theme } from '../core/types.js';
+import { SIZE, DIRECTION, VALIGN, HALIGN } from '../core/types.js';
+import type { Bounds } from '../core/bounds.js';
+import { Bounds as BoundsClass } from '../core/bounds.js';
+import type { Canvas } from '../core/canvas.js';
+import { elementHandlerRegistry, getIntrinsicWidth, type ElementHandler, type LayoutContext } from '../core/element-registry.js';
+import { distributeFlexSpace, type FlexChild } from '../core/flex.js';
+import { resolveGap } from '../utils/node-utils.js';
+import { ptToIn } from '../utils/font-utils.js';
+import { log } from '../utils/log.js';
 
 // Import from layout for child layout (handles overflow checking)
-import { getNodeHeight, getMinNodeHeight, computeLayout } from '../layout.js';
+import { getNodeHeight, getMinNodeHeight, computeLayout } from '../core/layout.js';
 
 // ============================================
 // CHILD HELPERS
 // ============================================
 
 function getChildHeight(node: ElementNode, width: number, ctx: LayoutContext): number {
-  const handlerResult = nodeHandlerRegistry.getHeight(node, width, ctx);
+  const handlerResult = elementHandlerRegistry.getHeight(node, width, ctx);
   if (handlerResult !== undefined) return handlerResult;
   return getNodeHeight(node, width, ctx.theme, ctx.measurer);
 }
 
 function getChildMinHeight(node: ElementNode, width: number, ctx: LayoutContext): number {
-  const handlerResult = nodeHandlerRegistry.getMinHeight(node, width, ctx);
+  const handlerResult = elementHandlerRegistry.getMinHeight(node, width, ctx);
   if (handlerResult !== undefined) return handlerResult;
   return getMinNodeHeight(node, width, ctx.theme, ctx.measurer);
 }
@@ -79,7 +79,7 @@ const COLUMN_CONFIG: ContainerConfig = {
   axis: Axis.COLUMN,
 };
 
-function createContainerHandler(config: ContainerConfig): NodeHandler<ContainerNode> {
+function createContainerHandler(config: ContainerConfig): ElementHandler<ContainerNode> {
   const { nodeType, axis } = config;
   const isRow = axis === Axis.ROW;
   const logFn = isRow ? log.layout.row : log.layout.column;
@@ -188,7 +188,7 @@ function createContainerHandler(config: ContainerConfig): NodeHandler<ContainerN
       log.render._('  container %s with %d children', logName.toUpperCase(), positioned.children?.length ?? 0);
       if (positioned.children) {
         for (const child of positioned.children) {
-          nodeHandlerRegistry.render(child, canvas, theme);
+          elementHandlerRegistry.render(child, canvas, theme);
         }
       }
     },
@@ -371,7 +371,7 @@ function computeColumnLayout(
 // STACK HANDLER (simpler, no axis parameterization needed)
 // ============================================
 
-export const stackHandler: NodeHandler<StackNode> = {
+export const stackHandler: ElementHandler<StackNode> = {
   nodeType: NODE_TYPE.STACK,
 
   getHeight(node: StackNode, width: number, ctx: LayoutContext): number {
@@ -411,7 +411,7 @@ export const stackHandler: NodeHandler<StackNode> = {
     log.render._('  container STACK with %d children', positioned.children?.length ?? 0);
     if (positioned.children) {
       for (const child of positioned.children) {
-        nodeHandlerRegistry.render(child, canvas, theme);
+        elementHandlerRegistry.render(child, canvas, theme);
       }
     }
   },
@@ -428,6 +428,6 @@ export const columnHandler = createContainerHandler(COLUMN_CONFIG);
 // REGISTRATION
 // ============================================
 
-nodeHandlerRegistry.register(rowHandler);
-nodeHandlerRegistry.register(columnHandler);
-nodeHandlerRegistry.register(stackHandler);
+elementHandlerRegistry.register(rowHandler);
+elementHandlerRegistry.register(columnHandler);
+elementHandlerRegistry.register(stackHandler);

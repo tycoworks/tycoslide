@@ -1,19 +1,19 @@
 // RECTANGLE Node Handler
 // Consolidates all RECTANGLE-related logic from compute-layout.ts and render.ts
 
-import { NODE_TYPE, type RectangleNode, type PositionedNode } from '../nodes.js';
-import type { Theme } from '../types.js';
-import { SHAPE } from '../types.js';
-import type { Bounds } from '../bounds.js';
-import type { Canvas } from '../canvas.js';
-import { nodeHandlerRegistry, type NodeHandler, type LayoutContext } from './registry.js';
-import { log } from '../../utils/log.js';
+import { NODE_TYPE, type RectangleNode, type PositionedNode } from '../core/nodes.js';
+import type { Theme } from '../core/types.js';
+import { SHAPE } from '../core/types.js';
+import type { Bounds } from '../core/bounds.js';
+import type { Canvas } from '../core/canvas.js';
+import { elementHandlerRegistry, type ElementHandler, type LayoutContext } from '../core/element-registry.js';
+import { log } from '../utils/log.js';
 
 // ============================================
 // RECTANGLE HANDLER
 // ============================================
 
-export const rectangleHandler: NodeHandler<RectangleNode> = {
+export const rectangleHandler: ElementHandler<RectangleNode> = {
   nodeType: NODE_TYPE.RECTANGLE,
 
   /**
@@ -111,4 +111,4 @@ export const rectangleHandler: NodeHandler<RectangleNode> = {
 // ============================================
 
 // Register handler on module load
-nodeHandlerRegistry.register(rectangleHandler);
+elementHandlerRegistry.register(rectangleHandler);

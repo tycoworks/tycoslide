@@ -8,7 +8,7 @@ import { Bounds } from './bounds.js';
 import { Canvas } from './canvas.js';
 import { PptxRenderer } from './pptx-renderer.js';
 import { computeLayout } from './layout.js';
-import { render } from './layout/index.js';
+import { render } from './element-registry.js';
 import { fontkitMeasurer } from '../utils/fontkit-measurer.js';
 import { log } from '../utils/log.js';
 import { componentRegistry } from './component-registry.js';

@@ -1,20 +1,20 @@
 // SLIDE_NUMBER Node Handler
 // Consolidates all SLIDE_NUMBER-related logic from compute-layout.ts, render.ts, and intrinsics.ts
 
-import { NODE_TYPE, type SlideNumberNode, type PositionedNode } from '../nodes.js';
-import type { Theme } from '../types.js';
-import { TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT } from '../types.js';
-import type { Bounds } from '../bounds.js';
-import type { Canvas } from '../canvas.js';
-import { nodeHandlerRegistry, type NodeHandler, type LayoutContext } from './registry.js';
-import { getFontFromFamily } from '../../utils/font-utils.js';
-import { log } from '../../utils/log.js';
+import { NODE_TYPE, type SlideNumberNode, type PositionedNode } from '../core/nodes.js';
+import type { Theme } from '../core/types.js';
+import { TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT } from '../core/types.js';
+import type { Bounds } from '../core/bounds.js';
+import type { Canvas } from '../core/canvas.js';
+import { elementHandlerRegistry, type ElementHandler, type LayoutContext } from '../core/element-registry.js';
+import { getFontFromFamily } from '../utils/font-utils.js';
+import { log } from '../utils/log.js';
 
 // ============================================
 // SLIDE_NUMBER HANDLER
 // ============================================
 
-export const slideNumberHandler: NodeHandler<SlideNumberNode> = {
+export const slideNumberHandler: ElementHandler<SlideNumberNode> = {
   nodeType: NODE_TYPE.SLIDE_NUMBER,
 
   /**
@@ -102,4 +102,4 @@ export const slideNumberHandler: NodeHandler<SlideNumberNode> = {
 // ============================================
 
 // Register handler on module load
-nodeHandlerRegistry.register(slideNumberHandler);
+elementHandlerRegistry.register(slideNumberHandler);

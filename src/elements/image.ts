@@ -1,12 +1,12 @@
 // IMAGE Node Handler
 // Consolidates all IMAGE-related logic from compute-layout.ts, render.ts, and intrinsics.ts
 
-import { NODE_TYPE, type ImageNode, type PositionedNode } from '../nodes.js';
-import type { Theme } from '../types.js';
-import type { Bounds } from '../bounds.js';
-import type { Canvas } from '../canvas.js';
-import { nodeHandlerRegistry, type NodeHandler, type LayoutContext } from './registry.js';
-import { log } from '../../utils/log.js';
+import { NODE_TYPE, type ImageNode, type PositionedNode } from '../core/nodes.js';
+import type { Theme } from '../core/types.js';
+import type { Bounds } from '../core/bounds.js';
+import type { Canvas } from '../core/canvas.js';
+import { elementHandlerRegistry, type ElementHandler, type LayoutContext } from '../core/element-registry.js';
+import { log } from '../utils/log.js';
 import imageSizeDefault from 'image-size';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const imageSize = (imageSizeDefault as any).default || imageSizeDefault;
@@ -15,7 +15,7 @@ const imageSize = (imageSizeDefault as any).default || imageSizeDefault;
 // IMAGE HANDLER
 // ============================================
 
-export const imageHandler: NodeHandler<ImageNode> = {
+export const imageHandler: ElementHandler<ImageNode> = {
   nodeType: NODE_TYPE.IMAGE,
 
   /**
@@ -115,4 +115,4 @@ export const imageHandler: NodeHandler<ImageNode> = {
 // ============================================
 
 // Register handler on module load
-nodeHandlerRegistry.register(imageHandler);
+elementHandlerRegistry.register(imageHandler);

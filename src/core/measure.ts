@@ -9,7 +9,8 @@ import type { Theme, TextStyleName, TextContent, TextStyle } from './types.js';
 import { Bounds } from './bounds.js';
 import { SIZE } from './types.js';
 import { resolveGap } from '../utils/node-utils.js';
-import { distributeFlexSpace, type FlexChild, nodeHandlerRegistry } from './layout/index.js';
+import { distributeFlexSpace, type FlexChild } from './flex.js';
+import { elementHandlerRegistry } from './element-registry.js';
 
 // ============================================
 // MEASUREMENT REQUEST TYPES
@@ -93,7 +94,7 @@ export function collectMeasurements(
 
   function collect(node: ElementNode, bounds: Bounds): void {
     // First, check if the handler provides collectMeasurements
-    const handler = nodeHandlerRegistry.get(node.type);
+    const handler = elementHandlerRegistry.get(node.type);
     if (handler?.collectMeasurements) {
       const requests = handler.collectMeasurements(node, bounds, theme);
       mergeRequests(requests);

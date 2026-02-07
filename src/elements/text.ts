@@ -1,15 +1,15 @@
 // TEXT Node Handler
 // Consolidates all TEXT-related logic from compute-layout.ts, render.ts, measure.ts, and intrinsics.ts
 
-import { NODE_TYPE, type TextNode, type PositionedNode } from '../nodes.js';
-import type { Theme, TextStyleName, TextContent } from '../types.js';
-import { TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT } from '../types.js';
-import type { Bounds } from '../bounds.js';
-import type { Canvas, TextFragment, TextFragmentOptions } from '../canvas.js';
-import type { MeasurementRequests } from '../measure.js';
-import { nodeHandlerRegistry, type NodeHandler, type LayoutContext } from './registry.js';
-import { getFontFromFamily, normalizeContent } from '../../utils/font-utils.js';
-import { log, contentPreview } from '../../utils/log.js';
+import { NODE_TYPE, type TextNode, type PositionedNode } from '../core/nodes.js';
+import type { Theme, TextStyleName, TextContent } from '../core/types.js';
+import { TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT } from '../core/types.js';
+import type { Bounds } from '../core/bounds.js';
+import type { Canvas, TextFragment, TextFragmentOptions } from '../core/canvas.js';
+import type { MeasurementRequests } from '../core/measure.js';
+import { elementHandlerRegistry, type ElementHandler, type LayoutContext } from '../core/element-registry.js';
+import { getFontFromFamily, normalizeContent } from '../utils/font-utils.js';
+import { log, contentPreview } from '../utils/log.js';
 
 // ============================================
 // TEXT RENDERING HELPERS
@@ -92,7 +92,7 @@ function makeStyleKey(styleName: TextStyleName): string {
 // TEXT HANDLER
 // ============================================
 
-export const textHandler: NodeHandler<TextNode> = {
+export const textHandler: ElementHandler<TextNode> = {
   nodeType: NODE_TYPE.TEXT,
 
   /**
@@ -200,4 +200,4 @@ export const textHandler: NodeHandler<TextNode> = {
 // ============================================
 
 // Register handler on module load
-nodeHandlerRegistry.register(textHandler);
+elementHandlerRegistry.register(textHandler);

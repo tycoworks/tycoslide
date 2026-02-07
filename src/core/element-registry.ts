@@ -1,14 +1,14 @@
 // Node Handler Registry
 // Interface definitions, registry singleton, and convenience functions
 
-import type { ElementNode, NodeType, PositionedNode } from '../nodes.js';
-import type { Theme, Direction } from '../types.js';
-import type { Bounds } from '../bounds.js';
-import type { Canvas } from '../canvas.js';
-import type { TextMeasurer } from '../../utils/text-measurer.js';
-import type { MeasurementRequests } from '../measure.js';
-import type { LayoutOptions } from '../layout.js';
-import { log } from '../../utils/log.js';
+import type { ElementNode, NodeType, PositionedNode } from './nodes.js';
+import type { Theme, Direction } from './types.js';
+import type { Bounds } from './bounds.js';
+import type { Canvas } from './canvas.js';
+import type { TextMeasurer } from '../utils/text-measurer.js';
+import type { MeasurementRequests } from './measure.js';
+import type { LayoutOptions } from './layout.js';
+import { log } from '../utils/log.js';
 
 // ============================================
 // LAYOUT CONTEXT
@@ -32,13 +32,13 @@ export interface LayoutContext {
 // ============================================
 
 /**
- * A NodeHandler encapsulates all behavior for a single node type.
+ * A ElementHandler encapsulates all behavior for a single node type.
  *
  * This consolidates logic that was previously scattered across multiple files.
  * Each node type (TEXT, IMAGE, LINE, ROW, COLUMN, etc.) has its own handler
  * that implements these methods, keeping all related logic in one place.
  */
-export interface NodeHandler<T extends ElementNode = ElementNode> {
+export interface ElementHandler<T extends ElementNode = ElementNode> {
   /** The node type this handler processes */
   readonly nodeType: NodeType;
 
@@ -94,23 +94,23 @@ export interface RenderContext {
 // ============================================
 
 /**
- * Registry for NodeHandler instances.
+ * Registry for ElementHandler instances.
  *
  * Handlers register themselves (typically at module load time),
  * and layout/render code delegates to the appropriate handler.
  */
-class NodeHandlerRegistry {
-  private handlers = new Map<NodeType, NodeHandler>();
+class ElementHandlerRegistry {
+  private handlers = new Map<NodeType, ElementHandler>();
 
   /**
    * Register a handler for a node type.
    * @throws Error if handler already registered for this type
    */
-  register<T extends ElementNode>(handler: NodeHandler<T>): void {
+  register<T extends ElementNode>(handler: ElementHandler<T>): void {
     if (this.handlers.has(handler.nodeType)) {
       throw new Error(`Handler already registered for node type: ${handler.nodeType}`);
     }
-    this.handlers.set(handler.nodeType, handler as NodeHandler);
+    this.handlers.set(handler.nodeType, handler as ElementHandler);
   }
 
   /**
@@ -123,14 +123,14 @@ class NodeHandlerRegistry {
   /**
    * Get a handler by node type.
    */
-  get<T extends ElementNode>(nodeType: NodeType): NodeHandler<T> | undefined {
-    return this.handlers.get(nodeType) as NodeHandler<T> | undefined;
+  get<T extends ElementNode>(nodeType: NodeType): ElementHandler<T> | undefined {
+    return this.handlers.get(nodeType) as ElementHandler<T> | undefined;
   }
 
   /**
    * Get a handler, throwing if not found.
    */
-  getOrThrow<T extends ElementNode>(nodeType: NodeType): NodeHandler<T> {
+  getOrThrow<T extends ElementNode>(nodeType: NodeType): ElementHandler<T> {
     const handler = this.get<T>(nodeType);
     if (!handler) {
       throw new Error(`No handler registered for node type: ${nodeType}`);
@@ -230,7 +230,7 @@ class NodeHandlerRegistry {
  * Global node handler registry.
  * Handlers register themselves at module load time.
  */
-export const nodeHandlerRegistry = new NodeHandlerRegistry();
+export const elementHandlerRegistry = new ElementHandlerRegistry();
 
 // ============================================
 // PUBLIC API FUNCTIONS
@@ -250,7 +250,7 @@ export function getIntrinsicWidth(
   constraintHeight: number,
   ctx: LayoutContext
 ): number {
-  const width = nodeHandlerRegistry.getIntrinsicWidth(node, constraintHeight, ctx);
+  const width = elementHandlerRegistry.getIntrinsicWidth(node, constraintHeight, ctx);
   return width ?? 0;
 }
 
@@ -264,7 +264,7 @@ export function render(positioned: PositionedNode, canvas: Canvas, theme: Theme)
   log.render._('render %s x=%f y=%f w=%f h=%f',
     node.type, positioned.x, positioned.y, positioned.width, positioned.height);
 
-  const handled = nodeHandlerRegistry.render(positioned, canvas, theme);
+  const handled = elementHandlerRegistry.render(positioned, canvas, theme);
   if (!handled) {
     throw new Error(`No handler registered for node type: ${node.type}`);
   }

@@ -1,14 +1,14 @@
 // DIAGRAM Node Handler
 // Consolidates all DIAGRAM-related logic from compute-layout.ts, render.ts, and measure.ts
 
-import { NODE_TYPE, type DiagramNode, type DiagramShape, type PositionedNode } from '../nodes.js';
-import type { Theme, TextStyleName, TextContent } from '../types.js';
-import { TEXT_STYLE, NODE_STYLE } from '../types.js';
-import type { Bounds } from '../bounds.js';
-import type { Canvas } from '../canvas.js';
-import type { MeasurementRequests, TextMeasurementRequest, StyleMeasurementRequest } from '../measure.js';
-import { nodeHandlerRegistry, type NodeHandler, type LayoutContext } from './registry.js';
-import { log } from '../../utils/log.js';
+import { NODE_TYPE, type DiagramNode, type DiagramShape, type PositionedNode } from '../core/nodes.js';
+import type { Theme, TextStyleName, TextContent } from '../core/types.js';
+import { TEXT_STYLE, NODE_STYLE } from '../core/types.js';
+import type { Bounds } from '../core/bounds.js';
+import type { Canvas } from '../core/canvas.js';
+import type { MeasurementRequests, TextMeasurementRequest, StyleMeasurementRequest } from '../core/measure.js';
+import { elementHandlerRegistry, type ElementHandler, type LayoutContext } from '../core/element-registry.js';
+import { log } from '../utils/log.js';
 import { execSync } from 'child_process';
 import { writeFileSync, mkdtempSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
@@ -215,7 +215,7 @@ function makeStyleKey(styleName: TextStyleName): string {
 // DIAGRAM HANDLER
 // ============================================
 
-export const diagramHandler: NodeHandler<DiagramNode> = {
+export const diagramHandler: ElementHandler<DiagramNode> = {
   nodeType: NODE_TYPE.DIAGRAM,
 
   /**
@@ -363,4 +363,4 @@ export const diagramHandler: NodeHandler<DiagramNode> = {
 // ============================================
 
 // Register handler on module load
-nodeHandlerRegistry.register(diagramHandler);
+elementHandlerRegistry.register(diagramHandler);

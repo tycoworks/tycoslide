@@ -1,20 +1,20 @@
 // LINE Node Handler
 // Consolidates all LINE-related logic from compute-layout.ts, render.ts, and intrinsics.ts
 
-import { NODE_TYPE, type LineNode, type PositionedNode } from '../nodes.js';
-import type { Theme } from '../types.js';
-import { SHAPE, DIRECTION } from '../types.js';
-import type { Bounds } from '../bounds.js';
-import type { Canvas } from '../canvas.js';
-import { nodeHandlerRegistry, type NodeHandler, type LayoutContext } from './registry.js';
-import { ptToIn } from '../../utils/font-utils.js';
-import { log } from '../../utils/log.js';
+import { NODE_TYPE, type LineNode, type PositionedNode } from '../core/nodes.js';
+import type { Theme } from '../core/types.js';
+import { SHAPE, DIRECTION } from '../core/types.js';
+import type { Bounds } from '../core/bounds.js';
+import type { Canvas } from '../core/canvas.js';
+import { elementHandlerRegistry, type ElementHandler, type LayoutContext } from '../core/element-registry.js';
+import { ptToIn } from '../utils/font-utils.js';
+import { log } from '../utils/log.js';
 
 // ============================================
 // LINE HANDLER
 // ============================================
 
-export const lineHandler: NodeHandler<LineNode> = {
+export const lineHandler: ElementHandler<LineNode> = {
   nodeType: NODE_TYPE.LINE,
 
   /**
@@ -113,4 +113,4 @@ export const lineHandler: NodeHandler<LineNode> = {
 // ============================================
 
 // Register handler on module load
-nodeHandlerRegistry.register(lineHandler);
+elementHandlerRegistry.register(lineHandler);

@@ -1,13 +1,16 @@
 // Layout Module
 // Public API for layout computation with overflow handling
 //
-// All node-type-specific logic is in layout/handlers/ - this file delegates.
+// All node-type-specific logic is in elements/ - this file delegates.
+
+// Side-effect import: register element handlers
+import '../elements/index.js';
 
 import { NODE_TYPE, type ElementNode, type PositionedNode } from './nodes.js';
 import type { Theme, Direction } from './types.js';
 import type { TextMeasurer } from '../utils/text-measurer.js';
 import { Bounds } from './bounds.js';
-import { nodeHandlerRegistry } from './layout/index.js';
+import { elementHandlerRegistry } from './element-registry.js';
 
 // ============================================
 // LAYOUT OPTIONS & ERRORS
@@ -95,7 +98,7 @@ export function getNodeHeight(
   theme: Theme,
   measurer: TextMeasurer
 ): number {
-  const height = nodeHandlerRegistry.getHeight(node, width, { theme, measurer });
+  const height = elementHandlerRegistry.getHeight(node, width, { theme, measurer });
   if (height !== undefined) {
     return height;
   }
@@ -112,7 +115,7 @@ export function getMinNodeHeight(
   theme: Theme,
   measurer: TextMeasurer
 ): number {
-  const minHeight = nodeHandlerRegistry.getMinHeight(node, width, { theme, measurer });
+  const minHeight = elementHandlerRegistry.getMinHeight(node, width, { theme, measurer });
   if (minHeight !== undefined) {
     return minHeight;
   }
@@ -138,12 +141,12 @@ export function computeLayout(
 ): PositionedNode {
   const ctx = { theme, measurer, parentDirection, options };
 
-  const positioned = nodeHandlerRegistry.computeLayout(node, bounds, ctx);
+  const positioned = elementHandlerRegistry.computeLayout(node, bounds, ctx);
   if (positioned !== undefined) {
     // Overflow checking is centralized here (not in handlers) for consistent enforcement
     // Only text-like content can overflow - images/diagrams scale to fit
     if (node.type === NODE_TYPE.TEXT || node.type === NODE_TYPE.SLIDE_NUMBER) {
-      const height = nodeHandlerRegistry.getHeight(node, bounds.w, ctx);
+      const height = elementHandlerRegistry.getHeight(node, bounds.w, ctx);
       if (height !== undefined) {
         checkOverflow(node.type, height, bounds.h, bounds.x, bounds.y, options);
       }
