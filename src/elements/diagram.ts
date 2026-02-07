@@ -6,7 +6,7 @@ import type { Theme, TextStyleName, TextContent } from '../core/types.js';
 import { TEXT_STYLE, NODE_STYLE } from '../core/types.js';
 import type { Bounds } from '../core/bounds.js';
 import type { Canvas } from '../core/canvas.js';
-import type { MeasurementRequests, TextMeasurementRequest, StyleMeasurementRequest } from '../core/measure.js';
+import type { MeasurementRequests } from '../core/measure.js';
 import { elementHandlerRegistry, type ElementHandler, type LayoutContext } from '../core/element-registry.js';
 import { log } from '../utils/log.js';
 import { execSync } from 'child_process';
@@ -199,19 +199,6 @@ function renderDiagramShapeNode(nodeDef: { id: string; label: string; shape: Dia
 }
 
 // ============================================
-// MEASUREMENT HELPERS
-// ============================================
-
-function makeTextKey(styleName: TextStyleName, availableWidth: number, content: TextContent): string {
-  const text = typeof content === 'string' ? content : content.map(run => typeof run === 'string' ? run : run.text).join('');
-  return `text|${styleName}|${availableWidth.toFixed(4)}|${text}`;
-}
-
-function makeStyleKey(styleName: TextStyleName): string {
-  return `style|${styleName}`;
-}
-
-// ============================================
 // DIAGRAM HANDLER
 // ============================================
 
@@ -325,36 +312,24 @@ export const diagramHandler: ElementHandler<DiagramNode> = {
 
   /**
    * Collect text measurements for diagram nodes.
+   * Returns raw data - measure.ts handles key generation and deduplication.
    */
   collectMeasurements(node: DiagramNode, bounds: Bounds, theme: Theme): MeasurementRequests {
-    const text: TextMeasurementRequest[] = [];
-    const styles: StyleMeasurementRequest[] = [];
-    const seenTextIds = new Set<string>();
-    const seenStyleIds = new Set<string>();
+    const styleName = TEXT_STYLE.SMALL;
+    const approxWidth = bounds.w / Math.max(node.nodes.length, 1);
 
-    // Diagram text uses SMALL style
-    const styleId = makeStyleKey(TEXT_STYLE.SMALL);
-    if (!seenStyleIds.has(styleId)) {
-      seenStyleIds.add(styleId);
-      styles.push({ id: styleId, style: theme.textStyles[TEXT_STYLE.SMALL] });
-    }
-
-    // Approximate box width
-    const approxWidth = bounds.w / node.nodes.length;
-    for (const box of node.nodes) {
-      const textId = makeTextKey(TEXT_STYLE.SMALL, approxWidth, box.label);
-      if (!seenTextIds.has(textId)) {
-        seenTextIds.add(textId);
-        text.push({
-          id: textId,
-          content: box.label,
-          style: theme.textStyles[TEXT_STYLE.SMALL],
-          availableWidth: approxWidth,
-        });
-      }
-    }
-
-    return { text, styles };
+    return {
+      text: node.nodes.map(box => ({
+        styleName,
+        content: box.label,
+        style: theme.textStyles[styleName],
+        availableWidth: approxWidth,
+      })),
+      styles: [{
+        styleName,
+        style: theme.textStyles[styleName],
+      }],
+    };
   },
 };
 

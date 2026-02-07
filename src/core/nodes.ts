@@ -32,6 +32,8 @@ export const NODE_TYPE = {
   RECTANGLE: 'rectangle',
   // Special (external rendering)
   DIAGRAM: 'diagram',
+  // Higher-level abstraction (expands to primitives)
+  COMPONENT: 'component',
 } as const;
 
 export type NodeType = typeof NODE_TYPE[keyof typeof NODE_TYPE];
@@ -198,7 +200,7 @@ export interface DiagramNode {
  * into primitive ElementNodes at Presentation.add() time.
  */
 export interface ComponentNode<TProps = unknown> {
-  type: 'component';
+  type: typeof NODE_TYPE.COMPONENT;
   componentName: string;
   props: TProps;
 }

@@ -72,23 +72,6 @@ function renderText(
 }
 
 // ============================================
-// MEASUREMENT HELPERS
-// ============================================
-
-function textToString(content: TextContent): string {
-  if (typeof content === 'string') return content;
-  return content.map(run => typeof run === 'string' ? run : run.text).join('');
-}
-
-function makeTextKey(styleName: TextStyleName, availableWidth: number, content: TextContent): string {
-  return `text|${styleName}|${availableWidth.toFixed(4)}|${textToString(content)}`;
-}
-
-function makeStyleKey(styleName: TextStyleName): string {
-  return `style|${styleName}`;
-}
-
-// ============================================
 // TEXT HANDLER
 // ============================================
 
@@ -165,21 +148,20 @@ export const textHandler: ElementHandler<TextNode> = {
 
   /**
    * Collect text measurement requests for browser-based measurement.
+   * Returns raw data - measure.ts handles key generation.
    */
   collectMeasurements(node: TextNode, bounds: Bounds, theme: Theme): MeasurementRequests {
     const styleName = node.style ?? TEXT_STYLE.BODY;
-    const textId = makeTextKey(styleName, bounds.w, node.content);
-    const styleId = makeStyleKey(styleName);
 
     return {
       text: [{
-        id: textId,
+        styleName,
         content: node.content,
         style: theme.textStyles[styleName],
         availableWidth: bounds.w,
       }],
       styles: [{
-        id: styleId,
+        styleName,
         style: theme.textStyles[styleName],
       }],
     };

@@ -269,7 +269,7 @@ export interface CardProps {
 
 export function card(props: CardProps): ComponentNode<CardProps> {
   return {
-    type: 'component',
+    type: NODE_TYPE.COMPONENT,
     componentName: 'card',
     props,
   };
@@ -296,7 +296,7 @@ interface ListComponentProps extends ListProps {
 
 export function list(items: ListItemContent[], props?: ListProps): ComponentNode<ListComponentProps> {
   return {
-    type: 'component',
+    type: NODE_TYPE.COMPONENT,
     componentName: 'list',
     props: { ...props, items },
   };
@@ -349,7 +349,7 @@ interface TableComponentProps extends TableProps {
 
 export function table(data: TableCellContent[][], props?: TableProps): ComponentNode<TableComponentProps> {
   return {
-    type: 'component',
+    type: NODE_TYPE.COMPONENT,
     componentName: 'table',
     props: { ...props, data },
   };

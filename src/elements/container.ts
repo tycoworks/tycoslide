@@ -16,6 +16,7 @@ import { Bounds as BoundsClass } from '../core/bounds.js';
 import type { Canvas } from '../core/canvas.js';
 import { elementHandlerRegistry, getIntrinsicWidth, type ElementHandler, type LayoutContext } from '../core/element-registry.js';
 import { distributeFlexSpace, type FlexChild } from '../core/flex.js';
+import { MeasurementCollector, type MeasurementRequests } from '../core/measure.js';
 import { resolveGap } from '../utils/node-utils.js';
 import { buildRowFlexChildren } from '../utils/flex-utils.js';
 import { ptToIn } from '../utils/font-utils.js';
@@ -186,6 +187,36 @@ function createContainerHandler(config: ContainerConfig): ElementHandler<Contain
           elementHandlerRegistry.render(child, canvas, theme);
         }
       }
+    },
+
+    collectMeasurements(node: ContainerNode, bounds: Bounds, theme: Theme): MeasurementRequests {
+      const collector = new MeasurementCollector();
+      const gap = resolveGap(node.gap, theme);
+      const n = node.children.length;
+      const totalGap = gap * (n - 1);
+
+      if (isRow) {
+        // ROW: calculate child widths, then collect from each child
+        const availableWidth = bounds.w - totalGap;
+        const flexChildren = buildRowFlexChildren(node.children);
+        const { sizes: childWidths } = distributeFlexSpace(flexChildren, availableWidth);
+
+        let x = bounds.x;
+        for (let i = 0; i < n; i++) {
+          const childBounds = new BoundsClass(x, bounds.y, childWidths[i], bounds.h);
+          const childRequests = elementHandlerRegistry.collectMeasurements(node.children[i], childBounds, theme);
+          if (childRequests) collector.merge(childRequests);
+          x += childWidths[i] + gap;
+        }
+      } else {
+        // COLUMN: each child gets full width
+        for (const child of node.children) {
+          const childRequests = elementHandlerRegistry.collectMeasurements(child, bounds, theme);
+          if (childRequests) collector.merge(childRequests);
+        }
+      }
+
+      return collector.getRequests();
     },
   };
 }
@@ -403,6 +434,17 @@ export const stackHandler: ElementHandler<StackNode> = {
         elementHandlerRegistry.render(child, canvas, theme);
       }
     }
+  },
+
+  collectMeasurements(node: StackNode, bounds: Bounds, theme: Theme): MeasurementRequests {
+    const collector = new MeasurementCollector();
+
+    for (const child of node.children) {
+      const childRequests = elementHandlerRegistry.collectMeasurements(child, bounds, theme);
+      if (childRequests) collector.merge(childRequests);
+    }
+
+    return collector.getRequests();
   },
 };
 
