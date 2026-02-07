@@ -8,6 +8,13 @@ import type { Canvas } from '../core/canvas.js';
 import { elementHandlerRegistry, type ElementHandler, type LayoutContext } from '../core/element-registry.js';
 import { log } from '../utils/log.js';
 import imageSizeDefault from 'image-size';
+
+/**
+ * Reference DPI for pixel-to-inch conversion.
+ * Defines "native size": a 960px image at 96 DPI = 10 inches.
+ * maxScaleFactor then controls how much beyond native we allow.
+ */
+const REFERENCE_DPI = 96;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const imageSize = (imageSizeDefault as any).default || imageSizeDefault;
 
@@ -19,9 +26,9 @@ export const imageHandler: ElementHandler<ImageNode> = {
   nodeType: NODE_TYPE.IMAGE,
 
   /**
-   * Compute image height based on aspect ratio and DPI constraints.
+   * Compute image height based on aspect ratio and scale constraints.
    * Image fills available width, height determined by aspect ratio.
-   * Constrained by DPI limit to prevent upscaling beyond native resolution.
+   * Constrained by maxScaleFactor to prevent upscaling beyond native resolution.
    */
   getHeight(node: ImageNode, width: number, ctx: LayoutContext): number {
     const dimensions = imageSize(node.src);
@@ -31,10 +38,11 @@ export const imageHandler: ElementHandler<ImageNode> = {
     const pixelWidth = dimensions.width;
     const pixelHeight = dimensions.height;
     const aspectRatio = pixelWidth / pixelHeight;
-    const maxHeightFromDPI = pixelHeight / ctx.theme.spacing.minDisplayDPI;
+    // maxScaleFactor controls upscaling limit relative to native size (at REFERENCE_DPI)
+    const maxHeight = (pixelHeight / REFERENCE_DPI) * ctx.theme.spacing.maxScaleFactor;
     const naturalHeight = width / aspectRatio;
-    const height = Math.min(naturalHeight, maxHeightFromDPI);
-    log.layout.height('HEIGHT image %dx%d ar=%f -> %f', pixelWidth, pixelHeight, aspectRatio, height);
+    const height = Math.min(naturalHeight, maxHeight);
+    log.layout.height('HEIGHT image %dx%d ar=%f maxScale=%f -> %f', pixelWidth, pixelHeight, aspectRatio, ctx.theme.spacing.maxScaleFactor, height);
     return height;
   },
 

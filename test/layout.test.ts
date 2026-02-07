@@ -438,8 +438,7 @@ describe('Gap Values', () => {
 // Helper Factories for Leaf Nodes
 // ------------------------------------------
 
-import type { ImageNode, LineNode, DiagramNode } from '../src/core/nodes.js';
-import { DIAGRAM_DIRECTION, NODE_SHAPE } from '../src/core/nodes.js';
+import type { ImageNode, LineNode } from '../src/core/nodes.js';
 
 function imageNode(src = 'test.png'): ImageNode {
   return {
@@ -452,16 +451,6 @@ function lineNode(): LineNode {
   return { type: NODE_TYPE.LINE };
 }
 
-function diagramNode(): DiagramNode {
-  return {
-    type: NODE_TYPE.DIAGRAM,
-    direction: DIAGRAM_DIRECTION.LEFT_TO_RIGHT,
-    nodes: [],
-    subgraphs: [],
-    edges: [],
-    classes: [],
-  };
-}
 
 // ============================================
 // TEXT NODE TESTS
@@ -590,50 +579,3 @@ describe('Line Node Layout', () => {
   });
 });
 
-// ============================================
-// DIAGRAM NODE TESTS
-// ============================================
-
-describe('Diagram Node Layout', () => {
-  const theme = mockTheme();
-  const measurer = mockMeasurer();
-
-  test('getNodeHeight returns 0 for diagrams (rendered externally)', () => {
-    const node = diagramNode();
-    const height = getNodeHeight(node, 10, theme, measurer);
-
-    // Diagram height cannot be computed at layout time - returns 0
-    // computeLayout will use bounds.h instead
-    approx(height, 0, 'diagram getNodeHeight returns 0');
-  });
-
-  test('diagram height independent of width in getNodeHeight', () => {
-    const node = diagramNode();
-    const height1 = getNodeHeight(node, 5, theme, measurer);
-    const height2 = getNodeHeight(node, 20, theme, measurer);
-
-    // Height is always 0 from getNodeHeight
-    approx(height1, 0, 'narrow diagram height');
-    approx(height2, 0, 'wide diagram height');
-  });
-
-  test('diagram layout uses bounds height', () => {
-    const node = diagramNode();
-    const bounds = new Bounds(1, 2, 10, 8);
-    const positioned = computeLayout(node, bounds, theme, measurer);
-
-    // Diagram uses full bounds height (container determines size)
-    approx(positioned.x, 1, 'x position');
-    approx(positioned.y, 2, 'y position');
-    approx(positioned.width, 10, 'width');
-    approx(positioned.height, 8, 'uses bounds.h');
-  });
-
-  test('empty diagram behaves same as populated', () => {
-    const empty = diagramNode();
-    const height = getNodeHeight(empty, 10, theme, measurer);
-
-    // Height is 0 regardless of content
-    approx(height, 0, 'empty diagram getNodeHeight');
-  });
-});

@@ -7,7 +7,6 @@ import './rectangle.js';
 import './text.js';
 import './image.js';
 import './slide-number.js';
-import './diagram.js';
 import './container.js';
 
 // Re-export handlers for direct access if needed
@@ -16,5 +15,4 @@ export { rectangleHandler } from './rectangle.js';
 export { textHandler } from './text.js';
 export { imageHandler } from './image.js';
 export { slideNumberHandler } from './slide-number.js';
-export { diagramHandler } from './diagram.js';
 export { rowHandler, columnHandler, stackHandler } from './container.js';

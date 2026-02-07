@@ -78,7 +78,7 @@ export { FontkitTextMeasurer, fontkitMeasurer } from './utils/fontkit-measurer.j
 // NODE TYPES
 // ============================================
 
-export { NODE_TYPE, DIAGRAM_DIRECTION, NODE_SHAPE } from './core/nodes.js';
+export { NODE_TYPE } from './core/nodes.js';
 export type {
   NodeType,
   ElementNode,
@@ -93,13 +93,6 @@ export type {
   StackNode,
   RectangleNode,
   RectangleBorder,
-  DiagramNode,
-  DiagramShape,
-  DiagramDirection,
-  DiagramNodeDef,
-  DiagramSubgraphDef,
-  DiagramEdgeDef,
-  DiagramClassDef,
   PositionedNode,
 } from './core/nodes.js';
 
@@ -167,8 +160,12 @@ export {
 export {
   DiagramBuilder,
   diagram,
+  DIAGRAM_DIRECTION,
+  NODE_SHAPE,
   type DiagramProps,
   type DiagramNodeRef,
+  type DiagramDirection,
+  type DiagramShape,
   type SubgraphOptions,
   type EdgeOptions,
 } from './components/diagram.js';

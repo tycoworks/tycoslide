@@ -56,7 +56,7 @@ export function mockTheme(options?: {
   cellPadding?: number;
   bulletSpacing?: number;
   margin?: number;
-  minDisplayDPI?: number;
+  maxScaleFactor?: number;
   lineSpacing?: number;
   borderWidth?: number;
   borderRadius?: number;
@@ -68,7 +68,7 @@ export function mockTheme(options?: {
   const cellPadding = options?.cellPadding ?? 0.1;
   const bulletSpacing = options?.bulletSpacing ?? 1.2;
   const margin = options?.margin ?? 0.5;
-  const minDisplayDPI = options?.minDisplayDPI ?? 96;
+  const maxScaleFactor = options?.maxScaleFactor ?? 1.0;
   const lineSpacing = options?.lineSpacing ?? 1.0;
   const borderWidth = options?.borderWidth ?? 1;
   const borderRadius = options?.borderRadius ?? 0.1;
@@ -89,14 +89,16 @@ export function mockTheme(options?: {
       subtleOpacity: 20,
     },
     spacing: {
+      unit: 0.03125,
       gap,
       gapTight,
       gapLoose,
       padding,
       cellPadding,
       bulletSpacing,
+      bulletIndentMultiplier: 1.5,
       margin,
-      minDisplayDPI,
+      maxScaleFactor,
       lineSpacing,
     },
     borders: {

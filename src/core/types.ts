@@ -295,7 +295,7 @@ export interface Theme {
     cellPadding: number;    // Padding inside table cells
     bulletSpacing: number;  // Line spacing multiple for lists
     bulletIndentMultiplier: number; // Multiplier for bullet indent (fontSize * multiplier = points)
-    minDisplayDPI: number;  // Minimum effective DPI for image display (e.g. 96)
+    maxScaleFactor: number; // Max image scale vs native size (1.0 = native, 2.0 = allow 2x upscale)
     lineSpacing: number;    // Default line height multiplier for text (e.g. 1.2)
   };
   borders: {

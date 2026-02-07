@@ -299,7 +299,7 @@ describe('DiagramBuilder', () => {
   // ------------------------------------------
   // Component Expansion
   // ------------------------------------------
-  test('componentRegistry can expand diagram', async () => {
+  test('componentRegistry can expand diagram to ImageNode', async () => {
     const { componentRegistry } = await import('../src/core/component-registry.js');
     const { NODE_TYPE } = await import('../src/core/nodes.js');
     const { mockTheme, mockMeasurer } = await import('./mocks.js');
@@ -314,9 +314,8 @@ describe('DiagramBuilder', () => {
       measurer: mockMeasurer({ lineHeight: 0.5, lines: 1 })
     });
 
-    // Expansion should produce DiagramNode
-    assert.strictEqual(expanded.type, NODE_TYPE.DIAGRAM);
-    assert.strictEqual((expanded as any).direction, 'LR');
-    assert.strictEqual((expanded as any).nodes.length, 2);
+    // Diagram now expands to ImageNode (mermaid renders PNG during expansion)
+    assert.strictEqual(expanded.type, NODE_TYPE.IMAGE);
+    assert.ok((expanded as any).src, 'ImageNode should have src pointing to rendered PNG');
   });
 });

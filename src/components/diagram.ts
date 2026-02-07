@@ -1,22 +1,16 @@
 // Diagram Component
-// Declarative builder for flowchart diagrams (rendered via mermaid-cli at render time)
+// Declarative builder for flowchart diagrams
+// Expands to ImageNode after rendering via mermaid-cli
 
 import {
   NODE_STYLE,
   type NodeStyle,
+  type Theme,
 } from '../core/types.js';
 
 import {
   NODE_TYPE,
-  DIAGRAM_DIRECTION,
-  NODE_SHAPE,
-  type DiagramNode,
-  type DiagramNodeDef,
-  type DiagramSubgraphDef,
-  type DiagramEdgeDef,
-  type DiagramClassDef,
-  type DiagramShape,
-  type DiagramDirection,
+  type ImageNode,
 } from '../core/nodes.js';
 
 import {
@@ -26,9 +20,12 @@ import {
   type ExpansionContext,
 } from '../core/component-registry.js';
 
-// Re-export for convenience
-export { NODE_STYLE, type NodeStyle, DIAGRAM_DIRECTION, NODE_SHAPE };
-export type { DiagramDirection, DiagramShape };
+import { execSync } from 'child_process';
+import { writeFileSync, mkdtempSync, existsSync } from 'fs';
+import { join, dirname } from 'path';
+import { tmpdir } from 'os';
+import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 
 // ============================================
 // CONSTANTS
@@ -36,6 +33,69 @@ export type { DiagramDirection, DiagramShape };
 
 /** Component name for diagram */
 export const DIAGRAM_COMPONENT = 'diagram' as const;
+
+/** Diagram flow direction */
+export const DIAGRAM_DIRECTION = {
+  LEFT_TO_RIGHT: 'LR',
+  RIGHT_TO_LEFT: 'RL',
+  TOP_TO_BOTTOM: 'TB',
+  BOTTOM_TO_TOP: 'BT',
+} as const;
+export type DiagramDirection = typeof DIAGRAM_DIRECTION[keyof typeof DIAGRAM_DIRECTION];
+
+/** Timeout for mermaid-cli rendering in milliseconds */
+const MERMAID_RENDER_TIMEOUT_MS = 30000;
+
+/** Max directory levels to search for mmdc binary */
+const MAX_MMDC_SEARCH_DEPTH = 6;
+
+/** Diagram node shape */
+export const NODE_SHAPE = {
+  RECT: 'rect',
+  ROUND: 'round',
+  STADIUM: 'stadium',
+  CYLINDER: 'cylinder',
+  HEXAGON: 'hexagon',
+  DIAMOND: 'diamond',
+  PARALLELOGRAM: 'parallelogram',
+  SUBROUTINE: 'subroutine',
+} as const;
+export type DiagramShape = typeof NODE_SHAPE[keyof typeof NODE_SHAPE];
+
+// Re-export for convenience
+export { NODE_STYLE, type NodeStyle };
+
+// ============================================
+// DIAGRAM DATA TYPES
+// ============================================
+
+/** A node in the diagram */
+export interface DiagramNodeDef {
+  id: string;
+  label: string;
+  shape: DiagramShape;
+}
+
+/** A subgraph grouping */
+export interface DiagramSubgraphDef {
+  id: string;
+  label?: string;
+  direction?: DiagramDirection;
+  nodeIds: string[];
+}
+
+/** An edge between nodes */
+export interface DiagramEdgeDef {
+  from: string[];
+  to: string[];
+  label?: string;
+}
+
+/** Style class assignment */
+export interface DiagramClassDef {
+  nodeId: string;
+  style: NodeStyle;
+}
 
 // ============================================
 // INTERFACES
@@ -80,22 +140,239 @@ export interface EdgeOptions {
 }
 
 // ============================================
+// MERMAID RENDERING HELPERS
+// ============================================
+
+function findMmdcPath(): string {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+
+  let dir = __dirname;
+  for (let i = 0; i < MAX_MMDC_SEARCH_DEPTH; i++) {
+    const candidate = join(dir, 'node_modules', '.bin', 'mmdc');
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+    dir = dirname(dir);
+  }
+
+  try {
+    const require = createRequire(import.meta.url);
+    const cliPath = require.resolve('@mermaid-js/mermaid-cli/src/cli.js');
+    return `node "${cliPath}"`;
+  } catch {
+    return 'mmdc';
+  }
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function buildDiagramConfig(theme: Theme): object {
+  const { colors, textStyles } = theme;
+  const fontFamily = textStyles.body.fontFamily.normal.name;
+  const alphaDecimal = colors.subtleOpacity / 100;
+
+  return {
+    theme: 'base',
+    themeVariables: {
+      fontFamily,
+      background: `#${colors.background}`,
+      primaryColor: `#${colors.primary}`,
+      primaryTextColor: `#${colors.text}`,
+      primaryBorderColor: `#${colors.secondary}`,
+      lineColor: `#${colors.secondary}`,
+      secondaryColor: `#${colors.primary}`,
+      tertiaryColor: `#${colors.primary}`,
+      textColor: `#${colors.text}`,
+      titleColor: `#${colors.text}`,
+      nodeTextColor: `#${colors.text}`,
+      clusterBkg: hexToRgba(colors.secondary, alphaDecimal),
+      clusterBorder: `#${colors.secondary}`,
+      edgeLabelBackground: `#${colors.background}`,
+    },
+  };
+}
+
+function buildClassDefs(theme: Theme): string {
+  const { colors } = theme;
+  const alpha = Math.round(colors.subtleOpacity / 100 * 255).toString(16).padStart(2, '0');
+
+  return Object.values(NODE_STYLE).map((styleName) => {
+    const baseColor = (colors as unknown as Record<string, string>)[styleName];
+    if (!baseColor || typeof baseColor !== 'string') return null;
+    const fill = styleName === NODE_STYLE.PRIMARY
+      ? `#${baseColor}`
+      : `#${baseColor}${alpha}`;
+    return `classDef ${styleName} fill:${fill}`;
+  }).filter(Boolean).join('\n');
+}
+
+function buildSubgraphStyles(definition: string, theme: Theme): string {
+  const { colors } = theme;
+  const alpha = Math.round(colors.subtleOpacity / 100 * 255).toString(16).padStart(2, '0');
+  const fillColor = `#${colors.secondary}${alpha}`;
+
+  const subgraphPattern = /subgraph\s+(\w+)/g;
+  const ids: string[] = [];
+  let match;
+  while ((match = subgraphPattern.exec(definition)) !== null) {
+    ids.push(match[1]);
+  }
+
+  if (ids.length === 0) return '';
+  return ids.map(id => `style ${id} fill:${fillColor}`).join('\n');
+}
+
+function injectClassDefs(definition: string, theme: Theme): string {
+  const classDefs = buildClassDefs(theme);
+  const subgraphStyles = buildSubgraphStyles(definition, theme);
+
+  const diagramPattern = /^(\s*(?:flowchart|graph)\s+\w*\s*\n)/m;
+  const match = definition.match(diagramPattern);
+
+  if (match) {
+    const [fullMatch] = match;
+    let result = definition.replace(fullMatch, `${fullMatch}${classDefs}\n`);
+    if (subgraphStyles) {
+      result = result.trimEnd() + '\n' + subgraphStyles;
+    }
+    return result;
+  }
+
+  let result = `${classDefs}\n${definition}`;
+  if (subgraphStyles) {
+    result = result.trimEnd() + '\n' + subgraphStyles;
+  }
+  return result;
+}
+
+function buildDiagramDefinition(props: DiagramComponentProps): string {
+  const lines: string[] = [];
+
+  lines.push(`%%{init: {"flowchart": {"curve": "linear"}}}%%`);
+  lines.push(`flowchart ${props.direction}`);
+
+  const renderedNodes = new Set<string>();
+
+  // Render subgraphs
+  for (const sg of props.subgraphs) {
+    const label = sg.label ? `${sg.id}[${sg.label}]` : sg.id;
+    lines.push(`    subgraph ${label}`);
+    if (sg.direction) {
+      lines.push(`        direction ${sg.direction}`);
+    }
+    for (const nodeId of sg.nodeIds) {
+      const nodeDef = props.nodes.find(n => n.id === nodeId);
+      if (nodeDef) {
+        lines.push(`        ${renderDiagramShapeNode(nodeDef)}`);
+        renderedNodes.add(nodeId);
+      }
+    }
+    lines.push(`    end`);
+  }
+
+  // Render remaining nodes
+  for (const nodeDef of props.nodes) {
+    if (!renderedNodes.has(nodeDef.id)) {
+      lines.push(`    ${renderDiagramShapeNode(nodeDef)}`);
+    }
+  }
+
+  // Render edges
+  for (const edge of props.edges) {
+    const fromStr = edge.from.length > 1 ? edge.from.join(' & ') : edge.from[0];
+    const toStr = edge.to.length > 1 ? edge.to.join(' & ') : edge.to[0];
+    const arrow = edge.label ? `-->|${edge.label}|` : '-->';
+    lines.push(`    ${fromStr} ${arrow} ${toStr}`);
+  }
+
+  // Render class assignments
+  const styleGroups = new Map<string, string[]>();
+  for (const cls of props.classes) {
+    if (!styleGroups.has(cls.style)) styleGroups.set(cls.style, []);
+    styleGroups.get(cls.style)!.push(cls.nodeId);
+  }
+  for (const [style, ids] of styleGroups) {
+    lines.push(`    class ${ids.join(',')} ${style}`);
+  }
+
+  return lines.join('\n');
+}
+
+function renderDiagramShapeNode(nodeDef: DiagramNodeDef): string {
+  const { id, label, shape } = nodeDef;
+  switch (shape) {
+    case 'cylinder': return `${id}[(${label})]`;
+    case 'hexagon': return `${id}{{${label}}}`;
+    case 'stadium': return `${id}([${label}])`;
+    case 'round': return `${id}(${label})`;
+    case 'diamond': return `${id}{${label}}`;
+    case 'parallelogram': return `${id}[/${label}/]`;
+    case 'subroutine': return `${id}[[${label}]]`;
+    case 'rect': return `${id}[${label}]`;
+  }
+}
+
+/**
+ * Render diagram to PNG via mermaid-cli.
+ * Returns the path to the generated PNG file.
+ */
+function renderDiagramToPng(props: DiagramComponentProps, theme: Theme): string {
+  const scale = props.scale ?? 2;
+
+  // Build mermaid definition from props
+  const definition = buildDiagramDefinition(props);
+
+  // Create temp directory and files
+  const tmpDir = mkdtempSync(join(tmpdir(), 'diagram-'));
+  const inputPath = join(tmpDir, 'diagram.mmd');
+  const outputPath = join(tmpDir, 'diagram.png');
+  const configPath = join(tmpDir, 'config.json');
+
+  // Inject theme-based class definitions
+  const processedDefinition = injectClassDefs(definition, theme);
+  writeFileSync(inputPath, processedDefinition);
+
+  // Write mermaid config
+  const config = buildDiagramConfig(theme);
+  writeFileSync(configPath, JSON.stringify(config));
+
+  // Render via mermaid-cli
+  const mmdc = findMmdcPath();
+  try {
+    execSync(
+      `${mmdc} -i "${inputPath}" -o "${outputPath}" -c "${configPath}" -s ${scale} -b transparent`,
+      { stdio: 'pipe', timeout: MERMAID_RENDER_TIMEOUT_MS },
+    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(`Diagram rendering failed: ${message}`);
+  }
+
+  return outputPath;
+}
+
+// ============================================
 // COMPONENT EXPANSION
 // ============================================
 
 /**
- * Expand diagram component props into DiagramNode (passthrough).
- * The expansion is trivial - just reshapes the data into the ElementNode format.
+ * Expand diagram component to ImageNode.
+ * Renders the diagram via mermaid-cli and returns an image reference.
  */
-function expandDiagram(props: DiagramComponentProps, _context: ExpansionContext): DiagramNode {
+function expandDiagram(props: DiagramComponentProps, context: ExpansionContext): ImageNode {
+  // Render diagram to PNG
+  const pngPath = renderDiagramToPng(props, context.theme);
+
+  // Return an ImageNode pointing to the rendered PNG
   return {
-    type: NODE_TYPE.DIAGRAM,
-    direction: props.direction,
-    nodes: props.nodes,
-    subgraphs: props.subgraphs,
-    edges: props.edges,
-    classes: props.classes,
-    scale: props.scale,
+    type: NODE_TYPE.IMAGE,
+    src: pngPath,
   };
 }
 
@@ -112,7 +389,7 @@ componentRegistry.register({
 /**
  * Declarative diagram builder that implements ComponentNode.
  * Use the fluent API to build the diagram, then use it directly where content is expected.
- * Theme is only needed at render time, not construction.
+ * Theme is only needed at expansion time (when diagram is rendered to PNG).
  *
  * @example
  * ```typescript
@@ -250,7 +527,7 @@ export class DiagramBuilder implements ComponentNode<DiagramComponentProps> {
 /**
  * Create a new declarative diagram builder.
  * Returns a ComponentNode with fluent builder methods.
- * No theme needed - theme is applied at render time.
+ * No theme needed at construction - theme is applied at expansion time.
  *
  * @example
  * ```typescript

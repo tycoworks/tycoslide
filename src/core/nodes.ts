@@ -10,7 +10,6 @@ import type {
   HighlightPair,
   ArrowType,
   DashType,
-  NodeStyle,
   SizeValue,
 } from './types.js';
 
@@ -30,8 +29,6 @@ export const NODE_TYPE = {
   STACK: 'stack',  // Z-order composition: children overlap at same position
   // Visual primitive
   RECTANGLE: 'rectangle',
-  // Special (external rendering)
-  DIAGRAM: 'diagram',
   // Higher-level abstraction (expands to primitives)
   COMPONENT: 'component',
 } as const;
@@ -127,71 +124,6 @@ export interface RectangleNode {
 }
 
 // ============================================
-// DIAGRAM NODE (flowchart builder)
-// ============================================
-
-/** Diagram flow direction */
-export const DIAGRAM_DIRECTION = {
-  LEFT_TO_RIGHT: 'LR',
-  RIGHT_TO_LEFT: 'RL',
-  TOP_TO_BOTTOM: 'TB',
-  BOTTOM_TO_TOP: 'BT',
-} as const;
-export type DiagramDirection = typeof DIAGRAM_DIRECTION[keyof typeof DIAGRAM_DIRECTION];
-
-/** Diagram node shape */
-export const NODE_SHAPE = {
-  RECT: 'rect',
-  ROUND: 'round',
-  STADIUM: 'stadium',
-  CYLINDER: 'cylinder',
-  HEXAGON: 'hexagon',
-  DIAMOND: 'diamond',
-  PARALLELOGRAM: 'parallelogram',
-  SUBROUTINE: 'subroutine',
-} as const;
-export type DiagramShape = typeof NODE_SHAPE[keyof typeof NODE_SHAPE];
-
-/** A node in the diagram */
-export interface DiagramNodeDef {
-  id: string;
-  label: string;
-  shape: DiagramShape;
-}
-
-/** A subgraph grouping */
-export interface DiagramSubgraphDef {
-  id: string;
-  label?: string;
-  direction?: DiagramDirection;
-  nodeIds: string[];
-}
-
-/** An edge between nodes */
-export interface DiagramEdgeDef {
-  from: string[];
-  to: string[];
-  label?: string;
-}
-
-/** Style class assignment */
-export interface DiagramClassDef {
-  nodeId: string;
-  style: NodeStyle;
-}
-
-/** Diagram node - stores all builder state as pure data */
-export interface DiagramNode {
-  type: typeof NODE_TYPE.DIAGRAM;
-  direction: DiagramDirection;
-  nodes: DiagramNodeDef[];
-  subgraphs: DiagramSubgraphDef[];
-  edges: DiagramEdgeDef[];
-  classes: DiagramClassDef[];
-  scale?: number;
-}
-
-// ============================================
 // COMPONENT NODE (higher-level abstraction)
 // ============================================
 
@@ -219,8 +151,7 @@ export type ElementNode =
   | RowNode
   | ColumnNode
   | StackNode
-  | RectangleNode
-  | DiagramNode;
+  | RectangleNode;
 
 /** Content that can appear in slides and containers - primitives or components */
 export type SlideContent = ElementNode | ComponentNode;
