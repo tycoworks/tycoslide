@@ -3,7 +3,7 @@
 
 import { defineComponent, type ExpansionContext } from '../core/component-registry.js';
 import { stack, row, column, rectangle, line, text } from '../core/dsl.js';
-import type { ElementNode, TextNode } from '../core/nodes.js';
+import { NODE_TYPE, type ElementNode, type TextNode } from '../core/nodes.js';
 import type { TextContent, TextStyleName, HorizontalAlignment, VerticalAlignment, BorderStyle } from '../core/types.js';
 import { TEXT_STYLE, GAP, SIZE } from '../core/types.js';
 import { toTextContent } from '../utils/node-utils.js';
@@ -96,7 +96,7 @@ function expandTable(props: TableComponentProps, context: ExpansionContext): Ele
       const style = isHeader ? headerTextStyle : textStyle;
 
       // Build cell content
-      const cellText = typeof cellContent === 'object' && 'type' in cellContent && cellContent.type === 'text'
+      const cellText = typeof cellContent === 'object' && 'type' in cellContent && cellContent.type === NODE_TYPE.TEXT
         ? cellContent as TextNode
         : text(toTextContent(cellContent), { style, hAlign, vAlign });
 

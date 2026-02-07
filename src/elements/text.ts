@@ -12,6 +12,13 @@ import { getFontFromFamily, normalizeContent } from '../utils/font-utils.js';
 import { log, contentPreview } from '../utils/log.js';
 
 // ============================================
+// CONSTANTS
+// ============================================
+
+/** Default line spacing multiplier for text rendering */
+const DEFAULT_LINE_SPACING_MULTIPLE = 1.0;
+
+// ============================================
 // TEXT RENDERING HELPERS
 // ============================================
 
@@ -56,7 +63,7 @@ function renderText(
   const fragments = buildTextFragments(content, styleName, theme, colorOverride);
 
   log.render.text('renderText style=%s x=%f y=%f w=%f h=%f align=%s/%s "%s"',
-    styleName, x, y, w, h, hAlign ?? 'left', vAlign ?? 'top', contentPreview(content));
+    styleName, x, y, w, h, hAlign ?? HALIGN.LEFT, vAlign ?? VALIGN.TOP, contentPreview(content));
 
   canvas.addText(fragments, {
     x, y, w, h,
@@ -65,7 +72,7 @@ function renderText(
     color: colorOverride ?? style.color ?? theme.colors.text,
     margin: 0,
     wrap: true,
-    lineSpacingMultiple: 1.0,
+    lineSpacingMultiple: DEFAULT_LINE_SPACING_MULTIPLE,
     align: (hAlign as any) ?? HALIGN.LEFT,
     valign: (vAlign as any) ?? VALIGN.TOP,
   });

@@ -60,11 +60,8 @@ function layoutChild(node: ElementNode, bounds: Bounds, ctx: LayoutContext): Pos
 
 type ContainerNode = RowNode | ColumnNode;
 
-/** Container axis - determines main distribution direction */
-const enum Axis {
-  ROW = 'row',
-  COLUMN = 'column',
-}
+/** Container axis - use DIRECTION.ROW or DIRECTION.COLUMN */
+type Axis = typeof DIRECTION.ROW | typeof DIRECTION.COLUMN;
 
 interface ContainerConfig {
   nodeType: typeof NODE_TYPE.ROW | typeof NODE_TYPE.COLUMN;
@@ -73,17 +70,17 @@ interface ContainerConfig {
 
 const ROW_CONFIG: ContainerConfig = {
   nodeType: NODE_TYPE.ROW,
-  axis: Axis.ROW,
+  axis: DIRECTION.ROW,
 };
 
 const COLUMN_CONFIG: ContainerConfig = {
   nodeType: NODE_TYPE.COLUMN,
-  axis: Axis.COLUMN,
+  axis: DIRECTION.COLUMN,
 };
 
 function createContainerHandler(config: ContainerConfig): ElementHandler<ContainerNode> {
   const { nodeType, axis } = config;
-  const isRow = axis === Axis.ROW;
+  const isRow = axis === DIRECTION.ROW;
   const logFn = isRow ? log.layout.row : log.layout.column;
   const logName = axis;
 

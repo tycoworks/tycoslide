@@ -1,7 +1,7 @@
 // Component Registry
 // Mechanism for registering and expanding component nodes to primitives
 
-import type { ElementNode, ComponentNode } from './nodes.js';
+import { NODE_TYPE, type ElementNode, type ComponentNode } from './nodes.js';
 import type { Theme } from './types.js';
 import type { TextMeasurer } from '../utils/text-measurer.js';
 
@@ -157,7 +157,7 @@ export const componentRegistry = new ComponentRegistry();
 // ============================================
 
 /** Type discriminator for component nodes */
-export const COMPONENT_TYPE = 'component' as const;
+export const COMPONENT_TYPE = NODE_TYPE.COMPONENT;
 
 // ============================================
 // DSL HELPERS

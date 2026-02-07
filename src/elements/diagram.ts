@@ -20,6 +20,16 @@ import imageSizeDefault from 'image-size';
 const imageSize = (imageSizeDefault as any).default || imageSizeDefault;
 
 // ============================================
+// CONSTANTS
+// ============================================
+
+/** Timeout for mermaid-cli rendering in milliseconds */
+const MERMAID_RENDER_TIMEOUT_MS = 30000;
+
+/** Max directory levels to search for mmdc binary */
+const MAX_MMDC_SEARCH_DEPTH = 6;
+
+// ============================================
 // DIAGRAM RENDERING HELPERS
 // ============================================
 
@@ -28,7 +38,7 @@ function findMmdcPath(): string {
   const __dirname = dirname(__filename);
 
   let dir = __dirname;
-  for (let i = 0; i < 6; i++) { // Go up one more level from handlers/
+  for (let i = 0; i < MAX_MMDC_SEARCH_DEPTH; i++) {
     const candidate = join(dir, 'node_modules', '.bin', 'mmdc');
     if (existsSync(candidate)) {
       return candidate;
@@ -271,7 +281,7 @@ export const diagramHandler: ElementHandler<DiagramNode> = {
     try {
       execSync(
         `${mmdc} -i "${inputPath}" -o "${outputPath}" -c "${configPath}" -s ${scale} -b transparent`,
-        { stdio: 'pipe', timeout: 30000 },
+        { stdio: 'pipe', timeout: MERMAID_RENDER_TIMEOUT_MS },
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

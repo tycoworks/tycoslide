@@ -3,7 +3,7 @@
 
 import { defineComponent, type ExpansionContext } from '../core/component-registry.js';
 import { column, row, text } from '../core/dsl.js';
-import type { ElementNode, TextNode } from '../core/nodes.js';
+import { NODE_TYPE, type ElementNode, type TextNode } from '../core/nodes.js';
 import type { TextContent, TextStyleName } from '../core/types.js';
 import { TEXT_STYLE, GAP, VALIGN } from '../core/types.js';
 import { toTextContent } from '../utils/node-utils.js';
@@ -80,7 +80,7 @@ function expandList(props: ListComponentProps, context: ExpansionContext): Eleme
     });
 
     // Item content
-    const itemContent = typeof item === 'object' && 'type' in item && item.type === 'text'
+    const itemContent = typeof item === 'object' && 'type' in item && item.type === NODE_TYPE.TEXT
       ? item as TextNode
       : text(toTextContent(item), { style, color });
 
