@@ -225,6 +225,55 @@ export function stack(...children: SlideContent[]): StackNode {
 }
 
 // ============================================
+// GRID (layout helper - chunks children into rows)
+// ============================================
+
+export interface GridProps {
+  columns: number;
+  gap?: GapSize;
+}
+
+/**
+ * Grid arranges children into rows of N columns.
+ * This is syntactic sugar that expands to column(row(...), row(...), ...).
+ *
+ * @example
+ * ```typescript
+ * // 4-column grid of icons
+ * grid(4, ...icons.map(path => image(path)))
+ *
+ * // With gap control
+ * grid({ columns: 3, gap: GAP.TIGHT }, ...cards)
+ * ```
+ */
+export function grid(props: GridProps, ...children: SlideContent[]): ColumnNode;
+export function grid(columns: number, ...children: SlideContent[]): ColumnNode;
+export function grid(...args: any[]): ColumnNode {
+  let columns: number;
+  let gap: GapSize | undefined;
+  let children: SlideContent[];
+
+  if (typeof args[0] === 'number') {
+    columns = args[0];
+    children = args.slice(1);
+  } else {
+    const props = args[0] as GridProps;
+    columns = props.columns;
+    gap = props.gap;
+    children = args.slice(1);
+  }
+
+  // Chunk children into rows
+  const rows: RowNode[] = [];
+  for (let i = 0; i < children.length; i += columns) {
+    const rowChildren = children.slice(i, i + columns);
+    rows.push(gap !== undefined ? row({ gap }, ...rowChildren) : row(...rowChildren));
+  }
+
+  return gap !== undefined ? column({ gap }, ...rows) : column(...rows);
+}
+
+// ============================================
 // RECTANGLE (visual primitive - pure shape, no children)
 // ============================================
 

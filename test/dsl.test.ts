@@ -17,6 +17,7 @@ import {
   slideNumber,
   row,
   column,
+  grid,
   card,
   list,
   bulletList,
@@ -547,7 +548,87 @@ describe('column()', () => {
 });
 
 // ============================================
-// GROUP
+// GRID
+// ============================================
+
+describe('grid()', () => {
+  const child1 = text('A');
+  const child2 = text('B');
+  const child3 = text('C');
+  const child4 = text('D');
+  const child5 = text('E');
+  const child6 = text('F');
+
+  test('returns ColumnNode', () => {
+    const node = grid(2, child1, child2);
+    assert.strictEqual(node.type, NODE_TYPE.COLUMN);
+  });
+
+  test('chunks children into rows (2 columns, 4 children = 2 rows)', () => {
+    const node = grid(2, child1, child2, child3, child4);
+    assert.strictEqual(node.children.length, 2);
+    // First row has 2 children
+    assert.strictEqual(node.children[0].type, NODE_TYPE.ROW);
+    assert.strictEqual((node.children[0] as any).children.length, 2);
+    // Second row has 2 children
+    assert.strictEqual(node.children[1].type, NODE_TYPE.ROW);
+    assert.strictEqual((node.children[1] as any).children.length, 2);
+  });
+
+  test('chunks children into rows (3 columns, 5 children = 2 rows, last row partial)', () => {
+    const node = grid(3, child1, child2, child3, child4, child5);
+    assert.strictEqual(node.children.length, 2);
+    // First row has 3 children
+    assert.strictEqual((node.children[0] as any).children.length, 3);
+    // Second row has 2 children (partial)
+    assert.strictEqual((node.children[1] as any).children.length, 2);
+  });
+
+  test('accepts props object with columns', () => {
+    const node = grid({ columns: 2 }, child1, child2, child3, child4);
+    assert.strictEqual(node.children.length, 2);
+  });
+
+  test('applies gap to both rows and column when specified', () => {
+    const node = grid({ columns: 2, gap: GAP.TIGHT }, child1, child2, child3, child4);
+    assert.strictEqual(node.gap, GAP.TIGHT);
+    assert.strictEqual((node.children[0] as any).gap, GAP.TIGHT);
+  });
+
+  test('does not apply gap when not specified', () => {
+    const node = grid(2, child1, child2);
+    assert.strictEqual(node.gap, undefined);
+    assert.strictEqual((node.children[0] as any).gap, undefined);
+  });
+
+  test('handles single row (columns >= children)', () => {
+    const node = grid(4, child1, child2);
+    assert.strictEqual(node.children.length, 1);
+    assert.strictEqual((node.children[0] as any).children.length, 2);
+  });
+
+  test('handles empty children', () => {
+    const node = grid(2);
+    assert.strictEqual(node.children.length, 0);
+  });
+
+  test('handles single child', () => {
+    const node = grid(3, child1);
+    assert.strictEqual(node.children.length, 1);
+    assert.strictEqual((node.children[0] as any).children.length, 1);
+  });
+
+  test('preserves child order', () => {
+    const node = grid(2, child1, child2, child3, child4);
+    const row1 = node.children[0] as any;
+    const row2 = node.children[1] as any;
+    assert.strictEqual(row1.children[0], child1);
+    assert.strictEqual(row1.children[1], child2);
+    assert.strictEqual(row2.children[0], child3);
+    assert.strictEqual(row2.children[1], child4);
+  });
+});
+
 // ============================================
 // CARD
 // ============================================
