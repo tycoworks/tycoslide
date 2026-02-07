@@ -604,15 +604,6 @@ describe('card()', () => {
     assert.strictEqual(node.props.padding, 0.25);
   });
 
-  test('preserves custom children in props', () => {
-    const customChildren = [text('Custom content')];
-    const node = card({
-      children: customChildren,
-      title: 'Ignored',
-    });
-    assert.strictEqual(node.props.children?.length, 1);
-    assert.strictEqual(node.props.title, 'Ignored'); // Props are passed through, expansion handles logic
-  });
 });
 
 // ============================================

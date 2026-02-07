@@ -136,7 +136,7 @@ export function isComponentNode(node: unknown): node is ComponentNode {
     typeof node === 'object' &&
     node !== null &&
     'type' in node &&
-    (node as any).type === 'component' &&
+    (node as any).type === COMPONENT_TYPE &&
     'componentName' in node &&
     'props' in node
   );
@@ -153,7 +153,14 @@ export function isComponentNode(node: unknown): node is ComponentNode {
 export const componentRegistry = new ComponentRegistry();
 
 // ============================================
-// DSL HELPER
+// CONSTANTS
+// ============================================
+
+/** Type discriminator for component nodes */
+export const COMPONENT_TYPE = 'component' as const;
+
+// ============================================
+// DSL HELPERS
 // ============================================
 
 /**
@@ -170,8 +177,32 @@ export const componentRegistry = new ComponentRegistry();
  */
 export function component<TProps>(name: string, props: TProps): ComponentNode<TProps> {
   return {
-    type: 'component',
+    type: COMPONENT_TYPE,
     componentName: name,
     props,
   };
+}
+
+/**
+ * Define and register a component in one step.
+ * Returns a typed DSL factory function.
+ *
+ * @example
+ * // Define component with single line
+ * export const card = defineComponent<CardProps>('card', (props, ctx) => {
+ *   return stack(rectangle(...), column(...));
+ * });
+ *
+ * // Usage
+ * card({ title: 'Hello', description: 'World' })
+ */
+export function defineComponent<TProps>(
+  name: string,
+  expand: (props: TProps, context: ExpansionContext) => ElementNode
+): (props: TProps) => ComponentNode<TProps> {
+  // Register the component
+  componentRegistry.register({ name, expand });
+
+  // Return the DSL factory
+  return (props: TProps) => component(name, props);
 }

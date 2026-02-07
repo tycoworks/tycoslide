@@ -16,14 +16,14 @@ export {
 
 export {
   tableComponent,
-  registerTableComponent,
+  TABLE_COMPONENT,
   type TableComponentProps,
   type TableCellContent,
 } from './table.js';
 
 export {
   cardComponent,
-  registerCardComponent,
+  CARD_COMPONENT,
   type CardComponentProps,
 } from './card.js';
 
@@ -31,7 +31,7 @@ export {
   listComponent,
   bulletListComponent,
   numberedListComponent,
-  registerListComponent,
+  LIST_COMPONENT,
   type ListComponentProps,
   type ListItemContent,
 } from './list.js';

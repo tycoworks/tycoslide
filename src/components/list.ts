@@ -1,12 +1,19 @@
 // List Component
 // Implements list as a component using primitives: column, row, text
 
-import { componentRegistry, type ExpansionContext, type ComponentNode } from '../core/component-registry.js';
+import { defineComponent, type ExpansionContext, type ComponentNode } from '../core/component-registry.js';
 import { column, row, text } from '../core/dsl.js';
 import type { ElementNode, TextNode } from '../core/nodes.js';
 import type { TextContent, TextStyleName } from '../core/types.js';
 import { TEXT_STYLE, GAP, VALIGN } from '../core/types.js';
 import { toTextContent } from '../utils/node-utils.js';
+
+// ============================================
+// CONSTANTS
+// ============================================
+
+/** Component name for list */
+export const LIST_COMPONENT = 'list' as const;
 
 // ============================================
 // TYPES
@@ -89,24 +96,13 @@ function expandList(props: ListComponentProps, context: ExpansionContext): Eleme
 }
 
 // ============================================
-// REGISTRATION
+// COMPONENT REGISTRATION & DSL
 // ============================================
 
 /**
- * Register the list component with the global registry.
+ * Create a list component node (internal - uses defineComponent).
  */
-export function registerListComponent(): void {
-  if (!componentRegistry.has('list')) {
-    componentRegistry.register({
-      name: 'list',
-      expand: expandList,
-    });
-  }
-}
-
-// ============================================
-// DSL FUNCTIONS
-// ============================================
+const listComponentInternal = defineComponent<ListComponentProps>(LIST_COMPONENT, expandList);
 
 /**
  * Create a list component node.
@@ -123,11 +119,7 @@ export function listComponent(
   items: ListItemContent[],
   props?: Omit<ListComponentProps, 'items'>
 ): ComponentNode<ListComponentProps> {
-  return {
-    type: 'component',
-    componentName: 'list',
-    props: { ...props, items },
-  };
+  return listComponentInternal({ ...props, items });
 }
 
 /**
@@ -149,6 +141,3 @@ export function numberedListComponent(
 ): ComponentNode<ListComponentProps> {
   return listComponent(items, { ...props, ordered: true });
 }
-
-// Auto-register on import
-registerListComponent();

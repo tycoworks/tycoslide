@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { tableComponent, registerTableComponent } from '../src/components/table.js';
+import { tableComponent } from '../src/components/table.js';
 import { componentRegistry } from '../src/core/component-registry.js';
 import { mockTheme, mockMeasurer } from './mocks.js';
 
@@ -10,12 +10,6 @@ describe('Table Component', () => {
 
   describe('registration', () => {
     it('should auto-register on import', () => {
-      assert.ok(componentRegistry.has('table'));
-    });
-
-    it('should be idempotent', () => {
-      registerTableComponent();
-      registerTableComponent();
       assert.ok(componentRegistry.has('table'));
     });
   });

@@ -1,11 +1,18 @@
 // Card Component
 // Implements card as a component using primitives: stack, column, rectangle, text, image
 
-import { componentRegistry, type ExpansionContext, type ComponentNode } from '../core/component-registry.js';
+import { defineComponent, type ExpansionContext } from '../core/component-registry.js';
 import { stack, column, rectangle, text, image } from '../core/dsl.js';
 import type { ElementNode } from '../core/nodes.js';
 import type { TextStyleName, GapSize } from '../core/types.js';
 import { TEXT_STYLE, GAP, HALIGN } from '../core/types.js';
+
+// ============================================
+// CONSTANTS
+// ============================================
+
+/** Component name for card */
+export const CARD_COMPONENT = 'card' as const;
 
 // ============================================
 // TYPES
@@ -14,8 +21,6 @@ import { TEXT_STYLE, GAP, HALIGN } from '../core/types.js';
 export interface CardComponentProps {
   /** Card image (path) - displayed at top */
   image?: string;
-  /** Icon image (path) - displayed at top (smaller than image) */
-  icon?: string;
   /** Card title text */
   title?: string;
   /** Text style for title */
@@ -44,12 +49,10 @@ export interface CardComponentProps {
   padding?: number;
   /** Gap between children */
   gap?: GapSize;
-  /** Custom children - if provided, overrides image/title/description */
-  children?: ElementNode[];
 }
 
 // ============================================
-// COMPONENT DEFINITION
+// EXPANSION FUNCTION
 // ============================================
 
 /**
@@ -66,7 +69,6 @@ export interface CardComponentProps {
 function expandCard(props: CardComponentProps, context: ExpansionContext): ElementNode {
   const {
     image: imagePath,
-    icon,
     title,
     titleStyle = TEXT_STYLE.H4,
     titleColor,
@@ -81,7 +83,6 @@ function expandCard(props: CardComponentProps, context: ExpansionContext): Eleme
     cornerRadius,
     padding,
     gap = GAP.TIGHT,
-    children: customChildren,
   } = props;
 
   const theme = context.theme;
@@ -90,38 +91,28 @@ function expandCard(props: CardComponentProps, context: ExpansionContext): Eleme
   const cardPadding = padding ?? theme.spacing.padding;
   const cardRadius = cornerRadius ?? theme.borders.radius;
 
-  // Build children: either custom children or from image/title/description props
-  let children: ElementNode[];
+  // Build children from image/title/description props
+  const children: ElementNode[] = [];
 
-  if (customChildren && customChildren.length > 0) {
-    children = customChildren;
-  } else {
-    children = [];
-
-    if (imagePath) {
-      children.push(image(imagePath));
-    }
-
-    if (icon) {
-      children.push(image(icon));
-    }
-
-    if (title) {
-      children.push(text(title, {
-        style: titleStyle,
-        color: titleColor,
-      }));
-    }
-
-    if (description) {
-      children.push(text(description, {
-        style: descriptionStyle,
-        color: descriptionColor,
-      }));
-    }
+  if (imagePath) {
+    children.push(image(imagePath));
   }
 
-  // Build content layer (centered horizontally for images/icons)
+  if (title) {
+    children.push(text(title, {
+      style: titleStyle,
+      color: titleColor,
+    }));
+  }
+
+  if (description) {
+    children.push(text(description, {
+      style: descriptionStyle,
+      color: descriptionColor,
+    }));
+  }
+
+  // Build content layer (centered horizontally for images)
   const contentLayer = column({ padding: cardPadding, gap, hAlign: HALIGN.CENTER }, ...children);
 
   // If no background, just return the content
@@ -149,23 +140,7 @@ function expandCard(props: CardComponentProps, context: ExpansionContext): Eleme
 }
 
 // ============================================
-// REGISTRATION
-// ============================================
-
-/**
- * Register the card component with the global registry.
- */
-export function registerCardComponent(): void {
-  if (!componentRegistry.has('card')) {
-    componentRegistry.register({
-      name: 'card',
-      expand: expandCard,
-    });
-  }
-}
-
-// ============================================
-// DSL FUNCTION
+// COMPONENT REGISTRATION & DSL
 // ============================================
 
 /**
@@ -173,26 +148,12 @@ export function registerCardComponent(): void {
  *
  * @example
  * ```typescript
- * // Using convenience props
  * cardComponent({
+ *   image: 'assets/photo.png',
  *   title: 'My Card',
  *   description: 'Card description text',
  *   backgroundColor: '#F0F0F0',
  * })
- *
- * // Using custom children
- * cardComponent({
- *   children: [h2('Custom Title'), body('Custom content')],
- * })
  * ```
  */
-export function cardComponent(props: CardComponentProps): ComponentNode<CardComponentProps> {
-  return {
-    type: 'component',
-    componentName: 'card',
-    props,
-  };
-}
-
-// Auto-register on import
-registerCardComponent();
+export const cardComponent = defineComponent<CardComponentProps>(CARD_COMPONENT, expandCard);

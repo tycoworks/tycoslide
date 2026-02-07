@@ -1,12 +1,19 @@
 // Table Component
 // Implements table as a component using primitives: stack, row, column, rectangle, line, text
 
-import { componentRegistry, type ExpansionContext, type ComponentNode } from '../core/component-registry.js';
+import { defineComponent, type ExpansionContext, type ComponentNode } from '../core/component-registry.js';
 import { stack, row, column, rectangle, line, text } from '../core/dsl.js';
 import type { ElementNode, TextNode } from '../core/nodes.js';
 import type { TextContent, TextStyleName, HorizontalAlignment, VerticalAlignment, BorderStyle } from '../core/types.js';
 import { TEXT_STYLE, GAP, SIZE } from '../core/types.js';
 import { toTextContent } from '../utils/node-utils.js';
+
+// ============================================
+// CONSTANTS
+// ============================================
+
+/** Component name for table */
+export const TABLE_COMPONENT = 'table' as const;
 
 // ============================================
 // TYPES
@@ -167,24 +174,13 @@ function createGridLines(numRows: number, numCols: number, context: ExpansionCon
 }
 
 // ============================================
-// REGISTRATION
+// COMPONENT REGISTRATION & DSL
 // ============================================
 
 /**
- * Register the table component with the global registry.
+ * Create a table component node (internal - uses defineComponent).
  */
-export function registerTableComponent(): void {
-  if (!componentRegistry.has('table')) {
-    componentRegistry.register({
-      name: 'table',
-      expand: expandTable,
-    });
-  }
-}
-
-// ============================================
-// DSL FUNCTION
-// ============================================
+const tableComponentInternal = defineComponent<TableComponentProps>(TABLE_COMPONENT, expandTable);
 
 /**
  * Create a table component node.
@@ -205,12 +201,5 @@ export function tableComponent(
   data: TableCellContent[][],
   props?: Omit<TableComponentProps, 'data'>
 ): ComponentNode<TableComponentProps> {
-  return {
-    type: 'component',
-    componentName: 'table',
-    props: { ...props, data },
-  };
+  return tableComponentInternal({ ...props, data });
 }
-
-// Auto-register on import
-registerTableComponent();

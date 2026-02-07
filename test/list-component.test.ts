@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { listComponent, bulletListComponent, numberedListComponent, registerListComponent } from '../src/components/list.js';
+import { listComponent, bulletListComponent, numberedListComponent } from '../src/components/list.js';
 import { componentRegistry } from '../src/core/component-registry.js';
 import type { ColumnNode, RowNode, TextNode } from '../src/core/nodes.js';
 import { mockTheme, mockMeasurer } from './mocks.js';
@@ -12,12 +12,6 @@ describe('List Component', () => {
 
   describe('registration', () => {
     it('should auto-register on import', () => {
-      assert.ok(componentRegistry.has('list'));
-    });
-
-    it('should be idempotent', () => {
-      registerListComponent();
-      registerListComponent();
       assert.ok(componentRegistry.has('list'));
     });
   });

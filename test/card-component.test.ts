@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { cardComponent, registerCardComponent } from '../src/components/card.js';
+import { cardComponent } from '../src/components/card.js';
 import { componentRegistry } from '../src/core/component-registry.js';
 import { mockTheme, mockMeasurer } from './mocks.js';
 
@@ -10,12 +10,6 @@ describe('Card Component', () => {
 
   describe('registration', () => {
     it('should auto-register on import', () => {
-      assert.ok(componentRegistry.has('card'));
-    });
-
-    it('should be idempotent', () => {
-      registerCardComponent();
-      registerCardComponent();
       assert.ok(componentRegistry.has('card'));
     });
   });
@@ -80,20 +74,6 @@ describe('Card Component', () => {
       assert.strictEqual(contentColumn.children.length, 2);
       assert.strictEqual(contentColumn.children[0].content, 'Title');
       assert.strictEqual(contentColumn.children[1].content, 'Description');
-    });
-
-    it('should use custom children when provided', () => {
-      const customChildren = [
-        { type: 'text' as const, content: 'Custom 1' },
-        { type: 'text' as const, content: 'Custom 2' },
-      ];
-      const node = cardComponent({ children: customChildren });
-      const expanded = componentRegistry.expand(node, { theme, measurer });
-
-      const contentColumn = expanded.children[1];
-      assert.strictEqual(contentColumn.children.length, 2);
-      assert.strictEqual(contentColumn.children[0].content, 'Custom 1');
-      assert.strictEqual(contentColumn.children[1].content, 'Custom 2');
     });
 
     it('should return empty column when no content', () => {
