@@ -4,6 +4,7 @@
 export {
   DiagramBuilder,
   diagram,
+  DIAGRAM_COMPONENT,
   DIAGRAM_DIRECTION,
   NODE_SHAPE,
   type DiagramProps,
