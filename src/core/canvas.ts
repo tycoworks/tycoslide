@@ -13,8 +13,14 @@ export interface TextFragmentOptions {
   fontFace?: string;
   fontSize?: number;
   highlight?: string;
-  softBreakBefore?: boolean;
-  bullet?: { type?: string; color?: string } | { color: string };
+  softBreakBefore?: boolean;   // Soft break (Shift+Enter) - same line
+  breakLine?: boolean;         // Hard break - new paragraph
+  bullet?: boolean | { type?: string; color?: string } | { color: string };
+  // Paragraph-level options (for rich text / markdown support)
+  bold?: boolean;
+  italic?: boolean;
+  paraSpaceBefore?: number;    // Points of space before paragraph
+  paraSpaceAfter?: number;     // Points of space after paragraph
 }
 
 /** A styled text fragment for canvas rendering */

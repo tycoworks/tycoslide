@@ -1,6 +1,6 @@
 # Markdown Component
 
-**Status:** Design complete, ready for implementation
+**Status:** Phase 0 (Enrich Text) in progress
 
 ---
 
@@ -13,7 +13,164 @@ Add a new `Markdown` component that:
 3. Uses paragraph spacing instead of layout gaps (more accurate)
 4. Provides a path to MDX support in the future
 
-**Migration strategy:** Add `Markdown` as a NEW component. Keep `Text` and `List` unchanged. Deprecate later once `Markdown` is battle-tested.
+**Architecture Decision:** Markdown is a **component** that expands to a **TextNode** with enriched runs. We enrich the existing Text element first, then build Markdown on top. This gives us ONE text system, not two.
+
+**Implementation strategy:**
+1. **Phase 0:** Enrich `NormalizedRun` with paragraph options (bold, italic, breakLine, bullet, paraSpaceBefore)
+2. **Phase 1:** Add `Markdown` component that parses markdown and returns a `TextNode`
+3. **Phase 2:** Battle test and iterate
+
+---
+
+## Phase 0: Enrich Text (Prerequisites)
+
+Before building Markdown, we enrich the existing Text element to support paragraph-level formatting. This ensures ONE text system in the API.
+
+### NormalizedRun Enrichment
+
+```typescript
+// src/core/types.ts - CURRENT
+export interface NormalizedRun {
+  text: string;
+  color?: string;
+  highlight?: HighlightPair;
+  weight?: FontWeight;
+}
+
+// src/core/types.ts - ENRICHED
+export interface NormalizedRun {
+  text: string;
+  color?: string;
+  highlight?: HighlightPair;
+  weight?: FontWeight;
+  // NEW: paragraph-level options
+  bold?: boolean;              // Shorthand for weight: 'bold'
+  italic?: boolean;            // Italic text
+  breakLine?: boolean;         // Force new paragraph before this run
+  bullet?: boolean | { type?: string; color?: string };  // Bullet marker
+  paraSpaceBefore?: number;    // Points of space before paragraph
+  paraSpaceAfter?: number;     // Points of space after paragraph
+}
+```
+
+### TextFragmentOptions Enrichment
+
+```typescript
+// src/core/canvas.ts - CURRENT
+export interface TextFragmentOptions {
+  color?: string;
+  fontFace?: string;
+  fontSize?: number;
+  highlight?: string;
+  softBreakBefore?: boolean;
+  bullet?: { type?: string; color?: string } | { color: string };
+}
+
+// src/core/canvas.ts - ENRICHED
+export interface TextFragmentOptions {
+  color?: string;
+  fontFace?: string;
+  fontSize?: number;
+  highlight?: string;
+  softBreakBefore?: boolean;
+  bullet?: { type?: string; color?: string } | { color: string };
+  // NEW: paragraph-level options
+  bold?: boolean;
+  italic?: boolean;
+  paraSpaceBefore?: number;    // Points
+  paraSpaceAfter?: number;     // Points
+}
+```
+
+### Text Handler Updates
+
+The text handler (`src/elements/text.ts`) must pass through the new options:
+
+```typescript
+// In buildTextFragments()
+const options: TextFragmentOptions = {
+  color: run.color ?? run.highlight?.text ?? defaultColor,
+  fontFace: runFont.name,
+  // NEW: pass through paragraph options
+  bold: run.bold,
+  italic: run.italic,
+  softBreakBefore: run.breakLine,
+  bullet: run.bullet,
+  paraSpaceBefore: run.paraSpaceBefore,
+  paraSpaceAfter: run.paraSpaceAfter,
+};
+```
+
+### pptxgenjs Bullet Behavior (IMPORTANT)
+
+Through testing, we discovered the correct patterns for pptxgenjs text arrays:
+
+**What works:**
+1. `bullet: true` on each item → auto line breaks + bullet markers
+2. `{ bullet: { type: 'number' } }` → numbered lists (1. 2. 3.)
+3. Header before bullets → no `\n` or `breakLine` needed; `bullet: true` auto-creates line break
+4. `\n` in text → plain paragraph breaks (for non-bullet content)
+5. Bold, italic, color → work within bullet runs
+
+**Key rule:** DON'T mix `\n` with `bullet: true` - causes empty bullet artifacts.
+
+**Correct pattern:**
+```javascript
+slide.addText([
+  { text: 'Header', options: { bold: true } },           // No \n needed
+  { text: 'First bullet', options: { bullet: true } },   // Auto line break
+  { text: 'Second bullet', options: { bullet: true } },  // Auto line break
+  { text: 'Third bullet', options: { bullet: true } },   // Auto line break
+], { x, y, w, h, fontSize: 18 });
+```
+
+**Mixed formatting in bullets:**
+```javascript
+slide.addText([
+  { text: 'Key Features', options: { bold: true } },
+  { text: 'Bold', options: { bullet: true, bold: true } },
+  { text: ' and ', options: {} },
+  { text: 'italic', options: { italic: true } },
+  { text: ' in same bullet', options: {} },
+  { text: 'Second bullet', options: { bullet: true } },
+], { x, y, w, h, fontSize: 18 });
+```
+
+### Showcase Example
+
+```typescript
+// Rich text without markdown - demonstrates enriched runs
+// Note: bullet: true auto-creates line breaks, no breakLine needed
+text([
+  { text: 'Introduction', bold: true },
+  { text: 'First bullet point', bullet: true },
+  { text: 'Second bullet point', bullet: true },
+  { text: 'Third bullet point', bullet: true },
+])
+
+// Numbered list
+text([
+  { text: 'Steps to follow', bold: true },
+  { text: 'First step', bullet: { type: 'number' } },
+  { text: 'Second step', bullet: { type: 'number' } },
+  { text: 'Third step', bullet: { type: 'number' } },
+])
+
+// Plain paragraphs (use \n for breaks, no bullets)
+text([
+  { text: 'First paragraph.\n' },
+  { text: 'Second paragraph.\n' },
+  { text: 'Third paragraph.' },
+])
+```
+
+### Phase 0 Success Criteria
+
+- [x] NormalizedRun has bold, italic, breakLine, bullet, paraSpaceBefore, paraSpaceAfter
+- [x] TextFragmentOptions has matching options
+- [x] Text handler passes options through to canvas
+- [ ] Showcase example renders correctly
+- [x] All existing tests pass (no breaking changes)
 
 ---
 
@@ -406,15 +563,29 @@ getHeight(width: number): number {
 
 ## Migration Path
 
-### Phase 1: Add Markdown Component (Non-Breaking)
+### Phase 0: Enrich Text (Current)
 
-1. Create `src/components/markdown.ts`
-2. Create `src/utils/markdown-parser.ts` (remark setup)
-3. Create `src/utils/remark-highlight.ts` (custom syntax plugin)
-4. Create `src/utils/mdast-to-pptx.ts` (AST transformer)
-5. Add to DSL exports
-6. **Keep `Text` and `List` unchanged**
-7. Authors adopt incrementally
+1. Add paragraph options to `NormalizedRun` in `src/core/types.ts`
+2. Add matching options to `TextFragmentOptions` in `src/core/canvas.ts`
+3. Update `buildTextFragments` in `src/elements/text.ts` to pass options through
+4. Update renderer to handle new options (bold, italic, paraSpacing)
+5. Add showcase example demonstrating rich text
+6. Add tests for new options
+7. **All existing tests must pass**
+
+### Phase 1: Add Markdown Component
+
+Markdown is a **component** (not an element) that:
+- Parses markdown string using remark/unified
+- Expands to a `TextNode` with enriched `NormalizedRun[]`
+- Registered in ComponentRegistry like Card, List, Table
+
+1. Create `src/utils/markdown-parser.ts` (remark setup)
+2. Create `src/utils/remark-highlight.ts` (custom syntax plugin)
+3. Create `src/utils/mdast-to-runs.ts` (AST → NormalizedRun[] transformer)
+4. Add `markdown()` factory to DSL that returns `ComponentNode<MarkdownProps>`
+5. Register expander in ComponentRegistry
+6. Add to DSL exports
 
 ### Phase 2: Battle Test
 
@@ -423,11 +594,35 @@ getHeight(width: number): number {
 - Ensure highlight validation works
 - Test edge cases (nested lists, complex inline formatting)
 
-### Phase 3: Deprecate Text/List (Optional, Future)
+### Phase 3: Remove List Component (Breaking Change)
 
-- Add deprecation warnings to `Text` and `List`
-- Provide migration guide
-- Eventually remove (major version)
+With rich text supporting `bullet: true` and `bullet: { type: 'number' }`, the List component becomes redundant:
+
+```typescript
+// OLD: List component (REMOVED)
+bulletList(['First item', 'Second item'])
+
+// NEW: Rich text with bullets (no breakLine needed - bullet auto-creates line breaks)
+text([
+  { text: 'First item', bullet: true },
+  { text: 'Second item', bullet: true },
+  { text: 'Third item', bullet: true },
+])
+
+// NEW: Numbered list
+text([
+  { text: 'First item', bullet: { type: 'number' } },
+  { text: 'Second item', bullet: { type: 'number' } },
+])
+
+// OR: Markdown component (after Phase 1)
+markdown(`
+- First item
+- Second item
+`)
+```
+
+**Migration path:** Remove List component as breaking change (no deprecation period).
 
 ### Programmatic Construction
 
@@ -480,17 +675,27 @@ Available highlights: teal, pink, yellow, purple, orange
 
 ## Files to Create/Modify
 
+### Phase 0: Enrich Text
+
 | File | Action |
 |------|--------|
-| `src/components/markdown.ts` | CREATE - New component |
+| `src/core/types.ts` | MODIFY - Add paragraph options to NormalizedRun |
+| `src/core/canvas.ts` | MODIFY - Add paragraph options to TextFragmentOptions |
+| `src/elements/text.ts` | MODIFY - Pass paragraph options through buildTextFragments |
+| `src/core/renderer.ts` | MODIFY - Handle bold, italic, paraSpacing in pptxgenjs output |
+| `test/rich-text.test.ts` | CREATE - Tests for enriched text |
+| showcase example | CREATE - Demonstrate rich text features |
+
+### Phase 1: Markdown Component
+
+| File | Action |
+|------|--------|
 | `src/utils/markdown-parser.ts` | CREATE - Remark processor setup |
 | `src/utils/remark-highlight.ts` | CREATE - Custom ::highlight:: plugin |
-| `src/utils/mdast-to-pptx.ts` | CREATE - AST to TextFragment[] |
-| `src/core/canvas.ts` | MODIFY - Add paragraph spacing to TextFragmentOptions |
-| `src/core/renderer.ts` | MODIFY - Handle paragraph spacing in pptxgenjs output |
-| `src/core/dsl.ts` | MODIFY - Add markdown to DSL |
-| `src/components/index.ts` | MODIFY - Export Markdown |
-| `src/index.ts` | MODIFY - Export markdown factory |
+| `src/utils/mdast-to-runs.ts` | CREATE - AST to NormalizedRun[] |
+| `src/core/dsl.ts` | MODIFY - Add markdown() factory |
+| `src/components/markdown-expander.ts` | CREATE - Component expander |
+| `src/components/index.ts` | MODIFY - Register markdown expander |
 | `test/markdown.test.ts` | CREATE - Unit tests |
 | `package.json` | MODIFY - Add remark dependencies |
 

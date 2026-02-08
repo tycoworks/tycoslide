@@ -27,13 +27,21 @@ function buildTextFragments(
 
   const normalized = normalizeContent(content);
   return normalized.map(run => {
-    const runWeight = run.weight ?? defaultWeight;
-    const runFont = getFontFromFamily(style.fontFamily, runWeight);
+    // Bold shorthand overrides weight
+    const effectiveWeight = run.bold ? FONT_WEIGHT.BOLD : (run.weight ?? defaultWeight);
+    const runFont = getFontFromFamily(style.fontFamily, effectiveWeight);
     const options: TextFragmentOptions = {
       color: run.color ?? run.highlight?.text ?? defaultColor,
       fontFace: runFont.name,
     };
     if (run.highlight) options.highlight = run.highlight.bg;
+    // Pass through paragraph-level options
+    if (run.bold) options.bold = true;
+    if (run.italic) options.italic = true;
+    if (run.breakLine) options.breakLine = true;
+    if (run.bullet) options.bullet = run.bullet;
+    if (run.paraSpaceBefore !== undefined) options.paraSpaceBefore = run.paraSpaceBefore;
+    if (run.paraSpaceAfter !== undefined) options.paraSpaceAfter = run.paraSpaceAfter;
     return { text: run.text, options };
   });
 }
@@ -62,6 +70,9 @@ function renderText(
   // Priority: node override > style override > theme default
   const lineSpacing = lineHeightMultiplier ?? style.lineHeightMultiplier ?? theme.spacing.lineSpacing;
 
+  // Check if any fragment has bullets - pptxgenjs bug: align breaks bullet rendering
+  const hasBullets = fragments.some(f => f.options?.bullet);
+
   canvas.addText(fragments, {
     x, y, w, h,
     fontSize: style.fontSize,
@@ -70,7 +81,8 @@ function renderText(
     margin: 0,
     wrap: true,
     lineSpacingMultiple: lineSpacing,
-    align: (hAlign as any) ?? HALIGN.LEFT,
+    // WORKAROUND: pptxgenjs bug - align option breaks bullet rendering
+    ...(hasBullets ? {} : { align: (hAlign as any) ?? HALIGN.LEFT }),
     valign: (vAlign as any) ?? VALIGN.TOP,
   });
 }

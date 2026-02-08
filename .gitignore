@@ -16,3 +16,6 @@ dist/
 
 # oh-my-claudecode
 .omc/
+
+# Generated presentations
+*.pptx
