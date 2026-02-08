@@ -1,258 +1,292 @@
-# Text Measurement & Component Sizing
+# Text Measurement & Async Pipeline
 
-**Status:** Not yet implemented - this document describes a planned architectural change.
+**Status:** Planning - this document describes the target architecture.
 
 ---
 
 ## The Problem
 
-1. **Bullet wrap issue:** Slide 16 bullets wrap unexpectedly in Google Slides
-2. **Editability:** Our manual line breaks make output hard to edit - users have to undo our breaks
-3. **Cross-platform variance:** We can't guarantee how PowerPoint/Keynote/Google Slides render text
+1. **Word wrap estimation:** Fontkit measures character widths but cannot predict where PowerPoint will break lines
+2. **Editability:** Manual line breaks make output hard to edit
+3. **Cross-platform variance:** Different apps render text differently
+4. **Blocking operations:** Mermaid diagram rendering blocks the main thread
 
-## Current Approach (Problems)
+## Why Fontkit Is Insufficient
 
-```
-fontkit measures → we inject softBreakBefore → wrap: false → pptxgenjs renders
-```
+Fontkit can measure character advance widths, but it cannot:
+- Know where words will break (language-specific word boundary logic)
+- Handle kerning pair adjustments at break points
+- Account for hyphenation rules
+- Match PowerPoint's proprietary text layout algorithm
 
-- We pre-wrap text ourselves based on fontkit measurement
-- We inject `softBreakBefore` to force line breaks at specific points
-- We pass `wrap: false` to pptxgenjs
-- **Result:** Output is hard to edit, and still doesn't render consistently
-
-## Proposed Approach
-
-```
-fontkit estimates height → wrap: true → pptxgenjs/PowerPoint handles wrapping
-```
-
-- Use fontkit only for **height estimation** (needed for layout)
-- Let PowerPoint handle **actual word wrapping** (`wrap: true`)
-- Accept that our height estimates might be slightly off
-- **Result:** More editable output, simpler code, "good enough" layout
+**Result:** ~75% accuracy on word wrap estimation. Not good enough.
 
 ---
 
-## Philosophy: Estimation, Not Control
+## Solution: Browser-Based Measurement
 
-We can't control how text renders across applications. So:
+### Approach
 
-1. **Estimate heights** for layout purposes (fontkit)
-2. **Let PowerPoint wrap** the actual text
-3. **Account for known offsets** (bullet indent)
-4. **Accept imperfection** - good enough is good enough
-
----
-
-## Changes
-
-### Text.ts - Remove manual wrapping
-
-**Before:**
-```typescript
-// Pre-wrap with fontkit, inject softBreakBefore
-const lines = this.wrapContent(style, defaultWeight, bounds.w);
-const lineRuns = splitRunsIntoLines(normalized, lines);
-// ... build pptxContent with softBreakBefore for each line
-slide.addText(pptxContent, { wrap: false, ... });
+```
+Collect measurements → Playwright renders HTML → Measure DOM → Use results in layout
 ```
 
-**After:**
-```typescript
-// Just build runs with styling, let PowerPoint wrap
-const pptxContent = normalized.map(run => ({
-  text: run.text,
-  options: { color, fontFace, highlight, ... }
-}));
-slide.addText(pptxContent, { wrap: true, ... });
-```
+Browser text layout handles word boundaries, kerning, and line breaking correctly. We can load the same fonts used in PowerPoint.
 
-`getHeight()` still uses fontkit to estimate - this is needed for layout.
+### Technology Choice: Playwright
 
-### List.ts - Same simplification
+| Approach | Wrap Accuracy | Latency | Recommendation |
+|----------|--------------|---------|----------------|
+| Fontkit only | ~75% | Fast | ❌ Rejected |
+| **Playwright + HTML** | ~95% | ~50-200ms batch | ✅ Chosen |
+| JSDOM + node-canvas | ~70-80% | Medium | Fallback option |
+| Native PowerPoint | 100% | Very slow | Validation only |
 
-**Before:**
-```typescript
-const lines = this.wrapItem(item, textStyle, defaultWeight, bounds.w);
-const lineRuns = splitRunsIntoLines(normalized, lines);
-// ... complex line-by-line processing with softBreakBefore
-slide.addText(textObjects, { wrap: false, ... });
-```
+Playwright chosen over Puppeteer for faster cold start.
 
-**After:**
-```typescript
-// Build items with bullet options, let PowerPoint wrap
-slide.addText(textObjects, { wrap: true, ... });
-```
+### HTML Text Rendering
 
-### Bullet indent - still needed
+CSS to mimic PowerPoint text boxes:
 
-Even with native wrapping, we need to account for bullet indent in height estimation:
-
-```typescript
-// In List.getHeight:
-const bulletIndent = theme.spacing.bulletIndent;
-const lines = this.wrapItem(item, textStyle, defaultWeight, width - bulletIndent);
-```
-
-And pass explicit indent to pptxgenjs:
-```typescript
-options.bullet = { color: markerColor, indent: inToPt(bulletIndent) };
-```
-
-### Theme additions
-
-```typescript
-spacing: {
-  bulletIndent: 0.25,    // 18pt in inches
-  measurementBuffer: 0.95,  // 5% safety margin for cross-platform variance
+```css
+.pptx-textbox {
+  font-family: 'Your Font Name';
+  font-size: 18pt;
+  line-height: 1.2;              /* lineHeightMultiplier */
+  white-space: pre-wrap;         /* Preserve spaces, wrap at words */
+  word-wrap: break-word;
+  width: 400px;                  /* Available width in pixels */
 }
 ```
 
-### Measurement buffer concept
-
-A global `measurementBuffer` (0.0-1.0) that scales all width measurements:
-
-```typescript
-// In getHeight / wrapContent:
-const effectiveWidth = width * theme.spacing.measurementBuffer;
-const lines = wrapText(text, font, fontSize, effectiveWidth);
-```
-
-**Use cases:**
-- `1.0` = trust our measurements exactly (current behavior)
-- `0.95` = 5% buffer (recommended default)
-- `0.90` = 10% buffer (extra safety for problematic content)
-
-This gives a quick toggle to tighten/loosen all layouts without changing individual components.
+Unit conversion (96 DPI): `1 inch = 96 pixels`, `1 point = 1.333 pixels`
 
 ---
 
-## Files to Modify
+## Async Pipeline Architecture
+
+### Current Pipeline (sync)
+
+```
+Parse → Expand Components → Compute Layout (fontkit) → Render → writeFile()
+```
+
+### Proposed Pipeline (async consolidated)
+
+```
+Parse → Expand → Collect Async Work → Execute Parallel → Layout → Render → writeFile()
+                        ↓                    ↓
+                 Text measurements    Browser batch (Playwright)
+                 + Diagram renders    + Mermaid CLI (parallel)
+```
+
+### Key Design Decision: Async in writeFile()
+
+The `writeFile()` method already returns `Promise<void>`. All async work happens there:
+
+```typescript
+// Existing code continues to work unchanged
+pres.add(slide1);  // sync - collects work
+pres.add(slide2);  // sync - collects work
+await pres.writeFile('output.pptx');  // async - executes measurements + diagrams
+```
+
+**Not a breaking change.** Users already await writeFile().
+
+### Consolidation with Mermaid Diagrams
+
+Currently diagram.ts uses `execSync` (blocking). The new architecture:
+
+1. **Collect ALL async work upfront** (text measurements + diagram renders)
+2. **Execute in parallel** (Playwright for text, mermaid-cli for diagrams)
+3. **Resume layout** with all results available
+
+```typescript
+interface AsyncWork {
+  measurements: KeyedMeasurementRequests;
+  diagrams: DiagramRenderRequest[];
+}
+
+async function executeAsyncWork(work: AsyncWork): Promise<AsyncResults> {
+  const [measurements, diagrams] = await Promise.all([
+    browserMeasurer.measureBatch(work.measurements),
+    renderDiagramsBatch(work.diagrams),
+  ]);
+  return { measurements, diagrams };
+}
+```
+
+---
+
+## Rich Text Considerations
+
+The enriched `NormalizedRun` type now includes paragraph-level options:
+
+| Feature | Height Impact | Measurement Needed |
+|---------|--------------|-------------------|
+| `bullet: true` | Reduces effective width | Subtract bulletIndent |
+| `paraSpaceBefore/After` | Adds vertical space | Sum paragraph spacing |
+| `breakLine: true` | Forces new line | Count forced breaks |
+| `bold/italic` | Minimal width difference | Use correct font weight |
+
+### Height Calculation with Rich Text
+
+```typescript
+function getHeight(node: TextNode, width: number, ctx: LayoutContext): number {
+  const content = normalizeContent(node.content);
+
+  // Account for bullet indent
+  const hasBullets = content.some(run => run.bullet);
+  const effectiveWidth = hasBullets
+    ? width - theme.spacing.bulletIndent
+    : width;
+
+  // Get base height from browser measurement
+  const baseHeight = ctx.measurements.getTextHeight(node, effectiveWidth);
+
+  // Add paragraph spacing
+  let extraSpace = 0;
+  for (const run of content) {
+    if (run.paraSpaceBefore) extraSpace += ptToIn(run.paraSpaceBefore);
+    if (run.paraSpaceAfter) extraSpace += ptToIn(run.paraSpaceAfter);
+  }
+
+  return baseHeight + extraSpace;
+}
+```
+
+---
+
+## Implementation Plan
+
+### Phase 1: Browser Measurement Service
+
+**New file: `src/utils/browser-measurer.ts`**
+
+```typescript
+interface BrowserMeasurer extends TextMeasurer {
+  measureBatch(requests: KeyedMeasurementRequests): Promise<MeasurementResults>;
+  launch(): Promise<void>;
+  close(): Promise<void>;
+}
+```
+
+- Launch Playwright browser once per presentation build
+- Create measurement page with font loading
+- Inject all measurement divs in one DOM update
+- Read all heights in one pass
+
+### Phase 2: Async Pipeline Coordinator
+
+**New file: `src/core/async-pipeline.ts`**
+
+- Collect text measurements and diagram requests during add()
+- Execute all async work in parallel during writeFile()
+- Inject results back into node tree
+
+### Phase 3: Diagram Deferred Rendering
+
+Modify diagram.ts to return placeholder nodes:
+
+```typescript
+function expandDiagram(props: DiagramComponentProps, context: ExpansionContext): ImageNode {
+  const diagramId = context.registerDiagram(props);
+  return {
+    type: NODE_TYPE.IMAGE,
+    src: `__diagram:${diagramId}__`,  // Placeholder, resolved after async
+  };
+}
+```
+
+### Phase 4: Integration
+
+- Modify Presentation class to collect async work
+- Execute async pipeline in writeFile()
+- Resolve placeholders before final render
+
+---
+
+## Files to Create/Modify
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `src/utils/browser-measurer.ts` | Playwright-based batch measurement |
+| `src/core/async-pipeline.ts` | Parallel async work coordinator |
+
+### Modified Files
 
 | File | Change |
 |------|--------|
-| `core/components/Text.ts` | Remove splitRunsIntoLines, pass `wrap: true` |
-| `core/components/List.ts` | Remove line-by-line processing, pass `wrap: true`, add bulletIndent |
-| `core/components/Table.ts` | Rewrite to use native `slide.addTable()` |
-| `core/types.ts` | Add `bulletIndent`, `measurementBuffer` to spacing |
-| `core/layout.ts` | Add `inToPt()` helper |
-| `materialize/theme.ts` | Add `bulletIndent: 0.25`, `measurementBuffer: 0.95` |
-
----
-
-## What We Keep
-
-- `wrapText()` in font-utils.ts - still used for height estimation
-- `getLineHeight()` - still used for height estimation
-- `measureText()` - still used for height estimation
-
-These are for **estimation only**, not for injecting breaks.
+| `src/core/presentation.ts` | Collect async work, execute in writeFile() |
+| `src/components/diagram.ts` | Deferred rendering pattern |
+| `src/core/measure.ts` | Already has collection infrastructure (use it) |
+| `src/utils/text-measurer.ts` | Add async measureBatch() to interface |
+| `package.json` | Add playwright dependency |
 
 ---
 
 ## Trade-offs
 
-| Aspect | Before | After |
-|--------|--------|-------|
-| Height accuracy | Tries to be exact | Estimates (may be slightly off) |
-| Cross-platform | Varies anyway | Varies (same) |
-| Editability | Hard (manual breaks) | Easy (native wrap) |
-| Code complexity | High | Lower |
-| Rich text styling | Works | Works (simpler) |
+| Aspect | Current (fontkit) | Proposed (browser) |
+|--------|-------------------|-------------------|
+| Word wrap accuracy | ~75% | ~95% |
+| Speed | ~5ms/slide | ~50-200ms first, ~10ms batch |
+| Dependencies | fontkit only | + playwright |
+| Cold start | None | ~500ms browser launch |
+| Mermaid rendering | Blocking (execSync) | Parallel (async) |
+
+**Mitigation for cold start:** Launch browser lazily on first text measurement, keep warm for duration of build.
 
 ---
 
-## Table Component Strategy
+## Incremental Build Steps
 
-### The Issue
+Each step is independently committable and testable:
 
-Native pptxgenjs tables (`slide.addTable()`) do NOT support images in cells - only text. Our current Table.ts uses shapes/lines and can contain any Component (images, text, etc.).
+### Step 1: Browser Measurer (standalone)
+- Add playwright dependency
+- Create `browser-measurer.ts` with `measureBatch()`
+- Add unit tests that measure known text → verify heights
+- **Commit:** "Add Playwright-based browser text measurer"
 
-### Proposal
+### Step 2: Async Text Measurer Interface
+- Extend `TextMeasurer` interface with optional async method
+- Keep fontkit as default, browser as opt-in
+- **Commit:** "Add async measureBatch to TextMeasurer interface"
 
-| Component | Implementation | Use Case |
-|-----------|---------------|----------|
-| **table()** | Native `slide.addTable()` | Data tables (text only) - simpler, native word wrap |
-| **grid()** | Current shape-based (enhanced) | Layouts with images, cards, mixed content |
+### Step 3: Measurement Collection in Presentation
+- Collect `KeyedMeasurementRequests` during `add()`
+- Store on Presentation instance (don't execute yet)
+- **Commit:** "Collect text measurement requests during add()"
 
-### Changes
+### Step 4: Execute Measurements in writeFile()
+- Call `browserMeasurer.measureBatch()` before layout
+- Pass results to `computeLayout()`
+- **Commit:** "Execute browser measurements in writeFile()"
 
-1. **Rewrite Table.ts** to use native pptxgenjs `slide.addTable()`
-   - Text-only cells
-   - Native word wrap (no fontkit measurement needed for cells)
-   - Still use fontkit for height estimation (for layout)
-   - Simpler, more editable output
+### Step 5: Diagram Deferred Rendering
+- Change `expandDiagram()` to return placeholder
+- Collect diagram requests during expansion
+- **Commit:** "Defer diagram rendering to async phase"
 
-2. **Enhance Grid.ts** to support borders/styling when needed
-   - Keep current shape-based approach
-   - Can contain any Component
-   - For use cases like image grids, card layouts, etc.
+### Step 6: Parallel Async Execution
+- Combine text measurement + diagram rendering
+- Execute with `Promise.all()`
+- **Commit:** "Parallelize text measurement and diagram rendering"
 
-### Native Table Benefits
-
-- Word wrap handled by PowerPoint
-- Easier to edit in PowerPoint
-- Less code to maintain
-- Column widths still controlled via props
-
----
-
-## getWidth for Text Components
-
-### The Dual Constraint Problem
-
-Components have two sizing methods:
-- `getHeight(width)` - given width, how tall is my content?
-- `getWidth(height)` - given height, how wide do I need to be?
-
-For Image, this is straightforward: aspect ratio gives direct conversion.
-
-For text-based components (Text, List, Divider), `getWidth(height)` is solvable:
-
-### Algorithm
-
-Given a height constraint:
-1. Calculate how many lines fit: `maxLines = floor(height / lineHeight)`
-2. Find the narrowest width that wraps text into ≤ maxLines
-
-Step 2 is a binary search:
-```typescript
-getWidth(height: number): number {
-  const lineHeight = getLineHeight(fontPath, fontSize);
-  const maxLines = Math.floor(height / lineHeight);
-
-  if (maxLines < 1) return Infinity;  // Can't fit
-
-  // Binary search for minimum width
-  let lo = 0;
-  let hi = measureText(fullText, fontPath, fontSize);  // Single-line width
-
-  while (hi - lo > 0.01) {  // 0.01" precision
-    const mid = (lo + hi) / 2;
-    const lines = wrapText(text, fontPath, fontSize, mid);
-    if (lines.length <= maxLines) {
-      hi = mid;  // Fits - try narrower
-    } else {
-      lo = mid;  // Doesn't fit - need wider
-    }
-  }
-
-  return hi;
-}
-```
-
-### Status
-
-Not yet implemented - haven't needed it since Text/List aren't used in ROW layouts where they'd need to report intrinsic width. When needed, the algorithm above works.
+### Step 7: Cleanup
+- Remove fontkit estimation code (now unused)
+- Remove `execSync` from diagram.ts
+- **Commit:** "Remove sync measurement code"
 
 ---
 
 ## Verification
 
-1. `npm run messaging && open messaging.pptx`
-2. Edit text in PowerPoint - verify word wrap works naturally
-3. Open in Google Slides - verify reasonable rendering
-4. Check vertical layout still works (spacers center correctly)
-5. Check tables are editable (native behavior)
+1. Build presentation with multiple text boxes
+2. Open in PowerPoint - verify text doesn't overflow boxes
+3. Compare browser measurement vs actual PowerPoint height
+4. Verify diagrams still render correctly
+5. Measure total build time (should be similar due to parallelization)
