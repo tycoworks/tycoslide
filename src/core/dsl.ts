@@ -52,35 +52,6 @@ export function text(content: TextContent, props?: TextProps): TextNode {
   };
 }
 
-// Convenience functions for common text styles
-export function h1(content: TextContent, props?: Omit<TextProps, 'style'>): TextNode {
-  return text(content, { ...props, style: TEXT_STYLE.H1 });
-}
-
-export function h2(content: TextContent, props?: Omit<TextProps, 'style'>): TextNode {
-  return text(content, { ...props, style: TEXT_STYLE.H2 });
-}
-
-export function h3(content: TextContent, props?: Omit<TextProps, 'style'>): TextNode {
-  return text(content, { ...props, style: TEXT_STYLE.H3 });
-}
-
-export function h4(content: TextContent, props?: Omit<TextProps, 'style'>): TextNode {
-  return text(content, { ...props, style: TEXT_STYLE.H4 });
-}
-
-export function body(content: TextContent, props?: Omit<TextProps, 'style'>): TextNode {
-  return text(content, { ...props, style: TEXT_STYLE.BODY });
-}
-
-export function small(content: TextContent, props?: Omit<TextProps, 'style'>): TextNode {
-  return text(content, { ...props, style: TEXT_STYLE.SMALL });
-}
-
-export function eyebrow(content: TextContent, props?: Omit<TextProps, 'style'>): TextNode {
-  return text(content, { ...props, style: TEXT_STYLE.EYEBROW });
-}
-
 // ============================================
 // IMAGE
 // ============================================
@@ -324,41 +295,6 @@ export function card(props: CardProps): ComponentNode<CardProps> {
     componentName: 'card',
     props,
   };
-}
-
-// ============================================
-// LIST
-// ============================================
-
-export interface ListProps {
-  style?: TextStyleName;
-  ordered?: boolean;
-  color?: string;
-  markerColor?: string;
-}
-
-/** List items can be plain text, styled runs, or TextNode */
-export type ListItemContent = TextContent | TextNode;
-
-/** Full list props including items for ComponentNode */
-interface ListComponentProps extends ListProps {
-  items: ListItemContent[];
-}
-
-export function list(items: ListItemContent[], props?: ListProps): ComponentNode<ListComponentProps> {
-  return {
-    type: NODE_TYPE.COMPONENT,
-    componentName: 'list',
-    props: { ...props, items },
-  };
-}
-
-export function bulletList(items: ListItemContent[], props?: Omit<ListProps, 'ordered'>): ComponentNode<ListComponentProps> {
-  return list(items, { ...props, ordered: false });
-}
-
-export function numberedList(items: ListItemContent[], props?: Omit<ListProps, 'ordered'>): ComponentNode<ListComponentProps> {
-  return list(items, { ...props, ordered: true });
 }
 
 // ============================================

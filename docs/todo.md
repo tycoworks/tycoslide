@@ -1,5 +1,4 @@
 Spacing / layouts:
-- DPI
 - Design principles
 -- Direction is opposite to container?
 -- Content rules
@@ -16,6 +15,7 @@ Core:
 Cleanup:
 - Text heights etc
 - Fixed percentages.
+- Right align bullet points
 
 Components:
 - Image to the left of the card / direction and justify

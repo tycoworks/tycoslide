@@ -173,4 +173,35 @@ describe('Rich Text', () => {
       assert.strictEqual(normalized[0].paraSpaceAfter, 6);
     });
   });
+
+  describe('pptxgenjs compatibility', () => {
+    it('should document that bullet: true auto-creates line breaks', () => {
+      // pptxgenjs quirk: bullet: true automatically creates line breaks
+      // Users should NOT combine breakLine: true with bullet: true
+      // The text handler strips breakLine when bullet is present
+      const content: NormalizedRun[] = [
+        { text: 'Header', bold: true },
+        { text: 'First bullet', bullet: true },
+        { text: 'Second bullet', bullet: true },  // No breakLine needed
+        { text: 'Third bullet', bullet: true },
+      ];
+      const normalized = normalizeContent(content);
+      // All runs preserved - stripping happens in buildTextFragments
+      assert.strictEqual(normalized.length, 4);
+      assert.strictEqual(normalized[1].bullet, true);
+      assert.strictEqual(normalized[2].bullet, true);
+      assert.strictEqual(normalized[3].bullet, true);
+    });
+
+    it('should allow breakLine without bullet for plain paragraphs', () => {
+      // breakLine is valid for non-bullet content (e.g., paragraph breaks)
+      const content: NormalizedRun[] = [
+        { text: 'First paragraph\n' },
+        { text: 'Second paragraph', breakLine: true },
+      ];
+      const normalized = normalizeContent(content);
+      assert.strictEqual(normalized[1].breakLine, true);
+      assert.strictEqual(normalized[1].bullet, undefined);
+    });
+  });
 });

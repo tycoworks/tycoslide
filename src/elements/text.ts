@@ -38,7 +38,8 @@ function buildTextFragments(
     // Pass through paragraph-level options
     if (run.bold) options.bold = true;
     if (run.italic) options.italic = true;
-    if (run.breakLine) options.breakLine = true;
+    // bullet implies a new paragraph, so breakLine is redundant when bullet is set
+    if (run.breakLine && !run.bullet) options.breakLine = true;
     if (run.bullet) options.bullet = run.bullet;
     if (run.paraSpaceBefore !== undefined) options.paraSpaceBefore = run.paraSpaceBefore;
     if (run.paraSpaceAfter !== undefined) options.paraSpaceAfter = run.paraSpaceAfter;

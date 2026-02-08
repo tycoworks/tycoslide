@@ -4,7 +4,6 @@
 // Side-effect imports: register elements and components
 import './elements/index.js';
 import './components/card.js';
-import './components/list.js';
 import './components/table.js';
 
 // Main class and types
@@ -102,13 +101,6 @@ export type {
 
 export {
   text,
-  h1,
-  h2,
-  h3,
-  h4,
-  body,
-  small,
-  eyebrow,
   image,
   line,
   slideNumber,
@@ -118,9 +110,6 @@ export {
   grid,
   rectangle,
   card,
-  list,
-  bulletList,
-  numberedList,
   table,
   type TextProps,
   type ImageProps,
@@ -130,8 +119,6 @@ export {
   type GridProps,
   type RectangleProps,
   type CardProps,
-  type ListProps,
-  type ListItemContent,
   type TableProps,
   type TableCellContent,
 } from './core/dsl.js';

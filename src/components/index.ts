@@ -28,11 +28,3 @@ export {
   type CardComponentProps,
 } from './card.js';
 
-export {
-  listComponent,
-  bulletListComponent,
-  numberedListComponent,
-  LIST_COMPONENT,
-  type ListComponentProps,
-  type ListItemContent,
-} from './list.js';
