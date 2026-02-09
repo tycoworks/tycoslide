@@ -6,8 +6,9 @@
 // - Browser computes actual widths via flexbox algorithm
 // - Measurements extracted from positioned elements
 
-import type { ElementNode, TextNode, SlideNumberNode } from '../core/nodes.js';
+import type { ElementNode, TextNode, SlideNumberNode, TableNode } from '../core/nodes.js';
 import { NODE_TYPE } from '../core/nodes.js';
+import { getTableCellSyntheticNodes } from '../elements/table.js';
 import { Bounds } from '../core/bounds.js';
 import type { Theme } from '../core/types.js';
 import {
@@ -180,6 +181,20 @@ export class TextMeasurementPipeline {
       const container = node as { children: ElementNode[] };
       for (const child of container.children) {
         this.collectNodeMeasurements(child, slideResults, allResults);
+      }
+    }
+
+    // Handle TABLE: collect measurements for synthetic cell TextNodes
+    if (node.type === NODE_TYPE.TABLE) {
+      const tableNode = node as TableNode;
+      const syntheticGrid = getTableCellSyntheticNodes(tableNode);
+      for (const row of syntheticGrid) {
+        for (const cellTextNode of row) {
+          const cellMeasurement = slideResults.get(cellTextNode);
+          if (cellMeasurement) {
+            allResults.set(cellTextNode, cellMeasurement);
+          }
+        }
       }
     }
   }

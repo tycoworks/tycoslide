@@ -3,8 +3,9 @@
 
 import { renderToString } from 'hono/jsx/dom/server';
 import type { FC, PropsWithChildren } from 'hono/jsx';
-import type { ElementNode, TextNode, ImageNode, RowNode, ColumnNode, StackNode, SlideNumberNode } from '../core/nodes.js';
+import type { ElementNode, TextNode, ImageNode, RowNode, ColumnNode, StackNode, SlideNumberNode, TableNode } from '../core/nodes.js';
 import { NODE_TYPE } from '../core/nodes.js';
+import { getTableCellSyntheticNodes, DEFAULT_CELL_PADDING } from '../elements/table.js';
 import type { Theme, TextStyle, FontWeight, GapSize, VerticalAlignment, HorizontalAlignment, SizeValue, TextContent, NormalizedRun, Direction } from '../core/types.js';
 import { TEXT_STYLE, FONT_WEIGHT, SIZE, VALIGN, HALIGN, DIRECTION } from '../core/types.js';
 import type { Bounds } from '../core/bounds.js';
@@ -465,6 +466,49 @@ function nodeToJsx(
 
     case NODE_TYPE.RECTANGLE: {
       return <LayoutRectangle nodeId={nodeId} />;
+    }
+
+    case NODE_TYPE.TABLE: {
+      const tableNode = node as TableNode;
+      const syntheticGrid = getTableCellSyntheticNodes(tableNode);
+      const numCols = tableNode.rows[0]?.length ?? 0;
+
+      // Calculate column widths (proportional -> flex basis)
+      const columnWidths = tableNode.columnWidths ?? Array(numCols).fill(1);
+      const totalWeight = columnWidths.reduce((a, b) => a + b, 0);
+
+      // Render table as CSS grid with cells as measurable children
+      const cellPadding = tableNode.style?.cellPadding ?? DEFAULT_CELL_PADDING;
+      const cellPaddingPx = inToPx(cellPadding);
+
+      return (
+        <div
+          data-node-id={nodeId}
+          style={`display: grid; grid-template-columns: ${columnWidths.map(w => `${(w / totalWeight) * 100}%`).join(' ')}; width: 100%`}
+        >
+          {syntheticGrid.flatMap((row) =>
+            row.map((cellTextNode) => {
+              const cellNodeId = generateNodeId();
+              nodeIds.set(cellTextNode, cellNodeId);
+
+              const styleName = cellTextNode.style ?? TEXT_STYLE.BODY;
+              const style = theme.textStyles[styleName];
+
+              return (
+                <div style={`padding: ${cellPaddingPx}px`}>
+                  <LayoutText
+                    nodeId={cellNodeId}
+                    content={cellTextNode.content}
+                    style={style}
+                    theme={theme}
+                    hAlign={cellTextNode.hAlign}
+                  />
+                </div>
+              );
+            })
+          )}
+        </div>
+      );
     }
 
     default:

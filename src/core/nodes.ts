@@ -11,6 +11,7 @@ import type {
   ArrowType,
   DashType,
   SizeValue,
+  BorderStyle,
 } from './types.js';
 
 // ============================================
@@ -23,6 +24,7 @@ export const NODE_TYPE = {
   IMAGE: 'image',
   LINE: 'line',
   SLIDE_NUMBER: 'slideNumber',
+  TABLE: 'table',  // Native pptxgenjs table element
   // Layout primitives
   ROW: 'row',
   COLUMN: 'column',
@@ -69,6 +71,45 @@ export interface SlideNumberNode {
   style?: TextStyleName;
   color?: string;
   hAlign?: HorizontalAlignment;
+}
+
+// ============================================
+// TABLE NODE (native pptxgenjs table)
+// ============================================
+
+/** Individual table cell data */
+export interface TableCellData {
+  content: TextContent;
+  colspan?: number;
+  rowspan?: number;
+  fill?: string;
+  textStyle?: TextStyleName;
+  hAlign?: HorizontalAlignment;
+  vAlign?: VerticalAlignment;
+}
+
+/** Table-level style configuration */
+export interface TableStyleProps {
+  borderStyle?: BorderStyle;
+  borderColor?: string;
+  borderWidth?: number;
+  headerBackground?: string;
+  headerTextStyle?: TextStyleName;
+  cellBackground?: string;
+  cellTextStyle?: TextStyleName;
+  cellPadding?: number;
+  hAlign?: HorizontalAlignment;
+  vAlign?: VerticalAlignment;
+}
+
+/** Native table element - renders directly via slide.addTable() */
+export interface TableNode {
+  type: typeof NODE_TYPE.TABLE;
+  rows: TableCellData[][];
+  columnWidths?: number[];       // Proportional widths (normalized internally)
+  headerRows?: number;           // Number of header rows (default: 0)
+  headerColumns?: number;        // Number of header columns (default: 0)
+  style?: TableStyleProps;
 }
 
 // ============================================
@@ -150,6 +191,7 @@ export type ElementNode =
   | ImageNode
   | LineNode
   | SlideNumberNode
+  | TableNode
   | RowNode
   | ColumnNode
   | StackNode
