@@ -4,8 +4,22 @@
 import type { ElementNode, NodeType, PositionedNode } from './nodes.js';
 import type { Theme, Direction } from './types.js';
 import type { Bounds } from './bounds.js';
-import type { LayoutOptions } from '../layout/engine.js';
 import type { MeasurementResults } from '../layout/pipeline.js';
+
+// ============================================
+// LAYOUT OPTIONS
+// ============================================
+
+/**
+ * Options for layout computation
+ */
+export interface LayoutOptions {
+  /**
+   * When true (default), validation errors are thrown.
+   * When false, validation is skipped.
+   */
+  strict?: boolean;
+}
 
 // ============================================
 // LAYOUT CONTEXT

@@ -2,7 +2,7 @@
 // Main barrel export
 
 // Core
-export { Presentation } from './presentation.js';
+export { Presentation, type Slide, type Master } from './presentation.js';
 export * from './core/types.js';
 export * from './core/dsl.js';
 export * from './core/nodes.js';

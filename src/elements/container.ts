@@ -499,9 +499,12 @@ function computeColumnLayout(
 
   let y = innerY;
   if (node.vAlign === VALIGN.MIDDLE) {
-    y = innerY + (innerH - contentHeight) / 2;
+    // Clamp offset to 0: never position children above parent bounds
+    // (negative offset means content is taller than available space)
+    y = innerY + Math.max(0, (innerH - contentHeight) / 2);
   } else if (node.vAlign === VALIGN.BOTTOM) {
-    y = innerY + innerH - contentHeight;
+    // Clamp offset to 0: never position children above parent bounds
+    y = innerY + Math.max(0, innerH - contentHeight);
   }
 
   log.layout.column('LAYOUT column gap=%f contentHeight=%f vAlign=%s startY=%f padding=%f',

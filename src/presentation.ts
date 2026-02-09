@@ -8,7 +8,7 @@ import type { Theme } from './core/types.js';
 import type { ElementNode, PositionedNode, SlideContent } from './core/nodes.js';
 import { Bounds } from './core/bounds.js';
 import { PptxRenderer, type Renderer } from './core/pptx-renderer.js';
-import { computeLayout } from './layout/engine.js';
+import { computeLayout, LayoutValidator } from './layout/engine.js';
 import { log } from './utils/log.js';
 import { componentRegistry } from './core/component-registry.js';
 import { TextMeasurementPipeline, type MeasurementResults } from './layout/pipeline.js';
@@ -198,9 +198,18 @@ export class Presentation {
         try {
           // Compute layout with measurements
           positioned = computeLayout(expanded, bounds, this._theme, measurements);
+
+          // Validate that positioned content is within content bounds (not slide bounds)
+          // Content bounds exclude the footer area reserved by the master
+          // Pass absolute edges: content can't go past bounds.x + bounds.w or bounds.y + bounds.h
+          const validator = new LayoutValidator({
+            width: bounds.x + bounds.w,   // Absolute right edge
+            height: bounds.y + bounds.h,  // Absolute bottom edge (excludes footer)
+          });
+          validator.validateOrThrow(positioned, slideIndex);
         } catch (error) {
-          if (error instanceof Error) {
-            error.message = `Slide ${slideIndex}: ${error.message}`;
+          if (error instanceof Error && !error.message.startsWith('Slide ')) {
+            error.message = `Slide ${slideIndex + 1}: ${error.message}`;
           }
           throw error;
         }
