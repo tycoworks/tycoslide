@@ -259,8 +259,8 @@ export class PptxRenderer implements Renderer {
       wrap: true,
       lineSpacingMultiple: lineSpacing,
       // WORKAROUND: pptxgenjs bug - align option breaks bullet rendering
-      ...(hasBullets ? {} : { align: (textNode.hAlign as any) ?? HALIGN.LEFT }),
-      valign: (textNode.vAlign as any) ?? VALIGN.TOP,
+      ...(hasBullets ? {} : { align: textNode.hAlign as any }),
+      valign: textNode.vAlign as any,
     };
 
     return { fragments, options };

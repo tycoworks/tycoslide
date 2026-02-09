@@ -50,12 +50,12 @@ describe('text()', () => {
     assert.deepStrictEqual(node.content, content);
   });
 
-  test('applies no props by default', () => {
+  test('applies explicit alignment defaults', () => {
     const node = text('test');
     assert.strictEqual(node.style, undefined);
     assert.strictEqual(node.color, undefined);
-    assert.strictEqual(node.hAlign, undefined);
-    assert.strictEqual(node.vAlign, undefined);
+    assert.strictEqual(node.hAlign, HALIGN.LEFT);   // Explicit default
+    assert.strictEqual(node.vAlign, VALIGN.TOP);    // Explicit default
   });
 
   test('applies style prop', () => {
@@ -242,11 +242,22 @@ describe('row()', () => {
     assert.deepStrictEqual(node.children, [child1, child2, child3]);
   });
 
-  test('applies no props by default when no props provided', () => {
+  test('applies explicit alignment defaults', () => {
     const node = row(child1);
     assert.strictEqual(node.width, undefined);
     assert.strictEqual(node.gap, undefined);
-    assert.strictEqual(node.vAlign, undefined);
+    assert.strictEqual(node.vAlign, VALIGN.TOP);    // Explicit default
+    assert.strictEqual(node.hAlign, HALIGN.LEFT);   // Explicit default
+  });
+
+  test('applies hAlign prop', () => {
+    const node = row({ hAlign: HALIGN.CENTER }, child1);
+    assert.strictEqual(node.hAlign, HALIGN.CENTER);
+  });
+
+  test('applies padding prop', () => {
+    const node = row({ padding: 0.5 }, child1);
+    assert.strictEqual(node.padding, 0.5);
   });
 
   test('accepts props with children (props first)', () => {
@@ -315,12 +326,12 @@ describe('column()', () => {
     assert.deepStrictEqual(node.children, [child1, child2, child3]);
   });
 
-  test('applies no props by default when no props provided', () => {
+  test('applies explicit alignment defaults', () => {
     const node = column(child1);
     assert.strictEqual(node.height, undefined);
     assert.strictEqual(node.gap, undefined);
-    assert.strictEqual(node.vAlign, undefined);
-    assert.strictEqual(node.hAlign, undefined);
+    assert.strictEqual(node.vAlign, VALIGN.TOP);    // Explicit default
+    assert.strictEqual(node.hAlign, HALIGN.LEFT);   // Explicit default
   });
 
   test('accepts props with children (props first)', () => {

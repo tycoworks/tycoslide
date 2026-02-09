@@ -93,6 +93,16 @@ class BrowserLayoutMeasurer implements LayoutMeasurer {
     // Generate layout HTML with CSS flexbox structure
     const { html, nodeIds } = generateLayoutHTML(tree, bounds, theme);
 
+    // Debug: save HTML to file if DEBUG_HTML env var is set
+    if (process.env.DEBUG_HTML) {
+      const fs = await import('fs');
+      const counter = (global as any).__debugHtmlCounter ?? 0;
+      (global as any).__debugHtmlCounter = counter + 1;
+      const path = `${process.env.DEBUG_HTML.replace('.html', '')}-${counter}.html`;
+      fs.writeFileSync(path, html);
+      console.log(`DEBUG: Saved measurement HTML to ${path}`);
+    }
+
     // Load HTML and wait for fonts
     await this.page.setContent(html);
     await this.page.evaluate(() => document.fonts.ready);

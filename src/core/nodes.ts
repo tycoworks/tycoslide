@@ -82,6 +82,8 @@ export interface RowNode {
   height?: number | SizeValue;  // inches (number) or SIZE.FILL to fill available height
   gap?: GapSize;
   vAlign?: VerticalAlignment;
+  hAlign?: HorizontalAlignment; // justify-content: flex-start (left), center, flex-end (right)
+  padding?: number;             // inches - internal padding on all sides
 }
 
 export interface ColumnNode {

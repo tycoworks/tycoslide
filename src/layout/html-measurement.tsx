@@ -5,8 +5,8 @@ import { renderToString } from 'hono/jsx/dom/server';
 import type { FC, PropsWithChildren } from 'hono/jsx';
 import type { ElementNode, TextNode, ImageNode, RowNode, ColumnNode, StackNode, SlideNumberNode } from '../core/nodes.js';
 import { NODE_TYPE } from '../core/nodes.js';
-import type { Theme, TextStyle, FontWeight, GapSize, VerticalAlignment, HorizontalAlignment, SizeValue, TextContent, NormalizedRun } from '../core/types.js';
-import { TEXT_STYLE, FONT_WEIGHT, SIZE, VALIGN, HALIGN } from '../core/types.js';
+import type { Theme, TextStyle, FontWeight, GapSize, VerticalAlignment, HorizontalAlignment, SizeValue, TextContent, NormalizedRun, Direction } from '../core/types.js';
+import { TEXT_STYLE, FONT_WEIGHT, SIZE, VALIGN, HALIGN, DIRECTION } from '../core/types.js';
 import type { Bounds } from '../core/bounds.js';
 import { normalizeContent } from '../utils/text.js';
 import { inToPx, ptToPx } from '../utils/units.js';
@@ -46,19 +46,19 @@ export function resetIdCounter(): void {
 
 function vAlignToCSS(vAlign: VerticalAlignment | undefined): string {
   switch (vAlign) {
-    case VALIGN.TOP: return 'flex-start';
     case VALIGN.BOTTOM: return 'flex-end';
-    case VALIGN.MIDDLE:
-    default: return 'center';
+    case VALIGN.MIDDLE: return 'center';
+    case VALIGN.TOP:
+    default: return 'flex-start';  // Default: TOP (matches PPTX renderer)
   }
 }
 
 function hAlignToCSS(hAlign: HorizontalAlignment | undefined): string {
   switch (hAlign) {
-    case HALIGN.LEFT: return 'flex-start';
     case HALIGN.RIGHT: return 'flex-end';
-    case HALIGN.CENTER:
-    default: return 'center';
+    case HALIGN.CENTER: return 'center';
+    case HALIGN.LEFT:
+    default: return 'stretch';  // Default: stretch for accurate width measurement (LEFT behavior with width:100%)
   }
 }
 
@@ -120,47 +120,10 @@ function generateFontFaceCSS(theme: Theme): string {
 // LAYOUT COMPONENTS
 // ============================================
 
-interface LayoutRowProps {
+// Unified container props - Row and Column are just flex containers with different direction
+interface LayoutContainerProps {
   nodeId: string;
-  width?: number | SizeValue;
-  height?: number | SizeValue;
-  gap?: GapSize;
-  vAlign?: VerticalAlignment;
-  theme: Theme;
-}
-
-const LayoutRow: FC<PropsWithChildren<LayoutRowProps>> = ({
-  nodeId,
-  width,
-  height,
-  gap,
-  vAlign,
-  theme,
-  children,
-}) => {
-  const gapPx = inToPx(resolveGap(gap, theme));
-  const alignItems = vAlignToCSS(vAlign);
-  const widthStyle = widthToCSS(width);
-  const heightStyle = heightToCSS(height);
-
-  const style = [
-    'display: flex',
-    'flex-direction: row',
-    `gap: ${gapPx}px`,
-    `align-items: ${alignItems}`,
-    widthStyle,
-    heightStyle,
-  ].filter(Boolean).join('; ');
-
-  return (
-    <div data-node-id={nodeId} style={style}>
-      {children}
-    </div>
-  );
-};
-
-interface LayoutColumnProps {
-  nodeId: string;
+  direction: Direction;
   width?: number | SizeValue;
   height?: number | SizeValue;
   gap?: GapSize;
@@ -170,8 +133,9 @@ interface LayoutColumnProps {
   theme: Theme;
 }
 
-const LayoutColumn: FC<PropsWithChildren<LayoutColumnProps>> = ({
+const LayoutContainer: FC<PropsWithChildren<LayoutContainerProps>> = ({
   nodeId,
+  direction,
   width,
   height,
   gap,
@@ -182,15 +146,24 @@ const LayoutColumn: FC<PropsWithChildren<LayoutColumnProps>> = ({
   children,
 }) => {
   const gapPx = inToPx(resolveGap(gap, theme));
-  const justifyContent = vAlignToCSS(vAlign);  // Column uses justify-content for vertical
-  const alignItems = hAlignToCSS(hAlign);      // and align-items for horizontal
   const widthStyle = widthToCSS(width);
   const heightStyle = heightToCSS(height);
   const paddingPx = padding ? inToPx(padding) : 0;
 
+  // In flexbox:
+  // - justify-content controls main axis (row: horizontal, column: vertical)
+  // - align-items controls cross axis (row: vertical, column: horizontal)
+  const isRow = direction === DIRECTION.ROW;
+  const justifyContent = isRow
+    ? (hAlign === HALIGN.CENTER ? 'center' : hAlign === HALIGN.RIGHT ? 'flex-end' : 'flex-start')
+    : vAlignToCSS(vAlign);
+  const alignItems = isRow
+    ? vAlignToCSS(vAlign)
+    : hAlignToCSS(hAlign);
+
   const style = [
     'display: flex',
-    'flex-direction: column',
+    `flex-direction: ${direction}`,
     `gap: ${gapPx}px`,
     `justify-content: ${justifyContent}`,
     `align-items: ${alignItems}`,
@@ -252,6 +225,9 @@ const LayoutText: FC<LayoutTextProps> = ({
   const lineHeight = lineHeightMultiplier ?? style.lineHeightMultiplier ?? 1.2;
   const fontSizePx = ptToPx(style.fontSize);
 
+  // Bullet indent: fontSize * multiplier, converted to px
+  const bulletIndentPx = ptToPx(style.fontSize * theme.spacing.bulletIndentMultiplier);
+
   const textAlign = hAlign === HALIGN.RIGHT ? 'right' : hAlign === HALIGN.CENTER ? 'center' : 'left';
 
   const containerStyle = [
@@ -261,11 +237,12 @@ const LayoutText: FC<LayoutTextProps> = ({
     `text-align: ${textAlign}`,
     'white-space: pre-wrap',
     'word-wrap: break-word',
+    'width: 100%',  // Fill container width (prevents centering in flex parent)
   ].join('; ');
 
   return (
     <div data-node-id={nodeId} style={containerStyle}>
-      {runs.map((run, i) => renderTextRun(run, i, style, defaultWeight))}
+      {runs.map((run, i) => renderTextRun(run, i, style, defaultWeight, bulletIndentPx))}
     </div>
   );
 };
@@ -274,7 +251,8 @@ function renderTextRun(
   run: NormalizedRun,
   index: number,
   style: TextStyle,
-  defaultWeight: string
+  defaultWeight: string,
+  bulletIndentPx: number
 ) {
   const spanStyles: string[] = [];
 
@@ -312,11 +290,29 @@ function renderTextRun(
     spanStyles.push(`color: #${run.highlight.text}`);
   }
 
+  // Handle paragraph spacing
+  if (run.paraSpaceBefore) {
+    spanStyles.push(`margin-top: ${ptToPx(run.paraSpaceBefore)}px`);
+  }
+  if (run.paraSpaceAfter) {
+    spanStyles.push(`margin-bottom: ${ptToPx(run.paraSpaceAfter)}px`);
+  }
+
   const styleAttr = spanStyles.length > 0 ? spanStyles.join('; ') : undefined;
   const text = escapeHtml(run.text);
 
-  // Handle line breaks - bullet implies a new paragraph
-  const prefix = (run.breakLine || run.bullet) ? <br /> : null;
+  // Handle bullets - simple left padding for indent
+  if (run.bullet) {
+    return (
+      <div key={index} style={`padding-left: ${bulletIndentPx}px`}>
+        <span style="display: inline-block; width: 1em; margin-left: -1em">•</span>
+        <span style={styleAttr}>{text}</span>
+      </div>
+    );
+  }
+
+  // Handle plain line breaks
+  const prefix = run.breakLine ? <br /> : null;
 
   return (
     <>
@@ -335,11 +331,11 @@ const LayoutImage: FC<LayoutImageProps> = ({
   nodeId,
   aspectRatio = 1.5,  // Default 3:2 aspect ratio
 }) => {
-  // Images are placeholders - we just need to reserve space
+  // Images are placeholders - need flex: 1 1 0 to participate in row layout
   return (
     <div
       data-node-id={nodeId}
-      style={`aspect-ratio: ${aspectRatio}; min-width: 0; min-height: 0`}
+      style={`flex: 1 1 0; min-width: 0; min-height: 0; aspect-ratio: ${aspectRatio}`}
     />
   );
 };
@@ -404,24 +400,28 @@ function nodeToJsx(
     case NODE_TYPE.ROW: {
       const rowNode = node as RowNode;
       return (
-        <LayoutRow
+        <LayoutContainer
           nodeId={nodeId}
+          direction={DIRECTION.ROW}
           width={rowNode.width}
           height={rowNode.height}
           gap={rowNode.gap}
           vAlign={rowNode.vAlign}
+          hAlign={rowNode.hAlign}
+          padding={rowNode.padding}
           theme={theme}
         >
           {rowNode.children.map((child) => nodeToJsx(child, theme, nodeIds))}
-        </LayoutRow>
+        </LayoutContainer>
       );
     }
 
     case NODE_TYPE.COLUMN: {
       const colNode = node as ColumnNode;
       return (
-        <LayoutColumn
+        <LayoutContainer
           nodeId={nodeId}
+          direction={DIRECTION.COLUMN}
           width={colNode.width}
           height={colNode.height}
           gap={colNode.gap}
@@ -431,7 +431,7 @@ function nodeToJsx(
           theme={theme}
         >
           {colNode.children.map((child) => nodeToJsx(child, theme, nodeIds))}
-        </LayoutColumn>
+        </LayoutContainer>
       );
     }
 

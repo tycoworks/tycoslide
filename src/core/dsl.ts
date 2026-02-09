@@ -26,7 +26,7 @@ import type {
   DashType,
   SizeValue,
 } from './types.js';
-import { TEXT_STYLE } from './types.js';
+import { TEXT_STYLE, VALIGN, HALIGN } from './types.js';
 
 // ============================================
 // TEXT
@@ -46,8 +46,8 @@ export function text(content: TextContent, props?: TextProps): TextNode {
     content,
     style: props?.style,
     color: props?.color,
-    hAlign: props?.hAlign,
-    vAlign: props?.vAlign,
+    hAlign: props?.hAlign ?? HALIGN.LEFT,   // Explicit default for consistent measurement
+    vAlign: props?.vAlign ?? VALIGN.TOP,    // Explicit default for consistent measurement
     lineHeightMultiplier: props?.lineHeightMultiplier,
   };
 }
@@ -113,6 +113,8 @@ export interface RowProps {
   height?: number | SizeValue;  // inches (number) or SIZE.FILL to fill container height
   gap?: GapSize;
   vAlign?: VerticalAlignment;
+  hAlign?: HorizontalAlignment; // justify-content: left (flex-start), center, right (flex-end)
+  padding?: number;             // inches - internal padding on all sides
 }
 
 export function row(props: RowProps, ...children: SlideContent[]): RowNode;
@@ -134,7 +136,9 @@ export function row(...args: any[]): RowNode {
     width: props.width,
     height: props.height,
     gap: props.gap,
-    vAlign: props.vAlign,
+    vAlign: props.vAlign ?? VALIGN.TOP,    // Explicit default for consistent measurement
+    hAlign: props.hAlign ?? HALIGN.LEFT,   // Explicit default for consistent measurement
+    padding: props.padding,
   };
 }
 
@@ -166,8 +170,8 @@ export function column(...args: any[]): ColumnNode {
     width: props.width,
     height: props.height,
     gap: props.gap,
-    vAlign: props.vAlign,
-    hAlign: props.hAlign,
+    vAlign: props.vAlign ?? VALIGN.TOP,    // Explicit default for consistent measurement
+    hAlign: props.hAlign ?? HALIGN.LEFT,   // Explicit default for consistent measurement
     padding: props.padding,
   };
 }
