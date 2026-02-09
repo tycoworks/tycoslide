@@ -65,6 +65,7 @@ export const BORDER_STYLE = {
   FULL: 'full',
   INTERNAL: 'internal',
   HORIZONTAL: 'horizontal',
+  VERTICAL: 'vertical',
   NONE: 'none',
 } as const;
 

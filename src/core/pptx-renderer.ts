@@ -6,10 +6,10 @@ import PptxGenJSDefault from 'pptxgenjs';
 const PptxGenJS = (PptxGenJSDefault as any).default || PptxGenJSDefault;
 type PptxSlide = ReturnType<InstanceType<typeof PptxGenJS>['addSlide']>;
 
-import type { PositionedNode, TextNode, ImageNode, RectangleNode, LineNode, SlideNumberNode } from './nodes.js';
+import type { PositionedNode, TextNode, ImageNode, RectangleNode, LineNode, SlideNumberNode, TableNode, TableCellData } from './nodes.js';
 import { NODE_TYPE } from './nodes.js';
 import type { Theme, TextStyleName, TextContent } from './types.js';
-import { CUSTOM_LAYOUT, SHAPE, TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT } from './types.js';
+import { CUSTOM_LAYOUT, SHAPE, TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT, BORDER_STYLE } from './types.js';
 import { getFontFromFamily, normalizeContent } from '../utils/text.js';
 import { log, contentPreview } from '../utils/log.js';
 
@@ -203,6 +203,9 @@ export class PptxRenderer implements Renderer {
         break;
       case NODE_TYPE.SLIDE_NUMBER:
         this.renderSlideNumber(positioned, slide, theme);
+        break;
+      case NODE_TYPE.TABLE:
+        this.renderTable(positioned, slide, theme);
         break;
       case NODE_TYPE.ROW:
       case NODE_TYPE.COLUMN:
@@ -420,6 +423,166 @@ export class PptxRenderer implements Renderer {
       valign: VALIGN.MIDDLE,
       margin: 0,
     };
+  }
+
+  private renderTable(positioned: PositionedNode, slide: PptxSlide, theme: Theme): void {
+    const tableNode = positioned.node as TableNode;
+    const { rows, columnWidths, headerRows = 0, headerColumns = 0, style = {} } = tableNode;
+
+    log.render._('RENDER table x=%f y=%f w=%f h=%f rows=%d cols=%d',
+      positioned.x, positioned.y, positioned.width, positioned.height,
+      rows.length, rows[0]?.length ?? 0);
+
+    if (rows.length === 0) return;
+
+    const numCols = rows[0]?.length ?? 0;
+    if (numCols === 0) return;
+
+    // Build column widths (normalize to fit positioned width)
+    const colW = this.buildColumnWidths(columnWidths, numCols, positioned.width);
+
+    // Build table rows for pptxgenjs
+    const numRows = rows.length;
+    const tableRows = rows.map((row, rowIndex) =>
+      row.map((cell, colIndex) =>
+        this.buildTableCell(cell, rowIndex, colIndex, numRows, numCols, headerRows, headerColumns, style, theme)
+      )
+    );
+
+    // Table options
+    const tableOptions: Record<string, unknown> = {
+      x: positioned.x,
+      y: positioned.y,
+      w: positioned.width,
+      colW,
+      margin: 0,
+    };
+
+    slide.addTable(tableRows, tableOptions);
+  }
+
+  private buildColumnWidths(columnWidths: number[] | undefined, numCols: number, totalWidth: number): number[] {
+    if (!columnWidths || columnWidths.length === 0) {
+      // Equal widths
+      const colWidth = totalWidth / numCols;
+      return Array(numCols).fill(colWidth);
+    }
+
+    // Normalize proportional widths to actual inches
+    const total = columnWidths.reduce((a, b) => a + b, 0);
+    return columnWidths.map(w => (w / total) * totalWidth);
+  }
+
+  private buildTableCell(
+    cell: TableCellData,
+    rowIndex: number,
+    colIndex: number,
+    numRows: number,
+    numCols: number,
+    headerRows: number,
+    headerColumns: number,
+    tableStyle: TableNode['style'],
+    theme: Theme
+  ): { text: TextFragment[]; options: Record<string, unknown> } {
+    const isHeaderRow = rowIndex < headerRows;
+    const isHeaderCol = colIndex < headerColumns;
+    const isHeader = isHeaderRow || isHeaderCol;
+
+    // Determine text style
+    const styleName = isHeader
+      ? (tableStyle?.headerTextStyle ?? cell.textStyle ?? TEXT_STYLE.BODY)
+      : (cell.textStyle ?? tableStyle?.cellTextStyle ?? TEXT_STYLE.BODY);
+    const textStyle = theme.textStyles[styleName];
+    const font = getFontFromFamily(textStyle.fontFamily, textStyle.defaultWeight ?? FONT_WEIGHT.NORMAL);
+
+    // Determine background
+    const fill = cell.fill
+      ?? (isHeader ? tableStyle?.headerBackground : undefined)
+      ?? tableStyle?.cellBackground;
+
+    // Determine alignment
+    const hAlign = cell.hAlign ?? tableStyle?.hAlign ?? HALIGN.LEFT;
+    const vAlign = cell.vAlign ?? tableStyle?.vAlign ?? VALIGN.MIDDLE;
+
+    // Cell padding
+    const cellPadding = tableStyle?.cellPadding ?? theme.spacing.cellPadding ?? 0.05;
+
+    // Build border config based on border style and cell position
+    const border = this.buildCellBorder(tableStyle, theme, rowIndex, colIndex, numRows, numCols);
+
+    // Build rich text fragments for cell content
+    const textFragments = this.buildTextFragments(cell.content, styleName, theme);
+
+    const options: Record<string, unknown> = {
+      fontFace: font.name,
+      fontSize: textStyle.fontSize,
+      color: textStyle.color ?? theme.colors.text,
+      align: hAlign,
+      valign: vAlign,
+      margin: cellPadding,
+    };
+
+    if (fill) {
+      options.fill = { color: fill };
+    }
+
+    if (border) {
+      options.border = border;
+    }
+
+    if (cell.colspan) {
+      options.colspan = cell.colspan;
+    }
+
+    if (cell.rowspan) {
+      options.rowspan = cell.rowspan;
+    }
+
+    return { text: textFragments, options };
+  }
+
+  private buildCellBorder(
+    tableStyle: TableNode['style'],
+    theme: Theme,
+    rowIndex: number,
+    colIndex: number,
+    numRows: number,
+    numCols: number
+  ): Array<{ pt?: number; color?: string; type?: string }> | undefined {
+    const borderStyle = tableStyle?.borderStyle ?? BORDER_STYLE.FULL;
+    if (borderStyle === BORDER_STYLE.NONE) return undefined;
+
+    const borderWidth = tableStyle?.borderWidth ?? theme.borders.width ?? 0.5;
+    const borderColor = tableStyle?.borderColor ?? theme.colors.secondary ?? '000000';
+
+    const solid = { pt: borderWidth, color: borderColor, type: 'solid' as const };
+    const none = { type: 'none' as const };
+
+    // For internal borders, determine which edges are on the table boundary
+    const isFirstRow = rowIndex === 0;
+    const isLastRow = rowIndex === numRows - 1;
+    const isFirstCol = colIndex === 0;
+    const isLastCol = colIndex === numCols - 1;
+
+    // Return [top, right, bottom, left] border array
+    switch (borderStyle) {
+      case BORDER_STYLE.FULL:
+        return [solid, solid, solid, solid];
+      case BORDER_STYLE.HORIZONTAL:
+        return [solid, none, solid, none];
+      case BORDER_STYLE.VERTICAL:
+        return [none, solid, none, solid];
+      case BORDER_STYLE.INTERNAL:
+        // Internal borders only - no borders on outer edges
+        return [
+          isFirstRow ? none : solid,  // top
+          isLastCol ? none : solid,   // right
+          isLastRow ? none : solid,   // bottom
+          isFirstCol ? none : solid,  // left
+        ];
+      default:
+        return [solid, solid, solid, solid];
+    }
   }
 
   // ============================================

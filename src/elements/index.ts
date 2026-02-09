@@ -8,6 +8,7 @@ import './text.js';
 import './image.js';
 import './slide-number.js';
 import './container.js';
+import './table.js';
 
 // Re-export handlers for direct access if needed
 export { lineHandler } from './line.js';
@@ -16,3 +17,4 @@ export { textHandler } from './text.js';
 export { imageHandler } from './image.js';
 export { slideNumberHandler } from './slide-number.js';
 export { rowHandler, columnHandler, stackHandler } from './container.js';
+export { tableHandler } from './table.js';
