@@ -294,6 +294,19 @@ npx tycoslide preview presentation.ts
 
 ## Step 3: VS Code Extension (Future)
 
+### Alternative: reveal.js for Preview Rendering
+
+**Consideration:** For the visual preview (Step 2), reveal.js could provide slide navigation, transitions, and presentation UX out of the box. However:
+
+| Approach | Pro | Con |
+|----------|-----|-----|
+| Custom HTML | Full control over fidelity | Build navigation ourselves |
+| reveal.js | Navigation/transitions free | Another dependency, may fight our CSS |
+
+**Decision:** Defer to Step 2. For Step 1 (measurement), we just need raw HTML divs - no presentation framework needed.
+
+---
+
 ### Challenge
 
 TycoSlide presentations are TypeScript files that must be **executed**, not parsed. Unlike Marp (Markdown), we can't just parse the file - we need to run it.

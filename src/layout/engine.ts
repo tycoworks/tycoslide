@@ -6,11 +6,11 @@
 // Side-effect import: register element handlers
 import '../elements/index.js';
 
-import { NODE_TYPE, type ElementNode, type PositionedNode } from './nodes.js';
-import type { Theme, Direction } from './types.js';
-import type { TextMeasurer } from '../utils/text-measurer.js';
-import { Bounds } from './bounds.js';
-import { elementHandlerRegistry } from './element-registry.js';
+import { NODE_TYPE, type ElementNode, type PositionedNode } from '../core/nodes.js';
+import type { Theme, Direction } from '../core/types.js';
+import { Bounds } from '../core/bounds.js';
+import { elementHandlerRegistry } from '../core/element-registry.js';
+import type { MeasurementResults } from './pipeline.js';
 
 // ============================================
 // LAYOUT OPTIONS & ERRORS
@@ -96,9 +96,9 @@ export function getNodeHeight(
   node: ElementNode,
   width: number,
   theme: Theme,
-  measurer: TextMeasurer
+  measurements: MeasurementResults
 ): number {
-  const height = elementHandlerRegistry.getHeight(node, width, { theme, measurer });
+  const height = elementHandlerRegistry.getHeight(node, width, { theme, measurements });
   if (height !== undefined) {
     return height;
   }
@@ -113,9 +113,9 @@ export function getMinNodeHeight(
   node: ElementNode,
   width: number,
   theme: Theme,
-  measurer: TextMeasurer
+  measurements: MeasurementResults
 ): number {
-  const minHeight = elementHandlerRegistry.getMinHeight(node, width, { theme, measurer });
+  const minHeight = elementHandlerRegistry.getMinHeight(node, width, { theme, measurements });
   if (minHeight !== undefined) {
     return minHeight;
   }
@@ -135,11 +135,11 @@ export function computeLayout(
   node: ElementNode,
   bounds: Bounds,
   theme: Theme,
-  measurer: TextMeasurer,
+  measurements: MeasurementResults,
   parentDirection?: Direction,
   options?: LayoutOptions
 ): PositionedNode {
-  const ctx = { theme, measurer, parentDirection, options };
+  const ctx = { theme, measurements, parentDirection, options };
 
   const positioned = elementHandlerRegistry.computeLayout(node, bounds, ctx);
   if (positioned !== undefined) {

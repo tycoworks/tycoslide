@@ -19,7 +19,7 @@ export {
   tableComponent,
   TABLE_COMPONENT,
   type TableComponentProps,
-  type TableCellContent,
+  // TableCellContent exported from core/dsl.js
 } from './table.js';
 
 export {

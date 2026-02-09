@@ -1,9 +1,9 @@
-// Font Utilities Tests
-// Tests for font-utils.ts utility functions
+// Text Utilities Tests
+// Tests for text.ts utility functions
 
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
-import { getFontFromFamily, normalizeContent } from '../src/utils/font-utils.js';
+import { getFontFromFamily, normalizeContent } from '../src/utils/text.js';
 import { FONT_WEIGHT, type FontFamily, type NormalizedRun } from '../src/core/types.js';
 
 // ============================================

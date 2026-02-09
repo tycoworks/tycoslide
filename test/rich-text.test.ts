@@ -6,7 +6,7 @@ import { describe, it } from 'node:test';
 import { text } from '../src/core/dsl.js';
 import { TEXT_STYLE, FONT_WEIGHT } from '../src/core/types.js';
 import type { NormalizedRun } from '../src/core/types.js';
-import { normalizeContent } from '../src/utils/font-utils.js';
+import { normalizeContent } from '../src/utils/text.js';
 
 describe('Rich Text', () => {
   describe('NormalizedRun paragraph options', () => {

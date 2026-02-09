@@ -1,14 +1,11 @@
-// Node Handler Registry
+// Element Handler Registry
 // Interface definitions, registry singleton, and convenience functions
 
 import type { ElementNode, NodeType, PositionedNode } from './nodes.js';
 import type { Theme, Direction } from './types.js';
 import type { Bounds } from './bounds.js';
-import type { Canvas } from './canvas.js';
-import type { TextMeasurer } from '../utils/text-measurer.js';
-import type { MeasurementRequests } from './measure.js';
-import type { LayoutOptions } from './layout.js';
-import { log } from '../utils/log.js';
+import type { LayoutOptions } from '../layout/engine.js';
+import type { MeasurementResults } from '../layout/pipeline.js';
 
 // ============================================
 // LAYOUT CONTEXT
@@ -16,11 +13,12 @@ import { log } from '../utils/log.js';
 
 /**
  * Context bundle for layout computation.
- * Combines theme and text measurer into a single object for cleaner function signatures.
+ * Contains theme and text measurements for all elements.
  */
 export interface LayoutContext {
   theme: Theme;
-  measurer: TextMeasurer;
+  /** Text measurement results (required - from browser measurement) */
+  measurements: MeasurementResults;
   /** Parent container direction - used by LINE for orientation */
   parentDirection?: Direction;
   /** Layout options for overflow handling */
@@ -62,22 +60,10 @@ export interface ElementHandler<T extends ElementNode = ElementNode> {
   computeLayout(node: T, bounds: Bounds, ctx: LayoutContext): PositionedNode;
 
   /**
-   * Render the positioned node to the canvas.
-   * Called after layout is complete.
-   */
-  render(positioned: PositionedNode, canvas: Canvas, theme: Theme): void;
-
-  /**
-   * Collect text measurement requests for browser-based measurement.
-   * Only implemented by nodes containing text (TEXT, SLIDE_NUMBER).
-   */
-  collectMeasurements?(node: T, bounds: Bounds, theme: Theme): MeasurementRequests;
-
-  /**
    * Compute the intrinsic width at a given height.
-   * Only implemented by nodes with width-from-height behavior (TEXT).
+   * All element handlers must implement this.
    */
-  getIntrinsicWidth?(node: T, height: number, ctx: LayoutContext): number;
+  getIntrinsicWidth(node: T, height: number, ctx: LayoutContext): number;
 }
 
 // ============================================
@@ -167,33 +153,12 @@ class ElementHandlerRegistry {
   }
 
   /**
-   * Render a positioned node, delegating to its handler.
-   * Returns false if no handler registered.
-   */
-  render(positioned: PositionedNode, canvas: Canvas, theme: Theme): boolean {
-    const handler = this.get(positioned.node.type);
-    if (!handler) return false;
-    handler.render(positioned, canvas, theme);
-    return true;
-  }
-
-  /**
-   * Collect measurements for a node, delegating to its handler.
-   * Returns undefined if no handler or handler doesn't implement collectMeasurements.
-   */
-  collectMeasurements(node: ElementNode, bounds: Bounds, theme: Theme): MeasurementRequests | undefined {
-    const handler = this.get(node.type);
-    if (!handler || !handler.collectMeasurements) return undefined;
-    return handler.collectMeasurements(node, bounds, theme);
-  }
-
-  /**
    * Get intrinsic width for a node, delegating to its handler.
-   * Returns undefined if no handler or handler doesn't implement getIntrinsicWidth.
+   * Returns undefined if no handler registered (allows fallback).
    */
   getIntrinsicWidth(node: ElementNode, height: number, ctx: LayoutContext): number | undefined {
     const handler = this.get(node.type);
-    if (!handler || !handler.getIntrinsicWidth) return undefined;
+    if (!handler) return undefined;
     return handler.getIntrinsicWidth(node, height, ctx);
   }
 
@@ -241,22 +206,5 @@ export function getIntrinsicWidth(
   constraintHeight: number,
   ctx: LayoutContext
 ): number {
-  const width = elementHandlerRegistry.getIntrinsicWidth(node, constraintHeight, ctx);
-  return width ?? 0;
-}
-
-/**
- * Render a positioned node tree to a canvas.
- * Delegates to the handler registry.
- */
-export function render(positioned: PositionedNode, canvas: Canvas, theme: Theme): void {
-  const { node } = positioned;
-
-  log.render._('render %s x=%f y=%f w=%f h=%f',
-    node.type, positioned.x, positioned.y, positioned.width, positioned.height);
-
-  const handled = elementHandlerRegistry.render(positioned, canvas, theme);
-  if (!handled) {
-    throw new Error(`No handler registered for node type: ${node.type}`);
-  }
+  return elementHandlerRegistry.getIntrinsicWidth(node, constraintHeight, ctx) ?? 0;
 }

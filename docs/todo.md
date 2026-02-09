@@ -3,6 +3,7 @@ Spacing / layouts:
 -- Direction is opposite to container?
 -- Content rules
 -- Image cover
+- Tidy up arch docs
 
 Core:
 - Align colors with design token standards
@@ -18,6 +19,9 @@ Cleanup:
 - Right align bullet points
 
 Components:
+- Markdown
+- Rect -> shape
 - Image to the left of the card / direction and justify
 - Quote component
 - Code component
+- Real mermaid

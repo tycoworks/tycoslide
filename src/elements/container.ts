@@ -9,19 +9,16 @@ import {
   type StackNode,
   type PositionedNode,
 } from '../core/nodes.js';
-import type { Theme } from '../core/types.js';
 import { SIZE, DIRECTION, VALIGN, HALIGN } from '../core/types.js';
 import type { Bounds } from '../core/bounds.js';
 import { Bounds as BoundsClass } from '../core/bounds.js';
-import type { Canvas } from '../core/canvas.js';
 import { elementHandlerRegistry, getIntrinsicWidth, type ElementHandler, type LayoutContext } from '../core/element-registry.js';
-import { MeasurementCollector, type MeasurementRequests } from '../core/measure.js';
-import { resolveGap } from '../utils/node-utils.js';
-import { ptToIn } from '../utils/font-utils.js';
+import { resolveGap } from '../utils/node.js';
+import { ptToIn } from '../utils/text.js';
 import { log } from '../utils/log.js';
 
 // Import from layout for child layout (handles overflow checking)
-import { getNodeHeight, getMinNodeHeight, computeLayout } from '../core/layout.js';
+import { getNodeHeight, getMinNodeHeight, computeLayout } from '../layout/engine.js';
 
 // ============================================
 // FLEX DISTRIBUTION ALGORITHM
@@ -206,13 +203,13 @@ function buildRowFlexChildren(
 function getChildHeight(node: ElementNode, width: number, ctx: LayoutContext): number {
   const handlerResult = elementHandlerRegistry.getHeight(node, width, ctx);
   if (handlerResult !== undefined) return handlerResult;
-  return getNodeHeight(node, width, ctx.theme, ctx.measurer);
+  return getNodeHeight(node, width, ctx.theme, ctx.measurements);
 }
 
 function getChildMinHeight(node: ElementNode, width: number, ctx: LayoutContext): number {
   const handlerResult = elementHandlerRegistry.getMinHeight(node, width, ctx);
   if (handlerResult !== undefined) return handlerResult;
-  return getMinNodeHeight(node, width, ctx.theme, ctx.measurer);
+  return getMinNodeHeight(node, width, ctx.theme, ctx.measurements);
 }
 
 function layoutChild(node: ElementNode, bounds: Bounds, ctx: LayoutContext): PositionedNode {
@@ -220,7 +217,7 @@ function layoutChild(node: ElementNode, bounds: Bounds, ctx: LayoutContext): Pos
     node,
     bounds as BoundsClass,
     ctx.theme,
-    ctx.measurer,
+    ctx.measurements,
     ctx.parentDirection,
     ctx.options
   );
@@ -351,43 +348,26 @@ function createContainerHandler(config: ContainerConfig): ElementHandler<Contain
       }
     },
 
-    render(positioned: PositionedNode, canvas: Canvas, theme: Theme): void {
-      log.render._('  container %s with %d children', logName.toUpperCase(), positioned.children?.length ?? 0);
-      if (positioned.children) {
-        for (const child of positioned.children) {
-          elementHandlerRegistry.render(child, canvas, theme);
-        }
-      }
-    },
-
-    collectMeasurements(node: ContainerNode, bounds: Bounds, theme: Theme): MeasurementRequests {
-      const collector = new MeasurementCollector();
-      const gap = resolveGap(node.gap, theme);
+    getIntrinsicWidth(node: ContainerNode, height: number, ctx: LayoutContext): number {
+      const gap = resolveGap(node.gap, ctx.theme);
       const n = node.children.length;
-      const totalGap = gap * (n - 1);
 
       if (isRow) {
-        // ROW: calculate child widths, then collect from each child
-        const availableWidth = bounds.w - totalGap;
-        const flexChildren = buildRowFlexChildren(node.children);
-        const { sizes: childWidths } = distributeFlexSpace(flexChildren, availableWidth);
-
-        let x = bounds.x;
+        // ROW: sum of children's intrinsic widths + gaps
+        let totalWidth = 0;
         for (let i = 0; i < n; i++) {
-          const childBounds = new BoundsClass(x, bounds.y, childWidths[i], bounds.h);
-          const childRequests = elementHandlerRegistry.collectMeasurements(node.children[i], childBounds, theme);
-          if (childRequests) collector.merge(childRequests);
-          x += childWidths[i] + gap;
+          if (i > 0) totalWidth += gap;
+          totalWidth += getIntrinsicWidth(node.children[i], height, ctx);
         }
+        return totalWidth;
       } else {
-        // COLUMN: each child gets full width
+        // COLUMN: max of children's intrinsic widths
+        let maxWidth = 0;
         for (const child of node.children) {
-          const childRequests = elementHandlerRegistry.collectMeasurements(child, bounds, theme);
-          if (childRequests) collector.merge(childRequests);
+          maxWidth = Math.max(maxWidth, getIntrinsicWidth(child, height, ctx));
         }
+        return maxWidth;
       }
-
-      return collector.getRequests();
     },
   };
 }
@@ -598,24 +578,13 @@ export const stackHandler: ElementHandler<StackNode> = {
     return { node, x: bounds.x, y: bounds.y, width: bounds.w, height: stackHeight, children };
   },
 
-  render(positioned: PositionedNode, canvas: Canvas, theme: Theme): void {
-    log.render._('  container STACK with %d children', positioned.children?.length ?? 0);
-    if (positioned.children) {
-      for (const child of positioned.children) {
-        elementHandlerRegistry.render(child, canvas, theme);
-      }
-    }
-  },
-
-  collectMeasurements(node: StackNode, bounds: Bounds, theme: Theme): MeasurementRequests {
-    const collector = new MeasurementCollector();
-
+  getIntrinsicWidth(node: StackNode, height: number, ctx: LayoutContext): number {
+    // STACK: max of children's intrinsic widths (children overlap)
+    let maxWidth = 0;
     for (const child of node.children) {
-      const childRequests = elementHandlerRegistry.collectMeasurements(child, bounds, theme);
-      if (childRequests) collector.merge(childRequests);
+      maxWidth = Math.max(maxWidth, getIntrinsicWidth(child, height, ctx));
     }
-
-    return collector.getRequests();
+    return maxWidth;
   },
 };
 

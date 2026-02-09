@@ -5,7 +5,7 @@ import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import { mockMeasurer, mockTheme, approx } from './mocks.js';
 import { Bounds } from '../src/core/bounds.js';
-import { computeLayout, getNodeHeight } from '../src/core/layout.js';
+import { computeLayout, getNodeHeight } from '../src/layout/engine.js';
 import { GAP, VALIGN, SIZE, type SizeValue, type VerticalAlignment } from '../src/core/types.js';
 import { NODE_TYPE, type TextNode, type RowNode, type ColumnNode, type ElementNode } from '../src/core/nodes.js';
 

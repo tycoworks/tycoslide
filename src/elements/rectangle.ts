@@ -1,11 +1,8 @@
-// RECTANGLE Node Handler
-// Consolidates all RECTANGLE-related logic from compute-layout.ts and render.ts
+// RECTANGLE Element Handler
+// Layout logic for rectangle nodes
 
 import { NODE_TYPE, type RectangleNode, type PositionedNode } from '../core/nodes.js';
-import type { Theme } from '../core/types.js';
-import { SHAPE } from '../core/types.js';
 import type { Bounds } from '../core/bounds.js';
-import type { Canvas } from '../core/canvas.js';
 import { elementHandlerRegistry, type ElementHandler, type LayoutContext } from '../core/element-registry.js';
 import { log } from '../utils/log.js';
 
@@ -51,58 +48,10 @@ export const rectangleHandler: ElementHandler<RectangleNode> = {
   },
 
   /**
-   * Render rectangle to canvas.
+   * Rectangle has no intrinsic width - fills bounds.
    */
-  render(positioned: PositionedNode, canvas: Canvas, theme: Theme): void {
-    const rectNode = positioned.node as RectangleNode;
-
-    log.render.shape('RENDER rectangle x=%f y=%f w=%f h=%f',
-      positioned.x, positioned.y, positioned.width, positioned.height);
-
-    // Draw the shape if fill or border is specified
-    if (rectNode.fill || rectNode.border) {
-      const shapeType = rectNode.cornerRadius ? SHAPE.ROUND_RECT : SHAPE.RECT;
-
-      // Build shape options
-      const shapeOpts: Parameters<typeof canvas.addShape>[1] = {
-        x: positioned.x,
-        y: positioned.y,
-        w: positioned.width,
-        h: positioned.height,
-      };
-
-      // Fill
-      if (rectNode.fill) {
-        shapeOpts.fill = {
-          color: rectNode.fill.color,
-          transparency: rectNode.fill.opacity !== undefined ? 100 - rectNode.fill.opacity : 0,
-        };
-      }
-
-      // Border - check if any sides are explicitly disabled
-      if (rectNode.border) {
-        const border = rectNode.border;
-        const allSides = border.top !== false && border.right !== false &&
-                         border.bottom !== false && border.left !== false;
-
-        if (allSides) {
-          // All sides - use standard line
-          shapeOpts.line = {
-            color: border.color ?? theme.colors.secondary,
-            width: border.width ?? theme.borders.width,
-          };
-        }
-        // Per-side borders would need separate line shapes - not yet implemented
-      }
-
-      // Corner radius
-      if (rectNode.cornerRadius) {
-        shapeOpts.rectRadius = rectNode.cornerRadius;
-      }
-
-      canvas.addShape(shapeType, shapeOpts);
-    }
-    // Rectangle is a pure visual shape - no children to render
+  getIntrinsicWidth(_node: RectangleNode, _height: number, _ctx: LayoutContext): number {
+    return 0;
   },
 };
 

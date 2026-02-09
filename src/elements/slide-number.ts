@@ -1,14 +1,42 @@
-// SLIDE_NUMBER Node Handler
-// Consolidates all SLIDE_NUMBER-related logic from compute-layout.ts, render.ts, and intrinsics.ts
+// SLIDE_NUMBER Element Handler
+// Layout and measurement logic for slide number nodes
 
-import { NODE_TYPE, type SlideNumberNode, type PositionedNode } from '../core/nodes.js';
-import type { Theme } from '../core/types.js';
-import { TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT } from '../core/types.js';
+import { NODE_TYPE, type SlideNumberNode, type TextNode, type PositionedNode } from '../core/nodes.js';
+import { TEXT_STYLE } from '../core/types.js';
 import type { Bounds } from '../core/bounds.js';
-import type { Canvas } from '../core/canvas.js';
 import { elementHandlerRegistry, type ElementHandler, type LayoutContext } from '../core/element-registry.js';
-import { getFontFromFamily } from '../utils/font-utils.js';
 import { log } from '../utils/log.js';
+
+// ============================================
+// SYNTHETIC TEXT NODE FOR MEASUREMENT
+// ============================================
+
+/**
+ * Maps SlideNumberNode instances to their synthetic TextNode for measurement.
+ * Uses WeakMap so nodes can be garbage collected.
+ */
+const slideNumberSyntheticNodes = new WeakMap<SlideNumberNode, TextNode>();
+
+/**
+ * Get or create a synthetic TextNode for a SlideNumberNode.
+ * Uses "999" as content to measure max reasonable slide number width.
+ *
+ * This allows the measurement pipeline to measure SlideNumberNode
+ * by delegating to a TextNode, without the pipeline needing to know
+ * the internal implementation details.
+ */
+export function getSyntheticTextNode(node: SlideNumberNode): TextNode {
+  let synthetic = slideNumberSyntheticNodes.get(node);
+  if (!synthetic) {
+    synthetic = {
+      type: NODE_TYPE.TEXT,
+      content: '999',
+      style: node.style ?? TEXT_STYLE.FOOTER,
+    };
+    slideNumberSyntheticNodes.set(node, synthetic);
+  }
+  return synthetic;
+}
 
 // ============================================
 // SLIDE_NUMBER HANDLER
@@ -18,14 +46,18 @@ export const slideNumberHandler: ElementHandler<SlideNumberNode> = {
   nodeType: NODE_TYPE.SLIDE_NUMBER,
 
   /**
-   * Compute slide number height based on text style line height.
+   * Compute slide number height using browser measurements.
    */
   getHeight(node: SlideNumberNode, _width: number, ctx: LayoutContext): number {
     const styleName = node.style ?? TEXT_STYLE.FOOTER;
-    const style = ctx.theme.textStyles[styleName];
-    const height = ctx.measurer.getStyleLineHeight(style, ctx.theme);
-    log.layout.height('HEIGHT slideNumber style=%s -> %f', styleName, height);
-    return height;
+
+    if (!ctx.measurements?.has(node)) {
+      throw new Error(`No measurement for SlideNumberNode. Ensure slide is processed through TextMeasurementPipeline.`);
+    }
+
+    const result = ctx.measurements.get(node)!;
+    log.layout.height('HEIGHT slideNumber style=%s -> %f', styleName, result.totalHeight);
+    return result.totalHeight;
   },
 
   /**
@@ -61,39 +93,15 @@ export const slideNumberHandler: ElementHandler<SlideNumberNode> = {
   },
 
   /**
-   * Render slide number to canvas.
-   */
-  render(positioned: PositionedNode, canvas: Canvas, theme: Theme): void {
-    const slideNumNode = positioned.node as SlideNumberNode;
-    const styleName = slideNumNode.style ?? TEXT_STYLE.FOOTER;
-    const style = theme.textStyles[styleName as keyof typeof theme.textStyles];
-    const font = getFontFromFamily(style.fontFamily, FONT_WEIGHT.NORMAL);
-
-    log.render.text('RENDER slideNumber x=%f y=%f w=%f h=%f',
-      positioned.x, positioned.y, positioned.width, positioned.height);
-
-    canvas.addSlideNumber({
-      x: positioned.x,
-      y: positioned.y,
-      w: positioned.width,
-      h: positioned.height,
-      fontFace: font.name,
-      fontSize: style.fontSize,
-      color: slideNumNode.color ?? style.color ?? theme.colors.textMuted,
-      align: slideNumNode.hAlign ?? HALIGN.RIGHT,
-      valign: VALIGN.MIDDLE,
-      margin: 0,
-    });
-  },
-
-  /**
-   * Get intrinsic width for slide number.
-   * Uses "99" as reasonable max width.
+   * Get intrinsic width from browser measurements.
+   * Delegates to the internal synthetic TextNode's measurement.
    */
   getIntrinsicWidth(node: SlideNumberNode, _height: number, ctx: LayoutContext): number {
-    const styleName = node.style ?? TEXT_STYLE.FOOTER;
-    const style = ctx.theme.textStyles[styleName];
-    return ctx.measurer.getContentWidth('99', style);
+    if (!ctx.measurements?.has(node)) {
+      throw new Error(`No measurement for SlideNumberNode. Ensure slide is processed through TextMeasurementPipeline.`);
+    }
+    const result = ctx.measurements.get(node)!;
+    return result.contentWidth;
   },
 };
 

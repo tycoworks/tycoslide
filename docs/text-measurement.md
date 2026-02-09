@@ -2,6 +2,15 @@
 
 **Status:** Planning - this document describes the target architecture.
 
+### Design Decisions (2026-02-08)
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Caching strategy | **Component identity** | Each component measured separately. No content-based deduplication. Simpler mental model. |
+| API | **Transparent in writeFile()** | No wrapper DSL. Measurements collected during expansion, executed in writeFile(). |
+| Browser | **Playwright** | Faster cold start than Puppeteer. |
+| Batching | **Yes** | All measurements in one browser call for efficiency. 30 identical texts = 30 measurements, but in one batch. |
+
 ---
 
 ## The Problem
@@ -102,8 +111,16 @@ Currently diagram.ts uses `execSync` (blocking). The new architecture:
 3. **Resume layout** with all results available
 
 ```typescript
+/** Each measurement request is tied to a component instance, not content */
+interface MeasurementRequest {
+  componentId: string;           // Unique per component instance
+  content: TextContent;
+  style: TextStyle;
+  availableWidth: number;
+}
+
 interface AsyncWork {
-  measurements: KeyedMeasurementRequests;
+  measurements: MeasurementRequest[];  // Component-identity based (no deduplication)
   diagrams: DiagramRenderRequest[];
 }
 
@@ -115,6 +132,8 @@ async function executeAsyncWork(work: AsyncWork): Promise<AsyncResults> {
   return { measurements, diagrams };
 }
 ```
+
+**Note:** 30 identical text components = 30 measurement requests. All batched in one Playwright call, still efficient.
 
 ---
 
@@ -164,17 +183,25 @@ function getHeight(node: TextNode, width: number, ctx: LayoutContext): number {
 **New file: `src/utils/browser-measurer.ts`**
 
 ```typescript
-interface BrowserMeasurer extends TextMeasurer {
-  measureBatch(requests: KeyedMeasurementRequests): Promise<MeasurementResults>;
+interface MeasurementResult {
+  componentId: string;
+  lines: number;
+  lineHeight: number;  // in inches
+  totalHeight: number; // in inches
+}
+
+interface BrowserMeasurer {
   launch(): Promise<void>;
+  measureBatch(requests: MeasurementRequest[]): Promise<MeasurementResult[]>;
   close(): Promise<void>;
 }
 ```
 
 - Launch Playwright browser once per presentation build
-- Create measurement page with font loading
+- Create measurement page with font loading (same fonts as PPTX)
 - Inject all measurement divs in one DOM update
 - Read all heights in one pass
+- Return results keyed by componentId (component-identity based)
 
 ### Phase 2: Async Pipeline Coordinator
 

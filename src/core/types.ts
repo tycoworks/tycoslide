@@ -1,7 +1,6 @@
 // Core Type Definitions
 // External-facing interfaces and type aliases
 
-import type { Canvas } from './canvas.js';
 import { Bounds } from './bounds.js';
 
 // ============================================
@@ -265,22 +264,6 @@ export interface AlignContext {
   hAlign?: HorizontalAlignment;  // Horizontal alignment (left/center/right)
   vAlign?: VerticalAlignment;    // Vertical alignment (top/middle/bottom)
   parentDirection?: Direction;   // Layout direction (for Divider orientation)
-}
-
-// ============================================
-// COMPONENT (abstract interface)
-// ============================================
-
-// Drawer function - executes drawing operations on a canvas
-export type Drawer = (canvas: Canvas) => void;
-
-// Component prepares a drawer from bounds
-// Theme is provided at construction time, not method-call time
-export interface Component {
-  prepare(bounds: Bounds, alignContext?: AlignContext): Drawer;
-  getHeight(width: number): number;      // "At this width, how tall is my content?"
-  getMinHeight(width: number): number;   // Incompressible floor (return getHeight for rigid components)
-  getWidth(height: number): number;      // "At this height, how wide is my content?"
 }
 
 // ============================================

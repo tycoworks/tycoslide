@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { text, row } from '../src/core/dsl.js';
-import { computeLayout, LayoutOverflowError, checkOverflow } from '../src/core/layout.js';
+import { computeLayout, LayoutOverflowError, checkOverflow } from '../src/layout/engine.js';
 import { Bounds } from '../src/core/bounds.js';
 import { mockTheme, mockMeasurer } from './mocks.js';
 

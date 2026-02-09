@@ -6,7 +6,7 @@ import { stack, row, column, rectangle, line, text } from '../core/dsl.js';
 import { NODE_TYPE, type ElementNode, type TextNode } from '../core/nodes.js';
 import type { TextContent, TextStyleName, HorizontalAlignment, VerticalAlignment, BorderStyle } from '../core/types.js';
 import { TEXT_STYLE, GAP, SIZE } from '../core/types.js';
-import { toTextContent } from '../utils/node-utils.js';
+import { toTextContent } from '../utils/node.js';
 
 // ============================================
 // CONSTANTS

@@ -6,7 +6,6 @@ import { elementHandlerRegistry, type ElementHandler, type LayoutContext } from 
 import { NODE_TYPE, type LineNode, type PositionedNode } from '../src/core/nodes.js';
 import type { Bounds } from '../src/core/bounds.js';
 import type { Theme } from '../src/core/types.js';
-import type { Canvas } from '../src/core/canvas.js';
 
 // ============================================
 // MOCK HANDLER
@@ -23,7 +22,7 @@ function createMockHandler(nodeType: string): ElementHandler<LineNode> {
       width: bounds.w,
       height: 0.01,
     }),
-    render: () => {},
+    getIntrinsicWidth: () => 0,
   };
 }
 
@@ -131,29 +130,6 @@ describe('ElementHandlerRegistry', () => {
       assert.strictEqual(result, 0.05);
     });
 
-    test('render returns true when handler exists', () => {
-      const handler = createMockHandler(NODE_TYPE.LINE);
-      let rendered = false;
-      handler.render = () => { rendered = true; };
-      elementHandlerRegistry.register(handler);
-
-      const positioned: PositionedNode = {
-        node: { type: NODE_TYPE.LINE },
-        x: 0, y: 0, width: 10, height: 0.01,
-      };
-      const result = elementHandlerRegistry.render(positioned, {} as Canvas, {} as Theme);
-      assert.strictEqual(result, true);
-      assert.strictEqual(rendered, true);
-    });
-
-    test('render returns false when no handler', () => {
-      const positioned: PositionedNode = {
-        node: { type: NODE_TYPE.LINE },
-        x: 0, y: 0, width: 10, height: 0.01,
-      };
-      const result = elementHandlerRegistry.render(positioned, {} as Canvas, {} as Theme);
-      assert.strictEqual(result, false);
-    });
   });
 
   // ============================================

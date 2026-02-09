@@ -1,9 +1,9 @@
 // Node Utilities Tests
-// Tests for node-utils.ts utility functions
+// Tests for node.ts utility functions
 
 import * as assert from 'node:assert';
 import { describe, it } from 'node:test';
-import { toTextContent, resolveGap } from '../src/utils/node-utils.js';
+import { toTextContent, resolveGap } from '../src/utils/node.js';
 import { NODE_TYPE, type TextNode } from '../src/core/nodes.js';
 import { GAP, type TextRun } from '../src/core/types.js';
 import { mockTheme } from './mocks.js';

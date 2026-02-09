@@ -3,7 +3,6 @@
 
 import { NODE_TYPE, type ElementNode, type ComponentNode } from './nodes.js';
 import type { Theme } from './types.js';
-import type { TextMeasurer } from '../utils/text-measurer.js';
 
 // Re-export ComponentNode for convenience
 export type { ComponentNode } from './nodes.js';
@@ -17,7 +16,6 @@ export type { ComponentNode } from './nodes.js';
  */
 export interface ExpansionContext {
   theme: Theme;
-  measurer?: TextMeasurer;
   slideIndex?: number;
 }
 

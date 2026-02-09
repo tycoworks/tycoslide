@@ -1,92 +1,11 @@
-// TEXT Node Handler
-// Consolidates all TEXT-related logic from compute-layout.ts, render.ts, measure.ts, and intrinsics.ts
+// TEXT Element Handler
+// Layout logic for text nodes (uses browser measurement)
 
 import { NODE_TYPE, type TextNode, type PositionedNode } from '../core/nodes.js';
-import type { Theme, TextStyleName, TextContent } from '../core/types.js';
-import { TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT } from '../core/types.js';
+import { TEXT_STYLE } from '../core/types.js';
 import type { Bounds } from '../core/bounds.js';
-import type { Canvas, TextFragment, TextFragmentOptions } from '../core/canvas.js';
-import type { MeasurementRequests } from '../core/measure.js';
 import { elementHandlerRegistry, type ElementHandler, type LayoutContext } from '../core/element-registry.js';
-import { getFontFromFamily, normalizeContent } from '../utils/font-utils.js';
 import { log, contentPreview } from '../utils/log.js';
-
-// ============================================
-// TEXT RENDERING HELPERS
-// ============================================
-
-function buildTextFragments(
-  content: TextContent,
-  styleName: TextStyleName,
-  theme: Theme,
-  colorOverride?: string
-): TextFragment[] {
-  const style = theme.textStyles[styleName];
-  const defaultColor = colorOverride ?? style.color ?? theme.colors.text;
-  const defaultWeight = style.defaultWeight ?? FONT_WEIGHT.NORMAL;
-
-  const normalized = normalizeContent(content);
-  return normalized.map(run => {
-    // Bold shorthand overrides weight
-    const effectiveWeight = run.bold ? FONT_WEIGHT.BOLD : (run.weight ?? defaultWeight);
-    const runFont = getFontFromFamily(style.fontFamily, effectiveWeight);
-    const options: TextFragmentOptions = {
-      color: run.color ?? run.highlight?.text ?? defaultColor,
-      fontFace: runFont.name,
-    };
-    if (run.highlight) options.highlight = run.highlight.bg;
-    // Pass through paragraph-level options
-    if (run.bold) options.bold = true;
-    if (run.italic) options.italic = true;
-    // bullet implies a new paragraph, so breakLine is redundant when bullet is set
-    if (run.breakLine && !run.bullet) options.breakLine = true;
-    if (run.bullet) options.bullet = run.bullet;
-    if (run.paraSpaceBefore !== undefined) options.paraSpaceBefore = run.paraSpaceBefore;
-    if (run.paraSpaceAfter !== undefined) options.paraSpaceAfter = run.paraSpaceAfter;
-    return { text: run.text, options };
-  });
-}
-
-function renderText(
-  canvas: Canvas,
-  content: TextContent,
-  styleName: TextStyleName,
-  theme: Theme,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  hAlign?: string,
-  vAlign?: string,
-  colorOverride?: string,
-  lineHeightMultiplier?: number
-): void {
-  const style = theme.textStyles[styleName];
-  const defaultFont = getFontFromFamily(style.fontFamily, style.defaultWeight ?? FONT_WEIGHT.NORMAL);
-  const fragments = buildTextFragments(content, styleName, theme, colorOverride);
-
-  log.render.text('renderText style=%s x=%f y=%f w=%f h=%f align=%s/%s "%s"',
-    styleName, x, y, w, h, hAlign ?? HALIGN.LEFT, vAlign ?? VALIGN.TOP, contentPreview(content));
-
-  // Priority: node override > style override > theme default
-  const lineSpacing = lineHeightMultiplier ?? style.lineHeightMultiplier ?? theme.spacing.lineSpacing;
-
-  // Check if any fragment has bullets - pptxgenjs bug: align breaks bullet rendering
-  const hasBullets = fragments.some(f => f.options?.bullet);
-
-  canvas.addText(fragments, {
-    x, y, w, h,
-    fontSize: style.fontSize,
-    fontFace: defaultFont.name,
-    color: colorOverride ?? style.color ?? theme.colors.text,
-    margin: 0,
-    wrap: true,
-    lineSpacingMultiple: lineSpacing,
-    // WORKAROUND: pptxgenjs bug - align option breaks bullet rendering
-    ...(hasBullets ? {} : { align: (hAlign as any) ?? HALIGN.LEFT }),
-    valign: (vAlign as any) ?? VALIGN.TOP,
-  });
-}
 
 // ============================================
 // TEXT HANDLER
@@ -96,17 +15,20 @@ export const textHandler: ElementHandler<TextNode> = {
   nodeType: NODE_TYPE.TEXT,
 
   /**
-   * Compute text height based on line count and line height.
+   * Compute text height from measurements.
+   * Throws if no measurement available.
    */
   getHeight(node: TextNode, width: number, ctx: LayoutContext): number {
     const styleName = node.style ?? TEXT_STYLE.BODY;
-    const style = ctx.theme.textStyles[styleName];
-    const lineHeight = ctx.measurer.getStyleLineHeight(style, ctx.theme);
-    const lines = ctx.measurer.estimateLines(node.content, style, width);
-    const height = lineHeight * lines;
-    log.layout.text('HEIGHT text style=%s width=%f lineHeight=%f lines=%d -> %f "%s"',
-      styleName, width, lineHeight, lines, height, contentPreview(node.content));
-    return height;
+
+    if (!ctx.measurements?.has(node)) {
+      throw new Error(`No measurement for TextNode "${contentPreview(node.content)}". Ensure slide is processed through TextMeasurementPipeline.`);
+    }
+
+    const result = ctx.measurements.get(node)!;
+    log.layout.text('HEIGHT text style=%s width=%f -> %f "%s"',
+      styleName, width, result.totalHeight, contentPreview(node.content));
+    return result.totalHeight;
   },
 
   /**
@@ -145,53 +67,14 @@ export const textHandler: ElementHandler<TextNode> = {
   },
 
   /**
-   * Render text to canvas.
-   */
-  render(positioned: PositionedNode, canvas: Canvas, theme: Theme): void {
-    const textNode = positioned.node as TextNode;
-    log.render.text('RENDER text x=%f y=%f w=%f h=%f "%s"',
-      positioned.x, positioned.y, positioned.width, positioned.height, contentPreview(textNode.content));
-    renderText(
-      canvas,
-      textNode.content,
-      textNode.style ?? TEXT_STYLE.BODY,
-      theme,
-      positioned.x, positioned.y, positioned.width, positioned.height,
-      textNode.hAlign,
-      textNode.vAlign,
-      textNode.color,
-      textNode.lineHeightMultiplier
-    );
-  },
-
-  /**
-   * Collect text measurement requests for browser-based measurement.
-   * Returns raw data - measure.ts handles key generation.
-   */
-  collectMeasurements(node: TextNode, bounds: Bounds, theme: Theme): MeasurementRequests {
-    const styleName = node.style ?? TEXT_STYLE.BODY;
-
-    return {
-      text: [{
-        styleName,
-        content: node.content,
-        style: theme.textStyles[styleName],
-        availableWidth: bounds.w,
-      }],
-      styles: [{
-        styleName,
-        style: theme.textStyles[styleName],
-      }],
-    };
-  },
-
-  /**
-   * Get intrinsic width of text content.
+   * Get intrinsic width from browser measurements.
    */
   getIntrinsicWidth(node: TextNode, _height: number, ctx: LayoutContext): number {
-    const styleName = node.style ?? TEXT_STYLE.BODY;
-    const style = ctx.theme.textStyles[styleName];
-    return ctx.measurer.getContentWidth(node.content, style);
+    if (!ctx.measurements?.has(node)) {
+      throw new Error(`No measurement for TextNode "${contentPreview(node.content)}". Ensure slide is processed through TextMeasurementPipeline.`);
+    }
+    const result = ctx.measurements.get(node)!;
+    return result.contentWidth;
   },
 };
 

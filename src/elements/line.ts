@@ -1,13 +1,11 @@
-// LINE Node Handler
-// Consolidates all LINE-related logic from compute-layout.ts, render.ts, and intrinsics.ts
+// LINE Element Handler
+// Layout logic for line nodes (direction-aware)
 
 import { NODE_TYPE, type LineNode, type PositionedNode } from '../core/nodes.js';
-import type { Theme } from '../core/types.js';
-import { SHAPE, DIRECTION } from '../core/types.js';
+import { DIRECTION } from '../core/types.js';
 import type { Bounds } from '../core/bounds.js';
-import type { Canvas } from '../core/canvas.js';
 import { elementHandlerRegistry, type ElementHandler, type LayoutContext } from '../core/element-registry.js';
-import { ptToIn } from '../utils/font-utils.js';
+import { ptToIn } from '../utils/text.js';
 import { log } from '../utils/log.js';
 
 // ============================================
@@ -63,40 +61,6 @@ export const lineHandler: ElementHandler<LineNode> = {
         width: bounds.w,
         height: strokeHeight,
       };
-    }
-  },
-
-  /**
-   * Render line to canvas.
-   * Orientation detected from positioned dimensions.
-   */
-  render(positioned: PositionedNode, canvas: Canvas, theme: Theme): void {
-    const lineNode = positioned.node as LineNode;
-    const color = lineNode.color ?? theme.colors.secondary;
-    const width = lineNode.width ?? theme.borders.width;
-
-    // Detect orientation from positioned dimensions
-    // Vertical if height > width, horizontal otherwise
-    const isVertical = positioned.height > positioned.width;
-
-    if (isVertical) {
-      log.render.shape('RENDER vertical line x=%f y=%f h=%f', positioned.x, positioned.y, positioned.height);
-      canvas.addShape(SHAPE.LINE, {
-        x: positioned.x,
-        y: positioned.y,
-        w: 0,
-        h: positioned.height,
-        line: { color, width },
-      });
-    } else {
-      log.render.shape('RENDER horizontal line x=%f y=%f w=%f', positioned.x, positioned.y, positioned.width);
-      canvas.addShape(SHAPE.LINE, {
-        x: positioned.x,
-        y: positioned.y,
-        w: positioned.width,
-        h: 0,
-        line: { color, width },
-      });
     }
   },
 

@@ -1,20 +1,12 @@
-// IMAGE Node Handler
-// Consolidates all IMAGE-related logic from compute-layout.ts, render.ts, and intrinsics.ts
+// IMAGE Element Handler
+// Layout and intrinsic size logic for image nodes
 
 import { NODE_TYPE, type ImageNode, type PositionedNode } from '../core/nodes.js';
-import type { Theme } from '../core/types.js';
 import type { Bounds } from '../core/bounds.js';
-import type { Canvas } from '../core/canvas.js';
 import { elementHandlerRegistry, type ElementHandler, type LayoutContext } from '../core/element-registry.js';
 import { log } from '../utils/log.js';
+import { SCREEN_DPI } from '../utils/units.js';
 import imageSizeDefault from 'image-size';
-
-/**
- * Reference DPI for pixel-to-inch conversion.
- * Defines "native size": a 960px image at 96 DPI = 10 inches.
- * maxScaleFactor then controls how much beyond native we allow.
- */
-const REFERENCE_DPI = 96;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const imageSize = (imageSizeDefault as any).default || imageSizeDefault;
 
@@ -38,8 +30,8 @@ export const imageHandler: ElementHandler<ImageNode> = {
     const pixelWidth = dimensions.width;
     const pixelHeight = dimensions.height;
     const aspectRatio = pixelWidth / pixelHeight;
-    // maxScaleFactor controls upscaling limit relative to native size (at REFERENCE_DPI)
-    const maxHeight = (pixelHeight / REFERENCE_DPI) * ctx.theme.spacing.maxScaleFactor;
+    // maxScaleFactor controls upscaling limit relative to native size (at SCREEN_DPI)
+    const maxHeight = (pixelHeight / SCREEN_DPI) * ctx.theme.spacing.maxScaleFactor;
     const naturalHeight = width / aspectRatio;
     const height = Math.min(naturalHeight, maxHeight);
     log.layout.height('HEIGHT image %dx%d ar=%f maxScale=%f -> %f', pixelWidth, pixelHeight, aspectRatio, ctx.theme.spacing.maxScaleFactor, height);
@@ -90,22 +82,6 @@ export const imageHandler: ElementHandler<ImageNode> = {
       width: finalWidth,
       height: finalHeight,
     };
-  },
-
-  /**
-   * Render image to canvas.
-   */
-  render(positioned: PositionedNode, canvas: Canvas, _theme: Theme): void {
-    const imageNode = positioned.node as ImageNode;
-    log.render.image('RENDER image x=%f y=%f w=%f h=%f src=%s',
-      positioned.x, positioned.y, positioned.width, positioned.height, imageNode.src.split('/').pop());
-    canvas.addImage({
-      path: imageNode.src,
-      x: positioned.x,
-      y: positioned.y,
-      w: positioned.width,
-      h: positioned.height,
-    });
   },
 
   /**
