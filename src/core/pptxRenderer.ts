@@ -11,7 +11,17 @@ import { NODE_TYPE } from './nodes.js';
 import type { Theme, TextStyleName, TextContent } from './types.js';
 import { CUSTOM_LAYOUT, SHAPE, TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT, BORDER_STYLE } from './types.js';
 import { getFontFromFamily, normalizeContent } from '../utils/text.js';
+import { readImageDimensions } from '../utils/image.js';
 import { log, contentPreview } from '../utils/log.js';
+
+// ============================================
+// HELPERS
+// ============================================
+
+/** Center a fitted extent within a box extent, returning [offset, extent]. */
+function containFit(boxExtent: number, fitExtent: number, offset: number): [number, number] {
+  return [offset + (boxExtent - fitExtent) / 2, fitExtent];
+}
 
 // ============================================
 // RENDERER INTERFACE
@@ -305,13 +315,34 @@ export class PptxRenderer implements Renderer {
     const imageNode = positioned.node as ImageNode;
     log.render.image('RENDER image x=%f y=%f w=%f h=%f src=%s',
       positioned.x, positioned.y, positioned.width, positioned.height, imageNode.src.split('/').pop());
-    slide.addImage({
-      path: imageNode.src,
-      x: positioned.x,
-      y: positioned.y,
-      w: positioned.width,
-      h: positioned.height,
-    });
+    slide.addImage(this.buildImageConfig(imageNode, positioned));
+  }
+
+  private buildImageConfig(
+    imageNode: ImageNode,
+    positioned: PositionedNode,
+  ): { path: string; x: number; y: number; w: number; h: number } {
+    // Compute contain placement ourselves.
+    // pptxgenjs sizing: { type: 'contain' } is broken — it uses the placement
+    // dimensions as both imgSize and boxDim, making it a no-op.
+    // Instead, read the actual image dimensions and fit within the bounding box.
+    let x = positioned.x;
+    let y = positioned.y;
+    let w = positioned.width;
+    let h = positioned.height;
+
+    const dims = readImageDimensions(imageNode.src);
+    if (dims) {
+      const boxRatio = w / h;
+
+      if (dims.aspectRatio > boxRatio) {
+        [y, h] = containFit(h, w / dims.aspectRatio, y);
+      } else {
+        [x, w] = containFit(w, h * dims.aspectRatio, x);
+      }
+    }
+
+    return { path: imageNode.src, x, y, w, h };
   }
 
   private renderRectangle(positioned: PositionedNode, slide: PptxSlide, theme: Theme): void {
@@ -375,23 +406,33 @@ export class PptxRenderer implements Renderer {
 
   private renderLine(positioned: PositionedNode, slide: PptxSlide, theme: Theme): void {
     const lineNode = positioned.node as LineNode;
-    const color = lineNode.color ?? theme.colors.secondary;
-    const width = lineNode.width ?? theme.borders.width;
+    log.render.shape('RENDER line x=%f y=%f w=%f h=%f', positioned.x, positioned.y, positioned.width, positioned.height);
+    const { shapeType, options } = this.buildLineConfig(lineNode, positioned, theme);
+    slide.addShape(shapeType, options);
+  }
 
-    // Detect orientation from positioned dimensions
-    // Vertical if height > width, horizontal otherwise
+  private buildLineConfig(
+    lineNode: LineNode,
+    positioned: PositionedNode,
+    theme: Theme
+  ): { shapeType: string; options: Record<string, unknown> } {
+    const color = lineNode.color ?? theme.colors.secondary;
+    const lineWidth = lineNode.width ?? theme.borders.width;
     const isVertical = positioned.height > positioned.width;
 
-    const w = isVertical ? 0 : positioned.width;
-    const h = isVertical ? positioned.height : 0;
-    log.render.shape('RENDER %s line x=%f y=%f w=%f h=%f', isVertical ? 'vertical' : 'horizontal', positioned.x, positioned.y, w, h);
-    slide.addShape(SHAPE.LINE, {
+    const options: Record<string, unknown> = {
       x: positioned.x,
       y: positioned.y,
-      w,
-      h,
-      line: { color, width },
-    });
+      w: isVertical ? 0 : positioned.width,
+      h: isVertical ? positioned.height : 0,
+      line: { color, width: lineWidth },
+    };
+
+    if (lineNode.beginArrow) options.beginArrowType = lineNode.beginArrow;
+    if (lineNode.endArrow) options.endArrowType = lineNode.endArrow;
+    if (lineNode.dashType) options.dashType = lineNode.dashType;
+
+    return { shapeType: String(SHAPE.LINE), options };
   }
 
   private renderSlideNumber(positioned: PositionedNode, slide: PptxSlide, theme: Theme): void {
@@ -488,10 +529,10 @@ export class PptxRenderer implements Renderer {
     const isHeaderCol = colIndex < headerColumns;
     const isHeader = isHeaderRow || isHeaderCol;
 
-    // Determine text style
-    const styleName = isHeader
-      ? (tableStyle?.headerTextStyle ?? cell.textStyle ?? TEXT_STYLE.BODY)
-      : (cell.textStyle ?? tableStyle?.cellTextStyle ?? TEXT_STYLE.BODY);
+    // Determine text style (cell-level override wins over table-level)
+    const styleName = cell.textStyle
+      ?? (isHeader ? tableStyle?.headerTextStyle : tableStyle?.cellTextStyle)
+      ?? TEXT_STYLE.BODY;
     const textStyle = theme.textStyles[styleName];
     const font = getFontFromFamily(textStyle.fontFamily, textStyle.defaultWeight ?? FONT_WEIGHT.NORMAL);
 
@@ -595,7 +636,7 @@ export class PptxRenderer implements Renderer {
     onSlideNumber: (opts: object) => void,
     theme: Theme
   ): void {
-    const { node, x, y, width, height, children } = positioned;
+    const { node, children } = positioned;
 
     switch (node.type) {
       case NODE_TYPE.TEXT: {
@@ -606,12 +647,7 @@ export class PptxRenderer implements Renderer {
       }
       case NODE_TYPE.IMAGE: {
         const imageNode = node as ImageNode;
-        objects.push({
-          image: {
-            path: imageNode.src,
-            x, y, w: width, h: height,
-          },
-        });
+        objects.push({ image: this.buildImageConfig(imageNode, positioned) });
         break;
       }
       case NODE_TYPE.RECTANGLE: {
@@ -624,17 +660,8 @@ export class PptxRenderer implements Renderer {
       }
       case NODE_TYPE.LINE: {
         const lineNode = node as LineNode;
-        const color = lineNode.color ?? theme.colors.secondary;
-        const lineWidth = lineNode.width ?? theme.borders.width;
-        const isVertical = height > width;
-        objects.push({
-          [String(SHAPE.LINE)]: {
-            x, y,
-            w: isVertical ? 0 : width,
-            h: isVertical ? height : 0,
-            line: { color, width: lineWidth },
-          },
-        });
+        const { shapeType, options } = this.buildLineConfig(lineNode, positioned, theme);
+        objects.push({ [shapeType]: options });
         break;
       }
       case NODE_TYPE.SLIDE_NUMBER: {

@@ -103,7 +103,7 @@ Map our border styles to per-cell TRBL border arrays:
 ### Modified Files
 - `src/core/nodes.ts` - Add NODE_TYPE.TABLE and interfaces
 - `src/core/dsl.ts` - Add table() function
-- `src/core/pptx-renderer.ts` - Add renderTable() method
+- `src/core/pptxRenderer.ts` - Add renderTable() method
 - `src/elements/index.ts` - Export tableHandler
 
 ## Migration Path

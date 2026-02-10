@@ -246,7 +246,7 @@ describe('row()', () => {
     const node = row(child1);
     assert.strictEqual(node.width, undefined);
     assert.strictEqual(node.gap, undefined);
-    assert.strictEqual(node.vAlign, VALIGN.TOP);    // Explicit default
+    assert.strictEqual(node.vAlign, VALIGN.TOP);      // Explicit default: pure alignment
     assert.strictEqual(node.hAlign, HALIGN.LEFT);   // Explicit default
   });
 
@@ -473,14 +473,16 @@ describe('grid()', () => {
     assert.strictEqual((node.children[0] as any).children.length, 1);
   });
 
-  test('preserves child order', () => {
+  test('preserves child order (each wrapped in column cell)', () => {
     const node = grid(2, child1, child2, child3, child4);
     const row1 = node.children[0] as any;
     const row2 = node.children[1] as any;
-    assert.strictEqual(row1.children[0], child1);
-    assert.strictEqual(row1.children[1], child2);
-    assert.strictEqual(row2.children[0], child3);
-    assert.strictEqual(row2.children[1], child4);
+    // Grid wraps each child in column({ width: SIZE.FILL }) for equal-width cells
+    assert.strictEqual(row1.children[0].type, 'column');
+    assert.strictEqual(row1.children[0].children[0], child1);
+    assert.strictEqual(row1.children[1].children[0], child2);
+    assert.strictEqual(row2.children[0].children[0], child3);
+    assert.strictEqual(row2.children[1].children[0], child4);
   });
 });
 

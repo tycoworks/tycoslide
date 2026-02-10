@@ -3,16 +3,23 @@
 
 import { renderToString } from 'hono/jsx/dom/server';
 import type { FC, PropsWithChildren } from 'hono/jsx';
-import type { ElementNode, TextNode, ImageNode, RowNode, ColumnNode, StackNode, SlideNumberNode, TableNode } from '../core/nodes.js';
+import type { ElementNode, TextNode, ImageNode, RowNode, ColumnNode, StackNode, SlideNumberNode, TableNode, TableCellData } from '../core/nodes.js';
 import { NODE_TYPE } from '../core/nodes.js';
-import { getTableCellSyntheticNodes, DEFAULT_CELL_PADDING } from '../elements/table.js';
 import type { Theme, TextStyle, FontWeight, GapSize, VerticalAlignment, HorizontalAlignment, SizeValue, TextContent, NormalizedRun, Direction } from '../core/types.js';
 import { TEXT_STYLE, FONT_WEIGHT, SIZE, VALIGN, HALIGN, DIRECTION } from '../core/types.js';
 import type { Bounds } from '../core/bounds.js';
-import { normalizeContent } from '../utils/text.js';
-import { inToPx, ptToPx } from '../utils/units.js';
+import { normalizeContent, fontWeightToNumeric, resolveLineHeight } from '../utils/text.js';
+import { readImageDimensions } from '../utils/image.js';
+import { inToPx, ptToPx, SCREEN_DPI } from '../utils/units.js';
 import { escapeHtml } from '../utils/html.js';
 import { resolveGap } from '../utils/node.js';
+
+// ============================================
+// CONSTANTS
+// ============================================
+
+/** Placeholder text for measuring slide number width (widest reasonable number) */
+const SLIDE_NUMBER_PLACEHOLDER = '999';
 
 // ============================================
 // TYPES
@@ -45,12 +52,28 @@ export function resetIdCounter(): void {
 // CSS HELPERS
 // ============================================
 
-function vAlignToCSS(vAlign: VerticalAlignment | undefined): string {
+/** Column justify-content: how content is positioned vertically in a column */
+function vAlignToJustifyContent(vAlign: VerticalAlignment | undefined): string {
+  // 'safe' keyword: falls back to 'start' when content overflows the container.
+  // Without 'safe', justify-content: center pushes content above the parent
+  // when content is taller than available space.
   switch (vAlign) {
-    case VALIGN.BOTTOM: return 'flex-end';
-    case VALIGN.MIDDLE: return 'center';
+    case VALIGN.BOTTOM: return 'safe flex-end';
+    case VALIGN.MIDDLE: return 'safe center';
     case VALIGN.TOP:
     default: return 'flex-start';  // Default: TOP (matches PPTX renderer)
+  }
+}
+
+/** Row align-items: how children are sized on the cross-axis (vertically) in a row */
+function vAlignToAlignItems(vAlign: VerticalAlignment | undefined): string {
+  switch (vAlign) {
+    case VALIGN.TOP: return 'flex-start';
+    case VALIGN.BOTTOM: return 'flex-end';
+    case VALIGN.MIDDLE: return 'center';
+    default: return 'stretch';  // CSS default: children fill row's height.
+    // This is critical for card layouts: stacks stretch to the row's definite
+    // height (from SIZE.FILL), and images inside compress to fit.
   }
 }
 
@@ -63,27 +86,60 @@ function hAlignToCSS(hAlign: HorizontalAlignment | undefined): string {
   }
 }
 
-function widthToCSS(width: number | SizeValue | undefined, defaultPx?: number): string {
-  if (width === SIZE.FILL) {
-    return 'flex: 1 1 0; min-width: 0';
-  }
-  if (typeof width === 'number') {
-    return `flex: 0 0 ${inToPx(width)}px; width: ${inToPx(width)}px`;
-  }
-  if (defaultPx !== undefined) {
-    return `width: ${defaultPx}px`;
-  }
-  return 'flex: 1 1 0; min-width: 0';  // Default to fill
-}
+/**
+ * Compute flex-item CSS for a node based on its parent's flex direction.
+ *
+ * CSS `flex` controls the PARENT's main axis, so:
+ * - In a row parent (main=horizontal): `flex` controls width, explicit `height` for cross-axis
+ * - In a column parent (main=vertical): `flex` controls height, explicit `width` for cross-axis
+ */
+function flexItemStyles(
+  width: number | SizeValue | undefined,
+  height: number | SizeValue | undefined,
+  parentDirection?: Direction
+): string {
+  const styles: string[] = [];
+  const isInRow = parentDirection === DIRECTION.ROW;
 
-function heightToCSS(height: number | SizeValue | undefined): string {
-  if (height === SIZE.FILL) {
-    return 'flex: 1 1 0; min-height: 0';
+  // Main axis sizing (controlled by `flex` property)
+  const mainSize = isInRow ? width : height;
+  const minMain = isInRow ? 'min-width: 0' : 'min-height: 0';
+
+  if (typeof mainSize === 'number') {
+    styles.push(`flex: 0 0 ${inToPx(mainSize)}px`);
+  } else if (mainSize === SIZE.FILL) {
+    styles.push('flex: 1 1 0', minMain);
+  } else if (isInRow) {
+    // In a row: children share width equally by default
+    // min-height: 0 allows vertical compression when constrained by align-self: stretch
+    styles.push('flex: 1 1 0', minMain, 'min-height: 0');
+  } else {
+    // In a column: children use intrinsic height by default (no flex grow).
+    // min-height: 0 allows containers to compress when parent is constrained
+    // (without this, min-height: auto prevents shrinking below content size).
+    // The root wrapper's CSS forces the top-level node to fill the slide.
+    styles.push('min-height: 0');
   }
-  if (typeof height === 'number') {
-    return `height: ${inToPx(height)}px`;
+
+  // Cross axis sizing (explicit CSS property)
+  const crossSize = isInRow ? height : width;
+  const crossProp = isInRow ? 'height' : 'width';
+
+  if (typeof crossSize === 'number') {
+    styles.push(`${crossProp}: ${inToPx(crossSize)}px`);
+  } else if (crossSize === SIZE.FILL) {
+    // SIZE.FILL on cross-axis: explicitly fill parent's cross dimension.
+    // In rows: height: 100% fills the row height. In columns: width: 100% fills column width.
+    styles.push(`${crossProp}: 100%`);
+  } else if (!isInRow && crossSize === undefined) {
+    // Containers in column parents need definite width for internal layout.
+    // Without this, align-items: center on the parent column causes containers
+    // to shrink to content width, breaking flex children (e.g., grid cells with flex: 1 1 0).
+    // This matches text elements which always get width: 100%.
+    styles.push('width: 100%');
   }
-  return '';
+
+  return styles.join('; ');
 }
 
 // ============================================
@@ -107,7 +163,7 @@ function generateFontFaceCSS(theme: Theme): string {
           @font-face {
             font-family: '${font.name}';
             src: url('file://${font.path}');
-            font-weight: ${weight === FONT_WEIGHT.LIGHT ? 300 : weight === FONT_WEIGHT.BOLD ? 700 : 400};
+            font-weight: ${fontWeightToNumeric(weight)};
           }
         `);
       }
@@ -125,6 +181,7 @@ function generateFontFaceCSS(theme: Theme): string {
 interface LayoutContainerProps {
   nodeId: string;
   direction: Direction;
+  parentDirection?: Direction;
   width?: number | SizeValue;
   height?: number | SizeValue;
   gap?: GapSize;
@@ -137,6 +194,7 @@ interface LayoutContainerProps {
 const LayoutContainer: FC<PropsWithChildren<LayoutContainerProps>> = ({
   nodeId,
   direction,
+  parentDirection,
   width,
   height,
   gap,
@@ -147,8 +205,7 @@ const LayoutContainer: FC<PropsWithChildren<LayoutContainerProps>> = ({
   children,
 }) => {
   const gapPx = inToPx(resolveGap(gap, theme));
-  const widthStyle = widthToCSS(width);
-  const heightStyle = heightToCSS(height);
+  const itemStyles = flexItemStyles(width, height, parentDirection);
   const paddingPx = padding ? inToPx(padding) : 0;
 
   // In flexbox:
@@ -157,9 +214,9 @@ const LayoutContainer: FC<PropsWithChildren<LayoutContainerProps>> = ({
   const isRow = direction === DIRECTION.ROW;
   const justifyContent = isRow
     ? (hAlign === HALIGN.CENTER ? 'center' : hAlign === HALIGN.RIGHT ? 'flex-end' : 'flex-start')
-    : vAlignToCSS(vAlign);
+    : vAlignToJustifyContent(vAlign);
   const alignItems = isRow
-    ? vAlignToCSS(vAlign)
+    ? vAlignToAlignItems(vAlign)
     : hAlignToCSS(hAlign);
 
   const style = [
@@ -168,8 +225,7 @@ const LayoutContainer: FC<PropsWithChildren<LayoutContainerProps>> = ({
     `gap: ${gapPx}px`,
     `justify-content: ${justifyContent}`,
     `align-items: ${alignItems}`,
-    widthStyle,
-    heightStyle,
+    itemStyles,
     paddingPx > 0 ? `padding: ${paddingPx}px` : '',
   ].filter(Boolean).join('; ');
 
@@ -180,24 +236,38 @@ const LayoutContainer: FC<PropsWithChildren<LayoutContainerProps>> = ({
   );
 };
 
-const LayoutStack: FC<PropsWithChildren<{ nodeId: string }>> = ({
+const LayoutStack: FC<PropsWithChildren<{ nodeId: string; parentDirection?: Direction }>> = ({
   nodeId,
+  parentDirection,
   children,
 }) => {
   // Stack positions all children at the same location (overlapping)
-  const style = 'position: relative; display: grid; grid-template: 1fr / 1fr';
+  // Uses direction-aware sizing via flexItemStyles (same as other containers):
+  // - Row parent: flex: 1 1 0 (share width equally), stretch for height
+  // - Column parent: intrinsic height (content-sized), width: 100%
+  // minmax(0, 1fr) allows grid tracks to shrink below content size
+  const itemStyles = flexItemStyles(undefined, undefined, parentDirection);
+  const styles = [
+    'position: relative',
+    'display: grid',
+    'grid-template: minmax(0, 1fr) / minmax(0, 1fr)',
+    itemStyles,
+  ];
 
   return (
-    <div data-node-id={nodeId} style={style}>
+    <div data-node-id={nodeId} style={styles.filter(Boolean).join('; ')}>
       {children}
     </div>
   );
 };
 
 const LayoutStackChild: FC<PropsWithChildren> = ({ children }) => {
-  // Each child in a stack occupies the same grid cell
+  // Each child in a stack occupies the same grid cell.
+  // display: flex + flex-direction: column so children (e.g., card content column)
+  // fill the grid cell height. min-height: 0 allows shrinking, overflow: hidden clips.
+  // This works because the height chain is definite: SIZE.FILL on row → stretch → grid → here.
   return (
-    <div style="grid-area: 1 / 1 / 2 / 2">
+    <div style="grid-area: 1 / 1 / 2 / 2; display: flex; flex-direction: column; min-height: 0; overflow: hidden">
       {children}
     </div>
   );
@@ -223,7 +293,7 @@ const LayoutText: FC<LayoutTextProps> = ({
   const runs = normalizeContent(content);
   const defaultWeight = style.defaultWeight ?? FONT_WEIGHT.NORMAL;
   const defaultFont = style.fontFamily[defaultWeight] ?? style.fontFamily.normal;
-  const lineHeight = lineHeightMultiplier ?? style.lineHeightMultiplier ?? 1.2;
+  const lineHeight = resolveLineHeight(lineHeightMultiplier, style, theme);
   const fontSizePx = ptToPx(style.fontSize);
 
   // Bullet indent: fontSize * multiplier, converted to px
@@ -232,13 +302,14 @@ const LayoutText: FC<LayoutTextProps> = ({
   const textAlign = hAlign === HALIGN.RIGHT ? 'right' : hAlign === HALIGN.CENTER ? 'center' : 'left';
 
   const containerStyle = [
-    `font-family: '${defaultFont.name}', sans-serif`,
+    `font-family: '${defaultFont.name}'`,
     `font-size: ${fontSizePx}px`,
     `line-height: ${lineHeight}`,
     `text-align: ${textAlign}`,
     'white-space: pre-wrap',
     'word-wrap: break-word',
     'width: 100%',  // Fill container width (prevents centering in flex parent)
+    'flex-shrink: 0',  // Incompressible: text should not shrink below measured height
   ].join('; ');
 
   return (
@@ -262,7 +333,7 @@ function renderTextRun(
     const font = style.fontFamily[run.weight];
     if (font) {
       spanStyles.push(`font-family: '${font.name}'`);
-      spanStyles.push(`font-weight: ${run.weight === 'bold' ? 700 : run.weight === 'light' ? 300 : 400}`);
+      spanStyles.push(`font-weight: ${fontWeightToNumeric(run.weight as FontWeight)}`);
     }
   }
 
@@ -271,7 +342,7 @@ function renderTextRun(
     const boldFont = style.fontFamily.bold;
     if (boldFont) {
       spanStyles.push(`font-family: '${boldFont.name}'`);
-      spanStyles.push('font-weight: 700');
+      spanStyles.push(`font-weight: ${fontWeightToNumeric(FONT_WEIGHT.BOLD)}`);
     }
   }
 
@@ -325,30 +396,66 @@ function renderTextRun(
 
 interface LayoutImageProps {
   nodeId: string;
-  aspectRatio?: number;
+  aspectRatio: number;
+  maxWidthPx?: number;
+  maxHeightPx?: number;
+  parentDirection?: Direction;
 }
 
 const LayoutImage: FC<LayoutImageProps> = ({
   nodeId,
-  aspectRatio = 1.5,  // Default 3:2 aspect ratio
+  aspectRatio,
+  maxWidthPx,
+  maxHeightPx,
+  parentDirection,
 }) => {
-  // Images are placeholders - need flex: 1 1 0 to participate in row layout
+  // Image contain behavior: fit within parent bounds preserving aspect ratio.
+  // CSS strategy depends on parent direction:
+  // - In a column: width is the constraint axis, derive height from aspect ratio
+  // - In a row: height is the constraint axis, derive width from aspect ratio
+  const styles: string[] = [`aspect-ratio: ${aspectRatio}`];
+
+  if (parentDirection === DIRECTION.ROW) {
+    // In a row: constrain to parent height, derive width from aspect ratio
+    // Fully compressible: can shrink to 0 (flex-shrink: 1, min-width: 0)
+    styles.push('height: 100%', 'flex: 0 1 auto', 'min-width: 0');
+  } else {
+    // In a column (or root): fill available width, derive height from aspect ratio
+    // Fully compressible: can shrink to 0 (flex-shrink: 1, min-height: 0)
+    styles.push('width: 100%', 'flex: 0 1 auto', 'min-height: 0');
+  }
+
+  // maxScaleFactor: prevent upscaling beyond native resolution
+  if (maxWidthPx) styles.push(`max-width: ${maxWidthPx}px`);
+  if (maxHeightPx) styles.push(`max-height: ${maxHeightPx}px`);
+
   return (
     <div
       data-node-id={nodeId}
-      style={`flex: 1 1 0; min-width: 0; min-height: 0; aspect-ratio: ${aspectRatio}`}
+      style={styles.join('; ')}
     />
   );
 };
 
 const LayoutRectangle: FC<{ nodeId: string }> = ({ nodeId }) => {
-  // Rectangles are purely visual - they don't affect text measurement
-  return <div data-node-id={nodeId} />;
+  // Rectangle fills its parent bounds completely
+  return <div data-node-id={nodeId} style="width: 100%; height: 100%" />;
 };
 
-const LayoutLine: FC<{ nodeId: string }> = ({ nodeId }) => {
-  // Lines don't affect text measurement
-  return <div data-node-id={nodeId} style="flex: 0 0 1px" />;
+interface LayoutLineProps {
+  nodeId: string;
+  parentDirection?: Direction;
+  borderWidthPx: number;
+}
+
+const LayoutLine: FC<LayoutLineProps> = ({ nodeId, parentDirection, borderWidthPx }) => {
+  // Direction-aware: horizontal in column, vertical in row
+  if (parentDirection === DIRECTION.ROW) {
+    // Vertical separator in a row: fixed width, stretch to row height
+    return <div data-node-id={nodeId} style={`flex: 0 0 ${borderWidthPx}px; align-self: stretch`} />;
+  }
+  // Horizontal separator in a column (default): full width, fixed height
+  return <div data-node-id={nodeId} style={`flex: 0 0 ${borderWidthPx}px; width: 100%`} />;
 };
 
 const LayoutSlideNumber: FC<{ nodeId: string; style: TextStyle }> = ({
@@ -358,16 +465,52 @@ const LayoutSlideNumber: FC<{ nodeId: string; style: TextStyle }> = ({
   const fontSizePx = ptToPx(style.fontSize);
   const defaultFont = style.fontFamily.normal;
 
-  // Use "999" as placeholder for max reasonable slide number
   return (
     <div
       data-node-id={nodeId}
-      style={`font-family: '${defaultFont.name}', sans-serif; font-size: ${fontSizePx}px; white-space: nowrap`}
+      style={`font-family: '${defaultFont.name}'; font-size: ${fontSizePx}px; white-space: nowrap`}
     >
-      999
+      {SLIDE_NUMBER_PLACEHOLDER}
     </div>
   );
 };
+
+// ============================================
+// TABLE CELL NODES
+// ============================================
+
+/** Cache of table cell TextNodes for measurement (one per cell) */
+const tableCellNodesCache = new WeakMap<TableNode, TextNode[][]>();
+
+/**
+ * Get or create TextNodes for a TableNode's cells.
+ * Each cell becomes a TextNode with its content and styling for measurement.
+ */
+function getTableCellNodes(node: TableNode): TextNode[][] {
+  let cells = tableCellNodesCache.get(node);
+  if (!cells) {
+    cells = node.rows.map((row, rowIndex) =>
+      row.map((cell: TableCellData) => {
+        const isHeaderRow = (node.headerRows ?? 0) > rowIndex;
+        // Cell-level override wins over table-level
+        const style = cell.textStyle
+          ?? (isHeaderRow ? node.style?.headerTextStyle : node.style?.cellTextStyle)
+          ?? TEXT_STYLE.BODY;
+
+        const textNode: TextNode = {
+          type: NODE_TYPE.TEXT,
+          content: cell.content,
+          style,
+          hAlign: cell.hAlign ?? node.style?.hAlign,
+          vAlign: cell.vAlign ?? node.style?.vAlign,
+        };
+        return textNode;
+      })
+    );
+    tableCellNodesCache.set(node, cells);
+  }
+  return cells;
+}
 
 // ============================================
 // NODE TREE TO JSX
@@ -376,7 +519,8 @@ const LayoutSlideNumber: FC<{ nodeId: string; style: TextStyle }> = ({
 function nodeToJsx(
   node: ElementNode,
   theme: Theme,
-  nodeIds: NodeIdMap
+  nodeIds: NodeIdMap,
+  parentDirection?: Direction,
 ) {
   const nodeId = generateNodeId();
   nodeIds.set(node, nodeId);
@@ -404,6 +548,7 @@ function nodeToJsx(
         <LayoutContainer
           nodeId={nodeId}
           direction={DIRECTION.ROW}
+          parentDirection={parentDirection}
           width={rowNode.width}
           height={rowNode.height}
           gap={rowNode.gap}
@@ -412,7 +557,7 @@ function nodeToJsx(
           padding={rowNode.padding}
           theme={theme}
         >
-          {rowNode.children.map((child) => nodeToJsx(child, theme, nodeIds))}
+          {rowNode.children.map((child) => nodeToJsx(child, theme, nodeIds, DIRECTION.ROW))}
         </LayoutContainer>
       );
     }
@@ -423,6 +568,7 @@ function nodeToJsx(
         <LayoutContainer
           nodeId={nodeId}
           direction={DIRECTION.COLUMN}
+          parentDirection={parentDirection}
           width={colNode.width}
           height={colNode.height}
           gap={colNode.gap}
@@ -431,7 +577,7 @@ function nodeToJsx(
           padding={colNode.padding}
           theme={theme}
         >
-          {colNode.children.map((child) => nodeToJsx(child, theme, nodeIds))}
+          {colNode.children.map((child) => nodeToJsx(child, theme, nodeIds, DIRECTION.COLUMN))}
         </LayoutContainer>
       );
     }
@@ -439,10 +585,10 @@ function nodeToJsx(
     case NODE_TYPE.STACK: {
       const stackNode = node as StackNode;
       return (
-        <LayoutStack nodeId={nodeId}>
+        <LayoutStack nodeId={nodeId} parentDirection={parentDirection}>
           {stackNode.children.map((child) => (
             <LayoutStackChild>
-              {nodeToJsx(child, theme, nodeIds)}
+              {nodeToJsx(child, theme, nodeIds, DIRECTION.COLUMN)}
             </LayoutStackChild>
           ))}
         </LayoutStack>
@@ -450,11 +596,22 @@ function nodeToJsx(
     }
 
     case NODE_TYPE.IMAGE: {
-      return <LayoutImage nodeId={nodeId} />;
+      const imgNode = node as ImageNode;
+      const dims = readImageDimensions(imgNode.src);
+      if (!dims) {
+        throw new Error(`Cannot read image dimensions: ${imgNode.src}`);
+      }
+
+      const maxScaleFactor = theme.spacing.maxScaleFactor ?? 1.0;
+      const maxWidthPx = (dims.width / SCREEN_DPI) * maxScaleFactor * SCREEN_DPI;
+      const maxHeightPx = (dims.height / SCREEN_DPI) * maxScaleFactor * SCREEN_DPI;
+
+      return <LayoutImage nodeId={nodeId} aspectRatio={dims.aspectRatio} maxWidthPx={maxWidthPx} maxHeightPx={maxHeightPx} parentDirection={parentDirection} />;
     }
 
     case NODE_TYPE.LINE: {
-      return <LayoutLine nodeId={nodeId} />;
+      const borderWidthPx = ptToPx(theme.borders.width);
+      return <LayoutLine nodeId={nodeId} parentDirection={parentDirection} borderWidthPx={borderWidthPx} />;
     }
 
     case NODE_TYPE.SLIDE_NUMBER: {
@@ -470,7 +627,7 @@ function nodeToJsx(
 
     case NODE_TYPE.TABLE: {
       const tableNode = node as TableNode;
-      const syntheticGrid = getTableCellSyntheticNodes(tableNode);
+      const cellNodes = getTableCellNodes(tableNode);
       const numCols = tableNode.rows[0]?.length ?? 0;
 
       // Calculate column widths (proportional -> flex basis)
@@ -478,7 +635,7 @@ function nodeToJsx(
       const totalWeight = columnWidths.reduce((a, b) => a + b, 0);
 
       // Render table as CSS grid with cells as measurable children
-      const cellPadding = tableNode.style?.cellPadding ?? DEFAULT_CELL_PADDING;
+      const cellPadding = tableNode.style?.cellPadding ?? theme.spacing.cellPadding;
       const cellPaddingPx = inToPx(cellPadding);
 
       return (
@@ -486,8 +643,8 @@ function nodeToJsx(
           data-node-id={nodeId}
           style={`display: grid; grid-template-columns: ${columnWidths.map(w => `${(w / totalWeight) * 100}%`).join(' ')}; width: 100%`}
         >
-          {syntheticGrid.flatMap((row) =>
-            row.map((cellTextNode) => {
+          {cellNodes.flatMap((row: TextNode[]) =>
+            row.map((cellTextNode: TextNode) => {
               const cellNodeId = generateNodeId();
               nodeIds.set(cellTextNode, cellNodeId);
 
@@ -541,8 +698,8 @@ export function generateLayoutHTML(
   const widthPx = inToPx(bounds.w);
   const heightPx = inToPx(bounds.h);
 
-  // Build the JSX tree
-  const jsxTree = nodeToJsx(tree, theme, nodeIds);
+  // Build the JSX tree (root wrapper is flex-direction: column)
+  const jsxTree = nodeToJsx(tree, theme, nodeIds, DIRECTION.COLUMN);
 
   // Wrap in HTML document with proper sizing
   const fullJsx = (
@@ -570,6 +727,12 @@ export function generateLayoutHTML(
             display: flex;
             flex-direction: column;
           }
+
+          /* Top-level node fills the slide (column children default to intrinsic) */
+          .root > * {
+            flex: 1 1 0;
+            min-height: 0;
+          }
         `}} />
       </head>
       <body>
@@ -585,63 +748,3 @@ export function generateLayoutHTML(
   return { html, nodeIds };
 }
 
-/**
- * Generate HTML for multiple slides (batched measurement).
- * Each slide gets its own section for independent layout.
- */
-export function generateBatchLayoutHTML(
-  slides: Array<{ tree: ElementNode; bounds: Bounds }>,
-  theme: Theme
-): { html: string; allNodeIds: NodeIdMap[] } {
-  resetIdCounter();
-  const allNodeIds: NodeIdMap[] = [];
-
-  const fontFaceCSS = generateFontFaceCSS(theme);
-
-  // Build JSX for each slide
-  const slideSections = slides.map((slide, slideIndex) => {
-    const nodeIds: NodeIdMap = new Map();
-    allNodeIds.push(nodeIds);
-
-    const widthPx = inToPx(slide.bounds.w);
-    const heightPx = inToPx(slide.bounds.h);
-    const jsxTree = nodeToJsx(slide.tree, theme, nodeIds);
-
-    return (
-      <div
-        data-slide-index={slideIndex}
-        style={`width: ${widthPx}px; height: ${heightPx}px; display: flex; flex-direction: column; position: absolute; visibility: hidden`}
-      >
-        {jsxTree}
-      </div>
-    );
-  });
-
-  const fullJsx = (
-    <html>
-      <head>
-        <meta charset="UTF-8" />
-        <style dangerouslySetInnerHTML={{ __html: `
-          ${fontFaceCSS}
-
-          * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-          }
-
-          body {
-            position: relative;
-          }
-        `}} />
-      </head>
-      <body>
-        {slideSections}
-      </body>
-    </html>
-  );
-
-  const html = '<!DOCTYPE html>' + renderToString(fullJsx);
-
-  return { html, allNodeIds };
-}

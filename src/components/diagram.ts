@@ -18,7 +18,7 @@ import {
   COMPONENT_TYPE,
   type ComponentNode,
   type ExpansionContext,
-} from '../core/component-registry.js';
+} from '../core/componentRegistry.js';
 
 import { execSync } from 'child_process';
 import { writeFileSync, mkdtempSync, existsSync } from 'fs';

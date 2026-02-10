@@ -1,11 +1,11 @@
 // Card Component
 // Implements card as a component using primitives: stack, column, rectangle, text, image
 
-import { defineComponent, type ExpansionContext } from '../core/component-registry.js';
+import { defineComponent, type ExpansionContext } from '../core/componentRegistry.js';
 import { stack, column, rectangle, text, image } from '../core/dsl.js';
 import type { ElementNode } from '../core/nodes.js';
 import type { TextStyleName, GapSize } from '../core/types.js';
-import { TEXT_STYLE, GAP, HALIGN } from '../core/types.js';
+import { TEXT_STYLE, GAP, HALIGN, VALIGN } from '../core/types.js';
 
 // ============================================
 // CONSTANTS
@@ -112,8 +112,8 @@ function expandCard(props: CardComponentProps, context: ExpansionContext): Eleme
     }));
   }
 
-  // Build content layer (centered horizontally for images)
-  const contentLayer = column({ padding: cardPadding, gap, hAlign: HALIGN.CENTER }, ...children);
+  // Build content layer (centered both axes for balanced card appearance)
+  const contentLayer = column({ padding: cardPadding, gap, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE }, ...children);
 
   // If no background, just return the content
   if (background === false || backgroundColor === 'none') {

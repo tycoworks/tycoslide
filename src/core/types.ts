@@ -39,27 +39,11 @@ export const DIRECTION = {
 
 export type Direction = typeof DIRECTION[keyof typeof DIRECTION];
 
-export const JUSTIFY = {
-  START: 'start',
-  CENTER: 'center',
-  END: 'end',
-} as const;
-
-export type Justify = typeof JUSTIFY[keyof typeof JUSTIFY];
-
 export const SIZE = {
   FILL: 'fill',
 } as const;
 
 export type SizeValue = typeof SIZE[keyof typeof SIZE];
-
-export const ALIGN = {
-  START: 'flex-start',
-  CENTER: 'center',
-  END: 'flex-end',
-} as const;
-
-export type Align = typeof ALIGN[keyof typeof ALIGN];
 
 export const BORDER_STYLE = {
   FULL: 'full',
@@ -101,13 +85,6 @@ export const DASH_TYPE = {
 } as const;
 
 export type DashType = typeof DASH_TYPE[keyof typeof DASH_TYPE];
-
-export const LAYER = {
-  SLIDE: 'slide',
-  MASTER: 'master',
-} as const;
-
-export type Layer = typeof LAYER[keyof typeof LAYER];
 
 export const SLIDE_SIZE = {
   S16x9:  { layout: 'LAYOUT_16x9',  width: 10,    height: 5.625 },
@@ -256,16 +233,6 @@ export type TextContent = string | TextRun[];
 // ============================================
 
 export { Bounds } from './bounds.js';
-
-// ============================================
-// ALIGNMENT CONTEXT
-// ============================================
-
-export interface AlignContext {
-  hAlign?: HorizontalAlignment;  // Horizontal alignment (left/center/right)
-  vAlign?: VerticalAlignment;    // Vertical alignment (top/middle/bottom)
-  parentDirection?: Direction;   // Layout direction (for Divider orientation)
-}
 
 // ============================================
 // THEME TYPES

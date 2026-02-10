@@ -1,42 +1,9 @@
 // Test Mocks
-// Shared mock utilities for testing the declarative pipeline
+// Shared mock utilities for testing
 
 import * as assert from 'node:assert';
-import type { MeasurementResults } from '../src/layout/pipeline.js';
 import type { Theme, TextStyle, FontFamily } from '../src/core/types.js';
 import { TEXT_STYLE } from '../src/core/types.js';
-
-// ============================================
-// MOCK MEASUREMENT RESULTS
-// ============================================
-
-/**
- * Create a mock MeasurementResults with configurable return values.
- * Default: 0.25" total height (1 line), 0.25" line height, 1" content width
- *
- * This mock returns the same values for any node, which is suitable for
- * unit tests that don't depend on specific text content.
- */
-export function mockMeasurer(options?: {
-  lineHeight?: number;
-  lines?: number;
-  contentWidth?: number;
-}): MeasurementResults {
-  const lineHeight = options?.lineHeight ?? 0.25;
-  const lines = options?.lines ?? 1;
-  const contentWidth = options?.contentWidth ?? 1;
-
-  return {
-    get: () => ({
-      componentId: 'mock',
-      lines,
-      lineHeight,
-      totalHeight: lineHeight * lines,
-      contentWidth,
-    }),
-    has: () => true,
-  };
-}
 
 // ============================================
 // MOCK THEME

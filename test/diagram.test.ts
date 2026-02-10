@@ -5,7 +5,7 @@
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import { diagram, DiagramBuilder, DIAGRAM_DIRECTION, NODE_STYLE, DIAGRAM_COMPONENT } from '../src/components/diagram.js';
-import { COMPONENT_TYPE } from '../src/core/component-registry.js';
+import { COMPONENT_TYPE } from '../src/core/componentRegistry.js';
 
 describe('DiagramBuilder', () => {
 
@@ -300,9 +300,9 @@ describe('DiagramBuilder', () => {
   // Component Expansion
   // ------------------------------------------
   test('componentRegistry can expand diagram to ImageNode', async () => {
-    const { componentRegistry } = await import('../src/core/component-registry.js');
+    const { componentRegistry } = await import('../src/core/componentRegistry.js');
     const { NODE_TYPE } = await import('../src/core/nodes.js');
-    const { mockTheme, mockMeasurer } = await import('./mocks.js');
+    const { mockTheme } = await import('./mocks.js');
 
     const d = diagram(DIAGRAM_DIRECTION.LEFT_TO_RIGHT);
     d.rect('A', 'Node A');
@@ -311,7 +311,6 @@ describe('DiagramBuilder', () => {
 
     const expanded = componentRegistry.expand(d, {
       theme: mockTheme(),
-      measurer: mockMeasurer({ lineHeight: 0.5, lines: 1 })
     });
 
     // Diagram now expands to ImageNode (mermaid renders PNG during expansion)

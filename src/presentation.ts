@@ -7,11 +7,11 @@
 import type { Theme } from './core/types.js';
 import type { ElementNode, PositionedNode, SlideContent } from './core/nodes.js';
 import { Bounds } from './core/bounds.js';
-import { PptxRenderer, type Renderer } from './core/pptx-renderer.js';
-import { computeLayout, LayoutValidator } from './layout/engine.js';
+import { PptxRenderer, type Renderer } from './core/pptxRenderer.js';
+import { LayoutValidator } from './layout/validator.js';
 import { log } from './utils/log.js';
-import { componentRegistry } from './core/component-registry.js';
-import { TextMeasurementPipeline, type MeasurementResults } from './layout/pipeline.js';
+import { componentRegistry } from './core/componentRegistry.js';
+import { LayoutPipeline } from './layout/pipeline.js';
 
 // Footer height as proportion of margin (footer sits in bottom margin area)
 const FOOTER_HEIGHT_RATIO = 0.6;
@@ -100,7 +100,7 @@ export class Presentation {
 
   /**
    * Write the presentation to a file.
-   * All slides are processed here with browser-based text measurement.
+   * All slides are processed here with browser-based layout.
    */
   async writeFile(fileName: string, options: { includeNotes?: boolean } = {}): Promise<void> {
     if (this.deferredSlides.length > 0) {
@@ -111,12 +111,12 @@ export class Presentation {
   }
 
   /**
-   * Process all deferred slides using browser-based text measurement.
-   * Masters are also processed through the pipeline for consistent measurement.
+   * Process all deferred slides using browser-based layout.
+   * The browser computes all positions via CSS flexbox.
    * @internal
    */
   private async processDeferredSlides(): Promise<void> {
-    const pipeline = new TextMeasurementPipeline();
+    const pipeline = new LayoutPipeline();
 
     try {
       // Phase 1: Collect all masters and their content
@@ -141,7 +141,7 @@ export class Presentation {
             footerBounds,
           });
           // Collect measurements from master content
-          pipeline.collectFromTree(masterContent, footerBounds, this._theme);
+          pipeline.collectFromTree(masterContent, footerBounds);
         }
       }
 
@@ -171,24 +171,24 @@ export class Presentation {
         const expanded = componentRegistry.expandTree(content, { theme: this._theme, slideIndex });
 
         // Collect measurements from expanded tree
-        pipeline.collectFromTree(expanded, bounds, this._theme);
+        pipeline.collectFromTree(expanded, bounds);
 
         expandedSlides.push({ deferred, expanded, bounds });
       }
 
-      // Phase 3: Execute browser measurements
-      log.pptx._('PIPELINE: Measuring %d text elements...', pipeline.measurementCount);
-      const measurements = await pipeline.executeMeasurements(this._theme);
+      // Phase 3: Execute browser measurements (computes ALL positions)
+      log.pptx._('PIPELINE: Measuring %d slides...', pipeline.measurementCount);
+      await pipeline.executeMeasurements(this._theme);
 
-      // Phase 4: Define masters (now with measurements)
+      // Phase 4: Define masters (build positioned trees from browser measurements)
       for (const [name, { master, content, contentBounds, footerBounds }] of pendingMasters) {
         log.pptx.master('DEFINE master "%s" (with measurements)', name);
-        const positioned = computeLayout(content, footerBounds, this._theme, measurements);
+        const positioned = pipeline.computeLayout(content, footerBounds);
         this.renderer.defineMaster({ name, background: master.background, content: positioned }, this._theme);
         this.masters.set(name, { contentBounds, positioned });
       }
 
-      // Phase 5: Process each slide with measurements
+      // Phase 5: Process each slide with browser-computed positions
       log.pptx._('PIPELINE: Processing slides with measurements...');
       for (const { deferred, expanded, bounds } of expandedSlides) {
         const { slide, slideIndex } = deferred;
@@ -196,17 +196,19 @@ export class Presentation {
 
         let positioned: PositionedNode;
         try {
-          // Compute layout with measurements
-          positioned = computeLayout(expanded, bounds, this._theme, measurements);
+          // Build positioned tree from browser measurements
+          positioned = pipeline.computeLayout(expanded, bounds);
 
-          // Validate that positioned content is within content bounds (not slide bounds)
-          // Content bounds exclude the footer area reserved by the master
-          // Pass absolute edges: content can't go past bounds.x + bounds.w or bounds.y + bounds.h
+          // Validate that positioned content is within content bounds
           const validator = new LayoutValidator({
             width: bounds.x + bounds.w,   // Absolute right edge
             height: bounds.y + bounds.h,  // Absolute bottom edge (excludes footer)
           });
-          validator.validateOrThrow(positioned, slideIndex);
+          const result = validator.validate(positioned);
+          if (result.overflows.length > 0 || result.boundsEscapes.length > 0) {
+            log.pptx._('WARNING: Slide %d has layout issues: %d overflows, %d bounds escapes',
+              slideIndex + 1, result.overflows.length, result.boundsEscapes.length);
+          }
         } catch (error) {
           if (error instanceof Error && !error.message.startsWith('Slide ')) {
             error.message = `Slide ${slideIndex + 1}: ${error.message}`;

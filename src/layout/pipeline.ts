@@ -1,34 +1,16 @@
-// Text Measurement Pipeline
-// Uses full layout HTML to accurately measure text within CSS flexbox containers
-//
-// Design: Layout-based measurement
-// - Generates HTML that mirrors slide structure with CSS flexbox
-// - Browser computes actual widths via flexbox algorithm
-// - Measurements extracted from positioned elements
+// Layout Pipeline
+// Coordinates browser-based layout measurement and position tree construction.
+// The browser computes all positions via CSS flexbox in a single pass per slide.
 
-import type { ElementNode, TextNode, SlideNumberNode, TableNode } from '../core/nodes.js';
+import type { ElementNode, PositionedNode, RowNode, ColumnNode, StackNode } from '../core/nodes.js';
 import { NODE_TYPE } from '../core/nodes.js';
-import { getTableCellSyntheticNodes } from '../elements/table.js';
-import { Bounds } from '../core/bounds.js';
+import type { Bounds } from '../core/bounds.js';
 import type { Theme } from '../core/types.js';
-import {
-  createLayoutMeasurer,
-  type LayoutMeasurer,
-  type LayoutMeasurementResults,
-} from './measurement.js';
+import { LayoutMeasurer } from './measurement.js';
 
 // ============================================
 // TYPES
 // ============================================
-
-/** Result of a text measurement (internal format for layout) */
-interface MeasurementResult {
-  componentId: string;
-  lines: number;
-  lineHeight: number;
-  totalHeight: number;
-  contentWidth: number;
-}
 
 /** Stored data for a slide that needs measurement */
 interface SlideMeasurementEntry {
@@ -36,109 +18,58 @@ interface SlideMeasurementEntry {
   bounds: Bounds;
 }
 
-/** Results stored for lookup during layout */
-export interface MeasurementResults {
-  /** Get measurement result for a TextNode or SlideNumberNode instance */
-  get(node: TextNode | SlideNumberNode): MeasurementResult | undefined;
-  /** Check if a node has been measured */
-  has(node: TextNode | SlideNumberNode): boolean;
-}
-
 // ============================================
-// RESULT ADAPTER
+// LAYOUT PIPELINE
 // ============================================
 
 /**
- * Adapts LayoutMeasurementResults to the MeasurementResults interface.
- * In the layout HTML system, both TextNode and SlideNumberNode are measured directly.
- */
-function adaptLayoutResults(
-  layoutResults: LayoutMeasurementResults
-): MeasurementResults {
-  return {
-    get: (node: TextNode | SlideNumberNode): MeasurementResult | undefined => {
-      // Both TextNode and SlideNumberNode are measured directly in layout HTML
-      const layout = layoutResults.get(node);
-      if (!layout) return undefined;
-
-      // Convert LayoutMeasurement to MeasurementResult format
-      // The layout engine expects totalHeight and contentWidth
-      return {
-        componentId: '', // Not used in new system
-        lines: 1,        // Could be computed if needed
-        lineHeight: layout.computedHeight,
-        totalHeight: layout.computedHeight,
-        contentWidth: layout.intrinsicWidth,
-      };
-    },
-    has: (node: TextNode | SlideNumberNode): boolean => {
-      return layoutResults.has(node);
-    },
-  };
-}
-
-// ============================================
-// MEASUREMENT PIPELINE
-// ============================================
-
-/**
- * Pipeline that coordinates text measurement for presentations.
- * Uses layout-based HTML generation for accurate flexbox measurements.
+ * Pipeline that coordinates browser-based layout measurement for presentations.
+ * Collects slides, measures them via the browser, and builds positioned trees.
  *
  * Usage:
- *   const pipeline = new TextMeasurementPipeline();
+ *   const pipeline = new LayoutPipeline();
  *
  *   // Collect from all slides
  *   for (const slide of slides) {
- *     pipeline.collectFromTree(expandedTree, bounds, theme);
+ *     pipeline.collectFromTree(expandedTree, bounds);
  *   }
  *
  *   // Execute all measurements
- *   const results = await pipeline.executeMeasurements(theme);
+ *   await pipeline.executeMeasurements(theme);
  *
- *   // Use results in layout
- *   const height = results.get(textNode)?.totalHeight;
+ *   // Build positioned tree for each slide
+ *   const positioned = pipeline.computeLayout(tree, bounds);
  */
-export class TextMeasurementPipeline {
+export class LayoutPipeline {
   private slides: SlideMeasurementEntry[] = [];
-  private measurer: LayoutMeasurer | null = null;
-  private resultsMap: MeasurementResults | null = null;
+  private measurer = new LayoutMeasurer();
+  private measurements: Map<ElementNode, Bounds> | null = null;
 
   /**
-   * Collect measurements from an expanded node tree.
+   * Collect a slide for measurement.
    * Call this for each slide after component expansion.
    */
-  collectFromTree(node: ElementNode, bounds: Bounds, _theme: Theme): void {
-    // Store the slide for layout-based measurement
+  collectFromTree(node: ElementNode, bounds: Bounds): void {
     this.slides.push({ tree: node, bounds });
   }
 
   /**
-   * Execute all collected measurements using layout-based HTML.
-   * Returns a results map for lookup during layout.
+   * Execute all collected measurements using the browser.
+   * Stores results internally for use by computeLayout.
    */
-  async executeMeasurements(theme: Theme): Promise<MeasurementResults> {
+  async executeMeasurements(theme: Theme): Promise<void> {
     if (this.slides.length === 0) {
-      // No slides to measure - return empty map
-      this.resultsMap = {
-        get: () => undefined,
-        has: () => false,
-      };
-      return this.resultsMap;
+      this.measurements = new Map();
+      return;
     }
 
-    // Launch measurer if needed
-    if (!this.measurer) {
-      this.measurer = createLayoutMeasurer();
+    // Launch browser if needed (idempotent)
+    if (!this.measurer.isLaunched()) {
       await this.measurer.launch();
     }
 
     // Measure each slide and merge results
-    const allResults = new Map<ElementNode, {
-      computedWidth: number;
-      computedHeight: number;
-      intrinsicWidth: number;
-    }>();
+    const allResults = new Map<ElementNode, Bounds>();
 
     for (const slide of this.slides) {
       const slideResults = await this.measurer.measureLayout(
@@ -148,62 +79,26 @@ export class TextMeasurementPipeline {
       );
 
       // Merge into combined results
-      // Walk the tree to get all nodes and their measurements
-      this.collectNodeMeasurements(slide.tree, slideResults, allResults);
-    }
-
-    // Create combined LayoutMeasurementResults
-    const combinedResults: LayoutMeasurementResults = {
-      get: (node: ElementNode) => allResults.get(node),
-      has: (node: ElementNode) => allResults.has(node),
-    };
-
-    // Adapt to MeasurementResults interface
-    this.resultsMap = adaptLayoutResults(combinedResults);
-    return this.resultsMap;
-  }
-
-  /**
-   * Recursively collect measurements from a tree.
-   */
-  private collectNodeMeasurements(
-    node: ElementNode,
-    slideResults: LayoutMeasurementResults,
-    allResults: Map<ElementNode, { computedWidth: number; computedHeight: number; intrinsicWidth: number }>
-  ): void {
-    const measurement = slideResults.get(node);
-    if (measurement) {
-      allResults.set(node, measurement);
-    }
-
-    // Recurse into containers
-    if (node.type === NODE_TYPE.ROW || node.type === NODE_TYPE.COLUMN || node.type === NODE_TYPE.STACK) {
-      const container = node as { children: ElementNode[] };
-      for (const child of container.children) {
-        this.collectNodeMeasurements(child, slideResults, allResults);
+      for (const [node, measurement] of slideResults) {
+        allResults.set(node, measurement);
       }
     }
 
-    // Handle TABLE: collect measurements for synthetic cell TextNodes
-    if (node.type === NODE_TYPE.TABLE) {
-      const tableNode = node as TableNode;
-      const syntheticGrid = getTableCellSyntheticNodes(tableNode);
-      for (const row of syntheticGrid) {
-        for (const cellTextNode of row) {
-          const cellMeasurement = slideResults.get(cellTextNode);
-          if (cellMeasurement) {
-            allResults.set(cellTextNode, cellMeasurement);
-          }
-        }
-      }
-    }
+    this.measurements = allResults;
   }
 
   /**
-   * Get the results map (after executeMeasurements).
+   * Build a PositionedNode tree from browser measurements.
+   * Must be called after executeMeasurements().
+   *
+   * @param tree - Root of the element node tree
+   * @param bounds - Content area bounds (used to offset from root-relative to slide-absolute)
    */
-  getResultsMap(): MeasurementResults | null {
-    return this.resultsMap;
+  computeLayout(tree: ElementNode, bounds: Bounds): PositionedNode {
+    if (!this.measurements) {
+      throw new Error('No measurements available. Call executeMeasurements() first.');
+    }
+    return this.buildPositionedTree(tree, bounds);
   }
 
   /**
@@ -217,11 +112,43 @@ export class TextMeasurementPipeline {
    * Close the browser and clean up.
    */
   async close(): Promise<void> {
-    if (this.measurer) {
-      await this.measurer.close();
-      this.measurer = null;
-    }
+    await this.measurer.close();
     this.slides = [];
-    this.resultsMap = null;
+    this.measurements = null;
+  }
+
+  // ============================================
+  // PRIVATE: Position tree construction
+  // ============================================
+
+  /**
+   * Build a PositionedNode tree from browser measurements.
+   * The browser has already computed all positions via CSS flexbox.
+   * This walks the node tree and constructs PositionedNode using
+   * the browser's computed {x, y, width, height} for each node.
+   */
+  private buildPositionedTree(node: ElementNode, bounds: Bounds): PositionedNode {
+    const m = this.measurements!.get(node);
+    if (!m) {
+      throw new Error(`No browser measurement for node type: ${node.type}`);
+    }
+
+    const positioned: PositionedNode = {
+      node,
+      x: bounds.x + m.x,
+      y: bounds.y + m.y,
+      width: m.w,
+      height: m.h,
+    };
+
+    // Recurse into container children
+    if (node.type === NODE_TYPE.ROW || node.type === NODE_TYPE.COLUMN || node.type === NODE_TYPE.STACK) {
+      const container = node as RowNode | ColumnNode | StackNode;
+      positioned.children = container.children.map(child =>
+        this.buildPositionedTree(child, bounds)
+      );
+    }
+
+    return positioned;
   }
 }

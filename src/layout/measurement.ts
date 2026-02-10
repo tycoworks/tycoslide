@@ -1,47 +1,23 @@
 // Layout Measurement Engine
 // Browser-based measurement using Playwright
+// The browser is the single source of truth for all layout positions.
 
 import { chromium, type Browser, type Page } from 'playwright';
 import type { Theme } from '../core/types.js';
 import type { ElementNode } from '../core/nodes.js';
-import type { Bounds } from '../core/bounds.js';
-import { generateLayoutHTML } from './html-measurement.js';
+import { Bounds } from '../core/bounds.js';
+import { generateLayoutHTML } from './layoutHtml.js';
 import { pxToIn } from '../utils/units.js';
-
 // ============================================
-// TYPES
-// ============================================
-
-/** Result of layout-based measurement for a single node */
-export interface LayoutMeasurement {
-  computedWidth: number;   // in inches - width computed by browser flexbox
-  computedHeight: number;  // in inches - height computed by browser
-  intrinsicWidth: number;  // in inches - natural single-line width
-}
-
-/** Results of layout-based measurement, keyed by node identity */
-export interface LayoutMeasurementResults {
-  get(node: ElementNode): LayoutMeasurement | undefined;
-  has(node: ElementNode): boolean;
-}
-
-/** Layout measurer interface - abstracts browser implementation */
-export interface LayoutMeasurer {
-  launch(): Promise<void>;
-  close(): Promise<void>;
-  isLaunched(): boolean;
-  measureLayout(tree: ElementNode, bounds: Bounds, theme: Theme): Promise<LayoutMeasurementResults>;
-}
-
-// ============================================
-// BROWSER LAYOUT MEASURER IMPLEMENTATION
+// LAYOUT MEASURER
 // ============================================
 
 /**
  * Browser-based layout measurer using Playwright.
- * Generates HTML with CSS flexbox to measure text dimensions.
+ * Generates HTML with CSS flexbox, lets the browser compute all positions,
+ * then extracts {x, y, width, height} for every node.
  */
-class BrowserLayoutMeasurer implements LayoutMeasurer {
+export class LayoutMeasurer {
   private browser: Browser | null = null;
   private page: Page | null = null;
 
@@ -74,18 +50,15 @@ class BrowserLayoutMeasurer implements LayoutMeasurer {
 
   /**
    * Measure a node tree using full layout HTML.
-   * This generates HTML that mirrors the slide structure with CSS flexbox,
-   * letting the browser compute accurate widths before measuring heights.
-   *
-   * Two-phase measurement:
-   * 1. Intrinsic widths (white-space: nowrap) - natural single-line width
-   * 2. Flex layout heights (white-space: pre-wrap) - wrapped height at computed width
+   * Generates HTML that mirrors the slide structure with CSS flexbox,
+   * lets the browser compute all positions, then extracts full
+   * {x, y, width, height} for every node relative to the root.
    */
   async measureLayout(
     tree: ElementNode,
     bounds: Bounds,
     theme: Theme
-  ): Promise<LayoutMeasurementResults> {
+  ): Promise<Map<ElementNode, Bounds>> {
     if (!this.page) {
       throw new Error('Browser not launched. Call launch() first.');
     }
@@ -107,26 +80,14 @@ class BrowserLayoutMeasurer implements LayoutMeasurer {
     await this.page.setContent(html);
     await this.page.evaluate(() => document.fonts.ready);
 
-    // Phase 1: Measure intrinsic widths (nowrap mode)
-    const intrinsicWidths = await this.page.evaluate(() => {
-      const results = new Map<string, number>();
-      document.querySelectorAll('[data-node-id]').forEach(el => {
-        const div = el as HTMLElement;
-        const nodeId = div.dataset.nodeId!;
-        // Temporarily set nowrap to measure intrinsic width
-        const originalWhiteSpace = div.style.whiteSpace;
-        div.style.whiteSpace = 'nowrap';
-        results.set(nodeId, div.scrollWidth);
-        div.style.whiteSpace = originalWhiteSpace;
-      });
-      return Array.from(results.entries());
-    });
-    const intrinsicWidthMap = new Map(intrinsicWidths);
-
-    // Phase 2: Measure flex-computed dimensions (normal wrapping)
+    // Extract full positions for all nodes, relative to root
     const measurements = await this.page.evaluate(() => {
+      const root = document.querySelector('.root')!;
+      const rootRect = root.getBoundingClientRect();
       const results: Array<{
         nodeId: string;
+        x: number;
+        y: number;
         width: number;
         height: number;
       }> = [];
@@ -136,6 +97,8 @@ class BrowserLayoutMeasurer implements LayoutMeasurer {
         const rect = div.getBoundingClientRect();
         results.push({
           nodeId: div.dataset.nodeId!,
+          x: rect.left - rootRect.left,
+          y: rect.top - rootRect.top,
           width: rect.width,
           height: rect.height,
         });
@@ -145,52 +108,22 @@ class BrowserLayoutMeasurer implements LayoutMeasurer {
     });
 
     // Build result map keyed by node identity
-    const nodeToMeasurement = new Map<ElementNode, LayoutMeasurement>();
+    const results = new Map<ElementNode, Bounds>();
 
     for (const [node, nodeId] of nodeIds) {
-      const measurement = measurements.find(m => m.nodeId === nodeId);
-      const intrinsicWidth = intrinsicWidthMap.get(nodeId) ?? 0;
+      const m = measurements.find(r => r.nodeId === nodeId);
 
-      if (measurement) {
-        nodeToMeasurement.set(node, {
-          computedWidth: pxToIn(measurement.width),
-          computedHeight: pxToIn(measurement.height),
-          intrinsicWidth: pxToIn(intrinsicWidth),
-        });
+      if (m) {
+        results.set(node, new Bounds(
+          pxToIn(m.x),
+          pxToIn(m.y),
+          pxToIn(m.width),
+          pxToIn(m.height),
+        ));
       }
     }
 
-    return {
-      get: (node: ElementNode) => nodeToMeasurement.get(node),
-      has: (node: ElementNode) => nodeToMeasurement.has(node),
-    };
+    return results;
   }
 }
 
-// ============================================
-// FACTORY AND SINGLETON
-// ============================================
-
-/** Singleton instance for default usage */
-let defaultMeasurer: LayoutMeasurer | null = null;
-
-/** Create a new layout measurer instance */
-export function createLayoutMeasurer(): LayoutMeasurer {
-  return new BrowserLayoutMeasurer();
-}
-
-/** Get the default layout measurer (singleton) */
-export function getLayoutMeasurer(): LayoutMeasurer {
-  if (!defaultMeasurer) {
-    defaultMeasurer = createLayoutMeasurer();
-  }
-  return defaultMeasurer;
-}
-
-/** Cleanup function for tests and shutdown */
-export async function closeLayoutMeasurer(): Promise<void> {
-  if (defaultMeasurer) {
-    await defaultMeasurer.close();
-    defaultMeasurer = null;
-  }
-}

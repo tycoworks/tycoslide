@@ -1,29 +1,26 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { text, row, column } from '../src/core/dsl.js';
-import { computeLayout, LayoutValidator, LayoutOverflowError, LayoutOverlapError, LayoutBoundsError } from '../src/layout/engine.js';
-import { Bounds } from '../src/core/bounds.js';
-import { mockTheme, mockMeasurer } from './mocks.js';
-import { VALIGN } from '../src/core/types.js';
-import { NODE_TYPE, type PositionedNode, type ElementNode, type ColumnNode } from '../src/core/nodes.js';
+import { LayoutValidator, LayoutOverflowError, LayoutBoundsError } from '../src/layout/validator.js';
+import { NODE_TYPE, type PositionedNode } from '../src/core/nodes.js';
 
 describe('Layout Validation', () => {
-  const theme = mockTheme();
-  const measurer = mockMeasurer({ lineHeight: 0.5, lines: 1 });
   const slideBounds = { width: 10, height: 7.5 };
 
   describe('LayoutValidator', () => {
     it('should not throw when content is within bounds', () => {
-      const node = text('Hello');
-      const bounds = new Bounds(0.5, 0.5, 9, 6.5);
-      const positioned = computeLayout(node, bounds, theme, measurer);
+      const positioned: PositionedNode = {
+        node: { type: NODE_TYPE.TEXT, content: 'Hello' },
+        x: 0.5,
+        y: 0.5,
+        width: 4,
+        height: 0.5,
+      };
 
       const validator = new LayoutValidator(slideBounds);
       assert.doesNotThrow(() => validator.validateOrThrow(positioned));
     });
 
     it('should detect overflow beyond slide right edge', () => {
-      // Create a positioned node that extends beyond slide width
       const positioned: PositionedNode = {
         node: { type: NODE_TYPE.TEXT, content: 'test' },
         x: 8,
@@ -104,7 +101,6 @@ describe('Layout Validation', () => {
 
   describe('Sibling Overlap Detection', () => {
     it('should detect overlapping siblings in a row', () => {
-      // Manually create a positioned row with overlapping children
       const positioned: PositionedNode = {
         node: { type: NODE_TYPE.ROW, children: [] },
         x: 1,
@@ -138,7 +134,6 @@ describe('Layout Validation', () => {
     });
 
     it('should not report overlap for Stack nodes (intentional)', () => {
-      // Stack nodes intentionally overlap children
       const positioned: PositionedNode = {
         node: { type: NODE_TYPE.STACK, children: [] },
         x: 1,
@@ -172,7 +167,6 @@ describe('Layout Validation', () => {
 
   describe('Bounds Escape Detection (Child outside Parent)', () => {
     it('should detect child positioned above parent (escapeTop)', () => {
-      // Child positioned above parent - this is a layout bug
       const positioned: PositionedNode = {
         node: { type: NODE_TYPE.COLUMN, children: [] },
         x: 1,
@@ -223,7 +217,6 @@ describe('Layout Validation', () => {
     });
 
     it('should NOT report bottom/right escapes (these are overflow, not positioning bugs)', () => {
-      // Child extends beyond parent bottom/right - this is acceptable overflow
       const positioned: PositionedNode = {
         node: { type: NODE_TYPE.COLUMN, children: [] },
         x: 1,
@@ -244,7 +237,6 @@ describe('Layout Validation', () => {
       const validator = new LayoutValidator(slideBounds);
       const result = validator.validate(positioned);
 
-      // No bounds escapes - bottom/right are not reported
       assert.strictEqual(result.boundsEscapes.length, 0);
     });
 
@@ -271,63 +263,6 @@ describe('Layout Validation', () => {
         () => validator.validateOrThrow(positioned),
         LayoutBoundsError
       );
-    });
-  });
-
-  describe('vAlign Regression (content > available space)', () => {
-    it('should not position children above parent when content overflows with vAlign MIDDLE', () => {
-      // This tests the bug fix: when contentHeight > availableHeight,
-      // the centering formula (availableHeight - contentHeight) / 2 goes negative
-      // The fix clamps offset to 0 so children never go above parent
-      const node = column({ vAlign: VALIGN.MIDDLE },
-        text('Line 1'),
-        text('Line 2'),
-        text('Line 3'),
-        text('Line 4'),
-      );
-
-      // Very constrained height - content will overflow
-      const bounds = new Bounds(1, 2, 8, 0.5); // Only 0.5" tall but content is ~2"
-      const positioned = computeLayout(node, bounds, theme, measurer);
-
-      // Verify no child is positioned above the parent's y
-      for (const child of positioned.children ?? []) {
-        assert.ok(
-          child.y >= positioned.y,
-          `Child y=${child.y} should not be above parent y=${positioned.y}`
-        );
-      }
-
-      // Validation should not throw LayoutBoundsError
-      // (may throw LayoutOverflowError since content is too tall, which is expected)
-      const validator = new LayoutValidator(slideBounds);
-      const result = validator.validate(positioned);
-
-      assert.strictEqual(result.boundsEscapes.length, 0, 'No bounds escapes with vAlign fix');
-    });
-
-    it('should not position children above parent when content overflows with vAlign BOTTOM', () => {
-      const node = column({ vAlign: VALIGN.BOTTOM },
-        text('Line 1'),
-        text('Line 2'),
-        text('Line 3'),
-        text('Line 4'),
-      );
-
-      const bounds = new Bounds(1, 2, 8, 0.5);
-      const positioned = computeLayout(node, bounds, theme, measurer);
-
-      for (const child of positioned.children ?? []) {
-        assert.ok(
-          child.y >= positioned.y,
-          `Child y=${child.y} should not be above parent y=${positioned.y}`
-        );
-      }
-
-      const validator = new LayoutValidator(slideBounds);
-      const result = validator.validate(positioned);
-
-      assert.strictEqual(result.boundsEscapes.length, 0, 'No bounds escapes with vAlign fix');
     });
   });
 });

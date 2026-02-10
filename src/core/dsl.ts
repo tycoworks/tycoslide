@@ -29,7 +29,7 @@ import type {
   DashType,
   SizeValue,
 } from './types.js';
-import { TEXT_STYLE, VALIGN, HALIGN } from './types.js';
+import { TEXT_STYLE, VALIGN, HALIGN, SIZE } from './types.js';
 
 // ============================================
 // TEXT
@@ -139,7 +139,7 @@ export function row(...args: any[]): RowNode {
     width: props.width,
     height: props.height,
     gap: props.gap,
-    vAlign: props.vAlign ?? VALIGN.TOP,    // Explicit default for consistent measurement
+    vAlign: props.vAlign ?? VALIGN.TOP,    // Explicit default: pure alignment (not CSS stretch)
     hAlign: props.hAlign ?? HALIGN.LEFT,   // Explicit default for consistent measurement
     padding: props.padding,
   };
@@ -241,10 +241,15 @@ export function grid(...args: any[]): ColumnNode {
     children = args.slice(1);
   }
 
-  // Chunk children into rows
+  // Wrap each child in a column cell so items share row width equally
+  // and images use width-based sizing (width: 100%, height from aspect-ratio)
+  // instead of height-based sizing (which requires definite row height).
+  const cells = children.map(child => column({ width: SIZE.FILL }, child));
+
+  // Chunk cells into rows
   const rows: RowNode[] = [];
-  for (let i = 0; i < children.length; i += columns) {
-    const rowChildren = children.slice(i, i + columns);
+  for (let i = 0; i < cells.length; i += columns) {
+    const rowChildren = cells.slice(i, i + columns);
     rows.push(gap !== undefined ? row({ gap }, ...rowChildren) : row(...rowChildren));
   }
 
