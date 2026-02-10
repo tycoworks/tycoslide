@@ -37,13 +37,15 @@ export function fontWeightToNumeric(weight: FontWeight): number {
 // TEXT STYLE RESOLUTION
 // ============================================
 
-/** Resolve line height: node override > style override > theme default */
+/** Resolve line height: node override > style override > theme default (bulletSpacing for bullet text) */
 export function resolveLineHeight(
   nodeMultiplier: number | undefined,
   style: TextStyle,
   theme: Theme,
+  hasBullets?: boolean,
 ): number {
-  return nodeMultiplier ?? style.lineHeightMultiplier ?? theme.spacing.lineSpacing;
+  const themeDefault = hasBullets ? theme.spacing.bulletSpacing : theme.spacing.lineSpacing;
+  return nodeMultiplier ?? style.lineHeightMultiplier ?? themeDefault;
 }
 
 // ============================================

@@ -10,7 +10,7 @@ import type { PositionedNode, TextNode, ImageNode, RectangleNode, LineNode, Slid
 import { NODE_TYPE } from './nodes.js';
 import type { Theme, TextStyleName, TextContent } from './types.js';
 import { CUSTOM_LAYOUT, SHAPE, TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT, BORDER_STYLE } from './types.js';
-import { getFontFromFamily, normalizeContent } from '../utils/text.js';
+import { getFontFromFamily, normalizeContent, resolveLineHeight } from '../utils/text.js';
 import { readImageDimensions } from '../utils/image.js';
 import { log, contentPreview } from '../utils/log.js';
 
@@ -254,11 +254,11 @@ export class PptxRenderer implements Renderer {
     const defaultFont = getFontFromFamily(style.fontFamily, style.defaultWeight ?? FONT_WEIGHT.NORMAL);
     const fragments = this.buildTextFragments(textNode.content, styleName, theme, textNode.color);
 
-    // Priority: node override > style override > theme default
-    const lineSpacing = textNode.lineHeightMultiplier ?? style.lineHeightMultiplier ?? theme.spacing.lineSpacing;
-
-    // Check if any fragment has bullets - pptxgenjs bug: align breaks bullet rendering
+    // Check if any fragment has bullets - affects line spacing and alignment
     const hasBullets = fragments.some(f => f.options?.bullet);
+
+    // Priority: node override > style override > theme default (bulletSpacing for bullet text)
+    const lineSpacing = resolveLineHeight(textNode.lineHeightMultiplier, style, theme, hasBullets);
 
     const options: Record<string, unknown> = {
       x: positioned.x,

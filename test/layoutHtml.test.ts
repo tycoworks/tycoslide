@@ -1,9 +1,9 @@
 // HTML Measurement Tests
 // Tests for HTML generation used in browser-based text measurement
 
-import { describe, test, beforeEach } from 'node:test';
+import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
-import { generateLayoutHTML, resetIdCounter } from '../dist/layout/layoutHtml.js';
+import { generateLayoutHTML } from '../dist/layout/layoutHtml.js';
 import { text, row, column, image, line, stack, rectangle } from '../dist/core/dsl.js';
 import { Bounds } from '../dist/core/bounds.js';
 import { HALIGN, VALIGN, DIRECTION, SIZE } from '../dist/core/types.js';
@@ -67,10 +67,6 @@ const mockTheme: Theme = {
 
 describe('HTML Measurement Generation', () => {
   const bounds = new Bounds(0, 0, 10, 5);
-
-  beforeEach(() => {
-    resetIdCounter();
-  });
 
   describe('LayoutContainer (unified Row/Column)', () => {
     test('row generates flex-direction: row', () => {

@@ -6,7 +6,7 @@ import { chromium, type Browser, type Page } from 'playwright';
 import type { Theme } from '../core/types.js';
 import type { ElementNode } from '../core/nodes.js';
 import { Bounds } from '../core/bounds.js';
-import { generateLayoutHTML } from './layoutHtml.js';
+import { generateLayoutHTML, measureFontNormalRatios, type FontNormalRatios } from './layoutHtml.js';
 import { pxToIn } from '../utils/units.js';
 // ============================================
 // LAYOUT MEASURER
@@ -20,6 +20,7 @@ import { pxToIn } from '../utils/units.js';
 export class LayoutMeasurer {
   private browser: Browser | null = null;
   private page: Page | null = null;
+  private fontNormalRatios: FontNormalRatios = new Map();
 
   async launch(): Promise<void> {
     if (this.browser) {
@@ -63,8 +64,13 @@ export class LayoutMeasurer {
       throw new Error('Browser not launched. Call launch() first.');
     }
 
+    // Ensure font metrics are measured (idempotent — only runs once per measurer lifetime)
+    if (this.fontNormalRatios.size === 0) {
+      this.fontNormalRatios = await measureFontNormalRatios(this.page, theme);
+    }
+
     // Generate layout HTML with CSS flexbox structure
-    const { html, nodeIds } = generateLayoutHTML(tree, bounds, theme);
+    const { html, nodeIds } = generateLayoutHTML(tree, bounds, theme, this.fontNormalRatios);
 
     // Debug: save HTML to file if DEBUG_HTML env var is set
     if (process.env.DEBUG_HTML) {
@@ -126,4 +132,3 @@ export class LayoutMeasurer {
     return results;
   }
 }
-

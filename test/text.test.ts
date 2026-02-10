@@ -3,8 +3,9 @@
 
 import { describe, it } from 'node:test';
 import * as assert from 'node:assert';
-import { getFontFromFamily, normalizeContent } from '../src/utils/text.js';
-import { FONT_WEIGHT, type FontFamily, type NormalizedRun } from '../src/core/types.js';
+import { getFontFromFamily, normalizeContent, resolveLineHeight } from '../src/utils/text.js';
+import { FONT_WEIGHT, type FontFamily, type NormalizedRun, type TextStyle } from '../src/core/types.js';
+import { mockTheme } from './mocks.js';
 
 // ============================================
 // TEST DATA
@@ -61,6 +62,41 @@ describe('getFontFromFamily', () => {
         message: "Font weight 'light' is not defined in this font family",
       }
     );
+  });
+});
+
+// ============================================
+// resolveLineHeight() TESTS
+// ============================================
+
+describe('resolveLineHeight', () => {
+  const theme = mockTheme({ lineSpacing: 1.0, bulletSpacing: 1.5 });
+  const baseStyle: TextStyle = { fontSize: 12, fontFamily: mockFontFamily };
+  const styleWithMultiplier: TextStyle = { fontSize: 12, fontFamily: mockFontFamily, lineHeightMultiplier: 1.3 };
+
+  it('uses theme.spacing.lineSpacing as default for non-bullet text', () => {
+    assert.strictEqual(resolveLineHeight(undefined, baseStyle, theme), 1.0);
+  });
+
+  it('uses theme.spacing.bulletSpacing as default for bullet text', () => {
+    assert.strictEqual(resolveLineHeight(undefined, baseStyle, theme, true), 1.5);
+  });
+
+  it('style.lineHeightMultiplier overrides theme default', () => {
+    assert.strictEqual(resolveLineHeight(undefined, styleWithMultiplier, theme), 1.3);
+  });
+
+  it('style.lineHeightMultiplier overrides theme default even for bullets', () => {
+    assert.strictEqual(resolveLineHeight(undefined, styleWithMultiplier, theme, true), 1.3);
+  });
+
+  it('node multiplier overrides everything', () => {
+    assert.strictEqual(resolveLineHeight(2.0, styleWithMultiplier, theme), 2.0);
+    assert.strictEqual(resolveLineHeight(2.0, styleWithMultiplier, theme, true), 2.0);
+  });
+
+  it('hasBullets=false uses lineSpacing (same as undefined)', () => {
+    assert.strictEqual(resolveLineHeight(undefined, baseStyle, theme, false), 1.0);
   });
 });
 

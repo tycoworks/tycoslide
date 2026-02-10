@@ -3,6 +3,7 @@
 
 import { renderToString } from 'hono/jsx/dom/server';
 import type { FC, PropsWithChildren } from 'hono/jsx';
+import type { Page } from 'playwright';
 import type { ElementNode, TextNode, ImageNode, RowNode, ColumnNode, StackNode, SlideNumberNode, TableNode, TableCellData } from '../core/nodes.js';
 import { NODE_TYPE } from '../core/nodes.js';
 import type { Theme, TextStyle, FontWeight, GapSize, VerticalAlignment, HorizontalAlignment, SizeValue, TextContent, NormalizedRun, Direction } from '../core/types.js';
@@ -21,31 +22,33 @@ import { resolveGap } from '../utils/node.js';
 /** Placeholder text for measuring slide number width (widest reasonable number) */
 const SLIDE_NUMBER_PLACEHOLDER = '999';
 
+/**
+ * Map of font name → line-height: normal ratio (normalHeight / fontSize).
+ * Used to convert PowerPoint's lineSpacingMultiple to CSS line-height.
+ * Measured by the browser via measureFontNormalRatios().
+ */
+export type FontNormalRatios = Map<string, number>;
+
 // ============================================
 // TYPES
 // ============================================
 
-/** Maps node instances to their assigned IDs */
-export type NodeIdMap = Map<ElementNode, string>;
-
 /** Result of HTML generation */
 export interface LayoutHtmlResult {
   html: string;
-  nodeIds: NodeIdMap;
+  nodeIds: Map<ElementNode, string>;
 }
 
 // ============================================
 // ID GENERATION
 // ============================================
 
-let idCounter = 0;
-
-function generateNodeId(): string {
-  return `node-${++idCounter}`;
+interface IdContext {
+  counter: number;
 }
 
-export function resetIdCounter(): void {
-  idCounter = 0;
+function generateNodeId(ctx: IdContext): string {
+  return `node-${++ctx.counter}`;
 }
 
 // ============================================
@@ -146,7 +149,7 @@ function flexItemStyles(
 // FONT FACE CSS
 // ============================================
 
-function generateFontFaceCSS(theme: Theme): string {
+export function generateFontFaceCSS(theme: Theme): string {
   const fontFaces: string[] = [];
   const seenPaths = new Set<string>();
 
@@ -171,6 +174,59 @@ function generateFontFaceCSS(theme: Theme): string {
   }
 
   return fontFaces.join('\n');
+}
+
+/**
+ * Measure line-height: normal ratio for each font in the theme.
+ * Loads fonts in the browser and measures their natural line height
+ * as a ratio of font-size, for converting PowerPoint's lineSpacingMultiple to CSS.
+ *
+ * PowerPoint's lineSpacingMultiple 1.0 = "single spacing" = font's natural line height.
+ * CSS line-height: normal = same thing. But CSS line-height as a unitless number
+ * is relative to font-size, not the font's natural height.
+ * We measure the browser's line-height: normal as a ratio of font-size,
+ * then use: cssLineHeight = lineSpacingMultiple × normalRatio
+ */
+export async function measureFontNormalRatios(page: Page, theme: Theme): Promise<FontNormalRatios> {
+  const fontFaceCSS = generateFontFaceCSS(theme);
+  await page.setContent(
+    `<!DOCTYPE html><html><head><style>${fontFaceCSS}</style></head><body></body></html>`
+  );
+  await page.evaluate(() => document.fonts.ready);
+
+  // Collect unique font names from all text styles
+  const fontNames = new Set<string>();
+  for (const styleName of Object.keys(theme.textStyles) as (keyof typeof theme.textStyles)[]) {
+    const style = theme.textStyles[styleName];
+    for (const font of Object.values(style.fontFamily)) {
+      if (font?.name) fontNames.add(font.name);
+    }
+  }
+
+  // Measure line-height: normal for each font as a ratio of font-size
+  // Use a large font-size (100px) for precision
+  const ratios = await page.evaluate((names: string[]) => {
+    const results: Array<{ name: string; ratio: number }> = [];
+    for (const name of names) {
+      const el = document.createElement('div');
+      el.style.fontFamily = `'${name}'`;
+      el.style.fontSize = '100px';
+      el.style.lineHeight = 'normal';
+      el.style.position = 'absolute';
+      el.textContent = 'X';  // Any text; line-height: normal is a fixed font metric
+      document.body.appendChild(el);
+      const ratio = el.getBoundingClientRect().height / 100;
+      document.body.removeChild(el);
+      results.push({ name, ratio });
+    }
+    return results;
+  }, [...fontNames]);
+
+  const result: FontNormalRatios = new Map();
+  for (const { name, ratio } of ratios) {
+    result.set(name, ratio);
+  }
+  return result;
 }
 
 // ============================================
@@ -280,6 +336,7 @@ interface LayoutTextProps {
   theme: Theme;
   hAlign?: HorizontalAlignment;
   lineHeightMultiplier?: number;
+  fontNormalRatios?: FontNormalRatios;
 }
 
 const LayoutText: FC<LayoutTextProps> = ({
@@ -289,12 +346,21 @@ const LayoutText: FC<LayoutTextProps> = ({
   theme,
   hAlign,
   lineHeightMultiplier,
+  fontNormalRatios,
 }) => {
   const runs = normalizeContent(content);
+  const hasBullets = runs.some(r => r.bullet);
   const defaultWeight = style.defaultWeight ?? FONT_WEIGHT.NORMAL;
   const defaultFont = style.fontFamily[defaultWeight] ?? style.fontFamily.normal;
-  const lineHeight = resolveLineHeight(lineHeightMultiplier, style, theme);
+  const lineSpacingMultiple = resolveLineHeight(lineHeightMultiplier, style, theme, hasBullets);
   const fontSizePx = ptToPx(style.fontSize);
+
+  // Convert PowerPoint's lineSpacingMultiple to CSS line-height.
+  // PPTX lineSpacingMultiple is relative to "single spacing" (font's natural line height).
+  // CSS line-height as a unitless number is relative to font-size.
+  // The font's normal ratio (measured in the browser) bridges the gap.
+  const normalRatio = fontNormalRatios?.get(defaultFont.name);
+  const cssLineHeight = normalRatio ? lineSpacingMultiple * normalRatio : lineSpacingMultiple;
 
   // Bullet indent: fontSize * multiplier, converted to px
   const bulletIndentPx = ptToPx(style.fontSize * theme.spacing.bulletIndentMultiplier);
@@ -304,7 +370,7 @@ const LayoutText: FC<LayoutTextProps> = ({
   const containerStyle = [
     `font-family: '${defaultFont.name}'`,
     `font-size: ${fontSizePx}px`,
-    `line-height: ${lineHeight}`,
+    `line-height: ${cssLineHeight}`,
     `text-align: ${textAlign}`,
     'white-space: pre-wrap',
     'word-wrap: break-word',
@@ -519,10 +585,12 @@ function getTableCellNodes(node: TableNode): TextNode[][] {
 function nodeToJsx(
   node: ElementNode,
   theme: Theme,
-  nodeIds: NodeIdMap,
+  nodeIds: Map<ElementNode, string>,
+  idCtx: IdContext,
   parentDirection?: Direction,
+  fontNormalRatios?: FontNormalRatios,
 ) {
-  const nodeId = generateNodeId();
+  const nodeId = generateNodeId(idCtx);
   nodeIds.set(node, nodeId);
 
   switch (node.type) {
@@ -538,6 +606,7 @@ function nodeToJsx(
           theme={theme}
           hAlign={textNode.hAlign}
           lineHeightMultiplier={textNode.lineHeightMultiplier}
+          fontNormalRatios={fontNormalRatios}
         />
       );
     }
@@ -557,7 +626,7 @@ function nodeToJsx(
           padding={rowNode.padding}
           theme={theme}
         >
-          {rowNode.children.map((child) => nodeToJsx(child, theme, nodeIds, DIRECTION.ROW))}
+          {rowNode.children.map((child) => nodeToJsx(child, theme, nodeIds, idCtx, DIRECTION.ROW, fontNormalRatios))}
         </LayoutContainer>
       );
     }
@@ -577,7 +646,7 @@ function nodeToJsx(
           padding={colNode.padding}
           theme={theme}
         >
-          {colNode.children.map((child) => nodeToJsx(child, theme, nodeIds, DIRECTION.COLUMN))}
+          {colNode.children.map((child) => nodeToJsx(child, theme, nodeIds, idCtx, DIRECTION.COLUMN, fontNormalRatios))}
         </LayoutContainer>
       );
     }
@@ -588,7 +657,7 @@ function nodeToJsx(
         <LayoutStack nodeId={nodeId} parentDirection={parentDirection}>
           {stackNode.children.map((child) => (
             <LayoutStackChild>
-              {nodeToJsx(child, theme, nodeIds, DIRECTION.COLUMN)}
+              {nodeToJsx(child, theme, nodeIds, idCtx, DIRECTION.COLUMN, fontNormalRatios)}
             </LayoutStackChild>
           ))}
         </LayoutStack>
@@ -645,7 +714,7 @@ function nodeToJsx(
         >
           {cellNodes.flatMap((row: TextNode[]) =>
             row.map((cellTextNode: TextNode) => {
-              const cellNodeId = generateNodeId();
+              const cellNodeId = generateNodeId(idCtx);
               nodeIds.set(cellTextNode, cellNodeId);
 
               const styleName = cellTextNode.style ?? TEXT_STYLE.BODY;
@@ -659,6 +728,7 @@ function nodeToJsx(
                     style={style}
                     theme={theme}
                     hAlign={cellTextNode.hAlign}
+                    fontNormalRatios={fontNormalRatios}
                   />
                 </div>
               );
@@ -689,17 +759,18 @@ function nodeToJsx(
 export function generateLayoutHTML(
   tree: ElementNode,
   bounds: Bounds,
-  theme: Theme
+  theme: Theme,
+  fontNormalRatios?: FontNormalRatios,
 ): LayoutHtmlResult {
-  resetIdCounter();
-  const nodeIds: NodeIdMap = new Map();
+  const idCtx: IdContext = { counter: 0 };
+  const nodeIds: Map<ElementNode, string> = new Map();
 
   const fontFaceCSS = generateFontFaceCSS(theme);
   const widthPx = inToPx(bounds.w);
   const heightPx = inToPx(bounds.h);
 
   // Build the JSX tree (root wrapper is flex-direction: column)
-  const jsxTree = nodeToJsx(tree, theme, nodeIds, DIRECTION.COLUMN);
+  const jsxTree = nodeToJsx(tree, theme, nodeIds, idCtx, DIRECTION.COLUMN, fontNormalRatios);
 
   // Wrap in HTML document with proper sizing
   const fullJsx = (
