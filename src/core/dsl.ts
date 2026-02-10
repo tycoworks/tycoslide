@@ -250,20 +250,24 @@ export function grid(...args: any[]): RowNode[] {
   // Wrap each child in a column cell so items share row width equally
   // and images use width-based sizing (width: 100%, height from aspect-ratio)
   // instead of height-based sizing (which requires definite row height).
-  const cells = children.map(child => column({ width: SIZE.FILL }, child));
+  // When fill: true, cells also get height: SIZE.FILL so they fill the row's cross-axis.
+  const cellProps = fill
+    ? { width: SIZE.FILL, height: SIZE.FILL }
+    : { width: SIZE.FILL };
+  const cells = children.map(child => column(cellProps, child));
 
   // Chunk cells into rows — caller's container controls vertical spacing
   const rows: RowNode[] = [];
   for (let i = 0; i < cells.length; i += columns) {
     const rowChildren = cells.slice(i, i + columns);
     if (fill) {
-      // Direct construction: vAlign undefined → CSS stretch (cells fill row height)
+      // Direct construction: rows get definite height, cells stretch via their own SIZE.FILL
       rows.push({
         type: NODE_TYPE.ROW,
         children: rowChildren as ElementNode[],
         gap,
         height: SIZE.FILL,
-        vAlign: undefined,
+        vAlign: VALIGN.TOP,
         hAlign: HALIGN.LEFT,
       });
     } else {

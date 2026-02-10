@@ -485,19 +485,31 @@ describe('grid()', () => {
     assert.strictEqual(row2.children[1].children[0], child4);
   });
 
-  test('fill: true sets height: SIZE.FILL and vAlign: undefined (stretch) on each row', () => {
+  test('fill: true sets height: SIZE.FILL and vAlign: TOP on each row', () => {
     const rows = grid({ columns: 2, fill: true }, child1, child2, child3, child4);
     assert.strictEqual((rows[0] as any).height, SIZE.FILL);
     assert.strictEqual((rows[1] as any).height, SIZE.FILL);
-    // vAlign undefined → CSS align-items: stretch (cells fill row height)
-    assert.strictEqual((rows[0] as any).vAlign, undefined);
-    assert.strictEqual((rows[1] as any).vAlign, undefined);
+    // vAlign is pure alignment — sizing is handled by SIZE.FILL on cells
+    assert.strictEqual((rows[0] as any).vAlign, VALIGN.TOP);
+    assert.strictEqual((rows[1] as any).vAlign, VALIGN.TOP);
   });
 
-  test('fill: false (default) does not set height on rows and uses default vAlign', () => {
+  test('fill: true sets height: SIZE.FILL on cell columns (cells stretch via sizing, not alignment)', () => {
+    const rows = grid({ columns: 2, fill: true }, child1, child2);
+    const cellColumn = (rows[0] as any).children[0];
+    assert.strictEqual(cellColumn.type, NODE_TYPE.COLUMN);
+    assert.strictEqual(cellColumn.width, SIZE.FILL);
+    assert.strictEqual(cellColumn.height, SIZE.FILL);
+  });
+
+  test('fill: false (default) does not set height on rows or cells', () => {
     const rows = grid(2, child1, child2);
     assert.strictEqual((rows[0] as any).height, undefined);
     assert.strictEqual((rows[0] as any).vAlign, VALIGN.TOP);
+    // Cell columns have width: SIZE.FILL but no height
+    const cellColumn = (rows[0] as any).children[0];
+    assert.strictEqual(cellColumn.width, SIZE.FILL);
+    assert.strictEqual(cellColumn.height, undefined);
   });
 });
 
