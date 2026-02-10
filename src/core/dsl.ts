@@ -209,26 +209,31 @@ export function stack(...children: SlideContent[]): StackNode {
 export interface GridProps {
   columns: number;
   gap?: GapSize;
+  /** When true, each row gets height: SIZE.FILL to share parent space equally */
+  fill?: boolean;
 }
 
 /**
  * Grid arranges children into rows of N columns.
- * This is syntactic sugar that expands to column(row(...), row(...), ...).
+ * Returns an array of rows — spread into a container column:
  *
  * @example
  * ```typescript
- * // 4-column grid of icons
- * grid(4, ...icons.map(path => image(path)))
+ * // 4-column grid of icons (intrinsic height)
+ * column(...grid(4, ...icons.map(path => image(path))))
  *
- * // With gap control
- * grid({ columns: 3, gap: GAP.TIGHT }, ...cards)
+ * // Fill available space equally
+ * column({ height: SIZE.FILL },
+ *   ...grid({ columns: 5, fill: true }, ...images),
+ * )
  * ```
  */
-export function grid(props: GridProps, ...children: SlideContent[]): ColumnNode;
-export function grid(columns: number, ...children: SlideContent[]): ColumnNode;
-export function grid(...args: any[]): ColumnNode {
+export function grid(props: GridProps, ...children: SlideContent[]): RowNode[];
+export function grid(columns: number, ...children: SlideContent[]): RowNode[];
+export function grid(...args: any[]): RowNode[] {
   let columns: number;
   let gap: GapSize | undefined;
+  let fill = false;
   let children: SlideContent[];
 
   if (typeof args[0] === 'number') {
@@ -238,6 +243,7 @@ export function grid(...args: any[]): ColumnNode {
     const props = args[0] as GridProps;
     columns = props.columns;
     gap = props.gap;
+    fill = props.fill ?? false;
     children = args.slice(1);
   }
 
@@ -246,14 +252,27 @@ export function grid(...args: any[]): ColumnNode {
   // instead of height-based sizing (which requires definite row height).
   const cells = children.map(child => column({ width: SIZE.FILL }, child));
 
-  // Chunk cells into rows
+  // Chunk cells into rows — caller's container controls vertical spacing
   const rows: RowNode[] = [];
   for (let i = 0; i < cells.length; i += columns) {
     const rowChildren = cells.slice(i, i + columns);
-    rows.push(gap !== undefined ? row({ gap }, ...rowChildren) : row(...rowChildren));
+    if (fill) {
+      // Direct construction: vAlign undefined → CSS stretch (cells fill row height)
+      rows.push({
+        type: NODE_TYPE.ROW,
+        children: rowChildren as ElementNode[],
+        gap,
+        height: SIZE.FILL,
+        vAlign: undefined,
+        hAlign: HALIGN.LEFT,
+      });
+    } else {
+      const rowProps = gap !== undefined ? { gap } : {};
+      rows.push(Object.keys(rowProps).length > 0 ? row(rowProps, ...rowChildren) : row(...rowChildren));
+    }
   }
 
-  return gap !== undefined ? column({ gap }, ...rows) : column(...rows);
+  return rows;
 }
 
 // ============================================

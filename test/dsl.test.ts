@@ -414,75 +414,90 @@ describe('grid()', () => {
   const child5 = text('E');
   const child6 = text('F');
 
-  test('returns ColumnNode', () => {
-    const node = grid(2, child1, child2);
-    assert.strictEqual(node.type, NODE_TYPE.COLUMN);
+  test('returns array of RowNodes', () => {
+    const rows = grid(2, child1, child2);
+    assert.ok(Array.isArray(rows));
+    assert.strictEqual(rows.length, 1);
+    assert.strictEqual(rows[0].type, NODE_TYPE.ROW);
   });
 
   test('chunks children into rows (2 columns, 4 children = 2 rows)', () => {
-    const node = grid(2, child1, child2, child3, child4);
-    assert.strictEqual(node.children.length, 2);
+    const rows = grid(2, child1, child2, child3, child4);
+    assert.strictEqual(rows.length, 2);
     // First row has 2 children
-    assert.strictEqual(node.children[0].type, NODE_TYPE.ROW);
-    assert.strictEqual((node.children[0] as any).children.length, 2);
+    assert.strictEqual(rows[0].type, NODE_TYPE.ROW);
+    assert.strictEqual((rows[0] as any).children.length, 2);
     // Second row has 2 children
-    assert.strictEqual(node.children[1].type, NODE_TYPE.ROW);
-    assert.strictEqual((node.children[1] as any).children.length, 2);
+    assert.strictEqual(rows[1].type, NODE_TYPE.ROW);
+    assert.strictEqual((rows[1] as any).children.length, 2);
   });
 
   test('chunks children into rows (3 columns, 5 children = 2 rows, last row partial)', () => {
-    const node = grid(3, child1, child2, child3, child4, child5);
-    assert.strictEqual(node.children.length, 2);
+    const rows = grid(3, child1, child2, child3, child4, child5);
+    assert.strictEqual(rows.length, 2);
     // First row has 3 children
-    assert.strictEqual((node.children[0] as any).children.length, 3);
+    assert.strictEqual((rows[0] as any).children.length, 3);
     // Second row has 2 children (partial)
-    assert.strictEqual((node.children[1] as any).children.length, 2);
+    assert.strictEqual((rows[1] as any).children.length, 2);
   });
 
   test('accepts props object with columns', () => {
-    const node = grid({ columns: 2 }, child1, child2, child3, child4);
-    assert.strictEqual(node.children.length, 2);
+    const rows = grid({ columns: 2 }, child1, child2, child3, child4);
+    assert.strictEqual(rows.length, 2);
   });
 
-  test('applies gap to both rows and column when specified', () => {
-    const node = grid({ columns: 2, gap: GAP.TIGHT }, child1, child2, child3, child4);
-    assert.strictEqual(node.gap, GAP.TIGHT);
-    assert.strictEqual((node.children[0] as any).gap, GAP.TIGHT);
+  test('applies gap to rows when specified', () => {
+    const rows = grid({ columns: 2, gap: GAP.TIGHT }, child1, child2, child3, child4);
+    assert.strictEqual((rows[0] as any).gap, GAP.TIGHT);
   });
 
   test('does not apply gap when not specified', () => {
-    const node = grid(2, child1, child2);
-    assert.strictEqual(node.gap, undefined);
-    assert.strictEqual((node.children[0] as any).gap, undefined);
+    const rows = grid(2, child1, child2);
+    assert.strictEqual((rows[0] as any).gap, undefined);
   });
 
   test('handles single row (columns >= children)', () => {
-    const node = grid(4, child1, child2);
-    assert.strictEqual(node.children.length, 1);
-    assert.strictEqual((node.children[0] as any).children.length, 2);
+    const rows = grid(4, child1, child2);
+    assert.strictEqual(rows.length, 1);
+    assert.strictEqual((rows[0] as any).children.length, 2);
   });
 
   test('handles empty children', () => {
-    const node = grid(2);
-    assert.strictEqual(node.children.length, 0);
+    const rows = grid(2);
+    assert.strictEqual(rows.length, 0);
   });
 
   test('handles single child', () => {
-    const node = grid(3, child1);
-    assert.strictEqual(node.children.length, 1);
-    assert.strictEqual((node.children[0] as any).children.length, 1);
+    const rows = grid(3, child1);
+    assert.strictEqual(rows.length, 1);
+    assert.strictEqual((rows[0] as any).children.length, 1);
   });
 
   test('preserves child order (each wrapped in column cell)', () => {
-    const node = grid(2, child1, child2, child3, child4);
-    const row1 = node.children[0] as any;
-    const row2 = node.children[1] as any;
+    const rows = grid(2, child1, child2, child3, child4);
+    const row1 = rows[0] as any;
+    const row2 = rows[1] as any;
     // Grid wraps each child in column({ width: SIZE.FILL }) for equal-width cells
     assert.strictEqual(row1.children[0].type, 'column');
     assert.strictEqual(row1.children[0].children[0], child1);
     assert.strictEqual(row1.children[1].children[0], child2);
     assert.strictEqual(row2.children[0].children[0], child3);
     assert.strictEqual(row2.children[1].children[0], child4);
+  });
+
+  test('fill: true sets height: SIZE.FILL and vAlign: undefined (stretch) on each row', () => {
+    const rows = grid({ columns: 2, fill: true }, child1, child2, child3, child4);
+    assert.strictEqual((rows[0] as any).height, SIZE.FILL);
+    assert.strictEqual((rows[1] as any).height, SIZE.FILL);
+    // vAlign undefined → CSS align-items: stretch (cells fill row height)
+    assert.strictEqual((rows[0] as any).vAlign, undefined);
+    assert.strictEqual((rows[1] as any).vAlign, undefined);
+  });
+
+  test('fill: false (default) does not set height on rows and uses default vAlign', () => {
+    const rows = grid(2, child1, child2);
+    assert.strictEqual((rows[0] as any).height, undefined);
+    assert.strictEqual((rows[0] as any).vAlign, VALIGN.TOP);
   });
 });
 
