@@ -204,11 +204,7 @@ export class Presentation {
             width: bounds.x + bounds.w,   // Absolute right edge
             height: bounds.y + bounds.h,  // Absolute bottom edge (excludes footer)
           });
-          const result = validator.validate(positioned);
-          if (result.overflows.length > 0 || result.boundsEscapes.length > 0) {
-            log.pptx._('WARNING: Slide %d has layout issues: %d overflows, %d bounds escapes',
-              slideIndex + 1, result.overflows.length, result.boundsEscapes.length);
-          }
+          validator.validateOrThrow(positioned, slideIndex);
         } catch (error) {
           if (error instanceof Error && !error.message.startsWith('Slide ')) {
             error.message = `Slide ${slideIndex + 1}: ${error.message}`;
