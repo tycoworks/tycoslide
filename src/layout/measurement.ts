@@ -2,6 +2,9 @@
 // Browser-based measurement using Playwright
 // The browser is the single source of truth for all layout positions.
 
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { chromium, type Browser, type Page } from 'playwright';
 import type { Theme } from '../core/types.js';
 import type { ElementNode } from '../core/nodes.js';
@@ -72,15 +75,7 @@ export class LayoutMeasurer {
     // Generate layout HTML with CSS flexbox structure
     const { html, nodeIds } = generateLayoutHTML(tree, bounds, theme, this.fontNormalRatios);
 
-    // Debug: save HTML to file if DEBUG_HTML env var is set
-    if (process.env.DEBUG_HTML) {
-      const fs = await import('fs');
-      const counter = (global as any).__debugHtmlCounter ?? 0;
-      (global as any).__debugHtmlCounter = counter + 1;
-      const path = `${process.env.DEBUG_HTML.replace('.html', '')}-${counter}.html`;
-      fs.writeFileSync(path, html);
-      console.log(`DEBUG: Saved measurement HTML to ${path}`);
-    }
+    if (process.env.DEBUG_HTML) this.saveDebugHtml(html);
 
     // Load HTML and wait for fonts
     await this.page.setContent(html);
@@ -130,5 +125,19 @@ export class LayoutMeasurer {
     }
 
     return results;
+  }
+
+  /** Save debug HTML to disk.
+   *  DEBUG_HTML=1 writes to <tmpdir>/debug-N.html; DEBUG_HTML=/path/prefix writes to /path/prefix-N.html */
+  private saveDebugHtml(html: string): void {
+    const counter = (global as any).__debugHtmlCounter ?? 0;
+    (global as any).__debugHtmlCounter = counter + 1;
+    const debugHtml = process.env.DEBUG_HTML!;
+    const prefix = debugHtml === '1'
+      ? path.join(os.tmpdir(), 'debug')
+      : debugHtml.replace('.html', '');
+    const filePath = `${prefix}-${counter}.html`;
+    fs.writeFileSync(filePath, html);
+    console.log(`DEBUG: Saved measurement HTML to ${filePath}`);
   }
 }
