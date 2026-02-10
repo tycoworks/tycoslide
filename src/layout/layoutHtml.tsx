@@ -56,36 +56,31 @@ function generateNodeId(ctx: IdContext): string {
 // ============================================
 
 /** Column justify-content: how content is positioned vertically in a column */
-function vAlignToJustifyContent(vAlign: VerticalAlignment | undefined): string {
+function vAlignToJustifyContent(vAlign: VerticalAlignment): string {
   // 'safe' keyword: falls back to 'start' when content overflows the container.
   // Without 'safe', justify-content: center pushes content above the parent
   // when content is taller than available space.
   switch (vAlign) {
     case VALIGN.BOTTOM: return 'safe flex-end';
     case VALIGN.MIDDLE: return 'safe center';
-    case VALIGN.TOP:
-    default: return 'flex-start';  // Default: TOP (matches PPTX renderer)
+    case VALIGN.TOP: return 'flex-start';
   }
 }
 
-/** Row align-items: how children are sized on the cross-axis (vertically) in a row */
-function vAlignToAlignItems(vAlign: VerticalAlignment | undefined): string {
+/** Row align-items: how children are positioned on the cross-axis (vertically) in a row */
+function vAlignToAlignItems(vAlign: VerticalAlignment): string {
   switch (vAlign) {
     case VALIGN.TOP: return 'flex-start';
     case VALIGN.BOTTOM: return 'flex-end';
     case VALIGN.MIDDLE: return 'center';
-    default: return 'stretch';  // CSS default: children fill row's height.
-    // This is critical for card layouts: stacks stretch to the row's definite
-    // height (from SIZE.FILL), and images inside compress to fit.
   }
 }
 
-function hAlignToCSS(hAlign: HorizontalAlignment | undefined): string {
+function hAlignToCSS(hAlign: HorizontalAlignment): string {
   switch (hAlign) {
     case HALIGN.RIGHT: return 'flex-end';
     case HALIGN.CENTER: return 'center';
-    case HALIGN.LEFT:
-    default: return 'stretch';  // Default: stretch for accurate width measurement (LEFT behavior with width:100%)
+    case HALIGN.LEFT: return 'stretch';  // stretch for accurate width measurement (LEFT behavior with width:100%)
   }
 }
 
@@ -130,16 +125,11 @@ function flexItemStyles(
 
   if (typeof crossSize === 'number') {
     styles.push(`${crossProp}: ${inToPx(crossSize)}px`);
-  } else if (crossSize === SIZE.FILL) {
-    // SIZE.FILL on cross-axis: explicitly fill parent's cross dimension.
-    // In rows: height: 100% fills the row height. In columns: width: 100% fills column width.
+  } else {
+    // SIZE.FILL or undefined: fill parent's cross dimension (100%).
+    // In rows: height: 100% makes containers match the tallest sibling.
+    // In columns: width: 100% prevents shrink-to-content from align-items.
     styles.push(`${crossProp}: 100%`);
-  } else if (!isInRow && crossSize === undefined) {
-    // Containers in column parents need definite width for internal layout.
-    // Without this, align-items: center on the parent column causes containers
-    // to shrink to content width, breaking flex children (e.g., grid cells with flex: 1 1 0).
-    // This matches text elements which always get width: 100%.
-    styles.push('width: 100%');
   }
 
   return styles.join('; ');
@@ -241,8 +231,8 @@ interface LayoutContainerProps {
   width?: number | SizeValue;
   height?: number | SizeValue;
   gap?: GapSize;
-  vAlign?: VerticalAlignment;
-  hAlign?: HorizontalAlignment;
+  vAlign: VerticalAlignment;
+  hAlign: HorizontalAlignment;
   padding?: number;
   theme: Theme;
 }
@@ -292,8 +282,10 @@ const LayoutContainer: FC<PropsWithChildren<LayoutContainerProps>> = ({
   );
 };
 
-const LayoutStack: FC<PropsWithChildren<{ nodeId: string; parentDirection?: Direction }>> = ({
+const LayoutStack: FC<PropsWithChildren<{ nodeId: string; width?: number | SizeValue; height?: number | SizeValue; parentDirection?: Direction }>> = ({
   nodeId,
+  width,
+  height,
   parentDirection,
   children,
 }) => {
@@ -302,7 +294,7 @@ const LayoutStack: FC<PropsWithChildren<{ nodeId: string; parentDirection?: Dire
   // - Row parent: flex: 1 1 0 (share width equally), stretch for height
   // - Column parent: intrinsic height (content-sized), width: 100%
   // minmax(0, 1fr) allows grid tracks to shrink below content size
-  const itemStyles = flexItemStyles(undefined, undefined, parentDirection);
+  const itemStyles = flexItemStyles(width, height, parentDirection);
   const styles = [
     'position: relative',
     'display: grid',
@@ -334,7 +326,7 @@ interface LayoutTextProps {
   content: TextContent;
   style: TextStyle;
   theme: Theme;
-  hAlign?: HorizontalAlignment;
+  hAlign: HorizontalAlignment;
   lineHeightMultiplier?: number;
   fontNormalRatios?: FontNormalRatios;
 }
@@ -567,8 +559,8 @@ function getTableCellNodes(node: TableNode): TextNode[][] {
           type: NODE_TYPE.TEXT,
           content: cell.content,
           style,
-          hAlign: cell.hAlign ?? node.style?.hAlign,
-          vAlign: cell.vAlign ?? node.style?.vAlign,
+          hAlign: cell.hAlign ?? node.style?.hAlign ?? HALIGN.LEFT,
+          vAlign: cell.vAlign ?? node.style?.vAlign ?? VALIGN.TOP,
         };
         return textNode;
       })
@@ -654,7 +646,7 @@ function nodeToJsx(
     case NODE_TYPE.STACK: {
       const stackNode = node as StackNode;
       return (
-        <LayoutStack nodeId={nodeId} parentDirection={parentDirection}>
+        <LayoutStack nodeId={nodeId} width={stackNode.width} height={stackNode.height} parentDirection={parentDirection}>
           {stackNode.children.map((child) => (
             <LayoutStackChild>
               {nodeToJsx(child, theme, nodeIds, idCtx, DIRECTION.COLUMN, fontNormalRatios)}

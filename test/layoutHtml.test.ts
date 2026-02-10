@@ -298,6 +298,26 @@ describe('HTML Measurement Generation', () => {
       assert.ok(html.includes('minmax(0, 1fr)'), 'Stack grid should use minmax(0, 1fr) not plain 1fr');
     });
 
+    test('container in row gets height: 100% (cross-axis fill)', () => {
+      // Containers in rows default to height: 100% so they match the tallest sibling.
+      // This is the key behavior that makes row(card(), card(), card()) work —
+      // all cards stretch to equal height without explicit SIZE.FILL.
+      const node = row(column(text('A')), column(text('B')));
+      const { html } = generateLayoutHTML(node, bounds, mockTheme);
+      const columnMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
+      assert.ok(columnMatch, 'Should find the nested column div');
+      assert.ok(columnMatch![1].includes('height: 100%'), 'Column in row should get height: 100% (cross-axis fill)');
+    });
+
+    test('stack in row gets height: 100% (card equal height)', () => {
+      // Stacks (used by card component) in rows need height: 100% to match siblings.
+      const node = row(stack(rectangle(), column(text('Card'))));
+      const { html } = generateLayoutHTML(node, bounds, mockTheme);
+      const stackMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
+      assert.ok(stackMatch, 'Should find the stack div');
+      assert.ok(stackMatch![1].includes('height: 100%'), 'Stack in row should get height: 100%');
+    });
+
     test('stack child (grid item) is flex container with min-height: 0 and overflow: hidden', () => {
       // Grid items inside stack must be flex containers so children fill the grid cell.
       // This works because the height chain is definite: SIZE.FILL → stretch → grid → here.

@@ -46,8 +46,8 @@ export interface TextNode {
   content: TextContent;
   style?: TextStyleName;
   color?: string;
-  hAlign?: HorizontalAlignment;
-  vAlign?: VerticalAlignment;
+  hAlign: HorizontalAlignment;
+  vAlign: VerticalAlignment;
   lineHeightMultiplier?: number;  // Overrides style's lineHeightMultiplier
 }
 
@@ -70,7 +70,7 @@ export interface SlideNumberNode {
   type: typeof NODE_TYPE.SLIDE_NUMBER;
   style?: TextStyleName;
   color?: string;
-  hAlign?: HorizontalAlignment;
+  hAlign: HorizontalAlignment;
 }
 
 // ============================================
@@ -122,8 +122,8 @@ export interface RowNode {
   width?: number | SizeValue;   // inches (number) or SIZE.FILL to take remaining space (when inside another Row)
   height?: number | SizeValue;  // inches (number) or SIZE.FILL to fill available height
   gap?: GapSize;
-  vAlign?: VerticalAlignment;
-  hAlign?: HorizontalAlignment; // justify-content: flex-start (left), center, flex-end (right)
+  vAlign: VerticalAlignment;
+  hAlign: HorizontalAlignment;  // justify-content: flex-start (left), center, flex-end (right)
   padding?: number;             // inches - internal padding on all sides
 }
 
@@ -133,8 +133,8 @@ export interface ColumnNode {
   width?: number | SizeValue;   // inches (number) or SIZE.FILL to take remaining space (when inside Row)
   height?: number | SizeValue;  // inches (number) or SIZE.FILL to take remaining space (when inside Column)
   gap?: GapSize;
-  vAlign?: VerticalAlignment;
-  hAlign?: HorizontalAlignment;
+  vAlign: VerticalAlignment;
+  hAlign: HorizontalAlignment;
   padding?: number;             // inches - internal padding on all sides
 }
 
@@ -142,6 +142,8 @@ export interface ColumnNode {
 export interface StackNode {
   type: typeof NODE_TYPE.STACK;
   children: ElementNode[];  // Post-expansion: [0] first (back), [n-1] last (front)
+  width?: number | SizeValue;   // inches or SIZE.FILL
+  height?: number | SizeValue;  // inches or SIZE.FILL
 }
 
 // ============================================

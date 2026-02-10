@@ -103,7 +103,7 @@ export function slideNumber(props?: { style?: TextStyleName; color?: string; hAl
     type: NODE_TYPE.SLIDE_NUMBER,
     style: props?.style,
     color: props?.color,
-    hAlign: props?.hAlign,
+    hAlign: props?.hAlign ?? HALIGN.RIGHT,
   };
 }
 

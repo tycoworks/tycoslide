@@ -460,7 +460,7 @@ export class PptxRenderer implements Renderer {
       fontFace: font.name,
       fontSize: style.fontSize,
       color: slideNumNode.color ?? style.color ?? theme.colors.textMuted,
-      align: slideNumNode.hAlign ?? HALIGN.RIGHT,
+      align: slideNumNode.hAlign,
       valign: VALIGN.MIDDLE,
       margin: 0,
     };

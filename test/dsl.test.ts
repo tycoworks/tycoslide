@@ -192,7 +192,7 @@ describe('slideNumber()', () => {
     const node = slideNumber();
     assert.strictEqual(node.style, undefined);
     assert.strictEqual(node.color, undefined);
-    assert.strictEqual(node.hAlign, undefined);
+    assert.strictEqual(node.hAlign, HALIGN.RIGHT);
   });
 
   test('applies style prop', () => {
