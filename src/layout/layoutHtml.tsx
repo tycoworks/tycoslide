@@ -329,6 +329,7 @@ interface LayoutTextProps {
   hAlign: HorizontalAlignment;
   lineHeightMultiplier?: number;
   fontNormalRatios?: FontNormalRatios;
+  parentDirection?: Direction;
 }
 
 const LayoutText: FC<LayoutTextProps> = ({
@@ -339,6 +340,7 @@ const LayoutText: FC<LayoutTextProps> = ({
   hAlign,
   lineHeightMultiplier,
   fontNormalRatios,
+  parentDirection,
 }) => {
   const runs = normalizeContent(content);
   const hasBullets = runs.some(r => r.bullet);
@@ -359,6 +361,8 @@ const LayoutText: FC<LayoutTextProps> = ({
 
   const textAlign = hAlign === HALIGN.RIGHT ? 'right' : hAlign === HALIGN.CENTER ? 'center' : 'left';
 
+  const isInRow = parentDirection === DIRECTION.ROW;
+
   const containerStyle = [
     `font-family: '${defaultFont.name}'`,
     `font-size: ${fontSizePx}px`,
@@ -366,8 +370,12 @@ const LayoutText: FC<LayoutTextProps> = ({
     `text-align: ${textAlign}`,
     'white-space: pre-wrap',
     'word-wrap: break-word',
-    'width: 100%',  // Fill container width (prevents centering in flex parent)
-    'flex-shrink: 0',  // Incompressible: text should not shrink below measured height
+    // Direction-aware sizing:
+    // In a column: fill width (cross-axis), don't shrink height (main-axis)
+    // In a row: share width equally (main-axis), allow wrapping within allocated space
+    ...(isInRow
+      ? ['flex: 1 1 0', 'min-width: 0']
+      : ['width: 100%', 'flex-shrink: 0']),
   ].join('; ');
 
   return (
@@ -599,6 +607,7 @@ function nodeToJsx(
           hAlign={textNode.hAlign}
           lineHeightMultiplier={textNode.lineHeightMultiplier}
           fontNormalRatios={fontNormalRatios}
+          parentDirection={parentDirection}
         />
       );
     }

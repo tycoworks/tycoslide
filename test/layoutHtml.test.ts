@@ -343,10 +343,22 @@ describe('HTML Measurement Generation', () => {
       assert.ok(html.includes('min-width: 0'), 'Image in row should have min-width: 0');
     });
 
-    test('text is incompressible (flex-shrink: 0)', () => {
+    test('text in column is incompressible (width: 100%, flex-shrink: 0)', () => {
       const node = column(text('Do not compress me'));
       const { html } = generateLayoutHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('flex-shrink: 0'), 'Text should have flex-shrink: 0 (incompressible)');
+      assert.ok(html.includes('flex-shrink: 0'), 'Text in column should have flex-shrink: 0 (incompressible height)');
+      assert.ok(html.includes('width: 100%'), 'Text in column should have width: 100%');
+    });
+
+    test('text in row shares width (flex: 1 1 0, min-width: 0)', () => {
+      const node = row(image('./test/fixtures/test.png'), text('Description beside image'));
+      const { html } = generateLayoutHTML(node, bounds, mockTheme);
+      // Text in a row should share width, not claim 100%
+      const textMatch = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
+      assert.ok(textMatch, 'Should find the text div');
+      assert.ok(textMatch![1].includes('flex: 1 1 0'), 'Text in row should use flex: 1 1 0 to share width');
+      assert.ok(textMatch![1].includes('min-width: 0'), 'Text in row should have min-width: 0 to allow shrinking');
+      assert.ok(!textMatch![1].includes('width: 100%'), 'Text in row should NOT have width: 100%');
     });
 
     test('container in column has min-height: 0 (allows compression)', () => {
