@@ -68,10 +68,12 @@ function vAlignToJustifyContent(vAlign: VerticalAlignment): string {
   }
 }
 
-/** Row align-items: how children are positioned on the cross-axis (vertically) in a row */
+/** Row align-items: how children are positioned on the cross-axis (vertically) in a row.
+ *  TOP maps to 'stretch' so children fill the row height natively (equal-height cards).
+ *  MIDDLE/BOTTOM use center/flex-end — children keep intrinsic height and get positioned. */
 function vAlignToAlignItems(vAlign: VerticalAlignment): string {
   switch (vAlign) {
-    case VALIGN.TOP: return 'flex-start';
+    case VALIGN.TOP: return 'stretch';
     case VALIGN.BOTTOM: return 'flex-end';
     case VALIGN.MIDDLE: return 'center';
   }
@@ -126,12 +128,15 @@ function flexItemStyles(
 
   if (typeof crossSize === 'number') {
     styles.push(`${crossProp}: ${inToPx(crossSize)}px`);
-  } else {
-    // SIZE.FILL or undefined: fill parent's cross dimension (100%).
-    // In rows: height: 100% makes containers match the tallest sibling.
+  } else if (crossSize === SIZE.FILL) {
+    // Explicit SIZE.FILL: always fill parent's cross dimension.
+    styles.push(`${crossProp}: 100%`);
+  } else if (!isInRow) {
     // In columns: width: 100% prevents shrink-to-content from align-items.
     styles.push(`${crossProp}: 100%`);
   }
+  // In rows with undefined cross-size: omit height entirely.
+  // align-items: stretch (VALIGN.TOP) fills natively; center/flex-end position at intrinsic height.
 
   return styles.join('; ');
 }

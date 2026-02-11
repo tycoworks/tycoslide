@@ -266,15 +266,14 @@ describe('HTML Measurement Generation', () => {
   });
 
   describe('Cross-axis stretch (containers fill parent height in rows)', () => {
-    test('row defaults to align-items: flex-start (vAlign: TOP)', () => {
-      // Row defaults to VALIGN.TOP → align-items: flex-start.
-      // Card layouts use SIZE.FILL on children for equal height instead of CSS stretch.
+    test('row defaults to align-items: stretch (vAlign: TOP)', () => {
+      // Row defaults to VALIGN.TOP → align-items: stretch.
+      // Children fill row height natively — no explicit height: 100% needed.
       const node = row(column(text('Card content')));
       const { html } = generateLayoutHTML(node, bounds, mockTheme);
-      // Find the row element's style (first data-node-id)
       const rowMatch = html.match(/data-node-id="node-1"[^>]*style="([^"]*)"/);
       assert.ok(rowMatch, 'Should find the row div');
-      assert.ok(rowMatch![1].includes('align-items: flex-start'), 'Row should default to align-items: flex-start');
+      assert.ok(rowMatch![1].includes('align-items: stretch'), 'Row should default to align-items: stretch');
     });
 
     test('row with vAlign MIDDLE uses align-items: center', () => {
@@ -302,24 +301,23 @@ describe('HTML Measurement Generation', () => {
       assert.ok(html.includes('minmax(0, 1fr)'), 'Stack grid should use minmax(0, 1fr) not plain 1fr');
     });
 
-    test('container in row gets height: 100% (cross-axis fill)', () => {
-      // Containers in rows default to height: 100% so they match the tallest sibling.
-      // This is the key behavior that makes row(card(), card(), card()) work —
-      // all cards stretch to equal height without explicit SIZE.FILL.
+    test('container in row omits height (stretch handles cross-axis fill)', () => {
+      // align-items: stretch on the row makes children fill the row height natively.
+      // No explicit height: 100% needed — CSS stretch does the work.
       const node = row(column(text('A')), column(text('B')));
       const { html } = generateLayoutHTML(node, bounds, mockTheme);
       const columnMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
       assert.ok(columnMatch, 'Should find the nested column div');
-      assert.ok(columnMatch![1].includes('height: 100%'), 'Column in row should get height: 100% (cross-axis fill)');
+      assert.ok(!columnMatch![1].includes('height: 100%'), 'Column in row should not have height: 100% (stretch handles it)');
     });
 
-    test('stack in row gets height: 100% (card equal height)', () => {
-      // Stacks (used by card component) in rows need height: 100% to match siblings.
+    test('stack in row omits height (stretch handles card equal height)', () => {
+      // Stacks (used by card component) in rows rely on align-items: stretch for equal height.
       const node = row(stack(rectangle(), column(text('Card'))));
       const { html } = generateLayoutHTML(node, bounds, mockTheme);
       const stackMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
       assert.ok(stackMatch, 'Should find the stack div');
-      assert.ok(stackMatch![1].includes('height: 100%'), 'Stack in row should get height: 100%');
+      assert.ok(!stackMatch![1].includes('height: 100%'), 'Stack in row should not have height: 100% (stretch handles it)');
     });
 
     test('stack child (grid item) is flex container with min-height: 0 and overflow: hidden', () => {
