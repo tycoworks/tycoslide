@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { cardComponent } from '../src/components/card.js';
+import { card } from '../src/components/card.js';
 import { componentRegistry } from '../src/core/componentRegistry.js';
 import { mockTheme } from './mocks.js';
 
@@ -13,15 +13,15 @@ describe('Card Component', () => {
     });
   });
 
-  describe('cardComponent DSL function', () => {
+  describe('card DSL function', () => {
     it('should create a component node with correct type', () => {
-      const node = cardComponent({ title: 'Test' });
+      const node = card({ title: 'Test' });
       assert.strictEqual(node.type, 'component');
       assert.strictEqual(node.componentName, 'card');
     });
 
     it('should pass props correctly', () => {
-      const node = cardComponent({
+      const node = card({
         title: 'My Title',
         description: 'My description',
         backgroundColor: '#FF0000',
@@ -34,112 +34,167 @@ describe('Card Component', () => {
 
   describe('expansion', () => {
     it('should expand to stack with background and content', () => {
-      const node = cardComponent({ title: 'Test' });
+      const node = card({ title: 'Test' });
       const expanded = componentRegistry.expand(node, { theme });
 
       // With background (default): stack(rectangle, column)
       assert.strictEqual(expanded.type, 'stack');
-      assert.strictEqual(expanded.children.length, 2);
-      assert.strictEqual(expanded.children[0].type, 'rectangle'); // background
-      assert.strictEqual(expanded.children[1].type, 'column');    // content
+      if (expanded.type === 'stack') {
+        assert.strictEqual(expanded.children.length, 2);
+        assert.strictEqual(expanded.children[0].type, 'rectangle');
+        assert.strictEqual(expanded.children[1].type, 'column');
+      }
     });
 
     it('should expand to column only when background=false', () => {
-      const node = cardComponent({ title: 'Test', background: false });
+      const node = card({ title: 'Test', background: false });
       const expanded = componentRegistry.expand(node, { theme });
 
-      // No background: just column
       assert.strictEqual(expanded.type, 'column');
     });
 
     it('should build children from title prop', () => {
-      const node = cardComponent({ title: 'My Title' });
+      const node = card({ title: 'My Title' });
       const expanded = componentRegistry.expand(node, { theme });
 
-      const contentColumn = expanded.children[1];
-      assert.strictEqual(contentColumn.children.length, 1);
-      assert.strictEqual(contentColumn.children[0].type, 'text');
-      assert.strictEqual(contentColumn.children[0].content, 'My Title');
+      assert.strictEqual(expanded.type, 'stack');
+      if (expanded.type === 'stack') {
+        const contentColumn = expanded.children[1];
+        assert.strictEqual(contentColumn.type, 'column');
+        if (contentColumn.type === 'column') {
+          assert.strictEqual(contentColumn.children.length, 1);
+          assert.strictEqual(contentColumn.children[0].type, 'text');
+          if (contentColumn.children[0].type === 'text') {
+            assert.strictEqual(contentColumn.children[0].content, 'My Title');
+          }
+        }
+      }
     });
 
     it('should build children from title and description props', () => {
-      const node = cardComponent({
+      const node = card({
         title: 'Title',
         description: 'Description',
       });
       const expanded = componentRegistry.expand(node, { theme });
 
-      const contentColumn = expanded.children[1];
-      assert.strictEqual(contentColumn.children.length, 2);
-      assert.strictEqual(contentColumn.children[0].content, 'Title');
-      assert.strictEqual(contentColumn.children[1].content, 'Description');
+      assert.strictEqual(expanded.type, 'stack');
+      if (expanded.type === 'stack') {
+        const contentColumn = expanded.children[1];
+        assert.strictEqual(contentColumn.type, 'column');
+        if (contentColumn.type === 'column') {
+          assert.strictEqual(contentColumn.children.length, 2);
+          if (contentColumn.children[0].type === 'text') {
+            assert.strictEqual(contentColumn.children[0].content, 'Title');
+          }
+          if (contentColumn.children[1].type === 'text') {
+            assert.strictEqual(contentColumn.children[1].content, 'Description');
+          }
+        }
+      }
     });
 
     it('should return empty column when no content', () => {
-      const node = cardComponent({});
+      const node = card({});
       const expanded = componentRegistry.expand(node, { theme });
 
-      const contentColumn = expanded.children[1];
-      assert.strictEqual(contentColumn.children.length, 0);
+      assert.strictEqual(expanded.type, 'stack');
+      if (expanded.type === 'stack') {
+        const contentColumn = expanded.children[1];
+        assert.strictEqual(contentColumn.type, 'column');
+        if (contentColumn.type === 'column') {
+          assert.strictEqual(contentColumn.children.length, 0);
+        }
+      }
     });
   });
 
   describe('styling options', () => {
     it('should apply background color', () => {
-      const node = cardComponent({
+      const node = card({
         title: 'Test',
         backgroundColor: '#AABBCC',
       });
       const expanded = componentRegistry.expand(node, { theme });
 
-      const rect = expanded.children[0];
-      assert.strictEqual(rect.fill?.color, '#AABBCC');
+      assert.strictEqual(expanded.type, 'stack');
+      if (expanded.type === 'stack') {
+        const rect = expanded.children[0];
+        assert.strictEqual(rect.type, 'rectangle');
+        if (rect.type === 'rectangle') {
+          assert.strictEqual(rect.fill?.color, '#AABBCC');
+        }
+      }
     });
 
     it('should apply background opacity', () => {
-      const node = cardComponent({
+      const node = card({
         title: 'Test',
         backgroundOpacity: 50,
       });
       const expanded = componentRegistry.expand(node, { theme });
 
-      const rect = expanded.children[0];
-      assert.strictEqual(rect.fill?.opacity, 50);
+      assert.strictEqual(expanded.type, 'stack');
+      if (expanded.type === 'stack') {
+        const rect = expanded.children[0];
+        assert.strictEqual(rect.type, 'rectangle');
+        if (rect.type === 'rectangle') {
+          assert.strictEqual(rect.fill?.opacity, 50);
+        }
+      }
     });
 
     it('should apply border properties', () => {
-      const node = cardComponent({
+      const node = card({
         title: 'Test',
         borderColor: '#123456',
         borderWidth: 2,
       });
       const expanded = componentRegistry.expand(node, { theme });
 
-      const rect = expanded.children[0];
-      assert.strictEqual(rect.border?.color, '#123456');
-      assert.strictEqual(rect.border?.width, 2);
+      assert.strictEqual(expanded.type, 'stack');
+      if (expanded.type === 'stack') {
+        const rect = expanded.children[0];
+        assert.strictEqual(rect.type, 'rectangle');
+        if (rect.type === 'rectangle') {
+          assert.strictEqual(rect.border?.color, '#123456');
+          assert.strictEqual(rect.border?.width, 2);
+        }
+      }
     });
 
     it('should apply corner radius', () => {
-      const node = cardComponent({
+      const node = card({
         title: 'Test',
         cornerRadius: 0.25,
       });
       const expanded = componentRegistry.expand(node, { theme });
 
-      const rect = expanded.children[0];
-      assert.strictEqual(rect.cornerRadius, 0.25);
+      assert.strictEqual(expanded.type, 'stack');
+      if (expanded.type === 'stack') {
+        const rect = expanded.children[0];
+        assert.strictEqual(rect.type, 'rectangle');
+        if (rect.type === 'rectangle') {
+          assert.strictEqual(rect.cornerRadius, 0.25);
+        }
+      }
     });
 
     it('should apply padding to content column', () => {
-      const node = cardComponent({
+      const node = card({
         title: 'Test',
         padding: 0.5,
       });
       const expanded = componentRegistry.expand(node, { theme });
 
-      const contentColumn = expanded.children[1];
-      assert.strictEqual(contentColumn.padding, 0.5);
+      assert.strictEqual(expanded.type, 'stack');
+      if (expanded.type === 'stack') {
+        const contentColumn = expanded.children[1];
+        assert.strictEqual(contentColumn.type, 'column');
+        if (contentColumn.type === 'column') {
+          assert.strictEqual(contentColumn.padding, 0.5);
+        }
+      }
     });
   });
 });

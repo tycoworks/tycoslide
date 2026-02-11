@@ -15,10 +15,15 @@ export {
   type SubgraphOptions,
 } from './diagram.js';
 
-
 export {
-  cardComponent,
+  card,
   CARD_COMPONENT,
-  type CardComponentProps,
+  type CardProps,
 } from './card.js';
 
+export {
+  markdown,
+  MARKDOWN_COMPONENT,
+  type MarkdownProps,
+  type MarkdownStyleProps,
+} from './markdown/index.js';

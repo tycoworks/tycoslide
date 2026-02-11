@@ -11,9 +11,9 @@ import {
   row,
   column,
   grid,
-  card,
   table,
 } from '../src/core/dsl.js';
+import { card } from '../src/components/card.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import {
   TEXT_STYLE,

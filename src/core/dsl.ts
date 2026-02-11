@@ -17,7 +17,6 @@ import {
   type RectangleBorder,
   type ElementNode,
   type SlideContent,
-  type ComponentNode,
 } from './nodes.js';
 import type {
   TextContent,
@@ -296,39 +295,6 @@ export function rectangle(props?: RectangleProps): RectangleNode {
     fill: props?.fill,
     border: props?.border,
     cornerRadius: props?.cornerRadius,
-  };
-}
-
-// ============================================
-// CARD
-// ============================================
-
-export interface CardProps {
-  image?: string;
-  icon?: string;
-  title?: string;
-  titleStyle?: TextStyleName;
-  titleColor?: string;
-  description?: string;
-  descriptionStyle?: TextStyleName;
-  descriptionColor?: string;
-  background?: boolean;          // Whether to show background (default: true)
-  backgroundColor?: string;
-  backgroundOpacity?: number;
-  borderColor?: string;
-  borderWidth?: number;
-  cornerRadius?: number;
-  padding?: number;
-  gap?: GapSize;
-  /** Custom children - if provided, overrides image/title/description */
-  children?: SlideContent[];
-}
-
-export function card(props: CardProps): ComponentNode<CardProps> {
-  return {
-    type: NODE_TYPE.COMPONENT,
-    componentName: 'card',
-    props,
   };
 }
 

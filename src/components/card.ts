@@ -18,7 +18,7 @@ export const CARD_COMPONENT = 'card' as const;
 // TYPES
 // ============================================
 
-export interface CardComponentProps {
+export interface CardProps {
   /** Card image (path) - displayed at top */
   image?: string;
   /** Card title text */
@@ -66,7 +66,7 @@ export interface CardComponentProps {
  * )
  * ```
  */
-function expandCard(props: CardComponentProps, context: ExpansionContext): ElementNode {
+function expandCard(props: CardProps, context: ExpansionContext): ElementNode {
   const {
     image: imagePath,
     title,
@@ -148,7 +148,7 @@ function expandCard(props: CardComponentProps, context: ExpansionContext): Eleme
  *
  * @example
  * ```typescript
- * cardComponent({
+ * card({
  *   image: 'assets/photo.png',
  *   title: 'My Card',
  *   description: 'Card description text',
@@ -156,4 +156,4 @@ function expandCard(props: CardComponentProps, context: ExpansionContext): Eleme
  * })
  * ```
  */
-export const cardComponent = defineComponent<CardComponentProps>(CARD_COMPONENT, expandCard);
+export const card = defineComponent<CardProps>(CARD_COMPONENT, expandCard);
