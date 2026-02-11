@@ -1,4 +1,5 @@
 Spacing / layouts:
+- Align - on the container or the objects?
 - Design principles
 -- Direction is opposite to container?
 -- Content rules
@@ -14,7 +15,6 @@ Core:
 - Groups
 
 Cleanup:
-- Text heights etc
 - Fixed percentages.
 - Right align bullet points
 
