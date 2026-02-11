@@ -2,11 +2,12 @@
 // Coordinates browser-based layout measurement and position tree construction.
 // The browser computes all positions via CSS flexbox in a single pass per slide.
 
-import type { ElementNode, PositionedNode, RowNode, ColumnNode, StackNode } from '../core/nodes.js';
+import type { ElementNode, PositionedNode, RowNode, ColumnNode, StackNode, TextNode } from '../core/nodes.js';
 import { NODE_TYPE } from '../core/nodes.js';
 import type { Bounds } from '../core/bounds.js';
 import type { Theme } from '../core/types.js';
 import { LayoutMeasurer } from './measurement.js';
+import { log } from '../utils/log.js';
 
 // ============================================
 // TYPES
@@ -98,7 +99,11 @@ export class LayoutPipeline {
     if (!this.measurements) {
       throw new Error('No measurements available. Call executeMeasurements() first.');
     }
-    return this.buildPositionedTree(tree, bounds);
+    const positioned = this.buildPositionedTree(tree, bounds);
+    if (process.env.DEBUG_HTML) {
+      this.debugDumpTree(positioned);
+    }
+    return positioned;
   }
 
   /**
@@ -150,5 +155,24 @@ export class LayoutPipeline {
     }
 
     return positioned;
+  }
+
+  private debugDumpTree(node: PositionedNode, indent = 0): void {
+    const pad = '  '.repeat(indent);
+    const type = node.node.type;
+    let label: string = type;
+    if (type === NODE_TYPE.TEXT) {
+      const content = (node.node as TextNode).content;
+      const preview = typeof content === 'string' ? content.substring(0, 50)
+        : Array.isArray(content) ? content.map((c: any) => typeof c === 'string' ? c : c.text).join('').substring(0, 50)
+        : '';
+      label = `TEXT "${preview}"`;
+    }
+    log.layout._(`${pad}${label}: x=${node.x.toFixed(3)} y=${node.y.toFixed(3)} w=${node.width.toFixed(3)} h=${node.height.toFixed(3)}`);
+    if (node.children) {
+      for (const child of node.children) {
+        this.debugDumpTree(child, indent + 1);
+      }
+    }
   }
 }

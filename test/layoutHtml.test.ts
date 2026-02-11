@@ -9,9 +9,13 @@ import { Bounds } from '../dist/core/bounds.js';
 import { HALIGN, VALIGN, DIRECTION, SIZE } from '../dist/core/types.js';
 import type { Theme } from '../dist/core/types.js';
 import { NODE_TYPE } from '../dist/core/nodes.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Minimal theme for testing - matches Theme interface from types.ts
-const mockFont = { name: 'Arial', path: '/fonts/Arial.ttf' };
+const mockFont = { name: 'Arial', path: path.join(__dirname, 'fixtures', 'test-font.woff2') };
 const mockFontFamily = { normal: mockFont };
 
 const mockTheme: Theme = {
@@ -336,11 +340,35 @@ describe('HTML Measurement Generation', () => {
       assert.ok(html.includes('min-height: 0'), 'Image in column should have min-height: 0');
     });
 
-    test('image in row is compressible (flex-shrink: 1, min-width: 0)', () => {
-      const node = row(image('./test/fixtures/test.png'));
+    test('image in auto-height row shares width equally (flex: 1 1 0)', () => {
+      // Row with no explicit height: image has no height anchor for aspect-ratio,
+      // so it must share space equally with siblings
+      const node = row(image('./test/fixtures/test.png'), text('Description'));
       const { html } = generateLayoutHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('flex: 0 1 auto'), 'Image should have flex-shrink: 1 (compressible)');
-      assert.ok(html.includes('min-width: 0'), 'Image in row should have min-width: 0');
+      const imageMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
+      assert.ok(imageMatch, 'Should find the image div');
+      assert.ok(imageMatch![1].includes('flex: 1 1 0'), 'Image in auto-height row should share width (flex: 1 1 0)');
+      assert.ok(imageMatch![1].includes('min-width: 0'), 'Image in auto-height row should have min-width: 0');
+    });
+
+    test('image in definite-height row uses natural aspect-ratio width (flex: 0 1 auto)', () => {
+      // Row with explicit height: height: 100% resolves, aspect-ratio derives width.
+      // Image should NOT grow to fill — it should be naturally sized.
+      const node = row({ height: 0.33 }, image('./test/fixtures/test.png'));
+      const { html } = generateLayoutHTML(node, bounds, mockTheme);
+      const imageMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
+      assert.ok(imageMatch, 'Should find the image div');
+      assert.ok(imageMatch![1].includes('flex: 0 1 auto'), 'Image in definite-height row should use natural width (flex: 0 1 auto)');
+      assert.ok(!imageMatch![1].includes('flex: 1 1 0'), 'Image in definite-height row should NOT grow to fill');
+    });
+
+    test('image in SIZE.FILL row uses natural aspect-ratio width (flex: 0 1 auto)', () => {
+      // Row with SIZE.FILL height: also definite (resolves via flex: 1 1 0 on the row itself)
+      const node = column(row({ height: SIZE.FILL }, image('./test/fixtures/test.png')));
+      const { html } = generateLayoutHTML(node, bounds, mockTheme);
+      const imageMatch = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
+      assert.ok(imageMatch, 'Should find the image div');
+      assert.ok(imageMatch![1].includes('flex: 0 1 auto'), 'Image in SIZE.FILL row should use natural width (flex: 0 1 auto)');
     });
 
     test('text in column is incompressible (width: 100%, flex-shrink: 0)', () => {

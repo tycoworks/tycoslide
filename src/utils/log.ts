@@ -26,6 +26,14 @@ export const log = {
     master: createDebug('tycoslide:pptx:master'),
     slide: createDebug('tycoslide:pptx:slide'),
   },
+
+  // Layout measurement
+  layout: {
+    _: createDebug('tycoslide:layout'),
+    font: createDebug('tycoslide:layout:font'),
+    measure: createDebug('tycoslide:layout:measure'),
+    html: createDebug('tycoslide:layout:html'),
+  },
 };
 
 // Helper to preview text content for logging

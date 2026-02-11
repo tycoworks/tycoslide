@@ -9,8 +9,9 @@ import { chromium, type Browser, type Page } from 'playwright';
 import type { Theme } from '../core/types.js';
 import type { ElementNode } from '../core/nodes.js';
 import { Bounds } from '../core/bounds.js';
-import { generateLayoutHTML, measureFontNormalRatios, type FontNormalRatios } from './layoutHtml.js';
+import { generateLayoutHTML, preloadFonts, measureFontNormalRatios, type FontNormalRatios, type FontDescriptor } from './layoutHtml.js';
 import { pxToIn } from '../utils/units.js';
+import { log } from '../utils/log.js';
 // ============================================
 // LAYOUT MEASURER
 // ============================================
@@ -24,6 +25,7 @@ export class LayoutMeasurer {
   private browser: Browser | null = null;
   private page: Page | null = null;
   private fontNormalRatios: FontNormalRatios = new Map();
+  private fontDescriptors: FontDescriptor[] = [];
 
   async launch(): Promise<void> {
     if (this.browser) {
@@ -69,7 +71,9 @@ export class LayoutMeasurer {
 
     // Ensure font metrics are measured (idempotent — only runs once per measurer lifetime)
     if (this.fontNormalRatios.size === 0) {
-      this.fontNormalRatios = await measureFontNormalRatios(this.page, theme);
+      const result = await measureFontNormalRatios(this.page, theme);
+      this.fontNormalRatios = result.ratios;
+      this.fontDescriptors = result.fonts;
     }
 
     // Generate layout HTML with CSS flexbox structure
@@ -77,9 +81,38 @@ export class LayoutMeasurer {
 
     if (process.env.DEBUG_HTML) this.saveDebugHtml(html);
 
-    // Load HTML and wait for fonts
+    // Load HTML and explicitly preload all fonts
+    // document.fonts.ready alone is unreliable — base64 fonts may not be parsed in time
     await this.page.setContent(html);
-    await this.page.evaluate(() => document.fonts.ready);
+    await preloadFonts(this.page, this.fontDescriptors);
+
+    // Verify all fonts loaded — silent fallback produces wrong measurements
+    const failedFonts = await this.page.evaluate(() => {
+      return Array.from(document.fonts)
+        .filter(f => f.status !== 'loaded')
+        .map(f => `${f.family} (${f.weight}): ${f.status}`);
+    });
+    if (failedFonts.length > 0) {
+      throw new Error(`Font verification failed — these fonts did not load: ${failedFonts.join(', ')}`);
+    }
+
+    // Diagnostic: log dimensions of all text nodes to debug measurement
+    if (process.env.DEBUG_HTML) {
+      const textDims = await this.page.evaluate(() => {
+        const results: string[] = [];
+        document.querySelectorAll('[data-node-id]').forEach(el => {
+          const div = el as HTMLElement;
+          const rect = div.getBoundingClientRect();
+          const text = div.textContent?.substring(0, 50) || '';
+          if (text.trim()) {
+            const computed = getComputedStyle(div);
+            results.push(`${div.dataset.nodeId}: ${rect.width.toFixed(1)}x${rect.height.toFixed(1)} font="${computed.fontFamily}" "${text.trim().substring(0, 40)}"`);
+          }
+        });
+        return results;
+      });
+      textDims.forEach(d => log.layout.measure('text-dim: %s', d));
+    }
 
     // Extract full positions for all nodes, relative to root
     const measurements = await this.page.evaluate(() => {
@@ -138,6 +171,6 @@ export class LayoutMeasurer {
       : debugHtml.replace('.html', '');
     const filePath = `${prefix}-${counter}.html`;
     fs.writeFileSync(filePath, html);
-    console.log(`DEBUG: Saved measurement HTML to ${filePath}`);
+    log.layout.html('saved debug HTML to %s', filePath);
   }
 }

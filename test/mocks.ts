@@ -2,16 +2,20 @@
 // Shared mock utilities for testing
 
 import * as assert from 'node:assert';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import type { Theme, TextStyle, FontFamily } from '../src/core/types.js';
 import { TEXT_STYLE } from '../src/core/types.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ============================================
 // MOCK THEME
 // ============================================
 
 const mockFontFamily: FontFamily = {
-  normal: { name: 'Arial', path: '/fonts/Arial.ttf' },
-  bold: { name: 'Arial Bold', path: '/fonts/Arial-Bold.ttf' },
+  normal: { name: 'Arial', path: path.join(__dirname, 'fixtures', 'test-font.woff2') },
+  bold: { name: 'Arial Bold', path: path.join(__dirname, 'fixtures', 'test-font-bold.woff2') },
 };
 
 const mockTextStyle: TextStyle = {

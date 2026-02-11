@@ -4,6 +4,7 @@
 // All slides are stored during add() and processed during writeFile().
 // This enables batching all text measurements in a single browser call.
 
+import path from 'path';
 import type { Theme } from './core/types.js';
 import type { ElementNode, PositionedNode, SlideContent } from './core/nodes.js';
 import { Bounds } from './core/bounds.js';
@@ -103,11 +104,14 @@ export class Presentation {
    * All slides are processed here with browser-based layout.
    */
   async writeFile(fileName: string, options: { includeNotes?: boolean } = {}): Promise<void> {
+    const resolvedPath = path.resolve(fileName);
+    log.pptx._('writing to: %s', resolvedPath);
+
     if (this.deferredSlides.length > 0) {
       await this.processDeferredSlides();
     }
 
-    return this.renderer.writeFile(fileName, options);
+    return this.renderer.writeFile(resolvedPath, options);
   }
 
   /**

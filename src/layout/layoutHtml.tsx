@@ -1,6 +1,8 @@
 // HTML Measurement Generator
 // Generates HTML that mirrors TycoSlide layout structure for accurate browser measurement
 
+import fs from 'fs';
+import path from 'path';
 import { renderToString } from 'hono/jsx/dom/server';
 import type { FC, PropsWithChildren } from 'hono/jsx';
 import type { Page } from 'playwright';
@@ -12,7 +14,6 @@ import type { Bounds } from '../core/bounds.js';
 import { normalizeContent, fontWeightToNumeric, resolveLineHeight } from '../utils/text.js';
 import { readImageDimensions } from '../utils/image.js';
 import { inToPx, ptToPx, SCREEN_DPI } from '../utils/units.js';
-import { escapeHtml } from '../utils/html.js';
 import { resolveGap } from '../utils/node.js';
 
 // ============================================
@@ -139,8 +140,23 @@ function flexItemStyles(
 // FONT FACE CSS
 // ============================================
 
-export function generateFontFaceCSS(theme: Theme): string {
+/** Font descriptor for explicit preloading */
+export interface FontDescriptor {
+  name: string;
+  weight: number;
+}
+
+/** MIME type and CSS format() hint for supported font formats */
+const FONT_FORMATS: Record<string, { mime: string; format: string }> = {
+  '.woff2': { mime: 'font/woff2', format: 'woff2' },
+  '.woff': { mime: 'font/woff', format: 'woff' },
+  '.ttf': { mime: 'font/ttf', format: 'truetype' },
+  '.otf': { mime: 'font/opentype', format: 'opentype' },
+};
+
+export function generateFontFaceCSS(theme: Theme): { css: string; fonts: FontDescriptor[] } {
   const fontFaces: string[] = [];
+  const fonts: FontDescriptor[] = [];
   const seenPaths = new Set<string>();
 
   // Collect fonts from all text styles
@@ -152,18 +168,51 @@ export function generateFontFaceCSS(theme: Theme): string {
       const font = family[weight];
       if (font && !seenPaths.has(font.path)) {
         seenPaths.add(font.path);
+        const numericWeight = fontWeightToNumeric(weight);
+        fonts.push({ name: font.name, weight: numericWeight });
+        // Embed font as base64 data URI so it loads in Playwright's setContent()
+        // (file:// URLs don't work because the page has no file origin)
+        const fontData = fs.readFileSync(font.path);
+        const base64 = fontData.toString('base64');
+        const ext = path.extname(font.path).toLowerCase();
+        const fontFormat = FONT_FORMATS[ext];
+        if (!fontFormat) {
+          throw new Error(`Unsupported font format "${ext}" for ${font.path}. Supported: ${Object.keys(FONT_FORMATS).join(', ')}`);
+        }
         fontFaces.push(`
           @font-face {
             font-family: '${font.name}';
-            src: url('file://${font.path}');
-            font-weight: ${fontWeightToNumeric(weight)};
+            src: url('data:${fontFormat.mime};base64,${base64}') format('${fontFormat.format}');
+            font-weight: ${numericWeight};
           }
         `);
       }
     }
   }
 
-  return fontFaces.join('\n');
+  return { css: fontFaces.join('\n'), fonts };
+}
+
+/**
+ * Explicitly preload all fonts in Playwright.
+ * document.fonts.ready can resolve before base64 fonts are fully parsed.
+ * document.fonts.load() forces the browser to load each font and waits.
+ */
+export async function preloadFonts(page: Page, fonts: FontDescriptor[]): Promise<void> {
+  const failures = await page.evaluate(async (fontList) => {
+    const failed: string[] = [];
+    for (const f of fontList) {
+      const loaded = await document.fonts.load(`${f.weight} 16px "${f.name}"`);
+      if (loaded.length === 0) {
+        failed.push(`"${f.name}" weight ${f.weight}`);
+      }
+    }
+    return failed;
+  }, fonts);
+
+  if (failures.length > 0) {
+    throw new Error(`Fonts failed to load in Playwright: ${failures.join(', ')}. Check @font-face CSS and font file paths.`);
+  }
 }
 
 /**
@@ -177,12 +226,12 @@ export function generateFontFaceCSS(theme: Theme): string {
  * We measure the browser's line-height: normal as a ratio of font-size,
  * then use: cssLineHeight = lineSpacingMultiple × normalRatio
  */
-export async function measureFontNormalRatios(page: Page, theme: Theme): Promise<FontNormalRatios> {
-  const fontFaceCSS = generateFontFaceCSS(theme);
+export async function measureFontNormalRatios(page: Page, theme: Theme): Promise<{ ratios: FontNormalRatios; fonts: FontDescriptor[] }> {
+  const { css: fontFaceCSS, fonts } = generateFontFaceCSS(theme);
   await page.setContent(
     `<!DOCTYPE html><html><head><style>${fontFaceCSS}</style></head><body></body></html>`
   );
-  await page.evaluate(() => document.fonts.ready);
+  await preloadFonts(page, fonts);
 
   // Collect unique font names from all text styles
   const fontNames = new Set<string>();
@@ -216,7 +265,7 @@ export async function measureFontNormalRatios(page: Page, theme: Theme): Promise
   for (const { name, ratio } of ratios) {
     result.set(name, ratio);
   }
-  return result;
+  return { ratios: result, fonts };
 }
 
 // ============================================
@@ -437,7 +486,7 @@ function renderTextRun(
   }
 
   const styleAttr = spanStyles.length > 0 ? spanStyles.join('; ') : undefined;
-  const text = escapeHtml(run.text);
+  const text = run.text;
 
   // Handle bullets - simple left padding for indent
   if (run.bullet) {
@@ -466,6 +515,7 @@ interface LayoutImageProps {
   maxWidthPx?: number;
   maxHeightPx?: number;
   parentDirection?: Direction;
+  parentHasDefiniteCrossSize?: boolean;
 }
 
 const LayoutImage: FC<LayoutImageProps> = ({
@@ -474,17 +524,24 @@ const LayoutImage: FC<LayoutImageProps> = ({
   maxWidthPx,
   maxHeightPx,
   parentDirection,
+  parentHasDefiniteCrossSize,
 }) => {
   // Image contain behavior: fit within parent bounds preserving aspect ratio.
-  // CSS strategy depends on parent direction:
+  // CSS strategy depends on parent direction and whether parent has definite cross-axis size:
   // - In a column: width is the constraint axis, derive height from aspect ratio
-  // - In a row: height is the constraint axis, derive width from aspect ratio
+  // - In a row with definite height: height: 100% resolves, aspect-ratio derives width naturally
+  // - In a row with auto height: no anchor for aspect-ratio, share space equally with siblings
   const styles: string[] = [`aspect-ratio: ${aspectRatio}`];
 
   if (parentDirection === DIRECTION.ROW) {
-    // In a row: constrain to parent height, derive width from aspect ratio
-    // Fully compressible: can shrink to 0 (flex-shrink: 1, min-width: 0)
-    styles.push('height: 100%', 'flex: 0 1 auto', 'min-width: 0');
+    styles.push('height: 100%', 'min-width: 0');
+    if (parentHasDefiniteCrossSize) {
+      // Row has definite height → browser resolves height: 100%, then aspect-ratio derives width
+      styles.push('flex: 0 1 auto');
+    } else {
+      // Row has auto height → no anchor for aspect-ratio width derivation, share space equally
+      styles.push('flex: 1 1 0');
+    }
   } else {
     // In a column (or root): fill available width, derive height from aspect ratio
     // Fully compressible: can shrink to 0 (flex-shrink: 1, min-height: 0)
@@ -582,12 +639,20 @@ function getTableCellNodes(node: TableNode): TextNode[][] {
 // NODE TREE TO JSX
 // ============================================
 
+/** Context about the parent container, passed to children during JSX tree construction */
+interface ParentContext {
+  direction: Direction;
+  /** True when the parent has a definite cross-axis size (height for rows, width for columns).
+   *  Images use this to decide whether aspect-ratio can derive their width from height: 100%. */
+  hasDefiniteCrossSize?: boolean;
+}
+
 function nodeToJsx(
   node: ElementNode,
   theme: Theme,
   nodeIds: Map<ElementNode, string>,
   idCtx: IdContext,
-  parentDirection?: Direction,
+  parent: ParentContext,
   fontNormalRatios?: FontNormalRatios,
 ) {
   const nodeId = generateNodeId(idCtx);
@@ -607,7 +672,7 @@ function nodeToJsx(
           hAlign={textNode.hAlign}
           lineHeightMultiplier={textNode.lineHeightMultiplier}
           fontNormalRatios={fontNormalRatios}
-          parentDirection={parentDirection}
+          parentDirection={parent.direction}
         />
       );
     }
@@ -618,7 +683,7 @@ function nodeToJsx(
         <LayoutContainer
           nodeId={nodeId}
           direction={DIRECTION.ROW}
-          parentDirection={parentDirection}
+          parentDirection={parent.direction}
           width={rowNode.width}
           height={rowNode.height}
           gap={rowNode.gap}
@@ -627,7 +692,7 @@ function nodeToJsx(
           padding={rowNode.padding}
           theme={theme}
         >
-          {rowNode.children.map((child) => nodeToJsx(child, theme, nodeIds, idCtx, DIRECTION.ROW, fontNormalRatios))}
+          {rowNode.children.map((child) => nodeToJsx(child, theme, nodeIds, idCtx, { direction: DIRECTION.ROW, hasDefiniteCrossSize: rowNode.height !== undefined }, fontNormalRatios))}
         </LayoutContainer>
       );
     }
@@ -638,7 +703,7 @@ function nodeToJsx(
         <LayoutContainer
           nodeId={nodeId}
           direction={DIRECTION.COLUMN}
-          parentDirection={parentDirection}
+          parentDirection={parent.direction}
           width={colNode.width}
           height={colNode.height}
           gap={colNode.gap}
@@ -647,7 +712,7 @@ function nodeToJsx(
           padding={colNode.padding}
           theme={theme}
         >
-          {colNode.children.map((child) => nodeToJsx(child, theme, nodeIds, idCtx, DIRECTION.COLUMN, fontNormalRatios))}
+          {colNode.children.map((child) => nodeToJsx(child, theme, nodeIds, idCtx, { direction: DIRECTION.COLUMN }, fontNormalRatios))}
         </LayoutContainer>
       );
     }
@@ -655,10 +720,10 @@ function nodeToJsx(
     case NODE_TYPE.STACK: {
       const stackNode = node as StackNode;
       return (
-        <LayoutStack nodeId={nodeId} width={stackNode.width} height={stackNode.height} parentDirection={parentDirection}>
+        <LayoutStack nodeId={nodeId} width={stackNode.width} height={stackNode.height} parentDirection={parent.direction}>
           {stackNode.children.map((child) => (
             <LayoutStackChild>
-              {nodeToJsx(child, theme, nodeIds, idCtx, DIRECTION.COLUMN, fontNormalRatios)}
+              {nodeToJsx(child, theme, nodeIds, idCtx, { direction: DIRECTION.COLUMN }, fontNormalRatios)}
             </LayoutStackChild>
           ))}
         </LayoutStack>
@@ -676,12 +741,12 @@ function nodeToJsx(
       const maxWidthPx = (dims.width / SCREEN_DPI) * maxScaleFactor * SCREEN_DPI;
       const maxHeightPx = (dims.height / SCREEN_DPI) * maxScaleFactor * SCREEN_DPI;
 
-      return <LayoutImage nodeId={nodeId} aspectRatio={dims.aspectRatio} maxWidthPx={maxWidthPx} maxHeightPx={maxHeightPx} parentDirection={parentDirection} />;
+      return <LayoutImage nodeId={nodeId} aspectRatio={dims.aspectRatio} maxWidthPx={maxWidthPx} maxHeightPx={maxHeightPx} parentDirection={parent.direction} parentHasDefiniteCrossSize={parent.hasDefiniteCrossSize} />;
     }
 
     case NODE_TYPE.LINE: {
       const borderWidthPx = ptToPx(theme.borders.width);
-      return <LayoutLine nodeId={nodeId} parentDirection={parentDirection} borderWidthPx={borderWidthPx} />;
+      return <LayoutLine nodeId={nodeId} parentDirection={parent.direction} borderWidthPx={borderWidthPx} />;
     }
 
     case NODE_TYPE.SLIDE_NUMBER: {
@@ -766,12 +831,12 @@ export function generateLayoutHTML(
   const idCtx: IdContext = { counter: 0 };
   const nodeIds: Map<ElementNode, string> = new Map();
 
-  const fontFaceCSS = generateFontFaceCSS(theme);
+  const { css: fontFaceCSS } = generateFontFaceCSS(theme);
   const widthPx = inToPx(bounds.w);
   const heightPx = inToPx(bounds.h);
 
   // Build the JSX tree (root wrapper is flex-direction: column)
-  const jsxTree = nodeToJsx(tree, theme, nodeIds, idCtx, DIRECTION.COLUMN, fontNormalRatios);
+  const jsxTree = nodeToJsx(tree, theme, nodeIds, idCtx, { direction: DIRECTION.COLUMN }, fontNormalRatios);
 
   // Wrap in HTML document with proper sizing
   const fullJsx = (
@@ -805,6 +870,12 @@ export function generateLayoutHTML(
             flex: 1 1 0;
             min-height: 0;
           }
+          ${process.env.DEBUG_HTML ? `
+          /* Debug borders - outline doesn't affect layout */
+          [data-node-id] {
+            outline: 1px solid rgba(255, 0, 0, 0.3);
+          }
+          ` : ''}
         `}} />
       </head>
       <body>
