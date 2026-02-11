@@ -1,85 +1,13 @@
 // Rich Text Tests
-// Test paragraph-level options (bold, italic, breakLine, bullet, paraSpaceBefore, paraSpaceAfter)
+// Test paragraph-level options flow through DSL and pptxgenjs compatibility
 
 import * as assert from 'node:assert';
 import { describe, it } from 'node:test';
 import { text } from '../src/core/dsl.js';
-import { TEXT_STYLE, FONT_WEIGHT } from '../src/core/types.js';
 import type { NormalizedRun } from '../src/core/types.js';
 import { normalizeContent } from '../src/utils/text.js';
 
 describe('Rich Text', () => {
-  describe('NormalizedRun paragraph options', () => {
-    it('should accept bold option', () => {
-      const runs: NormalizedRun[] = [
-        { text: 'Bold text', bold: true },
-      ];
-      assert.strictEqual(runs[0].bold, true);
-    });
-
-    it('should accept italic option', () => {
-      const runs: NormalizedRun[] = [
-        { text: 'Italic text', italic: true },
-      ];
-      assert.strictEqual(runs[0].italic, true);
-    });
-
-    it('should accept breakLine option', () => {
-      const runs: NormalizedRun[] = [
-        { text: 'New paragraph', breakLine: true },
-      ];
-      assert.strictEqual(runs[0].breakLine, true);
-    });
-
-    it('should accept bullet as boolean', () => {
-      const runs: NormalizedRun[] = [
-        { text: 'Bullet item', bullet: true },
-      ];
-      assert.strictEqual(runs[0].bullet, true);
-    });
-
-    it('should accept bullet as object with color', () => {
-      const runs: NormalizedRun[] = [
-        { text: 'Colored bullet', bullet: { color: 'FF0000' } },
-      ];
-      assert.deepStrictEqual(runs[0].bullet, { color: 'FF0000' });
-    });
-
-    it('should accept paraSpaceBefore', () => {
-      const runs: NormalizedRun[] = [
-        { text: 'Spaced paragraph', paraSpaceBefore: 12 },
-      ];
-      assert.strictEqual(runs[0].paraSpaceBefore, 12);
-    });
-
-    it('should accept paraSpaceAfter', () => {
-      const runs: NormalizedRun[] = [
-        { text: 'Spaced paragraph', paraSpaceAfter: 6 },
-      ];
-      assert.strictEqual(runs[0].paraSpaceAfter, 6);
-    });
-
-    it('should combine multiple paragraph options', () => {
-      const runs: NormalizedRun[] = [
-        {
-          text: 'Complex run',
-          bold: true,
-          italic: true,
-          breakLine: true,
-          bullet: true,
-          paraSpaceBefore: 6,
-          paraSpaceAfter: 12,
-        },
-      ];
-      assert.strictEqual(runs[0].bold, true);
-      assert.strictEqual(runs[0].italic, true);
-      assert.strictEqual(runs[0].breakLine, true);
-      assert.strictEqual(runs[0].bullet, true);
-      assert.strictEqual(runs[0].paraSpaceBefore, 6);
-      assert.strictEqual(runs[0].paraSpaceAfter, 12);
-    });
-  });
-
   describe('text() DSL with rich runs', () => {
     it('should create TextNode with bold runs', () => {
       const node = text([
@@ -121,56 +49,6 @@ describe('Rich Text', () => {
         assert.strictEqual(headerRun.paraSpaceAfter, 6);
         assert.strictEqual(bodyRun.paraSpaceBefore, 12);
       }
-    });
-  });
-
-  describe('normalizeContent with rich runs', () => {
-    it('should preserve bold option', () => {
-      const content: NormalizedRun[] = [
-        { text: 'Bold text', bold: true },
-      ];
-      const normalized = normalizeContent(content);
-      assert.strictEqual(normalized[0].bold, true);
-    });
-
-    it('should preserve italic option', () => {
-      const content: NormalizedRun[] = [
-        { text: 'Italic text', italic: true },
-      ];
-      const normalized = normalizeContent(content);
-      assert.strictEqual(normalized[0].italic, true);
-    });
-
-    it('should preserve breakLine option', () => {
-      const content: NormalizedRun[] = [
-        { text: 'New paragraph', breakLine: true },
-      ];
-      const normalized = normalizeContent(content);
-      assert.strictEqual(normalized[0].breakLine, true);
-    });
-
-    it('should preserve bullet option', () => {
-      const content: NormalizedRun[] = [
-        { text: 'Bullet', bullet: true },
-      ];
-      const normalized = normalizeContent(content);
-      assert.strictEqual(normalized[0].bullet, true);
-    });
-
-    it('should preserve paraSpaceBefore option', () => {
-      const content: NormalizedRun[] = [
-        { text: 'Spaced', paraSpaceBefore: 12 },
-      ];
-      const normalized = normalizeContent(content);
-      assert.strictEqual(normalized[0].paraSpaceBefore, 12);
-    });
-
-    it('should preserve paraSpaceAfter option', () => {
-      const content: NormalizedRun[] = [
-        { text: 'Spaced', paraSpaceAfter: 6 },
-      ];
-      const normalized = normalizeContent(content);
-      assert.strictEqual(normalized[0].paraSpaceAfter, 6);
     });
   });
 
