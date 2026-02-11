@@ -377,6 +377,17 @@ export function table(
       if (typeof cell === 'string' || Array.isArray(cell)) {
         return { content: cell };
       }
+      // Check if it's a TextNode (from text() DSL) — extract into TableCellData
+      if ('type' in cell && cell.type === NODE_TYPE.TEXT) {
+        const textNode = cell as TextNode;
+        return {
+          content: textNode.content,
+          color: textNode.color,
+          textStyle: textNode.style,
+          hAlign: textNode.hAlign,
+          // Omit vAlign so table-level default applies (TextNode defaults to TOP)
+        };
+      }
       // Check if it's already TableCellData (has 'content' property)
       if ('content' in cell) {
         return cell as TableCellData;

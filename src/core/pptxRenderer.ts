@@ -553,12 +553,12 @@ export class PptxRenderer implements Renderer {
     const border = this.buildCellBorder(tableStyle, theme, rowIndex, colIndex, numRows, numCols);
 
     // Build rich text fragments for cell content
-    const textFragments = this.buildTextFragments(cell.content, styleName, theme);
+    const textFragments = this.buildTextFragments(cell.content, styleName, theme, cell.color);
 
     const options: Record<string, unknown> = {
       fontFace: font.name,
       fontSize: textStyle.fontSize,
-      color: textStyle.color ?? theme.colors.text,
+      color: cell.color ?? textStyle.color ?? theme.colors.text,
       align: hAlign,
       valign: vAlign,
       margin: cellPadding,

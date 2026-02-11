@@ -80,6 +80,7 @@ export interface SlideNumberNode {
 /** Individual table cell data */
 export interface TableCellData {
   content: TextContent;
+  color?: string;
   colspan?: number;
   rowspan?: number;
   fill?: string;

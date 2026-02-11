@@ -12,6 +12,7 @@ import {
   column,
   grid,
   card,
+  table,
 } from '../src/core/dsl.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import {
@@ -567,6 +568,53 @@ describe('card()', () => {
     assert.strictEqual(node.props.borderWidth, 1);
     assert.strictEqual(node.props.cornerRadius, 0.125);
     assert.strictEqual(node.props.padding, 0.25);
+  });
+
+});
+
+// ============================================
+// TABLE FACTORY FUNCTIONS
+// ============================================
+
+describe('table()', () => {
+
+  test('converts TextNode cells to TableCellData with correct property mapping', () => {
+    const node = table([
+      ['Header', text('colored cell', { style: TEXT_STYLE.SMALL, color: 'FF0000', hAlign: HALIGN.CENTER })],
+    ]);
+    assert.strictEqual(node.type, NODE_TYPE.TABLE);
+    const cell = node.rows[0][1];
+    assert.strictEqual(cell.content, 'colored cell');
+    assert.strictEqual(cell.textStyle, TEXT_STYLE.SMALL);
+    assert.strictEqual(cell.color, 'FF0000');
+    assert.strictEqual(cell.hAlign, HALIGN.CENTER);
+  });
+
+  test('TextNode vAlign is omitted so table-level default applies', () => {
+    const node = table([
+      [text('cell with default vAlign')],
+    ]);
+    const cell = node.rows[0][0];
+    assert.strictEqual(cell.vAlign, undefined);
+  });
+
+  test('string cells are wrapped as TableCellData', () => {
+    const node = table([['plain string']]);
+    const cell = node.rows[0][0];
+    assert.strictEqual(cell.content, 'plain string');
+    assert.strictEqual(cell.color, undefined);
+    assert.strictEqual(cell.textStyle, undefined);
+  });
+
+  test('preserves table props', () => {
+    const node = table([['a']], {
+      columnWidths: [1, 2],
+      headerRows: 1,
+      headerColumns: 1,
+    });
+    assert.deepStrictEqual(node.columnWidths, [1, 2]);
+    assert.strictEqual(node.headerRows, 1);
+    assert.strictEqual(node.headerColumns, 1);
   });
 
 });
