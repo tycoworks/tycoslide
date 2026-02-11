@@ -420,17 +420,18 @@ export class PptxRenderer implements Renderer {
     const lineWidth = lineNode.width ?? theme.borders.width;
     const isVertical = positioned.height > positioned.width;
 
+    const lineOpts: Record<string, unknown> = { color, width: lineWidth };
+    if (lineNode.beginArrow) lineOpts.beginArrowType = lineNode.beginArrow;
+    if (lineNode.endArrow) lineOpts.endArrowType = lineNode.endArrow;
+    if (lineNode.dashType) lineOpts.dashType = lineNode.dashType;
+
     const options: Record<string, unknown> = {
       x: positioned.x,
       y: positioned.y,
       w: isVertical ? 0 : positioned.width,
       h: isVertical ? positioned.height : 0,
-      line: { color, width: lineWidth },
+      line: lineOpts,
     };
-
-    if (lineNode.beginArrow) options.beginArrowType = lineNode.beginArrow;
-    if (lineNode.endArrow) options.endArrowType = lineNode.endArrow;
-    if (lineNode.dashType) options.dashType = lineNode.dashType;
 
     return { shapeType: String(SHAPE.LINE), options };
   }
