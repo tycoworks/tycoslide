@@ -467,6 +467,4 @@ With 300ms debounce, this feels responsive for live preview.
 
 ## References
 
-- [text-measurement.md](./text-measurement.md) - Current calibration approach
-- [architecture.md](./architecture.md) - Canvas abstraction details
 - [Marp VS Code Extension](https://github.com/marp-team/marp-vscode) - Inspiration for VS Code UX

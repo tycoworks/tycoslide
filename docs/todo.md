@@ -3,7 +3,6 @@ Spacing / layouts:
 -- Direction is opposite to container?
 -- Content rules
 -- Image cover
-- Tidy up arch docs
 
 Core:
 - Align colors with design token standards
