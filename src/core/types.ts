@@ -218,8 +218,6 @@ export interface NormalizedRun {
   italic?: boolean;            // Italic text
   breakLine?: boolean;         // Force new paragraph before this run
   bullet?: boolean | { type?: string; color?: string };  // Bullet marker
-  paraSpaceBefore?: number;    // Points of space before paragraph
-  paraSpaceAfter?: number;     // Points of space after paragraph
 }
 
 // Rich text run - string shorthand or full object

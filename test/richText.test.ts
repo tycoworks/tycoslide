@@ -38,18 +38,6 @@ describe('Rich Text', () => {
       }
     });
 
-    it('should create TextNode with paragraph spacing', () => {
-      const node = text([
-        { text: 'Header', bold: true, paraSpaceAfter: 6 },
-        { text: 'Body text', breakLine: true, paraSpaceBefore: 12 },
-      ]);
-      if (Array.isArray(node.content)) {
-        const headerRun = node.content[0] as NormalizedRun;
-        const bodyRun = node.content[1] as NormalizedRun;
-        assert.strictEqual(headerRun.paraSpaceAfter, 6);
-        assert.strictEqual(bodyRun.paraSpaceBefore, 12);
-      }
-    });
   });
 
   describe('pptxgenjs compatibility', () => {

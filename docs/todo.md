@@ -5,11 +5,12 @@ Spacing / layouts:
 -- Image cover
 
 Core:
-- Align colors with design token standards
+- Align colors with design token standards. Semantic vs color names.
 - Escape hatch
 - Portrait mode
-- Nest or some other CLI framework?
+- CLI framework
 - Dark mode & design token integration
+- Theme package (npm?) & version
 - Groups
 
 Cleanup:
@@ -22,4 +23,4 @@ Components:
 - Image to the left of the card / direction and justify
 - Quote component
 - Code component
-- Real mermaid
+- Real mermaid (or embed diagram as alt)

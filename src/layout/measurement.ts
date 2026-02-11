@@ -26,6 +26,7 @@ export class LayoutMeasurer {
   private page: Page | null = null;
   private fontNormalRatios: FontNormalRatios = new Map();
   private fontDescriptors: FontDescriptor[] = [];
+  private debugCounter = 0;
 
   async launch(): Promise<void> {
     if (this.browser) {
@@ -79,7 +80,9 @@ export class LayoutMeasurer {
     // Generate layout HTML with CSS flexbox structure
     const { html, nodeIds } = generateLayoutHTML(tree, bounds, theme, this.fontNormalRatios);
 
-    if (process.env.DEBUG_HTML) this.saveDebugHtml(html);
+    if (process.env.DEBUG_HTML) {
+      this.saveDebugHtml(html);
+    }
 
     // Load HTML and explicitly preload all fonts
     // document.fonts.ready alone is unreliable — base64 fonts may not be parsed in time
@@ -96,22 +99,9 @@ export class LayoutMeasurer {
       throw new Error(`Font verification failed — these fonts did not load: ${failedFonts.join(', ')}`);
     }
 
-    // Diagnostic: log dimensions of all text nodes to debug measurement
     if (process.env.DEBUG_HTML) {
-      const textDims = await this.page.evaluate(() => {
-        const results: string[] = [];
-        document.querySelectorAll('[data-node-id]').forEach(el => {
-          const div = el as HTMLElement;
-          const rect = div.getBoundingClientRect();
-          const text = div.textContent?.substring(0, 50) || '';
-          if (text.trim()) {
-            const computed = getComputedStyle(div);
-            results.push(`${div.dataset.nodeId}: ${rect.width.toFixed(1)}x${rect.height.toFixed(1)} font="${computed.fontFamily}" "${text.trim().substring(0, 40)}"`);
-          }
-        });
-        return results;
-      });
-      textDims.forEach(d => log.layout.measure('text-dim: %s', d));
+      await this.saveDebugScreenshot();
+      await this.logNodeDimensions();
     }
 
     // Extract full positions for all nodes, relative to root
@@ -160,17 +150,52 @@ export class LayoutMeasurer {
     return results;
   }
 
-  /** Save debug HTML to disk.
-   *  DEBUG_HTML=1 writes to <tmpdir>/debug-N.html; DEBUG_HTML=/path/prefix writes to /path/prefix-N.html */
-  private saveDebugHtml(html: string): void {
-    const counter = (global as any).__debugHtmlCounter ?? 0;
-    (global as any).__debugHtmlCounter = counter + 1;
+  /** Debug path prefix from DEBUG_HTML env var.
+   *  DEBUG_HTML=1 → <tmpdir>/debug; DEBUG_HTML=/path/file.html → /path/file */
+  private debugPrefix(): string {
     const debugHtml = process.env.DEBUG_HTML!;
-    const prefix = debugHtml === '1'
+    return debugHtml === '1'
       ? path.join(os.tmpdir(), 'debug')
       : debugHtml.replace('.html', '');
-    const filePath = `${prefix}-${counter}.html`;
+  }
+
+  /** Save debug HTML to disk. Counter auto-increments per slide. */
+  private saveDebugHtml(html: string): void {
+    const counter = this.debugCounter++;
+    const filePath = `${this.debugPrefix()}-${counter}.html`;
     fs.writeFileSync(filePath, html);
     log.layout.html('saved debug HTML to %s', filePath);
+  }
+
+  /** Save Playwright screenshot alongside the debug HTML. */
+  private async saveDebugScreenshot(): Promise<void> {
+    const counter = this.debugCounter - 1; // matches the HTML just saved
+    const screenshotPath = `${this.debugPrefix()}-${counter}.png`;
+    await this.page!.screenshot({ path: screenshotPath, fullPage: true });
+    log.layout.measure('saved Playwright screenshot to %s', screenshotPath);
+  }
+
+  /** Log measured dimensions for every node (for visual debugging). */
+  private async logNodeDimensions(): Promise<void> {
+    const allDims = await this.page!.evaluate(() => {
+      const results: string[] = [];
+      const root = document.querySelector('.root');
+      const rootRect = root?.getBoundingClientRect();
+      if (rootRect) {
+        results.push(`ROOT: ${rootRect.width.toFixed(1)}x${rootRect.height.toFixed(1)} at (${rootRect.left.toFixed(1)},${rootRect.top.toFixed(1)})`);
+      }
+      document.querySelectorAll('[data-node-id]').forEach(el => {
+        const div = el as HTMLElement;
+        const rect = div.getBoundingClientRect();
+        const computed = getComputedStyle(div);
+        const text = div.textContent?.substring(0, 40)?.trim() || '';
+        const display = computed.display;
+        const width = computed.width;
+        const font = computed.fontFamily?.substring(0, 30);
+        results.push(`${div.dataset.nodeId}: ${rect.width.toFixed(1)}x${rect.height.toFixed(1)} at (${rect.left.toFixed(1)},${rect.top.toFixed(1)}) display=${display} cssW=${width} font="${font}" "${text}"`);
+      });
+      return results;
+    });
+    allDims.forEach(d => log.layout.measure('node-dim: %s', d));
   }
 }

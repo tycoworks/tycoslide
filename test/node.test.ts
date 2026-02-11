@@ -5,7 +5,7 @@ import * as assert from 'node:assert';
 import { describe, it } from 'node:test';
 import { toTextContent, resolveGap } from '../src/utils/node.js';
 import { NODE_TYPE, type TextNode } from '../src/core/nodes.js';
-import { GAP, type TextRun } from '../src/core/types.js';
+import { GAP, HALIGN, VALIGN, type TextRun } from '../src/core/types.js';
 import { mockTheme } from './mocks.js';
 
 // ============================================
@@ -19,8 +19,8 @@ describe('toTextContent()', () => {
     assert.strictEqual(result, input);
   });
 
-  it('should pass through TextRun input', () => {
-    const input: TextRun = { text: 'Hello', color: 'FF0000' };
+  it('should pass through TextRun array input', () => {
+    const input: TextRun[] = [{ text: 'Hello', color: 'FF0000' }];
     const result = toTextContent(input);
     assert.deepStrictEqual(result, input);
   });
@@ -54,6 +54,8 @@ describe('toTextContent()', () => {
     const textNode: TextNode = {
       type: NODE_TYPE.TEXT,
       content: 'Hello World',
+      hAlign: HALIGN.LEFT,
+      vAlign: VALIGN.TOP,
     };
     const result = toTextContent(textNode);
     assert.strictEqual(result, 'Hello World');
@@ -67,6 +69,8 @@ describe('toTextContent()', () => {
     const textNode: TextNode = {
       type: NODE_TYPE.TEXT,
       content,
+      hAlign: HALIGN.LEFT,
+      vAlign: VALIGN.TOP,
     };
     const result = toTextContent(textNode);
     assert.deepStrictEqual(result, content);

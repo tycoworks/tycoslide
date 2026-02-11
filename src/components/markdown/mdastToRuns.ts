@@ -64,6 +64,7 @@ export function mdastToRuns(
     if (node.type === MDAST.PARAGRAPH) {
       if (!isFirstBlock && runs.length > 0) {
         // Add breakLine to the first run of non-first paragraphs
+        // (means "start a new paragraph before this run")
         const paragraphRuns: NormalizedRun[] = [];
         transformInline(node.children, highlights, paragraphRuns, {});
         if (paragraphRuns.length > 0) {
@@ -96,7 +97,6 @@ function transformList(
     : true;
 
   for (const item of list.children as ListItem[]) {
-    // List items contain paragraphs; we take the first paragraph's children
     const firstChild = item.children[0];
     if (firstChild && firstChild.type === MDAST.PARAGRAPH) {
       // Collect item runs separately — only the first run gets bullet
@@ -111,6 +111,9 @@ function transformList(
         itemRuns[0] = { ...itemRuns[0], bullet: bulletType };
         runs.push(...itemRuns);
       }
+    } else if (firstChild && firstChild.type === MDAST.LIST) {
+      // Nested list (e.g. `- 1. text`) — recurse, but use outer bullet type
+      transformList(firstChild as List, highlights, runs);
     }
   }
 }

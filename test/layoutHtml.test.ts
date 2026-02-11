@@ -145,16 +145,16 @@ describe('HTML Measurement Generation', () => {
   });
 
   describe('Paragraph spacing', () => {
-    test('paraSpaceBefore generates margin-top', () => {
-      const node = text([{ text: 'Paragraph', paraSpaceBefore: 12 }]);
+    test('breakLine generates block spacer div with height: 1em', () => {
+      const node = text([{ text: 'Para 1' }, { text: 'Para 2', breakLine: true }]);
       const { html } = generateLayoutHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('margin-top:'), 'paraSpaceBefore should generate margin-top');
+      assert.ok(html.includes('height: 1em'), 'breakLine should generate a spacer div with height: 1em');
     });
 
-    test('paraSpaceAfter generates margin-bottom', () => {
-      const node = text([{ text: 'Paragraph', paraSpaceAfter: 12 }]);
+    test('breakLine does not generate br tag', () => {
+      const node = text([{ text: 'Para 1' }, { text: 'Para 2', breakLine: true }]);
       const { html } = generateLayoutHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('margin-bottom:'), 'paraSpaceAfter should generate margin-bottom');
+      assert.ok(!html.includes('<br'), 'breakLine should not use <br> — uses block spacer instead');
     });
   });
 

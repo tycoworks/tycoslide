@@ -5,7 +5,7 @@
 import type { PositionedNode, TextNode, ImageNode, RectangleNode, LineNode, SlideNumberNode, TableNode, TableCellData } from './nodes.js';
 import type { Theme, TextStyleName, TextContent } from './types.js';
 import { TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT, BORDER_STYLE, SHAPE } from './types.js';
-import { getFontFromFamily, normalizeContent, resolveLineHeight } from '../utils/text.js';
+import { getFontFromFamily, normalizeContent, resolveLineHeight, getParagraphGapRatio } from '../utils/text.js';
 import { readImageDimensions, containFit } from '../utils/image.js';
 
 // ============================================
@@ -90,7 +90,9 @@ export class PptxConfigBuilder {
     const defaultWeight = style.defaultWeight ?? FONT_WEIGHT.NORMAL;
 
     const normalized = normalizeContent(content);
-    return normalized.map(run => {
+    // Track which runs need a paragraph break before them
+    const breakBeforeIndices = new Set<number>();
+    const fragments: TextFragment[] = normalized.map((run, i) => {
       // Bold shorthand overrides weight
       const effectiveWeight = run.bold ? FONT_WEIGHT.BOLD : (run.weight ?? defaultWeight);
       const runFont = getFontFromFamily(style.fontFamily, effectiveWeight);
@@ -102,13 +104,27 @@ export class PptxConfigBuilder {
       // Pass through paragraph-level options
       if (run.bold) options.bold = true;
       if (run.italic) options.italic = true;
-      // bullet implies a new paragraph, so breakLine is redundant when bullet is set
-      if (run.breakLine && !run.bullet) options.breakLine = true;
+      // Record break-before for post-processing shift
+      if (run.breakLine && !run.bullet) breakBeforeIndices.add(i);
       if (run.bullet) options.bullet = run.bullet;
-      if (run.paraSpaceBefore !== undefined) options.paraSpaceBefore = run.paraSpaceBefore;
-      if (run.paraSpaceAfter !== undefined) options.paraSpaceAfter = run.paraSpaceAfter;
       return { text: run.text, options };
     });
+
+    // pptxgenjs breakLine means "break AFTER this run".
+    // Our semantic is "break BEFORE run N" → set breakLine on fragment N-1.
+    // Also add paragraph spacing on the new paragraph's first fragment.
+    // paraSpaceBefore = fontSize × getParagraphGapRatio() matches the CSS
+    // 1em spacer div in the HTML renderer (see layoutHtml.tsx renderTextRun).
+    for (const idx of breakBeforeIndices) {
+      if (idx > 0 && fragments[idx - 1].options) {
+        fragments[idx - 1].options!.breakLine = true;
+      }
+      if (fragments[idx].options) {
+        fragments[idx].options!.paraSpaceBefore = style.fontSize * getParagraphGapRatio();
+      }
+    }
+
+    return fragments;
   }
 
   buildImageConfig(

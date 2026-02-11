@@ -37,6 +37,22 @@ export function fontWeightToNumeric(weight: FontWeight): number {
 // TEXT STYLE RESOLUTION
 // ============================================
 
+/**
+ * Paragraph gap ratio: spacing between paragraphs as a multiple of fontSize.
+ *
+ * CSS default: <p> elements have margin-top/bottom of 1em.
+ * 1em === computed font-size (CSS Values Level 4, §5.1.1).
+ * Therefore paragraphGap = fontSize × 1.0.
+ *
+ * Unlike line-height: normal (which varies per font's OS/2 metrics and must
+ * be measured in the browser), this is a CSS specification constant — not a
+ * font metric. We express it as a named function for API consistency with
+ * fontNormalRatios and to document the assumption in one place.
+ */
+export function getParagraphGapRatio(): number {
+  return 1.0;
+}
+
 /** Resolve line height: node override > style override > theme default (bulletSpacing for bullet text) */
 export function resolveLineHeight(
   nodeMultiplier: number | undefined,

@@ -24,6 +24,17 @@ import {
   BORDER_STYLE,
   SHAPE,
 } from '../src/core/types.js';
+import { getParagraphGapRatio } from '../src/utils/text.js';
+
+// ============================================
+// getParagraphGapRatio
+// ============================================
+
+describe('getParagraphGapRatio()', () => {
+  test('returns 1.0 (CSS spec: 1em = fontSize)', () => {
+    assert.strictEqual(getParagraphGapRatio(), 1.0);
+  });
+});
 
 // ============================================
 // HELPERS
@@ -772,15 +783,43 @@ describe('buildTextFragments()', () => {
     assert.strictEqual(fragments[0].options?.bullet, true);
   });
 
-  test('applies breakLine when no bullet', () => {
+  test('shifts breakLine to previous fragment for pptxgenjs', () => {
     const fragments = builder.buildTextFragments(
-      [{ text: 'Line 1', breakLine: true }],
+      [{ text: 'Line 1' }, { text: 'Line 2', breakLine: true }],
       TEXT_STYLE.BODY,
       theme
     );
 
-    assert.strictEqual(fragments.length, 1);
+    assert.strictEqual(fragments.length, 2);
+    // pptxgenjs breakLine means "break AFTER this run", so it shifts to previous fragment
     assert.strictEqual(fragments[0].options?.breakLine, true);
+    assert.strictEqual(fragments[1].options?.breakLine, undefined);
+  });
+
+  test('adds paraSpaceBefore on paragraph break fragment', () => {
+    const fragments = builder.buildTextFragments(
+      [{ text: 'Paragraph 1' }, { text: 'Paragraph 2', breakLine: true }],
+      TEXT_STYLE.BODY,
+      theme
+    );
+
+    assert.strictEqual(fragments.length, 2);
+    // breakLine shifted to fragment 0
+    assert.strictEqual(fragments[0].options?.breakLine, true);
+    // paraSpaceBefore on fragment 1 (the new paragraph's first run)
+    // fontSize is 12 from mockTheme, getParagraphGapRatio() returns 1.0
+    assert.strictEqual(fragments[1].options?.paraSpaceBefore, 12);
+  });
+
+  test('paraSpaceBefore matches fontSize for any text style', () => {
+    const fragments = builder.buildTextFragments(
+      [{ text: 'A' }, { text: 'B', breakLine: true }],
+      TEXT_STYLE.H1,
+      theme
+    );
+
+    const h1FontSize = theme.textStyles[TEXT_STYLE.H1].fontSize;
+    assert.strictEqual(fragments[1].options?.paraSpaceBefore, h1FontSize);
   });
 
   test('does not apply breakLine when bullet present', () => {
@@ -795,16 +834,34 @@ describe('buildTextFragments()', () => {
     assert.strictEqual(fragments[0].options?.breakLine, undefined);
   });
 
-  test('applies paragraph spacing', () => {
+  test('does not add paraSpaceBefore when bullet present with breakLine', () => {
     const fragments = builder.buildTextFragments(
-      [{ text: 'Para', paraSpaceBefore: 0.5, paraSpaceAfter: 0.25 }],
+      [{ text: 'Bullet', bullet: true, breakLine: true }],
       TEXT_STYLE.BODY,
       theme
     );
 
-    assert.strictEqual(fragments.length, 1);
-    assert.strictEqual(fragments[0].options?.paraSpaceBefore, 0.5);
-    assert.strictEqual(fragments[0].options?.paraSpaceAfter, 0.25);
+    assert.strictEqual(fragments[0].options?.paraSpaceBefore, undefined);
+  });
+
+  test('multiple paragraph breaks each get paraSpaceBefore', () => {
+    const fragments = builder.buildTextFragments(
+      [
+        { text: 'Para 1' },
+        { text: 'Para 2', breakLine: true },
+        { text: 'Para 3', breakLine: true },
+      ],
+      TEXT_STYLE.BODY,
+      theme
+    );
+
+    assert.strictEqual(fragments.length, 3);
+    // Both paragraph-start fragments get paraSpaceBefore
+    assert.strictEqual(fragments[1].options?.paraSpaceBefore, 12);
+    assert.strictEqual(fragments[2].options?.paraSpaceBefore, 12);
+    // breakLine shifted to previous fragments
+    assert.strictEqual(fragments[0].options?.breakLine, true);
+    assert.strictEqual(fragments[1].options?.breakLine, true);
   });
 
   test('color override applies to all fragments', () => {
@@ -904,5 +961,68 @@ describe('buildSlideNumberOptions()', () => {
     assert.strictEqual(result.y, 2.5);
     assert.strictEqual(result.w, 3);
     assert.strictEqual(result.h, 0.4);
+  });
+});
+
+// ============================================
+// INTEGRATION: markdown → mdastToRuns → buildTextFragments
+// End-to-end: markdown string in, PPTX fragments out
+// ============================================
+
+import { parseMarkdown, mdastToRuns } from '../src/components/markdown/mdastToRuns.js';
+
+describe('Integration: markdown → PPTX fragments', () => {
+  const highlights = { teal: { bg: '003333', text: '00CCCC' } };
+  const fontSize = theme.textStyles[TEXT_STYLE.BODY].fontSize; // 12
+
+  test('two paragraphs produce correct PPTX fragments with paragraph spacing', () => {
+    const runs = mdastToRuns(parseMarkdown('First paragraph.\n\nSecond paragraph.'), highlights);
+    const fragments = builder.buildTextFragments(runs, TEXT_STYLE.BODY, theme);
+
+    assert.strictEqual(fragments.length, 2);
+
+    // Fragment 0: "First paragraph." — gets breakLine (shifted from run 1)
+    assert.strictEqual(fragments[0].text, 'First paragraph.');
+    assert.strictEqual(fragments[0].options?.breakLine, true);
+    assert.strictEqual(fragments[0].options?.paraSpaceBefore, undefined);
+
+    // Fragment 1: "Second paragraph." — gets paraSpaceBefore = fontSize
+    assert.strictEqual(fragments[1].text, 'Second paragraph.');
+    assert.strictEqual(fragments[1].options?.breakLine, undefined);
+    assert.strictEqual(fragments[1].options?.paraSpaceBefore, fontSize);
+  });
+
+  test('three paragraphs chain correctly', () => {
+    const runs = mdastToRuns(parseMarkdown('Para 1.\n\nPara 2.\n\nPara 3.'), highlights);
+    const fragments = builder.buildTextFragments(runs, TEXT_STYLE.BODY, theme);
+
+    assert.strictEqual(fragments.length, 3);
+
+    // Fragment 0: breakLine (shifted from run 1), no spacing
+    assert.strictEqual(fragments[0].text, 'Para 1.');
+    assert.strictEqual(fragments[0].options?.breakLine, true);
+    assert.strictEqual(fragments[0].options?.paraSpaceBefore, undefined);
+
+    // Fragment 1: paraSpaceBefore, AND breakLine (shifted from run 2)
+    assert.strictEqual(fragments[1].text, 'Para 2.');
+    assert.strictEqual(fragments[1].options?.breakLine, true);
+    assert.strictEqual(fragments[1].options?.paraSpaceBefore, fontSize);
+
+    // Fragment 2: paraSpaceBefore only
+    assert.strictEqual(fragments[2].text, 'Para 3.');
+    assert.strictEqual(fragments[2].options?.breakLine, undefined);
+    assert.strictEqual(fragments[2].options?.paraSpaceBefore, fontSize);
+  });
+
+  test('paragraph followed by bullets: no paraSpaceBefore on bullets', () => {
+    const runs = mdastToRuns(parseMarkdown('Intro.\n\n- Bullet one\n- Bullet two'), highlights);
+    const fragments = builder.buildTextFragments(runs, TEXT_STYLE.BODY, theme);
+
+    assert.strictEqual(fragments.length, 3);
+    assert.strictEqual(fragments[0].text, 'Intro.');
+    assert.strictEqual(fragments[1].text, 'Bullet one');
+    assert.ok(fragments[1].options?.bullet, 'Bullet run should have bullet');
+    // Bullets don't get paragraph spacing — they have their own line break mechanism
+    assert.strictEqual(fragments[1].options?.paraSpaceBefore, undefined);
   });
 });

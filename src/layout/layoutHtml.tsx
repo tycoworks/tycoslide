@@ -482,14 +482,6 @@ function renderTextRun(
     spanStyles.push(`color: #${run.highlight.text}`);
   }
 
-  // Handle paragraph spacing
-  if (run.paraSpaceBefore) {
-    spanStyles.push(`margin-top: ${ptToPx(run.paraSpaceBefore)}px`);
-  }
-  if (run.paraSpaceAfter) {
-    spanStyles.push(`margin-bottom: ${ptToPx(run.paraSpaceAfter)}px`);
-  }
-
   const styleAttr = spanStyles.length > 0 ? spanStyles.join('; ') : undefined;
   const text = run.text;
 
@@ -503,14 +495,21 @@ function renderTextRun(
     );
   }
 
-  // Handle plain line breaks
-  const prefix = run.breakLine ? <br /> : null;
+  // Handle paragraph breaks (blank line in markdown).
+  // A block-level spacer div with height: 1em creates the visual gap.
+  // 1em = fontSize (CSS Values Level 4, §5.1.1) — matches getParagraphGapRatio().
+  // This replaces the old <br/> which gave a line break but no paragraph gap.
+  if (run.breakLine) {
+    return (
+      <>
+        <div style="height: 1em" />
+        <span key={index} style={styleAttr}>{text}</span>
+      </>
+    );
+  }
 
   return (
-    <>
-      {prefix}
-      <span key={index} style={styleAttr}>{text}</span>
-    </>
+    <span key={index} style={styleAttr}>{text}</span>
   );
 }
 
@@ -596,7 +595,7 @@ const LayoutSlideNumber: FC<{ nodeId: string; style: TextStyle }> = ({
   return (
     <div
       data-node-id={nodeId}
-      style={`font-family: '${defaultFont.name}'; font-size: ${fontSizePx}px; white-space: nowrap`}
+      style={`font-family: '${defaultFont.name}'; font-size: ${fontSizePx}px; white-space: nowrap; flex: 0 0 auto`}
     >
       {SLIDE_NUMBER_PLACEHOLDER}
     </div>
@@ -778,10 +777,14 @@ function nodeToJsx(
       const cellPadding = tableNode.style?.cellPadding ?? theme.spacing.cellPadding;
       const cellPaddingPx = inToPx(cellPadding);
 
+      // In rows: share width equally. In columns: fill width.
+      const isInRow = parent.direction === 'row';
+      const tableWidthStyle = isInRow ? 'flex: 1 1 0; min-width: 0' : 'width: 100%';
+
       return (
         <div
           data-node-id={nodeId}
-          style={`display: grid; grid-template-columns: ${columnWidths.map(w => `${(w / totalWeight) * 100}%`).join(' ')}; width: 100%`}
+          style={`display: grid; grid-template-columns: ${columnWidths.map(w => `${(w / totalWeight) * 100}%`).join(' ')}; ${tableWidthStyle}`}
         >
           {cellNodes.flatMap((row: TextNode[]) =>
             row.map((cellTextNode: TextNode) => {
@@ -875,7 +878,8 @@ export function generateLayoutHTML(
             flex: 1 1 0;
             min-height: 0;
           }
-          ${process.env.DEBUG_HTML ? `
+
+${process.env.DEBUG_HTML ? `
           /* Debug borders - outline doesn't affect layout */
           [data-node-id] {
             outline: 1px solid rgba(255, 0, 0, 0.3);
