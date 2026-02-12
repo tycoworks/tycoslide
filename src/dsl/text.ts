@@ -10,7 +10,7 @@ import type { TextDirective } from 'mdast-util-directive';
 import type { NormalizedRun, HighlightScheme, TextStyleName, HorizontalAlignment, VerticalAlignment } from '../core/types.js';
 import { HALIGN, VALIGN } from '../core/types.js';
 import { NODE_TYPE, type ElementNode } from '../core/nodes.js';
-import { defineComponent, type ComponentNode } from '../core/registry.js';
+import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
 
 // ============================================
 // CONSTANTS
@@ -226,10 +226,7 @@ function expandText(props: TextComponentProps, context: { theme: any }): Element
 // COMPONENT REGISTRATION
 // ============================================
 
-const textComponent = defineComponent<TextComponentProps>(
-  TEXT_COMPONENT,
-  expandText
-);
+componentRegistry.register({ name: TEXT_COMPONENT, expand: expandText });
 
 /**
  * Create a text component node.
@@ -241,5 +238,5 @@ const textComponent = defineComponent<TextComponentProps>(
  * ```
  */
 export function text(content: string, props?: TextProps): ComponentNode<TextComponentProps> {
-  return textComponent({ content, ...props });
+  return component(TEXT_COMPONENT, { content, ...props });
 }

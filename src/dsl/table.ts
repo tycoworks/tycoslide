@@ -1,6 +1,6 @@
 // Table Component - Native pptxgenjs table element
 
-import { defineComponent, type ComponentNode } from '../core/registry.js';
+import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
 import { NODE_TYPE, type TableCellData, type TableStyleProps } from '../core/nodes.js';
 import type { TextContent } from '../core/types.js';
 
@@ -26,7 +26,7 @@ interface TableInternalProps {
   tableProps?: TableProps;
 }
 
-const tableComponent = defineComponent<TableInternalProps>(TABLE_COMPONENT, (props) => {
+componentRegistry.register({ name: TABLE_COMPONENT, expand: (props: TableInternalProps) => {
   // Normalize cells: convert plain strings/TextContent to TableCellData
   const rows: TableCellData[][] = props.data.map(row =>
     row.map(cell => {
@@ -50,7 +50,7 @@ const tableComponent = defineComponent<TableInternalProps>(TABLE_COMPONENT, (pro
     headerColumns: props.tableProps?.headerColumns,
     style: props.tableProps?.style,
   };
-});
+}});
 
 /**
  * Create a native table element that renders directly via pptxgenjs.
@@ -76,5 +76,5 @@ export function table(
   data: (TableCellData | TextContent)[][],
   props?: TableProps
 ): ComponentNode {
-  return tableComponent({ data, tableProps: props });
+  return component(TABLE_COMPONENT, { data, tableProps: props });
 }

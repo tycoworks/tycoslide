@@ -1,7 +1,6 @@
 // Primitive components: image, line, shape, slideNumber
-// Converts simple factory functions to defineComponent pattern
 
-import { defineComponent, type ComponentNode } from '../core/registry.js';
+import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
 import { NODE_TYPE } from '../core/nodes.js';
 import type { ImageNode, LineNode, ShapeNode, ShapeBorder, SlideNumberNode } from '../core/nodes.js';
 import type { TextStyleName, HorizontalAlignment, ArrowType, DashType, ShapeName } from '../core/types.js';
@@ -21,14 +20,14 @@ export interface ImageProps extends ImageOptions {
   src: string;
 }
 
-const imageComponent = defineComponent<ImageProps>(IMAGE_COMPONENT, (props): ImageNode => ({
+componentRegistry.register({ name: IMAGE_COMPONENT, expand: (props: ImageProps): ImageNode => ({
   type: NODE_TYPE.IMAGE,
   src: props.src,
   alt: props.alt,
-}));
+})});
 
 export function image(src: string, options?: ImageOptions): ComponentNode {
-  return imageComponent({ src, ...options });
+  return component(IMAGE_COMPONENT, { src, ...options });
 }
 
 // ============================================
@@ -45,17 +44,17 @@ export interface LineProps {
   endArrow?: ArrowType;
 }
 
-const lineComponent = defineComponent<LineProps>(LINE_COMPONENT, (props): LineNode => ({
+componentRegistry.register({ name: LINE_COMPONENT, expand: (props: LineProps): LineNode => ({
   type: NODE_TYPE.LINE,
   color: props.color,
   width: props.width,
   dashType: props.dashType,
   beginArrow: props.beginArrow,
   endArrow: props.endArrow,
-}));
+})});
 
 export function line(props?: LineProps): ComponentNode {
-  return lineComponent(props ?? {});
+  return component(LINE_COMPONENT, props ?? {});
 }
 
 // ============================================
@@ -71,16 +70,16 @@ export interface ShapeProps {
   cornerRadius?: number;
 }
 
-const shapeComponent = defineComponent<ShapeProps>(SHAPE_COMPONENT, (props): ShapeNode => ({
+componentRegistry.register({ name: SHAPE_COMPONENT, expand: (props: ShapeProps): ShapeNode => ({
   type: NODE_TYPE.SHAPE,
   shape: props.shape,
   fill: props.fill,
   border: props.border,
   cornerRadius: props.cornerRadius,
-}));
+})});
 
 export function shape(props: ShapeProps): ComponentNode {
-  return shapeComponent(props);
+  return component(SHAPE_COMPONENT, props);
 }
 
 // ============================================
@@ -95,15 +94,15 @@ export interface SlideNumberProps {
   hAlign?: HorizontalAlignment;
 }
 
-const slideNumberComponent = defineComponent<SlideNumberProps>(SLIDE_NUMBER_COMPONENT, (props): SlideNumberNode => ({
+componentRegistry.register({ name: SLIDE_NUMBER_COMPONENT, expand: (props: SlideNumberProps): SlideNumberNode => ({
   type: NODE_TYPE.SLIDE_NUMBER,
   style: props.style,
   color: props.color,
   hAlign: props.hAlign ?? HALIGN.RIGHT,
-}));
+})});
 
 export function slideNumber(props?: SlideNumberProps): ComponentNode {
-  return slideNumberComponent({
+  return component(SLIDE_NUMBER_COMPONENT, {
     style: props?.style,
     color: props?.color,
     hAlign: props?.hAlign,

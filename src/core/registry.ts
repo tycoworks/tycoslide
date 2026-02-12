@@ -1,14 +1,65 @@
-// Component Registry
-// Mechanism for registering and expanding component nodes to primitives
+// Registry
+// Generic base class, component registry, and layout registry
 
 import { NODE_TYPE, type ElementNode, type ComponentNode, type SlideNode } from './nodes.js';
 import type { Theme } from './types.js';
+import type { Slide } from '../presentation.js';
 
 // Re-export ComponentNode for convenience
 export type { ComponentNode } from './nodes.js';
 
 // ============================================
-// TYPES
+// GENERIC REGISTRY BASE CLASS
+// ============================================
+
+/**
+ * A generic registry for named definitions.
+ * Provides idempotent registration, lookup, and enumeration.
+ */
+export class Registry<TDef extends { name: string }> {
+  private definitions = new Map<string, TDef>();
+
+  constructor(private label: string, private identityKey: keyof TDef) {}
+
+  /**
+   * Register a definition.
+   * Idempotent: re-registering the same implementation is a no-op.
+   * @throws Error if a definition with this name has a different implementation
+   */
+  register(definition: TDef): void {
+    const existing = this.definitions.get(definition.name);
+    if (existing) {
+      if (existing[this.identityKey] === definition[this.identityKey]) {
+        return;
+      }
+      throw new Error(`${this.label} '${definition.name}' already registered with different implementation`);
+    }
+    this.definitions.set(definition.name, definition);
+  }
+
+  has(name: string): boolean {
+    return this.definitions.has(name);
+  }
+
+  get(name: string): TDef | undefined {
+    return this.definitions.get(name);
+  }
+
+  getAll(): TDef[] {
+    return Array.from(this.definitions.values());
+  }
+
+  getRegisteredNames(): string[] {
+    return Array.from(this.definitions.keys());
+  }
+
+  clear(): void {
+    this.definitions.clear();
+  }
+}
+
+// ============================================
+// COMPONENT REGISTRY
 // ============================================
 
 /**
@@ -29,45 +80,16 @@ export interface ComponentDefinition<TProps = unknown> {
   expand: (props: TProps, context: ExpansionContext) => SlideNode | Promise<SlideNode>;
 }
 
-// ============================================
-// REGISTRY
-// ============================================
+/** Type discriminator for component nodes */
+export const COMPONENT_TYPE = NODE_TYPE.COMPONENT;
 
 /**
  * Registry for component definitions.
- * Themes and the core library register components here.
+ * Extends the generic Registry with component-specific expansion logic.
  */
-class ComponentRegistry {
-  private definitions = new Map<string, ComponentDefinition<any>>();
-
-  /**
-   * Register a component definition.
-   * Idempotent: if the same expand function is re-registered, silently no-op.
-   * @throws Error if a component with this name is already registered with a different implementation
-   */
-  register<TProps>(definition: ComponentDefinition<TProps>): void {
-    const existing = this.definitions.get(definition.name);
-    if (existing) {
-      if (existing.expand === definition.expand) {
-        return; // Idempotent - same function, safe to skip
-      }
-      throw new Error(`Component '${definition.name}' already registered with different implementation`);
-    }
-    this.definitions.set(definition.name, definition);
-  }
-
-  /**
-   * Check if a component is registered.
-   */
-  has(name: string): boolean {
-    return this.definitions.has(name);
-  }
-
-  /**
-   * Get a component definition by name.
-   */
-  get<TProps>(name: string): ComponentDefinition<TProps> | undefined {
-    return this.definitions.get(name);
+class ComponentRegistry extends Registry<ComponentDefinition<any>> {
+  constructor() {
+    super('Component', 'expand');
   }
 
   /**
@@ -75,7 +97,7 @@ class ComponentRegistry {
    * @throws Error if the component is not registered
    */
   async expand(node: ComponentNode, context: ExpansionContext): Promise<SlideNode> {
-    const def = this.definitions.get(node.componentName);
+    const def = this.get(node.componentName);
     if (!def) {
       throw new Error(`Unknown component: '${node.componentName}'. Did you forget to register it?`);
     }
@@ -88,17 +110,13 @@ class ComponentRegistry {
    * results are recursively processed (in case they contain more components).
    */
   async expandTree(node: SlideNode, context: ExpansionContext): Promise<ElementNode> {
-    // Check if this is a component node
     if (isComponentNode(node)) {
-      // Expand and recursively process the result
       const expanded = await this.expand(node, context);
       return this.expandTree(expanded, context);
     }
 
-    // It's a primitive - recurse into children
     const elementNode = node as ElementNode;
 
-    // Handle 'children' array (Row, Column, Group, Card, etc.)
     if ('children' in elementNode && Array.isArray((elementNode as any).children)) {
       const withChildren = elementNode as ElementNode & { children: SlideNode[] };
       return {
@@ -109,29 +127,11 @@ class ComponentRegistry {
       } as ElementNode;
     }
 
-    // Leaf node - return as-is
     return elementNode;
-  }
-
-  /**
-   * Clear all registered components.
-   * Useful for testing.
-   */
-  clear(): void {
-    this.definitions.clear();
-  }
-
-  /**
-   * Get all registered component names.
-   */
-  getRegisteredNames(): string[] {
-    return Array.from(this.definitions.keys());
   }
 }
 
-// ============================================
-// TYPE GUARD
-// ============================================
+export const componentRegistry = new ComponentRegistry();
 
 /**
  * Type guard to check if a node is a component node.
@@ -148,72 +148,32 @@ export function isComponentNode(node: unknown): node is ComponentNode {
 }
 
 // ============================================
-// SINGLETON INSTANCE
+// LAYOUT REGISTRY
 // ============================================
 
 /**
- * Global component registry instance.
- * Use this to register and expand components.
+ * A named, described, typed slide factory.
+ * TParams provides compile-time type safety for the render function.
  */
-export const componentRegistry = new ComponentRegistry();
+export interface LayoutDefinition<TProps = Record<string, unknown>> {
+  name: string;
+  description: string;
+  render: (props: TProps) => Slide;
+}
+
+export const layoutRegistry = new Registry<LayoutDefinition<any>>('Layout', 'render');
 
 // ============================================
-// CONSTANTS
-// ============================================
-
-/** Type discriminator for component nodes */
-export const COMPONENT_TYPE = NODE_TYPE.COMPONENT;
-
-// ============================================
-// DSL HELPERS
+// DSL HELPER
 // ============================================
 
 /**
  * Create a component node.
- * This is the generic way to create components; convenience wrappers
- * like card() and table() will call this internally.
- *
- * @example
- * // Generic usage
- * component('card', { title: 'Hello', description: 'World' })
- *
- * // With type safety
- * component<CardProps>('card', { title: 'Hello' })
  */
 export function component<TProps>(name: string, props: TProps): ComponentNode<TProps> {
   return {
     type: COMPONENT_TYPE,
     componentName: name,
     props,
-  };
-}
-
-/**
- * Define and register a component in one step.
- * Returns a typed DSL factory function.
- * Uses lazy registration: component is registered on first use, not at import time.
- *
- * @example
- * // Define component with single line
- * export const card = defineComponent<CardProps>('card', (props, ctx) => {
- *   return stack(rectangle(...), column(...));
- * });
- *
- * // Usage
- * card({ title: 'Hello', description: 'World' })
- */
-export function defineComponent<TProps>(
-  name: string,
-  expand: (props: TProps, context: ExpansionContext) => SlideNode | Promise<SlideNode>
-): (props: TProps) => ComponentNode<TProps> {
-  let registered = false;
-
-  // Return the DSL factory that registers on first use
-  return (props: TProps): ComponentNode<TProps> => {
-    if (!registered) {
-      componentRegistry.register({ name, expand });
-      registered = true;
-    }
-    return component(name, props);
   };
 }

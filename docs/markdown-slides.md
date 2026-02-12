@@ -316,66 +316,84 @@ Everything after `Note:` (on its own line) until next slide boundary.
 
 ---
 
-## Layout Registry
+## Layout Registry — IMPLEMENTED
 
-### The Missing Piece
+### Design
 
-tycoslide core currently has no layout registry. Layouts are functions in the theme with ad-hoc signatures. For the document compiler, we need:
+`LayoutDefinition` is a tycoslide core type. Each layout has a name, description, and a typed `render` function:
 
 ```typescript
-interface LayoutDefinition {
+interface LayoutDefinition<TParams = Record<string, unknown>> {
   name: string;
   description: string;
-  params: LayoutParamSchema;
-  render: (params: LayoutParams, content: SlideContent[]) => Slide;
+  render: (params: TParams) => Slide;
 }
 ```
 
-Where `LayoutParamSchema` describes what the frontmatter can contain:
+TypeScript generics provide compile-time type safety. There is no runtime parameter schema — that will be added in Phase 3 using Zod when the markdown compiler needs to validate frontmatter.
+
+Themes define concrete param types for each layout:
 
 ```typescript
-interface LayoutParamSchema {
-  [key: string]: {
-    type: 'string' | 'string[]' | 'image' | 'boolean';
-    required?: boolean;
-    description?: string;
-  };
+interface ContentParams {
+  title: string;
+  eyebrow: string;
+  content: SlideNode[];
 }
-```
 
-### Example: Content Layout Registration
-
-```typescript
-registerLayout({
+const contentLayout: LayoutDefinition<ContentParams> = {
   name: 'content',
-  description: 'General content with eyebrow, title, and body',
-  params: {
-    eyebrow: { type: 'string', required: true },
-    title: { type: 'string' },  // Optional: extracted from first # heading
-  },
-  render: (params, content) => {
-    return contentSlide(
-      params.title,
-      params.eyebrow,
-      ...content,  // Markdown body compiled to ElementNode[]
-    );
-  },
-});
+  description: 'General content with eyebrow, title, and flexible centered body.',
+  render: ({ title, eyebrow, content }) =>
+    masteredSlide(headerBlock(eyebrow, title), contentBody(...content)),
+};
 ```
 
-### Mapping Materialize Layouts
+### Registry
 
-| Layout | Frontmatter Params | Content Model |
-|--------|-------------------|---------------|
+`LayoutRegistry` is a singleton (`layoutRegistry`) following the same pattern as `ComponentRegistry`. Themes call `registerMaterializeLayouts()` to register all layouts at initialization.
+
+### Validation Strategy (Phase 3)
+
+When the document compiler arrives, each layout will add a Zod schema alongside its TypeScript interface. Zod provides:
+- Runtime validation of frontmatter YAML
+- TypeScript type inference from the schema (eliminating double bookkeeping)
+- `.describe()` for AI discovery and error messages
+
+This avoids building a homebrew type system now that would be replaced by Zod later.
+
+### Materialize Layouts
+
+All layouts take a single typed params object:
+
+| Layout | Params Type | Key Fields |
+|--------|------------|------------|
+| `title` | `TitleParams` | `title`, `subtitle?` |
+| `section` | `SectionParams` | `title` |
+| `content` | `ContentParams` | `title`, `eyebrow`, `content: SlideNode[]` |
+| `agenda` | `AgendaParams` | `title`, `eyebrow`, `intro?`, `items: string[]` |
+| `bullet` | `BulletParams` | `title`, `eyebrow`, `intro`, `bullets: string[]` |
+| `card` | `CardSlideParams` | `title`, `eyebrow`, `intro`, `cards: CardProps[]` |
+| `numberedCard` | `NumberedCardSlideParams` | `title`, `eyebrow`, `intro`, `cards: CardProps[]` |
+| `image` | `ImageSlideParams` | `title`, `eyebrow`, `image` |
+| `table` | `TableSlideParams` | `title`, `eyebrow`, `intro`, `rows: TextContent[][]` |
+| `twoColumn` | `TwoColumnParams` | `title`, `eyebrow`, `left`, `right` |
+
+### Frontmatter Mapping (Phase 3)
+
+When the markdown compiler is built, it will map frontmatter + content to these params:
+
+| Layout | Frontmatter Fields | Content Mapping |
+|--------|-------------------|-----------------|
 | `title` | `subtitle?` | Title from `#` heading |
 | `section` | — | Title from `#` heading |
-| `content` | `eyebrow` | Title from `#`, body is content |
-| `agenda` | `eyebrow`, `intro?` | Title from `#`, bullets extracted |
-| `bullet` | `eyebrow`, `intro` | Title from `#`, bullets extracted |
-| `card` | `eyebrow`, `intro` | Title from `#`, cards from `::card::` slots |
+| `content` | `eyebrow` | Title from `#`, body → `content` |
+| `agenda` | `eyebrow`, `intro?` | Title from `#`, bullets → `items` |
+| `bullet` | `eyebrow`, `intro` | Title from `#`, bullets → `bullets` |
+| `card` | `eyebrow`, `intro` | Title from `#`, `:::card` directives → `cards` |
 | `image` | `eyebrow`, `image` | Title from `#` |
-| `table` | `eyebrow`, `intro` | Title from `#`, table from markdown table |
-| `twoColumn` | `eyebrow` | Title from `#`, `::left::` and `::right::` slots |
+| `table` | `eyebrow`, `intro` | Title from `#`, markdown table → `rows` |
+| `twoColumn` | `eyebrow` | Title from `#`, `::left::`/`::right::` → slots |
 
 ---
 
@@ -515,9 +533,9 @@ description: Handles billions of rows
 
 The `Note:` separator (reveal.js pattern) is proposed but not confirmed. Is there a better approach?
 
-### 2. Layout registry scope
+### 2. Layout registry scope — RESOLVED
 
-Should `LayoutDefinition` be a tycoslide core type that all themes must implement, or theme-level convention?
+`LayoutDefinition` is a tycoslide core type. `LayoutRegistry` is a core singleton. Themes register their layouts at initialization. No runtime param schema until Phase 3 (Zod).
 
 ---
 
@@ -527,12 +545,15 @@ Should `LayoutDefinition` be a tycoslide core type that all themes must implemen
 
 `markdown("**bold** and :accent1[highlighted]")` → single TextNode.
 
-### Phase 2: Layout Registry — NEXT
+### Phase 2: Layout Registry — IN PROGRESS
 
-- Define `LayoutDefinition` interface in tycoslide core
-- Migrate Materialize layouts to register themselves
-- Layout catalog with parameter schemas
-- This is the prerequisite for the document compiler
+- [x] Define `LayoutDefinition<TParams>` interface in tycoslide core (`src/core/layoutRegistry.ts`)
+- [x] `LayoutRegistry` singleton with register/get/has/getAll
+- [x] Export from `src/index.ts`
+- [x] Refactor Materialize layouts from positional functions to `LayoutDefinition` objects with typed params
+- [x] `registerMaterializeLayouts()` for theme initialization
+- [ ] Migrate all session scripts to new `layout.render({...})` API
+- No runtime param schema — deferred to Phase 3 (Zod)
 
 ### Phase 3: Document Compiler
 

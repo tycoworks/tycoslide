@@ -1,7 +1,6 @@
-// Container DSL functions converted to components
-// Uses defineComponent pattern for lazy expansion
+// Container DSL functions: row, column, stack, grid
 
-import { defineComponent, type ComponentNode } from '../core/registry.js';
+import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
 import { NODE_TYPE, type ElementNode, type SlideNode } from '../core/nodes.js';
 import type {
   HorizontalAlignment,
@@ -54,7 +53,7 @@ interface RowInternalProps extends RowProps {
   children: SlideNode[];
 }
 
-const rowComponent = defineComponent<RowInternalProps>(ROW_COMPONENT, (props) => ({
+componentRegistry.register({ name: ROW_COMPONENT, expand: (props: RowInternalProps) => ({
   type: NODE_TYPE.CONTAINER,
   direction: DIRECTION.ROW,
   children: props.children as ElementNode[],  // Safe: expandTree recurses into these
@@ -64,13 +63,13 @@ const rowComponent = defineComponent<RowInternalProps>(ROW_COMPONENT, (props) =>
   vAlign: props.vAlign ?? VALIGN.TOP,    // Explicit default: pure alignment (not CSS stretch)
   hAlign: props.hAlign ?? HALIGN.LEFT,   // Explicit default for consistent measurement
   padding: props.padding,
-}));
+})});
 
 export function row(props: RowProps, ...children: SlideNode[]): ComponentNode;
 export function row(...children: SlideNode[]): ComponentNode;
 export function row(...args: any[]): ComponentNode {
   const { props, children } = parseContainerArgs<RowProps>(args);
-  return rowComponent({ ...props, children });
+  return component(ROW_COMPONENT, { ...props, children });
 }
 
 // ============================================
@@ -92,7 +91,7 @@ interface ColumnInternalProps extends ColumnProps {
   children: SlideNode[];
 }
 
-const columnComponent = defineComponent<ColumnInternalProps>(COLUMN_COMPONENT, (props) => ({
+componentRegistry.register({ name: COLUMN_COMPONENT, expand: (props: ColumnInternalProps) => ({
   type: NODE_TYPE.CONTAINER,
   direction: DIRECTION.COLUMN,
   children: props.children as ElementNode[],  // Safe: expandTree recurses into these
@@ -102,13 +101,13 @@ const columnComponent = defineComponent<ColumnInternalProps>(COLUMN_COMPONENT, (
   vAlign: props.vAlign ?? VALIGN.TOP,    // Explicit default for consistent measurement
   hAlign: props.hAlign ?? HALIGN.LEFT,   // Explicit default for consistent measurement
   padding: props.padding,
-}));
+})});
 
 export function column(props: ColumnProps, ...children: SlideNode[]): ComponentNode;
 export function column(...children: SlideNode[]): ComponentNode;
 export function column(...args: any[]): ComponentNode {
   const { props, children } = parseContainerArgs<ColumnProps>(args);
-  return columnComponent({ ...props, children });
+  return component(COLUMN_COMPONENT, { ...props, children });
 }
 
 // ============================================
@@ -126,12 +125,12 @@ interface StackInternalProps extends StackProps {
   children: SlideNode[];
 }
 
-const stackComponent = defineComponent<StackInternalProps>(STACK_COMPONENT, (props) => ({
+componentRegistry.register({ name: STACK_COMPONENT, expand: (props: StackInternalProps) => ({
   type: NODE_TYPE.STACK,
   children: props.children as ElementNode[],  // Safe: expandTree recurses into these
   width: props.width,
   height: props.height,
-}));
+})});
 
 /**
  * Stack is a z-order container: all children occupy the same bounds.
@@ -149,7 +148,7 @@ export function stack(props: StackProps, ...children: SlideNode[]): ComponentNod
 export function stack(...children: SlideNode[]): ComponentNode;
 export function stack(...args: any[]): ComponentNode {
   const { props, children } = parseContainerArgs<StackProps>(args);
-  return stackComponent({ ...props, children });
+  return component(STACK_COMPONENT, { ...props, children });
 }
 
 // ============================================
@@ -169,7 +168,7 @@ interface GridInternalProps extends GridProps {
   children: SlideNode[];
 }
 
-const gridComponent = defineComponent<GridInternalProps>(GRID_COMPONENT, (props) => {
+componentRegistry.register({ name: GRID_COMPONENT, expand: (props: GridInternalProps) => {
   const { columns, gap, fill = false, children } = props;
 
   // Wrap each child in a column cell so items share row width equally
@@ -198,7 +197,7 @@ const gridComponent = defineComponent<GridInternalProps>(GRID_COMPONENT, (props)
   // When fill: true, the wrapper column needs SIZE.FILL so rows have a definite-height
   // parent to divide (flex: 1 1 0 needs space to distribute).
   return fill ? column({ height: SIZE.FILL }, ...rows) : column(...rows);
-});
+}});
 
 /**
  * Grid arranges children into rows of N columns.
@@ -232,5 +231,5 @@ export function grid(...args: any[]): ComponentNode {
     children = args.slice(1);
   }
 
-  return gridComponent({ columns, gap, fill, children });
+  return component(GRID_COMPONENT, { columns, gap, fill, children });
 }

@@ -1,7 +1,7 @@
 // Card Component
 // Implements card as a component using primitives: stack, column, shape, text, image
 
-import { defineComponent, type ExpansionContext } from '../core/registry.js';
+import { componentRegistry, component, type ExpansionContext } from '../core/registry.js';
 import { stack, column } from './containers.js';
 import { shape, image } from './primitives.js';
 import { text } from './text.js';
@@ -146,6 +146,8 @@ function expandCard(props: CardProps, context: ExpansionContext): SlideNode {
 // COMPONENT REGISTRATION & DSL
 // ============================================
 
+componentRegistry.register({ name: CARD_COMPONENT, expand: expandCard });
+
 /**
  * Create a card component node.
  *
@@ -159,4 +161,6 @@ function expandCard(props: CardProps, context: ExpansionContext): SlideNode {
  * })
  * ```
  */
-export const card = defineComponent<CardProps>(CARD_COMPONENT, expandCard);
+export function card(props: CardProps) {
+  return component(CARD_COMPONENT, props);
+}
