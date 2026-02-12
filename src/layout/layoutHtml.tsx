@@ -6,7 +6,7 @@ import path from 'path';
 import { renderToString } from 'hono/jsx/dom/server';
 import type { FC, PropsWithChildren } from 'hono/jsx';
 import type { Page } from 'playwright';
-import type { ElementNode, TextNode, ImageNode, ContainerNode, StackNode, SlideNumberNode, TableNode, TableCellData } from '../core/nodes.js';
+import type { ElementNode, TextNode, ImageNode, LineNode, ContainerNode, StackNode, SlideNumberNode, TableNode, TableCellData } from '../core/nodes.js';
 import { NODE_TYPE } from '../core/nodes.js';
 import type { Theme, TextStyle, FontWeight, GapSize, VerticalAlignment, HorizontalAlignment, SizeValue, TextContent, NormalizedRun, Direction } from '../core/types.js';
 import { TEXT_STYLE, FONT_WEIGHT, SIZE, VALIGN, HALIGN, DIRECTION } from '../core/types.js';
@@ -591,11 +591,6 @@ const LayoutImage: FC<LayoutImageProps> = ({
   );
 };
 
-const LayoutRectangle: FC<{ nodeId: string }> = ({ nodeId }) => {
-  // Rectangle fills its parent bounds completely
-  return <div data-node-id={nodeId} style={{ width: '100%', height: '100%' }} />;
-};
-
 interface LayoutLineProps {
   nodeId: string;
   parentDirection?: Direction;
@@ -603,13 +598,17 @@ interface LayoutLineProps {
 }
 
 const LayoutLine: FC<LayoutLineProps> = ({ nodeId, parentDirection, borderWidthPx }) => {
-  // Direction-aware: horizontal in column, vertical in row
   if (parentDirection === DIRECTION.ROW) {
     // Vertical separator in a row: fixed width, stretch to row height
     return <div data-node-id={nodeId} style={{ flex: `0 0 ${borderWidthPx}px`, alignSelf: 'stretch' }} />;
   }
   // Horizontal separator in a column (default): full width, fixed height
   return <div data-node-id={nodeId} style={{ flex: `0 0 ${borderWidthPx}px`, width: '100%' }} />;
+};
+
+const LayoutShape: FC<{ nodeId: string }> = ({ nodeId }) => {
+  // Area shapes: fill parent bounds completely (bounding box only — visual shape rendered in PPTX)
+  return <div data-node-id={nodeId} style={{ width: '100%', height: '100%' }} />;
 };
 
 const LayoutSlideNumber: FC<{ nodeId: string; style: TextStyle }> = ({
@@ -749,8 +748,13 @@ function nodeToJsx(
     }
 
     case NODE_TYPE.LINE: {
-      const borderWidthPx = ptToPx(theme.borders.width);
+      const lineNode = node as LineNode;
+      const borderWidthPx = ptToPx(lineNode.width ?? theme.borders.width);
       return <LayoutLine nodeId={nodeId} parentDirection={parent.direction} borderWidthPx={borderWidthPx} />;
+    }
+
+    case NODE_TYPE.SHAPE: {
+      return <LayoutShape nodeId={nodeId} />;
     }
 
     case NODE_TYPE.SLIDE_NUMBER: {
@@ -758,10 +762,6 @@ function nodeToJsx(
       const styleName = slideNumNode.style ?? TEXT_STYLE.FOOTER;
       const style = theme.textStyles[styleName];
       return <LayoutSlideNumber nodeId={nodeId} style={style} />;
-    }
-
-    case NODE_TYPE.RECTANGLE: {
-      return <LayoutRectangle nodeId={nodeId} />;
     }
 
     case NODE_TYPE.TABLE: {

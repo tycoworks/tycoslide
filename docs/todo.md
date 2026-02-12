@@ -5,6 +5,7 @@ Spacing / layouts:
 -- Image cover
 
 Core:
+- Markdown 2
 - Align colors with design token standards. Semantic vs color names.
 - Escape hatch
 - Portrait mode
@@ -18,8 +19,6 @@ Cleanup:
 - Right align bullet points
 
 Components:
-- Markdown
-- Rect -> shape
 - Image to the left of the card / direction and justify
 - Quote component
 - Code component

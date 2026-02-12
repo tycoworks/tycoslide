@@ -4,10 +4,10 @@
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import { generateLayoutHTML } from '../dist/layout/layoutHtml.js';
-import { text, row, column, image, line, stack, rectangle } from '../dist/dsl/index.js';
+import { text, row, column, image, line, stack, shape } from '../dist/dsl/index.js';
 import { componentRegistry } from '../dist/core/registry.js';
 import { Bounds } from '../dist/core/bounds.js';
-import { HALIGN, VALIGN, DIRECTION, SIZE } from '../dist/core/types.js';
+import { HALIGN, VALIGN, DIRECTION, SIZE, SHAPE } from '../dist/core/types.js';
 import type { Theme, } from '../dist/core/types.js';
 import type { ElementNode } from '../dist/core/nodes.js';
 import { NODE_TYPE } from '../dist/core/nodes.js';
@@ -304,7 +304,7 @@ describe('HTML Measurement Generation', () => {
 
     test('stack grid uses minmax(0, 1fr) to allow track shrinking', () => {
       // Grid tracks must allow shrinking below content size
-      const node = column(stack(rectangle(), column(text('Content'))));
+      const node = column(stack(shape({ shape: SHAPE.ROUND_RECT }), column(text('Content'))));
       const { html } = genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('minmax(0, 1fr)'), 'Stack grid should use minmax(0, 1fr) not plain 1fr');
     });
@@ -321,7 +321,7 @@ describe('HTML Measurement Generation', () => {
 
     test('stack in row omits height (stretch handles card equal height)', () => {
       // Stacks (used by card component) in rows rely on align-items: stretch for equal height.
-      const node = row(stack(rectangle(), column(text('Card'))));
+      const node = row(stack(shape({ shape: SHAPE.ROUND_RECT }), column(text('Card'))));
       const { html } = genHTML(node, bounds, mockTheme);
       const stackMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
       assert.ok(stackMatch, 'Should find the stack div');
@@ -331,7 +331,7 @@ describe('HTML Measurement Generation', () => {
     test('stack child (grid item) is flex container with min-height: 0 and overflow: hidden', () => {
       // Grid items inside stack must be flex containers so children fill the grid cell.
       // This works because the height chain is definite: SIZE.FILL → stretch → grid → here.
-      const node = column(stack(rectangle(), column(text('Content'))));
+      const node = column(stack(shape({ shape: SHAPE.ROUND_RECT }), column(text('Content'))));
       const { html } = genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('grid-area:1 / 1 / 2 / 2;display:flex;flex-direction:column;min-height:0px;overflow:hidden'), 'Stack child should be flex container with min-height:0px and overflow:hidden');
     });

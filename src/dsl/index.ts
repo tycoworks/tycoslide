@@ -1,19 +1,20 @@
 // DSL Index
 // All user-facing DSL functions — every function returns ComponentNode
 
-// Primitives (thin wrappers over ElementNodes)
+// Primitives (image, line, shape, slideNumber)
 export {
   image,
   line,
-  rectangle,
+  shape,
   slideNumber,
   IMAGE_COMPONENT,
   LINE_COMPONENT,
-  RECTANGLE_COMPONENT,
+  SHAPE_COMPONENT,
   SLIDE_NUMBER_COMPONENT,
   type ImageProps,
   type LineProps,
-  type RectangleProps,
+  type ShapeProps,
+  type SlideNumberProps,
 } from './primitives.js';
 
 // Containers (row, column, stack, grid)

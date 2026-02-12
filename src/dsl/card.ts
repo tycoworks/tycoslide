@@ -1,13 +1,13 @@
 // Card Component
-// Implements card as a component using primitives: stack, column, rectangle, text, image
+// Implements card as a component using primitives: stack, column, shape, text, image
 
 import { defineComponent, type ExpansionContext } from '../core/registry.js';
 import { stack, column } from './containers.js';
-import { rectangle, image } from './primitives.js';
+import { shape, image } from './primitives.js';
 import { text } from './text.js';
 import type { SlideNode } from '../core/nodes.js';
 import type { TextStyleName, GapSize } from '../core/types.js';
-import { TEXT_STYLE, GAP, HALIGN, VALIGN } from '../core/types.js';
+import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE } from '../core/types.js';
 
 // ============================================
 // CONSTANTS
@@ -128,7 +128,8 @@ function expandCard(props: CardProps, context: ExpansionContext): SlideNode {
   const bgBorderColor = borderColor ?? theme.colors.secondary;
   const bgBorderWidth = borderWidth ?? theme.borders.width;
 
-  const backgroundRect = rectangle({
+  const backgroundRect = shape({
+    shape: SHAPE.ROUND_RECT,
     fill: { color: bgColor, opacity: bgOpacity },
     border: {
       color: bgBorderColor,

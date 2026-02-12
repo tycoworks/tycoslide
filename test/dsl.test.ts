@@ -8,7 +8,7 @@ import {
   text,
   image,
   line,
-  rectangle,
+  shape,
   slideNumber,
   row,
   column,
@@ -18,7 +18,7 @@ import {
   TEXT_COMPONENT,
   IMAGE_COMPONENT,
   LINE_COMPONENT,
-  RECTANGLE_COMPONENT,
+  SHAPE_COMPONENT,
   SLIDE_NUMBER_COMPONENT,
   ROW_COMPONENT,
   COLUMN_COMPONENT,
@@ -29,7 +29,7 @@ import {
 import { card, CARD_COMPONENT } from '../src/dsl/card.js';
 import { componentRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
-import type { TextNode, ImageNode, LineNode, RectangleNode, SlideNumberNode, TableNode, ContainerNode, StackNode } from '../src/core/nodes.js';
+import type { TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, ContainerNode, StackNode } from '../src/core/nodes.js';
 import { DIRECTION } from '../src/core/types.js';
 import {
   TEXT_STYLE,
@@ -37,6 +37,7 @@ import {
   HALIGN,
   VALIGN,
   SIZE,
+  SHAPE,
   ARROW_TYPE,
   DASH_TYPE,
 } from '../src/core/types.js';
@@ -220,48 +221,51 @@ describe('line()', () => {
 });
 
 // ============================================
-// RECTANGLE
+// SHAPE (area shapes)
 // ============================================
 
-describe('rectangle()', () => {
+describe('shape()', () => {
   test('returns ComponentNode', () => {
-    const node = rectangle();
+    const node = shape({ shape: SHAPE.ELLIPSE });
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-    assert.strictEqual(node.componentName, RECTANGLE_COMPONENT);
+    assert.strictEqual(node.componentName, SHAPE_COMPONENT);
   });
 
-  test('expands to correct NODE_TYPE', () => {
-    const node = expand(rectangle()) as RectangleNode;
-    assert.strictEqual(node.type, NODE_TYPE.RECTANGLE);
+  test('expands to specified shape type', () => {
+    const node = expand(shape({ shape: SHAPE.PLUS })) as ShapeNode;
+    assert.strictEqual(node.type, NODE_TYPE.SHAPE);
+    assert.strictEqual(node.shape, SHAPE.PLUS);
   });
 
   test('applies no props by default', () => {
-    const node = expand(rectangle()) as RectangleNode;
+    const node = expand(shape({ shape: SHAPE.RECT })) as ShapeNode;
     assert.strictEqual(node.fill, undefined);
     assert.strictEqual(node.border, undefined);
     assert.strictEqual(node.cornerRadius, undefined);
   });
 
   test('passes fill color', () => {
-    const node = expand(rectangle({ fill: { color: 'FF0000' } })) as RectangleNode;
+    const node = expand(shape({ shape: SHAPE.RECT, fill: { color: 'FF0000' } })) as ShapeNode;
     assert.deepStrictEqual(node.fill, { color: 'FF0000' });
   });
 
   test('passes fill color with opacity', () => {
-    const node = expand(rectangle({ fill: { color: 'FF0000', opacity: 50 } })) as RectangleNode;
+    const node = expand(shape({ shape: SHAPE.RECT, fill: { color: 'FF0000', opacity: 50 } })) as ShapeNode;
     assert.deepStrictEqual(node.fill, { color: 'FF0000', opacity: 50 });
   });
 
   test('passes border properties', () => {
-    const node = expand(rectangle({
+    const node = expand(shape({
+      shape: SHAPE.RECT,
       border: { color: '0000FF', width: 2 },
-    })) as RectangleNode;
+    })) as ShapeNode;
     assert.strictEqual(node.border?.color, '0000FF');
     assert.strictEqual(node.border?.width, 2);
   });
 
   test('passes selective border sides', () => {
-    const node = expand(rectangle({
+    const node = expand(shape({
+      shape: SHAPE.RECT,
       border: {
         color: '000000',
         width: 1,
@@ -270,7 +274,7 @@ describe('rectangle()', () => {
         left: false,
         right: false,
       },
-    })) as RectangleNode;
+    })) as ShapeNode;
     assert.strictEqual(node.border?.top, true);
     assert.strictEqual(node.border?.bottom, true);
     assert.strictEqual(node.border?.left, false);
@@ -278,16 +282,24 @@ describe('rectangle()', () => {
   });
 
   test('passes corner radius', () => {
-    const node = expand(rectangle({ cornerRadius: 0.125 })) as RectangleNode;
+    const node = expand(shape({ shape: SHAPE.ROUND_RECT, cornerRadius: 0.125 })) as ShapeNode;
     assert.strictEqual(node.cornerRadius, 0.125);
   });
 
+  test('passes specific shape with fill', () => {
+    const node = expand(shape({ shape: SHAPE.TRAPEZOID, fill: { color: 'FF0000', opacity: 50 } })) as ShapeNode;
+    assert.strictEqual(node.shape, SHAPE.TRAPEZOID);
+    assert.deepStrictEqual(node.fill, { color: 'FF0000', opacity: 50 });
+  });
+
   test('applies all props together', () => {
-    const node = expand(rectangle({
+    const node = expand(shape({
+      shape: SHAPE.ELLIPSE,
       fill: { color: 'EEEEEE', opacity: 80 },
       border: { color: '333333', width: 1 },
       cornerRadius: 0.25,
-    })) as RectangleNode;
+    })) as ShapeNode;
+    assert.strictEqual(node.shape, SHAPE.ELLIPSE);
     assert.deepStrictEqual(node.fill, { color: 'EEEEEE', opacity: 80 });
     assert.strictEqual(node.border?.color, '333333');
     assert.strictEqual(node.border?.width, 1);

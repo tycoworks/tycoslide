@@ -1,11 +1,11 @@
-// Primitive components: image, line, rectangle, slideNumber
+// Primitive components: image, line, shape, slideNumber
 // Converts simple factory functions to defineComponent pattern
 
 import { defineComponent, type ComponentNode } from '../core/registry.js';
 import { NODE_TYPE } from '../core/nodes.js';
-import type { ImageNode, LineNode, RectangleNode, SlideNumberNode, RectangleBorder } from '../core/nodes.js';
-import type { TextStyleName, HorizontalAlignment, ArrowType, DashType } from '../core/types.js';
-import { HALIGN } from '../core/types.js';
+import type { ImageNode, LineNode, ShapeNode, ShapeBorder, SlideNumberNode } from '../core/nodes.js';
+import type { TextStyleName, HorizontalAlignment, ArrowType, DashType, ShapeName } from '../core/types.js';
+import { HALIGN, SHAPE } from '../core/types.js';
 
 // ============================================
 // IMAGE
@@ -59,26 +59,28 @@ export function line(props?: LineProps): ComponentNode {
 }
 
 // ============================================
-// RECTANGLE
+// SHAPE (all area shapes)
 // ============================================
 
-export const RECTANGLE_COMPONENT = 'rectangle' as const;
+export const SHAPE_COMPONENT = 'shape' as const;
 
-export interface RectangleProps {
+export interface ShapeProps {
+  shape: ShapeName;
   fill?: { color: string; opacity?: number };
-  border?: RectangleBorder;
+  border?: ShapeBorder;
   cornerRadius?: number;
 }
 
-const rectangleComponent = defineComponent<RectangleProps>(RECTANGLE_COMPONENT, (props): RectangleNode => ({
-  type: NODE_TYPE.RECTANGLE,
+const shapeComponent = defineComponent<ShapeProps>(SHAPE_COMPONENT, (props): ShapeNode => ({
+  type: NODE_TYPE.SHAPE,
+  shape: props.shape,
   fill: props.fill,
   border: props.border,
   cornerRadius: props.cornerRadius,
 }));
 
-export function rectangle(props?: RectangleProps): ComponentNode {
-  return rectangleComponent(props ?? {});
+export function shape(props: ShapeProps): ComponentNode {
+  return shapeComponent(props);
 }
 
 // ============================================

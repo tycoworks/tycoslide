@@ -10,7 +10,7 @@ import {
   type PositionedNode,
   type TextNode,
   type LineNode,
-  type RectangleNode,
+  type ShapeNode,
   type TableNode,
   type TableCellData,
   type SlideNumberNode,
@@ -23,6 +23,7 @@ import {
   DASH_TYPE,
   BORDER_STYLE,
   SHAPE,
+  LINE_SHAPE,
 } from '../src/core/types.js';
 import { getParagraphGapRatio } from '../src/utils/text.js';
 import { containFit } from '../src/utils/image.js';
@@ -62,6 +63,7 @@ describe('buildLineConfig()', () => {
   test('places arrows inside line sub-object', () => {
     const lineNode: LineNode = {
       type: NODE_TYPE.LINE,
+
       beginArrow: ARROW_TYPE.TRIANGLE,
       endArrow: ARROW_TYPE.TRIANGLE,
     };
@@ -69,7 +71,7 @@ describe('buildLineConfig()', () => {
 
     const result = builder.buildLineConfig(lineNode, pos, theme);
 
-    assert.strictEqual(result.shapeType, String(SHAPE.LINE));
+    assert.strictEqual(result.shapeType, LINE_SHAPE);
     assert.ok(result.options.line, 'line sub-object should exist');
     const lineOpts = result.options.line as Record<string, unknown>;
     assert.strictEqual(lineOpts.beginArrowType, ARROW_TYPE.TRIANGLE);
@@ -79,6 +81,7 @@ describe('buildLineConfig()', () => {
   test('places dashType inside line sub-object', () => {
     const lineNode: LineNode = {
       type: NODE_TYPE.LINE,
+
       dashType: DASH_TYPE.DASH,
     };
     const pos = positioned(lineNode, 1, 2, 5, 0);
@@ -92,6 +95,7 @@ describe('buildLineConfig()', () => {
   test('vertical line when height > width', () => {
     const lineNode: LineNode = {
       type: NODE_TYPE.LINE,
+
     };
     const pos = positioned(lineNode, 1, 2, 0.1, 5);
 
@@ -104,6 +108,7 @@ describe('buildLineConfig()', () => {
   test('horizontal line when width >= height', () => {
     const lineNode: LineNode = {
       type: NODE_TYPE.LINE,
+
     };
     const pos = positioned(lineNode, 1, 2, 5, 0.1);
 
@@ -116,6 +121,7 @@ describe('buildLineConfig()', () => {
   test('applies color and width from lineNode', () => {
     const lineNode: LineNode = {
       type: NODE_TYPE.LINE,
+
       color: 'FF0000',
       width: 3,
     };
@@ -131,6 +137,7 @@ describe('buildLineConfig()', () => {
   test('uses theme defaults when color and width not specified', () => {
     const lineNode: LineNode = {
       type: NODE_TYPE.LINE,
+
     };
     const pos = positioned(lineNode, 1, 2, 5, 0);
 
@@ -500,40 +507,43 @@ describe('buildColumnWidths()', () => {
 // RECTANGLE TESTS - Regression test #7
 // ============================================
 
-describe('buildRectangleConfig()', () => {
+describe('buildShapeConfig() — area shapes', () => {
   test('returns null when no fill and no border', () => {
-    const rectNode: RectangleNode = {
-      type: NODE_TYPE.RECTANGLE,
+    const shapeNode: ShapeNode = {
+      type: NODE_TYPE.SHAPE,
+      shape: SHAPE.ROUND_RECT,
     };
-    const pos = positioned(rectNode, 1, 2, 5, 3);
+    const pos = positioned(shapeNode, 1, 2, 5, 3);
 
-    const result = builder.buildRectangleConfig(rectNode, pos, theme);
+    const result = builder.buildShapeConfig(shapeNode, pos, theme);
 
     assert.strictEqual(result, null);
   });
 
-  test('returns RECT shape when no cornerRadius', () => {
-    const rectNode: RectangleNode = {
-      type: NODE_TYPE.RECTANGLE,
+  test('returns ROUND_RECT shape type', () => {
+    const shapeNode: ShapeNode = {
+      type: NODE_TYPE.SHAPE,
+      shape: SHAPE.ROUND_RECT,
       fill: { color: 'EEEEEE' },
     };
-    const pos = positioned(rectNode, 1, 2, 5, 3);
+    const pos = positioned(shapeNode, 1, 2, 5, 3);
 
-    const result = builder.buildRectangleConfig(rectNode, pos, theme);
+    const result = builder.buildShapeConfig(shapeNode, pos, theme);
 
     assert.ok(result);
-    assert.strictEqual(result.shapeType, SHAPE.RECT);
+    assert.strictEqual(result.shapeType, SHAPE.ROUND_RECT);
   });
 
   test('returns ROUND_RECT shape when cornerRadius specified', () => {
-    const rectNode: RectangleNode = {
-      type: NODE_TYPE.RECTANGLE,
+    const shapeNode: ShapeNode = {
+      type: NODE_TYPE.SHAPE,
+      shape: SHAPE.ROUND_RECT,
       fill: { color: 'EEEEEE' },
       cornerRadius: 0.125,
     };
-    const pos = positioned(rectNode, 1, 2, 5, 3);
+    const pos = positioned(shapeNode, 1, 2, 5, 3);
 
-    const result = builder.buildRectangleConfig(rectNode, pos, theme);
+    const result = builder.buildShapeConfig(shapeNode, pos, theme);
 
     assert.ok(result);
     assert.strictEqual(result.shapeType, SHAPE.ROUND_RECT);
@@ -541,13 +551,14 @@ describe('buildRectangleConfig()', () => {
   });
 
   test('applies fill color and transparency', () => {
-    const rectNode: RectangleNode = {
-      type: NODE_TYPE.RECTANGLE,
+    const shapeNode: ShapeNode = {
+      type: NODE_TYPE.SHAPE,
+      shape: SHAPE.ROUND_RECT,
       fill: { color: 'FF0000', opacity: 50 },
     };
-    const pos = positioned(rectNode, 1, 2, 5, 3);
+    const pos = positioned(shapeNode, 1, 2, 5, 3);
 
-    const result = builder.buildRectangleConfig(rectNode, pos, theme);
+    const result = builder.buildShapeConfig(shapeNode, pos, theme);
 
     assert.ok(result);
     assert.ok(result.options.fill);
@@ -557,17 +568,18 @@ describe('buildRectangleConfig()', () => {
   });
 
   test('applies border when all sides enabled', () => {
-    const rectNode: RectangleNode = {
-      type: NODE_TYPE.RECTANGLE,
+    const shapeNode: ShapeNode = {
+      type: NODE_TYPE.SHAPE,
+      shape: SHAPE.ROUND_RECT,
       fill: { color: 'FFFFFF' },
       border: {
         color: '000000',
         width: 2,
       },
     };
-    const pos = positioned(rectNode, 1, 2, 5, 3);
+    const pos = positioned(shapeNode, 1, 2, 5, 3);
 
-    const result = builder.buildRectangleConfig(rectNode, pos, theme);
+    const result = builder.buildShapeConfig(shapeNode, pos, theme);
 
     assert.ok(result);
     assert.ok(result.options.line);
@@ -577,8 +589,9 @@ describe('buildRectangleConfig()', () => {
   });
 
   test('no border when any side explicitly disabled', () => {
-    const rectNode: RectangleNode = {
-      type: NODE_TYPE.RECTANGLE,
+    const shapeNode: ShapeNode = {
+      type: NODE_TYPE.SHAPE,
+      shape: SHAPE.ROUND_RECT,
       fill: { color: 'FFFFFF' },
       border: {
         color: '000000',
@@ -586,23 +599,24 @@ describe('buildRectangleConfig()', () => {
         top: false,  // One side disabled
       },
     };
-    const pos = positioned(rectNode, 1, 2, 5, 3);
+    const pos = positioned(shapeNode, 1, 2, 5, 3);
 
-    const result = builder.buildRectangleConfig(rectNode, pos, theme);
+    const result = builder.buildShapeConfig(shapeNode, pos, theme);
 
     assert.ok(result);
     assert.strictEqual(result.options.line, undefined);
   });
 
   test('uses theme defaults for border color and width', () => {
-    const rectNode: RectangleNode = {
-      type: NODE_TYPE.RECTANGLE,
+    const shapeNode: ShapeNode = {
+      type: NODE_TYPE.SHAPE,
+      shape: SHAPE.ROUND_RECT,
       fill: { color: 'FFFFFF' },
       border: {},
     };
-    const pos = positioned(rectNode, 1, 2, 5, 3);
+    const pos = positioned(shapeNode, 1, 2, 5, 3);
 
-    const result = builder.buildRectangleConfig(rectNode, pos, theme);
+    const result = builder.buildShapeConfig(shapeNode, pos, theme);
 
     assert.ok(result);
     assert.ok(result.options.line);

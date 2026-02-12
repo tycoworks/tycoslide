@@ -10,6 +10,7 @@ import type {
   HighlightPair,
   ArrowType,
   DashType,
+  ShapeName,
   SizeValue,
   BorderStyle,
   Direction,
@@ -23,14 +24,14 @@ export const NODE_TYPE = {
   // Content primitives
   TEXT: 'text',
   IMAGE: 'image',
-  LINE: 'line',
   SLIDE_NUMBER: 'slideNumber',
   TABLE: 'table',  // Native pptxgenjs table element
   // Layout primitives
   CONTAINER: 'container',  // Flex container (row or column, determined by direction)
   STACK: 'stack',  // Z-order composition: children overlap at same position
-  // Visual primitive
-  RECTANGLE: 'rectangle',
+  // Visual primitives
+  LINE: 'line',    // Stroke-only separator (zero cross-axis)
+  SHAPE: 'shape',  // Area shapes: fill, border, cornerRadius
   // Higher-level abstraction (expands to primitives)
   COMPONENT: 'component',
 } as const;
@@ -64,6 +65,25 @@ export interface LineNode {
   dashType?: DashType;
   beginArrow?: ArrowType;
   endArrow?: ArrowType;
+}
+
+/** Border configuration for area shapes - can be all sides or selective */
+export interface ShapeBorder {
+  color?: string;
+  width?: number;
+  top?: boolean;
+  right?: boolean;
+  bottom?: boolean;
+  left?: boolean;
+}
+
+/** Area shape node: fill, border, cornerRadius (rectangles, ellipses, triangles, etc.) */
+export interface ShapeNode {
+  type: typeof NODE_TYPE.SHAPE;
+  shape: ShapeName;
+  fill?: { color: string; opacity?: number };
+  border?: ShapeBorder;
+  cornerRadius?: number;
 }
 
 export interface SlideNumberNode {
@@ -137,27 +157,6 @@ export interface StackNode {
   height?: number | SizeValue;  // inches or SIZE.FILL
 }
 
-// ============================================
-// VISUAL PRIMITIVE
-// ============================================
-
-/** Border configuration for Rectangle - can be all sides or selective */
-export interface RectangleBorder {
-  color?: string;
-  width?: number;
-  top?: boolean;     // If false, no top border (default: true when border specified)
-  right?: boolean;
-  bottom?: boolean;
-  left?: boolean;
-}
-
-/** Rectangle is a pure visual shape with fill, border, and radius */
-export interface RectangleNode {
-  type: typeof NODE_TYPE.RECTANGLE;
-  fill?: { color: string; opacity?: number };
-  border?: RectangleBorder;
-  cornerRadius?: number;
-}
 
 // ============================================
 // COMPONENT NODE (higher-level abstraction)
@@ -183,11 +182,11 @@ export type ElementNode =
   | TextNode
   | ImageNode
   | LineNode
+  | ShapeNode
   | SlideNumberNode
   | TableNode
   | ContainerNode
-  | StackNode
-  | RectangleNode;
+  | StackNode;
 
 /** Content that can appear in slides and containers - primitives or components */
 export type SlideNode = ElementNode | ComponentNode;

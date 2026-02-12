@@ -48,7 +48,7 @@ describe('Card Component', () => {
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {
         assert.strictEqual(expanded.children.length, 2);
-        assert.strictEqual(expanded.children[0].type, NODE_TYPE.RECTANGLE);
+        assert.strictEqual(expanded.children[0].type, NODE_TYPE.SHAPE);
         assert.strictEqual(expanded.children[1].type, NODE_TYPE.CONTAINER);
       }
     });
@@ -131,8 +131,8 @@ describe('Card Component', () => {
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {
         const rect = expanded.children[0];
-        assert.strictEqual(rect.type, NODE_TYPE.RECTANGLE);
-        if (rect.type === NODE_TYPE.RECTANGLE) {
+        assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
+        if (rect.type === NODE_TYPE.SHAPE) {
           assert.strictEqual(rect.fill?.color, '#AABBCC');
         }
       }
@@ -148,8 +148,8 @@ describe('Card Component', () => {
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {
         const rect = expanded.children[0];
-        assert.strictEqual(rect.type, NODE_TYPE.RECTANGLE);
-        if (rect.type === NODE_TYPE.RECTANGLE) {
+        assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
+        if (rect.type === NODE_TYPE.SHAPE) {
           assert.strictEqual(rect.fill?.opacity, 50);
         }
       }
@@ -166,8 +166,8 @@ describe('Card Component', () => {
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {
         const rect = expanded.children[0];
-        assert.strictEqual(rect.type, NODE_TYPE.RECTANGLE);
-        if (rect.type === NODE_TYPE.RECTANGLE) {
+        assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
+        if (rect.type === NODE_TYPE.SHAPE) {
           assert.strictEqual(rect.border?.color, '#123456');
           assert.strictEqual(rect.border?.width, 2);
         }
@@ -184,8 +184,8 @@ describe('Card Component', () => {
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {
         const rect = expanded.children[0];
-        assert.strictEqual(rect.type, NODE_TYPE.RECTANGLE);
-        if (rect.type === NODE_TYPE.RECTANGLE) {
+        assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
+        if (rect.type === NODE_TYPE.SHAPE) {
           assert.strictEqual(rect.cornerRadius, 0.25);
         }
       }

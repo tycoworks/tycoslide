@@ -6,7 +6,7 @@ import PptxGenJSDefault from 'pptxgenjs';
 const PptxGenJS = (PptxGenJSDefault as any).default || PptxGenJSDefault;
 type PptxSlide = ReturnType<InstanceType<typeof PptxGenJS>['addSlide']>;
 
-import type { PositionedNode, TextNode, ImageNode, RectangleNode, LineNode, SlideNumberNode, TableNode } from './nodes.js';
+import type { PositionedNode, TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode } from './nodes.js';
 import { NODE_TYPE } from './nodes.js';
 import type { Theme } from './types.js';
 import { CUSTOM_LAYOUT } from './types.js';
@@ -153,8 +153,8 @@ export class PptxRenderer {
       case NODE_TYPE.IMAGE:
         this.renderImage(positioned, slide);
         break;
-      case NODE_TYPE.RECTANGLE:
-        this.renderRectangle(positioned, slide, theme);
+      case NODE_TYPE.SHAPE:
+        this.renderShape(positioned, slide, theme);
         break;
       case NODE_TYPE.LINE:
         this.renderLine(positioned, slide, theme);
@@ -198,12 +198,12 @@ export class PptxRenderer {
     slide.addImage(this.config.buildImageConfig(imageNode, positioned));
   }
 
-  private renderRectangle(positioned: PositionedNode, slide: PptxSlide, theme: Theme): void {
-    const rectNode = positioned.node as RectangleNode;
-    log.render.shape('RENDER rectangle x=%f y=%f w=%f h=%f',
-      positioned.x, positioned.y, positioned.width, positioned.height);
+  private renderShape(positioned: PositionedNode, slide: PptxSlide, theme: Theme): void {
+    const shapeNode = positioned.node as ShapeNode;
+    log.render.shape('RENDER shape(%s) x=%f y=%f w=%f h=%f',
+      shapeNode.shape, positioned.x, positioned.y, positioned.width, positioned.height);
 
-    const config = this.config.buildRectangleConfig(rectNode, positioned, theme);
+    const config = this.config.buildShapeConfig(shapeNode, positioned, theme);
     if (config) {
       slide.addShape(config.shapeType, config.options);
     }
@@ -281,11 +281,11 @@ export class PptxRenderer {
         objects.push({ image: this.config.buildImageConfig(imageNode, positioned) });
         break;
       }
-      case NODE_TYPE.RECTANGLE: {
-        const rectNode = node as RectangleNode;
-        const config = this.config.buildRectangleConfig(rectNode, positioned, theme);
+      case NODE_TYPE.SHAPE: {
+        const shapeNode = node as ShapeNode;
+        const config = this.config.buildShapeConfig(shapeNode, positioned, theme);
         if (config) {
-          objects.push({ [String(config.shapeType)]: config.options });
+          objects.push({ [config.shapeType]: config.options });
         }
         break;
       }

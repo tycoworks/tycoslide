@@ -2,9 +2,9 @@
 // Pure translation layer: converts tycoslide domain types to pptxgenjs option shapes.
 // No pptxgenjs dependency — every method takes typed inputs and returns plain data.
 
-import type { PositionedNode, TextNode, ImageNode, RectangleNode, LineNode, SlideNumberNode, TableNode, TableCellData } from './nodes.js';
+import type { PositionedNode, TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, TableCellData } from './nodes.js';
 import type { Theme, TextStyleName, TextContent } from './types.js';
-import { TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT, BORDER_STYLE, SHAPE } from './types.js';
+import { TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT, BORDER_STYLE, LINE_SHAPE } from './types.js';
 import { getFontFromFamily, normalizeContent, resolveLineHeight, getParagraphGapRatio } from '../utils/text.js';
 import { readImageDimensions, containFit } from '../utils/image.js';
 
@@ -142,17 +142,16 @@ export class PptxConfigBuilder {
     return { path: imageNode.src, ...fitted };
   }
 
-  buildRectangleConfig(
-    rectNode: RectangleNode,
+  buildShapeConfig(
+    shapeNode: ShapeNode,
     positioned: PositionedNode,
     theme: Theme
   ): { shapeType: string; options: Record<string, unknown> } | null {
     // Only draw if fill or border is specified
-    if (!rectNode.fill && !rectNode.border) {
+    if (!shapeNode.fill && !shapeNode.border) {
       return null;
     }
 
-    const shapeType = rectNode.cornerRadius ? SHAPE.ROUND_RECT : SHAPE.RECT;
     const options: Record<string, unknown> = {
       x: positioned.x,
       y: positioned.y,
@@ -160,17 +159,15 @@ export class PptxConfigBuilder {
       h: positioned.height,
     };
 
-    // Fill
-    if (rectNode.fill) {
+    if (shapeNode.fill) {
       options.fill = {
-        color: rectNode.fill.color,
-        transparency: rectNode.fill.opacity !== undefined ? 100 - rectNode.fill.opacity : 0,
+        color: shapeNode.fill.color,
+        transparency: shapeNode.fill.opacity !== undefined ? 100 - shapeNode.fill.opacity : 0,
       };
     }
 
-    // Border - check if any sides are explicitly disabled
-    if (rectNode.border) {
-      const border = rectNode.border;
+    if (shapeNode.border) {
+      const border = shapeNode.border;
       const allSides = border.top !== false && border.right !== false &&
                        border.bottom !== false && border.left !== false;
 
@@ -182,12 +179,11 @@ export class PptxConfigBuilder {
       }
     }
 
-    // Corner radius
-    if (rectNode.cornerRadius) {
-      options.rectRadius = rectNode.cornerRadius;
+    if (shapeNode.cornerRadius) {
+      options.rectRadius = shapeNode.cornerRadius;
     }
 
-    return { shapeType, options };
+    return { shapeType: shapeNode.shape, options };
   }
 
   buildLineConfig(
@@ -204,15 +200,16 @@ export class PptxConfigBuilder {
     if (lineNode.endArrow) lineOpts.endArrowType = lineNode.endArrow;
     if (lineNode.dashType) lineOpts.dashType = lineNode.dashType;
 
-    const options: Record<string, unknown> = {
-      x: positioned.x,
-      y: positioned.y,
-      w: isVertical ? 0 : positioned.width,
-      h: isVertical ? positioned.height : 0,
-      line: lineOpts,
+    return {
+      shapeType: LINE_SHAPE,
+      options: {
+        x: positioned.x,
+        y: positioned.y,
+        w: isVertical ? 0 : positioned.width,
+        h: isVertical ? positioned.height : 0,
+        line: lineOpts,
+      },
     };
-
-    return { shapeType: String(SHAPE.LINE), options };
   }
 
   buildSlideNumberOptions(
