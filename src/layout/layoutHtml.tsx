@@ -6,7 +6,7 @@ import path from 'path';
 import { renderToString } from 'hono/jsx/dom/server';
 import type { FC, PropsWithChildren } from 'hono/jsx';
 import type { Page } from 'playwright';
-import type { ElementNode, TextNode, ImageNode, RowNode, ColumnNode, StackNode, SlideNumberNode, TableNode, TableCellData } from '../core/nodes.js';
+import type { ElementNode, TextNode, ImageNode, ContainerNode, StackNode, SlideNumberNode, TableNode, TableCellData } from '../core/nodes.js';
 import { NODE_TYPE } from '../core/nodes.js';
 import type { Theme, TextStyle, FontWeight, GapSize, VerticalAlignment, HorizontalAlignment, SizeValue, TextContent, NormalizedRun, Direction } from '../core/types.js';
 import { TEXT_STYLE, FONT_WEIGHT, SIZE, VALIGN, HALIGN, DIRECTION } from '../core/types.js';
@@ -700,42 +700,23 @@ function nodeToJsx(
       );
     }
 
-    case NODE_TYPE.ROW: {
-      const rowNode = node as RowNode;
+    case NODE_TYPE.CONTAINER: {
+      const container = node as ContainerNode;
+      const isRow = container.direction === DIRECTION.ROW;
       return (
         <LayoutContainer
           nodeId={nodeId}
-          direction={DIRECTION.ROW}
+          direction={container.direction}
           parentDirection={parent.direction}
-          width={rowNode.width}
-          height={rowNode.height}
-          gap={rowNode.gap}
-          vAlign={rowNode.vAlign}
-          hAlign={rowNode.hAlign}
-          padding={rowNode.padding}
+          width={container.width}
+          height={container.height}
+          gap={container.gap}
+          vAlign={container.vAlign}
+          hAlign={container.hAlign}
+          padding={container.padding}
           theme={theme}
         >
-          {rowNode.children.map((child) => nodeToJsx(child, theme, nodeIds, idCtx, { direction: DIRECTION.ROW, hasDefiniteCrossSize: rowNode.height !== undefined }, fontNormalRatios))}
-        </LayoutContainer>
-      );
-    }
-
-    case NODE_TYPE.COLUMN: {
-      const colNode = node as ColumnNode;
-      return (
-        <LayoutContainer
-          nodeId={nodeId}
-          direction={DIRECTION.COLUMN}
-          parentDirection={parent.direction}
-          width={colNode.width}
-          height={colNode.height}
-          gap={colNode.gap}
-          vAlign={colNode.vAlign}
-          hAlign={colNode.hAlign}
-          padding={colNode.padding}
-          theme={theme}
-        >
-          {colNode.children.map((child) => nodeToJsx(child, theme, nodeIds, idCtx, { direction: DIRECTION.COLUMN }, fontNormalRatios))}
+          {container.children.map((child) => nodeToJsx(child, theme, nodeIds, idCtx, { direction: container.direction, hasDefiniteCrossSize: isRow ? container.height !== undefined : undefined }, fontNormalRatios))}
         </LayoutContainer>
       );
     }

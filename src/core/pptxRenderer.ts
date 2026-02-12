@@ -165,8 +165,7 @@ export class PptxRenderer {
       case NODE_TYPE.TABLE:
         this.renderTable(positioned, slide, theme);
         break;
-      case NODE_TYPE.ROW:
-      case NODE_TYPE.COLUMN:
+      case NODE_TYPE.CONTAINER:
       case NODE_TYPE.STACK:
         // Containers just render their children
         log.render._('  container %s with %d children', node.type.toUpperCase(), children?.length ?? 0);
@@ -301,8 +300,7 @@ export class PptxRenderer {
         onSlideNumber(this.config.buildSlideNumberOptions(slideNumNode, positioned, theme));
         break;
       }
-      case NODE_TYPE.ROW:
-      case NODE_TYPE.COLUMN:
+      case NODE_TYPE.CONTAINER:
       case NODE_TYPE.STACK:
         // Recurse into children
         if (children) {

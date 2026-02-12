@@ -9,7 +9,7 @@ import type {
   GapSize,
   SizeValue,
 } from '../core/types.js';
-import { VALIGN, HALIGN, SIZE } from '../core/types.js';
+import { VALIGN, HALIGN, SIZE, DIRECTION } from '../core/types.js';
 
 // ============================================
 // SHARED HELPERS
@@ -53,7 +53,8 @@ interface RowInternalProps extends RowProps {
 }
 
 const rowComponent = defineComponent<RowInternalProps>('row', (props) => ({
-  type: NODE_TYPE.ROW,
+  type: NODE_TYPE.CONTAINER,
+  direction: DIRECTION.ROW,
   children: props.children as ElementNode[],  // Safe: expandTree recurses into these
   width: props.width,
   height: props.height,
@@ -88,7 +89,8 @@ interface ColumnInternalProps extends ColumnProps {
 }
 
 const columnComponent = defineComponent<ColumnInternalProps>('column', (props) => ({
-  type: NODE_TYPE.COLUMN,
+  type: NODE_TYPE.CONTAINER,
+  direction: DIRECTION.COLUMN,
   children: props.children as ElementNode[],  // Safe: expandTree recurses into these
   width: props.width,
   height: props.height,

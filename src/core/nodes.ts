@@ -12,6 +12,7 @@ import type {
   DashType,
   SizeValue,
   BorderStyle,
+  Direction,
 } from './types.js';
 
 // ============================================
@@ -26,8 +27,7 @@ export const NODE_TYPE = {
   SLIDE_NUMBER: 'slideNumber',
   TABLE: 'table',  // Native pptxgenjs table element
   // Layout primitives
-  ROW: 'row',
-  COLUMN: 'column',
+  CONTAINER: 'container',  // Flex container (row or column, determined by direction)
   STACK: 'stack',  // Z-order composition: children overlap at same position
   // Visual primitive
   RECTANGLE: 'rectangle',
@@ -117,26 +117,16 @@ export interface TableNode {
 // CONTAINER NODES
 // ============================================
 
-export interface RowNode {
-  type: typeof NODE_TYPE.ROW;
-  children: ElementNode[];      // Post-expansion: always primitives
-  width?: number | SizeValue;   // inches (number) or SIZE.FILL to take remaining space (when inside another Row)
-  height?: number | SizeValue;  // inches (number) or SIZE.FILL to fill available height
-  gap?: GapSize;
-  vAlign: VerticalAlignment;
-  hAlign: HorizontalAlignment;  // justify-content: flex-start (left), center, flex-end (right)
-  padding?: number;             // inches - internal padding on all sides
-}
-
-export interface ColumnNode {
-  type: typeof NODE_TYPE.COLUMN;
-  children: ElementNode[];      // Post-expansion: always primitives
-  width?: number | SizeValue;   // inches (number) or SIZE.FILL to take remaining space (when inside Row)
-  height?: number | SizeValue;  // inches (number) or SIZE.FILL to take remaining space (when inside Column)
+export interface ContainerNode {
+  type: typeof NODE_TYPE.CONTAINER;
+  direction: Direction;           // 'row' or 'column' — determines flex-direction
+  children: ElementNode[];        // Post-expansion: always primitives
+  width?: number | SizeValue;     // inches (number) or SIZE.FILL
+  height?: number | SizeValue;    // inches (number) or SIZE.FILL
   gap?: GapSize;
   vAlign: VerticalAlignment;
   hAlign: HorizontalAlignment;
-  padding?: number;             // inches - internal padding on all sides
+  padding?: number;               // inches - internal padding on all sides
 }
 
 /** Stack is a z-order container: all children occupy the same bounds, rendered in order */
@@ -195,8 +185,7 @@ export type ElementNode =
   | LineNode
   | SlideNumberNode
   | TableNode
-  | RowNode
-  | ColumnNode
+  | ContainerNode
   | StackNode
   | RectangleNode;
 

@@ -1,7 +1,18 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { LayoutValidator, LayoutOverflowError, LayoutBoundsError } from '../src/layout/validator.js';
-import { NODE_TYPE, type PositionedNode } from '../src/core/nodes.js';
+import { NODE_TYPE, type PositionedNode, type ElementNode } from '../src/core/nodes.js';
+import { HALIGN, VALIGN, DIRECTION } from '../src/core/types.js';
+
+/** Minimal text node for validator tests (validator only checks geometry, not content) */
+function textNode(content: string): ElementNode {
+  return { type: NODE_TYPE.TEXT, content, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP } as ElementNode;
+}
+
+/** Minimal container node for validator tests */
+function containerNode(): ElementNode {
+  return { type: NODE_TYPE.CONTAINER, children: [], direction: DIRECTION.ROW, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP } as ElementNode;
+}
 
 describe('Layout Validation', () => {
   const slideBounds = { width: 10, height: 7.5 };
@@ -9,7 +20,7 @@ describe('Layout Validation', () => {
   describe('LayoutValidator', () => {
     it('should not throw when content is within bounds', () => {
       const positioned: PositionedNode = {
-        node: { type: NODE_TYPE.TEXT, content: 'Hello' },
+        node: textNode('Hello'),
         x: 0.5,
         y: 0.5,
         width: 4,
@@ -22,7 +33,7 @@ describe('Layout Validation', () => {
 
     it('should detect overflow beyond slide right edge', () => {
       const positioned: PositionedNode = {
-        node: { type: NODE_TYPE.TEXT, content: 'test' },
+        node: textNode('test'),
         x: 8,
         y: 1,
         width: 5, // extends to x=13, beyond slide width=10
@@ -38,7 +49,7 @@ describe('Layout Validation', () => {
 
     it('should detect overflow beyond slide bottom edge', () => {
       const positioned: PositionedNode = {
-        node: { type: NODE_TYPE.TEXT, content: 'test' },
+        node: textNode('test'),
         x: 1,
         y: 6,
         width: 2,
@@ -54,7 +65,7 @@ describe('Layout Validation', () => {
 
     it('should throw LayoutOverflowError with slide index', () => {
       const positioned: PositionedNode = {
-        node: { type: NODE_TYPE.TEXT, content: 'test' },
+        node: textNode('test'),
         x: 8,
         y: 1,
         width: 5,
@@ -74,7 +85,7 @@ describe('Layout Validation', () => {
 
     it('should return true for valid layout', () => {
       const positioned: PositionedNode = {
-        node: { type: NODE_TYPE.TEXT, content: 'test' },
+        node: textNode('test'),
         x: 1,
         y: 1,
         width: 2,
@@ -87,7 +98,7 @@ describe('Layout Validation', () => {
 
     it('should return false for invalid layout', () => {
       const positioned: PositionedNode = {
-        node: { type: NODE_TYPE.TEXT, content: 'test' },
+        node: textNode('test'),
         x: 8,
         y: 1,
         width: 5, // overflows
@@ -102,21 +113,21 @@ describe('Layout Validation', () => {
   describe('Sibling Overlap Detection', () => {
     it('should detect overlapping siblings in a row', () => {
       const positioned: PositionedNode = {
-        node: { type: NODE_TYPE.ROW, children: [] },
+        node: containerNode(),
         x: 1,
         y: 1,
         width: 8,
         height: 2,
         children: [
           {
-            node: { type: NODE_TYPE.TEXT, content: 'A' },
+            node: textNode('A'),
             x: 1,
             y: 1,
             width: 3,
             height: 1,
           },
           {
-            node: { type: NODE_TYPE.TEXT, content: 'B' },
+            node: textNode('B'),
             x: 2, // overlaps with first child (x=1, width=3 → ends at x=4)
             y: 1,
             width: 3,
@@ -142,14 +153,14 @@ describe('Layout Validation', () => {
         height: 2,
         children: [
           {
-            node: { type: NODE_TYPE.TEXT, content: 'Background' },
+            node: textNode('Background'),
             x: 1,
             y: 1,
             width: 4,
             height: 2,
           },
           {
-            node: { type: NODE_TYPE.TEXT, content: 'Foreground' },
+            node: textNode('Foreground'),
             x: 1, // same position - intentional overlap
             y: 1,
             width: 4,
@@ -168,14 +179,14 @@ describe('Layout Validation', () => {
   describe('Bounds Escape Detection (Child outside Parent)', () => {
     it('should detect child positioned above parent (escapeTop)', () => {
       const positioned: PositionedNode = {
-        node: { type: NODE_TYPE.COLUMN, children: [] },
+        node: containerNode(),
         x: 1,
         y: 2,
         width: 4,
         height: 3,
         children: [
           {
-            node: { type: NODE_TYPE.TEXT, content: 'test' },
+            node: textNode('test'),
             x: 1,
             y: 1, // above parent.y=2
             width: 4,
@@ -193,14 +204,14 @@ describe('Layout Validation', () => {
 
     it('should detect child positioned left of parent (escapeLeft)', () => {
       const positioned: PositionedNode = {
-        node: { type: NODE_TYPE.ROW, children: [] },
+        node: containerNode(),
         x: 2,
         y: 1,
         width: 4,
         height: 2,
         children: [
           {
-            node: { type: NODE_TYPE.TEXT, content: 'test' },
+            node: textNode('test'),
             x: 1, // left of parent.x=2
             y: 1,
             width: 2,
@@ -218,14 +229,14 @@ describe('Layout Validation', () => {
 
     it('should NOT report bottom/right escapes (these are overflow, not positioning bugs)', () => {
       const positioned: PositionedNode = {
-        node: { type: NODE_TYPE.COLUMN, children: [] },
+        node: containerNode(),
         x: 1,
         y: 1,
         width: 4,
         height: 2,
         children: [
           {
-            node: { type: NODE_TYPE.TEXT, content: 'test' },
+            node: textNode('test'),
             x: 1,
             y: 1,
             width: 6, // extends right of parent
@@ -242,14 +253,14 @@ describe('Layout Validation', () => {
 
     it('should throw LayoutBoundsError (higher priority than overflow)', () => {
       const positioned: PositionedNode = {
-        node: { type: NODE_TYPE.COLUMN, children: [] },
+        node: containerNode(),
         x: 1,
         y: 2,
         width: 4,
         height: 3,
         children: [
           {
-            node: { type: NODE_TYPE.TEXT, content: 'test' },
+            node: textNode('test'),
             x: 1,
             y: 1, // escapes top
             width: 4,

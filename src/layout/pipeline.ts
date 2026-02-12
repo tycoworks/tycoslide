@@ -2,7 +2,7 @@
 // Coordinates browser-based layout measurement and position tree construction.
 // The browser computes all positions via CSS flexbox in a single pass per slide.
 
-import type { ElementNode, PositionedNode, RowNode, ColumnNode, StackNode, TextNode } from '../core/nodes.js';
+import type { ElementNode, PositionedNode, ContainerNode, StackNode, TextNode } from '../core/nodes.js';
 import { NODE_TYPE } from '../core/nodes.js';
 import type { Bounds } from '../core/bounds.js';
 import type { Theme } from '../core/types.js';
@@ -147,8 +147,8 @@ export class LayoutPipeline {
     };
 
     // Recurse into container children
-    if (node.type === NODE_TYPE.ROW || node.type === NODE_TYPE.COLUMN || node.type === NODE_TYPE.STACK) {
-      const container = node as RowNode | ColumnNode | StackNode;
+    if (node.type === NODE_TYPE.CONTAINER || node.type === NODE_TYPE.STACK) {
+      const container = node as ContainerNode | StackNode;
       positioned.children = container.children.map(child =>
         this.buildPositionedTree(child, bounds)
       );

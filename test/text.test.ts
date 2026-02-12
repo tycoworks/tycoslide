@@ -6,6 +6,7 @@ import assert from 'node:assert';
 import { parseMarkdown, mdastToRuns } from '../src/dsl/text/mdastToRuns.js';
 import { text } from '../src/dsl/text/index.js';
 import { componentRegistry } from '../src/core/registry.js';
+import { NODE_TYPE } from '../src/core/nodes.js';
 import type { NormalizedRun, HighlightScheme } from '../src/core/types.js';
 import { mockTheme } from './mocks.js';
 
@@ -213,7 +214,7 @@ describe('Text', () => {
   describe('text() DSL function', () => {
     it('should create a component node with correct type', () => {
       const node = text('Hello **world**');
-      assert.strictEqual(node.type, 'component');
+      assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
       assert.strictEqual(node.componentName, 'text');
       assert.strictEqual(node.props.content, 'Hello **world**');
     });
@@ -236,7 +237,7 @@ describe('Text', () => {
     it('should expand to a TextNode', () => {
       const node = text('Hello **world**');
       const expanded = componentRegistry.expand(node, { theme });
-      assert.strictEqual(expanded.type, 'text');
+      assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
     });
 
     it('should expand bold markdown to bold runs', () => {

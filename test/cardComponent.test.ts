@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { card } from '../src/dsl/card.js';
 import { componentRegistry } from '../src/core/registry.js';
+import { NODE_TYPE } from '../src/core/nodes.js';
 import { mockTheme } from './mocks.js';
 
 describe('Card Component', () => {
@@ -22,7 +23,7 @@ describe('Card Component', () => {
   describe('card DSL function', () => {
     it('should create a component node with correct type', () => {
       const node = card({ title: 'Test' });
-      assert.strictEqual(node.type, 'component');
+      assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
       assert.strictEqual(node.componentName, 'card');
     });
 
@@ -44,11 +45,11 @@ describe('Card Component', () => {
       const expanded = componentRegistry.expandTree(node, { theme });
 
       // With background (default): stack(rectangle, column)
-      assert.strictEqual(expanded.type, 'stack');
-      if (expanded.type === 'stack') {
+      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
+      if (expanded.type === NODE_TYPE.STACK) {
         assert.strictEqual(expanded.children.length, 2);
-        assert.strictEqual(expanded.children[0].type, 'rectangle');
-        assert.strictEqual(expanded.children[1].type, 'column');
+        assert.strictEqual(expanded.children[0].type, NODE_TYPE.RECTANGLE);
+        assert.strictEqual(expanded.children[1].type, NODE_TYPE.CONTAINER);
       }
     });
 
@@ -56,21 +57,21 @@ describe('Card Component', () => {
       const node = card({ title: 'Test', background: false });
       const expanded = componentRegistry.expandTree(node, { theme });
 
-      assert.strictEqual(expanded.type, 'column');
+      assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
     });
 
     it('should build children from title prop', () => {
       const node = card({ title: 'My Title' });
       const expanded = componentRegistry.expandTree(node, { theme });
 
-      assert.strictEqual(expanded.type, 'stack');
-      if (expanded.type === 'stack') {
+      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
+      if (expanded.type === NODE_TYPE.STACK) {
         const contentColumn = expanded.children[1];
-        assert.strictEqual(contentColumn.type, 'column');
-        if (contentColumn.type === 'column') {
+        assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
+        if (contentColumn.type === NODE_TYPE.CONTAINER) {
           assert.strictEqual(contentColumn.children.length, 1);
-          assert.strictEqual(contentColumn.children[0].type, 'text');
-          if (contentColumn.children[0].type === 'text') {
+          assert.strictEqual(contentColumn.children[0].type, NODE_TYPE.TEXT);
+          if (contentColumn.children[0].type === NODE_TYPE.TEXT) {
             // After expandTree, content is NormalizedRun[]
             const runs = contentColumn.children[0].content as any[];
             assert.strictEqual(runs[0].text, 'My Title');
@@ -86,17 +87,17 @@ describe('Card Component', () => {
       });
       const expanded = componentRegistry.expandTree(node, { theme });
 
-      assert.strictEqual(expanded.type, 'stack');
-      if (expanded.type === 'stack') {
+      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
+      if (expanded.type === NODE_TYPE.STACK) {
         const contentColumn = expanded.children[1];
-        assert.strictEqual(contentColumn.type, 'column');
-        if (contentColumn.type === 'column') {
+        assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
+        if (contentColumn.type === NODE_TYPE.CONTAINER) {
           assert.strictEqual(contentColumn.children.length, 2);
-          if (contentColumn.children[0].type === 'text') {
+          if (contentColumn.children[0].type === NODE_TYPE.TEXT) {
             const runs0 = contentColumn.children[0].content as any[];
             assert.strictEqual(runs0[0].text, 'Title');
           }
-          if (contentColumn.children[1].type === 'text') {
+          if (contentColumn.children[1].type === NODE_TYPE.TEXT) {
             const runs1 = contentColumn.children[1].content as any[];
             assert.strictEqual(runs1[0].text, 'Description');
           }
@@ -108,11 +109,11 @@ describe('Card Component', () => {
       const node = card({});
       const expanded = componentRegistry.expandTree(node, { theme });
 
-      assert.strictEqual(expanded.type, 'stack');
-      if (expanded.type === 'stack') {
+      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
+      if (expanded.type === NODE_TYPE.STACK) {
         const contentColumn = expanded.children[1];
-        assert.strictEqual(contentColumn.type, 'column');
-        if (contentColumn.type === 'column') {
+        assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
+        if (contentColumn.type === NODE_TYPE.CONTAINER) {
           assert.strictEqual(contentColumn.children.length, 0);
         }
       }
@@ -127,11 +128,11 @@ describe('Card Component', () => {
       });
       const expanded = componentRegistry.expandTree(node, { theme });
 
-      assert.strictEqual(expanded.type, 'stack');
-      if (expanded.type === 'stack') {
+      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
+      if (expanded.type === NODE_TYPE.STACK) {
         const rect = expanded.children[0];
-        assert.strictEqual(rect.type, 'rectangle');
-        if (rect.type === 'rectangle') {
+        assert.strictEqual(rect.type, NODE_TYPE.RECTANGLE);
+        if (rect.type === NODE_TYPE.RECTANGLE) {
           assert.strictEqual(rect.fill?.color, '#AABBCC');
         }
       }
@@ -144,11 +145,11 @@ describe('Card Component', () => {
       });
       const expanded = componentRegistry.expandTree(node, { theme });
 
-      assert.strictEqual(expanded.type, 'stack');
-      if (expanded.type === 'stack') {
+      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
+      if (expanded.type === NODE_TYPE.STACK) {
         const rect = expanded.children[0];
-        assert.strictEqual(rect.type, 'rectangle');
-        if (rect.type === 'rectangle') {
+        assert.strictEqual(rect.type, NODE_TYPE.RECTANGLE);
+        if (rect.type === NODE_TYPE.RECTANGLE) {
           assert.strictEqual(rect.fill?.opacity, 50);
         }
       }
@@ -162,11 +163,11 @@ describe('Card Component', () => {
       });
       const expanded = componentRegistry.expandTree(node, { theme });
 
-      assert.strictEqual(expanded.type, 'stack');
-      if (expanded.type === 'stack') {
+      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
+      if (expanded.type === NODE_TYPE.STACK) {
         const rect = expanded.children[0];
-        assert.strictEqual(rect.type, 'rectangle');
-        if (rect.type === 'rectangle') {
+        assert.strictEqual(rect.type, NODE_TYPE.RECTANGLE);
+        if (rect.type === NODE_TYPE.RECTANGLE) {
           assert.strictEqual(rect.border?.color, '#123456');
           assert.strictEqual(rect.border?.width, 2);
         }
@@ -180,11 +181,11 @@ describe('Card Component', () => {
       });
       const expanded = componentRegistry.expandTree(node, { theme });
 
-      assert.strictEqual(expanded.type, 'stack');
-      if (expanded.type === 'stack') {
+      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
+      if (expanded.type === NODE_TYPE.STACK) {
         const rect = expanded.children[0];
-        assert.strictEqual(rect.type, 'rectangle');
-        if (rect.type === 'rectangle') {
+        assert.strictEqual(rect.type, NODE_TYPE.RECTANGLE);
+        if (rect.type === NODE_TYPE.RECTANGLE) {
           assert.strictEqual(rect.cornerRadius, 0.25);
         }
       }
@@ -197,11 +198,11 @@ describe('Card Component', () => {
       });
       const expanded = componentRegistry.expandTree(node, { theme });
 
-      assert.strictEqual(expanded.type, 'stack');
-      if (expanded.type === 'stack') {
+      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
+      if (expanded.type === NODE_TYPE.STACK) {
         const contentColumn = expanded.children[1];
-        assert.strictEqual(contentColumn.type, 'column');
-        if (contentColumn.type === 'column') {
+        assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
+        if (contentColumn.type === NODE_TYPE.CONTAINER) {
           assert.strictEqual(contentColumn.padding, 0.5);
         }
       }
