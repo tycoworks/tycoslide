@@ -31,16 +31,6 @@ const SLIDE_NUMBER_PLACEHOLDER = '999';
 export type FontNormalRatios = Map<string, number>;
 
 // ============================================
-// TYPES
-// ============================================
-
-/** Result of HTML generation */
-export interface LayoutHtmlResult {
-  html: string;
-  nodeIds: Map<ElementNode, string>;
-}
-
-// ============================================
 // ID GENERATION
 // ============================================
 
@@ -822,35 +812,48 @@ function nodeToJsx(
 }
 
 // ============================================
-// MAIN GENERATORS
+// HTML GENERATION
 // ============================================
 
+/** Result of batch HTML generation */
+export interface LayoutHtmlResult {
+  html: string;
+  slideNodeIds: Array<Map<ElementNode, string>>;
+}
+
 /**
- * Generate HTML that mirrors the slide layout structure.
- * Uses CSS flexbox to replicate the layout algorithm.
- *
- * @param tree - Root node of the expanded element tree
- * @param bounds - Available bounds (typically slide content area)
- * @param theme - Theme for styling
- * @returns HTML string and map of node instances to their IDs
+ * Generate a single HTML document containing ALL slides for batch measurement.
+ * Each slide is in its own .root container with inline dimensions.
+ * Node IDs are globally unique (shared counter across all slides).
+ * Fonts are included once. One browser round-trip measures everything.
  */
 export function generateLayoutHTML(
-  tree: ElementNode,
-  bounds: Bounds,
+  slides: Array<{ tree: ElementNode; bounds: Bounds }>,
   theme: Theme,
   fontNormalRatios?: FontNormalRatios,
 ): LayoutHtmlResult {
   const idCtx: IdContext = { counter: 0 };
-  const nodeIds: Map<ElementNode, string> = new Map();
+  const slideNodeIds: Array<Map<ElementNode, string>> = [];
 
   const { css: fontFaceCSS } = generateFontFaceCSS(theme);
-  const widthPx = inToPx(bounds.w);
-  const heightPx = inToPx(bounds.h);
 
-  // Build the JSX tree (root wrapper is flex-direction: column)
-  const jsxTree = nodeToJsx(tree, theme, nodeIds, idCtx, { direction: DIRECTION.COLUMN }, fontNormalRatios);
+  // Build JSX for each slide's tree
+  const slideJsx = slides.map((slide, i) => {
+    const nodeIds: Map<ElementNode, string> = new Map();
+    slideNodeIds.push(nodeIds);
 
-  // Wrap in HTML document with proper sizing
+    const widthPx = inToPx(slide.bounds.w);
+    const heightPx = inToPx(slide.bounds.h);
+
+    const jsxTree = nodeToJsx(slide.tree, theme, nodeIds, idCtx, { direction: DIRECTION.COLUMN }, fontNormalRatios);
+
+    return (
+      <div class="root" data-slide-index={`${i}`} style={{ width: `${widthPx}px`, height: `${heightPx}px` }}>
+        {jsxTree}
+      </div>
+    );
+  });
+
   const fullJsx = (
     <html>
       <head>
@@ -865,14 +868,10 @@ export function generateLayoutHTML(
           }
 
           body {
-            width: ${widthPx}px;
-            height: ${heightPx}px;
             overflow: hidden;
           }
 
           .root {
-            width: 100%;
-            height: 100%;
             display: flex;
             flex-direction: column;
           }
@@ -892,15 +891,13 @@ ${process.env.DEBUG_HTML ? `
         `}} />
       </head>
       <body>
-        <div class="root">
-          {jsxTree}
-        </div>
+        {slideJsx}
       </body>
     </html>
   );
 
   const html = '<!DOCTYPE html>' + renderToString(fullJsx);
 
-  return { html, nodeIds };
+  return { html, slideNodeIds };
 }
 

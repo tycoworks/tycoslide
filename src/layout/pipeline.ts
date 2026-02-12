@@ -69,23 +69,8 @@ export class LayoutPipeline {
       await this.measurer.launch();
     }
 
-    // Measure each slide and merge results
-    const allResults = new Map<ElementNode, Bounds>();
-
-    for (const slide of this.slides) {
-      const slideResults = await this.measurer.measureLayout(
-        slide.tree,
-        slide.bounds,
-        theme
-      );
-
-      // Merge into combined results
-      for (const [node, measurement] of slideResults) {
-        allResults.set(node, measurement);
-      }
-    }
-
-    this.measurements = allResults;
+    // Measure ALL slides in a single browser round-trip
+    this.measurements = await this.measurer.measureLayout(this.slides, theme);
   }
 
   /**

@@ -56,40 +56,37 @@ export class LayoutMeasurer {
   }
 
   /**
-   * Measure a node tree using full layout HTML.
-   * Generates HTML that mirrors the slide structure with CSS flexbox,
-   * lets the browser compute all positions, then extracts full
-   * {x, y, width, height} for every node relative to the root.
+   * Measure all slides in a single browser round-trip.
+   * Generates one HTML page with all slides, loads fonts once,
+   * and extracts all measurements in one page.evaluate().
    */
   async measureLayout(
-    tree: ElementNode,
-    bounds: Bounds,
+    slides: Array<{ tree: ElementNode; bounds: Bounds }>,
     theme: Theme
   ): Promise<Map<ElementNode, Bounds>> {
     if (!this.page) {
       throw new Error('Browser not launched. Call launch() first.');
     }
 
-    // Ensure font metrics are measured (idempotent — only runs once per measurer lifetime)
+    // Ensure font metrics are measured (idempotent)
     if (this.fontNormalRatios.size === 0) {
       const result = await measureFontNormalRatios(this.page, theme);
       this.fontNormalRatios = result.ratios;
       this.fontDescriptors = result.fonts;
     }
 
-    // Generate layout HTML with CSS flexbox structure
-    const { html, nodeIds } = generateLayoutHTML(tree, bounds, theme, this.fontNormalRatios);
+    // Generate single HTML page containing all slides
+    const { html, slideNodeIds } = generateLayoutHTML(slides, theme, this.fontNormalRatios);
 
     if (process.env.DEBUG_HTML) {
       this.saveDebugHtml(html);
     }
 
-    // Load HTML and explicitly preload all fonts
-    // document.fonts.ready alone is unreliable — base64 fonts may not be parsed in time
+    // One setContent, one font preload
     await this.page.setContent(html);
     await preloadFonts(this.page, this.fontDescriptors);
 
-    // Verify all fonts loaded — silent fallback produces wrong measurements
+    // Verify all fonts loaded
     const failedFonts = await this.page.evaluate(() => {
       return Array.from(document.fonts)
         .filter(f => f.status !== 'loaded')
@@ -104,11 +101,10 @@ export class LayoutMeasurer {
       await this.logNodeDimensions();
     }
 
-    // Extract full positions for all nodes, relative to root
-    const measurements = await this.page.evaluate(() => {
-      const root = document.querySelector('.root')!;
-      const rootRect = root.getBoundingClientRect();
+    // Extract measurements for ALL slides in one evaluate
+    const allMeasurements = await this.page.evaluate(() => {
       const results: Array<{
+        slideIndex: number;
         nodeId: string;
         x: number;
         y: number;
@@ -116,38 +112,47 @@ export class LayoutMeasurer {
         height: number;
       }> = [];
 
-      document.querySelectorAll('[data-node-id]').forEach(el => {
-        const div = el as HTMLElement;
-        const rect = div.getBoundingClientRect();
-        results.push({
-          nodeId: div.dataset.nodeId!,
-          x: rect.left - rootRect.left,
-          y: rect.top - rootRect.top,
-          width: rect.width,
-          height: rect.height,
+      document.querySelectorAll('.root[data-slide-index]').forEach(root => {
+        const slideIndex = parseInt((root as HTMLElement).dataset.slideIndex!, 10);
+        const rootRect = root.getBoundingClientRect();
+
+        root.querySelectorAll('[data-node-id]').forEach(el => {
+          const div = el as HTMLElement;
+          const rect = div.getBoundingClientRect();
+          results.push({
+            slideIndex,
+            nodeId: div.dataset.nodeId!,
+            x: rect.left - rootRect.left,
+            y: rect.top - rootRect.top,
+            width: rect.width,
+            height: rect.height,
+          });
         });
       });
 
       return results;
     });
 
-    // Build result map keyed by node identity
-    const results = new Map<ElementNode, Bounds>();
+    // Build merged result map keyed by node identity
+    // Pre-index by nodeId (globally unique from shared IdContext) for O(N) lookup
+    const measurementsByNodeId = new Map(allMeasurements.map(m => [m.nodeId, m]));
+    const allResults = new Map<ElementNode, Bounds>();
 
-    for (const [node, nodeId] of nodeIds) {
-      const m = measurements.find(r => r.nodeId === nodeId);
-
-      if (m) {
-        results.set(node, new Bounds(
-          pxToIn(m.x),
-          pxToIn(m.y),
-          pxToIn(m.width),
-          pxToIn(m.height),
-        ));
+    for (const nodeIds of slideNodeIds) {
+      for (const [node, nodeId] of nodeIds) {
+        const m = measurementsByNodeId.get(nodeId);
+        if (m) {
+          allResults.set(node, new Bounds(
+            pxToIn(m.x),
+            pxToIn(m.y),
+            pxToIn(m.width),
+            pxToIn(m.height),
+          ));
+        }
       }
     }
 
-    return results;
+    return allResults;
   }
 
   /** Debug path prefix from DEBUG_HTML env var.
