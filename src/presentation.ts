@@ -137,7 +137,7 @@ export class Presentation {
         const { master } = deferred.slide;
         if (master && !this.masters.has(master.name) && !pendingMasters.has(master.name)) {
           const { content: rawMasterContent, contentBounds } = master.getContent(this._theme);
-          const masterContent = componentRegistry.expandTree(rawMasterContent, { theme: this._theme });
+          const masterContent = await componentRegistry.expandTree(rawMasterContent, { theme: this._theme });
           const footerBounds = this.getFooterBounds(contentBounds);
           pendingMasters.set(master.name, {
             master,
@@ -173,7 +173,7 @@ export class Presentation {
         }
 
         // Expand components
-        const expanded = componentRegistry.expandTree(content, { theme: this._theme, slideIndex });
+        const expanded = await componentRegistry.expandTree(content, { theme: this._theme, slideIndex });
 
         // Collect measurements from expanded tree
         pipeline.collectFromTree(expanded, bounds);

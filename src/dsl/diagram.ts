@@ -20,7 +20,8 @@ import {
   type ExpansionContext,
 } from '../core/registry.js';
 
-import { execSync } from 'child_process';
+import { exec as execCb } from 'child_process';
+import { promisify } from 'util';
 import { writeFileSync, mkdtempSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { tmpdir } from 'os';
@@ -318,11 +319,13 @@ function renderDiagramShapeNode(nodeDef: DiagramNodeDef): string {
   }
 }
 
+const execAsync = promisify(execCb);
+
 /**
  * Render diagram to PNG via mermaid-cli.
  * Returns the path to the generated PNG file.
  */
-function renderDiagramToPng(props: DiagramComponentProps, theme: Theme): string {
+async function renderDiagramToPng(props: DiagramComponentProps, theme: Theme): Promise<string> {
   const scale = props.scale ?? 2;
 
   // Build mermaid definition from props
@@ -345,9 +348,9 @@ function renderDiagramToPng(props: DiagramComponentProps, theme: Theme): string 
   // Render via mermaid-cli
   const mmdc = findMmdcPath();
   try {
-    execSync(
+    await execAsync(
       `${mmdc} -i "${inputPath}" -o "${outputPath}" -c "${configPath}" -s ${scale} -b transparent`,
-      { stdio: 'pipe', timeout: MERMAID_RENDER_TIMEOUT_MS },
+      { timeout: MERMAID_RENDER_TIMEOUT_MS },
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -365,9 +368,9 @@ function renderDiagramToPng(props: DiagramComponentProps, theme: Theme): string 
  * Expand diagram component to ImageNode.
  * Renders the diagram via mermaid-cli and returns an image reference.
  */
-function expandDiagram(props: DiagramComponentProps, context: ExpansionContext): ImageNode {
+async function expandDiagram(props: DiagramComponentProps, context: ExpansionContext): Promise<ImageNode> {
   // Render diagram to PNG
-  const pngPath = renderDiagramToPng(props, context.theme);
+  const pngPath = await renderDiagramToPng(props, context.theme);
 
   // Return an ImageNode pointing to the rendered PNG
   return {

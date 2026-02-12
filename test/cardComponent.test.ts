@@ -40,9 +40,9 @@ describe('Card Component', () => {
   });
 
   describe('expansion', () => {
-    it('should expand to stack with background and content', () => {
+    it('should expand to stack with background and content', async () => {
       const node = card({ title: 'Test' });
-      const expanded = componentRegistry.expandTree(node, { theme });
+      const expanded = await componentRegistry.expandTree(node, { theme });
 
       // With background (default): stack(rectangle, column)
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
@@ -53,16 +53,16 @@ describe('Card Component', () => {
       }
     });
 
-    it('should expand to column only when background=false', () => {
+    it('should expand to column only when background=false', async () => {
       const node = card({ title: 'Test', background: false });
-      const expanded = componentRegistry.expandTree(node, { theme });
+      const expanded = await componentRegistry.expandTree(node, { theme });
 
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
     });
 
-    it('should build children from title prop', () => {
+    it('should build children from title prop', async () => {
       const node = card({ title: 'My Title' });
-      const expanded = componentRegistry.expandTree(node, { theme });
+      const expanded = await componentRegistry.expandTree(node, { theme });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {
@@ -80,12 +80,12 @@ describe('Card Component', () => {
       }
     });
 
-    it('should build children from title and description props', () => {
+    it('should build children from title and description props', async () => {
       const node = card({
         title: 'Title',
         description: 'Description',
       });
-      const expanded = componentRegistry.expandTree(node, { theme });
+      const expanded = await componentRegistry.expandTree(node, { theme });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {
@@ -105,9 +105,9 @@ describe('Card Component', () => {
       }
     });
 
-    it('should return empty column when no content', () => {
+    it('should return empty column when no content', async () => {
       const node = card({});
-      const expanded = componentRegistry.expandTree(node, { theme });
+      const expanded = await componentRegistry.expandTree(node, { theme });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {
@@ -121,12 +121,12 @@ describe('Card Component', () => {
   });
 
   describe('styling options', () => {
-    it('should apply background color', () => {
+    it('should apply background color', async () => {
       const node = card({
         title: 'Test',
         backgroundColor: '#AABBCC',
       });
-      const expanded = componentRegistry.expandTree(node, { theme });
+      const expanded = await componentRegistry.expandTree(node, { theme });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {
@@ -138,12 +138,12 @@ describe('Card Component', () => {
       }
     });
 
-    it('should apply background opacity', () => {
+    it('should apply background opacity', async () => {
       const node = card({
         title: 'Test',
         backgroundOpacity: 50,
       });
-      const expanded = componentRegistry.expandTree(node, { theme });
+      const expanded = await componentRegistry.expandTree(node, { theme });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {
@@ -155,13 +155,13 @@ describe('Card Component', () => {
       }
     });
 
-    it('should apply border properties', () => {
+    it('should apply border properties', async () => {
       const node = card({
         title: 'Test',
         borderColor: '#123456',
         borderWidth: 2,
       });
-      const expanded = componentRegistry.expandTree(node, { theme });
+      const expanded = await componentRegistry.expandTree(node, { theme });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {
@@ -174,12 +174,12 @@ describe('Card Component', () => {
       }
     });
 
-    it('should apply corner radius', () => {
+    it('should apply corner radius', async () => {
       const node = card({
         title: 'Test',
         cornerRadius: 0.25,
       });
-      const expanded = componentRegistry.expandTree(node, { theme });
+      const expanded = await componentRegistry.expandTree(node, { theme });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {
@@ -191,12 +191,12 @@ describe('Card Component', () => {
       }
     });
 
-    it('should apply padding to content column', () => {
+    it('should apply padding to content column', async () => {
       const node = card({
         title: 'Test',
         padding: 0.5,
       });
-      const expanded = componentRegistry.expandTree(node, { theme });
+      const expanded = await componentRegistry.expandTree(node, { theme });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {

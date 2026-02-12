@@ -309,7 +309,7 @@ describe('DiagramBuilder', () => {
     d.rect('B', 'Node B');
     d.edge(d.props.nodes[0] as any, d.props.nodes[1] as any);
 
-    const expanded = componentRegistry.expand(d, {
+    const expanded = await componentRegistry.expand(d, {
       theme: mockTheme(),
     });
 

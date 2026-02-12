@@ -231,15 +231,15 @@ describe('Text', () => {
       assert.ok(componentRegistry.has('text'));
     });
 
-    it('should expand to a TextNode', () => {
+    it('should expand to a TextNode', async () => {
       const node = text('Hello **world**');
-      const expanded = componentRegistry.expand(node, { theme });
+      const expanded = await componentRegistry.expand(node, { theme });
       assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
     });
 
-    it('should expand bold markdown to bold runs', () => {
+    it('should expand bold markdown to bold runs', async () => {
       const node = text('Normal **bold** text');
-      const expanded = componentRegistry.expand(node, { theme }) as any;
+      const expanded = await componentRegistry.expand(node, { theme }) as any;
       const runs = expanded.content as NormalizedRun[];
       assert.strictEqual(runs.length, 3);
       assert.strictEqual(runs[0].text, 'Normal ');
@@ -248,37 +248,37 @@ describe('Text', () => {
       assert.strictEqual(runs[2].text, ' text');
     });
 
-    it('should expand highlight directives using theme', () => {
+    it('should expand highlight directives using theme', async () => {
       const node = text(':teal[highlighted]');
-      const expanded = componentRegistry.expand(node, { theme }) as any;
+      const expanded = await componentRegistry.expand(node, { theme }) as any;
       const runs = expanded.content as NormalizedRun[];
       assert.strictEqual(runs.length, 1);
       assert.deepStrictEqual(runs[0].highlight, highlights.teal);
     });
 
-    it('should apply style and color props', () => {
+    it('should apply style and color props', async () => {
       const node = text('text', { style: 'body' as any, color: 'AABBCC' });
-      const expanded = componentRegistry.expand(node, { theme }) as any;
+      const expanded = await componentRegistry.expand(node, { theme }) as any;
       assert.strictEqual(expanded.style, 'body');
       assert.strictEqual(expanded.color, 'AABBCC');
     });
 
-    it('should default hAlign to LEFT and vAlign to TOP', () => {
+    it('should default hAlign to LEFT and vAlign to TOP', async () => {
       const node = text('text');
-      const expanded = componentRegistry.expand(node, { theme }) as any;
+      const expanded = await componentRegistry.expand(node, { theme }) as any;
       assert.strictEqual(expanded.hAlign, 'left');
       assert.strictEqual(expanded.vAlign, 'top');
     });
 
-    it('should apply bulletColor to bullet runs', () => {
+    it('should apply bulletColor to bullet runs', async () => {
       const node = text('- First\n- Second', { bulletColor: 'FF0000' });
-      const expanded = componentRegistry.expand(node, { theme }) as any;
+      const expanded = await componentRegistry.expand(node, { theme }) as any;
       const runs = expanded.content as NormalizedRun[];
       assert.deepStrictEqual(runs[0].bullet, { color: 'FF0000' });
       assert.deepStrictEqual(runs[1].bullet, { color: 'FF0000' });
     });
 
-    it('should expand full markdown document', () => {
+    it('should expand full markdown document', async () => {
       const node = text(`
 Intro with **bold** and :teal[highlight].
 
@@ -287,7 +287,7 @@ Intro with **bold** and :teal[highlight].
 
 Conclusion.
       `);
-      const expanded = componentRegistry.expand(node, { theme }) as any;
+      const expanded = await componentRegistry.expand(node, { theme }) as any;
       const runs = expanded.content as NormalizedRun[];
 
       // Verify structure: intro runs + bullet runs + conclusion
