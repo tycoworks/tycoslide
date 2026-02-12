@@ -25,6 +25,7 @@ import {
   SHAPE,
 } from '../src/core/types.js';
 import { getParagraphGapRatio } from '../src/utils/text.js';
+import { containFit } from '../src/utils/image.js';
 
 // ============================================
 // getParagraphGapRatio
@@ -1024,5 +1025,57 @@ describe('Integration: markdown → PPTX fragments', () => {
     assert.ok(fragments[1].options?.bullet, 'Bullet run should have bullet');
     // Bullets don't get paragraph spacing — they have their own line break mechanism
     assert.strictEqual(fragments[1].options?.paraSpaceBefore, undefined);
+  });
+});
+
+// ============================================
+// containFit() TESTS
+// Image contain-fit: fit rectangle with aspect ratio inside bounding box, centered
+// ============================================
+
+describe('containFit()', () => {
+  test('wide image in square box (letterbox — height shrinks, centered vertically)', () => {
+    // 2:1 aspect ratio image in a 4x4 box → fits to 4x2, centered vertically
+    const result = containFit(0, 0, 4, 4, 2);
+    assert.strictEqual(result.w, 4);
+    assert.strictEqual(result.h, 2);
+    assert.strictEqual(result.x, 0);
+    assert.strictEqual(result.y, 1); // (4 - 2) / 2
+  });
+
+  test('tall image in square box (pillarbox — width shrinks, centered horizontally)', () => {
+    // 1:2 aspect ratio image in a 4x4 box → fits to 2x4, centered horizontally
+    const result = containFit(0, 0, 4, 4, 0.5);
+    assert.strictEqual(result.w, 2);
+    assert.strictEqual(result.h, 4);
+    assert.strictEqual(result.x, 1); // (4 - 2) / 2
+    assert.strictEqual(result.y, 0);
+  });
+
+  test('exact fit (no offset needed)', () => {
+    // 2:1 aspect ratio image in a 4x2 box → exact fit
+    const result = containFit(0, 0, 4, 2, 2);
+    assert.strictEqual(result.w, 4);
+    assert.strictEqual(result.h, 2);
+    assert.strictEqual(result.x, 0);
+    assert.strictEqual(result.y, 0);
+  });
+
+  test('preserves origin offset', () => {
+    // Same as letterbox but with non-zero origin
+    const result = containFit(1, 2, 4, 4, 2);
+    assert.strictEqual(result.w, 4);
+    assert.strictEqual(result.h, 2);
+    assert.strictEqual(result.x, 1);     // origin preserved
+    assert.strictEqual(result.y, 2 + 1); // origin + centering offset
+  });
+
+  test('square image in landscape box (pillarbox)', () => {
+    // 1:1 aspect ratio in 6x2 box → fits to 2x2, centered horizontally
+    const result = containFit(0, 0, 6, 2, 1);
+    assert.strictEqual(result.w, 2);
+    assert.strictEqual(result.h, 2);
+    assert.strictEqual(result.x, 2); // (6 - 2) / 2
+    assert.strictEqual(result.y, 0);
   });
 });
