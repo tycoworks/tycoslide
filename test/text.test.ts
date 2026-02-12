@@ -3,8 +3,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { parseMarkdown, mdastToRuns } from '../src/dsl/text/mdastToRuns.js';
-import { text } from '../src/dsl/text/index.js';
+import { parseMarkdown, mdastToRuns, text, TEXT_COMPONENT, MDAST } from '../src/dsl/text.js';
 import { componentRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import type { NormalizedRun, HighlightScheme } from '../src/core/types.js';
@@ -18,35 +17,33 @@ const highlights: HighlightScheme = {
 };
 
 function themeWithHighlights() {
-  const theme = mockTheme();
-  (theme as any).highlights = highlights;
-  return theme;
+  return mockTheme({ highlights });
 }
 
 describe('Text', () => {
   describe('parseMarkdown', () => {
     it('should parse simple text into a paragraph', () => {
       const tree = parseMarkdown('Hello world');
-      assert.strictEqual(tree.type, 'root');
+      assert.strictEqual(tree.type, MDAST.ROOT);
       assert.strictEqual(tree.children.length, 1);
-      assert.strictEqual(tree.children[0].type, 'paragraph');
+      assert.strictEqual(tree.children[0].type, MDAST.PARAGRAPH);
     });
 
     it('should parse bold text', () => {
       const tree = parseMarkdown('**bold**');
       const para = tree.children[0] as any;
-      assert.strictEqual(para.children[0].type, 'strong');
+      assert.strictEqual(para.children[0].type, MDAST.STRONG);
     });
 
     it('should parse italic text', () => {
       const tree = parseMarkdown('*italic*');
       const para = tree.children[0] as any;
-      assert.strictEqual(para.children[0].type, 'emphasis');
+      assert.strictEqual(para.children[0].type, MDAST.EMPHASIS);
     });
 
     it('should parse unordered list', () => {
       const tree = parseMarkdown('- item one\n- item two');
-      assert.strictEqual(tree.children[0].type, 'list');
+      assert.strictEqual(tree.children[0].type, MDAST.LIST);
       const list = tree.children[0] as any;
       assert.strictEqual(list.ordered, false);
       assert.strictEqual(list.children.length, 2);
@@ -62,15 +59,15 @@ describe('Text', () => {
     it('should parse text directive (:name[text])', () => {
       const tree = parseMarkdown(':teal[highlighted]');
       const para = tree.children[0] as any;
-      assert.strictEqual(para.children[0].type, 'textDirective');
+      assert.strictEqual(para.children[0].type, MDAST.TEXT_DIRECTIVE);
       assert.strictEqual(para.children[0].name, 'teal');
     });
 
     it('should parse multiple paragraphs', () => {
       const tree = parseMarkdown('First paragraph.\n\nSecond paragraph.');
       assert.strictEqual(tree.children.length, 2);
-      assert.strictEqual(tree.children[0].type, 'paragraph');
-      assert.strictEqual(tree.children[1].type, 'paragraph');
+      assert.strictEqual(tree.children[0].type, MDAST.PARAGRAPH);
+      assert.strictEqual(tree.children[1].type, MDAST.PARAGRAPH);
     });
   });
 
@@ -215,7 +212,7 @@ describe('Text', () => {
     it('should create a component node with correct type', () => {
       const node = text('Hello **world**');
       assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-      assert.strictEqual(node.componentName, 'text');
+      assert.strictEqual(node.componentName, TEXT_COMPONENT);
       assert.strictEqual(node.props.content, 'Hello **world**');
     });
 

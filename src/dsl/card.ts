@@ -4,7 +4,7 @@
 import { defineComponent, type ExpansionContext } from '../core/registry.js';
 import { stack, column } from './containers.js';
 import { rectangle, image } from './primitives.js';
-import { text } from './text/index.js';
+import { text } from './text.js';
 import type { SlideNode } from '../core/nodes.js';
 import type { TextStyleName, GapSize } from '../core/types.js';
 import { TEXT_STYLE, GAP, HALIGN, VALIGN } from '../core/types.js';

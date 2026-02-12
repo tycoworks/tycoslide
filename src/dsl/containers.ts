@@ -39,6 +39,8 @@ function parseContainerArgs<TProps>(args: any[]): { props: TProps; children: Sli
 // ROW
 // ============================================
 
+export const ROW_COMPONENT = 'row' as const;
+
 export interface RowProps {
   width?: number | SizeValue;   // inches (number) or SIZE.FILL (when inside another Row)
   height?: number | SizeValue;  // inches (number) or SIZE.FILL to fill container height
@@ -52,7 +54,7 @@ interface RowInternalProps extends RowProps {
   children: SlideNode[];
 }
 
-const rowComponent = defineComponent<RowInternalProps>('row', (props) => ({
+const rowComponent = defineComponent<RowInternalProps>(ROW_COMPONENT, (props) => ({
   type: NODE_TYPE.CONTAINER,
   direction: DIRECTION.ROW,
   children: props.children as ElementNode[],  // Safe: expandTree recurses into these
@@ -75,6 +77,8 @@ export function row(...args: any[]): ComponentNode {
 // COLUMN
 // ============================================
 
+export const COLUMN_COMPONENT = 'column' as const;
+
 export interface ColumnProps {
   width?: number | SizeValue;   // inches (number) or SIZE.FILL (when inside Row)
   height?: number | SizeValue;  // inches (number) or SIZE.FILL (when inside Column)
@@ -88,7 +92,7 @@ interface ColumnInternalProps extends ColumnProps {
   children: SlideNode[];
 }
 
-const columnComponent = defineComponent<ColumnInternalProps>('column', (props) => ({
+const columnComponent = defineComponent<ColumnInternalProps>(COLUMN_COMPONENT, (props) => ({
   type: NODE_TYPE.CONTAINER,
   direction: DIRECTION.COLUMN,
   children: props.children as ElementNode[],  // Safe: expandTree recurses into these
@@ -111,6 +115,8 @@ export function column(...args: any[]): ComponentNode {
 // STACK (z-order composition)
 // ============================================
 
+export const STACK_COMPONENT = 'stack' as const;
+
 export interface StackProps {
   width?: number | SizeValue;   // inches (number) or SIZE.FILL
   height?: number | SizeValue;  // inches (number) or SIZE.FILL
@@ -120,7 +126,7 @@ interface StackInternalProps extends StackProps {
   children: SlideNode[];
 }
 
-const stackComponent = defineComponent<StackInternalProps>('stack', (props) => ({
+const stackComponent = defineComponent<StackInternalProps>(STACK_COMPONENT, (props) => ({
   type: NODE_TYPE.STACK,
   children: props.children as ElementNode[],  // Safe: expandTree recurses into these
   width: props.width,
@@ -150,6 +156,8 @@ export function stack(...args: any[]): ComponentNode {
 // GRID (component - chunks children into column of rows)
 // ============================================
 
+export const GRID_COMPONENT = 'grid' as const;
+
 export interface GridProps {
   columns: number;
   gap?: GapSize;
@@ -161,7 +169,7 @@ interface GridInternalProps extends GridProps {
   children: SlideNode[];
 }
 
-const gridComponent = defineComponent<GridInternalProps>('grid', (props) => {
+const gridComponent = defineComponent<GridInternalProps>(GRID_COMPONENT, (props) => {
   const { columns, gap, fill = false, children } = props;
 
   // Wrap each child in a column cell so items share row width equally

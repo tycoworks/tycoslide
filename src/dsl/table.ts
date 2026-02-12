@@ -8,6 +8,8 @@ import type { TextContent } from '../core/types.js';
 // TABLE COMPONENT
 // ============================================
 
+export const TABLE_COMPONENT = 'table' as const;
+
 export interface TableProps {
   /** Proportional column widths (normalized internally) */
   columnWidths?: number[];
@@ -24,7 +26,7 @@ interface TableInternalProps {
   tableProps?: TableProps;
 }
 
-const tableComponent = defineComponent<TableInternalProps>('table', (props) => {
+const tableComponent = defineComponent<TableInternalProps>(TABLE_COMPONENT, (props) => {
   // Normalize cells: convert plain strings/TextContent to TableCellData
   const rows: TableCellData[][] = props.data.map(row =>
     row.map(cell => {

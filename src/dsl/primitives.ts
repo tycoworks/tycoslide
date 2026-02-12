@@ -11,6 +11,8 @@ import { HALIGN } from '../core/types.js';
 // IMAGE
 // ============================================
 
+export const IMAGE_COMPONENT = 'image' as const;
+
 export interface ImageOptions {
   alt?: string;
 }
@@ -19,7 +21,7 @@ export interface ImageProps extends ImageOptions {
   src: string;
 }
 
-const imageComponent = defineComponent<ImageProps>('image', (props): ImageNode => ({
+const imageComponent = defineComponent<ImageProps>(IMAGE_COMPONENT, (props): ImageNode => ({
   type: NODE_TYPE.IMAGE,
   src: props.src,
   alt: props.alt,
@@ -33,6 +35,8 @@ export function image(src: string, options?: ImageOptions): ComponentNode {
 // LINE
 // ============================================
 
+export const LINE_COMPONENT = 'line' as const;
+
 export interface LineProps {
   color?: string;
   width?: number;
@@ -41,7 +45,7 @@ export interface LineProps {
   endArrow?: ArrowType;
 }
 
-const lineComponent = defineComponent<LineProps>('line', (props): LineNode => ({
+const lineComponent = defineComponent<LineProps>(LINE_COMPONENT, (props): LineNode => ({
   type: NODE_TYPE.LINE,
   color: props.color,
   width: props.width,
@@ -58,13 +62,15 @@ export function line(props?: LineProps): ComponentNode {
 // RECTANGLE
 // ============================================
 
+export const RECTANGLE_COMPONENT = 'rectangle' as const;
+
 export interface RectangleProps {
   fill?: { color: string; opacity?: number };
   border?: RectangleBorder;
   cornerRadius?: number;
 }
 
-const rectangleComponent = defineComponent<RectangleProps>('rectangle', (props): RectangleNode => ({
+const rectangleComponent = defineComponent<RectangleProps>(RECTANGLE_COMPONENT, (props): RectangleNode => ({
   type: NODE_TYPE.RECTANGLE,
   fill: props.fill,
   border: props.border,
@@ -79,13 +85,15 @@ export function rectangle(props?: RectangleProps): ComponentNode {
 // SLIDE NUMBER
 // ============================================
 
+export const SLIDE_NUMBER_COMPONENT = 'slideNumber' as const;
+
 export interface SlideNumberProps {
   style?: TextStyleName;
   color?: string;
   hAlign?: HorizontalAlignment;
 }
 
-const slideNumberComponent = defineComponent<SlideNumberProps>('slideNumber', (props): SlideNumberNode => ({
+const slideNumberComponent = defineComponent<SlideNumberProps>(SLIDE_NUMBER_COMPONENT, (props): SlideNumberNode => ({
   type: NODE_TYPE.SLIDE_NUMBER,
   style: props.style,
   color: props.color,

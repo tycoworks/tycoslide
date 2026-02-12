@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { card } from '../src/dsl/card.js';
+import { card, CARD_COMPONENT } from '../src/dsl/card.js';
 import { componentRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import { mockTheme } from './mocks.js';
@@ -12,11 +12,11 @@ describe('Card Component', () => {
     it('should lazy-register on first use', () => {
       // Registry should be empty before first use
       componentRegistry.clear();
-      assert.strictEqual(componentRegistry.has('card'), false);
+      assert.strictEqual(componentRegistry.has(CARD_COMPONENT), false);
 
       // Calling card() should trigger registration
       card({ title: 'Test' });
-      assert.ok(componentRegistry.has('card'));
+      assert.ok(componentRegistry.has(CARD_COMPONENT));
     });
   });
 
@@ -24,7 +24,7 @@ describe('Card Component', () => {
     it('should create a component node with correct type', () => {
       const node = card({ title: 'Test' });
       assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-      assert.strictEqual(node.componentName, 'card');
+      assert.strictEqual(node.componentName, CARD_COMPONENT);
     });
 
     it('should pass props correctly', () => {

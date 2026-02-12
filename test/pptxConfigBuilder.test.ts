@@ -966,18 +966,28 @@ describe('buildSlideNumberOptions()', () => {
 });
 
 // ============================================
-// INTEGRATION: markdown → mdastToRuns → buildTextFragments
+// INTEGRATION: text() → expandTree → buildTextFragments
 // End-to-end: markdown string in, PPTX fragments out
+// Uses public text() API instead of internal parseMarkdown/mdastToRuns
 // ============================================
 
-import { parseMarkdown, mdastToRuns } from '../src/dsl/text/mdastToRuns.js';
+import { text } from '../src/dsl/text.js';
+import { componentRegistry } from '../src/core/registry.js';
+import type { NormalizedRun } from '../src/core/types.js';
 
-describe('Integration: markdown → PPTX fragments', () => {
-  const highlights = { teal: { bg: '003333', text: '00CCCC' } };
+/** Expand a text() component to get its NormalizedRun[] content */
+function expandTextToRuns(markdown: string): NormalizedRun[] {
+  const node = text(markdown);
+  const expanded = componentRegistry.expandTree(node, { theme });
+  assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
+  return (expanded as TextNode).content as NormalizedRun[];
+}
+
+describe('Integration: text() → PPTX fragments', () => {
   const fontSize = theme.textStyles[TEXT_STYLE.BODY].fontSize; // 12
 
   test('two paragraphs produce correct PPTX fragments with paragraph spacing', () => {
-    const runs = mdastToRuns(parseMarkdown('First paragraph.\n\nSecond paragraph.'), highlights);
+    const runs = expandTextToRuns('First paragraph.\n\nSecond paragraph.');
     const fragments = builder.buildTextFragments(runs, TEXT_STYLE.BODY, theme);
 
     assert.strictEqual(fragments.length, 2);
@@ -994,7 +1004,7 @@ describe('Integration: markdown → PPTX fragments', () => {
   });
 
   test('three paragraphs chain correctly', () => {
-    const runs = mdastToRuns(parseMarkdown('Para 1.\n\nPara 2.\n\nPara 3.'), highlights);
+    const runs = expandTextToRuns('Para 1.\n\nPara 2.\n\nPara 3.');
     const fragments = builder.buildTextFragments(runs, TEXT_STYLE.BODY, theme);
 
     assert.strictEqual(fragments.length, 3);
@@ -1016,7 +1026,7 @@ describe('Integration: markdown → PPTX fragments', () => {
   });
 
   test('paragraph followed by bullets: no paraSpaceBefore on bullets', () => {
-    const runs = mdastToRuns(parseMarkdown('Intro.\n\n- Bullet one\n- Bullet two'), highlights);
+    const runs = expandTextToRuns('Intro.\n\n- Bullet one\n- Bullet two');
     const fragments = builder.buildTextFragments(runs, TEXT_STYLE.BODY, theme);
 
     assert.strictEqual(fragments.length, 3);

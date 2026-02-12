@@ -4,7 +4,7 @@
 import * as assert from 'node:assert';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import type { Theme, TextStyle, FontFamily } from '../src/core/types.js';
+import type { Theme, TextStyle, FontFamily, HighlightScheme } from '../src/core/types.js';
 import { TEXT_STYLE } from '../src/core/types.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -39,6 +39,7 @@ export function mockTheme(options?: {
   lineSpacing?: number;
   borderWidth?: number;
   borderRadius?: number;
+  highlights?: HighlightScheme;
 }): Theme {
   const gap = options?.gap ?? 0.25;
   const gapTight = options?.gapTight ?? 0.125;
@@ -51,6 +52,7 @@ export function mockTheme(options?: {
   const lineSpacing = options?.lineSpacing ?? 1.0;
   const borderWidth = options?.borderWidth ?? 1;
   const borderRadius = options?.borderRadius ?? 0.1;
+  const highlights = options?.highlights ?? { teal: { bg: '003333', text: '00CCCC' } };
 
   return {
     slide: { width: 13.333, height: 7.5 },
@@ -93,6 +95,7 @@ export function mockTheme(options?: {
       [TEXT_STYLE.SMALL]: mockTextStyle,
       [TEXT_STYLE.FOOTER]: mockTextStyle,
     },
+    highlights,
   } as Theme;
 }
 

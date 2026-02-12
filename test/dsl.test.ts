@@ -15,8 +15,18 @@ import {
   stack,
   grid,
   table,
+  TEXT_COMPONENT,
+  IMAGE_COMPONENT,
+  LINE_COMPONENT,
+  RECTANGLE_COMPONENT,
+  SLIDE_NUMBER_COMPONENT,
+  ROW_COMPONENT,
+  COLUMN_COMPONENT,
+  STACK_COMPONENT,
+  GRID_COMPONENT,
+  TABLE_COMPONENT,
 } from '../src/dsl/index.js';
-import { card } from '../src/dsl/card.js';
+import { card, CARD_COMPONENT } from '../src/dsl/card.js';
 import { componentRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import type { TextNode, ImageNode, LineNode, RectangleNode, SlideNumberNode, TableNode, ContainerNode, StackNode } from '../src/core/nodes.js';
@@ -49,7 +59,7 @@ describe('text()', () => {
   test('returns ComponentNode', () => {
     const node = text('hello');
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-    assert.strictEqual(node.componentName, 'text');
+    assert.strictEqual(node.componentName, TEXT_COMPONENT);
   });
 
   test('expands to correct NODE_TYPE', () => {
@@ -119,7 +129,7 @@ describe('image()', () => {
   test('returns ComponentNode', () => {
     const node = image('photo.jpg');
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-    assert.strictEqual(node.componentName, 'image');
+    assert.strictEqual(node.componentName, IMAGE_COMPONENT);
   });
 
   test('expands to correct NODE_TYPE', () => {
@@ -151,7 +161,7 @@ describe('line()', () => {
   test('returns ComponentNode', () => {
     const node = line();
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-    assert.strictEqual(node.componentName, 'line');
+    assert.strictEqual(node.componentName, LINE_COMPONENT);
   });
 
   test('expands to correct NODE_TYPE', () => {
@@ -217,7 +227,7 @@ describe('rectangle()', () => {
   test('returns ComponentNode', () => {
     const node = rectangle();
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-    assert.strictEqual(node.componentName, 'rectangle');
+    assert.strictEqual(node.componentName, RECTANGLE_COMPONENT);
   });
 
   test('expands to correct NODE_TYPE', () => {
@@ -293,7 +303,7 @@ describe('slideNumber()', () => {
   test('returns ComponentNode', () => {
     const node = slideNumber();
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-    assert.strictEqual(node.componentName, 'slideNumber');
+    assert.strictEqual(node.componentName, SLIDE_NUMBER_COMPONENT);
   });
 
   test('expands to correct NODE_TYPE', () => {
@@ -347,7 +357,7 @@ describe('row()', () => {
   test('returns ComponentNode', () => {
     const node = row(child1);
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-    assert.strictEqual(node.componentName, 'row');
+    assert.strictEqual(node.componentName, ROW_COMPONENT);
   });
 
   test('accepts children without props', () => {
@@ -453,7 +463,7 @@ describe('column()', () => {
   test('returns ComponentNode', () => {
     const node = column(child1);
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-    assert.strictEqual(node.componentName, 'column');
+    assert.strictEqual(node.componentName, COLUMN_COMPONENT);
   });
 
   test('accepts children without props', () => {
@@ -566,7 +576,7 @@ describe('stack()', () => {
   test('returns ComponentNode', () => {
     const node = stack(child1);
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-    assert.strictEqual(node.componentName, 'stack');
+    assert.strictEqual(node.componentName, STACK_COMPONENT);
   });
 
   test('expands to correct NODE_TYPE', () => {
@@ -635,7 +645,7 @@ describe('grid()', () => {
   test('returns a single ComponentNode', () => {
     const g = grid(2, child1, child2);
     assert.strictEqual(g.type, NODE_TYPE.COMPONENT);
-    assert.strictEqual(g.componentName, 'grid');
+    assert.strictEqual(g.componentName, GRID_COMPONENT);
   });
 
   test('expands to ColumnNode containing rows', () => {
@@ -751,7 +761,7 @@ describe('card()', () => {
   test('returns ComponentNode with correct type', () => {
     const node = card({});
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-    assert.strictEqual(node.componentName, 'card');
+    assert.strictEqual(node.componentName, CARD_COMPONENT);
   });
 
   test('passes props to ComponentNode', () => {
@@ -782,7 +792,7 @@ describe('card()', () => {
     };
     const node = card(props);
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-    assert.strictEqual(node.componentName, 'card');
+    assert.strictEqual(node.componentName, CARD_COMPONENT);
     assert.strictEqual(node.props.image, 'hero.jpg');
     assert.strictEqual(node.props.title, 'Title');
     assert.strictEqual(node.props.titleStyle, TEXT_STYLE.H2);
@@ -810,7 +820,7 @@ describe('table()', () => {
   test('returns ComponentNode', () => {
     const node = table([['Header']]);
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-    assert.strictEqual(node.componentName, 'table');
+    assert.strictEqual(node.componentName, TABLE_COMPONENT);
   });
 
   test('TableCellData cells preserve properties after expansion', () => {

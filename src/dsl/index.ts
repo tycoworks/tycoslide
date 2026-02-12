@@ -7,6 +7,10 @@ export {
   line,
   rectangle,
   slideNumber,
+  IMAGE_COMPONENT,
+  LINE_COMPONENT,
+  RECTANGLE_COMPONENT,
+  SLIDE_NUMBER_COMPONENT,
   type ImageProps,
   type LineProps,
   type RectangleProps,
@@ -18,6 +22,10 @@ export {
   column,
   stack,
   grid,
+  ROW_COMPONENT,
+  COLUMN_COMPONENT,
+  STACK_COMPONENT,
+  GRID_COMPONENT,
   type RowProps,
   type ColumnProps,
   type StackProps,
@@ -27,6 +35,7 @@ export {
 // Table
 export {
   table,
+  TABLE_COMPONENT,
   type TableProps,
 } from './table.js';
 
@@ -34,9 +43,10 @@ export {
 export {
   text,
   TEXT_COMPONENT,
+  MDAST,
   type TextProps,
   type TextComponentProps,
-} from './text/index.js';
+} from './text.js';
 
 // Card (composition component)
 export {
