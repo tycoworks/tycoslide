@@ -4,8 +4,8 @@
 
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
-import { diagram, DiagramBuilder, DIAGRAM_DIRECTION, NODE_STYLE, DIAGRAM_COMPONENT } from '../src/components/diagram.js';
-import { COMPONENT_TYPE } from '../src/core/componentRegistry.js';
+import { diagram, DiagramBuilder, DIAGRAM_DIRECTION, NODE_STYLE, DIAGRAM_COMPONENT } from '../src/dsl/diagram.js';
+import { COMPONENT_TYPE } from '../src/core/registry.js';
 
 describe('DiagramBuilder', () => {
 
@@ -300,7 +300,7 @@ describe('DiagramBuilder', () => {
   // Component Expansion
   // ------------------------------------------
   test('componentRegistry can expand diagram to ImageNode', async () => {
-    const { componentRegistry } = await import('../src/core/componentRegistry.js');
+    const { componentRegistry } = await import('../src/core/registry.js');
     const { NODE_TYPE } = await import('../src/core/nodes.js');
     const { mockTheme } = await import('./mocks.js');
 

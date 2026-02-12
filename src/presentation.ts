@@ -6,12 +6,12 @@
 
 import path from 'path';
 import type { Theme } from './core/types.js';
-import type { ElementNode, PositionedNode, SlideContent } from './core/nodes.js';
+import type { ElementNode, PositionedNode, ComponentNode } from './core/nodes.js';
 import { Bounds } from './core/bounds.js';
 import { PptxRenderer, type Renderer } from './core/pptxRenderer.js';
 import { LayoutValidator } from './layout/validator.js';
 import { log } from './utils/log.js';
-import { componentRegistry } from './core/componentRegistry.js';
+import { componentRegistry } from './core/registry.js';
 import { LayoutPipeline } from './layout/pipeline.js';
 
 // Footer height as proportion of margin (footer sits in bottom margin area)
@@ -25,7 +25,7 @@ export interface Master {
   name: string;
   background?: string;
   getContent(theme: Theme): {
-    content: ElementNode;      // Footer/fixed elements as declarative nodes
+    content: ComponentNode;     // Footer/fixed elements as declarative nodes
     contentBounds: Bounds;     // Where slide content goes
   };
 }
@@ -38,7 +38,7 @@ export interface Slide {
   master?: Master;
   background?: string;
   notes?: string;
-  content: SlideContent;
+  content: ComponentNode;
 }
 
 // ============================================
@@ -136,7 +136,8 @@ export class Presentation {
       for (const deferred of this.deferredSlides) {
         const { master } = deferred.slide;
         if (master && !this.masters.has(master.name) && !pendingMasters.has(master.name)) {
-          const { content: masterContent, contentBounds } = master.getContent(this._theme);
+          const { content: rawMasterContent, contentBounds } = master.getContent(this._theme);
+          const masterContent = componentRegistry.expandTree(rawMasterContent, { theme: this._theme });
           const footerBounds = this.getFooterBounds(contentBounds);
           pendingMasters.set(master.name, {
             master,

@@ -1,9 +1,11 @@
 // Card Component
 // Implements card as a component using primitives: stack, column, rectangle, text, image
 
-import { defineComponent, type ExpansionContext } from '../core/componentRegistry.js';
-import { stack, column, rectangle, text, image } from '../core/dsl.js';
-import type { ElementNode } from '../core/nodes.js';
+import { defineComponent, type ExpansionContext } from '../core/registry.js';
+import { stack, column } from './containers.js';
+import { rectangle, image } from './primitives.js';
+import { text } from './text/index.js';
+import type { SlideNode } from '../core/nodes.js';
 import type { TextStyleName, GapSize } from '../core/types.js';
 import { TEXT_STYLE, GAP, HALIGN, VALIGN } from '../core/types.js';
 
@@ -66,7 +68,7 @@ export interface CardProps {
  * )
  * ```
  */
-function expandCard(props: CardProps, context: ExpansionContext): ElementNode {
+function expandCard(props: CardProps, context: ExpansionContext): SlideNode {
   const {
     image: imagePath,
     title,
@@ -92,7 +94,7 @@ function expandCard(props: CardProps, context: ExpansionContext): ElementNode {
   const cardRadius = cornerRadius ?? theme.borders.radius;
 
   // Build children from image/title/description props
-  const children: ElementNode[] = [];
+  const children: SlideNode[] = [];
 
   if (imagePath) {
     children.push(image(imagePath));

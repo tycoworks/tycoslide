@@ -119,7 +119,7 @@ export interface TableNode {
 
 export interface RowNode {
   type: typeof NODE_TYPE.ROW;
-  children: ElementNode[];      // Post-expansion: always primitives (DSL accepts SlideContent)
+  children: ElementNode[];      // Post-expansion: always primitives
   width?: number | SizeValue;   // inches (number) or SIZE.FILL to take remaining space (when inside another Row)
   height?: number | SizeValue;  // inches (number) or SIZE.FILL to fill available height
   gap?: GapSize;
@@ -130,7 +130,7 @@ export interface RowNode {
 
 export interface ColumnNode {
   type: typeof NODE_TYPE.COLUMN;
-  children: ElementNode[];      // Post-expansion: always primitives (DSL accepts SlideContent)
+  children: ElementNode[];      // Post-expansion: always primitives
   width?: number | SizeValue;   // inches (number) or SIZE.FILL to take remaining space (when inside Row)
   height?: number | SizeValue;  // inches (number) or SIZE.FILL to take remaining space (when inside Column)
   gap?: GapSize;
@@ -201,7 +201,7 @@ export type ElementNode =
   | RectangleNode;
 
 /** Content that can appear in slides and containers - primitives or components */
-export type SlideContent = ElementNode | ComponentNode;
+export type SlideNode = ElementNode | ComponentNode;
 
 // ============================================
 // POSITIONED NODE (after layout)

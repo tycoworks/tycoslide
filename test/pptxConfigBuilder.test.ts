@@ -969,7 +969,7 @@ describe('buildSlideNumberOptions()', () => {
 // End-to-end: markdown string in, PPTX fragments out
 // ============================================
 
-import { parseMarkdown, mdastToRuns } from '../src/components/markdown/mdastToRuns.js';
+import { parseMarkdown, mdastToRuns } from '../src/dsl/text/mdastToRuns.js';
 
 describe('Integration: markdown → PPTX fragments', () => {
   const highlights = { teal: { bg: '003333', text: '00CCCC' } };

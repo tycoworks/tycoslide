@@ -1,5 +1,6 @@
 // DSL Factory Function Tests
-// Tests for all factory functions in src/core/dsl.ts
+// Tests for all factory functions in src/dsl/
+// All DSL functions return ComponentNode; tests expand to ElementNode where needed.
 
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
@@ -7,14 +8,18 @@ import {
   text,
   image,
   line,
+  rectangle,
   slideNumber,
   row,
   column,
+  stack,
   grid,
   table,
-} from '../src/core/dsl.js';
-import { card } from '../src/components/card.js';
+} from '../src/dsl/index.js';
+import { card } from '../src/dsl/card.js';
+import { componentRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
+import type { TextNode, ImageNode, LineNode, RectangleNode, SlideNumberNode, TableNode, RowNode, ColumnNode, StackNode } from '../src/core/nodes.js';
 import {
   TEXT_STYLE,
   GAP,
@@ -24,35 +29,47 @@ import {
   ARROW_TYPE,
   DASH_TYPE,
 } from '../src/core/types.js';
+import { mockTheme as createMockTheme } from './mocks.js';
+
+// Theme with highlights for text expansion
+const theme = createMockTheme();
+(theme as any).highlights = {};
+
+/** Expand a ComponentNode to its ElementNode form */
+function expand(node: any) {
+  return componentRegistry.expandTree(node, { theme });
+}
 
 // ============================================
 // TEXT FACTORY FUNCTIONS
 // ============================================
 
 describe('text()', () => {
-  test('returns correct NODE_TYPE', () => {
+  test('returns ComponentNode', () => {
     const node = text('hello');
+    assert.strictEqual(node.type, 'component');
+    assert.strictEqual(node.componentName, 'text');
+  });
+
+  test('expands to correct NODE_TYPE', () => {
+    const node = expand(text('hello')) as TextNode;
     assert.strictEqual(node.type, NODE_TYPE.TEXT);
   });
 
-  test('sets content correctly', () => {
-    const node = text('hello world');
-    assert.strictEqual(node.content, 'hello world');
+  test('sets content correctly after expansion', () => {
+    const node = expand(text('hello world')) as TextNode;
+    const runs = node.content as any[];
+    assert.strictEqual(runs[0].text, 'hello world');
   });
 
   test('handles empty string content', () => {
-    const node = text('');
-    assert.strictEqual(node.content, '');
-  });
-
-  test('handles array content (styled runs)', () => {
-    const content = ['plain', { text: 'bold', weight: 'bold' as const }];
-    const node = text(content);
-    assert.deepStrictEqual(node.content, content);
+    const node = expand(text('')) as TextNode;
+    assert.ok(Array.isArray(node.content));
+    assert.strictEqual((node.content as any[]).length, 0);
   });
 
   test('applies explicit alignment defaults', () => {
-    const node = text('test');
+    const node = expand(text('test')) as TextNode;
     assert.strictEqual(node.style, undefined);
     assert.strictEqual(node.color, undefined);
     assert.strictEqual(node.hAlign, HALIGN.LEFT);   // Explicit default
@@ -60,32 +77,32 @@ describe('text()', () => {
   });
 
   test('applies style prop', () => {
-    const node = text('test', { style: TEXT_STYLE.H1 });
+    const node = expand(text('test', { style: TEXT_STYLE.H1 })) as TextNode;
     assert.strictEqual(node.style, TEXT_STYLE.H1);
   });
 
   test('applies color prop', () => {
-    const node = text('test', { color: 'FF0000' });
+    const node = expand(text('test', { color: 'FF0000' })) as TextNode;
     assert.strictEqual(node.color, 'FF0000');
   });
 
   test('applies hAlign prop', () => {
-    const node = text('test', { hAlign: HALIGN.CENTER });
+    const node = expand(text('test', { hAlign: HALIGN.CENTER })) as TextNode;
     assert.strictEqual(node.hAlign, HALIGN.CENTER);
   });
 
   test('applies vAlign prop', () => {
-    const node = text('test', { vAlign: VALIGN.MIDDLE });
+    const node = expand(text('test', { vAlign: VALIGN.MIDDLE })) as TextNode;
     assert.strictEqual(node.vAlign, VALIGN.MIDDLE);
   });
 
   test('applies all props together', () => {
-    const node = text('test', {
+    const node = expand(text('test', {
       style: TEXT_STYLE.BODY,
       color: '00FF00',
       hAlign: HALIGN.RIGHT,
       vAlign: VALIGN.BOTTOM,
-    });
+    })) as TextNode;
     assert.strictEqual(node.style, TEXT_STYLE.BODY);
     assert.strictEqual(node.color, '00FF00');
     assert.strictEqual(node.hAlign, HALIGN.RIGHT);
@@ -98,23 +115,29 @@ describe('text()', () => {
 // ============================================
 
 describe('image()', () => {
-  test('returns correct NODE_TYPE', () => {
+  test('returns ComponentNode', () => {
     const node = image('photo.jpg');
+    assert.strictEqual(node.type, 'component');
+    assert.strictEqual(node.componentName, 'image');
+  });
+
+  test('expands to correct NODE_TYPE', () => {
+    const node = expand(image('photo.jpg')) as ImageNode;
     assert.strictEqual(node.type, NODE_TYPE.IMAGE);
   });
 
   test('sets src correctly', () => {
-    const node = image('test.png');
+    const node = expand(image('test.png')) as ImageNode;
     assert.strictEqual(node.src, 'test.png');
   });
 
   test('applies no props by default', () => {
     const node = image('photo.jpg');
-    assert.strictEqual(node.alt, undefined);
+    assert.strictEqual((node.props as any).alt, undefined);
   });
 
   test('applies alt prop', () => {
-    const node = image('photo.jpg', { alt: 'A beautiful photo' });
+    const node = expand(image('photo.jpg', { alt: 'A beautiful photo' })) as ImageNode;
     assert.strictEqual(node.alt, 'A beautiful photo');
   });
 });
@@ -124,13 +147,19 @@ describe('image()', () => {
 // ============================================
 
 describe('line()', () => {
-  test('returns correct NODE_TYPE', () => {
+  test('returns ComponentNode', () => {
     const node = line();
+    assert.strictEqual(node.type, 'component');
+    assert.strictEqual(node.componentName, 'line');
+  });
+
+  test('expands to correct NODE_TYPE', () => {
+    const node = expand(line()) as LineNode;
     assert.strictEqual(node.type, NODE_TYPE.LINE);
   });
 
   test('applies no props by default', () => {
-    const node = line();
+    const node = expand(line()) as LineNode;
     assert.strictEqual(node.color, undefined);
     assert.strictEqual(node.width, undefined);
     assert.strictEqual(node.dashType, undefined);
@@ -139,38 +168,38 @@ describe('line()', () => {
   });
 
   test('applies color prop', () => {
-    const node = line({ color: 'FF0000' });
+    const node = expand(line({ color: 'FF0000' })) as LineNode;
     assert.strictEqual(node.color, 'FF0000');
   });
 
   test('applies width prop', () => {
-    const node = line({ width: 2 });
+    const node = expand(line({ width: 2 })) as LineNode;
     assert.strictEqual(node.width, 2);
   });
 
   test('applies dashType prop', () => {
-    const node = line({ dashType: DASH_TYPE.DASH });
+    const node = expand(line({ dashType: DASH_TYPE.DASH })) as LineNode;
     assert.strictEqual(node.dashType, DASH_TYPE.DASH);
   });
 
   test('applies beginArrow prop', () => {
-    const node = line({ beginArrow: ARROW_TYPE.ARROW });
+    const node = expand(line({ beginArrow: ARROW_TYPE.ARROW })) as LineNode;
     assert.strictEqual(node.beginArrow, ARROW_TYPE.ARROW);
   });
 
   test('applies endArrow prop', () => {
-    const node = line({ endArrow: ARROW_TYPE.TRIANGLE });
+    const node = expand(line({ endArrow: ARROW_TYPE.TRIANGLE })) as LineNode;
     assert.strictEqual(node.endArrow, ARROW_TYPE.TRIANGLE);
   });
 
   test('applies all props together', () => {
-    const node = line({
+    const node = expand(line({
       color: '0000FF',
       width: 3,
       dashType: DASH_TYPE.DASH_DOT,
       beginArrow: ARROW_TYPE.DIAMOND,
       endArrow: ARROW_TYPE.STEALTH,
-    });
+    })) as LineNode;
     assert.strictEqual(node.color, '0000FF');
     assert.strictEqual(node.width, 3);
     assert.strictEqual(node.dashType, DASH_TYPE.DASH_DOT);
@@ -180,43 +209,125 @@ describe('line()', () => {
 });
 
 // ============================================
+// RECTANGLE
+// ============================================
+
+describe('rectangle()', () => {
+  test('returns ComponentNode', () => {
+    const node = rectangle();
+    assert.strictEqual(node.type, 'component');
+    assert.strictEqual(node.componentName, 'rectangle');
+  });
+
+  test('expands to correct NODE_TYPE', () => {
+    const node = expand(rectangle()) as RectangleNode;
+    assert.strictEqual(node.type, NODE_TYPE.RECTANGLE);
+  });
+
+  test('applies no props by default', () => {
+    const node = expand(rectangle()) as RectangleNode;
+    assert.strictEqual(node.fill, undefined);
+    assert.strictEqual(node.border, undefined);
+    assert.strictEqual(node.cornerRadius, undefined);
+  });
+
+  test('passes fill color', () => {
+    const node = expand(rectangle({ fill: { color: 'FF0000' } })) as RectangleNode;
+    assert.deepStrictEqual(node.fill, { color: 'FF0000' });
+  });
+
+  test('passes fill color with opacity', () => {
+    const node = expand(rectangle({ fill: { color: 'FF0000', opacity: 50 } })) as RectangleNode;
+    assert.deepStrictEqual(node.fill, { color: 'FF0000', opacity: 50 });
+  });
+
+  test('passes border properties', () => {
+    const node = expand(rectangle({
+      border: { color: '0000FF', width: 2 },
+    })) as RectangleNode;
+    assert.strictEqual(node.border?.color, '0000FF');
+    assert.strictEqual(node.border?.width, 2);
+  });
+
+  test('passes selective border sides', () => {
+    const node = expand(rectangle({
+      border: {
+        color: '000000',
+        width: 1,
+        top: true,
+        bottom: true,
+        left: false,
+        right: false,
+      },
+    })) as RectangleNode;
+    assert.strictEqual(node.border?.top, true);
+    assert.strictEqual(node.border?.bottom, true);
+    assert.strictEqual(node.border?.left, false);
+    assert.strictEqual(node.border?.right, false);
+  });
+
+  test('passes corner radius', () => {
+    const node = expand(rectangle({ cornerRadius: 0.125 })) as RectangleNode;
+    assert.strictEqual(node.cornerRadius, 0.125);
+  });
+
+  test('applies all props together', () => {
+    const node = expand(rectangle({
+      fill: { color: 'EEEEEE', opacity: 80 },
+      border: { color: '333333', width: 1 },
+      cornerRadius: 0.25,
+    })) as RectangleNode;
+    assert.deepStrictEqual(node.fill, { color: 'EEEEEE', opacity: 80 });
+    assert.strictEqual(node.border?.color, '333333');
+    assert.strictEqual(node.border?.width, 1);
+    assert.strictEqual(node.cornerRadius, 0.25);
+  });
+});
+
+// ============================================
 // SLIDE NUMBER
 // ============================================
 
 describe('slideNumber()', () => {
-  test('returns correct NODE_TYPE', () => {
+  test('returns ComponentNode', () => {
     const node = slideNumber();
+    assert.strictEqual(node.type, 'component');
+    assert.strictEqual(node.componentName, 'slideNumber');
+  });
+
+  test('expands to correct NODE_TYPE', () => {
+    const node = expand(slideNumber()) as SlideNumberNode;
     assert.strictEqual(node.type, NODE_TYPE.SLIDE_NUMBER);
   });
 
   test('applies no props by default', () => {
-    const node = slideNumber();
+    const node = expand(slideNumber()) as SlideNumberNode;
     assert.strictEqual(node.style, undefined);
     assert.strictEqual(node.color, undefined);
     assert.strictEqual(node.hAlign, HALIGN.RIGHT);
   });
 
   test('applies style prop', () => {
-    const node = slideNumber({ style: TEXT_STYLE.FOOTER });
+    const node = expand(slideNumber({ style: TEXT_STYLE.FOOTER })) as SlideNumberNode;
     assert.strictEqual(node.style, TEXT_STYLE.FOOTER);
   });
 
   test('applies color prop', () => {
-    const node = slideNumber({ color: '666666' });
+    const node = expand(slideNumber({ color: '666666' })) as SlideNumberNode;
     assert.strictEqual(node.color, '666666');
   });
 
   test('applies hAlign prop', () => {
-    const node = slideNumber({ hAlign: HALIGN.RIGHT });
+    const node = expand(slideNumber({ hAlign: HALIGN.RIGHT })) as SlideNumberNode;
     assert.strictEqual(node.hAlign, HALIGN.RIGHT);
   });
 
   test('applies all props together', () => {
-    const node = slideNumber({
+    const node = expand(slideNumber({
       style: TEXT_STYLE.SMALL,
       color: 'AAAAAA',
       hAlign: HALIGN.CENTER,
-    });
+    })) as SlideNumberNode;
     assert.strictEqual(node.style, TEXT_STYLE.SMALL);
     assert.strictEqual(node.color, 'AAAAAA');
     assert.strictEqual(node.hAlign, HALIGN.CENTER);
@@ -232,78 +343,99 @@ describe('row()', () => {
   const child2 = text('B');
   const child3 = text('C');
 
-  test('returns correct NODE_TYPE', () => {
+  test('returns ComponentNode', () => {
     const node = row(child1);
-    assert.strictEqual(node.type, NODE_TYPE.ROW);
+    assert.strictEqual(node.type, 'component');
+    assert.strictEqual(node.componentName, 'row');
   });
 
   test('accepts children without props', () => {
     const node = row(child1, child2, child3);
-    assert.strictEqual(node.children.length, 3);
-    assert.deepStrictEqual(node.children, [child1, child2, child3]);
+    const expanded = expand(node) as RowNode;
+    assert.strictEqual(expanded.type, NODE_TYPE.ROW);
+    assert.strictEqual(expanded.children.length, 3);
   });
 
-  test('applies explicit alignment defaults', () => {
+  test('applies default vAlign', () => {
     const node = row(child1);
-    assert.strictEqual(node.width, undefined);
-    assert.strictEqual(node.gap, undefined);
-    assert.strictEqual(node.vAlign, VALIGN.TOP);      // Explicit default: pure alignment
-    assert.strictEqual(node.hAlign, HALIGN.LEFT);   // Explicit default
+    const expanded = expand(node) as RowNode;
+    assert.strictEqual(expanded.vAlign, VALIGN.TOP);
+  });
+
+  test('applies default hAlign', () => {
+    const node = row(child1);
+    const expanded = expand(node) as RowNode;
+    assert.strictEqual(expanded.hAlign, HALIGN.LEFT);
   });
 
   test('applies hAlign prop', () => {
     const node = row({ hAlign: HALIGN.CENTER }, child1);
-    assert.strictEqual(node.hAlign, HALIGN.CENTER);
+    const expanded = expand(node) as RowNode;
+    assert.strictEqual(expanded.hAlign, HALIGN.CENTER);
+  });
+
+  test('applies vAlign prop', () => {
+    const node = row({ vAlign: VALIGN.MIDDLE }, child1);
+    const expanded = expand(node) as RowNode;
+    assert.strictEqual(expanded.vAlign, VALIGN.MIDDLE);
   });
 
   test('applies padding prop', () => {
     const node = row({ padding: 0.5 }, child1);
-    assert.strictEqual(node.padding, 0.5);
-  });
-
-  test('accepts props with children (props first)', () => {
-    const node = row({ gap: GAP.TIGHT }, child1, child2);
-    assert.strictEqual(node.children.length, 2);
-    assert.strictEqual(node.gap, GAP.TIGHT);
+    const expanded = expand(node) as RowNode;
+    assert.strictEqual(expanded.padding, 0.5);
   });
 
   test('applies gap prop', () => {
-    const node = row({ gap: GAP.LOOSE }, child1, child2);
-    assert.strictEqual(node.gap, GAP.LOOSE);
+    const node = row({ gap: GAP.TIGHT }, child1, child2);
+    const expanded = expand(node) as RowNode;
+    assert.strictEqual(expanded.gap, GAP.TIGHT);
   });
 
-  test('applies vAlign prop', () => {
-    const node = row({ vAlign: VALIGN.BOTTOM }, child1);
-    assert.strictEqual(node.vAlign, VALIGN.BOTTOM);
+  test('applies width prop', () => {
+    const node = row({ width: SIZE.FILL }, child1);
+    const expanded = expand(node) as RowNode;
+    assert.strictEqual(expanded.width, SIZE.FILL);
+  });
+
+  test('applies height prop', () => {
+    const node = row({ height: 2.5 }, child1);
+    const expanded = expand(node) as RowNode;
+    assert.strictEqual(expanded.height, 2.5);
+  });
+
+  test('distinguishes props from children', () => {
+    const node = row({ gap: GAP.TIGHT }, text('A'));
+    const expanded = expand(node) as RowNode;
+    assert.strictEqual(expanded.children.length, 1);
+    assert.strictEqual(expanded.gap, GAP.TIGHT);
+  });
+
+  test('accepts props with children (props first)', () => {
+    const node = row({ gap: GAP.TIGHT }, text('A'), text('B'));
+    const expanded = expand(node) as RowNode;
+    assert.strictEqual(expanded.children.length, 2);
+    assert.strictEqual(expanded.gap, GAP.TIGHT);
   });
 
   test('applies all props together', () => {
-    const node = row(
-      { gap: GAP.NORMAL, vAlign: VALIGN.MIDDLE },
-      child1,
-      child2
-    );
-    assert.strictEqual(node.gap, GAP.NORMAL);
-    assert.strictEqual(node.vAlign, VALIGN.MIDDLE);
-    assert.strictEqual(node.children.length, 2);
+    const node = row({ gap: GAP.NORMAL, vAlign: VALIGN.MIDDLE }, text('A'), text('B'));
+    const expanded = expand(node) as RowNode;
+    assert.strictEqual(expanded.gap, GAP.NORMAL);
+    assert.strictEqual(expanded.vAlign, VALIGN.MIDDLE);
+    assert.strictEqual(expanded.children.length, 2);
   });
 
   test('handles single child', () => {
-    const node = row(child1);
-    assert.strictEqual(node.children.length, 1);
-    assert.strictEqual(node.children[0], child1);
+    const node = row(text('A'));
+    const expanded = expand(node) as RowNode;
+    assert.strictEqual(expanded.children.length, 1);
   });
 
   test('handles empty children', () => {
     const node = row();
-    assert.strictEqual(node.children.length, 0);
-  });
-
-  test('distinguishes props from children (props object has no type)', () => {
-    const propsObj = { gap: GAP.TIGHT };
-    const node = row(propsObj, child1);
-    assert.strictEqual(node.gap, GAP.TIGHT);
-    assert.strictEqual(node.children.length, 1);
+    const expanded = expand(node) as RowNode;
+    assert.strictEqual(expanded.children.length, 0);
   });
 });
 
@@ -316,90 +448,165 @@ describe('column()', () => {
   const child2 = text('B');
   const child3 = text('C');
 
-  test('returns correct NODE_TYPE', () => {
+  test('returns ComponentNode', () => {
     const node = column(child1);
-    assert.strictEqual(node.type, NODE_TYPE.COLUMN);
+    assert.strictEqual(node.type, 'component');
+    assert.strictEqual(node.componentName, 'column');
   });
 
   test('accepts children without props', () => {
     const node = column(child1, child2, child3);
-    assert.strictEqual(node.children.length, 3);
-    assert.deepStrictEqual(node.children, [child1, child2, child3]);
+    const expanded = expand(node) as ColumnNode;
+    assert.strictEqual(expanded.type, NODE_TYPE.COLUMN);
+    assert.strictEqual(expanded.children.length, 3);
   });
 
-  test('applies explicit alignment defaults', () => {
+  test('applies default vAlign', () => {
     const node = column(child1);
-    assert.strictEqual(node.height, undefined);
-    assert.strictEqual(node.gap, undefined);
-    assert.strictEqual(node.vAlign, VALIGN.TOP);    // Explicit default
-    assert.strictEqual(node.hAlign, HALIGN.LEFT);   // Explicit default
+    const expanded = expand(node) as ColumnNode;
+    assert.strictEqual(expanded.vAlign, VALIGN.TOP);
   });
 
-  test('accepts props with children (props first)', () => {
-    const node = column({ gap: GAP.LOOSE }, child1, child2);
-    assert.strictEqual(node.children.length, 2);
-    assert.strictEqual(node.gap, GAP.LOOSE);
-  });
-
-  test('applies height: SIZE.FILL prop', () => {
-    const node = column({ height: SIZE.FILL }, child1, child2);
-    assert.strictEqual(node.height, SIZE.FILL);
-  });
-
-  test('applies height: number prop', () => {
-    const node = column({ height: 2.5 }, child1, child2);
-    assert.strictEqual(node.height, 2.5);
-  });
-
-  test('applies gap prop', () => {
-    const node = column({ gap: GAP.TIGHT }, child1, child2);
-    assert.strictEqual(node.gap, GAP.TIGHT);
-  });
-
-  test('applies vAlign prop', () => {
-    const node = column({ vAlign: VALIGN.MIDDLE }, child1);
-    assert.strictEqual(node.vAlign, VALIGN.MIDDLE);
+  test('applies default hAlign', () => {
+    const node = column(child1);
+    const expanded = expand(node) as ColumnNode;
+    assert.strictEqual(expanded.hAlign, HALIGN.LEFT);
   });
 
   test('applies hAlign prop', () => {
     const node = column({ hAlign: HALIGN.RIGHT }, child1);
-    assert.strictEqual(node.hAlign, HALIGN.RIGHT);
+    const expanded = expand(node) as ColumnNode;
+    assert.strictEqual(expanded.hAlign, HALIGN.RIGHT);
+  });
+
+  test('applies vAlign prop', () => {
+    const node = column({ vAlign: VALIGN.BOTTOM }, child1);
+    const expanded = expand(node) as ColumnNode;
+    assert.strictEqual(expanded.vAlign, VALIGN.BOTTOM);
+  });
+
+  test('applies height prop', () => {
+    const node = column({ height: SIZE.FILL }, child1);
+    const expanded = expand(node) as ColumnNode;
+    assert.strictEqual(expanded.height, SIZE.FILL);
+  });
+
+  test('applies width prop', () => {
+    const node = column({ width: 3.0 }, child1);
+    const expanded = expand(node) as ColumnNode;
+    assert.strictEqual(expanded.width, 3.0);
+  });
+
+  test('applies gap prop', () => {
+    const node = column({ gap: GAP.LOOSE }, child1, child2);
+    const expanded = expand(node) as ColumnNode;
+    assert.strictEqual(expanded.gap, GAP.LOOSE);
+  });
+
+  test('applies padding prop', () => {
+    const node = column({ padding: 0.25 }, child1);
+    const expanded = expand(node) as ColumnNode;
+    assert.strictEqual(expanded.padding, 0.25);
+  });
+
+  test('applies numeric height', () => {
+    const node = column({ height: 2.5 }, text('A'));
+    const expanded = expand(node) as ColumnNode;
+    assert.strictEqual(expanded.height, 2.5);
+  });
+
+  test('distinguishes props from children', () => {
+    const node = column({ gap: GAP.TIGHT }, text('A'));
+    const expanded = expand(node) as ColumnNode;
+    assert.strictEqual(expanded.children.length, 1);
+    assert.strictEqual(expanded.gap, GAP.TIGHT);
+  });
+
+  test('accepts props with children (props first)', () => {
+    const node = column({ gap: GAP.TIGHT }, text('A'), text('B'));
+    const expanded = expand(node) as ColumnNode;
+    assert.strictEqual(expanded.children.length, 2);
+    assert.strictEqual(expanded.gap, GAP.TIGHT);
   });
 
   test('applies all props together', () => {
-    const node = column(
-      {
-        height: SIZE.FILL,
-        gap: GAP.NORMAL,
-        vAlign: VALIGN.BOTTOM,
-        hAlign: HALIGN.CENTER,
-      },
-      child1,
-      child2,
-      child3
-    );
-    assert.strictEqual(node.height, SIZE.FILL);
-    assert.strictEqual(node.gap, GAP.NORMAL);
-    assert.strictEqual(node.vAlign, VALIGN.BOTTOM);
-    assert.strictEqual(node.hAlign, HALIGN.CENTER);
-    assert.strictEqual(node.children.length, 3);
+    const node = column({ height: SIZE.FILL, gap: GAP.NORMAL, vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER }, text('A'), text('B'));
+    const expanded = expand(node) as ColumnNode;
+    assert.strictEqual(expanded.height, SIZE.FILL);
+    assert.strictEqual(expanded.gap, GAP.NORMAL);
+    assert.strictEqual(expanded.vAlign, VALIGN.MIDDLE);
+    assert.strictEqual(expanded.hAlign, HALIGN.CENTER);
+    assert.strictEqual(expanded.children.length, 2);
   });
 
   test('handles single child', () => {
-    const node = column(child1);
-    assert.strictEqual(node.children.length, 1);
+    const node = column(text('A'));
+    const expanded = expand(node) as ColumnNode;
+    assert.strictEqual(expanded.children.length, 1);
   });
 
   test('handles empty children', () => {
     const node = column();
-    assert.strictEqual(node.children.length, 0);
+    const expanded = expand(node) as ColumnNode;
+    assert.strictEqual(expanded.children.length, 0);
+  });
+});
+
+// ============================================
+// STACK
+// ============================================
+
+describe('stack()', () => {
+  const child1 = text('A');
+  const child2 = text('B');
+
+  test('returns ComponentNode', () => {
+    const node = stack(child1);
+    assert.strictEqual(node.type, 'component');
+    assert.strictEqual(node.componentName, 'stack');
   });
 
-  test('distinguishes props from children', () => {
-    const propsObj = { vAlign: VALIGN.TOP };
-    const node = column(propsObj, child1);
-    assert.strictEqual(node.vAlign, VALIGN.TOP);
-    assert.strictEqual(node.children.length, 1);
+  test('expands to correct NODE_TYPE', () => {
+    const node = expand(stack(child1)) as StackNode;
+    assert.strictEqual(node.type, NODE_TYPE.STACK);
+  });
+
+  test('children are preserved', () => {
+    const node = expand(stack(child1, child2)) as StackNode;
+    assert.strictEqual(node.children.length, 2);
+  });
+
+  test('applies no size props by default', () => {
+    const node = expand(stack(child1)) as StackNode;
+    assert.strictEqual(node.width, undefined);
+    assert.strictEqual(node.height, undefined);
+  });
+
+  test('passes width prop', () => {
+    const node = expand(stack({ width: 5 }, child1)) as StackNode;
+    assert.strictEqual(node.width, 5);
+  });
+
+  test('passes height prop', () => {
+    const node = expand(stack({ height: 3 }, child1)) as StackNode;
+    assert.strictEqual(node.height, 3);
+  });
+
+  test('passes width and height together', () => {
+    const node = expand(stack({ width: 5, height: 3 }, child1, child2)) as StackNode;
+    assert.strictEqual(node.width, 5);
+    assert.strictEqual(node.height, 3);
+    assert.strictEqual(node.children.length, 2);
+  });
+
+  test('passes SIZE.FILL for width', () => {
+    const node = expand(stack({ width: SIZE.FILL }, child1)) as StackNode;
+    assert.strictEqual(node.width, SIZE.FILL);
+  });
+
+  test('passes SIZE.FILL for height', () => {
+    const node = expand(stack({ height: SIZE.FILL }, child1)) as StackNode;
+    assert.strictEqual(node.height, SIZE.FILL);
   });
 });
 
@@ -415,102 +622,113 @@ describe('grid()', () => {
   const child5 = text('E');
   const child6 = text('F');
 
-  test('returns array of RowNodes', () => {
+  test('returns array of ComponentNodes', () => {
     const rows = grid(2, child1, child2);
     assert.ok(Array.isArray(rows));
     assert.strictEqual(rows.length, 1);
-    assert.strictEqual(rows[0].type, NODE_TYPE.ROW);
+    assert.strictEqual(rows[0].type, 'component');
+    assert.strictEqual(rows[0].componentName, 'row');
   });
 
   test('chunks children into rows (2 columns, 4 children = 2 rows)', () => {
     const rows = grid(2, child1, child2, child3, child4);
     assert.strictEqual(rows.length, 2);
-    // First row has 2 children
-    assert.strictEqual(rows[0].type, NODE_TYPE.ROW);
-    assert.strictEqual((rows[0] as any).children.length, 2);
-    // Second row has 2 children
-    assert.strictEqual(rows[1].type, NODE_TYPE.ROW);
-    assert.strictEqual((rows[1] as any).children.length, 2);
-  });
-
-  test('chunks children into rows (3 columns, 5 children = 2 rows, last row partial)', () => {
-    const rows = grid(3, child1, child2, child3, child4, child5);
-    assert.strictEqual(rows.length, 2);
-    // First row has 3 children
-    assert.strictEqual((rows[0] as any).children.length, 3);
-    // Second row has 2 children (partial)
-    assert.strictEqual((rows[1] as any).children.length, 2);
-  });
-
-  test('accepts props object with columns', () => {
-    const rows = grid({ columns: 2 }, child1, child2, child3, child4);
-    assert.strictEqual(rows.length, 2);
+    // Expand first row and check children count
+    const firstRow = expand(rows[0]) as RowNode;
+    assert.strictEqual(firstRow.children.length, 2);
+    // Expand second row and check children count
+    const secondRow = expand(rows[1]) as RowNode;
+    assert.strictEqual(secondRow.children.length, 2);
   });
 
   test('applies gap to rows when specified', () => {
     const rows = grid({ columns: 2, gap: GAP.TIGHT }, child1, child2, child3, child4);
-    assert.strictEqual((rows[0] as any).gap, GAP.TIGHT);
+    const firstRow = expand(rows[0]) as RowNode;
+    assert.strictEqual(firstRow.gap, GAP.TIGHT);
+  });
+
+  test('handles odd number of children (2 columns, 5 children = 3 rows)', () => {
+    const rows = grid(2, child1, child2, child3, child4, child5);
+    assert.strictEqual(rows.length, 3);
+    const lastRow = expand(rows[2]) as RowNode;
+    assert.strictEqual(lastRow.children.length, 1);
+  });
+
+  test('accepts props object with columns', () => {
+    const rows = grid({ columns: 2 }, child1, child2, child3);
+    assert.strictEqual(rows.length, 2);
+    const firstRow = expand(rows[0]) as RowNode;
+    assert.strictEqual(firstRow.children.length, 2);
+    const secondRow = expand(rows[1]) as RowNode;
+    assert.strictEqual(secondRow.children.length, 1);
   });
 
   test('does not apply gap when not specified', () => {
     const rows = grid(2, child1, child2);
-    assert.strictEqual((rows[0] as any).gap, undefined);
+    const firstRow = expand(rows[0]) as RowNode;
+    assert.strictEqual(firstRow.gap, undefined);
+  });
+
+  test('preserves child order (each wrapped in column cell)', () => {
+    const rows = grid(2, child1, child2);
+    const firstRow = expand(rows[0]) as RowNode;
+    // Each child is wrapped in a ColumnNode with width: SIZE.FILL
+    assert.strictEqual(firstRow.children.length, 2);
+    const col0 = firstRow.children[0] as ColumnNode;
+    assert.strictEqual(col0.type, NODE_TYPE.COLUMN);
+    assert.strictEqual(col0.width, SIZE.FILL);
+    const col1 = firstRow.children[1] as ColumnNode;
+    assert.strictEqual(col1.type, NODE_TYPE.COLUMN);
+    assert.strictEqual(col1.width, SIZE.FILL);
+    // The original child (after expansion) is inside each column
+    assert.strictEqual(col0.children.length, 1);
+    assert.strictEqual(col1.children.length, 1);
+  });
+
+  test('fill: true sets height: SIZE.FILL and vAlign: TOP on each row', () => {
+    const rows = grid({ columns: 2, fill: true }, child1, child2);
+    const firstRow = expand(rows[0]) as RowNode;
+    assert.strictEqual(firstRow.height, SIZE.FILL);
+    assert.strictEqual(firstRow.vAlign, VALIGN.TOP);
+  });
+
+  test('fill: true sets height: SIZE.FILL on cell columns', () => {
+    const rows = grid({ columns: 2, fill: true }, child1, child2);
+    const firstRow = expand(rows[0]) as RowNode;
+    const col0 = firstRow.children[0] as ColumnNode;
+    assert.strictEqual(col0.height, SIZE.FILL);
+    assert.strictEqual(col0.width, SIZE.FILL);
+    const col1 = firstRow.children[1] as ColumnNode;
+    assert.strictEqual(col1.height, SIZE.FILL);
+    assert.strictEqual(col1.width, SIZE.FILL);
+  });
+
+  test('fill: false (default) does not set height on rows or cells', () => {
+    const rows = grid(2, child1, child2);
+    const firstRow = expand(rows[0]) as RowNode;
+    assert.strictEqual(firstRow.height, undefined);
+    const col0 = firstRow.children[0] as ColumnNode;
+    assert.strictEqual(col0.height, undefined);
   });
 
   test('handles single row (columns >= children)', () => {
     const rows = grid(4, child1, child2);
     assert.strictEqual(rows.length, 1);
-    assert.strictEqual((rows[0] as any).children.length, 2);
+    const firstRow = expand(rows[0]) as RowNode;
+    assert.strictEqual(firstRow.children.length, 2);
   });
 
   test('handles empty children', () => {
     const rows = grid(2);
+    assert.ok(Array.isArray(rows));
     assert.strictEqual(rows.length, 0);
   });
 
   test('handles single child', () => {
-    const rows = grid(3, child1);
+    const rows = grid(2, child1);
     assert.strictEqual(rows.length, 1);
-    assert.strictEqual((rows[0] as any).children.length, 1);
-  });
-
-  test('preserves child order (each wrapped in column cell)', () => {
-    const rows = grid(2, child1, child2, child3, child4);
-    const row1 = rows[0] as any;
-    const row2 = rows[1] as any;
-    // Grid wraps each child in column({ width: SIZE.FILL }) for equal-width cells
-    assert.strictEqual(row1.children[0].type, 'column');
-    assert.strictEqual(row1.children[0].children[0], child1);
-    assert.strictEqual(row1.children[1].children[0], child2);
-    assert.strictEqual(row2.children[0].children[0], child3);
-    assert.strictEqual(row2.children[1].children[0], child4);
-  });
-
-  test('fill: true sets height: SIZE.FILL and vAlign: TOP on each row', () => {
-    const rows = grid({ columns: 2, fill: true }, child1, child2, child3, child4);
-    assert.strictEqual((rows[0] as any).height, SIZE.FILL);
-    assert.strictEqual((rows[1] as any).height, SIZE.FILL);
-    // vAlign is pure alignment — sizing is handled by SIZE.FILL on cells
-    assert.strictEqual((rows[0] as any).vAlign, VALIGN.TOP);
-    assert.strictEqual((rows[1] as any).vAlign, VALIGN.TOP);
-  });
-
-  test('fill: true sets height: SIZE.FILL on cell columns (cells stretch via sizing, not alignment)', () => {
-    const rows = grid({ columns: 2, fill: true }, child1, child2);
-    const cellColumn = (rows[0] as any).children[0];
-    assert.strictEqual(cellColumn.type, NODE_TYPE.COLUMN);
-    assert.strictEqual(cellColumn.width, SIZE.FILL);
-    assert.strictEqual(cellColumn.height, SIZE.FILL);
-  });
-
-  test('fill: false (default) does not set height on rows or cells', () => {
-    const rows = grid(2, child1, child2);
-    assert.strictEqual((rows[0] as any).height, undefined);
-    assert.strictEqual((rows[0] as any).vAlign, VALIGN.TOP);
-    // Cell columns have width: SIZE.FILL but no height
-    const cellColumn = (rows[0] as any).children[0];
-    assert.strictEqual(cellColumn.width, SIZE.FILL);
-    assert.strictEqual(cellColumn.height, undefined);
+    const firstRow = expand(rows[0]) as RowNode;
+    assert.strictEqual(firstRow.children.length, 1);
   });
 });
 
@@ -578,10 +796,16 @@ describe('card()', () => {
 
 describe('table()', () => {
 
-  test('converts TextNode cells to TableCellData with correct property mapping', () => {
-    const node = table([
-      ['Header', text('colored cell', { style: TEXT_STYLE.SMALL, color: 'FF0000', hAlign: HALIGN.CENTER })],
-    ]);
+  test('returns ComponentNode', () => {
+    const node = table([['Header']]);
+    assert.strictEqual(node.type, 'component');
+    assert.strictEqual(node.componentName, 'table');
+  });
+
+  test('TableCellData cells preserve properties after expansion', () => {
+    const node = expand(table([
+      ['Header', { content: 'colored cell', textStyle: TEXT_STYLE.SMALL, color: 'FF0000', hAlign: HALIGN.CENTER }],
+    ])) as TableNode;
     assert.strictEqual(node.type, NODE_TYPE.TABLE);
     const cell = node.rows[0][1];
     assert.strictEqual(cell.content, 'colored cell');
@@ -590,16 +814,16 @@ describe('table()', () => {
     assert.strictEqual(cell.hAlign, HALIGN.CENTER);
   });
 
-  test('TextNode vAlign is omitted so table-level default applies', () => {
-    const node = table([
-      [text('cell with default vAlign')],
-    ]);
+  test('TableCellData without vAlign leaves vAlign undefined', () => {
+    const node = expand(table([
+      [{ content: 'cell with default vAlign' }],
+    ])) as TableNode;
     const cell = node.rows[0][0];
     assert.strictEqual(cell.vAlign, undefined);
   });
 
   test('string cells are wrapped as TableCellData', () => {
-    const node = table([['plain string']]);
+    const node = expand(table([['plain string']])) as TableNode;
     const cell = node.rows[0][0];
     assert.strictEqual(cell.content, 'plain string');
     assert.strictEqual(cell.color, undefined);
@@ -607,11 +831,11 @@ describe('table()', () => {
   });
 
   test('preserves table props', () => {
-    const node = table([['a']], {
+    const node = expand(table([['a']], {
       columnWidths: [1, 2],
       headerRows: 1,
       headerColumns: 1,
-    });
+    })) as TableNode;
     assert.deepStrictEqual(node.columnWidths, [1, 2]);
     assert.strictEqual(node.headerRows, 1);
     assert.strictEqual(node.headerColumns, 1);

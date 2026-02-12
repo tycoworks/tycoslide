@@ -1,7 +1,7 @@
-// Markdown Component
+// Text Component
 // Parses markdown string and expands to a TextNode with NormalizedRun[]
 
-import { defineComponent, type ComponentNode } from '../../core/componentRegistry.js';
+import { defineComponent, type ComponentNode } from '../../core/registry.js';
 import type { TextStyleName, HorizontalAlignment, VerticalAlignment } from '../../core/types.js';
 import { HALIGN, VALIGN } from '../../core/types.js';
 import { NODE_TYPE, type ElementNode } from '../../core/nodes.js';
@@ -11,15 +11,15 @@ import { parseMarkdown, mdastToRuns } from './mdastToRuns.js';
 // CONSTANTS
 // ============================================
 
-/** Component name for markdown */
-export const MARKDOWN_COMPONENT = 'markdown' as const;
+/** Component name for text */
+export const TEXT_COMPONENT = 'text' as const;
 
 // ============================================
 // TYPES
 // ============================================
 
-/** Style options for markdown (everything except the content string) */
-export interface MarkdownStyleProps {
+/** Style options for text (everything except the content string) */
+export interface TextProps {
   style?: TextStyleName;
   color?: string;
   hAlign?: HorizontalAlignment;
@@ -29,7 +29,7 @@ export interface MarkdownStyleProps {
 }
 
 /** Full props including content (used internally by expansion) */
-export interface MarkdownProps extends MarkdownStyleProps {
+export interface TextComponentProps extends TextProps {
   content: string;
 }
 
@@ -37,7 +37,7 @@ export interface MarkdownProps extends MarkdownStyleProps {
 // EXPANSION FUNCTION
 // ============================================
 
-function expandMarkdown(props: MarkdownProps, context: { theme: any }): ElementNode {
+function expandText(props: TextComponentProps, context: { theme: any }): ElementNode {
   const tree = parseMarkdown(props.content);
   const runs = mdastToRuns(tree, context.theme.highlights);
 
@@ -67,20 +67,20 @@ function expandMarkdown(props: MarkdownProps, context: { theme: any }): ElementN
 // COMPONENT REGISTRATION
 // ============================================
 
-const markdownComponent = defineComponent<MarkdownProps>(
-  MARKDOWN_COMPONENT,
-  expandMarkdown
+const textComponent = defineComponent<TextComponentProps>(
+  TEXT_COMPONENT,
+  expandText
 );
 
 /**
- * Create a markdown component node.
+ * Create a text component node.
  *
  * @example
  * ```typescript
- * markdown("**Bold** and :teal[highlighted] text.")
- * markdown("- First bullet\n- Second bullet", { style: TEXT_STYLE.BODY })
+ * text("**Bold** and :teal[highlighted] text.")
+ * text("- First bullet\n- Second bullet", { style: TEXT_STYLE.BODY })
  * ```
  */
-export function markdown(content: string, props?: MarkdownStyleProps): ComponentNode<MarkdownProps> {
-  return markdownComponent({ content, ...props });
+export function text(content: string, props?: TextProps): ComponentNode<TextComponentProps> {
+  return textComponent({ content, ...props });
 }

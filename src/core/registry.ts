@@ -1,7 +1,7 @@
 // Component Registry
 // Mechanism for registering and expanding component nodes to primitives
 
-import { NODE_TYPE, type ElementNode, type ComponentNode } from './nodes.js';
+import { NODE_TYPE, type ElementNode, type ComponentNode, type SlideNode } from './nodes.js';
 import type { Theme } from './types.js';
 
 // Re-export ComponentNode for convenience
@@ -25,8 +25,8 @@ export interface ExpansionContext {
 export interface ComponentDefinition<TProps = unknown> {
   /** Unique name for this component (e.g., 'card', 'table') */
   name: string;
-  /** Expand props into a primitive node tree */
-  expand: (props: TProps, context: ExpansionContext) => ElementNode;
+  /** Expand props into a node tree (may contain components that get further expanded) */
+  expand: (props: TProps, context: ExpansionContext) => SlideNode;
 }
 
 // ============================================
@@ -69,7 +69,7 @@ class ComponentRegistry {
    * Expand a single component node to its primitive representation.
    * @throws Error if the component is not registered
    */
-  expand(node: ComponentNode, context: ExpansionContext): ElementNode {
+  expand(node: ComponentNode, context: ExpansionContext): SlideNode {
     const def = this.definitions.get(node.componentName);
     if (!def) {
       throw new Error(`Unknown component: '${node.componentName}'. Did you forget to register it?`);
@@ -82,7 +82,7 @@ class ComponentRegistry {
    * Primitives pass through unchanged; components are expanded and their
    * results are recursively processed (in case they contain more components).
    */
-  expandTree(node: ElementNode | ComponentNode, context: ExpansionContext): ElementNode {
+  expandTree(node: SlideNode, context: ExpansionContext): ElementNode {
     // Check if this is a component node
     if (isComponentNode(node)) {
       // Expand and recursively process the result
@@ -95,7 +95,7 @@ class ComponentRegistry {
 
     // Handle 'children' array (Row, Column, Group, Card, etc.)
     if ('children' in elementNode && Array.isArray((elementNode as any).children)) {
-      const withChildren = elementNode as ElementNode & { children: (ElementNode | ComponentNode)[] };
+      const withChildren = elementNode as ElementNode & { children: SlideNode[] };
       return {
         ...withChildren,
         children: withChildren.children.map(c => this.expandTree(c, context)),
@@ -196,7 +196,7 @@ export function component<TProps>(name: string, props: TProps): ComponentNode<TP
  */
 export function defineComponent<TProps>(
   name: string,
-  expand: (props: TProps, context: ExpansionContext) => ElementNode
+  expand: (props: TProps, context: ExpansionContext) => SlideNode
 ): (props: TProps) => ComponentNode<TProps> {
   // Register the component
   componentRegistry.register({ name, expand });
