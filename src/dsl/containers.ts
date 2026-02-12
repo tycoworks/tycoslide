@@ -185,7 +185,9 @@ const gridComponent = defineComponent<GridInternalProps>('grid', (props) => {
   }
 
   // Return a column containing all rows (expansion system recurses into children)
-  return column(...rows);
+  // When fill: true, the wrapper column needs SIZE.FILL so rows have a definite-height
+  // parent to divide (flex: 1 1 0 needs space to distribute).
+  return fill ? column({ height: SIZE.FILL }, ...rows) : column(...rows);
 });
 
 /**

@@ -688,6 +688,16 @@ describe('grid()', () => {
     assert.strictEqual(col1.children.length, 1);
   });
 
+  test('fill: true sets height: SIZE.FILL on wrapper column', () => {
+    const col = expand(grid({ columns: 2, fill: true }, child1, child2)) as ColumnNode;
+    assert.strictEqual(col.height, SIZE.FILL);
+  });
+
+  test('fill: false does not set height on wrapper column', () => {
+    const col = expand(grid(2, child1, child2)) as ColumnNode;
+    assert.strictEqual(col.height, undefined);
+  });
+
   test('fill: true sets height: SIZE.FILL and vAlign: TOP on each row', () => {
     const rows = expandGrid(grid({ columns: 2, fill: true }, child1, child2));
     assert.strictEqual(rows[0].height, SIZE.FILL);

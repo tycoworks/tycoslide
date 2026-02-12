@@ -98,47 +98,52 @@ function flexItemStyles(
   width: number | SizeValue | undefined,
   height: number | SizeValue | undefined,
   parentDirection?: Direction
-): string {
-  const styles: string[] = [];
+): Record<string, string | number> {
+  const styles: Record<string, string | number> = {};
   const isInRow = parentDirection === DIRECTION.ROW;
 
   // Main axis sizing (controlled by `flex` property)
   const mainSize = isInRow ? width : height;
-  const minMain = isInRow ? 'min-width: 0' : 'min-height: 0';
 
   if (typeof mainSize === 'number') {
-    styles.push(`flex: 0 0 ${inToPx(mainSize)}px`);
+    styles.flex = `0 0 ${inToPx(mainSize)}px`;
   } else if (mainSize === SIZE.FILL) {
-    styles.push('flex: 1 1 0', minMain);
+    styles.flex = '1 1 0';
+    if (isInRow) { styles.minWidth = 0; } else { styles.minHeight = 0; }
   } else if (isInRow) {
     // In a row: children share width equally by default
     // min-height: 0 allows vertical compression when constrained by align-self: stretch
-    styles.push('flex: 1 1 0', minMain, 'min-height: 0');
+    styles.flex = '1 1 0';
+    styles.minWidth = 0;
+    styles.minHeight = 0;
   } else {
     // In a column: children use intrinsic height by default (no flex grow).
     // min-height: 0 allows containers to compress when parent is constrained
     // (without this, min-height: auto prevents shrinking below content size).
     // The root wrapper's CSS forces the top-level node to fill the slide.
-    styles.push('min-height: 0');
+    styles.minHeight = 0;
   }
 
   // Cross axis sizing (explicit CSS property)
   const crossSize = isInRow ? height : width;
-  const crossProp = isInRow ? 'height' : 'width';
 
   if (typeof crossSize === 'number') {
-    styles.push(`${crossProp}: ${inToPx(crossSize)}px`);
+    if (isInRow) {
+      styles.height = `${inToPx(crossSize)}px`;
+    } else {
+      styles.width = `${inToPx(crossSize)}px`;
+    }
   } else if (crossSize === SIZE.FILL) {
     // Explicit SIZE.FILL: always fill parent's cross dimension.
-    styles.push(`${crossProp}: 100%`);
+    if (isInRow) { styles.height = '100%'; } else { styles.width = '100%'; }
   } else if (!isInRow) {
     // In columns: width: 100% prevents shrink-to-content from align-items.
-    styles.push(`${crossProp}: 100%`);
+    styles.width = '100%';
   }
   // In rows with undefined cross-size: omit height entirely.
   // align-items: stretch (VALIGN.TOP) fills natively; center/flex-end position at intrinsic height.
 
-  return styles.join('; ');
+  return styles;
 }
 
 // ============================================
@@ -338,15 +343,15 @@ const LayoutContainer: FC<PropsWithChildren<LayoutContainerProps>> = ({
     ? vAlignToAlignItems(vAlign)
     : hAlignToCSS(hAlign);
 
-  const style = [
-    'display: flex',
-    `flex-direction: ${direction}`,
-    `gap: ${gapPx}px`,
-    `justify-content: ${justifyContent}`,
-    `align-items: ${alignItems}`,
-    itemStyles,
-    paddingPx > 0 ? `padding: ${paddingPx}px` : '',
-  ].filter(Boolean).join('; ');
+  const style: Record<string, string | number> = {
+    display: 'flex',
+    flexDirection: direction,
+    gap: `${gapPx}px`,
+    justifyContent,
+    alignItems,
+    ...itemStyles,
+    ...(paddingPx > 0 ? { padding: `${paddingPx}px` } : {}),
+  };
 
   return (
     <div data-node-id={nodeId} style={style}>
@@ -368,15 +373,15 @@ const LayoutStack: FC<PropsWithChildren<{ nodeId: string; width?: number | SizeV
   // - Column parent: intrinsic height (content-sized), width: 100%
   // minmax(0, 1fr) allows grid tracks to shrink below content size
   const itemStyles = flexItemStyles(width, height, parentDirection);
-  const styles = [
-    'position: relative',
-    'display: grid',
-    'grid-template: minmax(0, 1fr) / minmax(0, 1fr)',
-    itemStyles,
-  ];
+  const style: Record<string, string | number> = {
+    position: 'relative',
+    display: 'grid',
+    gridTemplate: 'minmax(0, 1fr) / minmax(0, 1fr)',
+    ...itemStyles,
+  };
 
   return (
-    <div data-node-id={nodeId} style={styles.filter(Boolean).join('; ')}>
+    <div data-node-id={nodeId} style={style}>
       {children}
     </div>
   );
@@ -388,7 +393,7 @@ const LayoutStackChild: FC<PropsWithChildren> = ({ children }) => {
   // fill the grid cell height. min-height: 0 allows shrinking, overflow: hidden clips.
   // This works because the height chain is definite: SIZE.FILL on row → stretch → grid → here.
   return (
-    <div style="grid-area: 1 / 1 / 2 / 2; display: flex; flex-direction: column; min-height: 0; overflow: hidden">
+    <div style={{ gridArea: '1 / 1 / 2 / 2', display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
       {children}
     </div>
   );
@@ -436,20 +441,20 @@ const LayoutText: FC<LayoutTextProps> = ({
 
   const isInRow = parentDirection === DIRECTION.ROW;
 
-  const containerStyle = [
-    `font-family: '${defaultFont.name}'`,
-    `font-size: ${fontSizePx}px`,
-    `line-height: ${cssLineHeight}`,
-    `text-align: ${textAlign}`,
-    'white-space: pre-wrap',
-    'word-wrap: break-word',
+  const containerStyle: Record<string, string | number> = {
+    fontFamily: `'${defaultFont.name}'`,
+    fontSize: `${fontSizePx}px`,
+    lineHeight: `${cssLineHeight}`,
+    textAlign,
+    whiteSpace: 'pre-wrap',
+    wordWrap: 'break-word',
     // Direction-aware sizing:
     // In a column: fill width (cross-axis), don't shrink height (main-axis)
     // In a row: share width equally (main-axis), allow wrapping within allocated space
     ...(isInRow
-      ? ['flex: 1 1 0', 'min-width: 0']
-      : ['width: 100%', 'flex-shrink: 0']),
-  ].join('; ');
+      ? { flex: '1 1 0', minWidth: 0 }
+      : { width: '100%', flexShrink: 0 }),
+  };
 
   return (
     <div data-node-id={nodeId} style={containerStyle}>
@@ -465,14 +470,14 @@ function renderTextRun(
   defaultWeight: string,
   bulletIndentPx: number
 ) {
-  const spanStyles: string[] = [];
+  const spanStyles: Record<string, string | number> = {};
 
   // Handle weight changes
   if (run.weight && run.weight !== defaultWeight) {
     const font = style.fontFamily[run.weight];
     if (font) {
-      spanStyles.push(`font-family: '${font.name}'`);
-      spanStyles.push(`font-weight: ${fontWeightToNumeric(run.weight as FontWeight)}`);
+      spanStyles.fontFamily = `'${font.name}'`;
+      spanStyles.fontWeight = fontWeightToNumeric(run.weight as FontWeight);
     }
   }
 
@@ -480,35 +485,35 @@ function renderTextRun(
   if (run.bold) {
     const boldFont = style.fontFamily.bold;
     if (boldFont) {
-      spanStyles.push(`font-family: '${boldFont.name}'`);
-      spanStyles.push(`font-weight: ${fontWeightToNumeric(FONT_WEIGHT.BOLD)}`);
+      spanStyles.fontFamily = `'${boldFont.name}'`;
+      spanStyles.fontWeight = fontWeightToNumeric(FONT_WEIGHT.BOLD);
     }
   }
 
   // Handle italic
   if (run.italic) {
-    spanStyles.push('font-style: italic');
+    spanStyles.fontStyle = 'italic';
   }
 
   // Handle color
   if (run.color) {
-    spanStyles.push(`color: #${run.color}`);
+    spanStyles.color = `#${run.color}`;
   }
 
   // Handle highlight
   if (run.highlight) {
-    spanStyles.push(`background-color: #${run.highlight.bg}`);
-    spanStyles.push(`color: #${run.highlight.text}`);
+    spanStyles.backgroundColor = `#${run.highlight.bg}`;
+    spanStyles.color = `#${run.highlight.text}`;
   }
 
-  const styleAttr = spanStyles.length > 0 ? spanStyles.join('; ') : undefined;
+  const styleAttr = Object.keys(spanStyles).length > 0 ? spanStyles : undefined;
   const text = run.text;
 
   // Handle bullets - simple left padding for indent
   if (run.bullet) {
     return (
-      <div key={index} style={`padding-left: ${bulletIndentPx}px`}>
-        <span style="display: inline-block; width: 1em; margin-left: -1em">•</span>
+      <div key={index} style={{ paddingLeft: `${bulletIndentPx}px` }}>
+        <span style={{ display: 'inline-block', width: '1em', marginLeft: '-1em' }}>•</span>
         <span style={styleAttr}>{text}</span>
       </div>
     );
@@ -521,7 +526,7 @@ function renderTextRun(
   if (run.breakLine) {
     return (
       <>
-        <div style="height: 1em" />
+        <div style={{ height: '1em' }} />
         <span key={index} style={styleAttr}>{text}</span>
       </>
     );
@@ -554,38 +559,41 @@ const LayoutImage: FC<LayoutImageProps> = ({
   // - In a column: width is the constraint axis, derive height from aspect ratio
   // - In a row with definite height: height: 100% resolves, aspect-ratio derives width naturally
   // - In a row with auto height: no anchor for aspect-ratio, share space equally with siblings
-  const styles: string[] = [`aspect-ratio: ${aspectRatio}`];
+  const style: Record<string, string | number> = { aspectRatio: `${aspectRatio}` };
 
   if (parentDirection === DIRECTION.ROW) {
-    styles.push('height: 100%', 'min-width: 0');
+    style.height = '100%';
+    style.minWidth = 0;
     if (parentHasDefiniteCrossSize) {
       // Row has definite height → browser resolves height: 100%, then aspect-ratio derives width
-      styles.push('flex: 0 1 auto');
+      style.flex = '0 1 auto';
     } else {
       // Row has auto height → no anchor for aspect-ratio width derivation, share space equally
-      styles.push('flex: 1 1 0');
+      style.flex = '1 1 0';
     }
   } else {
     // In a column (or root): fill available width, derive height from aspect ratio
     // Fully compressible: can shrink to 0 (flex-shrink: 1, min-height: 0)
-    styles.push('width: 100%', 'flex: 0 1 auto', 'min-height: 0');
+    style.width = '100%';
+    style.flex = '0 1 auto';
+    style.minHeight = 0;
   }
 
   // maxScaleFactor: prevent upscaling beyond native resolution
-  if (maxWidthPx) styles.push(`max-width: ${maxWidthPx}px`);
-  if (maxHeightPx) styles.push(`max-height: ${maxHeightPx}px`);
+  if (maxWidthPx) style.maxWidth = `${maxWidthPx}px`;
+  if (maxHeightPx) style.maxHeight = `${maxHeightPx}px`;
 
   return (
     <div
       data-node-id={nodeId}
-      style={styles.join('; ')}
+      style={style}
     />
   );
 };
 
 const LayoutRectangle: FC<{ nodeId: string }> = ({ nodeId }) => {
   // Rectangle fills its parent bounds completely
-  return <div data-node-id={nodeId} style="width: 100%; height: 100%" />;
+  return <div data-node-id={nodeId} style={{ width: '100%', height: '100%' }} />;
 };
 
 interface LayoutLineProps {
@@ -598,10 +606,10 @@ const LayoutLine: FC<LayoutLineProps> = ({ nodeId, parentDirection, borderWidthP
   // Direction-aware: horizontal in column, vertical in row
   if (parentDirection === DIRECTION.ROW) {
     // Vertical separator in a row: fixed width, stretch to row height
-    return <div data-node-id={nodeId} style={`flex: 0 0 ${borderWidthPx}px; align-self: stretch`} />;
+    return <div data-node-id={nodeId} style={{ flex: `0 0 ${borderWidthPx}px`, alignSelf: 'stretch' }} />;
   }
   // Horizontal separator in a column (default): full width, fixed height
-  return <div data-node-id={nodeId} style={`flex: 0 0 ${borderWidthPx}px; width: 100%`} />;
+  return <div data-node-id={nodeId} style={{ flex: `0 0 ${borderWidthPx}px`, width: '100%' }} />;
 };
 
 const LayoutSlideNumber: FC<{ nodeId: string; style: TextStyle }> = ({
@@ -614,7 +622,7 @@ const LayoutSlideNumber: FC<{ nodeId: string; style: TextStyle }> = ({
   return (
     <div
       data-node-id={nodeId}
-      style={`font-family: '${defaultFont.name}'; font-size: ${fontSizePx}px; white-space: nowrap; flex: 0 0 auto`}
+      style={{ fontFamily: `'${defaultFont.name}'`, fontSize: `${fontSizePx}px`, whiteSpace: 'nowrap', flex: '0 0 auto' }}
     >
       {SLIDE_NUMBER_PLACEHOLDER}
     </div>
@@ -790,12 +798,16 @@ function nodeToJsx(
 
       // In rows: share width equally. In columns: fill width.
       const isInRow = parent.direction === 'row';
-      const tableWidthStyle = isInRow ? 'flex: 1 1 0; min-width: 0' : 'width: 100%';
+      const tableStyle: Record<string, string | number> = {
+        display: 'grid',
+        gridTemplateColumns: columnWidths.map(w => `${(w / totalWeight) * 100}%`).join(' '),
+        ...(isInRow ? { flex: '1 1 0', minWidth: 0 } : { width: '100%' }),
+      };
 
       return (
         <div
           data-node-id={nodeId}
-          style={`display: grid; grid-template-columns: ${columnWidths.map(w => `${(w / totalWeight) * 100}%`).join(' ')}; ${tableWidthStyle}`}
+          style={tableStyle}
         >
           {cellNodes.flatMap((row: TextNode[]) =>
             row.map((cellTextNode: TextNode) => {
@@ -806,7 +818,7 @@ function nodeToJsx(
               const style = theme.textStyles[styleName];
 
               return (
-                <div style={`padding: ${cellPaddingPx}px`}>
+                <div style={{ padding: `${cellPaddingPx}px` }}>
                   <LayoutText
                     nodeId={cellNodeId}
                     content={cellTextNode.content}

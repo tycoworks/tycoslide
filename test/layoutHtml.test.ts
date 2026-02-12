@@ -84,25 +84,25 @@ describe('HTML Measurement Generation', () => {
     test('row generates flex-direction: row', () => {
       const node = row(text('A'), text('B'));
       const { html } = genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('flex-direction: row'), 'Row should have flex-direction: row');
+      assert.ok(html.includes('flex-direction:row'), 'Row should have flex-direction:row');
     });
 
     test('column generates flex-direction: column', () => {
       const node = column(text('A'), text('B'));
       const { html } = genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('flex-direction: column'), 'Column should have flex-direction: column');
+      assert.ok(html.includes('flex-direction:column'), 'Column should have flex-direction:column');
     });
 
     test('row with hAlign center generates justify-content: center', () => {
       const node = row({ hAlign: HALIGN.CENTER }, text('A'));
       const { html } = genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('justify-content: center'), 'Row hAlign center should use justify-content: center');
+      assert.ok(html.includes('justify-content:center'), 'Row hAlign center should use justify-content:center');
     });
 
     test('row with hAlign right generates justify-content: flex-end', () => {
       const node = row({ hAlign: HALIGN.RIGHT }, text('A'));
       const { html } = genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('justify-content: flex-end'), 'Row hAlign right should use justify-content: flex-end');
+      assert.ok(html.includes('justify-content:flex-end'), 'Row hAlign right should use justify-content:flex-end');
     });
 
     test('row with padding generates padding style', () => {
@@ -122,19 +122,19 @@ describe('HTML Measurement Generation', () => {
     test('text generates width: 100%', () => {
       const node = text('Hello world');
       const { html } = genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('width: 100%'), 'Text should have width: 100%');
+      assert.ok(html.includes('width:100%'), 'Text should have width:100%');
     });
 
     test('text with hAlign center generates text-align: center', () => {
       const node = text('Hello', { hAlign: HALIGN.CENTER });
       const { html } = genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('text-align: center'), 'Text with hAlign center should use text-align: center');
+      assert.ok(html.includes('text-align:center'), 'Text with hAlign center should use text-align:center');
     });
 
     test('text with hAlign right generates text-align: right', () => {
       const node = text('Hello', { hAlign: HALIGN.RIGHT });
       const { html } = genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('text-align: right'), 'Text with hAlign right should use text-align: right');
+      assert.ok(html.includes('text-align:right'), 'Text with hAlign right should use text-align:right');
     });
   });
 
@@ -156,7 +156,7 @@ describe('HTML Measurement Generation', () => {
     test('breakLine generates block spacer div with height: 1em', () => {
       const node = text('Para 1\n\nPara 2');
       const { html } = genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('height: 1em'), 'breakLine should generate a spacer div with height: 1em');
+      assert.ok(html.includes('height:1em'), 'breakLine should generate a spacer div with height:1em');
     });
 
     test('breakLine does not generate br tag', () => {
@@ -173,14 +173,14 @@ describe('HTML Measurement Generation', () => {
       const node = column(row({ height: 0.33 }, text('Logo')));
       const { html } = genHTML(node, bounds, mockTheme);
       // 0.33 inches * 96 DPI = 31.68px
-      assert.ok(html.includes('flex: 0 0 31.68px'), 'Row with explicit height in column should get flex: 0 0 <height>px');
+      assert.ok(html.includes('flex:0 0 31.68px'), 'Row with explicit height in column should get flex:0 0 <height>px');
     });
 
     test('column with explicit width in row uses flex: 0 0 (fixed main axis)', () => {
       const node = row(column({ width: 3 }, text('Left')), text('Right'));
       const { html } = genHTML(node, bounds, mockTheme);
       // 3 inches * 96 DPI = 288px
-      assert.ok(html.includes('flex: 0 0 288px'), 'Column with explicit width in row should get flex: 0 0 <width>px');
+      assert.ok(html.includes('flex:0 0 288px'), 'Column with explicit width in row should get flex:0 0 <width>px');
     });
 
     test('row with no height in column uses intrinsic height (no flex grow)', () => {
@@ -195,13 +195,13 @@ describe('HTML Measurement Generation', () => {
       // Note: the column's flex comes from .root > * CSS rule, not inline styles
       const rowDivMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
       assert.ok(rowDivMatch, 'Should find the row div');
-      assert.ok(!rowDivMatch![1].includes('flex: 1 1 0'), 'Row in column should NOT get flex: 1 1 0 by default');
+      assert.ok(!rowDivMatch![1].includes('flex:1 1 0'), 'Row in column should NOT get flex:1 1 0 by default');
     });
 
     test('row with SIZE.FILL height in column fills available space', () => {
       const node = column(row({ height: SIZE.FILL }, text('A')));
       const { html } = genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('flex: 1 1 0'), 'Row with SIZE.FILL height should fill');
+      assert.ok(html.includes('flex:1 1 0'), 'Row with SIZE.FILL height should fill');
     });
 
     test('column with explicit height in column uses flex: 0 0 (cross-axis explicit)', () => {
@@ -212,7 +212,7 @@ describe('HTML Measurement Generation', () => {
       );
       const { html } = genHTML(node, bounds, mockTheme);
       // 2 inches * 96 = 192px
-      assert.ok(html.includes('flex: 0 0 192px'), 'Nested column with explicit height should use flex: 0 0');
+      assert.ok(html.includes('flex:0 0 192px'), 'Nested column with explicit height should use flex:0 0');
     });
 
     test('row with explicit height also sets cross-axis height when in row parent', () => {
@@ -220,7 +220,7 @@ describe('HTML Measurement Generation', () => {
       const node = row(row({ height: 1 }, text('Inner')));
       const { html } = genHTML(node, bounds, mockTheme);
       // height is cross-axis in a row parent, so should be explicit CSS height
-      assert.ok(html.includes('height: 96px'), 'Row with height in row parent should set explicit height CSS');
+      assert.ok(html.includes('height:96px'), 'Row with height in row parent should set explicit height CSS');
     });
   });
 
@@ -228,13 +228,13 @@ describe('HTML Measurement Generation', () => {
     test('image in column gets width: 100%', () => {
       const node = column(image('./test/fixtures/test.png'));
       const { html } = genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('width: 100%'), 'Image in column should get width: 100%');
+      assert.ok(html.includes('width:100%'), 'Image in column should get width:100%');
     });
 
     test('image in row gets height: 100%', () => {
       const node = row(image('./test/fixtures/test.png'));
       const { html } = genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('height: 100%'), 'Image in row should get height: 100%');
+      assert.ok(html.includes('height:100%'), 'Image in row should get height:100%');
     });
   });
 
@@ -243,13 +243,13 @@ describe('HTML Measurement Generation', () => {
       const node = column(text('Above'), line(), text('Below'));
       const { html } = genHTML(node, bounds, mockTheme);
       // Line in column = horizontal separator
-      assert.ok(html.includes('width: 100%'), 'Line in column should be full-width horizontal separator');
+      assert.ok(html.includes('width:100%'), 'Line in column should be full-width horizontal separator');
     });
 
     test('line in row gets align-self: stretch (vertical separator)', () => {
       const node = row(text('Left'), line(), text('Right'));
       const { html } = genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('align-self: stretch'), 'Line in row should stretch vertically');
+      assert.ok(html.includes('align-self:stretch'), 'Line in row should stretch vertically');
     });
   });
 
@@ -269,7 +269,7 @@ describe('HTML Measurement Generation', () => {
     test('column with vAlign TOP (default) generates flex-start (no safe needed)', () => {
       const node = column(text('Top'));
       const { html } = genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('justify-content: flex-start'), 'vAlign TOP should use plain flex-start');
+      assert.ok(html.includes('justify-content:flex-start'), 'vAlign TOP should use plain flex-start');
     });
   });
 
@@ -281,7 +281,7 @@ describe('HTML Measurement Generation', () => {
       const { html } = genHTML(node, bounds, mockTheme);
       const rowMatch = html.match(/data-node-id="node-1"[^>]*style="([^"]*)"/);
       assert.ok(rowMatch, 'Should find the row div');
-      assert.ok(rowMatch![1].includes('align-items: stretch'), 'Row should default to align-items: stretch');
+      assert.ok(rowMatch![1].includes('align-items:stretch'), 'Row should default to align-items:stretch');
     });
 
     test('row with vAlign MIDDLE uses align-items: center', () => {
@@ -289,7 +289,7 @@ describe('HTML Measurement Generation', () => {
       const { html } = genHTML(node, bounds, mockTheme);
       const rowMatch = html.match(/data-node-id="node-1"[^>]*style="([^"]*)"/);
       assert.ok(rowMatch, 'Should find the row div');
-      assert.ok(rowMatch![1].includes('align-items: center'), 'Row with vAlign MIDDLE should use center');
+      assert.ok(rowMatch![1].includes('align-items:center'), 'Row with vAlign MIDDLE should use center');
     });
 
     test('container in row has min-height: 0 (allows vertical compression)', () => {
@@ -299,7 +299,7 @@ describe('HTML Measurement Generation', () => {
       const { html } = genHTML(node, bounds, mockTheme);
       const columnMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
       assert.ok(columnMatch, 'Should find the nested column div');
-      assert.ok(columnMatch![1].includes('min-height: 0'), 'Column in row should have min-height: 0');
+      assert.ok(columnMatch![1].includes('min-height:0px'), 'Column in row should have min-height:0px');
     });
 
     test('stack grid uses minmax(0, 1fr) to allow track shrinking', () => {
@@ -316,7 +316,7 @@ describe('HTML Measurement Generation', () => {
       const { html } = genHTML(node, bounds, mockTheme);
       const columnMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
       assert.ok(columnMatch, 'Should find the nested column div');
-      assert.ok(!columnMatch![1].includes('height: 100%'), 'Column in row should not have height: 100% (stretch handles it)');
+      assert.ok(!columnMatch![1].includes('height:100%'), 'Column in row should not have height:100% (stretch handles it)');
     });
 
     test('stack in row omits height (stretch handles card equal height)', () => {
@@ -325,7 +325,7 @@ describe('HTML Measurement Generation', () => {
       const { html } = genHTML(node, bounds, mockTheme);
       const stackMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
       assert.ok(stackMatch, 'Should find the stack div');
-      assert.ok(!stackMatch![1].includes('height: 100%'), 'Stack in row should not have height: 100% (stretch handles it)');
+      assert.ok(!stackMatch![1].includes('height:100%'), 'Stack in row should not have height:100% (stretch handles it)');
     });
 
     test('stack child (grid item) is flex container with min-height: 0 and overflow: hidden', () => {
@@ -333,7 +333,7 @@ describe('HTML Measurement Generation', () => {
       // This works because the height chain is definite: SIZE.FILL → stretch → grid → here.
       const node = column(stack(rectangle(), column(text('Content'))));
       const { html } = genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('grid-area: 1 / 1 / 2 / 2; display: flex; flex-direction: column; min-height: 0; overflow: hidden'), 'Stack child should be flex container with min-height: 0 and overflow: hidden');
+      assert.ok(html.includes('grid-area:1 / 1 / 2 / 2;display:flex;flex-direction:column;min-height:0px;overflow:hidden'), 'Stack child should be flex container with min-height:0px and overflow:hidden');
     });
   });
 
@@ -342,8 +342,8 @@ describe('HTML Measurement Generation', () => {
       const node = column(image('./test/fixtures/test.png'));
       const { html } = genHTML(node, bounds, mockTheme);
       // Image should be able to shrink to fit available space
-      assert.ok(html.includes('flex: 0 1 auto'), 'Image should have flex-shrink: 1 (compressible)');
-      assert.ok(html.includes('min-height: 0'), 'Image in column should have min-height: 0');
+      assert.ok(html.includes('flex:0 1 auto'), 'Image should have flex-shrink: 1 (compressible)');
+      assert.ok(html.includes('min-height:0px'), 'Image in column should have min-height:0px');
     });
 
     test('image in auto-height row shares width equally (flex: 1 1 0)', () => {
@@ -353,8 +353,8 @@ describe('HTML Measurement Generation', () => {
       const { html } = genHTML(node, bounds, mockTheme);
       const imageMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
       assert.ok(imageMatch, 'Should find the image div');
-      assert.ok(imageMatch![1].includes('flex: 1 1 0'), 'Image in auto-height row should share width (flex: 1 1 0)');
-      assert.ok(imageMatch![1].includes('min-width: 0'), 'Image in auto-height row should have min-width: 0');
+      assert.ok(imageMatch![1].includes('flex:1 1 0'), 'Image in auto-height row should share width (flex:1 1 0)');
+      assert.ok(imageMatch![1].includes('min-width:0px'), 'Image in auto-height row should have min-width:0px');
     });
 
     test('image in definite-height row uses natural aspect-ratio width (flex: 0 1 auto)', () => {
@@ -364,8 +364,8 @@ describe('HTML Measurement Generation', () => {
       const { html } = genHTML(node, bounds, mockTheme);
       const imageMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
       assert.ok(imageMatch, 'Should find the image div');
-      assert.ok(imageMatch![1].includes('flex: 0 1 auto'), 'Image in definite-height row should use natural width (flex: 0 1 auto)');
-      assert.ok(!imageMatch![1].includes('flex: 1 1 0'), 'Image in definite-height row should NOT grow to fill');
+      assert.ok(imageMatch![1].includes('flex:0 1 auto'), 'Image in definite-height row should use natural width (flex:0 1 auto)');
+      assert.ok(!imageMatch![1].includes('flex:1 1 0'), 'Image in definite-height row should NOT grow to fill');
     });
 
     test('image in SIZE.FILL row uses natural aspect-ratio width (flex: 0 1 auto)', () => {
@@ -374,14 +374,14 @@ describe('HTML Measurement Generation', () => {
       const { html } = genHTML(node, bounds, mockTheme);
       const imageMatch = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
       assert.ok(imageMatch, 'Should find the image div');
-      assert.ok(imageMatch![1].includes('flex: 0 1 auto'), 'Image in SIZE.FILL row should use natural width (flex: 0 1 auto)');
+      assert.ok(imageMatch![1].includes('flex:0 1 auto'), 'Image in SIZE.FILL row should use natural width (flex:0 1 auto)');
     });
 
     test('text in column is incompressible (width: 100%, flex-shrink: 0)', () => {
       const node = column(text('Do not compress me'));
       const { html } = genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('flex-shrink: 0'), 'Text in column should have flex-shrink: 0 (incompressible height)');
-      assert.ok(html.includes('width: 100%'), 'Text in column should have width: 100%');
+      assert.ok(html.includes('flex-shrink:0'), 'Text in column should have flex-shrink:0 (incompressible height)');
+      assert.ok(html.includes('width:100%'), 'Text in column should have width:100%');
     });
 
     test('text in row shares width (flex: 1 1 0, min-width: 0)', () => {
@@ -390,9 +390,9 @@ describe('HTML Measurement Generation', () => {
       // Text in a row should share width, not claim 100%
       const textMatch = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
       assert.ok(textMatch, 'Should find the text div');
-      assert.ok(textMatch![1].includes('flex: 1 1 0'), 'Text in row should use flex: 1 1 0 to share width');
-      assert.ok(textMatch![1].includes('min-width: 0'), 'Text in row should have min-width: 0 to allow shrinking');
-      assert.ok(!textMatch![1].includes('width: 100%'), 'Text in row should NOT have width: 100%');
+      assert.ok(textMatch![1].includes('flex:1 1 0'), 'Text in row should use flex:1 1 0 to share width');
+      assert.ok(textMatch![1].includes('min-width:0px'), 'Text in row should have min-width:0px to allow shrinking');
+      assert.ok(!textMatch![1].includes('width:100%'), 'Text in row should NOT have width:100%');
     });
 
     test('container in column has min-height: 0 (allows compression)', () => {
@@ -401,7 +401,7 @@ describe('HTML Measurement Generation', () => {
       const { html } = genHTML(node, bounds, mockTheme);
       const rowDivMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
       assert.ok(rowDivMatch, 'Should find the row div');
-      assert.ok(rowDivMatch![1].includes('min-height: 0'), 'Row in column should have min-height: 0 for compression');
+      assert.ok(rowDivMatch![1].includes('min-height:0px'), 'Row in column should have min-height:0px for compression');
     });
   });
 });
