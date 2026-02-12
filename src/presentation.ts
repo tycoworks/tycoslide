@@ -8,7 +8,7 @@ import path from 'path';
 import type { Theme } from './core/types.js';
 import type { ElementNode, PositionedNode, ComponentNode } from './core/nodes.js';
 import { Bounds } from './core/bounds.js';
-import { PptxRenderer, type Renderer } from './core/pptxRenderer.js';
+import { PptxRenderer } from './core/pptxRenderer.js';
 import { LayoutValidator } from './layout/validator.js';
 import { log } from './utils/log.js';
 import { componentRegistry } from './core/registry.js';
@@ -55,7 +55,7 @@ interface DeferredSlide {
 // ============================================
 
 export class Presentation {
-  private renderer: Renderer;
+  private renderer: PptxRenderer;
   private _theme: Theme;
   private masters = new Map<string, { contentBounds: Bounds; positioned: PositionedNode }>();
   private fullBounds: Bounds;

@@ -12,6 +12,30 @@ import type {
 import { VALIGN, HALIGN, SIZE } from '../core/types.js';
 
 // ============================================
+// SHARED HELPERS
+// ============================================
+
+/**
+ * Parse container function arguments that support two overload patterns:
+ * 1. (props, ...children)
+ * 2. (...children)
+ *
+ * Discriminates props object from nodes by checking for 'type' and 'componentName' fields.
+ */
+function parseContainerArgs<TProps>(args: any[]): { props: TProps; children: SlideNode[] } {
+  if (args[0] && typeof args[0] === 'object' && !('type' in args[0]) && !('componentName' in args[0])) {
+    return {
+      props: args[0] as TProps,
+      children: args.slice(1),
+    };
+  }
+  return {
+    props: {} as TProps,
+    children: args,
+  };
+}
+
+// ============================================
 // ROW
 // ============================================
 
@@ -42,16 +66,7 @@ const rowComponent = defineComponent<RowInternalProps>('row', (props) => ({
 export function row(props: RowProps, ...children: SlideNode[]): ComponentNode;
 export function row(...children: SlideNode[]): ComponentNode;
 export function row(...args: any[]): ComponentNode {
-  let props: RowProps = {};
-  let children: SlideNode[];
-
-  if (args[0] && typeof args[0] === 'object' && !('type' in args[0]) && !('componentName' in args[0])) {
-    props = args[0];
-    children = args.slice(1);
-  } else {
-    children = args;
-  }
-
+  const { props, children } = parseContainerArgs<RowProps>(args);
   return rowComponent({ ...props, children });
 }
 
@@ -86,16 +101,7 @@ const columnComponent = defineComponent<ColumnInternalProps>('column', (props) =
 export function column(props: ColumnProps, ...children: SlideNode[]): ComponentNode;
 export function column(...children: SlideNode[]): ComponentNode;
 export function column(...args: any[]): ComponentNode {
-  let props: ColumnProps = {};
-  let children: SlideNode[];
-
-  if (args[0] && typeof args[0] === 'object' && !('type' in args[0]) && !('componentName' in args[0])) {
-    props = args[0];
-    children = args.slice(1);
-  } else {
-    children = args;
-  }
-
+  const { props, children } = parseContainerArgs<ColumnProps>(args);
   return columnComponent({ ...props, children });
 }
 
@@ -134,21 +140,12 @@ const stackComponent = defineComponent<StackInternalProps>('stack', (props) => (
 export function stack(props: StackProps, ...children: SlideNode[]): ComponentNode;
 export function stack(...children: SlideNode[]): ComponentNode;
 export function stack(...args: any[]): ComponentNode {
-  let props: StackProps = {};
-  let children: SlideNode[];
-
-  if (args[0] && typeof args[0] === 'object' && !('type' in args[0]) && !('componentName' in args[0])) {
-    props = args[0];
-    children = args.slice(1);
-  } else {
-    children = args;
-  }
-
+  const { props, children } = parseContainerArgs<StackProps>(args);
   return stackComponent({ ...props, children });
 }
 
 // ============================================
-// GRID (layout helper - chunks children into rows)
+// GRID (component - chunks children into column of rows)
 // ============================================
 
 export interface GridProps {
@@ -158,24 +155,55 @@ export interface GridProps {
   fill?: boolean;
 }
 
+interface GridInternalProps extends GridProps {
+  children: SlideNode[];
+}
+
+const gridComponent = defineComponent<GridInternalProps>('grid', (props) => {
+  const { columns, gap, fill = false, children } = props;
+
+  // Wrap each child in a column cell so items share row width equally
+  // and images use width-based sizing (width: 100%, height from aspect-ratio)
+  // instead of height-based sizing (which requires definite row height).
+  // When fill: true, cells also get height: SIZE.FILL so they fill the row's cross-axis.
+  const cellProps = fill
+    ? { width: SIZE.FILL, height: SIZE.FILL }
+    : { width: SIZE.FILL };
+  const cells = children.map(child => column(cellProps, child));
+
+  // Chunk cells into rows
+  const rows: ComponentNode[] = [];
+  for (let i = 0; i < cells.length; i += columns) {
+    const rowChildren = cells.slice(i, i + columns);
+    if (fill) {
+      // Fill mode: rows get definite height, cells stretch via their own SIZE.FILL
+      rows.push(row({ gap, height: SIZE.FILL }, ...rowChildren));
+    } else {
+      const rowProps = gap !== undefined ? { gap } : {};
+      rows.push(Object.keys(rowProps).length > 0 ? row(rowProps, ...rowChildren) : row(...rowChildren));
+    }
+  }
+
+  // Return a column containing all rows (expansion system recurses into children)
+  return column(...rows);
+});
+
 /**
  * Grid arranges children into rows of N columns.
- * Returns an array of row components — spread into a container column:
+ * Returns a single ComponentNode that expands to a column of rows.
  *
  * @example
  * ```typescript
  * // 4-column grid of icons (intrinsic height)
- * column(...grid(4, ...icons.map(path => image(path))))
+ * grid(4, ...icons.map(path => image(path)))
  *
  * // Fill available space equally
- * column({ height: SIZE.FILL },
- *   ...grid({ columns: 5, fill: true }, ...images),
- * )
+ * grid({ columns: 5, fill: true }, ...images)
  * ```
  */
-export function grid(props: GridProps, ...children: SlideNode[]): ComponentNode[];
-export function grid(columns: number, ...children: SlideNode[]): ComponentNode[];
-export function grid(...args: any[]): ComponentNode[] {
+export function grid(props: GridProps, ...children: SlideNode[]): ComponentNode;
+export function grid(columns: number, ...children: SlideNode[]): ComponentNode;
+export function grid(...args: any[]): ComponentNode {
   let columns: number;
   let gap: GapSize | undefined;
   let fill = false;
@@ -192,27 +220,5 @@ export function grid(...args: any[]): ComponentNode[] {
     children = args.slice(1);
   }
 
-  // Wrap each child in a column cell so items share row width equally
-  // and images use width-based sizing (width: 100%, height from aspect-ratio)
-  // instead of height-based sizing (which requires definite row height).
-  // When fill: true, cells also get height: SIZE.FILL so they fill the row's cross-axis.
-  const cellProps = fill
-    ? { width: SIZE.FILL, height: SIZE.FILL }
-    : { width: SIZE.FILL };
-  const cells = children.map(child => column(cellProps, child));
-
-  // Chunk cells into rows — caller's container controls vertical spacing
-  const rows: ComponentNode[] = [];
-  for (let i = 0; i < cells.length; i += columns) {
-    const rowChildren = cells.slice(i, i + columns);
-    if (fill) {
-      // Fill mode: rows get definite height, cells stretch via their own SIZE.FILL
-      rows.push(row({ gap, height: SIZE.FILL }, ...rowChildren));
-    } else {
-      const rowProps = gap !== undefined ? { gap } : {};
-      rows.push(Object.keys(rowProps).length > 0 ? row(rowProps, ...rowChildren) : row(...rowChildren));
-    }
-  }
-
-  return rows;
+  return gridComponent({ columns, gap, fill, children });
 }

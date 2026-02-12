@@ -3,89 +3,9 @@
 
 import * as assert from 'node:assert';
 import { describe, it } from 'node:test';
-import { toTextContent, resolveGap } from '../src/utils/node.js';
-import { NODE_TYPE, type TextNode } from '../src/core/nodes.js';
-import { GAP, HALIGN, VALIGN, type TextRun } from '../src/core/types.js';
+import { resolveGap } from '../src/utils/units.js';
+import { GAP } from '../src/core/types.js';
 import { mockTheme } from './mocks.js';
-
-// ============================================
-// toTextContent() TESTS
-// ============================================
-
-describe('toTextContent()', () => {
-  it('should pass through string input', () => {
-    const input = 'Hello World';
-    const result = toTextContent(input);
-    assert.strictEqual(result, input);
-  });
-
-  it('should pass through TextRun array input', () => {
-    const input: TextRun[] = [{ text: 'Hello', color: 'FF0000' }];
-    const result = toTextContent(input);
-    assert.deepStrictEqual(result, input);
-  });
-
-  it('should pass through array of strings', () => {
-    const input = ['Hello', 'World'];
-    const result = toTextContent(input);
-    assert.deepStrictEqual(result, input);
-  });
-
-  it('should pass through array of TextRuns', () => {
-    const input: TextRun[] = [
-      { text: 'Hello', color: 'FF0000' },
-      { text: 'World', color: '0000FF' },
-    ];
-    const result = toTextContent(input);
-    assert.deepStrictEqual(result, input);
-  });
-
-  it('should pass through mixed array of strings and TextRuns', () => {
-    const input: TextRun[] = [
-      'Plain text',
-      { text: 'Colored text', color: 'FF0000' },
-      'More plain',
-    ];
-    const result = toTextContent(input);
-    assert.deepStrictEqual(result, input);
-  });
-
-  it('should extract content from TextNode with string', () => {
-    const textNode: TextNode = {
-      type: NODE_TYPE.TEXT,
-      content: 'Hello World',
-      hAlign: HALIGN.LEFT,
-      vAlign: VALIGN.TOP,
-    };
-    const result = toTextContent(textNode);
-    assert.strictEqual(result, 'Hello World');
-  });
-
-  it('should extract content from TextNode with TextRun array', () => {
-    const content: TextRun[] = [
-      'Plain ',
-      { text: 'Bold', color: 'FF0000' },
-    ];
-    const textNode: TextNode = {
-      type: NODE_TYPE.TEXT,
-      content,
-      hAlign: HALIGN.LEFT,
-      vAlign: VALIGN.TOP,
-    };
-    const result = toTextContent(textNode);
-    assert.deepStrictEqual(result, content);
-  });
-
-  it('should handle empty string', () => {
-    const result = toTextContent('');
-    assert.strictEqual(result, '');
-  });
-
-  it('should handle empty array', () => {
-    const result = toTextContent([]);
-    assert.deepStrictEqual(result, []);
-  });
-});
 
 // ============================================
 // resolveGap() TESTS

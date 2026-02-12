@@ -30,5 +30,22 @@ export const inToPt = (inches: number): number => inches * POINTS_PER_INCH;
 /** Convert points to pixels */
 export const ptToPx = (pt: number): number => (pt / POINTS_PER_INCH) * SCREEN_DPI;
 
-/** Convert pixels to points */
-export const pxToPt = (px: number): number => (px / SCREEN_DPI) * POINTS_PER_INCH;
+// ============================================
+// GAP RESOLUTION
+// ============================================
+
+import type { Theme } from '../core/types.js';
+import { GAP } from '../core/types.js';
+
+/**
+ * Resolve GAP constant to actual spacing value from theme.
+ */
+export function resolveGap(gap: string | undefined, theme: Theme): number {
+  switch (gap) {
+    case GAP.NONE: return 0;
+    case GAP.TIGHT: return theme.spacing.gapTight;
+    case GAP.LOOSE: return theme.spacing.gapLoose;
+    case GAP.NORMAL:
+    default: return theme.spacing.gap;
+  }
+}

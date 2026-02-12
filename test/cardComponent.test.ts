@@ -8,7 +8,13 @@ describe('Card Component', () => {
   const theme = mockTheme();
 
   describe('registration', () => {
-    it('should auto-register on import', () => {
+    it('should lazy-register on first use', () => {
+      // Registry should be empty before first use
+      componentRegistry.clear();
+      assert.strictEqual(componentRegistry.has('card'), false);
+
+      // Calling card() should trigger registration
+      card({ title: 'Test' });
       assert.ok(componentRegistry.has('card'));
     });
   });

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
-import { diagram, DiagramBuilder, DIAGRAM_DIRECTION, NODE_STYLE, DIAGRAM_COMPONENT } from '../src/dsl/diagram.js';
+import { diagram, DiagramBuilder, DIAGRAM_DIRECTION, COLOR_NAME, DIAGRAM_COMPONENT } from '../src/dsl/diagram.js';
 import { COMPONENT_TYPE } from '../src/core/registry.js';
 
 describe('DiagramBuilder', () => {
@@ -190,18 +190,18 @@ describe('DiagramBuilder', () => {
   test('class() applies style to single node', () => {
     const d = diagram();
     const a = d.rect('A');
-    d.class(NODE_STYLE.PRIMARY, a);
+    d.class(COLOR_NAME.PRIMARY, a);
 
     assert.strictEqual(d.props.classes.length, 1);
     assert.strictEqual(d.props.classes[0].nodeId, 'A');
-    assert.strictEqual(d.props.classes[0].style, NODE_STYLE.PRIMARY);
+    assert.strictEqual(d.props.classes[0].style, COLOR_NAME.PRIMARY);
   });
 
   test('class() applies style to multiple nodes', () => {
     const d = diagram();
     const a = d.rect('A');
     const b = d.rect('B');
-    d.class(NODE_STYLE.PRIMARY, a, b);
+    d.class(COLOR_NAME.PRIMARY, a, b);
 
     assert.strictEqual(d.props.classes.length, 2);
     assert.strictEqual(d.props.classes[0].nodeId, 'A');
@@ -213,13 +213,13 @@ describe('DiagramBuilder', () => {
     const a = d.rect('A');
     const b = d.rect('B');
     const c = d.rect('C');
-    d.class(NODE_STYLE.PRIMARY, a)
-     .class(NODE_STYLE.BACKGROUND, b, c);
+    d.class(COLOR_NAME.PRIMARY, a)
+     .class(COLOR_NAME.BACKGROUND, b, c);
 
     assert.strictEqual(d.props.classes.length, 3);
-    assert.strictEqual(d.props.classes[0].style, NODE_STYLE.PRIMARY);
-    assert.strictEqual(d.props.classes[1].style, NODE_STYLE.BACKGROUND);
-    assert.strictEqual(d.props.classes[2].style, NODE_STYLE.BACKGROUND);
+    assert.strictEqual(d.props.classes[0].style, COLOR_NAME.PRIMARY);
+    assert.strictEqual(d.props.classes[1].style, COLOR_NAME.BACKGROUND);
+    assert.strictEqual(d.props.classes[2].style, COLOR_NAME.BACKGROUND);
   });
 
   // ------------------------------------------
@@ -233,7 +233,7 @@ describe('DiagramBuilder', () => {
     const result = d
       .subgraph('S', a)
       .edge(a, b)
-      .class(NODE_STYLE.PRIMARY, a);
+      .class(COLOR_NAME.PRIMARY, a);
 
     assert.strictEqual(result, d);
   });
@@ -270,8 +270,8 @@ describe('DiagramBuilder', () => {
      .edge(db, [T, I, M])
      .edge([T, I, M], P)
      .edge(P, ui, { label: 'STREAM' })
-     .class(NODE_STYLE.PRIMARY, db, T, I, M)
-     .class(NODE_STYLE.BACKGROUND, P, ui);
+     .class(COLOR_NAME.PRIMARY, db, T, I, M)
+     .class(COLOR_NAME.BACKGROUND, P, ui);
 
     // Verify nodes
     assert.strictEqual(d.props.nodes.length, 6);

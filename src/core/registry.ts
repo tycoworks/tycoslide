@@ -42,11 +42,16 @@ class ComponentRegistry {
 
   /**
    * Register a component definition.
-   * @throws Error if a component with this name is already registered
+   * Idempotent: if the same expand function is re-registered, silently no-op.
+   * @throws Error if a component with this name is already registered with a different implementation
    */
   register<TProps>(definition: ComponentDefinition<TProps>): void {
-    if (this.definitions.has(definition.name)) {
-      throw new Error(`Component '${definition.name}' is already registered`);
+    const existing = this.definitions.get(definition.name);
+    if (existing) {
+      if (existing.expand === definition.expand) {
+        return; // Idempotent - same function, safe to skip
+      }
+      throw new Error(`Component '${definition.name}' already registered with different implementation`);
     }
     this.definitions.set(definition.name, definition);
   }
@@ -184,6 +189,7 @@ export function component<TProps>(name: string, props: TProps): ComponentNode<TP
 /**
  * Define and register a component in one step.
  * Returns a typed DSL factory function.
+ * Uses lazy registration: component is registered on first use, not at import time.
  *
  * @example
  * // Define component with single line
@@ -198,9 +204,14 @@ export function defineComponent<TProps>(
   name: string,
   expand: (props: TProps, context: ExpansionContext) => SlideNode
 ): (props: TProps) => ComponentNode<TProps> {
-  // Register the component
-  componentRegistry.register({ name, expand });
+  let registered = false;
 
-  // Return the DSL factory
-  return (props: TProps) => component(name, props);
+  // Return the DSL factory that registers on first use
+  return (props: TProps): ComponentNode<TProps> => {
+    if (!registered) {
+      componentRegistry.register({ name, expand });
+      registered = true;
+    }
+    return component(name, props);
+  };
 }

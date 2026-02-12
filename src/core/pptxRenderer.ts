@@ -37,30 +37,6 @@ export interface WriteOptions {
   includeNotes?: boolean;
 }
 
-/**
- * Common interface for all output renderers.
- *
- * Renderers consume PositionedNode trees and produce output in their target format.
- * This enables multiple output formats (PPTX, HTML, PDF) from the same layout.
- */
-export interface Renderer {
-  /**
-   * Define a master slide template.
-   * Masters contain fixed elements (footers, logos) that appear on all slides using them.
-   */
-  defineMaster(master: MasterDefinition, theme: Theme): void;
-
-  /**
-   * Render a slide from its positioned content tree.
-   */
-  renderSlide(content: PositionedNode, options: RenderSlideOptions, theme: Theme): void;
-
-  /**
-   * Finalize and write output.
-   */
-  writeFile(fileName: string, options?: WriteOptions): Promise<void>;
-}
-
 // ============================================
 // TEXT FRAGMENT TYPES (for pptxgenjs)
 // ============================================
@@ -74,7 +50,7 @@ type PptxGenJSExtended = InstanceType<typeof PptxGenJS> & {
 // PPTX RENDERER
 // ============================================
 
-export class PptxRenderer implements Renderer {
+export class PptxRenderer {
   private pres: InstanceType<typeof PptxGenJS>;
   private masters = new Map<string, { slideNumberOptions?: object }>();
   private theme: Theme;

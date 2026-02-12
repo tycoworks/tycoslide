@@ -3,9 +3,6 @@
 
 import { FONT_WEIGHT, TEXT_STYLE, type Font, type FontFamily, type FontWeight, type TextContent, type TextRun, type NormalizedRun, type Theme, type TextStyle, type TextStyleName } from '../core/types.js';
 
-// Re-export unit conversions from centralized module
-export { POINTS_PER_INCH, ptToIn, inToPt } from './units.js';
-
 /**
  * Get the Font for a given weight from a FontFamily.
  * Throws if requested weight is not defined.

@@ -151,7 +151,7 @@ export interface TextStyle {
 // COLOR NAMES (single source of truth)
 // ============================================
 
-/** Base color names shared by ColorScheme and NODE_STYLE */
+/** Base color names shared by ColorScheme and diagram node styles */
 export const COLOR_NAME = {
   PRIMARY: 'primary',
   BACKGROUND: 'background',
@@ -182,13 +182,8 @@ export type ColorScheme = BaseColorScheme & {
 };
 
 // ============================================
-// NODE STYLES (alias for COLOR_NAME)
+// NODE STYLES (removed - use COLOR_NAME directly)
 // ============================================
-
-/** Style classes for diagram nodes. Same as COLOR_NAME for consistency with theme. */
-export const NODE_STYLE = COLOR_NAME;
-
-export type NodeStyle = ColorName;
 
 // ============================================
 // HIGHLIGHT PAIRS

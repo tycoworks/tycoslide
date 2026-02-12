@@ -14,7 +14,7 @@ import type { Bounds } from '../core/bounds.js';
 import { normalizeContent, fontWeightToNumeric, resolveLineHeight } from '../utils/text.js';
 import { readImageDimensions } from '../utils/image.js';
 import { inToPx, ptToPx, SCREEN_DPI } from '../utils/units.js';
-import { resolveGap } from '../utils/node.js';
+import { resolveGap } from '../utils/units.js';
 
 // ============================================
 // CONSTANTS
@@ -159,7 +159,24 @@ const FONT_FORMATS: Record<string, { mime: string; format: string }> = {
   '.otf': { mime: 'font/opentype', format: 'opentype' },
 };
 
+/** Cache for generateFontFaceCSS() to avoid redundant file I/O */
+const fontFaceCSSCache = new Map<string, { css: string; fonts: FontDescriptor[] }>();
+
 export function generateFontFaceCSS(theme: Theme): { css: string; fonts: FontDescriptor[] } {
+  // Build cache key from font paths (unique per theme)
+  const fontPaths: string[] = [];
+  for (const styleName of Object.keys(theme.textStyles) as (keyof typeof theme.textStyles)[]) {
+    const style = theme.textStyles[styleName];
+    for (const weight of Object.keys(style.fontFamily) as FontWeight[]) {
+      const font = style.fontFamily[weight];
+      if (font) fontPaths.push(font.path);
+    }
+  }
+  const cacheKey = JSON.stringify(fontPaths.sort());
+
+  // Return cached result if available
+  const cached = fontFaceCSSCache.get(cacheKey);
+  if (cached) return cached;
   const fontFaces: string[] = [];
   const fonts: FontDescriptor[] = [];
   const seenPaths = new Set<string>();
@@ -195,7 +212,9 @@ export function generateFontFaceCSS(theme: Theme): { css: string; fonts: FontDes
     }
   }
 
-  return { css: fontFaces.join('\n'), fonts };
+  const result = { css: fontFaces.join('\n'), fonts };
+  fontFaceCSSCache.set(cacheKey, result);
+  return result;
 }
 
 /**
@@ -606,37 +625,29 @@ const LayoutSlideNumber: FC<{ nodeId: string; style: TextStyle }> = ({
 // TABLE CELL NODES
 // ============================================
 
-/** Cache of table cell TextNodes for measurement (one per cell) */
-const tableCellNodesCache = new WeakMap<TableNode, TextNode[][]>();
-
 /**
  * Get or create TextNodes for a TableNode's cells.
  * Each cell becomes a TextNode with its content and styling for measurement.
  */
 function getTableCellNodes(node: TableNode): TextNode[][] {
-  let cells = tableCellNodesCache.get(node);
-  if (!cells) {
-    cells = node.rows.map((row, rowIndex) =>
-      row.map((cell: TableCellData) => {
-        const isHeaderRow = (node.headerRows ?? 0) > rowIndex;
-        // Cell-level override wins over table-level
-        const style = cell.textStyle
-          ?? (isHeaderRow ? node.style?.headerTextStyle : node.style?.cellTextStyle)
-          ?? TEXT_STYLE.BODY;
+  return node.rows.map((row, rowIndex) =>
+    row.map((cell: TableCellData) => {
+      const isHeaderRow = (node.headerRows ?? 0) > rowIndex;
+      // Cell-level override wins over table-level
+      const style = cell.textStyle
+        ?? (isHeaderRow ? node.style?.headerTextStyle : node.style?.cellTextStyle)
+        ?? TEXT_STYLE.BODY;
 
-        const textNode: TextNode = {
-          type: NODE_TYPE.TEXT,
-          content: cell.content,
-          style,
-          hAlign: cell.hAlign ?? node.style?.hAlign ?? HALIGN.LEFT,
-          vAlign: cell.vAlign ?? node.style?.vAlign ?? VALIGN.TOP,
-        };
-        return textNode;
-      })
-    );
-    tableCellNodesCache.set(node, cells);
-  }
-  return cells;
+      const textNode: TextNode = {
+        type: NODE_TYPE.TEXT,
+        content: cell.content,
+        style,
+        hAlign: cell.hAlign ?? node.style?.hAlign ?? HALIGN.LEFT,
+        vAlign: cell.vAlign ?? node.style?.vAlign ?? VALIGN.TOP,
+      };
+      return textNode;
+    })
+  );
 }
 
 // ============================================

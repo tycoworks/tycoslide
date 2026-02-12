@@ -3,8 +3,8 @@
 // Expands to ImageNode after rendering via mermaid-cli
 
 import {
-  NODE_STYLE,
-  type NodeStyle,
+  COLOR_NAME,
+  type ColorName,
   type Theme,
 } from '../core/types.js';
 
@@ -63,7 +63,7 @@ export const NODE_SHAPE = {
 export type DiagramShape = typeof NODE_SHAPE[keyof typeof NODE_SHAPE];
 
 // Re-export for convenience
-export { NODE_STYLE, type NodeStyle };
+export { COLOR_NAME, type ColorName };
 
 // ============================================
 // DIAGRAM DATA TYPES
@@ -94,7 +94,7 @@ export interface DiagramEdgeDef {
 /** Style class assignment */
 export interface DiagramClassDef {
   nodeId: string;
-  style: NodeStyle;
+  style: ColorName;
 }
 
 // ============================================
@@ -202,10 +202,10 @@ function buildClassDefs(theme: Theme): string {
   const { colors } = theme;
   const alpha = Math.round(colors.subtleOpacity / 100 * 255).toString(16).padStart(2, '0');
 
-  return Object.values(NODE_STYLE).map((styleName) => {
+  return Object.values(COLOR_NAME).map((styleName) => {
     const baseColor = (colors as unknown as Record<string, string>)[styleName];
     if (!baseColor || typeof baseColor !== 'string') return null;
-    const fill = styleName === NODE_STYLE.PRIMARY
+    const fill = styleName === COLOR_NAME.PRIMARY
       ? `#${baseColor}`
       : `#${baseColor}${alpha}`;
     return `classDef ${styleName} fill:${fill}`;
@@ -398,7 +398,7 @@ componentRegistry.register({
  * const app = d.rect('App', 'Application');
  * d.subgraph('Sources', db)
  *  .edge(db, app)
- *  .class(NODE_STYLE.PRIMARY, db);
+ *  .class(COLOR_NAME.PRIMARY, db);
  * // d is a ComponentNode - consistent with card(), list(), table()
  * pres.add(contentSlide('My Diagram', d));
  * ```
@@ -516,7 +516,7 @@ export class DiagramBuilder implements ComponentNode<DiagramComponentProps> {
   // STYLING
   // ============================================
 
-  class(style: NodeStyle, ...nodeList: DiagramNodeRef[]): this {
+  class(style: ColorName, ...nodeList: DiagramNodeRef[]): this {
     for (const node of nodeList) {
       this._classes.push({ nodeId: node.id, style });
     }
