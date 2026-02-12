@@ -10,7 +10,8 @@
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "prepare": "tsc",
-    "test": "tsx --test test/*.test.ts"
+    "typecheck": "tsc --project tsconfig.test.json",
+    "test": "tsc --project tsconfig.test.json && tsx --test test/*.test.ts"
   },
   "keywords": [
     "powerpoint",
