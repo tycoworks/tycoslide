@@ -51,6 +51,8 @@ export interface CardProps {
   padding?: number;
   /** Gap between children */
   gap?: GapSize;
+  /** Gap between title and description (defaults to gap) */
+  textGap?: GapSize;
 }
 
 // ============================================
@@ -85,6 +87,7 @@ function expandCard(props: CardProps, context: ExpansionContext): SlideNode {
     cornerRadius,
     padding,
     gap = GAP.TIGHT,
+    textGap,
   } = props;
 
   const theme = context.theme;
@@ -115,7 +118,7 @@ function expandCard(props: CardProps, context: ExpansionContext): SlideNode {
   }
 
   // Build content layer (centered both axes for balanced card appearance)
-  const contentLayer = column({ padding: cardPadding, gap, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE }, ...children);
+  const contentLayer = column({ padding: cardPadding, gap: textGap ?? gap, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE }, ...children);
 
   // If no background, just return the content
   if (background === false || backgroundColor === 'none') {
