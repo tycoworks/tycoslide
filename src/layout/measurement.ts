@@ -76,10 +76,10 @@ export class LayoutMeasurer {
     }
 
     // Generate single HTML page containing all slides
-    const { html, slideNodeIds } = generateLayoutHTML(slides, theme, this.fontNormalRatios);
+    const { html, slideNodeIds, perSlideHtml } = generateLayoutHTML(slides, theme, this.fontNormalRatios);
 
     if (process.env.DEBUG_HTML) {
-      this.saveDebugHtml(html);
+      this.saveDebugHtml(html, perSlideHtml);
     }
 
     // One setContent, one font preload
@@ -98,6 +98,7 @@ export class LayoutMeasurer {
 
     if (process.env.DEBUG_HTML) {
       await this.saveDebugScreenshot();
+      await this.saveDebugDomSnapshots();
       await this.logNodeDimensions();
     }
 
@@ -164,12 +165,41 @@ export class LayoutMeasurer {
       : debugHtml.replace('.html', '');
   }
 
-  /** Save debug HTML to disk. Counter auto-increments per slide. */
-  private saveDebugHtml(html: string): void {
+  /** Save debug HTML to disk. Writes batched file + per-slide generated HTML. */
+  private saveDebugHtml(html: string, perSlideHtml?: string[]): void {
     const counter = this.debugCounter++;
-    const filePath = `${this.debugPrefix()}-${counter}.html`;
+    const prefix = `${this.debugPrefix()}-${counter}`;
+    const filePath = `${prefix}.html`;
     fs.writeFileSync(filePath, html);
     log.layout.html('saved debug HTML to %s', filePath);
+
+    // Write per-slide files from source-level cache (no regex reconstruction)
+    if (perSlideHtml && perSlideHtml.length > 0) {
+      for (let i = 0; i < perSlideHtml.length; i++) {
+        const slideFile = `${prefix}-slide-${i}.html`;
+        fs.writeFileSync(slideFile, perSlideHtml[i]);
+      }
+      log.layout.html('saved %d per-slide debug files: %s-slide-*.html', perSlideHtml.length, prefix);
+    }
+  }
+
+  /** Extract per-slide DOM snapshots from Chromium's live DOM. */
+  private async saveDebugDomSnapshots(): Promise<void> {
+    const counter = this.debugCounter - 1; // matches the HTML just saved
+    const prefix = `${this.debugPrefix()}-${counter}`;
+
+    const snapshots = await this.page!.evaluate(() => {
+      return Array.from(document.querySelectorAll('.root[data-slide-index]')).map(root => {
+        const slideIndex = (root as HTMLElement).dataset.slideIndex;
+        return { slideIndex, outerHTML: root.outerHTML };
+      });
+    });
+
+    for (const { slideIndex, outerHTML } of snapshots) {
+      const domFile = `${prefix}-slide-${slideIndex}-dom.html`;
+      fs.writeFileSync(domFile, outerHTML);
+    }
+    log.layout.measure('saved %d per-slide DOM snapshots: %s-slide-*-dom.html', snapshots.length, prefix);
   }
 
   /** Save Playwright screenshot alongside the debug HTML. */
@@ -180,24 +210,25 @@ export class LayoutMeasurer {
     log.layout.measure('saved Playwright screenshot to %s', screenshotPath);
   }
 
-  /** Log measured dimensions for every node (for visual debugging). */
+  /** Log measured dimensions for every node across all slides. */
   private async logNodeDimensions(): Promise<void> {
     const allDims = await this.page!.evaluate(() => {
       const results: string[] = [];
-      const root = document.querySelector('.root');
-      const rootRect = root?.getBoundingClientRect();
-      if (rootRect) {
-        results.push(`ROOT: ${rootRect.width.toFixed(1)}x${rootRect.height.toFixed(1)} at (${rootRect.left.toFixed(1)},${rootRect.top.toFixed(1)})`);
-      }
-      document.querySelectorAll('[data-node-id]').forEach(el => {
-        const div = el as HTMLElement;
-        const rect = div.getBoundingClientRect();
-        const computed = getComputedStyle(div);
-        const text = div.textContent?.substring(0, 40)?.trim() || '';
-        const display = computed.display;
-        const width = computed.width;
-        const font = computed.fontFamily?.substring(0, 30);
-        results.push(`${div.dataset.nodeId}: ${rect.width.toFixed(1)}x${rect.height.toFixed(1)} at (${rect.left.toFixed(1)},${rect.top.toFixed(1)}) display=${display} cssW=${width} font="${font}" "${text}"`);
+      document.querySelectorAll('.root[data-slide-index]').forEach(root => {
+        const slideIndex = (root as HTMLElement).dataset.slideIndex;
+        const rootRect = root.getBoundingClientRect();
+        results.push(`[slide ${slideIndex}] ROOT: ${rootRect.width.toFixed(1)}x${rootRect.height.toFixed(1)} at (${rootRect.left.toFixed(1)},${rootRect.top.toFixed(1)})`);
+
+        root.querySelectorAll('[data-node-id]').forEach(el => {
+          const div = el as HTMLElement;
+          const rect = div.getBoundingClientRect();
+          const computed = getComputedStyle(div);
+          const text = div.textContent?.substring(0, 40)?.trim() || '';
+          const display = computed.display;
+          const width = computed.width;
+          const font = computed.fontFamily?.substring(0, 30);
+          results.push(`[slide ${slideIndex}] ${div.dataset.nodeId}: ${rect.width.toFixed(1)}x${rect.height.toFixed(1)} at (${rect.left.toFixed(1)},${rect.top.toFixed(1)}) display=${display} cssW=${width} font="${font}" "${text}"`);
+        });
       });
       return results;
     });

@@ -825,6 +825,7 @@ function nodeToJsx(
 export interface LayoutHtmlResult {
   html: string;
   slideNodeIds: Array<Map<ElementNode, string>>;
+  perSlideHtml?: string[];
 }
 
 /**
@@ -854,9 +855,16 @@ export function generateLayoutHTML(
     const jsxTree = nodeToJsx(slide.tree, theme, nodeIds, idCtx, { direction: DIRECTION.COLUMN }, fontNormalRatios);
 
     return (
-      <div class="root" data-slide-index={`${i}`} style={{ width: `${widthPx}px`, height: `${heightPx}px` }}>
-        {jsxTree}
-      </div>
+      <>
+        {process.env.DEBUG_HTML && (
+          <div style={{ background: '#333', color: '#fff', padding: '4px 8px', font: 'bold 14px monospace' }}>
+            Slide {i}
+          </div>
+        )}
+        <div class="root" data-slide-index={`${i}`} style={{ width: `${widthPx}px`, height: `${heightPx}px` }}>
+          {jsxTree}
+        </div>
+      </>
     );
   });
 
@@ -904,6 +912,31 @@ ${process.env.DEBUG_HTML ? `
 
   const html = '<!DOCTYPE html>' + renderToString(fullJsx);
 
-  return { html, slideNodeIds };
+  // In debug mode, render each slide individually for standalone per-slide files.
+  // This captures what we generated BEFORE concatenation — no regex reconstruction needed.
+  let perSlideHtml: string[] | undefined;
+  if (process.env.DEBUG_HTML) {
+    perSlideHtml = slideJsx.map(jsx => {
+      const slideDoc = (
+        <html>
+          <head>
+            <meta charset="UTF-8" />
+            <style dangerouslySetInnerHTML={{ __html: `
+              ${fontFaceCSS}
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body { overflow: hidden; }
+              .root { display: flex; flex-direction: column; }
+              .root > * { flex: 1 1 0; min-height: 0; }
+              [data-node-id] { outline: 1px solid rgba(255, 0, 0, 0.3); }
+            `}} />
+          </head>
+          <body>{jsx}</body>
+        </html>
+      );
+      return '<!DOCTYPE html>' + renderToString(slideDoc);
+    });
+  }
+
+  return { html, slideNodeIds, perSlideHtml };
 }
 
