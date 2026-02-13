@@ -347,6 +347,29 @@ describe('HTML Measurement Generation', () => {
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('grid-area:1 / 1 / 2 / 2;display:flex;flex-direction:column;min-height:0px;overflow:hidden'), 'Stack child should be flex container with min-height:0px and overflow:hidden');
     });
+
+    test('column with SIZE.FILL inside stack gets flex:1 1 0 (fills stack for centering)', async () => {
+      // Components like quote() explicitly set height: SIZE.FILL on their content column
+      // so that vAlign: MIDDLE centering works when the stack has definite height.
+      // Node IDs: stack=node-1, shape=node-2, column=node-3, text=node-4
+      const node = stack(shape({ shape: SHAPE.ROUND_RECT }), column({ vAlign: VALIGN.MIDDLE, height: SIZE.FILL }, text('Centered')));
+      const { html } = await genHTML(node, bounds, mockTheme);
+      const columnMatch = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
+      assert.ok(columnMatch, 'Should find the column inside stack (node-3)');
+      assert.ok(columnMatch![1].includes('flex:1 1 0'), 'Column with SIZE.FILL in stack should get flex:1 1 0');
+      assert.ok(columnMatch![1].includes('min-height:0'), 'Column with SIZE.FILL should have min-height:0');
+    });
+
+    test('column without SIZE.FILL inside stack uses intrinsic height (no flex grow)', async () => {
+      // Cards and other stack-based components without explicit SIZE.FILL should
+      // preserve intrinsic content height — no flex:1 that could collapse content.
+      // Node IDs: stack=node-1, shape=node-2, column=node-3, text=node-4
+      const node = stack(shape({ shape: SHAPE.ROUND_RECT }), column({ vAlign: VALIGN.MIDDLE }, text('Content')));
+      const { html } = await genHTML(node, bounds, mockTheme);
+      const columnMatch = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
+      assert.ok(columnMatch, 'Should find the column inside stack (node-3)');
+      assert.ok(!columnMatch![1].includes('flex:1 1 0'), 'Column without SIZE.FILL should NOT get flex:1 1 0');
+    });
   });
 
   describe('Compressibility rules', () => {

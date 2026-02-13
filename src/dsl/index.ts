@@ -56,6 +56,13 @@ export {
   type CardProps,
 } from './card.js';
 
+// Quote (composition component)
+export {
+  quote,
+  QUOTE_COMPONENT,
+  type QuoteProps,
+} from './quote.js';
+
 // Diagram (I/O component — mermaid-cli)
 export {
   DiagramBuilder,
