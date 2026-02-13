@@ -446,23 +446,60 @@ const LayoutText: FC<LayoutTextProps> = ({
       : { width: '100%', flexShrink: 0 }),
   };
 
+  // Group runs into renderable lines.
+  // A bullet or breakLine starts a new group; subsequent plain runs join the current group.
+  // This ensures multi-run bullets (e.g. "- **Bold:** plain text") render in one <div>.
+  const groups: NormalizedRun[][] = [];
+  let currentGroup: NormalizedRun[] = [];
+  for (const run of runs) {
+    if (run.bullet || run.breakLine) {
+      if (currentGroup.length > 0) groups.push(currentGroup);
+      currentGroup = [run];
+    } else {
+      currentGroup.push(run);
+    }
+  }
+  if (currentGroup.length > 0) groups.push(currentGroup);
+
   return (
     <div data-node-id={nodeId} style={containerStyle}>
-      {runs.map((run, i) => renderTextRun(run, i, style, defaultWeight, bulletIndentPx))}
+      {groups.map((group, gi) => {
+        const first = group[0];
+        const spans = group.map((run, ri) => renderRunSpan(run, gi * 100 + ri, style, defaultWeight));
+
+        if (first.bullet) {
+          return (
+            <div key={gi} style={{ paddingLeft: `${bulletIndentPx}px` }}>
+              <span style={{ display: 'inline-block', width: '1em', marginLeft: '-1em' }}>•</span>
+              {spans}
+            </div>
+          );
+        }
+
+        if (first.breakLine) {
+          return (
+            <div key={gi}>
+              <div style={{ height: '1em' }} />
+              {spans}
+            </div>
+          );
+        }
+
+        return <span key={gi}>{spans}</span>;
+      })}
     </div>
   );
 };
 
-function renderTextRun(
+/** Render a single run as an inline <span> (no block wrappers). */
+function renderRunSpan(
   run: NormalizedRun,
   index: number,
   style: TextStyle,
   defaultWeight: string,
-  bulletIndentPx: number
 ) {
   const spanStyles: Record<string, string | number> = {};
 
-  // Handle weight changes
   if (run.weight && run.weight !== defaultWeight) {
     const font = style.fontFamily[run.weight];
     if (font) {
@@ -471,7 +508,6 @@ function renderTextRun(
     }
   }
 
-  // Handle bold shorthand
   if (run.bold) {
     const boldFont = style.fontFamily.bold;
     if (boldFont) {
@@ -480,51 +516,21 @@ function renderTextRun(
     }
   }
 
-  // Handle italic
   if (run.italic) {
     spanStyles.fontStyle = 'italic';
   }
 
-  // Handle color
   if (run.color) {
     spanStyles.color = `#${run.color}`;
   }
 
-  // Handle highlight
   if (run.highlight) {
     spanStyles.backgroundColor = `#${run.highlight.bg}`;
     spanStyles.color = `#${run.highlight.text}`;
   }
 
   const styleAttr = Object.keys(spanStyles).length > 0 ? spanStyles : undefined;
-  const text = run.text;
-
-  // Handle bullets - simple left padding for indent
-  if (run.bullet) {
-    return (
-      <div key={index} style={{ paddingLeft: `${bulletIndentPx}px` }}>
-        <span style={{ display: 'inline-block', width: '1em', marginLeft: '-1em' }}>•</span>
-        <span style={styleAttr}>{text}</span>
-      </div>
-    );
-  }
-
-  // Handle paragraph breaks (blank line in markdown).
-  // A block-level spacer div with height: 1em creates the visual gap.
-  // 1em = fontSize (CSS Values Level 4, §5.1.1) — matches getParagraphGapRatio().
-  // This replaces the old <br/> which gave a line break but no paragraph gap.
-  if (run.breakLine) {
-    return (
-      <>
-        <div style={{ height: '1em' }} />
-        <span key={index} style={styleAttr}>{text}</span>
-      </>
-    );
-  }
-
-  return (
-    <span key={index} style={styleAttr}>{text}</span>
-  );
+  return <span key={index} style={styleAttr}>{run.text}</span>;
 }
 
 interface LayoutImageProps {

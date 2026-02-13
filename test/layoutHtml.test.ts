@@ -150,6 +150,18 @@ describe('HTML Measurement Generation', () => {
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('•'), 'Bullet should include bullet character');
     });
+
+    test('multi-run bullet renders all runs in one div', async () => {
+      // "- **Bold:** plain text" produces two runs: bold with bullet, plain without
+      const node = text('- **Bold:** plain text');
+      const { html } = await genHTML(node, bounds, mockTheme);
+      // The bullet div should contain both the bold and plain spans
+      const bulletDivMatch = html.match(/<div[^>]*padding-left[^>]*>(.*?)<\/div>/);
+      assert.ok(bulletDivMatch, 'Should have a bullet div with padding-left');
+      const bulletContent = bulletDivMatch![1];
+      assert.ok(bulletContent.includes('Bold:'), 'Bullet div should contain bold text');
+      assert.ok(bulletContent.includes('plain text'), 'Bullet div should contain plain text in same div');
+    });
   });
 
   describe('Paragraph spacing', () => {
