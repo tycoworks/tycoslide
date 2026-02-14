@@ -1,6 +1,6 @@
 # Markdown Slide Authoring — Design Doc
 
-**Status:** Research complete. Key decisions made. Layout registry is next implementation step.
+**Status:** Layout registry complete. All sessions migrated. Document compiler is next.
 
 ---
 
@@ -149,9 +149,10 @@ autoscale: true
 ### Hard Requirements
 
 1. **Named layouts only** — Slides must reference a registered layout. No ad-hoc positioning.
-2. **Layouts have typed parameters** — `contentSlide(title, eyebrow, ...content)` is not just a template; it's a function with a specific signature.
+2. **Layouts have typed parameters** — Layouts are functions with specific typed signatures. Parameters must be scalar values (strings, numbers, booleans, arrays of scalars, data objects like `CardProps`) — NOT component trees.
 3. **Everything is theme-bound** — Fonts, colors, highlights, images, layouts, spacing — all controlled by the theme. Slide authors can only use what the theme provides. This is a feature: it makes it impossible to produce off-brand presentations. No inline CSS, no arbitrary colors, no relative image paths.
 4. **Single output format** — Compiles to `Presentation` (same as TypeScript DSL).
+5. **Scalar-only layout parameters** — Layout params must be expressible as YAML frontmatter. This means no `SlideNode[]`, no component trees, no builder objects. Layouts own all component construction internally.
 
 ### Unique Challenges vs Prior Art
 
@@ -178,13 +179,11 @@ theme: materialize
 # My Presentation Title
 
 ---
-layout: content
+layout: statement
 eyebrow: INTRODUCTION
-
-Body content here with **bold** and :accent1[highlights].
-
-- Bullet point one
-- Bullet point two
+body: |
+  Materialize is a :teal[live data layer] that lets software engineers
+  join and transform operational data with SQL.
 
 ---
 layout: twoColumn
@@ -192,11 +191,11 @@ eyebrow: COMPARISON
 
 ::left::
 
-Left column content.
+Legacy systems can't keep up with real-time demands.
 
 ::right::
 
-Right column content.
+Materialize provides incrementally maintained views.
 ```
 
 ### Slide Boundaries
@@ -216,7 +215,7 @@ title: My Deck        # Presentation metadata
 
 ```yaml
 ---
-layout: content       # Required: named layout
+layout: statement     # Required: named layout (error if omitted)
 eyebrow: SECTION      # Layout parameter
 title: Slide Title    # Layout parameter (alternative to # heading)
 notes: |              # Speaker notes
@@ -231,7 +230,7 @@ How should slide titles be specified? Three options:
 **Option A: Title in frontmatter only**
 ```markdown
 ---
-layout: content
+layout: statement
 title: My Slide Title
 eyebrow: SECTION
 ---
@@ -244,7 +243,7 @@ Con: Doesn't read naturally as a document.
 **Option B: First `#` heading becomes title**
 ```markdown
 ---
-layout: content
+layout: statement
 eyebrow: SECTION
 ---
 
@@ -258,7 +257,7 @@ Con: `#` means "H1 heading" in markdown, not "layout title parameter." Semantic 
 **Option C: Both supported, frontmatter wins**
 ```markdown
 ---
-layout: content
+layout: statement
 eyebrow: SECTION
 ---
 
@@ -268,7 +267,7 @@ Body content here.
 ```
 If `title:` is in frontmatter, it's used. Otherwise first `# heading` is extracted as title. Heading is consumed (not rendered as content).
 
-**Recommendation:** Option C. Natural for authors, explicit when needed.
+**Decision:** Option C. Natural for authors, explicit when needed.
 
 ### Content Slots
 
@@ -299,7 +298,7 @@ reveal.js pattern:
 
 ```markdown
 ---
-layout: content
+layout: statement
 eyebrow: ARCHITECTURE
 ---
 
@@ -312,7 +311,7 @@ Emphasize that this is push-based, not polling.
 Mention the latency guarantees.
 ```
 
-Everything after `Note:` (on its own line) until next slide boundary.
+**Decision:** Everything after `Note:` (on its own line) until next slide boundary becomes `Slide.notes`.
 
 ---
 
@@ -320,32 +319,41 @@ Everything after `Note:` (on its own line) until next slide boundary.
 
 ### Design
 
-`LayoutDefinition` is a tycoslide core type. Each layout has a name, description, and a typed `render` function:
+`LayoutDefinition` is a tycoslide core type. Each layout has a name, description, a typed `render` function, and (Phase 3) a Zod schema for runtime validation:
 
 ```typescript
 interface LayoutDefinition<TParams = Record<string, unknown>> {
   name: string;
   description: string;
   render: (params: TParams) => Slide;
+  schema?: ZodType<TParams>;  // Phase 3: runtime validation for document compiler
 }
 ```
 
-TypeScript generics provide compile-time type safety. There is no runtime parameter schema — that will be added in Phase 3 using Zod when the markdown compiler needs to validate frontmatter.
+TypeScript generics provide compile-time type safety. The optional `schema` field will be added in Phase 3 using Zod when the markdown compiler needs to validate frontmatter.
 
-Themes define concrete param types for each layout:
+Themes define concrete param types for each layout. **All params must be scalar-only** (expressible as YAML):
 
 ```typescript
-interface ContentParams {
+interface StatementProps {
   title: string;
   eyebrow: string;
-  content: SlideNode[];
+  body: string;
+  bodyStyle?: TextStyleName;
+  caption?: string;
 }
 
-const contentLayout: LayoutDefinition<ContentParams> = {
-  name: 'content',
-  description: 'General content with eyebrow, title, and flexible centered body.',
-  render: ({ title, eyebrow, content }) =>
-    masteredSlide(headerBlock(eyebrow, title), contentBody(...content)),
+const statementLayout: LayoutDefinition<StatementProps> = {
+  name: 'statement',
+  description: 'Body text with optional style and caption.',
+  render: ({ title, eyebrow, body, bodyStyle, caption }) =>
+    masteredSlide(
+      headerBlock(eyebrow, title),
+      contentBody(
+        text(body, bodyStyle ? { style: bodyStyle } : undefined),
+        ...(caption ? [text(caption, { style: TEXT_STYLE.SMALL })] : []),
+      ),
+    ),
 };
 ```
 
@@ -355,79 +363,99 @@ const contentLayout: LayoutDefinition<ContentParams> = {
 
 ### Validation Strategy (Phase 3)
 
-When the document compiler arrives, each layout will add a Zod schema alongside its TypeScript interface. Zod provides:
+Each layout will add a Zod schema alongside its TypeScript interface. Zod provides:
 - Runtime validation of frontmatter YAML
 - TypeScript type inference from the schema (eliminating double bookkeeping)
 - `.describe()` for AI discovery and error messages
 
-This avoids building a homebrew type system now that would be replaced by Zod later.
+Schemas live on the `LayoutDefinition` itself (optional `schema` field), so the registry can validate params at lookup time.
 
-### Materialize Layouts
+### Materialize Layouts (Current)
 
-All layouts take a single typed params object:
+All layouts take a single typed params object. **Scalar-compatible** means all params can be expressed as YAML frontmatter.
 
-| Layout | Params Type | Key Fields |
-|--------|------------|------------|
-| `title` | `TitleParams` | `title`, `subtitle?` |
-| `section` | `SectionParams` | `title` |
-| `content` | `ContentParams` | `title`, `eyebrow`, `content: SlideNode[]` |
-| `agenda` | `AgendaParams` | `title`, `eyebrow`, `intro?`, `items: string[]` |
-| `bullet` | `BulletParams` | `title`, `eyebrow`, `intro`, `bullets: string[]` |
-| `card` | `CardSlideParams` | `title`, `eyebrow`, `intro`, `cards: CardProps[]` |
-| `numberedCard` | `NumberedCardSlideParams` | `title`, `eyebrow`, `intro`, `cards: CardProps[]` |
-| `image` | `ImageSlideParams` | `title`, `eyebrow`, `image` |
-| `table` | `TableSlideParams` | `title`, `eyebrow`, `intro`, `rows: TextContent[][]` |
-| `twoColumn` | `TwoColumnParams` | `title`, `eyebrow`, `left`, `right` |
+| Layout | Params Type | Key Fields | Scalar-Compatible |
+|--------|------------|------------|-------------------|
+| `title` | `TitleProps` | `title`, `subtitle?` | YES |
+| `section` | `SectionProps` | `title` | YES |
+| `content` | `ContentProps` | `title`, `eyebrow`, `content: SlideNode[]` | **NO** — escape hatch, to be deprecated |
+| `agenda` | `AgendaProps` | `title`, `eyebrow`, `intro?`, `items: string[]` | YES |
+| `card` | `CardSlideProps` | `title`, `eyebrow`, `intro`, `cards: CardProps[]` | YES (CardProps is all scalars) |
+| `numberedCard` | `NumberedCardSlideProps` | `title`, `eyebrow`, `intro`, `cards: CardProps[]` | YES |
+| `image` | `ImageSlideProps` | `title`, `eyebrow`, `image` | YES |
+| `twoColumn` | `TwoColumnProps` | `title`, `eyebrow`, `left`, `right`, `reverse?` | **NO** — left/right are `SlideNode`, needs redesign |
+| `customerStory` | `CustomerStoryProps` | `title`, `eyebrow`, `logo?`, `intro`, `bullets`, `quote`, `attribution`, `reverse?` | YES |
+| `statement` | `StatementProps` | `title`, `eyebrow`, `body`, `bodyStyle?`, `caption?` | YES |
+| `imageCards` | `ImageCardsProps` | `title`, `eyebrow`, `image`, `cards: CardProps[]`, `reverse?` | YES |
+
+### Scalar-Only Migration Plan
+
+Two layouts need redesign:
+
+**`contentLayout`** — Currently accepts `content: SlideNode[]`. This is an escape hatch that lets callers bypass the layout system. 35% of all slides (56 of 160) use it to pass arbitrary component trees. These cluster into patterns that should become their own layouts:
+
+| Pattern | Count | New Layout |
+|---------|-------|------------|
+| Text + Diagram | 14 | `diagramLayout` (TypeScript-only, diagrams stay imperative) |
+| Text + Table | 7 | `tableLayout` with `rows: TextContent[][]` |
+| Text + Card Row | 8 | Extend existing `cardLayout` flexibility |
+| Text + Image | 3 | Extend `imageLayout` with `description?` |
+| Multi-block text | 4 | Use `statementLayout` |
+| Shared slides | 7 uses | Each becomes its own layout or uses existing layouts |
+
+Once these are covered, `contentLayout` can be deprecated.
+
+**`twoColumnLayout`** — Currently accepts `left/right: SlideNode | SlideNode[]`. For the markdown compiler, the left/right params should be markdown strings that the layout compiles internally. For TypeScript users building complex column content (cards, diagrams), specific layouts like `imageCardsLayout` already exist or can be created.
 
 ### Frontmatter Mapping (Phase 3)
 
-When the markdown compiler is built, it will map frontmatter + content to these params:
+When the markdown compiler is built, it will map frontmatter + content to layout params:
 
 | Layout | Frontmatter Fields | Content Mapping |
 |--------|-------------------|-----------------|
 | `title` | `subtitle?` | Title from `#` heading |
 | `section` | — | Title from `#` heading |
-| `content` | `eyebrow` | Title from `#`, body → `content` |
 | `agenda` | `eyebrow`, `intro?` | Title from `#`, bullets → `items` |
-| `bullet` | `eyebrow`, `intro` | Title from `#`, bullets → `bullets` |
 | `card` | `eyebrow`, `intro` | Title from `#`, `:::card` directives → `cards` |
+| `numberedCard` | `eyebrow`, `intro` | Title from `#`, `:::card` directives → `cards` |
 | `image` | `eyebrow`, `image` | Title from `#` |
-| `table` | `eyebrow`, `intro` | Title from `#`, markdown table → `rows` |
-| `twoColumn` | `eyebrow` | Title from `#`, `::left::`/`::right::` → slots |
+| `statement` | `eyebrow`, `bodyStyle?`, `caption?` | Title from `#`, body text → `body` |
+| `customerStory` | `eyebrow`, `logo?`, `intro`, `quote`, `attribution`, `reverse?` | Title from `#`, bullets → `bullets` |
+| `imageCards` | `eyebrow`, `image`, `reverse?` | Title from `#`, `:::card` directives → `cards` |
+| `twoColumn` | `eyebrow`, `reverse?` | Title from `#`, `::left::`/`::right::` → slots |
+| `table` | `eyebrow`, `intro?`, table options | Title from `#`, markdown table → `rows` |
+| `diagram` | `eyebrow`, `description?` | Title from `#`, diagram (TypeScript-only) |
 
 ---
 
-## Content Compilation
+## Block Compiler
+
+The **block compiler** is a shared tycoslide core utility that converts a markdown string into a `ComponentNode` tree. It is used by:
+
+1. **Markdown-aware layouts** — layouts that accept a `body: string` param compile it internally via the block compiler
+2. **The document compiler** — to validate and extract content from markdown slide bodies
+3. **Slot compilation** — `twoColumn` layout compiles `::left::` / `::right::` slot content
+
+The block compiler extends the existing inline markdown parser (`src/dsl/text.ts`) to handle block-level elements. The inline parser produces a single `TextNode` with `NormalizedRun[]`. The block compiler produces multiple independent nodes:
 
 ### Block-Level Mapping
 
-When markdown body is compiled to `SlideContent[]`:
-
 | Markdown Block | Compiles To |
 |---------------|-------------|
-| Paragraph | `TextNode` with `NormalizedRun[]` |
-| Bullet list (entire list) | Single `TextNode` with bullet runs |
-| Numbered list | Single `TextNode` with numbered bullet runs |
-| Markdown table | `TableNode` |
-| `![](asset:name)` | `ImageNode` (resolved from theme assets) |
-| Multiple blocks | `ColumnNode` wrapping the above |
+| Paragraph | `text("paragraph content")` — ComponentNode |
+| Bullet list (entire list) | `text("- item1\n- item2")` — ComponentNode with bullet runs |
+| Numbered list | `text("1. item1\n2. item2")` — ComponentNode with numbered runs |
+| `## Subheading` | `text("Subheading", { style: TEXT_STYLE.H2 })` — ComponentNode |
+| `### Label` | `text("Label", { style: TEXT_STYLE.H3 })` — ComponentNode |
+| Markdown table | `table([...])` — ComponentNode |
+| `![](asset:name)` | `image(resolvedPath)` — ComponentNode (asset resolved from theme) |
+| Multiple blocks | `column(block1, block2, block3)` — wrapped in column with theme-default gap |
 
-This is the "block compiler" model — each block-level MDAST element becomes its own `ElementNode`. A single paragraph stays a single `TextNode`. Multiple blocks get wrapped in a `ColumnNode` with theme-default gap.
-
-### Headings Within Content
-
-Within the content body (after title extraction), headings map to styled text:
-
-| Markdown | Maps To |
-|----------|---------|
-| `## Subheading` | `TextNode` with `TEXT_STYLE.H2` |
-| `### Label` | `TextNode` with `TEXT_STYLE.H3` |
-
-This is where the block compiler diverges from the inline `markdown()` component. In the inline component, everything is one `TextNode`. In the document compiler, each block is independent — headings get their own `TextNode` with the appropriate style.
+This is where the block compiler diverges from the inline `markdown()` component. In the inline component, everything is one `TextNode`. In the block compiler, each block is independent — headings get their own `TextNode` with the appropriate style.
 
 ### Component Directives
 
-For tycoslide-specific components, use a directive syntax:
+For tycoslide-specific components, use the container directive syntax from remark-directive (already in our dependency tree):
 
 ```markdown
 :::card
@@ -442,15 +470,13 @@ description: Scales automatically
 :::
 ```
 
-Or for diagrams:
+The `:::name` syntax is parsed by remark-directive into `containerDirective` mdast nodes. The block compiler maps these to DSL calls (`card()`, etc.) using the directive's attributes as `CardProps`.
 
-```markdown
-:::diagram{direction=LR}
-[Source DB] --> [Materialize] --> [App]
-:::
-```
+### Diagrams — TypeScript Only (for now)
 
-The `:::name` syntax is the container directive from remark-directive (already in our dependency tree). Content between `:::` markers is parsed according to the component's schema.
+Diagrams use an imperative `DiagramBuilder` API that cannot be expressed as YAML. Diagram slides must be authored in TypeScript using the DSL.
+
+**Future option:** Accept mermaid syntax strings and parse them. The diagram rendering pipeline already goes through mermaid-cli, so this is a natural extension. But it's not needed for the initial document compiler.
 
 ---
 
@@ -460,19 +486,22 @@ The `:::name` syntax is the container directive from remark-directive (already i
 slides.md
     |
     v
-Parse markdown (unified + remark-parse + remark-directive)
+Parse markdown (unified + remark-parse + remark-frontmatter + remark-directive + remark-gfm)
     |
     v
-Split on --- boundaries → SlideBlock[]
+Split on --- boundaries → RawSlideBlock[]
     |
     v
-For each SlideBlock:
-  1. Parse YAML frontmatter → { layout, params }
-  2. Extract title from first # heading (if not in frontmatter)
-  3. Extract speaker notes (after Note:)
-  4. Compile remaining content → SlideContent[]
-  5. Look up layout in registry
-  6. Call layout.render(params, content) → Slide
+For each RawSlideBlock:
+  1. Parse YAML frontmatter → raw key-value pairs
+  2. Look up `layout:` in registry (error if missing or unknown)
+  3. Extract title from first # heading (if not in frontmatter)
+  4. Extract speaker notes (after Note:)
+  5. Extract slot content (::left::, ::right::, etc.)
+  6. Map frontmatter + extracted content to layout's expected params
+  7. Validate params against layout's Zod schema
+  8. Call layout.render(validatedParams) → Slide
+  9. Attach notes to Slide
     |
     v
 Presentation { slides: Slide[] }
@@ -480,6 +509,58 @@ Presentation { slides: Slide[] }
     v
 (existing pipeline: measure, position, render PPTX)
 ```
+
+### Key design choice: layouts compile their own content
+
+Under the scalar-only constraint, the document compiler does NOT produce `SlideNode[]`. It extracts scalar values from frontmatter and markdown content, then passes them to the layout. The layout's `render` function constructs all components internally.
+
+For layouts that accept markdown body text (like `statement` with `body: string`), the layout calls the block compiler internally to convert the markdown string into a component tree.
+
+This means:
+- The compiler is simple: extract strings, validate against schema, pass to layout
+- The layout controls rendering: text styles, spacing, structure are all layout decisions
+- Frontmatter can express everything: all params are YAML-compatible scalars
+- Validation is straightforward: Zod validates scalar types, not recursive component trees
+
+### Asset Resolution
+
+Images in markdown reference theme-defined assets using dot-path notation:
+
+```markdown
+![](asset:illustrations.integrate)
+```
+
+The compiler resolves `illustrations.integrate` by traversing the theme's `assets` object:
+
+```typescript
+// Theme assets object (nested)
+const assets = {
+  illustrations: {
+    integrate: '/path/to/integrate.png',
+    transform: '/path/to/transform.png',
+  },
+  brand: {
+    logo: '/path/to/logo.png',
+  },
+};
+
+// Compiler resolves dot-path to string
+resolveAsset('illustrations.integrate', assets) → '/path/to/integrate.png'
+```
+
+The resolver walks the nested object using the dot-separated path. Unknown asset paths produce a compile error with available asset names listed for discoverability.
+
+### Error Handling
+
+The compiler collects all errors and reports them with source locations:
+
+```
+deck.md:15: Unknown layout "bulleted" — available layouts: title, section, statement, agenda, card, ...
+deck.md:28: Layout "agenda" missing required field "items"
+deck.md:42: Unknown asset "illustrations.intgrate" — did you mean "illustrations.integrate"?
+```
+
+Errors include the markdown file path and line number. The compiler is fail-fast by default (first error stops compilation) but can be configured for collect-all-errors mode for CI use.
 
 ---
 
@@ -511,7 +592,7 @@ description: Handles billions of rows
 
 ### 4. Images come from theme assets
 
-**Decision:** Images must reference theme-defined assets, not relative file paths. The theme's asset registry is the source of truth. Syntax TBD (likely `![](asset:solutions.queryOffload)` or similar named reference).
+**Decision:** Images reference theme-defined assets using `![](asset:dot.path)` syntax. The compiler resolves dot-paths against the theme's `assets` object. No relative file paths — the theme is the source of truth.
 
 ### 5. Highlight names are theme-defined
 
@@ -519,23 +600,59 @@ description: Handles billions of rows
 
 ### 6. CLI needed (later)
 
-**Decision:** Yes, a CLI is needed. See [cli-architecture.md](./cli-architecture.md) for existing design work. This is Phase 5 — after the compiler works programmatically.
+**Decision:** Yes, a CLI is needed. See [cli-architecture.md](./cli-architecture.md) for design work. This is Phase 4 — after the compiler works programmatically.
 
 ### 7. Slide boundaries
 
 **Decision:** `---` (horizontal rule) for slide boundaries. Not `#` headings.
 
+### 8. Layout is required
+
+**Decision:** Every slide must have a `layout:` field in its frontmatter. Omitting it is a compile error. This is a strict system — there is no "default" layout. The first slide (before any `---`) is special: if it has only a `#` heading, it becomes a `title` layout automatically.
+
+### 9. Scalar-only layout parameters
+
+**Decision:** All layout parameters must be scalar values expressible as YAML frontmatter: strings, numbers, booleans, string arrays, and data objects with scalar fields (like `CardProps`). No `SlideNode[]`, no component trees, no builder objects. Layouts own all component construction.
+
+### 10. Speaker notes syntax
+
+**Decision:** The `Note:` separator (reveal.js pattern). Everything after `Note:` on its own line until the next slide boundary becomes `Slide.notes`. Simple, well-established, unambiguous.
+
+### 11. Zod schemas on LayoutDefinition
+
+**Decision:** Add an optional `schema: ZodType<TParams>` field to `LayoutDefinition`. Themes provide the schema alongside the render function. The compiler uses it for runtime validation. TypeScript users can ignore it (compile-time types are sufficient).
+
+### 12. Diagrams are TypeScript-only
+
+**Decision:** The `DiagramBuilder` API is imperative and cannot be expressed as YAML. Diagram slides must be authored in TypeScript. Mermaid string support is a future stretch goal.
+
 ---
 
 ## Open Questions
 
-### 1. Speaker notes syntax
+### 1. twoColumn markdown representation
 
-The `Note:` separator (reveal.js pattern) is proposed but not confirmed. Is there a better approach?
+How should `twoColumn` work in markdown? The `::left::` / `::right::` slot markers define two regions. But the layout currently accepts `SlideNode | SlideNode[]` — which needs to become scalar.
 
-### 2. Layout registry scope — RESOLVED
+**Proposed:** Each slot's markdown content is compiled by the block compiler (inside the layout's render function). The compiler passes raw markdown strings for each slot:
 
-`LayoutDefinition` is a tycoslide core type. `LayoutRegistry` is a core singleton. Themes register their layouts at initialization. No runtime param schema until Phase 3 (Zod).
+```typescript
+interface TwoColumnMarkdownProps {
+  title: string;
+  eyebrow: string;
+  left: string;    // markdown, compiled internally
+  right: string;   // markdown, compiled internally
+  reverse?: boolean;
+}
+```
+
+**Open:** Should the TypeScript `twoColumnLayout` (which accepts `SlideNode[]`) and the markdown variant (which accepts strings) be the same layout with a union type, or two separate layouts?
+
+### 2. Block compiler location
+
+Where does the block compiler module live?
+
+**Proposed:** `src/compiler/blockCompiler.ts` in tycoslide core. It's a shared utility used by markdown-aware layouts and by the document compiler. NOT inside layouts, NOT inside the CLI.
 
 ---
 
@@ -545,29 +662,61 @@ The `Note:` separator (reveal.js pattern) is proposed but not confirmed. Is ther
 
 `markdown("**bold** and :accent1[highlighted]")` → single TextNode.
 
-### Phase 2: Layout Registry — IN PROGRESS
+### Phase 2: Layout Registry — DONE
 
-- [x] Define `LayoutDefinition<TParams>` interface in tycoslide core (`src/core/layoutRegistry.ts`)
+- [x] Define `LayoutDefinition<TParams>` interface in tycoslide core (`src/core/registry.ts`)
 - [x] `LayoutRegistry` singleton with register/get/has/getAll
 - [x] Export from `src/index.ts`
 - [x] Refactor Materialize layouts from positional functions to `LayoutDefinition` objects with typed params
 - [x] `registerMaterializeLayouts()` for theme initialization
-- [ ] Migrate all session scripts to new `layout.render({...})` API
-- No runtime param schema — deferred to Phase 3 (Zod)
+- [x] Migrate all session scripts to new `layout.render({...})` API
 
 ### Phase 3: Document Compiler
 
-- Markdown file parser (slide splitting, frontmatter extraction)
-- Block-level content compiler (paragraph → TextNode, list → TextNode with bullets, table → TableNode, heading → styled TextNode)
-- Layout parameter mapping (frontmatter → layout params, `#` → title extraction)
-- Component directive handlers (`:::card`, `:::diagram`, etc.)
-- Slot markers (`::left::`, `::right::`) for multi-region layouts
+Sub-phases in implementation order:
+
+**3a: Block compiler** — markdown string → ComponentNode tree
+- Extend existing remark pipeline from `text.ts`
+- Handle paragraphs, lists, headings, tables as independent blocks
+- Wrap multiple blocks in `column()` with theme-default gap
+- Unit tests for each block type
+
+**3b: File parser** — slide splitting and frontmatter extraction
+- Add `remark-frontmatter` and `remark-gfm` to dependencies
+- Split on `---` boundaries into `RawSlideBlock[]`
+- Extract YAML frontmatter, `#` title, `Note:` speaker notes
+- Extract `::slot::` content for multi-region layouts
+
+**3c: Zod schemas** — runtime validation for all layouts
+- Add Zod schemas to each Materialize `LayoutDefinition`
+- Validate frontmatter params against schema
+- Error messages with field names and suggestions
+
+**3d: Layout parameter mapping** — frontmatter + content → validated params
+- Map extracted data to layout's expected param types
+- Handle title extraction (Option C: heading or frontmatter)
+- Handle slot mapping for `twoColumn`
+
+**3e: Asset resolution** — `asset:dot.path` → file paths
+- Dot-path resolver for theme assets object
+- Error messages listing available assets on unknown path
+
+**3f: Component directives** — `:::card` etc.
+- Map `containerDirective` mdast nodes to `CardProps` and other data types
+- Validate directive attributes against component schemas
+
+**3g: Scalar-only layout migration**
+- Create `tableLayout`, `diagramLayout` (TypeScript-only)
+- Extend `imageLayout` with `description?`
+- Redesign `twoColumnLayout` for markdown strings
+- Deprecate `contentLayout`
 
 ### Phase 4: CLI / DX
 
-- `tycoslide build` command (see [cli-architecture.md](./cli-architecture.md))
-- File watching / live preview
-- Error messages with line numbers
+- `tycoslide build` command (Commander.js, see [cli-architecture.md](./cli-architecture.md))
+- Theme resolution by package name (`--theme materialize` → `materialize_theme`)
+- Error messages with markdown source line numbers
+- File watching / live preview (future)
 
 ---
 
@@ -585,5 +734,6 @@ The `Note:` separator (reveal.js pattern) is proposed but not confirmed. Is ther
 ### tycoslide Internal
 - [Inline Markdown Component](./markdown.md) — Phase 0-1 design (implemented)
 - Materialize layouts: `clients/materialize/theme/src/layouts.ts`
-- Component registry: `src/core/componentRegistry.ts`
+- Registry: `src/core/registry.ts`
 - Presentation API: `src/presentation.ts`
+- Block compiler (Phase 3): `src/compiler/blockCompiler.ts` (planned)

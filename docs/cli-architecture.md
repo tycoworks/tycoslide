@@ -8,7 +8,7 @@ Tycoslide is currently a TypeScript library. The goal is to add a CLI that takes
 
 ## Unique Position
 
-Tycoslide generates **native, editable PowerPoint** with full programmatic layout control (Yoga flexbox, component tree, theme system). No other Markdown-to-PPTX tool does this:
+Tycoslide generates **native, editable PowerPoint** with full programmatic layout control (CSS flexbox via Playwright, component tree, theme system). No other Markdown-to-PPTX tool does this:
 
 - **Marp** renders slides to PNG images and embeds them — output is not editable in PowerPoint
 - **Pandoc** generates native PPTX but has no custom layout system — limited to what its Haskell writer supports
@@ -42,7 +42,7 @@ All three are adequate. Commander is the safe default; cac if we prefer minimal.
 
 ### Recommendation: unified/remark
 
-We need to walk an AST to map Markdown structure to the tycoslide component tree (headings → h1/h2, lists → bulletList, `---` → slide breaks, `:::columns` → row layout).
+We need to walk an AST to map Markdown structure to the tycoslide component tree (headings, lists, tables, `---` slide breaks, `:::card` directives).
 
 | Parser | AST? | Directives | Frontmatter | Ecosystem |
 |--------|------|-----------|-------------|-----------|
@@ -50,7 +50,7 @@ We need to walk an AST to map Markdown structure to the tycoslide component tree
 | markdown-it | Token stream | Plugins available | Plugin available | Proven in Marp |
 | marked | No real AST | Limited | Limited | Fast but rigid |
 
-Remark gives a proper `mdast` tree we can traverse and transform node-by-node into tycoslide DSL calls. The plugin ecosystem handles frontmatter, GFM tables, and custom directives out of the box.
+Remark gives a proper `mdast` tree we can traverse and transform node-by-node. The plugin ecosystem handles frontmatter, GFM tables, and custom directives out of the box.
 
 markdown-it is a valid alternative (Marp uses it), but its token-stream model is harder to map to a component tree than remark's AST.
 
@@ -63,22 +63,11 @@ remarkDirective      → custom blocks (:::card, :::columns, :::callout)
 remarkGfm            → GitHub-flavored Markdown (tables, strikethrough)
 ```
 
+**Current dependency status:** `remark-parse`, `remark-directive`, and `unified` are already installed. `remark-frontmatter` and `remark-gfm` need to be added.
+
 ### Slide separation
 
 Split on `thematicBreak` nodes in mdast (represents `---` in Markdown). This is the Marp convention and is CommonMark-compliant.
-
-### Custom layout directives
-
-```markdown
-:::columns
-Left column content
-
-:::
-Right column content
-:::
-```
-
-Maps to `row(theme, leftContent, rightContent)` in the DSL.
 
 ## Architecture
 
@@ -86,11 +75,11 @@ Maps to `row(theme, leftContent, rightContent)` in the DSL.
 
 ```
 Markdown file
-    ↓ remark-parse
+    ↓ remark-parse + remark-frontmatter + remark-directive + remark-gfm
 mdast (AST)
     ↓ slide splitter (split on --- thematic breaks)
-Slide[] of mdast subtrees
-    ↓ transformer (walk AST, emit DSL calls)
+RawSlideBlock[] (mdast subtrees with frontmatter)
+    ↓ document compiler (extract params, validate, call layout.render)
 Presentation with slides
     ↓ writeFile()
 .pptx
@@ -98,38 +87,47 @@ Presentation with slides
 
 ### File structure
 
-The CLI can live inside the tycoslide repo or as a separate package. Inside the repo:
+The CLI lives inside the tycoslide repo:
 
 ```
 tycoslide/
   src/
-    core/           ← existing: Presentation, Renderer, Box, DSL, Types
-    components/     ← existing: Text, Image, List, Table, Card
+    core/           ← existing: types, registry, renderer, pptxRenderer
+    dsl/            ← existing: text, image, table, card, row, column, diagram
+    layout/         ← existing: pipeline, measurement, validator
+    compiler/       ← new
+      blockCompiler.ts   ← markdown string → ComponentNode tree
+      documentCompiler.ts ← slides.md → Presentation
+      slideParser.ts     ← split, extract frontmatter/title/notes/slots
+      assetResolver.ts   ← asset:dot.path → file path
     cli/            ← new
       cli.ts        ← Commander setup, arg parsing (~50 lines)
-      markdown.ts   ← remark pipeline: Markdown → mdast → DSL calls
       config.ts     ← theme loading, frontmatter handling
 ```
 
-Or as a separate package (`@tycoslide/cli`) that depends on `tycoslide`.
-
 ### Where the complexity lives
 
-The CLI shell itself is ~50 lines of Commander setup. The real work is the **mdast → DSL transformer** — mapping Markdown nodes to tycoslide components:
+The CLI shell itself is ~50 lines of Commander setup. The real work is the **document compiler** — mapping markdown to layout params:
 
-| mdast node | tycoslide component |
+#### Block compiler: mdast → DSL calls
+
+| mdast node | tycoslide DSL call |
 |-----------|-------------------|
-| `heading` (depth 1) | `h1()` |
-| `heading` (depth 2) | `h2()` |
-| `heading` (depth 3-4) | `h3()` / `h4()` |
-| `paragraph` | `body()` |
-| `list` | `bulletList()` / `numberedList()` |
-| `table` | `table()` |
-| `image` | `image()` |
+| `heading` (depth 1) | Title extraction (consumed, not rendered) |
+| `heading` (depth 2) | `text("...", { style: TEXT_STYLE.H2 })` |
+| `heading` (depth 3) | `text("...", { style: TEXT_STYLE.H3 })` |
+| `paragraph` | `text("paragraph content")` |
+| `list` (unordered) | `text("- item1\n- item2")` (bullet runs) |
+| `list` (ordered) | `text("1. item1\n2. item2")` (numbered runs) |
+| `table` | `table(rows)` |
+| `image` | `image(resolvedAssetPath)` |
 | `thematicBreak` | slide separator |
-| `containerDirective` (:::columns) | `row()` |
-| `containerDirective` (:::card) | `card()` |
-| `yaml` (frontmatter) | theme/metadata config |
+| `containerDirective` (:::card) | `card(props)` via CardProps extraction |
+| `yaml` (frontmatter) | layout params + metadata |
+
+#### Document compiler: frontmatter → layout params
+
+The document compiler doesn't produce `SlideNode[]`. It extracts scalar values from frontmatter and markdown content, then passes them to `layout.render()`. Layouts own all component construction.
 
 ### Theme delivery
 
@@ -166,9 +164,10 @@ All three can coexist. Start with option 2 (named package) since that's how them
 
 ## Implementation priority
 
-1. **Core transformer**: mdast → tycoslide DSL (the hard part)
-2. **CLI entry point**: Commander with `build` command
-3. **Theme loading**: resolve named theme packages
-4. **Frontmatter**: deck-level and slide-level metadata
-5. **Custom directives**: :::columns, :::card, :::callout
-6. **Dev server** (future): file watcher + rebuild on change
+1. **Block compiler**: markdown string → ComponentNode tree (foundation for everything)
+2. **Document compiler**: slides.md → Presentation (the core logic)
+3. **CLI entry point**: Commander with `build` command (~50 lines)
+4. **Theme loading**: resolve named theme packages
+5. **Zod schemas**: runtime validation with helpful error messages
+6. **Custom directives**: :::card, :::callout
+7. **Dev server** (future): file watcher + rebuild on change
