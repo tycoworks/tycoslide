@@ -486,14 +486,11 @@ Diagrams use an imperative `DiagramBuilder` API that cannot be expressed as YAML
 slides.md
     |
     v
-Parse markdown (unified + remark-parse + remark-frontmatter + remark-directive + remark-gfm)
+Line-based state machine: split on --- boundaries (structural --- pair detection)
     |
     v
-Split on --- boundaries → RawSlideBlock[]
-    |
-    v
-For each RawSlideBlock:
-  1. Parse YAML frontmatter → raw key-value pairs
+For each slide:
+  1. Parse structurally-identified YAML frontmatter → raw key-value pairs
   2. Look up `layout:` in registry (error if missing or unknown)
   3. Extract title from first # heading (if not in frontmatter)
   4. Extract speaker notes (after Note:)
@@ -683,10 +680,17 @@ Sub-phases in implementation order:
 - Unit tests for each block type
 
 **3b: File parser** — slide splitting and frontmatter extraction
-- Add `remark-frontmatter` and `remark-gfm` to dependencies
-- Split on `---` boundaries into `RawSlideBlock[]`
-- Extract YAML frontmatter, `#` title, `Note:` speaker notes
-- Extract `::slot::` content for multi-region layouts
+- Line-based state machine splits on `---` boundaries (structural detection, like Slidev)
+- Frontmatter identified by position between `---` pairs, NEVER by guessing YAML
+- Blank line after `---` = no frontmatter (body starts); non-blank = frontmatter until closing `---`
+- Code fence awareness: `---` inside fenced code blocks is not a separator
+- Extract YAML frontmatter, `#` title, `Note:` speaker notes, `::slot::` content
+- **Error handling:**
+  - Invalid YAML in a `---` pair: throws `FrontmatterParseError` (fail-fast — we know it's supposed to be YAML)
+  - Valid YAML but not an object (scalar, array): treated as empty frontmatter
+  - Unterminated frontmatter (no closing `---`): treated as body content (graceful)
+  - Missing `layout:` field: not validated here (3c Zod schemas)
+  - Missing global frontmatter / `theme:`: not validated here (3d or later)
 
 **3c: Zod schemas** — runtime validation for all layouts
 - Add Zod schemas to each Materialize `LayoutDefinition`

@@ -14,3 +14,6 @@ export * from './dsl/index.js';
 
 // Compiler (block-level markdown → ComponentNode[])
 export { compileBlocks } from './compiler/blockCompiler.js';
+
+// Slide parser (multi-slide markdown file → structured document)
+export { parseSlideDocument, FrontmatterParseError, type ParsedDocument, type RawSlide } from './compiler/slideParser.js';

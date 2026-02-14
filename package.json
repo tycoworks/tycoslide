@@ -33,7 +33,8 @@
     "remark-directive": "^4.0.0",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
-    "unified": "^11.0.5"
+    "unified": "^11.0.5",
+    "yaml": "^2.8.2"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",
