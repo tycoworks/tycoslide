@@ -20,3 +20,6 @@ export { parseSlideDocument, FrontmatterParseError, type ParsedDocument, type Ra
 
 // Layout validation
 export { validateLayoutProps } from './core/registry.js';
+
+// Document compiler (markdown file → Presentation)
+export { compileDocument, type CompileOptions } from './compiler/documentCompiler.js';

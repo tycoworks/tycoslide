@@ -55,7 +55,7 @@ export function mockTheme(options?: {
   const highlights = options?.highlights ?? { teal: { bg: '003333', text: '00CCCC' } };
 
   return {
-    slide: { width: 13.333, height: 7.5 },
+    slide: { layout: 'CUSTOM' as const, width: 13.333, height: 7.5 },
     colors: {
       primary: 'FF0000',
       background: 'FFFFFF',

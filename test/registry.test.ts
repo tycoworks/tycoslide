@@ -16,7 +16,7 @@ import '../src/dsl/containers.js';
 // ============================================
 
 // Minimal stub slide for testing
-const stubSlide: Slide = { content: { type: 'component' as any, componentName: 'test', props: {} } };
+const stubSlide: Slide = { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: {} } };
 
 function makeLayout<T>(name: string, render: (params: T) => Slide): LayoutDefinition<T> {
   return {

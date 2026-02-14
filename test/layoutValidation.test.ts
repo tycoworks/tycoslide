@@ -5,6 +5,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { z } from 'zod';
 import { validateLayoutProps, type LayoutDefinition } from '../src/core/registry.js';
+import { NODE_TYPE } from '../src/core/nodes.js';
 
 // Create a test layout with a known schema
 const testSchema = z.object({
@@ -18,7 +19,7 @@ const testLayout: LayoutDefinition<z.infer<typeof testSchema>> = {
   name: 'test',
   description: 'Test layout for validation',
   schema: testSchema,
-  render: (props) => ({ content: { type: 'component' as const, componentName: 'test', props: { text: props.title } } }),
+  render: (props) => ({ content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: { text: props.title } } }),
 };
 
 describe('validateLayoutProps', () => {
@@ -121,7 +122,7 @@ describe('validateLayoutProps with enum schema', () => {
     name: 'enumTest',
     description: 'Test enum validation',
     schema: enumSchema,
-    render: (props) => ({ content: { type: 'component' as const, componentName: 'test', props: { style: props.style } } }),
+    render: (props) => ({ content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: { style: props.style } } }),
   };
 
   it('should accept valid enum value', () => {
