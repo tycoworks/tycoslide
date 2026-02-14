@@ -6,6 +6,7 @@ Spacing / layouts:
 
 Core:
 - Markdown 2
+- Remove diagram builder, just text?
 - Align colors with design token standards. Semantic vs color names.
 - Escape hatch
 - Portrait mode
