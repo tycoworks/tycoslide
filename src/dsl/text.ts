@@ -11,6 +11,10 @@ import type { NormalizedRun, HighlightScheme, TextStyleName, HorizontalAlignment
 import { HALIGN, VALIGN } from '../core/types.js';
 import { NODE_TYPE, type ElementNode } from '../core/nodes.js';
 import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
+import { MDAST } from '../core/mdast.js';
+
+// Re-export for backward compatibility (tests, dsl/index.ts consumers)
+export { MDAST } from '../core/mdast.js';
 
 // ============================================
 // CONSTANTS
@@ -37,22 +41,6 @@ export interface TextProps {
 export interface TextComponentProps extends TextProps {
   content: string;
 }
-
-// ============================================
-// MDAST NODE TYPES
-// ============================================
-
-export const MDAST = {
-  ROOT: 'root',
-  // Block-level
-  PARAGRAPH: 'paragraph',
-  LIST: 'list',
-  // Inline
-  TEXT: 'text',
-  STRONG: 'strong',
-  EMPHASIS: 'emphasis',
-  TEXT_DIRECTIVE: 'textDirective',
-} as const;
 
 // ============================================
 // PARSER

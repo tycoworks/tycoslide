@@ -675,10 +675,11 @@ Where does the block compiler module live?
 
 Sub-phases in implementation order:
 
-**3a: Block compiler** — markdown string → ComponentNode tree
-- Extend existing remark pipeline from `text.ts`
-- Handle paragraphs, lists, headings, tables as independent blocks
-- Wrap multiple blocks in `column()` with theme-default gap
+**3a: Block compiler** — markdown string → ComponentNode[]
+- New remark pipeline that identifies block-level nodes (paragraphs, lists, headings, tables, images)
+- Reuses the `text()` DSL component for text-containing blocks (paragraphs, lists, headings) — does NOT share internal parsing logic from `text.ts`
+- Calls `table()` and `image()` DSL components for non-text blocks
+- Returns `ComponentNode[]` — callers decide how to arrange them
 - Unit tests for each block type
 
 **3b: File parser** — slide splitting and frontmatter extraction

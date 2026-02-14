@@ -11,3 +11,6 @@ export * from './core/registry.js';
 
 // DSL (all user-facing functions — every function returns ComponentNode)
 export * from './dsl/index.js';
+
+// Compiler (block-level markdown → ComponentNode[])
+export { compileBlocks } from './compiler/blockCompiler.js';
