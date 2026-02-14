@@ -4,7 +4,7 @@
 import { componentRegistry, component, type ExpansionContext } from '../core/registry.js';
 import { stack, column } from './containers.js';
 import { shape, image } from './primitives.js';
-import { text } from './text.js';
+import { text, plainText } from './text.js';
 import type { SlideNode } from '../core/nodes.js';
 import type { TextStyleName, GapSize } from '../core/types.js';
 import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE } from '../core/types.js';
@@ -104,7 +104,7 @@ function expandCard(props: CardProps, context: ExpansionContext): SlideNode {
   }
 
   if (title) {
-    children.push(text(title, {
+    children.push(plainText(title, {
       style: titleStyle,
       color: titleColor,
     }));

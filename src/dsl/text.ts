@@ -228,3 +228,42 @@ componentRegistry.register({ name: TEXT_COMPONENT, expand: expandText });
 export function text(content: string, props?: TextProps): ComponentNode<TextComponentProps> {
   return component(TEXT_COMPONENT, { content, ...props });
 }
+
+// ============================================
+// PLAIN TEXT (no markdown parsing)
+// ============================================
+
+/** Component name for plain text */
+export const PLAIN_TEXT_COMPONENT = 'plainText' as const;
+
+function expandPlainText(props: TextComponentProps, _context: { theme: any }): ElementNode {
+  const runs: NormalizedRun[] = [{ text: props.content }];
+
+  return {
+    type: NODE_TYPE.TEXT,
+    content: runs,
+    style: props.style,
+    color: props.color,
+    hAlign: props.hAlign ?? HALIGN.LEFT,
+    vAlign: props.vAlign ?? VALIGN.TOP,
+    lineHeightMultiplier: props.lineHeightMultiplier,
+  };
+}
+
+componentRegistry.register({ name: PLAIN_TEXT_COMPONENT, expand: expandPlainText });
+
+/**
+ * Create a plain text component node (no markdown parsing).
+ *
+ * Use for labels and structural text that should never be interpreted
+ * as markdown: eyebrows, attributions, captions, slide numbers.
+ *
+ * @example
+ * ```typescript
+ * plainText("ARCHITECTURE", { style: TEXT_STYLE.EYEBROW })
+ * plainText("— Sam Spelsberg, CTO", { style: TEXT_STYLE.SMALL })
+ * ```
+ */
+export function plainText(content: string, props?: TextProps): ComponentNode<TextComponentProps> {
+  return component(PLAIN_TEXT_COMPONENT, { content, ...props });
+}

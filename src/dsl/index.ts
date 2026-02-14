@@ -40,10 +40,12 @@ export {
   type TableProps,
 } from './table.js';
 
-// Text (markdown-powered)
+// Text (markdown-powered + plain)
 export {
   text,
+  plainText,
   TEXT_COMPONENT,
+  PLAIN_TEXT_COMPONENT,
   MDAST,
   type TextProps,
   type TextComponentProps,
