@@ -7,6 +7,7 @@
 // params, markdown body → body param. Zod validation catches mismatches.
 
 import { parseSlideDocument, type RawSlide } from './slideParser.js';
+import { resolveAssetReferences } from './assetResolver.js';
 import { layoutRegistry, validateLayoutProps } from '../core/registry.js';
 import { Presentation, type Slide } from '../presentation.js';
 import type { Theme } from '../core/types.js';
@@ -21,6 +22,8 @@ export interface CompileOptions {
   theme: Theme;
   /** Default layout name when slide frontmatter omits `layout:`. */
   defaultLayout?: string;
+  /** Nested assets object for resolving `asset:dot.path` references in frontmatter. */
+  assets?: Record<string, unknown>;
 }
 
 // ============================================
@@ -94,8 +97,11 @@ function compileSlide(raw: RawSlide, options: CompileOptions): Slide {
     params.body = raw.body;
   }
 
+  // 3.5 Resolve asset references (before validation so schemas see plain strings)
+  const resolved = resolveAssetReferences(params, options.assets, raw.index) as Record<string, unknown>;
+
   // 4. Validate against layout's Zod schema
-  const validated = validateLayoutProps(layout, params);
+  const validated = validateLayoutProps(layout, resolved);
 
   // 5. Render
   const slide = layout.render(validated);

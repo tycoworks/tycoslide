@@ -1,6 +1,6 @@
 # Markdown Slide Authoring — Design Doc
 
-**Status:** Layout registry complete. All sessions migrated. Document compiler is next.
+**Status:** Document compiler Phases 3a–3e complete. Next: 3f (component directives), 3g (scalar-only migration), Phase 4 (CLI).
 
 ---
 
@@ -319,18 +319,18 @@ Mention the latency guarantees.
 
 ### Design
 
-`LayoutDefinition` is a tycoslide core type. Each layout has a name, description, a typed `render` function, and (Phase 3) a Zod schema for runtime validation:
+`LayoutDefinition` is a tycoslide core type. Each layout has a name, description, a typed `render` function, and a Zod schema for runtime validation:
 
 ```typescript
 interface LayoutDefinition<TParams = Record<string, unknown>> {
   name: string;
   description: string;
   render: (params: TParams) => Slide;
-  schema?: ZodType<TParams>;  // Phase 3: runtime validation for document compiler
+  schema: ZodType<TParams>;  // Runtime validation for document compiler
 }
 ```
 
-TypeScript generics provide compile-time type safety. The optional `schema` field will be added in Phase 3 using Zod when the markdown compiler needs to validate frontmatter.
+TypeScript generics provide compile-time type safety. The `schema` field is required — all registered layouts must have a Zod schema for the document compiler to validate frontmatter params.
 
 Themes define concrete param types for each layout. **All params must be scalar-only** (expressible as YAML):
 
@@ -361,14 +361,14 @@ const statementLayout: LayoutDefinition<StatementProps> = {
 
 `LayoutRegistry` is a singleton (`layoutRegistry`) following the same pattern as `ComponentRegistry`. Themes call `registerMaterializeLayouts()` to register all layouts at initialization.
 
-### Validation Strategy (Phase 3)
+### Validation Strategy — IMPLEMENTED
 
-Each layout will add a Zod schema alongside its TypeScript interface. Zod provides:
+Each layout has a Zod schema alongside its TypeScript interface. Zod provides:
 - Runtime validation of frontmatter YAML
 - TypeScript type inference from the schema (eliminating double bookkeeping)
 - `.describe()` for AI discovery and error messages
 
-Schemas live on the `LayoutDefinition` itself (optional `schema` field), so the registry can validate params at lookup time.
+Schemas live on the `LayoutDefinition` itself (required `schema` field). The registry validates params via `validateLayoutProps(layout, params)`.
 
 ### Materialize Layouts (Current)
 
@@ -378,19 +378,21 @@ All layouts take a single typed params object. **Scalar-compatible** means all p
 |--------|------------|------------|-------------------|
 | `title` | `TitleProps` | `title`, `subtitle?` | YES |
 | `section` | `SectionProps` | `title` | YES |
-| `content` | `ContentProps` | `title`, `eyebrow`, `content: SlideNode[]` | **NO** — escape hatch, to be deprecated |
+| `body` | `BodyProps` | `title`, `eyebrow`, `body` | YES |
+| `statement` | `StatementProps` | `title`, `eyebrow`, `body`, `bodyStyle?`, `caption?` | YES |
 | `agenda` | `AgendaProps` | `title`, `eyebrow`, `intro?`, `items: string[]` | YES |
+| `twoColumn` | `TwoColumnProps` | `title`, `eyebrow`, `left: string`, `right: string`, `reverse?` | YES — left/right are markdown strings, compiled internally |
+| `image` | `ImageSlideProps` | `title`, `eyebrow`, `image` | YES |
 | `card` | `CardSlideProps` | `title`, `eyebrow`, `intro`, `cards: CardProps[]` | YES (CardProps is all scalars) |
 | `numberedCard` | `NumberedCardSlideProps` | `title`, `eyebrow`, `intro`, `cards: CardProps[]` | YES |
-| `image` | `ImageSlideProps` | `title`, `eyebrow`, `image` | YES |
-| `twoColumn` | `TwoColumnProps` | `title`, `eyebrow`, `left`, `right`, `reverse?` | **NO** — left/right are `SlideNode`, needs redesign |
-| `customerStory` | `CustomerStoryProps` | `title`, `eyebrow`, `logo?`, `intro`, `bullets`, `quote`, `attribution`, `reverse?` | YES |
-| `statement` | `StatementProps` | `title`, `eyebrow`, `body`, `bodyStyle?`, `caption?` | YES |
 | `imageCards` | `ImageCardsProps` | `title`, `eyebrow`, `image`, `cards: CardProps[]`, `reverse?` | YES |
+| `customerStory` | `CustomerStoryProps` | `title`, `eyebrow`, `logo?`, `intro`, `bullets`, `quote`, `attribution`, `reverse?` | YES |
+| `content` | `ContentProps` | `title`, `eyebrow`, `content: SlideNode[]` | **NO** — programmatic-only escape hatch, to be deprecated |
+| `twoColumnRaw` | `TwoColumnRawProps` | `title`, `eyebrow`, `left: SlideNode[]`, `right: SlideNode[]` | **NO** — programmatic-only for TypeScript callers needing component trees |
 
 ### Scalar-Only Migration Plan
 
-Two layouts need redesign:
+**`twoColumnLayout`** — DONE. Redesigned to accept `left: string` / `right: string` (markdown strings compiled internally via `compileBlocks`). A separate `twoColumnRawLayout` exists as a programmatic-only layout for TypeScript callers needing `SlideNode[]`.
 
 **`contentLayout`** — Currently accepts `content: SlideNode[]`. This is an escape hatch that lets callers bypass the layout system. 35% of all slides (56 of 160) use it to pass arbitrary component trees. These cluster into patterns that should become their own layouts:
 
@@ -405,8 +407,6 @@ Two layouts need redesign:
 
 Once these are covered, `contentLayout` can be deprecated.
 
-**`twoColumnLayout`** — Currently accepts `left/right: SlideNode | SlideNode[]`. For the markdown compiler, the left/right params should be markdown strings that the layout compiles internally. For TypeScript users building complex column content (cards, diagrams), specific layouts like `imageCardsLayout` already exist or can be created.
-
 ### Frontmatter Mapping (Phase 3)
 
 When the markdown compiler is built, it will map frontmatter + content to layout params:
@@ -415,15 +415,16 @@ When the markdown compiler is built, it will map frontmatter + content to layout
 |--------|-------------------|-----------------|
 | `title` | `subtitle?` | Title from `#` heading |
 | `section` | — | Title from `#` heading |
-| `agenda` | `eyebrow`, `intro?` | Title from `#`, bullets → `items` |
-| `card` | `eyebrow`, `intro` | Title from `#`, `:::card` directives → `cards` |
-| `numberedCard` | `eyebrow`, `intro` | Title from `#`, `:::card` directives → `cards` |
-| `image` | `eyebrow`, `image` | Title from `#` |
+| `body` | `eyebrow` | Title from `#`, body text → `body` |
 | `statement` | `eyebrow`, `bodyStyle?`, `caption?` | Title from `#`, body text → `body` |
-| `customerStory` | `eyebrow`, `logo?`, `intro`, `quote`, `attribution`, `reverse?` | Title from `#`, bullets → `bullets` |
-| `imageCards` | `eyebrow`, `image`, `reverse?` | Title from `#`, `:::card` directives → `cards` |
+| `agenda` | `eyebrow`, `items: string[]` | Title from `#`, `intro?` from body or frontmatter |
 | `twoColumn` | `eyebrow`, `reverse?` | Title from `#`, `::left::`/`::right::` → slots |
-| `table` | `eyebrow`, `intro?`, table options | Title from `#`, markdown table → `rows` |
+| `image` | `eyebrow`, `image` | Title from `#` |
+| `card` | `eyebrow`, `intro`, `cards: CardProps[]` | Title from `#` (cards in frontmatter; Phase 3f adds `:::card` directive alternative) |
+| `numberedCard` | `eyebrow`, `intro`, `cards: CardProps[]` | Title from `#` (same as card) |
+| `imageCards` | `eyebrow`, `image`, `cards: CardProps[]`, `reverse?` | Title from `#` (same as card) |
+| `customerStory` | `eyebrow`, `logo?`, `attribution`, `reverse?` | Title from `#`, `::intro::`, `::bullets::`, `::quote::` → slots |
+| `table` | `eyebrow`, `intro?`, table options | Title from `#`, markdown table → `rows` (future) |
 | `diagram` | `eyebrow`, `description?` | Title from `#`, diagram (TypeScript-only) |
 
 ---
@@ -603,9 +604,9 @@ description: Handles billions of rows
 
 **Decision:** `---` (horizontal rule) for slide boundaries. Not `#` headings.
 
-### 8. Layout is required
+### 8. Layout is required (with optional default)
 
-**Decision:** Every slide must have a `layout:` field in its frontmatter. Omitting it is a compile error. This is a strict system — there is no "default" layout. The first slide (before any `---`) is special: if it has only a `#` heading, it becomes a `title` layout automatically.
+**Decision:** Every slide must have a `layout:` field in its frontmatter, OR the compiler must be configured with a `defaultLayout` in `CompileOptions`. If neither is provided, it's a compile error. The first slide (before any `---`) is special: if it has only a `#` heading, it becomes a `title` layout automatically.
 
 ### 9. Scalar-only layout parameters
 
@@ -617,39 +618,45 @@ description: Handles billions of rows
 
 ### 11. Zod schemas on LayoutDefinition
 
-**Decision:** Add an optional `schema: ZodType<TParams>` field to `LayoutDefinition`. Themes provide the schema alongside the render function. The compiler uses it for runtime validation. TypeScript users can ignore it (compile-time types are sufficient).
+**Decision:** Required `schema: ZodType<TParams>` field on `LayoutDefinition`. All registered layouts must provide a Zod schema. The document compiler uses it for runtime validation of frontmatter params. TypeScript users benefit from compile-time types but the schema is still required for registration.
 
 ### 12. Diagrams are TypeScript-only
 
 **Decision:** The `DiagramBuilder` API is imperative and cannot be expressed as YAML. Diagram slides must be authored in TypeScript. Mermaid string support is a future stretch goal.
 
+### 13. Frontmatter vs body content rule
+
+**Decision:** The boundary between frontmatter and markdown body is determined by whether the layout parses the value as markdown:
+
+- **Frontmatter parameters:** Scalars, labels, flags, asset references, structured data (e.g., `eyebrow`, `attribution`, `logo`, `cards: [{title, description}]`). These are not markdown-parsed.
+- **Body / slots:** Prose content that will be markdown-parsed (e.g., `body`, `intro`, `bullets`, `quote`, `left`, `right`). These use `::slot::` markers in the markdown body.
+
+The test: "does the layout parse this value as markdown?" If yes → body slot. If no → frontmatter parameter. This rule has zero exceptions. Cards are structured data with typed fields (`title`, `description`, `image`), so they stay in frontmatter YAML even though they contain text.
+
+### 14. Layouts are TypeScript-only
+
+**Decision:** Markdown-defined layouts were considered and rejected. Only simple layouts (title, section, body) could be expressed declaratively, and those are already trivial in TypeScript (~8 lines). By the time a layout needs conditionals, loops, or theme access (most layouts), a template language becomes a worse programming language. Layout authoring is a developer activity. If layout creation friction is a concern, better solutions are: a `createSimpleLayout()` helper, better docs, or a CLI scaffold command.
+
+### 15. `plainText()` DSL function
+
+**Decision:** Add a `plainText()` DSL function that creates a `TextNode` directly, bypassing markdown parsing. This provides a semantic distinction from `text()` (which parses markdown) for labels and structural text that should never be interpreted as markdown (eyebrows, attributions, captions, slide numbers).
+
+- `text()` stays the default (markdown-parsing) — more common across the codebase (~3:1 ratio)
+- `plainText()` is the explicit opt-in for plain strings — prevents accidental markdown interpretation
+- No new node type needed — `plainText()` returns a standard `TextNode` with `content: [{ text: string }]`
+- Both renderers already handle this via `normalizeContent()` — zero downstream changes
+
 ---
 
-## Open Questions
+## Resolved Questions
 
-### 1. twoColumn markdown representation
+### 1. twoColumn markdown representation — RESOLVED
 
-How should `twoColumn` work in markdown? The `::left::` / `::right::` slot markers define two regions. But the layout currently accepts `SlideNode | SlideNode[]` — which needs to become scalar.
+**Resolution:** Two separate layouts. `twoColumnLayout` accepts `left: string` / `right: string` (markdown strings compiled internally via `compileBlocks`). A separate `twoColumnRawLayout` exists as a programmatic-only layout for TypeScript callers needing `SlideNode[]`. The markdown `twoColumn` uses `::left::` / `::right::` slot markers.
 
-**Proposed:** Each slot's markdown content is compiled by the block compiler (inside the layout's render function). The compiler passes raw markdown strings for each slot:
+### 2. Block compiler location — RESOLVED
 
-```typescript
-interface TwoColumnMarkdownProps {
-  title: string;
-  eyebrow: string;
-  left: string;    // markdown, compiled internally
-  right: string;   // markdown, compiled internally
-  reverse?: boolean;
-}
-```
-
-**Open:** Should the TypeScript `twoColumnLayout` (which accepts `SlideNode[]`) and the markdown variant (which accepts strings) be the same layout with a union type, or two separate layouts?
-
-### 2. Block compiler location
-
-Where does the block compiler module live?
-
-**Proposed:** `src/compiler/blockCompiler.ts` in tycoslide core. It's a shared utility used by markdown-aware layouts and by the document compiler. NOT inside layouts, NOT inside the CLI.
+**Resolution:** `src/compiler/blockCompiler.ts` in tycoslide core. It's a shared utility used by markdown-aware layouts and by the document compiler.
 
 ---
 
@@ -672,49 +679,53 @@ Where does the block compiler module live?
 
 Sub-phases in implementation order:
 
-**3a: Block compiler** — markdown string → ComponentNode[]
-- New remark pipeline that identifies block-level nodes (paragraphs, lists, headings, tables, images)
-- Reuses the `text()` DSL component for text-containing blocks (paragraphs, lists, headings) — does NOT share internal parsing logic from `text.ts`
+**3a: Block compiler — DONE** (`src/compiler/blockCompiler.ts`)
+- Remark pipeline identifies block-level nodes (paragraphs, lists, headings, tables, images)
+- Reuses the `text()` DSL component for text-containing blocks
 - Calls `table()` and `image()` DSL components for non-text blocks
 - Returns `ComponentNode[]` — callers decide how to arrange them
 - Unit tests for each block type
 
-**3b: File parser** — slide splitting and frontmatter extraction
+**3b: File parser — DONE** (`src/compiler/slideParser.ts`)
 - Line-based state machine splits on `---` boundaries (structural detection, like Slidev)
 - Frontmatter identified by position between `---` pairs, NEVER by guessing YAML
-- Blank line after `---` = no frontmatter (body starts); non-blank = frontmatter until closing `---`
 - Code fence awareness: `---` inside fenced code blocks is not a separator
-- Extract YAML frontmatter, `#` title, `Note:` speaker notes, `::slot::` content
-- **Error handling:**
-  - Invalid YAML in a `---` pair: throws `FrontmatterParseError` (fail-fast — we know it's supposed to be YAML)
-  - Valid YAML but not an object (scalar, array): treated as empty frontmatter
-  - Unterminated frontmatter (no closing `---`): treated as body content (graceful)
-  - Missing `layout:` field: not validated here (3c Zod schemas)
-  - Missing global frontmatter / `theme:`: not validated here (3d or later)
+- Extracts YAML frontmatter, `#` title, `Note:` speaker notes, `::slot::` content
+- Error handling: `FrontmatterParseError` for invalid YAML, graceful handling of edge cases
 
-**3c: Zod schemas** — runtime validation for all layouts
-- Add Zod schemas to each Materialize `LayoutDefinition`
-- Validate frontmatter params against schema
-- Error messages with field names and suggestions
+**3c: Zod schemas — DONE** (all Materialize `LayoutDefinition`s have `schema` field)
+- Zod schemas on every registered layout
+- `validateLayoutProps()` validates frontmatter params against schema
+- Error messages with field names and expected types
 
-**3d: Layout parameter mapping** — frontmatter + content → validated params
-- Map extracted data to layout's expected param types
-- Handle title extraction (Option C: heading or frontmatter)
-- Handle slot mapping for `twoColumn`
+**3d: Layout parameter mapping — DONE** (`src/compiler/documentCompiler.ts`)
+- Generic parameter mapping — no layout-specific logic
+- Frontmatter fields pass through, `#` heading → `title`, `::slot::` → named params, markdown body → `body` param
+- Zod validation catches mismatches
+- `compileDocument(source, options)` → `Presentation`
 
-**3e: Asset resolution** — `asset:dot.path` → file paths
-- Dot-path resolver for theme assets object
+**3e: Asset resolution — DONE** (`src/compiler/assetResolver.ts`)
+- `asset:dot.path` prefix convention for resolving theme assets in frontmatter
+- Recursive traversal handles nested objects/arrays (e.g., `cards: [{image: "asset:..."}]`)
+- `CompileOptions.assets?: Record<string, unknown>` passed to compiler
 - Error messages listing available assets on unknown path
+- 17 unit tests + 3 integration tests
 
 **3f: Component directives** — `:::card` etc.
 - Map `containerDirective` mdast nodes to `CardProps` and other data types
 - Validate directive attributes against component schemas
+- `remarkDirective` plugin already wired into blockCompiler.ts — needs dispatch handler
 
 **3g: Scalar-only layout migration**
 - Create `tableLayout`, `diagramLayout` (TypeScript-only)
 - Extend `imageLayout` with `description?`
-- Redesign `twoColumnLayout` for markdown strings
 - Deprecate `contentLayout`
+
+**DSL enhancement: `plainText()` function** (can be done anytime)
+- New DSL function that creates a `TextNode` directly, bypassing markdown parsing
+- For labels and structural text: eyebrows, attributions, captions, slide numbers
+- ~15 lines, zero renderer changes — returns standard `TextNode` with single `NormalizedRun`
+- Layouts would use `plainText(eyebrow)` instead of `text(eyebrow)` for non-markdown fields
 
 ### Phase 4: CLI / DX
 
@@ -737,8 +748,12 @@ Sub-phases in implementation order:
 - [Deckset Configuration](https://docs.deckset.com/English.lproj/Customization/01-configuration-commands.html) — Per-slide directive syntax
 
 ### tycoslide Internal
-- [Inline Markdown Component](./markdown.md) — Phase 0-1 design (implemented)
+- [Inline Markdown Component](./markdown.md) — Phase 1 design (implemented)
+- [CLI Architecture](./cli-architecture.md) — Phase 4 design
 - Materialize layouts: `clients/materialize/theme/src/layouts.ts`
 - Registry: `src/core/registry.ts`
 - Presentation API: `src/presentation.ts`
-- Block compiler (Phase 3): `src/compiler/blockCompiler.ts` (planned)
+- Block compiler: `src/compiler/blockCompiler.ts` (implemented)
+- Slide parser: `src/compiler/slideParser.ts` (implemented)
+- Document compiler: `src/compiler/documentCompiler.ts` (implemented)
+- Asset resolver: `src/compiler/assetResolver.ts` (implemented)

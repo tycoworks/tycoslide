@@ -23,3 +23,6 @@ export { validateLayoutProps } from './core/registry.js';
 
 // Document compiler (markdown file → Presentation)
 export { compileDocument, type CompileOptions } from './compiler/documentCompiler.js';
+
+// Asset resolution
+export { ASSET_PREFIX } from './compiler/assetResolver.js';

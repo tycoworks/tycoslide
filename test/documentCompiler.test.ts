@@ -314,4 +314,72 @@ title: Has Title
       );
     });
   });
+
+  describe('asset resolution', () => {
+    const testAssets = {
+      images: { photo: '/resolved/photo.png' },
+      icons: { star: '/resolved/star.svg' },
+    };
+
+    it('should resolve asset references in frontmatter', () => {
+      const md = HEADER + `---
+layout: body
+title: asset:images.photo
+---
+
+Some body text`;
+      compileDocument(md, { theme: mockTheme(), assets: testAssets });
+      assert.strictEqual(receivedProps.length, 1);
+      assert.strictEqual(receivedProps[0].title, '/resolved/photo.png');
+    });
+
+    it('should throw when asset ref used without assets option', () => {
+      const md = HEADER + `---
+layout: body
+title: asset:images.photo
+---
+
+Body`;
+      assert.throws(
+        () => compileDocument(md, makeOptions()),
+        (err: any) => {
+          assert.ok(err.message.includes('no assets provided'));
+          return true;
+        },
+      );
+    });
+
+    it('should resolve asset references in nested arrays', () => {
+      // Register a layout that accepts cards with image fields
+      const cardLayout = {
+        name: 'cards',
+        description: 'Card layout',
+        schema: z.object({
+          title: z.string(),
+          cards: z.array(z.object({ image: z.string(), title: z.string() })),
+        }),
+        render: (props: any): Slide => {
+          receivedProps.push(props);
+          const slide: Slide = { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
+          renderedSlides.push(slide);
+          return slide;
+        },
+      };
+      layoutRegistry.register(cardLayout);
+
+      const md = HEADER + `---
+layout: cards
+title: My Cards
+cards:
+  - image: "asset:images.photo"
+    title: Card A
+  - image: "asset:icons.star"
+    title: Card B
+---`;
+      compileDocument(md, { theme: mockTheme(), assets: testAssets });
+      assert.strictEqual(receivedProps.length, 1);
+      assert.strictEqual(receivedProps[0].cards[0].image, '/resolved/photo.png');
+      assert.strictEqual(receivedProps[0].cards[1].image, '/resolved/star.svg');
+    });
+  });
 });
