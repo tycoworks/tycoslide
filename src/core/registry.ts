@@ -4,6 +4,7 @@
 import { NODE_TYPE, type ElementNode, type ComponentNode, type SlideNode } from './nodes.js';
 import type { Theme } from './types.js';
 import type { Slide } from '../presentation.js';
+import type { ZodType } from 'zod';
 
 // Re-export ComponentNode for convenience
 export type { ComponentNode } from './nodes.js';
@@ -151,17 +152,49 @@ export function isComponentNode(node: unknown): node is ComponentNode {
 // LAYOUT REGISTRY
 // ============================================
 
+/** Values that can round-trip through YAML frontmatter. */
+export type ScalarValue = string | number | boolean;
+
+/** Recursive type for layout props — only YAML-serializable values allowed. */
+export type ScalarProps = {
+  [key: string]: ScalarValue | ScalarValue[] | ScalarProps | ScalarProps[] | undefined;
+};
+
 /**
  * A named, described, typed slide factory.
- * TParams provides compile-time type safety for the render function.
+ * Registered layouts should only use ScalarProps-compatible types
+ * (strings, numbers, booleans, arrays of scalars, nested scalar objects).
+ * The schema field provides runtime validation via Zod.
+ * Non-scalar layouts (contentLayout, twoColumnRawLayout) should NOT
+ * use this type — they're plain objects outside the registry.
  */
 export interface LayoutDefinition<TProps = Record<string, unknown>> {
   name: string;
   description: string;
+  schema: ZodType<TProps>;
   render: (props: TProps) => Slide;
 }
 
 export const layoutRegistry = new Registry<LayoutDefinition<any>>('Layout', 'render');
+
+/**
+ * Validate raw frontmatter props against a layout's Zod schema.
+ * @returns The validated and typed props
+ * @throws Error with formatted message on validation failure
+ */
+export function validateLayoutProps<TProps>(
+  layout: LayoutDefinition<TProps>,
+  raw: Record<string, unknown>,
+): TProps {
+  const result = layout.schema.safeParse(raw);
+  if (result.success) {
+    return result.data;
+  }
+  const issues = result.error.issues
+    .map(i => `  - ${i.path.join('.')}: ${i.message}`)
+    .join('\n');
+  throw new Error(`Layout '${layout.name}' validation failed:\n${issues}`);
+}
 
 // ============================================
 // DSL HELPER

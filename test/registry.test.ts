@@ -1,5 +1,6 @@
 import { describe, test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { z } from 'zod';
 import { Registry, componentRegistry, isComponentNode, component, type LayoutDefinition } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import type { Slide } from '../src/presentation.js';
@@ -21,6 +22,7 @@ function makeLayout<T>(name: string, render: (params: T) => Slide): LayoutDefini
   return {
     name,
     description: `Test layout: ${name}`,
+    schema: z.record(z.string(), z.unknown()) as any,
     render,
   };
 }

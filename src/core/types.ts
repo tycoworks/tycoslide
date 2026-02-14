@@ -32,6 +32,9 @@ export const GAP = {
 
 export type GapSize = typeof GAP[keyof typeof GAP];
 
+/** All GAP values as a tuple — useful for Zod enum schemas */
+export const GAP_VALUES = Object.values(GAP) as [GapSize, ...GapSize[]];
+
 export const DIRECTION = {
   ROW: 'row',
   COLUMN: 'column',
@@ -327,6 +330,9 @@ export const TEXT_STYLE = {
 } as const;
 
 export type TextStyleName = typeof TEXT_STYLE[keyof typeof TEXT_STYLE];
+
+/** All TEXT_STYLE values as a tuple — useful for Zod enum schemas */
+export const TEXT_STYLE_VALUES = Object.values(TEXT_STYLE) as [TextStyleName, ...TextStyleName[]];
 
 export interface TextStyle {
   fontFamily: FontFamily;
