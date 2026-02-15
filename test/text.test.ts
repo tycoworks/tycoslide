@@ -3,7 +3,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { parseMarkdown, mdastToRuns, text, plainText, TEXT_COMPONENT, PLAIN_TEXT_COMPONENT, MDAST } from '../src/dsl/text.js';
+import { parseMarkdown, mdastToRuns, markdown, text, MARKDOWN_COMPONENT, TEXT_COMPONENT, MDAST } from '../src/dsl/text.js';
 import { componentRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import type { NormalizedRun, HighlightScheme } from '../src/core/types.js';
@@ -208,37 +208,37 @@ describe('Text', () => {
     });
   });
 
-  describe('text() DSL function', () => {
+  describe('markdown() DSL function', () => {
     it('should create a component node with correct type', () => {
-      const node = text('Hello **world**');
+      const node = markdown('Hello **world**');
       assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-      assert.strictEqual(node.componentName, TEXT_COMPONENT);
+      assert.strictEqual(node.componentName, MARKDOWN_COMPONENT);
       assert.strictEqual(node.props.content, 'Hello **world**');
     });
 
     it('should pass props correctly', () => {
-      const node = text('Content', { style: 'body' as any, color: 'FF0000' });
+      const node = markdown('Content', { style: 'body' as any, color: 'FF0000' });
       assert.strictEqual(node.props.content, 'Content');
       assert.strictEqual(node.props.style, 'body');
       assert.strictEqual(node.props.color, 'FF0000');
     });
   });
 
-  describe('component expansion', () => {
+  describe('markdown expansion', () => {
     const theme = themeWithHighlights();
 
     it('should auto-register on import', () => {
-      assert.ok(componentRegistry.has('text'));
+      assert.ok(componentRegistry.has('markdown'));
     });
 
     it('should expand to a TextNode', async () => {
-      const node = text('Hello **world**');
+      const node = markdown('Hello **world**');
       const expanded = await componentRegistry.expand(node, { theme });
       assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
     });
 
     it('should expand bold markdown to bold runs', async () => {
-      const node = text('Normal **bold** text');
+      const node = markdown('Normal **bold** text');
       const expanded = await componentRegistry.expand(node, { theme }) as any;
       const runs = expanded.content as NormalizedRun[];
       assert.strictEqual(runs.length, 3);
@@ -249,7 +249,7 @@ describe('Text', () => {
     });
 
     it('should expand highlight directives using theme', async () => {
-      const node = text(':teal[highlighted]');
+      const node = markdown(':teal[highlighted]');
       const expanded = await componentRegistry.expand(node, { theme }) as any;
       const runs = expanded.content as NormalizedRun[];
       assert.strictEqual(runs.length, 1);
@@ -257,21 +257,21 @@ describe('Text', () => {
     });
 
     it('should apply style and color props', async () => {
-      const node = text('text', { style: 'body' as any, color: 'AABBCC' });
+      const node = markdown('text', { style: 'body' as any, color: 'AABBCC' });
       const expanded = await componentRegistry.expand(node, { theme }) as any;
       assert.strictEqual(expanded.style, 'body');
       assert.strictEqual(expanded.color, 'AABBCC');
     });
 
     it('should default hAlign to LEFT and vAlign to TOP', async () => {
-      const node = text('text');
+      const node = markdown('text');
       const expanded = await componentRegistry.expand(node, { theme }) as any;
       assert.strictEqual(expanded.hAlign, 'left');
       assert.strictEqual(expanded.vAlign, 'top');
     });
 
     it('should apply bulletColor to bullet runs', async () => {
-      const node = text('- First\n- Second', { bulletColor: 'FF0000' });
+      const node = markdown('- First\n- Second', { bulletColor: 'FF0000' });
       const expanded = await componentRegistry.expand(node, { theme }) as any;
       const runs = expanded.content as NormalizedRun[];
       assert.deepStrictEqual(runs[0].bullet, { color: 'FF0000' });
@@ -279,7 +279,7 @@ describe('Text', () => {
     });
 
     it('should expand full markdown document', async () => {
-      const node = text(`
+      const node = markdown(`
 Intro with **bold** and :teal[highlight].
 
 - First bullet
@@ -304,31 +304,31 @@ Conclusion.
     });
   });
 
-  describe('plainText() DSL function', () => {
-    it('should create a component node with plainText type', () => {
-      const node = plainText('ARCHITECTURE');
+  describe('text() DSL function', () => {
+    it('should create a component node with text type', () => {
+      const node = text('ARCHITECTURE');
       assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-      assert.strictEqual(node.componentName, PLAIN_TEXT_COMPONENT);
+      assert.strictEqual(node.componentName, TEXT_COMPONENT);
       assert.strictEqual(node.props.content, 'ARCHITECTURE');
     });
 
     it('should pass props correctly', () => {
-      const node = plainText('Label', { style: 'eyebrow' as any, color: 'FF0000' });
+      const node = text('Label', { style: 'eyebrow' as any, color: 'FF0000' });
       assert.strictEqual(node.props.content, 'Label');
       assert.strictEqual(node.props.style, 'eyebrow');
       assert.strictEqual(node.props.color, 'FF0000');
     });
   });
 
-  describe('plainText expansion', () => {
+  describe('text() expansion (plain text)', () => {
     const theme = themeWithHighlights();
 
     it('should auto-register on import', () => {
-      assert.ok(componentRegistry.has('plainText'));
+      assert.ok(componentRegistry.has('text'));
     });
 
     it('should expand to a TextNode with single run', async () => {
-      const node = plainText('Hello world');
+      const node = text('Hello world');
       const expanded = await componentRegistry.expand(node, { theme }) as any;
       assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
       const runs = expanded.content as NormalizedRun[];
@@ -337,7 +337,7 @@ Conclusion.
     });
 
     it('should NOT parse markdown — bold stays literal', async () => {
-      const node = plainText('**not bold**');
+      const node = text('**not bold**');
       const expanded = await componentRegistry.expand(node, { theme }) as any;
       const runs = expanded.content as NormalizedRun[];
       assert.strictEqual(runs.length, 1);
@@ -346,7 +346,7 @@ Conclusion.
     });
 
     it('should NOT parse directives — stays literal', async () => {
-      const node = plainText(':teal[not highlighted]');
+      const node = text(':teal[not highlighted]');
       const expanded = await componentRegistry.expand(node, { theme }) as any;
       const runs = expanded.content as NormalizedRun[];
       assert.strictEqual(runs.length, 1);
@@ -355,7 +355,7 @@ Conclusion.
     });
 
     it('should apply style, color, and alignment', async () => {
-      const node = plainText('Label', { style: 'body' as any, color: 'AABBCC', hAlign: 'center' as any, vAlign: 'middle' as any });
+      const node = text('Label', { style: 'body' as any, color: 'AABBCC', hAlign: 'center' as any, vAlign: 'middle' as any });
       const expanded = await componentRegistry.expand(node, { theme }) as any;
       assert.strictEqual(expanded.style, 'body');
       assert.strictEqual(expanded.color, 'AABBCC');
@@ -364,7 +364,7 @@ Conclusion.
     });
 
     it('should default hAlign to LEFT and vAlign to TOP', async () => {
-      const node = plainText('Label');
+      const node = text('Label');
       const expanded = await componentRegistry.expand(node, { theme }) as any;
       assert.strictEqual(expanded.hAlign, 'left');
       assert.strictEqual(expanded.vAlign, 'top');

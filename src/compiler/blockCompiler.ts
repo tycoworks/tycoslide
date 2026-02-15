@@ -4,14 +4,14 @@
 // an independent ComponentNode by calling the appropriate DSL function.
 //
 // This does NOT share internal parsing logic with text.ts — it reuses
-// the text(), table(), and image() DSL components directly.
+// the markdown(), table(), and image() DSL components directly.
 
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkDirective from 'remark-directive';
 import remarkGfm from 'remark-gfm';
 import type { Root, RootContent, Heading, Paragraph, Table as MdastTable, PhrasingContent, Code } from 'mdast';
-import { text } from '../dsl/text.js';
+import { markdown } from '../dsl/text.js';
 import { MDAST } from '../core/mdast.js';
 import { table } from '../dsl/table.js';
 import { image } from '../dsl/primitives.js';
@@ -48,9 +48,9 @@ const HEADING_STYLE: Record<number, TextStyleName> = {
  * Compile a markdown string into an array of ComponentNodes.
  *
  * Each block-level element becomes an independent node:
- * - Paragraphs → text()
- * - Lists → text()
- * - Headings → text() with appropriate TEXT_STYLE
+ * - Paragraphs → markdown()
+ * - Lists → markdown()
+ * - Headings → markdown() with appropriate TEXT_STYLE
  * - Tables → table() with headerRows: 1
  * - Images (standalone) → image()
  *
@@ -117,7 +117,7 @@ function compileParagraph(node: Paragraph, source: string): ComponentNode {
  */
 function compileTextBlock(node: RootContent, source: string): ComponentNode {
   const raw = extractSource(node, source);
-  return text(raw);
+  return markdown(raw);
 }
 
 /**
@@ -128,7 +128,7 @@ function compileHeading(node: Heading, source: string): ComponentNode {
   const raw = extractSource(node, source);
   const content = raw.replace(/^#{1,6}\s+/, '');
   const style = HEADING_STYLE[node.depth] ?? TEXT_STYLE.H3;
-  return text(content, { style });
+  return markdown(content, { style });
 }
 
 /**

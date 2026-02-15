@@ -6,7 +6,7 @@ import { componentRegistry, component, type ExpansionContext } from '../core/reg
 import { stack, column } from './containers.js';
 import { shape } from './primitives.js';
 import { image as imageNode } from './primitives.js';
-import { text, plainText } from './text.js';
+import { markdown, text } from './text.js';
 import type { SlideNode } from '../core/nodes.js';
 import type { TextStyleName, GapSize } from '../core/types.js';
 import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE, SIZE } from '../core/types.js';
@@ -98,9 +98,9 @@ function expandQuote(props: QuoteProps, context: ExpansionContext): SlideNode {
   if (imagePath) {
     children.push(imageNode(imagePath));
   }
-  children.push(text(quoteText, quoteStyle ? { style: quoteStyle } : undefined));
+  children.push(markdown(quoteText, quoteStyle ? { style: quoteStyle } : undefined));
   if (attribution) {
-    children.push(plainText(attribution, { style: attributionStyle, hAlign: HALIGN.RIGHT }));
+    children.push(text(attribution, { style: attributionStyle, hAlign: HALIGN.RIGHT }));
   }
 
   const contentLayer = column(

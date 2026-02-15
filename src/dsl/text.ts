@@ -1,4 +1,4 @@
-// Text Component
+// Text Components
 // Parses markdown string via unified/remark, transforms MDAST to NormalizedRun[],
 // and expands to a TextNode.
 
@@ -19,6 +19,9 @@ export { MDAST } from '../core/mdast.js';
 // ============================================
 // CONSTANTS
 // ============================================
+
+/** Component name for markdown */
+export const MARKDOWN_COMPONENT = 'markdown' as const;
 
 /** Component name for text */
 export const TEXT_COMPONENT = 'text' as const;
@@ -184,7 +187,7 @@ function transformInline(
 // EXPANSION FUNCTION
 // ============================================
 
-function expandText(props: TextComponentProps, context: { theme: any }): ElementNode {
+function expandMarkdown(props: TextComponentProps, context: { theme: any }): ElementNode {
   const tree = parseMarkdown(props.content);
   const runs = mdastToRuns(tree, context.theme.highlights);
 
@@ -214,29 +217,26 @@ function expandText(props: TextComponentProps, context: { theme: any }): Element
 // COMPONENT REGISTRATION
 // ============================================
 
-componentRegistry.register({ name: TEXT_COMPONENT, expand: expandText });
+componentRegistry.register({ name: MARKDOWN_COMPONENT, expand: expandMarkdown });
 
 /**
- * Create a text component node.
+ * Create a markdown text component node.
  *
  * @example
  * ```typescript
- * text("**Bold** and :teal[highlighted] text.")
- * text("- First bullet\n- Second bullet", { style: TEXT_STYLE.BODY })
+ * markdown("**Bold** and :teal[highlighted] text.")
+ * markdown("- First bullet\n- Second bullet", { style: TEXT_STYLE.BODY })
  * ```
  */
-export function text(content: string, props?: TextProps): ComponentNode<TextComponentProps> {
-  return component(TEXT_COMPONENT, { content, ...props });
+export function markdown(content: string, props?: TextProps): ComponentNode<TextComponentProps> {
+  return component(MARKDOWN_COMPONENT, { content, ...props });
 }
 
 // ============================================
 // PLAIN TEXT (no markdown parsing)
 // ============================================
 
-/** Component name for plain text */
-export const PLAIN_TEXT_COMPONENT = 'plainText' as const;
-
-function expandPlainText(props: TextComponentProps, _context: { theme: any }): ElementNode {
+function expandText(props: TextComponentProps, _context: { theme: any }): ElementNode {
   const runs: NormalizedRun[] = [{ text: props.content }];
 
   return {
@@ -250,7 +250,7 @@ function expandPlainText(props: TextComponentProps, _context: { theme: any }): E
   };
 }
 
-componentRegistry.register({ name: PLAIN_TEXT_COMPONENT, expand: expandPlainText });
+componentRegistry.register({ name: TEXT_COMPONENT, expand: expandText });
 
 /**
  * Create a plain text component node (no markdown parsing).
@@ -260,10 +260,10 @@ componentRegistry.register({ name: PLAIN_TEXT_COMPONENT, expand: expandPlainText
  *
  * @example
  * ```typescript
- * plainText("ARCHITECTURE", { style: TEXT_STYLE.EYEBROW })
- * plainText("— Sam Spelsberg, CTO", { style: TEXT_STYLE.SMALL })
+ * text("ARCHITECTURE", { style: TEXT_STYLE.EYEBROW })
+ * text("— Sam Spelsberg, CTO", { style: TEXT_STYLE.SMALL })
  * ```
  */
-export function plainText(content: string, props?: TextProps): ComponentNode<TextComponentProps> {
-  return component(PLAIN_TEXT_COMPONENT, { content, ...props });
+export function text(content: string, props?: TextProps): ComponentNode<TextComponentProps> {
+  return component(TEXT_COMPONENT, { content, ...props });
 }

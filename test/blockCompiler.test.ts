@@ -4,6 +4,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { compileBlocks } from '../src/compiler/blockCompiler.js';
+import { MARKDOWN_COMPONENT } from '../src/dsl/text.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import { TEXT_STYLE } from '../src/core/types.js';
 
@@ -17,15 +18,15 @@ describe('Block Compiler', () => {
     it('should compile a single paragraph to a text() node', () => {
       const nodes = compileBlocks('Hello world');
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, 'text');
+      assert.strictEqual(nodes[0].componentName, MARKDOWN_COMPONENT);
       assert.strictEqual(props(nodes, 0).content, 'Hello world');
     });
 
     it('should compile multiple paragraphs to separate text() nodes', () => {
       const nodes = compileBlocks('First paragraph.\n\nSecond paragraph.');
       assert.strictEqual(nodes.length, 2);
-      assert.strictEqual(nodes[0].componentName, 'text');
-      assert.strictEqual(nodes[1].componentName, 'text');
+      assert.strictEqual(nodes[0].componentName, MARKDOWN_COMPONENT);
+      assert.strictEqual(nodes[1].componentName, MARKDOWN_COMPONENT);
     });
 
     it('should preserve inline markdown in paragraphs', () => {
@@ -45,7 +46,7 @@ describe('Block Compiler', () => {
     it('should compile an unordered list to a text() node', () => {
       const nodes = compileBlocks('- First\n- Second\n- Third');
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, 'text');
+      assert.strictEqual(nodes[0].componentName, MARKDOWN_COMPONENT);
       assert.ok(props(nodes, 0).content.includes('- First'));
       assert.ok(props(nodes, 0).content.includes('- Third'));
     });
@@ -53,15 +54,15 @@ describe('Block Compiler', () => {
     it('should compile an ordered list to a text() node', () => {
       const nodes = compileBlocks('1. First\n2. Second');
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, 'text');
+      assert.strictEqual(nodes[0].componentName, MARKDOWN_COMPONENT);
       assert.ok(props(nodes, 0).content.includes('1. First'));
     });
 
     it('should compile paragraph + list as separate nodes', () => {
       const nodes = compileBlocks('Intro text.\n\n- Bullet one\n- Bullet two');
       assert.strictEqual(nodes.length, 2);
-      assert.strictEqual(nodes[0].componentName, 'text');
-      assert.strictEqual(nodes[1].componentName, 'text');
+      assert.strictEqual(nodes[0].componentName, MARKDOWN_COMPONENT);
+      assert.strictEqual(nodes[1].componentName, MARKDOWN_COMPONENT);
       assert.ok(props(nodes, 0).content.includes('Intro'));
       assert.ok(props(nodes, 1).content.includes('- Bullet'));
     });
@@ -71,7 +72,7 @@ describe('Block Compiler', () => {
     it('should compile ## heading to text() with H2 style', () => {
       const nodes = compileBlocks('## Subheading');
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, 'text');
+      assert.strictEqual(nodes[0].componentName, MARKDOWN_COMPONENT);
       assert.strictEqual(props(nodes, 0).content, 'Subheading');
       assert.strictEqual(props(nodes, 0).style, TEXT_STYLE.H2);
     });
@@ -157,17 +158,17 @@ describe('Block Compiler', () => {
       const nodes = compileBlocks(md);
       assert.strictEqual(nodes.length, 3);
       assert.strictEqual(props(nodes, 0).style, TEXT_STYLE.H2);
-      assert.strictEqual(nodes[1].componentName, 'text');
-      assert.strictEqual(nodes[2].componentName, 'text');
+      assert.strictEqual(nodes[1].componentName, MARKDOWN_COMPONENT);
+      assert.strictEqual(nodes[2].componentName, MARKDOWN_COMPONENT);
     });
 
     it('should handle paragraph + image + paragraph', () => {
       const md = 'Before image.\n\n![](pic.png)\n\nAfter image.';
       const nodes = compileBlocks(md);
       assert.strictEqual(nodes.length, 3);
-      assert.strictEqual(nodes[0].componentName, 'text');
+      assert.strictEqual(nodes[0].componentName, MARKDOWN_COMPONENT);
       assert.strictEqual(nodes[1].componentName, 'image');
-      assert.strictEqual(nodes[2].componentName, 'text');
+      assert.strictEqual(nodes[2].componentName, MARKDOWN_COMPONENT);
     });
 
     it('should return empty array for empty input', () => {
@@ -179,8 +180,8 @@ describe('Block Compiler', () => {
       const md = 'Before\n\n---\n\nAfter';
       const nodes = compileBlocks(md);
       assert.strictEqual(nodes.length, 2);
-      assert.strictEqual(nodes[0].componentName, 'text');
-      assert.strictEqual(nodes[1].componentName, 'text');
+      assert.strictEqual(nodes[0].componentName, MARKDOWN_COMPONENT);
+      assert.strictEqual(nodes[1].componentName, MARKDOWN_COMPONENT);
     });
 
     it('should throw on blockquote', () => {

@@ -42,10 +42,10 @@ export {
 
 // Text (markdown-powered + plain)
 export {
+  markdown,
   text,
-  plainText,
+  MARKDOWN_COMPONENT,
   TEXT_COMPONENT,
-  PLAIN_TEXT_COMPONENT,
   MDAST,
   type TextProps,
   type TextComponentProps,

@@ -5,6 +5,7 @@
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import {
+  markdown,
   text,
   image,
   line,
@@ -15,6 +16,7 @@ import {
   stack,
   grid,
   table,
+  MARKDOWN_COMPONENT,
   TEXT_COMPONENT,
   IMAGE_COMPONENT,
   LINE_COMPONENT,
@@ -56,32 +58,32 @@ async function expand(node: any) {
 // TEXT FACTORY FUNCTIONS
 // ============================================
 
-describe('text()', () => {
+describe('markdown()', () => {
   test('returns ComponentNode', () => {
-    const node = text('hello');
+    const node = markdown('hello');
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-    assert.strictEqual(node.componentName, TEXT_COMPONENT);
+    assert.strictEqual(node.componentName, MARKDOWN_COMPONENT);
   });
 
   test('expands to correct NODE_TYPE', async () => {
-    const node = await expand(text('hello')) as TextNode;
+    const node = await expand(markdown('hello')) as TextNode;
     assert.strictEqual(node.type, NODE_TYPE.TEXT);
   });
 
   test('sets content correctly after expansion', async () => {
-    const node = await expand(text('hello world')) as TextNode;
+    const node = await expand(markdown('hello world')) as TextNode;
     const runs = node.content as any[];
     assert.strictEqual(runs[0].text, 'hello world');
   });
 
   test('handles empty string content', async () => {
-    const node = await expand(text('')) as TextNode;
+    const node = await expand(markdown('')) as TextNode;
     assert.ok(Array.isArray(node.content));
     assert.strictEqual((node.content as any[]).length, 0);
   });
 
   test('applies explicit alignment defaults', async () => {
-    const node = await expand(text('test')) as TextNode;
+    const node = await expand(markdown('test')) as TextNode;
     assert.strictEqual(node.style, undefined);
     assert.strictEqual(node.color, undefined);
     assert.strictEqual(node.hAlign, HALIGN.LEFT);   // Explicit default
@@ -89,27 +91,27 @@ describe('text()', () => {
   });
 
   test('applies style prop', async () => {
-    const node = await expand(text('test', { style: TEXT_STYLE.H1 })) as TextNode;
+    const node = await expand(markdown('test', { style: TEXT_STYLE.H1 })) as TextNode;
     assert.strictEqual(node.style, TEXT_STYLE.H1);
   });
 
   test('applies color prop', async () => {
-    const node = await expand(text('test', { color: 'FF0000' })) as TextNode;
+    const node = await expand(markdown('test', { color: 'FF0000' })) as TextNode;
     assert.strictEqual(node.color, 'FF0000');
   });
 
   test('applies hAlign prop', async () => {
-    const node = await expand(text('test', { hAlign: HALIGN.CENTER })) as TextNode;
+    const node = await expand(markdown('test', { hAlign: HALIGN.CENTER })) as TextNode;
     assert.strictEqual(node.hAlign, HALIGN.CENTER);
   });
 
   test('applies vAlign prop', async () => {
-    const node = await expand(text('test', { vAlign: VALIGN.MIDDLE })) as TextNode;
+    const node = await expand(markdown('test', { vAlign: VALIGN.MIDDLE })) as TextNode;
     assert.strictEqual(node.vAlign, VALIGN.MIDDLE);
   });
 
   test('applies all props together', async () => {
-    const node = await expand(text('test', {
+    const node = await expand(markdown('test', {
       style: TEXT_STYLE.BODY,
       color: '00FF00',
       hAlign: HALIGN.RIGHT,

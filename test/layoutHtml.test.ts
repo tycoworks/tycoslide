@@ -4,7 +4,7 @@
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import { generateLayoutHTML } from '../dist/layout/layoutHtml.js';
-import { text, row, column, image, line, stack, shape } from '../dist/dsl/index.js';
+import { markdown, text, row, column, image, line, stack, shape } from '../dist/dsl/index.js';
 import { componentRegistry } from '../dist/core/registry.js';
 import { Bounds } from '../dist/core/bounds.js';
 import { HALIGN, VALIGN, DIRECTION, SIZE, SHAPE } from '../dist/core/types.js';
@@ -140,20 +140,20 @@ describe('HTML Measurement Generation', () => {
 
   describe('Bullet rendering', () => {
     test('bullet text generates padding-left', async () => {
-      const node = text('- Item');
+      const node = markdown('- Item');
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('padding-left:'), 'Bullet should have padding-left');
     });
 
     test('bullet includes bullet character', async () => {
-      const node = text('- Item');
+      const node = markdown('- Item');
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('•'), 'Bullet should include bullet character');
     });
 
     test('multi-run bullet renders all runs in one div', async () => {
       // "- **Bold:** plain text" produces two runs: bold with bullet, plain without
-      const node = text('- **Bold:** plain text');
+      const node = markdown('- **Bold:** plain text');
       const { html } = await genHTML(node, bounds, mockTheme);
       // The bullet div should contain both the bold and plain spans
       const bulletDivMatch = html.match(/<div[^>]*padding-left[^>]*>(.*?)<\/div>/);
@@ -166,13 +166,13 @@ describe('HTML Measurement Generation', () => {
 
   describe('Paragraph spacing', () => {
     test('breakLine generates block spacer div with height: 1em', async () => {
-      const node = text('Para 1\n\nPara 2');
+      const node = markdown('Para 1\n\nPara 2');
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('height:1em'), 'breakLine should generate a spacer div with height:1em');
     });
 
     test('breakLine does not generate br tag', async () => {
-      const node = text('Para 1\n\nPara 2');
+      const node = markdown('Para 1\n\nPara 2');
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(!html.includes('<br'), 'breakLine should not use <br> — uses block spacer instead');
     });
