@@ -10,11 +10,12 @@ import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkDirective from 'remark-directive';
 import remarkGfm from 'remark-gfm';
-import type { Root, RootContent, Heading, Paragraph, Table as MdastTable, PhrasingContent } from 'mdast';
+import type { Root, RootContent, Heading, Paragraph, Table as MdastTable, PhrasingContent, Code } from 'mdast';
 import { text } from '../dsl/text.js';
 import { MDAST } from '../core/mdast.js';
 import { table } from '../dsl/table.js';
 import { image } from '../dsl/primitives.js';
+import { mermaid } from '../dsl/diagram.js';
 import { TEXT_STYLE } from '../core/types.js';
 import type { TextStyleName } from '../core/types.js';
 import type { ComponentNode } from '../core/registry.js';
@@ -81,9 +82,15 @@ function compileBlock(node: RootContent, source: string): ComponentNode | null {
       return compileHeading(node as Heading, source);
     case MDAST.TABLE:
       return compileTable(node as MdastTable);
-    default:
-      // Skip unsupported block types (thematicBreak, html, code, blockquote, etc.)
+    case MDAST.CODE:
+      return compileMermaidCode(node as Code);
+    case MDAST.THEMATIC_BREAK:
       return null;
+    default:
+      throw new Error(
+        `[tycoslide] compileBlocks: unsupported markdown block type "${node.type}". ` +
+        `Supported: paragraph, list, heading, table, code (mermaid only).`,
+      );
   }
 }
 
@@ -133,6 +140,20 @@ function compileTable(node: MdastTable): ComponentNode {
     row.children.map(cell => extractInlineText(cell.children))
   );
   return table(rows, { headerRows: 1 });
+}
+
+/**
+ * Compile a fenced code block. Only ```mermaid blocks are supported —
+ * other languages throw an error.
+ */
+function compileMermaidCode(node: Code): ComponentNode {
+  if (node.lang !== 'mermaid') {
+    throw new Error(
+      `[tycoslide] compileBlocks: unsupported code block language "${node.lang ?? 'none'}". ` +
+      `Only \`\`\`mermaid is supported in slides.`,
+    );
+  }
+  return mermaid(node.value);
 }
 
 // ============================================

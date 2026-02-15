@@ -1,6 +1,6 @@
 # Markdown Slide Authoring — Design Doc
 
-**Status:** Document compiler Phases 3a–3e complete. Next: 3f (component directives), 3g (scalar-only migration), Phase 4 (CLI).
+**Status:** Document compiler Phases 3a–3g complete, `plainText()` done. Next: 3h (mermaid support), 3f (component directives), Phase 4 (CLI).
 
 ---
 
@@ -390,22 +390,11 @@ All layouts take a single typed params object. **Scalar-compatible** means all p
 | `content` | `ContentProps` | `title`, `eyebrow`, `content: SlideNode[]` | **NO** — programmatic-only escape hatch, to be deprecated |
 | `twoColumnRaw` | `TwoColumnRawProps` | `title`, `eyebrow`, `left: SlideNode[]`, `right: SlideNode[]` | **NO** — programmatic-only for TypeScript callers needing component trees |
 
-### Scalar-Only Migration Plan
+### Scalar-Only Migration — DONE
 
 **`twoColumnLayout`** — DONE. Redesigned to accept `left: string` / `right: string` (markdown strings compiled internally via `compileBlocks`). A separate `twoColumnRawLayout` exists as a programmatic-only layout for TypeScript callers needing `SlideNode[]`.
 
-**`contentLayout`** — Currently accepts `content: SlideNode[]`. This is an escape hatch that lets callers bypass the layout system. 35% of all slides (56 of 160) use it to pass arbitrary component trees. These cluster into patterns that should become their own layouts:
-
-| Pattern | Count | New Layout |
-|---------|-------|------------|
-| Text + Diagram | 14 | `diagramLayout` (TypeScript-only, diagrams stay imperative) |
-| Text + Table | 7 | `tableLayout` with `rows: TextContent[][]` |
-| Text + Card Row | 8 | Extend existing `cardLayout` flexibility |
-| Text + Image | 3 | Extend `imageLayout` with `description?` |
-| Multi-block text | 4 | Use `statementLayout` |
-| Shared slides | 7 uses | Each becomes its own layout or uses existing layouts |
-
-Once these are covered, `contentLayout` can be deprecated.
+**`contentLayout` and `twoColumnRawLayout`** — Remain as programmatic-only escape hatches for TypeScript callers. No migration needed — all scalar layouts now exist, and `compileBlocks()` bridges markdown strings to component trees (handling paragraphs, lists, tables, images, and mermaid diagrams). The original plan to create `tableLayout`/`diagramLayout` is unnecessary because `bodyLayout` already uses `compileBlocks()` which handles GFM tables and (with Phase 3h) mermaid code blocks natively.
 
 ### Frontmatter Mapping (Phase 3)
 
@@ -424,8 +413,8 @@ When the markdown compiler is built, it will map frontmatter + content to layout
 | `numberedCard` | `eyebrow`, `intro`, `cards: CardProps[]` | Title from `#` (same as card) |
 | `imageCards` | `eyebrow`, `image`, `cards: CardProps[]`, `reverse?` | Title from `#` (same as card) |
 | `customerStory` | `eyebrow`, `logo?`, `attribution`, `reverse?` | Title from `#`, `::intro::`, `::bullets::`, `::quote::` → slots |
-| `table` | `eyebrow`, `intro?`, table options | Title from `#`, markdown table → `rows` (future) |
-| `diagram` | `eyebrow`, `description?` | Title from `#`, diagram (TypeScript-only) |
+| `content` | `eyebrow` | Title from `#`, programmatic `content: SlideNode[]` (TypeScript-only) |
+| `twoColumnRaw` | `eyebrow` | Title from `#`, programmatic `left/right: SlideNode[]` (TypeScript-only) |
 
 ---
 
@@ -620,9 +609,18 @@ description: Handles billions of rows
 
 **Decision:** Required `schema: ZodType<TParams>` field on `LayoutDefinition`. All registered layouts must provide a Zod schema. The document compiler uses it for runtime validation of frontmatter params. TypeScript users benefit from compile-time types but the schema is still required for registration.
 
-### 12. Diagrams are TypeScript-only
+### 12. Mermaid diagrams via raw syntax — SUPERSEDED
 
-**Decision:** The `DiagramBuilder` API is imperative and cannot be expressed as YAML. Diagram slides must be authored in TypeScript. Mermaid string support is a future stretch goal.
+**Original decision:** DiagramBuilder API is TypeScript-only. Mermaid string support is a future stretch goal.
+
+**Updated decision:** Replace `DiagramBuilder` with `mermaid(definition)` DSL function that accepts raw mermaid text. DiagramBuilder is removed entirely — it added indirection for users who know mermaid, only supported flowcharts, and blocked markdown authoring.
+
+- `mermaid("flowchart LR\n  A --> B")` in TypeScript
+- ` ```mermaid ` fenced code blocks in markdown body content
+- Theme styling via `class NodeId primary` (references theme-injected classDefs)
+- `style`, `linkStyle`, `classDef`, and `%%{init` directives are **rejected with an error** in `expandMermaid()` to enforce theme-only colors
+- `injectClassDefs()`, `buildDiagramConfig()`, `renderDiagramToPng()` infrastructure unchanged
+- All mermaid diagram types supported (flowchart, sequence, state, ER, etc.) — flowcharts get full theme classDefs, others get theme fonts and base colors
 
 ### 13. Frontmatter vs body content rule
 
@@ -637,7 +635,7 @@ The test: "does the layout parse this value as markdown?" If yes → body slot. 
 
 **Decision:** Markdown-defined layouts were considered and rejected. Only simple layouts (title, section, body) could be expressed declaratively, and those are already trivial in TypeScript (~8 lines). By the time a layout needs conditionals, loops, or theme access (most layouts), a template language becomes a worse programming language. Layout authoring is a developer activity. If layout creation friction is a concern, better solutions are: a `createSimpleLayout()` helper, better docs, or a CLI scaffold command.
 
-### 15. `plainText()` DSL function
+### 15. `plainText()` DSL function — IMPLEMENTED
 
 **Decision:** Add a `plainText()` DSL function that creates a `TextNode` directly, bypassing markdown parsing. This provides a semantic distinction from `text()` (which parses markdown) for labels and structural text that should never be interpreted as markdown (eyebrows, attributions, captions, slide numbers).
 
@@ -645,6 +643,23 @@ The test: "does the layout parse this value as markdown?" If yes → body slot. 
 - `plainText()` is the explicit opt-in for plain strings — prevents accidental markdown interpretation
 - No new node type needed — `plainText()` returns a standard `TextNode` with `content: [{ text: string }]`
 - Both renderers already handle this via `normalizeContent()` — zero downstream changes
+- Migrated: eyebrow in `headerBlock()`, attribution in `quote.ts`, card title in `card.ts`
+
+### 16. Content parsing levels
+
+**Decision:** Three tiers of text interpretation, documented on layout prop types:
+
+| Function | Parses Markdown? | Block Elements? | Use For |
+|----------|-----------------|-----------------|---------|
+| `plainText()` | No | No | Labels, eyebrows, attributions — literal strings |
+| `text()` | Yes (inline) | Partial (lists yes, tables/images no) | Body text with bold, italic, highlights, bullets |
+| `compileBlocks()` | Yes (full) | Yes (tables, images, headings, lists, mermaid) | Multi-block markdown content areas |
+
+Layout prop types should annotate which level each string field uses. This is documentation, not runtime enforcement — the failure mode (content silently disappearing in `text()`) is visible on preview.
+
+### 17. Scalar-only migration is complete
+
+**Decision:** Phase 3g is done. All scalar layouts exist (`body`, `statement`, `twoColumn`, `card`, `numberedCard`, `imageCards`, `customerStory`, `image`, `agenda`). The `compileBlocks()` function bridges markdown strings to component trees, handling tables, images, and (with 3h) mermaid diagrams. `contentLayout` and `twoColumnRawLayout` remain as programmatic-only escape hatches for TypeScript — no migration needed since they serve a different audience.
 
 ---
 
@@ -716,16 +731,25 @@ Sub-phases in implementation order:
 - Validate directive attributes against component schemas
 - `remarkDirective` plugin already wired into blockCompiler.ts — needs dispatch handler
 
-**3g: Scalar-only layout migration**
-- Create `tableLayout`, `diagramLayout` (TypeScript-only)
-- Extend `imageLayout` with `description?`
-- Deprecate `contentLayout`
+**3g: Scalar-only layout migration — DONE**
+- All scalar layouts exist (`body`, `statement`, `twoColumn`, `card`, `imageCards`, `customerStory`, etc.)
+- `compileBlocks()` bridges markdown strings to component trees (tables, images, mermaid)
+- `contentLayout`/`twoColumnRawLayout` remain as programmatic-only escape hatches — no migration needed
 
-**DSL enhancement: `plainText()` function** (can be done anytime)
-- New DSL function that creates a `TextNode` directly, bypassing markdown parsing
-- For labels and structural text: eyebrows, attributions, captions, slide numbers
-- ~15 lines, zero renderer changes — returns standard `TextNode` with single `NormalizedRun`
-- Layouts would use `plainText(eyebrow)` instead of `text(eyebrow)` for non-markdown fields
+**DSL enhancement: `plainText()` function — DONE**
+- `plainText()` creates a `TextNode` directly, bypassing markdown parsing
+- Migrated: eyebrow in `headerBlock()`, attribution in `quote.ts`, card title in `card.ts`
+- 8 tests, zero renderer changes
+
+**3h: Mermaid support** — Replace DiagramBuilder with raw mermaid
+- Remove `DiagramBuilder` class, `DIAGRAM_DIRECTION`, `NODE_SHAPE`, all builder types (~400 lines deleted)
+- New `mermaid(definition, opts?)` DSL function accepting raw mermaid text (~120 lines total)
+- `sanitizeMermaidDefinition()` rejects `style`, `linkStyle`, `classDef`, `%%{init` directives with an error in `expandMermaid()`
+- Theme classDefs injected automatically via existing `injectClassDefs()` — authors use `class NodeId primary`
+- Block compiler: `case 'code':` handles ` ```mermaid ` fenced blocks → `mermaid(node.value)` ComponentNode
+- All mermaid diagram types supported (flowchart, sequence, state, ER, etc.)
+- Migrate 11 diagrams across 4 session files from builder API to raw mermaid strings
+- Rewrite diagram tests for new API
 
 ### Phase 4: CLI / DX
 

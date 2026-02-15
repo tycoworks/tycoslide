@@ -182,5 +182,22 @@ describe('Block Compiler', () => {
       assert.strictEqual(nodes[0].componentName, 'text');
       assert.strictEqual(nodes[1].componentName, 'text');
     });
+
+    it('should throw on blockquote', () => {
+      const md = '> This is a quote';
+      assert.throws(() => compileBlocks(md), /unsupported markdown block type "blockquote"/);
+    });
+
+    it('should throw on non-mermaid code block', () => {
+      const md = '```sql\nSELECT 1;\n```';
+      assert.throws(() => compileBlocks(md), /unsupported code block language "sql"/);
+    });
+
+    it('should compile mermaid code block', () => {
+      const md = '```mermaid\nflowchart LR\n    A --> B\n```';
+      const nodes = compileBlocks(md);
+      assert.strictEqual(nodes.length, 1);
+      assert.strictEqual(nodes[0].componentName, 'mermaid');
+    });
   });
 });

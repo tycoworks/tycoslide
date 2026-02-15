@@ -65,17 +65,11 @@ export {
   type QuoteProps,
 } from './quote.js';
 
-// Diagram (I/O component — mermaid-cli)
+// Mermaid diagram (I/O component — mermaid-cli)
 export {
-  DiagramBuilder,
-  diagram,
-  DIAGRAM_COMPONENT,
-  DIAGRAM_DIRECTION,
-  NODE_SHAPE,
-  type DiagramProps,
-  type DiagramNodeRef,
-  type DiagramShape,
-  type DiagramDirection,
-  type EdgeOptions,
-  type SubgraphOptions,
+  mermaid,
+  sanitizeMermaidDefinition,
+  MERMAID_COMPONENT,
+  type MermaidProps,
+  type MermaidComponentProps,
 } from './diagram.js';

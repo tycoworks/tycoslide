@@ -15,4 +15,6 @@ export const MDAST = {
   EMPHASIS: 'emphasis',
   INLINE_CODE: 'inlineCode',
   TEXT_DIRECTIVE: 'textDirective',
+  CODE: 'code',
+  THEMATIC_BREAK: 'thematicBreak',
 } as const;

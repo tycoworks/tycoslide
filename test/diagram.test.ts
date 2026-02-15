@@ -1,320 +1,143 @@
 // Diagram Tests
-// Tests for DiagramBuilder as ComponentNode
-// DiagramBuilder implements ComponentNode<DiagramComponentProps>
+// Tests for mermaid() DSL function and sanitizeMermaidDefinition
 
-import { describe, test } from 'node:test';
-import * as assert from 'node:assert';
-import { diagram, DiagramBuilder, DIAGRAM_DIRECTION, COLOR_NAME, DIAGRAM_COMPONENT } from '../src/dsl/diagram.js';
-import { COMPONENT_TYPE } from '../src/core/registry.js';
+import { describe, it } from 'node:test';
+import assert from 'node:assert';
+import { mermaid, MERMAID_COMPONENT, sanitizeMermaidDefinition } from '../src/dsl/diagram.js';
+import { COMPONENT_TYPE, componentRegistry } from '../src/core/registry.js';
+import { NODE_TYPE } from '../src/core/nodes.js';
+import { mockTheme } from './mocks.js';
 
-describe('DiagramBuilder', () => {
-
-  // ------------------------------------------
-  // ComponentNode Interface
-  // ------------------------------------------
-  test('creates ComponentNode with correct type', () => {
-    const d = diagram(DIAGRAM_DIRECTION.LEFT_TO_RIGHT);
-    assert.strictEqual(d.type, COMPONENT_TYPE);
-    assert.strictEqual(d.componentName, DIAGRAM_COMPONENT);
+describe('mermaid() DSL function', () => {
+  it('returns ComponentNode with correct type', () => {
+    const m = mermaid('flowchart LR\n  A --> B');
+    assert.strictEqual(m.type, COMPONENT_TYPE);
   });
 
-  test('stores direction correctly in props', () => {
-    const d = diagram(DIAGRAM_DIRECTION.TOP_TO_BOTTOM);
-    assert.strictEqual(d.props.direction, 'TB');
+  it('returns ComponentNode with correct componentName', () => {
+    const m = mermaid('flowchart LR\n  A --> B');
+    assert.strictEqual(m.componentName, MERMAID_COMPONENT);
   });
 
-  test('defaults to LEFT_TO_RIGHT direction', () => {
-    const d = diagram();
-    assert.strictEqual(d.props.direction, 'LR');
+  it('stores definition in props.definition', () => {
+    const definition = 'flowchart LR\n  A --> B';
+    const m = mermaid(definition);
+    assert.strictEqual(m.props.definition, definition);
   });
 
-  // ------------------------------------------
-  // Node Creation
-  // ------------------------------------------
-  test('rect() creates node with rect shape', () => {
-    const d = diagram();
-    const a = d.rect('A', 'Start');
-
-    assert.strictEqual(a.id, 'A');
-    assert.strictEqual(a.label, 'Start');
-    assert.strictEqual(a.shape, 'rect');
-    assert.strictEqual(d.props.nodes.length, 1);
-    assert.deepStrictEqual(d.props.nodes[0], { id: 'A', label: 'Start', shape: 'rect' });
+  it('stores scale in props.scale', () => {
+    const m = mermaid('flowchart LR\n  A --> B', { scale: 3 });
+    assert.strictEqual(m.props.scale, 3);
   });
 
-  test('rect() uses id as label when label not provided', () => {
-    const d = diagram();
-    const a = d.rect('MyNode');
+  it('scale defaults to undefined when not provided', () => {
+    const m = mermaid('flowchart LR\n  A --> B');
+    assert.strictEqual(m.props.scale, undefined);
+  });
+});
 
-    assert.strictEqual(a.label, 'MyNode');
-    assert.strictEqual(d.props.nodes[0].label, 'MyNode');
+describe('sanitizeMermaidDefinition', () => {
+  it('throws on style NodeId fill:#f00 lines', () => {
+    const input = `flowchart LR
+  A[Node A]
+  style A fill:#ff0000
+  B[Node B]`;
+    assert.throws(() => sanitizeMermaidDefinition(input), /forbidden style directive/);
   });
 
-  test('cylinder() creates node with cylinder shape', () => {
-    const d = diagram();
-    const db = d.cylinder('DB', 'Postgres');
-
-    assert.strictEqual(db.shape, 'cylinder');
-    assert.strictEqual(d.props.nodes[0].shape, 'cylinder');
+  it('throws on linkStyle 0 stroke:#f00 lines', () => {
+    const input = `flowchart LR
+  A --> B
+  linkStyle 0 stroke:#ff0000`;
+    assert.throws(() => sanitizeMermaidDefinition(input), /forbidden style directive/);
   });
 
-  test('hexagon() creates node with hexagon shape', () => {
-    const d = diagram();
-    const k = d.hexagon('K', 'Kafka');
-
-    assert.strictEqual(k.shape, 'hexagon');
-    assert.strictEqual(d.props.nodes[0].shape, 'hexagon');
+  it('throws on classDef myClass fill:#f00 lines', () => {
+    const input = `flowchart LR
+  classDef myClass fill:#ff0000
+  A[Node A]`;
+    assert.throws(() => sanitizeMermaidDefinition(input), /forbidden style directive/);
   });
 
-  test('round() creates node with round shape', () => {
-    const d = diagram();
-    const r = d.round('R', 'Rounded');
-
-    assert.strictEqual(r.shape, 'round');
+  it('throws on %%{init: ...}%% lines', () => {
+    const input = `%%{init: {"flowchart": {"curve": "linear"}}}%%
+flowchart LR
+  A --> B`;
+    assert.throws(() => sanitizeMermaidDefinition(input), /forbidden style directive/);
   });
 
-  test('stadium() creates node with stadium shape', () => {
-    const d = diagram();
-    const s = d.stadium('S', 'Stadium');
-
-    assert.strictEqual(s.shape, 'stadium');
+  it('preserves class NodeId primary lines', () => {
+    const input = `flowchart LR
+  A[Node A]
+  class A primary`;
+    const result = sanitizeMermaidDefinition(input);
+    assert.strictEqual(result, `flowchart LR
+  A[Node A]
+  class A primary`);
   });
 
-  test('diamond() creates node with diamond shape', () => {
-    const d = diagram();
-    const dm = d.diamond('D', 'Decision');
-
-    assert.strictEqual(dm.shape, 'diamond');
+  it('preserves A:::primary inline class syntax', () => {
+    const input = `flowchart LR
+  A[Node A]:::primary
+  B[Node B]`;
+    const result = sanitizeMermaidDefinition(input);
+    assert.strictEqual(result, `flowchart LR
+  A[Node A]:::primary
+  B[Node B]`);
   });
 
-  test('parallelogram() creates node with parallelogram shape', () => {
-    const d = diagram();
-    const p = d.parallelogram('P', 'Input');
-
-    assert.strictEqual(p.shape, 'parallelogram');
+  it('preserves all other mermaid syntax', () => {
+    const input = `flowchart LR
+  subgraph Sources
+    DB[(Database)]
+  end
+  A[Start] --> B[End]
+  B --> C{Decision}`;
+    const result = sanitizeMermaidDefinition(input);
+    assert.strictEqual(result, input);
   });
 
-  test('subroutine() creates node with subroutine shape', () => {
-    const d = diagram();
-    const sr = d.subroutine('SR', 'Subroutine');
-
-    assert.strictEqual(sr.shape, 'subroutine');
+  it('throws on mixed content with multiple forbidden directives', () => {
+    const input = `%%{init: {"flowchart": {"curve": "linear"}}}%%
+flowchart LR
+  classDef primary fill:#ff0000
+  A[Node A]
+  style A fill:#00ff00
+  B[Node B]
+  class A primary
+  A --> B
+  linkStyle 0 stroke:#0000ff`;
+    assert.throws(() => sanitizeMermaidDefinition(input), /4 forbidden style directive/);
   });
 
-  // ------------------------------------------
-  // Edges
-  // ------------------------------------------
-  test('edge() creates edge between two nodes', () => {
-    const d = diagram();
-    const a = d.rect('A', 'Start');
-    const b = d.rect('B', 'End');
-    d.edge(a, b);
+  it('includes offending lines in error message', () => {
+    const input = `flowchart LR
+  A[Node A]
+  style A fill:#ff0000`;
+    try {
+      sanitizeMermaidDefinition(input);
+      assert.fail('should have thrown');
+    } catch (e: any) {
+      assert.ok(e.message.includes('style A fill:#ff0000'), 'error should include the offending line');
+      assert.ok(e.message.includes('class NodeId primary'), 'error should suggest the fix');
+    }
+  });
+});
 
-    assert.strictEqual(d.props.edges.length, 1);
-    assert.deepStrictEqual(d.props.edges[0], { from: ['A'], to: ['B'], label: undefined });
+describe('mermaid expansion', () => {
+  it('auto-registers mermaid component on import', () => {
+    const registered = componentRegistry.has(MERMAID_COMPONENT);
+    assert.ok(registered, 'mermaid component should be auto-registered');
   });
 
-  test('edge() with label stores label', () => {
-    const d = diagram();
-    const a = d.rect('A');
-    const b = d.rect('B');
-    d.edge(a, b, { label: 'connects' });
-
-    assert.strictEqual(d.props.edges[0].label, 'connects');
-  });
-
-  test('edge() with multiple targets creates multi-target edge', () => {
-    const d = diagram();
-    const a = d.rect('A');
-    const b = d.rect('B');
-    const c = d.rect('C');
-    d.edge(a, [b, c]);
-
-    assert.deepStrictEqual(d.props.edges[0].from, ['A']);
-    assert.deepStrictEqual(d.props.edges[0].to, ['B', 'C']);
-  });
-
-  test('edge() with multiple sources creates multi-source edge', () => {
-    const d = diagram();
-    const a = d.rect('A');
-    const b = d.rect('B');
-    const c = d.rect('C');
-    d.edge([a, b], c);
-
-    assert.deepStrictEqual(d.props.edges[0].from, ['A', 'B']);
-    assert.deepStrictEqual(d.props.edges[0].to, ['C']);
-  });
-
-  // ------------------------------------------
-  // Subgraphs
-  // ------------------------------------------
-  test('subgraph() creates subgraph with nodes', () => {
-    const d = diagram();
-    const db = d.cylinder('DB', 'Postgres');
-    d.subgraph('Sources', db);
-
-    assert.strictEqual(d.props.subgraphs.length, 1);
-    assert.strictEqual(d.props.subgraphs[0].id, 'Sources');
-    assert.deepStrictEqual(d.props.subgraphs[0].nodeIds, ['DB']);
-  });
-
-  test('subgraph() with custom label', () => {
-    const d = diagram();
-    const p = d.rect('P', 'processor');
-    d.subgraph('Core', { label: 'Processing' }, p);
-
-    assert.strictEqual(d.props.subgraphs[0].label, 'Processing');
-  });
-
-  test('subgraph() with direction', () => {
-    const d = diagram();
-    const p = d.rect('P', 'processor');
-    d.subgraph('Core', { direction: DIAGRAM_DIRECTION.TOP_TO_BOTTOM }, p);
-
-    assert.strictEqual(d.props.subgraphs[0].direction, 'TB');
-  });
-
-  test('subgraph() with multiple nodes', () => {
-    const d = diagram();
-    const a = d.rect('A');
-    const b = d.rect('B');
-    const c = d.rect('C');
-    d.subgraph('Group', a, b, c);
-
-    assert.deepStrictEqual(d.props.subgraphs[0].nodeIds, ['A', 'B', 'C']);
-  });
-
-  // ------------------------------------------
-  // Class Styling
-  // ------------------------------------------
-  test('class() applies style to single node', () => {
-    const d = diagram();
-    const a = d.rect('A');
-    d.class(COLOR_NAME.PRIMARY, a);
-
-    assert.strictEqual(d.props.classes.length, 1);
-    assert.strictEqual(d.props.classes[0].nodeId, 'A');
-    assert.strictEqual(d.props.classes[0].style, COLOR_NAME.PRIMARY);
-  });
-
-  test('class() applies style to multiple nodes', () => {
-    const d = diagram();
-    const a = d.rect('A');
-    const b = d.rect('B');
-    d.class(COLOR_NAME.PRIMARY, a, b);
-
-    assert.strictEqual(d.props.classes.length, 2);
-    assert.strictEqual(d.props.classes[0].nodeId, 'A');
-    assert.strictEqual(d.props.classes[1].nodeId, 'B');
-  });
-
-  test('multiple class() calls accumulate', () => {
-    const d = diagram();
-    const a = d.rect('A');
-    const b = d.rect('B');
-    const c = d.rect('C');
-    d.class(COLOR_NAME.PRIMARY, a)
-     .class(COLOR_NAME.BACKGROUND, b, c);
-
-    assert.strictEqual(d.props.classes.length, 3);
-    assert.strictEqual(d.props.classes[0].style, COLOR_NAME.PRIMARY);
-    assert.strictEqual(d.props.classes[1].style, COLOR_NAME.BACKGROUND);
-    assert.strictEqual(d.props.classes[2].style, COLOR_NAME.BACKGROUND);
-  });
-
-  // ------------------------------------------
-  // Fluent API
-  // ------------------------------------------
-  test('methods return this for chaining', () => {
-    const d = diagram();
-    const a = d.rect('A');
-    const b = d.rect('B');
-
-    const result = d
-      .subgraph('S', a)
-      .edge(a, b)
-      .class(COLOR_NAME.PRIMARY, a);
-
-    assert.strictEqual(result, d);
-  });
-
-  // ------------------------------------------
-  // Scale Option
-  // ------------------------------------------
-  test('scale option is stored', () => {
-    const d = diagram(DIAGRAM_DIRECTION.LEFT_TO_RIGHT, { scale: 3 });
-    assert.strictEqual(d.props.scale, 3);
-  });
-
-  test('scale defaults to undefined', () => {
-    const d = diagram();
-    assert.strictEqual(d.props.scale, undefined);
-  });
-
-  // ------------------------------------------
-  // Full Demo (from old tests)
-  // ------------------------------------------
-  test('full demo-style diagram has correct structure', () => {
-    const d = diagram(DIAGRAM_DIRECTION.LEFT_TO_RIGHT);
-
-    const db = d.cylinder('DB');
-    const T = d.rect('T', 'orders');
-    const I = d.rect('I', 'products');
-    const M = d.rect('M', 'inventory');
-    const P = d.rect('P', 'summary');
-    const ui = d.rect('UI', 'Dashboard');
-
-    d.subgraph('Sources', db)
-     .subgraph('Core', { label: 'Processing', direction: DIAGRAM_DIRECTION.LEFT_TO_RIGHT }, T, I, M, P)
-     .subgraph('Consumers', ui)
-     .edge(db, [T, I, M])
-     .edge([T, I, M], P)
-     .edge(P, ui, { label: 'STREAM' })
-     .class(COLOR_NAME.PRIMARY, db, T, I, M)
-     .class(COLOR_NAME.BACKGROUND, P, ui);
-
-    // Verify nodes
-    assert.strictEqual(d.props.nodes.length, 6);
-    assert.strictEqual(d.props.nodes[0].id, 'DB');
-    assert.strictEqual(d.props.nodes[0].shape, 'cylinder');
-
-    // Verify subgraphs
-    assert.strictEqual(d.props.subgraphs.length, 3);
-    assert.strictEqual(d.props.subgraphs[0].id, 'Sources');
-    assert.strictEqual(d.props.subgraphs[1].id, 'Core');
-    assert.strictEqual(d.props.subgraphs[1].label, 'Processing');
-    assert.strictEqual(d.props.subgraphs[1].direction, 'LR');
-    assert.deepStrictEqual(d.props.subgraphs[1].nodeIds, ['T', 'I', 'M', 'P']);
-
-    // Verify edges
-    assert.strictEqual(d.props.edges.length, 3);
-    assert.deepStrictEqual(d.props.edges[0].to, ['T', 'I', 'M']);
-    assert.deepStrictEqual(d.props.edges[1].from, ['T', 'I', 'M']);
-    assert.strictEqual(d.props.edges[2].label, 'STREAM');
-
-    // Verify classes
-    assert.strictEqual(d.props.classes.length, 6); // 4 PRIMARY + 2 BACKGROUND
-  });
-
-  // ------------------------------------------
-  // Component Expansion
-  // ------------------------------------------
-  test('componentRegistry can expand diagram to ImageNode', async () => {
-    const { componentRegistry } = await import('../src/core/registry.js');
-    const { NODE_TYPE } = await import('../src/core/nodes.js');
-    const { mockTheme } = await import('./mocks.js');
-
-    const d = diagram(DIAGRAM_DIRECTION.LEFT_TO_RIGHT);
-    d.rect('A', 'Node A');
-    d.rect('B', 'Node B');
-    d.edge(d.props.nodes[0] as any, d.props.nodes[1] as any);
-
-    const expanded = await componentRegistry.expand(d, {
+  it('expands to ImageNode with src pointing to PNG', async () => {
+    const m = mermaid('flowchart LR\n  A[Start] --> B[End]');
+    const expanded = await componentRegistry.expand(m, {
       theme: mockTheme(),
     });
 
-    // Diagram now expands to ImageNode (mermaid renders PNG during expansion)
     assert.strictEqual(expanded.type, NODE_TYPE.IMAGE);
-    assert.ok((expanded as any).src, 'ImageNode should have src pointing to rendered PNG');
+    assert.ok((expanded as any).src, 'ImageNode should have src pointing to PNG');
+    assert.strictEqual(typeof (expanded as any).src, 'string');
   });
 });
