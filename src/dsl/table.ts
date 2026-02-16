@@ -3,6 +3,9 @@
 import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
 import { NODE_TYPE, type TableCellData, type TableStyleProps } from '../core/nodes.js';
 import type { TextContent } from '../core/types.js';
+import { MARKDOWN } from '../core/types.js';
+import { MDAST, extractInlineText } from '../core/mdast.js';
+import type { Table as MdastTable } from 'mdast';
 
 // ============================================
 // TABLE COMPONENT
@@ -26,31 +29,48 @@ interface TableInternalProps {
   tableProps?: TableProps;
 }
 
-componentRegistry.register({ name: TABLE_COMPONENT, expand: (props: TableInternalProps) => {
-  // Normalize cells: convert plain strings/TextContent to TableCellData
-  const rows: TableCellData[][] = props.data.map(row =>
-    row.map(cell => {
-      if (typeof cell === 'string' || Array.isArray(cell)) {
-        return { content: cell };
-      }
-      // Check if it's already TableCellData (has 'content' property)
-      if ('content' in cell) {
-        return cell as TableCellData;
-      }
-      // It's a TextRun, wrap it
-      return { content: cell };
-    })
+/** Compile a GFM table MDAST node into a table() component. */
+function compileTableBlock(node: unknown, _source: string): ComponentNode {
+  const tableNode = node as MdastTable;
+  const rows = tableNode.children.map(row =>
+    row.children.map(cell => extractInlineText(cell.children))
   );
+  return table(rows, { headerRows: 1 });
+}
 
-  return {
-    type: NODE_TYPE.TABLE,
-    rows,
-    columnWidths: props.tableProps?.columnWidths,
-    headerRows: props.tableProps?.headerRows,
-    headerColumns: props.tableProps?.headerColumns,
-    style: props.tableProps?.style,
-  };
-}});
+componentRegistry.define({
+  name: TABLE_COMPONENT,
+  expand: (props: TableInternalProps) => {
+    // Normalize cells: convert plain strings/TextContent to TableCellData
+    const rows: TableCellData[][] = props.data.map(row =>
+      row.map(cell => {
+        if (typeof cell === 'string' || Array.isArray(cell)) {
+          return { content: cell };
+        }
+        // Check if it's already TableCellData (has 'content' property)
+        if ('content' in cell) {
+          return cell as TableCellData;
+        }
+        // It's a TextRun, wrap it
+        return { content: cell };
+      })
+    );
+
+    return {
+      type: NODE_TYPE.TABLE,
+      rows,
+      columnWidths: props.tableProps?.columnWidths,
+      headerRows: props.tableProps?.headerRows,
+      headerColumns: props.tableProps?.headerColumns,
+      style: props.tableProps?.style,
+    };
+  },
+  markdown: {
+    type: MARKDOWN.SYNTAX,
+    nodeType: MDAST.TABLE,
+    compile: compileTableBlock,
+  },
+});
 
 /**
  * Create a native table element that renders directly via pptxgenjs.

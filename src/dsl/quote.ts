@@ -2,14 +2,13 @@
 // Card with optional image, quote text, and attribution.
 // Expands to: stack(shape(background), column(image?, quote, attribution))
 
-import { componentRegistry, component, type ExpansionContext } from '../core/registry.js';
+import { componentRegistry, component, type ExpansionContext, type InferParams } from '../core/registry.js';
 import { stack, column } from './containers.js';
-import { shape } from './primitives.js';
-import { image as imageNode } from './primitives.js';
-import { markdown, text } from './text.js';
+import { shape, image as imageNode, imageComponent } from './primitives.js';
+import { markdown, text, markdownComponent, textComponent } from './text.js';
 import type { SlideNode } from '../core/nodes.js';
-import type { TextStyleName, GapSize } from '../core/types.js';
-import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE, SIZE } from '../core/types.js';
+import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE, SIZE, TEXT_STYLE_VALUES, GAP_VALUES, MARKDOWN } from '../core/types.js';
+import { schema } from '../schema.js';
 
 // ============================================
 // CONSTANTS
@@ -19,44 +18,50 @@ import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE, SIZE } from '../core/types.js';
 export const QUOTE_COMPONENT = 'quote' as const;
 
 // ============================================
+// PARAMS SCHEMA
+// ============================================
+
+const quoteParams = {
+  /** Quote text (markdown supported) */
+  quote: markdownComponent.input,
+  /** Attribution line, e.g. "— Jane Smith, CTO" */
+  attribution: textComponent.input.optional(),
+  /** Optional image/logo displayed above the quote */
+  image: imageComponent.input.optional(),
+  /** Text style for quote text */
+  quoteStyle: schema.enum(TEXT_STYLE_VALUES).optional(),
+  /** Text style for attribution */
+  attributionStyle: schema.enum(TEXT_STYLE_VALUES).optional(),
+  /** Whether to show background (default: true) */
+  background: schema.boolean().optional(),
+  /** Background color */
+  backgroundColor: schema.string().optional(),
+  /** Background opacity (0-100) */
+  backgroundOpacity: schema.number().optional(),
+  /** Border color */
+  borderColor: schema.string().optional(),
+  /** Border width in points */
+  borderWidth: schema.number().optional(),
+  /** Corner radius in inches */
+  cornerRadius: schema.number().optional(),
+  /** Internal padding in inches */
+  padding: schema.number().optional(),
+  /** Gap between children */
+  gap: schema.enum(GAP_VALUES).optional(),
+};
+
+// ============================================
 // TYPES
 // ============================================
 
-export interface QuoteProps {
-  /** Quote text (markdown supported) */
-  quote: string;
-  /** Attribution line, e.g. "— Jane Smith, CTO" */
-  attribution?: string;
-  /** Optional image/logo displayed above the quote */
-  image?: string;
-  /** Text style for quote text */
-  quoteStyle?: TextStyleName;
-  /** Text style for attribution */
-  attributionStyle?: TextStyleName;
-  /** Whether to show background (default: true) */
-  background?: boolean;
-  /** Background color */
-  backgroundColor?: string;
-  /** Background opacity (0-100) */
-  backgroundOpacity?: number;
-  /** Border color */
-  borderColor?: string;
-  /** Border width in points */
-  borderWidth?: number;
-  /** Corner radius in inches */
-  cornerRadius?: number;
-  /** Internal padding in inches */
-  padding?: number;
-  /** Gap between children */
-  gap?: GapSize;
-}
+export type QuoteParams = InferParams<typeof quoteParams>;
 
 // ============================================
 // EXPANSION FUNCTION
 // ============================================
 
 /**
- * Expand quote props into primitive node tree.
+ * Expand quote params into primitive node tree.
  *
  * Structure:
  * ```
@@ -70,7 +75,7 @@ export interface QuoteProps {
  * )
  * ```
  */
-function expandQuote(props: QuoteProps, context: ExpansionContext): SlideNode {
+function expandQuote(props: QuoteParams, context: ExpansionContext): SlideNode {
   const {
     quote: quoteText,
     attribution,
@@ -130,10 +135,15 @@ function expandQuote(props: QuoteProps, context: ExpansionContext): SlideNode {
 }
 
 // ============================================
-// COMPONENT REGISTRATION & DSL
+// COMPONENT DEFINITION
 // ============================================
 
-componentRegistry.register({ name: QUOTE_COMPONENT, expand: expandQuote });
+export const quoteComponent = componentRegistry.define({
+  name: QUOTE_COMPONENT,
+  params: quoteParams,
+  expand: expandQuote,
+  markdown: { type: MARKDOWN.BLOCK },
+});
 
 /**
  * Create a quote card with optional image, quote text, and attribution.
@@ -147,6 +157,6 @@ componentRegistry.register({ name: QUOTE_COMPONENT, expand: expandQuote });
  * })
  * ```
  */
-export function quote(props: QuoteProps) {
+export function quote(props: QuoteParams) {
   return component(QUOTE_COMPONENT, props);
 }

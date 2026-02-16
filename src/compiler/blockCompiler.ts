@@ -1,24 +1,24 @@
 // Block Compiler
 // Converts a markdown string into an array of ComponentNode[].
-// Each block-level element (paragraph, list, heading, table, image) becomes
-// an independent ComponentNode by calling the appropriate DSL function.
+// Each block-level element becomes an independent ComponentNode.
 //
-// This does NOT share internal parsing logic with text.ts — it reuses
-// the markdown(), table(), and image() DSL components directly.
+// Dispatch is registry-driven — components register their own MDAST handlers
+// via `markdown: { type: MARKDOWN.SYNTAX, ... }` in componentRegistry.define().
+// Block directives (:::name) are dispatched to components with
+// `markdown: { type: MARKDOWN.BLOCK }`.
+//
+// This file has ZERO component imports — all dispatch goes through the registry.
 
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkDirective from 'remark-directive';
 import remarkGfm from 'remark-gfm';
-import type { Root, RootContent, Heading, Paragraph, Table as MdastTable, PhrasingContent, Code } from 'mdast';
-import { markdown } from '../dsl/text.js';
-import { MDAST } from '../core/mdast.js';
-import { table } from '../dsl/table.js';
-import { image } from '../dsl/primitives.js';
-import { mermaid } from '../dsl/diagram.js';
-import { TEXT_STYLE } from '../core/types.js';
-import type { TextStyleName } from '../core/types.js';
-import type { ComponentNode } from '../core/registry.js';
+import type { Root, RootContent } from 'mdast';
+import { parse as parseYaml } from 'yaml';
+import { z } from 'zod';
+import { MDAST, extractSource } from '../core/mdast.js';
+import { MARKDOWN } from '../core/types.js';
+import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
 
 // ============================================
 // PARSER
@@ -30,15 +30,15 @@ const processor = unified()
   .use(remarkGfm);
 
 // ============================================
-// HEADING DEPTH → TEXT_STYLE
+// DIRECTIVE NODE TYPE (from remark-directive)
 // ============================================
 
-const HEADING_STYLE: Record<number, TextStyleName> = {
-  1: TEXT_STYLE.H1,
-  2: TEXT_STYLE.H2,
-  3: TEXT_STYLE.H3,
-  4: TEXT_STYLE.H4,
-};
+interface ContainerDirective {
+  type: 'containerDirective';
+  name: string;
+  children: RootContent[];
+  position?: { start: { offset?: number }; end: { offset?: number } };
+}
 
 // ============================================
 // PUBLIC API
@@ -47,21 +47,19 @@ const HEADING_STYLE: Record<number, TextStyleName> = {
 /**
  * Compile a markdown string into an array of ComponentNodes.
  *
- * Each block-level element becomes an independent node:
- * - Paragraphs → markdown()
- * - Lists → markdown()
- * - Headings → markdown() with appropriate TEXT_STYLE
- * - Tables → table() with headerRows: 1
- * - Images (standalone) → image()
+ * Block-level dispatch is registry-driven:
+ * - SYNTAX handlers: components that registered for specific MDAST node types
+ * - BLOCK handlers: components invoked via :::name directives
+ * - Thematic breaks are silently skipped
  *
  * Callers decide how to arrange the returned nodes (e.g. wrap in column()).
  */
-export function compileBlocks(markdown: string): ComponentNode[] {
-  const tree = processor.parse(markdown) as Root;
+export function compileBlocks(markdownStr: string): ComponentNode[] {
+  const tree = processor.parse(markdownStr) as Root;
   const nodes: ComponentNode[] = [];
 
   for (const child of tree.children) {
-    const compiled = compileBlock(child, markdown);
+    const compiled = compileBlock(child, markdownStr);
     if (compiled) nodes.push(compiled);
   }
 
@@ -73,110 +71,91 @@ export function compileBlocks(markdown: string): ComponentNode[] {
 // ============================================
 
 function compileBlock(node: RootContent, source: string): ComponentNode | null {
-  switch (node.type) {
-    case MDAST.PARAGRAPH:
-      return compileParagraph(node as Paragraph, source);
-    case MDAST.LIST:
-      return compileTextBlock(node, source);
-    case MDAST.HEADING:
-      return compileHeading(node as Heading, source);
-    case MDAST.TABLE:
-      return compileTable(node as MdastTable);
-    case MDAST.CODE:
-      return compileMermaidCode(node as Code);
-    case MDAST.THEMATIC_BREAK:
-      return null;
-    default:
-      throw new Error(
-        `[tycoslide] compileBlocks: unsupported markdown block type "${node.type}". ` +
-        `Supported: paragraph, list, heading, table, code (mermaid only).`,
-      );
+  // 1. Container directives → registry lookup by name
+  if (node.type === 'containerDirective') {
+    return compileDirective(node as unknown as ContainerDirective, source);
   }
-}
 
-// ============================================
-// BLOCK COMPILERS
-// ============================================
-
-/**
- * Compile a paragraph. If the paragraph contains only an image,
- * produce an image() node instead of text().
- */
-function compileParagraph(node: Paragraph, source: string): ComponentNode {
-  // Standalone image: paragraph with a single image child
-  if (node.children.length === 1 && node.children[0].type === MDAST.IMAGE) {
-    const img = node.children[0];
-    return image(img.url);
+  // 2. MDAST nodes → registry lookup by nodeType
+  const handler = componentRegistry.getSyntaxHandler(node.type);
+  if (handler) {
+    return handler.markdown.compile(node, source);
   }
-  return compileTextBlock(node, source);
-}
 
-/**
- * Compile any text-containing block (paragraph, list) by extracting
- * its raw markdown source and passing it to text().
- */
-function compileTextBlock(node: RootContent, source: string): ComponentNode {
-  const raw = extractSource(node, source);
-  return markdown(raw);
-}
+  // 3. Thematic breaks → skip
+  if (node.type === MDAST.THEMATIC_BREAK) return null;
 
-/**
- * Compile a heading by stripping the # markers and applying the
- * appropriate TEXT_STYLE based on depth.
- */
-function compileHeading(node: Heading, source: string): ComponentNode {
-  const raw = extractSource(node, source);
-  const content = raw.replace(/^#{1,6}\s+/, '');
-  const style = HEADING_STYLE[node.depth] ?? TEXT_STYLE.H3;
-  return markdown(content, { style });
-}
+  // 4. Unknown → error
+  const registered = componentRegistry.getAll()
+    .filter(d => d.markdown?.type === MARKDOWN.SYNTAX)
+    .map(d => {
+      const md = d.markdown!;
+      if (md.type === MARKDOWN.SYNTAX) {
+        return Array.isArray(md.nodeType) ? md.nodeType.join(', ') : md.nodeType;
+      }
+      return '';
+    })
+    .join(', ');
 
-/**
- * Compile a GFM table into a table() component.
- * First row becomes the header row.
- */
-function compileTable(node: MdastTable): ComponentNode {
-  const rows = node.children.map(row =>
-    row.children.map(cell => extractInlineText(cell.children))
+  throw new Error(
+    `[tycoslide] compileBlocks: unsupported markdown block type "${node.type}". ` +
+    `Registered syntax handlers: ${registered || 'none'}.`,
   );
-  return table(rows, { headerRows: 1 });
 }
 
+// ============================================
+// DIRECTIVE COMPILATION
+// ============================================
+
 /**
- * Compile a fenced code block. Only ```mermaid blocks are supported —
- * other languages throw an error.
+ * Compile a :::name container directive into a ComponentNode.
+ *
+ * Looks up the component by directive name. Body parsing depends on
+ * the component's schema:
+ * - params (ZodObject) → parse body as YAML
+ * - input (simple Zod type) → pass body as raw text
  */
-function compileMermaidCode(node: Code): ComponentNode {
-  if (node.lang !== 'mermaid') {
+function compileDirective(directive: ContainerDirective, source: string): ComponentNode {
+  const handler = componentRegistry.getBlockHandler(directive.name);
+  if (!handler) {
+    const available = componentRegistry.getAll()
+      .filter(d => d.markdown?.type === MARKDOWN.BLOCK)
+      .map(d => d.name)
+      .join(', ');
     throw new Error(
-      `[tycoslide] compileBlocks: unsupported code block language "${node.lang ?? 'none'}". ` +
-      `Only \`\`\`mermaid is supported in slides.`,
+      `[tycoslide] compileBlocks: unknown directive ":::${directive.name}". ` +
+      `Available block directives: ${available || 'none'}.`,
     );
   }
-  return mermaid(node.value);
+
+  // Extract the raw body text between :::name and closing :::
+  const body = extractDirectiveBody(directive, source);
+
+  // Parse and validate through the component's schema.
+  // For params (ZodObject): parse body as YAML first, then validate.
+  // For input (e.g., z.string()): validate directly (runs any transforms).
+  const input = handler.input;
+  const raw = input instanceof z.ZodObject ? (parseYaml(body) ?? {}) : body;
+  const props = input.parse(raw);
+
+  return component(handler.name, props);
 }
 
-// ============================================
-// HELPERS
-// ============================================
-
-/** Extract the raw markdown source for a node using position offsets. */
-function extractSource(
-  node: { position?: { start: { offset?: number }; end: { offset?: number } } },
-  source: string
-): string {
-  const start = node.position?.start.offset;
-  const end = node.position?.end.offset;
-  if (start == null || end == null) return '';
-  return source.slice(start, end);
-}
-
-/** Recursively extract plain text from inline mdast nodes. */
-function extractInlineText(nodes: PhrasingContent[]): string {
-  return nodes.map(node => {
-    if (node.type === MDAST.TEXT) return node.value;
-    if (node.type === MDAST.INLINE_CODE) return node.value;
-    if ('children' in node) return extractInlineText((node as any).children);
-    return '';
-  }).join('');
+/**
+ * Extract the raw body text from a container directive,
+ * stripping the :::name opener and ::: closer.
+ */
+function extractDirectiveBody(directive: ContainerDirective, source: string): string {
+  const raw = extractSource(directive, source);
+  // Strip opening :::name line and closing ::: line
+  const lines = raw.split('\n');
+  // First line is :::name (possibly with attributes)
+  // Last line is :::
+  if (lines.length < 2) return '';
+  const bodyLines = lines.slice(1);
+  // Remove closing ::: if present
+  if (bodyLines.length > 0 && bodyLines[bodyLines.length - 1].trim() === ':::') {
+    bodyLines.pop();
+  }
+  return bodyLines.join('\n').trim();
 }

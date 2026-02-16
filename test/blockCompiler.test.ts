@@ -7,6 +7,11 @@ import { compileBlocks } from '../src/compiler/blockCompiler.js';
 import { MARKDOWN_COMPONENT } from '../src/dsl/text.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import { TEXT_STYLE } from '../src/core/types.js';
+// Side-effect imports: trigger component self-registration
+import '../src/dsl/table.js';
+import '../src/dsl/diagram.js';
+import '../src/dsl/card.js';
+import '../src/dsl/quote.js';
 
 /** Helper: get props as any to avoid unknown type errors in tests */
 function props(nodes: any[], index: number): any {
@@ -189,16 +194,32 @@ describe('Block Compiler', () => {
       assert.throws(() => compileBlocks(md), /unsupported markdown block type "blockquote"/);
     });
 
-    it('should throw on non-mermaid code block', () => {
+    it('should throw on code block (no longer supported)', () => {
       const md = '```sql\nSELECT 1;\n```';
-      assert.throws(() => compileBlocks(md), /unsupported code block language "sql"/);
+      assert.throws(() => compileBlocks(md), /unsupported markdown block type "code"/);
     });
 
-    it('should compile mermaid code block', () => {
-      const md = '```mermaid\nflowchart LR\n    A --> B\n```';
+    it('should compile :::mermaid directive', () => {
+      const md = ':::mermaid\nflowchart LR\n    A --> B\n:::';
       const nodes = compileBlocks(md);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual(nodes[0].componentName, 'mermaid');
+      // input schema transforms raw string into { definition }
+      assert.strictEqual(props(nodes, 0).definition, 'flowchart LR\n    A --> B');
+    });
+
+    it('should compile :::card directive with YAML body', () => {
+      const md = ':::card\ntitle: Hello\ndescription: World\n:::';
+      const nodes = compileBlocks(md);
+      assert.strictEqual(nodes.length, 1);
+      assert.strictEqual(nodes[0].componentName, 'card');
+      assert.strictEqual(props(nodes, 0).title, 'Hello');
+      assert.strictEqual(props(nodes, 0).description, 'World');
+    });
+
+    it('should throw on unknown directive', () => {
+      const md = ':::unknown\nsome body\n:::';
+      assert.throws(() => compileBlocks(md), /unknown directive ":::unknown"/);
     });
   });
 });

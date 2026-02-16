@@ -53,17 +53,20 @@ interface RowInternalProps extends RowProps {
   children: SlideNode[];
 }
 
-componentRegistry.register({ name: ROW_COMPONENT, expand: (props: RowInternalProps) => ({
-  type: NODE_TYPE.CONTAINER,
-  direction: DIRECTION.ROW,
-  children: props.children as ElementNode[],  // Safe: expandTree recurses into these
-  width: props.width,
-  height: props.height,
-  gap: props.gap,
-  vAlign: props.vAlign ?? VALIGN.TOP,    // Explicit default: pure alignment (not CSS stretch)
-  hAlign: props.hAlign ?? HALIGN.LEFT,   // Explicit default for consistent measurement
-  padding: props.padding,
-})});
+componentRegistry.define({
+  name: ROW_COMPONENT,
+  expand: (props: RowInternalProps) => ({
+    type: NODE_TYPE.CONTAINER,
+    direction: DIRECTION.ROW,
+    children: props.children as ElementNode[],  // Safe: expandTree recurses into these
+    width: props.width,
+    height: props.height,
+    gap: props.gap,
+    vAlign: props.vAlign ?? VALIGN.TOP,    // Explicit default: pure alignment (not CSS stretch)
+    hAlign: props.hAlign ?? HALIGN.LEFT,   // Explicit default for consistent measurement
+    padding: props.padding,
+  }),
+});
 
 export function row(props: RowProps, ...children: SlideNode[]): ComponentNode;
 export function row(...children: SlideNode[]): ComponentNode;
@@ -91,17 +94,20 @@ interface ColumnInternalProps extends ColumnProps {
   children: SlideNode[];
 }
 
-componentRegistry.register({ name: COLUMN_COMPONENT, expand: (props: ColumnInternalProps) => ({
-  type: NODE_TYPE.CONTAINER,
-  direction: DIRECTION.COLUMN,
-  children: props.children as ElementNode[],  // Safe: expandTree recurses into these
-  width: props.width,
-  height: props.height,
-  gap: props.gap,
-  vAlign: props.vAlign ?? VALIGN.TOP,    // Explicit default for consistent measurement
-  hAlign: props.hAlign ?? HALIGN.LEFT,   // Explicit default for consistent measurement
-  padding: props.padding,
-})});
+componentRegistry.define({
+  name: COLUMN_COMPONENT,
+  expand: (props: ColumnInternalProps) => ({
+    type: NODE_TYPE.CONTAINER,
+    direction: DIRECTION.COLUMN,
+    children: props.children as ElementNode[],  // Safe: expandTree recurses into these
+    width: props.width,
+    height: props.height,
+    gap: props.gap,
+    vAlign: props.vAlign ?? VALIGN.TOP,    // Explicit default for consistent measurement
+    hAlign: props.hAlign ?? HALIGN.LEFT,   // Explicit default for consistent measurement
+    padding: props.padding,
+  }),
+});
 
 export function column(props: ColumnProps, ...children: SlideNode[]): ComponentNode;
 export function column(...children: SlideNode[]): ComponentNode;
@@ -125,12 +131,15 @@ interface StackInternalProps extends StackProps {
   children: SlideNode[];
 }
 
-componentRegistry.register({ name: STACK_COMPONENT, expand: (props: StackInternalProps) => ({
-  type: NODE_TYPE.STACK,
-  children: props.children as ElementNode[],  // Safe: expandTree recurses into these
-  width: props.width,
-  height: props.height,
-})});
+componentRegistry.define({
+  name: STACK_COMPONENT,
+  expand: (props: StackInternalProps) => ({
+    type: NODE_TYPE.STACK,
+    children: props.children as ElementNode[],  // Safe: expandTree recurses into these
+    width: props.width,
+    height: props.height,
+  }),
+});
 
 /**
  * Stack is a z-order container: all children occupy the same bounds.
@@ -168,7 +177,7 @@ interface GridInternalProps extends GridProps {
   children: SlideNode[];
 }
 
-componentRegistry.register({ name: GRID_COMPONENT, expand: (props: GridInternalProps) => {
+componentRegistry.define({ name: GRID_COMPONENT, expand: (props: GridInternalProps) => {
   const { columns, gap, fill = false, children } = props;
 
   // Wrap each child in a column cell so items share row width equally

@@ -5,16 +5,15 @@
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkDirective from 'remark-directive';
-import type { Root, PhrasingContent, List, Paragraph, ListItem } from 'mdast';
+import type { Root, PhrasingContent, List, Paragraph, ListItem, Heading } from 'mdast';
 import type { TextDirective } from 'mdast-util-directive';
 import type { NormalizedRun, HighlightScheme, TextStyleName, HorizontalAlignment, VerticalAlignment } from '../core/types.js';
-import { HALIGN, VALIGN } from '../core/types.js';
+import { HALIGN, VALIGN, MARKDOWN, TEXT_STYLE } from '../core/types.js';
+import { schema } from '../schema.js';
 import { NODE_TYPE, type ElementNode } from '../core/nodes.js';
 import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
-import { MDAST } from '../core/mdast.js';
-
-// Re-export for backward compatibility (tests, dsl/index.ts consumers)
-export { MDAST } from '../core/mdast.js';
+import { MDAST, extractSource } from '../core/mdast.js';
+import { image } from './primitives.js';
 
 // ============================================
 // CONSTANTS
@@ -214,10 +213,71 @@ function expandMarkdown(props: TextComponentProps, context: { theme: any }): Ele
 }
 
 // ============================================
-// COMPONENT REGISTRATION
+// BLOCK-LEVEL MARKDOWN COMPILATION
 // ============================================
 
-componentRegistry.register({ name: MARKDOWN_COMPONENT, expand: expandMarkdown });
+const HEADING_STYLE: Record<number, TextStyleName> = {
+  1: TEXT_STYLE.H1,
+  2: TEXT_STYLE.H2,
+  3: TEXT_STYLE.H3,
+  4: TEXT_STYLE.H4,
+};
+
+/**
+ * Compile a paragraph. If the paragraph contains only an image,
+ * produce an image() node instead of markdown().
+ */
+function compileParagraph(node: Paragraph, source: string): ComponentNode {
+  if (node.children.length === 1 && node.children[0].type === MDAST.IMAGE) {
+    const img = node.children[0];
+    return image(img.url);
+  }
+  return compileTextBlock(node, source);
+}
+
+/** Compile any text-containing block by extracting raw source and passing to markdown(). */
+function compileTextBlock(node: unknown, source: string): ComponentNode {
+  const raw = extractSource(node as any, source);
+  return markdown(raw);
+}
+
+/** Compile a heading by stripping # markers and applying TEXT_STYLE. */
+function compileHeading(node: Heading, source: string): ComponentNode {
+  const raw = extractSource(node, source);
+  const content = raw.replace(/^#{1,6}\s+/, '');
+  const style = HEADING_STYLE[node.depth] ?? TEXT_STYLE.H3;
+  return markdown(content, { style });
+}
+
+/** Compile any block-level MDAST node handled by the markdown component. */
+function compileMarkdownBlock(node: unknown, source: string): ComponentNode | null {
+  const n = node as { type: string };
+  switch (n.type) {
+    case MDAST.PARAGRAPH:
+      return compileParagraph(node as Paragraph, source);
+    case MDAST.LIST:
+      return compileTextBlock(node, source);
+    case MDAST.HEADING:
+      return compileHeading(node as Heading, source);
+    default:
+      return null;
+  }
+}
+
+// ============================================
+// COMPONENT DEFINITION & REGISTRATION
+// ============================================
+
+export const markdownComponent = componentRegistry.define({
+  name: MARKDOWN_COMPONENT,
+  input: schema.string(),
+  expand: expandMarkdown,
+  markdown: {
+    type: MARKDOWN.SYNTAX,
+    nodeType: [MDAST.PARAGRAPH, MDAST.LIST, MDAST.HEADING],
+    compile: compileMarkdownBlock,
+  },
+});
 
 /**
  * Create a markdown text component node.
@@ -250,7 +310,11 @@ function expandText(props: TextComponentProps, _context: { theme: any }): Elemen
   };
 }
 
-componentRegistry.register({ name: TEXT_COMPONENT, expand: expandText });
+export const textComponent = componentRegistry.define({
+  name: TEXT_COMPONENT,
+  input: schema.string(),
+  expand: expandText,
+});
 
 /**
  * Create a plain text component node (no markdown parsing).

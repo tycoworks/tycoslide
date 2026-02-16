@@ -6,19 +6,20 @@ import assert from 'node:assert';
 import { z } from 'zod';
 import { validateLayoutProps, type LayoutDefinition } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
+import { schema } from '../src/schema.js';
 
-// Create a test layout with a known schema
-const testSchema = z.object({
-  title: z.string(),
+// Create a test layout with a known schema shape
+const testShape = {
+  title: schema.string(),
   count: z.number().int().positive(),
-  tags: z.array(z.string()).optional(),
-  active: z.boolean().optional(),
-});
+  tags: schema.array(schema.string()).optional(),
+  active: schema.boolean().optional(),
+};
 
-const testLayout: LayoutDefinition<z.infer<typeof testSchema>> = {
+const testLayout: LayoutDefinition = {
   name: 'test',
   description: 'Test layout for validation',
-  schema: testSchema,
+  params: testShape,
   render: (props) => ({ content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: { text: props.title } } }),
 };
 
@@ -115,13 +116,13 @@ describe('validateLayoutProps', () => {
 });
 
 describe('validateLayoutProps with enum schema', () => {
-  const enumSchema = z.object({
-    style: z.enum(['h1', 'h2', 'h3', 'body'] as [string, ...string[]]),
-  });
-  const enumLayout: LayoutDefinition<z.infer<typeof enumSchema>> = {
+  const enumShape = {
+    style: schema.enum(['h1', 'h2', 'h3', 'body']),
+  };
+  const enumLayout: LayoutDefinition = {
     name: 'enumTest',
     description: 'Test enum validation',
-    schema: enumSchema,
+    params: enumShape,
     render: (props) => ({ content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: { style: props.style } } }),
   };
 

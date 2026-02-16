@@ -12,14 +12,17 @@ export * from './core/registry.js';
 // DSL (all user-facing functions — every function returns ComponentNode)
 export * from './dsl/index.js';
 
-// Compiler (block-level markdown → ComponentNode[])
+// Block compiler (markdown string → ComponentNode[])
 export { compileBlocks } from './compiler/blockCompiler.js';
 
 // Slide parser (multi-slide markdown file → structured document)
 export { parseSlideDocument, FrontmatterParseError, type ParsedDocument, type RawSlide } from './compiler/slideParser.js';
 
-// Layout validation
-export { validateLayoutProps } from './core/registry.js';
+// Layout and component definition
+export { validateLayoutProps, type ParamsComponentDefinition, type InputComponentDefinition, type InferParams, type MarkdownSyntax, type MarkdownBlock, type MarkdownInvocation } from './core/registry.js';
+
+// Schema helpers (domain-specific wrappers for layout Zod schemas)
+export { schema } from './schema.js';
 
 // Document compiler (markdown file → Presentation)
 export { compileDocument, type CompileOptions } from './compiler/documentCompiler.js';

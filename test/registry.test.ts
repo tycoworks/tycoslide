@@ -1,6 +1,5 @@
 import { describe, test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { z } from 'zod';
 import { Registry, componentRegistry, isComponentNode, component, type LayoutDefinition } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import type { Slide } from '../src/presentation.js';
@@ -18,20 +17,20 @@ import '../src/dsl/containers.js';
 // Minimal stub slide for testing
 const stubSlide: Slide = { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: {} } };
 
-function makeLayout<T>(name: string, render: (params: T) => Slide): LayoutDefinition<T> {
+function makeLayout(name: string, render: (params: any) => Slide): LayoutDefinition {
   return {
     name,
     description: `Test layout: ${name}`,
-    schema: z.record(z.string(), z.unknown()) as any,
+    params: {} as any,
     render,
   };
 }
 
 describe('Registry (generic base class)', () => {
-  let registry: Registry<LayoutDefinition<any>>;
+  let registry: Registry<LayoutDefinition>;
 
   beforeEach(() => {
-    registry = new Registry<LayoutDefinition<any>>('Layout', 'render');
+    registry = new Registry<LayoutDefinition>('Layout', 'render');
   });
 
   test('register and retrieve a definition', () => {

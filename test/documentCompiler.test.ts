@@ -13,6 +13,7 @@ import { layoutRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import { mockTheme } from './mocks.js';
 import type { Slide } from '../src/presentation.js';
+import { schema } from '../src/schema.js';
 
 // ============================================
 // TEST SETUP
@@ -32,8 +33,8 @@ function makeOptions(overrides?: { defaultLayout?: string }) {
 const simpleLayout = {
   name: 'simple',
   description: 'Test layout with just title',
-  schema: z.object({ title: z.string() }),
-  render: (props: { title: string }): Slide => {
+  params: { title: schema.string() },
+  render: (props: any): Slide => {
     receivedProps.push(props);
     const slide: Slide = { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
     renderedSlides.push(slide);
@@ -44,8 +45,8 @@ const simpleLayout = {
 const bodyLayout = {
   name: 'body',
   description: 'Body layout with title and body',
-  schema: z.object({ title: z.string().optional(), body: z.string() }),
-  render: (props: { title?: string; body: string }): Slide => {
+  params: { title: schema.string().optional(), body: schema.string() },
+  render: (props: any): Slide => {
     receivedProps.push(props);
     const slide: Slide = { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
     renderedSlides.push(slide);
@@ -56,7 +57,7 @@ const bodyLayout = {
 const slotLayout = {
   name: 'slots',
   description: 'Slot layout with named slots',
-  schema: z.object({ title: z.string(), eyebrow: z.string(), left: z.string(), right: z.string() }),
+  params: { title: schema.string(), eyebrow: schema.string(), left: schema.string(), right: schema.string() },
   render: (props: any): Slide => {
     receivedProps.push(props);
     const slide: Slide = { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
@@ -68,7 +69,7 @@ const slotLayout = {
 const strictLayout = {
   name: 'strict',
   description: 'Strict layout with required field',
-  schema: z.object({ title: z.string(), required_field: z.string() }),
+  params: { title: schema.string(), required_field: schema.string() },
   render: (props: any): Slide => {
     receivedProps.push(props);
     const slide: Slide = { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
@@ -80,7 +81,7 @@ const strictLayout = {
 const defaultLayout = {
   name: 'default',
   description: 'Default layout with optional body',
-  schema: z.object({ title: z.string().optional(), body: z.string().optional() }),
+  params: { title: schema.string().optional(), body: schema.string().optional() },
   render: (props: any): Slide => {
     receivedProps.push(props);
     const slide: Slide = { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
@@ -354,10 +355,10 @@ Body`;
       const cardLayout = {
         name: 'cards',
         description: 'Card layout',
-        schema: z.object({
-          title: z.string(),
-          cards: z.array(z.object({ image: z.string(), title: z.string() })),
-        }),
+        params: {
+          title: schema.string(),
+          cards: schema.array(z.object({ image: schema.string(), title: schema.string() })),
+        },
         render: (props: any): Slide => {
           receivedProps.push(props);
           const slide: Slide = { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };

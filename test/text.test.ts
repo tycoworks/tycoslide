@@ -3,7 +3,8 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { parseMarkdown, mdastToRuns, markdown, text, MARKDOWN_COMPONENT, TEXT_COMPONENT, MDAST } from '../src/dsl/text.js';
+import { parseMarkdown, mdastToRuns, markdown, text, MARKDOWN_COMPONENT, TEXT_COMPONENT } from '../src/dsl/text.js';
+import { MDAST } from '../src/core/mdast.js';
 import { componentRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import type { NormalizedRun, HighlightScheme } from '../src/core/types.js';

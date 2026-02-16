@@ -1,13 +1,13 @@
 // Card Component
 // Implements card as a component using primitives: stack, column, shape, text, image
 
-import { componentRegistry, component, type ExpansionContext } from '../core/registry.js';
+import { componentRegistry, component, type ExpansionContext, type InferParams } from '../core/registry.js';
 import { stack, column } from './containers.js';
-import { shape, image } from './primitives.js';
-import { markdown, text } from './text.js';
+import { shape, image, imageComponent } from './primitives.js';
+import { markdown, text, markdownComponent, textComponent } from './text.js';
 import type { SlideNode } from '../core/nodes.js';
-import type { TextStyleName, GapSize } from '../core/types.js';
-import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE } from '../core/types.js';
+import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE, TEXT_STYLE_VALUES, GAP_VALUES, MARKDOWN } from '../core/types.js';
+import { schema } from '../schema.js';
 
 // ============================================
 // CONSTANTS
@@ -17,50 +17,56 @@ import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE } from '../core/types.js';
 export const CARD_COMPONENT = 'card' as const;
 
 // ============================================
+// PARAMS SCHEMA
+// ============================================
+
+const cardParams = {
+  /** Card image (path) - displayed at top */
+  image: imageComponent.input.optional(),
+  /** Card title text */
+  title: textComponent.input.optional(),
+  /** Text style for title */
+  titleStyle: schema.enum(TEXT_STYLE_VALUES).optional(),
+  /** Color for title */
+  titleColor: schema.string().optional(),
+  /** Card description text */
+  description: markdownComponent.input.optional(),
+  /** Text style for description */
+  descriptionStyle: schema.enum(TEXT_STYLE_VALUES).optional(),
+  /** Color for description */
+  descriptionColor: schema.string().optional(),
+  /** Whether to show background (default: true) */
+  background: schema.boolean().optional(),
+  /** Background color */
+  backgroundColor: schema.string().optional(),
+  /** Background opacity (0-100) */
+  backgroundOpacity: schema.number().optional(),
+  /** Border color */
+  borderColor: schema.string().optional(),
+  /** Border width in points */
+  borderWidth: schema.number().optional(),
+  /** Corner radius in inches */
+  cornerRadius: schema.number().optional(),
+  /** Internal padding in inches */
+  padding: schema.number().optional(),
+  /** Gap between children */
+  gap: schema.enum(GAP_VALUES).optional(),
+  /** Gap between title and description (defaults to gap) */
+  textGap: schema.enum(GAP_VALUES).optional(),
+};
+
+// ============================================
 // TYPES
 // ============================================
 
-export interface CardProps {
-  /** Card image (path) - displayed at top */
-  image?: string;
-  /** Card title text */
-  title?: string;
-  /** Text style for title */
-  titleStyle?: TextStyleName;
-  /** Color for title */
-  titleColor?: string;
-  /** Card description text */
-  description?: string;
-  /** Text style for description */
-  descriptionStyle?: TextStyleName;
-  /** Color for description */
-  descriptionColor?: string;
-  /** Whether to show background (default: true) */
-  background?: boolean;
-  /** Background color */
-  backgroundColor?: string;
-  /** Background opacity (0-100) */
-  backgroundOpacity?: number;
-  /** Border color */
-  borderColor?: string;
-  /** Border width in points */
-  borderWidth?: number;
-  /** Corner radius in inches */
-  cornerRadius?: number;
-  /** Internal padding in inches */
-  padding?: number;
-  /** Gap between children */
-  gap?: GapSize;
-  /** Gap between title and description (defaults to gap) */
-  textGap?: GapSize;
-}
+export type CardParams = InferParams<typeof cardParams>;
 
 // ============================================
 // EXPANSION FUNCTION
 // ============================================
 
 /**
- * Expand card props into primitive node tree.
+ * Expand card params into primitive node tree.
  *
  * Structure:
  * ```
@@ -70,7 +76,7 @@ export interface CardProps {
  * )
  * ```
  */
-function expandCard(props: CardProps, context: ExpansionContext): SlideNode {
+function expandCard(props: CardParams, context: ExpansionContext): SlideNode {
   const {
     image: imagePath,
     title,
@@ -146,10 +152,15 @@ function expandCard(props: CardProps, context: ExpansionContext): SlideNode {
 }
 
 // ============================================
-// COMPONENT REGISTRATION & DSL
+// COMPONENT DEFINITION
 // ============================================
 
-componentRegistry.register({ name: CARD_COMPONENT, expand: expandCard });
+export const cardComponent = componentRegistry.define({
+  name: CARD_COMPONENT,
+  params: cardParams,
+  expand: expandCard,
+  markdown: { type: MARKDOWN.BLOCK },
+});
 
 /**
  * Create a card component node.
@@ -164,6 +175,6 @@ componentRegistry.register({ name: CARD_COMPONENT, expand: expandCard });
  * })
  * ```
  */
-export function card(props: CardProps) {
+export function card(props: CardParams) {
   return component(CARD_COMPONENT, props);
 }

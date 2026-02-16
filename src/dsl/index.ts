@@ -7,6 +7,7 @@ export {
   line,
   shape,
   slideNumber,
+  imageComponent,
   IMAGE_COMPONENT,
   LINE_COMPONENT,
   SHAPE_COMPONENT,
@@ -44,30 +45,37 @@ export {
 export {
   markdown,
   text,
+  markdownComponent,
+  textComponent,
   MARKDOWN_COMPONENT,
   TEXT_COMPONENT,
-  MDAST,
   type TextProps,
   type TextComponentProps,
 } from './text.js';
 
+// MDAST constants (node type names for markdown AST)
+export { MDAST } from '../core/mdast.js';
+
 // Card (composition component)
 export {
   card,
+  cardComponent,
   CARD_COMPONENT,
-  type CardProps,
+  type CardParams,
 } from './card.js';
 
 // Quote (composition component)
 export {
   quote,
+  quoteComponent,
   QUOTE_COMPONENT,
-  type QuoteProps,
+  type QuoteParams,
 } from './quote.js';
 
 // Mermaid diagram (I/O component — mermaid-cli)
 export {
   mermaid,
+  mermaidComponent,
   sanitizeMermaidDefinition,
   MERMAID_COMPONENT,
   type MermaidProps,
