@@ -308,7 +308,7 @@ export function isComponentNode(node: unknown): node is ComponentNode {
 export type SchemaShape = Record<string, z.ZodTypeAny>;
 
 /** Infer the TypeScript type from a raw Zod shape. Use instead of importing z from zod. */
-export type InferParams<TShape extends SchemaShape> = z.infer<z.ZodObject<TShape>>;
+export type InferProps<TShape extends SchemaShape> = z.infer<z.ZodObject<TShape>>;
 
 /**
  * A named, described, typed slide factory.

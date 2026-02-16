@@ -1,11 +1,11 @@
-// defineComponent Tests — all 3 overloads, .input, InferParams, registry compat
+// defineComponent Tests — all 3 overloads, .input, InferProps, registry compat
 
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { z } from 'zod';
 import {
   componentRegistry,
-  type InferParams,
+  type InferProps,
   type ParamsComponentDefinition,
   type InputComponentDefinition,
   type ComponentDefinition,

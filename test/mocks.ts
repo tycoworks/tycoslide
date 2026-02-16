@@ -94,6 +94,7 @@ export function mockTheme(options?: {
       [TEXT_STYLE.BODY]: mockTextStyle,
       [TEXT_STYLE.SMALL]: mockTextStyle,
       [TEXT_STYLE.FOOTER]: mockTextStyle,
+      [TEXT_STYLE.EYEBROW]: mockTextStyle,
     },
     highlights,
   } as Theme;

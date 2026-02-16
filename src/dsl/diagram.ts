@@ -9,6 +9,8 @@ import {
   component,
   type ComponentNode,
   type ExpansionContext,
+  type InferProps,
+  type SchemaShape,
 } from '../core/registry.js';
 import { schema } from '../schema.js';
 
@@ -34,17 +36,21 @@ const MERMAID_RENDER_TIMEOUT_MS = 30000;
 const MAX_MMDC_SEARCH_DEPTH = 6;
 
 // ============================================
-// TYPES
+// SCHEMAS & TYPES
 // ============================================
 
-export interface MermaidProps {
-  scale?: number;
-}
+const mermaidOptionsSchema = {
+  scale: schema.number().optional(),
+} satisfies SchemaShape;
 
-export interface MermaidComponentProps {
-  definition: string;
-  scale?: number;
-}
+export type MermaidProps = InferProps<typeof mermaidOptionsSchema>;
+
+const mermaidComponentSchema = {
+  ...mermaidOptionsSchema,
+  definition: schema.string(),
+} satisfies SchemaShape;
+
+export type MermaidComponentProps = InferProps<typeof mermaidComponentSchema>;
 
 // ============================================
 // SANITIZATION

@@ -3,7 +3,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { compileBlocks } from '../src/compiler/blockCompiler.js';
+import { compileBlocks } from '../src/markdown/blockCompiler.js';
 import { MARKDOWN_COMPONENT } from '../src/dsl/text.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import { TEXT_STYLE } from '../src/core/types.js';

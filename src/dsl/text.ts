@@ -7,13 +7,13 @@ import remarkParse from 'remark-parse';
 import remarkDirective from 'remark-directive';
 import type { Root, PhrasingContent, List, Paragraph, ListItem, Heading } from 'mdast';
 import type { TextDirective } from 'mdast-util-directive';
-import type { NormalizedRun, HighlightScheme, TextStyleName, HorizontalAlignment, VerticalAlignment } from '../core/types.js';
+import type { NormalizedRun, HighlightScheme } from '../core/types.js';
 import { HALIGN, VALIGN, MARKDOWN, TEXT_STYLE } from '../core/types.js';
-import { schema } from '../schema.js';
 import { NODE_TYPE, type ElementNode } from '../core/nodes.js';
-import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
+import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape } from '../core/registry.js';
 import { MDAST, extractSource } from '../core/mdast.js';
 import { image } from './primitives.js';
+import { schema } from '../schema.js';
 
 // ============================================
 // CONSTANTS
@@ -26,23 +26,28 @@ export const MARKDOWN_COMPONENT = 'markdown' as const;
 export const TEXT_COMPONENT = 'text' as const;
 
 // ============================================
-// TYPES
+// SCHEMAS & TYPES
 // ============================================
 
 /** Style options for text (everything except the content string) */
-export interface TextProps {
-  style?: TextStyleName;
-  color?: string;
-  hAlign?: HorizontalAlignment;
-  vAlign?: VerticalAlignment;
-  bulletColor?: string;
-  lineHeightMultiplier?: number;
-}
+const textSchema = {
+  style: schema.textStyle().optional(),
+  color: schema.string().optional(),
+  hAlign: schema.hAlign().optional(),
+  vAlign: schema.vAlign().optional(),
+  bulletColor: schema.string().optional(),
+  lineHeightMultiplier: schema.number().optional(),
+} satisfies SchemaShape;
+
+export type TextProps = InferProps<typeof textSchema>;
 
 /** Full props including content (used internally by expansion) */
-export interface TextComponentProps extends TextProps {
-  content: string;
-}
+const textComponentSchema = {
+  ...textSchema,
+  content: schema.string(),
+} satisfies SchemaShape;
+
+export type TextComponentProps = InferProps<typeof textComponentSchema>;
 
 // ============================================
 // PARSER
@@ -216,7 +221,7 @@ function expandMarkdown(props: TextComponentProps, context: { theme: any }): Ele
 // BLOCK-LEVEL MARKDOWN COMPILATION
 // ============================================
 
-const HEADING_STYLE: Record<number, TextStyleName> = {
+const HEADING_STYLE: Record<number, TextProps['style']> = {
   1: TEXT_STYLE.H1,
   2: TEXT_STYLE.H2,
   3: TEXT_STYLE.H3,

@@ -1,11 +1,15 @@
 // Primitive components: image, line, shape, slideNumber
 
-import { schema } from '../schema.js';
-import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
+import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape } from '../core/registry.js';
 import { NODE_TYPE } from '../core/nodes.js';
-import type { ImageNode, LineNode, ShapeNode, ShapeBorder, SlideNumberNode } from '../core/nodes.js';
-import type { TextStyleName, HorizontalAlignment, ArrowType, DashType, ShapeName } from '../core/types.js';
-import { HALIGN, SHAPE } from '../core/types.js';
+import type { ImageNode, LineNode, ShapeNode, SlideNumberNode } from '../core/nodes.js';
+import {
+  HALIGN,
+  ARROW_TYPE_VALUES,
+  DASH_TYPE_VALUES,
+  SHAPE_VALUES,
+} from '../core/types.js';
+import { schema } from '../schema.js';
 
 // ============================================
 // IMAGE
@@ -13,13 +17,18 @@ import { HALIGN, SHAPE } from '../core/types.js';
 
 export const IMAGE_COMPONENT = 'image' as const;
 
-export interface ImageOptions {
-  alt?: string;
-}
+const imageOptionsSchema = {
+  alt: schema.string().optional(),
+} satisfies SchemaShape;
 
-export interface ImageProps extends ImageOptions {
-  src: string;
-}
+export type ImageOptions = InferProps<typeof imageOptionsSchema>;
+
+const imageSchema = {
+  ...imageOptionsSchema,
+  src: schema.string(),
+} satisfies SchemaShape;
+
+export type ImageProps = InferProps<typeof imageSchema>;
 
 export const imageComponent = componentRegistry.define({
   name: IMAGE_COMPONENT,
@@ -41,16 +50,19 @@ export function image(src: string, options?: ImageOptions): ComponentNode {
 
 export const LINE_COMPONENT = 'line' as const;
 
-export interface LineProps {
-  color?: string;
-  width?: number;
-  dashType?: DashType;
-  beginArrow?: ArrowType;
-  endArrow?: ArrowType;
-}
+const lineSchema = {
+  color: schema.string().optional(),
+  width: schema.number().optional(),
+  dashType: schema.enum(DASH_TYPE_VALUES).optional(),
+  beginArrow: schema.enum(ARROW_TYPE_VALUES).optional(),
+  endArrow: schema.enum(ARROW_TYPE_VALUES).optional(),
+} satisfies SchemaShape;
+
+export type LineProps = InferProps<typeof lineSchema>;
 
 componentRegistry.define({
   name: LINE_COMPONENT,
+  params: lineSchema,
   expand: (props: LineProps): LineNode => ({
     type: NODE_TYPE.LINE,
     color: props.color,
@@ -71,15 +83,32 @@ export function line(props?: LineProps): ComponentNode {
 
 export const SHAPE_COMPONENT = 'shape' as const;
 
-export interface ShapeProps {
-  shape: ShapeName;
-  fill?: { color: string; opacity?: number };
-  border?: ShapeBorder;
-  cornerRadius?: number;
-}
+const shapeFillSchema = schema.object({
+  color: schema.string(),
+  opacity: schema.number().optional(),
+});
+
+const shapeBorderSchema = schema.object({
+  color: schema.string().optional(),
+  width: schema.number().optional(),
+  top: schema.boolean().optional(),
+  right: schema.boolean().optional(),
+  bottom: schema.boolean().optional(),
+  left: schema.boolean().optional(),
+});
+
+const shapeSchema = {
+  shape: schema.enum(SHAPE_VALUES),
+  fill: shapeFillSchema.optional(),
+  border: shapeBorderSchema.optional(),
+  cornerRadius: schema.number().optional(),
+} satisfies SchemaShape;
+
+export type ShapeProps = InferProps<typeof shapeSchema>;
 
 componentRegistry.define({
   name: SHAPE_COMPONENT,
+  params: shapeSchema,
   expand: (props: ShapeProps): ShapeNode => ({
     type: NODE_TYPE.SHAPE,
     shape: props.shape,
@@ -99,14 +128,17 @@ export function shape(props: ShapeProps): ComponentNode {
 
 export const SLIDE_NUMBER_COMPONENT = 'slideNumber' as const;
 
-export interface SlideNumberProps {
-  style?: TextStyleName;
-  color?: string;
-  hAlign?: HorizontalAlignment;
-}
+const slideNumberSchema = {
+  style: schema.textStyle().optional(),
+  color: schema.string().optional(),
+  hAlign: schema.hAlign().optional(),
+} satisfies SchemaShape;
+
+export type SlideNumberProps = InferProps<typeof slideNumberSchema>;
 
 componentRegistry.define({
   name: SLIDE_NUMBER_COMPONENT,
+  params: slideNumberSchema,
   expand: (props: SlideNumberProps): SlideNumberNode => ({
     type: NODE_TYPE.SLIDE_NUMBER,
     style: props.style,

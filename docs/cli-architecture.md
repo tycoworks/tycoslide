@@ -2,6 +2,8 @@
 
 Research and design notes for adding a CLI tool and Markdown input to tycoslide.
 
+Also dir structure stuff.oh I 
+
 ## Goal
 
 Tycoslide is currently a TypeScript library. The goal is to add a CLI that takes Markdown files as input and generates branded `.pptx` presentations — while keeping the library usable on its own.

@@ -61,7 +61,7 @@ export {
   card,
   cardComponent,
   CARD_COMPONENT,
-  type CardParams,
+  type CardProps,
 } from './card.js';
 
 // Quote (composition component)
@@ -69,7 +69,7 @@ export {
   quote,
   quoteComponent,
   QUOTE_COMPONENT,
-  type QuoteParams,
+  type QuoteProps,
 } from './quote.js';
 
 // Mermaid diagram (I/O component — mermaid-cli)

@@ -4,7 +4,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveAssetReferences, ASSET_PREFIX } from '../src/compiler/assetResolver.js';
+import { resolveAssetReferences, ASSET_PREFIX } from '../src/markdown/assetResolver.js';
 
 const mockAssets = {
   illustrations: {

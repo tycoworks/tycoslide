@@ -1,12 +1,12 @@
 // Card Component
 // Implements card as a component using primitives: stack, column, shape, text, image
 
-import { componentRegistry, component, type ExpansionContext, type InferParams } from '../core/registry.js';
+import { componentRegistry, component, type ExpansionContext, type InferProps, type SchemaShape } from '../core/registry.js';
 import { stack, column } from './containers.js';
 import { shape, image, imageComponent } from './primitives.js';
 import { markdown, text, markdownComponent, textComponent } from './text.js';
 import type { SlideNode } from '../core/nodes.js';
-import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE, TEXT_STYLE_VALUES, GAP_VALUES, MARKDOWN } from '../core/types.js';
+import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE, MARKDOWN } from '../core/types.js';
 import { schema } from '../schema.js';
 
 // ============================================
@@ -20,19 +20,19 @@ export const CARD_COMPONENT = 'card' as const;
 // PARAMS SCHEMA
 // ============================================
 
-const cardParams = {
+const cardSchema = {
   /** Card image (path) - displayed at top */
   image: imageComponent.input.optional(),
   /** Card title text */
   title: textComponent.input.optional(),
   /** Text style for title */
-  titleStyle: schema.enum(TEXT_STYLE_VALUES).optional(),
+  titleStyle: schema.textStyle().optional(),
   /** Color for title */
   titleColor: schema.string().optional(),
   /** Card description text */
   description: markdownComponent.input.optional(),
   /** Text style for description */
-  descriptionStyle: schema.enum(TEXT_STYLE_VALUES).optional(),
+  descriptionStyle: schema.textStyle().optional(),
   /** Color for description */
   descriptionColor: schema.string().optional(),
   /** Whether to show background (default: true) */
@@ -50,16 +50,16 @@ const cardParams = {
   /** Internal padding in inches */
   padding: schema.number().optional(),
   /** Gap between children */
-  gap: schema.enum(GAP_VALUES).optional(),
+  gap: schema.gap().optional(),
   /** Gap between title and description (defaults to gap) */
-  textGap: schema.enum(GAP_VALUES).optional(),
-};
+  textGap: schema.gap().optional(),
+} satisfies SchemaShape;
 
 // ============================================
 // TYPES
 // ============================================
 
-export type CardParams = InferParams<typeof cardParams>;
+export type CardProps = InferProps<typeof cardSchema>;
 
 // ============================================
 // EXPANSION FUNCTION
@@ -76,7 +76,7 @@ export type CardParams = InferParams<typeof cardParams>;
  * )
  * ```
  */
-function expandCard(props: CardParams, context: ExpansionContext): SlideNode {
+function expandCard(props: CardProps, context: ExpansionContext): SlideNode {
   const {
     image: imagePath,
     title,
@@ -157,7 +157,7 @@ function expandCard(props: CardParams, context: ExpansionContext): SlideNode {
 
 export const cardComponent = componentRegistry.define({
   name: CARD_COMPONENT,
-  params: cardParams,
+  params: cardSchema,
   expand: expandCard,
   markdown: { type: MARKDOWN.BLOCK },
 });
@@ -175,6 +175,6 @@ export const cardComponent = componentRegistry.define({
  * })
  * ```
  */
-export function card(props: CardParams) {
+export function card(props: CardProps) {
   return component(CARD_COMPONENT, props);
 }

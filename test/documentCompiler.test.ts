@@ -8,7 +8,7 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { z } from 'zod';
-import { compileDocument } from '../src/compiler/documentCompiler.js';
+import { compileDocument } from '../src/markdown/documentCompiler.js';
 import { layoutRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import { mockTheme } from './mocks.js';

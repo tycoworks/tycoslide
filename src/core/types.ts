@@ -21,6 +21,9 @@ export const HALIGN = {
 
 export type HorizontalAlignment = typeof HALIGN[keyof typeof HALIGN];
 
+/** All HALIGN values as a tuple — useful for Zod enum schemas */
+export const HALIGN_VALUES = Object.values(HALIGN) as [HorizontalAlignment, ...HorizontalAlignment[]];
+
 export const VALIGN = {
   TOP: 'top',
   MIDDLE: 'middle',
@@ -28,6 +31,9 @@ export const VALIGN = {
 } as const;
 
 export type VerticalAlignment = typeof VALIGN[keyof typeof VALIGN];
+
+/** All VALIGN values as a tuple — useful for Zod enum schemas */
+export const VALIGN_VALUES = Object.values(VALIGN) as [VerticalAlignment, ...VerticalAlignment[]];
 
 export const GAP = {
   NONE: 'none',
@@ -63,6 +69,7 @@ export const BORDER_STYLE = {
 } as const;
 
 export type BorderStyle = typeof BORDER_STYLE[keyof typeof BORDER_STYLE];
+
 
 export const SHAPE = {
   // Basic geometry
@@ -257,6 +264,9 @@ export const SHAPE = {
 
 export type ShapeName = typeof SHAPE[keyof typeof SHAPE];
 
+/** All SHAPE values as a tuple — useful for Zod enum schemas */
+export const SHAPE_VALUES = Object.values(SHAPE) as [ShapeName, ...ShapeName[]];
+
 
 /** pptxgenjs line shape name — used internally by buildLineConfig */
 export const LINE_SHAPE = 'line' as const;
@@ -272,6 +282,9 @@ export const ARROW_TYPE = {
 
 export type ArrowType = typeof ARROW_TYPE[keyof typeof ARROW_TYPE];
 
+/** All ARROW_TYPE values as a tuple — useful for Zod enum schemas */
+export const ARROW_TYPE_VALUES = Object.values(ARROW_TYPE) as [ArrowType, ...ArrowType[]];
+
 export const DASH_TYPE = {
   SOLID: 'solid',
   DASH: 'dash',
@@ -283,6 +296,9 @@ export const DASH_TYPE = {
 } as const;
 
 export type DashType = typeof DASH_TYPE[keyof typeof DASH_TYPE];
+
+/** All DASH_TYPE values as a tuple — useful for Zod enum schemas */
+export const DASH_TYPE_VALUES = Object.values(DASH_TYPE) as [DashType, ...DashType[]];
 
 export const SLIDE_SIZE = {
   S16x9:  { layout: 'LAYOUT_16x9',  width: 10,    height: 5.625 },

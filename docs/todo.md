@@ -6,7 +6,7 @@ Spacing / layouts:
 
 Core:
 - Markdown 2
-- Remove diagram builder, just text?
+- Typia
 - Align colors with design token standards. Semantic vs color names.
 - Escape hatch
 - Portrait mode
@@ -21,6 +21,5 @@ Cleanup:
 
 Components:
 - Image to the left of the card / direction and justify
-- Quote component
 - Code component
 - Real mermaid (or embed diagram as alt)

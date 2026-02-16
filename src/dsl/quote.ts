@@ -2,12 +2,12 @@
 // Card with optional image, quote text, and attribution.
 // Expands to: stack(shape(background), column(image?, quote, attribution))
 
-import { componentRegistry, component, type ExpansionContext, type InferParams } from '../core/registry.js';
+import { componentRegistry, component, type ExpansionContext, type InferProps, type SchemaShape } from '../core/registry.js';
 import { stack, column } from './containers.js';
 import { shape, image as imageNode, imageComponent } from './primitives.js';
 import { markdown, text, markdownComponent, textComponent } from './text.js';
 import type { SlideNode } from '../core/nodes.js';
-import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE, SIZE, TEXT_STYLE_VALUES, GAP_VALUES, MARKDOWN } from '../core/types.js';
+import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE, SIZE, MARKDOWN } from '../core/types.js';
 import { schema } from '../schema.js';
 
 // ============================================
@@ -21,7 +21,7 @@ export const QUOTE_COMPONENT = 'quote' as const;
 // PARAMS SCHEMA
 // ============================================
 
-const quoteParams = {
+const quoteSchema = {
   /** Quote text (markdown supported) */
   quote: markdownComponent.input,
   /** Attribution line, e.g. "— Jane Smith, CTO" */
@@ -29,9 +29,9 @@ const quoteParams = {
   /** Optional image/logo displayed above the quote */
   image: imageComponent.input.optional(),
   /** Text style for quote text */
-  quoteStyle: schema.enum(TEXT_STYLE_VALUES).optional(),
+  quoteStyle: schema.textStyle().optional(),
   /** Text style for attribution */
-  attributionStyle: schema.enum(TEXT_STYLE_VALUES).optional(),
+  attributionStyle: schema.textStyle().optional(),
   /** Whether to show background (default: true) */
   background: schema.boolean().optional(),
   /** Background color */
@@ -47,14 +47,14 @@ const quoteParams = {
   /** Internal padding in inches */
   padding: schema.number().optional(),
   /** Gap between children */
-  gap: schema.enum(GAP_VALUES).optional(),
-};
+  gap: schema.gap().optional(),
+} satisfies SchemaShape;
 
 // ============================================
 // TYPES
 // ============================================
 
-export type QuoteParams = InferParams<typeof quoteParams>;
+export type QuoteProps = InferProps<typeof quoteSchema>;
 
 // ============================================
 // EXPANSION FUNCTION
@@ -75,7 +75,7 @@ export type QuoteParams = InferParams<typeof quoteParams>;
  * )
  * ```
  */
-function expandQuote(props: QuoteParams, context: ExpansionContext): SlideNode {
+function expandQuote(props: QuoteProps, context: ExpansionContext): SlideNode {
   const {
     quote: quoteText,
     attribution,
@@ -140,7 +140,7 @@ function expandQuote(props: QuoteParams, context: ExpansionContext): SlideNode {
 
 export const quoteComponent = componentRegistry.define({
   name: QUOTE_COMPONENT,
-  params: quoteParams,
+  params: quoteSchema,
   expand: expandQuote,
   markdown: { type: MARKDOWN.BLOCK },
 });
@@ -157,6 +157,6 @@ export const quoteComponent = componentRegistry.define({
  * })
  * ```
  */
-export function quote(props: QuoteParams) {
+export function quote(props: QuoteProps) {
   return component(QUOTE_COMPONENT, props);
 }
