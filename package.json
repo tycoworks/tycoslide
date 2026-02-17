@@ -4,6 +4,9 @@
   "description": "Declarative slide generation library built on pptxgenjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "tycoslide": "./dist/cli/index.js"
+  },
   "scripts": {
     "postinstall": "patch-package",
     "build": "tsc",
@@ -26,6 +29,7 @@
     "@fontsource/host-grotesk": "^5.2.8",
     "@fontsource/inter": "^5.2.8",
     "@mermaid-js/mermaid-cli": "^11.12.0",
+    "commander": "^14.0.3",
     "debug": "^4.4.3",
     "hono": "^4.11.9",
     "image-size": "^1.1.1",
