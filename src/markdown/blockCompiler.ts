@@ -76,7 +76,15 @@ function compileBlock(node: RootContent, source: string): ComponentNode | null {
     return compileDirective(node as unknown as ContainerDirective, source);
   }
 
-  // 2. MDAST nodes → registry lookup by nodeType
+  // 2. Reject inline image syntax — MDAST wraps ![](url) in paragraphs
+  if (node.type === SYNTAX.PARAGRAPH) {
+    const para = node as { children: { type: string }[] };
+    if (para.children.length === 1 && para.children[0].type === SYNTAX.IMAGE) {
+      throw new Error('Images cannot be embedded inline in text. Use :::image directive.');
+    }
+  }
+
+  // 3. MDAST nodes → registry lookup by nodeType
   const handler = componentRegistry.getSyntaxHandler(node.type);
   if (handler) {
     return handler.markdown.compile(node, source);

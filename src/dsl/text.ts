@@ -12,7 +12,6 @@ import { HALIGN, VALIGN, MARKDOWN, TEXT_STYLE } from '../core/types.js';
 import { NODE_TYPE, type ElementNode } from '../core/nodes.js';
 import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape } from '../core/registry.js';
 import { SYNTAX, extractSource } from '../core/mdast.js';
-import { image } from './primitives.js';
 import { schema } from '../schema.js';
 
 // ============================================
@@ -183,7 +182,10 @@ function transformInline(
         );
         break;
       }
-      // Silently skip unsupported inline types (html, code, break, etc.)
+      case SYNTAX.IMAGE:
+        throw new Error('Images cannot be embedded inline in text.');
+      default:
+        throw new Error(`Unsupported inline markdown type "${node.type}".`);
     }
   }
 }
@@ -229,18 +231,6 @@ const HEADING_STYLE: Record<number, TextProps['style']> = {
   4: TEXT_STYLE.H4,
 };
 
-/**
- * Compile a paragraph. If the paragraph contains only an image,
- * produce an image() node instead of markdown().
- */
-function compileParagraph(node: Paragraph, source: string): ComponentNode {
-  if (node.children.length === 1 && node.children[0].type === SYNTAX.IMAGE) {
-    const img = node.children[0];
-    return image(img.url);
-  }
-  return compileTextBlock(node, source);
-}
-
 /** Compile any text-containing block by extracting raw source and passing to markdown(). */
 function compileTextBlock(node: unknown, source: string): ComponentNode {
   const raw = extractSource(node as any, source);
@@ -260,7 +250,7 @@ function compileMarkdownBlock(node: unknown, source: string): ComponentNode | nu
   const n = node as { type: string };
   switch (n.type) {
     case SYNTAX.PARAGRAPH:
-      return compileParagraph(node as Paragraph, source);
+      return compileTextBlock(node, source);
     case SYNTAX.LIST:
       return compileTextBlock(node, source);
     case SYNTAX.HEADING:

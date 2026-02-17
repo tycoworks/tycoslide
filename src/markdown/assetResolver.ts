@@ -14,8 +14,9 @@ export function resolveAssetReferences(
   slideIndex: number,
 ): unknown {
   if (typeof value === 'string') {
-    if (!value.startsWith(ASSET_PREFIX)) return value;
-    return resolveAssetPath(value, assets, slideIndex);
+    if (value.startsWith(ASSET_PREFIX)) return resolveAssetPath(value, assets, slideIndex);
+    if (value.includes(ASSET_PREFIX)) return resolveEmbeddedAssets(value, assets, slideIndex);
+    return value;
   }
   if (Array.isArray(value)) {
     return value.map(item => resolveAssetReferences(item, assets, slideIndex));
@@ -28,6 +29,21 @@ export function resolveAssetReferences(
     return out;
   }
   return value;
+}
+
+/**
+ * Replace all `asset:dot.path` references embedded within a larger string.
+ * Used for markdown body/slot content where asset references appear inside
+ * :::directive YAML bodies or ![](asset:...) image syntax.
+ */
+function resolveEmbeddedAssets(
+  text: string,
+  assets: Record<string, unknown> | undefined,
+  slideIndex: number,
+): string {
+  return text.replace(/\basset:([\w]+(?:\.[\w]+)*)/g, (match) => {
+    return resolveAssetPath(match, assets, slideIndex);
+  });
 }
 
 function resolveAssetPath(

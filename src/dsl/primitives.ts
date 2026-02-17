@@ -7,6 +7,7 @@ import {
   HALIGN,
   DASH_TYPE,
   TEXT_STYLE,
+  MARKDOWN,
   ARROW_TYPE_VALUES,
   DASH_TYPE_VALUES,
   SHAPE_VALUES,
@@ -39,11 +40,15 @@ export type ImageProps = InferProps<typeof imageSchema>;
 export const imageComponent = componentRegistry.define({
   name: IMAGE_COMPONENT,
   input: schema.string(),
-  expand: (props: ImageProps): ImageNode => ({
-    type: NODE_TYPE.IMAGE,
-    src: props.src,
-    alt: props.alt,
-  }),
+  expand: (props: ImageProps | string): ImageNode => {
+    const resolved = typeof props === 'string' ? { src: props } : props;
+    return {
+      type: NODE_TYPE.IMAGE,
+      src: resolved.src,
+      alt: resolved.alt,
+    };
+  },
+  markdown: { type: MARKDOWN.BLOCK },
 });
 
 export function image(src: string, options?: ImageOptions): ComponentNode {
@@ -89,6 +94,7 @@ componentRegistry.define({
     beginArrow: props.beginArrow,
     endArrow: props.endArrow,
   }),
+  markdown: { type: MARKDOWN.BLOCK },
 });
 
 export function line(props?: LineProps): ComponentNode {
@@ -134,6 +140,7 @@ componentRegistry.define({
     border: props.border,
     cornerRadius: props.cornerRadius,
   }),
+  markdown: { type: MARKDOWN.BLOCK },
 });
 
 export function shape(props: ShapeProps): ComponentNode {

@@ -183,6 +183,49 @@ describe('Asset Resolver', () => {
     });
   });
 
+  describe('embedded assets', () => {
+    it('should resolve asset references embedded in a larger string', () => {
+      const input = 'Look at ![](asset:illustrations.server) for details';
+      const result = resolveAssetReferences(input, mockAssets, 0);
+      assert.strictEqual(result, 'Look at ![](/abs/path/illustrations/server.png) for details');
+    });
+
+    it('should resolve multiple embedded asset references in one string', () => {
+      const input = '![](asset:illustrations.server) and ![](asset:clients.delphi)';
+      const result = resolveAssetReferences(input, mockAssets, 0);
+      assert.strictEqual(result, '![](/abs/path/illustrations/server.png) and ![](/abs/path/clients/delphi.png)');
+    });
+
+    it('should resolve embedded assets in markdown image syntax', () => {
+      const input = '![alt text](asset:brand.logos.wordmark)';
+      const result = resolveAssetReferences(input, mockAssets, 0);
+      assert.strictEqual(result, '![alt text](/abs/path/brand/logos/wordmark.png)');
+    });
+
+    it('should resolve embedded assets in directive YAML bodies', () => {
+      const input = 'image: asset:illustrations.cloud\ntitle: Hello';
+      const result = resolveAssetReferences(input, mockAssets, 0);
+      assert.strictEqual(result, 'image: /abs/path/illustrations/cloud.png\ntitle: Hello');
+    });
+
+    it('should not touch strings that merely contain "asset" without the prefix pattern', () => {
+      const input = 'This is an asset management system';
+      const result = resolveAssetReferences(input, mockAssets, 0);
+      assert.strictEqual(result, 'This is an asset management system');
+    });
+
+    it('should throw for invalid embedded asset reference', () => {
+      const input = 'See ![](asset:nonexistent.path) here';
+      assert.throws(
+        () => resolveAssetReferences(input, mockAssets, 0),
+        (err: any) => {
+          assert.ok(err.message.includes('could not be resolved'));
+          return true;
+        },
+      );
+    });
+  });
+
   describe('ASSET_PREFIX', () => {
     it('should export the prefix constant', () => {
       assert.strictEqual(ASSET_PREFIX, 'asset:');

@@ -1,6 +1,7 @@
 // Table Component - Native pptxgenjs table element
 
 import { componentRegistry, component, type ComponentNode, type ExpansionContext } from '../core/registry.js';
+import { MARKDOWN_COMPONENT } from './text.js';
 import { NODE_TYPE, type TextNode, type TableCellData, type TableStyleProps } from '../core/nodes.js';
 import { MARKDOWN, type Theme, type TextContent } from '../core/types.js';
 import { SYNTAX, extractInlineText } from '../core/mdast.js';
@@ -59,7 +60,7 @@ componentRegistry.define({
     const expandContent = async (content: TextContent): Promise<TextContent> => {
       if (typeof content === 'string') {
         const expanded = await componentRegistry.expand(
-          component('markdown', { content }),
+          component(MARKDOWN_COMPONENT, { content }),
           context,
         ) as TextNode;
         return expanded.content;

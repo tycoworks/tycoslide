@@ -5,12 +5,13 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { compileBlocks } from '../src/markdown/blockCompiler.js';
 import { MARKDOWN_COMPONENT } from '../src/dsl/text.js';
+import { IMAGE_COMPONENT } from '../src/dsl/primitives.js';
+import { TABLE_COMPONENT } from '../src/dsl/table.js';
+import { MERMAID_COMPONENT } from '../src/dsl/diagram.js';
+import { CARD_COMPONENT } from '../src/dsl/card.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import { TEXT_STYLE } from '../src/core/types.js';
 // Side-effect imports: trigger component self-registration
-import '../src/dsl/table.js';
-import '../src/dsl/diagram.js';
-import '../src/dsl/card.js';
 import '../src/dsl/quote.js';
 
 /** Helper: get props as any to avoid unknown type errors in tests */
@@ -116,18 +117,26 @@ describe('Block Compiler', () => {
   });
 
   describe('images', () => {
-    it('should compile a standalone image to an image() node', () => {
-      const nodes = compileBlocks('![alt text](/path/to/image.png)');
+    it('should compile :::image directive to an image() node', () => {
+      const nodes = compileBlocks(':::image\n/path/to/image.png\n:::');
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, 'image');
-      assert.strictEqual(props(nodes, 0).src, '/path/to/image.png');
+      assert.strictEqual(nodes[0].componentName, IMAGE_COMPONENT);
+      // Block directive passes body string as props (expand resolves to { src })
+      assert.strictEqual(nodes[0].props, '/path/to/image.png');
     });
 
-    it('should compile asset-style image URLs', () => {
-      const nodes = compileBlocks('![](asset:illustrations.integrate)');
+    it('should compile asset-style image in :::image directive', () => {
+      const nodes = compileBlocks(':::image\nasset:illustrations.integrate\n:::');
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, 'image');
-      assert.strictEqual(props(nodes, 0).src, 'asset:illustrations.integrate');
+      assert.strictEqual(nodes[0].componentName, IMAGE_COMPONENT);
+      assert.strictEqual(nodes[0].props, 'asset:illustrations.integrate');
+    });
+
+    it('should throw on ![](url) markdown image syntax', () => {
+      assert.throws(
+        () => compileBlocks('![alt text](/path/to/image.png)'),
+        /Images cannot be embedded inline in text/,
+      );
     });
   });
 
@@ -136,7 +145,7 @@ describe('Block Compiler', () => {
       const md = '| Name | Role |\n|------|------|\n| Alice | Engineer |';
       const nodes = compileBlocks(md);
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, 'table');
+      assert.strictEqual(nodes[0].componentName, TABLE_COMPONENT);
     });
 
     it('should extract cell text content', () => {
@@ -167,12 +176,12 @@ describe('Block Compiler', () => {
       assert.strictEqual(nodes[2].componentName, MARKDOWN_COMPONENT);
     });
 
-    it('should handle paragraph + image + paragraph', () => {
-      const md = 'Before image.\n\n![](pic.png)\n\nAfter image.';
+    it('should handle paragraph + :::image + paragraph', () => {
+      const md = 'Before image.\n\n:::image\npic.png\n:::\n\nAfter image.';
       const nodes = compileBlocks(md);
       assert.strictEqual(nodes.length, 3);
       assert.strictEqual(nodes[0].componentName, MARKDOWN_COMPONENT);
-      assert.strictEqual(nodes[1].componentName, 'image');
+      assert.strictEqual(nodes[1].componentName, IMAGE_COMPONENT);
       assert.strictEqual(nodes[2].componentName, MARKDOWN_COMPONENT);
     });
 
@@ -203,7 +212,7 @@ describe('Block Compiler', () => {
       const md = ':::mermaid\nflowchart LR\n    A --> B\n:::';
       const nodes = compileBlocks(md);
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, 'mermaid');
+      assert.strictEqual(nodes[0].componentName, MERMAID_COMPONENT);
       // input schema transforms raw string into { definition }
       assert.strictEqual(props(nodes, 0).definition, 'flowchart LR\n    A --> B');
     });
@@ -212,7 +221,7 @@ describe('Block Compiler', () => {
       const md = ':::card\ntitle: Hello\ndescription: World\n:::';
       const nodes = compileBlocks(md);
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, 'card');
+      assert.strictEqual(nodes[0].componentName, CARD_COMPONENT);
       assert.strictEqual(props(nodes, 0).title, 'Hello');
       assert.strictEqual(props(nodes, 0).description, 'World');
     });
