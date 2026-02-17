@@ -46,14 +46,15 @@ accents: {
   orange: palette.orange,
 
   // Semantic names — useful when the author is thinking about content meaning
-  problem: palette.orange,     // "before" state, pain points
-  solution: palette.teal,      // "after" state, improvements
-  metrics: palette.teal,       // quantitative results
+  metrics: palette.teal,            // quantitative results
   definition: palette.lightPurple,  // terms being defined
+  caution: palette.orange,          // warnings, "before" state, pain points
+  moderate: palette.yellow,         // middle tier, competitive but not differentiating
+  success: palette.teal,            // goal state, "after" state, improvements
 }
 ```
 
-Both `:teal[text]` and `:solution[text]` work — content authors choose whichever name fits their intent. A theme can map multiple semantic names to the same color (e.g., `solution` and `metrics` both map to teal). This is intentional: the semantic name documents _why_ the color is used, making presentations easier to maintain when the brand palette changes.
+Both `:teal[text]` and `:success[text]` work — content authors choose whichever name fits their intent. A theme can map multiple semantic names to the same color (e.g., `success` and `metrics` both map to teal). This is intentional: the semantic name documents _why_ the color is used, making presentations easier to maintain when the brand palette changes.
 
 ### DTCG-Aligned Three-Tier Token Model
 

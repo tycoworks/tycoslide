@@ -56,8 +56,8 @@ export {
   type TextComponentProps,
 } from './text.js';
 
-// MDAST constants (node type names for markdown AST)
-export { MDAST } from '../core/mdast.js';
+// Syntax constants (node type names for markdown AST)
+export { SYNTAX } from '../core/mdast.js';
 
 // Card (composition component)
 export {

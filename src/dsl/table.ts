@@ -3,7 +3,7 @@
 import { componentRegistry, component, type ComponentNode, type ExpansionContext } from '../core/registry.js';
 import { NODE_TYPE, type TextNode, type TableCellData, type TableStyleProps } from '../core/nodes.js';
 import { MARKDOWN, type Theme, type TextContent } from '../core/types.js';
-import { MDAST, extractInlineText } from '../core/mdast.js';
+import { SYNTAX, extractInlineText } from '../core/mdast.js';
 import type { Table as MdastTable } from 'mdast';
 
 // ============================================
@@ -94,7 +94,7 @@ componentRegistry.define({
   },
   markdown: {
     type: MARKDOWN.SYNTAX,
-    nodeType: MDAST.TABLE,
+    nodeType: SYNTAX.TABLE,
     compile: compileTableBlock,
   },
 });

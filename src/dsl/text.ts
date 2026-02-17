@@ -11,7 +11,7 @@ import type { NormalizedRun, HighlightPair, ColorScheme } from '../core/types.js
 import { HALIGN, VALIGN, MARKDOWN, TEXT_STYLE } from '../core/types.js';
 import { NODE_TYPE, type ElementNode } from '../core/nodes.js';
 import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape } from '../core/registry.js';
-import { MDAST, extractSource } from '../core/mdast.js';
+import { SYNTAX, extractSource } from '../core/mdast.js';
 import { image } from './primitives.js';
 import { schema } from '../schema.js';
 
@@ -87,7 +87,7 @@ function mdastToRuns(
   let isFirstBlock = true;
 
   for (const node of tree.children) {
-    if (node.type === MDAST.PARAGRAPH) {
+    if (node.type === SYNTAX.PARAGRAPH) {
       if (!isFirstBlock && runs.length > 0) {
         // Add breakLine to the first run of non-first paragraphs
         // (means "start a new paragraph before this run")
@@ -101,7 +101,7 @@ function mdastToRuns(
         transformInline(node.children, colors, runs, {});
       }
       isFirstBlock = false;
-    } else if (node.type === MDAST.LIST) {
+    } else if (node.type === SYNTAX.LIST) {
       transformList(node as List, colors, runs);
       isFirstBlock = false;
     }
@@ -124,7 +124,7 @@ function transformList(
 
   for (const item of list.children as ListItem[]) {
     const firstChild = item.children[0];
-    if (firstChild && firstChild.type === MDAST.PARAGRAPH) {
+    if (firstChild && firstChild.type === SYNTAX.PARAGRAPH) {
       // Collect item runs separately — only the first run gets bullet
       const itemRuns: NormalizedRun[] = [];
       transformInline(
@@ -137,7 +137,7 @@ function transformList(
         itemRuns[0] = { ...itemRuns[0], bullet: bulletType };
         runs.push(...itemRuns);
       }
-    } else if (firstChild && firstChild.type === MDAST.LIST) {
+    } else if (firstChild && firstChild.type === SYNTAX.LIST) {
       // Nested list (e.g. `- 1. text`) — recurse, but use outer bullet type
       transformList(firstChild as List, colors, runs);
     }
@@ -156,16 +156,16 @@ function transformInline(
 ): void {
   for (const node of nodes) {
     switch (node.type) {
-      case MDAST.TEXT:
+      case SYNTAX.TEXT:
         runs.push({ text: node.value, ...defaults });
         break;
-      case MDAST.STRONG:
+      case SYNTAX.STRONG:
         transformInline(node.children, colors, runs, { ...defaults, bold: true });
         break;
-      case MDAST.EMPHASIS:
+      case SYNTAX.EMPHASIS:
         transformInline(node.children, colors, runs, { ...defaults, italic: true });
         break;
-      case MDAST.TEXT_DIRECTIVE: {
+      case SYNTAX.TEXT_DIRECTIVE: {
         const directive = node as unknown as TextDirective;
         const accentColor = colors.accents[directive.name];
         if (!accentColor) {
@@ -234,7 +234,7 @@ const HEADING_STYLE: Record<number, TextProps['style']> = {
  * produce an image() node instead of markdown().
  */
 function compileParagraph(node: Paragraph, source: string): ComponentNode {
-  if (node.children.length === 1 && node.children[0].type === MDAST.IMAGE) {
+  if (node.children.length === 1 && node.children[0].type === SYNTAX.IMAGE) {
     const img = node.children[0];
     return image(img.url);
   }
@@ -259,11 +259,11 @@ function compileHeading(node: Heading, source: string): ComponentNode {
 function compileMarkdownBlock(node: unknown, source: string): ComponentNode | null {
   const n = node as { type: string };
   switch (n.type) {
-    case MDAST.PARAGRAPH:
+    case SYNTAX.PARAGRAPH:
       return compileParagraph(node as Paragraph, source);
-    case MDAST.LIST:
+    case SYNTAX.LIST:
       return compileTextBlock(node, source);
-    case MDAST.HEADING:
+    case SYNTAX.HEADING:
       return compileHeading(node as Heading, source);
     default:
       return null;
@@ -280,7 +280,7 @@ export const markdownComponent = componentRegistry.define({
   expand: expandMarkdown,
   markdown: {
     type: MARKDOWN.SYNTAX,
-    nodeType: [MDAST.PARAGRAPH, MDAST.LIST, MDAST.HEADING],
+    nodeType: [SYNTAX.PARAGRAPH, SYNTAX.LIST, SYNTAX.HEADING],
     compile: compileMarkdownBlock,
   },
 });

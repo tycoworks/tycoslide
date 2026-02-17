@@ -1,9 +1,9 @@
-// MDAST Node Type Constants
+// Syntax Node Type Constants
 // Shared constants for markdown AST node types used across the parser layer.
 
 import type { PhrasingContent } from 'mdast';
 
-export const MDAST = {
+export const SYNTAX = {
   ROOT: 'root',
   // Block-level
   PARAGRAPH: 'paragraph',
@@ -39,8 +39,8 @@ export function extractSource(
 /** Recursively extract plain text from inline mdast nodes. */
 export function extractInlineText(nodes: PhrasingContent[]): string {
   return nodes.map(node => {
-    if (node.type === MDAST.TEXT) return node.value;
-    if (node.type === MDAST.INLINE_CODE) return node.value;
+    if (node.type === SYNTAX.TEXT) return node.value;
+    if (node.type === SYNTAX.INLINE_CODE) return node.value;
     if ('children' in node) return extractInlineText((node as any).children);
     return '';
   }).join('');

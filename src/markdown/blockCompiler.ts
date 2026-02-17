@@ -16,7 +16,7 @@ import remarkGfm from 'remark-gfm';
 import type { Root, RootContent } from 'mdast';
 import { parse as parseYaml } from 'yaml';
 import { z } from 'zod';
-import { MDAST, extractSource } from '../core/mdast.js';
+import { SYNTAX, extractSource } from '../core/mdast.js';
 import { MARKDOWN } from '../core/types.js';
 import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
 
@@ -83,7 +83,7 @@ function compileBlock(node: RootContent, source: string): ComponentNode | null {
   }
 
   // 3. Thematic breaks → skip
-  if (node.type === MDAST.THEMATIC_BREAK) return null;
+  if (node.type === SYNTAX.THEMATIC_BREAK) return null;
 
   // 4. Unknown → error
   const registered = componentRegistry.getAll()
