@@ -8,7 +8,7 @@
 
 import { parseSlideDocument, type RawSlide } from './slideParser.js';
 import { resolveAssetReferences } from './assetResolver.js';
-import { layoutRegistry, validateLayoutProps } from '../core/registry.js';
+import { layoutRegistry, validateLayoutProps, slideRegistry, validateSlideProps } from '../core/registry.js';
 import { Presentation, type Slide } from '../presentation.js';
 import type { Theme } from '../core/types.js';
 
@@ -57,13 +57,60 @@ export function compileDocument(source: string, options: CompileOptions): Presen
 // ============================================
 
 function compileSlide(raw: RawSlide, options: CompileOptions): Slide {
+  // Pre-built slide reference — `slide: name` in frontmatter
+  const slideName = raw.frontmatter.slide as string | undefined;
+  if (slideName) {
+    return compileSlideRef(raw, slideName, options);
+  }
+
+  // Layout-based slide — `layout: name` in frontmatter
+  return compileLayoutSlide(raw, options);
+}
+
+/** Compile a `slide: name` reference — pre-built slide with validated params. */
+function compileSlideRef(raw: RawSlide, slideName: string, options: CompileOptions): Slide {
+  const slideDef = slideRegistry.get(slideName);
+  if (!slideDef) {
+    const available = slideRegistry.getRegisteredNames().join(', ');
+    throw new Error(
+      `Slide ${raw.index + 1}: unknown slide '${slideName}'. ` +
+      `Available: ${available || 'none (no slides registered)'}`,
+    );
+  }
+
+  // Build params from frontmatter (excluding the `slide` key)
+  const params: Record<string, unknown> = { ...raw.frontmatter };
+  delete params.slide;
+
+  // Title from # heading if not in frontmatter
+  if (raw.title !== undefined && params.title === undefined) {
+    params.title = raw.title;
+  }
+
+  // Resolve asset references
+  const resolved = resolveAssetReferences(params, options.assets, raw.index) as Record<string, unknown>;
+
+  // Validate and render
+  const validated = validateSlideProps(slideDef, resolved);
+  const slide = slideDef.render(validated);
+
+  // Attach speaker notes
+  if (raw.notes) {
+    slide.notes = raw.notes;
+  }
+
+  return slide;
+}
+
+/** Compile a `layout: name` slide — layout template with content params. */
+function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
   // 1. Resolve layout name
   const layoutName = (raw.frontmatter.layout as string | undefined)
     ?? options.defaultLayout;
 
   if (!layoutName) {
     throw new Error(
-      `Slide ${raw.index + 1}: missing 'layout' field in frontmatter`,
+      `Slide ${raw.index + 1}: missing 'layout' or 'slide' field in frontmatter`,
     );
   }
 
