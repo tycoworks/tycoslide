@@ -6,17 +6,20 @@ Spacing / layouts:
 
 Core:
 - Markdown 2
-- Typia
-- Align colors with design token standards. Semantic vs color names.
+- YAML input vs params
 - Escape hatch
 - Portrait mode
-- CLI framework
-- Dark mode & design token integration
 - Theme package (npm?) & version
+- Debug workflow in CLI
 - Groups
 
+Design:
+- JSON design tokens
+- Theme building in CLI
+- Dark mode
+
 Cleanup:
-- Fixed percentages.
+- Fixed percentages and slide size
 - Right align bullet points
 
 Components:
