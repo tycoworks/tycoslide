@@ -26,7 +26,7 @@ export class LayoutMeasurer {
   private page: Page | null = null;
   private fontNormalRatios: FontNormalRatios = new Map();
   private fontDescriptors: FontDescriptor[] = [];
-  private debugCounter = 0;
+
 
   async launch(): Promise<void> {
     if (this.browser) {
@@ -61,7 +61,7 @@ export class LayoutMeasurer {
    * and extracts all measurements in one page.evaluate().
    */
   async measureLayout(
-    slides: Array<{ tree: ElementNode; bounds: Bounds }>,
+    slides: Array<{ tree: ElementNode; bounds: Bounds; label: string }>,
     theme: Theme
   ): Promise<Map<ElementNode, Bounds>> {
     if (!this.page) {
@@ -76,10 +76,11 @@ export class LayoutMeasurer {
     }
 
     // Generate single HTML page containing all slides
-    const { html, slideNodeIds, perSlideHtml } = generateLayoutHTML(slides, theme, this.fontNormalRatios);
+    const labels = slides.map(s => s.label);
+    const { html, slideNodeIds, perSlideHtml } = generateLayoutHTML(slides, theme, this.fontNormalRatios, labels);
 
     if (process.env.DEBUG_HTML) {
-      this.saveDebugHtml(html, perSlideHtml);
+      this.saveDebugHtml(html, perSlideHtml, labels);
     }
 
     // One setContent, one font preload
@@ -98,7 +99,7 @@ export class LayoutMeasurer {
 
     if (process.env.DEBUG_HTML) {
       await this.saveDebugScreenshot();
-      await this.saveDebugDomSnapshots();
+      await this.saveDebugDomSnapshots(labels);
       await this.logNodeDimensions();
     }
 
@@ -165,47 +166,46 @@ export class LayoutMeasurer {
       : debugHtml.replace('.html', '');
   }
 
-  /** Save debug HTML to disk. Writes batched file + per-slide generated HTML. */
-  private saveDebugHtml(html: string, perSlideHtml?: string[]): void {
-    const counter = this.debugCounter++;
-    const prefix = `${this.debugPrefix()}-${counter}`;
+  /** Save debug HTML to disk. Writes combined file + per-slide generated HTML. */
+  private saveDebugHtml(html: string, perSlideHtml?: string[], labels?: string[]): void {
+    const prefix = this.debugPrefix();
     const filePath = `${prefix}.html`;
     fs.writeFileSync(filePath, html);
     log.layout.html('saved debug HTML to %s', filePath);
 
-    // Write per-slide files from source-level cache (no regex reconstruction)
+    // Write per-slide files using labels for filenames
     if (perSlideHtml && perSlideHtml.length > 0) {
       for (let i = 0; i < perSlideHtml.length; i++) {
-        const slideFile = `${prefix}-slide-${i}.html`;
+        const label = labels?.[i] ?? `unknown-${i}`;
+        const slideFile = `${prefix}-${label}.html`;
         fs.writeFileSync(slideFile, perSlideHtml[i]);
       }
-      log.layout.html('saved %d per-slide debug files: %s-slide-*.html', perSlideHtml.length, prefix);
+      log.layout.html('saved %d per-slide debug files: %s-*.html', perSlideHtml.length, prefix);
     }
   }
 
   /** Extract per-slide DOM snapshots from Chromium's live DOM. */
-  private async saveDebugDomSnapshots(): Promise<void> {
-    const counter = this.debugCounter - 1; // matches the HTML just saved
-    const prefix = `${this.debugPrefix()}-${counter}`;
+  private async saveDebugDomSnapshots(labels: string[]): Promise<void> {
+    const prefix = this.debugPrefix();
 
     const snapshots = await this.page!.evaluate(() => {
       return Array.from(document.querySelectorAll('.root[data-slide-index]')).map(root => {
         const slideIndex = (root as HTMLElement).dataset.slideIndex;
-        return { slideIndex, outerHTML: root.outerHTML };
+        return { slideIndex: Number(slideIndex), outerHTML: root.outerHTML };
       });
     });
 
     for (const { slideIndex, outerHTML } of snapshots) {
-      const domFile = `${prefix}-slide-${slideIndex}-dom.html`;
+      const label = labels[slideIndex] ?? `unknown-${slideIndex}`;
+      const domFile = `${prefix}-${label}-dom.html`;
       fs.writeFileSync(domFile, outerHTML);
     }
-    log.layout.measure('saved %d per-slide DOM snapshots: %s-slide-*-dom.html', snapshots.length, prefix);
+    log.layout.measure('saved %d per-slide DOM snapshots: %s-*-dom.html', snapshots.length, prefix);
   }
 
   /** Save Playwright screenshot alongside the debug HTML. */
   private async saveDebugScreenshot(): Promise<void> {
-    const counter = this.debugCounter - 1; // matches the HTML just saved
-    const screenshotPath = `${this.debugPrefix()}-${counter}.png`;
+    const screenshotPath = `${this.debugPrefix()}.png`;
     await this.page!.screenshot({ path: screenshotPath, fullPage: true });
     log.layout.measure('saved Playwright screenshot to %s', screenshotPath);
   }

@@ -17,6 +17,7 @@ import { log } from '../utils/log.js';
 interface SlideMeasurementEntry {
   tree: ElementNode;
   bounds: Bounds;
+  label: string;
 }
 
 // ============================================
@@ -50,8 +51,8 @@ export class LayoutPipeline {
    * Collect a slide for measurement.
    * Call this for each slide after component expansion.
    */
-  collectFromTree(node: ElementNode, bounds: Bounds): void {
-    this.slides.push({ tree: node, bounds });
+  collectFromTree(node: ElementNode, bounds: Bounds, label: string): void {
+    this.slides.push({ tree: node, bounds, label });
   }
 
   /**

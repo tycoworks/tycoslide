@@ -6,19 +6,20 @@ Core:
 
 Markdown:
 - Get rid of contentLayout. Make it impossible to make non-markdownable layouts.
-- How does block / body work?
+- Day AI example - body vs params
 - YAML input vs params
-- Shared slides
+- How does block / body work?
+- Shared slides / presentation packs in markdown?
 
 Design:
 - Theme building in CLI (inc. JSON design tokens)
 - Theme package (npm?) & version
-- Build theme from PPTX?
 - Dark mode
 - Design principles
 -- Direction is opposite to container?
 -- Content rules
 -- Image cover
+- Build theme from PPTX?
 
 Cleanup:
 - Fixed percentages and slide size

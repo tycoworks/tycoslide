@@ -149,7 +149,7 @@ export class Presentation {
             footerBounds,
           });
           // Collect measurements from master content
-          pipeline.collectFromTree(masterContent, footerBounds);
+          pipeline.collectFromTree(masterContent, footerBounds, `master-${master.name}`);
         }
       }
 
@@ -179,7 +179,7 @@ export class Presentation {
         const expanded = await componentRegistry.expandTree(content, { theme: this._theme, slideIndex });
 
         // Collect measurements from expanded tree
-        pipeline.collectFromTree(expanded, bounds);
+        pipeline.collectFromTree(expanded, bounds, `slide-${slideIndex + 1}`);
 
         expandedSlides.push({ deferred, expanded, bounds });
       }

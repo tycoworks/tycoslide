@@ -838,6 +838,7 @@ export function generateLayoutHTML(
   slides: Array<{ tree: ElementNode; bounds: Bounds }>,
   theme: Theme,
   fontNormalRatios?: FontNormalRatios,
+  labels?: string[],
 ): LayoutHtmlResult {
   const idCtx: IdContext = { counter: 0 };
   const slideNodeIds: Array<Map<ElementNode, string>> = [];
@@ -858,7 +859,7 @@ export function generateLayoutHTML(
       <>
         {process.env.DEBUG_HTML && (
           <div style={{ background: '#333', color: '#fff', padding: '4px 8px', font: 'bold 14px monospace' }}>
-            Slide {i}
+            {labels?.[i] ?? `slide-${i}`}
           </div>
         )}
         <div class="root" data-slide-index={`${i}`} style={{ width: `${widthPx}px`, height: `${heightPx}px` }}>
