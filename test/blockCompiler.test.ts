@@ -7,7 +7,7 @@ import { compileBlocks } from '../src/markdown/blockCompiler.js';
 import { MARKDOWN_COMPONENT } from '../src/dsl/text.js';
 import { IMAGE_COMPONENT } from '../src/dsl/primitives.js';
 import { TABLE_COMPONENT } from '../src/dsl/table.js';
-import { MERMAID_COMPONENT } from '../src/dsl/diagram.js';
+import { MERMAID_COMPONENT } from '../src/dsl/mermaid.js';
 import { CARD_COMPONENT } from '../src/dsl/card.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import { TEXT_STYLE } from '../src/core/types.js';

@@ -16,7 +16,7 @@ import { schema } from '../src/schema.js';
 // Import components to test their .input properties
 import { markdownComponent, textComponent } from '../src/dsl/text.js';
 import { imageComponent } from '../src/dsl/primitives.js';
-import { mermaidComponent } from '../src/dsl/diagram.js';
+import { mermaidComponent } from '../src/dsl/mermaid.js';
 import { cardComponent } from '../src/dsl/card.js';
 import { quoteComponent } from '../src/dsl/quote.js';
 

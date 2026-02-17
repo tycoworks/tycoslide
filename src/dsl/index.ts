@@ -85,4 +85,4 @@ export {
   MERMAID_COMPONENT,
   type MermaidProps,
   type MermaidComponentProps,
-} from './diagram.js';
+} from './mermaid.js';

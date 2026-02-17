@@ -3,7 +3,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { mermaid, MERMAID_COMPONENT, sanitizeMermaidDefinition } from '../src/dsl/diagram.js';
+import { mermaid, MERMAID_COMPONENT, sanitizeMermaidDefinition } from '../src/dsl/mermaid.js';
 import { COMPONENT_TYPE, componentRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import { mockTheme } from './mocks.js';
