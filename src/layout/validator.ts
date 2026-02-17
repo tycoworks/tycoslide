@@ -66,6 +66,13 @@ export interface ValidationResult {
 // VALIDATION ERRORS
 // ============================================
 
+/** Build a human-readable slide prefix like "Slide 3 (layout: body, eyebrow: RECAP): " */
+function slidePrefix(slideIndex?: number, slideName?: string): string {
+  if (slideIndex === undefined) return '';
+  const suffix = slideName ? ` (${slideName})` : '';
+  return `Slide ${slideIndex + 1}${suffix}: `;
+}
+
 /**
  * Error thrown when positioned content extends beyond slide boundaries.
  */
@@ -76,9 +83,10 @@ export class LayoutOverflowError extends Error {
   constructor(options: {
     violations: OverflowViolation[];
     slideIndex?: number;
+    slideName?: string;
   }) {
-    const { violations, slideIndex } = options;
-    const slidePrefix = slideIndex !== undefined ? `Slide ${slideIndex + 1}: ` : '';
+    const { violations, slideIndex, slideName } = options;
+    const prefix = slidePrefix(slideIndex, slideName);
 
     const details = violations.map(v => {
       const parts: string[] = [];
@@ -89,7 +97,7 @@ export class LayoutOverflowError extends Error {
       return `${v.nodeType} at (${v.x.toFixed(2)}, ${v.y.toFixed(2)}) overflows ${parts.join(', ')}`;
     });
 
-    const message = `${slidePrefix}Content extends beyond slide bounds:\n  ${details.join('\n  ')}`;
+    const message = `${prefix}Content extends beyond slide bounds:\n  ${details.join('\n  ')}`;
 
     super(message);
     this.name = 'LayoutOverflowError';
@@ -109,9 +117,10 @@ export class LayoutOverlapError extends Error {
   constructor(options: {
     violations: OverlapViolation[];
     slideIndex?: number;
+    slideName?: string;
   }) {
-    const { violations, slideIndex } = options;
-    const slidePrefix = slideIndex !== undefined ? `Slide ${slideIndex + 1}: ` : '';
+    const { violations, slideIndex, slideName } = options;
+    const prefix = slidePrefix(slideIndex, slideName);
 
     const details = violations.map(v =>
       `${v.node1Type}[${v.node1Index}] overlaps ${v.node2Type}[${v.node2Index}] ` +
@@ -119,7 +128,7 @@ export class LayoutOverlapError extends Error {
       `in ${v.parentNodeType}`
     );
 
-    const message = `${slidePrefix}Unintentional content overlap detected:\n  ${details.join('\n  ')}`;
+    const message = `${prefix}Unintentional content overlap detected:\n  ${details.join('\n  ')}`;
 
     super(message);
     this.name = 'LayoutOverlapError';
@@ -139,9 +148,10 @@ export class LayoutBoundsError extends Error {
   constructor(options: {
     violations: BoundsViolation[];
     slideIndex?: number;
+    slideName?: string;
   }) {
-    const { violations, slideIndex } = options;
-    const slidePrefix = slideIndex !== undefined ? `Slide ${slideIndex + 1}: ` : '';
+    const { violations, slideIndex, slideName } = options;
+    const prefix = slidePrefix(slideIndex, slideName);
 
     const details = violations.map(v => {
       const parts: string[] = [];
@@ -153,7 +163,7 @@ export class LayoutBoundsError extends Error {
         `(child at y=${v.childBounds.y.toFixed(2)}, parent starts at y=${v.parentBounds.y.toFixed(2)})`;
     });
 
-    const message = `${slidePrefix}Child positioned outside parent bounds (layout bug):\n  ${details.join('\n  ')}`;
+    const message = `${prefix}Child positioned outside parent bounds (layout bug):\n  ${details.join('\n  ')}`;
 
     super(message);
     this.name = 'LayoutBoundsError';
@@ -217,20 +227,20 @@ export class LayoutValidator {
    * @throws LayoutOverflowError if content extends beyond slide bounds
    * @throws LayoutOverlapError if siblings unintentionally overlap
    */
-  validateOrThrow(root: PositionedNode, slideIndex?: number): void {
+  validateOrThrow(root: PositionedNode, slideIndex?: number, slideName?: string): void {
     const { overflows, overlaps, boundsEscapes } = this.validate(root);
 
     // Bounds escapes are the most severe - layout bug
     if (boundsEscapes.length > 0) {
-      throw new LayoutBoundsError({ violations: boundsEscapes, slideIndex });
+      throw new LayoutBoundsError({ violations: boundsEscapes, slideIndex, slideName });
     }
 
     if (overflows.length > 0) {
-      throw new LayoutOverflowError({ violations: overflows, slideIndex });
+      throw new LayoutOverflowError({ violations: overflows, slideIndex, slideName });
     }
 
     if (overlaps.length > 0) {
-      throw new LayoutOverlapError({ violations: overlaps, slideIndex });
+      throw new LayoutOverlapError({ violations: overlaps, slideIndex, slideName });
     }
   }
 

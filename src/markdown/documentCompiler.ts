@@ -12,6 +12,31 @@ import { layoutRegistry, validateLayoutProps, slideRegistry, validateSlideProps 
 import { Presentation, type Slide } from '../presentation.js';
 import type { Theme } from '../core/types.js';
 
+/** Build a name from frontmatter for identifying slides in error messages and shared references. */
+export function buildSlideName(raw: RawSlide): string {
+  // Explicit name in frontmatter takes priority
+  if (typeof raw.frontmatter.name === 'string' && raw.frontmatter.name.length > 0) {
+    return raw.frontmatter.name;
+  }
+
+  // Auto-generate from frontmatter fields
+  const parts: string[] = [];
+  for (const [key, value] of Object.entries(raw.frontmatter)) {
+    if (key === 'name') continue; // already handled above
+    if (typeof value === 'string') {
+      const truncated = value.length > 50 ? value.slice(0, 50) + '...' : value;
+      parts.push(`${key}: ${truncated}`);
+    } else if (Array.isArray(value)) {
+      parts.push(`${key}: [${value.length} items]`);
+    }
+  }
+  if (raw.title && !raw.frontmatter.title) {
+    const truncated = raw.title.length > 50 ? raw.title.slice(0, 50) + '...' : raw.title;
+    parts.push(`title: ${truncated}`);
+  }
+  return parts.join(', ');
+}
+
 // ============================================
 // TYPES
 // ============================================
@@ -45,8 +70,7 @@ export function compileDocument(source: string, options: CompileOptions): Presen
   const presentation = new Presentation(options.theme);
 
   for (const raw of parsed.slides) {
-    const slide = compileSlide(raw, options);
-    presentation.add(slide);
+    presentation.add(compileSlide(raw, options));
   }
 
   return presentation;
@@ -58,29 +82,29 @@ export function compileDocument(source: string, options: CompileOptions): Presen
 
 function compileSlide(raw: RawSlide, options: CompileOptions): Slide {
   // Pre-built slide reference — `slide: name` in frontmatter
-  const slideName = raw.frontmatter.slide as string | undefined;
-  if (slideName) {
-    return compileSlideRef(raw, slideName, options);
-  }
-
-  // Layout-based slide — `layout: name` in frontmatter
-  return compileLayoutSlide(raw, options);
+  const slideRef = raw.frontmatter.slide as string | undefined;
+  const slide = slideRef
+    ? compileSlideRef(raw, slideRef, options)
+    : compileLayoutSlide(raw, options);
+  slide.name = buildSlideName(raw);
+  return slide;
 }
 
 /** Compile a `slide: name` reference — pre-built slide with validated params. */
-function compileSlideRef(raw: RawSlide, slideName: string, options: CompileOptions): Slide {
-  const slideDef = slideRegistry.get(slideName);
+function compileSlideRef(raw: RawSlide, slideRef: string, options: CompileOptions): Slide {
+  const slideDef = slideRegistry.get(slideRef);
   if (!slideDef) {
     const available = slideRegistry.getRegisteredNames().join(', ');
     throw new Error(
-      `Slide ${raw.index + 1}: unknown slide '${slideName}'. ` +
+      `Slide ${raw.index + 1}: unknown slide '${slideRef}'. ` +
       `Available: ${available || 'none (no slides registered)'}`,
     );
   }
 
-  // Build params from frontmatter (excluding the `slide` key)
+  // Build params from frontmatter (excluding the `slide` and `name` keys)
   const params: Record<string, unknown> = { ...raw.frontmatter };
   delete params.slide;
+  delete params.name;
 
   // Title from # heading if not in frontmatter
   if (raw.title !== undefined && params.title === undefined) {
@@ -126,6 +150,7 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
   // 3. Build raw params — merge sources in priority order
   const params: Record<string, unknown> = { ...raw.frontmatter };
   delete params.layout;
+  delete params.name;
 
   // Title: from # heading if not in frontmatter
   if (raw.title !== undefined && params.title === undefined) {

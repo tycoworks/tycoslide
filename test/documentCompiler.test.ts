@@ -8,7 +8,7 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { z } from 'zod';
-import { compileDocument } from '../src/markdown/documentCompiler.js';
+import { compileDocument, buildSlideName } from '../src/markdown/documentCompiler.js';
 import { layoutRegistry, slideRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import { mockTheme } from './mocks.js';
@@ -502,6 +502,93 @@ cards:
       assert.strictEqual(receivedProps.length, 1);
       assert.strictEqual(receivedProps[0].cards[0].image, '/resolved/photo.png');
       assert.strictEqual(receivedProps[0].cards[1].image, '/resolved/star.svg');
+    });
+  });
+
+  describe('slide naming', () => {
+    it('should build name from string frontmatter values', () => {
+      const raw = {
+        index: 0,
+        frontmatter: { layout: 'body', eyebrow: 'RECAP' },
+        title: undefined,
+        body: '',
+        slots: {},
+        notes: undefined,
+      };
+      const name = buildSlideName(raw as any);
+      assert.ok(name.includes('layout: body'));
+      assert.ok(name.includes('eyebrow: RECAP'));
+    });
+
+    it('should use explicit name from frontmatter', () => {
+      const raw = {
+        index: 0,
+        frontmatter: { layout: 'body', name: 'Day AI Story', eyebrow: 'STORY' },
+        title: undefined,
+        body: '',
+        slots: {},
+        notes: undefined,
+      };
+      const name = buildSlideName(raw as any);
+      assert.strictEqual(name, 'Day AI Story');
+    });
+
+    it('should truncate long values at 50 chars', () => {
+      const longValue = 'A'.repeat(60);
+      const raw = {
+        index: 0,
+        frontmatter: { layout: 'body', description: longValue },
+        title: undefined,
+        body: '',
+        slots: {},
+        notes: undefined,
+      };
+      const name = buildSlideName(raw as any);
+      assert.ok(name.includes('A'.repeat(50) + '...'));
+      assert.ok(!name.includes('A'.repeat(51)));
+    });
+
+    it('should show array fields as [N items]', () => {
+      const raw = {
+        index: 0,
+        frontmatter: { layout: 'cards', items: ['a', 'b', 'c'] },
+        title: undefined,
+        body: '',
+        slots: {},
+        notes: undefined,
+      };
+      const name = buildSlideName(raw as any);
+      assert.ok(name.includes('items: [3 items]'));
+    });
+
+    it('should include title from heading when not in frontmatter', () => {
+      const raw = {
+        index: 0,
+        frontmatter: { layout: 'body' },
+        title: 'From Heading',
+        body: '',
+        slots: {},
+        notes: undefined,
+      };
+      const name = buildSlideName(raw as any);
+      assert.ok(name.includes('layout: body'));
+      assert.ok(name.includes('title: From Heading'));
+    });
+
+    it('should NOT duplicate title when present in both frontmatter and heading', () => {
+      const raw = {
+        index: 0,
+        frontmatter: { layout: 'body', title: 'FM Title' },
+        title: 'Heading Title',
+        body: '',
+        slots: {},
+        notes: undefined,
+      };
+      const name = buildSlideName(raw as any);
+      assert.ok(name.includes('title: FM Title'));
+      // Should NOT have a second title entry
+      const titleCount = (name.match(/title:/g) || []).length;
+      assert.strictEqual(titleCount, 1);
     });
   });
 });

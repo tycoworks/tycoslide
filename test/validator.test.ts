@@ -108,6 +108,73 @@ describe('Layout Validation', () => {
       const validator = new LayoutValidator(slideBounds);
       assert.strictEqual(validator.isValid(positioned), false);
     });
+
+    it('should include slideName in LayoutOverflowError message', () => {
+      const positioned: PositionedNode = {
+        node: textNode('test'),
+        x: 8, y: 1, width: 5, height: 1,
+      };
+      const validator = new LayoutValidator(slideBounds);
+      try {
+        validator.validateOrThrow(positioned, 5, 'layout: customerStory, eyebrow: STORY');
+        assert.fail('Should have thrown');
+      } catch (e) {
+        assert.ok(e instanceof LayoutOverflowError);
+        assert.ok(e.message.includes('Slide 6'));
+        assert.ok(e.message.includes('layout: customerStory, eyebrow: STORY'));
+      }
+    });
+
+    it('should omit parentheses when slideName is not provided', () => {
+      const positioned: PositionedNode = {
+        node: textNode('test'),
+        x: 8, y: 1, width: 5, height: 1,
+      };
+      const validator = new LayoutValidator(slideBounds);
+      try {
+        validator.validateOrThrow(positioned, 5);
+        assert.fail('Should have thrown');
+      } catch (e) {
+        assert.ok(e instanceof LayoutOverflowError);
+        assert.ok(e.message.startsWith('Slide 6: Content'));
+      }
+    });
+
+    it('should include slideName in LayoutBoundsError message', () => {
+      const positioned: PositionedNode = {
+        node: containerNode(),
+        x: 1, y: 2, width: 4, height: 3,
+        children: [{
+          node: textNode('test'),
+          x: 1, y: 1, width: 4, height: 1,
+        }],
+      };
+      const validator = new LayoutValidator(slideBounds);
+      try {
+        validator.validateOrThrow(positioned, 3, 'layout: body, title: Test');
+        assert.fail('Should have thrown');
+      } catch (e) {
+        assert.ok(e instanceof LayoutBoundsError);
+        assert.ok(e.message.includes('Slide 4'));
+        assert.ok(e.message.includes('layout: body, title: Test'));
+      }
+    });
+
+    it('should produce correct message for slideIndex 0', () => {
+      const positioned: PositionedNode = {
+        node: textNode('test'),
+        x: 8, y: 1, width: 5, height: 1,
+      };
+      const validator = new LayoutValidator(slideBounds);
+      try {
+        validator.validateOrThrow(positioned, 0, 'layout: title');
+        assert.fail('Should have thrown');
+      } catch (e) {
+        assert.ok(e instanceof LayoutOverflowError);
+        assert.ok(e.message.includes('Slide 1'));
+        assert.ok(e.message.includes('layout: title'));
+      }
+    });
   });
 
   describe('Sibling Overlap Detection', () => {

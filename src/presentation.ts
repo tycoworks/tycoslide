@@ -39,6 +39,8 @@ export interface Slide {
   background?: string;
   notes?: string;
   content: ComponentNode;
+  /** Optional name for identifying slides in error messages and shared slide references. */
+  name?: string;
 }
 
 // ============================================
@@ -81,9 +83,10 @@ export class Presentation {
    * Slides are stored and processed in writeFile() to enable batched text measurement.
    */
   add(slide: Slide): void {
+    const slideIndex = this.slideCount;
     this.slideCount++;
-    log.pptx.slide('STORE slide #%d master=%s (deferred)', this.slideCount, slide.master?.name ?? 'none');
-    this.deferredSlides.push({ slide, slideIndex: this.slideCount });
+    log.pptx.slide('STORE slide #%d master=%s (deferred)', slideIndex + 1, slide.master?.name ?? 'none');
+    this.deferredSlides.push({ slide, slideIndex });
   }
 
   /** Calculate footer bounds (bottom margin area) */
@@ -209,7 +212,7 @@ export class Presentation {
             width: bounds.x + bounds.w,   // Absolute right edge
             height: bounds.y + bounds.h,  // Absolute bottom edge (excludes footer)
           });
-          validator.validateOrThrow(positioned, slideIndex);
+          validator.validateOrThrow(positioned, slideIndex, slide.name);
         } catch (error) {
           if (error instanceof Error && !error.message.startsWith('Slide ')) {
             error.message = `Slide ${slideIndex + 1}: ${error.message}`;
