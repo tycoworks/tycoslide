@@ -1,9 +1,8 @@
 // Table Component - Native pptxgenjs table element
 
-import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
-import { NODE_TYPE, type TableCellData, type TableStyleProps } from '../core/nodes.js';
-import type { TextContent } from '../core/types.js';
-import { MARKDOWN } from '../core/types.js';
+import { componentRegistry, component, type ComponentNode, type ExpansionContext } from '../core/registry.js';
+import { NODE_TYPE, type TextNode, type TableCellData, type TableStyleProps } from '../core/nodes.js';
+import { MARKDOWN, type Theme, type TextContent } from '../core/types.js';
 import { MDAST, extractInlineText } from '../core/mdast.js';
 import type { Table as MdastTable } from 'mdast';
 
@@ -13,6 +12,8 @@ import type { Table as MdastTable } from 'mdast';
 
 export const TABLE_COMPONENT = 'table' as const;
 
+export type TableTokens = TableStyleProps;
+
 export interface TableProps {
   /** Proportional column widths (normalized internally) */
   columnWidths?: number[];
@@ -20,13 +21,24 @@ export interface TableProps {
   headerRows?: number;
   /** Number of header columns (default: 0) */
   headerColumns?: number;
-  /** Table styling options */
-  style?: TableStyleProps;
 }
 
 interface TableInternalProps {
   data: (TableCellData | TextContent)[][];
   tableProps?: TableProps;
+  variant?: string;
+}
+
+function tableDefaults(theme: Theme): TableTokens {
+  const tokens: TableTokens = {
+    borderStyle: 'full',
+    borderColor: theme.colors.secondary,
+    borderWidth: theme.borders.width,
+    cellPadding: theme.spacing.cellPadding,
+    cellTextStyle: 'body',
+    headerTextStyle: 'body',
+  };
+  return tokens;
 }
 
 /** Compile a GFM table MDAST node into a table() component. */
@@ -40,21 +52,36 @@ function compileTableBlock(node: unknown, _source: string): ComponentNode {
 
 componentRegistry.define({
   name: TABLE_COMPONENT,
-  expand: (props: TableInternalProps) => {
+  defaults: tableDefaults,
+  expand: async (props: TableInternalProps, context: ExpansionContext, tokens: TableTokens) => {
+    // Expand string content through the markdown component to support
+    // rich text (**bold**, *italic*, :accent[highlights]) in table cells.
+    const expandContent = async (content: TextContent): Promise<TextContent> => {
+      if (typeof content === 'string') {
+        const expanded = await componentRegistry.expand(
+          component('markdown', { content }),
+          context,
+        ) as TextNode;
+        return expanded.content;
+      }
+      return content;
+    };
+
     // Normalize cells: convert plain strings/TextContent to TableCellData
-    const rows: TableCellData[][] = props.data.map(row =>
-      row.map(cell => {
+    const rows: TableCellData[][] = await Promise.all(props.data.map(row =>
+      Promise.all(row.map(async cell => {
         if (typeof cell === 'string' || Array.isArray(cell)) {
-          return { content: cell };
+          return { content: await expandContent(cell) };
         }
         // Check if it's already TableCellData (has 'content' property)
         if ('content' in cell) {
-          return cell as TableCellData;
+          const tcd = cell as TableCellData;
+          return { ...tcd, content: await expandContent(tcd.content) };
         }
         // It's a TextRun, wrap it
         return { content: cell };
-      })
-    );
+      }))
+    ));
 
     return {
       type: NODE_TYPE.TABLE,
@@ -62,7 +89,7 @@ componentRegistry.define({
       columnWidths: props.tableProps?.columnWidths,
       headerRows: props.tableProps?.headerRows,
       headerColumns: props.tableProps?.headerColumns,
-      style: props.tableProps?.style,
+      style: tokens,
     };
   },
   markdown: {
@@ -83,7 +110,7 @@ componentRegistry.define({
  * table([
  *   [{ content: 'Name' }, { content: 'Role' }],
  *   [{ content: 'Alice' }, { content: 'Engineer' }],
- * ], { headerRows: 1, style: { headerBackground: 'E0E0E0' } })
+ * ], { headerRows: 1 })
  *
  * // Convenience: string arrays auto-convert to cells
  * table([
@@ -94,7 +121,7 @@ componentRegistry.define({
  */
 export function table(
   data: (TableCellData | TextContent)[][],
-  props?: TableProps
+  props?: TableProps & { variant?: string }
 ): ComponentNode {
-  return component(TABLE_COMPONENT, { data, tableProps: props });
+  return component(TABLE_COMPONENT, { data, tableProps: props, variant: props?.variant });
 }

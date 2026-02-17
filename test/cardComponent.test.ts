@@ -25,11 +25,9 @@ describe('Card Component', () => {
       const node = card({
         title: 'My Title',
         description: 'My description',
-        backgroundColor: '#FF0000',
       });
       assert.strictEqual(node.props.title, 'My Title');
       assert.strictEqual(node.props.description, 'My description');
-      assert.strictEqual(node.props.backgroundColor, '#FF0000');
     });
   });
 
@@ -114,12 +112,9 @@ describe('Card Component', () => {
     });
   });
 
-  describe('styling options', () => {
-    it('should apply background color', async () => {
-      const node = card({
-        title: 'Test',
-        backgroundColor: '#AABBCC',
-      });
+  describe('theme token defaults', () => {
+    it('should use theme.colors.secondary as default background color', async () => {
+      const node = card({ title: 'Test' });
       const expanded = await componentRegistry.expandTree(node, { theme });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
@@ -127,17 +122,76 @@ describe('Card Component', () => {
         const rect = expanded.children[0];
         assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
         if (rect.type === NODE_TYPE.SHAPE) {
-          assert.strictEqual(rect.fill?.color, '#AABBCC');
+          assert.strictEqual(rect.fill?.color, theme.colors.secondary);
         }
       }
     });
 
-    it('should apply background opacity', async () => {
-      const node = card({
-        title: 'Test',
-        backgroundOpacity: 50,
-      });
+    it('should use theme.colors.subtleOpacity as default background opacity', async () => {
+      const node = card({ title: 'Test' });
       const expanded = await componentRegistry.expandTree(node, { theme });
+
+      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
+      if (expanded.type === NODE_TYPE.STACK) {
+        const rect = expanded.children[0];
+        assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
+        if (rect.type === NODE_TYPE.SHAPE) {
+          assert.strictEqual(rect.fill?.opacity, theme.colors.subtleOpacity);
+        }
+      }
+    });
+
+    it('should use theme.borders for default border and corner radius', async () => {
+      const node = card({ title: 'Test' });
+      const expanded = await componentRegistry.expandTree(node, { theme });
+
+      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
+      if (expanded.type === NODE_TYPE.STACK) {
+        const rect = expanded.children[0];
+        assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
+        if (rect.type === NODE_TYPE.SHAPE) {
+          assert.strictEqual(rect.border?.color, theme.colors.secondary);
+          assert.strictEqual(rect.border?.width, theme.borders.width);
+          assert.strictEqual(rect.cornerRadius, theme.borders.radius);
+        }
+      }
+    });
+
+    it('should use theme.spacing.padding as default padding', async () => {
+      const node = card({ title: 'Test' });
+      const expanded = await componentRegistry.expandTree(node, { theme });
+
+      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
+      if (expanded.type === NODE_TYPE.STACK) {
+        const contentColumn = expanded.children[1];
+        assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
+        if (contentColumn.type === NODE_TYPE.CONTAINER) {
+          assert.strictEqual(contentColumn.padding, theme.spacing.padding);
+        }
+      }
+    });
+  });
+
+  describe('theme.components.card overrides', () => {
+    it('should apply background color from theme.components.card', async () => {
+      const customTheme = mockTheme({ components: { card: { backgroundColor: 'AABBCC' } } });
+      const node = card({ title: 'Test' });
+      const expanded = await componentRegistry.expandTree(node, { theme: customTheme });
+
+      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
+      if (expanded.type === NODE_TYPE.STACK) {
+        const rect = expanded.children[0];
+        assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
+        if (rect.type === NODE_TYPE.SHAPE) {
+          assert.strictEqual(rect.fill?.color, 'AABBCC');
+        }
+      }
+    });
+
+    it('should apply background opacity from theme.components.card', async () => {
+      const customTheme = mockTheme({ components: { card: { backgroundOpacity: 50 } } });
+      const node = card({ title: 'Test' });
+      const expanded = await componentRegistry.expandTree(node, { theme: customTheme });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {
@@ -149,31 +203,26 @@ describe('Card Component', () => {
       }
     });
 
-    it('should apply border properties', async () => {
-      const node = card({
-        title: 'Test',
-        borderColor: '#123456',
-        borderWidth: 2,
-      });
-      const expanded = await componentRegistry.expandTree(node, { theme });
+    it('should apply border properties from theme.components.card', async () => {
+      const customTheme = mockTheme({ components: { card: { borderColor: '123456', borderWidth: 2 } } });
+      const node = card({ title: 'Test' });
+      const expanded = await componentRegistry.expandTree(node, { theme: customTheme });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {
         const rect = expanded.children[0];
         assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
         if (rect.type === NODE_TYPE.SHAPE) {
-          assert.strictEqual(rect.border?.color, '#123456');
+          assert.strictEqual(rect.border?.color, '123456');
           assert.strictEqual(rect.border?.width, 2);
         }
       }
     });
 
-    it('should apply corner radius', async () => {
-      const node = card({
-        title: 'Test',
-        cornerRadius: 0.25,
-      });
-      const expanded = await componentRegistry.expandTree(node, { theme });
+    it('should apply corner radius from theme.components.card', async () => {
+      const customTheme = mockTheme({ components: { card: { cornerRadius: 0.25 } } });
+      const node = card({ title: 'Test' });
+      const expanded = await componentRegistry.expandTree(node, { theme: customTheme });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {
@@ -185,12 +234,10 @@ describe('Card Component', () => {
       }
     });
 
-    it('should apply padding to content column', async () => {
-      const node = card({
-        title: 'Test',
-        padding: 0.5,
-      });
-      const expanded = await componentRegistry.expandTree(node, { theme });
+    it('should apply padding from theme.components.card', async () => {
+      const customTheme = mockTheme({ components: { card: { padding: 0.5 } } });
+      const node = card({ title: 'Test' });
+      const expanded = await componentRegistry.expandTree(node, { theme: customTheme });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {

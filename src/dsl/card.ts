@@ -7,6 +7,7 @@ import { shape, image, imageComponent } from './primitives.js';
 import { markdown, text, markdownComponent, textComponent } from './text.js';
 import type { SlideNode } from '../core/nodes.js';
 import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE, MARKDOWN } from '../core/types.js';
+import type { TextStyleName, GapSize, Theme } from '../core/types.js';
 import { schema } from '../schema.js';
 
 // ============================================
@@ -17,6 +18,25 @@ import { schema } from '../schema.js';
 export const CARD_COMPONENT = 'card' as const;
 
 // ============================================
+// DESIGN TOKENS
+// ============================================
+
+export interface CardTokens {
+  padding: number;
+  cornerRadius: number;
+  backgroundColor: string;
+  backgroundOpacity: number;
+  borderColor: string;
+  borderWidth: number;
+  titleStyle: TextStyleName;
+  titleColor?: string;
+  descriptionStyle: TextStyleName;
+  descriptionColor?: string;
+  gap: GapSize;
+  textGap?: GapSize;
+}
+
+// ============================================
 // PARAMS SCHEMA
 // ============================================
 
@@ -25,34 +45,12 @@ const cardSchema = {
   image: imageComponent.input.optional(),
   /** Card title text */
   title: textComponent.input.optional(),
-  /** Text style for title */
-  titleStyle: schema.textStyle().optional(),
-  /** Color for title */
-  titleColor: schema.string().optional(),
   /** Card description text */
   description: markdownComponent.input.optional(),
-  /** Text style for description */
-  descriptionStyle: schema.textStyle().optional(),
-  /** Color for description */
-  descriptionColor: schema.string().optional(),
   /** Whether to show background (default: true) */
   background: schema.boolean().optional(),
-  /** Background color */
-  backgroundColor: schema.string().optional(),
-  /** Background opacity (0-100) */
-  backgroundOpacity: schema.number().optional(),
-  /** Border color */
-  borderColor: schema.string().optional(),
-  /** Border width in points */
-  borderWidth: schema.number().optional(),
-  /** Corner radius in inches */
-  cornerRadius: schema.number().optional(),
-  /** Internal padding in inches */
-  padding: schema.number().optional(),
-  /** Gap between children */
-  gap: schema.gap().optional(),
-  /** Gap between title and description (defaults to gap) */
-  textGap: schema.gap().optional(),
+  /** Named variant (resolved from theme.components.card.variants) */
+  variant: schema.string().optional(),
 } satisfies SchemaShape;
 
 // ============================================
@@ -65,6 +63,20 @@ export type CardProps = InferProps<typeof cardSchema>;
 // EXPANSION FUNCTION
 // ============================================
 
+function cardDefaults(theme: Theme): CardTokens {
+  return {
+    padding: theme.spacing.padding,
+    cornerRadius: theme.borders.radius,
+    backgroundColor: theme.colors.secondary,
+    backgroundOpacity: theme.colors.subtleOpacity,
+    borderColor: theme.colors.secondary,
+    borderWidth: theme.borders.width,
+    titleStyle: TEXT_STYLE.H4,
+    descriptionStyle: TEXT_STYLE.SMALL,
+    gap: GAP.TIGHT,
+  };
+}
+
 /**
  * Expand card params into primitive node tree.
  *
@@ -76,31 +88,13 @@ export type CardProps = InferProps<typeof cardSchema>;
  * )
  * ```
  */
-function expandCard(props: CardProps, context: ExpansionContext): SlideNode {
+function expandCard(props: CardProps, context: ExpansionContext, tokens: CardTokens): SlideNode {
+  const { image: imagePath, title, description, background = true } = props;
   const {
-    image: imagePath,
-    title,
-    titleStyle = TEXT_STYLE.H4,
-    titleColor,
-    description,
-    descriptionStyle = TEXT_STYLE.SMALL,
-    descriptionColor,
-    background = true,
-    backgroundColor,
-    backgroundOpacity,
-    borderColor,
-    borderWidth,
-    cornerRadius,
-    padding,
-    gap = GAP.TIGHT,
-    textGap,
-  } = props;
-
-  const theme = context.theme;
-
-  // Resolve padding and corner radius from theme
-  const cardPadding = padding ?? theme.spacing.padding;
-  const cardRadius = cornerRadius ?? theme.borders.radius;
+    padding, cornerRadius, backgroundColor, backgroundOpacity,
+    borderColor, borderWidth, titleStyle, titleColor,
+    descriptionStyle, descriptionColor, gap, textGap,
+  } = tokens;
 
   // Build children from image/title/description props
   const children: SlideNode[] = [];
@@ -124,7 +118,7 @@ function expandCard(props: CardProps, context: ExpansionContext): SlideNode {
   }
 
   // Build content layer (centered both axes for balanced card appearance)
-  const contentLayer = column({ padding: cardPadding, gap: textGap ?? gap, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE }, ...children);
+  const contentLayer = column({ padding, gap: textGap ?? gap, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE }, ...children);
 
   // If no background, just return the content
   if (background === false || backgroundColor === 'none') {
@@ -132,19 +126,14 @@ function expandCard(props: CardProps, context: ExpansionContext): SlideNode {
   }
 
   // Build background rectangle
-  const bgColor = backgroundColor ?? theme.colors.secondary;
-  const bgOpacity = backgroundOpacity ?? theme.colors.subtleOpacity;
-  const bgBorderColor = borderColor ?? theme.colors.secondary;
-  const bgBorderWidth = borderWidth ?? theme.borders.width;
-
   const backgroundRect = shape({
     shape: SHAPE.ROUND_RECT,
-    fill: { color: bgColor, opacity: bgOpacity },
+    fill: { color: backgroundColor, opacity: backgroundOpacity },
     border: {
-      color: bgBorderColor,
-      width: bgBorderWidth,
+      color: borderColor,
+      width: borderWidth,
     },
-    cornerRadius: cardRadius,
+    cornerRadius,
   });
 
   // Stack: background behind, content in front
@@ -158,6 +147,7 @@ function expandCard(props: CardProps, context: ExpansionContext): SlideNode {
 export const cardComponent = componentRegistry.define({
   name: CARD_COMPONENT,
   params: cardSchema,
+  defaults: cardDefaults,
   expand: expandCard,
   markdown: { type: MARKDOWN.BLOCK },
 });
@@ -171,7 +161,6 @@ export const cardComponent = componentRegistry.define({
  *   image: 'assets/photo.png',
  *   title: 'My Card',
  *   description: 'Card description text',
- *   backgroundColor: '#F0F0F0',
  * })
  * ```
  */

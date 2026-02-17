@@ -2,7 +2,7 @@
 // Accepts raw mermaid text, sanitizes styling, injects theme classDefs,
 // renders via mermaid-cli to PNG, expands to ImageNode.
 
-import { COLOR_NAME, MARKDOWN, type Theme } from '../core/types.js';
+import { MARKDOWN, type Theme } from '../core/types.js';
 import { NODE_TYPE, type ImageNode } from '../core/nodes.js';
 import {
   componentRegistry,
@@ -143,14 +143,12 @@ function buildClassDefs(theme: Theme): string {
   const { colors } = theme;
   const alpha = Math.round(colors.subtleOpacity / 100 * 255).toString(16).padStart(2, '0');
 
-  return Object.values(COLOR_NAME).filter(name => name !== COLOR_NAME.BACKGROUND).map((styleName) => {
-    const baseColor = (colors as unknown as Record<string, string>)[styleName];
-    if (!baseColor || typeof baseColor !== 'string') return null;
-    const fill = styleName === COLOR_NAME.PRIMARY
-      ? `#${baseColor}`
-      : `#${baseColor}${alpha}`;
-    return `classDef ${styleName} fill:${fill}`;
-  }).filter(Boolean).join('\n');
+  const defs = Object.entries(colors.accents).map(([name, color]) => {
+    return `classDef ${name} fill:#${color}${alpha}`;
+  });
+  // Primary gets full opacity (not subtle)
+  defs.push(`classDef primary fill:#${colors.primary}`);
+  return defs.join('\n');
 }
 
 function buildSubgraphStyles(definition: string, theme: Theme): string {

@@ -74,25 +74,27 @@ export interface ExpansionContext {
 /**
  * A component definition describes how to expand a component into primitives.
  */
-export interface ComponentDefinition<TProps = unknown> {
+export interface ComponentDefinition<TProps = unknown, TTokens = undefined> {
   /** Unique name for this component (e.g., 'card', 'table') */
   name: string;
+  /** Optional theme token resolver — returns default token values for this component. */
+  defaults?: (theme: Theme) => TTokens;
   /** Expand props into a node tree (may contain components that get further expanded) */
-  expand: (props: TProps, context: ExpansionContext) => SlideNode | Promise<SlideNode>;
+  expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   /** How this component is invoked from markdown (if at all). */
   markdown?: MarkdownInvocation;
 }
 
 /** A component definition with typed params inferred from a Zod shape, for use in layout params. */
-export type ParamsComponentDefinition<TShape extends SchemaShape> =
-  ComponentDefinition<z.infer<z.ZodObject<TShape>>> & {
+export type ParamsComponentDefinition<TShape extends SchemaShape, TTokens = undefined> =
+  ComponentDefinition<z.infer<z.ZodObject<TShape>>, TTokens> & {
     /** YAML-facing input type — use in schema.array() or layout params. */
     input: z.ZodObject<TShape>;
   };
 
 /** A component definition with a simple YAML-facing input type (e.g., z.string()). */
-export type InputComponentDefinition<TProps, TInput extends z.ZodTypeAny> =
-  ComponentDefinition<TProps> & {
+export type InputComponentDefinition<TProps, TInput extends z.ZodTypeAny, TTokens = undefined> =
+  ComponentDefinition<TProps, TTokens> & {
     /** YAML-facing input type for use in layout params. */
     input: TInput;
   };
@@ -123,7 +125,7 @@ export const COMPONENT_TYPE = NODE_TYPE.COMPONENT;
  * Registry for component definitions.
  * Use `.define()` to create, register, and return a component definition in one call.
  */
-class ComponentRegistry extends Registry<ComponentDefinition<any>> {
+class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
   constructor() {
     super('Component', 'expand');
   }
@@ -135,33 +137,36 @@ class ComponentRegistry extends Registry<ComponentDefinition<any>> {
    * The returned definition has an `.input` property (pre-wrapped ZodObject)
    * that layout authors can reference directly: `schema.array(cardComponent.input)`
    */
-  define<TShape extends SchemaShape>(def: {
+  define<TShape extends SchemaShape, TTokens = undefined>(def: {
     name: string;
     params: TShape;
-    expand: (props: z.infer<z.ZodObject<TShape>>, context: ExpansionContext) => SlideNode | Promise<SlideNode>;
+    defaults?: (theme: Theme) => TTokens;
+    expand: (props: z.infer<z.ZodObject<TShape>>, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
     markdown?: MarkdownInvocation;
-  }): ParamsComponentDefinition<TShape>;
+  }): ParamsComponentDefinition<TShape, TTokens>;
 
   /**
    * Define and register a component with a simple YAML-facing input type.
    * Use for components where the YAML input differs from the full programmatic props
    * (e.g., markdown accepts a string from YAML but the expand function takes TextComponentProps).
    */
-  define<TProps, TInput extends z.ZodTypeAny>(def: {
+  define<TProps, TInput extends z.ZodTypeAny, TTokens = undefined>(def: {
     name: string;
     input: TInput;
-    expand: (props: TProps, context: ExpansionContext) => SlideNode | Promise<SlideNode>;
+    defaults?: (theme: Theme) => TTokens;
+    expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
     markdown?: MarkdownInvocation;
-  }): InputComponentDefinition<TProps, TInput>;
+  }): InputComponentDefinition<TProps, TInput, TTokens>;
 
   /**
    * Define and register a component for programmatic-only use (no YAML schema).
    */
-  define<TProps>(def: {
+  define<TProps, TTokens = undefined>(def: {
     name: string;
-    expand: (props: TProps, context: ExpansionContext) => SlideNode | Promise<SlideNode>;
+    defaults?: (theme: Theme) => TTokens;
+    expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
     markdown?: MarkdownInvocation;
-  }): ComponentDefinition<TProps>;
+  }): ComponentDefinition<TProps, TTokens>;
 
   define(def: any): any {
     if ('params' in def && 'input' in def) {
@@ -206,11 +211,11 @@ class ComponentRegistry extends Registry<ComponentDefinition<any>> {
     let result: any;
     if ('params' in def) {
       const input = z.object(def.params);
-      result = { name: def.name, expand: def.expand, input, markdown: md };
+      result = { name: def.name, expand: def.expand, input, markdown: md, defaults: def.defaults };
     } else if ('input' in def) {
-      result = { name: def.name, expand: def.expand, input: def.input, markdown: md };
+      result = { name: def.name, expand: def.expand, input: def.input, markdown: md, defaults: def.defaults };
     } else {
-      result = { name: def.name, expand: def.expand, markdown: md };
+      result = { name: def.name, expand: def.expand, markdown: md, defaults: def.defaults };
     }
     this.register(result);
     return result;
@@ -254,7 +259,33 @@ class ComponentRegistry extends Registry<ComponentDefinition<any>> {
     if (!def) {
       throw new Error(`Unknown component: '${node.componentName}'. Did you forget to register it?`);
     }
-    return def.expand(node.props, context);
+    if (def.defaults) {
+      const defaults = def.defaults(context.theme) as Record<string, unknown>;
+      const componentConfig = context.theme.components?.[node.componentName] ?? {};
+
+      // Separate variants from base overrides
+      const { variants: variantDefs, ...baseOverrides } = componentConfig as
+        Record<string, unknown> & { variants?: Record<string, Record<string, unknown>> };
+
+      // Start with defaults + base overrides
+      let tokens = { ...defaults, ...baseOverrides };
+
+      // Apply variant if requested via props
+      const variantName = (node.props as any)?.variant;
+      if (variantName && typeof variantName === 'string') {
+        const variantOverrides = variantDefs?.[variantName];
+        if (!variantOverrides) {
+          const available = variantDefs ? Object.keys(variantDefs).join(', ') : '(none)';
+          throw new Error(
+            `Unknown variant '${variantName}' for component '${node.componentName}'. Available: ${available}`
+          );
+        }
+        tokens = { ...tokens, ...variantOverrides };
+      }
+
+      return def.expand(node.props, context, tokens as any);
+    }
+    return def.expand(node.props, context, undefined as any);
   }
 
   /**

@@ -71,6 +71,7 @@ describe('componentRegistry.define', () => {
       const expanded = await comp.expand(
         { title: 'Hello', count: 1 },
         { theme: {} as any },
+        undefined,
       );
       assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
     });

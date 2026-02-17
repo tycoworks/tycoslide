@@ -14,8 +14,10 @@ export {
   SLIDE_NUMBER_COMPONENT,
   type ImageProps,
   type LineProps,
+  type LineTokens,
   type ShapeProps,
   type SlideNumberProps,
+  type SlideNumberTokens,
 } from './primitives.js';
 
 // Containers (row, column, stack, grid)
@@ -39,6 +41,7 @@ export {
   table,
   TABLE_COMPONENT,
   type TableProps,
+  type TableTokens,
 } from './table.js';
 
 // Text (markdown-powered + plain)
@@ -62,6 +65,7 @@ export {
   cardComponent,
   CARD_COMPONENT,
   type CardProps,
+  type CardTokens,
 } from './card.js';
 
 // Quote (composition component)
@@ -70,6 +74,7 @@ export {
   quoteComponent,
   QUOTE_COMPONENT,
   type QuoteProps,
+  type QuoteTokens,
 } from './quote.js';
 
 // Mermaid diagram (I/O component — mermaid-cli)

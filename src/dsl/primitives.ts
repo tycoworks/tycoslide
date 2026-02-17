@@ -1,13 +1,19 @@
 // Primitive components: image, line, shape, slideNumber
 
-import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape } from '../core/registry.js';
+import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape, type ExpansionContext } from '../core/registry.js';
 import { NODE_TYPE } from '../core/nodes.js';
 import type { ImageNode, LineNode, ShapeNode, SlideNumberNode } from '../core/nodes.js';
 import {
   HALIGN,
+  DASH_TYPE,
+  TEXT_STYLE,
   ARROW_TYPE_VALUES,
   DASH_TYPE_VALUES,
   SHAPE_VALUES,
+  type DashType,
+  type TextStyleName,
+  type HorizontalAlignment,
+  type Theme,
 } from '../core/types.js';
 import { schema } from '../schema.js';
 
@@ -50,24 +56,36 @@ export function image(src: string, options?: ImageOptions): ComponentNode {
 
 export const LINE_COMPONENT = 'line' as const;
 
+export interface LineTokens {
+  color: string;
+  width: number;
+  dashType: DashType;
+}
+
 const lineSchema = {
-  color: schema.string().optional(),
-  width: schema.number().optional(),
-  dashType: schema.enum(DASH_TYPE_VALUES).optional(),
   beginArrow: schema.enum(ARROW_TYPE_VALUES).optional(),
   endArrow: schema.enum(ARROW_TYPE_VALUES).optional(),
 } satisfies SchemaShape;
 
 export type LineProps = InferProps<typeof lineSchema>;
 
+function lineDefaults(theme: Theme): LineTokens {
+  return {
+    color: theme.colors.secondary,
+    width: theme.borders.width,
+    dashType: DASH_TYPE.SOLID,
+  };
+}
+
 componentRegistry.define({
   name: LINE_COMPONENT,
   params: lineSchema,
-  expand: (props: LineProps): LineNode => ({
+  defaults: lineDefaults,
+  expand: (props: LineProps, _context: ExpansionContext, tokens: LineTokens): LineNode => ({
     type: NODE_TYPE.LINE,
-    color: props.color,
-    width: props.width,
-    dashType: props.dashType,
+    color: tokens.color,
+    width: tokens.width,
+    dashType: tokens.dashType,
     beginArrow: props.beginArrow,
     endArrow: props.endArrow,
   }),
@@ -128,29 +146,35 @@ export function shape(props: ShapeProps): ComponentNode {
 
 export const SLIDE_NUMBER_COMPONENT = 'slideNumber' as const;
 
-const slideNumberSchema = {
-  style: schema.textStyle().optional(),
-  color: schema.string().optional(),
-  hAlign: schema.hAlign().optional(),
-} satisfies SchemaShape;
+export interface SlideNumberTokens {
+  style: TextStyleName;
+  color?: string;
+  hAlign: HorizontalAlignment;
+}
+
+const slideNumberSchema = {} satisfies SchemaShape;
 
 export type SlideNumberProps = InferProps<typeof slideNumberSchema>;
+
+function slideNumberDefaults(_theme: Theme): SlideNumberTokens {
+  return {
+    style: TEXT_STYLE.FOOTER,
+    hAlign: HALIGN.RIGHT,
+  };
+}
 
 componentRegistry.define({
   name: SLIDE_NUMBER_COMPONENT,
   params: slideNumberSchema,
-  expand: (props: SlideNumberProps): SlideNumberNode => ({
+  defaults: slideNumberDefaults,
+  expand: (_props: SlideNumberProps, _context: ExpansionContext, tokens: SlideNumberTokens): SlideNumberNode => ({
     type: NODE_TYPE.SLIDE_NUMBER,
-    style: props.style,
-    color: props.color,
-    hAlign: props.hAlign ?? HALIGN.RIGHT,
+    style: tokens.style,
+    color: tokens.color,
+    hAlign: tokens.hAlign,
   }),
 });
 
 export function slideNumber(props?: SlideNumberProps): ComponentNode {
-  return component(SLIDE_NUMBER_COMPONENT, {
-    style: props?.style,
-    color: props?.color,
-    hAlign: props?.hAlign,
-  });
+  return component(SLIDE_NUMBER_COMPONENT, props ?? {});
 }

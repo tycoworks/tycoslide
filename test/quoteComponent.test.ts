@@ -26,11 +26,9 @@ describe('Quote Component', () => {
       const node = quote({
         quote: 'A great quote',
         attribution: '— Author',
-        backgroundColor: '#FF0000',
       });
       assert.strictEqual(node.props.quote, 'A great quote');
       assert.strictEqual(node.props.attribution, '— Author');
-      assert.strictEqual(node.props.backgroundColor, '#FF0000');
     });
   });
 
@@ -152,9 +150,9 @@ describe('Quote Component', () => {
     });
   });
 
-  describe('styling options', () => {
-    it('should apply background color', async () => {
-      const node = quote({ quote: 'Test', backgroundColor: '#AABBCC' });
+  describe('theme token defaults', () => {
+    it('should use theme.colors.secondary as default background color', async () => {
+      const node = quote({ quote: 'Test' });
       const expanded = await componentRegistry.expandTree(node, { theme });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
@@ -162,64 +160,7 @@ describe('Quote Component', () => {
         const rect = expanded.children[0];
         assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
         if (rect.type === NODE_TYPE.SHAPE) {
-          assert.strictEqual(rect.fill?.color, '#AABBCC');
-        }
-      }
-    });
-
-    it('should apply background opacity', async () => {
-      const node = quote({ quote: 'Test', backgroundOpacity: 50 });
-      const expanded = await componentRegistry.expandTree(node, { theme });
-
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        const rect = expanded.children[0];
-        assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
-        if (rect.type === NODE_TYPE.SHAPE) {
-          assert.strictEqual(rect.fill?.opacity, 50);
-        }
-      }
-    });
-
-    it('should apply border properties', async () => {
-      const node = quote({ quote: 'Test', borderColor: '#123456', borderWidth: 2 });
-      const expanded = await componentRegistry.expandTree(node, { theme });
-
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        const rect = expanded.children[0];
-        assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
-        if (rect.type === NODE_TYPE.SHAPE) {
-          assert.strictEqual(rect.border?.color, '#123456');
-          assert.strictEqual(rect.border?.width, 2);
-        }
-      }
-    });
-
-    it('should apply corner radius', async () => {
-      const node = quote({ quote: 'Test', cornerRadius: 0.25 });
-      const expanded = await componentRegistry.expandTree(node, { theme });
-
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        const rect = expanded.children[0];
-        assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
-        if (rect.type === NODE_TYPE.SHAPE) {
-          assert.strictEqual(rect.cornerRadius, 0.25);
-        }
-      }
-    });
-
-    it('should apply padding to content column', async () => {
-      const node = quote({ quote: 'Test', padding: 0.5 });
-      const expanded = await componentRegistry.expandTree(node, { theme });
-
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        const contentColumn = expanded.children[1];
-        assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
-        if (contentColumn.type === NODE_TYPE.CONTAINER) {
-          assert.strictEqual(contentColumn.padding, 0.5);
+          assert.strictEqual(rect.fill?.color, theme.colors.secondary);
         }
       }
     });
@@ -241,6 +182,84 @@ describe('Quote Component', () => {
         assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
         if (rect.type === NODE_TYPE.SHAPE) {
           assert.strictEqual(rect.cornerRadius, 0.2);
+        }
+      }
+    });
+  });
+
+  describe('theme.components.quote overrides', () => {
+    it('should apply background color from theme.components.quote', async () => {
+      const customTheme = mockTheme({ components: { quote: { backgroundColor: 'AABBCC' } } });
+      const node = quote({ quote: 'Test' });
+      const expanded = await componentRegistry.expandTree(node, { theme: customTheme });
+
+      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
+      if (expanded.type === NODE_TYPE.STACK) {
+        const rect = expanded.children[0];
+        assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
+        if (rect.type === NODE_TYPE.SHAPE) {
+          assert.strictEqual(rect.fill?.color, 'AABBCC');
+        }
+      }
+    });
+
+    it('should apply background opacity from theme.components.quote', async () => {
+      const customTheme = mockTheme({ components: { quote: { backgroundOpacity: 50 } } });
+      const node = quote({ quote: 'Test' });
+      const expanded = await componentRegistry.expandTree(node, { theme: customTheme });
+
+      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
+      if (expanded.type === NODE_TYPE.STACK) {
+        const rect = expanded.children[0];
+        assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
+        if (rect.type === NODE_TYPE.SHAPE) {
+          assert.strictEqual(rect.fill?.opacity, 50);
+        }
+      }
+    });
+
+    it('should apply border properties from theme.components.quote', async () => {
+      const customTheme = mockTheme({ components: { quote: { borderColor: '123456', borderWidth: 2 } } });
+      const node = quote({ quote: 'Test' });
+      const expanded = await componentRegistry.expandTree(node, { theme: customTheme });
+
+      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
+      if (expanded.type === NODE_TYPE.STACK) {
+        const rect = expanded.children[0];
+        assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
+        if (rect.type === NODE_TYPE.SHAPE) {
+          assert.strictEqual(rect.border?.color, '123456');
+          assert.strictEqual(rect.border?.width, 2);
+        }
+      }
+    });
+
+    it('should apply corner radius from theme.components.quote', async () => {
+      const customTheme = mockTheme({ components: { quote: { cornerRadius: 0.25 } } });
+      const node = quote({ quote: 'Test' });
+      const expanded = await componentRegistry.expandTree(node, { theme: customTheme });
+
+      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
+      if (expanded.type === NODE_TYPE.STACK) {
+        const rect = expanded.children[0];
+        assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
+        if (rect.type === NODE_TYPE.SHAPE) {
+          assert.strictEqual(rect.cornerRadius, 0.25);
+        }
+      }
+    });
+
+    it('should apply padding from theme.components.quote', async () => {
+      const customTheme = mockTheme({ components: { quote: { padding: 0.5 } } });
+      const node = quote({ quote: 'Test' });
+      const expanded = await componentRegistry.expandTree(node, { theme: customTheme });
+
+      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
+      if (expanded.type === NODE_TYPE.STACK) {
+        const contentColumn = expanded.children[1];
+        assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
+        if (contentColumn.type === NODE_TYPE.CONTAINER) {
+          assert.strictEqual(contentColumn.padding, 0.5);
         }
       }
     });

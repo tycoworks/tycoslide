@@ -7,7 +7,7 @@ import remarkParse from 'remark-parse';
 import remarkDirective from 'remark-directive';
 import type { Root, PhrasingContent, List, Paragraph, ListItem, Heading } from 'mdast';
 import type { TextDirective } from 'mdast-util-directive';
-import type { NormalizedRun, HighlightScheme } from '../core/types.js';
+import type { NormalizedRun, HighlightPair, ColorScheme } from '../core/types.js';
 import { HALIGN, VALIGN, MARKDOWN, TEXT_STYLE } from '../core/types.js';
 import { NODE_TYPE, type ElementNode } from '../core/nodes.js';
 import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape } from '../core/registry.js';
@@ -61,7 +61,7 @@ const processor = unified()
  * Parse markdown string into MDAST (Markdown Abstract Syntax Tree).
  * Supports CommonMark + remark-directive text directives (:name[text]).
  */
-export function parseMarkdown(input: string): Root {
+function parseMarkdown(input: string): Root {
   return processor.parse(input) as Root;
 }
 
@@ -79,9 +79,9 @@ export function parseMarkdown(input: string): Root {
  * - emphasis: italic: true
  * - textDirective: :name[text] -> highlight from theme
  */
-export function mdastToRuns(
+function mdastToRuns(
   tree: Root,
-  highlights: HighlightScheme
+  colors: ColorScheme
 ): NormalizedRun[] {
   const runs: NormalizedRun[] = [];
   let isFirstBlock = true;
@@ -92,17 +92,17 @@ export function mdastToRuns(
         // Add breakLine to the first run of non-first paragraphs
         // (means "start a new paragraph before this run")
         const paragraphRuns: NormalizedRun[] = [];
-        transformInline(node.children, highlights, paragraphRuns, {});
+        transformInline(node.children, colors, paragraphRuns, {});
         if (paragraphRuns.length > 0) {
           paragraphRuns[0] = { ...paragraphRuns[0], breakLine: true };
           runs.push(...paragraphRuns);
         }
       } else {
-        transformInline(node.children, highlights, runs, {});
+        transformInline(node.children, colors, runs, {});
       }
       isFirstBlock = false;
     } else if (node.type === MDAST.LIST) {
-      transformList(node as List, highlights, runs);
+      transformList(node as List, colors, runs);
       isFirstBlock = false;
     }
   }
@@ -115,7 +115,7 @@ export function mdastToRuns(
  */
 function transformList(
   list: List,
-  highlights: HighlightScheme,
+  colors: ColorScheme,
   runs: NormalizedRun[]
 ): void {
   const bulletType = list.ordered
@@ -129,7 +129,7 @@ function transformList(
       const itemRuns: NormalizedRun[] = [];
       transformInline(
         (firstChild as Paragraph).children,
-        highlights,
+        colors,
         itemRuns,
         {}
       );
@@ -139,7 +139,7 @@ function transformList(
       }
     } else if (firstChild && firstChild.type === MDAST.LIST) {
       // Nested list (e.g. `- 1. text`) — recurse, but use outer bullet type
-      transformList(firstChild as List, highlights, runs);
+      transformList(firstChild as List, colors, runs);
     }
   }
 }
@@ -150,7 +150,7 @@ function transformList(
  */
 function transformInline(
   nodes: PhrasingContent[],
-  highlights: HighlightScheme,
+  colors: ColorScheme,
   runs: NormalizedRun[],
   defaults: Partial<NormalizedRun>
 ): void {
@@ -160,25 +160,26 @@ function transformInline(
         runs.push({ text: node.value, ...defaults });
         break;
       case MDAST.STRONG:
-        transformInline(node.children, highlights, runs, { ...defaults, bold: true });
+        transformInline(node.children, colors, runs, { ...defaults, bold: true });
         break;
       case MDAST.EMPHASIS:
-        transformInline(node.children, highlights, runs, { ...defaults, italic: true });
+        transformInline(node.children, colors, runs, { ...defaults, italic: true });
         break;
       case MDAST.TEXT_DIRECTIVE: {
         const directive = node as unknown as TextDirective;
-        const pair = highlights[directive.name];
-        if (!pair) {
-          const available = Object.keys(highlights).join(', ');
+        const accentColor = colors.accents[directive.name];
+        if (!accentColor) {
+          const available = Object.keys(colors.accents).join(', ');
           throw new Error(
-            `Unknown highlight '${directive.name}'. Available: ${available}`
+            `Unknown accent '${directive.name}'. Available: ${available}`
           );
         }
+        const highlight: HighlightPair = { bg: colors.background, text: accentColor };
         transformInline(
           directive.children as PhrasingContent[],
-          highlights,
+          colors,
           runs,
-          { ...defaults, highlight: pair }
+          { ...defaults, highlight }
         );
         break;
       }
@@ -193,7 +194,7 @@ function transformInline(
 
 function expandMarkdown(props: TextComponentProps, context: { theme: any }): ElementNode {
   const tree = parseMarkdown(props.content);
-  const runs = mdastToRuns(tree, context.theme.highlights);
+  const runs = mdastToRuns(tree, context.theme.colors);
 
   // Apply bulletColor to all bullet runs if specified
   if (props.bulletColor) {

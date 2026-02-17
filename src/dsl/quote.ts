@@ -8,6 +8,7 @@ import { shape, image as imageNode, imageComponent } from './primitives.js';
 import { markdown, text, markdownComponent, textComponent } from './text.js';
 import type { SlideNode } from '../core/nodes.js';
 import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE, SIZE, MARKDOWN } from '../core/types.js';
+import type { TextStyleName, GapSize, Theme } from '../core/types.js';
 import { schema } from '../schema.js';
 
 // ============================================
@@ -16,6 +17,22 @@ import { schema } from '../schema.js';
 
 /** Component name for quote */
 export const QUOTE_COMPONENT = 'quote' as const;
+
+// ============================================
+// DESIGN TOKENS
+// ============================================
+
+export interface QuoteTokens {
+  padding: number;
+  cornerRadius: number;
+  backgroundColor: string;
+  backgroundOpacity: number;
+  borderColor: string;
+  borderWidth: number;
+  quoteStyle?: TextStyleName;
+  attributionStyle: TextStyleName;
+  gap: GapSize;
+}
 
 // ============================================
 // PARAMS SCHEMA
@@ -28,26 +45,10 @@ const quoteSchema = {
   attribution: textComponent.input.optional(),
   /** Optional image/logo displayed above the quote */
   image: imageComponent.input.optional(),
-  /** Text style for quote text */
-  quoteStyle: schema.textStyle().optional(),
-  /** Text style for attribution */
-  attributionStyle: schema.textStyle().optional(),
   /** Whether to show background (default: true) */
   background: schema.boolean().optional(),
-  /** Background color */
-  backgroundColor: schema.string().optional(),
-  /** Background opacity (0-100) */
-  backgroundOpacity: schema.number().optional(),
-  /** Border color */
-  borderColor: schema.string().optional(),
-  /** Border width in points */
-  borderWidth: schema.number().optional(),
-  /** Corner radius in inches */
-  cornerRadius: schema.number().optional(),
-  /** Internal padding in inches */
-  padding: schema.number().optional(),
-  /** Gap between children */
-  gap: schema.gap().optional(),
+  /** Named variant (resolved from theme.components.quote.variants) */
+  variant: schema.string().optional(),
 } satisfies SchemaShape;
 
 // ============================================
@@ -59,6 +60,19 @@ export type QuoteProps = InferProps<typeof quoteSchema>;
 // ============================================
 // EXPANSION FUNCTION
 // ============================================
+
+function quoteDefaults(theme: Theme): QuoteTokens {
+  return {
+    padding: theme.spacing.padding * 2,
+    cornerRadius: theme.borders.radius,
+    backgroundColor: theme.colors.secondary,
+    backgroundOpacity: theme.colors.subtleOpacity,
+    borderColor: theme.colors.secondary,
+    borderWidth: theme.borders.width,
+    attributionStyle: TEXT_STYLE.SMALL,
+    gap: GAP.NORMAL,
+  };
+}
 
 /**
  * Expand quote params into primitive node tree.
@@ -75,28 +89,12 @@ export type QuoteProps = InferProps<typeof quoteSchema>;
  * )
  * ```
  */
-function expandQuote(props: QuoteProps, context: ExpansionContext): SlideNode {
+function expandQuote(props: QuoteProps, context: ExpansionContext, tokens: QuoteTokens): SlideNode {
+  const { quote: quoteText, attribution, image: imagePath, background = true } = props;
   const {
-    quote: quoteText,
-    attribution,
-    image: imagePath,
-    quoteStyle,
-    attributionStyle = TEXT_STYLE.SMALL,
-    background = true,
-    backgroundColor,
-    backgroundOpacity,
-    borderColor,
-    borderWidth,
-    cornerRadius,
-    padding,
-    gap = GAP.NORMAL,
-  } = props;
-
-  const theme = context.theme;
-
-  // Resolve padding and corner radius from theme
-  const quotePadding = padding ?? theme.spacing.padding * 2;
-  const quoteRadius = cornerRadius ?? theme.borders.radius;
+    padding, cornerRadius, backgroundColor, backgroundOpacity,
+    borderColor, borderWidth, quoteStyle, attributionStyle, gap,
+  } = tokens;
 
   // Build content children: optional image, quote text, attribution
   const children: SlideNode[] = [];
@@ -109,7 +107,7 @@ function expandQuote(props: QuoteProps, context: ExpansionContext): SlideNode {
   }
 
   const contentLayer = column(
-    { padding: quotePadding, gap, vAlign: VALIGN.MIDDLE, height: SIZE.FILL },
+    { padding, gap, vAlign: VALIGN.MIDDLE, height: SIZE.FILL },
     ...children,
   );
 
@@ -119,16 +117,11 @@ function expandQuote(props: QuoteProps, context: ExpansionContext): SlideNode {
   }
 
   // Build background shape
-  const bgColor = backgroundColor ?? theme.colors.secondary;
-  const bgOpacity = backgroundOpacity ?? theme.colors.subtleOpacity;
-  const bgBorderColor = borderColor ?? theme.colors.secondary;
-  const bgBorderWidth = borderWidth ?? theme.borders.width;
-
   const backgroundRect = shape({
     shape: SHAPE.ROUND_RECT,
-    fill: { color: bgColor, opacity: bgOpacity },
-    border: { color: bgBorderColor, width: bgBorderWidth },
-    cornerRadius: quoteRadius,
+    fill: { color: backgroundColor, opacity: backgroundOpacity },
+    border: { color: borderColor, width: borderWidth },
+    cornerRadius,
   });
 
   return stack(backgroundRect, contentLayer);
@@ -141,6 +134,7 @@ function expandQuote(props: QuoteProps, context: ExpansionContext): SlideNode {
 export const quoteComponent = componentRegistry.define({
   name: QUOTE_COMPONENT,
   params: quoteSchema,
+  defaults: quoteDefaults,
   expand: expandQuote,
   markdown: { type: MARKDOWN.BLOCK },
 });

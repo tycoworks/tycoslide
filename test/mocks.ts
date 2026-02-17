@@ -4,7 +4,7 @@
 import * as assert from 'node:assert';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import type { Theme, TextStyle, FontFamily, HighlightScheme } from '../src/core/types.js';
+import type { Theme, TextStyle, FontFamily } from '../src/core/types.js';
 import { TEXT_STYLE } from '../src/core/types.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -39,7 +39,8 @@ export function mockTheme(options?: {
   lineSpacing?: number;
   borderWidth?: number;
   borderRadius?: number;
-  highlights?: HighlightScheme;
+  accents?: Record<string, string>;
+  components?: Record<string, Record<string, unknown>>;
 }): Theme {
   const gap = options?.gap ?? 0.25;
   const gapTight = options?.gapTight ?? 0.125;
@@ -52,7 +53,8 @@ export function mockTheme(options?: {
   const lineSpacing = options?.lineSpacing ?? 1.0;
   const borderWidth = options?.borderWidth ?? 1;
   const borderRadius = options?.borderRadius ?? 0.1;
-  const highlights = options?.highlights ?? { teal: { bg: '003333', text: '00CCCC' } };
+  const accents = options?.accents ?? { teal: '00CCCC', pink: 'FF00FF', orange: 'FF8800' };
+  const components = options?.components ?? {};
 
   return {
     slide: { layout: 'CUSTOM' as const, width: 13.333, height: 7.5 },
@@ -60,11 +62,7 @@ export function mockTheme(options?: {
       primary: 'FF0000',
       background: 'FFFFFF',
       secondary: '333333',
-      accent1: '00FF00',
-      accent2: '0000FF',
-      accent3: 'FFFF00',
-      accent4: 'FF00FF',
-      accent5: '00FFFF',
+      accents,
       text: '000000',
       textMuted: '666666',
       subtleOpacity: 20,
@@ -96,8 +94,8 @@ export function mockTheme(options?: {
       [TEXT_STYLE.FOOTER]: mockTextStyle,
       [TEXT_STYLE.EYEBROW]: mockTextStyle,
     },
-    highlights,
-  } as Theme;
+    components,
+  };
 }
 
 // ============================================

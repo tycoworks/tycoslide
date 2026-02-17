@@ -2,7 +2,7 @@
 // Tests for all factory functions in src/dsl/
 // All DSL functions return ComponentNode; tests expand to ElementNode where needed.
 
-import { describe, test } from 'node:test';
+import { describe, test, it } from 'node:test';
 import * as assert from 'node:assert';
 import {
   markdown,
@@ -45,9 +45,8 @@ import {
 } from '../src/core/types.js';
 import { mockTheme as createMockTheme } from './mocks.js';
 
-// Theme with highlights for text expansion
+// Theme for text expansion
 const theme = createMockTheme();
-(theme as any).highlights = {};
 
 /** Expand a ComponentNode to its ElementNode form */
 async function expand(node: any) {
@@ -172,28 +171,14 @@ describe('line()', () => {
     assert.strictEqual(node.type, NODE_TYPE.LINE);
   });
 
-  test('applies no props by default', async () => {
+  test('uses theme token defaults for color, width, dashType', async () => {
     const node = await expand(line()) as LineNode;
-    assert.strictEqual(node.color, undefined);
-    assert.strictEqual(node.width, undefined);
-    assert.strictEqual(node.dashType, undefined);
+    // color, width, dashType come from theme tokens (lineDefaults)
+    assert.strictEqual(node.color, theme.colors.secondary);
+    assert.strictEqual(node.width, theme.borders.width);
+    assert.strictEqual(node.dashType, DASH_TYPE.SOLID);
     assert.strictEqual(node.beginArrow, undefined);
     assert.strictEqual(node.endArrow, undefined);
-  });
-
-  test('applies color prop', async () => {
-    const node = await expand(line({ color: 'FF0000' })) as LineNode;
-    assert.strictEqual(node.color, 'FF0000');
-  });
-
-  test('applies width prop', async () => {
-    const node = await expand(line({ width: 2 })) as LineNode;
-    assert.strictEqual(node.width, 2);
-  });
-
-  test('applies dashType prop', async () => {
-    const node = await expand(line({ dashType: DASH_TYPE.DASH })) as LineNode;
-    assert.strictEqual(node.dashType, DASH_TYPE.DASH);
   });
 
   test('applies beginArrow prop', async () => {
@@ -206,19 +191,17 @@ describe('line()', () => {
     assert.strictEqual(node.endArrow, ARROW_TYPE.TRIANGLE);
   });
 
-  test('applies all props together', async () => {
+  test('applies both arrow props together', async () => {
     const node = await expand(line({
-      color: '0000FF',
-      width: 3,
-      dashType: DASH_TYPE.DASH_DOT,
       beginArrow: ARROW_TYPE.DIAMOND,
       endArrow: ARROW_TYPE.STEALTH,
     })) as LineNode;
-    assert.strictEqual(node.color, '0000FF');
-    assert.strictEqual(node.width, 3);
-    assert.strictEqual(node.dashType, DASH_TYPE.DASH_DOT);
     assert.strictEqual(node.beginArrow, ARROW_TYPE.DIAMOND);
     assert.strictEqual(node.endArrow, ARROW_TYPE.STEALTH);
+    // Token defaults still apply
+    assert.strictEqual(node.color, theme.colors.secondary);
+    assert.strictEqual(node.width, theme.borders.width);
+    assert.strictEqual(node.dashType, DASH_TYPE.SOLID);
   });
 });
 
@@ -325,37 +308,12 @@ describe('slideNumber()', () => {
     assert.strictEqual(node.type, NODE_TYPE.SLIDE_NUMBER);
   });
 
-  test('applies no props by default', async () => {
+  test('uses theme token defaults for style, color, hAlign', async () => {
     const node = await expand(slideNumber()) as SlideNumberNode;
-    assert.strictEqual(node.style, undefined);
+    // style, color, hAlign come from theme tokens (slideNumberDefaults)
+    assert.strictEqual(node.style, TEXT_STYLE.FOOTER);
     assert.strictEqual(node.color, undefined);
     assert.strictEqual(node.hAlign, HALIGN.RIGHT);
-  });
-
-  test('applies style prop', async () => {
-    const node = await expand(slideNumber({ style: TEXT_STYLE.FOOTER })) as SlideNumberNode;
-    assert.strictEqual(node.style, TEXT_STYLE.FOOTER);
-  });
-
-  test('applies color prop', async () => {
-    const node = await expand(slideNumber({ color: '666666' })) as SlideNumberNode;
-    assert.strictEqual(node.color, '666666');
-  });
-
-  test('applies hAlign prop', async () => {
-    const node = await expand(slideNumber({ hAlign: HALIGN.RIGHT })) as SlideNumberNode;
-    assert.strictEqual(node.hAlign, HALIGN.RIGHT);
-  });
-
-  test('applies all props together', async () => {
-    const node = await expand(slideNumber({
-      style: TEXT_STYLE.SMALL,
-      color: 'AAAAAA',
-      hAlign: HALIGN.CENTER,
-    })) as SlideNumberNode;
-    assert.strictEqual(node.style, TEXT_STYLE.SMALL);
-    assert.strictEqual(node.color, 'AAAAAA');
-    assert.strictEqual(node.hAlign, HALIGN.CENTER);
   });
 });
 
@@ -781,46 +739,26 @@ describe('card()', () => {
   test('passes props to ComponentNode', () => {
     const node = card({
       title: 'Test Title',
-      backgroundColor: 'EEEEEE',
+      description: 'Test Description',
     });
     assert.strictEqual(node.props.title, 'Test Title');
-    assert.strictEqual(node.props.backgroundColor, 'EEEEEE');
+    assert.strictEqual(node.props.description, 'Test Description');
   });
 
   test('preserves all props', () => {
     const props = {
       image: 'hero.jpg',
       title: 'Title',
-      titleStyle: TEXT_STYLE.H2,
-      titleColor: 'FF0000',
       description: 'Description',
-      descriptionStyle: TEXT_STYLE.BODY,
-      descriptionColor: '333333',
       background: true,
-      backgroundColor: 'FFFFFF',
-      backgroundOpacity: 80,
-      borderColor: '000000',
-      borderWidth: 1,
-      cornerRadius: 0.125,
-      padding: 0.25,
     };
     const node = card(props);
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
     assert.strictEqual(node.componentName, CARD_COMPONENT);
     assert.strictEqual(node.props.image, 'hero.jpg');
     assert.strictEqual(node.props.title, 'Title');
-    assert.strictEqual(node.props.titleStyle, TEXT_STYLE.H2);
-    assert.strictEqual(node.props.titleColor, 'FF0000');
     assert.strictEqual(node.props.description, 'Description');
-    assert.strictEqual(node.props.descriptionStyle, TEXT_STYLE.BODY);
-    assert.strictEqual(node.props.descriptionColor, '333333');
     assert.strictEqual(node.props.background, true);
-    assert.strictEqual(node.props.backgroundColor, 'FFFFFF');
-    assert.strictEqual(node.props.backgroundOpacity, 80);
-    assert.strictEqual(node.props.borderColor, '000000');
-    assert.strictEqual(node.props.borderWidth, 1);
-    assert.strictEqual(node.props.cornerRadius, 0.125);
-    assert.strictEqual(node.props.padding, 0.25);
   });
 
 });
@@ -828,6 +766,40 @@ describe('card()', () => {
 // ============================================
 // TABLE FACTORY FUNCTIONS
 // ============================================
+
+describe('table() token defaults and theme overrides', () => {
+  it('uses default token values from theme', async () => {
+    const theme = createMockTheme();
+    const node = await componentRegistry.expandTree(
+      table([['A', 'B']], { headerRows: 1 }),
+      { theme }
+    ) as TableNode;
+    assert.strictEqual(node.type, NODE_TYPE.TABLE);
+    assert.strictEqual(node.style?.borderStyle, 'full');
+    assert.strictEqual(node.style?.borderColor, theme.colors.secondary);
+    assert.strictEqual(node.style?.borderWidth, theme.borders.width);
+    assert.strictEqual(node.style?.cellPadding, theme.spacing.cellPadding);
+    assert.strictEqual(node.style?.cellTextStyle, 'body');
+    assert.strictEqual(node.style?.headerTextStyle, 'body');
+  });
+
+  it('applies theme.components.table overrides while keeping other defaults', async () => {
+    const theme = createMockTheme({
+      components: { table: { borderColor: 'FF0000', cellTextStyle: 'small' } },
+    });
+    const node = await componentRegistry.expandTree(
+      table([['A', 'B']], { headerRows: 1 }),
+      { theme }
+    ) as TableNode;
+    assert.strictEqual(node.style?.borderColor, 'FF0000');
+    assert.strictEqual(node.style?.cellTextStyle, 'small');
+    // Defaults still fill remaining tokens
+    assert.strictEqual(node.style?.borderStyle, 'full');
+    assert.strictEqual(node.style?.borderWidth, theme.borders.width);
+    assert.strictEqual(node.style?.cellPadding, theme.spacing.cellPadding);
+    assert.strictEqual(node.style?.headerTextStyle, 'body');
+  });
+});
 
 describe('table()', () => {
 
@@ -843,7 +815,7 @@ describe('table()', () => {
     ])) as TableNode;
     assert.strictEqual(node.type, NODE_TYPE.TABLE);
     const cell = node.rows[0][1];
-    assert.strictEqual(cell.content, 'colored cell');
+    assert.deepStrictEqual(cell.content, [{ text: 'colored cell' }]);
     assert.strictEqual(cell.textStyle, TEXT_STYLE.SMALL);
     assert.strictEqual(cell.color, 'FF0000');
     assert.strictEqual(cell.hAlign, HALIGN.CENTER);
@@ -860,7 +832,7 @@ describe('table()', () => {
   test('string cells are wrapped as TableCellData', async () => {
     const node = await expand(table([['plain string']])) as TableNode;
     const cell = node.rows[0][0];
-    assert.strictEqual(cell.content, 'plain string');
+    assert.deepStrictEqual(cell.content, [{ text: 'plain string' }]);
     assert.strictEqual(cell.color, undefined);
     assert.strictEqual(cell.textStyle, undefined);
   });

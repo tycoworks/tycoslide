@@ -365,42 +365,19 @@ export interface TextStyle {
 }
 
 // ============================================
-// COLOR NAMES (single source of truth)
+// COLOR SCHEME
 // ============================================
 
-/** Base color names shared by ColorScheme and diagram node styles */
-export const COLOR_NAME = {
-  PRIMARY: 'primary',
-  BACKGROUND: 'background',
-  SECONDARY: 'secondary',
-  ACCENT1: 'accent1',
-  ACCENT2: 'accent2',
-  ACCENT3: 'accent3',
-  ACCENT4: 'accent4',
-  ACCENT5: 'accent5',
-} as const;
-
-export type ColorName = typeof COLOR_NAME[keyof typeof COLOR_NAME];
-
-// ============================================
-// COLOR SCHEME (derived from COLOR_NAME)
-// ============================================
-
-/** Base colors derived from COLOR_NAME */
-type BaseColorScheme = {
-  [K in ColorName]: string;
+/** Full color scheme with accent colors */
+export type ColorScheme = {
+  background: string;
+  text: string;
+  textMuted: string;
+  primary: string;
+  secondary: string;
+  subtleOpacity: number;
+  accents: Record<string, string>;
 };
-
-/** Full color scheme with additional properties */
-export type ColorScheme = BaseColorScheme & {
-  text: string;         // Main text color
-  textMuted: string;    // Muted text for footers, captions
-  subtleOpacity: number; // Opacity for muted fills (0-100)
-};
-
-// ============================================
-// NODE STYLES (removed - use COLOR_NAME directly)
-// ============================================
 
 // ============================================
 // HIGHLIGHT PAIRS
@@ -409,10 +386,6 @@ export type ColorScheme = BaseColorScheme & {
 export interface HighlightPair {
   bg: string;    // Background color (muted)
   text: string;  // Text color (bright)
-}
-
-export interface HighlightScheme {
-  [key: string]: HighlightPair;
 }
 
 // ============================================
@@ -451,7 +424,6 @@ export { Bounds } from './bounds.js';
 /** All spacing/dimension values are in inches. */
 export interface Theme {
   colors: ColorScheme;
-  highlights: HighlightScheme;
   slide: SlideSize | CustomSlideSize;
   spacing: {
     unit: number;           // Base spacing unit (grid quantum, e.g. 1/32 inch)
@@ -471,4 +443,5 @@ export interface Theme {
     radius: number;  // Corner radius in inches
   };
   textStyles: { [K in TextStyleName]: TextStyle };
+  components: Record<string, Record<string, unknown> & { variants?: Record<string, Record<string, unknown>> }>;
 }
