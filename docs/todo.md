@@ -12,6 +12,7 @@ Markdown:
 - Shared slides / presentation packs in markdown?
 
 Design:
+- function cardDefaults(theme: Theme): CardTokens {: is this right? Or should always have a default theme and throw if not defined.
 - Theme building in CLI (inc. JSON design tokens)
 - Theme package (npm?) & version
 - Dark mode
