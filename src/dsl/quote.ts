@@ -7,7 +7,7 @@ import { stack, column, row } from './containers.js';
 import { shape, image as imageNode, imageComponent } from './primitives.js';
 import { markdown, text, markdownComponent, textComponent } from './text.js';
 import type { SlideNode } from '../core/nodes.js';
-import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE, SIZE, MARKDOWN } from '../core/types.js';
+import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE, SIZE } from '../core/types.js';
 import type { TextStyleName, GapSize, Theme } from '../core/types.js';
 import { schema } from '../schema.js';
 
@@ -136,7 +136,7 @@ export const quoteComponent = componentRegistry.define({
   params: quoteSchema,
   defaults: quoteDefaults,
   expand: expandQuote,
-  markdown: { type: MARKDOWN.BLOCK },
+  markdown: {},
 });
 
 /**

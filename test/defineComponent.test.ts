@@ -163,6 +163,20 @@ describe('componentRegistry.define', () => {
         /cannot specify both 'params' and 'input'/,
       );
     });
+
+    test('throws when markdown.nodeType is set without compileSyntax', () => {
+      assert.throws(
+        () => componentRegistry.define({
+          name: 'bad-syntax-comp',
+          expand: () => ({ type: NODE_TYPE.TEXT, content: [], hAlign: 'left' as any, vAlign: 'top' as any }),
+          markdown: {
+            compile: () => ({ type: 'component' as const, componentName: 'x', props: {} }),
+            nodeType: 'paragraph',
+          },
+        } as any),
+        /nodeType.*requires.*compileSyntax/,
+      );
+    });
   });
 
   describe('real component .input properties', () => {

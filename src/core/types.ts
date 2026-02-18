@@ -7,12 +7,6 @@ import { Bounds } from './bounds.js';
 // CONSTANTS
 // ============================================
 
-export const MARKDOWN = {
-  SYNTAX: 'syntax',   // native markdown syntax triggers this (| table |, # heading, etc.)
-  BLOCK: 'block',     // :::name block triggers this (:::card, :::mermaid, etc.)
-} as const;
-
-
 export const HALIGN = {
   LEFT: 'left',
   CENTER: 'center',

@@ -3,8 +3,8 @@
 import { componentRegistry, component, type ComponentNode, type ExpansionContext } from '../core/registry.js';
 import { MARKDOWN_COMPONENT } from './text.js';
 import { NODE_TYPE, type TextNode, type TableCellData, type TableStyleProps } from '../core/nodes.js';
-import { MARKDOWN, type Theme, type TextContent } from '../core/types.js';
-import { SYNTAX, extractInlineText } from '../core/mdast.js';
+import type { Theme, TextContent } from '../core/types.js';
+import { SYNTAX, extractInlineText, type ContainerDirective } from '../core/mdast.js';
 import type { Table as MdastTable } from 'mdast';
 
 // ============================================
@@ -51,6 +51,29 @@ function compileTableBlock(node: unknown, _source: string): ComponentNode {
   return table(rows, { headerRows: 1 });
 }
 
+/** Compile a :::table{variant="clean"} directive wrapping a GFM table body. */
+function compileTableDirective(directive: ContainerDirective, _source: string, _body: string): ComponentNode {
+  const children = directive.children;
+  const tableChild = children.find(c => c.type === SYNTAX.TABLE);
+  if (!tableChild) {
+    throw new Error(':::table directive must contain a GFM table (| col1 | col2 | ...)');
+  }
+  const unexpected = children.filter(c => c.type !== SYNTAX.TABLE);
+  if (unexpected.length > 0) {
+    const types = unexpected.map(c => c.type).join(', ');
+    throw new Error(
+      `:::table directive must contain only a GFM table. ` +
+      `Found unexpected content: ${types}. Move non-table content outside the directive.`,
+    );
+  }
+  const tableNode = tableChild as unknown as MdastTable;
+  const rows = tableNode.children.map(row =>
+    row.children.map(cell => extractInlineText(cell.children))
+  );
+  const variant = directive.attributes?.variant || undefined;
+  return table(rows, { headerRows: 1, variant });
+}
+
 componentRegistry.define({
   name: TABLE_COMPONENT,
   defaults: tableDefaults,
@@ -94,9 +117,9 @@ componentRegistry.define({
     };
   },
   markdown: {
-    type: MARKDOWN.SYNTAX,
+    compile: compileTableDirective,
     nodeType: SYNTAX.TABLE,
-    compile: compileTableBlock,
+    compileSyntax: compileTableBlock,
   },
 });
 

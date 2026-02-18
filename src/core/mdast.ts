@@ -36,6 +36,15 @@ export function extractSource(
   return source.slice(start, end);
 }
 
+/** Container directive node from remark-directive (:::name{attrs} ... :::) */
+export interface ContainerDirective {
+  type: 'containerDirective';
+  name: string;
+  attributes?: Record<string, string | null | undefined>;
+  children: { type: string; [key: string]: unknown }[];
+  position?: { start: { offset?: number }; end: { offset?: number } };
+}
+
 /** Recursively extract plain text from inline mdast nodes. */
 export function extractInlineText(nodes: PhrasingContent[]): string {
   return nodes.map(node => {

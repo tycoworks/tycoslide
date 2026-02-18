@@ -8,7 +8,7 @@ import remarkDirective from 'remark-directive';
 import type { Root, PhrasingContent, List, Paragraph, ListItem, Heading } from 'mdast';
 import type { TextDirective } from 'mdast-util-directive';
 import type { NormalizedRun, HighlightPair, ColorScheme } from '../core/types.js';
-import { HALIGN, VALIGN, MARKDOWN, TEXT_STYLE } from '../core/types.js';
+import { HALIGN, VALIGN, TEXT_STYLE } from '../core/types.js';
 import { NODE_TYPE, type ElementNode } from '../core/nodes.js';
 import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape } from '../core/registry.js';
 import { SYNTAX, extractSource } from '../core/mdast.js';
@@ -269,9 +269,9 @@ export const markdownComponent = componentRegistry.define({
   input: schema.string(),
   expand: expandMarkdown,
   markdown: {
-    type: MARKDOWN.SYNTAX,
+    compile: (_directive, _source, body) => markdown(body),
     nodeType: [SYNTAX.PARAGRAPH, SYNTAX.LIST, SYNTAX.HEADING],
-    compile: compileMarkdownBlock,
+    compileSyntax: compileMarkdownBlock,
   },
 });
 

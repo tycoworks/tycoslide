@@ -2,9 +2,11 @@
 // Generic base class, component registry, and layout registry
 
 import { NODE_TYPE, type ElementNode, type ComponentNode, type SlideNode } from './nodes.js';
-import { MARKDOWN, type Theme } from './types.js';
+import type { Theme } from './types.js';
+import type { ContainerDirective } from './mdast.js';
 import type { Slide } from '../presentation.js';
 import { z } from 'zod';
+import { parse as parseYaml } from 'yaml';
 import type { MarkdownParam } from '../schema.js';
 
 // Re-export ComponentNode for convenience
@@ -101,23 +103,59 @@ export type InputComponentDefinition<TProps, TInput extends z.ZodTypeAny, TToken
   };
 
 // ============================================
-// MARKDOWN INVOCATION TYPES
+// MARKDOWN INVOCATION
 // ============================================
 
-/** Component handles native markdown syntax (e.g., | table |, # heading). */
-export interface MarkdownSyntax {
-  type: typeof MARKDOWN.SYNTAX;
-  nodeType: string | string[];
-  compile: (node: unknown, source: string) => ComponentNode | null;
+/**
+ * How a component is invoked from markdown (stored on the definition).
+ *
+ * Every markdown-visible component gets a `compile` function for :::name directives.
+ * Components that also handle bare MDAST syntax (e.g., GFM tables, paragraphs) register
+ * a `compileSyntax` shortcut with the corresponding `nodeType`.
+ */
+export interface MarkdownInvocation {
+  /** Compile a :::name container directive into a ComponentNode. */
+  compile: (directive: ContainerDirective, source: string, body: string) => ComponentNode;
+  /** Optional: MDAST node type(s) this component handles as bare syntax shortcut. */
+  nodeType?: string | string[];
+  /** Compile a bare MDAST node into a ComponentNode. Required if nodeType is set. */
+  compileSyntax?: (node: unknown, source: string) => ComponentNode | null;
 }
 
-/** Component is invoked via :::name block directive. */
-export interface MarkdownBlock {
-  type: typeof MARKDOWN.BLOCK;
-}
+/**
+ * Input configuration for markdown support in define().
+ * `compile` is auto-generated from the component's input schema when omitted.
+ */
+export type MarkdownConfig = Partial<MarkdownInvocation>;
 
-/** How a component is invoked from markdown. */
-export type MarkdownInvocation = MarkdownSyntax | MarkdownBlock;
+// ============================================
+// AUTO-GENERATION (private)
+// ============================================
+
+/**
+ * Auto-generate a compile function for :::name directives from a Zod schema.
+ * ZodObject inputs → YAML-parse the body first; all others → pass raw string.
+ */
+function autoGenerateCompile(
+  componentName: string,
+  input: z.ZodTypeAny,
+): MarkdownInvocation['compile'] {
+  return (_directive, _source, body) => {
+    let raw: unknown;
+    if (input instanceof z.ZodObject) {
+      try {
+        raw = parseYaml(body) ?? {};
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`in :::${componentName} directive: ${msg}`);
+      }
+    } else {
+      raw = body;
+    }
+    const props = input.parse(raw);
+    return component(componentName, props);
+  };
+}
 
 /** Type discriminator for component nodes */
 export const COMPONENT_TYPE = NODE_TYPE.COMPONENT;
@@ -143,7 +181,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     params: TShape;
     defaults?: (theme: Theme) => TTokens;
     expand: (props: z.infer<z.ZodObject<TShape>>, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
-    markdown?: MarkdownInvocation;
+    markdown?: MarkdownConfig;
   }): ParamsComponentDefinition<TShape, TTokens>;
 
   /**
@@ -156,7 +194,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     input: TInput;
     defaults?: (theme: Theme) => TTokens;
     expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
-    markdown?: MarkdownInvocation;
+    markdown?: MarkdownConfig;
   }): InputComponentDefinition<TProps, TInput, TTokens>;
 
   /**
@@ -166,7 +204,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     name: string;
     defaults?: (theme: Theme) => TTokens;
     expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
-    markdown?: MarkdownInvocation;
+    markdown?: MarkdownConfig;
   }): ComponentDefinition<TProps, TTokens>;
 
   define(def: any): any {
@@ -176,16 +214,16 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
 
     const md: MarkdownInvocation | undefined = def.markdown;
 
-    // Validate: BLOCK requires .input (params or input overload)
-    if (md?.type === MARKDOWN.BLOCK && !('params' in def) && !('input' in def)) {
+    // Validate: if nodeType is set, compileSyntax must also be set
+    if (md?.nodeType && !md.compileSyntax) {
       throw new Error(
-        `componentRegistry.define('${def.name}'): markdown type 'block' requires 'params' or 'input' ` +
-        `— there is no schema to parse the :::${def.name} directive body against.`,
+        `componentRegistry.define('${def.name}'): 'nodeType' requires 'compileSyntax' — ` +
+        `the component must provide a function to compile bare MDAST nodes.`,
       );
     }
 
-    // Validate: no duplicate SYNTAX handlers for the same MDAST node type
-    if (md?.type === MARKDOWN.SYNTAX) {
+    // Validate: no duplicate syntax handlers for the same MDAST node type
+    if (md?.nodeType) {
       const nodeTypes = Array.isArray(md.nodeType) ? md.nodeType : [md.nodeType];
       for (const nt of nodeTypes) {
         const existing = this.getSyntaxHandler(nt);
@@ -198,17 +236,6 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
       }
     }
 
-    // Validate: no duplicate BLOCK handlers for the same directive name
-    if (md?.type === MARKDOWN.BLOCK) {
-      const existing = this.getBlockHandler(def.name);
-      if (existing) {
-        throw new Error(
-          `componentRegistry.define('${def.name}'): directive ':::${def.name}' is already handled ` +
-          `by component '${existing.name}'.`,
-        );
-      }
-    }
-
     let result: any;
     if ('params' in def) {
       const input = z.object(def.params);
@@ -218,21 +245,36 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     } else {
       result = { name: def.name, expand: def.expand, markdown: md, defaults: def.defaults };
     }
+
+    // Auto-generate compile from input schema when markdown is present but compile is missing
+    if (result.markdown && !result.markdown.compile) {
+      if (!result.input) {
+        throw new Error(
+          `componentRegistry.define('${def.name}'): markdown support requires either ` +
+          `an explicit 'compile' function or an input schema (params/input).`,
+        );
+      }
+      result.markdown = {
+        ...result.markdown,
+        compile: autoGenerateCompile(result.name, result.input),
+      };
+    }
+
     this.register(result);
     return result;
   }
 
   /**
-   * Find the SYNTAX handler for a given MDAST node type.
-   * Returns the component definition if one registered for this node type, or undefined.
+   * Find the syntax handler for a given MDAST node type.
+   * Returns the component definition if one registered a compileSyntax for this node type.
    */
-  getSyntaxHandler(nodeType: string): (ComponentDefinition & { markdown: MarkdownSyntax }) | undefined {
+  getSyntaxHandler(nodeType: string): (ComponentDefinition & { markdown: MarkdownInvocation & { compileSyntax: NonNullable<MarkdownInvocation['compileSyntax']> } }) | undefined {
     for (const def of this.getAll()) {
       const md = def.markdown;
-      if (md?.type === MARKDOWN.SYNTAX) {
+      if (md?.nodeType && md.compileSyntax) {
         const types = Array.isArray(md.nodeType) ? md.nodeType : [md.nodeType];
         if (types.includes(nodeType)) {
-          return def as ComponentDefinition & { markdown: MarkdownSyntax };
+          return def as ComponentDefinition & { markdown: MarkdownInvocation & { compileSyntax: NonNullable<MarkdownInvocation['compileSyntax']> } };
         }
       }
     }
@@ -240,13 +282,13 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
   }
 
   /**
-   * Find the BLOCK handler for a given directive name.
+   * Find the block handler for a given directive name.
    * Block directives use the component name as the directive name (:::card → 'card').
    */
-  getBlockHandler(name: string): (ComponentDefinition & { markdown: MarkdownBlock; input: z.ZodTypeAny }) | undefined {
+  getBlockHandler(name: string): (ComponentDefinition & { markdown: MarkdownInvocation }) | undefined {
     const def = this.get(name);
-    if (def?.markdown?.type === MARKDOWN.BLOCK && 'input' in def) {
-      return def as ComponentDefinition & { markdown: MarkdownBlock; input: z.ZodTypeAny };
+    if (def?.markdown?.compile) {
+      return def as ComponentDefinition & { markdown: MarkdownInvocation };
     }
     return undefined;
   }

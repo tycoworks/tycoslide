@@ -7,7 +7,6 @@ import {
   HALIGN,
   DASH_TYPE,
   TEXT_STYLE,
-  MARKDOWN,
   ARROW_TYPE_VALUES,
   DASH_TYPE_VALUES,
   SHAPE_VALUES,
@@ -48,7 +47,7 @@ export const imageComponent = componentRegistry.define({
       alt: resolved.alt,
     };
   },
-  markdown: { type: MARKDOWN.BLOCK },
+  markdown: {},
 });
 
 export function image(src: string, options?: ImageOptions): ComponentNode {
@@ -94,7 +93,7 @@ componentRegistry.define({
     beginArrow: props.beginArrow,
     endArrow: props.endArrow,
   }),
-  markdown: { type: MARKDOWN.BLOCK },
+  markdown: {},
 });
 
 export function line(props?: LineProps): ComponentNode {
@@ -140,7 +139,7 @@ componentRegistry.define({
     border: props.border,
     cornerRadius: props.cornerRadius,
   }),
-  markdown: { type: MARKDOWN.BLOCK },
+  markdown: {},
 });
 
 export function shape(props: ShapeProps): ComponentNode {

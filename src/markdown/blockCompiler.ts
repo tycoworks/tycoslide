@@ -2,10 +2,8 @@
 // Converts a markdown string into an array of ComponentNode[].
 // Each block-level element becomes an independent ComponentNode.
 //
-// Dispatch is registry-driven — components register their own MDAST handlers
-// via `markdown: { type: MARKDOWN.SYNTAX, ... }` in componentRegistry.define().
-// Block directives (:::name) are dispatched to components with
-// `markdown: { type: MARKDOWN.BLOCK }`.
+// Dispatch is registry-driven — components register their own handlers
+// via `markdown: { compile, nodeType?, compileSyntax? }` in componentRegistry.define().
 //
 // This file has ZERO component imports — all dispatch goes through the registry.
 
@@ -14,11 +12,8 @@ import remarkParse from 'remark-parse';
 import remarkDirective from 'remark-directive';
 import remarkGfm from 'remark-gfm';
 import type { Root, RootContent } from 'mdast';
-import { parse as parseYaml } from 'yaml';
-import { z } from 'zod';
-import { SYNTAX, extractSource } from '../core/mdast.js';
-import { MARKDOWN } from '../core/types.js';
-import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
+import { SYNTAX, extractSource, type ContainerDirective } from '../core/mdast.js';
+import { componentRegistry, type ComponentNode } from '../core/registry.js';
 
 // ============================================
 // PARSER
@@ -30,17 +25,6 @@ const processor = unified()
   .use(remarkGfm);
 
 // ============================================
-// DIRECTIVE NODE TYPE (from remark-directive)
-// ============================================
-
-interface ContainerDirective {
-  type: 'containerDirective';
-  name: string;
-  children: RootContent[];
-  position?: { start: { offset?: number }; end: { offset?: number } };
-}
-
-// ============================================
 // PUBLIC API
 // ============================================
 
@@ -48,8 +32,8 @@ interface ContainerDirective {
  * Compile a markdown string into an array of ComponentNodes.
  *
  * Block-level dispatch is registry-driven:
- * - SYNTAX handlers: components that registered for specific MDAST node types
- * - BLOCK handlers: components invoked via :::name directives
+ * - :::name directives → component's `compile` function
+ * - MDAST nodes (paragraphs, tables, etc.) → component's `compileSyntax` function
  * - Thematic breaks are silently skipped
  *
  * Callers decide how to arrange the returned nodes (e.g. wrap in column()).
@@ -67,87 +51,8 @@ export function compileBlocks(markdownStr: string): ComponentNode[] {
 }
 
 // ============================================
-// BLOCK DISPATCHING
+// DIRECTIVE UTILITIES
 // ============================================
-
-function compileBlock(node: RootContent, source: string): ComponentNode | null {
-  // 1. Container directives → registry lookup by name
-  if (node.type === 'containerDirective') {
-    return compileDirective(node as unknown as ContainerDirective, source);
-  }
-
-  // 2. Reject inline image syntax — MDAST wraps ![](url) in paragraphs
-  if (node.type === SYNTAX.PARAGRAPH) {
-    const para = node as { children: { type: string }[] };
-    if (para.children.length === 1 && para.children[0].type === SYNTAX.IMAGE) {
-      throw new Error('Images cannot be embedded inline in text. Use :::image directive.');
-    }
-  }
-
-  // 3. MDAST nodes → registry lookup by nodeType
-  const handler = componentRegistry.getSyntaxHandler(node.type);
-  if (handler) {
-    return handler.markdown.compile(node, source);
-  }
-
-  // 3. Thematic breaks → skip
-  if (node.type === SYNTAX.THEMATIC_BREAK) return null;
-
-  // 4. Unknown → error
-  const registered = componentRegistry.getAll()
-    .filter(d => d.markdown?.type === MARKDOWN.SYNTAX)
-    .map(d => {
-      const md = d.markdown!;
-      if (md.type === MARKDOWN.SYNTAX) {
-        return Array.isArray(md.nodeType) ? md.nodeType.join(', ') : md.nodeType;
-      }
-      return '';
-    })
-    .join(', ');
-
-  throw new Error(
-    `[tycoslide] compileBlocks: unsupported markdown block type "${node.type}". ` +
-    `Registered syntax handlers: ${registered || 'none'}.`,
-  );
-}
-
-// ============================================
-// DIRECTIVE COMPILATION
-// ============================================
-
-/**
- * Compile a :::name container directive into a ComponentNode.
- *
- * Looks up the component by directive name. Body parsing depends on
- * the component's schema:
- * - params (ZodObject) → parse body as YAML
- * - input (simple Zod type) → pass body as raw text
- */
-function compileDirective(directive: ContainerDirective, source: string): ComponentNode {
-  const handler = componentRegistry.getBlockHandler(directive.name);
-  if (!handler) {
-    const available = componentRegistry.getAll()
-      .filter(d => d.markdown?.type === MARKDOWN.BLOCK)
-      .map(d => d.name)
-      .join(', ');
-    throw new Error(
-      `[tycoslide] compileBlocks: unknown directive ":::${directive.name}". ` +
-      `Available block directives: ${available || 'none'}.`,
-    );
-  }
-
-  // Extract the raw body text between :::name and closing :::
-  const body = extractDirectiveBody(directive, source);
-
-  // Parse and validate through the component's schema.
-  // For params (ZodObject): parse body as YAML first, then validate.
-  // For input (e.g., z.string()): validate directly (runs any transforms).
-  const input = handler.input;
-  const raw = input instanceof z.ZodObject ? (parseYaml(body) ?? {}) : body;
-  const props = input.parse(raw);
-
-  return component(handler.name, props);
-}
 
 /**
  * Extract the raw body text from a container directive,
@@ -166,4 +71,71 @@ function extractDirectiveBody(directive: ContainerDirective, source: string): st
     bodyLines.pop();
   }
   return bodyLines.join('\n').trim();
+}
+
+// ============================================
+// BLOCK DISPATCHING
+// ============================================
+
+function compileBlock(node: RootContent, source: string): ComponentNode | null {
+  // 1. Container directives → component's compile function
+  if (node.type === 'containerDirective') {
+    return compileDirective(node as unknown as ContainerDirective, source);
+  }
+
+  // 2. Reject inline image syntax — MDAST wraps ![](url) in paragraphs
+  if (node.type === SYNTAX.PARAGRAPH) {
+    const para = node as { children: { type: string }[] };
+    if (para.children.length === 1 && para.children[0].type === SYNTAX.IMAGE) {
+      throw new Error('Images cannot be embedded inline in text. Use :::image directive.');
+    }
+  }
+
+  // 3. MDAST nodes → component's compileSyntax function
+  const handler = componentRegistry.getSyntaxHandler(node.type);
+  if (handler) {
+    return handler.markdown.compileSyntax(node, source);
+  }
+
+  // 4. Thematic breaks → skip
+  if (node.type === SYNTAX.THEMATIC_BREAK) return null;
+
+  // 5. Unknown → error
+  const registered = componentRegistry.getAll()
+    .filter(d => d.markdown?.nodeType)
+    .map(d => {
+      const nt = d.markdown!.nodeType!;
+      return Array.isArray(nt) ? nt.join(', ') : nt;
+    })
+    .join(', ');
+
+  throw new Error(
+    `[tycoslide] compileBlocks: unsupported markdown block type "${node.type}". ` +
+    `Registered syntax handlers: ${registered || 'none'}.`,
+  );
+}
+
+// ============================================
+// DIRECTIVE COMPILATION
+// ============================================
+
+/**
+ * Compile a :::name container directive into a ComponentNode.
+ * Delegates to the component's own compile function.
+ */
+function compileDirective(directive: ContainerDirective, source: string): ComponentNode {
+  const handler = componentRegistry.getBlockHandler(directive.name);
+  if (!handler) {
+    const available = componentRegistry.getAll()
+      .filter(d => d.markdown?.compile)
+      .map(d => d.name)
+      .join(', ');
+    throw new Error(
+      `[tycoslide] compileBlocks: unknown directive ":::${directive.name}". ` +
+      `Available block directives: ${available || 'none'}.`,
+    );
+  }
+
+  const body = extractDirectiveBody(directive, source);
+  return handler.markdown.compile(directive, source, body);
 }

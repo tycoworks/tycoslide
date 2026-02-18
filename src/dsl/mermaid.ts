@@ -2,7 +2,7 @@
 // Accepts raw mermaid text, sanitizes styling, injects theme classDefs,
 // renders via mermaid-cli to PNG, expands to ImageNode.
 
-import { MARKDOWN, type Theme } from '../core/types.js';
+import type { Theme } from '../core/types.js';
 import { NODE_TYPE, type ImageNode } from '../core/nodes.js';
 import {
   componentRegistry,
@@ -253,11 +253,13 @@ async function expandMermaid(props: MermaidComponentProps, context: ExpansionCon
 // REGISTRATION + DSL FUNCTION
 // ============================================
 
+const mermaidInput = schema.string().transform((s): MermaidComponentProps => ({ definition: s }));
+
 export const mermaidComponent = componentRegistry.define({
   name: MERMAID_COMPONENT,
-  input: schema.string().transform((s): MermaidComponentProps => ({ definition: s })),
+  input: mermaidInput,
   expand: expandMermaid,
-  markdown: { type: MARKDOWN.BLOCK },
+  markdown: {},
 });
 
 /**

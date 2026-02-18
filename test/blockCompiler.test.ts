@@ -5,14 +5,13 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { compileBlocks } from '../src/markdown/blockCompiler.js';
 import { MARKDOWN_COMPONENT } from '../src/dsl/text.js';
-import { IMAGE_COMPONENT } from '../src/dsl/primitives.js';
+import { IMAGE_COMPONENT, LINE_COMPONENT, SHAPE_COMPONENT } from '../src/dsl/primitives.js';
 import { TABLE_COMPONENT } from '../src/dsl/table.js';
 import { MERMAID_COMPONENT } from '../src/dsl/mermaid.js';
 import { CARD_COMPONENT } from '../src/dsl/card.js';
+import { QUOTE_COMPONENT } from '../src/dsl/quote.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import { TEXT_STYLE } from '../src/core/types.js';
-// Side-effect imports: trigger component self-registration
-import '../src/dsl/quote.js';
 
 /** Helper: get props as any to avoid unknown type errors in tests */
 function props(nodes: any[], index: number): any {
@@ -163,6 +162,86 @@ describe('Block Compiler', () => {
       const md = '| H1 | H2 |\n|---|---|\n| D1 | D2 |';
       const nodes = compileBlocks(md);
       assert.strictEqual(props(nodes, 0).tableProps?.headerRows, 1);
+    });
+  });
+
+  describe(':::table directive', () => {
+    it('should compile :::table{variant="clean"} with GFM table body', () => {
+      const md = ':::table{variant="clean"}\n| A | B |\n|---|---|\n| C | D |\n:::';
+      const nodes = compileBlocks(md);
+      assert.strictEqual(nodes.length, 1);
+      assert.strictEqual(nodes[0].componentName, TABLE_COMPONENT);
+      assert.strictEqual(props(nodes, 0).variant, 'clean');
+      assert.strictEqual(props(nodes, 0).data.length, 2);
+      assert.strictEqual(props(nodes, 0).data[0][0], 'A');
+      assert.strictEqual(props(nodes, 0).data[1][1], 'D');
+      assert.strictEqual(props(nodes, 0).tableProps?.headerRows, 1);
+    });
+
+    it('should compile :::table without attributes as plain table', () => {
+      const md = ':::table\n| X | Y |\n|---|---|\n| 1 | 2 |\n:::';
+      const nodes = compileBlocks(md);
+      assert.strictEqual(nodes.length, 1);
+      assert.strictEqual(nodes[0].componentName, TABLE_COMPONENT);
+      assert.strictEqual(props(nodes, 0).variant, undefined);
+    });
+
+    it('should throw when :::table contains no GFM table', () => {
+      const md = ':::table{variant="clean"}\nJust a paragraph.\n:::';
+      assert.throws(() => compileBlocks(md), /must contain a GFM table/);
+    });
+
+    it('should throw when :::table contains table plus extra content', () => {
+      const md = ':::table{variant="clean"}\nExtra paragraph.\n\n| A | B |\n|---|---|\n| C | D |\n:::';
+      assert.throws(() => compileBlocks(md), /unexpected content/);
+    });
+  });
+
+  describe(':::quote directive', () => {
+    it('should compile :::quote directive with YAML body', () => {
+      const md = ':::quote\nquote: "This changed everything."\nattribution: "— Jane Smith"\n:::';
+      const nodes = compileBlocks(md);
+      assert.strictEqual(nodes.length, 1);
+      assert.strictEqual(nodes[0].componentName, QUOTE_COMPONENT);
+      assert.strictEqual(props(nodes, 0).quote, 'This changed everything.');
+      assert.strictEqual(props(nodes, 0).attribution, '— Jane Smith');
+    });
+  });
+
+  describe(':::line directive', () => {
+    it('should compile :::line directive with empty body', () => {
+      const md = ':::line\n:::';
+      const nodes = compileBlocks(md);
+      assert.strictEqual(nodes.length, 1);
+      assert.strictEqual(nodes[0].componentName, LINE_COMPONENT);
+    });
+  });
+
+  describe(':::shape directive', () => {
+    it('should compile :::shape directive with YAML body', () => {
+      const md = ':::shape\nshape: rect\n:::';
+      const nodes = compileBlocks(md);
+      assert.strictEqual(nodes.length, 1);
+      assert.strictEqual(nodes[0].componentName, SHAPE_COMPONENT);
+      assert.strictEqual(props(nodes, 0).shape, 'rect');
+    });
+  });
+
+  describe(':::markdown directive', () => {
+    it('should compile :::markdown directive to a markdown node', () => {
+      const md = ':::markdown\n**Bold** and *italic*\n:::';
+      const nodes = compileBlocks(md);
+      assert.strictEqual(nodes.length, 1);
+      assert.strictEqual(nodes[0].componentName, MARKDOWN_COMPONENT);
+      assert.ok(props(nodes, 0).content.includes('**Bold**'));
+    });
+
+    it('should compile :::markdown with list content', () => {
+      const md = ':::markdown\n- First\n- Second\n:::';
+      const nodes = compileBlocks(md);
+      assert.strictEqual(nodes.length, 1);
+      assert.strictEqual(nodes[0].componentName, MARKDOWN_COMPONENT);
+      assert.ok(props(nodes, 0).content.includes('- First'));
     });
   });
 

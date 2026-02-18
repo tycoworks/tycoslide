@@ -6,7 +6,7 @@ import { stack, column } from './containers.js';
 import { shape, image, imageComponent } from './primitives.js';
 import { markdown, text, markdownComponent, textComponent } from './text.js';
 import type { SlideNode } from '../core/nodes.js';
-import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE, MARKDOWN } from '../core/types.js';
+import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE } from '../core/types.js';
 import type { TextStyleName, GapSize, Theme } from '../core/types.js';
 import { schema } from '../schema.js';
 
@@ -149,7 +149,7 @@ export const cardComponent = componentRegistry.define({
   params: cardSchema,
   defaults: cardDefaults,
   expand: expandCard,
-  markdown: { type: MARKDOWN.BLOCK },
+  markdown: {},
 });
 
 /**
