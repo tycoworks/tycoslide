@@ -28,3 +28,24 @@ export const schema = {
   block:    ()                                        =>
     z.string().transform((s): ComponentNode[] => compileBlocks(s)),
 };
+
+// Leaf types derived from the schema object — the single source of truth
+// for what's markdown-expressible.
+type SchemaLeaf =
+  | ReturnType<typeof schema.string>
+  | ReturnType<typeof schema.number>
+  | ReturnType<typeof schema.boolean>
+  | ReturnType<typeof schema.textStyle>
+  | ReturnType<typeof schema.gap>
+  | ReturnType<typeof schema.hAlign>
+  | ReturnType<typeof schema.vAlign>
+  | ReturnType<typeof schema.block>
+  | ReturnType<typeof schema.enum>
+  | ReturnType<typeof schema.array>
+  | ReturnType<typeof schema.object>;
+
+/** A Zod type that accepts YAML/markdown input. Only types producible by the schema object qualify. */
+export type MarkdownParam =
+  | SchemaLeaf
+  | z.ZodOptional<SchemaLeaf>
+  | z.ZodDefault<SchemaLeaf>;

@@ -34,13 +34,13 @@ Two rules, zero exceptions:
 
 2. **Body is for block content.** The markdown body below the closing `---` is only used when the layout has a `schema.block()` parameter (which compiles markdown to `ComponentNode[]`). This applies to the `body` layout's body param and the `twoColumn` layout's `left`/`right` params (via `::name::` markers). If a layout has no `schema.block()` params, the body is empty.
 
-`::name::` markers split body content into named regions for `schema.block()` params. They are never used for string parameters like `intro`, `bullets`, or `quote` -- those go in YAML frontmatter.
+`::name::` markers split body content into named slots. By convention, slots target `schema.block()` params. String parameters like `intro`, `bullets`, or `quote` go in YAML frontmatter.
 
 ### Why this model
 
 - **One way to do each thing.** No choice between putting `intro` in frontmatter vs `::intro::` in body.
 - **All params visible in one place.** The frontmatter block is the complete manifest of a slide's configuration.
-- **Type-enforced.** The schema type determines the authoring location: `z.string()` / `markdownComponent.input` = frontmatter. `schema.block()` = body.
+- **Type-driven.** By convention, the schema type determines the authoring location: `z.string()` / `markdownComponent.input` = frontmatter. `schema.block()` = body.
 - **Clean body semantics.** Everything after `---` is rendered content, never configuration.
 
 ---
@@ -88,7 +88,7 @@ eyebrow: CONTEXT ENGINEERING
 ---
 ```
 
-Every slide must have `layout:` (or `slide:` for shared slide references, or `src:` for file imports). All layout parameters go here, including `title`.
+Every slide must have `layout:`. All layout parameters go here, including `title`.
 
 ### Title
 
@@ -153,7 +153,7 @@ flowchart LR
 
 The body compiles to `ComponentNode[]` via the block compiler. Supported block types: paragraphs, bullet/numbered lists, headings (`##`, `###`), GFM tables, `:::image` directives, `:::mermaid` code blocks, `:::card` directives.
 
-### Named content regions (::name::)
+### Slots (::name::)
 
 For layouts with multiple `schema.block()` params (like `twoColumn`):
 
@@ -177,7 +177,7 @@ title: Before and After
 - Views are **always consistent**
 ```
 
-`::name::` markers split body content into named regions. Everything before the first marker is the default slot. Only used for `schema.block()` params.
+`::name::` markers split body content into named slots. Everything before the first marker is the default slot.
 
 ### Component directives (:::name)
 
@@ -233,75 +233,7 @@ Resolved against the theme's `assets` object at compile time. Unknown paths prod
 
 ## Shared Slides
 
-Slides reused across multiple presentations. Two mechanisms: file imports (preferred) and slide registry (TypeScript escape hatch).
-
-### File imports (src:)
-
-A shared slide is just a standalone `.md` file:
-
-```markdown
-# shared/challenge.md
----
-layout: card
-title: The Challenge
-intro: "It's hard to get operational data in the :caution[right shape at the right time]."
-cards:
-  - image: asset:illustrations.problemDatabase
-    title: OLTP databases
-    description: siloed and slow to query
-  - image: asset:illustrations.problemWarehouse
-    title: Data lakehouses
-    description: minutes or hours behind
-  - image: asset:illustrations.problemDiy
-    title: DIY solutions
-    description: costly and hard to change
-caption: ":caution[Problem]"
----
-```
-
-Referenced from a presentation with `src:` and optional parameter overrides:
-
-```markdown
----
-src: ../shared/challenge.md
-eyebrow: RECAP
-notes: Quick recap -- same core tension.
----
-```
-
-**How it works:**
-- The compiler loads the source file and parses its frontmatter
-- The referencing slide's frontmatter is merged on top (referencing site wins on conflicts)
-- The merged slide compiles normally through layout validation and rendering
-
-**Parameterization** is handled by frontmatter merge -- the source file defines defaults, the reference site overrides what it needs. No template syntax (`{{var}}`), no new concepts.
-
-**Presentation packs** are just directories of `.md` files:
-
-```
-shared/
-  challenge.md
-  whatIsMaterialize.md
-  integrate.md
-  transform.md
-  serve.md
-```
-
-### Slide registry (TypeScript escape hatch)
-
-For slides that need programmatic content (complex tables with per-cell styling, custom compositions), the TypeScript `slideRegistry` remains:
-
-```markdown
----
-slide: solutionsGrid
-eyebrow: FRAMEWORK
-notes: The 3x3 grid...
----
-```
-
-The `slide:` field references a `slideRegistry.define()` definition. Params are validated against the slide's Zod schema. This is the escape hatch for content that cannot be expressed in the markdown authoring model.
-
-**Goal:** Minimize `slide:` usage over time by enhancing layouts and the block compiler to cover more patterns.
+For v1, copy-paste between markdown files. If a slide appears in multiple presentations, duplicate the frontmatter block. File-based imports (`src:`) may be added in a future version if copy-paste friction becomes a problem.
 
 ---
 
@@ -404,26 +336,6 @@ title: Before and After
 - Views are **always consistent**, automatically
 ```
 
-### Shared slide reference (file import)
-
-```markdown
----
-src: ../shared/challenge.md
-eyebrow: RECAP
-notes: Quick recap from the first session.
----
-```
-
-### Shared slide reference (TypeScript registry)
-
-```markdown
----
-slide: solutionsGrid
-eyebrow: FRAMEWORK
-notes: The 3x3 grid maps use cases to patterns.
----
-```
-
 ---
 
 ## Decisions
@@ -434,37 +346,33 @@ Title goes in YAML frontmatter, not as `# heading` in the body. The `#` heading 
 
 **Rationale:** The `---` block is the navigational skeleton. All slide configuration -- including title -- should be visible there. The body is reserved for rendered content.
 
-### 2. `::name::` slots are only for schema.block() params
+### 2. `::name::` slots target schema.block() params by convention
 
-Named slot markers in the body are only used for layout parameters with `schema.block()` type (which compiles markdown to `ComponentNode[]`). String parameters (`markdownComponent.input`, `textComponent.input`) always go in YAML frontmatter.
+Named slot markers in the body conventionally target `schema.block()` params (compiled markdown). String parameters go in YAML frontmatter. This is a convention, not enforced by the compiler — Zod validation handles type mismatches.
 
-**Rationale:** One way to do each thing. The schema type determines the authoring location.
+**Rationale:** One way to do each thing. The schema type guides the authoring location.
 
 ### 3. Markdown in YAML values
 
 YAML block scalars (`|`, `>-`) support multiline markdown in frontmatter. Bold, inline directives, bullet lists all work. This is already proven by the `agenda` layout's `items` array.
 
-### 4. Shared slides via src: file import
+### 4. Shared slides: copy-paste for v1
 
-Shared slides are standalone `.md` files referenced via `src:` in frontmatter. Parameterization is handled by frontmatter merge (referencing site's values override source file's defaults).
+No `src:` imports or slide registry in v1. Duplicate frontmatter between files.
 
-### 5. slide: registry remains as escape hatch
-
-The TypeScript `slideRegistry` stays for slides that need programmatic content (complex tables, custom compositions). Goal is to minimize usage over time.
-
-### 6. Layouts are TypeScript-only
+### 5. Layouts are TypeScript-only
 
 Layout definitions stay in TypeScript. If layout creation friction is a concern, better solutions are helpers, docs, or CLI scaffolding -- not a markdown-based layout definition language.
 
-### 7. Component syntax: :::directive
+### 6. Component syntax: :::directive
 
 Container directive syntax (`:::card`, `:::mermaid`, `:::image`) for components in body content. Parsed by remark-directive, dispatched through the component registry.
 
-### 8. Speaker notes are a frontmatter parameter
+### 7. Speaker notes are a frontmatter parameter
 
 Notes go in YAML frontmatter as `notes: |` (or plain string for single-line). Not a magic keyword in the body. Consistent with the "frontmatter = all parameters" rule. Notes are a string on the `Slide` object, not rendered content -- they belong with the other parameters.
 
-### 9. Asset references: asset:dot.path
+### 8. Asset references: asset:dot.path
 
 Theme-defined assets referenced by dot-path in frontmatter. Resolved at compile time against the theme's `assets` object.
 
@@ -488,37 +396,29 @@ The parser/compiler cleanup is done. Remaining work is content migration:
 1. ~~Remove `# heading` title extraction~~ Done
 2. ~~Remove `Note:` extraction~~ Done
 3. ~~Remove title fallback logic~~ Done
-4. **Migrate `::intro::`, `::bullets::`, `::quote::` content** to YAML frontmatter in all customerStory slides. (Title and notes migration is complete.)
+4. ~~Migrate `::intro::`, `::bullets::`, `::quote::` content to YAML frontmatter~~ Done
 
-### Phase 2: Eliminate contentLayout
+### Phase 2: Eliminate contentLayout and slideRegistry
 
 1. **Audit all `contentLayout` usage** -- categorize each into: (a) can use `body` layout now, (b) needs `twoColumn`, (c) needs new capability.
 
-2. **Convert shared slides** -- `whatIsMaterialize` and others to markdown with `body` or `twoColumn` layouts. The block compiler already handles paragraphs, lists, headings, tables, cards, images, and mermaid diagrams.
+2. **Convert shared slides** -- `whatIsMaterialize` and others to markdown with `body` or `twoColumn` layouts. Inline into each presentation that uses them (copy-paste). The block compiler already handles paragraphs, lists, headings, tables, cards, images, and mermaid diagrams.
 
 3. **Migrate TypeScript presentations** that use `contentLayout` to `body` layout where possible.
 
 4. **Delete `contentLayout` and `twoColumnRawLayout`** when no consumers remain.
 
-### Phase 3: Shared slide file imports
+5. **Remove `slideRegistry`** -- delete `SlideRegistry` class, `compileSlideRef()`, `slide:` routing, and related tests. All `slide:` references should already be inlined from step 2.
 
-1. **Add `src:` handling** to `documentCompiler.ts`. When a slide has `src:` in frontmatter, load the referenced file, parse its frontmatter and body, merge the referencing slide's frontmatter on top, and compile normally. ~30 lines in `compileSlide()`.
-
-2. **Convert simple shared slides to markdown** -- `challenge.md`, `integrate.md`, `transform.md`, `serve.md`. These already map to registered layouts (`card`, `twoColumn`).
-
-3. **Update presentation files** to use `src:` references instead of `slide:` for converted slides.
-
-### Phase 4: Enhanced table support (stretch)
-
-1. **Per-cell styling in markdown tables** -- extend the GFM table compiler or add a `:::table` block directive with YAML-based cell definitions.
-
-2. **Convert `solutionsGrid` family** to markdown.
-
-3. **Remove `slideRegistry`** if all slides are now markdown-expressible (or keep as a minimal escape hatch).
-
-### Phase 5: CLI
+### Phase 3: CLI
 
 - `tycoslide build` command
 - Theme resolution by package name
 - Error messages with source line numbers
 - File watching / live preview
+
+### Phase 4: Enhanced table support (stretch)
+
+1. **Per-cell styling in markdown tables** -- extend the GFM table compiler or add a `:::table` block directive with YAML-based cell definitions.
+
+2. **Convert `solutionsGrid` family** to markdown (if table support is sufficient).

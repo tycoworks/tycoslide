@@ -5,6 +5,7 @@ import { NODE_TYPE, type ElementNode, type ComponentNode, type SlideNode } from 
 import { MARKDOWN, type Theme } from './types.js';
 import type { Slide } from '../presentation.js';
 import { z } from 'zod';
+import type { MarkdownParam } from '../schema.js';
 
 // Re-export ComponentNode for convenience
 export type { ComponentNode } from './nodes.js';
@@ -338,6 +339,9 @@ export function isComponentNode(node: unknown): node is ComponentNode {
 /** Raw Zod shape — a record of field names to Zod types. */
 export type SchemaShape = Record<string, z.ZodTypeAny>;
 
+/** A Zod shape where every field is markdown-expressible. */
+export type MarkdownShape = Record<string, MarkdownParam>;
+
 /** Infer the TypeScript type from a raw Zod shape. Use instead of importing z from zod. */
 export type InferProps<TShape extends SchemaShape> = z.infer<z.ZodObject<TShape>>;
 
@@ -366,7 +370,7 @@ class LayoutRegistry extends Registry<LayoutDefinition> {
    * Define and register a layout with type-safe render params inferred from the params schema.
    * The params define both runtime validation AND TypeScript types — single source of truth.
    */
-  define<TShape extends SchemaShape>(def: {
+  define<TShape extends MarkdownShape>(def: {
     name: string;
     description: string;
     params: TShape;
@@ -426,7 +430,7 @@ class SlideRegistry extends Registry<SlideDefinition> {
   /**
    * Define and register a slide with type-safe params inferred from the schema.
    */
-  define<TShape extends SchemaShape>(def: {
+  define<TShape extends MarkdownShape>(def: {
     name: string;
     description: string;
     params: TShape;

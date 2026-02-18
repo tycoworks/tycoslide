@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { z } from 'zod';
 import { schema } from '../src/schema.js';
+import { layoutRegistry, COMPONENT_TYPE } from '../src/core/registry.js';
 import { MARKDOWN_COMPONENT } from '../src/dsl/text.js';
 
 describe('schema', () => {
@@ -79,6 +80,36 @@ describe('schema', () => {
     it('schema.block() rejects non-string input', () => {
       const s = z.object({ body: schema.block() });
       assert.strictEqual(s.safeParse({ body: 42 }).success, false);
+    });
+  });
+
+  describe('MarkdownParam constraint', () => {
+    it('rejects z.custom() in layout params', () => {
+      const dummy = { type: COMPONENT_TYPE, componentName: 'x', props: {} } as const;
+      // Type-level test: z.custom() should not be assignable to MarkdownParam.
+      // If this @ts-expect-error becomes "unused", the constraint was loosened.
+      layoutRegistry.define({
+        name: 'test-bad-custom',
+        description: 'should not compile',
+        params: {
+          // @ts-expect-error: z.custom() is not a MarkdownParam
+          content: z.custom<string[]>(),
+        },
+        render: () => ({ content: dummy }),
+      });
+    });
+
+    it('rejects z.any() in layout params', () => {
+      const dummy = { type: COMPONENT_TYPE, componentName: 'x', props: {} } as const;
+      layoutRegistry.define({
+        name: 'test-bad-any',
+        description: 'should not compile',
+        params: {
+          // @ts-expect-error: z.any() is not a MarkdownParam
+          data: z.any(),
+        },
+        render: () => ({ content: dummy }),
+      });
     });
   });
 });
