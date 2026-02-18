@@ -8,7 +8,7 @@
 
 import { parseSlideDocument, type RawSlide } from './slideParser.js';
 import { resolveAssetReferences } from './assetResolver.js';
-import { layoutRegistry, validateLayoutProps, slideRegistry, validateSlideProps } from '../core/registry.js';
+import { layoutRegistry, validateLayoutProps } from '../core/registry.js';
 import { Presentation, type Slide } from '../presentation.js';
 import type { Theme } from '../core/types.js';
 
@@ -77,45 +77,8 @@ export function compileDocument(source: string, options: CompileOptions): Presen
 // ============================================
 
 function compileSlide(raw: RawSlide, options: CompileOptions): Slide {
-  // Pre-built slide reference — `slide: name` in frontmatter
-  const slideRef = raw.frontmatter.slide as string | undefined;
-  const slide = slideRef
-    ? compileSlideRef(raw, slideRef, options)
-    : compileLayoutSlide(raw, options);
+  const slide = compileLayoutSlide(raw, options);
   slide.name = buildSlideName(raw);
-  return slide;
-}
-
-/** Compile a `slide: name` reference — pre-built slide with validated params. */
-function compileSlideRef(raw: RawSlide, slideRef: string, options: CompileOptions): Slide {
-  const slideDef = slideRegistry.get(slideRef);
-  if (!slideDef) {
-    const available = slideRegistry.getRegisteredNames().join(', ');
-    throw new Error(
-      `Slide ${raw.index + 1}: unknown slide '${slideRef}'. ` +
-      `Available: ${available || 'none (no slides registered)'}`,
-    );
-  }
-
-  // Build params from frontmatter (excluding the `slide`, `name`, and `notes` keys)
-  const params: Record<string, unknown> = { ...raw.frontmatter };
-  delete params.slide;
-  delete params.name;
-  const notes = params.notes as string | undefined;
-  delete params.notes;
-
-  // Resolve asset references
-  const resolved = resolveAssetReferences(params, options.assets, raw.index) as Record<string, unknown>;
-
-  // Validate and render
-  const validated = validateSlideProps(slideDef, resolved);
-  const slide = slideDef.render(validated);
-
-  // Attach speaker notes from frontmatter
-  if (notes) {
-    slide.notes = notes;
-  }
-
   return slide;
 }
 
@@ -127,7 +90,7 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
 
   if (!layoutName) {
     throw new Error(
-      `Slide ${raw.index + 1}: missing 'layout' or 'slide' field in frontmatter`,
+      `Slide ${raw.index + 1}: missing 'layout' field in frontmatter`,
     );
   }
 

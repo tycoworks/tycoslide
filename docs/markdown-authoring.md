@@ -231,9 +231,9 @@ Resolved against the theme's `assets` object at compile time. Unknown paths prod
 
 ---
 
-## Shared Slides
+## Shared Layouts
 
-For v1, copy-paste between markdown files. If a slide appears in multiple presentations, duplicate the frontmatter block. File-based imports (`src:`) may be added in a future version if copy-paste friction becomes a problem.
+Reusable slides (e.g. "The Challenge", "What is Materialize?") are registered as layouts via `layoutRegistry.define()` in the theme's shared modules. Markdown files target them with `layout:` just like any other layout. If a shared layout needs content variations, parameterize via frontmatter fields.
 
 ---
 
@@ -402,13 +402,13 @@ The parser/compiler cleanup is done. Remaining work is content migration:
 
 1. **Audit all `contentLayout` usage** -- categorize each into: (a) can use `body` layout now, (b) needs `twoColumn`, (c) needs new capability.
 
-2. **Convert shared slides** -- `whatIsMaterialize` and others to markdown with `body` or `twoColumn` layouts. Inline into each presentation that uses them (copy-paste). The block compiler already handles paragraphs, lists, headings, tables, cards, images, and mermaid diagrams.
+2. ~~**Convert shared slides**~~ Done -- `whatIsMaterialize`, `challenge`, `integrate`, `transform`, `serve`, `solutionsGrid`, `solutionsGridCustomers` converted from `slideRegistry.define()` to `layoutRegistry.define()`. Markdown files use `layout:` to target them.
 
 3. **Migrate TypeScript presentations** that use `contentLayout` to `body` layout where possible.
 
 4. **Delete `contentLayout` and `twoColumnRawLayout`** when no consumers remain.
 
-5. **Remove `slideRegistry`** -- delete `SlideRegistry` class, `compileSlideRef()`, `slide:` routing, and related tests. All `slide:` references should already be inlined from step 2.
+5. ~~**Remove `slideRegistry`**~~ Done -- deleted `SlideRegistry` class, `compileSlideRef()`, `slide:` routing, and related tests. Shared slides converted to layouts via `layoutRegistry.define()`.
 
 ### Phase 3: CLI
 

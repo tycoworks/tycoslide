@@ -9,7 +9,7 @@ import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { z } from 'zod';
 import { compileDocument, buildSlideName } from '../src/markdown/documentCompiler.js';
-import { layoutRegistry, slideRegistry } from '../src/core/registry.js';
+import { layoutRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import { mockTheme } from './mocks.js';
 import type { Slide } from '../src/presentation.js';
@@ -107,7 +107,6 @@ describe('Document Compiler', () => {
 
   afterEach(() => {
     layoutRegistry.clear();
-    slideRegistry.clear();
   });
 
   describe('parameter mapping', () => {
@@ -296,123 +295,6 @@ title: Has Title
           return true;
         },
       );
-    });
-  });
-
-  describe('slide references', () => {
-    const mockSlide = {
-      name: 'testSlide',
-      description: 'A test slide',
-      params: { eyebrow: schema.string() },
-      render: (props: any): Slide => {
-        receivedProps.push(props);
-        const slide: Slide = { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
-        renderedSlides.push(slide);
-        return slide;
-      },
-    };
-
-    it('should compile a slide: reference with params', () => {
-      slideRegistry.register(mockSlide);
-      const md = HEADER + `---
-slide: testSlide
-eyebrow: RECAP
----`;
-      compileDocument(md, makeOptions());
-      assert.strictEqual(receivedProps.length, 1);
-      assert.strictEqual(receivedProps[0].eyebrow, 'RECAP');
-    });
-
-    it('should attach notes to slide references from frontmatter', () => {
-      slideRegistry.register(mockSlide);
-      const md = HEADER + `---
-slide: testSlide
-eyebrow: INTRO
-notes: Speaker notes here.
----`;
-      compileDocument(md, makeOptions());
-      assert.strictEqual(renderedSlides.length, 1);
-      assert.strictEqual(renderedSlides[0].notes, 'Speaker notes here.');
-    });
-
-    it('should throw on unknown slide name', () => {
-      const md = HEADER + `---
-slide: nonexistent
----`;
-      assert.throws(
-        () => compileDocument(md, makeOptions()),
-        (err: any) => {
-          assert.ok(err.message.includes('nonexistent'));
-          assert.ok(err.message.includes('unknown slide'));
-          return true;
-        },
-      );
-    });
-
-    it('should throw on missing required slide param', () => {
-      slideRegistry.register(mockSlide);
-      const md = HEADER + `---
-slide: testSlide
----`;
-      assert.throws(
-        () => compileDocument(md, makeOptions()),
-        (err: any) => {
-          assert.ok(err.message.includes('validation'));
-          return true;
-        },
-      );
-    });
-
-    it('should mix slide references and layout slides', () => {
-      slideRegistry.register(mockSlide);
-      layoutRegistry.register(simpleLayout);
-      const md = HEADER + `---
-slide: testSlide
-eyebrow: RECAP
----
-
----
-layout: simple
-title: Layout Slide
----`;
-      compileDocument(md, makeOptions());
-      assert.strictEqual(receivedProps.length, 2);
-      assert.strictEqual(receivedProps[0].eyebrow, 'RECAP');
-      assert.strictEqual(receivedProps[1].title, 'Layout Slide');
-    });
-
-    it('should pass title from frontmatter for slide references', () => {
-      const titledSlide = {
-        name: 'titledSlide',
-        description: 'A slide with title param',
-        params: { title: schema.string() },
-        render: (props: any): Slide => {
-          receivedProps.push(props);
-          const slide: Slide = { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
-          renderedSlides.push(slide);
-          return slide;
-        },
-      };
-      slideRegistry.register(titledSlide);
-      const md = HEADER + `---
-slide: titledSlide
-title: From Frontmatter
----`;
-      compileDocument(md, makeOptions());
-      assert.strictEqual(receivedProps.length, 1);
-      assert.strictEqual(receivedProps[0].title, 'From Frontmatter');
-    });
-
-    it('should resolve asset references in slide params', () => {
-      slideRegistry.register(mockSlide);
-      const md = HEADER + `---
-slide: testSlide
-eyebrow: asset:icons.star
----`;
-      const testAssets = { icons: { star: 'STAR_ICON' } };
-      compileDocument(md, { theme: mockTheme(), assets: testAssets });
-      assert.strictEqual(receivedProps.length, 1);
-      assert.strictEqual(receivedProps[0].eyebrow, 'STAR_ICON');
     });
   });
 

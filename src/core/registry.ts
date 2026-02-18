@@ -404,61 +404,6 @@ export function validateLayoutProps(
 }
 
 // ============================================
-// SLIDE REGISTRY
-// ============================================
-
-/**
- * A named, pre-built slide with typed frontmatter params.
- * Referenced from markdown via `slide: name` in frontmatter.
- * Unlike layouts (structural templates), slides are complete content units
- * reused across presentations (e.g., "challenge", "whatIsMaterialize").
- */
-export interface SlideDefinition {
-  name: string;
-  description: string;
-  params: SchemaShape;
-  render: (props: any) => Slide;
-}
-
-/**
- * Registry for slide definitions.
- * Use `.define()` to create, register, and return a slide definition in one call.
- */
-class SlideRegistry extends Registry<SlideDefinition> {
-  constructor() { super('Slide', 'render'); }
-
-  /**
-   * Define and register a slide with type-safe params inferred from the schema.
-   */
-  define<TShape extends MarkdownShape>(def: {
-    name: string;
-    description: string;
-    params: TShape;
-    render: (props: z.infer<z.ZodObject<TShape>>) => Slide;
-  }): SlideDefinition {
-    this.register(def);
-    return def;
-  }
-}
-
-export const slideRegistry = new SlideRegistry();
-
-/**
- * Validate raw frontmatter props against a slide's Zod schema.
- */
-export function validateSlideProps(
-  slide: SlideDefinition,
-  raw: Record<string, unknown>,
-): any {
-  const result = z.object(slide.params).safeParse(raw);
-  if (result.success) return result.data;
-  const issues = result.error.issues
-    .map(i => `  - ${i.path.join('.')}: ${i.message}`)
-    .join('\n');
-  throw new Error(`Slide '${slide.name}' validation failed:\n${issues}`);
-}
-
-// ============================================
 // DSL HELPER
 // ============================================
 
