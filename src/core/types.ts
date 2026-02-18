@@ -29,6 +29,24 @@ export type VerticalAlignment = typeof VALIGN[keyof typeof VALIGN];
 /** All VALIGN values as a tuple — useful for Zod enum schemas */
 export const VALIGN_VALUES = Object.values(VALIGN) as [VerticalAlignment, ...VerticalAlignment[]];
 
+export enum Component {
+  Image = 'image',
+  Line = 'line',
+  Shape = 'shape',
+  SlideNumber = 'slideNumber',
+  Markdown = 'markdown',
+  Text = 'text',
+  Row = 'row',
+  Column = 'column',
+  Stack = 'stack',
+  Grid = 'grid',
+  Card = 'card',
+  Quote = 'quote',
+  Table = 'table',
+  Mermaid = 'mermaid',
+  Block = 'block',
+}
+
 export const GAP = {
   NONE: 'none',
   TIGHT: 'tight',

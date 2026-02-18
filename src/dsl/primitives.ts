@@ -4,6 +4,7 @@ import { componentRegistry, component, type ComponentNode, type InferProps, type
 import { NODE_TYPE } from '../core/nodes.js';
 import type { ImageNode, LineNode, ShapeNode, SlideNumberNode } from '../core/nodes.js';
 import {
+  Component,
   HALIGN,
   DASH_TYPE,
   TEXT_STYLE,
@@ -16,13 +17,10 @@ import {
   type Theme,
 } from '../core/types.js';
 import { schema } from '../schema.js';
-import { IMAGE_COMPONENT, LINE_COMPONENT, SHAPE_COMPONENT, SLIDE_NUMBER_COMPONENT } from '../core/componentNames.js';
 
 // ============================================
 // IMAGE
 // ============================================
-
-export { IMAGE_COMPONENT };
 
 const imageOptionsSchema = {
   alt: schema.string().optional(),
@@ -38,7 +36,7 @@ const imageSchema = {
 export type ImageProps = InferProps<typeof imageSchema>;
 
 export const imageComponent = componentRegistry.define({
-  name: IMAGE_COMPONENT,
+  name: Component.Image,
   input: schema.string(),
   expand: (props: ImageProps | string): ImageNode => {
     const resolved = typeof props === 'string' ? { src: props } : props;
@@ -52,14 +50,12 @@ export const imageComponent = componentRegistry.define({
 });
 
 export function image(src: string, options?: ImageOptions): ComponentNode {
-  return component(IMAGE_COMPONENT, { src, ...options });
+  return component(Component.Image, { src, ...options });
 }
 
 // ============================================
 // LINE
 // ============================================
-
-export { LINE_COMPONENT };
 
 export interface LineTokens {
   color: string;
@@ -83,7 +79,7 @@ function lineDefaults(theme: Theme): LineTokens {
 }
 
 componentRegistry.define({
-  name: LINE_COMPONENT,
+  name: Component.Line,
   params: lineSchema,
   defaults: lineDefaults,
   expand: (props: LineProps, _context: ExpansionContext, tokens: LineTokens): LineNode => ({
@@ -98,14 +94,12 @@ componentRegistry.define({
 });
 
 export function line(props?: LineProps): ComponentNode {
-  return component(LINE_COMPONENT, props ?? {});
+  return component(Component.Line, props ?? {});
 }
 
 // ============================================
 // SHAPE (all area shapes)
 // ============================================
-
-export { SHAPE_COMPONENT };
 
 const shapeFillSchema = schema.object({
   color: schema.string(),
@@ -131,7 +125,7 @@ const shapeSchema = {
 export type ShapeProps = InferProps<typeof shapeSchema>;
 
 componentRegistry.define({
-  name: SHAPE_COMPONENT,
+  name: Component.Shape,
   params: shapeSchema,
   expand: (props: ShapeProps): ShapeNode => ({
     type: NODE_TYPE.SHAPE,
@@ -144,14 +138,12 @@ componentRegistry.define({
 });
 
 export function shape(props: ShapeProps): ComponentNode {
-  return component(SHAPE_COMPONENT, props);
+  return component(Component.Shape, props);
 }
 
 // ============================================
 // SLIDE NUMBER
 // ============================================
-
-export { SLIDE_NUMBER_COMPONENT };
 
 export interface SlideNumberTokens {
   style: TextStyleName;
@@ -171,7 +163,7 @@ function slideNumberDefaults(_theme: Theme): SlideNumberTokens {
 }
 
 componentRegistry.define({
-  name: SLIDE_NUMBER_COMPONENT,
+  name: Component.SlideNumber,
   params: slideNumberSchema,
   defaults: slideNumberDefaults,
   expand: (_props: SlideNumberProps, _context: ExpansionContext, tokens: SlideNumberTokens): SlideNumberNode => ({
@@ -183,5 +175,5 @@ componentRegistry.define({
 });
 
 export function slideNumber(props?: SlideNumberProps): ComponentNode {
-  return component(SLIDE_NUMBER_COMPONENT, props ?? {});
+  return component(Component.SlideNumber, props ?? {});
 }

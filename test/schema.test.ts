@@ -5,8 +5,9 @@ import assert from 'node:assert';
 import { z } from 'zod';
 import { schema } from '../src/schema.js';
 import { layoutRegistry, COMPONENT_TYPE } from '../src/core/registry.js';
-import { BLOCK_COMPONENT } from '../src/dsl/block.js';
-import { IMAGE_COMPONENT } from '../src/dsl/primitives.js';
+import { Component } from '../src/core/types.js';
+import '../src/dsl/block.js';
+import '../src/dsl/primitives.js';
 
 describe('schema', () => {
   describe('scalar types', () => {
@@ -56,7 +57,7 @@ describe('schema', () => {
       if (result.success) {
         assert.ok(Array.isArray(result.data.body));
         assert.strictEqual(result.data.body.length, 1);
-        assert.strictEqual(result.data.body[0].componentName, BLOCK_COMPONENT);
+        assert.strictEqual(result.data.body[0].componentName, Component.Block);
       }
     });
 
@@ -66,8 +67,8 @@ describe('schema', () => {
       assert.strictEqual(result.success, true);
       if (result.success) {
         assert.strictEqual(result.data.body.length, 2);
-        assert.strictEqual(result.data.body[0].componentName, BLOCK_COMPONENT);
-        assert.strictEqual(result.data.body[1].componentName, IMAGE_COMPONENT);
+        assert.strictEqual(result.data.body[0].componentName, Component.Block);
+        assert.strictEqual(result.data.body[1].componentName, Component.Image);
       }
     });
 
@@ -91,7 +92,7 @@ describe('schema', () => {
       assert.strictEqual(result.success, true);
       if (result.success) {
         assert.strictEqual(result.data.body.length, 1);
-        assert.strictEqual(result.data.body[0].componentName, BLOCK_COMPONENT);
+        assert.strictEqual(result.data.body[0].componentName, Component.Block);
       }
     });
   });

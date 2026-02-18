@@ -18,8 +18,7 @@ import { schema } from '../schema.js';
 // CONSTANTS
 // ============================================
 
-import { MARKDOWN_COMPONENT, TEXT_COMPONENT } from '../core/componentNames.js';
-export { MARKDOWN_COMPONENT, TEXT_COMPONENT };
+import { Component } from '../core/types.js';
 
 // ============================================
 // SCHEMAS & TYPES
@@ -233,7 +232,7 @@ export const HEADING_STYLE: Record<number, TextProps['style']> = {
 // ============================================
 
 export const markdownComponent = componentRegistry.define({
-  name: MARKDOWN_COMPONENT,
+  name: Component.Markdown,
   input: schema.string(),
   expand: expandMarkdown,
   directive: {
@@ -251,7 +250,7 @@ export const markdownComponent = componentRegistry.define({
  * ```
  */
 export function markdown(content: string, props?: TextProps): ComponentNode<TextComponentProps> {
-  return component(MARKDOWN_COMPONENT, { content, ...props });
+  return component(Component.Markdown, { content, ...props });
 }
 
 // ============================================
@@ -273,7 +272,7 @@ function expandText(props: TextComponentProps, _context: { theme: any }): Elemen
 }
 
 export const textComponent = componentRegistry.define({
-  name: TEXT_COMPONENT,
+  name: Component.Text,
   input: schema.string(),
   expand: expandText,
 });
@@ -291,5 +290,5 @@ export const textComponent = componentRegistry.define({
  * ```
  */
 export function text(content: string, props?: TextProps): ComponentNode<TextComponentProps> {
-  return component(TEXT_COMPONENT, { content, ...props });
+  return component(Component.Text, { content, ...props });
 }

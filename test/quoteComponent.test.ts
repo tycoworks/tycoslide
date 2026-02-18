@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { quote, QUOTE_COMPONENT } from '../src/dsl/quote.js';
+import { quote } from '../src/dsl/quote.js';
+import { Component } from '../src/core/types.js';
 import { componentRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import { TEXT_STYLE, HALIGN, VALIGN } from '../src/core/types.js';
@@ -11,7 +12,7 @@ describe('Quote Component', () => {
 
   describe('registration', () => {
     it('should be registered at import time', () => {
-      assert.ok(componentRegistry.has(QUOTE_COMPONENT));
+      assert.ok(componentRegistry.has(Component.Quote));
     });
   });
 
@@ -19,7 +20,7 @@ describe('Quote Component', () => {
     it('should create a component node with correct type', () => {
       const node = quote({ quote: 'Test quote' });
       assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-      assert.strictEqual(node.componentName, QUOTE_COMPONENT);
+      assert.strictEqual(node.componentName, Component.Quote);
     });
 
     it('should pass props correctly', () => {

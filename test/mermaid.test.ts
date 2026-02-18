@@ -3,7 +3,8 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { mermaid, MERMAID_COMPONENT, sanitizeMermaidDefinition } from '../src/dsl/mermaid.js';
+import { mermaid, sanitizeMermaidDefinition } from '../src/dsl/mermaid.js';
+import { Component } from '../src/core/types.js';
 import { COMPONENT_TYPE, componentRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import { mockTheme } from './mocks.js';
@@ -16,7 +17,7 @@ describe('mermaid() DSL function', () => {
 
   it('returns ComponentNode with correct componentName', () => {
     const m = mermaid('flowchart LR\n  A --> B');
-    assert.strictEqual(m.componentName, MERMAID_COMPONENT);
+    assert.strictEqual(m.componentName, Component.Mermaid);
   });
 
   it('stores definition in props.definition', () => {
@@ -126,7 +127,7 @@ flowchart LR
 
 describe('mermaid expansion', () => {
   it('auto-registers mermaid component on import', () => {
-    const registered = componentRegistry.has(MERMAID_COMPONENT);
+    const registered = componentRegistry.has(Component.Mermaid);
     assert.ok(registered, 'mermaid component should be auto-registered');
   });
 

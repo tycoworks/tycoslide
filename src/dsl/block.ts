@@ -9,13 +9,11 @@ import type { Table as MdastTable } from 'mdast';
 import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
 import { SYNTAX, extractSource, extractInlineText, type ContainerDirective } from '../core/mdast.js';
 import { markdownProcessor, extractDirectiveBody } from '../core/parser.js';
-import { TEXT_STYLE } from '../core/types.js';
+import { Component, TEXT_STYLE } from '../core/types.js';
 import { markdown, HEADING_STYLE } from './text.js';
 import { table } from './table.js';
 import { column } from './containers.js';
 import { schema } from '../schema.js';
-import { BLOCK_COMPONENT } from '../core/componentNames.js';
-export { BLOCK_COMPONENT };
 
 // ============================================
 // MDAST DISPATCH
@@ -106,7 +104,7 @@ function expandBlock(content: string): ComponentNode {
 // ============================================
 
 export const blockComponent = componentRegistry.define({
-  name: BLOCK_COMPONENT,
+  name: Component.Block,
   input: schema.string(),
   expand: (content: string) => expandBlock(content),
   directive: true,
@@ -150,5 +148,5 @@ export const blockComponent = componentRegistry.define({
  * ```
  */
 export function block(content: string): ComponentNode {
-  return component(BLOCK_COMPONENT, content);
+  return component(Component.Block, content);
 }

@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { card, CARD_COMPONENT } from '../src/dsl/card.js';
+import { card } from '../src/dsl/card.js';
+import { Component } from '../src/core/types.js';
 import { componentRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import { mockTheme } from './mocks.js';
@@ -10,7 +11,7 @@ describe('Card Component', () => {
 
   describe('registration', () => {
     it('should be registered at import time', () => {
-      assert.ok(componentRegistry.has(CARD_COMPONENT));
+      assert.ok(componentRegistry.has(Component.Card));
     });
   });
 
@@ -18,7 +19,7 @@ describe('Card Component', () => {
     it('should create a component node with correct type', () => {
       const node = card({ title: 'Test' });
       assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-      assert.strictEqual(node.componentName, CARD_COMPONENT);
+      assert.strictEqual(node.componentName, Component.Card);
     });
 
     it('should pass props correctly', () => {

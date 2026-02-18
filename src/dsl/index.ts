@@ -8,10 +8,6 @@ export {
   shape,
   slideNumber,
   imageComponent,
-  IMAGE_COMPONENT,
-  LINE_COMPONENT,
-  SHAPE_COMPONENT,
-  SLIDE_NUMBER_COMPONENT,
   type ImageProps,
   type LineProps,
   type LineTokens,
@@ -26,10 +22,6 @@ export {
   column,
   stack,
   grid,
-  ROW_COMPONENT,
-  COLUMN_COMPONENT,
-  STACK_COMPONENT,
-  GRID_COMPONENT,
   type RowProps,
   type ColumnProps,
   type StackProps,
@@ -39,7 +31,6 @@ export {
 // Table
 export {
   table,
-  TABLE_COMPONENT,
   type TableProps,
   type TableTokens,
 } from './table.js';
@@ -50,8 +41,6 @@ export {
   text,
   markdownComponent,
   textComponent,
-  MARKDOWN_COMPONENT,
-  TEXT_COMPONENT,
   type TextProps,
   type TextComponentProps,
 } from './text.js';
@@ -63,7 +52,6 @@ export { SYNTAX } from '../core/mdast.js';
 export {
   card,
   cardComponent,
-  CARD_COMPONENT,
   type CardProps,
   type CardTokens,
 } from './card.js';
@@ -72,7 +60,6 @@ export {
 export {
   quote,
   quoteComponent,
-  QUOTE_COMPONENT,
   type QuoteProps,
   type QuoteTokens,
 } from './quote.js';
@@ -82,7 +69,6 @@ export {
   mermaid,
   mermaidComponent,
   sanitizeMermaidDefinition,
-  MERMAID_COMPONENT,
   type MermaidProps,
   type MermaidComponentProps,
 } from './mermaid.js';
@@ -91,5 +77,4 @@ export {
 export {
   block,
   blockComponent,
-  BLOCK_COMPONENT,
 } from './block.js';

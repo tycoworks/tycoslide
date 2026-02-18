@@ -3,8 +3,8 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { card, CARD_COMPONENT } from '../src/dsl/card.js';
-import { table, TABLE_COMPONENT } from '../src/dsl/table.js';
+import { card } from '../src/dsl/card.js';
+import { table } from '../src/dsl/table.js';
 import { componentRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import { mockTheme } from './mocks.js';

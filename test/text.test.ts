@@ -3,7 +3,8 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { markdown, text, MARKDOWN_COMPONENT, TEXT_COMPONENT } from '../src/dsl/text.js';
+import { markdown, text } from '../src/dsl/text.js';
+import { Component } from '../src/core/types.js';
 import { componentRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import type { NormalizedRun } from '../src/core/types.js';
@@ -39,7 +40,7 @@ describe('Text', () => {
     it('should create a component node with correct type', () => {
       const node = markdown('Hello **world**');
       assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-      assert.strictEqual(node.componentName, MARKDOWN_COMPONENT);
+      assert.strictEqual(node.componentName, Component.Markdown);
       assert.strictEqual(node.props.content, 'Hello **world**');
     });
 
@@ -232,7 +233,7 @@ Conclusion.
     it('should create a component node with text type', () => {
       const node = text('ARCHITECTURE');
       assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-      assert.strictEqual(node.componentName, TEXT_COMPONENT);
+      assert.strictEqual(node.componentName, Component.Text);
       assert.strictEqual(node.props.content, 'ARCHITECTURE');
     });
 

@@ -3,7 +3,7 @@
 //
 // A slot is a named content region in a layout (e.g. body, left, right).
 // Slots primarily contain :::directives. Consecutive bare MDAST nodes
-// are auto-wrapped in the default component ('block').
+// are auto-wrapped in the default component (Component.Block).
 //
 // The default is set here (not in block.ts) because it is a markdown pipeline
 // policy, not a component concern.
@@ -12,14 +12,14 @@ import type { Root, RootContent } from 'mdast';
 import { SYNTAX, type ContainerDirective } from '../core/mdast.js';
 import { markdownProcessor, extractDirectiveBody } from '../core/parser.js';
 import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
-import { BLOCK_COMPONENT } from '../core/componentNames.js';
+import { Component } from '../core/types.js';
 
 // ============================================
 // DEFAULT COMPONENT
 // ============================================
 
 /** Default component for bare MDAST in slots. Set here as markdown pipeline policy. */
-componentRegistry.setDefaultComponent(BLOCK_COMPONENT);
+componentRegistry.setDefaultComponent(Component.Block);
 
 // ============================================
 // PUBLIC API

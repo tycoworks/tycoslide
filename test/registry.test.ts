@@ -6,9 +6,10 @@ import type { Slide } from '../src/presentation.js';
 import { mockTheme } from './mocks.js';
 
 // Import DSL modules to trigger component registration
-import { TEXT_COMPONENT } from '../src/dsl/text.js';
-import { CARD_COMPONENT } from '../src/dsl/card.js';
-import { ROW_COMPONENT } from '../src/dsl/containers.js';
+import '../src/dsl/text.js';
+import '../src/dsl/card.js';
+import '../src/dsl/containers.js';
+import { Component } from '../src/core/types.js';
 
 // ============================================
 // GENERIC REGISTRY BASE CLASS
@@ -122,7 +123,7 @@ describe('ComponentRegistry', () => {
   describe('expand', () => {
     test('expands a registered component', async () => {
       // text() is registered at import time — use it as a real component
-      const node = component(TEXT_COMPONENT, { content: 'hello' });
+      const node = component(Component.Text, { content: 'hello' });
       const expanded = await componentRegistry.expand(node, { theme });
       assert.strictEqual((expanded as any).type, NODE_TYPE.TEXT);
     });
@@ -145,7 +146,7 @@ describe('ComponentRegistry', () => {
 
     test('recursively expands nested components', async () => {
       // card expands to stack(shape, column(...)) — tests recursive expansion
-      const node = component(CARD_COMPONENT, { title: 'Test', background: false });
+      const node = component(Component.Card, { title: 'Test', background: false });
       const expanded = await componentRegistry.expandTree(node, { theme });
       // background=false means just a column with text child
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
@@ -156,7 +157,7 @@ describe('ComponentRegistry', () => {
 
     test('recurses into element children', async () => {
       // A container with a component child should expand the child
-      const node = component(ROW_COMPONENT, { children: [component(TEXT_COMPONENT, { content: 'hi' })] });
+      const node = component(Component.Row, { children: [component(Component.Text, { content: 'hi' })] });
       const expanded = await componentRegistry.expandTree(node, { theme });
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
       if (expanded.type === NODE_TYPE.CONTAINER) {

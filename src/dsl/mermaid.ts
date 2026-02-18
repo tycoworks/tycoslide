@@ -26,8 +26,7 @@ import { createRequire } from 'module';
 // CONSTANTS
 // ============================================
 
-import { MERMAID_COMPONENT } from '../core/componentNames.js';
-export { MERMAID_COMPONENT };
+import { Component } from '../core/types.js';
 
 /** Timeout for mermaid-cli rendering in milliseconds */
 const MERMAID_RENDER_TIMEOUT_MS = 30000;
@@ -256,7 +255,7 @@ async function expandMermaid(props: MermaidComponentProps, context: ExpansionCon
 const mermaidInput = schema.string().transform((s): MermaidComponentProps => ({ definition: s }));
 
 export const mermaidComponent = componentRegistry.define({
-  name: MERMAID_COMPONENT,
+  name: Component.Mermaid,
   input: mermaidInput,
   expand: expandMermaid,
   directive: true,
@@ -279,5 +278,5 @@ export const mermaidComponent = componentRegistry.define({
  * ```
  */
 export function mermaid(definition: string, props?: MermaidProps): ComponentNode<MermaidComponentProps> {
-  return component(MERMAID_COMPONENT, { definition, ...props });
+  return component(Component.Mermaid, { definition, ...props });
 }

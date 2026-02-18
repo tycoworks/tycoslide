@@ -15,8 +15,7 @@ import { schema } from '../schema.js';
 // CONSTANTS
 // ============================================
 
-import { QUOTE_COMPONENT } from '../core/componentNames.js';
-export { QUOTE_COMPONENT };
+import { Component } from '../core/types.js';
 
 // ============================================
 // DESIGN TOKENS
@@ -132,7 +131,7 @@ function expandQuote(props: QuoteProps, context: ExpansionContext, tokens: Quote
 // ============================================
 
 export const quoteComponent = componentRegistry.define({
-  name: QUOTE_COMPONENT,
+  name: Component.Quote,
   params: quoteSchema,
   defaults: quoteDefaults,
   expand: expandQuote,
@@ -152,5 +151,5 @@ export const quoteComponent = componentRegistry.define({
  * ```
  */
 export function quote(props: QuoteProps) {
-  return component(QUOTE_COMPONENT, props);
+  return component(Component.Quote, props);
 }

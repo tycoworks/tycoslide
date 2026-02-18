@@ -14,8 +14,7 @@ import { schema } from '../schema.js';
 // CONSTANTS
 // ============================================
 
-import { CARD_COMPONENT } from '../core/componentNames.js';
-export { CARD_COMPONENT };
+import { Component } from '../core/types.js';
 
 // ============================================
 // DESIGN TOKENS
@@ -145,7 +144,7 @@ function expandCard(props: CardProps, context: ExpansionContext, tokens: CardTok
 // ============================================
 
 export const cardComponent = componentRegistry.define({
-  name: CARD_COMPONENT,
+  name: Component.Card,
   params: cardSchema,
   defaults: cardDefaults,
   expand: expandCard,
@@ -165,5 +164,5 @@ export const cardComponent = componentRegistry.define({
  * ```
  */
 export function card(props: CardProps) {
-  return component(CARD_COMPONENT, props);
+  return component(Component.Card, props);
 }

@@ -1,7 +1,7 @@
 // Table Component - Native pptxgenjs table element
 
 import { componentRegistry, component, type ComponentNode, type ExpansionContext } from '../core/registry.js';
-import { MARKDOWN_COMPONENT, TABLE_COMPONENT } from '../core/componentNames.js';
+import { Component } from '../core/types.js';
 import { NODE_TYPE, type TextNode, type TableCellData, type TableStyleProps } from '../core/nodes.js';
 import type { Theme, TextContent } from '../core/types.js';
 import { SYNTAX, extractInlineText, type ContainerDirective } from '../core/mdast.js';
@@ -10,8 +10,6 @@ import type { Table as MdastTable } from 'mdast';
 // ============================================
 // TABLE COMPONENT
 // ============================================
-
-export { TABLE_COMPONENT };
 
 export type TableTokens = TableStyleProps;
 
@@ -66,7 +64,7 @@ function compileTableDirective(directive: ContainerDirective, _source: string, _
 }
 
 componentRegistry.define({
-  name: TABLE_COMPONENT,
+  name: Component.Table,
   defaults: tableDefaults,
   expand: async (props: TableInternalProps, context: ExpansionContext, tokens: TableTokens) => {
     // Expand string content through the markdown component to support
@@ -74,7 +72,7 @@ componentRegistry.define({
     const expandContent = async (content: TextContent): Promise<TextContent> => {
       if (typeof content === 'string') {
         const expanded = await componentRegistry.expand(
-          component(MARKDOWN_COMPONENT, { content }),
+          component(Component.Markdown, { content }),
           context,
         ) as TextNode;
         return expanded.content;
@@ -136,5 +134,5 @@ export function table(
   data: (TableCellData | TextContent)[][],
   props?: TableProps & { variant?: string }
 ): ComponentNode {
-  return component(TABLE_COMPONENT, { data, tableProps: props, variant: props?.variant });
+  return component(Component.Table, { data, tableProps: props, variant: props?.variant });
 }
