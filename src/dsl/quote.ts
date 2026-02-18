@@ -3,7 +3,7 @@
 // Expands to: stack(shape(background), column(image?, quote, attribution))
 
 import { componentRegistry, component, type ExpansionContext, type InferProps, type SchemaShape } from '../core/registry.js';
-import { stack, column } from './containers.js';
+import { stack, column, row } from './containers.js';
 import { shape, image as imageNode, imageComponent } from './primitives.js';
 import { markdown, text, markdownComponent, textComponent } from './text.js';
 import type { SlideNode } from '../core/nodes.js';
@@ -99,7 +99,7 @@ function expandQuote(props: QuoteProps, context: ExpansionContext, tokens: Quote
   // Build content children: optional image, quote text, attribution
   const children: SlideNode[] = [];
   if (imagePath) {
-    children.push(imageNode(imagePath));
+    children.push(row({ hAlign: HALIGN.CENTER }, imageNode(imagePath)));
   }
   children.push(markdown(quoteText, quoteStyle ? { style: quoteStyle } : undefined));
   if (attribution) {

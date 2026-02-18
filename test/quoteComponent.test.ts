@@ -106,8 +106,11 @@ describe('Quote Component', () => {
         assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
         if (contentColumn.type === NODE_TYPE.CONTAINER) {
           assert.strictEqual(contentColumn.children.length, 2);
-          // Image is first child
-          assert.strictEqual(contentColumn.children[0].type, NODE_TYPE.IMAGE);
+          // Image is wrapped in a centering row
+          assert.strictEqual(contentColumn.children[0].type, NODE_TYPE.CONTAINER);
+          if (contentColumn.children[0].type === NODE_TYPE.CONTAINER) {
+            assert.strictEqual(contentColumn.children[0].children[0].type, NODE_TYPE.IMAGE);
+          }
           // Quote text is second
           assert.strictEqual(contentColumn.children[1].type, NODE_TYPE.TEXT);
         }
@@ -128,7 +131,11 @@ describe('Quote Component', () => {
         assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
         if (contentColumn.type === NODE_TYPE.CONTAINER) {
           assert.strictEqual(contentColumn.children.length, 3);
-          assert.strictEqual(contentColumn.children[0].type, NODE_TYPE.IMAGE);
+          // Image is wrapped in a centering row
+          assert.strictEqual(contentColumn.children[0].type, NODE_TYPE.CONTAINER);
+          if (contentColumn.children[0].type === NODE_TYPE.CONTAINER) {
+            assert.strictEqual(contentColumn.children[0].children[0].type, NODE_TYPE.IMAGE);
+          }
           assert.strictEqual(contentColumn.children[1].type, NODE_TYPE.TEXT);
           assert.strictEqual(contentColumn.children[2].type, NODE_TYPE.TEXT);
         }
