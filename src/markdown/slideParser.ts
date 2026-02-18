@@ -20,9 +20,7 @@ export interface RawSlide {
   index: number;
   /** YAML frontmatter key-value pairs (layout, eyebrow, etc.). */
   frontmatter: Record<string, unknown>;
-  /** Slide title — from `# heading` or frontmatter `title:` field. */
-  title?: string;
-  /** Default slot markdown content (after title extraction). */
+  /** Default slot markdown content. */
   body: string;
   /** Named slot contents keyed by slot name (e.g. `{ left: "...", right: "..." }`). */
   slots: Record<string, string>;
@@ -49,11 +47,15 @@ export interface ParsedDocument {
  * theme: materialize
  * ---
  *
- * # Title Slide
+ * ---
+ * layout: section
+ * title: First Slide
+ * ---
  *
  * ---
- * layout: statement
+ * layout: body
  * eyebrow: INTRO
+ * title: Second Slide
  * ---
  *
  * Body content here.
@@ -65,7 +67,6 @@ export interface ParsedDocument {
  * - After a separator, if the next non-blank line is followed by a closing
  *   `---`, the content between is YAML frontmatter for that slide
  * - A blank line immediately after `---` means no frontmatter (body starts)
- * - `# heading` at the start of body becomes the slide title (consumed)
  * - `::name::` markers split body into named content slots
  */
 export function parseSlideDocument(source: string): ParsedDocument {
@@ -75,7 +76,7 @@ export function parseSlideDocument(source: string): ParsedDocument {
   // Step 2: Split remaining content into slides using line-based state machine
   const rawSlides = splitIntoSlides(rest);
 
-  // Step 3: Build RawSlide objects with title/notes/slot extraction
+  // Step 3: Build RawSlide objects with slot extraction
   const slides: RawSlide[] = [];
   for (const raw of rawSlides) {
     slides.push(buildSlide(slides.length, raw.frontmatter, raw.content));
@@ -236,10 +237,7 @@ function buildSlide(index: number, fmString: string, rawContent: string): RawSli
   // Extract slots from body
   const { defaultSlot, slots } = extractSlots(rawContent);
 
-  // Extract title from default slot content or frontmatter
-  const { title, body } = extractTitle(defaultSlot, frontmatter);
-
-  return { index, frontmatter, title, body, slots };
+  return { index, frontmatter, body: defaultSlot, slots };
 }
 
 /** Error thrown when YAML in a structurally-identified frontmatter block fails to parse. */
@@ -264,35 +262,6 @@ function parseFrontmatter(yaml: string, slideIndex: number): Record<string, unkn
     throw new FrontmatterParseError(slideIndex, yaml, err);
   }
   return {};
-}
-
-// ============================================
-// TITLE EXTRACTION (Option C: heading or frontmatter)
-// ============================================
-
-/**
- * Extract slide title. Frontmatter `title:` takes precedence.
- * Otherwise, a leading `# heading` in the content is consumed as title.
- */
-function extractTitle(
-  content: string,
-  frontmatter: Record<string, unknown>
-): { title?: string; body: string } {
-  // Frontmatter title wins
-  if (typeof frontmatter.title === 'string') {
-    return { title: frontmatter.title, body: content };
-  }
-
-  // Leading # heading becomes title (consumed from body)
-  const match = content.match(/^#\s+(.+?)[ \t]*(?:\r?\n|$)/);
-  if (match) {
-    return {
-      title: match[1].trim(),
-      body: content.slice(match[0].length).trim(),
-    };
-  }
-
-  return { body: content };
 }
 
 // ============================================

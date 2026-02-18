@@ -3,8 +3,8 @@
 // a Presentation from a markdown source string.
 //
 // Phase 3d: Generic parameter mapping — no layout-specific logic.
-// Frontmatter fields pass through, # heading → title, ::slot:: → named
-// params, markdown body → body param. Zod validation catches mismatches.
+// Frontmatter fields pass through, ::slot:: → named params,
+// markdown body → body param. Zod validation catches mismatches.
 
 import { parseSlideDocument, type RawSlide } from './slideParser.js';
 import { resolveAssetReferences } from './assetResolver.js';
@@ -29,10 +29,6 @@ export function buildSlideName(raw: RawSlide): string {
     } else if (Array.isArray(value)) {
       parts.push(`${key}: [${value.length} items]`);
     }
-  }
-  if (raw.title && !raw.frontmatter.title) {
-    const truncated = raw.title.length > 50 ? raw.title.slice(0, 50) + '...' : raw.title;
-    parts.push(`title: ${truncated}`);
   }
   return parts.join(', ');
 }
@@ -108,11 +104,6 @@ function compileSlideRef(raw: RawSlide, slideRef: string, options: CompileOption
   const notes = params.notes as string | undefined;
   delete params.notes;
 
-  // Title from # heading if not in frontmatter
-  if (raw.title !== undefined && params.title === undefined) {
-    params.title = raw.title;
-  }
-
   // Resolve asset references
   const resolved = resolveAssetReferences(params, options.assets, raw.index) as Record<string, unknown>;
 
@@ -155,11 +146,6 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
   delete params.name;
   const notes = params.notes as string | undefined;
   delete params.notes;
-
-  // Title: from # heading if not in frontmatter
-  if (raw.title !== undefined && params.title === undefined) {
-    params.title = raw.title;
-  }
 
   // Slots: ::name:: content → param of same name
   for (const [key, value] of Object.entries(raw.slots)) {

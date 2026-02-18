@@ -479,38 +479,34 @@ Theme-defined assets referenced by dot-path in frontmatter. Resolved at compile 
 - Block compiler (paragraphs, lists, headings, tables, `:::card`, `:::image`, `:::mermaid`)
 - Asset resolver (`asset:dot.path` in frontmatter)
 - All scalar layouts registered with Zod schemas
+- **Phase 1 complete:** `# heading` title extraction removed, `Note:` extraction removed, title fallback logic removed, existing `# heading` and `Note:` content migrated to frontmatter
 
-### Phase 1: Authoring model refinements
+### Phase 1: Migrate remaining slot content ~~Authoring model refinements~~
 
-Compiler changes to match the new authoring rules:
+The parser/compiler cleanup is done. Remaining work is content migration:
 
-1. **Remove `# heading` title extraction** from `slideParser.ts`. Delete `extractTitle()` and the `title` field from `RawSlide`. Title is just another frontmatter field.
+1. ~~Remove `# heading` title extraction~~ Done
+2. ~~Remove `Note:` extraction~~ Done
+3. ~~Remove title fallback logic~~ Done
+4. **Migrate `::intro::`, `::bullets::`, `::quote::` content** to YAML frontmatter in all customerStory slides. (Title and notes migration is complete.)
 
-2. **Remove `Note:` extraction** from `slideParser.ts`. Delete `extractNotes()`. Notes come from `frontmatter.notes` instead. The compiler strips `notes` from frontmatter before passing params to the layout.
+### Phase 2: Eliminate contentLayout
 
-3. **Remove title fallback logic** from `documentCompiler.ts`. Delete the `if (raw.title !== undefined)` blocks that merged heading-extracted titles into params.
+1. **Audit all `contentLayout` usage** -- categorize each into: (a) can use `body` layout now, (b) needs `twoColumn`, (c) needs new capability.
 
-4. **Migrate existing markdown content** -- move `# heading` to `title:` in frontmatter, move `Note:` blocks to `notes:` in frontmatter, move `::intro::`, `::bullets::`, `::quote::` content to YAML frontmatter in all customerStory slides.
+2. **Convert shared slides** -- `whatIsMaterialize` and others to markdown with `body` or `twoColumn` layouts. The block compiler already handles paragraphs, lists, headings, tables, cards, images, and mermaid diagrams.
 
-### Phase 2: Shared slide file imports
+3. **Migrate TypeScript presentations** that use `contentLayout` to `body` layout where possible.
+
+4. **Delete `contentLayout` and `twoColumnRawLayout`** when no consumers remain.
+
+### Phase 3: Shared slide file imports
 
 1. **Add `src:` handling** to `documentCompiler.ts`. When a slide has `src:` in frontmatter, load the referenced file, parse its frontmatter and body, merge the referencing slide's frontmatter on top, and compile normally. ~30 lines in `compileSlide()`.
 
 2. **Convert simple shared slides to markdown** -- `challenge.md`, `integrate.md`, `transform.md`, `serve.md`. These already map to registered layouts (`card`, `twoColumn`).
 
 3. **Update presentation files** to use `src:` references instead of `slide:` for converted slides.
-
-### Phase 3: Eliminate contentLayout
-
-1. **Audit all `contentLayout` usage** -- categorize each into: (a) can use `body` layout now, (b) needs `twoColumn`, (c) needs new capability.
-
-2. **Add `:::text` block directive** (or similar) for styled text blocks in body content (e.g., `TEXT_STYLE.SMALL` + `HALIGN.CENTER`). Unlocks `whatIsMaterialize` conversion.
-
-3. **Convert remaining shared slides** -- `whatIsMaterialize` to markdown with `body` layout.
-
-4. **Migrate TypeScript presentations** that use `contentLayout` to `body` layout where possible.
-
-5. **Delete `contentLayout` and `twoColumnRawLayout`** when no consumers remain.
 
 ### Phase 4: Enhanced table support (stretch)
 

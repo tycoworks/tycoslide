@@ -27,8 +27,7 @@ describe('Slide Parser', () => {
     it('should handle empty global frontmatter', () => {
       const doc = parseSlideDocument('---\n---\n\n# Slide\n');
       assert.ok(doc.slides.length >= 1);
-      const titled = doc.slides.find(s => s.title === 'Slide');
-      assert.ok(titled, 'Should have a slide with title "Slide"');
+      assert.ok(doc.slides[0].body.includes('# Slide'));
     });
   });
 
@@ -176,7 +175,7 @@ describe('Slide Parser', () => {
   describe('code fence awareness', () => {
     it('should not split on --- inside a fenced code block', () => {
       const doc = parseSlideDocument(
-        '---\ntheme: test\n---\n\n# Slide\n\n```\ncode here\n---\nmore code\n```\n\nAfter code.'
+        '---\ntheme: test\n---\n\n```\ncode here\n---\nmore code\n```\n\nAfter code.'
       );
       assert.strictEqual(doc.slides.length, 1);
       assert.ok(doc.slides[0].body.includes('```'));
@@ -228,47 +227,6 @@ describe('Slide Parser', () => {
     });
   });
 
-  describe('title extraction', () => {
-    it('should extract # heading as title', () => {
-      const doc = parseSlideDocument('# My Title\n\nBody content.');
-      assert.strictEqual(doc.slides[0].title, 'My Title');
-      assert.strictEqual(doc.slides[0].body, 'Body content.');
-    });
-
-    it('should consume heading from body', () => {
-      const doc = parseSlideDocument('# Title\n\nParagraph one.\n\nParagraph two.');
-      assert.strictEqual(doc.slides[0].title, 'Title');
-      assert.ok(!doc.slides[0].body.includes('# Title'));
-      assert.ok(doc.slides[0].body.includes('Paragraph one.'));
-    });
-
-    it('should prefer frontmatter title over # heading', () => {
-      const doc = parseSlideDocument(
-        '---\ntheme: test\n---\n\n---\ntitle: FM Title\n---\n\n# Heading Title\n\nBody.'
-      );
-      assert.strictEqual(doc.slides[0].title, 'FM Title');
-      assert.ok(doc.slides[0].body.includes('# Heading Title'));
-    });
-
-    it('should handle slide with no title', () => {
-      const doc = parseSlideDocument('Just body, no heading.');
-      assert.strictEqual(doc.slides[0].title, undefined);
-      assert.strictEqual(doc.slides[0].body, 'Just body, no heading.');
-    });
-
-    it('should only match # (H1), not ## or ###', () => {
-      const doc = parseSlideDocument('## Subheading\n\nBody.');
-      assert.strictEqual(doc.slides[0].title, undefined);
-      assert.ok(doc.slides[0].body.includes('## Subheading'));
-    });
-
-    it('should only extract the first # heading, not subsequent ones', () => {
-      const doc = parseSlideDocument('# First\n\nParagraph.\n\n# Second');
-      assert.strictEqual(doc.slides[0].title, 'First');
-      assert.ok(doc.slides[0].body.includes('# Second'));
-    });
-  });
-
   describe('content slots', () => {
     it('should extract named slots', () => {
       const doc = parseSlideDocument(
@@ -314,19 +272,19 @@ describe('Slide Parser', () => {
 theme: materialize
 ---
 
-# My Presentation
+---
+layout: section
+title: My Presentation
+---
 
 ---
 layout: statement
 eyebrow: INTRO
+title: Value Proposition
+notes: Emphasize real-time capabilities.
 ---
 
-# Value Proposition
-
 Materialize is a live data layer.
-
-Note:
-Emphasize real-time capabilities.
 
 ---
 layout: twoColumn
@@ -344,15 +302,17 @@ Materialize provides real-time views.`;
       // Global
       assert.strictEqual(doc.global.theme, 'materialize');
 
-      // Slide 0: title slide
-      assert.strictEqual(doc.slides[0].title, 'My Presentation');
+      // Slide 0: section with title in frontmatter
+      assert.strictEqual(doc.slides[0].frontmatter.layout, 'section');
+      assert.strictEqual(doc.slides[0].frontmatter.title, 'My Presentation');
       assert.strictEqual(doc.slides[0].body, '');
 
-      // Slide 1: statement
+      // Slide 1: statement with title and notes in frontmatter
       assert.strictEqual(doc.slides[1].frontmatter.layout, 'statement');
       assert.strictEqual(doc.slides[1].frontmatter.eyebrow, 'INTRO');
-      assert.strictEqual(doc.slides[1].title, 'Value Proposition');
-      assert.strictEqual(doc.slides[1].body, 'Materialize is a live data layer.\n\nNote:\nEmphasize real-time capabilities.');
+      assert.strictEqual(doc.slides[1].frontmatter.title, 'Value Proposition');
+      assert.strictEqual(doc.slides[1].frontmatter.notes, 'Emphasize real-time capabilities.');
+      assert.strictEqual(doc.slides[1].body, 'Materialize is a live data layer.');
 
       // Slide 2: twoColumn with slots
       assert.strictEqual(doc.slides[2].frontmatter.layout, 'twoColumn');
@@ -360,11 +320,11 @@ Materialize provides real-time views.`;
       assert.strictEqual(doc.slides[2].slots.right, 'Materialize provides real-time views.');
     });
 
-    it('should handle minimal document (no frontmatter, single slide)', () => {
-      const doc = parseSlideDocument('# Hello World');
+    it('should handle minimal document (single slide with body)', () => {
+      const doc = parseSlideDocument('Just some content.');
       assert.deepStrictEqual(doc.global, {});
       assert.strictEqual(doc.slides.length, 1);
-      assert.strictEqual(doc.slides[0].title, 'Hello World');
+      assert.strictEqual(doc.slides[0].body, 'Just some content.');
     });
   });
 
@@ -376,11 +336,11 @@ Materialize provides real-time views.`;
     });
 
     it('should handle CRLF line endings', () => {
-      const doc = parseSlideDocument('---\r\ntheme: test\r\n---\r\n\r\n# Title\r\n\r\nBody.');
+      const doc = parseSlideDocument('---\r\ntheme: test\r\n---\r\n\r\n---\r\nlayout: body\r\ntitle: Hello\r\n---\r\n\r\nBody content.');
       assert.strictEqual(doc.global.theme, 'test');
-      assert.strictEqual(doc.slides[0].title, 'Title');
-      assert.strictEqual(doc.slides[0].body, 'Body.');
+      assert.strictEqual(doc.slides[0].frontmatter.layout, 'body');
+      assert.strictEqual(doc.slides[0].frontmatter.title, 'Hello');
+      assert.strictEqual(doc.slides[0].body, 'Body content.');
     });
-
-});
+  });
 });

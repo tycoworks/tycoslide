@@ -121,24 +121,11 @@ title: Hello World
       assert.strictEqual(receivedProps[0].title, 'Hello World');
     });
 
-    it('should extract title from # heading', () => {
-      const md = HEADER + `---
-layout: simple
----
-
-# Extracted Title`;
-      compileDocument(md, makeOptions());
-      assert.strictEqual(receivedProps.length, 1);
-      assert.strictEqual(receivedProps[0].title, 'Extracted Title');
-    });
-
-    it('should prefer frontmatter title over # heading', () => {
+    it('should pass title from frontmatter', () => {
       const md = HEADER + `---
 layout: simple
 title: Frontmatter Title
----
-
-# Heading Title`;
+---`;
       compileDocument(md, makeOptions());
       assert.strictEqual(receivedProps.length, 1);
       assert.strictEqual(receivedProps[0].title, 'Frontmatter Title');
@@ -161,10 +148,9 @@ Multiple paragraphs are preserved.`;
     it('should map named slots to params', () => {
       const md = HEADER + `---
 layout: slots
+title: Two Column Slide
 eyebrow: ARCHITECTURE
 ---
-
-# Two Column Slide
 
 ::left::
 Left column content here.
@@ -395,7 +381,7 @@ title: Layout Slide
       assert.strictEqual(receivedProps[1].title, 'Layout Slide');
     });
 
-    it('should extract title from # heading for slide references', () => {
+    it('should pass title from frontmatter for slide references', () => {
       const titledSlide = {
         name: 'titledSlide',
         description: 'A slide with title param',
@@ -410,12 +396,11 @@ title: Layout Slide
       slideRegistry.register(titledSlide);
       const md = HEADER + `---
 slide: titledSlide
----
-
-# From Heading`;
+title: From Frontmatter
+---`;
       compileDocument(md, makeOptions());
       assert.strictEqual(receivedProps.length, 1);
-      assert.strictEqual(receivedProps[0].title, 'From Heading');
+      assert.strictEqual(receivedProps[0].title, 'From Frontmatter');
     });
 
     it('should resolve asset references in slide params', () => {
@@ -504,7 +489,6 @@ cards:
       const raw = {
         index: 0,
         frontmatter: { layout: 'body', eyebrow: 'RECAP' },
-        title: undefined,
         body: '',
         slots: {},
         };
@@ -517,7 +501,6 @@ cards:
       const raw = {
         index: 0,
         frontmatter: { layout: 'body', name: 'Day AI Story', eyebrow: 'STORY' },
-        title: undefined,
         body: '',
         slots: {},
         };
@@ -530,7 +513,6 @@ cards:
       const raw = {
         index: 0,
         frontmatter: { layout: 'body', description: longValue },
-        title: undefined,
         body: '',
         slots: {},
         };
@@ -543,7 +525,6 @@ cards:
       const raw = {
         index: 0,
         frontmatter: { layout: 'cards', items: ['a', 'b', 'c'] },
-        title: undefined,
         body: '',
         slots: {},
         };
@@ -551,32 +532,15 @@ cards:
       assert.ok(name.includes('items: [3 items]'));
     });
 
-    it('should include title from heading when not in frontmatter', () => {
-      const raw = {
-        index: 0,
-        frontmatter: { layout: 'body' },
-        title: 'From Heading',
-        body: '',
-        slots: {},
-        };
-      const name = buildSlideName(raw as any);
-      assert.ok(name.includes('layout: body'));
-      assert.ok(name.includes('title: From Heading'));
-    });
-
-    it('should NOT duplicate title when present in both frontmatter and heading', () => {
+    it('should include title from frontmatter in name', () => {
       const raw = {
         index: 0,
         frontmatter: { layout: 'body', title: 'FM Title' },
-        title: 'Heading Title',
         body: '',
         slots: {},
         };
       const name = buildSlideName(raw as any);
       assert.ok(name.includes('title: FM Title'));
-      // Should NOT have a second title entry
-      const titleCount = (name.match(/title:/g) || []).length;
-      assert.strictEqual(titleCount, 1);
     });
   });
 });
