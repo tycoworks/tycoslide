@@ -22,12 +22,10 @@ export interface RawSlide {
   frontmatter: Record<string, unknown>;
   /** Slide title — from `# heading` or frontmatter `title:` field. */
   title?: string;
-  /** Default slot markdown content (after title extraction, before Note:). */
+  /** Default slot markdown content (after title extraction). */
   body: string;
   /** Named slot contents keyed by slot name (e.g. `{ left: "...", right: "..." }`). */
   slots: Record<string, string>;
-  /** Speaker notes (everything after `Note:` marker). */
-  notes?: string;
 }
 
 /** Parsed representation of a full slide document. */
@@ -60,8 +58,6 @@ export interface ParsedDocument {
  *
  * Body content here.
  *
- * Note:
- * Speaker notes here.
  * ```
  *
  * Rules:
@@ -70,7 +66,6 @@ export interface ParsedDocument {
  *   `---`, the content between is YAML frontmatter for that slide
  * - A blank line immediately after `---` means no frontmatter (body starts)
  * - `# heading` at the start of body becomes the slide title (consumed)
- * - `Note:` on its own line starts speaker notes (until end of slide)
  * - `::name::` markers split body into named content slots
  */
 export function parseSlideDocument(source: string): ParsedDocument {
@@ -238,16 +233,13 @@ function buildSlide(index: number, fmString: string, rawContent: string): RawSli
   // Parse frontmatter YAML (only called on structurally-identified FM)
   const frontmatter = parseFrontmatter(fmString, index);
 
-  // Extract notes first (before slot splitting)
-  const { body: beforeNotes, notes } = extractNotes(rawContent);
-
   // Extract slots from body
-  const { defaultSlot, slots } = extractSlots(beforeNotes);
+  const { defaultSlot, slots } = extractSlots(rawContent);
 
   // Extract title from default slot content or frontmatter
   const { title, body } = extractTitle(defaultSlot, frontmatter);
 
-  return { index, frontmatter, title, body, slots, notes };
+  return { index, frontmatter, title, body, slots };
 }
 
 /** Error thrown when YAML in a structurally-identified frontmatter block fails to parse. */
@@ -301,24 +293,6 @@ function extractTitle(
   }
 
   return { body: content };
-}
-
-// ============================================
-// SPEAKER NOTES
-// ============================================
-
-/**
- * Extract speaker notes. Everything after a `Note:` line (on its own line)
- * becomes notes. Follows the reveal.js convention.
- */
-function extractNotes(content: string): { body: string; notes?: string } {
-  const match = content.match(/^Note:[ \t]*/m);
-  if (!match || match.index === undefined) return { body: content };
-
-  const body = content.slice(0, match.index).trim();
-  const notes = content.slice(match.index + match[0].length).trim();
-
-  return { body, notes: notes || undefined };
 }
 
 // ============================================

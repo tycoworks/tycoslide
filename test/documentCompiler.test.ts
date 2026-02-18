@@ -179,16 +179,12 @@ Right column content here.`;
       assert.ok(receivedProps[0].right.includes('Right column content'));
     });
 
-    it('should attach speaker notes to slide', () => {
+    it('should attach speaker notes from frontmatter', () => {
       const md = HEADER + `---
 layout: simple
 title: Slide with Notes
----
-
-Body content.
-
-Note:
-These are speaker notes.`;
+notes: These are speaker notes.
+---`;
       compileDocument(md, makeOptions());
       assert.strictEqual(renderedSlides.length, 1);
       assert.strictEqual(renderedSlides[0].notes, 'These are speaker notes.');
@@ -341,15 +337,13 @@ eyebrow: RECAP
       assert.strictEqual(receivedProps[0].eyebrow, 'RECAP');
     });
 
-    it('should attach notes to slide references', () => {
+    it('should attach notes to slide references from frontmatter', () => {
       slideRegistry.register(mockSlide);
       const md = HEADER + `---
 slide: testSlide
 eyebrow: INTRO
----
-
-Note:
-Speaker notes here.`;
+notes: Speaker notes here.
+---`;
       compileDocument(md, makeOptions());
       assert.strictEqual(renderedSlides.length, 1);
       assert.strictEqual(renderedSlides[0].notes, 'Speaker notes here.');
@@ -513,8 +507,7 @@ cards:
         title: undefined,
         body: '',
         slots: {},
-        notes: undefined,
-      };
+        };
       const name = buildSlideName(raw as any);
       assert.ok(name.includes('layout: body'));
       assert.ok(name.includes('eyebrow: RECAP'));
@@ -527,8 +520,7 @@ cards:
         title: undefined,
         body: '',
         slots: {},
-        notes: undefined,
-      };
+        };
       const name = buildSlideName(raw as any);
       assert.strictEqual(name, 'Day AI Story');
     });
@@ -541,8 +533,7 @@ cards:
         title: undefined,
         body: '',
         slots: {},
-        notes: undefined,
-      };
+        };
       const name = buildSlideName(raw as any);
       assert.ok(name.includes('A'.repeat(50) + '...'));
       assert.ok(!name.includes('A'.repeat(51)));
@@ -555,8 +546,7 @@ cards:
         title: undefined,
         body: '',
         slots: {},
-        notes: undefined,
-      };
+        };
       const name = buildSlideName(raw as any);
       assert.ok(name.includes('items: [3 items]'));
     });
@@ -568,8 +558,7 @@ cards:
         title: 'From Heading',
         body: '',
         slots: {},
-        notes: undefined,
-      };
+        };
       const name = buildSlideName(raw as any);
       assert.ok(name.includes('layout: body'));
       assert.ok(name.includes('title: From Heading'));
@@ -582,8 +571,7 @@ cards:
         title: 'Heading Title',
         body: '',
         slots: {},
-        notes: undefined,
-      };
+        };
       const name = buildSlideName(raw as any);
       assert.ok(name.includes('title: FM Title'));
       // Should NOT have a second title entry

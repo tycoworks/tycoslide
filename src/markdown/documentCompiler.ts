@@ -101,10 +101,12 @@ function compileSlideRef(raw: RawSlide, slideRef: string, options: CompileOption
     );
   }
 
-  // Build params from frontmatter (excluding the `slide` and `name` keys)
+  // Build params from frontmatter (excluding the `slide`, `name`, and `notes` keys)
   const params: Record<string, unknown> = { ...raw.frontmatter };
   delete params.slide;
   delete params.name;
+  const notes = params.notes as string | undefined;
+  delete params.notes;
 
   // Title from # heading if not in frontmatter
   if (raw.title !== undefined && params.title === undefined) {
@@ -118,9 +120,9 @@ function compileSlideRef(raw: RawSlide, slideRef: string, options: CompileOption
   const validated = validateSlideProps(slideDef, resolved);
   const slide = slideDef.render(validated);
 
-  // Attach speaker notes
-  if (raw.notes) {
-    slide.notes = raw.notes;
+  // Attach speaker notes from frontmatter
+  if (notes) {
+    slide.notes = notes;
   }
 
   return slide;
@@ -151,6 +153,8 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
   const params: Record<string, unknown> = { ...raw.frontmatter };
   delete params.layout;
   delete params.name;
+  const notes = params.notes as string | undefined;
+  delete params.notes;
 
   // Title: from # heading if not in frontmatter
   if (raw.title !== undefined && params.title === undefined) {
@@ -178,9 +182,9 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
   // 5. Render
   const slide = layout.render(validated);
 
-  // 6. Attach speaker notes
-  if (raw.notes) {
-    slide.notes = raw.notes;
+  // 6. Attach speaker notes from frontmatter
+  if (notes) {
+    slide.notes = notes;
   }
 
   return slide;

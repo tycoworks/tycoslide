@@ -163,14 +163,6 @@ describe('Slide Parser', () => {
       assert.strictEqual(doc.slides[0].frontmatter.layout, 'card');
     });
 
-    it('should NOT treat "Note: text" in body as frontmatter (it becomes notes)', () => {
-      const doc = parseSlideDocument(
-        '---\ntheme: test\n---\n\n---\nlayout: statement\n---\n\nContent here.\n\nNote:\nRemember to mention X.'
-      );
-      assert.strictEqual(doc.slides[0].body, 'Content here.');
-      assert.strictEqual(doc.slides[0].notes, 'Remember to mention X.');
-    });
-
     it('should handle body-only slide starting with colon text', () => {
       // No frontmatter --- pair, body starts with "Result: ..."
       const doc = parseSlideDocument(
@@ -269,30 +261,11 @@ describe('Slide Parser', () => {
       assert.strictEqual(doc.slides[0].title, undefined);
       assert.ok(doc.slides[0].body.includes('## Subheading'));
     });
-  });
 
-  describe('speaker notes', () => {
-    it('should extract Note: section', () => {
-      const doc = parseSlideDocument('Content here.\n\nNote:\nSpeaker notes.');
-      assert.strictEqual(doc.slides[0].body, 'Content here.');
-      assert.strictEqual(doc.slides[0].notes, 'Speaker notes.');
-    });
-
-    it('should handle multi-line notes', () => {
-      const doc = parseSlideDocument(
-        'Content.\n\nNote:\nFirst note line.\nSecond note line.'
-      );
-      assert.strictEqual(doc.slides[0].notes, 'First note line.\nSecond note line.');
-    });
-
-    it('should handle Note: with content on same line', () => {
-      const doc = parseSlideDocument('Content.\n\nNote: Inline note.');
-      assert.strictEqual(doc.slides[0].notes, 'Inline note.');
-    });
-
-    it('should handle slide with no notes', () => {
-      const doc = parseSlideDocument('Content only.');
-      assert.strictEqual(doc.slides[0].notes, undefined);
+    it('should only extract the first # heading, not subsequent ones', () => {
+      const doc = parseSlideDocument('# First\n\nParagraph.\n\n# Second');
+      assert.strictEqual(doc.slides[0].title, 'First');
+      assert.ok(doc.slides[0].body.includes('# Second'));
     });
   });
 
@@ -379,8 +352,7 @@ Materialize provides real-time views.`;
       assert.strictEqual(doc.slides[1].frontmatter.layout, 'statement');
       assert.strictEqual(doc.slides[1].frontmatter.eyebrow, 'INTRO');
       assert.strictEqual(doc.slides[1].title, 'Value Proposition');
-      assert.strictEqual(doc.slides[1].body, 'Materialize is a live data layer.');
-      assert.strictEqual(doc.slides[1].notes, 'Emphasize real-time capabilities.');
+      assert.strictEqual(doc.slides[1].body, 'Materialize is a live data layer.\n\nNote:\nEmphasize real-time capabilities.');
 
       // Slide 2: twoColumn with slots
       assert.strictEqual(doc.slides[2].frontmatter.layout, 'twoColumn');
@@ -393,35 +365,6 @@ Materialize provides real-time views.`;
       assert.deepStrictEqual(doc.global, {});
       assert.strictEqual(doc.slides.length, 1);
       assert.strictEqual(doc.slides[0].title, 'Hello World');
-    });
-  });
-
-  describe('Note: interaction with slots', () => {
-    it('should extract Note: after slot content', () => {
-      const doc = parseSlideDocument(
-        'Default.\n\n::right::\n\nRight content.\n\nNote:\nSpeaker notes here.'
-      );
-      assert.strictEqual(doc.slides[0].body, 'Default.');
-      assert.strictEqual(doc.slides[0].slots.right, 'Right content.');
-      assert.strictEqual(doc.slides[0].notes, 'Speaker notes here.');
-    });
-
-    it('should extract Note: between default and slot (notes consume everything after)', () => {
-      // Note: appears before ::right:: — everything from Note: onward is notes
-      const doc = parseSlideDocument(
-        'Default.\n\nNote:\nNotes here.\n\n::right::\n\nRight content.'
-      );
-      assert.strictEqual(doc.slides[0].body, 'Default.');
-      assert.strictEqual(doc.slides[0].notes, 'Notes here.\n\n::right::\n\nRight content.');
-      assert.deepStrictEqual(doc.slides[0].slots, {});
-    });
-  });
-
-  describe('title extraction (additional)', () => {
-    it('should only extract the first # heading, not subsequent ones', () => {
-      const doc = parseSlideDocument('# First\n\nParagraph.\n\n# Second');
-      assert.strictEqual(doc.slides[0].title, 'First');
-      assert.ok(doc.slides[0].body.includes('# Second'));
     });
   });
 
@@ -439,12 +382,5 @@ Materialize provides real-time views.`;
       assert.strictEqual(doc.slides[0].body, 'Body.');
     });
 
-    it('should handle slide with only speaker notes', () => {
-      const doc = parseSlideDocument(
-        '---\ntheme: test\n---\n\n---\nlayout: section\n---\n\nNote:\nJust notes.'
-      );
-      assert.strictEqual(doc.slides[0].body, '');
-      assert.strictEqual(doc.slides[0].notes, 'Just notes.');
-    });
-  });
+});
 });
