@@ -15,8 +15,8 @@ import { schema } from '../schema.js';
 // CONSTANTS
 // ============================================
 
-/** Component name for quote */
-export const QUOTE_COMPONENT = 'quote' as const;
+import { QUOTE_COMPONENT } from '../core/componentNames.js';
+export { QUOTE_COMPONENT };
 
 // ============================================
 // DESIGN TOKENS
@@ -136,7 +136,7 @@ export const quoteComponent = componentRegistry.define({
   params: quoteSchema,
   defaults: quoteDefaults,
   expand: expandQuote,
-  markdown: {},
+  directive: true,
 });
 
 /**

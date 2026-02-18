@@ -12,9 +12,6 @@ export * from './core/registry.js';
 // DSL (all user-facing functions — every function returns ComponentNode)
 export * from './dsl/index.js';
 
-// Block compiler (markdown string → ComponentNode[])
-export { compileBlocks } from './markdown/blockCompiler.js';
-
 // Slide parser (multi-slide markdown file → structured document)
 export { parseSlideDocument, FrontmatterParseError, type ParsedDocument, type RawSlide } from './markdown/slideParser.js';
 

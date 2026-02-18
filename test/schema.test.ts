@@ -5,7 +5,8 @@ import assert from 'node:assert';
 import { z } from 'zod';
 import { schema } from '../src/schema.js';
 import { layoutRegistry, COMPONENT_TYPE } from '../src/core/registry.js';
-import { MARKDOWN_COMPONENT } from '../src/dsl/text.js';
+import { BLOCK_COMPONENT } from '../src/dsl/block.js';
+import { IMAGE_COMPONENT } from '../src/dsl/primitives.js';
 
 describe('schema', () => {
   describe('scalar types', () => {
@@ -47,29 +48,31 @@ describe('schema', () => {
     });
   });
 
-  describe('block content transform', () => {
-    it('schema.block() transforms string to ComponentNode[]', () => {
-      const s = z.object({ body: schema.block() });
-      const result = s.safeParse({ body: 'Hello world' });
+  describe('slot content transform', () => {
+    it('schema.slot() compiles directive to ComponentNode[]', () => {
+      const s = z.object({ body: schema.slot() });
+      const result = s.safeParse({ body: ':::block\nHello world\n:::' });
       assert.strictEqual(result.success, true);
       if (result.success) {
         assert.ok(Array.isArray(result.data.body));
         assert.strictEqual(result.data.body.length, 1);
-        assert.strictEqual(result.data.body[0].componentName, MARKDOWN_COMPONENT);
+        assert.strictEqual(result.data.body[0].componentName, BLOCK_COMPONENT);
       }
     });
 
-    it('schema.block() preserves block structure', () => {
-      const s = z.object({ body: schema.block() });
-      const result = s.safeParse({ body: '## Heading\n\nParagraph text.' });
+    it('schema.slot() compiles multiple directives', () => {
+      const s = z.object({ body: schema.slot() });
+      const result = s.safeParse({ body: ':::block\nText\n:::\n\n:::image\npic.png\n:::' });
       assert.strictEqual(result.success, true);
       if (result.success) {
         assert.strictEqual(result.data.body.length, 2);
+        assert.strictEqual(result.data.body[0].componentName, BLOCK_COMPONENT);
+        assert.strictEqual(result.data.body[1].componentName, IMAGE_COMPONENT);
       }
     });
 
-    it('schema.block() empty string → empty array', () => {
-      const s = z.object({ body: schema.block() });
+    it('schema.slot() empty string → empty array', () => {
+      const s = z.object({ body: schema.slot() });
       const result = s.safeParse({ body: '' });
       assert.strictEqual(result.success, true);
       if (result.success) {
@@ -77,9 +80,19 @@ describe('schema', () => {
       }
     });
 
-    it('schema.block() rejects non-string input', () => {
-      const s = z.object({ body: schema.block() });
+    it('schema.slot() rejects non-string input', () => {
+      const s = z.object({ body: schema.slot() });
       assert.strictEqual(s.safeParse({ body: 42 }).success, false);
+    });
+
+    it('schema.slot() auto-wraps bare MDAST in default component', () => {
+      const s = z.object({ body: schema.slot() });
+      const result = s.safeParse({ body: 'Hello world' });
+      assert.strictEqual(result.success, true);
+      if (result.success) {
+        assert.strictEqual(result.data.body.length, 1);
+        assert.strictEqual(result.data.body[0].componentName, BLOCK_COMPONENT);
+      }
     });
   });
 

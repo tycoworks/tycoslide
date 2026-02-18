@@ -26,21 +26,21 @@ Two rules, zero exceptions:
 | Location | What goes there | How it maps |
 |----------|----------------|-------------|
 | **YAML frontmatter** | All parameters -- title, eyebrow, intro, bullets, quote, attribution, logo, image, cards, items, notes, etc. | Passed to layout's `render()` function after Zod validation. `notes` attached to `Slide.notes`. |
-| **Body** | Only `schema.block()` content regions | Compiled to `ComponentNode[]` via block compiler |
+| **Body** | Only `schema.slot()` content regions | Compiled to `ComponentNode[]` via slot compiler |
 
 ### The rules in detail
 
 1. **Frontmatter is for parameters.** Every named value the layout needs -- strings, numbers, booleans, arrays, structured data -- goes in YAML frontmatter. This includes `title` and `notes`. The layout's Zod schema validates layout params at compile time. `notes` is a reserved field handled by the compiler (not passed to the layout).
 
-2. **Body is for block content.** The markdown body below the closing `---` is only used when the layout has a `schema.block()` parameter (which compiles markdown to `ComponentNode[]`). This applies to the `body` layout's body param and the `twoColumn` layout's `left`/`right` params (via `::name::` markers). If a layout has no `schema.block()` params, the body is empty.
+2. **Body is for block content.** The markdown body below the closing `---` is only used when the layout has a `schema.slot()` parameter (which compiles markdown to `ComponentNode[]`). This applies to the `body` layout's body param and the `twoColumn` layout's `left`/`right` params (via `::name::` markers). If a layout has no `schema.slot()` params, the body is empty.
 
-`::name::` markers split body content into named slots. By convention, slots target `schema.block()` params. String parameters like `intro`, `bullets`, or `quote` go in YAML frontmatter.
+`::name::` markers split body content into named slots. By convention, slots target `schema.slot()` params. String parameters like `intro`, `bullets`, or `quote` go in YAML frontmatter.
 
 ### Why this model
 
 - **One way to do each thing.** No choice between putting `intro` in frontmatter vs `::intro::` in body.
 - **All params visible in one place.** The frontmatter block is the complete manifest of a slide's configuration.
-- **Type-driven.** By convention, the schema type determines the authoring location: `z.string()` / `markdownComponent.input` = frontmatter. `schema.block()` = body.
+- **Type-driven.** By convention, the schema type determines the authoring location: `z.string()` / `markdownComponent.input` = frontmatter. `schema.slot()` = body.
 - **Clean body semantics.** Everything after `---` is rendered content, never configuration.
 
 ---
@@ -127,9 +127,9 @@ intro: Day AI is building an AI-native CRM where agents and humans work together
 
 Bold (`**text**`), inline directives (`:metrics[text]`, `:caution[text]`), and all other inline markdown works inside YAML string values. The YAML parser returns plain strings; the layout's `markdown()` call parses them.
 
-### Body content (schema.block() params)
+### Body content (schema.slot() params)
 
-When a layout has a `schema.block()` parameter, the body contains rendered markdown content:
+When a layout has a `schema.slot()` parameter, the body contains rendered markdown content:
 
 ```markdown
 ---
@@ -151,11 +151,11 @@ flowchart LR
 :::
 ```
 
-The body compiles to `ComponentNode[]` via the block compiler. Supported block types: paragraphs, bullet/numbered lists, headings (`##`, `###`), GFM tables, `:::image` directives, `:::mermaid` code blocks, `:::card` directives.
+The body compiles to `ComponentNode[]` via the slot compiler. Supported block types: paragraphs, bullet/numbered lists, headings (`##`, `###`), GFM tables, `:::image` directives, `:::mermaid` code blocks, `:::card` directives.
 
 ### Slots (::name::)
 
-For layouts with multiple `schema.block()` params (like `twoColumn`):
+For layouts with multiple `schema.slot()` params (like `twoColumn`):
 
 ```markdown
 ---
@@ -245,10 +245,10 @@ All registered layouts and their parameter sources:
 |--------|-------------------|--------------|-------|
 | `title` | `title`, `subtitle?` | -- | Opening slide |
 | `section` | `title` | -- | Section divider |
-| `body` | `title?`, `eyebrow?` | `body` (schema.block()) | Default markdown layout |
+| `body` | `title?`, `eyebrow?` | `body` (schema.slot()) | Default markdown layout |
 | `statement` | `title`, `eyebrow`, `body`, `bodyStyle?`, `caption?` | -- | `body` is a markdown string param |
 | `agenda` | `title`, `eyebrow`, `intro?`, `items[]` | -- | All params in frontmatter |
-| `twoColumn` | `title`, `eyebrow`, `reverse?` | `left`, `right` (schema.block()) | Two content regions |
+| `twoColumn` | `title`, `eyebrow`, `reverse?` | `left`, `right` (schema.slot()) | Two content regions |
 | `image` | `title`, `eyebrow`, `image` | -- | Full image slide |
 | `card` | `title`, `eyebrow`, `intro`, `cards[]`, `caption?` | -- | Auto-grid cards |
 | `numberedCard` | `title`, `eyebrow`, `intro`, `cards[]` | -- | Cards without backgrounds |
@@ -346,9 +346,9 @@ Title goes in YAML frontmatter, not as `# heading` in the body. The `#` heading 
 
 **Rationale:** The `---` block is the navigational skeleton. All slide configuration -- including title -- should be visible there. The body is reserved for rendered content.
 
-### 2. `::name::` slots target schema.block() params by convention
+### 2. `::name::` slots target schema.slot() params by convention
 
-Named slot markers in the body conventionally target `schema.block()` params (compiled markdown). String parameters go in YAML frontmatter. This is a convention, not enforced by the compiler — Zod validation handles type mismatches.
+Named slot markers in the body conventionally target `schema.slot()` params (compiled markdown). String parameters go in YAML frontmatter. This is a convention, not enforced by the compiler — Zod validation handles type mismatches.
 
 **Rationale:** One way to do each thing. The schema type guides the authoring location.
 
@@ -384,7 +384,7 @@ Theme-defined assets referenced by dot-path in frontmatter. Resolved at compile 
 
 - Slide parser (line-based state machine, `---` splitting, YAML frontmatter, `::slot::` extraction)
 - Document compiler (generic parameter mapping, Zod validation, layout rendering)
-- Block compiler (paragraphs, lists, headings, tables, `:::card`, `:::image`, `:::mermaid`)
+- Slot compiler (directives dispatched through component registry, bare MDAST auto-wrapped in default component)
 - Asset resolver (`asset:dot.path` in frontmatter)
 - All scalar layouts registered with Zod schemas
 - **Phase 1 complete:** `# heading` title extraction removed, `Note:` extraction removed, title fallback logic removed, existing `# heading` and `Note:` content migrated to frontmatter

@@ -98,7 +98,7 @@ tycoslide/
     dsl/            ← existing: text, image, table, card, row, column, diagram
     layout/         ← existing: pipeline, measurement, validator
     compiler/       ← new
-      blockCompiler.ts   ← markdown string → ComponentNode tree
+      slotCompiler.ts    ← slot markdown → ComponentNode[] (directives + auto-wrapped bare MDAST)
       documentCompiler.ts ← slides.md → Presentation
       slideParser.ts     ← split, extract frontmatter/title/notes/slots
       assetResolver.ts   ← asset:dot.path → file path
@@ -111,7 +111,7 @@ tycoslide/
 
 The CLI shell itself is ~50 lines of Commander setup. The real work is the **document compiler** — mapping markdown to layout params:
 
-#### Block compiler: mdast → DSL calls
+#### Slot compiler: slot markdown → ComponentNode[]
 
 | mdast node | tycoslide DSL call |
 |-----------|-------------------|
@@ -166,7 +166,7 @@ All three can coexist. Start with option 2 (named package) since that's how them
 
 ## Implementation priority
 
-1. **Block compiler**: markdown string → ComponentNode tree (foundation for everything)
+1. **Slot compiler**: slot markdown → ComponentNode[] (foundation for everything)
 2. **Document compiler**: slides.md → Presentation (the core logic)
 3. **CLI entry point**: Commander with `build` command (~50 lines)
 4. **Theme loading**: resolve named theme packages

@@ -86,3 +86,10 @@ export {
   type MermaidProps,
   type MermaidComponentProps,
 } from './mermaid.js';
+
+// Block (content dispatcher — parses markdown string into ComponentNodes)
+export {
+  block,
+  blockComponent,
+  BLOCK_COMPONENT,
+} from './block.js';

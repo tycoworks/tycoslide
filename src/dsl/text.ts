@@ -5,24 +5,21 @@
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkDirective from 'remark-directive';
-import type { Root, PhrasingContent, List, Paragraph, ListItem, Heading } from 'mdast';
+import type { Root, PhrasingContent, List, Paragraph, ListItem } from 'mdast';
 import type { TextDirective } from 'mdast-util-directive';
 import type { NormalizedRun, HighlightPair, ColorScheme } from '../core/types.js';
 import { HALIGN, VALIGN, TEXT_STYLE } from '../core/types.js';
 import { NODE_TYPE, type ElementNode } from '../core/nodes.js';
 import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape } from '../core/registry.js';
-import { SYNTAX, extractSource } from '../core/mdast.js';
+import { SYNTAX } from '../core/mdast.js';
 import { schema } from '../schema.js';
 
 // ============================================
 // CONSTANTS
 // ============================================
 
-/** Component name for markdown */
-export const MARKDOWN_COMPONENT = 'markdown' as const;
-
-/** Component name for text */
-export const TEXT_COMPONENT = 'text' as const;
+import { MARKDOWN_COMPONENT, TEXT_COMPONENT } from '../core/componentNames.js';
+export { MARKDOWN_COMPONENT, TEXT_COMPONENT };
 
 // ============================================
 // SCHEMAS & TYPES
@@ -221,44 +218,15 @@ function expandMarkdown(props: TextComponentProps, context: { theme: any }): Ele
 }
 
 // ============================================
-// BLOCK-LEVEL MARKDOWN COMPILATION
+// HEADING STYLE MAP (exported for block component)
 // ============================================
 
-const HEADING_STYLE: Record<number, TextProps['style']> = {
+export const HEADING_STYLE: Record<number, TextProps['style']> = {
   1: TEXT_STYLE.H1,
   2: TEXT_STYLE.H2,
   3: TEXT_STYLE.H3,
   4: TEXT_STYLE.H4,
 };
-
-/** Compile any text-containing block by extracting raw source and passing to markdown(). */
-function compileTextBlock(node: unknown, source: string): ComponentNode {
-  const raw = extractSource(node as any, source);
-  return markdown(raw);
-}
-
-/** Compile a heading by stripping # markers and applying TEXT_STYLE. */
-function compileHeading(node: Heading, source: string): ComponentNode {
-  const raw = extractSource(node, source);
-  const content = raw.replace(/^#{1,6}\s+/, '');
-  const style = HEADING_STYLE[node.depth] ?? TEXT_STYLE.H3;
-  return markdown(content, { style });
-}
-
-/** Compile any block-level MDAST node handled by the markdown component. */
-function compileMarkdownBlock(node: unknown, source: string): ComponentNode | null {
-  const n = node as { type: string };
-  switch (n.type) {
-    case SYNTAX.PARAGRAPH:
-      return compileTextBlock(node, source);
-    case SYNTAX.LIST:
-      return compileTextBlock(node, source);
-    case SYNTAX.HEADING:
-      return compileHeading(node as Heading, source);
-    default:
-      return null;
-  }
-}
 
 // ============================================
 // COMPONENT DEFINITION & REGISTRATION
@@ -268,10 +236,8 @@ export const markdownComponent = componentRegistry.define({
   name: MARKDOWN_COMPONENT,
   input: schema.string(),
   expand: expandMarkdown,
-  markdown: {
+  directive: {
     compile: (_directive, _source, body) => markdown(body),
-    nodeType: [SYNTAX.PARAGRAPH, SYNTAX.LIST, SYNTAX.HEADING],
-    compileSyntax: compileMarkdownBlock,
   },
 });
 

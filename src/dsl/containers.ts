@@ -1,6 +1,7 @@
 // Container DSL functions: row, column, stack, grid
 
 import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
+import { ROW_COMPONENT, COLUMN_COMPONENT, STACK_COMPONENT, GRID_COMPONENT } from '../core/componentNames.js';
 import { NODE_TYPE, type ElementNode, type SlideNode } from '../core/nodes.js';
 import type {
   HorizontalAlignment,
@@ -38,7 +39,7 @@ function parseContainerArgs<TProps>(args: any[]): { props: TProps; children: Sli
 // ROW
 // ============================================
 
-export const ROW_COMPONENT = 'row' as const;
+export { ROW_COMPONENT };
 
 export interface RowProps {
   width?: number | SizeValue;   // inches (number) or SIZE.FILL (when inside another Row)
@@ -79,7 +80,7 @@ export function row(...args: any[]): ComponentNode {
 // COLUMN
 // ============================================
 
-export const COLUMN_COMPONENT = 'column' as const;
+export { COLUMN_COMPONENT };
 
 export interface ColumnProps {
   width?: number | SizeValue;   // inches (number) or SIZE.FILL (when inside Row)
@@ -120,7 +121,7 @@ export function column(...args: any[]): ComponentNode {
 // STACK (z-order composition)
 // ============================================
 
-export const STACK_COMPONENT = 'stack' as const;
+export { STACK_COMPONENT };
 
 export interface StackProps {
   width?: number | SizeValue;   // inches (number) or SIZE.FILL
@@ -164,7 +165,7 @@ export function stack(...args: any[]): ComponentNode {
 // GRID (component - chunks children into column of rows)
 // ============================================
 
-export const GRID_COMPONENT = 'grid' as const;
+export { GRID_COMPONENT };
 
 export interface GridProps {
   columns: number;

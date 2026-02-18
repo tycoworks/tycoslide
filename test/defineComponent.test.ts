@@ -164,17 +164,44 @@ describe('componentRegistry.define', () => {
       );
     });
 
-    test('throws when markdown.nodeType is set without compileSyntax', () => {
+    test('directive: true auto-generates compile from params', () => {
+      const comp = componentRegistry.define({
+        name: 'test-directive-true-params',
+        params: { title: schema.string() },
+        expand: (props) => ({
+          type: NODE_TYPE.TEXT,
+          content: [{ text: props.title }],
+          hAlign: 'left' as any,
+          vAlign: 'top' as any,
+        }),
+        directive: true,
+      });
+      assert.ok(comp.directive?.compile, 'should have auto-generated compile');
+    });
+
+    test('directive: true auto-generates compile from input', () => {
+      const comp = componentRegistry.define({
+        name: 'test-directive-true-input',
+        input: schema.string(),
+        expand: (props: string) => ({
+          type: NODE_TYPE.TEXT,
+          content: [{ text: props }],
+          hAlign: 'left' as any,
+          vAlign: 'top' as any,
+        }),
+        directive: true,
+      });
+      assert.ok(comp.directive?.compile, 'should have auto-generated compile');
+    });
+
+    test('directive: true without input/params throws', () => {
       assert.throws(
         () => componentRegistry.define({
-          name: 'bad-syntax-comp',
+          name: 'test-directive-true-no-input',
           expand: () => ({ type: NODE_TYPE.TEXT, content: [], hAlign: 'left' as any, vAlign: 'top' as any }),
-          markdown: {
-            compile: () => ({ type: 'component' as const, componentName: 'x', props: {} }),
-            nodeType: 'paragraph',
-          },
+          directive: true,
         } as any),
-        /nodeType.*requires.*compileSyntax/,
+        /directive: true requires/,
       );
     });
   });

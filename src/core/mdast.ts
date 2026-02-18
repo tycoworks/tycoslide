@@ -6,6 +6,7 @@ import type { PhrasingContent } from 'mdast';
 export const SYNTAX = {
   ROOT: 'root',
   // Block-level
+  CONTAINER_DIRECTIVE: 'containerDirective',
   PARAGRAPH: 'paragraph',
   LIST: 'list',
   HEADING: 'heading',

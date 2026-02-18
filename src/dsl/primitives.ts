@@ -16,12 +16,13 @@ import {
   type Theme,
 } from '../core/types.js';
 import { schema } from '../schema.js';
+import { IMAGE_COMPONENT, LINE_COMPONENT, SHAPE_COMPONENT, SLIDE_NUMBER_COMPONENT } from '../core/componentNames.js';
 
 // ============================================
 // IMAGE
 // ============================================
 
-export const IMAGE_COMPONENT = 'image' as const;
+export { IMAGE_COMPONENT };
 
 const imageOptionsSchema = {
   alt: schema.string().optional(),
@@ -47,7 +48,7 @@ export const imageComponent = componentRegistry.define({
       alt: resolved.alt,
     };
   },
-  markdown: {},
+  directive: true,
 });
 
 export function image(src: string, options?: ImageOptions): ComponentNode {
@@ -58,7 +59,7 @@ export function image(src: string, options?: ImageOptions): ComponentNode {
 // LINE
 // ============================================
 
-export const LINE_COMPONENT = 'line' as const;
+export { LINE_COMPONENT };
 
 export interface LineTokens {
   color: string;
@@ -93,7 +94,7 @@ componentRegistry.define({
     beginArrow: props.beginArrow,
     endArrow: props.endArrow,
   }),
-  markdown: {},
+  directive: true,
 });
 
 export function line(props?: LineProps): ComponentNode {
@@ -104,7 +105,7 @@ export function line(props?: LineProps): ComponentNode {
 // SHAPE (all area shapes)
 // ============================================
 
-export const SHAPE_COMPONENT = 'shape' as const;
+export { SHAPE_COMPONENT };
 
 const shapeFillSchema = schema.object({
   color: schema.string(),
@@ -139,7 +140,7 @@ componentRegistry.define({
     border: props.border,
     cornerRadius: props.cornerRadius,
   }),
-  markdown: {},
+  directive: true,
 });
 
 export function shape(props: ShapeProps): ComponentNode {
@@ -150,7 +151,7 @@ export function shape(props: ShapeProps): ComponentNode {
 // SLIDE NUMBER
 // ============================================
 
-export const SLIDE_NUMBER_COMPONENT = 'slideNumber' as const;
+export { SLIDE_NUMBER_COMPONENT };
 
 export interface SlideNumberTokens {
   style: TextStyleName;

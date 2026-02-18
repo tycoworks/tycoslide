@@ -26,8 +26,8 @@ import { createRequire } from 'module';
 // CONSTANTS
 // ============================================
 
-/** Component name for mermaid diagram */
-export const MERMAID_COMPONENT = 'mermaid' as const;
+import { MERMAID_COMPONENT } from '../core/componentNames.js';
+export { MERMAID_COMPONENT };
 
 /** Timeout for mermaid-cli rendering in milliseconds */
 const MERMAID_RENDER_TIMEOUT_MS = 30000;
@@ -259,7 +259,7 @@ export const mermaidComponent = componentRegistry.define({
   name: MERMAID_COMPONENT,
   input: mermaidInput,
   expand: expandMermaid,
-  markdown: {},
+  directive: true,
 });
 
 /**

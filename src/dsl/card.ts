@@ -14,8 +14,8 @@ import { schema } from '../schema.js';
 // CONSTANTS
 // ============================================
 
-/** Component name for card */
-export const CARD_COMPONENT = 'card' as const;
+import { CARD_COMPONENT } from '../core/componentNames.js';
+export { CARD_COMPONENT };
 
 // ============================================
 // DESIGN TOKENS
@@ -149,7 +149,7 @@ export const cardComponent = componentRegistry.define({
   params: cardSchema,
   defaults: cardDefaults,
   expand: expandCard,
-  markdown: {},
+  directive: true,
 });
 
 /**
