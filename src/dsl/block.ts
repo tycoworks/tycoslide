@@ -103,11 +103,10 @@ function expandBlock(content: string): ComponentNode {
 // COMPONENT DEFINITION
 // ============================================
 
-export const blockComponent = componentRegistry.define({
+export const blockComponent = componentRegistry.defineContent({
   name: Component.Block,
-  input: schema.string(),
-  expand: (content: string) => expandBlock(content),
-  directive: true,
+  body: schema.string(),
+  expand: (props: { body: string }) => expandBlock(props.body),
 });
 
 // ============================================
@@ -148,5 +147,5 @@ export const blockComponent = componentRegistry.define({
  * ```
  */
 export function block(content: string): ComponentNode {
-  return component(Component.Block, content);
+  return component(Component.Block, { body: content });
 }

@@ -20,10 +20,10 @@ describe('mermaid() DSL function', () => {
     assert.strictEqual(m.componentName, Component.Mermaid);
   });
 
-  it('stores definition in props.definition', () => {
+  it('stores definition in props.body', () => {
     const definition = 'flowchart LR\n  A --> B';
     const m = mermaid(definition);
-    assert.strictEqual(m.props.definition, definition);
+    assert.strictEqual(m.props.body, definition);
   });
 
   it('stores scale in props.scale', () => {

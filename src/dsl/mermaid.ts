@@ -44,12 +44,7 @@ const mermaidOptionsSchema = {
 
 export type MermaidProps = InferProps<typeof mermaidOptionsSchema>;
 
-const mermaidComponentSchema = {
-  ...mermaidOptionsSchema,
-  definition: schema.string(),
-} satisfies SchemaShape;
-
-export type MermaidComponentProps = InferProps<typeof mermaidComponentSchema>;
+export type MermaidComponentProps = { body: string } & MermaidProps;
 
 // ============================================
 // SANITIZATION
@@ -237,7 +232,7 @@ async function renderMermaidToPng(definition: string, theme: Theme, scale: numbe
  * Sanitizes definition, renders via mermaid-cli, returns image reference.
  */
 async function expandMermaid(props: MermaidComponentProps, context: ExpansionContext): Promise<ImageNode> {
-  const sanitized = sanitizeMermaidDefinition(props.definition);
+  const sanitized = sanitizeMermaidDefinition(props.body);
   if (!sanitized.trim()) {
     throw new Error('Mermaid diagram definition is empty after sanitization');
   }
@@ -252,13 +247,11 @@ async function expandMermaid(props: MermaidComponentProps, context: ExpansionCon
 // REGISTRATION + DSL FUNCTION
 // ============================================
 
-const mermaidInput = schema.string().transform((s): MermaidComponentProps => ({ definition: s }));
-
-export const mermaidComponent = componentRegistry.define({
+export const mermaidComponent = componentRegistry.defineContent({
   name: Component.Mermaid,
-  input: mermaidInput,
+  body: schema.string(),
+  params: mermaidOptionsSchema,
   expand: expandMermaid,
-  directive: true,
 });
 
 /**
@@ -278,5 +271,5 @@ export const mermaidComponent = componentRegistry.define({
  * ```
  */
 export function mermaid(definition: string, props?: MermaidProps): ComponentNode<MermaidComponentProps> {
-  return component(Component.Mermaid, { definition, ...props });
+  return component(Component.Mermaid, { body: definition, ...props });
 }

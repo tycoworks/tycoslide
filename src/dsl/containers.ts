@@ -51,7 +51,7 @@ interface RowInternalProps extends RowProps {
   children: SlideNode[];
 }
 
-componentRegistry.define({
+componentRegistry.defineLayout({
   name: Component.Row,
   expand: (props: RowInternalProps) => ({
     type: NODE_TYPE.CONTAINER,
@@ -90,7 +90,7 @@ interface ColumnInternalProps extends ColumnProps {
   children: SlideNode[];
 }
 
-componentRegistry.define({
+componentRegistry.defineLayout({
   name: Component.Column,
   expand: (props: ColumnInternalProps) => ({
     type: NODE_TYPE.CONTAINER,
@@ -125,7 +125,7 @@ interface StackInternalProps extends StackProps {
   children: SlideNode[];
 }
 
-componentRegistry.define({
+componentRegistry.defineLayout({
   name: Component.Stack,
   expand: (props: StackInternalProps) => ({
     type: NODE_TYPE.STACK,
@@ -169,7 +169,7 @@ interface GridInternalProps extends GridProps {
   children: SlideNode[];
 }
 
-componentRegistry.define({ name: Component.Grid, expand: (props: GridInternalProps) => {
+componentRegistry.defineLayout({ name: Component.Grid, expand: (props: GridInternalProps) => {
   const { columns, gap, fill = false, children } = props;
 
   // Wrap each child in a column cell so items share row width equally

@@ -36,13 +36,8 @@ const textSchema = {
 
 export type TextProps = InferProps<typeof textSchema>;
 
-/** Full props including content (used internally by expansion) */
-const textComponentSchema = {
-  ...textSchema,
-  content: schema.string(),
-} satisfies SchemaShape;
-
-export type TextComponentProps = InferProps<typeof textComponentSchema>;
+/** Full props including body content (used internally by expansion) */
+export type TextComponentProps = { body: string } & TextProps;
 
 // ============================================
 // PARSER
@@ -191,7 +186,7 @@ function transformInline(
 // ============================================
 
 function expandMarkdown(props: TextComponentProps, context: { theme: any }): ElementNode {
-  const tree = parseMarkdown(props.content);
+  const tree = parseMarkdown(props.body);
   const runs = mdastToRuns(tree, context.theme.colors);
 
   // Apply bulletColor to all bullet runs if specified
@@ -231,13 +226,11 @@ export const HEADING_STYLE: Record<number, TextProps['style']> = {
 // COMPONENT DEFINITION & REGISTRATION
 // ============================================
 
-export const markdownComponent = componentRegistry.define({
+export const markdownComponent = componentRegistry.defineContent({
   name: Component.Markdown,
-  input: schema.string(),
+  body: schema.string(),
+  params: textSchema,
   expand: expandMarkdown,
-  directive: {
-    compile: (_directive, _source, body) => markdown(body),
-  },
 });
 
 /**
@@ -250,7 +243,7 @@ export const markdownComponent = componentRegistry.define({
  * ```
  */
 export function markdown(content: string, props?: TextProps): ComponentNode<TextComponentProps> {
-  return component(Component.Markdown, { content, ...props });
+  return component(Component.Markdown, { body: content, ...props });
 }
 
 // ============================================
@@ -258,7 +251,7 @@ export function markdown(content: string, props?: TextProps): ComponentNode<Text
 // ============================================
 
 function expandText(props: TextComponentProps, _context: { theme: any }): ElementNode {
-  const runs: NormalizedRun[] = [{ text: props.content }];
+  const runs: NormalizedRun[] = [{ text: props.body }];
 
   return {
     type: NODE_TYPE.TEXT,
@@ -271,9 +264,10 @@ function expandText(props: TextComponentProps, _context: { theme: any }): Elemen
   };
 }
 
-export const textComponent = componentRegistry.define({
+export const textComponent = componentRegistry.defineContent({
   name: Component.Text,
-  input: schema.string(),
+  body: schema.string(),
+  params: textSchema,
   expand: expandText,
 });
 
@@ -290,5 +284,5 @@ export const textComponent = componentRegistry.define({
  * ```
  */
 export function text(content: string, props?: TextProps): ComponentNode<TextComponentProps> {
-  return component(Component.Text, { content, ...props });
+  return component(Component.Text, { body: content, ...props });
 }

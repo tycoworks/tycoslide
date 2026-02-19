@@ -1,34 +1,38 @@
-// defineComponent Tests — all 3 overloads, .input, InferProps, registry compat
+// defineComponent Tests — defineContent / defineLayout, .schema, body convention, registry compat
 
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { z } from 'zod';
 import {
   componentRegistry,
+  ComponentType,
   type InferProps,
   type ParamsComponentDefinition,
-  type InputComponentDefinition,
+  type BodyComponentDefinition,
   type ComponentDefinition,
 } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
+import { Component } from '../src/core/types.js';
 import { schema } from '../src/schema.js';
 
-// Import components to test their .input properties
+// Import components to test their .schema properties
 import { markdownComponent, textComponent } from '../src/dsl/text.js';
 import { imageComponent } from '../src/dsl/primitives.js';
 import { mermaidComponent } from '../src/dsl/mermaid.js';
 import { cardComponent } from '../src/dsl/card.js';
 import { quoteComponent } from '../src/dsl/quote.js';
+import '../src/dsl/containers.js';
+import '../src/dsl/table.js';
 
-describe('componentRegistry.define', () => {
-  describe('overload 1: params component', () => {
+describe('componentRegistry.defineContent / defineLayout', () => {
+  describe('defineContent with params', () => {
     const testParams = {
       title: schema.string(),
       count: schema.number(),
       enabled: schema.boolean().optional(),
     };
 
-    const comp = componentRegistry.define({
+    const comp = componentRegistry.defineContent({
       name: 'test-params-comp',
       params: testParams,
       expand: (props) => ({
@@ -39,27 +43,23 @@ describe('componentRegistry.define', () => {
       }),
     });
 
-    test('has .input property (ZodObject)', () => {
-      assert.ok(comp.input);
-      assert.ok(comp.input instanceof z.ZodObject);
+    test('has .schema property (ZodObject)', () => {
+      assert.ok(comp.schema);
+      assert.ok(comp.schema instanceof z.ZodObject);
     });
 
-    test('does NOT have .schema property', () => {
-      assert.strictEqual((comp as any).schema, undefined);
-    });
-
-    test('.input validates correct data', () => {
-      const result = comp.input.safeParse({ title: 'Hi', count: 5 });
+    test('.schema validates correct data', () => {
+      const result = comp.schema.safeParse({ title: 'Hi', count: 5 });
       assert.strictEqual(result.success, true);
     });
 
-    test('.input rejects invalid data', () => {
-      const result = comp.input.safeParse({ title: 42, count: 'bad' });
+    test('.schema rejects invalid data', () => {
+      const result = comp.schema.safeParse({ title: 42, count: 'bad' });
       assert.strictEqual(result.success, false);
     });
 
-    test('.input is usable in schema.array()', () => {
-      const arr = schema.array(comp.input);
+    test('.schema is usable in schema.array()', () => {
+      const arr = schema.array(comp.schema);
       const result = arr.safeParse([
         { title: 'A', count: 1 },
         { title: 'B', count: 2 },
@@ -76,44 +76,56 @@ describe('componentRegistry.define', () => {
       assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
     });
 
+    test('has type: CONTENT', () => {
+      assert.strictEqual(comp.type, ComponentType.CONTENT);
+    });
+
+    test('auto-generates directive compile', () => {
+      assert.ok(comp.directive?.compile, 'params component should have auto-generated compile');
+    });
+
     test('is registerable in componentRegistry', () => {
       componentRegistry.register(comp);
     });
   });
 
-  describe('overload 2: input component (simple input type)', () => {
-    const comp = componentRegistry.define({
-      name: 'test-input-comp',
-      input: schema.string(),
-      expand: (props: { content: string }) => ({
+  describe('defineContent with body', () => {
+    const comp = componentRegistry.defineContent({
+      name: 'test-body-comp',
+      body: schema.string(),
+      expand: (props) => ({
         type: NODE_TYPE.TEXT,
-        content: [{ text: props.content }],
+        content: [{ text: props.body }],
         hAlign: 'left' as any,
         vAlign: 'top' as any,
       }),
     });
 
-    test('has .input property', () => {
-      assert.ok(comp.input);
-      assert.ok(comp.input instanceof z.ZodString);
+    test('has .schema property (= body type)', () => {
+      assert.ok(comp.schema);
+      assert.ok(comp.schema instanceof z.ZodString);
     });
 
-    test('does NOT have .schema property', () => {
-      assert.strictEqual((comp as any).schema, undefined);
+    test('.schema validates correct data', () => {
+      assert.strictEqual(comp.schema.safeParse('hello').success, true);
     });
 
-    test('.input validates correct data', () => {
-      assert.strictEqual(comp.input.safeParse('hello').success, true);
+    test('.schema rejects invalid data', () => {
+      assert.strictEqual(comp.schema.safeParse(42).success, false);
     });
 
-    test('.input rejects invalid data', () => {
-      assert.strictEqual(comp.input.safeParse(42).success, false);
-    });
-
-    test('.input.optional() chaining works', () => {
-      const opt = comp.input.optional();
+    test('.schema.optional() chaining works', () => {
+      const opt = comp.schema.optional();
       assert.strictEqual(opt.safeParse(undefined).success, true);
       assert.strictEqual(opt.safeParse('hi').success, true);
+    });
+
+    test('has type: CONTENT', () => {
+      assert.strictEqual(comp.type, ComponentType.CONTENT);
+    });
+
+    test('auto-generates directive compile', () => {
+      assert.ok(comp.directive?.compile, 'body component should have auto-generated compile');
     });
 
     test('is registerable in componentRegistry', () => {
@@ -121,8 +133,39 @@ describe('componentRegistry.define', () => {
     });
   });
 
-  describe('overload 3: programmatic-only (no input/params)', () => {
-    const comp = componentRegistry.define({
+  describe('defineContent with body + params', () => {
+    const comp = componentRegistry.defineContent({
+      name: 'test-body-params-comp',
+      body: schema.string(),
+      params: { scale: schema.number().optional() },
+      expand: (props) => ({
+        type: NODE_TYPE.TEXT,
+        content: [{ text: props.body }],
+        hAlign: 'left' as any,
+        vAlign: 'top' as any,
+      }),
+    });
+
+    test('.schema is body type (not full object)', () => {
+      assert.ok(comp.schema instanceof z.ZodString);
+    });
+
+    test('expand receives body + params', async () => {
+      const expanded = await comp.expand(
+        { body: 'hello', scale: 2 },
+        { theme: {} as any },
+        undefined,
+      );
+      assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
+    });
+
+    test('has type: CONTENT', () => {
+      assert.strictEqual(comp.type, ComponentType.CONTENT);
+    });
+  });
+
+  describe('defineLayout (no schema)', () => {
+    const comp = componentRegistry.defineLayout({
       name: 'test-prog-comp',
       expand: (props: { children: any[] }) => ({
         type: NODE_TYPE.CONTAINER,
@@ -133,17 +176,21 @@ describe('componentRegistry.define', () => {
       }),
     });
 
-    test('does NOT have .input property', () => {
-      assert.strictEqual((comp as any).input, undefined);
-    });
-
     test('does NOT have .schema property', () => {
       assert.strictEqual((comp as any).schema, undefined);
+    });
+
+    test('has type: LAYOUT', () => {
+      assert.strictEqual(comp.type, ComponentType.LAYOUT);
     });
 
     test('has name and expand', () => {
       assert.strictEqual(comp.name, 'test-prog-comp');
       assert.ok(typeof comp.expand === 'function');
+    });
+
+    test('does NOT have auto-generated directive', () => {
+      assert.strictEqual(comp.directive, undefined);
     });
 
     test('is registerable in componentRegistry', () => {
@@ -152,21 +199,25 @@ describe('componentRegistry.define', () => {
   });
 
   describe('runtime guard', () => {
-    test('throws when both params and input are provided', () => {
-      assert.throws(
-        () => componentRegistry.define({
-          name: 'ambiguous',
-          params: { title: schema.string() },
-          input: schema.string(),
-          expand: () => ({ type: NODE_TYPE.TEXT, content: [], hAlign: 'left' as any, vAlign: 'top' as any }),
-        } as any),
-        /cannot specify both 'params' and 'input'/,
-      );
+    test('directive: false opts out of auto-compile', () => {
+      const comp = componentRegistry.defineContent({
+        name: 'test-no-directive',
+        body: schema.string(),
+        expand: (props) => ({
+          type: NODE_TYPE.TEXT,
+          content: [{ text: props.body }],
+          hAlign: 'left' as any,
+          vAlign: 'top' as any,
+        }),
+        directive: false,
+      });
+      assert.strictEqual(comp.directive, undefined);
     });
 
-    test('directive: true auto-generates compile from params', () => {
-      const comp = componentRegistry.define({
-        name: 'test-directive-true-params',
+    test('custom compile overrides auto-generated', () => {
+      const customCompile = () => ({ type: 'component' as const, componentName: 'test', props: {} });
+      const comp = componentRegistry.defineContent({
+        name: 'test-custom-compile',
         params: { title: schema.string() },
         expand: (props) => ({
           type: NODE_TYPE.TEXT,
@@ -174,83 +225,68 @@ describe('componentRegistry.define', () => {
           hAlign: 'left' as any,
           vAlign: 'top' as any,
         }),
-        directive: true,
+        directive: { compile: customCompile },
       });
-      assert.ok(comp.directive?.compile, 'should have auto-generated compile');
+      assert.strictEqual(comp.directive?.compile, customCompile);
     });
 
-    test('directive: true auto-generates compile from input', () => {
-      const comp = componentRegistry.define({
-        name: 'test-directive-true-input',
-        input: schema.string(),
-        expand: (props: string) => ({
-          type: NODE_TYPE.TEXT,
-          content: [{ text: props }],
-          hAlign: 'left' as any,
-          vAlign: 'top' as any,
-        }),
-        directive: true,
-      });
-      assert.ok(comp.directive?.compile, 'should have auto-generated compile');
-    });
-
-    test('directive: true without input/params throws', () => {
+    test('directive: true on defineLayout without compile throws', () => {
       assert.throws(
-        () => componentRegistry.define({
-          name: 'test-directive-true-no-input',
+        () => componentRegistry.defineLayout({
+          name: 'test-directive-true-no-schema',
           expand: () => ({ type: NODE_TYPE.TEXT, content: [], hAlign: 'left' as any, vAlign: 'top' as any }),
-          directive: true,
-        } as any),
+          directive: true as any,
+        }),
         /directive: true requires/,
       );
     });
   });
 
-  describe('real component .input properties', () => {
-    test('markdownComponent.input is z.string()', () => {
-      assert.ok(markdownComponent.input);
-      assert.strictEqual(markdownComponent.input.safeParse('**bold**').success, true);
-      assert.strictEqual(markdownComponent.input.safeParse(42).success, false);
+  describe('real component .schema properties', () => {
+    test('markdownComponent.schema is z.string()', () => {
+      assert.ok(markdownComponent.schema);
+      assert.strictEqual(markdownComponent.schema.safeParse('**bold**').success, true);
+      assert.strictEqual(markdownComponent.schema.safeParse(42).success, false);
     });
 
-    test('textComponent.input is z.string()', () => {
-      assert.ok(textComponent.input);
-      assert.strictEqual(textComponent.input.safeParse('plain').success, true);
-      assert.strictEqual(textComponent.input.safeParse(42).success, false);
+    test('textComponent.schema is z.string()', () => {
+      assert.ok(textComponent.schema);
+      assert.strictEqual(textComponent.schema.safeParse('plain').success, true);
+      assert.strictEqual(textComponent.schema.safeParse(42).success, false);
     });
 
-    test('imageComponent.input is z.string()', () => {
-      assert.ok(imageComponent.input);
-      assert.strictEqual(imageComponent.input.safeParse('logo.png').success, true);
-      assert.strictEqual(imageComponent.input.safeParse(42).success, false);
+    test('imageComponent.schema is z.string()', () => {
+      assert.ok(imageComponent.schema);
+      assert.strictEqual(imageComponent.schema.safeParse('logo.png').success, true);
+      assert.strictEqual(imageComponent.schema.safeParse(42).success, false);
     });
 
-    test('mermaidComponent.input is z.string()', () => {
-      assert.ok(mermaidComponent.input);
-      assert.strictEqual(mermaidComponent.input.safeParse('flowchart LR\n  A-->B').success, true);
-      assert.strictEqual(mermaidComponent.input.safeParse(42).success, false);
+    test('mermaidComponent.schema is z.string()', () => {
+      assert.ok(mermaidComponent.schema);
+      assert.strictEqual(mermaidComponent.schema.safeParse('flowchart LR\n  A-->B').success, true);
+      assert.strictEqual(mermaidComponent.schema.safeParse(42).success, false);
     });
 
-    test('cardComponent.input is a ZodObject (params component)', () => {
-      assert.ok(cardComponent.input);
-      assert.ok(cardComponent.input instanceof z.ZodObject);
+    test('cardComponent.schema is a ZodObject (params component)', () => {
+      assert.ok(cardComponent.schema);
+      assert.ok(cardComponent.schema instanceof z.ZodObject);
     });
 
-    test('cardComponent.input validates card props', () => {
-      const result = cardComponent.input.safeParse({
+    test('cardComponent.schema validates card props', () => {
+      const result = cardComponent.schema.safeParse({
         title: 'Test Card',
         description: 'A **description**',
       });
       assert.strictEqual(result.success, true);
     });
 
-    test('quoteComponent.input is a ZodObject (params component)', () => {
-      assert.ok(quoteComponent.input);
-      assert.ok(quoteComponent.input instanceof z.ZodObject);
+    test('quoteComponent.schema is a ZodObject (params component)', () => {
+      assert.ok(quoteComponent.schema);
+      assert.ok(quoteComponent.schema instanceof z.ZodObject);
     });
 
-    test('quoteComponent.input validates quote props', () => {
-      const result = quoteComponent.input.safeParse({
+    test('quoteComponent.schema validates quote props', () => {
+      const result = quoteComponent.schema.safeParse({
         quote: '"This changed everything."',
         attribution: '— Jane Smith',
       });
@@ -258,15 +294,37 @@ describe('componentRegistry.define', () => {
     });
   });
 
-  describe('component .input in layout params', () => {
-    test('markdownComponent.input usable in schema.array()', () => {
-      const arr = schema.array(markdownComponent.input);
+  describe('type on real production components', () => {
+    test('content components have type: CONTENT', () => {
+      for (const comp of [markdownComponent, textComponent, imageComponent, mermaidComponent, cardComponent, quoteComponent]) {
+        assert.strictEqual(comp.type, ComponentType.CONTENT, `${comp.name} should be CONTENT`);
+      }
+    });
+
+    test('table is a content component', () => {
+      const def = componentRegistry.get(Component.Table);
+      assert.ok(def, 'table should be registered');
+      assert.strictEqual(def!.type, ComponentType.CONTENT, 'table should be CONTENT');
+    });
+
+    test('layout components have type: LAYOUT', () => {
+      for (const name of [Component.Row, Component.Column, Component.Stack, Component.Grid]) {
+        const def = componentRegistry.get(name);
+        assert.ok(def, `${name} should be registered`);
+        assert.strictEqual(def!.type, ComponentType.LAYOUT, `${name} should be LAYOUT`);
+      }
+    });
+  });
+
+  describe('component .schema in layout params', () => {
+    test('markdownComponent.schema usable in schema.array()', () => {
+      const arr = schema.array(markdownComponent.schema);
       const result = arr.safeParse(['**bold**', 'plain text']);
       assert.strictEqual(result.success, true);
     });
 
-    test('cardComponent.input usable in schema.array()', () => {
-      const arr = schema.array(cardComponent.input);
+    test('cardComponent.schema usable in schema.array()', () => {
+      const arr = schema.array(cardComponent.schema);
       const result = arr.safeParse([
         { title: 'Card 1' },
         { description: '**Bold** desc' },
@@ -274,12 +332,12 @@ describe('componentRegistry.define', () => {
       assert.strictEqual(result.success, true);
     });
 
-    test('mixed component inputs in layout params object', () => {
+    test('mixed component schemas in layout params object', () => {
       const layoutParams = z.object({
-        title: markdownComponent.input,
-        eyebrow: textComponent.input.optional(),
-        logo: imageComponent.input.optional(),
-        cards: schema.array(cardComponent.input),
+        title: markdownComponent.schema,
+        eyebrow: textComponent.schema.optional(),
+        logo: imageComponent.schema.optional(),
+        cards: schema.array(cardComponent.schema),
       });
 
       const result = layoutParams.safeParse({

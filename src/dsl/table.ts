@@ -6,6 +6,7 @@ import { NODE_TYPE, type TextNode, type TableCellData, type TableStyleProps } fr
 import type { Theme, TextContent } from '../core/types.js';
 import { SYNTAX, extractInlineText, type ContainerDirective } from '../core/mdast.js';
 import type { Table as MdastTable } from 'mdast';
+import { schema } from '../schema.js';
 
 // ============================================
 // TABLE COMPONENT
@@ -63,16 +64,19 @@ function compileTableDirective(directive: ContainerDirective, _source: string, _
   return table(rows, { headerRows: 1, variant });
 }
 
-componentRegistry.define({
+componentRegistry.defineContent({
+  body: schema.string(),
   name: Component.Table,
   defaults: tableDefaults,
-  expand: async (props: TableInternalProps, context: ExpansionContext, tokens: TableTokens) => {
+  // Table's custom compile transforms GFM → structured data before expand runs.
+  // The expand function always receives TableInternalProps (from compile or DSL), never { body: string }.
+  expand: (async (props: TableInternalProps, context: ExpansionContext, tokens: TableTokens) => {
     // Expand string content through the markdown component to support
     // rich text (**bold**, *italic*, :accent[highlights]) in table cells.
     const expandContent = async (content: TextContent): Promise<TextContent> => {
       if (typeof content === 'string') {
         const expanded = await componentRegistry.expand(
-          component(Component.Markdown, { content }),
+          component(Component.Markdown, { body: content }),
           context,
         ) as TextNode;
         return expanded.content;
@@ -104,7 +108,7 @@ componentRegistry.define({
       headerColumns: props.tableProps?.headerColumns,
       style: tokens,
     };
-  },
+  }) as any,
   directive: {
     compile: compileTableDirective,
   },

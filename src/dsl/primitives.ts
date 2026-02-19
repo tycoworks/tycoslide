@@ -28,29 +28,21 @@ const imageOptionsSchema = {
 
 export type ImageOptions = InferProps<typeof imageOptionsSchema>;
 
-const imageSchema = {
-  ...imageOptionsSchema,
-  src: schema.string(),
-} satisfies SchemaShape;
+export type ImageProps = { body: string } & ImageOptions;
 
-export type ImageProps = InferProps<typeof imageSchema>;
-
-export const imageComponent = componentRegistry.define({
+export const imageComponent = componentRegistry.defineContent({
   name: Component.Image,
-  input: schema.string(),
-  expand: (props: ImageProps | string): ImageNode => {
-    const resolved = typeof props === 'string' ? { src: props } : props;
-    return {
-      type: NODE_TYPE.IMAGE,
-      src: resolved.src,
-      alt: resolved.alt,
-    };
-  },
-  directive: true,
+  body: schema.string(),
+  params: imageOptionsSchema,
+  expand: (props: { body: string } & ImageOptions): ImageNode => ({
+    type: NODE_TYPE.IMAGE,
+    src: props.body,
+    alt: props.alt,
+  }),
 });
 
 export function image(src: string, options?: ImageOptions): ComponentNode {
-  return component(Component.Image, { src, ...options });
+  return component(Component.Image, { body: src, ...options });
 }
 
 // ============================================
@@ -78,7 +70,7 @@ function lineDefaults(theme: Theme): LineTokens {
   };
 }
 
-componentRegistry.define({
+componentRegistry.defineContent({
   name: Component.Line,
   params: lineSchema,
   defaults: lineDefaults,
@@ -90,7 +82,6 @@ componentRegistry.define({
     beginArrow: props.beginArrow,
     endArrow: props.endArrow,
   }),
-  directive: true,
 });
 
 export function line(props?: LineProps): ComponentNode {
@@ -124,7 +115,7 @@ const shapeSchema = {
 
 export type ShapeProps = InferProps<typeof shapeSchema>;
 
-componentRegistry.define({
+componentRegistry.defineContent({
   name: Component.Shape,
   params: shapeSchema,
   expand: (props: ShapeProps): ShapeNode => ({
@@ -134,7 +125,6 @@ componentRegistry.define({
     border: props.border,
     cornerRadius: props.cornerRadius,
   }),
-  directive: true,
 });
 
 export function shape(props: ShapeProps): ComponentNode {
@@ -162,7 +152,7 @@ function slideNumberDefaults(_theme: Theme): SlideNumberTokens {
   };
 }
 
-componentRegistry.define({
+componentRegistry.defineContent({
   name: Component.SlideNumber,
   params: slideNumberSchema,
   defaults: slideNumberDefaults,

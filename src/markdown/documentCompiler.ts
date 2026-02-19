@@ -165,11 +165,12 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
     slots.body = raw.body;
   }
 
-  // 5. Resolve asset references in params (slots are markdown strings, not asset refs)
+  // 5. Resolve asset references in params and slots
   const resolvedParams = resolveAssetReferences(params, options.assets, raw.index) as Record<string, unknown>;
+  const resolvedSlots = resolveAssetReferences(slots, options.assets, raw.index) as Record<string, unknown>;
 
   // 6. Validate params and slots separately, merge for render
-  const validated = validateLayout(layout, resolvedParams, slots);
+  const validated = validateLayout(layout, resolvedParams, resolvedSlots);
 
   // 7. Render
   const slide = layout.render(validated);

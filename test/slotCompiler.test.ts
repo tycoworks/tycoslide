@@ -29,16 +29,16 @@ describe('Slot Compiler', () => {
       const nodes = compileSlot('Hello world');
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual(nodes[0].componentName, Component.Block);
-      assert.strictEqual(props(nodes, 0), 'Hello world');
+      assert.strictEqual(props(nodes, 0).body, 'Hello world');
     });
 
     it('should group multiple paragraphs into one default component', () => {
       const nodes = compileSlot('First paragraph.\n\nSecond paragraph.');
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual(nodes[0].componentName, Component.Block);
-      const content = props(nodes, 0) as string;
-      assert.ok(content.includes('First paragraph.'));
-      assert.ok(content.includes('Second paragraph.'));
+      const body = props(nodes, 0).body as string;
+      assert.ok(body.includes('First paragraph.'));
+      assert.ok(body.includes('Second paragraph.'));
     });
 
     it('should group heading + paragraph + list into one default component', () => {
@@ -46,10 +46,10 @@ describe('Slot Compiler', () => {
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual(nodes[0].componentName, Component.Block);
-      const content = props(nodes, 0) as string;
-      assert.ok(content.includes('## Overview'));
-      assert.ok(content.includes('Intro paragraph.'));
-      assert.ok(content.includes('- Point one'));
+      const body = props(nodes, 0).body as string;
+      assert.ok(body.includes('## Overview'));
+      assert.ok(body.includes('Intro paragraph.'));
+      assert.ok(body.includes('- Point one'));
     });
 
     it('should group a single heading into the default component', () => {
@@ -119,14 +119,14 @@ describe('Slot Compiler', () => {
       const nodes = compileSlot(':::image\n/path/to/image.png\n:::');
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual(nodes[0].componentName, Component.Image);
-      assert.strictEqual(nodes[0].props, '/path/to/image.png');
+      assert.strictEqual(props(nodes, 0).body, '/path/to/image.png');
     });
 
     it('should compile asset-style image in :::image directive', () => {
       const nodes = compileSlot(':::image\nasset:illustrations.integrate\n:::');
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual(nodes[0].componentName, Component.Image);
-      assert.strictEqual(nodes[0].props, 'asset:illustrations.integrate');
+      assert.strictEqual(props(nodes, 0).body, 'asset:illustrations.integrate');
     });
   });
 
@@ -198,7 +198,7 @@ describe('Slot Compiler', () => {
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual(nodes[0].componentName, Component.Markdown);
-      assert.ok(props(nodes, 0).content.includes('**Bold**'));
+      assert.ok(props(nodes, 0).body.includes('**Bold**'));
     });
 
     it('should compile :::markdown with list content', () => {
@@ -206,7 +206,7 @@ describe('Slot Compiler', () => {
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual(nodes[0].componentName, Component.Markdown);
-      assert.ok(props(nodes, 0).content.includes('- First'));
+      assert.ok(props(nodes, 0).body.includes('- First'));
     });
   });
 
@@ -216,7 +216,7 @@ describe('Slot Compiler', () => {
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual(nodes[0].componentName, Component.Mermaid);
-      assert.strictEqual(props(nodes, 0).definition, 'flowchart LR\n    A --> B');
+      assert.strictEqual(props(nodes, 0).body, 'flowchart LR\n    A --> B');
     });
   });
 
@@ -237,7 +237,7 @@ describe('Slot Compiler', () => {
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual(nodes[0].componentName, Component.Block);
-      assert.strictEqual(props(nodes, 0), 'Hello world');
+      assert.strictEqual(props(nodes, 0).body, 'Hello world');
     });
 
     it('should compile :::block with heading and paragraph', () => {

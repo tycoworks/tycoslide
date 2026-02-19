@@ -44,7 +44,7 @@ export function compileSlot(markdownStr: string): ComponentNode[] {
     const endOffset = bareEnd.position?.end.offset ?? markdownStr.length;
     const rawSource = markdownStr.slice(startOffset, endOffset).trim();
     if (rawSource) {
-      nodes.push(component(componentRegistry.getDefaultComponentName(), rawSource));
+      nodes.push(component(componentRegistry.getDefaultComponentName(), { body: rawSource }));
     }
     bareStart = null;
     bareEnd = null;

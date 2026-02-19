@@ -74,12 +74,20 @@ export interface ExpansionContext {
   slideIndex?: number;
 }
 
+/** Content vs layout component discriminator. */
+export enum ComponentType {
+  CONTENT = 'content',
+  LAYOUT = 'layout',
+}
+
 /**
  * A component definition describes how to expand a component into primitives.
  */
 export interface ComponentDefinition<TProps = unknown, TTokens = undefined> {
   /** Unique name for this component (e.g., 'card', 'table') */
   name: string;
+  /** Whether this is a content component (usable in layout params) or a layout/container component (programmatic only). */
+  type: ComponentType;
   /** Optional theme token resolver — returns default token values for this component. */
   defaults?: (theme: Theme) => TTokens;
   /** Expand props into a node tree (may contain components that get further expanded) */
@@ -88,18 +96,22 @@ export interface ComponentDefinition<TProps = unknown, TTokens = undefined> {
   directive?: DirectiveInvocation;
 }
 
-/** A component definition with typed params inferred from a Zod shape, for use in layout params. */
+/** A content component with a body field (primary content) and optional extra params. */
+export type BodyComponentDefinition<
+  TBody extends z.ZodTypeAny,
+  TTokens = undefined,
+> = ComponentDefinition<{ body: z.infer<TBody> } & Record<string, unknown>, TTokens> & {
+  type: ComponentType.CONTENT;
+  /** YAML-facing type — the body type. Use in schema.array() or layout params. */
+  schema: TBody;
+};
+
+/** A content component with typed params inferred from a Zod shape, for use in layout params. */
 export type ParamsComponentDefinition<TShape extends SchemaShape, TTokens = undefined> =
   ComponentDefinition<z.infer<z.ZodObject<TShape>>, TTokens> & {
-    /** YAML-facing input type — use in schema.array() or layout params. */
-    input: z.ZodObject<TShape>;
-  };
-
-/** A component definition with a simple YAML-facing input type (e.g., z.string()). */
-export type InputComponentDefinition<TProps, TInput extends z.ZodTypeAny, TTokens = undefined> =
-  ComponentDefinition<TProps, TTokens> & {
-    /** YAML-facing input type for use in layout params. */
-    input: TInput;
+    type: ComponentType.CONTENT;
+    /** YAML-facing type — use in schema.array() or layout params. */
+    schema: z.ZodObject<TShape>;
   };
 
 // ============================================
@@ -109,45 +121,70 @@ export type InputComponentDefinition<TProps, TInput extends z.ZodTypeAny, TToken
 /**
  * How a component is invoked from a :::name container directive in markdown.
  */
-export interface DirectiveInvocation {
+interface DirectiveInvocation {
   /** Compile a :::name container directive into a ComponentNode. */
   compile: (directive: ContainerDirective, source: string, body: string) => ComponentNode;
 }
 
 /**
- * Input configuration for directive support in define().
- * `compile` is auto-generated from the component's input schema when omitted.
- * Pass `true` to enable directive support with a fully auto-generated compile function.
+ * Directive configuration for defineContent/defineLayout.
+ * - Omitted or `undefined`: auto-generate compile from schema (content components only).
+ * - `{ compile: fn }`: use custom compile function.
+ * - `false`: explicitly opt out of directive support.
  */
-export type DirectiveConfig = Partial<DirectiveInvocation> | true;
+type DirectiveConfig = Partial<DirectiveInvocation> | false;
 
 // ============================================
 // AUTO-GENERATION (private)
 // ============================================
 
 /**
- * Auto-generate a compile function for :::name directives from a Zod schema.
- * ZodObject inputs → YAML-parse the body first; all others → pass raw string.
+ * Auto-generate a compile function for :::name directives.
+ * Body components: raw directive body → props.body, directive attributes → params.
+ * Params-only components: YAML-parse body → params object.
  */
 function autoGenerateCompile(
   componentName: string,
-  input: z.ZodTypeAny,
+  bodySchema: z.ZodTypeAny | null,
+  paramsSchema: z.ZodObject<SchemaShape> | null,
 ): DirectiveInvocation['compile'] {
-  return (_directive, _source, body) => {
-    let raw: unknown;
-    if (input instanceof z.ZodObject) {
+  return (directive, _source, body) => {
+    if (bodySchema) {
+      // Body component: raw body → body field, attributes → params
+      const parsedBody = bodySchema.parse(body);
+      let parsedParams = {};
+      if (paramsSchema) {
+        parsedParams = paramsSchema.parse(directive.attributes ?? {});
+      }
+      return component(componentName, { body: parsedBody, ...parsedParams });
+    } else {
+      // Params-only: YAML-parse body as object
+      let raw: unknown;
       try {
         raw = parseYaml(body) ?? {};
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         throw new Error(`in :::${componentName} directive: ${msg}`);
       }
-    } else {
-      raw = body;
+      const props = paramsSchema!.parse(raw);
+      return component(componentName, props);
     }
-    const props = input.parse(raw);
-    return component(componentName, props);
   };
+}
+
+/**
+ * Resolve a DirectiveConfig into a DirectiveInvocation (or undefined).
+ * Shared by defineContent and defineLayout.
+ */
+function resolveDirective(
+  config: DirectiveConfig | undefined,
+  componentName: string,
+  bodySchema: z.ZodTypeAny | null,
+  paramsSchema: z.ZodObject<SchemaShape> | null,
+): DirectiveInvocation | undefined {
+  if (config === false) return undefined;
+  if (typeof config === 'object' && config?.compile) return config as DirectiveInvocation;
+  return { compile: autoGenerateCompile(componentName, bodySchema, paramsSchema) };
 }
 
 /** Type discriminator for component nodes */
@@ -155,7 +192,8 @@ export const COMPONENT_TYPE = NODE_TYPE.COMPONENT;
 
 /**
  * Registry for component definitions.
- * Use `.define()` to create, register, and return a component definition in one call.
+ * Use `.defineContent()` for content components (have .schema, usable in layout params).
+ * Use `.defineLayout()` for layout/container components (programmatic only, no .schema).
  */
 class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
   private _defaultComponentName: string | null = null;
@@ -184,13 +222,35 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
   }
 
   /**
-   * Define and register a component with typed params inferred from a Zod shape.
-   * The params are the single source of truth — no separate Props interface needed.
-   *
-   * The returned definition has an `.input` property (pre-wrapped ZodObject)
-   * that layout authors can reference directly: `schema.array(cardComponent.input)`
+   * Define and register a content component with a body field (primary content) only.
+   * Returns a definition with `.schema` (= body type) for use in layout params.
    */
-  define<TShape extends SchemaShape, TTokens = undefined>(def: {
+  defineContent<TBody extends z.ZodTypeAny, TTokens = undefined>(def: {
+    name: string;
+    body: TBody;
+    defaults?: (theme: Theme) => TTokens;
+    expand: (props: { body: z.infer<TBody> }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
+    directive?: DirectiveConfig;
+  }): BodyComponentDefinition<TBody, TTokens>;
+
+  /**
+   * Define and register a content component with a body field (primary content) and extra params.
+   * Returns a definition with `.schema` (= body type) for use in layout params.
+   */
+  defineContent<TBody extends z.ZodTypeAny, TParams extends SchemaShape, TTokens = undefined>(def: {
+    name: string;
+    body: TBody;
+    params: TParams;
+    defaults?: (theme: Theme) => TTokens;
+    expand: (props: { body: z.infer<TBody> } & z.infer<z.ZodObject<TParams>>, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
+    directive?: DirectiveConfig;
+  }): BodyComponentDefinition<TBody, TTokens>;
+
+  /**
+   * Define and register a content component with typed params inferred from a Zod shape.
+   * Returns a definition with `.schema` (pre-wrapped ZodObject) for use in layout params.
+   */
+  defineContent<TShape extends SchemaShape, TTokens = undefined>(def: {
     name: string;
     params: TShape;
     defaults?: (theme: Theme) => TTokens;
@@ -198,62 +258,58 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     directive?: DirectiveConfig;
   }): ParamsComponentDefinition<TShape, TTokens>;
 
+  // Implementation — overload signatures above provide type safety for callers.
+  // `any` param is unavoidable: overloaded `expand` signatures have contravariant
+  // parameter types, so no single structural type is a supertype of all three.
+  defineContent(def: any): BodyComponentDefinition<z.ZodTypeAny> | ParamsComponentDefinition<SchemaShape> {
+    const bodySchema: z.ZodTypeAny | null = 'body' in def ? def.body : null;
+    const paramsShape: SchemaShape = def.params ?? {};
+    const paramsSchema = Object.keys(paramsShape).length > 0 ? z.object(paramsShape) : null;
+
+    const result = {
+      name: def.name as string,
+      type: ComponentType.CONTENT as const,
+      expand: def.expand as ComponentDefinition['expand'],
+      defaults: def.defaults as ComponentDefinition['defaults'],
+      schema: bodySchema ?? z.object(paramsShape),
+      directive: resolveDirective(def.directive, def.name, bodySchema, paramsSchema),
+    };
+
+    this.register(result);
+    return result as BodyComponentDefinition<z.ZodTypeAny> | ParamsComponentDefinition<SchemaShape>;
+  }
+
   /**
-   * Define and register a component with a simple YAML-facing input type.
-   * Use for components where the YAML input differs from the full programmatic props
-   * (e.g., markdown accepts a string from YAML but the expand function takes TextComponentProps).
+   * Define and register a layout/container component (programmatic only, no .schema).
+   * Layout components cannot be used in layout params — they have no YAML-facing schema.
    */
-  define<TProps, TInput extends z.ZodTypeAny, TTokens = undefined>(def: {
+  defineLayout<TProps, TTokens = undefined>(def: {
     name: string;
-    input: TInput;
     defaults?: (theme: Theme) => TTokens;
     expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
     directive?: DirectiveConfig;
-  }): InputComponentDefinition<TProps, TInput, TTokens>;
-
-  /**
-   * Define and register a component for programmatic-only use (no YAML schema).
-   */
-  define<TProps, TTokens = undefined>(def: {
-    name: string;
-    defaults?: (theme: Theme) => TTokens;
-    expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
-    directive?: DirectiveConfig;
-  }): ComponentDefinition<TProps, TTokens>;
-
-  define(def: any): any {
-    if ('params' in def && 'input' in def) {
-      throw new Error(`componentRegistry.define('${def.name}'): cannot specify both 'params' and 'input'`);
-    }
-
-    // Normalize directive config
+  }): ComponentDefinition<TProps, TTokens> {
     const rawDirective = def.directive;
-    const md: Partial<DirectiveInvocation> | undefined =
-      rawDirective === true ? {} : rawDirective;
 
-    let result: any;
-    if ('params' in def) {
-      const input = z.object(def.params);
-      result = { name: def.name, expand: def.expand, input, directive: md, defaults: def.defaults };
-    } else if ('input' in def) {
-      result = { name: def.name, expand: def.expand, input: def.input, directive: md, defaults: def.defaults };
-    } else {
-      result = { name: def.name, expand: def.expand, directive: md, defaults: def.defaults };
+    // Layout components can't auto-generate compile (no schema)
+    if (rawDirective && typeof rawDirective !== 'object') {
+      throw new Error(
+        `componentRegistry.defineLayout('${def.name}'): directive: true requires ` +
+        `an explicit 'compile' function (layout components have no schema for auto-generation).`,
+      );
     }
 
-    // Auto-generate compile from input schema when directive is present but compile is missing
-    if (result.directive && !result.directive.compile) {
-      if (!result.input) {
-        throw new Error(
-          `componentRegistry.define('${def.name}'): directive: true requires either ` +
-          `an explicit 'compile' function or an input schema (params/input).`,
-        );
-      }
-      result.directive = {
-        ...result.directive,
-        compile: autoGenerateCompile(result.name, result.input),
-      };
-    }
+    const directive = (typeof rawDirective === 'object' && rawDirective?.compile)
+      ? rawDirective as DirectiveInvocation
+      : undefined;
+
+    const result: ComponentDefinition<TProps, TTokens> = {
+      name: def.name,
+      type: ComponentType.LAYOUT,
+      expand: def.expand,
+      defaults: def.defaults,
+      directive,
+    };
 
     this.register(result);
     return result;

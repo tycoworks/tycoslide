@@ -39,11 +39,11 @@ export interface QuoteTokens {
 
 const quoteSchema = {
   /** Quote text (markdown supported) */
-  quote: markdownComponent.input,
+  quote: markdownComponent.schema,
   /** Attribution line, e.g. "— Jane Smith, CTO" */
-  attribution: textComponent.input.optional(),
+  attribution: textComponent.schema.optional(),
   /** Optional image/logo displayed above the quote */
-  image: imageComponent.input.optional(),
+  image: imageComponent.schema.optional(),
   /** Whether to show background (default: true) */
   background: schema.boolean().optional(),
   /** Named variant (resolved from theme.components.quote.variants) */
@@ -130,12 +130,11 @@ function expandQuote(props: QuoteProps, context: ExpansionContext, tokens: Quote
 // COMPONENT DEFINITION
 // ============================================
 
-export const quoteComponent = componentRegistry.define({
+export const quoteComponent = componentRegistry.defineContent({
   name: Component.Quote,
   params: quoteSchema,
   defaults: quoteDefaults,
   expand: expandQuote,
-  directive: true,
 });
 
 /**

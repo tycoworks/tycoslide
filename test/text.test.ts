@@ -41,12 +41,12 @@ describe('Text', () => {
       const node = markdown('Hello **world**');
       assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
       assert.strictEqual(node.componentName, Component.Markdown);
-      assert.strictEqual(node.props.content, 'Hello **world**');
+      assert.strictEqual(node.props.body, 'Hello **world**');
     });
 
     it('should pass props correctly', () => {
       const node = markdown('Content', { style: 'body' as any, color: 'FF0000' });
-      assert.strictEqual(node.props.content, 'Content');
+      assert.strictEqual(node.props.body, 'Content');
       assert.strictEqual(node.props.style, 'body');
       assert.strictEqual(node.props.color, 'FF0000');
     });
@@ -56,7 +56,7 @@ describe('Text', () => {
     const theme = themeWithAccents();
 
     it('should auto-register on import', () => {
-      assert.ok(componentRegistry.has('markdown'));
+      assert.ok(componentRegistry.has(Component.Markdown));
     });
 
     it('should expand to a TextNode', async () => {
@@ -234,12 +234,12 @@ Conclusion.
       const node = text('ARCHITECTURE');
       assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
       assert.strictEqual(node.componentName, Component.Text);
-      assert.strictEqual(node.props.content, 'ARCHITECTURE');
+      assert.strictEqual(node.props.body, 'ARCHITECTURE');
     });
 
     it('should pass props correctly', () => {
       const node = text('Label', { style: 'eyebrow' as any, color: 'FF0000' });
-      assert.strictEqual(node.props.content, 'Label');
+      assert.strictEqual(node.props.body, 'Label');
       assert.strictEqual(node.props.style, 'eyebrow');
       assert.strictEqual(node.props.color, 'FF0000');
     });
@@ -249,7 +249,7 @@ Conclusion.
     const theme = themeWithAccents();
 
     it('should auto-register on import', () => {
-      assert.ok(componentRegistry.has('text'));
+      assert.ok(componentRegistry.has(Component.Text));
     });
 
     it('should expand to a TextNode with single run', async () => {

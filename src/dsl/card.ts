@@ -41,11 +41,11 @@ export interface CardTokens {
 
 const cardSchema = {
   /** Card image (path) - displayed at top */
-  image: imageComponent.input.optional(),
+  image: imageComponent.schema.optional(),
   /** Card title text */
-  title: textComponent.input.optional(),
+  title: textComponent.schema.optional(),
   /** Card description text */
-  description: markdownComponent.input.optional(),
+  description: markdownComponent.schema.optional(),
   /** Whether to show background (default: true) */
   background: schema.boolean().optional(),
   /** Named variant (resolved from theme.components.card.variants) */
@@ -143,12 +143,11 @@ function expandCard(props: CardProps, context: ExpansionContext, tokens: CardTok
 // COMPONENT DEFINITION
 // ============================================
 
-export const cardComponent = componentRegistry.define({
+export const cardComponent = componentRegistry.defineContent({
   name: Component.Card,
   params: cardSchema,
   defaults: cardDefaults,
   expand: expandCard,
-  directive: true,
 });
 
 /**
