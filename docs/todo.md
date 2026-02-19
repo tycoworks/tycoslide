@@ -4,16 +4,10 @@ Core:
 - Portrait mode
 - Debug workflow in CLI
 
-Markdown:
-- Get rid of contentLayout. Make it impossible to make non-markdownable layouts.
-- Day AI example - body vs params
-- YAML input vs params
-- How does block / body work?
-- Shared slides / presentation packs in markdown?
-
 Design:
 - function cardDefaults(theme: Theme): CardTokens {: is this right? Or should always have a default theme and throw if not defined.
 - Theme building in CLI (inc. JSON design tokens)
+- Where to put html / pptx?
 - Theme package (npm?) & version
 - Masters?
 - Dark mode
