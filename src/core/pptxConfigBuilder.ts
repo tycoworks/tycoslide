@@ -235,16 +235,9 @@ export class PptxConfigBuilder {
     };
   }
 
-  buildColumnWidths(columnWidths: number[] | undefined, numCols: number, totalWidth: number): number[] {
-    if (!columnWidths || columnWidths.length === 0) {
-      // Equal widths
-      const colWidth = totalWidth / numCols;
-      return Array(numCols).fill(colWidth);
-    }
-
-    // Normalize proportional widths to actual inches
-    const total = columnWidths.reduce((a, b) => a + b, 0);
-    return columnWidths.map(w => (w / total) * totalWidth);
+  buildColumnWidths(numCols: number, totalWidth: number): number[] {
+    const colWidth = totalWidth / numCols;
+    return Array(numCols).fill(colWidth);
   }
 
   buildTableCell(

@@ -123,52 +123,47 @@ describe('Slot Compiler', () => {
     });
 
     it('should compile asset-style image in :::image directive', () => {
-      const nodes = compileSlot(':::image\nasset:illustrations.integrate\n:::');
+      const nodes = compileSlot(':::image\nasset.illustrations.integrate\n:::');
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual(nodes[0].componentName, Component.Image);
-      assert.strictEqual(props(nodes, 0).body, 'asset:illustrations.integrate');
+      assert.strictEqual(props(nodes, 0).body, 'asset.illustrations.integrate');
     });
   });
 
   describe(':::table directive', () => {
-    it('should compile :::table{variant="clean"} with GFM table body', () => {
+    it('should deserialize :::table{variant="clean"} with GFM table body', () => {
       const md = ':::table{variant="clean"}\n| A | B |\n|---|---|\n| C | D |\n:::';
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual(nodes[0].componentName, Component.Table);
       assert.strictEqual(props(nodes, 0).variant, 'clean');
-      assert.strictEqual(props(nodes, 0).data.length, 2);
-      assert.strictEqual(props(nodes, 0).data[0][0], 'A');
-      assert.strictEqual(props(nodes, 0).data[1][1], 'D');
-      assert.strictEqual(props(nodes, 0).tableProps?.headerRows, 1);
+      // Body contains the raw GFM table text (parsed in expand, not deserialize)
+      assert.ok(props(nodes, 0).body.includes('| A | B |'));
     });
 
-    it('should compile :::table without attributes as plain table', () => {
+    it('should deserialize :::table without attributes as plain table', () => {
       const md = ':::table\n| X | Y |\n|---|---|\n| 1 | 2 |\n:::';
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual(nodes[0].componentName, Component.Table);
       assert.strictEqual(props(nodes, 0).variant, undefined);
+      assert.ok(props(nodes, 0).body.includes('| X | Y |'));
     });
 
-    it('should throw when :::table contains no GFM table', () => {
-      const md = ':::table{variant="clean"}\nJust a paragraph.\n:::';
-      assert.throws(() => compileSlot(md), /must contain a GFM table/);
-    });
-
-    it('should throw when :::table contains table plus extra content', () => {
-      const md = ':::table{variant="clean"}\nExtra paragraph.\n\n| A | B |\n|---|---|\n| C | D |\n:::';
-      assert.throws(() => compileSlot(md), /unexpected content/);
+    it('should pass headerColumns from attributes', () => {
+      const md = ':::table{variant="clean" headerColumns="1"}\n| A | B |\n|---|---|\n| C | D |\n:::';
+      const nodes = compileSlot(md);
+      assert.strictEqual(props(nodes, 0).headerColumns, 1);
     });
   });
 
   describe(':::quote directive', () => {
-    it('should compile :::quote directive with YAML body', () => {
-      const md = ':::quote\nquote: "This changed everything."\nattribution: "— Jane Smith"\n:::';
+    it('should compile :::quote directive with attributes and body text', () => {
+      const md = ':::quote{attribution="— Jane Smith"}\nThis changed everything.\n:::';
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual(nodes[0].componentName, Component.Quote);
-      assert.strictEqual(props(nodes, 0).quote, 'This changed everything.');
+      assert.strictEqual(props(nodes, 0).body, 'This changed everything.');
       assert.strictEqual(props(nodes, 0).attribution, '— Jane Smith');
     });
   });
@@ -183,8 +178,8 @@ describe('Slot Compiler', () => {
   });
 
   describe(':::shape directive', () => {
-    it('should compile :::shape directive with YAML body', () => {
-      const md = ':::shape\nshape: rect\n:::';
+    it('should compile :::shape directive with attributes', () => {
+      const md = ':::shape{shape="rect"}\n:::';
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual(nodes[0].componentName, Component.Shape);
@@ -221,13 +216,22 @@ describe('Slot Compiler', () => {
   });
 
   describe(':::card directive', () => {
-    it('should compile :::card directive with YAML body', () => {
-      const md = ':::card\ntitle: Hello\ndescription: World\n:::';
+    it('should compile :::card directive with attributes and body text', () => {
+      const md = ':::card{title="Hello"}\nWorld\n:::';
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual(nodes[0].componentName, Component.Card);
       assert.strictEqual(props(nodes, 0).title, 'Hello');
-      assert.strictEqual(props(nodes, 0).description, 'World');
+      assert.strictEqual(props(nodes, 0).body, 'World');
+    });
+
+    it('should compile :::card with attributes only (no body)', () => {
+      const md = ':::card{title="Hello" background="false"}\n:::';
+      const nodes = compileSlot(md);
+      assert.strictEqual(nodes.length, 1);
+      assert.strictEqual(nodes[0].componentName, Component.Card);
+      assert.strictEqual(props(nodes, 0).title, 'Hello');
+      assert.strictEqual(props(nodes, 0).background, false);
     });
   });
 

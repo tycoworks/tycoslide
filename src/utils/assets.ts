@@ -1,12 +1,12 @@
 // Asset Resolver
-// Resolves `asset:dot.path` references against a nested assets object.
+// Resolves `asset.dot.path` references against a nested assets object.
 // Used by the image component's expand function to resolve asset references
 // at expansion time.
 
-export const ASSET_PREFIX = 'asset:';
+export const ASSET_PREFIX = 'asset.';
 
 /**
- * Resolve an `asset:dot.path` reference to a string value from the assets object.
+ * Resolve an `asset.dot.path` reference to a string value from the assets object.
  * Throws descriptive errors if the path is invalid or the value is not a string.
  */
 export function resolveAssetPath(

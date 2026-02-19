@@ -28,14 +28,14 @@ function makeContext(overrides?: Partial<ExpansionContext>): ExpansionContext {
 describe('Image Asset Resolution', () => {
   describe('expansion', () => {
     it('should resolve asset ref to file path during image expansion', async () => {
-      const node = image('asset:illustrations.server');
+      const node = image('asset.illustrations.server');
       const result = await componentRegistry.expandTree(node, makeContext()) as ImageNode;
       assert.strictEqual(result.type, NODE_TYPE.IMAGE);
       assert.strictEqual(result.src, '/abs/path/illustrations/server.png');
     });
 
     it('should resolve deeply nested asset paths', async () => {
-      const node = image('asset:brand.logos.wordmark');
+      const node = image('asset.brand.logos.wordmark');
       const result = await componentRegistry.expandTree(node, makeContext()) as ImageNode;
       assert.strictEqual(result.src, '/abs/path/brand/logos/wordmark.png');
     });
@@ -47,7 +47,7 @@ describe('Image Asset Resolution', () => {
     });
 
     it('should preserve alt text through asset resolution', async () => {
-      const node = image('asset:illustrations.cloud', { alt: 'Cloud diagram' });
+      const node = image('asset.illustrations.cloud', { alt: 'Cloud diagram' });
       const result = await componentRegistry.expandTree(node, makeContext()) as ImageNode;
       assert.strictEqual(result.src, '/abs/path/illustrations/cloud.png');
       assert.strictEqual(result.alt, 'Cloud diagram');
@@ -56,7 +56,7 @@ describe('Image Asset Resolution', () => {
 
   describe('errors', () => {
     it('should throw when asset ref used without assets in context', async () => {
-      const node = image('asset:illustrations.server');
+      const node = image('asset.illustrations.server');
       await assert.rejects(
         () => componentRegistry.expandTree(node, makeContext({ assets: undefined })),
         (err: any) => {
@@ -68,7 +68,7 @@ describe('Image Asset Resolution', () => {
     });
 
     it('should throw on invalid asset path with available keys', async () => {
-      const node = image('asset:illustrations.nonexistent');
+      const node = image('asset.illustrations.nonexistent');
       await assert.rejects(
         () => componentRegistry.expandTree(node, makeContext({ slideIndex: 2 })),
         (err: any) => {
@@ -82,12 +82,12 @@ describe('Image Asset Resolution', () => {
     });
 
     it('should throw when path resolves to an object with suggestions', async () => {
-      const node = image('asset:illustrations');
+      const node = image('asset.illustrations');
       await assert.rejects(
         () => componentRegistry.expandTree(node, makeContext()),
         (err: any) => {
           assert.ok(err.message.includes('resolved to an object'));
-          assert.ok(err.message.includes('asset:illustrations.server'));
+          assert.ok(err.message.includes('asset.illustrations.server'));
           return true;
         },
       );

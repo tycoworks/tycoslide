@@ -38,8 +38,8 @@ export interface QuoteTokens {
 // ============================================
 
 const quoteSchema = {
-  /** Quote text (markdown supported) */
-  quote: markdownComponent.schema,
+  /** Quote text (markdown supported). From directives, can come via body instead. */
+  quote: markdownComponent.schema.optional(),
   /** Attribution line, e.g. "— Jane Smith, CTO" */
   attribution: textComponent.schema.optional(),
   /** Optional image/logo displayed above the quote */
@@ -88,8 +88,9 @@ function quoteDefaults(theme: Theme): QuoteTokens {
  * )
  * ```
  */
-function expandQuote(props: QuoteProps, context: ExpansionContext, tokens: QuoteTokens): SlideNode {
-  const { quote: quoteText, attribution, image: imagePath, background = true } = props;
+function expandQuote(props: QuoteProps & { body?: string }, context: ExpansionContext, tokens: QuoteTokens): SlideNode {
+  const { quote: quoteText, body, attribution, image: imagePath, background = true } = props;
+  const actualQuote = quoteText ?? body;
   const {
     padding, cornerRadius, backgroundColor, backgroundOpacity,
     borderColor, borderWidth, quoteStyle, attributionStyle, gap,
@@ -100,7 +101,7 @@ function expandQuote(props: QuoteProps, context: ExpansionContext, tokens: Quote
   if (imagePath) {
     children.push(row({ hAlign: HALIGN.CENTER }, imageNode(imagePath)));
   }
-  children.push(markdown(quoteText, quoteStyle ? { style: quoteStyle } : undefined));
+  children.push(markdown(actualQuote!, quoteStyle ? { style: quoteStyle } : undefined));
   if (attribution) {
     children.push(text(attribution, { style: attributionStyle, hAlign: HALIGN.RIGHT }));
   }

@@ -101,7 +101,7 @@ tycoslide/
       slotCompiler.ts    ← slot markdown → ComponentNode[] (directives + auto-wrapped bare MDAST)
       documentCompiler.ts ← slides.md → Presentation
       slideParser.ts     ← split, extract frontmatter/title/notes/slots
-      assetResolver.ts   ← asset:dot.path → file path
+      assetResolver.ts   ← asset.dot.path → file path
     cli/            ← new
       cli.ts        ← Commander setup, arg parsing (~50 lines)
       config.ts     ← theme loading, frontmatter handling

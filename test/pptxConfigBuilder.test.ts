@@ -452,8 +452,8 @@ describe('buildCellBorder()', () => {
 // ============================================
 
 describe('buildColumnWidths()', () => {
-  test('equal widths when columnWidths not specified', () => {
-    const widths = builder.buildColumnWidths(undefined, 3, 6);
+  test('equal widths for 3 columns', () => {
+    const widths = builder.buildColumnWidths(3, 6);
 
     assert.strictEqual(widths.length, 3);
     assert.strictEqual(widths[0], 2);
@@ -461,45 +461,14 @@ describe('buildColumnWidths()', () => {
     assert.strictEqual(widths[2], 2);
   });
 
-  test('equal widths when columnWidths is empty array', () => {
-    const widths = builder.buildColumnWidths([], 4, 8);
+  test('equal widths for 4 columns', () => {
+    const widths = builder.buildColumnWidths(4, 8);
 
     assert.strictEqual(widths.length, 4);
     assert.strictEqual(widths[0], 2);
     assert.strictEqual(widths[1], 2);
     assert.strictEqual(widths[2], 2);
     assert.strictEqual(widths[3], 2);
-  });
-
-  test('proportional normalization when columnWidths specified', () => {
-    // Proportions: [1, 2, 3] with total width 6
-    // Sum = 6, so 1/6 * 6 = 1, 2/6 * 6 = 2, 3/6 * 6 = 3
-    const widths = builder.buildColumnWidths([1, 2, 3], 3, 6);
-
-    assert.strictEqual(widths.length, 3);
-    assert.strictEqual(widths[0], 1);
-    assert.strictEqual(widths[1], 2);
-    assert.strictEqual(widths[2], 3);
-  });
-
-  test('proportional normalization with non-integer proportions', () => {
-    // Proportions: [1.5, 2.5, 1] with total width 10
-    // Sum = 5, so 1.5/5 * 10 = 3, 2.5/5 * 10 = 5, 1/5 * 10 = 2
-    const widths = builder.buildColumnWidths([1.5, 2.5, 1], 3, 10);
-
-    assert.strictEqual(widths.length, 3);
-    assert.strictEqual(widths[0], 3);
-    assert.strictEqual(widths[1], 5);
-    assert.strictEqual(widths[2], 2);
-  });
-
-  test('equal proportions produce equal widths', () => {
-    const widths = builder.buildColumnWidths([1, 1, 1], 3, 9);
-
-    assert.strictEqual(widths.length, 3);
-    assert.strictEqual(widths[0], 3);
-    assert.strictEqual(widths[1], 3);
-    assert.strictEqual(widths[2], 3);
   });
 });
 

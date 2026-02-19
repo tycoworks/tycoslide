@@ -187,7 +187,7 @@ Block-level components inside body content:
 :::card
 title: Query Offload
 description: Move heavy reads to Materialize
-image: asset:solutions.queryOffload
+image: asset.solutions.queryOffload
 :::
 
 :::mermaid
@@ -196,7 +196,7 @@ flowchart LR
 :::
 
 :::image
-asset:illustrations.integrate
+asset.illustrations.integrate
 :::
 ```
 
@@ -223,8 +223,8 @@ Use the YAML `|` (literal block) scalar for multiline notes. Single-line notes w
 Theme-defined assets use dot-path notation in frontmatter:
 
 ```yaml
-logo: asset:clients.dayAi
-image: asset:illustrations.integrate
+logo: asset.clients.dayAi
+image: asset.illustrations.integrate
 ```
 
 Resolved against the theme's `assets` object at compile time. Unknown paths produce an error listing available assets.
@@ -299,7 +299,7 @@ flowchart LR
 layout: customerStory
 eyebrow: CUSTOMER STORY
 title: Day AI
-logo: asset:clients.dayAi
+logo: asset.clients.dayAi
 attribution: "-- Erik Munson, Founding Engineer"
 intro: Day AI is building an AI-native CRM where agents and humans work together.
 bullets: |
@@ -372,7 +372,7 @@ Container directive syntax (`:::card`, `:::mermaid`, `:::image`) for components 
 
 Notes go in YAML frontmatter as `notes: |` (or plain string for single-line). Not a magic keyword in the body. Consistent with the "frontmatter = all parameters" rule. Notes are a string on the `Slide` object, not rendered content -- they belong with the other parameters.
 
-### 8. Asset references: asset:dot.path
+### 8. Asset references: asset.dot.path
 
 Theme-defined assets referenced by dot-path in frontmatter. Resolved at compile time against the theme's `assets` object.
 
@@ -385,7 +385,7 @@ Theme-defined assets referenced by dot-path in frontmatter. Resolved at compile 
 - Slide parser (line-based state machine, `---` splitting, YAML frontmatter, `::slot::` extraction)
 - Document compiler (generic parameter mapping, Zod validation, layout rendering)
 - Slot compiler (directives dispatched through component registry, bare MDAST auto-wrapped in default component)
-- Asset resolver (`asset:dot.path` in frontmatter)
+- Asset resolver (`asset.dot.path` in frontmatter)
 - All scalar layouts registered with Zod schemas
 - **Phase 1 complete:** `# heading` title extraction removed, `Note:` extraction removed, title fallback logic removed, existing `# heading` and `Note:` content migrated to frontmatter
 

@@ -45,7 +45,7 @@ export interface CompileOptions {
   theme: Theme;
   /** Default layout name when slide frontmatter omits `layout:`. */
   defaultLayout?: string;
-  /** Nested assets object for resolving `asset:dot.path` references in frontmatter. */
+  /** Nested assets object for resolving `asset.dot.path` references in frontmatter. */
   assets?: Record<string, unknown>;
 }
 
@@ -166,7 +166,7 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
   }
 
   // 5. Validate params and slots separately, merge for render
-  // Asset references (asset:dot.path) flow through as strings here.
+  // Asset references (asset.dot.path) flow through as strings here.
   // They are resolved later by the image component's expand function.
   const validated = validateLayout(layout, params, slots);
 

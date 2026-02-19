@@ -4,9 +4,12 @@ import { componentRegistry, component, type ComponentNode, type ExpansionContext
 import { Component, BORDER_STYLE, TEXT_STYLE } from '../core/types.js';
 import { NODE_TYPE, type TextNode, type TableCellData, type TableStyleProps } from '../core/nodes.js';
 import type { Theme, TextContent } from '../core/types.js';
-import { SYNTAX, extractInlineText, type ContainerDirective } from '../core/mdast.js';
+import { SYNTAX } from '../core/mdast.js';
 import type { Table as MdastTable } from 'mdast';
+import type { Root } from 'mdast';
+import { markdownProcessor } from '../utils/parser.js';
 import { schema } from '../schema.js';
+import type { SchemaShape } from '../core/registry.js';
 
 // ============================================
 // TABLE COMPONENT
@@ -15,8 +18,6 @@ import { schema } from '../schema.js';
 export type TableTokens = TableStyleProps;
 
 export interface TableProps {
-  /** Proportional column widths (normalized internally) */
-  columnWidths?: number[];
   /** Number of header rows (default: 0) */
   headerRows?: number;
   /** Number of header columns (default: 0) */
@@ -41,36 +42,59 @@ function tableDefaults(theme: Theme): TableTokens {
   return tokens;
 }
 
-/** Compile a :::table{variant="clean"} directive wrapping a GFM table body. */
-function compileTableDirective(directive: ContainerDirective, _source: string, _body: string): ComponentNode {
-  const children = directive.children;
-  const tableChild = children.find(c => c.type === SYNTAX.TABLE);
+/**
+ * Parse a GFM table string into rows of cell strings.
+ * Preserves inline markdown (bold, accents, etc.) in cell text.
+ */
+function parseGfmTable(body: string): string[][] {
+  const tree = markdownProcessor.parse(body) as Root;
+  const tableChild = tree.children.find(c => c.type === SYNTAX.TABLE);
   if (!tableChild) {
-    throw new Error(':::table directive must contain a GFM table (| col1 | col2 | ...)');
-  }
-  const unexpected = children.filter(c => c.type !== SYNTAX.TABLE);
-  if (unexpected.length > 0) {
-    const types = unexpected.map(c => c.type).join(', ');
-    throw new Error(
-      `:::table directive must contain only a GFM table. ` +
-      `Found unexpected content: ${types}. Move non-table content outside the directive.`,
-    );
+    throw new Error(':::table body must contain a GFM table (| col1 | col2 | ...)');
   }
   const tableNode = tableChild as unknown as MdastTable;
-  const rows = tableNode.children.map(row =>
-    row.children.map(cell => extractInlineText(cell.children))
+  return tableNode.children.map(row =>
+    row.children.map(cell => {
+      const children = cell.children;
+      if (children.length === 0) return '';
+      const start = children[0].position?.start.offset;
+      const end = children[children.length - 1].position?.end.offset;
+      if (start == null || end == null) return '';
+      return body.slice(start, end).trim();
+    })
   );
-  const variant = directive.attributes?.variant || undefined;
-  return table(rows, { headerRows: 1, variant });
 }
 
+/** Params accepted from :::table directive attributes. */
+const tableDirectiveSchema = {
+  variant: schema.string().optional(),
+  headerColumns: schema.number().optional(),
+} satisfies SchemaShape;
+
 componentRegistry.defineContent({
-  body: schema.string(),
   name: Component.Table,
+  params: tableDirectiveSchema,
   defaults: tableDefaults,
-  // Table's custom compile transforms GFM → structured data before expand runs.
-  // The expand function always receives TableInternalProps (from compile or DSL), never { body: string }.
-  expand: (async (props: TableInternalProps, context: ExpansionContext, tokens: TableTokens) => {
+  expand: (async (props: TableInternalProps & { body?: string; headerColumns?: number }, context: ExpansionContext, tokens: TableTokens) => {
+    // Determine data source: structured (DSL) or body string (directive)
+    let data: (TableCellData | TextContent)[][];
+    let headerRows: number | undefined;
+    let headerColumns: number | undefined;
+
+    if ('data' in props && props.data) {
+      // DSL path — structured data
+      data = props.data;
+      headerRows = props.tableProps?.headerRows;
+      headerColumns = props.tableProps?.headerColumns;
+    } else if (props.body) {
+      // Directive path — parse GFM body string
+      data = parseGfmTable(props.body);
+      headerRows = 1; // GFM tables always have a header row
+      headerColumns = props.headerColumns;
+    } else {
+      throw new Error('Table requires either data (DSL) or body (directive)');
+    }
+
     // Expand string content through the markdown component to support
     // rich text (**bold**, *italic*, :accent[highlights]) in table cells.
     const expandContent = async (content: TextContent): Promise<TextContent> => {
@@ -85,7 +109,7 @@ componentRegistry.defineContent({
     };
 
     // Normalize cells: convert plain strings/TextContent to TableCellData
-    const rows: TableCellData[][] = await Promise.all(props.data.map(row =>
+    const rows: TableCellData[][] = await Promise.all(data.map(row =>
       Promise.all(row.map(async cell => {
         if (typeof cell === 'string' || Array.isArray(cell)) {
           return { content: await expandContent(cell) };
@@ -103,15 +127,11 @@ componentRegistry.defineContent({
     return {
       type: NODE_TYPE.TABLE,
       rows,
-      columnWidths: props.tableProps?.columnWidths,
-      headerRows: props.tableProps?.headerRows,
-      headerColumns: props.tableProps?.headerColumns,
+      headerRows,
+      headerColumns,
       style: tokens,
     };
   }) as any,
-  directive: {
-    compile: compileTableDirective,
-  },
 });
 
 /**

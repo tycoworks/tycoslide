@@ -829,11 +829,9 @@ describe('table()', () => {
 
   test('preserves table props', async () => {
     const node = await expand(table([['a']], {
-      columnWidths: [1, 2],
       headerRows: 1,
       headerColumns: 1,
     })) as TableNode;
-    assert.deepStrictEqual(node.columnWidths, [1, 2]);
     assert.strictEqual(node.headerRows, 1);
     assert.strictEqual(node.headerColumns, 1);
   });

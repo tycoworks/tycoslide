@@ -3,10 +3,9 @@
 
 import { NODE_TYPE, type ElementNode, type ComponentNode, type SlideNode } from './nodes.js';
 import type { Theme } from './types.js';
-import type { ContainerDirective } from './mdast.js';
 import type { Slide } from '../presentation.js';
 import { z } from 'zod';
-import { parse as parseYaml } from 'yaml';
+
 import type { ScalarParam } from '../schema.js';
 
 // Re-export ComponentNode for convenience
@@ -93,8 +92,8 @@ export interface ComponentDefinition<TProps = unknown, TTokens = undefined> {
   defaults?: (theme: Theme) => TTokens;
   /** Expand props into a node tree (may contain components that get further expanded) */
   expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
-  /** How this component is invoked from a markdown directive (if at all). */
-  directive?: DirectiveInvocation;
+  /** Deserialize a :::name directive into a ComponentNode. Auto-generated for content components. */
+  deserialize?: DirectiveDeserializer;
 }
 
 /** A content component with a body field (primary content) and optional extra params. */
@@ -116,76 +115,44 @@ export type ParamsComponentDefinition<TShape extends SchemaShape, TTokens = unde
   };
 
 // ============================================
-// DIRECTIVE INVOCATION
+// DIRECTIVE DESERIALIZATION (private)
 // ============================================
 
+/** Deserializer: converts directive attributes + body text into a ComponentNode. */
+export type DirectiveDeserializer = (attributes: Record<string, string | null | undefined>, body: string) => ComponentNode;
+
 /**
- * How a component is invoked from a :::name container directive in markdown.
+ * Coerce string attribute values from directive markup to JS types.
+ * Directive attributes are always strings; schemas expect booleans/numbers.
  */
-interface DirectiveInvocation {
-  /** Compile a :::name container directive into a ComponentNode. */
-  compile: (directive: ContainerDirective, source: string, body: string) => ComponentNode;
+function coerceAttributes(attrs: Record<string, string | null | undefined>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v === 'true') result[k] = true;
+    else if (v === 'false') result[k] = false;
+    else if (typeof v === 'string' && v !== '' && !isNaN(Number(v))) result[k] = Number(v);
+    else result[k] = v;
+  }
+  return result;
 }
 
 /**
- * Directive configuration for defineContent/defineLayout.
- * - Omitted or `undefined`: auto-generate compile from schema (content components only).
- * - `{ compile: fn }`: use custom compile function.
- * - `false`: explicitly opt out of directive support.
+ * Build a deserializer for :::name directives.
+ * Attributes → typed params (with coercion), body → props.body (always a string).
+ * Each component's expand function decides what to do with body.
  */
-type DirectiveConfig = Partial<DirectiveInvocation> | false;
-
-// ============================================
-// AUTO-GENERATION (private)
-// ============================================
-
-/**
- * Auto-generate a compile function for :::name directives.
- * Body components: raw directive body → props.body, directive attributes → params.
- * Params-only components: YAML-parse body → params object.
- */
-function autoGenerateCompile(
+function buildDeserializer(
   componentName: string,
-  bodySchema: z.ZodTypeAny | null,
   paramsSchema: z.ZodObject<SchemaShape> | null,
-): DirectiveInvocation['compile'] {
-  return (directive, _source, body) => {
-    if (bodySchema) {
-      // Body component: raw body → body field, attributes → params
-      const parsedBody = bodySchema.parse(body);
-      let parsedParams = {};
-      if (paramsSchema) {
-        parsedParams = paramsSchema.parse(directive.attributes ?? {});
-      }
-      return component(componentName, { body: parsedBody, ...parsedParams });
-    } else {
-      // Params-only: YAML-parse body as object
-      let raw: unknown;
-      try {
-        raw = parseYaml(body) ?? {};
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        throw new Error(`in :::${componentName} directive: ${msg}`);
-      }
-      const props = paramsSchema!.parse(raw);
-      return component(componentName, props);
+): DirectiveDeserializer {
+  return (attributes, body) => {
+    const coerced = coerceAttributes(attributes);
+    if (body && body.trim()) {
+      coerced.body = body.trim();
     }
+    const props = paramsSchema ? paramsSchema.passthrough().parse(coerced) : coerced;
+    return component(componentName, props);
   };
-}
-
-/**
- * Resolve a DirectiveConfig into a DirectiveInvocation (or undefined).
- * Shared by defineContent and defineLayout.
- */
-function resolveDirective(
-  config: DirectiveConfig | undefined,
-  componentName: string,
-  bodySchema: z.ZodTypeAny | null,
-  paramsSchema: z.ZodObject<SchemaShape> | null,
-): DirectiveInvocation | undefined {
-  if (config === false) return undefined;
-  if (typeof config === 'object' && config?.compile) return config as DirectiveInvocation;
-  return { compile: autoGenerateCompile(componentName, bodySchema, paramsSchema) };
 }
 
 /** Type discriminator for component nodes */
@@ -231,7 +198,6 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     body: TBody;
     defaults?: (theme: Theme) => TTokens;
     expand: (props: { body: z.infer<TBody> }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
-    directive?: DirectiveConfig;
   }): BodyComponentDefinition<TBody, TTokens>;
 
   /**
@@ -244,19 +210,19 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     params: TParams;
     defaults?: (theme: Theme) => TTokens;
     expand: (props: { body: z.infer<TBody> } & z.infer<z.ZodObject<TParams>>, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
-    directive?: DirectiveConfig;
   }): BodyComponentDefinition<TBody, TTokens>;
 
   /**
    * Define and register a content component with typed params inferred from a Zod shape.
    * Returns a definition with `.schema` (pre-wrapped ZodObject) for use in layout params.
+   * When invoked from a :::directive, body text arrives as `props.body` (string).
+   * Use `namedField ?? body` in expand to bridge directive body to semantic field names.
    */
   defineContent<TShape extends SchemaShape, TTokens = undefined>(def: {
     name: string;
     params: TShape;
     defaults?: (theme: Theme) => TTokens;
-    expand: (props: z.infer<z.ZodObject<TShape>>, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
-    directive?: DirectiveConfig;
+    expand: (props: z.infer<z.ZodObject<TShape>> & { body?: string }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   }): ParamsComponentDefinition<TShape, TTokens>;
 
   // Implementation — overload signatures above provide type safety for callers.
@@ -273,7 +239,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
       expand: def.expand as ComponentDefinition['expand'],
       defaults: def.defaults as ComponentDefinition['defaults'],
       schema: bodySchema ?? z.object(paramsShape),
-      directive: resolveDirective(def.directive, def.name, bodySchema, paramsSchema),
+      deserialize: buildDeserializer(def.name, paramsSchema),
     };
 
     this.register(result);
@@ -283,33 +249,18 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
   /**
    * Define and register a layout/container component (programmatic only, no .schema).
    * Layout components cannot be used in layout params — they have no YAML-facing schema.
+   * Layout components do not support :::directive invocation (no deserializer).
    */
   defineLayout<TProps, TTokens = undefined>(def: {
     name: string;
     defaults?: (theme: Theme) => TTokens;
     expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
-    directive?: DirectiveConfig;
   }): ComponentDefinition<TProps, TTokens> {
-    const rawDirective = def.directive;
-
-    // Layout components can't auto-generate compile (no schema)
-    if (rawDirective && typeof rawDirective !== 'object') {
-      throw new Error(
-        `componentRegistry.defineLayout('${def.name}'): directive: true requires ` +
-        `an explicit 'compile' function (layout components have no schema for auto-generation).`,
-      );
-    }
-
-    const directive = (typeof rawDirective === 'object' && rawDirective?.compile)
-      ? rawDirective as DirectiveInvocation
-      : undefined;
-
     const result: ComponentDefinition<TProps, TTokens> = {
       name: def.name,
       type: ComponentType.LAYOUT,
       expand: def.expand,
       defaults: def.defaults,
-      directive,
     };
 
     this.register(result);
@@ -317,13 +268,13 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
   }
 
   /**
-   * Find the block handler for a given directive name.
-   * Block directives use the component name as the directive name (:::card → 'card').
+   * Find a component that supports :::name directive invocation.
+   * Returns undefined if the component doesn't exist or doesn't have a deserializer.
    */
-  getBlockHandler(name: string): (ComponentDefinition & { directive: DirectiveInvocation }) | undefined {
+  getDirectiveHandler(name: string): (ComponentDefinition & { deserialize: DirectiveDeserializer }) | undefined {
     const def = this.get(name);
-    if (def?.directive?.compile) {
-      return def as ComponentDefinition & { directive: DirectiveInvocation };
+    if (def?.deserialize) {
+      return def as ComponentDefinition & { deserialize: DirectiveDeserializer };
     }
     return undefined;
   }

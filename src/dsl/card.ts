@@ -87,8 +87,9 @@ function cardDefaults(theme: Theme): CardTokens {
  * )
  * ```
  */
-function expandCard(props: CardProps, context: ExpansionContext, tokens: CardTokens): SlideNode {
-  const { image: imagePath, title, description, background = true } = props;
+function expandCard(props: CardProps & { body?: string }, context: ExpansionContext, tokens: CardTokens): SlideNode {
+  const { image: imagePath, title, description, body, background = true } = props;
+  const actualDescription = description ?? body;
   const {
     padding, cornerRadius, backgroundColor, backgroundOpacity,
     borderColor, borderWidth, titleStyle, titleColor,
@@ -109,8 +110,8 @@ function expandCard(props: CardProps, context: ExpansionContext, tokens: CardTok
     }));
   }
 
-  if (description) {
-    children.push(markdown(description, {
+  if (actualDescription) {
+    children.push(markdown(actualDescription, {
       style: descriptionStyle,
       color: descriptionColor,
     }));

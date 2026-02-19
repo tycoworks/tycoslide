@@ -307,7 +307,7 @@ title: Has Title
     it('should pass asset references through as strings (resolved at expansion time)', () => {
       const md = HEADER + `---
 layout: body
-title: asset:images.photo
+title: asset.images.photo
 ---
 
 Some body text`;
@@ -315,7 +315,7 @@ Some body text`;
       compileDocument(md, { theme: mockTheme(), assets: testAssets });
       assert.strictEqual(receivedProps.length, 1);
       // Asset refs in non-image fields pass through as raw strings
-      assert.strictEqual(receivedProps[0].title, 'asset:images.photo');
+      assert.strictEqual(receivedProps[0].title, 'asset.images.photo');
     });
   });
 

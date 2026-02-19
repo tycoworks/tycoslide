@@ -23,10 +23,10 @@ function compileNode(node: RootContent, source: string): ComponentNode | null {
   // 1. Container directives → registry dispatch
   if (node.type === SYNTAX.CONTAINER_DIRECTIVE) {
     const directive = node as unknown as ContainerDirective;
-    const handler = componentRegistry.getBlockHandler(directive.name);
+    const handler = componentRegistry.getDirectiveHandler(directive.name);
     if (!handler) {
       const available = componentRegistry.getAll()
-        .filter(d => d.directive?.compile)
+        .filter(d => d.deserialize)
         .map(d => d.name)
         .join(', ');
       throw new Error(
@@ -35,7 +35,7 @@ function compileNode(node: RootContent, source: string): ComponentNode | null {
       );
     }
     const body = extractDirectiveBody(directive, source);
-    return handler.directive.compile(directive, source, body);
+    return handler.deserialize(directive.attributes ?? {}, body);
   }
 
   // 2. Paragraphs (reject inline images)

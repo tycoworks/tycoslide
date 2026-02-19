@@ -127,7 +127,6 @@ export interface TableStyleProps {
 export interface TableNode {
   type: typeof NODE_TYPE.TABLE;
   rows: TableCellData[][];
-  columnWidths?: number[];       // Proportional widths (normalized internally)
   headerRows?: number;           // Number of header rows (default: 0)
   headerColumns?: number;        // Number of header columns (default: 0)
   style?: TableStyleProps;

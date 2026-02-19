@@ -80,8 +80,8 @@ describe('componentRegistry.defineContent / defineLayout', () => {
       assert.strictEqual(comp.type, ComponentType.CONTENT);
     });
 
-    test('auto-generates directive compile', () => {
-      assert.ok(comp.directive?.compile, 'params component should have auto-generated compile');
+    test('auto-generates deserializer', () => {
+      assert.ok(comp.deserialize, 'params component should have auto-generated deserializer');
     });
 
     test('is registerable in componentRegistry', () => {
@@ -124,8 +124,8 @@ describe('componentRegistry.defineContent / defineLayout', () => {
       assert.strictEqual(comp.type, ComponentType.CONTENT);
     });
 
-    test('auto-generates directive compile', () => {
-      assert.ok(comp.directive?.compile, 'body component should have auto-generated compile');
+    test('auto-generates deserializer', () => {
+      assert.ok(comp.deserialize, 'body component should have auto-generated deserializer');
     });
 
     test('is registerable in componentRegistry', () => {
@@ -189,8 +189,8 @@ describe('componentRegistry.defineContent / defineLayout', () => {
       assert.ok(typeof comp.expand === 'function');
     });
 
-    test('does NOT have auto-generated directive', () => {
-      assert.strictEqual(comp.directive, undefined);
+    test('does NOT have deserializer', () => {
+      assert.strictEqual(comp.deserialize, undefined);
     });
 
     test('is registerable in componentRegistry', () => {
@@ -198,10 +198,10 @@ describe('componentRegistry.defineContent / defineLayout', () => {
     });
   });
 
-  describe('runtime guard', () => {
-    test('directive: false opts out of auto-compile', () => {
+  describe('deserializer behavior', () => {
+    test('all content components get auto-generated deserializer', () => {
       const comp = componentRegistry.defineContent({
-        name: 'test-no-directive',
+        name: 'test-auto-deserialize',
         body: schema.string(),
         expand: (props) => ({
           type: NODE_TYPE.TEXT,
@@ -209,36 +209,16 @@ describe('componentRegistry.defineContent / defineLayout', () => {
           hAlign: 'left' as any,
           vAlign: 'top' as any,
         }),
-        directive: false,
       });
-      assert.strictEqual(comp.directive, undefined);
+      assert.ok(comp.deserialize, 'content component should have deserializer');
     });
 
-    test('custom compile overrides auto-generated', () => {
-      const customCompile = () => ({ type: 'component' as const, componentName: 'test', props: {} });
-      const comp = componentRegistry.defineContent({
-        name: 'test-custom-compile',
-        params: { title: schema.string() },
-        expand: (props) => ({
-          type: NODE_TYPE.TEXT,
-          content: [{ text: props.title }],
-          hAlign: 'left' as any,
-          vAlign: 'top' as any,
-        }),
-        directive: { compile: customCompile },
+    test('layout components do NOT get deserializer', () => {
+      const comp = componentRegistry.defineLayout({
+        name: 'test-no-deserialize',
+        expand: () => ({ type: NODE_TYPE.TEXT, content: [], hAlign: 'left' as any, vAlign: 'top' as any }),
       });
-      assert.strictEqual(comp.directive?.compile, customCompile);
-    });
-
-    test('directive: true on defineLayout without compile throws', () => {
-      assert.throws(
-        () => componentRegistry.defineLayout({
-          name: 'test-directive-true-no-schema',
-          expand: () => ({ type: NODE_TYPE.TEXT, content: [], hAlign: 'left' as any, vAlign: 'top' as any }),
-          directive: true as any,
-        }),
-        /directive: true requires/,
-      );
+      assert.strictEqual(comp.deserialize, undefined);
     });
   });
 

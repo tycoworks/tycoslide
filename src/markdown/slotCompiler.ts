@@ -54,7 +54,7 @@ export function compileSlot(markdownStr: string): ComponentNode[] {
     // Container directives → flush bare group, then dispatch
     if (child.type === SYNTAX.CONTAINER_DIRECTIVE) {
       flushBareGroup();
-      nodes.push(compileDirective(child as unknown as ContainerDirective, markdownStr));
+      nodes.push(deserializeDirective(child as unknown as ContainerDirective, markdownStr));
       continue;
     }
 
@@ -73,18 +73,18 @@ export function compileSlot(markdownStr: string): ComponentNode[] {
 }
 
 // ============================================
-// DIRECTIVE COMPILATION
+// DIRECTIVE DESERIALIZATION
 // ============================================
 
 /**
- * Compile a :::name container directive into a ComponentNode.
- * Delegates to the component's own compile function.
+ * Deserialize a :::name container directive into a ComponentNode.
+ * Delegates to the component's auto-generated deserializer.
  */
-function compileDirective(directive: ContainerDirective, source: string): ComponentNode {
-  const handler = componentRegistry.getBlockHandler(directive.name);
+function deserializeDirective(directive: ContainerDirective, source: string): ComponentNode {
+  const handler = componentRegistry.getDirectiveHandler(directive.name);
   if (!handler) {
     const available = componentRegistry.getAll()
-      .filter(d => d.directive?.compile)
+      .filter(d => d.deserialize)
       .map(d => d.name)
       .join(', ');
     throw new Error(
@@ -94,5 +94,5 @@ function compileDirective(directive: ContainerDirective, source: string): Compon
   }
 
   const body = extractDirectiveBody(directive, source);
-  return handler.directive.compile(directive, source, body);
+  return handler.deserialize(directive.attributes ?? {}, body);
 }

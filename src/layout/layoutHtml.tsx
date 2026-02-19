@@ -765,10 +765,6 @@ function nodeToJsx(
       const cellNodes = getTableCellNodes(tableNode);
       const numCols = tableNode.rows[0]?.length ?? 0;
 
-      // Calculate column widths (proportional -> flex basis)
-      const columnWidths = tableNode.columnWidths ?? Array(numCols).fill(1);
-      const totalWeight = columnWidths.reduce((a, b) => a + b, 0);
-
       // Render table as CSS grid with cells as measurable children
       const cellPadding = tableNode.style?.cellPadding ?? theme.spacing.cellPadding;
       const cellPaddingPx = inToPx(cellPadding);
@@ -777,7 +773,7 @@ function nodeToJsx(
       const isInRow = parent.direction === 'row';
       const tableStyle: Record<string, string | number> = {
         display: 'grid',
-        gridTemplateColumns: columnWidths.map(w => `${(w / totalWeight) * 100}%`).join(' '),
+        gridTemplateColumns: `repeat(${numCols}, 1fr)`,
         ...(isInRow ? { flex: '1 1 0', minWidth: 0 } : { width: '100%' }),
       };
 
