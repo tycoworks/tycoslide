@@ -17,6 +17,7 @@ import {
   type Theme,
 } from '../core/types.js';
 import { schema } from '../schema.js';
+import { resolveAssetPath, ASSET_PREFIX } from '../utils/assets.js';
 
 // ============================================
 // IMAGE
@@ -34,11 +35,13 @@ export const imageComponent = componentRegistry.defineContent({
   name: Component.Image,
   body: schema.string(),
   params: imageOptionsSchema,
-  expand: (props: { body: string } & ImageOptions): ImageNode => ({
-    type: NODE_TYPE.IMAGE,
-    src: props.body,
-    alt: props.alt,
-  }),
+  expand: (props: { body: string } & ImageOptions, context: ExpansionContext): ImageNode => {
+    let src = props.body;
+    if (src.startsWith(ASSET_PREFIX)) {
+      src = resolveAssetPath(src, context.assets, context.slideIndex ?? 0);
+    }
+    return { type: NODE_TYPE.IMAGE, src, alt: props.alt };
+  },
 });
 
 export function image(src: string, options?: ImageOptions): ComponentNode {

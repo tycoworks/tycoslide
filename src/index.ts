@@ -22,4 +22,4 @@ export { schema, type ScalarParam } from './schema.js';
 export { compileDocument, validateLayout, type CompileOptions } from './markdown/documentCompiler.js';
 
 // Asset resolution
-export { ASSET_PREFIX } from './markdown/assetResolver.js';
+export { ASSET_PREFIX } from './utils/assets.js';

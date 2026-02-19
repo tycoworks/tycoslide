@@ -39,7 +39,7 @@ export function extractSource(
 
 /** Container directive node from remark-directive (:::name{attrs} ... :::) */
 export interface ContainerDirective {
-  type: 'containerDirective';
+  type: typeof SYNTAX.CONTAINER_DIRECTIVE;
   name: string;
   attributes?: Record<string, string | null | undefined>;
   children: { type: string; [key: string]: unknown }[];

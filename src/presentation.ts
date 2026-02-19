@@ -59,13 +59,15 @@ interface DeferredSlide {
 export class Presentation {
   private renderer: PptxRenderer;
   private _theme: Theme;
+  private _assets?: Record<string, unknown>;
   private masters = new Map<string, { contentBounds: Bounds; positioned: PositionedNode }>();
   private fullBounds: Bounds;
   private slideCount = 0;
   private deferredSlides: DeferredSlide[] = [];
 
-  constructor(theme: Theme) {
+  constructor(theme: Theme, assets?: Record<string, unknown>) {
     this._theme = theme;
+    this._assets = assets;
     this.renderer = new PptxRenderer(theme);
 
     // Calculate full slide bounds (no master - just margins)
@@ -140,7 +142,7 @@ export class Presentation {
         const { master } = deferred.slide;
         if (master && !this.masters.has(master.name) && !pendingMasters.has(master.name)) {
           const { content: rawMasterContent, contentBounds } = master.getContent(this._theme);
-          const masterContent = await componentRegistry.expandTree(rawMasterContent, { theme: this._theme });
+          const masterContent = await componentRegistry.expandTree(rawMasterContent, { theme: this._theme, assets: this._assets });
           const footerBounds = this.getFooterBounds(contentBounds);
           pendingMasters.set(master.name, {
             master,
@@ -176,7 +178,7 @@ export class Presentation {
         }
 
         // Expand components
-        const expanded = await componentRegistry.expandTree(content, { theme: this._theme, slideIndex });
+        const expanded = await componentRegistry.expandTree(content, { theme: this._theme, slideIndex, assets: this._assets });
 
         // Collect measurements from expanded tree
         pipeline.collectFromTree(expanded, bounds, `slide-${slideIndex + 1}`);

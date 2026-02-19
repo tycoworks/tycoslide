@@ -1,52 +1,15 @@
 // Asset Resolver
-// Resolves `asset:dot.path` references in frontmatter values against
-// a nested assets object. Runs after param merge, before Zod validation.
+// Resolves `asset:dot.path` references against a nested assets object.
+// Used by the image component's expand function to resolve asset references
+// at expansion time.
 
 export const ASSET_PREFIX = 'asset:';
 
 /**
- * Recursively walk a value tree and resolve any string starting with
- * `asset:` against the provided assets object.
+ * Resolve an `asset:dot.path` reference to a string value from the assets object.
+ * Throws descriptive errors if the path is invalid or the value is not a string.
  */
-export function resolveAssetReferences(
-  value: unknown,
-  assets: Record<string, unknown> | undefined,
-  slideIndex: number,
-): unknown {
-  if (typeof value === 'string') {
-    if (value.startsWith(ASSET_PREFIX)) return resolveAssetPath(value, assets, slideIndex);
-    if (value.includes(ASSET_PREFIX)) return resolveEmbeddedAssets(value, assets, slideIndex);
-    return value;
-  }
-  if (Array.isArray(value)) {
-    return value.map(item => resolveAssetReferences(item, assets, slideIndex));
-  }
-  if (value !== null && typeof value === 'object') {
-    const out: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(value)) {
-      out[k] = resolveAssetReferences(v, assets, slideIndex);
-    }
-    return out;
-  }
-  return value;
-}
-
-/**
- * Replace all `asset:dot.path` references embedded within a larger string.
- * Used for markdown body/slot content where asset references appear inside
- * :::directive YAML bodies or ![](asset:...) image syntax.
- */
-function resolveEmbeddedAssets(
-  text: string,
-  assets: Record<string, unknown> | undefined,
-  slideIndex: number,
-): string {
-  return text.replace(/\basset:([\w]+(?:\.[\w]+)*)/g, (match) => {
-    return resolveAssetPath(match, assets, slideIndex);
-  });
-}
-
-function resolveAssetPath(
+export function resolveAssetPath(
   ref: string,
   assets: Record<string, unknown> | undefined,
   slideIndex: number,
@@ -89,7 +52,7 @@ function resolveAssetPath(
 
   if (current !== null && typeof current === 'object') {
     const keys = Object.keys(current as Record<string, unknown>);
-    const suggestions = keys.slice(0, 5).map(k => `asset:${dotPath}.${k}`).join(', ');
+    const suggestions = keys.slice(0, 5).map(k => `${ASSET_PREFIX}${dotPath}.${k}`).join(', ');
     throw new Error(
       `Slide ${slideIndex + 1}: asset reference '${ref}' resolved to an object, not a string. Did you mean ${suggestions}?`,
     );

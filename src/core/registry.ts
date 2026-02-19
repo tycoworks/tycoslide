@@ -72,6 +72,7 @@ export class Registry<TDef extends { name: string }> {
 export interface ExpansionContext {
   theme: Theme;
   slideIndex?: number;
+  assets?: Record<string, unknown>;
 }
 
 /** Content vs layout component discriminator. */

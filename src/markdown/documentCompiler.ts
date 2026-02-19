@@ -7,7 +7,7 @@
 
 import { z } from 'zod';
 import { parseSlideDocument, type RawSlide } from './slideParser.js';
-import { resolveAssetReferences } from './assetResolver.js';
+
 import { compileSlot } from './slotCompiler.js';
 import { layoutRegistry, type LayoutDefinition } from '../core/registry.js';
 import type { ComponentNode } from '../core/nodes.js';
@@ -109,7 +109,7 @@ export function validateLayout(
  */
 export function compileDocument(source: string, options: CompileOptions): Presentation {
   const parsed = parseSlideDocument(source);
-  const presentation = new Presentation(options.theme);
+  const presentation = new Presentation(options.theme, options.assets);
 
   for (const raw of parsed.slides) {
     presentation.add(compileSlide(raw, options));
@@ -165,17 +165,15 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
     slots.body = raw.body;
   }
 
-  // 5. Resolve asset references in params and slots
-  const resolvedParams = resolveAssetReferences(params, options.assets, raw.index) as Record<string, unknown>;
-  const resolvedSlots = resolveAssetReferences(slots, options.assets, raw.index) as Record<string, unknown>;
+  // 5. Validate params and slots separately, merge for render
+  // Asset references (asset:dot.path) flow through as strings here.
+  // They are resolved later by the image component's expand function.
+  const validated = validateLayout(layout, params, slots);
 
-  // 6. Validate params and slots separately, merge for render
-  const validated = validateLayout(layout, resolvedParams, resolvedSlots);
-
-  // 7. Render
+  // 6. Render
   const slide = layout.render(validated);
 
-  // 8. Attach speaker notes from frontmatter
+  // 7. Attach speaker notes from frontmatter
   if (notes) {
     slide.notes = notes;
   }

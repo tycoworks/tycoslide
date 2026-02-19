@@ -8,7 +8,7 @@ import type { Root, RootContent, Heading } from 'mdast';
 import type { Table as MdastTable } from 'mdast';
 import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
 import { SYNTAX, extractSource, extractInlineText, type ContainerDirective } from '../core/mdast.js';
-import { markdownProcessor, extractDirectiveBody } from '../core/parser.js';
+import { markdownProcessor, extractDirectiveBody } from '../utils/parser.js';
 import { Component, TEXT_STYLE } from '../core/types.js';
 import { markdown, HEADING_STYLE } from './text.js';
 import { table } from './table.js';

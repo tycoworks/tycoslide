@@ -7,7 +7,7 @@ import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkDirective from 'remark-directive';
 import remarkGfm from 'remark-gfm';
-import { extractSource, type ContainerDirective } from './mdast.js';
+import { extractSource, type ContainerDirective } from '../core/mdast.js';
 
 // ============================================
 // PARSER

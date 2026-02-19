@@ -10,7 +10,7 @@
 
 import type { Root, RootContent } from 'mdast';
 import { SYNTAX, type ContainerDirective } from '../core/mdast.js';
-import { markdownProcessor, extractDirectiveBody } from '../core/parser.js';
+import { markdownProcessor, extractDirectiveBody } from '../utils/parser.js';
 import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
 import { Component } from '../core/types.js';
 

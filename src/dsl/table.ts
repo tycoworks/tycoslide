@@ -1,7 +1,7 @@
 // Table Component - Native pptxgenjs table element
 
 import { componentRegistry, component, type ComponentNode, type ExpansionContext } from '../core/registry.js';
-import { Component } from '../core/types.js';
+import { Component, BORDER_STYLE, TEXT_STYLE } from '../core/types.js';
 import { NODE_TYPE, type TextNode, type TableCellData, type TableStyleProps } from '../core/nodes.js';
 import type { Theme, TextContent } from '../core/types.js';
 import { SYNTAX, extractInlineText, type ContainerDirective } from '../core/mdast.js';
@@ -31,12 +31,12 @@ interface TableInternalProps {
 
 function tableDefaults(theme: Theme): TableTokens {
   const tokens: TableTokens = {
-    borderStyle: 'full',
+    borderStyle: BORDER_STYLE.FULL,
     borderColor: theme.colors.secondary,
     borderWidth: theme.borders.width,
     cellPadding: theme.spacing.cellPadding,
-    cellTextStyle: 'body',
-    headerTextStyle: 'body',
+    cellTextStyle: TEXT_STYLE.BODY,
+    headerTextStyle: TEXT_STYLE.BODY,
   };
   return tokens;
 }

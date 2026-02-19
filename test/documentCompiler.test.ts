@@ -7,7 +7,7 @@
 
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { z } from 'zod';
+
 import { compileDocument, buildSlideName } from '../src/markdown/documentCompiler.js';
 import { layoutRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
@@ -303,71 +303,19 @@ title: Has Title
     });
   });
 
-  describe('asset resolution', () => {
-    const testAssets = {
-      images: { photo: '/resolved/photo.png' },
-      icons: { star: '/resolved/star.svg' },
-    };
-
-    it('should resolve asset references in frontmatter', () => {
+  describe('asset references', () => {
+    it('should pass asset references through as strings (resolved at expansion time)', () => {
       const md = HEADER + `---
 layout: body
 title: asset:images.photo
 ---
 
 Some body text`;
+      const testAssets = { images: { photo: '/resolved/photo.png' } };
       compileDocument(md, { theme: mockTheme(), assets: testAssets });
       assert.strictEqual(receivedProps.length, 1);
-      assert.strictEqual(receivedProps[0].title, '/resolved/photo.png');
-    });
-
-    it('should throw when asset ref used without assets option', () => {
-      const md = HEADER + `---
-layout: body
-title: asset:images.photo
----
-
-Body`;
-      assert.throws(
-        () => compileDocument(md, makeOptions()),
-        (err: any) => {
-          assert.ok(err.message.includes('no assets provided'));
-          return true;
-        },
-      );
-    });
-
-    it('should resolve asset references in nested arrays', () => {
-      // Register a layout that accepts cards with image fields
-      const cardLayout = {
-        name: 'cards',
-        description: 'Card layout',
-        params: {
-          title: schema.string(),
-          cards: schema.array(z.object({ image: schema.string(), title: schema.string() })),
-        },
-        render: (props: any): Slide => {
-          receivedProps.push(props);
-          const slide: Slide = { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
-          renderedSlides.push(slide);
-          return slide;
-        },
-      };
-      layoutRegistry.register(cardLayout);
-
-      const md = HEADER + `---
-layout: cards
-title: My Cards
-cards:
-  - image: "asset:images.photo"
-    title: Card A
-  - image: "asset:icons.star"
-    title: Card B
----`;
-      compileDocument(md, { theme: mockTheme(), assets: testAssets });
-      assert.strictEqual(receivedProps.length, 1);
-      assert.strictEqual(receivedProps[0].cards[0].image, '/resolved/photo.png');
-      assert.strictEqual(receivedProps[0].cards[1].image, '/resolved/star.svg');
+      // Asset refs in non-image fields pass through as raw strings
+      assert.strictEqual(receivedProps[0].title, 'asset:images.photo');
     });
   });
 
