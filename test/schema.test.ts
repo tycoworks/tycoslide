@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { schema } from '../src/schema.js';
 import { layoutRegistry, COMPONENT_TYPE } from '../src/core/registry.js';
 import { Component } from '../src/core/types.js';
+import { compileSlot } from '../src/markdown/slotCompiler.js';
 import '../src/dsl/block.js';
 import '../src/dsl/primitives.js';
 
@@ -49,64 +50,43 @@ describe('schema', () => {
     });
   });
 
-  describe('slot content transform', () => {
-    it('schema.slot() compiles directive to ComponentNode[]', () => {
-      const s = z.object({ body: schema.slot() });
-      const result = s.safeParse({ body: ':::block\nHello world\n:::' });
-      assert.strictEqual(result.success, true);
-      if (result.success) {
-        assert.ok(Array.isArray(result.data.body));
-        assert.strictEqual(result.data.body.length, 1);
-        assert.strictEqual(result.data.body[0].componentName, Component.Block);
-      }
+  describe('compileSlot', () => {
+    it('compiles directive to ComponentNode[]', () => {
+      const result = compileSlot(':::block\nHello world\n:::');
+      assert.ok(Array.isArray(result));
+      assert.strictEqual(result.length, 1);
+      assert.strictEqual(result[0].componentName, Component.Block);
     });
 
-    it('schema.slot() compiles multiple directives', () => {
-      const s = z.object({ body: schema.slot() });
-      const result = s.safeParse({ body: ':::block\nText\n:::\n\n:::image\npic.png\n:::' });
-      assert.strictEqual(result.success, true);
-      if (result.success) {
-        assert.strictEqual(result.data.body.length, 2);
-        assert.strictEqual(result.data.body[0].componentName, Component.Block);
-        assert.strictEqual(result.data.body[1].componentName, Component.Image);
-      }
+    it('compiles multiple directives', () => {
+      const result = compileSlot(':::block\nText\n:::\n\n:::image\npic.png\n:::');
+      assert.strictEqual(result.length, 2);
+      assert.strictEqual(result[0].componentName, Component.Block);
+      assert.strictEqual(result[1].componentName, Component.Image);
     });
 
-    it('schema.slot() empty string → empty array', () => {
-      const s = z.object({ body: schema.slot() });
-      const result = s.safeParse({ body: '' });
-      assert.strictEqual(result.success, true);
-      if (result.success) {
-        assert.strictEqual(result.data.body.length, 0);
-      }
+    it('empty string → empty array', () => {
+      const result = compileSlot('');
+      assert.strictEqual(result.length, 0);
     });
 
-    it('schema.slot() rejects non-string input', () => {
-      const s = z.object({ body: schema.slot() });
-      assert.strictEqual(s.safeParse({ body: 42 }).success, false);
-    });
-
-    it('schema.slot() auto-wraps bare MDAST in default component', () => {
-      const s = z.object({ body: schema.slot() });
-      const result = s.safeParse({ body: 'Hello world' });
-      assert.strictEqual(result.success, true);
-      if (result.success) {
-        assert.strictEqual(result.data.body.length, 1);
-        assert.strictEqual(result.data.body[0].componentName, Component.Block);
-      }
+    it('auto-wraps bare MDAST in default component', () => {
+      const result = compileSlot('Hello world');
+      assert.strictEqual(result.length, 1);
+      assert.strictEqual(result[0].componentName, Component.Block);
     });
   });
 
-  describe('MarkdownParam constraint', () => {
+  describe('ScalarParam constraint (params rejects non-scalar types)', () => {
     it('rejects z.custom() in layout params', () => {
       const dummy = { type: COMPONENT_TYPE, componentName: 'x', props: {} } as const;
-      // Type-level test: z.custom() should not be assignable to MarkdownParam.
+      // Type-level test: z.custom() should not be assignable to ScalarParam.
       // If this @ts-expect-error becomes "unused", the constraint was loosened.
       layoutRegistry.define({
         name: 'test-bad-custom',
         description: 'should not compile',
         params: {
-          // @ts-expect-error: z.custom() is not a MarkdownParam
+          // @ts-expect-error: z.custom() is not a ScalarParam
           content: z.custom<string[]>(),
         },
         render: () => ({ content: dummy }),
@@ -119,11 +99,12 @@ describe('schema', () => {
         name: 'test-bad-any',
         description: 'should not compile',
         params: {
-          // @ts-expect-error: z.any() is not a MarkdownParam
+          // @ts-expect-error: z.any() is not a ScalarParam
           data: z.any(),
         },
         render: () => ({ content: dummy }),
       });
     });
   });
+
 });

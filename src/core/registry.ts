@@ -7,7 +7,7 @@ import type { ContainerDirective } from './mdast.js';
 import type { Slide } from '../presentation.js';
 import { z } from 'zod';
 import { parse as parseYaml } from 'yaml';
-import type { MarkdownParam } from '../schema.js';
+import type { ScalarParam } from '../schema.js';
 
 // Re-export ComponentNode for convenience
 export type { ComponentNode } from './nodes.js';
@@ -359,21 +359,26 @@ export function isComponentNode(node: unknown): node is ComponentNode {
 /** Raw Zod shape — a record of field names to Zod types. */
 export type SchemaShape = Record<string, z.ZodTypeAny>;
 
-/** A Zod shape where every field is markdown-expressible. */
-export type MarkdownShape = Record<string, MarkdownParam>;
+/** A Zod shape where every field is a scalar param (YAML-expressible). */
+export type ScalarShape = Record<string, ScalarParam>;
 
 /** Infer the TypeScript type from a raw Zod shape. Use instead of importing z from zod. */
 export type InferProps<TShape extends SchemaShape> = z.infer<z.ZodObject<TShape>>;
 
+/** Map slot names to their render type (each slot becomes ComponentNode[]). */
+type SlotsToProps<T extends readonly string[]> = { [K in T[number]]: ComponentNode[] };
+
 /**
  * A named, described, typed slide factory.
- * The params field is a raw shape — the framework wraps it in z.object() internally.
+ * `params` holds scalar fields (from YAML frontmatter).
+ * `slots` lists slot names (from ::name:: body markers), optional.
  * Use `layoutRegistry.define()` to create layouts with type-checked render params.
  */
 export interface LayoutDefinition {
   name: string;
   description: string;
   params: SchemaShape;
+  slots?: readonly string[];
   render: (props: any) => Slide;
 }
 
@@ -387,14 +392,16 @@ class LayoutRegistry extends Registry<LayoutDefinition> {
   }
 
   /**
-   * Define and register a layout with type-safe render params inferred from the params schema.
-   * The params define both runtime validation AND TypeScript types — single source of truth.
+   * Define and register a layout.
+   * TypeScript enforces: params accepts only ScalarParam fields.
+   * Slots (optional) are a string array — each becomes ComponentNode[] in render.
    */
-  define<TShape extends MarkdownShape>(def: {
+  define<TParams extends ScalarShape, const TSlots extends readonly string[] = readonly []>(def: {
     name: string;
     description: string;
-    params: TShape;
-    render: (props: z.infer<z.ZodObject<TShape>>) => Slide;
+    params: TParams;
+    slots?: TSlots;
+    render: (props: z.infer<z.ZodObject<TParams>> & SlotsToProps<TSlots>) => Slide;
   }): LayoutDefinition {
     this.register(def);
     return def;
@@ -402,26 +409,6 @@ class LayoutRegistry extends Registry<LayoutDefinition> {
 }
 
 export const layoutRegistry = new LayoutRegistry();
-
-/**
- * Validate raw frontmatter props against a layout's Zod schema.
- * Wraps the raw shape in z.object() before parsing.
- * @returns The validated props (post-transform)
- * @throws Error with formatted message on validation failure
- */
-export function validateLayoutProps(
-  layout: LayoutDefinition,
-  raw: Record<string, unknown>,
-): any {
-  const result = z.object(layout.params).safeParse(raw);
-  if (result.success) {
-    return result.data;
-  }
-  const issues = result.error.issues
-    .map(i => `  - ${i.path.join('.')}: ${i.message}`)
-    .join('\n');
-  throw new Error(`Layout '${layout.name}' validation failed:\n${issues}`);
-}
 
 // ============================================
 // DSL HELPER

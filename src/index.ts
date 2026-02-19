@@ -16,10 +16,10 @@ export * from './dsl/index.js';
 export { parseSlideDocument, FrontmatterParseError, type ParsedDocument, type RawSlide } from './markdown/slideParser.js';
 
 // Schema helpers (domain-specific wrappers for layout Zod schemas)
-export { schema } from './schema.js';
+export { schema, type ScalarParam } from './schema.js';
 
 // Document compiler (markdown file → Presentation)
-export { compileDocument, type CompileOptions } from './markdown/documentCompiler.js';
+export { compileDocument, validateLayout, type CompileOptions } from './markdown/documentCompiler.js';
 
 // Asset resolution
 export { ASSET_PREFIX } from './markdown/assetResolver.js';

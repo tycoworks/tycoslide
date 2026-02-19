@@ -45,7 +45,8 @@ const simpleLayout = {
 const bodyLayout = {
   name: 'body',
   description: 'Body layout with title and body',
-  params: { title: schema.string().optional(), body: schema.string() },
+  params: { title: schema.string().optional() },
+  slots: ['body'],
   render: (props: any): Slide => {
     receivedProps.push(props);
     const slide: Slide = { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
@@ -57,7 +58,8 @@ const bodyLayout = {
 const slotLayout = {
   name: 'slots',
   description: 'Slot layout with named slots',
-  params: { title: schema.string(), eyebrow: schema.string(), left: schema.string(), right: schema.string() },
+  params: { title: schema.string(), eyebrow: schema.string() },
+  slots: ['left', 'right'],
   render: (props: any): Slide => {
     receivedProps.push(props);
     const slide: Slide = { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
@@ -130,7 +132,7 @@ title: Frontmatter Title
       assert.strictEqual(receivedProps[0].title, 'Frontmatter Title');
     });
 
-    it('should map markdown body to body param', () => {
+    it('should compile markdown body to ComponentNode[]', () => {
       const md = HEADER + `---
 layout: body
 ---
@@ -140,11 +142,11 @@ This is the body content.
 Multiple paragraphs are preserved.`;
       compileDocument(md, makeOptions());
       assert.strictEqual(receivedProps.length, 1);
-      assert.ok(receivedProps[0].body.includes('This is the body content'));
-      assert.ok(receivedProps[0].body.includes('Multiple paragraphs'));
+      assert.ok(Array.isArray(receivedProps[0].body));
+      assert.ok(receivedProps[0].body.length > 0);
     });
 
-    it('should map named slots to params', () => {
+    it('should compile named slots to ComponentNode[]', () => {
       const md = HEADER + `---
 layout: slots
 title: Two Column Slide
@@ -160,8 +162,10 @@ Right column content here.`;
       assert.strictEqual(receivedProps.length, 1);
       assert.strictEqual(receivedProps[0].title, 'Two Column Slide');
       assert.strictEqual(receivedProps[0].eyebrow, 'ARCHITECTURE');
-      assert.ok(receivedProps[0].left.includes('Left column content'));
-      assert.ok(receivedProps[0].right.includes('Right column content'));
+      assert.ok(Array.isArray(receivedProps[0].left));
+      assert.ok(receivedProps[0].left.length > 0);
+      assert.ok(Array.isArray(receivedProps[0].right));
+      assert.ok(receivedProps[0].right.length > 0);
     });
 
     it('should attach speaker notes from frontmatter', () => {
@@ -209,7 +213,7 @@ Markdown body content`;
       assert.strictEqual(receivedProps[0].body, 'Frontmatter body content');
     });
 
-    it('should prefer frontmatter value over ::slot:: with same name', () => {
+    it('should ignore ::slot:: markers that match param names (separate namespaces)', () => {
       const md = HEADER + `---
 layout: slots
 title: Title
@@ -226,6 +230,7 @@ Right content
 FROM_SLOT`;
       compileDocument(md, makeOptions());
       assert.strictEqual(receivedProps.length, 1);
+      // eyebrow comes from params (frontmatter), not slots — ::eyebrow:: is ignored
       assert.strictEqual(receivedProps[0].eyebrow, 'FROM_FM');
     });
   });

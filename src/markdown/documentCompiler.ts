@@ -2,13 +2,15 @@
 // Wires together parsing, validation, and rendering to produce
 // a Presentation from a markdown source string.
 //
-// Phase 3d: Generic parameter mapping — no layout-specific logic.
-// Frontmatter fields pass through, ::slot:: → named params,
-// markdown body → body param. Zod validation catches mismatches.
+// Frontmatter → scalar params, ::slot:: markers + body → slot params.
+// Params and slots are validated separately against the layout's schemas.
 
+import { z } from 'zod';
 import { parseSlideDocument, type RawSlide } from './slideParser.js';
 import { resolveAssetReferences } from './assetResolver.js';
-import { layoutRegistry, validateLayoutProps } from '../core/registry.js';
+import { compileSlot } from './slotCompiler.js';
+import { layoutRegistry, type LayoutDefinition } from '../core/registry.js';
+import type { ComponentNode } from '../core/nodes.js';
 import { Presentation, type Slide } from '../presentation.js';
 import type { Theme } from '../core/types.js';
 
@@ -45,6 +47,50 @@ export interface CompileOptions {
   defaultLayout?: string;
   /** Nested assets object for resolving `asset:dot.path` references in frontmatter. */
   assets?: Record<string, unknown>;
+}
+
+// ============================================
+// VALIDATION
+// ============================================
+
+/** Zod schema for a single slot: string → ComponentNode[] via compileSlot. */
+const slotSchema = z.string().transform((s): ComponentNode[] => compileSlot(s));
+
+/**
+ * Validate raw params and slots against a layout's schemas.
+ * Params validated against the layout's Zod param shape.
+ * Slots compiled from markdown strings into ComponentNode[].
+ */
+export function validateLayout(
+  layout: LayoutDefinition,
+  rawParams: Record<string, unknown>,
+  rawSlots: Record<string, unknown>,
+): any {
+  const paramsResult = z.object(layout.params).safeParse(rawParams);
+  if (!paramsResult.success) {
+    const issues = paramsResult.error.issues
+      .map(i => `  - ${i.path.join('.')}: ${i.message}`)
+      .join('\n');
+    throw new Error(`Layout '${layout.name}' params validation failed:\n${issues}`);
+  }
+
+  let slotsData: Record<string, unknown> = {};
+  if (layout.slots && layout.slots.length > 0) {
+    const shape: Record<string, z.ZodTypeAny> = {};
+    for (const name of layout.slots) {
+      shape[name] = slotSchema;
+    }
+    const slotsResult = z.object(shape).safeParse(rawSlots);
+    if (!slotsResult.success) {
+      const issues = slotsResult.error.issues
+        .map(i => `  - ${i.path.join('.')}: ${i.message}`)
+        .join('\n');
+      throw new Error(`Layout '${layout.name}' slots validation failed:\n${issues}`);
+    }
+    slotsData = slotsResult.data as Record<string, unknown>;
+  }
+
+  return { ...paramsResult.data, ...slotsData };
 }
 
 // ============================================
@@ -103,35 +149,32 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
     );
   }
 
-  // 3. Build raw params — merge sources in priority order
+  // 3. Build PARAMS — from frontmatter only
   const params: Record<string, unknown> = { ...raw.frontmatter };
   delete params.layout;
   delete params.name;
   const notes = params.notes as string | undefined;
   delete params.notes;
 
-  // Slots: ::name:: content → param of same name
+  // 4. Build SLOTS — from ::name:: markers and body only
+  const slots: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(raw.slots)) {
-    if (params[key] === undefined) {
-      params[key] = value;
-    }
+    slots[key] = value;
+  }
+  if (raw.body.trim()) {
+    slots.body = raw.body;
   }
 
-  // Body: markdown body → `body` param
-  if (raw.body.trim() && params.body === undefined) {
-    params.body = raw.body;
-  }
+  // 5. Resolve asset references in params (slots are markdown strings, not asset refs)
+  const resolvedParams = resolveAssetReferences(params, options.assets, raw.index) as Record<string, unknown>;
 
-  // 3.5 Resolve asset references (before validation so schemas see plain strings)
-  const resolved = resolveAssetReferences(params, options.assets, raw.index) as Record<string, unknown>;
+  // 6. Validate params and slots separately, merge for render
+  const validated = validateLayout(layout, resolvedParams, slots);
 
-  // 4. Validate against layout's Zod schema
-  const validated = validateLayoutProps(layout, resolved);
-
-  // 5. Render
+  // 7. Render
   const slide = layout.render(validated);
 
-  // 6. Attach speaker notes from frontmatter
+  // 8. Attach speaker notes from frontmatter
   if (notes) {
     slide.notes = notes;
   }

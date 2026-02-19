@@ -3,8 +3,6 @@
 // Layout authors use these instead of importing Zod directly.
 
 import { z } from 'zod';
-import { compileSlot } from './markdown/slotCompiler.js';
-import type { ComponentNode } from './core/registry.js';
 import { TEXT_STYLE_VALUES, GAP_VALUES, HALIGN_VALUES, VALIGN_VALUES } from './core/types.js';
 
 export const schema = {
@@ -23,15 +21,14 @@ export const schema = {
   gap:       ()                                       => z.enum(GAP_VALUES),
   hAlign:    ()                                       => z.enum(HALIGN_VALUES),
   vAlign:    ()                                       => z.enum(VALIGN_VALUES),
-
-  // Compiler pipeline — slot content → ComponentNode[]
-  slot:     ()                                        =>
-    z.string().transform((s): ComponentNode[] => compileSlot(s)),
 };
 
-// Leaf types derived from the schema object — the single source of truth
-// for what's expressible in YAML/markdown frontmatter.
-type SchemaLeaf =
+// ============================================
+// PARAM TYPES
+// ============================================
+
+// Scalar leaf types — expressible in YAML frontmatter
+type ScalarLeaf =
   | ReturnType<typeof schema.string>
   | ReturnType<typeof schema.number>
   | ReturnType<typeof schema.boolean>
@@ -39,13 +36,12 @@ type SchemaLeaf =
   | ReturnType<typeof schema.gap>
   | ReturnType<typeof schema.hAlign>
   | ReturnType<typeof schema.vAlign>
-  | ReturnType<typeof schema.slot>
   | ReturnType<typeof schema.enum>
   | ReturnType<typeof schema.array>
   | ReturnType<typeof schema.object>;
 
-/** A Zod type that accepts YAML/markdown input. Only types producible by the schema object qualify. */
-export type MarkdownParam =
-  | SchemaLeaf
-  | z.ZodOptional<SchemaLeaf>
-  | z.ZodDefault<SchemaLeaf>;
+/** A param expressible in YAML frontmatter. Slots excluded. */
+export type ScalarParam =
+  | ScalarLeaf
+  | z.ZodOptional<ScalarLeaf>
+  | z.ZodDefault<ScalarLeaf>;
