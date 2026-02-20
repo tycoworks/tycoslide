@@ -9,7 +9,6 @@ import { loadTheme } from './themeLoader.js';
 
 export interface BuildOptions {
   output?: string;
-  theme?: string;
   defaultLayout?: string;
 }
 
@@ -24,12 +23,10 @@ export async function build(inputPath: string, options: BuildOptions): Promise<v
 
   // Extract theme name from CLI flag or global frontmatter
   const parsed = parseSlideDocument(source);
-  const themeName = options.theme ?? (typeof parsed.global.theme === 'string' ? parsed.global.theme : undefined);
+  const themeName = typeof parsed.global.theme === 'string' ? parsed.global.theme : undefined;
   if (!themeName) {
     throw new Error(
-      'No theme specified. Either:\n' +
-      '  - Add `theme: <name>` to the global frontmatter in your markdown file\n' +
-      '  - Pass --theme <name> on the command line',
+      'No theme specified. Add `theme: <name>` to the global frontmatter in your markdown file.',
     );
   }
 

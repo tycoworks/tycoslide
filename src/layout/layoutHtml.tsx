@@ -164,7 +164,7 @@ export function generateFontFaceCSS(theme: Theme): { css: string; fonts: FontDes
     const style = theme.textStyles[styleName];
     for (const weight of Object.keys(style.fontFamily) as FontWeight[]) {
       const font = style.fontFamily[weight];
-      if (font) fontPaths.push(font.path);
+      if (font && font.path) fontPaths.push(font.path);  // Skip system fonts (empty path)
     }
   }
   const cacheKey = JSON.stringify(fontPaths.sort());
@@ -183,27 +183,27 @@ export function generateFontFaceCSS(theme: Theme): { css: string; fonts: FontDes
 
     for (const weight of Object.keys(family) as FontWeight[]) {
       const font = family[weight];
-      if (font && !seenPaths.has(font.path)) {
-        seenPaths.add(font.path);
-        const numericWeight = fontWeightToNumeric(weight);
-        fonts.push({ name: font.name, weight: numericWeight });
-        // Embed font as base64 data URI so it loads in Playwright's setContent()
-        // (file:// URLs don't work because the page has no file origin)
-        const fontData = fs.readFileSync(font.path);
-        const base64 = fontData.toString('base64');
-        const ext = path.extname(font.path).toLowerCase();
-        const fontFormat = FONT_FORMATS[ext];
-        if (!fontFormat) {
-          throw new Error(`Unsupported font format "${ext}" for ${font.path}. Supported: ${Object.keys(FONT_FORMATS).join(', ')}`);
-        }
-        fontFaces.push(`
+      if (!font || !font.path) continue;       // Skip missing or system fonts (empty path)
+      if (seenPaths.has(font.path)) continue;   // Skip duplicates
+      seenPaths.add(font.path);
+      const numericWeight = fontWeightToNumeric(weight);
+      fonts.push({ name: font.name, weight: numericWeight });
+      // Embed font as base64 data URI so it loads in Playwright's setContent()
+      // (file:// URLs don't work because the page has no file origin)
+      const fontData = fs.readFileSync(font.path);
+      const base64 = fontData.toString('base64');
+      const ext = path.extname(font.path).toLowerCase();
+      const fontFormat = FONT_FORMATS[ext];
+      if (!fontFormat) {
+        throw new Error(`Unsupported font format "${ext}" for ${font.path}. Supported: ${Object.keys(FONT_FORMATS).join(', ')}`);
+      }
+      fontFaces.push(`
           @font-face {
             font-family: '${font.name}';
             src: url('data:${fontFormat.mime};base64,${base64}') format('${fontFormat.format}');
             font-weight: ${numericWeight};
           }
         `);
-      }
     }
   }
 

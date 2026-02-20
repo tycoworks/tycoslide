@@ -359,9 +359,27 @@ export interface CustomSlideSize {
 // STYLING TYPES
 // ============================================
 
+/**
+ * A font reference for rendering and measurement.
+ *
+ * For custom fonts, set `path` to the absolute path of a .woff2/.ttf file.
+ * Theme authors can use @fontsource npm packages:
+ * ```typescript
+ * import { createRequire } from 'module';
+ * const require = createRequire(import.meta.url);
+ * const font: Font = {
+ *   name: 'Inter',
+ *   path: require.resolve('@fontsource/inter/files/inter-latin-400-normal.woff2'),
+ * };
+ * ```
+ *
+ * For system fonts, set `path` to `''` (empty string). System fonts are used
+ * for PPTX rendering (where the viewer resolves them) but skipped during
+ * Playwright measurement (which uses base64-embedded fonts only).
+ */
 export interface Font {
-  name: string;   // Font name for rendering (e.g., 'Host Grotesk')
-  path: string;   // File path for measurement (e.g., '/path/to/font.woff2')
+  name: string;
+  path: string;
 }
 
 export interface FontFamily {

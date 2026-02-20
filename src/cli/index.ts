@@ -16,9 +16,8 @@ program
   .description('Compile a markdown file into a PPTX presentation')
   .argument('<input>', 'path to markdown file')
   .option('-o, --output <path>', 'output PPTX path (default: input basename + .pptx)')
-  .option('--theme <name>', 'theme name (overrides frontmatter)')
   .option('--default-layout <name>', 'default layout for slides without layout: field')
-  .action(async (input: string, opts: { output?: string; theme?: string; defaultLayout?: string }) => {
+  .action(async (input: string, opts: { output?: string; defaultLayout?: string }) => {
     try {
       await build(input, opts);
     } catch (err: any) {
