@@ -559,6 +559,21 @@ export interface SlideNumberTokens {
   [SLIDE_NUMBER_TOKEN.HALIGN]: HorizontalAlignment;
 }
 
+/**
+ * Maps component names to their required token interfaces.
+ * Theme.components is typed from this map — every entry here must be
+ * provided by any Theme object (compile-time enforced).
+ *
+ * Third-party components extend via declaration merging:
+ * ```typescript
+ * declare module 'tycoslide' {
+ *   interface ComponentTokenMap {
+ *     progressBar: ProgressBarTokens;
+ *   }
+ * }
+ * ```
+ * Theme authors then get compile-time errors if they omit the new component's tokens.
+ */
 export interface ComponentTokenMap {
   [Component.Card]: CardTokens;
   [Component.Quote]: QuoteTokens;
@@ -593,8 +608,11 @@ export interface Theme {
     radius: number;  // Corner radius in inches
   };
   textStyles: { [K in TextStyleName]: TextStyle };
+  /** Component tokens. All ComponentTokenMap entries are required (compile-time enforced).
+   *  The Record<string, ...> intersection enables dynamic runtime access in registry.expand()
+   *  and allows custom components that haven't used declaration merging. */
   components: {
-    [K in keyof ComponentTokenMap]?: Partial<ComponentTokenMap[K]> & {
+    [K in keyof ComponentTokenMap]: ComponentTokenMap[K] & {
       variants?: Record<string, Partial<ComponentTokenMap[K]>>;
     };
   } & Record<string, Record<string, unknown> & { variants?: Record<string, Record<string, unknown>> }>;

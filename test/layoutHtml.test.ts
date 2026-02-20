@@ -7,8 +7,8 @@ import { generateLayoutHTML } from '../dist/layout/layoutHtml.js';
 import { prose, label, text, row, column, image, line, stack, shape } from '../dist/dsl/index.js';
 import { componentRegistry } from '../dist/core/registry.js';
 import { Bounds } from '../dist/core/bounds.js';
-import { HALIGN, VALIGN, DIRECTION, SIZE, SHAPE, DASH_TYPE } from '../dist/core/types.js';
-import type { Theme, } from '../dist/core/types.js';
+import { Component, HALIGN, VALIGN, DIRECTION, SIZE, SHAPE, DASH_TYPE, TEXT_STYLE, GAP, BORDER_STYLE } from '../dist/core/types.js';
+import type { Theme } from '../dist/core/types.js';
 import type { ElementNode } from '../dist/core/nodes.js';
 import { NODE_TYPE } from '../dist/core/nodes.js';
 import path from 'path';
@@ -35,10 +35,43 @@ const mockTheme: Theme = {
     subtleOpacity: 20,
   },
   components: {
-    line: {
+    [Component.Card]: {
+      padding: 0.25,
+      cornerRadius: 0.1,
+      backgroundColor: '666666',
+      backgroundOpacity: 20,
+      borderColor: '666666',
+      borderWidth: 1,
+      titleStyle: TEXT_STYLE.H4,
+      descriptionStyle: TEXT_STYLE.SMALL,
+      gap: GAP.TIGHT,
+    },
+    [Component.Quote]: {
+      padding: 0.5,
+      cornerRadius: 0.1,
+      backgroundColor: '666666',
+      backgroundOpacity: 20,
+      borderColor: '666666',
+      borderWidth: 1,
+      attributionStyle: TEXT_STYLE.SMALL,
+      gap: GAP.NORMAL,
+    },
+    [Component.Table]: {
+      borderStyle: BORDER_STYLE.FULL,
+      borderColor: '666666',
+      borderWidth: 1,
+      cellPadding: 0.1,
+      cellTextStyle: TEXT_STYLE.BODY,
+      headerTextStyle: TEXT_STYLE.BODY,
+    },
+    [Component.Line]: {
       color: '666666',
       width: 1,
       dashType: DASH_TYPE.SOLID,
+    },
+    [Component.SlideNumber]: {
+      style: TEXT_STYLE.FOOTER,
+      hAlign: HALIGN.RIGHT,
     },
   },
   textStyles: {

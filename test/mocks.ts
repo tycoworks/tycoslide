@@ -4,8 +4,8 @@
 import * as assert from 'node:assert';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import type { Theme, TextStyle, FontFamily } from '../src/core/types.js';
-import { TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, HALIGN } from '../src/core/types.js';
+import type { Theme, TextStyle, FontFamily, ComponentTokenMap } from '../src/core/types.js';
+import { Component, TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, HALIGN } from '../src/core/types.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -57,7 +57,7 @@ export function mockTheme(options?: {
 
   // Default component tokens computed from primitive values
   const defaultComponents: Record<string, Record<string, unknown>> = {
-    card: {
+    [Component.Card]: {
       padding,
       cornerRadius: borderRadius,
       backgroundColor: '333333',
@@ -68,7 +68,7 @@ export function mockTheme(options?: {
       descriptionStyle: TEXT_STYLE.SMALL,
       gap: GAP.TIGHT,
     },
-    quote: {
+    [Component.Quote]: {
       padding: padding * 2,
       cornerRadius: borderRadius,
       backgroundColor: '333333',
@@ -78,7 +78,7 @@ export function mockTheme(options?: {
       attributionStyle: TEXT_STYLE.SMALL,
       gap: GAP.NORMAL,
     },
-    table: {
+    [Component.Table]: {
       borderStyle: BORDER_STYLE.FULL,
       borderColor: '333333',
       borderWidth,
@@ -86,16 +86,18 @@ export function mockTheme(options?: {
       cellTextStyle: TEXT_STYLE.BODY,
       headerTextStyle: TEXT_STYLE.BODY,
     },
-    line: {
+    [Component.Line]: {
       color: '333333',
       width: borderWidth,
       dashType: DASH_TYPE.SOLID,
     },
-    slideNumber: {
+    [Component.SlideNumber]: {
       style: TEXT_STYLE.FOOTER,
       hAlign: HALIGN.RIGHT,
     },
   };
+  // Compile-time exhaustiveness: fails if a new ComponentTokenMap entry is missing above
+  const _exhaustive: Record<keyof ComponentTokenMap, unknown> = defaultComponents;
 
   // Deep merge: user-provided components override defaults per-component
   const mergedComponents: Record<string, Record<string, unknown>> = {};
@@ -158,7 +160,7 @@ export function mockTheme(options?: {
       [TEXT_STYLE.FOOTER]: mockTextStyle,
       [TEXT_STYLE.EYEBROW]: mockTextStyle,
     },
-    components: mergedComponents,
+    components: mergedComponents as Theme['components'],
   };
 }
 

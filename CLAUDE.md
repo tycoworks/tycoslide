@@ -34,7 +34,6 @@ npm run typecheck    # Type-check including test files
 
 ```bash
 npx tycoslide build deck.md -o deck.pptx          # Build a single deck
-npx tycoslide build deck.md --theme materialize    # Specify theme (overrides frontmatter)
 npx tycoslide build deck.md --default-layout body  # Set fallback layout
 ```
 
@@ -51,7 +50,7 @@ npx tsc --build      # Rebuilds tycoslide (if changed) then the theme
 - `src/core/` — Types, component registry, renderer, PPTX generation
 - `src/dsl/` — Component implementations (card, table, text, image, etc.)
 - `src/layout/` — HTML measurement via Playwright, flex layout pipeline
-- `src/compiler/` — Markdown document compiler (slot compiler, slide parser)
+- `src/markdown/` — Markdown document compiler (slot compiler, slide parser)
 - `src/themes/` — Default theme
 - `docs/` — Design documents and feature specs
 - `test/` — Tests (uses `node:test`, NOT vitest)
