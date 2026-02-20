@@ -4,7 +4,7 @@
 import { componentRegistry, component, type ExpansionContext, type InferProps, type SchemaShape } from '../core/registry.js';
 import { stack, column } from './containers.js';
 import { shape, image, imageComponent } from './primitives.js';
-import { markdown, text, markdownComponent, textComponent } from './text.js';
+import { text, prose, textComponent, proseComponent } from './text.js';
 import type { SlideNode } from '../core/nodes.js';
 import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE } from '../core/types.js';
 import type { TextStyleName, GapSize, Theme } from '../core/types.js';
@@ -42,10 +42,10 @@ export interface CardTokens {
 const cardSchema = {
   /** Card image (path) - displayed at top */
   image: imageComponent.schema.optional(),
-  /** Card title text */
+  /** Card title (supports markdown: bold, color highlights, etc.) */
   title: textComponent.schema.optional(),
   /** Card description text */
-  description: markdownComponent.schema.optional(),
+  description: proseComponent.schema.optional(),
   /** Whether to show background (default: true) */
   background: schema.boolean().optional(),
   /** Named variant (resolved from theme.components.card.variants) */
@@ -111,7 +111,7 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
   }
 
   if (actualDescription) {
-    children.push(markdown(actualDescription, {
+    children.push(prose(actualDescription, {
       style: descriptionStyle,
       color: descriptionColor,
     }));

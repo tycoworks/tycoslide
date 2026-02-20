@@ -100,7 +100,7 @@ export function validateLayout(
 /**
  * Compile a markdown slide document into a Presentation.
  *
- * Layouts must be registered before calling (e.g., via `registerMaterializeLayouts()`).
+ * Layouts must be registered before calling (e.g., via `registerThemeLayouts()`).
  * Each slide's frontmatter is validated against the layout's Zod schema.
  *
  * @param source - Markdown source with frontmatter and `---` slide delimiters

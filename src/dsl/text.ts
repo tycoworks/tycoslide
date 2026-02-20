@@ -1,24 +1,47 @@
-// Text Components
-// Parses markdown string via unified/remark, transforms MDAST to NormalizedRun[],
-// and expands to a TextNode.
+// Text Component
+// Single component with three content modes, all producing TextNode with NormalizedRun[]:
+//   label()  — CONTENT.PLAIN: no parsing, single run (eyebrows, attributions, copyright)
+//   text()   — CONTENT.RICH:  inline-only rich text (bold, italic, :color[highlights], no bullets/paragraphs)
+//   prose()  — CONTENT.PROSE: structured rich text (bullets, paragraphs, inline formatting)
 
 import { unified } from 'unified';
+import type { Processor } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkDirective from 'remark-directive';
 import type { Root, PhrasingContent, List, Paragraph, ListItem } from 'mdast';
 import type { TextDirective } from 'mdast-util-directive';
-import type { NormalizedRun, HighlightPair, ColorScheme } from '../core/types.js';
-import { HALIGN, VALIGN, TEXT_STYLE } from '../core/types.js';
+import type { NormalizedRun, ColorScheme, ContentType } from '../core/types.js';
+import { HALIGN, VALIGN, TEXT_STYLE, CONTENT } from '../core/types.js';
 import { NODE_TYPE, type ElementNode } from '../core/nodes.js';
 import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape } from '../core/registry.js';
 import { SYNTAX } from '../core/mdast.js';
 import { schema } from '../schema.js';
-
-// ============================================
-// CONSTANTS
-// ============================================
-
 import { Component } from '../core/types.js';
+
+// ============================================
+// PARSERS
+// ============================================
+
+/** Plugin that disables block-level constructs at the micromark level.
+ *  Used by CONTENT.RICH to prevent `1. Problem` being parsed as an ordered list. */
+function remarkDisableBlocks(this: Processor): void {
+  const data = this.data();
+  const ext = (data.micromarkExtensions as any[]) || ((data as any).micromarkExtensions = []);
+  ext.push({
+    disable: {
+      null: [
+        'list', 'headingAtx', 'setextUnderline', 'blockQuote',
+        'thematicBreak', 'codeFenced', 'codeIndented', 'htmlFlow', 'definition',
+      ],
+    },
+  });
+}
+
+/** Full parser — all constructs enabled (for CONTENT.PROSE) */
+const proseProcessor = unified().use(remarkParse).use(remarkDirective);
+
+/** Inline-only parser — block constructs disabled (for CONTENT.RICH) */
+const inlineProcessor = unified().use(remarkParse).use(remarkDirective).use(remarkDisableBlocks);
 
 // ============================================
 // SCHEMAS & TYPES
@@ -32,28 +55,13 @@ const textSchema = {
   vAlign: schema.vAlign().optional(),
   bulletColor: schema.string().optional(),
   lineHeightMultiplier: schema.number().optional(),
+  content: schema.content().optional(),
 } satisfies SchemaShape;
 
-export type TextProps = InferProps<typeof textSchema>;
+export type TextProps = Omit<InferProps<typeof textSchema>, 'content'>;
 
-/** Full props including body content (used internally by expansion) */
-export type TextComponentProps = { body: string } & TextProps;
-
-// ============================================
-// PARSER
-// ============================================
-
-const processor = unified()
-  .use(remarkParse)
-  .use(remarkDirective);
-
-/**
- * Parse markdown string into MDAST (Markdown Abstract Syntax Tree).
- * Supports CommonMark + remark-directive text directives (:name[text]).
- */
-function parseMarkdown(input: string): Root {
-  return processor.parse(input) as Root;
-}
+/** Full props including body content and content kind (used internally by expansion) */
+export type TextComponentProps = { body: string; content?: ContentType } & TextProps;
 
 // ============================================
 // TRANSFORMER
@@ -67,7 +75,7 @@ function parseMarkdown(input: string): Root {
  * - list (ordered/unordered): bullet runs
  * - strong: bold: true
  * - emphasis: italic: true
- * - textDirective: :name[text] -> highlight from theme
+ * - textDirective: :name[text] -> accent color from theme
  */
 function mdastToRuns(
   tree: Root,
@@ -164,12 +172,11 @@ function transformInline(
             `Unknown accent '${directive.name}'. Available: ${available}`
           );
         }
-        const highlight: HighlightPair = { bg: colors.background, text: accentColor };
         transformInline(
           directive.children as PhrasingContent[],
           colors,
           runs,
-          { ...defaults, highlight }
+          { ...defaults, color: accentColor }
         );
         break;
       }
@@ -182,15 +189,55 @@ function transformInline(
 }
 
 // ============================================
-// EXPANSION FUNCTION
+// HEADING STYLE MAP (exported for document component)
 // ============================================
 
-function expandMarkdown(props: TextComponentProps, context: { theme: any }): ElementNode {
-  const tree = parseMarkdown(props.body);
+export const HEADING_STYLE: Record<number, TextProps['style']> = {
+  1: TEXT_STYLE.H1,
+  2: TEXT_STYLE.H2,
+  3: TEXT_STYLE.H3,
+  4: TEXT_STYLE.H4,
+};
+
+// ============================================
+// EXPAND — single function, switches on content kind
+// ============================================
+
+function expandText(props: TextComponentProps, context: { theme: any }): ElementNode {
+  const contentKind = props.content ?? CONTENT.RICH;
+
+  // PLAIN — no parsing, single run
+  if (contentKind === CONTENT.PLAIN) {
+    return {
+      type: NODE_TYPE.TEXT,
+      content: [{ text: props.body }],
+      style: props.style,
+      color: props.color,
+      hAlign: props.hAlign ?? HALIGN.LEFT,
+      vAlign: props.vAlign ?? VALIGN.TOP,
+      lineHeightMultiplier: props.lineHeightMultiplier,
+    };
+  }
+
+  // RICH or PROSE — parse markdown
+  const parser = contentKind === CONTENT.RICH ? inlineProcessor : proseProcessor;
+  const tree = parser.parse(props.body) as Root;
+
+  // RICH: validate single paragraph (no multi-block)
+  if (contentKind === CONTENT.RICH) {
+    const blocks = tree.children.filter(c => c.type !== SYNTAX.THEMATIC_BREAK);
+    if (blocks.length > 1 || (blocks.length === 1 && blocks[0].type !== SYNTAX.PARAGRAPH)) {
+      throw new Error(
+        `text() only supports inline formatting (bold, italic, colors). ` +
+        `For bullets or multiple paragraphs, use prose().`
+      );
+    }
+  }
+
   const runs = mdastToRuns(tree, context.theme.colors);
 
-  // Apply bulletColor to all bullet runs if specified
-  if (props.bulletColor) {
+  // PROSE: apply bulletColor to all bullet runs if specified
+  if (contentKind === CONTENT.PROSE && props.bulletColor) {
     for (const run of runs) {
       if (run.bullet && typeof run.bullet === 'object') {
         run.bullet = { ...run.bullet, color: props.bulletColor };
@@ -212,57 +259,8 @@ function expandMarkdown(props: TextComponentProps, context: { theme: any }): Ele
 }
 
 // ============================================
-// HEADING STYLE MAP (exported for block component)
+// COMPONENT REGISTRATION — single defineContent
 // ============================================
-
-export const HEADING_STYLE: Record<number, TextProps['style']> = {
-  1: TEXT_STYLE.H1,
-  2: TEXT_STYLE.H2,
-  3: TEXT_STYLE.H3,
-  4: TEXT_STYLE.H4,
-};
-
-// ============================================
-// COMPONENT DEFINITION & REGISTRATION
-// ============================================
-
-export const markdownComponent = componentRegistry.defineContent({
-  name: Component.Markdown,
-  body: schema.string(),
-  params: textSchema,
-  expand: expandMarkdown,
-});
-
-/**
- * Create a markdown text component node.
- *
- * @example
- * ```typescript
- * markdown("**Bold** and :teal[highlighted] text.")
- * markdown("- First bullet\n- Second bullet", { style: TEXT_STYLE.BODY })
- * ```
- */
-export function markdown(content: string, props?: TextProps): ComponentNode<TextComponentProps> {
-  return component(Component.Markdown, { body: content, ...props });
-}
-
-// ============================================
-// PLAIN TEXT (no markdown parsing)
-// ============================================
-
-function expandText(props: TextComponentProps, _context: { theme: any }): ElementNode {
-  const runs: NormalizedRun[] = [{ text: props.body }];
-
-  return {
-    type: NODE_TYPE.TEXT,
-    content: runs,
-    style: props.style,
-    color: props.color,
-    hAlign: props.hAlign ?? HALIGN.LEFT,
-    vAlign: props.vAlign ?? VALIGN.TOP,
-    lineHeightMultiplier: props.lineHeightMultiplier,
-  };
-}
 
 export const textComponent = componentRegistry.defineContent({
   name: Component.Text,
@@ -271,18 +269,55 @@ export const textComponent = componentRegistry.defineContent({
   expand: expandText,
 });
 
+// Semantic aliases — used in layout param schemas to communicate intent
+// (e.g., `title: labelComponent.schema` = "this param is plain text")
+export const labelComponent = textComponent;
+export const proseComponent = textComponent;
+
+// ============================================
+// DSL HELPERS
+// ============================================
+
 /**
  * Create a plain text component node (no markdown parsing).
- *
- * Use for labels and structural text that should never be interpreted
- * as markdown: eyebrows, attributions, captions, slide numbers.
+ * Use for structural chrome: eyebrows, attributions, copyright.
  *
  * @example
  * ```typescript
- * text("ARCHITECTURE", { style: TEXT_STYLE.EYEBROW })
- * text("— Sam Spelsberg, CTO", { style: TEXT_STYLE.SMALL })
+ * label("ARCHITECTURE", { style: TEXT_STYLE.EYEBROW })
+ * label("— Jane Doe, CTO", { style: TEXT_STYLE.SMALL })
  * ```
  */
-export function text(content: string, props?: TextProps): ComponentNode<TextComponentProps> {
-  return component(Component.Text, { body: content, ...props });
+export function label(body: string, props?: TextProps): ComponentNode<TextComponentProps> {
+  return component(Component.Text, { body, content: CONTENT.PLAIN, ...props });
+}
+
+/**
+ * Create an inline rich text component node.
+ * Supports bold, italic, and :color[highlights].
+ * Block constructs (lists, headings) are disabled — `1. Problem` stays literal.
+ * Rejects multi-paragraph input — use prose() for that.
+ *
+ * @example
+ * ```typescript
+ * text("1. Problem statement", { style: TEXT_STYLE.H4 })
+ * text("**Bold** and :teal[highlighted]")
+ * ```
+ */
+export function text(body: string, props?: TextProps): ComponentNode<TextComponentProps> {
+  return component(Component.Text, { body, content: CONTENT.RICH, ...props });
+}
+
+/**
+ * Create a structured rich text component node.
+ * Supports bullets, paragraphs, bold, italic, and :color[highlights].
+ *
+ * @example
+ * ```typescript
+ * prose("**Bold** and :teal[highlighted] text.")
+ * prose("- First bullet\n- Second bullet", { style: TEXT_STYLE.BODY })
+ * ```
+ */
+export function prose(body: string, props?: TextProps): ComponentNode<TextComponentProps> {
+  return component(Component.Text, { body, content: CONTENT.PROSE, ...props });
 }

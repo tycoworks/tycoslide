@@ -14,7 +14,7 @@ export interface LoadedTheme {
 
 /**
  * Load a theme package by name.
- * The name is the exact npm package name (e.g., "materialize_theme").
+ * The name is the exact npm package name (e.g., "acme_theme").
  *
  * The theme package must export:
  *   - theme: Theme (required)

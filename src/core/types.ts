@@ -34,7 +34,6 @@ export enum Component {
   Line = 'line',
   Shape = 'shape',
   SlideNumber = 'slideNumber',
-  Markdown = 'markdown',
   Text = 'text',
   Row = 'row',
   Column = 'column',
@@ -44,8 +43,17 @@ export enum Component {
   Quote = 'quote',
   Table = 'table',
   Mermaid = 'mermaid',
-  Block = 'block',
+  Document = 'document',
 }
+
+// Content kinds for the Text component — controls parsing level
+export const CONTENT = {
+  PLAIN: 'plain',
+  RICH: 'rich',
+  PROSE: 'prose',
+} as const;
+export type ContentType = typeof CONTENT[keyof typeof CONTENT];
+export const CONTENT_VALUES = Object.values(CONTENT) as [ContentType, ...ContentType[]];
 
 export const GAP = {
   NONE: 'none',

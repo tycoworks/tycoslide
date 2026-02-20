@@ -4,7 +4,7 @@
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import { generateLayoutHTML } from '../dist/layout/layoutHtml.js';
-import { markdown, text, row, column, image, line, stack, shape } from '../dist/dsl/index.js';
+import { prose, label, text, row, column, image, line, stack, shape } from '../dist/dsl/index.js';
 import { componentRegistry } from '../dist/core/registry.js';
 import { Bounds } from '../dist/core/bounds.js';
 import { HALIGN, VALIGN, DIRECTION, SIZE, SHAPE } from '../dist/core/types.js';
@@ -80,78 +80,78 @@ describe('HTML Measurement Generation', () => {
 
   describe('LayoutContainer (unified Row/Column)', () => {
     test('row generates flex-direction: row', async () => {
-      const node = row(text('A'), text('B'));
+      const node = row(label('A'), label('B'));
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('flex-direction:row'), 'Row should have flex-direction:row');
     });
 
     test('column generates flex-direction: column', async () => {
-      const node = column(text('A'), text('B'));
+      const node = column(label('A'), label('B'));
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('flex-direction:column'), 'Column should have flex-direction:column');
     });
 
     test('row with hAlign center generates justify-content: center', async () => {
-      const node = row({ hAlign: HALIGN.CENTER }, text('A'));
+      const node = row({ hAlign: HALIGN.CENTER }, label('A'));
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('justify-content:center'), 'Row hAlign center should use justify-content:center');
     });
 
     test('row with hAlign right generates justify-content: flex-end', async () => {
-      const node = row({ hAlign: HALIGN.RIGHT }, text('A'));
+      const node = row({ hAlign: HALIGN.RIGHT }, label('A'));
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('justify-content:flex-end'), 'Row hAlign right should use justify-content:flex-end');
     });
 
     test('row with padding generates padding style', async () => {
-      const node = row({ padding: 0.5 }, text('A'));
+      const node = row({ padding: 0.5 }, label('A'));
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('padding:'), 'Row with padding should generate padding style');
     });
 
     test('column with padding generates padding style', async () => {
-      const node = column({ padding: 0.5 }, text('A'));
+      const node = column({ padding: 0.5 }, label('A'));
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('padding:'), 'Column with padding should generate padding style');
     });
   });
 
   describe('Text rendering', () => {
-    test('text generates width: 100%', async () => {
-      const node = text('Hello world');
+    test('label generates width: 100%', async () => {
+      const node = label('Hello world');
       const { html } = await genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('width:100%'), 'Text should have width:100%');
+      assert.ok(html.includes('width:100%'), 'Label should have width:100%');
     });
 
-    test('text with hAlign center generates text-align: center', async () => {
-      const node = text('Hello', { hAlign: HALIGN.CENTER });
+    test('label with hAlign center generates text-align: center', async () => {
+      const node = label('Hello', { hAlign: HALIGN.CENTER });
       const { html } = await genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('text-align:center'), 'Text with hAlign center should use text-align:center');
+      assert.ok(html.includes('text-align:center'), 'Label with hAlign center should use text-align:center');
     });
 
-    test('text with hAlign right generates text-align: right', async () => {
-      const node = text('Hello', { hAlign: HALIGN.RIGHT });
+    test('label with hAlign right generates text-align: right', async () => {
+      const node = label('Hello', { hAlign: HALIGN.RIGHT });
       const { html } = await genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('text-align:right'), 'Text with hAlign right should use text-align:right');
+      assert.ok(html.includes('text-align:right'), 'Label with hAlign right should use text-align:right');
     });
   });
 
   describe('Bullet rendering', () => {
     test('bullet text generates padding-left', async () => {
-      const node = markdown('- Item');
+      const node = prose('- Item');
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('padding-left:'), 'Bullet should have padding-left');
     });
 
     test('bullet includes bullet character', async () => {
-      const node = markdown('- Item');
+      const node = prose('- Item');
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('•'), 'Bullet should include bullet character');
     });
 
     test('multi-run bullet renders all runs in one div', async () => {
       // "- **Bold:** plain text" produces two runs: bold with bullet, plain without
-      const node = markdown('- **Bold:** plain text');
+      const node = prose('- **Bold:** plain text');
       const { html } = await genHTML(node, bounds, mockTheme);
       // The bullet div should contain both the bold and plain spans
       const bulletDivMatch = html.match(/<div[^>]*padding-left[^>]*>(.*?)<\/div>/);
@@ -164,13 +164,13 @@ describe('HTML Measurement Generation', () => {
 
   describe('Paragraph spacing', () => {
     test('breakLine generates block spacer div with height: 1em', async () => {
-      const node = markdown('Para 1\n\nPara 2');
+      const node = prose('Para 1\n\nPara 2');
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('height:1em'), 'breakLine should generate a spacer div with height:1em');
     });
 
     test('breakLine does not generate br tag', async () => {
-      const node = markdown('Para 1\n\nPara 2');
+      const node = prose('Para 1\n\nPara 2');
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(!html.includes('<br'), 'breakLine should not use <br> — uses block spacer instead');
     });
@@ -180,14 +180,14 @@ describe('HTML Measurement Generation', () => {
     test('row with explicit height in column uses flex: 0 0 (fixed main axis)', async () => {
       // This is the title-slide logo bug: row({ height: 0.33 }) inside a column
       // should NOT get flex: 1 1 0 which would override the explicit height
-      const node = column(row({ height: 0.33 }, text('Logo')));
+      const node = column(row({ height: 0.33 }, label('Logo')));
       const { html } = await genHTML(node, bounds, mockTheme);
       // 0.33 inches * 96 DPI = 31.68px
       assert.ok(html.includes('flex:0 0 31.68px'), 'Row with explicit height in column should get flex:0 0 <height>px');
     });
 
     test('column with explicit width in row uses flex: 0 0 (fixed main axis)', async () => {
-      const node = row(column({ width: 3 }, text('Left')), text('Right'));
+      const node = row(column({ width: 3 }, label('Left')), label('Right'));
       const { html } = await genHTML(node, bounds, mockTheme);
       // 3 inches * 96 DPI = 288px
       assert.ok(html.includes('flex:0 0 288px'), 'Column with explicit width in row should get flex:0 0 <width>px');
@@ -196,7 +196,7 @@ describe('HTML Measurement Generation', () => {
     test('row with no height in column uses intrinsic height (no flex grow)', async () => {
       // In a column, children default to intrinsic height (content-determined)
       // Only SIZE.FILL triggers flex: 1 1 0
-      const node = column(row(text('A'), text('B')));
+      const node = column(row(label('A'), label('B')));
       const { html } = await genHTML(node, bounds, mockTheme);
       // The row inside the column should NOT get flex: 1 1 0
       // (The outer column gets it via .root > * CSS, but the row itself should be intrinsic)
@@ -209,7 +209,7 @@ describe('HTML Measurement Generation', () => {
     });
 
     test('row with SIZE.FILL height in column fills available space', async () => {
-      const node = column(row({ height: SIZE.FILL }, text('A')));
+      const node = column(row({ height: SIZE.FILL }, label('A')));
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('flex:1 1 0'), 'Row with SIZE.FILL height should fill');
     });
@@ -217,8 +217,8 @@ describe('HTML Measurement Generation', () => {
     test('column with explicit height in column uses flex: 0 0 (cross-axis explicit)', async () => {
       // A column inside another column with fixed height
       const node = column(
-        column({ height: 2 }, text('Fixed')),
-        text('Below'),
+        column({ height: 2 }, label('Fixed')),
+        label('Below'),
       );
       const { html } = await genHTML(node, bounds, mockTheme);
       // 2 inches * 96 = 192px
@@ -227,7 +227,7 @@ describe('HTML Measurement Generation', () => {
 
     test('row with explicit height also sets cross-axis height when in row parent', async () => {
       // A row inside another row - height is cross-axis, should use explicit height CSS
-      const node = row(row({ height: 1 }, text('Inner')));
+      const node = row(row({ height: 1 }, label('Inner')));
       const { html } = await genHTML(node, bounds, mockTheme);
       // height is cross-axis in a row parent, so should be explicit CSS height
       assert.ok(html.includes('height:96px'), 'Row with height in row parent should set explicit height CSS');
@@ -250,14 +250,14 @@ describe('HTML Measurement Generation', () => {
 
   describe('Line direction awareness', () => {
     test('line in column gets width: 100% (horizontal separator)', async () => {
-      const node = column(text('Above'), line(), text('Below'));
+      const node = column(label('Above'), line(), label('Below'));
       const { html } = await genHTML(node, bounds, mockTheme);
       // Line in column = horizontal separator
       assert.ok(html.includes('width:100%'), 'Line in column should be full-width horizontal separator');
     });
 
     test('line in row gets align-self: stretch (vertical separator)', async () => {
-      const node = row(text('Left'), line(), text('Right'));
+      const node = row(label('Left'), line(), label('Right'));
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('align-self:stretch'), 'Line in row should stretch vertically');
     });
@@ -265,19 +265,19 @@ describe('HTML Measurement Generation', () => {
 
   describe('Safe vertical alignment (overflow protection)', () => {
     test('column with vAlign MIDDLE generates safe center', async () => {
-      const node = column({ vAlign: VALIGN.MIDDLE }, text('Centered'));
+      const node = column({ vAlign: VALIGN.MIDDLE }, label('Centered'));
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('safe center'), 'vAlign MIDDLE should use "safe center" to prevent content above parent');
     });
 
     test('column with vAlign BOTTOM generates safe flex-end', async () => {
-      const node = column({ vAlign: VALIGN.BOTTOM }, text('Bottom'));
+      const node = column({ vAlign: VALIGN.BOTTOM }, label('Bottom'));
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('safe flex-end'), 'vAlign BOTTOM should use "safe flex-end"');
     });
 
     test('column with vAlign TOP (default) generates flex-start (no safe needed)', async () => {
-      const node = column(text('Top'));
+      const node = column(label('Top'));
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('justify-content:flex-start'), 'vAlign TOP should use plain flex-start');
     });

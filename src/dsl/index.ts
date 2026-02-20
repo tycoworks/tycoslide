@@ -35,15 +35,21 @@ export {
   type TableTokens,
 } from './table.js';
 
-// Text (markdown-powered + plain)
+// Text (label, inline-rich, structured)
 export {
-  markdown,
+  label,
   text,
-  markdownComponent,
+  prose,
+  labelComponent,
   textComponent,
+  proseComponent,
+  HEADING_STYLE,
   type TextProps,
   type TextComponentProps,
 } from './text.js';
+
+// Content kinds (re-export from core for convenience)
+export { CONTENT, type ContentType } from '../core/types.js';
 
 // Syntax constants (node type names for markdown AST)
 export { SYNTAX } from '../core/mdast.js';
@@ -73,8 +79,8 @@ export {
   type MermaidComponentProps,
 } from './mermaid.js';
 
-// Block (content dispatcher — parses markdown string into ComponentNodes)
+// Document (full markdown parser — headings, tables, directives)
 export {
-  block,
-  blockComponent,
-} from './block.js';
+  document,
+  documentComponent,
+} from './document.js';

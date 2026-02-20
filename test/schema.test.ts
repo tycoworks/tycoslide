@@ -7,7 +7,7 @@ import { schema } from '../src/schema.js';
 import { layoutRegistry, COMPONENT_TYPE } from '../src/core/registry.js';
 import { Component } from '../src/core/types.js';
 import { compileSlot } from '../src/markdown/slotCompiler.js';
-import '../src/dsl/block.js';
+import '../src/dsl/document.js';
 import '../src/dsl/primitives.js';
 
 describe('schema', () => {
@@ -52,16 +52,16 @@ describe('schema', () => {
 
   describe('compileSlot', () => {
     it('compiles directive to ComponentNode[]', () => {
-      const result = compileSlot(':::block\nHello world\n:::');
+      const result = compileSlot(':::document\nHello world\n:::');
       assert.ok(Array.isArray(result));
       assert.strictEqual(result.length, 1);
-      assert.strictEqual(result[0].componentName, Component.Block);
+      assert.strictEqual(result[0].componentName, Component.Document);
     });
 
     it('compiles multiple directives', () => {
-      const result = compileSlot(':::block\nText\n:::\n\n:::image\npic.png\n:::');
+      const result = compileSlot(':::document\nText\n:::\n\n:::image\npic.png\n:::');
       assert.strictEqual(result.length, 2);
-      assert.strictEqual(result[0].componentName, Component.Block);
+      assert.strictEqual(result[0].componentName, Component.Document);
       assert.strictEqual(result[1].componentName, Component.Image);
     });
 
@@ -73,7 +73,7 @@ describe('schema', () => {
     it('auto-wraps bare MDAST in default component', () => {
       const result = compileSlot('Hello world');
       assert.strictEqual(result.length, 1);
-      assert.strictEqual(result[0].componentName, Component.Block);
+      assert.strictEqual(result[0].componentName, Component.Document);
     });
   });
 

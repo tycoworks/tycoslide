@@ -5,7 +5,7 @@
 import { componentRegistry, component, type ExpansionContext, type InferProps, type SchemaShape } from '../core/registry.js';
 import { stack, column, row } from './containers.js';
 import { shape, image as imageNode, imageComponent } from './primitives.js';
-import { markdown, text, markdownComponent, textComponent } from './text.js';
+import { prose, label, proseComponent, labelComponent } from './text.js';
 import type { SlideNode } from '../core/nodes.js';
 import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE, SIZE } from '../core/types.js';
 import type { TextStyleName, GapSize, Theme } from '../core/types.js';
@@ -39,9 +39,9 @@ export interface QuoteTokens {
 
 const quoteSchema = {
   /** Quote text (markdown supported). From directives, can come via body instead. */
-  quote: markdownComponent.schema.optional(),
+  quote: proseComponent.schema.optional(),
   /** Attribution line, e.g. "— Jane Smith, CTO" */
-  attribution: textComponent.schema.optional(),
+  attribution: labelComponent.schema.optional(),
   /** Optional image/logo displayed above the quote */
   image: imageComponent.schema.optional(),
   /** Whether to show background (default: true) */
@@ -101,9 +101,9 @@ function expandQuote(props: QuoteProps & { body?: string }, context: ExpansionCo
   if (imagePath) {
     children.push(row({ hAlign: HALIGN.CENTER }, imageNode(imagePath)));
   }
-  children.push(markdown(actualQuote!, quoteStyle ? { style: quoteStyle } : undefined));
+  children.push(prose(actualQuote!, quoteStyle ? { style: quoteStyle } : undefined));
   if (attribution) {
-    children.push(text(attribution, { style: attributionStyle, hAlign: HALIGN.RIGHT }));
+    children.push(label(attribution, { style: attributionStyle, hAlign: HALIGN.RIGHT }));
   }
 
   const contentLayer = column(

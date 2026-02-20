@@ -5,8 +5,8 @@
 import { describe, test, it } from 'node:test';
 import * as assert from 'node:assert';
 import {
-  markdown,
-  text,
+  prose,
+  label,
   image,
   line,
   shape,
@@ -47,32 +47,32 @@ async function expand(node: any) {
 // TEXT FACTORY FUNCTIONS
 // ============================================
 
-describe('markdown()', () => {
+describe('prose()', () => {
   test('returns ComponentNode', () => {
-    const node = markdown('hello');
+    const node = prose('hello');
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-    assert.strictEqual(node.componentName, Component.Markdown);
+    assert.strictEqual(node.componentName, Component.Text);
   });
 
   test('expands to correct NODE_TYPE', async () => {
-    const node = await expand(markdown('hello')) as TextNode;
+    const node = await expand(prose('hello')) as TextNode;
     assert.strictEqual(node.type, NODE_TYPE.TEXT);
   });
 
   test('sets content correctly after expansion', async () => {
-    const node = await expand(markdown('hello world')) as TextNode;
+    const node = await expand(prose('hello world')) as TextNode;
     const runs = node.content as any[];
     assert.strictEqual(runs[0].text, 'hello world');
   });
 
   test('handles empty string content', async () => {
-    const node = await expand(markdown('')) as TextNode;
+    const node = await expand(prose('')) as TextNode;
     assert.ok(Array.isArray(node.content));
     assert.strictEqual((node.content as any[]).length, 0);
   });
 
   test('applies explicit alignment defaults', async () => {
-    const node = await expand(markdown('test')) as TextNode;
+    const node = await expand(prose('test')) as TextNode;
     assert.strictEqual(node.style, undefined);
     assert.strictEqual(node.color, undefined);
     assert.strictEqual(node.hAlign, HALIGN.LEFT);   // Explicit default
@@ -80,27 +80,27 @@ describe('markdown()', () => {
   });
 
   test('applies style prop', async () => {
-    const node = await expand(markdown('test', { style: TEXT_STYLE.H1 })) as TextNode;
+    const node = await expand(prose('test', { style: TEXT_STYLE.H1 })) as TextNode;
     assert.strictEqual(node.style, TEXT_STYLE.H1);
   });
 
   test('applies color prop', async () => {
-    const node = await expand(markdown('test', { color: 'FF0000' })) as TextNode;
+    const node = await expand(prose('test', { color: 'FF0000' })) as TextNode;
     assert.strictEqual(node.color, 'FF0000');
   });
 
   test('applies hAlign prop', async () => {
-    const node = await expand(markdown('test', { hAlign: HALIGN.CENTER })) as TextNode;
+    const node = await expand(prose('test', { hAlign: HALIGN.CENTER })) as TextNode;
     assert.strictEqual(node.hAlign, HALIGN.CENTER);
   });
 
   test('applies vAlign prop', async () => {
-    const node = await expand(markdown('test', { vAlign: VALIGN.MIDDLE })) as TextNode;
+    const node = await expand(prose('test', { vAlign: VALIGN.MIDDLE })) as TextNode;
     assert.strictEqual(node.vAlign, VALIGN.MIDDLE);
   });
 
   test('applies all props together', async () => {
-    const node = await expand(markdown('test', {
+    const node = await expand(prose('test', {
       style: TEXT_STYLE.BODY,
       color: '00FF00',
       hAlign: HALIGN.RIGHT,
@@ -312,9 +312,9 @@ describe('slideNumber()', () => {
 // ============================================
 
 describe('row()', () => {
-  const child1 = text('A');
-  const child2 = text('B');
-  const child3 = text('C');
+  const child1 = label('A');
+  const child2 = label('B');
+  const child3 = label('C');
 
   test('returns ComponentNode', () => {
     const node = row(child1);
@@ -379,21 +379,21 @@ describe('row()', () => {
   });
 
   test('distinguishes props from children', async () => {
-    const node = row({ gap: GAP.TIGHT }, text('A'));
+    const node = row({ gap: GAP.TIGHT }, label('A'));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.children.length, 1);
     assert.strictEqual(expanded.gap, GAP.TIGHT);
   });
 
   test('accepts props with children (props first)', async () => {
-    const node = row({ gap: GAP.TIGHT }, text('A'), text('B'));
+    const node = row({ gap: GAP.TIGHT }, label('A'), label('B'));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.children.length, 2);
     assert.strictEqual(expanded.gap, GAP.TIGHT);
   });
 
   test('applies all props together', async () => {
-    const node = row({ gap: GAP.NORMAL, vAlign: VALIGN.MIDDLE }, text('A'), text('B'));
+    const node = row({ gap: GAP.NORMAL, vAlign: VALIGN.MIDDLE }, label('A'), label('B'));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.gap, GAP.NORMAL);
     assert.strictEqual(expanded.vAlign, VALIGN.MIDDLE);
@@ -401,7 +401,7 @@ describe('row()', () => {
   });
 
   test('handles single child', async () => {
-    const node = row(text('A'));
+    const node = row(label('A'));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.children.length, 1);
   });
@@ -418,9 +418,9 @@ describe('row()', () => {
 // ============================================
 
 describe('column()', () => {
-  const child1 = text('A');
-  const child2 = text('B');
-  const child3 = text('C');
+  const child1 = label('A');
+  const child2 = label('B');
+  const child3 = label('C');
 
   test('returns ComponentNode', () => {
     const node = column(child1);
@@ -485,27 +485,27 @@ describe('column()', () => {
   });
 
   test('applies numeric height', async () => {
-    const node = column({ height: 2.5 }, text('A'));
+    const node = column({ height: 2.5 }, label('A'));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.height, 2.5);
   });
 
   test('distinguishes props from children', async () => {
-    const node = column({ gap: GAP.TIGHT }, text('A'));
+    const node = column({ gap: GAP.TIGHT }, label('A'));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.children.length, 1);
     assert.strictEqual(expanded.gap, GAP.TIGHT);
   });
 
   test('accepts props with children (props first)', async () => {
-    const node = column({ gap: GAP.TIGHT }, text('A'), text('B'));
+    const node = column({ gap: GAP.TIGHT }, label('A'), label('B'));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.children.length, 2);
     assert.strictEqual(expanded.gap, GAP.TIGHT);
   });
 
   test('applies all props together', async () => {
-    const node = column({ height: SIZE.FILL, gap: GAP.NORMAL, vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER }, text('A'), text('B'));
+    const node = column({ height: SIZE.FILL, gap: GAP.NORMAL, vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER }, label('A'), label('B'));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.height, SIZE.FILL);
     assert.strictEqual(expanded.gap, GAP.NORMAL);
@@ -515,7 +515,7 @@ describe('column()', () => {
   });
 
   test('handles single child', async () => {
-    const node = column(text('A'));
+    const node = column(label('A'));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.children.length, 1);
   });
@@ -532,8 +532,8 @@ describe('column()', () => {
 // ============================================
 
 describe('stack()', () => {
-  const child1 = text('A');
-  const child2 = text('B');
+  const child1 = label('A');
+  const child2 = label('B');
 
   test('returns ComponentNode', () => {
     const node = stack(child1);
@@ -590,12 +590,12 @@ describe('stack()', () => {
 // ============================================
 
 describe('grid()', () => {
-  const child1 = text('A');
-  const child2 = text('B');
-  const child3 = text('C');
-  const child4 = text('D');
-  const child5 = text('E');
-  const child6 = text('F');
+  const child1 = label('A');
+  const child2 = label('B');
+  const child3 = label('C');
+  const child4 = label('D');
+  const child5 = label('E');
+  const child6 = label('F');
 
   /** Expand grid ComponentNode to ContainerNode (column) and return its row children */
   async function expandGrid(gridNode: ReturnType<typeof grid>): Promise<ContainerNode[]> {

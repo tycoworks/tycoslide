@@ -12,8 +12,8 @@ import { parseSlideDocument, FrontmatterParseError } from '../src/markdown/slide
 describe('Slide Parser', () => {
   describe('global frontmatter', () => {
     it('should extract global frontmatter from file header', () => {
-      const doc = parseSlideDocument('---\ntheme: materialize\ntitle: My Deck\n---\n');
-      assert.strictEqual(doc.global.theme, 'materialize');
+      const doc = parseSlideDocument('---\ntheme: acme\ntitle: My Deck\n---\n');
+      assert.strictEqual(doc.global.theme, 'acme');
       assert.strictEqual(doc.global.title, 'My Deck');
       assert.strictEqual(doc.slides.length, 0);
     });
@@ -148,17 +148,17 @@ describe('Slide Parser', () => {
   describe('colon-in-body (regression: YAML false positives)', () => {
     it('should NOT treat "Takeaway: text" as frontmatter', () => {
       const doc = parseSlideDocument(
-        '---\ntheme: test\n---\n\n---\nlayout: statement\n---\n\nTakeaway: Materialize makes data fresh.'
+        '---\ntheme: test\n---\n\n---\nlayout: statement\n---\n\nTakeaway: Acme makes data fresh.'
       );
       assert.strictEqual(doc.slides[0].frontmatter.layout, 'statement');
-      assert.strictEqual(doc.slides[0].body, 'Takeaway: Materialize makes data fresh.');
+      assert.strictEqual(doc.slides[0].body, 'Takeaway: Acme makes data fresh.');
     });
 
     it('should NOT treat "Problem: text" as frontmatter', () => {
       const doc = parseSlideDocument(
-        '---\ntheme: test\n---\n\n---\nlayout: card\n---\n\nProblem: Legacy systems are slow.\n\nSolution: Use Materialize.'
+        '---\ntheme: test\n---\n\n---\nlayout: card\n---\n\nProblem: Legacy systems are slow.\n\nSolution: Use Acme.'
       );
-      assert.strictEqual(doc.slides[0].body, 'Problem: Legacy systems are slow.\n\nSolution: Use Materialize.');
+      assert.strictEqual(doc.slides[0].body, 'Problem: Legacy systems are slow.\n\nSolution: Use Acme.');
       assert.strictEqual(doc.slides[0].frontmatter.layout, 'card');
     });
 
@@ -269,7 +269,7 @@ describe('Slide Parser', () => {
   describe('full document', () => {
     it('should parse a complete multi-slide document', () => {
       const source = `---
-theme: materialize
+theme: acme
 ---
 
 ---
@@ -284,7 +284,7 @@ title: Value Proposition
 notes: Emphasize real-time capabilities.
 ---
 
-Materialize is a live data layer.
+Acme is a live data layer.
 
 ---
 layout: twoColumn
@@ -295,12 +295,12 @@ Legacy systems can't keep up.
 
 ::right::
 
-Materialize provides real-time views.`;
+Acme provides real-time views.`;
 
       const doc = parseSlideDocument(source);
 
       // Global
-      assert.strictEqual(doc.global.theme, 'materialize');
+      assert.strictEqual(doc.global.theme, 'acme');
 
       // Slide 0: section with title in frontmatter
       assert.strictEqual(doc.slides[0].frontmatter.layout, 'section');
@@ -312,12 +312,12 @@ Materialize provides real-time views.`;
       assert.strictEqual(doc.slides[1].frontmatter.eyebrow, 'INTRO');
       assert.strictEqual(doc.slides[1].frontmatter.title, 'Value Proposition');
       assert.strictEqual(doc.slides[1].frontmatter.notes, 'Emphasize real-time capabilities.');
-      assert.strictEqual(doc.slides[1].body, 'Materialize is a live data layer.');
+      assert.strictEqual(doc.slides[1].body, 'Acme is a live data layer.');
 
       // Slide 2: twoColumn with slots
       assert.strictEqual(doc.slides[2].frontmatter.layout, 'twoColumn');
       assert.strictEqual(doc.slides[2].body, "Legacy systems can't keep up.");
-      assert.strictEqual(doc.slides[2].slots.right, 'Materialize provides real-time views.');
+      assert.strictEqual(doc.slides[2].slots.right, 'Acme provides real-time views.');
     });
 
     it('should handle minimal document (single slide with body)', () => {

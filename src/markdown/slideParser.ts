@@ -44,7 +44,7 @@ export interface ParsedDocument {
  * File format (Slidev convention):
  * ```markdown
  * ---
- * theme: materialize
+ * theme: acme
  * ---
  *
  * ---

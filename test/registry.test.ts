@@ -122,8 +122,8 @@ describe('ComponentRegistry', () => {
 
   describe('expand', () => {
     test('expands a registered component', async () => {
-      // text() is registered at import time — use it as a real component
-      const node = component(Component.Text, { content: 'hello' });
+      // text component is registered at import time — use it as a real component
+      const node = component(Component.Text, { body: 'hello' });
       const expanded = await componentRegistry.expand(node, { theme });
       assert.strictEqual((expanded as any).type, NODE_TYPE.TEXT);
     });
@@ -148,7 +148,7 @@ describe('ComponentRegistry', () => {
       // card expands to stack(shape, column(...)) — tests recursive expansion
       const node = component(Component.Card, { title: 'Test', background: false });
       const expanded = await componentRegistry.expandTree(node, { theme });
-      // background=false means just a column with text child
+      // background=false means just a column with label child
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
       if (expanded.type === NODE_TYPE.CONTAINER) {
         assert.strictEqual(expanded.children[0].type, NODE_TYPE.TEXT);
@@ -157,7 +157,7 @@ describe('ComponentRegistry', () => {
 
     test('recurses into element children', async () => {
       // A container with a component child should expand the child
-      const node = component(Component.Row, { children: [component(Component.Text, { content: 'hi' })] });
+      const node = component(Component.Row, { children: [component(Component.Text, { body: 'hi' })] });
       const expanded = await componentRegistry.expandTree(node, { theme });
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
       if (expanded.type === NODE_TYPE.CONTAINER) {

@@ -8,7 +8,7 @@ import { validateLayout } from '../src/markdown/documentCompiler.js';
 import { type LayoutDefinition } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import { schema } from '../src/schema.js';
-import '../src/dsl/block.js';
+import '../src/dsl/document.js';
 import '../src/dsl/primitives.js';
 
 // Create a test layout with a known schema shape
@@ -164,7 +164,7 @@ describe('validateLayout (params and slots)', () => {
   };
 
   it('validates params and slots separately then merges', () => {
-    const result = validateLayout(layoutWithSlots, { title: 'Hello' }, { body: ':::block\nContent\n:::' });
+    const result = validateLayout(layoutWithSlots, { title: 'Hello' }, { body: ':::document\nContent\n:::' });
     assert.strictEqual(result.title, 'Hello');
     assert.ok(Array.isArray(result.body));
     assert.strictEqual(result.body.length, 1);
@@ -172,7 +172,7 @@ describe('validateLayout (params and slots)', () => {
 
   it('throws on missing required param', () => {
     assert.throws(
-      () => validateLayout(layoutWithSlots, {}, { body: ':::block\nContent\n:::' }),
+      () => validateLayout(layoutWithSlots, {}, { body: ':::document\nContent\n:::' }),
       (err: unknown) => {
         assert.ok(err instanceof Error);
         assert.ok(err.message.includes('params validation failed'));

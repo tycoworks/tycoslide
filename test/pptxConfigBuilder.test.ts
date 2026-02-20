@@ -954,13 +954,13 @@ describe('buildSlideNumberOptions()', () => {
 // Uses public text() API instead of internal parseMarkdown/mdastToRuns
 // ============================================
 
-import { markdown } from '../src/dsl/text.js';
+import { prose } from '../src/dsl/text.js';
 import { componentRegistry } from '../src/core/registry.js';
 import type { NormalizedRun } from '../src/core/types.js';
 
-/** Expand a markdown() component to get its NormalizedRun[] content */
+/** Expand a prose() component to get its NormalizedRun[] content */
 async function expandTextToRuns(md: string): Promise<NormalizedRun[]> {
-  const node = markdown(md);
+  const node = prose(md);
   const expanded = await componentRegistry.expandTree(node, { theme });
   assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
   return (expanded as TextNode).content as NormalizedRun[];

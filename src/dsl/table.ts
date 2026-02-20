@@ -1,7 +1,7 @@
 // Table Component - Native pptxgenjs table element
 
 import { componentRegistry, component, type ComponentNode, type ExpansionContext } from '../core/registry.js';
-import { Component, BORDER_STYLE, TEXT_STYLE } from '../core/types.js';
+import { Component, CONTENT, BORDER_STYLE, TEXT_STYLE } from '../core/types.js';
 import { NODE_TYPE, type TextNode, type TableCellData, type TableStyleProps } from '../core/nodes.js';
 import type { Theme, TextContent } from '../core/types.js';
 import { SYNTAX } from '../core/mdast.js';
@@ -100,7 +100,7 @@ componentRegistry.defineContent({
     const expandContent = async (content: TextContent): Promise<TextContent> => {
       if (typeof content === 'string') {
         const expanded = await componentRegistry.expand(
-          component(Component.Markdown, { body: content }),
+          component(Component.Text, { body: content, content: CONTENT.PROSE }),
           context,
         ) as TextNode;
         return expanded.content;

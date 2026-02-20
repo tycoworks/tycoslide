@@ -1,4 +1,4 @@
-// Block Component
+// Document Component
 // Parses a markdown string into ComponentNode(s), wrapping multiple blocks in a column.
 // Owns ALL bare MDAST dispatch: paragraphs, headings, lists, tables, thematic breaks.
 // Also handles nested :::directives within block content.
@@ -10,7 +10,7 @@ import { componentRegistry, component, type ComponentNode } from '../core/regist
 import { SYNTAX, extractSource, extractInlineText, type ContainerDirective } from '../core/mdast.js';
 import { markdownProcessor, extractDirectiveBody } from '../utils/parser.js';
 import { Component, TEXT_STYLE } from '../core/types.js';
-import { markdown, HEADING_STYLE } from './text.js';
+import { prose, HEADING_STYLE } from './text.js';
 import { table } from './table.js';
 import { column } from './containers.js';
 import { schema } from '../schema.js';
@@ -30,7 +30,7 @@ function compileNode(node: RootContent, source: string): ComponentNode | null {
         .map(d => d.name)
         .join(', ');
       throw new Error(
-        `[tycoslide] block: unknown directive ":::${directive.name}". ` +
+        `[tycoslide] document: unknown directive ":::${directive.name}". ` +
         `Available: ${available || 'none'}.`,
       );
     }
@@ -44,12 +44,12 @@ function compileNode(node: RootContent, source: string): ComponentNode | null {
     if (para.children.length === 1 && para.children[0].type === SYNTAX.IMAGE) {
       throw new Error('Images cannot be embedded inline in text. Use :::image directive.');
     }
-    return markdown(extractSource(node, source));
+    return prose(extractSource(node, source));
   }
 
   // 3. Lists
   if (node.type === SYNTAX.LIST) {
-    return markdown(extractSource(node, source));
+    return prose(extractSource(node, source));
   }
 
   // 4. Headings — separate TextNode with heading style
@@ -59,7 +59,7 @@ function compileNode(node: RootContent, source: string): ComponentNode | null {
     // Preserve inline markdown: strip leading #+ prefix from raw source
     const raw = extractSource(heading, source);
     const content = raw.replace(/^#{1,6}\s*/, '');
-    return markdown(content, { style });
+    return prose(content, { style });
   }
 
   // 5. Tables (GFM)
@@ -76,14 +76,14 @@ function compileNode(node: RootContent, source: string): ComponentNode | null {
 
   // 7. Unknown → error
   throw new Error(
-    `[tycoslide] block: unsupported markdown block type "${node.type}".`,
+    `[tycoslide] document: unsupported markdown block type "${node.type}".`,
   );
 }
 
 /**
  * Parse markdown and dispatch each block-level node to the appropriate component.
  */
-function expandBlock(content: string): ComponentNode {
+function expandDocument(content: string): ComponentNode {
   const tree = markdownProcessor.parse(content) as Root;
   const nodes: ComponentNode[] = [];
 
@@ -93,7 +93,7 @@ function expandBlock(content: string): ComponentNode {
   }
 
   if (nodes.length === 0) {
-    throw new Error('[tycoslide] block: empty markdown content');
+    throw new Error('[tycoslide] document: empty markdown content');
   }
   if (nodes.length === 1) return nodes[0];
   return column(...nodes);
@@ -103,10 +103,10 @@ function expandBlock(content: string): ComponentNode {
 // COMPONENT DEFINITION
 // ============================================
 
-export const blockComponent = componentRegistry.defineContent({
-  name: Component.Block,
+export const documentComponent = componentRegistry.defineContent({
+  name: Component.Document,
   body: schema.string(),
-  expand: (props: { body: string }) => expandBlock(props.body),
+  expand: (props: { body: string }) => expandDocument(props.body),
 });
 
 // ============================================
@@ -123,7 +123,7 @@ export const blockComponent = componentRegistry.defineContent({
  * @example
  * ```typescript
  * // Programmatic use — mix headings, lists, paragraphs
- * const content = block(`
+ * const content = document(`
  *   ## Architecture
  *
  *   Key components:
@@ -137,7 +137,7 @@ export const blockComponent = componentRegistry.defineContent({
  * @example
  * ```markdown
  * <!-- In a markdown slide file -->
- * :::block
+ * :::document
  * ## Architecture
  *
  * Key components:
@@ -146,6 +146,6 @@ export const blockComponent = componentRegistry.defineContent({
  * :::
  * ```
  */
-export function block(content: string): ComponentNode {
-  return component(Component.Block, { body: content });
+export function document(content: string): ComponentNode {
+  return component(Component.Document, { body: content });
 }

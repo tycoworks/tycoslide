@@ -16,7 +16,7 @@ import '../src/dsl/table.js';
 import '../src/dsl/mermaid.js';
 import '../src/dsl/card.js';
 import '../src/dsl/quote.js';
-import '../src/dsl/block.js';
+import '../src/dsl/document.js';
 
 /** Helper: get props as any to avoid unknown type errors in tests */
 function props(nodes: any[], index: number): any {
@@ -28,14 +28,14 @@ describe('Slot Compiler', () => {
     it('should wrap a single paragraph in the default component', () => {
       const nodes = compileSlot('Hello world');
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, Component.Block);
+      assert.strictEqual(nodes[0].componentName, Component.Document);
       assert.strictEqual(props(nodes, 0).body, 'Hello world');
     });
 
     it('should group multiple paragraphs into one default component', () => {
       const nodes = compileSlot('First paragraph.\n\nSecond paragraph.');
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, Component.Block);
+      assert.strictEqual(nodes[0].componentName, Component.Document);
       const body = props(nodes, 0).body as string;
       assert.ok(body.includes('First paragraph.'));
       assert.ok(body.includes('Second paragraph.'));
@@ -45,7 +45,7 @@ describe('Slot Compiler', () => {
       const md = '## Overview\n\nIntro paragraph.\n\n- Point one\n- Point two';
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, Component.Block);
+      assert.strictEqual(nodes[0].componentName, Component.Document);
       const body = props(nodes, 0).body as string;
       assert.ok(body.includes('## Overview'));
       assert.ok(body.includes('Intro paragraph.'));
@@ -55,20 +55,20 @@ describe('Slot Compiler', () => {
     it('should group a single heading into the default component', () => {
       const nodes = compileSlot('## Subheading');
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, Component.Block);
+      assert.strictEqual(nodes[0].componentName, Component.Document);
     });
 
     it('should group a table into the default component', () => {
       const md = '| A | B |\n|---|---|\n| C | D |';
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, Component.Block);
+      assert.strictEqual(nodes[0].componentName, Component.Document);
     });
 
     it('should group a list into the default component', () => {
       const nodes = compileSlot('- First\n- Second\n- Third');
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, Component.Block);
+      assert.strictEqual(nodes[0].componentName, Component.Document);
     });
   });
 
@@ -77,9 +77,9 @@ describe('Slot Compiler', () => {
       const md = 'Before image.\n\n:::image\npic.png\n:::\n\nAfter image.';
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 3);
-      assert.strictEqual(nodes[0].componentName, Component.Block);
+      assert.strictEqual(nodes[0].componentName, Component.Document);
       assert.strictEqual(nodes[1].componentName, Component.Image);
-      assert.strictEqual(nodes[2].componentName, Component.Block);
+      assert.strictEqual(nodes[2].componentName, Component.Document);
     });
 
     it('should handle directive at start with trailing bare MDAST', () => {
@@ -87,14 +87,14 @@ describe('Slot Compiler', () => {
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 2);
       assert.strictEqual(nodes[0].componentName, Component.Image);
-      assert.strictEqual(nodes[1].componentName, Component.Block);
+      assert.strictEqual(nodes[1].componentName, Component.Document);
     });
 
     it('should handle bare MDAST followed by directive', () => {
       const md = 'Some text.\n\n:::card\ntitle: Hello\n:::';
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 2);
-      assert.strictEqual(nodes[0].componentName, Component.Block);
+      assert.strictEqual(nodes[0].componentName, Component.Document);
       assert.strictEqual(nodes[1].componentName, Component.Card);
     });
   });
@@ -110,7 +110,7 @@ describe('Slot Compiler', () => {
       const nodes = compileSlot(md);
       // Thematic break is skipped, but Before and After are still consecutive bare MDAST
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, Component.Block);
+      assert.strictEqual(nodes[0].componentName, Component.Document);
     });
   });
 
@@ -187,20 +187,20 @@ describe('Slot Compiler', () => {
     });
   });
 
-  describe(':::markdown directive', () => {
-    it('should compile :::markdown directive to a markdown node', () => {
-      const md = ':::markdown\n**Bold** and *italic*\n:::';
+  describe(':::text directive', () => {
+    it('should compile :::text directive to a text node', () => {
+      const md = ':::text\n**Bold** and *italic*\n:::';
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, Component.Markdown);
+      assert.strictEqual(nodes[0].componentName, Component.Text);
       assert.ok(props(nodes, 0).body.includes('**Bold**'));
     });
 
-    it('should compile :::markdown with list content', () => {
-      const md = ':::markdown\n- First\n- Second\n:::';
+    it('should compile :::text with list content', () => {
+      const md = ':::text\n- First\n- Second\n:::';
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, Component.Markdown);
+      assert.strictEqual(nodes[0].componentName, Component.Text);
       assert.ok(props(nodes, 0).body.includes('- First'));
     });
   });
@@ -235,37 +235,37 @@ describe('Slot Compiler', () => {
     });
   });
 
-  describe(':::block directive', () => {
-    it('should compile :::block with a single paragraph', () => {
-      const md = ':::block\nHello world\n:::';
+  describe(':::document directive', () => {
+    it('should compile :::document with a single paragraph', () => {
+      const md = ':::document\nHello world\n:::';
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, Component.Block);
+      assert.strictEqual(nodes[0].componentName, Component.Document);
       assert.strictEqual(props(nodes, 0).body, 'Hello world');
     });
 
-    it('should compile :::block with heading and paragraph', () => {
-      const md = ':::block\n## Title\n\nSome text here\n:::';
+    it('should compile :::document with heading and paragraph', () => {
+      const md = ':::document\n## Title\n\nSome text here\n:::';
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, Component.Block);
+      assert.strictEqual(nodes[0].componentName, Component.Document);
     });
 
     it('should compile multiple directives in sequence', () => {
-      const md = ':::block\nBefore\n:::\n\n:::block\nAfter\n:::';
+      const md = ':::document\nBefore\n:::\n\n:::document\nAfter\n:::';
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 2);
-      assert.strictEqual(nodes[0].componentName, Component.Block);
-      assert.strictEqual(nodes[1].componentName, Component.Block);
+      assert.strictEqual(nodes[0].componentName, Component.Document);
+      assert.strictEqual(nodes[1].componentName, Component.Document);
     });
 
-    it('should compile :::block alongside other directives', () => {
-      const md = ':::block\nSome text\n:::\n\n:::image\npic.png\n:::\n\n:::block\nMore text\n:::';
+    it('should compile :::document alongside other directives', () => {
+      const md = ':::document\nSome text\n:::\n\n:::image\npic.png\n:::\n\n:::document\nMore text\n:::';
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 3);
-      assert.strictEqual(nodes[0].componentName, Component.Block);
+      assert.strictEqual(nodes[0].componentName, Component.Document);
       assert.strictEqual(nodes[1].componentName, Component.Image);
-      assert.strictEqual(nodes[2].componentName, Component.Block);
+      assert.strictEqual(nodes[2].componentName, Component.Document);
     });
   });
 

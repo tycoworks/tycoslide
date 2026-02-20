@@ -3,7 +3,7 @@
 // Layout authors use these instead of importing Zod directly.
 
 import { z } from 'zod';
-import { TEXT_STYLE_VALUES, GAP_VALUES, HALIGN_VALUES, VALIGN_VALUES } from './core/types.js';
+import { TEXT_STYLE_VALUES, GAP_VALUES, HALIGN_VALUES, VALIGN_VALUES, CONTENT_VALUES } from './core/types.js';
 
 export const schema = {
   // Structural — how values compose
@@ -21,6 +21,7 @@ export const schema = {
   gap:       ()                                       => z.enum(GAP_VALUES),
   hAlign:    ()                                       => z.enum(HALIGN_VALUES),
   vAlign:    ()                                       => z.enum(VALIGN_VALUES),
+  content:   ()                                       => z.enum(CONTENT_VALUES),
 };
 
 // ============================================
@@ -36,6 +37,7 @@ type ScalarLeaf =
   | ReturnType<typeof schema.gap>
   | ReturnType<typeof schema.hAlign>
   | ReturnType<typeof schema.vAlign>
+  | ReturnType<typeof schema.content>
   | ReturnType<typeof schema.enum>
   | ReturnType<typeof schema.array>
   | ReturnType<typeof schema.object>;

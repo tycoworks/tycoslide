@@ -16,7 +16,7 @@ import { Component } from '../src/core/types.js';
 import { schema } from '../src/schema.js';
 
 // Import components to test their .schema properties
-import { markdownComponent, textComponent } from '../src/dsl/text.js';
+import { proseComponent, labelComponent } from '../src/dsl/text.js';
 import { imageComponent } from '../src/dsl/primitives.js';
 import { mermaidComponent } from '../src/dsl/mermaid.js';
 import { cardComponent } from '../src/dsl/card.js';
@@ -223,16 +223,16 @@ describe('componentRegistry.defineContent / defineLayout', () => {
   });
 
   describe('real component .schema properties', () => {
-    test('markdownComponent.schema is z.string()', () => {
-      assert.ok(markdownComponent.schema);
-      assert.strictEqual(markdownComponent.schema.safeParse('**bold**').success, true);
-      assert.strictEqual(markdownComponent.schema.safeParse(42).success, false);
+    test('proseComponent.schema is z.string()', () => {
+      assert.ok(proseComponent.schema);
+      assert.strictEqual(proseComponent.schema.safeParse('**bold**').success, true);
+      assert.strictEqual(proseComponent.schema.safeParse(42).success, false);
     });
 
-    test('textComponent.schema is z.string()', () => {
-      assert.ok(textComponent.schema);
-      assert.strictEqual(textComponent.schema.safeParse('plain').success, true);
-      assert.strictEqual(textComponent.schema.safeParse(42).success, false);
+    test('labelComponent.schema is z.string()', () => {
+      assert.ok(labelComponent.schema);
+      assert.strictEqual(labelComponent.schema.safeParse('plain').success, true);
+      assert.strictEqual(labelComponent.schema.safeParse(42).success, false);
     });
 
     test('imageComponent.schema is z.string()', () => {
@@ -276,7 +276,7 @@ describe('componentRegistry.defineContent / defineLayout', () => {
 
   describe('type on real production components', () => {
     test('content components have type: CONTENT', () => {
-      for (const comp of [markdownComponent, textComponent, imageComponent, mermaidComponent, cardComponent, quoteComponent]) {
+      for (const comp of [proseComponent, labelComponent, imageComponent, mermaidComponent, cardComponent, quoteComponent]) {
         assert.strictEqual(comp.type, ComponentType.CONTENT, `${comp.name} should be CONTENT`);
       }
     });
@@ -297,8 +297,8 @@ describe('componentRegistry.defineContent / defineLayout', () => {
   });
 
   describe('component .schema in layout params', () => {
-    test('markdownComponent.schema usable in schema.array()', () => {
-      const arr = schema.array(markdownComponent.schema);
+    test('proseComponent.schema usable in schema.array()', () => {
+      const arr = schema.array(proseComponent.schema);
       const result = arr.safeParse(['**bold**', 'plain text']);
       assert.strictEqual(result.success, true);
     });
@@ -314,8 +314,8 @@ describe('componentRegistry.defineContent / defineLayout', () => {
 
     test('mixed component schemas in layout params object', () => {
       const layoutParams = z.object({
-        title: markdownComponent.schema,
-        eyebrow: textComponent.schema.optional(),
+        title: proseComponent.schema,
+        eyebrow: labelComponent.schema.optional(),
         logo: imageComponent.schema.optional(),
         cards: schema.array(cardComponent.schema),
       });

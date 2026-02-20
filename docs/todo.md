@@ -1,5 +1,5 @@
 Core:
-- Reorg
+- Reorg & comments / code docs
 - Escape hatch
 - Portrait mode
 - Debug workflow in CLI
@@ -8,6 +8,7 @@ Design:
 - function cardDefaults(theme: Theme): CardTokens {: is this right? Or should always have a default theme and throw if not defined.
 - Theme building in CLI (inc. JSON design tokens)
 - Where to put html / pptx?
+- Default theme
 - Theme package (npm?) & version
 - Masters?
 - Dark mode
