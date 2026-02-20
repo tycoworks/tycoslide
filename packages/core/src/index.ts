@@ -23,6 +23,3 @@ export { compileDocument, validateLayout, type CompileOptions } from './markdown
 
 // Asset resolution
 export { ASSET_PREFIX } from './utils/assets.js';
-
-// Default theme
-export { defaultTheme } from './themes/defaultTheme.js';

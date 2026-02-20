@@ -25,8 +25,13 @@ Each layer constrains the next: designers set the visual vocabulary, developers 
 ## Build & Test
 
 ```bash
-npm run build        # Compile TypeScript to dist/
-npm test             # Run test suite (node:test, NOT vitest)
+# From repo root:
+npm run build        # Build all workspaces
+npm test             # Run core test suite (node:test, NOT vitest)
+
+# From packages/core/:
+npm run build        # Build core only
+npm test             # Run tests
 npm run typecheck    # Type-check including test files
 ```
 
@@ -36,6 +41,13 @@ npm run typecheck    # Type-check including test files
 npx tycoslide build deck.md -o deck.pptx          # Build a single deck
 npx tycoslide build deck.md --default-layout body  # Set fallback layout
 ```
+
+## Monorepo Structure
+
+tycoslide is an npm workspaces monorepo with two packages:
+
+- **`packages/core`** (npm name: `tycoslide`) — The framework
+- **`packages/theme-default`** (npm name: `tycoslide-theme-default`) — Default theme with Inter font, Material Design icons, three layouts
 
 When consuming tycoslide from another project (e.g., a theme), `package.json` points `main` at `dist/index.js`. Always rebuild before running slides.
 
@@ -47,13 +59,13 @@ npx tsc --build      # Rebuilds tycoslide (if changed) then the theme
 
 ## Key Paths
 
-- `src/core/` — Types, component registry, renderer, PPTX generation
-- `src/dsl/` — Component implementations (card, table, text, image, etc.)
-- `src/layout/` — HTML measurement via Playwright, flex layout pipeline
-- `src/markdown/` — Markdown document compiler (slot compiler, slide parser)
-- `src/themes/` — Default theme
-- `docs/` — Design documents and feature specs
-- `test/` — Tests (uses `node:test`, NOT vitest)
+- `packages/core/src/core/` — Types, component registry, renderer, PPTX generation
+- `packages/core/src/dsl/` — Component implementations (card, table, text, image, etc.)
+- `packages/core/src/layout/` — HTML measurement via Playwright, flex layout pipeline
+- `packages/core/src/markdown/` — Markdown document compiler (slot compiler, slide parser)
+- `packages/core/test/` — Tests (uses `node:test`, NOT vitest)
+- `packages/core/docs/` — Design documents and feature specs
+- `packages/theme-default/` — Default theme package (Inter font, Material Design icons, title/section/body layouts)
 
 ## Architecture
 
