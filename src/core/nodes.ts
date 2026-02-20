@@ -14,6 +14,7 @@ import type {
   SizeValue,
   BorderStyle,
   Direction,
+  ComponentName,
 } from './types.js';
 
 // ============================================
@@ -181,7 +182,7 @@ export interface StackNode {
  */
 export interface ComponentNode<TProps = unknown> {
   type: typeof NODE_TYPE.COMPONENT;
-  componentName: string;
+  componentName: ComponentName;
   props: TProps;
 }
 

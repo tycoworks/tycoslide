@@ -53,6 +53,7 @@ interface RowInternalProps extends RowProps {
 
 componentRegistry.defineLayout({
   name: Component.Row,
+
   expand: (props: RowInternalProps) => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.ROW,
@@ -92,6 +93,7 @@ interface ColumnInternalProps extends ColumnProps {
 
 componentRegistry.defineLayout({
   name: Component.Column,
+
   expand: (props: ColumnInternalProps) => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.COLUMN,
@@ -127,6 +129,7 @@ interface StackInternalProps extends StackProps {
 
 componentRegistry.defineLayout({
   name: Component.Stack,
+
   expand: (props: StackInternalProps) => ({
     type: NODE_TYPE.STACK,
     children: props.children as ElementNode[],  // Safe: expandTree recurses into these

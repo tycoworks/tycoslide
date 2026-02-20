@@ -18,6 +18,8 @@ Each layer constrains the next: designers set the visual vocabulary, developers 
 
 **Theme is the single source of truth.** All visual decisions — colors, typography choices, spacing, component styling — live in the theme file. Components declare what tokens they need; the theme provides them. Missing tokens fail the build immediately. This aligns with the W3C Design Tokens (DTCG) model where the token file is the complete specification. No hidden defaults in framework code.
 
+**Extensible.** The component system is the framework's extension point. External developers can register custom content and layout components without modifying framework source or needing type casts.
+
 **Fail fast.** Invalid layouts, missing tokens, overflow errors, and malformed markdown all throw at build time with actionable error messages. Silent fallbacks are bugs.
 
 ## Build & Test
@@ -70,10 +72,15 @@ Measured + positioned nodes
 
 ## Component System
 
-Components register with the framework via `componentRegistry.defineContent()`. Each component declares:
-- A **name** (from the `Component` enum in `core/types.ts`)
+Two registration methods enforce the content/layout split at compile time:
+
+- **`defineContent()`** — Content components (card, table, image, etc.). Get a `.schema` for YAML validation and a `.deserialize` for `:::directive` support in markdown. Accepts `ContentComponentName`.
+- **`defineLayout()`** — Layout/container components (row, column, stack, grid). Programmatic only, no schema or directive support. Accepts `LayoutComponentName`.
+
+Each component declares:
+- A **name** — built-in names from `Component.*` const objects (`core/types.ts`), or any string for custom components
 - A **Zod schema** for props (validated at compile time)
-- **Required tokens** — keys that the theme must provide via `theme.components`
+- **Required tokens** — keys that the theme must provide via `theme.components`, type-constrained to `(keyof TTokens & string)[]`
 - An **expand function** that receives props + resolved tokens and returns a primitive node tree
 
 ## Spec-Driven Development

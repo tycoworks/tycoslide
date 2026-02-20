@@ -30,6 +30,7 @@ export const imageComponent = componentRegistry.defineContent({
   name: Component.Image,
   body: schema.string(),
   params: imageOptionsSchema,
+
   expand: (props: { body: string } & ImageOptions, context: ExpansionContext): ImageNode => {
     let src = props.body;
     if (src.startsWith(ASSET_PREFIX)) {
@@ -102,6 +103,7 @@ export type ShapeProps = InferProps<typeof shapeSchema>;
 componentRegistry.defineContent({
   name: Component.Shape,
   params: shapeSchema,
+
   expand: (props: ShapeProps): ShapeNode => ({
     type: NODE_TYPE.SHAPE,
     shape: props.shape,

@@ -2,7 +2,7 @@
 // Generic base class, component registry, and layout registry
 
 import { NODE_TYPE, type ElementNode, type ComponentNode, type SlideNode } from './nodes.js';
-import type { Theme } from './types.js';
+import type { Theme, ComponentName, ContentComponentName, LayoutComponentName } from './types.js';
 import type { Slide } from '../presentation.js';
 import { z } from 'zod';
 
@@ -74,20 +74,12 @@ export interface ExpansionContext {
   assets?: Record<string, unknown>;
 }
 
-/** Content vs layout component discriminator. */
-export enum ComponentType {
-  CONTENT = 'content',
-  LAYOUT = 'layout',
-}
-
 /**
  * A component definition describes how to expand a component into primitives.
  */
 export interface ComponentDefinition<TProps = unknown, TTokens = undefined> {
   /** Unique name for this component (e.g., 'card', 'table') */
-  name: string;
-  /** Whether this is a content component (usable in layout params) or a layout/container component (programmatic only). */
-  type: ComponentType;
+  name: ComponentName;
   /** Token keys that must be present in theme.components for this component. */
   tokens?: string[];
   /** Expand props into a node tree (may contain components that get further expanded) */
@@ -96,23 +88,14 @@ export interface ComponentDefinition<TProps = unknown, TTokens = undefined> {
   deserialize?: DirectiveDeserializer;
 }
 
-/** A content component with a body field (primary content) and optional extra params. */
-export type BodyComponentDefinition<
-  TBody extends z.ZodTypeAny,
+/** A content component definition — has .schema for YAML validation and layout params. */
+export type ContentComponentDefinition<
+  TSchema extends z.ZodTypeAny = z.ZodTypeAny,
   TTokens = undefined,
-> = ComponentDefinition<{ body: z.infer<TBody> } & Record<string, unknown>, TTokens> & {
-  type: ComponentType.CONTENT;
-  /** YAML-facing type — the body type. Use in schema.array() or layout params. */
-  schema: TBody;
+> = ComponentDefinition<any, TTokens> & {
+  /** YAML-facing schema. Use in schema.array() or layout params. */
+  schema: TSchema;
 };
-
-/** A content component with typed params inferred from a Zod shape, for use in layout params. */
-export type ParamsComponentDefinition<TShape extends SchemaShape, TTokens = undefined> =
-  ComponentDefinition<z.infer<z.ZodObject<TShape>>, TTokens> & {
-    type: ComponentType.CONTENT;
-    /** YAML-facing type — use in schema.array() or layout params. */
-    schema: z.ZodObject<TShape>;
-  };
 
 // ============================================
 // DIRECTIVE DESERIALIZATION (private)
@@ -142,7 +125,7 @@ function coerceAttributes(attrs: Record<string, string | null | undefined>): Rec
  * Each component's expand function decides what to do with body.
  */
 function buildDeserializer(
-  componentName: string,
+  componentName: ContentComponentName,
   paramsSchema: z.ZodObject<SchemaShape> | null,
 ): DirectiveDeserializer {
   return (attributes, body) => {
@@ -155,8 +138,6 @@ function buildDeserializer(
   };
 }
 
-/** Type discriminator for component nodes */
-export const COMPONENT_TYPE = NODE_TYPE.COMPONENT;
 
 /**
  * Registry for component definitions.
@@ -164,27 +145,27 @@ export const COMPONENT_TYPE = NODE_TYPE.COMPONENT;
  * Use `.defineLayout()` for layout/container components (programmatic only, no .schema).
  */
 class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
-  private _defaultComponentName: string | null = null;
+  private _defaultComponentName: ContentComponentName | null = null;
 
   constructor() {
     super('Component', 'expand');
   }
 
   /**
-   * Set the default component for bare MDAST in slots.
+   * Set the default content component for bare MDAST in slots.
    * Called by the slot compiler (markdown pipeline policy).
    */
-  setDefaultComponent(name: string): void {
+  setDefaultContent(name: ContentComponentName): void {
     this._defaultComponentName = name;
   }
 
   /**
-   * Get the default component name for bare MDAST in slots.
+   * Get the default content component for bare MDAST in slots.
    * @throws Error if no default has been set
    */
-  getDefaultComponentName(): string {
+  getDefaultContent(): ContentComponentName {
     if (!this._defaultComponentName) {
-      throw new Error('No default component set. Register one with setDefaultComponent().');
+      throw new Error('No default content component set. Register one with setDefaultContent().');
     }
     return this._defaultComponentName;
   }
@@ -194,23 +175,23 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
    * Returns a definition with `.schema` (= body type) for use in layout params.
    */
   defineContent<TBody extends z.ZodTypeAny, TTokens = undefined>(def: {
-    name: string;
+    name: ContentComponentName;
     body: TBody;
-    tokens?: string[];
+    tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
     expand: (props: { body: z.infer<TBody> }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
-  }): BodyComponentDefinition<TBody, TTokens>;
+  }): ContentComponentDefinition<TBody, TTokens>;
 
   /**
    * Define and register a content component with a body field (primary content) and extra params.
    * Returns a definition with `.schema` (= body type) for use in layout params.
    */
   defineContent<TBody extends z.ZodTypeAny, TParams extends SchemaShape, TTokens = undefined>(def: {
-    name: string;
+    name: ContentComponentName;
     body: TBody;
     params: TParams;
-    tokens?: string[];
+    tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
     expand: (props: { body: z.infer<TBody> } & z.infer<z.ZodObject<TParams>>, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
-  }): BodyComponentDefinition<TBody, TTokens>;
+  }): ContentComponentDefinition<TBody, TTokens>;
 
   /**
    * Define and register a content component with typed params inferred from a Zod shape.
@@ -219,31 +200,30 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
    * Use `namedField ?? body` in expand to bridge directive body to semantic field names.
    */
   defineContent<TShape extends SchemaShape, TTokens = undefined>(def: {
-    name: string;
+    name: ContentComponentName;
     params: TShape;
-    tokens?: string[];
+    tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
     expand: (props: z.infer<z.ZodObject<TShape>> & { body?: string }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
-  }): ParamsComponentDefinition<TShape, TTokens>;
+  }): ContentComponentDefinition<z.ZodObject<TShape>, TTokens>;
 
   // Implementation — overload signatures above provide type safety for callers.
   // `any` param is unavoidable: overloaded `expand` signatures have contravariant
   // parameter types, so no single structural type is a supertype of all three.
-  defineContent(def: any): BodyComponentDefinition<z.ZodTypeAny> | ParamsComponentDefinition<SchemaShape> {
+  defineContent(def: any): ContentComponentDefinition {
     const bodySchema: z.ZodTypeAny | null = 'body' in def ? def.body : null;
     const paramsShape: SchemaShape = def.params ?? {};
     const paramsSchema = Object.keys(paramsShape).length > 0 ? z.object(paramsShape) : null;
 
     const result = {
-      name: def.name as string,
-      type: ComponentType.CONTENT as const,
+      name: def.name as ContentComponentName,
       expand: def.expand as ComponentDefinition['expand'],
-      tokens: def.tokens as ComponentDefinition['tokens'],
+      tokens: def.tokens as string[],
       schema: bodySchema ?? z.object(paramsShape),
       deserialize: buildDeserializer(def.name, paramsSchema),
     };
 
     this.register(result);
-    return result as BodyComponentDefinition<z.ZodTypeAny> | ParamsComponentDefinition<SchemaShape>;
+    return result as ContentComponentDefinition;
   }
 
   /**
@@ -252,13 +232,12 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
    * Layout components do not support :::directive invocation (no deserializer).
    */
   defineLayout<TProps, TTokens = undefined>(def: {
-    name: string;
-    tokens?: string[];
+    name: LayoutComponentName;
+    tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
     expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   }): ComponentDefinition<TProps, TTokens> {
     const result: ComponentDefinition<TProps, TTokens> = {
       name: def.name,
-      type: ComponentType.LAYOUT,
       expand: def.expand,
       tokens: def.tokens,
     };
@@ -288,13 +267,14 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     if (!def) {
       throw new Error(`Unknown component: '${node.componentName}'. Did you forget to register it?`);
     }
-    if (def.tokens?.length) {
+    const requiredTokens = def.tokens;
+    if (requiredTokens?.length) {
       const componentConfig = context.theme.components?.[node.componentName];
       if (!componentConfig) {
         throw new Error(
           `Component '${node.componentName}' requires theme tokens but none were provided. ` +
           `Add them to theme.components.${node.componentName}. ` +
-          `Required: [${def.tokens.join(', ')}]`
+          `Required: [${requiredTokens.join(', ')}]`
         );
       }
 
@@ -316,7 +296,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
       }
 
       // Validate all required tokens are present
-      const missing = def.tokens.filter(
+      const missing = requiredTokens.filter(
         (key: string) => tokens[key] === undefined || tokens[key] === null
       );
       if (missing.length) {
@@ -369,7 +349,7 @@ export function isComponentNode(node: unknown): node is ComponentNode {
     typeof node === 'object' &&
     node !== null &&
     'type' in node &&
-    (node as any).type === COMPONENT_TYPE &&
+    (node as any).type === NODE_TYPE.COMPONENT &&
     'componentName' in node &&
     'props' in node
   );
@@ -440,9 +420,9 @@ export const layoutRegistry = new LayoutRegistry();
 /**
  * Create a component node.
  */
-export function component<TProps>(name: string, props: TProps): ComponentNode<TProps> {
+export function component<TProps>(name: ComponentName, props: TProps): ComponentNode<TProps> {
   return {
-    type: COMPONENT_TYPE,
+    type: NODE_TYPE.COMPONENT,
     componentName: name,
     props,
   };

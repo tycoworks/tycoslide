@@ -29,16 +29,13 @@ export type VerticalAlignment = typeof VALIGN[keyof typeof VALIGN];
 /** All VALIGN values as a tuple — useful for Zod enum schemas */
 export const VALIGN_VALUES = Object.values(VALIGN) as [VerticalAlignment, ...VerticalAlignment[]];
 
-export const Component = {
+// Content components: have schema, support :::directives, usable in layout params
+export const ContentComponent = {
   Image: 'image',
   Line: 'line',
   Shape: 'shape',
   SlideNumber: 'slideNumber',
   Text: 'text',
-  Row: 'row',
-  Column: 'column',
-  Stack: 'stack',
-  Grid: 'grid',
   Card: 'card',
   Quote: 'quote',
   Table: 'table',
@@ -46,7 +43,26 @@ export const Component = {
   Document: 'document',
 } as const;
 
-export type ComponentName = typeof Component[keyof typeof Component];
+// Layout components: programmatic only, no schema, no directives
+export const LayoutComponent = {
+  Row: 'row',
+  Column: 'column',
+  Stack: 'stack',
+  Grid: 'grid',
+} as const;
+
+// Unified const for convenience — use ContentComponent/LayoutComponent for type-safe registration
+export const Component = { ...ContentComponent, ...LayoutComponent } as const;
+
+// Strict literal unions of built-in names (useful for exhaustive internal checks)
+export type BuiltinContentComponentName = typeof ContentComponent[keyof typeof ContentComponent];
+export type BuiltinLayoutComponentName = typeof LayoutComponent[keyof typeof LayoutComponent];
+export type BuiltinComponentName = BuiltinContentComponentName | BuiltinLayoutComponentName;
+
+// Open types: autocomplete built-in names, but accept any string for custom components
+export type ContentComponentName = BuiltinContentComponentName | (string & {});
+export type LayoutComponentName = BuiltinLayoutComponentName | (string & {});
+export type ComponentName = ContentComponentName | LayoutComponentName;
 
 // Content kinds for the Text component — controls parsing level
 export const CONTENT = {

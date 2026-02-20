@@ -5,10 +5,7 @@ import assert from 'node:assert/strict';
 import { z } from 'zod';
 import {
   componentRegistry,
-  ComponentType,
   type InferProps,
-  type ParamsComponentDefinition,
-  type BodyComponentDefinition,
   type ComponentDefinition,
 } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
@@ -35,6 +32,7 @@ describe('componentRegistry.defineContent / defineLayout', () => {
     const comp = componentRegistry.defineContent({
       name: 'test-params-comp',
       params: testParams,
+      tokens: [],
       expand: (props) => ({
         type: NODE_TYPE.TEXT,
         content: [{ text: props.title }],
@@ -76,10 +74,6 @@ describe('componentRegistry.defineContent / defineLayout', () => {
       assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
     });
 
-    test('has type: CONTENT', () => {
-      assert.strictEqual(comp.type, ComponentType.CONTENT);
-    });
-
     test('auto-generates deserializer', () => {
       assert.ok(comp.deserialize, 'params component should have auto-generated deserializer');
     });
@@ -93,6 +87,7 @@ describe('componentRegistry.defineContent / defineLayout', () => {
     const comp = componentRegistry.defineContent({
       name: 'test-body-comp',
       body: schema.string(),
+      tokens: [],
       expand: (props) => ({
         type: NODE_TYPE.TEXT,
         content: [{ text: props.body }],
@@ -120,10 +115,6 @@ describe('componentRegistry.defineContent / defineLayout', () => {
       assert.strictEqual(opt.safeParse('hi').success, true);
     });
 
-    test('has type: CONTENT', () => {
-      assert.strictEqual(comp.type, ComponentType.CONTENT);
-    });
-
     test('auto-generates deserializer', () => {
       assert.ok(comp.deserialize, 'body component should have auto-generated deserializer');
     });
@@ -138,6 +129,7 @@ describe('componentRegistry.defineContent / defineLayout', () => {
       name: 'test-body-params-comp',
       body: schema.string(),
       params: { scale: schema.number().optional() },
+      tokens: [],
       expand: (props) => ({
         type: NODE_TYPE.TEXT,
         content: [{ text: props.body }],
@@ -159,14 +151,12 @@ describe('componentRegistry.defineContent / defineLayout', () => {
       assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
     });
 
-    test('has type: CONTENT', () => {
-      assert.strictEqual(comp.type, ComponentType.CONTENT);
-    });
   });
 
   describe('defineLayout (no schema)', () => {
     const comp = componentRegistry.defineLayout({
       name: 'test-prog-comp',
+      tokens: [],
       expand: (props: { children: any[] }) => ({
         type: NODE_TYPE.CONTAINER,
         direction: 'row',
@@ -178,10 +168,6 @@ describe('componentRegistry.defineContent / defineLayout', () => {
 
     test('does NOT have .schema property', () => {
       assert.strictEqual((comp as any).schema, undefined);
-    });
-
-    test('has type: LAYOUT', () => {
-      assert.strictEqual(comp.type, ComponentType.LAYOUT);
     });
 
     test('has name and expand', () => {
@@ -203,6 +189,7 @@ describe('componentRegistry.defineContent / defineLayout', () => {
       const comp = componentRegistry.defineContent({
         name: 'test-auto-deserialize',
         body: schema.string(),
+        tokens: [],
         expand: (props) => ({
           type: NODE_TYPE.TEXT,
           content: [{ text: props.body }],
@@ -216,6 +203,7 @@ describe('componentRegistry.defineContent / defineLayout', () => {
     test('layout components do NOT get deserializer', () => {
       const comp = componentRegistry.defineLayout({
         name: 'test-no-deserialize',
+        tokens: [],
         expand: () => ({ type: NODE_TYPE.TEXT, content: [], hAlign: HALIGN.LEFT as any, vAlign: VALIGN.TOP as any }),
       });
       assert.strictEqual(comp.deserialize, undefined);
@@ -271,28 +259,6 @@ describe('componentRegistry.defineContent / defineLayout', () => {
         attribution: '— Jane Smith',
       });
       assert.strictEqual(result.success, true);
-    });
-  });
-
-  describe('type on real production components', () => {
-    test('content components have type: CONTENT', () => {
-      for (const comp of [proseComponent, labelComponent, imageComponent, mermaidComponent, cardComponent, quoteComponent]) {
-        assert.strictEqual(comp.type, ComponentType.CONTENT, `${comp.name} should be CONTENT`);
-      }
-    });
-
-    test('table is a content component', () => {
-      const def = componentRegistry.get(Component.Table);
-      assert.ok(def, 'table should be registered');
-      assert.strictEqual(def!.type, ComponentType.CONTENT, 'table should be CONTENT');
-    });
-
-    test('layout components have type: LAYOUT', () => {
-      for (const name of [Component.Row, Component.Column, Component.Stack, Component.Grid]) {
-        const def = componentRegistry.get(name);
-        assert.ok(def, `${name} should be registered`);
-        assert.strictEqual(def!.type, ComponentType.LAYOUT, `${name} should be LAYOUT`);
-      }
     });
   });
 

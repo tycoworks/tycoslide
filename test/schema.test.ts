@@ -4,7 +4,8 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { z } from 'zod';
 import { schema } from '../src/schema.js';
-import { layoutRegistry, COMPONENT_TYPE } from '../src/core/registry.js';
+import { layoutRegistry } from '../src/core/registry.js';
+import { NODE_TYPE } from '../src/core/nodes.js';
 import { Component } from '../src/core/types.js';
 import { compileSlot } from '../src/markdown/slotCompiler.js';
 import '../src/dsl/document.js';
@@ -79,7 +80,7 @@ describe('schema', () => {
 
   describe('ScalarParam constraint (params rejects non-scalar types)', () => {
     it('rejects z.custom() in layout params', () => {
-      const dummy = { type: COMPONENT_TYPE, componentName: 'x', props: {} } as const;
+      const dummy = { type: NODE_TYPE.COMPONENT, componentName: 'x', props: {} } as const;
       // Type-level test: z.custom() should not be assignable to ScalarParam.
       // If this @ts-expect-error becomes "unused", the constraint was loosened.
       layoutRegistry.define({
@@ -94,7 +95,7 @@ describe('schema', () => {
     });
 
     it('rejects z.any() in layout params', () => {
-      const dummy = { type: COMPONENT_TYPE, componentName: 'x', props: {} } as const;
+      const dummy = { type: NODE_TYPE.COMPONENT, componentName: 'x', props: {} } as const;
       layoutRegistry.define({
         name: 'test-bad-any',
         description: 'should not compile',

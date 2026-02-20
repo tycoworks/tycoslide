@@ -19,7 +19,7 @@ import { Component } from '../core/types.js';
 // ============================================
 
 /** Default component for bare MDAST in slots. Set here as markdown pipeline policy. */
-componentRegistry.setDefaultComponent(Component.Document);
+componentRegistry.setDefaultContent(Component.Document);
 
 // ============================================
 // PUBLIC API
@@ -44,7 +44,7 @@ export function compileSlot(markdownStr: string): ComponentNode[] {
     const endOffset = bareEnd.position?.end.offset ?? markdownStr.length;
     const rawSource = markdownStr.slice(startOffset, endOffset).trim();
     if (rawSource) {
-      nodes.push(component(componentRegistry.getDefaultComponentName(), { body: rawSource }));
+      nodes.push(component(componentRegistry.getDefaultContent(), { body: rawSource }));
     }
     bareStart = null;
     bareEnd = null;

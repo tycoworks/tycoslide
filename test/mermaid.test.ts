@@ -5,14 +5,14 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { mermaid, sanitizeMermaidDefinition } from '../src/dsl/mermaid.js';
 import { Component } from '../src/core/types.js';
-import { COMPONENT_TYPE, componentRegistry } from '../src/core/registry.js';
+import { componentRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import { mockTheme } from './mocks.js';
 
 describe('mermaid() DSL function', () => {
   it('returns ComponentNode with correct type', () => {
     const m = mermaid('flowchart LR\n  A --> B');
-    assert.strictEqual(m.type, COMPONENT_TYPE);
+    assert.strictEqual(m.type, NODE_TYPE.COMPONENT);
   });
 
   it('returns ComponentNode with correct componentName', () => {
