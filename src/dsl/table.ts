@@ -1,9 +1,9 @@
 // Table Component - Native pptxgenjs table element
 
 import { componentRegistry, component, type ComponentNode, type ExpansionContext } from '../core/registry.js';
-import { Component, CONTENT, BORDER_STYLE, TEXT_STYLE } from '../core/types.js';
-import { NODE_TYPE, type TextNode, type TableCellData, type TableStyleProps } from '../core/nodes.js';
-import type { Theme, TextContent } from '../core/types.js';
+import { Component, CONTENT } from '../core/types.js';
+import { NODE_TYPE, TABLE_TOKEN, type TextNode, type TableCellData, type TableTokens } from '../core/nodes.js';
+import type { TextContent } from '../core/types.js';
 import { SYNTAX } from '../core/mdast.js';
 import type { Table as MdastTable } from 'mdast';
 import type { Root } from 'mdast';
@@ -14,8 +14,6 @@ import type { SchemaShape } from '../core/registry.js';
 // ============================================
 // TABLE COMPONENT
 // ============================================
-
-export type TableTokens = TableStyleProps;
 
 export interface TableProps {
   /** Number of header rows (default: 0) */
@@ -28,18 +26,6 @@ interface TableInternalProps {
   data: (TableCellData | TextContent)[][];
   tableProps?: TableProps;
   variant?: string;
-}
-
-function tableDefaults(theme: Theme): TableTokens {
-  const tokens: TableTokens = {
-    borderStyle: BORDER_STYLE.FULL,
-    borderColor: theme.colors.secondary,
-    borderWidth: theme.borders.width,
-    cellPadding: theme.spacing.cellPadding,
-    cellTextStyle: TEXT_STYLE.BODY,
-    headerTextStyle: TEXT_STYLE.BODY,
-  };
-  return tokens;
 }
 
 /**
@@ -74,7 +60,7 @@ const tableDirectiveSchema = {
 componentRegistry.defineContent({
   name: Component.Table,
   params: tableDirectiveSchema,
-  defaults: tableDefaults,
+  tokens: [TABLE_TOKEN.BORDER_STYLE, TABLE_TOKEN.BORDER_COLOR, TABLE_TOKEN.BORDER_WIDTH, TABLE_TOKEN.CELL_PADDING, TABLE_TOKEN.CELL_TEXT_STYLE, TABLE_TOKEN.HEADER_TEXT_STYLE],
   expand: (async (props: TableInternalProps & { body?: string; headerColumns?: number }, context: ExpansionContext, tokens: TableTokens) => {
     // Determine data source: structured (DSL) or body string (directive)
     let data: (TableCellData | TextContent)[][];

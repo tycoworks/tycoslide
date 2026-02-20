@@ -1,5 +1,5 @@
 // HTML Measurement Generator
-// Generates HTML that mirrors TycoSlide layout structure for accurate browser measurement
+// Generates HTML that mirrors tycoslide layout structure for accurate browser measurement
 
 import fs from 'fs';
 import path from 'path';

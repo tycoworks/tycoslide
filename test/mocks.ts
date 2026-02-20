@@ -5,7 +5,7 @@ import * as assert from 'node:assert';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import type { Theme, TextStyle, FontFamily } from '../src/core/types.js';
-import { TEXT_STYLE } from '../src/core/types.js';
+import { TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, HALIGN } from '../src/core/types.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -54,7 +54,71 @@ export function mockTheme(options?: {
   const borderWidth = options?.borderWidth ?? 1;
   const borderRadius = options?.borderRadius ?? 0.1;
   const accents = options?.accents ?? { teal: '00CCCC', pink: 'FF00FF', orange: 'FF8800' };
-  const components = options?.components ?? {};
+
+  // Default component tokens computed from primitive values
+  const defaultComponents: Record<string, Record<string, unknown>> = {
+    card: {
+      padding,
+      cornerRadius: borderRadius,
+      backgroundColor: '333333',
+      backgroundOpacity: 20,
+      borderColor: '333333',
+      borderWidth,
+      titleStyle: TEXT_STYLE.H4,
+      descriptionStyle: TEXT_STYLE.SMALL,
+      gap: GAP.TIGHT,
+    },
+    quote: {
+      padding: padding * 2,
+      cornerRadius: borderRadius,
+      backgroundColor: '333333',
+      backgroundOpacity: 20,
+      borderColor: '333333',
+      borderWidth,
+      attributionStyle: TEXT_STYLE.SMALL,
+      gap: GAP.NORMAL,
+    },
+    table: {
+      borderStyle: BORDER_STYLE.FULL,
+      borderColor: '333333',
+      borderWidth,
+      cellPadding,
+      cellTextStyle: TEXT_STYLE.BODY,
+      headerTextStyle: TEXT_STYLE.BODY,
+    },
+    line: {
+      color: '333333',
+      width: borderWidth,
+      dashType: DASH_TYPE.SOLID,
+    },
+    slideNumber: {
+      style: TEXT_STYLE.FOOTER,
+      hAlign: HALIGN.RIGHT,
+    },
+  };
+
+  // Deep merge: user-provided components override defaults per-component
+  const mergedComponents: Record<string, Record<string, unknown>> = {};
+  for (const [name, defaults] of Object.entries(defaultComponents)) {
+    const userConfig = options?.components?.[name];
+    if (userConfig) {
+      // Preserve user's variants if they provided them
+      const { variants: userVariants, ...userBase } = userConfig as any;
+      const { variants: defaultVariants, ...defaultBase } = defaults as any;
+      mergedComponents[name] = { ...defaultBase, ...userBase };
+      if (userVariants || defaultVariants) {
+        (mergedComponents[name] as any).variants = { ...(defaultVariants ?? {}), ...(userVariants ?? {}) };
+      }
+    } else {
+      mergedComponents[name] = { ...defaults };
+    }
+  }
+  // Also include any user-provided components not in defaults (custom components)
+  for (const [name, config] of Object.entries(options?.components ?? {})) {
+    if (!mergedComponents[name]) {
+      mergedComponents[name] = config;
+    }
+  }
 
   return {
     slide: { layout: 'CUSTOM' as const, width: 13.333, height: 7.5 },
@@ -94,7 +158,7 @@ export function mockTheme(options?: {
       [TEXT_STYLE.FOOTER]: mockTextStyle,
       [TEXT_STYLE.EYEBROW]: mockTextStyle,
     },
-    components,
+    components: mergedComponents,
   };
 }
 

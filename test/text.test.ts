@@ -4,7 +4,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { prose, label, text } from '../src/dsl/text.js';
-import { Component, CONTENT } from '../src/core/types.js';
+import { Component, CONTENT, HALIGN, VALIGN } from '../src/core/types.js';
 import { componentRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
 import type { NormalizedRun } from '../src/core/types.js';
@@ -198,8 +198,8 @@ describe('Text', () => {
     it('should default hAlign to LEFT and vAlign to TOP', async () => {
       const node = prose('text');
       const expanded = await componentRegistry.expand(node, { theme }) as any;
-      assert.strictEqual(expanded.hAlign, 'left');
-      assert.strictEqual(expanded.vAlign, 'top');
+      assert.strictEqual(expanded.hAlign, HALIGN.LEFT);
+      assert.strictEqual(expanded.vAlign, VALIGN.TOP);
     });
 
     it('should apply bulletColor to bullet runs', async () => {
@@ -282,19 +282,19 @@ Conclusion.
     });
 
     it('should apply style, color, and alignment', async () => {
-      const node = label('Label', { style: 'body' as any, color: 'AABBCC', hAlign: 'center' as any, vAlign: 'middle' as any });
+      const node = label('Label', { style: 'body' as any, color: 'AABBCC', hAlign: HALIGN.CENTER as any, vAlign: VALIGN.MIDDLE as any });
       const expanded = await componentRegistry.expand(node, { theme }) as any;
       assert.strictEqual(expanded.style, 'body');
       assert.strictEqual(expanded.color, 'AABBCC');
-      assert.strictEqual(expanded.hAlign, 'center');
-      assert.strictEqual(expanded.vAlign, 'middle');
+      assert.strictEqual(expanded.hAlign, HALIGN.CENTER);
+      assert.strictEqual(expanded.vAlign, VALIGN.MIDDLE);
     });
 
     it('should default hAlign to LEFT and vAlign to TOP', async () => {
       const node = label('Label');
       const expanded = await componentRegistry.expand(node, { theme }) as any;
-      assert.strictEqual(expanded.hAlign, 'left');
-      assert.strictEqual(expanded.vAlign, 'top');
+      assert.strictEqual(expanded.hAlign, HALIGN.LEFT);
+      assert.strictEqual(expanded.vAlign, VALIGN.TOP);
     });
   });
 

@@ -29,22 +29,24 @@ export type VerticalAlignment = typeof VALIGN[keyof typeof VALIGN];
 /** All VALIGN values as a tuple — useful for Zod enum schemas */
 export const VALIGN_VALUES = Object.values(VALIGN) as [VerticalAlignment, ...VerticalAlignment[]];
 
-export enum Component {
-  Image = 'image',
-  Line = 'line',
-  Shape = 'shape',
-  SlideNumber = 'slideNumber',
-  Text = 'text',
-  Row = 'row',
-  Column = 'column',
-  Stack = 'stack',
-  Grid = 'grid',
-  Card = 'card',
-  Quote = 'quote',
-  Table = 'table',
-  Mermaid = 'mermaid',
-  Document = 'document',
-}
+export const Component = {
+  Image: 'image',
+  Line: 'line',
+  Shape: 'shape',
+  SlideNumber: 'slideNumber',
+  Text: 'text',
+  Row: 'row',
+  Column: 'column',
+  Stack: 'stack',
+  Grid: 'grid',
+  Card: 'card',
+  Quote: 'quote',
+  Table: 'table',
+  Mermaid: 'mermaid',
+  Document: 'document',
+} as const;
+
+export type ComponentName = typeof Component[keyof typeof Component];
 
 // Content kinds for the Text component — controls parsing level
 export const CONTENT = {
@@ -438,6 +440,100 @@ export type TextContent = string | TextRun[];
 export { Bounds } from './bounds.js';
 
 // ============================================
+// COMPONENT TOKEN INTERFACES
+// ============================================
+
+export const CARD_TOKEN = {
+  PADDING: 'padding',
+  CORNER_RADIUS: 'cornerRadius',
+  BACKGROUND_COLOR: 'backgroundColor',
+  BACKGROUND_OPACITY: 'backgroundOpacity',
+  BORDER_COLOR: 'borderColor',
+  BORDER_WIDTH: 'borderWidth',
+  TITLE_STYLE: 'titleStyle',
+  TITLE_COLOR: 'titleColor',
+  DESCRIPTION_STYLE: 'descriptionStyle',
+  DESCRIPTION_COLOR: 'descriptionColor',
+  GAP: 'gap',
+  TEXT_GAP: 'textGap',
+} as const;
+
+export interface CardTokens {
+  [CARD_TOKEN.PADDING]: number;
+  [CARD_TOKEN.CORNER_RADIUS]: number;
+  [CARD_TOKEN.BACKGROUND_COLOR]: string;
+  [CARD_TOKEN.BACKGROUND_OPACITY]: number;
+  [CARD_TOKEN.BORDER_COLOR]: string;
+  [CARD_TOKEN.BORDER_WIDTH]: number;
+  [CARD_TOKEN.TITLE_STYLE]: TextStyleName;
+  [CARD_TOKEN.TITLE_COLOR]?: string;
+  [CARD_TOKEN.DESCRIPTION_STYLE]: TextStyleName;
+  [CARD_TOKEN.DESCRIPTION_COLOR]?: string;
+  [CARD_TOKEN.GAP]: GapSize;
+  [CARD_TOKEN.TEXT_GAP]?: GapSize;
+}
+
+export const QUOTE_TOKEN = {
+  PADDING: 'padding',
+  CORNER_RADIUS: 'cornerRadius',
+  BACKGROUND_COLOR: 'backgroundColor',
+  BACKGROUND_OPACITY: 'backgroundOpacity',
+  BORDER_COLOR: 'borderColor',
+  BORDER_WIDTH: 'borderWidth',
+  QUOTE_STYLE: 'quoteStyle',
+  ATTRIBUTION_STYLE: 'attributionStyle',
+  GAP: 'gap',
+} as const;
+
+export interface QuoteTokens {
+  [QUOTE_TOKEN.PADDING]: number;
+  [QUOTE_TOKEN.CORNER_RADIUS]: number;
+  [QUOTE_TOKEN.BACKGROUND_COLOR]: string;
+  [QUOTE_TOKEN.BACKGROUND_OPACITY]: number;
+  [QUOTE_TOKEN.BORDER_COLOR]: string;
+  [QUOTE_TOKEN.BORDER_WIDTH]: number;
+  [QUOTE_TOKEN.QUOTE_STYLE]?: TextStyleName;
+  [QUOTE_TOKEN.ATTRIBUTION_STYLE]: TextStyleName;
+  [QUOTE_TOKEN.GAP]: GapSize;
+}
+
+import type { TableTokens } from './nodes.js';
+export type { TableTokens } from './nodes.js';
+export { TABLE_TOKEN } from './nodes.js';
+
+export const LINE_TOKEN = {
+  COLOR: 'color',
+  WIDTH: 'width',
+  DASH_TYPE: 'dashType',
+} as const;
+
+export interface LineTokens {
+  [LINE_TOKEN.COLOR]: string;
+  [LINE_TOKEN.WIDTH]: number;
+  [LINE_TOKEN.DASH_TYPE]: DashType;
+}
+
+export const SLIDE_NUMBER_TOKEN = {
+  STYLE: 'style',
+  COLOR: 'color',
+  HALIGN: 'hAlign',
+} as const;
+
+export interface SlideNumberTokens {
+  [SLIDE_NUMBER_TOKEN.STYLE]: TextStyleName;
+  [SLIDE_NUMBER_TOKEN.COLOR]?: string;
+  [SLIDE_NUMBER_TOKEN.HALIGN]: HorizontalAlignment;
+}
+
+export interface ComponentTokenMap {
+  [Component.Card]: CardTokens;
+  [Component.Quote]: QuoteTokens;
+  [Component.Table]: TableTokens;
+  [Component.Line]: LineTokens;
+  [Component.SlideNumber]: SlideNumberTokens;
+}
+
+// ============================================
 // THEME TYPES
 // ============================================
 
@@ -463,5 +559,9 @@ export interface Theme {
     radius: number;  // Corner radius in inches
   };
   textStyles: { [K in TextStyleName]: TextStyle };
-  components: Record<string, Record<string, unknown> & { variants?: Record<string, Record<string, unknown>> }>;
+  components: {
+    [K in keyof ComponentTokenMap]?: Partial<ComponentTokenMap[K]> & {
+      variants?: Record<string, Partial<ComponentTokenMap[K]>>;
+    };
+  } & Record<string, Record<string, unknown> & { variants?: Record<string, Record<string, unknown>> }>;
 }

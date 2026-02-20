@@ -1,17 +1,80 @@
-# Context for Claude
+# tycoslide
 
-tycoslide is a TypeScript presentation framework that compiles a DSL into measured, positioned PPTX slides via Playwright-based HTML measurement.
+A build system for branded presentations. tycoslide compiles TypeScript or Markdown into measured, positioned, native PowerPoint files — treating marketing content like code.
 
-## Key Paths
-- `src/` - Core framework (layout, measurement, rendering)
-- `src/compiler/` - Markdown document compiler (in progress)
-- `docs/` - Design documents and feature specs
-- `test/` - Tests (uses `node:test`, NOT vitest)
+## Philosophy
+
+**Content as code.** Presentations are built in CI/CD pipelines, not manually in PowerPoint. tycoslide enforces brand compliance, type safety, and reproducible output. If something is wrong, it fails at build time — not after the deck ships.
+
+**Three personas, strict boundaries:**
+
+| Persona | Works in | Produces | Concerns |
+|---------|----------|----------|----------|
+| **Designer** | Design tools (Figma, Tokens Studio) | Design tokens, color palettes, typography scales | Visual identity, brand consistency |
+| **Developer** | TypeScript | Theme files, layouts, custom components | Structural correctness, component contracts, layout mechanics |
+| **Author** | Markdown | Slide decks | Content, narrative, choosing the right layout |
+
+Each layer constrains the next: designers set the visual vocabulary, developers build sanctioned layouts using that vocabulary, authors fill those layouts with content. An author cannot break the brand. A developer cannot override the designer's tokens without editing the theme.
+
+**Theme is the single source of truth.** All visual decisions — colors, typography choices, spacing, component styling — live in the theme file. Components declare what tokens they need; the theme provides them. Missing tokens fail the build immediately. This aligns with the W3C Design Tokens (DTCG) model where the token file is the complete specification. No hidden defaults in framework code.
+
+**Fail fast.** Invalid layouts, missing tokens, overflow errors, and malformed markdown all throw at build time with actionable error messages. Silent fallbacks are bugs.
 
 ## Build & Test
-- `npm run build` — compile TypeScript to `dist/`
-- `npm test` — run test suite
-- ALWAYS rebuild (`npm run build`) before any consumer runs slides, since `package.json` points `main` at `dist/index.js`
+
+```bash
+npm run build        # Compile TypeScript to dist/
+npm test             # Run test suite (node:test, NOT vitest)
+npm run typecheck    # Type-check including test files
+```
+
+**Building slides from markdown:**
+
+```bash
+npx tycoslide build deck.md -o deck.pptx          # Build a single deck
+npx tycoslide build deck.md --theme materialize    # Specify theme (overrides frontmatter)
+npx tycoslide build deck.md --default-layout body  # Set fallback layout
+```
+
+When consuming tycoslide from another project (e.g., a theme), `package.json` points `main` at `dist/index.js`. Always rebuild before running slides.
+
+**Cross-project builds:** Themes use TypeScript project references. From a theme directory:
+
+```bash
+npx tsc --build      # Rebuilds tycoslide (if changed) then the theme
+```
+
+## Key Paths
+
+- `src/core/` — Types, component registry, renderer, PPTX generation
+- `src/dsl/` — Component implementations (card, table, text, image, etc.)
+- `src/layout/` — HTML measurement via Playwright, flex layout pipeline
+- `src/compiler/` — Markdown document compiler (slot compiler, slide parser)
+- `src/themes/` — Default theme
+- `docs/` — Design documents and feature specs
+- `test/` — Tests (uses `node:test`, NOT vitest)
+
+## Architecture
+
+```
+Markdown or TypeScript DSL
+    ↓
+Component tree (ComponentNodes)
+    ↓ registry.expand() — resolves theme tokens, expands to primitives
+Primitive node tree (TextNode, ImageNode, ShapeNode, etc.)
+    ↓ layoutHtml.tsx — generates HTML, measures via Playwright
+Measured + positioned nodes
+    ↓ pptxRenderer — generates native PowerPoint objects
+.pptx file
+```
+
+## Component System
+
+Components register with the framework via `componentRegistry.defineContent()`. Each component declares:
+- A **name** (from the `Component` enum in `core/types.ts`)
+- A **Zod schema** for props (validated at compile time)
+- **Required tokens** — keys that the theme must provide via `theme.components`
+- An **expand function** that receives props + resolved tokens and returns a primitive node tree
 
 ## Spec-Driven Development
 
@@ -19,4 +82,4 @@ Design docs in `docs/` define features with phased implementation plans. When im
 
 1. **Read the spec first** — understand the phase requirements, decisions, and constraints before writing code
 2. **Execute against the spec** — implement what the doc says, not more
-3. **Verify automatically** — after completing implementation, always verify the result against the spec using the architect agent. Reference the specific phase/section. Do not wait for the user to ask for verification.
+3. **Verify automatically** — after completing implementation, always verify the result against the spec

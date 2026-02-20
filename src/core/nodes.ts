@@ -109,18 +109,31 @@ export interface TableCellData {
   vAlign?: VerticalAlignment;
 }
 
+export const TABLE_TOKEN = {
+  BORDER_STYLE: 'borderStyle',
+  BORDER_COLOR: 'borderColor',
+  BORDER_WIDTH: 'borderWidth',
+  HEADER_BACKGROUND: 'headerBackground',
+  HEADER_TEXT_STYLE: 'headerTextStyle',
+  CELL_BACKGROUND: 'cellBackground',
+  CELL_TEXT_STYLE: 'cellTextStyle',
+  CELL_PADDING: 'cellPadding',
+  HALIGN: 'hAlign',
+  VALIGN: 'vAlign',
+} as const;
+
 /** Table-level style configuration */
-export interface TableStyleProps {
-  borderStyle?: BorderStyle;
-  borderColor?: string;
-  borderWidth?: number;
-  headerBackground?: string;
-  headerTextStyle?: TextStyleName;
-  cellBackground?: string;
-  cellTextStyle?: TextStyleName;
-  cellPadding?: number;
-  hAlign?: HorizontalAlignment;
-  vAlign?: VerticalAlignment;
+export interface TableTokens {
+  [TABLE_TOKEN.BORDER_STYLE]?: BorderStyle;
+  [TABLE_TOKEN.BORDER_COLOR]?: string;
+  [TABLE_TOKEN.BORDER_WIDTH]?: number;
+  [TABLE_TOKEN.HEADER_BACKGROUND]?: string;
+  [TABLE_TOKEN.HEADER_TEXT_STYLE]?: TextStyleName;
+  [TABLE_TOKEN.CELL_BACKGROUND]?: string;
+  [TABLE_TOKEN.CELL_TEXT_STYLE]?: TextStyleName;
+  [TABLE_TOKEN.CELL_PADDING]?: number;
+  [TABLE_TOKEN.HALIGN]?: HorizontalAlignment;
+  [TABLE_TOKEN.VALIGN]?: VerticalAlignment;
 }
 
 /** Native table element - renders directly via slide.addTable() */
@@ -129,7 +142,7 @@ export interface TableNode {
   rows: TableCellData[][];
   headerRows?: number;           // Number of header rows (default: 0)
   headerColumns?: number;        // Number of header columns (default: 0)
-  style?: TableStyleProps;
+  style?: TableTokens;
 }
 
 // ============================================

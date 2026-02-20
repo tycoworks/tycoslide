@@ -1,5 +1,5 @@
 // Token Resolution Tests
-// Tests the 3-level token cascade: defaults → base overrides → variant overrides
+// Tests the token system: theme.components → variant overrides → required token validation
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
@@ -7,16 +7,17 @@ import { card } from '../src/dsl/card.js';
 import { table } from '../src/dsl/table.js';
 import { componentRegistry } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
+import { BORDER_STYLE, TEXT_STYLE, GAP, HALIGN, VALIGN } from '../src/core/types.js';
 import { mockTheme } from './mocks.js';
 
 describe('Token Resolution', () => {
 
   // ============================================
-  // 1. DEFAULTS FROM THEME PRIMITIVES
+  // 1. TOKENS FROM THEME
   // ============================================
 
-  describe('defaults from theme primitives', () => {
-    it('card: uses theme.colors.secondary as default backgroundColor', async () => {
+  describe('tokens from theme', () => {
+    it('card: uses theme.components.card tokens', async () => {
       const theme = mockTheme();
       const node = card({ title: 'Test' });
       const expanded = await componentRegistry.expandTree(node, { theme });
@@ -26,72 +27,12 @@ describe('Token Resolution', () => {
         const rect = expanded.children[0];
         assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
         if (rect.type === NODE_TYPE.SHAPE) {
-          assert.strictEqual(rect.fill?.color, theme.colors.secondary);
+          assert.strictEqual(rect.fill?.color, '333333'); // from mock theme.components.card.backgroundColor
         }
       }
     });
 
-    it('card: uses theme.borders.radius as default cornerRadius', async () => {
-      const theme = mockTheme({ borderRadius: 0.15 });
-      const node = card({ title: 'Test' });
-      const expanded = await componentRegistry.expandTree(node, { theme });
-
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        const rect = expanded.children[0];
-        assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
-        if (rect.type === NODE_TYPE.SHAPE) {
-          assert.strictEqual(rect.cornerRadius, theme.borders.radius);
-        }
-      }
-    });
-
-    it('card: uses theme.spacing.padding as default padding', async () => {
-      const theme = mockTheme({ padding: 0.3 });
-      const node = card({ title: 'Test' });
-      const expanded = await componentRegistry.expandTree(node, { theme });
-
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        const contentColumn = expanded.children[1];
-        assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
-        if (contentColumn.type === NODE_TYPE.CONTAINER) {
-          assert.strictEqual(contentColumn.padding, theme.spacing.padding);
-        }
-      }
-    });
-
-    it('table: uses theme.colors.secondary as default borderColor', async () => {
-      const theme = mockTheme();
-      const node = table([['a', 'b']]);
-      const expanded = await componentRegistry.expandTree(node, { theme });
-
-      assert.strictEqual(expanded.type, NODE_TYPE.TABLE);
-      if (expanded.type === NODE_TYPE.TABLE) {
-        assert.ok(expanded.style);
-        assert.strictEqual(expanded.style.borderColor, theme.colors.secondary);
-      }
-    });
-
-    it('table: uses theme.borders.width as default borderWidth', async () => {
-      const theme = mockTheme({ borderWidth: 2 });
-      const node = table([['a', 'b']]);
-      const expanded = await componentRegistry.expandTree(node, { theme });
-
-      assert.strictEqual(expanded.type, NODE_TYPE.TABLE);
-      if (expanded.type === NODE_TYPE.TABLE) {
-        assert.ok(expanded.style);
-        assert.strictEqual(expanded.style.borderWidth, theme.borders.width);
-      }
-    });
-  });
-
-  // ============================================
-  // 2. BASE OVERRIDES FROM theme.components
-  // ============================================
-
-  describe('base overrides from theme.components', () => {
-    it('card: applies backgroundColor and backgroundOpacity from theme.components.card', async () => {
+    it('card: custom theme token values are used', async () => {
       const theme = mockTheme({ components: { card: { backgroundColor: 'AABBCC', backgroundOpacity: 50 } } });
       const node = card({ title: 'Test' });
       const expanded = await componentRegistry.expandTree(node, { theme });
@@ -107,27 +48,35 @@ describe('Token Resolution', () => {
       }
     });
 
-    it('card: partial override — only backgroundColor overridden, padding still from defaults', async () => {
-      const theme = mockTheme({ padding: 0.25, components: { card: { backgroundColor: 'FF1122' } } });
+    it('card: padding comes from theme.components.card.padding', async () => {
+      const theme = mockTheme({ components: { card: { padding: 0.5 } } });
       const node = card({ title: 'Test' });
       const expanded = await componentRegistry.expandTree(node, { theme });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {
-        const rect = expanded.children[0];
-        assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
-        if (rect.type === NODE_TYPE.SHAPE) {
-          assert.strictEqual(rect.fill?.color, 'FF1122');
-        }
         const contentColumn = expanded.children[1];
         assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
         if (contentColumn.type === NODE_TYPE.CONTAINER) {
-          assert.strictEqual(contentColumn.padding, theme.spacing.padding);
+          assert.strictEqual(contentColumn.padding, 0.5);
         }
       }
     });
 
-    it('table: applies borderColor and cellPadding from theme.components.table', async () => {
+    it('table: uses theme.components.table tokens', async () => {
+      const theme = mockTheme();
+      const node = table([['a', 'b']]);
+      const expanded = await componentRegistry.expandTree(node, { theme });
+
+      assert.strictEqual(expanded.type, NODE_TYPE.TABLE);
+      if (expanded.type === NODE_TYPE.TABLE) {
+        assert.ok(expanded.style);
+        assert.strictEqual(expanded.style.borderColor, '333333');
+        assert.strictEqual(expanded.style.borderWidth, theme.borders.width);
+      }
+    });
+
+    it('table: custom theme tokens override mock defaults', async () => {
       const theme = mockTheme({ components: { table: { borderColor: 'AABBCC', cellPadding: 0.2 } } });
       const node = table([['a', 'b']]);
       const expanded = await componentRegistry.expandTree(node, { theme });
@@ -139,31 +88,18 @@ describe('Token Resolution', () => {
         assert.strictEqual(expanded.style.cellPadding, 0.2);
       }
     });
-
-    it('table: partial override — only borderColor overridden, borderWidth still from defaults', async () => {
-      const theme = mockTheme({ borderWidth: 1, components: { table: { borderColor: 'AABBCC' } } });
-      const node = table([['a', 'b']]);
-      const expanded = await componentRegistry.expandTree(node, { theme });
-
-      assert.strictEqual(expanded.type, NODE_TYPE.TABLE);
-      if (expanded.type === NODE_TYPE.TABLE) {
-        assert.ok(expanded.style);
-        assert.strictEqual(expanded.style.borderColor, 'AABBCC');
-        assert.strictEqual(expanded.style.borderWidth, theme.borders.width);
-      }
-    });
   });
 
   // ============================================
-  // 3. VARIANT RESOLUTION
+  // 2. VARIANT RESOLUTION
   // ============================================
 
   describe('variant resolution', () => {
-    it('(a) variant overrides base overrides — base borderColor + variant borderStyle', async () => {
+    it('variant overrides base tokens', async () => {
       const theme = mockTheme({ components: { table: {
         borderColor: 'AABBCC',
         variants: {
-          clean: { borderStyle: 'internal' },
+          clean: { borderStyle: BORDER_STYLE.INTERNAL },
         },
       }}});
       const node = table([['a']], { variant: 'clean' });
@@ -172,34 +108,16 @@ describe('Token Resolution', () => {
       assert.strictEqual(expanded.type, NODE_TYPE.TABLE);
       if (expanded.type === NODE_TYPE.TABLE) {
         assert.ok(expanded.style);
-        assert.strictEqual(expanded.style.borderColor, 'AABBCC', 'base override should be preserved');
-        assert.strictEqual(expanded.style.borderStyle, 'internal', 'variant override should apply');
+        assert.strictEqual(expanded.style.borderColor, 'AABBCC', 'base token should be preserved');
+        assert.strictEqual(expanded.style.borderStyle, BORDER_STYLE.INTERNAL, 'variant override should apply');
       }
     });
 
-    it('(b) variant overrides defaults when no base override', async () => {
-      const theme = mockTheme({ components: { table: {
-        variants: {
-          minimal: { borderStyle: 'none' },
-        },
-      }}});
-      const node = table([['a']], { variant: 'minimal' });
-      const expanded = await componentRegistry.expandTree(node, { theme });
-
-      assert.strictEqual(expanded.type, NODE_TYPE.TABLE);
-      if (expanded.type === NODE_TYPE.TABLE) {
-        assert.ok(expanded.style);
-        assert.strictEqual(expanded.style.borderStyle, 'none', 'variant should override default');
-        // Other tokens still from defaults
-        assert.strictEqual(expanded.style.borderColor, theme.colors.secondary, 'other tokens still from defaults');
-      }
-    });
-
-    it('(c) full cascade: defaults → base override → variant', async () => {
+    it('full cascade: base tokens + variant overrides', async () => {
       const theme = mockTheme({ components: { table: {
         cellPadding: 0.2,
         variants: {
-          grid: { borderStyle: 'internal', hAlign: 'center', vAlign: 'middle' },
+          grid: { borderStyle: BORDER_STYLE.INTERNAL, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE },
         },
       }}});
       const node = table([['a']], { variant: 'grid' });
@@ -208,17 +126,15 @@ describe('Token Resolution', () => {
       assert.strictEqual(expanded.type, NODE_TYPE.TABLE);
       if (expanded.type === NODE_TYPE.TABLE) {
         assert.ok(expanded.style);
-        assert.strictEqual(expanded.style.cellPadding, 0.2, 'base override should apply');
-        assert.strictEqual(expanded.style.borderStyle, 'internal', 'variant override should apply');
-        assert.strictEqual(expanded.style.hAlign, 'center', 'variant override should apply');
-        assert.strictEqual(expanded.style.vAlign, 'middle', 'variant override should apply');
-        assert.strictEqual(expanded.style.borderColor, theme.colors.secondary, 'defaults should fill remaining tokens');
+        assert.strictEqual(expanded.style.cellPadding, 0.2, 'base token should apply');
+        assert.strictEqual(expanded.style.borderStyle, BORDER_STYLE.INTERNAL, 'variant override should apply');
+        assert.strictEqual(expanded.style.hAlign, HALIGN.CENTER, 'variant override should apply');
       }
     });
 
-    it('(d) no variant requested → variant not applied, default borderStyle used', async () => {
+    it('no variant requested → base tokens only', async () => {
       const theme = mockTheme({ components: { table: {
-        variants: { clean: { borderStyle: 'internal' } },
+        variants: { clean: { borderStyle: BORDER_STYLE.INTERNAL } },
       }}});
       const node = table([['a']]);
       const expanded = await componentRegistry.expandTree(node, { theme });
@@ -226,21 +142,21 @@ describe('Token Resolution', () => {
       assert.strictEqual(expanded.type, NODE_TYPE.TABLE);
       if (expanded.type === NODE_TYPE.TABLE) {
         assert.ok(expanded.style);
-        assert.strictEqual(expanded.style.borderStyle, 'full', 'default should apply when no variant requested');
+        assert.strictEqual(expanded.style.borderStyle, BORDER_STYLE.FULL, 'base token should apply when no variant');
       }
     });
   });
 
   // ============================================
-  // 4. UNKNOWN VARIANT ERROR
+  // 3. UNKNOWN VARIANT ERROR
   // ============================================
 
   describe('unknown variant error', () => {
-    it('(a) throws with available variant names listed', async () => {
+    it('throws with available variant names listed', async () => {
       const theme = mockTheme({ components: { table: {
         variants: {
-          clean: { borderStyle: 'internal' },
-          minimal: { borderStyle: 'none' },
+          clean: { borderStyle: BORDER_STYLE.INTERNAL },
+          minimal: { borderStyle: BORDER_STYLE.NONE },
         },
       }}});
       const node = table([['a']], { variant: 'nonexistent' });
@@ -256,8 +172,8 @@ describe('Token Resolution', () => {
       );
     });
 
-    it('(b) throws with "(none)" when no variants defined', async () => {
-      const theme = mockTheme({ components: { table: {} } });
+    it('throws with "(none)" when no variants defined', async () => {
+      const theme = mockTheme();
       const node = table([['a']], { variant: 'anything' });
 
       await assert.rejects(
@@ -268,66 +184,78 @@ describe('Token Resolution', () => {
   });
 
   // ============================================
-  // 5. EMPTY COMPONENTS CONFIG
+  // 4. REQUIRED TOKEN VALIDATION (FAIL-FAST)
   // ============================================
 
-  describe('empty components config', () => {
-    it('components: {} → all defaults apply', async () => {
-      const theme = mockTheme({ components: {} });
-      const node = table([['a', 'b']]);
-      const expanded = await componentRegistry.expandTree(node, { theme });
+  describe('required token validation', () => {
+    it('throws when theme.components entry is missing entirely', async () => {
+      // Create a theme with NO card tokens at all
+      const theme = mockTheme();
+      // Remove card from components
+      delete (theme.components as any).card;
+      const node = card({ title: 'Test' });
 
-      assert.strictEqual(expanded.type, NODE_TYPE.TABLE);
-      if (expanded.type === NODE_TYPE.TABLE) {
-        assert.ok(expanded.style);
-        assert.strictEqual(expanded.style.borderStyle, 'full');
-        assert.strictEqual(expanded.style.borderColor, theme.colors.secondary);
-        assert.strictEqual(expanded.style.borderWidth, theme.borders.width);
-        assert.strictEqual(expanded.style.cellPadding, theme.spacing.cellPadding);
-      }
+      await assert.rejects(
+        () => componentRegistry.expandTree(node, { theme }),
+        (err: Error) => {
+          assert.match(err.message, /requires theme tokens/);
+          assert.match(err.message, /theme\.components\.card/);
+          return true;
+        }
+      );
     });
 
-    it('no components key at all → same result as empty components', async () => {
-      const themeWithout = mockTheme();
-      const themeWith = mockTheme({ components: {} });
+    it('throws when a required token is missing', async () => {
+      const theme = mockTheme();
+      // Remove titleStyle from card tokens
+      delete (theme.components as any).card.titleStyle;
+      const node = card({ title: 'Test' });
 
-      const node = table([['a', 'b']]);
-      const expandedWithout = await componentRegistry.expandTree(node, { theme: themeWithout });
-      const expandedWith = await componentRegistry.expandTree(node, { theme: themeWith });
-
-      assert.strictEqual(expandedWithout.type, NODE_TYPE.TABLE);
-      assert.strictEqual(expandedWith.type, NODE_TYPE.TABLE);
-
-      if (expandedWithout.type === NODE_TYPE.TABLE && expandedWith.type === NODE_TYPE.TABLE) {
-        assert.ok(expandedWithout.style);
-        assert.ok(expandedWith.style);
-        assert.strictEqual(expandedWithout.style.borderStyle, expandedWith.style.borderStyle);
-        assert.strictEqual(expandedWithout.style.borderColor, expandedWith.style.borderColor);
-        assert.strictEqual(expandedWithout.style.borderWidth, expandedWith.style.borderWidth);
-        assert.strictEqual(expandedWithout.style.cellPadding, expandedWith.style.cellPadding);
-      }
+      await assert.rejects(
+        () => componentRegistry.expandTree(node, { theme }),
+        (err: Error) => {
+          assert.match(err.message, /missing required tokens/);
+          assert.match(err.message, /titleStyle/);
+          return true;
+        }
+      );
     });
 
-    it('card with no components key → all card defaults apply', async () => {
+    it('error message lists ALL missing tokens', async () => {
+      const theme = mockTheme();
+      // Remove multiple required tokens
+      delete (theme.components as any).card.titleStyle;
+      delete (theme.components as any).card.descriptionStyle;
+      delete (theme.components as any).card.gap;
+      const node = card({ title: 'Test' });
+
+      await assert.rejects(
+        () => componentRegistry.expandTree(node, { theme }),
+        (err: Error) => {
+          assert.match(err.message, /titleStyle/);
+          assert.match(err.message, /descriptionStyle/);
+          assert.match(err.message, /gap/);
+          return true;
+        }
+      );
+    });
+
+    it('succeeds when all required tokens are provided', async () => {
       const theme = mockTheme();
       const node = card({ title: 'Test' });
+      // Should not throw — mockTheme provides all required tokens
       const expanded = await componentRegistry.expandTree(node, { theme });
-
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        const rect = expanded.children[0];
-        assert.strictEqual(rect.type, NODE_TYPE.SHAPE);
-        if (rect.type === NODE_TYPE.SHAPE) {
-          assert.strictEqual(rect.fill?.color, theme.colors.secondary);
-          assert.strictEqual(rect.fill?.opacity, theme.colors.subtleOpacity);
-          assert.strictEqual(rect.cornerRadius, theme.borders.radius);
-        }
-        const contentColumn = expanded.children[1];
-        assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
-        if (contentColumn.type === NODE_TYPE.CONTAINER) {
-          assert.strictEqual(contentColumn.padding, theme.spacing.padding);
-        }
-      }
+    });
+
+    it('optional tokens do not cause failure when missing', async () => {
+      const theme = mockTheme();
+      // titleColor is optional — make sure it's NOT in the tokens
+      delete (theme.components as any).card.titleColor;
+      const node = card({ title: 'Test' });
+      // Should not throw
+      const expanded = await componentRegistry.expandTree(node, { theme });
+      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
     });
   });
 });

@@ -6,8 +6,9 @@ import { stack, column } from './containers.js';
 import { shape, image, imageComponent } from './primitives.js';
 import { text, prose, textComponent, proseComponent } from './text.js';
 import type { SlideNode } from '../core/nodes.js';
-import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE } from '../core/types.js';
-import type { TextStyleName, GapSize, Theme } from '../core/types.js';
+import { HALIGN, VALIGN, SHAPE } from '../core/types.js';
+import { CARD_TOKEN } from '../core/types.js';
+import type { CardTokens } from '../core/types.js';
 import { schema } from '../schema.js';
 
 // ============================================
@@ -15,25 +16,6 @@ import { schema } from '../schema.js';
 // ============================================
 
 import { Component } from '../core/types.js';
-
-// ============================================
-// DESIGN TOKENS
-// ============================================
-
-export interface CardTokens {
-  padding: number;
-  cornerRadius: number;
-  backgroundColor: string;
-  backgroundOpacity: number;
-  borderColor: string;
-  borderWidth: number;
-  titleStyle: TextStyleName;
-  titleColor?: string;
-  descriptionStyle: TextStyleName;
-  descriptionColor?: string;
-  gap: GapSize;
-  textGap?: GapSize;
-}
 
 // ============================================
 // PARAMS SCHEMA
@@ -61,20 +43,6 @@ export type CardProps = InferProps<typeof cardSchema>;
 // ============================================
 // EXPANSION FUNCTION
 // ============================================
-
-function cardDefaults(theme: Theme): CardTokens {
-  return {
-    padding: theme.spacing.padding,
-    cornerRadius: theme.borders.radius,
-    backgroundColor: theme.colors.secondary,
-    backgroundOpacity: theme.colors.subtleOpacity,
-    borderColor: theme.colors.secondary,
-    borderWidth: theme.borders.width,
-    titleStyle: TEXT_STYLE.H4,
-    descriptionStyle: TEXT_STYLE.SMALL,
-    gap: GAP.TIGHT,
-  };
-}
 
 /**
  * Expand card params into primitive node tree.
@@ -147,7 +115,7 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
 export const cardComponent = componentRegistry.defineContent({
   name: Component.Card,
   params: cardSchema,
-  defaults: cardDefaults,
+  tokens: [CARD_TOKEN.PADDING, CARD_TOKEN.CORNER_RADIUS, CARD_TOKEN.BACKGROUND_COLOR, CARD_TOKEN.BACKGROUND_OPACITY, CARD_TOKEN.BORDER_COLOR, CARD_TOKEN.BORDER_WIDTH, CARD_TOKEN.TITLE_STYLE, CARD_TOKEN.DESCRIPTION_STYLE, CARD_TOKEN.GAP],
   expand: expandCard,
 });
 

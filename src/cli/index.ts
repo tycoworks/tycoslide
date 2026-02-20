@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// TycoSlide CLI
+// tycoslide CLI
 
 import { Command } from 'commander';
 import { build } from './build.js';

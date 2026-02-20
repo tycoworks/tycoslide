@@ -5,17 +5,12 @@ import { NODE_TYPE } from '../core/nodes.js';
 import type { ImageNode, LineNode, ShapeNode, SlideNumberNode } from '../core/nodes.js';
 import {
   Component,
-  HALIGN,
-  DASH_TYPE,
-  TEXT_STYLE,
   ARROW_TYPE_VALUES,
   DASH_TYPE_VALUES,
   SHAPE_VALUES,
-  type DashType,
-  type TextStyleName,
-  type HorizontalAlignment,
-  type Theme,
 } from '../core/types.js';
+import { LINE_TOKEN, SLIDE_NUMBER_TOKEN } from '../core/types.js';
+import type { LineTokens, SlideNumberTokens } from '../core/types.js';
 import { schema } from '../schema.js';
 import { resolveAssetPath, ASSET_PREFIX } from '../utils/assets.js';
 
@@ -52,12 +47,6 @@ export function image(src: string, options?: ImageOptions): ComponentNode {
 // LINE
 // ============================================
 
-export interface LineTokens {
-  color: string;
-  width: number;
-  dashType: DashType;
-}
-
 const lineSchema = {
   beginArrow: schema.enum(ARROW_TYPE_VALUES).optional(),
   endArrow: schema.enum(ARROW_TYPE_VALUES).optional(),
@@ -65,18 +54,10 @@ const lineSchema = {
 
 export type LineProps = InferProps<typeof lineSchema>;
 
-function lineDefaults(theme: Theme): LineTokens {
-  return {
-    color: theme.colors.secondary,
-    width: theme.borders.width,
-    dashType: DASH_TYPE.SOLID,
-  };
-}
-
 componentRegistry.defineContent({
   name: Component.Line,
   params: lineSchema,
-  defaults: lineDefaults,
+  tokens: [LINE_TOKEN.COLOR, LINE_TOKEN.WIDTH, LINE_TOKEN.DASH_TYPE],
   expand: (props: LineProps, _context: ExpansionContext, tokens: LineTokens): LineNode => ({
     type: NODE_TYPE.LINE,
     color: tokens.color,
@@ -138,27 +119,14 @@ export function shape(props: ShapeProps): ComponentNode {
 // SLIDE NUMBER
 // ============================================
 
-export interface SlideNumberTokens {
-  style: TextStyleName;
-  color?: string;
-  hAlign: HorizontalAlignment;
-}
-
 const slideNumberSchema = {} satisfies SchemaShape;
 
 export type SlideNumberProps = InferProps<typeof slideNumberSchema>;
 
-function slideNumberDefaults(_theme: Theme): SlideNumberTokens {
-  return {
-    style: TEXT_STYLE.FOOTER,
-    hAlign: HALIGN.RIGHT,
-  };
-}
-
 componentRegistry.defineContent({
   name: Component.SlideNumber,
   params: slideNumberSchema,
-  defaults: slideNumberDefaults,
+  tokens: [SLIDE_NUMBER_TOKEN.STYLE, SLIDE_NUMBER_TOKEN.HALIGN],
   expand: (_props: SlideNumberProps, _context: ExpansionContext, tokens: SlideNumberTokens): SlideNumberNode => ({
     type: NODE_TYPE.SLIDE_NUMBER,
     style: tokens.style,

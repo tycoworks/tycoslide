@@ -7,8 +7,9 @@ import { stack, column, row } from './containers.js';
 import { shape, image as imageNode, imageComponent } from './primitives.js';
 import { prose, label, proseComponent, labelComponent } from './text.js';
 import type { SlideNode } from '../core/nodes.js';
-import { TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE, SIZE } from '../core/types.js';
-import type { TextStyleName, GapSize, Theme } from '../core/types.js';
+import { HALIGN, VALIGN, SHAPE, SIZE } from '../core/types.js';
+import { QUOTE_TOKEN } from '../core/types.js';
+import type { QuoteTokens } from '../core/types.js';
 import { schema } from '../schema.js';
 
 // ============================================
@@ -16,22 +17,6 @@ import { schema } from '../schema.js';
 // ============================================
 
 import { Component } from '../core/types.js';
-
-// ============================================
-// DESIGN TOKENS
-// ============================================
-
-export interface QuoteTokens {
-  padding: number;
-  cornerRadius: number;
-  backgroundColor: string;
-  backgroundOpacity: number;
-  borderColor: string;
-  borderWidth: number;
-  quoteStyle?: TextStyleName;
-  attributionStyle: TextStyleName;
-  gap: GapSize;
-}
 
 // ============================================
 // PARAMS SCHEMA
@@ -59,19 +44,6 @@ export type QuoteProps = InferProps<typeof quoteSchema>;
 // ============================================
 // EXPANSION FUNCTION
 // ============================================
-
-function quoteDefaults(theme: Theme): QuoteTokens {
-  return {
-    padding: theme.spacing.padding * 2,
-    cornerRadius: theme.borders.radius,
-    backgroundColor: theme.colors.secondary,
-    backgroundOpacity: theme.colors.subtleOpacity,
-    borderColor: theme.colors.secondary,
-    borderWidth: theme.borders.width,
-    attributionStyle: TEXT_STYLE.SMALL,
-    gap: GAP.NORMAL,
-  };
-}
 
 /**
  * Expand quote params into primitive node tree.
@@ -134,7 +106,7 @@ function expandQuote(props: QuoteProps & { body?: string }, context: ExpansionCo
 export const quoteComponent = componentRegistry.defineContent({
   name: Component.Quote,
   params: quoteSchema,
-  defaults: quoteDefaults,
+  tokens: [QUOTE_TOKEN.PADDING, QUOTE_TOKEN.CORNER_RADIUS, QUOTE_TOKEN.BACKGROUND_COLOR, QUOTE_TOKEN.BACKGROUND_OPACITY, QUOTE_TOKEN.BORDER_COLOR, QUOTE_TOKEN.BORDER_WIDTH, QUOTE_TOKEN.ATTRIBUTION_STYLE, QUOTE_TOKEN.GAP],
   expand: expandQuote,
 });
 

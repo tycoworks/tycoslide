@@ -1,29 +1,41 @@
-Core:
+
+# Roadmap
+
+## V1
+
+### Core
 - Reorg & comments / code docs
 - Escape hatch
 - Portrait mode
-- Debug workflow in CLI
+- Debug workflow in CLI:
+-- Where to put html / pptx?
+-- Live preview / navigating between slides
 
-Design:
-- function cardDefaults(theme: Theme): CardTokens {: is this right? Or should always have a default theme and throw if not defined.
-- Theme building in CLI (inc. JSON design tokens)
-- Where to put html / pptx?
-- Default theme
+### Core
+
+- Default theme:
+-- Font
+-- Unused components
+-- Custom components
+-- Theme in CLI / theme assets
 - Theme package (npm?) & version
 - Masters?
-- Dark mode
 - Design principles
 -- Direction is opposite to container?
 -- Content rules
 -- Image cover
-- Build theme from PPTX?
 
-Cleanup:
+### Cleanup
 - Fixed percentages and slide size
 - Right align bullet points
 
-Components:
+### Components
 - Image to the left of the card / direction and justify
 - Code component
+
+# Future:
+- Build theme from PPTX
 - Real mermaid (or embed diagram as alt)
 - Groups
+- Theme building in CLI (inc. JSON design tokens)
+- Dark mode

@@ -9,7 +9,7 @@ import { mockTheme } from './mocks.js';
 import '../src/dsl/text.js';
 import '../src/dsl/card.js';
 import '../src/dsl/containers.js';
-import { Component } from '../src/core/types.js';
+import { Component, HALIGN, VALIGN } from '../src/core/types.js';
 
 // ============================================
 // GENERIC REGISTRY BASE CLASS
@@ -139,7 +139,7 @@ describe('ComponentRegistry', () => {
 
   describe('expandTree', () => {
     test('passes primitives through unchanged', async () => {
-      const textNode = { type: NODE_TYPE.TEXT, content: [], style: undefined, color: undefined, hAlign: 'left' as any, vAlign: 'top' as any };
+      const textNode = { type: NODE_TYPE.TEXT, content: [], style: undefined, color: undefined, hAlign: HALIGN.LEFT as any, vAlign: VALIGN.TOP as any };
       const result = await componentRegistry.expandTree(textNode, { theme });
       assert.strictEqual(result, textNode);
     });

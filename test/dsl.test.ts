@@ -163,7 +163,7 @@ describe('line()', () => {
 
   test('uses theme token defaults for color, width, dashType', async () => {
     const node = await expand(line()) as LineNode;
-    // color, width, dashType come from theme tokens (lineDefaults)
+    // color, width, dashType come from theme.components.line tokens
     assert.strictEqual(node.color, theme.colors.secondary);
     assert.strictEqual(node.width, theme.borders.width);
     assert.strictEqual(node.dashType, DASH_TYPE.SOLID);
@@ -300,7 +300,7 @@ describe('slideNumber()', () => {
 
   test('uses theme token defaults for style, color, hAlign', async () => {
     const node = await expand(slideNumber()) as SlideNumberNode;
-    // style, color, hAlign come from theme tokens (slideNumberDefaults)
+    // style, color, hAlign come from theme.components.slideNumber tokens
     assert.strictEqual(node.style, TEXT_STYLE.FOOTER);
     assert.strictEqual(node.color, undefined);
     assert.strictEqual(node.hAlign, HALIGN.RIGHT);

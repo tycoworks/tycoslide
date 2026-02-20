@@ -7,7 +7,7 @@ import { generateLayoutHTML } from '../dist/layout/layoutHtml.js';
 import { prose, label, text, row, column, image, line, stack, shape } from '../dist/dsl/index.js';
 import { componentRegistry } from '../dist/core/registry.js';
 import { Bounds } from '../dist/core/bounds.js';
-import { HALIGN, VALIGN, DIRECTION, SIZE, SHAPE } from '../dist/core/types.js';
+import { HALIGN, VALIGN, DIRECTION, SIZE, SHAPE, DASH_TYPE } from '../dist/core/types.js';
 import type { Theme, } from '../dist/core/types.js';
 import type { ElementNode } from '../dist/core/nodes.js';
 import { NODE_TYPE } from '../dist/core/nodes.js';
@@ -34,7 +34,13 @@ const mockTheme: Theme = {
     textMuted: '666666',
     subtleOpacity: 20,
   },
-  components: {},
+  components: {
+    line: {
+      color: '666666',
+      width: 1,
+      dashType: DASH_TYPE.SOLID,
+    },
+  },
   textStyles: {
     h1: { fontFamily: mockFontFamily, fontSize: 36, color: '000000' },
     h2: { fontFamily: mockFontFamily, fontSize: 28, color: '000000' },

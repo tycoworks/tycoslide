@@ -12,7 +12,7 @@ import {
   type ComponentDefinition,
 } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
-import { Component } from '../src/core/types.js';
+import { Component, HALIGN, VALIGN } from '../src/core/types.js';
 import { schema } from '../src/schema.js';
 
 // Import components to test their .schema properties
@@ -38,8 +38,8 @@ describe('componentRegistry.defineContent / defineLayout', () => {
       expand: (props) => ({
         type: NODE_TYPE.TEXT,
         content: [{ text: props.title }],
-        hAlign: 'left' as any,
-        vAlign: 'top' as any,
+        hAlign: HALIGN.LEFT as any,
+        vAlign: VALIGN.TOP as any,
       }),
     });
 
@@ -96,8 +96,8 @@ describe('componentRegistry.defineContent / defineLayout', () => {
       expand: (props) => ({
         type: NODE_TYPE.TEXT,
         content: [{ text: props.body }],
-        hAlign: 'left' as any,
-        vAlign: 'top' as any,
+        hAlign: HALIGN.LEFT as any,
+        vAlign: VALIGN.TOP as any,
       }),
     });
 
@@ -141,8 +141,8 @@ describe('componentRegistry.defineContent / defineLayout', () => {
       expand: (props) => ({
         type: NODE_TYPE.TEXT,
         content: [{ text: props.body }],
-        hAlign: 'left' as any,
-        vAlign: 'top' as any,
+        hAlign: HALIGN.LEFT as any,
+        vAlign: VALIGN.TOP as any,
       }),
     });
 
@@ -171,8 +171,8 @@ describe('componentRegistry.defineContent / defineLayout', () => {
         type: NODE_TYPE.CONTAINER,
         direction: 'row',
         children: props.children,
-        hAlign: 'left' as any,
-        vAlign: 'top' as any,
+        hAlign: HALIGN.LEFT as any,
+        vAlign: VALIGN.TOP as any,
       }),
     });
 
@@ -206,8 +206,8 @@ describe('componentRegistry.defineContent / defineLayout', () => {
         expand: (props) => ({
           type: NODE_TYPE.TEXT,
           content: [{ text: props.body }],
-          hAlign: 'left' as any,
-          vAlign: 'top' as any,
+          hAlign: HALIGN.LEFT as any,
+          vAlign: VALIGN.TOP as any,
         }),
       });
       assert.ok(comp.deserialize, 'content component should have deserializer');
@@ -216,7 +216,7 @@ describe('componentRegistry.defineContent / defineLayout', () => {
     test('layout components do NOT get deserializer', () => {
       const comp = componentRegistry.defineLayout({
         name: 'test-no-deserialize',
-        expand: () => ({ type: NODE_TYPE.TEXT, content: [], hAlign: 'left' as any, vAlign: 'top' as any }),
+        expand: () => ({ type: NODE_TYPE.TEXT, content: [], hAlign: HALIGN.LEFT as any, vAlign: VALIGN.TOP as any }),
       });
       assert.strictEqual(comp.deserialize, undefined);
     });

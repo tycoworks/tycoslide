@@ -88,8 +88,8 @@ export interface ComponentDefinition<TProps = unknown, TTokens = undefined> {
   name: string;
   /** Whether this is a content component (usable in layout params) or a layout/container component (programmatic only). */
   type: ComponentType;
-  /** Optional theme token resolver — returns default token values for this component. */
-  defaults?: (theme: Theme) => TTokens;
+  /** Token keys that must be present in theme.components for this component. */
+  tokens?: string[];
   /** Expand props into a node tree (may contain components that get further expanded) */
   expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   /** Deserialize a :::name directive into a ComponentNode. Auto-generated for content components. */
@@ -196,7 +196,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
   defineContent<TBody extends z.ZodTypeAny, TTokens = undefined>(def: {
     name: string;
     body: TBody;
-    defaults?: (theme: Theme) => TTokens;
+    tokens?: string[];
     expand: (props: { body: z.infer<TBody> }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   }): BodyComponentDefinition<TBody, TTokens>;
 
@@ -208,7 +208,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     name: string;
     body: TBody;
     params: TParams;
-    defaults?: (theme: Theme) => TTokens;
+    tokens?: string[];
     expand: (props: { body: z.infer<TBody> } & z.infer<z.ZodObject<TParams>>, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   }): BodyComponentDefinition<TBody, TTokens>;
 
@@ -221,7 +221,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
   defineContent<TShape extends SchemaShape, TTokens = undefined>(def: {
     name: string;
     params: TShape;
-    defaults?: (theme: Theme) => TTokens;
+    tokens?: string[];
     expand: (props: z.infer<z.ZodObject<TShape>> & { body?: string }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   }): ParamsComponentDefinition<TShape, TTokens>;
 
@@ -237,7 +237,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
       name: def.name as string,
       type: ComponentType.CONTENT as const,
       expand: def.expand as ComponentDefinition['expand'],
-      defaults: def.defaults as ComponentDefinition['defaults'],
+      tokens: def.tokens as ComponentDefinition['tokens'],
       schema: bodySchema ?? z.object(paramsShape),
       deserialize: buildDeserializer(def.name, paramsSchema),
     };
@@ -253,14 +253,14 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
    */
   defineLayout<TProps, TTokens = undefined>(def: {
     name: string;
-    defaults?: (theme: Theme) => TTokens;
+    tokens?: string[];
     expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   }): ComponentDefinition<TProps, TTokens> {
     const result: ComponentDefinition<TProps, TTokens> = {
       name: def.name,
       type: ComponentType.LAYOUT,
       expand: def.expand,
-      defaults: def.defaults,
+      tokens: def.tokens,
     };
 
     this.register(result);
@@ -288,18 +288,21 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     if (!def) {
       throw new Error(`Unknown component: '${node.componentName}'. Did you forget to register it?`);
     }
-    if (def.defaults) {
-      const defaults = def.defaults(context.theme) as Record<string, unknown>;
-      const componentConfig = context.theme.components?.[node.componentName] ?? {};
+    if (def.tokens?.length) {
+      const componentConfig = context.theme.components?.[node.componentName];
+      if (!componentConfig) {
+        throw new Error(
+          `Component '${node.componentName}' requires theme tokens but none were provided. ` +
+          `Add them to theme.components.${node.componentName}. ` +
+          `Required: [${def.tokens.join(', ')}]`
+        );
+      }
 
-      // Separate variants from base overrides
-      const { variants: variantDefs, ...baseOverrides } = componentConfig as
+      const { variants: variantDefs, ...baseTokens } = componentConfig as
         Record<string, unknown> & { variants?: Record<string, Record<string, unknown>> };
 
-      // Start with defaults + base overrides
-      let tokens = { ...defaults, ...baseOverrides };
+      let tokens = { ...baseTokens };
 
-      // Apply variant if requested via props
       const variantName = (node.props as any)?.variant;
       if (variantName && typeof variantName === 'string') {
         const variantOverrides = variantDefs?.[variantName];
@@ -312,8 +315,20 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
         tokens = { ...tokens, ...variantOverrides };
       }
 
+      // Validate all required tokens are present
+      const missing = def.tokens.filter(
+        (key: string) => tokens[key] === undefined || tokens[key] === null
+      );
+      if (missing.length) {
+        throw new Error(
+          `Component '${node.componentName}' is missing required tokens: [${missing.join(', ')}]. ` +
+          `Add them to theme.components.${node.componentName}.`
+        );
+      }
+
       return def.expand(node.props, context, tokens as any);
     }
+
     return def.expand(node.props, context, undefined as any);
   }
 

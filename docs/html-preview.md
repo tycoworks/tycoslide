@@ -10,7 +10,7 @@ Add an HTMLRenderer that consumes the existing Canvas abstraction, enabling:
 1. **Step 1:** Browser-based text measurement to validate/tune calibration constants
 2. **Step 2:** Visual slide preview (browser + VS Code extension)
 
-This builds on TycoSlide's existing architecture - no changes to components or Canvas.
+This builds on tycoslide's existing architecture - no changes to components or Canvas.
 
 ---
 
@@ -309,7 +309,7 @@ npx tycoslide preview presentation.ts
 
 ### Challenge
 
-TycoSlide presentations are TypeScript files that must be **executed**, not parsed. Unlike Marp (Markdown), we can't just parse the file - we need to run it.
+tycoslide presentations are TypeScript files that must be **executed**, not parsed. Unlike Marp (Markdown), we can't just parse the file - we need to run it.
 
 ### Architecture
 
@@ -372,7 +372,7 @@ With 300ms debounce, this feels responsive for live preview.
 
 ### VS Code UX
 
-- **Command:** "TycoSlide: Open Preview"
+- **Command:** "tycoslide: Open Preview"
 - **Auto-detect:** Files with `from 'tycoslide'` and `new Presentation`
 - **Side panel:** Split view like Marp
 - **Keyboard:** Arrow keys for slide navigation
@@ -458,7 +458,7 @@ With 300ms debounce, this feels responsive for live preview.
 - [ ] Visual fidelity "close enough" to PPTX output
 
 ### Step 3
-- [ ] VS Code extension activates on TycoSlide files
+- [ ] VS Code extension activates on tycoslide files
 - [ ] Preview panel shows slides in split view
 - [ ] Live reload on save
 - [ ] <1 second update latency
