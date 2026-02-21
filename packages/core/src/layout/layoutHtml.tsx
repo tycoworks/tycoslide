@@ -820,7 +820,7 @@ function nodeToJsx(
       const cellPaddingPx = inToPx(cellPadding);
 
       // In rows: share width equally. In columns: fill width.
-      const isInRow = parent.direction === 'row';
+      const isInRow = parent.direction === DIRECTION.ROW;
       const tableStyle: Record<string, string | number> = {
         display: 'grid',
         gridTemplateColumns: `repeat(${numCols}, 1fr)`,

@@ -247,7 +247,7 @@ async function expandMermaid(props: MermaidComponentProps, context: ExpansionCon
 // REGISTRATION + DSL FUNCTION
 // ============================================
 
-export const mermaidComponent = componentRegistry.defineContent({
+export const mermaidComponent = componentRegistry.define({
   name: Component.Mermaid,
   body: schema.string(),
   params: mermaidOptionsSchema,

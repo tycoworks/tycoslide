@@ -201,8 +201,6 @@ eyebrow: COMPONENTS
 notes: Directives use triple-colon delimiters with a component name. Attributes go in curly braces after the name. Body content goes between the opening and closing markers. Available directives are card, quote, table, and mermaid.
 ---
 
-Directives embed rich components inside markdown body content.
-
 | Directive | Purpose |
 |-----------|---------|
 | **card** | Content card with optional background |
@@ -211,6 +209,20 @@ Directives embed rich components inside markdown body content.
 | **mermaid** | Auto-themed diagrams |
 | **image** | Image from path or asset reference |
 | **line** | Separator with optional arrows |
+
+---
+layout: body
+title: Container Directives
+eyebrow: COMPONENTS
+notes: Container directives wrap other directives. They use fence-depth nesting — the outer directive uses more colons than inner ones (e.g. ::::row wraps :::card). This follows the standard remark-directive spec.
+---
+
+| Directive | Purpose |
+|-----------|---------|
+| **row** | Horizontal container for child directives |
+| **column** | Vertical container for child directives |
+| **stack** | Layered overlay of child directives |
+| **grid** | Equal-sized grid of child directives |
 
 ---
 layout: body
@@ -305,16 +317,57 @@ You can mix paragraphs, lists, tables, and directives in any order within a sing
 
 ---
 layout: body
+title: Row and Column
+eyebrow: CONTAINER DIRECTIVES
+notes: Row and column directives compose content horizontally or vertically. Nest any directives inside them. Attributes like gap control spacing.
+---
+
+:::::row
+::::column
+Left column with **bold text** and a list:
+
+- Item one
+- Item two
+::::
+
+::::column
+:::card{title="Right Column Card"}
+Cards compose naturally inside columns.
+:::
+::::
+:::::
+
+---
+layout: body
+title: Grid Layout
+eyebrow: CONTAINER DIRECTIVES
+notes: The grid directive arranges child directives into equal-sized rows. The columns attribute sets how many columns per row.
+---
+
+::::grid{columns=3}
+:::card{title="Feature 1" height="fill"}
+Fast queries
+:::
+
+:::card{title="Feature 2" height="fill"}
+Real-time updates
+:::
+
+:::card{title="Feature 3" height="fill"}
+Easy integration
+:::
+::::
+
+---
+layout: body
 title: TypeScript-Only Features
 eyebrow: REFERENCE
-notes: Some tycoslide features are only available through the TypeScript DSL, not markdown. This is by design — markdown is for content authors who need simplicity, TypeScript is for developers who need full control.
+notes: A few features remain TypeScript-only. Most content can now be authored in markdown using directives.
 ---
 
 These features require the **TypeScript DSL** (not available in markdown):
 
-- **Grid layouts** for icon and image galleries
 - **Stack overlays** for layered compositions
-- **Row and column containers** with precise sizing and alignment
 - **Programmatic slide generation** from data sources
 - **Custom component registration** for new content types
 

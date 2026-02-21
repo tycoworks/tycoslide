@@ -57,7 +57,7 @@ const tableDirectiveSchema = {
   headerColumns: schema.number().optional(),
 } satisfies SchemaShape;
 
-componentRegistry.defineContent({
+componentRegistry.define({
   name: Component.Table,
   params: tableDirectiveSchema,
   tokens: [TABLE_TOKEN.BORDER_STYLE, TABLE_TOKEN.BORDER_COLOR, TABLE_TOKEN.BORDER_WIDTH, TABLE_TOKEN.CELL_PADDING, TABLE_TOKEN.CELL_TEXT_STYLE, TABLE_TOKEN.HEADER_TEXT_STYLE],

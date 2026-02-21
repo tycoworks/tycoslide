@@ -1,4 +1,4 @@
-// defineComponent Tests — defineContent / defineLayout, .schema, body convention, registry compat
+// defineComponent Tests — define(), .schema, body convention, registry compat
 
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,7 +9,7 @@ import {
   type ComponentDefinition,
 } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
-import { Component, HALIGN, VALIGN, SIZE } from '../src/core/types.js';
+import { Component, HALIGN, VALIGN, SIZE, DIRECTION } from '../src/core/types.js';
 import { schema } from '../src/schema.js';
 
 // Import components to test their .schema properties
@@ -21,15 +21,15 @@ import { quoteComponent } from '../src/dsl/quote.js';
 import '../src/dsl/containers.js';
 import '../src/dsl/table.js';
 
-describe('componentRegistry.defineContent / defineLayout', () => {
-  describe('defineContent with params', () => {
+describe('componentRegistry.define', () => {
+  describe('define with params', () => {
     const testParams = {
       title: schema.string(),
       count: schema.number(),
       enabled: schema.boolean().optional(),
     };
 
-    const comp = componentRegistry.defineContent({
+    const comp = componentRegistry.define({
       name: 'test-params-comp',
       params: testParams,
       tokens: [],
@@ -83,8 +83,8 @@ describe('componentRegistry.defineContent / defineLayout', () => {
     });
   });
 
-  describe('defineContent with body', () => {
-    const comp = componentRegistry.defineContent({
+  describe('define with body', () => {
+    const comp = componentRegistry.define({
       name: 'test-body-comp',
       body: schema.string(),
       tokens: [],
@@ -124,8 +124,8 @@ describe('componentRegistry.defineContent / defineLayout', () => {
     });
   });
 
-  describe('defineContent with body + params', () => {
-    const comp = componentRegistry.defineContent({
+  describe('define with body + params', () => {
+    const comp = componentRegistry.define({
       name: 'test-body-params-comp',
       body: schema.string(),
       params: { scale: schema.number().optional() },
@@ -153,13 +153,14 @@ describe('componentRegistry.defineContent / defineLayout', () => {
 
   });
 
-  describe('defineLayout (no schema)', () => {
-    const comp = componentRegistry.defineLayout({
+  describe('define with slots (no schema)', () => {
+    const comp = componentRegistry.define({
       name: 'test-prog-comp',
+      slots: ['children'],
       tokens: [],
       expand: (props: { children: any[] }) => ({
         type: NODE_TYPE.CONTAINER,
-        direction: 'row',
+        direction: DIRECTION.ROW,
         children: props.children,
         width: SIZE.FILL,
         height: SIZE.HUG,
@@ -188,7 +189,7 @@ describe('componentRegistry.defineContent / defineLayout', () => {
 
   describe('deserializer behavior', () => {
     test('all content components get auto-generated deserializer', () => {
-      const comp = componentRegistry.defineContent({
+      const comp = componentRegistry.define({
         name: 'test-auto-deserialize',
         body: schema.string(),
         tokens: [],
@@ -202,9 +203,10 @@ describe('componentRegistry.defineContent / defineLayout', () => {
       assert.ok(comp.deserialize, 'content component should have deserializer');
     });
 
-    test('layout components do NOT get deserializer', () => {
-      const comp = componentRegistry.defineLayout({
+    test('slot components do NOT get deserializer', () => {
+      const comp = componentRegistry.define({
         name: 'test-no-deserialize',
+        slots: ['children'],
         tokens: [],
         expand: () => ({ type: NODE_TYPE.TEXT, content: [], hAlign: HALIGN.LEFT as any, vAlign: VALIGN.TOP as any }),
       });

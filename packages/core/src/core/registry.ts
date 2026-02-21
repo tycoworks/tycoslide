@@ -2,7 +2,7 @@
 // Generic base class, component registry, and layout registry
 
 import { NODE_TYPE, type ElementNode, type ComponentNode, type SlideNode } from './nodes.js';
-import type { Theme, ComponentName, ContentComponentName, LayoutComponentName } from './types.js';
+import type { Theme, ComponentName } from './types.js';
 import type { Slide } from '../presentation.js';
 import { z } from 'zod';
 
@@ -82,14 +82,18 @@ export interface ComponentDefinition<TProps = unknown, TTokens = undefined> {
   name: ComponentName;
   /** Token keys that must be present in theme.components for this component. */
   tokens?: string[];
+  /** Optional Zod schema shape for directive attributes (used for coercion on slotted components). */
+  params?: SchemaShape;
+  /** Slot names — directive body is compiled as ComponentNode[] and passed as props[slotName]. */
+  slots?: readonly string[];
   /** Expand props into a node tree (may contain components that get further expanded) */
   expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   /** Deserialize a :::name directive into a ComponentNode. Auto-generated for content components. */
   deserialize?: DirectiveDeserializer;
 }
 
-/** A content component definition — has .schema for YAML validation and layout params. */
-export type ContentComponentDefinition<
+/** A scalar component definition — has .schema for YAML validation and layout params. */
+export type ScalarComponentDefinition<
   TSchema extends z.ZodTypeAny = z.ZodTypeAny,
   TTokens = undefined,
 > = ComponentDefinition<any, TTokens> & {
@@ -108,7 +112,7 @@ export type DirectiveDeserializer = (attributes: Record<string, string | null | 
  * Coerce string attribute values from directive markup to JS types.
  * Directive attributes are always strings; schemas expect booleans/numbers.
  */
-function coerceAttributes(attrs: Record<string, string | null | undefined>): Record<string, unknown> {
+export function coerceAttributes(attrs: Record<string, string | null | undefined>): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(attrs)) {
     if (v === 'true') result[k] = true;
@@ -125,7 +129,7 @@ function coerceAttributes(attrs: Record<string, string | null | undefined>): Rec
  * Each component's expand function decides what to do with body.
  */
 function buildDeserializer(
-  componentName: ContentComponentName,
+  componentName: ComponentName,
   paramsSchema: z.ZodObject<SchemaShape> | null,
 ): DirectiveDeserializer {
   return (attributes, body) => {
@@ -141,106 +145,114 @@ function buildDeserializer(
 
 /**
  * Registry for component definitions.
- * Use `.defineContent()` for content components (have .schema, usable in layout params).
- * Use `.defineLayout()` for layout/container components (programmatic only, no .schema).
+ * Use `.define()` to register any component — scalar, slotted, or programmatic.
  */
 class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
-  private _defaultComponentName: ContentComponentName | null = null;
+  private _defaultComponentName: ComponentName | null = null;
 
   constructor() {
     super('Component', 'expand');
   }
 
   /**
-   * Set the default content component for bare MDAST in slots.
+   * Set the default component for bare MDAST in slots.
    * Called by the slot compiler (markdown pipeline policy).
    */
-  setDefaultContent(name: ContentComponentName): void {
+  setDefault(name: ComponentName): void {
     this._defaultComponentName = name;
   }
 
   /**
-   * Get the default content component for bare MDAST in slots.
+   * Get the default component for bare MDAST in slots.
    * @throws Error if no default has been set
    */
-  getDefaultContent(): ContentComponentName {
+  getDefault(): ComponentName {
     if (!this._defaultComponentName) {
-      throw new Error('No default content component set. Register one with setDefaultContent().');
+      throw new Error('No default component set. Register one with setDefault().');
     }
     return this._defaultComponentName;
   }
 
   /**
-   * Define and register a content component with a body field (primary content) only.
+   * Define and register a component with a body field (primary content) only.
    * Returns a definition with `.schema` (= body type) for use in layout params.
    */
-  defineContent<TBody extends z.ZodTypeAny, TTokens = undefined>(def: {
-    name: ContentComponentName;
+  define<TBody extends z.ZodTypeAny, TTokens = undefined>(def: {
+    name: ComponentName;
     body: TBody;
     tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
     expand: (props: { body: z.infer<TBody> }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
-  }): ContentComponentDefinition<TBody, TTokens>;
+  }): ScalarComponentDefinition<TBody, TTokens>;
 
   /**
-   * Define and register a content component with a body field (primary content) and extra params.
+   * Define and register a component with a body field (primary content) and extra params.
    * Returns a definition with `.schema` (= body type) for use in layout params.
    */
-  defineContent<TBody extends z.ZodTypeAny, TParams extends SchemaShape, TTokens = undefined>(def: {
-    name: ContentComponentName;
+  define<TBody extends z.ZodTypeAny, TParams extends SchemaShape, TTokens = undefined>(def: {
+    name: ComponentName;
     body: TBody;
     params: TParams;
     tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
     expand: (props: { body: z.infer<TBody> } & z.infer<z.ZodObject<TParams>>, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
-  }): ContentComponentDefinition<TBody, TTokens>;
+  }): ScalarComponentDefinition<TBody, TTokens>;
 
   /**
-   * Define and register a content component with typed params inferred from a Zod shape.
+   * Define and register a component with typed params inferred from a Zod shape.
    * Returns a definition with `.schema` (pre-wrapped ZodObject) for use in layout params.
    * When invoked from a :::directive, body text arrives as `props.body` (string).
-   * Use `namedField ?? body` in expand to bridge directive body to semantic field names.
    */
-  defineContent<TShape extends SchemaShape, TTokens = undefined>(def: {
-    name: ContentComponentName;
+  define<TShape extends SchemaShape, TTokens = undefined>(def: {
+    name: ComponentName;
     params: TShape;
     tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
     expand: (props: z.infer<z.ZodObject<TShape>> & { body?: string }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
-  }): ContentComponentDefinition<z.ZodObject<TShape>, TTokens>;
+  }): ScalarComponentDefinition<z.ZodObject<TShape>, TTokens>;
+
+  /**
+   * Define and register a slotted component (body compiled as ComponentNode[]).
+   * No `.schema` — slotted components aren't usable in layout params.
+   */
+  define<TTokens = undefined>(def: {
+    name: ComponentName;
+    params?: SchemaShape;
+    slots: readonly string[];
+    tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+    expand: (props: any, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
+  }): ComponentDefinition<any, TTokens>;
+
+  /**
+   * Define and register a programmatic-only component (no directive support, no schema).
+   */
+  define<TProps, TTokens = undefined>(def: {
+    name: ComponentName;
+    tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+    expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
+  }): ComponentDefinition<TProps, TTokens>;
 
   // Implementation — overload signatures above provide type safety for callers.
-  // `any` param is unavoidable: overloaded `expand` signatures have contravariant
-  // parameter types, so no single structural type is a supertype of all three.
-  defineContent(def: any): ContentComponentDefinition {
+  define(def: any): ComponentDefinition & { schema?: z.ZodTypeAny } {
     const bodySchema: z.ZodTypeAny | null = 'body' in def ? def.body : null;
     const paramsShape: SchemaShape = def.params ?? {};
     const paramsSchema = Object.keys(paramsShape).length > 0 ? z.object(paramsShape) : null;
+    const slots: readonly string[] | undefined = def.slots;
 
-    const result = {
-      name: def.name as ContentComponentName,
+    const result: ComponentDefinition & { schema?: z.ZodTypeAny } = {
+      name: def.name as ComponentName,
       expand: def.expand as ComponentDefinition['expand'],
       tokens: def.tokens as string[],
-      schema: bodySchema ?? z.object(paramsShape),
-      deserialize: buildDeserializer(def.name, paramsSchema),
+      params: def.params,
+      slots,
     };
 
-    this.register(result);
-    return result as ContentComponentDefinition;
-  }
-
-  /**
-   * Define and register a layout/container component (programmatic only, no .schema).
-   * Layout components cannot be used in layout params — they have no YAML-facing schema.
-   * Layout components do not support :::directive invocation (no deserializer).
-   */
-  defineLayout<TProps, TTokens = undefined>(def: {
-    name: LayoutComponentName;
-    tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
-    expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
-  }): ComponentDefinition<TProps, TTokens> {
-    const result: ComponentDefinition<TProps, TTokens> = {
-      name: def.name,
-      expand: def.expand,
-      tokens: def.tokens,
-    };
+    if (slots?.length) {
+      // Slotted component: no auto-deserializer (slot compiler handles body compilation).
+      // .schema is not set — slotted components aren't usable in layout params.
+    } else if (bodySchema || paramsSchema) {
+      // Scalar component: auto-generate .schema and directive deserializer
+      result.schema = bodySchema ?? z.object(paramsShape);
+      result.deserialize = buildDeserializer(def.name, paramsSchema);
+    }
+    // else: programmatic only — no directive support, no schema
 
     this.register(result);
     return result;
@@ -248,12 +260,12 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
 
   /**
    * Find a component that supports :::name directive invocation.
-   * Returns undefined if the component doesn't exist or doesn't have a deserializer.
+   * Returns the definition if it has a deserializer (scalar components) or slots (container components).
    */
-  getDirectiveHandler(name: string): (ComponentDefinition & { deserialize: DirectiveDeserializer }) | undefined {
+  getDirectiveHandler(name: string): ComponentDefinition | undefined {
     const def = this.get(name);
-    if (def?.deserialize) {
-      return def as ComponentDefinition & { deserialize: DirectiveDeserializer };
+    if (def?.deserialize || def?.slots?.length) {
+      return def;
     }
     return undefined;
   }

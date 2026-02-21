@@ -259,10 +259,10 @@ function expandText(props: TextComponentProps, context: { theme: any }): Element
 }
 
 // ============================================
-// COMPONENT REGISTRATION — single defineContent
+// COMPONENT REGISTRATION
 // ============================================
 
-export const textComponent = componentRegistry.defineContent({
+export const textComponent = componentRegistry.define({
   name: Component.Text,
   body: schema.string(),
   params: textSchema,

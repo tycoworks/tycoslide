@@ -75,7 +75,10 @@ function expandQuote(props: QuoteProps & { body?: string }, context: ExpansionCo
   if (imagePath) {
     children.push(row({ hAlign: HALIGN.CENTER }, imageNode(imagePath)));
   }
-  children.push(prose(actualQuote!, quoteStyle ? { style: quoteStyle } : undefined));
+  if (!actualQuote) {
+    throw new Error(`[tycoslide] Quote component requires either a 'quote' attribute or body text.`);
+  }
+  children.push(prose(actualQuote, quoteStyle ? { style: quoteStyle } : undefined));
   if (attribution) {
     children.push(label(attribution, { style: attributionStyle, hAlign: HALIGN.RIGHT }));
   }
@@ -105,7 +108,7 @@ function expandQuote(props: QuoteProps & { body?: string }, context: ExpansionCo
 // COMPONENT DEFINITION
 // ============================================
 
-export const quoteComponent = componentRegistry.defineContent({
+export const quoteComponent = componentRegistry.define({
   name: Component.Quote,
   params: quoteSchema,
   tokens: [QUOTE_TOKEN.PADDING, QUOTE_TOKEN.CORNER_RADIUS, QUOTE_TOKEN.BACKGROUND_COLOR, QUOTE_TOKEN.BACKGROUND_OPACITY, QUOTE_TOKEN.BORDER_COLOR, QUOTE_TOKEN.BORDER_WIDTH, QUOTE_TOKEN.ATTRIBUTION_STYLE, QUOTE_TOKEN.GAP],

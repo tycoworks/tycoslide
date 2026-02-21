@@ -24,8 +24,12 @@ export const markdownProcessor = unified()
 // ============================================
 
 /**
- * Extract the raw body text from a container directive,
+ * Extract the raw body text from a scalar container directive,
  * stripping the :::name opener and ::: closer.
+ *
+ * For scalar components only (card, image, text, etc.) where the body is a string.
+ * Slotted components (row, column, stack, grid) walk directive.children directly
+ * via compileChildren() — they never call this function.
  */
 export function extractDirectiveBody(directive: ContainerDirective, source: string): string {
   const raw = extractSource(directive, source);

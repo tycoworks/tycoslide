@@ -26,7 +26,7 @@ export type ImageOptions = InferProps<typeof imageOptionsSchema>;
 
 export type ImageProps = { body: string } & ImageOptions;
 
-export const imageComponent = componentRegistry.defineContent({
+export const imageComponent = componentRegistry.define({
   name: Component.Image,
   body: schema.string(),
   params: imageOptionsSchema,
@@ -55,7 +55,7 @@ const lineSchema = {
 
 export type LineProps = InferProps<typeof lineSchema>;
 
-componentRegistry.defineContent({
+componentRegistry.define({
   name: Component.Line,
   params: lineSchema,
   tokens: [LINE_TOKEN.COLOR, LINE_TOKEN.WIDTH, LINE_TOKEN.DASH_TYPE],
@@ -100,7 +100,7 @@ const shapeSchema = {
 
 export type ShapeProps = InferProps<typeof shapeSchema>;
 
-componentRegistry.defineContent({
+componentRegistry.define({
   name: Component.Shape,
   params: shapeSchema,
 
@@ -125,7 +125,7 @@ const slideNumberSchema = {} satisfies SchemaShape;
 
 export type SlideNumberProps = InferProps<typeof slideNumberSchema>;
 
-componentRegistry.defineContent({
+componentRegistry.define({
   name: Component.SlideNumber,
   params: slideNumberSchema,
   tokens: [SLIDE_NUMBER_TOKEN.STYLE, SLIDE_NUMBER_TOKEN.HALIGN],

@@ -116,7 +116,7 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
 // COMPONENT DEFINITION
 // ============================================
 
-export const cardComponent = componentRegistry.defineContent({
+export const cardComponent = componentRegistry.define({
   name: Component.Card,
   params: cardSchema,
   tokens: [CARD_TOKEN.PADDING, CARD_TOKEN.CORNER_RADIUS, CARD_TOKEN.BACKGROUND_COLOR, CARD_TOKEN.BACKGROUND_OPACITY, CARD_TOKEN.BORDER_COLOR, CARD_TOKEN.BORDER_WIDTH, CARD_TOKEN.TITLE_STYLE, CARD_TOKEN.DESCRIPTION_STYLE, CARD_TOKEN.GAP],

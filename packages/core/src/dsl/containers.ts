@@ -10,6 +10,7 @@ import {
   type SizeValue,
 } from '../core/types.js';
 import { Component, VALIGN, HALIGN, SIZE, DIRECTION } from '../core/types.js';
+import { schema } from '../schema.js';
 
 // ============================================
 // SHARED HELPERS
@@ -52,8 +53,17 @@ interface RowInternalProps extends RowProps {
   children: SlideNode[];
 }
 
-componentRegistry.defineLayout({
+componentRegistry.define({
   name: Component.Row,
+  params: {
+    gap: schema.gap().optional(),
+    vAlign: schema.vAlign().optional(),
+    hAlign: schema.hAlign().optional(),
+    padding: schema.number().optional(),
+    width: schema.size().optional(),
+    height: schema.size().optional(),
+  },
+  slots: ['children'] as const,
 
   expand: (props: RowInternalProps) => ({
     type: NODE_TYPE.CONTAINER,
@@ -92,8 +102,17 @@ interface ColumnInternalProps extends ColumnProps {
   children: SlideNode[];
 }
 
-componentRegistry.defineLayout({
+componentRegistry.define({
   name: Component.Column,
+  params: {
+    gap: schema.gap().optional(),
+    vAlign: schema.vAlign().optional(),
+    hAlign: schema.hAlign().optional(),
+    padding: schema.number().optional(),
+    width: schema.size().optional(),
+    height: schema.size().optional(),
+  },
+  slots: ['children'] as const,
 
   expand: (props: ColumnInternalProps) => ({
     type: NODE_TYPE.CONTAINER,
@@ -128,8 +147,13 @@ interface StackInternalProps extends StackProps {
   children: SlideNode[];
 }
 
-componentRegistry.defineLayout({
+componentRegistry.define({
   name: Component.Stack,
+  params: {
+    width: schema.size().optional(),
+    height: schema.size().optional(),
+  },
+  slots: ['children'] as const,
 
   expand: (props: StackInternalProps) => ({
     type: NODE_TYPE.STACK,
@@ -171,7 +195,14 @@ interface GridInternalProps extends GridProps {
   children: SlideNode[];
 }
 
-componentRegistry.defineLayout({ name: Component.Grid, expand: (props: GridInternalProps) => {
+componentRegistry.define({
+  name: Component.Grid,
+  params: {
+    columns: schema.number(),
+    gap: schema.gap().optional(),
+  },
+  slots: ['children'] as const,
+  expand: (props: GridInternalProps) => {
   const { columns, gap = GAP.NORMAL, children } = props;
 
   // Wrap each child in a column cell so items share row width equally

@@ -8,7 +8,8 @@ import type { Root, RootContent, Heading } from 'mdast';
 import type { Table as MdastTable } from 'mdast';
 import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
 import { SYNTAX, extractSource, extractInlineText, type ContainerDirective } from '../core/mdast.js';
-import { markdownProcessor, extractDirectiveBody } from '../utils/parser.js';
+import { markdownProcessor } from '../utils/parser.js';
+import { dispatchDirective } from '../markdown/slotCompiler.js';
 import { Component, TEXT_STYLE } from '../core/types.js';
 import { prose, HEADING_STYLE } from './text.js';
 import { table } from './table.js';
@@ -20,22 +21,9 @@ import { schema } from '../schema.js';
 // ============================================
 
 function compileNode(node: RootContent, source: string): ComponentNode | null {
-  // 1. Container directives → registry dispatch
+  // 1. Container directives → shared dispatch (handles scalar + slotted components)
   if (node.type === SYNTAX.CONTAINER_DIRECTIVE) {
-    const directive = node as unknown as ContainerDirective;
-    const handler = componentRegistry.getDirectiveHandler(directive.name);
-    if (!handler) {
-      const available = componentRegistry.getAll()
-        .filter(d => d.deserialize)
-        .map(d => d.name)
-        .join(', ');
-      throw new Error(
-        `[tycoslide] document: unknown directive ":::${directive.name}". ` +
-        `Available: ${available || 'none'}.`,
-      );
-    }
-    const body = extractDirectiveBody(directive, source);
-    return handler.deserialize(directive.attributes ?? {}, body);
+    return dispatchDirective(node as unknown as ContainerDirective, source, 'document');
   }
 
   // 2. Paragraphs (reject inline images)
@@ -103,7 +91,7 @@ function expandDocument(content: string): ComponentNode {
 // COMPONENT DEFINITION
 // ============================================
 
-export const documentComponent = componentRegistry.defineContent({
+export const documentComponent = componentRegistry.define({
   name: Component.Document,
   body: schema.string(),
   expand: (props: { body: string }) => expandDocument(props.body),
