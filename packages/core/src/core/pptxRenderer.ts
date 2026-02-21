@@ -273,6 +273,8 @@ export class PptxRenderer {
       case NODE_TYPE.TEXT: {
         const textNode = node as TextNode;
         const { fragments, options } = this.config.buildTextConfig(textNode, positioned, theme);
+        // Pass fragments array — patched pptxgenjs handles Array.isArray in createSlideMaster.
+        // See patches/pptxgenjs+4.0.1.patch (root level for hoisted node_modules).
         objects.push({ text: { text: fragments, options } });
         break;
       }

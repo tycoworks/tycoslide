@@ -3,6 +3,10 @@
   "workspaces": ["packages/*"],
   "scripts": {
     "build": "npm run build --workspaces",
-    "test": "npm test --workspace=packages/core"
+    "test": "npm test --workspace=packages/core",
+    "postinstall": "patch-package"
+  },
+  "devDependencies": {
+    "patch-package": "^8.0.0"
   }
 }
