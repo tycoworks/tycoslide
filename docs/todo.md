@@ -17,8 +17,6 @@
 -- Font
 -- Unused components
 -- Custom components
--- Theme in CLI / theme assets
-- Theme package (npm?) & version
 - Masters?
 - Design principles
 -- Direction is opposite to container?

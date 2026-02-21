@@ -33,6 +33,8 @@ const quoteSchema = {
   background: schema.boolean().optional(),
   /** Named variant (resolved from theme.components.quote.variants) */
   variant: schema.string().optional(),
+  /** Sizing: 'fill' to share parent space equally, 'hug' for content-sized (default) */
+  height: schema.size().optional(),
 } satisfies SchemaShape;
 
 // ============================================
@@ -61,7 +63,7 @@ export type QuoteProps = InferProps<typeof quoteSchema>;
  * ```
  */
 function expandQuote(props: QuoteProps & { body?: string }, context: ExpansionContext, tokens: QuoteTokens): SlideNode {
-  const { quote: quoteText, body, attribution, image: imagePath, background = true } = props;
+  const { quote: quoteText, body, attribution, image: imagePath, background = true, height: sizeHeight } = props;
   const actualQuote = quoteText ?? body;
   const {
     padding, cornerRadius, backgroundColor, backgroundOpacity,
@@ -78,14 +80,12 @@ function expandQuote(props: QuoteProps & { body?: string }, context: ExpansionCo
     children.push(label(attribution, { style: attributionStyle, hAlign: HALIGN.RIGHT }));
   }
 
-  const contentLayer = column(
-    { padding, gap, vAlign: VALIGN.MIDDLE, height: SIZE.FILL },
-    ...children,
-  );
+  const contentProps = { padding, gap, vAlign: VALIGN.MIDDLE };
+  const outerHeight = sizeHeight ?? SIZE.FILL;
 
-  // If no background, just return the content
+  // If no background, just return the content column directly
   if (background === false || backgroundColor === 'none') {
-    return contentLayer;
+    return column({ ...contentProps, height: outerHeight }, ...children);
   }
 
   // Build background shape
@@ -96,7 +96,9 @@ function expandQuote(props: QuoteProps & { body?: string }, context: ExpansionCo
     cornerRadius,
   });
 
-  return stack(backgroundRect, contentLayer);
+  // Content layer fills the stack so vAlign: MIDDLE centering works
+  const contentLayer = column({ ...contentProps, height: SIZE.FILL }, ...children);
+  return stack({ height: outerHeight }, backgroundRect, contentLayer);
 }
 
 // ============================================

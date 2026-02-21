@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { LayoutValidator, LayoutOverflowError, LayoutBoundsError } from '../src/layout/validator.js';
 import { NODE_TYPE, type PositionedNode, type ElementNode } from '../src/core/nodes.js';
-import { HALIGN, VALIGN, DIRECTION } from '../src/core/types.js';
+import { HALIGN, VALIGN, DIRECTION, SIZE } from '../src/core/types.js';
 
 /** Minimal text node for validator tests (validator only checks geometry, not content) */
 function textNode(content: string): ElementNode {
@@ -11,7 +11,7 @@ function textNode(content: string): ElementNode {
 
 /** Minimal container node for validator tests */
 function containerNode(): ElementNode {
-  return { type: NODE_TYPE.CONTAINER, children: [], direction: DIRECTION.ROW, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP } as ElementNode;
+  return { type: NODE_TYPE.CONTAINER, children: [], direction: DIRECTION.ROW, width: SIZE.FILL, height: SIZE.HUG, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP } as ElementNode;
 }
 
 describe('Layout Validation', () => {
@@ -213,7 +213,7 @@ describe('Layout Validation', () => {
 
     it('should not report overlap for Stack nodes (intentional)', () => {
       const positioned: PositionedNode = {
-        node: { type: NODE_TYPE.STACK, children: [] },
+        node: { type: NODE_TYPE.STACK, children: [], width: SIZE.FILL, height: SIZE.HUG },
         x: 1,
         y: 1,
         width: 4,

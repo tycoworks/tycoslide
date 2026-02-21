@@ -49,8 +49,9 @@ function generateNodeId(ctx: IdContext): string {
 /** Column justify-content: how content is positioned vertically in a column */
 function vAlignToJustifyContent(vAlign: VerticalAlignment): string {
   // 'safe' keyword: falls back to 'start' when content overflows the container.
-  // Without 'safe', justify-content: center pushes content above the parent
-  // when content is taller than available space.
+  // Even though HTML is measurement-only, the browser positions feed directly into
+  // PPTX placement. Without 'safe', center/flex-end push content above the container
+  // when content is taller than available space, causing bounds escape errors.
   switch (vAlign) {
     case VALIGN.BOTTOM: return 'safe flex-end';
     case VALIGN.MIDDLE: return 'safe center';
@@ -80,58 +81,55 @@ function hAlignToCSS(hAlign: HorizontalAlignment): string {
 /**
  * Compute flex-item CSS for a node based on its parent's flex direction.
  *
+ * All values are resolved before calling — no undefined, no implicit defaults.
+ * Three size types: number (fixed inches), SIZE.FILL (share space), SIZE.HUG (content-sized).
+ *
  * CSS `flex` controls the PARENT's main axis, so:
  * - In a row parent (main=horizontal): `flex` controls width, explicit `height` for cross-axis
  * - In a column parent (main=vertical): `flex` controls height, explicit `width` for cross-axis
  */
 function flexItemStyles(
-  width: number | SizeValue | undefined,
-  height: number | SizeValue | undefined,
-  parentDirection?: Direction
+  width: number | SizeValue,
+  height: number | SizeValue,
+  parentDirection: Direction,
+  heightIsConstrained: boolean
 ): Record<string, string | number> {
   const styles: Record<string, string | number> = {};
   const isInRow = parentDirection === DIRECTION.ROW;
-
-  // Main axis sizing (controlled by `flex` property)
   const mainSize = isInRow ? width : height;
+  const crossSize = isInRow ? height : width;
 
+  // Main axis → flex property
   if (typeof mainSize === 'number') {
     styles.flex = `0 0 ${inToPx(mainSize)}px`;
   } else if (mainSize === SIZE.FILL) {
     styles.flex = '1 1 0';
-    if (isInRow) { styles.minWidth = 0; } else { styles.minHeight = 0; }
-  } else if (isInRow) {
-    // In a row: children share width equally by default
-    // min-height: 0 allows vertical compression when constrained by align-self: stretch
-    styles.flex = '1 1 0';
-    styles.minWidth = 0;
-    styles.minHeight = 0;
-  } else {
-    // In a column: children use intrinsic height by default (no flex grow).
-    // min-height: 0 allows containers to compress when parent is constrained
-    // (without this, min-height: auto prevents shrinking below content size).
-    // The root wrapper's CSS forces the top-level node to fill the slide.
-    styles.minHeight = 0;
-  }
-
-  // Cross axis sizing (explicit CSS property)
-  const crossSize = isInRow ? height : width;
-
-  if (typeof crossSize === 'number') {
+    // Horizontal: always emit min-width: 0 — text reflows to narrower widths.
+    // Vertical: emit min-height: 0 ONLY when heightIsConstrained (the slide root
+    // provides a definite height through FILL containers). This allows compression
+    // of compressible children (images). When unconstrained (HUG ancestor broke the
+    // chain), omit min-height so content height is preserved as the minimum.
     if (isInRow) {
-      styles.height = `${inToPx(crossSize)}px`;
-    } else {
-      styles.width = `${inToPx(crossSize)}px`;
+      styles.minWidth = 0;
+    } else if (heightIsConstrained) {
+      styles.minHeight = 0;
     }
-  } else if (crossSize === SIZE.FILL) {
-    // Explicit SIZE.FILL: always fill parent's cross dimension.
-    if (isInRow) { styles.height = '100%'; } else { styles.width = '100%'; }
-  } else if (!isInRow) {
-    // In columns: width: 100% prevents shrink-to-content from align-items.
-    styles.width = '100%';
+  } else { // SIZE.HUG — content-sized, don't compress below content
+    styles.flexShrink = 0;
   }
-  // In rows with undefined cross-size: omit height entirely.
-  // align-items: stretch (VALIGN.TOP) fills natively; center/flex-end position at intrinsic height.
+
+  // Cross axis → explicit CSS dimension
+  if (typeof crossSize === 'number') {
+    if (isInRow) { styles.height = `${inToPx(crossSize)}px`; }
+    else { styles.width = `${inToPx(crossSize)}px`; }
+  } else if (crossSize === SIZE.FILL) {
+    // Cross-axis FILL always emits 100% — both width (columns) and height (rows).
+    // align-items: stretch alone is insufficient for grid children (Stack) whose
+    // internal fr units need a definite cross-axis size to resolve properly.
+    if (isInRow) { styles.height = '100%'; }
+    else { styles.width = '100%'; }
+  }
+  // SIZE.HUG cross-axis: omit entirely — auto sizing
 
   return styles;
 }
@@ -295,9 +293,10 @@ export async function measureFontNormalRatios(page: Page, theme: Theme): Promise
 interface LayoutContainerProps {
   nodeId: string;
   direction: Direction;
-  parentDirection?: Direction;
-  width?: number | SizeValue;
-  height?: number | SizeValue;
+  parentDirection: Direction;
+  heightIsConstrained: boolean;
+  width: number | SizeValue;
+  height: number | SizeValue;
   gap?: GapSize;
   vAlign: VerticalAlignment;
   hAlign: HorizontalAlignment;
@@ -309,6 +308,7 @@ const LayoutContainer: FC<PropsWithChildren<LayoutContainerProps>> = ({
   nodeId,
   direction,
   parentDirection,
+  heightIsConstrained,
   width,
   height,
   gap,
@@ -319,7 +319,7 @@ const LayoutContainer: FC<PropsWithChildren<LayoutContainerProps>> = ({
   children,
 }) => {
   const gapPx = inToPx(resolveGap(gap, theme));
-  const itemStyles = flexItemStyles(width, height, parentDirection);
+  const itemStyles = flexItemStyles(width, height, parentDirection, heightIsConstrained);
   const paddingPx = padding ? inToPx(padding) : 0;
 
   // In flexbox:
@@ -350,23 +350,30 @@ const LayoutContainer: FC<PropsWithChildren<LayoutContainerProps>> = ({
   );
 };
 
-const LayoutStack: FC<PropsWithChildren<{ nodeId: string; width?: number | SizeValue; height?: number | SizeValue; parentDirection?: Direction }>> = ({
+const LayoutStack: FC<PropsWithChildren<{ nodeId: string; width: number | SizeValue; height: number | SizeValue; parentDirection: Direction; heightIsConstrained: boolean }>> = ({
   nodeId,
   width,
   height,
   parentDirection,
+  heightIsConstrained,
   children,
 }) => {
   // Stack positions all children at the same location (overlapping)
   // Uses direction-aware sizing via flexItemStyles (same as other containers):
   // - Row parent: flex: 1 1 0 (share width equally), stretch for height
   // - Column parent: intrinsic height (content-sized), width: 100%
-  // minmax(0, 1fr) allows grid tracks to shrink below content size
-  const itemStyles = flexItemStyles(width, height, parentDirection);
+  //
+  // Grid template min track:
+  // - heightIsConstrained: minmax(0, 1fr) — allows grid cell to compress below content
+  // - unconstrained: minmax(min-content, 1fr) — grid cell preserves content height
+  // Note: for HUG stacks, gridMin is moot — the stack itself has flex-shrink:0,
+  // so no compression pressure reaches the grid cell regardless.
+  const itemStyles = flexItemStyles(width, height, parentDirection, heightIsConstrained);
+  const gridMin = heightIsConstrained ? '0' : 'min-content';
   const style: Record<string, string | number> = {
     position: 'relative',
     display: 'grid',
-    gridTemplate: 'minmax(0, 1fr) / minmax(0, 1fr)',
+    gridTemplate: `minmax(${gridMin}, 1fr) / minmax(${gridMin}, 1fr)`,
     ...itemStyles,
   };
 
@@ -380,10 +387,17 @@ const LayoutStack: FC<PropsWithChildren<{ nodeId: string; width?: number | SizeV
 const LayoutStackChild: FC<PropsWithChildren> = ({ children }) => {
   // Each child in a stack occupies the same grid cell.
   // display: flex + flex-direction: column so children (e.g., card content column)
-  // fill the grid cell height. min-height: 0 allows shrinking, overflow: hidden clips.
-  // This works because the height chain is definite: SIZE.FILL on row → stretch → grid → here.
+  // fill the grid cell height.
+  //
+  // No min-height here — compression is handled by LayoutStack's grid template:
+  // heightIsConstrained → minmax(0, 1fr), unconstrained → minmax(min-content, 1fr).
+  const style: Record<string, string | number> = {
+    gridArea: '1 / 1 / 2 / 2',
+    display: 'flex',
+    flexDirection: 'column',
+  };
   return (
-    <div style={{ gridArea: '1 / 1 / 2 / 2', display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
+    <div style={style}>
       {children}
     </div>
   );
@@ -540,6 +554,7 @@ interface LayoutImageProps {
   maxHeightPx?: number;
   parentDirection?: Direction;
   parentHasDefiniteCrossSize?: boolean;
+  heightIsConstrained: boolean;
 }
 
 const LayoutImage: FC<LayoutImageProps> = ({
@@ -549,6 +564,7 @@ const LayoutImage: FC<LayoutImageProps> = ({
   maxHeightPx,
   parentDirection,
   parentHasDefiniteCrossSize,
+  heightIsConstrained,
 }) => {
   // Image contain behavior: fit within parent bounds preserving aspect ratio.
   // CSS strategy depends on parent direction and whether parent has definite cross-axis size:
@@ -569,10 +585,12 @@ const LayoutImage: FC<LayoutImageProps> = ({
     }
   } else {
     // In a column (or root): fill available width, derive height from aspect ratio
-    // Fully compressible: can shrink to 0 (flex-shrink: 1, min-height: 0)
+    // Compressible when height chain is constrained (flex-shrink: 1, min-height: 0)
     style.width = '100%';
     style.flex = '0 1 auto';
-    style.minHeight = 0;
+    if (heightIsConstrained) {
+      style.minHeight = 0;
+    }
   }
 
   // maxScaleFactor: prevent upscaling beyond native resolution
@@ -663,6 +681,11 @@ interface ParentContext {
   /** True when the parent has a definite cross-axis size (height for rows, width for columns).
    *  Images use this to decide whether aspect-ratio can derive their width from height: 100%. */
   hasDefiniteCrossSize?: boolean;
+  /** True when the vertical size chain from the slide root provides a definite height budget.
+   *  FILL containers propagate the chain; HUG containers reset it to false; fixed px starts a new chain.
+   *  When true, vertical FILL items emit min-height: 0 (allows compression of images etc.).
+   *  When false, they omit it (prevents collapse to zero in content-sized contexts). */
+  heightIsConstrained: boolean;
 }
 
 function nodeToJsx(
@@ -698,11 +721,30 @@ function nodeToJsx(
     case NODE_TYPE.CONTAINER: {
       const container = node as ContainerNode;
       const isRow = container.direction === DIRECTION.ROW;
+
+      // Propagate heightIsConstrained to children:
+      // - Fixed px height = new definite anchor (true)
+      // - HUG height = chain broken (false)
+      // - FILL height = inherit from parent
+      // Same rules for rows and columns: a fixed-height row provides definite
+      // cross-axis height to children via stretch, just like a column does directly.
+      const childHeightIsConstrained =
+        typeof container.height === 'number' ? true
+        : container.height === SIZE.HUG ? false
+        : parent.heightIsConstrained;
+
+      const childContext: ParentContext = {
+        direction: container.direction,
+        hasDefiniteCrossSize: isRow ? container.height !== SIZE.HUG : undefined,
+        heightIsConstrained: childHeightIsConstrained,
+      };
+
       return (
         <LayoutContainer
           nodeId={nodeId}
           direction={container.direction}
           parentDirection={parent.direction}
+          heightIsConstrained={parent.heightIsConstrained}
           width={container.width}
           height={container.height}
           gap={container.gap}
@@ -711,18 +753,26 @@ function nodeToJsx(
           padding={container.padding}
           theme={theme}
         >
-          {container.children.map((child) => nodeToJsx(child, theme, nodeIds, idCtx, { direction: container.direction, hasDefiniteCrossSize: isRow ? container.height !== undefined : undefined }, fontNormalRatios))}
+          {container.children.map((child) => nodeToJsx(child, theme, nodeIds, idCtx, childContext, fontNormalRatios))}
         </LayoutContainer>
       );
     }
 
     case NODE_TYPE.STACK: {
       const stackNode = node as StackNode;
+
+      // Stack children are in a column context. Propagate heightIsConstrained:
+      // same rules as column containers.
+      const stackChildHeightIsConstrained =
+        typeof stackNode.height === 'number' ? true
+        : stackNode.height === SIZE.HUG ? false
+        : parent.heightIsConstrained;
+
       return (
-        <LayoutStack nodeId={nodeId} width={stackNode.width} height={stackNode.height} parentDirection={parent.direction}>
+        <LayoutStack nodeId={nodeId} width={stackNode.width} height={stackNode.height} parentDirection={parent.direction} heightIsConstrained={parent.heightIsConstrained}>
           {stackNode.children.map((child) => (
             <LayoutStackChild>
-              {nodeToJsx(child, theme, nodeIds, idCtx, { direction: DIRECTION.COLUMN }, fontNormalRatios)}
+              {nodeToJsx(child, theme, nodeIds, idCtx, { direction: DIRECTION.COLUMN, heightIsConstrained: stackChildHeightIsConstrained }, fontNormalRatios)}
             </LayoutStackChild>
           ))}
         </LayoutStack>
@@ -740,7 +790,7 @@ function nodeToJsx(
       const maxWidthPx = (dims.width / SCREEN_DPI) * maxScaleFactor * SCREEN_DPI;
       const maxHeightPx = (dims.height / SCREEN_DPI) * maxScaleFactor * SCREEN_DPI;
 
-      return <LayoutImage nodeId={nodeId} aspectRatio={dims.aspectRatio} maxWidthPx={maxWidthPx} maxHeightPx={maxHeightPx} parentDirection={parent.direction} parentHasDefiniteCrossSize={parent.hasDefiniteCrossSize} />;
+      return <LayoutImage nodeId={nodeId} aspectRatio={dims.aspectRatio} maxWidthPx={maxWidthPx} maxHeightPx={maxHeightPx} parentDirection={parent.direction} parentHasDefiniteCrossSize={parent.hasDefiniteCrossSize} heightIsConstrained={parent.heightIsConstrained} />;
     }
 
     case NODE_TYPE.LINE: {
@@ -849,7 +899,7 @@ export function generateLayoutHTML(
     const widthPx = inToPx(slide.bounds.w);
     const heightPx = inToPx(slide.bounds.h);
 
-    const jsxTree = nodeToJsx(slide.tree, theme, nodeIds, idCtx, { direction: DIRECTION.COLUMN }, fontNormalRatios);
+    const jsxTree = nodeToJsx(slide.tree, theme, nodeIds, idCtx, { direction: DIRECTION.COLUMN, heightIsConstrained: true }, fontNormalRatios);
 
     return (
       <>

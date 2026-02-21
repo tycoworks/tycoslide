@@ -154,8 +154,8 @@ export interface ContainerNode {
   type: typeof NODE_TYPE.CONTAINER;
   direction: Direction;           // 'row' or 'column' — determines flex-direction
   children: ElementNode[];        // Post-expansion: always primitives
-  width?: number | SizeValue;     // inches (number) or SIZE.FILL
-  height?: number | SizeValue;    // inches (number) or SIZE.FILL
+  width: number | SizeValue;      // inches (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
+  height: number | SizeValue;     // inches (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
   gap?: GapSize;
   vAlign: VerticalAlignment;
   hAlign: HorizontalAlignment;
@@ -166,8 +166,8 @@ export interface ContainerNode {
 export interface StackNode {
   type: typeof NODE_TYPE.STACK;
   children: ElementNode[];  // Post-expansion: [0] first (back), [n-1] last (front)
-  width?: number | SizeValue;   // inches or SIZE.FILL
-  height?: number | SizeValue;  // inches or SIZE.FILL
+  width: number | SizeValue;    // inches, SIZE.FILL, or SIZE.HUG
+  height: number | SizeValue;   // inches, SIZE.FILL, or SIZE.HUG
 }
 
 

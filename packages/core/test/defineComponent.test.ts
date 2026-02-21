@@ -9,7 +9,7 @@ import {
   type ComponentDefinition,
 } from '../src/core/registry.js';
 import { NODE_TYPE } from '../src/core/nodes.js';
-import { Component, HALIGN, VALIGN } from '../src/core/types.js';
+import { Component, HALIGN, VALIGN, SIZE } from '../src/core/types.js';
 import { schema } from '../src/schema.js';
 
 // Import components to test their .schema properties
@@ -161,6 +161,8 @@ describe('componentRegistry.defineContent / defineLayout', () => {
         type: NODE_TYPE.CONTAINER,
         direction: 'row',
         children: props.children,
+        width: SIZE.FILL,
+        height: SIZE.HUG,
         hAlign: HALIGN.LEFT as any,
         vAlign: VALIGN.TOP as any,
       }),

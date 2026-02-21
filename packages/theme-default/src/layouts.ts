@@ -33,10 +33,10 @@ export function headerBlock(title: string, eyebrow?: string): SlideNode {
   return label(title, { style: TEXT_STYLE.H3 });
 }
 
-/** Centered, fill-height body */
+/** Fill-height body, content flows from top */
 export function contentBody(...elements: SlideNode[]): SlideNode {
   return column(
-    { height: SIZE.FILL, vAlign: VALIGN.MIDDLE, hAlign: HALIGN.LEFT, gap: GAP.NORMAL },
+    { height: SIZE.FILL, vAlign: VALIGN.TOP, hAlign: HALIGN.LEFT, gap: GAP.NORMAL },
     ...elements,
   );
 }
@@ -45,7 +45,7 @@ export function contentBody(...elements: SlideNode[]): SlideNode {
 export function masteredSlide(...content: SlideNode[]): Slide {
   return {
     master: DEFAULT_MASTER,
-    content: column({ gap: GAP.NONE }, ...content),
+    content: column({ gap: GAP.NONE, height: SIZE.FILL }, ...content),
   };
 }
 
@@ -62,7 +62,7 @@ export const titleLayout = layoutRegistry.define({
   },
   render: ({ title, subtitle }) => ({
     content: column(
-      { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, gap: GAP.TIGHT },
+      { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, gap: GAP.TIGHT, height: SIZE.FILL },
       label(title, { style: TEXT_STYLE.H1, hAlign: HALIGN.CENTER }),
       ...(subtitle
         ? [label(subtitle, { style: TEXT_STYLE.H3, hAlign: HALIGN.CENTER, color: theme.colors.textMuted })]
@@ -77,7 +77,7 @@ export const sectionLayout = layoutRegistry.define({
   params: { title: labelComponent.schema },
   render: ({ title }) => ({
     content: column(
-      { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER },
+      { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, height: SIZE.FILL },
       label(title, { style: TEXT_STYLE.H2, hAlign: HALIGN.CENTER }),
     ),
   }),

@@ -6,7 +6,7 @@ import { stack, column } from './containers.js';
 import { shape, image, imageComponent } from './primitives.js';
 import { text, prose, textComponent, proseComponent } from './text.js';
 import type { SlideNode } from '../core/nodes.js';
-import { HALIGN, VALIGN, SHAPE } from '../core/types.js';
+import { HALIGN, VALIGN, SHAPE, SIZE } from '../core/types.js';
 import { CARD_TOKEN } from '../core/types.js';
 import type { CardTokens } from '../core/types.js';
 import { schema } from '../schema.js';
@@ -32,6 +32,8 @@ const cardSchema = {
   background: schema.boolean().optional(),
   /** Named variant (resolved from theme.components.card.variants) */
   variant: schema.string().optional(),
+  /** Sizing: 'fill' to share parent space equally, 'hug' for content-sized (default) */
+  height: schema.size().optional(),
 } satisfies SchemaShape;
 
 // ============================================
@@ -56,7 +58,7 @@ export type CardProps = InferProps<typeof cardSchema>;
  * ```
  */
 function expandCard(props: CardProps & { body?: string }, context: ExpansionContext, tokens: CardTokens): SlideNode {
-  const { image: imagePath, title, description, body, background = true } = props;
+  const { image: imagePath, title, description, body, background = true, height: sizeHeight } = props;
   const actualDescription = description ?? body;
   const {
     padding, cornerRadius, backgroundColor, backgroundOpacity,
@@ -85,12 +87,12 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
     }));
   }
 
-  // Build content layer (centered both axes for balanced card appearance)
-  const contentLayer = column({ padding, gap: textGap ?? gap, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE }, ...children);
+  const contentProps = { padding, gap: textGap ?? gap, hAlign: HALIGN.CENTER, vAlign: VALIGN.TOP };
+  const outerHeight = sizeHeight ?? SIZE.FILL;
 
-  // If no background, just return the content
+  // If no background, just return the content column directly
   if (background === false || backgroundColor === 'none') {
-    return contentLayer;
+    return column({ ...contentProps, height: outerHeight }, ...children);
   }
 
   // Build background rectangle
@@ -105,7 +107,9 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
   });
 
   // Stack: background behind, content in front
-  return stack(backgroundRect, contentLayer);
+  // Content layer fills the stack so padding/alignment works consistently
+  const contentLayer = column({ ...contentProps, height: SIZE.FILL }, ...children);
+  return stack({ height: outerHeight }, backgroundRect, contentLayer);
 }
 
 // ============================================

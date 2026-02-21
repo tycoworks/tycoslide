@@ -232,19 +232,15 @@ describe('HTML Measurement Generation', () => {
       assert.ok(html.includes('flex:0 0 288px'), 'Column with explicit width in row should get flex:0 0 <width>px');
     });
 
-    test('row with no height in column uses intrinsic height (no flex grow)', async () => {
-      // In a column, children default to intrinsic height (content-determined)
-      // Only SIZE.FILL triggers flex: 1 1 0
+    test('row with default HUG height in column uses flex-shrink:0 (content-sized)', async () => {
+      // Row defaults to height: HUG. In column parent, height is main axis.
+      // HUG main axis → flex-shrink:0, no flex:1 1 0
       const node = column(row(label('A'), label('B')));
       const { html } = await genHTML(node, bounds, mockTheme);
-      // The row inside the column should NOT get flex: 1 1 0
-      // (The outer column gets it via .root > * CSS, but the row itself should be intrinsic)
-      // We check the row doesn't have flex: 1 1 0 by checking it doesn't appear
-      // in the row's div (after the column's div which does get it from .root > *)
-      // Note: the column's flex comes from .root > * CSS rule, not inline styles
       const rowDivMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
       assert.ok(rowDivMatch, 'Should find the row div');
-      assert.ok(!rowDivMatch![1].includes('flex:1 1 0'), 'Row in column should NOT get flex:1 1 0 by default');
+      assert.ok(!rowDivMatch![1].includes('flex:1 1 0'), 'Row with HUG height should NOT get flex:1 1 0');
+      assert.ok(rowDivMatch![1].includes('flex-shrink:0'), 'Row with HUG height should get flex-shrink:0');
     });
 
     test('row with SIZE.FILL height in column fills available space', async () => {
@@ -302,11 +298,11 @@ describe('HTML Measurement Generation', () => {
     });
   });
 
-  describe('Safe vertical alignment (overflow protection)', () => {
+  describe('Vertical alignment (safe overflow protection)', () => {
     test('column with vAlign MIDDLE generates safe center', async () => {
       const node = column({ vAlign: VALIGN.MIDDLE }, label('Centered'));
       const { html } = await genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('safe center'), 'vAlign MIDDLE should use "safe center" to prevent content above parent');
+      assert.ok(html.includes('safe center'), 'vAlign MIDDLE should use "safe center" — prevents content above parent in measurements');
     });
 
     test('column with vAlign BOTTOM generates safe flex-end', async () => {
@@ -341,21 +337,22 @@ describe('HTML Measurement Generation', () => {
       assert.ok(rowMatch![1].includes('align-items:center'), 'Row with vAlign MIDDLE should use center');
     });
 
-    test('container in row has min-height: 0 (allows vertical compression)', async () => {
-      // Containers in rows need min-height: 0 so they can compress vertically
-      // when constrained by align-items: stretch
+    test('container in row: FILL width (main axis) gets flex:1 1 0 and min-width:0', async () => {
+      // Column in row: width=FILL (main axis) → flex:1 1 0, minWidth:0
+      // height=HUG (cross axis) → omit (stretch handles it)
       const node = row(column(text('A')));
       const { html } = await genHTML(node, bounds, mockTheme);
       const columnMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
       assert.ok(columnMatch, 'Should find the nested column div');
-      assert.ok(columnMatch![1].includes('min-height:0px'), 'Column in row should have min-height:0px');
+      assert.ok(columnMatch![1].includes('flex:1 1 0'), 'Column in row should get flex:1 1 0 (FILL main axis)');
+      assert.ok(columnMatch![1].includes('min-width:0'), 'Column in row should have min-width:0 (FILL main axis)');
     });
 
-    test('stack grid uses minmax(0, 1fr) to allow track shrinking', async () => {
-      // Grid tracks must allow shrinking below content size
+    test('stack grid uses minmax(min-content, 1fr) to prevent content collapse', async () => {
+      // Grid tracks must be at least content-sized to prevent children from collapsing to zero height
       const node = column(stack(shape({ shape: SHAPE.ROUND_RECT }), column(text('Content'))));
       const { html } = await genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('minmax(0, 1fr)'), 'Stack grid should use minmax(0, 1fr) not plain 1fr');
+      assert.ok(html.includes('minmax(min-content, 1fr)'), 'Stack grid should use minmax(min-content, 1fr)');
     });
 
     test('container in row omits height (stretch handles cross-axis fill)', async () => {
@@ -377,12 +374,14 @@ describe('HTML Measurement Generation', () => {
       assert.ok(!stackMatch![1].includes('height:100%'), 'Stack in row should not have height:100% (stretch handles it)');
     });
 
-    test('stack child (grid item) is flex container with min-height: 0 and overflow: hidden', async () => {
+    test('stack child (grid item) is flex container filling the grid cell', async () => {
       // Grid items inside stack must be flex containers so children fill the grid cell.
-      // This works because the height chain is definite: SIZE.FILL → stretch → grid → here.
+      // Compression is handled by LayoutStack's grid template (heightIsConstrained),
+      // not by min-height/overflow on the grid item wrapper.
       const node = column(stack(shape({ shape: SHAPE.ROUND_RECT }), column(text('Content'))));
       const { html } = await genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('grid-area:1 / 1 / 2 / 2;display:flex;flex-direction:column;min-height:0px;overflow:hidden'), 'Stack child should be flex container with min-height:0px and overflow:hidden');
+      assert.ok(html.includes('grid-area:1 / 1 / 2 / 2;display:flex;flex-direction:column'), 'Stack child should be flex container');
+      assert.ok(!html.includes('overflow:hidden'), 'Stack child should NOT have overflow:hidden (compression is in grid template)');
     });
 
     test('column with SIZE.FILL inside stack gets flex:1 1 0 (fills stack for centering)', async () => {
@@ -394,7 +393,10 @@ describe('HTML Measurement Generation', () => {
       const columnMatch = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
       assert.ok(columnMatch, 'Should find the column inside stack (node-3)');
       assert.ok(columnMatch![1].includes('flex:1 1 0'), 'Column with SIZE.FILL in stack should get flex:1 1 0');
-      assert.ok(columnMatch![1].includes('min-height:0'), 'Column with SIZE.FILL should have min-height:0');
+      // No min-height:0 here — the stack defaults to HUG, which breaks the
+      // heightIsConstrained chain. min-height:0 only appears when the full
+      // height chain from slide root is definite (FILL or fixed px).
+      assert.ok(!columnMatch![1].includes('min-height:0'), 'Column in HUG stack should NOT have min-height:0 (chain is broken)');
     });
 
     test('column without SIZE.FILL inside stack uses intrinsic height (no flex grow)', async () => {
@@ -411,7 +413,7 @@ describe('HTML Measurement Generation', () => {
 
   describe('Compressibility rules', () => {
     test('image in column is compressible (flex-shrink: 1, min-height: 0)', async () => {
-      const node = column(image('./test/fixtures/test.png'));
+      const node = column({ height: SIZE.FILL }, image('./test/fixtures/test.png'));
       const { html } = await genHTML(node, bounds, mockTheme);
       // Image should be able to shrink to fit available space
       assert.ok(html.includes('flex:0 1 auto'), 'Image should have flex-shrink: 1 (compressible)');
@@ -467,13 +469,111 @@ describe('HTML Measurement Generation', () => {
       assert.ok(!textMatch![1].includes('width:100%'), 'Text in row should NOT have width:100%');
     });
 
-    test('container in column has min-height: 0 (allows compression)', async () => {
-      // A row inside a column should be able to compress when parent is constrained
+    test('container in column: HUG height (main axis) gets flex-shrink:0', async () => {
+      // Row in column: height=HUG (main axis) → flexShrink:0 (content-sized, don't compress)
+      // width=FILL (cross axis) → width:100%
       const node = column(row(text('A'), text('B')));
       const { html } = await genHTML(node, bounds, mockTheme);
       const rowDivMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
       assert.ok(rowDivMatch, 'Should find the row div');
-      assert.ok(rowDivMatch![1].includes('min-height:0px'), 'Row in column should have min-height:0px for compression');
+      assert.ok(rowDivMatch![1].includes('flex-shrink:0'), 'Row in column should have flex-shrink:0 (HUG main axis)');
+      assert.ok(rowDivMatch![1].includes('width:100%'), 'Row in column should have width:100% (FILL cross axis)');
+    });
+  });
+
+  describe('heightIsConstrained propagation', () => {
+    test('multi-level FILL chain propagates min-height:0 to deepest container', async () => {
+      // Slide root (constrained) → FILL column → FILL column → FILL row
+      // The entire chain is definite, so the innermost FILL row gets min-height:0.
+      // node-1: outer column, node-2: middle column, node-3: row, node-4: image
+      const node = column({ height: SIZE.FILL },
+        column({ height: SIZE.FILL },
+          row({ height: SIZE.FILL }, image('./test/fixtures/test.png')),
+        ),
+      );
+      const { html } = await genHTML(node, bounds, mockTheme);
+      const rowMatch = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
+      assert.ok(rowMatch, 'Should find the inner row (node-3)');
+      assert.ok(rowMatch![1].includes('min-height:0'), 'FILL row in constrained chain should have min-height:0');
+    });
+
+    test('HUG breaks chain, fixed px restarts it', async () => {
+      // Slide root (constrained) → HUG column (breaks) → fixed column (restarts) → FILL column
+      // node-1: outer HUG column, node-2: fixed column, node-3: inner FILL column, node-4: text
+      const node = column(
+        column({ height: 2 },
+          column({ height: SIZE.FILL }, text('deep')),
+        ),
+      );
+      const { html } = await genHTML(node, bounds, mockTheme);
+      const innerCol = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
+      assert.ok(innerCol, 'Should find inner FILL column (node-3)');
+      assert.ok(innerCol![1].includes('flex:1 1 0'), 'Inner column should be FILL');
+      assert.ok(innerCol![1].includes('min-height:0'), 'Fixed px parent should restart chain — inner FILL gets min-height:0');
+    });
+
+    test('FILL stack in constrained context gets compressible grid template', async () => {
+      // Slide root (constrained) → FILL column → FILL stack
+      // Stack grid template should use minmax(0, 1fr) for compression.
+      // node-1: column, node-2: stack, node-3: shape, node-4: column, node-5: text
+      const node = column({ height: SIZE.FILL },
+        stack({ height: SIZE.FILL }, shape({ shape: SHAPE.ROUND_RECT }), column(text('Content'))),
+      );
+      const { html } = await genHTML(node, bounds, mockTheme);
+      const stackMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
+      assert.ok(stackMatch, 'Should find the stack (node-2)');
+      assert.ok(stackMatch![1].includes('minmax(0, 1fr)'), 'Constrained FILL stack should have minmax(0, 1fr) grid template');
+      assert.ok(!stackMatch![1].includes('min-content'), 'Constrained FILL stack should NOT have min-content');
+    });
+
+    test('row passes heightIsConstrained through to column children', async () => {
+      // Slide root (constrained) → FILL column → row → FILL column → FILL column
+      // The row passes through the constraint, so the deepest column gets min-height:0.
+      // node-1: outer column, node-2: row, node-3: mid column, node-4: inner column, node-5: text
+      const node = column({ height: SIZE.FILL },
+        row({ height: SIZE.FILL },
+          column({ height: SIZE.FILL },
+            column({ height: SIZE.FILL }, text('through row')),
+          ),
+        ),
+      );
+      const { html } = await genHTML(node, bounds, mockTheme);
+      const innerCol = html.match(/data-node-id="node-4"[^>]*style="([^"]*)"/);
+      assert.ok(innerCol, 'Should find innermost column (node-4)');
+      assert.ok(innerCol![1].includes('flex:1 1 0'), 'Innermost column should be FILL');
+      assert.ok(innerCol![1].includes('min-height:0'), 'Row should pass constraint through — inner column gets min-height:0');
+    });
+
+    test('HUG row breaks chain for its children', async () => {
+      // Slide root (constrained) → FILL column → HUG row → FILL column
+      // The row defaults to HUG height, which breaks the chain.
+      // The inner FILL column should NOT get min-height:0.
+      // node-1: outer column, node-2: row (HUG), node-3: inner column, node-4: text
+      const node = column({ height: SIZE.FILL },
+        row(
+          column({ height: SIZE.FILL }, text('inside HUG row')),
+        ),
+      );
+      const { html } = await genHTML(node, bounds, mockTheme);
+      const innerCol = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
+      assert.ok(innerCol, 'Should find inner column (node-3)');
+      assert.ok(innerCol![1].includes('flex:1 1 0'), 'Inner column should be FILL');
+      assert.ok(!innerCol![1].includes('min-height:0'), 'HUG row should break chain — inner column should NOT get min-height:0');
+    });
+
+    test('image in constrained column gets min-height:0 through row', async () => {
+      // Slide root (constrained) → FILL column → FILL row → FILL column → image
+      // The row passes constraint through, so the image in the inner column gets min-height:0.
+      // node-1: outer column, node-2: row, node-3: inner column, node-4: image
+      const node = column({ height: SIZE.FILL },
+        row({ height: SIZE.FILL },
+          column({ height: SIZE.FILL }, image('./test/fixtures/test.png')),
+        ),
+      );
+      const { html } = await genHTML(node, bounds, mockTheme);
+      const imgMatch = html.match(/data-node-id="node-4"[^>]*style="([^"]*)"/);
+      assert.ok(imgMatch, 'Should find image (node-4)');
+      assert.ok(imgMatch![1].includes('min-height:0'), 'Image in column inside constrained row should get min-height:0');
     });
   });
 });

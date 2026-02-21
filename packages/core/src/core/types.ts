@@ -94,9 +94,13 @@ export type Direction = typeof DIRECTION[keyof typeof DIRECTION];
 
 export const SIZE = {
   FILL: 'fill',
+  HUG: 'hug',
 } as const;
 
 export type SizeValue = typeof SIZE[keyof typeof SIZE];
+
+/** All SIZE values as a tuple — useful for Zod enum schemas */
+export const SIZE_VALUES = Object.values(SIZE) as [SizeValue, ...SizeValue[]];
 
 export const BORDER_STYLE = {
   FULL: 'full',

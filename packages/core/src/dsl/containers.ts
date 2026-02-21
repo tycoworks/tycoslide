@@ -39,8 +39,8 @@ function parseContainerArgs<TProps>(args: any[]): { props: TProps; children: Sli
 // ============================================
 
 export interface RowProps {
-  width?: number | SizeValue;   // inches (number) or SIZE.FILL (when inside another Row)
-  height?: number | SizeValue;  // inches (number) or SIZE.FILL to fill container height
+  width?: number | SizeValue;   // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
+  height?: number | SizeValue;  // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
   gap?: GapSize;
   vAlign?: VerticalAlignment;
   hAlign?: HorizontalAlignment; // justify-content: left (flex-start), center, right (flex-end)
@@ -58,8 +58,8 @@ componentRegistry.defineLayout({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.ROW,
     children: props.children as ElementNode[],  // Safe: expandTree recurses into these
-    width: props.width,
-    height: props.height,
+    width: props.width ?? SIZE.FILL,
+    height: props.height ?? SIZE.HUG,
     gap: props.gap,
     vAlign: props.vAlign ?? VALIGN.TOP,    // Explicit default: pure alignment (not CSS stretch)
     hAlign: props.hAlign ?? HALIGN.LEFT,   // Explicit default for consistent measurement
@@ -79,8 +79,8 @@ export function row(...args: any[]): ComponentNode {
 // ============================================
 
 export interface ColumnProps {
-  width?: number | SizeValue;   // inches (number) or SIZE.FILL (when inside Row)
-  height?: number | SizeValue;  // inches (number) or SIZE.FILL (when inside Column)
+  width?: number | SizeValue;   // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
+  height?: number | SizeValue;  // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
   gap?: GapSize;
   vAlign?: VerticalAlignment;
   hAlign?: HorizontalAlignment;
@@ -98,8 +98,8 @@ componentRegistry.defineLayout({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.COLUMN,
     children: props.children as ElementNode[],  // Safe: expandTree recurses into these
-    width: props.width,
-    height: props.height,
+    width: props.width ?? SIZE.FILL,
+    height: props.height ?? SIZE.HUG,
     gap: props.gap,
     vAlign: props.vAlign ?? VALIGN.TOP,    // Explicit default for consistent measurement
     hAlign: props.hAlign ?? HALIGN.LEFT,   // Explicit default for consistent measurement
@@ -119,8 +119,8 @@ export function column(...args: any[]): ComponentNode {
 // ============================================
 
 export interface StackProps {
-  width?: number | SizeValue;   // inches (number) or SIZE.FILL
-  height?: number | SizeValue;  // inches (number) or SIZE.FILL
+  width?: number | SizeValue;   // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
+  height?: number | SizeValue;  // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
 }
 
 interface StackInternalProps extends StackProps {
@@ -133,8 +133,8 @@ componentRegistry.defineLayout({
   expand: (props: StackInternalProps) => ({
     type: NODE_TYPE.STACK,
     children: props.children as ElementNode[],  // Safe: expandTree recurses into these
-    width: props.width,
-    height: props.height,
+    width: props.width ?? SIZE.FILL,
+    height: props.height ?? SIZE.HUG,
   }),
 });
 
