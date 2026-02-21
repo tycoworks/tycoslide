@@ -656,9 +656,9 @@ describe('grid()', () => {
     assert.strictEqual(rows[1].children.length, 1);
   });
 
-  test('does not apply gap when not specified', async () => {
+  test('defaults to GAP.NORMAL when gap not specified', async () => {
     const rows = await expandGrid(grid(2, child1, child2));
-    assert.strictEqual(rows[0].gap, undefined);
+    assert.strictEqual(rows[0].gap, GAP.NORMAL);
   });
 
   test('preserves child order (each wrapped in column cell)', async () => {
@@ -677,37 +677,22 @@ describe('grid()', () => {
     assert.strictEqual(col1.children.length, 1);
   });
 
-  test('fill: true sets height: SIZE.FILL on wrapper column', async () => {
-    const col = await expand(grid({ columns: 2, fill: true }, child1, child2)) as ContainerNode;
+  test('wrapper column has height: SIZE.FILL', async () => {
+    const col = await expand(grid(2, child1, child2)) as ContainerNode;
     assert.strictEqual(col.height, SIZE.FILL);
   });
 
-  test('fill: false defaults to height: HUG on wrapper column', async () => {
-    const col = await expand(grid(2, child1, child2)) as ContainerNode;
-    assert.strictEqual(col.height, SIZE.HUG);
-  });
-
-  test('fill: true sets height: SIZE.FILL and vAlign: TOP on each row', async () => {
-    const rows = await expandGrid(grid({ columns: 2, fill: true }, child1, child2));
+  test('rows have height: SIZE.FILL', async () => {
+    const rows = await expandGrid(grid(2, child1, child2));
     assert.strictEqual(rows[0].height, SIZE.FILL);
     assert.strictEqual(rows[0].vAlign, VALIGN.TOP);
   });
 
-  test('fill: true sets height: SIZE.FILL on cell columns', async () => {
-    const rows = await expandGrid(grid({ columns: 2, fill: true }, child1, child2));
+  test('cells have width and height: SIZE.FILL', async () => {
+    const rows = await expandGrid(grid(2, child1, child2));
     const col0 = rows[0].children[0] as ContainerNode;
     assert.strictEqual(col0.height, SIZE.FILL);
     assert.strictEqual(col0.width, SIZE.FILL);
-    const col1 = rows[0].children[1] as ContainerNode;
-    assert.strictEqual(col1.height, SIZE.FILL);
-    assert.strictEqual(col1.width, SIZE.FILL);
-  });
-
-  test('fill: false (default) uses HUG height on rows and cells', async () => {
-    const rows = await expandGrid(grid(2, child1, child2));
-    assert.strictEqual(rows[0].height, SIZE.HUG);
-    const col0 = rows[0].children[0] as ContainerNode;
-    assert.strictEqual(col0.height, SIZE.HUG);
   });
 
   test('handles single row (columns >= children)', async () => {
