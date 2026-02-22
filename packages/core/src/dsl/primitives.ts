@@ -8,6 +8,7 @@ import {
   ARROW_TYPE_VALUES,
   DASH_TYPE_VALUES,
   SHAPE_VALUES,
+  type ShapeName,
 } from '../core/types.js';
 import { LINE_TOKEN, SLIDE_NUMBER_TOKEN } from '../core/types.js';
 import type { LineTokens, SlideNumberTokens } from '../core/types.js';
@@ -77,40 +78,54 @@ export function line(props?: LineProps): ComponentNode {
 // SHAPE (all area shapes)
 // ============================================
 
-const shapeFillSchema = schema.object({
-  color: schema.string(),
-  opacity: schema.number().optional(),
-});
-
-const shapeBorderSchema = schema.object({
-  color: schema.string().optional(),
-  width: schema.number().optional(),
-  top: schema.boolean().optional(),
-  right: schema.boolean().optional(),
-  bottom: schema.boolean().optional(),
-  left: schema.boolean().optional(),
-});
-
-const shapeSchema = {
+// Flat schema for directive attributes (:::shape{shape="roundRect" fill="FF0000" fillOpacity=80})
+const shapeDirectiveSchema = {
   shape: schema.enum(SHAPE_VALUES),
-  fill: shapeFillSchema.optional(),
-  border: shapeBorderSchema.optional(),
+  fill: schema.string().optional(),            // fill color (hex)
+  fillOpacity: schema.number().optional(),     // fill opacity (0-100)
+  borderColor: schema.string().optional(),
+  borderWidth: schema.number().optional(),
   cornerRadius: schema.number().optional(),
 } satisfies SchemaShape;
 
-export type ShapeProps = InferProps<typeof shapeSchema>;
+type ShapeDirectiveProps = InferProps<typeof shapeDirectiveSchema>;
+
+// Rich nested type for DSL callers
+export interface ShapeProps {
+  shape: ShapeName;
+  fill?: { color: string; opacity?: number };
+  border?: { color?: string; width?: number; top?: boolean; right?: boolean; bottom?: boolean; left?: boolean };
+  cornerRadius?: number;
+}
 
 componentRegistry.define({
   name: Component.Shape,
-  params: shapeSchema,
+  params: shapeDirectiveSchema,
 
-  expand: (props: ShapeProps): ShapeNode => ({
-    type: NODE_TYPE.SHAPE,
-    shape: props.shape,
-    fill: props.fill,
-    border: props.border,
-    cornerRadius: props.cornerRadius,
-  }),
+  expand: (props): ShapeNode => {
+    const p = props as ShapeDirectiveProps & Record<string, unknown>;
+    // Support both flat (directive) and nested (DSL) forms
+    const rawFill = p.fill;
+    const fill = rawFill
+      ? (typeof rawFill === 'string'
+        ? { color: rawFill, opacity: p.fillOpacity }
+        : rawFill as { color: string; opacity?: number })
+      : undefined;
+
+    const rawBorder = (p as any).border;
+    const border = rawBorder
+      ?? (p.borderColor || p.borderWidth
+        ? { color: p.borderColor, width: p.borderWidth }
+        : undefined);
+
+    return {
+      type: NODE_TYPE.SHAPE,
+      shape: p.shape,
+      fill,
+      border,
+      cornerRadius: p.cornerRadius,
+    };
+  },
 });
 
 export function shape(props: ShapeProps): ComponentNode {
