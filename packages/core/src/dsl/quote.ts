@@ -94,8 +94,10 @@ function expandQuote(props: QuoteProps & { body?: string }, context: ExpansionCo
   // Build background shape
   const backgroundRect = shape({
     shape: SHAPE.ROUND_RECT,
-    fill: { color: backgroundColor, opacity: backgroundOpacity },
-    border: { color: borderColor, width: borderWidth },
+    fill: backgroundColor,
+    fillOpacity: backgroundOpacity,
+    borderColor,
+    borderWidth,
     cornerRadius,
   });
 

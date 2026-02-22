@@ -14,7 +14,7 @@ If DTCG JSON import is needed in the future, a CLI scaffold command (`tycoslide 
 
 1. **Font paths require TypeScript.** `TextStyle` references `FontFamily` objects with absolute `.woff2` paths resolved via `path.join(__dirname, ...)`. JSON cannot express environment-specific path resolution. Every workaround (conventions, manifests, template strings) means writing TypeScript to paper over what JSON cannot do.
 
-2. **Component tokens reference typed constants.** `BORDER_STYLE.INTERNAL`, `HALIGN.CENTER`, `VALIGN.MIDDLE` are TypeScript const objects. In JSON these would be strings requiring a mapping layer, and the `satisfies Partial<CardTokens>` compile-time safety disappears.
+2. **Component tokens reference typed constants.** `BORDER_STYLE.INTERNAL`, `HALIGN.CENTER`, `VALIGN.MIDDLE` are TypeScript const objects. In JSON these would be strings requiring a mapping layer, and the `satisfies Record<string, CardTokens>` compile-time safety disappears.
 
 3. **The theme file is ~100 lines.** Only ~40 lines are JSON-friendly (colors, spacing numbers). The rest are fonts and typed component tokens. JSON support would add a runtime resolver layer to replace the simplest part of theme authoring.
 
@@ -71,6 +71,8 @@ The CLI command would:
 
 Style Dictionary or Terrazzo could also be used directly — they output typed TypeScript constants that a thin adapter maps to the `Theme` interface.
 
+A deeper integration — extracting Figma component structure (Auto Layout, constraints, variant properties) and mapping them directly to tycoslide component definitions and layouts — is a future exploration. See the Phase 2 roadmap.
+
 ---
 
 ## Theme Structure: One Theme = One Slide Size
@@ -118,9 +120,9 @@ Analysis of both existing themes (default + Materialize):
 | `spacing.unit` | No | Grid quantum precision choice |
 | `borders.width` | **Yes** | Border thickness relative to canvas |
 | `borders.radius` | **Yes** | Corner radius maintains visual weight |
-| `components.card.padding`, `cornerRadius` | **Yes** | Absolute values scale with canvas |
-| `components.card.titleStyle`, `borderStyle`, etc. | No | Semantic tokens, not absolute values |
-| `components.*.variants` | No | Override same token types as base |
+| `components.card.variants.default.padding` | **Yes** | Absolute values scale with canvas |
+| `components.card.variants.default.titleStyle` | No | Semantic tokens, not absolute values |
+| `components.*.variants.*` | No | Complete token sets per variant, shared across sizes |
 | `assets.*` (fonts, icons, images) | No | File paths don't change |
 
 **Estimated overlap: ~85%.** Colors, fonts, assets, semantic tokens, multipliers, and component styling tokens are shared. Only `slide`, `spacing.*` (absolute values), `textStyles.*.fontSize`, and `borders.*` differ.
@@ -131,7 +133,7 @@ Analysis of both existing themes (default + Materialize):
 brand/
   palette.ts          # ColorScheme + accent definitions
   fonts.ts            # FontFamily definitions + asset paths
-  components.ts       # Component tokens (card, quote, table, line, slideNumber)
+  components.ts       # Component variants (card, quote, table, text, shape, line, slideNumber)
   theme-16x9.ts       # imports above + SLIDE_SIZE.S16x9 + spacing + textStyles
   theme-4x3.ts        # imports above + SLIDE_SIZE.S4x3  + spacing + textStyles
   assets.ts           # Brand assets (logos, icons, illustrations)
@@ -150,11 +152,11 @@ If we later want a CLI convenience (`tycoslide theme-derive --from brand-16x9 --
 
 ---
 
-## Color Authority: Theme-Constrained Color System
+## Variant-Only Color Model
 
 ### Problem
 
-The philosophy states: "An author cannot break the brand." and "Theme is the single source of truth for all visual decisions." But currently, arbitrary hex colors leak through multiple component schemas:
+The philosophy states: "An author cannot break the brand." and "Theme is the single source of truth for all visual decisions." But currently, arbitrary hex colors leak through two component schemas:
 
 | Component | Field | Current Type | Accepts Arbitrary Hex? |
 |-----------|-------|-------------|----------------------|
@@ -163,210 +165,534 @@ The philosophy states: "An author cannot break the brand." and "Theme is the sin
 | Shape | `fill` | `schema.string()` | **Yes** — any hex string |
 | Shape | `borderColor` | `schema.string()` | **Yes** — any hex string |
 
-Meanwhile, two patterns already enforce theme constraints correctly:
+Additionally, Text exposes `lineHeightMultiplier` and Shape exposes `fillOpacity`, `borderWidth`, and `cornerRadius` as author-settable props with no theme-controlled defaults.
 
-| Pattern | How It Works | Status |
-|---------|-------------|--------|
-| `:accentName[text]` inline directives | Resolves against `theme.colors.accents`, throws on unknown names | Correct |
-| `variant="dark"` on card/quote/table | Resolves against `theme.components.*.variants`, throws on unknown | Correct |
-
-The inline accent system (`:teal[highlighted text]`) is the proof that constrained color works. The `variant` system is the proof that constrained per-instance styling works. The `color: schema.string()` fields bypass both.
+Meanwhile, Card, Quote, and Table already enforce theme constraints correctly: all visual decisions come from tokens, the author only selects a `variant` name, and the registry resolves it against theme-defined presets.
 
 ### Decision
 
-**All color inputs — from both markdown AND TypeScript — must resolve against theme-defined color names.** No persona (author, developer, or layout builder) should be able to inject arbitrary hex values. This protects the brand even from the developer building layouts.
+**Slide authors style components by picking variants. They cannot set individual color or styling properties.** The directive schema (markdown) exposes only structural props and variant selection. All visual styling flows from theme-defined variant token sets.
 
-The Figma analogy: component instances only accept color styles from the library. You cannot enter a raw hex code. Even the designer building the component picks from defined styles. The color style library IS the constraint boundary.
+This is the MUI/Radix model applied to a non-browser rendering target. MUI's `<Button color="primary">` accepts only palette-keyed enum values — not hex, not CSS variables. Radix UI's `<Callout color="gray">` accepts only 24 predefined names. Both enforce constraints at the component API level through TypeScript types. tycoslide enforces constraints at the directive schema level: if the prop isn't in the schema, the author can't set it.
 
-### `schema.color()` — a theme-aware color schema
+### Why not `resolveColor()`?
 
-Add a new domain schema helper that validates color values against a known vocabulary:
+An earlier design proposed `schema.color()` + `resolveColor()`: replace hex inputs with color name inputs, resolve names to hex at expand time. This was rejected for three reasons:
 
-```typescript
-// In schema.ts
-export const schema = {
-  // ... existing helpers ...
+1. **Error timing.** A bug in `resolveColor` or a missing color name crashes at expand time. That's too late. Errors should be as close to compile time as possible. Removing color props from schemas eliminates the error category entirely — there's nothing to mistype.
 
-  /** Theme color reference. Accepts accent names and semantic color names.
-   *  Resolved to hex during component expansion, not at parse time. */
-  color: () => z.string(),  // Parse-time: any string (names, not hex)
-};
-```
+2. **Color authority constrains atoms, not outcomes.** `resolveColor()` gives authors ~15 individual color names to combine freely. `color="red" bulletColor="yellow"` uses only theme colors but looks terrible. The theme author can't prevent ugly combinations. Variant-only constrains outcomes: the theme author defines tested visual presets. No ugly combinations are possible because no combinations are possible.
 
-At parse time, `schema.color()` accepts a string (color name). At expansion time, the registry resolves the name against the theme's color vocabulary:
+3. **Composition complexity.** When Card passes a token-resolved hex to Text, `resolveColor()` needs to handle both names and hex values, requiring either a hex pass-through (security concern) or restructuring how components compose (architecture change). Variant-only avoids this entirely: the two API surfaces (directive schema for authors, TypeScript DSL for developers) are structurally disjoint.
 
-```
-theme.colors.accents.*     — accent names (teal, pink, brandPurple, metrics, etc.)
-theme.colors.text          — primary text color
-theme.colors.textMuted     — muted text color
-theme.colors.primary       — brand primary
-theme.colors.secondary     — brand secondary
-theme.colors.background    — slide background
-```
+### The two-tier API
 
-If the name is not found, expansion throws with available color names — same pattern as the existing `:accent[text]` directive handler and the variant resolver.
+The framework has three personas with different trust levels:
 
-### Resolution mechanism
+| Persona | Tool | Color control | Constraint mechanism |
+|---------|------|---------------|---------------------|
+| **Slide author** | Markdown directives | Variant names only | Directive schema — props not in schema can't be set |
+| **Layout developer** | TypeScript DSL | Full theme hex access | Type system — `theme.colors.*` is typed |
+| **Theme author** | TypeScript theme file | Full hex authoring | They ARE the brand authority |
 
-The color resolution lives in the registry's `expand()` path, not in individual components. Two options:
+This matches Figma exactly: a designer building a component has full access to every color and property. A user placing an instance picks from variants. The constraint gap IS the design.
 
-**Option A: Resolve in each component's expand function.**
+It also matches the CSS design system trend. The community has converged on **semantic tokens + enum component props** as the constraint mechanism (shadcn/ui, MUI, Radix), not raw property access (Open Props) or unconstrained utility classes.
 
-Each component that accepts color props calls a shared `resolveColor(name, theme)` helper. This keeps expand functions explicit but requires every color-accepting component to remember to call it.
+### What about inline `:accent[text]`?
 
-**Option B: Resolve in the registry before calling expand.**
+The inline accent directive (`:teal[highlighted text]`) stays unchanged. It operates at a different scope:
 
-The registry scans the component's schema for `schema.color()` fields and resolves them before passing props to expand. Components receive resolved hex values and never deal with names.
+| Scope | Mechanism | Purpose |
+|-------|-----------|---------|
+| **Component** (block-level) | `variant="muted"` | Styles a whole text block, card, or shape |
+| **Span** (inline) | `:teal[text]` | Colors a word or phrase within prose |
 
-**Recommendation: Option A.** Explicit resolution in expand functions is consistent with how tokens already work — the expand function receives tokens and maps them to node properties. Adding a `resolveColor()` call is one line per color field, easy to audit, and doesn't require schema introspection machinery.
+In Figma terms: you cannot change a component instance's internal colors by applying a style — you pick a variant. But in a text layer within that component, you CAN apply a character style to a selected word. The inline accent is that character style.
 
-```typescript
-// Shared helper — src/core/colors.ts
-export function resolveColor(name: string, theme: Theme): string {
-  // Check accents first (most common case)
-  if (name in theme.colors.accents) return theme.colors.accents[name];
-  // Check semantic color names
-  const semanticColors: Record<string, string> = {
-    text: theme.colors.text,
-    textMuted: theme.colors.textMuted,
-    primary: theme.colors.primary,
-    secondary: theme.colors.secondary,
-    background: theme.colors.background,
-  };
-  if (name in semanticColors) return semanticColors[name];
-  // Fail with available names
-  const available = [
-    ...Object.keys(theme.colors.accents),
-    ...Object.keys(semanticColors),
-  ].join(', ');
-  throw new Error(
-    `Unknown color '${name}'. Available theme colors: ${available}`
-  );
-}
-```
-
-### Impact on existing components
-
-**Text** (`src/dsl/text.ts`):
-```typescript
-// Before:
-color: schema.string().optional(),
-bulletColor: schema.string().optional(),
-
-// After:
-color: schema.color().optional(),
-bulletColor: schema.color().optional(),
-```
-Expand function calls `resolveColor(props.color, context.theme)` before setting `TextNode.color`.
-
-**Shape** (`src/dsl/primitives.ts`):
-```typescript
-// Directive schema (markdown authors):
-// Before:
-fill: schema.string().optional(),
-borderColor: schema.string().optional(),
-
-// After:
-fill: schema.color().optional(),
-borderColor: schema.color().optional(),
-```
-
-**TypeScript DSL** (`ShapeProps` interface):
-```typescript
-// Before:
-fill?: { color: string; opacity?: number };
-
-// After:
-fill?: { color: string; opacity?: number };  // string is a color NAME, not hex
-```
-The TypeScript type stays `string`, but the expand function resolves it through `resolveColor()`. A developer calling `shape({ fill: { color: 'teal' } })` gets the theme's teal. Calling `shape({ fill: { color: 'FF00FF' } })` throws.
-
-**Inline `:accent[text]` directives** — already correct, no change needed. The text transformer already resolves against `theme.colors.accents` and throws on unknown names.
-
-**Card/Quote/Table** — already correct. Colors come from theme tokens, not from author/developer input.
-
-**Line/SlideNumber** — already correct. Colors come from theme tokens (`LineTokens.color`, `SlideNumberTokens.color`).
-
-### What about the `:accent[text]` pattern?
-
-The inline directive pattern (`:teal[this is teal]`) resolves accent names at the text transformer level. The new `schema.color()` pattern resolves at the component expand level. They are complementary:
-
-- `:accent[text]` — colors a span of text inline, using an accent name
-- `color: "teal"` — sets the default color for an entire text block, using any theme color name (accents + semantic)
-
-The inline pattern stays limited to accent names (that's its job). The `schema.color()` pattern has a broader vocabulary (accents + semantic colors like `text`, `textMuted`, `primary`).
-
-### Migration
-
-This is a breaking change for any markdown or TypeScript code that passes raw hex to `color`, `bulletColor`, `fill`, or `borderColor`. The migration is mechanical:
-
-1. For hex values that match a theme accent, replace with the accent name: `color="7C5CD0"` -> `color="brandPurple"`
-2. For hex values that match a semantic color, replace with the semantic name: `color="FFFFFF"` -> `color="text"`
-3. For hex values that don't exist in the theme, the designer must add them to `theme.colors.accents`
-
-The showcase markdown (`showcase.md`) is the primary consumer that needs updating. Its shape gallery currently uses raw hex colors not in the Materialize palette.
+The `:accent[text]` directive is already correctly constrained — it resolves against `theme.colors.accents` and throws on unknown names. It remains the only place where authors select individual colors, and only for inline text emphasis.
 
 ---
 
-## Variant System Audit
+## Variant System
 
-### Current state
+### Design: Figma model, not CSS model
 
-| Component | Has `variant` in Schema | Has Tokens | Variant Resolution |
-|-----------|------------------------|-----------|-------------------|
-| Card | Yes | Yes (10 tokens) | Works — registry merges variant overrides into base tokens |
-| Quote | Yes | Yes (9 tokens) | Works — same mechanism |
-| Table | Yes | Yes (10 tokens) | Works — same mechanism |
-| Line | **No** | Yes (3 tokens) | Missing — has tokens but no variant prop |
-| SlideNumber | **No** | Yes (3 tokens) | Missing — has tokens but no variant prop |
-| Shape | **No** | **No** | N/A — no tokens at all |
-| Text | **No** | **No** | N/A — no tokens (uses text styles from theme) |
-| Image | **No** | **No** | N/A — asset reference, no styling |
-| Mermaid | **No** | **No** | N/A — renders to image |
-| Document | **No** | **No** | N/A — parser/dispatcher |
-| Row/Column/Stack/Grid | **No** | **No** | N/A — pure layout, no styling |
+The variant system follows the **Figma component variant model**, not the CSS modifier-class model.
+
+In Figma, each variant of a component is a **complete, independent `ComponentNode`**. There is no inheritance between variants — no "base" that others extend. Each variant stores every layer, fill, stroke, and effect independently. The Figma REST API confirms this: a `ComponentSetNode` contains N complete `ComponentNode` children. There is no delta encoding.
+
+The DTCG token spec aligns: design token tools (Tokens Studio, Style Dictionary) export variants as **complete, independent token sets**, not as deltas or partial overrides.
+
+tycoslide follows this model:
+
+- **Every variant is a complete token set.** No partial overrides. No inheritance. What you see is what you get.
+- **Every component requires a `default` variant.** This is the appearance when no variant is specified — analogous to the top-left variant in a Figma component set.
+- **DRY is achieved through TypeScript composition at authoring time**, not through runtime inheritance. The theme author uses `...spread` to share common values. The spread evaluates at import time, producing flat, resolved objects in memory.
+
+```typescript
+// CSS model (REJECTED): base + partial overrides, runtime merge
+card: {
+  padding: 0.25,
+  backgroundColor: 'E2E8F0',
+  variants: {
+    dark: { backgroundColor: '1A1A2E' },  // partial — inherits padding from base
+  }
+}
+
+// Figma model (ADOPTED): complete, independent variants
+card: {
+  variants: {
+    default: { padding: 0.25, backgroundColor: 'E2E8F0', ... },  // complete
+    dark:    { padding: 0.25, backgroundColor: '1A1A2E', ... },  // complete
+  }
+}
+```
+
+### Why the Figma model?
+
+**1. Predictability.** Each variant is self-describing. There is no hidden merge to mentally trace. `theme.components.card.variants.dark` contains exactly the tokens that will be used — nothing more, nothing less.
+
+**2. Compile-time validation.** `satisfies Record<string, CardTokens>` on the `variants` object validates that every variant is a complete `CardTokens` at theme authoring time. Missing tokens are caught by the TypeScript compiler. Under the CSS model with `Partial<CardTokens>`, missing tokens can only be caught at expand time.
+
+**3. DTCG alignment.** The DTCG spec defines tokens as flat, resolved values. Token tools export variants as complete, independent token sets. The Figma model matches this directly. The CSS override model has no equivalent in the token ecosystem.
+
+**4. Dark mode preparation.** When dark mode is added, each mode provides a complete `theme.components` tree. Each mode's variants are complete token sets. There is no question of "which base does the dark variant inherit from?" — every variant in every mode is self-contained.
+
+### Theme authoring with TypeScript spread
+
+Theme authors use TypeScript spread to share values across variants, avoiding repetition:
+
+```typescript
+const cardBase = {
+  padding: spacing.padding,
+  cornerRadius: 0.05,
+  borderWidth: 0.75,
+  titleStyle: TEXT_STYLE.H4,
+  descriptionStyle: TEXT_STYLE.SMALL,
+  gap: GAP.TIGHT,
+};
+
+card: {
+  variants: {
+    default: {
+      ...cardBase,
+      backgroundColor: colors.secondary,
+      backgroundOpacity: colors.subtleOpacity,
+      borderColor: colors.secondary,
+      titleColor: colors.text,
+      descriptionColor: colors.textMuted,
+    },
+    dark: {
+      ...cardBase,
+      backgroundColor: colors.text,
+      backgroundOpacity: 100,
+      borderColor: colors.primary,
+      titleColor: colors.background,
+      descriptionColor: colors.secondary,
+    },
+    minimal: {
+      ...cardBase,
+      backgroundColor: 'none',
+      backgroundOpacity: 0,
+      borderColor: 'transparent',
+      borderWidth: 0,
+      titleColor: colors.text,
+      descriptionColor: colors.textMuted,
+    },
+  } satisfies Record<string, CardTokens>,
+},
+```
+
+The `...cardBase` spread evaluates at import time. The `satisfies Record<string, CardTokens>` validates completeness at compile time. The theme object in memory contains flat, resolved values — no references, no inheritance. DTCG-aligned.
 
 ### How variant resolution works
 
-Registry `expand()` (registry.ts:293-308):
+Registry `expand()` — **updated from current implementation**:
 
-1. Extract base tokens from `theme.components[componentName]`
-2. If `props.variant` is set, look up `variantDefs[variantName]`
-3. If unknown variant, throw with available names
-4. Shallow-merge variant overrides into base tokens
-5. Validate all required tokens present
-6. Pass merged tokens to expand function
+```typescript
+// Current: destructure base + shallow-merge overrides
+const { variants: variantDefs, ...baseTokens } = componentConfig;
+let tokens = { ...baseTokens };
+if (variantName) tokens = { ...tokens, ...variantOverrides };
 
-The mechanism is generic — any component with a `tokens` array and `variant` in its schema gets variant support for free.
+// New: direct lookup from variants map
+const { variants } = componentConfig;
+const variantName = props.variant ?? 'default';
+const tokens = variants[variantName];
+if (!tokens) throw new Error(`Unknown variant '${variantName}'. Available: ${Object.keys(variants).join(', ')}`);
+```
 
-### Gaps
+Simpler. No merge. No destructuring. A direct map lookup. Validation is a key existence check.
 
-**Line should support variants.** It has 3 tokens (color, width, dashType). Use cases:
-- `variant: "accent"` — primary color line
-- `variant: "muted"` — secondary/faded divider
-- `variant: "dashed"` — dashed separator
+### The precedence rule: props override tokens
 
-Adding variant support is a one-line schema change (`variant: schema.string().optional()`) since the registry mechanism handles everything else. The theme author defines `line.variants.accent: { color: palette.brandPurple }`.
+When a component is used both standalone (author picks variant) and embedded (parent passes props), a clear precedence rule prevents conflicts:
 
-**SlideNumber could support variants** but has low ROI — typically one instance per slide with a single appearance. Defer unless a real use case emerges.
+| Priority | Source | Set by | Example |
+|----------|--------|--------|---------|
+| 1 (highest) | Explicit prop | Parent component or layout developer | Card passes `color: titleColor` to Text |
+| 2 (lowest) | Variant token | Theme author, selected by slide author | `variant="muted"` provides `color: '64748B'` |
 
-**Shape does not need variants** because shapes don't have theme tokens. Shapes use the new `schema.color()` resolution for fill/border colors. If a designer wants a "branded shape preset," the answer is a custom component that wraps `shape()` with token-resolved defaults, not variants on a primitive.
+In expand functions: `const resolvedColor = props.color ?? tokens.color`
 
-### Recommendation
+This means:
+- Standalone `:::text{variant="muted"}` — no `props.color`, uses `tokens.color` from muted variant
+- Card's child `text(title, { color: titleColor })` — `props.color` is hex from Card's variant tokens, wins over Text's own variant tokens
+- Author cannot set `color` in markdown — it's not in the directive schema
 
-Add `variant: schema.string().optional()` to Line. Leave SlideNumber and Shape as-is.
+### Component taxonomy
+
+| Tier | Components | Has Tokens | Supports Variants | Styling Props in Directive Schema |
+|------|-----------|------------|-------------------|----------------------------------|
+| **Compound** | Card, Quote, Table | Yes (9-12 tokens) | Yes | None — all visual from variant tokens |
+| **Leaf** | Text, Line | Yes (3-4 tokens) | Yes | Text: `style` only (structural) |
+| **Leaf** | Shape | Yes (5 tokens) | Yes | None — all visual from variant tokens |
+| **Leaf** | SlideNumber | Yes (3 tokens) | Deferred | None — fully token-controlled |
+| **Primitive** | Image | No | No | None — asset reference |
+| **Synthetic** | Mermaid | No | No | None — derives styling from `theme.colors` directly |
+| **Structural** | Row, Column, Stack, Grid | No | No | None — pure layout |
+| **Dispatcher** | Document | No | No | None — parses and delegates |
+
+The variant boundary follows an ontological distinction: **Compound and Leaf components have a visual surface that the theme controls.** Primitives, synthetics, structural containers, and dispatchers do not.
+
+### Complete component audit
+
+#### Card — fully covered (12 tokens, 0 directive styling gaps)
+
+Directive schema: `image`, `title`, `description` (content), `background` (toggle), `variant`, `height` (layout). Zero styling props.
+
+Tokens: `padding`, `cornerRadius`, `backgroundColor`, `backgroundOpacity`, `borderColor`, `borderWidth`, `titleStyle`, `titleColor`, `descriptionStyle`, `descriptionColor`, `gap`, `textGap`.
+
+#### Quote — fully covered (9 tokens, 0 directive styling gaps)
+
+Directive schema: `quote`, `attribution`, `image` (content), `background` (toggle), `variant`, `height` (layout). Zero styling props.
+
+Tokens: `padding`, `cornerRadius`, `backgroundColor`, `backgroundOpacity`, `borderColor`, `borderWidth`, `quoteStyle`, `attributionStyle`, `gap`.
+
+#### Table — fully covered (10 tokens, 0 directive styling gaps)
+
+Directive schema: `variant`, `headerColumns` (structural). Zero styling props.
+
+Tokens: `borderStyle`, `borderColor`, `borderWidth`, `headerBackground`, `headerTextStyle`, `cellBackground`, `cellTextStyle`, `cellPadding`, `hAlign`, `vAlign`.
+
+#### Text — needs tokens and variant (currently 4 gaps)
+
+Directive schema today: `style`, `color`, `hAlign`, `vAlign`, `bulletColor`, `lineHeightMultiplier`, `content`.
+
+**Directive schema after:** `style`, `hAlign`, `vAlign`, `content`, `variant`.
+
+Removed from directive: `color`, `bulletColor`, `lineHeightMultiplier` (become tokens).
+
+`style` stays in the directive schema — it's a structural/semantic choice ("this is a heading"), not a visual one. The theme controls what H1 looks like, but the author decides what IS an H1. Already validated at parse time by `schema.textStyle()` Zod enum.
+
+**New token interface — `TextTokens`:**
+
+| Token | Type | Purpose |
+|-------|------|---------|
+| `color` | `string` | Foreground color (hex) |
+| `bulletColor` | `string` | Bullet marker color (hex) |
+| `style` | `TextStyleName` | Text style |
+| `lineHeightMultiplier` | `number` | Line height multiplier |
+
+**Theme definition:**
+
+```typescript
+const textBase = { style: TEXT_STYLE.BODY, lineHeightMultiplier: spacing.lineSpacing };
+
+text: {
+  variants: {
+    default: { ...textBase, color: colors.text, bulletColor: colors.text },
+    muted:   { ...textBase, color: colors.textMuted, bulletColor: colors.textMuted },
+    accent:  { ...textBase, color: accents.blue, bulletColor: accents.blue },
+    inverse: { ...textBase, color: colors.background, bulletColor: colors.background },
+  } satisfies Record<string, TextTokens>,
+},
+```
+
+**Expand function precedence:**
+
+```typescript
+// props.style may come from directive (author structural choice) or parent component
+// tokens.style comes from the selected variant (complete token set)
+const resolvedStyle = props.style ?? tokens.style;
+const resolvedColor = props.color ?? tokens.color;
+const resolvedBulletColor = props.bulletColor ?? tokens.bulletColor;
+const resolvedLineHeight = props.lineHeightMultiplier ?? tokens.lineHeightMultiplier;
+```
+
+**Composition chain:** Card calls `text(title, { style: titleStyle, color: titleColor })` with hex from its own variant tokens. `props.color` wins over Text's variant `tokens.color`. No conflict. The directive schema doesn't have `color`, so authors can never set it — only parent components can.
+
+#### Shape — needs tokens and variant (currently 5 gaps)
+
+Directive schema today: `shape`, `fill`, `fillOpacity`, `borderColor`, `borderWidth`, `cornerRadius`.
+
+**Directive schema after:** `shape`, `variant`.
+
+All styling props removed. Only the geometric form and variant remain.
+
+**New token interface — `ShapeTokens`:**
+
+| Token | Type | Purpose |
+|-------|------|---------|
+| `fill` | `string` | Fill color (hex) |
+| `fillOpacity` | `number` | Fill opacity (0-100) |
+| `borderColor` | `string` | Border color (hex or 'transparent') |
+| `borderWidth` | `number` | Border width |
+| `cornerRadius` | `number` | Corner radius |
+
+**Theme definition:**
+
+```typescript
+const shapeBase = { fillOpacity: 100, borderWidth: 0, cornerRadius: 0 };
+
+shape: {
+  variants: {
+    default:  { ...shapeBase, fill: colors.secondary, borderColor: 'transparent' },
+    primary:  { ...shapeBase, fill: colors.primary, borderColor: 'transparent' },
+    subtle:   { ...shapeBase, fill: colors.secondary, fillOpacity: 15, borderColor: 'transparent' },
+    outlined: { ...shapeBase, fill: 'transparent', borderColor: colors.primary, borderWidth: 0.75 },
+    accent:   { ...shapeBase, fill: accents.blue, borderColor: 'transparent' },
+  } satisfies Record<string, ShapeTokens>,
+},
+```
+
+**TypeScript DSL stays unchanged.** `ShapeProps` keeps `fill?: { color: string; opacity?: number }` for layout developers and parent component expand functions (Card, Quote). The DSL and directive schema are structurally separate — the DSL constructs nodes directly, bypassing the directive schema.
+
+#### Line — needs variant added (0 gaps, 3 tokens already exist)
+
+Directive schema today: `beginArrow`, `endArrow`. Zero styling props.
+
+**Directive schema after:** `beginArrow`, `endArrow`, `variant`.
+
+One-line change: add `variant: schema.string().optional()` to `lineSchema`.
+
+Tokens already exist: `color`, `width`, `dashType`.
+
+**Theme definition (migrated to Figma model):**
+
+```typescript
+const lineBase = { width: 0.75, dashType: DASH_TYPE.SOLID };
+
+line: {
+  variants: {
+    default: { ...lineBase, color: colors.secondary },
+    accent:  { ...lineBase, color: colors.primary },
+    muted:   { color: colors.textMuted, width: 0.5, dashType: DASH_TYPE.SOLID },
+    dashed:  { color: colors.secondary, width: 0.75, dashType: DASH_TYPE.DASH },
+  } satisfies Record<string, LineTokens>,
+},
+```
+
+#### SlideNumber — deferred (3 tokens, no variant)
+
+Fully token-controlled. Typically one instance per slide via master definition. Low ROI for variant support. Migrated to Figma model (`variants: { default: { ... } }`) for consistency, but no additional variants defined. Defer variant support unless a real use case emerges.
+
+#### Image — no changes needed
+
+Asset reference. No styling props. No tokens needed.
+
+#### Mermaid — no changes needed
+
+Derives all visual styling from `theme.colors` and `theme.textStyles` directly. Author style directives are actively rejected with a build error. No tokens needed.
+
+#### Containers (Row, Column, Stack, Grid) — no changes needed
+
+Pure layout structure. All props are structural (gap, alignment, padding, sizing). No styling props. No tokens needed.
+
+### Data flow examples
+
+**Author uses text variant:**
+
+```
+1. Author writes: :::text{variant="muted"}
+2. Directive parser → ComponentNode { componentName: 'text', props: { variant: 'muted' } }
+3. Registry reads theme.components.text.variants:
+   variants = { default: { color: '1A1A2E', ... }, muted: { color: '64748B', ... } }
+4. Lookup: tokens = variants['muted']
+   → { color: '64748B', bulletColor: '64748B', style: 'body', lineHeightMultiplier: 1.2 }
+5. expandText receives: props = { variant: 'muted' }, tokens = (above)
+6. resolvedColor = props.color ?? tokens.color = undefined ?? '64748B' = '64748B'
+7. TextNode.color = '64748B'
+```
+
+**Author writes text with no variant (gets default):**
+
+```
+1. Author writes: :::text
+2. Registry: variantName = props.variant ?? 'default'
+3. tokens = variants['default']
+   → { color: '1A1A2E', bulletColor: '1A1A2E', style: 'body', lineHeightMultiplier: 1.2 }
+4. Text renders with default theme appearance.
+```
+
+**Author uses text variant with structural override:**
+
+```
+1. Author writes: :::text{variant="muted" style="h2"}
+2. tokens = variants['muted'] (complete token set)
+3. resolvedStyle = props.style ?? tokens.style = 'h2' ?? 'body' = 'h2' (prop wins)
+4. resolvedColor = props.color ?? tokens.color = undefined ?? '64748B' = '64748B'
+5. Result: H2 heading in muted color. Author chose the semantic level, theme controls the color.
+```
+
+**Card composes Text (internal):**
+
+```
+1. Card's variant tokens: titleColor = '1A1A2E', titleStyle = 'h4'
+2. Card calls: text(title, { style: 'h4', color: '1A1A2E' })
+3. This creates a ComponentNode via TypeScript DSL (not directive parsing)
+4. Registry expands Text: tokens = variants['default'] (no variant specified)
+5. expandText: resolvedColor = props.color ?? tokens.color = '1A1A2E' ?? '1A1A2E' = '1A1A2E'
+6. Card's title renders with Card's token-controlled color. No conflict.
+```
+
+**Card dark variant composes Text:**
+
+```
+1. Card dark variant tokens: titleColor = 'FFFFFF', backgroundColor = '1A1A2E'
+2. Card calls: text(title, { style: 'h4', color: 'FFFFFF' })
+3. expandText: resolvedColor = props.color = 'FFFFFF' (Card's prop wins over Text's default)
+4. White title text on dark card background. Correct.
+```
+
+**Author uses shape variant:**
+
+```
+1. Author writes: :::shape{shape="roundRect" variant="outlined"}
+2. Registry: tokens = variants['outlined']
+   → { fill: 'transparent', borderColor: '2563EB', borderWidth: 0.75, fillOpacity: 100, cornerRadius: 0 }
+3. Shape expand receives complete token set, builds ShapeNode.
+```
+
+### Interaction with future dark mode
+
+The roadmap includes per-slide dark mode. The Figma variant model makes dark mode straightforward.
+
+Each mode provides a complete `theme.components` tree, and each component within it provides complete variant token sets:
+
+```typescript
+// Conceptual — not current API
+modes: {
+  light: {
+    text: {
+      variants: {
+        default: { color: '1A1A2E', bulletColor: '1A1A2E', ... },
+        muted:   { color: '64748B', bulletColor: '64748B', ... },
+      }
+    },
+  },
+  dark: {
+    text: {
+      variants: {
+        default: { color: 'FFFFFF', bulletColor: 'FFFFFF', ... },
+        muted:   { color: '94A3B8', bulletColor: '94A3B8', ... },
+      }
+    },
+  },
+}
+```
+
+An author's `variant="muted"` means "muted relative to the current mode." Light-mode muted and dark-mode muted have different hex values, but the author doesn't care — they said "muted." Every variant in every mode is a complete, self-contained token set. No inheritance across modes.
+
+---
+
+## Implementation Plan
+
+### Step 1: Update `Theme` type and add token interfaces
+
+File: `packages/core/src/core/types.ts`
+
+- Add `TEXT_TOKEN` const, `TextTokens` interface
+- Add `SHAPE_TOKEN` const, `ShapeTokens` interface
+- Add `[Component.Text]: TextTokens` and `[Component.Shape]: ShapeTokens` to `ComponentTokenMap`
+- Change `Theme.components` type from `ComponentTokenMap[K] & { variants?: Record<string, Partial<ComponentTokenMap[K]>> }` to `{ variants: Record<string, ComponentTokenMap[K]> }` — variants are required, complete (not Partial), and no top-level token spread
+
+### Step 2: Update registry variant resolution
+
+File: `packages/core/src/core/registry.ts`
+
+- Replace the destructure + shallow-merge logic with direct variant lookup
+- Default to `'default'` when no variant specified
+- Remove required-tokens validation (completeness is now enforced at compile time by `satisfies Record<string, TokenInterface>`)
+
+### Step 3: Update Text component
+
+File: `packages/core/src/dsl/text.ts`
+
+- Remove `color`, `bulletColor`, `lineHeightMultiplier` from `textSchema`
+- Add `variant: schema.string().optional()` to `textSchema`
+- Add `tokens` array to component registration
+- Update `expandText` to use token defaults with props-override-tokens precedence
+
+### Step 4: Update Shape component
+
+File: `packages/core/src/dsl/primitives.ts`
+
+- Remove `fill`, `fillOpacity`, `borderColor`, `borderWidth`, `cornerRadius` from `shapeDirectiveSchema`
+- Add `variant: schema.string().optional()` to `shapeDirectiveSchema`
+- Add `tokens` array to shape component registration
+- Update shape expand to use token defaults, with DSL props overriding
+
+### Step 5: Add variant to Line
+
+File: `packages/core/src/dsl/primitives.ts`
+
+- Add `variant: schema.string().optional()` to `lineSchema`
+
+### Step 6: Migrate all themes to Figma model
+
+File: `packages/theme-default/src/theme.ts` (and any other theme packages)
+
+- Restructure all component token sections from `{ ...baseTokens, variants: { name: { ...partialOverrides } } }` to `{ variants: { default: { ...completeTokens }, name: { ...completeTokens } } }`
+- Add `text` variants section (default, muted, accent, inverse)
+- Add `shape` variants section (default, primary, subtle, outlined, accent)
+- Add variants to `line` section (default, accent, muted, dashed)
+- Define meaningful variants for `card`, `quote`, `table` (dark, accent, minimal, etc.)
+- Use TypeScript spread + `satisfies Record<string, TokenInterface>` for DRY and compile-time safety
+
+### Step 7: Update test infrastructure
+
+Files: `packages/core/test/mocks.ts`, test files
+
+- Update `mockTheme()` to use Figma model (variants map with `default`)
+- Add `[Component.Text]` and `[Component.Shape]` entries
+- Update existing variant resolution tests for new lookup model
+- Add Text, Shape, Line variant resolution tests
+- Add props-override-tokens precedence tests for Text
+
+### Step 8: Update markdown examples
+
+Files: `showcase.md`, any examples using removed props
+
+- Replace `color="..."` with `variant="..."` or remove
+- Replace `fill="..."` with `variant="..."` or remove
+- Verify all examples still build
+
+### Breaking changes
+
+**Theme format change.** All themes must restructure `theme.components` from base-tokens-plus-variant-overrides to variants-map-with-complete-token-sets. This affects every theme package. The migration is mechanical: wrap existing base tokens in `variants: { default: { ... } }`, then make each existing variant complete by spreading the base.
+
+**Directive schema change.** `color`, `bulletColor`, `lineHeightMultiplier` removed from Text. `fill`, `fillOpacity`, `borderColor`, `borderWidth`, `cornerRadius` removed from Shape. The migration:
+
+1. `:::text{color="..."}` → `:::text{variant="muted"}` (or appropriate variant)
+2. `:::shape{fill="..." borderColor="..."}` → `:::shape{shape="roundRect" variant="outlined"}` (or appropriate variant)
+3. If a specific visual treatment is needed that no variant provides, the theme author adds a variant
+
+**TypeScript DSL unchanged.** Layout developers and component expand functions continue to pass styling props directly.
 
 ---
 
 ## Phase 2 Roadmap
 
-| Feature | Description |
-|---------|-------------|
-| **Color authority** | Replace `schema.string()` with `schema.color()` for all color inputs. Add `resolveColor()` helper. Enforce theme-only colors across both markdown and TypeScript. |
-| **Line variants** | Add `variant` prop to Line component schema. Theme authors define line appearance presets. |
-| **Theme file splitting** | Document recommended pattern for multi-size themes (shared palette/fonts/components, size-specific spacing/textStyles). No framework changes needed. |
-| **Dark mode** | Per-slide color modes. Each slide specifies `mode: 'dark' | 'light'`. Theme defines color mappings per mode. Accents stay constant; surface/text colors swap. |
-| **CLI theme scaffold** | `tycoslide theme-init --from-dtcg tokens.json` — consumes DTCG JSON, emits TypeScript theme package scaffold. One-time codegen, not runtime. |
+| Priority | Feature | Description |
+|----------|---------|-------------|
+| **1** | **Variant-only color model** | Add TextTokens and ShapeTokens. Remove styling props from directive schemas. Add variant support to Text, Shape, and Line. Migrate all components to Figma variant model (complete token sets, `default` required). |
+| **2** | **Theme variant definitions** | Define meaningful variant sets for all components in the default theme. |
+| **3** | **Theme file splitting** | Document recommended pattern for multi-size themes (shared palette/fonts/components, size-specific spacing/textStyles). No framework changes needed. |
+| **4** | **Dark mode** | Per-slide color modes. Each slide specifies `mode: 'dark' | 'light'`. Theme defines complete component variant sets per mode. |
+| **5** | **CLI theme scaffold** | `tycoslide theme-init --from-dtcg tokens.json` — consumes DTCG JSON, emits TypeScript theme package scaffold. One-time codegen, not runtime. |
+| **6** | **Figma component pipeline** | Explore extracting Figma component structure (Auto Layout, variant properties) and mapping to tycoslide component definitions. Pipeline: Figma REST API → component extractor → TypeScript layouts + theme variants. |
 
 ---
 
@@ -377,3 +703,9 @@ Add `variant: schema.string().optional()` to Line. Leave SlideNumber and Shape a
 - [Terrazzo](https://terrazzo.app/) — DTCG-native token CLI
 - [Tokens Studio](https://docs.tokens.studio) — Figma plugin for DTCG tokens
 - [architecture.md](./architecture.md) — Layout and rendering architecture
+- [Figma ComponentSetNode API](https://developers.figma.com/docs/plugins/api/ComponentSetNode/) — Figma variant data model
+- [Figma REST API Types](https://github.com/figma/rest-api-spec/blob/main/dist/api_types.ts) — Authoritative TypeScript types
+- [Figma: Create and Use Variants](https://help.figma.com/hc/en-us/articles/360056440594-Create-and-use-variants) — Default variant behavior
+- [MUI Palette](https://mui.com/material-ui/customization/palette/) — TypeScript-enforced enum color props
+- [Radix UI Color](https://www.radix-ui.com/themes/docs/theme/color) — 24-name enum color constraint
+- [shadcn/ui Theming](https://ui.shadcn.com/docs/theming) — Semantic CSS variable tokens

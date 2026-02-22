@@ -554,6 +554,39 @@ export interface SlideNumberTokens {
   [SLIDE_NUMBER_TOKEN.HALIGN]: HorizontalAlignment;
 }
 
+export const TEXT_TOKEN = {
+  COLOR: 'color',
+  BULLET_COLOR: 'bulletColor',
+  STYLE: 'style',
+  LINE_HEIGHT_MULTIPLIER: 'lineHeightMultiplier',
+} as const;
+
+export interface TextTokens {
+  [TEXT_TOKEN.COLOR]: string;
+  [TEXT_TOKEN.BULLET_COLOR]: string;
+  [TEXT_TOKEN.STYLE]: TextStyleName;
+  [TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER]: number;
+}
+
+export const SHAPE_TOKEN = {
+  FILL: 'fill',
+  FILL_OPACITY: 'fillOpacity',
+  BORDER_COLOR: 'borderColor',
+  BORDER_WIDTH: 'borderWidth',
+  CORNER_RADIUS: 'cornerRadius',
+} as const;
+
+export interface ShapeTokens {
+  [SHAPE_TOKEN.FILL]: string;
+  [SHAPE_TOKEN.FILL_OPACITY]: number;
+  [SHAPE_TOKEN.BORDER_COLOR]: string;
+  [SHAPE_TOKEN.BORDER_WIDTH]: number;
+  [SHAPE_TOKEN.CORNER_RADIUS]: number;
+}
+
+/** The variant name used when no explicit variant is requested. Every component must define this variant. */
+export const DEFAULT_VARIANT = 'default' as const;
+
 /**
  * Maps component names to their required token interfaces.
  * Theme.components is typed from this map — every entry here must be
@@ -575,6 +608,8 @@ export interface ComponentTokenMap {
   [Component.Table]: TableTokens;
   [Component.Line]: LineTokens;
   [Component.SlideNumber]: SlideNumberTokens;
+  [Component.Text]: TextTokens;
+  [Component.Shape]: ShapeTokens;
 }
 
 // ============================================
@@ -607,8 +642,8 @@ export interface Theme {
    *  The Record<string, ...> intersection enables dynamic runtime access in registry.expand()
    *  and allows custom components that haven't used declaration merging. */
   components: {
-    [K in keyof ComponentTokenMap]: ComponentTokenMap[K] & {
-      variants?: Record<string, Partial<ComponentTokenMap[K]>>;
+    [K in keyof ComponentTokenMap]: {
+      variants: { [DEFAULT_VARIANT]: ComponentTokenMap[K] } & Record<string, ComponentTokenMap[K]>;
     };
-  } & Record<string, Record<string, unknown> & { variants?: Record<string, Record<string, unknown>> }>;
+  } & Record<string, { variants: { [DEFAULT_VARIANT]: Record<string, unknown> } & Record<string, Record<string, unknown>> }>;
 }

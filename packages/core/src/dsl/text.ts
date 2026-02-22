@@ -10,8 +10,8 @@ import remarkParse from 'remark-parse';
 import remarkDirective from 'remark-directive';
 import type { Root, PhrasingContent, List, Paragraph, ListItem } from 'mdast';
 import type { TextDirective } from 'mdast-util-directive';
-import type { NormalizedRun, ColorScheme, ContentType } from '../core/types.js';
-import { HALIGN, VALIGN, TEXT_STYLE, CONTENT } from '../core/types.js';
+import type { NormalizedRun, ColorScheme, ContentType, TextStyleName, HorizontalAlignment, VerticalAlignment, TextTokens } from '../core/types.js';
+import { HALIGN, VALIGN, TEXT_STYLE, CONTENT, TEXT_TOKEN } from '../core/types.js';
 import { NODE_TYPE, type ElementNode } from '../core/nodes.js';
 import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape } from '../core/registry.js';
 import { SYNTAX } from '../core/mdast.js';
@@ -47,18 +47,29 @@ const inlineProcessor = unified().use(remarkParse).use(remarkDirective).use(rema
 // SCHEMAS & TYPES
 // ============================================
 
-/** Style options for text (everything except the content string) */
+/** Directive schema — author-facing props only.
+ *  Styling props (color, bulletColor, lineHeightMultiplier) removed:
+ *  authors style via variant selection, not individual color props. */
 const textSchema = {
   style: schema.textStyle().optional(),
-  color: schema.string().optional(),
   hAlign: schema.hAlign().optional(),
   vAlign: schema.vAlign().optional(),
-  bulletColor: schema.string().optional(),
-  lineHeightMultiplier: schema.number().optional(),
   content: schema.content().optional(),
+  variant: schema.string().optional(),
 } satisfies SchemaShape;
 
-export type TextProps = Omit<InferProps<typeof textSchema>, 'content'>;
+/** Props accepted by DSL functions text(), prose(), label().
+ *  DSL callers can pass styling props (color, bulletColor, lineHeightMultiplier)
+ *  that are NOT in the directive schema — only available to TypeScript developers. */
+export interface TextProps {
+  style?: TextStyleName;
+  color?: string;
+  hAlign?: HorizontalAlignment;
+  vAlign?: VerticalAlignment;
+  bulletColor?: string;
+  lineHeightMultiplier?: number;
+  variant?: string;
+}
 
 /** Full props including body content and content kind (used internally by expansion) */
 export type TextComponentProps = { body: string; content?: ContentType } & TextProps;
@@ -203,19 +214,25 @@ export const HEADING_STYLE: Record<number, TextProps['style']> = {
 // EXPAND — single function, switches on content kind
 // ============================================
 
-function expandText(props: TextComponentProps, context: { theme: any }): ElementNode {
+function expandText(props: TextComponentProps, context: { theme: any }, tokens: TextTokens): ElementNode {
   const contentKind = props.content ?? CONTENT.RICH;
+
+  // Props override tokens: DSL/parent callers can pass explicit values
+  const resolvedStyle = props.style ?? tokens.style;
+  const resolvedColor = props.color ?? tokens.color;
+  const resolvedBulletColor = props.bulletColor ?? tokens.bulletColor;
+  const resolvedLineHeight = props.lineHeightMultiplier ?? tokens.lineHeightMultiplier;
 
   // PLAIN — no parsing, single run
   if (contentKind === CONTENT.PLAIN) {
     return {
       type: NODE_TYPE.TEXT,
       content: [{ text: props.body }],
-      style: props.style,
-      color: props.color,
+      style: resolvedStyle,
+      color: resolvedColor,
       hAlign: props.hAlign ?? HALIGN.LEFT,
       vAlign: props.vAlign ?? VALIGN.TOP,
-      lineHeightMultiplier: props.lineHeightMultiplier,
+      lineHeightMultiplier: resolvedLineHeight,
     };
   }
 
@@ -236,13 +253,13 @@ function expandText(props: TextComponentProps, context: { theme: any }): Element
 
   const runs = mdastToRuns(tree, context.theme.colors);
 
-  // PROSE: apply bulletColor to all bullet runs if specified
-  if (contentKind === CONTENT.PROSE && props.bulletColor) {
+  // PROSE: apply bulletColor to all bullet runs
+  if (contentKind === CONTENT.PROSE && resolvedBulletColor) {
     for (const run of runs) {
       if (run.bullet && typeof run.bullet === 'object') {
-        run.bullet = { ...run.bullet, color: props.bulletColor };
+        run.bullet = { ...run.bullet, color: resolvedBulletColor };
       } else if (run.bullet === true) {
-        run.bullet = { color: props.bulletColor };
+        run.bullet = { color: resolvedBulletColor };
       }
     }
   }
@@ -250,11 +267,11 @@ function expandText(props: TextComponentProps, context: { theme: any }): Element
   return {
     type: NODE_TYPE.TEXT,
     content: runs,
-    style: props.style,
-    color: props.color,
+    style: resolvedStyle,
+    color: resolvedColor,
     hAlign: props.hAlign ?? HALIGN.LEFT,
     vAlign: props.vAlign ?? VALIGN.TOP,
-    lineHeightMultiplier: props.lineHeightMultiplier,
+    lineHeightMultiplier: resolvedLineHeight,
   };
 }
 
@@ -266,6 +283,7 @@ export const textComponent = componentRegistry.define({
   name: Component.Text,
   body: schema.string(),
   params: textSchema,
+  tokens: [TEXT_TOKEN.COLOR, TEXT_TOKEN.BULLET_COLOR, TEXT_TOKEN.STYLE, TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER],
   expand: expandText,
 });
 

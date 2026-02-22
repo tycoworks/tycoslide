@@ -5,7 +5,7 @@ import * as assert from 'node:assert';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import type { Theme, TextStyle, FontFamily, ComponentTokenMap } from '../src/core/types.js';
-import { Component, TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, HALIGN } from '../src/core/types.js';
+import { Component, TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, HALIGN, DEFAULT_VARIANT } from '../src/core/types.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -55,8 +55,8 @@ export function mockTheme(options?: {
   const borderRadius = options?.borderRadius ?? 0.1;
   const accents = options?.accents ?? { teal: '00CCCC', pink: 'FF00FF', orange: 'FF8800' };
 
-  // Default component tokens computed from primitive values
-  const defaultComponents: Record<string, Record<string, unknown>> = {
+  // Default component tokens (Figma model: each is a complete default variant)
+  const defaultTokens: Record<string, Record<string, unknown>> = {
     [Component.Card]: {
       padding,
       cornerRadius: borderRadius,
@@ -93,32 +93,61 @@ export function mockTheme(options?: {
     },
     [Component.SlideNumber]: {
       style: TEXT_STYLE.FOOTER,
+      color: '666666',
       hAlign: HALIGN.RIGHT,
+    },
+    [Component.Text]: {
+      color: '000000',
+      bulletColor: '000000',
+      style: TEXT_STYLE.BODY,
+      lineHeightMultiplier: lineSpacing,
+    },
+    [Component.Shape]: {
+      fill: '333333',
+      fillOpacity: 100,
+      borderColor: 'FFFFFF',
+      borderWidth: 0,
+      cornerRadius: 0,
     },
   };
   // Compile-time exhaustiveness: fails if a new ComponentTokenMap entry is missing above
-  const _exhaustive: Record<keyof ComponentTokenMap, unknown> = defaultComponents;
+  const _exhaustive: Record<keyof ComponentTokenMap, unknown> = defaultTokens;
 
-  // Deep merge: user-provided components override defaults per-component
-  const mergedComponents: Record<string, Record<string, unknown>> = {};
-  for (const [name, defaults] of Object.entries(defaultComponents)) {
-    const userConfig = options?.components?.[name];
+  // Build Figma-model components: { variants: { default: {...}, ... } }
+  // User-provided overrides merge into the default variant for test convenience.
+  // User-provided variants are made complete by merging with the (overridden) default.
+  const mergedComponents: Record<string, { variants: Record<string, Record<string, unknown>> }> = {};
+  for (const [name, defaults] of Object.entries(defaultTokens)) {
+    const userConfig = options?.components?.[name] as Record<string, unknown> | undefined;
     if (userConfig) {
-      // Preserve user's variants if they provided them
-      const { variants: userVariants, ...userBase } = userConfig as any;
-      const { variants: defaultVariants, ...defaultBase } = defaults as any;
-      mergedComponents[name] = { ...defaultBase, ...userBase };
-      if (userVariants || defaultVariants) {
-        (mergedComponents[name] as any).variants = { ...(defaultVariants ?? {}), ...(userVariants ?? {}) };
+      const { variants: userVariants, ...userOverrides } = userConfig as
+        Record<string, unknown> & { variants?: Record<string, Record<string, unknown>> };
+      const defaultVariant = { ...defaults, ...userOverrides };
+      const variants: Record<string, Record<string, unknown>> = { [DEFAULT_VARIANT]: defaultVariant };
+      if (userVariants) {
+        for (const [varName, varOverrides] of Object.entries(userVariants)) {
+          if (varName === DEFAULT_VARIANT) {
+            variants[DEFAULT_VARIANT] = { ...defaultVariant, ...varOverrides };
+          } else {
+            variants[varName] = { ...defaultVariant, ...varOverrides };
+          }
+        }
       }
+      mergedComponents[name] = { variants };
     } else {
-      mergedComponents[name] = { ...defaults };
+      mergedComponents[name] = { variants: { [DEFAULT_VARIANT]: { ...defaults } } };
     }
   }
   // Also include any user-provided components not in defaults (custom components)
   for (const [name, config] of Object.entries(options?.components ?? {})) {
     if (!mergedComponents[name]) {
-      mergedComponents[name] = config;
+      const { variants: userVariants, ...userTokens } = config as
+        Record<string, unknown> & { variants?: Record<string, Record<string, unknown>> };
+      if (userVariants) {
+        mergedComponents[name] = { variants: userVariants };
+      } else {
+        mergedComponents[name] = { variants: { [DEFAULT_VARIANT]: userTokens } };
+      }
     }
   }
 

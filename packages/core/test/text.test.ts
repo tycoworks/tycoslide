@@ -110,18 +110,18 @@ describe('Text', () => {
       const runs = await expandProseRuns('- First\n- Second\n- Third');
       assert.strictEqual(runs.length, 3);
       assert.strictEqual(runs[0].text, 'First');
-      assert.strictEqual(runs[0].bullet, true);
+      assert.deepStrictEqual(runs[0].bullet, { color: '000000' }); // bulletColor from token
       assert.strictEqual(runs[1].text, 'Second');
-      assert.strictEqual(runs[1].bullet, true);
+      assert.deepStrictEqual(runs[1].bullet, { color: '000000' });
       assert.strictEqual(runs[2].text, 'Third');
-      assert.strictEqual(runs[2].bullet, true);
+      assert.deepStrictEqual(runs[2].bullet, { color: '000000' });
     });
 
     it('should expand ordered list to numbered bullet runs', async () => {
       const runs = await expandProseRuns('1. First\n2. Second');
       assert.strictEqual(runs.length, 2);
-      assert.deepStrictEqual(runs[0].bullet, { type: 'number' });
-      assert.deepStrictEqual(runs[1].bullet, { type: 'number' });
+      assert.deepStrictEqual(runs[0].bullet, { type: 'number', color: '000000' });
+      assert.deepStrictEqual(runs[1].bullet, { type: 'number', color: '000000' });
     });
 
     it('should add breakLine between paragraphs', async () => {
@@ -170,9 +170,9 @@ describe('Text', () => {
       assert.strictEqual(runs.length, 4);
       assert.strictEqual(runs[0].text, 'Intro.');
       assert.strictEqual(runs[1].text, 'Bullet one');
-      assert.strictEqual(runs[1].bullet, true);
+      assert.deepStrictEqual(runs[1].bullet, { color: '000000' }); // bulletColor from token
       assert.strictEqual(runs[2].text, 'Bullet two');
-      assert.strictEqual(runs[2].bullet, true);
+      assert.deepStrictEqual(runs[2].bullet, { color: '000000' });
       assert.strictEqual(runs[3].text, 'Conclusion.');
       assert.strictEqual(runs[3].breakLine, true);
     });
@@ -182,7 +182,7 @@ describe('Text', () => {
       assert.strictEqual(runs.length, 2);
       assert.strictEqual(runs[0].text, 'Bold');
       assert.strictEqual(runs[0].bold, true);
-      assert.strictEqual(runs[0].bullet, true);
+      assert.deepStrictEqual(runs[0].bullet, { color: '000000' }); // bulletColor from token
       assert.strictEqual(runs[1].text, ' bullet');
       assert.strictEqual(runs[1].bullet, undefined);
       assert.strictEqual(runs[1].bold, undefined);

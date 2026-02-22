@@ -71,12 +71,12 @@ describe('prose()', () => {
     assert.strictEqual((node.content as any[]).length, 0);
   });
 
-  test('applies explicit alignment defaults', async () => {
+  test('applies explicit alignment defaults and token defaults', async () => {
     const node = await expand(prose('test')) as TextNode;
-    assert.strictEqual(node.style, undefined);
-    assert.strictEqual(node.color, undefined);
-    assert.strictEqual(node.hAlign, HALIGN.LEFT);   // Explicit default
-    assert.strictEqual(node.vAlign, VALIGN.TOP);    // Explicit default
+    assert.strictEqual(node.style, TEXT_STYLE.BODY); // from text token default
+    assert.strictEqual(node.color, '000000');         // from text token default
+    assert.strictEqual(node.hAlign, HALIGN.LEFT);     // explicit default
+    assert.strictEqual(node.vAlign, VALIGN.TOP);      // explicit default
   });
 
   test('applies style prop', async () => {
@@ -212,27 +212,29 @@ describe('shape()', () => {
     assert.strictEqual(node.shape, SHAPE.PLUS);
   });
 
-  test('applies no props by default', async () => {
+  test('uses token defaults when no explicit props', async () => {
     const node = await expand(shape({ shape: SHAPE.RECT })) as ShapeNode;
-    assert.strictEqual(node.fill, undefined);
-    assert.strictEqual(node.border, undefined);
-    assert.strictEqual(node.cornerRadius, undefined);
+    // Shape now gets defaults from theme.components.shape tokens
+    assert.deepStrictEqual(node.fill, { color: '333333', opacity: 100 });
+    assert.deepStrictEqual(node.border, { color: 'FFFFFF', width: 0 });
+    assert.strictEqual(node.cornerRadius, 0);
   });
 
-  test('passes fill color', async () => {
-    const node = await expand(shape({ shape: SHAPE.RECT, fill: { color: 'FF0000' } })) as ShapeNode;
-    assert.deepStrictEqual(node.fill, { color: 'FF0000' });
+  test('passes fill color (opacity defaults from token)', async () => {
+    const node = await expand(shape({ shape: SHAPE.RECT, fill: 'FF0000' })) as ShapeNode;
+    assert.deepStrictEqual(node.fill, { color: 'FF0000', opacity: 100 });
   });
 
-  test('passes fill color with opacity', async () => {
-    const node = await expand(shape({ shape: SHAPE.RECT, fill: { color: 'FF0000', opacity: 50 } })) as ShapeNode;
+  test('passes fill color with explicit opacity', async () => {
+    const node = await expand(shape({ shape: SHAPE.RECT, fill: 'FF0000', fillOpacity: 50 })) as ShapeNode;
     assert.deepStrictEqual(node.fill, { color: 'FF0000', opacity: 50 });
   });
 
   test('passes border properties', async () => {
     const node = await expand(shape({
       shape: SHAPE.RECT,
-      border: { color: '0000FF', width: 2 },
+      borderColor: '0000FF',
+      borderWidth: 2,
     })) as ShapeNode;
     assert.strictEqual(node.border?.color, '0000FF');
     assert.strictEqual(node.border?.width, 2);
@@ -241,14 +243,12 @@ describe('shape()', () => {
   test('passes selective border sides', async () => {
     const node = await expand(shape({
       shape: SHAPE.RECT,
-      border: {
-        color: '000000',
-        width: 1,
-        top: true,
-        bottom: true,
-        left: false,
-        right: false,
-      },
+      borderColor: '000000',
+      borderWidth: 1,
+      borderTop: true,
+      borderBottom: true,
+      borderLeft: false,
+      borderRight: false,
     })) as ShapeNode;
     assert.strictEqual(node.border?.top, true);
     assert.strictEqual(node.border?.bottom, true);
@@ -262,7 +262,7 @@ describe('shape()', () => {
   });
 
   test('passes specific shape with fill', async () => {
-    const node = await expand(shape({ shape: SHAPE.TRAPEZOID, fill: { color: 'FF0000', opacity: 50 } })) as ShapeNode;
+    const node = await expand(shape({ shape: SHAPE.TRAPEZOID, fill: 'FF0000', fillOpacity: 50 })) as ShapeNode;
     assert.strictEqual(node.shape, SHAPE.TRAPEZOID);
     assert.deepStrictEqual(node.fill, { color: 'FF0000', opacity: 50 });
   });
@@ -270,8 +270,10 @@ describe('shape()', () => {
   test('applies all props together', async () => {
     const node = await expand(shape({
       shape: SHAPE.ELLIPSE,
-      fill: { color: 'EEEEEE', opacity: 80 },
-      border: { color: '333333', width: 1 },
+      fill: 'EEEEEE',
+      fillOpacity: 80,
+      borderColor: '333333',
+      borderWidth: 1,
       cornerRadius: 0.25,
     })) as ShapeNode;
     assert.strictEqual(node.shape, SHAPE.ELLIPSE);
@@ -302,7 +304,7 @@ describe('slideNumber()', () => {
     const node = await expand(slideNumber()) as SlideNumberNode;
     // style, color, hAlign come from theme.components.slideNumber tokens
     assert.strictEqual(node.style, TEXT_STYLE.FOOTER);
-    assert.strictEqual(node.color, undefined);
+    assert.strictEqual(node.color, '666666');
     assert.strictEqual(node.hAlign, HALIGN.RIGHT);
   });
 });

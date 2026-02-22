@@ -17,6 +17,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Minimal theme for testing - matches Theme interface from types.ts
+const testImage = path.join(__dirname, 'fixtures', 'test.png');
 const mockFont = { name: 'Arial', path: path.join(__dirname, 'fixtures', 'test-font.woff2') };
 const mockFontFamily = { normal: mockFont };
 
@@ -35,7 +36,7 @@ const mockTheme: Theme = {
     subtleOpacity: 20,
   },
   components: {
-    [Component.Card]: {
+    [Component.Card]: { variants: { default: {
       padding: 0.25,
       cornerRadius: 0.1,
       backgroundColor: '666666',
@@ -45,8 +46,8 @@ const mockTheme: Theme = {
       titleStyle: TEXT_STYLE.H4,
       descriptionStyle: TEXT_STYLE.SMALL,
       gap: GAP.TIGHT,
-    },
-    [Component.Quote]: {
+    }}},
+    [Component.Quote]: { variants: { default: {
       padding: 0.5,
       cornerRadius: 0.1,
       backgroundColor: '666666',
@@ -55,24 +56,38 @@ const mockTheme: Theme = {
       borderWidth: 1,
       attributionStyle: TEXT_STYLE.SMALL,
       gap: GAP.NORMAL,
-    },
-    [Component.Table]: {
+    }}},
+    [Component.Table]: { variants: { default: {
       borderStyle: BORDER_STYLE.FULL,
       borderColor: '666666',
       borderWidth: 1,
       cellPadding: 0.1,
       cellTextStyle: TEXT_STYLE.BODY,
       headerTextStyle: TEXT_STYLE.BODY,
-    },
-    [Component.Line]: {
+    }}},
+    [Component.Line]: { variants: { default: {
       color: '666666',
       width: 1,
       dashType: DASH_TYPE.SOLID,
-    },
-    [Component.SlideNumber]: {
+    }}},
+    [Component.SlideNumber]: { variants: { default: {
       style: TEXT_STYLE.FOOTER,
+      color: '666666',
       hAlign: HALIGN.RIGHT,
-    },
+    }}},
+    [Component.Text]: { variants: { default: {
+      color: '000000',
+      bulletColor: '000000',
+      style: TEXT_STYLE.BODY,
+      lineHeightMultiplier: 1.2,
+    }}},
+    [Component.Shape]: { variants: { default: {
+      fill: '666666',
+      fillOpacity: 100,
+      borderColor: 'FFFFFF',
+      borderWidth: 0,
+      cornerRadius: 0,
+    }}},
   },
   textStyles: {
     h1: { fontFamily: mockFontFamily, fontSize: 36, color: '000000' },
@@ -271,13 +286,13 @@ describe('HTML Measurement Generation', () => {
 
   describe('Image direction awareness', () => {
     test('image in column gets width: 100%', async () => {
-      const node = column(image('./test/fixtures/test.png'));
+      const node = column(image(testImage));
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('width:100%'), 'Image in column should get width:100%');
     });
 
     test('image in row gets height: 100%', async () => {
-      const node = row(image('./test/fixtures/test.png'));
+      const node = row(image(testImage));
       const { html } = await genHTML(node, bounds, mockTheme);
       assert.ok(html.includes('height:100%'), 'Image in row should get height:100%');
     });
@@ -413,7 +428,7 @@ describe('HTML Measurement Generation', () => {
 
   describe('Compressibility rules', () => {
     test('image in column is compressible (flex-shrink: 1, min-height: 0)', async () => {
-      const node = column({ height: SIZE.FILL }, image('./test/fixtures/test.png'));
+      const node = column({ height: SIZE.FILL }, image(testImage));
       const { html } = await genHTML(node, bounds, mockTheme);
       // Image should be able to shrink to fit available space
       assert.ok(html.includes('flex:0 1 auto'), 'Image should have flex-shrink: 1 (compressible)');
@@ -423,7 +438,7 @@ describe('HTML Measurement Generation', () => {
     test('image in auto-height row shares width equally (flex: 1 1 0)', async () => {
       // Row with no explicit height: image has no height anchor for aspect-ratio,
       // so it must share space equally with siblings
-      const node = row(image('./test/fixtures/test.png'), text('Description'));
+      const node = row(image(testImage), text('Description'));
       const { html } = await genHTML(node, bounds, mockTheme);
       const imageMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
       assert.ok(imageMatch, 'Should find the image div');
@@ -434,7 +449,7 @@ describe('HTML Measurement Generation', () => {
     test('image in definite-height row uses natural aspect-ratio width (flex: 0 1 auto)', async () => {
       // Row with explicit height: height: 100% resolves, aspect-ratio derives width.
       // Image should NOT grow to fill — it should be naturally sized.
-      const node = row({ height: 0.33 }, image('./test/fixtures/test.png'));
+      const node = row({ height: 0.33 }, image(testImage));
       const { html } = await genHTML(node, bounds, mockTheme);
       const imageMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
       assert.ok(imageMatch, 'Should find the image div');
@@ -444,7 +459,7 @@ describe('HTML Measurement Generation', () => {
 
     test('image in SIZE.FILL row uses natural aspect-ratio width (flex: 0 1 auto)', async () => {
       // Row with SIZE.FILL height: also definite (resolves via flex: 1 1 0 on the row itself)
-      const node = column(row({ height: SIZE.FILL }, image('./test/fixtures/test.png')));
+      const node = column(row({ height: SIZE.FILL }, image(testImage)));
       const { html } = await genHTML(node, bounds, mockTheme);
       const imageMatch = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
       assert.ok(imageMatch, 'Should find the image div');
@@ -459,7 +474,7 @@ describe('HTML Measurement Generation', () => {
     });
 
     test('text in row shares width (flex: 1 1 0, min-width: 0)', async () => {
-      const node = row(image('./test/fixtures/test.png'), text('Description beside image'));
+      const node = row(image(testImage), text('Description beside image'));
       const { html } = await genHTML(node, bounds, mockTheme);
       // Text in a row should share width, not claim 100%
       const textMatch = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
@@ -488,7 +503,7 @@ describe('HTML Measurement Generation', () => {
       // node-1: outer column, node-2: middle column, node-3: row, node-4: image
       const node = column({ height: SIZE.FILL },
         column({ height: SIZE.FILL },
-          row({ height: SIZE.FILL }, image('./test/fixtures/test.png')),
+          row({ height: SIZE.FILL }, image(testImage)),
         ),
       );
       const { html } = await genHTML(node, bounds, mockTheme);
@@ -567,7 +582,7 @@ describe('HTML Measurement Generation', () => {
       // node-1: outer column, node-2: row, node-3: inner column, node-4: image
       const node = column({ height: SIZE.FILL },
         row({ height: SIZE.FILL },
-          column({ height: SIZE.FILL }, image('./test/fixtures/test.png')),
+          column({ height: SIZE.FILL }, image(testImage)),
         ),
       );
       const { html } = await genHTML(node, bounds, mockTheme);

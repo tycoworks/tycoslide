@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "tycoslide-theme-default": "file:..",
+    "tycoslide": "file:../../core"
+  }
+}

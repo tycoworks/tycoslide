@@ -98,11 +98,10 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
   // Build background rectangle
   const backgroundRect = shape({
     shape: SHAPE.ROUND_RECT,
-    fill: { color: backgroundColor, opacity: backgroundOpacity },
-    border: {
-      color: borderColor,
-      width: borderWidth,
-    },
+    fill: backgroundColor,
+    fillOpacity: backgroundOpacity,
+    borderColor,
+    borderWidth,
     cornerRadius,
   });
 

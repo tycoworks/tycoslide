@@ -53,6 +53,13 @@ const spacing = {
 };
 
 // ============================================
+// BORDERS
+// ============================================
+
+const borderWidth = 0.75;
+const cornerRadius = 0.05;
+
+// ============================================
 // THEME EXPORT
 // ============================================
 
@@ -61,8 +68,8 @@ export const theme: Theme = {
   slide: SLIDE_SIZE.S16x9,
   spacing,
   borders: {
-    width: 0.75,
-    radius: 0.05,
+    width: borderWidth,
+    radius: cornerRadius,
   },
   textStyles: {
     h1: { fontFamily: assets.fonts.inter, fontSize: 36, color: colors.text },
@@ -76,42 +83,130 @@ export const theme: Theme = {
   },
   components: {
     card: {
-      padding: spacing.padding,
-      cornerRadius: 0.05,
-      backgroundColor: colors.secondary,
-      backgroundOpacity: colors.subtleOpacity,
-      borderColor: colors.secondary,
-      borderWidth: 0.75,
-      titleStyle: TEXT_STYLE.H4,
-      descriptionStyle: TEXT_STYLE.SMALL,
-      gap: GAP.TIGHT,
+      variants: {
+        default: {
+          padding: spacing.padding,
+          cornerRadius,
+          backgroundColor: colors.secondary,
+          backgroundOpacity: colors.subtleOpacity,
+          borderColor: colors.secondary,
+          borderWidth,
+          titleStyle: TEXT_STYLE.H4,
+          descriptionStyle: TEXT_STYLE.SMALL,
+          gap: GAP.TIGHT,
+        },
+      },
     },
     quote: {
-      padding: spacing.padding * 2,
-      cornerRadius: 0.05,
-      backgroundColor: colors.secondary,
-      backgroundOpacity: colors.subtleOpacity,
-      borderColor: colors.secondary,
-      borderWidth: 0.75,
-      attributionStyle: TEXT_STYLE.SMALL,
-      gap: GAP.NORMAL,
+      variants: {
+        default: {
+          padding: spacing.padding * 2,
+          cornerRadius,
+          backgroundColor: colors.secondary,
+          backgroundOpacity: colors.subtleOpacity,
+          borderColor: colors.secondary,
+          borderWidth,
+          attributionStyle: TEXT_STYLE.SMALL,
+          gap: GAP.NORMAL,
+        },
+      },
     },
     table: {
-      borderStyle: BORDER_STYLE.FULL,
-      borderColor: colors.secondary,
-      borderWidth: 0.75,
-      cellPadding: spacing.cellPadding,
-      cellTextStyle: TEXT_STYLE.BODY,
-      headerTextStyle: TEXT_STYLE.BODY,
+      variants: {
+        default: {
+          borderStyle: BORDER_STYLE.FULL,
+          borderColor: colors.secondary,
+          borderWidth,
+          cellPadding: spacing.cellPadding,
+          cellTextStyle: TEXT_STYLE.BODY,
+          headerTextStyle: TEXT_STYLE.BODY,
+        },
+      },
     },
     line: {
-      color: colors.secondary,
-      width: 0.75,
-      dashType: DASH_TYPE.SOLID,
+      variants: {
+        default: {
+          color: colors.secondary,
+          width: borderWidth,
+          dashType: DASH_TYPE.SOLID,
+        },
+      },
     },
     slideNumber: {
-      style: TEXT_STYLE.FOOTER,
-      hAlign: HALIGN.RIGHT,
+      variants: {
+        default: {
+          style: TEXT_STYLE.FOOTER,
+          color: colors.textMuted,
+          hAlign: HALIGN.RIGHT,
+        },
+      },
+    },
+    text: {
+      variants: {
+        default: {
+          color: colors.text,
+          bulletColor: colors.text,
+          style: TEXT_STYLE.BODY,
+          lineHeightMultiplier: spacing.lineSpacing,
+        },
+        muted: {
+          color: colors.textMuted,
+          bulletColor: colors.textMuted,
+          style: TEXT_STYLE.BODY,
+          lineHeightMultiplier: spacing.lineSpacing,
+        },
+        accent: {
+          color: colors.accents.blue,
+          bulletColor: colors.accents.blue,
+          style: TEXT_STYLE.BODY,
+          lineHeightMultiplier: spacing.lineSpacing,
+        },
+        inverse: {
+          color: colors.background,
+          bulletColor: colors.background,
+          style: TEXT_STYLE.BODY,
+          lineHeightMultiplier: spacing.lineSpacing,
+        },
+      },
+    },
+    shape: {
+      variants: {
+        default: {
+          fill: colors.secondary,
+          fillOpacity: 100,
+          borderColor: colors.background,
+          borderWidth: 0,
+          cornerRadius: 0,
+        },
+        primary: {
+          fill: colors.primary,
+          fillOpacity: 100,
+          borderColor: colors.background,
+          borderWidth: 0,
+          cornerRadius: 0,
+        },
+        subtle: {
+          fill: colors.secondary,
+          fillOpacity: colors.subtleOpacity,
+          borderColor: colors.background,
+          borderWidth: 0,
+          cornerRadius: 0,
+        },
+        outlined: {
+          fill: colors.background,
+          fillOpacity: 0,
+          borderColor: colors.primary,
+          borderWidth,
+          cornerRadius: 0,
+        },
+        accent: {
+          fill: colors.accents.blue,
+          fillOpacity: 100,
+          borderColor: colors.background,
+          borderWidth: 0,
+          cornerRadius: 0,
+        },
+      },
     },
   },
 };

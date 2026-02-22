@@ -32,7 +32,7 @@
 - Code component
 
 # Future:
-- Build theme from PPTX
+- Build theme from PPTX or Figma?
 - Real mermaid (or embed diagram as alt)
 - Groups
 - Theme building in CLI (inc. JSON design tokens)

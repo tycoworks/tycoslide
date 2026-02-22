@@ -2,6 +2,7 @@
 // Generic base class, component registry, and layout registry
 
 import { NODE_TYPE, type ElementNode, type ComponentNode, type SlideNode } from './nodes.js';
+import { DEFAULT_VARIANT } from './types.js';
 import type { Theme, ComponentName } from './types.js';
 import type { Slide } from '../presentation.js';
 import { z } from 'zod';
@@ -290,31 +291,34 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
         );
       }
 
-      const { variants: variantDefs, ...baseTokens } = componentConfig as
-        Record<string, unknown> & { variants?: Record<string, Record<string, unknown>> };
+      const { variants } = componentConfig as
+        { variants?: Record<string, Record<string, unknown>> };
 
-      let tokens = { ...baseTokens };
-
-      const variantName = (node.props as any)?.variant;
-      if (variantName && typeof variantName === 'string') {
-        const variantOverrides = variantDefs?.[variantName];
-        if (!variantOverrides) {
-          const available = variantDefs ? Object.keys(variantDefs).join(', ') : '(none)';
-          throw new Error(
-            `Unknown variant '${variantName}' for component '${node.componentName}'. Available: ${available}`
-          );
-        }
-        tokens = { ...tokens, ...variantOverrides };
+      if (!variants) {
+        throw new Error(
+          `Component '${node.componentName}' requires theme tokens but theme.components.${node.componentName}.variants is missing. ` +
+          `Add a variants map with at least a '${DEFAULT_VARIANT}' variant.`
+        );
       }
 
-      // Validate all required tokens are present
+      const variantName: string = (node.props as any)?.variant ?? DEFAULT_VARIANT;
+      const tokens = variants[variantName];
+
+      if (!tokens) {
+        const available = Object.keys(variants).join(', ');
+        throw new Error(
+          `Unknown variant '${variantName}' for component '${node.componentName}'. Available: ${available}`
+        );
+      }
+
+      // Validate all required tokens are present in the variant
       const missing = requiredTokens.filter(
         (key: string) => tokens[key] === undefined || tokens[key] === null
       );
       if (missing.length) {
         throw new Error(
-          `Component '${node.componentName}' is missing required tokens: [${missing.join(', ')}]. ` +
-          `Add them to theme.components.${node.componentName}.`
+          `Component '${node.componentName}' variant '${variantName}' is missing required tokens: [${missing.join(', ')}]. ` +
+          `Each variant must be a complete token set.`
         );
       }
 
