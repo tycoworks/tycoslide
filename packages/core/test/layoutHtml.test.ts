@@ -7,10 +7,9 @@ import { generateLayoutHTML } from '../dist/layout/layoutHtml.js';
 import { prose, label, text, row, column, image, line, stack, shape } from '../dist/dsl/index.js';
 import { componentRegistry } from '../dist/core/registry.js';
 import { Bounds } from '../dist/core/bounds.js';
-import { Component, HALIGN, VALIGN, DIRECTION, SIZE, SHAPE, DASH_TYPE, TEXT_STYLE, GAP, BORDER_STYLE } from '../dist/core/types.js';
+import { Component, HALIGN, VALIGN, SIZE, SHAPE, DASH_TYPE, TEXT_STYLE, GAP, BORDER_STYLE } from '../dist/core/types.js';
 import type { Theme } from '../dist/core/types.js';
 import type { ElementNode } from '../dist/core/nodes.js';
-import { NODE_TYPE } from '../dist/core/nodes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -191,42 +190,47 @@ describe('HTML Measurement Generation', () => {
   });
 
   describe('Bullet rendering', () => {
-    test('bullet text generates padding-left', async () => {
+    test('bullet renders as native ul/li with disc markers', async () => {
       const node = prose('- Item');
       const { html } = await genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('padding-left:'), 'Bullet should have padding-left');
+      assert.ok(html.includes('<ul'), 'Bullet should render as <ul>');
+      assert.ok(html.includes('<li'), 'Bullet items should render as <li>');
+      assert.ok(html.includes('list-style:disc'), 'Bullet list should use disc markers');
     });
 
-    test('bullet includes bullet character', async () => {
+    test('bullet list has padding for indent', async () => {
       const node = prose('- Item');
       const { html } = await genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('•'), 'Bullet should include bullet character');
+      // ul uses padding shorthand: padding:0 0 0 Npx
+      const ulMatch = html.match(/<ul[^>]*style="([^"]*)"/);
+      assert.ok(ulMatch, 'Should find <ul> with style');
+      assert.ok(ulMatch![1].includes('padding:0 0 0'), 'Bullet list should have left padding for indent');
     });
 
-    test('multi-run bullet renders all runs in one div', async () => {
+    test('multi-run bullet renders all runs in one li', async () => {
       // "- **Bold:** plain text" produces two runs: bold with bullet, plain without
       const node = prose('- **Bold:** plain text');
       const { html } = await genHTML(node, bounds, mockTheme);
-      // The bullet div should contain both the bold and plain spans
-      const bulletDivMatch = html.match(/<div[^>]*padding-left[^>]*>(.*?)<\/div>/);
-      assert.ok(bulletDivMatch, 'Should have a bullet div with padding-left');
-      const bulletContent = bulletDivMatch![1];
-      assert.ok(bulletContent.includes('Bold:'), 'Bullet div should contain bold text');
-      assert.ok(bulletContent.includes('plain text'), 'Bullet div should contain plain text in same div');
+      // The li should contain both the bold and plain spans
+      const liMatch = html.match(/<li[^>]*>(.*?)<\/li>/);
+      assert.ok(liMatch, 'Should have a <li> element');
+      const liContent = liMatch![1];
+      assert.ok(liContent.includes('Bold:'), 'li should contain bold text');
+      assert.ok(liContent.includes('plain text'), 'li should contain plain text in same element');
     });
   });
 
   describe('Paragraph spacing', () => {
-    test('breakLine generates block spacer div with height: 1em', async () => {
+    test('breakLine generates margin-top spacing', async () => {
       const node = prose('Para 1\n\nPara 2');
       const { html } = await genHTML(node, bounds, mockTheme);
-      assert.ok(html.includes('height:1em'), 'breakLine should generate a spacer div with height:1em');
+      assert.ok(html.includes('margin-top:1em'), 'breakLine should generate margin-top:1em for paragraph spacing');
     });
 
     test('breakLine does not generate br tag', async () => {
       const node = prose('Para 1\n\nPara 2');
       const { html } = await genHTML(node, bounds, mockTheme);
-      assert.ok(!html.includes('<br'), 'breakLine should not use <br> — uses block spacer instead');
+      assert.ok(!html.includes('<br'), 'breakLine should not use <br> — uses margin-top instead');
     });
   });
 
@@ -427,12 +431,14 @@ describe('HTML Measurement Generation', () => {
   });
 
   describe('Compressibility rules', () => {
-    test('image in column is compressible (flex-shrink: 1, min-height: 0)', async () => {
+    test('image in constrained column is compressible (flex: 1 1 0, min-height: 0)', async () => {
       const node = column({ height: SIZE.FILL }, image(testImage));
       const { html } = await genHTML(node, bounds, mockTheme);
-      // Image should be able to shrink to fit available space
-      assert.ok(html.includes('flex:0 1 auto'), 'Image should have flex-shrink: 1 (compressible)');
-      assert.ok(html.includes('min-height:0px'), 'Image in column should have min-height:0px');
+      const imageMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
+      assert.ok(imageMatch, 'Should find the image div');
+      // Image in constrained column: grows to fill and can compress (min-height:0)
+      assert.ok(imageMatch![1].includes('flex:1 1 0'), 'Image in constrained column should grow to fill (flex:1 1 0)');
+      assert.ok(imageMatch![1].includes('min-height:0'), 'Image in constrained column should be compressible (min-height:0)');
     });
 
     test('image in auto-height row shares width equally (flex: 1 1 0)', async () => {
@@ -497,39 +503,52 @@ describe('HTML Measurement Generation', () => {
   });
 
   describe('heightIsConstrained propagation', () => {
-    test('multi-level FILL chain propagates min-height:0 to deepest container', async () => {
-      // Slide root (constrained) → FILL column → FILL column → FILL row
-      // The entire chain is definite, so the innermost FILL row gets min-height:0.
-      // node-1: outer column, node-2: middle column, node-3: row, node-4: image
+    // V2 padding fix: only images get min-height:0 in constrained contexts.
+    // Containers keep min-height:auto to preserve their padding boundaries.
+    // These tests verify the constraint propagates correctly to images.
+
+    test('FILL chain propagates constraint to image (min-height:0)', async () => {
+      // Slide root (constrained) → FILL column → FILL column → FILL column → image
+      // The entire chain is definite, so the image in a column gets min-height:0.
+      // Containers do NOT get min-height:0 (padding fix).
+      // node-1: outer column, node-2: middle column, node-3: inner column, node-4: image
       const node = column({ height: SIZE.FILL },
         column({ height: SIZE.FILL },
-          row({ height: SIZE.FILL }, image(testImage)),
+          column({ height: SIZE.FILL }, image(testImage)),
         ),
       );
       const { html } = await genHTML(node, bounds, mockTheme);
-      const rowMatch = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
-      assert.ok(rowMatch, 'Should find the inner row (node-3)');
-      assert.ok(rowMatch![1].includes('min-height:0'), 'FILL row in constrained chain should have min-height:0');
+      const imageMatch = html.match(/data-node-id="node-4"[^>]*style="([^"]*)"/);
+      assert.ok(imageMatch, 'Should find the image (node-4)');
+      assert.ok(imageMatch![1].includes('min-height:0'), 'Image at end of FILL chain should be compressible (min-height:0)');
+      // The inner column should NOT have min-height:0 (padding preserved)
+      const colMatch = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
+      assert.ok(colMatch, 'Should find the inner column (node-3)');
+      assert.ok(!colMatch![1].includes('min-height:0'), 'Column container should NOT have min-height:0 (padding fix)');
     });
 
     test('HUG breaks chain, fixed px restarts it', async () => {
-      // Slide root (constrained) → HUG column (breaks) → fixed column (restarts) → FILL column
-      // node-1: outer HUG column, node-2: fixed column, node-3: inner FILL column, node-4: text
+      // Slide root (constrained) → HUG column (breaks) → fixed column (restarts) → FILL column → image
+      // node-1: outer HUG column, node-2: fixed column, node-3: inner FILL column, node-4: image
       const node = column(
         column({ height: 2 },
-          column({ height: SIZE.FILL }, text('deep')),
+          column({ height: SIZE.FILL }, image('./test/fixtures/test.png')),
         ),
       );
       const { html } = await genHTML(node, bounds, mockTheme);
+      const imageMatch = html.match(/data-node-id="node-4"[^>]*style="([^"]*)"/);
+      assert.ok(imageMatch, 'Should find image (node-4)');
+      assert.ok(imageMatch![1].includes('min-height:0'), 'Fixed px parent should restart chain — image gets min-height:0');
+      // The FILL column should NOT have min-height:0
       const innerCol = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
       assert.ok(innerCol, 'Should find inner FILL column (node-3)');
       assert.ok(innerCol![1].includes('flex:1 1 0'), 'Inner column should be FILL');
-      assert.ok(innerCol![1].includes('min-height:0'), 'Fixed px parent should restart chain — inner FILL gets min-height:0');
+      assert.ok(!innerCol![1].includes('min-height:0'), 'FILL column should NOT have min-height:0 (padding fix)');
     });
 
-    test('FILL stack in constrained context gets compressible grid template', async () => {
-      // Slide root (constrained) → FILL column → FILL stack
-      // Stack grid template should use minmax(0, 1fr) for compression.
+    test('stack preserves min-content grid template even in constrained context', async () => {
+      // V2: stacks always use minmax(min-content, 1fr) — never compress to zero.
+      // This preserves card content and padding boundaries.
       // node-1: column, node-2: stack, node-3: shape, node-4: column, node-5: text
       const node = column({ height: SIZE.FILL },
         stack({ height: SIZE.FILL }, shape({ shape: SHAPE.ROUND_RECT }), column(text('Content'))),
@@ -537,26 +556,27 @@ describe('HTML Measurement Generation', () => {
       const { html } = await genHTML(node, bounds, mockTheme);
       const stackMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
       assert.ok(stackMatch, 'Should find the stack (node-2)');
-      assert.ok(stackMatch![1].includes('minmax(0, 1fr)'), 'Constrained FILL stack should have minmax(0, 1fr) grid template');
-      assert.ok(!stackMatch![1].includes('min-content'), 'Constrained FILL stack should NOT have min-content');
+      assert.ok(stackMatch![1].includes('min-content'), 'Stack should use min-content grid template (preserves padding)');
+      assert.ok(!stackMatch![1].includes('minmax(0'), 'Stack should NOT use minmax(0, ...) (would allow crushing content)');
     });
 
-    test('row passes heightIsConstrained through to column children', async () => {
-      // Slide root (constrained) → FILL column → row → FILL column → FILL column
-      // The row passes through the constraint, so the deepest column gets min-height:0.
-      // node-1: outer column, node-2: row, node-3: mid column, node-4: inner column, node-5: text
+    test('row passes constraint through to images in nested columns', async () => {
+      // Slide root (constrained) → FILL column → FILL row → FILL column → image
+      // The row passes through the constraint, so the image gets min-height:0.
+      // node-1: outer column, node-2: row, node-3: column, node-4: image
       const node = column({ height: SIZE.FILL },
         row({ height: SIZE.FILL },
-          column({ height: SIZE.FILL },
-            column({ height: SIZE.FILL }, text('through row')),
-          ),
+          column({ height: SIZE.FILL }, image('./test/fixtures/test.png')),
         ),
       );
       const { html } = await genHTML(node, bounds, mockTheme);
-      const innerCol = html.match(/data-node-id="node-4"[^>]*style="([^"]*)"/);
-      assert.ok(innerCol, 'Should find innermost column (node-4)');
-      assert.ok(innerCol![1].includes('flex:1 1 0'), 'Innermost column should be FILL');
-      assert.ok(innerCol![1].includes('min-height:0'), 'Row should pass constraint through — inner column gets min-height:0');
+      const imageMatch = html.match(/data-node-id="node-4"[^>]*style="([^"]*)"/);
+      assert.ok(imageMatch, 'Should find the image (node-4)');
+      assert.ok(imageMatch![1].includes('min-height:0'), 'Row should pass constraint through — image gets min-height:0');
+      // Column should NOT have min-height:0
+      const colMatch = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
+      assert.ok(colMatch, 'Should find the column (node-3)');
+      assert.ok(!colMatch![1].includes('min-height:0'), 'Column should NOT have min-height:0 (padding fix)');
     });
 
     test('HUG row breaks chain for its children', async () => {
