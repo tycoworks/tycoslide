@@ -9,7 +9,6 @@ import { loadTheme } from './themeLoader.js';
 
 export interface BuildOptions {
   output?: string;
-  defaultLayout?: string;
 }
 
 export async function build(inputPath: string, options: BuildOptions): Promise<void> {
@@ -33,14 +32,10 @@ export async function build(inputPath: string, options: BuildOptions): Promise<v
   // Load theme package
   const loaded = await loadTheme(themeName);
 
-  // Determine default layout
-  const defaultLayout = options.defaultLayout ?? loaded.defaultLayout;
-
   // Compile markdown to presentation
   const pres = compileDocument(source, {
     theme: loaded.theme,
     assets: loaded.assets,
-    defaultLayout,
   });
 
   // Determine output path

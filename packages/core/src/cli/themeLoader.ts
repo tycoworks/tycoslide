@@ -9,7 +9,6 @@ import type { Theme } from '../core/types.js';
 export interface LoadedTheme {
   theme: Theme;
   assets?: Record<string, unknown>;
-  defaultLayout?: string;
 }
 
 /**
@@ -20,7 +19,6 @@ export interface LoadedTheme {
  *   - theme: Theme (required)
  *   - assets: Record<string, unknown> (optional)
  *   - layouts: any (required — import triggers layoutRegistry.define() side effects)
- *   - defaultLayout: string (optional — fallback layout name)
  */
 export async function loadTheme(name: string): Promise<LoadedTheme> {
   const packageName = name;
@@ -61,6 +59,5 @@ export async function loadTheme(name: string): Promise<LoadedTheme> {
   return {
     theme: mod.theme,
     assets: mod.assets,
-    defaultLayout: mod.defaultLayout,
   };
 }

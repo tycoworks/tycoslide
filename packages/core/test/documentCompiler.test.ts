@@ -25,8 +25,8 @@ let renderedSlides: Slide[] = [];
 /** Global FM header — required before any slide frontmatter */
 const HEADER = `---\ntheme: test\n---\n\n`;
 
-function makeOptions(overrides?: { defaultLayout?: string }) {
-  return { theme: mockTheme(), ...overrides };
+function makeOptions() {
+  return { theme: mockTheme() };
 }
 
 // Mock layouts
@@ -235,17 +235,8 @@ FROM_SLOT`;
     });
   });
 
-  describe('default layout', () => {
-    it('should use defaultLayout when layout is omitted', () => {
-      const md = HEADER + `---
-title: No Layout Specified
----`;
-      compileDocument(md, makeOptions({ defaultLayout: 'simple' }));
-      assert.strictEqual(receivedProps.length, 1);
-      assert.strictEqual(receivedProps[0].title, 'No Layout Specified');
-    });
-
-    it('should throw when layout omitted and no defaultLayout set', () => {
+  describe('errors', () => {
+    it('should throw when layout is omitted', () => {
       const md = HEADER + `---
 title: Missing Layout
 ---`;
@@ -258,10 +249,8 @@ title: Missing Layout
         },
       );
     });
-  });
 
-  describe('errors', () => {
-    it('should throw on missing layout without defaultLayout', () => {
+    it('should throw on slide without frontmatter', () => {
       // Slide without frontmatter (just a heading after global FM)
       const md = HEADER + `# Just a heading`;
       assert.throws(

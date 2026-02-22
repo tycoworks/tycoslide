@@ -43,8 +43,6 @@ export function buildSlideName(raw: RawSlide): string {
 export interface CompileOptions {
   /** Theme to apply to the presentation. */
   theme: Theme;
-  /** Default layout name when slide frontmatter omits `layout:`. */
-  defaultLayout?: string;
   /** Nested assets object for resolving `asset.dot.path` references in frontmatter. */
   assets?: Record<string, unknown>;
 }
@@ -131,8 +129,7 @@ function compileSlide(raw: RawSlide, options: CompileOptions): Slide {
 /** Compile a `layout: name` slide — layout template with content params. */
 function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
   // 1. Resolve layout name
-  const layoutName = (raw.frontmatter.layout as string | undefined)
-    ?? options.defaultLayout;
+  const layoutName = raw.frontmatter.layout as string | undefined;
 
   if (!layoutName) {
     throw new Error(

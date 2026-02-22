@@ -39,7 +39,6 @@ npm run typecheck    # Type-check including test files
 
 ```bash
 npx tycoslide build deck.md -o deck.pptx          # Build a single deck
-npx tycoslide build deck.md --default-layout body  # Set fallback layout
 ```
 
 ## Monorepo Structure
