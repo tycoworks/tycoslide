@@ -2,7 +2,8 @@
 // Main barrel export
 
 // Core
-export { Presentation, type Slide, type Master } from './presentation.js';
+export { Presentation, type Slide, type Master, type WriteResult } from './presentation.js';
+export { LayoutValidationError, type SlideValidationResult, type ValidationResult } from './layout/validator.js';
 export * from './core/types.js';
 export * from './core/nodes.js';
 

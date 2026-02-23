@@ -16,13 +16,9 @@ program
   .description('Compile a markdown file into a PPTX presentation')
   .argument('<input>', 'path to markdown file')
   .option('-o, --output <path>', 'output PPTX path (default: input basename + .pptx)')
-  .action(async (input: string, opts: { output?: string }) => {
-    try {
-      await build(input, opts);
-    } catch (err: any) {
-      console.error(err.message);
-      process.exit(1);
-    }
+  .option('-f, --force', 'write PPTX despite layout validation errors')
+  .action(async (input: string, opts: { output?: string; force?: boolean }) => {
+    await build(input, opts);
   });
 
 program.parse();

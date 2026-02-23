@@ -173,6 +173,56 @@ export class LayoutBoundsError extends Error {
 }
 
 // ============================================
+// BATCH VALIDATION
+// ============================================
+
+/** Per-slide validation result for batch error collection */
+export interface SlideValidationResult {
+  slideIndex: number;
+  slideName?: string;
+  result: ValidationResult;
+}
+
+/** Format all errors from multiple slides into a human-readable message.
+ *  Reuses the existing per-slide error classes for formatting. */
+function formatBatchErrors(slideErrors: SlideValidationResult[], totalSlides?: number): string {
+  const count = totalSlides !== undefined
+    ? `${slideErrors.length} of ${totalSlides} slides`
+    : `${slideErrors.length} slide(s)`;
+  const header = `Layout validation failed (${count}):`;
+
+  const sections = slideErrors.map(({ slideIndex, slideName, result }) => {
+    const messages: string[] = [];
+    if (result.boundsEscapes.length > 0) {
+      messages.push(new LayoutBoundsError({ violations: result.boundsEscapes, slideIndex, slideName }).message);
+    }
+    if (result.overflows.length > 0) {
+      messages.push(new LayoutOverflowError({ violations: result.overflows, slideIndex, slideName }).message);
+    }
+    if (result.overlaps.length > 0) {
+      messages.push(new LayoutOverlapError({ violations: result.overlaps, slideIndex, slideName }).message);
+    }
+    return messages.map(m => `  ${m}`).join('\n');
+  });
+
+  return `${header}\n\n${sections.join('\n\n')}`;
+}
+
+/**
+ * Aggregate error thrown when multiple slides have validation failures.
+ * Contains all per-slide errors collected during batch processing.
+ */
+export class LayoutValidationError extends Error {
+  readonly slideErrors: SlideValidationResult[];
+
+  constructor(slideErrors: SlideValidationResult[], totalSlides?: number) {
+    super(formatBatchErrors(slideErrors, totalSlides));
+    this.name = 'LayoutValidationError';
+    this.slideErrors = slideErrors;
+  }
+}
+
+// ============================================
 // LAYOUT VALIDATOR CLASS
 // ============================================
 

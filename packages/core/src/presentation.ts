@@ -9,7 +9,8 @@ import type { Theme } from './core/types.js';
 import type { ElementNode, PositionedNode, ComponentNode } from './core/nodes.js';
 import { Bounds } from './core/bounds.js';
 import { PptxRenderer } from './core/pptxRenderer.js';
-import { LayoutValidator } from './layout/validator.js';
+import { LayoutValidator, LayoutValidationError } from './layout/validator.js';
+import type { SlideValidationResult } from './layout/validator.js';
 import { log } from './utils/log.js';
 import { componentRegistry } from './core/registry.js';
 import { LayoutPipeline } from './layout/pipeline.js';
@@ -50,6 +51,15 @@ export interface Slide {
 interface DeferredSlide {
   slide: Slide;
   slideIndex: number;
+}
+
+// ============================================
+// WRITE RESULT
+// ============================================
+
+export interface WriteResult {
+  outputPath: string;
+  validationErrors: SlideValidationResult[];
 }
 
 // ============================================
@@ -107,16 +117,33 @@ export class Presentation {
   /**
    * Write the presentation to a file.
    * All slides are processed here with browser-based layout.
+   *
+   * By default, throws LayoutValidationError if any slides have validation errors.
+   * Pass `force: true` to write the PPTX despite errors (for visual debugging).
    */
-  async writeFile(fileName: string, options: { includeNotes?: boolean } = {}): Promise<void> {
+  async writeFile(fileName: string, options: { includeNotes?: boolean; force?: boolean } = {}): Promise<WriteResult> {
     const resolvedPath = path.resolve(fileName);
     log.pptx._('writing to: %s', resolvedPath);
 
+    let validationErrors: SlideValidationResult[] = [];
     if (this.deferredSlides.length > 0) {
-      await this.processDeferredSlides();
+      validationErrors = await this.processDeferredSlides();
     }
 
-    return this.renderer.writeFile(resolvedPath, options);
+    // Gate: fail by default if there are validation errors
+    if (validationErrors.length > 0 && !options.force) {
+      throw new LayoutValidationError(validationErrors, this.slideCount);
+    }
+
+    // Write the file (either clean, or force=true with errors)
+    await this.renderer.writeFile(resolvedPath, options);
+
+    if (validationErrors.length > 0) {
+      // force=true path: warn but don't throw
+      console.warn(new LayoutValidationError(validationErrors, this.slideCount).message);
+    }
+
+    return { outputPath: resolvedPath, validationErrors };
   }
 
   /**
@@ -124,7 +151,7 @@ export class Presentation {
    * The browser computes all positions via CSS flexbox.
    * @internal
    */
-  private async processDeferredSlides(): Promise<void> {
+  private async processDeferredSlides(): Promise<SlideValidationResult[]> {
     const pipeline = new LayoutPipeline();
 
     try {
@@ -200,21 +227,16 @@ export class Presentation {
 
       // Phase 5: Process each slide with browser-computed positions
       log.pptx._('PIPELINE: Processing slides with measurements...');
+      const validationErrors: SlideValidationResult[] = [];
+
       for (const { deferred, expanded, bounds } of expandedSlides) {
         const { slide, slideIndex } = deferred;
         const { master } = slide;
 
+        // Build positioned tree — computation crashes are still fatal
         let positioned: PositionedNode;
         try {
-          // Build positioned tree from browser measurements
           positioned = pipeline.computeLayout(expanded, bounds);
-
-          // Validate that positioned content is within content bounds
-          const validator = new LayoutValidator({
-            width: bounds.x + bounds.w,   // Absolute right edge
-            height: bounds.y + bounds.h,  // Absolute bottom edge (excludes footer)
-          });
-          validator.validateOrThrow(positioned, slideIndex, slide.name);
         } catch (error) {
           if (error instanceof Error && !error.message.startsWith('Slide ')) {
             error.message = `Slide ${slideIndex + 1}: ${error.message}`;
@@ -222,7 +244,17 @@ export class Presentation {
           throw error;
         }
 
-        // Render to pptx
+        // Validate (non-throwing) and collect errors
+        const validator = new LayoutValidator({
+          width: bounds.x + bounds.w,   // Absolute right edge
+          height: bounds.y + bounds.h,  // Absolute bottom edge (excludes footer)
+        });
+        const result = validator.validate(positioned);
+        if (result.overflows.length > 0 || result.overlaps.length > 0 || result.boundsEscapes.length > 0) {
+          validationErrors.push({ slideIndex, slideName: slide.name, result });
+        }
+
+        // Always render to pptx (pptxgenjs needs sequential slides)
         this.renderer.renderSlide(positioned, {
           masterName: master?.name,
           masterContent: master ? this.masters.get(master.name)!.positioned : undefined,
@@ -235,6 +267,8 @@ export class Presentation {
 
       // Clear deferred slides
       this.deferredSlides = [];
+
+      return validationErrors;
 
     } finally {
       // Clean up

@@ -4,11 +4,13 @@
 import fs from 'fs';
 import path from 'path';
 import { compileDocument } from '../markdown/documentCompiler.js';
+import { LayoutValidationError } from '../layout/validator.js';
 import { parseSlideDocument } from '../markdown/slideParser.js';
 import { loadTheme } from './themeLoader.js';
 
 export interface BuildOptions {
   output?: string;
+  force?: boolean;
 }
 
 export async function build(inputPath: string, options: BuildOptions): Promise<void> {
@@ -42,8 +44,16 @@ export async function build(inputPath: string, options: BuildOptions): Promise<v
   const outputPath = options.output
     ?? path.join(path.dirname(resolved), path.basename(resolved, path.extname(resolved)) + '.pptx');
 
-  await pres.writeFile(outputPath);
-
-  console.log(`Written: ${outputPath}`);
+  try {
+    await pres.writeFile(outputPath, { force: options.force });
+    console.log(`Written: ${outputPath}`);
+  } catch (error) {
+    if (error instanceof LayoutValidationError) {
+      console.error(error.message);
+      process.exitCode = 1;
+    } else {
+      throw error;
+    }
+  }
 }
 
