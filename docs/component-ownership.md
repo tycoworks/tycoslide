@@ -4,7 +4,7 @@
 
 ## Summary
 
-Move all DSL component functions from `packages/core/src/dsl/` to `packages/theme-default/`. Core becomes the engine (node types, registries, markdown pipeline, layout engine, renderer). The theme owns the entire component vocabulary.
+Move all DSL component functions from `packages/core/src/components/` to `packages/theme-default/`. Core becomes the engine (node types, registries, markdown pipeline, layout engine, renderer). The theme owns the entire component vocabulary.
 
 **Prerequisite:** Inline the Document component's compilation logic into the slot compiler to eliminate circular coupling before moving any files.
 
@@ -28,7 +28,7 @@ All DSL component functions — including primitives like `text()`, `image()`, `
 
 1. **No architectural distinction between DSL functions.** Every DSL function follows an identical pattern: register with `componentRegistry.define()`, produce a `ComponentNode`, expand to node types at build time. `row()` expands to `NODE_TYPE.CONTAINER` the same way `card()` expands to containers + shapes + text. The renderer doesn't know about any of them.
 
-2. **Core infrastructure has zero imports from `dsl/`.** The slot compiler, document compiler, and renderer work entirely through registry dispatch. The only reference to DSL files is the barrel re-export in `index.ts`. The engine is already decoupled.
+2. **Core infrastructure has zero imports from `components/`.** The slot compiler, document compiler, and renderer work entirely through registry dispatch. The only reference to DSL files is the barrel re-export in `index.ts`. The engine is already decoupled.
 
 3. **The extensibility story has a gap.** Built-in components use internal capabilities (`markdownProcessor`, `dispatchDirective`) that theme authors cannot access. Moving components out forces us to close this gap with a proper Component Author API. Dogfooding validates the API.
 
@@ -108,9 +108,9 @@ Content components (`document.ts`, `table.ts`) use internal functions that are n
 
 - `markdownProcessor` from `src/utils/parser.ts`
 - `extractDirectiveBody` from `src/utils/parser.ts`
-- `dispatchDirective` from `src/markdown/slotCompiler.ts`
-- `SYNTAX` from `src/core/mdast.ts`
-- `extractSource`, `extractInlineText` from `src/core/mdast.ts`
+- `dispatchDirective` from `src/core/markdown/slotCompiler.ts`
+- `SYNTAX` from `src/core/model/syntax.ts`
+- `extractSource`, `extractInlineText` from `src/core/model/syntax.ts`
 
 Exporting these individually creates a fragile, hard-to-discover API surface.
 
@@ -119,7 +119,7 @@ Exporting these individually creates a fragile, hard-to-discover API surface.
 Bundle all markdown processing utilities into a single namespace object, following the `schema` pattern already in the codebase:
 
 ```typescript
-// packages/core/src/markdown/toolkit.ts
+// packages/core/src/core/markdown/toolkit.ts
 export const markdown = {
   parse(content: string): Root { ... },
   extractSource(node, source): string { ... },
@@ -239,19 +239,19 @@ Token interfaces (`CardTokens`, `QuoteTokens`, etc.) and token name consts (`CAR
 
 ### Phase 1: Create Component Author API
 
-1. Create `packages/core/src/markdown/toolkit.ts` with the `markdown` namespace
+1. Create `packages/core/src/core/markdown/toolkit.ts` with the `markdown` namespace
 2. Export `markdown` from `packages/core/src/index.ts`
 3. Re-export key mdast types (`ContainerDirective`, `Root`, etc.)
 4. Build + test
 
 ### Phase 2: Move ALL DSL Files to Theme-Default
 
-1. Move files from `packages/core/src/dsl/` to `packages/theme-default/src/dsl/`
-2. Rewrite imports: relative `../core/registry.js` → package `tycoslide`
+1. Move files from `packages/core/src/components/` to `packages/theme-default/src/components/`
+2. Rewrite imports: relative `../core/rendering/registry.js` → package `tycoslide`
 3. Create `packages/theme-default/src/components.ts` barrel
 4. Export `components` from `packages/theme-default/src/index.ts`
 5. Update `loadTheme()` to import `mod.components`
-6. Remove `dsl/` barrel from core's `index.ts`
+6. Remove `components/` barrel from core's `index.ts`
 7. Build + test
 
 ### Phase 3: Move Token Types
@@ -270,7 +270,7 @@ Token interfaces (`CardTokens`, `QuoteTokens`, etc.) and token name consts (`CAR
 
 ### Phase 5: Clean Up
 
-1. Remove empty `dsl/` directory from core
+1. Remove empty `components/` directory from core
 2. Update core's `package.json` — move `@mermaid-js/mermaid-cli` to theme-default
 3. Update documentation and examples
 4. Verify TypeScript DSL imports work from theme-default
@@ -279,7 +279,7 @@ Token interfaces (`CardTokens`, `QuoteTokens`, etc.) and token name consts (`CAR
 
 ## File Movement Summary
 
-### Files Moving: `packages/core/src/dsl/` → `packages/theme-default/src/dsl/`
+### Files Moving: `packages/core/src/components/` → `packages/theme-default/src/components/`
 
 | File | Components | Notes |
 |------|-----------|-------|
@@ -296,20 +296,20 @@ Token interfaces (`CardTokens`, `QuoteTokens`, etc.) and token name consts (`CAR
 
 | File | Purpose |
 |------|---------|
-| `core/nodes.ts` | NODE_TYPE enum, all node interfaces |
-| `core/types.ts` | Theme, enums, constants, token interfaces |
-| `core/registry.ts` | ComponentRegistry, LayoutRegistry, expansion engine |
-| `core/pptxRenderer.ts` | PPTX generation |
-| `core/pptxConfigBuilder.ts` | pptxgenjs config |
-| `core/bounds.ts` | Geometry |
-| `markdown/slotCompiler.ts` | Slot compilation + `compileBareMarkdown()` |
-| `markdown/documentCompiler.ts` | Full document pipeline |
-| `markdown/slideParser.ts` | YAML frontmatter + slide parsing |
-| `markdown/toolkit.ts` | `markdown` namespace (NEW) |
-| `layout/*` | Measurement, positioning, validation |
-| `schema.ts` | Schema helpers for component authors |
-| `presentation.ts` | Presentation class |
-| `utils/*` | Assets, text, logging, parser |
+| `core/model/nodes.ts` | NODE_TYPE enum, all node interfaces |
+| `core/model/types.ts` | Theme, enums, constants, token interfaces |
+| `core/rendering/registry.ts` | ComponentRegistry, LayoutRegistry, expansion engine |
+| `core/rendering/pptxRenderer.ts` | PPTX generation |
+| `core/rendering/pptxConfigBuilder.ts` | pptxgenjs config |
+| `core/model/bounds.ts` | Geometry |
+| `core/markdown/slotCompiler.ts` | Slot compilation + `compileBareMarkdown()` |
+| `core/markdown/documentCompiler.ts` | Full document pipeline |
+| `core/markdown/slideParser.ts` | YAML frontmatter + slide parsing |
+| `core/markdown/toolkit.ts` | `markdown` namespace (NEW) |
+| `core/layout/*` | Measurement, positioning, validation |
+| `core/model/schema.ts` | Schema helpers for component authors |
+| `core/rendering/presentation.ts` | Presentation class |
+| `utils/*` | Assets, font, logging, parser |
 | `cli/*` | Build command, theme loader |
 
 ---
@@ -345,7 +345,7 @@ The boundary is clean: **core defines what CAN be drawn; themes define what IS d
 |------|-----------|
 | TypeScript DSL users must change import paths | Theme-default re-exports everything. Migration is find-and-replace. |
 | Core test suite needs theme components loaded | Import theme-default in test setup. Or split integration tests to theme-default. |
-| `compileBareMarkdown` in slotCompiler needs `prose()`, `table()`, `column()` | These are called via `component()` factory + registry dispatch, not direct imports. The registry resolves them at expand time. |
+| `compileBareMarkdown` in slotCompiler needs `prose()`, `table()`, `column()` | The slot compiler calls these via `component()` factory + registry dispatch. Note: `document.ts` does directly import `prose()`, `table()`, and `column()` from sibling files, but since all component files move together, these relative imports remain valid. |
 | `@mermaid-js/mermaid-cli` is a heavy dependency | Moving it to theme-default is a win — core gets lighter. |
 | `:::document` directive removed | Rarely used. Bare markdown does the same thing. |
 
@@ -355,4 +355,4 @@ The boundary is clean: **core defines what CAN be drawn; themes define what IS d
 
 - **Slidev architecture:** Core has zero content components. All content components live in themes. [sli.dev/builtin/components](https://sli.dev/builtin/components)
 - **Neversink theme:** 13 theme-owned components (admonitions, speech bubbles, sticky notes, etc.). [gureckis.github.io/slidev-theme-neversink](https://gureckis.github.io/slidev-theme-neversink/components/admonitions.html)
-- **Declaration merging:** Already documented in `types.ts:595-603` for third-party component token extension.
+- **Declaration merging:** Already documented in `core/model/types.ts:609-617` for third-party component token extension.
