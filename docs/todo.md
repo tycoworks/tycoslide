@@ -5,20 +5,13 @@
 
 ### Core
 - Reorg & comments / code docs
-- Escape hatch
 - Portrait mode
 
 ### Core
-
 - Default theme:
--- Font
--- Unused components
--- Custom components
+-- Colors
+-- Showcase
 - Masters?
-- Design principles
--- Direction is opposite to container?
--- Content rules
--- Image cover
 
 ### Cleanup
 - Right align bullet points
@@ -34,3 +27,8 @@
 - Theme building in CLI (inc. JSON design tokens)
 - Dark mode
 - Different size slides
+- Escape hatch
+- Design principles
+-- Direction is opposite to container?
+-- Content rules
+-- Image cover
