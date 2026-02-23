@@ -1,14 +1,18 @@
 // tycoslide-components — Standard component definitions
 // Barrel export — each component self-registers via import side effects
 
-// Primitives (image, line, shape, slideNumber)
+// Image (with asset resolution)
 export {
   image,
+  imageComponent,
+  type ImageProps,
+} from './image.js';
+
+// Primitives (line, shape, slideNumber)
+export {
   line,
   shape,
   slideNumber,
-  imageComponent,
-  type ImageProps,
   type LineProps,
   type ShapeProps,
   type SlideNumberProps,

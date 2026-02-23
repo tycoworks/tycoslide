@@ -6,7 +6,8 @@ import {
   type SlideNode, SHAPE, SIZE, CARD_TOKEN, type CardTokens, schema, Component,
 } from 'tycoslide';
 import { stack, column } from './containers.js';
-import { shape, image, imageComponent } from './primitives.js';
+import { shape } from './primitives.js';
+import { image, imageComponent } from './image.js';
 import { text, prose, textComponent, proseComponent } from './text.js';
 
 // ============================================

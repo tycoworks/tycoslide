@@ -1,7 +1,15 @@
-// Asset Resolver
-// Resolves `asset.dot.path` references against a nested assets object.
-// Used by the image component's expand function to resolve asset references
-// at expansion time.
+// Image component with asset resolution
+
+import {
+  componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape, type ExpansionContext,
+  NODE_TYPE, type ImageNode,
+  Component,
+  schema,
+} from 'tycoslide';
+
+// ============================================
+// ASSET RESOLUTION
+// ============================================
 
 export const ASSET_PREFIX = 'asset.';
 
@@ -61,4 +69,34 @@ export function resolveAssetPath(
   throw new Error(
     `Slide ${slideIndex + 1}: asset reference '${ref}' resolved to ${typeof current}, expected a string`,
   );
+}
+
+// ============================================
+// IMAGE COMPONENT
+// ============================================
+
+const imageOptionsSchema = {
+  alt: schema.string().optional(),
+} satisfies SchemaShape;
+
+export type ImageOptions = InferProps<typeof imageOptionsSchema>;
+
+export type ImageProps = { body: string } & ImageOptions;
+
+export const imageComponent = componentRegistry.define({
+  name: Component.Image,
+  body: schema.string(),
+  params: imageOptionsSchema,
+
+  expand: (props: { body: string } & ImageOptions, context: ExpansionContext): ImageNode => {
+    let src = props.body;
+    if (src.startsWith(ASSET_PREFIX)) {
+      src = resolveAssetPath(src, context.assets, context.slideIndex ?? 0);
+    }
+    return { type: NODE_TYPE.IMAGE, src, alt: props.alt };
+  },
+});
+
+export function image(src: string, options?: ImageOptions): ComponentNode {
+  return component(Component.Image, { body: src, ...options });
 }

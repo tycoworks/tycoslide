@@ -8,8 +8,6 @@ import { validateLayout } from '../src/core/markdown/documentCompiler.js';
 import { type LayoutDefinition } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { schema } from '../src/core/model/schema.js';
-import '../src/components/primitives.js';
-
 // Create a test layout with a known schema shape
 const testShape = {
   title: schema.string(),

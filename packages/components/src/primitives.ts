@@ -1,44 +1,14 @@
-// Primitive components: image, line, shape, slideNumber
+// Primitive components: line, shape, slideNumber
 
 import {
   componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape, type ExpansionContext,
-  NODE_TYPE, type ImageNode, type LineNode, type ShapeNode, type SlideNumberNode,
-  Component, ARROW_TYPE_VALUES, DASH_TYPE_VALUES, SHAPE_VALUES,
+  NODE_TYPE, type LineNode, type ShapeNode, type SlideNumberNode,
+  Component, ARROW_TYPE_VALUES, SHAPE_VALUES,
   type ShapeName, type ArrowType, type DashType, type TextStyleName, type HorizontalAlignment,
   LINE_TOKEN, SLIDE_NUMBER_TOKEN, SHAPE_TOKEN,
   type LineTokens, type SlideNumberTokens, type ShapeTokens,
-  schema, resolveAssetPath, ASSET_PREFIX,
+  schema,
 } from 'tycoslide';
-
-// ============================================
-// IMAGE
-// ============================================
-
-const imageOptionsSchema = {
-  alt: schema.string().optional(),
-} satisfies SchemaShape;
-
-export type ImageOptions = InferProps<typeof imageOptionsSchema>;
-
-export type ImageProps = { body: string } & ImageOptions;
-
-export const imageComponent = componentRegistry.define({
-  name: Component.Image,
-  body: schema.string(),
-  params: imageOptionsSchema,
-
-  expand: (props: { body: string } & ImageOptions, context: ExpansionContext): ImageNode => {
-    let src = props.body;
-    if (src.startsWith(ASSET_PREFIX)) {
-      src = resolveAssetPath(src, context.assets, context.slideIndex ?? 0);
-    }
-    return { type: NODE_TYPE.IMAGE, src, alt: props.alt };
-  },
-});
-
-export function image(src: string, options?: ImageOptions): ComponentNode {
-  return component(Component.Image, { body: src, ...options });
-}
 
 // ============================================
 // LINE

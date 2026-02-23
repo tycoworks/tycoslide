@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { z } from 'zod';
 import { schema } from 'tycoslide';
 import { proseComponent, labelComponent } from '../src/text.js';
-import { imageComponent } from '../src/primitives.js';
+import { imageComponent } from '../src/image.js';
 import { mermaidComponent } from '../src/mermaid.js';
 import { cardComponent } from '../src/card.js';
 import { quoteComponent } from '../src/quote.js';

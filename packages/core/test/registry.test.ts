@@ -5,10 +5,8 @@ import { NODE_TYPE } from '../src/core/model/nodes.js';
 import type { Slide } from '../src/core/model/types.js';
 import { mockTheme } from './mocks.js';
 
-// Import DSL modules to trigger component registration
-import '../src/components/text.js';
-import '../src/components/card.js';
-import '../src/components/containers.js';
+// Import test stubs to trigger component registration
+import './test-components.js';
 import { Component, HALIGN, VALIGN } from '../src/core/model/types.js';
 
 // ============================================

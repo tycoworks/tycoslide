@@ -10,14 +10,8 @@ import assert from 'node:assert';
 import { compileSlot } from '../src/core/markdown/slotCompiler.js';
 import { Component, HALIGN, VALIGN } from '../src/core/model/types.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
-// Side-effect imports: trigger component registration
-import '../src/components/text.js';
-import '../src/components/primitives.js';
-import '../src/components/table.js';
-import '../src/components/mermaid.js';
-import '../src/components/card.js';
-import '../src/components/quote.js';
-import '../src/components/containers.js';
+// Side-effect import: trigger component registration
+import './test-components.js';
 
 /** Helper: get props as any to avoid unknown type errors in tests */
 function props(nodes: any[], index: number): any {

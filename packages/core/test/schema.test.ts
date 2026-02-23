@@ -8,8 +8,7 @@ import { layoutRegistry } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { Component } from '../src/core/model/types.js';
 import { compileSlot } from '../src/core/markdown/slotCompiler.js';
-import '../src/components/text.js';
-import '../src/components/primitives.js';
+import './test-components.js';
 
 describe('schema', () => {
   describe('scalar types', () => {

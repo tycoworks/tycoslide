@@ -36,6 +36,3 @@ export type { ContainerDirective } from './core/model/syntax.js';
 
 // Document compiler (markdown file → Presentation)
 export { compileDocument, validateLayout, type CompileOptions } from './core/markdown/documentCompiler.js';
-
-// Asset resolution
-export { resolveAssetPath, ASSET_PREFIX } from './utils/assets.js';

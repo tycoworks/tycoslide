@@ -7,7 +7,8 @@ import {
   type SlideNode, SHAPE, SIZE, QUOTE_TOKEN, type QuoteTokens, schema, Component,
 } from 'tycoslide';
 import { stack, column, row } from './containers.js';
-import { shape, image as imageNode, imageComponent } from './primitives.js';
+import { shape } from './primitives.js';
+import { image as imageNode, imageComponent } from './image.js';
 import { prose, label, proseComponent, labelComponent } from './text.js';
 
 // ============================================
