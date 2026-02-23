@@ -17,7 +17,8 @@ program
   .argument('<input>', 'path to markdown file')
   .option('-o, --output <path>', 'output PPTX path (default: input basename + .pptx)')
   .option('-f, --force', 'write PPTX despite layout validation errors')
-  .action(async (input: string, opts: { output?: string; force?: boolean }) => {
+  .option('-d, --debug <dir>', 'write debug HTML files and enable verbose logging')
+  .action(async (input: string, opts: { output?: string; force?: boolean; debug?: string }) => {
     await build(input, opts);
   });
 

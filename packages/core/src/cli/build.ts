@@ -3,6 +3,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import createDebug from 'debug';
 import { compileDocument } from '../markdown/documentCompiler.js';
 import { LayoutValidationError } from '../layout/validator.js';
 import { parseSlideDocument } from '../markdown/slideParser.js';
@@ -11,9 +12,15 @@ import { loadTheme } from './themeLoader.js';
 export interface BuildOptions {
   output?: string;
   force?: boolean;
+  debug?: string;
 }
 
 export async function build(inputPath: string, options: BuildOptions): Promise<void> {
+  // Enable verbose logging when --debug is set
+  if (options.debug) {
+    createDebug.enable('tycoslide:*');
+  }
+
   const resolved = path.resolve(inputPath);
 
   if (!fs.existsSync(resolved)) {
@@ -44,8 +51,14 @@ export async function build(inputPath: string, options: BuildOptions): Promise<v
   const outputPath = options.output
     ?? path.join(path.dirname(resolved), path.basename(resolved, path.extname(resolved)) + '.pptx');
 
+  // Resolve debug directory
+  const debugDir = options.debug ? path.resolve(options.debug) : undefined;
+  if (debugDir) {
+    fs.mkdirSync(debugDir, { recursive: true });
+  }
+
   try {
-    await pres.writeFile(outputPath, { force: options.force });
+    await pres.writeFile(outputPath, { force: options.force, debugDir });
     console.log(`Written: ${outputPath}`);
   } catch (error) {
     if (error instanceof LayoutValidationError) {

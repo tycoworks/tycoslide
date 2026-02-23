@@ -4,7 +4,6 @@
 // All slides are stored during add() and processed during writeFile().
 // This enables batching all text measurements in a single browser call.
 
-import fs from 'fs';
 import path from 'path';
 import type { Theme } from './core/types.js';
 import type { ElementNode, PositionedNode, ComponentNode } from './core/nodes.js';
@@ -122,15 +121,13 @@ export class Presentation {
    * By default, throws LayoutValidationError if any slides have validation errors.
    * Pass `force: true` to write the PPTX despite errors (for visual debugging).
    */
-  async writeFile(fileName: string, options: { includeNotes?: boolean; force?: boolean } = {}): Promise<WriteResult> {
+  async writeFile(fileName: string, options: { includeNotes?: boolean; force?: boolean; debugDir?: string } = {}): Promise<WriteResult> {
     const resolvedPath = path.resolve(fileName);
-    const debugDir = resolvedPath.replace(/\.pptx$/i, '-debug');
-    fs.mkdirSync(debugDir, { recursive: true });
     log.pptx._('writing to: %s', resolvedPath);
 
     let validationErrors: SlideValidationResult[] = [];
     if (this.deferredSlides.length > 0) {
-      validationErrors = await this.processDeferredSlides(debugDir);
+      validationErrors = await this.processDeferredSlides(options.debugDir);
     }
 
     // Gate: fail by default if there are validation errors
@@ -139,7 +136,7 @@ export class Presentation {
     }
 
     // Write the file (either clean, or force=true with errors)
-    await this.renderer.writeFile(resolvedPath, options);
+    await this.renderer.writeFile(resolvedPath, { includeNotes: options.includeNotes });
 
     if (validationErrors.length > 0) {
       // force=true path: warn but don't throw

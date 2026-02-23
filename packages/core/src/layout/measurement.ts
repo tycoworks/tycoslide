@@ -105,7 +105,7 @@ export class LayoutMeasurer {
       await this.page!.screenshot({ path: screenshotPath, fullPage: true });
       log.layout.measure('saved debug files to %s', debugDir);
     }
-    if (process.env.DEBUG_HTML) {
+    if (log.layout.measure.enabled) {
       await this.logNodeDimensions();
     }
 

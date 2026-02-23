@@ -86,7 +86,7 @@ export class LayoutPipeline {
       throw new Error('No measurements available. Call executeMeasurements() first.');
     }
     const positioned = this.buildPositionedTree(tree, bounds);
-    if (process.env.DEBUG_HTML) {
+    if (log.layout._.enabled) {
       this.debugDumpTree(positioned);
     }
     return positioned;
