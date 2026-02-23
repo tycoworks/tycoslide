@@ -32,6 +32,10 @@ export { parseSlideDocument, FrontmatterParseError, type ParsedDocument, type Ra
 // Schema helpers (domain-specific wrappers for layout Zod schemas)
 export { schema, type ScalarParam } from './core/model/schema.js';
 
+// Markdown toolkit (for component authors that parse markdown internally)
+export { markdown } from './core/markdown/markdown.js';
+export type { ContainerDirective } from './core/model/syntax.js';
+
 // Document compiler (markdown file → Presentation)
 export { compileDocument, validateLayout, type CompileOptions } from './core/markdown/documentCompiler.js';
 

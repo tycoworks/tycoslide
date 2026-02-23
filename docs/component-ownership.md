@@ -113,7 +113,7 @@ Exporting these individually creates a fragile, hard-to-discover API surface.
 Bundle all markdown processing utilities into a single namespace object, following the `schema` pattern already in the codebase:
 
 ```typescript
-// packages/core/src/core/markdown/toolkit.ts
+// packages/core/src/core/markdown/markdown.ts
 export const markdown = {
   parse(content: string): Root { ... },
   extractSource(node, source): string { ... },
@@ -235,7 +235,7 @@ Token interfaces (`CardTokens`, `QuoteTokens`, etc.) and token name consts (`CAR
 
 ### Phase 1: Create Component Author API
 
-1. Create `packages/core/src/core/markdown/toolkit.ts` with the `markdown` namespace
+1. Create `packages/core/src/core/markdown/markdown.ts` with the `markdown` namespace
 2. Include `compileBareMarkdown` in the toolkit — completes the spectrum from "raw text" (`extractSource`) to "fully compiled nodes" (`compileBareMarkdown`). Prevents future duplication for components that accept rich markdown bodies.
 3. Export `markdown` from `packages/core/src/index.ts`
 4. Re-export key mdast types (`ContainerDirective`, `Root`, etc.)
@@ -302,7 +302,7 @@ Token interfaces (`CardTokens`, `QuoteTokens`, etc.) and token name consts (`CAR
 | `core/markdown/slotCompiler.ts` | Slot compilation + `compileBareMarkdown()` |
 | `core/markdown/documentCompiler.ts` | Full document pipeline |
 | `core/markdown/slideParser.ts` | YAML frontmatter + slide parsing |
-| `core/markdown/toolkit.ts` | `markdown` namespace (NEW) |
+| `core/markdown/markdown.ts` | `markdown` namespace (NEW) |
 | `core/layout/*` | Measurement, positioning, validation |
 | `core/model/schema.ts` | Schema helpers for component authors |
 | `core/rendering/presentation.ts` | Presentation class |
