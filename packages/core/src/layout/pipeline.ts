@@ -59,7 +59,7 @@ export class LayoutPipeline {
    * Execute all collected measurements using the browser.
    * Stores results internally for use by computeLayout.
    */
-  async executeMeasurements(theme: Theme): Promise<void> {
+  async executeMeasurements(theme: Theme, debugDir?: string): Promise<void> {
     if (this.slides.length === 0) {
       this.measurements = new Map();
       return;
@@ -71,7 +71,7 @@ export class LayoutPipeline {
     }
 
     // Measure ALL slides in a single browser round-trip
-    this.measurements = await this.measurer.measureLayout(this.slides, theme);
+    this.measurements = await this.measurer.measureLayout(this.slides, theme, debugDir);
   }
 
   /**

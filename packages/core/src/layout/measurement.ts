@@ -3,7 +3,6 @@
 // The browser is the single source of truth for all layout positions.
 
 import fs from 'fs';
-import os from 'os';
 import path from 'path';
 import { chromium, type Browser, type Page } from 'playwright';
 import type { Theme } from '../core/types.js';
@@ -62,7 +61,8 @@ export class LayoutMeasurer {
    */
   async measureLayout(
     slides: Array<{ tree: ElementNode; bounds: Bounds; label: string }>,
-    theme: Theme
+    theme: Theme,
+    debugDir?: string,
   ): Promise<Map<ElementNode, Bounds>> {
     if (!this.page) {
       throw new Error('Browser not launched. Call launch() first.');
@@ -77,10 +77,13 @@ export class LayoutMeasurer {
 
     // Generate single HTML page containing all slides
     const labels = slides.map(s => s.label);
-    const { html, slideNodeIds, perSlideHtml } = generateLayoutHTML(slides, theme, this.fontNormalRatios, labels);
+    const { html, slideNodeIds, perSlideHtml } = generateLayoutHTML(slides, theme, labels, this.fontNormalRatios);
 
-    if (process.env.DEBUG_HTML) {
-      this.saveDebugHtml(html, perSlideHtml, labels);
+    if (debugDir) {
+      for (let i = 0; i < perSlideHtml.length; i++) {
+        const label = labels[i] ?? `unknown-${i}`;
+        fs.writeFileSync(path.join(debugDir, `${label}.html`), perSlideHtml[i]);
+      }
     }
 
     // One setContent, one font preload
@@ -97,9 +100,12 @@ export class LayoutMeasurer {
       throw new Error(`Font verification failed — these fonts did not load: ${failedFonts.join(', ')}`);
     }
 
+    if (debugDir) {
+      const screenshotPath = path.join(debugDir, 'screenshot.png');
+      await this.page!.screenshot({ path: screenshotPath, fullPage: true });
+      log.layout.measure('saved debug files to %s', debugDir);
+    }
     if (process.env.DEBUG_HTML) {
-      await this.saveDebugScreenshot();
-      await this.saveDebugDomSnapshots(labels);
       await this.logNodeDimensions();
     }
 
@@ -155,59 +161,6 @@ export class LayoutMeasurer {
     }
 
     return allResults;
-  }
-
-  /** Debug path prefix from DEBUG_HTML env var.
-   *  DEBUG_HTML=1 → <tmpdir>/debug; DEBUG_HTML=/path/file.html → /path/file */
-  private debugPrefix(): string {
-    const debugHtml = process.env.DEBUG_HTML!;
-    return debugHtml === '1'
-      ? path.join(os.tmpdir(), 'debug')
-      : debugHtml.replace('.html', '');
-  }
-
-  /** Save debug HTML to disk. Writes combined file + per-slide generated HTML. */
-  private saveDebugHtml(html: string, perSlideHtml?: string[], labels?: string[]): void {
-    const prefix = this.debugPrefix();
-    const filePath = `${prefix}.html`;
-    fs.writeFileSync(filePath, html);
-    log.layout.html('saved debug HTML to %s', filePath);
-
-    // Write per-slide files using labels for filenames
-    if (perSlideHtml && perSlideHtml.length > 0) {
-      for (let i = 0; i < perSlideHtml.length; i++) {
-        const label = labels?.[i] ?? `unknown-${i}`;
-        const slideFile = `${prefix}-${label}.html`;
-        fs.writeFileSync(slideFile, perSlideHtml[i]);
-      }
-      log.layout.html('saved %d per-slide debug files: %s-*.html', perSlideHtml.length, prefix);
-    }
-  }
-
-  /** Extract per-slide DOM snapshots from Chromium's live DOM. */
-  private async saveDebugDomSnapshots(labels: string[]): Promise<void> {
-    const prefix = this.debugPrefix();
-
-    const snapshots = await this.page!.evaluate(() => {
-      return Array.from(document.querySelectorAll('.root[data-slide-index]')).map(root => {
-        const slideIndex = (root as HTMLElement).dataset.slideIndex;
-        return { slideIndex: Number(slideIndex), outerHTML: root.outerHTML };
-      });
-    });
-
-    for (const { slideIndex, outerHTML } of snapshots) {
-      const label = labels[slideIndex] ?? `unknown-${slideIndex}`;
-      const domFile = `${prefix}-${label}-dom.html`;
-      fs.writeFileSync(domFile, outerHTML);
-    }
-    log.layout.measure('saved %d per-slide DOM snapshots: %s-*-dom.html', snapshots.length, prefix);
-  }
-
-  /** Save Playwright screenshot alongside the debug HTML. */
-  private async saveDebugScreenshot(): Promise<void> {
-    const screenshotPath = `${this.debugPrefix()}.png`;
-    await this.page!.screenshot({ path: screenshotPath, fullPage: true });
-    log.layout.measure('saved Playwright screenshot to %s', screenshotPath);
   }
 
   /** Log measured dimensions for every node across all slides. */

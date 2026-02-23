@@ -4,6 +4,7 @@
 // All slides are stored during add() and processed during writeFile().
 // This enables batching all text measurements in a single browser call.
 
+import fs from 'fs';
 import path from 'path';
 import type { Theme } from './core/types.js';
 import type { ElementNode, PositionedNode, ComponentNode } from './core/nodes.js';
@@ -123,11 +124,13 @@ export class Presentation {
    */
   async writeFile(fileName: string, options: { includeNotes?: boolean; force?: boolean } = {}): Promise<WriteResult> {
     const resolvedPath = path.resolve(fileName);
+    const debugDir = resolvedPath.replace(/\.pptx$/i, '-debug');
+    fs.mkdirSync(debugDir, { recursive: true });
     log.pptx._('writing to: %s', resolvedPath);
 
     let validationErrors: SlideValidationResult[] = [];
     if (this.deferredSlides.length > 0) {
-      validationErrors = await this.processDeferredSlides();
+      validationErrors = await this.processDeferredSlides(debugDir);
     }
 
     // Gate: fail by default if there are validation errors
@@ -151,7 +154,7 @@ export class Presentation {
    * The browser computes all positions via CSS flexbox.
    * @internal
    */
-  private async processDeferredSlides(): Promise<SlideValidationResult[]> {
+  private async processDeferredSlides(debugDir?: string): Promise<SlideValidationResult[]> {
     const pipeline = new LayoutPipeline();
 
     try {
@@ -215,7 +218,7 @@ export class Presentation {
 
       // Phase 3: Execute browser measurements (computes ALL positions)
       log.pptx._('PIPELINE: Measuring %d slides...', pipeline.measurementCount);
-      await pipeline.executeMeasurements(this._theme);
+      await pipeline.executeMeasurements(this._theme, debugDir);
 
       // Phase 4: Define masters (build positioned trees from browser measurements)
       for (const [name, { master, content, contentBounds, footerBounds }] of pendingMasters) {

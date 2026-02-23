@@ -293,9 +293,9 @@ card: {
     },
     minimal: {
       ...cardBase,
-      backgroundColor: 'none',
+      backgroundColor: colors.background,
       backgroundOpacity: 0,
-      borderColor: 'transparent',
+      borderColor: colors.background,
       borderWidth: 0,
       titleColor: colors.text,
       descriptionColor: colors.textMuted,
@@ -348,7 +348,7 @@ This means:
 | **Compound** | Card, Quote, Table | Yes (9-12 tokens) | Yes | None — all visual from variant tokens |
 | **Leaf** | Text, Line | Yes (3-4 tokens) | Yes | Text: `style` only (structural) |
 | **Leaf** | Shape | Yes (5 tokens) | Yes | None — all visual from variant tokens |
-| **Leaf** | SlideNumber | Yes (3 tokens) | Deferred | None — fully token-controlled |
+| **Leaf** | SlideNumber | Yes (3 tokens) | Yes | None — fully token-controlled |
 | **Primitive** | Image | No | No | None — asset reference |
 | **Synthetic** | Mermaid | No | No | None — derives styling from `theme.colors` directly |
 | **Structural** | Row, Column, Stack, Grid | No | No | None — pure layout |
@@ -437,7 +437,7 @@ All styling props removed. Only the geometric form and variant remain.
 |-------|------|---------|
 | `fill` | `string` | Fill color (hex) |
 | `fillOpacity` | `number` | Fill opacity (0-100) |
-| `borderColor` | `string` | Border color (hex or 'transparent') |
+| `borderColor` | `string` | Border color (hex) |
 | `borderWidth` | `number` | Border width |
 | `cornerRadius` | `number` | Corner radius |
 
@@ -448,16 +448,16 @@ const shapeBase = { fillOpacity: 100, borderWidth: 0, cornerRadius: 0 };
 
 shape: {
   variants: {
-    default:  { ...shapeBase, fill: colors.secondary, borderColor: 'transparent' },
-    primary:  { ...shapeBase, fill: colors.primary, borderColor: 'transparent' },
-    subtle:   { ...shapeBase, fill: colors.secondary, fillOpacity: 15, borderColor: 'transparent' },
-    outlined: { ...shapeBase, fill: 'transparent', borderColor: colors.primary, borderWidth: 0.75 },
-    accent:   { ...shapeBase, fill: accents.blue, borderColor: 'transparent' },
+    default:  { ...shapeBase, fill: colors.secondary, borderColor: colors.background },
+    primary:  { ...shapeBase, fill: colors.primary, borderColor: colors.background },
+    subtle:   { ...shapeBase, fill: colors.secondary, fillOpacity: 15, borderColor: colors.background },
+    outlined: { ...shapeBase, fill: colors.background, fillOpacity: 0, borderColor: colors.primary, borderWidth: 0.75 },
+    accent:   { ...shapeBase, fill: accents.blue, borderColor: colors.background },
   } satisfies Record<string, ShapeTokens>,
 },
 ```
 
-**TypeScript DSL stays unchanged.** `ShapeProps` keeps `fill?: { color: string; opacity?: number }` for layout developers and parent component expand functions (Card, Quote). The DSL and directive schema are structurally separate — the DSL constructs nodes directly, bypassing the directive schema.
+**TypeScript DSL uses flat props.** `ShapeProps` has `fill?, fillOpacity?, borderColor?, borderWidth?, cornerRadius?` matching token names directly. Parent components (Card, Quote) pass flat props: `shape({ fill: backgroundColor, fillOpacity: backgroundOpacity, borderColor, borderWidth, cornerRadius })`. The DSL and directive schema are structurally separate — the DSL constructs nodes directly, bypassing the directive schema.
 
 #### Line — needs variant added (0 gaps, 3 tokens already exist)
 
@@ -484,9 +484,13 @@ line: {
 },
 ```
 
-#### SlideNumber — deferred (3 tokens, no variant)
+#### SlideNumber — fully covered (3 tokens, variant support)
 
-Fully token-controlled. Typically one instance per slide via master definition. Low ROI for variant support. Migrated to Figma model (`variants: { default: { ... } }`) for consistency, but no additional variants defined. Defer variant support unless a real use case emerges.
+Directive schema: `variant`. Zero styling props.
+
+Tokens: `style`, `color`, `hAlign`.
+
+DSL interface: `SlideNumberProps` with `style?, color?, hAlign?, variant?` for parent/layout overrides. Expand uses `props.X ?? tokens.X` precedence.
 
 #### Image — no changes needed
 
@@ -561,7 +565,7 @@ Pure layout structure. All props are structural (gap, alignment, padding, sizing
 ```
 1. Author writes: :::shape{shape="roundRect" variant="outlined"}
 2. Registry: tokens = variants['outlined']
-   → { fill: 'transparent', borderColor: '2563EB', borderWidth: 0.75, fillOpacity: 100, cornerRadius: 0 }
+   → { fill: 'FFFFFF', fillOpacity: 0, borderColor: '2563EB', borderWidth: 0.75, cornerRadius: 0 }
 3. Shape expand receives complete token set, builds ShapeNode.
 ```
 
@@ -614,7 +618,7 @@ File: `packages/core/src/core/registry.ts`
 
 - Replace the destructure + shallow-merge logic with direct variant lookup
 - Default to `'default'` when no variant specified
-- Remove required-tokens validation (completeness is now enforced at compile time by `satisfies Record<string, TokenInterface>`)
+- Keep required-tokens validation as a runtime safety net (compile-time `satisfies` catches theme authoring errors; runtime validation catches dynamic/test scenarios)
 
 ### Step 3: Update Text component
 

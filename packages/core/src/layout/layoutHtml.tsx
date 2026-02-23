@@ -587,7 +587,7 @@ const StyledDiv: FC<{ node: StyledNode }> = ({ node }) => {
 export interface LayoutHtmlResult {
   html: string;
   slideNodeIds: Array<Map<ElementNode, string>>;
-  perSlideHtml?: string[];
+  perSlideHtml: string[];
 }
 
 /** Font descriptor for explicit preloading */
@@ -599,8 +599,8 @@ export interface FontDescriptor {
 export function generateLayoutHTML(
   slides: Array<{ tree: ElementNode; bounds: Bounds }>,
   theme: Theme,
+  labels: string[],
   fontNormalRatios?: FontNormalRatios,
-  labels?: string[],
 ): LayoutHtmlResult {
   const idCtx: IdContext = { counter: 0 };
   const slideNodeIds: Array<Map<ElementNode, string>> = [];
@@ -618,20 +618,13 @@ export function generateLayoutHTML(
     const styled = styleNode(slide.tree, rootCtx, theme, idCtx, nodeIds, fontNormalRatios);
 
     return (
-      <>
-        {process.env.DEBUG_HTML && (
-          <div style={{ background: '#333', color: '#fff', padding: '4px 8px', font: 'bold 14px monospace' }}>
-            {labels?.[i] ?? `slide-${i}`}
-          </div>
-        )}
-        <div class="root" data-slide-index={`${i}`} style={{ width: `${widthPx}px`, height: `${heightPx}px` }}>
-          <StyledDiv node={styled} />
-        </div>
-      </>
+      <div class="root" data-slide-index={`${i}`} style={{ width: `${widthPx}px`, height: `${heightPx}px` }}>
+        <StyledDiv node={styled} />
+      </div>
     );
   });
 
-  // Shared CSS reset — single source of truth for both production and debug HTML
+  // Shared CSS reset — single source of truth for measurement HTML
   const baseCSS = `
     ${fontFaceCSS}
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -639,15 +632,13 @@ export function generateLayoutHTML(
     .root { display: flex; flex-direction: column; }
     .root > * { flex: 1 1 0; min-height: 0; }
   `;
-  const debugCSS = process.env.DEBUG_HTML
-    ? '[data-node-id] { outline: 1px solid rgba(255, 0, 0, 0.3); }' : '';
 
-  // Phase 3: render to HTML string
+  // Phase 3: render to HTML string (clean measurement — no debug visuals)
   const fullJsx = (
     <html>
       <head>
         <meta charset="UTF-8" />
-        <style dangerouslySetInnerHTML={{ __html: baseCSS + debugCSS }} />
+        <style dangerouslySetInnerHTML={{ __html: baseCSS }} />
       </head>
       <body>
         {slideJsx}
@@ -657,22 +648,37 @@ export function generateLayoutHTML(
 
   const html = '<!DOCTYPE html>' + renderToString(fullJsx);
 
-  // Debug: per-slide HTML for standalone inspection
-  let perSlideHtml: string[] | undefined;
-  if (process.env.DEBUG_HTML) {
-    perSlideHtml = slideJsx.map(jsx => {
-      const slideDoc = (
-        <html>
-          <head>
-            <meta charset="UTF-8" />
-            <style dangerouslySetInnerHTML={{ __html: baseCSS + debugCSS }} />
-          </head>
-          <body>{jsx}</body>
-        </html>
-      );
-      return '<!DOCTYPE html>' + renderToString(slideDoc);
-    });
-  }
+  // Always build per-slide debug HTML with nav bar
+  const debugCSS = `
+    [data-node-id] { outline: 1px solid rgba(255, 0, 0, 0.3); }
+    body { overflow: auto; }
+  `;
+  const perSlideHtml = slideJsx.map((jsx, i) => {
+    const label = labels[i];
+    const prevLabel = i > 0 ? labels[i - 1] : null;
+    const nextLabel = i < labels.length - 1 ? labels[i + 1] : null;
+
+    // Build nav bar HTML
+    const navParts: string[] = [];
+    if (prevLabel) navParts.push(`<a href="${prevLabel}.html" style="color:#fff;text-decoration:none">\u2190 prev</a>`);
+    navParts.push(`<strong>${label}</strong>`);
+    if (nextLabel) navParts.push(`<a href="${nextLabel}.html" style="color:#fff;text-decoration:none">next \u2192</a>`);
+    const navBarHtml = `<div style="background:#333;color:#fff;padding:4px 8px;font:14px monospace;display:flex;justify-content:center;align-items:center;gap:12px">${navParts.join('')}</div>`;
+
+    const slideDoc = (
+      <html>
+        <head>
+          <meta charset="UTF-8" />
+          <style dangerouslySetInnerHTML={{ __html: baseCSS + debugCSS }} />
+        </head>
+        <body>
+          <div dangerouslySetInnerHTML={{ __html: navBarHtml }} />
+          {jsx}
+        </body>
+      </html>
+    );
+    return '<!DOCTYPE html>' + renderToString(slideDoc);
+  });
 
   return { html, slideNodeIds, perSlideHtml };
 }

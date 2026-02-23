@@ -125,7 +125,7 @@ const mockTheme: Theme = {
 /** Expand ComponentNode tree to ElementNode tree, then generate layout HTML */
 async function genHTML(node: any, bounds: Bounds, theme: Theme) {
   const expanded = await componentRegistry.expandTree(node, { theme }) as ElementNode;
-  return generateLayoutHTML([{ tree: expanded, bounds }], theme);
+  return generateLayoutHTML([{ tree: expanded, bounds }], theme, ['test-slide']);
 }
 
 describe('HTML Measurement Generation', () => {
