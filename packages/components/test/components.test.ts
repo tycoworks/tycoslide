@@ -143,6 +143,60 @@ describe('image()', () => {
     const node = await expand(image('photo.jpg', { alt: 'A beautiful photo' })) as ImageNode;
     assert.strictEqual(node.alt, 'A beautiful photo');
   });
+
+  // Asset path resolution (tested through image expansion)
+
+  test('resolves asset.dot.path to string value', async () => {
+    const assets = { icons: { rocket: '/path/to/rocket.svg' } };
+    const node = await componentRegistry.expandTree(
+      image('asset.icons.rocket'), { theme, assets },
+    ) as ImageNode;
+    assert.strictEqual(node.src, '/path/to/rocket.svg');
+  });
+
+  test('resolves deeply nested asset path', async () => {
+    const assets = { images: { heroes: { landing: '/hero.png' } } };
+    const node = await componentRegistry.expandTree(
+      image('asset.images.heroes.landing'), { theme, assets },
+    ) as ImageNode;
+    assert.strictEqual(node.src, '/hero.png');
+  });
+
+  test('throws when assets not provided for asset reference', async () => {
+    await assert.rejects(
+      () => componentRegistry.expandTree(image('asset.icons.rocket'), { theme }),
+      /asset reference.*no assets provided/,
+    );
+  });
+
+  test('throws when asset key not found', async () => {
+    const assets = { icons: { star: '/star.svg' } };
+    await assert.rejects(
+      () => componentRegistry.expandTree(image('asset.icons.rocket'), { theme, assets }),
+      /could not be resolved/,
+    );
+  });
+
+  test('throws when asset path resolves to object (with suggestions)', async () => {
+    const assets = { icons: { rocket: '/rocket.svg', star: '/star.svg' } };
+    await assert.rejects(
+      () => componentRegistry.expandTree(image('asset.icons'), { theme, assets }),
+      /resolved to an object.*Did you mean/,
+    );
+  });
+
+  test('throws when traversal hits non-object mid-path', async () => {
+    const assets = { icons: { rocket: '/rocket.svg' } };
+    await assert.rejects(
+      () => componentRegistry.expandTree(image('asset.icons.rocket.size'), { theme, assets }),
+      /is not an object/,
+    );
+  });
+
+  test('passes through non-asset paths unchanged', async () => {
+    const node = await expand(image('https://example.com/photo.jpg')) as ImageNode;
+    assert.strictEqual(node.src, 'https://example.com/photo.jpg');
+  });
 });
 
 // ============================================

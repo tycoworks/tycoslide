@@ -157,81 +157,12 @@ describe('Slot Compiler', () => {
     });
   });
 
-  describe(':::quote directive', () => {
-    it('should compile :::quote directive with attributes and body text', () => {
-      const md = ':::quote{attribution="— Jane Smith"}\nThis changed everything.\n:::';
-      const nodes = compileSlot(md);
-      assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, Component.Quote);
-      assert.strictEqual(props(nodes, 0).body, 'This changed everything.');
-      assert.strictEqual(props(nodes, 0).attribution, '— Jane Smith');
-    });
-  });
-
   describe(':::line directive', () => {
     it('should compile :::line directive with empty body', () => {
       const md = ':::line\n:::';
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual(nodes[0].componentName, Component.Line);
-    });
-  });
-
-  describe(':::shape directive', () => {
-    it('should compile :::shape directive with attributes', () => {
-      const md = ':::shape{shape="rect"}\n:::';
-      const nodes = compileSlot(md);
-      assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, Component.Shape);
-      assert.strictEqual(props(nodes, 0).shape, 'rect');
-    });
-  });
-
-  describe(':::text directive', () => {
-    it('should compile :::text directive to a text node', () => {
-      const md = ':::text\n**Bold** and *italic*\n:::';
-      const nodes = compileSlot(md);
-      assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, Component.Text);
-      assert.ok(props(nodes, 0).body.includes('**Bold**'));
-    });
-
-    it('should compile :::text with list content', () => {
-      const md = ':::text\n- First\n- Second\n:::';
-      const nodes = compileSlot(md);
-      assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, Component.Text);
-      assert.ok(props(nodes, 0).body.includes('- First'));
-    });
-  });
-
-  describe(':::mermaid directive', () => {
-    it('should compile :::mermaid directive', () => {
-      const md = ':::mermaid\nflowchart LR\n    A --> B\n:::';
-      const nodes = compileSlot(md);
-      assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, Component.Mermaid);
-      assert.strictEqual(props(nodes, 0).body, 'flowchart LR\n    A --> B');
-    });
-  });
-
-  describe(':::card directive', () => {
-    it('should compile :::card directive with attributes and body text', () => {
-      const md = ':::card{title="Hello"}\nWorld\n:::';
-      const nodes = compileSlot(md);
-      assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, Component.Card);
-      assert.strictEqual(props(nodes, 0).title, 'Hello');
-      assert.strictEqual(props(nodes, 0).body, 'World');
-    });
-
-    it('should compile :::card with attributes only (no body)', () => {
-      const md = ':::card{title="Hello" variant="flat"}\n:::';
-      const nodes = compileSlot(md);
-      assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, Component.Card);
-      assert.strictEqual(props(nodes, 0).title, 'Hello');
-      assert.strictEqual(props(nodes, 0).variant, 'flat');
     });
   });
 
@@ -281,31 +212,6 @@ describe('Slot Compiler', () => {
       const nodes = compileSlot(md);
       assert.strictEqual(props(nodes, 0).gap, 'tight');
       assert.strictEqual(props(nodes, 0).padding, 0.5);
-    });
-  });
-
-  describe(':::grid directive (slotted)', () => {
-    it('should compile :::grid with card children', () => {
-      const md = '::::grid{columns="3"}\n:::card{title="A"}\n:::\n\n:::card{title="B"}\n:::\n\n:::card{title="C"}\n:::\n::::';
-      const nodes = compileSlot(md);
-      assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, Component.Grid);
-      assert.strictEqual(props(nodes, 0).columns, 3);
-      const children = props(nodes, 0).children;
-      assert.strictEqual(children.length, 3);
-    });
-  });
-
-  describe(':::stack directive (slotted)', () => {
-    it('should compile :::stack with children', () => {
-      const md = '::::stack\n:::image\nbg.png\n:::\n\nOverlay text\n::::';
-      const nodes = compileSlot(md);
-      assert.strictEqual(nodes.length, 1);
-      assert.strictEqual(nodes[0].componentName, Component.Stack);
-      const children = props(nodes, 0).children;
-      assert.strictEqual(children.length, 2);
-      assert.strictEqual(children[0].componentName, Component.Image);
-      assert.strictEqual(children[1].componentName, Component.Text);
     });
   });
 

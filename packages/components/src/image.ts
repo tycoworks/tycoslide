@@ -11,13 +11,13 @@ import {
 // ASSET RESOLUTION
 // ============================================
 
-export const ASSET_PREFIX = 'asset.';
+const ASSET_PREFIX = 'asset.';
 
 /**
  * Resolve an `asset.dot.path` reference to a string value from the assets object.
  * Throws descriptive errors if the path is invalid or the value is not a string.
  */
-export function resolveAssetPath(
+function resolveAssetPath(
   ref: string,
   assets: Record<string, unknown> | undefined,
   slideIndex: number,
