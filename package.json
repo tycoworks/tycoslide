@@ -3,6 +3,6 @@
   "workspaces": ["packages/*"],
   "scripts": {
     "build": "npm run build --workspaces",
-    "test": "npm test --workspace=packages/core"
+    "test": "npm test --workspaces --if-present"
   }
 }

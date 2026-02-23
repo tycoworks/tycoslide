@@ -14,7 +14,8 @@
     "tycoslide": "*",
     "unified": "^11.0.5",
     "remark-parse": "^11.0.0",
-    "remark-directive": "^4.0.0"
+    "remark-directive": "^4.0.0",
+    "@mermaid-js/mermaid-cli": "^11.12.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
