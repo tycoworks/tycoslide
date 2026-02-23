@@ -10,11 +10,8 @@ import {
   type Master,
   Bounds,
   type Theme,
-  row,
-  column,
-  label,
-  slideNumber,
 } from 'tycoslide';
+import { row, column, label, slideNumber } from 'tycoslide-components';
 
 const unit = 0.03125;
 export const FOOTER_HEIGHT = unit * 8; // 0.25"

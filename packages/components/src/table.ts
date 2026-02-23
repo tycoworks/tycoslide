@@ -1,15 +1,13 @@
 // Table Component - Native pptxgenjs table element
 
-import { componentRegistry, component, type ComponentNode, type ExpansionContext } from '../core/rendering/registry.js';
-import { Component, CONTENT } from '../core/model/types.js';
-import { NODE_TYPE, TABLE_TOKEN, type TextNode, type TableCellData, type TableTokens } from '../core/model/nodes.js';
-import type { TextContent } from '../core/model/types.js';
-import { SYNTAX } from '../core/model/syntax.js';
+import {
+  componentRegistry, component, type ComponentNode, type ExpansionContext, type SchemaShape,
+  Component, CONTENT, SYNTAX, NODE_TYPE, TABLE_TOKEN,
+  type TextNode, type TableCellData, type TableTokens, type TextContent,
+  schema, markdown,
+} from 'tycoslide';
 import type { Table as MdastTable } from 'mdast';
 import type { Root } from 'mdast';
-import { markdownProcessor } from '../utils/parser.js';
-import { schema } from '../core/model/schema.js';
-import type { SchemaShape } from '../core/rendering/registry.js';
 
 // ============================================
 // TABLE COMPONENT
@@ -33,7 +31,7 @@ interface TableInternalProps {
  * Preserves inline markdown (bold, accents, etc.) in cell text.
  */
 function parseGfmTable(body: string): string[][] {
-  const tree = markdownProcessor.parse(body) as Root;
+  const tree = markdown.parse(body);
   const tableChild = tree.children.find(c => c.type === SYNTAX.TABLE);
   if (!tableChild) {
     throw new Error(':::table body must contain a GFM table (| col1 | col2 | ...)');

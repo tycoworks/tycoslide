@@ -23,9 +23,6 @@ export {
   type InferProps,
 } from './core/rendering/registry.js';
 
-// DSL (all user-facing functions — every function returns ComponentNode)
-export * from './components/index.js';
-
 // Slide parser (multi-slide markdown file → structured document)
 export { parseSlideDocument, FrontmatterParseError, type ParsedDocument, type RawSlide } from './core/markdown/slideParser.js';
 
@@ -34,10 +31,11 @@ export { schema, type ScalarParam } from './core/model/schema.js';
 
 // Markdown toolkit (for component authors that parse markdown internally)
 export { markdown } from './core/markdown/markdown.js';
+export { SYNTAX } from './core/model/syntax.js';
 export type { ContainerDirective } from './core/model/syntax.js';
 
 // Document compiler (markdown file → Presentation)
 export { compileDocument, validateLayout, type CompileOptions } from './core/markdown/documentCompiler.js';
 
 // Asset resolution
-export { ASSET_PREFIX } from './utils/assets.js';
+export { resolveAssetPath, ASSET_PREFIX } from './utils/assets.js';

@@ -1,23 +1,14 @@
 // Primitive components: image, line, shape, slideNumber
 
-import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape, type ExpansionContext } from '../core/rendering/registry.js';
-import { NODE_TYPE } from '../core/model/nodes.js';
-import type { ImageNode, LineNode, ShapeNode, SlideNumberNode } from '../core/model/nodes.js';
 import {
-  Component,
-  ARROW_TYPE_VALUES,
-  DASH_TYPE_VALUES,
-  SHAPE_VALUES,
-  type ShapeName,
-  type ArrowType,
-  type DashType,
-  type TextStyleName,
-  type HorizontalAlignment,
-} from '../core/model/types.js';
-import { LINE_TOKEN, SLIDE_NUMBER_TOKEN, SHAPE_TOKEN } from '../core/model/types.js';
-import type { LineTokens, SlideNumberTokens, ShapeTokens } from '../core/model/types.js';
-import { schema } from '../core/model/schema.js';
-import { resolveAssetPath, ASSET_PREFIX } from '../utils/assets.js';
+  componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape, type ExpansionContext,
+  NODE_TYPE, type ImageNode, type LineNode, type ShapeNode, type SlideNumberNode,
+  Component, ARROW_TYPE_VALUES, DASH_TYPE_VALUES, SHAPE_VALUES,
+  type ShapeName, type ArrowType, type DashType, type TextStyleName, type HorizontalAlignment,
+  LINE_TOKEN, SLIDE_NUMBER_TOKEN, SHAPE_TOKEN,
+  type LineTokens, type SlideNumberTokens, type ShapeTokens,
+  schema, resolveAssetPath, ASSET_PREFIX,
+} from 'tycoslide';
 
 // ============================================
 // IMAGE

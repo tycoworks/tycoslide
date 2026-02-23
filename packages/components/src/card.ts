@@ -1,21 +1,13 @@
 // Card Component
 // Implements card as a component using primitives: stack, column, shape, text, image
 
-import { componentRegistry, component, type ExpansionContext, type InferProps, type SchemaShape } from '../core/rendering/registry.js';
+import {
+  componentRegistry, component, type ExpansionContext, type InferProps, type SchemaShape,
+  type SlideNode, SHAPE, SIZE, CARD_TOKEN, type CardTokens, schema, Component,
+} from 'tycoslide';
 import { stack, column } from './containers.js';
 import { shape, image, imageComponent } from './primitives.js';
 import { text, prose, textComponent, proseComponent } from './text.js';
-import type { SlideNode } from '../core/model/nodes.js';
-import { SHAPE, SIZE } from '../core/model/types.js';
-import { CARD_TOKEN } from '../core/model/types.js';
-import type { CardTokens } from '../core/model/types.js';
-import { schema } from '../core/model/schema.js';
-
-// ============================================
-// CONSTANTS
-// ============================================
-
-import { Component } from '../core/model/types.js';
 
 // ============================================
 // PARAMS SCHEMA

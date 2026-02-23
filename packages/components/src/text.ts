@@ -10,13 +10,11 @@ import remarkParse from 'remark-parse';
 import remarkDirective from 'remark-directive';
 import type { Root, PhrasingContent, List, Paragraph, ListItem } from 'mdast';
 import type { TextDirective } from 'mdast-util-directive';
-import type { NormalizedRun, ColorScheme, ContentType, TextStyleName, HorizontalAlignment, VerticalAlignment, TextTokens } from '../core/model/types.js';
-import { HALIGN, VALIGN, TEXT_STYLE, CONTENT, TEXT_TOKEN } from '../core/model/types.js';
-import { NODE_TYPE, type ElementNode } from '../core/model/nodes.js';
-import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape } from '../core/rendering/registry.js';
-import { SYNTAX } from '../core/model/syntax.js';
-import { schema } from '../core/model/schema.js';
-import { Component } from '../core/model/types.js';
+import type { NormalizedRun, ColorScheme, ContentType, TextStyleName, HorizontalAlignment, VerticalAlignment, TextTokens } from 'tycoslide';
+import { HALIGN, VALIGN, TEXT_STYLE, CONTENT, TEXT_TOKEN, Component, SYNTAX } from 'tycoslide';
+import { NODE_TYPE, type ElementNode } from 'tycoslide';
+import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape } from 'tycoslide';
+import { schema } from 'tycoslide';
 
 // ============================================
 // PARSERS

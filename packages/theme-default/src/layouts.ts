@@ -8,12 +8,10 @@ import {
   GAP,
   SIZE,
   layoutRegistry,
-  labelComponent,
   type SlideNode,
   type Slide,
-  label,
-  column,
 } from 'tycoslide';
+import { labelComponent, label, column } from 'tycoslide-components';
 import { DEFAULT_MASTER } from './master.js';
 import { theme } from './theme.js';
 

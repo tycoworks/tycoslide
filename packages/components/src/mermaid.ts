@@ -2,17 +2,12 @@
 // Accepts raw mermaid text, sanitizes styling, injects theme classDefs,
 // renders via mermaid-cli to PNG, expands to ImageNode.
 
-import type { Theme } from '../core/model/types.js';
-import { NODE_TYPE, type ImageNode } from '../core/model/nodes.js';
+import type { Theme } from 'tycoslide';
 import {
-  componentRegistry,
-  component,
-  type ComponentNode,
-  type ExpansionContext,
-  type InferProps,
-  type SchemaShape,
-} from '../core/rendering/registry.js';
-import { schema } from '../core/model/schema.js';
+  NODE_TYPE, type ImageNode,
+  componentRegistry, component, type ComponentNode, type ExpansionContext, type InferProps, type SchemaShape,
+  schema, Component,
+} from 'tycoslide';
 
 import { exec as execCb } from 'child_process';
 import { promisify } from 'util';
@@ -25,8 +20,6 @@ import { createRequire } from 'module';
 // ============================================
 // CONSTANTS
 // ============================================
-
-import { Component } from '../core/model/types.js';
 
 /** Timeout for mermaid-cli rendering in milliseconds */
 const MERMAID_RENDER_TIMEOUT_MS = 30000;

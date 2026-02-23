@@ -1,5 +1,5 @@
-// DSL Index
-// All user-facing DSL functions — every function returns ComponentNode
+// tycoslide-components — Standard component definitions
+// Barrel export — each component self-registers via import side effects
 
 // Primitives (image, line, shape, slideNumber)
 export {
@@ -45,12 +45,6 @@ export {
   type TextComponentProps,
 } from './text.js';
 
-// Content kinds (re-export from core for convenience)
-export { CONTENT, type ContentType } from '../core/model/types.js';
-
-// Syntax constants (node type names for markdown AST)
-export { SYNTAX } from '../core/model/syntax.js';
-
 // Card (composition component)
 export {
   card,
@@ -73,4 +67,3 @@ export {
   type MermaidProps,
   type MermaidComponentProps,
 } from './mermaid.js';
-

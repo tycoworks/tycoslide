@@ -2,21 +2,13 @@
 // Card with optional image, quote text, and attribution.
 // Expands to: stack(shape(background), column(image?, quote, attribution))
 
-import { componentRegistry, component, type ExpansionContext, type InferProps, type SchemaShape } from '../core/rendering/registry.js';
+import {
+  componentRegistry, component, type ExpansionContext, type InferProps, type SchemaShape,
+  type SlideNode, SHAPE, SIZE, QUOTE_TOKEN, type QuoteTokens, schema, Component,
+} from 'tycoslide';
 import { stack, column, row } from './containers.js';
 import { shape, image as imageNode, imageComponent } from './primitives.js';
 import { prose, label, proseComponent, labelComponent } from './text.js';
-import type { SlideNode } from '../core/model/nodes.js';
-import { SHAPE, SIZE } from '../core/model/types.js';
-import { QUOTE_TOKEN } from '../core/model/types.js';
-import type { QuoteTokens } from '../core/model/types.js';
-import { schema } from '../core/model/schema.js';
-
-// ============================================
-// CONSTANTS
-// ============================================
-
-import { Component } from '../core/model/types.js';
 
 // ============================================
 // PARAMS SCHEMA
