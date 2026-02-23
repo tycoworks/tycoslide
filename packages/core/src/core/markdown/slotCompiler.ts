@@ -3,23 +3,25 @@
 //
 // A slot is a named content region in a layout (e.g. body, left, right).
 // Slots primarily contain :::directives. Consecutive bare MDAST nodes
-// are auto-wrapped in the default component (Component.Document).
-//
-// The default is set here (not in document.ts) because it is a markdown pipeline
-// policy, not a component concern.
+// are compiled inline via compileBareMarkdown() — paragraphs, headings,
+// lists, and tables become direct component nodes (Text, Table, Column).
 
-import type { Root, RootContent } from 'mdast';
-import { SYNTAX, type ContainerDirective } from '../model/syntax.js';
+import type { Root, RootContent, Heading, Table as MdastTable } from 'mdast';
+import { SYNTAX, extractSource, extractInlineText, type ContainerDirective } from '../model/syntax.js';
 import { markdownProcessor, extractDirectiveBody } from '../../utils/parser.js';
 import { componentRegistry, coerceAttributes, component, type ComponentNode } from '../rendering/registry.js';
-import { Component } from '../model/types.js';
+import { Component, TEXT_STYLE, CONTENT } from '../model/types.js';
 
 // ============================================
-// DEFAULT COMPONENT
+// HEADING STYLE MAP
 // ============================================
 
-/** Default component for bare MDAST in slots. Set here as markdown pipeline policy. */
-componentRegistry.setDefault(Component.Document);
+const HEADING_STYLE: Record<number, string> = {
+  1: TEXT_STYLE.H1,
+  2: TEXT_STYLE.H2,
+  3: TEXT_STYLE.H3,
+  4: TEXT_STYLE.H4,
+};
 
 // ============================================
 // PUBLIC API
@@ -30,7 +32,7 @@ componentRegistry.setDefault(Component.Document);
  *
  * - :::directives → dispatched through the component registry
  * - Thematic breaks (---) → silently skipped
- * - Bare MDAST → auto-wrapped in the default component
+ * - Bare MDAST → compiled inline via compileBareMarkdown()
  */
 export function compileSlot(markdownStr: string): ComponentNode[] {
   const tree = markdownProcessor.parse(markdownStr) as Root;
@@ -47,7 +49,7 @@ export function compileSlot(markdownStr: string): ComponentNode[] {
  *
  * - Container directives → dispatched through dispatchDirective (recursive)
  * - Thematic breaks → silently skipped
- * - Consecutive bare MDAST → grouped and wrapped in the default component
+ * - Consecutive bare MDAST → grouped and compiled inline via compileBareMarkdown()
  */
 function compileChildren(
   children: RootContent[],
@@ -67,7 +69,7 @@ function compileChildren(
     }
     const rawSource = source.slice(startOffset, endOffset).trim();
     if (rawSource) {
-      nodes.push(component(componentRegistry.getDefault(), { body: rawSource }));
+      nodes.push(compileBareMarkdown(rawSource));
     }
     bareStart = null;
     bareEnd = null;
@@ -107,7 +109,7 @@ function compileChildren(
  *   The MDAST tree already has the correctly nested structure from the parser.
  * - Scalar components (card, image, text, etc.): extract body as raw text string.
  *
- * Exported for reuse by document.ts which also dispatches nested directives.
+ * Exported for reuse by compileBareNode which also dispatches nested directives.
  */
 export function dispatchDirective(
   directive: ContainerDirective,
@@ -146,4 +148,85 @@ export function dispatchDirective(
   // Scalar component: extract body as raw text string for the deserializer.
   const body = extractDirectiveBody(directive, source);
   return handler.deserialize!(directive.attributes ?? {}, body);
+}
+
+// ============================================
+// BARE MARKDOWN COMPILATION
+// ============================================
+
+/**
+ * Compile a bare markdown string into ComponentNode(s).
+ * Single blocks return directly; multiple blocks are wrapped in a Column.
+ *
+ * Handles all block-level markdown: paragraphs, headings, lists, tables,
+ * thematic breaks, and nested :::directives.
+ *
+ * Used by flushBareGroup() for inline compilation of bare MDAST,
+ * and exported for the document() DSL function.
+ */
+export function compileBareMarkdown(source: string): ComponentNode {
+  const tree = markdownProcessor.parse(source) as Root;
+  const nodes: ComponentNode[] = [];
+
+  for (const child of tree.children) {
+    const compiled = compileBareNode(child, source);
+    if (compiled) nodes.push(compiled);
+  }
+
+  if (nodes.length === 0) {
+    throw new Error('[tycoslide] document: empty markdown content');
+  }
+  if (nodes.length === 1) return nodes[0];
+  return component(Component.Column, { children: nodes });
+}
+
+/**
+ * Compile a single MDAST block node into a ComponentNode.
+ * Uses component() factory calls only — no imports from component files.
+ */
+function compileBareNode(node: RootContent, source: string): ComponentNode | null {
+  // Container directives → shared dispatch
+  if (node.type === SYNTAX.CONTAINER_DIRECTIVE) {
+    return dispatchDirective(node as unknown as ContainerDirective, source, 'document');
+  }
+
+  // Paragraphs (reject inline images)
+  if (node.type === SYNTAX.PARAGRAPH) {
+    const para = node as { children: { type: string }[] };
+    if (para.children.length === 1 && para.children[0].type === SYNTAX.IMAGE) {
+      throw new Error('Images cannot be embedded inline in text. Use :::image directive.');
+    }
+    return component(Component.Text, { body: extractSource(node, source), content: CONTENT.PROSE });
+  }
+
+  // Lists
+  if (node.type === SYNTAX.LIST) {
+    return component(Component.Text, { body: extractSource(node, source), content: CONTENT.PROSE });
+  }
+
+  // Headings
+  if (node.type === SYNTAX.HEADING) {
+    const heading = node as Heading;
+    const style = HEADING_STYLE[heading.depth] ?? TEXT_STYLE.H3;
+    const raw = extractSource(heading, source);
+    const content = raw.replace(/^#{1,6}\s*/, '');
+    return component(Component.Text, { body: content, content: CONTENT.PROSE, style });
+  }
+
+  // Tables (GFM)
+  if (node.type === SYNTAX.TABLE) {
+    const tableNode = node as unknown as MdastTable;
+    const rows = tableNode.children.map(row =>
+      row.children.map(cell => extractInlineText(cell.children))
+    );
+    return component(Component.Table, { data: rows, tableProps: { headerRows: 1 } });
+  }
+
+  // Thematic breaks → skip
+  if (node.type === SYNTAX.THEMATIC_BREAK) return null;
+
+  // Unknown → error
+  throw new Error(
+    `[tycoslide] document: unsupported markdown block type "${node.type}".`,
+  );
 }

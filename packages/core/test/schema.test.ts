@@ -8,7 +8,7 @@ import { layoutRegistry } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { Component } from '../src/core/model/types.js';
 import { compileSlot } from '../src/core/markdown/slotCompiler.js';
-import '../src/components/document.js';
+import '../src/components/text.js';
 import '../src/components/primitives.js';
 
 describe('schema', () => {
@@ -53,16 +53,16 @@ describe('schema', () => {
 
   describe('compileSlot', () => {
     it('compiles directive to ComponentNode[]', () => {
-      const result = compileSlot(':::document\nHello world\n:::');
+      const result = compileSlot(':::text\nHello world\n:::');
       assert.ok(Array.isArray(result));
       assert.strictEqual(result.length, 1);
-      assert.strictEqual(result[0].componentName, Component.Document);
+      assert.strictEqual(result[0].componentName, Component.Text);
     });
 
     it('compiles multiple directives', () => {
-      const result = compileSlot(':::document\nText\n:::\n\n:::image\npic.png\n:::');
+      const result = compileSlot(':::text\nText\n:::\n\n:::image\npic.png\n:::');
       assert.strictEqual(result.length, 2);
-      assert.strictEqual(result[0].componentName, Component.Document);
+      assert.strictEqual(result[0].componentName, Component.Text);
       assert.strictEqual(result[1].componentName, Component.Image);
     });
 
@@ -71,10 +71,10 @@ describe('schema', () => {
       assert.strictEqual(result.length, 0);
     });
 
-    it('auto-wraps bare MDAST in default component', () => {
+    it('compiles bare MDAST inline to text node', () => {
       const result = compileSlot('Hello world');
       assert.strictEqual(result.length, 1);
-      assert.strictEqual(result[0].componentName, Component.Document);
+      assert.strictEqual(result[0].componentName, Component.Text);
     });
   });
 

@@ -8,7 +8,6 @@ import { validateLayout } from '../src/core/markdown/documentCompiler.js';
 import { type LayoutDefinition } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { schema } from '../src/core/model/schema.js';
-import '../src/components/document.js';
 import '../src/components/primitives.js';
 
 // Create a test layout with a known schema shape
@@ -164,7 +163,7 @@ describe('validateLayout (params and slots)', () => {
   };
 
   it('validates params and slots separately then merges', () => {
-    const result = validateLayout(layoutWithSlots, { title: 'Hello' }, { body: ':::document\nContent\n:::' });
+    const result = validateLayout(layoutWithSlots, { title: 'Hello' }, { body: 'Content' });
     assert.strictEqual(result.title, 'Hello');
     assert.ok(Array.isArray(result.body));
     assert.strictEqual(result.body.length, 1);
@@ -172,7 +171,7 @@ describe('validateLayout (params and slots)', () => {
 
   it('throws on missing required param', () => {
     assert.throws(
-      () => validateLayout(layoutWithSlots, {}, { body: ':::document\nContent\n:::' }),
+      () => validateLayout(layoutWithSlots, {}, { body: 'Content' }),
       (err: unknown) => {
         assert.ok(err instanceof Error);
         assert.ok(err.message.includes('params validation failed'));

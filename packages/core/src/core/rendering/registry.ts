@@ -148,29 +148,8 @@ function buildDeserializer(
  * Use `.define()` to register any component — scalar, slotted, or programmatic.
  */
 class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
-  private _defaultComponentName: ComponentName | null = null;
-
   constructor() {
     super('Component', 'expand');
-  }
-
-  /**
-   * Set the default component for bare MDAST in slots.
-   * Called by the slot compiler (markdown pipeline policy).
-   */
-  setDefault(name: ComponentName): void {
-    this._defaultComponentName = name;
-  }
-
-  /**
-   * Get the default component for bare MDAST in slots.
-   * @throws Error if no default has been set
-   */
-  getDefault(): ComponentName {
-    if (!this._defaultComponentName) {
-      throw new Error('No default component set. Register one with setDefault().');
-    }
-    return this._defaultComponentName;
   }
 
   /**

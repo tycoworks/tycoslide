@@ -74,8 +74,3 @@ export {
   type MermaidComponentProps,
 } from './mermaid.js';
 
-// Document (full markdown parser — headings, tables, directives)
-export {
-  document,
-  documentComponent,
-} from './document.js';

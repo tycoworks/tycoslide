@@ -84,13 +84,7 @@ nodes.push(compileBareMarkdown(rawSource));
 
 **Step 3:** Remove `setDefault()`/`getDefault()` from `ComponentRegistry`. The indirection serves no purpose — only ever set to `'document'`, never overridden.
 
-**Step 4:** Reduce `document.ts` to a thin DSL wrapper (moves to theme with everything else):
-
-```typescript
-export function document(content: string): ComponentNode {
-  return compileBareMarkdown(content);
-}
-```
+**Step 4:** Delete `document.ts` entirely. Bare markdown already triggers `compileBareMarkdown()` through the slot compiler — the thin wrapper has zero value. Remove `Component.Document` from the enum.
 
 **Step 5:** Remove the `:::document` directive. Bare markdown already triggers the same behavior. Update tests accordingly.
 
@@ -104,7 +98,7 @@ After this refactor, every remaining DSL file is a clean "register + expand to n
 
 ### Problem
 
-Content components (`document.ts`, `table.ts`) use internal functions that are not part of core's public API:
+Content components (e.g. `table.ts`) use internal functions that are not part of core's public API:
 
 - `markdownProcessor` from `src/utils/parser.ts`
 - `extractDirectiveBody` from `src/utils/parser.ts`
@@ -126,6 +120,7 @@ export const markdown = {
   extractInlineText(nodes): string { ... },
   extractDirectiveBody(directive, source): string { ... },
   dispatchDirective(directive, source, context): ComponentNode { ... },
+  compileBareMarkdown(source: string): ComponentNode { ... },
   SYNTAX: { PARAGRAPH, HEADING, LIST, TABLE, ... },
 } as const;
 ```
@@ -143,7 +138,7 @@ import {
 } from 'tycoslide';
 ```
 
-One new export. Card and quote don't even need it — they only use composition primitives. Only components that parse markdown internally (table, document) need the `markdown` toolkit.
+One new export. Card and quote don't even need it — they only use composition primitives. Only components that parse markdown internally (e.g. table) need the `markdown` toolkit.
 
 ### Why Not a Base Class
 
@@ -234,15 +229,17 @@ Token interfaces (`CardTokens`, `QuoteTokens`, etc.) and token name consts (`CAR
 2. Change `flushBareGroup()` to call `compileBareMarkdown()` directly
 3. Remove `setDefault()`/`getDefault()` from registry
 4. Update `slotCompiler.test.ts` — remove `:::document` directive tests, add `compileBareMarkdown` tests
-5. Keep `document.ts` temporarily as thin wrapper
-6. Build + test: 575/575 must pass
+5. Delete `document.ts` entirely — bare markdown already triggers `compileBareMarkdown()` through the slot compiler, so the thin wrapper has zero value. Remove `Component.Document` from the enum.
+6. Remove the `:::document` directive. Bare markdown does the same thing.
+7. Build + test: 575/575 pass (**done**)
 
 ### Phase 1: Create Component Author API
 
 1. Create `packages/core/src/core/markdown/toolkit.ts` with the `markdown` namespace
-2. Export `markdown` from `packages/core/src/index.ts`
-3. Re-export key mdast types (`ContainerDirective`, `Root`, etc.)
-4. Build + test
+2. Include `compileBareMarkdown` in the toolkit — completes the spectrum from "raw text" (`extractSource`) to "fully compiled nodes" (`compileBareMarkdown`). Prevents future duplication for components that accept rich markdown bodies.
+3. Export `markdown` from `packages/core/src/index.ts`
+4. Re-export key mdast types (`ContainerDirective`, `Root`, etc.)
+5. Build + test
 
 ### Phase 2: Move ALL DSL Files to Theme-Default
 
@@ -283,14 +280,14 @@ Token interfaces (`CardTokens`, `QuoteTokens`, etc.) and token name consts (`CAR
 
 | File | Components | Notes |
 |------|-----------|-------|
-| `text.ts` | text, prose, label | Used by card, quote, document |
+| `text.ts` | text, prose, label | Used by card, quote |
 | `primitives.ts` | image, shape, line, slideNumber | Used by card, quote, layouts |
 | `containers.ts` | row, column, stack, grid | Used by card, quote, layouts, grid depends on row+column |
 | `card.ts` | card | Composes stack + column + shape + text + image |
 | `quote.ts` | quote | Composes stack + column + row + shape + prose + label |
 | `table.ts` | table | Uses `markdown.parse()` for cell content |
 | `mermaid.ts` | mermaid | Shells out to mermaid-cli |
-| `document.ts` | document | Thin wrapper after Phase 0 |
+| `document.ts` | *(deleted in Phase 0)* | Bare markdown triggers `compileBareMarkdown()` directly |
 
 ### Files Staying in Core
 
@@ -345,9 +342,9 @@ The boundary is clean: **core defines what CAN be drawn; themes define what IS d
 |------|-----------|
 | TypeScript DSL users must change import paths | Theme-default re-exports everything. Migration is find-and-replace. |
 | Core test suite needs theme components loaded | Import theme-default in test setup. Or split integration tests to theme-default. |
-| `compileBareMarkdown` in slotCompiler needs `prose()`, `table()`, `column()` | The slot compiler calls these via `component()` factory + registry dispatch. Note: `document.ts` does directly import `prose()`, `table()`, and `column()` from sibling files, but since all component files move together, these relative imports remain valid. |
+| `compileBareMarkdown` in slotCompiler needs `prose()`, `table()`, `column()` | Uses `component()` factory + registry dispatch exclusively — zero imports from component files. |
 | `@mermaid-js/mermaid-cli` is a heavy dependency | Moving it to theme-default is a win — core gets lighter. |
-| `:::document` directive removed | Rarely used. Bare markdown does the same thing. |
+| `:::document` directive removed | Done in Phase 0. Bare markdown does the same thing. |
 
 ---
 
