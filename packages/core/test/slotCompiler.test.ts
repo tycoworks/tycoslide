@@ -7,18 +7,18 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { compileSlot } from '../src/markdown/slotCompiler.js';
-import { Component, HALIGN, VALIGN } from '../src/core/types.js';
-import { NODE_TYPE } from '../src/core/nodes.js';
+import { compileSlot } from '../src/core/markdown/slotCompiler.js';
+import { Component, HALIGN, VALIGN } from '../src/core/model/types.js';
+import { NODE_TYPE } from '../src/core/model/nodes.js';
 // Side-effect imports: trigger component registration
-import '../src/dsl/text.js';
-import '../src/dsl/primitives.js';
-import '../src/dsl/table.js';
-import '../src/dsl/mermaid.js';
-import '../src/dsl/card.js';
-import '../src/dsl/quote.js';
-import '../src/dsl/document.js';
-import '../src/dsl/containers.js';
+import '../src/components/text.js';
+import '../src/components/primitives.js';
+import '../src/components/table.js';
+import '../src/components/mermaid.js';
+import '../src/components/card.js';
+import '../src/components/quote.js';
+import '../src/components/document.js';
+import '../src/components/containers.js';
 
 /** Helper: get props as any to avoid unknown type errors in tests */
 function props(nodes: any[], index: number): any {
@@ -396,7 +396,7 @@ describe('Slot Compiler', () => {
 
     it('should throw on multi-slot component used as directive', async () => {
       // Register a test component with multiple slots
-      const { componentRegistry } = await import('../src/core/registry.js');
+      const { componentRegistry } = await import('../src/core/rendering/registry.js');
       componentRegistry.define({
         name: 'test-multi-slot',
         slots: ['left', 'right'],

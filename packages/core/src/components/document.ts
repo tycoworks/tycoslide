@@ -6,15 +6,15 @@
 
 import type { Root, RootContent, Heading } from 'mdast';
 import type { Table as MdastTable } from 'mdast';
-import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
-import { SYNTAX, extractSource, extractInlineText, type ContainerDirective } from '../core/mdast.js';
+import { componentRegistry, component, type ComponentNode } from '../core/rendering/registry.js';
+import { SYNTAX, extractSource, extractInlineText, type ContainerDirective } from '../core/model/syntax.js';
 import { markdownProcessor } from '../utils/parser.js';
-import { dispatchDirective } from '../markdown/slotCompiler.js';
-import { Component, TEXT_STYLE } from '../core/types.js';
+import { dispatchDirective } from '../core/markdown/slotCompiler.js';
+import { Component, TEXT_STYLE } from '../core/model/types.js';
 import { prose, HEADING_STYLE } from './text.js';
 import { table } from './table.js';
 import { column } from './containers.js';
-import { schema } from '../schema.js';
+import { schema } from '../core/model/schema.js';
 
 // ============================================
 // MDAST DISPATCH

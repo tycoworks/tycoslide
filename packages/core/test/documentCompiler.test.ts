@@ -8,12 +8,12 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { compileDocument, buildSlideName } from '../src/markdown/documentCompiler.js';
-import { layoutRegistry } from '../src/core/registry.js';
-import { NODE_TYPE } from '../src/core/nodes.js';
+import { compileDocument, buildSlideName } from '../src/core/markdown/documentCompiler.js';
+import { layoutRegistry } from '../src/core/rendering/registry.js';
+import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { mockTheme } from './mocks.js';
-import type { Slide } from '../src/presentation.js';
-import { schema } from '../src/schema.js';
+import type { Slide } from '../src/core/model/types.js';
+import { schema } from '../src/core/model/schema.js';
 
 // ============================================
 // TEST SETUP

@@ -1,15 +1,15 @@
 // Table Component - Native pptxgenjs table element
 
-import { componentRegistry, component, type ComponentNode, type ExpansionContext } from '../core/registry.js';
-import { Component, CONTENT } from '../core/types.js';
-import { NODE_TYPE, TABLE_TOKEN, type TextNode, type TableCellData, type TableTokens } from '../core/nodes.js';
-import type { TextContent } from '../core/types.js';
-import { SYNTAX } from '../core/mdast.js';
+import { componentRegistry, component, type ComponentNode, type ExpansionContext } from '../core/rendering/registry.js';
+import { Component, CONTENT } from '../core/model/types.js';
+import { NODE_TYPE, TABLE_TOKEN, type TextNode, type TableCellData, type TableTokens } from '../core/model/nodes.js';
+import type { TextContent } from '../core/model/types.js';
+import { SYNTAX } from '../core/model/syntax.js';
 import type { Table as MdastTable } from 'mdast';
 import type { Root } from 'mdast';
 import { markdownProcessor } from '../utils/parser.js';
-import { schema } from '../schema.js';
-import type { SchemaShape } from '../core/registry.js';
+import { schema } from '../core/model/schema.js';
+import type { SchemaShape } from '../core/rendering/registry.js';
 
 // ============================================
 // TABLE COMPONENT

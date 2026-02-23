@@ -4,9 +4,9 @@
 import fs from 'fs';
 import path from 'path';
 import createDebug from 'debug';
-import { compileDocument } from '../markdown/documentCompiler.js';
-import { LayoutValidationError } from '../layout/validator.js';
-import { parseSlideDocument } from '../markdown/slideParser.js';
+import { compileDocument } from '../core/markdown/documentCompiler.js';
+import { LayoutValidationError } from '../core/layout/validator.js';
+import { parseSlideDocument } from '../core/markdown/slideParser.js';
 import { loadTheme } from './themeLoader.js';
 
 export interface BuildOptions {

@@ -7,19 +7,19 @@ import {
   componentRegistry,
   type InferProps,
   type ComponentDefinition,
-} from '../src/core/registry.js';
-import { NODE_TYPE } from '../src/core/nodes.js';
-import { Component, HALIGN, VALIGN, SIZE, DIRECTION } from '../src/core/types.js';
-import { schema } from '../src/schema.js';
+} from '../src/core/rendering/registry.js';
+import { NODE_TYPE } from '../src/core/model/nodes.js';
+import { Component, HALIGN, VALIGN, SIZE, DIRECTION } from '../src/core/model/types.js';
+import { schema } from '../src/core/model/schema.js';
 
 // Import components to test their .schema properties
-import { proseComponent, labelComponent } from '../src/dsl/text.js';
-import { imageComponent } from '../src/dsl/primitives.js';
-import { mermaidComponent } from '../src/dsl/mermaid.js';
-import { cardComponent } from '../src/dsl/card.js';
-import { quoteComponent } from '../src/dsl/quote.js';
-import '../src/dsl/containers.js';
-import '../src/dsl/table.js';
+import { proseComponent, labelComponent } from '../src/components/text.js';
+import { imageComponent } from '../src/components/primitives.js';
+import { mermaidComponent } from '../src/components/mermaid.js';
+import { cardComponent } from '../src/components/card.js';
+import { quoteComponent } from '../src/components/quote.js';
+import '../src/components/containers.js';
+import '../src/components/table.js';
 
 describe('componentRegistry.define', () => {
   describe('define with params', () => {

@@ -540,7 +540,7 @@ export interface QuoteTokens {
   [QUOTE_TOKEN.VALIGN]: VerticalAlignment;
 }
 
-import type { TableTokens } from './nodes.js';
+import type { TableTokens, ComponentNode } from './nodes.js';
 export type { TableTokens } from './nodes.js';
 export { TABLE_TOKEN } from './nodes.js';
 
@@ -631,6 +631,28 @@ export interface ComponentTokenMap {
 // ============================================
 
 /** All spacing/dimension values are in inches. */
+// ============================================
+// SLIDE & MASTER TYPES
+// ============================================
+
+export interface Master {
+  name: string;
+  background?: string;
+  getContent(theme: Theme): {
+    content: ComponentNode;     // Footer/fixed elements as declarative nodes
+    contentBounds: Bounds;     // Where slide content goes
+  };
+}
+
+export interface Slide {
+  master?: Master;
+  background?: string;
+  notes?: string;
+  content: ComponentNode;
+  /** Optional name for identifying slides in error messages and shared slide references. */
+  name?: string;
+}
+
 export interface Theme {
   colors: ColorScheme;
   slide: SlideSize | CustomSlideSize;

@@ -1,8 +1,8 @@
 // Primitive components: image, line, shape, slideNumber
 
-import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape, type ExpansionContext } from '../core/registry.js';
-import { NODE_TYPE } from '../core/nodes.js';
-import type { ImageNode, LineNode, ShapeNode, SlideNumberNode } from '../core/nodes.js';
+import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape, type ExpansionContext } from '../core/rendering/registry.js';
+import { NODE_TYPE } from '../core/model/nodes.js';
+import type { ImageNode, LineNode, ShapeNode, SlideNumberNode } from '../core/model/nodes.js';
 import {
   Component,
   ARROW_TYPE_VALUES,
@@ -13,10 +13,10 @@ import {
   type DashType,
   type TextStyleName,
   type HorizontalAlignment,
-} from '../core/types.js';
-import { LINE_TOKEN, SLIDE_NUMBER_TOKEN, SHAPE_TOKEN } from '../core/types.js';
-import type { LineTokens, SlideNumberTokens, ShapeTokens } from '../core/types.js';
-import { schema } from '../schema.js';
+} from '../core/model/types.js';
+import { LINE_TOKEN, SLIDE_NUMBER_TOKEN, SHAPE_TOKEN } from '../core/model/types.js';
+import type { LineTokens, SlideNumberTokens, ShapeTokens } from '../core/model/types.js';
+import { schema } from '../core/model/schema.js';
 import { resolveAssetPath, ASSET_PREFIX } from '../utils/assets.js';
 
 // ============================================

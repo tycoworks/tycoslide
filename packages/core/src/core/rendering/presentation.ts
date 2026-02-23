@@ -5,44 +5,20 @@
 // This enables batching all text measurements in a single browser call.
 
 import path from 'path';
-import type { Theme } from './core/types.js';
-import type { ElementNode, PositionedNode, ComponentNode } from './core/nodes.js';
-import { Bounds } from './core/bounds.js';
-import { PptxRenderer } from './core/pptxRenderer.js';
-import { LayoutValidator, LayoutValidationError } from './layout/validator.js';
-import type { SlideValidationResult } from './layout/validator.js';
-import { log } from './utils/log.js';
-import { componentRegistry } from './core/registry.js';
-import { LayoutPipeline } from './layout/pipeline.js';
+import type { Theme, Slide, Master } from '../model/types.js';
+import type { ElementNode, PositionedNode } from '../model/nodes.js';
+import { Bounds } from '../model/bounds.js';
+import { PptxRenderer } from './pptxRenderer.js';
+import { LayoutValidator, LayoutValidationError } from '../layout/validator.js';
+import type { SlideValidationResult } from '../layout/validator.js';
+import { log } from '../../utils/log.js';
+import { componentRegistry } from './registry.js';
+import { LayoutPipeline } from '../layout/pipeline.js';
+
+export type { Slide, Master } from '../model/types.js';
 
 // Footer height as proportion of margin (footer sits in bottom margin area)
 const FOOTER_HEIGHT_RATIO = 0.6;
-
-// ============================================
-// MASTER TYPE (declarative)
-// ============================================
-
-export interface Master {
-  name: string;
-  background?: string;
-  getContent(theme: Theme): {
-    content: ComponentNode;     // Footer/fixed elements as declarative nodes
-    contentBounds: Bounds;     // Where slide content goes
-  };
-}
-
-// ============================================
-// SLIDE TYPE (declarative)
-// ============================================
-
-export interface Slide {
-  master?: Master;
-  background?: string;
-  notes?: string;
-  content: ComponentNode;
-  /** Optional name for identifying slides in error messages and shared slide references. */
-  name?: string;
-}
 
 // ============================================
 // DEFERRED SLIDE (internal)

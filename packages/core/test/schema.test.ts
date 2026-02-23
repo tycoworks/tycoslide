@@ -3,13 +3,13 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { z } from 'zod';
-import { schema } from '../src/schema.js';
-import { layoutRegistry } from '../src/core/registry.js';
-import { NODE_TYPE } from '../src/core/nodes.js';
-import { Component } from '../src/core/types.js';
-import { compileSlot } from '../src/markdown/slotCompiler.js';
-import '../src/dsl/document.js';
-import '../src/dsl/primitives.js';
+import { schema } from '../src/core/model/schema.js';
+import { layoutRegistry } from '../src/core/rendering/registry.js';
+import { NODE_TYPE } from '../src/core/model/nodes.js';
+import { Component } from '../src/core/model/types.js';
+import { compileSlot } from '../src/core/markdown/slotCompiler.js';
+import '../src/components/document.js';
+import '../src/components/primitives.js';
 
 describe('schema', () => {
   describe('scalar types', () => {

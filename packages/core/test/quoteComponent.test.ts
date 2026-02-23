@@ -1,10 +1,10 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { quote } from '../src/dsl/quote.js';
-import { Component } from '../src/core/types.js';
-import { componentRegistry } from '../src/core/registry.js';
-import { NODE_TYPE } from '../src/core/nodes.js';
-import { TEXT_STYLE, HALIGN, VALIGN } from '../src/core/types.js';
+import { quote } from '../src/components/quote.js';
+import { Component } from '../src/core/model/types.js';
+import { componentRegistry } from '../src/core/rendering/registry.js';
+import { NODE_TYPE } from '../src/core/model/nodes.js';
+import { TEXT_STYLE, HALIGN, VALIGN } from '../src/core/model/types.js';
 import { mockTheme } from './mocks.js';
 
 describe('Quote Component', () => {

@@ -3,7 +3,7 @@
 
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
-import { PptxConfigBuilder } from '../src/core/pptxConfigBuilder.js';
+import { PptxConfigBuilder } from '../src/core/rendering/pptxConfigBuilder.js';
 import { mockTheme } from './mocks.js';
 import {
   NODE_TYPE,
@@ -15,7 +15,7 @@ import {
   type TableCellData,
   type TableTokens,
   type SlideNumberNode,
-} from '../src/core/nodes.js';
+} from '../src/core/model/nodes.js';
 import {
   TEXT_STYLE,
   HALIGN,
@@ -25,8 +25,8 @@ import {
   BORDER_STYLE,
   SHAPE,
   LINE_SHAPE,
-} from '../src/core/types.js';
-import { getParagraphGapRatio } from '../src/utils/text.js';
+} from '../src/core/model/types.js';
+import { getParagraphGapRatio } from '../src/utils/font.js';
 import { containFit } from '../src/utils/image.js';
 
 // ============================================
@@ -985,9 +985,9 @@ describe('buildSlideNumberOptions()', () => {
 // Uses public text() API instead of internal parseMarkdown/mdastToRuns
 // ============================================
 
-import { prose } from '../src/dsl/text.js';
-import { componentRegistry } from '../src/core/registry.js';
-import type { NormalizedRun } from '../src/core/types.js';
+import { prose } from '../src/components/text.js';
+import { componentRegistry } from '../src/core/rendering/registry.js';
+import type { NormalizedRun } from '../src/core/model/types.js';
 
 /** Expand a prose() component to get its NormalizedRun[] content */
 async function expandTextToRuns(md: string): Promise<NormalizedRun[]> {

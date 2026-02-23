@@ -2,8 +2,8 @@
 // Accepts raw mermaid text, sanitizes styling, injects theme classDefs,
 // renders via mermaid-cli to PNG, expands to ImageNode.
 
-import type { Theme } from '../core/types.js';
-import { NODE_TYPE, type ImageNode } from '../core/nodes.js';
+import type { Theme } from '../core/model/types.js';
+import { NODE_TYPE, type ImageNode } from '../core/model/nodes.js';
 import {
   componentRegistry,
   component,
@@ -11,8 +11,8 @@ import {
   type ExpansionContext,
   type InferProps,
   type SchemaShape,
-} from '../core/registry.js';
-import { schema } from '../schema.js';
+} from '../core/rendering/registry.js';
+import { schema } from '../core/model/schema.js';
 
 import { exec as execCb } from 'child_process';
 import { promisify } from 'util';
@@ -26,7 +26,7 @@ import { createRequire } from 'module';
 // CONSTANTS
 // ============================================
 
-import { Component } from '../core/types.js';
+import { Component } from '../core/model/types.js';
 
 /** Timeout for mermaid-cli rendering in milliseconds */
 const MERMAID_RENDER_TIMEOUT_MS = 30000;

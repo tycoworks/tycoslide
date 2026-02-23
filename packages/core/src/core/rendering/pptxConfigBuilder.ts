@@ -2,11 +2,11 @@
 // Pure translation layer: converts tycoslide domain types to pptxgenjs option shapes.
 // No pptxgenjs dependency — every method takes typed inputs and returns plain data.
 
-import type { PositionedNode, TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, TableCellData } from './nodes.js';
-import type { Theme, TextStyleName, TextContent } from './types.js';
-import { TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT, BORDER_STYLE, LINE_SHAPE } from './types.js';
-import { getFontFromFamily, normalizeContent, resolveLineHeight, getParagraphGapRatio } from '../utils/text.js';
-import { readImageDimensions, containFit } from '../utils/image.js';
+import type { PositionedNode, TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, TableCellData } from '../model/nodes.js';
+import type { Theme, TextStyleName, TextContent } from '../model/types.js';
+import { TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT, BORDER_STYLE, LINE_SHAPE } from '../model/types.js';
+import { getFontFromFamily, normalizeContent, resolveLineHeight, getParagraphGapRatio } from '../../utils/font.js';
+import { readImageDimensions, containFit } from '../../utils/image.js';
 
 // ============================================
 // TYPES

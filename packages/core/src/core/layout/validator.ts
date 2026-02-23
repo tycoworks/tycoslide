@@ -4,8 +4,8 @@
 // 2. Sibling content overlapping (except intentional Stack overlaps)
 // 3. Children positioned outside parent bounds (layout error)
 
-import type { PositionedNode } from '../core/nodes.js';
-import { NODE_TYPE } from '../core/nodes.js';
+import type { PositionedNode } from '../model/nodes.js';
+import { NODE_TYPE } from '../model/nodes.js';
 
 // ============================================
 // TYPES

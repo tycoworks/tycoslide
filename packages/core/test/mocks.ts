@@ -4,8 +4,8 @@
 import * as assert from 'node:assert';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import type { Theme, TextStyle, FontFamily, ComponentTokenMap } from '../src/core/types.js';
-import { Component, TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, HALIGN, VALIGN, DEFAULT_VARIANT } from '../src/core/types.js';
+import type { Theme, TextStyle, FontFamily, ComponentTokenMap } from '../src/core/model/types.js';
+import { Component, TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, HALIGN, VALIGN, DEFAULT_VARIANT } from '../src/core/model/types.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

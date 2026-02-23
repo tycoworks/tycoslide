@@ -1,15 +1,15 @@
 import { describe, test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { Registry, componentRegistry, isComponentNode, component, type LayoutDefinition } from '../src/core/registry.js';
-import { NODE_TYPE } from '../src/core/nodes.js';
-import type { Slide } from '../src/presentation.js';
+import { Registry, componentRegistry, isComponentNode, component, type LayoutDefinition } from '../src/core/rendering/registry.js';
+import { NODE_TYPE } from '../src/core/model/nodes.js';
+import type { Slide } from '../src/core/model/types.js';
 import { mockTheme } from './mocks.js';
 
 // Import DSL modules to trigger component registration
-import '../src/dsl/text.js';
-import '../src/dsl/card.js';
-import '../src/dsl/containers.js';
-import { Component, HALIGN, VALIGN } from '../src/core/types.js';
+import '../src/components/text.js';
+import '../src/components/card.js';
+import '../src/components/containers.js';
+import { Component, HALIGN, VALIGN } from '../src/core/model/types.js';
 
 // ============================================
 // GENERIC REGISTRY BASE CLASS

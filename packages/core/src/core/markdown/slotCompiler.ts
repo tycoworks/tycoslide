@@ -9,10 +9,10 @@
 // policy, not a component concern.
 
 import type { Root, RootContent } from 'mdast';
-import { SYNTAX, type ContainerDirective } from '../core/mdast.js';
-import { markdownProcessor, extractDirectiveBody } from '../utils/parser.js';
-import { componentRegistry, coerceAttributes, component, type ComponentNode } from '../core/registry.js';
-import { Component } from '../core/types.js';
+import { SYNTAX, type ContainerDirective } from '../model/syntax.js';
+import { markdownProcessor, extractDirectiveBody } from '../../utils/parser.js';
+import { componentRegistry, coerceAttributes, component, type ComponentNode } from '../rendering/registry.js';
+import { Component } from '../model/types.js';
 
 // ============================================
 // DEFAULT COMPONENT

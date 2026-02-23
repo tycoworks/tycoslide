@@ -4,7 +4,7 @@
 
 import { describe, test } from 'node:test';
 import assert from 'node:assert';
-import { normalizeContent } from '../src/utils/text.js';
+import { normalizeContent } from '../src/utils/font.js';
 
 describe('normalizeContent()', () => {
   test('string input returns single NormalizedRun', () => {

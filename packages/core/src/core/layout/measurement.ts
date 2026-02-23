@@ -5,12 +5,12 @@
 import fs from 'fs';
 import path from 'path';
 import { chromium, type Browser, type Page } from 'playwright';
-import type { Theme } from '../core/types.js';
-import type { ElementNode } from '../core/nodes.js';
-import { Bounds } from '../core/bounds.js';
+import type { Theme } from '../model/types.js';
+import type { ElementNode } from '../model/nodes.js';
+import { Bounds } from '../model/bounds.js';
 import { generateLayoutHTML, preloadFonts, measureFontNormalRatios, type FontNormalRatios, type FontDescriptor } from './layoutHtml.js';
-import { pxToIn } from '../utils/units.js';
-import { log } from '../utils/log.js';
+import { pxToIn } from '../../utils/units.js';
+import { log } from '../../utils/log.js';
 // ============================================
 // LAYOUT MEASURER
 // ============================================

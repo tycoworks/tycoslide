@@ -2,7 +2,7 @@
 
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
-import { Bounds } from '../src/core/bounds.js';
+import { Bounds } from '../src/core/model/bounds.js';
 
 function approx(actual: number, expected: number, msg: string, tolerance = 0.001): void {
   assert.ok(Math.abs(actual - expected) < tolerance, `${msg}: expected ~${expected}, got ${actual}`);

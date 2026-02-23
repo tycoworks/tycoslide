@@ -2,12 +2,12 @@
 // Coordinates browser-based layout measurement and position tree construction.
 // The browser computes all positions via CSS flexbox in a single pass per slide.
 
-import type { ElementNode, PositionedNode, ContainerNode, StackNode, TextNode } from '../core/nodes.js';
-import { NODE_TYPE } from '../core/nodes.js';
-import type { Bounds } from '../core/bounds.js';
-import type { Theme } from '../core/types.js';
+import type { ElementNode, PositionedNode, ContainerNode, StackNode, TextNode } from '../model/nodes.js';
+import { NODE_TYPE } from '../model/nodes.js';
+import type { Bounds } from '../model/bounds.js';
+import type { Theme } from '../model/types.js';
 import { LayoutMeasurer } from './measurement.js';
-import { log } from '../utils/log.js';
+import { log } from '../../utils/log.js';
 
 // ============================================
 // TYPES

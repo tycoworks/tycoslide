@@ -6,12 +6,12 @@ import PptxGenJSDefault from 'pptxgenjs';
 const PptxGenJS = (PptxGenJSDefault as any).default || PptxGenJSDefault;
 type PptxSlide = ReturnType<InstanceType<typeof PptxGenJS>['addSlide']>;
 
-import type { PositionedNode, TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode } from './nodes.js';
-import { NODE_TYPE } from './nodes.js';
-import type { Theme } from './types.js';
-import { CUSTOM_LAYOUT } from './types.js';
+import type { PositionedNode, TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode } from '../model/nodes.js';
+import { NODE_TYPE } from '../model/nodes.js';
+import type { Theme } from '../model/types.js';
+import { CUSTOM_LAYOUT } from '../model/types.js';
 import { PptxConfigBuilder } from './pptxConfigBuilder.js';
-import { log, contentPreview } from '../utils/log.js';
+import { log, contentPreview } from '../../utils/log.js';
 
 // ============================================
 // RENDERER INTERFACE

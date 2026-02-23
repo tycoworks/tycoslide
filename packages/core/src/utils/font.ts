@@ -1,7 +1,7 @@
 // Font Utilities Module
 // Provides text normalization and font family helpers
 
-import { FONT_WEIGHT, TEXT_STYLE, type Font, type FontFamily, type FontWeight, type TextContent, type TextRun, type NormalizedRun, type Theme, type TextStyle, type TextStyleName } from '../core/types.js';
+import { FONT_WEIGHT, TEXT_STYLE, type Font, type FontFamily, type FontWeight, type TextContent, type TextRun, type NormalizedRun, type Theme, type TextStyle, type TextStyleName } from '../core/model/types.js';
 
 /**
  * Get the Font for a given weight from a FontFamily.

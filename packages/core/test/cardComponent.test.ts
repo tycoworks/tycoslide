@@ -1,9 +1,9 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { card } from '../src/dsl/card.js';
-import { Component } from '../src/core/types.js';
-import { componentRegistry } from '../src/core/registry.js';
-import { NODE_TYPE } from '../src/core/nodes.js';
+import { card } from '../src/components/card.js';
+import { Component } from '../src/core/model/types.js';
+import { componentRegistry } from '../src/core/rendering/registry.js';
+import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { mockTheme } from './mocks.js';
 
 describe('Card Component', () => {

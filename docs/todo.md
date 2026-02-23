@@ -6,6 +6,7 @@
 ### Core
 - Reorg & comments / code docs
 - Portrait mode
+- Where do components live?
 
 ### Core
 - Default theme:

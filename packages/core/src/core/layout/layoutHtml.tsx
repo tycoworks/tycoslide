@@ -10,14 +10,14 @@ import path from 'path';
 import { renderToString } from 'hono/jsx/dom/server';
 import type { FC } from 'hono/jsx';
 import type { Page } from 'playwright';
-import type { ElementNode, TextNode, ImageNode, LineNode, ContainerNode, StackNode, SlideNumberNode, TableNode, TableCellData } from '../core/nodes.js';
-import { NODE_TYPE } from '../core/nodes.js';
-import type { Theme, TextStyle, FontWeight, VerticalAlignment, HorizontalAlignment, SizeValue, NormalizedRun, Direction } from '../core/types.js';
-import { TEXT_STYLE, FONT_WEIGHT, SIZE, VALIGN, HALIGN, DIRECTION } from '../core/types.js';
-import type { Bounds } from '../core/bounds.js';
-import { normalizeContent, fontWeightToNumeric, resolveLineHeight } from '../utils/text.js';
-import { readImageDimensions } from '../utils/image.js';
-import { inToPx, ptToPx, resolveGap } from '../utils/units.js';
+import type { ElementNode, TextNode, ImageNode, LineNode, ContainerNode, StackNode, SlideNumberNode, TableNode, TableCellData } from '../model/nodes.js';
+import { NODE_TYPE } from '../model/nodes.js';
+import type { Theme, TextStyle, FontWeight, VerticalAlignment, HorizontalAlignment, SizeValue, NormalizedRun, Direction } from '../model/types.js';
+import { TEXT_STYLE, FONT_WEIGHT, SIZE, VALIGN, HALIGN, DIRECTION } from '../model/types.js';
+import type { Bounds } from '../model/bounds.js';
+import { normalizeContent, fontWeightToNumeric, resolveLineHeight } from '../../utils/font.js';
+import { readImageDimensions } from '../../utils/image.js';
+import { inToPx, ptToPx, resolveGap } from '../../utils/units.js';
 
 // ============================================
 // TYPES

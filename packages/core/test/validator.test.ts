@@ -1,8 +1,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { LayoutValidator, LayoutOverflowError, LayoutBoundsError } from '../src/layout/validator.js';
-import { NODE_TYPE, type PositionedNode, type ElementNode } from '../src/core/nodes.js';
-import { HALIGN, VALIGN, DIRECTION, SIZE } from '../src/core/types.js';
+import { LayoutValidator, LayoutOverflowError, LayoutBoundsError } from '../src/core/layout/validator.js';
+import { NODE_TYPE, type PositionedNode, type ElementNode } from '../src/core/model/nodes.js';
+import { HALIGN, VALIGN, DIRECTION, SIZE } from '../src/core/model/types.js';
 
 /** Minimal text node for validator tests (validator only checks geometry, not content) */
 function textNode(content: string): ElementNode {

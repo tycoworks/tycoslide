@@ -3,13 +3,13 @@
 
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
-import { generateLayoutHTML } from '../dist/layout/layoutHtml.js';
-import { prose, label, text, row, column, image, line, stack, shape } from '../dist/dsl/index.js';
-import { componentRegistry } from '../dist/core/registry.js';
-import { Bounds } from '../dist/core/bounds.js';
-import { Component, HALIGN, VALIGN, SIZE, SHAPE, DASH_TYPE, TEXT_STYLE, GAP, BORDER_STYLE } from '../dist/core/types.js';
-import type { Theme } from '../dist/core/types.js';
-import type { ElementNode } from '../dist/core/nodes.js';
+import { generateLayoutHTML } from '../dist/core/layout/layoutHtml.js';
+import { prose, label, text, row, column, image, line, stack, shape } from '../dist/components/index.js';
+import { componentRegistry } from '../dist/core/rendering/registry.js';
+import { Bounds } from '../dist/core/model/bounds.js';
+import { Component, HALIGN, VALIGN, SIZE, SHAPE, DASH_TYPE, TEXT_STYLE, GAP, BORDER_STYLE } from '../dist/core/model/types.js';
+import type { Theme } from '../dist/core/model/types.js';
+import type { ElementNode } from '../dist/core/model/nodes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 

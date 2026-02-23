@@ -4,7 +4,7 @@
 import * as assert from 'node:assert';
 import { describe, it } from 'node:test';
 import { resolveGap } from '../src/utils/units.js';
-import { GAP } from '../src/core/types.js';
+import { GAP } from '../src/core/model/types.js';
 import { mockTheme } from './mocks.js';
 
 // ============================================

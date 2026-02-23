@@ -1,16 +1,15 @@
 // Registry
 // Generic base class, component registry, and layout registry
 
-import { NODE_TYPE, type ElementNode, type ComponentNode, type SlideNode } from './nodes.js';
-import { DEFAULT_VARIANT } from './types.js';
-import type { Theme, ComponentName } from './types.js';
-import type { Slide } from '../presentation.js';
+import { NODE_TYPE, type ElementNode, type ComponentNode, type SlideNode } from '../model/nodes.js';
+import { DEFAULT_VARIANT } from '../model/types.js';
+import type { Theme, ComponentName, Slide } from '../model/types.js';
 import { z } from 'zod';
 
-import type { ScalarParam } from '../schema.js';
+import type { ScalarParam } from '../model/schema.js';
 
 // Re-export ComponentNode for convenience
-export type { ComponentNode } from './nodes.js';
+export type { ComponentNode } from '../model/nodes.js';
 
 // ============================================
 // GENERIC REGISTRY BASE CLASS

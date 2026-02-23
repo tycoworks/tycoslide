@@ -16,13 +16,13 @@ import {
   stack,
   grid,
   table,
-} from '../src/dsl/index.js';
-import { card } from '../src/dsl/card.js';
-import { Component } from '../src/core/types.js';
-import { componentRegistry } from '../src/core/registry.js';
-import { NODE_TYPE } from '../src/core/nodes.js';
-import type { TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, ContainerNode, StackNode } from '../src/core/nodes.js';
-import { DIRECTION } from '../src/core/types.js';
+} from '../src/components/index.js';
+import { card } from '../src/components/card.js';
+import { Component } from '../src/core/model/types.js';
+import { componentRegistry } from '../src/core/rendering/registry.js';
+import { NODE_TYPE } from '../src/core/model/nodes.js';
+import type { TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, ContainerNode, StackNode } from '../src/core/model/nodes.js';
+import { DIRECTION } from '../src/core/model/types.js';
 import {
   TEXT_STYLE,
   GAP,
@@ -32,7 +32,7 @@ import {
   SHAPE,
   ARROW_TYPE,
   DASH_TYPE,
-} from '../src/core/types.js';
+} from '../src/core/model/types.js';
 import { mockTheme as createMockTheme } from './mocks.js';
 
 // Theme for text expansion

@@ -9,10 +9,10 @@ import { z } from 'zod';
 import { parseSlideDocument, type RawSlide } from './slideParser.js';
 
 import { compileSlot } from './slotCompiler.js';
-import { layoutRegistry, type LayoutDefinition } from '../core/registry.js';
-import type { ComponentNode } from '../core/nodes.js';
-import { Presentation, type Slide } from '../presentation.js';
-import type { Theme } from '../core/types.js';
+import { layoutRegistry, type LayoutDefinition } from '../rendering/registry.js';
+import type { ComponentNode } from '../model/nodes.js';
+import { Presentation } from '../rendering/presentation.js';
+import type { Theme, Slide } from '../model/types.js';
 
 /** Build a name from frontmatter for identifying slides in error messages and shared references. */
 export function buildSlideName(raw: RawSlide): string {

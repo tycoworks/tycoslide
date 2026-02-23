@@ -4,7 +4,7 @@
 import { createRequire } from 'module';
 import { pathToFileURL } from 'url';
 import path from 'path';
-import type { Theme } from '../core/types.js';
+import type { Theme } from '../core/model/types.js';
 
 export interface LoadedTheme {
   theme: Theme;

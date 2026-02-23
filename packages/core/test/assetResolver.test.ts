@@ -4,9 +4,9 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { componentRegistry, type ExpansionContext } from '../src/core/registry.js';
-import { image } from '../src/dsl/primitives.js';
-import { NODE_TYPE, type ImageNode } from '../src/core/nodes.js';
+import { componentRegistry, type ExpansionContext } from '../src/core/rendering/registry.js';
+import { image } from '../src/components/primitives.js';
+import { NODE_TYPE, type ImageNode } from '../src/core/model/nodes.js';
 import { mockTheme } from './mocks.js';
 
 const testAssets = {

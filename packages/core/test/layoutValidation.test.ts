@@ -4,12 +4,12 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { z } from 'zod';
-import { validateLayout } from '../src/markdown/documentCompiler.js';
-import { type LayoutDefinition } from '../src/core/registry.js';
-import { NODE_TYPE } from '../src/core/nodes.js';
-import { schema } from '../src/schema.js';
-import '../src/dsl/document.js';
-import '../src/dsl/primitives.js';
+import { validateLayout } from '../src/core/markdown/documentCompiler.js';
+import { type LayoutDefinition } from '../src/core/rendering/registry.js';
+import { NODE_TYPE } from '../src/core/model/nodes.js';
+import { schema } from '../src/core/model/schema.js';
+import '../src/components/document.js';
+import '../src/components/primitives.js';
 
 // Create a test layout with a known schema shape
 const testShape = {

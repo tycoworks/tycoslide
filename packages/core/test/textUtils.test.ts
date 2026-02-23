@@ -3,8 +3,8 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { getFontFromFamily, resolveLineHeight } from '../src/utils/text.js';
-import { FONT_WEIGHT, type FontFamily, type TextStyle } from '../src/core/types.js';
+import { getFontFromFamily, resolveLineHeight } from '../src/utils/font.js';
+import { FONT_WEIGHT, type FontFamily, type TextStyle } from '../src/core/model/types.js';
 import { mockTheme } from './mocks.js';
 
 // ============================================

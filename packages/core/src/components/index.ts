@@ -46,10 +46,10 @@ export {
 } from './text.js';
 
 // Content kinds (re-export from core for convenience)
-export { CONTENT, type ContentType } from '../core/types.js';
+export { CONTENT, type ContentType } from '../core/model/types.js';
 
 // Syntax constants (node type names for markdown AST)
-export { SYNTAX } from '../core/mdast.js';
+export { SYNTAX } from '../core/model/syntax.js';
 
 // Card (composition component)
 export {

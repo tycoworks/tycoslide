@@ -3,7 +3,7 @@
 // Layout authors use these instead of importing Zod directly.
 
 import { z } from 'zod';
-import { TEXT_STYLE_VALUES, GAP_VALUES, HALIGN_VALUES, VALIGN_VALUES, CONTENT_VALUES, SIZE_VALUES } from './core/types.js';
+import { TEXT_STYLE_VALUES, GAP_VALUES, HALIGN_VALUES, VALIGN_VALUES, CONTENT_VALUES, SIZE_VALUES } from './types.js';
 
 export const schema = {
   // Structural — how values compose

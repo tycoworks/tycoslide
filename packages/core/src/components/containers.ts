@@ -1,16 +1,16 @@
 // Container DSL functions: row, column, stack, grid
 
-import { componentRegistry, component, type ComponentNode } from '../core/registry.js';
-import { NODE_TYPE, type ElementNode, type SlideNode } from '../core/nodes.js';
+import { componentRegistry, component, type ComponentNode } from '../core/rendering/registry.js';
+import { NODE_TYPE, type ElementNode, type SlideNode } from '../core/model/nodes.js';
 import {
   GAP,
   type HorizontalAlignment,
   type VerticalAlignment,
   type GapSize,
   type SizeValue,
-} from '../core/types.js';
-import { Component, VALIGN, HALIGN, SIZE, DIRECTION } from '../core/types.js';
-import { schema } from '../schema.js';
+} from '../core/model/types.js';
+import { Component, VALIGN, HALIGN, SIZE, DIRECTION } from '../core/model/types.js';
+import { schema } from '../core/model/schema.js';
 
 // ============================================
 // SHARED HELPERS

@@ -7,7 +7,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { parseSlideDocument, FrontmatterParseError } from '../src/markdown/slideParser.js';
+import { parseSlideDocument, FrontmatterParseError } from '../src/core/markdown/slideParser.js';
 
 describe('Slide Parser', () => {
   describe('global frontmatter', () => {
