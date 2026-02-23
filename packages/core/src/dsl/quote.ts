@@ -29,8 +29,6 @@ const quoteSchema = {
   attribution: labelComponent.schema.optional(),
   /** Optional image/logo displayed above the quote */
   image: imageComponent.schema.optional(),
-  /** Whether to show background (default: true) */
-  background: schema.boolean().optional(),
   /** Named variant (resolved from theme.components.quote.variants) */
   variant: schema.string().optional(),
   /** Sizing: 'fill' to share parent space equally, 'hug' for content-sized (default) */
@@ -63,7 +61,7 @@ export type QuoteProps = InferProps<typeof quoteSchema>;
  * ```
  */
 function expandQuote(props: QuoteProps & { body?: string }, context: ExpansionContext, tokens: QuoteTokens): SlideNode {
-  const { quote: quoteText, body, attribution, image: imagePath, background = true, height: sizeHeight } = props;
+  const { quote: quoteText, body, attribution, image: imagePath, height: sizeHeight } = props;
   const actualQuote = quoteText ?? body;
   const {
     padding, cornerRadius, backgroundColor, backgroundOpacity,
@@ -88,8 +86,8 @@ function expandQuote(props: QuoteProps & { body?: string }, context: ExpansionCo
   const contentProps = { padding, gap, hAlign: contentHAlign, vAlign: contentVAlign };
   const outerHeight = sizeHeight ?? SIZE.FILL;
 
-  // If no background, just return the content column directly
-  if (background === false || backgroundOpacity === 0) {
+  // If no background (opacity 0), just return the content column directly
+  if (backgroundOpacity === 0) {
     return column({ ...contentProps, height: outerHeight }, ...children);
   }
 

@@ -28,8 +28,6 @@ const cardSchema = {
   title: textComponent.schema.optional(),
   /** Card description text */
   description: proseComponent.schema.optional(),
-  /** Whether to show background (default: true) */
-  background: schema.boolean().optional(),
   /** Named variant (resolved from theme.components.card.variants) */
   variant: schema.string().optional(),
   /** Sizing: 'fill' to share parent space equally, 'hug' for content-sized (default) */
@@ -58,7 +56,7 @@ export type CardProps = InferProps<typeof cardSchema>;
  * ```
  */
 function expandCard(props: CardProps & { body?: string }, context: ExpansionContext, tokens: CardTokens): SlideNode {
-  const { image: imagePath, title, description, body, background = true, height: sizeHeight } = props;
+  const { image: imagePath, title, description, body, height: sizeHeight } = props;
   const actualDescription = description ?? body;
   const {
     padding, cornerRadius, backgroundColor, backgroundOpacity,
@@ -91,8 +89,8 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
   const contentProps = { padding, gap: textGap, hAlign: contentHAlign, vAlign: contentVAlign };
   const outerHeight = sizeHeight ?? SIZE.FILL;
 
-  // If no background, just return the content column directly
-  if (background === false || backgroundOpacity === 0) {
+  // If no background (opacity 0), just return the content column directly
+  if (backgroundOpacity === 0) {
     return column({ ...contentProps, height: outerHeight }, ...children);
   }
 

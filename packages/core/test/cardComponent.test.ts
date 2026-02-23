@@ -46,9 +46,10 @@ describe('Card Component', () => {
       }
     });
 
-    it('should expand to column only when background=false', async () => {
-      const node = card({ title: 'Test', background: false });
-      const expanded = await componentRegistry.expandTree(node, { theme });
+    it('should expand to column only when variant has backgroundOpacity=0', async () => {
+      const flatTheme = mockTheme({ components: { card: { variants: { flat: { backgroundOpacity: 0 } } } } });
+      const node = card({ title: 'Test', variant: 'flat' });
+      const expanded = await componentRegistry.expandTree(node, { theme: flatTheme });
 
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
     });

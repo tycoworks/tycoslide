@@ -228,12 +228,12 @@ describe('Slot Compiler', () => {
     });
 
     it('should compile :::card with attributes only (no body)', () => {
-      const md = ':::card{title="Hello" background="false"}\n:::';
+      const md = ':::card{title="Hello" variant="flat"}\n:::';
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual(nodes[0].componentName, Component.Card);
       assert.strictEqual(props(nodes, 0).title, 'Hello');
-      assert.strictEqual(props(nodes, 0).background, false);
+      assert.strictEqual(props(nodes, 0).variant, 'flat');
     });
   });
 

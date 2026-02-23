@@ -145,10 +145,10 @@ describe('ComponentRegistry', () => {
     });
 
     test('recursively expands nested components', async () => {
-      // card expands to stack(shape, column(...)) — tests recursive expansion
-      const node = component(Component.Card, { title: 'Test', background: false });
-      const expanded = await componentRegistry.expandTree(node, { theme });
-      // background=false means just a column with label child
+      const flatTheme = mockTheme({ components: { card: { variants: { flat: { backgroundOpacity: 0 } } } } });
+      const node = component(Component.Card, { title: 'Test', variant: 'flat' });
+      const expanded = await componentRegistry.expandTree(node, { theme: flatTheme });
+      // backgroundOpacity=0 means just a column with label child
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
       if (expanded.type === NODE_TYPE.CONTAINER) {
         assert.strictEqual(expanded.children[0].type, NODE_TYPE.TEXT);

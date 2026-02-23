@@ -239,14 +239,14 @@ A build system for branded presentations. Compile markdown or TypeScript into me
 layout: body
 title: Multiple Cards
 eyebrow: DIRECTIVE
-notes: Place multiple card directives in sequence. Each card renders as a separate block. The background attribute controls whether the card has a colored background (default true). Set background=false for a clean outlined style.
+notes: Place multiple card directives in sequence. Each card renders as a separate block. Use variant="flat" for cards without background styling.
 ---
 
 :::card{title="Content as Code" height="fill"}
 Presentations built in CI/CD pipelines, not manually in PowerPoint.
 :::
 
-:::card{title="Theme-Driven" height="fill" background="false"}
+:::card{title="Theme-Driven" height="fill" variant="flat"}
 All visual decisions live in the theme file. Missing tokens fail the build.
 :::
 

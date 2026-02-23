@@ -741,7 +741,6 @@ describe('card()', () => {
       image: 'hero.jpg',
       title: 'Title',
       description: 'Description',
-      background: true,
     };
     const node = card(props);
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
@@ -749,7 +748,6 @@ describe('card()', () => {
     assert.strictEqual(node.props.image, 'hero.jpg');
     assert.strictEqual(node.props.title, 'Title');
     assert.strictEqual(node.props.description, 'Description');
-    assert.strictEqual(node.props.background, true);
   });
 
 });
