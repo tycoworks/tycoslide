@@ -3,11 +3,9 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { prose, label, text } from '../src/components/text.js';
-import { Component, CONTENT, HALIGN, VALIGN } from '../src/core/model/types.js';
-import { componentRegistry } from '../src/core/rendering/registry.js';
-import { NODE_TYPE } from '../src/core/model/nodes.js';
-import type { NormalizedRun } from '../src/core/model/types.js';
+import { prose, label, text } from '../src/text.js';
+import { Component, CONTENT, HALIGN, VALIGN, NODE_TYPE, componentRegistry } from 'tycoslide';
+import type { NormalizedRun } from 'tycoslide';
 import { mockTheme } from './mocks.js';
 
 // Test accents for directive resolution

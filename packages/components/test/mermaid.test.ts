@@ -3,10 +3,8 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { mermaid, sanitizeMermaidDefinition } from '../src/components/mermaid.js';
-import { Component } from '../src/core/model/types.js';
-import { componentRegistry } from '../src/core/rendering/registry.js';
-import { NODE_TYPE } from '../src/core/model/nodes.js';
+import { mermaid, sanitizeMermaidDefinition } from '../src/mermaid.js';
+import { Component, componentRegistry, NODE_TYPE } from 'tycoslide';
 import { mockTheme } from './mocks.js';
 
 describe('mermaid() DSL function', () => {

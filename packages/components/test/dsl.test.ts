@@ -16,14 +16,13 @@ import {
   stack,
   grid,
   table,
-} from '../src/components/index.js';
-import { card } from '../src/components/card.js';
-import { Component } from '../src/core/model/types.js';
-import { componentRegistry } from '../src/core/rendering/registry.js';
-import { NODE_TYPE } from '../src/core/model/nodes.js';
-import type { TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, ContainerNode, StackNode } from '../src/core/model/nodes.js';
-import { DIRECTION } from '../src/core/model/types.js';
+} from '../src/index.js';
+import { card } from '../src/card.js';
 import {
+  Component,
+  componentRegistry,
+  NODE_TYPE,
+  DIRECTION,
   TEXT_STYLE,
   GAP,
   HALIGN,
@@ -32,7 +31,8 @@ import {
   SHAPE,
   ARROW_TYPE,
   DASH_TYPE,
-} from '../src/core/model/types.js';
+} from 'tycoslide';
+import type { TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, ContainerNode, StackNode } from 'tycoslide';
 import { mockTheme as createMockTheme } from './mocks.js';
 
 // Theme for text expansion
@@ -836,4 +836,3 @@ describe('table()', () => {
   });
 
 });
-

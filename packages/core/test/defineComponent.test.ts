@@ -12,14 +12,6 @@ import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { Component, HALIGN, VALIGN, SIZE, DIRECTION } from '../src/core/model/types.js';
 import { schema } from '../src/core/model/schema.js';
 
-// Import components to test their .schema properties
-import { proseComponent, labelComponent } from '../src/components/text.js';
-import { imageComponent } from '../src/components/primitives.js';
-import { mermaidComponent } from '../src/components/mermaid.js';
-import { cardComponent } from '../src/components/card.js';
-import { quoteComponent } from '../src/components/quote.js';
-import '../src/components/containers.js';
-import '../src/components/table.js';
 
 describe('componentRegistry.define', () => {
   describe('define with params', () => {
@@ -214,88 +206,4 @@ describe('componentRegistry.define', () => {
     });
   });
 
-  describe('real component .schema properties', () => {
-    test('proseComponent.schema is z.string()', () => {
-      assert.ok(proseComponent.schema);
-      assert.strictEqual(proseComponent.schema.safeParse('**bold**').success, true);
-      assert.strictEqual(proseComponent.schema.safeParse(42).success, false);
-    });
-
-    test('labelComponent.schema is z.string()', () => {
-      assert.ok(labelComponent.schema);
-      assert.strictEqual(labelComponent.schema.safeParse('plain').success, true);
-      assert.strictEqual(labelComponent.schema.safeParse(42).success, false);
-    });
-
-    test('imageComponent.schema is z.string()', () => {
-      assert.ok(imageComponent.schema);
-      assert.strictEqual(imageComponent.schema.safeParse('logo.png').success, true);
-      assert.strictEqual(imageComponent.schema.safeParse(42).success, false);
-    });
-
-    test('mermaidComponent.schema is z.string()', () => {
-      assert.ok(mermaidComponent.schema);
-      assert.strictEqual(mermaidComponent.schema.safeParse('flowchart LR\n  A-->B').success, true);
-      assert.strictEqual(mermaidComponent.schema.safeParse(42).success, false);
-    });
-
-    test('cardComponent.schema is a ZodObject (params component)', () => {
-      assert.ok(cardComponent.schema);
-      assert.ok(cardComponent.schema instanceof z.ZodObject);
-    });
-
-    test('cardComponent.schema validates card props', () => {
-      const result = cardComponent.schema.safeParse({
-        title: 'Test Card',
-        description: 'A **description**',
-      });
-      assert.strictEqual(result.success, true);
-    });
-
-    test('quoteComponent.schema is a ZodObject (params component)', () => {
-      assert.ok(quoteComponent.schema);
-      assert.ok(quoteComponent.schema instanceof z.ZodObject);
-    });
-
-    test('quoteComponent.schema validates quote props', () => {
-      const result = quoteComponent.schema.safeParse({
-        quote: '"This changed everything."',
-        attribution: '— Jane Smith',
-      });
-      assert.strictEqual(result.success, true);
-    });
-  });
-
-  describe('component .schema in layout params', () => {
-    test('proseComponent.schema usable in schema.array()', () => {
-      const arr = schema.array(proseComponent.schema);
-      const result = arr.safeParse(['**bold**', 'plain text']);
-      assert.strictEqual(result.success, true);
-    });
-
-    test('cardComponent.schema usable in schema.array()', () => {
-      const arr = schema.array(cardComponent.schema);
-      const result = arr.safeParse([
-        { title: 'Card 1' },
-        { description: '**Bold** desc' },
-      ]);
-      assert.strictEqual(result.success, true);
-    });
-
-    test('mixed component schemas in layout params object', () => {
-      const layoutParams = z.object({
-        title: proseComponent.schema,
-        eyebrow: labelComponent.schema.optional(),
-        logo: imageComponent.schema.optional(),
-        cards: schema.array(cardComponent.schema),
-      });
-
-      const result = layoutParams.safeParse({
-        title: '**Welcome**',
-        logo: 'logo.png',
-        cards: [{ title: 'Card 1' }],
-      });
-      assert.strictEqual(result.success, true);
-    });
-  });
 });

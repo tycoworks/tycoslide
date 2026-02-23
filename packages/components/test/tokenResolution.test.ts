@@ -3,14 +3,23 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { card } from '../src/components/card.js';
-import { quote } from '../src/components/quote.js';
-import { table } from '../src/components/table.js';
-import { prose, label } from '../src/components/text.js';
-import { shape, line, slideNumber } from '../src/components/primitives.js';
-import { componentRegistry } from '../src/core/rendering/registry.js';
-import { NODE_TYPE } from '../src/core/model/nodes.js';
-import { BORDER_STYLE, TEXT_STYLE, GAP, HALIGN, VALIGN, SHAPE, DASH_TYPE, Component } from '../src/core/model/types.js';
+import { card } from '../src/card.js';
+import { quote } from '../src/quote.js';
+import { table } from '../src/table.js';
+import { prose, label } from '../src/text.js';
+import { shape, line, slideNumber } from '../src/primitives.js';
+import {
+  componentRegistry,
+  NODE_TYPE,
+  BORDER_STYLE,
+  TEXT_STYLE,
+  GAP,
+  HALIGN,
+  VALIGN,
+  SHAPE,
+  DASH_TYPE,
+  Component,
+} from 'tycoslide';
 import { mockTheme } from './mocks.js';
 
 describe('Token Resolution', () => {

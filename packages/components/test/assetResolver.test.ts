@@ -4,9 +4,9 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { componentRegistry, type ExpansionContext } from '../src/core/rendering/registry.js';
-import { image } from '../src/components/primitives.js';
-import { NODE_TYPE, type ImageNode } from '../src/core/model/nodes.js';
+import { componentRegistry, NODE_TYPE } from 'tycoslide';
+import type { ExpansionContext, ImageNode } from 'tycoslide';
+import { image } from '../src/primitives.js';
 import { mockTheme } from './mocks.js';
 
 const testAssets = {
