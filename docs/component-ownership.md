@@ -369,6 +369,14 @@ Revert all code changes from the incomplete Phase 2 attempt (which moved compone
    import { card, row, column, text } from 'tycoslide-components';
    ```
 
+### Phase 11: Layering Improvements
+
+1. **Move `Component` const to components package** — Core's `types.ts` currently enumerates all 13 built-in component names. This knowledge belongs in the components package. Core's slot compiler only needs 3 names (Text, Column, Table) for `compileBareMarkdown()` — use string literals or a minimal internal const. See "The `Component` Const and `ComponentTokenMap`" section.
+
+2. **Fix `resolveAssetPath` layering violation** — `resolveAssetPath` (in `components/src/image.ts`) accepts a `slideIndex` parameter and includes `Slide ${slideIndex + 1}:` in error messages. A component-level function should not have knowledge of slide indices. Fix: throw clean errors about the asset path only; let the caller (expansion context or presentation layer) add slide context to error messages.
+
+3. **Architectural review for other layering violations** — Audit the codebase for similar patterns where lower-level code has knowledge it shouldn't: components knowing about slides, core knowing about specific components, rendering code making content decisions. Document findings and create targeted fixes.
+
 ---
 
 ## What Each Package Becomes
@@ -408,7 +416,11 @@ The boundary: **core defines what CAN be drawn; components define what IS drawn;
 
 ### Component Names
 
-Keep all component name strings in core's `Component` const. Names are just string constants with zero runtime cost. The `ComponentName` type remains open: `BuiltinComponentName | (string & {})`.
+Move the `Component` const (all 13 built-in names) from core's `types.ts` to the components package. Core should not enumerate the full set of built-in components — that knowledge belongs to the package that defines them.
+
+Core's slot compiler needs only 3 names (`Text`, `Column`, `Table`) for `compileBareMarkdown()`. These can be string literals or a minimal internal const — not the full 13-name `Component` object.
+
+The `ComponentName` type remains open: `BuiltinComponentName | (string & {})`. `BuiltinComponentName` can be defined via declaration merging from the components package, just like `ComponentTokenMap`.
 
 ### Token Map
 
