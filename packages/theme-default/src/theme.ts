@@ -7,6 +7,7 @@ import {
   BORDER_STYLE,
   DASH_TYPE,
   HALIGN,
+  VALIGN,
   SLIDE_SIZE,
   type Theme,
 } from 'tycoslide';
@@ -60,6 +61,21 @@ const borderWidth = 0.75;
 const cornerRadius = 0.05;
 
 // ============================================
+// COMPONENT BASES (shared across variants)
+// ============================================
+
+const textBase = {
+  style: TEXT_STYLE.BODY,
+  lineHeightMultiplier: spacing.lineSpacing,
+};
+
+const shapeBase = {
+  borderColor: colors.background,
+  borderWidth: 0,
+  cornerRadius: 0,
+};
+
+// ============================================
 // THEME EXPORT
 // ============================================
 
@@ -92,8 +108,13 @@ export const theme: Theme = {
           borderColor: colors.secondary,
           borderWidth,
           titleStyle: TEXT_STYLE.H4,
+          titleColor: colors.text,
           descriptionStyle: TEXT_STYLE.SMALL,
+          descriptionColor: colors.textMuted,
           gap: GAP.TIGHT,
+          textGap: GAP.TIGHT,
+          hAlign: HALIGN.CENTER,
+          vAlign: VALIGN.TOP,
         },
       },
     },
@@ -106,8 +127,14 @@ export const theme: Theme = {
           backgroundOpacity: colors.subtleOpacity,
           borderColor: colors.secondary,
           borderWidth,
+          quoteStyle: TEXT_STYLE.BODY,
+          quoteColor: colors.text,
           attributionStyle: TEXT_STYLE.SMALL,
+          attributionColor: colors.textMuted,
+          attributionHAlign: HALIGN.RIGHT,
           gap: GAP.NORMAL,
+          hAlign: HALIGN.CENTER,
+          vAlign: VALIGN.MIDDLE,
         },
       },
     },
@@ -117,9 +144,15 @@ export const theme: Theme = {
           borderStyle: BORDER_STYLE.FULL,
           borderColor: colors.secondary,
           borderWidth,
-          cellPadding: spacing.cellPadding,
-          cellTextStyle: TEXT_STYLE.BODY,
+          headerBackground: colors.background,
+          headerBackgroundOpacity: 0,
           headerTextStyle: TEXT_STYLE.BODY,
+          cellBackground: colors.background,
+          cellBackgroundOpacity: 0,
+          cellTextStyle: TEXT_STYLE.BODY,
+          cellPadding: spacing.cellPadding,
+          hAlign: HALIGN.LEFT,
+          vAlign: VALIGN.MIDDLE,
         },
       },
     },
@@ -143,69 +176,19 @@ export const theme: Theme = {
     },
     text: {
       variants: {
-        default: {
-          color: colors.text,
-          bulletColor: colors.text,
-          style: TEXT_STYLE.BODY,
-          lineHeightMultiplier: spacing.lineSpacing,
-        },
-        muted: {
-          color: colors.textMuted,
-          bulletColor: colors.textMuted,
-          style: TEXT_STYLE.BODY,
-          lineHeightMultiplier: spacing.lineSpacing,
-        },
-        accent: {
-          color: colors.accents.blue,
-          bulletColor: colors.accents.blue,
-          style: TEXT_STYLE.BODY,
-          lineHeightMultiplier: spacing.lineSpacing,
-        },
-        inverse: {
-          color: colors.background,
-          bulletColor: colors.background,
-          style: TEXT_STYLE.BODY,
-          lineHeightMultiplier: spacing.lineSpacing,
-        },
+        default: { ...textBase, color: colors.text, bulletColor: colors.text },
+        muted:   { ...textBase, color: colors.textMuted, bulletColor: colors.textMuted },
+        accent:  { ...textBase, color: colors.accents.blue, bulletColor: colors.accents.blue },
+        inverse: { ...textBase, color: colors.background, bulletColor: colors.background },
       },
     },
     shape: {
       variants: {
-        default: {
-          fill: colors.secondary,
-          fillOpacity: 100,
-          borderColor: colors.background,
-          borderWidth: 0,
-          cornerRadius: 0,
-        },
-        primary: {
-          fill: colors.primary,
-          fillOpacity: 100,
-          borderColor: colors.background,
-          borderWidth: 0,
-          cornerRadius: 0,
-        },
-        subtle: {
-          fill: colors.secondary,
-          fillOpacity: colors.subtleOpacity,
-          borderColor: colors.background,
-          borderWidth: 0,
-          cornerRadius: 0,
-        },
-        outlined: {
-          fill: colors.background,
-          fillOpacity: 0,
-          borderColor: colors.primary,
-          borderWidth,
-          cornerRadius: 0,
-        },
-        accent: {
-          fill: colors.accents.blue,
-          fillOpacity: 100,
-          borderColor: colors.background,
-          borderWidth: 0,
-          cornerRadius: 0,
-        },
+        default:  { ...shapeBase, fill: colors.secondary, fillOpacity: 100 },
+        primary:  { ...shapeBase, fill: colors.primary, fillOpacity: 100 },
+        subtle:   { ...shapeBase, fill: colors.secondary, fillOpacity: colors.subtleOpacity },
+        outlined: { ...shapeBase, fill: colors.background, fillOpacity: 0, borderColor: colors.primary, borderWidth },
+        accent:   { ...shapeBase, fill: colors.accents.blue, fillOpacity: 100 },
       },
     },
   },

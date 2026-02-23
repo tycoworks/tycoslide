@@ -5,7 +5,7 @@ import * as assert from 'node:assert';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import type { Theme, TextStyle, FontFamily, ComponentTokenMap } from '../src/core/types.js';
-import { Component, TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, HALIGN, DEFAULT_VARIANT } from '../src/core/types.js';
+import { Component, TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, HALIGN, VALIGN, DEFAULT_VARIANT } from '../src/core/types.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -65,8 +65,13 @@ export function mockTheme(options?: {
       borderColor: '333333',
       borderWidth,
       titleStyle: TEXT_STYLE.H4,
+      titleColor: 'FFFFFF',
       descriptionStyle: TEXT_STYLE.SMALL,
+      descriptionColor: 'CCCCCC',
       gap: GAP.TIGHT,
+      textGap: GAP.TIGHT,
+      hAlign: HALIGN.CENTER,
+      vAlign: VALIGN.TOP,
     },
     [Component.Quote]: {
       padding: padding * 2,
@@ -75,16 +80,28 @@ export function mockTheme(options?: {
       backgroundOpacity: 20,
       borderColor: '333333',
       borderWidth,
+      quoteStyle: TEXT_STYLE.BODY,
+      quoteColor: 'FFFFFF',
       attributionStyle: TEXT_STYLE.SMALL,
+      attributionColor: '666666',
+      attributionHAlign: HALIGN.RIGHT,
       gap: GAP.NORMAL,
+      hAlign: HALIGN.CENTER,
+      vAlign: VALIGN.MIDDLE,
     },
     [Component.Table]: {
       borderStyle: BORDER_STYLE.FULL,
       borderColor: '333333',
       borderWidth,
-      cellPadding,
-      cellTextStyle: TEXT_STYLE.BODY,
+      headerBackground: 'FFFFFF',
+      headerBackgroundOpacity: 0,
       headerTextStyle: TEXT_STYLE.BODY,
+      cellBackground: 'FFFFFF',
+      cellBackgroundOpacity: 0,
+      cellTextStyle: TEXT_STYLE.BODY,
+      cellPadding,
+      hAlign: HALIGN.LEFT,
+      vAlign: VALIGN.MIDDLE,
     },
     [Component.Line]: {
       color: '333333',

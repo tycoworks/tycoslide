@@ -60,7 +60,7 @@ const tableDirectiveSchema = {
 componentRegistry.define({
   name: Component.Table,
   params: tableDirectiveSchema,
-  tokens: [TABLE_TOKEN.BORDER_STYLE, TABLE_TOKEN.BORDER_COLOR, TABLE_TOKEN.BORDER_WIDTH, TABLE_TOKEN.CELL_PADDING, TABLE_TOKEN.CELL_TEXT_STYLE, TABLE_TOKEN.HEADER_TEXT_STYLE],
+  tokens: [TABLE_TOKEN.BORDER_STYLE, TABLE_TOKEN.BORDER_COLOR, TABLE_TOKEN.BORDER_WIDTH, TABLE_TOKEN.HEADER_BACKGROUND, TABLE_TOKEN.HEADER_BACKGROUND_OPACITY, TABLE_TOKEN.HEADER_TEXT_STYLE, TABLE_TOKEN.CELL_BACKGROUND, TABLE_TOKEN.CELL_BACKGROUND_OPACITY, TABLE_TOKEN.CELL_TEXT_STYLE, TABLE_TOKEN.CELL_PADDING, TABLE_TOKEN.HALIGN, TABLE_TOKEN.VALIGN],
   expand: (async (props: TableInternalProps & { body?: string; headerColumns?: number }, context: ExpansionContext, tokens: TableTokens) => {
     // Determine data source: structured (DSL) or body string (directive)
     let data: (TableCellData | TextContent)[][];

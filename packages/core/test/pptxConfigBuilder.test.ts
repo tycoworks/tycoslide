@@ -13,6 +13,7 @@ import {
   type ShapeNode,
   type TableNode,
   type TableCellData,
+  type TableTokens,
   type SlideNumberNode,
 } from '../src/core/nodes.js';
 import {
@@ -153,13 +154,29 @@ describe('buildLineConfig()', () => {
 // TABLE CELL TESTS - Regression test #3 and #4
 // ============================================
 
+/** Complete table style for tests — spread with overrides per test */
+const defaultTableStyle: TableTokens = {
+  borderStyle: BORDER_STYLE.FULL,
+  borderColor: '333333',
+  borderWidth: 1,
+  headerBackground: 'FFFFFF',
+  headerBackgroundOpacity: 0,
+  headerTextStyle: TEXT_STYLE.BODY,
+  cellBackground: 'FFFFFF',
+  cellBackgroundOpacity: 0,
+  cellTextStyle: TEXT_STYLE.BODY,
+  cellPadding: 0.1,
+  hAlign: HALIGN.LEFT,
+  vAlign: VALIGN.MIDDLE,
+};
+
 describe('buildTableCell()', () => {
   test('preserves cell color in options and text fragments', () => {
     const cell: TableCellData = {
       content: 'Red text',
       color: 'FF0000',
     };
-    const tableStyle: TableNode['style'] = {};
+    const tableStyle: TableNode['style'] = { ...defaultTableStyle };
 
     const result = builder.buildTableCell(
       cell,
@@ -179,9 +196,7 @@ describe('buildTableCell()', () => {
       content: 'Cell with override',
       vAlign: VALIGN.BOTTOM,
     };
-    const tableStyle: TableNode['style'] = {
-      vAlign: VALIGN.TOP,
-    };
+    const tableStyle: TableNode['style'] = { ...defaultTableStyle, vAlign: VALIGN.TOP };
 
     const result = builder.buildTableCell(
       cell,
@@ -198,9 +213,7 @@ describe('buildTableCell()', () => {
     const cell: TableCellData = {
       content: 'Cell with default',
     };
-    const tableStyle: TableNode['style'] = {
-      vAlign: VALIGN.TOP,
-    };
+    const tableStyle: TableNode['style'] = { ...defaultTableStyle, vAlign: VALIGN.TOP };
 
     const result = builder.buildTableCell(
       cell,
@@ -217,7 +230,7 @@ describe('buildTableCell()', () => {
     const cell: TableCellData = {
       content: 'Cell with terminal default',
     };
-    const tableStyle: TableNode['style'] = {};
+    const tableStyle: TableNode['style'] = undefined;
 
     const result = builder.buildTableCell(
       cell,
@@ -235,9 +248,7 @@ describe('buildTableCell()', () => {
       content: 'Right aligned',
       hAlign: HALIGN.RIGHT,
     };
-    const tableStyle: TableNode['style'] = {
-      hAlign: HALIGN.LEFT,
-    };
+    const tableStyle: TableNode['style'] = { ...defaultTableStyle, hAlign: HALIGN.LEFT };
 
     const result = builder.buildTableCell(
       cell,
@@ -256,7 +267,7 @@ describe('buildTableCell()', () => {
       colspan: 2,
       rowspan: 3,
     };
-    const tableStyle: TableNode['style'] = {};
+    const tableStyle: TableNode['style'] = { ...defaultTableStyle };
 
     const result = builder.buildTableCell(
       cell,
@@ -275,7 +286,7 @@ describe('buildTableCell()', () => {
       content: 'Cell with fill',
       fill: 'FFFF00',
     };
-    const tableStyle: TableNode['style'] = {};
+    const tableStyle: TableNode['style'] = { ...defaultTableStyle };
 
     const result = builder.buildTableCell(
       cell,
@@ -286,17 +297,66 @@ describe('buildTableCell()', () => {
     );
 
     assert.ok(result.options.fill);
-    const fill = result.options.fill as { color: string };
+    const fill = result.options.fill as { color: string; transparency: number };
     assert.strictEqual(fill.color, 'FFFF00');
+    assert.strictEqual(fill.transparency, 0); // cell-level fill always fully opaque
+  });
+
+  test('header cell with opacity 0 produces no fill', () => {
+    const cell: TableCellData = { content: 'Header' };
+    const tableStyle: TableNode['style'] = {
+      ...defaultTableStyle,
+      headerBackground: 'EEEEEE',
+      headerBackgroundOpacity: 0,
+    };
+    const result = builder.buildTableCell(cell, 0, 0, 1, 1, 1, 0, tableStyle, theme);
+    assert.strictEqual(result.options.fill, undefined);
+  });
+
+  test('header cell with opacity 50 produces fill with transparency 50', () => {
+    const cell: TableCellData = { content: 'Header' };
+    const tableStyle: TableNode['style'] = {
+      ...defaultTableStyle,
+      headerBackground: 'AABBCC',
+      headerBackgroundOpacity: 50,
+    };
+    const result = builder.buildTableCell(cell, 0, 0, 1, 1, 1, 0, tableStyle, theme);
+    assert.ok(result.options.fill);
+    const fill = result.options.fill as { color: string; transparency: number };
+    assert.strictEqual(fill.color, 'AABBCC');
+    assert.strictEqual(fill.transparency, 50);
+  });
+
+  test('non-header cell with cellBackgroundOpacity 0 produces no fill', () => {
+    const cell: TableCellData = { content: 'Data' };
+    const tableStyle: TableNode['style'] = {
+      ...defaultTableStyle,
+      cellBackground: 'DDDDDD',
+      cellBackgroundOpacity: 0,
+    };
+    const result = builder.buildTableCell(cell, 1, 0, 2, 1, 1, 0, tableStyle, theme);
+    assert.strictEqual(result.options.fill, undefined);
+  });
+
+  test('non-header cell with cellBackgroundOpacity 80 produces fill with transparency 20', () => {
+    const cell: TableCellData = { content: 'Data' };
+    const tableStyle: TableNode['style'] = {
+      ...defaultTableStyle,
+      cellBackground: 'DDDDDD',
+      cellBackgroundOpacity: 80,
+    };
+    const result = builder.buildTableCell(cell, 1, 0, 2, 1, 1, 0, tableStyle, theme);
+    assert.ok(result.options.fill);
+    const fill = result.options.fill as { color: string; transparency: number };
+    assert.strictEqual(fill.color, 'DDDDDD');
+    assert.strictEqual(fill.transparency, 20);
   });
 
   test('header cell uses headerBackground from table style', () => {
     const cell: TableCellData = {
       content: 'Header',
     };
-    const tableStyle: TableNode['style'] = {
-      headerBackground: 'EEEEEE',
-    };
+    const tableStyle: TableNode['style'] = { ...defaultTableStyle, headerBackground: 'EEEEEE', headerBackgroundOpacity: 100 };
 
     const result = builder.buildTableCell(
       cell,
@@ -307,8 +367,9 @@ describe('buildTableCell()', () => {
     );
 
     assert.ok(result.options.fill);
-    const fill = result.options.fill as { color: string };
+    const fill = result.options.fill as { color: string; transparency: number };
     assert.strictEqual(fill.color, 'EEEEEE');
+    assert.strictEqual(fill.transparency, 0);
   });
 });
 
@@ -318,11 +379,7 @@ describe('buildTableCell()', () => {
 
 describe('buildCellBorder()', () => {
   test('BORDER_STYLE.INTERNAL - corner cell (0,0) in 3x3 table', () => {
-    const tableStyle: TableNode['style'] = {
-      borderStyle: BORDER_STYLE.INTERNAL,
-      borderWidth: 1,
-      borderColor: '000000',
-    };
+    const tableStyle: TableNode['style'] = { ...defaultTableStyle, borderStyle: BORDER_STYLE.INTERNAL, borderWidth: 1, borderColor: '000000' };
 
     const border = builder.buildCellBorder(tableStyle, theme, 0, 0, 3, 3);
 
@@ -336,11 +393,7 @@ describe('buildCellBorder()', () => {
   });
 
   test('BORDER_STYLE.INTERNAL - middle cell (1,1) in 3x3 table', () => {
-    const tableStyle: TableNode['style'] = {
-      borderStyle: BORDER_STYLE.INTERNAL,
-      borderWidth: 1,
-      borderColor: '000000',
-    };
+    const tableStyle: TableNode['style'] = { ...defaultTableStyle, borderStyle: BORDER_STYLE.INTERNAL, borderWidth: 1, borderColor: '000000' };
 
     const border = builder.buildCellBorder(tableStyle, theme, 1, 1, 3, 3);
 
@@ -354,11 +407,7 @@ describe('buildCellBorder()', () => {
   });
 
   test('BORDER_STYLE.INTERNAL - bottom-right cell (2,2) in 3x3 table', () => {
-    const tableStyle: TableNode['style'] = {
-      borderStyle: BORDER_STYLE.INTERNAL,
-      borderWidth: 1,
-      borderColor: '000000',
-    };
+    const tableStyle: TableNode['style'] = { ...defaultTableStyle, borderStyle: BORDER_STYLE.INTERNAL, borderWidth: 1, borderColor: '000000' };
 
     const border = builder.buildCellBorder(tableStyle, theme, 2, 2, 3, 3);
 
@@ -372,11 +421,7 @@ describe('buildCellBorder()', () => {
   });
 
   test('BORDER_STYLE.FULL - all borders solid', () => {
-    const tableStyle: TableNode['style'] = {
-      borderStyle: BORDER_STYLE.FULL,
-      borderWidth: 1,
-      borderColor: '000000',
-    };
+    const tableStyle: TableNode['style'] = { ...defaultTableStyle, borderStyle: BORDER_STYLE.FULL, borderWidth: 1, borderColor: '000000' };
 
     const border = builder.buildCellBorder(tableStyle, theme, 1, 1, 3, 3);
 
@@ -389,11 +434,7 @@ describe('buildCellBorder()', () => {
   });
 
   test('BORDER_STYLE.HORIZONTAL - only top and bottom', () => {
-    const tableStyle: TableNode['style'] = {
-      borderStyle: BORDER_STYLE.HORIZONTAL,
-      borderWidth: 1,
-      borderColor: '000000',
-    };
+    const tableStyle: TableNode['style'] = { ...defaultTableStyle, borderStyle: BORDER_STYLE.HORIZONTAL, borderWidth: 1, borderColor: '000000' };
 
     const border = builder.buildCellBorder(tableStyle, theme, 1, 1, 3, 3);
 
@@ -406,11 +447,7 @@ describe('buildCellBorder()', () => {
   });
 
   test('BORDER_STYLE.VERTICAL - only left and right', () => {
-    const tableStyle: TableNode['style'] = {
-      borderStyle: BORDER_STYLE.VERTICAL,
-      borderWidth: 1,
-      borderColor: '000000',
-    };
+    const tableStyle: TableNode['style'] = { ...defaultTableStyle, borderStyle: BORDER_STYLE.VERTICAL, borderWidth: 1, borderColor: '000000' };
 
     const border = builder.buildCellBorder(tableStyle, theme, 1, 1, 3, 3);
 
@@ -423,9 +460,7 @@ describe('buildCellBorder()', () => {
   });
 
   test('BORDER_STYLE.NONE - returns undefined', () => {
-    const tableStyle: TableNode['style'] = {
-      borderStyle: BORDER_STYLE.NONE,
-    };
+    const tableStyle: TableNode['style'] = { ...defaultTableStyle, borderStyle: BORDER_STYLE.NONE };
 
     const border = builder.buildCellBorder(tableStyle, theme, 1, 1, 3, 3);
 
@@ -433,11 +468,7 @@ describe('buildCellBorder()', () => {
   });
 
   test('border width and color applied correctly', () => {
-    const tableStyle: TableNode['style'] = {
-      borderStyle: BORDER_STYLE.FULL,
-      borderWidth: 2.5,
-      borderColor: 'FF0000',
-    };
+    const tableStyle: TableNode['style'] = { ...defaultTableStyle, borderStyle: BORDER_STYLE.FULL, borderWidth: 2.5, borderColor: 'FF0000' };
 
     const border = builder.buildCellBorder(tableStyle, theme, 0, 0, 1, 1);
 

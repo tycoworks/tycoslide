@@ -115,8 +115,10 @@ export const TABLE_TOKEN = {
   BORDER_COLOR: 'borderColor',
   BORDER_WIDTH: 'borderWidth',
   HEADER_BACKGROUND: 'headerBackground',
+  HEADER_BACKGROUND_OPACITY: 'headerBackgroundOpacity',
   HEADER_TEXT_STYLE: 'headerTextStyle',
   CELL_BACKGROUND: 'cellBackground',
+  CELL_BACKGROUND_OPACITY: 'cellBackgroundOpacity',
   CELL_TEXT_STYLE: 'cellTextStyle',
   CELL_PADDING: 'cellPadding',
   HALIGN: 'hAlign',
@@ -125,16 +127,18 @@ export const TABLE_TOKEN = {
 
 /** Table-level style configuration */
 export interface TableTokens {
-  [TABLE_TOKEN.BORDER_STYLE]?: BorderStyle;
-  [TABLE_TOKEN.BORDER_COLOR]?: string;
-  [TABLE_TOKEN.BORDER_WIDTH]?: number;
-  [TABLE_TOKEN.HEADER_BACKGROUND]?: string;
-  [TABLE_TOKEN.HEADER_TEXT_STYLE]?: TextStyleName;
-  [TABLE_TOKEN.CELL_BACKGROUND]?: string;
-  [TABLE_TOKEN.CELL_TEXT_STYLE]?: TextStyleName;
-  [TABLE_TOKEN.CELL_PADDING]?: number;
-  [TABLE_TOKEN.HALIGN]?: HorizontalAlignment;
-  [TABLE_TOKEN.VALIGN]?: VerticalAlignment;
+  [TABLE_TOKEN.BORDER_STYLE]: BorderStyle;
+  [TABLE_TOKEN.BORDER_COLOR]: string;
+  [TABLE_TOKEN.BORDER_WIDTH]: number;
+  [TABLE_TOKEN.HEADER_BACKGROUND]: string;
+  [TABLE_TOKEN.HEADER_BACKGROUND_OPACITY]: number;
+  [TABLE_TOKEN.HEADER_TEXT_STYLE]: TextStyleName;
+  [TABLE_TOKEN.CELL_BACKGROUND]: string;
+  [TABLE_TOKEN.CELL_BACKGROUND_OPACITY]: number;
+  [TABLE_TOKEN.CELL_TEXT_STYLE]: TextStyleName;
+  [TABLE_TOKEN.CELL_PADDING]: number;
+  [TABLE_TOKEN.HALIGN]: HorizontalAlignment;
+  [TABLE_TOKEN.VALIGN]: VerticalAlignment;
 }
 
 /** Native table element - renders directly via slide.addTable() */

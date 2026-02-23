@@ -485,6 +485,8 @@ export const CARD_TOKEN = {
   DESCRIPTION_COLOR: 'descriptionColor',
   GAP: 'gap',
   TEXT_GAP: 'textGap',
+  HALIGN: 'hAlign',
+  VALIGN: 'vAlign',
 } as const;
 
 export interface CardTokens {
@@ -495,11 +497,13 @@ export interface CardTokens {
   [CARD_TOKEN.BORDER_COLOR]: string;
   [CARD_TOKEN.BORDER_WIDTH]: number;
   [CARD_TOKEN.TITLE_STYLE]: TextStyleName;
-  [CARD_TOKEN.TITLE_COLOR]?: string;
+  [CARD_TOKEN.TITLE_COLOR]: string;
   [CARD_TOKEN.DESCRIPTION_STYLE]: TextStyleName;
-  [CARD_TOKEN.DESCRIPTION_COLOR]?: string;
+  [CARD_TOKEN.DESCRIPTION_COLOR]: string;
   [CARD_TOKEN.GAP]: GapSize;
-  [CARD_TOKEN.TEXT_GAP]?: GapSize;
+  [CARD_TOKEN.TEXT_GAP]: GapSize;
+  [CARD_TOKEN.HALIGN]: HorizontalAlignment;
+  [CARD_TOKEN.VALIGN]: VerticalAlignment;
 }
 
 export const QUOTE_TOKEN = {
@@ -510,8 +514,13 @@ export const QUOTE_TOKEN = {
   BORDER_COLOR: 'borderColor',
   BORDER_WIDTH: 'borderWidth',
   QUOTE_STYLE: 'quoteStyle',
+  QUOTE_COLOR: 'quoteColor',
   ATTRIBUTION_STYLE: 'attributionStyle',
+  ATTRIBUTION_COLOR: 'attributionColor',
+  ATTRIBUTION_HALIGN: 'attributionHAlign',
   GAP: 'gap',
+  HALIGN: 'hAlign',
+  VALIGN: 'vAlign',
 } as const;
 
 export interface QuoteTokens {
@@ -521,9 +530,14 @@ export interface QuoteTokens {
   [QUOTE_TOKEN.BACKGROUND_OPACITY]: number;
   [QUOTE_TOKEN.BORDER_COLOR]: string;
   [QUOTE_TOKEN.BORDER_WIDTH]: number;
-  [QUOTE_TOKEN.QUOTE_STYLE]?: TextStyleName;
+  [QUOTE_TOKEN.QUOTE_STYLE]: TextStyleName;
+  [QUOTE_TOKEN.QUOTE_COLOR]: string;
   [QUOTE_TOKEN.ATTRIBUTION_STYLE]: TextStyleName;
+  [QUOTE_TOKEN.ATTRIBUTION_COLOR]: string;
+  [QUOTE_TOKEN.ATTRIBUTION_HALIGN]: HorizontalAlignment;
   [QUOTE_TOKEN.GAP]: GapSize;
+  [QUOTE_TOKEN.HALIGN]: HorizontalAlignment;
+  [QUOTE_TOKEN.VALIGN]: VerticalAlignment;
 }
 
 import type { TableTokens } from './nodes.js';
@@ -550,7 +564,7 @@ export const SLIDE_NUMBER_TOKEN = {
 
 export interface SlideNumberTokens {
   [SLIDE_NUMBER_TOKEN.STYLE]: TextStyleName;
-  [SLIDE_NUMBER_TOKEN.COLOR]?: string;
+  [SLIDE_NUMBER_TOKEN.COLOR]: string;
   [SLIDE_NUMBER_TOKEN.HALIGN]: HorizontalAlignment;
 }
 

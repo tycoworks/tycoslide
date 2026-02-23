@@ -255,14 +255,17 @@ describe('Token Resolution', () => {
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
     });
 
-    it('optional tokens do not cause failure when missing', async () => {
+    it('titleColor is required (all card tokens are registered)', async () => {
       const theme = mockTheme();
-      // titleColor is optional — make sure it's NOT in the variant tokens
       delete (theme.components as any).card.variants.default.titleColor;
       const node = card({ title: 'Test' });
-      // Should not throw
-      const expanded = await componentRegistry.expandTree(node, { theme });
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
+      await assert.rejects(
+        () => componentRegistry.expandTree(node, { theme }),
+        (err: Error) => {
+          assert.match(err.message, /titleColor/);
+          return true;
+        }
+      );
     });
   });
 
@@ -492,7 +495,7 @@ describe('Token Resolution', () => {
                 descriptionStyle: TEXT_STYLE.SMALL, gap: GAP.TIGHT,
               },
               outlined: {
-                padding: 0.5, cornerRadius: 0.2, backgroundColor: 'none', backgroundOpacity: 0,
+                padding: 0.5, cornerRadius: 0.2, backgroundColor: 'FFFFFF', backgroundOpacity: 0,
                 borderColor: 'FF0000', borderWidth: 2, titleStyle: TEXT_STYLE.H3,
                 descriptionStyle: TEXT_STYLE.BODY, gap: GAP.NORMAL,
               },
@@ -502,7 +505,7 @@ describe('Token Resolution', () => {
       });
       const node = card({ title: 'Test', variant: 'outlined' });
       const expanded = await componentRegistry.expandTree(node, { theme }) as any;
-      // outlined variant has backgroundColor: 'none', so no background shape — just a column
+      // outlined variant has backgroundOpacity: 0, so no background shape — just a column
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
     });
 
@@ -563,7 +566,7 @@ describe('Token Resolution', () => {
       const theme = mockTheme({
         components: {
           [Component.Quote]: {
-            backgroundColor: 'none',
+            backgroundOpacity: 0,
           },
         },
       });

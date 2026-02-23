@@ -437,7 +437,7 @@ All styling props removed. Only the geometric form and variant remain.
 |-------|------|---------|
 | `fill` | `string` | Fill color (hex) |
 | `fillOpacity` | `number` | Fill opacity (0-100) |
-| `borderColor` | `string` | Border color (hex) |
+| `borderColor` | `string` | Border color (hex). Use `borderWidth: 0` for no border |
 | `borderWidth` | `number` | Border width |
 | `cornerRadius` | `number` | Corner radius |
 

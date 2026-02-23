@@ -7,7 +7,7 @@ import { stack, column, row } from './containers.js';
 import { shape, image as imageNode, imageComponent } from './primitives.js';
 import { prose, label, proseComponent, labelComponent } from './text.js';
 import type { SlideNode } from '../core/nodes.js';
-import { HALIGN, VALIGN, SHAPE, SIZE } from '../core/types.js';
+import { SHAPE, SIZE } from '../core/types.js';
 import { QUOTE_TOKEN } from '../core/types.js';
 import type { QuoteTokens } from '../core/types.js';
 import { schema } from '../schema.js';
@@ -67,27 +67,29 @@ function expandQuote(props: QuoteProps & { body?: string }, context: ExpansionCo
   const actualQuote = quoteText ?? body;
   const {
     padding, cornerRadius, backgroundColor, backgroundOpacity,
-    borderColor, borderWidth, quoteStyle, attributionStyle, gap,
+    borderColor, borderWidth, quoteStyle, quoteColor,
+    attributionStyle, attributionColor, attributionHAlign,
+    gap, hAlign: contentHAlign, vAlign: contentVAlign,
   } = tokens;
 
   // Build content children: optional image, quote text, attribution
   const children: SlideNode[] = [];
   if (imagePath) {
-    children.push(row({ hAlign: HALIGN.CENTER }, imageNode(imagePath)));
+    children.push(row({ hAlign: contentHAlign }, imageNode(imagePath)));
   }
   if (!actualQuote) {
     throw new Error(`[tycoslide] Quote component requires either a 'quote' attribute or body text.`);
   }
-  children.push(prose(actualQuote, quoteStyle ? { style: quoteStyle } : undefined));
+  children.push(prose(actualQuote, { style: quoteStyle, color: quoteColor }));
   if (attribution) {
-    children.push(label(attribution, { style: attributionStyle, hAlign: HALIGN.RIGHT }));
+    children.push(label(attribution, { style: attributionStyle, color: attributionColor, hAlign: attributionHAlign }));
   }
 
-  const contentProps = { padding, gap, vAlign: VALIGN.MIDDLE };
+  const contentProps = { padding, gap, hAlign: contentHAlign, vAlign: contentVAlign };
   const outerHeight = sizeHeight ?? SIZE.FILL;
 
   // If no background, just return the content column directly
-  if (background === false || backgroundColor === 'none') {
+  if (background === false || backgroundOpacity === 0) {
     return column({ ...contentProps, height: outerHeight }, ...children);
   }
 
@@ -113,7 +115,7 @@ function expandQuote(props: QuoteProps & { body?: string }, context: ExpansionCo
 export const quoteComponent = componentRegistry.define({
   name: Component.Quote,
   params: quoteSchema,
-  tokens: [QUOTE_TOKEN.PADDING, QUOTE_TOKEN.CORNER_RADIUS, QUOTE_TOKEN.BACKGROUND_COLOR, QUOTE_TOKEN.BACKGROUND_OPACITY, QUOTE_TOKEN.BORDER_COLOR, QUOTE_TOKEN.BORDER_WIDTH, QUOTE_TOKEN.ATTRIBUTION_STYLE, QUOTE_TOKEN.GAP],
+  tokens: [QUOTE_TOKEN.PADDING, QUOTE_TOKEN.CORNER_RADIUS, QUOTE_TOKEN.BACKGROUND_COLOR, QUOTE_TOKEN.BACKGROUND_OPACITY, QUOTE_TOKEN.BORDER_COLOR, QUOTE_TOKEN.BORDER_WIDTH, QUOTE_TOKEN.QUOTE_STYLE, QUOTE_TOKEN.QUOTE_COLOR, QUOTE_TOKEN.ATTRIBUTION_STYLE, QUOTE_TOKEN.ATTRIBUTION_COLOR, QUOTE_TOKEN.ATTRIBUTION_HALIGN, QUOTE_TOKEN.GAP, QUOTE_TOKEN.HALIGN, QUOTE_TOKEN.VALIGN],
   expand: expandQuote,
 });
 

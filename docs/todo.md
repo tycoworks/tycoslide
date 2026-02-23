@@ -7,9 +7,6 @@
 - Reorg & comments / code docs
 - Escape hatch
 - Portrait mode
-- Debug workflow in CLI:
--- Where to put html / pptx?
--- Live preview / navigating between slides
 
 ### Core
 
@@ -24,7 +21,6 @@
 -- Image cover
 
 ### Cleanup
-- Fixed percentages and slide size
 - Right align bullet points
 
 ### Components
@@ -37,3 +33,4 @@
 - Groups
 - Theme building in CLI (inc. JSON design tokens)
 - Dark mode
+- Different size slides

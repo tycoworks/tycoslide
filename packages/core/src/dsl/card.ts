@@ -6,7 +6,7 @@ import { stack, column } from './containers.js';
 import { shape, image, imageComponent } from './primitives.js';
 import { text, prose, textComponent, proseComponent } from './text.js';
 import type { SlideNode } from '../core/nodes.js';
-import { HALIGN, VALIGN, SHAPE, SIZE } from '../core/types.js';
+import { SHAPE, SIZE } from '../core/types.js';
 import { CARD_TOKEN } from '../core/types.js';
 import type { CardTokens } from '../core/types.js';
 import { schema } from '../schema.js';
@@ -63,7 +63,8 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
   const {
     padding, cornerRadius, backgroundColor, backgroundOpacity,
     borderColor, borderWidth, titleStyle, titleColor,
-    descriptionStyle, descriptionColor, gap, textGap,
+    descriptionStyle, descriptionColor, textGap,
+    hAlign: contentHAlign, vAlign: contentVAlign,
   } = tokens;
 
   // Build children from image/title/description props
@@ -87,11 +88,11 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
     }));
   }
 
-  const contentProps = { padding, gap: textGap ?? gap, hAlign: HALIGN.CENTER, vAlign: VALIGN.TOP };
+  const contentProps = { padding, gap: textGap, hAlign: contentHAlign, vAlign: contentVAlign };
   const outerHeight = sizeHeight ?? SIZE.FILL;
 
   // If no background, just return the content column directly
-  if (background === false || backgroundColor === 'none') {
+  if (background === false || backgroundOpacity === 0) {
     return column({ ...contentProps, height: outerHeight }, ...children);
   }
 
@@ -118,7 +119,7 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
 export const cardComponent = componentRegistry.define({
   name: Component.Card,
   params: cardSchema,
-  tokens: [CARD_TOKEN.PADDING, CARD_TOKEN.CORNER_RADIUS, CARD_TOKEN.BACKGROUND_COLOR, CARD_TOKEN.BACKGROUND_OPACITY, CARD_TOKEN.BORDER_COLOR, CARD_TOKEN.BORDER_WIDTH, CARD_TOKEN.TITLE_STYLE, CARD_TOKEN.DESCRIPTION_STYLE, CARD_TOKEN.GAP],
+  tokens: [CARD_TOKEN.PADDING, CARD_TOKEN.CORNER_RADIUS, CARD_TOKEN.BACKGROUND_COLOR, CARD_TOKEN.BACKGROUND_OPACITY, CARD_TOKEN.BORDER_COLOR, CARD_TOKEN.BORDER_WIDTH, CARD_TOKEN.TITLE_STYLE, CARD_TOKEN.TITLE_COLOR, CARD_TOKEN.DESCRIPTION_STYLE, CARD_TOKEN.DESCRIPTION_COLOR, CARD_TOKEN.GAP, CARD_TOKEN.TEXT_GAP, CARD_TOKEN.HALIGN, CARD_TOKEN.VALIGN],
   expand: expandCard,
 });
 

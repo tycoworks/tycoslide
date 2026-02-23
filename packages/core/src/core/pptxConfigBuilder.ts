@@ -262,11 +262,6 @@ export class PptxConfigBuilder {
     const textStyle = theme.textStyles[styleName];
     const font = getFontFromFamily(textStyle.fontFamily, textStyle.defaultWeight ?? FONT_WEIGHT.NORMAL);
 
-    // Determine background
-    const fill = cell.fill
-      ?? (isHeader ? tableStyle?.headerBackground : undefined)
-      ?? tableStyle?.cellBackground;
-
     // Determine alignment
     const hAlign = cell.hAlign ?? tableStyle?.hAlign ?? HALIGN.LEFT;
     const vAlign = cell.vAlign ?? tableStyle?.vAlign ?? VALIGN.MIDDLE;
@@ -289,8 +284,15 @@ export class PptxConfigBuilder {
       margin: cellPadding,
     };
 
-    if (fill) {
-      options.fill = { color: fill };
+    // Background fill: cell-level override wins, then token-driven (opacity 0 = no fill)
+    if (cell.fill) {
+      options.fill = { color: cell.fill, transparency: 0 };
+    } else if (tableStyle) {
+      const bg = isHeader ? tableStyle.headerBackground : tableStyle.cellBackground;
+      const opacity = isHeader ? tableStyle.headerBackgroundOpacity : tableStyle.cellBackgroundOpacity;
+      if (opacity > 0) {
+        options.fill = { color: bg, transparency: 100 - opacity };
+      }
     }
 
     if (border) {
