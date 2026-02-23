@@ -18,7 +18,8 @@ program
   .option('-o, --output <path>', 'output PPTX path (default: input basename + .pptx)')
   .option('-f, --force', 'write PPTX despite layout validation errors')
   .option('-d, --debug <dir>', 'write debug HTML files and enable verbose logging')
-  .action(async (input: string, opts: { output?: string; force?: boolean; debug?: string }) => {
+  .option('--no-notes', 'exclude speaker notes from output')
+  .action(async (input: string, opts: { output?: string; force?: boolean; debug?: string; notes: boolean }) => {
     await build(input, opts);
   });
 

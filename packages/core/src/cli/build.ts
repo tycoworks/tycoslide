@@ -13,6 +13,7 @@ export interface BuildOptions {
   output?: string;
   force?: boolean;
   debug?: string;
+  notes: boolean;
 }
 
 export async function build(inputPath: string, options: BuildOptions): Promise<void> {
@@ -58,7 +59,7 @@ export async function build(inputPath: string, options: BuildOptions): Promise<v
   }
 
   try {
-    await pres.writeFile(outputPath, { force: options.force, debugDir });
+    await pres.writeFile(outputPath, { force: options.force, debugDir, includeNotes: options.notes });
     console.log(`Written: ${outputPath}`);
   } catch (error) {
     if (error instanceof LayoutValidationError) {
