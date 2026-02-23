@@ -1,175 +1,406 @@
-# Component Ownership — Move All DSL to Theme
+# Component Ownership — Three-Package Architecture
 
 ---
 
 ## Summary
 
-Move all DSL component functions from `packages/core/src/components/` to `packages/theme-default/`. Core becomes the engine (node types, registries, markdown pipeline, layout engine, renderer). The theme owns the entire component vocabulary.
+tycoslide splits into three npm packages:
 
-**Prerequisite:** Inline the Document component's compilation logic into the slot compiler to eliminate circular coupling before moving any files.
+| Package | npm name | Purpose |
+|---------|----------|---------|
+| `packages/core` | `tycoslide` | Framework: registry, rendering, layout engine, markdown compiler, schema, types |
+| `packages/components` | `tycoslide-components` | Standard component definitions: text, image, card, quote, table, mermaid, containers |
+| `packages/theme-default` | `tycoslide-theme-default` | Default theme: colors, tokens, text styles, layouts, master slides, assets |
+
+Dependency graph (strict, no cycles, no cross-package test dependencies):
+
+```
+tycoslide-theme-default
+    |
+    v
+tycoslide-components
+    |
+    v
+tycoslide (core)
+```
+
+Every package depends only on packages below it. No devDependency exceptions. Core never imports from components or theme. Components never import from theme.
 
 ---
 
-## Architectural Decision: Components Belong in Themes
+## Architectural Decision: Three Packages
 
-### Decision
+### The Custom Theme Story (killer argument)
 
-All DSL component functions — including primitives like `text()`, `image()`, `row()`, `column()` — move from `packages/core` to `packages/theme-default`. Core retains only:
+A custom theme author building `tycoslide-theme-materialized` wants the standard `card` component. With components in theme-default, they must write:
 
-- Node types and interfaces (`NODE_TYPE`, `TextNode`, `ContainerNode`, etc.)
-- Registries (`componentRegistry`, `layoutRegistry`) and expansion engine
-- Markdown pipeline (slot compiler, document compiler, slide parser)
-- Layout engine (HTML measurement, flex positioning, validation)
-- Renderer (`pptxRenderer`, `pptxConfigBuilder`)
-- Component Author API (`schema`, `markdown` toolkit)
-- Constants and enums (`HALIGN`, `VALIGN`, `SIZE`, `DIRECTION`, `GAP`, `SHAPE`)
+```typescript
+import { card } from 'tycoslide-theme-default'; // wrong: theme depends on theme
+```
 
-### Rationale
+With three packages:
 
-1. **No architectural distinction between DSL functions.** Every DSL function follows an identical pattern: register with `componentRegistry.define()`, produce a `ComponentNode`, expand to node types at build time. `row()` expands to `NODE_TYPE.CONTAINER` the same way `card()` expands to containers + shapes + text. The renderer doesn't know about any of them.
+```typescript
+import { card } from 'tycoslide-components'; // correct: theme depends on components
+```
 
-2. **Core infrastructure has zero imports from `components/`.** The slot compiler, document compiler, and renderer work entirely through registry dispatch. The only reference to DSL files is the barrel re-export in `index.ts`. The engine is already decoupled.
+Both `theme-default` and `theme-materialized` consume the same component library. Neither depends on the other.
 
-3. **The extensibility story has a gap.** Built-in components use internal capabilities (`markdownProcessor`, `dispatchDirective`) that theme authors cannot access. Moving components out forces us to close this gap with a proper Component Author API. Dogfooding validates the API.
+### Evidence: Components Are Already Decoupled From Theme
 
-4. **Themes define the vocabulary.** Slidev's architecture has zero content components in core — all content components (cards, admonitions, speech bubbles) live in themes. A different tycoslide theme should be able to define `hbox()`/`vbox()` instead of `row()`/`column()`, or use an entirely different compositional model.
+Every component file (`text.ts`, `card.ts`, `quote.ts`, `table.ts`, `primitives.ts`, `containers.ts`, `mermaid.ts`) imports exclusively from `tycoslide` (core) and from sibling component files. Zero imports from `theme.ts`, `assets.ts`, `layouts.ts`, or `master.ts`. The `expand()` functions receive tokens as a parameter from the registry — they never reach into a theme object. The package boundary just needs to match the code boundary that already exists.
 
-5. **Now is the cheapest time.** One theme, one user, zero external consumers. API changes cost nothing. Every component added while DSL lives in core widens the implicit internal API surface.
+### Rationale (unchanged from original design)
 
-### Analogy
+1. **No architectural distinction between DSL functions.** Every DSL function follows an identical pattern: register with `componentRegistry.define()`, produce a `ComponentNode`, expand to node types at build time.
 
-From financial markets trading systems: the core API provides order primitives (create, cancel, fill). An "order plugin" wraps those primitives into business logic. Users extend the system by wrapping or tweaking that plugin, not by modifying the core API. Components are the plugins; node types are the core API.
+2. **Core infrastructure has zero imports from `components/`.** The slot compiler, document compiler, and renderer work entirely through registry dispatch.
+
+3. **The extensibility story has a gap.** Built-in components use internal capabilities (`markdownProcessor`, `dispatchDirective`) that theme authors cannot access. Moving components out forces us to close this gap with a proper Component Author API.
+
+4. **Themes define the vocabulary.** A different tycoslide theme should be able to define `hbox()`/`vbox()` instead of `row()`/`column()`, or use an entirely different compositional model.
+
+5. **Now is the cheapest time.** One theme, one user, zero external consumers.
 
 ### What This Is NOT
 
 - **Not a plugin system.** No configuration, lifecycle hooks, or dependency resolution. Components register via import side effects, exactly as today.
 - **Not a breaking change to the node types.** The renderer, layout engine, and all 8 `NODE_TYPE` values are unchanged.
-- **Not moving layouts.** Layouts already live in theme-default. This change makes components consistent with that.
 
 ---
 
 ## Prerequisite: Resolve the Document Component
 
-### Problem
+*(Completed — Phase 0)*
 
-The Document component creates a circular coupling between `document.ts` and `slotCompiler.ts`:
-
-```
-slotCompiler.ts
-  → componentRegistry.setDefault('document')
-  → flushBareGroup() wraps bare MDAST in component('document', { body: rawSource })
-
-document.ts
-  → expandDocument() parses markdown, dispatches blocks
-  → For :::directives, calls dispatchDirective() imported from slotCompiler.ts
-```
-
-Document is not a visual component. It has zero theme tokens, zero visual opinion. It is markdown pipeline logic masquerading as a component.
-
-### Solution
-
-Inline Document's compilation logic into the slot compiler.
-
-**Step 1:** Extract `compileNode()` and `expandDocument()` from `document.ts` into `slotCompiler.ts` as `compileBareMarkdown(source: string): ComponentNode`.
-
-**Step 2:** Change `flushBareGroup()` to call `compileBareMarkdown()` directly:
-
-```typescript
-// Before
-nodes.push(component(componentRegistry.getDefault(), { body: rawSource }));
-
-// After
-nodes.push(compileBareMarkdown(rawSource));
-```
-
-**Step 3:** Remove `setDefault()`/`getDefault()` from `ComponentRegistry`. The indirection serves no purpose — only ever set to `'document'`, never overridden.
-
-**Step 4:** Delete `document.ts` entirely. Bare markdown already triggers `compileBareMarkdown()` through the slot compiler — the thin wrapper has zero value. Remove `Component.Document` from the enum.
-
-**Step 5:** Remove the `:::document` directive. Bare markdown already triggers the same behavior. Update tests accordingly.
-
-### Why This Comes First
-
-After this refactor, every remaining DSL file is a clean "register + expand to node types" pattern with no circular dependencies. The move to theme becomes mechanical.
+The Document component created circular coupling between `document.ts` and `slotCompiler.ts`. Solution: inline Document's compilation logic into the slot compiler as `compileBareMarkdown()`. Delete `document.ts` and `Component.Document` from the enum.
 
 ---
 
 ## Component Author API
 
-### Problem
+*(Completed — Phase 1)*
 
-Content components (e.g. `table.ts`) use internal functions that are not part of core's public API:
-
-- `markdownProcessor` from `src/utils/parser.ts`
-- `extractDirectiveBody` from `src/utils/parser.ts`
-- `dispatchDirective` from `src/core/markdown/slotCompiler.ts`
-- `SYNTAX` from `src/core/model/syntax.ts`
-- `extractSource`, `extractInlineText` from `src/core/model/syntax.ts`
-
-Exporting these individually creates a fragile, hard-to-discover API surface.
-
-### Solution: `markdown` Namespace
-
-Bundle all markdown processing utilities into a single namespace object, following the `schema` pattern already in the codebase:
+Bundle all markdown processing utilities into a single `markdown` namespace object:
 
 ```typescript
-// packages/core/src/core/markdown/markdown.ts
 export const markdown = {
   parse(content: string): Root { ... },
-  extractSource(node, source): string { ... },
-  extractInlineText(nodes): string { ... },
-  extractDirectiveBody(directive, source): string { ... },
-  dispatchDirective(directive, source, context): ComponentNode { ... },
-  compileBareMarkdown(source: string): ComponentNode { ... },
-  SYNTAX: { PARAGRAPH, HEADING, LIST, TABLE, ... },
-} as const;
+  extractSource, extractInlineText, extractDirectiveBody,
+  dispatchDirective, compileBareMarkdown, SYNTAX,
+};
 ```
 
-**Import experience for component authors:**
-
-```typescript
-import {
-  componentRegistry, component, schema, markdown,
-  type ExpansionContext, type ComponentNode,
-  // primitives (from theme, not core)
-  column, prose, text, label,
-  // constants
-  HALIGN, VALIGN, TEXT_STYLE,
-} from 'tycoslide';
-```
-
-One new export. Card and quote don't even need it — they only use composition primitives. Only components that parse markdown internally (e.g. table) need the `markdown` toolkit.
-
-### Why Not a Base Class
-
-Components are pure functions (`expand: (props, context, tokens) => nodes`). A `ComponentBase` class would impose unnecessary structure on simple cases like card and quote. The namespace groups related helpers by domain without adding ceremony.
+Exported from core's barrel alongside `schema` and `component`.
 
 ---
 
-## Theme Loader Changes
+## Package Boundaries
 
-### Current State
+### `packages/core` (npm: `tycoslide`)
 
-`loadTheme()` in `cli/themeLoader.ts` imports `mod.layouts` for side effects (triggering `layoutRegistry.define()` calls).
+**Responsibilities:** Node types, registries, expansion engine, markdown pipeline, layout engine, PPTX rendering, schema helpers, markdown toolkit, CLI.
 
-### Change
+**Source files (unchanged):**
+- `src/core/model/` — types, nodes, schema, bounds, syntax
+- `src/core/rendering/` — registry, pptxConfigBuilder, pptxRenderer, presentation
+- `src/core/layout/` — layoutHtml, measurement, pipeline, validator
+- `src/core/markdown/` — slideParser, slotCompiler, documentCompiler, markdown toolkit
+- `src/cli/` — build command, theme loader
+- `src/utils/` — assets, font, image, log, parser, units
+- `src/index.ts` — barrel export
 
-Add a `components` import:
+**Test files (in core):**
 
-```typescript
-if (mod.components) {
-  void mod.components; // Side-effect: registers components
+| Test | Notes |
+|------|-------|
+| `bounds.test.ts` | No changes |
+| `cli.test.ts` | No changes |
+| `documentCompiler.test.ts` | Uses `mocks.ts`, `stubComponents.ts` |
+| `layoutValidation.test.ts` | Uses `stubComponents.ts` |
+| `layoutHtml.test.ts` | **Rewritten** — constructs element nodes directly, no component imports |
+| `node.test.ts` | Uses `mocks.ts` |
+| `normalizeContent.test.ts` | No component dependency |
+| `pptxConfigBuilder.test.ts` | **Unit tests only** — integration tests (lines 982–1053) move to components |
+| `registry.test.ts` | Uses `stubComponents.ts`, `mocks.ts` |
+| `schema.test.ts` | Uses `stubComponents.ts` |
+| `slideParser.test.ts` | No component dependency |
+| `slotCompiler.test.ts` | Uses `stubComponents.ts` |
+| `textUtils.test.ts` | Uses `mocks.ts` |
+| `validator.test.ts` | No component dependency |
+| `defineComponent.test.ts` | **Generic API portion only** (lines 1–215) — real component schema tests move to components |
+| `stubComponents.ts` | Lightweight stubs for registration |
+| `mocks.ts` | Core's own mock theme |
+
+**Dependencies:** No dependency on `tycoslide-components` or `tycoslide-theme-default`, not even as devDependency.
+
+### `packages/components` (npm: `tycoslide-components`) — NEW
+
+**Source files (moved from core's `src/components/`):**
+- `src/text.ts` — Text component + `text()` DSL helper
+- `src/primitives.ts` — image, line, shape, slideNumber
+- `src/containers.ts` — row, column, stack, grid
+- `src/card.ts` — card component
+- `src/quote.ts` — quote component
+- `src/table.ts` — table component
+- `src/mermaid.ts` — mermaid component
+- `src/index.ts` — barrel export
+
+**Test files:**
+
+| Test | Reason it belongs here |
+|------|----------------------|
+| `text.test.ts` | Tests text expansion, markdown parsing, accent directives |
+| `cardComponent.test.ts` | Tests card expansion, token defaults, theme overrides |
+| `quoteComponent.test.ts` | Tests quote expansion, token defaults, theme overrides |
+| `mermaid.test.ts` | Tests mermaid expansion, sanitization |
+| `dsl.test.ts` | Tests all DSL factory functions |
+| `assetResolver.test.ts` | Tests image asset resolution during expansion |
+| `tokenResolution.test.ts` | Tests component+token integration: variant selection, overrides, missing token errors |
+| `componentSchemas.test.ts` | Real component `.schema` tests (split from defineComponent.test.ts lines 217–301) |
+| `pptxIntegration.test.ts` | 3 integration tests extracted from pptxConfigBuilder.test.ts (lines 982–1053) |
+| `mocks.ts` | Components' own mock theme (copy of core's) |
+| `fixtures/` | test-font.woff2, test-font-bold.woff2, test.png, etc. |
+
+**`package.json`:**
+```json
+{
+  "name": "tycoslide-components",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "tsc --project tsconfig.test.json && tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "tycoslide": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.3.0"
+  }
 }
 ```
 
-Theme-default's `index.ts` gains:
+Note: `unified`, `remark-parse`, `remark-directive` are already transitive dependencies from `tycoslide` (core). If the components package needs them directly (e.g. `text.ts` uses `markdown.parse()`), they would be added.
 
+### `packages/theme-default` (npm: `tycoslide-theme-default`) — slimmed down
+
+**Source files:**
+- `src/theme.ts` — color palette, spacing, text styles, component token variants
+- `src/assets.ts` — font paths, icon paths
+- `src/layouts.ts` — layout definitions (imports from `tycoslide-components`)
+- `src/master.ts` — master slide definition (imports from `tycoslide-components`)
+- `src/index.ts` — barrel export, re-exports from `tycoslide-components`
+
+**`src/index.ts` (after migration):**
 ```typescript
-import * as components from './components.js';
+export { theme } from './theme.js';
+export { assets } from './assets.js';
+import * as layouts from './layouts.js';
+export { layouts };
+
+// Re-export components (side-effect: registers on import)
+import * as components from 'tycoslide-components';
 export { components };
+export * from 'tycoslide-components';
 ```
 
-Where `components.ts` is a barrel that imports all component files, each of which calls `componentRegistry.define()` on import.
+**Dependencies:**
+```json
+{
+  "dependencies": {
+    "tycoslide": "*",
+    "tycoslide-components": "*",
+    "@fontsource/inter": "^5.0.0",
+    "@material-design-icons/svg": "^0.14.0",
+    "@mermaid-js/mermaid-cli": "^11.12.0"
+  }
+}
+```
+
+**Tests:** None currently. Future: layout-level integration tests.
+
+---
+
+## Theme Loader
+
+`loadTheme()` is unchanged. Theme-default re-exports components via `export { components }`. When `loadTheme()` accesses `mod.components`, the re-export triggers component registration via side-effect imports.
+
+---
+
+## Test Strategy
+
+### Zero cross-package test dependencies
+
+Each package's tests import only from:
+1. The package's own source (`../src/...`)
+2. Packages below it in the dependency graph (`'tycoslide'` for components, `'tycoslide'` + `'tycoslide-components'` for theme)
+3. Its own test helpers (`./mocks.js`, `./stubComponents.js`)
+
+### `stubComponents.ts` — lightweight stubs in core
+
+Registers all 13 components with minimal `componentRegistry.define()` calls. Correct names, params, body schemas, tokens, slots. Trivial expand functions that return basic element nodes. Used by:
+- `slotCompiler.test.ts` — needs components registered for `compileSlot()` to find handlers
+- `schema.test.ts` — needs components for schema tests
+- `layoutValidation.test.ts` — needs components for validation
+- `registry.test.ts` — needs components for registry API tests
+
+The Text stub does NOT need to produce realistic `NormalizedRun[]` with `breakLine: true`. Those integration tests move to the components package.
+
+### `layoutHtml.test.ts` — plain element nodes
+
+Constructs element node trees directly using local helper functions:
+
+```typescript
+function textNode(body: string, props?: Partial<TextNode>): TextNode {
+  return { type: NODE_TYPE.TEXT, content: [{ text: body }],
+           hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP, ...props };
+}
+
+function rowNode(props: Partial<ContainerNode>, ...children: ElementNode[]): ContainerNode {
+  return { type: NODE_TYPE.CONTAINER, direction: DIRECTION.ROW, children,
+           width: SIZE.FILL, height: SIZE.HUG,
+           vAlign: VALIGN.TOP, hAlign: HALIGN.LEFT, ...props };
+}
+```
+
+No `componentRegistry`, no `expandTree`, no component imports. The system under test is `generateLayoutHTML()` — components were only used as a convenience for creating node trees.
+
+### `mocks.ts` — each package gets its own copy
+
+Core and components each have their own `mocks.ts` with the same `mockTheme()` factory. Intentional duplication for package isolation. Both use the same default token values.
+
+### `defineComponent.test.ts` — split
+
+- **Lines 1–215 (core):** Generic `componentRegistry.define()` API tests using inline test components (`test-params-comp`, `test-body-comp`, etc.). Tests `.schema` generation, Zod validation, deserializer behavior.
+- **Lines 217–301 (components as `componentSchemas.test.ts`):** Tests `.schema` properties of real components (`proseComponent.schema`, `cardComponent.schema`, etc.).
+
+### `pptxConfigBuilder.test.ts` — integration tests move out
+
+The 3 integration tests (lines 982–1053) call `prose()` → `componentRegistry.expandTree()` → `builder.buildTextFragments()`. They need real markdown parsing in the text component's expand function. They move to `packages/components/test/pptxIntegration.test.ts`. Requires `PptxConfigBuilder` to be exported from core's barrel.
+
+---
+
+## Migration Plan
+
+### Phase 0: Inline Document into Slot Compiler — DONE
+
+### Phase 1: Create Component Author API — DONE
+
+### Phase 2: Revert Incomplete Work
+
+Revert all code changes from the incomplete Phase 2 attempt (which moved components to theme-default). Start fresh.
+
+### Phase 3: Create `packages/components` Scaffold
+
+1. Create `packages/components/` directory
+2. Create `package.json`, `tsconfig.json`, `tsconfig.test.json`
+3. Create placeholder `src/index.ts`
+4. Update root `tsconfig.json` references
+5. Update `packages/theme-default/tsconfig.json` references
+6. Run `npm install` from root (workspace linking)
+7. Verify `npx tsc --build` succeeds
+
+### Phase 4: Move Component Source Files
+
+1. Move files from `packages/core/src/components/` to `packages/components/src/`
+2. Write `packages/components/src/index.ts` barrel
+3. Add `"tycoslide-components": "*"` to theme-default's dependencies
+4. Update `packages/theme-default/src/index.ts` to import/re-export from `tycoslide-components`
+5. Update `layouts.ts` and `master.ts` imports
+6. Delete `packages/core/src/components/` directory
+7. Remove components barrel from core's `index.ts`
+8. Update `loadTheme()` if needed (likely unchanged — theme re-exports handle it)
+9. Build all three packages
+10. Verify: `npx tsc --build` succeeds
+
+### Phase 5: Move Component Tests to Components Package
+
+1. Create `packages/components/test/`, `test/fixtures/`
+2. Copy `mocks.ts` and fixtures
+3. Move test files: text, card, quote, mermaid, dsl, assetResolver, tokenResolution
+4. Update imports: `'../src/components/X.js'` → `'../src/X.js'`
+5. Verify: `npm test` in components and core both pass
+
+### Phase 6: Split defineComponent.test.ts and Move Integration Tests
+
+1. Split defineComponent.test.ts: generic API tests stay in core, component schema tests → `packages/components/test/componentSchemas.test.ts`
+2. Extract pptxConfigBuilder integration tests → `packages/components/test/pptxIntegration.test.ts`
+3. Export `PptxConfigBuilder` from core's barrel if not already exported
+4. Create `packages/core/test/stubComponents.ts` with lightweight stubs
+5. Update core test imports to use stubs
+6. Verify: all tests pass in both packages
+
+### Phase 7: Rewrite layoutHtml.test.ts
+
+1. Replace all component DSL helper calls with direct element node construction
+2. Remove `componentRegistry` and `expandTree` usage
+3. Add local builder helpers (`textNode`, `rowNode`, `colNode`, etc.)
+4. Verify: all layoutHtml assertions still pass
+
+### Phase 8: Remove `prose()` and `label()` DSL Helpers
+
+1. Remove `prose()` and `label()` function exports from `text.ts`
+2. Keep `labelComponent` and `proseComponent` as schema aliases
+3. Update callers in `card.ts`, `quote.ts`, `layouts.ts`, `master.ts` to use `text(body, { content: CONTENT.PLAIN|PROSE })`
+4. Update test files
+5. Remove `prose()` export from `stubComponents.ts` if still present
+6. Verify: build and tests pass
+
+### Phase 9: Clean Up
+
+1. Remove empty directories
+2. Move `@mermaid-js/mermaid-cli` dependency to theme-default if not already there
+3. Verify theme-default is minimal: theme, assets, layouts, master, re-exports
+4. Update root `package.json` test script to include components workspace
+
+### Phase 10: Final Verification
+
+1. `npx tsc --build` from root — zero errors
+2. `npm test --workspace=packages/core` — all pass
+3. `npm test --workspace=packages/components` — all pass
+4. Manual smoke test: `npx tycoslide build` on a markdown deck
+5. Verify the custom theme story types correctly:
+   ```typescript
+   import { card, row, column, text } from 'tycoslide-components';
+   ```
+
+---
+
+## What Each Package Becomes
+
+```
+tycoslide (core)
+├── Node types          — What the renderer can draw
+├── Registries          — How components and layouts are discovered
+├── Markdown pipeline   — How markdown becomes component trees
+├── Layout engine       — How component trees become positioned nodes
+├── Renderer            — How positioned nodes become PowerPoint
+├── schema              — API for defining component props
+└── markdown            — API for parsing markdown in components
+
+tycoslide-components
+├── Text                — text, prose, label modes
+├── Primitives          — image, line, shape, slideNumber
+├── Containers          — row, column, stack, grid
+├── Card                — title + description + image card
+├── Quote               — attribution quote
+├── Table               — markdown table
+└── Mermaid             — diagram rendering
+
+tycoslide-theme-default
+├── Theme               — colors, fonts, spacing, text styles
+├── Tokens              — component variant token values
+├── Layouts             — title, section, body slide templates
+├── Master              — master slide (footer)
+└── Assets              — fonts, icons
+```
+
+The boundary: **core defines what CAN be drawn; components define what IS drawn; themes define how it LOOKS.**
 
 ---
 
@@ -177,31 +408,14 @@ Where `components.ts` is a barrel that imports all component files, each of whic
 
 ### Component Names
 
-Keep all component name strings in core's `Component` const. Names are just string constants with zero runtime cost. Removing them would break every import site for no benefit. The `ComponentName` type remains open: `BuiltinComponentName | (string & {})`.
+Keep all component name strings in core's `Component` const. Names are just string constants with zero runtime cost. The `ComponentName` type remains open: `BuiltinComponentName | (string & {})`.
 
 ### Token Map
 
-Remove content component entries from `ComponentTokenMap` in core:
+Remove content component entries from `ComponentTokenMap` in core. Use declaration merging from the components package (or theme):
 
 ```typescript
-// Before (core/types.ts)
-export interface ComponentTokenMap {
-  card: CardTokens;
-  quote: QuoteTokens;
-  table: TableTokens;
-  line: LineTokens;
-  slideNumber: SlideNumberTokens;
-  text: TextTokens;
-  shape: ShapeTokens;
-}
-
-// After (core/types.ts) — only components that stay in core's token map
-// Actually: ALL component tokens move out. Core's ComponentTokenMap is empty.
-// Theme-default uses declaration merging to add its tokens:
-```
-
-```typescript
-// theme-default/src/types.ts
+// packages/components/src/types.ts
 declare module 'tycoslide' {
   interface ComponentTokenMap {
     card: CardTokens;
@@ -215,124 +429,7 @@ declare module 'tycoslide' {
 }
 ```
 
-The `Theme.components` type already has a `Record<string, ...>` intersection for runtime access. Declaration merging provides compile-time enforcement for themes that use these components.
-
-Token interfaces (`CardTokens`, `QuoteTokens`, etc.) and token name consts (`CARD_TOKEN`, `QUOTE_TOKEN`, etc.) stay in core's `types.ts`. They are pure type definitions with zero runtime cost and serve as the "alphabet" component authors use.
-
----
-
-## Migration Plan
-
-### Phase 0: Inline Document into Slot Compiler
-
-1. Move `compileNode()` + `expandDocument()` logic into `slotCompiler.ts` as `compileBareMarkdown()`
-2. Change `flushBareGroup()` to call `compileBareMarkdown()` directly
-3. Remove `setDefault()`/`getDefault()` from registry
-4. Update `slotCompiler.test.ts` — remove `:::document` directive tests, add `compileBareMarkdown` tests
-5. Delete `document.ts` entirely — bare markdown already triggers `compileBareMarkdown()` through the slot compiler, so the thin wrapper has zero value. Remove `Component.Document` from the enum.
-6. Remove the `:::document` directive. Bare markdown does the same thing.
-7. Build + test: 575/575 pass (**done**)
-
-### Phase 1: Create Component Author API
-
-1. Create `packages/core/src/core/markdown/markdown.ts` with the `markdown` namespace
-2. Include `compileBareMarkdown` in the toolkit — completes the spectrum from "raw text" (`extractSource`) to "fully compiled nodes" (`compileBareMarkdown`). Prevents future duplication for components that accept rich markdown bodies.
-3. Export `markdown` from `packages/core/src/index.ts`
-4. Re-export key mdast types (`ContainerDirective`, `Root`, etc.)
-5. Build + test
-
-### Phase 2: Move ALL DSL Files to Theme-Default
-
-1. Move files from `packages/core/src/components/` to `packages/theme-default/src/components/`
-2. Rewrite imports: relative `../core/rendering/registry.js` → package `tycoslide`
-3. Create `packages/theme-default/src/components.ts` barrel
-4. Export `components` from `packages/theme-default/src/index.ts`
-5. Update `loadTheme()` to import `mod.components`
-6. Remove `components/` barrel from core's `index.ts`
-7. Build + test
-
-### Phase 3: Move Token Types
-
-1. Empty `ComponentTokenMap` in core
-2. Add declaration merging in theme-default
-3. Move token interface tests to theme-default
-4. Build + test
-
-### Phase 4: Move Tests
-
-1. Move `cardComponent.test.ts`, `quoteComponent.test.ts`, `mermaid.test.ts` to theme-default
-2. Split `dsl.test.ts` and `slotCompiler.test.ts` — core tests import theme-default for component registration
-3. Update `documentCompiler.test.ts` and integration tests
-4. Build + all tests pass
-
-### Phase 5: Clean Up
-
-1. Remove empty `components/` directory from core
-2. Update core's `package.json` — move `@mermaid-js/mermaid-cli` to theme-default
-3. Update documentation and examples
-4. Verify TypeScript DSL imports work from theme-default
-
----
-
-## File Movement Summary
-
-### Files Moving: `packages/core/src/components/` → `packages/theme-default/src/components/`
-
-| File | Components | Notes |
-|------|-----------|-------|
-| `text.ts` | text, prose, label | Used by card, quote |
-| `primitives.ts` | image, shape, line, slideNumber | Used by card, quote, layouts |
-| `containers.ts` | row, column, stack, grid | Used by card, quote, layouts, grid depends on row+column |
-| `card.ts` | card | Composes stack + column + shape + text + image |
-| `quote.ts` | quote | Composes stack + column + row + shape + prose + label |
-| `table.ts` | table | Uses `markdown.parse()` for cell content |
-| `mermaid.ts` | mermaid | Shells out to mermaid-cli |
-| `document.ts` | *(deleted in Phase 0)* | Bare markdown triggers `compileBareMarkdown()` directly |
-
-### Files Staying in Core
-
-| File | Purpose |
-|------|---------|
-| `core/model/nodes.ts` | NODE_TYPE enum, all node interfaces |
-| `core/model/types.ts` | Theme, enums, constants, token interfaces |
-| `core/rendering/registry.ts` | ComponentRegistry, LayoutRegistry, expansion engine |
-| `core/rendering/pptxRenderer.ts` | PPTX generation |
-| `core/rendering/pptxConfigBuilder.ts` | pptxgenjs config |
-| `core/model/bounds.ts` | Geometry |
-| `core/markdown/slotCompiler.ts` | Slot compilation + `compileBareMarkdown()` |
-| `core/markdown/documentCompiler.ts` | Full document pipeline |
-| `core/markdown/slideParser.ts` | YAML frontmatter + slide parsing |
-| `core/markdown/markdown.ts` | `markdown` namespace (NEW) |
-| `core/layout/*` | Measurement, positioning, validation |
-| `core/model/schema.ts` | Schema helpers for component authors |
-| `core/rendering/presentation.ts` | Presentation class |
-| `utils/*` | Assets, font, logging, parser |
-| `cli/*` | Build command, theme loader |
-
----
-
-## What Core Becomes
-
-After this refactor, core is **the engine**:
-
-```
-tycoslide (core)
-├── Node types          — What the renderer can draw
-├── Registries          — How components and layouts are discovered
-├── Markdown pipeline   — How markdown becomes component trees
-├── Layout engine       — How component trees become positioned nodes
-├── Renderer            — How positioned nodes become PowerPoint
-├── schema              — API for defining component props
-└── markdown            — API for parsing markdown in components
-
-tycoslide-theme-default
-├── Components          — The vocabulary (text, image, card, table, etc.)
-├── Layouts             — The page templates (title, section, body)
-├── Theme               — The design tokens (colors, fonts, spacing)
-└── Assets              — Fonts, icons
-```
-
-The boundary is clean: **core defines what CAN be drawn; themes define what IS drawn.**
+Token interfaces (`CardTokens`, etc.) and token name consts (`CARD_TOKEN`, etc.) stay in core's `types.ts` — pure type definitions with zero runtime cost.
 
 ---
 
@@ -340,16 +437,19 @@ The boundary is clean: **core defines what CAN be drawn; themes define what IS d
 
 | Risk | Mitigation |
 |------|-----------|
-| TypeScript DSL users must change import paths | Theme-default re-exports everything. Migration is find-and-replace. |
-| Core test suite needs theme components loaded | Import theme-default in test setup. Or split integration tests to theme-default. |
-| `compileBareMarkdown` in slotCompiler needs `prose()`, `table()`, `column()` | Uses `component()` factory + registry dispatch exclusively — zero imports from component files. |
-| `@mermaid-js/mermaid-cli` is a heavy dependency | Moving it to theme-default is a win — core gets lighter. |
-| `:::document` directive removed | Done in Phase 0. Bare markdown does the same thing. |
+| TypeScript DSL users must change import paths | Theme-default re-exports everything from components. Migration is find-and-replace. |
+| Core test suite needs components registered | `stubComponents.ts` with minimal stubs — no cross-package dependency. |
+| `compileBareMarkdown` in slotCompiler needs components | Uses `component()` factory + registry dispatch exclusively — zero imports from component files. |
+| `@mermaid-js/mermaid-cli` is a heavy dependency | Stays in theme-default (I/O build step, not component logic). |
+| One more package to maintain | The boundary already exists in code — the package just formalizes it. One `package.json` + `tsconfig.json`. |
+| layoutHtml.test.ts rewrite misses edge cases | CSS assertions are unchanged — only node construction changes. Each test verified individually. |
+| Duplicated mocks.ts | Intentional for package isolation. Same API, can drift independently. |
+| `PptxConfigBuilder` not yet exported from core | Add one line to `packages/core/src/index.ts` during Phase 6. |
 
 ---
 
 ## References
 
 - **Slidev architecture:** Core has zero content components. All content components live in themes. [sli.dev/builtin/components](https://sli.dev/builtin/components)
-- **Neversink theme:** 13 theme-owned components (admonitions, speech bubbles, sticky notes, etc.). [gureckis.github.io/slidev-theme-neversink](https://gureckis.github.io/slidev-theme-neversink/components/admonitions.html)
-- **Declaration merging:** Already documented in `core/model/types.ts:609-617` for third-party component token extension.
+- **Neversink theme:** 13 theme-owned components. [gureckis.github.io/slidev-theme-neversink](https://gureckis.github.io/slidev-theme-neversink/components/admonitions.html)
+- **Declaration merging:** Already documented in `core/model/types.ts:609-617`.
