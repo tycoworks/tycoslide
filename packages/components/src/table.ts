@@ -22,7 +22,7 @@ export interface TableProps {
 }
 
 interface TableInternalProps {
-  data: (TableCellData | TextContent)[][];
+  data?: (TableCellData | TextContent)[][];
   tableProps?: TableProps;
   variant?: string;
 }
@@ -133,7 +133,7 @@ export const tableComponent = componentRegistry.define({
       headerColumns,
       style: tokens,
     };
-  }) as any,
+  }),
 });
 
 /**
