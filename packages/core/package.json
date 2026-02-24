@@ -15,10 +15,10 @@
   },
   "scripts": {
     "postinstall": "patch-package",
-    "build": "tsc",
+    "build": "tsc && chmod +x dist/cli/index.js",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
-    "prepare": "tsc",
+    "prepare": "tsc && chmod +x dist/cli/index.js",
     "typecheck": "tsc --project tsconfig.test.json",
     "test": "tsc --project tsconfig.test.json && tsx --test test/*.test.ts"
   },

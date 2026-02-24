@@ -102,7 +102,7 @@ export const tableComponent = componentRegistry.define({
     const expandContent = async (content: TextContent): Promise<TextContent> => {
       if (typeof content === 'string') {
         const expanded = await componentRegistry.expand(
-          component(Component.Text, { body: content, content: CONTENT.PROSE }),
+          component(Component.Text, { body: content, content: CONTENT.RICH }),
           context,
         ) as TextNode;
         return expanded.content;
