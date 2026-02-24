@@ -6,7 +6,7 @@ import {
   type TextNode, type TableCellData, type TableTokens, type TextContent,
   schema, markdown,
 } from 'tycoslide';
-import type { Table as MdastTable } from 'mdast';
+import type { Table as MdastTable, RootContent } from 'mdast';
 import type { Root } from 'mdast';
 
 // ============================================
@@ -59,6 +59,23 @@ componentRegistry.define({
   name: Component.Table,
   params: tableDirectiveSchema,
   tokens: [TABLE_TOKEN.BORDER_STYLE, TABLE_TOKEN.BORDER_COLOR, TABLE_TOKEN.BORDER_WIDTH, TABLE_TOKEN.HEADER_BACKGROUND, TABLE_TOKEN.HEADER_BACKGROUND_OPACITY, TABLE_TOKEN.HEADER_TEXT_STYLE, TABLE_TOKEN.CELL_BACKGROUND, TABLE_TOKEN.CELL_BACKGROUND_OPACITY, TABLE_TOKEN.CELL_TEXT_STYLE, TABLE_TOKEN.CELL_PADDING, TABLE_TOKEN.HALIGN, TABLE_TOKEN.VALIGN],
+  mdast: {
+    nodeTypes: [SYNTAX.TABLE],
+    compile: (node: RootContent, source: string): ComponentNode | null => {
+      const tableNode = node as unknown as MdastTable;
+      const rows = tableNode.children.map(row =>
+        row.children.map(cell => {
+          const children = cell.children;
+          if (children.length === 0) return '';
+          const start = children[0].position?.start.offset;
+          const end = children[children.length - 1].position?.end.offset;
+          if (start == null || end == null) return '';
+          return source.slice(start, end).trim();
+        })
+      );
+      return component(Component.Table, { data: rows, tableProps: { headerRows: 1 } });
+    },
+  },
   expand: (async (props: TableInternalProps & { body?: string; headerColumns?: number }, context: ExpansionContext, tokens: TableTokens) => {
     // Determine data source: structured (DSL) or body string (directive)
     let data: (TableCellData | TextContent)[][];

@@ -6,6 +6,8 @@ import assert from 'node:assert';
 import { z } from 'zod';
 import { validateLayout } from '../src/core/markdown/documentCompiler.js';
 import { type LayoutDefinition } from '../src/core/rendering/registry.js';
+// Side-effect import: trigger component registration (MDAST handlers needed by slot compiler)
+import './test-components.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { schema } from '../src/core/model/schema.js';
 // Create a test layout with a known schema shape

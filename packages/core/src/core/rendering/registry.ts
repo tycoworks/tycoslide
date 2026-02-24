@@ -4,6 +4,8 @@
 import { NODE_TYPE, type ElementNode, type ComponentNode, type SlideNode } from '../model/nodes.js';
 import { DEFAULT_VARIANT } from '../model/types.js';
 import type { Theme, ComponentName, Slide } from '../model/types.js';
+import type { SyntaxType } from '../model/syntax.js';
+import type { RootContent } from 'mdast';
 import { z } from 'zod';
 
 import type { ScalarParam } from '../model/schema.js';
@@ -74,6 +76,17 @@ export interface ExpansionContext {
 }
 
 /**
+ * Declares which bare MDAST node types a component can compile.
+ * Registered via the `mdast` field on `define()`.
+ */
+export interface MdastHandler {
+  /** MDAST node types this component handles (e.g., SYNTAX.PARAGRAPH, SYNTAX.LIST) */
+  nodeTypes: SyntaxType[];
+  /** Transform an MDAST node into a ComponentNode. Return null to skip. */
+  compile: (node: RootContent, source: string) => ComponentNode | null;
+}
+
+/**
  * A component definition describes how to expand a component into primitives.
  */
 export interface ComponentDefinition<TProps = unknown, TTokens = undefined> {
@@ -89,6 +102,8 @@ export interface ComponentDefinition<TProps = unknown, TTokens = undefined> {
   expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   /** Deserialize a :::name directive into a ComponentNode. Auto-generated for content components. */
   deserialize?: DirectiveDeserializer;
+  /** MDAST handler — declares which bare markdown node types this component compiles. */
+  mdast?: MdastHandler;
 }
 
 /** A scalar component definition — has .schema for YAML validation and layout params. */
@@ -159,6 +174,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     name: ComponentName;
     body: TBody;
     tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+    mdast?: MdastHandler;
     expand: (props: { body: z.infer<TBody> }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   }): ScalarComponentDefinition<TBody, TTokens>;
 
@@ -171,6 +187,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     body: TBody;
     params: TParams;
     tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+    mdast?: MdastHandler;
     expand: (props: { body: z.infer<TBody> } & z.infer<z.ZodObject<TParams>>, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   }): ScalarComponentDefinition<TBody, TTokens>;
 
@@ -183,6 +200,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     name: ComponentName;
     params: TShape;
     tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+    mdast?: MdastHandler;
     expand: (props: z.infer<z.ZodObject<TShape>> & { body?: string }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   }): ScalarComponentDefinition<z.ZodObject<TShape>, TTokens>;
 
@@ -195,6 +213,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     params?: SchemaShape;
     slots: readonly string[];
     tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+    mdast?: MdastHandler;
     expand: (props: any, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   }): ComponentDefinition<any, TTokens>;
 
@@ -204,6 +223,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
   define<TProps, TTokens = undefined>(def: {
     name: ComponentName;
     tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+    mdast?: MdastHandler;
     expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   }): ComponentDefinition<TProps, TTokens>;
 
@@ -214,13 +234,29 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     const paramsSchema = Object.keys(paramsShape).length > 0 ? z.object(paramsShape) : null;
     const slots: readonly string[] | undefined = def.slots;
 
+    const mdast: MdastHandler | undefined = def.mdast;
+
     const result: ComponentDefinition & { schema?: z.ZodTypeAny } = {
       name: def.name as ComponentName,
       expand: def.expand as ComponentDefinition['expand'],
       tokens: def.tokens as string[],
       params: def.params,
       slots,
+      mdast,
     };
+
+    // Fail fast on duplicate MDAST handler registration
+    if (mdast) {
+      for (const nodeType of mdast.nodeTypes) {
+        const existing = this.getMdastHandler(nodeType);
+        if (existing) {
+          throw new Error(
+            `MDAST node type '${nodeType}' already handled by '${existing.name}'. ` +
+            `Cannot register '${def.name}' for the same type.`,
+          );
+        }
+      }
+    }
 
     if (slots?.length) {
       // Slotted component: no auto-deserializer (slot compiler handles body compilation).
@@ -234,6 +270,17 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
 
     this.register(result);
     return result;
+  }
+
+  /**
+   * Find the component that handles a given bare MDAST node type.
+   * Returns undefined if no component has registered for this type.
+   */
+  getMdastHandler(nodeType: string): ComponentDefinition | undefined {
+    for (const def of this.getAll()) {
+      if (def.mdast?.nodeTypes.includes(nodeType as SyntaxType)) return def;
+    }
+    return undefined;
   }
 
   /**
@@ -361,8 +408,8 @@ export type ScalarShape = Record<string, ScalarParam>;
 /** Infer the TypeScript type from a raw Zod shape. Use instead of importing z from zod. */
 export type InferProps<TShape extends SchemaShape> = z.infer<z.ZodObject<TShape>>;
 
-/** Map slot names to their render type (each slot becomes ComponentNode[]). */
-type SlotsToProps<T extends readonly string[]> = { [K in T[number]]: ComponentNode[] };
+/** Map slot names to their render type (each slot becomes SlideNode[]). */
+type SlotsToProps<T extends readonly string[]> = { [K in T[number]]: SlideNode[] };
 
 /**
  * A named, described, typed slide factory.

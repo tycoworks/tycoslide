@@ -8,11 +8,24 @@
 // Import this file for side-effect registration in core tests.
 
 import { componentRegistry, component } from '../src/core/rendering/registry.js';
-import type { ExpansionContext } from '../src/core/rendering/registry.js';
+import type { ExpansionContext, ComponentNode } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import type { ElementNode } from '../src/core/model/nodes.js';
-import { Component, HALIGN, VALIGN, SIZE, DIRECTION } from '../src/core/model/types.js';
+import { Component, HALIGN, VALIGN, SIZE, DIRECTION, TEXT_STYLE, CONTENT } from '../src/core/model/types.js';
+import { SYNTAX, extractSource } from '../src/core/model/syntax.js';
 import { schema } from '../src/core/model/schema.js';
+import type { RootContent, Heading, Table as MdastTable } from 'mdast';
+
+// ============================================
+// HEADING STYLE MAP (matches real text component)
+// ============================================
+
+const HEADING_STYLE: Record<number, string> = {
+  1: TEXT_STYLE.H1,
+  2: TEXT_STYLE.H2,
+  3: TEXT_STYLE.H3,
+  4: TEXT_STYLE.H4,
+};
 
 // ============================================
 // TEXT (real expand — used by registry.test.ts)
@@ -29,6 +42,25 @@ componentRegistry.define({
     variant: schema.string().optional(),
   },
   tokens: ['color', 'bulletColor', 'style', 'lineHeightMultiplier'],
+  mdast: {
+    nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.LIST, SYNTAX.HEADING],
+    compile: (node: RootContent, source: string): ComponentNode | null => {
+      if (node.type === SYNTAX.HEADING) {
+        const heading = node as Heading;
+        const style = HEADING_STYLE[heading.depth] ?? TEXT_STYLE.H3;
+        const raw = extractSource(heading, source);
+        const content = raw.replace(/^#{1,6}\s*/, '');
+        return component(Component.Text, { body: content, content: CONTENT.PROSE, style });
+      }
+      if (node.type === SYNTAX.PARAGRAPH) {
+        const para = node as { children: { type: string }[] };
+        if (para.children.length === 1 && para.children[0].type === SYNTAX.IMAGE) {
+          throw new Error('Images cannot be embedded inline in text. Use :::image directive.');
+        }
+      }
+      return component(Component.Text, { body: extractSource(node, source), content: CONTENT.PROSE });
+    },
+  },
   expand: (props: any, _ctx: ExpansionContext, tokens: any): any => ({
     type: NODE_TYPE.TEXT,
     content: [{ text: props.body }],
@@ -195,6 +227,23 @@ componentRegistry.define({
     'cellBackground', 'cellBackgroundOpacity', 'cellTextStyle',
     'cellPadding', 'hAlign', 'vAlign',
   ],
+  mdast: {
+    nodeTypes: [SYNTAX.TABLE],
+    compile: (node: RootContent, source: string): ComponentNode | null => {
+      const tableNode = node as unknown as MdastTable;
+      const rows = tableNode.children.map(row =>
+        row.children.map(cell => {
+          const children = cell.children;
+          if (children.length === 0) return '';
+          const start = children[0].position?.start.offset;
+          const end = children[children.length - 1].position?.end.offset;
+          if (start == null || end == null) return '';
+          return source.slice(start, end).trim();
+        })
+      );
+      return component(Component.Table, { data: rows, tableProps: { headerRows: 1 } });
+    },
+  },
   expand: () => ({}) as any,
 });
 

@@ -55,14 +55,14 @@ describe('schema', () => {
       const result = compileSlot(':::text\nHello world\n:::');
       assert.ok(Array.isArray(result));
       assert.strictEqual(result.length, 1);
-      assert.strictEqual(result[0].componentName, Component.Text);
+      assert.strictEqual((result[0] as any).componentName, Component.Text);
     });
 
     it('compiles multiple directives', () => {
       const result = compileSlot(':::text\nText\n:::\n\n:::image\npic.png\n:::');
       assert.strictEqual(result.length, 2);
-      assert.strictEqual(result[0].componentName, Component.Text);
-      assert.strictEqual(result[1].componentName, Component.Image);
+      assert.strictEqual((result[0] as any).componentName, Component.Text);
+      assert.strictEqual((result[1] as any).componentName, Component.Image);
     });
 
     it('empty string → empty array', () => {
@@ -73,7 +73,7 @@ describe('schema', () => {
     it('compiles bare MDAST inline to text node', () => {
       const result = compileSlot('Hello world');
       assert.strictEqual(result.length, 1);
-      assert.strictEqual(result[0].componentName, Component.Text);
+      assert.strictEqual((result[0] as any).componentName, Component.Text);
     });
   });
 

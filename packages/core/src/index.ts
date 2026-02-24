@@ -21,6 +21,7 @@ export {
   type SchemaShape,
   type ScalarShape,
   type InferProps,
+  type MdastHandler,
 } from './core/rendering/registry.js';
 
 // Slide parser (multi-slide markdown file → structured document)
@@ -32,7 +33,7 @@ export { schema, type ScalarParam } from './core/model/schema.js';
 // Markdown toolkit (for component authors that parse markdown internally)
 export { markdown } from './core/markdown/markdown.js';
 export { SYNTAX } from './core/model/syntax.js';
-export type { ContainerDirective } from './core/model/syntax.js';
+export type { ContainerDirective, SyntaxType } from './core/model/syntax.js';
 
 // Document compiler (markdown file → Presentation)
 export { compileDocument, validateLayout, type CompileOptions } from './core/markdown/documentCompiler.js';

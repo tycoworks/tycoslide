@@ -12,15 +12,24 @@ export const SYNTAX = {
   HEADING: 'heading',
   TABLE: 'table',
   IMAGE: 'image',
+  CODE: 'code',
+  BLOCKQUOTE: 'blockquote',
+  HTML: 'html',
+  DEFINITION: 'definition',
+  THEMATIC_BREAK: 'thematicBreak',
   // Inline
   TEXT: 'text',
   STRONG: 'strong',
   EMPHASIS: 'emphasis',
   INLINE_CODE: 'inlineCode',
+  LINK: 'link',
+  BREAK: 'break',
+  DELETE: 'delete',
   TEXT_DIRECTIVE: 'textDirective',
-  CODE: 'code',
-  THEMATIC_BREAK: 'thematicBreak',
 } as const;
+
+/** Union of all SYNTAX values — use for typed MDAST node type references. */
+export type SyntaxType = typeof SYNTAX[keyof typeof SYNTAX];
 
 // ============================================
 // HELPERS

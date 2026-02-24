@@ -1,62 +1,51 @@
 // Slot Compiler
-// Compiles a slot's markdown content into ComponentNode[].
+// Compiles a slot's markdown content into SlideNode[].
 //
 // A slot is a named content region in a layout (e.g. body, left, right).
 // Slots primarily contain :::directives. Consecutive bare MDAST nodes
-// are compiled inline via compileBareMarkdown() — paragraphs, headings,
-// lists, and tables become direct component nodes (Text, Table, Column).
+// are compiled via registered MDAST handlers on the component registry.
 
-import type { Root, RootContent, Heading, Table as MdastTable } from 'mdast';
-import { SYNTAX, extractSource, extractInlineText, type ContainerDirective } from '../model/syntax.js';
+import type { Root, RootContent } from 'mdast';
+import { SYNTAX, type ContainerDirective } from '../model/syntax.js';
 import { markdownProcessor, extractDirectiveBody } from '../../utils/parser.js';
 import { componentRegistry, coerceAttributes, component, type ComponentNode } from '../rendering/registry.js';
-import { Component, TEXT_STYLE, CONTENT } from '../model/types.js';
-
-// ============================================
-// HEADING STYLE MAP
-// ============================================
-
-const HEADING_STYLE: Record<number, string> = {
-  1: TEXT_STYLE.H1,
-  2: TEXT_STYLE.H2,
-  3: TEXT_STYLE.H3,
-  4: TEXT_STYLE.H4,
-};
+import { NODE_TYPE, type SlideNode, type ContainerNode, type ElementNode } from '../model/nodes.js';
+import { DIRECTION, SIZE, HALIGN, VALIGN } from '../model/types.js';
 
 // ============================================
 // PUBLIC API
 // ============================================
 
 /**
- * Compile a slot's markdown content into ComponentNode[].
+ * Compile a slot's markdown content into SlideNode[].
  *
  * - :::directives → dispatched through the component registry
  * - Thematic breaks (---) → silently skipped
- * - Bare MDAST → compiled inline via compileBareMarkdown()
+ * - Bare MDAST → compiled via registered MDAST handlers
  */
-export function compileSlot(markdownStr: string): ComponentNode[] {
+export function compileSlot(markdownStr: string): SlideNode[] {
   const tree = markdownProcessor.parse(markdownStr) as Root;
   return compileChildren(tree.children, markdownStr, 'slot');
 }
 
 // ============================================
-// MDAST CHILDREN → ComponentNode[]
+// MDAST CHILDREN → SlideNode[]
 // ============================================
 
 /**
- * Compile an array of already-parsed MDAST nodes into ComponentNode[].
+ * Compile an array of already-parsed MDAST nodes into SlideNode[].
  * Shared by compileSlot (top-level slot parsing) and dispatchDirective (nested container bodies).
  *
  * - Container directives → dispatched through dispatchDirective (recursive)
  * - Thematic breaks → silently skipped
- * - Consecutive bare MDAST → grouped and compiled inline via compileBareMarkdown()
+ * - Consecutive bare MDAST → grouped and compiled via registered MDAST handlers
  */
 function compileChildren(
   children: RootContent[],
   source: string,
   errorPrefix: string,
-): ComponentNode[] {
-  const nodes: ComponentNode[] = [];
+): SlideNode[] {
+  const nodes: SlideNode[] = [];
   let bareStart: RootContent | null = null;
   let bareEnd: RootContent | null = null;
 
@@ -155,18 +144,18 @@ export function dispatchDirective(
 // ============================================
 
 /**
- * Compile a bare markdown string into ComponentNode(s).
- * Single blocks return directly; multiple blocks are wrapped in a Column.
+ * Compile a bare markdown string into a SlideNode.
+ * Single blocks return directly; multiple blocks are wrapped in a
+ * ContainerNode with column direction (structural primitive, no component reference).
  *
- * Handles all block-level markdown: paragraphs, headings, lists, tables,
- * thematic breaks, and nested :::directives.
+ * Block compilation is driven by registered MDAST handlers on the component registry.
  *
  * Used by flushBareGroup() for inline compilation of bare MDAST,
  * and exported for the document() DSL function.
  */
-export function compileBareMarkdown(source: string): ComponentNode {
+export function compileBareMarkdown(source: string): SlideNode {
   const tree = markdownProcessor.parse(source) as Root;
-  const nodes: ComponentNode[] = [];
+  const nodes: SlideNode[] = [];
 
   for (const child of tree.children) {
     const compiled = compileBareNode(child, source);
@@ -177,56 +166,40 @@ export function compileBareMarkdown(source: string): ComponentNode {
     throw new Error('[tycoslide] document: empty markdown content');
   }
   if (nodes.length === 1) return nodes[0];
-  return component(Component.Column, { children: nodes });
+  return {
+    type: NODE_TYPE.CONTAINER,
+    direction: DIRECTION.COLUMN,
+    // Pre-expansion: children are ComponentNodes; expandTree() resolves them to ElementNodes
+    children: nodes as unknown as ElementNode[],
+    width: SIZE.FILL,
+    height: SIZE.HUG,
+    vAlign: VALIGN.TOP,
+    hAlign: HALIGN.LEFT,
+  } as ContainerNode;
 }
 
 /**
- * Compile a single MDAST block node into a ComponentNode.
- * Uses component() factory calls only — no imports from component files.
+ * Compile a single MDAST block node into a SlideNode.
+ * Dispatches to registered MDAST handlers on the component registry.
  */
-function compileBareNode(node: RootContent, source: string): ComponentNode | null {
+function compileBareNode(node: RootContent, source: string): SlideNode | null {
   // Container directives → shared dispatch
   if (node.type === SYNTAX.CONTAINER_DIRECTIVE) {
     return dispatchDirective(node as unknown as ContainerDirective, source, 'document');
   }
 
-  // Paragraphs (reject inline images)
-  if (node.type === SYNTAX.PARAGRAPH) {
-    const para = node as { children: { type: string }[] };
-    if (para.children.length === 1 && para.children[0].type === SYNTAX.IMAGE) {
-      throw new Error('Images cannot be embedded inline in text. Use :::image directive.');
-    }
-    return component(Component.Text, { body: extractSource(node, source), content: CONTENT.PROSE });
-  }
-
-  // Lists
-  if (node.type === SYNTAX.LIST) {
-    return component(Component.Text, { body: extractSource(node, source), content: CONTENT.PROSE });
-  }
-
-  // Headings
-  if (node.type === SYNTAX.HEADING) {
-    const heading = node as Heading;
-    const style = HEADING_STYLE[heading.depth] ?? TEXT_STYLE.H3;
-    const raw = extractSource(heading, source);
-    const content = raw.replace(/^#{1,6}\s*/, '');
-    return component(Component.Text, { body: content, content: CONTENT.PROSE, style });
-  }
-
-  // Tables (GFM)
-  if (node.type === SYNTAX.TABLE) {
-    const tableNode = node as unknown as MdastTable;
-    const rows = tableNode.children.map(row =>
-      row.children.map(cell => extractInlineText(cell.children))
-    );
-    return component(Component.Table, { data: rows, tableProps: { headerRows: 1 } });
-  }
-
   // Thematic breaks → skip
   if (node.type === SYNTAX.THEMATIC_BREAK) return null;
 
+  // Dispatch to registered MDAST handler
+  const handler = componentRegistry.getMdastHandler(node.type);
+  if (handler?.mdast) {
+    return handler.mdast.compile(node, source);
+  }
+
   // Unknown → error
   throw new Error(
-    `[tycoslide] document: unsupported markdown block type "${node.type}".`,
+    `[tycoslide] document: unsupported markdown block type "${node.type}". ` +
+    `No component has registered an MDAST handler for this type.`,
   );
 }

@@ -10,8 +10,9 @@ import remarkParse from 'remark-parse';
 import remarkDirective from 'remark-directive';
 import type { Root, PhrasingContent, List, Paragraph, ListItem } from 'mdast';
 import type { TextDirective } from 'mdast-util-directive';
+import type { RootContent, Heading } from 'mdast';
 import type { NormalizedRun, ColorScheme, ContentType, TextStyleName, HorizontalAlignment, VerticalAlignment, TextTokens } from 'tycoslide';
-import { HALIGN, VALIGN, TEXT_STYLE, CONTENT, TEXT_TOKEN, Component, SYNTAX } from 'tycoslide';
+import { HALIGN, VALIGN, TEXT_STYLE, CONTENT, TEXT_TOKEN, Component, SYNTAX, markdown } from 'tycoslide';
 import { NODE_TYPE, type ElementNode } from 'tycoslide';
 import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape } from 'tycoslide';
 import { schema } from 'tycoslide';
@@ -282,6 +283,25 @@ export const textComponent = componentRegistry.define({
   body: schema.string(),
   params: textSchema,
   tokens: [TEXT_TOKEN.COLOR, TEXT_TOKEN.BULLET_COLOR, TEXT_TOKEN.STYLE, TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER],
+  mdast: {
+    nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.LIST, SYNTAX.HEADING],
+    compile: (node: RootContent, source: string): ComponentNode | null => {
+      if (node.type === SYNTAX.HEADING) {
+        const heading = node as Heading;
+        const style = HEADING_STYLE[heading.depth] ?? TEXT_STYLE.H3;
+        const raw = markdown.extractSource(heading, source);
+        const content = raw.replace(/^#{1,6}\s*/, '');
+        return component(Component.Text, { body: content, content: CONTENT.PROSE, style });
+      }
+      if (node.type === SYNTAX.PARAGRAPH) {
+        const para = node as { children: { type: string }[] };
+        if (para.children.length === 1 && para.children[0].type === SYNTAX.IMAGE) {
+          throw new Error('Images cannot be embedded inline in text. Use :::image directive.');
+        }
+      }
+      return component(Component.Text, { body: markdown.extractSource(node, source), content: CONTENT.PROSE });
+    },
+  },
   expand: expandText,
 });
 

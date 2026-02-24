@@ -10,7 +10,7 @@ import { parseSlideDocument, type RawSlide } from './slideParser.js';
 
 import { compileSlot } from './slotCompiler.js';
 import { layoutRegistry, type LayoutDefinition } from '../rendering/registry.js';
-import type { ComponentNode } from '../model/nodes.js';
+import type { SlideNode } from '../model/nodes.js';
 import { Presentation } from '../rendering/presentation.js';
 import type { Theme, Slide } from '../model/types.js';
 
@@ -51,13 +51,13 @@ export interface CompileOptions {
 // VALIDATION
 // ============================================
 
-/** Zod schema for a single slot: string → ComponentNode[] via compileSlot. */
-const slotSchema = z.string().transform((s): ComponentNode[] => compileSlot(s));
+/** Zod schema for a single slot: string → SlideNode[] via compileSlot. */
+const slotSchema = z.string().transform((s): SlideNode[] => compileSlot(s));
 
 /**
  * Validate raw params and slots against a layout's schemas.
  * Params validated against the layout's Zod param shape.
- * Slots compiled from markdown strings into ComponentNode[].
+ * Slots compiled from markdown strings into SlideNode[].
  */
 export function validateLayout(
   layout: LayoutDefinition,

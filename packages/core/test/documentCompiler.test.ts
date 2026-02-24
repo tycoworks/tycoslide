@@ -10,6 +10,8 @@ import assert from 'node:assert/strict';
 
 import { compileDocument, buildSlideName } from '../src/core/markdown/documentCompiler.js';
 import { layoutRegistry } from '../src/core/rendering/registry.js';
+// Side-effect import: trigger component registration (MDAST handlers needed by slot compiler)
+import './test-components.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { mockTheme } from './mocks.js';
 import type { Slide } from '../src/core/model/types.js';
