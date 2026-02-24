@@ -6,7 +6,7 @@ A build system for branded presentations. tycoslide compiles TypeScript or Markd
 
 **Content as code.** Presentations are built in CI/CD pipelines, not manually in PowerPoint. tycoslide enforces brand compliance, type safety, and reproducible output. If something is wrong, it fails at build time — not after the deck ships.
 
-**Three personas, strict boundaries:**
+**Separation of concerns:**
 
 | Persona | Works in | Produces | Concerns |
 |---------|----------|----------|----------|
@@ -70,6 +70,6 @@ tycoslide's pipeline runs: Markdown or TypeScript DSL → component tree → pri
 
 - **[Quick Start](./quick-start.md)** — Install tycoslide and build your first presentation in 5 minutes
 - **[Markdown Syntax](./markdown-syntax.md)** — Learn the markdown syntax for creating slides
-- **[Creating Themes](../extending/creating-themes.md)** — Understand the theme system and how to customize themes
-- **[Components](./components.md)** — Built-in components and building custom ones
-- **[Creating Layouts](../extending/creating-layouts.md)** — Layout system and building custom layouts
+- **[Themes](./themes.md)** — Theme system, customization, and building themes
+- **[Components](./components.md)** — Built-in components and creating custom ones
+- **[Layouts](./layouts.md)** — Default layouts and creating custom layouts

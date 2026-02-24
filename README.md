@@ -12,7 +12,7 @@ A build system for presentations. tycoslide compiles Markdown or TypeScript into
 - **Markdown authoring** — Write content in Markdown
 - **TypeScript API** — Build custom themes and components
 
-**[Read the full introduction →](./docs/guide/introduction.md)** to understand tycoslide's philosophy and how it differs from Slidev, Marp, and Reveal.js.
+**[Read the full introduction →](./docs/introduction.md)** to understand tycoslide's philosophy and how it differs from Slidev, Marp, and Reveal.js.
 
 ## Quick Start
 
@@ -52,13 +52,13 @@ npx tycoslide build slides.md
 
 Output: `slides.pptx` — ready to open and present.
 
-**[Full quick start guide →](./docs/guide/quick-start.md)**
+**[Full quick start guide →](./docs/quick-start.md)**
 
 ## Documentation
 
 **[Read the documentation →](./docs/)**
 
-Three sections: **Guide** (using tycoslide), **Extending** (building components, layouts, themes), and **Default Theme** (token reference and customization).
+Covers markdown syntax, components, layouts, themes, CLI usage, and troubleshooting.
 
 ## License
 

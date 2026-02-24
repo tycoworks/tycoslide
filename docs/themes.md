@@ -1,4 +1,4 @@
-# Creating Custom Themes
+# Themes
 
 Themes control all visual styling in tycoslide presentations. A theme is a TypeScript object that provides colors, typography, spacing, slide dimensions, and component token values. It is the single source of truth for all visual decisions.
 
@@ -48,9 +48,253 @@ assets.icons.rocket     // rocket_launch (filled)
 assets.icons.shield     // verified_user (filled)
 ```
 
-See the [theme source](../../packages/theme-default/src/theme.ts) for all default values.
+See the [theme source](../packages/theme-default/src/theme.ts) for all default values.
 
 ---
+
+## Extending an Existing Theme
+
+### Quick Extension Pattern
+
+Import the default theme and spread it with your overrides:
+
+```typescript
+import { theme as defaultTheme } from 'tycoslide-theme-default';
+import type { Theme } from 'tycoslide';
+
+const myTheme: Theme = {
+  ...defaultTheme,
+  // Override only what you need
+};
+
+export default myTheme;
+```
+
+Then reference your package in the presentation frontmatter:
+
+```markdown
+---
+theme: my-theme
+---
+```
+
+---
+
+### Overriding Colors
+
+Replace brand colors while inheriting everything else:
+
+```typescript
+import { theme as defaultTheme } from 'tycoslide-theme-default';
+import type { Theme } from 'tycoslide';
+
+const myTheme: Theme = {
+  ...defaultTheme,
+  colors: {
+    ...defaultTheme.colors,
+    primary: 'FF6600',       // Your brand color (no # prefix)
+    secondary: 'F0EAE0',     // Subtle surface color
+    accents: {
+      ...defaultTheme.colors.accents,
+      blue: 'FF6600',        // Map accent names to your palette
+      green: '00A86B',
+    },
+  },
+};
+```
+
+All color values are 6-character hex strings without a `#` prefix.
+
+**Color tokens and their roles:**
+
+| Token | Role |
+|-------|------|
+| `background` | Slide background |
+| `text` | Primary text color |
+| `textMuted` | Secondary text, captions, footers |
+| `primary` | Primary accent — buttons, highlights, `primary` shape variant |
+| `secondary` | Subtle surface fills — card backgrounds, borders |
+| `subtleOpacity` | Opacity (%) for subtle fills (0–100) |
+| `accents.*` | Named inline highlight colors (`:name[text]` syntax) |
+
+---
+
+### Overriding Fonts
+
+Replace Inter with a system font or a custom `.woff2` file:
+
+#### System font (no file embedding)
+
+```typescript
+import { theme as defaultTheme } from 'tycoslide-theme-default';
+import type { Theme, FontFamily } from 'tycoslide';
+
+const helvetica: FontFamily = {
+  normal: { name: 'Helvetica', path: '' },  // path: '' = system font
+  bold:   { name: 'Helvetica', path: '' },
+};
+
+const myTheme: Theme = {
+  ...defaultTheme,
+  textStyles: {
+    h1:     { ...defaultTheme.textStyles.h1,     fontFamily: helvetica },
+    h2:     { ...defaultTheme.textStyles.h2,     fontFamily: helvetica },
+    h3:     { ...defaultTheme.textStyles.h3,     fontFamily: helvetica },
+    h4:     { ...defaultTheme.textStyles.h4,     fontFamily: helvetica },
+    body:   { ...defaultTheme.textStyles.body,   fontFamily: helvetica },
+    small:  { ...defaultTheme.textStyles.small,  fontFamily: helvetica },
+    eyebrow:{ ...defaultTheme.textStyles.eyebrow,fontFamily: helvetica },
+    footer: { ...defaultTheme.textStyles.footer, fontFamily: helvetica },
+  },
+};
+```
+
+#### Custom font via @fontsource
+
+```typescript
+import { createRequire } from 'module';
+import type { FontFamily } from 'tycoslide';
+
+const require = createRequire(import.meta.url);
+
+const plusJakarta: FontFamily = {
+  light:  { name: 'Plus Jakarta Sans Light',  path: require.resolve('@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-300-normal.woff2') },
+  normal: { name: 'Plus Jakarta Sans',        path: require.resolve('@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-400-normal.woff2') },
+  bold:   { name: 'Plus Jakarta Sans Bold',   path: require.resolve('@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-700-normal.woff2') },
+};
+```
+
+#### Adjusting font sizes only
+
+```typescript
+const myTheme: Theme = {
+  ...defaultTheme,
+  textStyles: {
+    ...defaultTheme.textStyles,
+    h1: { ...defaultTheme.textStyles.h1, fontSize: 44 },
+    h2: { ...defaultTheme.textStyles.h2, fontSize: 32 },
+  },
+};
+```
+
+---
+
+### Overriding Spacing
+
+```typescript
+const myTheme: Theme = {
+  ...defaultTheme,
+  spacing: {
+    ...defaultTheme.spacing,
+    margin: 0.625,   // Wider margins (was 0.5")
+    gap: 0.375,      // More breathing room (was 0.25")
+    gapTight: 0.25,  // Looser tight gap (was 0.125")
+    padding: 0.375,  // More card padding (was 0.25")
+  },
+};
+```
+
+Spacing values are in inches. The base `unit` (1/32") is used for sub-pixel precision in component layouts.
+
+---
+
+### Overriding Component Tokens
+
+Each component's appearance is controlled by tokens in `theme.components`. Every component must have at least a `default` variant.
+
+#### Changing card colors
+
+```typescript
+const myTheme: Theme = {
+  ...defaultTheme,
+  components: {
+    ...defaultTheme.components,
+    card: {
+      variants: {
+        default: {
+          ...defaultTheme.components.card.variants.default,
+          backgroundColor: 'F5F0FF',   // Custom card background
+          backgroundOpacity: 20,
+          borderColor: 'C4B5FD',
+        },
+        flat: {
+          ...defaultTheme.components.card.variants.flat,
+        },
+      },
+    },
+  },
+};
+```
+
+#### Adding a new card variant
+
+```typescript
+const myTheme: Theme = {
+  ...defaultTheme,
+  components: {
+    ...defaultTheme.components,
+    card: {
+      variants: {
+        ...defaultTheme.components.card.variants,
+        // New "highlight" variant
+        highlight: {
+          ...defaultTheme.components.card.variants.default,
+          backgroundColor: 'FF6600',
+          backgroundOpacity: 100,
+          titleColor: 'FFFFFF',
+          descriptionColor: 'FFD4B3',
+        },
+      },
+    },
+  },
+};
+```
+
+Then use it in markdown:
+
+```markdown
+:::card{title="Featured" variant="highlight"}
+This card uses the highlight variant.
+:::
+```
+
+#### Overriding quote tokens
+
+```typescript
+components: {
+  ...defaultTheme.components,
+  quote: {
+    variants: {
+      default: {
+        ...defaultTheme.components.quote.variants.default,
+        quoteStyle: 'h3',         // Larger quote text
+        padding: 0.5,
+        vAlign: 'middle',
+      },
+    },
+  },
+},
+```
+
+#### Overriding table tokens
+
+```typescript
+import { BORDER_STYLE } from 'tycoslide';
+
+components: {
+  ...defaultTheme.components,
+  table: {
+    variants: {
+      default: {
+        ...defaultTheme.components.table.variants.default,
+        borderStyle: BORDER_STYLE.HORIZONTAL,  // Horizontal lines only
+        headerBackground: 'F0F0F0',
+        headerBackgroundOpacity: 100,
+      },
+    },
+  },
+},
+```
 
 ## When to Build a Custom Theme
 
@@ -59,7 +303,7 @@ Build a custom theme when:
 - You want complete design control
 - You're building a reusable theme for your organization
 
-**For quick customization:** Extend an existing theme using the spread operator pattern (see below).
+**For quick customization:** Extend an existing theme using the spread operator pattern (see above).
 
 **For full control:** Build from scratch (this guide).
 
@@ -227,359 +471,26 @@ borders: {
 
 ### 7. Provide Component Tokens
 
-Each component requires token configuration with at least a `default` variant. All 7 token-bearing built-in components must be configured:
+Each component requires a `components` entry with at least a `default` variant. Every token the component declares must be present — missing tokens fail the build. The shape is the same for all components:
 
 ```typescript
-import { TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, HALIGN, VALIGN } from 'tycoslide';
-
 components: {
   card: {
     variants: {
       default: {
-        padding: spacing.padding,
-        cornerRadius: 0.05,
-        backgroundColor: colors.secondary,
-        backgroundOpacity: colors.subtleOpacity,
-        borderColor: colors.secondary,
-        borderWidth: 0.75,
-        titleStyle: TEXT_STYLE.H4,
-        titleColor: colors.text,
-        descriptionStyle: TEXT_STYLE.SMALL,
-        descriptionColor: colors.textMuted,
-        gap: GAP.TIGHT,
-        textGap: GAP.TIGHT,
-        hAlign: HALIGN.CENTER,
-        vAlign: VALIGN.TOP,
+        // All required tokens for card — colors, spacing, text styles, alignment
       },
     },
   },
-  quote: {
-    variants: {
-      default: {
-        padding: spacing.padding * 2,
-        cornerRadius: 0.05,
-        backgroundColor: colors.secondary,
-        backgroundOpacity: colors.subtleOpacity,
-        borderColor: colors.secondary,
-        borderWidth: 0.75,
-        quoteStyle: TEXT_STYLE.BODY,
-        quoteColor: colors.text,
-        attributionStyle: TEXT_STYLE.SMALL,
-        attributionColor: colors.textMuted,
-        attributionHAlign: HALIGN.RIGHT,
-        gap: GAP.NORMAL,
-        hAlign: HALIGN.CENTER,
-        vAlign: VALIGN.MIDDLE,
-      },
-    },
-  },
-  table: {
-    variants: {
-      default: {
-        borderStyle: BORDER_STYLE.FULL,
-        borderColor: colors.secondary,
-        borderWidth: 0.75,
-        headerBackground: colors.background,
-        headerBackgroundOpacity: 0,
-        headerTextStyle: TEXT_STYLE.BODY,
-        cellBackground: colors.background,
-        cellBackgroundOpacity: 0,
-        cellTextStyle: TEXT_STYLE.BODY,
-        cellPadding: spacing.cellPadding,
-        hAlign: HALIGN.LEFT,
-        vAlign: VALIGN.MIDDLE,
-      },
-    },
-  },
-  line: {
-    variants: {
-      default: {
-        color: colors.secondary,
-        width: 0.75,
-        dashType: DASH_TYPE.SOLID,
-      },
-    },
-  },
-  slideNumber: {
-    variants: {
-      default: {
-        style: TEXT_STYLE.FOOTER,
-        color: colors.textMuted,
-        hAlign: HALIGN.RIGHT,
-      },
-    },
-  },
-  text: {
-    variants: {
-      default: {
-        style: TEXT_STYLE.BODY,
-        color: colors.text,
-        bulletColor: colors.text,
-        lineHeightMultiplier: 1.2,
-      },
-    },
-  },
-  shape: {
-    variants: {
-      default: {
-        fill: colors.secondary,
-        fillOpacity: 100,
-        borderColor: colors.background,
-        borderWidth: 0,
-        cornerRadius: 0,
-      },
-    },
-  },
+  // ... same pattern for each component
 }
 ```
 
-**Required component token entries:** `card`, `quote`, `table`, `line`, `slideNumber`, `text`, `shape`
+**All 7 token-bearing components must be configured:** `card`, `quote`, `table`, `line`, `slideNumber`, `text`, `shape`
 
-See the [theme-default source](../../packages/theme-default/src/theme.ts) for a complete reference implementation.
+Each component's required token keys are defined in its component definition. Use framework constants (`TEXT_STYLE`, `GAP`, `BORDER_STYLE`, `DASH_TYPE`, `HALIGN`, `VALIGN`) for enum-valued tokens.
 
-### Extending an Existing Theme
-
-#### Quick Extension Pattern
-
-Import the default theme and spread it with your overrides:
-
-```typescript
-import { theme as defaultTheme } from 'tycoslide-theme-default';
-import type { Theme } from 'tycoslide';
-
-const myTheme: Theme = {
-  ...defaultTheme,
-  // Override only what you need
-};
-
-export default myTheme;
-```
-
-Then reference your package in the presentation frontmatter:
-
-```markdown
----
-theme: my-theme
----
-```
-
----
-
-#### Overriding Colors
-
-Replace brand colors while inheriting everything else:
-
-```typescript
-import { theme as defaultTheme } from 'tycoslide-theme-default';
-import type { Theme } from 'tycoslide';
-
-const myTheme: Theme = {
-  ...defaultTheme,
-  colors: {
-    ...defaultTheme.colors,
-    primary: 'FF6600',       // Your brand color (no # prefix)
-    secondary: 'F0EAE0',     // Subtle surface color
-    accents: {
-      ...defaultTheme.colors.accents,
-      blue: 'FF6600',        // Map accent names to your palette
-      green: '00A86B',
-    },
-  },
-};
-```
-
-All color values are 6-character hex strings without a `#` prefix.
-
-**Color tokens and their roles:**
-
-| Token | Role |
-|-------|------|
-| `background` | Slide background |
-| `text` | Primary text color |
-| `textMuted` | Secondary text, captions, footers |
-| `primary` | Primary accent — buttons, highlights, `primary` shape variant |
-| `secondary` | Subtle surface fills — card backgrounds, borders |
-| `subtleOpacity` | Opacity (%) for subtle fills (0–100) |
-| `accents.*` | Named inline highlight colors (`:name[text]` syntax) |
-
----
-
-#### Overriding Fonts
-
-Replace Inter with a system font or a custom `.woff2` file:
-
-##### System font (no file embedding)
-
-```typescript
-import { theme as defaultTheme } from 'tycoslide-theme-default';
-import type { Theme, FontFamily } from 'tycoslide';
-
-const helvetica: FontFamily = {
-  normal: { name: 'Helvetica', path: '' },  // path: '' = system font
-  bold:   { name: 'Helvetica', path: '' },
-};
-
-const myTheme: Theme = {
-  ...defaultTheme,
-  textStyles: {
-    h1:     { ...defaultTheme.textStyles.h1,     fontFamily: helvetica },
-    h2:     { ...defaultTheme.textStyles.h2,     fontFamily: helvetica },
-    h3:     { ...defaultTheme.textStyles.h3,     fontFamily: helvetica },
-    h4:     { ...defaultTheme.textStyles.h4,     fontFamily: helvetica },
-    body:   { ...defaultTheme.textStyles.body,   fontFamily: helvetica },
-    small:  { ...defaultTheme.textStyles.small,  fontFamily: helvetica },
-    eyebrow:{ ...defaultTheme.textStyles.eyebrow,fontFamily: helvetica },
-    footer: { ...defaultTheme.textStyles.footer, fontFamily: helvetica },
-  },
-};
-```
-
-##### Custom font via @fontsource
-
-```typescript
-import { createRequire } from 'module';
-import type { FontFamily } from 'tycoslide';
-
-const require = createRequire(import.meta.url);
-
-const plusJakarta: FontFamily = {
-  light:  { name: 'Plus Jakarta Sans Light',  path: require.resolve('@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-300-normal.woff2') },
-  normal: { name: 'Plus Jakarta Sans',        path: require.resolve('@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-400-normal.woff2') },
-  bold:   { name: 'Plus Jakarta Sans Bold',   path: require.resolve('@fontsource/plus-jakarta-sans/files/plus-jakarta-sans-latin-700-normal.woff2') },
-};
-```
-
-##### Adjusting font sizes only
-
-```typescript
-const myTheme: Theme = {
-  ...defaultTheme,
-  textStyles: {
-    ...defaultTheme.textStyles,
-    h1: { ...defaultTheme.textStyles.h1, fontSize: 44 },
-    h2: { ...defaultTheme.textStyles.h2, fontSize: 32 },
-  },
-};
-```
-
----
-
-#### Overriding Spacing
-
-```typescript
-const myTheme: Theme = {
-  ...defaultTheme,
-  spacing: {
-    ...defaultTheme.spacing,
-    margin: 0.625,   // Wider margins (was 0.5")
-    gap: 0.375,      // More breathing room (was 0.25")
-    gapTight: 0.25,  // Looser tight gap (was 0.125")
-    padding: 0.375,  // More card padding (was 0.25")
-  },
-};
-```
-
-Spacing values are in inches. The base `unit` (1/32") is used for sub-pixel precision in component layouts.
-
----
-
-#### Overriding Component Tokens
-
-Each component's appearance is controlled by tokens in `theme.components`. Every component must have at least a `default` variant.
-
-##### Changing card colors
-
-```typescript
-const myTheme: Theme = {
-  ...defaultTheme,
-  components: {
-    ...defaultTheme.components,
-    card: {
-      variants: {
-        default: {
-          ...defaultTheme.components.card.variants.default,
-          backgroundColor: 'F5F0FF',   // Custom card background
-          backgroundOpacity: 20,
-          borderColor: 'C4B5FD',
-        },
-        flat: {
-          ...defaultTheme.components.card.variants.flat,
-        },
-      },
-    },
-  },
-};
-```
-
-##### Adding a new card variant
-
-```typescript
-const myTheme: Theme = {
-  ...defaultTheme,
-  components: {
-    ...defaultTheme.components,
-    card: {
-      variants: {
-        ...defaultTheme.components.card.variants,
-        // New "highlight" variant
-        highlight: {
-          ...defaultTheme.components.card.variants.default,
-          backgroundColor: 'FF6600',
-          backgroundOpacity: 100,
-          titleColor: 'FFFFFF',
-          descriptionColor: 'FFD4B3',
-        },
-      },
-    },
-  },
-};
-```
-
-Then use it in markdown:
-
-```markdown
-:::card{title="Featured" variant="highlight"}
-This card uses the highlight variant.
-:::
-```
-
-##### Overriding quote tokens
-
-```typescript
-components: {
-  ...defaultTheme.components,
-  quote: {
-    variants: {
-      default: {
-        ...defaultTheme.components.quote.variants.default,
-        quoteStyle: 'h3',         // Larger quote text
-        padding: 0.5,
-        vAlign: 'middle',
-      },
-    },
-  },
-},
-```
-
-##### Overriding table tokens
-
-```typescript
-import { BORDER_STYLE } from 'tycoslide';
-
-components: {
-  ...defaultTheme.components,
-  table: {
-    variants: {
-      default: {
-        ...defaultTheme.components.table.variants.default,
-        borderStyle: BORDER_STYLE.HORIZONTAL,  // Horizontal lines only
-        headerBackground: 'F0F0F0',
-        headerBackgroundOpacity: 100,
-      },
-    },
-  },
-},
-```
+See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete reference implementation with all token keys and default values.
 
 ## Using Custom Themes
 
@@ -757,11 +668,3 @@ Test each variant you define. Test custom components if your theme includes them
 2. Define all tokens explicitly
 3. Test with all components
 4. Package as an npm module
-
----
-
-## See Also
-
-- [Layouts](../guide/layouts.md)
-- [Creating Components](./creating-components.md)
-- [Creating Layouts](./creating-layouts.md)

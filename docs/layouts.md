@@ -1,8 +1,141 @@
-# Creating Custom Layouts
+# Layouts
+
+Layouts define the structure and visual arrangement of a slide — where the title goes, where body content renders, and what fixed elements like footers appear. Each layout accepts specific frontmatter parameters and controls how content is positioned on the slide.
+
+This page covers the built-in layouts provided by `tycoslide-theme-default` and how to create custom layouts for your own themes.
+
+## Available Layouts
+
+`tycoslide-theme-default` provides three layouts. Custom themes can define their own (see [Creating Custom Layouts](#creating-custom-layouts)).
+
+| Name | Purpose |
+|------|---------|
+| `title` | Opening or closing slide — large centered title with optional subtitle |
+| `section` | Section divider — centered heading, no body content |
+| `body` | Default content slide — optional title/eyebrow with a full markdown body |
+
+---
+
+## title
+
+Opening and closing slides. Renders title and optional subtitle centered vertically and horizontally.
+
+### Parameters
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `title` | yes | Main title text |
+| `subtitle` | no | Subtitle text, rendered below the title in `textMuted` color |
+
+### Example
+
+```markdown
+---
+layout: title
+title: My Presentation
+subtitle: A Brief Overview
+---
+```
+
+```markdown
+---
+layout: title
+title: Thank You
+subtitle: Questions?
+---
+```
+
+---
+
+## section
+
+Section divider. A single centered heading with no body content or master footer.
+
+### Parameters
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `title` | yes | Section name |
+
+### Example
+
+```markdown
+---
+layout: section
+title: Part 1: Getting Started
+---
+```
+
+---
+
+## body
+
+Default content layout. Accepts markdown in the slide body and renders it inside a content area bounded by the default master (footer + margins).
+
+### Parameters
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `title` | no | Slide title, rendered as `h3` style |
+| `eyebrow` | no | Small label above the title, rendered in `eyebrow` style (uppercased automatically) |
+
+### Markdown body content
+
+The body slot accepts any markdown content: text, bullets, headings, tables, and component directives.
+
+```markdown
+---
+layout: body
+title: Key Features
+eyebrow: OVERVIEW
+---
+
+tycoslide compiles Markdown to native PowerPoint:
+
+- Brand-compliant output without manual formatting
+- Component system for cards, tables, and diagrams
+- Fails at build time on invalid content
+```
+
+```markdown
+---
+layout: body
+title: Architecture
+---
+
+::::row{gap="normal"}
+:::card{title="Author" height="fill"}
+Writes Markdown, chooses layouts.
+:::
+:::card{title="Developer" height="fill"}
+Builds themes and components.
+:::
+:::card{title="Designer" height="fill"}
+Defines tokens and color palettes.
+:::
+::::
+```
+
+---
+
+## Default Master
+
+All `body` layout slides use the `DEFAULT_MASTER`, which adds:
+
+- **Footer row** at the bottom of every slide — `0.25"` tall
+  - Left: "Your Company Name" in `footer` style — replace this in your theme's master
+  - Right: slide number via the `slideNumber` component
+- **Content bounds** — the usable area for slide content, inset by `0.5"` margin on all sides and shrunk by the footer height at the bottom
+
+`title` and `section` layouts do not use the master — they render without a footer.
+
+---
+
+## Creating Custom Layouts
 
 Custom layouts define slide structure. Each layout controls where content appears, what frontmatter parameters are accepted, what content slots are available, and how everything is positioned on the slide.
 
-## When to Create Custom Layouts
+### When to Create Custom Layouts
 
 Create a custom layout when:
 - You need a slide structure not provided by the theme you're using
@@ -10,7 +143,7 @@ Create a custom layout when:
 - You want to enforce consistent structure (title placement, eyebrow, content bounds)
 - You're building a theme for your organization
 
-## Layout Registration
+### Layout Registration
 
 Layouts are defined using `layoutRegistry.define()`:
 
@@ -40,7 +173,7 @@ layoutRegistry.define({
 });
 ```
 
-## Layout Structure
+### Layout Structure
 
 ```typescript
 interface LayoutDefinition {
@@ -52,7 +185,7 @@ interface LayoutDefinition {
 }
 ```
 
-## Parameters
+### Parameters
 
 Define parameters using `schema` helpers and component schemas:
 
@@ -69,13 +202,13 @@ params: {
 }
 ```
 
-For parameter schema helpers and shared value types, see [Creating Components — Parameters](./creating-components.md#parameters).
+For parameter schema helpers and shared value types, see [Components — Defining Parameters](./components.md#defining-parameters).
 
 `textComponent.schema` validates the parameter as text content with the same rules as the text component — it accepts a string that supports inline markdown formatting. Use this for any layout parameter that authors write as human-readable text in frontmatter.
 
 Parameters are validated at build time. Invalid frontmatter values cause build errors.
 
-## Content Slots
+### Content Slots
 
 Slots allow markdown body content to be inserted into specific positions in the layout.
 
@@ -126,7 +259,7 @@ render: (props) => ({
 })
 ```
 
-## TypeScript DSL for Layout Development
+### TypeScript DSL for Layout Development
 
 Layouts are built by composing container functions from `tycoslide-components`. The core pattern is nesting `column` and `row` calls to define structure, then placing content nodes inside them:
 
@@ -145,9 +278,9 @@ column(
 )
 ```
 
-For the complete DSL function reference including all content and container components, see [Creating Components — TypeScript DSL Functions](./creating-components.md#typescript-dsl-functions).
+For the complete DSL function reference including all content and container components, see [Components — TypeScript DSL Functions](./components.md#typescript-dsl-functions).
 
-## Render Function
+### Render Function
 
 The render function receives validated props and returns a Slide object:
 
@@ -162,11 +295,11 @@ render: (props) => ({
 
 `props` contains all validated frontmatter parameters plus slot arrays. The function must return at minimum a `content` node.
 
-## Real-World Examples
+### Real-World Examples
 
-The default theme's `title`, `section`, and `body` layouts in [`packages/theme-default/src/layouts.ts`](../../packages/theme-default/src/layouts.ts) demonstrate all of these patterns — params, slots, masters, and composition with DSL functions.
+The default theme's `title`, `section`, and `body` layouts in [`packages/theme-default/src/layouts.ts`](../packages/theme-default/src/layouts.ts) demonstrate all of these patterns — params, slots, masters, and composition with DSL functions.
 
-## Using Masters
+### Using Masters
 
 Masters define fixed elements that appear on every slide using a layout (footers, logos, page numbers) and set the content bounds — the region where slide content renders.
 
@@ -195,7 +328,7 @@ Pass the master in the render function's return value: `render: (props) => ({ ma
 - `contentBounds` must account for fixed elements — if the master has a footer bar at the bottom, reduce `height` accordingly
 - Masters can include slide numbers, logos, headers, and background elements
 
-### Replacing the Default Master
+#### Replacing the Default Master
 
 To customize the footer (company name, logo, colors), create your own master and pass it to your layout definitions:
 
@@ -238,7 +371,7 @@ export const MY_MASTER: Master = {
 };
 ```
 
-## Registering Layouts in Themes
+### Registering Layouts in Themes
 
 Each layout file calls `layoutRegistry.define()` to register itself:
 
@@ -249,9 +382,9 @@ import { layoutRegistry } from 'tycoslide';
 layoutRegistry.define({ /* layout definition */ });
 ```
 
-For how to package layouts with your theme entry point, see [Creating Themes — Layouts](./creating-themes.md#layouts).
+For how to package layouts with your theme entry point, see [Themes — Registering Layouts in Themes](./themes.md#registering-layouts-in-themes).
 
-## Testing Layouts
+### Testing Layouts
 
 **Using Markdown:**
 
@@ -288,7 +421,7 @@ const pres = new Presentation(theme);
 
 Test with minimal content, maximal content, all parameter combinations, and check for overflow.
 
-## Best Practices
+### Best Practices
 
 **Keep layouts simple:**
 - One clear purpose per layout
@@ -314,11 +447,3 @@ Test with minimal content, maximal content, all parameter combinations, and chec
 - Test with maximal content
 - Test all parameter combinations
 - Check for overflow in constrained slots
-
----
-
-## See Also
-
-- [Layouts](../guide/layouts.md) — title, section, body layout reference
-- [Creating Components](./creating-components.md)
-- [Creating Themes](./creating-themes.md)

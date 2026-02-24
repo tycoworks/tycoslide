@@ -107,7 +107,7 @@ components: {
 }
 ```
 
-See [`theme.ts`](../../packages/theme-default/src/theme.ts) for the complete token reference.
+See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete token reference.
 
 Call `componentRegistry.validateTheme(theme)` at startup to catch all missing tokens at once.
 
@@ -245,7 +245,7 @@ Error: Slide 3: unknown layout 'hero'. Available: title, section, body
 ### "Layout params validation failed"
 
 ```
-Error: Layout 'body' params validation failed:
+Error: Layout 'title' params validation failed:
   - title: Required
 ```
 

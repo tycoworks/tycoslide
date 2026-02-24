@@ -96,7 +96,7 @@ Open `slides.pptx` in PowerPoint, Keynote, or LibreOffice Impress. The output is
 - **Markdown syntax:** See [Markdown Syntax](./markdown-syntax.md)
 - **Add components:** See [Components](./components.md)
 - **Slide layouts:** See [Layouts](./layouts.md)
-- **Customize themes:** See [Creating Themes](../extending/creating-themes.md)
+- **Customize themes:** See [Themes](./themes.md)
 - **CLI options:** See [CLI](./cli.md)
 
 ## Editor Setup (Optional)

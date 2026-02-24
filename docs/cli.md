@@ -156,4 +156,4 @@ tycoslide build --help
 - [Quick Start](./quick-start.md) - Build your first presentation
 - [Markdown Syntax](./markdown-syntax.md) - Markdown syntax reference
 - [Components](./components.md) - Component reference and custom components
-- [Creating Themes](../extending/creating-themes.md) - Theme system
+- [Themes](./themes.md) - Theme system
