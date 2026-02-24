@@ -6,7 +6,8 @@
 ### Core
 - Reorg & comments / code docs
 - Portrait mode
-- Where do components live?
+- Get rid of red line debug
+- So many json and tsconfig everywhere...
 
 ### Core
 - Default theme:
