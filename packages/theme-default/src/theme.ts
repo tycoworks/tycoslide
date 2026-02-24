@@ -18,7 +18,6 @@ import { assets } from './assets.js';
 // ============================================
 
 // Material Design 3 color palette
-// See /internal/research/design/MATERIAL-DESIGN-COLORS.md for full palette documentation
 const colors = {
   background: 'FFFFFF',
   text: '1C1B1F',        // Material Design on-surface (16.1:1 contrast, AAA)

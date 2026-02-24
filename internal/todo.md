@@ -28,6 +28,7 @@
 - Groups
 - Theme building in CLI (inc. JSON design tokens)
 - Dark mode
+- Live
 - Different size slides
 - Escape hatch
 - Design principles
