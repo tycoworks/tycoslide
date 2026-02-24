@@ -185,6 +185,9 @@ function styleContainer(
     justifyContent,
     alignItems,
     ...flexItem(node.width, node.height, parent.direction),
+    // Containment requires definite inline size. HUG columns are content-sized —
+    // containment would zero their intrinsic width, collapsing the column.
+    ...(!isRow && node.width !== SIZE.HUG ? { containerType: 'inline-size' } : {}),
   };
   if (paddingPx > 0) {
     styles.padding = `${paddingPx}px`;
@@ -222,7 +225,7 @@ function styleStack(
     children: node.children.map(child => ({
       // Stack child wrapper: same grid cell, flex column
       nodeId: '',
-      styles: { gridArea: '1 / 1 / 2 / 2', display: 'flex', flexDirection: DIRECTION.COLUMN },
+      styles: { gridArea: '1 / 1 / 2 / 2', display: 'flex', flexDirection: DIRECTION.COLUMN, containerType: 'inline-size' },
       children: [styleNode(child, ctx, theme, idCtx, nodeIds, fontRatios)],
     })),
   };
@@ -303,7 +306,18 @@ function styleImage(
   }
 
   if (maxWidthPx) styles.maxWidth = `${maxWidthPx}px`;
-  if (maxHeightPx) styles.maxHeight = `${maxHeightPx}px`;
+  if (parent.direction === DIRECTION.ROW) {
+    // Row: simple pixel cap (height is the cross axis, no cqw needed)
+    if (maxHeightPx) styles.maxHeight = `${maxHeightPx}px`;
+  } else {
+    // Column: cap at the SMALLER of native pixels and proportional height
+    // from container width. Uses container query units (cqw) to sidestep
+    // the aspect-ratio-in-flex problem entirely.
+    const proportionalCap = `calc(100cqw / ${dims.aspectRatio})`;
+    styles.maxHeight = maxHeightPx
+      ? `min(${maxHeightPx}px, ${proportionalCap})`
+      : proportionalCap;
+  }
 
   return { nodeId, styles, children: [] };
 }

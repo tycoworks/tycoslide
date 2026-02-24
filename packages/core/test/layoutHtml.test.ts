@@ -478,6 +478,32 @@ describe('HTML Measurement Generation', () => {
       // Image in constrained column: grows to fill and can compress (min-height:0)
       assert.ok(imageMatch![1].includes('flex:1 1 0'), 'Image in constrained column should grow to fill (flex:1 1 0)');
       assert.ok(imageMatch![1].includes('min-height:0'), 'Image in constrained column should be compressible (min-height:0)');
+      // max-height uses min() with cqw to cap at proportional height from container width
+      assert.ok(imageMatch![1].includes('min('), 'Image in constrained column should have min() max-height');
+      assert.ok(imageMatch![1].includes('cqw'), 'Image max-height should use container query units (cqw)');
+    });
+
+    test('column containers have container-type: inline-size for cqw units', async () => {
+      const node = colNode(imageNode(testImage));
+      const { html } = await genHTML(node, bounds);
+      const colMatch = html.match(/data-node-id="node-1"[^>]*style="([^"]*)"/);
+      assert.ok(colMatch, 'Should find the column div');
+      assert.ok(colMatch![1].includes('container-type:inline-size'), 'Column should have container-type:inline-size');
+    });
+
+    test('HUG-width column does NOT get container-type (would collapse width)', async () => {
+      const node = rowNode(colNode({ width: SIZE.HUG }, textNode('Narrow')));
+      const { html } = await genHTML(node, bounds);
+      const colMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
+      assert.ok(colMatch, 'Should find the HUG column div');
+      assert.ok(!colMatch![1].includes('container-type'), 'HUG column must NOT have container-type');
+    });
+
+    test('Stack child wrapper has container-type: inline-size', async () => {
+      const node = stackNode(imageNode(testImage));
+      const { html } = await genHTML(node, bounds);
+      // Stack wrapper is the anonymous div between the stack and its child
+      assert.ok(html.includes('container-type:inline-size'), 'Stack wrapper should have container-type:inline-size');
     });
 
     test('image in auto-height row shares width equally (flex: 1 1 0)', async () => {
