@@ -4,6 +4,12 @@
   "description": "Declarative slide generation library built on pptxgenjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "bin": {
     "tycoslide": "./dist/cli/index.js"
   },

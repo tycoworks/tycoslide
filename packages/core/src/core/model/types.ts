@@ -443,8 +443,6 @@ export type TextContent = string | TextRun[];
 export { Bounds } from './bounds.js';
 
 import type { ComponentNode } from './nodes.js';
-export type { TableTokens } from './nodes.js';
-export { TABLE_TOKEN } from './nodes.js';
 
 /** The variant name used when no explicit variant is requested. Every component must define this variant. */
 export const DEFAULT_VARIANT = 'default' as const;
@@ -454,7 +452,6 @@ export const DEFAULT_VARIANT = 'default' as const;
 // THEME TYPES
 // ============================================
 
-/** All spacing/dimension values are in inches. */
 // ============================================
 // SLIDE & MASTER TYPES
 // ============================================

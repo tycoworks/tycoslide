@@ -7,6 +7,7 @@ import {
   type ShapeName, type ArrowType, type DashType, type TextStyleName, type HorizontalAlignment,
   schema,
 } from 'tycoslide';
+import { Component } from './names.js';
 
 export const LINE_TOKEN = {
   COLOR: 'color',
@@ -47,14 +48,13 @@ export interface ShapeTokens {
   [SHAPE_TOKEN.BORDER_WIDTH]: number;
   [SHAPE_TOKEN.CORNER_RADIUS]: number;
 }
-import { Component } from './names.js';
 
 // ============================================
 // LINE
 // ============================================
 
 // Directive schema — author-facing props only.
-const lineDirectiveSchema = {
+const lineSchema = {
   beginArrow: schema.enum(ARROW_TYPE_VALUES).optional(),
   endArrow: schema.enum(ARROW_TYPE_VALUES).optional(),
   variant: schema.string().optional(),
@@ -70,9 +70,9 @@ export interface LineProps {
   variant?: string;
 }
 
-componentRegistry.define({
+export const lineComponent = componentRegistry.define({
   name: Component.Line,
-  params: lineDirectiveSchema,
+  params: lineSchema,
   tokens: [LINE_TOKEN.COLOR, LINE_TOKEN.WIDTH, LINE_TOKEN.DASH_TYPE],
   expand: (props, _context: ExpansionContext, tokens: LineTokens): LineNode => {
     const p = props as LineProps;
@@ -97,12 +97,12 @@ export function line(props?: LineProps): ComponentNode {
 
 // Directive schema — author-facing props only.
 // Styling props removed: authors style via variant selection.
-const shapeDirectiveSchema = {
+const shapeSchema = {
   shape: schema.enum(SHAPE_VALUES),
   variant: schema.string().optional(),
 } satisfies SchemaShape;
 
-type ShapeDirectiveProps = InferProps<typeof shapeDirectiveSchema>;
+type ShapeDirectiveProps = InferProps<typeof shapeSchema>;
 
 // Full props for DSL callers (TypeScript developers retain full access to styling)
 export interface ShapeProps {
@@ -119,9 +119,9 @@ export interface ShapeProps {
   variant?: string;
 }
 
-componentRegistry.define({
+export const shapeComponent = componentRegistry.define({
   name: Component.Shape,
-  params: shapeDirectiveSchema,
+  params: shapeSchema,
   tokens: [SHAPE_TOKEN.FILL, SHAPE_TOKEN.FILL_OPACITY, SHAPE_TOKEN.BORDER_COLOR, SHAPE_TOKEN.BORDER_WIDTH, SHAPE_TOKEN.CORNER_RADIUS],
 
   expand: (props, _context: ExpansionContext, tokens: ShapeTokens): ShapeNode => {
@@ -155,7 +155,7 @@ export function shape(props: ShapeProps): ComponentNode {
 // ============================================
 
 // Directive schema — no author-facing props for slide number.
-const slideNumberDirectiveSchema = {} satisfies SchemaShape;
+const slideNumberSchema = {} satisfies SchemaShape;
 
 // Full props for DSL callers (TypeScript developers retain full access to styling)
 export interface SlideNumberProps {
@@ -165,9 +165,9 @@ export interface SlideNumberProps {
   variant?: string;
 }
 
-componentRegistry.define({
+export const slideNumberComponent = componentRegistry.define({
   name: Component.SlideNumber,
-  params: slideNumberDirectiveSchema,
+  params: slideNumberSchema,
   tokens: [SLIDE_NUMBER_TOKEN.STYLE, SLIDE_NUMBER_TOKEN.COLOR, SLIDE_NUMBER_TOKEN.HALIGN],
   expand: (props, _context: ExpansionContext, tokens: SlideNumberTokens): SlideNumberNode => {
     const p = props as SlideNumberProps;

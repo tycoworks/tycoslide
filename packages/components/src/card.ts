@@ -6,6 +6,11 @@ import {
   type SlideNode, SHAPE, SIZE, schema,
   type TextStyleName, type GapSize, type HorizontalAlignment, type VerticalAlignment,
 } from 'tycoslide';
+import { Component } from './names.js';
+import { stack, column } from './containers.js';
+import { shape } from './primitives.js';
+import { image, imageComponent } from './image.js';
+import { text, prose, textComponent, proseComponent } from './text.js';
 
 export const CARD_TOKEN = {
   PADDING: 'padding',
@@ -40,11 +45,6 @@ export interface CardTokens {
   [CARD_TOKEN.HALIGN]: HorizontalAlignment;
   [CARD_TOKEN.VALIGN]: VerticalAlignment;
 }
-import { Component } from './names.js';
-import { stack, column } from './containers.js';
-import { shape } from './primitives.js';
-import { image, imageComponent } from './image.js';
-import { text, prose, textComponent, proseComponent } from './text.js';
 
 // ============================================
 // PARAMS SCHEMA

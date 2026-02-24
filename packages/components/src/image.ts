@@ -74,20 +74,20 @@ function resolveAssetPath(
 // IMAGE COMPONENT
 // ============================================
 
-const imageOptionsSchema = {
+const imageSchema = {
   alt: schema.string().optional(),
 } satisfies SchemaShape;
 
-export type ImageOptions = InferProps<typeof imageOptionsSchema>;
+export type ImageProps = InferProps<typeof imageSchema>;
 
-export type ImageProps = { body: string } & ImageOptions;
+export type ImageComponentProps = { body: string } & ImageProps;
 
 export const imageComponent = componentRegistry.define({
   name: Component.Image,
   body: schema.string(),
-  params: imageOptionsSchema,
+  params: imageSchema,
 
-  expand: (props: { body: string } & ImageOptions, context: ExpansionContext): ImageNode => {
+  expand: (props: ImageComponentProps, context: ExpansionContext): ImageNode => {
     let src = props.body;
     if (src.startsWith(ASSET_PREFIX)) {
       src = resolveAssetPath(src, context.assets);
@@ -96,6 +96,6 @@ export const imageComponent = componentRegistry.define({
   },
 });
 
-export function image(src: string, options?: ImageOptions): ComponentNode {
+export function image(src: string, options?: ImageProps): ComponentNode {
   return component(Component.Image, { body: src, ...options });
 }

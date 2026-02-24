@@ -7,6 +7,11 @@ import {
   type SlideNode, SHAPE, SIZE, schema,
   type TextStyleName, type GapSize, type HorizontalAlignment, type VerticalAlignment,
 } from 'tycoslide';
+import { Component } from './names.js';
+import { stack, column, row } from './containers.js';
+import { shape } from './primitives.js';
+import { image as imageNode, imageComponent } from './image.js';
+import { prose, label, proseComponent, labelComponent } from './text.js';
 
 export const QUOTE_TOKEN = {
   PADDING: 'padding',
@@ -41,11 +46,6 @@ export interface QuoteTokens {
   [QUOTE_TOKEN.HALIGN]: HorizontalAlignment;
   [QUOTE_TOKEN.VALIGN]: VerticalAlignment;
 }
-import { Component } from './names.js';
-import { stack, column, row } from './containers.js';
-import { shape } from './primitives.js';
-import { image as imageNode, imageComponent } from './image.js';
-import { prose, label, proseComponent, labelComponent } from './text.js';
 
 // ============================================
 // PARAMS SCHEMA

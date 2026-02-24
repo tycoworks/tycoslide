@@ -9,13 +9,17 @@ export {
   image,
   imageComponent,
   type ImageProps,
+  type ImageComponentProps,
 } from './image.js';
 
 // Primitives (line, shape, slideNumber)
 export {
   line,
+  lineComponent,
   shape,
+  shapeComponent,
   slideNumber,
+  slideNumberComponent,
   type LineProps,
   type ShapeProps,
   type SlideNumberProps,
@@ -30,9 +34,13 @@ export {
 // Containers (row, column, stack, grid)
 export {
   row,
+  rowComponent,
   column,
+  columnComponent,
   stack,
+  stackComponent,
   grid,
+  gridComponent,
   type RowProps,
   type ColumnProps,
   type StackProps,
@@ -42,6 +50,7 @@ export {
 // Table
 export {
   table,
+  tableComponent,
   type TableProps,
 } from './table.js';
 

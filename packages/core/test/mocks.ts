@@ -97,6 +97,34 @@ export function mockTheme(options?: {
       style: TEXT_STYLE.BODY,
       lineHeightMultiplier: lineSpacing,
     },
+    quote: {
+      padding: padding * 2,
+      cornerRadius: borderRadius,
+      backgroundColor: '333333',
+      backgroundOpacity: 20,
+      borderColor: '333333',
+      borderWidth,
+      quoteStyle: TEXT_STYLE.BODY,
+      quoteColor: 'FFFFFF',
+      attributionStyle: TEXT_STYLE.SMALL,
+      attributionColor: '666666',
+      attributionHAlign: HALIGN.RIGHT,
+      gap: GAP.NORMAL,
+      hAlign: HALIGN.CENTER,
+      vAlign: VALIGN.MIDDLE,
+    },
+    slideNumber: {
+      style: TEXT_STYLE.FOOTER,
+      color: '666666',
+      hAlign: HALIGN.RIGHT,
+    },
+    shape: {
+      fill: '333333',
+      fillOpacity: 100,
+      borderColor: 'FFFFFF',
+      borderWidth: 0,
+      cornerRadius: 0,
+    },
   };
   // Build Figma-model components: { variants: { default: {...}, ... } }
   // User-provided overrides merge into the default variant for test convenience.

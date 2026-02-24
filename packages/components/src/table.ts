@@ -51,14 +51,14 @@ function parseGfmTable(body: string): string[][] {
 }
 
 /** Params accepted from :::table directive attributes. */
-const tableDirectiveSchema = {
+const tableSchema = {
   variant: schema.string().optional(),
   headerColumns: schema.number().optional(),
 } satisfies SchemaShape;
 
-componentRegistry.define({
+export const tableComponent = componentRegistry.define({
   name: Component.Table,
-  params: tableDirectiveSchema,
+  params: tableSchema,
   tokens: [TABLE_TOKEN.BORDER_STYLE, TABLE_TOKEN.BORDER_COLOR, TABLE_TOKEN.BORDER_WIDTH, TABLE_TOKEN.HEADER_BACKGROUND, TABLE_TOKEN.HEADER_BACKGROUND_OPACITY, TABLE_TOKEN.HEADER_TEXT_STYLE, TABLE_TOKEN.CELL_BACKGROUND, TABLE_TOKEN.CELL_BACKGROUND_OPACITY, TABLE_TOKEN.CELL_TEXT_STYLE, TABLE_TOKEN.CELL_PADDING, TABLE_TOKEN.HALIGN, TABLE_TOKEN.VALIGN],
   mdast: {
     nodeTypes: [SYNTAX.TABLE],

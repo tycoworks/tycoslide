@@ -8,7 +8,6 @@ import {
   componentRegistry, component, type ComponentNode, type ExpansionContext, type InferProps, type SchemaShape,
   schema,
 } from 'tycoslide';
-import { Component } from './names.js';
 
 import { exec as execCb } from 'child_process';
 import { promisify } from 'util';
@@ -17,6 +16,7 @@ import { join, dirname } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
+import { Component } from './names.js';
 
 // ============================================
 // CONSTANTS
@@ -32,11 +32,11 @@ const MAX_MMDC_SEARCH_DEPTH = 6;
 // SCHEMAS & TYPES
 // ============================================
 
-const mermaidOptionsSchema = {
+const mermaidSchema = {
   scale: schema.number().optional(),
 } satisfies SchemaShape;
 
-export type MermaidProps = InferProps<typeof mermaidOptionsSchema>;
+export type MermaidProps = InferProps<typeof mermaidSchema>;
 
 export type MermaidComponentProps = { body: string } & MermaidProps;
 
@@ -244,7 +244,7 @@ async function expandMermaid(props: MermaidComponentProps, context: ExpansionCon
 export const mermaidComponent = componentRegistry.define({
   name: Component.Mermaid,
   body: schema.string(),
-  params: mermaidOptionsSchema,
+  params: mermaidSchema,
   expand: expandMermaid,
 });
 

@@ -7,7 +7,7 @@ import { mockTheme } from './mocks.js';
 
 // Import test stubs to trigger component registration
 import { C } from './test-components.js';
-import { HALIGN, VALIGN } from '../src/core/model/types.js';
+import { HALIGN, VALIGN, DEFAULT_VARIANT } from '../src/core/model/types.js';
 
 // ============================================
 // GENERIC REGISTRY BASE CLASS
@@ -170,6 +170,43 @@ describe('ComponentRegistry', () => {
       assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
       assert.strictEqual(node.componentName, 'myComp');
       assert.deepStrictEqual(node.props, { x: 1 });
+    });
+  });
+
+  describe('validateTheme', () => {
+    test('passes for a valid theme', () => {
+      const theme = mockTheme();
+      assert.doesNotThrow(() => componentRegistry.validateTheme(theme));
+    });
+
+    test('throws when theme is missing tokens for a registered component', () => {
+      const theme = mockTheme();
+      // Remove a component that has required tokens
+      delete (theme.components as any).text;
+      assert.throws(
+        () => componentRegistry.validateTheme(theme),
+        /Theme missing tokens for component 'text'/,
+      );
+    });
+
+    test('throws when theme is missing default variant', () => {
+      const theme = mockTheme();
+      // Replace variants with one that has no 'default' key
+      (theme.components as any).text = { variants: { custom: { color: '000000' } } };
+      assert.throws(
+        () => componentRegistry.validateTheme(theme),
+        /missing 'default' variant/,
+      );
+    });
+
+    test('throws when a variant is missing required tokens', () => {
+      const theme = mockTheme();
+      // Add a variant that's missing some required tokens
+      (theme.components as any).text.variants.incomplete = { color: '000000' };
+      assert.throws(
+        () => componentRegistry.validateTheme(theme),
+        /missing required tokens/,
+      );
     });
   });
 });
