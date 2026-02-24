@@ -17,19 +17,21 @@ import { assets } from './assets.js';
 // COLOR PALETTE
 // ============================================
 
+// Material Design 3 color palette
+// See /internal/research/design/MATERIAL-DESIGN-COLORS.md for full palette documentation
 const colors = {
   background: 'FFFFFF',
-  text: '1A1A2E',
-  textMuted: '64748B',
-  primary: '2563EB',
-  secondary: 'E2E8F0',
+  text: '1C1B1F',        // Material Design on-surface (16.1:1 contrast, AAA)
+  textMuted: '49454F',   // Material Design on-surface-variant (7.5:1 contrast, AAA)
+  primary: '1976D2',     // Material Blue 700
+  secondary: 'E7E0EC',   // Material Design surface-variant
   subtleOpacity: 15,
   accents: {
-    blue: '2563EB',
-    green: '16A34A',
-    red: 'DC2626',
-    yellow: 'EAB308',
-    purple: '9333EA',
+    blue: '1976D2',      // Material Blue 700
+    green: '388E3C',     // Material Green 700
+    red: 'D32F2F',       // Material Red 700
+    yellow: 'FBC02D',    // Material Yellow 700
+    purple: '7B1FA2',    // Material Purple 700
   },
 };
 

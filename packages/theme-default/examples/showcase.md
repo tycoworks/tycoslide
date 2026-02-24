@@ -4,391 +4,348 @@ theme: tycoslide-theme-default
 
 ---
 layout: title
-title: tycoslide Authoring Guide
-subtitle: A complete reference for markdown slide authoring
-notes: This deck demonstrates every markdown authoring feature in tycoslide. Each slide teaches one concept. Read the speaker notes for syntax explanations.
+title: tycoslide
+subtitle: Build presentations like software.
+notes: Opening slide introducing tycoslide.
 ---
 
 ---
 layout: body
-title: How This Deck Works
-eyebrow: OVERVIEW
-notes: This slide uses the body layout with title and eyebrow params. The body content below the frontmatter closing --- is rendered as markdown. Speaker notes (like this one) appear in presenter view only.
+title: What is tycoslide?
+eyebrow: FUNCTIONAL DESCRIPTION
+notes: Lead with what it IS - a presentation build tool.
 ---
 
-- Each slide demonstrates **one feature** of tycoslide's markdown system
-- Speaker notes explain the syntax that produced each slide
-- This file is both a buildable deck and a readable reference
-- The default theme provides three layouts: **title**, **section**, and **body**
+**tycoslide is a presentation build tool** that generates native PowerPoint decks from markdown and TypeScript, with enforced brand compliance through design tokens.
+
+Key capabilities:
+
+- **Markdown → PowerPoint** — Write slides like documentation, compile to .pptx
+- **Theme system** — Layouts and components defined in TypeScript
+- **Design tokens** — W3C DTCG-aligned tokens for colors, typography, spacing
+- **Type-safe compilation** — Missing tokens and invalid layouts fail the build
+
+---
+layout: body
+title: The Problem
+eyebrow: PROBLEM FRAMING
+notes: The false choice between brand compliance and developer velocity.
+---
+
+Other presentation tools force you to choose between **brand compliance** and **development velocity**:
+
+::::grid{columns=2}
+:::card{title="Design Tools" height="fill"}
+PowerPoint and Keynote require manual enforcement of brand guidelines — slow, error-prone, breaks easily.
+:::
+
+:::card{title="Code-First Tools" height="fill"}
+Slidev and Reveal.js produce web slides that don't work in corporate environments where PowerPoint is the standard.
+:::
+::::
+
+**Markdown converters** like Marp and Pandoc are close, but produce non-editable PDFs or lack layout control.
+
+---
+layout: body
+title: How tycoslide Solves This
+eyebrow: VALUE FRAMING
+notes: Solves both sides of the false choice.
+---
+
+tycoslide enforces **brand compliance at compile time** while generating **native PowerPoint files**.
+
+You get the velocity of markdown and the safety of type-checked design tokens, **without sacrificing PowerPoint compatibility**.
+
+::::grid{columns=3}
+:::card{title="Presentations as Code" height="fill"}
+Markdown authoring, CI/CD integration, version control, build-time validation.
+:::
+
+:::card{title="Brand Compliance" height="fill"}
+Design tokens as single source of truth. Invalid designs fail the build.
+:::
+
+:::card{title="PowerPoint Output" height="fill"}
+Editable .pptx files that work in PowerPoint, Keynote, LibreOffice.
+:::
+::::
+
+---
+layout: body
+title: Presentations as Code
+eyebrow: SUPPORTING ARGUMENT 1
+notes: Treats presentations as code artifacts.
+---
+
+Unlike traditional presentation tools that require working in a GUI with manual processes, tycoslide treats presentations as code with full CI/CD integration:
+
+- **Markdown authoring** — Write slides like documentation, version control in Git
+- **TypeScript DSL** — Programmatic slide generation with full type safety
+- **Automated pipelines** — Build decks in CI/CD with fail-fast validation
+
+---
+layout: body
+title: Brand Compliance
+eyebrow: SUPPORTING ARGUMENT 2
+notes: Brand rules encoded in design tokens and theme files.
+---
+
+Unlike other tools that treat brand guidelines as documentation (easily ignored), tycoslide encodes brand rules in design tokens and theme files:
+
+- **Design token system** — W3C DTCG-aligned tokens for colors, typography, spacing as single source of truth
+- **Type-safe token resolution** — Missing or invalid tokens = compile error, not runtime surprises
+- **Component boundaries** — Pre-approved layouts and components enforce persona separation
+
+---
+layout: body
+title: PowerPoint Output
+eyebrow: SUPPORTING ARGUMENT 3
+notes: Real PowerPoint objects with precise control.
+---
+
+Unlike web-based tools (Slidev, Reveal.js) or converters (Marp) that embed images, tycoslide generates real PowerPoint objects:
+
+- **Editable .pptx files** — Output works offline in PowerPoint, Keynote, LibreOffice
+- **Measured layout engine** — CSS flexbox via Playwright for precise positioning
+- **Native PowerPoint objects** — Real shapes, text, tables with component primitives for cards and grids
 
 ---
 layout: section
-title: Slide Structure
-notes: The section layout takes a single required param (title) and renders it centered. No body content.
+title: Layouts
+notes: Demonstrating the three current layouts.
 ---
 
 ---
-layout: body
-title: Frontmatter
-eyebrow: STRUCTURE
-notes: Every slide starts with --- delimiters containing YAML frontmatter. Fields are layout (which template), title, subtitle, eyebrow, notes, and name. The body content follows the closing ---.
+layout: title
+title: Title Layout
+subtitle: Used for opening slides
+notes: The title layout centers content with title and subtitle parameters. Used for opening slides.
 ---
-
-Every slide begins with YAML frontmatter between triple-dash delimiters.
-
-| Field | Purpose |
-|-------|---------|
-| layout | Which template to use |
-| title | Slide heading |
-| subtitle | Secondary text (title layout only) |
-| eyebrow | Small label above the title |
-| notes | Speaker notes (not rendered) |
-| name | Slide identifier for error messages |
-
----
-layout: body
-title: Built-in Layouts
-eyebrow: LAYOUTS
-notes: The default theme ships three layouts. The body layout is the default — you can omit layout:body from frontmatter and it will be used automatically.
----
-
-| Layout | Params | Body Slot | Use For |
-|--------|--------|-----------|---------|
-| **title** | title, subtitle | No | Opening and closing slides |
-| **section** | title | No | Section dividers |
-| **body** | title, eyebrow | Yes | All content slides |
-
-The **body** layout is the default. If you omit the layout field, body is used automatically.
-
----
-layout: body
-title: Speaker Notes
-eyebrow: STRUCTURE
-notes: This text appears only in the presenter view. Use notes for talking points, context, and delivery reminders. Notes are plain text — markdown formatting is not rendered in notes.
----
-
-Add speaker notes to any slide with the **notes** field in frontmatter.
-
-Notes appear in the presenter view when presenting. They are not rendered on the slide itself.
-
-- Use notes for talking points and reminders
-- Notes support plain text only
-- Every slide in this deck has notes explaining its syntax
 
 ---
 layout: section
-title: Text Formatting
-notes: Section dividers are simple — just a centered title. Great for organizing a long deck into chapters.
+title: Section Layout
+notes: The section layout creates chapter dividers with centered titles. No body content or eyebrow.
 ---
 
 ---
 layout: body
-title: Bold and Italic
+title: Body Layout
+eyebrow: LAYOUT DEMONSTRATION
+notes: The body layout handles all content slides with title, optional eyebrow, and markdown body.
+---
+
+The **body** layout is the default for content slides. It supports:
+
+- A **title** field for the heading
+- An optional **eyebrow** field for small labels above the title
+- Full **markdown** rendering in the body slot
+- **Speaker notes** in the frontmatter
+
+This layout handles 90% of presentation content with consistent styling.
+
+---
+layout: section
+title: Markdown Capabilities
+notes: Showing typography, colors, and tables in concise demos.
+---
+
+---
+layout: body
+title: Typography and Formatting
 eyebrow: TEXT
-notes: Wrap text in double asterisks for bold, single asterisks for italic, triple for both. These are the standard markdown emphasis markers.
+notes: All text formatting in one slide - headings, emphasis, lists.
 ---
 
-Use standard markdown emphasis for inline formatting:
+## Major Section Heading
 
-- This is **bold text** using double asterisks
-- This is *italic text* using single asterisks
-- This is ***bold and italic*** using triple asterisks
-- Mix them freely: **bold with *nested italic* inside**
+Body text flows naturally below headings with automatic spacing and line height.
+
+### Subsection Heading
+
+Use **bold** for emphasis, *italic* for secondary emphasis, and ***bold italic*** for maximum weight.
+
+**Text formatting examples:**
+
+- Use :blue[inline colors] for emphasis
+- Apply :green[semantic colors] to highlight outcomes
+- Mark :red[important warnings] for visibility
 
 ---
 layout: body
 title: Accent Colors
 eyebrow: TEXT
-notes: The colon-bracket syntax :color[text] applies theme-defined accent colors. The default theme defines five accents (blue, green, red, yellow, purple). Colors can wrap bold or italic text.
+notes: All five accent colors shown in realistic use cases.
 ---
 
-Highlight text with theme-defined accent colors using the colon-bracket syntax:
+Highlight key terms with theme-defined accent colors:
 
-- :blue[Blue] for emphasis and links
-- :green[Green] for success and positive outcomes
-- :red[Red] for warnings and critical items
-- :yellow[Yellow] for caution and highlights
-- :purple[Purple] for special or creative emphasis
+- :blue[**Technical terms**] and brand emphasis (links, product names)
+- :green[**Positive outcomes**] and success metrics (+15% growth, approved)
+- :red[**Critical items**] and warnings (breaking changes, blockers)
+- :yellow[**Pending status**] and caution (under review, waiting)
+- :purple[**Special callouts**] and creative emphasis (new feature, beta)
 
-Combine with formatting: :red[**bold red**] and :blue[*italic blue*]
-
----
-layout: body
-eyebrow: TEXT
-notes: This slide has no title param — only the eyebrow. The body content starts with headings rendered at their natural size. Headings in the body use H2 through H4 styles.
----
-
-## Heading 2
-
-Body text below a heading flows naturally.
-
-### Heading 3
-
-A smaller heading for subsections.
-
-#### Heading 4
-
-The smallest heading level.
-
----
-layout: body
-title: Paragraphs
-eyebrow: TEXT
-notes: Separate paragraphs with a blank line. Consecutive lines without a blank line between them are joined into a single paragraph.
----
-
-This is the first paragraph. It demonstrates that text flows naturally within a paragraph and wraps when it reaches the slide edge.
-
-This is the second paragraph, separated by a blank line. Paragraph spacing is automatic.
-
----
-layout: section
-title: Lists and Tables
-notes: Lists and tables are the primary structured content types in markdown slides.
----
-
----
-layout: body
-title: Bullet Lists
-eyebrow: LISTS
-notes: Unordered lists use the dash prefix. Each item can contain bold, italic, and accent color formatting. Nested lists are not supported in the current renderer.
----
-
-- **Performance** matters more than features
-- Operational databases need :blue[real-time] consistency
-- Every query must complete in *under 100 milliseconds*
-- Scale :green[horizontally] without sacrificing correctness
-- The :red[**wrong architecture**] costs more than the right one
-
----
-layout: body
-title: Numbered Lists
-eyebrow: LISTS
-notes: Ordered lists use number-dot prefix. Numbering is automatic — you can use 1. for every item and tycoslide will number them correctly.
----
-
-1. Define your **data sources** and ingestion patterns
-1. Configure :blue[transformation logic] for each stream
-1. Set up *materialized views* for query patterns
-1. Deploy and monitor **end-to-end latency**
-1. Iterate on :green[performance] and correctness
+Invalid color names fail the build — only theme-defined colors are allowed.
 
 ---
 layout: body
 title: Tables
-eyebrow: TABLES
-notes: GFM (GitHub Flavored Markdown) tables work in body content. The first row is always the header. Cells support bold and accent color formatting. Use pipes and dashes for alignment.
+eyebrow: MARKDOWN
+notes: GitHub Flavored Markdown tables with inline formatting.
 ---
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| **Bold text** | :green[Supported] | Double asterisks |
-| *Italic text* | :green[Supported] | Single asterisks |
-| :blue[Accent colors] | :green[Supported] | Five theme colors |
-| Headings | :green[Supported] | H2 through H4 |
-| Bullet lists | :green[Supported] | Unordered and ordered |
+Standard markdown tables support bold, italic, and accent colors:
+
+| Feature | tycoslide | Slidev | Marp | Reveal.js |
+|---------|-----------|--------|------|-----------|
+| **Output** | :green[PowerPoint] | HTML | PDF/HTML | HTML |
+| **Type Safety** | :green[Full] | Partial | None | None |
+| **Brand Tokens** | :green[Built-in] | Manual | Manual | Manual |
+| **Editable** | :green[Yes] | No | No | No |
+
+Keep tables to 4-6 rows and 3-4 columns for readability on slides.
 
 ---
 layout: section
-title: Directives
-notes: Directives are the escape hatch from plain markdown into rich components. They use the triple-colon syntax from the remark-directive ecosystem.
+title: Components
+notes: Directive-based components for structured content.
 ---
 
 ---
 layout: body
-title: What Are Directives?
-eyebrow: COMPONENTS
-notes: Directives use triple-colon delimiters with a component name. Attributes go in curly braces after the name. Body content goes between the opening and closing markers. Available directives are card, quote, table, and mermaid.
+title: Cards for Structured Content
+eyebrow: COMPONENT
+notes: Single slide showing card variants.
 ---
 
-| Directive | Purpose |
-|-----------|---------|
-| **card** | Content card with optional background |
-| **quote** | Quotation with attribution |
-| **table** | Table with header columns and variants |
-| **mermaid** | Auto-themed diagrams |
-| **image** | Image from path or asset reference |
-| **line** | Separator with optional arrows |
+:::card{title="What is a Card?" height="hug"}
+A styled content block with a title and body text. Use cards to visually separate concepts on a slide.
+:::
 
----
-layout: body
-title: Container Directives
-eyebrow: COMPONENTS
-notes: Container directives wrap other directives. They use fence-depth nesting — the outer directive uses more colons than inner ones (e.g. ::::row wraps :::card). This follows the standard remark-directive spec.
----
+:::card{title="Stacked Cards" height="fill"}
+Multiple cards stack vertically with automatic spacing. The **height="fill"** attribute distributes remaining space equally.
+:::
 
-| Directive | Purpose |
-|-----------|---------|
-| **row** | Horizontal container for child directives |
-| **column** | Vertical container for child directives |
-| **stack** | Layered overlay of child directives |
-| **grid** | Equal-sized grid of child directives |
-
----
-layout: body
-title: Cards
-eyebrow: DIRECTIVE
-notes: The card directive creates a styled content card. Use the title attribute for the card heading and put the description in the body. Cards automatically receive theme styling (background color, border radius, padding).
----
-
-:::card{title="What is tycoslide?" height="hug"}
-A build system for branded presentations. Compile markdown or TypeScript into measured, positioned, native PowerPoint files.
+:::card{title="Outlined Variant" height="fill" background="false"}
+Set **background="false"** for outlined cards without fill color. Useful for secondary information.
 :::
 
 ---
 layout: body
-title: Multiple Cards
-eyebrow: DIRECTIVE
-notes: Place multiple card directives in sequence. Each card renders as a separate block. Use variant="flat" for cards without background styling.
+title: Feature Comparison
+eyebrow: COMPONENT
+notes: Card grids for side-by-side layouts.
 ---
 
-:::card{title="Content as Code" height="fill"}
-Presentations built in CI/CD pipelines, not manually in PowerPoint.
+::::grid{columns=3}
+:::card{title="Fast" height="fill"}
+Complete builds in seconds, not minutes. Watch mode rebuilds on save.
 :::
 
-:::card{title="Theme-Driven" height="fill" variant="flat"}
-All visual decisions live in the theme file. Missing tokens fail the build.
+:::card{title="Safe" height="fill"}
+Type errors and brand violations fail the build before shipping.
 :::
+
+:::card{title="Native" height="fill"}
+Output is real .pptx files that work everywhere PowerPoint works.
+:::
+::::
+
+Use the **grid** directive to arrange cards in equal-width columns. Set **columns=2** or **columns=3** based on content.
 
 ---
 layout: body
-title: Quotes
-eyebrow: DIRECTIVE
-notes: The quote directive renders a styled quotation. The body text is the quote itself. The attribution attribute names the source. Quotes receive theme styling with a visual treatment that distinguishes them from regular text.
+title: Customer Feedback
+eyebrow: COMPONENT
+notes: Quote directive for styled quotations.
 ---
 
-:::quote{attribution="Every presentation framework"}
-We promise pixel-perfect slides, then deliver approximate layouts with manual tweaking.
+:::quote{attribution="Sarah Chen, VP Marketing at Acme Corp"}
+We spend more time fixing fonts and alignment than writing content. tycoslide solved that — change the theme once, rebuild every deck.
 :::
+
+:::quote{attribution="Dev team at TechStart"}
+Brand compliance should be enforced by the compiler, not by a style guide PDF. That's exactly what tycoslide does.
+:::
+
+The **quote** directive styles quotations with attribution. Great for testimonials, pull quotes, and key statements.
 
 ---
 layout: body
 title: Table Directive
-eyebrow: DIRECTIVE
-notes: The table directive wraps a GFM table with extra controls. The headerColumns attribute makes the first N columns styled as headers (useful for row headers). The variant attribute changes the visual style (clean removes borders).
+eyebrow: COMPONENT
+notes: Table component with row headers and custom styling.
 ---
 
+The **table** directive provides enhanced tables with row headers:
+
 :::table{headerColumns="1"}
-| Approach | Latency | Consistency |
-|----------|---------|-------------|
-| **Batch ETL** | Minutes to hours | Eventual |
-| **Streaming** | Seconds | Eventual |
-| **Materialized Views** | Milliseconds | Strong |
+| Feature | tycoslide | Slidev | Marp |
+|---------|-----------|--------|------|
+| **PowerPoint Output** | :green[Native PPTX] | :red[No] | :yellow[Limited] |
+| **Type Safety** | :green[Full TS] | :yellow[Partial] | :red[None] |
+| **Design Tokens** | :green[W3C DTCG] | :red[Manual] | :red[Manual] |
 :::
+
+Set **headerColumns="1"** to style the first column as row headers.
 
 ---
 layout: body
 title: Mermaid Diagrams
-eyebrow: DIRECTIVE
-notes: The mermaid directive renders diagrams from text definitions. tycoslide auto-themes the diagram using your theme colors. The diagram below shows the tycoslide build pipeline — from markdown input to PowerPoint output.
+eyebrow: COMPONENT
+notes: Mermaid diagram component for flowcharts and diagrams.
 ---
+
+The **mermaid** directive renders flowcharts, sequence diagrams, and other diagram types. Diagrams are auto-themed using design tokens.
+
+**Example workflow:**
 
 :::mermaid
 flowchart LR
-    A[Markdown] --> B[Component Tree]
-    B --> C[Primitive Nodes]
-    C --> D[HTML Measurement]
-    D --> E[Positioned Nodes]
-    E --> F[.pptx File]
+    A[Markdown] --> B[tycoslide build]
+    B --> C[PowerPoint]
 :::
+
+Diagrams are rendered using Mermaid.js and automatically inherit theme styling where supported.
 
 ---
 layout: section
-title: Advanced Features
-notes: These features give you more control over slide composition and help you understand the boundaries of the markdown authoring system.
+title: Theming
+notes: How themes control all visual styling.
 ---
 
 ---
 layout: body
-title: Mixing Content
-eyebrow: ADVANCED
-notes: You can freely mix plain markdown and directives in the same slide body. Text, lists, tables, cards, and quotes all compose naturally. The slot compiler processes them in order, creating a vertical stack of content.
+title: Theme as Single Source of Truth
+eyebrow: DESIGN SYSTEM
+notes: One slide showing how theme controls everything.
 ---
 
-Directives and markdown **compose naturally** in the same slide.
+All visual styling comes from the theme:
 
-:::card{title="Key Insight"}
-You can mix paragraphs, lists, tables, and directives in any order within a single slide body.
+::::grid{columns=2}
+:::card{title="Design Tokens Define" height="fill"}
+- Colors (primary, accent, semantic)
+- Typography (fonts, sizes, weights)
+- Spacing (padding, margins, gaps)
+- Component styles (cards, tables, quotes)
 :::
 
-- This bullet list follows the card above
-- Each content block stacks :blue[vertically]
-- Keep total content modest to avoid overflow
-
----
-layout: body
-title: Row and Column
-eyebrow: CONTAINER DIRECTIVES
-notes: Row and column directives compose content horizontally or vertically. Nest any directives inside them. Attributes like gap control spacing.
----
-
-:::::row
-::::column
-Left column with **bold text** and a list:
-
-- Item one
-- Item two
-::::
-
-::::column
-:::card{title="Right Column Card"}
-Cards compose naturally inside columns.
-:::
-::::
-:::::
-
----
-layout: body
-title: Grid Layout
-eyebrow: CONTAINER DIRECTIVES
-notes: The grid directive arranges child directives into equal-sized rows. The columns attribute sets how many columns per row.
----
-
-::::grid{columns=3}
-:::card{title="Feature 1" height="fill"}
-Fast queries
-:::
-
-:::card{title="Feature 2" height="fill"}
-Real-time updates
-:::
-
-:::card{title="Feature 3" height="fill"}
-Easy integration
+:::card{title="Authors Cannot" height="fill"}
+- Override colors or fonts
+- Set arbitrary sizes
+- Break layout constraints
+- Use undefined tokens
 :::
 ::::
 
----
-layout: body
-title: TypeScript-Only Features
-eyebrow: REFERENCE
-notes: A few features remain TypeScript-only. Most content can now be authored in markdown using directives.
----
-
-These features require the **TypeScript DSL** (not available in markdown):
-
-- **Stack overlays** for layered compositions
-- **Programmatic slide generation** from data sources
-- **Custom component registration** for new content types
-
----
-layout: body
-title: Tips for Authors
-eyebrow: BEST PRACTICES
-notes: These guidelines help produce clean, readable slides. Content density is the most common mistake — less is more on a slide. Use speaker notes for detail that would clutter the visual.
----
-
-- **Less is more** — aim for 5 to 7 bullet items per slide maximum
-- Use **bold** for key terms, :blue[color] for emphasis sparingly
-- Put detail in **speaker notes**, not on the slide
-- One idea per slide — split rather than cram
-- Tables work best with 4 to 5 rows
-- Directives are powerful but use them deliberately
-- The **body** layout handles 90% of content slides
+**Change the theme once, rebuild every deck.** Brand compliance becomes a build error, not a process problem.
 
 ---
 layout: title
 title: tycoslide
-subtitle: Build decks from markdown. Customize with code.
-notes: End slide. The title layout centers content with no footer — ideal for opening and closing slides.
+subtitle: Presentations as code. Brand compliance as build errors.
+notes: Closing slide.
 ---
