@@ -56,24 +56,9 @@ Output: `slides.pptx` — ready to open and present.
 
 ## Documentation
 
-**Guide:**
-- **[Introduction](./docs/guide/introduction.md)** - Philosophy and comparison to other tools
-- **[Quick Start](./docs/guide/quick-start.md)** - Build your first presentation
-- **[Markdown Syntax](./docs/guide/markdown-syntax.md)** - Markdown syntax reference
-- **[Components](./docs/guide/components.md)** - Using built-in components
-- **[CLI](./docs/guide/cli.md)** - Command-line tool
-- **[Troubleshooting](./docs/guide/troubleshooting.md)** - Common issues and solutions
+**[Read the documentation →](./docs/)**
 
-**Extending:**
-- **[Creating Components](./docs/extending/creating-components.md)** - Build custom components
-- **[Creating Layouts](./docs/extending/creating-layouts.md)** - Build custom layouts
-- **[Creating Themes](./docs/extending/creating-themes.md)** - Build custom themes
-
-**Default Theme:**
-- **[Overview](./docs/default-theme/)** - Layouts and components in the default theme
-- **[Component Tokens](./docs/default-theme/component-tokens.md)** - Token reference
-- **[Layouts](./docs/default-theme/layouts.md)** - Available layouts
-- **[Customizing](./docs/default-theme/customizing.md)** - Extending the default theme
+Three sections: **Guide** (using tycoslide), **Extending** (building components, layouts, themes), and **Default Theme** (token reference and customization).
 
 ## License
 

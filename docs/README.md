@@ -29,7 +29,6 @@ tycoslide is distributed as three npm packages:
 
 ## Default Theme
 
-- [Overview](./default-theme/README.md) — Colors, typography, spacing
-- [Component Tokens](./default-theme/component-tokens.md) — Token values and variants for all styled components
+- [Overview](./default-theme/README.md) — Installation, usage, and bundled icons
 - [Layouts](./default-theme/layouts.md) — title, section, and body layout parameters
 - [Customizing](./default-theme/customizing.md) — Extending and overriding the default theme

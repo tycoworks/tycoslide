@@ -2,7 +2,7 @@
 
 Components are content elements that you compose in markdown to build slides. All built-in components come from `tycoslide-components` and are re-exported by themes (including `tycoslide-theme-default`), so they are available by default.
 
-This page covers **using** components in markdown directives. To build your own, see [Creating Components](../extending/creating-components.md). For the default theme's token values (colors, sizes, styles), see [Component Tokens](../default-theme/component-tokens.md).
+This page covers **using** components in markdown directives. To build your own, see [Creating Components](../extending/creating-components.md). For the default theme's token values, see [`theme.ts`](../../packages/theme-default/src/theme.ts).
 
 ---
 
@@ -521,5 +521,4 @@ Section Title
 
 ## Next Steps
 
-- [Component Tokens](../default-theme/component-tokens.md) -- Default theme token values for each component
 - [Creating Components](../extending/creating-components.md) -- Build custom components with the component registry

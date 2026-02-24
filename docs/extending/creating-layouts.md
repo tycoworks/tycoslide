@@ -69,18 +69,7 @@ params: {
 }
 ```
 
-**Parameter patterns:**
-
-| Helper | Type | Values |
-|--------|------|--------|
-| `textComponent.schema` | Text content | Same validation as the text component |
-| `schema.string()` | Plain string | Any string |
-| `schema.number()` | Numeric value | Any number |
-| `schema.boolean()` | Boolean | `true` / `false` |
-| `schema.enum([...])` | Enumerated values | Declared members |
-| `schema.gap()` | Gap size | `none` / `tight` / `normal` / `loose` |
-| `schema.hAlign()` | Horizontal alignment | `left` / `center` / `right` |
-| `schema.vAlign()` | Vertical alignment | `top` / `middle` / `bottom` |
+For parameter schema helpers and shared value types, see [Creating Components — Parameters](./creating-components.md#parameters).
 
 `textComponent.schema` validates the parameter as text content with the same rules as the text component — it accepts a string that supports inline markdown formatting. Use this for any layout parameter that authors write as human-readable text in frontmatter.
 
@@ -139,92 +128,24 @@ render: (props) => ({
 
 ## TypeScript DSL for Layout Development
 
-Layouts are built by composing functions from `tycoslide-components`.
-
-### Container Functions
+Layouts are built by composing container functions from `tycoslide-components`. The core pattern is nesting `column` and `row` calls to define structure, then placing content nodes inside them:
 
 ```typescript
-import { column, row, grid, stack } from 'tycoslide-components';
-import { GAP, SIZE, HALIGN, VALIGN } from 'tycoslide';
+import { column, row, text } from 'tycoslide-components';
+import { GAP, TEXT_STYLE, CONTENT } from 'tycoslide';
 
-// Vertical container
 column(
   { gap: GAP.NORMAL },
-  text("Top"),
-  text("Bottom")
-)
-
-// Horizontal container
-row(
-  { gap: GAP.NORMAL, vAlign: VALIGN.TOP },
-  card({ title: "Left" }),
-  card({ title: "Right" })
-)
-
-// Equal-width columns
-grid(
-  { columns: 3, gap: GAP.NORMAL },
-  card({ title: "1" }),
-  card({ title: "2" }),
-  card({ title: "3" })
-)
-
-// Layered overlay
-stack(
-  shape({ shape: SHAPE.RECT, fill: '#000000' }),
-  text("Overlaid", { color: '#FFFFFF' })
+  text("Section Header", { content: CONTENT.PLAIN, style: TEXT_STYLE.EYEBROW }),
+  row(
+    { gap: GAP.NORMAL },
+    column(...props.left),
+    column(...props.right)
+  )
 )
 ```
 
-### Text Functions
-
-```typescript
-import { text } from 'tycoslide-components';
-import { TEXT_STYLE, CONTENT, HALIGN } from 'tycoslide';
-
-// Rich text — default mode (inline bold, italic, :accent[colors])
-text("**Bold** and _italic_ text", {
-  style: TEXT_STYLE.H1,
-  color: '#000000',
-  hAlign: HALIGN.CENTER,
-})
-
-// Plain text — no parsing, single run (for eyebrows, labels)
-text("ARCHITECTURE", {
-  content: CONTENT.PLAIN,
-  style: TEXT_STYLE.EYEBROW,
-})
-
-// Prose — full markdown (bullets, paragraphs, headings)
-text("- First item\n- Second item\n\nA paragraph.", {
-  content: CONTENT.PROSE,
-})
-```
-
-### Component Functions
-
-```typescript
-import { card, quote, table } from 'tycoslide-components';
-import { SIZE } from 'tycoslide';
-
-card({
-  title: "Card Title",
-  description: "Description",
-  image: "./image.png",
-  variant: "default",
-  height: SIZE.FILL,
-})
-
-quote({
-  quote: "The quote text",
-  attribution: "Author Name",
-})
-
-table([
-  ["Header 1", "Header 2"],
-  ["Cell 1", "Cell 2"],
-], { headerRows: 1 })
-```
+For the complete DSL function reference including all content and container components, see [Creating Components — TypeScript DSL Functions](./creating-components.md#typescript-dsl-functions).
 
 ## Render Function
 
@@ -241,64 +162,9 @@ render: (props) => ({
 
 `props` contains all validated frontmatter parameters plus slot arrays. The function must return at minimum a `content` node.
 
-## Complete Example: Two-Column Layout
+## Real-World Examples
 
-```typescript
-import { layoutRegistry, schema, TEXT_STYLE, GAP, SIZE, CONTENT } from 'tycoslide';
-import { textComponent, text, row, column } from 'tycoslide-components';
-
-layoutRegistry.define({
-  name: 'two-column',
-  description: 'Side-by-side content with optional title',
-  params: {
-    title: textComponent.schema.optional(),
-    eyebrow: textComponent.schema.optional(),
-    reverse: schema.boolean().optional(),
-  },
-  slots: ['left', 'right'],
-  render: (props) => {
-    const leftColumn = column({ gap: GAP.TIGHT, height: SIZE.FILL }, ...props.left);
-    const rightColumn = column({ gap: GAP.TIGHT, height: SIZE.FILL }, ...props.right);
-
-    const columns = props.reverse
-      ? row({ gap: GAP.NORMAL }, rightColumn, leftColumn)
-      : row({ gap: GAP.NORMAL }, leftColumn, rightColumn);
-
-    return {
-      content: column(
-        { gap: GAP.NORMAL },
-        ...(props.eyebrow ? [text(props.eyebrow, { content: CONTENT.PLAIN, style: TEXT_STYLE.EYEBROW })] : []),
-        ...(props.title ? [text(props.title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H3 })] : []),
-        columns
-      ),
-    };
-  },
-});
-```
-
-**Usage in Markdown:**
-
-```markdown
----
-layout: two-column
-title: Before vs After
-eyebrow: COMPARISON
----
-
-## Before
-
-- Manual process
-- Time consuming
-- Error prone
-
-::right::
-
-## After
-
-- Automated
-- Fast
-- Reliable
-```
+The default theme's `title`, `section`, and `body` layouts in [`packages/theme-default/src/layouts.ts`](../../packages/theme-default/src/layouts.ts) demonstrate all of these patterns — params, slots, masters, and composition with DSL functions.
 
 ## Using Masters
 
@@ -306,17 +172,12 @@ Masters define fixed elements that appear on every slide using a layout (footers
 
 ```typescript
 import type { Master, Theme } from 'tycoslide';
-import { row, text, slideNumber } from 'tycoslide-components';
-import { VALIGN, HALIGN } from 'tycoslide';
 
-const defaultMaster: Master = {
+const myMaster: Master = {
   name: 'default',
   background: '#FFFFFF',
   getContent: (theme: Theme) => ({
-    content: row(
-      { vAlign: VALIGN.BOTTOM, hAlign: HALIGN.RIGHT },
-      slideNumber()
-    ),
+    content: /* fixed footer/header nodes */,
     contentBounds: {
       x: theme.spacing.margin,
       y: theme.spacing.margin,
@@ -325,49 +186,29 @@ const defaultMaster: Master = {
     },
   }),
 };
-
-layoutRegistry.define({
-  name: 'my-layout',
-  description: 'Layout with footer',
-  params: { title: textComponent.schema },
-  slots: ['body'],
-  render: (props) => ({
-    master: defaultMaster,
-    content: column(
-      text(props.title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H3 }),
-      column({ height: SIZE.FILL }, ...props.body)
-    ),
-  }),
-});
 ```
 
-**Master components:**
-- Fixed footers (slide numbers, logos)
-- Headers
-- Background elements
-- `contentBounds` — defines where the layout's `content` tree renders (x, y, width, height in inches)
+Pass the master in the render function's return value: `render: (props) => ({ master: myMaster, content: ... })`.
 
-`contentBounds` should account for fixed elements. If the master includes a footer bar at the bottom, reduce the `height` accordingly.
+**Key concepts:**
+- `contentBounds` defines where the layout's `content` tree renders (x, y, width, height in inches)
+- `contentBounds` must account for fixed elements — if the master has a footer bar at the bottom, reduce `height` accordingly
+- Masters can include slide numbers, logos, headers, and background elements
+
+For the default master's structure and a complete replacement example, see [Default Theme — Layouts](../default-theme/layouts.md#default-master).
 
 ## Registering Layouts in Themes
 
-Layouts must be registered before building presentations. The standard pattern is to import the layout file as a side-effect from the theme entry point:
+Each layout file calls `layoutRegistry.define()` to register itself:
 
 ```typescript
 // my-theme/layouts.ts
 import { layoutRegistry } from 'tycoslide';
 
-layoutRegistry.define({ /* layout 1 */ });
-layoutRegistry.define({ /* layout 2 */ });
-
-// my-theme/index.ts
-import './layouts';  // Registers layouts via side-effect
-import { theme } from './theme';
-
-export { theme };
+layoutRegistry.define({ /* layout definition */ });
 ```
 
-When a user imports the theme, layouts are registered automatically.
+For how to package layouts with your theme entry point, see [Creating Themes — Layouts](./creating-themes.md#layouts).
 
 ## Testing Layouts
 

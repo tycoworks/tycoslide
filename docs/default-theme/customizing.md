@@ -246,25 +246,6 @@ components: {
 
 ---
 
-## Complete Component Token Reference
-
-For a full list of token names and types per component, see [component-tokens.md](./component-tokens.md).
-
-Import constants for token values from `tycoslide`:
-
-```typescript
-import {
-  TEXT_STYLE,   // 'h1' | 'h2' | 'h3' | 'h4' | 'body' | 'small' | 'eyebrow' | 'footer'
-  GAP,          // 'none' | 'tight' | 'normal' | 'loose'
-  HALIGN,       // 'left' | 'center' | 'right'
-  VALIGN,       // 'top' | 'middle' | 'bottom'
-  BORDER_STYLE, // 'full' | 'internal' | 'horizontal' | 'vertical' | 'none'
-  DASH_TYPE,    // 'solid' | 'dash' | 'dashDot' | 'lgDash' | ...
-} from 'tycoslide';
-```
-
----
-
 ## Building a Theme from Scratch
 
 For complete control over all visual design, see [Creating Themes](../extending/creating-themes.md).

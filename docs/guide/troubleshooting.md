@@ -99,21 +99,15 @@ components: {
       default: {
         padding: 0.25,
         cornerRadius: 0.05,
-        backgroundColor: 'EEEEEE',
-        backgroundOpacity: 100,
-        borderColor: 'CCCCCC',
-        borderWidth: 0.75,
-        titleStyle: 'h4',
-        descriptionStyle: 'small',
-        gap: 'tight',
-        hAlign: 'center',
-        vAlign: 'top',
-      },
-    },
-  },
-  // ... other components
+        backgroundColor: 'E7E0EC',
+        // ... all required tokens
+      }
+    }
+  }
 }
 ```
+
+See [`theme.ts`](../../packages/theme-default/src/theme.ts) for the complete token reference.
 
 Call `componentRegistry.validateTheme(theme)` at startup to catch all missing tokens at once.
 
