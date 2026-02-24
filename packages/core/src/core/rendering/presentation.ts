@@ -181,7 +181,15 @@ export class Presentation {
         }
 
         // Expand components
-        const expanded = await componentRegistry.expandTree(content, { theme: this._theme, slideIndex, assets: this._assets });
+        let expanded: ElementNode;
+        try {
+          expanded = await componentRegistry.expandTree(content, { theme: this._theme, assets: this._assets });
+        } catch (error) {
+          if (error instanceof Error) {
+            error.message = `Slide ${slideIndex + 1}: ${error.message}`;
+          }
+          throw error;
+        }
 
         // Collect measurements from expanded tree
         pipeline.collectFromTree(expanded, bounds, `slide-${slideIndex + 1}`);
@@ -214,7 +222,7 @@ export class Presentation {
         try {
           positioned = pipeline.computeLayout(expanded, bounds);
         } catch (error) {
-          if (error instanceof Error && !error.message.startsWith('Slide ')) {
+          if (error instanceof Error) {
             error.message = `Slide ${slideIndex + 1}: ${error.message}`;
           }
           throw error;

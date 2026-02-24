@@ -20,11 +20,10 @@ const ASSET_PREFIX = 'asset.';
 function resolveAssetPath(
   ref: string,
   assets: Record<string, unknown> | undefined,
-  slideIndex: number,
 ): string {
   if (!assets) {
     throw new Error(
-      `Slide ${slideIndex + 1}: asset reference '${ref}' found but no assets provided in CompileOptions`,
+      `asset reference '${ref}' found but no assets provided in CompileOptions`,
     );
   }
 
@@ -36,7 +35,7 @@ function resolveAssetPath(
     if (current === null || typeof current !== 'object') {
       const traversed = segments.slice(0, i).join('.');
       throw new Error(
-        `Slide ${slideIndex + 1}: asset reference '${ref}' failed — '${traversed}' is not an object`,
+        `asset reference '${ref}' failed — '${traversed}' is not an object`,
       );
     }
 
@@ -47,7 +46,7 @@ function resolveAssetPath(
       const available = Object.keys(obj).join(', ');
       const at = i === 0 ? 'root' : `'${segments.slice(0, i).join('.')}'`;
       throw new Error(
-        `Slide ${slideIndex + 1}: asset reference '${ref}' could not be resolved. Available keys at ${at}: ${available}`,
+        `asset reference '${ref}' could not be resolved. Available keys at ${at}: ${available}`,
       );
     }
 
@@ -62,12 +61,12 @@ function resolveAssetPath(
     const keys = Object.keys(current as Record<string, unknown>);
     const suggestions = keys.slice(0, 5).map(k => `${ASSET_PREFIX}${dotPath}.${k}`).join(', ');
     throw new Error(
-      `Slide ${slideIndex + 1}: asset reference '${ref}' resolved to an object, not a string. Did you mean ${suggestions}?`,
+      `asset reference '${ref}' resolved to an object, not a string. Did you mean ${suggestions}?`,
     );
   }
 
   throw new Error(
-    `Slide ${slideIndex + 1}: asset reference '${ref}' resolved to ${typeof current}, expected a string`,
+    `asset reference '${ref}' resolved to ${typeof current}, expected a string`,
   );
 }
 
@@ -91,7 +90,7 @@ export const imageComponent = componentRegistry.define({
   expand: (props: { body: string } & ImageOptions, context: ExpansionContext): ImageNode => {
     let src = props.body;
     if (src.startsWith(ASSET_PREFIX)) {
-      src = resolveAssetPath(src, context.assets, context.slideIndex ?? 0);
+      src = resolveAssetPath(src, context.assets);
     }
     return { type: NODE_TYPE.IMAGE, src, alt: props.alt };
   },
