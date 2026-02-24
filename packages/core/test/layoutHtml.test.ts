@@ -11,16 +11,18 @@ import type { ElementNode, TextNode, ContainerNode, StackNode, ImageNode, LineNo
 import type { Theme, NormalizedRun } from '../src/core/model/types.js';
 import { HALIGN, VALIGN, SIZE, SHAPE, DASH_TYPE, TEXT_STYLE, DIRECTION } from '../src/core/model/types.js';
 import path from 'path';
+import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
 
 // ============================================
 // MOCK THEME (layout-focused: no component tokens needed)
 // ============================================
 
 const testImage = path.join(__dirname, 'fixtures', 'test.png');
-const mockFont = { name: 'Arial', path: path.join(__dirname, 'fixtures', 'test-font.woff2') };
+const mockFont = { name: 'Inter', path: require.resolve('@fontsource/inter/files/inter-latin-400-normal.woff2') };
 const mockFontFamily = { normal: mockFont };
 
 const mockTheme = {

@@ -2,20 +2,19 @@
 // Shared mock utilities for testing
 
 import * as assert from 'node:assert';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 import type { Theme, TextStyle, FontFamily, ComponentTokenMap } from 'tycoslide';
 import { Component, TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, HALIGN, VALIGN, DEFAULT_VARIANT } from 'tycoslide';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
 
 // ============================================
 // MOCK THEME
 // ============================================
 
 const mockFontFamily: FontFamily = {
-  normal: { name: 'Arial', path: path.join(__dirname, 'fixtures', 'test-font.woff2') },
-  bold: { name: 'Arial Bold', path: path.join(__dirname, 'fixtures', 'test-font-bold.woff2') },
+  normal: { name: 'Inter', path: require.resolve('@fontsource/inter/files/inter-latin-400-normal.woff2') },
+  bold: { name: 'Inter Bold', path: require.resolve('@fontsource/inter/files/inter-latin-700-normal.woff2') },
 };
 
 const mockTextStyle: TextStyle = {
