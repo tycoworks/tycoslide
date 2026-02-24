@@ -3,14 +3,14 @@
 
 import {
   componentRegistry, component, type ExpansionContext, type InferProps, type SchemaShape,
-  type SlideNode, SHAPE, SIZE, schema,
+  type SlideNode, SHAPE, SIZE, CONTENT, schema,
   type TextStyleName, type GapSize, type HorizontalAlignment, type VerticalAlignment,
 } from 'tycoslide';
 import { Component } from './names.js';
 import { stack, column } from './containers.js';
 import { shape } from './primitives.js';
 import { image, imageComponent } from './image.js';
-import { text, prose, textComponent, proseComponent } from './text.js';
+import { text, textComponent } from './text.js';
 
 export const CARD_TOKEN = {
   PADDING: 'padding',
@@ -56,7 +56,7 @@ const cardSchema = {
   /** Card title (supports markdown: bold, color highlights, etc.) */
   title: textComponent.schema.optional(),
   /** Card description text */
-  description: proseComponent.schema.optional(),
+  description: textComponent.schema.optional(),
   /** Named variant (resolved from theme.components.card.variants) */
   variant: schema.string().optional(),
   /** Sizing: 'fill' to share parent space equally, 'hug' for content-sized (default) */
@@ -109,7 +109,8 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
   }
 
   if (actualDescription) {
-    children.push(prose(actualDescription, {
+    children.push(text(actualDescription, {
+      content: CONTENT.PROSE,
       style: descriptionStyle,
       color: descriptionColor,
     }));

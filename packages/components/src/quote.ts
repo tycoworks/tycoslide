@@ -4,14 +4,14 @@
 
 import {
   componentRegistry, component, type ExpansionContext, type InferProps, type SchemaShape,
-  type SlideNode, SHAPE, SIZE, schema,
+  type SlideNode, SHAPE, SIZE, CONTENT, schema,
   type TextStyleName, type GapSize, type HorizontalAlignment, type VerticalAlignment,
 } from 'tycoslide';
 import { Component } from './names.js';
 import { stack, column, row } from './containers.js';
 import { shape } from './primitives.js';
 import { image as imageNode, imageComponent } from './image.js';
-import { prose, label, proseComponent, labelComponent } from './text.js';
+import { text, textComponent } from './text.js';
 
 export const QUOTE_TOKEN = {
   PADDING: 'padding',
@@ -53,9 +53,9 @@ export interface QuoteTokens {
 
 const quoteSchema = {
   /** Quote text (markdown supported). From directives, can come via body instead. */
-  quote: proseComponent.schema.optional(),
+  quote: textComponent.schema.optional(),
   /** Attribution line, e.g. "— Jane Smith, CTO" */
-  attribution: labelComponent.schema.optional(),
+  attribution: textComponent.schema.optional(),
   /** Optional image/logo displayed above the quote */
   image: imageComponent.schema.optional(),
   /** Named variant (resolved from theme.components.quote.variants) */
@@ -107,9 +107,9 @@ function expandQuote(props: QuoteProps & { body?: string }, context: ExpansionCo
   if (!actualQuote) {
     throw new Error(`[tycoslide] Quote component requires either a 'quote' attribute or body text.`);
   }
-  children.push(prose(actualQuote, { style: quoteStyle, color: quoteColor }));
+  children.push(text(actualQuote, { content: CONTENT.PROSE, style: quoteStyle, color: quoteColor }));
   if (attribution) {
-    children.push(label(attribution, { style: attributionStyle, color: attributionColor, hAlign: attributionHAlign }));
+    children.push(text(attribution, { content: CONTENT.PLAIN, style: attributionStyle, color: attributionColor, hAlign: attributionHAlign }));
   }
 
   const contentProps = { padding, gap, hAlign: contentHAlign, vAlign: contentVAlign };

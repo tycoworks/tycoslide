@@ -8,10 +8,11 @@ import {
   GAP,
   SIZE,
   layoutRegistry,
+  CONTENT,
   type SlideNode,
   type Slide,
 } from 'tycoslide';
-import { labelComponent, label, column } from 'tycoslide-components';
+import { textComponent, text, column } from 'tycoslide-components';
 import { DEFAULT_MASTER } from './master.js';
 import { theme } from './theme.js';
 
@@ -24,11 +25,11 @@ export function headerBlock(title: string, eyebrow?: string): SlideNode {
   if (eyebrow) {
     return column(
       { gap: GAP.TIGHT },
-      label(eyebrow.toUpperCase(), { style: TEXT_STYLE.EYEBROW }),
-      label(title, { style: TEXT_STYLE.H3 }),
+      text(eyebrow.toUpperCase(), { content: CONTENT.PLAIN, style: TEXT_STYLE.EYEBROW }),
+      text(title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H3 }),
     );
   }
-  return label(title, { style: TEXT_STYLE.H3 });
+  return text(title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H3 });
 }
 
 /** Fill-height body, content flows from top */
@@ -55,15 +56,15 @@ export const titleLayout = layoutRegistry.define({
   name: 'title',
   description: 'Opening slide with large title and optional subtitle.',
   params: {
-    title: labelComponent.schema,
-    subtitle: labelComponent.schema.optional(),
+    title: textComponent.schema,
+    subtitle: textComponent.schema.optional(),
   },
   render: ({ title, subtitle }) => ({
     content: column(
       { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, gap: GAP.TIGHT, height: SIZE.FILL },
-      label(title, { style: TEXT_STYLE.H1, hAlign: HALIGN.CENTER }),
+      text(title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H1, hAlign: HALIGN.CENTER }),
       ...(subtitle
-        ? [label(subtitle, { style: TEXT_STYLE.H3, hAlign: HALIGN.CENTER, color: theme.colors.textMuted })]
+        ? [text(subtitle, { content: CONTENT.PLAIN, style: TEXT_STYLE.H3, hAlign: HALIGN.CENTER, color: theme.colors.textMuted })]
         : []),
     ),
   }),
@@ -72,11 +73,11 @@ export const titleLayout = layoutRegistry.define({
 export const sectionLayout = layoutRegistry.define({
   name: 'section',
   description: 'Section divider with centered title.',
-  params: { title: labelComponent.schema },
+  params: { title: textComponent.schema },
   render: ({ title }) => ({
     content: column(
       { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, height: SIZE.FILL },
-      label(title, { style: TEXT_STYLE.H2, hAlign: HALIGN.CENTER }),
+      text(title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H2, hAlign: HALIGN.CENTER }),
     ),
   }),
 });
@@ -85,8 +86,8 @@ export const bodyLayout = layoutRegistry.define({
   name: 'body',
   description: 'Markdown body with optional title. Default layout.',
   params: {
-    title: labelComponent.schema.optional(),
-    eyebrow: labelComponent.schema.optional(),
+    title: textComponent.schema.optional(),
+    eyebrow: textComponent.schema.optional(),
   },
   slots: ['body'],
   render: ({ title, eyebrow, body }) =>

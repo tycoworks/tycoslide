@@ -6,7 +6,7 @@ import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { z } from 'zod';
 import { schema } from 'tycoslide';
-import { proseComponent, labelComponent } from '../src/text.js';
+import { textComponent } from '../src/text.js';
 import { imageComponent } from '../src/image.js';
 import { mermaidComponent } from '../src/mermaid.js';
 import { cardComponent } from '../src/card.js';
@@ -14,16 +14,11 @@ import { quoteComponent } from '../src/quote.js';
 
 describe('Component .schema properties', () => {
   describe('real component .schema properties', () => {
-    test('proseComponent.schema is z.string()', () => {
-      assert.ok(proseComponent.schema);
-      assert.strictEqual(proseComponent.schema.safeParse('**bold**').success, true);
-      assert.strictEqual(proseComponent.schema.safeParse(42).success, false);
-    });
-
-    test('labelComponent.schema is z.string()', () => {
-      assert.ok(labelComponent.schema);
-      assert.strictEqual(labelComponent.schema.safeParse('plain').success, true);
-      assert.strictEqual(labelComponent.schema.safeParse(42).success, false);
+    test('textComponent.schema is z.string()', () => {
+      assert.ok(textComponent.schema);
+      assert.strictEqual(textComponent.schema.safeParse('**bold**').success, true);
+      assert.strictEqual(textComponent.schema.safeParse('plain').success, true);
+      assert.strictEqual(textComponent.schema.safeParse(42).success, false);
     });
 
     test('imageComponent.schema is z.string()', () => {
@@ -66,8 +61,8 @@ describe('Component .schema properties', () => {
   });
 
   describe('component .schema in layout params', () => {
-    test('proseComponent.schema usable in schema.array()', () => {
-      const arr = schema.array(proseComponent.schema);
+    test('textComponent.schema usable in schema.array()', () => {
+      const arr = schema.array(textComponent.schema);
       const result = arr.safeParse(['**bold**', 'plain text']);
       assert.strictEqual(result.success, true);
     });
@@ -83,8 +78,8 @@ describe('Component .schema properties', () => {
 
     test('mixed component schemas in layout params object', () => {
       const layoutParams = z.object({
-        title: proseComponent.schema,
-        eyebrow: labelComponent.schema.optional(),
+        title: textComponent.schema,
+        eyebrow: textComponent.schema.optional(),
         logo: imageComponent.schema.optional(),
         cards: schema.array(cardComponent.schema),
       });

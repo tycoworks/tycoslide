@@ -1,8 +1,9 @@
 // Text Component
-// Single component with three content modes, all producing TextNode with NormalizedRun[]:
-//   label()  — CONTENT.PLAIN: no parsing, single run (eyebrows, attributions, copyright)
-//   text()   — CONTENT.RICH:  inline-only rich text (bold, italic, :color[highlights], no bullets/paragraphs)
-//   prose()  — CONTENT.PROSE: structured rich text (bullets, paragraphs, inline formatting)
+// Single DSL entry point: text(body, { content?, ...props })
+// Three content modes (default: CONTENT.RICH):
+//   CONTENT.PLAIN — no parsing, single run (eyebrows, attributions, copyright)
+//   CONTENT.RICH  — inline-only rich text (bold, italic, :color[highlights], no bullets/paragraphs)
+//   CONTENT.PROSE — structured rich text (bullets, paragraphs, inline formatting)
 
 import { unified } from 'unified';
 import type { Processor } from 'unified';
@@ -72,10 +73,11 @@ const textSchema = {
   variant: schema.string().optional(),
 } satisfies SchemaShape;
 
-/** Props accepted by DSL functions text(), prose(), label().
+/** Props accepted by the text() DSL function.
  *  DSL callers can pass styling props (color, bulletColor, lineHeightMultiplier)
  *  that are NOT in the directive schema — only available to TypeScript developers. */
 export interface TextProps {
+  content?: ContentType;
   style?: TextStyleName;
   color?: string;
   hAlign?: HorizontalAlignment;
@@ -259,8 +261,8 @@ function expandText(props: TextComponentProps, context: { theme: any }, tokens: 
     const blocks = tree.children.filter(c => c.type !== SYNTAX.THEMATIC_BREAK);
     if (blocks.length > 1 || (blocks.length === 1 && blocks[0].type !== SYNTAX.PARAGRAPH)) {
       throw new Error(
-        `text() only supports inline formatting (bold, italic, colors). ` +
-        `For bullets or multiple paragraphs, use prose().`
+        `text() with CONTENT.RICH only supports inline formatting (bold, italic, colors). ` +
+        `For bullets or multiple paragraphs, use content: CONTENT.PROSE.`
       );
     }
   }
@@ -320,55 +322,22 @@ export const textComponent = componentRegistry.define({
   expand: expandText,
 });
 
-// Semantic aliases — used in layout param schemas to communicate intent
-// (e.g., `title: labelComponent.schema` = "this param is plain text")
-export const labelComponent = textComponent;
-export const proseComponent = textComponent;
-
 // ============================================
-// DSL HELPERS
+// DSL FUNCTION
 // ============================================
 
 /**
- * Create a plain text component node (no markdown parsing).
- * Use for structural chrome: eyebrows, attributions, copyright.
- *
- * @example
- * ```typescript
- * label("ARCHITECTURE", { style: TEXT_STYLE.EYEBROW })
- * label("— Jane Doe, CTO", { style: TEXT_STYLE.SMALL })
- * ```
- */
-export function label(body: string, props?: TextProps): ComponentNode<TextComponentProps> {
-  return component(Component.Text, { body, content: CONTENT.PLAIN, ...props });
-}
-
-/**
- * Create an inline rich text component node.
- * Supports bold, italic, and :color[highlights].
- * Block constructs (lists, headings) are disabled — `1. Problem` stays literal.
- * Rejects multi-paragraph input — use prose() for that.
+ * Create a text component node.
+ * Default content mode is CONTENT.RICH (inline formatting only).
  *
  * @example
  * ```typescript
  * text("1. Problem statement", { style: TEXT_STYLE.H4 })
  * text("**Bold** and :teal[highlighted]")
+ * text("ARCHITECTURE", { content: CONTENT.PLAIN, style: TEXT_STYLE.EYEBROW })
+ * text("- First\n- Second", { content: CONTENT.PROSE })
  * ```
  */
 export function text(body: string, props?: TextProps): ComponentNode<TextComponentProps> {
   return component(Component.Text, { body, content: CONTENT.RICH, ...props });
-}
-
-/**
- * Create a structured rich text component node.
- * Supports bullets, paragraphs, bold, italic, and :color[highlights].
- *
- * @example
- * ```typescript
- * prose("**Bold** and :teal[highlighted] text.")
- * prose("- First bullet\n- Second bullet", { style: TEXT_STYLE.BODY })
- * ```
- */
-export function prose(body: string, props?: TextProps): ComponentNode<TextComponentProps> {
-  return component(Component.Text, { body, content: CONTENT.PROSE, ...props });
 }

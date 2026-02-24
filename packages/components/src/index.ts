@@ -54,14 +54,10 @@ export {
   type TableProps,
 } from './table.js';
 
-// Text (label, inline-rich, structured)
+// Text
 export {
-  label,
   text,
-  prose,
-  labelComponent,
   textComponent,
-  proseComponent,
   HEADING_STYLE,
   TEXT_TOKEN,
   type TextTokens,

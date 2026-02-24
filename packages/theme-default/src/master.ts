@@ -7,11 +7,12 @@ import {
   TEXT_STYLE,
   GAP,
   SIZE,
+  CONTENT,
   type Master,
   Bounds,
   type Theme,
 } from 'tycoslide';
-import { row, column, label, slideNumber } from 'tycoslide-components';
+import { row, column, text, slideNumber } from 'tycoslide-components';
 
 const unit = 0.03125;
 export const FOOTER_HEIGHT = unit * 8; // 0.25"
@@ -31,7 +32,8 @@ function masterContent(t: Theme) {
     { gap: GAP.TIGHT, height: FOOTER_HEIGHT, vAlign: VALIGN.MIDDLE },
     column(
       { width: SIZE.FILL, vAlign: VALIGN.MIDDLE },
-      label('Your Company Name', {
+      text('Your Company Name', {
+        content: CONTENT.PLAIN,
         style: TEXT_STYLE.FOOTER,
         hAlign: HALIGN.LEFT,
         vAlign: VALIGN.MIDDLE,
