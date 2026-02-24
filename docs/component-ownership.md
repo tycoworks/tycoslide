@@ -369,13 +369,15 @@ Revert all code changes from the incomplete Phase 2 attempt (which moved compone
    import { card, row, column, text } from 'tycoslide-components';
    ```
 
-### Phase 11: Layering Improvements
+### Phase 11: Layering Improvements — DONE
 
-1. **Move `Component` const to components package** — Core's `types.ts` currently enumerates all 13 built-in component names. This knowledge belongs in the components package. Core's slot compiler only needs 3 names (Text, Column, Table) for `compileBareMarkdown()` — use string literals or a minimal internal const. See "The `Component` Const and `ComponentTokenMap`" section.
+1. ~~**Move `Component` const to components package**~~ — Done. `Component` const moved to `packages/components/src/names.ts`. `ComponentTokenMap` and `ComponentName` type deleted from core. `Theme.components` simplified to `Record<string, { variants: ... }>`. Core has zero knowledge of specific component names.
 
-2. **Fix `resolveAssetPath` layering violation** — `resolveAssetPath` (in `components/src/image.ts`) accepts a `slideIndex` parameter and includes `Slide ${slideIndex + 1}:` in error messages. A component-level function should not have knowledge of slide indices. Fix: throw clean errors about the asset path only; let the caller (expansion context or presentation layer) add slide context to error messages.
+2. ~~**Fix `resolveAssetPath` layering violation**~~ — Done. Slide index removed from component-level error messages.
 
-3. **Architectural review for other layering violations** — Audit the codebase for similar patterns where lower-level code has knowledge it shouldn't: components knowing about slides, core knowing about specific components, rendering code making content decisions. Document findings and create targeted fixes.
+3. ~~**Move token const/interface pairs to components**~~ — Done. `CARD_TOKEN`/`CardTokens`, `QUOTE_TOKEN`/`QuoteTokens`, `LINE_TOKEN`/`LineTokens`, `SLIDE_NUMBER_TOKEN`/`SlideNumberTokens`, `TEXT_TOKEN`/`TextTokens`, `SHAPE_TOKEN`/`ShapeTokens` moved from core `types.ts` to their respective component files. `TABLE_TOKEN`/`TableTokens` stays in core `nodes.ts` (used by `TableNode.style`).
+
+4. ~~**Add runtime theme validation**~~ — Done. `validateTheme()` method added to `ComponentRegistry`. Validates that themes provide all required tokens for all registered components.
 
 ---
 
@@ -412,36 +414,15 @@ The boundary: **core defines what CAN be drawn; components define what IS drawn;
 
 ---
 
-## The `Component` Const and `ComponentTokenMap`
+## The `Component` Const and Token Ownership — COMPLETED
 
-### Component Names
+**Component names:** `Component` const lives in `packages/components/src/names.ts`. Core uses plain strings for component names — no enum, no `ComponentName` type alias. The slot compiler dispatches through MDAST handlers registered on the component registry, not through name checks.
 
-Move the `Component` const (all 13 built-in names) from core's `types.ts` to the components package. Core should not enumerate the full set of built-in components — that knowledge belongs to the package that defines them.
+**Token consts/interfaces:** Each component file defines its own token const and interface (e.g., `CARD_TOKEN`/`CardTokens` in `card.ts`). These are exported from the components barrel. Core retains only `TABLE_TOKEN`/`TableTokens` in `nodes.ts` (structural dependency: `TableNode.style: TableTokens`).
 
-Core's slot compiler needs only 3 names (`Text`, `Column`, `Table`) for `compileBareMarkdown()`. These can be string literals or a minimal internal const — not the full 13-name `Component` object.
+**Theme validation:** `componentRegistry.validateTheme(theme)` checks at runtime that all registered components' required tokens are present in the theme's variant maps. Replaces the deleted compile-time `ComponentTokenMap`.
 
-The `ComponentName` type remains open: `BuiltinComponentName | (string & {})`. `BuiltinComponentName` can be defined via declaration merging from the components package, just like `ComponentTokenMap`.
-
-### Token Map
-
-Remove content component entries from `ComponentTokenMap` in core. Use declaration merging from the components package (or theme):
-
-```typescript
-// packages/components/src/types.ts
-declare module 'tycoslide' {
-  interface ComponentTokenMap {
-    card: CardTokens;
-    quote: QuoteTokens;
-    table: TableTokens;
-    text: TextTokens;
-    line: LineTokens;
-    shape: ShapeTokens;
-    slideNumber: SlideNumberTokens;
-  }
-}
-```
-
-Token interfaces (`CardTokens`, etc.) and token name consts (`CARD_TOKEN`, etc.) stay in core's `types.ts` — pure type definitions with zero runtime cost.
+**`ComponentTokenMap`:** Deleted. Was a compile-time mapped type coupling core to component knowledge. Replaced by runtime `validateTheme()` and the `tokens` array on each component's `define()` call.
 
 ---
 
@@ -464,4 +445,4 @@ Token interfaces (`CardTokens`, etc.) and token name consts (`CARD_TOKEN`, etc.)
 
 - **Slidev architecture:** Core has zero content components. All content components live in themes. [sli.dev/builtin/components](https://sli.dev/builtin/components)
 - **Neversink theme:** 13 theme-owned components. [gureckis.github.io/slidev-theme-neversink](https://gureckis.github.io/slidev-theme-neversink/components/admonitions.html)
-- **Declaration merging:** Already documented in `core/model/types.ts:609-617`.
+- **Runtime theme validation:** `componentRegistry.validateTheme()` in `core/rendering/registry.ts`.

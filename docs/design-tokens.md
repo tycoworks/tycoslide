@@ -603,71 +603,23 @@ An author's `variant="muted"` means "muted relative to the current mode." Light-
 
 ## Implementation Plan
 
-### Step 1: Update `Theme` type and add token interfaces
+### Steps 1–5: DONE
 
-File: `packages/core/src/core/types.ts`
-
-- Add `TEXT_TOKEN` const, `TextTokens` interface
-- Add `SHAPE_TOKEN` const, `ShapeTokens` interface
-- Add `[Component.Text]: TextTokens` and `[Component.Shape]: ShapeTokens` to `ComponentTokenMap`
-- Change `Theme.components` type from `ComponentTokenMap[K] & { variants?: Record<string, Partial<ComponentTokenMap[K]>> }` to `{ variants: Record<string, ComponentTokenMap[K]> }` — variants are required, complete (not Partial), and no top-level token spread
-
-### Step 2: Update registry variant resolution
-
-File: `packages/core/src/core/registry.ts`
-
-- Replace the destructure + shallow-merge logic with direct variant lookup
-- Default to `'default'` when no variant specified
-- Keep required-tokens validation as a runtime safety net (compile-time `satisfies` catches theme authoring errors; runtime validation catches dynamic/test scenarios)
-
-### Step 3: Update Text component
-
-File: `packages/core/src/dsl/text.ts`
-
-- Remove `color`, `bulletColor`, `lineHeightMultiplier` from `textSchema`
-- Add `variant: schema.string().optional()` to `textSchema`
-- Add `tokens` array to component registration
-- Update `expandText` to use token defaults with props-override-tokens precedence
-
-### Step 4: Update Shape component
-
-File: `packages/core/src/dsl/primitives.ts`
-
-- Remove `fill`, `fillOpacity`, `borderColor`, `borderWidth`, `cornerRadius` from `shapeDirectiveSchema`
-- Add `variant: schema.string().optional()` to `shapeDirectiveSchema`
-- Add `tokens` array to shape component registration
-- Update shape expand to use token defaults, with DSL props overriding
-
-### Step 5: Add variant to Line
-
-File: `packages/core/src/dsl/primitives.ts`
-
-- Add `variant: schema.string().optional()` to `lineSchema`
+Token interfaces and consts now live in their respective component files in `packages/components/src/`. `ComponentTokenMap` has been deleted — replaced by runtime `validateTheme()` on the component registry. `Theme.components` is `Record<string, { variants: Record<string, Record<string, unknown>> }>`. All components (Text, Shape, Line, Card, Quote, Table, SlideNumber) have token arrays and variant support.
 
 ### Step 6: Migrate all themes to Figma model
 
-File: `packages/theme-default/src/theme.ts` (and any other theme packages)
+File: `packages/theme-default/src/theme.ts`
 
-- Restructure all component token sections from `{ ...baseTokens, variants: { name: { ...partialOverrides } } }` to `{ variants: { default: { ...completeTokens }, name: { ...completeTokens } } }`
-- Add `text` variants section (default, muted, accent, inverse)
-- Add `shape` variants section (default, primary, subtle, outlined, accent)
-- Add variants to `line` section (default, accent, muted, dashed)
-- Define meaningful variants for `card`, `quote`, `table` (dark, accent, minimal, etc.)
-- Use TypeScript spread + `satisfies Record<string, TokenInterface>` for DRY and compile-time safety
+- Define meaningful variant sets for all components (dark, accent, minimal, etc.)
+- Use TypeScript spread for DRY across variants
 
 ### Step 7: Update test infrastructure
 
-Files: `packages/core/test/mocks.ts`, test files
-
-- Update `mockTheme()` to use Figma model (variants map with `default`)
-- Add `[Component.Text]` and `[Component.Shape]` entries
-- Update existing variant resolution tests for new lookup model
-- Add Text, Shape, Line variant resolution tests
-- Add props-override-tokens precedence tests for Text
+- Add variant resolution tests for Text, Shape, Line
+- Add props-override-tokens precedence tests
 
 ### Step 8: Update markdown examples
-
-Files: `showcase.md`, any examples using removed props
 
 - Replace `color="..."` with `variant="..."` or remove
 - Replace `fill="..."` with `variant="..."` or remove
