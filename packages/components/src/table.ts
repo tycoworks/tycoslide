@@ -2,10 +2,11 @@
 
 import {
   componentRegistry, component, type ComponentNode, type ExpansionContext, type SchemaShape,
-  Component, CONTENT, SYNTAX, NODE_TYPE, TABLE_TOKEN,
+  CONTENT, SYNTAX, NODE_TYPE, TABLE_TOKEN,
   type TextNode, type TableCellData, type TableTokens, type TextContent,
   schema, markdown,
 } from 'tycoslide';
+import { Component } from './names.js';
 import type { Table as MdastTable, RootContent } from 'mdast';
 import type { Root } from 'mdast';
 

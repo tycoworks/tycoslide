@@ -3,9 +3,9 @@
 import {
   componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape, type ExpansionContext,
   NODE_TYPE, type ImageNode,
-  Component,
   schema,
 } from 'tycoslide';
+import { Component } from './names.js';
 
 // ============================================
 // ASSET RESOLUTION

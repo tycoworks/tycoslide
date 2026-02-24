@@ -6,8 +6,8 @@ import type { Slide } from '../src/core/model/types.js';
 import { mockTheme } from './mocks.js';
 
 // Import test stubs to trigger component registration
-import './test-components.js';
-import { Component, HALIGN, VALIGN } from '../src/core/model/types.js';
+import { C } from './test-components.js';
+import { HALIGN, VALIGN } from '../src/core/model/types.js';
 
 // ============================================
 // GENERIC REGISTRY BASE CLASS
@@ -121,7 +121,7 @@ describe('ComponentRegistry', () => {
   describe('expand', () => {
     test('expands a registered component', async () => {
       // text component is registered at import time — use it as a real component
-      const node = component(Component.Text, { body: 'hello' });
+      const node = component(C.Text, { body: 'hello' });
       const expanded = await componentRegistry.expand(node, { theme });
       assert.strictEqual((expanded as any).type, NODE_TYPE.TEXT);
     });
@@ -144,7 +144,7 @@ describe('ComponentRegistry', () => {
 
     test('recursively expands nested components', async () => {
       const flatTheme = mockTheme({ components: { card: { variants: { flat: { backgroundOpacity: 0 } } } } });
-      const node = component(Component.Card, { title: 'Test', variant: 'flat' });
+      const node = component(C.Card, { title: 'Test', variant: 'flat' });
       const expanded = await componentRegistry.expandTree(node, { theme: flatTheme });
       // backgroundOpacity=0 means just a column with label child
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
@@ -155,7 +155,7 @@ describe('ComponentRegistry', () => {
 
     test('recurses into element children', async () => {
       // A container with a component child should expand the child
-      const node = component(Component.Row, { children: [component(Component.Text, { body: 'hi' })] });
+      const node = component(C.Row, { children: [component(C.Text, { body: 'hi' })] });
       const expanded = await componentRegistry.expandTree(node, { theme });
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
       if (expanded.type === NODE_TYPE.CONTAINER) {

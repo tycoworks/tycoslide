@@ -6,9 +6,8 @@ import { z } from 'zod';
 import { schema } from '../src/core/model/schema.js';
 import { layoutRegistry } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
-import { Component } from '../src/core/model/types.js';
 import { compileSlot } from '../src/core/markdown/slotCompiler.js';
-import './test-components.js';
+import { C } from './test-components.js';
 
 describe('schema', () => {
   describe('scalar types', () => {
@@ -55,14 +54,14 @@ describe('schema', () => {
       const result = compileSlot(':::text\nHello world\n:::');
       assert.ok(Array.isArray(result));
       assert.strictEqual(result.length, 1);
-      assert.strictEqual((result[0] as any).componentName, Component.Text);
+      assert.strictEqual((result[0] as any).componentName, C.Text);
     });
 
     it('compiles multiple directives', () => {
       const result = compileSlot(':::text\nText\n:::\n\n:::image\npic.png\n:::');
       assert.strictEqual(result.length, 2);
-      assert.strictEqual((result[0] as any).componentName, Component.Text);
-      assert.strictEqual((result[1] as any).componentName, Component.Image);
+      assert.strictEqual((result[0] as any).componentName, C.Text);
+      assert.strictEqual((result[1] as any).componentName, C.Image);
     });
 
     it('empty string → empty array', () => {
@@ -73,7 +72,7 @@ describe('schema', () => {
     it('compiles bare MDAST inline to text node', () => {
       const result = compileSlot('Hello world');
       assert.strictEqual(result.length, 1);
-      assert.strictEqual((result[0] as any).componentName, Component.Text);
+      assert.strictEqual((result[0] as any).componentName, C.Text);
     });
   });
 

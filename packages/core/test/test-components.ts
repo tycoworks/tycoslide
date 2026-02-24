@@ -2,8 +2,8 @@
 // Minimal component definitions registered with the real componentRegistry.
 // Used by core tests that need components registered (slotCompiler, schema, registry, etc.)
 //
-// Only Text, Card, Row, Column have real expand functions (needed by registry.test.ts).
-// Everything else registers metadata only — slotCompiler never calls expand.
+// Text, Card, Row, Column have real expand functions (needed by registry.test.ts).
+// Image, Table, Line register metadata only — slotCompiler never calls expand.
 //
 // Import this file for side-effect registration in core tests.
 
@@ -11,10 +11,17 @@ import { componentRegistry, component } from '../src/core/rendering/registry.js'
 import type { ExpansionContext, ComponentNode } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import type { ElementNode } from '../src/core/model/nodes.js';
-import { Component, HALIGN, VALIGN, SIZE, DIRECTION, TEXT_STYLE, CONTENT } from '../src/core/model/types.js';
+import { HALIGN, VALIGN, SIZE, DIRECTION, TEXT_STYLE, CONTENT } from '../src/core/model/types.js';
 import { SYNTAX, extractSource } from '../src/core/model/syntax.js';
 import { schema } from '../src/core/model/schema.js';
 import type { RootContent, Heading, Table as MdastTable } from 'mdast';
+
+// Local component name const — core tests can't import from tycoslide-components
+export const C = {
+  Text: 'text', Card: 'card', Table: 'table',
+  Image: 'image', Line: 'line',
+  Row: 'row', Column: 'column',
+} as const;
 
 // ============================================
 // HEADING STYLE MAP (matches real text component)
@@ -32,7 +39,7 @@ const HEADING_STYLE: Record<number, string> = {
 // ============================================
 
 componentRegistry.define({
-  name: Component.Text,
+  name: C.Text,
   body: schema.string(),
   params: {
     style: schema.string().optional(),
@@ -50,7 +57,7 @@ componentRegistry.define({
         const style = HEADING_STYLE[heading.depth] ?? TEXT_STYLE.H3;
         const raw = extractSource(heading, source);
         const content = raw.replace(/^#{1,6}\s*/, '');
-        return component(Component.Text, { body: content, content: CONTENT.PROSE, style });
+        return component(C.Text, { body: content, content: CONTENT.PROSE, style });
       }
       if (node.type === SYNTAX.PARAGRAPH) {
         const para = node as { children: { type: string }[] };
@@ -58,7 +65,7 @@ componentRegistry.define({
           throw new Error('Images cannot be embedded inline in text. Use :::image directive.');
         }
       }
-      return component(Component.Text, { body: extractSource(node, source), content: CONTENT.PROSE });
+      return component(C.Text, { body: extractSource(node, source), content: CONTENT.PROSE });
     },
   },
   expand: (props: any, _ctx: ExpansionContext, tokens: any): any => ({
@@ -76,7 +83,7 @@ componentRegistry.define({
 // ============================================
 
 componentRegistry.define({
-  name: Component.Row,
+  name: C.Row,
   params: {
     gap: schema.string().optional(),
     vAlign: schema.string().optional(),
@@ -104,7 +111,7 @@ componentRegistry.define({
 // ============================================
 
 componentRegistry.define({
-  name: Component.Column,
+  name: C.Column,
   params: {
     gap: schema.string().optional(),
     vAlign: schema.string().optional(),
@@ -132,7 +139,7 @@ componentRegistry.define({
 // ============================================
 
 componentRegistry.define({
-  name: Component.Card,
+  name: C.Card,
   params: {
     title: schema.string().optional(),
     description: schema.string().optional(),
@@ -144,18 +151,8 @@ componentRegistry.define({
     'descriptionStyle', 'descriptionColor', 'gap', 'textGap', 'hAlign', 'vAlign',
   ],
   expand: (props: any, _ctx: ExpansionContext, tokens: any): any => {
-    const titleNode = component(Component.Text, { body: props.title ?? props.body ?? '' });
-    const contentColumn = component(Component.Column, { children: [titleNode], padding: tokens.padding });
-
-    if (tokens.backgroundOpacity > 0) {
-      return component(Component.Stack, {
-        children: [
-          component(Component.Shape, { shape: 'roundRect', fill: tokens.backgroundColor, fillOpacity: tokens.backgroundOpacity }),
-          contentColumn,
-        ],
-      });
-    }
-    return contentColumn;
+    const titleNode = component(C.Text, { body: props.title ?? props.body ?? '' });
+    return component(C.Column, { children: [titleNode], padding: tokens.padding });
   },
 });
 
@@ -164,14 +161,14 @@ componentRegistry.define({
 // ============================================
 
 componentRegistry.define({
-  name: Component.Image,
+  name: C.Image,
   body: schema.string(),
   params: { alt: schema.string().optional() },
   expand: () => ({}) as any,
 });
 
 componentRegistry.define({
-  name: Component.Line,
+  name: C.Line,
   params: {
     variant: schema.string().optional(),
     beginArrow: schema.string().optional(),
@@ -182,40 +179,7 @@ componentRegistry.define({
 });
 
 componentRegistry.define({
-  name: Component.Shape,
-  params: {
-    shape: schema.string(),
-    variant: schema.string().optional(),
-  },
-  tokens: ['fill', 'fillOpacity', 'borderColor', 'borderWidth', 'cornerRadius'],
-  expand: () => ({}) as any,
-});
-
-componentRegistry.define({
-  name: Component.SlideNumber,
-  params: { variant: schema.string().optional() },
-  tokens: ['style', 'color', 'hAlign'],
-  expand: () => ({}) as any,
-});
-
-componentRegistry.define({
-  name: Component.Quote,
-  body: schema.string(),
-  params: {
-    attribution: schema.string().optional(),
-    variant: schema.string().optional(),
-  },
-  tokens: [
-    'padding', 'cornerRadius', 'backgroundColor', 'backgroundOpacity',
-    'borderColor', 'borderWidth', 'quoteStyle', 'quoteColor',
-    'attributionStyle', 'attributionColor', 'attributionHAlign',
-    'gap', 'hAlign', 'vAlign',
-  ],
-  expand: () => ({}) as any,
-});
-
-componentRegistry.define({
-  name: Component.Table,
+  name: C.Table,
   body: schema.string(),
   params: {
     variant: schema.string().optional(),
@@ -241,34 +205,8 @@ componentRegistry.define({
           return source.slice(start, end).trim();
         })
       );
-      return component(Component.Table, { data: rows, tableProps: { headerRows: 1 } });
+      return component(C.Table, { data: rows, tableProps: { headerRows: 1 } });
     },
   },
-  expand: () => ({}) as any,
-});
-
-componentRegistry.define({
-  name: Component.Mermaid,
-  body: schema.string(),
-  expand: () => ({}) as any,
-});
-
-componentRegistry.define({
-  name: Component.Stack,
-  params: {
-    width: schema.string().optional(),
-    height: schema.string().optional(),
-  },
-  slots: ['children'] as const,
-  expand: () => ({}) as any,
-});
-
-componentRegistry.define({
-  name: Component.Grid,
-  params: {
-    columns: schema.number(),
-    gap: schema.string().optional(),
-  },
-  slots: ['children'] as const,
   expand: () => ({}) as any,
 });

@@ -3,8 +3,9 @@
 
 import * as assert from 'node:assert';
 import { createRequire } from 'module';
-import type { Theme, TextStyle, FontFamily, ComponentTokenMap } from 'tycoslide';
-import { Component, TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, HALIGN, VALIGN, DEFAULT_VARIANT } from 'tycoslide';
+import type { Theme, TextStyle, FontFamily } from 'tycoslide';
+import { TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, HALIGN, VALIGN, DEFAULT_VARIANT } from 'tycoslide';
+import { Component } from '../src/names.js';
 
 const require = createRequire(import.meta.url);
 
@@ -126,9 +127,6 @@ export function mockTheme(options?: {
       cornerRadius: 0,
     },
   };
-  // Compile-time exhaustiveness: fails if a new ComponentTokenMap entry is missing above
-  const _exhaustive: Record<keyof ComponentTokenMap, unknown> = defaultTokens;
-
   // Build Figma-model components: { variants: { default: {...}, ... } }
   // User-provided overrides merge into the default variant for test convenience.
   // User-provided variants are made complete by merging with the (overridden) default.

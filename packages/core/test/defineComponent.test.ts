@@ -9,7 +9,7 @@ import {
   type ComponentDefinition,
 } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
-import { Component, HALIGN, VALIGN, SIZE, DIRECTION } from '../src/core/model/types.js';
+import { HALIGN, VALIGN, SIZE, DIRECTION } from '../src/core/model/types.js';
 import { schema } from '../src/core/model/schema.js';
 
 

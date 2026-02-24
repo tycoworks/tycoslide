@@ -4,9 +4,10 @@ import {
   componentRegistry, component, type ComponentNode,
   NODE_TYPE, type ElementNode, type SlideNode,
   GAP, type HorizontalAlignment, type VerticalAlignment, type GapSize, type SizeValue,
-  Component, VALIGN, HALIGN, SIZE, DIRECTION,
+  VALIGN, HALIGN, SIZE, DIRECTION,
   schema,
 } from 'tycoslide';
+import { Component } from './names.js';
 
 // ============================================
 // SHARED HELPERS

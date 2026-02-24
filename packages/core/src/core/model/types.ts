@@ -29,31 +29,6 @@ export type VerticalAlignment = typeof VALIGN[keyof typeof VALIGN];
 /** All VALIGN values as a tuple — useful for Zod enum schemas */
 export const VALIGN_VALUES = Object.values(VALIGN) as [VerticalAlignment, ...VerticalAlignment[]];
 
-// All built-in components
-export const Component = {
-  // Scalar components: have schema, support :::directives, usable in layout params
-  Image: 'image',
-  Line: 'line',
-  Shape: 'shape',
-  SlideNumber: 'slideNumber',
-  Text: 'text',
-  Card: 'card',
-  Quote: 'quote',
-  Table: 'table',
-  Mermaid: 'mermaid',
-  // Container components: have slots, support :::directives with compiled body
-  Row: 'row',
-  Column: 'column',
-  Stack: 'stack',
-  Grid: 'grid',
-} as const;
-
-// Strict literal union of built-in names (useful for exhaustive internal checks)
-export type BuiltinComponentName = typeof Component[keyof typeof Component];
-
-// Open type: autocomplete built-in names, but accept any string for custom components
-export type ComponentName = BuiltinComponentName | (string & {});
-
 // Content kinds for the Text component — controls parsing level
 export const CONTENT = {
   PLAIN: 'plain',
@@ -467,163 +442,13 @@ export type TextContent = string | TextRun[];
 
 export { Bounds } from './bounds.js';
 
-// ============================================
-// COMPONENT TOKEN INTERFACES
-// ============================================
-
-export const CARD_TOKEN = {
-  PADDING: 'padding',
-  CORNER_RADIUS: 'cornerRadius',
-  BACKGROUND_COLOR: 'backgroundColor',
-  BACKGROUND_OPACITY: 'backgroundOpacity',
-  BORDER_COLOR: 'borderColor',
-  BORDER_WIDTH: 'borderWidth',
-  TITLE_STYLE: 'titleStyle',
-  TITLE_COLOR: 'titleColor',
-  DESCRIPTION_STYLE: 'descriptionStyle',
-  DESCRIPTION_COLOR: 'descriptionColor',
-  GAP: 'gap',
-  TEXT_GAP: 'textGap',
-  HALIGN: 'hAlign',
-  VALIGN: 'vAlign',
-} as const;
-
-export interface CardTokens {
-  [CARD_TOKEN.PADDING]: number;
-  [CARD_TOKEN.CORNER_RADIUS]: number;
-  [CARD_TOKEN.BACKGROUND_COLOR]: string;
-  [CARD_TOKEN.BACKGROUND_OPACITY]: number;
-  [CARD_TOKEN.BORDER_COLOR]: string;
-  [CARD_TOKEN.BORDER_WIDTH]: number;
-  [CARD_TOKEN.TITLE_STYLE]: TextStyleName;
-  [CARD_TOKEN.TITLE_COLOR]: string;
-  [CARD_TOKEN.DESCRIPTION_STYLE]: TextStyleName;
-  [CARD_TOKEN.DESCRIPTION_COLOR]: string;
-  [CARD_TOKEN.GAP]: GapSize;
-  [CARD_TOKEN.TEXT_GAP]: GapSize;
-  [CARD_TOKEN.HALIGN]: HorizontalAlignment;
-  [CARD_TOKEN.VALIGN]: VerticalAlignment;
-}
-
-export const QUOTE_TOKEN = {
-  PADDING: 'padding',
-  CORNER_RADIUS: 'cornerRadius',
-  BACKGROUND_COLOR: 'backgroundColor',
-  BACKGROUND_OPACITY: 'backgroundOpacity',
-  BORDER_COLOR: 'borderColor',
-  BORDER_WIDTH: 'borderWidth',
-  QUOTE_STYLE: 'quoteStyle',
-  QUOTE_COLOR: 'quoteColor',
-  ATTRIBUTION_STYLE: 'attributionStyle',
-  ATTRIBUTION_COLOR: 'attributionColor',
-  ATTRIBUTION_HALIGN: 'attributionHAlign',
-  GAP: 'gap',
-  HALIGN: 'hAlign',
-  VALIGN: 'vAlign',
-} as const;
-
-export interface QuoteTokens {
-  [QUOTE_TOKEN.PADDING]: number;
-  [QUOTE_TOKEN.CORNER_RADIUS]: number;
-  [QUOTE_TOKEN.BACKGROUND_COLOR]: string;
-  [QUOTE_TOKEN.BACKGROUND_OPACITY]: number;
-  [QUOTE_TOKEN.BORDER_COLOR]: string;
-  [QUOTE_TOKEN.BORDER_WIDTH]: number;
-  [QUOTE_TOKEN.QUOTE_STYLE]: TextStyleName;
-  [QUOTE_TOKEN.QUOTE_COLOR]: string;
-  [QUOTE_TOKEN.ATTRIBUTION_STYLE]: TextStyleName;
-  [QUOTE_TOKEN.ATTRIBUTION_COLOR]: string;
-  [QUOTE_TOKEN.ATTRIBUTION_HALIGN]: HorizontalAlignment;
-  [QUOTE_TOKEN.GAP]: GapSize;
-  [QUOTE_TOKEN.HALIGN]: HorizontalAlignment;
-  [QUOTE_TOKEN.VALIGN]: VerticalAlignment;
-}
-
-import type { TableTokens, ComponentNode } from './nodes.js';
+import type { ComponentNode } from './nodes.js';
 export type { TableTokens } from './nodes.js';
 export { TABLE_TOKEN } from './nodes.js';
-
-export const LINE_TOKEN = {
-  COLOR: 'color',
-  WIDTH: 'width',
-  DASH_TYPE: 'dashType',
-} as const;
-
-export interface LineTokens {
-  [LINE_TOKEN.COLOR]: string;
-  [LINE_TOKEN.WIDTH]: number;
-  [LINE_TOKEN.DASH_TYPE]: DashType;
-}
-
-export const SLIDE_NUMBER_TOKEN = {
-  STYLE: 'style',
-  COLOR: 'color',
-  HALIGN: 'hAlign',
-} as const;
-
-export interface SlideNumberTokens {
-  [SLIDE_NUMBER_TOKEN.STYLE]: TextStyleName;
-  [SLIDE_NUMBER_TOKEN.COLOR]: string;
-  [SLIDE_NUMBER_TOKEN.HALIGN]: HorizontalAlignment;
-}
-
-export const TEXT_TOKEN = {
-  COLOR: 'color',
-  BULLET_COLOR: 'bulletColor',
-  STYLE: 'style',
-  LINE_HEIGHT_MULTIPLIER: 'lineHeightMultiplier',
-} as const;
-
-export interface TextTokens {
-  [TEXT_TOKEN.COLOR]: string;
-  [TEXT_TOKEN.BULLET_COLOR]: string;
-  [TEXT_TOKEN.STYLE]: TextStyleName;
-  [TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER]: number;
-}
-
-export const SHAPE_TOKEN = {
-  FILL: 'fill',
-  FILL_OPACITY: 'fillOpacity',
-  BORDER_COLOR: 'borderColor',
-  BORDER_WIDTH: 'borderWidth',
-  CORNER_RADIUS: 'cornerRadius',
-} as const;
-
-export interface ShapeTokens {
-  [SHAPE_TOKEN.FILL]: string;
-  [SHAPE_TOKEN.FILL_OPACITY]: number;
-  [SHAPE_TOKEN.BORDER_COLOR]: string;
-  [SHAPE_TOKEN.BORDER_WIDTH]: number;
-  [SHAPE_TOKEN.CORNER_RADIUS]: number;
-}
 
 /** The variant name used when no explicit variant is requested. Every component must define this variant. */
 export const DEFAULT_VARIANT = 'default' as const;
 
-/**
- * Maps component names to their required token interfaces.
- * Theme.components is typed from this map — every entry here must be
- * provided by any Theme object (compile-time enforced).
- *
- * Third-party components extend via declaration merging:
- * ```typescript
- * declare module 'tycoslide' {
- *   interface ComponentTokenMap {
- *     progressBar: ProgressBarTokens;
- *   }
- * }
- * ```
- * Theme authors then get compile-time errors if they omit the new component's tokens.
- */
-export interface ComponentTokenMap {
-  [Component.Card]: CardTokens;
-  [Component.Quote]: QuoteTokens;
-  [Component.Table]: TableTokens;
-  [Component.Line]: LineTokens;
-  [Component.SlideNumber]: SlideNumberTokens;
-  [Component.Text]: TextTokens;
-  [Component.Shape]: ShapeTokens;
-}
 
 // ============================================
 // THEME TYPES
@@ -673,12 +498,9 @@ export interface Theme {
     radius: number;  // Corner radius in inches
   };
   textStyles: { [K in TextStyleName]: TextStyle };
-  /** Component tokens. All ComponentTokenMap entries are required (compile-time enforced).
-   *  The Record<string, ...> intersection enables dynamic runtime access in registry.expand()
-   *  and allows custom components that haven't used declaration merging. */
-  components: {
-    [K in keyof ComponentTokenMap]: {
-      variants: { [DEFAULT_VARIANT]: ComponentTokenMap[K] } & Record<string, ComponentTokenMap[K]>;
-    };
-  } & Record<string, { variants: { [DEFAULT_VARIANT]: Record<string, unknown> } & Record<string, Record<string, unknown>> }>;
+  /** Component tokens. Each registered component declares its required token keys;
+   *  validateTheme() on the registry checks that themes provide them at runtime. */
+  components: Record<string, {
+    variants: { [DEFAULT_VARIANT]: Record<string, unknown> } & Record<string, Record<string, unknown>>;
+  }>;
 }

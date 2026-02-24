@@ -1,6 +1,9 @@
 // tycoslide-components — Standard component definitions
 // Barrel export — each component self-registers via import side effects
 
+// Component names (canonical registry of built-in identifiers)
+export { Component, type ComponentName } from './names.js';
+
 // Image (with asset resolution)
 export {
   image,
@@ -16,6 +19,12 @@ export {
   type LineProps,
   type ShapeProps,
   type SlideNumberProps,
+  LINE_TOKEN,
+  type LineTokens,
+  SLIDE_NUMBER_TOKEN,
+  type SlideNumberTokens,
+  SHAPE_TOKEN,
+  type ShapeTokens,
 } from './primitives.js';
 
 // Containers (row, column, stack, grid)
@@ -45,6 +54,8 @@ export {
   textComponent,
   proseComponent,
   HEADING_STYLE,
+  TEXT_TOKEN,
+  type TextTokens,
   type TextProps,
   type TextComponentProps,
 } from './text.js';
@@ -53,6 +64,8 @@ export {
 export {
   card,
   cardComponent,
+  CARD_TOKEN,
+  type CardTokens,
   type CardProps,
 } from './card.js';
 
@@ -60,6 +73,8 @@ export {
 export {
   quote,
   quoteComponent,
+  QUOTE_TOKEN,
+  type QuoteTokens,
   type QuoteProps,
 } from './quote.js';
 

@@ -3,8 +3,44 @@
 
 import {
   componentRegistry, component, type ExpansionContext, type InferProps, type SchemaShape,
-  type SlideNode, SHAPE, SIZE, CARD_TOKEN, type CardTokens, schema, Component,
+  type SlideNode, SHAPE, SIZE, schema,
+  type TextStyleName, type GapSize, type HorizontalAlignment, type VerticalAlignment,
 } from 'tycoslide';
+
+export const CARD_TOKEN = {
+  PADDING: 'padding',
+  CORNER_RADIUS: 'cornerRadius',
+  BACKGROUND_COLOR: 'backgroundColor',
+  BACKGROUND_OPACITY: 'backgroundOpacity',
+  BORDER_COLOR: 'borderColor',
+  BORDER_WIDTH: 'borderWidth',
+  TITLE_STYLE: 'titleStyle',
+  TITLE_COLOR: 'titleColor',
+  DESCRIPTION_STYLE: 'descriptionStyle',
+  DESCRIPTION_COLOR: 'descriptionColor',
+  GAP: 'gap',
+  TEXT_GAP: 'textGap',
+  HALIGN: 'hAlign',
+  VALIGN: 'vAlign',
+} as const;
+
+export interface CardTokens {
+  [CARD_TOKEN.PADDING]: number;
+  [CARD_TOKEN.CORNER_RADIUS]: number;
+  [CARD_TOKEN.BACKGROUND_COLOR]: string;
+  [CARD_TOKEN.BACKGROUND_OPACITY]: number;
+  [CARD_TOKEN.BORDER_COLOR]: string;
+  [CARD_TOKEN.BORDER_WIDTH]: number;
+  [CARD_TOKEN.TITLE_STYLE]: TextStyleName;
+  [CARD_TOKEN.TITLE_COLOR]: string;
+  [CARD_TOKEN.DESCRIPTION_STYLE]: TextStyleName;
+  [CARD_TOKEN.DESCRIPTION_COLOR]: string;
+  [CARD_TOKEN.GAP]: GapSize;
+  [CARD_TOKEN.TEXT_GAP]: GapSize;
+  [CARD_TOKEN.HALIGN]: HorizontalAlignment;
+  [CARD_TOKEN.VALIGN]: VerticalAlignment;
+}
+import { Component } from './names.js';
 import { stack, column } from './containers.js';
 import { shape } from './primitives.js';
 import { image, imageComponent } from './image.js';

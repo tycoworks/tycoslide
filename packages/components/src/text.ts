@@ -11,9 +11,24 @@ import remarkDirective from 'remark-directive';
 import type { Root, PhrasingContent, List, Paragraph, ListItem } from 'mdast';
 import type { TextDirective } from 'mdast-util-directive';
 import type { RootContent, Heading } from 'mdast';
-import type { NormalizedRun, ColorScheme, ContentType, TextStyleName, HorizontalAlignment, VerticalAlignment, TextTokens } from 'tycoslide';
-import { HALIGN, VALIGN, TEXT_STYLE, CONTENT, TEXT_TOKEN, Component, SYNTAX, markdown } from 'tycoslide';
+import type { NormalizedRun, ColorScheme, ContentType, TextStyleName, HorizontalAlignment, VerticalAlignment } from 'tycoslide';
+import { HALIGN, VALIGN, TEXT_STYLE, CONTENT, SYNTAX, markdown } from 'tycoslide';
+import { Component } from './names.js';
 import { NODE_TYPE, type ElementNode } from 'tycoslide';
+
+export const TEXT_TOKEN = {
+  COLOR: 'color',
+  BULLET_COLOR: 'bulletColor',
+  STYLE: 'style',
+  LINE_HEIGHT_MULTIPLIER: 'lineHeightMultiplier',
+} as const;
+
+export interface TextTokens {
+  [TEXT_TOKEN.COLOR]: string;
+  [TEXT_TOKEN.BULLET_COLOR]: string;
+  [TEXT_TOKEN.STYLE]: TextStyleName;
+  [TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER]: number;
+}
 import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape } from 'tycoslide';
 import { schema } from 'tycoslide';
 

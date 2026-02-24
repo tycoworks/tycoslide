@@ -4,7 +4,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { prose, label, text } from '../src/text.js';
-import { Component, CONTENT, HALIGN, VALIGN, NODE_TYPE, componentRegistry } from 'tycoslide';
+import { CONTENT, HALIGN, VALIGN, NODE_TYPE, componentRegistry } from 'tycoslide';
+import { Component } from '../src/names.js';
 import type { NormalizedRun } from 'tycoslide';
 import { mockTheme } from './mocks.js';
 

@@ -3,12 +3,51 @@
 import {
   componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape, type ExpansionContext,
   NODE_TYPE, type LineNode, type ShapeNode, type SlideNumberNode,
-  Component, ARROW_TYPE_VALUES, SHAPE_VALUES,
+  ARROW_TYPE_VALUES, SHAPE_VALUES,
   type ShapeName, type ArrowType, type DashType, type TextStyleName, type HorizontalAlignment,
-  LINE_TOKEN, SLIDE_NUMBER_TOKEN, SHAPE_TOKEN,
-  type LineTokens, type SlideNumberTokens, type ShapeTokens,
   schema,
 } from 'tycoslide';
+
+export const LINE_TOKEN = {
+  COLOR: 'color',
+  WIDTH: 'width',
+  DASH_TYPE: 'dashType',
+} as const;
+
+export interface LineTokens {
+  [LINE_TOKEN.COLOR]: string;
+  [LINE_TOKEN.WIDTH]: number;
+  [LINE_TOKEN.DASH_TYPE]: DashType;
+}
+
+export const SLIDE_NUMBER_TOKEN = {
+  STYLE: 'style',
+  COLOR: 'color',
+  HALIGN: 'hAlign',
+} as const;
+
+export interface SlideNumberTokens {
+  [SLIDE_NUMBER_TOKEN.STYLE]: TextStyleName;
+  [SLIDE_NUMBER_TOKEN.COLOR]: string;
+  [SLIDE_NUMBER_TOKEN.HALIGN]: HorizontalAlignment;
+}
+
+export const SHAPE_TOKEN = {
+  FILL: 'fill',
+  FILL_OPACITY: 'fillOpacity',
+  BORDER_COLOR: 'borderColor',
+  BORDER_WIDTH: 'borderWidth',
+  CORNER_RADIUS: 'cornerRadius',
+} as const;
+
+export interface ShapeTokens {
+  [SHAPE_TOKEN.FILL]: string;
+  [SHAPE_TOKEN.FILL_OPACITY]: number;
+  [SHAPE_TOKEN.BORDER_COLOR]: string;
+  [SHAPE_TOKEN.BORDER_WIDTH]: number;
+  [SHAPE_TOKEN.CORNER_RADIUS]: number;
+}
+import { Component } from './names.js';
 
 // ============================================
 // LINE

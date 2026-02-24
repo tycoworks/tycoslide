@@ -1,7 +1,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { quote } from '../src/quote.js';
-import { Component, componentRegistry, NODE_TYPE, TEXT_STYLE, HALIGN, VALIGN } from 'tycoslide';
+import { componentRegistry, NODE_TYPE, TEXT_STYLE, HALIGN, VALIGN } from 'tycoslide';
+import { Component } from '../src/names.js';
 import { mockTheme } from './mocks.js';
 
 describe('Quote Component', () => {

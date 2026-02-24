@@ -18,8 +18,8 @@ import {
   table,
 } from '../src/index.js';
 import { card } from '../src/card.js';
+import { Component } from '../src/names.js';
 import {
-  Component,
   componentRegistry,
   NODE_TYPE,
   DIRECTION,

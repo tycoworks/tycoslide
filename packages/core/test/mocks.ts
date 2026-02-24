@@ -3,8 +3,8 @@
 
 import * as assert from 'node:assert';
 import { createRequire } from 'module';
-import type { Theme, TextStyle, FontFamily, ComponentTokenMap } from '../src/core/model/types.js';
-import { Component, TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, HALIGN, VALIGN, DEFAULT_VARIANT } from '../src/core/model/types.js';
+import type { Theme, TextStyle, FontFamily } from '../src/core/model/types.js';
+import { TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, HALIGN, VALIGN, DEFAULT_VARIANT } from '../src/core/model/types.js';
 
 const require = createRequire(import.meta.url);
 
@@ -56,7 +56,7 @@ export function mockTheme(options?: {
 
   // Default component tokens (Figma model: each is a complete default variant)
   const defaultTokens: Record<string, Record<string, unknown>> = {
-    [Component.Card]: {
+    card: {
       padding,
       cornerRadius: borderRadius,
       backgroundColor: '333333',
@@ -72,23 +72,7 @@ export function mockTheme(options?: {
       hAlign: HALIGN.CENTER,
       vAlign: VALIGN.TOP,
     },
-    [Component.Quote]: {
-      padding: padding * 2,
-      cornerRadius: borderRadius,
-      backgroundColor: '333333',
-      backgroundOpacity: 20,
-      borderColor: '333333',
-      borderWidth,
-      quoteStyle: TEXT_STYLE.BODY,
-      quoteColor: 'FFFFFF',
-      attributionStyle: TEXT_STYLE.SMALL,
-      attributionColor: '666666',
-      attributionHAlign: HALIGN.RIGHT,
-      gap: GAP.NORMAL,
-      hAlign: HALIGN.CENTER,
-      vAlign: VALIGN.MIDDLE,
-    },
-    [Component.Table]: {
+    table: {
       borderStyle: BORDER_STYLE.FULL,
       borderColor: '333333',
       borderWidth,
@@ -102,33 +86,18 @@ export function mockTheme(options?: {
       hAlign: HALIGN.LEFT,
       vAlign: VALIGN.MIDDLE,
     },
-    [Component.Line]: {
+    line: {
       color: '333333',
       width: borderWidth,
       dashType: DASH_TYPE.SOLID,
     },
-    [Component.SlideNumber]: {
-      style: TEXT_STYLE.FOOTER,
-      color: '666666',
-      hAlign: HALIGN.RIGHT,
-    },
-    [Component.Text]: {
+    text: {
       color: '000000',
       bulletColor: '000000',
       style: TEXT_STYLE.BODY,
       lineHeightMultiplier: lineSpacing,
     },
-    [Component.Shape]: {
-      fill: '333333',
-      fillOpacity: 100,
-      borderColor: 'FFFFFF',
-      borderWidth: 0,
-      cornerRadius: 0,
-    },
   };
-  // Compile-time exhaustiveness: fails if a new ComponentTokenMap entry is missing above
-  const _exhaustive: Record<keyof ComponentTokenMap, unknown> = defaultTokens;
-
   // Build Figma-model components: { variants: { default: {...}, ... } }
   // User-provided overrides merge into the default variant for test convenience.
   // User-provided variants are made complete by merging with the (overridden) default.

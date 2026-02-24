@@ -1,7 +1,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { card } from '../src/card.js';
-import { Component, componentRegistry, NODE_TYPE } from 'tycoslide';
+import { componentRegistry, NODE_TYPE } from 'tycoslide';
+import { Component } from '../src/names.js';
 import { mockTheme } from './mocks.js';
 
 describe('Card Component', () => {

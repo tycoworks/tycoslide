@@ -6,8 +6,9 @@ import type { Theme } from 'tycoslide';
 import {
   NODE_TYPE, type ImageNode,
   componentRegistry, component, type ComponentNode, type ExpansionContext, type InferProps, type SchemaShape,
-  schema, Component,
+  schema,
 } from 'tycoslide';
+import { Component } from './names.js';
 
 import { exec as execCb } from 'child_process';
 import { promisify } from 'util';

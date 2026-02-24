@@ -3,7 +3,7 @@
 
 import { NODE_TYPE, type ElementNode, type ComponentNode, type SlideNode } from '../model/nodes.js';
 import { DEFAULT_VARIANT } from '../model/types.js';
-import type { Theme, ComponentName, Slide } from '../model/types.js';
+import type { Theme, Slide } from '../model/types.js';
 import type { SyntaxType } from '../model/syntax.js';
 import type { RootContent } from 'mdast';
 import { z } from 'zod';
@@ -91,7 +91,7 @@ export interface MdastHandler {
  */
 export interface ComponentDefinition<TProps = unknown, TTokens = undefined> {
   /** Unique name for this component (e.g., 'card', 'table') */
-  name: ComponentName;
+  name: string;
   /** Token keys that must be present in theme.components for this component. */
   tokens?: string[];
   /** Optional Zod schema shape for directive attributes (used for coercion on slotted components). */
@@ -143,7 +143,7 @@ export function coerceAttributes(attrs: Record<string, string | null | undefined
  * Each component's expand function decides what to do with body.
  */
 function buildDeserializer(
-  componentName: ComponentName,
+  componentName: string,
   paramsSchema: z.ZodObject<SchemaShape> | null,
 ): DirectiveDeserializer {
   return (attributes, body) => {
@@ -171,7 +171,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
    * Returns a definition with `.schema` (= body type) for use in layout params.
    */
   define<TBody extends z.ZodTypeAny, TTokens = undefined>(def: {
-    name: ComponentName;
+    name: string;
     body: TBody;
     tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
     mdast?: MdastHandler;
@@ -183,7 +183,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
    * Returns a definition with `.schema` (= body type) for use in layout params.
    */
   define<TBody extends z.ZodTypeAny, TParams extends SchemaShape, TTokens = undefined>(def: {
-    name: ComponentName;
+    name: string;
     body: TBody;
     params: TParams;
     tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
@@ -197,7 +197,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
    * When invoked from a :::directive, body text arrives as `props.body` (string).
    */
   define<TShape extends SchemaShape, TTokens = undefined>(def: {
-    name: ComponentName;
+    name: string;
     params: TShape;
     tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
     mdast?: MdastHandler;
@@ -209,7 +209,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
    * No `.schema` — slotted components aren't usable in layout params.
    */
   define<TTokens = undefined>(def: {
-    name: ComponentName;
+    name: string;
     params?: SchemaShape;
     slots: readonly string[];
     tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
@@ -221,7 +221,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
    * Define and register a programmatic-only component (no directive support, no schema).
    */
   define<TProps, TTokens = undefined>(def: {
-    name: ComponentName;
+    name: string;
     tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
     mdast?: MdastHandler;
     expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
@@ -237,7 +237,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     const mdast: MdastHandler | undefined = def.mdast;
 
     const result: ComponentDefinition & { schema?: z.ZodTypeAny } = {
-      name: def.name as ComponentName,
+      name: def.name as string,
       expand: def.expand as ComponentDefinition['expand'],
       tokens: def.tokens as string[],
       params: def.params,
@@ -293,6 +293,42 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
       return def;
     }
     return undefined;
+  }
+
+  /**
+   * Eagerly validate that a theme provides all required tokens for every registered component.
+   * Call in tests or at theme load time to catch missing tokens before rendering.
+   * @throws Error on the first component/variant with missing tokens
+   */
+  validateTheme(theme: Theme): void {
+    for (const def of this.getAll()) {
+      if (!def.tokens?.length) continue;
+      const config = theme.components?.[def.name];
+      if (!config) {
+        throw new Error(
+          `Theme missing tokens for component '${def.name}'. ` +
+          `Required: [${def.tokens.join(', ')}]`
+        );
+      }
+      const { variants } = config;
+      if (!variants?.[DEFAULT_VARIANT]) {
+        throw new Error(
+          `Theme missing '${DEFAULT_VARIANT}' variant for component '${def.name}'.`
+        );
+      }
+      for (const [variantName, tokens] of Object.entries(variants)) {
+        const missing = def.tokens.filter(
+          (key: string) => (tokens as Record<string, unknown>)[key] === undefined ||
+                           (tokens as Record<string, unknown>)[key] === null
+        );
+        if (missing.length) {
+          throw new Error(
+            `Component '${def.name}' variant '${variantName}' is missing required tokens: [${missing.join(', ')}]. ` +
+            `Each variant must be a complete token set.`
+          );
+        }
+      }
+    }
   }
 
   /**
@@ -460,7 +496,7 @@ export const layoutRegistry = new LayoutRegistry();
 /**
  * Create a component node.
  */
-export function component<TProps>(name: ComponentName, props: TProps): ComponentNode<TProps> {
+export function component<TProps>(name: string, props: TProps): ComponentNode<TProps> {
   return {
     type: NODE_TYPE.COMPONENT,
     componentName: name,

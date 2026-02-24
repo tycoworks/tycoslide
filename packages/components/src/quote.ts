@@ -4,8 +4,44 @@
 
 import {
   componentRegistry, component, type ExpansionContext, type InferProps, type SchemaShape,
-  type SlideNode, SHAPE, SIZE, QUOTE_TOKEN, type QuoteTokens, schema, Component,
+  type SlideNode, SHAPE, SIZE, schema,
+  type TextStyleName, type GapSize, type HorizontalAlignment, type VerticalAlignment,
 } from 'tycoslide';
+
+export const QUOTE_TOKEN = {
+  PADDING: 'padding',
+  CORNER_RADIUS: 'cornerRadius',
+  BACKGROUND_COLOR: 'backgroundColor',
+  BACKGROUND_OPACITY: 'backgroundOpacity',
+  BORDER_COLOR: 'borderColor',
+  BORDER_WIDTH: 'borderWidth',
+  QUOTE_STYLE: 'quoteStyle',
+  QUOTE_COLOR: 'quoteColor',
+  ATTRIBUTION_STYLE: 'attributionStyle',
+  ATTRIBUTION_COLOR: 'attributionColor',
+  ATTRIBUTION_HALIGN: 'attributionHAlign',
+  GAP: 'gap',
+  HALIGN: 'hAlign',
+  VALIGN: 'vAlign',
+} as const;
+
+export interface QuoteTokens {
+  [QUOTE_TOKEN.PADDING]: number;
+  [QUOTE_TOKEN.CORNER_RADIUS]: number;
+  [QUOTE_TOKEN.BACKGROUND_COLOR]: string;
+  [QUOTE_TOKEN.BACKGROUND_OPACITY]: number;
+  [QUOTE_TOKEN.BORDER_COLOR]: string;
+  [QUOTE_TOKEN.BORDER_WIDTH]: number;
+  [QUOTE_TOKEN.QUOTE_STYLE]: TextStyleName;
+  [QUOTE_TOKEN.QUOTE_COLOR]: string;
+  [QUOTE_TOKEN.ATTRIBUTION_STYLE]: TextStyleName;
+  [QUOTE_TOKEN.ATTRIBUTION_COLOR]: string;
+  [QUOTE_TOKEN.ATTRIBUTION_HALIGN]: HorizontalAlignment;
+  [QUOTE_TOKEN.GAP]: GapSize;
+  [QUOTE_TOKEN.HALIGN]: HorizontalAlignment;
+  [QUOTE_TOKEN.VALIGN]: VerticalAlignment;
+}
+import { Component } from './names.js';
 import { stack, column, row } from './containers.js';
 import { shape } from './primitives.js';
 import { image as imageNode, imageComponent } from './image.js';
