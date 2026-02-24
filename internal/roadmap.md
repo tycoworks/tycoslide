@@ -1,81 +1,120 @@
-# Roadmap
+# tycoslide Roadmap
 
-Future work and planned improvements for tycoslide.
-
----
-
-## Completed
-
-| Feature | Description | Status |
-|---------|-------------|--------|
-| **Component migration** | All 13 DSL component definitions moved from `packages/core` to `packages/components` (`tycoslide-components`). Core is now a pure engine with zero component knowledge. See [component-ownership.md](./component-ownership.md). | Done |
-| **Variant-only color model** | Added `TextTokens` and `ShapeTokens`. Removed styling props (color, fill, borderColor, etc.) from directive schemas. All components now style via variant selection only. | Done |
-| **Theme variant definitions** | Defined variant sets for all components in the default theme: Card (default, flat), Text (default, muted, accent, inverse), Shape (default, primary, subtle, outlined, accent), Line/Quote/Table/SlideNumber (default). | Done |
-| **Runtime theme validation** | `componentRegistry.validateTheme(theme)` validates all registered components at runtime. Replaced the old compile-time `ComponentTokenMap`. | Done |
-| **Component Author API** | `markdown` toolkit namespace and `schema` helpers provide a clean API for custom component authors. | Done |
-| **`prose()` / `label()` removal** | Removed in favor of `text(body, { style: TEXT_STYLE.X })`. Simpler, more explicit. | Done |
+Now / Next / Later — unified from todo, review, and roadmap docs.
 
 ---
 
-## Phase 2 Roadmap
+## Now
 
-| Priority | Feature | Description |
-|----------|---------|-------------|
-| **1** | **Theme file splitting** | Document recommended pattern for multi-size themes (shared palette/fonts/components, size-specific spacing/textStyles). No framework changes needed. |
-| **2** | **Dark mode** | Per-slide color modes. Each slide specifies `mode: 'dark' | 'light'`. Theme defines complete component variant sets per mode. |
-| **3** | **CLI theme scaffold** | `tycoslide theme-init --from-dtcg tokens.json` — consumes DTCG JSON, emits TypeScript theme package scaffold. One-time codegen, not runtime. |
-| **4** | **Figma component pipeline** | Explore extracting Figma component structure (Auto Layout, variant properties) and mapping to tycoslide component definitions. Pipeline: Figma REST API -> component extractor -> TypeScript layouts + theme variants. |
+Before launch. Must be done before telling the world.
 
----
+### Default Theme & Showcase
 
-## Future: Figma -> tycoslide Pipeline
+The big piece. A polished default theme with good colors, layouts, and a showcase deck that demonstrates everything tycoslide can do. The `layout-research.md` file informs layout decisions.
 
-If a Figma-to-tycoslide workflow is needed, the pipeline would be:
+### Code Comments Audit
 
-```
-Figma Variables
-    |  (Tokens Studio plugin — syncs to GitHub)
-    v
-tokens.json (DTCG format)
-    |  (tycoslide CLI — one-time scaffold)
-    v
-theme.ts (TypeScript Theme object)
-    + assets.ts (font paths — manual, environment-specific)
-    + layouts.ts (layout functions — manual, TypeScript logic)
-```
+Scrub client-specific references from core codebase. No mentions of Materialize, real-time streaming, or any client-specific concepts in `packages/core/` or `packages/components/`.
 
-The CLI command would:
-1. Read DTCG JSON
-2. Map `color.*` tokens to `ColorScheme` fields
-3. Map `spacing.*` / `border.*` tokens to `spacing` and `borders` fields
-4. Map `typography.*` composite tokens to `textStyles` (with `// TODO: configure font paths`)
-5. Emit a complete `theme.ts` scaffold
+### Blockquote Mdast Type
 
-Style Dictionary or Terrazzo could also be used directly — they output typed TypeScript constants that a thin adapter maps to the `Theme` interface.
+Markdown `>` blockquote syntax doesn't produce quote components. Need to register a blockquote handler in the markdown compilation pipeline so `>` maps to the quote component.
 
-A deeper integration — extracting Figma component structure (Auto Layout, constraints, variant properties) and mapping them directly to tycoslide component definitions and layouts — is a future exploration.
+### Review Masters & Footer
+
+Verify the footer concept lives only in theme masters, not in core. Currently `FOOTER_HEIGHT_RATIO` and `getFooterBounds()` in `presentation.ts` hardcode footer layout. Footer is purely a master concern. Fix: `Master.getContent()` should return `masterBounds` in addition to `contentBounds`. Delete the footer plumbing from core.
+
+### Cleanup
+
+Small items to tidy before launch:
+
+- Wire or remove Card's unused `gap` token (`CARD_TOKEN.GAP` declared and themed but never used in `expandCard`)
+- Remove dead `ShapeDirectiveProps` type (`primitives.ts`)
+- Update stale `CLAUDE.md` (references `defineContent()`/`defineLayout()` which don't exist)
+- Rename `node.test.ts` to `resolveGap.test.ts` (tests `resolveGap()`, nothing to do with nodes)
+- Variant names: consider enum or const object instead of bare strings (`'flat'`, `'compact'`)
+- Reduce `as any` casts: `registry.ts:304,325,328` (generic boundaries), `primitives.ts:78,128` (Line/Shape props)
 
 ---
 
-## Recommended Theme File Structure for Multi-Size
+## Next
 
-For brands that need multiple slide sizes (16:9, 4:3), the recommended structure is:
+Immediate next priorities after launch.
 
-```
-brand/
-  palette.ts          # ColorScheme + accent definitions
-  fonts.ts            # FontFamily definitions + asset paths
-  components.ts       # Component variants (card, quote, table, text, shape, line, slideNumber)
-  theme-16x9.ts       # imports above + SLIDE_SIZE.S16x9 + spacing + textStyles
-  theme-4x3.ts        # imports above + SLIDE_SIZE.S4x3  + spacing + textStyles
-  assets.ts           # Brand assets (logos, icons, illustrations)
-  layouts.ts          # Layout functions
-  master.ts           # Master slide definition
-  index.ts            # Re-exports selected theme
-```
+### Code Component
 
-The shared modules (`palette.ts`, `fonts.ts`, `components.ts`) capture the ~85% that's size-independent. Each size-specific theme file is ~20 lines importing the shared base plus the absolute spacing and font size values.
+Syntax-highlighted code blocks in slides. Important for technical audiences.
 
-This is a theme authoring pattern, not a framework change. The `Theme` interface stays unchanged. Authors `import { palette } from './palette.js'` and compose the Theme object. The framework never knows or cares that the theme was assembled from shared parts.
+### Card Image Placement
 
-If we later want a CLI convenience (`tycoslide theme-derive --from brand-16x9 --size 4x3`), it can generate a second theme file by applying a scale factor to absolute values. But that's a tool, not a runtime feature.
+Cards currently only show images at the top. Add support for image on the left side (horizontal card layout).
+
+### PPTX Groups
+
+Composite components (cards) currently render all shapes individually. They should be grouped in PPTX output. Blocked by pptxgenjs not supporting groups natively — may need to work around or contribute upstream.
+
+### Theme Building CLI
+
+Make it easier to bootstrap themes. `tycoslide theme-init --from-dtcg tokens.json` consumes W3C DTCG JSON and emits a TypeScript theme scaffold. One-time codegen, not runtime. Document the recommended multi-size theme file structure (shared palette/fonts/components, size-specific spacing/textStyles).
+
+### Dark Mode
+
+Per-slide color modes. Each slide specifies `mode: 'dark' | 'light'`. Theme defines complete component variant sets per mode.
+
+### HTML Live Preview
+
+Better developer experience for previewing slides. Bundle with debug HTML improvements — Chrome DevTools may already provide container visualization, reducing the need for custom red-line debug overlays. Explore preview server and VS Code extension.
+
+### Test Coverage
+
+Zero-coverage files that need tests:
+
+- `pptxRenderer.ts` (316 lines) — final output stage
+- `pipeline.ts` (164 lines) — layout orchestration
+- `presentation.ts` (278 lines) — public API
+- `themeLoader.ts` — zero dedicated tests
+- Unit conversion functions (`pxToIn`, `inToPx`, `inToPt`, `ptToIn`)
+
+### Code Quality
+
+- Split `types.ts` (503 lines) into `types.ts`, `shapes.ts`, `tokens.ts`, `theme.ts`
+- Move `TABLE_TOKEN`/`TableTokens` from `nodes.ts` to component file
+- Standardize test assert imports (3 patterns currently)
+- Standardize `test()` vs `it()` (pick one)
+- Extract `layoutHtml.test.ts` inline mock to shared `mockTheme()`
+- Fix `bounds.test.ts` duplicate `approx()` helper
+
+
+---
+
+## Later
+
+Future exploration. No timeline.
+
+### Portrait & Different Slide Sizes
+
+Support portrait orientation, A4 format, and other sizes. Opens the door to content beyond presentations — documents, handouts, posters. Includes the multi-size theme pattern (shared base, size-specific spacing).
+
+### Theme from PPTX or Figma
+
+Detect and bootstrap themes from existing materials. Figma pipeline: Tokens Studio plugin syncs to GitHub as DTCG JSON, CLI scaffolds TypeScript theme. Deeper integration: extract Figma component structure (Auto Layout, variant properties) and map to tycoslide definitions.
+
+### Real Mermaid
+
+Currently mermaid diagrams render as images. Explore creating them as native PPTX shapes for better quality and editability.
+
+---
+
+## Bugs
+
+Tracked separately from roadmap — different scope and size.
+
+- **Right-aligned bullet points** — pptxgenjs renders right-aligned text in bullet points incorrectly. Edge case, unlikely to hit in practice.
+
+---
+
+## Philosophy
+
+- **No design opinions in core.** Design decisions come from themes and layouts upstream. tycoslide enforces what the theme author specifies, nothing more.
+- **The default theme must be good enough.** Chicken-and-egg: people need to see a great theme before investing in building their own. The default theme is a showcase, not a constraint.
+- **TypeScript themes, not JSON.** Themes are TypeScript for font path resolution, typed constants, and compile-time safety. DTCG JSON is an authoring input consumed by a CLI scaffold tool, not a runtime format.
