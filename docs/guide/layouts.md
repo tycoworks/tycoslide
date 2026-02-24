@@ -1,6 +1,6 @@
 # Layouts
 
-`tycoslide-theme-default` provides three layouts registered with `layoutRegistry`. Each layout defines a slide structure and its accepted frontmatter parameters.
+`tycoslide-theme-default` provides three layouts. These are the layouts that come with the default theme — custom themes can define their own layouts (see [Creating Layouts](../extending/creating-layouts.md)).
 
 ## Available Layouts
 
@@ -124,46 +124,3 @@ All `body` layout slides use the `DEFAULT_MASTER`, which adds:
 - **Content bounds** — the usable area for slide content, inset by `0.5"` margin on all sides and shrunk by the footer height at the bottom
 
 `title` and `section` layouts do not use the master — they render without a footer.
-
-### Replacing the master
-
-To customize the footer (company name, logo, colors), create your own master and pass it to your layout definitions:
-
-```typescript
-import { HALIGN, VALIGN, TEXT_STYLE, GAP, SIZE, CONTENT, Bounds, type Master, type Theme } from 'tycoslide';
-import { row, column, text, slideNumber } from 'tycoslide-components';
-
-const unit = 0.03125;
-const FOOTER_HEIGHT = unit * 8; // 0.25"
-
-export const MY_MASTER: Master = {
-  name: 'MY_MASTER',
-  getContent: (theme: Theme) => {
-    const { margin } = theme.spacing;
-    const { width, height } = theme.slide;
-
-    const contentBounds = new Bounds(
-      margin,
-      margin,
-      width - margin * 2,
-      height - margin * 2 - FOOTER_HEIGHT,
-    );
-
-    const content = row(
-      { gap: GAP.TIGHT, height: FOOTER_HEIGHT, vAlign: VALIGN.MIDDLE },
-      column(
-        { width: SIZE.FILL, vAlign: VALIGN.MIDDLE },
-        text('Acme Corp', {
-          content: CONTENT.PLAIN,
-          style: TEXT_STYLE.FOOTER,
-          hAlign: HALIGN.LEFT,
-          vAlign: VALIGN.MIDDLE,
-        }),
-      ),
-      slideNumber(),
-    );
-
-    return { content, contentBounds };
-  },
-};
-```

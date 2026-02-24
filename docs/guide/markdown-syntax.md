@@ -273,5 +273,5 @@ For component directives and parameters, see [Components](./components.md).
 
 - [Quick Start](./quick-start.md) - Your first presentation
 - [Components](./components.md) - Directives for rich content
-- [Layouts](../default-theme/layouts.md) - Available slide layouts
+- [Layouts](./layouts.md) - Available slide layouts
 - [CLI](./cli.md) - Build command options

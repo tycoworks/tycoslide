@@ -195,7 +195,48 @@ Pass the master in the render function's return value: `render: (props) => ({ ma
 - `contentBounds` must account for fixed elements — if the master has a footer bar at the bottom, reduce `height` accordingly
 - Masters can include slide numbers, logos, headers, and background elements
 
-For the default master's structure and a complete replacement example, see [Default Theme — Layouts](../default-theme/layouts.md#default-master).
+### Replacing the Default Master
+
+To customize the footer (company name, logo, colors), create your own master and pass it to your layout definitions:
+
+```typescript
+import { HALIGN, VALIGN, TEXT_STYLE, GAP, SIZE, CONTENT, Bounds, type Master, type Theme } from 'tycoslide';
+import { row, column, text, slideNumber } from 'tycoslide-components';
+
+const unit = 0.03125;
+const FOOTER_HEIGHT = unit * 8; // 0.25"
+
+export const MY_MASTER: Master = {
+  name: 'MY_MASTER',
+  getContent: (theme: Theme) => {
+    const { margin } = theme.spacing;
+    const { width, height } = theme.slide;
+
+    const contentBounds = new Bounds(
+      margin,
+      margin,
+      width - margin * 2,
+      height - margin * 2 - FOOTER_HEIGHT,
+    );
+
+    const content = row(
+      { gap: GAP.TIGHT, height: FOOTER_HEIGHT, vAlign: VALIGN.MIDDLE },
+      column(
+        { width: SIZE.FILL, vAlign: VALIGN.MIDDLE },
+        text('Acme Corp', {
+          content: CONTENT.PLAIN,
+          style: TEXT_STYLE.FOOTER,
+          hAlign: HALIGN.LEFT,
+          vAlign: VALIGN.MIDDLE,
+        }),
+      ),
+      slideNumber(),
+    );
+
+    return { content, contentBounds };
+  },
+};
+```
 
 ## Registering Layouts in Themes
 
@@ -278,6 +319,6 @@ Test with minimal content, maximal content, all parameter combinations, and chec
 
 ## See Also
 
-- [Default Theme Layouts](../default-theme/layouts.md) — title, section, body layout reference
+- [Layouts](../guide/layouts.md) — title, section, body layout reference
 - [Creating Components](./creating-components.md)
 - [Creating Themes](./creating-themes.md)
