@@ -25,7 +25,6 @@ Verify the footer concept lives only in theme masters, not in core. Currently `F
 Small items to tidy before launch:
 
 - Card gap token: rename `CARD_TOKEN.TEXT_GAP` to `CARD_TOKEN.GAP` (matching quote's pattern), delete unused `CARD_TOKEN.GAP`. Update both themes.
-- Rename `node.test.ts` to `units.test.ts` (tests `resolveGap()` from `utils/units.ts`, future home for unit conversion tests)
 - Fix `registry.ts:404` — replace `(elementNode as any).children` with proper type narrowing (`node.type === NODE_TYPE.CONTAINER || NODE_TYPE.STACK`)
 - Add phantom `dslProps` type parameter to `componentRegistry.define()` overload — eliminates `as LineProps`/`as ShapeProps` casts in primitives by letting expand functions accept a wider type than the directive schema
 
