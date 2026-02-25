@@ -103,6 +103,7 @@ export function mockTheme(options?: {
       cellPadding,
       hAlign: HALIGN.LEFT,
       vAlign: VALIGN.MIDDLE,
+      cellLineHeight: lineSpacing,
     },
     [Component.Line]: {
       color: '333333',

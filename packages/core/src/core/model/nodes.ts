@@ -123,7 +123,7 @@ export interface TableCellData {
   resolvedStyle: TextStyle;         // pre-resolved from theme.textStyles[textStyle]
   hAlign: HorizontalAlignment;     // pre-resolved: cell → table default
   vAlign: VerticalAlignment;       // pre-resolved: cell → table default
-  lineHeightMultiplier: number;    // pre-resolved from theme.spacing.lineSpacing
+  lineHeightMultiplier: number;    // pre-resolved from table cellLineHeight token
   colspan?: number;
   rowspan?: number;
   fill?: string;

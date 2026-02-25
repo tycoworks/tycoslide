@@ -28,6 +28,7 @@ export const TABLE_TOKEN = {
   CELL_PADDING: 'cellPadding',
   HALIGN: 'hAlign',
   VALIGN: 'vAlign',
+  CELL_LINE_HEIGHT: 'cellLineHeight',
 } as const;
 
 export interface TableTokens {
@@ -43,6 +44,7 @@ export interface TableTokens {
   [TABLE_TOKEN.CELL_PADDING]: number;
   [TABLE_TOKEN.HALIGN]: HorizontalAlignment;
   [TABLE_TOKEN.VALIGN]: VerticalAlignment;
+  [TABLE_TOKEN.CELL_LINE_HEIGHT]: number;
 }
 
 // ============================================
@@ -94,7 +96,7 @@ const tableSchema = {
 export const tableComponent = componentRegistry.define({
   name: Component.Table,
   params: tableSchema,
-  tokens: [TABLE_TOKEN.BORDER_STYLE, TABLE_TOKEN.BORDER_COLOR, TABLE_TOKEN.BORDER_WIDTH, TABLE_TOKEN.HEADER_BACKGROUND, TABLE_TOKEN.HEADER_BACKGROUND_OPACITY, TABLE_TOKEN.HEADER_TEXT_STYLE, TABLE_TOKEN.CELL_BACKGROUND, TABLE_TOKEN.CELL_BACKGROUND_OPACITY, TABLE_TOKEN.CELL_TEXT_STYLE, TABLE_TOKEN.CELL_PADDING, TABLE_TOKEN.HALIGN, TABLE_TOKEN.VALIGN],
+  tokens: [TABLE_TOKEN.BORDER_STYLE, TABLE_TOKEN.BORDER_COLOR, TABLE_TOKEN.BORDER_WIDTH, TABLE_TOKEN.HEADER_BACKGROUND, TABLE_TOKEN.HEADER_BACKGROUND_OPACITY, TABLE_TOKEN.HEADER_TEXT_STYLE, TABLE_TOKEN.CELL_BACKGROUND, TABLE_TOKEN.CELL_BACKGROUND_OPACITY, TABLE_TOKEN.CELL_TEXT_STYLE, TABLE_TOKEN.CELL_PADDING, TABLE_TOKEN.HALIGN, TABLE_TOKEN.VALIGN, TABLE_TOKEN.CELL_LINE_HEIGHT],
   mdast: {
     nodeTypes: [SYNTAX.TABLE],
     compile: (node: RootContent, source: string): ComponentNode | null => {
@@ -136,11 +138,14 @@ export const tableComponent = componentRegistry.define({
     // rich text (**bold**, *italic*, :accent[highlights]) in table cells.
     const expandContent = async (content: TextContent): Promise<TextContent> => {
       if (typeof content === 'string') {
-        const expanded = await componentRegistry.expand(
+        const expanded = await componentRegistry.expandTree(
           component(Component.Text, { body: content, content: CONTENT.RICH }),
           context,
-        ) as TextNode;
-        return expanded.content;
+        );
+        if (expanded.type !== NODE_TYPE.TEXT) {
+          throw new Error(`Expected TextNode from text component, got ${expanded.type}`);
+        }
+        return (expanded as TextNode).content;
       }
       return content;
     };
@@ -190,7 +195,7 @@ export const tableComponent = componentRegistry.define({
           resolvedStyle: resolvedTextStyle,
           hAlign,
           vAlign,
-          lineHeightMultiplier: context.theme.spacing.lineSpacing,
+          lineHeightMultiplier: tokens.cellLineHeight,
           ...(colspan != null && { colspan }),
           ...(rowspan != null && { rowspan }),
           ...(fill != null && { fill }),

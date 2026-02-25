@@ -38,7 +38,7 @@ Zero-coverage files that need tests:
 - Extract `layoutHtml.test.ts` inline mock to shared `mockTheme()`
 - Replace magic strings in tests with typed constants — `components.test.ts` uses string literals like `'body'`, `'full'`, `'small'` in assertions instead of `TEXT_STYLE.BODY`, `BORDER_STYLE.FULL`, `TEXT_STYLE.SMALL`. Same rule as the `Component` enum: never use string literals when typed constants exist.
 - **headerColumns not checked in layoutHtml** — `getTableCellNodes` in `layoutHtml.tsx` only checks `headerRows`, not `headerColumns`. Header column cells get `cellTextStyle` instead of `headerTextStyle` in HTML measurement, while `pptxConfigBuilder` handles it correctly. Low impact unless header/cell text styles differ significantly.
-- Text nodes get `lineHeightMultiplier` from their component token (per-variant, e.g. 1.2 in Materialize). Table cells get it from `theme.spacing.lineSpacing` (global, 1.0 in Materialize). The difference is intentional (tighter tables) but the asymmetry means theme authors must reason about two different config points for the same concept. Add a `cellLineHeight` token to the table component so table cell line height is explicitly configurable per-theme.
+- **Generic `ContainerNode<C>` for pre-expansion type safety** — `ContainerNode.children` is typed `ElementNode[]` but during expand they're actually `SlideNode[]`, forcing 4 casts (3 in `containers.ts`, 1 double-cast in `slotCompiler.ts`). Fix: add generic parameter `ContainerNode<C extends SlideNode = ElementNode>` so producers use `ContainerNode<SlideNode>` and consumers use the default. `expandTree()` becomes the single honest conversion point. 5 files touched, 0 consumer changes.
 
 ---
 

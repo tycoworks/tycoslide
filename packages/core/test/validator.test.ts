@@ -1,12 +1,26 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { LayoutValidator, LayoutOverflowError, LayoutBoundsError } from '../src/core/layout/validator.js';
-import { NODE_TYPE, type PositionedNode, type ElementNode } from '../src/core/model/nodes.js';
-import { HALIGN, VALIGN, DIRECTION, SIZE } from '../src/core/model/types.js';
+import { NODE_TYPE, type PositionedNode, type ElementNode, type TextNode } from '../src/core/model/nodes.js';
+import { HALIGN, VALIGN, DIRECTION, SIZE, TEXT_STYLE, FONT_WEIGHT } from '../src/core/model/types.js';
 
 /** Minimal text node for validator tests (validator only checks geometry, not content) */
-function textNode(content: string): ElementNode {
-  return { type: NODE_TYPE.TEXT, content, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP } as ElementNode;
+function textNode(content: string): TextNode {
+  return {
+    type: NODE_TYPE.TEXT,
+    content,
+    hAlign: HALIGN.LEFT,
+    vAlign: VALIGN.TOP,
+    style: TEXT_STYLE.BODY,
+    resolvedStyle: {
+      fontFamily: { normal: { name: 'Arial', path: '' } },
+      fontSize: 14,
+      defaultWeight: FONT_WEIGHT.NORMAL,
+    },
+    color: '000000',
+    lineHeightMultiplier: 1.2,
+    bulletIndentPt: 18,
+  };
 }
 
 /** Minimal container node for validator tests */

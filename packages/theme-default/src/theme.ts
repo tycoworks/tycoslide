@@ -169,6 +169,7 @@ export const theme: Theme = {
           cellPadding: spacing.cellPadding,
           hAlign: HALIGN.LEFT,
           vAlign: VALIGN.MIDDLE,
+          cellLineHeight: spacing.lineSpacing,
         },
       },
     },

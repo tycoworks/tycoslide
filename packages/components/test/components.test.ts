@@ -884,7 +884,7 @@ describe('table()', () => {
     assert.strictEqual(cell.hAlign, HALIGN.CENTER);
     assert.ok(cell.resolvedStyle);
     assert.strictEqual(cell.resolvedStyle.fontSize, 12); // from mockTextStyle
-    assert.strictEqual(cell.lineHeightMultiplier, 1.0); // from theme.spacing.lineSpacing default
+    assert.strictEqual(cell.lineHeightMultiplier, 1.0); // from cellLineHeight token
   });
 
   test('TableCellData without vAlign resolves to table default', async () => {
@@ -903,7 +903,7 @@ describe('table()', () => {
     assert.strictEqual(cell.textStyle, TEXT_STYLE.BODY); // resolved from table token
     assert.ok(cell.resolvedStyle);
     assert.strictEqual(cell.resolvedStyle.fontSize, 12); // from mockTextStyle
-    assert.strictEqual(cell.lineHeightMultiplier, 1.0); // from theme.spacing.lineSpacing default
+    assert.strictEqual(cell.lineHeightMultiplier, 1.0); // from cellLineHeight token
   });
 
   test('preserves table props', async () => {
