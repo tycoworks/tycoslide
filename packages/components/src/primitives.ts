@@ -164,10 +164,12 @@ export interface SlideNumberProps {
   variant?: string;
 }
 
-function expandSlideNumber(props: SlideNumberProps, _context: ExpansionContext, tokens: SlideNumberTokens): SlideNumberNode {
+function expandSlideNumber(props: SlideNumberProps, context: ExpansionContext, tokens: SlideNumberTokens): SlideNumberNode {
+  const style = props.style ?? tokens.style;
   return {
     type: NODE_TYPE.SLIDE_NUMBER,
-    style: props.style ?? tokens.style,
+    style,
+    resolvedStyle: context.theme.textStyles[style],
     color: props.color ?? tokens.color,
     hAlign: props.hAlign ?? tokens.hAlign,
     vAlign: props.vAlign ?? tokens.vAlign,

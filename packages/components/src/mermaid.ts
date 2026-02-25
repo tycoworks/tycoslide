@@ -234,6 +234,7 @@ async function expandMermaid(props: MermaidComponentProps, context: ExpansionCon
   return {
     type: NODE_TYPE.IMAGE,
     src: pngPath,
+    maxScale: context.theme.spacing.maxScaleFactor,
   };
 }
 

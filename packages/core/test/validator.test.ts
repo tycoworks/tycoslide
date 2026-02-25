@@ -11,7 +11,7 @@ function textNode(content: string): ElementNode {
 
 /** Minimal container node for validator tests */
 function containerNode(): ElementNode {
-  return { type: NODE_TYPE.CONTAINER, children: [], direction: DIRECTION.ROW, width: SIZE.FILL, height: SIZE.HUG, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP } as ElementNode;
+  return { type: NODE_TYPE.CONTAINER, children: [], direction: DIRECTION.ROW, width: SIZE.FILL, height: SIZE.HUG, gap: 0, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP } as ElementNode;
 }
 
 describe('Layout Validation', () => {

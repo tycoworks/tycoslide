@@ -15,9 +15,9 @@ import { NODE_TYPE } from '../model/nodes.js';
 import type { Theme, TextStyle, FontWeight, VerticalAlignment, HorizontalAlignment, SizeValue, NormalizedRun, Direction } from '../model/types.js';
 import { FONT_WEIGHT, SIZE, VALIGN, HALIGN, DIRECTION } from '../model/types.js';
 import type { Bounds } from '../model/bounds.js';
-import { normalizeContent, fontWeightToNumeric, resolveLineHeight, getFontFromFamily } from '../../utils/font.js';
+import { normalizeContent, fontWeightToNumeric, getFontFromFamily } from '../../utils/font.js';
 import { readImageDimensions } from '../../utils/image.js';
-import { inToPx, ptToPx, resolveGap } from '../../utils/units.js';
+import { inToPx, ptToPx } from '../../utils/units.js';
 
 // ============================================
 // TYPES
@@ -161,14 +161,13 @@ function hAlignToCSS(hAlign: HorizontalAlignment): string {
 function styleContainer(
   node: ContainerNode,
   parent: ParentCtx,
-  theme: Theme,
   nodeId: string,
   idCtx: IdContext,
   nodeIds: Map<ElementNode, string>,
   fontRatios?: FontNormalRatios,
 ): StyledNode {
   const isRow = node.direction === DIRECTION.ROW;
-  const gapPx = inToPx(resolveGap(node.gap, theme));
+  const gapPx = inToPx(node.gap);
   const paddingPx = node.padding ? inToPx(node.padding) : 0;
 
   const justifyContent = isRow
@@ -197,14 +196,13 @@ function styleContainer(
   return {
     nodeId,
     styles,
-    children: node.children.map(child => styleNode(child, ctx, theme, idCtx, nodeIds, fontRatios)),
+    children: node.children.map(child => styleNode(child, ctx, idCtx, nodeIds, fontRatios)),
   };
 }
 
 function styleStack(
   node: StackNode,
   parent: ParentCtx,
-  theme: Theme,
   nodeId: string,
   idCtx: IdContext,
   nodeIds: Map<ElementNode, string>,
@@ -226,7 +224,7 @@ function styleStack(
       // Stack child wrapper: same grid cell, flex column
       nodeId: '',
       styles: { gridArea: '1 / 1 / 2 / 2', display: 'flex', flexDirection: DIRECTION.COLUMN, containerType: 'inline-size' },
-      children: [styleNode(child, ctx, theme, idCtx, nodeIds, fontRatios)],
+      children: [styleNode(child, ctx, idCtx, nodeIds, fontRatios)],
     })),
   };
 }
@@ -234,21 +232,18 @@ function styleStack(
 function styleText(
   node: TextNode,
   parent: ParentCtx,
-  theme: Theme,
   nodeId: string,
   fontRatios?: FontNormalRatios,
 ): StyledNode {
-  const styleName = node.style;
-  const style = theme.textStyles[styleName];
+  const style = node.resolvedStyle;
   const runs = normalizeContent(node.content);
-  const hasBullets = runs.some(r => r.bullet);
   const defaultWeight = style.defaultWeight;
   const defaultFont = getFontFromFamily(style.fontFamily, defaultWeight);
-  const lineSpacingMultiple = resolveLineHeight(node.lineHeightMultiplier, style, theme, hasBullets);
+  const lineSpacingMultiple = node.lineHeightMultiplier;
   const fontSizePx = ptToPx(style.fontSize);
   const normalRatio = fontRatios?.get(defaultFont.name);
   const cssLineHeight = normalRatio ? lineSpacingMultiple * normalRatio : lineSpacingMultiple;
-  const bulletIndentPx = ptToPx(style.fontSize * theme.spacing.bulletIndentMultiplier);
+  const bulletIndentPx = ptToPx(node.bulletIndentPt);
   const textAlign = node.hAlign === HALIGN.RIGHT ? 'right' : node.hAlign === HALIGN.CENTER ? 'center' : 'left';
   const isInRow = parent.direction === DIRECTION.ROW;
 
@@ -275,7 +270,6 @@ function styleText(
 function styleImage(
   node: ImageNode,
   parent: ParentCtx,
-  theme: Theme,
   nodeId: string,
 ): StyledNode {
   const dims = readImageDimensions(node.src);
@@ -283,9 +277,8 @@ function styleImage(
     throw new Error(`Cannot read image dimensions: ${node.src}`);
   }
 
-  const maxScaleFactor = theme.spacing.maxScaleFactor;
-  const maxWidthPx = dims.width * maxScaleFactor;
-  const maxHeightPx = dims.height * maxScaleFactor;
+  const maxWidthPx = dims.width * node.maxScale;
+  const maxHeightPx = dims.height * node.maxScale;
 
   const styles: Record<string, string | number> = {
     aspectRatio: `${dims.aspectRatio}`,
@@ -337,17 +330,18 @@ function styleLine(
 
 function styleSlideNumber(
   node: SlideNumberNode,
-  theme: Theme,
   nodeId: string,
 ): StyledNode {
-  const styleName = node.style;
-  const style = theme.textStyles[styleName];
+  const style = node.resolvedStyle;
   const fontSizePx = ptToPx(style.fontSize);
   const defaultFont = getFontFromFamily(style.fontFamily, style.defaultWeight);
 
   return {
     nodeId,
     styles: {
+      display: 'flex',
+      flexDirection: DIRECTION.COLUMN,
+      justifyContent: vAlignToJustify(node.vAlign),
       fontFamily: `'${defaultFont.name}'`,
       fontSize: `${fontSizePx}px`,
       whiteSpace: 'nowrap',
@@ -361,13 +355,12 @@ function styleSlideNumber(
 function styleTable(
   node: TableNode,
   parent: ParentCtx,
-  theme: Theme,
   nodeId: string,
   idCtx: IdContext,
   nodeIds: Map<ElementNode, string>,
   fontRatios?: FontNormalRatios,
 ): StyledNode {
-  const cellNodes = getTableCellNodes(node, theme);
+  const cellNodes = getTableCellNodes(node);
   const numCols = node.rows[0]?.length ?? 0;
   const cellPadding = node.cellPadding;
   const cellPaddingPx = inToPx(cellPadding);
@@ -385,7 +378,7 @@ function styleTable(
       const cellNodeId = generateNodeId(idCtx);
       nodeIds.set(cellTextNode, cellNodeId);
 
-      const textStyled = styleText(cellTextNode, { direction: DIRECTION.COLUMN, heightIsConstrained: false }, theme, cellNodeId, fontRatios);
+      const textStyled = styleText(cellTextNode, { direction: DIRECTION.COLUMN, heightIsConstrained: false }, cellNodeId, fontRatios);
       return {
         nodeId: '',
         styles: { padding: `${cellPaddingPx}px` },
@@ -403,7 +396,6 @@ function styleTable(
 export function styleNode(
   node: ElementNode,
   parent: ParentCtx,
-  theme: Theme,
   idCtx: IdContext,
   nodeIds: Map<ElementNode, string>,
   fontRatios?: FontNormalRatios,
@@ -413,21 +405,21 @@ export function styleNode(
 
   switch (node.type) {
     case NODE_TYPE.CONTAINER:
-      return styleContainer(node as ContainerNode, parent, theme, nodeId, idCtx, nodeIds, fontRatios);
+      return styleContainer(node as ContainerNode, parent, nodeId, idCtx, nodeIds, fontRatios);
     case NODE_TYPE.STACK:
-      return styleStack(node as StackNode, parent, theme, nodeId, idCtx, nodeIds, fontRatios);
+      return styleStack(node as StackNode, parent, nodeId, idCtx, nodeIds, fontRatios);
     case NODE_TYPE.TEXT:
-      return styleText(node as TextNode, parent, theme, nodeId, fontRatios);
+      return styleText(node as TextNode, parent, nodeId, fontRatios);
     case NODE_TYPE.IMAGE:
-      return styleImage(node as ImageNode, parent, theme, nodeId);
+      return styleImage(node as ImageNode, parent, nodeId);
     case NODE_TYPE.LINE:
       return styleLine(node as LineNode, parent, nodeId);
     case NODE_TYPE.SHAPE:
       return { nodeId, styles: { width: '100%', height: '100%' }, children: [] };
     case NODE_TYPE.SLIDE_NUMBER:
-      return styleSlideNumber(node as SlideNumberNode, theme, nodeId);
+      return styleSlideNumber(node as SlideNumberNode, nodeId);
     case NODE_TYPE.TABLE:
-      return styleTable(node as TableNode, parent, theme, nodeId, idCtx, nodeIds, fontRatios);
+      return styleTable(node as TableNode, parent, nodeId, idCtx, nodeIds, fontRatios);
     default:
       return { nodeId, styles: {}, children: [] };
   }
@@ -545,25 +537,19 @@ function escapeHtml(text: string): string {
 
 // ─── Table Cell Nodes ─────────────────────────
 
-function getTableCellNodes(node: TableNode, theme: Theme): TextNode[][] {
-  return node.rows.map((row, rowIndex) =>
-    row.map((cell: TableCellData) => {
-      const isHeaderRow = (node.headerRows ?? 0) > rowIndex;
-      const style = cell.textStyle
-        ?? (isHeaderRow ? node.headerTextStyle : node.cellTextStyle);
-      const textStyle = theme.textStyles[style];
-
-      const textNode: TextNode = {
-        type: NODE_TYPE.TEXT,
-        content: cell.content,
-        style,
-        color: cell.color ?? textStyle.color ?? theme.colors.text,
-        hAlign: cell.hAlign ?? node.hAlign,
-        vAlign: cell.vAlign ?? node.vAlign,
-        lineHeightMultiplier: theme.spacing.lineSpacing,
-      };
-      return textNode;
-    })
+function getTableCellNodes(node: TableNode): TextNode[][] {
+  return node.rows.map((row) =>
+    row.map((cell: TableCellData): TextNode => ({
+      type: NODE_TYPE.TEXT,
+      content: cell.content,
+      style: cell.textStyle,
+      resolvedStyle: cell.resolvedStyle,
+      color: cell.color,
+      hAlign: cell.hAlign,
+      vAlign: cell.vAlign,
+      lineHeightMultiplier: cell.lineHeightMultiplier,
+      bulletIndentPt: 0,  // Table cells never have bullets
+    }))
   );
 }
 
@@ -630,7 +616,7 @@ export function generateLayoutHTML(
     const heightPx = inToPx(slide.bounds.h);
 
     const rootCtx: ParentCtx = { direction: DIRECTION.COLUMN, heightIsConstrained: true };
-    const styled = styleNode(slide.tree, rootCtx, theme, idCtx, nodeIds, fontNormalRatios);
+    const styled = styleNode(slide.tree, rootCtx, idCtx, nodeIds, fontNormalRatios);
 
     return (
       <div class="root" data-slide-index={`${i}`} style={{ width: `${widthPx}px`, height: `${heightPx}px` }}>
@@ -699,7 +685,7 @@ export function generateLayoutHTML(
 }
 
 // ============================================
-// FONT INFRASTRUCTURE (unchanged from V1)
+// FONT INFRASTRUCTURE
 // ============================================
 
 const FONT_FORMATS: Record<string, { mime: string; format: string }> = {

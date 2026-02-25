@@ -3,9 +3,9 @@
 // No pptxgenjs dependency — every method takes typed inputs and returns plain data.
 
 import type { PositionedNode, TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, TableCellData } from '../model/nodes.js';
-import type { Theme, TextStyleName, TextContent } from '../model/types.js';
+import type { TextStyle, TextContent } from '../model/types.js';
 import { FONT_WEIGHT, BORDER_STYLE, LINE_SHAPE } from '../model/types.js';
-import { getFontFromFamily, normalizeContent, resolveLineHeight, getParagraphGapRatio } from '../../utils/font.js';
+import { getFontFromFamily, normalizeContent, getParagraphGapRatio } from '../../utils/font.js';
 import { readImageDimensions, containFit } from '../../utils/image.js';
 
 // ============================================
@@ -36,7 +36,7 @@ export interface TextFragment {
 // ============================================
 
 /**
- * Translates tycoslide domain objects (nodes, positioned, theme)
+ * Translates tycoslide domain objects (nodes, positioned)
  * into pptxgenjs configuration objects.
  *
  * Pure translation layer — no side effects, no pptxgenjs dependency.
@@ -47,18 +47,15 @@ export class PptxConfigBuilder {
   buildTextConfig(
     textNode: TextNode,
     positioned: PositionedNode,
-    theme: Theme
   ): { fragments: TextFragment[]; options: Record<string, unknown> } {
-    const styleName = textNode.style;
-    const style = theme.textStyles[styleName];
+    const style = textNode.resolvedStyle;
     const defaultFont = getFontFromFamily(style.fontFamily, style.defaultWeight);
-    const fragments = this.buildTextFragments(textNode.content, styleName, theme, textNode.color);
+    const fragments = this.buildTextFragments(textNode.content, style, textNode.color);
 
-    // Check if any fragment has bullets - affects line spacing and alignment
+    // Check if any fragment has bullets - affects alignment
     const hasBullets = fragments.some(f => f.options.bullet);
 
-    // Priority: node override > style override > theme default (bulletSpacing for bullet text)
-    const lineSpacing = resolveLineHeight(textNode.lineHeightMultiplier, style, theme, hasBullets);
+    const lineSpacing = textNode.lineHeightMultiplier;
 
     const options: Record<string, unknown> = {
       x: positioned.x,
@@ -81,12 +78,9 @@ export class PptxConfigBuilder {
 
   buildTextFragments(
     content: TextContent,
-    styleName: TextStyleName,
-    theme: Theme,
-    colorOverride?: string
+    style: TextStyle,
+    color: string
   ): TextFragment[] {
-    const style = theme.textStyles[styleName];
-    const defaultColor = colorOverride ?? style.color ?? theme.colors.text;
     const defaultWeight = style.defaultWeight;
 
     const normalized = normalizeContent(content);
@@ -97,7 +91,7 @@ export class PptxConfigBuilder {
       const effectiveWeight = run.bold ? FONT_WEIGHT.BOLD : (run.weight ?? defaultWeight);
       const runFont = getFontFromFamily(style.fontFamily, effectiveWeight);
       const options: TextFragmentOptions = {
-        color: run.color ?? run.highlight?.text ?? defaultColor,
+        color: run.color ?? run.highlight?.text ?? color,
         fontFace: runFont.name,
       };
       if (run.highlight) options.highlight = run.highlight.bg;
@@ -203,10 +197,8 @@ export class PptxConfigBuilder {
   buildSlideNumberOptions(
     slideNumNode: SlideNumberNode,
     positioned: PositionedNode,
-    theme: Theme
   ): Record<string, unknown> {
-    const styleName = slideNumNode.style;
-    const style = theme.textStyles[styleName];
+    const style = slideNumNode.resolvedStyle;
     const font = getFontFromFamily(style.fontFamily, style.defaultWeight);
 
     return {
@@ -237,21 +229,12 @@ export class PptxConfigBuilder {
     headerRows: number,
     headerColumns: number,
     tableNode: TableNode,
-    theme: Theme
   ): { text: TextFragment[]; options: Record<string, unknown> } {
-    const isHeaderRow = rowIndex < headerRows;
-    const isHeaderCol = colIndex < headerColumns;
-    const isHeader = isHeaderRow || isHeaderCol;
+    const isHeader = rowIndex < headerRows || colIndex < headerColumns;
 
-    // Determine text style (cell-level override wins over table-level)
-    const styleName = cell.textStyle
-      ?? (isHeader ? tableNode.headerTextStyle : tableNode.cellTextStyle);
-    const textStyle = theme.textStyles[styleName];
+    // Cell values are pre-resolved by component expand
+    const textStyle = cell.resolvedStyle;
     const font = getFontFromFamily(textStyle.fontFamily, textStyle.defaultWeight);
-
-    // Determine alignment
-    const hAlign = cell.hAlign ?? tableNode.hAlign;
-    const vAlign = cell.vAlign ?? tableNode.vAlign;
 
     // Cell padding
     const cellPadding = tableNode.cellPadding;
@@ -260,14 +243,14 @@ export class PptxConfigBuilder {
     const border = this.buildCellBorder(tableNode, rowIndex, colIndex, numRows, numCols);
 
     // Build rich text fragments for cell content
-    const textFragments = this.buildTextFragments(cell.content, styleName, theme, cell.color);
+    const textFragments = this.buildTextFragments(cell.content, textStyle, cell.color);
 
     const options: Record<string, unknown> = {
       fontFace: font.name,
       fontSize: textStyle.fontSize,
-      color: cell.color ?? textStyle.color ?? theme.colors.text,
-      align: hAlign,
-      valign: vAlign,
+      color: cell.color,
+      align: cell.hAlign,
+      valign: cell.vAlign,
       margin: cellPadding,
     };
 

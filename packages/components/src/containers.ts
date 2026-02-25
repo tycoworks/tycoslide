@@ -6,6 +6,7 @@ import {
   GAP, type HorizontalAlignment, type VerticalAlignment, type GapSize, type SizeValue,
   VALIGN, HALIGN, SIZE, DIRECTION,
   schema, type SchemaShape,
+  type ExpansionContext, resolveGap,
 } from 'tycoslide';
 import { Component } from './names.js';
 
@@ -64,13 +65,13 @@ export const rowComponent = componentRegistry.define({
   params: rowSchema,
   slots: ['children'] as const,
 
-  expand: (props: RowInternalProps) => ({
+  expand: (props: RowInternalProps, context: ExpansionContext) => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.ROW,
     children: props.children as ElementNode[],  // Safe: expandTree recurses into these
     width: props.width ?? SIZE.FILL,
     height: props.height ?? SIZE.HUG,
-    gap: props.gap,
+    gap: resolveGap(props.gap, context.theme),
     vAlign: props.vAlign ?? VALIGN.TOP,    // Explicit default: pure alignment (not CSS stretch)
     hAlign: props.hAlign ?? HALIGN.LEFT,   // Explicit default for consistent measurement
     padding: props.padding,
@@ -115,13 +116,13 @@ export const columnComponent = componentRegistry.define({
   params: columnSchema,
   slots: ['children'] as const,
 
-  expand: (props: ColumnInternalProps) => ({
+  expand: (props: ColumnInternalProps, context: ExpansionContext) => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.COLUMN,
     children: props.children as ElementNode[],  // Safe: expandTree recurses into these
     width: props.width ?? SIZE.FILL,
     height: props.height ?? SIZE.HUG,
-    gap: props.gap,
+    gap: resolveGap(props.gap, context.theme),
     vAlign: props.vAlign ?? VALIGN.TOP,    // Explicit default for consistent measurement
     hAlign: props.hAlign ?? HALIGN.LEFT,   // Explicit default for consistent measurement
     padding: props.padding,

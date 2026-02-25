@@ -1,11 +1,10 @@
 // Text Utilities Tests
-// Tests for getFontFromFamily and resolveLineHeight from src/utils/text.ts
+// Tests for getFontFromFamily from src/utils/font.ts
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { getFontFromFamily, resolveLineHeight } from '../src/utils/font.js';
-import { FONT_WEIGHT, type FontFamily, type TextStyle } from '../src/core/model/types.js';
-import { mockTheme } from './mocks.js';
+import { getFontFromFamily } from '../src/utils/font.js';
+import { FONT_WEIGHT, type FontFamily } from '../src/core/model/types.js';
 
 // ============================================
 // TEST DATA
@@ -60,39 +59,5 @@ describe('getFontFromFamily', () => {
     assert.ok(font.path, 'Font should have a path');
     assert.strictEqual(typeof font.name, 'string');
     assert.strictEqual(typeof font.path, 'string');
-  });
-});
-
-// ============================================
-// resolveLineHeight() TESTS
-// ============================================
-
-describe('resolveLineHeight', () => {
-  const theme = mockTheme({ lineSpacing: 1.0, bulletSpacing: 1.5 });
-  const baseStyle: TextStyle = { fontSize: 12, fontFamily: mockFontFamily, defaultWeight: FONT_WEIGHT.NORMAL };
-  const styleWithMultiplier: TextStyle = { fontSize: 12, fontFamily: mockFontFamily, defaultWeight: FONT_WEIGHT.NORMAL, lineHeightMultiplier: 1.3 };
-
-  it('returns theme line spacing as default', () => {
-    assert.strictEqual(resolveLineHeight(undefined, baseStyle, theme), 1.0);
-  });
-
-  it('returns theme bullet spacing when hasBullets=true', () => {
-    assert.strictEqual(resolveLineHeight(undefined, baseStyle, theme, true), 1.5);
-  });
-
-  it('style multiplier overrides theme default', () => {
-    assert.strictEqual(resolveLineHeight(undefined, styleWithMultiplier, theme), 1.3);
-  });
-
-  it('node multiplier overrides both style and theme', () => {
-    assert.strictEqual(resolveLineHeight(2.0, styleWithMultiplier, theme), 2.0);
-  });
-
-  it('node multiplier overrides style multiplier', () => {
-    assert.strictEqual(resolveLineHeight(2.0, styleWithMultiplier, theme, true), 2.0);
-  });
-
-  it('uses theme default when no overrides', () => {
-    assert.strictEqual(resolveLineHeight(undefined, baseStyle, theme, false), 1.0);
   });
 });

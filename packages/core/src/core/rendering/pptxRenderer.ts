@@ -57,11 +57,9 @@ type PptxGenJSExtended = InstanceType<typeof PptxGenJS> & {
 export class PptxRenderer {
   private pres: InstanceType<typeof PptxGenJS>;
   private masters = new Map<string, { slideNumberOptions?: object }>();
-  private theme: Theme;
   private config = new PptxConfigBuilder();
 
   constructor(theme: Theme) {
-    this.theme = theme;
     this.pres = new PptxGenJS();
     const { layout, width, height } = theme.slide;
     if (layout === CUSTOM_LAYOUT) {
@@ -79,7 +77,7 @@ export class PptxRenderer {
 
     this.collectMasterObjects(content, masterObjects, (opts) => {
       slideNumberOptions = opts;
-    }, theme);
+    });
 
     this.pres.defineSlideMaster({
       title: name,
@@ -116,7 +114,7 @@ export class PptxRenderer {
     }
 
     // Render the positioned tree directly to the slide
-    this.renderNode(content, pptxSlide, theme);
+    this.renderNode(content, pptxSlide);
 
     // Speaker notes
     if (notes) {
@@ -143,14 +141,14 @@ export class PptxRenderer {
   // PRIVATE: Render PositionedNode tree
   // ============================================
 
-  private renderNode(positioned: PositionedNode, slide: PptxSlide, theme: Theme): void {
+  private renderNode(positioned: PositionedNode, slide: PptxSlide): void {
     const { node, x, y, width, height, children } = positioned;
 
     log.render._('render %s x=%f y=%f w=%f h=%f', node.type, x, y, width, height);
 
     switch (node.type) {
       case NODE_TYPE.TEXT:
-        this.renderText(positioned, slide, theme);
+        this.renderText(positioned, slide);
         break;
       case NODE_TYPE.IMAGE:
         this.renderImage(positioned, slide);
@@ -162,10 +160,10 @@ export class PptxRenderer {
         this.renderLine(positioned, slide);
         break;
       case NODE_TYPE.SLIDE_NUMBER:
-        this.renderSlideNumber(positioned, slide, theme);
+        this.renderSlideNumber(positioned, slide);
         break;
       case NODE_TYPE.TABLE:
-        this.renderTable(positioned, slide, theme);
+        this.renderTable(positioned, slide);
         break;
       case NODE_TYPE.CONTAINER:
       case NODE_TYPE.STACK:
@@ -173,7 +171,7 @@ export class PptxRenderer {
         log.render._('  container %s with %d children', node.type.toUpperCase(), children?.length ?? 0);
         if (children) {
           for (const child of children) {
-            this.renderNode(child, slide, theme);
+            this.renderNode(child, slide);
           }
         }
         break;
@@ -184,12 +182,12 @@ export class PptxRenderer {
   // ELEMENT-SPECIFIC RENDER METHODS
   // ============================================
 
-  private renderText(positioned: PositionedNode, slide: PptxSlide, theme: Theme): void {
+  private renderText(positioned: PositionedNode, slide: PptxSlide): void {
     const textNode = positioned.node as TextNode;
     log.render.text('RENDER text x=%f y=%f w=%f h=%f "%s"',
       positioned.x, positioned.y, positioned.width, positioned.height, contentPreview(textNode.content));
 
-    const { fragments, options } = this.config.buildTextConfig(textNode, positioned, theme);
+    const { fragments, options } = this.config.buildTextConfig(textNode, positioned);
     slide.addText(fragments, options);
   }
 
@@ -216,15 +214,15 @@ export class PptxRenderer {
     slide.addShape(shapeType, options);
   }
 
-  private renderSlideNumber(positioned: PositionedNode, slide: PptxSlide, theme: Theme): void {
+  private renderSlideNumber(positioned: PositionedNode, slide: PptxSlide): void {
     const slideNumNode = positioned.node as SlideNumberNode;
     log.render.text('RENDER slideNumber x=%f y=%f w=%f h=%f',
       positioned.x, positioned.y, positioned.width, positioned.height);
 
-    slide.slideNumber = this.config.buildSlideNumberOptions(slideNumNode, positioned, theme);
+    slide.slideNumber = this.config.buildSlideNumberOptions(slideNumNode, positioned);
   }
 
-  private renderTable(positioned: PositionedNode, slide: PptxSlide, theme: Theme): void {
+  private renderTable(positioned: PositionedNode, slide: PptxSlide): void {
     const tableNode = positioned.node as TableNode;
     const { rows, headerRows = 0, headerColumns = 0 } = tableNode;
 
@@ -242,7 +240,7 @@ export class PptxRenderer {
     const numRows = rows.length;
     const tableRows = rows.map((row, rowIndex) =>
       row.map((cell, colIndex) =>
-        this.config.buildTableCell(cell, rowIndex, colIndex, numRows, numCols, headerRows, headerColumns, tableNode, theme)
+        this.config.buildTableCell(cell, rowIndex, colIndex, numRows, numCols, headerRows, headerColumns, tableNode)
       )
     );
 
@@ -265,14 +263,13 @@ export class PptxRenderer {
     positioned: PositionedNode,
     objects: object[],
     onSlideNumber: (opts: object) => void,
-    theme: Theme
   ): void {
     const { node, children } = positioned;
 
     switch (node.type) {
       case NODE_TYPE.TEXT: {
         const textNode = node as TextNode;
-        const { fragments, options } = this.config.buildTextConfig(textNode, positioned, theme);
+        const { fragments, options } = this.config.buildTextConfig(textNode, positioned);
         // Pass fragments array — patched pptxgenjs handles Array.isArray in createSlideMaster.
         // See patches/pptxgenjs+4.0.1.patch (root level for hoisted node_modules).
         objects.push({ text: { text: fragments, options } });
@@ -297,7 +294,7 @@ export class PptxRenderer {
       }
       case NODE_TYPE.SLIDE_NUMBER: {
         const slideNumNode = node as SlideNumberNode;
-        onSlideNumber(this.config.buildSlideNumberOptions(slideNumNode, positioned, theme));
+        onSlideNumber(this.config.buildSlideNumberOptions(slideNumNode, positioned));
         break;
       }
       case NODE_TYPE.CONTAINER:
@@ -305,7 +302,7 @@ export class PptxRenderer {
         // Recurse into children
         if (children) {
           for (const child of children) {
-            this.collectMasterObjects(child, objects, onSlideNumber, theme);
+            this.collectMasterObjects(child, objects, onSlideNumber);
           }
         }
         break;

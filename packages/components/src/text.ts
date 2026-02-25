@@ -12,7 +12,7 @@ import remarkDirective from 'remark-directive';
 import type { Root, PhrasingContent, List, Paragraph, ListItem } from 'mdast';
 import type { TextDirective } from 'mdast-util-directive';
 import type { RootContent, Heading } from 'mdast';
-import type { NormalizedRun, ColorScheme, ContentType, TextStyleName, HorizontalAlignment, VerticalAlignment } from 'tycoslide';
+import type { NormalizedRun, ColorScheme, ContentType, TextStyleName, HorizontalAlignment, VerticalAlignment, ExpansionContext } from 'tycoslide';
 import { HALIGN, VALIGN, TEXT_STYLE, CONTENT, SYNTAX, markdown } from 'tycoslide';
 import { NODE_TYPE, type ElementNode } from 'tycoslide';
 import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape } from 'tycoslide';
@@ -230,7 +230,7 @@ export const HEADING_STYLE: Record<number, TextProps['style']> = {
 // EXPAND — single function, switches on content kind
 // ============================================
 
-function expandText(props: TextComponentProps, context: { theme: any }, tokens: TextTokens): ElementNode {
+function expandText(props: TextComponentProps, context: ExpansionContext, tokens: TextTokens): ElementNode {
   const contentKind = props.content ?? CONTENT.RICH;
 
   // Props override tokens: DSL/parent callers can pass explicit values
@@ -238,6 +238,8 @@ function expandText(props: TextComponentProps, context: { theme: any }, tokens: 
   const resolvedColor = props.color ?? tokens.color;
   const resolvedBulletColor = props.bulletColor ?? tokens.bulletColor;
   const resolvedLineHeight = props.lineHeightMultiplier ?? tokens.lineHeightMultiplier;
+  const textStyle = context.theme.textStyles[resolvedStyle];
+  const bulletIndentPt = textStyle.fontSize * context.theme.spacing.bulletIndentMultiplier;
 
   // PLAIN — no parsing, single run
   if (contentKind === CONTENT.PLAIN) {
@@ -245,10 +247,12 @@ function expandText(props: TextComponentProps, context: { theme: any }, tokens: 
       type: NODE_TYPE.TEXT,
       content: [{ text: props.body }],
       style: resolvedStyle,
+      resolvedStyle: textStyle,
       color: resolvedColor,
       hAlign: props.hAlign ?? HALIGN.LEFT,
       vAlign: props.vAlign ?? VALIGN.TOP,
       lineHeightMultiplier: resolvedLineHeight,
+      bulletIndentPt,
     };
   }
 
@@ -284,10 +288,12 @@ function expandText(props: TextComponentProps, context: { theme: any }, tokens: 
     type: NODE_TYPE.TEXT,
     content: runs,
     style: resolvedStyle,
+    resolvedStyle: textStyle,
     color: resolvedColor,
     hAlign: props.hAlign ?? HALIGN.LEFT,
     vAlign: props.vAlign ?? VALIGN.TOP,
     lineHeightMultiplier: resolvedLineHeight,
+    bulletIndentPt,
   };
 }
 

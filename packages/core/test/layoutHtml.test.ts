@@ -74,16 +74,20 @@ const mockTheme = {
 // ELEMENT NODE BUILDERS
 // ============================================
 
+const bodyStyle = mockTheme.textStyles[TEXT_STYLE.BODY];
+
 /** Plain text node with sensible defaults matching theme tokens */
 function textNode(content: string | NormalizedRun[], opts?: Partial<Omit<TextNode, 'type'>>): TextNode {
   return {
     type: NODE_TYPE.TEXT,
     content: typeof content === 'string' ? [{ text: content }] : content,
     style: TEXT_STYLE.BODY,
+    resolvedStyle: bodyStyle,
     color: '000000',
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.TOP,
     lineHeightMultiplier: 1.2,
+    bulletIndentPt: 27,
     ...opts,
   };
 }
@@ -102,7 +106,7 @@ function rowNode(...args: any[]): ContainerNode {
     height: opts.height ?? SIZE.HUG,
     vAlign: opts.vAlign ?? VALIGN.TOP,
     hAlign: opts.hAlign ?? HALIGN.LEFT,
-    gap: opts.gap,
+    gap: opts.gap ?? 0,
     padding: opts.padding,
   };
 }
@@ -121,14 +125,14 @@ function colNode(...args: any[]): ContainerNode {
     height: opts.height ?? SIZE.HUG,
     vAlign: opts.vAlign ?? VALIGN.TOP,
     hAlign: opts.hAlign ?? HALIGN.LEFT,
-    gap: opts.gap,
+    gap: opts.gap ?? 0,
     padding: opts.padding,
   };
 }
 
 /** Image node */
 function imageNode(src: string): ImageNode {
-  return { type: NODE_TYPE.IMAGE, src };
+  return { type: NODE_TYPE.IMAGE, src, maxScale: 2.0 };
 }
 
 /** Line node (token values baked in from mockTheme) */

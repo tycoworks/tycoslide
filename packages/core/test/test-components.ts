@@ -68,15 +68,20 @@ componentRegistry.define({
       return component(C.Text, { body: extractSource(node, source), content: CONTENT.PROSE });
     },
   },
-  expand: (props: any, _ctx: ExpansionContext, tokens: any): any => ({
-    type: NODE_TYPE.TEXT,
-    content: [{ text: props.body }],
-    style: props.style ?? tokens?.style,
-    color: props.color ?? tokens?.color,
-    hAlign: (props.hAlign ?? HALIGN.LEFT) as any,
-    vAlign: (props.vAlign ?? VALIGN.TOP) as any,
-    lineHeightMultiplier: tokens?.lineHeightMultiplier ?? 1.2,
-  }),
+  expand: (props: any, ctx: ExpansionContext, tokens: any): any => {
+    const style = props.style ?? tokens?.style;
+    return {
+      type: NODE_TYPE.TEXT,
+      content: [{ text: props.body }],
+      style,
+      resolvedStyle: (ctx.theme.textStyles as any)[style],
+      color: props.color ?? tokens?.color,
+      hAlign: (props.hAlign ?? HALIGN.LEFT) as any,
+      vAlign: (props.vAlign ?? VALIGN.TOP) as any,
+      lineHeightMultiplier: tokens?.lineHeightMultiplier ?? 1.2,
+      bulletIndentPt: 18,
+    };
+  },
 });
 
 // ============================================
@@ -100,7 +105,7 @@ componentRegistry.define({
     children: props.children as ElementNode[],
     width: props.width ?? SIZE.FILL,
     height: props.height ?? SIZE.HUG,
-    gap: props.gap,
+    gap: props.gap ?? 0,
     vAlign: props.vAlign ?? VALIGN.TOP,
     hAlign: props.hAlign ?? HALIGN.LEFT,
     padding: props.padding,
@@ -128,7 +133,7 @@ componentRegistry.define({
     children: props.children as ElementNode[],
     width: props.width ?? SIZE.FILL,
     height: props.height ?? SIZE.HUG,
-    gap: props.gap,
+    gap: props.gap ?? 0,
     vAlign: props.vAlign ?? VALIGN.TOP,
     hAlign: props.hAlign ?? HALIGN.LEFT,
     padding: props.padding,

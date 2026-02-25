@@ -4,7 +4,7 @@
 import { describe, test } from 'node:test';
 import * as assert from 'node:assert';
 import { PptxConfigBuilder } from '../src/core/rendering/pptxConfigBuilder.js';
-import { mockTheme } from './mocks.js';
+import { mockTheme, mockTextStyle } from './mocks.js';
 import {
   NODE_TYPE,
   type PositionedNode,
@@ -156,9 +156,21 @@ const baseTableNode: TableNode = {
   vAlign: VALIGN.MIDDLE,
 };
 
+/** Base cell for tests — all required fields pre-resolved */
+const baseCell: TableCellData = {
+  content: 'test',
+  color: '000000',
+  textStyle: TEXT_STYLE.BODY,
+  resolvedStyle: mockTextStyle,
+  hAlign: HALIGN.LEFT,
+  vAlign: VALIGN.MIDDLE,
+  lineHeightMultiplier: 1.2,
+};
+
 describe('buildTableCell()', () => {
   test('preserves cell color in options and text fragments', () => {
     const cell: TableCellData = {
+      ...baseCell,
       content: 'Red text',
       color: 'FF0000',
     };
@@ -168,8 +180,7 @@ describe('buildTableCell()', () => {
       cell,
       0, 0, 1, 1,
       0, 0,
-      tableNode,
-      theme
+      tableNode
     );
 
     assert.strictEqual(result.options.color, 'FF0000');
@@ -179,6 +190,7 @@ describe('buildTableCell()', () => {
 
   test('vAlign cascade: cell vAlign overrides table style', () => {
     const cell: TableCellData = {
+      ...baseCell,
       content: 'Cell with override',
       vAlign: VALIGN.BOTTOM,
     };
@@ -188,25 +200,25 @@ describe('buildTableCell()', () => {
       cell,
       0, 0, 1, 1,
       0, 0,
-      tableNode,
-      theme
+      tableNode
     );
 
     assert.strictEqual(result.options.valign, VALIGN.BOTTOM);
   });
 
-  test('vAlign cascade: cell without vAlign uses table style', () => {
+  test('vAlign: uses pre-resolved cell value directly', () => {
     const cell: TableCellData = {
+      ...baseCell,
       content: 'Cell with default',
+      vAlign: VALIGN.TOP,  // pre-resolved by expand
     };
-    const tableNode: TableNode = { ...baseTableNode, vAlign: VALIGN.TOP };
+    const tableNode: TableNode = { ...baseTableNode };
 
     const result = builder.buildTableCell(
       cell,
       0, 0, 1, 1,
       0, 0,
-      tableNode,
-      theme
+      tableNode
     );
 
     assert.strictEqual(result.options.valign, VALIGN.TOP);
@@ -214,6 +226,7 @@ describe('buildTableCell()', () => {
 
   test('hAlign cascade: cell hAlign overrides table style', () => {
     const cell: TableCellData = {
+      ...baseCell,
       content: 'Right aligned',
       hAlign: HALIGN.RIGHT,
     };
@@ -223,8 +236,7 @@ describe('buildTableCell()', () => {
       cell,
       0, 0, 1, 1,
       0, 0,
-      tableNode,
-      theme
+      tableNode
     );
 
     assert.strictEqual(result.options.align, HALIGN.RIGHT);
@@ -232,6 +244,7 @@ describe('buildTableCell()', () => {
 
   test('colspan and rowspan are passed through', () => {
     const cell: TableCellData = {
+      ...baseCell,
       content: 'Merged cell',
       colspan: 2,
       rowspan: 3,
@@ -242,8 +255,7 @@ describe('buildTableCell()', () => {
       cell,
       0, 0, 1, 1,
       0, 0,
-      tableNode,
-      theme
+      tableNode
     );
 
     assert.strictEqual(result.options.colspan, 2);
@@ -252,6 +264,7 @@ describe('buildTableCell()', () => {
 
   test('fill color applied from cell', () => {
     const cell: TableCellData = {
+      ...baseCell,
       content: 'Cell with fill',
       fill: 'FFFF00',
     };
@@ -261,8 +274,7 @@ describe('buildTableCell()', () => {
       cell,
       0, 0, 1, 1,
       0, 0,
-      tableNode,
-      theme
+      tableNode
     );
 
     assert.ok(result.options.fill);
@@ -272,24 +284,24 @@ describe('buildTableCell()', () => {
   });
 
   test('header cell with opacity 0 produces no fill', () => {
-    const cell: TableCellData = { content: 'Header' };
+    const cell: TableCellData = { ...baseCell, content: 'Header' };
     const tableNode: TableNode = {
       ...baseTableNode,
       headerBackground: 'EEEEEE',
       headerBackgroundOpacity: 0,
     };
-    const result = builder.buildTableCell(cell, 0, 0, 1, 1, 1, 0, tableNode, theme);
+    const result = builder.buildTableCell(cell, 0, 0, 1, 1, 1, 0, tableNode);
     assert.strictEqual(result.options.fill, undefined);
   });
 
   test('header cell with opacity 50 produces fill with transparency 50', () => {
-    const cell: TableCellData = { content: 'Header' };
+    const cell: TableCellData = { ...baseCell, content: 'Header' };
     const tableNode: TableNode = {
       ...baseTableNode,
       headerBackground: 'AABBCC',
       headerBackgroundOpacity: 50,
     };
-    const result = builder.buildTableCell(cell, 0, 0, 1, 1, 1, 0, tableNode, theme);
+    const result = builder.buildTableCell(cell, 0, 0, 1, 1, 1, 0, tableNode);
     assert.ok(result.options.fill);
     const fill = result.options.fill as { color: string; transparency: number };
     assert.strictEqual(fill.color, 'AABBCC');
@@ -297,24 +309,24 @@ describe('buildTableCell()', () => {
   });
 
   test('non-header cell with cellBackgroundOpacity 0 produces no fill', () => {
-    const cell: TableCellData = { content: 'Data' };
+    const cell: TableCellData = { ...baseCell, content: 'Data' };
     const tableNode: TableNode = {
       ...baseTableNode,
       cellBackground: 'DDDDDD',
       cellBackgroundOpacity: 0,
     };
-    const result = builder.buildTableCell(cell, 1, 0, 2, 1, 1, 0, tableNode, theme);
+    const result = builder.buildTableCell(cell, 1, 0, 2, 1, 1, 0, tableNode);
     assert.strictEqual(result.options.fill, undefined);
   });
 
   test('non-header cell with cellBackgroundOpacity 80 produces fill with transparency 20', () => {
-    const cell: TableCellData = { content: 'Data' };
+    const cell: TableCellData = { ...baseCell, content: 'Data' };
     const tableNode: TableNode = {
       ...baseTableNode,
       cellBackground: 'DDDDDD',
       cellBackgroundOpacity: 80,
     };
-    const result = builder.buildTableCell(cell, 1, 0, 2, 1, 1, 0, tableNode, theme);
+    const result = builder.buildTableCell(cell, 1, 0, 2, 1, 1, 0, tableNode);
     assert.ok(result.options.fill);
     const fill = result.options.fill as { color: string; transparency: number };
     assert.strictEqual(fill.color, 'DDDDDD');
@@ -322,7 +334,7 @@ describe('buildTableCell()', () => {
   });
 
   test('header column cell (not header row) uses headerBackground', () => {
-    const cell: TableCellData = { content: 'Header Col' };
+    const cell: TableCellData = { ...baseCell, content: 'Header Col' };
     const tableNode: TableNode = {
       ...baseTableNode,
       headerBackground: 'AABB00',
@@ -332,8 +344,7 @@ describe('buildTableCell()', () => {
       cell,
       1, 0, 2, 2,
       0, 1,  // headerRows=0, headerColumns=1 (col 0 is header)
-      tableNode,
-      theme
+      tableNode
     );
     const fill = result.options.fill as { color: string; transparency: number };
     assert.strictEqual(fill.color, 'AABB00');
@@ -341,6 +352,7 @@ describe('buildTableCell()', () => {
 
   test('header cell uses headerBackground from table style', () => {
     const cell: TableCellData = {
+      ...baseCell,
       content: 'Header',
     };
     const tableNode: TableNode = { ...baseTableNode, headerBackground: 'EEEEEE', headerBackgroundOpacity: 100 };
@@ -349,8 +361,7 @@ describe('buildTableCell()', () => {
       cell,
       0, 0, 1, 1,
       1, 0,  // headerRows = 1, so row 0 is header
-      tableNode,
-      theme
+      tableNode
     );
 
     assert.ok(result.options.fill);
@@ -569,10 +580,12 @@ const baseTextNode: TextNode = {
   type: NODE_TYPE.TEXT,
   content: 'Text',
   style: TEXT_STYLE.BODY,
+  resolvedStyle: mockTextStyle,
   color: '333333',
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.TOP,
   lineHeightMultiplier: 1.2,
+  bulletIndentPt: 0,
 };
 
 describe('buildTextConfig()', () => {
@@ -587,7 +600,7 @@ describe('buildTextConfig()', () => {
     };
     const pos = positioned(textNode, 1, 2, 5, 3);
 
-    const result = builder.buildTextConfig(textNode, pos, theme);
+    const result = builder.buildTextConfig(textNode, pos);
 
     assert.strictEqual(result.options.align, undefined);
     assert.strictEqual(result.options.valign, VALIGN.TOP);
@@ -601,13 +614,13 @@ describe('buildTextConfig()', () => {
     };
     const pos = positioned(textNode, 1, 2, 5, 3);
 
-    const result = builder.buildTextConfig(textNode, pos, theme);
+    const result = builder.buildTextConfig(textNode, pos);
 
     assert.strictEqual(result.options.align, HALIGN.CENTER);
     assert.strictEqual(result.options.valign, VALIGN.TOP);
   });
 
-  test('applies text style from theme', () => {
+  test('applies fontSize and fontFace from resolvedStyle', () => {
     const textNode: TextNode = {
       ...baseTextNode,
       content: 'Styled text',
@@ -615,7 +628,7 @@ describe('buildTextConfig()', () => {
     };
     const pos = positioned(textNode, 1, 2, 5, 3);
 
-    const result = builder.buildTextConfig(textNode, pos, theme);
+    const result = builder.buildTextConfig(textNode, pos);
 
     const h1Style = theme.textStyles[TEXT_STYLE.H1];
     assert.strictEqual(result.options.fontSize, h1Style.fontSize);
@@ -630,7 +643,7 @@ describe('buildTextConfig()', () => {
     };
     const pos = positioned(textNode, 1, 2, 5, 3);
 
-    const result = builder.buildTextConfig(textNode, pos, theme);
+    const result = builder.buildTextConfig(textNode, pos);
 
     assert.strictEqual(result.options.color, 'FF0000');
   });
@@ -643,7 +656,7 @@ describe('buildTextConfig()', () => {
     };
     const pos = positioned(textNode, 1, 2, 5, 3);
 
-    const result = builder.buildTextConfig(textNode, pos, theme);
+    const result = builder.buildTextConfig(textNode, pos);
 
     assert.strictEqual(result.options.lineSpacingMultiple, 1.5);
   });
@@ -659,7 +672,7 @@ describe('buildTextConfig()', () => {
     };
     const pos = positioned(textNode, 1, 2, 5, 3);
 
-    const result = builder.buildTextConfig(textNode, pos, theme);
+    const result = builder.buildTextConfig(textNode, pos);
 
     assert.strictEqual(result.options.lineSpacingMultiple, 1.5);
   });
@@ -673,8 +686,8 @@ describe('buildTextFragments()', () => {
   test('converts string content to single fragment', () => {
     const fragments = builder.buildTextFragments(
       'Plain text',
-      TEXT_STYLE.BODY,
-      theme
+      mockTextStyle,
+      '000000'
     );
 
     assert.strictEqual(fragments.length, 1);
@@ -684,8 +697,8 @@ describe('buildTextFragments()', () => {
   test('preserves color from text run', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Colored', color: 'FF0000' }],
-      TEXT_STYLE.BODY,
-      theme
+      mockTextStyle,
+      '000000'
     );
 
     assert.strictEqual(fragments.length, 1);
@@ -695,8 +708,8 @@ describe('buildTextFragments()', () => {
   test('applies bold formatting', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Bold text', bold: true }],
-      TEXT_STYLE.BODY,
-      theme
+      mockTextStyle,
+      '000000'
     );
 
     assert.strictEqual(fragments.length, 1);
@@ -706,8 +719,8 @@ describe('buildTextFragments()', () => {
   test('applies italic formatting', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Italic text', italic: true }],
-      TEXT_STYLE.BODY,
-      theme
+      mockTextStyle,
+      '000000'
     );
 
     assert.strictEqual(fragments.length, 1);
@@ -717,8 +730,8 @@ describe('buildTextFragments()', () => {
   test('applies highlight background', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Highlighted', highlight: { bg: 'FFFF00', text: '000000' } }],
-      TEXT_STYLE.BODY,
-      theme
+      mockTextStyle,
+      '000000'
     );
 
     assert.strictEqual(fragments.length, 1);
@@ -729,8 +742,8 @@ describe('buildTextFragments()', () => {
   test('applies bullet formatting', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Bullet item', bullet: true }],
-      TEXT_STYLE.BODY,
-      theme
+      mockTextStyle,
+      '000000'
     );
 
     assert.strictEqual(fragments.length, 1);
@@ -740,8 +753,8 @@ describe('buildTextFragments()', () => {
   test('shifts breakLine to previous fragment for pptxgenjs', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Line 1' }, { text: 'Line 2', breakLine: true }],
-      TEXT_STYLE.BODY,
-      theme
+      mockTextStyle,
+      '000000'
     );
 
     assert.strictEqual(fragments.length, 2);
@@ -753,8 +766,8 @@ describe('buildTextFragments()', () => {
   test('adds paraSpaceBefore on paragraph break fragment', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Paragraph 1' }, { text: 'Paragraph 2', breakLine: true }],
-      TEXT_STYLE.BODY,
-      theme
+      mockTextStyle,
+      '000000'
     );
 
     assert.strictEqual(fragments.length, 2);
@@ -768,8 +781,8 @@ describe('buildTextFragments()', () => {
   test('paraSpaceBefore matches fontSize for any text style', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'A' }, { text: 'B', breakLine: true }],
-      TEXT_STYLE.H1,
-      theme
+      mockTextStyle,
+      '000000'
     );
 
     const h1FontSize = theme.textStyles[TEXT_STYLE.H1].fontSize;
@@ -779,8 +792,8 @@ describe('buildTextFragments()', () => {
   test('does not apply breakLine when bullet present', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Bullet', bullet: true, breakLine: true }],
-      TEXT_STYLE.BODY,
-      theme
+      mockTextStyle,
+      '000000'
     );
 
     assert.strictEqual(fragments.length, 1);
@@ -791,8 +804,8 @@ describe('buildTextFragments()', () => {
   test('does not add paraSpaceBefore when bullet present with breakLine', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Bullet', bullet: true, breakLine: true }],
-      TEXT_STYLE.BODY,
-      theme
+      mockTextStyle,
+      '000000'
     );
 
     assert.strictEqual(fragments[0].options?.paraSpaceBefore, undefined);
@@ -805,8 +818,8 @@ describe('buildTextFragments()', () => {
         { text: 'Para 2', breakLine: true },
         { text: 'Para 3', breakLine: true },
       ],
-      TEXT_STYLE.BODY,
-      theme
+      mockTextStyle,
+      '000000'
     );
 
     assert.strictEqual(fragments.length, 3);
@@ -821,8 +834,7 @@ describe('buildTextFragments()', () => {
   test('color override applies to all fragments', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Run 1' }, { text: 'Run 2' }],
-      TEXT_STYLE.BODY,
-      theme,
+      mockTextStyle,
       'FF0000'
     );
 
@@ -839,6 +851,7 @@ describe('buildTextFragments()', () => {
 const baseSlideNumNode: SlideNumberNode = {
   type: NODE_TYPE.SLIDE_NUMBER,
   style: TEXT_STYLE.FOOTER,
+  resolvedStyle: mockTextStyle,
   color: '999999',
   hAlign: HALIGN.RIGHT,
   vAlign: VALIGN.MIDDLE,
@@ -848,7 +861,7 @@ describe('buildSlideNumberOptions()', () => {
   test('applies FOOTER style from node', () => {
     const pos = positioned(baseSlideNumNode, 1, 2, 2, 0.3);
 
-    const result = builder.buildSlideNumberOptions(baseSlideNumNode, pos, theme);
+    const result = builder.buildSlideNumberOptions(baseSlideNumNode, pos);
 
     const footerStyle = theme.textStyles[TEXT_STYLE.FOOTER];
     assert.strictEqual(result.fontSize, footerStyle.fontSize);
@@ -862,7 +875,7 @@ describe('buildSlideNumberOptions()', () => {
     };
     const pos = positioned(slideNumNode, 1, 2, 2, 0.3);
 
-    const result = builder.buildSlideNumberOptions(slideNumNode, pos, theme);
+    const result = builder.buildSlideNumberOptions(slideNumNode, pos);
 
     const smallStyle = theme.textStyles[TEXT_STYLE.SMALL];
     assert.strictEqual(result.fontSize, smallStyle.fontSize);
@@ -875,7 +888,7 @@ describe('buildSlideNumberOptions()', () => {
     };
     const pos = positioned(slideNumNode, 1, 2, 2, 0.3);
 
-    const result = builder.buildSlideNumberOptions(slideNumNode, pos, theme);
+    const result = builder.buildSlideNumberOptions(slideNumNode, pos);
 
     assert.strictEqual(result.color, 'FF0000');
   });
@@ -887,7 +900,7 @@ describe('buildSlideNumberOptions()', () => {
     };
     const pos = positioned(slideNumNode, 1, 2, 2, 0.3);
 
-    const result = builder.buildSlideNumberOptions(slideNumNode, pos, theme);
+    const result = builder.buildSlideNumberOptions(slideNumNode, pos);
 
     assert.strictEqual(result.align, HALIGN.CENTER);
   });
@@ -898,30 +911,29 @@ describe('buildSlideNumberOptions()', () => {
       vAlign: VALIGN.TOP,
     };
     const pos = positioned(slideNumNode, 1, 2, 2, 0.3);
-    const result = builder.buildSlideNumberOptions(slideNumNode, pos, theme);
+    const result = builder.buildSlideNumberOptions(slideNumNode, pos);
     assert.strictEqual(result.valign, VALIGN.TOP);
   });
 
-  test('uses defaultWeight from theme style for font selection', () => {
-    // Create a theme where footer style has bold defaultWeight
-    const boldTheme = mockTheme();
-    (boldTheme.textStyles as any).footer = {
-      ...boldTheme.textStyles.footer,
-      fontFamily: {
-        normal: { name: 'Inter', path: '/fonts/inter-normal.woff2' },
-        bold: { name: 'Inter Bold', path: '/fonts/inter-bold.woff2' },
-      },
-      defaultWeight: FONT_WEIGHT.BOLD,
+  test('uses defaultWeight from resolvedStyle for font selection', () => {
+    // SlideNumber node with bold resolvedStyle (pre-resolved by expand)
+    const boldFontFamily = {
+      normal: { name: 'Inter', path: '/fonts/inter-normal.woff2' },
+      bold: { name: 'Inter Bold', path: '/fonts/inter-bold.woff2' },
     };
-    const pos = positioned(baseSlideNumNode, 1, 2, 2, 0.3);
-    const result = builder.buildSlideNumberOptions(baseSlideNumNode, pos, boldTheme);
+    const boldNode: SlideNumberNode = {
+      ...baseSlideNumNode,
+      resolvedStyle: { fontSize: 12, fontFamily: boldFontFamily, defaultWeight: FONT_WEIGHT.BOLD },
+    };
+    const pos = positioned(boldNode, 1, 2, 2, 0.3);
+    const result = builder.buildSlideNumberOptions(boldNode, pos);
     assert.strictEqual(result.fontFace, 'Inter Bold');
   });
 
   test('position and dimensions applied', () => {
     const pos = positioned(baseSlideNumNode, 1.5, 2.5, 3, 0.4);
 
-    const result = builder.buildSlideNumberOptions(baseSlideNumNode, pos, theme);
+    const result = builder.buildSlideNumberOptions(baseSlideNumNode, pos);
 
     assert.strictEqual(result.x, 1.5);
     assert.strictEqual(result.y, 2.5);
@@ -946,7 +958,7 @@ describe('buildTextFragments with multi-paragraph runs', () => {
       { text: 'First paragraph.' },
       { text: 'Second paragraph.', breakLine: true },
     ];
-    const fragments = builder.buildTextFragments(runs, TEXT_STYLE.BODY, theme);
+    const fragments = builder.buildTextFragments(runs, mockTextStyle, '000000');
 
     assert.strictEqual(fragments.length, 2);
 
@@ -967,7 +979,7 @@ describe('buildTextFragments with multi-paragraph runs', () => {
       { text: 'Para 2.', breakLine: true },
       { text: 'Para 3.', breakLine: true },
     ];
-    const fragments = builder.buildTextFragments(runs, TEXT_STYLE.BODY, theme);
+    const fragments = builder.buildTextFragments(runs, mockTextStyle, '000000');
 
     assert.strictEqual(fragments.length, 3);
 
@@ -993,7 +1005,7 @@ describe('buildTextFragments with multi-paragraph runs', () => {
       { text: 'Bullet one', bullet: { color: '000000' } },
       { text: 'Bullet two', bullet: { color: '000000' } },
     ];
-    const fragments = builder.buildTextFragments(runs, TEXT_STYLE.BODY, theme);
+    const fragments = builder.buildTextFragments(runs, mockTextStyle, '000000');
 
     assert.strictEqual(fragments.length, 3);
     assert.strictEqual(fragments[0].text, 'Intro.');

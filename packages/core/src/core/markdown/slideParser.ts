@@ -315,7 +315,7 @@ function extractSlots(content: string): { defaultSlot: string; slots: Record<str
     }
   }
 
-  const defaultSlot = (slotLines.get(null) ?? []).join('\n').trim();
+  const defaultSlot = slotLines.get(null)!.join('\n').trim();
   const slots: Record<string, string> = {};
   for (const [name, sLines] of slotLines) {
     if (name !== null) {

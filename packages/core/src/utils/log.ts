@@ -17,7 +17,6 @@ export const log = {
     text: createDebug('tycoslide:render:text'),
     shape: createDebug('tycoslide:render:shape'),
     image: createDebug('tycoslide:render:image'),
-    diagram: createDebug('tycoslide:render:diagram'),
   },
 
   // PPTX generation
@@ -30,9 +29,7 @@ export const log = {
   // Layout measurement
   layout: {
     _: createDebug('tycoslide:layout'),
-    font: createDebug('tycoslide:layout:font'),
     measure: createDebug('tycoslide:layout:measure'),
-    html: createDebug('tycoslide:layout:html'),
   },
 };
 

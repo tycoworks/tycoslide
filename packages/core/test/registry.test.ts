@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { Registry, componentRegistry, isComponentNode, component, type LayoutDefinition } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import type { Slide } from '../src/core/model/types.js';
-import { mockTheme } from './mocks.js';
+import { mockTheme, mockTextStyle } from './mocks.js';
 
 // Import test stubs to trigger component registration
 import { C } from './test-components.js';
@@ -137,7 +137,7 @@ describe('ComponentRegistry', () => {
 
   describe('expandTree', () => {
     test('passes primitives through unchanged', async () => {
-      const textNode = { type: NODE_TYPE.TEXT, content: [], style: TEXT_STYLE.BODY, color: '000000', hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP, lineHeightMultiplier: 1.2 };
+      const textNode = { type: NODE_TYPE.TEXT, content: [], style: TEXT_STYLE.BODY, resolvedStyle: mockTextStyle, color: '000000', hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP, lineHeightMultiplier: 1.2, bulletIndentPt: 0 };
       const result = await componentRegistry.expandTree(textNode, { theme });
       assert.strictEqual(result, textNode);
     });

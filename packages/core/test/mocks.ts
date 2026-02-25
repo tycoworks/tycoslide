@@ -17,7 +17,7 @@ const mockFontFamily: FontFamily = {
   bold: { name: 'Inter Bold', path: require.resolve('@fontsource/inter/files/inter-latin-700-normal.woff2') },
 };
 
-const mockTextStyle: TextStyle = {
+export const mockTextStyle: TextStyle = {
   fontSize: 12,
   fontFamily: mockFontFamily,
   defaultWeight: FONT_WEIGHT.NORMAL,

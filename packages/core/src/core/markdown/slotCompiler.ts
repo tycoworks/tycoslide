@@ -173,9 +173,11 @@ export function compileBareMarkdown(source: string): SlideNode {
     children: nodes as unknown as ElementNode[],
     width: SIZE.FILL,
     height: SIZE.HUG,
+    gap: 0,
+    padding: 0,
     vAlign: VALIGN.TOP,
     hAlign: HALIGN.LEFT,
-  } as ContainerNode;
+  };
 }
 
 /**

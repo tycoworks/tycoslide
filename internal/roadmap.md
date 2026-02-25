@@ -37,6 +37,8 @@ Zero-coverage files that need tests:
 - Standardize `test()` vs `it()` (pick one)
 - Extract `layoutHtml.test.ts` inline mock to shared `mockTheme()`
 - Replace magic strings in tests with typed constants — `components.test.ts` uses string literals like `'body'`, `'full'`, `'small'` in assertions instead of `TEXT_STYLE.BODY`, `BORDER_STYLE.FULL`, `TEXT_STYLE.SMALL`. Same rule as the `Component` enum: never use string literals when typed constants exist.
+- **headerColumns not checked in layoutHtml** — `getTableCellNodes` in `layoutHtml.tsx` only checks `headerRows`, not `headerColumns`. Header column cells get `cellTextStyle` instead of `headerTextStyle` in HTML measurement, while `pptxConfigBuilder` handles it correctly. Low impact unless header/cell text styles differ significantly.
+- Text nodes get `lineHeightMultiplier` from their component token (per-variant, e.g. 1.2 in Materialize). Table cells get it from `theme.spacing.lineSpacing` (global, 1.0 in Materialize). The difference is intentional (tighter tables) but the asymmetry means theme authors must reason about two different config points for the same concept. Add a `cellLineHeight` token to the table component so table cell line height is explicitly configurable per-theme.
 
 ---
 
@@ -94,8 +96,6 @@ Currently mermaid diagrams render as images. Explore creating them as native PPT
 Tracked separately from roadmap — different scope and size.
 
 - **Right-aligned bullet points** — pptxgenjs renders right-aligned text in bullet points incorrectly. Edge case, unlikely to hit in practice.
-- **headerColumns not checked in layoutHtml** — `getTableCellNodes` in `layoutHtml.tsx` only checks `headerRows`, not `headerColumns`. Header column cells get `cellTextStyle` instead of `headerTextStyle` in HTML measurement, while `pptxConfigBuilder` handles it correctly. Low impact unless header/cell text styles differ significantly.
-- **Audit for hardcoded defaults in core** — Core should never contain design opinions; all defaults must come from the theme. The token system fills every field at expand time, so terminal fallbacks in rendering code shouldn't be needed. Known examples: (1) `pptxConfigBuilder.ts:270` has `?? 0.05` cellPadding fallback, (2) `layoutHtml.tsx:561-562` and `pptxConfigBuilder.ts:266-267` have double fallback chains like `cell.hAlign ?? node.hAlign ?? HALIGN.LEFT` — the terminal `?? HALIGN.LEFT` is redundant since expand always populates `node.hAlign`. Audit the table paths in particular, then check more broadly.
 
 ---
 

@@ -81,7 +81,7 @@ export class LayoutMeasurer {
 
     if (debugDir) {
       for (let i = 0; i < perSlideHtml.length; i++) {
-        const label = labels[i] ?? `unknown-${i}`;
+        const label = labels[i]!;
         fs.writeFileSync(path.join(debugDir, `${label}.html`), perSlideHtml[i]);
       }
     }

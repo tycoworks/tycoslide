@@ -4,10 +4,9 @@
 import type {
   TextContent,
   TextStyleName,
+  TextStyle,
   HorizontalAlignment,
   VerticalAlignment,
-  GapSize,
-  HighlightPair,
   ArrowType,
   DashType,
   ShapeName,
@@ -47,16 +46,19 @@ export interface TextNode {
   type: typeof NODE_TYPE.TEXT;
   content: TextContent;
   style: TextStyleName;
+  resolvedStyle: TextStyle;         // pre-resolved from theme.textStyles[style]
   color: string;
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;
   lineHeightMultiplier: number;
+  bulletIndentPt: number;           // points — pre-resolved: fontSize * bulletIndentMultiplier
 }
 
 export interface ImageNode {
   type: typeof NODE_TYPE.IMAGE;
   src: string;
   alt?: string;
+  maxScale: number;                 // pre-resolved from theme.spacing.maxScaleFactor
 }
 
 export interface LineNode {
@@ -90,6 +92,7 @@ export interface ShapeNode {
 export interface SlideNumberNode {
   type: typeof NODE_TYPE.SLIDE_NUMBER;
   style: TextStyleName;
+  resolvedStyle: TextStyle;         // pre-resolved from theme.textStyles[style]
   color: string;
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;
@@ -100,15 +103,30 @@ export interface SlideNumberNode {
 // ============================================
 
 /** Individual table cell data */
-export interface TableCellData {
+/** User-facing input for table cells — optional fields resolved by expand */
+export interface TableCellInput {
   content: TextContent;
   color?: string;
-  colspan?: number;
-  rowspan?: number;
-  fill?: string;
   textStyle?: TextStyleName;
   hAlign?: HorizontalAlignment;
   vAlign?: VerticalAlignment;
+  colspan?: number;
+  rowspan?: number;
+  fill?: string;
+}
+
+/** Fully-resolved table cell data — all fields pre-resolved by component expand */
+export interface TableCellData {
+  content: TextContent;
+  color: string;                    // pre-resolved: cell → textStyle.color → theme.colors.text
+  textStyle: TextStyleName;         // pre-resolved: cell → header/cell default from table tokens
+  resolvedStyle: TextStyle;         // pre-resolved from theme.textStyles[textStyle]
+  hAlign: HorizontalAlignment;     // pre-resolved: cell → table default
+  vAlign: VerticalAlignment;       // pre-resolved: cell → table default
+  lineHeightMultiplier: number;    // pre-resolved from theme.spacing.lineSpacing
+  colspan?: number;
+  rowspan?: number;
+  fill?: string;
 }
 
 /** Native table element - renders directly via slide.addTable() */
@@ -142,7 +160,7 @@ export interface ContainerNode {
   children: ElementNode[];        // Post-expansion: always primitives
   width: number | SizeValue;      // inches (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
   height: number | SizeValue;     // inches (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
-  gap?: GapSize;
+  gap: number;                    // inches — pre-resolved from GapSize by component expand
   vAlign: VerticalAlignment;
   hAlign: HorizontalAlignment;
   padding?: number;               // inches - internal padding on all sides

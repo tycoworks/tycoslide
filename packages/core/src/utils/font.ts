@@ -1,7 +1,7 @@
 // Font Utilities Module
 // Provides text normalization and font family helpers
 
-import { FONT_WEIGHT, type Font, type FontFamily, type FontWeight, type TextContent, type TextRun, type NormalizedRun, type Theme, type TextStyle, type TextStyleName } from '../core/model/types.js';
+import { FONT_WEIGHT, type Font, type FontFamily, type FontWeight, type TextContent, type TextRun, type NormalizedRun } from '../core/model/types.js';
 
 /**
  * Get the Font for a given weight from a FontFamily.
@@ -20,14 +20,16 @@ export function getFontFromFamily(fontFamily: FontFamily, weight: FontWeight): F
 // ============================================
 
 /** CSS numeric font weight for a FontWeight constant */
-const FONT_WEIGHT_NUMERIC: Record<string, number> = {
+const FONT_WEIGHT_NUMERIC: Record<FontWeight, number> = {
   [FONT_WEIGHT.LIGHT]: 300,
   [FONT_WEIGHT.NORMAL]: 400,
   [FONT_WEIGHT.BOLD]: 700,
 };
 
 export function fontWeightToNumeric(weight: FontWeight): number {
-  return FONT_WEIGHT_NUMERIC[weight] ?? 400;
+  const numeric = FONT_WEIGHT_NUMERIC[weight];
+  if (numeric === undefined) throw new Error(`Unknown font weight: ${weight}`);
+  return numeric;
 }
 
 // ============================================
@@ -48,17 +50,6 @@ export function fontWeightToNumeric(weight: FontWeight): number {
  */
 export function getParagraphGapRatio(): number {
   return 1.0;
-}
-
-/** Resolve line height: node override > style override > theme default (bulletSpacing for bullet text) */
-export function resolveLineHeight(
-  nodeMultiplier: number | undefined,
-  style: TextStyle,
-  theme: Theme,
-  hasBullets?: boolean,
-): number {
-  const themeDefault = hasBullets ? theme.spacing.bulletSpacing : theme.spacing.lineSpacing;
-  return nodeMultiplier ?? style.lineHeightMultiplier ?? themeDefault;
 }
 
 // ============================================

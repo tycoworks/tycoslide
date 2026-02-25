@@ -112,6 +112,14 @@ describe('text() with CONTENT.PROSE', () => {
     assert.strictEqual(node.hAlign, HALIGN.RIGHT);
     assert.strictEqual(node.vAlign, VALIGN.BOTTOM);
   });
+
+  test('pre-resolves resolvedStyle, bulletIndentPt, and lineHeightMultiplier at expand time', async () => {
+    const node = await expand(text('hello', { content: CONTENT.PROSE })) as TextNode;
+    assert.ok(node.resolvedStyle);
+    assert.strictEqual(node.resolvedStyle.fontSize, 12); // from mockTextStyle for BODY style
+    assert.strictEqual(node.bulletIndentPt, 18); // 12 * 1.5 (fontSize * bulletIndentMultiplier)
+    assert.strictEqual(node.lineHeightMultiplier, 1.0); // from text token lineHeightMultiplier (lineSpacing default)
+  });
 });
 
 // ============================================
@@ -197,6 +205,11 @@ describe('image()', () => {
   test('passes through non-asset paths unchanged', async () => {
     const node = await expand(image('https://example.com/photo.jpg')) as ImageNode;
     assert.strictEqual(node.src, 'https://example.com/photo.jpg');
+  });
+
+  test('pre-resolves maxScale from theme spacing.maxScaleFactor', async () => {
+    const node = await expand(image('photo.jpg')) as ImageNode;
+    assert.strictEqual(node.maxScale, 1.0); // from mockTheme spacing.maxScaleFactor default
   });
 });
 
@@ -362,6 +375,12 @@ describe('slideNumber()', () => {
     assert.strictEqual(node.color, '666666');
     assert.strictEqual(node.hAlign, HALIGN.RIGHT);
   });
+
+  test('pre-resolves resolvedStyle at expand time', async () => {
+    const node = await expand(slideNumber()) as SlideNumberNode;
+    assert.ok(node.resolvedStyle);
+    assert.strictEqual(node.resolvedStyle.fontSize, 12);
+  });
 });
 
 // ============================================
@@ -427,7 +446,7 @@ describe('row()', () => {
   test('applies gap prop', async () => {
     const node = row({ gap: GAP.TIGHT }, child1, child2);
     const expanded = await expand(node) as ContainerNode;
-    assert.strictEqual(expanded.gap, GAP.TIGHT);
+    assert.strictEqual(expanded.gap, 0.125);
   });
 
   test('applies width prop', async () => {
@@ -446,20 +465,20 @@ describe('row()', () => {
     const node = row({ gap: GAP.TIGHT }, text('A'));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.children.length, 1);
-    assert.strictEqual(expanded.gap, GAP.TIGHT);
+    assert.strictEqual(expanded.gap, 0.125);
   });
 
   test('accepts props with children (props first)', async () => {
     const node = row({ gap: GAP.TIGHT }, text('A'), text('B'));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.children.length, 2);
-    assert.strictEqual(expanded.gap, GAP.TIGHT);
+    assert.strictEqual(expanded.gap, 0.125);
   });
 
   test('applies all props together', async () => {
     const node = row({ gap: GAP.NORMAL, vAlign: VALIGN.MIDDLE }, text('A'), text('B'));
     const expanded = await expand(node) as ContainerNode;
-    assert.strictEqual(expanded.gap, GAP.NORMAL);
+    assert.strictEqual(expanded.gap, 0.25);
     assert.strictEqual(expanded.vAlign, VALIGN.MIDDLE);
     assert.strictEqual(expanded.children.length, 2);
   });
@@ -546,7 +565,7 @@ describe('column()', () => {
   test('applies gap prop', async () => {
     const node = column({ gap: GAP.LOOSE }, child1, child2);
     const expanded = await expand(node) as ContainerNode;
-    assert.strictEqual(expanded.gap, GAP.LOOSE);
+    assert.strictEqual(expanded.gap, 0.5);
   });
 
   test('applies padding prop', async () => {
@@ -565,21 +584,21 @@ describe('column()', () => {
     const node = column({ gap: GAP.TIGHT }, text('A'));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.children.length, 1);
-    assert.strictEqual(expanded.gap, GAP.TIGHT);
+    assert.strictEqual(expanded.gap, 0.125);
   });
 
   test('accepts props with children (props first)', async () => {
     const node = column({ gap: GAP.TIGHT }, text('A'), text('B'));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.children.length, 2);
-    assert.strictEqual(expanded.gap, GAP.TIGHT);
+    assert.strictEqual(expanded.gap, 0.125);
   });
 
   test('applies all props together', async () => {
     const node = column({ height: SIZE.FILL, gap: GAP.NORMAL, vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER }, text('A'), text('B'));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.height, SIZE.FILL);
-    assert.strictEqual(expanded.gap, GAP.NORMAL);
+    assert.strictEqual(expanded.gap, 0.25);
     assert.strictEqual(expanded.vAlign, VALIGN.MIDDLE);
     assert.strictEqual(expanded.hAlign, HALIGN.CENTER);
     assert.strictEqual(expanded.children.length, 2);
@@ -697,7 +716,7 @@ describe('grid()', () => {
 
   test('applies gap to rows when specified', async () => {
     const rows = await expandGrid(grid({ columns: 2, gap: GAP.TIGHT }, child1, child2, child3, child4));
-    assert.strictEqual(rows[0].gap, GAP.TIGHT);
+    assert.strictEqual(rows[0].gap, 0.125);
   });
 
   test('handles odd number of children (2 columns, 5 children = 3 rows)', async () => {
@@ -715,7 +734,7 @@ describe('grid()', () => {
 
   test('defaults to GAP.NORMAL when gap not specified', async () => {
     const rows = await expandGrid(grid(2, child1, child2));
-    assert.strictEqual(rows[0].gap, GAP.NORMAL);
+    assert.strictEqual(rows[0].gap, 0.25);
   });
 
   test('preserves child order (each wrapped in column cell)', async () => {
@@ -863,22 +882,28 @@ describe('table()', () => {
     assert.strictEqual(cell.textStyle, TEXT_STYLE.SMALL);
     assert.strictEqual(cell.color, 'FF0000');
     assert.strictEqual(cell.hAlign, HALIGN.CENTER);
+    assert.ok(cell.resolvedStyle);
+    assert.strictEqual(cell.resolvedStyle.fontSize, 12); // from mockTextStyle
+    assert.strictEqual(cell.lineHeightMultiplier, 1.0); // from theme.spacing.lineSpacing default
   });
 
-  test('TableCellData without vAlign leaves vAlign undefined', async () => {
+  test('TableCellData without vAlign resolves to table default', async () => {
     const node = await expand(table([
       [{ content: 'cell with default vAlign' }],
     ])) as TableNode;
     const cell = node.rows[0][0];
-    assert.strictEqual(cell.vAlign, undefined);
+    assert.strictEqual(cell.vAlign, VALIGN.MIDDLE);
   });
 
-  test('string cells are wrapped as TableCellData', async () => {
+  test('string cells are fully resolved as TableCellData', async () => {
     const node = await expand(table([['plain string']])) as TableNode;
     const cell = node.rows[0][0];
     assert.deepStrictEqual(cell.content, [{ text: 'plain string' }]);
-    assert.strictEqual(cell.color, undefined);
-    assert.strictEqual(cell.textStyle, undefined);
+    assert.strictEqual(cell.color, '000000');           // resolved from theme.colors.text
+    assert.strictEqual(cell.textStyle, TEXT_STYLE.BODY); // resolved from table token
+    assert.ok(cell.resolvedStyle);
+    assert.strictEqual(cell.resolvedStyle.fontSize, 12); // from mockTextStyle
+    assert.strictEqual(cell.lineHeightMultiplier, 1.0); // from theme.spacing.lineSpacing default
   });
 
   test('preserves table props', async () => {

@@ -3,7 +3,7 @@
 import {
   componentRegistry, component, type ComponentNode, type ExpansionContext, type SchemaShape,
   CONTENT, SYNTAX, NODE_TYPE,
-  type TextNode, type TableCellData, type TextContent,
+  type TextNode, type TableCellData, type TableCellInput, type TextContent,
   type BorderStyle, type TextStyleName, type HorizontalAlignment, type VerticalAlignment,
   schema, markdown,
 } from 'tycoslide';
@@ -57,7 +57,7 @@ export interface TableProps {
 }
 
 interface TableInternalProps {
-  data?: (TableCellData | TextContent)[][];
+  data?: (TableCellInput | TextContent)[][];
   tableProps?: TableProps;
   variant?: string;
 }
@@ -114,7 +114,7 @@ export const tableComponent = componentRegistry.define({
   },
   expand: (async (props: TableInternalProps & { body?: string; headerColumns?: number }, context: ExpansionContext, tokens: TableTokens) => {
     // Determine data source: structured (DSL) or body string (directive)
-    let data: (TableCellData | TextContent)[][];
+    let data: (TableCellInput | TextContent)[][];
     let headerRows: number | undefined;
     let headerColumns: number | undefined;
 
@@ -145,19 +145,57 @@ export const tableComponent = componentRegistry.define({
       return content;
     };
 
-    // Normalize cells: convert plain strings/TextContent to TableCellData
-    const rows: TableCellData[][] = await Promise.all(data.map(row =>
-      Promise.all(row.map(async cell => {
+    // Normalize cells: convert plain strings/TextContent to fully-resolved TableCellData
+    const headerRowCount = headerRows ?? 0;
+    const rows: TableCellData[][] = await Promise.all(data.map((row, rowIndex) =>
+      Promise.all(row.map(async (cell) => {
+        // Extract partial cell data from input
+        let partialColor: string | undefined;
+        let partialTextStyle: TextStyleName | undefined;
+        let partialHAlign: HorizontalAlignment | undefined;
+        let partialVAlign: VerticalAlignment | undefined;
+        let content: TextContent;
+        let colspan: number | undefined;
+        let rowspan: number | undefined;
+        let fill: string | undefined;
+
         if (typeof cell === 'string' || Array.isArray(cell)) {
-          return { content: await expandContent(cell) };
+          content = await expandContent(cell);
+        } else if ('content' in cell) {
+          const tcd = cell as TableCellInput;
+          content = await expandContent(tcd.content);
+          partialColor = tcd.color;
+          partialTextStyle = tcd.textStyle;
+          partialHAlign = tcd.hAlign;
+          partialVAlign = tcd.vAlign;
+          colspan = tcd.colspan;
+          rowspan = tcd.rowspan;
+          fill = tcd.fill;
+        } else {
+          content = cell;
         }
-        // Check if it's already TableCellData (has 'content' property)
-        if ('content' in cell) {
-          const tcd = cell as TableCellData;
-          return { ...tcd, content: await expandContent(tcd.content) };
-        }
-        // It's a TextRun, wrap it
-        return { content: cell };
+
+        // Resolve cascade: cell → table tokens → theme defaults
+        const isHeader = rowIndex < headerRowCount;
+        const textStyle = partialTextStyle ?? (isHeader ? tokens.headerTextStyle : tokens.cellTextStyle);
+        const resolvedTextStyle = context.theme.textStyles[textStyle];
+        const color = partialColor ?? resolvedTextStyle.color ?? context.theme.colors.text;
+        const hAlign = partialHAlign ?? tokens.hAlign;
+        const vAlign = partialVAlign ?? tokens.vAlign;
+
+        const resolved: TableCellData = {
+          content,
+          color,
+          textStyle,
+          resolvedStyle: resolvedTextStyle,
+          hAlign,
+          vAlign,
+          lineHeightMultiplier: context.theme.spacing.lineSpacing,
+          ...(colspan != null && { colspan }),
+          ...(rowspan != null && { rowspan }),
+          ...(fill != null && { fill }),
+        };
+        return resolved;
       }))
     ));
 
@@ -203,7 +241,7 @@ export const tableComponent = componentRegistry.define({
  * ```
  */
 export function table(
-  data: (TableCellData | TextContent)[][],
+  data: (TableCellInput | TextContent)[][],
   props?: TableProps & { variant?: string }
 ): ComponentNode {
   return component(Component.Table, { data, tableProps: props, variant: props?.variant });
