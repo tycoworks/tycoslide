@@ -12,10 +12,6 @@ Before launch. Must be done before telling the world.
 
 The big piece. A polished default theme with good colors, layouts, and a showcase deck that demonstrates everything tycoslide can do. The `layout-research.md` file informs layout decisions.
 
-### Code Comments Audit
-
-Scrub client-specific references from core codebase. No mentions of Materialize, real-time streaming, or any client-specific concepts in `packages/core/` or `packages/components/`.
-
 ### Blockquote Mdast Type
 
 Markdown `>` blockquote syntax doesn't produce quote components. Need to register a blockquote handler in the markdown compilation pipeline so `>` maps to the quote component.
@@ -28,12 +24,10 @@ Verify the footer concept lives only in theme masters, not in core. Currently `F
 
 Small items to tidy before launch:
 
-- Wire or remove Card's unused `gap` token (`CARD_TOKEN.GAP` declared and themed but never used in `expandCard`)
-- Remove dead `ShapeDirectiveProps` type (`primitives.ts`)
-- Update stale `CLAUDE.md` (references `defineContent()`/`defineLayout()` which don't exist)
-- Rename `node.test.ts` to `resolveGap.test.ts` (tests `resolveGap()`, nothing to do with nodes)
-- Variant names: consider enum or const object instead of bare strings (`'flat'`, `'compact'`)
-- Reduce `as any` casts: `registry.ts:304,325,328` (generic boundaries), `primitives.ts:78,128` (Line/Shape props)
+- Card gap token: rename `CARD_TOKEN.TEXT_GAP` to `CARD_TOKEN.GAP` (matching quote's pattern), delete unused `CARD_TOKEN.GAP`. Update both themes.
+- Rename `node.test.ts` to `units.test.ts` (tests `resolveGap()` from `utils/units.ts`, future home for unit conversion tests)
+- Fix `registry.ts:404` — replace `(elementNode as any).children` with proper type narrowing (`node.type === NODE_TYPE.CONTAINER || NODE_TYPE.STACK`)
+- Add phantom `dslProps` type parameter to `componentRegistry.define()` overload — eliminates `as LineProps`/`as ShapeProps` casts in primitives by letting expand functions accept a wider type than the directive schema
 
 ---
 
@@ -82,7 +76,6 @@ Zero-coverage files that need tests:
 - Standardize test assert imports (3 patterns currently)
 - Standardize `test()` vs `it()` (pick one)
 - Extract `layoutHtml.test.ts` inline mock to shared `mockTheme()`
-- Fix `bounds.test.ts` duplicate `approx()` helper
 
 
 ---

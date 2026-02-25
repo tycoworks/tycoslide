@@ -18,6 +18,8 @@ Each layer constrains the next: designers set the visual vocabulary, developers 
 
 **Theme is the single source of truth.** All visual decisions — colors, typography choices, spacing, component styling — live in the theme file. Components declare what tokens they need; the theme provides them. Missing tokens fail the build immediately. This aligns with the W3C Design Tokens (DTCG) model where the token file is the complete specification. No hidden defaults in framework code.
 
+**Type the contract, not the vocabulary.** The framework enforces token shapes at compile time — every card variant must provide `backgroundColor`, `titleStyle`, etc. But variant names, accent names, and other theme-specific identifiers are open vocabulary defined by each theme, validated at runtime. Framework enums are for closed universal sets (alignments, shapes, text styles); theme-specific sets stay as strings.
+
 **Open component registry.** External developers can register custom content and layout components without modifying framework source.
 
 **Fail fast.** Invalid layouts, missing tokens, overflow errors, and malformed markdown all throw at build time with actionable error messages. Silent fallbacks are bugs.
