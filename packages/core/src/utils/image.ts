@@ -2,7 +2,7 @@
 // Provides image dimension reading
 
 import imageSizeDefault from 'image-size';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- CJS/ESM interop: .default exists at runtime but not in types
 const imageSize = (imageSizeDefault as any).default || imageSizeDefault;
 
 // ============================================

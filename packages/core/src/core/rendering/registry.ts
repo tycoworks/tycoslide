@@ -361,7 +361,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
         );
       }
 
-      const variantName: string = (node.props as any)?.variant ?? DEFAULT_VARIANT;
+      const variantName: string = (node.props as { variant?: string })?.variant ?? DEFAULT_VARIANT;
       const tokens = variants[variantName];
 
       if (!tokens) {
@@ -382,10 +382,10 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
         );
       }
 
-      return def.expand(node.props, context, tokens as any);
+      return def.expand(node.props, context, tokens as never);
     }
 
-    return def.expand(node.props, context, undefined as any);
+    return def.expand(node.props, context, undefined as never);
   }
 
   /**
@@ -401,12 +401,11 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
 
     const elementNode = node as ElementNode;
 
-    if ('children' in elementNode && Array.isArray((elementNode as any).children)) {
-      const withChildren = elementNode as ElementNode & { children: SlideNode[] };
+    if (elementNode.type === NODE_TYPE.CONTAINER || elementNode.type === NODE_TYPE.STACK) {
       return {
-        ...withChildren,
+        ...elementNode,
         children: await Promise.all(
-          withChildren.children.map(c => this.expandTree(c, context))
+          elementNode.children.map(c => this.expandTree(c, context))
         ),
       } as ElementNode;
     }
@@ -425,7 +424,7 @@ export function isComponentNode(node: unknown): node is ComponentNode {
     typeof node === 'object' &&
     node !== null &&
     'type' in node &&
-    (node as any).type === NODE_TYPE.COMPONENT &&
+    (node as { type: unknown }).type === NODE_TYPE.COMPONENT &&
     'componentName' in node &&
     'props' in node
   );

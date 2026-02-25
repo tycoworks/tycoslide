@@ -2,7 +2,7 @@
 // Renders PositionedNode trees directly to PowerPoint via pptxgenjs
 
 import PptxGenJSDefault from 'pptxgenjs';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- CJS/ESM interop: .default exists at runtime but not in types
 const PptxGenJS = (PptxGenJSDefault as any).default || PptxGenJSDefault;
 type PptxSlide = ReturnType<InstanceType<typeof PptxGenJS>['addSlide']>;
 
@@ -41,9 +41,13 @@ export interface WriteOptions {
 // TEXT FRAGMENT TYPES (for pptxgenjs)
 // ============================================
 
-// Extend PptxGenJS type to include slides array (exists at runtime but not in types)
+// Extend PptxGenJS types to include internal properties (exist at runtime but not in types)
+type PptxSlideInternal = PptxSlide & {
+  _slideObjects?: Array<{ _type: string; [key: string]: unknown }>;
+};
+
 type PptxGenJSExtended = InstanceType<typeof PptxGenJS> & {
-  slides: PptxSlide[];
+  slides: PptxSlideInternal[];
 };
 
 // ============================================
@@ -126,10 +130,8 @@ export class PptxRenderer {
     // Strip speaker notes if requested
     if (!includeNotes) {
       for (const slide of (this.pres as PptxGenJSExtended).slides) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (slide as any)._slideObjects = (slide as any)._slideObjects?.filter(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (obj: any) => obj._type !== 'notes'
+        slide._slideObjects = slide._slideObjects?.filter(
+          (obj: { _type: string }) => obj._type !== 'notes'
         );
       }
     }

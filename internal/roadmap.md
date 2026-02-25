@@ -24,7 +24,7 @@ Verify the footer concept lives only in theme masters, not in core. Currently `F
 
 Small items to tidy before launch:
 
-- Fix `registry.ts:404` — replace `(elementNode as any).children` with proper type narrowing (`node.type === NODE_TYPE.CONTAINER || NODE_TYPE.STACK`)
+- ~~Fix `registry.ts:404`~~ DONE — full `as any` audit completed (12 casts: 7 removed, 2 narrowed, 3 kept with documentation)
 
 ### Test Coverage
 

@@ -40,8 +40,8 @@ export interface TextTokens {
 /** Plugin that disables block-level constructs at the micromark level.
  *  Used by CONTENT.RICH to prevent `1. Problem` being parsed as an ordered list. */
 function remarkDisableBlocks(this: Processor): void {
-  const data = this.data();
-  const ext = (data.micromarkExtensions as any[]) || ((data as any).micromarkExtensions = []);
+  const data = this.data() as { micromarkExtensions?: unknown[] };
+  const ext = data.micromarkExtensions ?? (data.micromarkExtensions = []);
   ext.push({
     disable: {
       null: [
