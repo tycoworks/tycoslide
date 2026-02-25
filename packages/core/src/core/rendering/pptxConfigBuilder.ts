@@ -248,7 +248,7 @@ export class PptxConfigBuilder {
     numCols: number,
     headerRows: number,
     headerColumns: number,
-    tableStyle: TableNode['style'],
+    tableNode: TableNode,
     theme: Theme
   ): { text: TextFragment[]; options: Record<string, unknown> } {
     const isHeaderRow = rowIndex < headerRows;
@@ -257,20 +257,20 @@ export class PptxConfigBuilder {
 
     // Determine text style (cell-level override wins over table-level)
     const styleName = cell.textStyle
-      ?? (isHeader ? tableStyle?.headerTextStyle : tableStyle?.cellTextStyle)
+      ?? (isHeader ? tableNode.headerTextStyle : tableNode.cellTextStyle)
       ?? TEXT_STYLE.BODY;
     const textStyle = theme.textStyles[styleName];
     const font = getFontFromFamily(textStyle.fontFamily, textStyle.defaultWeight ?? FONT_WEIGHT.NORMAL);
 
     // Determine alignment
-    const hAlign = cell.hAlign ?? tableStyle?.hAlign ?? HALIGN.LEFT;
-    const vAlign = cell.vAlign ?? tableStyle?.vAlign ?? VALIGN.MIDDLE;
+    const hAlign = cell.hAlign ?? tableNode.hAlign ?? HALIGN.LEFT;
+    const vAlign = cell.vAlign ?? tableNode.vAlign ?? VALIGN.MIDDLE;
 
     // Cell padding
-    const cellPadding = tableStyle?.cellPadding ?? theme.spacing.cellPadding ?? 0.05;
+    const cellPadding = tableNode.cellPadding ?? theme.spacing.cellPadding ?? 0.05;
 
     // Build border config based on border style and cell position
-    const border = this.buildCellBorder(tableStyle, theme, rowIndex, colIndex, numRows, numCols);
+    const border = this.buildCellBorder(tableNode, theme, rowIndex, colIndex, numRows, numCols);
 
     // Build rich text fragments for cell content
     const textFragments = this.buildTextFragments(cell.content, styleName, theme, cell.color);
@@ -287,10 +287,10 @@ export class PptxConfigBuilder {
     // Background fill: cell-level override wins, then token-driven (opacity 0 = no fill)
     if (cell.fill) {
       options.fill = { color: cell.fill, transparency: 0 };
-    } else if (tableStyle) {
-      const bg = isHeader ? tableStyle.headerBackground : tableStyle.cellBackground;
-      const opacity = isHeader ? tableStyle.headerBackgroundOpacity : tableStyle.cellBackgroundOpacity;
-      if (opacity > 0) {
+    } else {
+      const bg = isHeader ? tableNode.headerBackground : tableNode.cellBackground;
+      const opacity = isHeader ? tableNode.headerBackgroundOpacity : tableNode.cellBackgroundOpacity;
+      if (bg && opacity !== undefined && opacity > 0) {
         options.fill = { color: bg, transparency: 100 - opacity };
       }
     }
@@ -311,18 +311,18 @@ export class PptxConfigBuilder {
   }
 
   buildCellBorder(
-    tableStyle: TableNode['style'],
+    tableNode: TableNode,
     theme: Theme,
     rowIndex: number,
     colIndex: number,
     numRows: number,
     numCols: number
   ): Array<{ pt?: number; color?: string; type?: string }> | undefined {
-    const borderStyle = tableStyle?.borderStyle ?? BORDER_STYLE.FULL;
+    const borderStyle = tableNode.borderStyle ?? BORDER_STYLE.FULL;
     if (borderStyle === BORDER_STYLE.NONE) return undefined;
 
-    const borderWidth = tableStyle?.borderWidth ?? theme.borders.width;
-    const borderColor = tableStyle?.borderColor ?? theme.colors.secondary;
+    const borderWidth = tableNode.borderWidth ?? theme.borders.width;
+    const borderColor = tableNode.borderColor ?? theme.colors.secondary;
 
     const solid = { pt: borderWidth, color: borderColor, type: 'solid' as const };
     const none = { type: 'none' as const };

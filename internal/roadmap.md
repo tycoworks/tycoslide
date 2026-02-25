@@ -20,12 +20,6 @@ Markdown `>` blockquote syntax doesn't produce quote components. Need to registe
 
 Verify the footer concept lives only in theme masters, not in core. Currently `FOOTER_HEIGHT_RATIO` and `getFooterBounds()` in `presentation.ts` hardcode footer layout. Footer is purely a master concern. Fix: `Master.getContent()` should return `masterBounds` in addition to `contentBounds`. Delete the footer plumbing from core.
 
-### Cleanup
-
-Small items to tidy before launch:
-
-- ~~Fix `registry.ts:404`~~ DONE — full `as any` audit completed (12 casts: 7 removed, 2 narrowed, 3 kept with documentation)
-
 ### Test Coverage
 
 Zero-coverage files that need tests:
@@ -39,10 +33,10 @@ Zero-coverage files that need tests:
 ### Code Quality
 
 - Split `types.ts` (503 lines) into `types.ts`, `shapes.ts`, `tokens.ts`, `theme.ts`
-- Move `TABLE_TOKEN`/`TableTokens` from `nodes.ts` to component file
 - Standardize test assert imports (3 patterns currently)
 - Standardize `test()` vs `it()` (pick one)
 - Extract `layoutHtml.test.ts` inline mock to shared `mockTheme()`
+- Replace magic strings in tests with typed constants — `components.test.ts` uses string literals like `'body'`, `'full'`, `'small'` in assertions instead of `TEXT_STYLE.BODY`, `BORDER_STYLE.FULL`, `TEXT_STYLE.SMALL`. Same rule as the `Component` enum: never use string literals when typed constants exist.
 
 ---
 
@@ -100,6 +94,8 @@ Currently mermaid diagrams render as images. Explore creating them as native PPT
 Tracked separately from roadmap — different scope and size.
 
 - **Right-aligned bullet points** — pptxgenjs renders right-aligned text in bullet points incorrectly. Edge case, unlikely to hit in practice.
+- **headerColumns not checked in layoutHtml** — `getTableCellNodes` in `layoutHtml.tsx` only checks `headerRows`, not `headerColumns`. Header column cells get `cellTextStyle` instead of `headerTextStyle` in HTML measurement, while `pptxConfigBuilder` handles it correctly. Low impact unless header/cell text styles differ significantly.
+- **Audit for hardcoded defaults in core** — Core should never contain design opinions; all defaults must come from the theme. The token system fills every field at expand time, so terminal fallbacks in rendering code shouldn't be needed. Known examples: (1) `pptxConfigBuilder.ts:270` has `?? 0.05` cellPadding fallback, (2) `layoutHtml.tsx:561-562` and `pptxConfigBuilder.ts:266-267` have double fallback chains like `cell.hAlign ?? node.hAlign ?? HALIGN.LEFT` — the terminal `?? HALIGN.LEFT` is redundant since expand always populates `node.hAlign`. Audit the table paths in particular, then check more broadly.
 
 ---
 

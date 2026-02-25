@@ -51,6 +51,8 @@ export {
 export {
   table,
   tableComponent,
+  TABLE_TOKEN,
+  type TableTokens,
   type TableProps,
 } from './table.js';
 

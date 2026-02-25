@@ -110,44 +110,25 @@ export interface TableCellData {
   vAlign?: VerticalAlignment;
 }
 
-export const TABLE_TOKEN = {
-  BORDER_STYLE: 'borderStyle',
-  BORDER_COLOR: 'borderColor',
-  BORDER_WIDTH: 'borderWidth',
-  HEADER_BACKGROUND: 'headerBackground',
-  HEADER_BACKGROUND_OPACITY: 'headerBackgroundOpacity',
-  HEADER_TEXT_STYLE: 'headerTextStyle',
-  CELL_BACKGROUND: 'cellBackground',
-  CELL_BACKGROUND_OPACITY: 'cellBackgroundOpacity',
-  CELL_TEXT_STYLE: 'cellTextStyle',
-  CELL_PADDING: 'cellPadding',
-  HALIGN: 'hAlign',
-  VALIGN: 'vAlign',
-} as const;
-
-/** Table-level style configuration */
-export interface TableTokens {
-  [TABLE_TOKEN.BORDER_STYLE]: BorderStyle;
-  [TABLE_TOKEN.BORDER_COLOR]: string;
-  [TABLE_TOKEN.BORDER_WIDTH]: number;
-  [TABLE_TOKEN.HEADER_BACKGROUND]: string;
-  [TABLE_TOKEN.HEADER_BACKGROUND_OPACITY]: number;
-  [TABLE_TOKEN.HEADER_TEXT_STYLE]: TextStyleName;
-  [TABLE_TOKEN.CELL_BACKGROUND]: string;
-  [TABLE_TOKEN.CELL_BACKGROUND_OPACITY]: number;
-  [TABLE_TOKEN.CELL_TEXT_STYLE]: TextStyleName;
-  [TABLE_TOKEN.CELL_PADDING]: number;
-  [TABLE_TOKEN.HALIGN]: HorizontalAlignment;
-  [TABLE_TOKEN.VALIGN]: VerticalAlignment;
-}
-
 /** Native table element - renders directly via slide.addTable() */
 export interface TableNode {
   type: typeof NODE_TYPE.TABLE;
   rows: TableCellData[][];
   headerRows?: number;           // Number of header rows (default: 0)
   headerColumns?: number;        // Number of header columns (default: 0)
-  style?: TableTokens;
+  // Style properties (resolved from theme tokens by component expand)
+  borderStyle?: BorderStyle;
+  borderColor?: string;
+  borderWidth?: number;
+  headerBackground?: string;
+  headerBackgroundOpacity?: number;
+  headerTextStyle?: TextStyleName;
+  cellBackground?: string;
+  cellBackgroundOpacity?: number;
+  cellTextStyle?: TextStyleName;
+  cellPadding?: number;
+  hAlign?: HorizontalAlignment;
+  vAlign?: VerticalAlignment;
 }
 
 // ============================================

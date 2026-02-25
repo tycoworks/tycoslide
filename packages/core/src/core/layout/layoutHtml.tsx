@@ -370,7 +370,7 @@ function styleTable(
 ): StyledNode {
   const cellNodes = getTableCellNodes(node);
   const numCols = node.rows[0]?.length ?? 0;
-  const cellPadding = node.style?.cellPadding ?? theme.spacing.cellPadding;
+  const cellPadding = node.cellPadding ?? theme.spacing.cellPadding;
   const cellPaddingPx = inToPx(cellPadding);
   const isInRow = parent.direction === DIRECTION.ROW;
 
@@ -551,15 +551,15 @@ function getTableCellNodes(node: TableNode): TextNode[][] {
     row.map((cell: TableCellData) => {
       const isHeaderRow = (node.headerRows ?? 0) > rowIndex;
       const style = cell.textStyle
-        ?? (isHeaderRow ? node.style?.headerTextStyle : node.style?.cellTextStyle)
+        ?? (isHeaderRow ? node.headerTextStyle : node.cellTextStyle)
         ?? TEXT_STYLE.BODY;
 
       const textNode: TextNode = {
         type: NODE_TYPE.TEXT,
         content: cell.content,
         style,
-        hAlign: cell.hAlign ?? node.style?.hAlign ?? HALIGN.LEFT,
-        vAlign: cell.vAlign ?? node.style?.vAlign ?? VALIGN.TOP,
+        hAlign: cell.hAlign ?? node.hAlign ?? HALIGN.LEFT,
+        vAlign: cell.vAlign ?? node.vAlign ?? VALIGN.MIDDLE,
       };
       return textNode;
     })

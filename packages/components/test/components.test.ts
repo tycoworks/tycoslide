@@ -819,12 +819,12 @@ describe('table() token defaults and theme overrides', () => {
       { theme }
     ) as TableNode;
     assert.strictEqual(node.type, NODE_TYPE.TABLE);
-    assert.strictEqual(node.style?.borderStyle, 'full');
-    assert.strictEqual(node.style?.borderColor, theme.colors.secondary);
-    assert.strictEqual(node.style?.borderWidth, theme.borders.width);
-    assert.strictEqual(node.style?.cellPadding, theme.spacing.cellPadding);
-    assert.strictEqual(node.style?.cellTextStyle, 'body');
-    assert.strictEqual(node.style?.headerTextStyle, 'body');
+    assert.strictEqual(node.borderStyle, 'full');
+    assert.strictEqual(node.borderColor, theme.colors.secondary);
+    assert.strictEqual(node.borderWidth, theme.borders.width);
+    assert.strictEqual(node.cellPadding, theme.spacing.cellPadding);
+    assert.strictEqual(node.cellTextStyle, 'body');
+    assert.strictEqual(node.headerTextStyle, 'body');
   });
 
   it('applies theme.components.table overrides while keeping other defaults', async () => {
@@ -835,13 +835,13 @@ describe('table() token defaults and theme overrides', () => {
       table([['A', 'B']], { headerRows: 1 }),
       { theme }
     ) as TableNode;
-    assert.strictEqual(node.style?.borderColor, 'FF0000');
-    assert.strictEqual(node.style?.cellTextStyle, 'small');
+    assert.strictEqual(node.borderColor, 'FF0000');
+    assert.strictEqual(node.cellTextStyle, 'small');
     // Defaults still fill remaining tokens
-    assert.strictEqual(node.style?.borderStyle, 'full');
-    assert.strictEqual(node.style?.borderWidth, theme.borders.width);
-    assert.strictEqual(node.style?.cellPadding, theme.spacing.cellPadding);
-    assert.strictEqual(node.style?.headerTextStyle, 'body');
+    assert.strictEqual(node.borderStyle, 'full');
+    assert.strictEqual(node.borderWidth, theme.borders.width);
+    assert.strictEqual(node.cellPadding, theme.spacing.cellPadding);
+    assert.strictEqual(node.headerTextStyle, 'body');
   });
 });
 

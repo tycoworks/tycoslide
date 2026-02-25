@@ -228,7 +228,7 @@ export class PptxRenderer {
 
   private renderTable(positioned: PositionedNode, slide: PptxSlide, theme: Theme): void {
     const tableNode = positioned.node as TableNode;
-    const { rows, headerRows = 0, headerColumns = 0, style } = tableNode;
+    const { rows, headerRows = 0, headerColumns = 0 } = tableNode;
 
     log.render._('RENDER table x=%f y=%f w=%f h=%f rows=%d cols=%d',
       positioned.x, positioned.y, positioned.width, positioned.height,
@@ -244,7 +244,7 @@ export class PptxRenderer {
     const numRows = rows.length;
     const tableRows = rows.map((row, rowIndex) =>
       row.map((cell, colIndex) =>
-        this.config.buildTableCell(cell, rowIndex, colIndex, numRows, numCols, headerRows, headerColumns, style, theme)
+        this.config.buildTableCell(cell, rowIndex, colIndex, numRows, numCols, headerRows, headerColumns, tableNode, theme)
       )
     );
 

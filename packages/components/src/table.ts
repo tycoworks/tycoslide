@@ -2,13 +2,48 @@
 
 import {
   componentRegistry, component, type ComponentNode, type ExpansionContext, type SchemaShape,
-  CONTENT, SYNTAX, NODE_TYPE, TABLE_TOKEN,
-  type TextNode, type TableCellData, type TableTokens, type TextContent,
+  CONTENT, SYNTAX, NODE_TYPE,
+  type TextNode, type TableCellData, type TextContent,
+  type BorderStyle, type TextStyleName, type HorizontalAlignment, type VerticalAlignment,
   schema, markdown,
 } from 'tycoslide';
 import { Component } from './names.js';
 import type { Table as MdastTable, RootContent } from 'mdast';
 import type { Root } from 'mdast';
+
+// ============================================
+// TABLE TOKENS
+// ============================================
+
+export const TABLE_TOKEN = {
+  BORDER_STYLE: 'borderStyle',
+  BORDER_COLOR: 'borderColor',
+  BORDER_WIDTH: 'borderWidth',
+  HEADER_BACKGROUND: 'headerBackground',
+  HEADER_BACKGROUND_OPACITY: 'headerBackgroundOpacity',
+  HEADER_TEXT_STYLE: 'headerTextStyle',
+  CELL_BACKGROUND: 'cellBackground',
+  CELL_BACKGROUND_OPACITY: 'cellBackgroundOpacity',
+  CELL_TEXT_STYLE: 'cellTextStyle',
+  CELL_PADDING: 'cellPadding',
+  HALIGN: 'hAlign',
+  VALIGN: 'vAlign',
+} as const;
+
+export interface TableTokens {
+  [TABLE_TOKEN.BORDER_STYLE]: BorderStyle;
+  [TABLE_TOKEN.BORDER_COLOR]: string;
+  [TABLE_TOKEN.BORDER_WIDTH]: number;
+  [TABLE_TOKEN.HEADER_BACKGROUND]: string;
+  [TABLE_TOKEN.HEADER_BACKGROUND_OPACITY]: number;
+  [TABLE_TOKEN.HEADER_TEXT_STYLE]: TextStyleName;
+  [TABLE_TOKEN.CELL_BACKGROUND]: string;
+  [TABLE_TOKEN.CELL_BACKGROUND_OPACITY]: number;
+  [TABLE_TOKEN.CELL_TEXT_STYLE]: TextStyleName;
+  [TABLE_TOKEN.CELL_PADDING]: number;
+  [TABLE_TOKEN.HALIGN]: HorizontalAlignment;
+  [TABLE_TOKEN.VALIGN]: VerticalAlignment;
+}
 
 // ============================================
 // TABLE COMPONENT
@@ -131,7 +166,18 @@ export const tableComponent = componentRegistry.define({
       rows,
       headerRows,
       headerColumns,
-      style: tokens,
+      borderStyle: tokens.borderStyle,
+      borderColor: tokens.borderColor,
+      borderWidth: tokens.borderWidth,
+      headerBackground: tokens.headerBackground,
+      headerBackgroundOpacity: tokens.headerBackgroundOpacity,
+      headerTextStyle: tokens.headerTextStyle,
+      cellBackground: tokens.cellBackground,
+      cellBackgroundOpacity: tokens.cellBackgroundOpacity,
+      cellTextStyle: tokens.cellTextStyle,
+      cellPadding: tokens.cellPadding,
+      hAlign: tokens.hAlign,
+      vAlign: tokens.vAlign,
     };
   }),
 });
