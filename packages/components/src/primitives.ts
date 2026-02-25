@@ -1,7 +1,7 @@
 // Primitive components: line, shape, slideNumber
 
 import {
-  componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape, type ExpansionContext,
+  componentRegistry, component, type ComponentNode, type SchemaShape, type ExpansionContext,
   NODE_TYPE, type LineNode, type ShapeNode, type SlideNumberNode,
   ARROW_TYPE_VALUES, SHAPE_VALUES,
   type ShapeName, type ArrowType, type DashType, type TextStyleName, type HorizontalAlignment,
@@ -70,21 +70,22 @@ export interface LineProps {
   variant?: string;
 }
 
+function expandLine(props: LineProps, _context: ExpansionContext, tokens: LineTokens): LineNode {
+  return {
+    type: NODE_TYPE.LINE,
+    color: props.color ?? tokens.color,
+    width: props.width ?? tokens.width,
+    dashType: props.dashType ?? tokens.dashType,
+    beginArrow: props.beginArrow,
+    endArrow: props.endArrow,
+  };
+}
+
 export const lineComponent = componentRegistry.define({
   name: Component.Line,
   params: lineSchema,
   tokens: [LINE_TOKEN.COLOR, LINE_TOKEN.WIDTH, LINE_TOKEN.DASH_TYPE],
-  expand: (props, _context: ExpansionContext, tokens: LineTokens): LineNode => {
-    const p = props as LineProps;
-    return {
-      type: NODE_TYPE.LINE,
-      color: p.color ?? tokens.color,
-      width: p.width ?? tokens.width,
-      dashType: p.dashType ?? tokens.dashType,
-      beginArrow: p.beginArrow,
-      endArrow: p.endArrow,
-    };
-  },
+  expand: expandLine,
 });
 
 export function line(props?: LineProps): ComponentNode {
@@ -102,8 +103,6 @@ const shapeSchema = {
   variant: schema.string().optional(),
 } satisfies SchemaShape;
 
-type ShapeDirectiveProps = InferProps<typeof shapeSchema>;
-
 // Full props for DSL callers (TypeScript developers retain full access to styling)
 export interface ShapeProps {
   shape: ShapeName;
@@ -119,31 +118,31 @@ export interface ShapeProps {
   variant?: string;
 }
 
+function expandShape(props: ShapeProps, _context: ExpansionContext, tokens: ShapeTokens): ShapeNode {
+  return {
+    type: NODE_TYPE.SHAPE,
+    shape: props.shape,
+    fill: {
+      color: props.fill ?? tokens.fill,
+      opacity: props.fillOpacity ?? tokens.fillOpacity,
+    },
+    border: {
+      color: props.borderColor ?? tokens.borderColor,
+      width: props.borderWidth ?? tokens.borderWidth,
+      ...(props.borderTop !== undefined && { top: props.borderTop }),
+      ...(props.borderRight !== undefined && { right: props.borderRight }),
+      ...(props.borderBottom !== undefined && { bottom: props.borderBottom }),
+      ...(props.borderLeft !== undefined && { left: props.borderLeft }),
+    },
+    cornerRadius: props.cornerRadius ?? tokens.cornerRadius,
+  };
+}
+
 export const shapeComponent = componentRegistry.define({
   name: Component.Shape,
   params: shapeSchema,
   tokens: [SHAPE_TOKEN.FILL, SHAPE_TOKEN.FILL_OPACITY, SHAPE_TOKEN.BORDER_COLOR, SHAPE_TOKEN.BORDER_WIDTH, SHAPE_TOKEN.CORNER_RADIUS],
-
-  expand: (props, _context: ExpansionContext, tokens: ShapeTokens): ShapeNode => {
-    const p = props as ShapeProps;
-    return {
-      type: NODE_TYPE.SHAPE,
-      shape: p.shape,
-      fill: {
-        color: p.fill ?? tokens.fill,
-        opacity: p.fillOpacity ?? tokens.fillOpacity,
-      },
-      border: {
-        color: p.borderColor ?? tokens.borderColor,
-        width: p.borderWidth ?? tokens.borderWidth,
-        ...(p.borderTop !== undefined && { top: p.borderTop }),
-        ...(p.borderRight !== undefined && { right: p.borderRight }),
-        ...(p.borderBottom !== undefined && { bottom: p.borderBottom }),
-        ...(p.borderLeft !== undefined && { left: p.borderLeft }),
-      },
-      cornerRadius: p.cornerRadius ?? tokens.cornerRadius,
-    };
-  },
+  expand: expandShape,
 });
 
 export function shape(props: ShapeProps): ComponentNode {
@@ -154,9 +153,6 @@ export function shape(props: ShapeProps): ComponentNode {
 // SLIDE NUMBER
 // ============================================
 
-// Directive schema — no author-facing props for slide number.
-const slideNumberSchema = {} satisfies SchemaShape;
-
 // Full props for DSL callers (TypeScript developers retain full access to styling)
 export interface SlideNumberProps {
   style?: TextStyleName;
@@ -165,19 +161,19 @@ export interface SlideNumberProps {
   variant?: string;
 }
 
+function expandSlideNumber(props: SlideNumberProps, _context: ExpansionContext, tokens: SlideNumberTokens): SlideNumberNode {
+  return {
+    type: NODE_TYPE.SLIDE_NUMBER,
+    style: props.style ?? tokens.style,
+    color: props.color ?? tokens.color,
+    hAlign: props.hAlign ?? tokens.hAlign,
+  };
+}
+
 export const slideNumberComponent = componentRegistry.define({
   name: Component.SlideNumber,
-  params: slideNumberSchema,
   tokens: [SLIDE_NUMBER_TOKEN.STYLE, SLIDE_NUMBER_TOKEN.COLOR, SLIDE_NUMBER_TOKEN.HALIGN],
-  expand: (props, _context: ExpansionContext, tokens: SlideNumberTokens): SlideNumberNode => {
-    const p = props as SlideNumberProps;
-    return {
-      type: NODE_TYPE.SLIDE_NUMBER,
-      style: p.style ?? tokens.style,
-      color: p.color ?? tokens.color,
-      hAlign: p.hAlign ?? tokens.hAlign,
-    };
-  },
+  expand: expandSlideNumber,
 });
 
 export function slideNumber(props?: SlideNumberProps): ComponentNode {

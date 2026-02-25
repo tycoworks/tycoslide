@@ -26,7 +26,24 @@ Small items to tidy before launch:
 
 - Card gap token: rename `CARD_TOKEN.TEXT_GAP` to `CARD_TOKEN.GAP` (matching quote's pattern), delete unused `CARD_TOKEN.GAP`. Update both themes.
 - Fix `registry.ts:404` — replace `(elementNode as any).children` with proper type narrowing (`node.type === NODE_TYPE.CONTAINER || NODE_TYPE.STACK`)
-- Add phantom `dslProps` type parameter to `componentRegistry.define()` overload — eliminates `as LineProps`/`as ShapeProps` casts in primitives by letting expand functions accept a wider type than the directive schema
+
+### Test Coverage
+
+Zero-coverage files that need tests:
+
+- `pptxRenderer.ts` (316 lines) — final output stage
+- `pipeline.ts` (164 lines) — layout orchestration
+- `presentation.ts` (278 lines) — public API
+- `themeLoader.ts` — zero dedicated tests
+- Unit conversion functions (`pxToIn`, `inToPx`, `inToPt`, `ptToIn`)
+
+### Code Quality
+
+- Split `types.ts` (503 lines) into `types.ts`, `shapes.ts`, `tokens.ts`, `theme.ts`
+- Move `TABLE_TOKEN`/`TableTokens` from `nodes.ts` to component file
+- Standardize test assert imports (3 patterns currently)
+- Standardize `test()` vs `it()` (pick one)
+- Extract `layoutHtml.test.ts` inline mock to shared `mockTheme()`
 
 ---
 
@@ -57,24 +74,6 @@ Per-slide color modes. Each slide specifies `mode: 'dark' | 'light'`. Theme defi
 ### HTML Live Preview
 
 Better developer experience for previewing slides. Bundle with debug HTML improvements — Chrome DevTools may already provide container visualization, reducing the need for custom red-line debug overlays. Explore preview server and VS Code extension.
-
-### Test Coverage
-
-Zero-coverage files that need tests:
-
-- `pptxRenderer.ts` (316 lines) — final output stage
-- `pipeline.ts` (164 lines) — layout orchestration
-- `presentation.ts` (278 lines) — public API
-- `themeLoader.ts` — zero dedicated tests
-- Unit conversion functions (`pxToIn`, `inToPx`, `inToPt`, `ptToIn`)
-
-### Code Quality
-
-- Split `types.ts` (503 lines) into `types.ts`, `shapes.ts`, `tokens.ts`, `theme.ts`
-- Move `TABLE_TOKEN`/`TableTokens` from `nodes.ts` to component file
-- Standardize test assert imports (3 patterns currently)
-- Standardize `test()` vs `it()` (pick one)
-- Extract `layoutHtml.test.ts` inline mock to shared `mockTheme()`
 
 
 ---
