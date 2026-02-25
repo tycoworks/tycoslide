@@ -46,11 +46,11 @@ export type NodeType = typeof NODE_TYPE[keyof typeof NODE_TYPE];
 export interface TextNode {
   type: typeof NODE_TYPE.TEXT;
   content: TextContent;
-  style?: TextStyleName;
-  color?: string;
+  style: TextStyleName;
+  color: string;
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;
-  lineHeightMultiplier?: number;  // Overrides style's lineHeightMultiplier
+  lineHeightMultiplier: number;
 }
 
 export interface ImageNode {
@@ -61,17 +61,17 @@ export interface ImageNode {
 
 export interface LineNode {
   type: typeof NODE_TYPE.LINE;
-  color?: string;
-  width?: number;
-  dashType?: DashType;
+  color: string;
+  width: number;
+  dashType: DashType;
   beginArrow?: ArrowType;
   endArrow?: ArrowType;
 }
 
 /** Border configuration for area shapes - can be all sides or selective */
 export interface ShapeBorder {
-  color?: string;
-  width?: number;
+  color: string;
+  width: number;
   top?: boolean;
   right?: boolean;
   bottom?: boolean;
@@ -82,16 +82,17 @@ export interface ShapeBorder {
 export interface ShapeNode {
   type: typeof NODE_TYPE.SHAPE;
   shape: ShapeName;
-  fill?: { color: string; opacity?: number };
-  border?: ShapeBorder;
-  cornerRadius?: number;
+  fill: { color: string; opacity: number };
+  border: ShapeBorder;
+  cornerRadius: number;
 }
 
 export interface SlideNumberNode {
   type: typeof NODE_TYPE.SLIDE_NUMBER;
-  style?: TextStyleName;
-  color?: string;
+  style: TextStyleName;
+  color: string;
   hAlign: HorizontalAlignment;
+  vAlign: VerticalAlignment;
 }
 
 // ============================================
@@ -117,18 +118,18 @@ export interface TableNode {
   headerRows?: number;           // Number of header rows (default: 0)
   headerColumns?: number;        // Number of header columns (default: 0)
   // Style properties (resolved from theme tokens by component expand)
-  borderStyle?: BorderStyle;
-  borderColor?: string;
-  borderWidth?: number;
-  headerBackground?: string;
-  headerBackgroundOpacity?: number;
-  headerTextStyle?: TextStyleName;
-  cellBackground?: string;
-  cellBackgroundOpacity?: number;
-  cellTextStyle?: TextStyleName;
-  cellPadding?: number;
-  hAlign?: HorizontalAlignment;
-  vAlign?: VerticalAlignment;
+  borderStyle: BorderStyle;
+  borderColor: string;
+  borderWidth: number;
+  headerBackground: string;
+  headerBackgroundOpacity: number;
+  headerTextStyle: TextStyleName;
+  cellBackground: string;
+  cellBackgroundOpacity: number;
+  cellTextStyle: TextStyleName;
+  cellPadding: number;
+  hAlign: HorizontalAlignment;
+  vAlign: VerticalAlignment;
 }
 
 // ============================================

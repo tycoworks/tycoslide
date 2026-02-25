@@ -8,7 +8,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { compileSlot } from '../src/core/markdown/slotCompiler.js';
-import { CONTENT, DIRECTION, HALIGN, SIZE, VALIGN } from '../src/core/model/types.js';
+import { CONTENT, DIRECTION, HALIGN, SIZE, TEXT_STYLE, VALIGN } from '../src/core/model/types.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { SYNTAX } from '../src/core/model/syntax.js';
 import { componentRegistry } from '../src/core/rendering/registry.js';
@@ -301,7 +301,7 @@ describe('Slot Compiler', () => {
       componentRegistry.define({
         name: 'test-multi-slot',
         slots: ['left', 'right'],
-        expand: (props: any) => ({ type: NODE_TYPE.TEXT, content: [], hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP } as any),
+        expand: (props: any) => ({ type: NODE_TYPE.TEXT, content: [], style: TEXT_STYLE.BODY, color: '000000', hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP, lineHeightMultiplier: 1.2 } as any),
       });
       const md = ':::test-multi-slot\nsome body\n:::';
       assert.throws(() => compileSlot(md), /only supports 1/);

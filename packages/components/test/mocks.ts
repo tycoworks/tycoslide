@@ -4,7 +4,7 @@
 import * as assert from 'node:assert';
 import { createRequire } from 'module';
 import type { Theme, TextStyle, FontFamily } from 'tycoslide';
-import { TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, HALIGN, VALIGN, DEFAULT_VARIANT } from 'tycoslide';
+import { TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, HALIGN, VALIGN, FONT_WEIGHT, DEFAULT_VARIANT } from 'tycoslide';
 import { Component } from '../src/names.js';
 
 const require = createRequire(import.meta.url);
@@ -21,6 +21,7 @@ const mockFontFamily: FontFamily = {
 const mockTextStyle: TextStyle = {
   fontSize: 12,
   fontFamily: mockFontFamily,
+  defaultWeight: FONT_WEIGHT.NORMAL,
 };
 
 /**
@@ -112,6 +113,7 @@ export function mockTheme(options?: {
       style: TEXT_STYLE.FOOTER,
       color: '666666',
       hAlign: HALIGN.RIGHT,
+      vAlign: VALIGN.MIDDLE,
     },
     [Component.Text]: {
       color: '000000',

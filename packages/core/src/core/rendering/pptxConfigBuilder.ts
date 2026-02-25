@@ -4,7 +4,7 @@
 
 import type { PositionedNode, TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, TableCellData } from '../model/nodes.js';
 import type { Theme, TextStyleName, TextContent } from '../model/types.js';
-import { VALIGN, FONT_WEIGHT, BORDER_STYLE, LINE_SHAPE } from '../model/types.js';
+import { FONT_WEIGHT, BORDER_STYLE, LINE_SHAPE } from '../model/types.js';
 import { getFontFromFamily, normalizeContent, resolveLineHeight, getParagraphGapRatio } from '../../utils/font.js';
 import { readImageDimensions, containFit } from '../../utils/image.js';
 
@@ -28,7 +28,7 @@ export interface TextFragmentOptions {
 
 export interface TextFragment {
   text: string;
-  options?: TextFragmentOptions;
+  options: TextFragmentOptions;
 }
 
 // ============================================
@@ -49,13 +49,13 @@ export class PptxConfigBuilder {
     positioned: PositionedNode,
     theme: Theme
   ): { fragments: TextFragment[]; options: Record<string, unknown> } {
-    const styleName = textNode.style!;
+    const styleName = textNode.style;
     const style = theme.textStyles[styleName];
-    const defaultFont = getFontFromFamily(style.fontFamily, style.defaultWeight ?? FONT_WEIGHT.NORMAL);
+    const defaultFont = getFontFromFamily(style.fontFamily, style.defaultWeight);
     const fragments = this.buildTextFragments(textNode.content, styleName, theme, textNode.color);
 
     // Check if any fragment has bullets - affects line spacing and alignment
-    const hasBullets = fragments.some(f => f.options?.bullet);
+    const hasBullets = fragments.some(f => f.options.bullet);
 
     // Priority: node override > style override > theme default (bulletSpacing for bullet text)
     const lineSpacing = resolveLineHeight(textNode.lineHeightMultiplier, style, theme, hasBullets);
@@ -67,7 +67,7 @@ export class PptxConfigBuilder {
       h: positioned.height,
       fontSize: style.fontSize,
       fontFace: defaultFont.name,
-      color: textNode.color!,
+      color: textNode.color,
       margin: 0,
       wrap: true,
       lineSpacingMultiple: lineSpacing,
@@ -87,7 +87,7 @@ export class PptxConfigBuilder {
   ): TextFragment[] {
     const style = theme.textStyles[styleName];
     const defaultColor = colorOverride ?? style.color ?? theme.colors.text;
-    const defaultWeight = style.defaultWeight ?? FONT_WEIGHT.NORMAL;
+    const defaultWeight = style.defaultWeight;
 
     const normalized = normalizeContent(content);
     // Track which runs need a paragraph break before them
@@ -117,10 +117,10 @@ export class PptxConfigBuilder {
     // 1em spacer div in the HTML renderer (see layoutHtml.tsx renderTextRun).
     for (const idx of breakBeforeIndices) {
       if (idx > 0 && fragments[idx - 1].options) {
-        fragments[idx - 1].options!.breakLine = true;
+        fragments[idx - 1].options.breakLine = true;
       }
       if (fragments[idx].options) {
-        fragments[idx].options!.paraSpaceBefore = style.fontSize * getParagraphGapRatio();
+        fragments[idx].options.paraSpaceBefore = style.fontSize * getParagraphGapRatio();
       }
     }
 
@@ -145,41 +145,30 @@ export class PptxConfigBuilder {
   buildShapeConfig(
     shapeNode: ShapeNode,
     positioned: PositionedNode,
-    theme: Theme
-  ): { shapeType: string; options: Record<string, unknown> } | null {
-    // Only draw if fill or border is specified
-    if (!shapeNode.fill && !shapeNode.border) {
-      return null;
-    }
-
+  ): { shapeType: string; options: Record<string, unknown> } {
     const options: Record<string, unknown> = {
       x: positioned.x,
       y: positioned.y,
       w: positioned.width,
       h: positioned.height,
+      fill: {
+        color: shapeNode.fill.color,
+        transparency: 100 - shapeNode.fill.opacity,
+      },
     };
 
-    if (shapeNode.fill) {
-      options.fill = {
-        color: shapeNode.fill.color,
-        transparency: shapeNode.fill.opacity !== undefined ? 100 - shapeNode.fill.opacity : 0,
+    const border = shapeNode.border;
+    const allSides = border.top !== false && border.right !== false &&
+                     border.bottom !== false && border.left !== false;
+
+    if (allSides) {
+      options.line = {
+        color: border.color,
+        width: border.width,
       };
     }
 
-    if (shapeNode.border) {
-      const border = shapeNode.border;
-      const allSides = border.top !== false && border.right !== false &&
-                       border.bottom !== false && border.left !== false;
-
-      if (allSides) {
-        options.line = {
-          color: border.color ?? theme.colors.secondary,
-          width: border.width ?? theme.borders.width,
-        };
-      }
-    }
-
-    if (shapeNode.cornerRadius) {
+    if (shapeNode.cornerRadius > 0) {
       options.rectRadius = shapeNode.cornerRadius;
     }
 
@@ -189,16 +178,15 @@ export class PptxConfigBuilder {
   buildLineConfig(
     lineNode: LineNode,
     positioned: PositionedNode,
-    theme: Theme
   ): { shapeType: string; options: Record<string, unknown> } {
-    const color = lineNode.color ?? theme.colors.secondary;
-    const lineWidth = lineNode.width ?? theme.borders.width;
+    const color = lineNode.color;
+    const lineWidth = lineNode.width;
     const isVertical = positioned.height > positioned.width;
 
     const lineOpts: Record<string, unknown> = { color, width: lineWidth };
     if (lineNode.beginArrow) lineOpts.beginArrowType = lineNode.beginArrow;
     if (lineNode.endArrow) lineOpts.endArrowType = lineNode.endArrow;
-    if (lineNode.dashType) lineOpts.dashType = lineNode.dashType;
+    lineOpts.dashType = lineNode.dashType;
 
     return {
       shapeType: LINE_SHAPE,
@@ -217,9 +205,9 @@ export class PptxConfigBuilder {
     positioned: PositionedNode,
     theme: Theme
   ): Record<string, unknown> {
-    const styleName = slideNumNode.style!;
-    const style = theme.textStyles[styleName as keyof typeof theme.textStyles];
-    const font = getFontFromFamily(style.fontFamily, FONT_WEIGHT.NORMAL);
+    const styleName = slideNumNode.style;
+    const style = theme.textStyles[styleName];
+    const font = getFontFromFamily(style.fontFamily, style.defaultWeight);
 
     return {
       x: positioned.x,
@@ -228,9 +216,9 @@ export class PptxConfigBuilder {
       h: positioned.height,
       fontFace: font.name,
       fontSize: style.fontSize,
-      color: slideNumNode.color!,
+      color: slideNumNode.color,
       align: slideNumNode.hAlign,
-      valign: VALIGN.MIDDLE,
+      valign: slideNumNode.vAlign,
       margin: 0,
     };
   }
@@ -257,19 +245,19 @@ export class PptxConfigBuilder {
 
     // Determine text style (cell-level override wins over table-level)
     const styleName = cell.textStyle
-      ?? (isHeader ? tableNode.headerTextStyle : tableNode.cellTextStyle)!;
+      ?? (isHeader ? tableNode.headerTextStyle : tableNode.cellTextStyle);
     const textStyle = theme.textStyles[styleName];
-    const font = getFontFromFamily(textStyle.fontFamily, textStyle.defaultWeight ?? FONT_WEIGHT.NORMAL);
+    const font = getFontFromFamily(textStyle.fontFamily, textStyle.defaultWeight);
 
     // Determine alignment
-    const hAlign = cell.hAlign ?? tableNode.hAlign!;
-    const vAlign = cell.vAlign ?? tableNode.vAlign!;
+    const hAlign = cell.hAlign ?? tableNode.hAlign;
+    const vAlign = cell.vAlign ?? tableNode.vAlign;
 
     // Cell padding
-    const cellPadding = tableNode.cellPadding!;
+    const cellPadding = tableNode.cellPadding;
 
     // Build border config based on border style and cell position
-    const border = this.buildCellBorder(tableNode, theme, rowIndex, colIndex, numRows, numCols);
+    const border = this.buildCellBorder(tableNode, rowIndex, colIndex, numRows, numCols);
 
     // Build rich text fragments for cell content
     const textFragments = this.buildTextFragments(cell.content, styleName, theme, cell.color);
@@ -289,7 +277,7 @@ export class PptxConfigBuilder {
     } else {
       const bg = isHeader ? tableNode.headerBackground : tableNode.cellBackground;
       const opacity = isHeader ? tableNode.headerBackgroundOpacity : tableNode.cellBackgroundOpacity;
-      if (bg && opacity !== undefined && opacity > 0) {
+      if (bg && opacity > 0) {
         options.fill = { color: bg, transparency: 100 - opacity };
       }
     }
@@ -311,17 +299,16 @@ export class PptxConfigBuilder {
 
   buildCellBorder(
     tableNode: TableNode,
-    theme: Theme,
     rowIndex: number,
     colIndex: number,
     numRows: number,
     numCols: number
   ): Array<{ pt?: number; color?: string; type?: string }> | undefined {
-    const borderStyle = tableNode.borderStyle!;
+    const borderStyle = tableNode.borderStyle;
     if (borderStyle === BORDER_STYLE.NONE) return undefined;
 
-    const borderWidth = tableNode.borderWidth ?? theme.borders.width;
-    const borderColor = tableNode.borderColor ?? theme.colors.secondary;
+    const borderWidth = tableNode.borderWidth;
+    const borderColor = tableNode.borderColor;
 
     const solid = { pt: borderWidth, color: borderColor, type: 'solid' as const };
     const none = { type: 'none' as const };

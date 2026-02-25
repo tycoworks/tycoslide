@@ -7,7 +7,7 @@ import { mockTheme } from './mocks.js';
 
 // Import test stubs to trigger component registration
 import { C } from './test-components.js';
-import { HALIGN, VALIGN, DEFAULT_VARIANT } from '../src/core/model/types.js';
+import { HALIGN, VALIGN, DEFAULT_VARIANT, TEXT_STYLE } from '../src/core/model/types.js';
 
 // ============================================
 // GENERIC REGISTRY BASE CLASS
@@ -137,7 +137,7 @@ describe('ComponentRegistry', () => {
 
   describe('expandTree', () => {
     test('passes primitives through unchanged', async () => {
-      const textNode = { type: NODE_TYPE.TEXT, content: [], style: undefined, color: undefined, hAlign: HALIGN.LEFT as any, vAlign: VALIGN.TOP as any };
+      const textNode = { type: NODE_TYPE.TEXT, content: [], style: TEXT_STYLE.BODY, color: '000000', hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP, lineHeightMultiplier: 1.2 };
       const result = await componentRegistry.expandTree(textNode, { theme });
       assert.strictEqual(result, textNode);
     });

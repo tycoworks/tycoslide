@@ -69,8 +69,8 @@ describe('getFontFromFamily', () => {
 
 describe('resolveLineHeight', () => {
   const theme = mockTheme({ lineSpacing: 1.0, bulletSpacing: 1.5 });
-  const baseStyle: TextStyle = { fontSize: 12, fontFamily: mockFontFamily };
-  const styleWithMultiplier: TextStyle = { fontSize: 12, fontFamily: mockFontFamily, lineHeightMultiplier: 1.3 };
+  const baseStyle: TextStyle = { fontSize: 12, fontFamily: mockFontFamily, defaultWeight: FONT_WEIGHT.NORMAL };
+  const styleWithMultiplier: TextStyle = { fontSize: 12, fontFamily: mockFontFamily, defaultWeight: FONT_WEIGHT.NORMAL, lineHeightMultiplier: 1.3 };
 
   it('returns theme line spacing as default', () => {
     assert.strictEqual(resolveLineHeight(undefined, baseStyle, theme), 1.0);

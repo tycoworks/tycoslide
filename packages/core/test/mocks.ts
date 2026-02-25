@@ -4,7 +4,7 @@
 import * as assert from 'node:assert';
 import { createRequire } from 'module';
 import type { Theme, TextStyle, FontFamily } from '../src/core/model/types.js';
-import { TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, HALIGN, VALIGN, DEFAULT_VARIANT } from '../src/core/model/types.js';
+import { TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, FONT_WEIGHT, HALIGN, VALIGN, DEFAULT_VARIANT } from '../src/core/model/types.js';
 
 const require = createRequire(import.meta.url);
 
@@ -20,6 +20,7 @@ const mockFontFamily: FontFamily = {
 const mockTextStyle: TextStyle = {
   fontSize: 12,
   fontFamily: mockFontFamily,
+  defaultWeight: FONT_WEIGHT.NORMAL,
 };
 
 /**
@@ -117,6 +118,7 @@ export function mockTheme(options?: {
       style: TEXT_STYLE.FOOTER,
       color: '666666',
       hAlign: HALIGN.RIGHT,
+      vAlign: VALIGN.MIDDLE,
     },
     shape: {
       fill: '333333',

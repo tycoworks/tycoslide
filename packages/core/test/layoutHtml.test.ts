@@ -9,7 +9,7 @@ import { Bounds } from '../src/core/model/bounds.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import type { ElementNode, TextNode, ContainerNode, StackNode, ImageNode, LineNode, ShapeNode } from '../src/core/model/nodes.js';
 import type { Theme, NormalizedRun } from '../src/core/model/types.js';
-import { HALIGN, VALIGN, SIZE, SHAPE, DASH_TYPE, TEXT_STYLE, DIRECTION } from '../src/core/model/types.js';
+import { HALIGN, VALIGN, SIZE, SHAPE, DASH_TYPE, TEXT_STYLE, DIRECTION, FONT_WEIGHT } from '../src/core/model/types.js';
 import path from 'path';
 import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
@@ -36,14 +36,14 @@ const mockTheme = {
     subtleOpacity: 20,
   },
   textStyles: {
-    h1: { fontFamily: mockFontFamily, fontSize: 36, color: '000000' },
-    h2: { fontFamily: mockFontFamily, fontSize: 28, color: '000000' },
-    h3: { fontFamily: mockFontFamily, fontSize: 24, color: '000000' },
-    h4: { fontFamily: mockFontFamily, fontSize: 20, color: '000000' },
-    body: { fontFamily: mockFontFamily, fontSize: 18, color: '000000' },
-    small: { fontFamily: mockFontFamily, fontSize: 14, color: '000000' },
-    eyebrow: { fontFamily: mockFontFamily, fontSize: 12, color: '666666' },
-    footer: { fontFamily: mockFontFamily, fontSize: 12, color: '666666' },
+    h1: { fontFamily: mockFontFamily, fontSize: 36, defaultWeight: FONT_WEIGHT.NORMAL, color: '000000' },
+    h2: { fontFamily: mockFontFamily, fontSize: 28, defaultWeight: FONT_WEIGHT.NORMAL, color: '000000' },
+    h3: { fontFamily: mockFontFamily, fontSize: 24, defaultWeight: FONT_WEIGHT.NORMAL, color: '000000' },
+    h4: { fontFamily: mockFontFamily, fontSize: 20, defaultWeight: FONT_WEIGHT.NORMAL, color: '000000' },
+    body: { fontFamily: mockFontFamily, fontSize: 18, defaultWeight: FONT_WEIGHT.NORMAL, color: '000000' },
+    small: { fontFamily: mockFontFamily, fontSize: 14, defaultWeight: FONT_WEIGHT.NORMAL, color: '000000' },
+    eyebrow: { fontFamily: mockFontFamily, fontSize: 12, defaultWeight: FONT_WEIGHT.NORMAL, color: '666666' },
+    footer: { fontFamily: mockFontFamily, fontSize: 12, defaultWeight: FONT_WEIGHT.NORMAL, color: '666666' },
   },
   spacing: {
     unit: 0.125,
@@ -80,8 +80,10 @@ function textNode(content: string | NormalizedRun[], opts?: Partial<Omit<TextNod
     type: NODE_TYPE.TEXT,
     content: typeof content === 'string' ? [{ text: content }] : content,
     style: TEXT_STYLE.BODY,
+    color: '000000',
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.TOP,
+    lineHeightMultiplier: 1.2,
     ...opts,
   };
 }

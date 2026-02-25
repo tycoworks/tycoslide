@@ -9,7 +9,7 @@ import {
   type ComponentDefinition,
 } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
-import { HALIGN, VALIGN, SIZE, DIRECTION } from '../src/core/model/types.js';
+import { HALIGN, VALIGN, SIZE, DIRECTION, TEXT_STYLE } from '../src/core/model/types.js';
 import { schema } from '../src/core/model/schema.js';
 
 
@@ -28,8 +28,11 @@ describe('componentRegistry.define', () => {
       expand: (props) => ({
         type: NODE_TYPE.TEXT,
         content: [{ text: props.title }],
-        hAlign: HALIGN.LEFT as any,
-        vAlign: VALIGN.TOP as any,
+        style: TEXT_STYLE.BODY,
+        color: '000000',
+        hAlign: HALIGN.LEFT,
+        vAlign: VALIGN.TOP,
+        lineHeightMultiplier: 1.2,
       }),
     });
 
@@ -83,8 +86,11 @@ describe('componentRegistry.define', () => {
       expand: (props) => ({
         type: NODE_TYPE.TEXT,
         content: [{ text: props.body }],
-        hAlign: HALIGN.LEFT as any,
-        vAlign: VALIGN.TOP as any,
+        style: TEXT_STYLE.BODY,
+        color: '000000',
+        hAlign: HALIGN.LEFT,
+        vAlign: VALIGN.TOP,
+        lineHeightMultiplier: 1.2,
       }),
     });
 
@@ -125,8 +131,11 @@ describe('componentRegistry.define', () => {
       expand: (props) => ({
         type: NODE_TYPE.TEXT,
         content: [{ text: props.body }],
-        hAlign: HALIGN.LEFT as any,
-        vAlign: VALIGN.TOP as any,
+        style: TEXT_STYLE.BODY,
+        color: '000000',
+        hAlign: HALIGN.LEFT,
+        vAlign: VALIGN.TOP,
+        lineHeightMultiplier: 1.2,
       }),
     });
 
@@ -156,8 +165,8 @@ describe('componentRegistry.define', () => {
         children: props.children,
         width: SIZE.FILL,
         height: SIZE.HUG,
-        hAlign: HALIGN.LEFT as any,
-        vAlign: VALIGN.TOP as any,
+        hAlign: HALIGN.LEFT,
+        vAlign: VALIGN.TOP,
       }),
     });
 
@@ -188,8 +197,11 @@ describe('componentRegistry.define', () => {
         expand: (props) => ({
           type: NODE_TYPE.TEXT,
           content: [{ text: props.body }],
-          hAlign: HALIGN.LEFT as any,
-          vAlign: VALIGN.TOP as any,
+          style: TEXT_STYLE.BODY,
+          color: '000000',
+          hAlign: HALIGN.LEFT,
+          vAlign: VALIGN.TOP,
+          lineHeightMultiplier: 1.2,
         }),
       });
       assert.ok(comp.deserialize, 'content component should have deserializer');
@@ -200,7 +212,7 @@ describe('componentRegistry.define', () => {
         name: 'test-no-deserialize',
         slots: ['children'],
         tokens: [],
-        expand: () => ({ type: NODE_TYPE.TEXT, content: [], hAlign: HALIGN.LEFT as any, vAlign: VALIGN.TOP as any }),
+        expand: () => ({ type: NODE_TYPE.TEXT, content: [], style: TEXT_STYLE.BODY, color: '000000', hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP, lineHeightMultiplier: 1.2 }),
       });
       assert.strictEqual(comp.deserialize, undefined);
     });

@@ -15,7 +15,7 @@ import { NODE_TYPE } from '../model/nodes.js';
 import type { Theme, TextStyle, FontWeight, VerticalAlignment, HorizontalAlignment, SizeValue, NormalizedRun, Direction } from '../model/types.js';
 import { FONT_WEIGHT, SIZE, VALIGN, HALIGN, DIRECTION } from '../model/types.js';
 import type { Bounds } from '../model/bounds.js';
-import { normalizeContent, fontWeightToNumeric, resolveLineHeight } from '../../utils/font.js';
+import { normalizeContent, fontWeightToNumeric, resolveLineHeight, getFontFromFamily } from '../../utils/font.js';
 import { readImageDimensions } from '../../utils/image.js';
 import { inToPx, ptToPx, resolveGap } from '../../utils/units.js';
 
@@ -238,12 +238,12 @@ function styleText(
   nodeId: string,
   fontRatios?: FontNormalRatios,
 ): StyledNode {
-  const styleName = node.style!;
+  const styleName = node.style;
   const style = theme.textStyles[styleName];
   const runs = normalizeContent(node.content);
   const hasBullets = runs.some(r => r.bullet);
-  const defaultWeight = style.defaultWeight ?? FONT_WEIGHT.NORMAL;
-  const defaultFont = style.fontFamily[defaultWeight] ?? style.fontFamily.normal;
+  const defaultWeight = style.defaultWeight;
+  const defaultFont = getFontFromFamily(style.fontFamily, defaultWeight);
   const lineSpacingMultiple = resolveLineHeight(node.lineHeightMultiplier, style, theme, hasBullets);
   const fontSizePx = ptToPx(style.fontSize);
   const normalRatio = fontRatios?.get(defaultFont.name);
@@ -325,10 +325,9 @@ function styleImage(
 function styleLine(
   node: LineNode,
   parent: ParentCtx,
-  theme: Theme,
   nodeId: string,
 ): StyledNode {
-  const borderWidthPx = ptToPx(node.width ?? theme.borders.width);
+  const borderWidthPx = ptToPx(node.width);
 
   if (parent.direction === DIRECTION.ROW) {
     return { nodeId, styles: { flex: `0 0 ${borderWidthPx}px`, alignSelf: 'stretch' }, children: [] };
@@ -341,10 +340,10 @@ function styleSlideNumber(
   theme: Theme,
   nodeId: string,
 ): StyledNode {
-  const styleName = node.style!;
+  const styleName = node.style;
   const style = theme.textStyles[styleName];
   const fontSizePx = ptToPx(style.fontSize);
-  const defaultFont = style.fontFamily.normal;
+  const defaultFont = getFontFromFamily(style.fontFamily, style.defaultWeight);
 
   return {
     nodeId,
@@ -368,9 +367,9 @@ function styleTable(
   nodeIds: Map<ElementNode, string>,
   fontRatios?: FontNormalRatios,
 ): StyledNode {
-  const cellNodes = getTableCellNodes(node);
+  const cellNodes = getTableCellNodes(node, theme);
   const numCols = node.rows[0]?.length ?? 0;
-  const cellPadding = node.cellPadding!;
+  const cellPadding = node.cellPadding;
   const cellPaddingPx = inToPx(cellPadding);
   const isInRow = parent.direction === DIRECTION.ROW;
 
@@ -422,7 +421,7 @@ export function styleNode(
     case NODE_TYPE.IMAGE:
       return styleImage(node as ImageNode, parent, theme, nodeId);
     case NODE_TYPE.LINE:
-      return styleLine(node as LineNode, parent, theme, nodeId);
+      return styleLine(node as LineNode, parent, nodeId);
     case NODE_TYPE.SHAPE:
       return { nodeId, styles: { width: '100%', height: '100%' }, children: [] };
     case NODE_TYPE.SLIDE_NUMBER:
@@ -546,19 +545,22 @@ function escapeHtml(text: string): string {
 
 // ─── Table Cell Nodes ─────────────────────────
 
-function getTableCellNodes(node: TableNode): TextNode[][] {
+function getTableCellNodes(node: TableNode, theme: Theme): TextNode[][] {
   return node.rows.map((row, rowIndex) =>
     row.map((cell: TableCellData) => {
       const isHeaderRow = (node.headerRows ?? 0) > rowIndex;
       const style = cell.textStyle
-        ?? (isHeaderRow ? node.headerTextStyle : node.cellTextStyle)!;
+        ?? (isHeaderRow ? node.headerTextStyle : node.cellTextStyle);
+      const textStyle = theme.textStyles[style];
 
       const textNode: TextNode = {
         type: NODE_TYPE.TEXT,
         content: cell.content,
         style,
-        hAlign: cell.hAlign ?? node.hAlign!,
-        vAlign: cell.vAlign ?? node.vAlign!,
+        color: cell.color ?? textStyle.color ?? theme.colors.text,
+        hAlign: cell.hAlign ?? node.hAlign,
+        vAlign: cell.vAlign ?? node.vAlign,
+        lineHeightMultiplier: theme.spacing.lineSpacing,
       };
       return textNode;
     })

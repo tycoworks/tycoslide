@@ -156,10 +156,10 @@ export class PptxRenderer {
         this.renderImage(positioned, slide);
         break;
       case NODE_TYPE.SHAPE:
-        this.renderShape(positioned, slide, theme);
+        this.renderShape(positioned, slide);
         break;
       case NODE_TYPE.LINE:
-        this.renderLine(positioned, slide, theme);
+        this.renderLine(positioned, slide);
         break;
       case NODE_TYPE.SLIDE_NUMBER:
         this.renderSlideNumber(positioned, slide, theme);
@@ -200,21 +200,19 @@ export class PptxRenderer {
     slide.addImage(this.config.buildImageConfig(imageNode, positioned));
   }
 
-  private renderShape(positioned: PositionedNode, slide: PptxSlide, theme: Theme): void {
+  private renderShape(positioned: PositionedNode, slide: PptxSlide): void {
     const shapeNode = positioned.node as ShapeNode;
     log.render.shape('RENDER shape(%s) x=%f y=%f w=%f h=%f',
       shapeNode.shape, positioned.x, positioned.y, positioned.width, positioned.height);
 
-    const config = this.config.buildShapeConfig(shapeNode, positioned, theme);
-    if (config) {
-      slide.addShape(config.shapeType, config.options);
-    }
+    const config = this.config.buildShapeConfig(shapeNode, positioned);
+    slide.addShape(config.shapeType, config.options);
   }
 
-  private renderLine(positioned: PositionedNode, slide: PptxSlide, theme: Theme): void {
+  private renderLine(positioned: PositionedNode, slide: PptxSlide): void {
     const lineNode = positioned.node as LineNode;
     log.render.shape('RENDER line x=%f y=%f w=%f h=%f', positioned.x, positioned.y, positioned.width, positioned.height);
-    const { shapeType, options } = this.config.buildLineConfig(lineNode, positioned, theme);
+    const { shapeType, options } = this.config.buildLineConfig(lineNode, positioned);
     slide.addShape(shapeType, options);
   }
 
@@ -287,15 +285,13 @@ export class PptxRenderer {
       }
       case NODE_TYPE.SHAPE: {
         const shapeNode = node as ShapeNode;
-        const config = this.config.buildShapeConfig(shapeNode, positioned, theme);
-        if (config) {
-          objects.push({ [config.shapeType]: config.options });
-        }
+        const config = this.config.buildShapeConfig(shapeNode, positioned);
+        objects.push({ [config.shapeType]: config.options });
         break;
       }
       case NODE_TYPE.LINE: {
         const lineNode = node as LineNode;
-        const { shapeType, options } = this.config.buildLineConfig(lineNode, positioned, theme);
+        const { shapeType, options } = this.config.buildLineConfig(lineNode, positioned);
         objects.push({ [shapeType]: options });
         break;
       }

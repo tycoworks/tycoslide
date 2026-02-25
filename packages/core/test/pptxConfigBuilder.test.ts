@@ -24,6 +24,7 @@ import {
   BORDER_STYLE,
   SHAPE,
   LINE_SHAPE,
+  FONT_WEIGHT,
 } from '../src/core/model/types.js';
 import { getParagraphGapRatio } from '../src/utils/font.js';
 import { containFit } from '../src/utils/image.js';
@@ -59,17 +60,23 @@ function positioned(
 // LINE TESTS - Regression test #1 and #2
 // ============================================
 
+const baseLineNode: LineNode = {
+  type: NODE_TYPE.LINE,
+  color: 'E7E0EC',
+  width: 0.75,
+  dashType: DASH_TYPE.SOLID,
+};
+
 describe('buildLineConfig()', () => {
   test('places arrows inside line sub-object', () => {
     const lineNode: LineNode = {
-      type: NODE_TYPE.LINE,
-
+      ...baseLineNode,
       beginArrow: ARROW_TYPE.TRIANGLE,
       endArrow: ARROW_TYPE.TRIANGLE,
     };
     const pos = positioned(lineNode, 1, 2, 5, 0);
 
-    const result = builder.buildLineConfig(lineNode, pos, theme);
+    const result = builder.buildLineConfig(lineNode, pos);
 
     assert.strictEqual(result.shapeType, LINE_SHAPE);
     assert.ok(result.options.line, 'line sub-object should exist');
@@ -80,39 +87,32 @@ describe('buildLineConfig()', () => {
 
   test('places dashType inside line sub-object', () => {
     const lineNode: LineNode = {
-      type: NODE_TYPE.LINE,
-
+      ...baseLineNode,
       dashType: DASH_TYPE.DASH,
     };
     const pos = positioned(lineNode, 1, 2, 5, 0);
 
-    const result = builder.buildLineConfig(lineNode, pos, theme);
+    const result = builder.buildLineConfig(lineNode, pos);
 
     const lineOpts = result.options.line as Record<string, unknown>;
     assert.strictEqual(lineOpts.dashType, DASH_TYPE.DASH);
   });
 
   test('vertical line when height > width', () => {
-    const lineNode: LineNode = {
-      type: NODE_TYPE.LINE,
-
-    };
+    const lineNode: LineNode = { ...baseLineNode };
     const pos = positioned(lineNode, 1, 2, 0.1, 5);
 
-    const result = builder.buildLineConfig(lineNode, pos, theme);
+    const result = builder.buildLineConfig(lineNode, pos);
 
     assert.strictEqual(result.options.w, 0);
     assert.strictEqual(result.options.h, 5);
   });
 
   test('horizontal line when width >= height', () => {
-    const lineNode: LineNode = {
-      type: NODE_TYPE.LINE,
-
-    };
+    const lineNode: LineNode = { ...baseLineNode };
     const pos = positioned(lineNode, 1, 2, 5, 0.1);
 
-    const result = builder.buildLineConfig(lineNode, pos, theme);
+    const result = builder.buildLineConfig(lineNode, pos);
 
     assert.strictEqual(result.options.w, 5);
     assert.strictEqual(result.options.h, 0);
@@ -120,32 +120,17 @@ describe('buildLineConfig()', () => {
 
   test('applies color and width from lineNode', () => {
     const lineNode: LineNode = {
-      type: NODE_TYPE.LINE,
-
+      ...baseLineNode,
       color: 'FF0000',
       width: 3,
     };
     const pos = positioned(lineNode, 1, 2, 5, 0);
 
-    const result = builder.buildLineConfig(lineNode, pos, theme);
+    const result = builder.buildLineConfig(lineNode, pos);
 
     const lineOpts = result.options.line as Record<string, unknown>;
     assert.strictEqual(lineOpts.color, 'FF0000');
     assert.strictEqual(lineOpts.width, 3);
-  });
-
-  test('uses theme defaults when color and width not specified', () => {
-    const lineNode: LineNode = {
-      type: NODE_TYPE.LINE,
-
-    };
-    const pos = positioned(lineNode, 1, 2, 5, 0);
-
-    const result = builder.buildLineConfig(lineNode, pos, theme);
-
-    const lineOpts = result.options.line as Record<string, unknown>;
-    assert.strictEqual(lineOpts.color, theme.colors.secondary);
-    assert.strictEqual(lineOpts.width, theme.borders.width);
   });
 });
 
@@ -383,7 +368,7 @@ describe('buildCellBorder()', () => {
   test('BORDER_STYLE.INTERNAL - corner cell (0,0) in 3x3 table', () => {
     const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.INTERNAL, borderWidth: 1, borderColor: '000000' };
 
-    const border = builder.buildCellBorder(tableNode, theme, 0, 0, 3, 3);
+    const border = builder.buildCellBorder(tableNode, 0, 0, 3, 3);
 
     assert.ok(border);
     assert.strictEqual(border.length, 4);
@@ -397,7 +382,7 @@ describe('buildCellBorder()', () => {
   test('BORDER_STYLE.INTERNAL - middle cell (1,1) in 3x3 table', () => {
     const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.INTERNAL, borderWidth: 1, borderColor: '000000' };
 
-    const border = builder.buildCellBorder(tableNode, theme, 1, 1, 3, 3);
+    const border = builder.buildCellBorder(tableNode, 1, 1, 3, 3);
 
     assert.ok(border);
     assert.strictEqual(border.length, 4);
@@ -411,7 +396,7 @@ describe('buildCellBorder()', () => {
   test('BORDER_STYLE.INTERNAL - bottom-right cell (2,2) in 3x3 table', () => {
     const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.INTERNAL, borderWidth: 1, borderColor: '000000' };
 
-    const border = builder.buildCellBorder(tableNode, theme, 2, 2, 3, 3);
+    const border = builder.buildCellBorder(tableNode, 2, 2, 3, 3);
 
     assert.ok(border);
     assert.strictEqual(border.length, 4);
@@ -425,7 +410,7 @@ describe('buildCellBorder()', () => {
   test('BORDER_STYLE.FULL - all borders solid', () => {
     const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.FULL, borderWidth: 1, borderColor: '000000' };
 
-    const border = builder.buildCellBorder(tableNode, theme, 1, 1, 3, 3);
+    const border = builder.buildCellBorder(tableNode, 1, 1, 3, 3);
 
     assert.ok(border);
     assert.strictEqual(border.length, 4);
@@ -438,7 +423,7 @@ describe('buildCellBorder()', () => {
   test('BORDER_STYLE.HORIZONTAL - only top and bottom', () => {
     const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.HORIZONTAL, borderWidth: 1, borderColor: '000000' };
 
-    const border = builder.buildCellBorder(tableNode, theme, 1, 1, 3, 3);
+    const border = builder.buildCellBorder(tableNode, 1, 1, 3, 3);
 
     assert.ok(border);
     assert.strictEqual(border.length, 4);
@@ -451,7 +436,7 @@ describe('buildCellBorder()', () => {
   test('BORDER_STYLE.VERTICAL - only left and right', () => {
     const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.VERTICAL, borderWidth: 1, borderColor: '000000' };
 
-    const border = builder.buildCellBorder(tableNode, theme, 1, 1, 3, 3);
+    const border = builder.buildCellBorder(tableNode, 1, 1, 3, 3);
 
     assert.ok(border);
     assert.strictEqual(border.length, 4);
@@ -464,7 +449,7 @@ describe('buildCellBorder()', () => {
   test('BORDER_STYLE.NONE - returns undefined', () => {
     const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.NONE };
 
-    const border = builder.buildCellBorder(tableNode, theme, 1, 1, 3, 3);
+    const border = builder.buildCellBorder(tableNode, 1, 1, 3, 3);
 
     assert.strictEqual(border, undefined);
   });
@@ -472,7 +457,7 @@ describe('buildCellBorder()', () => {
   test('border width and color applied correctly', () => {
     const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.FULL, borderWidth: 2.5, borderColor: 'FF0000' };
 
-    const border = builder.buildCellBorder(tableNode, theme, 0, 0, 1, 1);
+    const border = builder.buildCellBorder(tableNode, 0, 0, 1, 1);
 
     assert.ok(border);
     assert.strictEqual(border[0].pt, 2.5);
@@ -509,43 +494,30 @@ describe('buildColumnWidths()', () => {
 // RECTANGLE TESTS - Regression test #7
 // ============================================
 
+const baseShapeNode: ShapeNode = {
+  type: NODE_TYPE.SHAPE,
+  shape: SHAPE.ROUND_RECT,
+  fill: { color: 'EEEEEE', opacity: 100 },
+  border: { color: 'E7E0EC', width: 0.75 },
+  cornerRadius: 0,
+};
+
 describe('buildShapeConfig() — area shapes', () => {
-  test('returns null when no fill and no border', () => {
-    const shapeNode: ShapeNode = {
-      type: NODE_TYPE.SHAPE,
-      shape: SHAPE.ROUND_RECT,
-    };
-    const pos = positioned(shapeNode, 1, 2, 5, 3);
-
-    const result = builder.buildShapeConfig(shapeNode, pos, theme);
-
-    assert.strictEqual(result, null);
-  });
-
   test('returns ROUND_RECT shape type', () => {
-    const shapeNode: ShapeNode = {
-      type: NODE_TYPE.SHAPE,
-      shape: SHAPE.ROUND_RECT,
-      fill: { color: 'EEEEEE' },
-    };
+    const shapeNode: ShapeNode = { ...baseShapeNode };
     const pos = positioned(shapeNode, 1, 2, 5, 3);
 
-    const result = builder.buildShapeConfig(shapeNode, pos, theme);
+    const result = builder.buildShapeConfig(shapeNode, pos);
 
     assert.ok(result);
     assert.strictEqual(result.shapeType, SHAPE.ROUND_RECT);
   });
 
   test('returns ROUND_RECT shape when cornerRadius specified', () => {
-    const shapeNode: ShapeNode = {
-      type: NODE_TYPE.SHAPE,
-      shape: SHAPE.ROUND_RECT,
-      fill: { color: 'EEEEEE' },
-      cornerRadius: 0.125,
-    };
+    const shapeNode: ShapeNode = { ...baseShapeNode, cornerRadius: 0.125 };
     const pos = positioned(shapeNode, 1, 2, 5, 3);
 
-    const result = builder.buildShapeConfig(shapeNode, pos, theme);
+    const result = builder.buildShapeConfig(shapeNode, pos);
 
     assert.ok(result);
     assert.strictEqual(result.shapeType, SHAPE.ROUND_RECT);
@@ -553,14 +525,10 @@ describe('buildShapeConfig() — area shapes', () => {
   });
 
   test('applies fill color and transparency', () => {
-    const shapeNode: ShapeNode = {
-      type: NODE_TYPE.SHAPE,
-      shape: SHAPE.ROUND_RECT,
-      fill: { color: 'FF0000', opacity: 50 },
-    };
+    const shapeNode: ShapeNode = { ...baseShapeNode, fill: { color: 'FF0000', opacity: 50 } };
     const pos = positioned(shapeNode, 1, 2, 5, 3);
 
-    const result = builder.buildShapeConfig(shapeNode, pos, theme);
+    const result = builder.buildShapeConfig(shapeNode, pos);
 
     assert.ok(result);
     assert.ok(result.options.fill);
@@ -570,18 +538,10 @@ describe('buildShapeConfig() — area shapes', () => {
   });
 
   test('applies border when all sides enabled', () => {
-    const shapeNode: ShapeNode = {
-      type: NODE_TYPE.SHAPE,
-      shape: SHAPE.ROUND_RECT,
-      fill: { color: 'FFFFFF' },
-      border: {
-        color: '000000',
-        width: 2,
-      },
-    };
+    const shapeNode: ShapeNode = { ...baseShapeNode, border: { color: '000000', width: 2 } };
     const pos = positioned(shapeNode, 1, 2, 5, 3);
 
-    const result = builder.buildShapeConfig(shapeNode, pos, theme);
+    const result = builder.buildShapeConfig(shapeNode, pos);
 
     assert.ok(result);
     assert.ok(result.options.line);
@@ -591,40 +551,13 @@ describe('buildShapeConfig() — area shapes', () => {
   });
 
   test('no border when any side explicitly disabled', () => {
-    const shapeNode: ShapeNode = {
-      type: NODE_TYPE.SHAPE,
-      shape: SHAPE.ROUND_RECT,
-      fill: { color: 'FFFFFF' },
-      border: {
-        color: '000000',
-        width: 2,
-        top: false,  // One side disabled
-      },
-    };
+    const shapeNode: ShapeNode = { ...baseShapeNode, border: { color: '000000', width: 2, top: false } };
     const pos = positioned(shapeNode, 1, 2, 5, 3);
 
-    const result = builder.buildShapeConfig(shapeNode, pos, theme);
+    const result = builder.buildShapeConfig(shapeNode, pos);
 
     assert.ok(result);
     assert.strictEqual(result.options.line, undefined);
-  });
-
-  test('uses theme defaults for border color and width', () => {
-    const shapeNode: ShapeNode = {
-      type: NODE_TYPE.SHAPE,
-      shape: SHAPE.ROUND_RECT,
-      fill: { color: 'FFFFFF' },
-      border: {},
-    };
-    const pos = positioned(shapeNode, 1, 2, 5, 3);
-
-    const result = builder.buildShapeConfig(shapeNode, pos, theme);
-
-    assert.ok(result);
-    assert.ok(result.options.line);
-    const line = result.options.line as { color: string; width: number };
-    assert.strictEqual(line.color, theme.colors.secondary);
-    assert.strictEqual(line.width, theme.borders.width);
   });
 });
 
@@ -639,6 +572,7 @@ const baseTextNode: TextNode = {
   color: '333333',
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.TOP,
+  lineHeightMultiplier: 1.2,
 };
 
 describe('buildTextConfig()', () => {
@@ -714,16 +648,20 @@ describe('buildTextConfig()', () => {
     assert.strictEqual(result.options.lineSpacingMultiple, 1.5);
   });
 
-  test('uses bulletSpacing for bullet text', () => {
+  test('bullet text uses lineHeightMultiplier from node (set by expand to bulletSpacing)', () => {
+    // The expand function sets lineHeightMultiplier to bulletSpacing for bullet text.
+    // The renderer just passes it through — no special bullet logic needed here.
+    // Use a distinct value (1.5) to prove the node's value wins, not a coincidence.
     const textNode: TextNode = {
       ...baseTextNode,
       content: [{ text: 'Bullet', bullet: true }],
+      lineHeightMultiplier: 1.5,
     };
     const pos = positioned(textNode, 1, 2, 5, 3);
 
     const result = builder.buildTextConfig(textNode, pos, theme);
 
-    assert.strictEqual(result.options.lineSpacingMultiple, theme.spacing.bulletSpacing);
+    assert.strictEqual(result.options.lineSpacingMultiple, 1.5);
   });
 });
 
@@ -903,6 +841,7 @@ const baseSlideNumNode: SlideNumberNode = {
   style: TEXT_STYLE.FOOTER,
   color: '999999',
   hAlign: HALIGN.RIGHT,
+  vAlign: VALIGN.MIDDLE,
 };
 
 describe('buildSlideNumberOptions()', () => {
@@ -953,12 +892,30 @@ describe('buildSlideNumberOptions()', () => {
     assert.strictEqual(result.align, HALIGN.CENTER);
   });
 
-  test('valign is always MIDDLE', () => {
+  test('valign comes from node (non-default value)', () => {
+    const slideNumNode: SlideNumberNode = {
+      ...baseSlideNumNode,
+      vAlign: VALIGN.TOP,
+    };
+    const pos = positioned(slideNumNode, 1, 2, 2, 0.3);
+    const result = builder.buildSlideNumberOptions(slideNumNode, pos, theme);
+    assert.strictEqual(result.valign, VALIGN.TOP);
+  });
+
+  test('uses defaultWeight from theme style for font selection', () => {
+    // Create a theme where footer style has bold defaultWeight
+    const boldTheme = mockTheme();
+    (boldTheme.textStyles as any).footer = {
+      ...boldTheme.textStyles.footer,
+      fontFamily: {
+        normal: { name: 'Inter', path: '/fonts/inter-normal.woff2' },
+        bold: { name: 'Inter Bold', path: '/fonts/inter-bold.woff2' },
+      },
+      defaultWeight: FONT_WEIGHT.BOLD,
+    };
     const pos = positioned(baseSlideNumNode, 1, 2, 2, 0.3);
-
-    const result = builder.buildSlideNumberOptions(baseSlideNumNode, pos, theme);
-
-    assert.strictEqual(result.valign, VALIGN.MIDDLE);
+    const result = builder.buildSlideNumberOptions(baseSlideNumNode, pos, boldTheme);
+    assert.strictEqual(result.fontFace, 'Inter Bold');
   });
 
   test('position and dimensions applied', () => {

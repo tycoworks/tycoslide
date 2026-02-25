@@ -75,6 +75,7 @@ componentRegistry.define({
     color: props.color ?? tokens?.color,
     hAlign: (props.hAlign ?? HALIGN.LEFT) as any,
     vAlign: (props.vAlign ?? VALIGN.TOP) as any,
+    lineHeightMultiplier: tokens?.lineHeightMultiplier ?? 1.2,
   }),
 });
 

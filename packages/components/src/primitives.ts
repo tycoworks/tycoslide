@@ -4,7 +4,7 @@ import {
   componentRegistry, component, type ComponentNode, type SchemaShape, type ExpansionContext,
   NODE_TYPE, type LineNode, type ShapeNode, type SlideNumberNode,
   ARROW_TYPE_VALUES, SHAPE_VALUES,
-  type ShapeName, type ArrowType, type DashType, type TextStyleName, type HorizontalAlignment,
+  type ShapeName, type ArrowType, type DashType, type TextStyleName, type HorizontalAlignment, type VerticalAlignment,
   schema,
 } from 'tycoslide';
 import { Component } from './names.js';
@@ -25,12 +25,14 @@ export const SLIDE_NUMBER_TOKEN = {
   STYLE: 'style',
   COLOR: 'color',
   HALIGN: 'hAlign',
+  VALIGN: 'vAlign',
 } as const;
 
 export interface SlideNumberTokens {
   [SLIDE_NUMBER_TOKEN.STYLE]: TextStyleName;
   [SLIDE_NUMBER_TOKEN.COLOR]: string;
   [SLIDE_NUMBER_TOKEN.HALIGN]: HorizontalAlignment;
+  [SLIDE_NUMBER_TOKEN.VALIGN]: VerticalAlignment;
 }
 
 export const SHAPE_TOKEN = {
@@ -158,6 +160,7 @@ export interface SlideNumberProps {
   style?: TextStyleName;
   color?: string;
   hAlign?: HorizontalAlignment;
+  vAlign?: VerticalAlignment;
   variant?: string;
 }
 
@@ -167,12 +170,13 @@ function expandSlideNumber(props: SlideNumberProps, _context: ExpansionContext, 
     style: props.style ?? tokens.style,
     color: props.color ?? tokens.color,
     hAlign: props.hAlign ?? tokens.hAlign,
+    vAlign: props.vAlign ?? tokens.vAlign,
   };
 }
 
 export const slideNumberComponent = componentRegistry.define({
   name: Component.SlideNumber,
-  tokens: [SLIDE_NUMBER_TOKEN.STYLE, SLIDE_NUMBER_TOKEN.COLOR, SLIDE_NUMBER_TOKEN.HALIGN],
+  tokens: [SLIDE_NUMBER_TOKEN.STYLE, SLIDE_NUMBER_TOKEN.COLOR, SLIDE_NUMBER_TOKEN.HALIGN, SLIDE_NUMBER_TOKEN.VALIGN],
   expand: expandSlideNumber,
 });
 
