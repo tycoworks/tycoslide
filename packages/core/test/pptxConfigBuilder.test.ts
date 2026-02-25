@@ -227,23 +227,6 @@ describe('buildTableCell()', () => {
     assert.strictEqual(result.options.valign, VALIGN.TOP);
   });
 
-  test('vAlign cascade: cell without vAlign and no table style uses default MIDDLE', () => {
-    const cell: TableCellData = {
-      content: 'Cell with terminal default',
-    };
-    const tableNode: TableNode = { type: NODE_TYPE.TABLE, rows: [] };
-
-    const result = builder.buildTableCell(
-      cell,
-      0, 0, 1, 1,
-      0, 0,
-      tableNode,
-      theme
-    );
-
-    assert.strictEqual(result.options.valign, VALIGN.MIDDLE);
-  });
-
   test('hAlign cascade: cell hAlign overrides table style', () => {
     const cell: TableCellData = {
       content: 'Right aligned',
@@ -649,16 +632,24 @@ describe('buildShapeConfig() — area shapes', () => {
 // TEXT CONFIG TESTS - Regression test #8
 // ============================================
 
+const baseTextNode: TextNode = {
+  type: NODE_TYPE.TEXT,
+  content: 'Text',
+  style: TEXT_STYLE.BODY,
+  color: '333333',
+  hAlign: HALIGN.LEFT,
+  vAlign: VALIGN.TOP,
+};
+
 describe('buildTextConfig()', () => {
   test('does not include align option when text has bullets', () => {
     const textNode: TextNode = {
-      type: NODE_TYPE.TEXT,
+      ...baseTextNode,
       content: [
         { text: 'Item 1', bullet: true },
         { text: 'Item 2', bullet: true },
       ],
       hAlign: HALIGN.CENTER,
-      vAlign: VALIGN.TOP,
     };
     const pos = positioned(textNode, 1, 2, 5, 3);
 
@@ -670,10 +661,9 @@ describe('buildTextConfig()', () => {
 
   test('includes align option when text has no bullets', () => {
     const textNode: TextNode = {
-      type: NODE_TYPE.TEXT,
+      ...baseTextNode,
       content: 'Plain text',
       hAlign: HALIGN.CENTER,
-      vAlign: VALIGN.TOP,
     };
     const pos = positioned(textNode, 1, 2, 5, 3);
 
@@ -685,11 +675,9 @@ describe('buildTextConfig()', () => {
 
   test('applies text style from theme', () => {
     const textNode: TextNode = {
-      type: NODE_TYPE.TEXT,
+      ...baseTextNode,
       content: 'Styled text',
       style: TEXT_STYLE.H1,
-      hAlign: HALIGN.LEFT,
-      vAlign: VALIGN.TOP,
     };
     const pos = positioned(textNode, 1, 2, 5, 3);
 
@@ -702,11 +690,9 @@ describe('buildTextConfig()', () => {
 
   test('applies color override from node', () => {
     const textNode: TextNode = {
-      type: NODE_TYPE.TEXT,
+      ...baseTextNode,
       content: 'Colored text',
       color: 'FF0000',
-      hAlign: HALIGN.LEFT,
-      vAlign: VALIGN.TOP,
     };
     const pos = positioned(textNode, 1, 2, 5, 3);
 
@@ -717,11 +703,9 @@ describe('buildTextConfig()', () => {
 
   test('applies custom line height multiplier from node', () => {
     const textNode: TextNode = {
-      type: NODE_TYPE.TEXT,
+      ...baseTextNode,
       content: 'Text with custom spacing',
       lineHeightMultiplier: 1.5,
-      hAlign: HALIGN.LEFT,
-      vAlign: VALIGN.TOP,
     };
     const pos = positioned(textNode, 1, 2, 5, 3);
 
@@ -732,10 +716,8 @@ describe('buildTextConfig()', () => {
 
   test('uses bulletSpacing for bullet text', () => {
     const textNode: TextNode = {
-      type: NODE_TYPE.TEXT,
+      ...baseTextNode,
       content: [{ text: 'Bullet', bullet: true }],
-      hAlign: HALIGN.LEFT,
-      vAlign: VALIGN.TOP,
     };
     const pos = positioned(textNode, 1, 2, 5, 3);
 
@@ -916,15 +898,18 @@ describe('buildTextFragments()', () => {
 // SLIDE NUMBER TESTS
 // ============================================
 
-describe('buildSlideNumberOptions()', () => {
-  test('applies default FOOTER style', () => {
-    const slideNumNode: SlideNumberNode = {
-      type: NODE_TYPE.SLIDE_NUMBER,
-      hAlign: HALIGN.RIGHT,
-    };
-    const pos = positioned(slideNumNode, 1, 2, 2, 0.3);
+const baseSlideNumNode: SlideNumberNode = {
+  type: NODE_TYPE.SLIDE_NUMBER,
+  style: TEXT_STYLE.FOOTER,
+  color: '999999',
+  hAlign: HALIGN.RIGHT,
+};
 
-    const result = builder.buildSlideNumberOptions(slideNumNode, pos, theme);
+describe('buildSlideNumberOptions()', () => {
+  test('applies FOOTER style from node', () => {
+    const pos = positioned(baseSlideNumNode, 1, 2, 2, 0.3);
+
+    const result = builder.buildSlideNumberOptions(baseSlideNumNode, pos, theme);
 
     const footerStyle = theme.textStyles[TEXT_STYLE.FOOTER];
     assert.strictEqual(result.fontSize, footerStyle.fontSize);
@@ -933,9 +918,8 @@ describe('buildSlideNumberOptions()', () => {
 
   test('applies custom style', () => {
     const slideNumNode: SlideNumberNode = {
-      type: NODE_TYPE.SLIDE_NUMBER,
+      ...baseSlideNumNode,
       style: TEXT_STYLE.SMALL,
-      hAlign: HALIGN.RIGHT,
     };
     const pos = positioned(slideNumNode, 1, 2, 2, 0.3);
 
@@ -947,9 +931,8 @@ describe('buildSlideNumberOptions()', () => {
 
   test('applies color override', () => {
     const slideNumNode: SlideNumberNode = {
-      type: NODE_TYPE.SLIDE_NUMBER,
+      ...baseSlideNumNode,
       color: 'FF0000',
-      hAlign: HALIGN.RIGHT,
     };
     const pos = positioned(slideNumNode, 1, 2, 2, 0.3);
 
@@ -960,7 +943,7 @@ describe('buildSlideNumberOptions()', () => {
 
   test('applies hAlign from node', () => {
     const slideNumNode: SlideNumberNode = {
-      type: NODE_TYPE.SLIDE_NUMBER,
+      ...baseSlideNumNode,
       hAlign: HALIGN.CENTER,
     };
     const pos = positioned(slideNumNode, 1, 2, 2, 0.3);
@@ -971,25 +954,17 @@ describe('buildSlideNumberOptions()', () => {
   });
 
   test('valign is always MIDDLE', () => {
-    const slideNumNode: SlideNumberNode = {
-      type: NODE_TYPE.SLIDE_NUMBER,
-      hAlign: HALIGN.RIGHT,
-    };
-    const pos = positioned(slideNumNode, 1, 2, 2, 0.3);
+    const pos = positioned(baseSlideNumNode, 1, 2, 2, 0.3);
 
-    const result = builder.buildSlideNumberOptions(slideNumNode, pos, theme);
+    const result = builder.buildSlideNumberOptions(baseSlideNumNode, pos, theme);
 
     assert.strictEqual(result.valign, VALIGN.MIDDLE);
   });
 
   test('position and dimensions applied', () => {
-    const slideNumNode: SlideNumberNode = {
-      type: NODE_TYPE.SLIDE_NUMBER,
-      hAlign: HALIGN.RIGHT,
-    };
-    const pos = positioned(slideNumNode, 1.5, 2.5, 3, 0.4);
+    const pos = positioned(baseSlideNumNode, 1.5, 2.5, 3, 0.4);
 
-    const result = builder.buildSlideNumberOptions(slideNumNode, pos, theme);
+    const result = builder.buildSlideNumberOptions(baseSlideNumNode, pos, theme);
 
     assert.strictEqual(result.x, 1.5);
     assert.strictEqual(result.y, 2.5);

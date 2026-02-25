@@ -4,7 +4,7 @@
 
 import type { PositionedNode, TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, TableCellData } from '../model/nodes.js';
 import type { Theme, TextStyleName, TextContent } from '../model/types.js';
-import { TEXT_STYLE, HALIGN, VALIGN, FONT_WEIGHT, BORDER_STYLE, LINE_SHAPE } from '../model/types.js';
+import { VALIGN, FONT_WEIGHT, BORDER_STYLE, LINE_SHAPE } from '../model/types.js';
 import { getFontFromFamily, normalizeContent, resolveLineHeight, getParagraphGapRatio } from '../../utils/font.js';
 import { readImageDimensions, containFit } from '../../utils/image.js';
 
@@ -49,7 +49,7 @@ export class PptxConfigBuilder {
     positioned: PositionedNode,
     theme: Theme
   ): { fragments: TextFragment[]; options: Record<string, unknown> } {
-    const styleName = textNode.style ?? TEXT_STYLE.BODY;
+    const styleName = textNode.style!;
     const style = theme.textStyles[styleName];
     const defaultFont = getFontFromFamily(style.fontFamily, style.defaultWeight ?? FONT_WEIGHT.NORMAL);
     const fragments = this.buildTextFragments(textNode.content, styleName, theme, textNode.color);
@@ -67,7 +67,7 @@ export class PptxConfigBuilder {
       h: positioned.height,
       fontSize: style.fontSize,
       fontFace: defaultFont.name,
-      color: textNode.color ?? style.color ?? theme.colors.text,
+      color: textNode.color!,
       margin: 0,
       wrap: true,
       lineSpacingMultiple: lineSpacing,
@@ -217,7 +217,7 @@ export class PptxConfigBuilder {
     positioned: PositionedNode,
     theme: Theme
   ): Record<string, unknown> {
-    const styleName = slideNumNode.style ?? TEXT_STYLE.FOOTER;
+    const styleName = slideNumNode.style!;
     const style = theme.textStyles[styleName as keyof typeof theme.textStyles];
     const font = getFontFromFamily(style.fontFamily, FONT_WEIGHT.NORMAL);
 
@@ -228,7 +228,7 @@ export class PptxConfigBuilder {
       h: positioned.height,
       fontFace: font.name,
       fontSize: style.fontSize,
-      color: slideNumNode.color ?? style.color ?? theme.colors.textMuted,
+      color: slideNumNode.color!,
       align: slideNumNode.hAlign,
       valign: VALIGN.MIDDLE,
       margin: 0,
@@ -257,17 +257,16 @@ export class PptxConfigBuilder {
 
     // Determine text style (cell-level override wins over table-level)
     const styleName = cell.textStyle
-      ?? (isHeader ? tableNode.headerTextStyle : tableNode.cellTextStyle)
-      ?? TEXT_STYLE.BODY;
+      ?? (isHeader ? tableNode.headerTextStyle : tableNode.cellTextStyle)!;
     const textStyle = theme.textStyles[styleName];
     const font = getFontFromFamily(textStyle.fontFamily, textStyle.defaultWeight ?? FONT_WEIGHT.NORMAL);
 
     // Determine alignment
-    const hAlign = cell.hAlign ?? tableNode.hAlign ?? HALIGN.LEFT;
-    const vAlign = cell.vAlign ?? tableNode.vAlign ?? VALIGN.MIDDLE;
+    const hAlign = cell.hAlign ?? tableNode.hAlign!;
+    const vAlign = cell.vAlign ?? tableNode.vAlign!;
 
     // Cell padding
-    const cellPadding = tableNode.cellPadding ?? theme.spacing.cellPadding ?? 0.05;
+    const cellPadding = tableNode.cellPadding!;
 
     // Build border config based on border style and cell position
     const border = this.buildCellBorder(tableNode, theme, rowIndex, colIndex, numRows, numCols);
@@ -318,7 +317,7 @@ export class PptxConfigBuilder {
     numRows: number,
     numCols: number
   ): Array<{ pt?: number; color?: string; type?: string }> | undefined {
-    const borderStyle = tableNode.borderStyle ?? BORDER_STYLE.FULL;
+    const borderStyle = tableNode.borderStyle!;
     if (borderStyle === BORDER_STYLE.NONE) return undefined;
 
     const borderWidth = tableNode.borderWidth ?? theme.borders.width;
@@ -349,8 +348,10 @@ export class PptxConfigBuilder {
           isLastRow ? none : solid,   // bottom
           isFirstCol ? none : solid,  // left
         ];
-      default:
-        return [solid, solid, solid, solid];
+      default: {
+        const _exhaustive: never = borderStyle;
+        return _exhaustive;
+      }
     }
   }
 }

@@ -13,7 +13,7 @@ import type { Page } from 'playwright';
 import type { ElementNode, TextNode, ImageNode, LineNode, ContainerNode, StackNode, SlideNumberNode, TableNode, TableCellData } from '../model/nodes.js';
 import { NODE_TYPE } from '../model/nodes.js';
 import type { Theme, TextStyle, FontWeight, VerticalAlignment, HorizontalAlignment, SizeValue, NormalizedRun, Direction } from '../model/types.js';
-import { TEXT_STYLE, FONT_WEIGHT, SIZE, VALIGN, HALIGN, DIRECTION } from '../model/types.js';
+import { FONT_WEIGHT, SIZE, VALIGN, HALIGN, DIRECTION } from '../model/types.js';
 import type { Bounds } from '../model/bounds.js';
 import { normalizeContent, fontWeightToNumeric, resolveLineHeight } from '../../utils/font.js';
 import { readImageDimensions } from '../../utils/image.js';
@@ -238,7 +238,7 @@ function styleText(
   nodeId: string,
   fontRatios?: FontNormalRatios,
 ): StyledNode {
-  const styleName = node.style ?? TEXT_STYLE.BODY;
+  const styleName = node.style!;
   const style = theme.textStyles[styleName];
   const runs = normalizeContent(node.content);
   const hasBullets = runs.some(r => r.bullet);
@@ -283,7 +283,7 @@ function styleImage(
     throw new Error(`Cannot read image dimensions: ${node.src}`);
   }
 
-  const maxScaleFactor = theme.spacing.maxScaleFactor ?? 1.0;
+  const maxScaleFactor = theme.spacing.maxScaleFactor;
   const maxWidthPx = dims.width * maxScaleFactor;
   const maxHeightPx = dims.height * maxScaleFactor;
 
@@ -341,7 +341,7 @@ function styleSlideNumber(
   theme: Theme,
   nodeId: string,
 ): StyledNode {
-  const styleName = node.style ?? TEXT_STYLE.FOOTER;
+  const styleName = node.style!;
   const style = theme.textStyles[styleName];
   const fontSizePx = ptToPx(style.fontSize);
   const defaultFont = style.fontFamily.normal;
@@ -370,7 +370,7 @@ function styleTable(
 ): StyledNode {
   const cellNodes = getTableCellNodes(node);
   const numCols = node.rows[0]?.length ?? 0;
-  const cellPadding = node.cellPadding ?? theme.spacing.cellPadding;
+  const cellPadding = node.cellPadding!;
   const cellPaddingPx = inToPx(cellPadding);
   const isInRow = parent.direction === DIRECTION.ROW;
 
@@ -551,15 +551,14 @@ function getTableCellNodes(node: TableNode): TextNode[][] {
     row.map((cell: TableCellData) => {
       const isHeaderRow = (node.headerRows ?? 0) > rowIndex;
       const style = cell.textStyle
-        ?? (isHeaderRow ? node.headerTextStyle : node.cellTextStyle)
-        ?? TEXT_STYLE.BODY;
+        ?? (isHeaderRow ? node.headerTextStyle : node.cellTextStyle)!;
 
       const textNode: TextNode = {
         type: NODE_TYPE.TEXT,
         content: cell.content,
         style,
-        hAlign: cell.hAlign ?? node.hAlign ?? HALIGN.LEFT,
-        vAlign: cell.vAlign ?? node.vAlign ?? VALIGN.MIDDLE,
+        hAlign: cell.hAlign ?? node.hAlign!,
+        vAlign: cell.vAlign ?? node.vAlign!,
       };
       return textNode;
     })
