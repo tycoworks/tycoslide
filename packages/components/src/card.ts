@@ -24,7 +24,6 @@ export const CARD_TOKEN = {
   DESCRIPTION_STYLE: 'descriptionStyle',
   DESCRIPTION_COLOR: 'descriptionColor',
   GAP: 'gap',
-  TEXT_GAP: 'textGap',
   HALIGN: 'hAlign',
   VALIGN: 'vAlign',
 } as const;
@@ -41,7 +40,6 @@ export interface CardTokens {
   [CARD_TOKEN.DESCRIPTION_STYLE]: TextStyleName;
   [CARD_TOKEN.DESCRIPTION_COLOR]: string;
   [CARD_TOKEN.GAP]: GapSize;
-  [CARD_TOKEN.TEXT_GAP]: GapSize;
   [CARD_TOKEN.HALIGN]: HorizontalAlignment;
   [CARD_TOKEN.VALIGN]: VerticalAlignment;
 }
@@ -90,7 +88,7 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
   const {
     padding, cornerRadius, backgroundColor, backgroundOpacity,
     borderColor, borderWidth, titleStyle, titleColor,
-    descriptionStyle, descriptionColor, textGap,
+    descriptionStyle, descriptionColor, gap,
     hAlign: contentHAlign, vAlign: contentVAlign,
   } = tokens;
 
@@ -116,7 +114,7 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
     }));
   }
 
-  const contentProps = { padding, gap: textGap, hAlign: contentHAlign, vAlign: contentVAlign };
+  const contentProps = { padding, gap, hAlign: contentHAlign, vAlign: contentVAlign };
   const outerHeight = sizeHeight ?? SIZE.FILL;
 
   // If no background (opacity 0), just return the content column directly
@@ -147,7 +145,7 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
 export const cardComponent = componentRegistry.define({
   name: Component.Card,
   params: cardSchema,
-  tokens: [CARD_TOKEN.PADDING, CARD_TOKEN.CORNER_RADIUS, CARD_TOKEN.BACKGROUND_COLOR, CARD_TOKEN.BACKGROUND_OPACITY, CARD_TOKEN.BORDER_COLOR, CARD_TOKEN.BORDER_WIDTH, CARD_TOKEN.TITLE_STYLE, CARD_TOKEN.TITLE_COLOR, CARD_TOKEN.DESCRIPTION_STYLE, CARD_TOKEN.DESCRIPTION_COLOR, CARD_TOKEN.GAP, CARD_TOKEN.TEXT_GAP, CARD_TOKEN.HALIGN, CARD_TOKEN.VALIGN],
+  tokens: [CARD_TOKEN.PADDING, CARD_TOKEN.CORNER_RADIUS, CARD_TOKEN.BACKGROUND_COLOR, CARD_TOKEN.BACKGROUND_OPACITY, CARD_TOKEN.BORDER_COLOR, CARD_TOKEN.BORDER_WIDTH, CARD_TOKEN.TITLE_STYLE, CARD_TOKEN.TITLE_COLOR, CARD_TOKEN.DESCRIPTION_STYLE, CARD_TOKEN.DESCRIPTION_COLOR, CARD_TOKEN.GAP, CARD_TOKEN.HALIGN, CARD_TOKEN.VALIGN],
   expand: expandCard,
 });
 
