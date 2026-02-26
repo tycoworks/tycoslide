@@ -29,7 +29,7 @@ export type VerticalAlignment = typeof VALIGN[keyof typeof VALIGN];
 /** All VALIGN values as a tuple — useful for Zod enum schemas */
 export const VALIGN_VALUES = Object.values(VALIGN) as [VerticalAlignment, ...VerticalAlignment[]];
 
-// Content kinds for the Text component — controls parsing level
+// Content types for the Text component — controls parsing level
 export const CONTENT = {
   PLAIN: 'plain',
   RICH: 'rich',

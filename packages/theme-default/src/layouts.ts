@@ -25,7 +25,7 @@ export function headerBlock(title: string, eyebrow?: string): SlideNode {
   if (eyebrow) {
     return column(
       { gap: GAP.TIGHT },
-      text(eyebrow.toUpperCase(), { content: CONTENT.PLAIN, style: TEXT_STYLE.EYEBROW }),
+      text(eyebrow.toUpperCase(), { content: CONTENT.PLAIN, variant: 'eyebrow' }),
       text(title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H3 }),
     );
   }

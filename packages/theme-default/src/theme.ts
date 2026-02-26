@@ -194,8 +194,9 @@ export const theme: Theme = {
     },
     text: {
       variants: {
-        default: { ...textBase, color: colors.text, bulletColor: colors.text },
-        muted:   { ...textBase, color: colors.textMuted, bulletColor: colors.textMuted },
+        default:  { ...textBase, color: colors.text, bulletColor: colors.text },
+        eyebrow:  { ...textBase, color: colors.textMuted, bulletColor: colors.textMuted, style: TEXT_STYLE.EYEBROW, lineHeightMultiplier: 1.0 },
+        muted:    { ...textBase, color: colors.textMuted, bulletColor: colors.textMuted },
         accent:  { ...textBase, color: colors.accents.blue, bulletColor: colors.accents.blue },
         inverse: { ...textBase, color: colors.background, bulletColor: colors.background },
       },
