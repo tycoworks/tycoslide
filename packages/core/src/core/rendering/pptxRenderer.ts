@@ -20,7 +20,7 @@ import { log, contentPreview } from '../../utils/log.js';
 /** Options for rendering a slide */
 export interface RenderSlideOptions {
   masterName?: string;
-  masterContent?: PositionedNode;  // Master's positioned footer/fixed content
+  masterContent?: PositionedNode;  // Master's positioned content
   background?: string;
   notes?: string;
 }
@@ -29,7 +29,7 @@ export interface RenderSlideOptions {
 export interface MasterDefinition {
   name: string;
   background?: string;
-  content: PositionedNode;  // Positioned footer/fixed elements
+  content: PositionedNode;  // Positioned master elements
 }
 
 /** Options for writing output */

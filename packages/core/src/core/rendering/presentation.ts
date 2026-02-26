@@ -17,9 +17,6 @@ import { LayoutPipeline } from '../layout/pipeline.js';
 
 export type { Slide, Master } from '../model/types.js';
 
-// Footer height as proportion of margin (footer sits in bottom margin area)
-const FOOTER_HEIGHT_RATIO = 0.6;
-
 // ============================================
 // DEFERRED SLIDE (internal)
 // ============================================
@@ -48,6 +45,7 @@ export class Presentation {
   private _assets?: Record<string, unknown>;
   private masters = new Map<string, { contentBounds: Bounds; positioned: PositionedNode }>();
   private fullBounds: Bounds;
+  private masterBounds: Bounds;
   private slideCount = 0;
   private deferredSlides: DeferredSlide[] = [];
 
@@ -60,6 +58,7 @@ export class Presentation {
     const { margin } = theme.spacing;
     const { width, height } = theme.slide;
     this.fullBounds = new Bounds(width, height, margin);
+    this.masterBounds = new Bounds(width, height);  // Full slide — masters position their own content
   }
 
   get theme(): Theme {
@@ -75,19 +74,6 @@ export class Presentation {
     this.slideCount++;
     log.pptx.slide('STORE slide #%d master=%s (deferred)', slideIndex + 1, slide.master?.name ?? 'none');
     this.deferredSlides.push({ slide, slideIndex });
-  }
-
-  /** Calculate footer bounds (bottom margin area) */
-  private getFooterBounds(contentBounds: Bounds): Bounds {
-    const { margin } = this._theme.spacing;
-    const { width, height } = this._theme.slide;
-    const footerHeight = margin * FOOTER_HEIGHT_RATIO;
-    return new Bounds(
-      margin,
-      height - margin + (margin - footerHeight) / 2,
-      width - margin * 2,
-      footerHeight,
-    );
   }
 
   /**
@@ -137,7 +123,6 @@ export class Presentation {
         master: Master;
         content: ElementNode;
         contentBounds: Bounds;
-        footerBounds: Bounds;
       }>();
 
       // First pass: identify unique masters and get their bounds
@@ -146,15 +131,13 @@ export class Presentation {
         if (master && !this.masters.has(master.name) && !pendingMasters.has(master.name)) {
           const { content: rawMasterContent, contentBounds } = master.getContent(this._theme);
           const masterContent = await componentRegistry.expandTree(rawMasterContent, { theme: this._theme, assets: this._assets });
-          const footerBounds = this.getFooterBounds(contentBounds);
           pendingMasters.set(master.name, {
             master,
             content: masterContent,
             contentBounds,
-            footerBounds,
           });
-          // Collect measurements from master content
-          pipeline.collectFromTree(masterContent, footerBounds, `master-${master.name}`);
+          // Collect measurements from master content (full slide — masters position their own elements)
+          pipeline.collectFromTree(masterContent, this.masterBounds, `master-${master.name}`);
         }
       }
 
@@ -202,9 +185,9 @@ export class Presentation {
       await pipeline.executeMeasurements(this._theme, debugDir);
 
       // Phase 4: Define masters (build positioned trees from browser measurements)
-      for (const [name, { master, content, contentBounds, footerBounds }] of pendingMasters) {
+      for (const [name, { master, content, contentBounds }] of pendingMasters) {
         log.pptx.master('DEFINE master "%s" (with measurements)', name);
-        const positioned = pipeline.computeLayout(content, footerBounds);
+        const positioned = pipeline.computeLayout(content, this.masterBounds);
         this.renderer.defineMaster({ name, background: master.background, content: positioned }, this._theme);
         this.masters.set(name, { contentBounds, positioned });
       }
@@ -231,7 +214,7 @@ export class Presentation {
         // Validate (non-throwing) and collect errors
         const validator = new LayoutValidator({
           width: bounds.x + bounds.w,   // Absolute right edge
-          height: bounds.y + bounds.h,  // Absolute bottom edge (excludes footer)
+          height: bounds.y + bounds.h,  // Absolute bottom edge
         });
         const result = validator.validate(positioned);
         if (result.overflows.length > 0 || result.overlaps.length > 0 || result.boundsEscapes.length > 0) {

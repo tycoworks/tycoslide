@@ -460,8 +460,8 @@ export interface Master {
   name: string;
   background?: string;
   getContent(theme: Theme): {
-    content: ComponentNode;     // Footer/fixed elements as declarative nodes
-    contentBounds: Bounds;     // Where slide content goes
+    content: ComponentNode;     // Master's visual elements (full-slide layout tree)
+    contentBounds: Bounds;     // Where per-slide content goes
   };
 }
 

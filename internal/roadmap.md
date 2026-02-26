@@ -16,10 +16,6 @@ The big piece. A polished default theme with good colors, layouts, and a showcas
 
 Markdown `>` blockquote syntax doesn't produce quote components. Need to register a blockquote handler in the markdown compilation pipeline so `>` maps to the quote component.
 
-### Review Masters & Footer
-
-Verify the footer concept lives only in theme masters, not in core. Currently `FOOTER_HEIGHT_RATIO` and `getFooterBounds()` in `presentation.ts` hardcode footer layout. Footer is purely a master concern. Fix: `Master.getContent()` should return `masterBounds` in addition to `contentBounds`. Delete the footer plumbing from core.
-
 ### Test Coverage
 
 Zero-coverage files that need tests:
