@@ -26,10 +26,6 @@ Zero-coverage files that need tests:
 - `themeLoader.ts` — zero dedicated tests
 - Unit conversion functions (`pxToIn`, `inToPx`, `inToPt`, `ptToIn`)
 
-### Code Quality
-
-- **headerColumns not checked in layoutHtml** — `getTableCellNodes` in `layoutHtml.tsx` only checks `headerRows`, not `headerColumns`. Header column cells get `cellTextStyle` instead of `headerTextStyle` in HTML measurement, while `pptxConfigBuilder` handles it correctly. Low impact unless header/cell text styles differ significantly.
-
 
 ---
 

@@ -156,8 +156,9 @@ export const tableComponent = componentRegistry.define({
 
     // Normalize cells: convert plain strings/TextContent to fully-resolved TableCellData
     const headerRowCount = headerRows ?? 0;
+    const headerColumnCount = headerColumns ?? 0;
     const rows: TableCellData[][] = await Promise.all(data.map((row, rowIndex) =>
-      Promise.all(row.map(async (cell) => {
+      Promise.all(row.map(async (cell, colIndex) => {
         // Extract partial cell data from input
         let partialColor: string | undefined;
         let partialTextStyle: TextStyleName | undefined;
@@ -185,7 +186,7 @@ export const tableComponent = componentRegistry.define({
         }
 
         // Resolve cascade: cell → table tokens → theme defaults
-        const isHeader = rowIndex < headerRowCount;
+        const isHeader = rowIndex < headerRowCount || colIndex < headerColumnCount;
         const textStyle = partialTextStyle ?? (isHeader ? tokens.headerTextStyle : tokens.cellTextStyle);
         const resolvedTextStyle = context.theme.textStyles[textStyle];
         const color = partialColor ?? (isHeader ? tokens.headerTextColor : tokens.cellTextColor);
