@@ -32,11 +32,6 @@ Zero-coverage files that need tests:
 
 ### Code Quality
 
-- Split `types.ts` (503 lines) into `types.ts`, `shapes.ts`, `tokens.ts`, `theme.ts`
-- Standardize test assert imports (3 patterns currently)
-- Standardize `test()` vs `it()` (pick one)
-- Extract `layoutHtml.test.ts` inline mock to shared `mockTheme()`
-- Replace magic strings in tests with typed constants — `components.test.ts` uses string literals like `'body'`, `'full'`, `'small'` in assertions instead of `TEXT_STYLE.BODY`, `BORDER_STYLE.FULL`, `TEXT_STYLE.SMALL`. Same rule as the `Component` enum: never use string literals when typed constants exist.
 - **headerColumns not checked in layoutHtml** — `getTableCellNodes` in `layoutHtml.tsx` only checks `headerRows`, not `headerColumns`. Header column cells get `cellTextStyle` instead of `headerTextStyle` in HTML measurement, while `pptxConfigBuilder` handles it correctly. Low impact unless header/cell text styles differ significantly.
 
 

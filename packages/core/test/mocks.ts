@@ -41,6 +41,9 @@ export function mockTheme(options?: {
   borderRadius?: number;
   accents?: Record<string, string>;
   components?: Record<string, Record<string, unknown>>;
+  textStyles?: Partial<Record<string, Partial<TextStyle>>>;
+  slide?: { layout: string; width: number; height: number };
+  colors?: Partial<Theme['colors']>;
 }): Theme {
   const gap = options?.gap ?? 0.25;
   const gapTight = options?.gapTight ?? 0.125;
@@ -167,15 +170,15 @@ export function mockTheme(options?: {
   }
 
   return {
-    slide: { layout: 'CUSTOM' as const, width: 13.333, height: 7.5 },
+    slide: (options?.slide ?? { layout: 'CUSTOM', width: 13.333, height: 7.5 }) as Theme['slide'],
     colors: {
-      primary: 'FF0000',
-      background: 'FFFFFF',
-      secondary: '333333',
-      accents,
-      text: '000000',
-      textMuted: '666666',
-      subtleOpacity: 20,
+      primary: options?.colors?.primary ?? 'FF0000',
+      background: options?.colors?.background ?? 'FFFFFF',
+      secondary: options?.colors?.secondary ?? '333333',
+      accents: options?.colors?.accents ?? accents,
+      text: options?.colors?.text ?? '000000',
+      textMuted: options?.colors?.textMuted ?? '666666',
+      subtleOpacity: options?.colors?.subtleOpacity ?? 20,
     },
     spacing: {
       unit: 0.03125,
@@ -195,14 +198,14 @@ export function mockTheme(options?: {
       radius: borderRadius,
     },
     textStyles: {
-      [TEXT_STYLE.H1]: mockTextStyle,
-      [TEXT_STYLE.H2]: mockTextStyle,
-      [TEXT_STYLE.H3]: mockTextStyle,
-      [TEXT_STYLE.H4]: mockTextStyle,
-      [TEXT_STYLE.BODY]: mockTextStyle,
-      [TEXT_STYLE.SMALL]: mockTextStyle,
-      [TEXT_STYLE.FOOTER]: mockTextStyle,
-      [TEXT_STYLE.EYEBROW]: mockTextStyle,
+      [TEXT_STYLE.H1]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.H1] },
+      [TEXT_STYLE.H2]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.H2] },
+      [TEXT_STYLE.H3]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.H3] },
+      [TEXT_STYLE.H4]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.H4] },
+      [TEXT_STYLE.BODY]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.BODY] },
+      [TEXT_STYLE.SMALL]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.SMALL] },
+      [TEXT_STYLE.FOOTER]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.FOOTER] },
+      [TEXT_STYLE.EYEBROW]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.EYEBROW] },
     },
     components: mergedComponents as Theme['components'],
   };

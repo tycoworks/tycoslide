@@ -31,6 +31,7 @@ import {
   SHAPE,
   ARROW_TYPE,
   DASH_TYPE,
+  BORDER_STYLE,
 } from 'tycoslide';
 import type { TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, ContainerNode, StackNode } from 'tycoslide';
 import { mockTheme as createMockTheme } from './mocks.js';
@@ -838,29 +839,29 @@ describe('table() token defaults and theme overrides', () => {
       { theme }
     ) as TableNode;
     assert.strictEqual(node.type, NODE_TYPE.TABLE);
-    assert.strictEqual(node.borderStyle, 'full');
+    assert.strictEqual(node.borderStyle, BORDER_STYLE.FULL);
     assert.strictEqual(node.borderColor, theme.colors.secondary);
     assert.strictEqual(node.borderWidth, theme.borders.width);
     assert.strictEqual(node.cellPadding, theme.spacing.cellPadding);
-    assert.strictEqual(node.cellTextStyle, 'body');
-    assert.strictEqual(node.headerTextStyle, 'body');
+    assert.strictEqual(node.cellTextStyle, TEXT_STYLE.BODY);
+    assert.strictEqual(node.headerTextStyle, TEXT_STYLE.BODY);
   });
 
   it('applies theme.components.table overrides while keeping other defaults', async () => {
     const theme = createMockTheme({
-      components: { table: { borderColor: 'FF0000', cellTextStyle: 'small' } },
+      components: { table: { borderColor: 'FF0000', cellTextStyle: TEXT_STYLE.SMALL } },
     });
     const node = await componentRegistry.expandTree(
       table([['A', 'B']], { headerRows: 1 }),
       { theme }
     ) as TableNode;
     assert.strictEqual(node.borderColor, 'FF0000');
-    assert.strictEqual(node.cellTextStyle, 'small');
+    assert.strictEqual(node.cellTextStyle, TEXT_STYLE.SMALL);
     // Defaults still fill remaining tokens
-    assert.strictEqual(node.borderStyle, 'full');
+    assert.strictEqual(node.borderStyle, BORDER_STYLE.FULL);
     assert.strictEqual(node.borderWidth, theme.borders.width);
     assert.strictEqual(node.cellPadding, theme.spacing.cellPadding);
-    assert.strictEqual(node.headerTextStyle, 'body');
+    assert.strictEqual(node.headerTextStyle, TEXT_STYLE.BODY);
   });
 });
 

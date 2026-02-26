@@ -8,67 +8,39 @@ import { generateLayoutHTML } from '../src/core/layout/layoutHtml.js';
 import { Bounds } from '../src/core/model/bounds.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import type { ElementNode, TextNode, ContainerNode, StackNode, ImageNode, LineNode, ShapeNode } from '../src/core/model/nodes.js';
-import type { Theme, NormalizedRun } from '../src/core/model/types.js';
-import { HALIGN, VALIGN, SIZE, SHAPE, DASH_TYPE, TEXT_STYLE, DIRECTION, FONT_WEIGHT } from '../src/core/model/types.js';
+import type { NormalizedRun } from '../src/core/model/types.js';
+import { HALIGN, VALIGN, SIZE, SHAPE, DASH_TYPE, TEXT_STYLE, DIRECTION } from '../src/core/model/types.js';
+import { mockTheme as createMockTheme } from './mocks.js';
 import path from 'path';
-import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const require = createRequire(import.meta.url);
 
 // ============================================
-// MOCK THEME (layout-focused: no component tokens needed)
+// MOCK THEME (layout-focused: realistic font sizes for HTML measurement)
 // ============================================
 
 const testImage = path.join(__dirname, 'fixtures', 'test.png');
-const mockFont = { name: 'Inter', path: require.resolve('@fontsource/inter/files/inter-latin-400-normal.woff2') };
-const mockFontFamily = { normal: mockFont };
 
-const mockTheme = {
+const mockTheme = createMockTheme({
+  maxScaleFactor: 2.0,
+  lineSpacing: 1.2,
   colors: {
     primary: '000000',
-    background: 'FFFFFF',
     secondary: '666666',
-    accents: { blue: '0066CC', green: '00CC66', orange: 'CC6600' },
-    text: '000000',
-    textMuted: '666666',
-    subtleOpacity: 20,
   },
+  slide: { layout: 'LAYOUT_16x9', width: 10, height: 5.625 },
   textStyles: {
-    h1: { fontFamily: mockFontFamily, fontSize: 36, defaultWeight: FONT_WEIGHT.NORMAL, color: '000000' },
-    h2: { fontFamily: mockFontFamily, fontSize: 28, defaultWeight: FONT_WEIGHT.NORMAL, color: '000000' },
-    h3: { fontFamily: mockFontFamily, fontSize: 24, defaultWeight: FONT_WEIGHT.NORMAL, color: '000000' },
-    h4: { fontFamily: mockFontFamily, fontSize: 20, defaultWeight: FONT_WEIGHT.NORMAL, color: '000000' },
-    body: { fontFamily: mockFontFamily, fontSize: 18, defaultWeight: FONT_WEIGHT.NORMAL, color: '000000' },
-    small: { fontFamily: mockFontFamily, fontSize: 14, defaultWeight: FONT_WEIGHT.NORMAL, color: '000000' },
-    eyebrow: { fontFamily: mockFontFamily, fontSize: 12, defaultWeight: FONT_WEIGHT.NORMAL, color: '666666' },
-    footer: { fontFamily: mockFontFamily, fontSize: 12, defaultWeight: FONT_WEIGHT.NORMAL, color: '666666' },
+    [TEXT_STYLE.H1]: { fontSize: 36, color: '000000' },
+    [TEXT_STYLE.H2]: { fontSize: 28, color: '000000' },
+    [TEXT_STYLE.H3]: { fontSize: 24, color: '000000' },
+    [TEXT_STYLE.H4]: { fontSize: 20, color: '000000' },
+    [TEXT_STYLE.BODY]: { fontSize: 18, color: '000000' },
+    [TEXT_STYLE.SMALL]: { fontSize: 14, color: '000000' },
+    [TEXT_STYLE.EYEBROW]: { fontSize: 12, color: '666666' },
+    [TEXT_STYLE.FOOTER]: { fontSize: 12, color: '666666' },
   },
-  spacing: {
-    unit: 0.125,
-    margin: 0.5,
-    gap: 0.25,
-    gapTight: 0.125,
-    gapLoose: 0.5,
-    padding: 0.25,
-    cellPadding: 0.1,
-    bulletSpacing: 1.2,
-    bulletIndentMultiplier: 1.5,
-    maxScaleFactor: 2.0,
-    lineSpacing: 1.2,
-  },
-  borders: {
-    width: 1,
-    radius: 0.1,
-  },
-  slide: {
-    layout: 'LAYOUT_16x9',
-    width: 10,
-    height: 5.625,
-  },
-  components: {} as Theme['components'],
-} as Theme;
+});
 
 // ============================================
 // ELEMENT NODE BUILDERS
