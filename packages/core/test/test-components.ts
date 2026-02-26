@@ -10,7 +10,7 @@
 import { componentRegistry, component } from '../src/core/rendering/registry.js';
 import type { ExpansionContext, ComponentNode } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
-import type { ElementNode } from '../src/core/model/nodes.js';
+
 import { HALIGN, VALIGN, SIZE, DIRECTION, TEXT_STYLE, CONTENT } from '../src/core/model/types.js';
 import { SYNTAX, extractSource } from '../src/core/model/syntax.js';
 import { schema } from '../src/core/model/schema.js';
@@ -102,7 +102,7 @@ componentRegistry.define({
   expand: (props: any): any => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.ROW,
-    children: props.children as ElementNode[],
+    children: props.children,
     width: props.width ?? SIZE.FILL,
     height: props.height ?? SIZE.HUG,
     gap: props.gap ?? 0,
@@ -130,7 +130,7 @@ componentRegistry.define({
   expand: (props: any): any => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.COLUMN,
-    children: props.children as ElementNode[],
+    children: props.children,
     width: props.width ?? SIZE.FILL,
     height: props.height ?? SIZE.HUG,
     gap: props.gap ?? 0,

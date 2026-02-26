@@ -154,10 +154,10 @@ export interface TableNode {
 // CONTAINER NODES
 // ============================================
 
-export interface ContainerNode {
+export interface ContainerNode<C extends SlideNode = ElementNode> {
   type: typeof NODE_TYPE.CONTAINER;
   direction: Direction;           // 'row' or 'column' — determines flex-direction
-  children: ElementNode[];        // Post-expansion: always primitives
+  children: C[];                  // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
   width: number | SizeValue;      // inches (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
   height: number | SizeValue;     // inches (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
   gap: number;                    // inches — pre-resolved from GapSize by component expand
@@ -167,9 +167,9 @@ export interface ContainerNode {
 }
 
 /** Stack is a z-order container: all children occupy the same bounds, rendered in order */
-export interface StackNode {
+export interface StackNode<C extends SlideNode = ElementNode> {
   type: typeof NODE_TYPE.STACK;
-  children: ElementNode[];  // Post-expansion: [0] first (back), [n-1] last (front)
+  children: C[];              // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
   width: number | SizeValue;    // inches, SIZE.FILL, or SIZE.HUG
   height: number | SizeValue;   // inches, SIZE.FILL, or SIZE.HUG
 }
@@ -205,8 +205,8 @@ export type ElementNode =
   | ContainerNode
   | StackNode;
 
-/** Content that can appear in slides and containers - primitives or components */
-export type SlideNode = ElementNode | ComponentNode;
+/** Content that can appear in slides and containers - primitives, components, or pre-expansion containers */
+export type SlideNode = ElementNode | ComponentNode | ContainerNode<SlideNode> | StackNode<SlideNode>;
 
 // ============================================
 // POSITIONED NODE (after layout)

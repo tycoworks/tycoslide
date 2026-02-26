@@ -1,7 +1,7 @@
 // Registry
 // Generic base class, component registry, and layout registry
 
-import { NODE_TYPE, type ElementNode, type ComponentNode, type SlideNode } from '../model/nodes.js';
+import { NODE_TYPE, type ElementNode, type ComponentNode, type SlideNode, type ContainerNode, type StackNode } from '../model/nodes.js';
 import { DEFAULT_VARIANT } from '../model/types.js';
 import type { Theme, Slide } from '../model/types.js';
 import type { SyntaxType } from '../model/syntax.js';
@@ -399,18 +399,29 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
       return this.expandTree(expanded, context);
     }
 
-    const elementNode = node as ElementNode;
-
-    if (elementNode.type === NODE_TYPE.CONTAINER || elementNode.type === NODE_TYPE.STACK) {
+    // After the ComponentNode guard above, node is either a leaf ElementNode
+    // or a container/stack whose children may still contain ComponentNodes.
+    if (node.type === NODE_TYPE.CONTAINER) {
+      const container = node as ContainerNode<SlideNode>;
       return {
-        ...elementNode,
+        ...container,
         children: await Promise.all(
-          elementNode.children.map(c => this.expandTree(c, context))
+          container.children.map(c => this.expandTree(c, context))
         ),
-      } as ElementNode;
+      } as ContainerNode;
+    }
+    if (node.type === NODE_TYPE.STACK) {
+      const stack = node as StackNode<SlideNode>;
+      return {
+        ...stack,
+        children: await Promise.all(
+          stack.children.map(c => this.expandTree(c, context))
+        ),
+      } as StackNode;
     }
 
-    return elementNode;
+    // Leaf node (text, image, line, shape, slideNumber, table) — no children to resolve
+    return node as ElementNode;
   }
 }
 

@@ -9,7 +9,7 @@ import type { Root, RootContent } from 'mdast';
 import { SYNTAX, type ContainerDirective } from '../model/syntax.js';
 import { markdownProcessor, extractDirectiveBody } from '../../utils/parser.js';
 import { componentRegistry, coerceAttributes, component, type ComponentNode } from '../rendering/registry.js';
-import { NODE_TYPE, type SlideNode, type ContainerNode, type ElementNode } from '../model/nodes.js';
+import { NODE_TYPE, type SlideNode } from '../model/nodes.js';
 import { DIRECTION, SIZE, HALIGN, VALIGN } from '../model/types.js';
 
 // ============================================
@@ -169,8 +169,7 @@ export function compileBareMarkdown(source: string): SlideNode {
   return {
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.COLUMN,
-    // Pre-expansion: children are ComponentNodes; expandTree() resolves them to ElementNodes
-    children: nodes as unknown as ElementNode[],
+    children: nodes,
     width: SIZE.FILL,
     height: SIZE.HUG,
     gap: 0,

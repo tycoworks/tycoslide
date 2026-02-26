@@ -2,7 +2,7 @@
 
 import {
   componentRegistry, component, type ComponentNode,
-  NODE_TYPE, type ElementNode, type SlideNode,
+  NODE_TYPE, type SlideNode,
   GAP, type HorizontalAlignment, type VerticalAlignment, type GapSize, type SizeValue,
   VALIGN, HALIGN, SIZE, DIRECTION,
   schema, type SchemaShape,
@@ -68,7 +68,7 @@ export const rowComponent = componentRegistry.define({
   expand: (props: RowInternalProps, context: ExpansionContext) => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.ROW,
-    children: props.children as ElementNode[],  // Safe: expandTree recurses into these
+    children: props.children,
     width: props.width ?? SIZE.FILL,
     height: props.height ?? SIZE.HUG,
     gap: resolveGap(props.gap, context.theme),
@@ -119,7 +119,7 @@ export const columnComponent = componentRegistry.define({
   expand: (props: ColumnInternalProps, context: ExpansionContext) => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.COLUMN,
-    children: props.children as ElementNode[],  // Safe: expandTree recurses into these
+    children: props.children,
     width: props.width ?? SIZE.FILL,
     height: props.height ?? SIZE.HUG,
     gap: resolveGap(props.gap, context.theme),
@@ -161,7 +161,7 @@ export const stackComponent = componentRegistry.define({
 
   expand: (props: StackInternalProps) => ({
     type: NODE_TYPE.STACK,
-    children: props.children as ElementNode[],  // Safe: expandTree recurses into these
+    children: props.children,
     width: props.width ?? SIZE.FILL,
     height: props.height ?? SIZE.HUG,
   }),
