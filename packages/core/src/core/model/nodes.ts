@@ -118,7 +118,7 @@ export interface TableCellInput {
 /** Fully-resolved table cell data — all fields pre-resolved by component expand */
 export interface TableCellData {
   content: TextContent;
-  color: string;                    // pre-resolved: cell → textStyle.color → theme.colors.text
+  color: string;                    // pre-resolved: cell → token
   textStyle: TextStyleName;         // pre-resolved: cell → header/cell default from table tokens
   resolvedStyle: TextStyle;         // pre-resolved from theme.textStyles[textStyle]
   hAlign: HorizontalAlignment;     // pre-resolved: cell → table default

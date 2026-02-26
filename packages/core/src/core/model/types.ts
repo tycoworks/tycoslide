@@ -385,8 +385,6 @@ export interface TextStyle {
   fontFamily: FontFamily;
   fontSize: number;
   defaultWeight: FontWeight;
-  color?: string;              // default color for this style
-  lineHeightMultiplier?: number;  // default: 1.2
 }
 
 // ============================================

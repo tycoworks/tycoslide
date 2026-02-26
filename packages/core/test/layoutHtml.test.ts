@@ -31,14 +31,14 @@ const mockTheme = createMockTheme({
   },
   slide: { layout: 'LAYOUT_16x9', width: 10, height: 5.625 },
   textStyles: {
-    [TEXT_STYLE.H1]: { fontSize: 36, color: '000000' },
-    [TEXT_STYLE.H2]: { fontSize: 28, color: '000000' },
-    [TEXT_STYLE.H3]: { fontSize: 24, color: '000000' },
-    [TEXT_STYLE.H4]: { fontSize: 20, color: '000000' },
-    [TEXT_STYLE.BODY]: { fontSize: 18, color: '000000' },
-    [TEXT_STYLE.SMALL]: { fontSize: 14, color: '000000' },
-    [TEXT_STYLE.EYEBROW]: { fontSize: 12, color: '666666' },
-    [TEXT_STYLE.FOOTER]: { fontSize: 12, color: '666666' },
+    [TEXT_STYLE.H1]: { fontSize: 36 },
+    [TEXT_STYLE.H2]: { fontSize: 28 },
+    [TEXT_STYLE.H3]: { fontSize: 24 },
+    [TEXT_STYLE.H4]: { fontSize: 20 },
+    [TEXT_STYLE.BODY]: { fontSize: 18 },
+    [TEXT_STYLE.SMALL]: { fontSize: 14 },
+    [TEXT_STYLE.EYEBROW]: { fontSize: 12 },
+    [TEXT_STYLE.FOOTER]: { fontSize: 12 },
   },
 });
 

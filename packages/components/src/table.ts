@@ -29,6 +29,8 @@ export const TABLE_TOKEN = {
   HALIGN: 'hAlign',
   VALIGN: 'vAlign',
   CELL_LINE_HEIGHT: 'cellLineHeight',
+  HEADER_TEXT_COLOR: 'headerTextColor',
+  CELL_TEXT_COLOR: 'cellTextColor',
 } as const;
 
 export interface TableTokens {
@@ -38,9 +40,11 @@ export interface TableTokens {
   [TABLE_TOKEN.HEADER_BACKGROUND]: string;
   [TABLE_TOKEN.HEADER_BACKGROUND_OPACITY]: number;
   [TABLE_TOKEN.HEADER_TEXT_STYLE]: TextStyleName;
+  [TABLE_TOKEN.HEADER_TEXT_COLOR]: string;
   [TABLE_TOKEN.CELL_BACKGROUND]: string;
   [TABLE_TOKEN.CELL_BACKGROUND_OPACITY]: number;
   [TABLE_TOKEN.CELL_TEXT_STYLE]: TextStyleName;
+  [TABLE_TOKEN.CELL_TEXT_COLOR]: string;
   [TABLE_TOKEN.CELL_PADDING]: number;
   [TABLE_TOKEN.HALIGN]: HorizontalAlignment;
   [TABLE_TOKEN.VALIGN]: VerticalAlignment;
@@ -96,7 +100,7 @@ const tableSchema = {
 export const tableComponent = componentRegistry.define({
   name: Component.Table,
   params: tableSchema,
-  tokens: [TABLE_TOKEN.BORDER_STYLE, TABLE_TOKEN.BORDER_COLOR, TABLE_TOKEN.BORDER_WIDTH, TABLE_TOKEN.HEADER_BACKGROUND, TABLE_TOKEN.HEADER_BACKGROUND_OPACITY, TABLE_TOKEN.HEADER_TEXT_STYLE, TABLE_TOKEN.CELL_BACKGROUND, TABLE_TOKEN.CELL_BACKGROUND_OPACITY, TABLE_TOKEN.CELL_TEXT_STYLE, TABLE_TOKEN.CELL_PADDING, TABLE_TOKEN.HALIGN, TABLE_TOKEN.VALIGN, TABLE_TOKEN.CELL_LINE_HEIGHT],
+  tokens: [TABLE_TOKEN.BORDER_STYLE, TABLE_TOKEN.BORDER_COLOR, TABLE_TOKEN.BORDER_WIDTH, TABLE_TOKEN.HEADER_BACKGROUND, TABLE_TOKEN.HEADER_BACKGROUND_OPACITY, TABLE_TOKEN.HEADER_TEXT_STYLE, TABLE_TOKEN.HEADER_TEXT_COLOR, TABLE_TOKEN.CELL_BACKGROUND, TABLE_TOKEN.CELL_BACKGROUND_OPACITY, TABLE_TOKEN.CELL_TEXT_STYLE, TABLE_TOKEN.CELL_TEXT_COLOR, TABLE_TOKEN.CELL_PADDING, TABLE_TOKEN.HALIGN, TABLE_TOKEN.VALIGN, TABLE_TOKEN.CELL_LINE_HEIGHT],
   mdast: {
     nodeTypes: [SYNTAX.TABLE],
     compile: (node: RootContent, source: string): ComponentNode | null => {
@@ -184,7 +188,7 @@ export const tableComponent = componentRegistry.define({
         const isHeader = rowIndex < headerRowCount;
         const textStyle = partialTextStyle ?? (isHeader ? tokens.headerTextStyle : tokens.cellTextStyle);
         const resolvedTextStyle = context.theme.textStyles[textStyle];
-        const color = partialColor ?? resolvedTextStyle.color ?? context.theme.colors.text;
+        const color = partialColor ?? (isHeader ? tokens.headerTextColor : tokens.cellTextColor);
         const hAlign = partialHAlign ?? tokens.hAlign;
         const vAlign = partialVAlign ?? tokens.vAlign;
 
