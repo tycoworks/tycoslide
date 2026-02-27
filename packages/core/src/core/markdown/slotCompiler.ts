@@ -19,7 +19,6 @@ import { type SlideNode } from '../model/nodes.js';
  * Compile a slot's markdown content into SlideNode[].
  *
  * - :::directives → dispatched through the component registry
- * - Thematic breaks (---) → silently skipped
  * - Bare MDAST → compiled via registered MDAST handlers
  */
 export function compileSlot(markdownStr: string): SlideNode[] {
@@ -36,7 +35,6 @@ export function compileSlot(markdownStr: string): SlideNode[] {
  * Shared by compileSlot (top-level slot parsing) and dispatchDirective (nested container bodies).
  *
  * - Container directives → dispatched through dispatchDirective (recursive)
- * - Thematic breaks → silently skipped
  * - Consecutive bare MDAST → grouped and compiled via registered MDAST handlers
  */
 function compileChildren(
@@ -71,7 +69,7 @@ function compileChildren(
       continue;
     }
 
-    // Thematic breaks → skip (don't accumulate)
+    // Thematic breaks (---) are reserved as slide delimiters; silently skip.
     if (child.type === SYNTAX.THEMATIC_BREAK) continue;
 
     // Bare MDAST → accumulate (flush will wrap)
@@ -170,7 +168,7 @@ function compileBareNode(node: RootContent, source: string): SlideNode | null {
     return dispatchDirective(node as unknown as ContainerDirective, source, 'document');
   }
 
-  // Thematic breaks → skip
+  // Thematic breaks (---) are reserved as slide delimiters; silently skip.
   if (node.type === SYNTAX.THEMATIC_BREAK) return null;
 
   // Dispatch to registered MDAST handler

@@ -5,7 +5,7 @@ import {
   CONTENT, SYNTAX, NODE_TYPE,
   type TextNode, type TableCellData, type TableCellInput, type TextContent,
   type BorderStyle, type TextStyleName, type HorizontalAlignment, type VerticalAlignment,
-  schema, markdown,
+  schema, parseMarkdown,
 } from 'tycoslide';
 import { Component } from './names.js';
 import type { Table as MdastTable, RootContent } from 'mdast';
@@ -73,7 +73,7 @@ interface TableInternalProps {
  * Preserves inline markdown (bold, accents, etc.) in cell text.
  */
 function parseGfmTable(body: string): string[][] {
-  const tree = markdown.parse(body);
+  const tree = parseMarkdown(body);
   const tableChild = tree.children.find(c => c.type === SYNTAX.TABLE);
   if (!tableChild) {
     throw new Error(':::table body must contain a GFM table (| col1 | col2 | ...)');

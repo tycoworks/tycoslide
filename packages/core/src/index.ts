@@ -33,10 +33,10 @@ export { resolveGap } from './utils/units.js';
 // Schema helpers (domain-specific wrappers for layout Zod schemas)
 export { schema, type ScalarParam } from './core/model/schema.js';
 
-// Markdown toolkit (for component authors that parse markdown internally)
-export { markdown } from './core/markdown/markdown.js';
-export { SYNTAX } from './core/model/syntax.js';
+// Markdown utilities (for component authors)
+export { extractSource, SYNTAX } from './core/model/syntax.js';
 export type { ContainerDirective, SyntaxType } from './core/model/syntax.js';
+export { parseMarkdown } from './utils/parser.js';
 
 // Document compiler (markdown file → Presentation)
 export { compileDocument, validateLayout, type CompileOptions } from './core/markdown/documentCompiler.js';

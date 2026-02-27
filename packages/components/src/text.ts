@@ -13,7 +13,7 @@ import type { Root, PhrasingContent, List, Paragraph, ListItem } from 'mdast';
 import type { TextDirective } from 'mdast-util-directive';
 import type { RootContent, Heading } from 'mdast';
 import type { NormalizedRun, ColorScheme, ContentType, TextStyleName, HorizontalAlignment, VerticalAlignment, ExpansionContext } from 'tycoslide';
-import { HALIGN, VALIGN, TEXT_STYLE, CONTENT, SYNTAX, markdown } from 'tycoslide';
+import { HALIGN, VALIGN, TEXT_STYLE, CONTENT, SYNTAX, extractSource } from 'tycoslide';
 import { NODE_TYPE, type ElementNode } from 'tycoslide';
 import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape } from 'tycoslide';
 import { schema } from 'tycoslide';
@@ -312,7 +312,7 @@ export const textComponent = componentRegistry.define({
       if (node.type === SYNTAX.HEADING) {
         const heading = node as Heading;
         const style = HEADING_STYLE[heading.depth] ?? TEXT_STYLE.H3;
-        const raw = markdown.extractSource(heading, source);
+        const raw = extractSource(heading, source);
         const content = raw.replace(/^#{1,6}\s*/, '');
         return component(Component.Text, { body: content, content: CONTENT.PROSE, style });
       }
@@ -322,7 +322,7 @@ export const textComponent = componentRegistry.define({
           throw new Error('Images cannot be embedded inline in text. Use :::image directive.');
         }
       }
-      return component(Component.Text, { body: markdown.extractSource(node, source), content: CONTENT.PROSE });
+      return component(Component.Text, { body: extractSource(node, source), content: CONTENT.PROSE });
     },
   },
   expand: expandText,

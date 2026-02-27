@@ -19,6 +19,11 @@ export const markdownProcessor = unified()
   .use(remarkDirective)
   .use(remarkGfm);
 
+/** Parse a markdown string into an MDAST tree. */
+export function parseMarkdown(content: string): import('mdast').Root {
+  return markdownProcessor.parse(content) as import('mdast').Root;
+}
+
 // ============================================
 // DIRECTIVE HELPERS
 // ============================================
