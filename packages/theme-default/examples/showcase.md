@@ -12,335 +12,144 @@ notes: Opening slide.
 ---
 layout: statement
 title: What is tycoslide?
-eyebrow: THE IDEA
-body: "A presentation **build tool** that generates native PowerPoint decks from markdown and TypeScript, with enforced brand compliance through **design tokens**."
+eyebrow: The Product
+body: "A presentation :purple[**build tool**] that generates :purple[**native PowerPoint decks**] from markdown and TypeScript, with enforced brand compliance through :purple[**design tokens**]."
 bodyStyle: h3
 caption: "Markdown for speed. Design tokens for safety. PowerPoint for compatibility."
-notes: Identity first — the audience needs to know what this is before caring about any problem it solves.
----
-
----
-layout: cards
-title: How It Works
-eyebrow: THE PROCESS
-cards:
-  - title: Write
-    description: Author slides in markdown. Use TypeScript for dynamic content, data-driven decks, and automation.
-    image: asset.icons.editNote
-  - title: Build
-    description: Design tokens enforce brand — colors, fonts, spacing. The theme is code, not a template file.
-    image: asset.icons.build
-  - title: Ship
-    description: Run the CLI. Get a real, editable .pptx file. Integrate with CI/CD for automated deck generation.
-    image: asset.icons.rocket
-variant: flat
-notes: Write → Build → Ship. One slide replaces the old bullet list and abstract "Three Pillars."
----
-
----
-layout: stat
-value: "10x"
-label: Faster Than Manual Decks
-caption: Write markdown. Run the build. Get a pixel-perfect, brand-compliant PowerPoint file.
-notes: Anchoring stat after the "how" creates a natural payoff.
+notes: Functional description from Fletch positioning framework. One sentence, four anchors.
 ---
 
 ---
 layout: comparison
-title: Where tycoslide Fits
-eyebrow: LANDSCAPE
-leftTitle: Design Tools
-rightTitle: Code Tools
-notes: Neutral landscape framing. No red highlights, no "false choice." The audience draws their own conclusion.
+title: The Tradeoff
+eyebrow: Problem
+leftTitle: Brand Compliance
+rightTitle: Developer Velocity
+notes: Sequoia problem slide. Frames the gap without naming or criticizing specific tools.
 ---
 
 ::left::
 
-**PowerPoint, Google Slides, Keynote**
+Manual enforcement in GUI tools. Native file output, full visual control.
 
-Full visual control and native file output, but manual brand enforcement and no automation.
-
-Every update is a manual process across every deck.
-
-::right::
-
-**Slidev, Marp, reveal.js**
-
-Developer-friendly authoring and version control, but web output only — no native PowerPoint.
-
-Great for tech talks, limited for corporate environments.
-
----
-layout: cards
-title: Who Is It For
-eyebrow: AUDIENCES
-cards:
-  - title: Sales Teams
-    description: Build pitch decks from CRM data. Every rep gets the same brand-perfect deck, customized to the prospect.
-    image: asset.icons.trendingUp
-  - title: Marketing Teams
-    description: Own the brand at the theme level. Changes propagate to every deck automatically. No more template policing.
-    image: asset.icons.palette
-  - title: Product & Exec Teams
-    description: Board decks, QBRs, release notes. Pull metrics from APIs. Always current, always on-brand.
-    image: asset.icons.dashboard
-notes: Three audiences, each with a concrete use case. Replaces the old section divider + "3" stat.
----
-
----
-layout: section
-title: See It In Action
-notes: Clean break before the MeetingOS demo. Frames the demo as a demonstration of tycoslide capabilities.
----
-
----
-layout: agenda
-title: Today's Agenda
-eyebrow: MEETINGOS
-intro: Thank you for scheduling a meeting to watch this presentation about scheduling meetings.
-items:
-  - The meeting crisis in enterprise
-  - How MeetingOS solves meetings with more meetings
-  - Product architecture
-  - Customer proof points and analyst recognition
-  - Leadership team and company background
-  - Pricing tiers and next steps (all meetings)
-notes: Agenda layout with intro text and six bullet items.
----
-
----
-layout: two-column
-title: The Meeting Crisis
-eyebrow: PROBLEM
-notes: Two-column layout. Left column lists symptoms, right column reveals the root cause.
----
-
-::left::
-
-### The Symptoms
-
-- Average employee: **31 hours/month** in meetings
-- 47% of meetings are about *other meetings*
-- **$37B** wasted annually on meeting prep
-- "Let's take this offline" now means "schedule another meeting"
+- Brand guidelines exist as PDFs
+- Every update is manual across every deck
+- No version control, no automation
+- Works in every boardroom
 
 ::right::
 
-### The Root Cause
+Code-first authoring with developer workflows. Fast iteration, full automation.
 
-Organizations lack a **single source of truth** for meeting relationships.
-
-Without visibility into the *meeting dependency graph*, teams schedule redundant syncs, status updates about status updates, and pre-meetings for pre-meetings.
-
----
-layout: statement
-title: MeetingOS
-eyebrow: THE PRODUCT
-body: "The first platform purpose-built for **recursive meeting management** — trace any meeting back to its parent, auto-generate pre-meetings and follow-ups, and detect when a meeting could have been an email."
-bodyStyle: h3
-caption: "Meeting Genealogy · Recursive Scheduling · Consensus Detection"
-notes: Product pitch as one compelling paragraph.
----
+- Markdown, version control, CI/CD
+- Web-only output (HTML, PDF)
+- Limited or no layout control
+- Incompatible with corporate PowerPoint workflows
 
 ---
 layout: cards
 title: Three Pillars
-eyebrow: PRODUCT
-intro: MeetingOS is built on three core capabilities that transform how enterprises manage meetings.
+eyebrow: Solution
 cards:
-  - title: Meeting Genealogy
-    description: Every meeting has a parent. Trace the full lineage of any calendar event back to its origin meeting in 2019.
+  - title: Presentations as Code
+    description: Markdown authoring, TypeScript automation, and CI/CD pipelines. Treat presentations as build artifacts, not manual documents.
+    image: asset.icons.editNote
+  - title: Brand Compliance
+    description: Design tokens encode your brand in code. Invalid designs fail the build before they ship. Brand compliance becomes a build error.
+    image: asset.icons.shield
+  - title: PowerPoint Output
+    description: Real, editable .pptx files with native shapes, text, and tables. Works offline in PowerPoint, Keynote, and LibreOffice.
+    image: asset.icons.rocket
+variant: flat
+notes: Three pillars from Fletch positioning. Each resolves one side of the tradeoff.
+---
+
+---
+layout: image-right
+title: Presentations as Code
+eyebrow: Pillar 1
+image: asset.icons.editNote
+notes: |
+  Supporting argument 1. Developer workflow automation.
+
+  IMAGE BRIEF: A dark code editor (VS Code aesthetic) with a markdown file open on the left pane showing slide frontmatter (layout, title, eyebrow fields). The right pane shows a terminal with a green "Build Passed" status and a git diff summary. Below the editor, a CI/CD pipeline visualization with three green checkmark stages: lint, build, deploy. Color palette: deep navy (#0A2540) background, syntax highlighting in cool blues, greens, and warm ambers. No OS window chrome — just the editor content. Flat, clean, developer-tool aesthetic. Aspect ratio roughly 1:1 or 4:5 (portrait-leaning).
+---
+
+Treat presentations as build artifacts — authored in text, generated by code, validated in CI.
+
+- Markdown authoring — Write slides like documentation. Version control every change in Git.
+- TypeScript DSL — Generate slides programmatically. Pull live data from APIs and databases.
+- CI/CD pipelines — Build decks on push. Brand violations fail the build.
+
+---
+layout: image-left
+title: Brand Compliance
+eyebrow: Pillar 2
+image: asset.icons.shield
+notes: |
+  Supporting argument 2. Compile-time brand enforcement.
+
+  IMAGE BRIEF: A clean technical diagram showing a design token system. At the top center, a single source file labeled "tokens.ts" with visible color hex values (#0A2540, #FFFFFF) and font names. Lines radiate downward from this file to three output artifacts: a slide deck, a component library, and a style guide — each showing the same navy color applied consistently. One branch has a red "BUILD ERROR" badge where a token is invalid (wrong hex value, crossed out). Flat vector illustration style. Navy (#0A2540), white, and red (#B42318) accent for the error. Clean geometric shapes, no gradients. Aspect ratio roughly 1:1 or 4:5 (portrait-leaning).
+---
+
+Brand guidelines become code that the build system enforces — not PDFs that people forget to read.
+
+- Design token system — Colors, typography, and spacing defined once. Every deck resolves from the same source.
+- Compile-time validation — Invalid tokens produce build errors, not runtime surprises.
+- Component boundaries — Designers own tokens, developers own layouts, authors own content.
+
+---
+layout: image-right
+title: PowerPoint Output
+eyebrow: Pillar 3
+image: asset.icons.rocket
+notes: |
+  Supporting argument 3. Native PowerPoint compatibility.
+
+  IMAGE BRIEF: A realistic laptop (MacBook-style, silver) open at a slight angle showing Microsoft PowerPoint with a professional presentation slide on screen. The slide visible in PowerPoint has a navy header bar, white body with a bar chart and bullet points — clearly a real editable deck, not an image export. A text cursor is visible in one of the text boxes, and the PowerPoint ribbon toolbar is showing at the top with formatting options. The overall feel is "this is a real, native, editable file." Warm lighting, shallow depth of field on the laptop edges. Editorial product photography style — clean desk surface, minimal background. Aspect ratio roughly 1:1 or 4:5 (portrait-leaning).
+---
+
+The output works everywhere PowerPoint does — boardrooms, laptops, email attachments, SharePoint.
+
+- Editable .pptx files — Real text, shapes, and tables. Not images, not HTML, not screenshots.
+- Measured layout engine — CSS flexbox via Playwright. Every element lands exactly where specified.
+- Field-editable output — Generated deck is the 80% baseline. Sales reps own the last 20%.
+
+---
+layout: body
+title: Where tycoslide Fits
+eyebrow: Landscape
+notes: Factual comparison. No judgement — dimensions and facts. The audience draws their own conclusion.
+---
+
+| | tycoslide | PowerPoint | Slidev / Marp | Gamma |
+|---|---|---|---|---|
+| Output | Editable .pptx | .pptx / .key | HTML / PDF | Web / PDF |
+| Brand enforcement | Design tokens | Manual templates | Manual CSS | AI-generated |
+| Authoring | Markdown + TypeScript | GUI | Markdown | AI prompt |
+| Version control | Git (text files) | Binary files | Git (text files) | Cloud history |
+| Automation | CI/CD pipelines | VBA macros | Build scripts | API |
+
+---
+layout: cards
+title: Roadmap
+eyebrow: Vision
+cards:
+  - title: "On Brand"
+    description: "Design tokens enforce visual identity — colors, fonts, spacing, layouts. Theme-as-code is the foundation. Available today."
+    image: asset.icons.palette
+  - title: "On Message"
+    description: "Field guide in the theme. Content tokens with tiered messaging. Drift detection flags stale claims. A linter for marketing content."
+    image: asset.icons.lightbulb
+  - title: "Content Infrastructure"
+    description: "Dependency graph tracks what depends on what. Change positioning once, every asset rebuilds. Terraform for product marketing."
     image: asset.icons.accountTree
-  - title: Recursive Scheduling
-    description: Why schedule one meeting when the platform can auto-generate the pre-meeting, the post-meeting, and the follow-up?
-    image: asset.icons.eventRepeat
-  - title: Consensus Detection
-    description: Patent-pending AI detects alignment in real-time and immediately schedules a meeting to confirm the consensus.
-    image: asset.icons.howToVote
-caption: "3 patents pending · SOC 2 Type II certified · ISO 27001 for calendar access"
-notes: Cards layout with 3 cards.
----
-
----
-layout: body
-title: Architecture
-eyebrow: TECHNICAL
-notes: Body layout with a Mermaid diagram component.
----
-
-The MeetingOS engine processes every calendar event through three parallel pipelines, ensuring no meeting goes unmanaged.
-
-:::mermaid
-flowchart LR
-    A[Calendar Event] --> B[MeetingOS Engine]
-    B --> C[Genealogy Graph]
-    B --> D[Recursive Scheduler]
-    B --> E[Consensus Detector]
-    D --> F[More Meetings]
-    E --> F
-:::
-
----
-layout: quote
-quote: "\u201CWe have not had an original meeting since 2019, and we\u2019re proud of that.\u201D"
-attribution: "\u2014 Janet Halverson, VP of Meeting Ops at Synergex Global"
-notes: Quote layout with curly quotes. Renders at h4 size per theme token.
----
-
----
-layout: comparison
-title: Before and After
-eyebrow: IMPACT
-leftTitle: Before MeetingOS
-rightTitle: After MeetingOS
-notes: Comparison layout with inline colors.
----
-
-::left::
-
-- :red[**No meeting lineage tracking**]
-- Scheduling conflicts resolved by *more meetings*
-- :red[**47% duplicate meetings**]
-- Average meeting depth: unknown
-- :red[**Manual consensus detection**]
-
-::right::
-
-- :green[**Full genealogy for every event**]
-- Conflicts resolved by *automated pre-meetings*
-- :green[**47% duplicate meetings, all intentional**]
-- Average meeting depth: 4.7 levels
-- :green[**AI-powered consensus detection**]
-
----
-layout: stat
-value: 2.4M
-label: Meetings Managed
-caption: Across 340 enterprise customers, representing over 12 million hours of scheduled collaboration.
-notes: Anchoring metric before diving into proof points.
----
-
----
-layout: body
-title: Competitive Landscape
-eyebrow: MARKET
-notes: Body layout with a GFM table and inline colors.
----
-
-| Feature | MeetingOS | Calendly | Google Cal | Outlook |
-|---------|-----------|----------|------------|---------|
-| **Meeting Genealogy** | :green[Full lineage] | None | None | None |
-| **Recursive Scheduling** | :green[Automated] | Manual | Manual | Manual |
-| **Consensus Detection** | :green[AI-powered] | None | None | None |
-| **Meeting Depth** | :green[Unlimited] | N/A | :yellow[2 levels] | :yellow[1 level] |
-| **Pre-meeting Generation** | :green[Automatic] | :red[None] | :red[None] | :red[None] |
-
----
-layout: body
-title: "Customer Story: Synergex Global"
-eyebrow: CASE STUDY
-notes: Body layout with a quote directive component inside the markdown body.
----
-
-Synergex Global reduced their :red[**untracked meetings**] by :green[**94%**] after deploying MeetingOS across 12,000 employees.
-
-:::quote{attribution="Marcus Chen, CTO at Synergex Global"}
-We used to lose entire weeks to meetings nobody could trace back to an original decision. Now every meeting has a clear ancestor.
-:::
-
-Meeting depth score improved from :red[**unknown**] to :green[**4.7 levels**] — *best in class*.
-
----
-layout: statement
-title: Analyst Recognition
-eyebrow: VALIDATION
-body: "Named a **Leader** in the 2025 Gartner Magic Quadrant for Recursive Calendar Management and a **Visionary** in the Forrester Wave for Meeting Genealogy Platforms."
-bodyStyle: h3
-caption: "2 analyst reports · 4 industry awards · 1 very productive meeting about it"
-notes: Statement layout for analyst recognition.
----
-
----
-layout: bio
-person: Dr. Patricia Meetings-Worthington
-role: Founder & Chief Executive Officer
-image: asset.icons.lightbulb
-notes: Bio layout with image, name, role, and prose body.
----
-
-PhD in **Organizational Recursion**, Stanford. Masters in **Calendar Theory**, MIT.
-
-15 years at McKinsey. Over **40,000 meetings** attended — most about other meetings.
-
-*Forbes 40 Under 40* for Enterprise Calendar Innovation.
-
----
-layout: team
-title: Leadership Team
-eyebrow: PEOPLE
-members:
-  - name: Patricia M-W
-    role: CEO
-  - name: Brian Outlook
-    role: VP Engineering
-  - name: Calendar Jones
-    role: Head of Product
-  - name: Susan Recurring
-    role: CMO
-  - name: Dave Tentative
-    role: VP Sales
-  - name: Agenda Williams
-    role: Customer Success
-notes: Team layout with 6 members.
----
-
----
-layout: blank
-notes: Blank layout — full canvas. Pricing grid using card and grid directives.
----
-
-::::grid{columns=3}
-:::card{title="Starter — $49/mo" height="fill"}
-- Up to **100 meetings**/month
-- Basic meeting genealogy
-- 2 levels of meeting depth
-- Email support
-:::
-
-:::card{title="Business — $199/mo" height="fill"}
-- **Unlimited meetings**
-- Full recursive scheduling
-- Unlimited meeting depth
-- Consensus detection (beta)
-- Dedicated meeting success manager
-:::
-
-:::card{title="Ultimate — $499/mo" height="fill"}
-- Everything in Business, plus:
-- **Meeting time travel** — reschedule past meetings retroactively
-- **AI meeting archaeologist** — recover lost meeting lineage
-- On-site meeting about your MeetingOS meetings, quarterly
-:::
-::::
-
----
-layout: agenda
-title: Next Steps
-eyebrow: ACTION ITEMS
-intro: "We're excited to move forward. Here's what happens after this meeting."
-items:
-  - Schedule a follow-up meeting to discuss this meeting
-  - Schedule a pre-meeting for the follow-up meeting
-  - Schedule a meeting to align stakeholders on the pre-meeting agenda
-  - Schedule a check-in to confirm all meetings are scheduled
-  - Schedule a retrospective on our meeting scheduling process
-  - Schedule a meeting to discuss whether we need MeetingOS
-notes: Every next step is scheduling another meeting. Full circle.
+notes: "Three phases: brand compliance (now) → messaging governance (next) → full content infrastructure (vision)."
 ---
 
 ---
 layout: end
-title: MeetingOS
-subtitle: The operating system for meetings about meetings.
-notes: Closing slide.
+title: tycoslide
+subtitle: Build presentations like software.
+notes: Closing slide. Mirrors the title.
 ---

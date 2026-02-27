@@ -28,7 +28,7 @@ import {
   grid,
 } from 'tycoslide-components';
 import { DEFAULT_MASTER } from './master.js';
-import { theme } from './theme.js';
+import { colors } from './theme.js';
 
 // ============================================
 // COMPOSITION PRIMITIVES
@@ -39,7 +39,7 @@ export function headerBlock(title: string, eyebrow?: string): SlideNode {
   if (eyebrow) {
     return column(
       { gap: GAP.TIGHT },
-      text(eyebrow.toUpperCase(), { content: CONTENT.PLAIN, variant: 'eyebrow' }),
+      text(eyebrow, { content: CONTENT.PLAIN, variant: 'eyebrow' }),
       text(title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H3 }),
     );
   }
@@ -77,11 +77,14 @@ function wrapSide(content: SlideNode | SlideNode[]): SlideNode {
 }
 
 /** Shared implementation for image-left and image-right */
-function imageSplitSlide(imagePath: string, body: SlideNode[], imageOnLeft: boolean): Slide {
+function imageSplitSlide(imagePath: string, body: SlideNode[], imageOnLeft: boolean, title?: string, eyebrow?: string): Slide {
   const img = image(imagePath);
   const prose = column({ vAlign: VALIGN.MIDDLE, gap: GAP.NORMAL, height: SIZE.FILL }, ...body);
   const [l, r] = imageOnLeft ? [img, prose] : [prose, img];
-  return masteredSlide(row({ height: SIZE.FILL }, l, r));
+  return masteredSlide(
+    ...(title ? [headerBlock(title, eyebrow)] : []),
+    row({ height: SIZE.FILL }, l, r),
+  );
 }
 
 // ============================================
@@ -102,12 +105,12 @@ export const titleLayout = layoutRegistry.define({
     subtitle: textComponent.schema.optional(),
   },
   render: ({ title, subtitle }) => ({
-    background: theme.colors.primary,
+    background: colors.text,
     content: column(
       { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, gap: GAP.TIGHT, height: SIZE.FILL },
-      text(title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H1, hAlign: HALIGN.CENTER, color: 'FFFFFF' }),
+      text(title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H1, hAlign: HALIGN.CENTER, color: colors.onPrimary }),
       ...(subtitle
-        ? [text(subtitle, { content: CONTENT.PLAIN, style: TEXT_STYLE.H3, hAlign: HALIGN.CENTER, color: 'FFFFFF' })]
+        ? [text(subtitle, { content: CONTENT.PLAIN, style: TEXT_STYLE.H3, hAlign: HALIGN.CENTER, color: colors.onPrimary })]
         : []),
     ),
   }),
@@ -123,10 +126,10 @@ export const sectionLayout = layoutRegistry.define({
   description: 'Section divider with centered title.',
   params: { title: textComponent.schema },
   render: ({ title }) => ({
-    background: theme.colors.primary,
+    background: colors.text,
     content: column(
       { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, height: SIZE.FILL },
-      text(title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H2, hAlign: HALIGN.CENTER, color: 'FFFFFF' }),
+      text(title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H2, hAlign: HALIGN.CENTER, color: colors.onPrimary }),
     ),
   }),
 });
@@ -156,10 +159,6 @@ export const bodyLayout = layoutRegistry.define({
     ),
 });
 
-// ============================================
-// TIER 1 — every deck needs these
-// ============================================
-
 // +----------------------------+
 // |                            |
 // |            47%             |
@@ -181,8 +180,8 @@ export const statLayout = layoutRegistry.define({
     masteredSlide(
       centeredBody(
         text(value, { content: CONTENT.PLAIN, style: TEXT_STYLE.H1, hAlign: HALIGN.CENTER }),
-        text(label, { content: CONTENT.PLAIN, style: TEXT_STYLE.H3, hAlign: HALIGN.CENTER, color: theme.colors.textMuted }),
-        ...(caption ? [text(caption, { style: TEXT_STYLE.SMALL, color: theme.colors.textMuted, hAlign: HALIGN.CENTER })] : []),
+        text(label, { content: CONTENT.PLAIN, style: TEXT_STYLE.H3, hAlign: HALIGN.CENTER, color: colors.textMuted }),
+        ...(caption ? [text(caption, { style: TEXT_STYLE.SMALL, color: colors.textMuted, hAlign: HALIGN.CENTER })] : []),
       ),
     ),
 });
@@ -225,12 +224,12 @@ export const endLayout = layoutRegistry.define({
     subtitle: textComponent.schema.optional(),
   },
   render: ({ title, subtitle }) => ({
-    background: theme.colors.primary,
+    background: colors.text,
     content: column(
       { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, gap: GAP.TIGHT, height: SIZE.FILL },
-      text(title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H1, hAlign: HALIGN.CENTER, color: 'FFFFFF' }),
+      text(title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H1, hAlign: HALIGN.CENTER, color: colors.onPrimary }),
       ...(subtitle
-        ? [text(subtitle, { content: CONTENT.PLAIN, style: TEXT_STYLE.H3, hAlign: HALIGN.CENTER, color: 'FFFFFF' })]
+        ? [text(subtitle, { content: CONTENT.PLAIN, style: TEXT_STYLE.H3, hAlign: HALIGN.CENTER, color: colors.onPrimary })]
         : []),
     ),
   }),
@@ -250,10 +249,6 @@ export const blankLayout = layoutRegistry.define({
     content: column({ height: SIZE.FILL }, ...body),
   }),
 });
-
-// ============================================
-// TIER 2 — common patterns
-// ============================================
 
 // +----------------------------+
 // | EYEBROW                    |
@@ -295,11 +290,13 @@ export const imageLeftLayout = layoutRegistry.define({
   name: 'image-left',
   description: 'Image on left, markdown prose on right.',
   params: {
+    title: textComponent.schema.optional(),
+    eyebrow: textComponent.schema.optional(),
     image: imageComponent.schema,
   },
   slots: ['body'],
-  render: ({ image: imagePath, body }) =>
-    imageSplitSlide(imagePath, body, true),
+  render: ({ title, eyebrow, image: imagePath, body }) =>
+    imageSplitSlide(imagePath, body, true, title, eyebrow),
 });
 
 // +----------------------------+
@@ -315,11 +312,13 @@ export const imageRightLayout = layoutRegistry.define({
   name: 'image-right',
   description: 'Image on right, markdown prose on left.',
   params: {
+    title: textComponent.schema.optional(),
+    eyebrow: textComponent.schema.optional(),
     image: imageComponent.schema,
   },
   slots: ['body'],
-  render: ({ image: imagePath, body }) =>
-    imageSplitSlide(imagePath, body, false),
+  render: ({ title, eyebrow, image: imagePath, body }) =>
+    imageSplitSlide(imagePath, body, false, title, eyebrow),
 });
 
 // +----------------------------+
@@ -415,7 +414,7 @@ export const statementLayout = layoutRegistry.define({
       headerBlock(title, eyebrow),
       centeredBody(
         text(body, { content: CONTENT.PROSE, ...(bodyStyle ? { style: bodyStyle } : {}) }),
-        ...(caption ? [text(caption, { style: TEXT_STYLE.SMALL, color: theme.colors.textMuted, hAlign: HALIGN.CENTER })] : []),
+        ...(caption ? [text(caption, { style: TEXT_STYLE.SMALL, color: colors.textMuted, hAlign: HALIGN.CENTER })] : []),
       ),
     ),
 });
@@ -453,10 +452,6 @@ export const agendaLayout = layoutRegistry.define({
   },
 });
 
-// ============================================
-// TIER 3 — nice to have
-// ============================================
-
 // +----------------------------+
 // | EYEBROW                    |
 // | Title                      |
@@ -488,7 +483,7 @@ export const cardsLayout = layoutRegistry.define({
       centeredBody(
         ...(intro ? [text(intro)] : []),
         grid(perRow, ...built),
-        ...(caption ? [text(caption, { style: TEXT_STYLE.SMALL, color: theme.colors.textMuted, hAlign: HALIGN.CENTER })] : []),
+        ...(caption ? [text(caption, { style: TEXT_STYLE.SMALL, color: colors.textMuted, hAlign: HALIGN.CENTER })] : []),
       ),
     );
   },
@@ -520,7 +515,7 @@ export const bioLayout = layoutRegistry.define({
         column(
           { vAlign: VALIGN.MIDDLE, gap: GAP.NORMAL, height: SIZE.FILL },
           text(person, { content: CONTENT.PLAIN, style: TEXT_STYLE.H4 }),
-          ...(role ? [text(role, { content: CONTENT.PLAIN, style: TEXT_STYLE.BODY, color: theme.colors.textMuted })] : []),
+          ...(role ? [text(role, { content: CONTENT.PLAIN, style: TEXT_STYLE.BODY, color: colors.textMuted })] : []),
           ...body,
         ),
       ),
@@ -549,7 +544,7 @@ export const captionLayout = layoutRegistry.define({
       column(
         { height: SIZE.FILL, gap: GAP.TIGHT },
         image(imagePath),
-        text(caption, { content: CONTENT.PLAIN, style: TEXT_STYLE.SMALL, color: theme.colors.textMuted, hAlign: HALIGN.CENTER }),
+        text(caption, { content: CONTENT.PLAIN, style: TEXT_STYLE.SMALL, color: colors.textMuted, hAlign: HALIGN.CENTER }),
       ),
     ),
 });

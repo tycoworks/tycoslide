@@ -18,29 +18,28 @@ import { assets } from './assets.js';
 // COLOR PALETTE
 // ============================================
 
-// Stripe-derived palette — navy IS the brand color.
-// Source: Stripe's accessible color system (0A2540 "Downriver")
-const colors = {
+// Neutral gray surfaces (zero chroma), purple primary accent.
+export const colors = {
   background: 'FFFFFF',          // Pure white
-  text: '0A2540',                // Stripe Downriver navy (15.5:1 AAA)
-  textMuted: '425466',           // Stripe secondary slate (7.8:1 AAA)
-  primary: '0A2540',             // Navy — same as text (Stripe pattern)
-  onPrimary: 'FFFFFF',           // White on navy
-  secondary: 'E8EDF3',           // Blue-tinted surface variant
+  text: '1A1A2E',               // Dark navy
+  textMuted: '4A4A5A',           // Neutral gray
+  primary: '7C3AED',             // Purple accent
+  onPrimary: 'FFFFFF',           // White on purple
+  secondary: 'F5F5F5',           // Neutral surface
   subtleOpacity: 15,
 
-  // Blue-tinted gray surface hierarchy (hue 210°)
-  surfaceContainer: 'ECF0F4',    // Cards, callouts
-  surfaceContainerLow: 'F5F7F9', // Quotes
-  surfaceContainerHigh: 'D9E0E8',// Table headers
-  outlineVariant: 'B2C2D1',      // Borders, separators
+  // Neutral gray surface hierarchy (zero chroma)
+  surfaceContainer: 'F5F5F5',    // Cards, callouts
+  surfaceContainerLow: 'FAFAFA', // Quotes
+  surfaceContainerHigh: 'EBEBEB',// Table headers
+  outlineVariant: 'E5E5E5',      // Borders, separators
 
   accents: {
-    blue: '0A2540',      // Navy (default emphasis)
+    blue: '1A1A2E',      // Dark navy (default emphasis)
     green: '0E6245',     // Deep forest green
     red: 'B42318',       // Deep brick red
     yellow: 'B54708',    // Deep amber
-    purple: '5925DC',    // Deep violet
+    purple: '7C3AED',
   },
 };
 
@@ -69,7 +68,7 @@ const spacing = {
 // ============================================
 
 const borderWidth = 0.75;
-const cornerRadius = 0.05;
+const cornerRadius = 0.08;
 
 // ============================================
 // COMPONENT BASES (shared across variants)
@@ -99,13 +98,13 @@ export const theme: Theme = {
     radius: cornerRadius,
   },
   textStyles: {
-    h1: { fontFamily: assets.fonts.inter, fontSize: 32, defaultWeight: FONT_WEIGHT.LIGHT },
-    h2: { fontFamily: assets.fonts.inter, fontSize: 26, defaultWeight: FONT_WEIGHT.LIGHT },
-    h3: { fontFamily: assets.fonts.inter, fontSize: 20, defaultWeight: FONT_WEIGHT.NORMAL },
-    h4: { fontFamily: assets.fonts.inter, fontSize: 16, defaultWeight: FONT_WEIGHT.NORMAL },
+    h1: { fontFamily: assets.fonts.inter, fontSize: 48, defaultWeight: FONT_WEIGHT.LIGHT },
+    h2: { fontFamily: assets.fonts.inter, fontSize: 36, defaultWeight: FONT_WEIGHT.LIGHT },
+    h3: { fontFamily: assets.fonts.inter, fontSize: 24, defaultWeight: FONT_WEIGHT.LIGHT },
+    h4: { fontFamily: assets.fonts.inter, fontSize: 16, defaultWeight: FONT_WEIGHT.LIGHT },
     body: { fontFamily: assets.fonts.inter, fontSize: 14, defaultWeight: FONT_WEIGHT.LIGHT },
     small: { fontFamily: assets.fonts.inter, fontSize: 12, defaultWeight: FONT_WEIGHT.LIGHT },
-    eyebrow: { fontFamily: assets.fonts.inter, fontSize: 10, defaultWeight: FONT_WEIGHT.NORMAL },
+    eyebrow: { fontFamily: assets.fonts.inter, fontSize: 11, defaultWeight: FONT_WEIGHT.NORMAL },
     footer: { fontFamily: assets.fonts.inter, fontSize: 8, defaultWeight: FONT_WEIGHT.LIGHT },
   },
   components: {
@@ -206,7 +205,7 @@ export const theme: Theme = {
     text: {
       variants: {
         default:  { ...textBase, color: colors.text, bulletColor: colors.text },
-        eyebrow:  { ...textBase, color: colors.textMuted, bulletColor: colors.textMuted, style: TEXT_STYLE.EYEBROW, lineHeightMultiplier: 1.0 },
+        eyebrow:  { ...textBase, color: colors.primary, bulletColor: colors.primary, style: TEXT_STYLE.EYEBROW, lineHeightMultiplier: 1.0 },
         muted:    { ...textBase, color: colors.textMuted, bulletColor: colors.textMuted },
         accent:  { ...textBase, color: colors.accents.blue, bulletColor: colors.accents.blue },
         inverse: { ...textBase, color: colors.background, bulletColor: colors.background },
