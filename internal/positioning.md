@@ -2,6 +2,10 @@
 
 A 6-slide positioning framework following the Fletch methodology, designed to clearly communicate tycoslide's unique value proposition in the presentation tooling market.
 
+ the other thing I was thinking is... So if you read Claude.md, you'll see my philosophy, like on brand and on message, blah blah blah. So that's good. Then if you think about all the presentations that I have been making, they do need to be on brand, they do need to be on message, but they're all internal facing presentations. So they're not really expected to see the light of day. I think for external facing presentations for like keynote speeches and whatever, you would probably design new graphics and things for that. And maybe you'd send that to a professional designer who might use big notes or whatever. So I feel like there's an opportunity to make a distinction here in terms of target market, which is more non-designers, so product marketers, developers, whoever, making internal presentations that need to be on brand and on message, rather than people making keynote presentations for arbitrary purposes for external use. So the analogy here is the positioning that retool occupied. So they're like build internal tools fast. Maybe I'm like build internal decks fast. Again, there's no need to necessarily do that. What do I mean by that? So physically there is no restriction. You can use decks how you want to. I'm just thinking about positioning messaging who to attract with this. I probably don't want to oversell it either. Like this is not Canva. This is not Figma. Maybe it could be. So maybe I'm thinking more, well, step one, who would want to use this thing? Maybe it's for internal people for internal presentations. Maybe retool. Think about board decks, quarterly business reviews, sales training. There's a whole bunch of internal presentations, which will never be seen externally. Maybe ad hoc things for clients, like a monthly review with a client, talking about the priority one issues and all that stuff. Does that make sense? Maybe chat with me a little bit on that. 
+
+
+
 ---
 
 ## Slide 1: Functional Description

@@ -26,12 +26,56 @@ Zero-coverage files that need tests:
 - `themeLoader.ts` — zero dedicated tests
 - Unit conversion functions (`pxToIn`, `inToPx`, `inToPt`, `ptToIn`)
 
+### Default Theme Layouts
+
+Missing layouts for the default theme, organized by priority:
+
+**Tier 1 — every deck needs these:**
+- Big Number / Fact — oversized stat + label. Universal in business decks
+- Standalone Quote — clean pull quote + attribution (simpler than customerStory)
+- End / Thank You — closing slide, mirrors title/cover
+- Blank / Full Canvas — no chrome at all (current image layout has header bar)
+
+**Tier 2 — common patterns:**
+- Image Left / Image Right — dedicated param-based image+prose half-split (twoColumn handles this via markdown slots, but a param-based version is cleaner)
+- Comparison — two columns with individual headers (pros/cons, before/after)
+- Title Only — title bar + empty canvas for diagrams
+
+**Tier 3 — nice to have:**
+- Intro / Bio — person photo + name/title/bio
+- Picture with Caption — image + caption text below
+- Asymmetric Split — 1/3 + 2/3 or similar uneven columns
+- Credits / Team — grid of names/roles
+
+### Integration Tests
+
+DSL input → full pipeline (expand → measure → layout) → assert element positions/sizes. Not pixel-perfect screenshot comparison, but geometric assertions: "this text node is at (x, y) with size (w, h)". Deterministic because Playwright measurement with embedded fonts is reproducible. The showcase deck doubles as a test fixture.
+
+### Render Hook (Escape Hatch)
+
+A `(slide, bounds)` callback in component definitions that gives theme authors scoped access to the pptxgenjs slide object during PPTX rendering. Covers anything pptxgenjs supports that tycoslide doesn't wrap. For things pptxgenjs can't do (animations, grouping, raw XML), document post-processing the .pptx ZIP as an external option.
 
 ---
 
 ## Next
 
 Immediate next priorities after launch.
+
+### Charts
+
+Chart components for data visualization (bar, line, pie, etc.). pptxgenjs has native chart support — wrap it as a tycoslide component with theme-aware colors. High demand for sales and analytics decks.
+
+### Hyperlinks
+
+Hyperlinks on text, images, and shapes. pptxgenjs already supports this — just needs plumbing through the component system and DSL.
+
+### Shadows
+
+Shadow support on shapes and images. Standard business deck polish. pptxgenjs has native shadow options.
+
+### Shape Rotation
+
+Rotation property on shapes and images. Needed for decorative elements. pptxgenjs supports `rotate` on all shape types.
 
 ### Code Component
 

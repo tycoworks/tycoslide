@@ -6,346 +6,341 @@ theme: tycoslide-theme-default
 layout: title
 title: tycoslide
 subtitle: Build presentations like software.
-notes: Opening slide introducing tycoslide.
+notes: Opening slide.
 ---
 
 ---
-layout: body
+layout: statement
 title: What is tycoslide?
-eyebrow: FUNCTIONAL DESCRIPTION
-notes: Lead with what it IS - a presentation build tool.
----
-
-**tycoslide is a presentation build tool** that generates native PowerPoint decks from markdown and TypeScript, with enforced brand compliance through design tokens.
-
-Key capabilities:
-
-- **Markdown → PowerPoint** — Write slides like documentation, compile to .pptx
-- **Theme system** — Layouts and components defined in TypeScript
-- **Design tokens** — W3C DTCG-aligned tokens for colors, typography, spacing
-- **Type-safe compilation** — Missing tokens and invalid layouts fail the build
-
----
-layout: body
-title: The Problem
-eyebrow: PROBLEM FRAMING
-notes: The false choice between brand compliance and developer velocity.
----
-
-Other presentation tools force you to choose between **brand compliance** and **development velocity**:
-
-::::grid{columns=2}
-:::card{title="Design Tools" height="fill"}
-PowerPoint and Keynote require manual enforcement of brand guidelines — slow, error-prone, breaks easily.
-:::
-
-:::card{title="Code-First Tools" height="fill"}
-Slidev and Reveal.js produce web slides that don't work in corporate environments where PowerPoint is the standard.
-:::
-::::
-
-**Markdown converters** like Marp and Pandoc are close, but produce non-editable PDFs or lack layout control.
-
----
-layout: body
-title: How tycoslide Solves This
-eyebrow: VALUE FRAMING
-notes: Solves both sides of the false choice.
----
-
-tycoslide enforces **brand compliance at compile time** while generating **native PowerPoint files**.
-
-You get the velocity of markdown and the safety of type-checked design tokens, **without sacrificing PowerPoint compatibility**.
-
-::::grid{columns=3}
-:::card{title="Presentations as Code" height="fill"}
-Markdown authoring, CI/CD integration, version control, build-time validation.
-:::
-
-:::card{title="Brand Compliance" height="fill"}
-Design tokens as single source of truth. Invalid designs fail the build.
-:::
-
-:::card{title="PowerPoint Output" height="fill"}
-Editable .pptx files that work in PowerPoint, Keynote, LibreOffice.
-:::
-::::
-
----
-layout: body
-title: Presentations as Code
-eyebrow: SUPPORTING ARGUMENT 1
-notes: Treats presentations as code artifacts.
----
-
-Unlike traditional presentation tools that require working in a GUI with manual processes, tycoslide treats presentations as code with full CI/CD integration:
-
-- **Markdown authoring** — Write slides like documentation, version control in Git
-- **TypeScript DSL** — Programmatic slide generation with full type safety
-- **Automated pipelines** — Build decks in CI/CD with fail-fast validation
-
----
-layout: body
-title: Brand Compliance
-eyebrow: SUPPORTING ARGUMENT 2
-notes: Brand rules encoded in design tokens and theme files.
----
-
-Unlike other tools that treat brand guidelines as documentation (easily ignored), tycoslide encodes brand rules in design tokens and theme files:
-
-- **Design token system** — W3C DTCG-aligned tokens for colors, typography, spacing as single source of truth
-- **Type-safe token resolution** — Missing or invalid tokens = compile error, not runtime surprises
-- **Component boundaries** — Pre-approved layouts and components enforce persona separation
-
----
-layout: body
-title: PowerPoint Output
-eyebrow: SUPPORTING ARGUMENT 3
-notes: Real PowerPoint objects with precise control.
----
-
-Unlike web-based tools (Slidev, Reveal.js) or converters (Marp) that embed images, tycoslide generates real PowerPoint objects:
-
-- **Editable .pptx files** — Output works offline in PowerPoint, Keynote, LibreOffice
-- **Measured layout engine** — CSS flexbox via Playwright for precise positioning
-- **Native PowerPoint objects** — Real shapes, text, tables with component primitives for cards and grids
-
----
-layout: section
-title: Layouts
-notes: Demonstrating the three current layouts.
+eyebrow: THE IDEA
+body: "A presentation **build tool** that generates native PowerPoint decks from markdown and TypeScript, with enforced brand compliance through **design tokens**."
+bodyStyle: h3
+caption: "Markdown for speed. Design tokens for safety. PowerPoint for compatibility."
+notes: Identity first — the audience needs to know what this is before caring about any problem it solves.
 ---
 
 ---
-layout: title
-title: Title Layout
-subtitle: Used for opening slides
-notes: The title layout centers content with title and subtitle parameters. Used for opening slides.
+layout: cards
+title: How It Works
+eyebrow: THE PROCESS
+cards:
+  - title: Write
+    description: Author slides in markdown. Use TypeScript for dynamic content, data-driven decks, and automation.
+    image: asset.icons.editNote
+  - title: Build
+    description: Design tokens enforce brand — colors, fonts, spacing. The theme is code, not a template file.
+    image: asset.icons.build
+  - title: Ship
+    description: Run the CLI. Get a real, editable .pptx file. Integrate with CI/CD for automated deck generation.
+    image: asset.icons.rocket
+variant: flat
+notes: Write → Build → Ship. One slide replaces the old bullet list and abstract "Three Pillars."
+---
+
+---
+layout: stat
+value: "10x"
+label: Faster Than Manual Decks
+caption: Write markdown. Run the build. Get a pixel-perfect, brand-compliant PowerPoint file.
+notes: Anchoring stat after the "how" creates a natural payoff.
+---
+
+---
+layout: comparison
+title: Where tycoslide Fits
+eyebrow: LANDSCAPE
+leftTitle: Design Tools
+rightTitle: Code Tools
+notes: Neutral landscape framing. No red highlights, no "false choice." The audience draws their own conclusion.
+---
+
+::left::
+
+**PowerPoint, Google Slides, Keynote**
+
+Full visual control and native file output, but manual brand enforcement and no automation.
+
+Every update is a manual process across every deck.
+
+::right::
+
+**Slidev, Marp, reveal.js**
+
+Developer-friendly authoring and version control, but web output only — no native PowerPoint.
+
+Great for tech talks, limited for corporate environments.
+
+---
+layout: cards
+title: Who Is It For
+eyebrow: AUDIENCES
+cards:
+  - title: Sales Teams
+    description: Build pitch decks from CRM data. Every rep gets the same brand-perfect deck, customized to the prospect.
+    image: asset.icons.trendingUp
+  - title: Marketing Teams
+    description: Own the brand at the theme level. Changes propagate to every deck automatically. No more template policing.
+    image: asset.icons.palette
+  - title: Product & Exec Teams
+    description: Board decks, QBRs, release notes. Pull metrics from APIs. Always current, always on-brand.
+    image: asset.icons.dashboard
+notes: Three audiences, each with a concrete use case. Replaces the old section divider + "3" stat.
 ---
 
 ---
 layout: section
-title: Section Layout
-notes: The section layout creates chapter dividers with centered titles. No body content or eyebrow.
+title: See It In Action
+notes: Clean break before the MeetingOS demo. Frames the demo as a demonstration of tycoslide capabilities.
+---
+
+---
+layout: agenda
+title: Today's Agenda
+eyebrow: MEETINGOS
+intro: Thank you for scheduling a meeting to watch this presentation about scheduling meetings.
+items:
+  - The meeting crisis in enterprise
+  - How MeetingOS solves meetings with more meetings
+  - Product architecture
+  - Customer proof points and analyst recognition
+  - Leadership team and company background
+  - Pricing tiers and next steps (all meetings)
+notes: Agenda layout with intro text and six bullet items.
+---
+
+---
+layout: two-column
+title: The Meeting Crisis
+eyebrow: PROBLEM
+notes: Two-column layout. Left column lists symptoms, right column reveals the root cause.
+---
+
+::left::
+
+### The Symptoms
+
+- Average employee: **31 hours/month** in meetings
+- 47% of meetings are about *other meetings*
+- **$37B** wasted annually on meeting prep
+- "Let's take this offline" now means "schedule another meeting"
+
+::right::
+
+### The Root Cause
+
+Organizations lack a **single source of truth** for meeting relationships.
+
+Without visibility into the *meeting dependency graph*, teams schedule redundant syncs, status updates about status updates, and pre-meetings for pre-meetings.
+
+---
+layout: statement
+title: MeetingOS
+eyebrow: THE PRODUCT
+body: "The first platform purpose-built for **recursive meeting management** — trace any meeting back to its parent, auto-generate pre-meetings and follow-ups, and detect when a meeting could have been an email."
+bodyStyle: h3
+caption: "Meeting Genealogy · Recursive Scheduling · Consensus Detection"
+notes: Product pitch as one compelling paragraph.
+---
+
+---
+layout: cards
+title: Three Pillars
+eyebrow: PRODUCT
+intro: MeetingOS is built on three core capabilities that transform how enterprises manage meetings.
+cards:
+  - title: Meeting Genealogy
+    description: Every meeting has a parent. Trace the full lineage of any calendar event back to its origin meeting in 2019.
+    image: asset.icons.accountTree
+  - title: Recursive Scheduling
+    description: Why schedule one meeting when the platform can auto-generate the pre-meeting, the post-meeting, and the follow-up?
+    image: asset.icons.eventRepeat
+  - title: Consensus Detection
+    description: Patent-pending AI detects alignment in real-time and immediately schedules a meeting to confirm the consensus.
+    image: asset.icons.howToVote
+caption: "3 patents pending · SOC 2 Type II certified · ISO 27001 for calendar access"
+notes: Cards layout with 3 cards.
 ---
 
 ---
 layout: body
-title: Body Layout
-eyebrow: LAYOUT DEMONSTRATION
-notes: The body layout handles all content slides with title, optional eyebrow, and markdown body.
+title: Architecture
+eyebrow: TECHNICAL
+notes: Body layout with a Mermaid diagram component.
 ---
 
-The **body** layout is the default for content slides. It supports:
-
-- A **title** field for the heading
-- An optional **eyebrow** field for small labels above the title
-- Full **markdown** rendering in the body slot
-- **Speaker notes** in the frontmatter
-
-This layout handles 90% of presentation content with consistent styling.
-
----
-layout: section
-title: Markdown Capabilities
-notes: Showing typography, colors, and tables in concise demos.
----
-
----
-layout: body
-title: Typography and Formatting
-eyebrow: TEXT
-notes: All text formatting in one slide - headings, emphasis, lists.
----
-
-## Major Section Heading
-
-Body text flows naturally below headings with automatic spacing and line height.
-
-### Subsection Heading
-
-Use **bold** for emphasis, *italic* for secondary emphasis, and ***bold italic*** for maximum weight.
-
-**Text formatting examples:**
-
-- Use :blue[inline colors] for emphasis
-- Apply :green[semantic colors] to highlight outcomes
-- Mark :red[important warnings] for visibility
-
----
-layout: body
-title: Accent Colors
-eyebrow: TEXT
-notes: All five accent colors shown in realistic use cases.
----
-
-Highlight key terms with theme-defined accent colors:
-
-- :blue[**Technical terms**] and brand emphasis (links, product names)
-- :green[**Positive outcomes**] and success metrics (+15% growth, approved)
-- :red[**Critical items**] and warnings (breaking changes, blockers)
-- :yellow[**Pending status**] and caution (under review, waiting)
-- :purple[**Special callouts**] and creative emphasis (new feature, beta)
-
-Invalid color names fail the build — only theme-defined colors are allowed.
-
----
-layout: body
-title: Tables
-eyebrow: MARKDOWN
-notes: GitHub Flavored Markdown tables with inline formatting.
----
-
-Standard markdown tables support bold, italic, and accent colors:
-
-| Feature | tycoslide | Slidev | Marp | Reveal.js |
-|---------|-----------|--------|------|-----------|
-| **Output** | :green[PowerPoint] | HTML | PDF/HTML | HTML |
-| **Type Safety** | :green[Full] | Partial | None | None |
-| **Brand Tokens** | :green[Built-in] | Manual | Manual | Manual |
-| **Editable** | :green[Yes] | No | No | No |
-
-Keep tables to 4-6 rows and 3-4 columns for readability on slides.
-
----
-layout: section
-title: Components
-notes: Directive-based components for structured content.
----
-
----
-layout: body
-title: Cards for Structured Content
-eyebrow: COMPONENT
-notes: Single slide showing card variants.
----
-
-:::card{title="What is a Card?" height="hug"}
-A styled content block with a title and body text. Use cards to visually separate concepts on a slide.
-:::
-
-:::card{title="Stacked Cards" height="fill"}
-Multiple cards stack vertically with automatic spacing. The **height="fill"** attribute distributes remaining space equally.
-:::
-
-:::card{title="Outlined Variant" height="fill" background="false"}
-Set **background="false"** for outlined cards without fill color. Useful for secondary information.
-:::
-
----
-layout: body
-title: Feature Comparison
-eyebrow: COMPONENT
-notes: Card grids for side-by-side layouts.
----
-
-::::grid{columns=3}
-:::card{title="Fast" height="fill"}
-Complete builds in seconds, not minutes. Watch mode rebuilds on save.
-:::
-
-:::card{title="Safe" height="fill"}
-Type errors and brand violations fail the build before shipping.
-:::
-
-:::card{title="Native" height="fill"}
-Output is real .pptx files that work everywhere PowerPoint works.
-:::
-::::
-
-Use the **grid** directive to arrange cards in equal-width columns. Set **columns=2** or **columns=3** based on content.
-
----
-layout: body
-title: Customer Feedback
-eyebrow: COMPONENT
-notes: Quote directive for styled quotations.
----
-
-:::quote{attribution="Sarah Chen, VP Marketing at Acme Corp"}
-We spend more time fixing fonts and alignment than writing content. tycoslide solved that — change the theme once, rebuild every deck.
-:::
-
-:::quote{attribution="Dev team at TechStart"}
-Brand compliance should be enforced by the compiler, not by a style guide PDF. That's exactly what tycoslide does.
-:::
-
-The **quote** directive styles quotations with attribution. Great for testimonials, pull quotes, and key statements.
-
----
-layout: body
-title: Table Directive
-eyebrow: COMPONENT
-notes: Table component with row headers and custom styling.
----
-
-The **table** directive provides enhanced tables with row headers:
-
-:::table{headerColumns="1"}
-| Feature | tycoslide | Slidev | Marp |
-|---------|-----------|--------|------|
-| **PowerPoint Output** | :green[Native PPTX] | :red[No] | :yellow[Limited] |
-| **Type Safety** | :green[Full TS] | :yellow[Partial] | :red[None] |
-| **Design Tokens** | :green[W3C DTCG] | :red[Manual] | :red[Manual] |
-:::
-
-Set **headerColumns="1"** to style the first column as row headers.
-
----
-layout: body
-title: Mermaid Diagrams
-eyebrow: COMPONENT
-notes: Mermaid diagram component for flowcharts and diagrams.
----
-
-The **mermaid** directive renders flowcharts, sequence diagrams, and other diagram types. Diagrams are auto-themed using design tokens.
-
-**Example workflow:**
+The MeetingOS engine processes every calendar event through three parallel pipelines, ensuring no meeting goes unmanaged.
 
 :::mermaid
 flowchart LR
-    A[Markdown] --> B[tycoslide build]
-    B --> C[PowerPoint]
+    A[Calendar Event] --> B[MeetingOS Engine]
+    B --> C[Genealogy Graph]
+    B --> D[Recursive Scheduler]
+    B --> E[Consensus Detector]
+    D --> F[More Meetings]
+    E --> F
 :::
 
-Diagrams are rendered using Mermaid.js and automatically inherit theme styling where supported.
+---
+layout: quote
+quote: "\u201CWe have not had an original meeting since 2019, and we\u2019re proud of that.\u201D"
+attribution: "\u2014 Janet Halverson, VP of Meeting Ops at Synergex Global"
+notes: Quote layout with curly quotes. Renders at h4 size per theme token.
+---
 
 ---
-layout: section
-title: Theming
-notes: How themes control all visual styling.
+layout: comparison
+title: Before and After
+eyebrow: IMPACT
+leftTitle: Before MeetingOS
+rightTitle: After MeetingOS
+notes: Comparison layout with inline colors.
+---
+
+::left::
+
+- :red[**No meeting lineage tracking**]
+- Scheduling conflicts resolved by *more meetings*
+- :red[**47% duplicate meetings**]
+- Average meeting depth: unknown
+- :red[**Manual consensus detection**]
+
+::right::
+
+- :green[**Full genealogy for every event**]
+- Conflicts resolved by *automated pre-meetings*
+- :green[**47% duplicate meetings, all intentional**]
+- Average meeting depth: 4.7 levels
+- :green[**AI-powered consensus detection**]
+
+---
+layout: stat
+value: 2.4M
+label: Meetings Managed
+caption: Across 340 enterprise customers, representing over 12 million hours of scheduled collaboration.
+notes: Anchoring metric before diving into proof points.
 ---
 
 ---
 layout: body
-title: Theme as Single Source of Truth
-eyebrow: DESIGN SYSTEM
-notes: One slide showing how theme controls everything.
+title: Competitive Landscape
+eyebrow: MARKET
+notes: Body layout with a GFM table and inline colors.
 ---
 
-All visual styling comes from the theme:
+| Feature | MeetingOS | Calendly | Google Cal | Outlook |
+|---------|-----------|----------|------------|---------|
+| **Meeting Genealogy** | :green[Full lineage] | None | None | None |
+| **Recursive Scheduling** | :green[Automated] | Manual | Manual | Manual |
+| **Consensus Detection** | :green[AI-powered] | None | None | None |
+| **Meeting Depth** | :green[Unlimited] | N/A | :yellow[2 levels] | :yellow[1 level] |
+| **Pre-meeting Generation** | :green[Automatic] | :red[None] | :red[None] | :red[None] |
 
-::::grid{columns=2}
-:::card{title="Design Tokens Define" height="fill"}
-- Colors (primary, accent, semantic)
-- Typography (fonts, sizes, weights)
-- Spacing (padding, margins, gaps)
-- Component styles (cards, tables, quotes)
+---
+layout: body
+title: "Customer Story: Synergex Global"
+eyebrow: CASE STUDY
+notes: Body layout with a quote directive component inside the markdown body.
+---
+
+Synergex Global reduced their :red[**untracked meetings**] by :green[**94%**] after deploying MeetingOS across 12,000 employees.
+
+:::quote{attribution="Marcus Chen, CTO at Synergex Global"}
+We used to lose entire weeks to meetings nobody could trace back to an original decision. Now every meeting has a clear ancestor.
 :::
 
-:::card{title="Authors Cannot" height="fill"}
-- Override colors or fonts
-- Set arbitrary sizes
-- Break layout constraints
-- Use undefined tokens
+Meeting depth score improved from :red[**unknown**] to :green[**4.7 levels**] — *best in class*.
+
+---
+layout: statement
+title: Analyst Recognition
+eyebrow: VALIDATION
+body: "Named a **Leader** in the 2025 Gartner Magic Quadrant for Recursive Calendar Management and a **Visionary** in the Forrester Wave for Meeting Genealogy Platforms."
+bodyStyle: h3
+caption: "2 analyst reports · 4 industry awards · 1 very productive meeting about it"
+notes: Statement layout for analyst recognition.
+---
+
+---
+layout: bio
+person: Dr. Patricia Meetings-Worthington
+role: Founder & Chief Executive Officer
+image: asset.icons.lightbulb
+notes: Bio layout with image, name, role, and prose body.
+---
+
+PhD in **Organizational Recursion**, Stanford. Masters in **Calendar Theory**, MIT.
+
+15 years at McKinsey. Over **40,000 meetings** attended — most about other meetings.
+
+*Forbes 40 Under 40* for Enterprise Calendar Innovation.
+
+---
+layout: team
+title: Leadership Team
+eyebrow: PEOPLE
+members:
+  - name: Patricia M-W
+    role: CEO
+  - name: Brian Outlook
+    role: VP Engineering
+  - name: Calendar Jones
+    role: Head of Product
+  - name: Susan Recurring
+    role: CMO
+  - name: Dave Tentative
+    role: VP Sales
+  - name: Agenda Williams
+    role: Customer Success
+notes: Team layout with 6 members.
+---
+
+---
+layout: blank
+notes: Blank layout — full canvas. Pricing grid using card and grid directives.
+---
+
+::::grid{columns=3}
+:::card{title="Starter — $49/mo" height="fill"}
+- Up to **100 meetings**/month
+- Basic meeting genealogy
+- 2 levels of meeting depth
+- Email support
+:::
+
+:::card{title="Business — $199/mo" height="fill"}
+- **Unlimited meetings**
+- Full recursive scheduling
+- Unlimited meeting depth
+- Consensus detection (beta)
+- Dedicated meeting success manager
+:::
+
+:::card{title="Ultimate — $499/mo" height="fill"}
+- Everything in Business, plus:
+- **Meeting time travel** — reschedule past meetings retroactively
+- **AI meeting archaeologist** — recover lost meeting lineage
+- On-site meeting about your MeetingOS meetings, quarterly
 :::
 ::::
 
-**Change the theme once, rebuild every deck.** Brand compliance becomes a build error, not a process problem.
+---
+layout: agenda
+title: Next Steps
+eyebrow: ACTION ITEMS
+intro: "We're excited to move forward. Here's what happens after this meeting."
+items:
+  - Schedule a follow-up meeting to discuss this meeting
+  - Schedule a pre-meeting for the follow-up meeting
+  - Schedule a meeting to align stakeholders on the pre-meeting agenda
+  - Schedule a check-in to confirm all meetings are scheduled
+  - Schedule a retrospective on our meeting scheduling process
+  - Schedule a meeting to discuss whether we need MeetingOS
+notes: Every next step is scheduling another meeting. Full circle.
+---
 
 ---
-layout: title
-title: tycoslide
-subtitle: Presentations as code. Brand compliance as build errors.
+layout: end
+title: MeetingOS
+subtitle: The operating system for meetings about meetings.
 notes: Closing slide.
 ---

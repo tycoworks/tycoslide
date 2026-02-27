@@ -13,6 +13,9 @@ import type { ScalarParam } from '../model/schema.js';
 // Re-export ComponentNode for convenience
 export type { ComponentNode } from '../model/nodes.js';
 
+/** Frontmatter keys consumed by the compiler — cannot be used as layout param names. */
+export const RESERVED_FRONTMATTER_KEYS = new Set(['layout', 'name', 'notes'] as const);
+
 // ============================================
 // GENERIC REGISTRY BASE CLASS
 // ============================================
@@ -492,6 +495,13 @@ class LayoutRegistry extends Registry<LayoutDefinition> {
     slots?: TSlots;
     render: (props: z.infer<z.ZodObject<TParams>> & SlotsToProps<TSlots>) => Slide;
   }): LayoutDefinition {
+    for (const key of Object.keys(def.params)) {
+      if (RESERVED_FRONTMATTER_KEYS.has(key as any)) {
+        throw new Error(
+          `Layout '${def.name}': param '${key}' is a reserved frontmatter key (${[...RESERVED_FRONTMATTER_KEYS].join(', ')}). Use a different name.`,
+        );
+      }
+    }
     this.register(def);
     return def;
   }

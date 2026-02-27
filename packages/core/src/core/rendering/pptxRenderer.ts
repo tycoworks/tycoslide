@@ -82,7 +82,7 @@ export class PptxRenderer {
     this.pres.defineSlideMaster({
       title: name,
       background: background
-        ? { path: background }
+        ? (/^[0-9A-Fa-f]{6}$/.test(background) ? { color: background } : { path: background })
         : { color: theme.colors.background },
       objects: masterObjects,
     });
@@ -100,7 +100,8 @@ export class PptxRenderer {
 
     // Slide background overrides master background
     if (background) {
-      pptxSlide.background = { path: background };
+      const isColor = /^[0-9A-Fa-f]{6}$/.test(background);
+      pptxSlide.background = isColor ? { color: background } : { path: background };
     } else if (!masterName) {
       pptxSlide.background = { color: theme.colors.background };
     }

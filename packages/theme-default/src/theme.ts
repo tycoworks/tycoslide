@@ -18,20 +18,29 @@ import { assets } from './assets.js';
 // COLOR PALETTE
 // ============================================
 
-// Material Design 3 color palette
+// Stripe-derived palette — navy IS the brand color.
+// Source: Stripe's accessible color system (0A2540 "Downriver")
 const colors = {
-  background: 'FFFFFF',
-  text: '1C1B1F',        // Material Design on-surface (16.1:1 contrast, AAA)
-  textMuted: '49454F',   // Material Design on-surface-variant (7.5:1 contrast, AAA)
-  primary: '1976D2',     // Material Blue 700
-  secondary: 'E7E0EC',   // Material Design surface-variant
+  background: 'FFFFFF',          // Pure white
+  text: '0A2540',                // Stripe Downriver navy (15.5:1 AAA)
+  textMuted: '425466',           // Stripe secondary slate (7.8:1 AAA)
+  primary: '0A2540',             // Navy — same as text (Stripe pattern)
+  onPrimary: 'FFFFFF',           // White on navy
+  secondary: 'E8EDF3',           // Blue-tinted surface variant
   subtleOpacity: 15,
+
+  // Blue-tinted gray surface hierarchy (hue 210°)
+  surfaceContainer: 'ECF0F4',    // Cards, callouts
+  surfaceContainerLow: 'F5F7F9', // Quotes
+  surfaceContainerHigh: 'D9E0E8',// Table headers
+  outlineVariant: 'B2C2D1',      // Borders, separators
+
   accents: {
-    blue: '1976D2',      // Material Blue 700
-    green: '388E3C',     // Material Green 700
-    red: 'D32F2F',       // Material Red 700
-    yellow: 'FBC02D',    // Material Yellow 700
-    purple: '7B1FA2',    // Material Purple 700
+    blue: '0A2540',      // Navy (default emphasis)
+    green: '0E6245',     // Deep forest green
+    red: 'B42318',       // Deep brick red
+    yellow: 'B54708',    // Deep amber
+    purple: '5925DC',    // Deep violet
   },
 };
 
@@ -90,14 +99,14 @@ export const theme: Theme = {
     radius: cornerRadius,
   },
   textStyles: {
-    h1: { fontFamily: assets.fonts.inter, fontSize: 36, defaultWeight: FONT_WEIGHT.NORMAL },
-    h2: { fontFamily: assets.fonts.inter, fontSize: 28, defaultWeight: FONT_WEIGHT.NORMAL },
-    h3: { fontFamily: assets.fonts.inter, fontSize: 22, defaultWeight: FONT_WEIGHT.NORMAL },
-    h4: { fontFamily: assets.fonts.inter, fontSize: 18, defaultWeight: FONT_WEIGHT.NORMAL },
-    body: { fontFamily: assets.fonts.inter, fontSize: 14, defaultWeight: FONT_WEIGHT.NORMAL },
-    small: { fontFamily: assets.fonts.inter, fontSize: 12, defaultWeight: FONT_WEIGHT.NORMAL },
+    h1: { fontFamily: assets.fonts.inter, fontSize: 32, defaultWeight: FONT_WEIGHT.LIGHT },
+    h2: { fontFamily: assets.fonts.inter, fontSize: 26, defaultWeight: FONT_WEIGHT.LIGHT },
+    h3: { fontFamily: assets.fonts.inter, fontSize: 20, defaultWeight: FONT_WEIGHT.NORMAL },
+    h4: { fontFamily: assets.fonts.inter, fontSize: 16, defaultWeight: FONT_WEIGHT.NORMAL },
+    body: { fontFamily: assets.fonts.inter, fontSize: 14, defaultWeight: FONT_WEIGHT.LIGHT },
+    small: { fontFamily: assets.fonts.inter, fontSize: 12, defaultWeight: FONT_WEIGHT.LIGHT },
     eyebrow: { fontFamily: assets.fonts.inter, fontSize: 10, defaultWeight: FONT_WEIGHT.NORMAL },
-    footer: { fontFamily: assets.fonts.inter, fontSize: 8, defaultWeight: FONT_WEIGHT.NORMAL },
+    footer: { fontFamily: assets.fonts.inter, fontSize: 8, defaultWeight: FONT_WEIGHT.LIGHT },
   },
   components: {
     card: {
@@ -105,9 +114,9 @@ export const theme: Theme = {
         default: {
           padding: spacing.padding,
           cornerRadius,
-          backgroundColor: colors.secondary,
-          backgroundOpacity: colors.subtleOpacity,
-          borderColor: colors.secondary,
+          backgroundColor: colors.surfaceContainer,
+          backgroundOpacity: 100,
+          borderColor: colors.outlineVariant,
           borderWidth,
           titleStyle: TEXT_STYLE.H4,
           titleColor: colors.text,
@@ -122,7 +131,7 @@ export const theme: Theme = {
           cornerRadius,
           backgroundColor: colors.background,
           backgroundOpacity: 0,
-          borderColor: colors.secondary,
+          borderColor: colors.outlineVariant,
           borderWidth: 0,
           titleStyle: TEXT_STYLE.H4,
           titleColor: colors.text,
@@ -139,11 +148,11 @@ export const theme: Theme = {
         default: {
           padding: spacing.padding * 2,
           cornerRadius,
-          backgroundColor: colors.secondary,
-          backgroundOpacity: colors.subtleOpacity,
-          borderColor: colors.secondary,
+          backgroundColor: colors.surfaceContainerLow,
+          backgroundOpacity: 100,
+          borderColor: colors.text,
           borderWidth,
-          quoteStyle: TEXT_STYLE.BODY,
+          quoteStyle: TEXT_STYLE.H4,
           quoteColor: colors.text,
           attributionStyle: TEXT_STYLE.SMALL,
           attributionColor: colors.textMuted,
@@ -158,10 +167,10 @@ export const theme: Theme = {
       variants: {
         default: {
           borderStyle: BORDER_STYLE.FULL,
-          borderColor: colors.secondary,
+          borderColor: colors.outlineVariant,
           borderWidth,
-          headerBackground: colors.background,
-          headerBackgroundOpacity: 0,
+          headerBackground: colors.surfaceContainerHigh,
+          headerBackgroundOpacity: 100,
           headerTextStyle: TEXT_STYLE.BODY,
           headerTextColor: colors.text,
           cellBackground: colors.background,
@@ -178,7 +187,7 @@ export const theme: Theme = {
     line: {
       variants: {
         default: {
-          color: colors.secondary,
+          color: colors.outlineVariant,
           width: borderWidth,
           dashType: DASH_TYPE.SOLID,
         },
@@ -205,10 +214,10 @@ export const theme: Theme = {
     },
     shape: {
       variants: {
-        default:  { ...shapeBase, fill: colors.secondary, fillOpacity: 100 },
+        default:  { ...shapeBase, fill: colors.surfaceContainerHigh, fillOpacity: 100 },
         primary:  { ...shapeBase, fill: colors.primary, fillOpacity: 100 },
-        subtle:   { ...shapeBase, fill: colors.secondary, fillOpacity: colors.subtleOpacity },
-        outlined: { ...shapeBase, fill: colors.background, fillOpacity: 0, borderColor: colors.primary, borderWidth },
+        subtle:   { ...shapeBase, fill: colors.surfaceContainer, fillOpacity: 100 },
+        outlined: { ...shapeBase, fill: colors.background, fillOpacity: 0, borderColor: colors.outlineVariant, borderWidth },
         accent:   { ...shapeBase, fill: colors.accents.blue, fillOpacity: 100 },
       },
     },

@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { parseSlideDocument, type RawSlide } from './slideParser.js';
 
 import { compileSlot } from './slotCompiler.js';
-import { layoutRegistry, type LayoutDefinition } from '../rendering/registry.js';
+import { layoutRegistry, RESERVED_FRONTMATTER_KEYS, type LayoutDefinition } from '../rendering/registry.js';
 import type { SlideNode } from '../model/nodes.js';
 import { Presentation } from '../rendering/presentation.js';
 import type { Theme, Slide } from '../model/types.js';
@@ -146,12 +146,12 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
     );
   }
 
-  // 3. Build PARAMS — from frontmatter only
+  // 3. Build PARAMS — strip reserved frontmatter keys
   const params: Record<string, unknown> = { ...raw.frontmatter };
-  delete params.layout;
-  delete params.name;
   const notes = params.notes as string | undefined;
-  delete params.notes;
+  for (const key of RESERVED_FRONTMATTER_KEYS) {
+    delete params[key];
+  }
 
   // 4. Build SLOTS — from ::name:: markers and body only
   const slots: Record<string, unknown> = {};
