@@ -5,7 +5,7 @@
 import type { Root } from 'mdast';
 import { markdownProcessor, extractDirectiveBody } from '../../utils/parser.js';
 import { extractSource, extractInlineText, SYNTAX } from '../model/syntax.js';
-import { dispatchDirective, compileBareMarkdown } from './slotCompiler.js';
+import { dispatchDirective } from './slotCompiler.js';
 
 export const markdown = {
   parse(content: string): Root {
@@ -15,7 +15,6 @@ export const markdown = {
   extractInlineText,
   extractDirectiveBody,
   dispatchDirective,
-  compileBareMarkdown,
   SYNTAX,
 };
 

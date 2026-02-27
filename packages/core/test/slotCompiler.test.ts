@@ -8,7 +8,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { compileSlot } from '../src/core/markdown/slotCompiler.js';
-import { CONTENT, DIRECTION, HALIGN, SIZE, TEXT_STYLE, VALIGN } from '../src/core/model/types.js';
+import { CONTENT, HALIGN, TEXT_STYLE, VALIGN } from '../src/core/model/types.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { SYNTAX } from '../src/core/model/syntax.js';
 import { componentRegistry } from '../src/core/rendering/registry.js';
@@ -21,7 +21,7 @@ function props(nodes: any[], index: number): any {
 }
 
 describe('Slot Compiler', () => {
-  describe('bare MDAST auto-wrapping', () => {
+  describe('bare MDAST compilation', () => {
     it('should compile a single paragraph to a prose text node', () => {
       const nodes = compileSlot('Hello world');
       assert.strictEqual(nodes.length, 1);
@@ -30,32 +30,20 @@ describe('Slot Compiler', () => {
       assert.strictEqual(props(nodes, 0).content, CONTENT.PROSE);
     });
 
-    it('should wrap multiple paragraphs in a container column', () => {
+    it('should return multiple paragraphs as separate text nodes', () => {
       const nodes = compileSlot('First paragraph.\n\nSecond paragraph.');
-      assert.strictEqual(nodes.length, 1);
-      const wrapper = nodes[0] as any;
-      assert.strictEqual(wrapper.type, NODE_TYPE.CONTAINER);
-      assert.strictEqual(wrapper.direction, DIRECTION.COLUMN);
-      assert.strictEqual(wrapper.width, SIZE.FILL);
-      assert.strictEqual(wrapper.height, SIZE.HUG);
-      assert.strictEqual(wrapper.vAlign, VALIGN.TOP);
-      assert.strictEqual(wrapper.hAlign, HALIGN.LEFT);
-      assert.strictEqual(wrapper.children.length, 2);
-      assert.strictEqual(wrapper.children[0].componentName, C.Text);
-      assert.strictEqual(wrapper.children[1].componentName, C.Text);
+      assert.strictEqual(nodes.length, 2);
+      assert.strictEqual((nodes[0] as any).componentName, C.Text);
+      assert.strictEqual((nodes[1] as any).componentName, C.Text);
     });
 
-    it('should wrap heading + paragraph + list in a container column', () => {
+    it('should return heading + paragraph + list as separate nodes', () => {
       const md = '## Overview\n\nIntro paragraph.\n\n- Point one\n- Point two';
       const nodes = compileSlot(md);
-      assert.strictEqual(nodes.length, 1);
-      const wrapper = nodes[0] as any;
-      assert.strictEqual(wrapper.type, NODE_TYPE.CONTAINER);
-      assert.strictEqual(wrapper.direction, DIRECTION.COLUMN);
-      assert.strictEqual(wrapper.children.length, 3); // heading, paragraph, list
-      assert.strictEqual(wrapper.children[0].componentName, C.Text); // heading
-      assert.strictEqual(wrapper.children[1].componentName, C.Text); // paragraph
-      assert.strictEqual(wrapper.children[2].componentName, C.Text); // list
+      assert.strictEqual(nodes.length, 3);
+      assert.strictEqual((nodes[0] as any).componentName, C.Text); // heading
+      assert.strictEqual((nodes[1] as any).componentName, C.Text); // paragraph
+      assert.strictEqual((nodes[2] as any).componentName, C.Text); // list
     });
 
     it('should compile a single heading to a text node with style', () => {
@@ -113,14 +101,13 @@ describe('Slot Compiler', () => {
       assert.strictEqual(nodes.length, 0);
     });
 
-    it('should skip thematic breaks and group surrounding content', () => {
+    it('should skip thematic breaks and return surrounding content as separate nodes', () => {
       const md = 'Before\n\n---\n\nAfter';
       const nodes = compileSlot(md);
-      // Thematic break is skipped, Before and After compile as container column of two text nodes
-      assert.strictEqual(nodes.length, 1);
-      const wrapper = nodes[0] as any;
-      assert.strictEqual(wrapper.type, NODE_TYPE.CONTAINER);
-      assert.strictEqual(wrapper.direction, DIRECTION.COLUMN);
+      // Thematic break is skipped, Before and After are separate text nodes
+      assert.strictEqual(nodes.length, 2);
+      assert.strictEqual((nodes[0] as any).componentName, C.Text);
+      assert.strictEqual((nodes[1] as any).componentName, C.Text);
     });
   });
 

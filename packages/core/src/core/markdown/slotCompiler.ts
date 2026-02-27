@@ -9,8 +9,7 @@ import type { Root, RootContent } from 'mdast';
 import { SYNTAX, type ContainerDirective } from '../model/syntax.js';
 import { markdownProcessor, extractDirectiveBody } from '../../utils/parser.js';
 import { componentRegistry, coerceAttributes, component, type ComponentNode } from '../rendering/registry.js';
-import { NODE_TYPE, type SlideNode } from '../model/nodes.js';
-import { DIRECTION, SIZE, HALIGN, VALIGN } from '../model/types.js';
+import { type SlideNode } from '../model/nodes.js';
 
 // ============================================
 // PUBLIC API
@@ -58,7 +57,7 @@ function compileChildren(
     }
     const rawSource = source.slice(startOffset, endOffset).trim();
     if (rawSource) {
-      nodes.push(compileBareMarkdown(rawSource));
+      nodes.push(...compileBareMarkdown(rawSource));
     }
     bareStart = null;
     bareEnd = null;
@@ -144,16 +143,12 @@ export function dispatchDirective(
 // ============================================
 
 /**
- * Compile a bare markdown string into a SlideNode.
- * Single blocks return directly; multiple blocks are wrapped in a
- * ContainerNode with column direction (structural primitive, no component reference).
- *
- * Block compilation is driven by registered MDAST handlers on the component registry.
- *
- * Used by flushBareGroup() for inline compilation of bare MDAST,
- * and exported for the document() DSL function.
+ * Compile a bare markdown string into SlideNode[].
+ * Each MDAST block becomes a separate SlideNode via registered MDAST handlers.
+ * Callers insert these directly into their parent container, whose gap
+ * (set by the layout with theme access) controls inter-block spacing.
  */
-export function compileBareMarkdown(source: string): SlideNode {
+function compileBareMarkdown(source: string): SlideNode[] {
   const tree = markdownProcessor.parse(source) as Root;
   const nodes: SlideNode[] = [];
 
@@ -162,21 +157,7 @@ export function compileBareMarkdown(source: string): SlideNode {
     if (compiled) nodes.push(compiled);
   }
 
-  if (nodes.length === 0) {
-    throw new Error('[tycoslide] document: empty markdown content');
-  }
-  if (nodes.length === 1) return nodes[0];
-  return {
-    type: NODE_TYPE.CONTAINER,
-    direction: DIRECTION.COLUMN,
-    children: nodes,
-    width: SIZE.FILL,
-    height: SIZE.HUG,
-    gap: 0,
-    padding: 0,
-    vAlign: VALIGN.TOP,
-    hAlign: HALIGN.LEFT,
-  };
+  return nodes;
 }
 
 /**
