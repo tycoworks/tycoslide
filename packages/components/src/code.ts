@@ -198,7 +198,7 @@ async function expandCode(
   }
 
   const html = await renderCodeToHtml(code, props.language, tokens);
-  const pngPath = await context.render.renderHtmlToImage(html, false);
+  const pngPath = await context.canvas.renderHtml(html, false);
 
   return {
     type: NODE_TYPE.IMAGE,

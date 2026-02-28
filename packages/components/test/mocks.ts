@@ -247,11 +247,11 @@ export function mockTheme(options?: {
 }
 
 // ============================================
-// RENDER SERVICE MOCK
+// CANVAS MOCK
 // ============================================
 
-export function noopRender() {
-  return { renderHtmlToImage: async () => 'mock://render.png' };
+export function noopCanvas() {
+  return { renderHtml: async () => 'mock://render.png' };
 }
 
 // ============================================

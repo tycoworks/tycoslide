@@ -5,7 +5,7 @@ import type { RootContent } from 'mdast';
 import { Component } from '../src/names.js';
 import { code, codeComponent, buildCodeTheme, renderCodeToHtml, CODE_TOKEN, type CodeTokens } from '../src/code.js';
 import { LANGUAGE, LANGUAGE_VALUES } from '../src/languages.js';
-import { mockTheme, noopRender } from './mocks.js';
+import { mockTheme, noopCanvas } from './mocks.js';
 
 // ============================================
 // DSL FUNCTION
@@ -165,10 +165,10 @@ describe('code component registration', () => {
 // ============================================
 
 describe('code expansion', () => {
-  it('expands to ImageNode via render service', async () => {
+  it('expands to ImageNode via canvas', async () => {
     const theme = mockTheme();
-    const render = noopRender();
-    const context = { theme, assets: undefined, render } as any;
+    const canvas = noopCanvas();
+    const context = { theme, assets: undefined, canvas } as any;
 
     const node = code('SELECT 1', 'sql');
     const result = await componentRegistry.expand(node, context);
@@ -177,16 +177,16 @@ describe('code expansion', () => {
     assert.strictEqual((result as any).src, 'mock://render.png');
   });
 
-  it('passes transparent: false to renderHtmlToImage', async () => {
+  it('passes transparent: false to canvas.renderHtml', async () => {
     const theme = mockTheme();
     let capturedTransparent: boolean | undefined;
-    const render = {
-      renderHtmlToImage: async (_html: string, transparent?: boolean) => {
+    const canvas = {
+      renderHtml: async (_html: string, transparent?: boolean) => {
         capturedTransparent = transparent;
         return 'mock://render.png';
       },
     };
-    const context = { theme, assets: undefined, render } as any;
+    const context = { theme, assets: undefined, canvas } as any;
 
     const node = code('SELECT 1', 'sql');
     await componentRegistry.expand(node, context);
@@ -196,8 +196,8 @@ describe('code expansion', () => {
 
   it('throws on empty code body', async () => {
     const theme = mockTheme();
-    const render = noopRender();
-    const context = { theme, assets: undefined, render } as any;
+    const canvas = noopCanvas();
+    const context = { theme, assets: undefined, canvas } as any;
 
     const node = code('   ', 'text');
     await assert.rejects(
@@ -209,13 +209,13 @@ describe('code expansion', () => {
   it('HTML passed to render contains the code text', async () => {
     const theme = mockTheme();
     let capturedHtml = '';
-    const render = {
-      renderHtmlToImage: async (html: string, _transparent?: boolean) => {
+    const canvas = {
+      renderHtml: async (html: string, _transparent?: boolean) => {
         capturedHtml = html;
         return 'mock://render.png';
       },
     };
-    const context = { theme, assets: undefined, render } as any;
+    const context = { theme, assets: undefined, canvas } as any;
 
     const node = code('SELECT * FROM orders', 'sql');
     await componentRegistry.expand(node, context);
@@ -226,13 +226,13 @@ describe('code expansion', () => {
   it('HTML contains background style from token', async () => {
     const theme = mockTheme();
     let capturedHtml = '';
-    const render = {
-      renderHtmlToImage: async (html: string, _transparent?: boolean) => {
+    const canvas = {
+      renderHtml: async (html: string, _transparent?: boolean) => {
         capturedHtml = html;
         return 'mock://render.png';
       },
     };
-    const context = { theme, assets: undefined, render } as any;
+    const context = { theme, assets: undefined, canvas } as any;
 
     const node = code('x = 1', 'python');
     await componentRegistry.expand(node, context);
@@ -449,8 +449,8 @@ describe('buildCodeTheme() — operator scope', () => {
 describe('code expansion — additional', () => {
   it('sets maxScale from theme.spacing.maxScaleFactor', async () => {
     const theme = mockTheme({ maxScaleFactor: 2.5 });
-    const render = noopRender();
-    const context = { theme, assets: undefined, render } as any;
+    const canvas = noopCanvas();
+    const context = { theme, assets: undefined, canvas } as any;
 
     const node = code('SELECT 1', 'sql');
     const result = await componentRegistry.expand(node, context);
@@ -462,13 +462,13 @@ describe('code expansion — additional', () => {
   it('trims whitespace from code before rendering', async () => {
     const theme = mockTheme();
     let capturedHtml = '';
-    const render = {
-      renderHtmlToImage: async (html: string) => {
+    const canvas = {
+      renderHtml: async (html: string) => {
         capturedHtml = html;
         return 'mock://render.png';
       },
     };
-    const context = { theme, assets: undefined, render } as any;
+    const context = { theme, assets: undefined, canvas } as any;
 
     const node = code('  \n  SELECT 1  \n  ', 'sql');
     await componentRegistry.expand(node, context);
@@ -480,13 +480,13 @@ describe('code expansion — additional', () => {
   it('multiline code produces valid HTML', async () => {
     const theme = mockTheme();
     let capturedHtml = '';
-    const render = {
-      renderHtmlToImage: async (html: string) => {
+    const canvas = {
+      renderHtml: async (html: string) => {
         capturedHtml = html;
         return 'mock://render.png';
       },
     };
-    const context = { theme, assets: undefined, render } as any;
+    const context = { theme, assets: undefined, canvas } as any;
 
     const multiline = 'function hello() {\n  return "world";\n}';
     const node = code(multiline, 'javascript');

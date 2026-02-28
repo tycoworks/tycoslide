@@ -67,7 +67,7 @@ describe('componentRegistry.define', () => {
     test('expand function works', async () => {
       const expanded = await comp.expand(
         { title: 'Hello', count: 1 },
-        { theme: {} as any, render: { renderHtmlToImage: async () => '' } },
+        { theme: {} as any, canvas: { renderHtml: async () => '' } },
         undefined,
       );
       assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
@@ -152,7 +152,7 @@ describe('componentRegistry.define', () => {
     test('expand receives body + params', async () => {
       const expanded = await comp.expand(
         { body: 'hello', scale: 2 },
-        { theme: {} as any, render: { renderHtmlToImage: async () => '' } },
+        { theme: {} as any, canvas: { renderHtml: async () => '' } },
         undefined,
       );
       assert.strictEqual(expanded.type, NODE_TYPE.TEXT);

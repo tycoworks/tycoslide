@@ -2,7 +2,7 @@
 // Renders mermaid diagrams using the mermaid JS library and the shared browser.
 // Theme fonts and colors are automatically injected for brand compliance.
 
-import type { RenderService } from 'tycoslide';
+import type { Canvas } from 'tycoslide';
 import {
   NODE_TYPE, type ImageNode,
   componentRegistry, component, type ComponentNode, type ExpansionContext, type SchemaShape,
@@ -199,14 +199,14 @@ async function getMermaidBundle(): Promise<string> {
 /**
  * Render mermaid definition to PNG via shared browser.
  * Loads the mermaid JS library in-page, renders to SVG, screenshots to PNG.
- * Theme fonts are automatically injected by the render service.
+ * Theme fonts are automatically injected by the canvas.
  */
 async function renderMermaidToPng(
   definition: string,
   tokens: MermaidTokens,
   fontFamily: string,
   ctx: MermaidRenderContext,
-  render: RenderService,
+  canvas: Canvas,
 ): Promise<string> {
   const config = buildMermaidConfig(tokens, fontFamily);
   const processed = injectClassDefs(definition, tokens, ctx.accents);
@@ -241,7 +241,7 @@ async function renderMermaidToPng(
         // Load ALL registered @font-face fonts before mermaid measures text.
         // document.fonts.ready alone resolves immediately (nothing references the font yet).
         // Iterating document.fonts and calling .load() on each triggers the actual fetch.
-        // The @font-face rules are injected by renderHtmlToImage's font infrastructure.
+        // The @font-face rules are injected by the canvas font infrastructure.
         await Promise.all([...document.fonts].map(f => f.load()));
         await document.fonts.ready;
 
@@ -270,7 +270,7 @@ async function renderMermaidToPng(
   </script>
 </body></html>`;
 
-  return render.renderHtmlToImage(html, true);
+  return canvas.renderHtml(html, true);
 }
 
 // ============================================
@@ -291,7 +291,7 @@ async function expandMermaid(props: MermaidComponentProps, context: ExpansionCon
   const renderCtx: MermaidRenderContext = {
     accents: context.theme.colors.accents,
   };
-  const pngPath = await renderMermaidToPng(sanitized, tokens, fontFamily, renderCtx, context.render);
+  const pngPath = await renderMermaidToPng(sanitized, tokens, fontFamily, renderCtx, context.canvas);
   return {
     type: NODE_TYPE.IMAGE,
     src: pngPath,

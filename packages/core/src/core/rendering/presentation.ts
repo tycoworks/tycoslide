@@ -120,12 +120,12 @@ export class Presentation {
       // Launch browser early so components can use it during expansion
       await pipeline.launch();
 
-      // Build expansion context with render capability
+      // Build expansion context with canvas capability
       const expansionContext: ExpansionContext = {
         theme: this._theme,
         assets: this._assets,
-        render: {
-          renderHtmlToImage: (html, transparent) =>
+        canvas: {
+          renderHtml: (html, transparent) =>
             pipeline.renderHtmlToImage(html, this._theme, transparent),
         },
       };

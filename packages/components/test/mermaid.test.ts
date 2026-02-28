@@ -6,7 +6,7 @@ import assert from 'node:assert';
 import { mermaid, sanitizeMermaidDefinition, buildMermaidConfig, buildClassDefs, injectClassDefs, type MermaidTokens } from '../src/mermaid.js';
 import { componentRegistry, NODE_TYPE, TEXT_STYLE } from 'tycoslide';
 import { Component } from '../src/names.js';
-import { mockTheme, noopRender } from './mocks.js';
+import { mockTheme, noopCanvas } from './mocks.js';
 
 describe('mermaid() DSL function', () => {
   it('returns ComponentNode with correct type', () => {
@@ -234,12 +234,12 @@ describe('mermaid expansion', () => {
     assert.ok(registered, 'mermaid component should be auto-registered');
   });
 
-  it('expands to ImageNode via render service', async () => {
+  it('expands to ImageNode via canvas', async () => {
     const m = mermaid('flowchart LR\n  A[Start] --> B[End]');
     const expanded = await componentRegistry.expand(m, {
       theme: mockTheme(),
-      render: {
-        renderHtmlToImage: async (html: string, transparent?: boolean) => {
+      canvas: {
+        renderHtml: async (html: string, transparent?: boolean) => {
           assert.ok(html.includes('mermaid'), 'HTML should contain mermaid bundle');
           assert.strictEqual(transparent, true, 'mermaid renders with transparent background');
           return 'mock://mermaid.png';

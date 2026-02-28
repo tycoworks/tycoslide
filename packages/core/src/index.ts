@@ -17,7 +17,7 @@ export {
   type ComponentDefinition,
   type ScalarComponentDefinition,
   type ExpansionContext,
-  type RenderService,
+  type Canvas,
   type LayoutDefinition,
   type SchemaShape,
   type ScalarShape,

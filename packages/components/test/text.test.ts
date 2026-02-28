@@ -7,7 +7,7 @@ import { text } from '../src/text.js';
 import { CONTENT, HALIGN, VALIGN, NODE_TYPE, TEXT_STYLE, componentRegistry } from 'tycoslide';
 import { Component } from '../src/names.js';
 import type { NormalizedRun } from 'tycoslide';
-import { mockTheme, noopRender } from './mocks.js';
+import { mockTheme, noopCanvas } from './mocks.js';
 
 // Test accents for directive resolution
 const testAccents = {
@@ -30,7 +30,7 @@ function themeWithAccents() {
 /** Helper: expand text with PROSE content and return runs */
 async function expandProseRuns(content: string, theme?: any): Promise<NormalizedRun[]> {
   const node = text(content, { content: CONTENT.PROSE });
-  const expanded = await componentRegistry.expand(node, { theme: theme ?? themeWithAccents(), render: noopRender() }) as any;
+  const expanded = await componentRegistry.expand(node, { theme: theme ?? themeWithAccents(), canvas: noopCanvas() }) as any;
   return expanded.content as NormalizedRun[];
 }
 
@@ -61,7 +61,7 @@ describe('Text', () => {
 
     it('should expand to a TextNode', async () => {
       const node = text('Hello **world**', { content: CONTENT.PROSE });
-      const expanded = await componentRegistry.expand(node, { theme, render: noopRender() });
+      const expanded = await componentRegistry.expand(node, { theme, canvas: noopCanvas() });
       assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
     });
 
@@ -189,21 +189,21 @@ describe('Text', () => {
 
     it('should apply style and color props', async () => {
       const node = text('text', { content: CONTENT.PROSE, style: TEXT_STYLE.BODY as any, color: 'AABBCC' });
-      const expanded = await componentRegistry.expand(node, { theme, render: noopRender() }) as any;
+      const expanded = await componentRegistry.expand(node, { theme, canvas: noopCanvas() }) as any;
       assert.strictEqual(expanded.style, 'body');
       assert.strictEqual(expanded.color, 'AABBCC');
     });
 
     it('should default hAlign to LEFT and vAlign to TOP', async () => {
       const node = text('text', { content: CONTENT.PROSE });
-      const expanded = await componentRegistry.expand(node, { theme, render: noopRender() }) as any;
+      const expanded = await componentRegistry.expand(node, { theme, canvas: noopCanvas() }) as any;
       assert.strictEqual(expanded.hAlign, HALIGN.LEFT);
       assert.strictEqual(expanded.vAlign, VALIGN.TOP);
     });
 
     it('should apply bulletColor to bullet runs', async () => {
       const node = text('- First\n- Second', { content: CONTENT.PROSE, bulletColor: 'FF0000' });
-      const expanded = await componentRegistry.expand(node, { theme, render: noopRender() }) as any;
+      const expanded = await componentRegistry.expand(node, { theme, canvas: noopCanvas() }) as any;
       const runs = expanded.content as NormalizedRun[];
       assert.deepStrictEqual(runs[0].bullet, { color: 'FF0000' });
       assert.deepStrictEqual(runs[1].bullet, { color: 'FF0000' });
@@ -255,7 +255,7 @@ Conclusion.
 
     it('should expand to a TextNode with single run', async () => {
       const node = text('Hello world', { content: CONTENT.PLAIN });
-      const expanded = await componentRegistry.expand(node, { theme, render: noopRender() }) as any;
+      const expanded = await componentRegistry.expand(node, { theme, canvas: noopCanvas() }) as any;
       assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
       const runs = expanded.content as NormalizedRun[];
       assert.strictEqual(runs.length, 1);
@@ -264,7 +264,7 @@ Conclusion.
 
     it('should NOT parse markdown — bold stays literal', async () => {
       const node = text('**not bold**', { content: CONTENT.PLAIN });
-      const expanded = await componentRegistry.expand(node, { theme, render: noopRender() }) as any;
+      const expanded = await componentRegistry.expand(node, { theme, canvas: noopCanvas() }) as any;
       const runs = expanded.content as NormalizedRun[];
       assert.strictEqual(runs.length, 1);
       assert.strictEqual(runs[0].text, '**not bold**');
@@ -273,7 +273,7 @@ Conclusion.
 
     it('should NOT parse directives — stays literal', async () => {
       const node = text(':teal[not highlighted]', { content: CONTENT.PLAIN });
-      const expanded = await componentRegistry.expand(node, { theme, render: noopRender() }) as any;
+      const expanded = await componentRegistry.expand(node, { theme, canvas: noopCanvas() }) as any;
       const runs = expanded.content as NormalizedRun[];
       assert.strictEqual(runs.length, 1);
       assert.strictEqual(runs[0].text, ':teal[not highlighted]');
@@ -282,7 +282,7 @@ Conclusion.
 
     it('should apply style, color, and alignment', async () => {
       const node = text('Label', { content: CONTENT.PLAIN, style: TEXT_STYLE.BODY as any, color: 'AABBCC', hAlign: HALIGN.CENTER as any, vAlign: VALIGN.MIDDLE as any });
-      const expanded = await componentRegistry.expand(node, { theme, render: noopRender() }) as any;
+      const expanded = await componentRegistry.expand(node, { theme, canvas: noopCanvas() }) as any;
       assert.strictEqual(expanded.style, 'body');
       assert.strictEqual(expanded.color, 'AABBCC');
       assert.strictEqual(expanded.hAlign, HALIGN.CENTER);
@@ -291,7 +291,7 @@ Conclusion.
 
     it('should default hAlign to LEFT and vAlign to TOP', async () => {
       const node = text('Label', { content: CONTENT.PLAIN });
-      const expanded = await componentRegistry.expand(node, { theme, render: noopRender() }) as any;
+      const expanded = await componentRegistry.expand(node, { theme, canvas: noopCanvas() }) as any;
       assert.strictEqual(expanded.hAlign, HALIGN.LEFT);
       assert.strictEqual(expanded.vAlign, VALIGN.TOP);
     });
@@ -301,7 +301,7 @@ Conclusion.
     const theme = themeWithAccents();
 
     function makeContext() {
-      return { theme, render: noopRender() };
+      return { theme, canvas: noopCanvas() };
     }
 
     it('should create a text component node with rich content kind', () => {
