@@ -272,6 +272,7 @@ describe('Slot Compiler', () => {
       assert.throws(
         () => componentRegistry.define({
           name: 'duplicate-paragraph-handler',
+          tokens: [],
           mdast: {
             nodeTypes: [SYNTAX.PARAGRAPH],
             compile: () => null,
@@ -288,6 +289,7 @@ describe('Slot Compiler', () => {
       componentRegistry.define({
         name: 'test-multi-slot',
         slots: ['left', 'right'],
+        tokens: [],
         expand: (props: any) => ({ type: NODE_TYPE.TEXT, content: [], style: TEXT_STYLE.BODY, color: '000000', hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP, lineHeightMultiplier: 1.2 } as any),
       });
       const md = ':::test-multi-slot\nsome body\n:::';

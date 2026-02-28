@@ -99,6 +99,7 @@ componentRegistry.define({
     height: schema.string().optional(),
   },
   slots: ['children'] as const,
+  tokens: [],
   expand: (props: any): any => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.ROW,
@@ -127,6 +128,7 @@ componentRegistry.define({
     height: schema.string().optional(),
   },
   slots: ['children'] as const,
+  tokens: [],
   expand: (props: any): any => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.COLUMN,
@@ -170,6 +172,7 @@ componentRegistry.define({
   name: C.Image,
   body: schema.string(),
   params: { alt: schema.string().optional() },
+  tokens: [],
   expand: () => ({}) as any,
 });
 

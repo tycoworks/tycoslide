@@ -86,6 +86,7 @@ export const imageComponent = componentRegistry.define({
   name: Component.Image,
   body: schema.string(),
   params: imageSchema,
+  tokens: [],
 
   expand: (props: ImageComponentProps, context: ExpansionContext): ImageNode => {
     let src = props.body;

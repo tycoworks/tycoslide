@@ -64,6 +64,7 @@ export const rowComponent = componentRegistry.define({
   name: Component.Row,
   params: rowSchema,
   slots: ['children'] as const,
+  tokens: [],
 
   expand: (props: RowInternalProps, context: ExpansionContext) => ({
     type: NODE_TYPE.CONTAINER,
@@ -115,6 +116,7 @@ export const columnComponent = componentRegistry.define({
   name: Component.Column,
   params: columnSchema,
   slots: ['children'] as const,
+  tokens: [],
 
   expand: (props: ColumnInternalProps, context: ExpansionContext) => ({
     type: NODE_TYPE.CONTAINER,
@@ -158,6 +160,7 @@ export const stackComponent = componentRegistry.define({
   name: Component.Stack,
   params: stackSchema,
   slots: ['children'] as const,
+  tokens: [],
 
   expand: (props: StackInternalProps) => ({
     type: NODE_TYPE.STACK,
@@ -208,6 +211,7 @@ export const gridComponent = componentRegistry.define({
   name: Component.Grid,
   params: gridSchema,
   slots: ['children'] as const,
+  tokens: [],
   expand: (props: GridInternalProps) => {
   const { columns, gap = GAP.NORMAL, children } = props;
 

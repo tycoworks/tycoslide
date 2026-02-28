@@ -105,8 +105,8 @@ export interface MdastHandler {
 export interface ComponentDefinition<TProps = unknown, TTokens = undefined> {
   /** Unique name for this component (e.g., 'card', 'table') */
   name: string;
-  /** Token keys that must be present in theme.components for this component. */
-  tokens?: string[];
+  /** Token keys that must be present in theme.components for this component. Empty array = no tokens. */
+  tokens: string[];
   /** Optional Zod schema shape for directive attributes (used for coercion on slotted components). */
   params?: SchemaShape;
   /** Slot names — directive body is compiled as ComponentNode[] and passed as props[slotName]. */
@@ -186,7 +186,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
   define<TBody extends z.ZodTypeAny, TTokens = undefined>(def: {
     name: string;
     body: TBody;
-    tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+    tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
     mdast?: MdastHandler;
     expand: (props: { body: z.infer<TBody> }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   }): ScalarComponentDefinition<TBody, TTokens>;
@@ -199,7 +199,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     name: string;
     body: TBody;
     params: TParams;
-    tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+    tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
     mdast?: MdastHandler;
     expand: (props: { body: z.infer<TBody> } & z.infer<z.ZodObject<TParams>>, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   }): ScalarComponentDefinition<TBody, TTokens>;
@@ -212,7 +212,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
   define<TShape extends SchemaShape, TTokens = undefined>(def: {
     name: string;
     params: TShape;
-    tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+    tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
     mdast?: MdastHandler;
     expand: (props: z.infer<z.ZodObject<TShape>> & { body?: string }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   }): ScalarComponentDefinition<z.ZodObject<TShape>, TTokens>;
@@ -225,7 +225,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     name: string;
     params?: SchemaShape;
     slots: readonly string[];
-    tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+    tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
     mdast?: MdastHandler;
     expand: (props: any, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   }): ComponentDefinition<any, TTokens>;
@@ -235,7 +235,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
    */
   define<TProps, TTokens = undefined>(def: {
     name: string;
-    tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+    tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
     mdast?: MdastHandler;
     expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   }): ComponentDefinition<TProps, TTokens>;

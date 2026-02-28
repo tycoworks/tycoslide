@@ -12,13 +12,6 @@ Before launch. Must be done before telling the world.
 
 The `render.renderHtmlToImage()` nesting on `ExpansionContext` is right, but `RenderService` is the wrong name. Defer this decision until after the code component — a second consumer will clarify what the interface should be called.
 
-### Registry Hardening
-
-The mermaid component was fundamentally misaligned with the token/variant system because `tokens` is optional in `defineComponent` overloads. Tokens should be required — it should be a willful choice to pass an empty array, not an accidental omission. Investigate:
-
-- Make tokens required (non-optional) in all `defineComponent` overloads
-- Minimize the number of overloads
-
 ### Code Component
 
 Syntax-highlighted code blocks in slides via Shiki + shared Playwright browser (`renderHtmlToImage`). Registers a MDAST handler for fenced code blocks so markdown ``` maps to the code component. Important for technical audiences.
