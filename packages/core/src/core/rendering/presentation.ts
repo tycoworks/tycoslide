@@ -12,7 +12,7 @@ import { PptxRenderer } from './pptxRenderer.js';
 import { LayoutValidator, LayoutValidationError } from '../layout/validator.js';
 import type { SlideValidationResult } from '../layout/validator.js';
 import { log } from '../../utils/log.js';
-import { componentRegistry } from './registry.js';
+import { componentRegistry, type ExpansionContext } from './registry.js';
 import { LayoutPipeline } from '../layout/pipeline.js';
 
 export type { Slide, Master } from '../model/types.js';
@@ -117,6 +117,19 @@ export class Presentation {
     const pipeline = new LayoutPipeline();
 
     try {
+      // Launch browser early so components can use it during expansion
+      await pipeline.launch();
+
+      // Build expansion context with render capability
+      const expansionContext: ExpansionContext = {
+        theme: this._theme,
+        assets: this._assets,
+        render: {
+          renderHtmlToImage: (html, transparent) =>
+            pipeline.renderHtmlToImage(html, this._theme, transparent),
+        },
+      };
+
       // Phase 1: Collect all masters and their content
       log.pptx._('PIPELINE: Collecting masters and slides...');
       const pendingMasters = new Map<string, {
@@ -130,7 +143,7 @@ export class Presentation {
         const { master } = deferred.slide;
         if (master && !this.masters.has(master.name) && !pendingMasters.has(master.name)) {
           const { content: rawMasterContent, contentBounds } = master.getContent(this._theme);
-          const masterContent = await componentRegistry.expandTree(rawMasterContent, { theme: this._theme, assets: this._assets });
+          const masterContent = await componentRegistry.expandTree(rawMasterContent, expansionContext);
           pendingMasters.set(master.name, {
             master,
             content: masterContent,
@@ -166,7 +179,7 @@ export class Presentation {
         // Expand components
         let expanded: ElementNode;
         try {
-          expanded = await componentRegistry.expandTree(content, { theme: this._theme, assets: this._assets });
+          expanded = await componentRegistry.expandTree(content, expansionContext);
         } catch (error) {
           if (error instanceof Error) {
             error.message = `Slide ${slideIndex + 1}: ${error.message}`;

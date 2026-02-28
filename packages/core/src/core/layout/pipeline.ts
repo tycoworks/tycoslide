@@ -6,7 +6,9 @@ import type { ElementNode, PositionedNode, ContainerNode, StackNode, TextNode } 
 import { NODE_TYPE } from '../model/nodes.js';
 import type { Bounds } from '../model/bounds.js';
 import type { Theme } from '../model/types.js';
+import { HeadlessBrowser } from './browser.js';
 import { LayoutMeasurer } from './measurement.js';
+import { HtmlRenderer } from './htmlRenderer.js';
 import { log } from '../../utils/log.js';
 
 // ============================================
@@ -26,10 +28,13 @@ interface SlideMeasurementEntry {
 
 /**
  * Pipeline that coordinates browser-based layout measurement for presentations.
- * Collects slides, measures them via the browser, and builds positioned trees.
+ * Composes a shared browser, layout measurer, and HTML renderer.
  *
  * Usage:
  *   const pipeline = new LayoutPipeline();
+ *
+ *   // Launch browser (enables component rendering during expansion)
+ *   await pipeline.launch();
  *
  *   // Collect from all slides
  *   for (const slide of slides) {
@@ -44,7 +49,9 @@ interface SlideMeasurementEntry {
  */
 export class LayoutPipeline {
   private slides: SlideMeasurementEntry[] = [];
-  private measurer = new LayoutMeasurer();
+  private browser = new HeadlessBrowser();
+  private measurer = new LayoutMeasurer(this.browser);
+  private renderer = new HtmlRenderer(this.browser);
   private measurements: Map<ElementNode, Bounds> | null = null;
 
   /**
@@ -53,6 +60,23 @@ export class LayoutPipeline {
    */
   collectFromTree(node: ElementNode, bounds: Bounds, label: string): void {
     this.slides.push({ tree: node, bounds, label });
+  }
+
+  /**
+   * Launch browser early (for component rendering during expansion).
+   * Idempotent — safe to call multiple times.
+   */
+  async launch(): Promise<void> {
+    await this.browser.launch();
+    await this.measurer.init();
+  }
+
+  /**
+   * Render an HTML string to a PNG image using the shared browser.
+   * Delegates to the dedicated HtmlRenderer.
+   */
+  async renderHtmlToImage(html: string, theme: Theme, transparent?: boolean): Promise<string> {
+    return this.renderer.renderHtmlToImage(html, theme, transparent);
   }
 
   /**
@@ -66,8 +90,9 @@ export class LayoutPipeline {
     }
 
     // Launch browser if needed (idempotent)
-    if (!this.measurer.isLaunched()) {
-      await this.measurer.launch();
+    if (!this.browser.isLaunched()) {
+      await this.browser.launch();
+      await this.measurer.init();
     }
 
     // Measure ALL slides in a single browser round-trip
@@ -103,7 +128,7 @@ export class LayoutPipeline {
    * Close the browser and clean up.
    */
   async close(): Promise<void> {
-    await this.measurer.close();
+    await this.browser.close();
     this.slides = [];
     this.measurements = null;
   }

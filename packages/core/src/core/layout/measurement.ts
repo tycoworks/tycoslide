@@ -4,13 +4,15 @@
 
 import fs from 'fs';
 import path from 'path';
-import { chromium, type Browser, type Page } from 'playwright';
+import type { Page } from 'playwright';
 import type { Theme } from '../model/types.js';
 import type { ElementNode } from '../model/nodes.js';
 import { Bounds } from '../model/bounds.js';
+import type { HeadlessBrowser } from './browser.js';
 import { generateLayoutHTML, preloadFonts, measureFontNormalRatios, type FontNormalRatios, type FontDescriptor } from './layoutHtml.js';
 import { pxToIn } from '../../utils/units.js';
 import { log } from '../../utils/log.js';
+
 // ============================================
 // LAYOUT MEASURER
 // ============================================
@@ -21,37 +23,16 @@ import { log } from '../../utils/log.js';
  * then extracts {x, y, width, height} for every node.
  */
 export class LayoutMeasurer {
-  private browser: Browser | null = null;
   private page: Page | null = null;
   private fontNormalRatios: FontNormalRatios = new Map();
   private fontDescriptors: FontDescriptor[] = [];
 
+  constructor(private browser: HeadlessBrowser) {}
 
-  async launch(): Promise<void> {
-    if (this.browser) {
-      return; // Already launched
+  async init(): Promise<void> {
+    if (!this.page) {
+      this.page = await this.browser.newPage();
     }
-
-    this.browser = await chromium.launch({
-      headless: true,
-    });
-
-    this.page = await this.browser.newPage();
-  }
-
-  async close(): Promise<void> {
-    if (this.page) {
-      await this.page.close();
-      this.page = null;
-    }
-    if (this.browser) {
-      await this.browser.close();
-      this.browser = null;
-    }
-  }
-
-  isLaunched(): boolean {
-    return this.browser !== null;
   }
 
   /**
@@ -65,7 +46,7 @@ export class LayoutMeasurer {
     debugDir?: string,
   ): Promise<Map<ElementNode, Bounds>> {
     if (!this.page) {
-      throw new Error('Browser not launched. Call launch() first.');
+      throw new Error('Measurer not initialized. Call init() first.');
     }
 
     // Ensure font metrics are measured (idempotent)

@@ -71,11 +71,22 @@ export class Registry<TDef extends { name: string }> {
 // ============================================
 
 /**
+ * Browser-based rendering capability.
+ * Renders HTML strings to PNG images using the shared Playwright browser.
+ * Theme fonts are automatically injected for brand compliance.
+ */
+export interface RenderService {
+  renderHtmlToImage(html: string, transparent?: boolean): Promise<string>;
+}
+
+/**
  * Context passed to component expansion functions.
  */
 export interface ExpansionContext {
   theme: Theme;
   assets?: Record<string, unknown>;
+  /** Browser rendering service. Available during Presentation.writeFile(). */
+  render?: RenderService;
 }
 
 /**
