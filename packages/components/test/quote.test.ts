@@ -3,7 +3,7 @@ import assert from 'node:assert';
 import { quote } from '../src/quote.js';
 import { componentRegistry, NODE_TYPE, TEXT_STYLE, HALIGN, VALIGN } from 'tycoslide';
 import { Component } from '../src/names.js';
-import { mockTheme } from './mocks.js';
+import { mockTheme, noopRender } from './mocks.js';
 
 describe('Quote Component', () => {
   const theme = mockTheme();
@@ -34,7 +34,7 @@ describe('Quote Component', () => {
   describe('expansion', () => {
     it('should expand to stack with background and content', async () => {
       const node = quote({ quote: 'Test' });
-      const expanded = await componentRegistry.expandTree(node, { theme });
+      const expanded = await componentRegistry.expandTree(node, { theme, render: noopRender() });
 
       // With background (default): stack(shape, column)
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
@@ -48,14 +48,14 @@ describe('Quote Component', () => {
     it('should expand to column only when variant has backgroundOpacity=0', async () => {
       const flatTheme = mockTheme({ components: { quote: { variants: { flat: { backgroundOpacity: 0 } } } } });
       const node = quote({ quote: 'Test', variant: 'flat' });
-      const expanded = await componentRegistry.expandTree(node, { theme: flatTheme });
+      const expanded = await componentRegistry.expandTree(node, { theme: flatTheme, render: noopRender() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
     });
 
     it('should include quote text as markdown', async () => {
       const node = quote({ quote: 'A wise saying' });
-      const expanded = await componentRegistry.expandTree(node, { theme });
+      const expanded = await componentRegistry.expandTree(node, { theme, render: noopRender() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {
@@ -75,7 +75,7 @@ describe('Quote Component', () => {
 
     it('should include attribution when provided', async () => {
       const node = quote({ quote: 'Quote text', attribution: '— Jane Smith' });
-      const expanded = await componentRegistry.expandTree(node, { theme });
+      const expanded = await componentRegistry.expandTree(node, { theme, render: noopRender() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {
@@ -98,7 +98,7 @@ describe('Quote Component', () => {
 
     it('should include image when provided', async () => {
       const node = quote({ quote: 'Quote text', image: 'logo.png' });
-      const expanded = await componentRegistry.expandTree(node, { theme });
+      const expanded = await componentRegistry.expandTree(node, { theme, render: noopRender() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {
@@ -123,7 +123,7 @@ describe('Quote Component', () => {
         attribution: '— Author',
         image: 'logo.png',
       });
-      const expanded = await componentRegistry.expandTree(node, { theme });
+      const expanded = await componentRegistry.expandTree(node, { theme, render: noopRender() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {
@@ -144,7 +144,7 @@ describe('Quote Component', () => {
 
     it('should vertically center content', async () => {
       const node = quote({ quote: 'Test' });
-      const expanded = await componentRegistry.expandTree(node, { theme });
+      const expanded = await componentRegistry.expandTree(node, { theme, render: noopRender() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
       if (expanded.type === NODE_TYPE.STACK) {

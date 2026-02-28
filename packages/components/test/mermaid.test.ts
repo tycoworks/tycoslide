@@ -3,10 +3,10 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { mermaid, sanitizeMermaidDefinition } from '../src/mermaid.js';
-import { componentRegistry, NODE_TYPE } from 'tycoslide';
+import { mermaid, sanitizeMermaidDefinition, buildMermaidConfig, buildClassDefs, injectClassDefs, type MermaidTokens } from '../src/mermaid.js';
+import { componentRegistry, NODE_TYPE, TEXT_STYLE } from 'tycoslide';
 import { Component } from '../src/names.js';
-import { mockTheme } from './mocks.js';
+import { mockTheme, noopRender } from './mocks.js';
 
 describe('mermaid() DSL function', () => {
   it('returns ComponentNode with correct type', () => {
@@ -114,18 +114,124 @@ flowchart LR
   });
 });
 
+// ============================================
+// THEME INTEGRATION (pure functions)
+// ============================================
+
+const testTokens: MermaidTokens = {
+  primaryColor: 'FF0000',
+  primaryTextColor: 'FFFFFF',
+  primaryBorderColor: '666666',
+  lineColor: '000000',
+  secondaryColor: '333333',
+  tertiaryColor: '333333',
+  textColor: '000000',
+  nodeTextColor: '111111',
+  clusterBackground: 'AABBCC',
+  clusterBorderColor: '666666',
+  edgeLabelBackground: 'FFFFFF',
+  titleColor: '222222',
+  textStyle: TEXT_STYLE.BODY,
+  accentOpacity: 20,
+};
+
+describe('buildMermaidConfig', () => {
+  it('maps all tokens to #-prefixed themeVariables', () => {
+    const config = buildMermaidConfig(testTokens, 'Inter') as any;
+    assert.strictEqual(config.themeVariables.primaryColor, '#FF0000');
+    assert.strictEqual(config.themeVariables.primaryTextColor, '#FFFFFF');
+    assert.strictEqual(config.themeVariables.lineColor, '#000000');
+    assert.strictEqual(config.themeVariables.nodeTextColor, '#111111');
+    assert.strictEqual(config.themeVariables.titleColor, '#222222');
+    assert.strictEqual(config.themeVariables.edgeLabelBackground, '#FFFFFF');
+  });
+
+  it('sets fontFamily from parameter', () => {
+    const config = buildMermaidConfig(testTokens, 'CustomFont') as any;
+    assert.strictEqual(config.themeVariables.fontFamily, 'CustomFont');
+  });
+
+  it('sets background to transparent', () => {
+    const config = buildMermaidConfig(testTokens, 'Inter') as any;
+    assert.strictEqual(config.themeVariables.background, 'transparent');
+  });
+
+  it('converts clusterBkg to rgba with accentOpacity', () => {
+    const config = buildMermaidConfig(testTokens, 'Inter') as any;
+    // AABBCC at 20% → rgba(170, 187, 204, 0.2)
+    assert.strictEqual(config.themeVariables.clusterBkg, 'rgba(170, 187, 204, 0.2)');
+  });
+
+  it('uses mermaid base theme', () => {
+    const config = buildMermaidConfig(testTokens, 'Inter') as any;
+    assert.strictEqual(config.theme, 'base');
+  });
+});
+
+describe('buildClassDefs', () => {
+  it('generates classDef for each accent with hex alpha', () => {
+    const accents = { teal: '00CCCC', pink: 'FF00FF' };
+    const result = buildClassDefs(testTokens, accents);
+    // 20% of 255 = 51 → hex '33'
+    assert.ok(result.includes('classDef teal fill:#00CCCC33'));
+    assert.ok(result.includes('classDef pink fill:#FF00FF33'));
+  });
+
+  it('generates primary classDef at full opacity with text color', () => {
+    const result = buildClassDefs(testTokens, {});
+    assert.ok(result.includes('classDef primary fill:#FF0000,color:#FFFFFF'));
+  });
+
+  it('primary classDef has no alpha suffix', () => {
+    const result = buildClassDefs(testTokens, {});
+    // Should NOT have hex alpha appended to primary fill
+    assert.ok(!result.includes('classDef primary fill:#FF000033'));
+  });
+});
+
+describe('injectClassDefs', () => {
+  const accents = { teal: '00CCCC' };
+
+  it('injects classDefs after flowchart declaration', () => {
+    const def = 'flowchart LR\n  A --> B';
+    const result = injectClassDefs(def, testTokens, accents);
+    assert.ok(result.startsWith('flowchart LR\n'));
+    assert.ok(result.includes('classDef teal'));
+    assert.ok(result.includes('classDef primary'));
+    // Original content preserved
+    assert.ok(result.includes('A --> B'));
+  });
+
+  it('injects after graph declaration too', () => {
+    const def = 'graph TD\n  A --> B';
+    const result = injectClassDefs(def, testTokens, accents);
+    assert.ok(result.includes('classDef teal'));
+  });
+
+  it('skips injection for non-flowchart diagrams', () => {
+    const def = 'sequenceDiagram\n  Alice->>Bob: Hello';
+    const result = injectClassDefs(def, testTokens, accents);
+    assert.strictEqual(result, def);
+  });
+
+  it('adds subgraph style directives when subgraphs present', () => {
+    const def = 'flowchart LR\n  subgraph Sources\n    A[Node]\n  end';
+    const result = injectClassDefs(def, testTokens, accents);
+    // Subgraph style uses clusterBackground + accentOpacity hex alpha
+    assert.ok(result.includes('style Sources fill:#AABBCC33'));
+  });
+
+  it('skips subgraph styles when no subgraphs', () => {
+    const def = 'flowchart LR\n  A --> B';
+    const result = injectClassDefs(def, testTokens, accents);
+    assert.ok(!result.includes('style '));
+  });
+});
+
 describe('mermaid expansion', () => {
   it('auto-registers mermaid component on import', () => {
     const registered = componentRegistry.has(Component.Mermaid);
     assert.ok(registered, 'mermaid component should be auto-registered');
-  });
-
-  it('throws without render service', async () => {
-    const m = mermaid('flowchart LR\n  A --> B');
-    await assert.rejects(
-      () => componentRegistry.expand(m, { theme: mockTheme() }),
-      /render service/i,
-    );
   });
 
   it('expands to ImageNode via render service', async () => {
@@ -136,12 +242,12 @@ describe('mermaid expansion', () => {
         renderHtmlToImage: async (html: string, transparent?: boolean) => {
           assert.ok(html.includes('mermaid'), 'HTML should contain mermaid bundle');
           assert.strictEqual(transparent, true, 'mermaid renders with transparent background');
-          return '/tmp/mock-mermaid.png';
+          return 'mock://mermaid.png';
         },
       },
     });
 
     assert.strictEqual(expanded.type, NODE_TYPE.IMAGE);
-    assert.strictEqual((expanded as any).src, '/tmp/mock-mermaid.png');
+    assert.strictEqual((expanded as any).src, 'mock://mermaid.png');
   });
 });

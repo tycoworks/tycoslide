@@ -10,11 +10,23 @@ Before launch. Must be done before telling the world.
 
 ### Default Theme & Showcase
 
-The big piece. A polished default theme with good colors, layouts, and a showcase deck that demonstrates everything tycoslide can do. The `layout-research.md` file informs layout decisions.
+The big piece. A polished default theme with good colors, layouts, and a showcase deck that demonstrates everything tycoslide can do. The `layout-research.md` file informs layout decisions. tycoworks theme.
 
 ### Blockquote Mdast Type
 
 Markdown `>` blockquote syntax doesn't produce quote components. Need to register a blockquote handler in the markdown compilation pipeline so `>` maps to the quote component.
+
+- Quote vs QuoteCard
+
+- Scale CLI
+
+- Update docs
+
+- Registry check - tokens optional?
+
+- Token resolution check
+
+- RenderService?
 
 ### Test Coverage
 
@@ -91,7 +103,7 @@ Composite components (cards) currently render all shapes individually. They shou
 
 ### Theme Building CLI
 
-Make it easier to bootstrap themes. `tycoslide theme-init --from-dtcg tokens.json` consumes W3C DTCG JSON and emits a TypeScript theme scaffold. One-time codegen, not runtime. Document the recommended multi-size theme file structure (shared palette/fonts/components, size-specific spacing/textStyles).
+Make it easier to bootstrap themes. `tycoslide theme-init --from-dtcg tokens.json` consumes W3C DTCG JSON and emits a TypeScript theme scaffold. One-time codegen, not runtime. Document the recommended multi-size theme file structure (shared palette/fonts/components, size-specific spacing/textStyles). Or scrapes website / existing presentations.
 
 ### Dark Mode
 

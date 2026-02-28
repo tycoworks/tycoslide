@@ -2,7 +2,7 @@
 // Renders mermaid diagrams using the mermaid JS library and the shared browser.
 // Theme fonts and colors are automatically injected for brand compliance.
 
-import type { Theme } from 'tycoslide';
+import type { RenderService } from 'tycoslide';
 import {
   NODE_TYPE, type ImageNode,
   componentRegistry, component, type ComponentNode, type ExpansionContext, type SchemaShape,
@@ -12,6 +12,44 @@ import {
 import fs from 'fs';
 import { createRequire } from 'module';
 import { Component } from './names.js';
+
+// ============================================
+// TOKENS
+// ============================================
+
+export const MERMAID_TOKEN = {
+  PRIMARY_COLOR: 'primaryColor',
+  PRIMARY_TEXT_COLOR: 'primaryTextColor',
+  PRIMARY_BORDER_COLOR: 'primaryBorderColor',
+  LINE_COLOR: 'lineColor',
+  SECONDARY_COLOR: 'secondaryColor',
+  TERTIARY_COLOR: 'tertiaryColor',
+  TEXT_COLOR: 'textColor',
+  NODE_TEXT_COLOR: 'nodeTextColor',
+  CLUSTER_BACKGROUND: 'clusterBackground',
+  CLUSTER_BORDER_COLOR: 'clusterBorderColor',
+  EDGE_LABEL_BACKGROUND: 'edgeLabelBackground',
+  TITLE_COLOR: 'titleColor',
+  TEXT_STYLE: 'textStyle',
+  ACCENT_OPACITY: 'accentOpacity',
+} as const;
+
+export interface MermaidTokens {
+  [MERMAID_TOKEN.PRIMARY_COLOR]: string;
+  [MERMAID_TOKEN.PRIMARY_TEXT_COLOR]: string;
+  [MERMAID_TOKEN.PRIMARY_BORDER_COLOR]: string;
+  [MERMAID_TOKEN.LINE_COLOR]: string;
+  [MERMAID_TOKEN.SECONDARY_COLOR]: string;
+  [MERMAID_TOKEN.TERTIARY_COLOR]: string;
+  [MERMAID_TOKEN.TEXT_COLOR]: string;
+  [MERMAID_TOKEN.NODE_TEXT_COLOR]: string;
+  [MERMAID_TOKEN.CLUSTER_BACKGROUND]: string;
+  [MERMAID_TOKEN.CLUSTER_BORDER_COLOR]: string;
+  [MERMAID_TOKEN.EDGE_LABEL_BACKGROUND]: string;
+  [MERMAID_TOKEN.TITLE_COLOR]: string;
+  [MERMAID_TOKEN.TEXT_STYLE]: string;
+  [MERMAID_TOKEN.ACCENT_OPACITY]: number;
+}
 
 // ============================================
 // SCHEMAS & TYPES
@@ -53,6 +91,11 @@ export function sanitizeMermaidDefinition(definition: string): string {
 // THEME INTEGRATION
 // ============================================
 
+/** The subset of theme data that mermaid rendering actually needs (beyond tokens). */
+export interface MermaidRenderContext {
+  accents: Record<string, string>;
+}
+
 function hexToRgba(hex: string, alpha: number): string {
   const r = parseInt(hex.slice(0, 2), 16);
   const g = parseInt(hex.slice(2, 4), 16);
@@ -60,11 +103,7 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-function buildMermaidConfig(theme: Theme): object {
-  const { colors, textStyles } = theme;
-  const fontFamily = textStyles.body.fontFamily.normal.name;
-  const alphaDecimal = colors.subtleOpacity / 100;
-
+export function buildMermaidConfig(tokens: MermaidTokens, fontFamily: string): object {
   return {
     startOnLoad: false,
     // 'loose' enables foreignObject for richer text (e.g. <br/> in labels).
@@ -74,38 +113,36 @@ function buildMermaidConfig(theme: Theme): object {
     themeVariables: {
       fontFamily,
       background: 'transparent',
-      primaryColor: `#${colors.primary}`,
-      primaryTextColor: `#${colors.background}`,   // Light text on dark primary fill
-      primaryBorderColor: `#${colors.textMuted}`,   // Visible borders
-      lineColor: `#${colors.text}`,                 // Visible arrows
-      secondaryColor: `#${colors.secondary}`,
-      tertiaryColor: `#${colors.secondary}`,
-      textColor: `#${colors.text}`,
-      titleColor: `#${colors.text}`,
-      nodeTextColor: `#${colors.background}`,        // Light text on filled nodes
-      clusterBkg: hexToRgba(colors.secondary, alphaDecimal),
-      clusterBorder: `#${colors.textMuted}`,
-      edgeLabelBackground: `#${colors.background}`,
+      primaryColor: `#${tokens.primaryColor}`,
+      primaryTextColor: `#${tokens.primaryTextColor}`,
+      primaryBorderColor: `#${tokens.primaryBorderColor}`,
+      lineColor: `#${tokens.lineColor}`,
+      secondaryColor: `#${tokens.secondaryColor}`,
+      tertiaryColor: `#${tokens.tertiaryColor}`,
+      textColor: `#${tokens.textColor}`,
+      titleColor: `#${tokens.titleColor}`,
+      nodeTextColor: `#${tokens.nodeTextColor}`,
+      clusterBkg: hexToRgba(tokens.clusterBackground, tokens.accentOpacity / 100),
+      clusterBorder: `#${tokens.clusterBorderColor}`,
+      edgeLabelBackground: `#${tokens.edgeLabelBackground}`,
     },
   };
 }
 
-function buildClassDefs(theme: Theme): string {
-  const { colors } = theme;
-  const alpha = Math.round(colors.subtleOpacity / 100 * 255).toString(16).padStart(2, '0');
+export function buildClassDefs(tokens: MermaidTokens, accents: Record<string, string>): string {
+  const alpha = Math.round(tokens.accentOpacity / 100 * 255).toString(16).padStart(2, '0');
 
-  const defs = Object.entries(colors.accents).map(([name, color]) => {
+  const defs = Object.entries(accents).map(([name, color]) => {
     return `classDef ${name} fill:#${color}${alpha}`;
   });
-  // Primary gets full opacity with light text for contrast
-  defs.push(`classDef primary fill:#${colors.primary},color:#${colors.background}`);
+  // Primary gets full opacity with themed text color for contrast
+  defs.push(`classDef primary fill:#${tokens.primaryColor},color:#${tokens.primaryTextColor}`);
   return defs.join('\n');
 }
 
-function buildSubgraphStyles(definition: string, theme: Theme): string {
-  const { colors } = theme;
-  const alpha = Math.round(colors.subtleOpacity / 100 * 255).toString(16).padStart(2, '0');
-  const fillColor = `#${colors.secondary}${alpha}`;
+function buildSubgraphStyles(definition: string, tokens: MermaidTokens): string {
+  const alpha = Math.round(tokens.accentOpacity / 100 * 255).toString(16).padStart(2, '0');
+  const fillColor = `#${tokens.clusterBackground}${alpha}`;
 
   const subgraphPattern = /subgraph\s+(\w+)/g;
   const ids: string[] = [];
@@ -118,7 +155,7 @@ function buildSubgraphStyles(definition: string, theme: Theme): string {
   return ids.map(id => `style ${id} fill:${fillColor}`).join('\n');
 }
 
-function injectClassDefs(definition: string, theme: Theme): string {
+export function injectClassDefs(definition: string, tokens: MermaidTokens, accents: Record<string, string>): string {
   // classDef and style directives are flowchart/graph-only syntax.
   // For other diagram types (sequence, state, ER, etc.), skip injection —
   // they are themed via buildMermaidConfig's themeVariables instead.
@@ -129,8 +166,8 @@ function injectClassDefs(definition: string, theme: Theme): string {
     return definition;
   }
 
-  const classDefs = buildClassDefs(theme);
-  const subgraphStyles = buildSubgraphStyles(definition, theme);
+  const classDefs = buildClassDefs(tokens, accents);
+  const subgraphStyles = buildSubgraphStyles(definition, tokens);
 
   const [fullMatch] = match;
   let result = definition.replace(fullMatch, `${fullMatch}${classDefs}\n`);
@@ -166,11 +203,13 @@ async function getMermaidBundle(): Promise<string> {
  */
 async function renderMermaidToPng(
   definition: string,
-  theme: Theme,
-  render: { renderHtmlToImage(html: string, transparent?: boolean): Promise<string> },
+  tokens: MermaidTokens,
+  fontFamily: string,
+  ctx: MermaidRenderContext,
+  render: RenderService,
 ): Promise<string> {
-  const config = buildMermaidConfig(theme);
-  const processed = injectClassDefs(definition, theme);
+  const config = buildMermaidConfig(tokens, fontFamily);
+  const processed = injectClassDefs(definition, tokens, ctx.accents);
   const bundle = await getMermaidBundle();
 
   // Use JSON script blocks to safely pass data without escaping issues.
@@ -242,15 +281,17 @@ async function renderMermaidToPng(
  * Expand mermaid component to ImageNode.
  * Sanitizes definition, renders via shared browser, returns image reference.
  */
-async function expandMermaid(props: MermaidComponentProps, context: ExpansionContext): Promise<ImageNode> {
-  if (!context.render) {
-    throw new Error('Mermaid component requires render service. Use Presentation.writeFile() for rendering.');
-  }
+async function expandMermaid(props: MermaidComponentProps, context: ExpansionContext, tokens: MermaidTokens): Promise<ImageNode> {
   const sanitized = sanitizeMermaidDefinition(props.body);
   if (!sanitized.trim()) {
     throw new Error('Mermaid definition is empty after sanitization');
   }
-  const pngPath = await renderMermaidToPng(sanitized, context.theme, context.render);
+  const textStyleConfig = context.theme.textStyles[tokens.textStyle as keyof typeof context.theme.textStyles];
+  const fontFamily = textStyleConfig.fontFamily.normal.name;
+  const renderCtx: MermaidRenderContext = {
+    accents: context.theme.colors.accents,
+  };
+  const pngPath = await renderMermaidToPng(sanitized, tokens, fontFamily, renderCtx, context.render);
   return {
     type: NODE_TYPE.IMAGE,
     src: pngPath,
@@ -266,6 +307,22 @@ export const mermaidComponent = componentRegistry.define({
   name: Component.Mermaid,
   body: schema.string(),
   params: mermaidSchema,
+  tokens: [
+    MERMAID_TOKEN.PRIMARY_COLOR,
+    MERMAID_TOKEN.PRIMARY_TEXT_COLOR,
+    MERMAID_TOKEN.PRIMARY_BORDER_COLOR,
+    MERMAID_TOKEN.LINE_COLOR,
+    MERMAID_TOKEN.SECONDARY_COLOR,
+    MERMAID_TOKEN.TERTIARY_COLOR,
+    MERMAID_TOKEN.TEXT_COLOR,
+    MERMAID_TOKEN.NODE_TEXT_COLOR,
+    MERMAID_TOKEN.CLUSTER_BACKGROUND,
+    MERMAID_TOKEN.CLUSTER_BORDER_COLOR,
+    MERMAID_TOKEN.EDGE_LABEL_BACKGROUND,
+    MERMAID_TOKEN.TITLE_COLOR,
+    MERMAID_TOKEN.TEXT_STYLE,
+    MERMAID_TOKEN.ACCENT_OPACITY,
+  ],
   expand: expandMermaid,
 });
 

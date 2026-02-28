@@ -220,5 +220,25 @@ export const theme: Theme = {
         accent:   { ...shapeBase, fill: colors.accents.blue, fillOpacity: 100 },
       },
     },
+    mermaid: {
+      variants: {
+        default: {
+          primaryColor: colors.primary,
+          primaryTextColor: colors.onPrimary,
+          primaryBorderColor: colors.outlineVariant,
+          lineColor: colors.text,
+          secondaryColor: colors.secondary,
+          tertiaryColor: colors.secondary,
+          textColor: colors.text,
+          nodeTextColor: colors.text,
+          clusterBackground: colors.secondary,
+          clusterBorderColor: colors.outlineVariant,
+          edgeLabelBackground: colors.background,
+          titleColor: colors.text,
+          textStyle: TEXT_STYLE.BODY,
+          accentOpacity: colors.subtleOpacity,
+        },
+      },
+    },
   },
 };

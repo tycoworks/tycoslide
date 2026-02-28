@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { Registry, componentRegistry, isComponentNode, component, type LayoutDefinition } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import type { Slide } from '../src/core/model/types.js';
-import { mockTheme, mockTextStyle } from './mocks.js';
+import { mockTheme, mockTextStyle, noopRender } from './mocks.js';
 
 // Import test stubs to trigger component registration
 import { C } from './test-components.js';
@@ -122,14 +122,14 @@ describe('ComponentRegistry', () => {
     test('expands a registered component', async () => {
       // text component is registered at import time — use it as a real component
       const node = component(C.Text, { body: 'hello' });
-      const expanded = await componentRegistry.expand(node, { theme });
+      const expanded = await componentRegistry.expand(node, { theme, render: noopRender() });
       assert.strictEqual((expanded as any).type, NODE_TYPE.TEXT);
     });
 
     test('throws for unknown component', async () => {
       const node = component('nonexistent-component', {});
       await assert.rejects(
-        () => componentRegistry.expand(node, { theme }),
+        () => componentRegistry.expand(node, { theme, render: noopRender() }),
         /Unknown component: 'nonexistent-component'/,
       );
     });
@@ -138,14 +138,14 @@ describe('ComponentRegistry', () => {
   describe('expandTree', () => {
     test('passes primitives through unchanged', async () => {
       const textNode = { type: NODE_TYPE.TEXT, content: [], style: TEXT_STYLE.BODY, resolvedStyle: mockTextStyle, color: '000000', hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP, lineHeightMultiplier: 1.2, bulletIndentPt: 0 };
-      const result = await componentRegistry.expandTree(textNode, { theme });
+      const result = await componentRegistry.expandTree(textNode, { theme, render: noopRender() });
       assert.strictEqual(result, textNode);
     });
 
     test('recursively expands nested components', async () => {
       const flatTheme = mockTheme({ components: { card: { variants: { flat: { backgroundOpacity: 0 } } } } });
       const node = component(C.Card, { title: 'Test', variant: 'flat' });
-      const expanded = await componentRegistry.expandTree(node, { theme: flatTheme });
+      const expanded = await componentRegistry.expandTree(node, { theme: flatTheme, render: noopRender() });
       // backgroundOpacity=0 means just a column with label child
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
       if (expanded.type === NODE_TYPE.CONTAINER) {
@@ -156,7 +156,7 @@ describe('ComponentRegistry', () => {
     test('recurses into element children', async () => {
       // A container with a component child should expand the child
       const node = component(C.Row, { children: [component(C.Text, { body: 'hi' })] });
-      const expanded = await componentRegistry.expandTree(node, { theme });
+      const expanded = await componentRegistry.expandTree(node, { theme, render: noopRender() });
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
       if (expanded.type === NODE_TYPE.CONTAINER) {
         assert.strictEqual(expanded.children[0].type, NODE_TYPE.TEXT);

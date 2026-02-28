@@ -34,14 +34,14 @@ import {
   BORDER_STYLE,
 } from 'tycoslide';
 import type { TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, ContainerNode, StackNode } from 'tycoslide';
-import { mockTheme as createMockTheme } from './mocks.js';
+import { mockTheme as createMockTheme, noopRender } from './mocks.js';
 
 // Theme for text expansion
 const theme = createMockTheme();
 
 /** Expand a ComponentNode to its ElementNode form */
 async function expand(node: any) {
-  return componentRegistry.expandTree(node, { theme });
+  return componentRegistry.expandTree(node, { theme, render: noopRender() });
 }
 
 // ============================================
@@ -159,7 +159,7 @@ describe('image()', () => {
   test('resolves asset.dot.path to string value', async () => {
     const assets = { icons: { rocket: '/path/to/rocket.svg' } };
     const node = await componentRegistry.expandTree(
-      image('asset.icons.rocket'), { theme, assets },
+      image('asset.icons.rocket'), { theme, assets, render: noopRender() },
     ) as ImageNode;
     assert.strictEqual(node.src, '/path/to/rocket.svg');
   });
@@ -167,14 +167,14 @@ describe('image()', () => {
   test('resolves deeply nested asset path', async () => {
     const assets = { images: { heroes: { landing: '/hero.png' } } };
     const node = await componentRegistry.expandTree(
-      image('asset.images.heroes.landing'), { theme, assets },
+      image('asset.images.heroes.landing'), { theme, assets, render: noopRender() },
     ) as ImageNode;
     assert.strictEqual(node.src, '/hero.png');
   });
 
   test('throws when assets not provided for asset reference', async () => {
     await assert.rejects(
-      () => componentRegistry.expandTree(image('asset.icons.rocket'), { theme }),
+      () => componentRegistry.expandTree(image('asset.icons.rocket'), { theme, render: noopRender() }),
       /asset reference.*no assets provided/,
     );
   });
@@ -182,7 +182,7 @@ describe('image()', () => {
   test('throws when asset key not found', async () => {
     const assets = { icons: { star: '/star.svg' } };
     await assert.rejects(
-      () => componentRegistry.expandTree(image('asset.icons.rocket'), { theme, assets }),
+      () => componentRegistry.expandTree(image('asset.icons.rocket'), { theme, assets, render: noopRender() }),
       /could not be resolved/,
     );
   });
@@ -190,7 +190,7 @@ describe('image()', () => {
   test('throws when asset path resolves to object (with suggestions)', async () => {
     const assets = { icons: { rocket: '/rocket.svg', star: '/star.svg' } };
     await assert.rejects(
-      () => componentRegistry.expandTree(image('asset.icons'), { theme, assets }),
+      () => componentRegistry.expandTree(image('asset.icons'), { theme, assets, render: noopRender() }),
       /resolved to an object.*Did you mean/,
     );
   });
@@ -198,7 +198,7 @@ describe('image()', () => {
   test('throws when traversal hits non-object mid-path', async () => {
     const assets = { icons: { rocket: '/rocket.svg' } };
     await assert.rejects(
-      () => componentRegistry.expandTree(image('asset.icons.rocket.size'), { theme, assets }),
+      () => componentRegistry.expandTree(image('asset.icons.rocket.size'), { theme, assets, render: noopRender() }),
       /is not an object/,
     );
   });
@@ -836,7 +836,7 @@ describe('table() token defaults and theme overrides', () => {
     const theme = createMockTheme();
     const node = await componentRegistry.expandTree(
       table([['A', 'B']], { headerRows: 1 }),
-      { theme }
+      { theme, render: noopRender() }
     ) as TableNode;
     assert.strictEqual(node.type, NODE_TYPE.TABLE);
     assert.strictEqual(node.borderStyle, BORDER_STYLE.FULL);
@@ -853,7 +853,7 @@ describe('table() token defaults and theme overrides', () => {
     });
     const node = await componentRegistry.expandTree(
       table([['A', 'B']], { headerRows: 1 }),
-      { theme }
+      { theme, render: noopRender() }
     ) as TableNode;
     assert.strictEqual(node.borderColor, 'FF0000');
     assert.strictEqual(node.cellTextStyle, TEXT_STYLE.SMALL);

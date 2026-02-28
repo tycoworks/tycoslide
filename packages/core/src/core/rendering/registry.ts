@@ -85,8 +85,7 @@ export interface RenderService {
 export interface ExpansionContext {
   theme: Theme;
   assets?: Record<string, unknown>;
-  /** Browser rendering service. Available during Presentation.writeFile(). */
-  render?: RenderService;
+  render: RenderService;
 }
 
 /**

@@ -8,7 +8,7 @@ import { componentRegistry, component } from '../src/core/rendering/registry.js'
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { HALIGN, VALIGN } from '../src/core/model/types.js';
 import { schema } from '../src/core/model/schema.js';
-import { mockTheme } from './mocks.js';
+import { mockTheme, noopRender } from './mocks.js';
 
 // ============================================
 // TEST COMPONENT WITH DECLARED TOKENS
@@ -48,7 +48,7 @@ describe('Token Resolution Engine', () => {
     it('resolves tokens from theme.components[name].variants.default', async () => {
       const theme = tokenTheme({ alpha: 'AAA', beta: 'BBB', gamma: 'CCC' });
       const node = component(TOKEN_COMP as any, { label: 'test' });
-      const expanded = await componentRegistry.expandTree(node, { theme }) as any;
+      const expanded = await componentRegistry.expandTree(node, { theme, render: noopRender() }) as any;
       assert.strictEqual(expanded._tokens.alpha, 'AAA');
       assert.strictEqual(expanded._tokens.beta, 'BBB');
       assert.strictEqual(expanded._tokens.gamma, 'CCC');
@@ -57,7 +57,7 @@ describe('Token Resolution Engine', () => {
     it('custom token values from theme are used', async () => {
       const theme = tokenTheme({ alpha: 'CUSTOM', beta: 'VALUES', gamma: 'HERE' });
       const node = component(TOKEN_COMP as any, { label: 'test' });
-      const expanded = await componentRegistry.expandTree(node, { theme }) as any;
+      const expanded = await componentRegistry.expandTree(node, { theme, render: noopRender() }) as any;
       assert.strictEqual(expanded._tokens.alpha, 'CUSTOM');
       assert.strictEqual(expanded._tokens.beta, 'VALUES');
       assert.strictEqual(expanded._tokens.gamma, 'HERE');
@@ -77,7 +77,7 @@ describe('Token Resolution Engine', () => {
         },
       });
       const node = component(TOKEN_COMP as any, { label: 'test' });
-      const expanded = await componentRegistry.expandTree(node, { theme }) as any;
+      const expanded = await componentRegistry.expandTree(node, { theme, render: noopRender() }) as any;
       assert.strictEqual(expanded._tokens.alpha, 'def-A');
       assert.strictEqual(expanded._tokens.beta, 'def-B');
     });
@@ -90,7 +90,7 @@ describe('Token Resolution Engine', () => {
         },
       });
       const node = component(TOKEN_COMP as any, { label: 'test', variant: 'alt' });
-      const expanded = await componentRegistry.expandTree(node, { theme }) as any;
+      const expanded = await componentRegistry.expandTree(node, { theme, render: noopRender() }) as any;
       assert.strictEqual(expanded._tokens.alpha, 'alt-A');
       assert.strictEqual(expanded._tokens.beta, 'alt-B');
       assert.strictEqual(expanded._tokens.gamma, 'alt-G');
@@ -104,7 +104,7 @@ describe('Token Resolution Engine', () => {
         },
       });
       const node = component(TOKEN_COMP as any, { label: 'test', variant: 'special' });
-      const expanded = await componentRegistry.expandTree(node, { theme }) as any;
+      const expanded = await componentRegistry.expandTree(node, { theme, render: noopRender() }) as any;
       assert.strictEqual(expanded._tokens.alpha, 'SPECIAL-A');
       assert.strictEqual(expanded._tokens.beta, 'SPECIAL-B');
     });
@@ -117,7 +117,7 @@ describe('Token Resolution Engine', () => {
         },
       });
       const node = component(TOKEN_COMP as any, { label: 'test' });
-      const expanded = await componentRegistry.expandTree(node, { theme }) as any;
+      const expanded = await componentRegistry.expandTree(node, { theme, render: noopRender() }) as any;
       assert.strictEqual(expanded._tokens.alpha, 'DEF-A');
     });
   });
@@ -138,7 +138,7 @@ describe('Token Resolution Engine', () => {
       const node = component(TOKEN_COMP as any, { label: 'test', variant: 'nonexistent' });
 
       await assert.rejects(
-        () => componentRegistry.expandTree(node, { theme }),
+        () => componentRegistry.expandTree(node, { theme, render: noopRender() }),
         (err: Error) => {
           assert.match(err.message, /Unknown variant 'nonexistent'/);
           assert.match(err.message, /clean/);
@@ -153,7 +153,7 @@ describe('Token Resolution Engine', () => {
       const node = component(TOKEN_COMP as any, { label: 'test', variant: 'anything' });
 
       await assert.rejects(
-        () => componentRegistry.expandTree(node, { theme }),
+        () => componentRegistry.expandTree(node, { theme, render: noopRender() }),
         (err: Error) => {
           assert.match(err.message, /Unknown variant 'anything'/);
           assert.match(err.message, /default/);
@@ -174,7 +174,7 @@ describe('Token Resolution Engine', () => {
       const node = component(TOKEN_COMP as any, { label: 'test' });
 
       await assert.rejects(
-        () => componentRegistry.expandTree(node, { theme }),
+        () => componentRegistry.expandTree(node, { theme, render: noopRender() }),
         (err: Error) => {
           assert.match(err.message, /requires theme tokens/);
           return true;
@@ -191,7 +191,7 @@ describe('Token Resolution Engine', () => {
       const node = component(TOKEN_COMP as any, { label: 'test' });
 
       await assert.rejects(
-        () => componentRegistry.expandTree(node, { theme }),
+        () => componentRegistry.expandTree(node, { theme, render: noopRender() }),
         (err: Error) => {
           assert.match(err.message, /missing required tokens/);
           assert.match(err.message, /gamma/);
@@ -209,7 +209,7 @@ describe('Token Resolution Engine', () => {
       const node = component(TOKEN_COMP as any, { label: 'test' });
 
       await assert.rejects(
-        () => componentRegistry.expandTree(node, { theme }),
+        () => componentRegistry.expandTree(node, { theme, render: noopRender() }),
         (err: Error) => {
           assert.match(err.message, /beta/);
           assert.match(err.message, /gamma/);
@@ -221,7 +221,7 @@ describe('Token Resolution Engine', () => {
     it('succeeds when all required tokens are provided', async () => {
       const theme = tokenTheme({ alpha: 'A', beta: 'B', gamma: 'G' });
       const node = component(TOKEN_COMP as any, { label: 'test' });
-      const expanded = await componentRegistry.expandTree(node, { theme });
+      const expanded = await componentRegistry.expandTree(node, { theme, render: noopRender() });
       assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
     });
   });

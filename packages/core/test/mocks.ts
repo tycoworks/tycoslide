@@ -58,7 +58,10 @@ export function mockTheme(options?: {
   const borderRadius = options?.borderRadius ?? 0.1;
   const accents = options?.accents ?? { teal: '00CCCC', pink: 'FF00FF', orange: 'FF8800' };
 
-  // Default component tokens (Figma model: each is a complete default variant)
+  // Default component tokens (Figma model: each is a complete default variant).
+  // NOTE: String-literal keys here must match Component enum values in
+  // packages/components/src/names.ts. Core cannot import from components
+  // (dependency flows the other direction), so keep these in sync manually.
   const defaultTokens: Record<string, Record<string, unknown>> = {
     card: {
       padding,
@@ -83,9 +86,11 @@ export function mockTheme(options?: {
       headerBackground: 'FFFFFF',
       headerBackgroundOpacity: 0,
       headerTextStyle: TEXT_STYLE.BODY,
+      headerTextColor: '000000',
       cellBackground: 'FFFFFF',
       cellBackgroundOpacity: 0,
       cellTextStyle: TEXT_STYLE.BODY,
+      cellTextColor: '000000',
       cellPadding,
       hAlign: HALIGN.LEFT,
       vAlign: VALIGN.MIDDLE,
@@ -129,6 +134,22 @@ export function mockTheme(options?: {
       borderColor: 'FFFFFF',
       borderWidth: 0,
       cornerRadius: 0,
+    },
+    mermaid: {
+      primaryColor: 'FF0000',
+      primaryTextColor: 'FFFFFF',
+      primaryBorderColor: '666666',
+      lineColor: '000000',
+      secondaryColor: '333333',
+      tertiaryColor: '333333',
+      textColor: '000000',
+      nodeTextColor: '000000',
+      clusterBackground: '333333',
+      clusterBorderColor: '666666',
+      edgeLabelBackground: 'FFFFFF',
+      titleColor: '000000',
+      textStyle: TEXT_STYLE.BODY,
+      accentOpacity: 20,
     },
   };
   // Build Figma-model components: { variants: { default: {...}, ... } }
@@ -209,6 +230,14 @@ export function mockTheme(options?: {
     },
     components: mergedComponents as Theme['components'],
   };
+}
+
+// ============================================
+// RENDER SERVICE MOCK
+// ============================================
+
+export function noopRender() {
+  return { renderHtmlToImage: async () => 'mock://render.png' };
 }
 
 // ============================================

@@ -90,5 +90,11 @@ export {
   mermaid,
   mermaidComponent,
   sanitizeMermaidDefinition,
+  buildMermaidConfig,
+  buildClassDefs,
+  injectClassDefs,
+  MERMAID_TOKEN,
+  type MermaidTokens,
+  type MermaidRenderContext,
   type MermaidComponentProps,
 } from './mermaid.js';
