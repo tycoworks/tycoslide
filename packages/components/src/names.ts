@@ -13,6 +13,7 @@ export const Component = {
   Quote: 'quote',
   Table: 'table',
   Mermaid: 'mermaid',
+  Code: 'code',
   // Container components: have slots, support :::directives with compiled body
   Row: 'row',
   Column: 'column',

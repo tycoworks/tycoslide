@@ -98,3 +98,16 @@ export {
   type MermaidRenderContext,
   type MermaidComponentProps,
 } from './mermaid.js';
+
+// Code (I/O component — shared browser rendering via Shiki)
+export {
+  code,
+  codeComponent,
+  buildCodeTheme,
+  CODE_TOKEN,
+  type CodeTokens,
+  type CodeComponentProps,
+} from './code.js';
+
+// Languages (supported syntax highlighting languages)
+export { LANGUAGE, type LanguageName, LANGUAGE_VALUES } from './languages.js';

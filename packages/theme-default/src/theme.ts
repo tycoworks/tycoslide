@@ -220,6 +220,27 @@ export const theme: Theme = {
         accent:   { ...shapeBase, fill: colors.accents.blue, fillOpacity: 100 },
       },
     },
+    code: {
+      variants: {
+        default: {
+          backgroundColor: '1A1A2E',
+          textColor: 'E2E8F0',
+          keywordColor: 'A78BFA',
+          stringColor: '10B981',
+          commentColor: '6B7280',
+          functionColor: '79C0FF',
+          numberColor: 'F0883E',
+          operatorColor: 'E2E8F0',
+          typeColor: 'FFA657',
+          variableColor: 'E2E8F0',
+          fontSize: 11,
+          fontFamily: 'monospace',
+          lineHeight: 1.6,
+          padding: spacing.padding,
+          borderRadius: cornerRadius,
+        },
+      },
+    },
     mermaid: {
       variants: {
         default: {

@@ -29,7 +29,7 @@ export {
 export { parseSlideDocument, FrontmatterParseError, type ParsedDocument, type RawSlide } from './core/markdown/slideParser.js';
 
 // Unit utilities (for component authors that resolve theme values during expand)
-export { resolveGap } from './utils/units.js';
+export { resolveGap, inToPx } from './utils/units.js';
 
 // Schema helpers (domain-specific wrappers for layout Zod schemas)
 export { schema, type ScalarParam } from './core/model/schema.js';

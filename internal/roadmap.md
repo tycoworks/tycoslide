@@ -12,9 +12,9 @@ Before launch. Must be done before telling the world.
 
 The `render.renderHtmlToImage()` nesting on `ExpansionContext` is right, but `RenderService` is the wrong name. Defer this decision until after the code component — a second consumer will clarify what the interface should be called.
 
-### Code Component
+### Theme Font Registry
 
-Syntax-highlighted code blocks in slides via Shiki + shared Playwright browser (`renderHtmlToImage`). Registers a MDAST handler for fenced code blocks so markdown ``` maps to the code component. Important for technical audiences.
+Add `theme.fonts` — a named font registry (`Record<string, FontFamily>`) at the top level of `Theme`. Themes declare fonts by semantic role (body, mono, heading). `generateFontFaceCSS()` discovers and embeds all registered fonts as base64 data URIs. The code component's `fontFamily` token becomes a `FontFamily` object instead of a plain string, ensuring monospace fonts go through the same Playwright base64 loading pipeline as all other fonts. Ships a monospace font (e.g., Fira Code via `@fontsource/fira-code`) in the default theme. Currently the code component falls back to system `monospace`, which varies across environments.
 
 ### Quote vs QuoteCard
 
@@ -26,7 +26,7 @@ Add `maxScaleFactor` as a CLI parameter. Currently set in the theme's `spacing.m
 
 ### tycoworks Theme & Showcase
 
-Rebrand `theme-default` as the tycoworks theme — a real brand-aligned theme that demonstrates what tycoslide enables. No generic "default" theme; the whole point is you build your own. The tycoworks theme is the only shipped example and doubles as the showcase. Layouts are done (19 across all tiers). Showcase deck needs updating to demonstrate new components (mermaid, code) and layouts not yet shown.
+Rebrand `theme-default` as the tycoworks theme — a real brand-aligned theme that demonstrates what tycoslide enables. No generic "default" theme; the whole point is you build your own. The tycoworks theme is the only shipped example and doubles as the showcase. Layouts are done (19 across all tiers). Showcase deck needs updating to demonstrate new components (mermaid, code) and layouts not yet shown. Align tokens to website?
 
 ### Test Coverage
 

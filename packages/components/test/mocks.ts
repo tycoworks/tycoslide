@@ -147,6 +147,23 @@ export function mockTheme(options?: {
       textStyle: TEXT_STYLE.BODY,
       accentOpacity: 20,
     },
+    [Component.Code]: {
+      backgroundColor: '1E1E1E',
+      textColor: 'D4D4D4',
+      keywordColor: '569CD6',
+      stringColor: 'CE9178',
+      commentColor: '6A9955',
+      functionColor: 'DCDCAA',
+      numberColor: 'B5CEA8',
+      operatorColor: 'D4D4D4',
+      typeColor: '4EC9B0',
+      variableColor: '9CDCFE',
+      fontSize: 12,
+      fontFamily: 'monospace',
+      lineHeight: 1.4,
+      padding: 0.25,
+      borderRadius: 0.1,
+    },
   };
   // Build Figma-model components: { variants: { default: {...}, ... } }
   // User-provided overrides merge into the default variant for test convenience.

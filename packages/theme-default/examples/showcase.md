@@ -135,6 +135,31 @@ flowchart LR
 
 ---
 layout: body
+title: Presentations as Code
+eyebrow: Code Component
+notes: Demonstrates syntax-highlighted code blocks. The code component renders via Shiki, themed entirely through design tokens.
+---
+
+```typescript
+import { presentation, contentSlide } from 'tycoslide';
+import { text, code, row } from 'tycoslide-components';
+
+const pres = presentation('my-theme');
+
+pres.add(contentSlide('API Example',
+  row(
+    text('Query all active orders:'),
+    code(`SELECT * FROM orders
+WHERE status = 'active'
+ORDER BY created_at DESC;`, 'sql'),
+  ),
+));
+
+await pres.build('output.pptx');
+```
+
+---
+layout: body
 title: Where tycoslide Fits
 eyebrow: Landscape
 notes: Factual comparison. No judgement — dimensions and facts. The audience draws their own conclusion.
