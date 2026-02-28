@@ -85,11 +85,10 @@ export {
   type QuoteProps,
 } from './quote.js';
 
-// Mermaid diagram (I/O component — mermaid-cli)
+// Mermaid diagram (I/O component — shared browser rendering)
 export {
   mermaid,
   mermaidComponent,
   sanitizeMermaidDefinition,
-  type MermaidProps,
   type MermaidComponentProps,
 } from './mermaid.js';

@@ -1,4 +1,4 @@
-// Diagram Tests
+// Mermaid Tests
 // Tests for mermaid() DSL function and sanitizeMermaidDefinition
 
 import { describe, it } from 'node:test';
@@ -23,16 +23,6 @@ describe('mermaid() DSL function', () => {
     const definition = 'flowchart LR\n  A --> B';
     const m = mermaid(definition);
     assert.strictEqual(m.props.body, definition);
-  });
-
-  it('stores scale in props.scale', () => {
-    const m = mermaid('flowchart LR\n  A --> B', { scale: 3 });
-    assert.strictEqual(m.props.scale, 3);
-  });
-
-  it('scale defaults to undefined when not provided', () => {
-    const m = mermaid('flowchart LR\n  A --> B');
-    assert.strictEqual(m.props.scale, undefined);
   });
 });
 
@@ -130,14 +120,28 @@ describe('mermaid expansion', () => {
     assert.ok(registered, 'mermaid component should be auto-registered');
   });
 
-  it('expands to ImageNode with src pointing to PNG', async () => {
+  it('throws without render service', async () => {
+    const m = mermaid('flowchart LR\n  A --> B');
+    await assert.rejects(
+      () => componentRegistry.expand(m, { theme: mockTheme() }),
+      /render service/i,
+    );
+  });
+
+  it('expands to ImageNode via render service', async () => {
     const m = mermaid('flowchart LR\n  A[Start] --> B[End]');
     const expanded = await componentRegistry.expand(m, {
       theme: mockTheme(),
+      render: {
+        renderHtmlToImage: async (html: string, transparent?: boolean) => {
+          assert.ok(html.includes('mermaid'), 'HTML should contain mermaid bundle');
+          assert.strictEqual(transparent, true, 'mermaid renders with transparent background');
+          return '/tmp/mock-mermaid.png';
+        },
+      },
     });
 
     assert.strictEqual(expanded.type, NODE_TYPE.IMAGE);
-    assert.ok((expanded as any).src, 'ImageNode should have src pointing to PNG');
-    assert.strictEqual(typeof (expanded as any).src, 'string');
+    assert.strictEqual((expanded as any).src, '/tmp/mock-mermaid.png');
   });
 });

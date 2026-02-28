@@ -1,44 +1,25 @@
-// Mermaid Diagram Component
-// Accepts raw mermaid text, sanitizes styling, injects theme classDefs,
-// renders via mermaid-cli to PNG, expands to ImageNode.
+// Mermaid Component
+// Renders mermaid diagrams using the mermaid JS library and the shared browser.
+// Theme fonts and colors are automatically injected for brand compliance.
 
 import type { Theme } from 'tycoslide';
 import {
   NODE_TYPE, type ImageNode,
-  componentRegistry, component, type ComponentNode, type ExpansionContext, type InferProps, type SchemaShape,
+  componentRegistry, component, type ComponentNode, type ExpansionContext, type SchemaShape,
   schema,
 } from 'tycoslide';
 
-import { exec as execCb } from 'child_process';
-import { promisify } from 'util';
-import { writeFileSync, mkdtempSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { tmpdir } from 'os';
-import { fileURLToPath } from 'url';
+import fs from 'fs';
 import { createRequire } from 'module';
 import { Component } from './names.js';
-
-// ============================================
-// CONSTANTS
-// ============================================
-
-/** Timeout for mermaid-cli rendering in milliseconds */
-const MERMAID_RENDER_TIMEOUT_MS = 30000;
-
-/** Max directory levels to search for mmdc binary */
-const MAX_MMDC_SEARCH_DEPTH = 6;
 
 // ============================================
 // SCHEMAS & TYPES
 // ============================================
 
-const mermaidSchema = {
-  scale: schema.number().optional(),
-} satisfies SchemaShape;
+const mermaidSchema = {} satisfies SchemaShape;
 
-export type MermaidProps = InferProps<typeof mermaidSchema>;
-
-export type MermaidComponentProps = { body: string } & MermaidProps;
+export type MermaidComponentProps = { body: string };
 
 // ============================================
 // SANITIZATION
@@ -69,30 +50,8 @@ export function sanitizeMermaidDefinition(definition: string): string {
 }
 
 // ============================================
-// MERMAID RENDERING HELPERS
+// THEME INTEGRATION
 // ============================================
-
-function findMmdcPath(): string {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = dirname(__filename);
-
-  let dir = __dirname;
-  for (let i = 0; i < MAX_MMDC_SEARCH_DEPTH; i++) {
-    const candidate = join(dir, 'node_modules', '.bin', 'mmdc');
-    if (existsSync(candidate)) {
-      return candidate;
-    }
-    dir = dirname(dir);
-  }
-
-  try {
-    const require = createRequire(import.meta.url);
-    const cliPath = require.resolve('@mermaid-js/mermaid-cli/src/cli.js');
-    return `node "${cliPath}"`;
-  } catch {
-    return 'mmdc';
-  }
-}
 
 function hexToRgba(hex: string, alpha: number): string {
   const r = parseInt(hex.slice(0, 2), 16);
@@ -101,27 +60,31 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-function buildDiagramConfig(theme: Theme): object {
+function buildMermaidConfig(theme: Theme): object {
   const { colors, textStyles } = theme;
   const fontFamily = textStyles.body.fontFamily.normal.name;
   const alphaDecimal = colors.subtleOpacity / 100;
 
   return {
+    startOnLoad: false,
+    // 'loose' enables foreignObject for richer text (e.g. <br/> in labels).
+    // Safe: runs in sandboxed Playwright, input is sanitized.
+    securityLevel: 'loose',
     theme: 'base',
     themeVariables: {
       fontFamily,
-      background: `#${colors.background}`,
+      background: 'transparent',
       primaryColor: `#${colors.primary}`,
-      primaryTextColor: `#${colors.text}`,
-      primaryBorderColor: `#${colors.secondary}`,
-      lineColor: `#${colors.secondary}`,
-      secondaryColor: `#${colors.primary}`,
-      tertiaryColor: `#${colors.primary}`,
+      primaryTextColor: `#${colors.background}`,   // Light text on dark primary fill
+      primaryBorderColor: `#${colors.textMuted}`,   // Visible borders
+      lineColor: `#${colors.text}`,                 // Visible arrows
+      secondaryColor: `#${colors.secondary}`,
+      tertiaryColor: `#${colors.secondary}`,
       textColor: `#${colors.text}`,
       titleColor: `#${colors.text}`,
-      nodeTextColor: `#${colors.text}`,
+      nodeTextColor: `#${colors.background}`,        // Light text on filled nodes
       clusterBkg: hexToRgba(colors.secondary, alphaDecimal),
-      clusterBorder: `#${colors.secondary}`,
+      clusterBorder: `#${colors.textMuted}`,
       edgeLabelBackground: `#${colors.background}`,
     },
   };
@@ -134,8 +97,8 @@ function buildClassDefs(theme: Theme): string {
   const defs = Object.entries(colors.accents).map(([name, color]) => {
     return `classDef ${name} fill:#${color}${alpha}`;
   });
-  // Primary gets full opacity (not subtle)
-  defs.push(`classDef primary fill:#${colors.primary}`);
+  // Primary gets full opacity with light text for contrast
+  defs.push(`classDef primary fill:#${colors.primary},color:#${colors.background}`);
   return defs.join('\n');
 }
 
@@ -158,7 +121,7 @@ function buildSubgraphStyles(definition: string, theme: Theme): string {
 function injectClassDefs(definition: string, theme: Theme): string {
   // classDef and style directives are flowchart/graph-only syntax.
   // For other diagram types (sequence, state, ER, etc.), skip injection —
-  // they are themed via buildDiagramConfig's themeVariables instead.
+  // they are themed via buildMermaidConfig's themeVariables instead.
   const flowchartPattern = /^(\s*(?:flowchart|graph)\s+\w*\s*\n)/m;
   const match = definition.match(flowchartPattern);
 
@@ -178,43 +141,97 @@ function injectClassDefs(definition: string, theme: Theme): string {
 }
 
 // ============================================
+// MERMAID BUNDLE
+// ============================================
+
+let bundleCache: string | null = null;
+
+async function getMermaidBundle(): Promise<string> {
+  if (!bundleCache) {
+    const require = createRequire(import.meta.url);
+    const bundlePath = require.resolve('mermaid/dist/mermaid.min.js');
+    bundleCache = await fs.promises.readFile(bundlePath, 'utf-8');
+  }
+  return bundleCache;
+}
+
+// ============================================
 // RENDERING
 // ============================================
 
-const execAsync = promisify(execCb);
-
 /**
- * Render mermaid definition to PNG via mermaid-cli.
- * Returns the path to the generated PNG file.
+ * Render mermaid definition to PNG via shared browser.
+ * Loads the mermaid JS library in-page, renders to SVG, screenshots to PNG.
+ * Theme fonts are automatically injected by the render service.
  */
-async function renderMermaidToPng(definition: string, theme: Theme, scale: number): Promise<string> {
-  // Create temp directory and files
-  const tmpDir = mkdtempSync(join(tmpdir(), 'mermaid-'));
-  const inputPath = join(tmpDir, 'diagram.mmd');
-  const outputPath = join(tmpDir, 'diagram.png');
-  const configPath = join(tmpDir, 'config.json');
+async function renderMermaidToPng(
+  definition: string,
+  theme: Theme,
+  render: { renderHtmlToImage(html: string, transparent?: boolean): Promise<string> },
+): Promise<string> {
+  const config = buildMermaidConfig(theme);
+  const processed = injectClassDefs(definition, theme);
+  const bundle = await getMermaidBundle();
 
-  // Inject theme-based class definitions
-  const processedDefinition = injectClassDefs(definition, theme);
-  writeFileSync(inputPath, processedDefinition);
+  // Use JSON script blocks to safely pass data without escaping issues.
+  // Escape </ sequences to prevent premature </script> closure.
+  const defJson = JSON.stringify(processed).replace(/<\//g, '<\\/');
+  const configJson = JSON.stringify(config).replace(/<\//g, '<\\/');
 
-  // Write mermaid config
-  const config = buildDiagramConfig(theme);
-  writeFileSync(configPath, JSON.stringify(config));
+  const html = `<!DOCTYPE html>
+<html><head>
+<style>body { margin: 0; background: transparent; }</style>
+</head>
+<body>
+  <div id="output" data-render-signal="pending"></div>
+  <script id="mermaid-def" type="application/json">${defJson}</script>
+  <script id="mermaid-config" type="application/json">${configJson}</script>
+  <script>${bundle}</script>
+  <script>
+    (async () => {
+      try {
+        const def = JSON.parse(document.getElementById('mermaid-def').textContent);
+        const config = JSON.parse(document.getElementById('mermaid-config').textContent);
 
-  // Render via mermaid-cli
-  const mmdc = findMmdcPath();
-  try {
-    await execAsync(
-      `${mmdc} -i "${inputPath}" -o "${outputPath}" -c "${configPath}" -s ${scale} -b transparent`,
-      { timeout: MERMAID_RENDER_TIMEOUT_MS },
-    );
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    throw new Error(`Mermaid rendering failed: ${message}`);
-  }
+        // Hidden container for mermaid's scratch rendering
+        const container = document.createElement('div');
+        container.style.position = 'absolute';
+        container.style.top = '-9999px';
+        document.body.appendChild(container);
 
-  return outputPath;
+        // Load ALL registered @font-face fonts before mermaid measures text.
+        // document.fonts.ready alone resolves immediately (nothing references the font yet).
+        // Iterating document.fonts and calling .load() on each triggers the actual fetch.
+        // The @font-face rules are injected by renderHtmlToImage's font infrastructure.
+        await Promise.all([...document.fonts].map(f => f.load()));
+        await document.fonts.ready;
+
+        mermaid.initialize(config);
+        const { svg } = await mermaid.render('mermaid-0', def, container);
+
+        container.remove();
+        document.getElementById('output').innerHTML = svg;
+
+        // Scale SVG to fill viewport AFTER mermaid has measured text at natural size.
+        // Mermaid sets inline max-width that constrains the SVG — override it.
+        // viewBox scaling is uniform, so text remains correctly sized.
+        const svgEl = document.querySelector('#output svg');
+        if (svgEl) {
+          svgEl.style.maxWidth = 'none';
+          svgEl.style.width = '100%';
+          svgEl.style.height = 'auto';
+        }
+
+        document.getElementById('output').setAttribute('data-render-signal', 'done');
+      } catch (e) {
+        document.getElementById('output').setAttribute('data-render-error', e.message);
+        document.getElementById('output').setAttribute('data-render-signal', 'done');
+      }
+    })();
+  </script>
+</body></html>`;
+
+  return render.renderHtmlToImage(html, true);
 }
 
 // ============================================
@@ -223,14 +240,17 @@ async function renderMermaidToPng(definition: string, theme: Theme, scale: numbe
 
 /**
  * Expand mermaid component to ImageNode.
- * Sanitizes definition, renders via mermaid-cli, returns image reference.
+ * Sanitizes definition, renders via shared browser, returns image reference.
  */
 async function expandMermaid(props: MermaidComponentProps, context: ExpansionContext): Promise<ImageNode> {
+  if (!context.render) {
+    throw new Error('Mermaid component requires render service. Use Presentation.writeFile() for rendering.');
+  }
   const sanitized = sanitizeMermaidDefinition(props.body);
   if (!sanitized.trim()) {
-    throw new Error('Mermaid diagram definition is empty after sanitization');
+    throw new Error('Mermaid definition is empty after sanitization');
   }
-  const pngPath = await renderMermaidToPng(sanitized, context.theme, props.scale ?? 2);
+  const pngPath = await renderMermaidToPng(sanitized, context.theme, context.render);
   return {
     type: NODE_TYPE.IMAGE,
     src: pngPath,
@@ -265,6 +285,6 @@ export const mermaidComponent = componentRegistry.define({
  * pres.add(contentSlide('Architecture', diagram));
  * ```
  */
-export function mermaid(definition: string, props?: MermaidProps): ComponentNode<MermaidComponentProps> {
-  return component(Component.Mermaid, { body: definition, ...props });
+export function mermaid(definition: string): ComponentNode<MermaidComponentProps> {
+  return component(Component.Mermaid, { body: definition });
 }

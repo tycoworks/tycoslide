@@ -23,11 +23,13 @@ export class HtmlRenderer {
     theme: Theme,
     transparent?: boolean,
   ): Promise<string> {
-    // Create dedicated render page on first use, sized to slide dimensions
+    // Create dedicated render page on first use, sized to slide dimensions.
+    // 2x deviceScaleFactor produces Retina-quality PNGs.
     if (!this.page) {
       this.page = await this.browser.newPage({
         width: Math.round(inToPx(theme.slide.width)),
         height: Math.round(inToPx(theme.slide.height)),
+        deviceScaleFactor: 2,
       });
       this.page.on('pageerror', err => {
         throw new Error(`Render page error: ${err.message}`);
@@ -56,6 +58,14 @@ export class HtmlRenderer {
           ?.getAttribute('data-render-signal') === 'done',
         { timeout: 30000 },
       );
+
+      // Check if the in-page render reported an error
+      const renderError = await this.page.evaluate(
+        () => document.querySelector('[data-render-error]')?.getAttribute('data-render-error'),
+      );
+      if (renderError) {
+        throw new Error(`In-page render failed: ${renderError}`);
+      }
     }
 
     // Screenshot the first child element of body

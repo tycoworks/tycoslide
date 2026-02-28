@@ -117,6 +117,24 @@ The output works everywhere PowerPoint does — boardrooms, laptops, email attac
 
 ---
 layout: body
+title: How It Works
+eyebrow: Architecture
+notes: Technical flow from authored content to native PowerPoint output. Each stage is a discrete, testable pipeline step.
+---
+
+:::mermaid
+flowchart LR
+  MD["Markdown<br/>+ YAML"] --> PARSE["Parse"]
+  TS["TypeScript<br/>DSL"] --> PARSE
+  PARSE --> EXPAND["Expand<br/>Components"]
+  EXPAND --> LAYOUT["Browser<br/>Layout"]
+  LAYOUT --> RENDER["Build<br/>.pptx"]
+  RENDER --> FILE[".pptx"]
+  class PARSE,EXPAND,LAYOUT,RENDER primary
+:::
+
+---
+layout: body
 title: Where tycoslide Fits
 eyebrow: Landscape
 notes: Factual comparison. No judgement — dimensions and facts. The audience draws their own conclusion.

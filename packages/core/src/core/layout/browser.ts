@@ -16,10 +16,11 @@ export class HeadlessBrowser {
     return this.browser !== null;
   }
 
-  async newPage(viewport?: { width: number; height: number }): Promise<Page> {
+  async newPage(options?: { width?: number; height?: number; deviceScaleFactor?: number }): Promise<Page> {
     if (!this.browser) throw new Error('Browser not launched. Call launch() first.');
-    const page = await this.browser.newPage();
-    if (viewport) await page.setViewportSize(viewport);
+    const { width, height, deviceScaleFactor } = options ?? {};
+    const page = await this.browser.newPage(deviceScaleFactor ? { deviceScaleFactor } : undefined);
+    if (width && height) await page.setViewportSize({ width, height });
     this.pages.push(page);
     return page;
   }
