@@ -18,7 +18,6 @@ The mermaid component was fundamentally misaligned with the token/variant system
 
 - Make tokens required (non-optional) in all `defineComponent` overloads
 - Minimize the number of overloads
-- Color token resolution: validate hex color format (no `#` prefix) at token boundaries to catch mismatches early
 
 ### Code Component
 
@@ -59,6 +58,10 @@ DSL input → full pipeline (expand → measure → layout) → assert element p
 ## Next
 
 Immediate next priorities after launch.
+
+### Color Token Validation
+
+Validate hex color format at token boundaries — catch `#FF0000` vs `FF0000` mismatches, CSS named colors, and other invalid formats. Needs a clean approach: heuristic validation, token type metadata, or point-of-use `assertHexColor()` utility.
 
 ### Charts
 
