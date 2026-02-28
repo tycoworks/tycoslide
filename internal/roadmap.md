@@ -8,25 +8,33 @@ Now / Next / Later — unified from todo, review, and roadmap docs.
 
 Before launch. Must be done before telling the world.
 
-### Default Theme & Showcase
+### RenderService Naming
 
-The big piece. A polished default theme with good colors, layouts, and a showcase deck that demonstrates everything tycoslide can do. The `layout-research.md` file informs layout decisions. tycoworks theme.
+The `render.renderHtmlToImage()` nesting on `ExpansionContext` is right, but `RenderService` is the wrong name. Defer this decision until after the code component — a second consumer will clarify what the interface should be called.
 
-### Blockquote Mdast Type
+### Registry Hardening
 
-Markdown `>` blockquote syntax doesn't produce quote components. Need to register a blockquote handler in the markdown compilation pipeline so `>` maps to the quote component.
+The mermaid component was fundamentally misaligned with the token/variant system because `tokens` is optional in `defineComponent` overloads. Tokens should be required — it should be a willful choice to pass an empty array, not an accidental omission. Investigate:
 
-- Quote vs QuoteCard
+- Make tokens required (non-optional) in all `defineComponent` overloads
+- Minimize the number of overloads
+- Color token resolution: validate hex color format (no `#` prefix) at token boundaries to catch mismatches early
 
-- Scale CLI
+### Code Component
 
-- Update docs
+Syntax-highlighted code blocks in slides via Shiki + shared Playwright browser (`renderHtmlToImage`). Registers a MDAST handler for fenced code blocks so markdown ``` maps to the code component. Important for technical audiences.
 
-- Registry check - tokens optional?
+### Quote vs QuoteCard
 
-- Token resolution check
+The current quote component is card-like (background, border, padding) — that's a client-specific design. Most quotes are simpler (pull quote + attribution, no card chrome). Investigate splitting: move the current card-style quote to the Materialize theme, replace the default quote component with a simpler implementation. The simpler quote also becomes the natural target for markdown `>` blockquote syntax.
 
-- RenderService?
+### Scale CLI
+
+Add `maxScaleFactor` as a CLI parameter. Currently set in the theme's `spacing.maxScaleFactor` and passed through to mermaid/image components. Should be overridable from the command line.
+
+### tycoworks Theme & Showcase
+
+Rebrand `theme-default` as the tycoworks theme — a real brand-aligned theme that demonstrates what tycoslide enables. No generic "default" theme; the whole point is you build your own. The tycoworks theme is the only shipped example and doubles as the showcase. Layouts are done (19 across all tiers). Showcase deck needs updating to demonstrate new components (mermaid, code) and layouts not yet shown.
 
 ### Test Coverage
 
@@ -38,34 +46,13 @@ Zero-coverage files that need tests:
 - `themeLoader.ts` — zero dedicated tests
 - Unit conversion functions (`pxToIn`, `inToPx`, `inToPt`, `ptToIn`)
 
-### Default Theme Layouts
+### Update Docs
 
-Missing layouts for the default theme, organized by priority:
-
-**Tier 1 — every deck needs these:**
-- Big Number / Fact — oversized stat + label. Universal in business decks
-- Standalone Quote — clean pull quote + attribution (simpler than customerStory)
-- End / Thank You — closing slide, mirrors title/cover
-- Blank / Full Canvas — no chrome at all (current image layout has header bar)
-
-**Tier 2 — common patterns:**
-- Image Left / Image Right — dedicated param-based image+prose half-split (twoColumn handles this via markdown slots, but a param-based version is cleaner)
-- Comparison — two columns with individual headers (pros/cons, before/after)
-- Title Only — title bar + empty canvas for diagrams
-
-**Tier 3 — nice to have:**
-- Intro / Bio — person photo + name/title/bio
-- Picture with Caption — image + caption text below
-- Asymmetric Split — 1/3 + 2/3 or similar uneven columns
-- Credits / Team — grid of names/roles
+User-facing documentation has diverged from the codebase. Code component will be new, there's a new CLI option (scale), component token system has evolved. Investigate thoroughly and update.
 
 ### Integration Tests
 
 DSL input → full pipeline (expand → measure → layout) → assert element positions/sizes. Not pixel-perfect screenshot comparison, but geometric assertions: "this text node is at (x, y) with size (w, h)". Deterministic because Playwright measurement with embedded fonts is reproducible. The showcase deck doubles as a test fixture.
-
-### Render Hook (Escape Hatch)
-
-A `(slide, bounds)` callback in component definitions that gives theme authors scoped access to the pptxgenjs slide object during PPTX rendering. Covers anything pptxgenjs supports that tycoslide doesn't wrap. For things pptxgenjs can't do (animations, grouping, raw XML), document post-processing the .pptx ZIP as an external option.
 
 ---
 
@@ -88,10 +75,6 @@ Shadow support on shapes and images. Standard business deck polish. pptxgenjs ha
 ### Shape Rotation
 
 Rotation property on shapes and images. Needed for decorative elements. pptxgenjs supports `rotate` on all shape types.
-
-### Code Component
-
-Syntax-highlighted code blocks in slides. Important for technical audiences.
 
 ### Card Image Placement
 
@@ -145,5 +128,5 @@ Tracked separately from roadmap — different scope and size.
 ## Philosophy
 
 - **No design opinions in core.** Design decisions come from themes and layouts upstream. tycoslide enforces what the theme author specifies, nothing more.
-- **The default theme must be good enough.** Chicken-and-egg: people need to see a great theme before investing in building their own. The default theme is a showcase, not a constraint.
+- **Show, don't default.** No generic "default" theme — the whole point is building your own. The shipped tycoworks theme is a showcase of what brand alignment looks like, not a starting point to customize.
 - **TypeScript themes, not JSON.** Themes are TypeScript for font path resolution, typed constants, and compile-time safety. DTCG JSON is an authoring input consumed by a CLI scaffold tool, not a runtime format.
