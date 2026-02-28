@@ -4,7 +4,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { componentRegistry, component } from '../src/core/rendering/registry.js';
+import { componentRegistry, defineComponent, component, registerComponents } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { HALIGN, VALIGN } from '../src/core/model/types.js';
 import { schema } from '../src/core/model/schema.js';
@@ -16,7 +16,7 @@ import { mockTheme, noopCanvas } from './mocks.js';
 
 const TOKEN_COMP = 'test-token-engine';
 
-componentRegistry.define({
+const tokenTestComponent = defineComponent({
   name: TOKEN_COMP as any,
   params: {
     label: schema.string().optional(),
@@ -32,6 +32,8 @@ componentRegistry.define({
     _tokens: { ...tokens },
   }),
 });
+
+registerComponents([tokenTestComponent]);
 
 /** Create a theme with tokens for the test component. */
 function tokenTheme(config: Record<string, unknown>) {

@@ -1,11 +1,25 @@
 import { describe, it, before } from 'node:test';
 import * as assert from 'node:assert';
-import { NODE_TYPE, componentRegistry, SYNTAX, inToPx } from 'tycoslide';
+import { NODE_TYPE, componentRegistry, SYNTAX, inToPx, registerComponents } from 'tycoslide';
 import type { RootContent } from 'mdast';
 import { Component } from '../src/names.js';
 import { code, codeComponent, buildCodeTheme, renderCodeToHtml, CODE_TOKEN, type CodeTokens } from '../src/code.js';
 import { LANGUAGE, LANGUAGE_VALUES } from '../src/languages.js';
 import { mockTheme, noopCanvas } from './mocks.js';
+import {
+  textComponent, imageComponent, cardComponent, quoteComponent,
+  tableComponent, mermaidComponent,
+  lineComponent, shapeComponent, slideNumberComponent,
+  rowComponent, columnComponent, stackComponent, gridComponent,
+} from '../src/index.js';
+
+// Register components explicitly
+registerComponents([
+  textComponent, imageComponent, cardComponent, quoteComponent,
+  tableComponent, codeComponent, mermaidComponent,
+  lineComponent, shapeComponent, slideNumberComponent,
+  rowComponent, columnComponent, stackComponent, gridComponent,
+]);
 
 // ============================================
 // DSL FUNCTION
@@ -155,7 +169,7 @@ describe('buildCodeTheme()', () => {
 // ============================================
 
 describe('code component registration', () => {
-  it('auto-registers on import', () => {
+  it('should be available after registerComponents()', () => {
     assert.ok(componentRegistry.has(Component.Code));
   });
 });

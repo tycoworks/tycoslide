@@ -15,7 +15,7 @@ import type { RootContent, Heading } from 'mdast';
 import type { NormalizedRun, ColorScheme, ContentType, TextStyleName, HorizontalAlignment, VerticalAlignment, ExpansionContext } from 'tycoslide';
 import { HALIGN, VALIGN, TEXT_STYLE, CONTENT, SYNTAX, extractSource } from 'tycoslide';
 import { NODE_TYPE, type ElementNode } from 'tycoslide';
-import { componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape } from 'tycoslide';
+import { defineComponent, component, type ComponentNode, type InferProps, type SchemaShape } from 'tycoslide';
 import { schema } from 'tycoslide';
 import { Component } from './names.js';
 
@@ -301,7 +301,7 @@ function expandText(props: TextComponentProps, context: ExpansionContext, tokens
 // COMPONENT REGISTRATION
 // ============================================
 
-export const textComponent = componentRegistry.define({
+export const textComponent = defineComponent({
   name: Component.Text,
   body: schema.string(),
   params: textSchema,

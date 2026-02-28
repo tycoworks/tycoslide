@@ -10,7 +10,7 @@ import {
   GAP,
   SIZE,
   CONTENT,
-  layoutRegistry,
+  defineLayout,
   schema,
   type SlideNode,
   type Slide,
@@ -97,7 +97,7 @@ function imageSplitSlide(imagePath: string, body: SlideNode[], imageOnLeft: bool
 // |          subtitle          |
 // |                            |
 // +----------------------------+
-export const titleLayout = layoutRegistry.define({
+export const titleLayout = defineLayout({
   name: 'title',
   description: 'Opening slide with large title and optional subtitle.',
   params: {
@@ -121,7 +121,7 @@ export const titleLayout = layoutRegistry.define({
 // |           TITLE            |
 // |                            |
 // +----------------------------+
-export const sectionLayout = layoutRegistry.define({
+export const sectionLayout = defineLayout({
   name: 'section',
   description: 'Section divider with centered title.',
   params: { title: textComponent.schema },
@@ -144,7 +144,7 @@ export const sectionLayout = layoutRegistry.define({
 // +----------------------------+
 // | footer                     |
 // +----------------------------+
-export const bodyLayout = layoutRegistry.define({
+export const bodyLayout = defineLayout({
   name: 'body',
   description: 'Markdown body with optional title. Default layout.',
   params: {
@@ -168,7 +168,7 @@ export const bodyLayout = layoutRegistry.define({
 // +----------------------------+
 // | footer                     |
 // +----------------------------+
-export const statLayout = layoutRegistry.define({
+export const statLayout = defineLayout({
   name: 'stat',
   description: 'Big number or key metric with label and optional caption.',
   params: {
@@ -194,7 +194,7 @@ export const statLayout = layoutRegistry.define({
 // +----------------------------+
 // | footer                     |
 // +----------------------------+
-export const quoteLayout = layoutRegistry.define({
+export const quoteLayout = defineLayout({
   name: 'quote',
   description: 'Standalone pull quote with optional attribution and image.',
   params: {
@@ -216,7 +216,7 @@ export const quoteLayout = layoutRegistry.define({
 // |          subtitle          |
 // |                            |
 // +----------------------------+
-export const endLayout = layoutRegistry.define({
+export const endLayout = defineLayout({
   name: 'end',
   description: 'Closing slide. Mirrors the title layout.',
   params: {
@@ -240,7 +240,7 @@ export const endLayout = layoutRegistry.define({
 // |       (raw content)        |
 // |                            |
 // +----------------------------+
-export const blankLayout = layoutRegistry.define({
+export const blankLayout = defineLayout({
   name: 'blank',
   description: 'No chrome. Full canvas for custom content.',
   params: {},
@@ -262,7 +262,7 @@ export const blankLayout = layoutRegistry.define({
 // +----------------------------+
 // | footer                     |
 // +----------------------------+
-export const imageLayout = layoutRegistry.define({
+export const imageLayout = defineLayout({
   name: 'image',
   description: 'Full image with title and optional eyebrow.',
   params: {
@@ -286,7 +286,7 @@ export const imageLayout = layoutRegistry.define({
 // +----------------------------+
 // | footer                     |
 // +----------------------------+
-export const imageLeftLayout = layoutRegistry.define({
+export const imageLeftLayout = defineLayout({
   name: 'image-left',
   description: 'Image on left, markdown prose on right.',
   params: {
@@ -308,7 +308,7 @@ export const imageLeftLayout = layoutRegistry.define({
 // +----------------------------+
 // | footer                     |
 // +----------------------------+
-export const imageRightLayout = layoutRegistry.define({
+export const imageRightLayout = defineLayout({
   name: 'image-right',
   description: 'Image on right, markdown prose on left.',
   params: {
@@ -332,7 +332,7 @@ export const imageRightLayout = layoutRegistry.define({
 // +----------------------------+
 // | footer                     |
 // +----------------------------+
-export const twoColumnLayout = layoutRegistry.define({
+export const twoColumnLayout = defineLayout({
   name: 'two-column',
   description: 'Two equal markdown columns with optional header.',
   params: {
@@ -358,7 +358,7 @@ export const twoColumnLayout = layoutRegistry.define({
 // +----------------------------+
 // | footer                     |
 // +----------------------------+
-export const comparisonLayout = layoutRegistry.define({
+export const comparisonLayout = defineLayout({
   name: 'comparison',
   description: 'Two columns with individual headers. Use for pros/cons, before/after.',
   params: {
@@ -399,7 +399,7 @@ export const comparisonLayout = layoutRegistry.define({
 // +----------------------------+
 // | footer                     |
 // +----------------------------+
-export const statementLayout = layoutRegistry.define({
+export const statementLayout = defineLayout({
   name: 'statement',
   description: 'Body text with optional style and caption. Use for value props.',
   params: {
@@ -431,7 +431,7 @@ export const statementLayout = layoutRegistry.define({
 // +----------------------------+
 // | footer                     |
 // +----------------------------+
-export const agendaLayout = layoutRegistry.define({
+export const agendaLayout = defineLayout({
   name: 'agenda',
   description: 'Eyebrow, title, optional intro, and bullet list.',
   params: {
@@ -464,7 +464,7 @@ export const agendaLayout = layoutRegistry.define({
 // +----------------------------+
 // | footer                     |
 // +----------------------------+
-export const cardsLayout = layoutRegistry.define({
+export const cardsLayout = defineLayout({
   name: 'cards',
   description: 'Card grid with intro text and optional caption.',
   params: {
@@ -498,7 +498,7 @@ export const cardsLayout = layoutRegistry.define({
 // +----------------------------+
 // | footer                     |
 // +----------------------------+
-export const bioLayout = layoutRegistry.define({
+export const bioLayout = defineLayout({
   name: 'bio',
   description: 'Person introduction with photo, name, role, and bio.',
   params: {
@@ -532,7 +532,7 @@ export const bioLayout = layoutRegistry.define({
 // +----------------------------+
 // | footer                     |
 // +----------------------------+
-export const captionLayout = layoutRegistry.define({
+export const captionLayout = defineLayout({
   name: 'caption',
   description: 'Image with caption text below.',
   params: {
@@ -559,7 +559,7 @@ export const captionLayout = layoutRegistry.define({
 // +----------------------------+
 // | footer                     |
 // +----------------------------+
-export const titleOnlyLayout = layoutRegistry.define({
+export const titleOnlyLayout = defineLayout({
   name: 'title-only',
   description: 'Title bar with empty canvas below. Use for diagrams or screenshots.',
   params: {
@@ -584,7 +584,7 @@ export const titleOnlyLayout = layoutRegistry.define({
 // +----------------------------+
 // | footer                     |
 // +----------------------------+
-export const teamLayout = layoutRegistry.define({
+export const teamLayout = defineLayout({
   name: 'team',
   description: 'Grid of team members with name, role, and optional photo.',
   params: {
@@ -610,3 +610,29 @@ export const teamLayout = layoutRegistry.define({
     );
   },
 });
+
+// ============================================
+// ALL LAYOUTS
+// ============================================
+
+export const allLayouts = [
+  titleLayout,
+  sectionLayout,
+  bodyLayout,
+  statLayout,
+  quoteLayout,
+  endLayout,
+  blankLayout,
+  imageLayout,
+  imageLeftLayout,
+  imageRightLayout,
+  twoColumnLayout,
+  comparisonLayout,
+  statementLayout,
+  agendaLayout,
+  cardsLayout,
+  bioLayout,
+  captionLayout,
+  titleOnlyLayout,
+  teamLayout,
+];

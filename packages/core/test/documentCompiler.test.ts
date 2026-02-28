@@ -9,9 +9,8 @@ import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { compileDocument, buildSlideName } from '../src/core/markdown/documentCompiler.js';
-import { layoutRegistry } from '../src/core/rendering/registry.js';
-// Side-effect import: trigger component registration (MDAST handlers needed by slot compiler)
-import './test-components.js';
+import { layoutRegistry, registerComponents, defineLayout, registerLayouts } from '../src/core/rendering/registry.js';
+import { testComponents } from './test-components.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { mockTheme } from './mocks.js';
 import type { Slide } from '../src/core/model/types.js';
@@ -100,6 +99,7 @@ const defaultLayout = {
 
 describe('Document Compiler', () => {
   beforeEach(() => {
+    registerComponents(testComponents);
     layoutRegistry.register(simpleLayout);
     layoutRegistry.register(bodyLayout);
     layoutRegistry.register(slotLayout);

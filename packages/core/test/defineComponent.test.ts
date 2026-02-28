@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { z } from 'zod';
 import {
   componentRegistry,
+  defineComponent,
   type InferProps,
   type ComponentDefinition,
 } from '../src/core/rendering/registry.js';
@@ -16,7 +17,7 @@ import { schema } from '../src/core/model/schema.js';
 const stubStyle: TextStyle = { fontSize: 12, fontFamily: { normal: { name: 'Test', path: '' } }, defaultWeight: FONT_WEIGHT.NORMAL };
 
 
-describe('componentRegistry.define', () => {
+describe('defineComponent', () => {
   describe('define with params', () => {
     const testParams = {
       title: schema.string(),
@@ -24,7 +25,7 @@ describe('componentRegistry.define', () => {
       enabled: schema.boolean().optional(),
     };
 
-    const comp = componentRegistry.define({
+    const comp = defineComponent({
       name: 'test-params-comp',
       params: testParams,
       tokens: [],
@@ -83,7 +84,7 @@ describe('componentRegistry.define', () => {
   });
 
   describe('define with body', () => {
-    const comp = componentRegistry.define({
+    const comp = defineComponent({
       name: 'test-body-comp',
       body: schema.string(),
       tokens: [],
@@ -128,7 +129,7 @@ describe('componentRegistry.define', () => {
   });
 
   describe('define with body + params', () => {
-    const comp = componentRegistry.define({
+    const comp = defineComponent({
       name: 'test-body-params-comp',
       body: schema.string(),
       params: { scale: schema.number().optional() },
@@ -161,7 +162,7 @@ describe('componentRegistry.define', () => {
   });
 
   describe('define with slots (no schema)', () => {
-    const comp = componentRegistry.define({
+    const comp = defineComponent({
       name: 'test-prog-comp',
       slots: ['children'],
       tokens: [],
@@ -197,7 +198,7 @@ describe('componentRegistry.define', () => {
 
   describe('deserializer behavior', () => {
     test('all content components get auto-generated deserializer', () => {
-      const comp = componentRegistry.define({
+      const comp = defineComponent({
         name: 'test-auto-deserialize',
         body: schema.string(),
         tokens: [],
@@ -216,7 +217,7 @@ describe('componentRegistry.define', () => {
     });
 
     test('slot components do NOT get deserializer', () => {
-      const comp = componentRegistry.define({
+      const comp = defineComponent({
         name: 'test-no-deserialize',
         slots: ['children'],
         tokens: [],

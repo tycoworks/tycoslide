@@ -11,9 +11,11 @@ import { compileSlot } from '../src/core/markdown/slotCompiler.js';
 import { CONTENT, HALIGN, TEXT_STYLE, VALIGN } from '../src/core/model/types.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { SYNTAX } from '../src/core/model/syntax.js';
-import { componentRegistry } from '../src/core/rendering/registry.js';
-// Side-effect import: trigger component registration
-import { C } from './test-components.js';
+import { componentRegistry, registerComponents, defineComponent } from '../src/core/rendering/registry.js';
+import { C, testComponents } from './test-components.js';
+
+// Register test components before tests run
+registerComponents(testComponents);
 
 /** Helper: get props as any to avoid unknown type errors in tests */
 function props(nodes: any[], index: number): any {
@@ -269,29 +271,32 @@ describe('Slot Compiler', () => {
     });
 
     it('should throw on duplicate MDAST handler registration', () => {
+      const dup = defineComponent({
+        name: 'duplicate-paragraph-handler',
+        tokens: [],
+        mdast: {
+          nodeTypes: [SYNTAX.PARAGRAPH],
+          compile: () => null,
+        },
+        expand: () => ({}) as any,
+      });
       assert.throws(
-        () => componentRegistry.define({
-          name: 'duplicate-paragraph-handler',
-          tokens: [],
-          mdast: {
-            nodeTypes: [SYNTAX.PARAGRAPH],
-            compile: () => null,
-          },
-          expand: () => ({}) as any,
-        }),
+        () => registerComponents([...testComponents, dup]),
         /MDAST node type 'paragraph' already handled by/,
       );
+      // Re-register clean set after the failed attempt
+      registerComponents(testComponents);
     });
 
-    it('should throw on multi-slot component used as directive', async () => {
+    it('should throw on multi-slot component used as directive', () => {
       // Register a test component with multiple slots
-      const { componentRegistry } = await import('../src/core/rendering/registry.js');
-      componentRegistry.define({
+      const multiSlot = defineComponent({
         name: 'test-multi-slot',
         slots: ['left', 'right'],
         tokens: [],
         expand: (props: any) => ({ type: NODE_TYPE.TEXT, content: [], style: TEXT_STYLE.BODY, color: '000000', hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP, lineHeightMultiplier: 1.2 } as any),
       });
+      componentRegistry.register(multiSlot);
       const md = ':::test-multi-slot\nsome body\n:::';
       assert.throws(() => compileSlot(md), /only supports 1/);
     });

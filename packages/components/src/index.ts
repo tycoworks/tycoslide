@@ -1,5 +1,5 @@
 // tycoslide-components — Standard component definitions
-// Barrel export — each component self-registers via import side effects
+// Barrel export — components are inert definitions until explicitly registered by a theme
 
 // Component names (canonical registry of built-in identifiers)
 export { Component, type ComponentName } from './names.js';

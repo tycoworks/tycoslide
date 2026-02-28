@@ -1,7 +1,7 @@
 // Table Component - Native pptxgenjs table element
 
 import {
-  componentRegistry, component, type ComponentNode, type ExpansionContext, type SchemaShape,
+  componentRegistry, defineComponent, component, type ComponentNode, type ExpansionContext, type SchemaShape,
   CONTENT, SYNTAX, NODE_TYPE,
   type TextNode, type TableCellData, type TableCellInput, type TextContent,
   type BorderStyle, type TextStyleName, type HorizontalAlignment, type VerticalAlignment,
@@ -97,7 +97,7 @@ const tableSchema = {
   headerColumns: schema.number().optional(),
 } satisfies SchemaShape;
 
-export const tableComponent = componentRegistry.define({
+export const tableComponent = defineComponent({
   name: Component.Table,
   params: tableSchema,
   tokens: [TABLE_TOKEN.BORDER_STYLE, TABLE_TOKEN.BORDER_COLOR, TABLE_TOKEN.BORDER_WIDTH, TABLE_TOKEN.HEADER_BACKGROUND, TABLE_TOKEN.HEADER_BACKGROUND_OPACITY, TABLE_TOKEN.HEADER_TEXT_STYLE, TABLE_TOKEN.HEADER_TEXT_COLOR, TABLE_TOKEN.CELL_BACKGROUND, TABLE_TOKEN.CELL_BACKGROUND_OPACITY, TABLE_TOKEN.CELL_TEXT_STYLE, TABLE_TOKEN.CELL_TEXT_COLOR, TABLE_TOKEN.CELL_PADDING, TABLE_TOKEN.HALIGN, TABLE_TOKEN.VALIGN, TABLE_TOKEN.CELL_LINE_HEIGHT],

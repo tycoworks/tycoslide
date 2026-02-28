@@ -1,7 +1,7 @@
 // Image component with asset resolution
 
 import {
-  componentRegistry, component, type ComponentNode, type InferProps, type SchemaShape, type ExpansionContext,
+  defineComponent, component, type ComponentNode, type InferProps, type SchemaShape, type ExpansionContext,
   NODE_TYPE, type ImageNode,
   schema,
 } from 'tycoslide';
@@ -82,7 +82,7 @@ export type ImageProps = InferProps<typeof imageSchema>;
 
 export type ImageComponentProps = { body: string } & ImageProps;
 
-export const imageComponent = componentRegistry.define({
+export const imageComponent = defineComponent({
   name: Component.Image,
   body: schema.string(),
   params: imageSchema,

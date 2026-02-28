@@ -32,9 +32,24 @@ import {
   ARROW_TYPE,
   DASH_TYPE,
   BORDER_STYLE,
+  registerComponents,
 } from 'tycoslide';
 import type { TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, ContainerNode, StackNode } from 'tycoslide';
 import { mockTheme as createMockTheme, noopCanvas } from './mocks.js';
+import {
+  textComponent, imageComponent, cardComponent, quoteComponent,
+  tableComponent, codeComponent, mermaidComponent,
+  lineComponent, shapeComponent, slideNumberComponent,
+  rowComponent, columnComponent, stackComponent, gridComponent,
+} from '../src/index.js';
+
+// Register components explicitly
+registerComponents([
+  textComponent, imageComponent, cardComponent, quoteComponent,
+  tableComponent, codeComponent, mermaidComponent,
+  lineComponent, shapeComponent, slideNumberComponent,
+  rowComponent, columnComponent, stackComponent, gridComponent,
+]);
 
 // Theme for text expansion
 const theme = createMockTheme();

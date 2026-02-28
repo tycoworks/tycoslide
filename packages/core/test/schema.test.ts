@@ -4,10 +4,13 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { z } from 'zod';
 import { schema } from '../src/core/model/schema.js';
-import { layoutRegistry } from '../src/core/rendering/registry.js';
+import { layoutRegistry, registerComponents, defineLayout } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { compileSlot } from '../src/core/markdown/slotCompiler.js';
-import { C } from './test-components.js';
+import { C, testComponents } from './test-components.js';
+
+// Register test components before tests run
+registerComponents(testComponents);
 
 describe('schema', () => {
   describe('scalar types', () => {
@@ -81,7 +84,7 @@ describe('schema', () => {
       const dummy = { type: NODE_TYPE.COMPONENT, componentName: 'x', props: {} } as const;
       // Type-level test: z.custom() should not be assignable to ScalarParam.
       // If this @ts-expect-error becomes "unused", the constraint was loosened.
-      layoutRegistry.define({
+      defineLayout({
         name: 'test-bad-custom',
         description: 'should not compile',
         params: {
@@ -94,7 +97,7 @@ describe('schema', () => {
 
     it('rejects z.any() in layout params', () => {
       const dummy = { type: NODE_TYPE.COMPONENT, componentName: 'x', props: {} } as const;
-      layoutRegistry.define({
+      defineLayout({
         name: 'test-bad-any',
         description: 'should not compile',
         params: {

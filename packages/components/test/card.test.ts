@@ -1,15 +1,29 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { card } from '../src/card.js';
-import { componentRegistry, NODE_TYPE } from 'tycoslide';
+import { componentRegistry, NODE_TYPE, registerComponents } from 'tycoslide';
 import { Component } from '../src/names.js';
 import { mockTheme, noopCanvas } from './mocks.js';
+import {
+  textComponent, imageComponent, cardComponent, quoteComponent,
+  tableComponent, codeComponent, mermaidComponent,
+  lineComponent, shapeComponent, slideNumberComponent,
+  rowComponent, columnComponent, stackComponent, gridComponent,
+} from '../src/index.js';
+
+// Register components explicitly
+registerComponents([
+  textComponent, imageComponent, cardComponent, quoteComponent,
+  tableComponent, codeComponent, mermaidComponent,
+  lineComponent, shapeComponent, slideNumberComponent,
+  rowComponent, columnComponent, stackComponent, gridComponent,
+]);
 
 describe('Card Component', () => {
   const theme = mockTheme();
 
   describe('registration', () => {
-    it('should be registered at import time', () => {
+    it('should be registered after registerComponents()', () => {
       assert.ok(componentRegistry.has(Component.Card));
     });
   });

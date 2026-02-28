@@ -5,7 +5,7 @@
 import type { Canvas } from 'tycoslide';
 import {
   NODE_TYPE, type ImageNode,
-  componentRegistry, component, type ComponentNode, type ExpansionContext, type SchemaShape,
+  defineComponent, component, type ComponentNode, type ExpansionContext, type SchemaShape,
   schema,
 } from 'tycoslide';
 
@@ -303,7 +303,7 @@ async function expandMermaid(props: MermaidComponentProps, context: ExpansionCon
 // REGISTRATION + DSL FUNCTION
 // ============================================
 
-export const mermaidComponent = componentRegistry.define({
+export const mermaidComponent = defineComponent({
   name: Component.Mermaid,
   body: schema.string(),
   params: mermaidSchema,

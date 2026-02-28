@@ -4,7 +4,7 @@
 
 import {
   NODE_TYPE, type ImageNode,
-  componentRegistry, component, type ComponentNode, type ExpansionContext, type SchemaShape,
+  defineComponent, component, type ComponentNode, type ExpansionContext, type SchemaShape,
   schema,
   SYNTAX,
   inToPx,
@@ -211,7 +211,7 @@ async function expandCode(
 // REGISTRATION + DSL FUNCTION
 // ============================================
 
-export const codeComponent = componentRegistry.define({
+export const codeComponent = defineComponent({
   name: Component.Code,
   body: schema.string(),
   params: codeSchema,

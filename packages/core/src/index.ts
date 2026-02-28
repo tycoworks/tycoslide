@@ -9,6 +9,10 @@ export * from './core/model/nodes.js';
 
 // Component system (for custom component authors)
 export {
+  defineComponent,
+  defineLayout,
+  registerComponents,
+  registerLayouts,
   componentRegistry,
   layoutRegistry,
   component,

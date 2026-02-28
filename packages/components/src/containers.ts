@@ -1,7 +1,7 @@
 // Container DSL functions: row, column, stack, grid
 
 import {
-  componentRegistry, component, type ComponentNode,
+  defineComponent, component, type ComponentNode,
   NODE_TYPE, type SlideNode,
   GAP, type HorizontalAlignment, type VerticalAlignment, type GapSize, type SizeValue,
   VALIGN, HALIGN, SIZE, DIRECTION,
@@ -60,7 +60,7 @@ const rowSchema = {
   height: schema.size().optional(),
 } satisfies SchemaShape;
 
-export const rowComponent = componentRegistry.define({
+export const rowComponent = defineComponent({
   name: Component.Row,
   params: rowSchema,
   slots: ['children'] as const,
@@ -112,7 +112,7 @@ const columnSchema = {
   height: schema.size().optional(),
 } satisfies SchemaShape;
 
-export const columnComponent = componentRegistry.define({
+export const columnComponent = defineComponent({
   name: Component.Column,
   params: columnSchema,
   slots: ['children'] as const,
@@ -156,7 +156,7 @@ const stackSchema = {
   height: schema.size().optional(),
 } satisfies SchemaShape;
 
-export const stackComponent = componentRegistry.define({
+export const stackComponent = defineComponent({
   name: Component.Stack,
   params: stackSchema,
   slots: ['children'] as const,
@@ -207,7 +207,7 @@ const gridSchema = {
   gap: schema.gap().optional(),
 } satisfies SchemaShape;
 
-export const gridComponent = componentRegistry.define({
+export const gridComponent = defineComponent({
   name: Component.Grid,
   params: gridSchema,
   slots: ['children'] as const,

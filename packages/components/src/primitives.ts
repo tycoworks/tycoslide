@@ -1,7 +1,7 @@
 // Primitive components: line, shape, slideNumber
 
 import {
-  componentRegistry, component, type ComponentNode, type SchemaShape, type ExpansionContext,
+  defineComponent, component, type ComponentNode, type SchemaShape, type ExpansionContext,
   NODE_TYPE, type LineNode, type ShapeNode, type SlideNumberNode,
   ARROW_TYPE_VALUES, SHAPE_VALUES,
   type ShapeName, type ArrowType, type DashType, type TextStyleName, type HorizontalAlignment, type VerticalAlignment,
@@ -83,7 +83,7 @@ function expandLine(props: LineProps, _context: ExpansionContext, tokens: LineTo
   };
 }
 
-export const lineComponent = componentRegistry.define({
+export const lineComponent = defineComponent({
   name: Component.Line,
   params: lineSchema,
   tokens: [LINE_TOKEN.COLOR, LINE_TOKEN.WIDTH, LINE_TOKEN.DASH_TYPE],
@@ -140,7 +140,7 @@ function expandShape(props: ShapeProps, _context: ExpansionContext, tokens: Shap
   };
 }
 
-export const shapeComponent = componentRegistry.define({
+export const shapeComponent = defineComponent({
   name: Component.Shape,
   params: shapeSchema,
   tokens: [SHAPE_TOKEN.FILL, SHAPE_TOKEN.FILL_OPACITY, SHAPE_TOKEN.BORDER_COLOR, SHAPE_TOKEN.BORDER_WIDTH, SHAPE_TOKEN.CORNER_RADIUS],
@@ -176,7 +176,7 @@ function expandSlideNumber(props: SlideNumberProps, context: ExpansionContext, t
   };
 }
 
-export const slideNumberComponent = componentRegistry.define({
+export const slideNumberComponent = defineComponent({
   name: Component.SlideNumber,
   tokens: [SLIDE_NUMBER_TOKEN.STYLE, SLIDE_NUMBER_TOKEN.COLOR, SLIDE_NUMBER_TOKEN.HALIGN, SLIDE_NUMBER_TOKEN.VALIGN],
   expand: expandSlideNumber,

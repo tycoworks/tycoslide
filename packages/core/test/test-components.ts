@@ -1,13 +1,13 @@
 // Test Component Stubs
-// Minimal component definitions registered with the real componentRegistry.
+// Minimal component definitions for core tests.
 // Used by core tests that need components registered (slotCompiler, schema, registry, etc.)
 //
 // Text, Card, Row, Column have real expand functions (needed by registry.test.ts).
 // Image, Table, Line register metadata only — slotCompiler never calls expand.
 //
-// Import this file for side-effect registration in core tests.
+// Import testComponents array and call registerComponents() in tests.
 
-import { componentRegistry, component } from '../src/core/rendering/registry.js';
+import { defineComponent, component } from '../src/core/rendering/registry.js';
 import type { ExpansionContext, ComponentNode } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 
@@ -38,7 +38,7 @@ const HEADING_STYLE: Record<number, string> = {
 // TEXT (real expand — used by registry.test.ts)
 // ============================================
 
-componentRegistry.define({
+export const textComponent = defineComponent({
   name: C.Text,
   body: schema.string(),
   params: {
@@ -88,7 +88,7 @@ componentRegistry.define({
 // ROW (real expand — used by registry.test.ts)
 // ============================================
 
-componentRegistry.define({
+export const rowComponent = defineComponent({
   name: C.Row,
   params: {
     gap: schema.string().optional(),
@@ -117,7 +117,7 @@ componentRegistry.define({
 // COLUMN (real expand — used by registry.test.ts via Card)
 // ============================================
 
-componentRegistry.define({
+export const columnComponent = defineComponent({
   name: C.Column,
   params: {
     gap: schema.string().optional(),
@@ -146,7 +146,7 @@ componentRegistry.define({
 // CARD (real expand — used by registry.test.ts)
 // ============================================
 
-componentRegistry.define({
+export const cardComponent = defineComponent({
   name: C.Card,
   params: {
     title: schema.string().optional(),
@@ -168,7 +168,7 @@ componentRegistry.define({
 // METADATA-ONLY STUBS (slotCompiler needs registration, not expand)
 // ============================================
 
-componentRegistry.define({
+export const imageComponent = defineComponent({
   name: C.Image,
   body: schema.string(),
   params: { alt: schema.string().optional() },
@@ -176,7 +176,7 @@ componentRegistry.define({
   expand: () => ({}) as any,
 });
 
-componentRegistry.define({
+export const lineComponent = defineComponent({
   name: C.Line,
   params: {
     variant: schema.string().optional(),
@@ -187,7 +187,7 @@ componentRegistry.define({
   expand: () => ({}) as any,
 });
 
-componentRegistry.define({
+export const tableComponent = defineComponent({
   name: C.Table,
   body: schema.string(),
   params: {
@@ -219,3 +219,17 @@ componentRegistry.define({
   },
   expand: () => ({}) as any,
 });
+
+// ============================================
+// ALL TEST COMPONENTS
+// ============================================
+
+export const testComponents = [
+  textComponent,
+  rowComponent,
+  columnComponent,
+  cardComponent,
+  imageComponent,
+  lineComponent,
+  tableComponent,
+];

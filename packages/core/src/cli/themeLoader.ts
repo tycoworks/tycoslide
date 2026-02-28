@@ -5,6 +5,7 @@ import { createRequire } from 'module';
 import { pathToFileURL } from 'url';
 import path from 'path';
 import type { Theme } from '../core/model/types.js';
+import { registerComponents, registerLayouts } from '../core/rendering/registry.js';
 
 export interface LoadedTheme {
   theme: Theme;
@@ -17,8 +18,9 @@ export interface LoadedTheme {
  *
  * The theme package must export:
  *   - theme: Theme (required)
+ *   - components: ComponentDefinition[] (required — explicitly registered)
+ *   - layouts: LayoutDefinition[] (required — explicitly registered)
  *   - assets: Record<string, unknown> (optional)
- *   - layouts: any (required — import triggers layoutRegistry.define() side effects)
  */
 export async function loadTheme(name: string): Promise<LoadedTheme> {
   const packageName = name;
@@ -46,15 +48,22 @@ export async function loadTheme(name: string): Promise<LoadedTheme> {
     );
   }
 
-  if (!mod.layouts) {
+  // Explicit registration from theme exports
+  if (mod.components) {
+    registerComponents(mod.components);
+  } else {
     throw new Error(
-      `Theme package '${packageName}' does not export 'layouts'.\n` +
-      `Layouts must be exported so that importing them registers them in the layout registry.`,
+      `Theme package '${packageName}' does not export 'components'.`,
     );
   }
 
-  // Side-effect: importing layouts triggers registration
-  void mod.layouts;
+  if (mod.layouts) {
+    registerLayouts(mod.layouts);
+  } else {
+    throw new Error(
+      `Theme package '${packageName}' does not export 'layouts'.`,
+    );
+  }
 
   return {
     theme: mod.theme,

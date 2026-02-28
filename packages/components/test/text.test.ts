@@ -4,10 +4,24 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { text } from '../src/text.js';
-import { CONTENT, HALIGN, VALIGN, NODE_TYPE, TEXT_STYLE, componentRegistry } from 'tycoslide';
+import { CONTENT, HALIGN, VALIGN, NODE_TYPE, TEXT_STYLE, componentRegistry, registerComponents } from 'tycoslide';
 import { Component } from '../src/names.js';
 import type { NormalizedRun } from 'tycoslide';
 import { mockTheme, noopCanvas } from './mocks.js';
+import {
+  textComponent, imageComponent, cardComponent, quoteComponent,
+  tableComponent, codeComponent, mermaidComponent,
+  lineComponent, shapeComponent, slideNumberComponent,
+  rowComponent, columnComponent, stackComponent, gridComponent,
+} from '../src/index.js';
+
+// Register components explicitly
+registerComponents([
+  textComponent, imageComponent, cardComponent, quoteComponent,
+  tableComponent, codeComponent, mermaidComponent,
+  lineComponent, shapeComponent, slideNumberComponent,
+  rowComponent, columnComponent, stackComponent, gridComponent,
+]);
 
 // Test accents for directive resolution
 const testAccents = {
@@ -55,7 +69,7 @@ describe('Text', () => {
   describe('CONTENT.PROSE expansion', () => {
     const theme = themeWithAccents();
 
-    it('should auto-register on import', () => {
+    it('should be available after registerComponents()', () => {
       assert.ok(componentRegistry.has(Component.Text));
     });
 
@@ -249,7 +263,7 @@ Conclusion.
   describe('CONTENT.PLAIN expansion', () => {
     const theme = themeWithAccents();
 
-    it('should auto-register on import', () => {
+    it('should be available after registerComponents()', () => {
       assert.ok(componentRegistry.has(Component.Text));
     });
 

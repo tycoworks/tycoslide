@@ -2,7 +2,7 @@
 // Implements card as a component using primitives: stack, column, shape, text, image
 
 import {
-  componentRegistry, component, type ExpansionContext, type InferProps, type SchemaShape,
+  defineComponent, component, type ExpansionContext, type InferProps, type SchemaShape,
   type SlideNode, SHAPE, SIZE, CONTENT, schema,
   type TextStyleName, type GapSize, type HorizontalAlignment, type VerticalAlignment,
 } from 'tycoslide';
@@ -142,7 +142,7 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
 // COMPONENT DEFINITION
 // ============================================
 
-export const cardComponent = componentRegistry.define({
+export const cardComponent = defineComponent({
   name: Component.Card,
   params: cardSchema,
   tokens: [CARD_TOKEN.PADDING, CARD_TOKEN.CORNER_RADIUS, CARD_TOKEN.BACKGROUND_COLOR, CARD_TOKEN.BACKGROUND_OPACITY, CARD_TOKEN.BORDER_COLOR, CARD_TOKEN.BORDER_WIDTH, CARD_TOKEN.TITLE_STYLE, CARD_TOKEN.TITLE_COLOR, CARD_TOKEN.DESCRIPTION_STYLE, CARD_TOKEN.DESCRIPTION_COLOR, CARD_TOKEN.GAP, CARD_TOKEN.HALIGN, CARD_TOKEN.VALIGN],

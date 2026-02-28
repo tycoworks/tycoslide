@@ -4,9 +4,23 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { mermaid, sanitizeMermaidDefinition, buildMermaidConfig, buildClassDefs, injectClassDefs, type MermaidTokens } from '../src/mermaid.js';
-import { componentRegistry, NODE_TYPE, TEXT_STYLE } from 'tycoslide';
+import { componentRegistry, NODE_TYPE, TEXT_STYLE, registerComponents } from 'tycoslide';
 import { Component } from '../src/names.js';
 import { mockTheme, noopCanvas } from './mocks.js';
+import {
+  textComponent, imageComponent, cardComponent, quoteComponent,
+  tableComponent, codeComponent, mermaidComponent,
+  lineComponent, shapeComponent, slideNumberComponent,
+  rowComponent, columnComponent, stackComponent, gridComponent,
+} from '../src/index.js';
+
+// Register components explicitly
+registerComponents([
+  textComponent, imageComponent, cardComponent, quoteComponent,
+  tableComponent, codeComponent, mermaidComponent,
+  lineComponent, shapeComponent, slideNumberComponent,
+  rowComponent, columnComponent, stackComponent, gridComponent,
+]);
 
 describe('mermaid() DSL function', () => {
   it('returns ComponentNode with correct type', () => {
@@ -229,9 +243,9 @@ describe('injectClassDefs', () => {
 });
 
 describe('mermaid expansion', () => {
-  it('auto-registers mermaid component on import', () => {
+  it('should be available after registerComponents()', () => {
     const registered = componentRegistry.has(Component.Mermaid);
-    assert.ok(registered, 'mermaid component should be auto-registered');
+    assert.ok(registered, 'mermaid component should be registered');
   });
 
   it('expands to ImageNode via canvas', async () => {

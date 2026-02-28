@@ -3,7 +3,7 @@
 // Expands to: stack(shape(background), column(image?, quote, attribution))
 
 import {
-  componentRegistry, component, type ExpansionContext, type InferProps, type SchemaShape,
+  defineComponent, component, type ExpansionContext, type InferProps, type SchemaShape,
   type SlideNode, SHAPE, SIZE, CONTENT, schema,
   type TextStyleName, type GapSize, type HorizontalAlignment, type VerticalAlignment,
 } from 'tycoslide';
@@ -139,7 +139,7 @@ function expandQuote(props: QuoteProps & { body?: string }, context: ExpansionCo
 // COMPONENT DEFINITION
 // ============================================
 
-export const quoteComponent = componentRegistry.define({
+export const quoteComponent = defineComponent({
   name: Component.Quote,
   params: quoteSchema,
   tokens: [QUOTE_TOKEN.PADDING, QUOTE_TOKEN.CORNER_RADIUS, QUOTE_TOKEN.BACKGROUND_COLOR, QUOTE_TOKEN.BACKGROUND_OPACITY, QUOTE_TOKEN.BORDER_COLOR, QUOTE_TOKEN.BORDER_WIDTH, QUOTE_TOKEN.QUOTE_STYLE, QUOTE_TOKEN.QUOTE_COLOR, QUOTE_TOKEN.ATTRIBUTION_STYLE, QUOTE_TOKEN.ATTRIBUTION_COLOR, QUOTE_TOKEN.ATTRIBUTION_HALIGN, QUOTE_TOKEN.GAP, QUOTE_TOKEN.HALIGN, QUOTE_TOKEN.VALIGN],
