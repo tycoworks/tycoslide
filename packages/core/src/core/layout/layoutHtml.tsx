@@ -12,7 +12,7 @@ import type { FC } from 'hono/jsx';
 import type { Page } from 'playwright';
 import type { ElementNode, TextNode, ImageNode, LineNode, ContainerNode, StackNode, SlideNumberNode, TableNode, TableCellData } from '../model/nodes.js';
 import { NODE_TYPE } from '../model/nodes.js';
-import type { Theme, TextStyle, FontWeight, VerticalAlignment, HorizontalAlignment, SizeValue, NormalizedRun, Direction } from '../model/types.js';
+import type { Theme, TextStyle, FontFamily, FontWeight, VerticalAlignment, HorizontalAlignment, SizeValue, NormalizedRun, Direction } from '../model/types.js';
 import { FONT_WEIGHT, SIZE, VALIGN, HALIGN, DIRECTION } from '../model/types.js';
 import type { Bounds } from '../model/bounds.js';
 import { normalizeContent, fontWeightToNumeric, getFontFromFamily } from '../../utils/font.js';
@@ -697,27 +697,71 @@ const FONT_FORMATS: Record<string, { mime: string; format: string }> = {
 
 const fontFaceCSSCache = new Map<string, { css: string; fonts: FontDescriptor[] }>();
 
+const WEIGHT_KEYS: FontWeight[] = ['light', 'normal', 'bold'];
+
+/** Duck-type check: is this value a FontFamily object? */
+function isFontFamily(value: unknown): value is FontFamily {
+  return typeof value === 'object' && value !== null &&
+    'normal' in value &&
+    typeof (value as any).normal === 'object' &&
+    typeof (value as any).normal.name === 'string' &&
+    typeof (value as any).normal.path === 'string';
+}
+
 export function generateFontFaceCSS(theme: Theme): { css: string; fonts: FontDescriptor[] } {
+  // Build cache key from theme.fonts (the sole font source)
   const fontPaths: string[] = [];
-  for (const styleName of Object.keys(theme.textStyles) as (keyof typeof theme.textStyles)[]) {
-    const style = theme.textStyles[styleName];
-    for (const weight of Object.keys(style.fontFamily) as FontWeight[]) {
-      const font = style.fontFamily[weight];
+  for (const family of theme.fonts) {
+    for (const weight of WEIGHT_KEYS) {
+      const font = family[weight];
       if (font && font.path) fontPaths.push(font.path);
     }
   }
+  // Validate before cache check — same font CSS can be cached,
+  // but different themes may have different textStyles/components referencing unregistered fonts.
+  const registeredPaths = new Set(fontPaths);
+  for (const styleName of Object.keys(theme.textStyles) as (keyof typeof theme.textStyles)[]) {
+    const style = theme.textStyles[styleName];
+    for (const weight of WEIGHT_KEYS) {
+      const font = style.fontFamily[weight];
+      if (font && font.path && !registeredPaths.has(font.path)) {
+        throw new Error(
+          `[tycoslide] Font "${font.name}" (${font.path}) used in textStyle "${styleName}" is not listed in theme.fonts.`
+        );
+      }
+    }
+  }
+
+  // Validate: component tokens that are FontFamily must be in theme.fonts
+  for (const [componentName, componentDef] of Object.entries(theme.components)) {
+    for (const [variantName, tokens] of Object.entries(componentDef.variants)) {
+      for (const [tokenName, value] of Object.entries(tokens)) {
+        if (isFontFamily(value)) {
+          for (const weight of WEIGHT_KEYS) {
+            const font = value[weight];
+            if (font && font.path && !registeredPaths.has(font.path)) {
+              throw new Error(
+                `[tycoslide] Font "${font.name}" (${font.path}) used in component "${componentName}" (variant "${variantName}", token "${tokenName}") is not listed in theme.fonts.`
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Cache check (after validation — validation must always run)
   const cacheKey = JSON.stringify(fontPaths.sort());
   const cached = fontFaceCSSCache.get(cacheKey);
   if (cached) return cached;
 
+  // Embed fonts from theme.fonts as base64 @font-face rules
   const fontFaces: string[] = [];
   const fonts: FontDescriptor[] = [];
   const seenPaths = new Set<string>();
 
-  for (const styleName of Object.keys(theme.textStyles) as (keyof typeof theme.textStyles)[]) {
-    const style = theme.textStyles[styleName];
-    const family = style.fontFamily;
-    for (const weight of Object.keys(family) as FontWeight[]) {
+  for (const family of theme.fonts) {
+    for (const weight of WEIGHT_KEYS) {
       const font = family[weight];
       if (!font || !font.path) continue;
       if (seenPaths.has(font.path)) continue;

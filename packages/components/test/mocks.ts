@@ -159,7 +159,7 @@ export function mockTheme(options?: {
       typeColor: '4EC9B0',
       variableColor: '9CDCFE',
       fontSize: 12,
-      fontFamily: 'monospace',
+      fontFamily: mockFontFamily,
       lineHeight: 1.4,
       padding: 0.25,
       borderRadius: 0.1,
@@ -231,6 +231,7 @@ export function mockTheme(options?: {
       width: borderWidth,
       radius: borderRadius,
     },
+    fonts: [mockFontFamily],
     textStyles: {
       [TEXT_STYLE.H1]: mockTextStyle,
       [TEXT_STYLE.H2]: mockTextStyle,

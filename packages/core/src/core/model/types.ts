@@ -492,6 +492,9 @@ export interface Theme {
     width: number;   // Border width in points
     radius: number;  // Corner radius in inches
   };
+  /** Explicit font manifest. Every font the theme uses must be listed here.
+   *  `generateFontFaceCSS()` reads exclusively from this list. */
+  fonts: FontFamily[];
   textStyles: { [K in TextStyleName]: TextStyle };
   /** Component tokens. Each registered component declares its required token keys;
    *  validateTheme() on the registry checks that themes provide them at runtime. */

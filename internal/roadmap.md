@@ -12,10 +12,6 @@ Before launch. Must be done before telling the world.
 
 The `render.renderHtmlToImage()` nesting on `ExpansionContext` is right, but `RenderService` is the wrong name. Defer this decision until after the code component — a second consumer will clarify what the interface should be called.
 
-### Theme Font Registry
-
-Add `theme.fonts` — a named font registry (`Record<string, FontFamily>`) at the top level of `Theme`. Themes declare fonts by semantic role (body, mono, heading). `generateFontFaceCSS()` discovers and embeds all registered fonts as base64 data URIs. The code component's `fontFamily` token becomes a `FontFamily` object instead of a plain string, ensuring monospace fonts go through the same Playwright base64 loading pipeline as all other fonts. Ships a monospace font (e.g., Fira Code via `@fontsource/fira-code`) in the default theme. Currently the code component falls back to system `monospace`, which varies across environments.
-
 ### Quote vs QuoteCard
 
 The current quote component is card-like (background, border, padding) — that's a client-specific design. Most quotes are simpler (pull quote + attribution, no card chrome). Investigate splitting: move the current card-style quote to the Materialize theme, replace the default quote component with a simpler implementation. The simpler quote also becomes the natural target for markdown `>` blockquote syntax.

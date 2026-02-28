@@ -97,6 +97,7 @@ export const theme: Theme = {
     width: borderWidth,
     radius: cornerRadius,
   },
+  fonts: [assets.fonts.inter, assets.fonts.firaCode],
   textStyles: {
     h1: { fontFamily: assets.fonts.inter, fontSize: 48, defaultWeight: FONT_WEIGHT.LIGHT },
     h2: { fontFamily: assets.fonts.inter, fontSize: 36, defaultWeight: FONT_WEIGHT.LIGHT },
@@ -234,7 +235,7 @@ export const theme: Theme = {
           typeColor: 'FFA657',
           variableColor: 'E2E8F0',
           fontSize: 11,
-          fontFamily: 'monospace',
+          fontFamily: assets.fonts.firaCode,
           lineHeight: 1.6,
           padding: spacing.padding,
           borderRadius: cornerRadius,

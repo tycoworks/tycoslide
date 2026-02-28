@@ -8,6 +8,7 @@ import {
   schema,
   SYNTAX,
   inToPx,
+  type FontFamily,
 } from 'tycoslide';
 import type { RootContent } from 'mdast';
 import type { Code as MdastCode } from 'mdast';
@@ -55,7 +56,7 @@ export interface CodeTokens {
   [CODE_TOKEN.TYPE_COLOR]: string;
   [CODE_TOKEN.VARIABLE_COLOR]: string;
   [CODE_TOKEN.FONT_SIZE]: number;
-  [CODE_TOKEN.FONT_FAMILY]: string;
+  [CODE_TOKEN.FONT_FAMILY]: FontFamily;
   [CODE_TOKEN.LINE_HEIGHT]: number;
   [CODE_TOKEN.PADDING]: number;
   [CODE_TOKEN.BORDER_RADIUS]: number;
@@ -162,7 +163,7 @@ body {
 }
 .code-container pre {
   margin: 0;
-  font-family: '${tokens.fontFamily}', monospace;
+  font-family: '${tokens.fontFamily.normal.name}';
   font-size: ${tokens.fontSize}pt;
   line-height: ${tokens.lineHeight};
 }

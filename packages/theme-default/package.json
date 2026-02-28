@@ -17,10 +17,11 @@
   },
   "type": "module",
   "dependencies": {
-    "tycoslide": "*",
-    "tycoslide-components": "*",
+    "@fontsource/fira-code": "^5.2.7",
     "@fontsource/inter": "^5.0.0",
-    "@material-design-icons/svg": "^0.14.0"
+    "@material-design-icons/svg": "^0.14.0",
+    "tycoslide": "*",
+    "tycoslide-components": "*"
   },
   "devDependencies": {
     "@types/node": "^20.19.30",

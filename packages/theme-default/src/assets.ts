@@ -23,6 +23,12 @@ export const assets = {
         path: require.resolve('@fontsource/inter/files/inter-latin-700-normal.woff2'),
       },
     },
+    firaCode: {
+      normal: {
+        name: 'Fira Code',
+        path: require.resolve('@fontsource/fira-code/files/fira-code-latin-400-normal.woff2'),
+      },
+    },
   },
   icons: {
     barChart: icon('bar_chart.png'),
