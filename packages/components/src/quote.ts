@@ -1,50 +1,36 @@
 // Quote Component
-// Card with optional image, quote text, and attribution.
-// Expands to: stack(shape(background), column(image?, quote, attribution))
+// Simple pull quote with left accent bar, quote text, and optional attribution.
+// Expands to: row(line(bar), column(quote, attribution?))
 
 import {
   defineComponent, component, type ExpansionContext, type InferProps, type SchemaShape,
-  type SlideNode, SHAPE, SIZE, CONTENT, schema,
-  type TextStyleName, type GapSize, type HorizontalAlignment, type VerticalAlignment,
+  type SlideNode, CONTENT, SIZE, HALIGN, schema, SYNTAX, extractSource,
+  type TextStyleName, type GapSize,
 } from 'tycoslide';
+import type { RootContent } from 'mdast';
 import { Component } from './names.js';
-import { stack, column, row } from './containers.js';
-import { shape } from './primitives.js';
-import { image as imageNode, imageComponent } from './image.js';
+import { row, column } from './containers.js';
+import { line } from './primitives.js';
 import { text, textComponent } from './text.js';
 
 export const QUOTE_TOKEN = {
-  PADDING: 'padding',
-  CORNER_RADIUS: 'cornerRadius',
-  BACKGROUND_COLOR: 'backgroundColor',
-  BACKGROUND_OPACITY: 'backgroundOpacity',
-  BORDER_COLOR: 'borderColor',
-  BORDER_WIDTH: 'borderWidth',
+  BAR_COLOR: 'barColor',
+  BAR_WIDTH: 'barWidth',
   QUOTE_STYLE: 'quoteStyle',
   QUOTE_COLOR: 'quoteColor',
   ATTRIBUTION_STYLE: 'attributionStyle',
   ATTRIBUTION_COLOR: 'attributionColor',
-  ATTRIBUTION_HALIGN: 'attributionHAlign',
   GAP: 'gap',
-  HALIGN: 'hAlign',
-  VALIGN: 'vAlign',
 } as const;
 
 export interface QuoteTokens {
-  [QUOTE_TOKEN.PADDING]: number;
-  [QUOTE_TOKEN.CORNER_RADIUS]: number;
-  [QUOTE_TOKEN.BACKGROUND_COLOR]: string;
-  [QUOTE_TOKEN.BACKGROUND_OPACITY]: number;
-  [QUOTE_TOKEN.BORDER_COLOR]: string;
-  [QUOTE_TOKEN.BORDER_WIDTH]: number;
+  [QUOTE_TOKEN.BAR_COLOR]: string;
+  [QUOTE_TOKEN.BAR_WIDTH]: number;
   [QUOTE_TOKEN.QUOTE_STYLE]: TextStyleName;
   [QUOTE_TOKEN.QUOTE_COLOR]: string;
   [QUOTE_TOKEN.ATTRIBUTION_STYLE]: TextStyleName;
   [QUOTE_TOKEN.ATTRIBUTION_COLOR]: string;
-  [QUOTE_TOKEN.ATTRIBUTION_HALIGN]: HorizontalAlignment;
   [QUOTE_TOKEN.GAP]: GapSize;
-  [QUOTE_TOKEN.HALIGN]: HorizontalAlignment;
-  [QUOTE_TOKEN.VALIGN]: VerticalAlignment;
 }
 
 // ============================================
@@ -56,8 +42,6 @@ const quoteSchema = {
   quote: textComponent.schema.optional(),
   /** Attribution line, e.g. "— Jane Smith, CTO" */
   attribution: textComponent.schema.optional(),
-  /** Optional image/logo displayed above the quote */
-  image: imageComponent.schema.optional(),
   /** Named variant (resolved from theme.components.quote.variants) */
   variant: schema.string().optional(),
   /** Sizing: 'fill' to share parent space equally, 'hug' for content-sized (default) */
@@ -79,60 +63,39 @@ export type QuoteProps = InferProps<typeof quoteSchema>;
  *
  * Structure:
  * ```
- * stack(
- *   shape(background),
- *   column({ padding, gap, vAlign: MIDDLE },
- *     image?,         // Optional logo/image
+ * row({ gap },
+ *   line({ color, width }),   // vertical accent bar
+ *   column({ gap },
  *     text(quote),
- *     text(attribution, { style: SMALL, hAlign: RIGHT })
+ *     text(attribution)?
  *   )
  * )
  * ```
  */
-function expandQuote(props: QuoteProps & { body?: string }, context: ExpansionContext, tokens: QuoteTokens): SlideNode {
-  const { quote: quoteText, body, attribution, image: imagePath, height: sizeHeight } = props;
+function expandQuote(props: QuoteProps & { body?: string }, _context: ExpansionContext, tokens: QuoteTokens): SlideNode {
+  const { quote: quoteText, body, attribution, height: sizeHeight } = props;
   const actualQuote = quoteText ?? body;
-  const {
-    padding, cornerRadius, backgroundColor, backgroundOpacity,
-    borderColor, borderWidth, quoteStyle, quoteColor,
-    attributionStyle, attributionColor, attributionHAlign,
-    gap, hAlign: contentHAlign, vAlign: contentVAlign,
-  } = tokens;
+  const { barColor, barWidth, quoteStyle, quoteColor, attributionStyle, attributionColor, gap } = tokens;
 
-  // Build content children: optional image, quote text, attribution
-  const children: SlideNode[] = [];
-  if (imagePath) {
-    children.push(row({ hAlign: contentHAlign }, imageNode(imagePath)));
-  }
   if (!actualQuote) {
     throw new Error(`[tycoslide] Quote component requires either a 'quote' attribute or body text.`);
   }
-  children.push(text(actualQuote, { content: CONTENT.PROSE, style: quoteStyle, color: quoteColor }));
+
+  // Build content children: quote text, optional attribution
+  const children: SlideNode[] = [
+    text(actualQuote, { content: CONTENT.PROSE, style: quoteStyle, color: quoteColor }),
+  ];
   if (attribution) {
-    children.push(text(attribution, { content: CONTENT.PLAIN, style: attributionStyle, color: attributionColor, hAlign: attributionHAlign }));
+    children.push(text(attribution, { content: CONTENT.PLAIN, style: attributionStyle, color: attributionColor, hAlign: HALIGN.LEFT }));
   }
 
-  const contentProps = { padding, gap, hAlign: contentHAlign, vAlign: contentVAlign };
-  const outerHeight = sizeHeight ?? SIZE.FILL;
+  const outerHeight = sizeHeight ?? SIZE.HUG;
 
-  // If no background (opacity 0), just return the content column directly
-  if (backgroundOpacity === 0) {
-    return column({ ...contentProps, height: outerHeight }, ...children);
-  }
-
-  // Build background shape
-  const backgroundRect = shape({
-    shape: SHAPE.ROUND_RECT,
-    fill: backgroundColor,
-    fillOpacity: backgroundOpacity,
-    borderColor,
-    borderWidth,
-    cornerRadius,
-  });
-
-  // Content layer fills the stack so vAlign: MIDDLE centering works
-  const contentLayer = column({ ...contentProps, height: SIZE.FILL }, ...children);
-  return stack({ height: outerHeight }, backgroundRect, contentLayer);
+  return row(
+    { gap, height: outerHeight },
+    line({ color: barColor, width: barWidth }),
+    column({ gap }, ...children),
+  );
 }
 
 // ============================================
@@ -142,19 +105,27 @@ function expandQuote(props: QuoteProps & { body?: string }, context: ExpansionCo
 export const quoteComponent = defineComponent({
   name: Component.Quote,
   params: quoteSchema,
-  tokens: [QUOTE_TOKEN.PADDING, QUOTE_TOKEN.CORNER_RADIUS, QUOTE_TOKEN.BACKGROUND_COLOR, QUOTE_TOKEN.BACKGROUND_OPACITY, QUOTE_TOKEN.BORDER_COLOR, QUOTE_TOKEN.BORDER_WIDTH, QUOTE_TOKEN.QUOTE_STYLE, QUOTE_TOKEN.QUOTE_COLOR, QUOTE_TOKEN.ATTRIBUTION_STYLE, QUOTE_TOKEN.ATTRIBUTION_COLOR, QUOTE_TOKEN.ATTRIBUTION_HALIGN, QUOTE_TOKEN.GAP, QUOTE_TOKEN.HALIGN, QUOTE_TOKEN.VALIGN],
+  tokens: [QUOTE_TOKEN.BAR_COLOR, QUOTE_TOKEN.BAR_WIDTH, QUOTE_TOKEN.QUOTE_STYLE, QUOTE_TOKEN.QUOTE_COLOR, QUOTE_TOKEN.ATTRIBUTION_STYLE, QUOTE_TOKEN.ATTRIBUTION_COLOR, QUOTE_TOKEN.GAP],
+  mdast: {
+    nodeTypes: [SYNTAX.BLOCKQUOTE],
+    compile: (node: RootContent, source: string) => {
+      const raw = extractSource(node, source);
+      // Strip leading `> ` or `>` from each line to get the inner content
+      const inner = raw.replace(/^>\s?/gm, '').trim();
+      return component(Component.Quote, { quote: inner });
+    },
+  },
   expand: expandQuote,
 });
 
 /**
- * Create a quote card with optional image, quote text, and attribution.
+ * Create a pull quote with left accent bar, quote text, and optional attribution.
  *
  * @example
  * ```typescript
  * quote({
- *   quote: '"This changed everything for us."',
- *   attribution: '— Jane Smith, CTO',
- *   image: 'logo.png',
+ *   quote: '"The best way to predict the future is to invent it."',
+ *   attribution: '— Alan Kay',
  * })
  * ```
  */

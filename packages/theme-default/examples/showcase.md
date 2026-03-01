@@ -191,6 +191,23 @@ notes: "Three phases: brand compliance (now) → messaging governance (next) →
 ---
 
 ---
+layout: quote
+quote: "The best presentations are built like software — version-controlled, token-driven, and repeatable."
+attribution: "— The tycoslide manifesto"
+notes: Pull quote component. Left accent bar, large text, optional attribution. This is the default rendering for markdown blockquotes.
+---
+
+---
+layout: body
+title: Customer Testimonial
+eyebrow: Testimonial Component
+notes: Card-style testimonial with background, border, and optional image. Use for customer stories, endorsements, and social proof.
+---
+
+:::testimonial{quote="tycoslide replaced our entire manual slide workflow. What used to take a designer two days now runs in CI in under a minute." attribution="— Jamie Chen, Head of Product Marketing"}
+:::
+
+---
 layout: end
 title: tycoslide
 subtitle: Build presentations like software.

@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { quote } from '../src/quote.js';
-import { componentRegistry, NODE_TYPE, TEXT_STYLE, HALIGN, VALIGN } from 'tycoslide';
+import { componentRegistry, NODE_TYPE, TEXT_STYLE, HALIGN } from 'tycoslide';
 import { Component } from '../src/names.js';
 import { mockTheme, noopCanvas } from './mocks.js';
 import {
@@ -9,6 +9,7 @@ import {
   tableComponent, codeComponent, mermaidComponent,
   lineComponent, shapeComponent, slideNumberComponent,
   rowComponent, columnComponent, stackComponent, gridComponent,
+  testimonialComponent,
 } from '../src/index.js';
 
 // Register components explicitly
@@ -17,9 +18,10 @@ componentRegistry.register([
   tableComponent, codeComponent, mermaidComponent,
   lineComponent, shapeComponent, slideNumberComponent,
   rowComponent, columnComponent, stackComponent, gridComponent,
+  testimonialComponent,
 ]);
 
-describe('Quote Component', () => {
+describe('Quote Component (Pull Quote)', () => {
   const theme = mockTheme();
 
   describe('registration', () => {
@@ -46,128 +48,98 @@ describe('Quote Component', () => {
   });
 
   describe('expansion', () => {
-    it('should expand to stack with background and content', async () => {
+    it('should expand to row with line (bar) and content column', async () => {
       const node = quote({ quote: 'Test' });
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
-      // With background (default): stack(shape, column)
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
+      // row(line, column(text))
+      assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
+      if (expanded.type === NODE_TYPE.CONTAINER) {
         assert.strictEqual(expanded.children.length, 2);
-        assert.strictEqual(expanded.children[0].type, NODE_TYPE.SHAPE);
+        // First child: the accent bar (line component, expanded)
+        assert.strictEqual(expanded.children[0].type, NODE_TYPE.LINE);
+        // Second child: content column
         assert.strictEqual(expanded.children[1].type, NODE_TYPE.CONTAINER);
       }
     });
 
-    it('should expand to column only when variant has backgroundOpacity=0', async () => {
-      const flatTheme = mockTheme({ components: { quote: { variants: { flat: { backgroundOpacity: 0 } } } } });
-      const node = quote({ quote: 'Test', variant: 'flat' });
-      const expanded = await componentRegistry.expandTree(node, { theme: flatTheme, canvas: noopCanvas() });
+    it('should apply bar tokens to the line node', async () => {
+      const node = quote({ quote: 'Test' });
+      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
+      if (expanded.type === NODE_TYPE.CONTAINER) {
+        const bar = expanded.children[0];
+        assert.strictEqual(bar.type, NODE_TYPE.LINE);
+        if (bar.type === NODE_TYPE.LINE) {
+          assert.strictEqual(bar.color, 'FF0000'); // mock theme barColor
+          assert.strictEqual(bar.width, 3);         // mock theme barWidth
+        }
+      }
     });
 
-    it('should include quote text as markdown', async () => {
+    it('should include quote text as PROSE content', async () => {
       const node = quote({ quote: 'A wise saying' });
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        const contentColumn = expanded.children[1];
-        assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
-        if (contentColumn.type === NODE_TYPE.CONTAINER) {
-          // Quote text should be first child
-          assert.ok(contentColumn.children.length >= 1);
-          assert.strictEqual(contentColumn.children[0].type, NODE_TYPE.TEXT);
-          if (contentColumn.children[0].type === NODE_TYPE.TEXT) {
-            const runs = contentColumn.children[0].content as any[];
+      assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
+      if (expanded.type === NODE_TYPE.CONTAINER) {
+        const contentCol = expanded.children[1];
+        assert.strictEqual(contentCol.type, NODE_TYPE.CONTAINER);
+        if (contentCol.type === NODE_TYPE.CONTAINER) {
+          assert.ok(contentCol.children.length >= 1);
+          const quoteText = contentCol.children[0];
+          assert.strictEqual(quoteText.type, NODE_TYPE.TEXT);
+          if (quoteText.type === NODE_TYPE.TEXT) {
+            const runs = quoteText.content as any[];
             assert.strictEqual(runs[0].text, 'A wise saying');
           }
         }
       }
     });
 
-    it('should include attribution when provided', async () => {
+    it('should include attribution with LEFT alignment when provided', async () => {
       const node = quote({ quote: 'Quote text', attribution: '— Jane Smith' });
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        const contentColumn = expanded.children[1];
-        assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
-        if (contentColumn.type === NODE_TYPE.CONTAINER) {
-          assert.strictEqual(contentColumn.children.length, 2);
-          // Attribution is plain text with RIGHT alignment and SMALL style
-          const attribution = contentColumn.children[1];
+      assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
+      if (expanded.type === NODE_TYPE.CONTAINER) {
+        const contentCol = expanded.children[1];
+        assert.strictEqual(contentCol.type, NODE_TYPE.CONTAINER);
+        if (contentCol.type === NODE_TYPE.CONTAINER) {
+          assert.strictEqual(contentCol.children.length, 2);
+          const attribution = contentCol.children[1];
           assert.strictEqual(attribution.type, NODE_TYPE.TEXT);
           if (attribution.type === NODE_TYPE.TEXT) {
             const runs = attribution.content as any[];
             assert.strictEqual(runs[0].text, '— Jane Smith');
-            assert.strictEqual(attribution.hAlign, HALIGN.RIGHT);
+            assert.strictEqual(attribution.hAlign, HALIGN.LEFT);
             assert.strictEqual(attribution.style, TEXT_STYLE.SMALL);
           }
         }
       }
     });
 
-    it('should include image when provided', async () => {
-      const node = quote({ quote: 'Quote text', image: 'logo.png' });
+    it('should have only quote text when no attribution', async () => {
+      const node = quote({ quote: 'Just a quote' });
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        const contentColumn = expanded.children[1];
-        assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
-        if (contentColumn.type === NODE_TYPE.CONTAINER) {
-          assert.strictEqual(contentColumn.children.length, 2);
-          // Image is wrapped in a centering row
-          assert.strictEqual(contentColumn.children[0].type, NODE_TYPE.CONTAINER);
-          if (contentColumn.children[0].type === NODE_TYPE.CONTAINER) {
-            assert.strictEqual(contentColumn.children[0].children[0].type, NODE_TYPE.IMAGE);
-          }
-          // Quote text is second
-          assert.strictEqual(contentColumn.children[1].type, NODE_TYPE.TEXT);
+      assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
+      if (expanded.type === NODE_TYPE.CONTAINER) {
+        const contentCol = expanded.children[1];
+        assert.strictEqual(contentCol.type, NODE_TYPE.CONTAINER);
+        if (contentCol.type === NODE_TYPE.CONTAINER) {
+          assert.strictEqual(contentCol.children.length, 1);
+          assert.strictEqual(contentCol.children[0].type, NODE_TYPE.TEXT);
         }
       }
     });
 
-    it('should include all three children: image, quote, attribution', async () => {
-      const node = quote({
-        quote: 'Quote text',
-        attribution: '— Author',
-        image: 'logo.png',
-      });
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
-
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        const contentColumn = expanded.children[1];
-        assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
-        if (contentColumn.type === NODE_TYPE.CONTAINER) {
-          assert.strictEqual(contentColumn.children.length, 3);
-          // Image is wrapped in a centering row
-          assert.strictEqual(contentColumn.children[0].type, NODE_TYPE.CONTAINER);
-          if (contentColumn.children[0].type === NODE_TYPE.CONTAINER) {
-            assert.strictEqual(contentColumn.children[0].children[0].type, NODE_TYPE.IMAGE);
-          }
-          assert.strictEqual(contentColumn.children[1].type, NODE_TYPE.TEXT);
-          assert.strictEqual(contentColumn.children[2].type, NODE_TYPE.TEXT);
-        }
-      }
-    });
-
-    it('should vertically center content', async () => {
-      const node = quote({ quote: 'Test' });
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
-
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        const contentColumn = expanded.children[1];
-        assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
-        if (contentColumn.type === NODE_TYPE.CONTAINER) {
-          assert.strictEqual(contentColumn.vAlign, VALIGN.MIDDLE);
-        }
-      }
+    it('should throw on missing quote text', () => {
+      assert.rejects(async () => {
+        const node = quote({});
+        await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
+      }, /Quote component requires/);
     });
   });
 });

@@ -107,6 +107,15 @@ export function mockTheme(options?: {
       lineHeightMultiplier: lineSpacing,
     },
     quote: {
+      barColor: 'FF0000',
+      barWidth: 3,
+      quoteStyle: TEXT_STYLE.BODY,
+      quoteColor: 'FFFFFF',
+      attributionStyle: TEXT_STYLE.SMALL,
+      attributionColor: '666666',
+      gap: GAP.TIGHT,
+    },
+    testimonial: {
       padding: padding * 2,
       cornerRadius: borderRadius,
       backgroundColor: '333333',

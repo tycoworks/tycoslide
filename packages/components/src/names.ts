@@ -11,6 +11,7 @@ export const Component = {
   Text: 'text',
   Card: 'card',
   Quote: 'quote',
+  Testimonial: 'testimonial',
   Table: 'table',
   Mermaid: 'mermaid',
   Code: 'code',

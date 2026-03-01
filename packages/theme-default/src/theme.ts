@@ -146,6 +146,19 @@ export const theme: Theme = {
     quote: {
       variants: {
         default: {
+          barColor: colors.primary,
+          barWidth: 2,
+          quoteStyle: TEXT_STYLE.H3,
+          quoteColor: colors.text,
+          attributionStyle: TEXT_STYLE.SMALL,
+          attributionColor: colors.textMuted,
+          gap: GAP.NORMAL,
+        },
+      },
+    },
+    testimonial: {
+      variants: {
+        default: {
           padding: spacing.padding * 2,
           cornerRadius,
           backgroundColor: colors.surfaceContainerLow,

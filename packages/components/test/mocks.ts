@@ -75,6 +75,15 @@ export function mockTheme(options?: {
       vAlign: VALIGN.TOP,
     },
     [Component.Quote]: {
+      barColor: 'FF0000',
+      barWidth: 3,
+      quoteStyle: TEXT_STYLE.BODY,
+      quoteColor: 'FFFFFF',
+      attributionStyle: TEXT_STYLE.SMALL,
+      attributionColor: '666666',
+      gap: GAP.TIGHT,
+    },
+    [Component.Testimonial]: {
       padding: padding * 2,
       cornerRadius: borderRadius,
       backgroundColor: '333333',

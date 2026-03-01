@@ -196,16 +196,15 @@ export const statLayout = defineLayout({
 // +----------------------------+
 export const quoteLayout = defineLayout({
   name: 'quote',
-  description: 'Standalone pull quote with optional attribution and image.',
+  description: 'Standalone pull quote with left accent bar and optional attribution.',
   params: {
     quote: textComponent.schema,
     attribution: textComponent.schema.optional(),
-    image: imageComponent.schema.optional(),
   },
-  render: ({ quote: quoteText, attribution, image: imagePath }) =>
+  render: ({ quote: quoteText, attribution }) =>
     masteredSlide(
       centeredBody(
-        quoteBlock({ quote: quoteText, attribution, image: imagePath }),
+        quoteBlock({ quote: quoteText, attribution }),
       ),
     ),
 });

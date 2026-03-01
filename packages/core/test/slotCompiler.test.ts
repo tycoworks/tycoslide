@@ -68,6 +68,7 @@ describe('Slot Compiler', () => {
       assert.strictEqual((nodes[0] as any).componentName, C.Text);
       assert.strictEqual(props(nodes, 0).content, CONTENT.PROSE);
     });
+
   });
 
   describe('bare MDAST + directive interleaving', () => {
@@ -261,13 +262,6 @@ describe('Slot Compiler', () => {
     it('should throw on unknown directive', () => {
       const md = ':::unknown\nsome body\n:::';
       assert.throws(() => compileSlot(md), /unknown directive ":::unknown"/);
-    });
-
-    it('should throw on unsupported bare MDAST block type', () => {
-      assert.throws(
-        () => compileSlot('> This is a blockquote'),
-        /unsupported markdown block type "blockquote"/,
-      );
     });
 
     it('should throw on duplicate MDAST handler registration', () => {

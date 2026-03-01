@@ -8,16 +8,6 @@ Now / Next / Later — unified from todo, review, and roadmap docs.
 
 Before launch. Must be done before telling the world.
 
-### ~~RenderService Naming~~ DONE
-
-Renamed to `Canvas` / `context.canvas` with method `renderHtml()`. The interface represents browser-backed capabilities available to components during expansion — today HTML-to-image, extensible to SVG, LaTeX, font metrics, etc.
-
-### Quote vs QuoteCard
-
-Then if you look at the tycoslide default theme directory, you'll see the screenshot 'Screenshot 2026-02-28 at 11.23.25 AM.png'. So this pertains to a roadmap item to re-implement the quote component as something a little bit similar. So what I was going to suggest is we re-implement a new component, call it quote two or something. Get it all working, then move the existing quote component to the materialized theme and rename quote two to quote one and we're done. But then I had a question, how do you in a theme define what components are used by or possible to be used by the theme? Because consider quote card in the materialized theme. I could either have that as a new directive, in which case how would I register that component and is there somewhere in the theme which says hey, these are the components that are exposed by this theme and kind of a parallel thing to the tokens part of the theme. The other thing is how would we override a component from the components package. So I feel like right now, if we look at card.ts or any component, it registers itself. Maybe it shouldn't do that, maybe the theme should do that somehow. So a theme can then decide what to register because we probably wouldn't want to register the old quote component in the material, the new quote component in the materialized theme if you know what I mean. So maybe spin up the architect and do some proper analysis on this.
-
-The current quote component is card-like (background, border, padding) — that's a client-specific design. Most quotes are simpler (pull quote + attribution, no card chrome). Investigate splitting: move the current card-style quote to the Materialize theme, replace the default quote component with a simpler implementation. The simpler quote also becomes the natural target for markdown `>` blockquote syntax.
-
 ### Scale CLI
 
 Add `maxScaleFactor` as a CLI parameter. Currently set in the theme's `spacing.maxScaleFactor` and passed through to mermaid/image components. Should be overridable from the command line.

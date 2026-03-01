@@ -76,7 +76,7 @@ export {
   type CardProps,
 } from './card.js';
 
-// Quote (composition component)
+// Quote (simple pull quote — composition component)
 export {
   quote,
   quoteComponent,
@@ -84,6 +84,15 @@ export {
   type QuoteTokens,
   type QuoteProps,
 } from './quote.js';
+
+// Testimonial (card-style quote — composition component)
+export {
+  testimonial,
+  testimonialComponent,
+  TESTIMONIAL_TOKEN,
+  type TestimonialTokens,
+  type TestimonialProps,
+} from './testimonial.js';
 
 // Mermaid diagram (I/O component — shared browser rendering)
 export {
