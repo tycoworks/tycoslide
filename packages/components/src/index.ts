@@ -98,10 +98,6 @@ export {
 export {
   mermaid,
   mermaidComponent,
-  sanitizeMermaidDefinition,
-  buildMermaidConfig,
-  buildClassDefs,
-  injectClassDefs,
   MERMAID_TOKEN,
   type MermaidTokens,
   type MermaidRenderContext,
@@ -112,7 +108,6 @@ export {
 export {
   code,
   codeComponent,
-  buildCodeTheme,
   CODE_TOKEN,
   type CodeTokens,
   type CodeComponentProps,

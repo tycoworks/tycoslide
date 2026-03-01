@@ -46,8 +46,5 @@ export { theme } from './theme.js';
 export { assets } from './assets.js';
 export type { Assets } from './assets.js';
 
-// Re-export layouts namespace for backward compat
-export * from './layouts.js';
-
 // Re-export component DSL functions for theme consumers
 export * from 'tycoslide-components';
