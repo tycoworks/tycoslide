@@ -46,24 +46,22 @@ Three-deep nesting uses five colons on the outermost container, four on the midd
 | [row](#row) | Horizontal flex container — children side by side |
 | [column](#column) | Vertical flex container — children stacked top to bottom |
 | [stack](#stack) | Z-order overlay — layer text over a background shape |
-| [grid](#grid) | Equal-column grid — use when all children need the same width |
-
-Use `row` when children need different widths. Use `grid` when every child shares the same width (e.g., a 3-up card layout). Use `stack` to place content on top of a background shape or image.
+| [grid](#grid) | Equal-column grid — uniform width for all children |
 
 ### Content Components
 
 | Component | Description |
 |-----------|-------------|
 | [text](#text) | Paragraph text, headings, bullets |
-| [card](#card) | Titled content block with background — for features, steps, summaries |
-| [quote](#quote) | Inline blockquote with accent bar — sits inside a layout's body area |
-| [testimonial](#testimonial) | Standalone quote card with background — for customer quotes in a grid |
+| [card](#card) | Content card with optional image, title, and description |
+| [quote](#quote) | Blockquote with optional attribution and image |
+| [testimonial](#testimonial) | Quote card with optional image and attribution |
 | [table](#table) | Native PowerPoint table with header support |
 | [image](#image) | Embedded image |
 | [mermaid](#mermaid) | Auto-themed Mermaid diagram rendered as PNG |
 | [code](#code) | Syntax-highlighted code block rendered as PNG |
-| [line](#line) | Horizontal or vertical rule — visual separator between sections |
-| [shape](#shape) | Filled/outlined area — backgrounds and decorations inside a `stack` |
+| [line](#line) | Horizontal or vertical rule |
+| [shape](#shape) | Filled/outlined area shape |
 | [slideNumber](#slidenumber) | Slide number element (used in masters) |
 
 ### Shared Value Types
@@ -136,7 +134,7 @@ SECTION LABEL
 
 ## card
 
-Content card with an optional image, title, and description. Renders as a rounded rectangle with configurable background. Use cards for discrete content blocks that need a visual boundary — feature lists, process steps, team bios in a grid.
+Content card with an optional image, title, and description. Renders as a rounded rectangle with configurable background.
 
 ### Parameters
 
@@ -180,7 +178,7 @@ Ship to production with confidence.
 
 ## quote
 
-Blockquote with optional attribution line and optional image/logo. Same background structure as card. Use `quote` for an inline pull quote within a slide's body content; use `testimonial` when the quote is the primary content of its own card in a grid or row.
+Blockquote with optional attribution line and optional image/logo. Same background structure as card.
 
 Quote text is required -- provide it either via the `quote` attribute or as body content.
 
@@ -212,7 +210,7 @@ Design systems reduce decision fatigue across teams.
 
 ## table
 
-Native PowerPoint table with accurate borders, cell merging, and text wrapping. GFM tables in the directive body always produce one header row. Use `:::table` when you need styled headers, header columns, or theme variants; plain GFM tables in the slide body work for simple data without special styling.
+Native PowerPoint table with accurate borders, cell merging, and text wrapping. GFM tables in the directive body always produce one header row.
 
 Cell content supports inline markdown (`**bold**`, `*italic*`, `:accent[color]`).
 
@@ -239,7 +237,7 @@ Cell content supports inline markdown (`**bold**`, `*italic*`, `:accent[color]`)
 
 ## line
 
-A horizontal or vertical rule. Expands to a native PowerPoint line shape. Use it to visually separate sections within a slide, or add arrows with `beginArrow` / `endArrow` for flow diagrams.
+A horizontal or vertical rule. Expands to a native PowerPoint line shape. Supports arrows with `beginArrow` / `endArrow` for flow diagrams.
 
 ### Parameters
 
@@ -260,7 +258,7 @@ A horizontal or vertical rule. Expands to a native PowerPoint line shape. Use it
 
 ## shape
 
-A filled area shape. Pair it with `stack` to create colored backgrounds behind text, section dividers, or decorative elements.
+A filled area shape.
 
 ### Parameters
 
@@ -309,7 +307,7 @@ No directive parameters.
 
 ## row
 
-Horizontal flex container. Children are arranged side by side. Use `row` when children need different widths or different component types; use `grid` when every child shares the same width.
+Horizontal flex container. Children are arranged side by side.
 
 ### Parameters
 
@@ -362,7 +360,7 @@ Automating the review cycle freed up two days per sprint.
 
 ## stack
 
-Z-order overlay container. All children occupy the same bounds; the first child renders behind, the last child renders in front. Use `stack` to layer text over a background shape or image — for section headers, hero slides, or colored callout boxes.
+Z-order overlay container. All children occupy the same bounds; the first child renders behind, the last child renders in front.
 
 ### Parameters
 
@@ -387,7 +385,7 @@ White text over blue background
 
 ## grid
 
-Equal-column grid. Wraps children into rows of N columns, each cell sharing space equally. Use `grid` for uniform layouts like feature cards or icon grids; use `row` when children need different widths.
+Equal-column grid. Wraps children into rows of N columns, each cell sharing space equally.
 
 ### Parameters
 
@@ -506,7 +504,7 @@ code(`SELECT * FROM orders WHERE status = 'active';`, 'sql')
 
 ## testimonial
 
-Quote card with optional image, quote text, and attribution. Renders as a rounded rectangle background with vertically stacked content. Use `testimonial` when the quote stands alone as a card — in a grid of customer quotes or a row of endorsements. Use `quote` for an inline pull quote within other body content.
+Quote card with optional image, quote text, and attribution. Renders as a rounded rectangle background with vertically stacked content.
 
 Quote text is required -- provide it either via the `quote` attribute or as body content.
 

@@ -22,13 +22,13 @@ Zero-coverage files that need tests:
 - `themeLoader.ts` — zero dedicated tests
 - Unit conversion functions (`pxToIn`, `inToPx`, `inToPt`, `ptToIn`)
 
-### Update Docs
-
-User-facing documentation has diverged from the codebase. Code component will be new, there's a new CLI option (scale), component token system has evolved. Investigate thoroughly and update.
-
 ### Integration Tests
 
 DSL input → full pipeline (expand → measure → layout) → assert element positions/sizes. Not pixel-perfect screenshot comparison, but geometric assertions: "this text node is at (x, y) with size (w, h)". Deterministic because Playwright measurement with embedded fonts is reproducible. The showcase deck doubles as a test fixture.
+
+### Update Docs
+
+User-facing documentation has diverged from the codebase. Code component will be new, there's a new CLI option (scale), component token system has evolved. Investigate thoroughly and update.
 
 ---
 
