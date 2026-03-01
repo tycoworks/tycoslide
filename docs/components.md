@@ -39,20 +39,7 @@ Three-deep nesting uses five colons on the outermost container, four on the midd
 
 ## Component Summary
 
-### Content Components (theme tokens apply)
-
-| Component | Description |
-|-----------|-------------|
-| [text](#text) | Paragraph text, headings, bullets |
-| [card](#card) | Content card with optional image, title, and description |
-| [quote](#quote) | Blockquote with optional attribution and image |
-| [testimonial](#testimonial) | Quote card with optional image and attribution |
-| [table](#table) | Native PowerPoint table with header support |
-| [line](#line) | Horizontal or vertical rule |
-| [shape](#shape) | Filled/outlined area shape |
-| [slideNumber](#slidenumber) | Slide number element (used in master) |
-
-### Container Components (no theme tokens)
+### Container Components
 
 | Component | Description |
 |-----------|-------------|
@@ -61,13 +48,21 @@ Three-deep nesting uses five colons on the outermost container, four on the midd
 | [stack](#stack) | Z-order overlay container |
 | [grid](#grid) | Equal-column grid |
 
-### I/O Components (rendered to image)
+### Content Components
 
 | Component | Description |
 |-----------|-------------|
+| [text](#text) | Paragraph text, headings, bullets |
+| [card](#card) | Content card with optional image, title, and description |
+| [quote](#quote) | Blockquote with optional attribution and image |
+| [testimonial](#testimonial) | Quote card with optional image and attribution |
+| [table](#table) | Native PowerPoint table with header support |
 | [image](#image) | Embedded image |
 | [mermaid](#mermaid) | Auto-themed Mermaid diagram rendered as PNG |
 | [code](#code) | Syntax-highlighted code block rendered as PNG |
+| [line](#line) | Horizontal or vertical rule |
+| [shape](#shape) | Filled/outlined area shape |
+| [slideNumber](#slidenumber) | Slide number element (used in masters) |
 
 ### Shared Value Types
 
@@ -483,7 +478,7 @@ flowchart LR
 
 Syntax-highlighted code block rendered as a PNG image. Fenced code blocks in markdown (` ```language `) auto-compile to this component. The language identifier after the opening fences is required.
 
-**All styling is controlled by theme tokens.** See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete list of code component tokens.
+See [`theme.ts`](../packages/theme-default/src/theme.ts) for code component token keys and defaults.
 
 ### Parameters
 
@@ -743,7 +738,9 @@ Missing tokens fail the build immediately.
 
 ### Content Slots
 
-Components can accept compiled markdown content in named slots:
+Slots are named content areas inside a component. The component defines the slot; the slide author fills it with markdown. A card's body is a slot — the card draws the frame, the author writes whatever goes inside.
+
+Components accept compiled markdown content in named slots:
 
 ```typescript
 const calloutComponent = defineComponent({
@@ -941,7 +938,7 @@ export function metric(props: MetricProps) {
 
 ### Expansion Function
 
-The expansion function transforms component props into a primitive node tree:
+Every component has an expansion function that transforms its props into a tree of primitive nodes. This is where a component's behavior lives — composing text, shapes, and containers into the final visual output.
 
 ```typescript
 expand: (props, context, tokens) => {

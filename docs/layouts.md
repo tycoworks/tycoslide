@@ -134,7 +134,7 @@ Defines tokens and color palettes.
 
 ## stat
 
-Big number or key metric with label and optional caption. Uses the default master.
+Big number or key metric with label and optional caption.
 
 ### Parameters
 
@@ -144,22 +144,11 @@ Big number or key metric with label and optional caption. Uses the default maste
 | `label` | `string` | Label below the value, rendered as `h3` (**required**) |
 | `caption` | `string` | Optional caption below the label |
 
-### Example
-
-```markdown
----
-layout: stat
-value: "47%"
-label: Reduction in Build Time
-caption: Measured over Q4 2025
----
-```
-
 ---
 
 ## quote
 
-Standalone pull quote with left accent bar and optional attribution. Uses the default master.
+Standalone pull quote with left accent bar and optional attribution.
 
 ### Parameters
 
@@ -167,16 +156,6 @@ Standalone pull quote with left accent bar and optional attribution. Uses the de
 |-------|------|-------------|
 | `quote` | `string` | Quote text (**required**) |
 | `attribution` | `string` | Attribution line below the quote |
-
-### Example
-
-```markdown
----
-layout: quote
-quote: "Simplicity is the ultimate sophistication."
-attribution: Leonardo da Vinci
----
-```
 
 ---
 
@@ -191,47 +170,21 @@ Closing slide. Mirrors the title layout with centered text on a dark background.
 | `title` | `string` | Closing title text (**required**) |
 | `subtitle` | `string` | Subtitle text below the title |
 
-### Example
-
-```markdown
----
-layout: end
-title: Thank You
-subtitle: Questions?
----
-```
-
 ---
 
 ## blank
 
-No chrome. Full canvas for custom content. No master footer.
+No chrome. Full canvas for custom content. No master footer. The `body` slot accepts any markdown.
 
 ### Parameters
 
 None.
 
-### Slots
-
-| Slot | Description |
-|------|-------------|
-| `body` | Full-slide content area |
-
-### Example
-
-```markdown
----
-layout: blank
----
-
-Custom content fills the entire slide.
-```
-
 ---
 
 ## image
 
-Full image with title and optional eyebrow. Uses the default master.
+Full image with title and optional eyebrow.
 
 ### Parameters
 
@@ -241,21 +194,11 @@ Full image with title and optional eyebrow. Uses the default master.
 | `eyebrow` | `string` | Small label above the title |
 | `image` | `string` | Path to the image file (**required**) |
 
-### Example
-
-```markdown
----
-layout: image
-title: System Architecture
-image: ./images/architecture.png
----
-```
-
 ---
 
 ## image-left
 
-Image on left, markdown prose on right. Uses the default master.
+Image on left, markdown prose on right. Slots: `body`.
 
 ### Parameters
 
@@ -264,33 +207,12 @@ Image on left, markdown prose on right. Uses the default master.
 | `title` | `string` | Slide title |
 | `eyebrow` | `string` | Small label above the title |
 | `image` | `string` | Path to the image file (**required**) |
-
-### Slots
-
-| Slot | Description |
-|------|-------------|
-| `body` | Markdown content on the right side |
-
-### Example
-
-```markdown
----
-layout: image-left
-title: Our Product
-image: ./images/product.png
----
-
-Description text flows on the right side of the image.
-
-- Feature one
-- Feature two
-```
 
 ---
 
 ## image-right
 
-Image on right, markdown prose on left. Uses the default master.
+Image on right, markdown prose on left. Slots: `body`.
 
 ### Parameters
 
@@ -300,29 +222,11 @@ Image on right, markdown prose on left. Uses the default master.
 | `eyebrow` | `string` | Small label above the title |
 | `image` | `string` | Path to the image file (**required**) |
 
-### Slots
-
-| Slot | Description |
-|------|-------------|
-| `body` | Markdown content on the left side |
-
-### Example
-
-```markdown
----
-layout: image-right
-title: Our Product
-image: ./images/product.png
----
-
-Description text flows on the left side of the image.
-```
-
 ---
 
 ## two-column
 
-Two equal markdown columns with optional header. Uses the default master.
+Two equal markdown columns with optional header. Slots: `left`, `right`.
 
 ### Parameters
 
@@ -331,33 +235,11 @@ Two equal markdown columns with optional header. Uses the default master.
 | `title` | `string` | Slide title |
 | `eyebrow` | `string` | Small label above the title |
 
-### Slots
-
-| Slot | Description |
-|------|-------------|
-| `left` | Left column content |
-| `right` | Right column content |
-
-### Example
-
-```markdown
----
-layout: two-column
-title: Side by Side
----
-
-Left column content here.
-
-::right::
-
-Right column content here.
-```
-
 ---
 
 ## comparison
 
-Two columns with individual headers for side-by-side comparisons. Uses the default master.
+Two columns with individual headers for side-by-side comparisons. Slots: `left`, `right`.
 
 ### Parameters
 
@@ -368,37 +250,11 @@ Two columns with individual headers for side-by-side comparisons. Uses the defau
 | `leftTitle` | `string` | Left column header (**required**) |
 | `rightTitle` | `string` | Right column header (**required**) |
 
-### Slots
-
-| Slot | Description |
-|------|-------------|
-| `left` | Left column content |
-| `right` | Right column content |
-
-### Example
-
-```markdown
----
-layout: comparison
-title: Migration Path
-leftTitle: Before
-rightTitle: After
----
-
-- Manual deployments
-- No test coverage
-
-::right::
-
-- Automated CI/CD
-- 95% coverage
-```
-
 ---
 
 ## statement
 
-Centered body text with optional text style and caption. Uses the default master.
+Centered body text with optional text style and caption.
 
 ### Parameters
 
@@ -410,23 +266,11 @@ Centered body text with optional text style and caption. Uses the default master
 | `bodyStyle` | `h1 \| h2 \| h3 \| h4 \| body \| small \| eyebrow \| footer` | Text style for the body |
 | `caption` | `string` | Caption below the body text |
 
-### Example
-
-```markdown
----
-layout: statement
-title: Our Mission
-eyebrow: ABOUT US
-body: Build tools that let teams focus on content, not formatting.
-caption: Founded 2024
----
-```
-
 ---
 
 ## agenda
 
-Title, optional intro text, and a bullet list of items. Uses the default master.
+Title, optional intro text, and a bullet list of items.
 
 ### Parameters
 
@@ -437,26 +281,11 @@ Title, optional intro text, and a bullet list of items. Uses the default master.
 | `intro` | `string` | Introductory text above the list |
 | `items` | `string[]` | List of agenda items (**required**) |
 
-### Example
-
-```markdown
----
-layout: agenda
-title: Agenda
-eyebrow: TODAY'S SESSION
-intro: Three topics in 30 minutes.
-items:
-  - Architecture overview
-  - Live demo
-  - Q&A
----
-```
-
 ---
 
 ## cards
 
-Card grid with optional intro text and caption. Automatically adjusts columns based on card count. Uses the default master.
+Card grid with optional intro text and caption. Automatically adjusts columns based on card count.
 
 ### Parameters
 
@@ -469,27 +298,11 @@ Card grid with optional intro text and caption. Automatically adjusts columns ba
 | `caption` | `string` | Caption below the cards |
 | `variant` | `string` | Card variant applied to all cards |
 
-### Example
-
-```markdown
----
-layout: cards
-title: Our Services
-cards:
-  - title: Consulting
-    description: Strategy and architecture
-  - title: Development
-    description: Full-stack implementation
-  - title: Training
-    description: Hands-on workshops
----
-```
-
 ---
 
 ## bio
 
-Person introduction with photo, name, role, and bio text. Uses the default master.
+Person introduction with photo, name, role, and bio text. Slots: `body`.
 
 ### Parameters
 
@@ -499,30 +312,11 @@ Person introduction with photo, name, role, and bio text. Uses the default maste
 | `role` | `string` | Job title or role |
 | `image` | `string` | Path to the person's photo |
 
-### Slots
-
-| Slot | Description |
-|------|-------------|
-| `body` | Bio text and additional content |
-
-### Example
-
-```markdown
----
-layout: bio
-person: Jane Smith
-role: Engineering Lead
-image: ./images/jane.png
----
-
-Jane has 15 years of experience building distributed systems. She leads the platform team.
-```
-
 ---
 
 ## caption
 
-Image with caption text below. Uses the default master.
+Image with caption text below.
 
 ### Parameters
 
@@ -531,21 +325,11 @@ Image with caption text below. Uses the default master.
 | `image` | `string` | Path to the image file (**required**) |
 | `caption` | `string` | Caption text below the image (**required**) |
 
-### Example
-
-```markdown
----
-layout: caption
-image: ./images/dashboard.png
-caption: "Figure 1: Production dashboard after the migration."
----
-```
-
 ---
 
 ## title-only
 
-Title bar with empty canvas below. Uses the default master.
+Title bar with empty canvas below.
 
 ### Parameters
 
@@ -554,21 +338,11 @@ Title bar with empty canvas below. Uses the default master.
 | `title` | `string` | Slide title (**required**) |
 | `eyebrow` | `string` | Small label above the title |
 
-### Example
-
-```markdown
----
-layout: title-only
-title: System Diagram
-eyebrow: ARCHITECTURE
----
-```
-
 ---
 
 ## team
 
-Grid of team members with name, role, and optional photo. Automatically adjusts columns based on member count. Uses the default master.
+Grid of team members with name, role, and optional photo. Automatically adjusts columns based on member count.
 
 ### Parameters
 
@@ -585,22 +359,6 @@ Each member object:
 | `name` | `string` | Person name (**required**) |
 | `role` | `string` | Job title or role |
 | `image` | `string` | Path to the person's photo |
-
-### Example
-
-```markdown
----
-layout: team
-title: Meet the Team
-members:
-  - name: Alice
-    role: Designer
-  - name: Bob
-    role: Engineer
-  - name: Carol
-    role: Product Manager
----
-```
 
 ---
 

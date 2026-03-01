@@ -511,7 +511,7 @@ components: {
 }
 ```
 
-**All 10 token-bearing components must be configured:** `card`, `quote`, `testimonial`, `table`, `line`, `slideNumber`, `text`, `shape`, `code`, `mermaid`
+Every component in your theme's `components` array that declares tokens must have a corresponding entry in `theme.components` with at least a `default` variant. The default theme registers 10 token-bearing components: `card`, `quote`, `testimonial`, `table`, `line`, `slideNumber`, `text`, `shape`, `code`, `mermaid`.
 
 Each component's required token keys are defined in its component definition. Use framework constants (`TEXT_STYLE`, `GAP`, `BORDER_STYLE`, `DASH_TYPE`, `HALIGN`, `VALIGN`) for enum-valued tokens.
 
