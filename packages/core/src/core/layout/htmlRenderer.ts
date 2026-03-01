@@ -16,7 +16,7 @@ export class HtmlRenderer {
   private tmpDir: string | null = null;
   private renderCount = 0;
 
-  constructor(private browser: HeadlessBrowser) {}
+  constructor(private browser: HeadlessBrowser, private options?: { deviceScaleFactor?: number }) {}
 
   async renderHtmlToImage(
     html: string,
@@ -24,12 +24,12 @@ export class HtmlRenderer {
     transparent?: boolean,
   ): Promise<string> {
     // Create dedicated render page on first use, sized to slide dimensions.
-    // 2x deviceScaleFactor produces Retina-quality PNGs.
+    // deviceScaleFactor controls PNG pixel density (default 2x for Retina quality).
     if (!this.page) {
       this.page = await this.browser.newPage({
         width: Math.round(inToPx(theme.slide.width)),
         height: Math.round(inToPx(theme.slide.height)),
-        deviceScaleFactor: 2,
+        deviceScaleFactor: this.options?.deviceScaleFactor ?? 2,
       });
       this.page.on('pageerror', err => {
         throw new Error(`Render page error: ${err.message}`);

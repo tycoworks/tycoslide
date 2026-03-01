@@ -51,8 +51,12 @@ export class LayoutPipeline {
   private slides: SlideMeasurementEntry[] = [];
   private browser = new HeadlessBrowser();
   private measurer = new LayoutMeasurer(this.browser);
-  private renderer = new HtmlRenderer(this.browser);
+  private renderer: HtmlRenderer;
   private measurements: Map<ElementNode, Bounds> | null = null;
+
+  constructor(options?: { deviceScaleFactor?: number }) {
+    this.renderer = new HtmlRenderer(this.browser, options);
+  }
 
   /**
    * Collect a slide for measurement.

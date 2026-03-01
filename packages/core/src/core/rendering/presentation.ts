@@ -83,13 +83,13 @@ export class Presentation {
    * By default, throws LayoutValidationError if any slides have validation errors.
    * Pass `force: true` to write the PPTX despite errors (for visual debugging).
    */
-  async writeFile(fileName: string, options: { includeNotes?: boolean; force?: boolean; debugDir?: string } = {}): Promise<WriteResult> {
+  async writeFile(fileName: string, options: { includeNotes?: boolean; force?: boolean; debugDir?: string; renderScale?: number } = {}): Promise<WriteResult> {
     const resolvedPath = path.resolve(fileName);
     log.pptx._('writing to: %s', resolvedPath);
 
     let validationErrors: SlideValidationResult[] = [];
     if (this.deferredSlides.length > 0) {
-      validationErrors = await this.processDeferredSlides(options.debugDir);
+      validationErrors = await this.processDeferredSlides(options.debugDir, options.renderScale);
     }
 
     // Gate: fail by default if there are validation errors
@@ -113,8 +113,8 @@ export class Presentation {
    * The browser computes all positions via CSS flexbox.
    * @internal
    */
-  private async processDeferredSlides(debugDir?: string): Promise<SlideValidationResult[]> {
-    const pipeline = new LayoutPipeline();
+  private async processDeferredSlides(debugDir?: string, renderScale?: number): Promise<SlideValidationResult[]> {
+    const pipeline = new LayoutPipeline(renderScale ? { deviceScaleFactor: renderScale } : undefined);
 
     try {
       // Launch browser early so components can use it during expansion

@@ -8,10 +8,6 @@ Now / Next / Later — unified from todo, review, and roadmap docs.
 
 Before launch. Must be done before telling the world.
 
-### Scale CLI
-
-Add `maxScaleFactor` as a CLI parameter. Currently set in the theme's `spacing.maxScaleFactor` and passed through to mermaid/image components. Should be overridable from the command line.
-
 ### tycoworks Theme & Showcase
 
 Rebrand `theme-default` as the tycoworks theme — a real brand-aligned theme that demonstrates what tycoslide enables. No generic "default" theme; the whole point is you build your own. The tycoworks theme is the only shipped example and doubles as the showcase. Layouts are done (19 across all tiers). Showcase deck needs updating to demonstrate new components (mermaid, code) and layouts not yet shown. Align tokens to website?

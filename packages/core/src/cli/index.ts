@@ -19,8 +19,13 @@ program
   .option('-f, --force', 'write PPTX despite layout validation errors')
   .option('-d, --debug <dir>', 'write debug HTML files and enable verbose logging')
   .option('--no-notes', 'exclude speaker notes from output')
-  .action(async (input: string, opts: { output?: string; force?: boolean; debug?: string; notes: boolean }) => {
-    await build(input, opts);
+  .option('--render-scale <factor>', 'pixel density for rendered diagrams and code (1=fast, 2=retina, 3=print)')
+  .action(async (input: string, opts: { output?: string; force?: boolean; debug?: string; notes: boolean; renderScale?: string }) => {
+    const renderScale = opts.renderScale ? parseInt(opts.renderScale, 10) : undefined;
+    if (renderScale !== undefined && (!Number.isFinite(renderScale) || renderScale < 1)) {
+      throw new Error(`--render-scale must be a positive integer, got: ${opts.renderScale}`);
+    }
+    await build(input, { ...opts, renderScale });
   });
 
 program.parse();
