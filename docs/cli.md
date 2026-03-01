@@ -56,9 +56,23 @@ This creates:
 Useful for:
 - Debugging layout issues
 - Understanding why content overflows
-- Seeing how the layout pipeline works
+- Seeing how elements are measured and positioned
 
 See the [Debug Workflow](#debug-workflow) section below for details on interpreting debug output.
+
+#### `--render-scale <factor>`
+
+Scale factor for rendered images (mermaid diagrams and code blocks).
+
+```bash
+tycoslide build slides.md --render-scale 3
+```
+
+- `1` — Fast, draft quality
+- `2` — Retina quality (default)
+- `3` — Print quality
+
+Default: `2`
 
 #### `--no-notes`
 
@@ -134,7 +148,7 @@ For a full debugging walkthrough, see [Troubleshooting](./troubleshooting.md).
 
 ## Environment Variables
 
-None currently. All configuration is via CLI options or frontmatter.
+None. All configuration is via CLI options or frontmatter.
 
 ## Version
 

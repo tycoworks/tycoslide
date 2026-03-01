@@ -6,6 +6,7 @@ Themes control all visual styling in tycoslide presentations. A theme is a TypeS
 
 - **Color scheme** — Background, text, accents
 - **Typography** — Font families, sizes, weights for all text styles
+- **Font manifest** — Explicit list of all font families used by the theme
 - **Spacing** — Margins, gaps, padding, line height
 - **Component styling** — How cards, quotes, tables, shapes look (via token variants)
 - **Slide size** — 16:9, 4:3, etc.
@@ -30,7 +31,7 @@ The theme applies to all slides in the presentation.
 
 ### Available Themes
 
-**`tycoslide-theme-default`** is the currently available theme. It uses Material Design 3 colors and the Inter font, with three layouts (`title`, `section`, `body`) and all built-in components.
+**`tycoslide-theme-default`** is the currently available theme. Neutral gray surfaces with Inter font. Includes 19 layouts and all built-in components. See [Layouts](./layouts.md) for the full layout reference.
 
 ```bash
 npm install tycoslide-theme-default
@@ -115,7 +116,7 @@ All color values are 6-character hex strings without a `#` prefix.
 | `primary` | Primary accent — buttons, highlights, `primary` shape variant |
 | `secondary` | Subtle surface fills — card backgrounds, borders |
 | `subtleOpacity` | Opacity (%) for subtle fills (0–100) |
-| `accents.*` | Named inline highlight colors (`:name[text]` syntax) |
+| `accents` | Open vocabulary of named accent colors (`:name[text]` syntax) |
 
 ---
 
@@ -186,15 +187,18 @@ const myTheme: Theme = {
   ...defaultTheme,
   spacing: {
     ...defaultTheme.spacing,
-    margin: 0.625,   // Wider margins (was 0.5")
-    gap: 0.375,      // More breathing room (was 0.25")
-    gapTight: 0.25,  // Looser tight gap (was 0.125")
-    padding: 0.375,  // More card padding (was 0.25")
+    margin: 0.625,      // Wider margins (was 0.5")
+    gap: 0.375,         // More breathing room (was 0.25")
+    gapTight: 0.25,     // Looser tight gap (was 0.125")
+    padding: 0.375,     // More card padding (was 0.25")
+    lineSpacing: 1.4,   // Looser line height (was 1.2)
   },
 };
 ```
 
-Spacing values are in inches. The base `unit` (1/32") is used for sub-pixel precision in component layouts.
+Spacing values are in inches. Multipliers (`lineSpacing`, `bulletSpacing`, `bulletIndentMultiplier`, `maxScaleFactor`) are dimensionless. The base `unit` (1/32") is used for sub-pixel precision in component layouts.
+
+`lineSpacing` sets the default line height multiplier for all text. The default theme uses `1.2`.
 
 ---
 
@@ -319,6 +323,7 @@ const myTheme: Theme = {
   slide: { /* ... */ },
   spacing: { /* ... */ },
   borders: { /* ... */ },
+  fonts: [ /* ... */ ],
   textStyles: { /* ... */ },
   components: { /* ... */ },
 };
@@ -346,14 +351,22 @@ npm init -y
 npm install tycoslide tycoslide-components
 ```
 
-Create `index.ts`:
+Create `theme.ts` for your theme object and `index.ts` as the entry point:
 
 ```typescript
+// theme.ts
 import type { Theme } from 'tycoslide';
 
 export const theme: Theme = {
   // Filled in step by step below
 };
+```
+
+```typescript
+// index.ts — see "Registering Layouts in Themes" for the full entry point pattern
+export { theme } from './theme.js';
+export { components } from './components.js';
+export { layouts } from './layouts.js';
 ```
 
 ### 2. Define Colors
@@ -389,12 +402,14 @@ colors: {
 | `subtleOpacity` | number 0–100 | Opacity for subtle backgrounds |
 | `accents` | `Record<string, string>` | Named accent colors |
 
-Accent colors are used for inline text highlighting in Markdown:
+Accent names are open vocabulary — define whatever names make sense for your brand. Authors reference them with the `:name[text]` syntax in Markdown:
 
 ```markdown
 This is :teal[highlighted in teal].
 This is :blue[highlighted in blue].
 ```
+
+The default theme defines `blue`, `green`, `red`, `yellow`, and `purple`. Custom themes can use any names.
 
 ### 3. Configure Text Styles
 
@@ -469,7 +484,17 @@ borders: {
 }
 ```
 
-### 7. Provide Component Tokens
+### 7. Declare Fonts
+
+Every font the theme uses must be listed in the `fonts` array. This manifest drives font loading for text measurement and rendering.
+
+```typescript
+fonts: [myFont, myMonoFont],
+```
+
+Each entry is a `FontFamily` object (see [Font Requirements](#font-requirements)). List every font family referenced in `textStyles` or component tokens.
+
+### 8. Provide Component Tokens
 
 Each component requires a `components` entry with at least a `default` variant. Every token the component declares must be present — missing tokens fail the build. The shape is the same for all components:
 
@@ -486,7 +511,7 @@ components: {
 }
 ```
 
-**All 7 token-bearing components must be configured:** `card`, `quote`, `table`, `line`, `slideNumber`, `text`, `shape`
+**All 10 token-bearing components must be configured:** `card`, `quote`, `testimonial`, `table`, `line`, `slideNumber`, `text`, `shape`, `code`, `mermaid`
 
 Each component's required token keys are defined in its component definition. Use framework constants (`TEXT_STYLE`, `GAP`, `BORDER_STYLE`, `DASH_TYPE`, `HALIGN`, `VALIGN`) for enum-valued tokens.
 
@@ -592,21 +617,57 @@ const interFont: FontFamily = {
 
 ## Registering Layouts in Themes
 
-Themes typically also register layouts. Import the layouts file for side-effect registration from the theme entry point:
+Theme packages export three named values: `theme`, `components`, and `layouts`. The CLI registers components and layouts automatically at load time.
 
 ```typescript
 // my-theme/index.ts
-import './layouts';  // Registers layouts with layoutRegistry
-export { theme } from './theme';
-export { assets } from './assets';
+import {
+  textComponent,
+  imageComponent,
+  cardComponent,
+  quoteComponent,
+  testimonialComponent,
+  tableComponent,
+  codeComponent,
+  mermaidComponent,
+  lineComponent,
+  shapeComponent,
+  slideNumberComponent,
+  rowComponent,
+  columnComponent,
+  stackComponent,
+  gridComponent,
+} from 'tycoslide-components';
+import { allLayouts } from './layouts.js';
 
-// Re-export components so users only need one import
-import * as components from 'tycoslide-components';
-export { components };
-export * from 'tycoslide-components';
+export const components = [
+  textComponent,
+  imageComponent,
+  cardComponent,
+  quoteComponent,
+  testimonialComponent,
+  tableComponent,
+  codeComponent,
+  mermaidComponent,
+  lineComponent,
+  shapeComponent,
+  slideNumberComponent,
+  rowComponent,
+  columnComponent,
+  stackComponent,
+  gridComponent,
+];
+
+export const layouts = allLayouts;
+
+export { theme } from './theme.js';
 ```
 
-When a user imports the theme, layouts are registered automatically.
+Each component package exports a definition object (e.g., `textComponent`, `cardComponent`) alongside its DSL function. The `components` array lists every component definition the theme uses. The `layouts` array lists every layout definition created with `defineLayout()`.
+
+The CLI calls `componentRegistry.register(components)` and `layoutRegistry.register(layouts)` when loading the theme.
+
+See [`packages/theme-default/src/index.ts`](../packages/theme-default/src/index.ts) for the complete reference entry point.
 
 ## Testing Your Theme
 

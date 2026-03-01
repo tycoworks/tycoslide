@@ -79,7 +79,7 @@ This is :green[styled as a metric].
 This is :red[styled as a warning].
 ```
 
-Available accents depend on your theme's color scheme.
+Accent names are defined by your theme as an open set — any key in the theme's `accents` map is valid. Common names like `blue`, `green`, and `red` are provided by `tycoslide-theme-default`.
 
 ### Headings
 
@@ -266,6 +266,8 @@ layout: section
 title: Next Steps
 ---
 ```
+
+Fenced code blocks (triple backticks with a language tag) compile to the `code` component, which renders syntax-highlighted code as an image. See [Components — code](./components.md#code) for supported languages and theme tokens.
 
 For component directives and parameters, see [Components](./components.md).
 

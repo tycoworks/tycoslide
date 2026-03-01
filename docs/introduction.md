@@ -64,7 +64,7 @@ tycoslide differs from other tools in three ways:
 
 ## Architecture Overview
 
-tycoslide's pipeline runs: Markdown or TypeScript DSL → component tree → primitive node tree (via `registry.expand()`) → measured and positioned nodes (via Playwright-based HTML measurement) → native PowerPoint objects in a .pptx file. See the [main README](../README.md) for full details.
+tycoslide's pipeline runs: Markdown or TypeScript DSL → component tree → primitive node tree → measured and positioned nodes → native PowerPoint objects in a .pptx file. See the [main README](../README.md) for full details.
 
 ## Next Steps
 

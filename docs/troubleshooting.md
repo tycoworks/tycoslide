@@ -73,10 +73,14 @@ Layouts must be exported so that importing them registers them in the layout reg
 
 **Cause:** The theme package does not re-export its layouts module. Layouts must be exported (even if unused by the caller) so that the import side-effect registers them in the layout registry.
 
-**Fix:** Add a `layouts` re-export to your theme's `index.ts`:
+**Fix:** Add the required exports to your theme's `index.ts`:
 
 ```typescript
-export * as layouts from './layouts.js';
+import { cardComponent, textComponent, /* ... */ } from 'tycoslide-components';
+import { allLayouts } from './layouts.js';
+
+export const components = [cardComponent, textComponent, /* ... */];
+export const layouts = allLayouts;
 export { theme } from './theme.js';
 ```
 
@@ -154,19 +158,14 @@ subtle: {
 Error: Unknown component: 'xyz'. Did you forget to register it?
 ```
 
-**Cause:** A directive `:::xyz` or TypeScript DSL call references a component that has not been registered with `componentRegistry.define()`.
+**Cause:** A directive `:::xyz` or TypeScript DSL call references a component that has not been registered with `componentRegistry.register()`.
 
-**Fix:** Make sure the component package is imported before compiling. If you are using `tycoslide-components`, import it in your theme's entry point:
-
-```typescript
-import 'tycoslide-components';
-```
-
-For a custom component, register it before calling `compileDocument()`:
+**Fix:** Make sure the component is defined and registered before compiling:
 
 ```typescript
-import { componentRegistry } from 'tycoslide';
-componentRegistry.define({ name: 'my-component', expand: ... });
+import { defineComponent, componentRegistry } from 'tycoslide';
+const myComponent = defineComponent({ name: 'my-component', tokens: [], expand: ... });
+componentRegistry.register(myComponent);
 ```
 
 ---
@@ -193,6 +192,36 @@ Add them to theme.components.card. Required: [padding, cornerRadius, ...]
 **Cause:** The component was registered with a `tokens` list but the theme has no `components.card` entry. Similar to the validateTheme error but caught at render time.
 
 **Fix:** Same as "Theme missing tokens" above — add the required block to `theme.components`.
+
+---
+
+### "Code block has no language specified"
+
+```
+Error: [tycoslide] Code block has no language specified. Add a language after the opening fences, e.g. ```sql
+```
+
+**Cause:** A fenced code block has no language tag after the opening triple backticks.
+
+**Fix:** Add a language identifier after the opening fences:
+
+````markdown
+```typescript
+const x = 1;
+```
+````
+
+---
+
+### "Unsupported code language"
+
+```
+Error: [tycoslide] Unsupported code language "xyz". Supported languages include: typescript, python, sql, rust, go, java. See LANGUAGE constant for full list.
+```
+
+**Cause:** The language tag on a fenced code block is not recognized.
+
+**Fix:** Use a supported language identifier. Common values: `typescript`, `javascript`, `python`, `sql`, `rust`, `go`, `java`, `bash`, `json`. See the `LANGUAGE` constant in `tycoslide-components` for the full list.
 
 ---
 
@@ -238,7 +267,7 @@ Error: Slide 3: unknown layout 'hero'. Available: title, section, body
 
 **Cause:** The `layout:` value does not match any registered layout. The available layouts come from the theme package.
 
-**Fix:** Use one of the layouts listed in the error, or verify that your theme package exports the correct layouts. For `tycoslide-theme-default` the available layouts are `title`, `section`, and `body`.
+**Fix:** Use one of the layouts listed in the error, or verify that your theme package exports the correct layouts. For the full list of available layouts, see [Layouts](./layouts.md).
 
 ---
 

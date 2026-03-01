@@ -6,26 +6,42 @@ This page covers the built-in layouts provided by `tycoslide-theme-default` and 
 
 ## Available Layouts
 
-`tycoslide-theme-default` provides three layouts. Custom themes can define their own (see [Creating Custom Layouts](#creating-custom-layouts)).
+`tycoslide-theme-default` provides 19 layouts. Custom themes can define their own (see [Creating Custom Layouts](#creating-custom-layouts)).
 
 | Name | Purpose |
 |------|---------|
-| `title` | Opening or closing slide — large centered title with optional subtitle |
-| `section` | Section divider — centered heading, no body content |
-| `body` | Default content slide — optional title/eyebrow with a full markdown body |
+| `title` | Opening slide with large centered title and optional subtitle |
+| `section` | Section divider with centered heading |
+| `body` | Default content slide with optional title/eyebrow and markdown body |
+| `stat` | Big number or key metric with label and optional caption |
+| `quote` | Standalone pull quote with accent bar and optional attribution |
+| `end` | Closing slide, mirrors the title layout |
+| `blank` | No chrome, full canvas for custom content |
+| `image` | Full image with title and optional eyebrow |
+| `image-left` | Image on left, markdown prose on right |
+| `image-right` | Image on right, markdown prose on left |
+| `two-column` | Two equal markdown columns with optional header |
+| `comparison` | Two columns with individual headers for pros/cons or before/after |
+| `statement` | Centered body text with optional style and caption |
+| `agenda` | Title, optional intro, and bullet list |
+| `cards` | Card grid with intro text and optional caption |
+| `bio` | Person introduction with photo, name, role, and bio |
+| `caption` | Image with caption text below |
+| `title-only` | Title bar with empty canvas below |
+| `team` | Grid of team members with name, role, and optional photo |
 
 ---
 
 ## title
 
-Opening and closing slides. Renders title and optional subtitle centered vertically and horizontally.
+Opening slide with large title and optional subtitle, centered on a dark background.
 
 ### Parameters
 
-| Param | Required | Description |
-|-------|----------|-------------|
-| `title` | yes | Main title text |
-| `subtitle` | no | Subtitle text, rendered below the title in `textMuted` color |
+| Param | Type | Description |
+|-------|------|-------------|
+| `title` | `string` | Main title text (**required**) |
+| `subtitle` | `string` | Subtitle text below the title |
 
 ### Example
 
@@ -37,25 +53,17 @@ subtitle: A Brief Overview
 ---
 ```
 
-```markdown
----
-layout: title
-title: Thank You
-subtitle: Questions?
----
-```
-
 ---
 
 ## section
 
-Section divider. A single centered heading with no body content or master footer.
+Section divider with centered title on a dark background. No body content or master footer.
 
 ### Parameters
 
-| Param | Required | Description |
-|-------|----------|-------------|
-| `title` | yes | Section name |
+| Param | Type | Description |
+|-------|------|-------------|
+| `title` | `string` | Section name (**required**) |
 
 ### Example
 
@@ -70,14 +78,20 @@ title: Part 1: Getting Started
 
 ## body
 
-Default content layout. Accepts markdown in the slide body and renders it inside a content area bounded by the default master (footer + margins).
+Markdown body with optional title. This is the default layout when no `layout` is specified in frontmatter.
 
 ### Parameters
 
-| Param | Required | Description |
-|-------|----------|-------------|
-| `title` | no | Slide title, rendered as `h3` style |
-| `eyebrow` | no | Small label above the title, rendered in `eyebrow` style (uppercased automatically) |
+| Param | Type | Description |
+|-------|------|-------------|
+| `title` | `string` | Slide title, rendered as `h3` style |
+| `eyebrow` | `string` | Small label above the title, rendered in `eyebrow` style |
+
+### Slots
+
+| Slot | Description |
+|------|-------------|
+| `body` | Main content area — accepts any markdown |
 
 ### Markdown body content
 
@@ -118,16 +132,488 @@ Defines tokens and color palettes.
 
 ---
 
+## stat
+
+Big number or key metric with label and optional caption. Uses the default master.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `value` | `string` | The metric value, rendered as `h1` (**required**) |
+| `label` | `string` | Label below the value, rendered as `h3` (**required**) |
+| `caption` | `string` | Optional caption below the label |
+
+### Example
+
+```markdown
+---
+layout: stat
+value: "47%"
+label: Reduction in Build Time
+caption: Measured over Q4 2025
+---
+```
+
+---
+
+## quote
+
+Standalone pull quote with left accent bar and optional attribution. Uses the default master.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `quote` | `string` | Quote text (**required**) |
+| `attribution` | `string` | Attribution line below the quote |
+
+### Example
+
+```markdown
+---
+layout: quote
+quote: "Simplicity is the ultimate sophistication."
+attribution: Leonardo da Vinci
+---
+```
+
+---
+
+## end
+
+Closing slide. Mirrors the title layout with centered text on a dark background.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `title` | `string` | Closing title text (**required**) |
+| `subtitle` | `string` | Subtitle text below the title |
+
+### Example
+
+```markdown
+---
+layout: end
+title: Thank You
+subtitle: Questions?
+---
+```
+
+---
+
+## blank
+
+No chrome. Full canvas for custom content. No master footer.
+
+### Parameters
+
+None.
+
+### Slots
+
+| Slot | Description |
+|------|-------------|
+| `body` | Full-slide content area |
+
+### Example
+
+```markdown
+---
+layout: blank
+---
+
+Custom content fills the entire slide.
+```
+
+---
+
+## image
+
+Full image with title and optional eyebrow. Uses the default master.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `title` | `string` | Slide title (**required**) |
+| `eyebrow` | `string` | Small label above the title |
+| `image` | `string` | Path to the image file (**required**) |
+
+### Example
+
+```markdown
+---
+layout: image
+title: System Architecture
+image: ./images/architecture.png
+---
+```
+
+---
+
+## image-left
+
+Image on left, markdown prose on right. Uses the default master.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `title` | `string` | Slide title |
+| `eyebrow` | `string` | Small label above the title |
+| `image` | `string` | Path to the image file (**required**) |
+
+### Slots
+
+| Slot | Description |
+|------|-------------|
+| `body` | Markdown content on the right side |
+
+### Example
+
+```markdown
+---
+layout: image-left
+title: Our Product
+image: ./images/product.png
+---
+
+Description text flows on the right side of the image.
+
+- Feature one
+- Feature two
+```
+
+---
+
+## image-right
+
+Image on right, markdown prose on left. Uses the default master.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `title` | `string` | Slide title |
+| `eyebrow` | `string` | Small label above the title |
+| `image` | `string` | Path to the image file (**required**) |
+
+### Slots
+
+| Slot | Description |
+|------|-------------|
+| `body` | Markdown content on the left side |
+
+### Example
+
+```markdown
+---
+layout: image-right
+title: Our Product
+image: ./images/product.png
+---
+
+Description text flows on the left side of the image.
+```
+
+---
+
+## two-column
+
+Two equal markdown columns with optional header. Uses the default master.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `title` | `string` | Slide title |
+| `eyebrow` | `string` | Small label above the title |
+
+### Slots
+
+| Slot | Description |
+|------|-------------|
+| `left` | Left column content |
+| `right` | Right column content |
+
+### Example
+
+```markdown
+---
+layout: two-column
+title: Side by Side
+---
+
+Left column content here.
+
+::right::
+
+Right column content here.
+```
+
+---
+
+## comparison
+
+Two columns with individual headers for side-by-side comparisons. Uses the default master.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `title` | `string` | Slide title |
+| `eyebrow` | `string` | Small label above the title |
+| `leftTitle` | `string` | Left column header (**required**) |
+| `rightTitle` | `string` | Right column header (**required**) |
+
+### Slots
+
+| Slot | Description |
+|------|-------------|
+| `left` | Left column content |
+| `right` | Right column content |
+
+### Example
+
+```markdown
+---
+layout: comparison
+title: Migration Path
+leftTitle: Before
+rightTitle: After
+---
+
+- Manual deployments
+- No test coverage
+
+::right::
+
+- Automated CI/CD
+- 95% coverage
+```
+
+---
+
+## statement
+
+Centered body text with optional text style and caption. Uses the default master.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `title` | `string` | Slide title (**required**) |
+| `eyebrow` | `string` | Small label above the title |
+| `body` | `string` | Body text, centered (**required**) |
+| `bodyStyle` | `h1 \| h2 \| h3 \| h4 \| body \| small \| eyebrow \| footer` | Text style for the body |
+| `caption` | `string` | Caption below the body text |
+
+### Example
+
+```markdown
+---
+layout: statement
+title: Our Mission
+eyebrow: ABOUT US
+body: Build tools that let teams focus on content, not formatting.
+caption: Founded 2024
+---
+```
+
+---
+
+## agenda
+
+Title, optional intro text, and a bullet list of items. Uses the default master.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `title` | `string` | Slide title (**required**) |
+| `eyebrow` | `string` | Small label above the title |
+| `intro` | `string` | Introductory text above the list |
+| `items` | `string[]` | List of agenda items (**required**) |
+
+### Example
+
+```markdown
+---
+layout: agenda
+title: Agenda
+eyebrow: TODAY'S SESSION
+intro: Three topics in 30 minutes.
+items:
+  - Architecture overview
+  - Live demo
+  - Q&A
+---
+```
+
+---
+
+## cards
+
+Card grid with optional intro text and caption. Automatically adjusts columns based on card count. Uses the default master.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `title` | `string` | Slide title (**required**) |
+| `eyebrow` | `string` | Small label above the title |
+| `intro` | `string` | Introductory text above the cards |
+| `cards` | `object[]` | Array of card objects (each with `title`, `description`, `image`) (**required**) |
+| `caption` | `string` | Caption below the cards |
+| `variant` | `string` | Card variant applied to all cards |
+
+### Example
+
+```markdown
+---
+layout: cards
+title: Our Services
+cards:
+  - title: Consulting
+    description: Strategy and architecture
+  - title: Development
+    description: Full-stack implementation
+  - title: Training
+    description: Hands-on workshops
+---
+```
+
+---
+
+## bio
+
+Person introduction with photo, name, role, and bio text. Uses the default master.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `person` | `string` | Person name (**required**) |
+| `role` | `string` | Job title or role |
+| `image` | `string` | Path to the person's photo |
+
+### Slots
+
+| Slot | Description |
+|------|-------------|
+| `body` | Bio text and additional content |
+
+### Example
+
+```markdown
+---
+layout: bio
+person: Jane Smith
+role: Engineering Lead
+image: ./images/jane.png
+---
+
+Jane has 15 years of experience building distributed systems. She leads the platform team.
+```
+
+---
+
+## caption
+
+Image with caption text below. Uses the default master.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `image` | `string` | Path to the image file (**required**) |
+| `caption` | `string` | Caption text below the image (**required**) |
+
+### Example
+
+```markdown
+---
+layout: caption
+image: ./images/dashboard.png
+caption: "Figure 1: Production dashboard after the migration."
+---
+```
+
+---
+
+## title-only
+
+Title bar with empty canvas below. Uses the default master.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `title` | `string` | Slide title (**required**) |
+| `eyebrow` | `string` | Small label above the title |
+
+### Example
+
+```markdown
+---
+layout: title-only
+title: System Diagram
+eyebrow: ARCHITECTURE
+---
+```
+
+---
+
+## team
+
+Grid of team members with name, role, and optional photo. Automatically adjusts columns based on member count. Uses the default master.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `title` | `string` | Slide title |
+| `eyebrow` | `string` | Small label above the title |
+| `members` | `object[]` | Array of member objects (each with `name`, `role`, `image`) (**required**) |
+
+Each member object:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | `string` | Person name (**required**) |
+| `role` | `string` | Job title or role |
+| `image` | `string` | Path to the person's photo |
+
+### Example
+
+```markdown
+---
+layout: team
+title: Meet the Team
+members:
+  - name: Alice
+    role: Designer
+  - name: Bob
+    role: Engineer
+  - name: Carol
+    role: Product Manager
+---
+```
+
+---
+
 ## Default Master
 
-All `body` layout slides use the `DEFAULT_MASTER`, which adds:
+Most layouts use the `DEFAULT_MASTER`, which adds:
 
 - **Footer row** at the bottom of every slide — `0.25"` tall
   - Left: "Your Company Name" in `footer` style — replace this in your theme's master
   - Right: slide number via the `slideNumber` component
 - **Content bounds** — the usable area for slide content, inset by `0.5"` margin on all sides and shrunk by the footer height at the bottom
 
-`title` and `section` layouts do not use the master — they render without a footer.
+`title`, `section`, `end`, and `blank` layouts do not use the master — they render without a footer.
 
 ---
 
@@ -145,13 +631,13 @@ Create a custom layout when:
 
 ### Layout Registration
 
-Layouts are defined using `layoutRegistry.define()`:
+Layouts are defined with `defineLayout()` and registered with `layoutRegistry.register()`:
 
 ```typescript
-import { layoutRegistry, schema, TEXT_STYLE, GAP, SIZE, CONTENT } from 'tycoslide';
+import { defineLayout, schema, TEXT_STYLE, GAP, SIZE, CONTENT } from 'tycoslide';
 import { textComponent, text, row, column } from 'tycoslide-components';
 
-layoutRegistry.define({
+export const twoColumnLayout = defineLayout({
   name: 'two-column',
   description: 'Two-column layout for side-by-side content',
   params: {
@@ -172,6 +658,17 @@ layoutRegistry.define({
   }),
 });
 ```
+
+Registration happens in the theme entry point:
+
+```typescript
+import { layoutRegistry } from 'tycoslide';
+import { twoColumnLayout } from './layouts.js';
+
+layoutRegistry.register(twoColumnLayout);
+```
+
+`defineLayout()` is a pure factory — it validates the definition but does not register it. See [Themes — Registering Layouts in Themes](./themes.md#registering-layouts-in-themes) for the full pattern.
 
 ### Layout Structure
 
@@ -373,16 +870,18 @@ export const MY_MASTER: Master = {
 
 ### Registering Layouts in Themes
 
-Each layout file calls `layoutRegistry.define()` to register itself:
+Layout files export definition objects created with `defineLayout()`:
 
 ```typescript
 // my-theme/layouts.ts
-import { layoutRegistry } from 'tycoslide';
+import { defineLayout } from 'tycoslide';
 
-layoutRegistry.define({ /* layout definition */ });
+export const myLayout = defineLayout({ /* layout definition */ });
+
+export const allLayouts = [myLayout];
 ```
 
-For how to package layouts with your theme entry point, see [Themes — Registering Layouts in Themes](./themes.md#registering-layouts-in-themes).
+The theme entry point exports the layouts array. The CLI registers them automatically. See [Themes — Registering Layouts in Themes](./themes.md#registering-layouts-in-themes) for the full pattern.
 
 ### Testing Layouts
 
@@ -408,10 +907,12 @@ Right content.
 **Using the TypeScript DSL:**
 
 ```typescript
-import { Presentation } from 'tycoslide';
-import { theme } from 'tycoslide-theme-default';
-import { card } from 'tycoslide-components';
-import './my-layouts';  // Register layouts
+import { Presentation, layoutRegistry } from 'tycoslide';
+import { theme, components, layouts } from 'tycoslide-theme-default';
+import { componentRegistry } from 'tycoslide';
+
+componentRegistry.register(components);
+layoutRegistry.register(layouts);
 
 const pres = new Presentation(theme);
 

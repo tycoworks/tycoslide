@@ -1,6 +1,6 @@
 # Components
 
-Components are content elements that you compose in markdown to build slides. All built-in components come from `tycoslide-components` and are re-exported by themes (including `tycoslide-theme-default`), so they are available by default.
+Components are content elements that you compose in markdown to build slides. All built-in components come from `tycoslide-components` and are re-exported by themes (including `tycoslide-theme-default`).
 
 This page covers both **using** built-in components in markdown directives and **building** custom components with the component registry. For the default theme's token values, see [`theme.ts`](../packages/theme-default/src/theme.ts).
 
@@ -46,6 +46,7 @@ Three-deep nesting uses five colons on the outermost container, four on the midd
 | [text](#text) | Paragraph text, headings, bullets |
 | [card](#card) | Content card with optional image, title, and description |
 | [quote](#quote) | Blockquote with optional attribution and image |
+| [testimonial](#testimonial) | Quote card with optional image and attribution |
 | [table](#table) | Native PowerPoint table with header support |
 | [line](#line) | Horizontal or vertical rule |
 | [shape](#shape) | Filled/outlined area shape |
@@ -60,12 +61,13 @@ Three-deep nesting uses five colons on the outermost container, four on the midd
 | [stack](#stack) | Z-order overlay container |
 | [grid](#grid) | Equal-column grid |
 
-### I/O Components (no theme tokens)
+### I/O Components (rendered to image)
 
 | Component | Description |
 |-----------|-------------|
 | [image](#image) | Embedded image |
-| [mermaid](#mermaid) | Auto-themed Mermaid diagram (renders via mermaid-cli) |
+| [mermaid](#mermaid) | Auto-themed Mermaid diagram rendered as PNG |
+| [code](#code) | Syntax-highlighted code block rendered as PNG |
 
 ### Shared Value Types
 
@@ -96,7 +98,7 @@ Renders paragraph text, bullets, and headings. Supports three content modes.
 ### Content Modes
 
 - **`plain`** -- No parsing, single text run. Use for eyebrows, labels, attributions.
-- **`rich`** -- Inline formatting only: `**bold**`, `*italic*`, `:accent[highlighted]`. This is the default.
+- **`rich`** -- Inline formatting only: `**bold**`, `*italic*`, `:accent[highlighted]`. This is the default. Block-level constructs (lists, headings, block quotes, code fences) are disabled at the parser level. Text like `1. Problem` renders as a plain paragraph, not an ordered list.
 - **`prose`** -- Full markdown: bullets, numbered lists, multiple paragraphs.
 
 ### Inline Accent Colors
@@ -109,7 +111,7 @@ Normal text with :blue[blue highlight] and :green[green highlight].
 :::
 ```
 
-Available accent names: `blue`, `green`, `red`, `yellow`, `purple`.
+The default theme provides `blue`, `green`, `red`, `yellow`, and `purple`. Custom themes can define any accent names. See [Themes](./themes.md) for details.
 
 ### Examples
 
@@ -270,6 +272,22 @@ A filled area shape. Used as backgrounds, decorations, or structural elements.
 | `shape` | ShapeName | Shape type (**required**) -- e.g. `rect`, `roundRect`, `ellipse` |
 | `variant` | string | Theme variant (`default`, `primary`, `subtle`, `outlined`, `accent`) |
 
+The following properties are available in the TypeScript DSL only (not in directive syntax):
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `fill` | string | Fill color (6-character hex) |
+| `fillOpacity` | number | Fill opacity (0--1) |
+| `borderColor` | string | Border color (6-character hex) |
+| `borderWidth` | number | Border width in points |
+| `borderTop` | boolean | Show top border only |
+| `borderRight` | boolean | Show right border only |
+| `borderBottom` | boolean | Show bottom border only |
+| `borderLeft` | boolean | Show left border only |
+| `cornerRadius` | number | Corner radius in inches |
+
+When any `borderTop`/`borderRight`/`borderBottom`/`borderLeft` prop is set, only the specified sides render a border.
+
 ### Example
 
 ```markdown
@@ -423,7 +441,7 @@ The image path is provided as the **directive body content** (not a parameter).
 
 ## mermaid
 
-Renders a Mermaid diagram to PNG via `mermaid-cli` and embeds it as an image. Theme colors are automatically injected.
+Renders a Mermaid diagram to PNG and embeds it as an image. Theme colors are automatically injected.
 
 **Do not** add `style`, `classDef`, `linkStyle`, or `%%{init}` directives -- they will throw an error. The theme handles all styling.
 
@@ -456,6 +474,66 @@ flowchart LR
     A[Client] --> B[API]
     B --> C[(Database)]
     class B primary
+:::
+```
+
+---
+
+## code
+
+Syntax-highlighted code block rendered as a PNG image. Fenced code blocks in markdown (` ```language `) auto-compile to this component. The language identifier after the opening fences is required.
+
+**All styling is controlled by theme tokens.** See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete list of code component tokens.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `language` | string | Language identifier (**required**) -- e.g. `typescript`, `python`, `sql` |
+
+The `body` contains the source code. In markdown, this is the content between the fences. In the DSL, pass it as the first argument to `code()`.
+
+### Examples
+
+````markdown
+```sql
+SELECT * FROM orders WHERE status = 'active';
+```
+````
+
+```typescript
+code(`SELECT * FROM orders WHERE status = 'active';`, 'sql')
+```
+
+---
+
+## testimonial
+
+Quote card with optional image, quote text, and attribution. Renders as a rounded rectangle background with vertically stacked content.
+
+Quote text is required -- provide it either via the `quote` attribute or as body content.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `quote` | string | Quote text (**required** unless body content provided) |
+| `attribution` | string | Attribution line, e.g. "-- Jane Smith, CTO" |
+| `image` | string | Path to image/logo displayed above the quote |
+| `variant` | string | Theme variant name |
+| `height` | `fill` \| `hug` | Height sizing (default: `fill`) |
+
+### Examples
+
+```markdown
+:::testimonial{attribution="— Jane Smith, CTO"}
+This changed everything for us.
+:::
+```
+
+```markdown
+:::testimonial{attribution="— Jane Smith, CTO" image="./assets/logo.png"}
+This changed everything for us.
 :::
 ```
 
@@ -528,17 +606,18 @@ Custom components extend tycoslide with new content types. They integrate with t
 Create a custom component when:
 - You have a repeating content pattern not covered by built-in components
 - You want to encapsulate a complex layout into a single named element
-- You're building a reusable component library for your organization
+- You are building a reusable component library for your organization
 
 ### Component Registration
 
-Components are registered using `componentRegistry.define()`:
+Components are defined with `defineComponent()` and registered with `componentRegistry.register()`. Definition is a pure factory -- it does not register the component. Registration is a separate step, typically done by the theme entry point.
 
 ```typescript
-import { componentRegistry, component, schema, CONTENT } from 'tycoslide';
-import { text, column } from 'tycoslide-components';
+import { defineComponent, componentRegistry, component, schema } from 'tycoslide';
+import { text } from 'tycoslide-components';
 
-componentRegistry.define({
+// 1. Define the component (pure factory -- no side effects)
+export const badgeComponent = defineComponent({
   name: 'badge',
   params: {
     label: schema.string(),
@@ -552,11 +631,16 @@ componentRegistry.define({
     });
   },
 });
+
+// 2. Register (theme entry point does this)
+componentRegistry.register(badgeComponent);
 ```
+
+Each built-in component exports its definition object (e.g., `cardComponent`, `textComponent`, `codeComponent`) alongside its DSL function. Theme entry points collect these into a `components` array and register them. See [Themes -- Theme Entry Point](./themes.md#registering-layouts-in-themes).
 
 #### Overload Patterns
 
-`componentRegistry.define()` accepts five signatures depending on the component's input model:
+`defineComponent()` accepts five signatures depending on the component's input model:
 
 | Pattern | When to use |
 |---------|-------------|
@@ -596,7 +680,10 @@ params: {
   enabled: schema.boolean(),                       // Boolean
   gap: schema.gap().optional(),                    // GAP enum: none/tight/normal/loose
   align: schema.hAlign().optional(),               // HALIGN enum: left/center/right
+  valign: schema.vAlign().optional(),              // VALIGN enum: top/middle/bottom
   style: schema.textStyle().optional(),            // TEXT_STYLE enum: h1/h2/h3/h4/body/small/eyebrow/footer
+  content: schema.content().optional(),            // CONTENT enum: plain/rich/prose
+  height: schema.size().optional(),                // SIZE enum: fill/hug
 }
 ```
 
@@ -613,7 +700,7 @@ const BADGE_TOKEN = {
   TEXT_STYLE: 'textStyle',
 } as const;
 
-componentRegistry.define({
+const badgeComponent = defineComponent({
   name: 'badge',
   params: { label: schema.string(), variant: schema.string().optional() },
   tokens: [BADGE_TOKEN.BACKGROUND_COLOR, BADGE_TOKEN.TEXT_COLOR, BADGE_TOKEN.TEXT_STYLE],
@@ -659,10 +746,11 @@ Missing tokens fail the build immediately.
 Components can accept compiled markdown content in named slots:
 
 ```typescript
-componentRegistry.define({
+const calloutComponent = defineComponent({
   name: 'callout',
   params: { title: schema.string() },
   slots: ['children'],
+  tokens: [],
   expand: (props, context, tokens) => {
     return column(
       text(props.title, { style: TEXT_STYLE.H3 }),
@@ -685,6 +773,8 @@ This is the body content.
 
 The `children` slot receives the compiled content as an array of `ComponentNode[]`.
 
+**Slotted components in `:::directive` syntax support only one slot.** The directive body is compiled and passed to the first slot. Components with multiple named slots must be used via the TypeScript DSL, where each slot is passed as a separate prop.
+
 ### Variants
 
 Support multiple visual styles by declaring token-backed variants:
@@ -706,8 +796,7 @@ The `variant` prop is handled automatically. Use `variant="name"` in Markdown or
 Display a large metric value with a label and optional change indicator:
 
 ```typescript
-import { componentRegistry, component, schema, CONTENT } from 'tycoslide';
-import { TEXT_STYLE, GAP } from 'tycoslide';
+import { defineComponent, componentRegistry, component, schema, CONTENT } from 'tycoslide';
 import { column, text } from 'tycoslide-components';
 
 // 1. Define token constants
@@ -722,8 +811,8 @@ const METRIC_TOKEN = {
   GAP: 'gap',
 } as const;
 
-// 2. Define and register component
-componentRegistry.define({
+// 2. Define component
+export const metricComponent = defineComponent({
   name: 'metric',
   params: {
     value: schema.string(),
@@ -753,7 +842,10 @@ componentRegistry.define({
   },
 });
 
-// 3. Export DSL function
+// 3. Register (theme entry point does this)
+componentRegistry.register(metricComponent);
+
+// 4. Export DSL function
 export function metric(props: {
   value: string;
   label: string;
@@ -800,7 +892,7 @@ components: {
 Components are used programmatically via DSL functions. All built-in DSL functions are exported from `tycoslide-components`:
 
 ```typescript
-import { text, card, quote, table, image, mermaid } from 'tycoslide-components';
+import { text, card, quote, testimonial, table, image, mermaid, code } from 'tycoslide-components';
 import { row, column, stack, grid } from 'tycoslide-components';
 import { line, shape, slideNumber } from 'tycoslide-components';
 import { TEXT_STYLE, GAP, SIZE, SHAPE, CONTENT, HALIGN, VALIGN } from 'tycoslide';
@@ -859,21 +951,34 @@ expand: (props, context, tokens) => {
 
 **Parameters:**
 - `props` — Validated component properties. Includes `body` if a body schema is defined, or parsed directive body.
-- `context` — Expansion context: `{ theme, assets? }`
+- `context` — Expansion context: `{ theme, assets?, canvas }`
 - `tokens` — Theme token values resolved for the active variant (if component declared tokens)
 
 **Return:** A `SlideNode` — either a primitive node (text, image, shape, container) or another component node for composition. Component nodes are further expanded by the registry.
+
+#### Canvas
+
+`context.canvas` renders arbitrary HTML to a PNG image. Use it when a component needs to produce visuals that are not natively supported as PowerPoint objects.
+
+```typescript
+const pngPath = await context.canvas.renderHtml(html, transparent?);
+```
+
+The first argument is a complete HTML document string. The optional second argument controls background transparency (default: `false`). The return value is a file path to the rendered PNG, suitable for use as an `ImageNode.src`.
+
+The [mermaid](#mermaid) and [code](#code) components use Canvas internally. Those implementations serve as reference for components that render HTML to PNG.
 
 ### Testing Components
 
 Create test presentations to verify rendering:
 
 ```typescript
-import { Presentation } from 'tycoslide';
+import { Presentation, componentRegistry } from 'tycoslide';
 import { theme } from 'tycoslide-theme-default';
 import { column } from 'tycoslide-components';
-import './my-component';  // Register component via side-effect
+import { metricComponent } from './my-component';
 
+componentRegistry.register(metricComponent);
 const pres = new Presentation(theme);
 
 pres.add({
@@ -896,7 +1001,7 @@ Test all prop combinations, all variants, and overflow edge cases. Test with mul
 - Sensible defaults via optional params
 
 **Use tokens for all styling:**
-- Don't hard-code colors, sizes, or fonts
+- Do not hard-code colors, sizes, or fonts
 - Request theme tokens for every visual property
 - Support variants for contextual styling
 
