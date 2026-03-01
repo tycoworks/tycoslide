@@ -57,7 +57,7 @@ See the [theme source](../packages/theme-default/src/theme.ts) for all default v
 
 ### Quick Extension Pattern
 
-Import the default theme and spread it with your overrides:
+Start here when you need brand colors or fonts but the default layout and component structure works. Import the default theme and spread it with your overrides:
 
 ```typescript
 import { theme as defaultTheme } from 'tycoslide-theme-default';
@@ -125,6 +125,8 @@ All color values are 6-character hex strings without a `#` prefix.
 Replace Inter with a system font or a custom `.woff2` file:
 
 #### System font (no file embedding)
+
+Use system fonts for quick prototyping or when recipients have the font installed. Use custom `.woff2` files for brand fonts that must render identically everywhere.
 
 ```typescript
 import { theme as defaultTheme } from 'tycoslide-theme-default';
@@ -231,6 +233,8 @@ const myTheme: Theme = {
 ```
 
 #### Adding a new card variant
+
+Add a variant when you need a visually distinct treatment for the same component — for example, a "highlight" card for featured content alongside a "default" card for everything else.
 
 ```typescript
 const myTheme: Theme = {
@@ -542,7 +546,7 @@ const pres = new Presentation(theme);
 
 ## Variants System
 
-Every component supports named variants for different visual styles. Variants are defined per-component in the theme.
+Every component supports named variants for different visual styles. Variants are defined per-component in the theme. Add a variant when the same component needs a different color treatment — a "highlight" card, a "subtle" shape. Create a new component instead when the structure itself changes, not just the styling.
 
 **Using variants in Markdown:**
 

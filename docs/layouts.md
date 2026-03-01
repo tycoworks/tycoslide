@@ -8,27 +8,27 @@ This page covers the built-in layouts provided by `tycoslide-theme-default` and 
 
 `tycoslide-theme-default` provides 19 layouts. Custom themes can define their own (see [Creating Custom Layouts](#creating-custom-layouts)).
 
-| Name | Purpose |
-|------|---------|
-| `title` | Opening slide with large centered title and optional subtitle |
-| `section` | Section divider with centered heading |
-| `body` | Default content slide with optional title/eyebrow and markdown body |
-| `stat` | Big number or key metric with label and optional caption |
-| `quote` | Standalone pull quote with accent bar and optional attribution |
-| `end` | Closing slide, mirrors the title layout |
-| `blank` | No chrome, full canvas for custom content |
-| `image` | Full image with title and optional eyebrow |
-| `image-left` | Image on left, markdown prose on right |
-| `image-right` | Image on right, markdown prose on left |
-| `two-column` | Two equal markdown columns with optional header |
-| `comparison` | Two columns with individual headers for pros/cons or before/after |
-| `statement` | Centered body text with optional style and caption |
-| `agenda` | Title, optional intro, and bullet list |
-| `cards` | Card grid with intro text and optional caption |
-| `bio` | Person introduction with photo, name, role, and bio |
-| `caption` | Image with caption text below |
-| `title-only` | Title bar with empty canvas below |
-| `team` | Grid of team members with name, role, and optional photo |
+| Name | Purpose | When to use |
+|------|---------|-------------|
+| `title` | Opening slide with large centered title and optional subtitle | First slide of the deck |
+| `section` | Section divider with centered heading | Transition between major sections |
+| `body` | Default content slide with optional title/eyebrow and markdown body | General-purpose — bullets, prose, component directives |
+| `stat` | Big number or key metric with label and optional caption | Highlighting a single KPI or data point |
+| `quote` | Standalone pull quote with accent bar and optional attribution | Full-slide quote without other content |
+| `end` | Closing slide, mirrors the title layout | Last slide of the deck |
+| `blank` | No chrome, full canvas for custom content | Fully custom slides built entirely from directives |
+| `image` | Full image with title and optional eyebrow | Hero image that dominates the slide |
+| `image-left` | Image on left, markdown prose on right | Image paired with explanatory text |
+| `image-right` | Image on right, markdown prose on left | Same as `image-left`, reversed |
+| `two-column` | Two equal markdown columns with optional header | Side-by-side content without contrasting headers |
+| `comparison` | Two columns with individual headers | Before/after, pros/cons, or any labeled contrast |
+| `statement` | Centered body text with optional style and caption | One bold sentence or tagline as the focal point |
+| `agenda` | Title, optional intro, and bullet list | Meeting agendas or table-of-contents slides |
+| `cards` | Card grid with intro text and optional caption | Multiple items defined in frontmatter (no directives needed) |
+| `bio` | Person introduction with photo, name, role, and bio | Speaker intros or executive profiles |
+| `caption` | Image with caption text below | Annotated screenshots, diagrams, or photos |
+| `title-only` | Title bar with empty canvas below | Title plus fully custom body built from directives |
+| `team` | Grid of team members with name, role, and optional photo | Team overview slides |
 
 ---
 
@@ -78,7 +78,7 @@ title: Part 1: Getting Started
 
 ## body
 
-Markdown body with optional title. This is the default layout when no `layout` is specified in frontmatter.
+Markdown body with optional title. This is the default layout when no `layout` is specified in frontmatter. Use `body` for general-purpose content slides; use `statement` when the slide's point is a single centered sentence or tagline.
 
 ### Parameters
 
@@ -148,7 +148,7 @@ Big number or key metric with label and optional caption.
 
 ## quote
 
-Standalone pull quote with left accent bar and optional attribution.
+Standalone pull quote with left accent bar and optional attribution. Use this layout when a quote deserves its own slide; use the `:::quote` component directive to embed a quote within a `body` slide alongside other content.
 
 ### Parameters
 
@@ -174,7 +174,7 @@ Closing slide. Mirrors the title layout with centered text on a dark background.
 
 ## blank
 
-No chrome. Full canvas for custom content. No master footer. The `body` slot accepts any markdown.
+No chrome. Full canvas for custom content. No master footer. The `body` slot accepts any markdown. Use `blank` for fully custom slides built entirely from directives; use `title-only` when you want a standard title bar but custom content below it.
 
 ### Parameters
 
@@ -184,7 +184,7 @@ None.
 
 ## image
 
-Full image with title and optional eyebrow.
+Full image with title and optional eyebrow. Use `image` when the image is the hero of the slide; use `image-left` or `image-right` when the image shares the slide with prose; use `caption` when the image needs descriptive text below it.
 
 ### Parameters
 
@@ -226,7 +226,7 @@ Image on right, markdown prose on left. Slots: `body`.
 
 ## two-column
 
-Two equal markdown columns with optional header. Slots: `left`, `right`.
+Two equal markdown columns with optional header. Slots: `left`, `right`. Use `two-column` for side-by-side content under a shared title; use `comparison` when each column needs its own labeled header (e.g., "Before" / "After").
 
 ### Parameters
 
@@ -239,7 +239,7 @@ Two equal markdown columns with optional header. Slots: `left`, `right`.
 
 ## comparison
 
-Two columns with individual headers for side-by-side comparisons. Slots: `left`, `right`.
+Two columns with individual headers for side-by-side comparisons. Slots: `left`, `right`. Use `comparison` for before/after, pros/cons, or any two-column layout where each side needs its own heading. Use `two-column` when the columns share a single title.
 
 ### Parameters
 
@@ -254,7 +254,7 @@ Two columns with individual headers for side-by-side comparisons. Slots: `left`,
 
 ## statement
 
-Centered body text with optional text style and caption.
+Centered body text with optional text style and caption. Use `statement` for a single bold sentence or tagline as the focal point of the slide; use `body` when the slide has structured content like bullets, tables, or directives.
 
 ### Parameters
 
@@ -285,7 +285,7 @@ Title, optional intro text, and a bullet list of items.
 
 ## cards
 
-Card grid with optional intro text and caption. Automatically adjusts columns based on card count.
+Card grid with optional intro text and caption. Automatically adjusts columns based on card count. Use `cards` to define card content entirely in frontmatter without writing directives; use the `body` layout with `:::grid` and `:::card` directives when you need more control over card layout or mixed content types.
 
 ### Parameters
 
@@ -316,7 +316,7 @@ Person introduction with photo, name, role, and bio text. Slots: `body`.
 
 ## caption
 
-Image with caption text below.
+Image with caption text below. Use `caption` for annotated screenshots, diagrams, or photos that need explanatory text; use the `image` layout when the image is self-explanatory and needs only a title.
 
 ### Parameters
 
@@ -329,7 +329,7 @@ Image with caption text below.
 
 ## title-only
 
-Title bar with empty canvas below.
+Title bar with empty canvas below. Use `title-only` when you want a standard title and footer but fully custom body content built from directives; use `blank` when you need the entire slide area with no chrome at all.
 
 ### Parameters
 

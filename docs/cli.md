@@ -62,7 +62,7 @@ See the [Debug Workflow](#debug-workflow) section below for details on interpret
 
 #### `--render-scale <factor>`
 
-Scale factor for rendered images (mermaid diagrams and code blocks).
+Scale factor for rendered images (mermaid diagrams and code blocks). Use `1` for fast iteration while drafting, `2` (the default) for screen presentations, and `3` for decks that will be printed or projected at high resolution.
 
 ```bash
 tycoslide build slides.md --render-scale 3
