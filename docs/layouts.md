@@ -281,6 +281,34 @@ Title, optional intro text, and a bullet list of items.
 | `intro` | `string` | Introductory text above the list |
 | `items` | `string[]` | List of agenda items (**required**) |
 
+### YAML Array and Object Syntax
+
+Array parameters use YAML block sequence syntax. Object array parameters (like `team`'s `members`) use block mapping entries inside the sequence:
+
+```markdown
+---
+layout: agenda
+title: Today's Agenda
+items:
+  - Introduction and context
+  - Live demo
+  - Q&A
+---
+```
+
+```markdown
+---
+layout: team
+title: The Team
+members:
+  - name: Alice Kim
+    role: Engineering Lead
+    image: ./assets/alice.jpg
+  - name: Bob Patel
+    role: Product Manager
+---
+```
+
 ---
 
 ## cards
@@ -460,6 +488,17 @@ params: {
 For parameter schema helpers and shared value types, see [Components — Defining Parameters](./components.md#defining-parameters).
 
 `textComponent.schema` validates the parameter as text content with the same rules as the text component — it accepts a string that supports inline markdown formatting. Use this for any layout parameter that authors write as human-readable text in frontmatter.
+
+Every component definition exports a `.schema` property — a Zod schema that validates the component's primary input. Layout params can reuse these schemas directly, ensuring the same validation rules apply whether content comes from frontmatter or a directive. Use `componentName.schema` when the parameter holds a value that component already knows how to validate; use `schema.*` helpers for generic types like booleans, numbers, and enums.
+
+```typescript
+params: {
+  title: textComponent.schema,            // Validates as inline-markdown text
+  image: imageComponent.schema,           // Validates as an image path or asset ref
+  card: cardComponent.schema.optional(),  // Reuses card's full schema, optional
+  count: schema.number(),                 // Generic number — no component owns this
+}
+```
 
 Parameters are validated at build time. Invalid frontmatter values cause build errors.
 

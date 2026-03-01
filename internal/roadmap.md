@@ -28,7 +28,7 @@ DSL input → full pipeline (expand → measure → layout) → assert element p
 
 ### Update Docs
 
-User-facing documentation has diverged from the codebase. Code component will be new, there's a new CLI option (scale), component token system has evolved. Investigate thoroughly and update.
+User-facing documentation has diverged from the codebase. Code component will be new, there's a new CLI option (scale), component token system has evolved. Investigate thoroughly and update. And add a skill: https://github.com/slidevjs/slidev/tree/main/skills/slidev
 
 ---
 

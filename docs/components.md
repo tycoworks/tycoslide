@@ -432,6 +432,8 @@ The image path is provided as the **directive body content** (not a parameter).
 :::
 ```
 
+Image paths are resolved relative to the current working directory when the CLI runs, not relative to the markdown file. Run the CLI from the directory containing your markdown file, or use absolute paths.
+
 ---
 
 ## mermaid
@@ -631,7 +633,7 @@ export const badgeComponent = defineComponent({
 componentRegistry.register(badgeComponent);
 ```
 
-Each built-in component exports its definition object (e.g., `cardComponent`, `textComponent`, `codeComponent`) alongside its DSL function. Theme entry points collect these into a `components` array and register them. See [Themes -- Theme Entry Point](./themes.md#registering-layouts-in-themes).
+Each built-in component exports its definition object (e.g., `cardComponent`, `textComponent`, `codeComponent`) alongside its DSL function. Theme entry points collect these into a `components` array and register them. `componentRegistry.register()` accepts either a single definition or an array. See [Themes -- Theme Entry Point](./themes.md#registering-layouts-in-themes).
 
 #### Overload Patterns
 
@@ -962,6 +964,8 @@ const pngPath = await context.canvas.renderHtml(html, transparent?);
 ```
 
 The first argument is a complete HTML document string. The optional second argument controls background transparency (default: `false`). The return value is a file path to the rendered PNG, suitable for use as an `ImageNode.src`.
+
+The render viewport matches the slide dimensions at 96 DPI — for a 16:9 slide (10" × 5.625") that is 960 × 540 CSS pixels, output at 2× device scale (1920 × 1080 physical pixels). All theme fonts are automatically available in the HTML document — reference them by name exactly as defined in `FontFamily.name`. Rendered PNG files are written to a temporary directory and deleted when the build process exits; do not store the returned path beyond the expand function's lifetime.
 
 The [mermaid](#mermaid) and [code](#code) components use Canvas internally. Those implementations serve as reference for components that render HTML to PNG.
 
