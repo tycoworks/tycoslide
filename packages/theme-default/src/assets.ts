@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 
 const require = createRequire(import.meta.url);
 const icon = (name: string) => fileURLToPath(new URL(`../assets/icons/${name}`, import.meta.url));
+const tycoworks = (name: string) => fileURLToPath(new URL(`../assets/tycoworks/${name}`, import.meta.url));
 
 export const assets = {
   fonts: {
@@ -44,6 +45,12 @@ export const assets = {
     accountTree: icon('account_tree.png'),
     eventRepeat: icon('event_repeat.png'),
     howToVote: icon('how_to_vote.png'),
+  },
+  tycoworks: {
+    website: tycoworks('website.png'),
+    tycoslide: tycoworks('tycoslide.png'),
+    background: tycoworks('tycoworks background.png'),
+    logo: tycoworks('tycoworks logo.png'),
   },
 };
 
