@@ -4,8 +4,64 @@
 // Core
 export { Presentation, type WriteResult } from './core/rendering/presentation.js';
 export { LayoutValidationError, type SlideValidationResult, type ValidationResult } from './core/layout/validator.js';
-export * from './core/model/types.js';
-export * from './core/model/nodes.js';
+export {
+  HALIGN, HALIGN_VALUES,
+  VALIGN, VALIGN_VALUES,
+  CONTENT, CONTENT_VALUES,
+  GAP, GAP_VALUES,
+  DIRECTION,
+  SIZE, SIZE_VALUES,
+  BORDER_STYLE,
+  SHAPE, SHAPE_VALUES,
+  ARROW_TYPE, ARROW_TYPE_VALUES,
+  DASH_TYPE, DASH_TYPE_VALUES,
+  SLIDE_SIZE,
+  CUSTOM_LAYOUT,
+  FONT_WEIGHT,
+  TEXT_STYLE, TEXT_STYLE_VALUES,
+  DEFAULT_VARIANT,
+  Bounds,
+} from './core/model/types.js';
+export type {
+  HorizontalAlignment, VerticalAlignment,
+  ContentType,
+  GapSize,
+  Direction,
+  SizeValue,
+  BorderStyle,
+  ShapeName,
+  ArrowType,
+  DashType,
+  SlideSize,
+  TextStyleName,
+  FontWeight,
+  Font, FontFamily,
+  TextStyle,
+  ColorScheme,
+  HighlightPair,
+  NormalizedRun,
+  Master, Slide, Theme,
+  TextRun, TextContent,
+} from './core/model/types.js';
+
+export { NODE_TYPE } from './core/model/nodes.js';
+export type {
+  NodeType,
+  TextNode,
+  ImageNode,
+  LineNode,
+  ShapeBorder,
+  ShapeNode,
+  SlideNumberNode,
+  TableCellInput,
+  TableCellData,
+  TableNode,
+  ContainerNode,
+  StackNode,
+  PositionedNode,
+  ElementNode,
+  SlideNode,
+} from './core/model/nodes.js';
 
 // Component system (for custom component authors)
 export {
