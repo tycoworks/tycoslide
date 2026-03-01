@@ -5,7 +5,7 @@ import { createRequire } from 'module';
 import { pathToFileURL } from 'url';
 import path from 'path';
 import type { Theme } from '../core/model/types.js';
-import { registerComponents, registerLayouts } from '../core/rendering/registry.js';
+import { componentRegistry, layoutRegistry } from '../core/rendering/registry.js';
 
 export interface LoadedTheme {
   theme: Theme;
@@ -50,7 +50,7 @@ export async function loadTheme(name: string): Promise<LoadedTheme> {
 
   // Explicit registration from theme exports
   if (mod.components) {
-    registerComponents(mod.components);
+    componentRegistry.register(mod.components);
   } else {
     throw new Error(
       `Theme package '${packageName}' does not export 'components'.`,
@@ -58,7 +58,7 @@ export async function loadTheme(name: string): Promise<LoadedTheme> {
   }
 
   if (mod.layouts) {
-    registerLayouts(mod.layouts);
+    layoutRegistry.register(mod.layouts);
   } else {
     throw new Error(
       `Theme package '${packageName}' does not export 'layouts'.`,

@@ -5,7 +5,7 @@
 // Text, Card, Row, Column have real expand functions (needed by registry.test.ts).
 // Image, Table, Line register metadata only — slotCompiler never calls expand.
 //
-// Import testComponents array and call registerComponents() in tests.
+// Import testComponents array and call componentRegistry.register() in tests.
 
 import { defineComponent, component } from '../src/core/rendering/registry.js';
 import type { ExpansionContext, ComponentNode } from '../src/core/rendering/registry.js';

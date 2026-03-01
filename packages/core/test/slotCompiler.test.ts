@@ -11,11 +11,11 @@ import { compileSlot } from '../src/core/markdown/slotCompiler.js';
 import { CONTENT, HALIGN, TEXT_STYLE, VALIGN } from '../src/core/model/types.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { SYNTAX } from '../src/core/model/syntax.js';
-import { componentRegistry, registerComponents, defineComponent } from '../src/core/rendering/registry.js';
+import { componentRegistry, defineComponent } from '../src/core/rendering/registry.js';
 import { C, testComponents } from './test-components.js';
 
 // Register test components before tests run
-registerComponents(testComponents);
+componentRegistry.register(testComponents);
 
 /** Helper: get props as any to avoid unknown type errors in tests */
 function props(nodes: any[], index: number): any {
@@ -281,11 +281,9 @@ describe('Slot Compiler', () => {
         expand: () => ({}) as any,
       });
       assert.throws(
-        () => registerComponents([...testComponents, dup]),
+        () => componentRegistry.register(dup),
         /MDAST node type 'paragraph' already handled by/,
       );
-      // Re-register clean set after the failed attempt
-      registerComponents(testComponents);
     });
 
     it('should throw on multi-slot component used as directive', () => {

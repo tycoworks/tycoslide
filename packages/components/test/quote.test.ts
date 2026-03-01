@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { quote } from '../src/quote.js';
-import { componentRegistry, NODE_TYPE, TEXT_STYLE, HALIGN, VALIGN, registerComponents } from 'tycoslide';
+import { componentRegistry, NODE_TYPE, TEXT_STYLE, HALIGN, VALIGN } from 'tycoslide';
 import { Component } from '../src/names.js';
 import { mockTheme, noopCanvas } from './mocks.js';
 import {
@@ -12,7 +12,7 @@ import {
 } from '../src/index.js';
 
 // Register components explicitly
-registerComponents([
+componentRegistry.register([
   textComponent, imageComponent, cardComponent, quoteComponent,
   tableComponent, codeComponent, mermaidComponent,
   lineComponent, shapeComponent, slideNumberComponent,
@@ -23,7 +23,7 @@ describe('Quote Component', () => {
   const theme = mockTheme();
 
   describe('registration', () => {
-    it('should be registered after registerComponents()', () => {
+    it('should be registered after register()', () => {
       assert.ok(componentRegistry.has(Component.Quote));
     });
   });

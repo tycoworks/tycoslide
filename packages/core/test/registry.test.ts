@@ -6,10 +6,9 @@ import type { Slide } from '../src/core/model/types.js';
 import { mockTheme, mockTextStyle, noopCanvas } from './mocks.js';
 
 import { C, testComponents } from './test-components.js';
-import { registerComponents } from '../src/core/rendering/registry.js';
 
 // Register test components
-registerComponents(testComponents);
+componentRegistry.register(testComponents);
 import { HALIGN, VALIGN, DEFAULT_VARIANT, TEXT_STYLE } from '../src/core/model/types.js';
 
 // ============================================
@@ -32,7 +31,7 @@ describe('Registry (generic base class)', () => {
   let registry: Registry<LayoutDefinition>;
 
   beforeEach(() => {
-    registry = new Registry<LayoutDefinition>('Layout', 'render');
+    registry = new Registry<LayoutDefinition>('Layout');
   });
 
   test('register and retrieve a definition', () => {
@@ -85,14 +84,6 @@ describe('Registry (generic base class)', () => {
     assert.ok(all.includes(b));
   });
 
-  test('clear removes all definitions', () => {
-    registry.register(makeLayout('title', () => stubSlide));
-    registry.register(makeLayout('section', () => stubSlide));
-    registry.clear();
-    assert.strictEqual(registry.has('title'), false);
-    assert.strictEqual(registry.has('section'), false);
-    assert.deepStrictEqual(registry.getRegisteredNames(), []);
-  });
 });
 
 // ============================================
@@ -123,7 +114,7 @@ describe('ComponentRegistry', () => {
 
   describe('expand', () => {
     test('expands a registered component', async () => {
-      // text component is registered via registerComponents() — use it as a real component
+      // text component is registered via componentRegistry.register() — use it as a real component
       const node = component(C.Text, { body: 'hello' });
       const expanded = await componentRegistry.expand(node, { theme, canvas: noopCanvas() });
       assert.strictEqual((expanded as any).type, NODE_TYPE.TEXT);
@@ -214,24 +205,3 @@ describe('ComponentRegistry', () => {
   });
 });
 
-// ============================================
-// registerComponents() / registerLayouts()
-// ============================================
-
-describe('registerComponents()', () => {
-  test('replaces previous registrations (clear-and-replace)', () => {
-    // Start with full test components
-    registerComponents(testComponents);
-    assert.ok(componentRegistry.has(C.Text));
-    assert.ok(componentRegistry.has(C.Row));
-
-    // Register a subset — previous components should be gone
-    const subset = testComponents.filter((c) => c.name === C.Text);
-    registerComponents(subset);
-    assert.ok(componentRegistry.has(C.Text));
-    assert.strictEqual(componentRegistry.has(C.Row), false);
-
-    // Restore full set for other tests
-    registerComponents(testComponents);
-  });
-});

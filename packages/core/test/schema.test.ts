@@ -4,13 +4,13 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { z } from 'zod';
 import { schema } from '../src/core/model/schema.js';
-import { layoutRegistry, registerComponents, defineLayout } from '../src/core/rendering/registry.js';
+import { layoutRegistry, componentRegistry, defineLayout } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { compileSlot } from '../src/core/markdown/slotCompiler.js';
 import { C, testComponents } from './test-components.js';
 
 // Register test components before tests run
-registerComponents(testComponents);
+componentRegistry.register(testComponents);
 
 describe('schema', () => {
   describe('scalar types', () => {

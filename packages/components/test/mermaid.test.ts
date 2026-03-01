@@ -4,7 +4,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { mermaid, sanitizeMermaidDefinition, buildMermaidConfig, buildClassDefs, injectClassDefs, type MermaidTokens } from '../src/mermaid.js';
-import { componentRegistry, NODE_TYPE, TEXT_STYLE, registerComponents } from 'tycoslide';
+import { componentRegistry, NODE_TYPE, TEXT_STYLE } from 'tycoslide';
 import { Component } from '../src/names.js';
 import { mockTheme, noopCanvas } from './mocks.js';
 import {
@@ -15,7 +15,7 @@ import {
 } from '../src/index.js';
 
 // Register components explicitly
-registerComponents([
+componentRegistry.register([
   textComponent, imageComponent, cardComponent, quoteComponent,
   tableComponent, codeComponent, mermaidComponent,
   lineComponent, shapeComponent, slideNumberComponent,
@@ -243,7 +243,7 @@ describe('injectClassDefs', () => {
 });
 
 describe('mermaid expansion', () => {
-  it('should be available after registerComponents()', () => {
+  it('should be available after register()', () => {
     const registered = componentRegistry.has(Component.Mermaid);
     assert.ok(registered, 'mermaid component should be registered');
   });

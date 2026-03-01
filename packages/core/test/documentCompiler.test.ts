@@ -5,11 +5,11 @@
 // frontmatter. Slide frontmatter starts AFTER the global block.
 // Every test document must begin with a global FM header.
 
-import { describe, it, beforeEach, afterEach } from 'node:test';
+import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { compileDocument, buildSlideName } from '../src/core/markdown/documentCompiler.js';
-import { layoutRegistry, registerComponents, defineLayout, registerLayouts } from '../src/core/rendering/registry.js';
+import { layoutRegistry, componentRegistry, defineLayout } from '../src/core/rendering/registry.js';
 import { testComponents } from './test-components.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { mockTheme } from './mocks.js';
@@ -94,23 +94,20 @@ const defaultLayout = {
 };
 
 // ============================================
+// REGISTRATION (module-level, once)
+// ============================================
+
+componentRegistry.register(testComponents);
+layoutRegistry.register([simpleLayout, bodyLayout, slotLayout, strictLayout, defaultLayout]);
+
+// ============================================
 // TESTS
 // ============================================
 
 describe('Document Compiler', () => {
   beforeEach(() => {
-    registerComponents(testComponents);
-    layoutRegistry.register(simpleLayout);
-    layoutRegistry.register(bodyLayout);
-    layoutRegistry.register(slotLayout);
-    layoutRegistry.register(strictLayout);
-    layoutRegistry.register(defaultLayout);
     receivedProps = [];
     renderedSlides = [];
-  });
-
-  afterEach(() => {
-    layoutRegistry.clear();
   });
 
   describe('parameter mapping', () => {

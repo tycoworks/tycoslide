@@ -1,6 +1,6 @@
 import { describe, it, before } from 'node:test';
 import * as assert from 'node:assert';
-import { NODE_TYPE, componentRegistry, SYNTAX, inToPx, registerComponents } from 'tycoslide';
+import { NODE_TYPE, componentRegistry, SYNTAX, inToPx } from 'tycoslide';
 import type { RootContent } from 'mdast';
 import { Component } from '../src/names.js';
 import { code, codeComponent, buildCodeTheme, renderCodeToHtml, CODE_TOKEN, type CodeTokens } from '../src/code.js';
@@ -14,7 +14,7 @@ import {
 } from '../src/index.js';
 
 // Register components explicitly
-registerComponents([
+componentRegistry.register([
   textComponent, imageComponent, cardComponent, quoteComponent,
   tableComponent, codeComponent, mermaidComponent,
   lineComponent, shapeComponent, slideNumberComponent,
@@ -169,7 +169,7 @@ describe('buildCodeTheme()', () => {
 // ============================================
 
 describe('code component registration', () => {
-  it('should be available after registerComponents()', () => {
+  it('should be available after register()', () => {
     assert.ok(componentRegistry.has(Component.Code));
   });
 });

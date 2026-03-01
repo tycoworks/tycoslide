@@ -4,7 +4,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { text } from '../src/text.js';
-import { CONTENT, HALIGN, VALIGN, NODE_TYPE, TEXT_STYLE, componentRegistry, registerComponents } from 'tycoslide';
+import { CONTENT, HALIGN, VALIGN, NODE_TYPE, TEXT_STYLE, componentRegistry } from 'tycoslide';
 import { Component } from '../src/names.js';
 import type { NormalizedRun } from 'tycoslide';
 import { mockTheme, noopCanvas } from './mocks.js';
@@ -16,7 +16,7 @@ import {
 } from '../src/index.js';
 
 // Register components explicitly
-registerComponents([
+componentRegistry.register([
   textComponent, imageComponent, cardComponent, quoteComponent,
   tableComponent, codeComponent, mermaidComponent,
   lineComponent, shapeComponent, slideNumberComponent,
@@ -69,7 +69,7 @@ describe('Text', () => {
   describe('CONTENT.PROSE expansion', () => {
     const theme = themeWithAccents();
 
-    it('should be available after registerComponents()', () => {
+    it('should be available after register()', () => {
       assert.ok(componentRegistry.has(Component.Text));
     });
 
@@ -263,7 +263,7 @@ Conclusion.
   describe('CONTENT.PLAIN expansion', () => {
     const theme = themeWithAccents();
 
-    it('should be available after registerComponents()', () => {
+    it('should be available after register()', () => {
       assert.ok(componentRegistry.has(Component.Text));
     });
 

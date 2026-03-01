@@ -11,8 +11,6 @@ export * from './core/model/nodes.js';
 export {
   defineComponent,
   defineLayout,
-  registerComponents,
-  registerLayouts,
   componentRegistry,
   layoutRegistry,
   component,

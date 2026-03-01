@@ -1,7 +1,6 @@
 // tycoslide-theme-default
 // Default theme package for tycoslide
 
-import { registerComponents, registerLayouts } from 'tycoslide';
 import {
   textComponent,
   imageComponent,
@@ -39,10 +38,6 @@ export const components = [
 ];
 
 export const layouts = allLayouts;
-
-// Register on import — theme entry point is the single registration site
-registerComponents(components);
-registerLayouts(layouts);
 
 // Theme and assets
 export { theme } from './theme.js';

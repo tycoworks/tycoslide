@@ -27,22 +27,25 @@ export const RESERVED_FRONTMATTER_KEYS = new Set(['layout', 'name', 'notes'] as 
 export class Registry<TDef extends { name: string }> {
   private definitions = new Map<string, TDef>();
 
-  constructor(private label: string, private identityKey: keyof TDef) {}
+  constructor(private label: string) {}
 
   /**
-   * Register a definition.
-   * Idempotent: re-registering the same implementation is a no-op.
-   * @throws Error if a definition with this name has a different implementation
+   * Register one or more definitions.
+   * Idempotent: re-registering the same object is a no-op.
+   * @throws Error if a different definition with the same name is already registered
    */
-  register(definition: TDef): void {
-    const existing = this.definitions.get(definition.name);
-    if (existing) {
-      if (existing[this.identityKey] === definition[this.identityKey]) {
-        return;
-      }
-      throw new Error(`${this.label} '${definition.name}' already registered with different implementation`);
+  register(input: TDef | readonly TDef[]): void {
+    if (Array.isArray(input)) {
+      for (const def of input) this.register(def);
+      return;
     }
-    this.definitions.set(definition.name, definition);
+    const def = input as TDef;
+    const existing = this.definitions.get(def.name);
+    if (existing) {
+      if (existing === def) return;
+      throw new Error(`${this.label} '${def.name}' already registered`);
+    }
+    this.definitions.set(def.name, def);
   }
 
   has(name: string): boolean {
@@ -59,10 +62,6 @@ export class Registry<TDef extends { name: string }> {
 
   getRegisteredNames(): string[] {
     return Array.from(this.definitions.keys());
-  }
-
-  clear(): void {
-    this.definitions.clear();
   }
 }
 
@@ -276,11 +275,35 @@ export function defineComponent(def: any): ComponentDefinition & { schema?: z.Zo
 
 /**
  * Registry for component definitions.
- * Components are defined with `defineComponent()` and registered via `registerComponents()`.
+ * Components are defined with `defineComponent()` and registered via `componentRegistry.register()`.
  */
 class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
   constructor() {
-    super('Component', 'expand');
+    super('Component');
+  }
+
+  /**
+   * Register one or more component definitions.
+   * Validates MDAST node type uniqueness — no two components may claim the same node type.
+   */
+  override register(input: ComponentDefinition<any, any> | readonly ComponentDefinition<any, any>[]): void {
+    if (Array.isArray(input)) {
+      for (const def of input) this.register(def);
+      return;
+    }
+    const def = input as ComponentDefinition<any, any>;
+    if (def.mdast) {
+      for (const nodeType of def.mdast.nodeTypes) {
+        const existing = this.getMdastHandler(nodeType);
+        if (existing && existing.name !== def.name) {
+          throw new Error(
+            `MDAST node type '${nodeType}' already handled by '${existing.name}'. ` +
+            `Cannot register '${def.name}' for the same type.`,
+          );
+        }
+      }
+    }
+    super.register(def);
   }
 
   /**
@@ -507,53 +530,15 @@ export function defineLayout<TParams extends ScalarShape, const TSlots extends r
 
 /**
  * Registry for layout definitions.
- * Layouts are defined with `defineLayout()` and registered via `registerLayouts()`.
+ * Layouts are defined with `defineLayout()` and registered via `layoutRegistry.register()`.
  */
 class LayoutRegistry extends Registry<LayoutDefinition> {
   constructor() {
-    super('Layout', 'render');
+    super('Layout');
   }
 }
 
 export const layoutRegistry = new LayoutRegistry();
-
-// ============================================
-// REGISTRATION FUNCTIONS
-// ============================================
-
-/**
- * Register a set of component definitions.
- * Clears the registry first — the provided set is the complete component universe.
- * MDAST handler uniqueness is validated during registration.
- */
-export function registerComponents(definitions: readonly (ComponentDefinition<any, any> & { schema?: z.ZodTypeAny })[]): void {
-  componentRegistry.clear();
-  for (const def of definitions) {
-    if (def.mdast) {
-      for (const nodeType of def.mdast.nodeTypes) {
-        const existing = componentRegistry.getMdastHandler(nodeType);
-        if (existing) {
-          throw new Error(
-            `MDAST node type '${nodeType}' already handled by '${existing.name}'. ` +
-            `Cannot register '${def.name}' for the same type.`,
-          );
-        }
-      }
-    }
-    componentRegistry.register(def);
-  }
-}
-
-/**
- * Register a set of layout definitions.
- * Clears the registry first — the provided set is the complete layout universe.
- */
-export function registerLayouts(definitions: LayoutDefinition[]): void {
-  layoutRegistry.clear();
-  for (const def of definitions) {
-    layoutRegistry.register(def);
-  }
-}
 
 // ============================================
 // DSL HELPER

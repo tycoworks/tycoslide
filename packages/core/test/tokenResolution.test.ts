@@ -4,7 +4,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { componentRegistry, defineComponent, component, registerComponents } from '../src/core/rendering/registry.js';
+import { componentRegistry, defineComponent, component } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { HALIGN, VALIGN } from '../src/core/model/types.js';
 import { schema } from '../src/core/model/schema.js';
@@ -33,7 +33,7 @@ const tokenTestComponent = defineComponent({
   }),
 });
 
-registerComponents([tokenTestComponent]);
+componentRegistry.register(tokenTestComponent);
 
 /** Create a theme with tokens for the test component. */
 function tokenTheme(config: Record<string, unknown>) {
