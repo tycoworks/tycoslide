@@ -137,13 +137,22 @@ describe('Text', () => {
       assert.deepStrictEqual(runs[1].bullet, { type: 'number', color: '000000' });
     });
 
-    it('should add breakLine between paragraphs', async () => {
+    it('should add paragraphBreak between paragraphs', async () => {
       const runs = await expandProseRuns('First paragraph.\n\nSecond paragraph.');
       assert.strictEqual(runs.length, 2);
       assert.strictEqual(runs[0].text, 'First paragraph.');
-      assert.strictEqual(runs[0].breakLine, undefined);
+      assert.strictEqual(runs[0].paragraphBreak, undefined);
       assert.strictEqual(runs[1].text, 'Second paragraph.');
-      assert.strictEqual(runs[1].breakLine, true);
+      assert.strictEqual(runs[1].paragraphBreak, true);
+    });
+
+    it('should produce softBreak (not paragraphBreak) for markdown hard break', async () => {
+      // Markdown hard break: two spaces or backslash at end of line
+      const runs = await expandProseRuns('Line one\\\nLine two');
+      // Should have 3 runs: "Line one", empty softBreak sentinel, "Line two"
+      const softBreakRun = runs.find((r: NormalizedRun) => r.softBreak === true);
+      assert.ok(softBreakRun, 'Should have a run with softBreak: true');
+      assert.strictEqual(softBreakRun!.paragraphBreak, undefined, 'softBreak run must NOT have paragraphBreak: true');
     });
 
     it('should expand accent directives using theme colors', async () => {
@@ -187,7 +196,7 @@ describe('Text', () => {
       assert.strictEqual(runs[2].text, 'Bullet two');
       assert.deepStrictEqual(runs[2].bullet, { color: '000000' });
       assert.strictEqual(runs[3].text, 'Conclusion.');
-      assert.strictEqual(runs[3].breakLine, true);
+      assert.strictEqual(runs[3].paragraphBreak, true);
     });
 
     it('should handle bold inside bullet', async () => {

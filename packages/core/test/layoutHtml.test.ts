@@ -238,16 +238,16 @@ describe('HTML Measurement Generation', () => {
   });
 
   describe('Paragraph spacing', () => {
-    test('breakLine generates margin-top spacing', async () => {
-      const node = textNode([{ text: 'Para 1' }, { text: 'Para 2', breakLine: true }]);
+    test('paragraphBreak generates margin-top spacing', async () => {
+      const node = textNode([{ text: 'Para 1' }, { text: 'Para 2', paragraphBreak: true }]);
       const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes('margin-top:1em'), 'breakLine should generate margin-top:1em for paragraph spacing');
+      assert.ok(html.includes('margin-top:1em'), 'paragraphBreak should generate margin-top:1em for paragraph spacing');
     });
 
-    test('breakLine does not generate br tag', async () => {
-      const node = textNode([{ text: 'Para 1' }, { text: 'Para 2', breakLine: true }]);
+    test('paragraphBreak does not generate br tag', async () => {
+      const node = textNode([{ text: 'Para 1' }, { text: 'Para 2', paragraphBreak: true }]);
       const { html } = await genHTML(node, bounds);
-      assert.ok(!html.includes('<br'), 'breakLine should not use <br> — uses margin-top instead');
+      assert.ok(!html.includes('<br'), 'paragraphBreak should not use <br> — uses margin-top instead');
     });
   });
 

@@ -750,9 +750,9 @@ describe('buildTextFragments()', () => {
     assert.strictEqual(fragments[0].options?.bullet, true);
   });
 
-  test('shifts breakLine to previous fragment for pptxgenjs', () => {
+  test('shifts paragraphBreak to previous fragment for pptxgenjs', () => {
     const fragments = builder.buildTextFragments(
-      [{ text: 'Line 1' }, { text: 'Line 2', breakLine: true }],
+      [{ text: 'Line 1' }, { text: 'Line 2', paragraphBreak: true }],
       mockTextStyle,
       '000000'
     );
@@ -765,7 +765,7 @@ describe('buildTextFragments()', () => {
 
   test('adds paraSpaceBefore on paragraph break fragment', () => {
     const fragments = builder.buildTextFragments(
-      [{ text: 'Paragraph 1' }, { text: 'Paragraph 2', breakLine: true }],
+      [{ text: 'Paragraph 1' }, { text: 'Paragraph 2', paragraphBreak: true }],
       mockTextStyle,
       '000000'
     );
@@ -780,7 +780,7 @@ describe('buildTextFragments()', () => {
 
   test('paraSpaceBefore matches fontSize for any text style', () => {
     const fragments = builder.buildTextFragments(
-      [{ text: 'A' }, { text: 'B', breakLine: true }],
+      [{ text: 'A' }, { text: 'B', paragraphBreak: true }],
       mockTextStyle,
       '000000'
     );
@@ -789,9 +789,9 @@ describe('buildTextFragments()', () => {
     assert.strictEqual(fragments[1].options?.paraSpaceBefore, h1FontSize);
   });
 
-  test('does not apply breakLine when bullet present', () => {
+  test('does not apply paragraphBreak when bullet present', () => {
     const fragments = builder.buildTextFragments(
-      [{ text: 'Bullet', bullet: true, breakLine: true }],
+      [{ text: 'Bullet', bullet: true, paragraphBreak: true }],
       mockTextStyle,
       '000000'
     );
@@ -801,9 +801,9 @@ describe('buildTextFragments()', () => {
     assert.strictEqual(fragments[0].options?.breakLine, undefined);
   });
 
-  test('does not add paraSpaceBefore when bullet present with breakLine', () => {
+  test('does not add paraSpaceBefore when bullet present with paragraphBreak', () => {
     const fragments = builder.buildTextFragments(
-      [{ text: 'Bullet', bullet: true, breakLine: true }],
+      [{ text: 'Bullet', bullet: true, paragraphBreak: true }],
       mockTextStyle,
       '000000'
     );
@@ -815,8 +815,8 @@ describe('buildTextFragments()', () => {
     const fragments = builder.buildTextFragments(
       [
         { text: 'Para 1' },
-        { text: 'Para 2', breakLine: true },
-        { text: 'Para 3', breakLine: true },
+        { text: 'Para 2', paragraphBreak: true },
+        { text: 'Para 3', paragraphBreak: true },
       ],
       mockTextStyle,
       '000000'
@@ -829,6 +829,22 @@ describe('buildTextFragments()', () => {
     // breakLine shifted to previous fragments
     assert.strictEqual(fragments[0].options?.breakLine, true);
     assert.strictEqual(fragments[1].options?.breakLine, true);
+  });
+
+  test('softBreak sets softBreakBefore on its own fragment without shifting to previous', () => {
+    const fragments = builder.buildTextFragments(
+      [{ text: 'Line 1' }, { text: 'Line 2', softBreak: true }],
+      mockTextStyle,
+      '000000'
+    );
+
+    assert.strictEqual(fragments.length, 2);
+    // softBreakBefore goes directly on the lineBreak fragment (no backward shift)
+    assert.strictEqual(fragments[1].options?.softBreakBefore, true);
+    // Previous fragment must NOT get breakLine
+    assert.strictEqual(fragments[0].options?.breakLine, undefined);
+    // lineBreak fragment must NOT get paraSpaceBefore
+    assert.strictEqual(fragments[1].options?.paraSpaceBefore, undefined);
   });
 
   test('color override applies to all fragments', () => {
@@ -956,7 +972,7 @@ describe('buildTextFragments with multi-paragraph runs', () => {
   test('two paragraphs produce correct PPTX fragments with paragraph spacing', () => {
     const runs: NormalizedRun[] = [
       { text: 'First paragraph.' },
-      { text: 'Second paragraph.', breakLine: true },
+      { text: 'Second paragraph.', paragraphBreak: true },
     ];
     const fragments = builder.buildTextFragments(runs, mockTextStyle, '000000');
 
@@ -976,8 +992,8 @@ describe('buildTextFragments with multi-paragraph runs', () => {
   test('three paragraphs chain correctly', () => {
     const runs: NormalizedRun[] = [
       { text: 'Para 1.' },
-      { text: 'Para 2.', breakLine: true },
-      { text: 'Para 3.', breakLine: true },
+      { text: 'Para 2.', paragraphBreak: true },
+      { text: 'Para 3.', paragraphBreak: true },
     ];
     const fragments = builder.buildTextFragments(runs, mockTextStyle, '000000');
 

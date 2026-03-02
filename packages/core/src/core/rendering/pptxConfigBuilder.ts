@@ -99,7 +99,8 @@ export class PptxConfigBuilder {
       if (run.bold) options.bold = true;
       if (run.italic) options.italic = true;
       // Record break-before for post-processing shift
-      if (run.breakLine && !run.bullet) breakBeforeIndices.add(i);
+      if (run.paragraphBreak && !run.bullet) breakBeforeIndices.add(i);
+      if (run.softBreak) options.softBreakBefore = true;
       if (run.bullet) options.bullet = run.bullet;
       return { text: run.text, options };
     });

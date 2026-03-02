@@ -424,7 +424,8 @@ export interface NormalizedRun {
   // Paragraph-level options (for rich text / markdown support)
   bold?: boolean;              // Shorthand for weight: 'bold'
   italic?: boolean;            // Italic text
-  breakLine?: boolean;         // Force new paragraph before this run
+  paragraphBreak?: boolean;    // Force new paragraph before this run
+  softBreak?: boolean;         // Soft line break (like <br>, no paragraph spacing)
   bullet?: boolean | { type?: string; color?: string };  // Bullet marker
 }
 

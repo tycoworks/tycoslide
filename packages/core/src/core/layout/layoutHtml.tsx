@@ -430,7 +430,7 @@ export function styleNode(
 // ============================================
 
 /** Render text runs to an HTML string for innerHTML injection.
- *  Groups runs into lines: bullet/breakLine starts a new group, plain runs join current.
+ *  Groups runs into lines: bullet/paragraphBreak starts a new group, plain runs join current.
  *  Consecutive bullet lines are wrapped in a single <ul> with native disc markers. */
 function renderTextRunsToHTML(
   runs: NormalizedRun[],
@@ -442,7 +442,7 @@ function renderTextRunsToHTML(
   const groups: NormalizedRun[][] = [];
   let currentGroup: NormalizedRun[] = [];
   for (const run of runs) {
-    if (run.bullet || run.breakLine) {
+    if (run.bullet || run.paragraphBreak || run.softBreak) {
       if (currentGroup.length > 0) groups.push(currentGroup);
       currentGroup = [run];
     } else {
@@ -470,8 +470,10 @@ function renderTextRunsToHTML(
       bulletBuffer.push(`<li style="margin:0;padding:0">${spans}</li>`);
     } else {
       flushBullets();
-      if (first.breakLine) {
+      if (first.paragraphBreak) {
         parts.push(`<div style="margin-top:1em">${spans}</div>`);
+      } else if (first.softBreak) {
+        parts.push(`<br/><span>${spans}</span>`);
       } else {
         parts.push(`<span>${spans}</span>`);
       }

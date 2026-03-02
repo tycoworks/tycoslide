@@ -119,7 +119,7 @@ function mdastToRuns(
         const paragraphRuns: NormalizedRun[] = [];
         transformInline(node.children, colors, paragraphRuns, {});
         if (paragraphRuns.length > 0) {
-          paragraphRuns[0] = { ...paragraphRuns[0], breakLine: true };
+          paragraphRuns[0] = { ...paragraphRuns[0], paragraphBreak: true };
           runs.push(...paragraphRuns);
         }
       } else {
@@ -207,10 +207,18 @@ function transformInline(
         );
         break;
       }
-      case SYNTAX.IMAGE:
-        throw new Error('Images cannot be embedded inline in text.');
+      case SYNTAX.BREAK:
+        runs.push({ text: '', softBreak: true, ...defaults });
+        break;
       default:
-        throw new Error(`Unsupported inline markdown type "${node.type}".`);
+        // Graceful degradation: recurse into children or extract value.
+        // Handles: inlineCode, link, delete, html, image, footnoteReference, etc.
+        if ('children' in node && Array.isArray((node as any).children)) {
+          transformInline((node as any).children as PhrasingContent[], colors, runs, defaults);
+        } else if ('value' in node && typeof (node as any).value === 'string') {
+          runs.push({ text: (node as any).value, ...defaults });
+        }
+        break;
     }
   }
 }

@@ -66,13 +66,13 @@ describe('normalizeContent()', () => {
     assert.deepStrictEqual(result, [{ text: 'item', bullet: true }]);
   });
 
-  test('TextRun with breakLine property passes through', () => {
+  test('TextRun with paragraphBreak property passes through', () => {
     const result = normalizeContent([
-      { text: 'line1', breakLine: true },
+      { text: 'line1', paragraphBreak: true },
       { text: 'line2' },
     ]);
     assert.deepStrictEqual(result, [
-      { text: 'line1', breakLine: true },
+      { text: 'line1', paragraphBreak: true },
       { text: 'line2' },
     ]);
   });
@@ -85,7 +85,7 @@ describe('normalizeContent()', () => {
         italic: true,
         color: '0000FF',
         bullet: true,
-        breakLine: true,
+        paragraphBreak: true,
       },
     ]);
     assert.deepStrictEqual(result, [
@@ -95,7 +95,7 @@ describe('normalizeContent()', () => {
         italic: true,
         color: '0000FF',
         bullet: true,
-        breakLine: true,
+        paragraphBreak: true,
       },
     ]);
   });
