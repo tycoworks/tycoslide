@@ -10,14 +10,15 @@ import path from 'path';
 import { renderToString } from 'hono/jsx/dom/server';
 import type { FC } from 'hono/jsx';
 import type { Page } from 'playwright';
-import type { ElementNode, TextNode, ImageNode, LineNode, ContainerNode, StackNode, SlideNumberNode, TableNode, TableCellData } from '../model/nodes.js';
+import type { ElementNode, TextNode, ImageNode, LineNode, ShapeNode, ContainerNode, StackNode, SlideNumberNode, TableNode, TableCellData } from '../model/nodes.js';
 import { NODE_TYPE } from '../model/nodes.js';
-import type { Theme, TextStyle, FontFamily, FontWeight, VerticalAlignment, HorizontalAlignment, SizeValue, NormalizedRun, Direction } from '../model/types.js';
-import { FONT_WEIGHT, SIZE, VALIGN, HALIGN, DIRECTION } from '../model/types.js';
+import type { Theme, TextStyle, FontFamily, FontWeight, VerticalAlignment, HorizontalAlignment, SizeValue, NormalizedRun, Direction, DashType } from '../model/types.js';
+import { FONT_WEIGHT, SIZE, VALIGN, HALIGN, DIRECTION, BORDER_STYLE, SHAPE, DASH_TYPE } from '../model/types.js';
 import type { Bounds } from '../model/bounds.js';
 import { normalizeContent, fontWeightToNumeric, getFontFromFamily } from '../../utils/font.js';
 import { readImageDimensions } from '../../utils/image.js';
 import { inToPx, ptToPx } from '../../utils/units.js';
+import { bgColor } from '../../utils/color.js';
 
 // ============================================
 // TYPES
@@ -248,9 +249,13 @@ function styleText(
   const isInRow = parent.direction === DIRECTION.ROW;
 
   const styles: Record<string, string | number> = {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: vAlignToJustify(node.vAlign),
     fontFamily: `'${defaultFont.name}'`,
     fontSize: `${fontSizePx}px`,
     lineHeight: `${cssLineHeight}`,
+    color: `#${node.color}`,
     textAlign,
     whiteSpace: 'pre-wrap',
     wordWrap: 'break-word',
@@ -263,7 +268,7 @@ function styleText(
     nodeId,
     styles,
     children: [],
-    innerHTML: renderTextRunsToHTML(runs, style, defaultWeight, bulletIndentPx),
+    innerHTML: `<div>${renderTextRunsToHTML(runs, style, defaultWeight, bulletIndentPx, node.color)}</div>`,
   };
 }
 
@@ -312,7 +317,26 @@ function styleImage(
       : proportionalCap;
   }
 
-  return { nodeId, styles, children: [] };
+  // Add image preview: works in browser (file:// origin), degrades gracefully in Playwright.
+  // Position absolute so the img's intrinsic size doesn't influence the container's flex basis.
+  styles.position = 'relative';
+  styles.overflow = 'hidden';
+  const imgSrc = path.resolve(node.src);
+  return { nodeId, styles, children: [], innerHTML: `<img src="${imgSrc}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block" />` };
+}
+
+/** Map pptxgenjs dash types to closest CSS border-style */
+function dashTypeToCss(dt: DashType): string {
+  switch (dt) {
+    case DASH_TYPE.SOLID: return 'solid';
+    case DASH_TYPE.DASH:
+    case DASH_TYPE.LG_DASH:
+    case DASH_TYPE.DASH_DOT:
+    case DASH_TYPE.LG_DASH_DOT: return 'dashed';
+    case DASH_TYPE.SYS_DASH:
+    case DASH_TYPE.SYS_DOT: return 'dotted';
+    default: return 'solid';
+  }
 }
 
 function styleLine(
@@ -320,12 +344,54 @@ function styleLine(
   parent: ParentCtx,
   nodeId: string,
 ): StyledNode {
-  const borderWidthPx = ptToPx(node.width);
+  const widthPx = ptToPx(node.width);
+  const color = `#${node.color}`;
+  const borderStyle = dashTypeToCss(node.dashType);
 
   if (parent.direction === DIRECTION.ROW) {
-    return { nodeId, styles: { flex: `0 0 ${borderWidthPx}px`, alignSelf: 'stretch' }, children: [] };
+    // Vertical separator in a row
+    return { nodeId, styles: {
+      flex: `0 0 ${widthPx}px`, alignSelf: 'stretch',
+      borderLeft: `${widthPx}px ${borderStyle} ${color}`,
+    }, children: [] };
   }
-  return { nodeId, styles: { flex: `0 0 ${borderWidthPx}px`, width: '100%' }, children: [] };
+  // Horizontal separator in a column
+  return { nodeId, styles: {
+    flex: `0 0 ${widthPx}px`, width: '100%',
+    borderTop: `${widthPx}px ${borderStyle} ${color}`,
+  }, children: [] };
+}
+
+function styleShape(
+  node: ShapeNode,
+  nodeId: string,
+): StyledNode {
+  const styles: Record<string, string | number> = {
+    width: '100%',
+    height: '100%',
+  };
+  // Fill: use rgba for partial opacity so borders stay fully opaque
+  styles.backgroundColor = bgColor(node.fill.color, node.fill.opacity);
+  // Shape type: ellipse gets border-radius: 50%
+  if (node.shape === SHAPE.ELLIPSE) {
+    styles.borderRadius = '50%';
+  } else if (node.cornerRadius) {
+    styles.borderRadius = `${inToPx(node.cornerRadius)}px`;
+  }
+  const bw = ptToPx(node.border.width);
+  if (bw > 0) {
+    const bc = `#${node.border.color}`;
+    if (node.border.top === false || node.border.right === false
+        || node.border.bottom === false || node.border.left === false) {
+      styles.borderTop = node.border.top !== false ? `${bw}px solid ${bc}` : 'none';
+      styles.borderRight = node.border.right !== false ? `${bw}px solid ${bc}` : 'none';
+      styles.borderBottom = node.border.bottom !== false ? `${bw}px solid ${bc}` : 'none';
+      styles.borderLeft = node.border.left !== false ? `${bw}px solid ${bc}` : 'none';
+    } else {
+      styles.border = `${bw}px solid ${bc}`;
+    }
+  }
+  return { nodeId, styles, children: [] };
 }
 
 function styleSlideNumber(
@@ -336,6 +402,7 @@ function styleSlideNumber(
   const fontSizePx = ptToPx(style.fontSize);
   const defaultFont = getFontFromFamily(style.fontFamily, style.defaultWeight);
 
+  const textAlign = node.hAlign === HALIGN.RIGHT ? 'right' : node.hAlign === HALIGN.CENTER ? 'center' : 'left';
   return {
     nodeId,
     styles: {
@@ -344,6 +411,8 @@ function styleSlideNumber(
       justifyContent: vAlignToJustify(node.vAlign),
       fontFamily: `'${defaultFont.name}'`,
       fontSize: `${fontSizePx}px`,
+      color: `#${node.color}`,
+      textAlign,
       whiteSpace: 'nowrap',
       flex: '0 0 auto',
     },
@@ -366,22 +435,91 @@ function styleTable(
   const cellPaddingPx = inToPx(cellPadding);
   const isInRow = parent.direction === DIRECTION.ROW;
 
+  const borderWidthPx = ptToPx(node.borderWidth);
+  const borderColor = `#${node.borderColor}`;
+  const headerRows = node.headerRows ?? 0;
+  const headerCols = node.headerColumns ?? 0;
+
   const styles: Record<string, string | number> = {
     display: 'grid',
     gridTemplateColumns: `repeat(${numCols}, 1fr)`,
     ...(isInRow ? { flex: '1 1 0', minWidth: 0 } : { width: '100%' }),
   };
 
+  // Outer border (FULL, HORIZONTAL, VERTICAL get outer border; INTERNAL and NONE do not)
+  if (node.borderStyle !== BORDER_STYLE.NONE && node.borderStyle !== BORDER_STYLE.INTERNAL) {
+    const bs = `${borderWidthPx}px solid ${borderColor}`;
+    if (node.borderStyle === BORDER_STYLE.HORIZONTAL) {
+      styles.borderTop = bs;
+      styles.borderBottom = bs;
+    } else if (node.borderStyle === BORDER_STYLE.VERTICAL) {
+      styles.borderLeft = bs;
+      styles.borderRight = bs;
+    } else {
+      // FULL
+      styles.outline = `${borderWidthPx}px solid ${borderColor}`;
+      styles.outlineOffset = `-${borderWidthPx}px`;
+    }
+  }
+
+  const numRows = cellNodes.length;
+
   // Each cell: padding wrapper → text StyledNode
-  const cellChildren: StyledNode[] = cellNodes.flatMap((row: TextNode[]) =>
-    row.map((cellTextNode: TextNode) => {
+  const cellChildren: StyledNode[] = cellNodes.flatMap((row: TextNode[], ri: number) =>
+    row.map((cellTextNode: TextNode, colIdx: number) => {
       const cellNodeId = generateNodeId(idCtx);
       nodeIds.set(cellTextNode, cellNodeId);
+
+      const cellStyles: Record<string, string | number> = {
+        padding: `${cellPaddingPx}px`,
+      };
+
+      // Cell borders — directional based on borderStyle
+      const bs = `${borderWidthPx}px solid ${borderColor}`;
+      switch (node.borderStyle) {
+        case BORDER_STYLE.FULL:
+        case BORDER_STYLE.INTERNAL: {
+          // All internal lines. Use border on right/bottom edges to avoid doubling.
+          if (ri < numRows - 1) cellStyles.borderBottom = bs;
+          if (colIdx < numCols - 1) cellStyles.borderRight = bs;
+          break;
+        }
+        case BORDER_STYLE.HORIZONTAL: {
+          if (ri < numRows - 1) cellStyles.borderBottom = bs;
+          break;
+        }
+        case BORDER_STYLE.VERTICAL: {
+          if (colIdx < numCols - 1) cellStyles.borderRight = bs;
+          break;
+        }
+        // NONE: no cell borders
+      }
+
+      // Cell background: cell-level fill overrides, then header/non-header cascade
+      const rawCell = node.rows[ri][colIdx];
+      if (rawCell.fill) {
+        cellStyles.backgroundColor = `#${rawCell.fill}`;
+      } else {
+        const isHeader = ri < headerRows || colIdx < headerCols;
+        if (isHeader && node.headerBackground) {
+          cellStyles.backgroundColor = bgColor(node.headerBackground, node.headerBackgroundOpacity);
+        } else if (!isHeader && node.cellBackground && node.cellBackgroundOpacity > 0) {
+          cellStyles.backgroundColor = bgColor(node.cellBackground, node.cellBackgroundOpacity);
+        }
+      }
+
+      // colspan / rowspan: CSS grid span
+      if (rawCell.colspan && rawCell.colspan > 1) {
+        cellStyles.gridColumn = `span ${rawCell.colspan}`;
+      }
+      if (rawCell.rowspan && rawCell.rowspan > 1) {
+        cellStyles.gridRow = `span ${rawCell.rowspan}`;
+      }
 
       const textStyled = styleText(cellTextNode, { direction: DIRECTION.COLUMN, heightIsConstrained: false }, cellNodeId, fontRatios);
       return {
         nodeId: '',
-        styles: { padding: `${cellPaddingPx}px` },
+        styles: cellStyles,
         children: [textStyled],
       };
     })
@@ -389,6 +527,7 @@ function styleTable(
 
   return { nodeId, styles, children: cellChildren };
 }
+
 
 // ─── The Dispatch ─────────────────────────────
 
@@ -415,7 +554,7 @@ export function styleNode(
     case NODE_TYPE.LINE:
       return styleLine(node as LineNode, parent, nodeId);
     case NODE_TYPE.SHAPE:
-      return { nodeId, styles: { width: '100%', height: '100%' }, children: [] };
+      return styleShape(node as ShapeNode, nodeId);
     case NODE_TYPE.SLIDE_NUMBER:
       return styleSlideNumber(node as SlideNumberNode, nodeId);
     case NODE_TYPE.TABLE:
@@ -437,6 +576,7 @@ function renderTextRunsToHTML(
   style: TextStyle,
   defaultWeight: FontWeight,
   bulletIndentPx: number,
+  textColor: string,
 ): string {
   // Step 1: Group runs into renderable lines
   const groups: NormalizedRun[][] = [];
@@ -467,7 +607,19 @@ function renderTextRunsToHTML(
     const spans = group.map(run => renderRunSpanHTML(run, style, defaultWeight)).join('');
 
     if (first.bullet) {
-      bulletBuffer.push(`<li style="margin:0;padding:0">${spans}</li>`);
+      // Bullet marker color: set on <li> so ::marker inherits it.
+      // When bullet color differs from text color, wrap content in a span
+      // that restores the text color (otherwise spans without explicit run.color
+      // would inherit the marker color from the <li>).
+      const bulletColor = typeof first.bullet === 'object' && 'color' in first.bullet && first.bullet.color
+        ? first.bullet.color : null;
+      const liStyle = bulletColor
+        ? `margin:0;padding:0;color:#${bulletColor}`
+        : 'margin:0;padding:0';
+      const content = bulletColor
+        ? `<span style="color:#${textColor}">${spans}</span>`
+        : spans;
+      bulletBuffer.push(`<li style="${liStyle}">${content}</li>`);
     } else {
       flushBullets();
       if (first.paragraphBreak) {
@@ -621,7 +773,7 @@ export function generateLayoutHTML(
     const styled = styleNode(slide.tree, rootCtx, idCtx, nodeIds, fontNormalRatios);
 
     return (
-      <div class="root" data-slide-index={`${i}`} style={{ width: `${widthPx}px`, height: `${heightPx}px` }}>
+      <div class="root" data-slide-index={`${i}`} style={{ width: `${widthPx}px`, height: `${heightPx}px`, backgroundColor: `#${theme.colors.background}` }}>
         <StyledDiv node={styled} />
       </div>
     );
@@ -651,11 +803,8 @@ export function generateLayoutHTML(
 
   const html = '<!DOCTYPE html>' + renderToString(fullJsx);
 
-  // Always build per-slide debug HTML with nav bar
-  const debugCSS = `
-    [data-node-id] { outline: 1px solid rgba(255, 0, 0, 0.3); }
-    body { overflow: auto; }
-  `;
+  // Build per-slide preview HTML with nav bar
+  const previewCSS = `body { overflow: auto; }`;
   const perSlideHtml = slideJsx.map((jsx, i) => {
     const label = labels[i];
     const prevLabel = i > 0 ? labels[i - 1] : null;
@@ -672,7 +821,7 @@ export function generateLayoutHTML(
       <html>
         <head>
           <meta charset="UTF-8" />
-          <style dangerouslySetInnerHTML={{ __html: baseCSS + debugCSS }} />
+          <style dangerouslySetInnerHTML={{ __html: baseCSS + previewCSS }} />
         </head>
         <body>
           <div dangerouslySetInnerHTML={{ __html: navBarHtml }} />

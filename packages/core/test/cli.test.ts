@@ -62,6 +62,6 @@ describe('tycoslide CLI', () => {
 
   test('build --help shows options', () => {
     const { stdout } = run(['build', '--help']);
-    assert.ok(stdout.includes('--output') || stdout.includes('-o'), 'should show output option');
+    assert.ok(stdout.includes('--preview') || stdout.includes('-p'), 'should show preview option');
   });
 });

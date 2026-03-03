@@ -1,5 +1,6 @@
 // Build Command
-// Reads a markdown file, resolves its theme, compiles to slides, and writes PPTX.
+// Reads a markdown file, resolves its theme, compiles to slides,
+// and writes either PPTX or navigable HTML preview.
 
 import fs from 'fs';
 import path from 'path';
@@ -10,9 +11,9 @@ import { parseSlideDocument } from '../core/markdown/slideParser.js';
 import { loadTheme } from './themeLoader.js';
 
 export interface BuildOptions {
-  output?: string;
+  preview?: boolean;
   force?: boolean;
-  debug?: string;
+  debug?: boolean;
   notes: boolean;
   renderScale?: number;
 }
@@ -31,7 +32,7 @@ export async function build(inputPath: string, options: BuildOptions): Promise<v
 
   const source = fs.readFileSync(resolved, 'utf-8');
 
-  // Extract theme name from CLI flag or global frontmatter
+  // Extract theme name from global frontmatter
   const parsed = parseSlideDocument(source);
   const themeName = typeof parsed.global.theme === 'string' ? parsed.global.theme : undefined;
   if (!themeName) {
@@ -49,26 +50,41 @@ export async function build(inputPath: string, options: BuildOptions): Promise<v
     assets: loaded.assets,
   });
 
-  // Determine output path
-  const outputPath = options.output
-    ?? path.join(path.dirname(resolved), path.basename(resolved, path.extname(resolved)) + '.pptx');
+  const basename = path.basename(resolved, path.extname(resolved));
+  const outputDir = path.resolve(`${basename}-html`);
+  fs.mkdirSync(outputDir, { recursive: true });
 
-  // Resolve debug directory
-  const debugDir = options.debug ? path.resolve(options.debug) : undefined;
-  if (debugDir) {
-    fs.mkdirSync(debugDir, { recursive: true });
-  }
+  if (options.preview) {
+    // Preview mode: HTML only, skip PPTX
+    const result = await pres.preview({ outputDir, renderScale: options.renderScale });
 
-  try {
-    await pres.writeFile(outputPath, { force: options.force, debugDir, includeNotes: options.notes, renderScale: options.renderScale });
-    console.log(`Written: ${outputPath}`);
-  } catch (error) {
-    if (error instanceof LayoutValidationError) {
-      console.error(error.message);
-      process.exitCode = 1;
+    if (result.validationErrors.length > 0) {
+      console.warn(`${result.validationErrors.length} validation warning(s)`);
+      for (const err of result.validationErrors) {
+        const name = err.slideName ? ` "${err.slideName}"` : '';
+        console.warn(`  Slide ${err.slideIndex + 1}${name}`);
+      }
+    }
+
+    if (result.outputFiles.length > 0) {
+      console.log(`Preview: ${result.outputFiles[0]}`);
     } else {
-      throw error;
+      console.log(`Preview: ${outputDir}`);
+    }
+  } else {
+    // Build mode: PPTX + HTML
+    const outputPath = path.resolve(`${basename}.pptx`);
+
+    try {
+      await pres.writeFile(outputPath, { force: options.force, outputDir, includeNotes: options.notes, renderScale: options.renderScale });
+      console.log(`Written: ${outputPath}`);
+    } catch (error) {
+      if (error instanceof LayoutValidationError) {
+        console.error(error.message);
+        process.exitCode = 1;
+      } else {
+        throw error;
+      }
     }
   }
 }
-

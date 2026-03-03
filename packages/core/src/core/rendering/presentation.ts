@@ -10,7 +10,7 @@ import type { ElementNode, PositionedNode } from '../model/nodes.js';
 import { Bounds } from '../model/bounds.js';
 import { PptxRenderer } from './pptxRenderer.js';
 import { LayoutValidator, LayoutValidationError } from '../layout/validator.js';
-import type { SlideValidationResult } from '../layout/validator.js';
+import type { SlideValidationResult, ValidationResult } from '../layout/validator.js';
 import { log } from '../../utils/log.js';
 import { componentRegistry, type ExpansionContext } from './registry.js';
 import { LayoutPipeline } from '../layout/pipeline.js';
@@ -33,6 +33,19 @@ interface DeferredSlide {
 export interface WriteResult {
   outputPath: string;
   validationErrors: SlideValidationResult[];
+  slides: SlideLayout[];
+}
+
+// ============================================
+// SLIDE LAYOUT TYPES
+// ============================================
+
+export interface SlideLayout {
+  slideIndex: number;
+  slideName?: string;
+  positioned: PositionedNode;
+  bounds: Bounds;
+  validationResult?: ValidationResult;
 }
 
 // ============================================
@@ -83,13 +96,16 @@ export class Presentation {
    * By default, throws LayoutValidationError if any slides have validation errors.
    * Pass `force: true` to write the PPTX despite errors (for visual debugging).
    */
-  async writeFile(fileName: string, options: { includeNotes?: boolean; force?: boolean; debugDir?: string; renderScale?: number } = {}): Promise<WriteResult> {
+  async writeFile(fileName: string, options: { includeNotes?: boolean; force?: boolean; outputDir: string; renderScale?: number }): Promise<WriteResult> {
     const resolvedPath = path.resolve(fileName);
     log.pptx._('writing to: %s', resolvedPath);
 
     let validationErrors: SlideValidationResult[] = [];
+    let slides: SlideLayout[] = [];
     if (this.deferredSlides.length > 0) {
-      validationErrors = await this.processDeferredSlides(options.debugDir, options.renderScale);
+      const result = await this.processDeferredSlides({ outputDir: options.outputDir, renderScale: options.renderScale });
+      validationErrors = result.validationErrors;
+      slides = result.slides;
     }
 
     // Gate: fail by default if there are validation errors
@@ -105,16 +121,21 @@ export class Presentation {
       console.warn(new LayoutValidationError(validationErrors, this.slideCount).message);
     }
 
-    return { outputPath: resolvedPath, validationErrors };
+    return { outputPath: resolvedPath, validationErrors, slides };
   }
 
   /**
    * Process all deferred slides using browser-based layout.
    * The browser computes all positions via CSS flexbox.
+   * When preview is true, skips renderer calls and does not clear deferredSlides.
    * @internal
    */
-  private async processDeferredSlides(debugDir?: string, renderScale?: number): Promise<SlideValidationResult[]> {
-    const pipeline = new LayoutPipeline(renderScale ? { deviceScaleFactor: renderScale } : undefined);
+  private async processDeferredSlides(options: {
+    outputDir: string;
+    renderScale?: number;
+    preview?: boolean;
+  }): Promise<{ slides: SlideLayout[]; validationErrors: SlideValidationResult[]; outputFiles: string[] }> {
+    const pipeline = new LayoutPipeline(options?.renderScale ? { deviceScaleFactor: options.renderScale } : undefined);
 
     try {
       // Launch browser early so components can use it during expansion
@@ -130,7 +151,7 @@ export class Presentation {
         },
       };
 
-      // Phase 1: Collect all masters and their content
+      // Phase 1: Expand masters (collect unique masters, expand component trees, collect measurements)
       log.pptx._('PIPELINE: Collecting masters and slides...');
       const pendingMasters = new Map<string, {
         master: Master;
@@ -138,7 +159,6 @@ export class Presentation {
         contentBounds: Bounds;
       }>();
 
-      // First pass: identify unique masters and get their bounds
       for (const deferred of this.deferredSlides) {
         const { master } = deferred.slide;
         if (master && !this.masters.has(master.name) && !pendingMasters.has(master.name)) {
@@ -154,7 +174,7 @@ export class Presentation {
         }
       }
 
-      // Phase 2: Expand all slides and collect measurements
+      // Phase 2: Expand slides (expand each slide's component tree, collect measurements)
       log.pptx._('PIPELINE: Expanding %d slides...', this.deferredSlides.length);
       const expandedSlides: Array<{
         deferred: DeferredSlide;
@@ -193,25 +213,29 @@ export class Presentation {
         expandedSlides.push({ deferred, expanded, bounds });
       }
 
-      // Phase 3: Execute browser measurements (computes ALL positions)
+      // Phase 3: Browser measurement (execute all measurements)
       log.pptx._('PIPELINE: Measuring %d slides...', pipeline.measurementCount);
-      await pipeline.executeMeasurements(this._theme, debugDir);
+      await pipeline.executeMeasurements(this._theme, options.outputDir);
 
-      // Phase 4: Define masters (build positioned trees from browser measurements)
+      // Phase 4: Compute master layouts
+      const masterPositionedMap = new Map<string, PositionedNode>();
       for (const [name, { master, content, contentBounds }] of pendingMasters) {
         log.pptx.master('DEFINE master "%s" (with measurements)', name);
         const positioned = pipeline.computeLayout(content, this.masterBounds);
-        this.renderer.defineMaster({ name, background: master.background, content: positioned }, this._theme);
-        this.masters.set(name, { contentBounds, positioned });
+        masterPositionedMap.set(name, positioned);
+        if (!options?.preview) {
+          this.renderer.defineMaster({ name, background: master.background, content: positioned }, this._theme);
+          this.masters.set(name, { contentBounds, positioned });
+        }
       }
 
-      // Phase 5: Process each slide with browser-computed positions
+      // Phase 5: Compute slide layouts + validate
       log.pptx._('PIPELINE: Processing slides with measurements...');
+      const slides: SlideLayout[] = [];
       const validationErrors: SlideValidationResult[] = [];
 
       for (const { deferred, expanded, bounds } of expandedSlides) {
         const { slide, slideIndex } = deferred;
-        const { master } = slide;
 
         // Build positioned tree — computation crashes are still fatal
         let positioned: PositionedNode;
@@ -230,29 +254,58 @@ export class Presentation {
           height: bounds.y + bounds.h,  // Absolute bottom edge
         });
         const result = validator.validate(positioned);
+
+        const slideLayout: SlideLayout = {
+          slideIndex,
+          slideName: slide.name,
+          positioned,
+          bounds,
+        };
+
         if (result.overflows.length > 0 || result.overlaps.length > 0 || result.boundsEscapes.length > 0) {
+          slideLayout.validationResult = result;
           validationErrors.push({ slideIndex, slideName: slide.name, result });
         }
 
-        // Always render to pptx (pptxgenjs needs sequential slides)
-        this.renderer.renderSlide(positioned, {
-          masterName: master?.name,
-          masterContent: master ? this.masters.get(master.name)!.positioned : undefined,
-          background: slide.background,
-          notes: slide.notes,
-        }, this._theme);
+        slides.push(slideLayout);
 
-        log.pptx.slide('  slide #%d complete', slideIndex);
+        if (!options?.preview) {
+          const { master } = slide;
+          const masterPositioned = master
+            ? (masterPositionedMap.get(master.name) ?? this.masters.get(master.name)?.positioned)
+            : undefined;
+
+          this.renderer.renderSlide(positioned, {
+            masterName: master?.name,
+            masterContent: masterPositioned,
+            background: slide.background,
+            notes: slide.notes,
+          }, this._theme);
+
+          log.pptx.slide('  slide #%d complete', slideIndex);
+        }
       }
 
-      // Clear deferred slides
-      this.deferredSlides = [];
+      if (!options?.preview) {
+        this.deferredSlides = [];
+      }
 
-      return validationErrors;
+      const outputFiles = pipeline.getOutputFiles();
+      return { slides, validationErrors, outputFiles };
 
     } finally {
-      // Clean up
       await pipeline.close();
     }
+  }
+
+  /**
+   * Preview all deferred slides — runs the full layout pipeline without generating PPTX.
+   * Returns positioned node trees and validation results.
+   *
+   * When outputDir is provided, writes navigable HTML files for browser preview.
+   * Does NOT clear deferred slides — writeFile() can still be called after.
+   */
+  async preview(options: { outputDir: string; renderScale?: number }): Promise<{ slides: SlideLayout[]; validationErrors: SlideValidationResult[]; outputFiles: string[] }> {
+    return this.processDeferredSlides({ outputDir: options.outputDir, renderScale: options.renderScale, preview: true });
   }
 }

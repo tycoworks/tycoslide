@@ -7,9 +7,9 @@ import * as assert from 'node:assert';
 import { generateLayoutHTML } from '../src/core/layout/layoutHtml.js';
 import { Bounds } from '../src/core/model/bounds.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
-import type { ElementNode, TextNode, ContainerNode, StackNode, ImageNode, LineNode, ShapeNode } from '../src/core/model/nodes.js';
+import type { ElementNode, TextNode, ContainerNode, StackNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, TableCellData } from '../src/core/model/nodes.js';
 import type { NormalizedRun } from '../src/core/model/types.js';
-import { HALIGN, VALIGN, SIZE, SHAPE, DASH_TYPE, TEXT_STYLE, DIRECTION } from '../src/core/model/types.js';
+import { HALIGN, VALIGN, SIZE, SHAPE, DASH_TYPE, TEXT_STYLE, DIRECTION, BORDER_STYLE } from '../src/core/model/types.js';
 import { mockTheme as createMockTheme } from './mocks.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -134,6 +134,54 @@ function shapeNode(shapeName: string): ShapeNode {
     fill: { color: '666666', opacity: 100 },
     border: { color: 'FFFFFF', width: 0 },
     cornerRadius: 0,
+  };
+}
+
+/** Slide number node */
+function slideNumberNode(opts?: Partial<Omit<SlideNumberNode, 'type'>>): SlideNumberNode {
+  return {
+    type: NODE_TYPE.SLIDE_NUMBER,
+    style: TEXT_STYLE.FOOTER,
+    resolvedStyle: mockTheme.textStyles[TEXT_STYLE.FOOTER],
+    color: '666666',
+    hAlign: HALIGN.RIGHT,
+    vAlign: VALIGN.MIDDLE,
+    ...opts,
+  };
+}
+
+/** Table cell helper */
+function cell(text: string, opts?: Partial<TableCellData>): TableCellData {
+  return {
+    content: [{ text }],
+    color: '000000',
+    textStyle: TEXT_STYLE.BODY,
+    resolvedStyle: bodyStyle,
+    hAlign: HALIGN.LEFT,
+    vAlign: VALIGN.MIDDLE,
+    lineHeightMultiplier: 1.0,
+    ...opts,
+  };
+}
+
+/** Table node */
+function tableNode(rows: TableCellData[][], opts?: Partial<Omit<TableNode, 'type' | 'rows'>>): TableNode {
+  return {
+    type: NODE_TYPE.TABLE,
+    rows,
+    borderStyle: BORDER_STYLE.FULL,
+    borderColor: '333333',
+    borderWidth: 1,
+    headerBackground: 'AAAAAA',
+    headerBackgroundOpacity: 100,
+    headerTextStyle: TEXT_STYLE.BODY,
+    cellBackground: 'EEEEEE',
+    cellBackgroundOpacity: 0,
+    cellTextStyle: TEXT_STYLE.BODY,
+    cellPadding: 0.1,
+    hAlign: HALIGN.LEFT,
+    vAlign: VALIGN.MIDDLE,
+    ...opts,
   };
 }
 
@@ -652,6 +700,483 @@ describe('HTML Measurement Generation', () => {
       const imgMatch = html.match(/data-node-id="node-4"[^>]*style="([^"]*)"/);
       assert.ok(imgMatch, 'Should find image (node-4)');
       assert.ok(imgMatch![1].includes('min-height:0'), 'Image in column inside constrained row should get min-height:0');
+    });
+  });
+
+  // ============================================
+  // Property gap coverage tests
+  // ============================================
+
+  describe('Shape rendering', () => {
+    test('shape with full opacity uses hex background color', async () => {
+      const node = colNode(stackNode(
+        shapeNode(SHAPE.ROUND_RECT),
+        colNode(textNode('Content')),
+      ));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('background-color:#666666'), 'Shape with 100% opacity should use hex color');
+    });
+
+    test('shape with partial opacity uses rgba background', async () => {
+      const shape: ShapeNode = {
+        type: NODE_TYPE.SHAPE,
+        shape: SHAPE.ROUND_RECT,
+        fill: { color: 'BDB0E0', opacity: 20 },
+        border: { color: 'FFFFFF', width: 0 },
+        cornerRadius: 0,
+      };
+      const node = colNode(stackNode(shape, colNode(textNode('Content'))));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('rgba(189,176,224,0.2)'), 'Shape with 20% opacity should use rgba');
+      assert.ok(!html.includes('opacity:0.2'), 'Should NOT use CSS opacity (makes borders transparent too)');
+    });
+
+    test('ellipse shape gets border-radius: 50%', async () => {
+      const shape: ShapeNode = {
+        type: NODE_TYPE.SHAPE,
+        shape: SHAPE.ELLIPSE,
+        fill: { color: 'FF0000', opacity: 100 },
+        border: { color: 'FFFFFF', width: 0 },
+        cornerRadius: 0,
+      };
+      const node = colNode(stackNode(shape, colNode(textNode('Circle'))));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('border-radius:50%'), 'Ellipse should get border-radius:50%');
+    });
+
+    test('shape with cornerRadius gets pixel border-radius', async () => {
+      const shape: ShapeNode = {
+        type: NODE_TYPE.SHAPE,
+        shape: SHAPE.ROUND_RECT,
+        fill: { color: '333333', opacity: 100 },
+        border: { color: 'FFFFFF', width: 0 },
+        cornerRadius: 0.1,
+      };
+      const node = colNode(stackNode(shape, colNode(textNode('Rounded'))));
+      const { html } = await genHTML(node, bounds);
+      // 0.1 inches * 96 DPI ≈ 9.6px (floating point may add trailing digits)
+      assert.ok(html.match(/border-radius:9\.6\d*px/), 'cornerRadius should map to pixels (0.1in ≈ 9.6px)');
+    });
+
+    test('shape with border renders solid border', async () => {
+      const shape: ShapeNode = {
+        type: NODE_TYPE.SHAPE,
+        shape: SHAPE.ROUND_RECT,
+        fill: { color: '333333', opacity: 100 },
+        border: { color: 'AABBCC', width: 2 },
+        cornerRadius: 0,
+      };
+      const node = colNode(stackNode(shape, colNode(textNode('Bordered'))));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('#AABBCC'), 'Border color should appear in HTML');
+      assert.ok(html.includes('solid'), 'Border should be solid');
+    });
+
+    test('shape with selective borders renders per-side', async () => {
+      const shape: ShapeNode = {
+        type: NODE_TYPE.SHAPE,
+        shape: SHAPE.ROUND_RECT,
+        fill: { color: '333333', opacity: 100 },
+        border: { color: 'FF0000', width: 2, top: true, right: false, bottom: true, left: false },
+        cornerRadius: 0,
+      };
+      const node = colNode(stackNode(shape, colNode(textNode('Selective'))));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('border-right:none'), 'Right border should be none');
+      assert.ok(html.includes('border-left:none'), 'Left border should be none');
+    });
+  });
+
+  describe('SlideNumber rendering', () => {
+    test('slideNumber renders with correct color', async () => {
+      const node = rowNode(textNode('Footer'), slideNumberNode({ color: 'BDB0E0' }));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('color:#BDB0E0'), 'SlideNumber should render with its color');
+    });
+
+    test('slideNumber with hAlign RIGHT renders text-align:right', async () => {
+      const node = rowNode(textNode('Footer'), slideNumberNode({ hAlign: HALIGN.RIGHT }));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('text-align:right'), 'SlideNumber should have text-align:right');
+    });
+
+    test('slideNumber with hAlign CENTER renders text-align:center', async () => {
+      const node = rowNode(textNode('Footer'), slideNumberNode({ hAlign: HALIGN.CENTER }));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('text-align:center'), 'SlideNumber with CENTER should have text-align:center');
+    });
+
+    test('slideNumber with vAlign MIDDLE renders safe center', async () => {
+      const node = rowNode(textNode('Footer'), slideNumberNode({ vAlign: VALIGN.MIDDLE }));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('safe center'), 'SlideNumber with MIDDLE should use safe center');
+    });
+
+    test('slideNumber uses flex: 0 0 auto (content-sized)', async () => {
+      const node = rowNode(textNode('Footer'), slideNumberNode());
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('flex:0 0 auto'), 'SlideNumber should be content-sized (flex:0 0 auto)');
+    });
+
+    test('slideNumber renders placeholder text', async () => {
+      const node = rowNode(slideNumberNode());
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('999'), 'SlideNumber should render placeholder text 999');
+    });
+  });
+
+  describe('Table rendering', () => {
+    test('table uses CSS grid with correct column count', async () => {
+      const rows = [
+        [cell('A'), cell('B'), cell('C')],
+        [cell('D'), cell('E'), cell('F')],
+      ];
+      const node = colNode(tableNode(rows));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('display:grid'), 'Table should use CSS grid');
+      assert.ok(html.includes('repeat(3'), 'Table with 3 columns should have repeat(3, ...)');
+    });
+
+    test('table FULL border style renders outline', async () => {
+      const rows = [[cell('A'), cell('B')]];
+      const node = colNode(tableNode(rows, { borderStyle: BORDER_STYLE.FULL }));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('outline:'), 'FULL border should use outline for outer border');
+    });
+
+    test('table NONE border style renders no outline', async () => {
+      const rows = [[cell('A'), cell('B')]];
+      const node = colNode(tableNode(rows, { borderStyle: BORDER_STYLE.NONE }));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(!html.includes('outline:'), 'NONE border should have no outline');
+    });
+
+    test('table HORIZONTAL border style renders top/bottom only', async () => {
+      const rows = [[cell('A'), cell('B')]];
+      const node = colNode(tableNode(rows, { borderStyle: BORDER_STYLE.HORIZONTAL }));
+      const { html } = await genHTML(node, bounds);
+      // The outer table div should have border-top and border-bottom
+      const tableMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
+      assert.ok(tableMatch, 'Should find table div');
+      assert.ok(tableMatch![1].includes('border-top:'), 'HORIZONTAL should have top border');
+      assert.ok(tableMatch![1].includes('border-bottom:'), 'HORIZONTAL should have bottom border');
+    });
+
+    test('table header row gets background color', async () => {
+      const rows = [
+        [cell('Header 1'), cell('Header 2')],
+        [cell('Data 1'), cell('Data 2')],
+      ];
+      const node = colNode(tableNode(rows, {
+        headerRows: 1,
+        headerBackground: 'FF0000',
+        headerBackgroundOpacity: 100,
+      }));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('#FF0000'), 'Header cells should have background color');
+    });
+
+    test('table non-header cells get cellBackground when opacity > 0', async () => {
+      const rows = [
+        [cell('Header')],
+        [cell('Data')],
+      ];
+      const node = colNode(tableNode(rows, {
+        headerRows: 1,
+        headerBackground: 'FF0000',
+        headerBackgroundOpacity: 100,
+        cellBackground: '00FF00',
+        cellBackgroundOpacity: 50,
+      }));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('rgba(0,255,0,0.5)'), 'Non-header cell should get cellBackground with rgba opacity');
+    });
+
+    test('table cell-level fill overrides header background', async () => {
+      const rows = [
+        [cell('Header', { fill: 'AABBCC' }), cell('Header 2')],
+        [cell('Data')],
+      ];
+      const node = colNode(tableNode(rows, {
+        headerRows: 1,
+        headerBackground: 'FF0000',
+        headerBackgroundOpacity: 100,
+      }));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('#AABBCC'), 'Cell-level fill should override header background');
+    });
+
+    test('table colspan renders grid-column span', async () => {
+      const rows = [
+        [cell('Spanning', { colspan: 2 }), cell('Normal')],
+        [cell('A'), cell('B'), cell('C')],
+      ];
+      const node = colNode(tableNode(rows));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('grid-column:span 2'), 'colspan:2 should generate grid-column:span 2');
+    });
+
+    test('table rowspan renders grid-row span', async () => {
+      const rows = [
+        [cell('Tall', { rowspan: 2 }), cell('B')],
+        [cell('C'), cell('D')],
+      ];
+      const node = colNode(tableNode(rows));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('grid-row:span 2'), 'rowspan:2 should generate grid-row:span 2');
+    });
+
+    test('table in row gets flex: 1 1 0 (shares width)', async () => {
+      const rows = [[cell('A')]];
+      const node = rowNode(textNode('Left'), tableNode(rows));
+      const { html } = await genHTML(node, bounds);
+      // Find the table div (node-2 = text, node-3 = table)
+      const tableMatch = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
+      assert.ok(tableMatch, 'Should find the table div');
+      assert.ok(tableMatch![1].includes('flex:1 1 0'), 'Table in row should share width (flex:1 1 0)');
+    });
+  });
+
+  describe('Bullet marker color', () => {
+    test('bullet with explicit color sets color on li for ::marker', async () => {
+      const node = textNode([
+        { text: 'Item', bullet: { color: 'FF00FF' } },
+      ]);
+      const { html } = await genHTML(node, bounds);
+      const liMatch = html.match(/<li[^>]*style="([^"]*)"/);
+      assert.ok(liMatch, 'Should find <li> with style');
+      assert.ok(liMatch![1].includes('color:#FF00FF'), 'li should have bullet marker color');
+    });
+
+    test('bullet with color wraps content in span restoring text color', async () => {
+      const node = textNode([
+        { text: 'Item', bullet: { color: 'FF00FF' } },
+      ], { color: 'FFFFFF' });
+      const { html } = await genHTML(node, bounds);
+      const liMatch = html.match(/<li[^>]*>(.*?)<\/li>/);
+      assert.ok(liMatch, 'Should find <li> content');
+      assert.ok(liMatch![1].includes('<span style="color:#FFFFFF">'), 'Bullet content should be wrapped in span with text color');
+    });
+
+    test('bullet without explicit color does not add marker color', async () => {
+      const node = textNode([
+        { text: 'Item', bullet: true },
+      ]);
+      const { html } = await genHTML(node, bounds);
+      const liMatch = html.match(/<li[^>]*style="([^"]*)"/);
+      assert.ok(liMatch, 'Should find <li> with style');
+      // Should only have margin:0;padding:0 — no color
+      assert.ok(liMatch![1] === 'margin:0;padding:0', 'li without bullet color should only have margin/padding reset');
+    });
+
+    test('bullet with color preserves run-level colors alongside text color restore', async () => {
+      const node = textNode([
+        { text: 'Bold:', bold: true, color: 'FF0000', bullet: { color: 'FF00FF' } },
+        { text: ' plain text' },
+      ], { color: 'FFFFFF' });
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('color:#FF0000'), 'Bold run should keep its explicit color');
+      assert.ok(html.includes('color:#FFFFFF'), 'Text color should be restored for plain runs');
+    });
+  });
+
+  describe('SoftBreak rendering', () => {
+    test('softBreak renders as br tag (not paragraph spacing)', async () => {
+      const node = textNode([
+        { text: 'Line one' },
+        { text: 'Line two', softBreak: true },
+      ]);
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('<br/>'), 'softBreak should render as <br/>');
+    });
+
+    test('softBreak does not add paragraph margin', async () => {
+      const node = textNode([
+        { text: 'Line one' },
+        { text: 'Line two', softBreak: true },
+      ]);
+      const { html } = await genHTML(node, bounds);
+      assert.ok(!html.includes('margin-top:1em'), 'softBreak should NOT have paragraph margin');
+    });
+
+    test('softBreak is distinct from paragraphBreak', async () => {
+      const node = textNode([
+        { text: 'Line one' },
+        { text: 'Soft', softBreak: true },
+        { text: 'Para', paragraphBreak: true },
+      ]);
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('<br/>'), 'softBreak should produce <br/>');
+      assert.ok(html.includes('margin-top:1em'), 'paragraphBreak should produce margin-top:1em');
+    });
+  });
+
+  describe('Line dashType rendering', () => {
+    test('solid line in column uses border-top with solid style', async () => {
+      const node = colNode(
+        textNode('Above'),
+        lineNode(),
+        textNode('Below'),
+      );
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('border-top:'), 'Line in column should use border-top');
+      assert.ok(html.includes('solid'), 'Solid line should have solid border style');
+    });
+
+    test('dashed line renders border-style: dashed', async () => {
+      const line: LineNode = { type: NODE_TYPE.LINE, color: '666666', width: 1, dashType: DASH_TYPE.DASH };
+      const node = colNode(textNode('Above'), line, textNode('Below'));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('dashed'), 'DASH type should render as dashed border');
+    });
+
+    test('dotted line renders border-style: dotted', async () => {
+      const line: LineNode = { type: NODE_TYPE.LINE, color: '666666', width: 1, dashType: DASH_TYPE.SYS_DOT };
+      const node = colNode(textNode('Above'), line, textNode('Below'));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('dotted'), 'SYS_DOT type should render as dotted border');
+    });
+
+    test('line in row uses border-left (vertical separator)', async () => {
+      const line: LineNode = { type: NODE_TYPE.LINE, color: 'FF0000', width: 2, dashType: DASH_TYPE.DASH };
+      const node = rowNode(textNode('Left'), line, textNode('Right'));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('border-left:'), 'Line in row should use border-left (vertical separator)');
+      assert.ok(html.includes('dashed'), 'Dashed line in row should have dashed style');
+      assert.ok(html.includes('#FF0000'), 'Line should use its color');
+    });
+
+    test('LG_DASH maps to dashed', async () => {
+      const line: LineNode = { type: NODE_TYPE.LINE, color: '000000', width: 1, dashType: DASH_TYPE.LG_DASH };
+      const node = colNode(line);
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('dashed'), 'LG_DASH should map to dashed');
+    });
+
+    test('SYS_DASH maps to dotted', async () => {
+      const line: LineNode = { type: NODE_TYPE.LINE, color: '000000', width: 1, dashType: DASH_TYPE.SYS_DASH };
+      const node = colNode(line);
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('dotted'), 'SYS_DASH should map to dotted');
+    });
+  });
+
+  describe('Table headerColumns', () => {
+    test('headerColumns marks left column cells as header with background', async () => {
+      const rows = [
+        [cell('Row Label'), cell('Data 1')],
+        [cell('Row Label 2'), cell('Data 2')],
+      ];
+      const node = colNode(tableNode(rows, {
+        headerRows: 0,
+        headerColumns: 1,
+        headerBackground: 'AA00AA',
+        headerBackgroundOpacity: 100,
+      }));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('#AA00AA'), 'Left column cells should get header background from headerColumns');
+    });
+
+    test('headerColumns + headerRows both apply header background', async () => {
+      const rows = [
+        [cell('Corner'), cell('Col Header')],
+        [cell('Row Header'), cell('Data')],
+      ];
+      const node = colNode(tableNode(rows, {
+        headerRows: 1,
+        headerColumns: 1,
+        headerBackground: 'BB00BB',
+        headerBackgroundOpacity: 100,
+      }));
+      const { html } = await genHTML(node, bounds);
+      // All cells except bottom-right "Data" should be header
+      const bgMatches = html.match(/#BB00BB/g);
+      assert.ok(bgMatches && bgMatches.length === 3, `Expected 3 header-bg cells (corner + col header + row header), got ${bgMatches?.length}`);
+    });
+  });
+
+  describe('Table cellBackground at full opacity', () => {
+    test('cellBackgroundOpacity 100 uses hex color (not rgba)', async () => {
+      const rows = [
+        [cell('Header')],
+        [cell('Data')],
+      ];
+      const node = colNode(tableNode(rows, {
+        headerRows: 1,
+        headerBackground: 'FF0000',
+        headerBackgroundOpacity: 100,
+        cellBackground: '00FF00',
+        cellBackgroundOpacity: 100,
+      }));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('#00FF00'), 'Full opacity cellBackground should use hex color');
+      assert.ok(!html.includes('rgba(0,255,0'), 'Full opacity should NOT use rgba');
+    });
+  });
+
+  describe('escapeHtml edge cases', () => {
+    test('HTML entities in text are escaped (ampersand, angle brackets)', async () => {
+      const node = textNode([{ text: 'A < B & C > D "quoted"' }]);
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('&amp;'), 'Ampersand should be escaped to &amp;');
+      assert.ok(html.includes('&lt;'), 'Less-than should be escaped to &lt;');
+      assert.ok(html.includes('&gt;'), 'Greater-than should be escaped to &gt;');
+      assert.ok(html.includes('&quot;'), 'Double quote should be escaped to &quot;');
+      assert.ok(!html.includes('< B'), 'Raw < should not appear in output');
+    });
+
+    test('escaping preserves measurement accuracy (no double-encoding)', async () => {
+      const node = textNode([{ text: "it's a test" }]);
+      const { html } = await genHTML(node, bounds);
+      // Hono JSX auto-escapes children, but our text goes through dangerouslySetInnerHTML
+      // via renderRunSpanHTML. The escapeHtml function runs once — verify no double-encoding.
+      assert.ok(!html.includes('&amp;#'), 'Should NOT have double-encoded entities');
+      assert.ok(!html.includes('&amp;amp;'), 'Should NOT have double-encoded ampersands');
+    });
+  });
+
+  describe('perSlideHtml preview nav bar', () => {
+    test('single slide has no prev/next links', async () => {
+      const node = colNode(textNode('Solo'));
+      const { perSlideHtml } = await genHTML(node, bounds);
+      assert.strictEqual(perSlideHtml.length, 1, 'Should have exactly 1 per-slide HTML');
+      assert.ok(perSlideHtml[0].includes('<strong>test-slide</strong>'), 'Nav bar should show slide label');
+      assert.ok(!perSlideHtml[0].includes('prev'), 'Single slide should have no prev link');
+      assert.ok(!perSlideHtml[0].includes('next'), 'Single slide should have no next link');
+    });
+
+    test('multi-slide generates prev/next navigation links', async () => {
+      const slides = [
+        { tree: colNode(textNode('Slide 1')) as ElementNode, bounds },
+        { tree: colNode(textNode('Slide 2')) as ElementNode, bounds },
+        { tree: colNode(textNode('Slide 3')) as ElementNode, bounds },
+      ];
+      const result = generateLayoutHTML(slides, mockTheme, ['slide-1', 'slide-2', 'slide-3']);
+      assert.strictEqual(result.perSlideHtml.length, 3);
+
+      // First slide: no prev, has next
+      assert.ok(!result.perSlideHtml[0].includes('prev'), 'First slide should not have prev link');
+      assert.ok(result.perSlideHtml[0].includes('next'), 'First slide should have next link');
+      assert.ok(result.perSlideHtml[0].includes('slide-2.html'), 'First slide next should link to slide-2.html');
+
+      // Middle slide: has prev and next
+      assert.ok(result.perSlideHtml[1].includes('prev'), 'Middle slide should have prev link');
+      assert.ok(result.perSlideHtml[1].includes('next'), 'Middle slide should have next link');
+      assert.ok(result.perSlideHtml[1].includes('slide-1.html'), 'Middle slide prev should link to slide-1.html');
+      assert.ok(result.perSlideHtml[1].includes('slide-3.html'), 'Middle slide next should link to slide-3.html');
+
+      // Last slide: has prev, no next
+      assert.ok(result.perSlideHtml[2].includes('prev'), 'Last slide should have prev link');
+      assert.ok(!result.perSlideHtml[2].includes('next'), 'Last slide should not have next link');
+      assert.ok(result.perSlideHtml[2].includes('slide-2.html'), 'Last slide prev should link to slide-2.html');
+    });
+
+    test('perSlideHtml is full HTML document with doctype', async () => {
+      const node = colNode(textNode('Content'));
+      const { perSlideHtml } = await genHTML(node, bounds);
+      assert.ok(perSlideHtml[0].startsWith('<!DOCTYPE html>'), 'Should start with DOCTYPE');
+      assert.ok(perSlideHtml[0].includes('<html>'), 'Should contain html tag');
+      assert.ok(perSlideHtml[0].includes('<body>'), 'Should contain body tag');
     });
   });
 });

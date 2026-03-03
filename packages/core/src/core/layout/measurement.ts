@@ -43,8 +43,8 @@ export class LayoutMeasurer {
   async measureLayout(
     slides: Array<{ tree: ElementNode; bounds: Bounds; label: string }>,
     theme: Theme,
-    debugDir?: string,
-  ): Promise<Map<ElementNode, Bounds>> {
+    outputDir: string,
+  ): Promise<{ measurements: Map<ElementNode, Bounds>; outputFiles: string[] }> {
     if (!this.page) {
       throw new Error('Measurer not initialized. Call init() first.');
     }
@@ -60,11 +60,12 @@ export class LayoutMeasurer {
     const labels = slides.map(s => s.label);
     const { html, slideNodeIds, perSlideHtml } = generateLayoutHTML(slides, theme, labels, this.fontNormalRatios);
 
-    if (debugDir) {
-      for (let i = 0; i < perSlideHtml.length; i++) {
-        const label = labels[i]!;
-        fs.writeFileSync(path.join(debugDir, `${label}.html`), perSlideHtml[i]);
-      }
+    const outputFiles: string[] = [];
+    for (let i = 0; i < perSlideHtml.length; i++) {
+      const label = labels[i]!;
+      const filePath = path.join(outputDir, `${label}.html`);
+      fs.writeFileSync(filePath, perSlideHtml[i]!);
+      outputFiles.push(filePath);
     }
 
     // One setContent, one font preload
@@ -81,11 +82,9 @@ export class LayoutMeasurer {
       throw new Error(`Font verification failed — these fonts did not load: ${failedFonts.join(', ')}`);
     }
 
-    if (debugDir) {
-      const screenshotPath = path.join(debugDir, 'screenshot.png');
-      await this.page!.screenshot({ path: screenshotPath, fullPage: true });
-      log.layout.measure('saved debug files to %s', debugDir);
-    }
+    const screenshotPath = path.join(outputDir, 'screenshot.png');
+    await this.page!.screenshot({ path: screenshotPath, fullPage: true });
+    log.layout.measure('saved output files to %s', outputDir);
     if (log.layout.measure.enabled) {
       await this.logNodeDimensions();
     }
@@ -141,7 +140,7 @@ export class LayoutMeasurer {
       }
     }
 
-    return allResults;
+    return { measurements: allResults, outputFiles };
   }
 
   /** Log measured dimensions for every node across all slides. */

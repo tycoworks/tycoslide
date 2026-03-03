@@ -2,7 +2,7 @@
 // Main barrel export
 
 // Core
-export { Presentation, type WriteResult } from './core/rendering/presentation.js';
+export { Presentation, type WriteResult, type SlideLayout } from './core/rendering/presentation.js';
 export { LayoutValidationError, type SlideValidationResult, type ValidationResult } from './core/layout/validator.js';
 export {
   HALIGN, HALIGN_VALUES,
@@ -88,6 +88,9 @@ export { parseSlideDocument, FrontmatterParseError, type ParsedDocument, type Ra
 
 // Unit utilities (for component authors that resolve theme values during expand)
 export { resolveGap, inToPx } from './utils/units.js';
+
+// Color utilities
+export { hexToRgba, bgColor } from './utils/color.js';
 
 // Schema helpers (domain-specific wrappers for layout Zod schemas)
 export { schema, type ScalarParam } from './core/model/schema.js';

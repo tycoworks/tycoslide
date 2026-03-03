@@ -53,6 +53,7 @@ export class LayoutPipeline {
   private measurer = new LayoutMeasurer(this.browser);
   private renderer: HtmlRenderer;
   private measurements: Map<ElementNode, Bounds> | null = null;
+  private outputFiles: string[] = [];
 
   constructor(options?: { deviceScaleFactor?: number }) {
     this.renderer = new HtmlRenderer(this.browser, options);
@@ -87,9 +88,10 @@ export class LayoutPipeline {
    * Execute all collected measurements using the browser.
    * Stores results internally for use by computeLayout.
    */
-  async executeMeasurements(theme: Theme, debugDir?: string): Promise<void> {
+  async executeMeasurements(theme: Theme, outputDir: string): Promise<void> {
     if (this.slides.length === 0) {
       this.measurements = new Map();
+      this.outputFiles = [];
       return;
     }
 
@@ -100,7 +102,14 @@ export class LayoutPipeline {
     }
 
     // Measure ALL slides in a single browser round-trip
-    this.measurements = await this.measurer.measureLayout(this.slides, theme, debugDir);
+    const { measurements, outputFiles } = await this.measurer.measureLayout(this.slides, theme, outputDir);
+    this.measurements = measurements;
+    this.outputFiles = outputFiles;
+  }
+
+  /** Get output files written during measurement */
+  getOutputFiles(): string[] {
+    return this.outputFiles;
   }
 
   /**
@@ -135,6 +144,7 @@ export class LayoutPipeline {
     await this.browser.close();
     this.slides = [];
     this.measurements = null;
+    this.outputFiles = [];
   }
 
   // ============================================
