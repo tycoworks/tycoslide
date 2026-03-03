@@ -1,15 +1,10 @@
 # Markdown Syntax
 
-Learn the essential Markdown syntax for authoring tycoslide presentations.
+tycoslide uses GitHub Flavored Markdown (GFM) for slide content — the same dialect used in GitHub README files, with extensions for directives and inline accents.
 
 ## Slide Structure
 
-Every slide has two parts:
-
-1. **Frontmatter** (YAML configuration)
-2. **Body** (Markdown content)
-
-Slides are separated by `---` (three hyphens on their own line).
+Slides are separated by `---` on its own line. Each slide has a YAML frontmatter block followed by optional body content.
 
 ```markdown
 ---
@@ -38,8 +33,6 @@ theme: tycoslide-theme-default
 ---
 ```
 
-This sets the theme for all slides.
-
 ## Per-Slide Frontmatter
 
 Each slide must specify a layout and any layout-specific parameters:
@@ -61,8 +54,6 @@ Common parameters:
 
 ## Text Formatting
 
-### Bold and Italic
-
 ```markdown
 **Bold text**
 _Italic text_
@@ -83,31 +74,13 @@ Accent names are defined by your theme as an open set — any key in the theme's
 
 ### Headings
 
-Use headings for structure within slide body:
-
 ```markdown
 ## Main Point
 
 ### Supporting Detail
-
-Regular paragraph text.
-```
-
-Headings are styled according to your theme's text styles.
-
-### Paragraphs
-
-Separate paragraphs with blank lines:
-
-```markdown
-First paragraph.
-
-Second paragraph.
 ```
 
 ## Lists
-
-### Bullet Lists
 
 ```markdown
 - First item
@@ -115,33 +88,13 @@ Second paragraph.
 - Third item
 ```
 
-Or use asterisks:
-
-```markdown
-* First item
-* Second item
-* Third item
-```
-
-### Numbered Lists
-
 ```markdown
 1. First step
 2. Second step
 3. Third step
 ```
 
-Numbers auto-increment, so you can use `1.` for all items:
-
-```markdown
-1. First step
-1. Second step
-1. Third step
-```
-
-### Nested Lists
-
-Indent with 2 spaces:
+Nested lists use 2-space indent:
 
 ```markdown
 - Top level
@@ -152,16 +105,7 @@ Indent with 2 spaces:
 
 ## Tables
 
-Use GitHub Flavored Markdown (GFM) table syntax:
-
-```markdown
-| Header 1 | Header 2 | Header 3 |
-|----------|----------|----------|
-| Cell 1   | Cell 2   | Cell 3   |
-| Cell 4   | Cell 5   | Cell 6   |
-```
-
-Alignment is supported:
+Standard GFM (GitHub Flavored Markdown) table syntax with optional per-column alignment:
 
 ```markdown
 | Left | Center | Right |
@@ -172,8 +116,6 @@ Alignment is supported:
 For styled tables, use the `:::table` directive (see [Components](./components.md)).
 
 ## Speaker Notes
-
-Add speaker notes in frontmatter:
 
 ```markdown
 ---
@@ -187,38 +129,11 @@ notes: |
 Slide content here.
 ```
 
-Use `|` for multi-line notes. For single-line notes:
-
-```markdown
-notes: This is a brief note.
-```
-
 Notes appear in PowerPoint's presenter view.
 
-## Slide Separators
+## Code Blocks
 
-Use `---` on its own line to separate slides:
-
-```markdown
----
-layout: body
-title: First Slide
----
-
-Content.
-
----
-layout: body
-title: Second Slide
----
-
-More content.
-```
-
-The separator must:
-- Be on its own line
-- Have exactly three hyphens
-- Have no spaces before or after
+Fenced code blocks (triple backticks with a language tag) compile to the `code` component, which renders syntax-highlighted code as an image. See [Components — code](./components.md#code) for supported languages and theme tokens.
 
 ## Complete Example
 
@@ -266,10 +181,6 @@ layout: section
 title: Next Steps
 ---
 ```
-
-Fenced code blocks (triple backticks with a language tag) compile to the `code` component, which renders syntax-highlighted code as an image. See [Components — code](./components.md#code) for supported languages and theme tokens.
-
-For component directives and parameters, see [Components](./components.md).
 
 ## Related
 

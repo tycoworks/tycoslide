@@ -4,166 +4,40 @@ Complete reference for the tycoslide command-line interface.
 
 ## tycoslide build
 
-Compile Markdown to PowerPoint (PPTX).
+Compiles a Markdown file to PowerPoint. Every build also writes a `{basename}-html/` directory containing a per-slide HTML preview you can open in a browser to check how your slides look.
 
-```bash
+```
 tycoslide build <input> [options]
 ```
 
-### Arguments
+### Flags
 
-- `<input>` - Path to Markdown file (required)
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-p, --preview` | off | Skip PPTX generation; write HTML only. Validation errors become warnings instead of failures. |
+| `-f, --force` | off | Write PPTX even when layout validation errors are present. |
+| `-d, --debug` | off | Enable verbose build logging. Does not affect output files. |
+| `--render-scale <n>` | `2` | Pixel density for rendered diagrams and code blocks. `1` = draft, `2` = retina, `3` = print. |
+| `--no-notes` | notes included | Exclude speaker notes from the output PPTX. |
 
-### Options
+### Exit Codes
 
-#### `-o, --output <path>`
-
-Specify the output PPTX file path.
-
-```bash
-tycoslide build slides.md -o presentation.pptx
-```
-
-Default: Input filename with `.pptx` extension (e.g., `slides.md` → `slides.pptx`)
-
-#### `-f, --force`
-
-Write PPTX despite layout validation errors.
-
-```bash
-tycoslide build slides.md --force
-```
-
-Use this when:
-- You accept content overflow warnings
-- You want to generate output for review despite errors
-
-Default: Build fails on validation errors
-
-#### `-d, --debug <dir>`
-
-Enable debug mode and write debug HTML files to the specified directory.
-
-```bash
-tycoslide build slides.md -d debug-output
-```
-
-This creates:
-- HTML files showing layout visualization
-- Measurement data for each slide
-- Verbose logging in console
-
-Useful for:
-- Debugging layout issues
-- Understanding why content overflows
-- Seeing how elements are measured and positioned
-
-See the [Debug Workflow](#debug-workflow) section below for details on interpreting debug output.
-
-#### `--render-scale <factor>`
-
-Scale factor for rendered images (mermaid diagrams and code blocks). Use `1` for fast iteration while drafting, `2` (the default) for screen presentations, and `3` for decks that will be printed or projected at high resolution.
-
-```bash
-tycoslide build slides.md --render-scale 3
-```
-
-- `1` — Fast, draft quality
-- `2` — Retina quality (default)
-- `3` — Print quality
-
-Default: `2`
-
-#### `--no-notes`
-
-Exclude speaker notes from the output PPTX.
-
-```bash
-tycoslide build slides.md --no-notes
-```
-
-Use this when:
-- Sharing slides publicly
-- Reducing file size
-- Notes aren't needed
-
-Default: Notes are included
-
-### Examples
-
-**Basic build:**
-```bash
-tycoslide build slides.md
-```
-
-Output: `slides.pptx`
-
-**Custom output path:**
-```bash
-tycoslide build slides.md -o output/presentation.pptx
-```
-
-**Build with debug output:**
-```bash
-tycoslide build slides.md -d debug
-```
-
-Creates `debug/` directory with HTML visualization files.
-
-**Force build despite errors:**
-```bash
-tycoslide build slides.md --force
-```
-
-Generates output even if content overflows slide bounds.
-
-**Build without notes:**
-```bash
-tycoslide build slides.md --no-notes
-```
-
-**Combine options:**
-```bash
-tycoslide build slides.md -o dist/slides.pptx -d debug --no-notes
-```
-
-## Exit Codes
-
-- `0` - Success
-- `1` - Build error (parse, validation, or layout failure)
+- `0` — Success
+- `1` — Build error (parse, validation, or layout failure)
 
 For error messages and solutions, see [Troubleshooting](./troubleshooting.md).
 
-## Debug Workflow
+### Debug Workflow
 
-Use the `-d` / `--debug` flag to write HTML visualization files for each slide:
+When a slide overflows or renders incorrectly, use `--preview` to skip PPTX generation and just get the HTML:
 
 ```bash
-tycoslide build slides.md -d debug
+tycoslide build slides.md --preview
 ```
 
-This creates `debug/slide-0.html` (and one file per slide) showing bounding boxes, text measurement data, and element positioning.
+Open `slides-html/slide-N.html` in a browser to see where each element landed. Add `--debug` for verbose logging.
 
 For a full debugging walkthrough, see [Troubleshooting](./troubleshooting.md).
-
-## Environment Variables
-
-None. All configuration is via CLI options or frontmatter.
-
-## Version
-
-Check installed version:
-```bash
-tycoslide --version
-```
-
-## Help
-
-Display help:
-```bash
-tycoslide --help
-tycoslide build --help
-```
 
 ## Related
 

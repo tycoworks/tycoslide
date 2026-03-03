@@ -27,8 +27,6 @@ title: My Presentation
 ---
 ```
 
-The theme applies to all slides in the presentation.
-
 ### Available Themes
 
 **`tycoslide-theme-default`** is the currently available theme. Neutral gray surfaces with Inter font. Includes 19 layouts and all built-in components. See [Layouts](./layouts.md) for the full layout reference.
@@ -55,8 +53,6 @@ See the [theme source](../packages/theme-default/src/theme.ts) for all default v
 
 ## Extending an Existing Theme
 
-### Quick Extension Pattern
-
 Start here when you need brand colors or fonts but the default layout and component structure works. Import the default theme and spread it with your overrides:
 
 ```typescript
@@ -82,8 +78,6 @@ theme: my-theme
 ---
 
 ### Overriding Colors
-
-Replace brand colors while inheriting everything else:
 
 ```typescript
 import { theme as defaultTheme } from 'tycoslide-theme-default';
@@ -198,9 +192,7 @@ const myTheme: Theme = {
 };
 ```
 
-Spacing values are in inches. Multipliers (`lineSpacing`, `bulletSpacing`, `bulletIndentMultiplier`, `maxScaleFactor`) are dimensionless. The base `unit` (1/32") is used for sub-pixel precision in component layouts.
-
-`lineSpacing` sets the default line height multiplier for all text. The default theme uses `1.2`.
+Spacing values are in inches. Multipliers (`lineSpacing`, `bulletSpacing`, `bulletIndentMultiplier`, `maxScaleFactor`) are dimensionless.
 
 ---
 
@@ -244,7 +236,6 @@ const myTheme: Theme = {
     card: {
       variants: {
         ...defaultTheme.components.card.variants,
-        // New "highlight" variant
         highlight: {
           ...defaultTheme.components.card.variants.default,
           backgroundColor: 'FF6600',
@@ -304,18 +295,11 @@ components: {
 },
 ```
 
-## When to Build a Custom Theme
+---
 
-Build a custom theme when:
-- You need specific brand colors and fonts
-- You want complete design control
-- You're building a reusable theme for your organization
+## Building a Custom Theme
 
-**For quick customization:** Extend an existing theme using the spread operator pattern (see above).
-
-**For full control:** Build from scratch (this guide).
-
-## Theme Structure
+### Theme Structure
 
 A theme is a TypeScript object implementing the `Theme` interface:
 
@@ -335,18 +319,11 @@ const myTheme: Theme = {
 
 All fields are required. Missing fields cause a TypeScript compile error.
 
-## Design Token System
+tycoslide uses the W3C Design Tokens (DTCG) model: components declare required token keys, themes provide token values, and missing tokens fail the build immediately. There are no hidden defaults in framework code — all values must be explicit in the theme.
 
-tycoslide uses the W3C Design Tokens (DTCG) model:
+### Step-by-Step Guide
 
-- **Components declare** required token keys (e.g., `backgroundColor`, `textColor`)
-- **Themes provide** token values in `theme.components`
-- **No hidden defaults** in framework code — all values must be explicit
-- **Missing tokens fail the build** immediately with an actionable error
-
-## Step-by-Step Guide
-
-### 1. Set Up Files
+#### 1. Set Up Files
 
 ```bash
 mkdir my-theme
@@ -373,7 +350,7 @@ export { components } from './components.js';
 export { layouts } from './layouts.js';
 ```
 
-### 2. Define Colors
+#### 2. Define Colors
 
 ```typescript
 colors: {
@@ -406,16 +383,9 @@ colors: {
 | `subtleOpacity` | number 0–100 | Opacity for subtle backgrounds |
 | `accents` | `Record<string, string>` | Named accent colors |
 
-Accent names are open vocabulary — define whatever names make sense for your brand. Authors reference them with the `:name[text]` syntax in Markdown:
+Accent names are open vocabulary — define whatever names make sense for your brand. Authors reference them with the `:name[text]` syntax in Markdown.
 
-```markdown
-This is :teal[highlighted in teal].
-This is :blue[highlighted in blue].
-```
-
-The default theme defines `blue`, `green`, `red`, `yellow`, and `purple`. Custom themes can use any names.
-
-### 3. Configure Text Styles
+#### 3. Configure Text Styles
 
 Define styles for all eight text style names:
 
@@ -434,7 +404,7 @@ textStyles: {
 
 All eight styles (`h1`, `h2`, `h3`, `h4`, `body`, `small`, `eyebrow`, `footer`) are required.
 
-### 4. Define Spacing
+#### 4. Define Spacing
 
 ```typescript
 const unit = 0.03125; // 1/32 inch
@@ -456,7 +426,7 @@ spacing: {
 
 All dimension values are in inches. Multipliers are dimensionless.
 
-### 5. Set Slide Size
+#### 5. Set Slide Size
 
 ```typescript
 import { SLIDE_SIZE } from 'tycoslide';
@@ -479,7 +449,7 @@ Custom dimensions:
 slide: { layout: 'CUSTOM', width: 10, height: 7.5 }
 ```
 
-### 6. Configure Borders
+#### 6. Configure Borders
 
 ```typescript
 borders: {
@@ -488,9 +458,9 @@ borders: {
 }
 ```
 
-### 7. Declare Fonts
+#### 7. Declare Fonts
 
-Every font the theme uses must be listed in the `fonts` array. This manifest drives font loading for text measurement and rendering.
+Every font the theme uses must be listed in the `fonts` array:
 
 ```typescript
 fonts: [myFont, myMonoFont],
@@ -498,9 +468,9 @@ fonts: [myFont, myMonoFont],
 
 Each entry is a `FontFamily` object (see [Font Requirements](#font-requirements)). List every font family referenced in `textStyles` or component tokens.
 
-### 8. Provide Component Tokens
+#### 8. Provide Component Tokens
 
-Each component requires a `components` entry with at least a `default` variant. Every token the component declares must be present — missing tokens fail the build. The shape is the same for all components:
+Each component requires a `components` entry with at least a `default` variant. Every token the component declares must be present — missing tokens fail the build.
 
 ```typescript
 components: {
@@ -515,11 +485,13 @@ components: {
 }
 ```
 
-Every component in your theme's `components` array that declares tokens must have a corresponding entry in `theme.components` with at least a `default` variant. The default theme registers 10 token-bearing components: `card`, `quote`, `testimonial`, `table`, `line`, `slideNumber`, `text`, `shape`, `code`, `mermaid`.
+The default theme registers 10 token-bearing components: `card`, `quote`, `testimonial`, `table`, `line`, `slideNumber`, `text`, `shape`, `code`, `mermaid`.
 
 Each component's required token keys are defined in its component definition. Use framework constants (`TEXT_STYLE`, `GAP`, `BORDER_STYLE`, `DASH_TYPE`, `HALIGN`, `VALIGN`) for enum-valued tokens.
 
 See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete reference implementation with all token keys and default values.
+
+---
 
 ## Using Custom Themes
 
@@ -544,6 +516,8 @@ import { theme } from './my-theme';
 const pres = new Presentation(theme);
 ```
 
+---
+
 ## Variants System
 
 Every component supports named variants for different visual styles. Variants are defined per-component in the theme. Add a variant when the same component needs a different color treatment — a "highlight" card, a "subtle" shape. Create a new component instead when the structure itself changes, not just the styling.
@@ -562,7 +536,7 @@ Uses flat variant styling from the theme.
 
 **Defining variants:**
 
-Each component token config must include a `variants` object with at least a `default` variant. Every variant must be a complete token set — all required tokens must be present. Missing tokens cause a build error.
+Each component token config must include a `variants` object with at least a `default` variant. Every variant must be a complete token set — partial overrides are not supported.
 
 ```typescript
 card: {
@@ -575,6 +549,8 @@ card: {
 ```
 
 If a user specifies `variant="name"` for a component and that variant is not defined in the theme, the build fails.
+
+---
 
 ## Font Requirements
 
@@ -618,6 +594,8 @@ const interFont: FontFamily = {
   },
 };
 ```
+
+---
 
 ## Registering Layouts in Themes
 
@@ -673,6 +651,8 @@ The CLI calls `componentRegistry.register(components)` and `layoutRegistry.regis
 
 See [`packages/theme-default/src/index.ts`](../packages/theme-default/src/index.ts) for the complete reference entry point.
 
+---
+
 ## Testing Your Theme
 
 Test with all built-in components to verify every token is correct:
@@ -720,16 +700,3 @@ flowchart LR
 ```
 
 Test each variant you define. Test custom components if your theme includes them.
-
-## Recommended Workflow
-
-**For quick customization:**
-1. Start with `tycoslide-theme-default`
-2. Override colors and fonts using the [spread operator pattern](#extending-an-existing-theme)
-3. Export as a new theme
-
-**For full control:**
-1. Create theme from scratch following the step-by-step guide
-2. Define all tokens explicitly
-3. Test with all components
-4. Package as an npm module

@@ -339,10 +339,6 @@ Right content.
 
 Vertical flex container. Children are stacked top to bottom. Same parameters as [row](#row).
 
-### Parameters
-
-Same as `row`: `gap`, `vAlign`, `hAlign`, `padding`, `width`, `height`.
-
 ### Example
 
 ```markdown
@@ -414,9 +410,7 @@ Third.
 
 ## image
 
-Embeds an image. No theme tokens -- sizing follows the layout container.
-
-The image path is provided as the **directive body content** (not a parameter).
+Embeds an image. The image path is provided as the **directive body content** (not a parameter).
 
 ### Parameters
 
@@ -598,13 +592,6 @@ Section Title
 
 Custom components extend tycoslide with new content types. They integrate with the directive syntax in Markdown and the TypeScript DSL, and receive styling tokens from the theme.
 
-### When to Create Custom Components
-
-Create a custom component when:
-- You have a repeating content pattern not covered by built-in components
-- You want to encapsulate a complex layout into a single named element
-- You are building a reusable component library for your organization
-
 ### Component Registration
 
 Components are defined with `defineComponent()` and registered with `componentRegistry.register()`. Definition is a pure factory -- it does not register the component. Registration is a separate step, typically done by the theme entry point.
@@ -639,7 +626,7 @@ Each built-in component exports its definition object (e.g., `cardComponent`, `t
 
 `defineComponent()` accepts five signatures depending on the component's input model:
 
-| Pattern | When to use |
+| Pattern | Description |
 |---------|-------------|
 | `{ name, body: schema.string(), expand }` | Single body text, no named params |
 | `{ name, body, params: {...}, expand }` | Body text plus additional named attributes |
@@ -648,8 +635,6 @@ Each built-in component exports its definition object (e.g., `cardComponent`, `t
 | `{ name, expand }` | Programmatic use only, no directive support |
 
 ### Component Structure
-
-A component definition includes:
 
 ```typescript
 {
@@ -740,9 +725,7 @@ Missing tokens fail the build immediately.
 
 ### Content Slots
 
-Slots are named content areas inside a component. The component defines the slot; the slide author fills it with markdown. A card's body is a slot — the card draws the frame, the author writes whatever goes inside. Use slots when your component wraps arbitrary author-provided markdown rather than taking fixed parameters.
-
-Components accept compiled markdown content in named slots:
+Slots are named content areas inside a component. The component defines the slot; the slide author fills it with markdown. Use slots when your component wraps arbitrary author-provided markdown rather than taking fixed parameters.
 
 ```typescript
 const calloutComponent = defineComponent({
@@ -940,7 +923,7 @@ export function metric(props: MetricProps) {
 
 ### Expansion Function
 
-Every component has an expansion function that transforms its props into a tree of primitive nodes. This is where a component's behavior lives — composing text, shapes, and containers into the final visual output.
+Every component has an expansion function that transforms its props into a tree of primitive nodes.
 
 ```typescript
 expand: (props, context, tokens) => {
@@ -957,21 +940,17 @@ expand: (props, context, tokens) => {
 
 #### Canvas
 
-`context.canvas` renders arbitrary HTML to a PNG image. Use it when a component needs visuals that are not natively supported as PowerPoint objects — syntax highlighting, diagrams, or anything that requires browser rendering.
+`context.canvas` renders arbitrary HTML to a PNG image. Use it when a component needs visuals that are not natively supported as PowerPoint objects — syntax highlighting, diagrams, or anything requiring browser rendering.
 
 ```typescript
 const pngPath = await context.canvas.renderHtml(html, transparent?);
 ```
 
-The first argument is a complete HTML document string. The optional second argument controls background transparency (default: `false`). The return value is a file path to the rendered PNG, suitable for use as an `ImageNode.src`.
-
-The render viewport matches the slide dimensions at 96 DPI — for a 16:9 slide (10" × 5.625") that is 960 × 540 CSS pixels, output at 2× device scale (1920 × 1080 physical pixels). All theme fonts are automatically available in the HTML document — reference them by name exactly as defined in `FontFamily.name`. Rendered PNG files are written to a temporary directory and deleted when the build process exits; do not store the returned path beyond the expand function's lifetime.
+The first argument is a complete HTML document string. The optional second argument controls background transparency (default: `false`). The return value is a file path to the rendered PNG, suitable for use as an `ImageNode.src`. All theme fonts are automatically available in the HTML document — reference them by name exactly as defined in `FontFamily.name`. The render viewport matches the slide dimensions at 96 DPI — for a 16:9 slide (10" × 5.625") that is 960 × 540 CSS pixels, output at 2× device scale (1920 × 1080 physical pixels). Rendered PNG files are written to a temporary directory and deleted when the build process exits; do not store the returned path beyond the expand function's lifetime.
 
 The [mermaid](#mermaid) and [code](#code) components use Canvas internally. Those implementations serve as reference for components that render HTML to PNG.
 
 ### Testing Components
-
-Create test presentations to verify rendering:
 
 ```typescript
 import { Presentation, componentRegistry } from 'tycoslide';
@@ -989,34 +968,5 @@ pres.add({
   ),
 });
 
-await pres.writeFile("component-test.pptx");
+await pres.writeFile("component-test.pptx", { outputDir: "./build" });
 ```
-
-Test all prop combinations, all variants, and overflow edge cases. Test with multiple themes if the component will be distributed.
-
-### Best Practices
-
-**Keep components focused:**
-- One clear purpose per component
-- Minimal required props
-- Sensible defaults via optional params
-
-**Use tokens for all styling:**
-- Do not hard-code colors, sizes, or fonts
-- Request theme tokens for every visual property
-- Support variants for contextual styling
-
-**Validate props:**
-- Use `schema.*` helpers for all parameter definitions
-- Document required vs optional params
-
-**Composition over complexity:**
-- Build from primitives (`text`, `shape`, container functions)
-- Reuse existing components from `tycoslide-components`
-- Keep expansion logic readable
-
-**Test thoroughly:**
-- Test all prop combinations
-- Test with different themes
-- Test all variants
-- Check content that might overflow

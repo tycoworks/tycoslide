@@ -1,6 +1,6 @@
 # Layouts
 
-Layouts define the structure and visual arrangement of a slide — where the title goes, where body content renders, and what fixed elements like footers appear. Each layout accepts specific frontmatter parameters and controls how content is positioned on the slide.
+Layouts define the structure of a slide — where the title goes, where body content renders, and what fixed elements like footers appear. Each layout accepts specific frontmatter parameters and controls how content is positioned on the slide.
 
 This page covers the built-in layouts provided by `tycoslide-theme-default` and how to create custom layouts for your own themes.
 
@@ -407,14 +407,6 @@ Most layouts use the `DEFAULT_MASTER`, which adds:
 
 Custom layouts define slide structure. Each layout controls where content appears, what frontmatter parameters are accepted, what content slots are available, and how everything is positioned on the slide.
 
-### When to Create Custom Layouts
-
-Create a custom layout when:
-- You need a slide structure not provided by the theme you're using
-- You have a repeating slide pattern across many presentations
-- You want to enforce consistent structure (title placement, eyebrow, content bounds)
-- You're building a theme for your organization
-
 ### Layout Registration
 
 Layouts are defined with `defineLayout()` and registered with `layoutRegistry.register()`:
@@ -485,11 +477,9 @@ params: {
 }
 ```
 
-For parameter schema helpers and shared value types, see [Components — Defining Parameters](./components.md#defining-parameters).
+`textComponent.schema` validates the parameter as inline-markdown text. Use it for any layout parameter that authors write as human-readable text in frontmatter. Use `schema.*` helpers for generic types like booleans, numbers, and enums.
 
-`textComponent.schema` validates the parameter as text content with the same rules as the text component — it accepts a string that supports inline markdown formatting. Use this for any layout parameter that authors write as human-readable text in frontmatter.
-
-Every component definition exports a `.schema` property — a Zod schema that validates the component's primary input. Layout params can reuse these schemas directly, ensuring the same validation rules apply whether content comes from frontmatter or a directive. Use `componentName.schema` when the parameter holds a value that component already knows how to validate; use `schema.*` helpers for generic types like booleans, numbers, and enums.
+Every component definition exports a `.schema` property — a Zod schema that validates the component's primary input. Layout params can reuse these schemas directly, ensuring the same validation rules apply whether content comes from frontmatter or a directive:
 
 ```typescript
 params: {
@@ -555,7 +545,7 @@ render: (props) => ({
 
 ### TypeScript DSL for Layout Development
 
-Layouts are built by composing container functions from `tycoslide-components`. The core pattern is nesting `column` and `row` calls to define structure, then placing content nodes inside them:
+Layouts are built by composing container functions from `tycoslide-components`:
 
 ```typescript
 import { column, row, text } from 'tycoslide-components';
@@ -716,32 +706,3 @@ const pres = new Presentation(theme);
 // Add slides programmatically to test DSL usage,
 // or use compileDocument() for markdown-based testing.
 ```
-
-Test with minimal content, maximal content, all parameter combinations, and check for overflow.
-
-### Best Practices
-
-**Keep layouts simple:**
-- One clear purpose per layout
-- Minimal required parameters
-- Sensible defaults via optional params
-
-**Use composition:**
-- Build from `row`, `column`, `grid`, `stack`, and component functions
-- Don't reimplement container logic
-
-**Validate parameters:**
-- Use `schema.*` helpers for type safety
-- Use `textComponent.schema` for text parameters that authors write in frontmatter
-- Document required vs optional in the layout description
-
-**Consider masters:**
-- Use masters for consistent footers and headers across slides
-- Define `contentBounds` carefully — content that overflows bounds may be clipped
-- Account for fixed elements when calculating available content height
-
-**Test thoroughly:**
-- Test with minimal content
-- Test with maximal content
-- Test all parameter combinations
-- Check for overflow in constrained slots

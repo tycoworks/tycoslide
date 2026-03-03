@@ -80,16 +80,11 @@ title: Questions?
 npx tycoslide build slides.md
 ```
 
-This creates `slides.pptx` in the same directory.
+This creates `slides.pptx` and a `slides-html/` directory containing a per-slide HTML preview.
 
 ## Open the Output
 
-Open `slides.pptx` in PowerPoint, Keynote, or LibreOffice Impress. The output is a native PowerPoint file:
-
-- Title slide, section dividers, and content slides with text, bullets, and cards
-- All slides styled from the theme (colors, typography, spacing)
-- Editable — no special software needed to view or present
-- Version control friendly (source is Markdown)
+Open `slides.pptx` in PowerPoint, Keynote, or LibreOffice Impress.
 
 ## Next Steps
 
@@ -98,16 +93,3 @@ Open `slides.pptx` in PowerPoint, Keynote, or LibreOffice Impress. The output is
 - **Slide layouts:** See [Layouts](./layouts.md)
 - **Customize themes:** See [Themes](./themes.md)
 - **CLI options:** See [CLI](./cli.md)
-
-## Editor Setup (Optional)
-
-Optional editor configuration:
-
-**VS Code:**
-- Markdown syntax highlighting (built-in)
-- Markdown preview (built-in)
-- YAML support for frontmatter
-
-**Other editors:**
-- Any editor with Markdown support works fine
-- Syntax highlighting for fenced code blocks is helpful
