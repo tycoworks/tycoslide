@@ -172,6 +172,7 @@ export function mockTheme(options?: {
       primary: options?.colors?.primary ?? 'FF0000',
       background: options?.colors?.background ?? 'FFFFFF',
       secondary: options?.colors?.secondary ?? '333333',
+      hyperlink: options?.colors?.hyperlink ?? 'FF0000',
       accents: options?.colors?.accents ?? accents,
       text: options?.colors?.text ?? '000000',
       textMuted: options?.colors?.textMuted ?? '666666',

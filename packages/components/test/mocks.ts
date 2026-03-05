@@ -230,6 +230,7 @@ export function mockTheme(options?: {
       primary: 'FF0000',
       background: 'FFFFFF',
       secondary: '333333',
+      hyperlink: 'FF0000',
       accents,
       text: '000000',
       textMuted: '666666',

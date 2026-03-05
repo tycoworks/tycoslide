@@ -66,6 +66,7 @@ export class PptxRenderer {
       this.pres.defineLayout({ name: CUSTOM_LAYOUT, width, height });
     }
     this.pres.layout = layout;
+    (this.pres as any).theme = { ...(this.pres as any).theme, hlinkColor: theme.colors.hyperlink };
   }
 
   defineMaster(master: MasterDefinition, theme: Theme): void {

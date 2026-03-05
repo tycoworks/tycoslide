@@ -412,6 +412,7 @@ export type ColorScheme = {
   textMuted: string;
   primary: string;
   secondary: string;
+  hyperlink: string;
   subtleOpacity: number;
   accents: Record<string, string>;
 };

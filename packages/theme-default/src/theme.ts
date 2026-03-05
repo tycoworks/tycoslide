@@ -24,6 +24,7 @@ export const colors = {
   text: '1A1A2E',               // Dark navy
   textMuted: '4A4A5A',           // Neutral gray
   primary: '7C3AED',             // Purple accent
+  hyperlink: '7C3AED',           // Theme-level hyperlink fallback (Keynote/LibreOffice)
   onPrimary: 'FFFFFF',           // White on purple
   secondary: 'F5F5F5',           // Neutral surface
   subtleOpacity: 15,
