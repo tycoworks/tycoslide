@@ -90,11 +90,25 @@ Renders paragraph text and headings. The text component is used internally by th
 | `vAlign` | `top` \| `middle` \| `bottom` | Vertical alignment |
 | `content` | `plain` \| `rich` | Content mode (default: `rich`) |
 | `variant` | string | Theme variant name |
+| `color` | string | Text color (6-character hex, DSL only) |
+| `lineHeightMultiplier` | number | Line height multiplier (DSL only) |
+| `linkColor` | string | Hyperlink text color (6-character hex, DSL only) |
+| `linkUnderline` | boolean | Whether hyperlinks are underlined (DSL only) |
+
+### Tokens
+
+| Token | Type | Description |
+|-------|------|-------------|
+| `color` | string | Default text color |
+| `style` | TextStyleName | Default text style |
+| `lineHeightMultiplier` | number | Default line height multiplier |
+| `linkColor` | string | Hyperlink text color (6-character hex) |
+| `linkUnderline` | boolean | Whether hyperlinks are underlined |
 
 ### Content Modes
 
 - **`plain`** — Plain text with no formatting. Use for labels, eyebrows, and attributions where you want the exact string rendered as-is.
-- **`rich`** (default) — Supports `**bold**`, `*italic*`, and `:accent[colored text]`. Only inline formatting — lists and block quotes are handled by their own components.
+- **`rich`** (default) — Supports `**bold**`, `*italic*`, `[hyperlinks](url)`, `~~strikethrough~~`, `++underline++`, and `:accent[colored text]`. Only inline formatting — lists and block quotes are handled by their own components.
 
 ### Inline Accent Colors
 
@@ -150,6 +164,8 @@ list(['Item with :blue[accent]'], { color: '0066CC' })
 | `hAlign` | `left` \| `center` \| `right` | Horizontal alignment |
 | `vAlign` | `top` \| `middle` \| `bottom` | Vertical alignment |
 | `lineHeightMultiplier` | number | Line height multiplier |
+| `linkColor` | string | Hyperlink text color (6-character hex) |
+| `linkUnderline` | boolean | Whether hyperlinks are underlined |
 | `variant` | string | Theme variant name |
 
 ### Tokens
@@ -159,6 +175,8 @@ list(['Item with :blue[accent]'], { color: '0066CC' })
 | `color` | string | Default text color |
 | `style` | TextStyleName | Default text style |
 | `lineHeightMultiplier` | number | Default line height multiplier |
+| `linkColor` | string | Hyperlink text color (6-character hex) |
+| `linkUnderline` | boolean | Whether hyperlinks are underlined |
 
 ---
 
