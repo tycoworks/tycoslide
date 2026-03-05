@@ -133,6 +133,12 @@ export function mockTheme(options?: {
       style: TEXT_STYLE.BODY,
       lineHeightMultiplier: lineSpacing,
     },
+    [Component.List]: {
+      color: '000000',
+      bulletColor: '000000',
+      style: TEXT_STYLE.BODY,
+      lineHeightMultiplier: lineSpacing,
+    },
     [Component.Shape]: {
       fill: '333333',
       fillOpacity: 100,

@@ -52,7 +52,8 @@ Three-deep nesting uses five colons on the outermost container, four on the midd
 
 | Component | Description |
 |-----------|-------------|
-| [text](#text) | Paragraph text, headings, bullets |
+| [text](#text) | Paragraph text and headings |
+| [list](#list) | Bullet and numbered lists |
 | [card](#card) | Content card with optional image, title, and description |
 | [quote](#quote) | Blockquote with optional attribution and image |
 | [testimonial](#testimonial) | Quote card with optional image and attribution |
@@ -78,7 +79,7 @@ Three-deep nesting uses five colons on the outermost container, four on the midd
 
 ## text
 
-Renders paragraph text, bullets, and headings. Supports three content modes.
+Renders paragraph text and headings. The text component is used internally by the slot compiler and in layout definitions — it has no `:::text` directive. Markdown paragraphs and headings auto-compile to text nodes. In the TypeScript DSL, use `text()` directly.
 
 ### Parameters
 
@@ -87,48 +88,79 @@ Renders paragraph text, bullets, and headings. Supports three content modes.
 | `style` | TextStyleName | Override text style (`h1`--`h4`, `body`, `small`, `eyebrow`, `footer`) |
 | `hAlign` | `left` \| `center` \| `right` | Horizontal alignment |
 | `vAlign` | `top` \| `middle` \| `bottom` | Vertical alignment |
-| `content` | `plain` \| `rich` \| `prose` | Parsing mode (default: `rich`) |
+| `content` | `plain` \| `rich` | Content mode (default: `rich`) |
 | `variant` | string | Theme variant name |
 
 ### Content Modes
 
-- **`plain`** -- No parsing, single text run. Use for eyebrows, labels, attributions.
-- **`rich`** -- Inline formatting only: `**bold**`, `*italic*`, `:accent[highlighted]`. This is the default. Block-level constructs (lists, headings, block quotes, code fences) are disabled at the parser level. Text like `1. Problem` renders as a plain paragraph, not an ordered list.
-- **`prose`** -- Full markdown: bullets, numbered lists, multiple paragraphs.
+- **`plain`** — Plain text with no formatting. Use for labels, eyebrows, and attributions where you want the exact string rendered as-is.
+- **`rich`** (default) — Supports `**bold**`, `*italic*`, and `:accent[colored text]`. Only inline formatting — lists and block quotes are handled by their own components.
 
 ### Inline Accent Colors
 
-In `rich` and `prose` modes, use the `:name[text]` syntax to apply accent colors inline:
+In `rich` mode, use the `:name[text]` syntax to apply accent colors inline:
 
 ```markdown
-:::text
 Normal text with :blue[blue highlight] and :green[green highlight].
-:::
 ```
 
 The default theme provides `blue`, `green`, `red`, `yellow`, and `purple`. Custom themes can define any accent names. See [Themes](./themes.md) for details.
 
 ### Examples
 
+```typescript
+text("**Bold** and :blue[highlighted]")                                      // Rich (default)
+text("ARCHITECTURE", { content: CONTENT.PLAIN, style: TEXT_STYLE.EYEBROW }) // Plain
+text("Custom styled", { style: TEXT_STYLE.H3, color: 'FF0000' })           // With overrides
+```
+
+---
+
+## list
+
+Renders bullet or numbered lists with inline formatting support. The list component is used internally by the slot compiler — it has no `:::list` directive. Markdown bullet and numbered lists auto-compile to list nodes. In the TypeScript DSL, use `list()` directly.
+
+### Examples
+
 ```markdown
-:::text{style="h4" variant="accent"}
-Highlighted heading
-:::
+- First item with **bold** text
+- Second item with :blue[accent color]
+- Third item
 ```
 
 ```markdown
-:::text{content="prose"}
-- First bullet
-- Second bullet
-- Third bullet
-:::
+1. Step one
+2. Step two
+3. Step three
 ```
 
-```markdown
-:::text{style="eyebrow" variant="muted"}
-SECTION LABEL
-:::
+```typescript
+list(['First item', 'Second item', '**Bold** third item'])
+list(['Step one', 'Step two'], { ordered: true })
+list(['Item with :blue[accent]'], { bulletColor: '0066CC' })
 ```
+
+### Parameters
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `ordered` | boolean | Numbered list instead of bullets (default: `false`) |
+| `style` | TextStyleName | Override text style |
+| `color` | string | Text color (6-character hex) |
+| `bulletColor` | string | Bullet/number color (6-character hex) |
+| `hAlign` | `left` \| `center` \| `right` | Horizontal alignment |
+| `vAlign` | `top` \| `middle` \| `bottom` | Vertical alignment |
+| `lineHeightMultiplier` | number | Line height multiplier |
+| `variant` | string | Theme variant name |
+
+### Tokens
+
+| Token | Type | Description |
+|-------|------|-------------|
+| `color` | string | Default text color |
+| `bulletColor` | string | Default bullet/number color |
+| `style` | TextStyleName | Default text style |
+| `lineHeightMultiplier` | number | Default line height multiplier |
 
 ---
 
@@ -286,12 +318,7 @@ When any `borderTop`/`borderRight`/`borderBottom`/`borderLeft` prop is set, only
 ### Example
 
 ```markdown
-:::stack
 :::shape{shape="roundRect" variant="subtle"}
-:::
-:::text{style="h3" variant="inverse"}
-Text over background
-:::
 :::
 ```
 
@@ -343,9 +370,7 @@ Vertical flex container. Children are stacked top to bottom. Same parameters as 
 
 ```markdown
 ::::column{gap="tight"}
-:::text{style="eyebrow"}
 CONTEXT
-:::
 :::quote{attribution="— Sarah Chen, Design Lead"}
 Automating the review cycle freed up two days per sprint.
 :::
@@ -371,9 +396,7 @@ Z-order overlay container. All children occupy the same bounds; the first child 
 :::stack{height="fill"}
 :::shape{shape="rect" variant="primary"}
 :::
-:::text{style="h1" variant="inverse"}
 White text over blue background
-:::
 :::
 ```
 
@@ -530,64 +553,6 @@ This changed everything for us.
 
 ---
 
-## Common Patterns
-
-### Two-column comparison
-
-```markdown
-::::row{gap="normal"}
-:::card{title="Before" height="fill"}
-Manual process, error-prone.
-:::
-:::card{title="After" height="fill"}
-Automated, reproducible.
-:::
-::::
-```
-
-### Feature grid
-
-```markdown
-::::grid{columns=3}
-:::card{title="Research" height="fill"}
-Gather requirements and user insights.
-:::
-:::card{title="Design" height="fill"}
-Create wireframes and prototypes.
-:::
-:::card{title="Deliver" height="fill"}
-Ship to production with confidence.
-:::
-::::
-```
-
-### Quote with label
-
-```markdown
-::::column{gap="tight"}
-:::text{style="eyebrow" variant="muted"}
-TEAM FEEDBACK
-:::
-:::quote{attribution="— Sarah Chen, Design Lead"}
-Automating the review cycle freed up two days per sprint.
-:::
-::::
-```
-
-### Text over background
-
-```markdown
-:::stack{height="fill"}
-:::shape{shape="rect" variant="primary"}
-:::
-:::text{style="h2" variant="inverse" hAlign="center" vAlign="middle"}
-Section Title
-:::
-:::
-```
-
----
-
 ## Creating Custom Components
 
 Custom components extend tycoslide with new content types. They integrate with the directive syntax in Markdown and the TypeScript DSL, and receive styling tokens from the theme.
@@ -664,7 +629,7 @@ params: {
   align: schema.hAlign().optional(),               // HALIGN enum: left/center/right
   valign: schema.vAlign().optional(),              // VALIGN enum: top/middle/bottom
   style: schema.textStyle().optional(),            // TEXT_STYLE enum: h1/h2/h3/h4/body/small/eyebrow/footer
-  content: schema.content().optional(),            // CONTENT enum: plain/rich/prose
+  content: schema.content().optional(),            // CONTENT enum: plain/rich
   height: schema.size().optional(),                // SIZE enum: fill/hug
 }
 ```
@@ -874,15 +839,18 @@ components: {
 Components are used programmatically via DSL functions. All built-in DSL functions are exported from `tycoslide-components`:
 
 ```typescript
-import { text, card, quote, testimonial, table, image, mermaid, code } from 'tycoslide-components';
+import { text, list, card, quote, testimonial, table, image, mermaid, code } from 'tycoslide-components';
 import { row, column, stack, grid } from 'tycoslide-components';
 import { line, shape, slideNumber } from 'tycoslide-components';
 import { TEXT_STYLE, GAP, SIZE, SHAPE, CONTENT, HALIGN, VALIGN } from 'tycoslide';
 
-// Text — three content modes
+// Text — two content modes
 text("**Bold** and :blue[highlighted]")                          // CONTENT.RICH (default)
 text("ARCHITECTURE", { content: CONTENT.PLAIN, style: TEXT_STYLE.EYEBROW })  // Plain text
-text("- First\n- Second", { content: CONTENT.PROSE })           // Full markdown
+
+// Lists
+list(["First item", "Second **bold** item", "Third item"])       // Unordered
+list(["Step one", "Step two"], { ordered: true })                 // Ordered
 
 // Cards
 card({ title: "My Card", description: "Description text" })

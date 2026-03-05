@@ -225,6 +225,16 @@ export const theme: Theme = {
         inverse: { ...textBase, color: colors.background, bulletColor: colors.background },
       },
     },
+    list: {
+      variants: {
+        default: {
+          color: colors.text,
+          bulletColor: colors.text,
+          style: TEXT_STYLE.BODY,
+          lineHeightMultiplier: spacing.lineSpacing,
+        },
+      },
+    },
     shape: {
       variants: {
         default:  { ...shapeBase, fill: colors.surfaceContainerHigh, fillOpacity: 100 },

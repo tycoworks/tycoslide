@@ -78,7 +78,7 @@ describe('Quote Component (Pull Quote)', () => {
       }
     });
 
-    it('should include quote text as PROSE content', async () => {
+    it('should include quote text as RICH content', async () => {
       const node = quote({ quote: 'A wise saying' });
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 

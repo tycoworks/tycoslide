@@ -60,12 +60,20 @@ export {
 export {
   text,
   textComponent,
-  HEADING_STYLE,
   TEXT_TOKEN,
   type TextTokens,
   type TextProps,
   type TextComponentProps,
 } from './text.js';
+
+// List
+export {
+  list,
+  listComponent,
+  LIST_TOKEN,
+  type ListTokens,
+  type ListProps,
+} from './list.js';
 
 // Card (composition component)
 export {

@@ -19,4 +19,5 @@ dist/
 
 # Generated presentations
 *.pptx
+*-html/
 tsconfig.tsbuildinfo

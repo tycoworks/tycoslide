@@ -10,6 +10,19 @@ notes: Opening slide.
 ---
 
 ---
+layout: agenda
+title: Agenda
+eyebrow: Overview
+items:
+  - What is tycoslide?
+  - The authoring workflow
+  - Brand compliance through design tokens
+  - PowerPoint output and compatibility
+  - Roadmap and next steps
+notes: Agenda layout — items render as a native bullet list via the list component.
+---
+
+---
 layout: statement
 title: What is tycoslide?
 eyebrow: The Product
@@ -132,6 +145,19 @@ flowchart LR
   RENDER --> FILE[".pptx"]
   class PARSE,EXPAND,LAYOUT,RENDER primary
 :::
+
+---
+layout: agenda
+title: Agenda
+eyebrow: Overview
+items:
+  - What is tycoslide?
+  - The authoring workflow
+  - Brand compliance through design tokens
+  - PowerPoint output and compatibility
+  - Roadmap and next steps
+notes: Agenda layout — items render as a native bullet list via the list component.
+---
 
 ---
 layout: body

@@ -108,7 +108,7 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
 
   if (actualDescription) {
     children.push(text(actualDescription, {
-      content: CONTENT.PROSE,
+      content: CONTENT.RICH,
       style: descriptionStyle,
       color: descriptionColor,
     }));

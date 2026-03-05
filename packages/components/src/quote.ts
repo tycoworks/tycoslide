@@ -83,7 +83,7 @@ function expandQuote(props: QuoteProps & { body?: string }, _context: ExpansionC
 
   // Build content children: quote text, optional attribution
   const children: SlideNode[] = [
-    text(actualQuote, { content: CONTENT.PROSE, style: quoteStyle, color: quoteColor }),
+    text(actualQuote, { content: CONTENT.RICH, style: quoteStyle, color: quoteColor }),
   ];
   if (attribution) {
     children.push(text(attribution, { content: CONTENT.PLAIN, style: attributionStyle, color: attributionColor, hAlign: HALIGN.LEFT }));

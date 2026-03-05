@@ -20,6 +20,7 @@ import {
   imageComponent,
   cardComponent,
   text,
+  list,
   image,
   row,
   column,
@@ -412,7 +413,7 @@ export const statementLayout = defineLayout({
     masteredSlide(
       headerBlock(title, eyebrow),
       centeredBody(
-        text(body, { content: CONTENT.PROSE, ...(bodyStyle ? { style: bodyStyle } : {}) }),
+        text(body, { ...(bodyStyle ? { style: bodyStyle } : {}) }),
         ...(caption ? [text(caption, { style: TEXT_STYLE.SMALL, color: colors.textMuted, hAlign: HALIGN.CENTER })] : []),
       ),
     ),
@@ -440,13 +441,12 @@ export const agendaLayout = defineLayout({
     items: schema.array(textComponent.schema),
   },
   render: ({ title, eyebrow, intro, items }) => {
-    const body = [
-      ...(intro ? [intro] : []),
-      items.map(item => `- ${item}`).join('\n'),
-    ].join('\n\n');
     return masteredSlide(
       headerBlock(title, eyebrow),
-      contentBody(text(body, { content: CONTENT.PROSE })),
+      contentBody(
+        ...(intro ? [text(intro)] : []),
+        list(items),
+      ),
     );
   },
 });

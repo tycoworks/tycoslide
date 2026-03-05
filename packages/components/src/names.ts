@@ -9,6 +9,7 @@ export const Component = {
   Shape: 'shape',
   SlideNumber: 'slideNumber',
   Text: 'text',
+  List: 'list',
   Card: 'card',
   Quote: 'quote',
   Testimonial: 'testimonial',

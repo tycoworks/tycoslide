@@ -33,7 +33,6 @@ export const VALIGN_VALUES = Object.values(VALIGN) as [VerticalAlignment, ...Ver
 export const CONTENT = {
   PLAIN: 'plain',
   RICH: 'rich',
-  PROSE: 'prose',
 } as const;
 export type ContentType = typeof CONTENT[keyof typeof CONTENT];
 export const CONTENT_VALUES = Object.values(CONTENT) as [ContentType, ...ContentType[]];

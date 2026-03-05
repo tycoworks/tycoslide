@@ -53,15 +53,15 @@ describe('schema', () => {
   });
 
   describe('compileSlot', () => {
-    it('compiles directive to ComponentNode[]', () => {
-      const result = compileSlot(':::text\nHello world\n:::');
+    it('compiles markdown to ComponentNode[]', () => {
+      const result = compileSlot('Hello world');
       assert.ok(Array.isArray(result));
       assert.strictEqual(result.length, 1);
       assert.strictEqual((result[0] as any).componentName, C.Text);
     });
 
-    it('compiles multiple directives', () => {
-      const result = compileSlot(':::text\nText\n:::\n\n:::image\npic.png\n:::');
+    it('compiles mixed content', () => {
+      const result = compileSlot('Some text.\n\n:::image\npic.png\n:::');
       assert.strictEqual(result.length, 2);
       assert.strictEqual((result[0] as any).componentName, C.Text);
       assert.strictEqual((result[1] as any).componentName, C.Image);

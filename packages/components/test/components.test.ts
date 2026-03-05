@@ -21,7 +21,6 @@ import { Component } from '../src/names.js';
 import {
   componentRegistry,
   NODE_TYPE,
-  CONTENT,
   DIRECTION,
   TEXT_STYLE,
   GAP,
@@ -39,7 +38,7 @@ import {
   textComponent, imageComponent, cardComponent, quoteComponent,
   tableComponent, codeComponent, mermaidComponent,
   lineComponent, shapeComponent, slideNumberComponent,
-  rowComponent, columnComponent, stackComponent, gridComponent,
+  rowComponent, columnComponent, stackComponent, gridComponent, listComponent,
 } from '../src/index.js';
 
 // Register components explicitly
@@ -47,7 +46,7 @@ componentRegistry.register([
   textComponent, imageComponent, cardComponent, quoteComponent,
   tableComponent, codeComponent, mermaidComponent,
   lineComponent, shapeComponent, slideNumberComponent,
-  rowComponent, columnComponent, stackComponent, gridComponent,
+  rowComponent, columnComponent, stackComponent, gridComponent, listComponent,
 ]);
 
 // Theme for text expansion
@@ -61,81 +60,6 @@ async function expand(node: any) {
 // ============================================
 // TEXT FACTORY FUNCTIONS
 // ============================================
-
-describe('text() with CONTENT.PROSE', () => {
-  test('returns ComponentNode', () => {
-    const node = text('hello', { content: CONTENT.PROSE });
-    assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-    assert.strictEqual(node.componentName, Component.Text);
-  });
-
-  test('expands to correct NODE_TYPE', async () => {
-    const node = await expand(text('hello', { content: CONTENT.PROSE })) as TextNode;
-    assert.strictEqual(node.type, NODE_TYPE.TEXT);
-  });
-
-  test('sets content correctly after expansion', async () => {
-    const node = await expand(text('hello world', { content: CONTENT.PROSE })) as TextNode;
-    const runs = node.content as any[];
-    assert.strictEqual(runs[0].text, 'hello world');
-  });
-
-  test('handles empty string content', async () => {
-    const node = await expand(text('', { content: CONTENT.PROSE })) as TextNode;
-    assert.ok(Array.isArray(node.content));
-    assert.strictEqual((node.content as any[]).length, 0);
-  });
-
-  test('applies explicit alignment defaults and token defaults', async () => {
-    const node = await expand(text('test', { content: CONTENT.PROSE })) as TextNode;
-    assert.strictEqual(node.style, TEXT_STYLE.BODY); // from text token default
-    assert.strictEqual(node.color, '000000');         // from text token default
-    assert.strictEqual(node.hAlign, HALIGN.LEFT);     // explicit default
-    assert.strictEqual(node.vAlign, VALIGN.TOP);      // explicit default
-  });
-
-  test('applies style prop', async () => {
-    const node = await expand(text('test', { content: CONTENT.PROSE, style: TEXT_STYLE.H1 })) as TextNode;
-    assert.strictEqual(node.style, TEXT_STYLE.H1);
-  });
-
-  test('applies color prop', async () => {
-    const node = await expand(text('test', { content: CONTENT.PROSE, color: 'FF0000' })) as TextNode;
-    assert.strictEqual(node.color, 'FF0000');
-  });
-
-  test('applies hAlign prop', async () => {
-    const node = await expand(text('test', { content: CONTENT.PROSE, hAlign: HALIGN.CENTER })) as TextNode;
-    assert.strictEqual(node.hAlign, HALIGN.CENTER);
-  });
-
-  test('applies vAlign prop', async () => {
-    const node = await expand(text('test', { content: CONTENT.PROSE, vAlign: VALIGN.MIDDLE })) as TextNode;
-    assert.strictEqual(node.vAlign, VALIGN.MIDDLE);
-  });
-
-  test('applies all props together', async () => {
-    const node = await expand(text('test', {
-      content: CONTENT.PROSE,
-      style: TEXT_STYLE.BODY,
-      color: '00FF00',
-      hAlign: HALIGN.RIGHT,
-      vAlign: VALIGN.BOTTOM,
-    })) as TextNode;
-    assert.strictEqual(node.style, TEXT_STYLE.BODY);
-    assert.strictEqual(node.color, '00FF00');
-    assert.strictEqual(node.hAlign, HALIGN.RIGHT);
-    assert.strictEqual(node.vAlign, VALIGN.BOTTOM);
-  });
-
-  test('pre-resolves resolvedStyle, bulletIndentPt, and lineHeightMultiplier at expand time', async () => {
-    const node = await expand(text('hello', { content: CONTENT.PROSE })) as TextNode;
-    assert.ok(node.resolvedStyle);
-    assert.strictEqual(node.resolvedStyle.fontSize, 12); // from mockTextStyle for BODY style
-    assert.strictEqual(node.bulletIndentPt, 18); // 12 * 1.5 (fontSize * bulletIndentMultiplier)
-    assert.strictEqual(node.lineHeightMultiplier, 1.0); // from text token lineHeightMultiplier (lineSpacing default)
-  });
-});
 
 // ============================================
 // IMAGE

@@ -17,6 +17,7 @@ import {
   columnComponent,
   stackComponent,
   gridComponent,
+  listComponent,
 } from 'tycoslide-components';
 import { allLayouts } from './layouts.js';
 
@@ -37,6 +38,7 @@ export const components = [
   columnComponent,
   stackComponent,
   gridComponent,
+  listComponent,
 ];
 
 export const layouts = allLayouts;

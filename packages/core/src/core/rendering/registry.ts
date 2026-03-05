@@ -180,6 +180,7 @@ function buildDeserializer(
 export function defineComponent<TBody extends z.ZodTypeAny, TTokens = undefined>(def: {
   name: string;
   body: TBody;
+  directive?: boolean;
   tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
   mdast?: MdastHandler;
   expand: (props: { body: z.infer<TBody> }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
@@ -194,6 +195,7 @@ export function defineComponent<TBody extends z.ZodTypeAny, TParams extends Sche
   name: string;
   body: TBody;
   params: TParams;
+  directive?: boolean;
   tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
   mdast?: MdastHandler;
   expand: (props: { body: z.infer<TBody> } & z.infer<z.ZodObject<TParams>>, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
@@ -208,6 +210,7 @@ export function defineComponent<TBody extends z.ZodTypeAny, TParams extends Sche
 export function defineComponent<TShape extends SchemaShape, TTokens = undefined>(def: {
   name: string;
   params: TShape;
+  directive?: boolean;
   tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
   mdast?: MdastHandler;
   expand: (props: z.infer<z.ZodObject<TShape>> & { body?: string }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
@@ -262,7 +265,9 @@ export function defineComponent(def: any): ComponentDefinition & { schema?: z.Zo
   } else if (bodySchema || paramsSchema) {
     // Scalar component: auto-generate .schema and directive deserializer
     result.schema = bodySchema ?? z.object(paramsShape);
-    result.deserialize = buildDeserializer(def.name, paramsSchema);
+    if (def.directive !== false) {
+      result.deserialize = buildDeserializer(def.name, paramsSchema);
+    }
   }
   // else: programmatic only — no directive support, no schema
 

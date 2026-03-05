@@ -8,7 +8,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { compileSlot } from '../src/core/markdown/slotCompiler.js';
-import { CONTENT, HALIGN, TEXT_STYLE, VALIGN } from '../src/core/model/types.js';
+import { HALIGN, TEXT_STYLE, VALIGN } from '../src/core/model/types.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { SYNTAX } from '../src/core/model/syntax.js';
 import { componentRegistry, defineComponent } from '../src/core/rendering/registry.js';
@@ -24,12 +24,11 @@ function props(nodes: any[], index: number): any {
 
 describe('Slot Compiler', () => {
   describe('bare MDAST compilation', () => {
-    it('should compile a single paragraph to a prose text node', () => {
+    it('should compile a single paragraph to a text node', () => {
       const nodes = compileSlot('Hello world');
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual((nodes[0] as any).componentName, C.Text);
       assert.strictEqual(props(nodes, 0).body, 'Hello world');
-      assert.strictEqual(props(nodes, 0).content, CONTENT.PROSE);
     });
 
     it('should return multiple paragraphs as separate text nodes', () => {
@@ -62,11 +61,10 @@ describe('Slot Compiler', () => {
       assert.strictEqual((nodes[0] as any).componentName, C.Table);
     });
 
-    it('should compile a list to a prose text node', () => {
+    it('should compile a list to a text component node', () => {
       const nodes = compileSlot('- First\n- Second\n- Third');
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual((nodes[0] as any).componentName, C.Text);
-      assert.strictEqual(props(nodes, 0).content, CONTENT.PROSE);
     });
 
   });

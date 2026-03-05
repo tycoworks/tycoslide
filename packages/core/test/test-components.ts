@@ -11,7 +11,7 @@ import { defineComponent, component } from '../src/core/rendering/registry.js';
 import type { ExpansionContext, ComponentNode } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 
-import { HALIGN, VALIGN, SIZE, DIRECTION, TEXT_STYLE, CONTENT } from '../src/core/model/types.js';
+import { HALIGN, VALIGN, SIZE, DIRECTION, TEXT_STYLE } from '../src/core/model/types.js';
 import { SYNTAX, extractSource } from '../src/core/model/syntax.js';
 import { schema } from '../src/core/model/schema.js';
 import type { RootContent, Heading, Table as MdastTable } from 'mdast';
@@ -50,14 +50,14 @@ export const textComponent = defineComponent({
   },
   tokens: ['color', 'bulletColor', 'style', 'lineHeightMultiplier'],
   mdast: {
-    nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.LIST, SYNTAX.HEADING],
+    nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.HEADING, SYNTAX.LIST],
     compile: (node: RootContent, source: string): ComponentNode | null => {
       if (node.type === SYNTAX.HEADING) {
         const heading = node as Heading;
         const style = HEADING_STYLE[heading.depth] ?? TEXT_STYLE.H3;
         const raw = extractSource(heading, source);
         const content = raw.replace(/^#{1,6}\s*/, '');
-        return component(C.Text, { body: content, content: CONTENT.PROSE, style });
+        return component(C.Text, { body: content, style });
       }
       if (node.type === SYNTAX.PARAGRAPH) {
         const para = node as { children: { type: string }[] };
@@ -65,7 +65,7 @@ export const textComponent = defineComponent({
           throw new Error('Images cannot be embedded inline in text. Use :::image directive.');
         }
       }
-      return component(C.Text, { body: extractSource(node, source), content: CONTENT.PROSE });
+      return component(C.Text, { body: extractSource(node, source) });
     },
   },
   expand: (props: any, ctx: ExpansionContext, tokens: any): any => {

@@ -1,23 +1,19 @@
 // Text Component
-// Single DSL entry point: text(body, { content?, ...props })
-// Three content modes (default: CONTENT.RICH):
+// Internal-only component — not reachable via :::text directive in markdown.
+// Available to layout TypeScript authors via text() DSL function.
+// Two content modes (default: CONTENT.RICH):
 //   CONTENT.PLAIN — no parsing, single run (eyebrows, attributions, copyright)
 //   CONTENT.RICH  — inline-only rich text (bold, italic, :color[highlights], no bullets/paragraphs)
-//   CONTENT.PROSE — structured rich text (bullets, paragraphs, inline formatting)
 
-import { unified } from 'unified';
-import type { Processor } from 'unified';
-import remarkParse from 'remark-parse';
-import remarkDirective from 'remark-directive';
-import type { Root, PhrasingContent, List, Paragraph, ListItem } from 'mdast';
-import type { TextDirective } from 'mdast-util-directive';
+import type { Root } from 'mdast';
 import type { RootContent, Heading } from 'mdast';
-import type { NormalizedRun, ColorScheme, ContentType, TextStyleName, HorizontalAlignment, VerticalAlignment, ExpansionContext } from 'tycoslide';
+import type { NormalizedRun, ContentType, TextStyleName, HorizontalAlignment, VerticalAlignment, ExpansionContext } from 'tycoslide';
 import { HALIGN, VALIGN, TEXT_STYLE, CONTENT, SYNTAX, extractSource } from 'tycoslide';
 import { NODE_TYPE, type ElementNode } from 'tycoslide';
-import { defineComponent, component, type ComponentNode, type InferProps, type SchemaShape } from 'tycoslide';
+import { defineComponent, component, type ComponentNode, type SchemaShape } from 'tycoslide';
 import { schema } from 'tycoslide';
 import { Component } from './names.js';
+import { transformInline, inlineProcessor } from './utils/inline.js';
 
 export const TEXT_TOKEN = {
   COLOR: 'color',
@@ -34,42 +30,13 @@ export interface TextTokens {
 }
 
 // ============================================
-// PARSERS
-// ============================================
-
-/** Plugin that disables block-level constructs at the micromark level.
- *  Used by CONTENT.RICH to prevent `1. Problem` being parsed as an ordered list. */
-function remarkDisableBlocks(this: Processor): void {
-  const data = this.data() as { micromarkExtensions?: unknown[] };
-  const ext = data.micromarkExtensions ?? (data.micromarkExtensions = []);
-  ext.push({
-    disable: {
-      null: [
-        'list', 'headingAtx', 'setextUnderline', 'blockQuote',
-        'thematicBreak', 'codeFenced', 'codeIndented', 'htmlFlow', 'definition',
-      ],
-    },
-  });
-}
-
-/** Full parser — all constructs enabled (for CONTENT.PROSE) */
-const proseProcessor = unified().use(remarkParse).use(remarkDirective);
-
-/** Inline-only parser — block constructs disabled (for CONTENT.RICH) */
-const inlineProcessor = unified().use(remarkParse).use(remarkDirective).use(remarkDisableBlocks);
-
-// ============================================
 // SCHEMAS & TYPES
 // ============================================
 
-/** Directive schema — author-facing props only.
- *  Styling props (color, bulletColor, lineHeightMultiplier) removed:
- *  authors style via variant selection, not individual color props. */
 const textSchema = {
   style: schema.textStyle().optional(),
   hAlign: schema.hAlign().optional(),
   vAlign: schema.vAlign().optional(),
-  content: schema.content().optional(),
   variant: schema.string().optional(),
 } satisfies SchemaShape;
 
@@ -89,139 +56,6 @@ export interface TextProps {
 
 /** Full props including body content and content kind (used internally by expansion) */
 export type TextComponentProps = { body: string; content?: ContentType } & TextProps;
-
-// ============================================
-// TRANSFORMER
-// ============================================
-
-/**
- * Transform a parsed MDAST tree into NormalizedRun[].
- *
- * Supported node types:
- * - paragraph: text runs, with breakLine between paragraphs
- * - list (ordered/unordered): bullet runs
- * - strong: bold: true
- * - emphasis: italic: true
- * - textDirective: :name[text] -> accent color from theme
- */
-function mdastToRuns(
-  tree: Root,
-  colors: ColorScheme
-): NormalizedRun[] {
-  const runs: NormalizedRun[] = [];
-  let isFirstBlock = true;
-
-  for (const node of tree.children) {
-    if (node.type === SYNTAX.PARAGRAPH) {
-      if (!isFirstBlock && runs.length > 0) {
-        // Add breakLine to the first run of non-first paragraphs
-        // (means "start a new paragraph before this run")
-        const paragraphRuns: NormalizedRun[] = [];
-        transformInline(node.children, colors, paragraphRuns, {});
-        if (paragraphRuns.length > 0) {
-          paragraphRuns[0] = { ...paragraphRuns[0], paragraphBreak: true };
-          runs.push(...paragraphRuns);
-        }
-      } else {
-        transformInline(node.children, colors, runs, {});
-      }
-      isFirstBlock = false;
-    } else if (node.type === SYNTAX.LIST) {
-      transformList(node as List, colors, runs);
-      isFirstBlock = false;
-    }
-  }
-
-  return runs;
-}
-
-/**
- * Transform a list node into bullet/numbered runs.
- */
-function transformList(
-  list: List,
-  colors: ColorScheme,
-  runs: NormalizedRun[]
-): void {
-  const bulletType = list.ordered
-    ? { type: 'number' as const }
-    : true;
-
-  for (const item of list.children as ListItem[]) {
-    const firstChild = item.children[0];
-    if (firstChild && firstChild.type === SYNTAX.PARAGRAPH) {
-      // Collect item runs separately — only the first run gets bullet
-      const itemRuns: NormalizedRun[] = [];
-      transformInline(
-        (firstChild as Paragraph).children,
-        colors,
-        itemRuns,
-        {}
-      );
-      if (itemRuns.length > 0) {
-        itemRuns[0] = { ...itemRuns[0], bullet: bulletType };
-        runs.push(...itemRuns);
-      }
-    } else if (firstChild && firstChild.type === SYNTAX.LIST) {
-      // Nested list (e.g. `- 1. text`) — recurse, but use outer bullet type
-      transformList(firstChild as List, colors, runs);
-    }
-  }
-}
-
-/**
- * Transform inline/phrasing content into NormalizedRun[].
- * Recurses for strong, emphasis, and textDirective nodes.
- */
-function transformInline(
-  nodes: PhrasingContent[],
-  colors: ColorScheme,
-  runs: NormalizedRun[],
-  defaults: Partial<NormalizedRun>
-): void {
-  for (const node of nodes) {
-    switch (node.type) {
-      case SYNTAX.TEXT:
-        runs.push({ text: node.value, ...defaults });
-        break;
-      case SYNTAX.STRONG:
-        transformInline(node.children, colors, runs, { ...defaults, bold: true });
-        break;
-      case SYNTAX.EMPHASIS:
-        transformInline(node.children, colors, runs, { ...defaults, italic: true });
-        break;
-      case SYNTAX.TEXT_DIRECTIVE: {
-        const directive = node as unknown as TextDirective;
-        const accentColor = colors.accents[directive.name];
-        if (!accentColor) {
-          const available = Object.keys(colors.accents).join(', ');
-          throw new Error(
-            `Unknown accent '${directive.name}'. Available: ${available}`
-          );
-        }
-        transformInline(
-          directive.children as PhrasingContent[],
-          colors,
-          runs,
-          { ...defaults, color: accentColor }
-        );
-        break;
-      }
-      case SYNTAX.BREAK:
-        runs.push({ text: '', softBreak: true, ...defaults });
-        break;
-      default:
-        // Graceful degradation: recurse into children or extract value.
-        // Handles: inlineCode, link, delete, html, image, footnoteReference, etc.
-        if ('children' in node && Array.isArray((node as any).children)) {
-          transformInline((node as any).children as PhrasingContent[], colors, runs, defaults);
-        } else if ('value' in node && typeof (node as any).value === 'string') {
-          runs.push({ text: (node as any).value, ...defaults });
-        }
-        break;
-    }
-  }
-}
 
 // ============================================
 // HEADING STYLE MAP (exported for document component)
@@ -244,7 +78,6 @@ function expandText(props: TextComponentProps, context: ExpansionContext, tokens
   // Props override tokens: DSL/parent callers can pass explicit values
   const resolvedStyle = props.style ?? tokens.style;
   const resolvedColor = props.color ?? tokens.color;
-  const resolvedBulletColor = props.bulletColor ?? tokens.bulletColor;
   const resolvedLineHeight = props.lineHeightMultiplier ?? tokens.lineHeightMultiplier;
   const textStyle = context.theme.textStyles[resolvedStyle];
   const bulletIndentPt = textStyle.fontSize * context.theme.spacing.bulletIndentMultiplier;
@@ -264,31 +97,22 @@ function expandText(props: TextComponentProps, context: ExpansionContext, tokens
     };
   }
 
-  // RICH or PROSE — parse markdown
-  const parser = contentKind === CONTENT.RICH ? inlineProcessor : proseProcessor;
-  const tree = parser.parse(props.body) as Root;
+  // RICH — parse inline markdown only
+  const tree = inlineProcessor.parse(props.body) as Root;
 
-  // RICH: validate single paragraph (no multi-block)
-  if (contentKind === CONTENT.RICH) {
-    const blocks = tree.children.filter(c => c.type !== SYNTAX.THEMATIC_BREAK);
-    if (blocks.length > 1 || (blocks.length === 1 && blocks[0].type !== SYNTAX.PARAGRAPH)) {
-      throw new Error(
-        `text() with CONTENT.RICH only supports inline formatting (bold, italic, colors). ` +
-        `For bullets or multiple paragraphs, use content: CONTENT.PROSE.`
-      );
-    }
+  // Validate single paragraph (no multi-block)
+  const blocks = tree.children.filter(c => c.type !== SYNTAX.THEMATIC_BREAK);
+  if (blocks.length > 1 || (blocks.length === 1 && blocks[0].type !== SYNTAX.PARAGRAPH)) {
+    throw new Error(
+      `text() with CONTENT.RICH only supports inline formatting (bold, italic, colors). ` +
+      `For bullets, use the list component.`
+    );
   }
 
-  const runs = mdastToRuns(tree, context.theme.colors);
-
-  // PROSE: apply bulletColor to all bullet runs
-  if (contentKind === CONTENT.PROSE && resolvedBulletColor) {
-    for (const run of runs) {
-      if (run.bullet && typeof run.bullet === 'object') {
-        run.bullet = { ...run.bullet, color: resolvedBulletColor };
-      } else if (run.bullet === true) {
-        run.bullet = { color: resolvedBulletColor };
-      }
+  const runs: NormalizedRun[] = [];
+  for (const child of tree.children) {
+    if (child.type === SYNTAX.PARAGRAPH) {
+      transformInline(child.children, context.theme.colors, runs, {});
     }
   }
 
@@ -313,16 +137,17 @@ export const textComponent = defineComponent({
   name: Component.Text,
   body: schema.string(),
   params: textSchema,
+  directive: false,
   tokens: [TEXT_TOKEN.COLOR, TEXT_TOKEN.BULLET_COLOR, TEXT_TOKEN.STYLE, TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER],
   mdast: {
-    nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.LIST, SYNTAX.HEADING],
+    nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.HEADING],
     compile: (node: RootContent, source: string): ComponentNode | null => {
       if (node.type === SYNTAX.HEADING) {
         const heading = node as Heading;
         const style = HEADING_STYLE[heading.depth] ?? TEXT_STYLE.H3;
         const raw = extractSource(heading, source);
         const content = raw.replace(/^#{1,6}\s*/, '');
-        return component(Component.Text, { body: content, content: CONTENT.PROSE, style });
+        return component(Component.Text, { body: content, content: CONTENT.RICH, style });
       }
       if (node.type === SYNTAX.PARAGRAPH) {
         const para = node as { children: { type: string }[] };
@@ -330,7 +155,7 @@ export const textComponent = defineComponent({
           throw new Error('Images cannot be embedded inline in text. Use :::image directive.');
         }
       }
-      return component(Component.Text, { body: extractSource(node, source), content: CONTENT.PROSE });
+      return component(Component.Text, { body: extractSource(node, source), content: CONTENT.RICH });
     },
   },
   expand: expandText,
@@ -349,7 +174,6 @@ export const textComponent = defineComponent({
  * text("1. Problem statement", { style: TEXT_STYLE.H4 })
  * text("**Bold** and :teal[highlighted]")
  * text("ARCHITECTURE", { content: CONTENT.PLAIN, style: TEXT_STYLE.EYEBROW })
- * text("- First\n- Second", { content: CONTENT.PROSE })
  * ```
  */
 export function text(body: string, props?: TextProps): ComponentNode<TextComponentProps> {

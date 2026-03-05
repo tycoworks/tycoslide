@@ -107,7 +107,7 @@ function expandTestimonial(props: TestimonialProps & { body?: string }, context:
   if (!actualQuote) {
     throw new Error(`[tycoslide] Testimonial component requires either a 'quote' attribute or body text.`);
   }
-  children.push(text(actualQuote, { content: CONTENT.PROSE, style: quoteStyle, color: quoteColor }));
+  children.push(text(actualQuote, { content: CONTENT.RICH, style: quoteStyle, color: quoteColor }));
   if (attribution) {
     children.push(text(attribution, { content: CONTENT.PLAIN, style: attributionStyle, color: attributionColor, hAlign: attributionHAlign }));
   }
