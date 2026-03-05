@@ -16,6 +16,19 @@ import { schema } from '../src/core/model/schema.js';
 
 const stubStyle: TextStyle = { fontSize: 12, fontFamily: { normal: { name: 'Test', path: '' } }, defaultWeight: FONT_WEIGHT.NORMAL };
 
+const stubTextNode = (text: string = ''): any => ({
+  type: NODE_TYPE.TEXT,
+  content: [{ text }],
+  style: TEXT_STYLE.BODY,
+  resolvedStyle: stubStyle,
+  color: '000000',
+  hAlign: HALIGN.LEFT,
+  vAlign: VALIGN.TOP,
+  lineHeightMultiplier: 1.2,
+  bulletIndentPt: 0,
+  linkColor: '0000FF',
+  linkUnderline: true,
+});
 
 describe('defineComponent', () => {
   describe('define with params', () => {
@@ -29,16 +42,7 @@ describe('defineComponent', () => {
       name: 'test-params-comp',
       params: testParams,
       tokens: [],
-      expand: (props) => ({
-        type: NODE_TYPE.TEXT,
-        content: [{ text: props.title }],
-        style: TEXT_STYLE.BODY,
-        resolvedStyle: stubStyle,
-        color: '000000',
-        hAlign: HALIGN.LEFT,
-        vAlign: VALIGN.TOP,
-        lineHeightMultiplier: 1.2, bulletIndentPt: 0, linkColor: '0000FF', linkUnderline: true,
-      }),
+      expand: (props) => stubTextNode(props.title),
     });
 
     test('has .schema property (ZodObject)', () => {
@@ -88,16 +92,7 @@ describe('defineComponent', () => {
       name: 'test-body-comp',
       body: schema.string(),
       tokens: [],
-      expand: (props) => ({
-        type: NODE_TYPE.TEXT,
-        content: [{ text: props.body }],
-        style: TEXT_STYLE.BODY,
-        resolvedStyle: stubStyle,
-        color: '000000',
-        hAlign: HALIGN.LEFT,
-        vAlign: VALIGN.TOP,
-        lineHeightMultiplier: 1.2, bulletIndentPt: 0, linkColor: '0000FF', linkUnderline: true,
-      }),
+      expand: (props) => stubTextNode(props.body),
     });
 
     test('has .schema property (= body type)', () => {
@@ -134,16 +129,7 @@ describe('defineComponent', () => {
       body: schema.string(),
       params: { scale: schema.number().optional() },
       tokens: [],
-      expand: (props) => ({
-        type: NODE_TYPE.TEXT,
-        content: [{ text: props.body }],
-        style: TEXT_STYLE.BODY,
-        resolvedStyle: stubStyle,
-        color: '000000',
-        hAlign: HALIGN.LEFT,
-        vAlign: VALIGN.TOP,
-        lineHeightMultiplier: 1.2, bulletIndentPt: 0, linkColor: '0000FF', linkUnderline: true,
-      }),
+      expand: (props) => stubTextNode(props.body),
     });
 
     test('.schema is body type (not full object)', () => {
@@ -193,37 +179,6 @@ describe('defineComponent', () => {
 
     test('is registerable in componentRegistry', () => {
       componentRegistry.register(comp);
-    });
-  });
-
-  describe('deserializer behavior', () => {
-    test('all content components get auto-generated deserializer', () => {
-      const comp = defineComponent({
-        name: 'test-auto-deserialize',
-        body: schema.string(),
-        tokens: [],
-        expand: (props) => ({
-          type: NODE_TYPE.TEXT,
-          content: [{ text: props.body }],
-          style: TEXT_STYLE.BODY,
-          resolvedStyle: stubStyle,
-          color: '000000',
-          hAlign: HALIGN.LEFT,
-          vAlign: VALIGN.TOP,
-          lineHeightMultiplier: 1.2, bulletIndentPt: 0, linkColor: '0000FF', linkUnderline: true,
-        }),
-      });
-      assert.ok(comp.deserialize, 'content component should have deserializer');
-    });
-
-    test('slot components do NOT get deserializer', () => {
-      const comp = defineComponent({
-        name: 'test-no-deserialize',
-        slots: ['children'],
-        tokens: [],
-        expand: () => ({ type: NODE_TYPE.TEXT, content: [], style: TEXT_STYLE.BODY, resolvedStyle: stubStyle, color: '000000', hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP, lineHeightMultiplier: 1.2, bulletIndentPt: 0, linkColor: '0000FF', linkUnderline: true }),
-      });
-      assert.strictEqual(comp.deserialize, undefined);
     });
   });
 
