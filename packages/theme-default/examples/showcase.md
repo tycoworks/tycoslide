@@ -147,19 +147,6 @@ flowchart LR
 :::
 
 ---
-layout: agenda
-title: Agenda
-eyebrow: Overview
-items:
-  - What is tycoslide?
-  - The authoring workflow
-  - Brand compliance through design tokens
-  - PowerPoint output and compatibility
-  - Roadmap and next steps
-notes: Agenda layout — items render as a native bullet list via the list component.
----
-
----
 layout: body
 title: Presentations as Code
 eyebrow: Code Component
@@ -183,6 +170,22 @@ ORDER BY created_at DESC;`, 'sql'),
 
 await pres.build('output.pptx');
 ```
+
+---
+layout: body
+title: Rich Text Formatting
+eyebrow: Inline Styles
+notes: Demonstrates all inline formatting options available in CONTENT.RICH mode.
+---
+
+tycoslide supports a full range of inline formatting:
+
+- **Bold text** and *italic text* for emphasis
+- [Hyperlinks](https://example.com) with theme-controlled color and underline
+- ~~Strikethrough~~ for deletions or corrections
+- ++Underline++ for additional emphasis
+- :purple[Accent colors] via text directives
+- Composable: [**~~bold struck link~~**](https://example.com)
 
 ---
 layout: body

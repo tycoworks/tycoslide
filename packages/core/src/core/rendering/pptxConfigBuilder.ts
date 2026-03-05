@@ -3,8 +3,8 @@
 // No pptxgenjs dependency — every method takes typed inputs and returns plain data.
 
 import type { PositionedNode, TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, TableCellData } from '../model/nodes.js';
-import type { TextStyle, TextContent } from '../model/types.js';
-import { FONT_WEIGHT, BORDER_STYLE, LINE_SHAPE } from '../model/types.js';
+import type { TextStyle, TextContent, StrikeType, UnderlineStyle } from '../model/types.js';
+import { FONT_WEIGHT, BORDER_STYLE, LINE_SHAPE, STRIKE_TYPE, UNDERLINE_STYLE } from '../model/types.js';
 import { getFontFromFamily, normalizeContent, getParagraphGapRatio } from '../../utils/font.js';
 import { readImageDimensions, containFit } from '../../utils/image.js';
 
@@ -22,6 +22,9 @@ export interface TextFragmentOptions {
   bullet?: boolean | { type?: string; color?: string } | { color: string };
   bold?: boolean;
   italic?: boolean;
+  strike?: StrikeType;
+  underline?: { style: UnderlineStyle; color?: string };
+  hyperlink?: { url: string };
   paraSpaceBefore?: number;
   paraSpaceAfter?: number;
 }
@@ -50,7 +53,7 @@ export class PptxConfigBuilder {
   ): { fragments: TextFragment[]; options: Record<string, unknown> } {
     const style = textNode.resolvedStyle;
     const defaultFont = getFontFromFamily(style.fontFamily, style.defaultWeight);
-    const fragments = this.buildTextFragments(textNode.content, style, textNode.color);
+    const fragments = this.buildTextFragments(textNode.content, style, textNode.color, textNode.linkColor, textNode.linkUnderline);
 
     // Check if any fragment has bullets - affects alignment
     const hasBullets = fragments.some(f => f.options.bullet);
@@ -79,7 +82,9 @@ export class PptxConfigBuilder {
   buildTextFragments(
     content: TextContent,
     style: TextStyle,
-    color: string
+    color: string,
+    linkColor?: string,
+    linkUnderline?: boolean,
   ): TextFragment[] {
     const defaultWeight = style.defaultWeight;
 
@@ -98,6 +103,14 @@ export class PptxConfigBuilder {
       // Pass through paragraph-level options
       if (run.bold) options.bold = true;
       if (run.italic) options.italic = true;
+      if (run.strikethrough) options.strike = STRIKE_TYPE.SINGLE;
+      if (run.underline) options.underline = { style: UNDERLINE_STYLE.SINGLE };
+      if (run.hyperlink) {
+        options.hyperlink = { url: run.hyperlink };
+        // Apply link token styling unless run has explicit overrides
+        if (!run.color && linkColor) options.color = linkColor;
+        if (!run.underline && linkUnderline) options.underline = { style: UNDERLINE_STYLE.SINGLE };
+      }
       // Record break-before for post-processing shift
       if (run.paragraphBreak && !run.bullet) breakBeforeIndices.add(i);
       if (run.softBreak) options.softBreakBefore = true;
@@ -244,7 +257,7 @@ export class PptxConfigBuilder {
     const border = this.buildCellBorder(tableNode, rowIndex, colIndex, numRows, numCols);
 
     // Build rich text fragments for cell content
-    const textFragments = this.buildTextFragments(cell.content, textStyle, cell.color);
+    const textFragments = this.buildTextFragments(cell.content, textStyle, cell.color, cell.linkColor, cell.linkUnderline);
 
     const options: Record<string, unknown> = {
       fontFace: font.name,

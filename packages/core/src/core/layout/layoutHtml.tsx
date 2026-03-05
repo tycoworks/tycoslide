@@ -268,7 +268,7 @@ function styleText(
     nodeId,
     styles,
     children: [],
-    innerHTML: `<div>${renderTextRunsToHTML(runs, style, defaultWeight, bulletIndentPx, node.color)}</div>`,
+    innerHTML: `<div>${renderTextRunsToHTML(runs, style, defaultWeight, bulletIndentPx, node.color, node.linkColor, node.linkUnderline)}</div>`,
   };
 }
 
@@ -577,6 +577,8 @@ function renderTextRunsToHTML(
   defaultWeight: FontWeight,
   bulletIndentPx: number,
   textColor: string,
+  linkColor?: string,
+  linkUnderline?: boolean,
 ): string {
   // Step 1: Group runs into renderable lines
   const groups: NormalizedRun[][] = [];
@@ -604,7 +606,7 @@ function renderTextRunsToHTML(
 
   for (const group of groups) {
     const first = group[0];
-    const spans = group.map(run => renderRunSpanHTML(run, style, defaultWeight)).join('');
+    const spans = group.map(run => renderRunSpanHTML(run, style, defaultWeight, linkColor, linkUnderline)).join('');
 
     if (first.bullet) {
       // Bullet marker color: set on <li> so ::marker inherits it.
@@ -641,6 +643,8 @@ function renderRunSpanHTML(
   run: NormalizedRun,
   style: TextStyle,
   defaultWeight: FontWeight,
+  linkColor?: string,
+  linkUnderline?: boolean,
 ): string {
   const css: string[] = [];
 
@@ -673,11 +677,32 @@ function renderRunSpanHTML(
     css.push(`color:#${run.highlight.text}`);
   }
 
-  const escaped = escapeHtml(run.text);
-  if (css.length > 0) {
-    return `<span style="${css.join(';')}">${escaped}</span>`;
+  // Text decorations: strikethrough and underline can combine
+  const decorations: string[] = [];
+  if (run.strikethrough) decorations.push('line-through');
+  if (run.underline) decorations.push('underline');
+  if (decorations.length > 0) {
+    css.push(`text-decoration:${decorations.join(' ')}`);
   }
-  return `<span>${escaped}</span>`;
+
+  const escaped = escapeHtml(run.text);
+  let html: string;
+  if (css.length > 0) {
+    html = `<span style="${css.join(';')}">${escaped}</span>`;
+  } else {
+    html = `<span>${escaped}</span>`;
+  }
+
+  // Wrap in <a> for hyperlinks — color and underline from tokens
+  // Accent color (explicit run.color) wins over link token
+  if (run.hyperlink) {
+    const linkCss: string[] = [];
+    linkCss.push(!run.color && linkColor ? `color:#${linkColor}` : 'color:inherit');
+    linkCss.push(linkUnderline && !run.underline ? 'text-decoration:underline' : 'text-decoration:inherit');
+    html = `<a href="${escapeHtml(run.hyperlink)}" style="${linkCss.join(';')}">${html}</a>`;
+  }
+
+  return html;
 }
 
 /** Escape HTML special characters in text content */
@@ -703,6 +728,8 @@ function getTableCellNodes(node: TableNode): TextNode[][] {
       vAlign: cell.vAlign,
       lineHeightMultiplier: cell.lineHeightMultiplier,
       bulletIndentPt: 0,  // Table cells never have bullets
+      linkColor: cell.linkColor,
+      linkUnderline: cell.linkUnderline,
     }))
   );
 }

@@ -25,6 +25,8 @@ import {
   SHAPE,
   LINE_SHAPE,
   FONT_WEIGHT,
+  STRIKE_TYPE,
+  UNDERLINE_STYLE,
 } from '../src/core/model/types.js';
 import { getParagraphGapRatio } from '../src/utils/font.js';
 import { containFit } from '../src/utils/image.js';
@@ -154,6 +156,8 @@ const baseTableNode: TableNode = {
   cellPadding: 0.1,
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.MIDDLE,
+  linkColor: '0000FF',
+  linkUnderline: true,
 };
 
 /** Base cell for tests — all required fields pre-resolved */
@@ -165,6 +169,8 @@ const baseCell: TableCellData = {
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.MIDDLE,
   lineHeightMultiplier: 1.2,
+  linkColor: '0000FF',
+  linkUnderline: true,
 };
 
 describe('buildTableCell()', () => {
@@ -586,6 +592,8 @@ const baseTextNode: TextNode = {
   vAlign: VALIGN.TOP,
   lineHeightMultiplier: 1.2,
   bulletIndentPt: 0,
+  linkColor: '0000FF',
+  linkUnderline: true,
 };
 
 describe('buildTextConfig()', () => {
@@ -748,6 +756,68 @@ describe('buildTextFragments()', () => {
 
     assert.strictEqual(fragments.length, 1);
     assert.strictEqual(fragments[0].options?.bullet, true);
+  });
+
+  test('applies strikethrough as STRIKE_TYPE.SINGLE', () => {
+    const fragments = builder.buildTextFragments(
+      [{ text: 'Struck', strikethrough: true }],
+      mockTextStyle,
+      '000000'
+    );
+
+    assert.strictEqual(fragments.length, 1);
+    assert.strictEqual(fragments[0].options?.strike, STRIKE_TYPE.SINGLE);
+  });
+
+  test('applies underline as UNDERLINE_STYLE.SINGLE', () => {
+    const fragments = builder.buildTextFragments(
+      [{ text: 'Underlined', underline: true }],
+      mockTextStyle,
+      '000000'
+    );
+
+    assert.strictEqual(fragments.length, 1);
+    assert.deepStrictEqual(fragments[0].options?.underline, { style: UNDERLINE_STYLE.SINGLE });
+  });
+
+  test('applies hyperlink with link token color and underline', () => {
+    const fragments = builder.buildTextFragments(
+      [{ text: 'Click', hyperlink: 'https://example.com' }],
+      mockTextStyle,
+      '000000',
+      'FF00FF',  // linkColor
+      true       // linkUnderline
+    );
+
+    assert.strictEqual(fragments.length, 1);
+    assert.deepStrictEqual(fragments[0].options?.hyperlink, { url: 'https://example.com' });
+    assert.strictEqual(fragments[0].options?.color, 'FF00FF');
+    assert.deepStrictEqual(fragments[0].options?.underline, { style: UNDERLINE_STYLE.SINGLE });
+  });
+
+  test('hyperlink: explicit run.color wins over linkColor token', () => {
+    const fragments = builder.buildTextFragments(
+      [{ text: 'Accent link', hyperlink: 'https://example.com', color: 'AA0000' }],
+      mockTextStyle,
+      '000000',
+      'FF00FF',  // linkColor — should be overridden
+      true
+    );
+
+    assert.strictEqual(fragments[0].options?.color, 'AA0000');
+  });
+
+  test('hyperlink: explicit run.underline wins over linkUnderline token', () => {
+    const fragments = builder.buildTextFragments(
+      [{ text: 'Already underlined', hyperlink: 'https://example.com', underline: true }],
+      mockTextStyle,
+      '000000',
+      'FF00FF',
+      true  // linkUnderline — should not double
+    );
+
+    // underline should be set exactly once (from run.underline, not duplicated by token)
+    assert.deepStrictEqual(fragments[0].options?.underline, { style: UNDERLINE_STYLE.SINGLE });
   });
 
   test('shifts paragraphBreak to previous fragment for pptxgenjs', () => {

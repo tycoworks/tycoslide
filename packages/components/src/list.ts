@@ -2,21 +2,23 @@
 // Peer of text — handles bullet/numbered lists as its own component.
 // Internal-only (no :::list directive). Available via list() DSL and MDAST handler.
 
-import type { Root, PhrasingContent, List as MdastList, Paragraph, ListItem } from 'mdast';
+import type { List as MdastList, ListItem } from 'mdast';
 import type { RootContent } from 'mdast';
 import type { NormalizedRun, TextStyleName, HorizontalAlignment, VerticalAlignment, ExpansionContext } from 'tycoslide';
-import { HALIGN, VALIGN, CONTENT, SYNTAX, extractSource } from 'tycoslide';
+import { HALIGN, VALIGN, SYNTAX, extractSource } from 'tycoslide';
 import { NODE_TYPE, type ElementNode } from 'tycoslide';
-import { defineComponent, component, type ComponentNode, type SchemaShape } from 'tycoslide';
+import { defineComponent, component, type ComponentNode } from 'tycoslide';
 import { schema } from 'tycoslide';
 import { Component } from './names.js';
-import { transformInline, inlineProcessor } from './utils/inline.js';
+import { transformInline, inlineParse } from './utils/inline.js';
 
 export const LIST_TOKEN = {
   COLOR: 'color',
   BULLET_COLOR: 'bulletColor',
   STYLE: 'style',
   LINE_HEIGHT_MULTIPLIER: 'lineHeightMultiplier',
+  LINK_COLOR: 'linkColor',
+  LINK_UNDERLINE: 'linkUnderline',
 } as const;
 
 export interface ListTokens {
@@ -24,6 +26,8 @@ export interface ListTokens {
   [LIST_TOKEN.BULLET_COLOR]: string;
   [LIST_TOKEN.STYLE]: TextStyleName;
   [LIST_TOKEN.LINE_HEIGHT_MULTIPLIER]: number;
+  [LIST_TOKEN.LINK_COLOR]: string;
+  [LIST_TOKEN.LINK_UNDERLINE]: boolean;
 }
 
 // ============================================
@@ -37,6 +41,8 @@ export interface ListProps {
   vAlign?: VerticalAlignment;
   bulletColor?: string;
   lineHeightMultiplier?: number;
+  linkColor?: string;
+  linkUnderline?: boolean;
   ordered?: boolean;
   variant?: string;
 }
@@ -52,6 +58,8 @@ function expandList(props: ListComponentProps, context: ExpansionContext, tokens
   const resolvedColor = props.color ?? tokens.color;
   const resolvedBulletColor = props.bulletColor ?? tokens.bulletColor;
   const resolvedLineHeight = props.lineHeightMultiplier ?? tokens.lineHeightMultiplier;
+  const resolvedLinkColor = props.linkColor ?? tokens.linkColor;
+  const resolvedLinkUnderline = props.linkUnderline ?? tokens.linkUnderline;
   const textStyle = context.theme.textStyles[resolvedStyle];
   const bulletIndentPt = textStyle.fontSize * context.theme.spacing.bulletIndentMultiplier;
 
@@ -61,7 +69,7 @@ function expandList(props: ListComponentProps, context: ExpansionContext, tokens
   for (let i = 0; i < props.body.length; i++) {
     const item = props.body[i];
     // Parse each item as RICH (inline formatting)
-    const tree = inlineProcessor.parse(item) as Root;
+    const tree = inlineParse(item);
     const itemRuns: NormalizedRun[] = [];
     for (const child of tree.children) {
       if (child.type === SYNTAX.PARAGRAPH) {
@@ -100,6 +108,8 @@ function expandList(props: ListComponentProps, context: ExpansionContext, tokens
     vAlign: props.vAlign ?? VALIGN.TOP,
     lineHeightMultiplier: resolvedLineHeight,
     bulletIndentPt,
+    linkColor: resolvedLinkColor,
+    linkUnderline: resolvedLinkUnderline,
   };
 }
 
@@ -130,7 +140,7 @@ export const listComponent = defineComponent({
   name: Component.List,
   body: schema.array(schema.string()),
   directive: false,
-  tokens: [LIST_TOKEN.COLOR, LIST_TOKEN.BULLET_COLOR, LIST_TOKEN.STYLE, LIST_TOKEN.LINE_HEIGHT_MULTIPLIER],
+  tokens: [LIST_TOKEN.COLOR, LIST_TOKEN.BULLET_COLOR, LIST_TOKEN.STYLE, LIST_TOKEN.LINE_HEIGHT_MULTIPLIER, LIST_TOKEN.LINK_COLOR, LIST_TOKEN.LINK_UNDERLINE],
   mdast: {
     nodeTypes: [SYNTAX.LIST],
     compile: (node: RootContent, source: string): ComponentNode | null => {

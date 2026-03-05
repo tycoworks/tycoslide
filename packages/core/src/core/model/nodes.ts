@@ -52,6 +52,8 @@ export interface TextNode {
   vAlign: VerticalAlignment;
   lineHeightMultiplier: number;
   bulletIndentPt: number;           // points — pre-resolved: fontSize * bulletIndentMultiplier
+  linkColor: string;                // token-driven hyperlink color (render-time)
+  linkUnderline: boolean;           // token-driven hyperlink underline (render-time)
 }
 
 export interface ImageNode {
@@ -124,6 +126,8 @@ export interface TableCellData {
   hAlign: HorizontalAlignment;     // pre-resolved: cell → table default
   vAlign: VerticalAlignment;       // pre-resolved: cell → table default
   lineHeightMultiplier: number;    // pre-resolved from table cellLineHeight token
+  linkColor: string;               // pre-resolved from table token
+  linkUnderline: boolean;          // pre-resolved from table token
   colspan?: number;
   rowspan?: number;
   fill?: string;
@@ -148,6 +152,8 @@ export interface TableNode {
   cellPadding: number;
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;
+  linkColor: string;
+  linkUnderline: boolean;
 }
 
 // ============================================

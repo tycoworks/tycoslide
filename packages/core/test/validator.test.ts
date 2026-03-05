@@ -20,6 +20,8 @@ function textNode(content: string): TextNode {
     color: '000000',
     lineHeightMultiplier: 1.2,
     bulletIndentPt: 18,
+    linkColor: '0000FF',
+    linkUnderline: true,
   };
 }
 

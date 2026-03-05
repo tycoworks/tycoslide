@@ -31,6 +31,8 @@ export const TABLE_TOKEN = {
   CELL_LINE_HEIGHT: 'cellLineHeight',
   HEADER_TEXT_COLOR: 'headerTextColor',
   CELL_TEXT_COLOR: 'cellTextColor',
+  LINK_COLOR: 'linkColor',
+  LINK_UNDERLINE: 'linkUnderline',
 } as const;
 
 export interface TableTokens {
@@ -49,6 +51,8 @@ export interface TableTokens {
   [TABLE_TOKEN.HALIGN]: HorizontalAlignment;
   [TABLE_TOKEN.VALIGN]: VerticalAlignment;
   [TABLE_TOKEN.CELL_LINE_HEIGHT]: number;
+  [TABLE_TOKEN.LINK_COLOR]: string;
+  [TABLE_TOKEN.LINK_UNDERLINE]: boolean;
 }
 
 // ============================================
@@ -100,7 +104,7 @@ const tableSchema = {
 export const tableComponent = defineComponent({
   name: Component.Table,
   params: tableSchema,
-  tokens: [TABLE_TOKEN.BORDER_STYLE, TABLE_TOKEN.BORDER_COLOR, TABLE_TOKEN.BORDER_WIDTH, TABLE_TOKEN.HEADER_BACKGROUND, TABLE_TOKEN.HEADER_BACKGROUND_OPACITY, TABLE_TOKEN.HEADER_TEXT_STYLE, TABLE_TOKEN.HEADER_TEXT_COLOR, TABLE_TOKEN.CELL_BACKGROUND, TABLE_TOKEN.CELL_BACKGROUND_OPACITY, TABLE_TOKEN.CELL_TEXT_STYLE, TABLE_TOKEN.CELL_TEXT_COLOR, TABLE_TOKEN.CELL_PADDING, TABLE_TOKEN.HALIGN, TABLE_TOKEN.VALIGN, TABLE_TOKEN.CELL_LINE_HEIGHT],
+  tokens: [TABLE_TOKEN.BORDER_STYLE, TABLE_TOKEN.BORDER_COLOR, TABLE_TOKEN.BORDER_WIDTH, TABLE_TOKEN.HEADER_BACKGROUND, TABLE_TOKEN.HEADER_BACKGROUND_OPACITY, TABLE_TOKEN.HEADER_TEXT_STYLE, TABLE_TOKEN.HEADER_TEXT_COLOR, TABLE_TOKEN.CELL_BACKGROUND, TABLE_TOKEN.CELL_BACKGROUND_OPACITY, TABLE_TOKEN.CELL_TEXT_STYLE, TABLE_TOKEN.CELL_TEXT_COLOR, TABLE_TOKEN.CELL_PADDING, TABLE_TOKEN.HALIGN, TABLE_TOKEN.VALIGN, TABLE_TOKEN.CELL_LINE_HEIGHT, TABLE_TOKEN.LINK_COLOR, TABLE_TOKEN.LINK_UNDERLINE],
   mdast: {
     nodeTypes: [SYNTAX.TABLE],
     compile: (node: RootContent, source: string): ComponentNode | null => {
@@ -201,6 +205,8 @@ export const tableComponent = defineComponent({
           hAlign,
           vAlign,
           lineHeightMultiplier: tokens.cellLineHeight,
+          linkColor: tokens.linkColor,
+          linkUnderline: tokens.linkUnderline,
           ...(colspan != null && { colspan }),
           ...(rowspan != null && { rowspan }),
           ...(fill != null && { fill }),
@@ -226,6 +232,8 @@ export const tableComponent = defineComponent({
       cellPadding: tokens.cellPadding,
       hAlign: tokens.hAlign,
       vAlign: tokens.vAlign,
+      linkColor: tokens.linkColor,
+      linkUnderline: tokens.linkUnderline,
     };
   }),
 });

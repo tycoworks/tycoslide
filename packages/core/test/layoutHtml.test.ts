@@ -60,6 +60,8 @@ function textNode(content: string | NormalizedRun[], opts?: Partial<Omit<TextNod
     vAlign: VALIGN.TOP,
     lineHeightMultiplier: 1.2,
     bulletIndentPt: 27,
+    linkColor: '0000FF',
+    linkUnderline: true,
     ...opts,
   };
 }
@@ -160,6 +162,8 @@ function cell(text: string, opts?: Partial<TableCellData>): TableCellData {
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.MIDDLE,
     lineHeightMultiplier: 1.0,
+    linkColor: '0000FF',
+    linkUnderline: true,
     ...opts,
   };
 }
@@ -181,6 +185,8 @@ function tableNode(rows: TableCellData[][], opts?: Partial<Omit<TableNode, 'type
     cellPadding: 0.1,
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.MIDDLE,
+    linkColor: '0000FF',
+    linkUnderline: true,
     ...opts,
   };
 }

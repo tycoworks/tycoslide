@@ -4,14 +4,18 @@
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkDirective from 'remark-directive';
+import remarkIns from 'remark-ins';
+import { gfmStrikethrough } from 'micromark-extension-gfm-strikethrough';
+import { gfmStrikethroughFromMarkdown } from 'mdast-util-gfm-strikethrough';
 import type { Processor } from 'unified';
-import type { PhrasingContent } from 'mdast';
+import type { Root, PhrasingContent, Link } from 'mdast';
+import type { Parent } from 'unist';
 import type { TextDirective } from 'mdast-util-directive';
 import type { NormalizedRun, ColorScheme } from 'tycoslide';
 import { SYNTAX } from 'tycoslide';
 
 // ============================================
-// PARSER
+// PARSER PLUGINS
 // ============================================
 
 /** Plugin that disables block-level constructs at the micromark level.
@@ -29,8 +33,27 @@ function remarkDisableBlocks(this: Processor): void {
   });
 }
 
-/** Inline-only parser — block constructs disabled (for CONTENT.RICH) */
-export const inlineProcessor = unified().use(remarkParse).use(remarkDirective).use(remarkDisableBlocks);
+/** Plugin that adds GFM strikethrough (~~text~~) without the rest of GFM.
+ *  singleTilde: false means only ~~ works, avoiding accidental triggers. */
+function remarkStrikethrough(this: Processor): void {
+  const data = this.data() as Record<string, unknown[]>;
+  (data.micromarkExtensions ??= []).push(gfmStrikethrough({ singleTilde: false }));
+  (data.fromMarkdownExtensions ??= []).push(gfmStrikethroughFromMarkdown());
+}
+
+/** Inline-only processor — block constructs disabled, strikethrough + underline enabled.
+ *  Uses runSync(parse(...)) because remark-ins is a transform plugin requiring the run phase. */
+const processor = unified()
+  .use(remarkParse)
+  .use(remarkStrikethrough)
+  .use(remarkDirective)
+  .use(remarkIns)
+  .use(remarkDisableBlocks);
+
+/** Parse inline markdown to an MDAST tree. */
+export function inlineParse(input: string): Root {
+  return processor.runSync(processor.parse(input)) as Root;
+}
 
 // ============================================
 // INLINE TRANSFORMER
@@ -38,7 +61,7 @@ export const inlineProcessor = unified().use(remarkParse).use(remarkDirective).u
 
 /**
  * Transform inline/phrasing content into NormalizedRun[].
- * Recurses for strong, emphasis, and textDirective nodes.
+ * Recurses for strong, emphasis, strikethrough, underline, hyperlink, and textDirective nodes.
  */
 export function transformInline(
   nodes: PhrasingContent[],
@@ -56,6 +79,23 @@ export function transformInline(
         break;
       case SYNTAX.EMPHASIS:
         transformInline(node.children, colors, runs, { ...defaults, italic: true });
+        break;
+      case SYNTAX.LINK: {
+        const link = node as unknown as Link;
+        transformInline(link.children as PhrasingContent[], colors, runs, {
+          ...defaults, hyperlink: link.url,
+        });
+        break;
+      }
+      case SYNTAX.DELETE:
+        transformInline((node as unknown as Parent).children as PhrasingContent[], colors, runs, {
+          ...defaults, strikethrough: true,
+        });
+        break;
+      case SYNTAX.INS:
+        transformInline((node as unknown as Parent).children as PhrasingContent[], colors, runs, {
+          ...defaults, underline: true,
+        });
         break;
       case SYNTAX.TEXT_DIRECTIVE: {
         const directive = node as unknown as TextDirective;
@@ -79,7 +119,7 @@ export function transformInline(
         break;
       default:
         // Graceful degradation: recurse into children or extract value.
-        // Handles: inlineCode, link, delete, html, image, footnoteReference, etc.
+        // Handles: inlineCode, html, image, footnoteReference, etc.
         if ('children' in node && Array.isArray((node as any).children)) {
           transformInline((node as any).children as PhrasingContent[], colors, runs, defaults);
         } else if ('value' in node && typeof (node as any).value === 'string') {

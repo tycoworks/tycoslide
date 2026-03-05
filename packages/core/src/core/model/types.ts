@@ -306,6 +306,21 @@ export type DashType = typeof DASH_TYPE[keyof typeof DASH_TYPE];
 /** All DASH_TYPE values as a tuple — useful for Zod enum schemas */
 export const DASH_TYPE_VALUES = Object.values(DASH_TYPE) as [DashType, ...DashType[]];
 
+/** pptxgenjs strikethrough styles (OpenXML a:strike values) */
+export const STRIKE_TYPE = {
+  SINGLE: 'sngStrike',
+  DOUBLE: 'dblStrike',
+} as const;
+
+export type StrikeType = typeof STRIKE_TYPE[keyof typeof STRIKE_TYPE];
+
+/** pptxgenjs underline styles (OpenXML a:uFill values) */
+export const UNDERLINE_STYLE = {
+  SINGLE: 'sng',
+} as const;
+
+export type UnderlineStyle = typeof UNDERLINE_STYLE[keyof typeof UNDERLINE_STYLE];
+
 export const SLIDE_SIZE = {
   S16x9:  { layout: 'LAYOUT_16x9',  width: 10,    height: 5.625 },
   S16x10: { layout: 'LAYOUT_16x10', width: 10,    height: 6.25 },
@@ -423,6 +438,9 @@ export interface NormalizedRun {
   // Paragraph-level options (for rich text / markdown support)
   bold?: boolean;              // Shorthand for weight: 'bold'
   italic?: boolean;            // Italic text
+  strikethrough?: boolean;     // Strikethrough text (~~text~~)
+  underline?: boolean;         // Underlined text (++text++)
+  hyperlink?: string;          // Hyperlink URL ([text](url))
   paragraphBreak?: boolean;    // Force new paragraph before this run
   softBreak?: boolean;         // Soft line break (like <br>, no paragraph spacing)
   bullet?: boolean | { type?: string; color?: string };  // Bullet marker

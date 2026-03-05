@@ -94,6 +94,8 @@ export function mockTheme(options?: {
       cellPadding,
       hAlign: HALIGN.LEFT,
       vAlign: VALIGN.MIDDLE,
+      linkColor: '0000FF',
+      linkUnderline: true,
     },
     line: {
       color: '333333',
@@ -105,6 +107,8 @@ export function mockTheme(options?: {
       bulletColor: '000000',
       style: TEXT_STYLE.BODY,
       lineHeightMultiplier: lineSpacing,
+      linkColor: '0000FF',
+      linkUnderline: true,
     },
     quote: {
       barColor: 'FF0000',

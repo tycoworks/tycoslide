@@ -58,6 +58,9 @@ Common parameters:
 **Bold text**
 _Italic text_
 **_Bold and italic_**
+~~Strikethrough text~~
+++Underlined text++
+[Link text](https://example.com)
 ```
 
 ### Inline Accents
@@ -155,9 +158,11 @@ eyebrow: BASICS
 notes: Demo each formatting style
 ---
 
-You can use **bold**, _italic_, and **_bold italic_** text.
+You can use **bold**, _italic_, **_bold italic_**, ~~strikethrough~~, and ++underlined++ text.
 
 Highlight with :blue[accent colors] from your theme.
+
+Add [clickable links](https://example.com) to any slide.
 
 ---
 layout: body

@@ -37,7 +37,7 @@ describe('defineComponent', () => {
         color: '000000',
         hAlign: HALIGN.LEFT,
         vAlign: VALIGN.TOP,
-        lineHeightMultiplier: 1.2, bulletIndentPt: 0,
+        lineHeightMultiplier: 1.2, bulletIndentPt: 0, linkColor: '0000FF', linkUnderline: true,
       }),
     });
 
@@ -96,7 +96,7 @@ describe('defineComponent', () => {
         color: '000000',
         hAlign: HALIGN.LEFT,
         vAlign: VALIGN.TOP,
-        lineHeightMultiplier: 1.2, bulletIndentPt: 0,
+        lineHeightMultiplier: 1.2, bulletIndentPt: 0, linkColor: '0000FF', linkUnderline: true,
       }),
     });
 
@@ -142,7 +142,7 @@ describe('defineComponent', () => {
         color: '000000',
         hAlign: HALIGN.LEFT,
         vAlign: VALIGN.TOP,
-        lineHeightMultiplier: 1.2, bulletIndentPt: 0,
+        lineHeightMultiplier: 1.2, bulletIndentPt: 0, linkColor: '0000FF', linkUnderline: true,
       }),
     });
 
@@ -210,7 +210,7 @@ describe('defineComponent', () => {
           color: '000000',
           hAlign: HALIGN.LEFT,
           vAlign: VALIGN.TOP,
-          lineHeightMultiplier: 1.2, bulletIndentPt: 0,
+          lineHeightMultiplier: 1.2, bulletIndentPt: 0, linkColor: '0000FF', linkUnderline: true,
         }),
       });
       assert.ok(comp.deserialize, 'content component should have deserializer');
@@ -221,7 +221,7 @@ describe('defineComponent', () => {
         name: 'test-no-deserialize',
         slots: ['children'],
         tokens: [],
-        expand: () => ({ type: NODE_TYPE.TEXT, content: [], style: TEXT_STYLE.BODY, resolvedStyle: stubStyle, color: '000000', hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP, lineHeightMultiplier: 1.2, bulletIndentPt: 0 }),
+        expand: () => ({ type: NODE_TYPE.TEXT, content: [], style: TEXT_STYLE.BODY, resolvedStyle: stubStyle, color: '000000', hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP, lineHeightMultiplier: 1.2, bulletIndentPt: 0, linkColor: '0000FF', linkUnderline: true }),
       });
       assert.strictEqual(comp.deserialize, undefined);
     });

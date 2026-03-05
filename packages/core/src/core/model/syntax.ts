@@ -23,6 +23,7 @@ export const SYNTAX = {
   LINK: 'link',
   BREAK: 'break',
   DELETE: 'delete',
+  INS: 'insert',
   TEXT_DIRECTIVE: 'textDirective',
 } as const;
 

@@ -5,7 +5,6 @@
 //   CONTENT.PLAIN — no parsing, single run (eyebrows, attributions, copyright)
 //   CONTENT.RICH  — inline-only rich text (bold, italic, :color[highlights], no bullets/paragraphs)
 
-import type { Root } from 'mdast';
 import type { RootContent, Heading } from 'mdast';
 import type { NormalizedRun, ContentType, TextStyleName, HorizontalAlignment, VerticalAlignment, ExpansionContext } from 'tycoslide';
 import { HALIGN, VALIGN, TEXT_STYLE, CONTENT, SYNTAX, extractSource } from 'tycoslide';
@@ -13,13 +12,15 @@ import { NODE_TYPE, type ElementNode } from 'tycoslide';
 import { defineComponent, component, type ComponentNode, type SchemaShape } from 'tycoslide';
 import { schema } from 'tycoslide';
 import { Component } from './names.js';
-import { transformInline, inlineProcessor } from './utils/inline.js';
+import { transformInline, inlineParse } from './utils/inline.js';
 
 export const TEXT_TOKEN = {
   COLOR: 'color',
   BULLET_COLOR: 'bulletColor',
   STYLE: 'style',
   LINE_HEIGHT_MULTIPLIER: 'lineHeightMultiplier',
+  LINK_COLOR: 'linkColor',
+  LINK_UNDERLINE: 'linkUnderline',
 } as const;
 
 export interface TextTokens {
@@ -27,6 +28,8 @@ export interface TextTokens {
   [TEXT_TOKEN.BULLET_COLOR]: string;
   [TEXT_TOKEN.STYLE]: TextStyleName;
   [TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER]: number;
+  [TEXT_TOKEN.LINK_COLOR]: string;
+  [TEXT_TOKEN.LINK_UNDERLINE]: boolean;
 }
 
 // ============================================
@@ -51,6 +54,8 @@ export interface TextProps {
   vAlign?: VerticalAlignment;
   bulletColor?: string;
   lineHeightMultiplier?: number;
+  linkColor?: string;
+  linkUnderline?: boolean;
   variant?: string;
 }
 
@@ -79,6 +84,8 @@ function expandText(props: TextComponentProps, context: ExpansionContext, tokens
   const resolvedStyle = props.style ?? tokens.style;
   const resolvedColor = props.color ?? tokens.color;
   const resolvedLineHeight = props.lineHeightMultiplier ?? tokens.lineHeightMultiplier;
+  const resolvedLinkColor = props.linkColor ?? tokens.linkColor;
+  const resolvedLinkUnderline = props.linkUnderline ?? tokens.linkUnderline;
   const textStyle = context.theme.textStyles[resolvedStyle];
   const bulletIndentPt = textStyle.fontSize * context.theme.spacing.bulletIndentMultiplier;
 
@@ -94,11 +101,13 @@ function expandText(props: TextComponentProps, context: ExpansionContext, tokens
       vAlign: props.vAlign ?? VALIGN.TOP,
       lineHeightMultiplier: resolvedLineHeight,
       bulletIndentPt,
+      linkColor: resolvedLinkColor,
+      linkUnderline: resolvedLinkUnderline,
     };
   }
 
   // RICH — parse inline markdown only
-  const tree = inlineProcessor.parse(props.body) as Root;
+  const tree = inlineParse(props.body);
 
   // Validate single paragraph (no multi-block)
   const blocks = tree.children.filter(c => c.type !== SYNTAX.THEMATIC_BREAK);
@@ -126,6 +135,8 @@ function expandText(props: TextComponentProps, context: ExpansionContext, tokens
     vAlign: props.vAlign ?? VALIGN.TOP,
     lineHeightMultiplier: resolvedLineHeight,
     bulletIndentPt,
+    linkColor: resolvedLinkColor,
+    linkUnderline: resolvedLinkUnderline,
   };
 }
 
@@ -138,7 +149,7 @@ export const textComponent = defineComponent({
   body: schema.string(),
   params: textSchema,
   directive: false,
-  tokens: [TEXT_TOKEN.COLOR, TEXT_TOKEN.BULLET_COLOR, TEXT_TOKEN.STYLE, TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER],
+  tokens: [TEXT_TOKEN.COLOR, TEXT_TOKEN.BULLET_COLOR, TEXT_TOKEN.STYLE, TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER, TEXT_TOKEN.LINK_COLOR, TEXT_TOKEN.LINK_UNDERLINE],
   mdast: {
     nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.HEADING],
     compile: (node: RootContent, source: string): ComponentNode | null => {

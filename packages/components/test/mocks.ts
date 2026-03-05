@@ -115,6 +115,8 @@ export function mockTheme(options?: {
       hAlign: HALIGN.LEFT,
       vAlign: VALIGN.MIDDLE,
       cellLineHeight: lineSpacing,
+      linkColor: '0000FF',
+      linkUnderline: true,
     },
     [Component.Line]: {
       color: '333333',
@@ -132,12 +134,16 @@ export function mockTheme(options?: {
       bulletColor: '000000',
       style: TEXT_STYLE.BODY,
       lineHeightMultiplier: lineSpacing,
+      linkColor: '0000FF',
+      linkUnderline: true,
     },
     [Component.List]: {
       color: '000000',
       bulletColor: '000000',
       style: TEXT_STYLE.BODY,
       lineHeightMultiplier: lineSpacing,
+      linkColor: '0000FF',
+      linkUnderline: true,
     },
     [Component.Shape]: {
       fill: '333333',

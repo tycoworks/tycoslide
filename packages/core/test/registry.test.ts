@@ -131,7 +131,7 @@ describe('ComponentRegistry', () => {
 
   describe('expandTree', () => {
     test('passes primitives through unchanged', async () => {
-      const textNode = { type: NODE_TYPE.TEXT, content: [], style: TEXT_STYLE.BODY, resolvedStyle: mockTextStyle, color: '000000', hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP, lineHeightMultiplier: 1.2, bulletIndentPt: 0 };
+      const textNode = { type: NODE_TYPE.TEXT, content: [], style: TEXT_STYLE.BODY, resolvedStyle: mockTextStyle, color: '000000', hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP, lineHeightMultiplier: 1.2, bulletIndentPt: 0, linkColor: '0000FF', linkUnderline: true };
       const result = await componentRegistry.expandTree(textNode, { theme, canvas: noopCanvas() });
       assert.strictEqual(result, textNode);
     });

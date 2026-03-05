@@ -198,5 +198,45 @@ describe('Text', () => {
       assert.strictEqual(result.style, 'body');
       assert.strictEqual(result.color, 'AABBCC');
     });
+
+    it('should parse hyperlinks', async () => {
+      const node = text('[Click here](https://example.com)');
+      const result = await componentRegistry.expandTree(node, makeContext()) as any;
+      const runs = result.content as NormalizedRun[];
+      assert.ok(runs.some((r) => r.hyperlink === 'https://example.com'));
+      assert.ok(runs.some((r) => r.text === 'Click here'));
+    });
+
+    it('should parse strikethrough', async () => {
+      const node = text('~~struck~~');
+      const result = await componentRegistry.expandTree(node, makeContext()) as any;
+      const runs = result.content as NormalizedRun[];
+      assert.ok(runs.some((r) => r.strikethrough === true && r.text === 'struck'));
+    });
+
+    it('should parse underline', async () => {
+      const node = text('++underlined++');
+      const result = await componentRegistry.expandTree(node, makeContext()) as any;
+      const runs = result.content as NormalizedRun[];
+      assert.ok(runs.some((r) => r.underline === true && r.text === 'underlined'));
+    });
+
+    it('should compose bold + strikethrough + hyperlink', async () => {
+      const node = text('[**~~bold struck link~~**](https://example.com)');
+      const result = await componentRegistry.expandTree(node, makeContext()) as any;
+      const runs = result.content as NormalizedRun[];
+      const composedRun = runs.find((r: NormalizedRun) => r.text === 'bold struck link');
+      assert.ok(composedRun, 'Should have a composed run');
+      assert.strictEqual(composedRun!.bold, true);
+      assert.strictEqual(composedRun!.strikethrough, true);
+      assert.strictEqual(composedRun!.hyperlink, 'https://example.com');
+    });
+
+    it('should resolve linkColor and linkUnderline from tokens', async () => {
+      const node = text('[link](https://example.com)');
+      const result = await componentRegistry.expandTree(node, makeContext()) as any;
+      assert.strictEqual(result.linkColor, '0000FF');
+      assert.strictEqual(result.linkUnderline, true);
+    });
   });
 });
