@@ -19,7 +19,7 @@ export interface TextFragmentOptions {
   highlight?: string;
   softBreakBefore?: boolean;
   breakLine?: boolean;
-  bullet?: boolean | { type?: string; color?: string } | { color: string };
+  bullet?: boolean | { type?: string };
   bold?: boolean;
   italic?: boolean;
   strike?: StrikeType;

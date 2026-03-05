@@ -1088,8 +1088,8 @@ describe('buildTextFragments with multi-paragraph runs', () => {
   test('paragraph followed by bullets: no paraSpaceBefore on bullets', () => {
     const runs: NormalizedRun[] = [
       { text: 'Intro.' },
-      { text: 'Bullet one', bullet: { color: '000000' } },
-      { text: 'Bullet two', bullet: { color: '000000' } },
+      { text: 'Bullet one', bullet: true },
+      { text: 'Bullet two', bullet: true },
     ];
     const fragments = builder.buildTextFragments(runs, mockTextStyle, '000000');
 

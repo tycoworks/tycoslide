@@ -104,7 +104,6 @@ export function mockTheme(options?: {
     },
     text: {
       color: '000000',
-      bulletColor: '000000',
       style: TEXT_STYLE.BODY,
       lineHeightMultiplier: lineSpacing,
       linkColor: '0000FF',

@@ -10,9 +10,9 @@ Design decisions for the component token system. Companion to [roadmap.md](./roa
 
 ### Problem
 
-Card, quote, and testimonial pass only `color` and `style` to their child text components. Everything else — `bulletColor`, `lineHeightMultiplier`, `linkColor`, `linkUnderline` — silently falls back to `text.variants.default`.
+Card, quote, and testimonial pass only `color` and `style` to their child text components. Everything else — `lineHeightMultiplier`, `linkColor`, `linkUnderline` — silently falls back to `text.variants.default`.
 
-This means changing text's default variant unknowingly changes how card descriptions, quote text, and testimonial attributions render. The coupling is invisible: a theme author looking at card's variant tokens sees `titleColor` and `titleStyle` but has no way to know that `bulletColor` comes from a completely different part of the theme.
+This means changing text's default variant unknowingly changes how card descriptions, quote text, and testimonial attributions render. The coupling is invisible: a theme author looking at card's variant tokens sees `titleColor` and `titleStyle` but has no way to know that `lineHeightMultiplier` comes from a completely different part of the theme.
 
 ### Decision: Flat Explicit Tokens (Option B)
 
@@ -24,11 +24,10 @@ Card example — current vs proposed:
 // Current (card.ts:103): passes 2 of 6 text properties
 text(title, { style: titleStyle, color: titleColor })
 
-// Proposed: passes all 6
+// Proposed: passes all 5
 text(title, {
   style: titleStyle,
   color: titleColor,
-  bulletColor: titleBulletColor,
   lineHeightMultiplier: titleLineHeightMultiplier,
   linkColor: titleLinkColor,
   linkUnderline: titleLinkUnderline,
@@ -62,7 +61,7 @@ Six options were evaluated against W3C DTCG principles, Material Design 3 patter
 | **B. All tokens flat** | **Parent exposes all text tokens per slot** | **Chosen — most W3C DTCG aligned, simplest model** |
 | C. Variant name reference | Parent has `titleTextVariant: 'card-title'` | Rejected — "weird to edit text to style a card", cross-component group reference has no DTCG primitive |
 | D. Cohesion groups | Override all-or-none within a group | Rejected — no prior art, novel abstraction |
-| E. Nested text object | `titleText: { color, bulletColor, ... }` | Rejected — breaks flat token model, needs recursive validation |
+| E. Nested text object | `titleText: { color, lineHeightMultiplier, ... }` | Rejected — breaks flat token model, needs recursive validation |
 | F. Hybrid key + variant | Keep key tokens, add variant for the rest | Rejected — three-layer resolution, inconsistent |
 
 **W3C DTCG alignment ranking**: B > E > C > F > D > A

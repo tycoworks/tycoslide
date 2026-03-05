@@ -131,7 +131,6 @@ export function mockTheme(options?: {
     },
     [Component.Text]: {
       color: '000000',
-      bulletColor: '000000',
       style: TEXT_STYLE.BODY,
       lineHeightMultiplier: lineSpacing,
       linkColor: '0000FF',
@@ -139,7 +138,6 @@ export function mockTheme(options?: {
     },
     [Component.List]: {
       color: '000000',
-      bulletColor: '000000',
       style: TEXT_STYLE.BODY,
       lineHeightMultiplier: lineSpacing,
       linkColor: '0000FF',

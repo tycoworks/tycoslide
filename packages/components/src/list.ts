@@ -14,7 +14,6 @@ import { transformInline, inlineParse } from './utils/inline.js';
 
 export const LIST_TOKEN = {
   COLOR: 'color',
-  BULLET_COLOR: 'bulletColor',
   STYLE: 'style',
   LINE_HEIGHT_MULTIPLIER: 'lineHeightMultiplier',
   LINK_COLOR: 'linkColor',
@@ -23,7 +22,6 @@ export const LIST_TOKEN = {
 
 export interface ListTokens {
   [LIST_TOKEN.COLOR]: string;
-  [LIST_TOKEN.BULLET_COLOR]: string;
   [LIST_TOKEN.STYLE]: TextStyleName;
   [LIST_TOKEN.LINE_HEIGHT_MULTIPLIER]: number;
   [LIST_TOKEN.LINK_COLOR]: string;
@@ -39,7 +37,6 @@ export interface ListProps {
   color?: string;
   hAlign?: HorizontalAlignment;
   vAlign?: VerticalAlignment;
-  bulletColor?: string;
   lineHeightMultiplier?: number;
   linkColor?: string;
   linkUnderline?: boolean;
@@ -56,7 +53,6 @@ type ListComponentProps = { body: string[]; ordered?: boolean } & ListProps;
 function expandList(props: ListComponentProps, context: ExpansionContext, tokens: ListTokens): ElementNode {
   const resolvedStyle = props.style ?? tokens.style;
   const resolvedColor = props.color ?? tokens.color;
-  const resolvedBulletColor = props.bulletColor ?? tokens.bulletColor;
   const resolvedLineHeight = props.lineHeightMultiplier ?? tokens.lineHeightMultiplier;
   const resolvedLinkColor = props.linkColor ?? tokens.linkColor;
   const resolvedLinkUnderline = props.linkUnderline ?? tokens.linkUnderline;
@@ -84,17 +80,6 @@ function expandList(props: ListComponentProps, context: ExpansionContext, tokens
         itemRuns[0] = { ...itemRuns[0], paragraphBreak: true };
       }
       runs.push(...itemRuns);
-    }
-  }
-
-  // Apply bulletColor to all bullet runs
-  if (resolvedBulletColor) {
-    for (const run of runs) {
-      if (run.bullet && typeof run.bullet === 'object') {
-        run.bullet = { ...run.bullet, color: resolvedBulletColor };
-      } else if (run.bullet === true) {
-        run.bullet = { color: resolvedBulletColor };
-      }
     }
   }
 
@@ -140,7 +125,7 @@ export const listComponent = defineComponent({
   name: Component.List,
   body: schema.array(schema.string()),
   directive: false,
-  tokens: [LIST_TOKEN.COLOR, LIST_TOKEN.BULLET_COLOR, LIST_TOKEN.STYLE, LIST_TOKEN.LINE_HEIGHT_MULTIPLIER, LIST_TOKEN.LINK_COLOR, LIST_TOKEN.LINK_UNDERLINE],
+  tokens: [LIST_TOKEN.COLOR, LIST_TOKEN.STYLE, LIST_TOKEN.LINE_HEIGHT_MULTIPLIER, LIST_TOKEN.LINK_COLOR, LIST_TOKEN.LINK_UNDERLINE],
   mdast: {
     nodeTypes: [SYNTAX.LIST],
     compile: (node: RootContent, source: string): ComponentNode | null => {

@@ -48,7 +48,7 @@ export const textComponent = defineComponent({
     content: schema.string().optional(),
     variant: schema.string().optional(),
   },
-  tokens: ['color', 'bulletColor', 'style', 'lineHeightMultiplier'],
+  tokens: ['color', 'style', 'lineHeightMultiplier'],
   mdast: {
     nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.HEADING, SYNTAX.LIST],
     compile: (node: RootContent, source: string): ComponentNode | null => {

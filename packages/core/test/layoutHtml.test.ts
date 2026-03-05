@@ -943,46 +943,15 @@ describe('HTML Measurement Generation', () => {
     });
   });
 
-  describe('Bullet marker color', () => {
-    test('bullet with explicit color sets color on li for ::marker', async () => {
-      const node = textNode([
-        { text: 'Item', bullet: { color: 'FF00FF' } },
-      ]);
-      const { html } = await genHTML(node, bounds);
-      const liMatch = html.match(/<li[^>]*style="([^"]*)"/);
-      assert.ok(liMatch, 'Should find <li> with style');
-      assert.ok(liMatch![1].includes('color:#FF00FF'), 'li should have bullet marker color');
-    });
-
-    test('bullet with color wraps content in span restoring text color', async () => {
-      const node = textNode([
-        { text: 'Item', bullet: { color: 'FF00FF' } },
-      ], { color: 'FFFFFF' });
-      const { html } = await genHTML(node, bounds);
-      const liMatch = html.match(/<li[^>]*>(.*?)<\/li>/);
-      assert.ok(liMatch, 'Should find <li> content');
-      assert.ok(liMatch![1].includes('<span style="color:#FFFFFF">'), 'Bullet content should be wrapped in span with text color');
-    });
-
-    test('bullet without explicit color does not add marker color', async () => {
+  describe('Bullet rendering', () => {
+    test('bullet items render as li with margin/padding reset', async () => {
       const node = textNode([
         { text: 'Item', bullet: true },
       ]);
       const { html } = await genHTML(node, bounds);
       const liMatch = html.match(/<li[^>]*style="([^"]*)"/);
       assert.ok(liMatch, 'Should find <li> with style');
-      // Should only have margin:0;padding:0 — no color
-      assert.ok(liMatch![1] === 'margin:0;padding:0', 'li without bullet color should only have margin/padding reset');
-    });
-
-    test('bullet with color preserves run-level colors alongside text color restore', async () => {
-      const node = textNode([
-        { text: 'Bold:', bold: true, color: 'FF0000', bullet: { color: 'FF00FF' } },
-        { text: ' plain text' },
-      ], { color: 'FFFFFF' });
-      const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes('color:#FF0000'), 'Bold run should keep its explicit color');
-      assert.ok(html.includes('color:#FFFFFF'), 'Text color should be restored for plain runs');
+      assert.ok(liMatch![1] === 'margin:0;padding:0', 'li should only have margin/padding reset');
     });
   });
 

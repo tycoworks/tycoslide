@@ -16,7 +16,6 @@ import { transformInline, inlineParse } from './utils/inline.js';
 
 export const TEXT_TOKEN = {
   COLOR: 'color',
-  BULLET_COLOR: 'bulletColor',
   STYLE: 'style',
   LINE_HEIGHT_MULTIPLIER: 'lineHeightMultiplier',
   LINK_COLOR: 'linkColor',
@@ -25,7 +24,6 @@ export const TEXT_TOKEN = {
 
 export interface TextTokens {
   [TEXT_TOKEN.COLOR]: string;
-  [TEXT_TOKEN.BULLET_COLOR]: string;
   [TEXT_TOKEN.STYLE]: TextStyleName;
   [TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER]: number;
   [TEXT_TOKEN.LINK_COLOR]: string;
@@ -44,7 +42,7 @@ const textSchema = {
 } satisfies SchemaShape;
 
 /** Props accepted by the text() DSL function.
- *  DSL callers can pass styling props (color, bulletColor, lineHeightMultiplier)
+ *  DSL callers can pass styling props (color, lineHeightMultiplier)
  *  that are NOT in the directive schema — only available to TypeScript developers. */
 export interface TextProps {
   content?: ContentType;
@@ -52,7 +50,6 @@ export interface TextProps {
   color?: string;
   hAlign?: HorizontalAlignment;
   vAlign?: VerticalAlignment;
-  bulletColor?: string;
   lineHeightMultiplier?: number;
   linkColor?: string;
   linkUnderline?: boolean;
@@ -149,7 +146,7 @@ export const textComponent = defineComponent({
   body: schema.string(),
   params: textSchema,
   directive: false,
-  tokens: [TEXT_TOKEN.COLOR, TEXT_TOKEN.BULLET_COLOR, TEXT_TOKEN.STYLE, TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER, TEXT_TOKEN.LINK_COLOR, TEXT_TOKEN.LINK_UNDERLINE],
+  tokens: [TEXT_TOKEN.COLOR, TEXT_TOKEN.STYLE, TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER, TEXT_TOKEN.LINK_COLOR, TEXT_TOKEN.LINK_UNDERLINE],
   mdast: {
     nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.HEADING],
     compile: (node: RootContent, source: string): ComponentNode | null => {

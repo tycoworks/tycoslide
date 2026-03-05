@@ -137,7 +137,7 @@ Renders bullet or numbered lists with inline formatting support. The list compon
 ```typescript
 list(['First item', 'Second item', '**Bold** third item'])
 list(['Step one', 'Step two'], { ordered: true })
-list(['Item with :blue[accent]'], { bulletColor: '0066CC' })
+list(['Item with :blue[accent]'], { color: '0066CC' })
 ```
 
 ### Parameters
@@ -147,7 +147,6 @@ list(['Item with :blue[accent]'], { bulletColor: '0066CC' })
 | `ordered` | boolean | Numbered list instead of bullets (default: `false`) |
 | `style` | TextStyleName | Override text style |
 | `color` | string | Text color (6-character hex) |
-| `bulletColor` | string | Bullet/number color (6-character hex) |
 | `hAlign` | `left` \| `center` \| `right` | Horizontal alignment |
 | `vAlign` | `top` \| `middle` \| `bottom` | Vertical alignment |
 | `lineHeightMultiplier` | number | Line height multiplier |
@@ -158,7 +157,6 @@ list(['Item with :blue[accent]'], { bulletColor: '0066CC' })
 | Token | Type | Description |
 |-------|------|-------------|
 | `color` | string | Default text color |
-| `bulletColor` | string | Default bullet/number color |
 | `style` | TextStyleName | Default text style |
 | `lineHeightMultiplier` | number | Default line height multiplier |
 

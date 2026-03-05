@@ -221,18 +221,17 @@ export const theme: Theme = {
     },
     text: {
       variants: {
-        default:  { ...textBase, color: colors.text, bulletColor: colors.text, linkColor: colors.primary, linkUnderline: true },
-        eyebrow:  { ...textBase, color: colors.primary, bulletColor: colors.primary, style: TEXT_STYLE.EYEBROW, lineHeightMultiplier: 1.0, linkColor: colors.primary, linkUnderline: false },
-        muted:    { ...textBase, color: colors.textMuted, bulletColor: colors.textMuted, linkColor: colors.primary, linkUnderline: true },
-        accent:  { ...textBase, color: colors.accents.blue, bulletColor: colors.accents.blue, linkColor: colors.accents.blue, linkUnderline: true },
-        inverse: { ...textBase, color: colors.background, bulletColor: colors.background, linkColor: colors.background, linkUnderline: true },
+        default:  { ...textBase, color: colors.text, linkColor: colors.primary, linkUnderline: true },
+        eyebrow:  { ...textBase, color: colors.primary, style: TEXT_STYLE.EYEBROW, lineHeightMultiplier: 1.0, linkColor: colors.primary, linkUnderline: false },
+        muted:    { ...textBase, color: colors.textMuted, linkColor: colors.primary, linkUnderline: true },
+        accent:  { ...textBase, color: colors.accents.blue, linkColor: colors.accents.blue, linkUnderline: true },
+        inverse: { ...textBase, color: colors.background, linkColor: colors.background, linkUnderline: true },
       },
     },
     list: {
       variants: {
         default: {
           color: colors.text,
-          bulletColor: colors.text,
           style: TEXT_STYLE.BODY,
           lineHeightMultiplier: spacing.lineSpacing,
           linkColor: colors.primary,

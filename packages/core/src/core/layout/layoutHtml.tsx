@@ -268,7 +268,7 @@ function styleText(
     nodeId,
     styles,
     children: [],
-    innerHTML: `<div>${renderTextRunsToHTML(runs, style, defaultWeight, bulletIndentPx, node.color, node.linkColor, node.linkUnderline)}</div>`,
+    innerHTML: `<div>${renderTextRunsToHTML(runs, style, defaultWeight, bulletIndentPx, node.linkColor, node.linkUnderline)}</div>`,
   };
 }
 
@@ -576,7 +576,6 @@ function renderTextRunsToHTML(
   style: TextStyle,
   defaultWeight: FontWeight,
   bulletIndentPx: number,
-  textColor: string,
   linkColor?: string,
   linkUnderline?: boolean,
 ): string {
@@ -609,19 +608,7 @@ function renderTextRunsToHTML(
     const spans = group.map(run => renderRunSpanHTML(run, style, defaultWeight, linkColor, linkUnderline)).join('');
 
     if (first.bullet) {
-      // Bullet marker color: set on <li> so ::marker inherits it.
-      // When bullet color differs from text color, wrap content in a span
-      // that restores the text color (otherwise spans without explicit run.color
-      // would inherit the marker color from the <li>).
-      const bulletColor = typeof first.bullet === 'object' && 'color' in first.bullet && first.bullet.color
-        ? first.bullet.color : null;
-      const liStyle = bulletColor
-        ? `margin:0;padding:0;color:#${bulletColor}`
-        : 'margin:0;padding:0';
-      const content = bulletColor
-        ? `<span style="color:#${textColor}">${spans}</span>`
-        : spans;
-      bulletBuffer.push(`<li style="${liStyle}">${content}</li>`);
+      bulletBuffer.push(`<li style="margin:0;padding:0">${spans}</li>`);
     } else {
       flushBullets();
       if (first.paragraphBreak) {

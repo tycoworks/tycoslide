@@ -444,7 +444,7 @@ export interface NormalizedRun {
   hyperlink?: string;          // Hyperlink URL ([text](url))
   paragraphBreak?: boolean;    // Force new paragraph before this run
   softBreak?: boolean;         // Soft line break (like <br>, no paragraph spacing)
-  bullet?: boolean | { type?: string; color?: string };  // Bullet marker
+  bullet?: boolean | { type?: string };  // Bullet marker
 }
 
 // Rich text run - string shorthand or full object
