@@ -63,6 +63,37 @@ its constructor. This provides a theme-level fallback for Keynote, LibreOffice, 
 PowerPoint that ignore the per-run `ahyp:hlinkClr` extension. Modern apps (Office 2019+,
 Google Slides) use the per-run color from component `linkColor` tokens instead.
 
+## Patch 4: Single `<a:pPr>` per paragraph (STEP 6)
+
+**Files:** `pptxgen.cjs.js`, `pptxgen.es.js` — `genXmlTextBody()`, STEP 6
+
+**Bug:** The per-run loop in STEP 6 calls `genXmlParagraphProperties()` for every
+run in a paragraph, emitting a separate `<a:pPr>` element for each. The OOXML spec
+allows only ONE `<a:pPr>` per `<a:p>`.
+
+When a bullet paragraph has mixed runs (e.g., `- **Bold:** plain text`), the first
+run's `<a:pPr>` has the bullet, but subsequent non-bullet runs emit
+`<a:pPr indent="0" marL="0"><a:buNone/></a:pPr>`. Keynote uses the first `<a:pPr>`
+(bullets work), Google Slides uses the last (bullets disappear).
+
+**Fix:** Wrap the `genXmlParagraphProperties` call in `if (idx === 0)` so only
+the first run in each paragraph emits `<a:pPr>`. Subsequent runs still inherit
+options for `<a:rPr>` generation (color, fontSize, etc.) but no longer emit
+paragraph-level properties:
+```js
+// Before (broken — every run emits <a:pPr>):
+paragraphPropXml = genXmlParagraphProperties(textObj, false);
+strSlideXml += paragraphPropXml.replace('<a:pPr></a:pPr>', '');
+
+// After (fixed — only first run emits <a:pPr>):
+if (idx === 0) {
+    paragraphPropXml = genXmlParagraphProperties(textObj, false);
+    strSlideXml += paragraphPropXml.replace('<a:pPr></a:pPr>', '');
+}
+```
+
+This fixes bullet rendering in Google Slides for any multi-run bullet paragraph.
+
 ## Workaround (in tycoslide, not patched): Master slideNumber propagation
 
 **Bug:** PPTXGen.js does not propagate `slideNumber` defined on a slide master to

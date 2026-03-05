@@ -36,7 +36,7 @@
     "debug": "^4.4.3",
     "hono": "^4.11.9",
     "image-size": "^1.1.1",
-    "pptxgenjs": "^4.0.1",
+    "pptxgenjs": "4.0.1",
     "remark-directive": "^4.0.0",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
