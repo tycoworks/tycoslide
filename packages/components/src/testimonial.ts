@@ -22,8 +22,14 @@ export const TESTIMONIAL_TOKEN = {
   BORDER_WIDTH: 'borderWidth',
   QUOTE_STYLE: 'quoteStyle',
   QUOTE_COLOR: 'quoteColor',
+  QUOTE_LINE_HEIGHT_MULTIPLIER: 'quoteLineHeightMultiplier',
+  QUOTE_LINK_COLOR: 'quoteLinkColor',
+  QUOTE_LINK_UNDERLINE: 'quoteLinkUnderline',
   ATTRIBUTION_STYLE: 'attributionStyle',
   ATTRIBUTION_COLOR: 'attributionColor',
+  ATTRIBUTION_LINE_HEIGHT_MULTIPLIER: 'attributionLineHeightMultiplier',
+  ATTRIBUTION_LINK_COLOR: 'attributionLinkColor',
+  ATTRIBUTION_LINK_UNDERLINE: 'attributionLinkUnderline',
   ATTRIBUTION_HALIGN: 'attributionHAlign',
   GAP: 'gap',
   HALIGN: 'hAlign',
@@ -39,8 +45,14 @@ export interface TestimonialTokens {
   [TESTIMONIAL_TOKEN.BORDER_WIDTH]: number;
   [TESTIMONIAL_TOKEN.QUOTE_STYLE]: TextStyleName;
   [TESTIMONIAL_TOKEN.QUOTE_COLOR]: string;
+  [TESTIMONIAL_TOKEN.QUOTE_LINE_HEIGHT_MULTIPLIER]: number;
+  [TESTIMONIAL_TOKEN.QUOTE_LINK_COLOR]: string;
+  [TESTIMONIAL_TOKEN.QUOTE_LINK_UNDERLINE]: boolean;
   [TESTIMONIAL_TOKEN.ATTRIBUTION_STYLE]: TextStyleName;
   [TESTIMONIAL_TOKEN.ATTRIBUTION_COLOR]: string;
+  [TESTIMONIAL_TOKEN.ATTRIBUTION_LINE_HEIGHT_MULTIPLIER]: number;
+  [TESTIMONIAL_TOKEN.ATTRIBUTION_LINK_COLOR]: string;
+  [TESTIMONIAL_TOKEN.ATTRIBUTION_LINK_UNDERLINE]: boolean;
   [TESTIMONIAL_TOKEN.ATTRIBUTION_HALIGN]: HorizontalAlignment;
   [TESTIMONIAL_TOKEN.GAP]: GapSize;
   [TESTIMONIAL_TOKEN.HALIGN]: HorizontalAlignment;
@@ -95,8 +107,10 @@ function expandTestimonial(props: TestimonialProps & { body?: string }, context:
   const {
     padding, cornerRadius, backgroundColor, backgroundOpacity,
     borderColor, borderWidth, quoteStyle, quoteColor,
-    attributionStyle, attributionColor, attributionHAlign,
-    gap, hAlign: contentHAlign, vAlign: contentVAlign,
+    quoteLineHeightMultiplier, quoteLinkColor, quoteLinkUnderline,
+    attributionStyle, attributionColor,
+    attributionLineHeightMultiplier, attributionLinkColor, attributionLinkUnderline,
+    attributionHAlign, gap, hAlign: contentHAlign, vAlign: contentVAlign,
   } = tokens;
 
   // Build content children: optional image, quote text, attribution
@@ -107,9 +121,15 @@ function expandTestimonial(props: TestimonialProps & { body?: string }, context:
   if (!actualQuote) {
     throw new Error(`[tycoslide] Testimonial component requires either a 'quote' attribute or body text.`);
   }
-  children.push(text(actualQuote, { content: CONTENT.RICH, style: quoteStyle, color: quoteColor }));
+  children.push(text(actualQuote, {
+    content: CONTENT.RICH, style: quoteStyle, color: quoteColor,
+    lineHeightMultiplier: quoteLineHeightMultiplier, linkColor: quoteLinkColor, linkUnderline: quoteLinkUnderline,
+  }));
   if (attribution) {
-    children.push(text(attribution, { content: CONTENT.PLAIN, style: attributionStyle, color: attributionColor, hAlign: attributionHAlign }));
+    children.push(text(attribution, {
+      content: CONTENT.PLAIN, style: attributionStyle, color: attributionColor, hAlign: attributionHAlign,
+      lineHeightMultiplier: attributionLineHeightMultiplier, linkColor: attributionLinkColor, linkUnderline: attributionLinkUnderline,
+    }));
   }
 
   const contentProps = { padding, gap, hAlign: contentHAlign, vAlign: contentVAlign };
@@ -142,7 +162,7 @@ function expandTestimonial(props: TestimonialProps & { body?: string }, context:
 export const testimonialComponent = defineComponent({
   name: Component.Testimonial,
   params: testimonialSchema,
-  tokens: [TESTIMONIAL_TOKEN.PADDING, TESTIMONIAL_TOKEN.CORNER_RADIUS, TESTIMONIAL_TOKEN.BACKGROUND_COLOR, TESTIMONIAL_TOKEN.BACKGROUND_OPACITY, TESTIMONIAL_TOKEN.BORDER_COLOR, TESTIMONIAL_TOKEN.BORDER_WIDTH, TESTIMONIAL_TOKEN.QUOTE_STYLE, TESTIMONIAL_TOKEN.QUOTE_COLOR, TESTIMONIAL_TOKEN.ATTRIBUTION_STYLE, TESTIMONIAL_TOKEN.ATTRIBUTION_COLOR, TESTIMONIAL_TOKEN.ATTRIBUTION_HALIGN, TESTIMONIAL_TOKEN.GAP, TESTIMONIAL_TOKEN.HALIGN, TESTIMONIAL_TOKEN.VALIGN],
+  tokens: [TESTIMONIAL_TOKEN.PADDING, TESTIMONIAL_TOKEN.CORNER_RADIUS, TESTIMONIAL_TOKEN.BACKGROUND_COLOR, TESTIMONIAL_TOKEN.BACKGROUND_OPACITY, TESTIMONIAL_TOKEN.BORDER_COLOR, TESTIMONIAL_TOKEN.BORDER_WIDTH, TESTIMONIAL_TOKEN.QUOTE_STYLE, TESTIMONIAL_TOKEN.QUOTE_COLOR, TESTIMONIAL_TOKEN.QUOTE_LINE_HEIGHT_MULTIPLIER, TESTIMONIAL_TOKEN.QUOTE_LINK_COLOR, TESTIMONIAL_TOKEN.QUOTE_LINK_UNDERLINE, TESTIMONIAL_TOKEN.ATTRIBUTION_STYLE, TESTIMONIAL_TOKEN.ATTRIBUTION_COLOR, TESTIMONIAL_TOKEN.ATTRIBUTION_LINE_HEIGHT_MULTIPLIER, TESTIMONIAL_TOKEN.ATTRIBUTION_LINK_COLOR, TESTIMONIAL_TOKEN.ATTRIBUTION_LINK_UNDERLINE, TESTIMONIAL_TOKEN.ATTRIBUTION_HALIGN, TESTIMONIAL_TOKEN.GAP, TESTIMONIAL_TOKEN.HALIGN, TESTIMONIAL_TOKEN.VALIGN],
   expand: expandTestimonial,
 });
 

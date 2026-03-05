@@ -18,8 +18,14 @@ export const QUOTE_TOKEN = {
   BAR_WIDTH: 'barWidth',
   QUOTE_STYLE: 'quoteStyle',
   QUOTE_COLOR: 'quoteColor',
+  QUOTE_LINE_HEIGHT_MULTIPLIER: 'quoteLineHeightMultiplier',
+  QUOTE_LINK_COLOR: 'quoteLinkColor',
+  QUOTE_LINK_UNDERLINE: 'quoteLinkUnderline',
   ATTRIBUTION_STYLE: 'attributionStyle',
   ATTRIBUTION_COLOR: 'attributionColor',
+  ATTRIBUTION_LINE_HEIGHT_MULTIPLIER: 'attributionLineHeightMultiplier',
+  ATTRIBUTION_LINK_COLOR: 'attributionLinkColor',
+  ATTRIBUTION_LINK_UNDERLINE: 'attributionLinkUnderline',
   GAP: 'gap',
 } as const;
 
@@ -28,8 +34,14 @@ export interface QuoteTokens {
   [QUOTE_TOKEN.BAR_WIDTH]: number;
   [QUOTE_TOKEN.QUOTE_STYLE]: TextStyleName;
   [QUOTE_TOKEN.QUOTE_COLOR]: string;
+  [QUOTE_TOKEN.QUOTE_LINE_HEIGHT_MULTIPLIER]: number;
+  [QUOTE_TOKEN.QUOTE_LINK_COLOR]: string;
+  [QUOTE_TOKEN.QUOTE_LINK_UNDERLINE]: boolean;
   [QUOTE_TOKEN.ATTRIBUTION_STYLE]: TextStyleName;
   [QUOTE_TOKEN.ATTRIBUTION_COLOR]: string;
+  [QUOTE_TOKEN.ATTRIBUTION_LINE_HEIGHT_MULTIPLIER]: number;
+  [QUOTE_TOKEN.ATTRIBUTION_LINK_COLOR]: string;
+  [QUOTE_TOKEN.ATTRIBUTION_LINK_UNDERLINE]: boolean;
   [QUOTE_TOKEN.GAP]: GapSize;
 }
 
@@ -75,7 +87,13 @@ export type QuoteProps = InferProps<typeof quoteSchema>;
 function expandQuote(props: QuoteProps & { body?: string }, _context: ExpansionContext, tokens: QuoteTokens): SlideNode {
   const { quote: quoteText, body, attribution, height: sizeHeight } = props;
   const actualQuote = quoteText ?? body;
-  const { barColor, barWidth, quoteStyle, quoteColor, attributionStyle, attributionColor, gap } = tokens;
+  const {
+    barColor, barWidth, quoteStyle, quoteColor,
+    quoteLineHeightMultiplier, quoteLinkColor, quoteLinkUnderline,
+    attributionStyle, attributionColor,
+    attributionLineHeightMultiplier, attributionLinkColor, attributionLinkUnderline,
+    gap,
+  } = tokens;
 
   if (!actualQuote) {
     throw new Error(`[tycoslide] Quote component requires either a 'quote' attribute or body text.`);
@@ -83,10 +101,16 @@ function expandQuote(props: QuoteProps & { body?: string }, _context: ExpansionC
 
   // Build content children: quote text, optional attribution
   const children: SlideNode[] = [
-    text(actualQuote, { content: CONTENT.RICH, style: quoteStyle, color: quoteColor }),
+    text(actualQuote, {
+      content: CONTENT.RICH, style: quoteStyle, color: quoteColor,
+      lineHeightMultiplier: quoteLineHeightMultiplier, linkColor: quoteLinkColor, linkUnderline: quoteLinkUnderline,
+    }),
   ];
   if (attribution) {
-    children.push(text(attribution, { content: CONTENT.PLAIN, style: attributionStyle, color: attributionColor, hAlign: HALIGN.LEFT }));
+    children.push(text(attribution, {
+      content: CONTENT.PLAIN, style: attributionStyle, color: attributionColor, hAlign: HALIGN.LEFT,
+      lineHeightMultiplier: attributionLineHeightMultiplier, linkColor: attributionLinkColor, linkUnderline: attributionLinkUnderline,
+    }));
   }
 
   const outerHeight = sizeHeight ?? SIZE.HUG;
@@ -105,7 +129,7 @@ function expandQuote(props: QuoteProps & { body?: string }, _context: ExpansionC
 export const quoteComponent = defineComponent({
   name: Component.Quote,
   params: quoteSchema,
-  tokens: [QUOTE_TOKEN.BAR_COLOR, QUOTE_TOKEN.BAR_WIDTH, QUOTE_TOKEN.QUOTE_STYLE, QUOTE_TOKEN.QUOTE_COLOR, QUOTE_TOKEN.ATTRIBUTION_STYLE, QUOTE_TOKEN.ATTRIBUTION_COLOR, QUOTE_TOKEN.GAP],
+  tokens: [QUOTE_TOKEN.BAR_COLOR, QUOTE_TOKEN.BAR_WIDTH, QUOTE_TOKEN.QUOTE_STYLE, QUOTE_TOKEN.QUOTE_COLOR, QUOTE_TOKEN.QUOTE_LINE_HEIGHT_MULTIPLIER, QUOTE_TOKEN.QUOTE_LINK_COLOR, QUOTE_TOKEN.QUOTE_LINK_UNDERLINE, QUOTE_TOKEN.ATTRIBUTION_STYLE, QUOTE_TOKEN.ATTRIBUTION_COLOR, QUOTE_TOKEN.ATTRIBUTION_LINE_HEIGHT_MULTIPLIER, QUOTE_TOKEN.ATTRIBUTION_LINK_COLOR, QUOTE_TOKEN.ATTRIBUTION_LINK_UNDERLINE, QUOTE_TOKEN.GAP],
   mdast: {
     nodeTypes: [SYNTAX.BLOCKQUOTE],
     compile: (node: RootContent, source: string) => {

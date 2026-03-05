@@ -21,8 +21,14 @@ export const CARD_TOKEN = {
   BORDER_WIDTH: 'borderWidth',
   TITLE_STYLE: 'titleStyle',
   TITLE_COLOR: 'titleColor',
+  TITLE_LINE_HEIGHT_MULTIPLIER: 'titleLineHeightMultiplier',
+  TITLE_LINK_COLOR: 'titleLinkColor',
+  TITLE_LINK_UNDERLINE: 'titleLinkUnderline',
   DESCRIPTION_STYLE: 'descriptionStyle',
   DESCRIPTION_COLOR: 'descriptionColor',
+  DESCRIPTION_LINE_HEIGHT_MULTIPLIER: 'descriptionLineHeightMultiplier',
+  DESCRIPTION_LINK_COLOR: 'descriptionLinkColor',
+  DESCRIPTION_LINK_UNDERLINE: 'descriptionLinkUnderline',
   GAP: 'gap',
   HALIGN: 'hAlign',
   VALIGN: 'vAlign',
@@ -37,8 +43,14 @@ export interface CardTokens {
   [CARD_TOKEN.BORDER_WIDTH]: number;
   [CARD_TOKEN.TITLE_STYLE]: TextStyleName;
   [CARD_TOKEN.TITLE_COLOR]: string;
+  [CARD_TOKEN.TITLE_LINE_HEIGHT_MULTIPLIER]: number;
+  [CARD_TOKEN.TITLE_LINK_COLOR]: string;
+  [CARD_TOKEN.TITLE_LINK_UNDERLINE]: boolean;
   [CARD_TOKEN.DESCRIPTION_STYLE]: TextStyleName;
   [CARD_TOKEN.DESCRIPTION_COLOR]: string;
+  [CARD_TOKEN.DESCRIPTION_LINE_HEIGHT_MULTIPLIER]: number;
+  [CARD_TOKEN.DESCRIPTION_LINK_COLOR]: string;
+  [CARD_TOKEN.DESCRIPTION_LINK_UNDERLINE]: boolean;
   [CARD_TOKEN.GAP]: GapSize;
   [CARD_TOKEN.HALIGN]: HorizontalAlignment;
   [CARD_TOKEN.VALIGN]: VerticalAlignment;
@@ -88,8 +100,10 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
   const {
     padding, cornerRadius, backgroundColor, backgroundOpacity,
     borderColor, borderWidth, titleStyle, titleColor,
-    descriptionStyle, descriptionColor, gap,
-    hAlign: contentHAlign, vAlign: contentVAlign,
+    titleLineHeightMultiplier, titleLinkColor, titleLinkUnderline,
+    descriptionStyle, descriptionColor,
+    descriptionLineHeightMultiplier, descriptionLinkColor, descriptionLinkUnderline,
+    gap, hAlign: contentHAlign, vAlign: contentVAlign,
   } = tokens;
 
   // Build children from image/title/description props
@@ -103,6 +117,9 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
     children.push(text(title, {
       style: titleStyle,
       color: titleColor,
+      lineHeightMultiplier: titleLineHeightMultiplier,
+      linkColor: titleLinkColor,
+      linkUnderline: titleLinkUnderline,
     }));
   }
 
@@ -111,6 +128,9 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
       content: CONTENT.RICH,
       style: descriptionStyle,
       color: descriptionColor,
+      lineHeightMultiplier: descriptionLineHeightMultiplier,
+      linkColor: descriptionLinkColor,
+      linkUnderline: descriptionLinkUnderline,
     }));
   }
 
@@ -145,7 +165,7 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
 export const cardComponent = defineComponent({
   name: Component.Card,
   params: cardSchema,
-  tokens: [CARD_TOKEN.PADDING, CARD_TOKEN.CORNER_RADIUS, CARD_TOKEN.BACKGROUND_COLOR, CARD_TOKEN.BACKGROUND_OPACITY, CARD_TOKEN.BORDER_COLOR, CARD_TOKEN.BORDER_WIDTH, CARD_TOKEN.TITLE_STYLE, CARD_TOKEN.TITLE_COLOR, CARD_TOKEN.DESCRIPTION_STYLE, CARD_TOKEN.DESCRIPTION_COLOR, CARD_TOKEN.GAP, CARD_TOKEN.HALIGN, CARD_TOKEN.VALIGN],
+  tokens: [CARD_TOKEN.PADDING, CARD_TOKEN.CORNER_RADIUS, CARD_TOKEN.BACKGROUND_COLOR, CARD_TOKEN.BACKGROUND_OPACITY, CARD_TOKEN.BORDER_COLOR, CARD_TOKEN.BORDER_WIDTH, CARD_TOKEN.TITLE_STYLE, CARD_TOKEN.TITLE_COLOR, CARD_TOKEN.TITLE_LINE_HEIGHT_MULTIPLIER, CARD_TOKEN.TITLE_LINK_COLOR, CARD_TOKEN.TITLE_LINK_UNDERLINE, CARD_TOKEN.DESCRIPTION_STYLE, CARD_TOKEN.DESCRIPTION_COLOR, CARD_TOKEN.DESCRIPTION_LINE_HEIGHT_MULTIPLIER, CARD_TOKEN.DESCRIPTION_LINK_COLOR, CARD_TOKEN.DESCRIPTION_LINK_UNDERLINE, CARD_TOKEN.GAP, CARD_TOKEN.HALIGN, CARD_TOKEN.VALIGN],
   expand: expandCard,
 });
 

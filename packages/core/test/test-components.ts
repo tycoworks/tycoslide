@@ -156,7 +156,7 @@ export const cardComponent = defineComponent({
   tokens: [
     'padding', 'cornerRadius', 'backgroundColor', 'backgroundOpacity',
     'borderColor', 'borderWidth', 'titleStyle', 'titleColor',
-    'descriptionStyle', 'descriptionColor', 'gap', 'textGap', 'hAlign', 'vAlign',
+    'descriptionStyle', 'descriptionColor', 'gap', 'hAlign', 'vAlign',
   ],
   expand: (props: any, _ctx: ExpansionContext, tokens: any): any => {
     const titleNode = component(C.Text, { body: props.title ?? props.body ?? '' });

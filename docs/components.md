@@ -194,6 +194,30 @@ Content card with an optional image, title, and description. Renders as a rounde
 | `variant` | string | Theme variant (`default`, `flat`) |
 | `height` | `fill` \| `hug` | Height sizing (default: `fill`) |
 
+### Tokens
+
+| Token | Type | Description |
+|-------|------|-------------|
+| `padding` | number | Inner padding (inches) |
+| `cornerRadius` | number | Corner radius (inches) |
+| `backgroundColor` | string | Background fill color |
+| `backgroundOpacity` | number | Background opacity (0--100) |
+| `borderColor` | string | Border color |
+| `borderWidth` | number | Border width (pt) |
+| `titleStyle` | TextStyleName | Title text style |
+| `titleColor` | string | Title text color |
+| `titleLineHeightMultiplier` | number | Title line height multiplier |
+| `titleLinkColor` | string | Title hyperlink color |
+| `titleLinkUnderline` | boolean | Title hyperlink underline |
+| `descriptionStyle` | TextStyleName | Description text style |
+| `descriptionColor` | string | Description text color |
+| `descriptionLineHeightMultiplier` | number | Description line height multiplier |
+| `descriptionLinkColor` | string | Description hyperlink color |
+| `descriptionLinkUnderline` | boolean | Description hyperlink underline |
+| `gap` | GapSize | Gap between title and description |
+| `hAlign` | HorizontalAlignment | Content horizontal alignment |
+| `vAlign` | VerticalAlignment | Content vertical alignment |
+
 ### Examples
 
 ```markdown
@@ -239,6 +263,24 @@ Quote text is required -- provide it either via the `quote` attribute or as body
 | `image` | string | Path to logo/image shown above quote |
 | `variant` | string | Theme variant |
 | `height` | `fill` \| `hug` | Height sizing (default: `fill`) |
+
+### Tokens
+
+| Token | Type | Description |
+|-------|------|-------------|
+| `barColor` | string | Accent bar color |
+| `barWidth` | number | Accent bar width (pt) |
+| `quoteStyle` | TextStyleName | Quote text style |
+| `quoteColor` | string | Quote text color |
+| `quoteLineHeightMultiplier` | number | Quote line height multiplier |
+| `quoteLinkColor` | string | Quote hyperlink color |
+| `quoteLinkUnderline` | boolean | Quote hyperlink underline |
+| `attributionStyle` | TextStyleName | Attribution text style |
+| `attributionColor` | string | Attribution text color |
+| `attributionLineHeightMultiplier` | number | Attribution line height multiplier |
+| `attributionLinkColor` | string | Attribution hyperlink color |
+| `attributionLinkUnderline` | boolean | Attribution hyperlink underline |
+| `gap` | GapSize | Gap between quote and attribution |
 
 ### Examples
 
@@ -552,6 +594,31 @@ Quote text is required -- provide it either via the `quote` attribute or as body
 | `image` | string | Path to image/logo displayed above the quote |
 | `variant` | string | Theme variant name |
 | `height` | `fill` \| `hug` | Height sizing (default: `fill`) |
+
+### Tokens
+
+| Token | Type | Description |
+|-------|------|-------------|
+| `padding` | number | Inner padding (inches) |
+| `cornerRadius` | number | Corner radius (inches) |
+| `backgroundColor` | string | Background fill color |
+| `backgroundOpacity` | number | Background opacity (0--100) |
+| `borderColor` | string | Border color |
+| `borderWidth` | number | Border width (pt) |
+| `quoteStyle` | TextStyleName | Quote text style |
+| `quoteColor` | string | Quote text color |
+| `quoteLineHeightMultiplier` | number | Quote line height multiplier |
+| `quoteLinkColor` | string | Quote hyperlink color |
+| `quoteLinkUnderline` | boolean | Quote hyperlink underline |
+| `attributionStyle` | TextStyleName | Attribution text style |
+| `attributionColor` | string | Attribution text color |
+| `attributionLineHeightMultiplier` | number | Attribution line height multiplier |
+| `attributionLinkColor` | string | Attribution hyperlink color |
+| `attributionLinkUnderline` | boolean | Attribution hyperlink underline |
+| `attributionHAlign` | HorizontalAlignment | Attribution horizontal alignment |
+| `gap` | GapSize | Gap between content sections |
+| `hAlign` | HorizontalAlignment | Content horizontal alignment |
+| `vAlign` | VerticalAlignment | Content vertical alignment |
 
 ### Examples
 
