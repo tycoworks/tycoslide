@@ -94,7 +94,7 @@ export function line(tokens: LineTokens, props?: LineProps): ComponentNode {
 // ============================================
 
 // Directive schema — author-facing props only.
-// Styling props removed: authors style via variant selection.
+// Styling props removed: visual values come from tokens.
 const shapeSchema = {
   shape: schema.enum(SHAPE_VALUES),
 } satisfies SchemaShape;

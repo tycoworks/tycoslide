@@ -29,9 +29,6 @@ export type PlainTextTokens = {
 // TYPES
 // ============================================
 
-/** Props accepted by the plainText() DSL function — empty after Phase 4 unification. */
-export interface PlainTextProps {}
-
 /** Full props including body content (used internally by expansion). */
 export interface PlainTextComponentProps {
   body: string;

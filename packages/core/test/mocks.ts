@@ -99,6 +99,7 @@ export function mockTheme(options?: {
       [TEXT_STYLE.EYEBROW]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.EYEBROW] },
     },
     layouts: (options?.layouts ?? {}) as Theme['layouts'],
+    master: {},
   };
 }
 

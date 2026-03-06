@@ -7,7 +7,7 @@ import type { RootContent, Heading } from 'mdast';
 import type { NormalizedRun, TextStyleName, HorizontalAlignment, VerticalAlignment, ExpansionContext } from 'tycoslide';
 import { TEXT_STYLE, SYNTAX, extractSource } from 'tycoslide';
 import { NODE_TYPE, type ElementNode } from 'tycoslide';
-import { defineComponent, component, type ComponentNode, type SchemaShape } from 'tycoslide';
+import { defineComponent, component, type ComponentNode } from 'tycoslide';
 import { schema } from 'tycoslide';
 import { Component } from './names.js';
 import { transformInline, inlineParse } from './utils/inline.js';
@@ -33,13 +33,8 @@ export interface TextTokens {
 }
 
 // ============================================
-// SCHEMAS & TYPES
+// TYPES
 // ============================================
-
-const textSchema = {} satisfies SchemaShape;
-
-/** Props accepted by the text() DSL function — empty after Phase 4 unification. */
-export interface TextProps {}
 
 /** Full props including body content (used internally by expansion) */
 export type TextComponentProps = { body: string };
@@ -104,7 +99,7 @@ function expandText(props: TextComponentProps, context: ExpansionContext, tokens
 export const textComponent = defineComponent({
   name: Component.Text,
   body: schema.string(),
-  params: textSchema,
+  params: {},
   directive: false,
   tokens: [TEXT_TOKEN.COLOR, TEXT_TOKEN.STYLE, TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER, TEXT_TOKEN.LINK_COLOR, TEXT_TOKEN.LINK_UNDERLINE, TEXT_TOKEN.HALIGN, TEXT_TOKEN.VALIGN],
   mdast: {

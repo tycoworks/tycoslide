@@ -513,5 +513,5 @@ export interface Theme {
   }>;
   /** Master slide tokens. Provides visual treatment for the master slide's
    *  slideNumber and footer components. Keys are component-specific token maps. */
-  master?: Record<string, unknown>;
+  master: Record<string, unknown>;
 }

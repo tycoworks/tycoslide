@@ -62,7 +62,6 @@ export {
   textComponent,
   TEXT_TOKEN,
   type TextTokens,
-  type TextProps,
   type TextComponentProps,
 } from './text.js';
 
@@ -72,7 +71,6 @@ export {
   plainTextComponent,
   PLAIN_TEXT_TOKEN,
   type PlainTextTokens,
-  type PlainTextProps,
   type PlainTextComponentProps,
 } from './plainText.js';
 

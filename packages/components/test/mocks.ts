@@ -96,6 +96,7 @@ export function mockTheme(options?: {
       [TEXT_STYLE.EYEBROW]: mockTextStyle,
     },
     layouts: {},
+    master: {},
   };
 }
 

@@ -5,7 +5,7 @@
 import type { Canvas } from 'tycoslide';
 import {
   NODE_TYPE, type ImageNode,
-  defineComponent, component, type ComponentNode, type ExpansionContext, type SchemaShape,
+  defineComponent, component, type ComponentNode, type ExpansionContext,
   schema,
 } from 'tycoslide';
 
@@ -52,10 +52,8 @@ export interface MermaidTokens {
 }
 
 // ============================================
-// SCHEMAS & TYPES
+// TYPES
 // ============================================
-
-const mermaidSchema = {} satisfies SchemaShape;
 
 export type MermaidComponentProps = { body: string };
 
@@ -306,7 +304,7 @@ async function expandMermaid(props: MermaidComponentProps, context: ExpansionCon
 export const mermaidComponent = defineComponent({
   name: Component.Mermaid,
   body: schema.string(),
-  params: mermaidSchema,
+  params: {},
   tokens: [
     MERMAID_TOKEN.PRIMARY_COLOR,
     MERMAID_TOKEN.PRIMARY_TEXT_COLOR,

@@ -33,36 +33,14 @@ import {
   BORDER_STYLE,
 } from 'tycoslide';
 import type { TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, ContainerNode, StackNode } from 'tycoslide';
-import { mockTheme as createMockTheme, noopCanvas, DEFAULT_TEXT_TOKENS, DEFAULT_TABLE_TOKENS, DEFAULT_CODE_TOKENS, DEFAULT_MERMAID_TOKENS, DEFAULT_CARD_TOKENS } from './mocks.js';
+import { mockTheme as createMockTheme, noopCanvas, DEFAULT_TEXT_TOKENS, DEFAULT_TABLE_TOKENS, DEFAULT_CODE_TOKENS, DEFAULT_MERMAID_TOKENS, DEFAULT_CARD_TOKENS, DEFAULT_LINE_TOKENS, DEFAULT_SHAPE_TOKENS, DEFAULT_SLIDE_NUMBER_TOKENS } from './mocks.js';
 import {
   textComponent, imageComponent, cardComponent, quoteComponent,
   tableComponent, codeComponent, mermaidComponent,
   lineComponent, shapeComponent, slideNumberComponent,
   rowComponent, columnComponent, stackComponent, gridComponent, listComponent,
-  type LineTokens, type ShapeTokens, type SlideNumberTokens,
+  type ShapeTokens,
 } from '../src/index.js';
-
-// Default tokens matching mock theme component defaults
-const DEFAULT_LINE_TOKENS: LineTokens = {
-  color: '333333',
-  width: 1,
-  dashType: DASH_TYPE.SOLID,
-};
-
-const DEFAULT_SHAPE_TOKENS: ShapeTokens = {
-  fill: '333333',
-  fillOpacity: 100,
-  borderColor: 'FFFFFF',
-  borderWidth: 0,
-  cornerRadius: 0,
-};
-
-const DEFAULT_SLIDE_NUMBER_TOKENS: SlideNumberTokens = {
-  style: TEXT_STYLE.FOOTER,
-  color: '666666',
-  hAlign: HALIGN.RIGHT,
-  vAlign: VALIGN.MIDDLE,
-};
 
 // Register components explicitly
 componentRegistry.register([

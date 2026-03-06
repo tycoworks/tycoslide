@@ -25,10 +25,7 @@ function masterContent(t: Theme) {
   );
 
   // Read tokens from theme.master
-  const masterTokens = t.master as { slideNumber: SlideNumberTokens; footer: PlainTextTokens } | undefined;
-  if (!masterTokens) {
-    throw new Error('[tycoslide] Theme must define master tokens (slideNumber, footer).');
-  }
+  const masterTokens = t.master as { slideNumber: SlideNumberTokens; footer: PlainTextTokens };
 
   const content = column(
     { height: SIZE.FILL, vAlign: VALIGN.BOTTOM, padding: margin },

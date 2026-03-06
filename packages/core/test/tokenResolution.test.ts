@@ -45,6 +45,7 @@ function minimalTheme(): Theme {
     fonts: [],
     textStyles: {} as any,
     layouts: {},
+    master: {},
   };
 }
 
