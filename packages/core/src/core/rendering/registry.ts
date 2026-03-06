@@ -103,7 +103,7 @@ export interface MdastHandler {
 export interface ComponentDefinition<TProps = unknown, TTokens = undefined> {
   /** Unique name for this component (e.g., 'card', 'table') */
   name: string;
-  /** Token keys that must be present in theme.components for this component. Empty array = no tokens. */
+  /** Token keys that must be present in node.tokens for this component. Empty array = no tokens. */
   tokens: string[];
   /** Optional Zod schema shape for directive attributes (used for coercion on slotted components). */
   params?: SchemaShape;
@@ -372,7 +372,17 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
 
   /**
    * Expand a single component node to its primitive representation.
-   * @throws Error if the component is not registered
+   *
+   * Token resolution order:
+   * 1. node.tokens (set by DSL component() helper or slot injection)
+   * 2. Bridge A: extract from node.props if all required keys present (temporary — Phase 4 pattern)
+   * 3. Bridge B: lookup from theme.components via variant (temporary — pre-Phase 5 pattern)
+   * 4. Error if none provides complete tokens
+   *
+   * Bridges A and B are removed in Phase 5f when all components use node.tokens.
+   *
+   * Token completeness is validated here, AFTER slot injection has already run.
+   * @throws Error if the component is not registered or tokens are incomplete
    */
   async expand(node: ComponentNode, context: ExpansionContext): Promise<SlideNode> {
     const def = this.get(node.componentName);
@@ -384,7 +394,23 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
       return def.expand(node.props, context, undefined as never);
     }
 
-    // Path 1: Extract tokens from node.props (parent-provided via DSL or slot injection)
+    // Primary: read from node.tokens (set by DSL or slot injection)
+    if (node.tokens) {
+      const missing = requiredTokens.filter(
+        (key: string) => node.tokens![key] === undefined || node.tokens![key] === null
+      );
+      if (missing.length) {
+        throw new Error(
+          `Component '${node.componentName}' is missing required tokens: [${missing.join(', ')}]. ` +
+          `All tokens must be provided by the parent component or layout.`
+        );
+      }
+      return def.expand(node.props, context, node.tokens as never);
+    }
+
+    // Bridge A (temporary): extract from node.props if all required keys present.
+    // This supports components that still spread tokens into props (text/plainText/list).
+    // Removed in Phase 5f when all components use node.tokens.
     const propsRecord = node.props as Record<string, unknown>;
     const allTokensInProps = requiredTokens.every(
       (key: string) => propsRecord[key] !== undefined && propsRecord[key] !== null
@@ -398,47 +424,24 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
       return def.expand(node.props, context, tokens as never);
     }
 
-    // Path 2: Fallback to theme.components lookup (composition components)
-    const componentConfig = context.theme.components?.[node.componentName];
-    if (!componentConfig) {
-      throw new Error(
-        `Component '${node.componentName}' requires theme tokens but none were provided. ` +
-        `Tokens must be passed by the parent (layout or composition component). ` +
-        `Required: [${requiredTokens.join(', ')}]`
-      );
+    // Bridge B (temporary): lookup from theme.components via variant.
+    // This supports components not yet migrated to node.tokens (card, table, line, etc.).
+    // Removed in Phase 5f when all callers pass tokens explicitly.
+    const variant = (propsRecord.variant as string | undefined) ?? DEFAULT_VARIANT;
+    const config = context.theme.components?.[node.componentName];
+    if (config) {
+      const variantTokens = config.variants?.[variant] ?? config.variants?.[DEFAULT_VARIANT];
+      if (variantTokens) {
+        return def.expand(node.props, context, variantTokens as never);
+      }
     }
 
-    const { variants } = componentConfig as
-      { variants?: Record<string, Record<string, unknown>> };
-
-    if (!variants) {
-      throw new Error(
-        `Component '${node.componentName}' requires theme tokens but theme.components.${node.componentName}.variants is missing. ` +
-        `Add a variants map with at least a '${DEFAULT_VARIANT}' variant.`
-      );
-    }
-
-    const variantName: string = (node.props as { variant?: string })?.variant ?? DEFAULT_VARIANT;
-    const tokens = variants[variantName];
-
-    if (!tokens) {
-      const available = Object.keys(variants).join(', ');
-      throw new Error(
-        `Unknown variant '${variantName}' for component '${node.componentName}'. Available: ${available}`
-      );
-    }
-
-    const missing = requiredTokens.filter(
-      (key: string) => tokens[key] === undefined || tokens[key] === null
+    // No tokens found — error
+    throw new Error(
+      `Component '${node.componentName}' requires tokens but none were provided. ` +
+      `Tokens must be passed by the parent (layout or composition component). ` +
+      `Required: [${requiredTokens.join(', ')}]`
     );
-    if (missing.length) {
-      throw new Error(
-        `Component '${node.componentName}' variant '${variantName}' is missing required tokens: [${missing.join(', ')}]. ` +
-        `Each variant must be a complete token set.`
-      );
-    }
-
-    return def.expand(node.props, context, tokens as never);
   }
 
   /**
@@ -633,11 +636,15 @@ export const layoutRegistry = new LayoutRegistry();
 
 /**
  * Create a component node.
+ * Tokens are stored separately from props to avoid naming conflicts
+ * (e.g., card has both props.title: string and tokens.title: TextTokens).
  */
-export function component<TProps>(name: string, props: TProps): ComponentNode<TProps> {
-  return {
+export function component<TProps>(name: string, props: TProps, tokens?: Record<string, unknown> | object): ComponentNode<TProps> {
+  const node: ComponentNode<TProps> = {
     type: NODE_TYPE.COMPONENT,
     componentName: name,
     props,
   };
+  if (tokens) node.tokens = tokens as Record<string, unknown>;
+  return node;
 }

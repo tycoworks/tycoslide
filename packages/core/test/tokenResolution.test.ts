@@ -1,5 +1,5 @@
 // Token Resolution Engine Tests
-// Tests the core token resolution mechanism: theme lookup, variant resolution, validation.
+// Tests the core token resolution mechanism: node.tokens, bridge (node.props), validation.
 // Uses a simple inline test component — does NOT test specific component implementations.
 
 import { describe, it } from 'node:test';
@@ -8,7 +8,8 @@ import { componentRegistry, defineComponent, component } from '../src/core/rende
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { HALIGN, VALIGN } from '../src/core/model/types.js';
 import { schema } from '../src/core/model/schema.js';
-import { mockTheme, noopCanvas } from './mocks.js';
+import { noopCanvas } from './mocks.js';
+import type { Theme } from '../src/core/model/types.js';
 
 // ============================================
 // TEST COMPONENT WITH DECLARED TOKENS
@@ -20,7 +21,6 @@ const tokenTestComponent = defineComponent({
   name: TOKEN_COMP as any,
   params: {
     label: schema.string().optional(),
-    variant: schema.string().optional(),
   },
   tokens: ['alpha', 'beta', 'gamma'],
   expand: (props: any, _ctx: any, tokens: any): any => ({
@@ -35,162 +35,98 @@ const tokenTestComponent = defineComponent({
 
 componentRegistry.register(tokenTestComponent);
 
-/** Create a theme with tokens for the test component. */
-function tokenTheme(config: Record<string, unknown>) {
-  return mockTheme({ components: { [TOKEN_COMP]: config } });
+/** Minimal theme for tests (no theme.components needed). */
+function minimalTheme(): Theme {
+  return {
+    colors: {} as any,
+    slide: { layout: 'LAYOUT_16x9', width: 10, height: 5.625 },
+    spacing: {} as any,
+    borders: {} as any,
+    fonts: [],
+    textStyles: {} as any,
+    components: {} as any,
+  };
 }
 
 describe('Token Resolution Engine', () => {
 
   // ============================================
-  // 1. TOKENS FROM THEME
+  // 1. TOKENS FROM node.tokens (primary path)
   // ============================================
 
-  describe('tokens from theme', () => {
-    it('resolves tokens from theme.components[name].variants.default', async () => {
-      const theme = tokenTheme({ alpha: 'AAA', beta: 'BBB', gamma: 'CCC' });
-      const node = component(TOKEN_COMP as any, { label: 'test' });
+  describe('tokens from node.tokens', () => {
+    it('resolves tokens from node.tokens', async () => {
+      const theme = minimalTheme();
+      const node = component(TOKEN_COMP as any, { label: 'test' }, { alpha: 'AAA', beta: 'BBB', gamma: 'CCC' });
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() }) as any;
       assert.strictEqual(expanded._tokens.alpha, 'AAA');
       assert.strictEqual(expanded._tokens.beta, 'BBB');
       assert.strictEqual(expanded._tokens.gamma, 'CCC');
     });
 
-    it('custom token values from theme are used', async () => {
-      const theme = tokenTheme({ alpha: 'CUSTOM', beta: 'VALUES', gamma: 'HERE' });
-      const node = component(TOKEN_COMP as any, { label: 'test' });
+    it('custom token values are passed through', async () => {
+      const theme = minimalTheme();
+      const node = component(TOKEN_COMP as any, { label: 'test' }, { alpha: 'CUSTOM', beta: 'VALUES', gamma: 'HERE' });
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() }) as any;
       assert.strictEqual(expanded._tokens.alpha, 'CUSTOM');
       assert.strictEqual(expanded._tokens.beta, 'VALUES');
       assert.strictEqual(expanded._tokens.gamma, 'HERE');
     });
-  });
 
-  // ============================================
-  // 2. VARIANT RESOLUTION
-  // ============================================
-
-  describe('variant resolution', () => {
-    it('default variant is used when no variant specified', async () => {
-      const theme = tokenTheme({
-        variants: {
-          default: { alpha: 'def-A', beta: 'def-B', gamma: 'def-G' },
-          alt: { alpha: 'alt-A', beta: 'alt-B', gamma: 'alt-G' },
-        },
-      });
-      const node = component(TOKEN_COMP as any, { label: 'test' });
+    it('props and tokens are separate — no key conflicts', async () => {
+      const theme = minimalTheme();
+      // Simulate card-like scenario: props.alpha is a string, tokens.alpha is an object
+      const node = component(TOKEN_COMP as any, { label: 'test', alpha: 'content-string' }, { alpha: { nested: true }, beta: 'B', gamma: 'G' });
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() }) as any;
-      assert.strictEqual(expanded._tokens.alpha, 'def-A');
-      assert.strictEqual(expanded._tokens.beta, 'def-B');
-    });
-
-    it('non-default variant tokens are resolved when requested', async () => {
-      const theme = tokenTheme({
-        variants: {
-          default: { alpha: 'def-A', beta: 'def-B', gamma: 'def-G' },
-          alt: { alpha: 'alt-A', beta: 'alt-B', gamma: 'alt-G' },
-        },
-      });
-      const node = component(TOKEN_COMP as any, { label: 'test', variant: 'alt' });
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() }) as any;
-      assert.strictEqual(expanded._tokens.alpha, 'alt-A');
-      assert.strictEqual(expanded._tokens.beta, 'alt-B');
-      assert.strictEqual(expanded._tokens.gamma, 'alt-G');
-    });
-
-    it('each variant provides independent token set', async () => {
-      const theme = tokenTheme({
-        variants: {
-          default: { alpha: 'BASE-A', beta: 'BASE-B', gamma: 'BASE-G' },
-          special: { alpha: 'SPECIAL-A', beta: 'SPECIAL-B', gamma: 'SPECIAL-G' },
-        },
-      });
-      const node = component(TOKEN_COMP as any, { label: 'test', variant: 'special' });
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() }) as any;
-      assert.strictEqual(expanded._tokens.alpha, 'SPECIAL-A');
-      assert.strictEqual(expanded._tokens.beta, 'SPECIAL-B');
-    });
-
-    it('no variant requested → default variant only', async () => {
-      const theme = tokenTheme({
-        variants: {
-          default: { alpha: 'DEF-A', beta: 'DEF-B', gamma: 'DEF-G' },
-          other: { alpha: 'OTHER-A', beta: 'OTHER-B', gamma: 'OTHER-G' },
-        },
-      });
-      const node = component(TOKEN_COMP as any, { label: 'test' });
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() }) as any;
-      assert.strictEqual(expanded._tokens.alpha, 'DEF-A');
+      // tokens.alpha should be the object, not the string
+      assert.deepStrictEqual(expanded._tokens.alpha, { nested: true });
     });
   });
 
   // ============================================
-  // 3. UNKNOWN VARIANT ERROR
+  // 2. BRIDGE: TOKENS FROM node.props (backward compat)
   // ============================================
 
-  describe('unknown variant error', () => {
-    it('throws with available variant names listed', async () => {
-      const theme = tokenTheme({
-        variants: {
-          default: { alpha: 'A', beta: 'B', gamma: 'G' },
-          clean: { alpha: 'A', beta: 'B', gamma: 'G' },
-          minimal: { alpha: 'A', beta: 'B', gamma: 'G' },
-        },
-      });
-      const node = component(TOKEN_COMP as any, { label: 'test', variant: 'nonexistent' });
-
-      await assert.rejects(
-        () => componentRegistry.expandTree(node, { theme, canvas: noopCanvas() }),
-        (err: Error) => {
-          assert.match(err.message, /Unknown variant 'nonexistent'/);
-          assert.match(err.message, /clean/);
-          assert.match(err.message, /minimal/);
-          return true;
-        },
-      );
+  describe('bridge: tokens from node.props', () => {
+    it('extracts tokens from props when node.tokens is absent', async () => {
+      const theme = minimalTheme();
+      // No node.tokens — tokens spread into props (Phase 4 pattern)
+      const node = component(TOKEN_COMP as any, { label: 'test', alpha: 'A', beta: 'B', gamma: 'G' });
+      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() }) as any;
+      assert.strictEqual(expanded._tokens.alpha, 'A');
+      assert.strictEqual(expanded._tokens.beta, 'B');
+      assert.strictEqual(expanded._tokens.gamma, 'G');
     });
 
-    it('throws with default always listed', async () => {
-      const theme = tokenTheme({ alpha: 'A', beta: 'B', gamma: 'G' });
-      const node = component(TOKEN_COMP as any, { label: 'test', variant: 'anything' });
-
-      await assert.rejects(
-        () => componentRegistry.expandTree(node, { theme, canvas: noopCanvas() }),
-        (err: Error) => {
-          assert.match(err.message, /Unknown variant 'anything'/);
-          assert.match(err.message, /default/);
-          return true;
-        },
-      );
+    it('node.tokens takes priority over props', async () => {
+      const theme = minimalTheme();
+      const node = component(TOKEN_COMP as any, { label: 'test', alpha: 'from-props', beta: 'from-props', gamma: 'from-props' }, { alpha: 'from-tokens', beta: 'from-tokens', gamma: 'from-tokens' });
+      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() }) as any;
+      assert.strictEqual(expanded._tokens.alpha, 'from-tokens');
     });
   });
 
   // ============================================
-  // 4. REQUIRED TOKEN VALIDATION (FAIL-FAST)
+  // 3. REQUIRED TOKEN VALIDATION (FAIL-FAST)
   // ============================================
 
   describe('required token validation', () => {
-    it('throws when theme.components entry is missing entirely', async () => {
-      const theme = mockTheme();
-      // test-token-engine is not a standard component, so it's not in defaults
+    it('throws when no tokens are provided at all', async () => {
+      const theme = minimalTheme();
       const node = component(TOKEN_COMP as any, { label: 'test' });
 
       await assert.rejects(
         () => componentRegistry.expandTree(node, { theme, canvas: noopCanvas() }),
         (err: Error) => {
-          assert.match(err.message, /requires theme tokens/);
+          assert.match(err.message, /requires tokens but none were provided/);
           return true;
         },
       );
     });
 
-    it('throws when a required token is missing', async () => {
-      const theme = tokenTheme({
-        variants: {
-          default: { alpha: 'A', beta: 'B' }, // gamma missing
-        },
-      });
-      const node = component(TOKEN_COMP as any, { label: 'test' });
+    it('throws when a required token is missing from node.tokens', async () => {
+      const theme = minimalTheme();
+      const node = component(TOKEN_COMP as any, { label: 'test' }, { alpha: 'A', beta: 'B' }); // gamma missing
 
       await assert.rejects(
         () => componentRegistry.expandTree(node, { theme, canvas: noopCanvas() }),
@@ -203,12 +139,8 @@ describe('Token Resolution Engine', () => {
     });
 
     it('error message lists ALL missing tokens', async () => {
-      const theme = tokenTheme({
-        variants: {
-          default: { alpha: 'A' }, // beta and gamma missing
-        },
-      });
-      const node = component(TOKEN_COMP as any, { label: 'test' });
+      const theme = minimalTheme();
+      const node = component(TOKEN_COMP as any, { label: 'test' }, { alpha: 'A' }); // beta and gamma missing
 
       await assert.rejects(
         () => componentRegistry.expandTree(node, { theme, canvas: noopCanvas() }),
@@ -220,9 +152,37 @@ describe('Token Resolution Engine', () => {
       );
     });
 
-    it('succeeds when all required tokens are provided', async () => {
-      const theme = tokenTheme({ alpha: 'A', beta: 'B', gamma: 'G' });
-      const node = component(TOKEN_COMP as any, { label: 'test' });
+    it('succeeds when all required tokens are provided via node.tokens', async () => {
+      const theme = minimalTheme();
+      const node = component(TOKEN_COMP as any, { label: 'test' }, { alpha: 'A', beta: 'B', gamma: 'G' });
+      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
+      assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
+    });
+
+    it('succeeds when all required tokens are in props (bridge)', async () => {
+      const theme = minimalTheme();
+      const node = component(TOKEN_COMP as any, { label: 'test', alpha: 'A', beta: 'B', gamma: 'G' });
+      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
+      assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
+    });
+
+    it('components with no tokens expand without error', async () => {
+      const NO_TOKEN_COMP = 'test-no-tokens';
+      const noTokenComp = defineComponent({
+        name: NO_TOKEN_COMP as any,
+        params: { value: schema.string().optional() },
+        tokens: [],
+        expand: (props: any): any => ({
+          type: NODE_TYPE.TEXT,
+          content: [{ text: props.value ?? '' }],
+          hAlign: HALIGN.LEFT,
+          vAlign: VALIGN.TOP,
+        }),
+      });
+      componentRegistry.register(noTokenComp);
+
+      const theme = minimalTheme();
+      const node = component(NO_TOKEN_COMP as any, { value: 'hello' });
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
       assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
     });

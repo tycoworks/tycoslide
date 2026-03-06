@@ -201,19 +201,19 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
 /**
  * Walk slot-compiled nodes and inject layout tokens into ComponentNodes.
  * For each ComponentNode, if the layout tokens contain a key matching
- * node.componentName, merge those token values into node.props.
+ * node.componentName, set node.tokens with layout defaults merged under
+ * any node-specific token overrides (e.g., heading style: 'h2' from mdast compile).
  * This is how slot-compiled text/list nodes get their visual tokens from the layout.
  */
 function injectSlotTokens(nodes: SlideNode[], layoutTokens: Record<string, unknown>): void {
   for (const node of nodes) {
     if (isComponentNode(node)) {
       const tokenMap = layoutTokens[node.componentName];
-      // TODO Phase 3: when all layouts declare tokens, error if no matching token key
-      // exists for this component type (plan: "Missing token for a slot content type = build error")
       if (tokenMap && typeof tokenMap === 'object') {
-        (node as ComponentNode<Record<string, unknown>>).props = {
+        // Layout defaults first, then node-specific overrides (e.g., heading style)
+        (node as ComponentNode).tokens = {
           ...(tokenMap as Record<string, unknown>),
-          ...(node.props as Record<string, unknown>),
+          ...(node.tokens ?? {}),
         };
       }
     }

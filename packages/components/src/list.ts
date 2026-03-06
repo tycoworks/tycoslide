@@ -138,5 +138,5 @@ export const listComponent = defineComponent({
  * ```
  */
 export function list(items: string[], tokens: ListTokens, ordered?: boolean): ComponentNode<ListComponentProps> {
-  return component(Component.List, { body: items, ordered: ordered ?? false, ...tokens });
+  return component(Component.List, { body: items, ordered: ordered ?? false }, tokens);
 }

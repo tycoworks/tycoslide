@@ -114,8 +114,9 @@ describe('ComponentRegistry', () => {
 
   describe('expand', () => {
     test('expands a registered component', async () => {
-      // text component is registered via componentRegistry.register() — use it as a real component
-      const node = component(C.Text, { body: 'hello' });
+      // text component requires tokens — provide them via node.tokens
+      const textTokens = { color: '000000', style: TEXT_STYLE.BODY, lineHeightMultiplier: 1.2, linkColor: '0000FF', linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP };
+      const node = component(C.Text, { body: 'hello' }, textTokens);
       const expanded = await componentRegistry.expand(node, { theme, canvas: noopCanvas() });
       assert.strictEqual((expanded as any).type, NODE_TYPE.TEXT);
     });
@@ -137,10 +138,16 @@ describe('ComponentRegistry', () => {
     });
 
     test('recursively expands nested components', async () => {
-      const flatTheme = mockTheme({ components: { card: { variants: { flat: { backgroundOpacity: 0 } } } } });
-      const node = component(C.Card, { title: 'Test', variant: 'flat' });
-      const expanded = await componentRegistry.expandTree(node, { theme: flatTheme, canvas: noopCanvas() });
-      // backgroundOpacity=0 means just a column with label child
+      // Card requires tokens — provide them via node.tokens
+      const cardTokens = {
+        background: { fill: '333333', fillOpacity: 0, borderColor: '333333', borderWidth: 1, cornerRadius: 0.1 },
+        padding: 0.25, gap: 0.125, hAlign: HALIGN.CENTER, vAlign: VALIGN.TOP,
+        title: { style: TEXT_STYLE.H4, color: 'FFFFFF', lineHeightMultiplier: 1, linkColor: '0000FF', linkUnderline: true, hAlign: HALIGN.CENTER, vAlign: VALIGN.TOP },
+        description: { style: TEXT_STYLE.SMALL, color: 'CCCCCC', lineHeightMultiplier: 1, linkColor: '0000FF', linkUnderline: true, hAlign: HALIGN.CENTER, vAlign: VALIGN.TOP },
+      };
+      const node = component(C.Card, { title: 'Test' }, cardTokens);
+      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
+      // Card expand creates a Column containing a Text child
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
       if (expanded.type === NODE_TYPE.CONTAINER) {
         assert.strictEqual(expanded.children[0].type, NODE_TYPE.TEXT);
@@ -149,7 +156,8 @@ describe('ComponentRegistry', () => {
 
     test('recurses into element children', async () => {
       // A container with a component child should expand the child
-      const node = component(C.Row, { children: [component(C.Text, { body: 'hi' })] });
+      const textTokens = { color: '000000', style: TEXT_STYLE.BODY, lineHeightMultiplier: 1.2, linkColor: '0000FF', linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP };
+      const node = component(C.Row, { children: [component(C.Text, { body: 'hi' }, textTokens)] });
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
       if (expanded.type === NODE_TYPE.CONTAINER) {

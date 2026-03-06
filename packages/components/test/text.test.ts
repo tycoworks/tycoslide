@@ -53,11 +53,12 @@ describe('Text', () => {
       assert.strictEqual(node.props.body, 'ARCHITECTURE');
     });
 
-    it('should pass props correctly', () => {
+    it('should pass props and tokens correctly', () => {
       const node = plainText('Label', { ...DEFAULT_PLAIN_TEXT_TOKENS, style: TEXT_STYLE.EYEBROW, color: 'FF0000' });
       assert.strictEqual(node.props.body, 'Label');
-      assert.strictEqual((node.props as any).style, 'eyebrow');
-      assert.strictEqual((node.props as any).color, 'FF0000');
+      // Tokens are now in node.tokens, not spread into props
+      assert.strictEqual((node.tokens as any).style, 'eyebrow');
+      assert.strictEqual((node.tokens as any).color, 'FF0000');
     });
   });
 

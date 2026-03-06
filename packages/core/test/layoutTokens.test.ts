@@ -416,11 +416,12 @@ describe('Slot Token Injection', () => {
     const textNode = bodyNodes[0];
     assert.ok(isComponentNode(textNode), 'body node should be a ComponentNode');
     assert.strictEqual(textNode.componentName, 'text');
-    // Token values should be merged into props
-    const props = textNode.props as Record<string, unknown>;
-    assert.strictEqual(props.style, 'h2');
-    assert.strictEqual(props.color, 'FF0000');
-    assert.strictEqual(props.lineHeightMultiplier, 1.5);
+    // Token values should be in node.tokens (not merged into props)
+    const tokens = textNode.tokens as Record<string, unknown>;
+    assert.ok(tokens, 'tokens should be set on the node');
+    assert.strictEqual(tokens.style, 'h2');
+    assert.strictEqual(tokens.color, 'FF0000');
+    assert.strictEqual(tokens.lineHeightMultiplier, 1.5);
   });
 
   it('preserves explicit props over injected tokens', () => {
@@ -444,11 +445,13 @@ describe('Slot Token Injection', () => {
 
     const bodyNodes = receivedProps[0].body;
     const textNode = bodyNodes[0];
-    const props = textNode.props as Record<string, unknown>;
-    // The heading's explicit style should override the layout token
-    assert.strictEqual(props.style, 'h2');
-    // color should come from layout token (heading doesn't set it)
-    assert.strictEqual(props.color, '000000');
+    const tokens = textNode.tokens as Record<string, unknown>;
+    assert.ok(tokens, 'tokens should be set on the node');
+    // Heading mdast compile puts style:'h2' in node.tokens.
+    // Slot injection merges: { ...layoutDefaults, ...nodeTokens }
+    // So heading's 'h2' overrides layout's 'body'.
+    assert.strictEqual(tokens.style, 'h2');
+    assert.strictEqual(tokens.color, '000000');
   });
 
   it('does not inject tokens when layout has no token key matching component name', () => {
@@ -474,11 +477,11 @@ describe('Slot Token Injection', () => {
 
     const bodyNodes = receivedProps[0].body;
     const textNode = bodyNodes[0];
+    // No matching layout token key for 'text', so node.tokens should not be set
+    assert.strictEqual(textNode.tokens, undefined);
+    // Props should still have body content
     const props = textNode.props as Record<string, unknown>;
-    // body prop should exist (from the markdown source), but no injected color/style
     assert.ok(props.body !== undefined);
-    // No injected token keys from layout
-    assert.strictEqual(props.color, undefined);
   });
 
   it('does not inject tokens for layouts without slots', () => {

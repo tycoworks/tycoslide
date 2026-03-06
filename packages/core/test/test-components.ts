@@ -57,7 +57,7 @@ export const textComponent = defineComponent({
         const style = HEADING_STYLE[heading.depth] ?? TEXT_STYLE.H3;
         const raw = extractSource(heading, source);
         const content = raw.replace(/^#{1,6}\s*/, '');
-        return component(C.Text, { body: content, style });
+        return component(C.Text, { body: content }, { style });
       }
       if (node.type === SYNTAX.PARAGRAPH) {
         const para = node as { children: { type: string }[] };
@@ -155,7 +155,8 @@ export const cardComponent = defineComponent({
   },
   tokens: ['background', 'padding', 'gap', 'hAlign', 'vAlign', 'title', 'description'],
   expand: (props: any, _ctx: ExpansionContext, tokens: any): any => {
-    const titleNode = component(C.Text, { body: props.title ?? props.body ?? '' });
+    // Pass title tokens down to child Text component
+    const titleNode = component(C.Text, { body: props.title ?? props.body ?? '' }, tokens.title);
     return component(C.Column, { children: [titleNode], padding: tokens.padding });
   },
 });

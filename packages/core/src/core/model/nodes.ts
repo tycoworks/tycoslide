@@ -194,6 +194,8 @@ export interface ComponentNode<TProps = unknown> {
   type: typeof NODE_TYPE.COMPONENT;
   componentName: string;
   props: TProps;
+  /** Visual tokens provided by parent (DSL) or slot injection. Separate from content props. */
+  tokens?: Record<string, unknown>;
 }
 
 // ============================================

@@ -51,7 +51,7 @@ describe('Slot Compiler', () => {
       const nodes = compileSlot('## Subheading');
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual((nodes[0] as any).componentName, C.Text);
-      assert.ok(props(nodes, 0).style); // has heading style
+      assert.ok((nodes[0] as any).tokens?.style); // heading style now in node.tokens
     });
 
     it('should compile a GFM table to a table node', () => {

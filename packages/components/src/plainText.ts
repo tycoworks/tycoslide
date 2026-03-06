@@ -97,5 +97,5 @@ export function plainText(
   body: string,
   tokens: PlainTextTokens,
 ): ComponentNode<PlainTextComponentProps> {
-  return component(Component.PlainText, { body, ...tokens });
+  return component(Component.PlainText, { body }, tokens);
 }

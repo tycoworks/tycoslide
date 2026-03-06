@@ -115,7 +115,7 @@ export const textComponent = defineComponent({
         const style = HEADING_STYLE[heading.depth] ?? TEXT_STYLE.H3;
         const raw = extractSource(heading, source);
         const content = raw.replace(/^#{1,6}\s*/, '');
-        return component(Component.Text, { body: content, style });
+        return component(Component.Text, { body: content }, { style });
       }
       if (node.type === SYNTAX.PARAGRAPH) {
         const para = node as { children: { type: string }[] };
@@ -142,5 +142,5 @@ export const textComponent = defineComponent({
  * ```
  */
 export function text(body: string, tokens: TextTokens): ComponentNode<TextComponentProps> {
-  return component(Component.Text, { body, ...tokens });
+  return component(Component.Text, { body }, tokens);
 }
