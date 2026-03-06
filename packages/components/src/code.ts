@@ -44,7 +44,7 @@ export const CODE_TOKEN = {
   BORDER_RADIUS: 'borderRadius',
 } as const;
 
-export interface CodeTokens {
+export type CodeTokens = {
   [CODE_TOKEN.BACKGROUND_COLOR]: string;
   [CODE_TOKEN.TEXT_COLOR]: string;
   [CODE_TOKEN.KEYWORD_COLOR]: string;
@@ -60,7 +60,7 @@ export interface CodeTokens {
   [CODE_TOKEN.LINE_HEIGHT]: number;
   [CODE_TOKEN.PADDING]: number;
   [CODE_TOKEN.BORDER_RADIUS]: number;
-}
+};
 
 // ============================================
 // SCHEMAS & TYPES
@@ -215,23 +215,7 @@ export const codeComponent = defineComponent({
   name: Component.Code,
   body: schema.string(),
   params: codeSchema,
-  tokens: [
-    CODE_TOKEN.BACKGROUND_COLOR,
-    CODE_TOKEN.TEXT_COLOR,
-    CODE_TOKEN.KEYWORD_COLOR,
-    CODE_TOKEN.STRING_COLOR,
-    CODE_TOKEN.COMMENT_COLOR,
-    CODE_TOKEN.FUNCTION_COLOR,
-    CODE_TOKEN.NUMBER_COLOR,
-    CODE_TOKEN.OPERATOR_COLOR,
-    CODE_TOKEN.TYPE_COLOR,
-    CODE_TOKEN.VARIABLE_COLOR,
-    CODE_TOKEN.FONT_SIZE,
-    CODE_TOKEN.FONT_FAMILY,
-    CODE_TOKEN.LINE_HEIGHT,
-    CODE_TOKEN.PADDING,
-    CODE_TOKEN.BORDER_RADIUS,
-  ],
+  tokens: Object.values(CODE_TOKEN),
   mdast: {
     nodeTypes: [SYNTAX.CODE],
     compile: (node: RootContent, _source: string): ComponentNode | null => {

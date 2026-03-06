@@ -22,7 +22,7 @@ export const TEXT_TOKEN = {
   VALIGN: 'vAlign',
 } as const;
 
-export interface TextTokens {
+export type TextTokens = {
   [TEXT_TOKEN.COLOR]: string;
   [TEXT_TOKEN.STYLE]: TextStyleName;
   [TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER]: number;
@@ -30,7 +30,7 @@ export interface TextTokens {
   [TEXT_TOKEN.LINK_UNDERLINE]: boolean;
   [TEXT_TOKEN.HALIGN]: HorizontalAlignment;
   [TEXT_TOKEN.VALIGN]: VerticalAlignment;
-}
+};
 
 // ============================================
 // TYPES
@@ -101,7 +101,7 @@ export const textComponent = defineComponent({
   body: schema.string(),
   params: {},
   directive: false,
-  tokens: [TEXT_TOKEN.COLOR, TEXT_TOKEN.STYLE, TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER, TEXT_TOKEN.LINK_COLOR, TEXT_TOKEN.LINK_UNDERLINE, TEXT_TOKEN.HALIGN, TEXT_TOKEN.VALIGN],
+  tokens: Object.values(TEXT_TOKEN),
   mdast: {
     nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.HEADING],
     compile: (node: RootContent, source: string): ComponentNode | null => {

@@ -6,7 +6,6 @@ import { z } from 'zod';
 import {
   componentRegistry,
   defineComponent,
-  type InferProps,
   type ComponentDefinition,
 } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';

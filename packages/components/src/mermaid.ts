@@ -34,7 +34,7 @@ export const MERMAID_TOKEN = {
   ACCENT_OPACITY: 'accentOpacity',
 } as const;
 
-export interface MermaidTokens {
+export type MermaidTokens = {
   [MERMAID_TOKEN.PRIMARY_COLOR]: string;
   [MERMAID_TOKEN.PRIMARY_TEXT_COLOR]: string;
   [MERMAID_TOKEN.PRIMARY_BORDER_COLOR]: string;
@@ -49,7 +49,7 @@ export interface MermaidTokens {
   [MERMAID_TOKEN.TITLE_COLOR]: string;
   [MERMAID_TOKEN.TEXT_STYLE]: string;
   [MERMAID_TOKEN.ACCENT_OPACITY]: number;
-}
+};
 
 // ============================================
 // TYPES
@@ -305,22 +305,7 @@ export const mermaidComponent = defineComponent({
   name: Component.Mermaid,
   body: schema.string(),
   params: {},
-  tokens: [
-    MERMAID_TOKEN.PRIMARY_COLOR,
-    MERMAID_TOKEN.PRIMARY_TEXT_COLOR,
-    MERMAID_TOKEN.PRIMARY_BORDER_COLOR,
-    MERMAID_TOKEN.LINE_COLOR,
-    MERMAID_TOKEN.SECONDARY_COLOR,
-    MERMAID_TOKEN.TERTIARY_COLOR,
-    MERMAID_TOKEN.TEXT_COLOR,
-    MERMAID_TOKEN.NODE_TEXT_COLOR,
-    MERMAID_TOKEN.CLUSTER_BACKGROUND,
-    MERMAID_TOKEN.CLUSTER_BORDER_COLOR,
-    MERMAID_TOKEN.EDGE_LABEL_BACKGROUND,
-    MERMAID_TOKEN.TITLE_COLOR,
-    MERMAID_TOKEN.TEXT_STYLE,
-    MERMAID_TOKEN.ACCENT_OPACITY,
-  ],
+  tokens: Object.values(MERMAID_TOKEN),
   expand: expandMermaid,
 });
 

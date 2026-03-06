@@ -38,14 +38,14 @@ function parseContainerArgs<TProps>(args: any[]): { props: TProps; children: Sli
 // ROW
 // ============================================
 
-export interface RowProps {
+export type RowProps = {
   width?: number | SizeValue;   // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
   height?: number | SizeValue;  // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
   gap?: GapSize;
   vAlign?: VerticalAlignment;
   hAlign?: HorizontalAlignment; // justify-content: left (flex-start), center, right (flex-end)
   padding?: number;             // inches - internal padding on all sides
-}
+};
 
 interface RowInternalProps extends RowProps {
   children: SlideNode[];
@@ -90,14 +90,14 @@ export function row(...args: any[]): ComponentNode {
 // COLUMN
 // ============================================
 
-export interface ColumnProps {
+export type ColumnProps = {
   width?: number | SizeValue;   // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
   height?: number | SizeValue;  // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
   gap?: GapSize;
   vAlign?: VerticalAlignment;
   hAlign?: HorizontalAlignment;
   padding?: number;             // inches - internal padding on all sides
-}
+};
 
 interface ColumnInternalProps extends ColumnProps {
   children: SlideNode[];
@@ -142,10 +142,10 @@ export function column(...args: any[]): ComponentNode {
 // STACK (z-order composition)
 // ============================================
 
-export interface StackProps {
+export type StackProps = {
   width?: number | SizeValue;   // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
   height?: number | SizeValue;  // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
-}
+};
 
 interface StackInternalProps extends StackProps {
   children: SlideNode[];
@@ -193,10 +193,10 @@ export function stack(...args: any[]): ComponentNode {
 // GRID (component - chunks children into column of rows)
 // ============================================
 
-export interface GridProps {
+export type GridProps = {
   columns: number;
   gap?: GapSize;
-}
+};
 
 interface GridInternalProps extends GridProps {
   children: SlideNode[];

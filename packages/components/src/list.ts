@@ -22,7 +22,7 @@ export const LIST_TOKEN = {
   VALIGN: 'vAlign',
 } as const;
 
-export interface ListTokens {
+export type ListTokens = {
   [LIST_TOKEN.COLOR]: string;
   [LIST_TOKEN.STYLE]: TextStyleName;
   [LIST_TOKEN.LINE_HEIGHT_MULTIPLIER]: number;
@@ -30,7 +30,7 @@ export interface ListTokens {
   [LIST_TOKEN.LINK_UNDERLINE]: boolean;
   [LIST_TOKEN.HALIGN]: HorizontalAlignment;
   [LIST_TOKEN.VALIGN]: VerticalAlignment;
-}
+};
 
 // ============================================
 // TYPES
@@ -112,7 +112,7 @@ export const listComponent = defineComponent({
   name: Component.List,
   body: schema.array(schema.string()),
   directive: false,
-  tokens: [LIST_TOKEN.COLOR, LIST_TOKEN.STYLE, LIST_TOKEN.LINE_HEIGHT_MULTIPLIER, LIST_TOKEN.LINK_COLOR, LIST_TOKEN.LINK_UNDERLINE, LIST_TOKEN.HALIGN, LIST_TOKEN.VALIGN],
+  tokens: Object.values(LIST_TOKEN),
   mdast: {
     nodeTypes: [SYNTAX.LIST],
     compile: (node: RootContent, source: string): ComponentNode | null => {

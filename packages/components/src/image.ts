@@ -1,7 +1,7 @@
 // Image component with asset resolution
 
 import {
-  defineComponent, component, type ComponentNode, type InferProps, type SchemaShape, type ExpansionContext,
+  defineComponent, component, type ComponentNode, type SchemaShape, type ExpansionContext,
   NODE_TYPE, type ImageNode,
   schema,
 } from 'tycoslide';
@@ -78,7 +78,9 @@ const imageSchema = {
   alt: schema.string().optional(),
 } satisfies SchemaShape;
 
-export type ImageProps = InferProps<typeof imageSchema>;
+export type ImageProps = {
+  alt?: string;
+};
 
 export type ImageComponentProps = { body: string } & ImageProps;
 

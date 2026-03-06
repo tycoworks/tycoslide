@@ -15,11 +15,11 @@ export const LINE_TOKEN = {
   DASH_TYPE: 'dashType',
 } as const;
 
-export interface LineTokens {
+export type LineTokens = {
   [LINE_TOKEN.COLOR]: string;
   [LINE_TOKEN.WIDTH]: number;
   [LINE_TOKEN.DASH_TYPE]: DashType;
-}
+};
 
 export const SLIDE_NUMBER_TOKEN = {
   STYLE: 'style',
@@ -28,12 +28,12 @@ export const SLIDE_NUMBER_TOKEN = {
   VALIGN: 'vAlign',
 } as const;
 
-export interface SlideNumberTokens {
+export type SlideNumberTokens = {
   [SLIDE_NUMBER_TOKEN.STYLE]: TextStyleName;
   [SLIDE_NUMBER_TOKEN.COLOR]: string;
   [SLIDE_NUMBER_TOKEN.HALIGN]: HorizontalAlignment;
   [SLIDE_NUMBER_TOKEN.VALIGN]: VerticalAlignment;
-}
+};
 
 export const SHAPE_TOKEN = {
   FILL: 'fill',
@@ -43,13 +43,13 @@ export const SHAPE_TOKEN = {
   CORNER_RADIUS: 'cornerRadius',
 } as const;
 
-export interface ShapeTokens {
+export type ShapeTokens = {
   [SHAPE_TOKEN.FILL]: string;
   [SHAPE_TOKEN.FILL_OPACITY]: number;
   [SHAPE_TOKEN.BORDER_COLOR]: string;
   [SHAPE_TOKEN.BORDER_WIDTH]: number;
   [SHAPE_TOKEN.CORNER_RADIUS]: number;
-}
+};
 
 // ============================================
 // LINE
@@ -62,10 +62,10 @@ const lineSchema = {
 } satisfies SchemaShape;
 
 // Full props for DSL callers (only arrow overrides — styling comes from tokens)
-export interface LineProps {
+export type LineProps = {
   beginArrow?: ArrowType;
   endArrow?: ArrowType;
-}
+};
 
 function expandLine(props: LineProps, _context: ExpansionContext, tokens: LineTokens): LineNode {
   return {
@@ -81,7 +81,7 @@ function expandLine(props: LineProps, _context: ExpansionContext, tokens: LineTo
 export const lineComponent = defineComponent({
   name: Component.Line,
   params: lineSchema,
-  tokens: [LINE_TOKEN.COLOR, LINE_TOKEN.WIDTH, LINE_TOKEN.DASH_TYPE],
+  tokens: Object.values(LINE_TOKEN),
   expand: expandLine,
 });
 
@@ -100,13 +100,13 @@ const shapeSchema = {
 } satisfies SchemaShape;
 
 // Full props for DSL callers (only shape geometry — styling comes from tokens)
-export interface ShapeProps {
+export type ShapeProps = {
   shape: ShapeName;
   borderTop?: boolean;
   borderRight?: boolean;
   borderBottom?: boolean;
   borderLeft?: boolean;
-}
+};
 
 function expandShape(props: ShapeProps, _context: ExpansionContext, tokens: ShapeTokens): ShapeNode {
   return {
@@ -131,7 +131,7 @@ function expandShape(props: ShapeProps, _context: ExpansionContext, tokens: Shap
 export const shapeComponent = defineComponent({
   name: Component.Shape,
   params: shapeSchema,
-  tokens: [SHAPE_TOKEN.FILL, SHAPE_TOKEN.FILL_OPACITY, SHAPE_TOKEN.BORDER_COLOR, SHAPE_TOKEN.BORDER_WIDTH, SHAPE_TOKEN.CORNER_RADIUS],
+  tokens: Object.values(SHAPE_TOKEN),
   expand: expandShape,
 });
 
@@ -144,7 +144,7 @@ export function shape(tokens: ShapeTokens, props: ShapeProps): ComponentNode {
 // ============================================
 
 // Full props for DSL callers (no styling overrides — all comes from tokens)
-export interface SlideNumberProps {}
+export type SlideNumberProps = {};
 
 function expandSlideNumber(_props: SlideNumberProps, context: ExpansionContext, tokens: SlideNumberTokens): SlideNumberNode {
   const style = tokens.style;
@@ -160,7 +160,7 @@ function expandSlideNumber(_props: SlideNumberProps, context: ExpansionContext, 
 
 export const slideNumberComponent = defineComponent({
   name: Component.SlideNumber,
-  tokens: [SLIDE_NUMBER_TOKEN.STYLE, SLIDE_NUMBER_TOKEN.COLOR, SLIDE_NUMBER_TOKEN.HALIGN, SLIDE_NUMBER_TOKEN.VALIGN],
+  tokens: Object.values(SLIDE_NUMBER_TOKEN),
   expand: expandSlideNumber,
 });
 

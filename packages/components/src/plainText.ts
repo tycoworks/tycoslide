@@ -30,9 +30,9 @@ export type PlainTextTokens = {
 // ============================================
 
 /** Full props including body content (used internally by expansion). */
-export interface PlainTextComponentProps {
+export type PlainTextComponentProps = {
   body: string;
-}
+};
 
 // ============================================
 // EXPAND
@@ -66,13 +66,7 @@ export const plainTextComponent = defineComponent({
   body: schema.string(),
   params: {},
   directive: false,
-  tokens: [
-    PLAIN_TEXT_TOKEN.COLOR,
-    PLAIN_TEXT_TOKEN.STYLE,
-    PLAIN_TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER,
-    PLAIN_TEXT_TOKEN.HALIGN,
-    PLAIN_TEXT_TOKEN.VALIGN,
-  ],
+  tokens: Object.values(PLAIN_TEXT_TOKEN),
   expand: expandPlainText,
 });
 

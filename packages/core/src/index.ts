@@ -80,7 +80,7 @@ export {
   type LayoutDefinition,
   type SchemaShape,
   type ScalarShape,
-  type InferProps,
+  type ComponentProps,
   type MdastHandler,
 } from './core/rendering/registry.js';
 

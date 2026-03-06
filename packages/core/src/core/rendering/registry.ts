@@ -126,6 +126,9 @@ export type ScalarComponentDefinition<
   schema: TSchema;
 };
 
+/** Extract the props type from a component definition's schema. Hides Zod from component authors. */
+export type ComponentProps<T extends { schema: z.ZodTypeAny }> = z.infer<T['schema']>;
+
 // ============================================
 // DIRECTIVE DESERIALIZATION (private)
 // ============================================
@@ -436,9 +439,6 @@ export type SchemaShape = Record<string, z.ZodTypeAny>;
 
 /** A Zod shape where every field is a scalar param (YAML-expressible). */
 export type ScalarShape = Record<string, ScalarParam>;
-
-/** Infer the TypeScript type from a raw Zod shape. Use instead of importing z from zod. */
-export type InferProps<TShape extends SchemaShape> = z.infer<z.ZodObject<TShape>>;
 
 /** Map slot names to their render type (each slot becomes SlideNode[]). */
 type SlotsToProps<T extends readonly string[]> = { [K in T[number]]: SlideNode[] };

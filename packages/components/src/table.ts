@@ -35,7 +35,7 @@ export const TABLE_TOKEN = {
   LINK_UNDERLINE: 'linkUnderline',
 } as const;
 
-export interface TableTokens {
+export type TableTokens = {
   [TABLE_TOKEN.BORDER_STYLE]: BorderStyle;
   [TABLE_TOKEN.BORDER_COLOR]: string;
   [TABLE_TOKEN.BORDER_WIDTH]: number;
@@ -53,18 +53,18 @@ export interface TableTokens {
   [TABLE_TOKEN.CELL_LINE_HEIGHT]: number;
   [TABLE_TOKEN.LINK_COLOR]: string;
   [TABLE_TOKEN.LINK_UNDERLINE]: boolean;
-}
+};
 
 // ============================================
 // TABLE COMPONENT
 // ============================================
 
-export interface TableProps {
+export type TableProps = {
   /** Number of header rows (default: 0) */
   headerRows?: number;
   /** Number of header columns (default: 0) */
   headerColumns?: number;
-}
+};
 
 interface TableInternalProps {
   data?: (TableCellInput | TextContent)[][];
@@ -102,7 +102,7 @@ const tableSchema = {
 export const tableComponent = defineComponent({
   name: Component.Table,
   params: tableSchema,
-  tokens: [TABLE_TOKEN.BORDER_STYLE, TABLE_TOKEN.BORDER_COLOR, TABLE_TOKEN.BORDER_WIDTH, TABLE_TOKEN.HEADER_BACKGROUND, TABLE_TOKEN.HEADER_BACKGROUND_OPACITY, TABLE_TOKEN.HEADER_TEXT_STYLE, TABLE_TOKEN.HEADER_TEXT_COLOR, TABLE_TOKEN.CELL_BACKGROUND, TABLE_TOKEN.CELL_BACKGROUND_OPACITY, TABLE_TOKEN.CELL_TEXT_STYLE, TABLE_TOKEN.CELL_TEXT_COLOR, TABLE_TOKEN.CELL_PADDING, TABLE_TOKEN.HALIGN, TABLE_TOKEN.VALIGN, TABLE_TOKEN.CELL_LINE_HEIGHT, TABLE_TOKEN.LINK_COLOR, TABLE_TOKEN.LINK_UNDERLINE],
+  tokens: Object.values(TABLE_TOKEN),
   mdast: {
     nodeTypes: [SYNTAX.TABLE],
     compile: (node: RootContent, source: string): ComponentNode | null => {

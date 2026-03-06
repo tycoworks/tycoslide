@@ -135,6 +135,44 @@ const mutedCaption: TextTokens = {
   linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
 };
 
+// --- Dark-background (hero/section) token objects ---
+
+const heroTitle: PlainTextTokens = {
+  style: TEXT_STYLE.H1, color: colors.onPrimary, lineHeightMultiplier: spacing.lineSpacing,
+  hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
+};
+const heroSubtitle: PlainTextTokens = {
+  style: TEXT_STYLE.H3, color: colors.onPrimary, lineHeightMultiplier: spacing.lineSpacing,
+  hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
+};
+const sectionHeading: PlainTextTokens = {
+  style: TEXT_STYLE.H2, color: colors.onPrimary, lineHeightMultiplier: spacing.lineSpacing,
+  hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
+};
+
+// --- Layout-specific token objects ---
+
+const statValue: PlainTextTokens = {
+  style: TEXT_STYLE.H1, color: colors.text, lineHeightMultiplier: spacing.lineSpacing,
+  hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
+};
+const statLabel: PlainTextTokens = {
+  style: TEXT_STYLE.H3, color: colors.textMuted, lineHeightMultiplier: spacing.lineSpacing,
+  hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
+};
+const subHeading: PlainTextTokens = {
+  style: TEXT_STYLE.H4, color: colors.text, lineHeightMultiplier: spacing.lineSpacing,
+  hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE,
+};
+const mutedBody: PlainTextTokens = {
+  style: TEXT_STYLE.BODY, color: colors.textMuted, lineHeightMultiplier: spacing.lineSpacing,
+  hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE,
+};
+const captionPlain: PlainTextTokens = {
+  style: TEXT_STYLE.SMALL, color: colors.textMuted, lineHeightMultiplier: spacing.lineSpacing,
+  hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
+};
+
 // ============================================
 // SLOT COMPONENT TOKEN OBJECTS (shared across layouts)
 // ============================================
@@ -175,6 +213,33 @@ const codeTokens = {
   lineHeight: 1.6,
   padding: spacing.padding,
   borderRadius: cornerRadius,
+};
+
+const quoteSlotTokens = {
+  bar: {
+    color: colors.primary,
+    width: 2,
+    dashType: DASH_TYPE.SOLID,
+  },
+  gap: GAP.NORMAL,
+  quote: quoteText,
+  attribution: quoteAttribution,
+};
+
+const testimonialSlotTokens = {
+  background: {
+    fill: colors.surfaceContainer,
+    fillOpacity: 100,
+    borderColor: colors.outlineVariant,
+    borderWidth,
+    cornerRadius,
+  },
+  padding: spacing.padding,
+  gap: GAP.TIGHT,
+  hAlign: HALIGN.CENTER,
+  vAlign: VALIGN.MIDDLE,
+  quote: quoteText,
+  attribution: quoteAttribution,
 };
 
 const mermaidTokens = {
@@ -222,8 +287,8 @@ export const theme: Theme = {
       variants: {
         default: {
           background: colors.text,
-          title: { style: TEXT_STYLE.H1, color: colors.onPrimary, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
-          subtitle: { style: TEXT_STYLE.H3, color: colors.onPrimary, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
+          title: heroTitle,
+          subtitle: heroSubtitle,
         },
       },
     },
@@ -231,8 +296,8 @@ export const theme: Theme = {
       variants: {
         default: {
           background: colors.text,
-          title: { style: TEXT_STYLE.H1, color: colors.onPrimary, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
-          subtitle: { style: TEXT_STYLE.H3, color: colors.onPrimary, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
+          title: heroTitle,
+          subtitle: heroSubtitle,
         },
       },
     },
@@ -240,7 +305,7 @@ export const theme: Theme = {
       variants: {
         default: {
           background: colors.text,
-          title: { style: TEXT_STYLE.H2, color: colors.onPrimary, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
+          title: sectionHeading,
         },
       },
     },
@@ -254,14 +319,16 @@ export const theme: Theme = {
           table: tableTokens,
           code: codeTokens,
           mermaid: mermaidTokens,
+          quote: quoteSlotTokens,
+          testimonial: testimonialSlotTokens,
         },
       },
     },
     stat: {
       variants: {
         default: {
-          value: { style: TEXT_STYLE.H1, color: colors.text, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
-          label: { style: TEXT_STYLE.H3, color: colors.textMuted, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
+          value: statValue,
+          label: statLabel,
           caption: mutedCaption,
         },
       },
@@ -284,6 +351,8 @@ export const theme: Theme = {
           table: tableTokens,
           code: codeTokens,
           mermaid: mermaidTokens,
+          quote: quoteSlotTokens,
+          testimonial: testimonialSlotTokens,
         },
       },
     },
@@ -297,6 +366,8 @@ export const theme: Theme = {
           table: tableTokens,
           code: codeTokens,
           mermaid: mermaidTokens,
+          quote: quoteSlotTokens,
+          testimonial: testimonialSlotTokens,
         },
       },
     },
@@ -310,6 +381,8 @@ export const theme: Theme = {
           table: tableTokens,
           code: codeTokens,
           mermaid: mermaidTokens,
+          quote: quoteSlotTokens,
+          testimonial: testimonialSlotTokens,
         },
       },
     },
@@ -318,12 +391,14 @@ export const theme: Theme = {
         default: {
           title: headerTitle,
           eyebrow: headerEyebrow,
-          columnTitle: { style: TEXT_STYLE.H4, color: colors.text, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
+          columnTitle: subHeading,
           text: bodyText,
           list: bodyList,
           table: tableTokens,
           code: codeTokens,
           mermaid: mermaidTokens,
+          quote: quoteSlotTokens,
+          testimonial: testimonialSlotTokens,
         },
       },
     },
@@ -402,8 +477,8 @@ export const theme: Theme = {
     bio: {
       variants: {
         default: {
-          person: { style: TEXT_STYLE.H4, color: colors.text, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
-          role: { style: TEXT_STYLE.BODY, color: colors.textMuted, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
+          person: subHeading,
+          role: mutedBody,
           text: bodyText,
           list: bodyList,
           table: tableTokens,
@@ -415,7 +490,7 @@ export const theme: Theme = {
     caption: {
       variants: {
         default: {
-          caption: { style: TEXT_STYLE.SMALL, color: colors.textMuted, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
+          caption: captionPlain,
         },
       },
     },

@@ -3,8 +3,8 @@
 // Expands to: row(line(bar), column(quote, attribution?))
 
 import {
-  defineComponent, component, type ExpansionContext, type InferProps, type SchemaShape,
-  type SlideNode, SIZE, schema, SYNTAX, extractSource,
+  defineComponent, component, type ComponentProps, type SchemaShape,
+  SIZE, schema, SYNTAX, extractSource,
   type GapSize,
 } from 'tycoslide';
 import type { RootContent } from 'mdast';
@@ -21,12 +21,12 @@ export const QUOTE_TOKEN = {
   ATTRIBUTION: 'attribution',
 } as const;
 
-export interface QuoteTokens {
+export type QuoteTokens = {
   [QUOTE_TOKEN.BAR]: LineTokens;
   [QUOTE_TOKEN.GAP]: GapSize;
   [QUOTE_TOKEN.QUOTE]: TextTokens;
   [QUOTE_TOKEN.ATTRIBUTION]: PlainTextTokens;
-}
+};
 
 // ============================================
 // PARAMS SCHEMA
@@ -42,13 +42,7 @@ const quoteSchema = {
 } satisfies SchemaShape;
 
 // ============================================
-// TYPES
-// ============================================
-
-export type QuoteProps = InferProps<typeof quoteSchema>;
-
-// ============================================
-// EXPANSION FUNCTION
+// COMPONENT DEFINITION
 // ============================================
 
 /**
@@ -65,43 +59,10 @@ export type QuoteProps = InferProps<typeof quoteSchema>;
  * )
  * ```
  */
-function expandQuote(props: QuoteProps & { body?: string }, _context: ExpansionContext, tokens: QuoteTokens): SlideNode {
-  const { quote: quoteText, body, attribution, height: sizeHeight } = props;
-  const actualQuote = quoteText ?? body;
-  const {
-    bar: barTokens, gap,
-    quote: quoteTokens, attribution: attributionTokens,
-  } = tokens;
-
-  if (!actualQuote) {
-    throw new Error(`[tycoslide] Quote component requires either a 'quote' attribute or body text.`);
-  }
-
-  // Build content children: quote text, optional attribution
-  const children: SlideNode[] = [
-    text(actualQuote, quoteTokens),
-  ];
-  if (attribution) {
-    children.push(plainText(attribution, attributionTokens));
-  }
-
-  const outerHeight = sizeHeight ?? SIZE.HUG;
-
-  return row(
-    { gap, height: outerHeight },
-    line(barTokens),
-    column({ gap }, ...children),
-  );
-}
-
-// ============================================
-// COMPONENT DEFINITION
-// ============================================
-
 export const quoteComponent = defineComponent({
   name: Component.Quote,
   params: quoteSchema,
-  tokens: [QUOTE_TOKEN.BAR, QUOTE_TOKEN.GAP, QUOTE_TOKEN.QUOTE, QUOTE_TOKEN.ATTRIBUTION],
+  tokens: Object.values(QUOTE_TOKEN),
   mdast: {
     nodeTypes: [SYNTAX.BLOCKQUOTE],
     compile: (node: RootContent, source: string) => {
@@ -111,8 +72,41 @@ export const quoteComponent = defineComponent({
       return component(Component.Quote, { quote: inner });
     },
   },
-  expand: expandQuote,
+  expand(props, _context, tokens: QuoteTokens) {
+    const { quote: quoteText, body, attribution, height: sizeHeight } = props;
+    const actualQuote = quoteText ?? body;
+    const {
+      bar: barTokens, gap,
+      quote: quoteTokens, attribution: attributionTokens,
+    } = tokens;
+
+    if (!actualQuote) {
+      throw new Error(`[tycoslide] Quote component requires either a 'quote' attribute or body text.`);
+    }
+
+    // Build content children: quote text, optional attribution
+    const children = [
+      text(actualQuote, quoteTokens),
+    ];
+    if (attribution) {
+      children.push(plainText(attribution, attributionTokens));
+    }
+
+    const outerHeight = sizeHeight ?? SIZE.HUG;
+
+    return row(
+      { gap, height: outerHeight },
+      line(barTokens),
+      column({ gap }, ...children),
+    );
+  },
 });
+
+// ============================================
+// DSL FUNCTION
+// ============================================
+
+export type QuoteProps = ComponentProps<typeof quoteComponent>;
 
 /**
  * Create a pull quote with left accent bar, quote text, and optional attribution.
