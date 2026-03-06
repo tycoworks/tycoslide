@@ -99,7 +99,6 @@ function expandText(props: TextComponentProps, context: ExpansionContext, tokens
 export const textComponent = defineComponent({
   name: Component.Text,
   body: schema.string(),
-  params: {},
   directive: false,
   tokens: Object.values(TEXT_TOKEN),
   mdast: {

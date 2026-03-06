@@ -304,7 +304,6 @@ async function expandMermaid(props: MermaidComponentProps, context: ExpansionCon
 export const mermaidComponent = defineComponent({
   name: Component.Mermaid,
   body: schema.string(),
-  params: {},
   tokens: Object.values(MERMAID_TOKEN),
   expand: expandMermaid,
 });
