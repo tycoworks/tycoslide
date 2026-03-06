@@ -4,56 +4,32 @@
 import {
   defineComponent, component, type ExpansionContext, type InferProps, type SchemaShape,
   type SlideNode, SHAPE, SIZE, schema,
-  type TextStyleName, type GapSize, type HorizontalAlignment, type VerticalAlignment,
+  type GapSize, type HorizontalAlignment, type VerticalAlignment,
 } from 'tycoslide';
 import { Component } from './names.js';
 import { stack, column } from './containers.js';
-import { shape } from './primitives.js';
+import { shape, type ShapeTokens } from './primitives.js';
 import { image, imageComponent } from './image.js';
-import { text, textComponent } from './text.js';
+import { text, textComponent, type TextTokens } from './text.js';
 
 export const CARD_TOKEN = {
+  BACKGROUND: 'background',
   PADDING: 'padding',
-  CORNER_RADIUS: 'cornerRadius',
-  BACKGROUND_COLOR: 'backgroundColor',
-  BACKGROUND_OPACITY: 'backgroundOpacity',
-  BORDER_COLOR: 'borderColor',
-  BORDER_WIDTH: 'borderWidth',
-  TITLE_STYLE: 'titleStyle',
-  TITLE_COLOR: 'titleColor',
-  TITLE_LINE_HEIGHT_MULTIPLIER: 'titleLineHeightMultiplier',
-  TITLE_LINK_COLOR: 'titleLinkColor',
-  TITLE_LINK_UNDERLINE: 'titleLinkUnderline',
-  DESCRIPTION_STYLE: 'descriptionStyle',
-  DESCRIPTION_COLOR: 'descriptionColor',
-  DESCRIPTION_LINE_HEIGHT_MULTIPLIER: 'descriptionLineHeightMultiplier',
-  DESCRIPTION_LINK_COLOR: 'descriptionLinkColor',
-  DESCRIPTION_LINK_UNDERLINE: 'descriptionLinkUnderline',
   GAP: 'gap',
   HALIGN: 'hAlign',
   VALIGN: 'vAlign',
+  TITLE: 'title',
+  DESCRIPTION: 'description',
 } as const;
 
 export interface CardTokens {
+  [CARD_TOKEN.BACKGROUND]: ShapeTokens;
   [CARD_TOKEN.PADDING]: number;
-  [CARD_TOKEN.CORNER_RADIUS]: number;
-  [CARD_TOKEN.BACKGROUND_COLOR]: string;
-  [CARD_TOKEN.BACKGROUND_OPACITY]: number;
-  [CARD_TOKEN.BORDER_COLOR]: string;
-  [CARD_TOKEN.BORDER_WIDTH]: number;
-  [CARD_TOKEN.TITLE_STYLE]: TextStyleName;
-  [CARD_TOKEN.TITLE_COLOR]: string;
-  [CARD_TOKEN.TITLE_LINE_HEIGHT_MULTIPLIER]: number;
-  [CARD_TOKEN.TITLE_LINK_COLOR]: string;
-  [CARD_TOKEN.TITLE_LINK_UNDERLINE]: boolean;
-  [CARD_TOKEN.DESCRIPTION_STYLE]: TextStyleName;
-  [CARD_TOKEN.DESCRIPTION_COLOR]: string;
-  [CARD_TOKEN.DESCRIPTION_LINE_HEIGHT_MULTIPLIER]: number;
-  [CARD_TOKEN.DESCRIPTION_LINK_COLOR]: string;
-  [CARD_TOKEN.DESCRIPTION_LINK_UNDERLINE]: boolean;
   [CARD_TOKEN.GAP]: GapSize;
   [CARD_TOKEN.HALIGN]: HorizontalAlignment;
   [CARD_TOKEN.VALIGN]: VerticalAlignment;
+  [CARD_TOKEN.TITLE]: TextTokens;
+  [CARD_TOKEN.DESCRIPTION]: TextTokens;
 }
 
 // ============================================
@@ -98,12 +74,8 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
   const { image: imagePath, title, description, body, height: sizeHeight } = props;
   const actualDescription = description ?? body;
   const {
-    padding, cornerRadius, backgroundColor, backgroundOpacity,
-    borderColor, borderWidth, titleStyle, titleColor,
-    titleLineHeightMultiplier, titleLinkColor, titleLinkUnderline,
-    descriptionStyle, descriptionColor,
-    descriptionLineHeightMultiplier, descriptionLinkColor, descriptionLinkUnderline,
-    gap, hAlign: contentHAlign, vAlign: contentVAlign,
+    background, padding, gap, hAlign: contentHAlign, vAlign: contentVAlign,
+    title: titleTokens, description: descriptionTokens,
   } = tokens;
 
   // Build children from image/title/description props
@@ -114,41 +86,25 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
   }
 
   if (title) {
-    children.push(text(title, {
-      style: titleStyle,
-      color: titleColor,
-      lineHeightMultiplier: titleLineHeightMultiplier,
-      linkColor: titleLinkColor,
-      linkUnderline: titleLinkUnderline,
-    }));
+    children.push(text(title, titleTokens));
   }
 
   if (actualDescription) {
-    children.push(text(actualDescription, {
-      style: descriptionStyle,
-      color: descriptionColor,
-      lineHeightMultiplier: descriptionLineHeightMultiplier,
-      linkColor: descriptionLinkColor,
-      linkUnderline: descriptionLinkUnderline,
-    }));
+    children.push(text(actualDescription, descriptionTokens));
   }
 
   const contentProps = { padding, gap, hAlign: contentHAlign, vAlign: contentVAlign };
   const outerHeight = sizeHeight ?? SIZE.FILL;
 
-  // If no background (opacity 0), just return the content column directly
-  if (backgroundOpacity === 0) {
+  // Check background opacity from the ShapeTokens map
+  if (background.fillOpacity === 0) {
     return column({ ...contentProps, height: outerHeight }, ...children);
   }
 
-  // Build background rectangle
+  // Build background rectangle using ShapeTokens directly
   const backgroundRect = shape({
     shape: SHAPE.ROUND_RECT,
-    fill: backgroundColor,
-    fillOpacity: backgroundOpacity,
-    borderColor,
-    borderWidth,
-    cornerRadius,
+    ...background,
   });
 
   // Stack: background behind, content in front
@@ -164,7 +120,7 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
 export const cardComponent = defineComponent({
   name: Component.Card,
   params: cardSchema,
-  tokens: [CARD_TOKEN.PADDING, CARD_TOKEN.CORNER_RADIUS, CARD_TOKEN.BACKGROUND_COLOR, CARD_TOKEN.BACKGROUND_OPACITY, CARD_TOKEN.BORDER_COLOR, CARD_TOKEN.BORDER_WIDTH, CARD_TOKEN.TITLE_STYLE, CARD_TOKEN.TITLE_COLOR, CARD_TOKEN.TITLE_LINE_HEIGHT_MULTIPLIER, CARD_TOKEN.TITLE_LINK_COLOR, CARD_TOKEN.TITLE_LINK_UNDERLINE, CARD_TOKEN.DESCRIPTION_STYLE, CARD_TOKEN.DESCRIPTION_COLOR, CARD_TOKEN.DESCRIPTION_LINE_HEIGHT_MULTIPLIER, CARD_TOKEN.DESCRIPTION_LINK_COLOR, CARD_TOKEN.DESCRIPTION_LINK_UNDERLINE, CARD_TOKEN.GAP, CARD_TOKEN.HALIGN, CARD_TOKEN.VALIGN],
+  tokens: [CARD_TOKEN.BACKGROUND, CARD_TOKEN.PADDING, CARD_TOKEN.GAP, CARD_TOKEN.HALIGN, CARD_TOKEN.VALIGN, CARD_TOKEN.TITLE, CARD_TOKEN.DESCRIPTION],
   expand: expandCard,
 });
 

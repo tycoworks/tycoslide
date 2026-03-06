@@ -5,7 +5,7 @@
 
 import type { RootContent, Heading } from 'mdast';
 import type { NormalizedRun, TextStyleName, HorizontalAlignment, VerticalAlignment, ExpansionContext } from 'tycoslide';
-import { HALIGN, VALIGN, TEXT_STYLE, SYNTAX, extractSource } from 'tycoslide';
+import { TEXT_STYLE, SYNTAX, extractSource } from 'tycoslide';
 import { NODE_TYPE, type ElementNode } from 'tycoslide';
 import { defineComponent, component, type ComponentNode, type SchemaShape } from 'tycoslide';
 import { schema } from 'tycoslide';
@@ -18,6 +18,8 @@ export const TEXT_TOKEN = {
   LINE_HEIGHT_MULTIPLIER: 'lineHeightMultiplier',
   LINK_COLOR: 'linkColor',
   LINK_UNDERLINE: 'linkUnderline',
+  HALIGN: 'hAlign',
+  VALIGN: 'vAlign',
 } as const;
 
 export interface TextTokens {
@@ -26,6 +28,8 @@ export interface TextTokens {
   [TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER]: number;
   [TEXT_TOKEN.LINK_COLOR]: string;
   [TEXT_TOKEN.LINK_UNDERLINE]: boolean;
+  [TEXT_TOKEN.HALIGN]: HorizontalAlignment;
+  [TEXT_TOKEN.VALIGN]: VerticalAlignment;
 }
 
 // ============================================
@@ -106,8 +110,8 @@ function expandText(props: TextComponentProps, context: ExpansionContext, tokens
     style: resolvedStyle,
     resolvedStyle: textStyle,
     color: resolvedColor,
-    hAlign: props.hAlign ?? HALIGN.LEFT,
-    vAlign: props.vAlign ?? VALIGN.TOP,
+    hAlign: props.hAlign ?? tokens.hAlign,
+    vAlign: props.vAlign ?? tokens.vAlign,
     lineHeightMultiplier: resolvedLineHeight,
     bulletIndentPt,
     linkColor: resolvedLinkColor,
@@ -124,7 +128,7 @@ export const textComponent = defineComponent({
   body: schema.string(),
   params: textSchema,
   directive: false,
-  tokens: [TEXT_TOKEN.COLOR, TEXT_TOKEN.STYLE, TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER, TEXT_TOKEN.LINK_COLOR, TEXT_TOKEN.LINK_UNDERLINE],
+  tokens: [TEXT_TOKEN.COLOR, TEXT_TOKEN.STYLE, TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER, TEXT_TOKEN.LINK_COLOR, TEXT_TOKEN.LINK_UNDERLINE, TEXT_TOKEN.HALIGN, TEXT_TOKEN.VALIGN],
   mdast: {
     nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.HEADING],
     compile: (node: RootContent, source: string): ComponentNode | null => {

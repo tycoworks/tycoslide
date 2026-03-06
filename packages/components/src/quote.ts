@@ -4,42 +4,28 @@
 
 import {
   defineComponent, component, type ExpansionContext, type InferProps, type SchemaShape,
-  type SlideNode, SIZE, HALIGN, schema, SYNTAX, extractSource,
-  type TextStyleName, type GapSize,
+  type SlideNode, SIZE, schema, SYNTAX, extractSource,
+  type GapSize,
 } from 'tycoslide';
 import type { RootContent } from 'mdast';
 import { Component } from './names.js';
 import { row, column } from './containers.js';
-import { line } from './primitives.js';
-import { text, textComponent } from './text.js';
-import { plainText } from './plainText.js';
+import { line, type LineTokens } from './primitives.js';
+import { text, textComponent, type TextTokens } from './text.js';
+import { plainText, type PlainTextTokens } from './plainText.js';
 
 export const QUOTE_TOKEN = {
-  BAR_COLOR: 'barColor',
-  BAR_WIDTH: 'barWidth',
-  QUOTE_STYLE: 'quoteStyle',
-  QUOTE_COLOR: 'quoteColor',
-  QUOTE_LINE_HEIGHT_MULTIPLIER: 'quoteLineHeightMultiplier',
-  QUOTE_LINK_COLOR: 'quoteLinkColor',
-  QUOTE_LINK_UNDERLINE: 'quoteLinkUnderline',
-  ATTRIBUTION_STYLE: 'attributionStyle',
-  ATTRIBUTION_COLOR: 'attributionColor',
-  ATTRIBUTION_LINE_HEIGHT_MULTIPLIER: 'attributionLineHeightMultiplier',
+  BAR: 'bar',
   GAP: 'gap',
+  QUOTE: 'quote',
+  ATTRIBUTION: 'attribution',
 } as const;
 
 export interface QuoteTokens {
-  [QUOTE_TOKEN.BAR_COLOR]: string;
-  [QUOTE_TOKEN.BAR_WIDTH]: number;
-  [QUOTE_TOKEN.QUOTE_STYLE]: TextStyleName;
-  [QUOTE_TOKEN.QUOTE_COLOR]: string;
-  [QUOTE_TOKEN.QUOTE_LINE_HEIGHT_MULTIPLIER]: number;
-  [QUOTE_TOKEN.QUOTE_LINK_COLOR]: string;
-  [QUOTE_TOKEN.QUOTE_LINK_UNDERLINE]: boolean;
-  [QUOTE_TOKEN.ATTRIBUTION_STYLE]: TextStyleName;
-  [QUOTE_TOKEN.ATTRIBUTION_COLOR]: string;
-  [QUOTE_TOKEN.ATTRIBUTION_LINE_HEIGHT_MULTIPLIER]: number;
+  [QUOTE_TOKEN.BAR]: LineTokens;
   [QUOTE_TOKEN.GAP]: GapSize;
+  [QUOTE_TOKEN.QUOTE]: TextTokens;
+  [QUOTE_TOKEN.ATTRIBUTION]: PlainTextTokens;
 }
 
 // ============================================
@@ -85,11 +71,8 @@ function expandQuote(props: QuoteProps & { body?: string }, _context: ExpansionC
   const { quote: quoteText, body, attribution, height: sizeHeight } = props;
   const actualQuote = quoteText ?? body;
   const {
-    barColor, barWidth, quoteStyle, quoteColor,
-    quoteLineHeightMultiplier, quoteLinkColor, quoteLinkUnderline,
-    attributionStyle, attributionColor,
-    attributionLineHeightMultiplier,
-    gap,
+    bar: barTokens, gap,
+    quote: quoteTokens, attribution: attributionTokens,
   } = tokens;
 
   if (!actualQuote) {
@@ -98,23 +81,17 @@ function expandQuote(props: QuoteProps & { body?: string }, _context: ExpansionC
 
   // Build content children: quote text, optional attribution
   const children: SlideNode[] = [
-    text(actualQuote, {
-      style: quoteStyle, color: quoteColor,
-      lineHeightMultiplier: quoteLineHeightMultiplier, linkColor: quoteLinkColor, linkUnderline: quoteLinkUnderline,
-    }),
+    text(actualQuote, quoteTokens),
   ];
   if (attribution) {
-    children.push(plainText(attribution, {
-      style: attributionStyle, color: attributionColor, hAlign: HALIGN.LEFT,
-      lineHeightMultiplier: attributionLineHeightMultiplier,
-    }));
+    children.push(plainText(attribution, attributionTokens));
   }
 
   const outerHeight = sizeHeight ?? SIZE.HUG;
 
   return row(
     { gap, height: outerHeight },
-    line({ color: barColor, width: barWidth }),
+    line(barTokens),
     column({ gap }, ...children),
   );
 }
@@ -126,7 +103,7 @@ function expandQuote(props: QuoteProps & { body?: string }, _context: ExpansionC
 export const quoteComponent = defineComponent({
   name: Component.Quote,
   params: quoteSchema,
-  tokens: [QUOTE_TOKEN.BAR_COLOR, QUOTE_TOKEN.BAR_WIDTH, QUOTE_TOKEN.QUOTE_STYLE, QUOTE_TOKEN.QUOTE_COLOR, QUOTE_TOKEN.QUOTE_LINE_HEIGHT_MULTIPLIER, QUOTE_TOKEN.QUOTE_LINK_COLOR, QUOTE_TOKEN.QUOTE_LINK_UNDERLINE, QUOTE_TOKEN.ATTRIBUTION_STYLE, QUOTE_TOKEN.ATTRIBUTION_COLOR, QUOTE_TOKEN.ATTRIBUTION_LINE_HEIGHT_MULTIPLIER, QUOTE_TOKEN.GAP],
+  tokens: [QUOTE_TOKEN.BAR, QUOTE_TOKEN.GAP, QUOTE_TOKEN.QUOTE, QUOTE_TOKEN.ATTRIBUTION],
   mdast: {
     nodeTypes: [SYNTAX.BLOCKQUOTE],
     compile: (node: RootContent, source: string) => {

@@ -12,6 +12,7 @@ import {
   SLIDE_SIZE,
   type Theme,
 } from 'tycoslide';
+import type { TextTokens, PlainTextTokens, ShapeTokens, LineTokens } from 'tycoslide-components';
 import { assets } from './assets.js';
 
 // ============================================
@@ -87,6 +88,63 @@ const shapeBase = {
 };
 
 // ============================================
+// SHARED TOKEN OBJECTS FOR COMPOSITION COMPONENTS
+// ============================================
+
+const cardTitle: TextTokens = {
+  style: TEXT_STYLE.H4,
+  color: colors.text,
+  lineHeightMultiplier: spacing.lineSpacing,
+  linkColor: colors.primary,
+  linkUnderline: true,
+  hAlign: HALIGN.CENTER,
+  vAlign: VALIGN.TOP,
+};
+const cardDescription: TextTokens = {
+  style: TEXT_STYLE.SMALL,
+  color: colors.textMuted,
+  lineHeightMultiplier: spacing.lineSpacing,
+  linkColor: colors.primary,
+  linkUnderline: true,
+  hAlign: HALIGN.CENTER,
+  vAlign: VALIGN.TOP,
+};
+
+const quoteText: TextTokens = {
+  style: TEXT_STYLE.H3,
+  color: colors.text,
+  lineHeightMultiplier: spacing.lineSpacing,
+  linkColor: colors.primary,
+  linkUnderline: true,
+  hAlign: HALIGN.LEFT,
+  vAlign: VALIGN.TOP,
+};
+const quoteAttribution: PlainTextTokens = {
+  style: TEXT_STYLE.SMALL,
+  color: colors.textMuted,
+  lineHeightMultiplier: 1.0,
+  hAlign: HALIGN.LEFT,
+  vAlign: VALIGN.TOP,
+};
+
+const testimonialQuote: TextTokens = {
+  style: TEXT_STYLE.H4,
+  color: colors.text,
+  lineHeightMultiplier: spacing.lineSpacing,
+  linkColor: colors.primary,
+  linkUnderline: true,
+  hAlign: HALIGN.CENTER,
+  vAlign: VALIGN.TOP,
+};
+const testimonialAttribution: PlainTextTokens = {
+  style: TEXT_STYLE.SMALL,
+  color: colors.textMuted,
+  lineHeightMultiplier: 1.0,
+  hAlign: HALIGN.RIGHT,
+  vAlign: VALIGN.TOP,
+};
+
+// ============================================
 // THEME EXPORT
 // ============================================
 
@@ -113,87 +171,67 @@ export const theme: Theme = {
     card: {
       variants: {
         default: {
+          background: {
+            fill: colors.surfaceContainer,
+            fillOpacity: 100,
+            borderColor: colors.outlineVariant,
+            borderWidth,
+            cornerRadius,
+          } satisfies ShapeTokens,
           padding: spacing.padding,
-          cornerRadius,
-          backgroundColor: colors.surfaceContainer,
-          backgroundOpacity: 100,
-          borderColor: colors.outlineVariant,
-          borderWidth,
-          titleStyle: TEXT_STYLE.H4,
-          titleColor: colors.text,
-          titleLineHeightMultiplier: spacing.lineSpacing,
-          titleLinkColor: colors.primary,
-          titleLinkUnderline: true,
-          descriptionStyle: TEXT_STYLE.SMALL,
-          descriptionColor: colors.textMuted,
-          descriptionLineHeightMultiplier: spacing.lineSpacing,
-          descriptionLinkColor: colors.primary,
-          descriptionLinkUnderline: true,
           gap: GAP.TIGHT,
           hAlign: HALIGN.CENTER,
           vAlign: VALIGN.TOP,
+          title: cardTitle,
+          description: cardDescription,
         },
         flat: {
+          background: {
+            fill: colors.background,
+            fillOpacity: 0,
+            borderColor: colors.outlineVariant,
+            borderWidth: 0,
+            cornerRadius,
+          } satisfies ShapeTokens,
           padding: spacing.padding,
-          cornerRadius,
-          backgroundColor: colors.background,
-          backgroundOpacity: 0,
-          borderColor: colors.outlineVariant,
-          borderWidth: 0,
-          titleStyle: TEXT_STYLE.H4,
-          titleColor: colors.text,
-          titleLineHeightMultiplier: spacing.lineSpacing,
-          titleLinkColor: colors.primary,
-          titleLinkUnderline: true,
-          descriptionStyle: TEXT_STYLE.SMALL,
-          descriptionColor: colors.textMuted,
-          descriptionLineHeightMultiplier: spacing.lineSpacing,
-          descriptionLinkColor: colors.primary,
-          descriptionLinkUnderline: true,
           gap: GAP.TIGHT,
           hAlign: HALIGN.CENTER,
           vAlign: VALIGN.TOP,
+          title: cardTitle,
+          description: cardDescription,
         },
       },
     },
     quote: {
       variants: {
         default: {
-          barColor: colors.primary,
-          barWidth: 2,
-          quoteStyle: TEXT_STYLE.H3,
-          quoteColor: colors.text,
-          quoteLineHeightMultiplier: spacing.lineSpacing,
-          quoteLinkColor: colors.primary,
-          quoteLinkUnderline: true,
-          attributionStyle: TEXT_STYLE.SMALL,
-          attributionColor: colors.textMuted,
-          attributionLineHeightMultiplier: 1.0,
+          bar: {
+            color: colors.primary,
+            width: 2,
+            dashType: DASH_TYPE.SOLID,
+          } satisfies LineTokens,
           gap: GAP.NORMAL,
+          quote: quoteText,
+          attribution: quoteAttribution,
         },
       },
     },
     testimonial: {
       variants: {
         default: {
+          background: {
+            fill: colors.surfaceContainerLow,
+            fillOpacity: 100,
+            borderColor: colors.text,
+            borderWidth,
+            cornerRadius,
+          } satisfies ShapeTokens,
           padding: spacing.padding * 2,
-          cornerRadius,
-          backgroundColor: colors.surfaceContainerLow,
-          backgroundOpacity: 100,
-          borderColor: colors.text,
-          borderWidth,
-          quoteStyle: TEXT_STYLE.H4,
-          quoteColor: colors.text,
-          quoteLineHeightMultiplier: spacing.lineSpacing,
-          quoteLinkColor: colors.primary,
-          quoteLinkUnderline: true,
-          attributionStyle: TEXT_STYLE.SMALL,
-          attributionColor: colors.textMuted,
-          attributionLineHeightMultiplier: 1.0,
-          attributionHAlign: HALIGN.RIGHT,
           gap: GAP.NORMAL,
           hAlign: HALIGN.CENTER,
           vAlign: VALIGN.MIDDLE,
+          quote: testimonialQuote,
+          attribution: testimonialAttribution,
         },
       },
     },
@@ -241,11 +279,11 @@ export const theme: Theme = {
     },
     text: {
       variants: {
-        default:  { ...textBase, color: colors.text, linkColor: colors.primary, linkUnderline: true },
-        eyebrow:  { ...textBase, color: colors.primary, style: TEXT_STYLE.EYEBROW, lineHeightMultiplier: 1.0, linkColor: colors.primary, linkUnderline: false },
-        muted:    { ...textBase, color: colors.textMuted, linkColor: colors.primary, linkUnderline: true },
-        accent:  { ...textBase, color: colors.accents.blue, linkColor: colors.accents.blue, linkUnderline: true },
-        inverse: { ...textBase, color: colors.background, linkColor: colors.background, linkUnderline: true },
+        default:  { ...textBase, color: colors.text, linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP },
+        eyebrow:  { ...textBase, color: colors.primary, style: TEXT_STYLE.EYEBROW, lineHeightMultiplier: 1.0, linkColor: colors.primary, linkUnderline: false, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP },
+        muted:    { ...textBase, color: colors.textMuted, linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP },
+        accent:  { ...textBase, color: colors.accents.blue, linkColor: colors.accents.blue, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP },
+        inverse: { ...textBase, color: colors.background, linkColor: colors.background, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP },
       },
     },
     plainText: {
@@ -254,21 +292,29 @@ export const theme: Theme = {
           style: TEXT_STYLE.BODY,
           color: colors.text,
           lineHeightMultiplier: spacing.lineSpacing,
+          hAlign: HALIGN.LEFT,
+          vAlign: VALIGN.TOP,
         },
         eyebrow: {
           style: TEXT_STYLE.EYEBROW,
           color: colors.primary,
           lineHeightMultiplier: 1.0,
+          hAlign: HALIGN.LEFT,
+          vAlign: VALIGN.TOP,
         },
         muted: {
           style: TEXT_STYLE.BODY,
           color: colors.textMuted,
           lineHeightMultiplier: spacing.lineSpacing,
+          hAlign: HALIGN.LEFT,
+          vAlign: VALIGN.TOP,
         },
         inverse: {
           style: TEXT_STYLE.BODY,
           color: colors.onPrimary,
           lineHeightMultiplier: spacing.lineSpacing,
+          hAlign: HALIGN.LEFT,
+          vAlign: VALIGN.TOP,
         },
       },
     },
@@ -280,6 +326,8 @@ export const theme: Theme = {
           lineHeightMultiplier: spacing.lineSpacing,
           linkColor: colors.primary,
           linkUnderline: true,
+          hAlign: HALIGN.LEFT,
+          vAlign: VALIGN.TOP,
         },
       },
     },

@@ -48,7 +48,7 @@ export const textComponent = defineComponent({
     content: schema.string().optional(),
     variant: schema.string().optional(),
   },
-  tokens: ['color', 'style', 'lineHeightMultiplier'],
+  tokens: ['color', 'style', 'lineHeightMultiplier', 'linkColor', 'linkUnderline', 'hAlign', 'vAlign'],
   mdast: {
     nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.HEADING, SYNTAX.LIST],
     compile: (node: RootContent, source: string): ComponentNode | null => {
@@ -153,11 +153,7 @@ export const cardComponent = defineComponent({
     description: schema.string().optional(),
     variant: schema.string().optional(),
   },
-  tokens: [
-    'padding', 'cornerRadius', 'backgroundColor', 'backgroundOpacity',
-    'borderColor', 'borderWidth', 'titleStyle', 'titleColor',
-    'descriptionStyle', 'descriptionColor', 'gap', 'hAlign', 'vAlign',
-  ],
+  tokens: ['background', 'padding', 'gap', 'hAlign', 'vAlign', 'title', 'description'],
   expand: (props: any, _ctx: ExpansionContext, tokens: any): any => {
     const titleNode = component(C.Text, { body: props.title ?? props.body ?? '' });
     return component(C.Column, { children: [titleNode], padding: tokens.padding });

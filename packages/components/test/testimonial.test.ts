@@ -62,7 +62,7 @@ describe('Testimonial Component', () => {
     });
 
     it('should expand to column only when variant has backgroundOpacity=0', async () => {
-      const flatTheme = mockTheme({ components: { testimonial: { variants: { flat: { backgroundOpacity: 0 } } } } });
+      const flatTheme = mockTheme({ components: { testimonial: { variants: { flat: { background: { fill: '333333', fillOpacity: 0, borderColor: '333333', borderWidth: 0, cornerRadius: 0.1 } } } } } });
       const node = testimonial({ quote: 'Test', variant: 'flat' });
       const expanded = await componentRegistry.expandTree(node, { theme: flatTheme, canvas: noopCanvas() });
 

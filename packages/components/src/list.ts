@@ -5,7 +5,7 @@
 import type { List as MdastList, ListItem } from 'mdast';
 import type { RootContent } from 'mdast';
 import type { NormalizedRun, TextStyleName, HorizontalAlignment, VerticalAlignment, ExpansionContext } from 'tycoslide';
-import { HALIGN, VALIGN, SYNTAX, extractSource } from 'tycoslide';
+import { SYNTAX, extractSource } from 'tycoslide';
 import { NODE_TYPE, type ElementNode } from 'tycoslide';
 import { defineComponent, component, type ComponentNode } from 'tycoslide';
 import { schema } from 'tycoslide';
@@ -18,6 +18,8 @@ export const LIST_TOKEN = {
   LINE_HEIGHT_MULTIPLIER: 'lineHeightMultiplier',
   LINK_COLOR: 'linkColor',
   LINK_UNDERLINE: 'linkUnderline',
+  HALIGN: 'hAlign',
+  VALIGN: 'vAlign',
 } as const;
 
 export interface ListTokens {
@@ -26,6 +28,8 @@ export interface ListTokens {
   [LIST_TOKEN.LINE_HEIGHT_MULTIPLIER]: number;
   [LIST_TOKEN.LINK_COLOR]: string;
   [LIST_TOKEN.LINK_UNDERLINE]: boolean;
+  [LIST_TOKEN.HALIGN]: HorizontalAlignment;
+  [LIST_TOKEN.VALIGN]: VerticalAlignment;
 }
 
 // ============================================
@@ -89,8 +93,8 @@ function expandList(props: ListComponentProps, context: ExpansionContext, tokens
     style: resolvedStyle,
     resolvedStyle: textStyle,
     color: resolvedColor,
-    hAlign: props.hAlign ?? HALIGN.LEFT,
-    vAlign: props.vAlign ?? VALIGN.TOP,
+    hAlign: props.hAlign ?? tokens.hAlign,
+    vAlign: props.vAlign ?? tokens.vAlign,
     lineHeightMultiplier: resolvedLineHeight,
     bulletIndentPt,
     linkColor: resolvedLinkColor,
@@ -125,7 +129,7 @@ export const listComponent = defineComponent({
   name: Component.List,
   body: schema.array(schema.string()),
   directive: false,
-  tokens: [LIST_TOKEN.COLOR, LIST_TOKEN.STYLE, LIST_TOKEN.LINE_HEIGHT_MULTIPLIER, LIST_TOKEN.LINK_COLOR, LIST_TOKEN.LINK_UNDERLINE],
+  tokens: [LIST_TOKEN.COLOR, LIST_TOKEN.STYLE, LIST_TOKEN.LINE_HEIGHT_MULTIPLIER, LIST_TOKEN.LINK_COLOR, LIST_TOKEN.LINK_UNDERLINE, LIST_TOKEN.HALIGN, LIST_TOKEN.VALIGN],
   mdast: {
     nodeTypes: [SYNTAX.LIST],
     compile: (node: RootContent, source: string): ComponentNode | null => {

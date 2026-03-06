@@ -472,10 +472,10 @@ export const cardsLayout = defineLayout({
     intro: textComponent.schema.optional(),
     cards: schema.array(cardComponent.schema),
     caption: textComponent.schema.optional(),
-    variant: schema.string().optional(),
+    cardVariant: schema.string().optional(),
   },
-  render: ({ title, eyebrow, intro, cards, caption, variant }) => {
-    const built = cards.map(c => card(variant ? { ...c, variant } : c));
+  render: ({ title, eyebrow, intro, cards, caption, cardVariant }) => {
+    const built = cards.map(c => card(cardVariant ? { ...c, variant: cardVariant } : c));
     const perRow = built.length <= 2 ? built.length : built.length === 4 ? 2 : built.length >= 7 ? 4 : 3;
     return masteredSlide(
       headerBlock(title, eyebrow),

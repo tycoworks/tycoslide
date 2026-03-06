@@ -73,7 +73,7 @@ cards:
   - title: PowerPoint Output
     description: Real, editable .pptx files with native shapes, text, and tables. Works offline in PowerPoint, Keynote, and LibreOffice.
     image: asset.icons.rocket
-variant: flat
+cardVariant: flat
 notes: Three pillars from Fletch positioning. Each resolves one side of the tradeoff.
 ---
 

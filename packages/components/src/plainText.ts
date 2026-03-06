@@ -4,7 +4,7 @@
 // Use this for eyebrows, attributions, labels, and other non-rich text.
 
 import type { TextStyleName, HorizontalAlignment, VerticalAlignment, ExpansionContext } from 'tycoslide';
-import { HALIGN, VALIGN } from 'tycoslide';
+// VALIGN default now comes from tokens, not hardcoded
 import { NODE_TYPE, type ElementNode } from 'tycoslide';
 import { defineComponent, component, type ComponentNode } from 'tycoslide';
 import { schema } from 'tycoslide';
@@ -14,12 +14,16 @@ export const PLAIN_TEXT_TOKEN = {
   COLOR: 'color',
   STYLE: 'style',
   LINE_HEIGHT_MULTIPLIER: 'lineHeightMultiplier',
+  HALIGN: 'hAlign',
+  VALIGN: 'vAlign',
 } as const;
 
 export type PlainTextTokens = {
   color: string;
   style: TextStyleName;
   lineHeightMultiplier: number;
+  hAlign: HorizontalAlignment;
+  vAlign: VerticalAlignment;
 };
 
 // ============================================
@@ -58,8 +62,8 @@ function expandPlainText(props: PlainTextComponentProps, context: ExpansionConte
     style: resolvedStyle,
     resolvedStyle: textStyle,
     color: resolvedColor,
-    hAlign: props.hAlign ?? HALIGN.LEFT,
-    vAlign: props.vAlign ?? VALIGN.TOP,
+    hAlign: props.hAlign ?? tokens.hAlign,
+    vAlign: props.vAlign ?? tokens.vAlign,
     lineHeightMultiplier: resolvedLineHeight,
     bulletIndentPt,
     linkColor: resolvedColor,
@@ -86,6 +90,8 @@ export const plainTextComponent = defineComponent({
     PLAIN_TEXT_TOKEN.COLOR,
     PLAIN_TEXT_TOKEN.STYLE,
     PLAIN_TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER,
+    PLAIN_TEXT_TOKEN.HALIGN,
+    PLAIN_TEXT_TOKEN.VALIGN,
   ],
   expand: expandPlainText,
 });

@@ -5,55 +5,33 @@
 import {
   defineComponent, component, type ExpansionContext, type InferProps, type SchemaShape,
   type SlideNode, SHAPE, SIZE, schema,
-  type TextStyleName, type GapSize, type HorizontalAlignment, type VerticalAlignment,
+  type GapSize, type HorizontalAlignment, type VerticalAlignment,
 } from 'tycoslide';
 import { Component } from './names.js';
 import { stack, column, row } from './containers.js';
-import { shape } from './primitives.js';
+import { shape, type ShapeTokens } from './primitives.js';
 import { image as imageNode, imageComponent } from './image.js';
-import { text, textComponent } from './text.js';
-import { plainText } from './plainText.js';
+import { text, textComponent, type TextTokens } from './text.js';
+import { plainText, type PlainTextTokens } from './plainText.js';
 
 export const TESTIMONIAL_TOKEN = {
+  BACKGROUND: 'background',
   PADDING: 'padding',
-  CORNER_RADIUS: 'cornerRadius',
-  BACKGROUND_COLOR: 'backgroundColor',
-  BACKGROUND_OPACITY: 'backgroundOpacity',
-  BORDER_COLOR: 'borderColor',
-  BORDER_WIDTH: 'borderWidth',
-  QUOTE_STYLE: 'quoteStyle',
-  QUOTE_COLOR: 'quoteColor',
-  QUOTE_LINE_HEIGHT_MULTIPLIER: 'quoteLineHeightMultiplier',
-  QUOTE_LINK_COLOR: 'quoteLinkColor',
-  QUOTE_LINK_UNDERLINE: 'quoteLinkUnderline',
-  ATTRIBUTION_STYLE: 'attributionStyle',
-  ATTRIBUTION_COLOR: 'attributionColor',
-  ATTRIBUTION_LINE_HEIGHT_MULTIPLIER: 'attributionLineHeightMultiplier',
-  ATTRIBUTION_HALIGN: 'attributionHAlign',
   GAP: 'gap',
   HALIGN: 'hAlign',
   VALIGN: 'vAlign',
+  QUOTE: 'quote',
+  ATTRIBUTION: 'attribution',
 } as const;
 
 export interface TestimonialTokens {
+  [TESTIMONIAL_TOKEN.BACKGROUND]: ShapeTokens;
   [TESTIMONIAL_TOKEN.PADDING]: number;
-  [TESTIMONIAL_TOKEN.CORNER_RADIUS]: number;
-  [TESTIMONIAL_TOKEN.BACKGROUND_COLOR]: string;
-  [TESTIMONIAL_TOKEN.BACKGROUND_OPACITY]: number;
-  [TESTIMONIAL_TOKEN.BORDER_COLOR]: string;
-  [TESTIMONIAL_TOKEN.BORDER_WIDTH]: number;
-  [TESTIMONIAL_TOKEN.QUOTE_STYLE]: TextStyleName;
-  [TESTIMONIAL_TOKEN.QUOTE_COLOR]: string;
-  [TESTIMONIAL_TOKEN.QUOTE_LINE_HEIGHT_MULTIPLIER]: number;
-  [TESTIMONIAL_TOKEN.QUOTE_LINK_COLOR]: string;
-  [TESTIMONIAL_TOKEN.QUOTE_LINK_UNDERLINE]: boolean;
-  [TESTIMONIAL_TOKEN.ATTRIBUTION_STYLE]: TextStyleName;
-  [TESTIMONIAL_TOKEN.ATTRIBUTION_COLOR]: string;
-  [TESTIMONIAL_TOKEN.ATTRIBUTION_LINE_HEIGHT_MULTIPLIER]: number;
-  [TESTIMONIAL_TOKEN.ATTRIBUTION_HALIGN]: HorizontalAlignment;
   [TESTIMONIAL_TOKEN.GAP]: GapSize;
   [TESTIMONIAL_TOKEN.HALIGN]: HorizontalAlignment;
   [TESTIMONIAL_TOKEN.VALIGN]: VerticalAlignment;
+  [TESTIMONIAL_TOKEN.QUOTE]: TextTokens;
+  [TESTIMONIAL_TOKEN.ATTRIBUTION]: PlainTextTokens;
 }
 
 // ============================================
@@ -102,12 +80,8 @@ function expandTestimonial(props: TestimonialProps & { body?: string }, context:
   const { quote: quoteText, body, attribution, image: imagePath, height: sizeHeight } = props;
   const actualQuote = quoteText ?? body;
   const {
-    padding, cornerRadius, backgroundColor, backgroundOpacity,
-    borderColor, borderWidth, quoteStyle, quoteColor,
-    quoteLineHeightMultiplier, quoteLinkColor, quoteLinkUnderline,
-    attributionStyle, attributionColor,
-    attributionLineHeightMultiplier,
-    attributionHAlign, gap, hAlign: contentHAlign, vAlign: contentVAlign,
+    background, padding, gap, hAlign: contentHAlign, vAlign: contentVAlign,
+    quote: quoteTokens, attribution: attributionTokens,
   } = tokens;
 
   // Build content children: optional image, quote text, attribution
@@ -118,33 +92,23 @@ function expandTestimonial(props: TestimonialProps & { body?: string }, context:
   if (!actualQuote) {
     throw new Error(`[tycoslide] Testimonial component requires either a 'quote' attribute or body text.`);
   }
-  children.push(text(actualQuote, {
-    style: quoteStyle, color: quoteColor,
-    lineHeightMultiplier: quoteLineHeightMultiplier, linkColor: quoteLinkColor, linkUnderline: quoteLinkUnderline,
-  }));
+  children.push(text(actualQuote, quoteTokens));
   if (attribution) {
-    children.push(plainText(attribution, {
-      style: attributionStyle, color: attributionColor, hAlign: attributionHAlign,
-      lineHeightMultiplier: attributionLineHeightMultiplier,
-    }));
+    children.push(plainText(attribution, attributionTokens));
   }
 
   const contentProps = { padding, gap, hAlign: contentHAlign, vAlign: contentVAlign };
   const outerHeight = sizeHeight ?? SIZE.FILL;
 
-  // If no background (opacity 0), just return the content column directly
-  if (backgroundOpacity === 0) {
+  // Check background opacity from the ShapeTokens map
+  if (background.fillOpacity === 0) {
     return column({ ...contentProps, height: outerHeight }, ...children);
   }
 
-  // Build background shape
+  // Build background rectangle using ShapeTokens directly
   const backgroundRect = shape({
     shape: SHAPE.ROUND_RECT,
-    fill: backgroundColor,
-    fillOpacity: backgroundOpacity,
-    borderColor,
-    borderWidth,
-    cornerRadius,
+    ...background,
   });
 
   // Content layer fills the stack so vAlign: MIDDLE centering works
@@ -159,7 +123,7 @@ function expandTestimonial(props: TestimonialProps & { body?: string }, context:
 export const testimonialComponent = defineComponent({
   name: Component.Testimonial,
   params: testimonialSchema,
-  tokens: [TESTIMONIAL_TOKEN.PADDING, TESTIMONIAL_TOKEN.CORNER_RADIUS, TESTIMONIAL_TOKEN.BACKGROUND_COLOR, TESTIMONIAL_TOKEN.BACKGROUND_OPACITY, TESTIMONIAL_TOKEN.BORDER_COLOR, TESTIMONIAL_TOKEN.BORDER_WIDTH, TESTIMONIAL_TOKEN.QUOTE_STYLE, TESTIMONIAL_TOKEN.QUOTE_COLOR, TESTIMONIAL_TOKEN.QUOTE_LINE_HEIGHT_MULTIPLIER, TESTIMONIAL_TOKEN.QUOTE_LINK_COLOR, TESTIMONIAL_TOKEN.QUOTE_LINK_UNDERLINE, TESTIMONIAL_TOKEN.ATTRIBUTION_STYLE, TESTIMONIAL_TOKEN.ATTRIBUTION_COLOR, TESTIMONIAL_TOKEN.ATTRIBUTION_LINE_HEIGHT_MULTIPLIER, TESTIMONIAL_TOKEN.ATTRIBUTION_HALIGN, TESTIMONIAL_TOKEN.GAP, TESTIMONIAL_TOKEN.HALIGN, TESTIMONIAL_TOKEN.VALIGN],
+  tokens: [TESTIMONIAL_TOKEN.BACKGROUND, TESTIMONIAL_TOKEN.PADDING, TESTIMONIAL_TOKEN.GAP, TESTIMONIAL_TOKEN.HALIGN, TESTIMONIAL_TOKEN.VALIGN, TESTIMONIAL_TOKEN.QUOTE, TESTIMONIAL_TOKEN.ATTRIBUTION],
   expand: expandTestimonial,
 });
 
