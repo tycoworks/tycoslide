@@ -36,35 +36,19 @@ export interface TextTokens {
 // SCHEMAS & TYPES
 // ============================================
 
-const textSchema = {
-  style: schema.textStyle().optional(),
-  hAlign: schema.hAlign().optional(),
-  vAlign: schema.vAlign().optional(),
-  variant: schema.string().optional(),
-} satisfies SchemaShape;
+const textSchema = {} satisfies SchemaShape;
 
-/** Props accepted by the text() DSL function.
- *  DSL callers can pass styling props (color, lineHeightMultiplier)
- *  that are NOT in the directive schema — only available to TypeScript developers. */
-export interface TextProps {
-  style?: TextStyleName;
-  color?: string;
-  hAlign?: HorizontalAlignment;
-  vAlign?: VerticalAlignment;
-  lineHeightMultiplier?: number;
-  linkColor?: string;
-  linkUnderline?: boolean;
-  variant?: string;
-}
+/** Props accepted by the text() DSL function — empty after Phase 4 unification. */
+export interface TextProps {}
 
 /** Full props including body content (used internally by expansion) */
-export type TextComponentProps = { body: string } & TextProps;
+export type TextComponentProps = { body: string };
 
 // ============================================
 // HEADING STYLE MAP (exported for document component)
 // ============================================
 
-export const HEADING_STYLE: Record<number, TextProps['style']> = {
+export const HEADING_STYLE: Record<number, TextStyleName> = {
   1: TEXT_STYLE.H1,
   2: TEXT_STYLE.H2,
   3: TEXT_STYLE.H3,
@@ -76,13 +60,7 @@ export const HEADING_STYLE: Record<number, TextProps['style']> = {
 // ============================================
 
 function expandText(props: TextComponentProps, context: ExpansionContext, tokens: TextTokens): ElementNode {
-  // Props override tokens: DSL/parent callers can pass explicit values
-  const resolvedStyle = props.style ?? tokens.style;
-  const resolvedColor = props.color ?? tokens.color;
-  const resolvedLineHeight = props.lineHeightMultiplier ?? tokens.lineHeightMultiplier;
-  const resolvedLinkColor = props.linkColor ?? tokens.linkColor;
-  const resolvedLinkUnderline = props.linkUnderline ?? tokens.linkUnderline;
-  const textStyle = context.theme.textStyles[resolvedStyle];
+  const textStyle = context.theme.textStyles[tokens.style];
   const bulletIndentPt = textStyle.fontSize * context.theme.spacing.bulletIndentMultiplier;
 
   // Parse inline markdown only (bold, italic, :color[highlights])
@@ -107,15 +85,15 @@ function expandText(props: TextComponentProps, context: ExpansionContext, tokens
   return {
     type: NODE_TYPE.TEXT,
     content: runs,
-    style: resolvedStyle,
+    style: tokens.style,
     resolvedStyle: textStyle,
-    color: resolvedColor,
-    hAlign: props.hAlign ?? tokens.hAlign,
-    vAlign: props.vAlign ?? tokens.vAlign,
-    lineHeightMultiplier: resolvedLineHeight,
+    color: tokens.color,
+    hAlign: tokens.hAlign,
+    vAlign: tokens.vAlign,
+    lineHeightMultiplier: tokens.lineHeightMultiplier,
     bulletIndentPt,
-    linkColor: resolvedLinkColor,
-    linkUnderline: resolvedLinkUnderline,
+    linkColor: tokens.linkColor,
+    linkUnderline: tokens.linkUnderline,
   };
 }
 
@@ -160,10 +138,9 @@ export const textComponent = defineComponent({
  *
  * @example
  * ```typescript
- * text("1. Problem statement", { style: TEXT_STYLE.H4 })
- * text("**Bold** and :teal[highlighted]")
+ * text("**Bold** and :teal[highlighted]", tokens.text)
  * ```
  */
-export function text(body: string, props?: TextProps): ComponentNode<TextComponentProps> {
-  return component(Component.Text, { body, ...props });
+export function text(body: string, tokens: TextTokens): ComponentNode<TextComponentProps> {
+  return component(Component.Text, { body, ...tokens });
 }

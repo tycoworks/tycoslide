@@ -380,51 +380,65 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
       throw new Error(`Unknown component: '${node.componentName}'. Did you forget to register it?`);
     }
     const requiredTokens = def.tokens;
-    if (requiredTokens?.length) {
-      const componentConfig = context.theme.components?.[node.componentName];
-      if (!componentConfig) {
-        throw new Error(
-          `Component '${node.componentName}' requires theme tokens but none were provided. ` +
-          `Add them to theme.components.${node.componentName}. ` +
-          `Required: [${requiredTokens.join(', ')}]`
-        );
+    if (!requiredTokens?.length) {
+      return def.expand(node.props, context, undefined as never);
+    }
+
+    // Path 1: Extract tokens from node.props (parent-provided via DSL or slot injection)
+    const propsRecord = node.props as Record<string, unknown>;
+    const allTokensInProps = requiredTokens.every(
+      (key: string) => propsRecord[key] !== undefined && propsRecord[key] !== null
+    );
+
+    if (allTokensInProps) {
+      const tokens: Record<string, unknown> = {};
+      for (const key of requiredTokens) {
+        tokens[key] = propsRecord[key];
       }
-
-      const { variants } = componentConfig as
-        { variants?: Record<string, Record<string, unknown>> };
-
-      if (!variants) {
-        throw new Error(
-          `Component '${node.componentName}' requires theme tokens but theme.components.${node.componentName}.variants is missing. ` +
-          `Add a variants map with at least a '${DEFAULT_VARIANT}' variant.`
-        );
-      }
-
-      const variantName: string = (node.props as { variant?: string })?.variant ?? DEFAULT_VARIANT;
-      const tokens = variants[variantName];
-
-      if (!tokens) {
-        const available = Object.keys(variants).join(', ');
-        throw new Error(
-          `Unknown variant '${variantName}' for component '${node.componentName}'. Available: ${available}`
-        );
-      }
-
-      // Validate all required tokens are present in the variant
-      const missing = requiredTokens.filter(
-        (key: string) => tokens[key] === undefined || tokens[key] === null
-      );
-      if (missing.length) {
-        throw new Error(
-          `Component '${node.componentName}' variant '${variantName}' is missing required tokens: [${missing.join(', ')}]. ` +
-          `Each variant must be a complete token set.`
-        );
-      }
-
       return def.expand(node.props, context, tokens as never);
     }
 
-    return def.expand(node.props, context, undefined as never);
+    // Path 2: Fallback to theme.components lookup (composition components)
+    const componentConfig = context.theme.components?.[node.componentName];
+    if (!componentConfig) {
+      throw new Error(
+        `Component '${node.componentName}' requires theme tokens but none were provided. ` +
+        `Tokens must be passed by the parent (layout or composition component). ` +
+        `Required: [${requiredTokens.join(', ')}]`
+      );
+    }
+
+    const { variants } = componentConfig as
+      { variants?: Record<string, Record<string, unknown>> };
+
+    if (!variants) {
+      throw new Error(
+        `Component '${node.componentName}' requires theme tokens but theme.components.${node.componentName}.variants is missing. ` +
+        `Add a variants map with at least a '${DEFAULT_VARIANT}' variant.`
+      );
+    }
+
+    const variantName: string = (node.props as { variant?: string })?.variant ?? DEFAULT_VARIANT;
+    const tokens = variants[variantName];
+
+    if (!tokens) {
+      const available = Object.keys(variants).join(', ');
+      throw new Error(
+        `Unknown variant '${variantName}' for component '${node.componentName}'. Available: ${available}`
+      );
+    }
+
+    const missing = requiredTokens.filter(
+      (key: string) => tokens[key] === undefined || tokens[key] === null
+    );
+    if (missing.length) {
+      throw new Error(
+        `Component '${node.componentName}' variant '${variantName}' is missing required tokens: [${missing.join(', ')}]. ` +
+        `Each variant must be a complete token set.`
+      );
+    }
+
+    return def.expand(node.props, context, tokens as never);
   }
 
   /**

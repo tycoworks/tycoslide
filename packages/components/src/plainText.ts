@@ -4,7 +4,6 @@
 // Use this for eyebrows, attributions, labels, and other non-rich text.
 
 import type { TextStyleName, HorizontalAlignment, VerticalAlignment, ExpansionContext } from 'tycoslide';
-// VALIGN default now comes from tokens, not hardcoded
 import { NODE_TYPE, type ElementNode } from 'tycoslide';
 import { defineComponent, component, type ComponentNode } from 'tycoslide';
 import { schema } from 'tycoslide';
@@ -30,18 +29,11 @@ export type PlainTextTokens = {
 // TYPES
 // ============================================
 
-/** Props accepted by the plainText() DSL function. */
-export interface PlainTextProps {
-  style?: TextStyleName;
-  color?: string;
-  hAlign?: HorizontalAlignment;
-  vAlign?: VerticalAlignment;
-  lineHeightMultiplier?: number;
-  variant?: string;
-}
+/** Props accepted by the plainText() DSL function — empty after Phase 4 unification. */
+export interface PlainTextProps {}
 
 /** Full props including body content (used internally by expansion). */
-export interface PlainTextComponentProps extends PlainTextProps {
+export interface PlainTextComponentProps {
   body: string;
 }
 
@@ -50,23 +42,20 @@ export interface PlainTextComponentProps extends PlainTextProps {
 // ============================================
 
 function expandPlainText(props: PlainTextComponentProps, context: ExpansionContext, tokens: PlainTextTokens): ElementNode {
-  const resolvedStyle = props.style ?? tokens.style;
-  const resolvedColor = props.color ?? tokens.color;
-  const resolvedLineHeight = props.lineHeightMultiplier ?? tokens.lineHeightMultiplier;
-  const textStyle = context.theme.textStyles[resolvedStyle];
+  const textStyle = context.theme.textStyles[tokens.style];
   const bulletIndentPt = textStyle.fontSize * context.theme.spacing.bulletIndentMultiplier;
 
   return {
     type: NODE_TYPE.TEXT,
     content: [{ text: props.body }],
-    style: resolvedStyle,
+    style: tokens.style,
     resolvedStyle: textStyle,
-    color: resolvedColor,
-    hAlign: props.hAlign ?? tokens.hAlign,
-    vAlign: props.vAlign ?? tokens.vAlign,
-    lineHeightMultiplier: resolvedLineHeight,
+    color: tokens.color,
+    hAlign: tokens.hAlign,
+    vAlign: tokens.vAlign,
+    lineHeightMultiplier: tokens.lineHeightMultiplier,
     bulletIndentPt,
-    linkColor: resolvedColor,
+    linkColor: tokens.color,
     linkUnderline: false,
   };
 }
@@ -78,13 +67,7 @@ function expandPlainText(props: PlainTextComponentProps, context: ExpansionConte
 export const plainTextComponent = defineComponent({
   name: Component.PlainText,
   body: schema.string(),
-  params: {
-    style: schema.textStyle().optional(),
-    hAlign: schema.hAlign().optional(),
-    vAlign: schema.vAlign().optional(),
-    lineHeightMultiplier: schema.number().optional(),
-    variant: schema.string().optional(),
-  },
+  params: {},
   directive: false,
   tokens: [
     PLAIN_TEXT_TOKEN.COLOR,
@@ -107,13 +90,12 @@ export const plainTextComponent = defineComponent({
  *
  * @example
  * ```typescript
- * plainText("ARCHITECTURE", { style: TEXT_STYLE.EYEBROW })
- * plainText("© 2024 Acme Corp", { style: TEXT_STYLE.CAPTION, color: '#888888' })
+ * plainText("ARCHITECTURE", tokens.eyebrow)
  * ```
  */
 export function plainText(
   body: string,
-  props?: PlainTextProps,
+  tokens: PlainTextTokens,
 ): ComponentNode<PlainTextComponentProps> {
-  return component(Component.PlainText, { body, ...props });
+  return component(Component.PlainText, { body, ...tokens });
 }

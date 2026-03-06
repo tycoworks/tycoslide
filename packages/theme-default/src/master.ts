@@ -12,6 +12,7 @@ import {
   type Theme,
 } from 'tycoslide';
 import { row, column, plainText, slideNumber } from 'tycoslide-components';
+import { colors } from './theme.js';
 
 function masterContent(t: Theme) {
   const { margin, unit } = t.spacing;
@@ -31,6 +32,8 @@ function masterContent(t: Theme) {
       { gap: GAP.TIGHT, height: footerHeight, vAlign: VALIGN.MIDDLE },
       plainText('tycoworks', {
         style: TEXT_STYLE.FOOTER,
+        color: colors.textMuted,
+        lineHeightMultiplier: 1.0,
         hAlign: HALIGN.LEFT,
         vAlign: VALIGN.MIDDLE,
       }),

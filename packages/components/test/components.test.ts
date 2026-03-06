@@ -33,7 +33,7 @@ import {
   BORDER_STYLE,
 } from 'tycoslide';
 import type { TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, ContainerNode, StackNode } from 'tycoslide';
-import { mockTheme as createMockTheme, noopCanvas } from './mocks.js';
+import { mockTheme as createMockTheme, noopCanvas, DEFAULT_TEXT_TOKENS } from './mocks.js';
 import {
   textComponent, imageComponent, cardComponent, quoteComponent,
   tableComponent, codeComponent, mermaidComponent,
@@ -327,9 +327,9 @@ describe('slideNumber()', () => {
 // ============================================
 
 describe('row()', () => {
-  const child1 = text('A');
-  const child2 = text('B');
-  const child3 = text('C');
+  const child1 = text('A', DEFAULT_TEXT_TOKENS);
+  const child2 = text('B', DEFAULT_TEXT_TOKENS);
+  const child3 = text('C', DEFAULT_TEXT_TOKENS);
 
   test('returns ComponentNode', () => {
     const node = row(child1);
@@ -401,21 +401,21 @@ describe('row()', () => {
   });
 
   test('distinguishes props from children', async () => {
-    const node = row({ gap: GAP.TIGHT }, text('A'));
+    const node = row({ gap: GAP.TIGHT }, text('A', DEFAULT_TEXT_TOKENS));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.children.length, 1);
     assert.strictEqual(expanded.gap, 0.125);
   });
 
   test('accepts props with children (props first)', async () => {
-    const node = row({ gap: GAP.TIGHT }, text('A'), text('B'));
+    const node = row({ gap: GAP.TIGHT }, text('A', DEFAULT_TEXT_TOKENS), text('B', DEFAULT_TEXT_TOKENS));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.children.length, 2);
     assert.strictEqual(expanded.gap, 0.125);
   });
 
   test('applies all props together', async () => {
-    const node = row({ gap: GAP.NORMAL, vAlign: VALIGN.MIDDLE }, text('A'), text('B'));
+    const node = row({ gap: GAP.NORMAL, vAlign: VALIGN.MIDDLE }, text('A', DEFAULT_TEXT_TOKENS), text('B', DEFAULT_TEXT_TOKENS));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.gap, 0.25);
     assert.strictEqual(expanded.vAlign, VALIGN.MIDDLE);
@@ -423,7 +423,7 @@ describe('row()', () => {
   });
 
   test('handles single child', async () => {
-    const node = row(text('A'));
+    const node = row(text('A', DEFAULT_TEXT_TOKENS));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.children.length, 1);
   });
@@ -440,9 +440,9 @@ describe('row()', () => {
 // ============================================
 
 describe('column()', () => {
-  const child1 = text('A');
-  const child2 = text('B');
-  const child3 = text('C');
+  const child1 = text('A', DEFAULT_TEXT_TOKENS);
+  const child2 = text('B', DEFAULT_TEXT_TOKENS);
+  const child3 = text('C', DEFAULT_TEXT_TOKENS);
 
   test('returns ComponentNode', () => {
     const node = column(child1);
@@ -514,27 +514,27 @@ describe('column()', () => {
   });
 
   test('applies numeric height', async () => {
-    const node = column({ height: 2.5 }, text('A'));
+    const node = column({ height: 2.5 }, text('A', DEFAULT_TEXT_TOKENS));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.height, 2.5);
   });
 
   test('distinguishes props from children', async () => {
-    const node = column({ gap: GAP.TIGHT }, text('A'));
+    const node = column({ gap: GAP.TIGHT }, text('A', DEFAULT_TEXT_TOKENS));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.children.length, 1);
     assert.strictEqual(expanded.gap, 0.125);
   });
 
   test('accepts props with children (props first)', async () => {
-    const node = column({ gap: GAP.TIGHT }, text('A'), text('B'));
+    const node = column({ gap: GAP.TIGHT }, text('A', DEFAULT_TEXT_TOKENS), text('B', DEFAULT_TEXT_TOKENS));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.children.length, 2);
     assert.strictEqual(expanded.gap, 0.125);
   });
 
   test('applies all props together', async () => {
-    const node = column({ height: SIZE.FILL, gap: GAP.NORMAL, vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER }, text('A'), text('B'));
+    const node = column({ height: SIZE.FILL, gap: GAP.NORMAL, vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER }, text('A', DEFAULT_TEXT_TOKENS), text('B', DEFAULT_TEXT_TOKENS));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.height, SIZE.FILL);
     assert.strictEqual(expanded.gap, 0.25);
@@ -544,7 +544,7 @@ describe('column()', () => {
   });
 
   test('handles single child', async () => {
-    const node = column(text('A'));
+    const node = column(text('A', DEFAULT_TEXT_TOKENS));
     const expanded = await expand(node) as ContainerNode;
     assert.strictEqual(expanded.children.length, 1);
   });
@@ -561,8 +561,8 @@ describe('column()', () => {
 // ============================================
 
 describe('stack()', () => {
-  const child1 = text('A');
-  const child2 = text('B');
+  const child1 = text('A', DEFAULT_TEXT_TOKENS);
+  const child2 = text('B', DEFAULT_TEXT_TOKENS);
 
   test('returns ComponentNode', () => {
     const node = stack(child1);
@@ -619,12 +619,12 @@ describe('stack()', () => {
 // ============================================
 
 describe('grid()', () => {
-  const child1 = text('A');
-  const child2 = text('B');
-  const child3 = text('C');
-  const child4 = text('D');
-  const child5 = text('E');
-  const child6 = text('F');
+  const child1 = text('A', DEFAULT_TEXT_TOKENS);
+  const child2 = text('B', DEFAULT_TEXT_TOKENS);
+  const child3 = text('C', DEFAULT_TEXT_TOKENS);
+  const child4 = text('D', DEFAULT_TEXT_TOKENS);
+  const child5 = text('E', DEFAULT_TEXT_TOKENS);
+  const child6 = text('F', DEFAULT_TEXT_TOKENS);
 
   /** Expand grid ComponentNode to ContainerNode (column) and return its row children */
   async function expandGrid(gridNode: ReturnType<typeof grid>): Promise<ContainerNode[]> {

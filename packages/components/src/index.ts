@@ -82,7 +82,6 @@ export {
   listComponent,
   LIST_TOKEN,
   type ListTokens,
-  type ListProps,
 } from './list.js';
 
 // Card (composition component)

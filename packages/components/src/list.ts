@@ -36,31 +36,14 @@ export interface ListTokens {
 // TYPES
 // ============================================
 
-export interface ListProps {
-  style?: TextStyleName;
-  color?: string;
-  hAlign?: HorizontalAlignment;
-  vAlign?: VerticalAlignment;
-  lineHeightMultiplier?: number;
-  linkColor?: string;
-  linkUnderline?: boolean;
-  ordered?: boolean;
-  variant?: string;
-}
-
-type ListComponentProps = { body: string[]; ordered?: boolean } & ListProps;
+type ListComponentProps = { body: string[]; ordered?: boolean };
 
 // ============================================
 // EXPAND
 // ============================================
 
 function expandList(props: ListComponentProps, context: ExpansionContext, tokens: ListTokens): ElementNode {
-  const resolvedStyle = props.style ?? tokens.style;
-  const resolvedColor = props.color ?? tokens.color;
-  const resolvedLineHeight = props.lineHeightMultiplier ?? tokens.lineHeightMultiplier;
-  const resolvedLinkColor = props.linkColor ?? tokens.linkColor;
-  const resolvedLinkUnderline = props.linkUnderline ?? tokens.linkUnderline;
-  const textStyle = context.theme.textStyles[resolvedStyle];
+  const textStyle = context.theme.textStyles[tokens.style];
   const bulletIndentPt = textStyle.fontSize * context.theme.spacing.bulletIndentMultiplier;
 
   const bulletType = props.ordered ? { type: 'number' as const } : true;
@@ -90,15 +73,15 @@ function expandList(props: ListComponentProps, context: ExpansionContext, tokens
   return {
     type: NODE_TYPE.TEXT,
     content: runs,
-    style: resolvedStyle,
+    style: tokens.style,
     resolvedStyle: textStyle,
-    color: resolvedColor,
-    hAlign: props.hAlign ?? tokens.hAlign,
-    vAlign: props.vAlign ?? tokens.vAlign,
-    lineHeightMultiplier: resolvedLineHeight,
+    color: tokens.color,
+    hAlign: tokens.hAlign,
+    vAlign: tokens.vAlign,
+    lineHeightMultiplier: tokens.lineHeightMultiplier,
     bulletIndentPt,
-    linkColor: resolvedLinkColor,
-    linkUnderline: resolvedLinkUnderline,
+    linkColor: tokens.linkColor,
+    linkUnderline: tokens.linkUnderline,
   };
 }
 
@@ -150,10 +133,10 @@ export const listComponent = defineComponent({
  *
  * @example
  * ```typescript
- * list(['First item', 'Second item', '**Bold** third item'])
- * list(['Step one', 'Step two'], { ordered: true })
+ * list(['First item', 'Second item'], tokens.list)
+ * list(['Step one', 'Step two'], tokens.list, true)
  * ```
  */
-export function list(items: string[], props?: ListProps): ComponentNode<ListComponentProps> {
-  return component(Component.List, { body: items, ordered: false, ...props });
+export function list(items: string[], tokens: ListTokens, ordered?: boolean): ComponentNode<ListComponentProps> {
+  return component(Component.List, { body: items, ordered: ordered ?? false, ...tokens });
 }

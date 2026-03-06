@@ -5,6 +5,7 @@ import * as assert from 'node:assert';
 import { createRequire } from 'module';
 import type { Theme, TextStyle, FontFamily } from 'tycoslide';
 import { TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, HALIGN, VALIGN, FONT_WEIGHT, DEFAULT_VARIANT } from 'tycoslide';
+import type { TextTokens, PlainTextTokens, ListTokens } from '../src/index.js';
 import { Component } from '../src/names.js';
 
 const require = createRequire(import.meta.url);
@@ -110,6 +111,7 @@ export function mockTheme(options?: {
         color: '666666',
         lineHeightMultiplier: lineSpacing,
         hAlign: HALIGN.LEFT,
+        vAlign: VALIGN.TOP,
       },
     },
     [Component.Testimonial]: {
@@ -138,6 +140,7 @@ export function mockTheme(options?: {
         color: '666666',
         lineHeightMultiplier: lineSpacing,
         hAlign: HALIGN.RIGHT,
+        vAlign: VALIGN.TOP,
       },
     },
     [Component.Table]: {
@@ -317,6 +320,38 @@ export function mockTheme(options?: {
     components: mergedComponents as Theme['components'],
   };
 }
+
+// ============================================
+// DEFAULT TOKEN MAPS FOR TEST DSL CALLS
+// ============================================
+
+export const DEFAULT_TEXT_TOKENS: TextTokens = {
+  color: '000000',
+  style: TEXT_STYLE.BODY,
+  lineHeightMultiplier: 1.0,
+  linkColor: '0000FF',
+  linkUnderline: true,
+  hAlign: HALIGN.LEFT,
+  vAlign: VALIGN.TOP,
+};
+
+export const DEFAULT_PLAIN_TEXT_TOKENS: PlainTextTokens = {
+  color: '000000',
+  style: TEXT_STYLE.BODY,
+  lineHeightMultiplier: 1.0,
+  hAlign: HALIGN.LEFT,
+  vAlign: VALIGN.TOP,
+};
+
+export const DEFAULT_LIST_TOKENS: ListTokens = {
+  color: '000000',
+  style: TEXT_STYLE.BODY,
+  lineHeightMultiplier: 1.0,
+  linkColor: '0000FF',
+  linkUnderline: true,
+  hAlign: HALIGN.LEFT,
+  vAlign: VALIGN.TOP,
+};
 
 // ============================================
 // CANVAS MOCK
