@@ -512,4 +512,9 @@ export interface Theme {
   components: Record<string, {
     variants: { [DEFAULT_VARIANT]: Record<string, unknown> } & Record<string, Record<string, unknown>>;
   }>;
+  /** Layout tokens. Each layout that declares token keys gets its visual values from here.
+   *  Optional during migration — existing themes without layout tokens continue to work. */
+  layouts?: Record<string, {
+    variants: { [DEFAULT_VARIANT]: Record<string, unknown> } & Record<string, Record<string, unknown>>;
+  }>;
 }

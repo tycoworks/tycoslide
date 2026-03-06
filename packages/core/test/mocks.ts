@@ -41,6 +41,7 @@ export function mockTheme(options?: {
   borderRadius?: number;
   accents?: Record<string, string>;
   components?: Record<string, Record<string, unknown>>;
+  layouts?: Record<string, { variants: Record<string, Record<string, unknown>> }>;
   textStyles?: Partial<Record<string, Partial<TextStyle>>>;
   slide?: { layout: string; width: number; height: number };
   colors?: Partial<Theme['colors']>;
@@ -216,6 +217,7 @@ export function mockTheme(options?: {
       [TEXT_STYLE.EYEBROW]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.EYEBROW] },
     },
     components: mergedComponents as Theme['components'],
+    ...(options?.layouts ? { layouts: options.layouts as Theme['layouts'] } : {}),
   };
 }
 

@@ -9,10 +9,11 @@ import { z } from 'zod';
 import { parseSlideDocument, type RawSlide } from './slideParser.js';
 
 import { compileSlot } from './slotCompiler.js';
-import { layoutRegistry, RESERVED_FRONTMATTER_KEYS, type LayoutDefinition } from '../rendering/registry.js';
-import type { SlideNode } from '../model/nodes.js';
+import { layoutRegistry, RESERVED_FRONTMATTER_KEYS, isComponentNode, type LayoutDefinition } from '../rendering/registry.js';
+import type { SlideNode, ComponentNode } from '../model/nodes.js';
 import { Presentation } from '../rendering/presentation.js';
 import type { Theme, Slide } from '../model/types.js';
+import { DEFAULT_VARIANT } from '../model/types.js';
 
 /** Build a name from frontmatter for identifying slides in error messages and shared references. */
 export function buildSlideName(raw: RawSlide): string {
@@ -146,14 +147,23 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
     );
   }
 
-  // 3. Build PARAMS — strip reserved frontmatter keys
+  // 3. Extract variant from frontmatter (before stripping reserved keys)
+  const variant = (raw.frontmatter.variant as string | undefined) ?? DEFAULT_VARIANT;
+
+  // 4. Build PARAMS — strip reserved frontmatter keys
   const params: Record<string, unknown> = { ...raw.frontmatter };
   const notes = params.notes as string | undefined;
   for (const key of RESERVED_FRONTMATTER_KEYS) {
     delete params[key];
   }
 
-  // 4. Build SLOTS — from ::name:: markers and body only
+  // 5. Resolve layout tokens (if the layout declares them)
+  let resolvedTokens: Record<string, unknown> | undefined;
+  if (layout.tokens?.length) {
+    resolvedTokens = layoutRegistry.resolveTokens(layoutName, variant, options.theme);
+  }
+
+  // 6. Build SLOTS — from ::name:: markers and body only
   const slots: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(raw.slots)) {
     slots[key] = value;
@@ -162,18 +172,50 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
     slots.body = raw.body;
   }
 
-  // 5. Validate params and slots separately, merge for render
+  // 7. Validate params and slots separately, merge for render
   // Asset references (asset.dot.path) flow through as strings here.
   // They are resolved later by the image component's expand function.
   const validated = validateLayout(layout, params, slots);
 
-  // 6. Render
-  const slide = layout.render(validated);
+  // 8. Inject layout tokens into slot-compiled ComponentNodes
+  if (resolvedTokens && layout.slots?.length) {
+    for (const slotName of layout.slots) {
+      const slotNodes = validated[slotName];
+      if (Array.isArray(slotNodes)) {
+        injectSlotTokens(slotNodes as SlideNode[], resolvedTokens);
+      }
+    }
+  }
 
-  // 7. Attach speaker notes from frontmatter
+  // 9. Render (pass tokens if layout declares them)
+  const slide = layout.render(validated, resolvedTokens);
+
+  // 10. Attach speaker notes from frontmatter
   if (notes) {
     slide.notes = notes;
   }
 
   return slide;
+}
+
+/**
+ * Walk slot-compiled nodes and inject layout tokens into ComponentNodes.
+ * For each ComponentNode, if the layout tokens contain a key matching
+ * node.componentName, merge those token values into node.props.
+ * This is how slot-compiled text/list nodes get their visual tokens from the layout.
+ */
+function injectSlotTokens(nodes: SlideNode[], layoutTokens: Record<string, unknown>): void {
+  for (const node of nodes) {
+    if (isComponentNode(node)) {
+      const tokenMap = layoutTokens[node.componentName];
+      // TODO Phase 3: when all layouts declare tokens, error if no matching token key
+      // exists for this component type (plan: "Missing token for a slot content type = build error")
+      if (tokenMap && typeof tokenMap === 'object') {
+        (node as ComponentNode<Record<string, unknown>>).props = {
+          ...(tokenMap as Record<string, unknown>),
+          ...(node.props as Record<string, unknown>),
+        };
+      }
+    }
+  }
 }
