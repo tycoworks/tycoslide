@@ -41,7 +41,6 @@ function minimalTheme(): Theme {
     colors: {} as any,
     slide: { layout: 'LAYOUT_16x9', width: 10, height: 5.625 },
     spacing: {} as any,
-    borders: {} as any,
     fonts: [],
     textStyles: {} as any,
     layouts: {},

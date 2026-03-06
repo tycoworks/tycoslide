@@ -499,10 +499,6 @@ export interface Theme {
     maxScaleFactor: number; // Max image scale vs native size (1.0 = native, 2.0 = allow 2x upscale)
     lineSpacing: number;    // Default line height multiplier for text (e.g. 1.2)
   };
-  borders: {
-    width: number;   // Border width in points
-    radius: number;  // Corner radius in inches
-  };
   /** Explicit font manifest. Every font the theme uses must be listed here.
    *  `generateFontFaceCSS()` reads exclusively from this list. */
   fonts: FontFamily[];

@@ -37,8 +37,6 @@ export function mockTheme(options?: {
   margin?: number;
   maxScaleFactor?: number;
   lineSpacing?: number;
-  borderWidth?: number;
-  borderRadius?: number;
   accents?: Record<string, string>;
   layouts?: Record<string, { variants: Record<string, Record<string, unknown>> }>;
   textStyles?: Partial<Record<string, Partial<TextStyle>>>;
@@ -54,8 +52,6 @@ export function mockTheme(options?: {
   const margin = options?.margin ?? 0.5;
   const maxScaleFactor = options?.maxScaleFactor ?? 1.0;
   const lineSpacing = options?.lineSpacing ?? 1.0;
-  const borderWidth = options?.borderWidth ?? 1;
-  const borderRadius = options?.borderRadius ?? 0.1;
   const accents = options?.accents ?? { teal: '00CCCC', pink: 'FF00FF', orange: 'FF8800' };
 
   return {
@@ -82,10 +78,6 @@ export function mockTheme(options?: {
       margin,
       maxScaleFactor,
       lineSpacing,
-    },
-    borders: {
-      width: borderWidth,
-      radius: borderRadius,
     },
     fonts: [mockFontFamily],
     textStyles: {

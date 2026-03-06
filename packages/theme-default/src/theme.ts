@@ -267,10 +267,6 @@ export const theme: Theme = {
   colors,
   slide: SLIDE_SIZE.S16x9,
   spacing,
-  borders: {
-    width: borderWidth,
-    radius: cornerRadius,
-  },
   fonts: [assets.fonts.inter, assets.fonts.firaCode],
   textStyles: {
     h1: { fontFamily: assets.fonts.inter, fontSize: 48, defaultWeight: FONT_WEIGHT.LIGHT },
