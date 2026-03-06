@@ -4,9 +4,8 @@
 import * as assert from 'node:assert';
 import { createRequire } from 'module';
 import type { Theme, TextStyle, FontFamily } from 'tycoslide';
-import { TEXT_STYLE, GAP, BORDER_STYLE, DASH_TYPE, HALIGN, VALIGN, FONT_WEIGHT, DEFAULT_VARIANT } from 'tycoslide';
-import type { TextTokens, PlainTextTokens, ListTokens } from '../src/index.js';
-import { Component } from '../src/names.js';
+import { TEXT_STYLE, BORDER_STYLE, DASH_TYPE, GAP, HALIGN, VALIGN, FONT_WEIGHT } from 'tycoslide';
+import type { TextTokens, PlainTextTokens, ListTokens, TableTokens, CodeTokens, MermaidTokens, CardTokens, QuoteTokens, TestimonialTokens, LineTokens, ShapeTokens, SlideNumberTokens } from '../src/index.js';
 
 const require = createRequire(import.meta.url);
 
@@ -42,7 +41,6 @@ export function mockTheme(options?: {
   borderWidth?: number;
   borderRadius?: number;
   accents?: Record<string, string>;
-  components?: Record<string, Record<string, unknown>>;
 }): Theme {
   const gap = options?.gap ?? 0.25;
   const gapTight = options?.gapTight ?? 0.125;
@@ -56,226 +54,6 @@ export function mockTheme(options?: {
   const borderWidth = options?.borderWidth ?? 1;
   const borderRadius = options?.borderRadius ?? 0.1;
   const accents = options?.accents ?? { teal: '00CCCC', pink: 'FF00FF', orange: 'FF8800' };
-
-  // Default component tokens (Figma model: each is a complete default variant)
-  const defaultTokens: Record<string, Record<string, unknown>> = {
-    [Component.Card]: {
-      background: {
-        fill: '333333',
-        fillOpacity: 20,
-        borderColor: '333333',
-        borderWidth,
-        cornerRadius: borderRadius,
-      },
-      padding,
-      gap: GAP.TIGHT,
-      hAlign: HALIGN.CENTER,
-      vAlign: VALIGN.TOP,
-      title: {
-        style: TEXT_STYLE.H4,
-        color: 'FFFFFF',
-        lineHeightMultiplier: lineSpacing,
-        linkColor: '0000FF',
-        linkUnderline: true,
-        hAlign: HALIGN.CENTER,
-        vAlign: VALIGN.TOP,
-      },
-      description: {
-        style: TEXT_STYLE.SMALL,
-        color: 'CCCCCC',
-        lineHeightMultiplier: lineSpacing,
-        linkColor: '0000FF',
-        linkUnderline: true,
-        hAlign: HALIGN.CENTER,
-        vAlign: VALIGN.TOP,
-      },
-    },
-    [Component.Quote]: {
-      bar: {
-        color: 'FF0000',
-        width: 3,
-        dashType: DASH_TYPE.SOLID,
-      },
-      gap: GAP.TIGHT,
-      quote: {
-        style: TEXT_STYLE.BODY,
-        color: 'FFFFFF',
-        lineHeightMultiplier: lineSpacing,
-        linkColor: '0000FF',
-        linkUnderline: true,
-        hAlign: HALIGN.LEFT,
-        vAlign: VALIGN.TOP,
-      },
-      attribution: {
-        style: TEXT_STYLE.SMALL,
-        color: '666666',
-        lineHeightMultiplier: lineSpacing,
-        hAlign: HALIGN.LEFT,
-        vAlign: VALIGN.TOP,
-      },
-    },
-    [Component.Testimonial]: {
-      background: {
-        fill: '333333',
-        fillOpacity: 20,
-        borderColor: '333333',
-        borderWidth,
-        cornerRadius: borderRadius,
-      },
-      padding: padding * 2,
-      gap: GAP.NORMAL,
-      hAlign: HALIGN.CENTER,
-      vAlign: VALIGN.MIDDLE,
-      quote: {
-        style: TEXT_STYLE.BODY,
-        color: 'FFFFFF',
-        lineHeightMultiplier: lineSpacing,
-        linkColor: '0000FF',
-        linkUnderline: true,
-        hAlign: HALIGN.CENTER,
-        vAlign: VALIGN.TOP,
-      },
-      attribution: {
-        style: TEXT_STYLE.SMALL,
-        color: '666666',
-        lineHeightMultiplier: lineSpacing,
-        hAlign: HALIGN.RIGHT,
-        vAlign: VALIGN.TOP,
-      },
-    },
-    [Component.Table]: {
-      borderStyle: BORDER_STYLE.FULL,
-      borderColor: '333333',
-      borderWidth,
-      headerBackground: 'FFFFFF',
-      headerBackgroundOpacity: 0,
-      headerTextColor: '000000',
-      headerTextStyle: TEXT_STYLE.BODY,
-      cellBackground: 'FFFFFF',
-      cellBackgroundOpacity: 0,
-      cellTextColor: '000000',
-      cellTextStyle: TEXT_STYLE.BODY,
-      cellPadding,
-      hAlign: HALIGN.LEFT,
-      vAlign: VALIGN.MIDDLE,
-      cellLineHeight: lineSpacing,
-      linkColor: '0000FF',
-      linkUnderline: true,
-    },
-    [Component.Line]: {
-      color: '333333',
-      width: borderWidth,
-      dashType: DASH_TYPE.SOLID,
-    },
-    [Component.SlideNumber]: {
-      style: TEXT_STYLE.FOOTER,
-      color: '666666',
-      hAlign: HALIGN.RIGHT,
-      vAlign: VALIGN.MIDDLE,
-    },
-    [Component.Text]: {
-      color: '000000',
-      style: TEXT_STYLE.BODY,
-      lineHeightMultiplier: lineSpacing,
-      linkColor: '0000FF',
-      linkUnderline: true,
-      hAlign: HALIGN.LEFT,
-      vAlign: VALIGN.TOP,
-    },
-    [Component.PlainText]: {
-      color: '000000',
-      style: TEXT_STYLE.BODY,
-      lineHeightMultiplier: lineSpacing,
-      hAlign: HALIGN.LEFT,
-      vAlign: VALIGN.TOP,
-    },
-    [Component.List]: {
-      color: '000000',
-      style: TEXT_STYLE.BODY,
-      lineHeightMultiplier: lineSpacing,
-      linkColor: '0000FF',
-      linkUnderline: true,
-      hAlign: HALIGN.LEFT,
-      vAlign: VALIGN.TOP,
-    },
-    [Component.Shape]: {
-      fill: '333333',
-      fillOpacity: 100,
-      borderColor: 'FFFFFF',
-      borderWidth: 0,
-      cornerRadius: 0,
-    },
-    [Component.Mermaid]: {
-      primaryColor: 'FF0000',
-      primaryTextColor: 'FFFFFF',
-      primaryBorderColor: '666666',
-      lineColor: '000000',
-      secondaryColor: '333333',
-      tertiaryColor: '333333',
-      textColor: '000000',
-      nodeTextColor: '000000',
-      clusterBackground: '333333',
-      clusterBorderColor: '666666',
-      edgeLabelBackground: 'FFFFFF',
-      titleColor: '000000',
-      textStyle: TEXT_STYLE.BODY,
-      accentOpacity: 20,
-    },
-    [Component.Code]: {
-      backgroundColor: '1E1E1E',
-      textColor: 'D4D4D4',
-      keywordColor: '569CD6',
-      stringColor: 'CE9178',
-      commentColor: '6A9955',
-      functionColor: 'DCDCAA',
-      numberColor: 'B5CEA8',
-      operatorColor: 'D4D4D4',
-      typeColor: '4EC9B0',
-      variableColor: '9CDCFE',
-      fontSize: 12,
-      fontFamily: mockFontFamily,
-      lineHeight: 1.4,
-      padding: 0.25,
-      borderRadius: 0.1,
-    },
-  };
-  // Build Figma-model components: { variants: { default: {...}, ... } }
-  // User-provided overrides merge into the default variant for test convenience.
-  // User-provided variants are made complete by merging with the (overridden) default.
-  const mergedComponents: Record<string, { variants: Record<string, Record<string, unknown>> }> = {};
-  for (const [name, defaults] of Object.entries(defaultTokens)) {
-    const userConfig = options?.components?.[name] as Record<string, unknown> | undefined;
-    if (userConfig) {
-      const { variants: userVariants, ...userOverrides } = userConfig as
-        Record<string, unknown> & { variants?: Record<string, Record<string, unknown>> };
-      const defaultVariant = { ...defaults, ...userOverrides };
-      const variants: Record<string, Record<string, unknown>> = { [DEFAULT_VARIANT]: defaultVariant };
-      if (userVariants) {
-        for (const [varName, varOverrides] of Object.entries(userVariants)) {
-          if (varName === DEFAULT_VARIANT) {
-            variants[DEFAULT_VARIANT] = { ...defaultVariant, ...varOverrides };
-          } else {
-            variants[varName] = { ...defaultVariant, ...varOverrides };
-          }
-        }
-      }
-      mergedComponents[name] = { variants };
-    } else {
-      mergedComponents[name] = { variants: { [DEFAULT_VARIANT]: { ...defaults } } };
-    }
-  }
-  // Also include any user-provided components not in defaults (custom components)
-  for (const [name, config] of Object.entries(options?.components ?? {})) {
-    if (!mergedComponents[name]) {
-      const { variants: userVariants, ...userTokens } = config as
-        Record<string, unknown> & { variants?: Record<string, Record<string, unknown>> };
-      if (userVariants) {
-        mergedComponents[name] = { variants: userVariants };
-      } else {
-        mergedComponents[name] = { variants: { [DEFAULT_VARIANT]: userTokens } };
-      }
-    }
-  }
 
   return {
     slide: { layout: 'CUSTOM' as const, width: 13.333, height: 7.5 },
@@ -317,7 +95,7 @@ export function mockTheme(options?: {
       [TEXT_STYLE.FOOTER]: mockTextStyle,
       [TEXT_STYLE.EYEBROW]: mockTextStyle,
     },
-    components: mergedComponents as Theme['components'],
+    layouts: {},
   };
 }
 
@@ -351,6 +129,169 @@ export const DEFAULT_LIST_TOKENS: ListTokens = {
   linkUnderline: true,
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.TOP,
+};
+
+export const DEFAULT_TABLE_TOKENS: TableTokens = {
+  borderStyle: BORDER_STYLE.FULL,
+  borderColor: '333333',
+  borderWidth: 1,
+  headerBackground: 'FFFFFF',
+  headerBackgroundOpacity: 0,
+  headerTextStyle: TEXT_STYLE.BODY,
+  headerTextColor: '000000',
+  cellBackground: 'FFFFFF',
+  cellBackgroundOpacity: 0,
+  cellTextStyle: TEXT_STYLE.BODY,
+  cellTextColor: '000000',
+  cellPadding: 0.1,
+  hAlign: HALIGN.LEFT,
+  vAlign: VALIGN.MIDDLE,
+  cellLineHeight: 1.0,
+  linkColor: '0000FF',
+  linkUnderline: true,
+};
+
+export const DEFAULT_CODE_TOKENS: CodeTokens = {
+  backgroundColor: '1E1E1E',
+  textColor: 'D4D4D4',
+  keywordColor: '569CD6',
+  stringColor: 'CE9178',
+  commentColor: '6A9955',
+  functionColor: 'DCDCAA',
+  numberColor: 'B5CEA8',
+  operatorColor: 'D4D4D4',
+  typeColor: '4EC9B0',
+  variableColor: '9CDCFE',
+  fontSize: 12,
+  fontFamily: mockFontFamily,
+  lineHeight: 1.4,
+  padding: 0.25,
+  borderRadius: 0.1,
+};
+
+export const DEFAULT_MERMAID_TOKENS: MermaidTokens = {
+  primaryColor: 'FF0000',
+  primaryTextColor: 'FFFFFF',
+  primaryBorderColor: '666666',
+  lineColor: '000000',
+  secondaryColor: '333333',
+  tertiaryColor: '333333',
+  textColor: '000000',
+  nodeTextColor: '000000',
+  clusterBackground: '333333',
+  clusterBorderColor: '666666',
+  edgeLabelBackground: 'FFFFFF',
+  titleColor: '000000',
+  textStyle: TEXT_STYLE.BODY,
+  accentOpacity: 20,
+};
+
+export const DEFAULT_CARD_TOKENS: CardTokens = {
+  background: {
+    fill: '333333',
+    fillOpacity: 20,
+    borderColor: '333333',
+    borderWidth: 1,
+    cornerRadius: 0.1,
+  },
+  padding: 0.25,
+  gap: GAP.TIGHT,
+  hAlign: HALIGN.CENTER,
+  vAlign: VALIGN.TOP,
+  title: {
+    style: TEXT_STYLE.H4,
+    color: 'FFFFFF',
+    lineHeightMultiplier: 1.0,
+    linkColor: '0000FF',
+    linkUnderline: true,
+    hAlign: HALIGN.CENTER,
+    vAlign: VALIGN.TOP,
+  },
+  description: {
+    style: TEXT_STYLE.SMALL,
+    color: 'CCCCCC',
+    lineHeightMultiplier: 1.0,
+    linkColor: '0000FF',
+    linkUnderline: true,
+    hAlign: HALIGN.CENTER,
+    vAlign: VALIGN.TOP,
+  },
+};
+
+export const DEFAULT_QUOTE_TOKENS: QuoteTokens = {
+  bar: {
+    color: 'FF0000',
+    width: 3,
+    dashType: DASH_TYPE.SOLID,
+  },
+  gap: GAP.TIGHT,
+  quote: {
+    style: TEXT_STYLE.BODY,
+    color: 'FFFFFF',
+    lineHeightMultiplier: 1.0,
+    linkColor: '0000FF',
+    linkUnderline: true,
+    hAlign: HALIGN.LEFT,
+    vAlign: VALIGN.TOP,
+  },
+  attribution: {
+    style: TEXT_STYLE.SMALL,
+    color: '666666',
+    lineHeightMultiplier: 1.0,
+    hAlign: HALIGN.LEFT,
+    vAlign: VALIGN.TOP,
+  },
+};
+
+export const DEFAULT_TESTIMONIAL_TOKENS: TestimonialTokens = {
+  background: {
+    fill: '333333',
+    fillOpacity: 20,
+    borderColor: '333333',
+    borderWidth: 1,
+    cornerRadius: 0.1,
+  },
+  padding: 0.5,
+  gap: GAP.NORMAL,
+  hAlign: HALIGN.CENTER,
+  vAlign: VALIGN.MIDDLE,
+  quote: {
+    style: TEXT_STYLE.BODY,
+    color: 'FFFFFF',
+    lineHeightMultiplier: 1.0,
+    linkColor: '0000FF',
+    linkUnderline: true,
+    hAlign: HALIGN.CENTER,
+    vAlign: VALIGN.TOP,
+  },
+  attribution: {
+    style: TEXT_STYLE.SMALL,
+    color: '666666',
+    lineHeightMultiplier: 1.0,
+    hAlign: HALIGN.RIGHT,
+    vAlign: VALIGN.TOP,
+  },
+};
+
+export const DEFAULT_LINE_TOKENS: LineTokens = {
+  color: '333333',
+  width: 1,
+  dashType: DASH_TYPE.SOLID,
+};
+
+export const DEFAULT_SHAPE_TOKENS: ShapeTokens = {
+  fill: '333333',
+  fillOpacity: 100,
+  borderColor: 'FFFFFF',
+  borderWidth: 0,
+  cornerRadius: 0,
+};
+
+export const DEFAULT_SLIDE_NUMBER_TOKENS: SlideNumberTokens = {
+  style: TEXT_STYLE.FOOTER,
+  color: '666666',
+  hAlign: HALIGN.RIGHT,
+  vAlign: VALIGN.MIDDLE,
 };
 
 // ============================================

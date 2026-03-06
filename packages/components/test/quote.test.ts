@@ -3,7 +3,7 @@ import assert from 'node:assert';
 import { quote } from '../src/quote.js';
 import { componentRegistry, NODE_TYPE, TEXT_STYLE, HALIGN } from 'tycoslide';
 import { Component } from '../src/names.js';
-import { mockTheme, noopCanvas } from './mocks.js';
+import { mockTheme, noopCanvas, DEFAULT_QUOTE_TOKENS } from './mocks.js';
 import {
   textComponent, imageComponent, cardComponent, quoteComponent,
   tableComponent, codeComponent, mermaidComponent,
@@ -32,7 +32,7 @@ describe('Quote Component (Pull Quote)', () => {
 
   describe('quote DSL function', () => {
     it('should create a component node with correct type', () => {
-      const node = quote({ quote: 'Test quote' });
+      const node = quote({ quote: 'Test quote' }, DEFAULT_QUOTE_TOKENS);
       assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
       assert.strictEqual(node.componentName, Component.Quote);
     });
@@ -41,7 +41,7 @@ describe('Quote Component (Pull Quote)', () => {
       const node = quote({
         quote: 'A great quote',
         attribution: '— Author',
-      });
+      }, DEFAULT_QUOTE_TOKENS);
       assert.strictEqual(node.props.quote, 'A great quote');
       assert.strictEqual(node.props.attribution, '— Author');
     });
@@ -49,7 +49,7 @@ describe('Quote Component (Pull Quote)', () => {
 
   describe('expansion', () => {
     it('should expand to row with line (bar) and content column', async () => {
-      const node = quote({ quote: 'Test' });
+      const node = quote({ quote: 'Test' }, DEFAULT_QUOTE_TOKENS);
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
       // row(line, column(text))
@@ -64,7 +64,7 @@ describe('Quote Component (Pull Quote)', () => {
     });
 
     it('should apply bar tokens to the line node', async () => {
-      const node = quote({ quote: 'Test' });
+      const node = quote({ quote: 'Test' }, DEFAULT_QUOTE_TOKENS);
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
@@ -79,7 +79,7 @@ describe('Quote Component (Pull Quote)', () => {
     });
 
     it('should include quote text as RICH content', async () => {
-      const node = quote({ quote: 'A wise saying' });
+      const node = quote({ quote: 'A wise saying' }, DEFAULT_QUOTE_TOKENS);
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
@@ -99,7 +99,7 @@ describe('Quote Component (Pull Quote)', () => {
     });
 
     it('should include attribution with LEFT alignment when provided', async () => {
-      const node = quote({ quote: 'Quote text', attribution: '— Jane Smith' });
+      const node = quote({ quote: 'Quote text', attribution: '— Jane Smith' }, DEFAULT_QUOTE_TOKENS);
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
@@ -121,7 +121,7 @@ describe('Quote Component (Pull Quote)', () => {
     });
 
     it('should have only quote text when no attribution', async () => {
-      const node = quote({ quote: 'Just a quote' });
+      const node = quote({ quote: 'Just a quote' }, DEFAULT_QUOTE_TOKENS);
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
@@ -137,7 +137,7 @@ describe('Quote Component (Pull Quote)', () => {
 
     it('should throw on missing quote text', () => {
       assert.rejects(async () => {
-        const node = quote({});
+        const node = quote({} as any, DEFAULT_QUOTE_TOKENS);
         await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
       }, /Quote component requires/);
     });

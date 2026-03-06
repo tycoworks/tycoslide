@@ -1,5 +1,5 @@
 // Token Resolution Engine Tests
-// Tests the core token resolution mechanism: node.tokens, bridge (node.props), validation.
+// Tests the core token resolution mechanism: node.tokens and validation.
 // Uses a simple inline test component — does NOT test specific component implementations.
 
 import { describe, it } from 'node:test';
@@ -35,7 +35,7 @@ const tokenTestComponent = defineComponent({
 
 componentRegistry.register(tokenTestComponent);
 
-/** Minimal theme for tests (no theme.components needed). */
+/** Minimal theme for tests (no layout tokens needed). */
 function minimalTheme(): Theme {
   return {
     colors: {} as any,
@@ -44,7 +44,7 @@ function minimalTheme(): Theme {
     borders: {} as any,
     fonts: [],
     textStyles: {} as any,
-    components: {} as any,
+    layouts: {},
   };
 }
 
@@ -84,30 +84,7 @@ describe('Token Resolution Engine', () => {
   });
 
   // ============================================
-  // 2. BRIDGE: TOKENS FROM node.props (backward compat)
-  // ============================================
-
-  describe('bridge: tokens from node.props', () => {
-    it('extracts tokens from props when node.tokens is absent', async () => {
-      const theme = minimalTheme();
-      // No node.tokens — tokens spread into props (Phase 4 pattern)
-      const node = component(TOKEN_COMP as any, { label: 'test', alpha: 'A', beta: 'B', gamma: 'G' });
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() }) as any;
-      assert.strictEqual(expanded._tokens.alpha, 'A');
-      assert.strictEqual(expanded._tokens.beta, 'B');
-      assert.strictEqual(expanded._tokens.gamma, 'G');
-    });
-
-    it('node.tokens takes priority over props', async () => {
-      const theme = minimalTheme();
-      const node = component(TOKEN_COMP as any, { label: 'test', alpha: 'from-props', beta: 'from-props', gamma: 'from-props' }, { alpha: 'from-tokens', beta: 'from-tokens', gamma: 'from-tokens' });
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() }) as any;
-      assert.strictEqual(expanded._tokens.alpha, 'from-tokens');
-    });
-  });
-
-  // ============================================
-  // 3. REQUIRED TOKEN VALIDATION (FAIL-FAST)
+  // 2. REQUIRED TOKEN VALIDATION (FAIL-FAST)
   // ============================================
 
   describe('required token validation', () => {
@@ -155,13 +132,6 @@ describe('Token Resolution Engine', () => {
     it('succeeds when all required tokens are provided via node.tokens', async () => {
       const theme = minimalTheme();
       const node = component(TOKEN_COMP as any, { label: 'test' }, { alpha: 'A', beta: 'B', gamma: 'G' });
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
-      assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
-    });
-
-    it('succeeds when all required tokens are in props (bridge)', async () => {
-      const theme = minimalTheme();
-      const node = component(TOKEN_COMP as any, { label: 'test', alpha: 'A', beta: 'B', gamma: 'G' });
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
       assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
     });

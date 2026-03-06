@@ -5,7 +5,7 @@ import type { RootContent } from 'mdast';
 import { Component } from '../src/names.js';
 import { code, codeComponent, buildCodeTheme, renderCodeToHtml, CODE_TOKEN, type CodeTokens } from '../src/code.js';
 import { LANGUAGE, LANGUAGE_VALUES } from '../src/languages.js';
-import { mockTheme, noopCanvas } from './mocks.js';
+import { mockTheme, noopCanvas, DEFAULT_CODE_TOKENS } from './mocks.js';
 import {
   textComponent, imageComponent, cardComponent, quoteComponent,
   tableComponent, mermaidComponent,
@@ -185,6 +185,7 @@ describe('code expansion', () => {
     const context = { theme, assets: undefined, canvas } as any;
 
     const node = code('SELECT 1', 'sql');
+    node.tokens = { ...DEFAULT_CODE_TOKENS };
     const result = await componentRegistry.expand(node, context);
 
     assert.strictEqual(result.type, NODE_TYPE.IMAGE);
@@ -203,6 +204,7 @@ describe('code expansion', () => {
     const context = { theme, assets: undefined, canvas } as any;
 
     const node = code('SELECT 1', 'sql');
+    node.tokens = { ...DEFAULT_CODE_TOKENS };
     await componentRegistry.expand(node, context);
 
     assert.strictEqual(capturedTransparent, false);
@@ -214,6 +216,7 @@ describe('code expansion', () => {
     const context = { theme, assets: undefined, canvas } as any;
 
     const node = code('   ', 'text');
+    node.tokens = { ...DEFAULT_CODE_TOKENS };
     await assert.rejects(
       () => componentRegistry.expand(node, context),
       /Code block is empty/,
@@ -232,6 +235,7 @@ describe('code expansion', () => {
     const context = { theme, assets: undefined, canvas } as any;
 
     const node = code('SELECT * FROM orders', 'sql');
+    node.tokens = { ...DEFAULT_CODE_TOKENS };
     await componentRegistry.expand(node, context);
 
     assert.ok(capturedHtml.includes('SELECT'), 'HTML should contain code text');
@@ -249,6 +253,7 @@ describe('code expansion', () => {
     const context = { theme, assets: undefined, canvas } as any;
 
     const node = code('x = 1', 'python');
+    node.tokens = { ...DEFAULT_CODE_TOKENS };
     await componentRegistry.expand(node, context);
 
     assert.ok(capturedHtml.includes('1E1E1E'), 'HTML should contain background color from token');
@@ -467,6 +472,7 @@ describe('code expansion — additional', () => {
     const context = { theme, assets: undefined, canvas } as any;
 
     const node = code('SELECT 1', 'sql');
+    node.tokens = { ...DEFAULT_CODE_TOKENS };
     const result = await componentRegistry.expand(node, context);
 
     assert.strictEqual(result.type, NODE_TYPE.IMAGE);
@@ -485,6 +491,7 @@ describe('code expansion — additional', () => {
     const context = { theme, assets: undefined, canvas } as any;
 
     const node = code('  \n  SELECT 1  \n  ', 'sql');
+    node.tokens = { ...DEFAULT_CODE_TOKENS };
     await componentRegistry.expand(node, context);
 
     // The trimmed code should be passed to Shiki (Shiki tokenizes words into separate spans)
@@ -504,6 +511,7 @@ describe('code expansion — additional', () => {
 
     const multiline = 'function hello() {\n  return "world";\n}';
     const node = code(multiline, 'javascript');
+    node.tokens = { ...DEFAULT_CODE_TOKENS };
     const result = await componentRegistry.expand(node, context);
 
     assert.strictEqual(result.type, NODE_TYPE.IMAGE);

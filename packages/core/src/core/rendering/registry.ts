@@ -103,7 +103,7 @@ export interface MdastHandler {
 export interface ComponentDefinition<TProps = unknown, TTokens = undefined> {
   /** Unique name for this component (e.g., 'card', 'table') */
   name: string;
-  /** Token keys that must be present in node.tokens for this component. Empty array = no tokens. */
+  /** Token keys that must be present in node.tokens. Set by DSL or slot injection. Empty array = no tokens. */
   tokens: string[];
   /** Optional Zod schema shape for directive attributes (used for coercion on slotted components). */
   params?: SchemaShape;
@@ -335,51 +335,11 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
   }
 
   /**
-   * Eagerly validate that a theme provides all required tokens for every registered component.
-   * Call in tests or at theme load time to catch missing tokens before rendering.
-   * @throws Error on the first component/variant with missing tokens
-   */
-  validateTheme(theme: Theme): void {
-    for (const def of this.getAll()) {
-      if (!def.tokens?.length) continue;
-      const config = theme.components?.[def.name];
-      if (!config) {
-        throw new Error(
-          `Theme missing tokens for component '${def.name}'. ` +
-          `Required: [${def.tokens.join(', ')}]`
-        );
-      }
-      const { variants } = config;
-      if (!variants?.[DEFAULT_VARIANT]) {
-        throw new Error(
-          `Theme missing '${DEFAULT_VARIANT}' variant for component '${def.name}'.`
-        );
-      }
-      for (const [variantName, tokens] of Object.entries(variants)) {
-        const missing = def.tokens.filter(
-          (key: string) => (tokens as Record<string, unknown>)[key] === undefined ||
-                           (tokens as Record<string, unknown>)[key] === null
-        );
-        if (missing.length) {
-          throw new Error(
-            `Component '${def.name}' variant '${variantName}' is missing required tokens: [${missing.join(', ')}]. ` +
-            `Each variant must be a complete token set.`
-          );
-        }
-      }
-    }
-  }
-
-  /**
    * Expand a single component node to its primitive representation.
    *
-   * Token resolution order:
-   * 1. node.tokens (set by DSL component() helper or slot injection)
-   * 2. Bridge A: extract from node.props if all required keys present (temporary — Phase 4 pattern)
-   * 3. Bridge B: lookup from theme.components via variant (temporary — pre-Phase 5 pattern)
-   * 4. Error if none provides complete tokens
-   *
-   * Bridges A and B are removed in Phase 5f when all components use node.tokens.
+   * Tokens are read from node.tokens, which is set by:
+   * - DSL component() helper (e.g., text(body, tokens))
+   * - Slot injection from parent layouts/components
    *
    * Token completeness is validated here, AFTER slot injection has already run.
    * @throws Error if the component is not registered or tokens are incomplete
@@ -394,54 +354,24 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
       return def.expand(node.props, context, undefined as never);
     }
 
-    // Primary: read from node.tokens (set by DSL or slot injection)
-    if (node.tokens) {
-      const missing = requiredTokens.filter(
-        (key: string) => node.tokens![key] === undefined || node.tokens![key] === null
+    // Read from node.tokens (set by DSL or slot injection)
+    if (!node.tokens) {
+      throw new Error(
+        `Component '${node.componentName}' requires tokens but none were provided. ` +
+        `Tokens must be passed by the parent (layout or composition component). ` +
+        `Required: [${requiredTokens.join(', ')}]`
       );
-      if (missing.length) {
-        throw new Error(
-          `Component '${node.componentName}' is missing required tokens: [${missing.join(', ')}]. ` +
-          `All tokens must be provided by the parent component or layout.`
-        );
-      }
-      return def.expand(node.props, context, node.tokens as never);
     }
-
-    // Bridge A (temporary): extract from node.props if all required keys present.
-    // This supports components that still spread tokens into props (text/plainText/list).
-    // Removed in Phase 5f when all components use node.tokens.
-    const propsRecord = node.props as Record<string, unknown>;
-    const allTokensInProps = requiredTokens.every(
-      (key: string) => propsRecord[key] !== undefined && propsRecord[key] !== null
+    const missing = requiredTokens.filter(
+      (key: string) => node.tokens![key] === undefined || node.tokens![key] === null
     );
-
-    if (allTokensInProps) {
-      const tokens: Record<string, unknown> = {};
-      for (const key of requiredTokens) {
-        tokens[key] = propsRecord[key];
-      }
-      return def.expand(node.props, context, tokens as never);
+    if (missing.length) {
+      throw new Error(
+        `Component '${node.componentName}' is missing required tokens: [${missing.join(', ')}]. ` +
+        `All tokens must be provided by the parent component or layout.`
+      );
     }
-
-    // Bridge B (temporary): lookup from theme.components via variant.
-    // This supports components not yet migrated to node.tokens (card, table, line, etc.).
-    // Removed in Phase 5f when all callers pass tokens explicitly.
-    const variant = (propsRecord.variant as string | undefined) ?? DEFAULT_VARIANT;
-    const config = context.theme.components?.[node.componentName];
-    if (config) {
-      const variantTokens = config.variants?.[variant] ?? config.variants?.[DEFAULT_VARIANT];
-      if (variantTokens) {
-        return def.expand(node.props, context, variantTokens as never);
-      }
-    }
-
-    // No tokens found — error
-    throw new Error(
-      `Component '${node.componentName}' requires tokens but none were provided. ` +
-      `Tokens must be passed by the parent (layout or composition component). ` +
-      `Required: [${requiredTokens.join(', ')}]`
-    );
+    return def.expand(node.props, context, node.tokens as never);
   }
 
   /**

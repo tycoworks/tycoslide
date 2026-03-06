@@ -3,7 +3,8 @@ import assert from 'node:assert';
 import { card } from '../src/card.js';
 import { componentRegistry, NODE_TYPE } from 'tycoslide';
 import { Component } from '../src/names.js';
-import { mockTheme, noopCanvas } from './mocks.js';
+import { mockTheme, noopCanvas, DEFAULT_CARD_TOKENS } from './mocks.js';
+import type { CardTokens } from '../src/index.js';
 import {
   textComponent, imageComponent, cardComponent, quoteComponent,
   tableComponent, codeComponent, mermaidComponent,
@@ -30,7 +31,7 @@ describe('Card Component', () => {
 
   describe('card DSL function', () => {
     it('should create a component node with correct type', () => {
-      const node = card({ title: 'Test' });
+      const node = card({ title: 'Test' }, DEFAULT_CARD_TOKENS);
       assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
       assert.strictEqual(node.componentName, Component.Card);
     });
@@ -39,7 +40,7 @@ describe('Card Component', () => {
       const node = card({
         title: 'My Title',
         description: 'My description',
-      });
+      }, DEFAULT_CARD_TOKENS);
       assert.strictEqual(node.props.title, 'My Title');
       assert.strictEqual(node.props.description, 'My description');
     });
@@ -47,7 +48,7 @@ describe('Card Component', () => {
 
   describe('expansion', () => {
     it('should expand to stack with background and content', async () => {
-      const node = card({ title: 'Test' });
+      const node = card({ title: 'Test' }, DEFAULT_CARD_TOKENS);
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
       // With background (default): stack(rectangle, column)
@@ -59,16 +60,19 @@ describe('Card Component', () => {
       }
     });
 
-    it('should expand to column only when variant has backgroundOpacity=0', async () => {
-      const flatTheme = mockTheme({ components: { card: { variants: { flat: { background: { fill: '333333', fillOpacity: 0, borderColor: '333333', borderWidth: 0, cornerRadius: 0.1 } } } } } });
-      const node = card({ title: 'Test', variant: 'flat' });
-      const expanded = await componentRegistry.expandTree(node, { theme: flatTheme, canvas: noopCanvas() });
+    it('should expand to column only when tokens have backgroundOpacity=0', async () => {
+      const flatTokens: CardTokens = {
+        ...DEFAULT_CARD_TOKENS,
+        background: { fill: '333333', fillOpacity: 0, borderColor: '333333', borderWidth: 0, cornerRadius: 0.1 },
+      };
+      const node = card({ title: 'Test' }, flatTokens);
+      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
     });
 
     it('should build children from title prop', async () => {
-      const node = card({ title: 'My Title' });
+      const node = card({ title: 'My Title' }, DEFAULT_CARD_TOKENS);
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
@@ -91,7 +95,7 @@ describe('Card Component', () => {
       const node = card({
         title: 'Title',
         description: 'Description',
-      });
+      }, DEFAULT_CARD_TOKENS);
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
@@ -113,7 +117,7 @@ describe('Card Component', () => {
     });
 
     it('should return empty column when no content', async () => {
-      const node = card({});
+      const node = card({}, DEFAULT_CARD_TOKENS);
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);

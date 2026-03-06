@@ -45,8 +45,6 @@ const testimonialSchema = {
   attribution: textComponent.schema.optional(),
   /** Optional image/logo displayed above the quote */
   image: imageComponent.schema.optional(),
-  /** Named variant (resolved from theme.components.testimonial.variants) */
-  variant: schema.string().optional(),
   /** Sizing: 'fill' to share parent space equally, 'hug' for content-sized (default) */
   height: schema.size().optional(),
 } satisfies SchemaShape;
@@ -136,6 +134,6 @@ export const testimonialComponent = defineComponent({
  * })
  * ```
  */
-export function testimonial(props: TestimonialProps, tokens?: TestimonialTokens) {
+export function testimonial(props: TestimonialProps, tokens: TestimonialTokens) {
   return component(Component.Testimonial, props, tokens);
 }

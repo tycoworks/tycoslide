@@ -897,22 +897,34 @@ export function generateFontFaceCSS(theme: Theme): { css: string; fonts: FontDes
     }
   }
 
-  // Validate: component tokens that are FontFamily must be in theme.fonts
-  for (const [componentName, componentDef] of Object.entries(theme.components)) {
-    for (const [variantName, tokens] of Object.entries(componentDef.variants)) {
-      for (const [tokenName, value] of Object.entries(tokens)) {
-        if (isFontFamily(value)) {
-          for (const weight of WEIGHT_KEYS) {
-            const font = value[weight];
-            if (font && font.path && !registeredPaths.has(font.path)) {
-              throw new Error(
-                `[tycoslide] Font "${font.name}" (${font.path}) used in component "${componentName}" (variant "${variantName}", token "${tokenName}") is not listed in theme.fonts.`
-              );
-            }
+  // Validate: layout and master tokens that contain FontFamily must be in theme.fonts
+  const walkTokensForFonts = (tokens: Record<string, unknown>, path: string) => {
+    for (const [key, value] of Object.entries(tokens)) {
+      if (isFontFamily(value)) {
+        for (const weight of WEIGHT_KEYS) {
+          const font = value[weight];
+          if (font && font.path && !registeredPaths.has(font.path)) {
+            throw new Error(
+              `[tycoslide] Font "${font.name}" (${font.path}) used in ${path}.${key} is not listed in theme.fonts.`
+            );
           }
         }
+      } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        walkTokensForFonts(value as Record<string, unknown>, `${path}.${key}`);
       }
     }
+  };
+
+  if (theme.layouts) {
+    for (const [layoutName, layoutDef] of Object.entries(theme.layouts)) {
+      for (const [variantName, tokens] of Object.entries(layoutDef.variants)) {
+        walkTokensForFonts(tokens as Record<string, unknown>, `layout "${layoutName}" variant "${variantName}"`);
+      }
+    }
+  }
+
+  if (theme.master) {
+    walkTokensForFonts(theme.master, 'master');
   }
 
   // Cache check (after validation — validation must always run)

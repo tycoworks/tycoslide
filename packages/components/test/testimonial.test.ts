@@ -2,8 +2,9 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { testimonial } from '../src/testimonial.js';
 import { componentRegistry, NODE_TYPE, TEXT_STYLE, HALIGN, VALIGN } from 'tycoslide';
+import type { TestimonialTokens } from '../src/index.js';
 import { Component } from '../src/names.js';
-import { mockTheme, noopCanvas } from './mocks.js';
+import { mockTheme, noopCanvas, DEFAULT_TESTIMONIAL_TOKENS } from './mocks.js';
 import {
   textComponent, imageComponent, cardComponent, quoteComponent,
   tableComponent, codeComponent, mermaidComponent,
@@ -32,7 +33,7 @@ describe('Testimonial Component', () => {
 
   describe('testimonial DSL function', () => {
     it('should create a component node with correct type', () => {
-      const node = testimonial({ quote: 'Test quote' });
+      const node = testimonial({ quote: 'Test quote' }, DEFAULT_TESTIMONIAL_TOKENS);
       assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
       assert.strictEqual(node.componentName, Component.Testimonial);
     });
@@ -41,7 +42,7 @@ describe('Testimonial Component', () => {
       const node = testimonial({
         quote: 'A great quote',
         attribution: '— Author',
-      });
+      }, DEFAULT_TESTIMONIAL_TOKENS);
       assert.strictEqual(node.props.quote, 'A great quote');
       assert.strictEqual(node.props.attribution, '— Author');
     });
@@ -49,7 +50,7 @@ describe('Testimonial Component', () => {
 
   describe('expansion', () => {
     it('should expand to stack with background and content', async () => {
-      const node = testimonial({ quote: 'Test' });
+      const node = testimonial({ quote: 'Test' }, DEFAULT_TESTIMONIAL_TOKENS);
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
       // With background (default): stack(shape, column)
@@ -61,16 +62,19 @@ describe('Testimonial Component', () => {
       }
     });
 
-    it('should expand to column only when variant has backgroundOpacity=0', async () => {
-      const flatTheme = mockTheme({ components: { testimonial: { variants: { flat: { background: { fill: '333333', fillOpacity: 0, borderColor: '333333', borderWidth: 0, cornerRadius: 0.1 } } } } } });
-      const node = testimonial({ quote: 'Test', variant: 'flat' });
-      const expanded = await componentRegistry.expandTree(node, { theme: flatTheme, canvas: noopCanvas() });
+    it('should expand to column only when tokens have backgroundOpacity=0', async () => {
+      const flatTokens: TestimonialTokens = {
+        ...DEFAULT_TESTIMONIAL_TOKENS,
+        background: { fill: '333333', fillOpacity: 0, borderColor: '333333', borderWidth: 0, cornerRadius: 0.1 },
+      };
+      const node = testimonial({ quote: 'Test' }, flatTokens);
+      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
     });
 
     it('should include quote text as markdown', async () => {
-      const node = testimonial({ quote: 'A wise saying' });
+      const node = testimonial({ quote: 'A wise saying' }, DEFAULT_TESTIMONIAL_TOKENS);
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
@@ -90,7 +94,7 @@ describe('Testimonial Component', () => {
     });
 
     it('should include attribution when provided', async () => {
-      const node = testimonial({ quote: 'Quote text', attribution: '— Jane Smith' });
+      const node = testimonial({ quote: 'Quote text', attribution: '— Jane Smith' }, DEFAULT_TESTIMONIAL_TOKENS);
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
@@ -113,7 +117,7 @@ describe('Testimonial Component', () => {
     });
 
     it('should include image when provided', async () => {
-      const node = testimonial({ quote: 'Quote text', image: 'logo.png' });
+      const node = testimonial({ quote: 'Quote text', image: 'logo.png' }, DEFAULT_TESTIMONIAL_TOKENS);
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
@@ -138,7 +142,7 @@ describe('Testimonial Component', () => {
         quote: 'Quote text',
         attribution: '— Author',
         image: 'logo.png',
-      });
+      }, DEFAULT_TESTIMONIAL_TOKENS);
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
@@ -159,7 +163,7 @@ describe('Testimonial Component', () => {
     });
 
     it('should vertically center content', async () => {
-      const node = testimonial({ quote: 'Test' });
+      const node = testimonial({ quote: 'Test' }, DEFAULT_TESTIMONIAL_TOKENS);
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
 
       assert.strictEqual(expanded.type, NODE_TYPE.STACK);
@@ -174,7 +178,7 @@ describe('Testimonial Component', () => {
 
     it('should throw error when quote text is missing', () => {
       assert.rejects(async () => {
-        const node = testimonial({});
+        const node = testimonial({} as any, DEFAULT_TESTIMONIAL_TOKENS);
         await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
       }, /Testimonial component requires/);
     });

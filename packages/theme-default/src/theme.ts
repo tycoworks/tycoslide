@@ -12,7 +12,7 @@ import {
   SLIDE_SIZE,
   type Theme,
 } from 'tycoslide';
-import type { TextTokens, PlainTextTokens, ShapeTokens, LineTokens, ListTokens } from 'tycoslide-components';
+import type { TextTokens, PlainTextTokens, ListTokens } from 'tycoslide-components';
 import { assets } from './assets.js';
 
 // ============================================
@@ -73,21 +73,6 @@ const borderWidth = 0.75;
 const cornerRadius = 0.08;
 
 // ============================================
-// COMPONENT BASES (shared across variants)
-// ============================================
-
-const textBase = {
-  style: TEXT_STYLE.BODY,
-  lineHeightMultiplier: spacing.lineSpacing,
-};
-
-const shapeBase = {
-  borderColor: colors.background,
-  borderWidth: 0,
-  cornerRadius: 0,
-};
-
-// ============================================
 // SHARED TOKEN OBJECTS FOR COMPOSITION COMPONENTS
 // ============================================
 
@@ -124,23 +109,6 @@ const quoteAttribution: PlainTextTokens = {
   color: colors.textMuted,
   lineHeightMultiplier: 1.0,
   hAlign: HALIGN.LEFT,
-  vAlign: VALIGN.MIDDLE,
-};
-
-const testimonialQuote: TextTokens = {
-  style: TEXT_STYLE.H4,
-  color: colors.text,
-  lineHeightMultiplier: spacing.lineSpacing,
-  linkColor: colors.primary,
-  linkUnderline: true,
-  hAlign: HALIGN.CENTER,
-  vAlign: VALIGN.MIDDLE,
-};
-const testimonialAttribution: PlainTextTokens = {
-  style: TEXT_STYLE.SMALL,
-  color: colors.textMuted,
-  lineHeightMultiplier: 1.0,
-  hAlign: HALIGN.RIGHT,
   vAlign: VALIGN.MIDDLE,
 };
 
@@ -248,221 +216,6 @@ export const theme: Theme = {
     small: { fontFamily: assets.fonts.inter, fontSize: 12, defaultWeight: FONT_WEIGHT.LIGHT },
     eyebrow: { fontFamily: assets.fonts.inter, fontSize: 11, defaultWeight: FONT_WEIGHT.NORMAL },
     footer: { fontFamily: assets.fonts.inter, fontSize: 8, defaultWeight: FONT_WEIGHT.LIGHT },
-  },
-  components: {
-    card: {
-      variants: {
-        default: {
-          background: {
-            fill: colors.surfaceContainer,
-            fillOpacity: 100,
-            borderColor: colors.outlineVariant,
-            borderWidth,
-            cornerRadius,
-          } satisfies ShapeTokens,
-          padding: spacing.padding,
-          gap: GAP.TIGHT,
-          hAlign: HALIGN.CENTER,
-          vAlign: VALIGN.TOP,
-          title: cardTitle,
-          description: cardDescription,
-        },
-        flat: {
-          background: {
-            fill: colors.background,
-            fillOpacity: 0,
-            borderColor: colors.outlineVariant,
-            borderWidth: 0,
-            cornerRadius,
-          } satisfies ShapeTokens,
-          padding: spacing.padding,
-          gap: GAP.TIGHT,
-          hAlign: HALIGN.CENTER,
-          vAlign: VALIGN.TOP,
-          title: cardTitle,
-          description: cardDescription,
-        },
-      },
-    },
-    quote: {
-      variants: {
-        default: {
-          bar: {
-            color: colors.primary,
-            width: 2,
-            dashType: DASH_TYPE.SOLID,
-          } satisfies LineTokens,
-          gap: GAP.NORMAL,
-          quote: quoteText,
-          attribution: quoteAttribution,
-        },
-      },
-    },
-    testimonial: {
-      variants: {
-        default: {
-          background: {
-            fill: colors.surfaceContainerLow,
-            fillOpacity: 100,
-            borderColor: colors.text,
-            borderWidth,
-            cornerRadius,
-          } satisfies ShapeTokens,
-          padding: spacing.padding * 2,
-          gap: GAP.NORMAL,
-          hAlign: HALIGN.CENTER,
-          vAlign: VALIGN.MIDDLE,
-          quote: testimonialQuote,
-          attribution: testimonialAttribution,
-        },
-      },
-    },
-    table: {
-      variants: {
-        default: {
-          borderStyle: BORDER_STYLE.FULL,
-          borderColor: colors.outlineVariant,
-          borderWidth,
-          headerBackground: colors.surfaceContainerHigh,
-          headerBackgroundOpacity: 100,
-          headerTextStyle: TEXT_STYLE.BODY,
-          headerTextColor: colors.text,
-          cellBackground: colors.background,
-          cellBackgroundOpacity: 0,
-          cellTextStyle: TEXT_STYLE.BODY,
-          cellTextColor: colors.text,
-          cellPadding: spacing.cellPadding,
-          hAlign: HALIGN.LEFT,
-          vAlign: VALIGN.MIDDLE,
-          cellLineHeight: spacing.lineSpacing,
-          linkColor: colors.primary,
-          linkUnderline: true,
-        },
-      },
-    },
-    line: {
-      variants: {
-        default: {
-          color: colors.outlineVariant,
-          width: borderWidth,
-          dashType: DASH_TYPE.SOLID,
-        },
-      },
-    },
-    slideNumber: {
-      variants: {
-        default: {
-          style: TEXT_STYLE.FOOTER,
-          color: colors.textMuted,
-          hAlign: HALIGN.RIGHT,
-          vAlign: VALIGN.MIDDLE,
-        },
-      },
-    },
-    text: {
-      variants: {
-        default:  { ...textBase, color: colors.text, linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
-        eyebrow:  { ...textBase, color: colors.primary, style: TEXT_STYLE.EYEBROW, lineHeightMultiplier: 1.0, linkColor: colors.primary, linkUnderline: false, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
-        muted:    { ...textBase, color: colors.textMuted, linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
-        accent:  { ...textBase, color: colors.accents.blue, linkColor: colors.accents.blue, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
-        inverse: { ...textBase, color: colors.background, linkColor: colors.background, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
-      },
-    },
-    plainText: {
-      variants: {
-        default: {
-          style: TEXT_STYLE.BODY,
-          color: colors.text,
-          lineHeightMultiplier: spacing.lineSpacing,
-          hAlign: HALIGN.LEFT,
-          vAlign: VALIGN.MIDDLE,
-        },
-        eyebrow: {
-          style: TEXT_STYLE.EYEBROW,
-          color: colors.primary,
-          lineHeightMultiplier: 1.0,
-          hAlign: HALIGN.LEFT,
-          vAlign: VALIGN.MIDDLE,
-        },
-        muted: {
-          style: TEXT_STYLE.BODY,
-          color: colors.textMuted,
-          lineHeightMultiplier: spacing.lineSpacing,
-          hAlign: HALIGN.LEFT,
-          vAlign: VALIGN.MIDDLE,
-        },
-        inverse: {
-          style: TEXT_STYLE.BODY,
-          color: colors.onPrimary,
-          lineHeightMultiplier: spacing.lineSpacing,
-          hAlign: HALIGN.LEFT,
-          vAlign: VALIGN.MIDDLE,
-        },
-      },
-    },
-    list: {
-      variants: {
-        default: {
-          color: colors.text,
-          style: TEXT_STYLE.BODY,
-          lineHeightMultiplier: spacing.lineSpacing,
-          linkColor: colors.primary,
-          linkUnderline: true,
-          hAlign: HALIGN.LEFT,
-          vAlign: VALIGN.TOP,
-        },
-      },
-    },
-    shape: {
-      variants: {
-        default:  { ...shapeBase, fill: colors.surfaceContainerHigh, fillOpacity: 100 },
-        primary:  { ...shapeBase, fill: colors.primary, fillOpacity: 100 },
-        subtle:   { ...shapeBase, fill: colors.surfaceContainer, fillOpacity: 100 },
-        outlined: { ...shapeBase, fill: colors.background, fillOpacity: 0, borderColor: colors.outlineVariant, borderWidth },
-        accent:   { ...shapeBase, fill: colors.accents.blue, fillOpacity: 100 },
-      },
-    },
-    code: {
-      variants: {
-        default: {
-          backgroundColor: '1A1A2E',
-          textColor: 'E2E8F0',
-          keywordColor: 'A78BFA',
-          stringColor: '10B981',
-          commentColor: '6B7280',
-          functionColor: '79C0FF',
-          numberColor: 'F0883E',
-          operatorColor: 'E2E8F0',
-          typeColor: 'FFA657',
-          variableColor: 'E2E8F0',
-          fontSize: 11,
-          fontFamily: assets.fonts.firaCode,
-          lineHeight: 1.6,
-          padding: spacing.padding,
-          borderRadius: cornerRadius,
-        },
-      },
-    },
-    mermaid: {
-      variants: {
-        default: {
-          primaryColor: colors.primary,
-          primaryTextColor: colors.onPrimary,
-          primaryBorderColor: colors.outlineVariant,
-          lineColor: colors.text,
-          secondaryColor: colors.secondary,
-          tertiaryColor: colors.secondary,
-          textColor: colors.text,
-          nodeTextColor: colors.text,
-          clusterBackground: colors.secondary,
-          clusterBorderColor: colors.outlineVariant,
-          edgeLabelBackground: colors.background,
-          titleColor: colors.text,
-          textStyle: TEXT_STYLE.BODY,
-          accentOpacity: colors.subtleOpacity,
-        },
-      },
-    },
   },
   layouts: {
     title: {

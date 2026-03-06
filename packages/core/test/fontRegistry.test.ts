@@ -69,41 +69,47 @@ describe('generateFontFaceCSS — font registry', () => {
     });
   });
 
-  describe('component token validation', () => {
-    it('throws when component FontFamily token is not in theme.fonts', () => {
+  describe('layout and master token validation', () => {
+    it('throws when layout FontFamily token is not in theme.fonts', () => {
       const unregisteredFamily = {
         normal: { name: 'Unknown Mono', path: '/fake/unknown-mono.woff2' },
       };
       const theme = mockTheme({
-        components: {
-          code: {
-            fontFamily: unregisteredFamily,
+        layouts: {
+          body: {
+            variants: {
+              default: {
+                heading: { fontFamily: unregisteredFamily },
+              },
+            },
           },
         },
       });
 
       assert.throws(
         () => generateFontFaceCSS(theme),
-        /Unknown Mono.*component "code".*not listed in theme\.fonts/,
+        /Unknown Mono.*layout "body".*not listed in theme\.fonts/,
       );
     });
 
-    it('does not throw when component FontFamily is in theme.fonts', () => {
-      const theme = mockTheme();
-      // mockTheme's code token uses mockFontFamily which IS in theme.fonts
-      assert.doesNotThrow(() => generateFontFaceCSS(theme));
-    });
-
-    it('ignores non-FontFamily component token values', () => {
+    it('does not throw when layout tokens have no FontFamily values', () => {
       const theme = mockTheme({
-        components: {
-          text: {
-            color: 'FF0000',
-            style: 'body',
+        layouts: {
+          body: {
+            variants: {
+              default: {
+                color: 'FF0000',
+                style: 'body',
+              },
+            },
           },
         },
       });
-      // String tokens should not trigger FontFamily validation
+      assert.doesNotThrow(() => generateFontFaceCSS(theme));
+    });
+
+    it('does not throw when theme has no layouts', () => {
+      const theme = mockTheme();
       assert.doesNotThrow(() => generateFontFaceCSS(theme));
     });
   });

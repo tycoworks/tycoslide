@@ -37,8 +37,6 @@ const quoteSchema = {
   quote: textComponent.schema.optional(),
   /** Attribution line, e.g. "— Jane Smith, CTO" */
   attribution: textComponent.schema.optional(),
-  /** Named variant (resolved from theme.components.quote.variants) */
-  variant: schema.string().optional(),
   /** Sizing: 'fill' to share parent space equally, 'hug' for content-sized (default) */
   height: schema.size().optional(),
 } satisfies SchemaShape;
@@ -127,6 +125,6 @@ export const quoteComponent = defineComponent({
  * })
  * ```
  */
-export function quote(props: QuoteProps, tokens?: QuoteTokens) {
+export function quote(props: QuoteProps, tokens: QuoteTokens) {
   return component(Component.Quote, props, tokens);
 }

@@ -6,7 +6,7 @@ import assert from 'node:assert';
 import { mermaid, sanitizeMermaidDefinition, buildMermaidConfig, buildClassDefs, injectClassDefs, type MermaidTokens } from '../src/mermaid.js';
 import { componentRegistry, NODE_TYPE, TEXT_STYLE } from 'tycoslide';
 import { Component } from '../src/names.js';
-import { mockTheme, noopCanvas } from './mocks.js';
+import { mockTheme, noopCanvas, DEFAULT_MERMAID_TOKENS } from './mocks.js';
 import {
   textComponent, imageComponent, cardComponent, quoteComponent,
   tableComponent, codeComponent, mermaidComponent,
@@ -250,6 +250,7 @@ describe('mermaid expansion', () => {
 
   it('expands to ImageNode via canvas', async () => {
     const m = mermaid('flowchart LR\n  A[Start] --> B[End]');
+    m.tokens = { ...DEFAULT_MERMAID_TOKENS };
     const expanded = await componentRegistry.expand(m, {
       theme: mockTheme(),
       canvas: {

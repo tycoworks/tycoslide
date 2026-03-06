@@ -33,7 +33,7 @@ import {
   BORDER_STYLE,
 } from 'tycoslide';
 import type { TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, ContainerNode, StackNode } from 'tycoslide';
-import { mockTheme as createMockTheme, noopCanvas, DEFAULT_TEXT_TOKENS } from './mocks.js';
+import { mockTheme as createMockTheme, noopCanvas, DEFAULT_TEXT_TOKENS, DEFAULT_TABLE_TOKENS, DEFAULT_CODE_TOKENS, DEFAULT_MERMAID_TOKENS, DEFAULT_CARD_TOKENS } from './mocks.js';
 import {
   textComponent, imageComponent, cardComponent, quoteComponent,
   tableComponent, codeComponent, mermaidComponent,
@@ -749,7 +749,7 @@ describe('grid()', () => {
 
 describe('card()', () => {
   test('returns ComponentNode with correct type', () => {
-    const node = card({});
+    const node = card({}, DEFAULT_CARD_TOKENS);
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
     assert.strictEqual(node.componentName, Component.Card);
   });
@@ -758,7 +758,7 @@ describe('card()', () => {
     const node = card({
       title: 'Test Title',
       description: 'Test Description',
-    });
+    }, DEFAULT_CARD_TOKENS);
     assert.strictEqual(node.props.title, 'Test Title');
     assert.strictEqual(node.props.description, 'Test Description');
   });
@@ -769,7 +769,7 @@ describe('card()', () => {
       title: 'Title',
       description: 'Description',
     };
-    const node = card(props);
+    const node = card(props, DEFAULT_CARD_TOKENS);
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
     assert.strictEqual(node.componentName, Component.Card);
     assert.strictEqual(node.props.image, 'hero.jpg');
@@ -783,40 +783,6 @@ describe('card()', () => {
 // TABLE FACTORY FUNCTIONS
 // ============================================
 
-describe('table() token defaults and theme overrides', () => {
-  it('uses default token values from theme', async () => {
-    const theme = createMockTheme();
-    const node = await componentRegistry.expandTree(
-      table([['A', 'B']], { headerRows: 1 }),
-      { theme, canvas: noopCanvas() }
-    ) as TableNode;
-    assert.strictEqual(node.type, NODE_TYPE.TABLE);
-    assert.strictEqual(node.borderStyle, BORDER_STYLE.FULL);
-    assert.strictEqual(node.borderColor, theme.colors.secondary);
-    assert.strictEqual(node.borderWidth, theme.borders.width);
-    assert.strictEqual(node.cellPadding, theme.spacing.cellPadding);
-    assert.strictEqual(node.cellTextStyle, TEXT_STYLE.BODY);
-    assert.strictEqual(node.headerTextStyle, TEXT_STYLE.BODY);
-  });
-
-  it('applies theme.components.table overrides while keeping other defaults', async () => {
-    const theme = createMockTheme({
-      components: { table: { borderColor: 'FF0000', cellTextStyle: TEXT_STYLE.SMALL } },
-    });
-    const node = await componentRegistry.expandTree(
-      table([['A', 'B']], { headerRows: 1 }),
-      { theme, canvas: noopCanvas() }
-    ) as TableNode;
-    assert.strictEqual(node.borderColor, 'FF0000');
-    assert.strictEqual(node.cellTextStyle, TEXT_STYLE.SMALL);
-    // Defaults still fill remaining tokens
-    assert.strictEqual(node.borderStyle, BORDER_STYLE.FULL);
-    assert.strictEqual(node.borderWidth, theme.borders.width);
-    assert.strictEqual(node.cellPadding, theme.spacing.cellPadding);
-    assert.strictEqual(node.headerTextStyle, TEXT_STYLE.BODY);
-  });
-});
-
 describe('table()', () => {
 
   test('returns ComponentNode', () => {
@@ -826,9 +792,11 @@ describe('table()', () => {
   });
 
   test('TableCellData cells preserve properties after expansion', async () => {
-    const node = await expand(table([
+    const tNode = table([
       ['Header', { content: 'colored cell', textStyle: TEXT_STYLE.SMALL, color: 'FF0000', hAlign: HALIGN.CENTER }],
-    ])) as TableNode;
+    ]);
+    tNode.tokens = { ...DEFAULT_TABLE_TOKENS };
+    const node = await expand(tNode) as TableNode;
     assert.strictEqual(node.type, NODE_TYPE.TABLE);
     const cell = node.rows[0][1];
     assert.deepStrictEqual(cell.content, [{ text: 'colored cell' }]);
@@ -841,15 +809,19 @@ describe('table()', () => {
   });
 
   test('TableCellData without vAlign resolves to table default', async () => {
-    const node = await expand(table([
+    const tNode = table([
       [{ content: 'cell with default vAlign' }],
-    ])) as TableNode;
+    ]);
+    tNode.tokens = { ...DEFAULT_TABLE_TOKENS };
+    const node = await expand(tNode) as TableNode;
     const cell = node.rows[0][0];
     assert.strictEqual(cell.vAlign, VALIGN.MIDDLE);
   });
 
   test('string cells are fully resolved as TableCellData', async () => {
-    const node = await expand(table([['plain string']])) as TableNode;
+    const tNode = table([['plain string']]);
+    tNode.tokens = { ...DEFAULT_TABLE_TOKENS };
+    const node = await expand(tNode) as TableNode;
     const cell = node.rows[0][0];
     assert.deepStrictEqual(cell.content, [{ text: 'plain string' }]);
     assert.strictEqual(cell.color, '000000');           // resolved from theme.colors.text
@@ -860,10 +832,12 @@ describe('table()', () => {
   });
 
   test('preserves table props', async () => {
-    const node = await expand(table([['a']], {
+    const tNode = table([['a']], {
       headerRows: 1,
       headerColumns: 1,
-    })) as TableNode;
+    });
+    tNode.tokens = { ...DEFAULT_TABLE_TOKENS };
+    const node = await expand(tNode) as TableNode;
     assert.strictEqual(node.headerRows, 1);
     assert.strictEqual(node.headerColumns, 1);
   });

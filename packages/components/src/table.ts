@@ -69,7 +69,6 @@ export interface TableProps {
 interface TableInternalProps {
   data?: (TableCellInput | TextContent)[][];
   tableProps?: TableProps;
-  variant?: string;
 }
 
 /**
@@ -97,7 +96,6 @@ function parseGfmTable(body: string): string[][] {
 
 /** Params accepted from :::table directive attributes. */
 const tableSchema = {
-  variant: schema.string().optional(),
   headerColumns: schema.number().optional(),
 } satisfies SchemaShape;
 
@@ -142,12 +140,23 @@ export const tableComponent = defineComponent({
       throw new Error('Table requires either data (DSL) or body (directive)');
     }
 
+    // Derive text tokens from table tokens for child text components.
+    const textTokens = {
+      color: tokens.cellTextColor,
+      style: tokens.cellTextStyle,
+      lineHeightMultiplier: tokens.cellLineHeight,
+      linkColor: tokens.linkColor,
+      linkUnderline: tokens.linkUnderline,
+      hAlign: tokens.hAlign,
+      vAlign: tokens.vAlign,
+    };
+
     // Expand string content through the markdown component to support
     // rich text (**bold**, *italic*, :accent[highlights]) in table cells.
     const expandContent = async (content: TextContent): Promise<TextContent> => {
       if (typeof content === 'string') {
         const expanded = await componentRegistry.expandTree(
-          component(Component.Text, { body: content }),
+          component(Component.Text, { body: content }, textTokens),
           context,
         );
         if (expanded.type !== NODE_TYPE.TEXT) {
@@ -260,7 +269,7 @@ export const tableComponent = defineComponent({
  */
 export function table(
   data: (TableCellInput | TextContent)[][],
-  props?: TableProps & { variant?: string }
+  props?: TableProps
 ): ComponentNode {
-  return component(Component.Table, { data, tableProps: props, variant: props?.variant });
+  return component(Component.Table, { data, tableProps: props });
 }

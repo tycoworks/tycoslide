@@ -26,13 +26,16 @@ function masterContent(t: Theme) {
 
   // Read tokens from theme.master
   const masterTokens = t.master as { slideNumber: SlideNumberTokens; footer: PlainTextTokens } | undefined;
+  if (!masterTokens) {
+    throw new Error('[tycoslide] Theme must define master tokens (slideNumber, footer).');
+  }
 
   const content = column(
     { height: SIZE.FILL, vAlign: VALIGN.BOTTOM, padding: margin },
     row(
       { gap: GAP.TIGHT, height: footerHeight, vAlign: VALIGN.MIDDLE },
-      plainText('tycoworks', masterTokens!.footer),
-      slideNumber(masterTokens!.slideNumber),
+      plainText('tycoworks', masterTokens.footer),
+      slideNumber(masterTokens.slideNumber),
     ),
   );
 

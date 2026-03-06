@@ -59,7 +59,6 @@ export interface ShapeTokens {
 const lineSchema = {
   beginArrow: schema.enum(ARROW_TYPE_VALUES).optional(),
   endArrow: schema.enum(ARROW_TYPE_VALUES).optional(),
-  variant: schema.string().optional(),
 } satisfies SchemaShape;
 
 // Full props for DSL callers (only arrow overrides — styling comes from tokens)
@@ -98,7 +97,6 @@ export function line(tokens: LineTokens, props?: LineProps): ComponentNode {
 // Styling props removed: authors style via variant selection.
 const shapeSchema = {
   shape: schema.enum(SHAPE_VALUES),
-  variant: schema.string().optional(),
 } satisfies SchemaShape;
 
 // Full props for DSL callers (only shape geometry — styling comes from tokens)

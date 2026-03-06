@@ -507,14 +507,8 @@ export interface Theme {
    *  `generateFontFaceCSS()` reads exclusively from this list. */
   fonts: FontFamily[];
   textStyles: { [K in TextStyleName]: TextStyle };
-  /** Component tokens. Each registered component declares its required token keys;
-   *  validateTheme() on the registry checks that themes provide them at runtime. */
-  components: Record<string, {
-    variants: { [DEFAULT_VARIANT]: Record<string, unknown> } & Record<string, Record<string, unknown>>;
-  }>;
-  /** Layout tokens. Each layout that declares token keys gets its visual values from here.
-   *  Optional during migration — existing themes without layout tokens continue to work. */
-  layouts?: Record<string, {
+  /** Layout tokens. Each layout that declares token keys gets its visual values from here. */
+  layouts: Record<string, {
     variants: { [DEFAULT_VARIANT]: Record<string, unknown> } & Record<string, Record<string, unknown>>;
   }>;
   /** Master slide tokens. Provides visual treatment for the master slide's

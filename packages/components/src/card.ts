@@ -43,8 +43,6 @@ const cardSchema = {
   title: textComponent.schema.optional(),
   /** Card description text */
   description: textComponent.schema.optional(),
-  /** Named variant (resolved from theme.components.card.variants) */
-  variant: schema.string().optional(),
   /** Sizing: 'fill' to share parent space equally, 'hug' for content-sized (default) */
   height: schema.size().optional(),
 } satisfies SchemaShape;
@@ -133,6 +131,6 @@ export const cardComponent = defineComponent({
  * })
  * ```
  */
-export function card(props: CardProps, tokens?: CardTokens) {
+export function card(props: CardProps, tokens: CardTokens) {
   return component(Component.Card, props, tokens);
 }
