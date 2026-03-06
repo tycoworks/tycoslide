@@ -98,7 +98,7 @@ const cardTitle: TextTokens = {
   linkColor: colors.primary,
   linkUnderline: true,
   hAlign: HALIGN.CENTER,
-  vAlign: VALIGN.TOP,
+  vAlign: VALIGN.MIDDLE,
 };
 const cardDescription: TextTokens = {
   style: TEXT_STYLE.SMALL,
@@ -107,7 +107,7 @@ const cardDescription: TextTokens = {
   linkColor: colors.primary,
   linkUnderline: true,
   hAlign: HALIGN.CENTER,
-  vAlign: VALIGN.TOP,
+  vAlign: VALIGN.MIDDLE,
 };
 
 const quoteText: TextTokens = {
@@ -117,14 +117,14 @@ const quoteText: TextTokens = {
   linkColor: colors.primary,
   linkUnderline: true,
   hAlign: HALIGN.LEFT,
-  vAlign: VALIGN.TOP,
+  vAlign: VALIGN.MIDDLE,
 };
 const quoteAttribution: PlainTextTokens = {
   style: TEXT_STYLE.SMALL,
   color: colors.textMuted,
   lineHeightMultiplier: 1.0,
   hAlign: HALIGN.LEFT,
-  vAlign: VALIGN.TOP,
+  vAlign: VALIGN.MIDDLE,
 };
 
 const testimonialQuote: TextTokens = {
@@ -134,14 +134,14 @@ const testimonialQuote: TextTokens = {
   linkColor: colors.primary,
   linkUnderline: true,
   hAlign: HALIGN.CENTER,
-  vAlign: VALIGN.TOP,
+  vAlign: VALIGN.MIDDLE,
 };
 const testimonialAttribution: PlainTextTokens = {
   style: TEXT_STYLE.SMALL,
   color: colors.textMuted,
   lineHeightMultiplier: 1.0,
   hAlign: HALIGN.RIGHT,
-  vAlign: VALIGN.TOP,
+  vAlign: VALIGN.MIDDLE,
 };
 
 // ============================================
@@ -279,11 +279,11 @@ export const theme: Theme = {
     },
     text: {
       variants: {
-        default:  { ...textBase, color: colors.text, linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP },
-        eyebrow:  { ...textBase, color: colors.primary, style: TEXT_STYLE.EYEBROW, lineHeightMultiplier: 1.0, linkColor: colors.primary, linkUnderline: false, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP },
-        muted:    { ...textBase, color: colors.textMuted, linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP },
-        accent:  { ...textBase, color: colors.accents.blue, linkColor: colors.accents.blue, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP },
-        inverse: { ...textBase, color: colors.background, linkColor: colors.background, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP },
+        default:  { ...textBase, color: colors.text, linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
+        eyebrow:  { ...textBase, color: colors.primary, style: TEXT_STYLE.EYEBROW, lineHeightMultiplier: 1.0, linkColor: colors.primary, linkUnderline: false, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
+        muted:    { ...textBase, color: colors.textMuted, linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
+        accent:  { ...textBase, color: colors.accents.blue, linkColor: colors.accents.blue, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
+        inverse: { ...textBase, color: colors.background, linkColor: colors.background, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
       },
     },
     plainText: {
@@ -293,28 +293,28 @@ export const theme: Theme = {
           color: colors.text,
           lineHeightMultiplier: spacing.lineSpacing,
           hAlign: HALIGN.LEFT,
-          vAlign: VALIGN.TOP,
+          vAlign: VALIGN.MIDDLE,
         },
         eyebrow: {
           style: TEXT_STYLE.EYEBROW,
           color: colors.primary,
           lineHeightMultiplier: 1.0,
           hAlign: HALIGN.LEFT,
-          vAlign: VALIGN.TOP,
+          vAlign: VALIGN.MIDDLE,
         },
         muted: {
           style: TEXT_STYLE.BODY,
           color: colors.textMuted,
           lineHeightMultiplier: spacing.lineSpacing,
           hAlign: HALIGN.LEFT,
-          vAlign: VALIGN.TOP,
+          vAlign: VALIGN.MIDDLE,
         },
         inverse: {
           style: TEXT_STYLE.BODY,
           color: colors.onPrimary,
           lineHeightMultiplier: spacing.lineSpacing,
           hAlign: HALIGN.LEFT,
-          vAlign: VALIGN.TOP,
+          vAlign: VALIGN.MIDDLE,
         },
       },
     },
