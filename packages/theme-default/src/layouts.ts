@@ -5,8 +5,6 @@
 import {
   HALIGN,
   VALIGN,
-  TEXT_STYLE,
-  TEXT_STYLE_VALUES,
   GAP,
   SIZE,
   defineLayout,
@@ -28,23 +26,28 @@ import {
   quote as quoteBlock,
   grid,
 } from 'tycoslide-components';
+import type { PlainTextTokens, TextTokens, ListTokens } from 'tycoslide-components';
 import { DEFAULT_MASTER } from './master.js';
-import { colors } from './theme.js';
 
 // ============================================
 // COMPOSITION PRIMITIVES
 // ============================================
 
+interface HeaderTokens {
+  title: PlainTextTokens;
+  eyebrow: PlainTextTokens;
+}
+
 /** Title header block with optional eyebrow */
-export function headerBlock(title: string, eyebrow?: string): SlideNode {
+export function headerBlock(title: string, tokens: HeaderTokens, eyebrow?: string): SlideNode {
   if (eyebrow) {
     return column(
       { gap: GAP.TIGHT },
-      plainText(eyebrow, { variant: 'eyebrow' }),
-      plainText(title, { style: TEXT_STYLE.H3 }),
+      plainText(eyebrow, tokens.eyebrow),
+      plainText(title, tokens.title),
     );
   }
-  return plainText(title, { style: TEXT_STYLE.H3 });
+  return plainText(title, tokens.title);
 }
 
 /** Fill-height body, content flows from top */
@@ -78,12 +81,12 @@ function wrapSide(content: SlideNode | SlideNode[]): SlideNode {
 }
 
 /** Shared implementation for image-left and image-right */
-function imageSplitSlide(imagePath: string, body: SlideNode[], imageOnLeft: boolean, title?: string, eyebrow?: string): Slide {
+function imageSplitSlide(imagePath: string, body: SlideNode[], imageOnLeft: boolean, tokens: HeaderTokens, title?: string, eyebrow?: string): Slide {
   const img = image(imagePath);
   const prose = column({ vAlign: VALIGN.MIDDLE, gap: GAP.NORMAL, height: SIZE.FILL }, ...body);
   const [l, r] = imageOnLeft ? [img, prose] : [prose, img];
   return masteredSlide(
-    ...(title ? [headerBlock(title, eyebrow)] : []),
+    ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
     row({ height: SIZE.FILL }, l, r),
   );
 }
@@ -91,6 +94,20 @@ function imageSplitSlide(imagePath: string, body: SlideNode[], imageOnLeft: bool
 // ============================================
 // FULL-SLIDE LAYOUTS (no master)
 // ============================================
+
+// --- title, end ---
+
+export const TITLE_LAYOUT_TOKEN = {
+  BACKGROUND: 'background',
+  TITLE: 'title',
+  SUBTITLE: 'subtitle',
+} as const;
+
+export interface TitleLayoutTokens {
+  [TITLE_LAYOUT_TOKEN.BACKGROUND]: string;
+  [TITLE_LAYOUT_TOKEN.TITLE]: PlainTextTokens;
+  [TITLE_LAYOUT_TOKEN.SUBTITLE]: PlainTextTokens;
+}
 
 // +----------------------------+
 // |                            |
@@ -105,17 +122,30 @@ export const titleLayout = defineLayout({
     title: textComponent.schema,
     subtitle: textComponent.schema.optional(),
   },
-  render: ({ title, subtitle }) => ({
-    background: colors.text,
-    content: column(
-      { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, gap: GAP.TIGHT, height: SIZE.FILL },
-      plainText(title, { style: TEXT_STYLE.H1, hAlign: HALIGN.CENTER, color: colors.onPrimary }),
-      ...(subtitle
-        ? [plainText(subtitle, { style: TEXT_STYLE.H3, hAlign: HALIGN.CENTER, color: colors.onPrimary })]
-        : []),
-    ),
-  }),
+  tokens: [TITLE_LAYOUT_TOKEN.BACKGROUND, TITLE_LAYOUT_TOKEN.TITLE, TITLE_LAYOUT_TOKEN.SUBTITLE],
+  render: ({ title, subtitle }, tokens: TitleLayoutTokens) => {
+    return {
+      background: tokens.background,
+      content: column(
+        { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, gap: GAP.TIGHT, height: SIZE.FILL },
+        plainText(title, tokens.title),
+        ...(subtitle ? [plainText(subtitle, tokens.subtitle)] : []),
+      ),
+    };
+  },
 });
+
+// --- section ---
+
+export const SECTION_LAYOUT_TOKEN = {
+  BACKGROUND: 'background',
+  TITLE: 'title',
+} as const;
+
+export interface SectionLayoutTokens {
+  [SECTION_LAYOUT_TOKEN.BACKGROUND]: string;
+  [SECTION_LAYOUT_TOKEN.TITLE]: PlainTextTokens;
+}
 
 // +----------------------------+
 // |                            |
@@ -126,14 +156,33 @@ export const sectionLayout = defineLayout({
   name: 'section',
   description: 'Section divider with centered title.',
   params: { title: textComponent.schema },
-  render: ({ title }) => ({
-    background: colors.text,
-    content: column(
-      { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, height: SIZE.FILL },
-      plainText(title, { style: TEXT_STYLE.H2, hAlign: HALIGN.CENTER, color: colors.onPrimary }),
-    ),
-  }),
+  tokens: [SECTION_LAYOUT_TOKEN.BACKGROUND, SECTION_LAYOUT_TOKEN.TITLE],
+  render: ({ title }, tokens: SectionLayoutTokens) => {
+    return {
+      background: tokens.background,
+      content: column(
+        { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, height: SIZE.FILL },
+        plainText(title, tokens.title),
+      ),
+    };
+  },
 });
+
+// --- body, image-left, image-right, two-column ---
+
+export const BODY_LAYOUT_TOKEN = {
+  TITLE: 'title',
+  EYEBROW: 'eyebrow',
+  TEXT: 'text',
+  LIST: 'list',
+} as const;
+
+export interface BodyLayoutTokens {
+  [BODY_LAYOUT_TOKEN.TITLE]: PlainTextTokens;
+  [BODY_LAYOUT_TOKEN.EYEBROW]: PlainTextTokens;
+  [BODY_LAYOUT_TOKEN.TEXT]: TextTokens;
+  [BODY_LAYOUT_TOKEN.LIST]: ListTokens;
+}
 
 // +----------------------------+
 // | EYEBROW                    |
@@ -153,12 +202,28 @@ export const bodyLayout = defineLayout({
     eyebrow: textComponent.schema.optional(),
   },
   slots: ['body'],
-  render: ({ title, eyebrow, body }) =>
-    masteredSlide(
-      ...(title ? [headerBlock(title, eyebrow)] : []),
+  tokens: [BODY_LAYOUT_TOKEN.TITLE, BODY_LAYOUT_TOKEN.EYEBROW, BODY_LAYOUT_TOKEN.TEXT, BODY_LAYOUT_TOKEN.LIST],
+  render: ({ title, eyebrow, body }, tokens: BodyLayoutTokens) => {
+    return masteredSlide(
+      ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
       contentBody(...body),
-    ),
+    );
+  },
 });
+
+// --- stat ---
+
+export const STAT_LAYOUT_TOKEN = {
+  VALUE: 'value',
+  LABEL: 'label',
+  CAPTION: 'caption',
+} as const;
+
+export interface StatLayoutTokens {
+  [STAT_LAYOUT_TOKEN.VALUE]: PlainTextTokens;
+  [STAT_LAYOUT_TOKEN.LABEL]: PlainTextTokens;
+  [STAT_LAYOUT_TOKEN.CAPTION]: TextTokens;
+}
 
 // +----------------------------+
 // |                            |
@@ -177,14 +242,16 @@ export const statLayout = defineLayout({
     label: textComponent.schema,
     caption: textComponent.schema.optional(),
   },
-  render: ({ value, label, caption }) =>
-    masteredSlide(
+  tokens: [STAT_LAYOUT_TOKEN.VALUE, STAT_LAYOUT_TOKEN.LABEL, STAT_LAYOUT_TOKEN.CAPTION],
+  render: ({ value, label, caption }, tokens: StatLayoutTokens) => {
+    return masteredSlide(
       centeredBody(
-        plainText(value, { style: TEXT_STYLE.H1, hAlign: HALIGN.CENTER }),
-        plainText(label, { style: TEXT_STYLE.H3, hAlign: HALIGN.CENTER, color: colors.textMuted }),
-        ...(caption ? [text(caption, { style: TEXT_STYLE.SMALL, color: colors.textMuted, hAlign: HALIGN.CENTER })] : []),
+        plainText(value, tokens.value),
+        plainText(label, tokens.label),
+        ...(caption ? [text(caption, tokens.caption)] : []),
       ),
-    ),
+    );
+  },
 });
 
 // +----------------------------+
@@ -223,16 +290,17 @@ export const endLayout = defineLayout({
     title: textComponent.schema,
     subtitle: textComponent.schema.optional(),
   },
-  render: ({ title, subtitle }) => ({
-    background: colors.text,
-    content: column(
-      { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, gap: GAP.TIGHT, height: SIZE.FILL },
-      plainText(title, { style: TEXT_STYLE.H1, hAlign: HALIGN.CENTER, color: colors.onPrimary }),
-      ...(subtitle
-        ? [plainText(subtitle, { style: TEXT_STYLE.H3, hAlign: HALIGN.CENTER, color: colors.onPrimary })]
-        : []),
-    ),
-  }),
+  tokens: [TITLE_LAYOUT_TOKEN.BACKGROUND, TITLE_LAYOUT_TOKEN.TITLE, TITLE_LAYOUT_TOKEN.SUBTITLE],
+  render: ({ title, subtitle }, tokens: TitleLayoutTokens) => {
+    return {
+      background: tokens.background,
+      content: column(
+        { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, gap: GAP.TIGHT, height: SIZE.FILL },
+        plainText(title, tokens.title),
+        ...(subtitle ? [plainText(subtitle, tokens.subtitle)] : []),
+      ),
+    };
+  },
 });
 
 // +----------------------------+
@@ -249,6 +317,18 @@ export const blankLayout = defineLayout({
     content: column({ height: SIZE.FILL }, ...body),
   }),
 });
+
+// --- image, title-only ---
+
+export const IMAGE_LAYOUT_TOKEN = {
+  TITLE: 'title',
+  EYEBROW: 'eyebrow',
+} as const;
+
+export interface ImageLayoutTokens {
+  [IMAGE_LAYOUT_TOKEN.TITLE]: PlainTextTokens;
+  [IMAGE_LAYOUT_TOKEN.EYEBROW]: PlainTextTokens;
+}
 
 // +----------------------------+
 // | EYEBROW                    |
@@ -270,11 +350,13 @@ export const imageLayout = defineLayout({
     eyebrow: textComponent.schema.optional(),
     image: imageComponent.schema,
   },
-  render: ({ title, eyebrow, image: imagePath }) =>
-    masteredSlide(
-      headerBlock(title, eyebrow),
+  tokens: [IMAGE_LAYOUT_TOKEN.TITLE, IMAGE_LAYOUT_TOKEN.EYEBROW],
+  render: ({ title, eyebrow, image: imagePath }, tokens: ImageLayoutTokens) => {
+    return masteredSlide(
+      headerBlock(title, tokens, eyebrow),
       centeredBody(image(imagePath)),
-    ),
+    );
+  },
 });
 
 // +----------------------------+
@@ -295,8 +377,10 @@ export const imageLeftLayout = defineLayout({
     image: imageComponent.schema,
   },
   slots: ['body'],
-  render: ({ title, eyebrow, image: imagePath, body }) =>
-    imageSplitSlide(imagePath, body, true, title, eyebrow),
+  tokens: [BODY_LAYOUT_TOKEN.TITLE, BODY_LAYOUT_TOKEN.EYEBROW, BODY_LAYOUT_TOKEN.TEXT, BODY_LAYOUT_TOKEN.LIST],
+  render: ({ title, eyebrow, image: imagePath, body }, tokens: BodyLayoutTokens) => {
+    return imageSplitSlide(imagePath, body, true, tokens, title, eyebrow);
+  },
 });
 
 // +----------------------------+
@@ -317,8 +401,10 @@ export const imageRightLayout = defineLayout({
     image: imageComponent.schema,
   },
   slots: ['body'],
-  render: ({ title, eyebrow, image: imagePath, body }) =>
-    imageSplitSlide(imagePath, body, false, title, eyebrow),
+  tokens: [BODY_LAYOUT_TOKEN.TITLE, BODY_LAYOUT_TOKEN.EYEBROW, BODY_LAYOUT_TOKEN.TEXT, BODY_LAYOUT_TOKEN.LIST],
+  render: ({ title, eyebrow, image: imagePath, body }, tokens: BodyLayoutTokens) => {
+    return imageSplitSlide(imagePath, body, false, tokens, title, eyebrow);
+  },
 });
 
 // +----------------------------+
@@ -340,12 +426,32 @@ export const twoColumnLayout = defineLayout({
     eyebrow: textComponent.schema.optional(),
   },
   slots: ['left', 'right'],
-  render: ({ title, eyebrow, left, right }) =>
-    masteredSlide(
-      ...(title ? [headerBlock(title, eyebrow)] : []),
+  tokens: [BODY_LAYOUT_TOKEN.TITLE, BODY_LAYOUT_TOKEN.EYEBROW, BODY_LAYOUT_TOKEN.TEXT, BODY_LAYOUT_TOKEN.LIST],
+  render: ({ title, eyebrow, left, right }, tokens: BodyLayoutTokens) => {
+    return masteredSlide(
+      ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
       contentBody(row({ height: SIZE.FILL }, wrapSide(left), wrapSide(right))),
-    ),
+    );
+  },
 });
+
+// --- comparison ---
+
+export const COMPARISON_LAYOUT_TOKEN = {
+  TITLE: 'title',
+  EYEBROW: 'eyebrow',
+  COLUMN_TITLE: 'columnTitle',
+  TEXT: 'text',
+  LIST: 'list',
+} as const;
+
+export interface ComparisonLayoutTokens {
+  [COMPARISON_LAYOUT_TOKEN.TITLE]: PlainTextTokens;
+  [COMPARISON_LAYOUT_TOKEN.EYEBROW]: PlainTextTokens;
+  [COMPARISON_LAYOUT_TOKEN.COLUMN_TITLE]: PlainTextTokens;
+  [COMPARISON_LAYOUT_TOKEN.TEXT]: TextTokens;
+  [COMPARISON_LAYOUT_TOKEN.LIST]: ListTokens;
+}
 
 // +----------------------------+
 // | EYEBROW                    |
@@ -368,24 +474,42 @@ export const comparisonLayout = defineLayout({
     rightTitle: textComponent.schema,
   },
   slots: ['left', 'right'],
-  render: ({ title, eyebrow, leftTitle, rightTitle, left, right }) =>
-    masteredSlide(
-      ...(title ? [headerBlock(title, eyebrow)] : []),
+  tokens: [COMPARISON_LAYOUT_TOKEN.TITLE, COMPARISON_LAYOUT_TOKEN.EYEBROW, COMPARISON_LAYOUT_TOKEN.COLUMN_TITLE, COMPARISON_LAYOUT_TOKEN.TEXT, COMPARISON_LAYOUT_TOKEN.LIST],
+  render: ({ title, eyebrow, leftTitle, rightTitle, left, right }, tokens: ComparisonLayoutTokens) => {
+    return masteredSlide(
+      ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
       contentBody(
         row(
           { height: SIZE.FILL },
           column({ vAlign: VALIGN.TOP, gap: GAP.NORMAL, height: SIZE.FILL },
-            plainText(leftTitle, { style: TEXT_STYLE.H4 }),
+            plainText(leftTitle, tokens.columnTitle),
             ...left,
           ),
           column({ vAlign: VALIGN.TOP, gap: GAP.NORMAL, height: SIZE.FILL },
-            plainText(rightTitle, { style: TEXT_STYLE.H4 }),
+            plainText(rightTitle, tokens.columnTitle),
             ...right,
           ),
         ),
       ),
-    ),
+    );
+  },
 });
+
+// --- statement ---
+
+export const STATEMENT_LAYOUT_TOKEN = {
+  TITLE: 'title',
+  EYEBROW: 'eyebrow',
+  BODY: 'body',
+  CAPTION: 'caption',
+} as const;
+
+export interface StatementLayoutTokens {
+  [STATEMENT_LAYOUT_TOKEN.TITLE]: PlainTextTokens;
+  [STATEMENT_LAYOUT_TOKEN.EYEBROW]: PlainTextTokens;
+  [STATEMENT_LAYOUT_TOKEN.BODY]: TextTokens;
+  [STATEMENT_LAYOUT_TOKEN.CAPTION]: TextTokens;
+}
 
 // +----------------------------+
 // | EYEBROW                    |
@@ -393,7 +517,6 @@ export const comparisonLayout = defineLayout({
 // |----------------------------|
 // |                            |
 // |   Body text, centered      |
-// |   with optional style      |
 // |      optional caption      |
 // |                            |
 // +----------------------------+
@@ -401,23 +524,40 @@ export const comparisonLayout = defineLayout({
 // +----------------------------+
 export const statementLayout = defineLayout({
   name: 'statement',
-  description: 'Body text with optional style and caption. Use for value props.',
+  description: 'Body text with optional caption. Use for value props.',
   params: {
     title: textComponent.schema,
     eyebrow: textComponent.schema.optional(),
     body: textComponent.schema,
-    bodyStyle: schema.enum(TEXT_STYLE_VALUES).optional(),
     caption: textComponent.schema.optional(),
   },
-  render: ({ title, eyebrow, body, bodyStyle, caption }) =>
-    masteredSlide(
-      headerBlock(title, eyebrow),
+  tokens: [STATEMENT_LAYOUT_TOKEN.TITLE, STATEMENT_LAYOUT_TOKEN.EYEBROW, STATEMENT_LAYOUT_TOKEN.BODY, STATEMENT_LAYOUT_TOKEN.CAPTION],
+  render: ({ title, eyebrow, body, caption }, tokens: StatementLayoutTokens) => {
+    return masteredSlide(
+      headerBlock(title, tokens, eyebrow),
       centeredBody(
-        text(body, { ...(bodyStyle ? { style: bodyStyle } : {}) }),
-        ...(caption ? [text(caption, { style: TEXT_STYLE.SMALL, color: colors.textMuted, hAlign: HALIGN.CENTER })] : []),
+        text(body, tokens.body),
+        ...(caption ? [text(caption, tokens.caption)] : []),
       ),
-    ),
+    );
+  },
 });
+
+// --- agenda ---
+
+export const AGENDA_LAYOUT_TOKEN = {
+  TITLE: 'title',
+  EYEBROW: 'eyebrow',
+  INTRO: 'intro',
+  ITEMS: 'items',
+} as const;
+
+export interface AgendaLayoutTokens {
+  [AGENDA_LAYOUT_TOKEN.TITLE]: PlainTextTokens;
+  [AGENDA_LAYOUT_TOKEN.EYEBROW]: PlainTextTokens;
+  [AGENDA_LAYOUT_TOKEN.INTRO]: TextTokens;
+  [AGENDA_LAYOUT_TOKEN.ITEMS]: ListTokens;
+}
 
 // +----------------------------+
 // | EYEBROW                    |
@@ -440,16 +580,35 @@ export const agendaLayout = defineLayout({
     intro: textComponent.schema.optional(),
     items: schema.array(textComponent.schema),
   },
-  render: ({ title, eyebrow, intro, items }) => {
+  tokens: [AGENDA_LAYOUT_TOKEN.TITLE, AGENDA_LAYOUT_TOKEN.EYEBROW, AGENDA_LAYOUT_TOKEN.INTRO, AGENDA_LAYOUT_TOKEN.ITEMS],
+  render: ({ title, eyebrow, intro, items }, tokens: AgendaLayoutTokens) => {
     return masteredSlide(
-      headerBlock(title, eyebrow),
+      headerBlock(title, tokens, eyebrow),
       contentBody(
-        ...(intro ? [text(intro)] : []),
-        list(items),
+        ...(intro ? [text(intro, tokens.intro)] : []),
+        list(items, tokens.items),
       ),
     );
   },
 });
+
+// --- cards ---
+
+export const CARDS_LAYOUT_TOKEN = {
+  TITLE: 'title',
+  EYEBROW: 'eyebrow',
+  INTRO: 'intro',
+  CAPTION: 'caption',
+  CARD_VARIANT: 'cardVariant',
+} as const;
+
+export interface CardsLayoutTokens {
+  [CARDS_LAYOUT_TOKEN.TITLE]: PlainTextTokens;
+  [CARDS_LAYOUT_TOKEN.EYEBROW]: PlainTextTokens;
+  [CARDS_LAYOUT_TOKEN.INTRO]: TextTokens;
+  [CARDS_LAYOUT_TOKEN.CAPTION]: TextTokens;
+  [CARDS_LAYOUT_TOKEN.CARD_VARIANT]: string;
+}
 
 // +----------------------------+
 // | EYEBROW                    |
@@ -472,21 +631,37 @@ export const cardsLayout = defineLayout({
     intro: textComponent.schema.optional(),
     cards: schema.array(cardComponent.schema),
     caption: textComponent.schema.optional(),
-    cardVariant: schema.string().optional(),
   },
-  render: ({ title, eyebrow, intro, cards, caption, cardVariant }) => {
-    const built = cards.map(c => card(cardVariant ? { ...c, variant: cardVariant } : c));
+  tokens: [CARDS_LAYOUT_TOKEN.TITLE, CARDS_LAYOUT_TOKEN.EYEBROW, CARDS_LAYOUT_TOKEN.INTRO, CARDS_LAYOUT_TOKEN.CAPTION, CARDS_LAYOUT_TOKEN.CARD_VARIANT],
+  render: ({ title, eyebrow, intro, cards: cardItems, caption }, tokens: CardsLayoutTokens) => {
+    const built = cardItems.map(c => card({ ...c, variant: tokens.cardVariant }));
     const perRow = built.length <= 2 ? built.length : built.length === 4 ? 2 : built.length >= 7 ? 4 : 3;
     return masteredSlide(
-      headerBlock(title, eyebrow),
+      headerBlock(title, tokens, eyebrow),
       centeredBody(
-        ...(intro ? [text(intro)] : []),
+        ...(intro ? [text(intro, tokens.intro)] : []),
         grid(perRow, ...built),
-        ...(caption ? [text(caption, { style: TEXT_STYLE.SMALL, color: colors.textMuted, hAlign: HALIGN.CENTER })] : []),
+        ...(caption ? [text(caption, tokens.caption)] : []),
       ),
     );
   },
 });
+
+// --- bio ---
+
+export const BIO_LAYOUT_TOKEN = {
+  PERSON: 'person',
+  ROLE: 'role',
+  TEXT: 'text',
+  LIST: 'list',
+} as const;
+
+export interface BioLayoutTokens {
+  [BIO_LAYOUT_TOKEN.PERSON]: PlainTextTokens;
+  [BIO_LAYOUT_TOKEN.ROLE]: PlainTextTokens;
+  [BIO_LAYOUT_TOKEN.TEXT]: TextTokens;
+  [BIO_LAYOUT_TOKEN.LIST]: ListTokens;
+}
 
 // +----------------------------+
 // | +------+  Name             |
@@ -506,20 +681,32 @@ export const bioLayout = defineLayout({
     image: imageComponent.schema.optional(),
   },
   slots: ['body'],
-  render: ({ person, role, image: imagePath, body }) =>
-    masteredSlide(
+  tokens: [BIO_LAYOUT_TOKEN.PERSON, BIO_LAYOUT_TOKEN.ROLE, BIO_LAYOUT_TOKEN.TEXT, BIO_LAYOUT_TOKEN.LIST],
+  render: ({ person, role, image: imagePath, body }, tokens: BioLayoutTokens) => {
+    return masteredSlide(
       row(
         { height: SIZE.FILL },
         ...(imagePath ? [image(imagePath)] : []),
         column(
           { vAlign: VALIGN.MIDDLE, gap: GAP.NORMAL, height: SIZE.FILL },
-          plainText(person, { style: TEXT_STYLE.H4 }),
-          ...(role ? [plainText(role, { style: TEXT_STYLE.BODY, color: colors.textMuted })] : []),
+          plainText(person, tokens.person),
+          ...(role ? [plainText(role, tokens.role)] : []),
           ...body,
         ),
       ),
-    ),
+    );
+  },
 });
+
+// --- caption ---
+
+export const CAPTION_LAYOUT_TOKEN = {
+  CAPTION: 'caption',
+} as const;
+
+export interface CaptionLayoutTokens {
+  [CAPTION_LAYOUT_TOKEN.CAPTION]: PlainTextTokens;
+}
 
 // +----------------------------+
 // | +------------------------+ |
@@ -538,14 +725,16 @@ export const captionLayout = defineLayout({
     image: imageComponent.schema,
     caption: textComponent.schema,
   },
-  render: ({ image: imagePath, caption }) =>
-    masteredSlide(
+  tokens: [CAPTION_LAYOUT_TOKEN.CAPTION],
+  render: ({ image: imagePath, caption }, tokens: CaptionLayoutTokens) => {
+    return masteredSlide(
       column(
         { height: SIZE.FILL, gap: GAP.TIGHT },
         image(imagePath),
-        plainText(caption, { style: TEXT_STYLE.SMALL, color: colors.textMuted, hAlign: HALIGN.CENTER }),
+        plainText(caption, tokens.caption),
       ),
-    ),
+    );
+  },
 });
 
 // +----------------------------+
@@ -565,12 +754,28 @@ export const titleOnlyLayout = defineLayout({
     title: textComponent.schema,
     eyebrow: textComponent.schema.optional(),
   },
-  render: ({ title, eyebrow }) =>
-    masteredSlide(
-      headerBlock(title, eyebrow),
+  tokens: [IMAGE_LAYOUT_TOKEN.TITLE, IMAGE_LAYOUT_TOKEN.EYEBROW],
+  render: ({ title, eyebrow }, tokens: ImageLayoutTokens) => {
+    return masteredSlide(
+      headerBlock(title, tokens, eyebrow),
       contentBody(),
-    ),
+    );
+  },
 });
+
+// --- team ---
+
+export const TEAM_LAYOUT_TOKEN = {
+  TITLE: 'title',
+  EYEBROW: 'eyebrow',
+  CARD_VARIANT: 'cardVariant',
+} as const;
+
+export interface TeamLayoutTokens {
+  [TEAM_LAYOUT_TOKEN.TITLE]: PlainTextTokens;
+  [TEAM_LAYOUT_TOKEN.EYEBROW]: PlainTextTokens;
+  [TEAM_LAYOUT_TOKEN.CARD_VARIANT]: string;
+}
 
 // +----------------------------+
 // | EYEBROW                    |
@@ -595,16 +800,17 @@ export const teamLayout = defineLayout({
       image: imageComponent.schema.optional(),
     })),
   },
-  render: ({ title, eyebrow, members }) => {
+  tokens: [TEAM_LAYOUT_TOKEN.TITLE, TEAM_LAYOUT_TOKEN.EYEBROW, TEAM_LAYOUT_TOKEN.CARD_VARIANT],
+  render: ({ title, eyebrow, members }, tokens: TeamLayoutTokens) => {
     const built = members.map(m => card({
       title: m.name,
       description: m.role,
       image: m.image,
-      variant: 'flat',
+      variant: tokens.cardVariant,
     }));
     const perRow = built.length <= 3 ? built.length : built.length <= 6 ? 3 : 4;
     return masteredSlide(
-      ...(title ? [headerBlock(title, eyebrow)] : []),
+      ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
       centeredBody(grid(perRow, ...built)),
     );
   },

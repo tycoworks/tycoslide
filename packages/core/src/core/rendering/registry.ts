@@ -509,7 +509,7 @@ export interface LayoutDefinition {
   slots?: readonly string[];
   /** Token keys that must be present in theme.layouts for this layout. Empty or undefined = no tokens. */
   tokens?: string[];
-  render: (props: any, tokens?: Record<string, unknown>) => Slide;
+  render: (props: any, tokens: unknown) => Slide;
 }
 
 /**
@@ -518,13 +518,13 @@ export interface LayoutDefinition {
  * TypeScript enforces: params accepts only ScalarParam fields.
  * Slots (optional) are a string array — each becomes ComponentNode[] in render.
  */
-export function defineLayout<TParams extends ScalarShape, const TSlots extends readonly string[] = readonly []>(def: {
+export function defineLayout<TParams extends ScalarShape, const TSlots extends readonly string[] = readonly [], TTokens = undefined>(def: {
   name: string;
   description: string;
   params: TParams;
   slots?: TSlots;
-  tokens?: string[];
-  render: (props: z.infer<z.ZodObject<TParams>> & SlotsToProps<TSlots>, tokens?: Record<string, unknown>) => Slide;
+  tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+  render: (props: z.infer<z.ZodObject<TParams>> & SlotsToProps<TSlots>, tokens: TTokens extends undefined ? (Record<string, unknown> | undefined) : TTokens) => Slide;
 }): LayoutDefinition {
   for (const key of Object.keys(def.params)) {
     if (RESERVED_FRONTMATTER_KEYS.has(key as any)) {
@@ -533,7 +533,7 @@ export function defineLayout<TParams extends ScalarShape, const TSlots extends r
       );
     }
   }
-  return def;
+  return def as unknown as LayoutDefinition;
 }
 
 /**

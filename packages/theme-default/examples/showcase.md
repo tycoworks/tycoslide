@@ -27,7 +27,7 @@ layout: statement
 title: What is tycoslide?
 eyebrow: The Product
 body: "A presentation :purple[**build tool**] that generates :purple[**native PowerPoint decks**] from markdown and TypeScript, with enforced brand compliance through :purple[**design tokens**]."
-bodyStyle: h3
+variant: hero
 caption: "Markdown for speed. Design tokens for safety. PowerPoint for compatibility."
 notes: Functional description from Fletch positioning framework. One sentence, four anchors.
 ---
@@ -73,7 +73,7 @@ cards:
   - title: PowerPoint Output
     description: Real, editable .pptx files with native shapes, text, and tables. Works offline in PowerPoint, Keynote, and LibreOffice.
     image: asset.icons.rocket
-cardVariant: flat
+variant: flat
 notes: Three pillars from Fletch positioning. Each resolves one side of the tradeoff.
 ---
 

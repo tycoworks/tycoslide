@@ -12,7 +12,7 @@ import {
   SLIDE_SIZE,
   type Theme,
 } from 'tycoslide';
-import type { TextTokens, PlainTextTokens, ShapeTokens, LineTokens } from 'tycoslide-components';
+import type { TextTokens, PlainTextTokens, ShapeTokens, LineTokens, ListTokens } from 'tycoslide-components';
 import { assets } from './assets.js';
 
 // ============================================
@@ -142,6 +142,29 @@ const testimonialAttribution: PlainTextTokens = {
   lineHeightMultiplier: 1.0,
   hAlign: HALIGN.RIGHT,
   vAlign: VALIGN.MIDDLE,
+};
+
+// --- Shared layout token objects ---
+
+const headerTitle: PlainTextTokens = {
+  style: TEXT_STYLE.H3, color: colors.text, lineHeightMultiplier: spacing.lineSpacing,
+  hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE,
+};
+const headerEyebrow: PlainTextTokens = {
+  style: TEXT_STYLE.EYEBROW, color: colors.primary, lineHeightMultiplier: 1.0,
+  hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE,
+};
+const bodyText: TextTokens = {
+  style: TEXT_STYLE.BODY, color: colors.text, lineHeightMultiplier: spacing.lineSpacing,
+  linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE,
+};
+const bodyList: ListTokens = {
+  style: TEXT_STYLE.BODY, color: colors.text, lineHeightMultiplier: spacing.lineSpacing,
+  linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP,
+};
+const mutedCaption: TextTokens = {
+  style: TEXT_STYLE.SMALL, color: colors.textMuted, lineHeightMultiplier: spacing.lineSpacing,
+  linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
 };
 
 // ============================================
@@ -378,6 +401,180 @@ export const theme: Theme = {
           titleColor: colors.text,
           textStyle: TEXT_STYLE.BODY,
           accentOpacity: colors.subtleOpacity,
+        },
+      },
+    },
+  },
+  layouts: {
+    title: {
+      variants: {
+        default: {
+          background: colors.text,
+          title: { style: TEXT_STYLE.H1, color: colors.onPrimary, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
+          subtitle: { style: TEXT_STYLE.H3, color: colors.onPrimary, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
+        },
+      },
+    },
+    end: {
+      variants: {
+        default: {
+          background: colors.text,
+          title: { style: TEXT_STYLE.H1, color: colors.onPrimary, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
+          subtitle: { style: TEXT_STYLE.H3, color: colors.onPrimary, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
+        },
+      },
+    },
+    section: {
+      variants: {
+        default: {
+          background: colors.text,
+          title: { style: TEXT_STYLE.H2, color: colors.onPrimary, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
+        },
+      },
+    },
+    body: {
+      variants: {
+        default: {
+          title: headerTitle,
+          eyebrow: headerEyebrow,
+          text: bodyText,
+          list: bodyList,
+        },
+      },
+    },
+    stat: {
+      variants: {
+        default: {
+          value: { style: TEXT_STYLE.H1, color: colors.text, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
+          label: { style: TEXT_STYLE.H3, color: colors.textMuted, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
+          caption: mutedCaption,
+        },
+      },
+    },
+    image: {
+      variants: {
+        default: {
+          title: headerTitle,
+          eyebrow: headerEyebrow,
+        },
+      },
+    },
+    'image-left': {
+      variants: {
+        default: {
+          title: headerTitle,
+          eyebrow: headerEyebrow,
+          text: bodyText,
+          list: bodyList,
+        },
+      },
+    },
+    'image-right': {
+      variants: {
+        default: {
+          title: headerTitle,
+          eyebrow: headerEyebrow,
+          text: bodyText,
+          list: bodyList,
+        },
+      },
+    },
+    'two-column': {
+      variants: {
+        default: {
+          title: headerTitle,
+          eyebrow: headerEyebrow,
+          text: bodyText,
+          list: bodyList,
+        },
+      },
+    },
+    comparison: {
+      variants: {
+        default: {
+          title: headerTitle,
+          eyebrow: headerEyebrow,
+          columnTitle: { style: TEXT_STYLE.H4, color: colors.text, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
+          text: bodyText,
+          list: bodyList,
+        },
+      },
+    },
+    statement: {
+      variants: {
+        default: {
+          title: headerTitle,
+          eyebrow: headerEyebrow,
+          body: bodyText,
+          caption: mutedCaption,
+        },
+        hero: {
+          title: headerTitle,
+          eyebrow: headerEyebrow,
+          body: { ...bodyText, style: TEXT_STYLE.H3 },
+          caption: mutedCaption,
+        },
+      },
+    },
+    agenda: {
+      variants: {
+        default: {
+          title: headerTitle,
+          eyebrow: headerEyebrow,
+          intro: bodyText,
+          items: bodyList,
+        },
+      },
+    },
+    cards: {
+      variants: {
+        default: {
+          title: headerTitle,
+          eyebrow: headerEyebrow,
+          intro: bodyText,
+          caption: mutedCaption,
+          cardVariant: 'default',
+        },
+        flat: {
+          title: headerTitle,
+          eyebrow: headerEyebrow,
+          intro: bodyText,
+          caption: mutedCaption,
+          cardVariant: 'flat',
+        },
+      },
+    },
+    bio: {
+      variants: {
+        default: {
+          person: { style: TEXT_STYLE.H4, color: colors.text, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
+          role: { style: TEXT_STYLE.BODY, color: colors.textMuted, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
+          text: bodyText,
+          list: bodyList,
+        },
+      },
+    },
+    caption: {
+      variants: {
+        default: {
+          caption: { style: TEXT_STYLE.SMALL, color: colors.textMuted, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
+        },
+      },
+    },
+    'title-only': {
+      variants: {
+        default: {
+          title: headerTitle,
+          eyebrow: headerEyebrow,
+        },
+      },
+    },
+    team: {
+      variants: {
+        default: {
+          title: headerTitle,
+          eyebrow: headerEyebrow,
+          cardVariant: 'flat',
         },
       },
     },
