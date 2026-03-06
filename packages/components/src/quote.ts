@@ -127,6 +127,6 @@ export const quoteComponent = defineComponent({
  * })
  * ```
  */
-export function quote(props: QuoteProps) {
-  return component(Component.Quote, props);
+export function quote(props: QuoteProps, tokens?: QuoteTokens) {
+  return component(Component.Quote, props, tokens);
 }

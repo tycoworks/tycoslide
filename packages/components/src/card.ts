@@ -102,10 +102,7 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
   }
 
   // Build background rectangle using ShapeTokens directly
-  const backgroundRect = shape({
-    shape: SHAPE.ROUND_RECT,
-    ...background,
-  });
+  const backgroundRect = shape(background, { shape: SHAPE.ROUND_RECT });
 
   // Stack: background behind, content in front
   // Content layer fills the stack so padding/alignment works consistently
@@ -136,6 +133,6 @@ export const cardComponent = defineComponent({
  * })
  * ```
  */
-export function card(props: CardProps) {
-  return component(Component.Card, props);
+export function card(props: CardProps, tokens?: CardTokens) {
+  return component(Component.Card, props, tokens);
 }

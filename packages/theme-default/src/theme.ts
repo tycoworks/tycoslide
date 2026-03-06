@@ -168,6 +168,65 @@ const mutedCaption: TextTokens = {
 };
 
 // ============================================
+// SLOT COMPONENT TOKEN OBJECTS (shared across layouts)
+// ============================================
+
+const tableTokens = {
+  borderStyle: BORDER_STYLE.FULL,
+  borderColor: colors.outlineVariant,
+  borderWidth,
+  headerBackground: colors.surfaceContainerHigh,
+  headerBackgroundOpacity: 100,
+  headerTextStyle: TEXT_STYLE.BODY,
+  headerTextColor: colors.text,
+  cellBackground: colors.background,
+  cellBackgroundOpacity: 0,
+  cellTextStyle: TEXT_STYLE.BODY,
+  cellTextColor: colors.text,
+  cellPadding: spacing.cellPadding,
+  hAlign: HALIGN.LEFT,
+  vAlign: VALIGN.MIDDLE,
+  cellLineHeight: spacing.lineSpacing,
+  linkColor: colors.primary,
+  linkUnderline: true,
+};
+
+const codeTokens = {
+  backgroundColor: '1A1A2E',
+  textColor: 'E2E8F0',
+  keywordColor: 'A78BFA',
+  stringColor: '10B981',
+  commentColor: '6B7280',
+  functionColor: '79C0FF',
+  numberColor: 'F0883E',
+  operatorColor: 'E2E8F0',
+  typeColor: 'FFA657',
+  variableColor: 'E2E8F0',
+  fontSize: 11,
+  fontFamily: assets.fonts.firaCode,
+  lineHeight: 1.6,
+  padding: spacing.padding,
+  borderRadius: cornerRadius,
+};
+
+const mermaidTokens = {
+  primaryColor: colors.primary,
+  primaryTextColor: colors.onPrimary,
+  primaryBorderColor: colors.outlineVariant,
+  lineColor: colors.text,
+  secondaryColor: colors.secondary,
+  tertiaryColor: colors.secondary,
+  textColor: colors.text,
+  nodeTextColor: colors.text,
+  clusterBackground: colors.secondary,
+  clusterBorderColor: colors.outlineVariant,
+  edgeLabelBackground: colors.background,
+  titleColor: colors.text,
+  textStyle: TEXT_STYLE.BODY,
+  accentOpacity: colors.subtleOpacity,
+};
+
+// ============================================
 // THEME EXPORT
 // ============================================
 
@@ -439,6 +498,9 @@ export const theme: Theme = {
           eyebrow: headerEyebrow,
           text: bodyText,
           list: bodyList,
+          table: tableTokens,
+          code: codeTokens,
+          mermaid: mermaidTokens,
         },
       },
     },
@@ -466,6 +528,9 @@ export const theme: Theme = {
           eyebrow: headerEyebrow,
           text: bodyText,
           list: bodyList,
+          table: tableTokens,
+          code: codeTokens,
+          mermaid: mermaidTokens,
         },
       },
     },
@@ -476,6 +541,9 @@ export const theme: Theme = {
           eyebrow: headerEyebrow,
           text: bodyText,
           list: bodyList,
+          table: tableTokens,
+          code: codeTokens,
+          mermaid: mermaidTokens,
         },
       },
     },
@@ -486,6 +554,9 @@ export const theme: Theme = {
           eyebrow: headerEyebrow,
           text: bodyText,
           list: bodyList,
+          table: tableTokens,
+          code: codeTokens,
+          mermaid: mermaidTokens,
         },
       },
     },
@@ -497,6 +568,9 @@ export const theme: Theme = {
           columnTitle: { style: TEXT_STYLE.H4, color: colors.text, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
           text: bodyText,
           list: bodyList,
+          table: tableTokens,
+          code: codeTokens,
+          mermaid: mermaidTokens,
         },
       },
     },
@@ -533,14 +607,42 @@ export const theme: Theme = {
           eyebrow: headerEyebrow,
           intro: bodyText,
           caption: mutedCaption,
-          cardVariant: 'default',
+          card: {
+            background: {
+              fill: colors.surfaceContainer,
+              fillOpacity: 100,
+              borderColor: colors.outlineVariant,
+              borderWidth,
+              cornerRadius,
+            },
+            padding: spacing.padding,
+            gap: GAP.TIGHT,
+            hAlign: HALIGN.CENTER,
+            vAlign: VALIGN.TOP,
+            title: cardTitle,
+            description: cardDescription,
+          },
         },
         flat: {
           title: headerTitle,
           eyebrow: headerEyebrow,
           intro: bodyText,
           caption: mutedCaption,
-          cardVariant: 'flat',
+          card: {
+            background: {
+              fill: colors.background,
+              fillOpacity: 0,
+              borderColor: colors.outlineVariant,
+              borderWidth: 0,
+              cornerRadius,
+            },
+            padding: spacing.padding,
+            gap: GAP.TIGHT,
+            hAlign: HALIGN.CENTER,
+            vAlign: VALIGN.TOP,
+            title: cardTitle,
+            description: cardDescription,
+          },
         },
       },
     },
@@ -551,6 +653,9 @@ export const theme: Theme = {
           role: { style: TEXT_STYLE.BODY, color: colors.textMuted, lineHeightMultiplier: spacing.lineSpacing, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE } satisfies PlainTextTokens,
           text: bodyText,
           list: bodyList,
+          table: tableTokens,
+          code: codeTokens,
+          mermaid: mermaidTokens,
         },
       },
     },
@@ -574,9 +679,54 @@ export const theme: Theme = {
         default: {
           title: headerTitle,
           eyebrow: headerEyebrow,
-          cardVariant: 'flat',
+          card: {
+            background: {
+              fill: colors.background,
+              fillOpacity: 0,
+              borderColor: colors.outlineVariant,
+              borderWidth: 0,
+              cornerRadius,
+            },
+            padding: spacing.padding,
+            gap: GAP.TIGHT,
+            hAlign: HALIGN.CENTER,
+            vAlign: VALIGN.TOP,
+            title: cardTitle,
+            description: cardDescription,
+          },
         },
       },
+    },
+    quote: {
+      variants: {
+        default: {
+          quote: {
+            bar: {
+              color: colors.primary,
+              width: 2,
+              dashType: DASH_TYPE.SOLID,
+            },
+            gap: GAP.NORMAL,
+            quote: quoteText,
+            attribution: quoteAttribution,
+          },
+        },
+      },
+    },
+  },
+  master: {
+    slideNumber: {
+      style: TEXT_STYLE.FOOTER,
+      color: colors.textMuted,
+      hAlign: HALIGN.RIGHT,
+      vAlign: VALIGN.MIDDLE,
+    },
+    footer: {
+      style: TEXT_STYLE.FOOTER,
+      color: colors.textMuted,
+      lineHeightMultiplier: 1.0,
+      hAlign: HALIGN.LEFT,
+      vAlign: VALIGN.MIDDLE,
     },
   },
 };

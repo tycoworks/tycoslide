@@ -517,4 +517,7 @@ export interface Theme {
   layouts?: Record<string, {
     variants: { [DEFAULT_VARIANT]: Record<string, unknown> } & Record<string, Record<string, unknown>>;
   }>;
+  /** Master slide tokens. Provides visual treatment for the master slide's
+   *  slideNumber and footer components. Keys are component-specific token maps. */
+  master?: Record<string, unknown>;
 }

@@ -106,10 +106,7 @@ function expandTestimonial(props: TestimonialProps & { body?: string }, context:
   }
 
   // Build background rectangle using ShapeTokens directly
-  const backgroundRect = shape({
-    shape: SHAPE.ROUND_RECT,
-    ...background,
-  });
+  const backgroundRect = shape(background, { shape: SHAPE.ROUND_RECT });
 
   // Content layer fills the stack so vAlign: MIDDLE centering works
   const contentLayer = column({ ...contentProps, height: SIZE.FILL }, ...children);
@@ -139,6 +136,6 @@ export const testimonialComponent = defineComponent({
  * })
  * ```
  */
-export function testimonial(props: TestimonialProps) {
-  return component(Component.Testimonial, props);
+export function testimonial(props: TestimonialProps, tokens?: TestimonialTokens) {
+  return component(Component.Testimonial, props, tokens);
 }

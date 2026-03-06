@@ -62,22 +62,18 @@ const lineSchema = {
   variant: schema.string().optional(),
 } satisfies SchemaShape;
 
-// Full props for DSL callers (TypeScript developers retain full access to styling)
+// Full props for DSL callers (only arrow overrides — styling comes from tokens)
 export interface LineProps {
-  color?: string;
-  width?: number;
-  dashType?: DashType;
   beginArrow?: ArrowType;
   endArrow?: ArrowType;
-  variant?: string;
 }
 
 function expandLine(props: LineProps, _context: ExpansionContext, tokens: LineTokens): LineNode {
   return {
     type: NODE_TYPE.LINE,
-    color: props.color ?? tokens.color,
-    width: props.width ?? tokens.width,
-    dashType: props.dashType ?? tokens.dashType,
+    color: tokens.color,
+    width: tokens.width,
+    dashType: tokens.dashType,
     beginArrow: props.beginArrow,
     endArrow: props.endArrow,
   };
@@ -90,8 +86,8 @@ export const lineComponent = defineComponent({
   expand: expandLine,
 });
 
-export function line(props?: LineProps): ComponentNode {
-  return component(Component.Line, props ?? {});
+export function line(tokens: LineTokens, props?: LineProps): ComponentNode {
+  return component(Component.Line, props ?? {}, tokens);
 }
 
 // ============================================
@@ -105,19 +101,13 @@ const shapeSchema = {
   variant: schema.string().optional(),
 } satisfies SchemaShape;
 
-// Full props for DSL callers (TypeScript developers retain full access to styling)
+// Full props for DSL callers (only shape geometry — styling comes from tokens)
 export interface ShapeProps {
   shape: ShapeName;
-  fill?: string;
-  fillOpacity?: number;
-  borderColor?: string;
-  borderWidth?: number;
   borderTop?: boolean;
   borderRight?: boolean;
   borderBottom?: boolean;
   borderLeft?: boolean;
-  cornerRadius?: number;
-  variant?: string;
 }
 
 function expandShape(props: ShapeProps, _context: ExpansionContext, tokens: ShapeTokens): ShapeNode {
@@ -125,18 +115,18 @@ function expandShape(props: ShapeProps, _context: ExpansionContext, tokens: Shap
     type: NODE_TYPE.SHAPE,
     shape: props.shape,
     fill: {
-      color: props.fill ?? tokens.fill,
-      opacity: props.fillOpacity ?? tokens.fillOpacity,
+      color: tokens.fill,
+      opacity: tokens.fillOpacity,
     },
     border: {
-      color: props.borderColor ?? tokens.borderColor,
-      width: props.borderWidth ?? tokens.borderWidth,
+      color: tokens.borderColor,
+      width: tokens.borderWidth,
       ...(props.borderTop !== undefined && { top: props.borderTop }),
       ...(props.borderRight !== undefined && { right: props.borderRight }),
       ...(props.borderBottom !== undefined && { bottom: props.borderBottom }),
       ...(props.borderLeft !== undefined && { left: props.borderLeft }),
     },
-    cornerRadius: props.cornerRadius ?? tokens.cornerRadius,
+    cornerRadius: tokens.cornerRadius,
   };
 }
 
@@ -147,32 +137,26 @@ export const shapeComponent = defineComponent({
   expand: expandShape,
 });
 
-export function shape(props: ShapeProps): ComponentNode {
-  return component(Component.Shape, props);
+export function shape(tokens: ShapeTokens, props: ShapeProps): ComponentNode {
+  return component(Component.Shape, props, tokens);
 }
 
 // ============================================
 // SLIDE NUMBER
 // ============================================
 
-// Full props for DSL callers (TypeScript developers retain full access to styling)
-export interface SlideNumberProps {
-  style?: TextStyleName;
-  color?: string;
-  hAlign?: HorizontalAlignment;
-  vAlign?: VerticalAlignment;
-  variant?: string;
-}
+// Full props for DSL callers (no styling overrides — all comes from tokens)
+export interface SlideNumberProps {}
 
-function expandSlideNumber(props: SlideNumberProps, context: ExpansionContext, tokens: SlideNumberTokens): SlideNumberNode {
-  const style = props.style ?? tokens.style;
+function expandSlideNumber(_props: SlideNumberProps, context: ExpansionContext, tokens: SlideNumberTokens): SlideNumberNode {
+  const style = tokens.style;
   return {
     type: NODE_TYPE.SLIDE_NUMBER,
     style,
     resolvedStyle: context.theme.textStyles[style],
-    color: props.color ?? tokens.color,
-    hAlign: props.hAlign ?? tokens.hAlign,
-    vAlign: props.vAlign ?? tokens.vAlign,
+    color: tokens.color,
+    hAlign: tokens.hAlign,
+    vAlign: tokens.vAlign,
   };
 }
 
@@ -182,6 +166,6 @@ export const slideNumberComponent = defineComponent({
   expand: expandSlideNumber,
 });
 
-export function slideNumber(props?: SlideNumberProps): ComponentNode {
-  return component(Component.SlideNumber, props ?? {});
+export function slideNumber(tokens: SlideNumberTokens, props?: SlideNumberProps): ComponentNode {
+  return component(Component.SlideNumber, props ?? {}, tokens);
 }

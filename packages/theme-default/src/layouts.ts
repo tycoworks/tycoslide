@@ -9,6 +9,7 @@ import {
   SIZE,
   defineLayout,
   schema,
+  component,
   type SlideNode,
   type Slide,
 } from 'tycoslide';
@@ -22,11 +23,10 @@ import {
   image,
   row,
   column,
-  card,
-  quote as quoteBlock,
   grid,
+  Component,
 } from 'tycoslide-components';
-import type { PlainTextTokens, TextTokens, ListTokens } from 'tycoslide-components';
+import type { PlainTextTokens, TextTokens, ListTokens, CardTokens, QuoteTokens } from 'tycoslide-components';
 import { DEFAULT_MASTER } from './master.js';
 
 // ============================================
@@ -254,6 +254,14 @@ export const statLayout = defineLayout({
   },
 });
 
+export const QUOTE_LAYOUT_TOKEN = {
+  QUOTE: 'quote',
+} as const;
+
+export interface QuoteLayoutTokens {
+  [QUOTE_LAYOUT_TOKEN.QUOTE]: QuoteTokens;
+}
+
 // +----------------------------+
 // |                            |
 // |  "Quote text here..."      |
@@ -269,10 +277,11 @@ export const quoteLayout = defineLayout({
     quote: textComponent.schema,
     attribution: textComponent.schema.optional(),
   },
-  render: ({ quote: quoteText, attribution }) =>
+  tokens: [QUOTE_LAYOUT_TOKEN.QUOTE],
+  render: ({ quote: quoteText, attribution }, tokens: QuoteLayoutTokens) =>
     masteredSlide(
       centeredBody(
-        quoteBlock({ quote: quoteText, attribution }),
+        component(Component.Quote, { quote: quoteText, attribution }, tokens.quote),
       ),
     ),
 });
@@ -599,7 +608,7 @@ export const CARDS_LAYOUT_TOKEN = {
   EYEBROW: 'eyebrow',
   INTRO: 'intro',
   CAPTION: 'caption',
-  CARD_VARIANT: 'cardVariant',
+  CARD: 'card',
 } as const;
 
 export interface CardsLayoutTokens {
@@ -607,7 +616,7 @@ export interface CardsLayoutTokens {
   [CARDS_LAYOUT_TOKEN.EYEBROW]: PlainTextTokens;
   [CARDS_LAYOUT_TOKEN.INTRO]: TextTokens;
   [CARDS_LAYOUT_TOKEN.CAPTION]: TextTokens;
-  [CARDS_LAYOUT_TOKEN.CARD_VARIANT]: string;
+  [CARDS_LAYOUT_TOKEN.CARD]: CardTokens;
 }
 
 // +----------------------------+
@@ -632,9 +641,9 @@ export const cardsLayout = defineLayout({
     cards: schema.array(cardComponent.schema),
     caption: textComponent.schema.optional(),
   },
-  tokens: [CARDS_LAYOUT_TOKEN.TITLE, CARDS_LAYOUT_TOKEN.EYEBROW, CARDS_LAYOUT_TOKEN.INTRO, CARDS_LAYOUT_TOKEN.CAPTION, CARDS_LAYOUT_TOKEN.CARD_VARIANT],
+  tokens: [CARDS_LAYOUT_TOKEN.TITLE, CARDS_LAYOUT_TOKEN.EYEBROW, CARDS_LAYOUT_TOKEN.INTRO, CARDS_LAYOUT_TOKEN.CAPTION, CARDS_LAYOUT_TOKEN.CARD],
   render: ({ title, eyebrow, intro, cards: cardItems, caption }, tokens: CardsLayoutTokens) => {
-    const built = cardItems.map(c => card({ ...c, variant: tokens.cardVariant }));
+    const built = cardItems.map(c => component(Component.Card, { ...c }, tokens.card));
     const perRow = built.length <= 2 ? built.length : built.length === 4 ? 2 : built.length >= 7 ? 4 : 3;
     return masteredSlide(
       headerBlock(title, tokens, eyebrow),
@@ -768,13 +777,13 @@ export const titleOnlyLayout = defineLayout({
 export const TEAM_LAYOUT_TOKEN = {
   TITLE: 'title',
   EYEBROW: 'eyebrow',
-  CARD_VARIANT: 'cardVariant',
+  CARD: 'card',
 } as const;
 
 export interface TeamLayoutTokens {
   [TEAM_LAYOUT_TOKEN.TITLE]: PlainTextTokens;
   [TEAM_LAYOUT_TOKEN.EYEBROW]: PlainTextTokens;
-  [TEAM_LAYOUT_TOKEN.CARD_VARIANT]: string;
+  [TEAM_LAYOUT_TOKEN.CARD]: CardTokens;
 }
 
 // +----------------------------+
@@ -800,14 +809,13 @@ export const teamLayout = defineLayout({
       image: imageComponent.schema.optional(),
     })),
   },
-  tokens: [TEAM_LAYOUT_TOKEN.TITLE, TEAM_LAYOUT_TOKEN.EYEBROW, TEAM_LAYOUT_TOKEN.CARD_VARIANT],
+  tokens: [TEAM_LAYOUT_TOKEN.TITLE, TEAM_LAYOUT_TOKEN.EYEBROW, TEAM_LAYOUT_TOKEN.CARD],
   render: ({ title, eyebrow, members }, tokens: TeamLayoutTokens) => {
-    const built = members.map(m => card({
+    const built = members.map(m => component(Component.Card, {
       title: m.name,
       description: m.role,
       image: m.image,
-      variant: tokens.cardVariant,
-    }));
+    }, tokens.card));
     const perRow = built.length <= 3 ? built.length : built.length <= 6 ? 3 : 4;
     return masteredSlide(
       ...(title ? [headerBlock(title, tokens, eyebrow)] : []),

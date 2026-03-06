@@ -2,9 +2,7 @@
 // Full-slide layout with footer (copyright + slide number)
 
 import {
-  HALIGN,
   VALIGN,
-  TEXT_STYLE,
   GAP,
   SIZE,
   type Master,
@@ -12,7 +10,7 @@ import {
   type Theme,
 } from 'tycoslide';
 import { row, column, plainText, slideNumber } from 'tycoslide-components';
-import { colors } from './theme.js';
+import type { PlainTextTokens, SlideNumberTokens } from 'tycoslide-components';
 
 function masterContent(t: Theme) {
   const { margin, unit } = t.spacing;
@@ -26,18 +24,15 @@ function masterContent(t: Theme) {
     height - margin * 2 - footerHeight,
   );
 
+  // Read tokens from theme.master
+  const masterTokens = t.master as { slideNumber: SlideNumberTokens; footer: PlainTextTokens } | undefined;
+
   const content = column(
     { height: SIZE.FILL, vAlign: VALIGN.BOTTOM, padding: margin },
     row(
       { gap: GAP.TIGHT, height: footerHeight, vAlign: VALIGN.MIDDLE },
-      plainText('tycoworks', {
-        style: TEXT_STYLE.FOOTER,
-        color: colors.textMuted,
-        lineHeightMultiplier: 1.0,
-        hAlign: HALIGN.LEFT,
-        vAlign: VALIGN.MIDDLE,
-      }),
-      slideNumber(),
+      plainText('tycoworks', masterTokens!.footer),
+      slideNumber(masterTokens!.slideNumber),
     ),
   );
 

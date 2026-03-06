@@ -39,7 +39,30 @@ import {
   tableComponent, codeComponent, mermaidComponent,
   lineComponent, shapeComponent, slideNumberComponent,
   rowComponent, columnComponent, stackComponent, gridComponent, listComponent,
+  type LineTokens, type ShapeTokens, type SlideNumberTokens,
 } from '../src/index.js';
+
+// Default tokens matching mock theme component defaults
+const DEFAULT_LINE_TOKENS: LineTokens = {
+  color: '333333',
+  width: 1,
+  dashType: DASH_TYPE.SOLID,
+};
+
+const DEFAULT_SHAPE_TOKENS: ShapeTokens = {
+  fill: '333333',
+  fillOpacity: 100,
+  borderColor: 'FFFFFF',
+  borderWidth: 0,
+  cornerRadius: 0,
+};
+
+const DEFAULT_SLIDE_NUMBER_TOKENS: SlideNumberTokens = {
+  style: TEXT_STYLE.FOOTER,
+  color: '666666',
+  hAlign: HALIGN.RIGHT,
+  vAlign: VALIGN.MIDDLE,
+};
 
 // Register components explicitly
 componentRegistry.register([
@@ -158,46 +181,45 @@ describe('image()', () => {
 
 describe('line()', () => {
   test('returns ComponentNode', () => {
-    const node = line();
+    const node = line(DEFAULT_LINE_TOKENS);
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
     assert.strictEqual(node.componentName, Component.Line);
   });
 
   test('expands to correct NODE_TYPE', async () => {
-    const node = await expand(line()) as LineNode;
+    const node = await expand(line(DEFAULT_LINE_TOKENS)) as LineNode;
     assert.strictEqual(node.type, NODE_TYPE.LINE);
   });
 
-  test('uses theme token defaults for color, width, dashType', async () => {
-    const node = await expand(line()) as LineNode;
-    // color, width, dashType come from theme.components.line tokens
-    assert.strictEqual(node.color, theme.colors.secondary);
-    assert.strictEqual(node.width, theme.borders.width);
+  test('uses token values for color, width, dashType', async () => {
+    const node = await expand(line(DEFAULT_LINE_TOKENS)) as LineNode;
+    assert.strictEqual(node.color, DEFAULT_LINE_TOKENS.color);
+    assert.strictEqual(node.width, DEFAULT_LINE_TOKENS.width);
     assert.strictEqual(node.dashType, DASH_TYPE.SOLID);
     assert.strictEqual(node.beginArrow, undefined);
     assert.strictEqual(node.endArrow, undefined);
   });
 
   test('applies beginArrow prop', async () => {
-    const node = await expand(line({ beginArrow: ARROW_TYPE.ARROW })) as LineNode;
+    const node = await expand(line(DEFAULT_LINE_TOKENS, { beginArrow: ARROW_TYPE.ARROW })) as LineNode;
     assert.strictEqual(node.beginArrow, ARROW_TYPE.ARROW);
   });
 
   test('applies endArrow prop', async () => {
-    const node = await expand(line({ endArrow: ARROW_TYPE.TRIANGLE })) as LineNode;
+    const node = await expand(line(DEFAULT_LINE_TOKENS, { endArrow: ARROW_TYPE.TRIANGLE })) as LineNode;
     assert.strictEqual(node.endArrow, ARROW_TYPE.TRIANGLE);
   });
 
   test('applies both arrow props together', async () => {
-    const node = await expand(line({
+    const node = await expand(line(DEFAULT_LINE_TOKENS, {
       beginArrow: ARROW_TYPE.DIAMOND,
       endArrow: ARROW_TYPE.STEALTH,
     })) as LineNode;
     assert.strictEqual(node.beginArrow, ARROW_TYPE.DIAMOND);
     assert.strictEqual(node.endArrow, ARROW_TYPE.STEALTH);
-    // Token defaults still apply
-    assert.strictEqual(node.color, theme.colors.secondary);
-    assert.strictEqual(node.width, theme.borders.width);
+    // Token values still apply
+    assert.strictEqual(node.color, DEFAULT_LINE_TOKENS.color);
+    assert.strictEqual(node.width, DEFAULT_LINE_TOKENS.width);
     assert.strictEqual(node.dashType, DASH_TYPE.SOLID);
   });
 });
@@ -208,50 +230,47 @@ describe('line()', () => {
 
 describe('shape()', () => {
   test('returns ComponentNode', () => {
-    const node = shape({ shape: SHAPE.ELLIPSE });
+    const node = shape(DEFAULT_SHAPE_TOKENS, { shape: SHAPE.ELLIPSE });
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
     assert.strictEqual(node.componentName, Component.Shape);
   });
 
   test('expands to specified shape type', async () => {
-    const node = await expand(shape({ shape: SHAPE.PLUS })) as ShapeNode;
+    const node = await expand(shape(DEFAULT_SHAPE_TOKENS, { shape: SHAPE.PLUS })) as ShapeNode;
     assert.strictEqual(node.type, NODE_TYPE.SHAPE);
     assert.strictEqual(node.shape, SHAPE.PLUS);
   });
 
-  test('uses token defaults when no explicit props', async () => {
-    const node = await expand(shape({ shape: SHAPE.RECT })) as ShapeNode;
-    // Shape now gets defaults from theme.components.shape tokens
+  test('uses token values for fill, border, cornerRadius', async () => {
+    const node = await expand(shape(DEFAULT_SHAPE_TOKENS, { shape: SHAPE.RECT })) as ShapeNode;
     assert.deepStrictEqual(node.fill, { color: '333333', opacity: 100 });
     assert.deepStrictEqual(node.border, { color: 'FFFFFF', width: 0 });
     assert.strictEqual(node.cornerRadius, 0);
   });
 
-  test('passes fill color (opacity defaults from token)', async () => {
-    const node = await expand(shape({ shape: SHAPE.RECT, fill: 'FF0000' })) as ShapeNode;
+  test('passes fill color from tokens', async () => {
+    const tokens: ShapeTokens = { ...DEFAULT_SHAPE_TOKENS, fill: 'FF0000' };
+    const node = await expand(shape(tokens, { shape: SHAPE.RECT })) as ShapeNode;
     assert.deepStrictEqual(node.fill, { color: 'FF0000', opacity: 100 });
   });
 
-  test('passes fill color with explicit opacity', async () => {
-    const node = await expand(shape({ shape: SHAPE.RECT, fill: 'FF0000', fillOpacity: 50 })) as ShapeNode;
+  test('passes fill color with explicit opacity from tokens', async () => {
+    const tokens: ShapeTokens = { ...DEFAULT_SHAPE_TOKENS, fill: 'FF0000', fillOpacity: 50 };
+    const node = await expand(shape(tokens, { shape: SHAPE.RECT })) as ShapeNode;
     assert.deepStrictEqual(node.fill, { color: 'FF0000', opacity: 50 });
   });
 
-  test('passes border properties', async () => {
-    const node = await expand(shape({
-      shape: SHAPE.RECT,
-      borderColor: '0000FF',
-      borderWidth: 2,
-    })) as ShapeNode;
+  test('passes border properties from tokens', async () => {
+    const tokens: ShapeTokens = { ...DEFAULT_SHAPE_TOKENS, borderColor: '0000FF', borderWidth: 2 };
+    const node = await expand(shape(tokens, { shape: SHAPE.RECT })) as ShapeNode;
     assert.strictEqual(node.border?.color, '0000FF');
     assert.strictEqual(node.border?.width, 2);
   });
 
-  test('passes selective border sides', async () => {
-    const node = await expand(shape({
+  test('passes selective border sides from props', async () => {
+    const tokens: ShapeTokens = { ...DEFAULT_SHAPE_TOKENS, borderColor: '000000', borderWidth: 1 };
+    const node = await expand(shape(tokens, {
       shape: SHAPE.RECT,
-      borderColor: '000000',
-      borderWidth: 1,
       borderTop: true,
       borderBottom: true,
       borderLeft: false,
@@ -263,26 +282,22 @@ describe('shape()', () => {
     assert.strictEqual(node.border?.right, false);
   });
 
-  test('passes corner radius', async () => {
-    const node = await expand(shape({ shape: SHAPE.ROUND_RECT, cornerRadius: 0.125 })) as ShapeNode;
+  test('passes corner radius from tokens', async () => {
+    const tokens: ShapeTokens = { ...DEFAULT_SHAPE_TOKENS, cornerRadius: 0.125 };
+    const node = await expand(shape(tokens, { shape: SHAPE.ROUND_RECT })) as ShapeNode;
     assert.strictEqual(node.cornerRadius, 0.125);
   });
 
-  test('passes specific shape with fill', async () => {
-    const node = await expand(shape({ shape: SHAPE.TRAPEZOID, fill: 'FF0000', fillOpacity: 50 })) as ShapeNode;
+  test('passes specific shape with fill from tokens', async () => {
+    const tokens: ShapeTokens = { ...DEFAULT_SHAPE_TOKENS, fill: 'FF0000', fillOpacity: 50 };
+    const node = await expand(shape(tokens, { shape: SHAPE.TRAPEZOID })) as ShapeNode;
     assert.strictEqual(node.shape, SHAPE.TRAPEZOID);
     assert.deepStrictEqual(node.fill, { color: 'FF0000', opacity: 50 });
   });
 
-  test('applies all props together', async () => {
-    const node = await expand(shape({
-      shape: SHAPE.ELLIPSE,
-      fill: 'EEEEEE',
-      fillOpacity: 80,
-      borderColor: '333333',
-      borderWidth: 1,
-      cornerRadius: 0.25,
-    })) as ShapeNode;
+  test('applies all tokens and props together', async () => {
+    const tokens: ShapeTokens = { fill: 'EEEEEE', fillOpacity: 80, borderColor: '333333', borderWidth: 1, cornerRadius: 0.25 };
+    const node = await expand(shape(tokens, { shape: SHAPE.ELLIPSE })) as ShapeNode;
     assert.strictEqual(node.shape, SHAPE.ELLIPSE);
     assert.deepStrictEqual(node.fill, { color: 'EEEEEE', opacity: 80 });
     assert.strictEqual(node.border?.color, '333333');
@@ -297,26 +312,25 @@ describe('shape()', () => {
 
 describe('slideNumber()', () => {
   test('returns ComponentNode', () => {
-    const node = slideNumber();
+    const node = slideNumber(DEFAULT_SLIDE_NUMBER_TOKENS);
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
     assert.strictEqual(node.componentName, Component.SlideNumber);
   });
 
   test('expands to correct NODE_TYPE', async () => {
-    const node = await expand(slideNumber()) as SlideNumberNode;
+    const node = await expand(slideNumber(DEFAULT_SLIDE_NUMBER_TOKENS)) as SlideNumberNode;
     assert.strictEqual(node.type, NODE_TYPE.SLIDE_NUMBER);
   });
 
-  test('uses theme token defaults for style, color, hAlign', async () => {
-    const node = await expand(slideNumber()) as SlideNumberNode;
-    // style, color, hAlign come from theme.components.slideNumber tokens
+  test('uses token values for style, color, hAlign', async () => {
+    const node = await expand(slideNumber(DEFAULT_SLIDE_NUMBER_TOKENS)) as SlideNumberNode;
     assert.strictEqual(node.style, TEXT_STYLE.FOOTER);
     assert.strictEqual(node.color, '666666');
     assert.strictEqual(node.hAlign, HALIGN.RIGHT);
   });
 
   test('pre-resolves resolvedStyle at expand time', async () => {
-    const node = await expand(slideNumber()) as SlideNumberNode;
+    const node = await expand(slideNumber(DEFAULT_SLIDE_NUMBER_TOKENS)) as SlideNumberNode;
     assert.ok(node.resolvedStyle);
     assert.strictEqual(node.resolvedStyle.fontSize, 12);
   });
