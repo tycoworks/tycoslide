@@ -11,7 +11,7 @@ import type { Processor } from 'unified';
 import type { Root, PhrasingContent, Link } from 'mdast';
 import type { Parent } from 'unist';
 import type { TextDirective } from 'mdast-util-directive';
-import type { NormalizedRun, ColorScheme } from 'tycoslide';
+import type { NormalizedRun } from 'tycoslide';
 import { SYNTAX } from 'tycoslide';
 
 // ============================================
@@ -65,7 +65,7 @@ export function inlineParse(input: string): Root {
  */
 export function transformInline(
   nodes: PhrasingContent[],
-  colors: ColorScheme,
+  accents: Record<string, string>,
   runs: NormalizedRun[],
   defaults: Partial<NormalizedRun>
 ): void {
@@ -75,40 +75,40 @@ export function transformInline(
         runs.push({ text: node.value, ...defaults });
         break;
       case SYNTAX.STRONG:
-        transformInline(node.children, colors, runs, { ...defaults, bold: true });
+        transformInline(node.children, accents, runs, { ...defaults, bold: true });
         break;
       case SYNTAX.EMPHASIS:
-        transformInline(node.children, colors, runs, { ...defaults, italic: true });
+        transformInline(node.children, accents, runs, { ...defaults, italic: true });
         break;
       case SYNTAX.LINK: {
         const link = node as unknown as Link;
-        transformInline(link.children as PhrasingContent[], colors, runs, {
+        transformInline(link.children as PhrasingContent[], accents, runs, {
           ...defaults, hyperlink: link.url,
         });
         break;
       }
       case SYNTAX.DELETE:
-        transformInline((node as unknown as Parent).children as PhrasingContent[], colors, runs, {
+        transformInline((node as unknown as Parent).children as PhrasingContent[], accents, runs, {
           ...defaults, strikethrough: true,
         });
         break;
       case SYNTAX.INS:
-        transformInline((node as unknown as Parent).children as PhrasingContent[], colors, runs, {
+        transformInline((node as unknown as Parent).children as PhrasingContent[], accents, runs, {
           ...defaults, underline: true,
         });
         break;
       case SYNTAX.TEXT_DIRECTIVE: {
         const directive = node as unknown as TextDirective;
-        const accentColor = colors.accents[directive.name];
+        const accentColor = accents[directive.name];
         if (!accentColor) {
-          const available = Object.keys(colors.accents).join(', ');
+          const available = Object.keys(accents).join(', ');
           throw new Error(
             `Unknown accent '${directive.name}'. Available: ${available}`
           );
         }
         transformInline(
           directive.children as PhrasingContent[],
-          colors,
+          accents,
           runs,
           { ...defaults, color: accentColor }
         );
@@ -121,7 +121,7 @@ export function transformInline(
         // Graceful degradation: recurse into children or extract value.
         // Handles: inlineCode, html, image, footnoteReference, etc.
         if ('children' in node && Array.isArray((node as any).children)) {
-          transformInline((node as any).children as PhrasingContent[], colors, runs, defaults);
+          transformInline((node as any).children as PhrasingContent[], accents, runs, defaults);
         } else if ('value' in node && typeof (node as any).value === 'string') {
           runs.push({ text: (node as any).value, ...defaults });
         }

@@ -84,6 +84,7 @@ const cardTitle: TextTokens = {
   linkUnderline: true,
   hAlign: HALIGN.CENTER,
   vAlign: VALIGN.MIDDLE,
+  accents: colors.accents,
 };
 const cardDescription: TextTokens = {
   style: TEXT_STYLE.SMALL,
@@ -93,6 +94,7 @@ const cardDescription: TextTokens = {
   linkUnderline: true,
   hAlign: HALIGN.CENTER,
   vAlign: VALIGN.MIDDLE,
+  accents: colors.accents,
 };
 
 const quoteText: TextTokens = {
@@ -103,6 +105,7 @@ const quoteText: TextTokens = {
   linkUnderline: true,
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.MIDDLE,
+  accents: colors.accents,
 };
 const quoteAttribution: PlainTextTokens = {
   style: TEXT_STYLE.SMALL,
@@ -125,14 +128,17 @@ const headerEyebrow: PlainTextTokens = {
 const bodyText: TextTokens = {
   style: TEXT_STYLE.BODY, color: colors.text, lineHeightMultiplier: spacing.lineSpacing,
   linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE,
+  accents: colors.accents,
 };
 const bodyList: ListTokens = {
   style: TEXT_STYLE.BODY, color: colors.text, lineHeightMultiplier: spacing.lineSpacing,
   linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP,
+  accents: colors.accents,
 };
 const mutedCaption: TextTokens = {
   style: TEXT_STYLE.SMALL, color: colors.textMuted, lineHeightMultiplier: spacing.lineSpacing,
   linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
+  accents: colors.accents,
 };
 
 // --- Dark-background (hero/section) token objects ---
@@ -195,6 +201,7 @@ const tableTokens = {
   cellLineHeight: spacing.lineSpacing,
   linkColor: colors.primary,
   linkUnderline: true,
+  accents: colors.accents,
 };
 
 const codeTokens = {
@@ -257,6 +264,7 @@ const mermaidTokens = {
   titleColor: colors.text,
   textStyle: TEXT_STYLE.BODY,
   accentOpacity: colors.subtleOpacity,
+  accents: colors.accents,
 };
 
 // ============================================
@@ -264,7 +272,6 @@ const mermaidTokens = {
 // ============================================
 
 export const theme: Theme = {
-  colors,
   slide: SLIDE_SIZE.S16x9,
   spacing,
   fonts: [assets.fonts.inter, assets.fonts.firaCode],

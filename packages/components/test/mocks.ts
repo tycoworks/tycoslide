@@ -38,7 +38,6 @@ export function mockTheme(options?: {
   margin?: number;
   maxScaleFactor?: number;
   lineSpacing?: number;
-  accents?: Record<string, string>;
 }): Theme {
   const gap = options?.gap ?? 0.25;
   const gapTight = options?.gapTight ?? 0.125;
@@ -49,20 +48,8 @@ export function mockTheme(options?: {
   const margin = options?.margin ?? 0.5;
   const maxScaleFactor = options?.maxScaleFactor ?? 1.0;
   const lineSpacing = options?.lineSpacing ?? 1.0;
-  const accents = options?.accents ?? { teal: '00CCCC', pink: 'FF00FF', orange: 'FF8800' };
-
   return {
     slide: { layout: 'CUSTOM' as const, width: 13.333, height: 7.5 },
-    colors: {
-      primary: 'FF0000',
-      background: 'FFFFFF',
-      secondary: '333333',
-      hyperlink: 'FF0000',
-      accents,
-      text: '000000',
-      textMuted: '666666',
-      subtleOpacity: 20,
-    },
     spacing: {
       unit: 0.03125,
       gap,
@@ -104,6 +91,7 @@ export const DEFAULT_TEXT_TOKENS: TextTokens = {
   linkUnderline: true,
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.TOP,
+  accents: { teal: '00CCCC', pink: 'FF00FF', orange: 'FF8800' },
 };
 
 export const DEFAULT_PLAIN_TEXT_TOKENS: PlainTextTokens = {
@@ -122,6 +110,7 @@ export const DEFAULT_LIST_TOKENS: ListTokens = {
   linkUnderline: true,
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.TOP,
+  accents: { teal: '00CCCC', pink: 'FF00FF', orange: 'FF8800' },
 };
 
 export const DEFAULT_TABLE_TOKENS: TableTokens = {
@@ -142,6 +131,7 @@ export const DEFAULT_TABLE_TOKENS: TableTokens = {
   cellLineHeight: 1.0,
   linkColor: '0000FF',
   linkUnderline: true,
+  accents: { teal: '00CCCC', pink: 'FF00FF', orange: 'FF8800' },
 };
 
 export const DEFAULT_CODE_TOKENS: CodeTokens = {
@@ -177,6 +167,7 @@ export const DEFAULT_MERMAID_TOKENS: MermaidTokens = {
   titleColor: '000000',
   textStyle: TEXT_STYLE.BODY,
   accentOpacity: 20,
+  accents: { teal: '00CCCC', pink: 'FF00FF', orange: 'FF8800' },
 };
 
 export const DEFAULT_CARD_TOKENS: CardTokens = {
@@ -199,6 +190,7 @@ export const DEFAULT_CARD_TOKENS: CardTokens = {
     linkUnderline: true,
     hAlign: HALIGN.CENTER,
     vAlign: VALIGN.TOP,
+    accents: { teal: '00CCCC', pink: 'FF00FF', orange: 'FF8800' },
   },
   description: {
     style: TEXT_STYLE.SMALL,
@@ -208,6 +200,7 @@ export const DEFAULT_CARD_TOKENS: CardTokens = {
     linkUnderline: true,
     hAlign: HALIGN.CENTER,
     vAlign: VALIGN.TOP,
+    accents: { teal: '00CCCC', pink: 'FF00FF', orange: 'FF8800' },
   },
 };
 
@@ -226,6 +219,7 @@ export const DEFAULT_QUOTE_TOKENS: QuoteTokens = {
     linkUnderline: true,
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.TOP,
+    accents: { teal: '00CCCC', pink: 'FF00FF', orange: 'FF8800' },
   },
   attribution: {
     style: TEXT_STYLE.SMALL,
@@ -256,6 +250,7 @@ export const DEFAULT_TESTIMONIAL_TOKENS: TestimonialTokens = {
     linkUnderline: true,
     hAlign: HALIGN.CENTER,
     vAlign: VALIGN.TOP,
+    accents: { teal: '00CCCC', pink: 'FF00FF', orange: 'FF8800' },
   },
   attribution: {
     style: TEXT_STYLE.SMALL,

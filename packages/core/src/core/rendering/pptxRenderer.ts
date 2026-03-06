@@ -28,7 +28,7 @@ export interface RenderSlideOptions {
 /** Options for defining a master slide */
 export interface MasterDefinition {
   name: string;
-  background?: string;
+  background: string;
   content: PositionedNode;  // Positioned master elements
 }
 
@@ -66,10 +66,9 @@ export class PptxRenderer {
       this.pres.defineLayout({ name: CUSTOM_LAYOUT, width, height });
     }
     this.pres.layout = layout;
-    (this.pres as any).theme = { ...(this.pres as any).theme, hlinkColor: theme.colors.hyperlink };
   }
 
-  defineMaster(master: MasterDefinition, theme: Theme): void {
+  defineMaster(master: MasterDefinition): void {
     const { name, background, content } = master;
 
     // Collect master objects (excluding slideNumber which is handled separately)
@@ -82,16 +81,16 @@ export class PptxRenderer {
 
     this.pres.defineSlideMaster({
       title: name,
-      background: background
-        ? (/^[0-9A-Fa-f]{6}$/.test(background) ? { color: background } : { path: background })
-        : { color: theme.colors.background },
+      background: /^[0-9A-Fa-f]{6}$/.test(background)
+        ? { color: background }
+        : { path: background },
       objects: masterObjects,
     });
 
     this.masters.set(name, { slideNumberOptions });
   }
 
-  renderSlide(content: PositionedNode, options: RenderSlideOptions, theme: Theme): void {
+  renderSlide(content: PositionedNode, options: RenderSlideOptions): void {
     const { masterName, masterContent, background, notes } = options;
 
     // Create pptx slide (with master if specified)
@@ -104,7 +103,7 @@ export class PptxRenderer {
       const isColor = /^[0-9A-Fa-f]{6}$/.test(background);
       pptxSlide.background = isColor ? { color: background } : { path: background };
     } else if (!masterName) {
-      pptxSlide.background = { color: theme.colors.background };
+      pptxSlide.background = { color: 'FFFFFF' };
     }
 
     // Propagate master's slideNumber as default (PPTXGen.js doesn't do this itself)

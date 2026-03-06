@@ -33,6 +33,7 @@ export const TABLE_TOKEN = {
   CELL_TEXT_COLOR: 'cellTextColor',
   LINK_COLOR: 'linkColor',
   LINK_UNDERLINE: 'linkUnderline',
+  ACCENTS: 'accents',
 } as const;
 
 export type TableTokens = {
@@ -53,6 +54,7 @@ export type TableTokens = {
   [TABLE_TOKEN.CELL_LINE_HEIGHT]: number;
   [TABLE_TOKEN.LINK_COLOR]: string;
   [TABLE_TOKEN.LINK_UNDERLINE]: boolean;
+  [TABLE_TOKEN.ACCENTS]: Record<string, string>;
 };
 
 // ============================================
@@ -149,6 +151,7 @@ export const tableComponent = defineComponent({
       linkUnderline: tokens.linkUnderline,
       hAlign: tokens.hAlign,
       vAlign: tokens.vAlign,
+      accents: tokens.accents,
     };
 
     // Expand string content through the markdown component to support

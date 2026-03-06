@@ -20,6 +20,7 @@ export const TEXT_TOKEN = {
   LINK_UNDERLINE: 'linkUnderline',
   HALIGN: 'hAlign',
   VALIGN: 'vAlign',
+  ACCENTS: 'accents',
 } as const;
 
 export type TextTokens = {
@@ -30,6 +31,7 @@ export type TextTokens = {
   [TEXT_TOKEN.LINK_UNDERLINE]: boolean;
   [TEXT_TOKEN.HALIGN]: HorizontalAlignment;
   [TEXT_TOKEN.VALIGN]: VerticalAlignment;
+  [TEXT_TOKEN.ACCENTS]: Record<string, string>;
 };
 
 // ============================================
@@ -73,7 +75,7 @@ function expandText(props: TextComponentProps, context: ExpansionContext, tokens
   const runs: NormalizedRun[] = [];
   for (const child of tree.children) {
     if (child.type === SYNTAX.PARAGRAPH) {
-      transformInline(child.children, context.theme.colors, runs, {});
+      transformInline(child.children, tokens.accents, runs, {});
     }
   }
 

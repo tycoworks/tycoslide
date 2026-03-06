@@ -38,7 +38,6 @@ componentRegistry.register(tokenTestComponent);
 /** Minimal theme for tests (no layout tokens needed). */
 function minimalTheme(): Theme {
   return {
-    colors: {} as any,
     slide: { layout: 'LAYOUT_16x9', width: 10, height: 5.625 },
     spacing: {} as any,
     fonts: [],

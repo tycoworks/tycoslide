@@ -802,7 +802,7 @@ describe('table()', () => {
     const node = await expand(tNode) as TableNode;
     const cell = node.rows[0][0];
     assert.deepStrictEqual(cell.content, [{ text: 'plain string' }]);
-    assert.strictEqual(cell.color, '000000');           // resolved from theme.colors.text
+    assert.strictEqual(cell.color, '000000');           // resolved from table token cellTextColor
     assert.strictEqual(cell.textStyle, TEXT_STYLE.BODY); // resolved from table token
     assert.ok(cell.resolvedStyle);
     assert.strictEqual(cell.resolvedStyle.fontSize, 12); // from mockTextStyle

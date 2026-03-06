@@ -27,21 +27,8 @@ componentRegistry.register([
 ]);
 
 // Test accents for directive resolution
-const testAccents = {
-  teal: '00CCCC',
-  pink: 'FF00FF',
-  orange: 'FF8800',
-};
-
-// Expected accent colors (text directives set color directly, no highlight background)
-const expectedAccentColors = {
-  teal: '00CCCC',
-  pink: 'FF00FF',
-  orange: 'FF8800',
-};
-
 function themeWithAccents() {
-  return mockTheme({ accents: testAccents });
+  return mockTheme();
 }
 
 describe('Text', () => {

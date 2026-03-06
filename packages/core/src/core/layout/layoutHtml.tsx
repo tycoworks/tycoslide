@@ -787,7 +787,7 @@ export function generateLayoutHTML(
     const styled = styleNode(slide.tree, rootCtx, idCtx, nodeIds, fontNormalRatios);
 
     return (
-      <div class="root" data-slide-index={`${i}`} style={{ width: `${widthPx}px`, height: `${heightPx}px`, backgroundColor: `#${theme.colors.background}` }}>
+      <div class="root" data-slide-index={`${i}`} style={{ width: `${widthPx}px`, height: `${heightPx}px`, backgroundColor: '#FFFFFF' }}>
         <StyledDiv node={styled} />
       </div>
     );

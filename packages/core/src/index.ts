@@ -38,7 +38,6 @@ export type {
   FontWeight,
   Font, FontFamily,
   TextStyle,
-  ColorScheme,
   HighlightPair,
   NormalizedRun,
   Master, Slide, Theme,

@@ -20,6 +20,7 @@ export const LIST_TOKEN = {
   LINK_UNDERLINE: 'linkUnderline',
   HALIGN: 'hAlign',
   VALIGN: 'vAlign',
+  ACCENTS: 'accents',
 } as const;
 
 export type ListTokens = {
@@ -30,6 +31,7 @@ export type ListTokens = {
   [LIST_TOKEN.LINK_UNDERLINE]: boolean;
   [LIST_TOKEN.HALIGN]: HorizontalAlignment;
   [LIST_TOKEN.VALIGN]: VerticalAlignment;
+  [LIST_TOKEN.ACCENTS]: Record<string, string>;
 };
 
 // ============================================
@@ -56,7 +58,7 @@ function expandList(props: ListComponentProps, context: ExpansionContext, tokens
     const itemRuns: NormalizedRun[] = [];
     for (const child of tree.children) {
       if (child.type === SYNTAX.PARAGRAPH) {
-        transformInline(child.children, context.theme.colors, itemRuns, {});
+        transformInline(child.children, tokens.accents, itemRuns, {});
       }
     }
     if (itemRuns.length > 0) {

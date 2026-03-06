@@ -37,11 +37,9 @@ export function mockTheme(options?: {
   margin?: number;
   maxScaleFactor?: number;
   lineSpacing?: number;
-  accents?: Record<string, string>;
   layouts?: Record<string, { variants: Record<string, Record<string, unknown>> }>;
   textStyles?: Partial<Record<string, Partial<TextStyle>>>;
   slide?: { layout: string; width: number; height: number };
-  colors?: Partial<Theme['colors']>;
 }): Theme {
   const gap = options?.gap ?? 0.25;
   const gapTight = options?.gapTight ?? 0.125;
@@ -52,20 +50,8 @@ export function mockTheme(options?: {
   const margin = options?.margin ?? 0.5;
   const maxScaleFactor = options?.maxScaleFactor ?? 1.0;
   const lineSpacing = options?.lineSpacing ?? 1.0;
-  const accents = options?.accents ?? { teal: '00CCCC', pink: 'FF00FF', orange: 'FF8800' };
-
   return {
     slide: (options?.slide ?? { layout: 'CUSTOM', width: 13.333, height: 7.5 }) as Theme['slide'],
-    colors: {
-      primary: options?.colors?.primary ?? 'FF0000',
-      background: options?.colors?.background ?? 'FFFFFF',
-      secondary: options?.colors?.secondary ?? '333333',
-      hyperlink: options?.colors?.hyperlink ?? 'FF0000',
-      accents: options?.colors?.accents ?? accents,
-      text: options?.colors?.text ?? '000000',
-      textMuted: options?.colors?.textMuted ?? '666666',
-      subtleOpacity: options?.colors?.subtleOpacity ?? 20,
-    },
     spacing: {
       unit: 0.03125,
       gap,

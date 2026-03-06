@@ -224,7 +224,7 @@ export class Presentation {
         const positioned = pipeline.computeLayout(content, this.masterBounds);
         masterPositionedMap.set(name, positioned);
         if (!options?.preview) {
-          this.renderer.defineMaster({ name, background: master.background, content: positioned }, this._theme);
+          this.renderer.defineMaster({ name, background: master.background, content: positioned });
           this.masters.set(name, { contentBounds, positioned });
         }
       }
@@ -280,7 +280,7 @@ export class Presentation {
             masterContent: masterPositioned,
             background: slide.background,
             notes: slide.notes,
-          }, this._theme);
+          });
 
           log.pptx.slide('  slide #%d complete', slideIndex);
         }

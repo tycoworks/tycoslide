@@ -41,5 +41,6 @@ function masterContent(t: Theme) {
 
 export const DEFAULT_MASTER: Master = {
   name: 'DEFAULT',
+  background: 'FFFFFF',
   getContent: masterContent,
 };

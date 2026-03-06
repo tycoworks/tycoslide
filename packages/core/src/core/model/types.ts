@@ -394,22 +394,6 @@ export interface TextStyle {
 }
 
 // ============================================
-// COLOR SCHEME
-// ============================================
-
-/** Full color scheme with accent colors */
-export type ColorScheme = {
-  background: string;
-  text: string;
-  textMuted: string;
-  primary: string;
-  secondary: string;
-  hyperlink: string;
-  subtleOpacity: number;
-  accents: Record<string, string>;
-};
-
-// ============================================
 // HIGHLIGHT PAIRS
 // ============================================
 
@@ -467,7 +451,7 @@ export const DEFAULT_VARIANT = 'default' as const;
 
 export interface Master {
   name: string;
-  background?: string;
+  background: string;
   getContent(theme: Theme): {
     content: ComponentNode;     // Master's visual elements (full-slide layout tree)
     contentBounds: Bounds;     // Where per-slide content goes
@@ -484,7 +468,6 @@ export interface Slide {
 }
 
 export interface Theme {
-  colors: ColorScheme;
   slide: SlideSize | CustomSlideSize;
   spacing: {
     unit: number;           // Base spacing unit (grid quantum, e.g. 1/32 inch)

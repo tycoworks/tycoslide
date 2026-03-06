@@ -32,6 +32,7 @@ export const MERMAID_TOKEN = {
   TITLE_COLOR: 'titleColor',
   TEXT_STYLE: 'textStyle',
   ACCENT_OPACITY: 'accentOpacity',
+  ACCENTS: 'accents',
 } as const;
 
 export type MermaidTokens = {
@@ -49,6 +50,7 @@ export type MermaidTokens = {
   [MERMAID_TOKEN.TITLE_COLOR]: string;
   [MERMAID_TOKEN.TEXT_STYLE]: string;
   [MERMAID_TOKEN.ACCENT_OPACITY]: number;
+  [MERMAID_TOKEN.ACCENTS]: Record<string, string>;
 };
 
 // ============================================
@@ -287,7 +289,7 @@ async function expandMermaid(props: MermaidComponentProps, context: ExpansionCon
   const textStyleConfig = context.theme.textStyles[tokens.textStyle as keyof typeof context.theme.textStyles];
   const fontFamily = textStyleConfig.fontFamily.normal.name;
   const renderCtx: MermaidRenderContext = {
-    accents: context.theme.colors.accents,
+    accents: tokens.accents,
   };
   const pngPath = await renderMermaidToPng(sanitized, tokens, fontFamily, renderCtx, context.canvas);
   return {
