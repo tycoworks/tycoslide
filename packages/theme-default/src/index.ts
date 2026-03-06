@@ -3,6 +3,7 @@
 
 import {
   textComponent,
+  plainTextComponent,
   imageComponent,
   cardComponent,
   quoteComponent,
@@ -24,6 +25,7 @@ import { allLayouts } from './layouts.js';
 // Explicit component and layout lists — themes declare what they use
 export const components = [
   textComponent,
+  plainTextComponent,
   imageComponent,
   cardComponent,
   quoteComponent,

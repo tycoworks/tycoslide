@@ -19,7 +19,7 @@ import { SYNTAX } from 'tycoslide';
 // ============================================
 
 /** Plugin that disables block-level constructs at the micromark level.
- *  Used by CONTENT.RICH to prevent `1. Problem` being parsed as an ordered list. */
+ *  Prevents `1. Problem` being parsed as an ordered list in inline/rich text parsing. */
 function remarkDisableBlocks(this: Processor): void {
   const data = this.data() as { micromarkExtensions?: unknown[] };
   const ext = data.micromarkExtensions ?? (data.micromarkExtensions = []);

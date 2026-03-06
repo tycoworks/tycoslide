@@ -1,8 +1,6 @@
 # Components
 
-Components are content elements that you compose in markdown to build slides. All built-in components come from `tycoslide-components` and are re-exported by themes (including `tycoslide-theme-default`).
-
-This page covers both **using** built-in components in markdown directives and **building** custom components with the component registry. For the default theme's token values, see [`theme.ts`](../packages/theme-default/src/theme.ts).
+Components are what layouts and themes are built from. Layout developers compose them in TypeScript to define how slides look; authors can also use some directly via markdown directives. All built-in components come from `tycoslide-components` and are re-exported by themes. For the default theme's token values, see [`theme.ts`](../packages/theme-default/src/theme.ts).
 
 ---
 
@@ -52,7 +50,8 @@ Three-deep nesting uses five colons on the outermost container, four on the midd
 
 | Component | Description |
 |-----------|-------------|
-| [text](#text) | Paragraph text and headings |
+| [text](#text) | Single paragraph of formatted text with heading style support |
+| [plainText](#plaintext) | Unformatted text for titles, captions, and attributions |
 | [list](#list) | Bullet and numbered lists |
 | [card](#card) | Content card with optional image, title, and description |
 | [quote](#quote) | Blockquote with optional attribution and image |
@@ -79,7 +78,7 @@ Three-deep nesting uses five colons on the outermost container, four on the midd
 
 ## text
 
-Renders paragraph text and headings. The text component is used internally by the slot compiler and in layout definitions — it has no `:::text` directive. Markdown paragraphs and headings auto-compile to text nodes. In the TypeScript DSL, use `text()` directly.
+A single paragraph of formatted content: bold, italic, strikethrough, underline, hyperlinks, and accent colors. Headings in markdown (`# Heading`) also become text with the appropriate heading style (H1–H4). Use `text()` in layouts when the content needs formatting support — for example, a card description where the author might write `**bold**` or `:blue[highlighted]`. No `:::text` directive — use `text()` in TypeScript.
 
 ### Parameters
 
@@ -88,7 +87,6 @@ Renders paragraph text and headings. The text component is used internally by th
 | `style` | TextStyleName | Override text style (`h1`--`h4`, `body`, `small`, `eyebrow`, `footer`) |
 | `hAlign` | `left` \| `center` \| `right` | Horizontal alignment |
 | `vAlign` | `top` \| `middle` \| `bottom` | Vertical alignment |
-| `content` | `plain` \| `rich` | Content mode (default: `rich`) |
 | `variant` | string | Theme variant name |
 | `color` | string | Text color (6-character hex, DSL only) |
 | `lineHeightMultiplier` | number | Line height multiplier (DSL only) |
@@ -105,14 +103,11 @@ Renders paragraph text and headings. The text component is used internally by th
 | `linkColor` | string | Hyperlink text color (6-character hex) |
 | `linkUnderline` | boolean | Whether hyperlinks are underlined |
 
-### Content Modes
+### Formatting
 
-- **`plain`** — Plain text with no formatting. Use for labels, eyebrows, and attributions where you want the exact string rendered as-is.
-- **`rich`** (default) — Supports `**bold**`, `*italic*`, `[hyperlinks](url)`, `~~strikethrough~~`, `++underline++`, and `:accent[colored text]`. Only inline formatting — lists and block quotes are handled by their own components.
+Supports `**bold**`, `*italic*`, `[hyperlinks](url)`, `~~strikethrough~~`, `++underline++`, and `:accent[colored text]`.
 
-### Inline Accent Colors
-
-In `rich` mode, use the `:name[text]` syntax to apply accent colors inline:
+Use the `:name[text]` syntax to apply accent colors inline:
 
 ```markdown
 Normal text with :blue[blue highlight] and :green[green highlight].
@@ -123,16 +118,44 @@ The default theme provides `blue`, `green`, `red`, `yellow`, and `purple`. Custo
 ### Examples
 
 ```typescript
-text("**Bold** and :blue[highlighted]")                                      // Rich (default)
-text("ARCHITECTURE", { content: CONTENT.PLAIN, style: TEXT_STYLE.EYEBROW }) // Plain
-text("Custom styled", { style: TEXT_STYLE.H3, color: 'FF0000' })           // With overrides
+text("**Bold** and :blue[highlighted]")
+text("Custom styled", { style: TEXT_STYLE.H3, color: 'FF0000' })
+```
+
+---
+
+## plainText
+
+Text rendered exactly as written. Use `plainText()` when content comes from a fixed string or frontmatter parameter rather than user-authored markdown. Titles, eyebrow labels, captions, and attribution lines are typical uses. Available in the TypeScript DSL only.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `style` | TextStyleName | Override text style (`h1`--`h4`, `body`, `small`, `eyebrow`, `footer`) |
+| `color` | string | Text color (6-character hex) |
+| `lineHeightMultiplier` | number | Line height multiplier |
+
+### Tokens
+
+| Token | Type | Description |
+|-------|------|-------------|
+| `style` | TextStyleName | Default text style |
+| `color` | string | Default text color |
+| `lineHeightMultiplier` | number | Default line height multiplier |
+
+### Examples
+
+```typescript
+plainText("ARCHITECTURE", { style: TEXT_STYLE.EYEBROW })
+plainText(props.label, { style: tokens.labelStyle, color: tokens.labelColor })
 ```
 
 ---
 
 ## list
 
-Renders bullet or numbered lists with inline formatting support. The list component is used internally by the slot compiler — it has no `:::list` directive. Markdown bullet and numbered lists auto-compile to list nodes. In the TypeScript DSL, use `list()` directly.
+Renders bullet or numbered lists with support for formatting. The list component has no `:::list` directive — markdown lists auto-compile to list nodes instead. In the TypeScript DSL, use `list()` directly.
 
 ### Examples
 
@@ -188,7 +211,7 @@ Content card with an optional image, title, and description. Renders as a rounde
 
 | Param | Type | Description |
 |-------|------|-------------|
-| `title` | string | Card title (inline markdown supported) |
+| `title` | string | Card title (formatting supported) |
 | `description` | string | Description text (or use body content) |
 | `image` | string | Path to image file |
 | `variant` | string | Theme variant (`default`, `flat`) |
@@ -278,8 +301,6 @@ Quote text is required -- provide it either via the `quote` attribute or as body
 | `attributionStyle` | TextStyleName | Attribution text style |
 | `attributionColor` | string | Attribution text color |
 | `attributionLineHeightMultiplier` | number | Attribution line height multiplier |
-| `attributionLinkColor` | string | Attribution hyperlink color |
-| `attributionLinkUnderline` | boolean | Attribution hyperlink underline |
 | `gap` | GapSize | Gap between quote and attribution |
 
 ### Examples
@@ -302,7 +323,7 @@ Design systems reduce decision fatigue across teams.
 
 Native PowerPoint table with accurate borders, cell merging, and text wrapping. GFM tables in the directive body always produce one header row.
 
-Cell content supports inline markdown (`**bold**`, `*italic*`, `:accent[color]`).
+Cell content supports formatting (`**bold**`, `*italic*`, `:accent[color]`).
 
 ### Parameters
 
@@ -613,8 +634,6 @@ Quote text is required -- provide it either via the `quote` attribute or as body
 | `attributionStyle` | TextStyleName | Attribution text style |
 | `attributionColor` | string | Attribution text color |
 | `attributionLineHeightMultiplier` | number | Attribution line height multiplier |
-| `attributionLinkColor` | string | Attribution hyperlink color |
-| `attributionLinkUnderline` | boolean | Attribution hyperlink underline |
 | `attributionHAlign` | HorizontalAlignment | Attribution horizontal alignment |
 | `gap` | GapSize | Gap between content sections |
 | `hAlign` | HorizontalAlignment | Content horizontal alignment |
@@ -712,7 +731,6 @@ params: {
   align: schema.hAlign().optional(),               // HALIGN enum: left/center/right
   valign: schema.vAlign().optional(),              // VALIGN enum: top/middle/bottom
   style: schema.textStyle().optional(),            // TEXT_STYLE enum: h1/h2/h3/h4/body/small/eyebrow/footer
-  content: schema.content().optional(),            // CONTENT enum: plain/rich
   height: schema.size().optional(),                // SIZE enum: fill/hug
 }
 ```
@@ -826,8 +844,8 @@ The `variant` prop is handled automatically. Use `variant="name"` in Markdown or
 Display a large metric value with a label and optional change indicator:
 
 ```typescript
-import { defineComponent, componentRegistry, component, schema, CONTENT } from 'tycoslide';
-import { column, text } from 'tycoslide-components';
+import { defineComponent, componentRegistry, component, schema } from 'tycoslide';
+import { column, text, plainText } from 'tycoslide-components';
 
 // 1. Define token constants
 const METRIC_TOKEN = {
@@ -854,14 +872,13 @@ export const metricComponent = defineComponent({
   expand: (props, context, tokens) => {
     const elements = [
       text(props.value, { style: tokens.valueStyle, color: tokens.valueColor }),
-      text(props.label, { content: CONTENT.PLAIN, style: tokens.labelStyle, color: tokens.labelColor }),
+      plainText(props.label, { style: tokens.labelStyle, color: tokens.labelColor }),
     ];
 
     if (props.change) {
       const isPositive = props.change.startsWith('+');
       elements.push(
-        text(props.change, {
-          content: CONTENT.PLAIN,
+        plainText(props.change, {
           style: tokens.changeStyle,
           color: isPositive ? tokens.positiveColor : tokens.negativeColor,
         })
@@ -922,14 +939,16 @@ components: {
 Components are used programmatically via DSL functions. All built-in DSL functions are exported from `tycoslide-components`:
 
 ```typescript
-import { text, list, card, quote, testimonial, table, image, mermaid, code } from 'tycoslide-components';
+import { text, plainText, list, card, quote, testimonial, table, image, mermaid, code } from 'tycoslide-components';
 import { row, column, stack, grid } from 'tycoslide-components';
 import { line, shape, slideNumber } from 'tycoslide-components';
-import { TEXT_STYLE, GAP, SIZE, SHAPE, CONTENT, HALIGN, VALIGN } from 'tycoslide';
+import { TEXT_STYLE, GAP, SIZE, SHAPE, HALIGN, VALIGN } from 'tycoslide';
 
-// Text — two content modes
-text("**Bold** and :blue[highlighted]")                          // CONTENT.RICH (default)
-text("ARCHITECTURE", { content: CONTENT.PLAIN, style: TEXT_STYLE.EYEBROW })  // Plain text
+// Text — with formatting
+text("**Bold** and :blue[highlighted]")
+
+// Plain text — renders as-is without formatting
+plainText("ARCHITECTURE", { style: TEXT_STYLE.EYEBROW })
 
 // Lists
 list(["First item", "Second **bold** item", "Third item"])       // Unordered

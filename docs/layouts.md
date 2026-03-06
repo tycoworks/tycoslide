@@ -412,8 +412,8 @@ Custom layouts define slide structure. Each layout controls where content appear
 Layouts are defined with `defineLayout()` and registered with `layoutRegistry.register()`:
 
 ```typescript
-import { defineLayout, schema, TEXT_STYLE, GAP, SIZE, CONTENT } from 'tycoslide';
-import { textComponent, text, row, column } from 'tycoslide-components';
+import { defineLayout, schema, TEXT_STYLE, GAP, SIZE } from 'tycoslide';
+import { textComponent, plainText, row, column } from 'tycoslide-components';
 
 export const twoColumnLayout = defineLayout({
   name: 'two-column',
@@ -426,7 +426,7 @@ export const twoColumnLayout = defineLayout({
   render: (props) => ({
     content: column(
       { gap: GAP.NORMAL },
-      ...(props.title ? [text(props.title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H3 })] : []),
+      ...(props.title ? [plainText(props.title, { style: TEXT_STYLE.H3 })] : []),
       row(
         { gap: GAP.NORMAL },
         column(...props.left),
@@ -537,7 +537,7 @@ slots: ['body'],
 
 render: (props) => ({
   content: column(
-    text(props.title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H3 }),
+    plainText(props.title, { style: TEXT_STYLE.H3 }),
     column(...props.body)
   ),
 })
@@ -548,12 +548,12 @@ render: (props) => ({
 Layouts are built by composing container functions from `tycoslide-components`:
 
 ```typescript
-import { column, row, text } from 'tycoslide-components';
-import { GAP, TEXT_STYLE, CONTENT } from 'tycoslide';
+import { column, row, plainText } from 'tycoslide-components';
+import { GAP, TEXT_STYLE } from 'tycoslide';
 
 column(
   { gap: GAP.NORMAL },
-  text("Section Header", { content: CONTENT.PLAIN, style: TEXT_STYLE.EYEBROW }),
+  plainText("Section Header", { style: TEXT_STYLE.EYEBROW }),
   row(
     { gap: GAP.NORMAL },
     column(...props.left),
@@ -617,8 +617,8 @@ Pass the master in the render function's return value: `render: (props) => ({ ma
 To customize the footer (company name, logo, colors), create your own master and pass it to your layout definitions:
 
 ```typescript
-import { HALIGN, VALIGN, TEXT_STYLE, GAP, SIZE, CONTENT, Bounds, type Master, type Theme } from 'tycoslide';
-import { row, column, text, slideNumber } from 'tycoslide-components';
+import { HALIGN, VALIGN, TEXT_STYLE, GAP, SIZE, Bounds, type Master, type Theme } from 'tycoslide';
+import { row, column, plainText, slideNumber } from 'tycoslide-components';
 
 const unit = 0.03125;
 const FOOTER_HEIGHT = unit * 8; // 0.25"
@@ -640,8 +640,7 @@ export const MY_MASTER: Master = {
       { gap: GAP.TIGHT, height: FOOTER_HEIGHT, vAlign: VALIGN.MIDDLE },
       column(
         { width: SIZE.FILL, vAlign: VALIGN.MIDDLE },
-        text('Acme Corp', {
-          content: CONTENT.PLAIN,
+        plainText('Acme Corp', {
           style: TEXT_STYLE.FOOTER,
           hAlign: HALIGN.LEFT,
           vAlign: VALIGN.MIDDLE,

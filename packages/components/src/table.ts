@@ -2,7 +2,7 @@
 
 import {
   componentRegistry, defineComponent, component, type ComponentNode, type ExpansionContext, type SchemaShape,
-  CONTENT, SYNTAX, NODE_TYPE,
+  SYNTAX, NODE_TYPE,
   type TextNode, type TableCellData, type TableCellInput, type TextContent,
   type BorderStyle, type TextStyleName, type HorizontalAlignment, type VerticalAlignment,
   schema, parseMarkdown,
@@ -147,7 +147,7 @@ export const tableComponent = defineComponent({
     const expandContent = async (content: TextContent): Promise<TextContent> => {
       if (typeof content === 'string') {
         const expanded = await componentRegistry.expandTree(
-          component(Component.Text, { body: content, content: CONTENT.RICH }),
+          component(Component.Text, { body: content }),
           context,
         );
         if (expanded.type !== NODE_TYPE.TEXT) {

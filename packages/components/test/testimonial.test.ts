@@ -9,7 +9,7 @@ import {
   tableComponent, codeComponent, mermaidComponent,
   lineComponent, shapeComponent, slideNumberComponent,
   rowComponent, columnComponent, stackComponent, gridComponent,
-  testimonialComponent,
+  testimonialComponent, plainTextComponent,
 } from '../src/index.js';
 
 // Register components explicitly
@@ -18,7 +18,7 @@ componentRegistry.register([
   tableComponent, codeComponent, mermaidComponent,
   lineComponent, shapeComponent, slideNumberComponent,
   rowComponent, columnComponent, stackComponent, gridComponent,
-  testimonialComponent,
+  testimonialComponent, plainTextComponent,
 ]);
 
 describe('Testimonial Component', () => {

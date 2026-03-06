@@ -9,7 +9,6 @@ import {
   TEXT_STYLE_VALUES,
   GAP,
   SIZE,
-  CONTENT,
   defineLayout,
   schema,
   type SlideNode,
@@ -20,6 +19,7 @@ import {
   imageComponent,
   cardComponent,
   text,
+  plainText,
   list,
   image,
   row,
@@ -40,11 +40,11 @@ export function headerBlock(title: string, eyebrow?: string): SlideNode {
   if (eyebrow) {
     return column(
       { gap: GAP.TIGHT },
-      text(eyebrow, { content: CONTENT.PLAIN, variant: 'eyebrow' }),
-      text(title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H3 }),
+      plainText(eyebrow, { variant: 'eyebrow' }),
+      plainText(title, { style: TEXT_STYLE.H3 }),
     );
   }
-  return text(title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H3 });
+  return plainText(title, { style: TEXT_STYLE.H3 });
 }
 
 /** Fill-height body, content flows from top */
@@ -109,9 +109,9 @@ export const titleLayout = defineLayout({
     background: colors.text,
     content: column(
       { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, gap: GAP.TIGHT, height: SIZE.FILL },
-      text(title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H1, hAlign: HALIGN.CENTER, color: colors.onPrimary }),
+      plainText(title, { style: TEXT_STYLE.H1, hAlign: HALIGN.CENTER, color: colors.onPrimary }),
       ...(subtitle
-        ? [text(subtitle, { content: CONTENT.PLAIN, style: TEXT_STYLE.H3, hAlign: HALIGN.CENTER, color: colors.onPrimary })]
+        ? [plainText(subtitle, { style: TEXT_STYLE.H3, hAlign: HALIGN.CENTER, color: colors.onPrimary })]
         : []),
     ),
   }),
@@ -130,7 +130,7 @@ export const sectionLayout = defineLayout({
     background: colors.text,
     content: column(
       { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, height: SIZE.FILL },
-      text(title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H2, hAlign: HALIGN.CENTER, color: colors.onPrimary }),
+      plainText(title, { style: TEXT_STYLE.H2, hAlign: HALIGN.CENTER, color: colors.onPrimary }),
     ),
   }),
 });
@@ -180,8 +180,8 @@ export const statLayout = defineLayout({
   render: ({ value, label, caption }) =>
     masteredSlide(
       centeredBody(
-        text(value, { content: CONTENT.PLAIN, style: TEXT_STYLE.H1, hAlign: HALIGN.CENTER }),
-        text(label, { content: CONTENT.PLAIN, style: TEXT_STYLE.H3, hAlign: HALIGN.CENTER, color: colors.textMuted }),
+        plainText(value, { style: TEXT_STYLE.H1, hAlign: HALIGN.CENTER }),
+        plainText(label, { style: TEXT_STYLE.H3, hAlign: HALIGN.CENTER, color: colors.textMuted }),
         ...(caption ? [text(caption, { style: TEXT_STYLE.SMALL, color: colors.textMuted, hAlign: HALIGN.CENTER })] : []),
       ),
     ),
@@ -227,9 +227,9 @@ export const endLayout = defineLayout({
     background: colors.text,
     content: column(
       { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, gap: GAP.TIGHT, height: SIZE.FILL },
-      text(title, { content: CONTENT.PLAIN, style: TEXT_STYLE.H1, hAlign: HALIGN.CENTER, color: colors.onPrimary }),
+      plainText(title, { style: TEXT_STYLE.H1, hAlign: HALIGN.CENTER, color: colors.onPrimary }),
       ...(subtitle
-        ? [text(subtitle, { content: CONTENT.PLAIN, style: TEXT_STYLE.H3, hAlign: HALIGN.CENTER, color: colors.onPrimary })]
+        ? [plainText(subtitle, { style: TEXT_STYLE.H3, hAlign: HALIGN.CENTER, color: colors.onPrimary })]
         : []),
     ),
   }),
@@ -375,11 +375,11 @@ export const comparisonLayout = defineLayout({
         row(
           { height: SIZE.FILL },
           column({ vAlign: VALIGN.TOP, gap: GAP.NORMAL, height: SIZE.FILL },
-            text(leftTitle, { content: CONTENT.PLAIN, style: TEXT_STYLE.H4 }),
+            plainText(leftTitle, { style: TEXT_STYLE.H4 }),
             ...left,
           ),
           column({ vAlign: VALIGN.TOP, gap: GAP.NORMAL, height: SIZE.FILL },
-            text(rightTitle, { content: CONTENT.PLAIN, style: TEXT_STYLE.H4 }),
+            plainText(rightTitle, { style: TEXT_STYLE.H4 }),
             ...right,
           ),
         ),
@@ -513,8 +513,8 @@ export const bioLayout = defineLayout({
         ...(imagePath ? [image(imagePath)] : []),
         column(
           { vAlign: VALIGN.MIDDLE, gap: GAP.NORMAL, height: SIZE.FILL },
-          text(person, { content: CONTENT.PLAIN, style: TEXT_STYLE.H4 }),
-          ...(role ? [text(role, { content: CONTENT.PLAIN, style: TEXT_STYLE.BODY, color: colors.textMuted })] : []),
+          plainText(person, { style: TEXT_STYLE.H4 }),
+          ...(role ? [plainText(role, { style: TEXT_STYLE.BODY, color: colors.textMuted })] : []),
           ...body,
         ),
       ),
@@ -543,7 +543,7 @@ export const captionLayout = defineLayout({
       column(
         { height: SIZE.FILL, gap: GAP.TIGHT },
         image(imagePath),
-        text(caption, { content: CONTENT.PLAIN, style: TEXT_STYLE.SMALL, color: colors.textMuted, hAlign: HALIGN.CENTER }),
+        plainText(caption, { style: TEXT_STYLE.SMALL, color: colors.textMuted, hAlign: HALIGN.CENTER }),
       ),
     ),
 });

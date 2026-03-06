@@ -7,7 +7,6 @@ export { LayoutValidationError, type SlideValidationResult, type ValidationResul
 export {
   HALIGN, HALIGN_VALUES,
   VALIGN, VALIGN_VALUES,
-  CONTENT, CONTENT_VALUES,
   GAP, GAP_VALUES,
   DIRECTION,
   SIZE, SIZE_VALUES,
@@ -25,7 +24,6 @@ export {
 } from './core/model/types.js';
 export type {
   HorizontalAlignment, VerticalAlignment,
-  ContentType,
   GapSize,
   Direction,
   SizeValue,

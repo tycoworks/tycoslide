@@ -1,13 +1,11 @@
 // Text Component
 // Internal-only component — not reachable via :::text directive in markdown.
 // Available to layout TypeScript authors via text() DSL function.
-// Two content modes (default: CONTENT.RICH):
-//   CONTENT.PLAIN — no parsing, single run (eyebrows, attributions, copyright)
-//   CONTENT.RICH  — inline-only rich text (bold, italic, :color[highlights], no bullets/paragraphs)
+// Always uses rich text (inline formatting only): bold, italic, :color[highlights], no bullets/paragraphs.
 
 import type { RootContent, Heading } from 'mdast';
-import type { NormalizedRun, ContentType, TextStyleName, HorizontalAlignment, VerticalAlignment, ExpansionContext } from 'tycoslide';
-import { HALIGN, VALIGN, TEXT_STYLE, CONTENT, SYNTAX, extractSource } from 'tycoslide';
+import type { NormalizedRun, TextStyleName, HorizontalAlignment, VerticalAlignment, ExpansionContext } from 'tycoslide';
+import { HALIGN, VALIGN, TEXT_STYLE, SYNTAX, extractSource } from 'tycoslide';
 import { NODE_TYPE, type ElementNode } from 'tycoslide';
 import { defineComponent, component, type ComponentNode, type SchemaShape } from 'tycoslide';
 import { schema } from 'tycoslide';
@@ -45,7 +43,6 @@ const textSchema = {
  *  DSL callers can pass styling props (color, lineHeightMultiplier)
  *  that are NOT in the directive schema — only available to TypeScript developers. */
 export interface TextProps {
-  content?: ContentType;
   style?: TextStyleName;
   color?: string;
   hAlign?: HorizontalAlignment;
@@ -56,8 +53,8 @@ export interface TextProps {
   variant?: string;
 }
 
-/** Full props including body content and content kind (used internally by expansion) */
-export type TextComponentProps = { body: string; content?: ContentType } & TextProps;
+/** Full props including body content (used internally by expansion) */
+export type TextComponentProps = { body: string } & TextProps;
 
 // ============================================
 // HEADING STYLE MAP (exported for document component)
@@ -71,12 +68,10 @@ export const HEADING_STYLE: Record<number, TextProps['style']> = {
 };
 
 // ============================================
-// EXPAND — single function, switches on content kind
+// EXPAND — always rich text (inline markdown)
 // ============================================
 
 function expandText(props: TextComponentProps, context: ExpansionContext, tokens: TextTokens): ElementNode {
-  const contentKind = props.content ?? CONTENT.RICH;
-
   // Props override tokens: DSL/parent callers can pass explicit values
   const resolvedStyle = props.style ?? tokens.style;
   const resolvedColor = props.color ?? tokens.color;
@@ -86,31 +81,14 @@ function expandText(props: TextComponentProps, context: ExpansionContext, tokens
   const textStyle = context.theme.textStyles[resolvedStyle];
   const bulletIndentPt = textStyle.fontSize * context.theme.spacing.bulletIndentMultiplier;
 
-  // PLAIN — no parsing, single run
-  if (contentKind === CONTENT.PLAIN) {
-    return {
-      type: NODE_TYPE.TEXT,
-      content: [{ text: props.body }],
-      style: resolvedStyle,
-      resolvedStyle: textStyle,
-      color: resolvedColor,
-      hAlign: props.hAlign ?? HALIGN.LEFT,
-      vAlign: props.vAlign ?? VALIGN.TOP,
-      lineHeightMultiplier: resolvedLineHeight,
-      bulletIndentPt,
-      linkColor: resolvedLinkColor,
-      linkUnderline: resolvedLinkUnderline,
-    };
-  }
-
-  // RICH — parse inline markdown only
+  // Parse inline markdown only (bold, italic, :color[highlights])
   const tree = inlineParse(props.body);
 
   // Validate single paragraph (no multi-block)
   const blocks = tree.children.filter(c => c.type !== SYNTAX.THEMATIC_BREAK);
   if (blocks.length > 1 || (blocks.length === 1 && blocks[0].type !== SYNTAX.PARAGRAPH)) {
     throw new Error(
-      `text() with CONTENT.RICH only supports inline formatting (bold, italic, colors). ` +
+      `text() only supports inline formatting (bold, italic, colors). ` +
       `For bullets, use the list component.`
     );
   }
@@ -155,7 +133,7 @@ export const textComponent = defineComponent({
         const style = HEADING_STYLE[heading.depth] ?? TEXT_STYLE.H3;
         const raw = extractSource(heading, source);
         const content = raw.replace(/^#{1,6}\s*/, '');
-        return component(Component.Text, { body: content, content: CONTENT.RICH, style });
+        return component(Component.Text, { body: content, style });
       }
       if (node.type === SYNTAX.PARAGRAPH) {
         const para = node as { children: { type: string }[] };
@@ -163,7 +141,7 @@ export const textComponent = defineComponent({
           throw new Error('Images cannot be embedded inline in text. Use :::image directive.');
         }
       }
-      return component(Component.Text, { body: extractSource(node, source), content: CONTENT.RICH });
+      return component(Component.Text, { body: extractSource(node, source) });
     },
   },
   expand: expandText,
@@ -175,15 +153,13 @@ export const textComponent = defineComponent({
 
 /**
  * Create a text component node.
- * Default content mode is CONTENT.RICH (inline formatting only).
  *
  * @example
  * ```typescript
  * text("1. Problem statement", { style: TEXT_STYLE.H4 })
  * text("**Bold** and :teal[highlighted]")
- * text("ARCHITECTURE", { content: CONTENT.PLAIN, style: TEXT_STYLE.EYEBROW })
  * ```
  */
 export function text(body: string, props?: TextProps): ComponentNode<TextComponentProps> {
-  return component(Component.Text, { body, content: CONTENT.RICH, ...props });
+  return component(Component.Text, { body, ...props });
 }

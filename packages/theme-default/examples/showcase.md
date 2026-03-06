@@ -175,7 +175,7 @@ await pres.build('output.pptx');
 layout: body
 title: Rich Text Formatting
 eyebrow: Inline Styles
-notes: Demonstrates all inline formatting options available in CONTENT.RICH mode.
+notes: Demonstrates all inline text formatting options available.
 ---
 
 tycoslide supports a full range of inline formatting:

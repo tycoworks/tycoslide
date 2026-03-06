@@ -114,6 +114,11 @@ export function mockTheme(options?: {
       linkColor: '0000FF',
       linkUnderline: true,
     },
+    plainText: {
+      color: '000000',
+      style: TEXT_STYLE.BODY,
+      lineHeightMultiplier: lineSpacing,
+    },
     code: {
       backgroundColor: '1E1E1E',
       textColor: 'D4D4D4',

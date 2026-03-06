@@ -4,7 +4,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { text } from '../src/text.js';
-import { CONTENT, HALIGN, VALIGN, NODE_TYPE, TEXT_STYLE, componentRegistry } from 'tycoslide';
+import { plainText } from '../src/plainText.js';
+import { HALIGN, VALIGN, NODE_TYPE, TEXT_STYLE, componentRegistry } from 'tycoslide';
 import { Component } from '../src/names.js';
 import type { NormalizedRun } from 'tycoslide';
 import { mockTheme, noopCanvas } from './mocks.js';
@@ -13,7 +14,7 @@ import {
   tableComponent, codeComponent, mermaidComponent,
   lineComponent, shapeComponent, slideNumberComponent,
   rowComponent, columnComponent, stackComponent, gridComponent,
-  listComponent,
+  listComponent, plainTextComponent,
 } from '../src/index.js';
 
 // Register components explicitly
@@ -22,7 +23,7 @@ componentRegistry.register([
   tableComponent, codeComponent, mermaidComponent,
   lineComponent, shapeComponent, slideNumberComponent,
   rowComponent, columnComponent, stackComponent, gridComponent,
-  listComponent,
+  listComponent, plainTextComponent,
 ]);
 
 // Test accents for directive resolution
@@ -44,32 +45,31 @@ function themeWithAccents() {
 }
 
 describe('Text', () => {
-  describe('text() with CONTENT.PLAIN', () => {
-    it('should create a component node with plain content kind', () => {
-      const node = text('ARCHITECTURE', { content: CONTENT.PLAIN });
+  describe('plainText() DSL', () => {
+    it('should create a component node with plainText component name', () => {
+      const node = plainText('ARCHITECTURE');
       assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-      assert.strictEqual(node.componentName, Component.Text);
+      assert.strictEqual(node.componentName, 'plainText');
       assert.strictEqual(node.props.body, 'ARCHITECTURE');
-      assert.strictEqual(node.props.content, CONTENT.PLAIN);
     });
 
     it('should pass props correctly', () => {
-      const node = text('Label', { content: CONTENT.PLAIN, style: TEXT_STYLE.EYEBROW as any, color: 'FF0000' });
+      const node = plainText('Label', { style: TEXT_STYLE.EYEBROW as any, color: 'FF0000' });
       assert.strictEqual(node.props.body, 'Label');
       assert.strictEqual(node.props.style, 'eyebrow');
       assert.strictEqual(node.props.color, 'FF0000');
     });
   });
 
-  describe('CONTENT.PLAIN expansion', () => {
+  describe('plainText expansion', () => {
     const theme = themeWithAccents();
 
     it('should be available after register()', () => {
-      assert.ok(componentRegistry.has(Component.Text));
+      assert.ok(componentRegistry.has('plainText'));
     });
 
     it('should expand to a TextNode with single run', async () => {
-      const node = text('Hello world', { content: CONTENT.PLAIN });
+      const node = plainText('Hello world');
       const expanded = await componentRegistry.expand(node, { theme, canvas: noopCanvas() }) as any;
       assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
       const runs = expanded.content as NormalizedRun[];
@@ -78,7 +78,7 @@ describe('Text', () => {
     });
 
     it('should NOT parse markdown — bold stays literal', async () => {
-      const node = text('**not bold**', { content: CONTENT.PLAIN });
+      const node = plainText('**not bold**');
       const expanded = await componentRegistry.expand(node, { theme, canvas: noopCanvas() }) as any;
       const runs = expanded.content as NormalizedRun[];
       assert.strictEqual(runs.length, 1);
@@ -87,7 +87,7 @@ describe('Text', () => {
     });
 
     it('should NOT parse directives — stays literal', async () => {
-      const node = text(':teal[not highlighted]', { content: CONTENT.PLAIN });
+      const node = plainText(':teal[not highlighted]');
       const expanded = await componentRegistry.expand(node, { theme, canvas: noopCanvas() }) as any;
       const runs = expanded.content as NormalizedRun[];
       assert.strictEqual(runs.length, 1);
@@ -96,7 +96,7 @@ describe('Text', () => {
     });
 
     it('should apply style, color, and alignment', async () => {
-      const node = text('Label', { content: CONTENT.PLAIN, style: TEXT_STYLE.BODY as any, color: 'AABBCC', hAlign: HALIGN.CENTER as any, vAlign: VALIGN.MIDDLE as any });
+      const node = plainText('Label', { style: TEXT_STYLE.BODY as any, color: 'AABBCC', hAlign: HALIGN.CENTER as any, vAlign: VALIGN.MIDDLE as any });
       const expanded = await componentRegistry.expand(node, { theme, canvas: noopCanvas() }) as any;
       assert.strictEqual(expanded.style, 'body');
       assert.strictEqual(expanded.color, 'AABBCC');
@@ -105,10 +105,17 @@ describe('Text', () => {
     });
 
     it('should default hAlign to LEFT and vAlign to TOP', async () => {
-      const node = text('Label', { content: CONTENT.PLAIN });
+      const node = plainText('Label');
       const expanded = await componentRegistry.expand(node, { theme, canvas: noopCanvas() }) as any;
       assert.strictEqual(expanded.hAlign, HALIGN.LEFT);
       assert.strictEqual(expanded.vAlign, VALIGN.TOP);
+    });
+
+    it('should hardcode linkColor to text color and linkUnderline to false', async () => {
+      const node = plainText('Label');
+      const expanded = await componentRegistry.expand(node, { theme, canvas: noopCanvas() }) as any;
+      assert.strictEqual(expanded.linkColor, expanded.color);
+      assert.strictEqual(expanded.linkUnderline, false);
     });
   });
 
@@ -119,10 +126,10 @@ describe('Text', () => {
       return { theme, canvas: noopCanvas() };
     }
 
-    it('should create a text component node with rich content kind', () => {
+    it('should create a text component node', () => {
       const node = text('Hello **world**');
       assert.strictEqual(node.componentName, Component.Text);
-      assert.strictEqual(node.props.content, CONTENT.RICH);
+      assert.strictEqual(node.props.body, 'Hello **world**');
     });
 
     it('should be registered', () => {

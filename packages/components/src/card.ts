@@ -3,7 +3,7 @@
 
 import {
   defineComponent, component, type ExpansionContext, type InferProps, type SchemaShape,
-  type SlideNode, SHAPE, SIZE, CONTENT, schema,
+  type SlideNode, SHAPE, SIZE, schema,
   type TextStyleName, type GapSize, type HorizontalAlignment, type VerticalAlignment,
 } from 'tycoslide';
 import { Component } from './names.js';
@@ -125,7 +125,6 @@ function expandCard(props: CardProps & { body?: string }, context: ExpansionCont
 
   if (actualDescription) {
     children.push(text(actualDescription, {
-      content: CONTENT.RICH,
       style: descriptionStyle,
       color: descriptionColor,
       lineHeightMultiplier: descriptionLineHeightMultiplier,

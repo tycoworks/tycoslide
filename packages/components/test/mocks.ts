@@ -90,8 +90,6 @@ export function mockTheme(options?: {
       attributionStyle: TEXT_STYLE.SMALL,
       attributionColor: '666666',
       attributionLineHeightMultiplier: lineSpacing,
-      attributionLinkColor: '0000FF',
-      attributionLinkUnderline: false,
       gap: GAP.TIGHT,
     },
     [Component.Testimonial]: {
@@ -109,8 +107,6 @@ export function mockTheme(options?: {
       attributionStyle: TEXT_STYLE.SMALL,
       attributionColor: '666666',
       attributionLineHeightMultiplier: lineSpacing,
-      attributionLinkColor: '0000FF',
-      attributionLinkUnderline: false,
       attributionHAlign: HALIGN.RIGHT,
       gap: GAP.NORMAL,
       hAlign: HALIGN.CENTER,
@@ -152,6 +148,11 @@ export function mockTheme(options?: {
       lineHeightMultiplier: lineSpacing,
       linkColor: '0000FF',
       linkUnderline: true,
+    },
+    [Component.PlainText]: {
+      color: '000000',
+      style: TEXT_STYLE.BODY,
+      lineHeightMultiplier: lineSpacing,
     },
     [Component.List]: {
       color: '000000',

@@ -66,6 +66,16 @@ export {
   type TextComponentProps,
 } from './text.js';
 
+// PlainText (plain string text — no markdown, no link tokens)
+export {
+  plainText,
+  plainTextComponent,
+  PLAIN_TEXT_TOKEN,
+  type PlainTextTokens,
+  type PlainTextProps,
+  type PlainTextComponentProps,
+} from './plainText.js';
+
 // List
 export {
   list,

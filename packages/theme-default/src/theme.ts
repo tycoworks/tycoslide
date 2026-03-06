@@ -169,8 +169,6 @@ export const theme: Theme = {
           attributionStyle: TEXT_STYLE.SMALL,
           attributionColor: colors.textMuted,
           attributionLineHeightMultiplier: 1.0,
-          attributionLinkColor: colors.primary,
-          attributionLinkUnderline: false,
           gap: GAP.NORMAL,
         },
       },
@@ -192,8 +190,6 @@ export const theme: Theme = {
           attributionStyle: TEXT_STYLE.SMALL,
           attributionColor: colors.textMuted,
           attributionLineHeightMultiplier: 1.0,
-          attributionLinkColor: colors.primary,
-          attributionLinkUnderline: false,
           attributionHAlign: HALIGN.RIGHT,
           gap: GAP.NORMAL,
           hAlign: HALIGN.CENTER,
@@ -250,6 +246,30 @@ export const theme: Theme = {
         muted:    { ...textBase, color: colors.textMuted, linkColor: colors.primary, linkUnderline: true },
         accent:  { ...textBase, color: colors.accents.blue, linkColor: colors.accents.blue, linkUnderline: true },
         inverse: { ...textBase, color: colors.background, linkColor: colors.background, linkUnderline: true },
+      },
+    },
+    plainText: {
+      variants: {
+        default: {
+          style: TEXT_STYLE.BODY,
+          color: colors.text,
+          lineHeightMultiplier: spacing.lineSpacing,
+        },
+        eyebrow: {
+          style: TEXT_STYLE.EYEBROW,
+          color: colors.primary,
+          lineHeightMultiplier: 1.0,
+        },
+        muted: {
+          style: TEXT_STYLE.BODY,
+          color: colors.textMuted,
+          lineHeightMultiplier: spacing.lineSpacing,
+        },
+        inverse: {
+          style: TEXT_STYLE.BODY,
+          color: colors.onPrimary,
+          lineHeightMultiplier: spacing.lineSpacing,
+        },
       },
     },
     list: {
