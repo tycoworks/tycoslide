@@ -384,7 +384,8 @@ export const TEXT_STYLE = {
   CODE: 'code',
 } as const;
 
-export type TextStyleName = typeof TEXT_STYLE[keyof typeof TEXT_STYLE];
+/** Well-known text style names from TEXT_STYLE, plus any theme-defined custom names. */
+export type TextStyleName = (typeof TEXT_STYLE)[keyof typeof TEXT_STYLE] | (string & {});
 
 /** All TEXT_STYLE values as a tuple — useful for Zod enum schemas */
 export const TEXT_STYLE_VALUES = Object.values(TEXT_STYLE) as [TextStyleName, ...TextStyleName[]];
@@ -482,7 +483,7 @@ export interface Theme {
   /** Explicit font manifest. Every font the theme uses must be listed here.
    *  `generateFontFaceCSS()` reads exclusively from this list. */
   fonts: FontFamily[];
-  textStyles: { [K in TextStyleName]: TextStyle };
+  textStyles: Record<string, TextStyle>;
   /** Layout tokens. Each layout that declares token keys gets its visual values from here. */
   layouts: Record<string, {
     variants: { [DEFAULT_VARIANT]: Record<string, unknown> } & Record<string, Record<string, unknown>>;

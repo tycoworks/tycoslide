@@ -885,7 +885,7 @@ export function generateFontFaceCSS(theme: Theme): { css: string; fonts: FontDes
   // Validate before cache check — same font CSS can be cached,
   // but different themes may have different textStyles/components referencing unregistered fonts.
   const registeredPaths = new Set(fontPaths);
-  for (const styleName of Object.keys(theme.textStyles) as (keyof typeof theme.textStyles)[]) {
+  for (const styleName of Object.keys(theme.textStyles)) {
     const style = theme.textStyles[styleName];
     for (const weight of WEIGHT_KEYS) {
       const font = style.fontFamily[weight];
@@ -992,7 +992,7 @@ export async function measureFontNormalRatios(page: Page, theme: Theme): Promise
   await preloadFonts(page, fonts);
 
   const fontNames = new Set<string>();
-  for (const styleName of Object.keys(theme.textStyles) as (keyof typeof theme.textStyles)[]) {
+  for (const styleName of Object.keys(theme.textStyles)) {
     const style = theme.textStyles[styleName];
     for (const font of Object.values(style.fontFamily)) {
       if (font?.name) fontNames.add(font.name);
