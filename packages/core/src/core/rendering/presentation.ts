@@ -156,17 +156,19 @@ export class Presentation {
         master: Master;
         content: ElementNode;
         contentBounds: Bounds;
+        background: string;
       }>();
 
       for (const deferred of this.deferredSlides) {
         const { master } = deferred.slide;
         if (master && !this.masters.has(master.name) && !pendingMasters.has(master.name)) {
-          const { content: rawMasterContent, contentBounds } = master.getContent(this._theme);
+          const { content: rawMasterContent, contentBounds, background } = master.getContent(this._theme);
           const masterContent = await componentRegistry.expandTree(rawMasterContent, expansionContext);
           pendingMasters.set(master.name, {
             master,
             content: masterContent,
             contentBounds,
+            background,
           });
           // Collect measurements from master content (full slide — masters position their own elements)
           pipeline.collectFromTree(masterContent, this.masterBounds, `master-${master.name}`);
@@ -218,12 +220,12 @@ export class Presentation {
 
       // Phase 4: Compute master layouts
       const masterPositionedMap = new Map<string, PositionedNode>();
-      for (const [name, { master, content, contentBounds }] of pendingMasters) {
+      for (const [name, { content, contentBounds, background }] of pendingMasters) {
         log.pptx.master('DEFINE master "%s" (with measurements)', name);
         const positioned = pipeline.computeLayout(content, this.masterBounds);
         masterPositionedMap.set(name, positioned);
         if (!options?.preview) {
-          this.renderer.defineMaster({ name, background: master.background, content: positioned });
+          this.renderer.defineMaster({ name, background, content: positioned });
           this.masters.set(name, { contentBounds, positioned });
         }
       }

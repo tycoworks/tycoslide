@@ -454,12 +454,34 @@ export const DEFAULT_VARIANT = 'default' as const;
 // SLIDE & MASTER TYPES
 // ============================================
 
+/** Typed token shape for the default master slide.
+ *  Defines background, footer chrome, and slide number styling.
+ *  Sub-object shapes match PlainTextTokens / SlideNumberTokens
+ *  (structurally compatible without cross-package imports). */
+export interface MasterTokens {
+  background: string;
+  footerHeight: number;
+  footerText: string;
+  slideNumber: {
+    style: TextStyleName;
+    color: string;
+    hAlign: HorizontalAlignment;
+    vAlign: VerticalAlignment;
+  };
+  footer: {
+    style: TextStyleName;
+    color: string;
+    hAlign: HorizontalAlignment;
+    vAlign: VerticalAlignment;
+  };
+}
+
 export interface Master {
   name: string;
-  background: string;
   getContent(theme: Theme): {
     content: ComponentNode;     // Master's visual elements (full-slide layout tree)
     contentBounds: Bounds;     // Where per-slide content goes
+    background: string;        // Slide background (from tokens)
   };
 }
 
@@ -488,7 +510,6 @@ export interface Theme {
   layouts: Record<string, {
     variants: { [DEFAULT_VARIANT]: Record<string, unknown> } & Record<string, Record<string, unknown>>;
   }>;
-  /** Master slide tokens. Provides visual treatment for the master slide's
-   *  slideNumber and footer components. Keys are component-specific token maps. */
-  master: Record<string, unknown>;
+  /** Master slide tokens. Background, footer chrome, and slide number styling. */
+  master: MasterTokens;
 }

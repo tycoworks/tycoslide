@@ -43,7 +43,13 @@ function minimalTheme(): Theme {
     fonts: [],
     textStyles: {} as any,
     layouts: {},
-    master: {},
+    master: {
+      background: 'FFFFFF',
+      footerHeight: 0.3,
+      footerText: 'test',
+      slideNumber: { style: 'footer', color: '999999', hAlign: HALIGN.RIGHT, vAlign: VALIGN.MIDDLE },
+      footer: { style: 'footer', color: '999999', hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
+    },
   };
 }
 

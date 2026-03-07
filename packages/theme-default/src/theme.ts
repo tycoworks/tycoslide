@@ -533,7 +533,9 @@ export const theme = {
     },
   },
   master: {
+    background: colors.background,
     footerHeight,
+    footerText: 'tycoworks',
     slideNumber: {
       style: TEXT_STYLE.FOOTER,
       color: colors.textMuted,

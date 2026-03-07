@@ -40,7 +40,7 @@ export type {
   TextStyle,
   HighlightPair,
   NormalizedRun,
-  Master, Slide, Theme,
+  Master, MasterTokens, Slide, Theme,
   TextRun, TextContent,
 } from './core/model/types.js';
 

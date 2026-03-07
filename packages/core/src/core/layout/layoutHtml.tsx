@@ -924,7 +924,7 @@ export function generateFontFaceCSS(theme: Theme): { css: string; fonts: FontDes
   }
 
   if (theme.master) {
-    walkTokensForFonts(theme.master, 'master');
+    walkTokensForFonts(theme.master as unknown as Record<string, unknown>, 'master');
   }
 
   // Cache check (after validation — validation must always run)

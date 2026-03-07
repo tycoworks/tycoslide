@@ -10,12 +10,10 @@ import {
   type Theme,
 } from 'tycoslide';
 import { row, column, plainText, slideNumber } from 'tycoslide-components';
-import type { PlainTextTokens, SlideNumberTokens } from 'tycoslide-components';
 
 function masterContent(t: Theme) {
   const { width, height, margin } = t.slide;
-  const masterTokens = t.master as { footerHeight: number; slideNumber: SlideNumberTokens; footer: PlainTextTokens };
-  const { footerHeight } = masterTokens;
+  const { background, footerHeight, footerText, slideNumber: slideNumberTokens, footer: footerTokens } = t.master;
 
   const contentBounds = new Bounds(
     margin,
@@ -28,16 +26,15 @@ function masterContent(t: Theme) {
     { height: SIZE.FILL, vAlign: VALIGN.BOTTOM, padding: margin },
     row(
       { gap: GAP.TIGHT, height: footerHeight, vAlign: VALIGN.MIDDLE },
-      plainText('tycoworks', masterTokens.footer),
-      slideNumber(masterTokens.slideNumber),
+      plainText(footerText, footerTokens),
+      slideNumber(slideNumberTokens),
     ),
   );
 
-  return { content, contentBounds };
+  return { content, contentBounds, background };
 }
 
 export const DEFAULT_MASTER: Master = {
   name: 'DEFAULT',
-  background: 'FFFFFF',
   getContent: masterContent,
 };

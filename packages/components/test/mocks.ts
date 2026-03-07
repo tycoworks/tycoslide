@@ -54,7 +54,13 @@ export function mockTheme(options?: {
       [TEXT_STYLE.CODE]: mockTextStyle,
     },
     layouts: {},
-    master: {},
+    master: {
+      background: 'FFFFFF',
+      footerHeight: 0.3,
+      footerText: 'test',
+      slideNumber: { style: TEXT_STYLE.FOOTER, color: '999999', hAlign: HALIGN.RIGHT, vAlign: VALIGN.MIDDLE },
+      footer: { style: TEXT_STYLE.FOOTER, color: '999999', hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
+    },
   };
 }
 
