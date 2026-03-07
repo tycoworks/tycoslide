@@ -15,7 +15,6 @@ import { transformInline, inlineParse } from './utils/inline.js';
 export const TEXT_TOKEN = {
   COLOR: 'color',
   STYLE: 'style',
-  LINE_HEIGHT_MULTIPLIER: 'lineHeightMultiplier',
   LINK_COLOR: 'linkColor',
   LINK_UNDERLINE: 'linkUnderline',
   HALIGN: 'hAlign',
@@ -26,7 +25,6 @@ export const TEXT_TOKEN = {
 export type TextTokens = {
   [TEXT_TOKEN.COLOR]: string;
   [TEXT_TOKEN.STYLE]: TextStyleName;
-  [TEXT_TOKEN.LINE_HEIGHT_MULTIPLIER]: number;
   [TEXT_TOKEN.LINK_COLOR]: string;
   [TEXT_TOKEN.LINK_UNDERLINE]: boolean;
   [TEXT_TOKEN.HALIGN]: HorizontalAlignment;
@@ -58,7 +56,7 @@ export const HEADING_STYLE: Record<number, TextStyleName> = {
 
 function expandText(props: TextComponentProps, context: ExpansionContext, tokens: TextTokens): ElementNode {
   const textStyle = context.theme.textStyles[tokens.style];
-  const bulletIndentPt = textStyle.fontSize * context.theme.spacing.bulletIndentMultiplier;
+  const bulletIndentPt = textStyle.fontSize * textStyle.bulletIndentMultiplier;
 
   // Parse inline markdown only (bold, italic, :color[highlights])
   const tree = inlineParse(props.body);
@@ -87,7 +85,7 @@ function expandText(props: TextComponentProps, context: ExpansionContext, tokens
     color: tokens.color,
     hAlign: tokens.hAlign,
     vAlign: tokens.vAlign,
-    lineHeightMultiplier: tokens.lineHeightMultiplier,
+    lineHeightMultiplier: textStyle.lineHeightMultiplier,
     bulletIndentPt,
     linkColor: tokens.linkColor,
     linkUnderline: tokens.linkUnderline,

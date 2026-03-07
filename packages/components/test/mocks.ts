@@ -22,6 +22,8 @@ const mockTextStyle: TextStyle = {
   fontSize: 12,
   fontFamily: mockFontFamily,
   defaultWeight: FONT_WEIGHT.NORMAL,
+  lineHeightMultiplier: 1.0,
+  bulletIndentMultiplier: 1.5,
 };
 
 /**
@@ -32,37 +34,13 @@ export function mockTheme(options?: {
   gap?: number;
   gapTight?: number;
   gapLoose?: number;
-  padding?: number;
-  cellPadding?: number;
-  bulletSpacing?: number;
-  margin?: number;
-  maxScaleFactor?: number;
-  lineSpacing?: number;
 }): Theme {
   const gap = options?.gap ?? 0.25;
   const gapTight = options?.gapTight ?? 0.125;
   const gapLoose = options?.gapLoose ?? 0.5;
-  const padding = options?.padding ?? 0.25;
-  const cellPadding = options?.cellPadding ?? 0.1;
-  const bulletSpacing = options?.bulletSpacing ?? 1.2;
-  const margin = options?.margin ?? 0.5;
-  const maxScaleFactor = options?.maxScaleFactor ?? 1.0;
-  const lineSpacing = options?.lineSpacing ?? 1.0;
   return {
-    slide: { layout: 'CUSTOM' as const, width: 13.333, height: 7.5 },
-    spacing: {
-      unit: 0.03125,
-      gap,
-      gapTight,
-      gapLoose,
-      padding,
-      cellPadding,
-      bulletSpacing,
-      bulletIndentMultiplier: 1.5,
-      margin,
-      maxScaleFactor,
-      lineSpacing,
-    },
+    slide: { layout: 'CUSTOM' as const, width: 13.333, height: 7.5, margin: 0.5 },
+    spacing: { normal: gap, tight: gapTight, loose: gapLoose },
     fonts: [mockFontFamily],
     textStyles: {
       [TEXT_STYLE.H1]: mockTextStyle,
@@ -86,7 +64,6 @@ export function mockTheme(options?: {
 export const DEFAULT_TEXT_TOKENS: TextTokens = {
   color: '000000',
   style: TEXT_STYLE.BODY,
-  lineHeightMultiplier: 1.0,
   linkColor: '0000FF',
   linkUnderline: true,
   hAlign: HALIGN.LEFT,
@@ -97,7 +74,6 @@ export const DEFAULT_TEXT_TOKENS: TextTokens = {
 export const DEFAULT_PLAIN_TEXT_TOKENS: PlainTextTokens = {
   color: '000000',
   style: TEXT_STYLE.BODY,
-  lineHeightMultiplier: 1.0,
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.TOP,
 };
@@ -105,7 +81,6 @@ export const DEFAULT_PLAIN_TEXT_TOKENS: PlainTextTokens = {
 export const DEFAULT_LIST_TOKENS: ListTokens = {
   color: '000000',
   style: TEXT_STYLE.BODY,
-  lineHeightMultiplier: 1.0,
   linkColor: '0000FF',
   linkUnderline: true,
   hAlign: HALIGN.LEFT,
@@ -185,7 +160,6 @@ export const DEFAULT_CARD_TOKENS: CardTokens = {
   title: {
     style: TEXT_STYLE.H4,
     color: 'FFFFFF',
-    lineHeightMultiplier: 1.0,
     linkColor: '0000FF',
     linkUnderline: true,
     hAlign: HALIGN.CENTER,
@@ -195,7 +169,6 @@ export const DEFAULT_CARD_TOKENS: CardTokens = {
   description: {
     style: TEXT_STYLE.SMALL,
     color: 'CCCCCC',
-    lineHeightMultiplier: 1.0,
     linkColor: '0000FF',
     linkUnderline: true,
     hAlign: HALIGN.CENTER,
@@ -214,7 +187,6 @@ export const DEFAULT_QUOTE_TOKENS: QuoteTokens = {
   quote: {
     style: TEXT_STYLE.BODY,
     color: 'FFFFFF',
-    lineHeightMultiplier: 1.0,
     linkColor: '0000FF',
     linkUnderline: true,
     hAlign: HALIGN.LEFT,
@@ -224,7 +196,6 @@ export const DEFAULT_QUOTE_TOKENS: QuoteTokens = {
   attribution: {
     style: TEXT_STYLE.SMALL,
     color: '666666',
-    lineHeightMultiplier: 1.0,
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.TOP,
   },
@@ -245,7 +216,6 @@ export const DEFAULT_TESTIMONIAL_TOKENS: TestimonialTokens = {
   quote: {
     style: TEXT_STYLE.BODY,
     color: 'FFFFFF',
-    lineHeightMultiplier: 1.0,
     linkColor: '0000FF',
     linkUnderline: true,
     hAlign: HALIGN.CENTER,
@@ -255,7 +225,6 @@ export const DEFAULT_TESTIMONIAL_TOKENS: TestimonialTokens = {
   attribution: {
     style: TEXT_STYLE.SMALL,
     color: '666666',
-    lineHeightMultiplier: 1.0,
     hAlign: HALIGN.RIGHT,
     vAlign: VALIGN.TOP,
   },

@@ -51,19 +51,15 @@ export const colors = {
 
 const unit = 0.03125; // 1/32 inch
 
-const spacing = {
-  unit,
-  margin: unit * 16,       // 0.5"
-  gap: unit * 8,            // 0.25"
-  gapTight: unit * 4,       // 0.125"
-  gapLoose: unit * 16,      // 0.5"
-  padding: unit * 8,        // 0.25"
-  cellPadding: unit * 2,    // 0.0625"
-  bulletSpacing: 1.5,
-  bulletIndentMultiplier: 1.5,
-  maxScaleFactor: 1.0,
-  lineSpacing: 1.2,
-};
+// Derived spacing constants (local to theme construction, not on Theme type)
+const gap = unit * 8;             // 0.25"
+const gapTight = unit * 4;        // 0.125"
+const gapLoose = unit * 16;       // 0.5"
+const padding = unit * 8;         // 0.25"
+const cellPadding = unit * 2;     // 0.0625"
+const bulletIndentMultiplier = 1.5;
+const lineSpacing = 1.2;
+const footerHeight = unit * 8;
 
 // ============================================
 // BORDERS
@@ -79,7 +75,6 @@ const cornerRadius = 0.08;
 const cardTitle: TextTokens = {
   style: TEXT_STYLE.H4,
   color: colors.text,
-  lineHeightMultiplier: spacing.lineSpacing,
   linkColor: colors.primary,
   linkUnderline: true,
   hAlign: HALIGN.CENTER,
@@ -89,7 +84,6 @@ const cardTitle: TextTokens = {
 const cardDescription: TextTokens = {
   style: TEXT_STYLE.SMALL,
   color: colors.textMuted,
-  lineHeightMultiplier: spacing.lineSpacing,
   linkColor: colors.primary,
   linkUnderline: true,
   hAlign: HALIGN.CENTER,
@@ -100,7 +94,6 @@ const cardDescription: TextTokens = {
 const quoteText: TextTokens = {
   style: TEXT_STYLE.H3,
   color: colors.text,
-  lineHeightMultiplier: spacing.lineSpacing,
   linkColor: colors.primary,
   linkUnderline: true,
   hAlign: HALIGN.LEFT,
@@ -110,7 +103,6 @@ const quoteText: TextTokens = {
 const quoteAttribution: PlainTextTokens = {
   style: TEXT_STYLE.SMALL,
   color: colors.textMuted,
-  lineHeightMultiplier: 1.0,
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.MIDDLE,
 };
@@ -118,25 +110,25 @@ const quoteAttribution: PlainTextTokens = {
 // --- Shared layout token objects ---
 
 const headerTitle: PlainTextTokens = {
-  style: TEXT_STYLE.H3, color: colors.text, lineHeightMultiplier: spacing.lineSpacing,
+  style: TEXT_STYLE.H3, color: colors.text,
   hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE,
 };
 const headerEyebrow: PlainTextTokens = {
-  style: TEXT_STYLE.EYEBROW, color: colors.primary, lineHeightMultiplier: 1.0,
+  style: TEXT_STYLE.EYEBROW, color: colors.primary,
   hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE,
 };
 const bodyText: TextTokens = {
-  style: TEXT_STYLE.BODY, color: colors.text, lineHeightMultiplier: spacing.lineSpacing,
+  style: TEXT_STYLE.BODY, color: colors.text,
   linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE,
   accents: colors.accents,
 };
 const bodyList: ListTokens = {
-  style: TEXT_STYLE.BODY, color: colors.text, lineHeightMultiplier: spacing.lineSpacing,
+  style: TEXT_STYLE.BODY, color: colors.text,
   linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP,
   accents: colors.accents,
 };
 const mutedCaption: TextTokens = {
-  style: TEXT_STYLE.SMALL, color: colors.textMuted, lineHeightMultiplier: spacing.lineSpacing,
+  style: TEXT_STYLE.SMALL, color: colors.textMuted,
   linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
   accents: colors.accents,
 };
@@ -144,38 +136,38 @@ const mutedCaption: TextTokens = {
 // --- Dark-background (hero/section) token objects ---
 
 const heroTitle: PlainTextTokens = {
-  style: TEXT_STYLE.H1, color: colors.onPrimary, lineHeightMultiplier: spacing.lineSpacing,
+  style: TEXT_STYLE.H1, color: colors.onPrimary,
   hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
 };
 const heroSubtitle: PlainTextTokens = {
-  style: TEXT_STYLE.H3, color: colors.onPrimary, lineHeightMultiplier: spacing.lineSpacing,
+  style: TEXT_STYLE.H3, color: colors.onPrimary,
   hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
 };
 const sectionHeading: PlainTextTokens = {
-  style: TEXT_STYLE.H2, color: colors.onPrimary, lineHeightMultiplier: spacing.lineSpacing,
+  style: TEXT_STYLE.H2, color: colors.onPrimary,
   hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
 };
 
 // --- Layout-specific token objects ---
 
 const statValue: PlainTextTokens = {
-  style: TEXT_STYLE.H1, color: colors.text, lineHeightMultiplier: spacing.lineSpacing,
+  style: TEXT_STYLE.H1, color: colors.text,
   hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
 };
 const statLabel: PlainTextTokens = {
-  style: TEXT_STYLE.H3, color: colors.textMuted, lineHeightMultiplier: spacing.lineSpacing,
+  style: TEXT_STYLE.H3, color: colors.textMuted,
   hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
 };
 const subHeading: PlainTextTokens = {
-  style: TEXT_STYLE.H4, color: colors.text, lineHeightMultiplier: spacing.lineSpacing,
+  style: TEXT_STYLE.H4, color: colors.text,
   hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE,
 };
 const mutedBody: PlainTextTokens = {
-  style: TEXT_STYLE.BODY, color: colors.textMuted, lineHeightMultiplier: spacing.lineSpacing,
+  style: TEXT_STYLE.BODY, color: colors.textMuted,
   hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE,
 };
 const captionPlain: PlainTextTokens = {
-  style: TEXT_STYLE.SMALL, color: colors.textMuted, lineHeightMultiplier: spacing.lineSpacing,
+  style: TEXT_STYLE.SMALL, color: colors.textMuted,
   hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
 };
 
@@ -195,10 +187,10 @@ const tableTokens = {
   cellBackgroundOpacity: 0,
   cellTextStyle: TEXT_STYLE.BODY,
   cellTextColor: colors.text,
-  cellPadding: spacing.cellPadding,
+  cellPadding: cellPadding,
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.MIDDLE,
-  cellLineHeight: spacing.lineSpacing,
+  cellLineHeight: lineSpacing,
   linkColor: colors.primary,
   linkUnderline: true,
   accents: colors.accents,
@@ -218,7 +210,7 @@ const codeTokens = {
   fontSize: 11,
   fontFamily: assets.fonts.firaCode,
   lineHeight: 1.6,
-  padding: spacing.padding,
+  padding: padding,
   borderRadius: cornerRadius,
 };
 
@@ -241,7 +233,7 @@ const testimonialSlotTokens = {
     borderWidth,
     cornerRadius,
   },
-  padding: spacing.padding,
+  padding: padding,
   gap: GAP.TIGHT,
   hAlign: HALIGN.CENTER,
   vAlign: VALIGN.MIDDLE,
@@ -273,17 +265,17 @@ const mermaidTokens = {
 
 export const theme: Theme = {
   slide: SLIDE_SIZE.S16x9,
-  spacing,
+  spacing: { normal: gap, tight: gapTight, loose: gapLoose },
   fonts: [assets.fonts.inter, assets.fonts.firaCode],
   textStyles: {
-    h1: { fontFamily: assets.fonts.inter, fontSize: 48, defaultWeight: FONT_WEIGHT.LIGHT },
-    h2: { fontFamily: assets.fonts.inter, fontSize: 36, defaultWeight: FONT_WEIGHT.LIGHT },
-    h3: { fontFamily: assets.fonts.inter, fontSize: 24, defaultWeight: FONT_WEIGHT.LIGHT },
-    h4: { fontFamily: assets.fonts.inter, fontSize: 16, defaultWeight: FONT_WEIGHT.LIGHT },
-    body: { fontFamily: assets.fonts.inter, fontSize: 14, defaultWeight: FONT_WEIGHT.LIGHT },
-    small: { fontFamily: assets.fonts.inter, fontSize: 12, defaultWeight: FONT_WEIGHT.LIGHT },
-    eyebrow: { fontFamily: assets.fonts.inter, fontSize: 11, defaultWeight: FONT_WEIGHT.NORMAL },
-    footer: { fontFamily: assets.fonts.inter, fontSize: 8, defaultWeight: FONT_WEIGHT.LIGHT },
+    h1: { fontFamily: assets.fonts.inter, fontSize: 48, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: lineSpacing, bulletIndentMultiplier },
+    h2: { fontFamily: assets.fonts.inter, fontSize: 36, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: lineSpacing, bulletIndentMultiplier },
+    h3: { fontFamily: assets.fonts.inter, fontSize: 24, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: lineSpacing, bulletIndentMultiplier },
+    h4: { fontFamily: assets.fonts.inter, fontSize: 16, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: lineSpacing, bulletIndentMultiplier },
+    body: { fontFamily: assets.fonts.inter, fontSize: 14, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: lineSpacing, bulletIndentMultiplier },
+    small: { fontFamily: assets.fonts.inter, fontSize: 12, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: lineSpacing, bulletIndentMultiplier },
+    eyebrow: { fontFamily: assets.fonts.inter, fontSize: 11, defaultWeight: FONT_WEIGHT.NORMAL, lineHeightMultiplier: 1.0, bulletIndentMultiplier },
+    footer: { fontFamily: assets.fonts.inter, fontSize: 8, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: 1.0, bulletIndentMultiplier },
   },
   layouts: {
     title: {
@@ -446,7 +438,7 @@ export const theme: Theme = {
               borderWidth,
               cornerRadius,
             },
-            padding: spacing.padding,
+            padding: padding,
             gap: GAP.TIGHT,
             hAlign: HALIGN.CENTER,
             vAlign: VALIGN.TOP,
@@ -467,7 +459,7 @@ export const theme: Theme = {
               borderWidth: 0,
               cornerRadius,
             },
-            padding: spacing.padding,
+            padding: padding,
             gap: GAP.TIGHT,
             hAlign: HALIGN.CENTER,
             vAlign: VALIGN.TOP,
@@ -518,7 +510,7 @@ export const theme: Theme = {
               borderWidth: 0,
               cornerRadius,
             },
-            padding: spacing.padding,
+            padding: padding,
             gap: GAP.TIGHT,
             hAlign: HALIGN.CENTER,
             vAlign: VALIGN.TOP,
@@ -546,6 +538,7 @@ export const theme: Theme = {
     },
   },
   master: {
+    footerHeight,
     slideNumber: {
       style: TEXT_STYLE.FOOTER,
       color: colors.textMuted,
@@ -555,7 +548,6 @@ export const theme: Theme = {
     footer: {
       style: TEXT_STYLE.FOOTER,
       color: colors.textMuted,
-      lineHeightMultiplier: 1.0,
       hAlign: HALIGN.LEFT,
       vAlign: VALIGN.MIDDLE,
     },

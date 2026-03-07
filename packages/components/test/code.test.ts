@@ -466,8 +466,8 @@ describe('buildCodeTheme() — operator scope', () => {
 // ============================================
 
 describe('code expansion — additional', () => {
-  it('sets maxScale from theme.spacing.maxScaleFactor', async () => {
-    const theme = mockTheme({ maxScaleFactor: 2.5 });
+  it('sets maxScale to 1.0', async () => {
+    const theme = mockTheme();
     const canvas = noopCanvas();
     const context = { theme, assets: undefined, canvas } as any;
 
@@ -476,7 +476,7 @@ describe('code expansion — additional', () => {
     const result = await componentRegistry.expand(node, context);
 
     assert.strictEqual(result.type, NODE_TYPE.IMAGE);
-    assert.strictEqual((result as any).maxScale, 2.5);
+    assert.strictEqual((result as any).maxScale, 1.0);
   });
 
   it('trims whitespace from code before rendering', async () => {

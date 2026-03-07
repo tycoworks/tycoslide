@@ -48,7 +48,7 @@ export const textComponent = defineComponent({
     content: schema.string().optional(),
     variant: schema.string().optional(),
   },
-  tokens: ['color', 'style', 'lineHeightMultiplier', 'linkColor', 'linkUnderline', 'hAlign', 'vAlign'],
+  tokens: ['color', 'style', 'linkColor', 'linkUnderline', 'hAlign', 'vAlign'],
   mdast: {
     nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.HEADING, SYNTAX.LIST],
     compile: (node: RootContent, source: string): ComponentNode | null => {
@@ -78,7 +78,7 @@ export const textComponent = defineComponent({
       color: props.color ?? tokens?.color,
       hAlign: (props.hAlign ?? HALIGN.LEFT) as any,
       vAlign: (props.vAlign ?? VALIGN.TOP) as any,
-      lineHeightMultiplier: tokens?.lineHeightMultiplier ?? 1.2,
+      lineHeightMultiplier: (ctx.theme.textStyles as any)[style]?.lineHeightMultiplier ?? 1.0,
       bulletIndentPt: 18,
     };
   },

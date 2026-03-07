@@ -15,7 +15,6 @@ import { transformInline, inlineParse } from './utils/inline.js';
 export const LIST_TOKEN = {
   COLOR: 'color',
   STYLE: 'style',
-  LINE_HEIGHT_MULTIPLIER: 'lineHeightMultiplier',
   LINK_COLOR: 'linkColor',
   LINK_UNDERLINE: 'linkUnderline',
   HALIGN: 'hAlign',
@@ -26,7 +25,6 @@ export const LIST_TOKEN = {
 export type ListTokens = {
   [LIST_TOKEN.COLOR]: string;
   [LIST_TOKEN.STYLE]: TextStyleName;
-  [LIST_TOKEN.LINE_HEIGHT_MULTIPLIER]: number;
   [LIST_TOKEN.LINK_COLOR]: string;
   [LIST_TOKEN.LINK_UNDERLINE]: boolean;
   [LIST_TOKEN.HALIGN]: HorizontalAlignment;
@@ -46,7 +44,7 @@ type ListComponentProps = { body: string[]; ordered?: boolean };
 
 function expandList(props: ListComponentProps, context: ExpansionContext, tokens: ListTokens): ElementNode {
   const textStyle = context.theme.textStyles[tokens.style];
-  const bulletIndentPt = textStyle.fontSize * context.theme.spacing.bulletIndentMultiplier;
+  const bulletIndentPt = textStyle.fontSize * textStyle.bulletIndentMultiplier;
 
   const bulletType = props.ordered ? { type: 'number' as const } : true;
   const runs: NormalizedRun[] = [];
@@ -80,7 +78,7 @@ function expandList(props: ListComponentProps, context: ExpansionContext, tokens
     color: tokens.color,
     hAlign: tokens.hAlign,
     vAlign: tokens.vAlign,
-    lineHeightMultiplier: tokens.lineHeightMultiplier,
+    lineHeightMultiplier: textStyle.lineHeightMultiplier,
     bulletIndentPt,
     linkColor: tokens.linkColor,
     linkUnderline: tokens.linkUnderline,

@@ -95,7 +95,7 @@ export const imageComponent = defineComponent({
     if (src.startsWith(ASSET_PREFIX)) {
       src = resolveAssetPath(src, context.assets);
     }
-    return { type: NODE_TYPE.IMAGE, src, alt: props.alt, maxScale: context.theme.spacing.maxScaleFactor };
+    return { type: NODE_TYPE.IMAGE, src, alt: props.alt, maxScale: 1.0 };
   },
 });
 

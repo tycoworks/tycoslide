@@ -43,9 +43,9 @@ import { GAP } from '../core/model/types.js';
 export function resolveGap(gap: string | undefined, theme: Theme): number {
   switch (gap) {
     case GAP.NONE: return 0;
-    case GAP.TIGHT: return theme.spacing.gapTight;
-    case GAP.LOOSE: return theme.spacing.gapLoose;
+    case GAP.TIGHT: return theme.spacing.tight;
+    case GAP.LOOSE: return theme.spacing.loose;
     case GAP.NORMAL:
-    default: return theme.spacing.gap;
+    default: return theme.spacing.normal;
   }
 }

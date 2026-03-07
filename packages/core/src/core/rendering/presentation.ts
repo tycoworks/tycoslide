@@ -68,8 +68,7 @@ export class Presentation {
     this.renderer = new PptxRenderer(theme);
 
     // Calculate full slide bounds (no master - just margins)
-    const { margin } = theme.spacing;
-    const { width, height } = theme.slide;
+    const { width, height, margin } = theme.slide;
     this.fullBounds = new Bounds(width, height, margin);
     this.masterBounds = new Bounds(width, height);  // Full slide — masters position their own content
   }

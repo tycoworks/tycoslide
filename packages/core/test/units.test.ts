@@ -23,22 +23,22 @@ describe('resolveGap()', () => {
     assert.strictEqual(result, 0);
   });
 
-  it('should resolve GAP.TIGHT to theme.spacing.gapTight', () => {
+  it('should resolve GAP.TIGHT to theme.spacing.tight', () => {
     const result = resolveGap(GAP.TIGHT, theme);
     assert.strictEqual(result, 0.125);
   });
 
-  it('should resolve GAP.NORMAL to theme.spacing.gap', () => {
+  it('should resolve GAP.NORMAL to theme.spacing.normal', () => {
     const result = resolveGap(GAP.NORMAL, theme);
     assert.strictEqual(result, 0.25);
   });
 
-  it('should resolve GAP.LOOSE to theme.spacing.gapLoose', () => {
+  it('should resolve GAP.LOOSE to theme.spacing.loose', () => {
     const result = resolveGap(GAP.LOOSE, theme);
     assert.strictEqual(result, 0.5);
   });
 
-  it('should resolve undefined to theme.spacing.gap (default)', () => {
+  it('should resolve undefined to theme.spacing.normal (default)', () => {
     const result = resolveGap(undefined, theme);
     assert.strictEqual(result, 0.25);
   });

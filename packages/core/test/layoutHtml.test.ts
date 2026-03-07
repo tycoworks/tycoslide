@@ -23,9 +23,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const testImage = path.join(__dirname, 'fixtures', 'test.png');
 
 const mockTheme = createMockTheme({
-  maxScaleFactor: 2.0,
-  lineSpacing: 1.2,
-  slide: { layout: 'LAYOUT_16x9', width: 10, height: 5.625 },
+  slide: { layout: 'LAYOUT_16x9', width: 10, height: 5.625, margin: 0.5 } as any,
   textStyles: {
     [TEXT_STYLE.H1]: { fontSize: 36 },
     [TEXT_STYLE.H2]: { fontSize: 28 },

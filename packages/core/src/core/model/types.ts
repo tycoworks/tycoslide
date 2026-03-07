@@ -314,10 +314,10 @@ export const UNDERLINE_STYLE = {
 export type UnderlineStyle = typeof UNDERLINE_STYLE[keyof typeof UNDERLINE_STYLE];
 
 export const SLIDE_SIZE = {
-  S16x9:  { layout: 'LAYOUT_16x9',  width: 10,    height: 5.625 },
-  S16x10: { layout: 'LAYOUT_16x10', width: 10,    height: 6.25 },
-  S4x3:   { layout: 'LAYOUT_4x3',   width: 10,    height: 7.5 },
-  WIDE:   { layout: 'LAYOUT_WIDE',  width: 13.33, height: 7.5 },
+  S16x9:  { layout: 'LAYOUT_16x9',  width: 10,    height: 5.625, margin: 0.5 },
+  S16x10: { layout: 'LAYOUT_16x10', width: 10,    height: 6.25,  margin: 0.5 },
+  S4x3:   { layout: 'LAYOUT_4x3',   width: 10,    height: 7.5,   margin: 0.5 },
+  WIDE:   { layout: 'LAYOUT_WIDE',  width: 13.33, height: 7.5,   margin: 0.5 },
 } as const;
 
 export type SlideSize = typeof SLIDE_SIZE[keyof typeof SLIDE_SIZE];
@@ -328,6 +328,7 @@ export interface CustomSlideSize {
   layout: typeof CUSTOM_LAYOUT;
   width: number;
   height: number;
+  margin: number;
 }
 
 // ============================================
@@ -391,6 +392,8 @@ export interface TextStyle {
   fontFamily: FontFamily;
   fontSize: number;
   defaultWeight: FontWeight;
+  lineHeightMultiplier: number;
+  bulletIndentMultiplier: number;
 }
 
 // ============================================
@@ -469,18 +472,11 @@ export interface Slide {
 
 export interface Theme {
   slide: SlideSize | CustomSlideSize;
+  /** Semantic spacing scale for container gaps (W3C DTCG convention). */
   spacing: {
-    unit: number;           // Base spacing unit (grid quantum, e.g. 1/32 inch)
-    margin: number;         // Inset from all 4 edges
-    gap: number;            // Standard gap between elements
-    gapTight: number;       // Tight gap for related items (title→description)
-    gapLoose: number;       // Loose gap for section breaks
-    padding: number;        // Internal padding for containers (e.g. cards)
-    cellPadding: number;    // Padding inside table cells
-    bulletSpacing: number;  // Line spacing multiple for lists
-    bulletIndentMultiplier: number; // Multiplier for bullet indent (fontSize * multiplier = points)
-    maxScaleFactor: number; // Max image scale vs native size (1.0 = native, 2.0 = allow 2x upscale)
-    lineSpacing: number;    // Default line height multiplier for text (e.g. 1.2)
+    normal: number;
+    tight: number;
+    loose: number;
   };
   /** Explicit font manifest. Every font the theme uses must be listed here.
    *  `generateFontFaceCSS()` reads exclusively from this list. */

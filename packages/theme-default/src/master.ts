@@ -13,9 +13,9 @@ import { row, column, plainText, slideNumber } from 'tycoslide-components';
 import type { PlainTextTokens, SlideNumberTokens } from 'tycoslide-components';
 
 function masterContent(t: Theme) {
-  const { margin, unit } = t.spacing;
-  const { width, height } = t.slide;
-  const footerHeight = unit * 8;
+  const { width, height, margin } = t.slide;
+  const masterTokens = t.master as { footerHeight: number; slideNumber: SlideNumberTokens; footer: PlainTextTokens };
+  const { footerHeight } = masterTokens;
 
   const contentBounds = new Bounds(
     margin,
@@ -23,9 +23,6 @@ function masterContent(t: Theme) {
     width - margin * 2,
     height - margin * 2 - footerHeight,
   );
-
-  // Read tokens from theme.master
-  const masterTokens = t.master as { slideNumber: SlideNumberTokens; footer: PlainTextTokens };
 
   const content = column(
     { height: SIZE.FILL, vAlign: VALIGN.BOTTOM, padding: margin },

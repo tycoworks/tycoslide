@@ -16,6 +16,8 @@ function textNode(content: string): TextNode {
       fontFamily: { normal: { name: 'Arial', path: '' } },
       fontSize: 14,
       defaultWeight: FONT_WEIGHT.NORMAL,
+      lineHeightMultiplier: 1.0,
+      bulletIndentMultiplier: 1.5,
     },
     color: '000000',
     lineHeightMultiplier: 1.2,

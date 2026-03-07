@@ -13,7 +13,7 @@ import { HALIGN, VALIGN, SIZE, DIRECTION, TEXT_STYLE, FONT_WEIGHT } from '../src
 import type { TextStyle } from '../src/core/model/types.js';
 import { schema } from '../src/core/model/schema.js';
 
-const stubStyle: TextStyle = { fontSize: 12, fontFamily: { normal: { name: 'Test', path: '' } }, defaultWeight: FONT_WEIGHT.NORMAL };
+const stubStyle: TextStyle = { fontSize: 12, fontFamily: { normal: { name: 'Test', path: '' } }, defaultWeight: FONT_WEIGHT.NORMAL, lineHeightMultiplier: 1.0, bulletIndentMultiplier: 1.5 };
 
 const stubTextNode = (text: string = ''): any => ({
   type: NODE_TYPE.TEXT,

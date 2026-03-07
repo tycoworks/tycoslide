@@ -1009,7 +1009,7 @@ describe('buildSlideNumberOptions()', () => {
     };
     const boldNode: SlideNumberNode = {
       ...baseSlideNumNode,
-      resolvedStyle: { fontSize: 12, fontFamily: boldFontFamily, defaultWeight: FONT_WEIGHT.BOLD },
+      resolvedStyle: { fontSize: 12, fontFamily: boldFontFamily, defaultWeight: FONT_WEIGHT.BOLD, lineHeightMultiplier: 1.0, bulletIndentMultiplier: 1.5 },
     };
     const pos = positioned(boldNode, 1, 2, 2, 0.3);
     const result = builder.buildSlideNumberOptions(boldNode, pos);

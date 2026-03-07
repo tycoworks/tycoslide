@@ -12,7 +12,6 @@ import { Component } from './names.js';
 export const PLAIN_TEXT_TOKEN = {
   COLOR: 'color',
   STYLE: 'style',
-  LINE_HEIGHT_MULTIPLIER: 'lineHeightMultiplier',
   HALIGN: 'hAlign',
   VALIGN: 'vAlign',
 } as const;
@@ -20,7 +19,6 @@ export const PLAIN_TEXT_TOKEN = {
 export type PlainTextTokens = {
   color: string;
   style: TextStyleName;
-  lineHeightMultiplier: number;
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;
 };
@@ -40,7 +38,7 @@ export type PlainTextComponentProps = {
 
 function expandPlainText(props: PlainTextComponentProps, context: ExpansionContext, tokens: PlainTextTokens): ElementNode {
   const textStyle = context.theme.textStyles[tokens.style];
-  const bulletIndentPt = textStyle.fontSize * context.theme.spacing.bulletIndentMultiplier;
+  const bulletIndentPt = textStyle.fontSize * textStyle.bulletIndentMultiplier;
 
   return {
     type: NODE_TYPE.TEXT,
@@ -50,7 +48,7 @@ function expandPlainText(props: PlainTextComponentProps, context: ExpansionConte
     color: tokens.color,
     hAlign: tokens.hAlign,
     vAlign: tokens.vAlign,
-    lineHeightMultiplier: tokens.lineHeightMultiplier,
+    lineHeightMultiplier: textStyle.lineHeightMultiplier,
     bulletIndentPt,
     linkColor: tokens.color,
     linkUnderline: false,

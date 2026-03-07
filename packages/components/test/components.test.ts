@@ -147,9 +147,9 @@ describe('image()', () => {
     assert.strictEqual(node.src, 'https://example.com/photo.jpg');
   });
 
-  test('pre-resolves maxScale from theme spacing.maxScaleFactor', async () => {
+  test('sets maxScale to 1.0', async () => {
     const node = await expand(image('photo.jpg')) as ImageNode;
-    assert.strictEqual(node.maxScale, 1.0); // from mockTheme spacing.maxScaleFactor default
+    assert.strictEqual(node.maxScale, 1.0);
   });
 });
 
