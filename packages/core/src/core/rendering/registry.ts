@@ -503,43 +503,6 @@ class LayoutRegistry extends Registry<LayoutDefinition> {
   }
 
   /**
-   * Validate that a theme provides all required layout tokens for every registered layout.
-   * Only checks layouts that declare tokens. Layouts without tokens are skipped.
-   * @throws Error on the first layout/variant with missing tokens
-   */
-  validateTheme(theme: Theme, layoutNames?: string[]): void {
-    const defs = layoutNames
-      ? layoutNames.map(name => this.get(name)).filter((d): d is LayoutDefinition => d !== undefined)
-      : this.getAll();
-    for (const def of defs) {
-      if (!def.tokens?.length) continue;
-
-      const config = theme.layouts?.[def.name];
-      if (!config) {
-        throw new Error(
-          `Theme missing layout tokens for layout '${def.name}'. ` +
-          `Required: [${def.tokens.join(', ')}]`
-        );
-      }
-
-      const { variants } = config;
-
-      for (const [variantName, tokens] of Object.entries(variants)) {
-        const missing = def.tokens.filter(
-          (key: string) => (tokens as Record<string, unknown>)[key] === undefined ||
-                           (tokens as Record<string, unknown>)[key] === null
-        );
-        if (missing.length) {
-          throw new Error(
-            `Layout '${def.name}' variant '${variantName}' is missing required tokens: [${missing.join(', ')}]. ` +
-            `Each variant must be a complete token set.`
-          );
-        }
-      }
-    }
-  }
-
-  /**
    * Resolve layout tokens for a given layout name and variant from the theme.
    * @throws Error if the layout is not found in theme.layouts or the variant doesn't exist
    */
@@ -623,39 +586,6 @@ export function defineMaster<TTokens = undefined>(def: {
 class MasterRegistry extends Registry<MasterDefinition> {
   constructor() {
     super('Master');
-  }
-
-  /**
-   * Validate that a theme provides all required master tokens for every registered master.
-   * @throws Error on the first master/variant with missing tokens
-   */
-  validateTheme(theme: Theme): void {
-    for (const def of this.getAll()) {
-      if (!def.tokens?.length) continue;
-
-      const config = theme.masters?.[def.name];
-      if (!config) {
-        throw new Error(
-          `Theme missing master tokens for master '${def.name}'. ` +
-          `Required: [${def.tokens.join(', ')}]`
-        );
-      }
-
-      const { variants } = config;
-
-      for (const [variantName, tokens] of Object.entries(variants)) {
-        const missing = def.tokens.filter(
-          (key: string) => (tokens as Record<string, unknown>)[key] === undefined ||
-                           (tokens as Record<string, unknown>)[key] === null
-        );
-        if (missing.length) {
-          throw new Error(
-            `Master '${def.name}' variant '${variantName}' is missing required tokens: [${missing.join(', ')}]. ` +
-            `Each variant must be a complete token set.`
-          );
-        }
-      }
-    }
   }
 
   /**

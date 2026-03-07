@@ -1,6 +1,4 @@
 // Layout Token Tests
-// Tests for Phase 1: Layout Token Infrastructure
-// - LayoutRegistry.validateTheme() for layout tokens
 // - LayoutRegistry.resolveTokens() for variant lookup
 // - Slot token injection in documentCompiler
 // - Backward compatibility (layouts without tokens)
@@ -94,101 +92,6 @@ describe('LayoutRegistry.resolveTokens', () => {
       () => layoutRegistry.resolveTokens('title', 'nonexistent', theme),
       /Unknown variant 'nonexistent' for layout 'title'/,
     );
-  });
-});
-
-// ============================================
-// LAYOUT REGISTRY validateTheme
-// ============================================
-
-describe('LayoutRegistry.validateTheme', () => {
-  // We need a fresh LayoutRegistry per test to control which layouts are registered.
-  // Since LayoutRegistry is a class but not exported, we test via a standalone registry.
-  // But validateTheme is on the LayoutRegistry class specifically.
-  // Instead, register layouts on the singleton and clean up.
-
-  // Use integration approach: register token-bearing layouts, validate, then
-  // verify they pass or fail correctly.
-
-  it('passes when theme provides all declared layout tokens', () => {
-    const layout = defineLayout({
-      name: 'tokenTest1',
-      description: 'test',
-      params: {},
-      tokens: ['background', 'title'],
-      render: () => ({ masterName: 'default', masterVariant: 'default', content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: {} } }),
-    });
-    layoutRegistry.register(layout);
-
-    const theme = mockTheme({
-      layouts: {
-        tokenTest1: {
-          variants: {
-            ['default']: { background: 'FFFFFF', title: { style: 'h1' } },
-          },
-        },
-      },
-    });
-
-    assert.doesNotThrow(() => layoutRegistry.validateTheme(theme, ['tokenTest1']));
-  });
-
-  it('throws when theme is missing layout tokens for a registered layout', () => {
-    const layout = defineLayout({
-      name: 'tokenTest2',
-      description: 'test',
-      params: {},
-      tokens: ['background', 'title'],
-      render: () => ({ masterName: 'default', masterVariant: 'default', content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: {} } }),
-    });
-    layoutRegistry.register(layout);
-
-    const theme = mockTheme({ layouts: {} });
-
-    assert.throws(
-      () => layoutRegistry.validateTheme(theme, ['tokenTest2']),
-      /Theme missing layout tokens for layout 'tokenTest2'/,
-    );
-  });
-
-  it('throws when a variant is missing required token keys', () => {
-    const layout = defineLayout({
-      name: 'tokenTest3',
-      description: 'test',
-      params: {},
-      tokens: ['background', 'title'],
-      render: () => ({ masterName: 'default', masterVariant: 'default', content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: {} } }),
-    });
-    layoutRegistry.register(layout);
-
-    const theme = mockTheme({
-      layouts: {
-        tokenTest3: {
-          variants: {
-            ['default']: { background: 'FFFFFF' }, // missing 'title'
-          },
-        },
-      },
-    });
-
-    assert.throws(
-      () => layoutRegistry.validateTheme(theme, ['tokenTest3']),
-      /Layout 'tokenTest3' variant 'default' is missing required tokens: \[title\]/,
-    );
-  });
-
-  it('skips layouts without tokens', () => {
-    const layout = defineLayout({
-      name: 'tokenTest5',
-      description: 'test',
-      params: {},
-      render: () => ({ masterName: 'default', masterVariant: 'default', content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: {} } }),
-    });
-    layoutRegistry.register(layout);
-
-    // tokenTest5 has no tokens — validateTheme should not throw for it
-    const theme = mockTheme();
-    assert.doesNotThrow(() => layoutRegistry.validateTheme(theme, ['tokenTest5']));
   });
 });
 
