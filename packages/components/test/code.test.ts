@@ -1,7 +1,8 @@
 import { describe, it, before } from 'node:test';
 import * as assert from 'node:assert';
-import { NODE_TYPE, componentRegistry, SYNTAX, inToPx } from 'tycoslide';
+import { NODE_TYPE, componentRegistry, SYNTAX, inToPx, TEXT_STYLE, FONT_WEIGHT } from 'tycoslide';
 import type { RootContent } from 'mdast';
+import type { TextStyle } from 'tycoslide';
 import { Component } from '../src/names.js';
 import { code, codeComponent, buildCodeTheme, renderCodeToHtml, CODE_TOKEN, type CodeTokens } from '../src/code.js';
 import { LANGUAGE, LANGUAGE_VALUES } from '../src/languages.js';
@@ -52,7 +53,8 @@ describe('code() DSL function', () => {
 // ============================================
 
 describe('buildCodeTheme()', () => {
-  const tokens = {
+  const tokens: CodeTokens = {
+    textStyle: TEXT_STYLE.CODE,
     backgroundColor: '1E1E1E',
     textColor: 'D4D4D4',
     keywordColor: '569CD6',
@@ -63,9 +65,6 @@ describe('buildCodeTheme()', () => {
     operatorColor: 'D4D4D4',
     typeColor: '4EC9B0',
     variableColor: '9CDCFE',
-    fontSize: 12,
-    fontFamily: { normal: { name: 'monospace', path: '' } },
-    lineHeight: 1.4,
     padding: 0.25,
     borderRadius: 0.1,
   };
@@ -350,6 +349,7 @@ describe('code MDAST compile handler', () => {
 
 describe('renderCodeToHtml()', () => {
   const tokens: CodeTokens = {
+    textStyle: TEXT_STYLE.CODE,
     backgroundColor: '1E1E1E',
     textColor: 'D4D4D4',
     keywordColor: '569CD6',
@@ -360,67 +360,72 @@ describe('renderCodeToHtml()', () => {
     operatorColor: 'D4D4D4',
     typeColor: '4EC9B0',
     variableColor: '9CDCFE',
-    fontSize: 12,
-    fontFamily: { normal: { name: 'Fira Code', path: '' } },
-    lineHeight: 1.4,
     padding: 0.25,
     borderRadius: 0.1,
   };
 
+  const codeStyle: TextStyle = {
+    fontFamily: { normal: { name: 'Fira Code', path: '' } },
+    fontSize: 12,
+    defaultWeight: FONT_WEIGHT.NORMAL,
+    lineHeightMultiplier: 1.4,
+    bulletIndentPt: 0,
+  };
+
   it('returns a complete HTML document', async () => {
-    const html = await renderCodeToHtml('const x = 1;', 'typescript', tokens);
+    const html = await renderCodeToHtml('const x = 1;', 'typescript', tokens, codeStyle);
     assert.ok(html.includes('<!DOCTYPE html>'), 'should start with DOCTYPE');
     assert.ok(html.includes('<html>'), 'should have html tag');
     assert.ok(html.includes('<body>'), 'should have body tag');
   });
 
   it('contains data-render-signal="done"', async () => {
-    const html = await renderCodeToHtml('x = 1', 'python', tokens);
+    const html = await renderCodeToHtml('x = 1', 'python', tokens, codeStyle);
     assert.ok(html.includes('data-render-signal="done"'), 'should have render signal for Playwright');
   });
 
   it('contains background color from token', async () => {
-    const html = await renderCodeToHtml('x', 'text', tokens);
+    const html = await renderCodeToHtml('x', 'text', tokens, codeStyle);
     assert.ok(html.includes('1E1E1E'), 'should contain background color');
   });
 
-  it('contains font-family from token', async () => {
-    const html = await renderCodeToHtml('x', 'text', tokens);
+  it('contains font-family from textStyle', async () => {
+    const html = await renderCodeToHtml('x', 'text', tokens, codeStyle);
     assert.ok(html.includes('Fira Code'), 'should contain font family');
   });
 
-  it('contains font-size from token', async () => {
-    const html = await renderCodeToHtml('x', 'text', tokens);
+  it('contains font-size from textStyle', async () => {
+    const html = await renderCodeToHtml('x', 'text', tokens, codeStyle);
     assert.ok(html.includes('12pt'), 'should contain font size in pt');
   });
 
-  it('contains line-height from token', async () => {
-    const html = await renderCodeToHtml('x', 'text', tokens);
+  it('contains line-height from textStyle', async () => {
+    const html = await renderCodeToHtml('x', 'text', tokens, codeStyle);
     assert.ok(html.includes('1.4'), 'should contain line height');
   });
 
   it('uses inToPx for padding', async () => {
-    const html = await renderCodeToHtml('x', 'text', tokens);
+    const html = await renderCodeToHtml('x', 'text', tokens, codeStyle);
     const expectedPadding = `${inToPx(0.25)}px`;
     assert.ok(html.includes(expectedPadding), `should contain padding ${expectedPadding}`);
   });
 
   it('uses inToPx for border-radius', async () => {
-    const html = await renderCodeToHtml('x', 'text', tokens);
+    const html = await renderCodeToHtml('x', 'text', tokens, codeStyle);
     const expectedRadius = `${inToPx(0.1)}px`;
     assert.ok(html.includes(expectedRadius), `should contain border-radius ${expectedRadius}`);
   });
 
   it('preserves multiline code', async () => {
     const multiline = 'line 1\nline 2\nline 3';
-    const html = await renderCodeToHtml(multiline, 'text', tokens);
+    const html = await renderCodeToHtml(multiline, 'text', tokens, codeStyle);
     assert.ok(html.includes('line 1'), 'should contain first line');
     assert.ok(html.includes('line 3'), 'should contain last line');
   });
 
   it('handles special characters in code', async () => {
     const code = 'if (x < 10 && y > 20) { return "ok"; }';
-    const html = await renderCodeToHtml(code, 'javascript', tokens);
+    const html = await renderCodeToHtml(code, 'javascript', tokens, codeStyle);
     // Shiki should produce valid HTML with entities
     assert.ok(html.includes('10'), 'should contain the code content');
     // Should not contain raw unescaped < in code content (Shiki escapes to &lt;)
@@ -434,6 +439,7 @@ describe('renderCodeToHtml()', () => {
 
 describe('buildCodeTheme() — operator scope', () => {
   const tokens: CodeTokens = {
+    textStyle: TEXT_STYLE.CODE,
     backgroundColor: '1E1E1E',
     textColor: 'D4D4D4',
     keywordColor: '569CD6',
@@ -444,9 +450,6 @@ describe('buildCodeTheme() — operator scope', () => {
     operatorColor: 'FF00FF',
     typeColor: '4EC9B0',
     variableColor: '9CDCFE',
-    fontSize: 12,
-    fontFamily: { normal: { name: 'monospace', path: '' } },
-    lineHeight: 1.4,
     padding: 0.25,
     borderRadius: 0.1,
   };

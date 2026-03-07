@@ -381,6 +381,7 @@ export const TEXT_STYLE = {
   SMALL: 'small',
   EYEBROW: 'eyebrow',
   FOOTER: 'footer',
+  CODE: 'code',
 } as const;
 
 export type TextStyleName = typeof TEXT_STYLE[keyof typeof TEXT_STYLE];

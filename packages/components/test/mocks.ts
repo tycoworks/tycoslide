@@ -51,6 +51,7 @@ export function mockTheme(options?: {
       [TEXT_STYLE.SMALL]: mockTextStyle,
       [TEXT_STYLE.FOOTER]: mockTextStyle,
       [TEXT_STYLE.EYEBROW]: mockTextStyle,
+      [TEXT_STYLE.CODE]: mockTextStyle,
     },
     layouts: {},
     master: {},
@@ -110,6 +111,7 @@ export const DEFAULT_TABLE_TOKENS: TableTokens = {
 };
 
 export const DEFAULT_CODE_TOKENS: CodeTokens = {
+  textStyle: TEXT_STYLE.CODE,
   backgroundColor: '1E1E1E',
   textColor: 'D4D4D4',
   keywordColor: '569CD6',
@@ -120,9 +122,6 @@ export const DEFAULT_CODE_TOKENS: CodeTokens = {
   operatorColor: 'D4D4D4',
   typeColor: '4EC9B0',
   variableColor: '9CDCFE',
-  fontSize: 12,
-  fontFamily: mockFontFamily,
-  lineHeight: 1.4,
   padding: 0.25,
   borderRadius: 0.1,
 };

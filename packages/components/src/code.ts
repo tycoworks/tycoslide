@@ -8,7 +8,8 @@ import {
   schema,
   SYNTAX,
   inToPx,
-  type FontFamily,
+  type TextStyle,
+  type TextStyleName,
 } from 'tycoslide';
 import type { RootContent } from 'mdast';
 import type { Code as MdastCode } from 'mdast';
@@ -25,6 +26,8 @@ const SUPPORTED_LANGUAGES = new Set<string>(LANGUAGE_VALUES);
 // ============================================
 
 export const CODE_TOKEN = {
+  // Typography (resolved via theme.textStyles)
+  TEXT_STYLE: 'textStyle',
   // Syntax colors (map to Shiki TextMate scopes)
   BACKGROUND_COLOR: 'backgroundColor',
   TEXT_COLOR: 'textColor',
@@ -37,14 +40,12 @@ export const CODE_TOKEN = {
   TYPE_COLOR: 'typeColor',
   VARIABLE_COLOR: 'variableColor',
   // Structural styling
-  FONT_SIZE: 'fontSize',
-  FONT_FAMILY: 'fontFamily',
-  LINE_HEIGHT: 'lineHeight',
   PADDING: 'padding',
   BORDER_RADIUS: 'borderRadius',
 } as const;
 
 export type CodeTokens = {
+  [CODE_TOKEN.TEXT_STYLE]: TextStyleName;
   [CODE_TOKEN.BACKGROUND_COLOR]: string;
   [CODE_TOKEN.TEXT_COLOR]: string;
   [CODE_TOKEN.KEYWORD_COLOR]: string;
@@ -55,9 +56,6 @@ export type CodeTokens = {
   [CODE_TOKEN.OPERATOR_COLOR]: string;
   [CODE_TOKEN.TYPE_COLOR]: string;
   [CODE_TOKEN.VARIABLE_COLOR]: string;
-  [CODE_TOKEN.FONT_SIZE]: number;
-  [CODE_TOKEN.FONT_FAMILY]: FontFamily;
-  [CODE_TOKEN.LINE_HEIGHT]: number;
   [CODE_TOKEN.PADDING]: number;
   [CODE_TOKEN.BORDER_RADIUS]: number;
 };
@@ -139,6 +137,7 @@ export async function renderCodeToHtml(
   code: string,
   language: string,
   tokens: CodeTokens,
+  style: TextStyle,
 ): Promise<string> {
   const theme = buildCodeTheme(tokens);
 
@@ -163,9 +162,9 @@ body {
 }
 .code-container pre {
   margin: 0;
-  font-family: '${tokens.fontFamily.normal.name}';
-  font-size: ${tokens.fontSize}pt;
-  line-height: ${tokens.lineHeight};
+  font-family: '${style.fontFamily.normal.name}';
+  font-size: ${style.fontSize}pt;
+  line-height: ${style.lineHeightMultiplier};
 }
 .code-container code {
   font-family: inherit;
@@ -197,7 +196,8 @@ async function expandCode(
     throw new Error('[tycoslide] Code block is empty');
   }
 
-  const html = await renderCodeToHtml(code, props.language, tokens);
+  const codeStyle = context.theme.textStyles[tokens.textStyle];
+  const html = await renderCodeToHtml(code, props.language, tokens, codeStyle);
   const pngPath = await context.canvas.renderHtml(html, false);
 
   return {

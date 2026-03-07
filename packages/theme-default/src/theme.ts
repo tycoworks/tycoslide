@@ -197,6 +197,7 @@ const tableTokens = {
 };
 
 const codeTokens = {
+  textStyle: TEXT_STYLE.CODE,
   backgroundColor: '1A1A2E',
   textColor: 'E2E8F0',
   keywordColor: 'A78BFA',
@@ -207,9 +208,6 @@ const codeTokens = {
   operatorColor: 'E2E8F0',
   typeColor: 'FFA657',
   variableColor: 'E2E8F0',
-  fontSize: 11,
-  fontFamily: assets.fonts.firaCode,
-  lineHeight: 1.6,
   padding: padding,
   borderRadius: cornerRadius,
 };
@@ -276,6 +274,7 @@ export const theme: Theme = {
     small: { fontFamily: assets.fonts.inter, fontSize: 12, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: lineSpacing, bulletIndentPt: 12 * bulletIndentMultiplier },
     eyebrow: { fontFamily: assets.fonts.inter, fontSize: 11, defaultWeight: FONT_WEIGHT.NORMAL, lineHeightMultiplier: 1.0, bulletIndentPt: 11 * bulletIndentMultiplier },
     footer: { fontFamily: assets.fonts.inter, fontSize: 8, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: 1.0, bulletIndentPt: 8 * bulletIndentMultiplier },
+    code: { fontFamily: assets.fonts.firaCode, fontSize: 11, defaultWeight: FONT_WEIGHT.NORMAL, lineHeightMultiplier: 1.6, bulletIndentPt: 0 },
   },
   layouts: {
     title: {

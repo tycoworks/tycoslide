@@ -2,7 +2,7 @@
 // Renders mermaid diagrams using the mermaid JS library and the shared browser.
 // Theme fonts and colors are automatically injected for brand compliance.
 
-import type { Canvas } from 'tycoslide';
+import type { Canvas, TextStyleName } from 'tycoslide';
 import {
   NODE_TYPE, type ImageNode,
   defineComponent, component, type ComponentNode, type ExpansionContext,
@@ -48,7 +48,7 @@ export type MermaidTokens = {
   [MERMAID_TOKEN.CLUSTER_BORDER_COLOR]: string;
   [MERMAID_TOKEN.EDGE_LABEL_BACKGROUND]: string;
   [MERMAID_TOKEN.TITLE_COLOR]: string;
-  [MERMAID_TOKEN.TEXT_STYLE]: string;
+  [MERMAID_TOKEN.TEXT_STYLE]: TextStyleName;
   [MERMAID_TOKEN.ACCENT_OPACITY]: number;
   [MERMAID_TOKEN.ACCENTS]: Record<string, string>;
 };
@@ -286,7 +286,7 @@ async function expandMermaid(props: MermaidComponentProps, context: ExpansionCon
   if (!sanitized.trim()) {
     throw new Error('Mermaid definition is empty after sanitization');
   }
-  const textStyleConfig = context.theme.textStyles[tokens.textStyle as keyof typeof context.theme.textStyles];
+  const textStyleConfig = context.theme.textStyles[tokens.textStyle];
   const fontFamily = textStyleConfig.fontFamily.normal.name;
   const renderCtx: MermaidRenderContext = {
     accents: tokens.accents,
