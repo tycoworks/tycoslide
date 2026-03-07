@@ -19,7 +19,7 @@ export interface TextFragmentOptions {
   highlight?: string;
   softBreakBefore?: boolean;
   breakLine?: boolean;
-  bullet?: boolean | { type?: string };
+  bullet?: boolean | { type?: string; indent?: number };
   bold?: boolean;
   italic?: boolean;
   strike?: StrikeType;
@@ -53,7 +53,7 @@ export class PptxConfigBuilder {
   ): { fragments: TextFragment[]; options: Record<string, unknown> } {
     const style = textNode.resolvedStyle;
     const defaultFont = getFontFromFamily(style.fontFamily, style.defaultWeight);
-    const fragments = this.buildTextFragments(textNode.content, style, textNode.color, textNode.linkColor, textNode.linkUnderline);
+    const fragments = this.buildTextFragments(textNode.content, style, textNode.color, textNode.linkColor, textNode.linkUnderline, textNode.bulletIndentPt);
 
     // Check if any fragment has bullets - affects alignment
     const hasBullets = fragments.some(f => f.options.bullet);
@@ -85,6 +85,7 @@ export class PptxConfigBuilder {
     color: string,
     linkColor?: string,
     linkUnderline?: boolean,
+    bulletIndentPt: number = 0,
   ): TextFragment[] {
     const defaultWeight = style.defaultWeight;
 
@@ -114,7 +115,10 @@ export class PptxConfigBuilder {
       // Record break-before for post-processing shift
       if (run.paragraphBreak && !run.bullet) breakBeforeIndices.add(i);
       if (run.softBreak) options.softBreakBefore = true;
-      if (run.bullet) options.bullet = run.bullet;
+      if (run.bullet) {
+        const base = run.bullet === true ? {} : run.bullet;
+        options.bullet = { ...base, indent: bulletIndentPt };
+      }
       return { text: run.text, options };
     });
 

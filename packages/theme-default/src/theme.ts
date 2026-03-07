@@ -268,14 +268,14 @@ export const theme: Theme = {
   spacing: { normal: gap, tight: gapTight, loose: gapLoose },
   fonts: [assets.fonts.inter, assets.fonts.firaCode],
   textStyles: {
-    h1: { fontFamily: assets.fonts.inter, fontSize: 48, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: lineSpacing, bulletIndentMultiplier },
-    h2: { fontFamily: assets.fonts.inter, fontSize: 36, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: lineSpacing, bulletIndentMultiplier },
-    h3: { fontFamily: assets.fonts.inter, fontSize: 24, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: lineSpacing, bulletIndentMultiplier },
-    h4: { fontFamily: assets.fonts.inter, fontSize: 16, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: lineSpacing, bulletIndentMultiplier },
-    body: { fontFamily: assets.fonts.inter, fontSize: 14, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: lineSpacing, bulletIndentMultiplier },
-    small: { fontFamily: assets.fonts.inter, fontSize: 12, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: lineSpacing, bulletIndentMultiplier },
-    eyebrow: { fontFamily: assets.fonts.inter, fontSize: 11, defaultWeight: FONT_WEIGHT.NORMAL, lineHeightMultiplier: 1.0, bulletIndentMultiplier },
-    footer: { fontFamily: assets.fonts.inter, fontSize: 8, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: 1.0, bulletIndentMultiplier },
+    h1: { fontFamily: assets.fonts.inter, fontSize: 48, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: lineSpacing, bulletIndentPt: 48 * bulletIndentMultiplier },
+    h2: { fontFamily: assets.fonts.inter, fontSize: 36, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: lineSpacing, bulletIndentPt: 36 * bulletIndentMultiplier },
+    h3: { fontFamily: assets.fonts.inter, fontSize: 24, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: lineSpacing, bulletIndentPt: 24 * bulletIndentMultiplier },
+    h4: { fontFamily: assets.fonts.inter, fontSize: 16, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: lineSpacing, bulletIndentPt: 16 * bulletIndentMultiplier },
+    body: { fontFamily: assets.fonts.inter, fontSize: 14, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: lineSpacing, bulletIndentPt: 14 * bulletIndentMultiplier },
+    small: { fontFamily: assets.fonts.inter, fontSize: 12, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: lineSpacing, bulletIndentPt: 12 * bulletIndentMultiplier },
+    eyebrow: { fontFamily: assets.fonts.inter, fontSize: 11, defaultWeight: FONT_WEIGHT.NORMAL, lineHeightMultiplier: 1.0, bulletIndentPt: 11 * bulletIndentMultiplier },
+    footer: { fontFamily: assets.fonts.inter, fontSize: 8, defaultWeight: FONT_WEIGHT.LIGHT, lineHeightMultiplier: 1.0, bulletIndentPt: 8 * bulletIndentMultiplier },
   },
   layouts: {
     title: {

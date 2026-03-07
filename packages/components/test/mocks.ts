@@ -23,7 +23,7 @@ const mockTextStyle: TextStyle = {
   fontFamily: mockFontFamily,
   defaultWeight: FONT_WEIGHT.NORMAL,
   lineHeightMultiplier: 1.0,
-  bulletIndentMultiplier: 1.5,
+  bulletIndentPt: 18,
 };
 
 /**

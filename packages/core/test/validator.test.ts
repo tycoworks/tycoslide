@@ -17,7 +17,7 @@ function textNode(content: string): TextNode {
       fontSize: 14,
       defaultWeight: FONT_WEIGHT.NORMAL,
       lineHeightMultiplier: 1.0,
-      bulletIndentMultiplier: 1.5,
+      bulletIndentPt: 21,
     },
     color: '000000',
     lineHeightMultiplier: 1.2,

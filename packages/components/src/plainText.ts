@@ -38,7 +38,6 @@ export type PlainTextComponentProps = {
 
 function expandPlainText(props: PlainTextComponentProps, context: ExpansionContext, tokens: PlainTextTokens): ElementNode {
   const textStyle = context.theme.textStyles[tokens.style];
-  const bulletIndentPt = textStyle.fontSize * textStyle.bulletIndentMultiplier;
 
   return {
     type: NODE_TYPE.TEXT,
@@ -49,7 +48,7 @@ function expandPlainText(props: PlainTextComponentProps, context: ExpansionConte
     hAlign: tokens.hAlign,
     vAlign: tokens.vAlign,
     lineHeightMultiplier: textStyle.lineHeightMultiplier,
-    bulletIndentPt,
+    bulletIndentPt: textStyle.bulletIndentPt,
     linkColor: tokens.color,
     linkUnderline: false,
   };

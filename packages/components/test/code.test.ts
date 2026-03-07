@@ -466,19 +466,6 @@ describe('buildCodeTheme() — operator scope', () => {
 // ============================================
 
 describe('code expansion — additional', () => {
-  it('sets maxScale to 1.0', async () => {
-    const theme = mockTheme();
-    const canvas = noopCanvas();
-    const context = { theme, assets: undefined, canvas } as any;
-
-    const node = code('SELECT 1', 'sql');
-    node.tokens = { ...DEFAULT_CODE_TOKENS };
-    const result = await componentRegistry.expand(node, context);
-
-    assert.strictEqual(result.type, NODE_TYPE.IMAGE);
-    assert.strictEqual((result as any).maxScale, 1.0);
-  });
-
   it('trims whitespace from code before rendering', async () => {
     const theme = mockTheme();
     let capturedHtml = '';

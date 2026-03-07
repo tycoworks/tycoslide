@@ -100,7 +100,7 @@ function colNode(...args: any[]): ContainerNode {
 
 /** Image node */
 function imageNode(src: string): ImageNode {
-  return { type: NODE_TYPE.IMAGE, src, maxScale: 2.0 };
+  return { type: NODE_TYPE.IMAGE, src };
 }
 
 /** Line node (token values baked in from mockTheme) */

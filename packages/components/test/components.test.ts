@@ -147,10 +147,6 @@ describe('image()', () => {
     assert.strictEqual(node.src, 'https://example.com/photo.jpg');
   });
 
-  test('sets maxScale to 1.0', async () => {
-    const node = await expand(image('photo.jpg')) as ImageNode;
-    assert.strictEqual(node.maxScale, 1.0);
-  });
 });
 
 // ============================================

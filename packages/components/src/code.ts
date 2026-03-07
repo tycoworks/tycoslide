@@ -203,7 +203,6 @@ async function expandCode(
   return {
     type: NODE_TYPE.IMAGE,
     src: pngPath,
-    maxScale: 1.0,
   };
 }
 

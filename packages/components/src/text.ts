@@ -56,7 +56,6 @@ export const HEADING_STYLE: Record<number, TextStyleName> = {
 
 function expandText(props: TextComponentProps, context: ExpansionContext, tokens: TextTokens): ElementNode {
   const textStyle = context.theme.textStyles[tokens.style];
-  const bulletIndentPt = textStyle.fontSize * textStyle.bulletIndentMultiplier;
 
   // Parse inline markdown only (bold, italic, :color[highlights])
   const tree = inlineParse(props.body);
@@ -86,7 +85,7 @@ function expandText(props: TextComponentProps, context: ExpansionContext, tokens
     hAlign: tokens.hAlign,
     vAlign: tokens.vAlign,
     lineHeightMultiplier: textStyle.lineHeightMultiplier,
-    bulletIndentPt,
+    bulletIndentPt: textStyle.bulletIndentPt,
     linkColor: tokens.linkColor,
     linkUnderline: tokens.linkUnderline,
   };

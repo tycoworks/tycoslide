@@ -282,8 +282,8 @@ function styleImage(
     throw new Error(`Cannot read image dimensions: ${node.src}`);
   }
 
-  const maxWidthPx = dims.width * node.maxScale;
-  const maxHeightPx = dims.height * node.maxScale;
+  const maxWidthPx = dims.width;
+  const maxHeightPx = dims.height;
 
   const styles: Record<string, string | number> = {
     aspectRatio: `${dims.aspectRatio}`,

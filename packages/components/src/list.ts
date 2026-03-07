@@ -44,7 +44,6 @@ type ListComponentProps = { body: string[]; ordered?: boolean };
 
 function expandList(props: ListComponentProps, context: ExpansionContext, tokens: ListTokens): ElementNode {
   const textStyle = context.theme.textStyles[tokens.style];
-  const bulletIndentPt = textStyle.fontSize * textStyle.bulletIndentMultiplier;
 
   const bulletType = props.ordered ? { type: 'number' as const } : true;
   const runs: NormalizedRun[] = [];
@@ -79,7 +78,7 @@ function expandList(props: ListComponentProps, context: ExpansionContext, tokens
     hAlign: tokens.hAlign,
     vAlign: tokens.vAlign,
     lineHeightMultiplier: textStyle.lineHeightMultiplier,
-    bulletIndentPt,
+    bulletIndentPt: textStyle.bulletIndentPt,
     linkColor: tokens.linkColor,
     linkUnderline: tokens.linkUnderline,
   };

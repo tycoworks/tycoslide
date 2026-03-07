@@ -747,15 +747,18 @@ describe('buildTextFragments()', () => {
     assert.strictEqual(fragments[0].options?.color, '000000');
   });
 
-  test('applies bullet formatting', () => {
+  test('applies bullet formatting with indent from bulletIndentPt', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Bullet item', bullet: true }],
       mockTextStyle,
-      '000000'
+      '000000',
+      undefined,
+      undefined,
+      18,
     );
 
     assert.strictEqual(fragments.length, 1);
-    assert.strictEqual(fragments[0].options?.bullet, true);
+    assert.deepStrictEqual(fragments[0].options?.bullet, { indent: 18 });
   });
 
   test('applies strikethrough as STRIKE_TYPE.SINGLE', () => {
@@ -863,11 +866,14 @@ describe('buildTextFragments()', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Bullet', bullet: true, paragraphBreak: true }],
       mockTextStyle,
-      '000000'
+      '000000',
+      undefined,
+      undefined,
+      18,
     );
 
     assert.strictEqual(fragments.length, 1);
-    assert.strictEqual(fragments[0].options?.bullet, true);
+    assert.deepStrictEqual(fragments[0].options?.bullet, { indent: 18 });
     assert.strictEqual(fragments[0].options?.breakLine, undefined);
   });
 
@@ -875,7 +881,10 @@ describe('buildTextFragments()', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Bullet', bullet: true, paragraphBreak: true }],
       mockTextStyle,
-      '000000'
+      '000000',
+      undefined,
+      undefined,
+      18,
     );
 
     assert.strictEqual(fragments[0].options?.paraSpaceBefore, undefined);
@@ -1009,7 +1018,7 @@ describe('buildSlideNumberOptions()', () => {
     };
     const boldNode: SlideNumberNode = {
       ...baseSlideNumNode,
-      resolvedStyle: { fontSize: 12, fontFamily: boldFontFamily, defaultWeight: FONT_WEIGHT.BOLD, lineHeightMultiplier: 1.0, bulletIndentMultiplier: 1.5 },
+      resolvedStyle: { fontSize: 12, fontFamily: boldFontFamily, defaultWeight: FONT_WEIGHT.BOLD, lineHeightMultiplier: 1.0, bulletIndentPt: 18 },
     };
     const pos = positioned(boldNode, 1, 2, 2, 0.3);
     const result = builder.buildSlideNumberOptions(boldNode, pos);
@@ -1091,12 +1100,12 @@ describe('buildTextFragments with multi-paragraph runs', () => {
       { text: 'Bullet one', bullet: true },
       { text: 'Bullet two', bullet: true },
     ];
-    const fragments = builder.buildTextFragments(runs, mockTextStyle, '000000');
+    const fragments = builder.buildTextFragments(runs, mockTextStyle, '000000', undefined, undefined, 18);
 
     assert.strictEqual(fragments.length, 3);
     assert.strictEqual(fragments[0].text, 'Intro.');
     assert.strictEqual(fragments[1].text, 'Bullet one');
-    assert.ok(fragments[1].options?.bullet, 'Bullet run should have bullet');
+    assert.deepStrictEqual(fragments[1].options?.bullet, { indent: 18 });
     // Bullets don't get paragraph spacing — they have their own line break mechanism
     assert.strictEqual(fragments[1].options?.paraSpaceBefore, undefined);
   });

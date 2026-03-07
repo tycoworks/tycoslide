@@ -51,7 +51,7 @@ export interface TextNode {
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;
   lineHeightMultiplier: number;
-  bulletIndentPt: number;           // points — pre-resolved: fontSize * bulletIndentMultiplier
+  bulletIndentPt: number;
   linkColor: string;                // token-driven hyperlink color (render-time)
   linkUnderline: boolean;           // token-driven hyperlink underline (render-time)
 }
@@ -60,7 +60,6 @@ export interface ImageNode {
   type: typeof NODE_TYPE.IMAGE;
   src: string;
   alt?: string;
-  maxScale: number;                 // pre-resolved from theme.spacing.maxScaleFactor
 }
 
 export interface LineNode {

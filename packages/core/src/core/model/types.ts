@@ -393,7 +393,7 @@ export interface TextStyle {
   fontSize: number;
   defaultWeight: FontWeight;
   lineHeightMultiplier: number;
-  bulletIndentMultiplier: number;
+  bulletIndentPt: number;
 }
 
 // ============================================
