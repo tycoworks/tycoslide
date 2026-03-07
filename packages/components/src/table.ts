@@ -8,6 +8,7 @@ import {
   schema, parseMarkdown,
 } from 'tycoslide';
 import { Component } from './names.js';
+import type { TextTokens } from './text.js';
 import type { Table as MdastTable, RootContent } from 'mdast';
 import type { Root } from 'mdast';
 
@@ -143,10 +144,9 @@ export const tableComponent = defineComponent({
     }
 
     // Derive text tokens from table tokens for child text components.
-    const textTokens = {
+    const textTokens: TextTokens = {
       color: tokens.cellTextColor,
       style: tokens.cellTextStyle,
-      lineHeightMultiplier: tokens.cellLineHeight,
       linkColor: tokens.linkColor,
       linkUnderline: tokens.linkUnderline,
       hAlign: tokens.hAlign,

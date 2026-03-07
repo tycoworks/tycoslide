@@ -1,5 +1,6 @@
 // Default Theme
 // Clean light theme with Inter font. Copy and customize for your brand.
+// Units: spacing/margins/radii = inches, fontSize/borderWidth = points, opacity = 0-100
 
 import {
   TEXT_STYLE,
@@ -19,8 +20,8 @@ import {
   titleLayout, endLayout, sectionLayout, bodyLayout,
   statLayout, imageLayout, imageLeftLayout, imageRightLayout,
   twoColumnLayout, comparisonLayout, statementLayout,
-  agendaLayout, cardsLayout, bioLayout, captionLayout,
-  titleOnlyLayout, teamLayout, quoteLayout,
+  agendaLayout, cardsLayout, captionLayout,
+  titleOnlyLayout, quoteLayout,
 } from './layouts.js';
 
 // ============================================
@@ -33,10 +34,8 @@ export const colors = {
   text: '1A1A2E',               // Dark navy
   textMuted: '4A4A5A',           // Neutral gray
   primary: '7C3AED',             // Purple accent
-  hyperlink: '7C3AED',           // Theme-level hyperlink fallback (Keynote/LibreOffice)
   onPrimary: 'FFFFFF',           // White on purple
   secondary: 'F5F5F5',           // Neutral surface
-  subtleOpacity: 15,
 
   // Neutral gray surface hierarchy (zero chroma)
   surfaceContainer: 'F5F5F5',    // Cards, callouts
@@ -52,6 +51,8 @@ export const colors = {
     purple: '7C3AED',
   },
 };
+
+const subtleOpacity = 15;
 
 // ============================================
 // SPACING
@@ -170,10 +171,6 @@ const subHeading: PlainTextTokens = {
   style: TEXT_STYLE.H4, color: colors.text,
   hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE,
 };
-const mutedBody: PlainTextTokens = {
-  style: TEXT_STYLE.BODY, color: colors.textMuted,
-  hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE,
-};
 const captionPlain: PlainTextTokens = {
   style: TEXT_STYLE.SMALL, color: colors.textMuted,
   hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
@@ -261,7 +258,7 @@ const mermaidTokens = {
   edgeLabelBackground: colors.background,
   titleColor: colors.text,
   textStyle: TEXT_STYLE.BODY,
-  accentOpacity: colors.subtleOpacity,
+  accentOpacity: subtleOpacity,
   accents: colors.accents,
 };
 
@@ -391,20 +388,13 @@ export const theme = {
       },
     },
     statement: {
-      variants: {
-        default: statementLayout.tokenMap({
-          title: headerTitle,
-          eyebrow: headerEyebrow,
-          body: bodyText,
-          caption: mutedCaption,
-        }),
-        hero: statementLayout.tokenMap({
-          title: headerTitle,
-          eyebrow: headerEyebrow,
-          body: { ...bodyText, style: TEXT_STYLE.H3 },
-          caption: mutedCaption,
-        }),
-      },
+      variants: (() => {
+        const base = { title: headerTitle, eyebrow: headerEyebrow, caption: mutedCaption };
+        return {
+          default: statementLayout.tokenMap({ ...base, body: bodyText }),
+          hero: statementLayout.tokenMap({ ...base, body: { ...bodyText, style: TEXT_STYLE.H3 } }),
+        };
+      })(),
     },
     agenda: {
       variants: {
@@ -462,19 +452,6 @@ export const theme = {
         }),
       },
     },
-    bio: {
-      variants: {
-        default: bioLayout.tokenMap({
-          person: subHeading,
-          role: mutedBody,
-          text: bodyText,
-          list: bodyList,
-          table: tableTokens,
-          code: codeTokens,
-          mermaid: mermaidTokens,
-        }),
-      },
-    },
     caption: {
       variants: {
         default: captionLayout.tokenMap({
@@ -487,29 +464,6 @@ export const theme = {
         default: titleOnlyLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
-        }),
-      },
-    },
-    team: {
-      variants: {
-        default: teamLayout.tokenMap({
-          title: headerTitle,
-          eyebrow: headerEyebrow,
-          card: {
-            background: {
-              fill: colors.background,
-              fillOpacity: 0,
-              borderColor: colors.outlineVariant,
-              borderWidth: 0,
-              cornerRadius,
-            },
-            padding: padding,
-            gap: GAP.TIGHT,
-            hAlign: HALIGN.CENTER,
-            vAlign: VALIGN.TOP,
-            title: cardTitle,
-            description: cardDescription,
-          },
         }),
       },
     },

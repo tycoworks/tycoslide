@@ -657,57 +657,6 @@ export const cardsLayout = defineLayout({
   },
 });
 
-// --- bio ---
-
-export const BIO_LAYOUT_TOKEN = {
-  PERSON: 'person',
-  ROLE: 'role',
-  TEXT: 'text',
-  LIST: 'list',
-} as const;
-
-export interface BioLayoutTokens {
-  [BIO_LAYOUT_TOKEN.PERSON]: PlainTextTokens;
-  [BIO_LAYOUT_TOKEN.ROLE]: PlainTextTokens;
-  [BIO_LAYOUT_TOKEN.TEXT]: TextTokens;
-  [BIO_LAYOUT_TOKEN.LIST]: ListTokens;
-}
-
-// +----------------------------+
-// | +------+  Name             |
-// | |IMAGE |  Role             |
-// | |      |                   |
-// | +------+  Bio text from    |
-// |           body slot...     |
-// +----------------------------+
-// | footer                     |
-// +----------------------------+
-export const bioLayout = defineLayout({
-  name: 'bio',
-  description: 'Person introduction with photo, name, role, and bio.',
-  params: {
-    person: textComponent.schema,
-    role: textComponent.schema.optional(),
-    image: imageComponent.schema.optional(),
-  },
-  slots: ['body'],
-  tokens: [BIO_LAYOUT_TOKEN.PERSON, BIO_LAYOUT_TOKEN.ROLE, BIO_LAYOUT_TOKEN.TEXT, BIO_LAYOUT_TOKEN.LIST],
-  render: ({ person, role, image: imagePath, body }, tokens: BioLayoutTokens) => {
-    return masteredSlide(
-      row(
-        { height: SIZE.FILL },
-        ...(imagePath ? [image(imagePath)] : []),
-        column(
-          { vAlign: VALIGN.MIDDLE, gap: GAP.NORMAL, height: SIZE.FILL },
-          plainText(person, tokens.person),
-          ...(role ? [plainText(role, tokens.role)] : []),
-          ...body,
-        ),
-      ),
-    );
-  },
-});
-
 // --- caption ---
 
 export const CAPTION_LAYOUT_TOKEN = {
@@ -773,58 +722,6 @@ export const titleOnlyLayout = defineLayout({
   },
 });
 
-// --- team ---
-
-export const TEAM_LAYOUT_TOKEN = {
-  TITLE: 'title',
-  EYEBROW: 'eyebrow',
-  CARD: 'card',
-} as const;
-
-export interface TeamLayoutTokens {
-  [TEAM_LAYOUT_TOKEN.TITLE]: PlainTextTokens;
-  [TEAM_LAYOUT_TOKEN.EYEBROW]: PlainTextTokens;
-  [TEAM_LAYOUT_TOKEN.CARD]: CardTokens;
-}
-
-// +----------------------------+
-// | EYEBROW                    |
-// | Title                      |
-// |----------------------------|
-// | +------+ +------+ +------+ |
-// | | Name | | Name | | Name | |
-// | | Role | | Role | | Role | |
-// | +------+ +------+ +------+ |
-// +----------------------------+
-// | footer                     |
-// +----------------------------+
-export const teamLayout = defineLayout({
-  name: 'team',
-  description: 'Grid of team members with name, role, and optional photo.',
-  params: {
-    title: textComponent.schema.optional(),
-    eyebrow: textComponent.schema.optional(),
-    members: schema.array(schema.object({
-      name: schema.string(),
-      role: schema.string().optional(),
-      image: imageComponent.schema.optional(),
-    })),
-  },
-  tokens: [TEAM_LAYOUT_TOKEN.TITLE, TEAM_LAYOUT_TOKEN.EYEBROW, TEAM_LAYOUT_TOKEN.CARD],
-  render: ({ title, eyebrow, members }, tokens: TeamLayoutTokens) => {
-    const built = members.map(m => component(Component.Card, {
-      title: m.name,
-      description: m.role,
-      image: m.image,
-    }, tokens.card));
-    const perRow = built.length <= 3 ? built.length : built.length <= 6 ? 3 : 4;
-    return masteredSlide(
-      ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
-      centeredBody(grid(perRow, ...built)),
-    );
-  },
-});
-
 // ============================================
 // ALL LAYOUTS
 // ============================================
@@ -845,8 +742,6 @@ export const allLayouts = [
   statementLayout,
   agendaLayout,
   cardsLayout,
-  bioLayout,
   captionLayout,
   titleOnlyLayout,
-  teamLayout,
 ];

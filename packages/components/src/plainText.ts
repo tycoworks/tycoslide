@@ -17,10 +17,10 @@ export const PLAIN_TEXT_TOKEN = {
 } as const;
 
 export type PlainTextTokens = {
-  color: string;
-  style: TextStyleName;
-  hAlign: HorizontalAlignment;
-  vAlign: VerticalAlignment;
+  [PLAIN_TEXT_TOKEN.COLOR]: string;
+  [PLAIN_TEXT_TOKEN.STYLE]: TextStyleName;
+  [PLAIN_TEXT_TOKEN.HALIGN]: HorizontalAlignment;
+  [PLAIN_TEXT_TOKEN.VALIGN]: VerticalAlignment;
 };
 
 // ============================================
