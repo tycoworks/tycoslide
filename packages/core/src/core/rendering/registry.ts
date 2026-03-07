@@ -460,6 +460,16 @@ export interface LayoutDefinition {
 }
 
 /**
+ * A layout definition that preserves its token type for compile-time validation.
+ * The `.tokenMap()` identity method validates token maps against the layout's required shape.
+ * Extra properties (e.g. slot injection tokens) are allowed — only declared tokens are checked.
+ */
+export interface TypedLayoutDefinition<TTokens = unknown> extends LayoutDefinition {
+  /** Validate a token map against this layout's required token shape. Returns the map unchanged. */
+  tokenMap<T extends TTokens>(map: T): T;
+}
+
+/**
  * Define a layout with type-checked render params.
  * Pure factory — does NOT register the layout.
  * TypeScript enforces: params accepts only ScalarParam fields.
@@ -472,7 +482,7 @@ export function defineLayout<TParams extends ScalarShape, const TSlots extends r
   slots?: TSlots;
   tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
   render: (props: z.infer<z.ZodObject<TParams>> & SlotsToProps<TSlots>, tokens: TTokens extends undefined ? (Record<string, unknown> | undefined) : TTokens) => Slide;
-}): LayoutDefinition {
+}): TypedLayoutDefinition<TTokens extends undefined ? Record<string, unknown> : TTokens> {
   for (const key of Object.keys(def.params)) {
     if (RESERVED_FRONTMATTER_KEYS.has(key as any)) {
       throw new Error(
@@ -480,7 +490,8 @@ export function defineLayout<TParams extends ScalarShape, const TSlots extends r
       );
     }
   }
-  return def as unknown as LayoutDefinition;
+  (def as any).tokenMap = (map: any) => map;
+  return def as unknown as TypedLayoutDefinition<any>;
 }
 
 /**

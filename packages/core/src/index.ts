@@ -77,6 +77,7 @@ export {
   type ExpansionContext,
   type Canvas,
   type LayoutDefinition,
+  type TypedLayoutDefinition,
   type SchemaShape,
   type ScalarShape,
   type ComponentProps,

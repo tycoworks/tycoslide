@@ -14,6 +14,13 @@ import {
 } from 'tycoslide';
 import type { TextTokens, PlainTextTokens, ListTokens } from 'tycoslide-components';
 import { assets } from './assets.js';
+import {
+  titleLayout, endLayout, sectionLayout, bodyLayout,
+  statLayout, imageLayout, imageLeftLayout, imageRightLayout,
+  twoColumnLayout, comparisonLayout, statementLayout,
+  agendaLayout, cardsLayout, bioLayout, captionLayout,
+  titleOnlyLayout, teamLayout, quoteLayout,
+} from './layouts.js';
 
 // ============================================
 // COLOR PALETTE
@@ -261,7 +268,16 @@ const mermaidTokens = {
 // THEME EXPORT
 // ============================================
 
-export const theme: Theme = {
+// Shared slot injection tokens for layouts with markdown body slots
+const bodySlotTokens = {
+  table: tableTokens,
+  code: codeTokens,
+  mermaid: mermaidTokens,
+  quote: quoteSlotTokens,
+  testimonial: testimonialSlotTokens,
+};
+
+export const theme = {
   slide: SLIDE_SIZE.S16x9,
   spacing: { normal: gap, tight: gapTight, loose: gapLoose },
   fonts: [assets.fonts.inter, assets.fonts.firaCode],
@@ -279,152 +295,132 @@ export const theme: Theme = {
   layouts: {
     title: {
       variants: {
-        default: {
+        default: titleLayout.tokenMap({
           background: colors.text,
           title: heroTitle,
           subtitle: heroSubtitle,
-        },
+        }),
       },
     },
     end: {
       variants: {
-        default: {
+        default: endLayout.tokenMap({
           background: colors.text,
           title: heroTitle,
           subtitle: heroSubtitle,
-        },
+        }),
       },
     },
     section: {
       variants: {
-        default: {
+        default: sectionLayout.tokenMap({
           background: colors.text,
           title: sectionHeading,
-        },
+        }),
       },
     },
     body: {
       variants: {
-        default: {
+        default: bodyLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
           text: bodyText,
           list: bodyList,
-          table: tableTokens,
-          code: codeTokens,
-          mermaid: mermaidTokens,
-          quote: quoteSlotTokens,
-          testimonial: testimonialSlotTokens,
-        },
+          ...bodySlotTokens,
+        }),
       },
     },
     stat: {
       variants: {
-        default: {
+        default: statLayout.tokenMap({
           value: statValue,
           label: statLabel,
           caption: mutedCaption,
-        },
+        }),
       },
     },
     image: {
       variants: {
-        default: {
+        default: imageLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
-        },
+        }),
       },
     },
     'image-left': {
       variants: {
-        default: {
+        default: imageLeftLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
           text: bodyText,
           list: bodyList,
-          table: tableTokens,
-          code: codeTokens,
-          mermaid: mermaidTokens,
-          quote: quoteSlotTokens,
-          testimonial: testimonialSlotTokens,
-        },
+          ...bodySlotTokens,
+        }),
       },
     },
     'image-right': {
       variants: {
-        default: {
+        default: imageRightLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
           text: bodyText,
           list: bodyList,
-          table: tableTokens,
-          code: codeTokens,
-          mermaid: mermaidTokens,
-          quote: quoteSlotTokens,
-          testimonial: testimonialSlotTokens,
-        },
+          ...bodySlotTokens,
+        }),
       },
     },
     'two-column': {
       variants: {
-        default: {
+        default: twoColumnLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
           text: bodyText,
           list: bodyList,
-          table: tableTokens,
-          code: codeTokens,
-          mermaid: mermaidTokens,
-          quote: quoteSlotTokens,
-          testimonial: testimonialSlotTokens,
-        },
+          ...bodySlotTokens,
+        }),
       },
     },
     comparison: {
       variants: {
-        default: {
+        default: comparisonLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
           columnTitle: subHeading,
           text: bodyText,
           list: bodyList,
-          table: tableTokens,
-          code: codeTokens,
-          mermaid: mermaidTokens,
-          quote: quoteSlotTokens,
-          testimonial: testimonialSlotTokens,
-        },
+          ...bodySlotTokens,
+        }),
       },
     },
     statement: {
       variants: {
-        default: {
+        default: statementLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
           body: bodyText,
           caption: mutedCaption,
-        },
-        hero: {
+        }),
+        hero: statementLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
           body: { ...bodyText, style: TEXT_STYLE.H3 },
           caption: mutedCaption,
-        },
+        }),
       },
     },
     agenda: {
       variants: {
-        default: {
+        default: agendaLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
           intro: bodyText,
           items: bodyList,
-        },
+        }),
       },
     },
     cards: {
       variants: {
-        default: {
+        default: cardsLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
           intro: bodyText,
@@ -444,8 +440,8 @@ export const theme: Theme = {
             title: cardTitle,
             description: cardDescription,
           },
-        },
-        flat: {
+        }),
+        flat: cardsLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
           intro: bodyText,
@@ -465,12 +461,12 @@ export const theme: Theme = {
             title: cardTitle,
             description: cardDescription,
           },
-        },
+        }),
       },
     },
     bio: {
       variants: {
-        default: {
+        default: bioLayout.tokenMap({
           person: subHeading,
           role: mutedBody,
           text: bodyText,
@@ -478,27 +474,27 @@ export const theme: Theme = {
           table: tableTokens,
           code: codeTokens,
           mermaid: mermaidTokens,
-        },
+        }),
       },
     },
     caption: {
       variants: {
-        default: {
+        default: captionLayout.tokenMap({
           caption: captionPlain,
-        },
+        }),
       },
     },
     'title-only': {
       variants: {
-        default: {
+        default: titleOnlyLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
-        },
+        }),
       },
     },
     team: {
       variants: {
-        default: {
+        default: teamLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
           card: {
@@ -516,12 +512,12 @@ export const theme: Theme = {
             title: cardTitle,
             description: cardDescription,
           },
-        },
+        }),
       },
     },
     quote: {
       variants: {
-        default: {
+        default: quoteLayout.tokenMap({
           quote: {
             bar: {
               color: colors.primary,
@@ -532,7 +528,7 @@ export const theme: Theme = {
             quote: quoteText,
             attribution: quoteAttribution,
           },
-        },
+        }),
       },
     },
   },
@@ -551,4 +547,4 @@ export const theme: Theme = {
       vAlign: VALIGN.MIDDLE,
     },
   },
-};
+} satisfies Theme;
