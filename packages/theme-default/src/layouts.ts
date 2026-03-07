@@ -27,7 +27,6 @@ import {
   Component,
 } from 'tycoslide-components';
 import type { PlainTextTokens, TextTokens, ListTokens, CardTokens, QuoteTokens } from 'tycoslide-components';
-import { DEFAULT_MASTER } from './master.js';
 
 // ============================================
 // COMPOSITION PRIMITIVES
@@ -66,10 +65,11 @@ function centeredBody(...elements: SlideNode[]): SlideNode {
   );
 }
 
-/** Wrap content in the DEFAULT_MASTER (footer + content bounds) */
+/** Wrap content in the default master (footer chrome + content bounds) */
 export function masteredSlide(...content: SlideNode[]): Slide {
   return {
-    master: DEFAULT_MASTER,
+    masterName: 'default',
+    masterVariant: 'default',
     content: column({ gap: GAP.NONE, height: SIZE.FILL }, ...content),
   };
 }
@@ -98,13 +98,11 @@ function imageSplitSlide(imagePath: string, body: SlideNode[], imageOnLeft: bool
 // --- title, end ---
 
 export const TITLE_LAYOUT_TOKEN = {
-  BACKGROUND: 'background',
   TITLE: 'title',
   SUBTITLE: 'subtitle',
 } as const;
 
 export interface TitleLayoutTokens {
-  [TITLE_LAYOUT_TOKEN.BACKGROUND]: string;
   [TITLE_LAYOUT_TOKEN.TITLE]: PlainTextTokens;
   [TITLE_LAYOUT_TOKEN.SUBTITLE]: PlainTextTokens;
 }
@@ -122,10 +120,11 @@ export const titleLayout = defineLayout({
     title: textComponent.schema,
     subtitle: textComponent.schema.optional(),
   },
-  tokens: [TITLE_LAYOUT_TOKEN.BACKGROUND, TITLE_LAYOUT_TOKEN.TITLE, TITLE_LAYOUT_TOKEN.SUBTITLE],
+  tokens: [TITLE_LAYOUT_TOKEN.TITLE, TITLE_LAYOUT_TOKEN.SUBTITLE],
   render: ({ title, subtitle }, tokens: TitleLayoutTokens) => {
     return {
-      background: tokens.background,
+      masterName: 'minimal',
+      masterVariant: 'dark',
       content: column(
         { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, gap: GAP.TIGHT, height: SIZE.FILL },
         plainText(title, tokens.title),
@@ -138,12 +137,10 @@ export const titleLayout = defineLayout({
 // --- section ---
 
 export const SECTION_LAYOUT_TOKEN = {
-  BACKGROUND: 'background',
   TITLE: 'title',
 } as const;
 
 export interface SectionLayoutTokens {
-  [SECTION_LAYOUT_TOKEN.BACKGROUND]: string;
   [SECTION_LAYOUT_TOKEN.TITLE]: PlainTextTokens;
 }
 
@@ -156,10 +153,11 @@ export const sectionLayout = defineLayout({
   name: 'section',
   description: 'Section divider with centered title.',
   params: { title: textComponent.schema },
-  tokens: [SECTION_LAYOUT_TOKEN.BACKGROUND, SECTION_LAYOUT_TOKEN.TITLE],
+  tokens: [SECTION_LAYOUT_TOKEN.TITLE],
   render: ({ title }, tokens: SectionLayoutTokens) => {
     return {
-      background: tokens.background,
+      masterName: 'minimal',
+      masterVariant: 'dark',
       content: column(
         { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, height: SIZE.FILL },
         plainText(title, tokens.title),
@@ -299,10 +297,11 @@ export const endLayout = defineLayout({
     title: textComponent.schema,
     subtitle: textComponent.schema.optional(),
   },
-  tokens: [TITLE_LAYOUT_TOKEN.BACKGROUND, TITLE_LAYOUT_TOKEN.TITLE, TITLE_LAYOUT_TOKEN.SUBTITLE],
+  tokens: [TITLE_LAYOUT_TOKEN.TITLE, TITLE_LAYOUT_TOKEN.SUBTITLE],
   render: ({ title, subtitle }, tokens: TitleLayoutTokens) => {
     return {
-      background: tokens.background,
+      masterName: 'minimal',
+      masterVariant: 'dark',
       content: column(
         { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, gap: GAP.TIGHT, height: SIZE.FILL },
         plainText(title, tokens.title),
@@ -323,6 +322,8 @@ export const blankLayout = defineLayout({
   params: {},
   slots: ['body'],
   render: ({ body }) => ({
+    masterName: 'minimal',
+    masterVariant: 'default',
     content: column({ height: SIZE.FILL }, ...body),
   }),
 });

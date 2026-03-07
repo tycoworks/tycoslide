@@ -20,9 +20,11 @@ import {
   gridComponent,
   listComponent,
 } from 'tycoslide-components';
+import type { MasterDefinition } from 'tycoslide';
 import { allLayouts } from './layouts.js';
+import { defaultMaster, minimalMaster } from './master.js';
 
-// Explicit component and layout lists — themes declare what they use
+// Explicit component, layout, and master lists — themes declare what they use
 export const components = [
   textComponent,
   plainTextComponent,
@@ -44,6 +46,8 @@ export const components = [
 ];
 
 export const layouts = allLayouts;
+
+export const masters: MasterDefinition[] = [defaultMaster, minimalMaster];
 
 // Theme and assets
 export { theme } from './theme.js';

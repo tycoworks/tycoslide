@@ -91,7 +91,7 @@ describe('schema', () => {
           // @ts-expect-error: z.custom() is not a ScalarParam
           content: z.custom<string[]>(),
         },
-        render: () => ({ content: dummy }),
+        render: () => ({ masterName: 'default', masterVariant: 'default', content: dummy }),
       });
     });
 
@@ -104,7 +104,7 @@ describe('schema', () => {
           // @ts-expect-error: z.any() is not a ScalarParam
           data: z.any(),
         },
-        render: () => ({ content: dummy }),
+        render: () => ({ masterName: 'default', masterVariant: 'default', content: dummy }),
       });
     });
   });

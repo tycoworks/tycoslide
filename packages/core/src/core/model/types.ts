@@ -1,8 +1,6 @@
 // Core Type Definitions
 // External-facing interfaces and type aliases
 
-import { Bounds } from './bounds.js';
-
 // ============================================
 // CONSTANTS
 // ============================================
@@ -314,10 +312,10 @@ export const UNDERLINE_STYLE = {
 export type UnderlineStyle = typeof UNDERLINE_STYLE[keyof typeof UNDERLINE_STYLE];
 
 export const SLIDE_SIZE = {
-  S16x9:  { layout: 'LAYOUT_16x9',  width: 10,    height: 5.625, margin: 0.5 },
-  S16x10: { layout: 'LAYOUT_16x10', width: 10,    height: 6.25,  margin: 0.5 },
-  S4x3:   { layout: 'LAYOUT_4x3',   width: 10,    height: 7.5,   margin: 0.5 },
-  WIDE:   { layout: 'LAYOUT_WIDE',  width: 13.33, height: 7.5,   margin: 0.5 },
+  S16x9:  { layout: 'LAYOUT_16x9',  width: 10,    height: 5.625 },
+  S16x10: { layout: 'LAYOUT_16x10', width: 10,    height: 6.25  },
+  S4x3:   { layout: 'LAYOUT_4x3',   width: 10,    height: 7.5   },
+  WIDE:   { layout: 'LAYOUT_WIDE',  width: 13.33, height: 7.5   },
 } as const;
 
 export type SlideSize = typeof SLIDE_SIZE[keyof typeof SLIDE_SIZE];
@@ -328,7 +326,6 @@ export interface CustomSlideSize {
   layout: typeof CUSTOM_LAYOUT;
   width: number;
   height: number;
-  margin: number;
 }
 
 // ============================================
@@ -442,51 +439,16 @@ export { Bounds } from './bounds.js';
 
 import type { ComponentNode } from './nodes.js';
 
-/** The variant name used when no explicit variant is requested. Every component must define this variant. */
-export const DEFAULT_VARIANT = 'default' as const;
-
-
 // ============================================
-// THEME TYPES
+// SLIDE & THEME TYPES
 // ============================================
-
-// ============================================
-// SLIDE & MASTER TYPES
-// ============================================
-
-/** Typed token shape for the default master slide.
- *  Defines background, footer chrome, and slide number styling.
- *  Sub-object shapes match PlainTextTokens / SlideNumberTokens
- *  (structurally compatible without cross-package imports). */
-export interface MasterTokens {
-  background: string;
-  footerHeight: number;
-  footerText: string;
-  slideNumber: {
-    style: TextStyleName;
-    color: string;
-    hAlign: HorizontalAlignment;
-    vAlign: VerticalAlignment;
-  };
-  footer: {
-    style: TextStyleName;
-    color: string;
-    hAlign: HorizontalAlignment;
-    vAlign: VerticalAlignment;
-  };
-}
-
-export interface Master {
-  name: string;
-  getContent(theme: Theme): {
-    content: ComponentNode;     // Master's visual elements (full-slide layout tree)
-    contentBounds: Bounds;     // Where per-slide content goes
-    background: string;        // Slide background (from tokens)
-  };
-}
 
 export interface Slide {
-  master?: Master;
+  /** Master name — every slide must reference a registered master. */
+  masterName: string;
+  /** Master variant — explicitly set by every layout. */
+  masterVariant: string;
+  /** Overrides master background if set. */
   background?: string;
   notes?: string;
   content: ComponentNode;
@@ -508,8 +470,11 @@ export interface Theme {
   textStyles: Record<string, TextStyle>;
   /** Layout tokens. Each layout that declares token keys gets its visual values from here. */
   layouts: Record<string, {
-    variants: { [DEFAULT_VARIANT]: Record<string, unknown> } & Record<string, Record<string, unknown>>;
+    variants: Record<string, Record<string, unknown>>;
   }>;
-  /** Master slide tokens. Background, footer chrome, and slide number styling. */
-  master: MasterTokens;
+  /** Master tokens. Each master that declares token keys gets its visual values from here.
+   *  Same variant structure as layouts — framework resolves tokens before calling getContent. */
+  masters: Record<string, {
+    variants: Record<string, Record<string, unknown>>;
+  }>;
 }

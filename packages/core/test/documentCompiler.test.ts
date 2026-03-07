@@ -31,16 +31,22 @@ function makeOptions() {
 }
 
 // Mock layouts
+function mockSlide(props: any): Slide {
+  receivedProps.push(props);
+  const slide: Slide = {
+    masterName: 'default',
+    masterVariant: 'default',
+    content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props },
+  };
+  renderedSlides.push(slide);
+  return slide;
+}
+
 const simpleLayout = {
   name: 'simple',
   description: 'Test layout with just title',
   params: { title: schema.string() },
-  render: (props: any): Slide => {
-    receivedProps.push(props);
-    const slide: Slide = { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
-    renderedSlides.push(slide);
-    return slide;
-  },
+  render: (props: any): Slide => mockSlide(props),
 };
 
 const bodyLayout = {
@@ -48,12 +54,7 @@ const bodyLayout = {
   description: 'Body layout with title and body',
   params: { title: schema.string().optional() },
   slots: ['body'],
-  render: (props: any): Slide => {
-    receivedProps.push(props);
-    const slide: Slide = { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
-    renderedSlides.push(slide);
-    return slide;
-  },
+  render: (props: any): Slide => mockSlide(props),
 };
 
 const slotLayout = {
@@ -61,36 +62,21 @@ const slotLayout = {
   description: 'Slot layout with named slots',
   params: { title: schema.string(), eyebrow: schema.string() },
   slots: ['left', 'right'],
-  render: (props: any): Slide => {
-    receivedProps.push(props);
-    const slide: Slide = { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
-    renderedSlides.push(slide);
-    return slide;
-  },
+  render: (props: any): Slide => mockSlide(props),
 };
 
 const strictLayout = {
   name: 'strict',
   description: 'Strict layout with required field',
   params: { title: schema.string(), required_field: schema.string() },
-  render: (props: any): Slide => {
-    receivedProps.push(props);
-    const slide: Slide = { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
-    renderedSlides.push(slide);
-    return slide;
-  },
+  render: (props: any): Slide => mockSlide(props),
 };
 
 const defaultLayout = {
   name: 'default',
   description: 'Default layout with optional body',
   params: { title: schema.string().optional(), body: schema.string().optional() },
-  render: (props: any): Slide => {
-    receivedProps.push(props);
-    const slide: Slide = { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
-    renderedSlides.push(slide);
-    return slide;
-  },
+  render: (props: any): Slide => mockSlide(props),
 };
 
 // ============================================
@@ -114,6 +100,7 @@ describe('Document Compiler', () => {
     it('should compile a minimal frontmatter-only slide', () => {
       const md = HEADER + `---
 layout: simple
+variant: default
 title: Hello World
 ---`;
       compileDocument(md, makeOptions());
@@ -124,6 +111,7 @@ title: Hello World
     it('should pass title from frontmatter', () => {
       const md = HEADER + `---
 layout: simple
+variant: default
 title: Frontmatter Title
 ---`;
       compileDocument(md, makeOptions());
@@ -134,6 +122,7 @@ title: Frontmatter Title
     it('should compile markdown body to ComponentNode[]', () => {
       const md = HEADER + `---
 layout: body
+variant: default
 ---
 
 This is the body content.
@@ -148,6 +137,7 @@ Multiple paragraphs are preserved.`;
     it('should compile named slots to ComponentNode[]', () => {
       const md = HEADER + `---
 layout: slots
+variant: default
 title: Two Column Slide
 eyebrow: ARCHITECTURE
 ---
@@ -170,6 +160,7 @@ Right column content here.`;
     it('should attach speaker notes from frontmatter', () => {
       const md = HEADER + `---
 layout: simple
+variant: default
 title: Slide with Notes
 notes: These are speaker notes.
 ---`;
@@ -181,16 +172,19 @@ notes: These are speaker notes.
     it('should compile multiple slides', () => {
       const md = HEADER + `---
 layout: simple
+variant: default
 title: Slide One
 ---
 
 ---
 layout: simple
+variant: default
 title: Slide Two
 ---
 
 ---
 layout: simple
+variant: default
 title: Slide Three
 ---`;
       compileDocument(md, makeOptions());
@@ -203,6 +197,7 @@ title: Slide Three
     it('should prefer frontmatter body over markdown body', () => {
       const md = HEADER + `---
 layout: default
+variant: default
 body: Frontmatter body content
 ---
 
@@ -215,6 +210,7 @@ Markdown body content`;
     it('should ignore ::slot:: markers that match param names (separate namespaces)', () => {
       const md = HEADER + `---
 layout: slots
+variant: default
 title: Title
 eyebrow: FROM_FM
 ---
@@ -276,9 +272,25 @@ layout: nonexistent
       );
     });
 
+    it('should throw when variant is omitted', () => {
+      const md = HEADER + `---
+layout: simple
+title: No Variant
+---`;
+      assert.throws(
+        () => compileDocument(md, makeOptions()),
+        (err: any) => {
+          assert.ok(err.message.includes("missing 'variant'"));
+          assert.ok(err.message.includes('Slide 1'));
+          return true;
+        },
+      );
+    });
+
     it('should throw on validation failure with missing required field', () => {
       const md = HEADER + `---
 layout: strict
+variant: default
 title: Has Title
 ---`;
       assert.throws(
@@ -295,6 +307,7 @@ title: Has Title
     it('should pass asset references through as strings (resolved at expansion time)', () => {
       const md = HEADER + `---
 layout: body
+variant: default
 title: asset.images.photo
 ---
 

@@ -4,7 +4,7 @@
 import * as assert from 'node:assert';
 import { createRequire } from 'module';
 import type { Theme, TextStyle, FontFamily } from '../src/core/model/types.js';
-import { TEXT_STYLE, FONT_WEIGHT, HALIGN, VALIGN } from '../src/core/model/types.js';
+import { TEXT_STYLE, FONT_WEIGHT } from '../src/core/model/types.js';
 
 const require = createRequire(import.meta.url);
 
@@ -41,7 +41,7 @@ export function mockTheme(options?: {
   const gapTight = options?.gapTight ?? 0.125;
   const gapLoose = options?.gapLoose ?? 0.5;
   return {
-    slide: options?.slide ?? { layout: 'CUSTOM' as const, width: 13.333, height: 7.5, margin: 0.5 },
+    slide: options?.slide ?? { layout: 'CUSTOM' as const, width: 13.333, height: 7.5 },
     spacing: { normal: gap, tight: gapTight, loose: gapLoose },
     fonts: [mockFontFamily],
     textStyles: {
@@ -56,13 +56,7 @@ export function mockTheme(options?: {
       [TEXT_STYLE.CODE]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.CODE] },
     },
     layouts: (options?.layouts ?? {}) as Theme['layouts'],
-    master: {
-      background: 'FFFFFF',
-      footerHeight: 0.3,
-      footerText: 'test',
-      slideNumber: { style: TEXT_STYLE.FOOTER, color: '999999', hAlign: HALIGN.RIGHT, vAlign: VALIGN.MIDDLE },
-      footer: { style: TEXT_STYLE.FOOTER, color: '999999', hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
-    },
+    masters: {},
   };
 }
 

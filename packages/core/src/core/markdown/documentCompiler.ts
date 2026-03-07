@@ -13,7 +13,7 @@ import { layoutRegistry, RESERVED_FRONTMATTER_KEYS, isComponentNode, type Layout
 import type { SlideNode, ComponentNode } from '../model/nodes.js';
 import { Presentation } from '../rendering/presentation.js';
 import type { Theme, Slide } from '../model/types.js';
-import { DEFAULT_VARIANT } from '../model/types.js';
+
 
 /** Build a name from frontmatter for identifying slides in error messages and shared references. */
 export function buildSlideName(raw: RawSlide): string {
@@ -148,7 +148,13 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
   }
 
   // 3. Extract variant from frontmatter (before stripping reserved keys)
-  const variant = (raw.frontmatter.variant as string | undefined) ?? DEFAULT_VARIANT;
+  const variant = raw.frontmatter.variant as string | undefined;
+
+  if (!variant) {
+    throw new Error(
+      `Slide ${raw.index + 1}: missing 'variant' field in frontmatter`,
+    );
+  }
 
   // 4. Build PARAMS — strip reserved frontmatter keys
   const params: Record<string, unknown> = { ...raw.frontmatter };

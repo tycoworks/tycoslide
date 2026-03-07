@@ -12,7 +12,6 @@ import { Registry, layoutRegistry, componentRegistry, defineLayout, isComponentN
 import type { LayoutDefinition } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
 import type { Slide } from '../src/core/model/types.js';
-import { DEFAULT_VARIANT } from '../src/core/model/types.js';
 import { mockTheme } from './mocks.js';
 import { schema } from '../src/core/model/schema.js';
 import { compileDocument } from '../src/core/markdown/documentCompiler.js';
@@ -39,12 +38,12 @@ describe('LayoutRegistry.resolveTokens', () => {
       layouts: {
         title: {
           variants: {
-            [DEFAULT_VARIANT]: { background: 'FF0000', title: { style: 'h1', color: 'FFFFFF' } },
+            ['default']: { background: 'FF0000', title: { style: 'h1', color: 'FFFFFF' } },
           },
         },
       },
     });
-    const tokens = layoutRegistry.resolveTokens('title', DEFAULT_VARIANT, theme);
+    const tokens = layoutRegistry.resolveTokens('title', 'default', theme);
     assert.strictEqual(tokens.background, 'FF0000');
     assert.deepStrictEqual(tokens.title, { style: 'h1', color: 'FFFFFF' });
   });
@@ -54,7 +53,7 @@ describe('LayoutRegistry.resolveTokens', () => {
       layouts: {
         title: {
           variants: {
-            [DEFAULT_VARIANT]: { background: 'FF0000' },
+            ['default']: { background: 'FF0000' },
             dark: { background: '000000' },
           },
         },
@@ -67,7 +66,7 @@ describe('LayoutRegistry.resolveTokens', () => {
   it('throws when layout is not in theme.layouts', () => {
     const theme = mockTheme({ layouts: {} });
     assert.throws(
-      () => layoutRegistry.resolveTokens('nonexistent', DEFAULT_VARIANT, theme),
+      () => layoutRegistry.resolveTokens('nonexistent', 'default', theme),
       /theme\.layouts\.nonexistent is missing/,
     );
   });
@@ -76,7 +75,7 @@ describe('LayoutRegistry.resolveTokens', () => {
     const theme = mockTheme();
     // theme.layouts is undefined by default
     assert.throws(
-      () => layoutRegistry.resolveTokens('title', DEFAULT_VARIANT, theme),
+      () => layoutRegistry.resolveTokens('title', 'default', theme),
       /theme\.layouts\.title is missing/,
     );
   });
@@ -86,7 +85,7 @@ describe('LayoutRegistry.resolveTokens', () => {
       layouts: {
         title: {
           variants: {
-            [DEFAULT_VARIANT]: { background: 'FF0000' },
+            ['default']: { background: 'FF0000' },
           },
         },
       },
@@ -117,7 +116,7 @@ describe('LayoutRegistry.validateTheme', () => {
       description: 'test',
       params: {},
       tokens: ['background', 'title'],
-      render: () => ({ content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: {} } }),
+      render: () => ({ masterName: 'default', masterVariant: 'default', content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: {} } }),
     });
     layoutRegistry.register(layout);
 
@@ -125,7 +124,7 @@ describe('LayoutRegistry.validateTheme', () => {
       layouts: {
         tokenTest1: {
           variants: {
-            [DEFAULT_VARIANT]: { background: 'FFFFFF', title: { style: 'h1' } },
+            ['default']: { background: 'FFFFFF', title: { style: 'h1' } },
           },
         },
       },
@@ -140,7 +139,7 @@ describe('LayoutRegistry.validateTheme', () => {
       description: 'test',
       params: {},
       tokens: ['background', 'title'],
-      render: () => ({ content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: {} } }),
+      render: () => ({ masterName: 'default', masterVariant: 'default', content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: {} } }),
     });
     layoutRegistry.register(layout);
 
@@ -158,7 +157,7 @@ describe('LayoutRegistry.validateTheme', () => {
       description: 'test',
       params: {},
       tokens: ['background', 'title'],
-      render: () => ({ content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: {} } }),
+      render: () => ({ masterName: 'default', masterVariant: 'default', content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: {} } }),
     });
     layoutRegistry.register(layout);
 
@@ -166,7 +165,7 @@ describe('LayoutRegistry.validateTheme', () => {
       layouts: {
         tokenTest3: {
           variants: {
-            [DEFAULT_VARIANT]: { background: 'FFFFFF' }, // missing 'title'
+            ['default']: { background: 'FFFFFF' }, // missing 'title'
           },
         },
       },
@@ -178,38 +177,12 @@ describe('LayoutRegistry.validateTheme', () => {
     );
   });
 
-  it('throws when default variant is missing', () => {
-    const layout = defineLayout({
-      name: 'tokenTest4',
-      description: 'test',
-      params: {},
-      tokens: ['background'],
-      render: () => ({ content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: {} } }),
-    });
-    layoutRegistry.register(layout);
-
-    const theme = mockTheme({
-      layouts: {
-        tokenTest4: {
-          variants: {
-            dark: { background: '000000' },
-          },
-        },
-      },
-    });
-
-    assert.throws(
-      () => layoutRegistry.validateTheme(theme, ['tokenTest4']),
-      /missing 'default' variant for layout 'tokenTest4'/,
-    );
-  });
-
   it('skips layouts without tokens', () => {
     const layout = defineLayout({
       name: 'tokenTest5',
       description: 'test',
       params: {},
-      render: () => ({ content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: {} } }),
+      render: () => ({ masterName: 'default', masterVariant: 'default', content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: {} } }),
     });
     layoutRegistry.register(layout);
 
@@ -238,7 +211,7 @@ describe('Document Compiler: Layout Tokens', () => {
     render: (props: any, tokens?: Record<string, unknown>): Slide => {
       receivedProps.push(props);
       receivedTokens.push(tokens);
-      return { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
+      return { masterName: 'default', masterVariant: 'default', content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
     },
   });
 
@@ -250,7 +223,7 @@ describe('Document Compiler: Layout Tokens', () => {
     render: (props: any, tokens?: Record<string, unknown>): Slide => {
       receivedProps.push(props);
       receivedTokens.push(tokens);
-      return { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
+      return { masterName: 'default', masterVariant: 'default', content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
     },
   });
 
@@ -266,13 +239,13 @@ describe('Document Compiler: Layout Tokens', () => {
       layouts: {
         tokenSimple: {
           variants: {
-            [DEFAULT_VARIANT]: { background: 'AAAAAA', titleTokens: { style: 'h1', color: 'FFFFFF' } },
+            ['default']: { background: 'AAAAAA', titleTokens: { style: 'h1', color: 'FFFFFF' } },
           },
         },
       },
     });
 
-    const md = HEADER + `---\nlayout: tokenSimple\ntitle: Hello\n---`;
+    const md = HEADER + `---\nlayout: tokenSimple\nvariant: default\ntitle: Hello\n---`;
     compileDocument(md, { theme });
 
     assert.strictEqual(receivedTokens.length, 1);
@@ -285,7 +258,7 @@ describe('Document Compiler: Layout Tokens', () => {
       layouts: {
         tokenSimple: {
           variants: {
-            [DEFAULT_VARIANT]: { background: 'AAAAAA', titleTokens: { style: 'h1' } },
+            ['default']: { background: 'AAAAAA', titleTokens: { style: 'h1' } },
             dark: { background: '000000', titleTokens: { style: 'h2' } },
           },
         },
@@ -304,14 +277,14 @@ describe('Document Compiler: Layout Tokens', () => {
       layouts: {
         tokenSimple: {
           variants: {
-            [DEFAULT_VARIANT]: { background: 'FFFFFF', titleTokens: {} },
+            ['default']: { background: 'FFFFFF', titleTokens: {} },
             dark: { background: '000000', titleTokens: {} },
           },
         },
       },
     });
 
-    const md = HEADER + `---\nlayout: tokenSimple\ntitle: Hello\n---`;
+    const md = HEADER + `---\nlayout: tokenSimple\nvariant: default\ntitle: Hello\n---`;
     compileDocument(md, { theme });
 
     assert.strictEqual(receivedTokens[0].background, 'FFFFFF');
@@ -322,7 +295,7 @@ describe('Document Compiler: Layout Tokens', () => {
       layouts: {
         tokenSimple: {
           variants: {
-            [DEFAULT_VARIANT]: { background: 'FFFFFF', titleTokens: {} },
+            ['default']: { background: 'FFFFFF', titleTokens: {} },
             dark: { background: '000000', titleTokens: {} },
           },
         },
@@ -348,12 +321,12 @@ describe('Document Compiler: Layout Tokens', () => {
       params: { title: schema.string() },
       render: (props: any, tokens?: Record<string, unknown>): Slide => {
         capturedTokens = tokens;
-        return { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
+        return { masterName: 'default', masterVariant: 'default', content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
       },
     });
     layoutRegistry.register(noTokenLayout);
 
-    const md = HEADER + `---\nlayout: noTokenTest\ntitle: Hello\n---`;
+    const md = HEADER + `---\nlayout: noTokenTest\nvariant: default\ntitle: Hello\n---`;
     compileDocument(md, { theme: mockTheme() });
 
     assert.strictEqual(capturedTokens, undefined);
@@ -378,7 +351,7 @@ describe('Slot Token Injection', () => {
     render: (props: any, tokens?: Record<string, unknown>): Slide => {
       receivedProps.push(props);
       receivedTokens.push(tokens);
-      return { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
+      return { masterName: 'default', masterVariant: 'default', content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
     },
   });
 
@@ -395,7 +368,7 @@ describe('Slot Token Injection', () => {
       layouts: {
         slotTokenTest: {
           variants: {
-            [DEFAULT_VARIANT]: {
+            ['default']: {
               background: 'FFFFFF',
               text: textTokens,
             },
@@ -404,7 +377,7 @@ describe('Slot Token Injection', () => {
       },
     });
 
-    const md = HEADER + `---\nlayout: slotTokenTest\n---\n\nHello world`;
+    const md = HEADER + `---\nlayout: slotTokenTest\nvariant: default\n---\n\nHello world`;
     compileDocument(md, { theme });
 
     assert.strictEqual(receivedProps.length, 1);
@@ -430,7 +403,7 @@ describe('Slot Token Injection', () => {
       layouts: {
         slotTokenTest: {
           variants: {
-            [DEFAULT_VARIANT]: {
+            ['default']: {
               background: 'FFFFFF',
               text: textTokens,
             },
@@ -440,7 +413,7 @@ describe('Slot Token Injection', () => {
     });
 
     // Use a heading which sets style explicitly
-    const md = HEADER + `---\nlayout: slotTokenTest\n---\n\n## Heading`;
+    const md = HEADER + `---\nlayout: slotTokenTest\nvariant: default\n---\n\n## Heading`;
     compileDocument(md, { theme });
 
     const bodyNodes = receivedProps[0].body;
@@ -459,7 +432,7 @@ describe('Slot Token Injection', () => {
       layouts: {
         slotTokenTest: {
           variants: {
-            [DEFAULT_VARIANT]: {
+            ['default']: {
               background: 'FFFFFF',
               // No 'text' key — only 'background'
               text: undefined as any,  // explicitly undefined
@@ -470,9 +443,9 @@ describe('Slot Token Injection', () => {
     });
 
     // Remove the undefined key to truly test absence
-    delete (theme.layouts as any).slotTokenTest.variants[DEFAULT_VARIANT].text;
+    delete (theme.layouts as any).slotTokenTest.variants['default'].text;
 
-    const md = HEADER + `---\nlayout: slotTokenTest\n---\n\nHello`;
+    const md = HEADER + `---\nlayout: slotTokenTest\nvariant: default\n---\n\nHello`;
     compileDocument(md, { theme });
 
     const bodyNodes = receivedProps[0].body;
@@ -493,7 +466,7 @@ describe('Slot Token Injection', () => {
       tokens: ['background', 'text'],
       render: (props: any, tokens?: Record<string, unknown>): Slide => {
         capturedProps = props;
-        return { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
+        return { masterName: 'default', masterVariant: 'default', content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } };
       },
     });
     layoutRegistry.register(noSlotTokenLayout);
@@ -502,7 +475,7 @@ describe('Slot Token Injection', () => {
       layouts: {
         noSlotTokenTest: {
           variants: {
-            [DEFAULT_VARIANT]: {
+            ['default']: {
               background: 'FFFFFF',
               text: { style: 'body', color: '000000' },
             },
@@ -511,7 +484,7 @@ describe('Slot Token Injection', () => {
       },
     });
 
-    const md = HEADER + `---\nlayout: noSlotTokenTest\ntitle: Hello\n---`;
+    const md = HEADER + `---\nlayout: noSlotTokenTest\nvariant: default\ntitle: Hello\n---`;
     compileDocument(md, { theme });
 
     // Props should just be the validated params, no injection
@@ -530,7 +503,7 @@ describe('RESERVED_FRONTMATTER_KEYS includes variant', () => {
         name: 'badLayout',
         description: 'test',
         params: { variant: schema.string() },
-        render: () => ({ content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: {} } }),
+        render: () => ({ masterName: 'default', masterVariant: 'default', content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: {} } }),
       }),
       /reserved frontmatter key/,
     );

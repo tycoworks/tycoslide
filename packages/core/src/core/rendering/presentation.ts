@@ -5,17 +5,17 @@
 // This enables batching all text measurements in a single browser call.
 
 import path from 'path';
-import type { Theme, Slide, Master } from '../model/types.js';
+import type { Theme, Slide } from '../model/types.js';
 import type { ElementNode, PositionedNode } from '../model/nodes.js';
 import { Bounds } from '../model/bounds.js';
 import { PptxRenderer } from './pptxRenderer.js';
 import { LayoutValidator, LayoutValidationError } from '../layout/validator.js';
 import type { SlideValidationResult, ValidationResult } from '../layout/validator.js';
 import { log } from '../../utils/log.js';
-import { componentRegistry, type ExpansionContext } from './registry.js';
+import { componentRegistry, masterRegistry, type ExpansionContext } from './registry.js';
 import { LayoutPipeline } from '../layout/pipeline.js';
 
-export type { Slide, Master } from '../model/types.js';
+export type { Slide } from '../model/types.js';
 
 // ============================================
 // DEFERRED SLIDE (internal)
@@ -57,7 +57,6 @@ export class Presentation {
   private _theme: Theme;
   private _assets?: Record<string, unknown>;
   private masters = new Map<string, { contentBounds: Bounds; positioned: PositionedNode }>();
-  private fullBounds: Bounds;
   private masterBounds: Bounds;
   private slideCount = 0;
   private deferredSlides: DeferredSlide[] = [];
@@ -67,9 +66,7 @@ export class Presentation {
     this._assets = assets;
     this.renderer = new PptxRenderer(theme);
 
-    // Calculate full slide bounds (no master - just margins)
-    const { width, height, margin } = theme.slide;
-    this.fullBounds = new Bounds(width, height, margin);
+    const { width, height } = theme.slide;
     this.masterBounds = new Bounds(width, height);  // Full slide — masters position their own content
   }
 
@@ -84,7 +81,7 @@ export class Presentation {
   add(slide: Slide): void {
     const slideIndex = this.slideCount;
     this.slideCount++;
-    log.pptx.slide('STORE slide #%d master=%s (deferred)', slideIndex + 1, slide.master?.name ?? 'none');
+    log.pptx.slide('STORE slide #%d master=%s (deferred)', slideIndex + 1, slide.masterName);
     this.deferredSlides.push({ slide, slideIndex });
   }
 
@@ -150,28 +147,30 @@ export class Presentation {
         },
       };
 
-      // Phase 1: Expand masters (collect unique masters, expand component trees, collect measurements)
+      // Phase 1: Expand masters (collect unique master+variant combos, expand component trees)
       log.pptx._('PIPELINE: Collecting masters and slides...');
+      const { width, height } = this._theme.slide;
       const pendingMasters = new Map<string, {
-        master: Master;
         content: ElementNode;
         contentBounds: Bounds;
         background: string;
       }>();
 
       for (const deferred of this.deferredSlides) {
-        const { master } = deferred.slide;
-        if (master && !this.masters.has(master.name) && !pendingMasters.has(master.name)) {
-          const { content: rawMasterContent, contentBounds, background } = master.getContent(this._theme);
+        const { masterName, masterVariant } = deferred.slide;
+        const masterKey = `${masterName}/${masterVariant}`;
+
+        if (!this.masters.has(masterKey) && !pendingMasters.has(masterKey)) {
+          const def = masterRegistry.get(masterName);
+          if (!def) {
+            throw new Error(`Unknown master: '${masterName}'. Did you forget to register it?`);
+          }
+          const tokens = masterRegistry.resolveTokens(masterName, masterVariant, this._theme);
+          const { content: rawMasterContent, contentBounds, background } = def.getContent(tokens, { width, height });
           const masterContent = await componentRegistry.expandTree(rawMasterContent, expansionContext);
-          pendingMasters.set(master.name, {
-            master,
-            content: masterContent,
-            contentBounds,
-            background,
-          });
+          pendingMasters.set(masterKey, { content: masterContent, contentBounds, background });
           // Collect measurements from master content (full slide — masters position their own elements)
-          pipeline.collectFromTree(masterContent, this.masterBounds, `master-${master.name}`);
+          pipeline.collectFromTree(masterContent, this.masterBounds, `master-${masterName}-${masterVariant}`);
         }
       }
 
@@ -181,26 +180,26 @@ export class Presentation {
         deferred: DeferredSlide;
         expanded: ElementNode;
         bounds: Bounds;
+        masterKey: string;
       }> = [];
 
       for (const deferred of this.deferredSlides) {
         const { slide, slideIndex } = deferred;
-        const { master, content } = slide;
+        const { masterName, masterVariant } = slide;
+        const masterKey = `${masterName}/${masterVariant}`;
 
         // Get bounds from pending or existing master
-        let bounds: Bounds;
-        if (master) {
-          const pending = pendingMasters.get(master.name);
-          const existing = this.masters.get(master.name);
-          bounds = pending?.contentBounds ?? existing?.contentBounds ?? this.fullBounds;
-        } else {
-          bounds = this.fullBounds;
+        const pending = pendingMasters.get(masterKey);
+        const existing = this.masters.get(masterKey);
+        const bounds = pending?.contentBounds ?? existing?.contentBounds;
+        if (!bounds) {
+          throw new Error(`Slide ${slideIndex + 1}: master '${masterKey}' not found.`);
         }
 
         // Expand components
         let expanded: ElementNode;
         try {
-          expanded = await componentRegistry.expandTree(content, expansionContext);
+          expanded = await componentRegistry.expandTree(slide.content, expansionContext);
         } catch (error) {
           if (error instanceof Error) {
             error.message = `Slide ${slideIndex + 1}: ${error.message}`;
@@ -211,7 +210,7 @@ export class Presentation {
         // Collect measurements from expanded tree
         pipeline.collectFromTree(expanded, bounds, `slide-${slideIndex + 1}`);
 
-        expandedSlides.push({ deferred, expanded, bounds });
+        expandedSlides.push({ deferred, expanded, bounds, masterKey });
       }
 
       // Phase 3: Browser measurement (execute all measurements)
@@ -220,13 +219,13 @@ export class Presentation {
 
       // Phase 4: Compute master layouts
       const masterPositionedMap = new Map<string, PositionedNode>();
-      for (const [name, { content, contentBounds, background }] of pendingMasters) {
-        log.pptx.master('DEFINE master "%s" (with measurements)', name);
+      for (const [masterKey, { content, contentBounds, background }] of pendingMasters) {
+        log.pptx.master('DEFINE master "%s" (with measurements)', masterKey);
         const positioned = pipeline.computeLayout(content, this.masterBounds);
-        masterPositionedMap.set(name, positioned);
+        masterPositionedMap.set(masterKey, positioned);
         if (!options?.preview) {
-          this.renderer.defineMaster({ name, background, content: positioned });
-          this.masters.set(name, { contentBounds, positioned });
+          this.renderer.defineMaster({ name: masterKey, background, content: positioned });
+          this.masters.set(masterKey, { contentBounds, positioned });
         }
       }
 
@@ -235,7 +234,7 @@ export class Presentation {
       const slides: SlideLayout[] = [];
       const validationErrors: SlideValidationResult[] = [];
 
-      for (const { deferred, expanded, bounds } of expandedSlides) {
+      for (const { deferred, expanded, bounds, masterKey } of expandedSlides) {
         const { slide, slideIndex } = deferred;
 
         // Build positioned tree — computation crashes are still fatal
@@ -271,13 +270,10 @@ export class Presentation {
         slides.push(slideLayout);
 
         if (!options?.preview) {
-          const { master } = slide;
-          const masterPositioned = master
-            ? (masterPositionedMap.get(master.name) ?? this.masters.get(master.name)?.positioned)
-            : undefined;
+          const masterPositioned = masterPositionedMap.get(masterKey) ?? this.masters.get(masterKey)?.positioned;
 
           this.renderer.renderSlide(positioned, {
-            masterName: master?.name,
+            masterName: masterKey,
             masterContent: masterPositioned,
             background: slide.background,
             notes: slide.notes,

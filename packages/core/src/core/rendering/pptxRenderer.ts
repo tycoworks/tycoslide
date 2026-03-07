@@ -102,8 +102,6 @@ export class PptxRenderer {
     if (background) {
       const isColor = /^[0-9A-Fa-f]{6}$/.test(background);
       pptxSlide.background = isColor ? { color: background } : { path: background };
-    } else if (!masterName) {
-      pptxSlide.background = { color: 'FFFFFF' };
     }
 
     // Propagate master's slideNumber as default (PPTXGen.js doesn't do this itself)

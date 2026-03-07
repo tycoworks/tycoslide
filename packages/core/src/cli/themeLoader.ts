@@ -5,7 +5,7 @@ import { createRequire } from 'module';
 import { pathToFileURL } from 'url';
 import path from 'path';
 import type { Theme } from '../core/model/types.js';
-import { componentRegistry, layoutRegistry } from '../core/rendering/registry.js';
+import { componentRegistry, layoutRegistry, masterRegistry } from '../core/rendering/registry.js';
 
 export interface LoadedTheme {
   theme: Theme;
@@ -62,6 +62,14 @@ export async function loadTheme(name: string): Promise<LoadedTheme> {
   } else {
     throw new Error(
       `Theme package '${packageName}' does not export 'layouts'.`,
+    );
+  }
+
+  if (mod.masters) {
+    masterRegistry.register(mod.masters);
+  } else {
+    throw new Error(
+      `Theme package '${packageName}' does not export 'masters'.`,
     );
   }
 

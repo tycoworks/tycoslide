@@ -19,7 +19,6 @@ export {
   CUSTOM_LAYOUT,
   FONT_WEIGHT,
   TEXT_STYLE, TEXT_STYLE_VALUES,
-  DEFAULT_VARIANT,
   Bounds,
 } from './core/model/types.js';
 export type {
@@ -40,7 +39,7 @@ export type {
   TextStyle,
   HighlightPair,
   NormalizedRun,
-  Master, MasterTokens, Slide, Theme,
+  Slide, Theme,
   TextRun, TextContent,
 } from './core/model/types.js';
 
@@ -67,8 +66,10 @@ export type {
 export {
   defineComponent,
   defineLayout,
+  defineMaster,
   componentRegistry,
   layoutRegistry,
+  masterRegistry,
   component,
   isComponentNode,
   type ComponentNode,
@@ -78,6 +79,8 @@ export {
   type Canvas,
   type LayoutDefinition,
   type TypedLayoutDefinition,
+  type MasterDefinition,
+  type TypedMasterDefinition,
   type SchemaShape,
   type ScalarShape,
   type ComponentProps,

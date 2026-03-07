@@ -923,8 +923,12 @@ export function generateFontFaceCSS(theme: Theme): { css: string; fonts: FontDes
     }
   }
 
-  if (theme.master) {
-    walkTokensForFonts(theme.master as unknown as Record<string, unknown>, 'master');
+  if (theme.masters) {
+    for (const [masterName, masterDef] of Object.entries(theme.masters)) {
+      for (const [variantName, tokens] of Object.entries(masterDef.variants)) {
+        walkTokensForFonts(tokens as Record<string, unknown>, `master "${masterName}" variant "${variantName}"`);
+      }
+    }
   }
 
   // Cache check (after validation — validation must always run)

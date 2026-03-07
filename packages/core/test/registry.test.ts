@@ -9,14 +9,14 @@ import { C, testComponents } from './test-components.js';
 
 // Register test components
 componentRegistry.register(testComponents);
-import { HALIGN, VALIGN, DEFAULT_VARIANT, TEXT_STYLE } from '../src/core/model/types.js';
+import { HALIGN, VALIGN, TEXT_STYLE } from '../src/core/model/types.js';
 
 // ============================================
 // GENERIC REGISTRY BASE CLASS
 // ============================================
 
 // Minimal stub slide for testing
-const stubSlide: Slide = { content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: {} } };
+const stubSlide: Slide = { masterName: 'default', masterVariant: 'default', content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: {} } };
 
 function makeLayout(name: string, render: (params: any) => Slide): LayoutDefinition {
   return {

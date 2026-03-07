@@ -14,6 +14,7 @@ import {
 } from 'tycoslide';
 import type { TextTokens, PlainTextTokens, ListTokens } from 'tycoslide-components';
 import { assets } from './assets.js';
+import { defaultMaster, minimalMaster } from './master.js';
 import {
   titleLayout, endLayout, sectionLayout, bodyLayout,
   statLayout, imageLayout, imageLeftLayout, imageRightLayout,
@@ -296,7 +297,6 @@ export const theme = {
     title: {
       variants: {
         default: titleLayout.tokenMap({
-          background: colors.text,
           title: heroTitle,
           subtitle: heroSubtitle,
         }),
@@ -305,7 +305,6 @@ export const theme = {
     end: {
       variants: {
         default: endLayout.tokenMap({
-          background: colors.text,
           title: heroTitle,
           subtitle: heroSubtitle,
         }),
@@ -314,7 +313,6 @@ export const theme = {
     section: {
       variants: {
         default: sectionLayout.tokenMap({
-          background: colors.text,
           title: sectionHeading,
         }),
       },
@@ -532,21 +530,40 @@ export const theme = {
       },
     },
   },
-  master: {
-    background: colors.background,
-    footerHeight,
-    footerText: 'tycoworks',
-    slideNumber: {
-      style: TEXT_STYLE.FOOTER,
-      color: colors.textMuted,
-      hAlign: HALIGN.RIGHT,
-      vAlign: VALIGN.MIDDLE,
+  masters: {
+    default: {
+      variants: {
+        default: defaultMaster.tokenMap({
+          background: colors.background,
+          margin: 0.5,
+          footerHeight,
+          footerText: 'tycoworks',
+          slideNumber: {
+            style: TEXT_STYLE.FOOTER,
+            color: colors.textMuted,
+            hAlign: HALIGN.RIGHT,
+            vAlign: VALIGN.MIDDLE,
+          },
+          footer: {
+            style: TEXT_STYLE.FOOTER,
+            color: colors.textMuted,
+            hAlign: HALIGN.LEFT,
+            vAlign: VALIGN.MIDDLE,
+          },
+        }),
+      },
     },
-    footer: {
-      style: TEXT_STYLE.FOOTER,
-      color: colors.textMuted,
-      hAlign: HALIGN.LEFT,
-      vAlign: VALIGN.MIDDLE,
+    minimal: {
+      variants: {
+        default: minimalMaster.tokenMap({
+          background: colors.background,
+          margin: 0.5,
+        }),
+        dark: minimalMaster.tokenMap({
+          background: colors.text,
+          margin: 0.5,
+        }),
+      },
     },
   },
 } satisfies Theme;

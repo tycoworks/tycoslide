@@ -2,7 +2,6 @@
 // Generic base class, component registry, and layout registry
 
 import { NODE_TYPE, type ElementNode, type ComponentNode, type SlideNode, type ContainerNode, type StackNode } from '../model/nodes.js';
-import { DEFAULT_VARIANT } from '../model/types.js';
 import type { Theme, Slide } from '../model/types.js';
 import type { SyntaxType } from '../model/syntax.js';
 import type { RootContent } from 'mdast';
@@ -524,11 +523,6 @@ class LayoutRegistry extends Registry<LayoutDefinition> {
       }
 
       const { variants } = config;
-      if (!variants?.[DEFAULT_VARIANT]) {
-        throw new Error(
-          `Theme missing '${DEFAULT_VARIANT}' variant for layout '${def.name}'.`
-        );
-      }
 
       for (const [variantName, tokens] of Object.entries(variants)) {
         const missing = def.tokens.filter(
@@ -570,6 +564,125 @@ class LayoutRegistry extends Registry<LayoutDefinition> {
 }
 
 export const layoutRegistry = new LayoutRegistry();
+
+// ============================================
+// MASTER REGISTRY
+// ============================================
+
+import { Bounds } from '../model/bounds.js';
+
+/**
+ * A master slide definition. Masters provide slide chrome (footer, slide number),
+ * content bounds, and background. Registered via `masterRegistry.register()`.
+ */
+export interface MasterDefinition {
+  name: string;
+  /** Token keys that must be present in theme.masters for this master. */
+  tokens: string[];
+  /** Build master content from resolved tokens and slide dimensions. */
+  getContent: (tokens: Record<string, unknown>, slideSize: { width: number; height: number }) => {
+    content: ComponentNode;
+    contentBounds: Bounds;
+    background: string;
+  };
+}
+
+/**
+ * A master definition that preserves its token type for compile-time validation.
+ * The `.tokenMap()` identity method validates token maps against the master's required shape.
+ */
+export interface TypedMasterDefinition<TTokens = unknown> extends MasterDefinition {
+  /** Validate a token map against this master's required token shape. Returns the map unchanged. */
+  tokenMap<T extends TTokens>(map: T): T;
+}
+
+/**
+ * Define a master slide with type-checked tokens.
+ * Pure factory — does NOT register the master.
+ */
+export function defineMaster<TTokens = undefined>(def: {
+  name: string;
+  tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+  getContent: (
+    tokens: TTokens extends undefined ? Record<string, unknown> : TTokens,
+    slideSize: { width: number; height: number },
+  ) => {
+    content: ComponentNode;
+    contentBounds: Bounds;
+    background: string;
+  };
+}): TypedMasterDefinition<TTokens extends undefined ? Record<string, unknown> : TTokens> {
+  (def as any).tokenMap = (map: any) => map;
+  return def as unknown as TypedMasterDefinition<any>;
+}
+
+/**
+ * Registry for master slide definitions.
+ * Masters are defined with `defineMaster()` and registered via `masterRegistry.register()`.
+ */
+class MasterRegistry extends Registry<MasterDefinition> {
+  constructor() {
+    super('Master');
+  }
+
+  /**
+   * Validate that a theme provides all required master tokens for every registered master.
+   * @throws Error on the first master/variant with missing tokens
+   */
+  validateTheme(theme: Theme): void {
+    for (const def of this.getAll()) {
+      if (!def.tokens?.length) continue;
+
+      const config = theme.masters?.[def.name];
+      if (!config) {
+        throw new Error(
+          `Theme missing master tokens for master '${def.name}'. ` +
+          `Required: [${def.tokens.join(', ')}]`
+        );
+      }
+
+      const { variants } = config;
+
+      for (const [variantName, tokens] of Object.entries(variants)) {
+        const missing = def.tokens.filter(
+          (key: string) => (tokens as Record<string, unknown>)[key] === undefined ||
+                           (tokens as Record<string, unknown>)[key] === null
+        );
+        if (missing.length) {
+          throw new Error(
+            `Master '${def.name}' variant '${variantName}' is missing required tokens: [${missing.join(', ')}]. ` +
+            `Each variant must be a complete token set.`
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Resolve master tokens for a given master name and variant from the theme.
+   * @throws Error if the master is not found in theme.masters or the variant doesn't exist
+   */
+  resolveTokens(masterName: string, variant: string, theme: Theme): Record<string, unknown> {
+    const config = theme.masters?.[masterName];
+    if (!config) {
+      throw new Error(
+        `Master '${masterName}' requires tokens but theme.masters.${masterName} is missing.`
+      );
+    }
+
+    const tokens = config.variants[variant];
+    if (!tokens) {
+      const available = Object.keys(config.variants).join(', ');
+      throw new Error(
+        `Unknown variant '${variant}' for master '${masterName}'. Available: ${available}`
+      );
+    }
+
+    return tokens as Record<string, unknown>;
+  }
+}
+
+export const masterRegistry = new MasterRegistry();
 
 // ============================================
 // DSL HELPER

@@ -24,7 +24,7 @@ const testLayout: LayoutDefinition = {
   name: 'test',
   description: 'Test layout for validation',
   params: testShape,
-  render: (props) => ({ content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: { text: props.title } } }),
+  render: (props) => ({ masterName: 'default', masterVariant: 'default', content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: { text: props.title } } }),
 };
 
 describe('validateLayout (params only)', () => {
@@ -128,7 +128,7 @@ describe('validateLayout with enum schema', () => {
     name: 'enumTest',
     description: 'Test enum validation',
     params: enumShape,
-    render: (props) => ({ content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: { style: props.style } } }),
+    render: (props) => ({ masterName: 'default', masterVariant: 'default', content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props: { style: props.style } } }),
   };
 
   it('should accept valid enum value', () => {
@@ -154,14 +154,14 @@ describe('validateLayout (params and slots)', () => {
     description: 'Test layout with params and slots',
     params: { title: schema.string() },
     slots: ['body'],
-    render: (props) => ({ content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } }),
+    render: (props) => ({ masterName: 'default', masterVariant: 'default', content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } }),
   };
 
   const layoutNoSlots: LayoutDefinition = {
     name: 'noSlotTest',
     description: 'Test layout with params only',
     params: { title: schema.string() },
-    render: (props) => ({ content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } }),
+    render: (props) => ({ masterName: 'default', masterVariant: 'default', content: { type: NODE_TYPE.COMPONENT, componentName: 'test', props } }),
   };
 
   it('validates params and slots separately then merges', () => {
