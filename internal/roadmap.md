@@ -12,10 +12,6 @@ Before launch. Must be done before telling the world.
 
 I don't think we need it
 
-### CLI
-
--o flag?
-
 ### Proper Preview
 
 Collapse Master + Slide together and fix prev / next navigation.

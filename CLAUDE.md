@@ -22,7 +22,7 @@ npm run typecheck    # Type-check including test files
 **Building slides from markdown:**
 
 ```bash
-npx tycoslide build deck.md -o deck.pptx          # Build a single deck
+npx tycoslide build deck.md          # Build a single deck (outputs deck.pptx)
 ```
 
 ## Monorepo Structure
