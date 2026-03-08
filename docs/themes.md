@@ -1,16 +1,15 @@
 # Themes
 
-Themes control all visual styling in tycoslide presentations. A theme is a TypeScript object that provides colors, typography, spacing, slide dimensions, and component token values. It is the single source of truth for all visual decisions.
+Themes control all visual styling in tycoslide presentations. A theme is a TypeScript object that provides typography, spacing, layout tokens, master tokens, and slide dimensions — the single source of truth for all visual decisions.
 
 ## What Themes Control
 
-- **Color scheme** — Background, text, accents
 - **Typography** — Font families, sizes, weights for all text styles
 - **Font manifest** — Explicit list of all font families used by the theme
-- **Spacing** — Margins, gaps, padding, line height
-- **Component styling** — How cards, quotes, tables, shapes look (via token variants)
+- **Spacing** — Normal, tight, and loose gap values
+- **Layout tokens** — Visual styling for each layout variant (colors, alignment, component appearance)
+- **Masters** — Background color, margins, fixed chrome (footers, slide numbers)
 - **Slide size** — 16:9, 4:3, etc.
-- **Borders** — Default border width and corner radius
 
 ## Using a Theme
 
@@ -29,7 +28,7 @@ title: My Presentation
 
 ### Available Themes
 
-**`tycoslide-theme-default`** is the currently available theme. Neutral gray surfaces with Inter font. Includes 19 layouts and all built-in components. See [Layouts](./layouts.md) for the full layout reference.
+**`tycoslide-theme-default`** is the currently available theme. Neutral gray surfaces with Inter font. Includes 17 layouts and all built-in components. See [Layouts](./layouts.md) for the full layout reference.
 
 ```bash
 npm install tycoslide-theme-default
@@ -53,18 +52,16 @@ See the [theme source](../packages/theme-default/src/theme.ts) for all default v
 
 ## Extending an Existing Theme
 
-Start here when you need brand colors or fonts but the default layout and component structure works. Import the default theme and spread it with your overrides:
+The primary path is to copy or spread the default theme and override what you need. The default theme is the reference implementation — it defines all required fields and serves as a starting point for any custom brand.
 
 ```typescript
 import { theme as defaultTheme } from 'tycoslide-theme-default';
 import type { Theme } from 'tycoslide';
 
-const myTheme: Theme = {
+export const theme = {
   ...defaultTheme,
-  // Override only what you need
-};
-
-export default myTheme;
+  // Override textStyles, spacing, layouts, or masters
+} satisfies Theme;
 ```
 
 Then reference your package in the presentation frontmatter:
@@ -74,43 +71,6 @@ Then reference your package in the presentation frontmatter:
 theme: my-theme
 ---
 ```
-
----
-
-### Overriding Colors
-
-```typescript
-import { theme as defaultTheme } from 'tycoslide-theme-default';
-import type { Theme } from 'tycoslide';
-
-const myTheme: Theme = {
-  ...defaultTheme,
-  colors: {
-    ...defaultTheme.colors,
-    primary: 'FF6600',       // Your brand color (no # prefix)
-    secondary: 'F0EAE0',     // Subtle surface color
-    accents: {
-      ...defaultTheme.colors.accents,
-      blue: 'FF6600',        // Map accent names to your palette
-      green: '00A86B',
-    },
-  },
-};
-```
-
-All color values are 6-character hex strings without a `#` prefix.
-
-**Color tokens and their roles:**
-
-| Token | Role |
-|-------|------|
-| `background` | Slide background |
-| `text` | Primary text color |
-| `textMuted` | Secondary text, captions, footers |
-| `primary` | Primary accent — buttons, highlights, `primary` shape variant |
-| `secondary` | Subtle surface fills — card backgrounds, borders |
-| `subtleOpacity` | Opacity (%) for subtle fills (0–100) |
-| `accents` | Open vocabulary of named accent colors (`:name[text]` syntax) |
 
 ---
 
@@ -131,7 +91,7 @@ const helvetica: FontFamily = {
   bold:   { name: 'Helvetica', path: '' },
 };
 
-const myTheme: Theme = {
+export const theme = {
   ...defaultTheme,
   textStyles: {
     h1:     { ...defaultTheme.textStyles.h1,     fontFamily: helvetica },
@@ -143,7 +103,7 @@ const myTheme: Theme = {
     eyebrow:{ ...defaultTheme.textStyles.eyebrow,fontFamily: helvetica },
     footer: { ...defaultTheme.textStyles.footer, fontFamily: helvetica },
   },
-};
+} satisfies Theme;
 ```
 
 #### Custom font via @fontsource
@@ -164,136 +124,68 @@ const plusJakarta: FontFamily = {
 #### Adjusting font sizes only
 
 ```typescript
-const myTheme: Theme = {
+export const theme = {
   ...defaultTheme,
   textStyles: {
     ...defaultTheme.textStyles,
     h1: { ...defaultTheme.textStyles.h1, fontSize: 44 },
     h2: { ...defaultTheme.textStyles.h2, fontSize: 32 },
   },
-};
+} satisfies Theme;
 ```
 
 ---
 
 ### Overriding Spacing
 
+`theme.spacing` defines three semantic gap values used by layouts and containers:
+
 ```typescript
-const myTheme: Theme = {
+export const theme = {
   ...defaultTheme,
   spacing: {
-    ...defaultTheme.spacing,
-    margin: 0.625,      // Wider margins (was 0.5")
-    gap: 0.375,         // More breathing room (was 0.25")
-    gapTight: 0.25,     // Looser tight gap (was 0.125")
-    padding: 0.375,     // More card padding (was 0.25")
-    lineSpacing: 1.4,   // Looser line height (was 1.2)
+    normal: 0.25,   // Standard gap between elements (inches)
+    tight:  0.125,  // Compact gap (inches)
+    loose:  0.5,    // Generous gap (inches)
   },
-};
+} satisfies Theme;
 ```
 
-Spacing values are in inches. Multipliers (`lineSpacing`, `bulletSpacing`, `bulletIndentMultiplier`, `maxScaleFactor`) are dimensionless.
+All values are in inches.
 
 ---
 
-### Overriding Component Tokens
+### Colors
 
-Each component's appearance is controlled by tokens in `theme.components`. Every component must have at least a `default` variant.
+Colors live as local constants in the theme file and are referenced in layout and master token maps. To change the color scheme, replace the color constants and update the token maps in `theme.layouts` and `theme.masters` accordingly.
 
-#### Changing card colors
+See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete reference.
 
-```typescript
-const myTheme: Theme = {
-  ...defaultTheme,
-  components: {
-    ...defaultTheme.components,
-    card: {
-      variants: {
-        default: {
-          ...defaultTheme.components.card.variants.default,
-          backgroundColor: 'F5F0FF',   // Custom card background
-          backgroundOpacity: 20,
-          borderColor: 'C4B5FD',
-        },
-        flat: {
-          ...defaultTheme.components.card.variants.flat,
-        },
-      },
-    },
-  },
-};
-```
+---
 
-#### Adding a new card variant
+### Layout Tokens
 
-Add a variant when you need a visually distinct treatment for the same component — for example, a "highlight" card for featured content alongside a "default" card for everything else.
+Component styling is controlled by layout token maps in `theme.layouts`. Each layout declares the token keys it needs; the theme provides their values via `.tokenMap()`.
 
 ```typescript
-const myTheme: Theme = {
-  ...defaultTheme,
-  components: {
-    ...defaultTheme.components,
-    card: {
-      variants: {
-        ...defaultTheme.components.card.variants,
-        highlight: {
-          ...defaultTheme.components.card.variants.default,
-          backgroundColor: 'FF6600',
-          backgroundOpacity: 100,
-          titleColor: 'FFFFFF',
-          descriptionColor: 'FFD4B3',
-        },
-      },
-    },
-  },
-};
-```
+import { bodyLayout } from 'tycoslide-theme-default';
 
-Then use it in markdown:
-
-```markdown
-:::card{title="Featured" variant="highlight"}
-This card uses the highlight variant.
-:::
-```
-
-#### Overriding quote tokens
-
-```typescript
-components: {
-  ...defaultTheme.components,
-  quote: {
+layouts: {
+  body: {
     variants: {
-      default: {
-        ...defaultTheme.components.quote.variants.default,
-        quoteStyle: 'h3',         // Larger quote text
-        padding: 0.5,
-        vAlign: 'middle',
-      },
+      default: bodyLayout.tokenMap({
+        title:   { style: TEXT_STYLE.H3, color: colors.text, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
+        eyebrow: { style: TEXT_STYLE.EYEBROW, color: colors.primary, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
+        text:    { style: TEXT_STYLE.BODY, color: colors.text, linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE, accents: colors.accents },
+        list:    { style: TEXT_STYLE.BODY, color: colors.text, linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP, accents: colors.accents },
+        // slot component tokens (table, code, mermaid, quote, testimonial)
+      }),
     },
   },
 },
 ```
 
-#### Overriding table tokens
-
-```typescript
-import { BORDER_STYLE } from 'tycoslide';
-
-components: {
-  ...defaultTheme.components,
-  table: {
-    variants: {
-      default: {
-        ...defaultTheme.components.table.variants.default,
-        borderStyle: BORDER_STYLE.HORIZONTAL,  // Horizontal lines only
-        headerBackground: 'F0F0F0',
-        headerBackgroundOpacity: 100,
-      },
-    },
-  },
-},
-```
+The token keys available for each layout are defined in that layout's TypeScript interface. See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete reference with all token keys and default values.
 
 ---
 
@@ -301,25 +193,30 @@ components: {
 
 ### Theme Structure
 
-A theme is a TypeScript object implementing the `Theme` interface:
+A theme is a TypeScript object implementing the `Theme` interface. Use `satisfies Theme` (not `: Theme`) to preserve literal types:
 
 ```typescript
+import { SLIDE_SIZE } from 'tycoslide';
 import type { Theme } from 'tycoslide';
 
-const myTheme: Theme = {
-  colors: { /* ... */ },
-  slide: { /* ... */ },
-  spacing: { /* ... */ },
-  borders: { /* ... */ },
-  fonts: [ /* ... */ ],
-  textStyles: { /* ... */ },
-  components: { /* ... */ },
-};
+const myTheme = {
+  slide: SLIDE_SIZE.S16x9,
+  spacing: { normal: 0.25, tight: 0.125, loose: 0.5 },
+  fonts: [...],
+  textStyles: { h1: {...}, h2: {...}, h3: {...}, h4: {...}, body: {...}, small: {...}, eyebrow: {...}, footer: {...}, code: {...} },
+  layouts: {
+    body:    { variants: { default: bodyLayout.tokenMap({...}) } },
+    title:   { variants: { default: titleLayout.tokenMap({...}) } },
+    // ... one entry per layout
+  },
+  masters: {
+    default: { variants: { default: defaultMaster.tokenMap({...}) } },
+    minimal: { variants: { default: minimalMaster.tokenMap({...}), dark: minimalMaster.tokenMap({...}) } },
+  },
+} satisfies Theme;
 ```
 
-All fields are required. Missing fields cause a TypeScript compile error.
-
-tycoslide uses the W3C Design Tokens (DTCG) model: components declare required token keys, themes provide token values, and missing tokens fail the build immediately. There are no hidden defaults in framework code — all values must be explicit in the theme.
+Layouts and masters declare required token keys; themes provide their values. Missing tokens fail the build immediately.
 
 ### Step-by-Step Guide
 
@@ -338,9 +235,9 @@ Create `theme.ts` for your theme object and `index.ts` as the entry point:
 // theme.ts
 import type { Theme } from 'tycoslide';
 
-export const theme: Theme = {
+export const theme = {
   // Filled in step by step below
-};
+} satisfies Theme;
 ```
 
 ```typescript
@@ -348,83 +245,66 @@ export const theme: Theme = {
 export { theme } from './theme.js';
 export { components } from './components.js';
 export { layouts } from './layouts.js';
+export { masters } from './masters.js';
 ```
 
-#### 2. Define Colors
+#### 2. Define Color Constants
+
+Colors are local constants referenced in layout and master token maps:
 
 ```typescript
-colors: {
+const colors = {
   background: 'FFFFFF',
   text: '1A1A1A',
   textMuted: '666666',
   primary: '0066CC',
   secondary: 'E0E0E0',
-  subtleOpacity: 15,
   accents: {
-    teal: '00B8A9',
-    purple: '6B5B95',
-    orange: 'FF6600',
+    blue: '4285F4',
     green: '34A853',
     red: 'EA4335',
-    blue: '4285F4',
+    yellow: 'FBBC05',
   },
-}
+};
 ```
 
-**Required fields:**
-
-| Field | Type | Purpose |
-|-------|------|---------|
-| `background` | hex string (no `#`) | Slide background color |
-| `text` | hex string | Primary text color |
-| `textMuted` | hex string | Secondary/muted text color |
-| `primary` | hex string | Primary brand color |
-| `secondary` | hex string | Secondary brand color |
-| `subtleOpacity` | number 0–100 | Opacity for subtle backgrounds |
-| `accents` | `Record<string, string>` | Named accent colors |
-
-Accent names are open vocabulary — define whatever names make sense for your brand. Authors reference them with the `:name[text]` syntax in Markdown.
+All color values are 6-character hex strings without a `#` prefix. Accent names are open vocabulary — define whatever names make sense for your brand.
 
 #### 3. Configure Text Styles
 
-Define styles for all eight text style names:
+Define styles for all required text style names. Each `TextStyle` includes:
 
 ```typescript
+import { FONT_WEIGHT } from 'tycoslide';
+
 textStyles: {
-  h1: { fontFamily: myFont, fontSize: 36, color: colors.text },
-  h2: { fontFamily: myFont, fontSize: 28, color: colors.text },
-  h3: { fontFamily: myFont, fontSize: 22, color: colors.text },
-  h4: { fontFamily: myFont, fontSize: 18, color: colors.text },
-  body: { fontFamily: myFont, fontSize: 14, color: colors.text },
-  small: { fontFamily: myFont, fontSize: 12, color: colors.textMuted },
-  eyebrow: { fontFamily: myFont, fontSize: 10, color: colors.textMuted },
-  footer: { fontFamily: myFont, fontSize: 8, color: colors.textMuted },
+  h1:      { fontFamily: myFont, fontSize: 48, defaultWeight: FONT_WEIGHT.LIGHT,   lineHeightMultiplier: 1.2, bulletIndentPt: 72 },
+  h2:      { fontFamily: myFont, fontSize: 36, defaultWeight: FONT_WEIGHT.LIGHT,   lineHeightMultiplier: 1.2, bulletIndentPt: 54 },
+  h3:      { fontFamily: myFont, fontSize: 24, defaultWeight: FONT_WEIGHT.LIGHT,   lineHeightMultiplier: 1.2, bulletIndentPt: 36 },
+  h4:      { fontFamily: myFont, fontSize: 16, defaultWeight: FONT_WEIGHT.LIGHT,   lineHeightMultiplier: 1.2, bulletIndentPt: 24 },
+  body:    { fontFamily: myFont, fontSize: 14, defaultWeight: FONT_WEIGHT.LIGHT,   lineHeightMultiplier: 1.2, bulletIndentPt: 21 },
+  small:   { fontFamily: myFont, fontSize: 12, defaultWeight: FONT_WEIGHT.LIGHT,   lineHeightMultiplier: 1.2, bulletIndentPt: 18 },
+  eyebrow: { fontFamily: myFont, fontSize: 11, defaultWeight: FONT_WEIGHT.NORMAL,  lineHeightMultiplier: 1.0, bulletIndentPt: 16.5 },
+  footer:  { fontFamily: myFont, fontSize:  8, defaultWeight: FONT_WEIGHT.LIGHT,   lineHeightMultiplier: 1.0, bulletIndentPt: 12 },
+  code:    { fontFamily: myMono, fontSize: 11, defaultWeight: FONT_WEIGHT.NORMAL,  lineHeightMultiplier: 1.6, bulletIndentPt: 0 },
 }
 ```
 
-All eight styles (`h1`, `h2`, `h3`, `h4`, `body`, `small`, `eyebrow`, `footer`) are required.
+`fontFamily` — a `FontFamily` object (see [Font Requirements](#font-requirements))
+`fontSize` — in points
+`defaultWeight` — `FONT_WEIGHT.LIGHT`, `FONT_WEIGHT.NORMAL`, or `FONT_WEIGHT.BOLD`
+`lineHeightMultiplier` — dimensionless multiplier applied to `fontSize`
+`bulletIndentPt` — indent distance for bulleted list items, in points
 
-#### 4. Define Spacing
+#### 4. Set Spacing
 
 ```typescript
-const unit = 0.03125; // 1/32 inch
-
 spacing: {
-  unit,
-  margin: unit * 16,              // 0.5"
-  gap: unit * 8,                  // 0.25"
-  gapTight: unit * 4,             // 0.125"
-  gapLoose: unit * 16,            // 0.5"
-  padding: unit * 8,              // 0.25"
-  cellPadding: unit * 2,          // 0.0625"
-  bulletSpacing: 1.5,             // Line spacing multiplier for lists
-  bulletIndentMultiplier: 1.5,    // Indent = fontSize * multiplier
-  maxScaleFactor: 1.0,            // Max image upscale (1.0 = native)
-  lineSpacing: 1.2,               // Default line height multiplier
-}
+  normal: 0.25,   // Standard gap (inches)
+  tight:  0.125,  // Compact gap (inches)
+  loose:  0.5,    // Generous gap (inches)
+},
 ```
-
-All dimension values are in inches. Multipliers are dimensionless.
 
 #### 5. Set Slide Size
 
@@ -449,16 +329,7 @@ Custom dimensions:
 slide: { layout: 'CUSTOM', width: 10, height: 7.5 }
 ```
 
-#### 6. Configure Borders
-
-```typescript
-borders: {
-  width: 0.75,    // Border width in points
-  radius: 0.05,   // Corner radius in inches
-}
-```
-
-#### 7. Declare Fonts
+#### 6. Declare Fonts
 
 Every font the theme uses must be listed in the `fonts` array:
 
@@ -466,30 +337,73 @@ Every font the theme uses must be listed in the `fonts` array:
 fonts: [myFont, myMonoFont],
 ```
 
-Each entry is a `FontFamily` object (see [Font Requirements](#font-requirements)). List every font family referenced in `textStyles` or component tokens.
+Each entry is a `FontFamily` object (see [Font Requirements](#font-requirements)). List every font family referenced in `textStyles` or layout token maps.
 
-#### 8. Provide Component Tokens
+#### 7. Define Layouts with Token Maps
 
-Each component requires a `components` entry with at least a `default` variant. Every token the component declares must be present — missing tokens fail the build.
+Each layout in the theme gets a `variants` object. The `default` variant is required. Call `.tokenMap()` on the layout definition to produce a typed token record:
 
 ```typescript
-components: {
-  card: {
+import { bodyLayout, titleLayout, sectionLayout } from './layouts.js';
+import { TEXT_STYLE, HALIGN, VALIGN } from 'tycoslide';
+
+layouts: {
+  title: {
     variants: {
-      default: {
-        // All required tokens for card — colors, spacing, text styles, alignment
-      },
+      default: titleLayout.tokenMap({
+        title:    { style: TEXT_STYLE.H1, color: colors.background, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE },
+        subtitle: { style: TEXT_STYLE.H3, color: colors.background, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE },
+      }),
     },
   },
-  // ... same pattern for each component
-}
+  body: {
+    variants: {
+      default: bodyLayout.tokenMap({
+        title:   { style: TEXT_STYLE.H3, color: colors.text,      hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
+        eyebrow: { style: TEXT_STYLE.EYEBROW, color: colors.primary, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
+        text:    { style: TEXT_STYLE.BODY, color: colors.text, linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE, accents: colors.accents },
+        list:    { style: TEXT_STYLE.BODY, color: colors.text, linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP,    accents: colors.accents },
+        // table, code, mermaid, quote, testimonial slot tokens...
+      }),
+    },
+  },
+  // ... one entry per layout
+},
 ```
 
-The default theme registers 10 token-bearing components: `card`, `quote`, `testimonial`, `table`, `line`, `slideNumber`, `text`, `shape`, `code`, `mermaid`.
+See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete reference with all layouts and their full token sets.
 
-Each component's required token keys are defined in its component definition. Use framework constants (`TEXT_STYLE`, `GAP`, `BORDER_STYLE`, `DASH_TYPE`, `HALIGN`, `VALIGN`) for enum-valued tokens.
+#### 8. Define Masters
 
-See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete reference implementation with all token keys and default values.
+Each master in the theme gets a `variants` object. Call `.tokenMap()` on the master definition:
+
+```typescript
+import { defaultMaster, minimalMaster } from './masters.js';
+import { TEXT_STYLE, HALIGN, VALIGN } from 'tycoslide';
+
+masters: {
+  default: {
+    variants: {
+      default: defaultMaster.tokenMap({
+        background:  colors.background,
+        margin:      0.5,
+        footerHeight: 0.25,
+        footerText:  'My Company',
+        slideNumber: { style: TEXT_STYLE.FOOTER, color: colors.textMuted, hAlign: HALIGN.RIGHT, vAlign: VALIGN.MIDDLE },
+        footer:      { style: TEXT_STYLE.FOOTER, color: colors.textMuted, hAlign: HALIGN.LEFT,  vAlign: VALIGN.MIDDLE },
+      }),
+    },
+  },
+  minimal: {
+    variants: {
+      default: minimalMaster.tokenMap({ background: colors.background, margin: 0.5 }),
+      dark:    minimalMaster.tokenMap({ background: colors.text,       margin: 0.5 }),
+    },
+  },
+},
+```
+
+The `default` master with a `default` variant is required. Layouts reference masters by name and variant in their render functions.
 
 ---
 
@@ -520,35 +434,31 @@ const pres = new Presentation(theme);
 
 ## Variants System
 
-Every component supports named variants for different visual styles. Variants are defined per-component in the theme. Add a variant when the same component needs a different color treatment — a "highlight" card, a "subtle" shape. Create a new component instead when the structure itself changes, not just the styling.
+Variants are defined per-layout and per-master in the theme. A layout variant controls the complete visual treatment of a slide — text colors, alignment, component styling, and slot tokens. A master variant controls background color and chrome.
 
 **Using variants in Markdown:**
 
 ```markdown
-:::card{title="Default"}
-Uses default variant.
-:::
-
-:::card{title="Flat Card" variant="flat"}
-Uses flat variant styling from the theme.
-:::
+---
+layout: statement
+variant: hero
+---
 ```
 
-**Defining variants:**
+**Defining layout variants:**
 
-Each component token config must include a `variants` object with at least a `default` variant. Every variant must be a complete token set — partial overrides are not supported.
+Each layout entry in `theme.layouts` has a `variants` object. Every variant is a complete token set produced by `.tokenMap()`. The `default` variant is required; additional variants are optional.
 
 ```typescript
-card: {
+statement: {
   variants: {
-    default: { /* all required tokens */ },    // Required
-    flat: { /* all required tokens */ },       // Optional additional variant
-    accent: { /* all required tokens */ },     // Optional additional variant
+    default: statementLayout.tokenMap({ title: headerTitle, eyebrow: headerEyebrow, body: bodyText, caption: mutedCaption }),
+    hero:    statementLayout.tokenMap({ title: headerTitle, eyebrow: headerEyebrow, body: { ...bodyText, style: TEXT_STYLE.H3 }, caption: mutedCaption }),
   },
-}
+},
 ```
 
-If a user specifies `variant="name"` for a component and that variant is not defined in the theme, the build fails.
+If a slide specifies `variant="name"` for a layout and that variant is not defined in the theme, the build fails.
 
 ---
 
@@ -599,7 +509,7 @@ const interFont: FontFamily = {
 
 ## Registering Layouts in Themes
 
-Theme packages export three named values: `theme`, `components`, and `layouts`. The CLI registers components and layouts automatically at load time.
+Theme packages export four named values: `theme`, `components`, `layouts`, and `masters`. The CLI registers components, layouts, and masters automatically at load time.
 
 ```typescript
 // my-theme/index.ts
@@ -620,7 +530,9 @@ import {
   stackComponent,
   gridComponent,
 } from 'tycoslide-components';
+import type { MasterDefinition } from 'tycoslide';
 import { allLayouts } from './layouts.js';
+import { defaultMaster, minimalMaster } from './masters.js';
 
 export const components = [
   textComponent,
@@ -642,12 +554,10 @@ export const components = [
 
 export const layouts = allLayouts;
 
+export const masters: MasterDefinition[] = [defaultMaster, minimalMaster];
+
 export { theme } from './theme.js';
 ```
-
-Each component package exports a definition object (e.g., `textComponent`, `cardComponent`) alongside its DSL function. The `components` array lists every component definition the theme uses. The `layouts` array lists every layout definition created with `defineLayout()`.
-
-The CLI calls `componentRegistry.register(components)` and `layoutRegistry.register(layouts)` when loading the theme.
 
 See [`packages/theme-default/src/index.ts`](../packages/theme-default/src/index.ts) for the complete reference entry point.
 

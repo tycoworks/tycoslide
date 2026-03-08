@@ -6,7 +6,7 @@ This page covers the built-in layouts provided by `tycoslide-theme-default` and 
 
 ## Available Layouts
 
-`tycoslide-theme-default` provides 19 layouts. Custom themes can define their own (see [Creating Custom Layouts](#creating-custom-layouts)).
+`tycoslide-theme-default` provides 17 layouts. Custom themes can define their own (see [Creating Custom Layouts](#creating-custom-layouts)).
 
 | Name | Purpose |
 |------|---------|
@@ -16,19 +16,17 @@ This page covers the built-in layouts provided by `tycoslide-theme-default` and 
 | `stat` | Big number or key metric with label and optional caption |
 | `quote` | Standalone pull quote with accent bar and optional attribution |
 | `end` | Closing slide, mirrors the title layout |
-| `blank` | No chrome, full canvas for custom content |
+| `blank` | Full canvas for custom content |
 | `image` | Full image with title and optional eyebrow |
 | `image-left` | Image on left, markdown prose on right |
 | `image-right` | Image on right, markdown prose on left |
 | `two-column` | Two equal markdown columns with optional header |
 | `comparison` | Two columns with individual headers |
-| `statement` | Centered body text with optional style and caption |
+| `statement` | Centered body text with optional caption |
 | `agenda` | Title, optional intro, and bullet list |
 | `cards` | Card grid with intro text and optional caption |
-| `bio` | Person introduction with photo, name, role, and bio |
 | `caption` | Image with caption text below |
 | `title-only` | Title bar with empty canvas below |
-| `team` | Grid of team members with name, role, and optional photo |
 
 ---
 
@@ -57,7 +55,7 @@ subtitle: A Brief Overview
 
 ## section
 
-Section divider with centered title on a dark background. No body content or master footer.
+Section divider with centered title on a dark background.
 
 ### Parameters
 
@@ -174,7 +172,7 @@ Closing slide. Mirrors the title layout with centered text on a dark background.
 
 ## blank
 
-No chrome. Full canvas for custom content. No master footer. The `body` slot accepts any markdown.
+Full canvas for custom content. The `body` slot accepts any markdown.
 
 ### Parameters
 
@@ -254,7 +252,7 @@ Two columns with individual headers for side-by-side comparisons. Slots: `left`,
 
 ## statement
 
-Centered body text with optional text style and caption.
+Centered body text with optional caption. Use for value propositions and key statements.
 
 ### Parameters
 
@@ -263,7 +261,7 @@ Centered body text with optional text style and caption.
 | `title` | `string` | Slide title (**required**) |
 | `eyebrow` | `string` | Small label above the title |
 | `body` | `string` | Body text, centered (**required**) |
-| `bodyStyle` | `h1 \| h2 \| h3 \| h4 \| body \| small \| eyebrow \| footer` | Text style for the body |
+| `variant` | `string` | Layout variant — `hero` renders body in `h3` style |
 | `caption` | `string` | Caption below the body text |
 
 ---
@@ -281,9 +279,9 @@ Title, optional intro text, and a bullet list of items.
 | `intro` | `string` | Introductory text above the list |
 | `items` | `string[]` | List of agenda items (**required**) |
 
-### YAML Array and Object Syntax
+### YAML Array Syntax
 
-Array parameters use YAML block sequence syntax. Object array parameters (like `team`'s `members`) use block mapping entries inside the sequence:
+Array parameters use YAML block sequence syntax:
 
 ```markdown
 ---
@@ -293,19 +291,6 @@ items:
   - Introduction and context
   - Live demo
   - Q&A
----
-```
-
-```markdown
----
-layout: team
-title: The Team
-members:
-  - name: Alice Kim
-    role: Engineering Lead
-    image: ./assets/alice.jpg
-  - name: Bob Patel
-    role: Product Manager
 ---
 ```
 
@@ -325,20 +310,6 @@ Card grid with optional intro text and caption. Automatically adjusts columns ba
 | `cards` | `object[]` | Array of card objects (each with `title`, `description`, `image`) (**required**) |
 | `caption` | `string` | Caption below the cards |
 | `variant` | `string` | Card variant applied to all cards |
-
----
-
-## bio
-
-Person introduction with photo, name, role, and bio text. Slots: `body`.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `person` | `string` | Person name (**required**) |
-| `role` | `string` | Job title or role |
-| `image` | `string` | Path to the person's photo |
 
 ---
 
@@ -368,38 +339,16 @@ Title bar with empty canvas below.
 
 ---
 
-## team
+## Masters
 
-Grid of team members with name, role, and optional photo. Automatically adjusts columns based on member count.
+Masters control the fixed elements that appear on every slide — footers, slide numbers, background color — and define the content bounds available to layout content. Layouts reference a master by name; the master handles the chrome and the margins.
 
-### Parameters
+The default theme provides two masters:
 
-| Param | Type | Description |
-|-------|------|-------------|
-| `title` | `string` | Slide title |
-| `eyebrow` | `string` | Small label above the title |
-| `members` | `object[]` | Array of member objects (each with `name`, `role`, `image`) (**required**) |
+- **`default`** — footer chrome with company name and slide number. Most content layouts use this master.
+- **`minimal`** — margin and background only, no footer. `title`, `section`, `end`, and `blank` layouts use this master.
 
-Each member object:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `name` | `string` | Person name (**required**) |
-| `role` | `string` | Job title or role |
-| `image` | `string` | Path to the person's photo |
-
----
-
-## Default Master
-
-Most layouts use the `DEFAULT_MASTER`, which adds:
-
-- **Footer row** at the bottom of every slide — `0.25"` tall
-  - Left: "Your Company Name" in `footer` style — replace this in your theme's master
-  - Right: slide number via the `slideNumber` component
-- **Content bounds** — the usable area for slide content, inset by `0.5"` margin on all sides and shrunk by the footer height at the bottom
-
-`title`, `section`, `end`, and `blank` layouts do not use the master — they render without a footer.
+Each master supports multiple variants. `minimal` provides `default` (white background) and `dark` variants. `title`, `section`, and `end` use `minimal` with the `dark` variant.
 
 ---
 
@@ -409,54 +358,51 @@ Custom layouts define slide structure. Each layout controls where content appear
 
 ### Layout Registration
 
-Layouts are defined with `defineLayout()` and registered with `layoutRegistry.register()`:
+`defineLayout<TTokens>()` creates a layout definition — it declares the layout's name, accepted params, content slots, required tokens, and render function. The type parameter constrains which tokens the theme must supply.
 
 ```typescript
-import { defineLayout, schema, TEXT_STYLE, GAP, SIZE } from 'tycoslide';
+import { defineLayout, schema, GAP, SIZE, VALIGN, HALIGN } from 'tycoslide';
 import { textComponent, plainText, row, column } from 'tycoslide-components';
+import type { PlainTextTokens } from 'tycoslide-components';
 
-export const twoColumnLayout = defineLayout({
+type TwoColumnTokens = {
+  title: PlainTextTokens;
+  eyebrow: PlainTextTokens;
+};
+
+export const twoColumnLayout = defineLayout<TwoColumnTokens>({
   name: 'two-column',
-  description: 'Two-column layout for side-by-side content',
+  description: 'Two equal markdown columns with optional header.',
   params: {
     title: textComponent.schema.optional(),
     eyebrow: textComponent.schema.optional(),
   },
   slots: ['left', 'right'],
-  render: (props) => ({
+  tokens: ['title', 'eyebrow'],
+  render: ({ title, eyebrow, left, right }, tokens) => ({
+    masterName: 'default',
+    masterVariant: 'default',
     content: column(
-      { gap: GAP.NORMAL },
-      ...(props.title ? [plainText(props.title, { style: TEXT_STYLE.H3 })] : []),
-      row(
-        { gap: GAP.NORMAL },
-        column(...props.left),
-        column(...props.right)
-      )
+      { gap: GAP.NONE, height: SIZE.FILL },
+      ...(title ? [plainText(title, tokens.title)] : []),
+      row({ height: SIZE.FILL }, column(...left), column(...right)),
     ),
   }),
 });
 ```
 
-Registration happens in the theme entry point:
-
-```typescript
-import { layoutRegistry } from 'tycoslide';
-import { twoColumnLayout } from './layouts.js';
-
-layoutRegistry.register(twoColumnLayout);
-```
-
-`defineLayout()` is a pure factory — it validates the definition but does not register it. See [Themes — Registering Layouts in Themes](./themes.md#registering-layouts-in-themes) for the full pattern.
+`defineLayout()` is a pure factory — it does not register the layout. See [Themes — Registering Layouts in Themes](./themes.md#registering-layouts-in-themes) for the full pattern.
 
 ### Layout Structure
 
 ```typescript
 interface LayoutDefinition {
-  name: string;               // Layout name (used in frontmatter)
-  description: string;        // Human-readable description
-  params: ScalarShape;        // Schema for frontmatter parameters
-  slots?: readonly string[];  // Content slot names
-  render: (props) => Slide;   // Render function
+  name: string;                     // Layout name (used in frontmatter)
+  description: string;              // Human-readable description
+  params: ScalarShape;              // Schema for frontmatter parameters
+  slots?: readonly string[];        // Content slot names
+  tokens?: string[];                // Required token keys
+  render: (props, tokens) => Slide; // Render with resolved tokens
 }
 ```
 
@@ -566,18 +512,19 @@ For the complete DSL function reference including all content and container comp
 
 ### Render Function
 
-The render function receives validated props and returns a Slide object:
+The render function receives validated props and resolved tokens, and returns a Slide object:
 
 ```typescript
-render: (props) => ({
-  master?: Master,          // Master slide (optional)
-  background?: string,      // Background color hex (optional)
-  notes?: string,           // Speaker notes (optional)
+render: (props, tokens) => ({
+  masterName: string,       // Which master to use (required)
+  masterVariant: string,    // Which master variant (required)
+  background?: string,      // Overrides master background if set
+  notes?: string,           // Speaker notes
   content: ComponentNode,   // Slide content (required)
 })
 ```
 
-`props` contains all validated frontmatter parameters plus slot arrays. The function must return at minimum a `content` node.
+`props` contains all validated frontmatter parameters plus slot arrays. `tokens` contains the resolved token values declared in the layout's `tokens` array.
 
 ### Real-World Examples
 
@@ -585,74 +532,53 @@ The default theme's `title`, `section`, and `body` layouts in [`packages/theme-d
 
 ### Using Masters
 
-Masters define fixed elements that appear on every slide using a layout (footers, logos, page numbers) and set the content bounds — the region where slide content renders.
+`defineMaster<TTokens>()` creates a master definition. A master returns fixed chrome elements and the `contentBounds` that tells layouts how much space they have to work with.
 
 ```typescript
-import type { Master, Theme } from 'tycoslide';
-
-const myMaster: Master = {
-  name: 'default',
-  background: '#FFFFFF',
-  getContent: (theme: Theme) => ({
-    content: /* fixed footer/header nodes */,
-    contentBounds: {
-      x: theme.spacing.margin,
-      y: theme.spacing.margin,
-      width: theme.slide.width - (theme.spacing.margin * 2),
-      height: theme.slide.height - (theme.spacing.margin * 2) - 0.3,
-    },
-  }),
-};
-```
-
-Pass the master in the render function's return value: `render: (props) => ({ master: myMaster, content: ... })`.
-
-**Key concepts:**
-- `contentBounds` defines where the layout's `content` tree renders (x, y, width, height in inches)
-- `contentBounds` must account for fixed elements — if the master has a footer bar at the bottom, reduce `height` accordingly
-- Masters can include slide numbers, logos, headers, and background elements
-
-#### Replacing the Default Master
-
-To customize the footer (company name, logo, colors), create your own master and pass it to your layout definitions:
-
-```typescript
-import { HALIGN, VALIGN, TEXT_STYLE, GAP, SIZE, Bounds, type Master, type Theme } from 'tycoslide';
+import { defineMaster, VALIGN, GAP, SIZE, Bounds } from 'tycoslide';
+import type { PlainTextTokens, SlideNumberTokens } from 'tycoslide-components';
 import { row, column, plainText, slideNumber } from 'tycoslide-components';
 
-const unit = 0.03125;
-const FOOTER_HEIGHT = unit * 8; // 0.25"
+interface MyMasterTokens {
+  background: string;
+  margin: number;
+  footerHeight: number;
+  footerText: string;
+  slideNumber: SlideNumberTokens;
+  footer: PlainTextTokens;
+}
 
-export const MY_MASTER: Master = {
-  name: 'MY_MASTER',
-  getContent: (theme: Theme) => {
-    const { margin } = theme.spacing;
-    const { width, height } = theme.slide;
-
+export const myMaster = defineMaster<MyMasterTokens>({
+  name: 'default',
+  tokens: ['background', 'margin', 'footerHeight', 'footerText', 'slideNumber', 'footer'],
+  getContent: (tokens, slideSize) => {
+    const { background, margin, footerHeight } = tokens;
     const contentBounds = new Bounds(
       margin,
       margin,
-      width - margin * 2,
-      height - margin * 2 - FOOTER_HEIGHT,
+      slideSize.width - margin * 2,
+      slideSize.height - margin * 2 - footerHeight,
     );
-
-    const content = row(
-      { gap: GAP.TIGHT, height: FOOTER_HEIGHT, vAlign: VALIGN.MIDDLE },
-      column(
-        { width: SIZE.FILL, vAlign: VALIGN.MIDDLE },
-        plainText('Acme Corp', {
-          style: TEXT_STYLE.FOOTER,
-          hAlign: HALIGN.LEFT,
-          vAlign: VALIGN.MIDDLE,
-        }),
+    const content = column(
+      { height: SIZE.FILL, vAlign: VALIGN.BOTTOM, padding: margin },
+      row(
+        { gap: GAP.TIGHT, height: footerHeight, vAlign: VALIGN.MIDDLE },
+        plainText(tokens.footerText, tokens.footer),
+        slideNumber(tokens.slideNumber),
       ),
-      slideNumber(),
     );
-
-    return { content, contentBounds };
+    return { content, contentBounds, background };
   },
-};
+});
 ```
+
+**Key concepts:**
+- `contentBounds` defines where layout content renders (x, y, width, height in inches)
+- `contentBounds` must account for fixed chrome — reduce height by footer height if a footer bar is present
+- `getContent` receives resolved tokens and slide dimensions
+- Masters are registered by exporting them from the theme entry point alongside layouts
+
+Masters are registered in the theme entry point and their tokens are provided via `theme.masters`. See [`packages/theme-default/src/master.ts`](../packages/theme-default/src/master.ts) for the complete reference implementation.
 
 ### Registering Layouts in Themes
 
@@ -667,7 +593,7 @@ export const myLayout = defineLayout({ /* layout definition */ });
 export const allLayouts = [myLayout];
 ```
 
-The theme entry point exports the layouts array. The CLI registers them automatically. See [Themes — Registering Layouts in Themes](./themes.md#registering-layouts-in-themes) for the full pattern.
+The theme entry point exports both a `layouts` array and a `masters` array. The CLI registers them automatically. See [Themes — Registering Layouts in Themes](./themes.md#registering-layouts-in-themes) for the full pattern.
 
 ### Testing Layouts
 

@@ -2,6 +2,8 @@
 
 A build system for branded presentations. tycoslide compiles TypeScript or Markdown into measured, positioned .pptx files — treating marketing content like code.
 
+tycoslide is in active development. APIs may change between releases.
+
 ## Philosophy
 
 **Content as code.** Presentations are built in CI/CD pipelines, not manually in PowerPoint. tycoslide enforces brand compliance, type safety, and reproducible output. If something is wrong, it fails at build time — not after the deck ships.

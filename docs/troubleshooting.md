@@ -65,87 +65,23 @@ Error: Theme package 'my-theme' does not export 'layouts'.
 Layouts must be exported so that importing them registers them in the layout registry.
 ```
 
-**Fix:** Add the required exports to your theme's `index.ts`:
+**Fix:** Export `layouts` from your theme's `index.ts`:
 
 ```typescript
-import { cardComponent, textComponent, /* ... */ } from 'tycoslide-components';
 import { allLayouts } from './layouts.js';
 
-export const components = [cardComponent, textComponent, /* ... */];
 export const layouts = allLayouts;
-export { theme } from './theme.js';
 ```
 
 ---
 
-### "Theme missing tokens for component"
+### "Missing tokens for component"
 
 ```
-Error: Theme missing tokens for component 'card'. Required: [padding, cornerRadius, ...]
+Component 'xyz' is missing required tokens: [foo, bar]. All tokens must be provided by the parent component or layout.
 ```
 
-**Fix:** Add the missing component token block to your theme:
-
-```typescript
-components: {
-  card: {
-    variants: {
-      default: {
-        padding: 0.25,
-        cornerRadius: 0.05,
-        backgroundColor: 'E7E0EC',
-        // ... all required tokens
-      }
-    }
-  }
-}
-```
-
-See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete token reference.
-
-Call `componentRegistry.validateTheme(theme)` at startup to catch all missing tokens at once.
-
----
-
-### "Theme missing 'default' variant for component"
-
-```
-Error: Theme missing 'default' variant for component 'card'.
-```
-
-**Fix:** Add a `default` variant to the component's `variants` map.
-
----
-
-### "Component variant missing required tokens"
-
-```
-Error: Component 'card' variant 'subtle' is missing required tokens: [titleColor, descriptionColor].
-Each variant must be a complete token set.
-```
-
-**Fix:** Copy the `default` variant and override only what you need:
-
-```typescript
-subtle: {
-  ...defaultTheme.components.card.variants.default,
-  backgroundColor: 'F0F0F0',
-  backgroundOpacity: 50,
-},
-```
-
----
-
-### "Component requires theme tokens but none were provided"
-
-```
-Error: Component 'card' requires theme tokens but none were provided.
-Add them to theme.components.card. Required: [padding, cornerRadius, ...]
-```
-
-The component was registered with a `tokens` list but the theme has no `components.card` entry. This is similar to the "Theme missing tokens" error but caught at render time rather than at validation time.
-
-**Fix:** Same as "Theme missing tokens" above — add the required block to `theme.components`.
+**Fix:** Add the missing token keys to the layout's token map in `theme.layouts`. See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete reference.
 
 ---
 
@@ -167,13 +103,13 @@ componentRegistry.register(myComponent);
 
 ---
 
-### "Unknown variant for component"
+### "Unknown variant"
 
 ```
-Error: Unknown variant 'highlight' for component 'card'. Available: default, flat
+Error: Unknown variant 'highlight' for layout 'cards'. Available: default, flat
 ```
 
-**Fix:** Either add the variant to your theme, or use one of the listed available variants.
+**Fix:** Either add the variant to your theme's layout token map, or use one of the listed available variants.
 
 ---
 
@@ -256,7 +192,7 @@ Error: Layout 'title' params validation failed:
 
 ## Overflow and Bounds Errors
 
-These errors appear after layout measurement. Use `tycoslide build deck.md --force` to write the PPTX anyway and inspect visually, or `--preview` to write HTML files without generating a PPTX.
+Use `tycoslide build deck.md --force` to write the PPTX anyway and inspect visually, or `--preview` to write HTML files without generating a PPTX.
 
 ### "Content extends beyond slide bounds"
 
@@ -334,11 +270,10 @@ Writes the PPTX even when slides have layout validation errors. Combine with `--
 
 ### Theme validation
 
-Validate your theme's tokens against all registered components before building:
+Layout and master token maps are validated at compile time via TypeScript. Use `satisfies Theme` on your theme object to catch missing or mistyped tokens:
 
 ```typescript
-import { componentRegistry } from 'tycoslide';
-import { theme } from './my-theme';
-
-componentRegistry.validateTheme(theme); // throws on first missing token
+export const theme = {
+  // ...
+} satisfies Theme;  // TypeScript error if structure is wrong
 ```

@@ -708,7 +708,7 @@ Each built-in component exports its definition object (e.g., `cardComponent`, `t
   name: string;           // Unique component name
   params?: SchemaShape;   // Zod schema for directive attributes
   body?: ZodType;         // Schema for body content (e.g., schema.string())
-  tokens?: string[];      // Required theme token keys
+  tokens?: string[];      // Token keys this component needs (provided by the layout's token map)
   slots?: string[];       // Named content slots (for container components)
   expand: Function;       // Expansion to primitives
 }
@@ -739,7 +739,7 @@ params: {
 
 #### Declaring Tokens
 
-Components declare required theme tokens by name. Tokens are resolved from the theme for the component's active variant:
+Components declare required token keys by name. The theme provides token values through layout token maps:
 
 ```typescript
 const BADGE_TOKEN = {
@@ -748,13 +748,17 @@ const BADGE_TOKEN = {
   TEXT_STYLE: 'textStyle',
 } as const;
 
+export type BadgeTokens = {
+  [BADGE_TOKEN.BACKGROUND_COLOR]: string;
+  [BADGE_TOKEN.TEXT_COLOR]: string;
+  [BADGE_TOKEN.TEXT_STYLE]: TextStyleName;
+};
+
 const badgeComponent = defineComponent({
   name: 'badge',
-  params: { label: schema.string(), variant: schema.string().optional() },
-  tokens: [BADGE_TOKEN.BACKGROUND_COLOR, BADGE_TOKEN.TEXT_COLOR, BADGE_TOKEN.TEXT_STYLE],
-  expand: (props, context, tokens) => {
-    // tokens.backgroundColor, tokens.textColor, tokens.textStyle
-    // are resolved from theme.components.badge.variants[variant]
+  params: { label: schema.string() },
+  tokens: Object.values(BADGE_TOKEN),
+  expand: (props, context, tokens: BadgeTokens) => {
     return text(props.label, {
       style: tokens.textStyle,
       color: tokens.textColor,
@@ -765,27 +769,17 @@ const badgeComponent = defineComponent({
 
 #### Providing Tokens in a Theme
 
-The theme must supply token values for every variant used:
+The theme defines token values for each layout in `theme.layouts`. When a layout renders your component, it passes the relevant tokens from its token map:
 
 ```typescript
-// In your theme definition
-components: {
-  badge: {
-    variants: {
-      default: {
-        backgroundColor: '#0066CC',
-        textColor: '#FFFFFF',
-        textStyle: 'small',
-      },
-      success: {
-        backgroundColor: '#34A853',
-        textColor: '#FFFFFF',
-        textStyle: 'small',
-      },
-    },
-  },
+// In a layout render function:
+render: ({ title, cards }, tokens: CardsLayoutTokens) => {
+  const built = cards.map(c => component(Component.Card, c, tokens.card));
+  // ...
 }
 ```
+
+Layout token maps live in `theme.layouts[layoutName].variants[variantName]` and are validated via the layout's `.tokenMap()` method. See [`theme.ts`](../packages/theme-default/src/theme.ts) for all layout token maps.
 
 Missing tokens fail the build immediately.
 
@@ -825,19 +819,16 @@ The `children` slot receives the compiled content as an array of `ComponentNode[
 
 ### Variants
 
-Use variants when the same component needs different visual treatments — a "flat" card vs a "highlight" card. Create a variant when the structure is identical but colors or spacing differ; create a new component when the structure itself changes.
+A variant is an alternative visual treatment for a layout — same structure, different styling. Authors select a variant in slide frontmatter with `variant: hero`. Each variant provides different token values to the same layout render function, so your component receives different styling without any code changes.
 
-```typescript
-expand: (props, context, tokens) => {
-  // tokens are resolved for the specified variant automatically
-  return shape({
-    shape: SHAPE.ROUND_RECT,
-    fill: tokens.backgroundColor,
-  });
-}
+```markdown
+---
+layout: statement
+variant: hero
+---
 ```
 
-The `variant` prop is handled automatically. Use `variant="name"` in Markdown or `{ variant: 'name' }` in TypeScript. Themes must provide a complete token set for each variant. Missing tokens for a declared variant cause a build error.
+Create a new variant when visual values differ; create a new layout when the structure changes.
 
 ### Complete Example: Metric Component
 
@@ -846,8 +837,9 @@ Display a large metric value with a label and optional change indicator:
 ```typescript
 import { defineComponent, componentRegistry, component, schema } from 'tycoslide';
 import { column, text, plainText } from 'tycoslide-components';
+import type { TextStyleName, GapSize } from 'tycoslide';
 
-// 1. Define token constants
+// 1. Define token constants and types
 const METRIC_TOKEN = {
   VALUE_STYLE: 'valueStyle',
   VALUE_COLOR: 'valueColor',
@@ -859,6 +851,17 @@ const METRIC_TOKEN = {
   GAP: 'gap',
 } as const;
 
+export type MetricTokens = {
+  valueStyle: TextStyleName;
+  valueColor: string;
+  labelStyle: TextStyleName;
+  labelColor: string;
+  changeStyle: TextStyleName;
+  positiveColor: string;
+  negativeColor: string;
+  gap: GapSize;
+};
+
 // 2. Define component
 export const metricComponent = defineComponent({
   name: 'metric',
@@ -866,12 +869,11 @@ export const metricComponent = defineComponent({
     value: schema.string(),
     label: schema.string(),
     change: schema.string().optional(),
-    variant: schema.string().optional(),
   },
   tokens: Object.values(METRIC_TOKEN),
-  expand: (props, context, tokens) => {
+  expand: (props, context, tokens: MetricTokens) => {
     const elements = [
-      text(props.value, { style: tokens.valueStyle, color: tokens.valueColor }),
+      plainText(props.value, { style: tokens.valueStyle, color: tokens.valueColor }),
       plainText(props.label, { style: tokens.labelStyle, color: tokens.labelColor }),
     ];
 
@@ -892,20 +894,10 @@ export const metricComponent = defineComponent({
 // 3. Register (theme entry point does this)
 componentRegistry.register(metricComponent);
 
-// 4. Export DSL function
-export function metric(props: {
-  value: string;
-  label: string;
-  change?: string;
-  variant?: string;
-}) {
-  return component('metric', props);
+// 4. Export DSL function — tokens passed by caller
+export function metric(props: MetricProps, tokens: MetricTokens) {
+  return component('metric', props, tokens);
 }
-```
-
-**Usage in TypeScript:**
-```typescript
-metric({ value: "$2.4M", label: "Revenue", change: "+15%" })
 ```
 
 **Usage in Markdown:**
@@ -914,25 +906,17 @@ metric({ value: "$2.4M", label: "Revenue", change: "+15%" })
 :::
 ```
 
-**Theme tokens:**
+**Wiring tokens in a layout:** Provide token values when calling the component from a layout render function. Define the metric token object in the layout's token map and pass it through:
+
 ```typescript
-components: {
-  metric: {
-    variants: {
-      default: {
-        valueStyle: 'h1',
-        valueColor: '#1A1A1A',
-        labelStyle: 'small',
-        labelColor: '#666666',
-        changeStyle: 'small',
-        positiveColor: '#34A853',
-        negativeColor: '#EA4335',
-        gap: 'tight',
-      },
-    },
-  },
+render: ({ metrics }, tokens: MyLayoutTokens) => {
+  return masteredSlide(
+    ...metrics.map(m => metric(m, tokens.metric)),
+  );
 }
 ```
+
+The layout's token map entry for `metric` holds the `MetricTokens` object. The theme sets these values in `theme.layouts[layoutName].variants[variantName]`.
 
 ### TypeScript DSL Functions
 
@@ -944,22 +928,9 @@ import { row, column, stack, grid } from 'tycoslide-components';
 import { line, shape, slideNumber } from 'tycoslide-components';
 import { TEXT_STYLE, GAP, SIZE, SHAPE, HALIGN, VALIGN } from 'tycoslide';
 
-// Text — with formatting
-text("**Bold** and :blue[highlighted]")
-
-// Plain text — renders as-is without formatting
-plainText("ARCHITECTURE", { style: TEXT_STYLE.EYEBROW })
-
 // Lists
 list(["First item", "Second **bold** item", "Third item"])       // Unordered
 list(["Step one", "Step two"], { ordered: true })                 // Ordered
-
-// Cards
-card({ title: "My Card", description: "Description text" })
-card({ title: "With Image", image: "./photo.png", height: SIZE.FILL })
-
-// Quote
-quote({ quote: "Innovation is key.", attribution: "— CEO" })
 
 // Table (data array + options)
 table([
@@ -969,16 +940,23 @@ table([
 
 // Image
 image('./path/to/image.png')
-image('asset.logos.company', { alt: 'Company logo' })
 
 // Shape
-shape({ shape: SHAPE.ROUND_RECT, fill: '#FF0000', cornerRadius: 0.1 })
+shape({ shape: SHAPE.ROUND_RECT, fill: 'FF0000', cornerRadius: 0.1 })
 
 // Containers
-column({ gap: GAP.NORMAL }, text("Top"), text("Bottom"))
-row({ gap: GAP.NORMAL }, card({ title: "Left" }), card({ title: "Right" }))
-grid({ columns: 3, gap: GAP.NORMAL }, ...cards)
-stack(shape({ shape: SHAPE.RECT, fill: '#000' }), text("Overlaid", { color: '#FFF' }))
+column({ gap: GAP.NORMAL }, ...)
+row({ gap: GAP.NORMAL }, ...)
+grid(3, ...)
+stack(backgroundNode, foregroundNode)
+```
+
+Composition components (`text`, `plainText`, `card`, `quote`, etc.) require a token argument. In layout render functions, tokens come from the layout's token map:
+
+```typescript
+text(props.body, tokens.bodyText)
+plainText(props.title, tokens.headerTitle)
+card({ title: props.cardTitle }, tokens.card)
 ```
 
 Custom components export their own DSL functions using `component()` from `tycoslide`:
@@ -986,8 +964,8 @@ Custom components export their own DSL functions using `component()` from `tycos
 ```typescript
 import { component } from 'tycoslide';
 
-export function metric(props: MetricProps) {
-  return component('metric', props);
+export function metric(props: MetricProps, tokens: MetricTokens) {
+  return component('metric', props, tokens);
 }
 ```
 
@@ -1004,19 +982,19 @@ expand: (props, context, tokens) => {
 **Parameters:**
 - `props` — Validated component properties. Includes `body` if a body schema is defined, or parsed directive body.
 - `context` — Expansion context: `{ theme, assets?, canvas }`
-- `tokens` — Theme token values resolved for the active variant (if component declared tokens)
+- `tokens` — Token values provided by the caller (layout render function or DSL user). Present only if the component declared tokens; `undefined` otherwise.
 
 **Return:** A `SlideNode` — either a primitive node (text, image, shape, container) or another component node for composition. Component nodes are further expanded by the registry.
 
 #### Canvas
 
-`context.canvas` renders arbitrary HTML to a PNG image. Use it when a component needs visuals that are not natively supported as PowerPoint objects — syntax highlighting, diagrams, or anything requiring browser rendering.
+`context.canvas` renders arbitrary HTML to a PNG image. Use it when a component needs visuals that are not natively supported as PowerPoint objects — syntax highlighting, diagrams, or custom layouts.
 
 ```typescript
 const pngPath = await context.canvas.renderHtml(html, transparent?);
 ```
 
-The first argument is a complete HTML document string. The optional second argument controls background transparency (default: `false`). The return value is a file path to the rendered PNG, suitable for use as an `ImageNode.src`. All theme fonts are automatically available in the HTML document — reference them by name exactly as defined in `FontFamily.name`. The render viewport matches the slide dimensions at 96 DPI — for a 16:9 slide (10" × 5.625") that is 960 × 540 CSS pixels, output at 2× device scale (1920 × 1080 physical pixels). Rendered PNG files are written to a temporary directory and deleted when the build process exits; do not store the returned path beyond the expand function's lifetime.
+The first argument is a complete HTML document string. The optional second argument controls background transparency (default: `false`). The return value is a file path to the rendered PNG, suitable for use as an `ImageNode.src`. All theme fonts are automatically available in the HTML document — reference them by name exactly as defined in `FontFamily.name`. The rendered PNG is only valid for the duration of the build; do not store the returned path beyond the expand function's lifetime.
 
 The [mermaid](#mermaid) and [code](#code) components use Canvas internally. Those implementations serve as reference for components that render HTML to PNG.
 
