@@ -1,11 +1,11 @@
 # Themes
 
-Themes control all visual styling in tycoslide presentations. A theme is a TypeScript object that provides typography, spacing, layout tokens, master tokens, and slide dimensions — the single source of truth for all visual decisions.
+Themes control all visual styling in tycoslide presentations — typography, spacing, colors, layout tokens, master tokens, and slide dimensions. Missing tokens fail the build immediately — if a token is wrong, the deck never ships.
 
 ## What Themes Control
 
 - **Typography** — Font families, sizes, weights for all text styles
-- **Font manifest** — Explicit list of all font families used by the theme
+- **Font manifest** — Explicit list of all font families used by the theme; fonts not listed here are not embedded in the output file
 - **Spacing** — Normal, tight, and loose gap values
 - **Layout tokens** — Visual styling for each layout variant (colors, alignment, component appearance)
 - **Masters** — Background color, margins, fixed chrome (footers, slide numbers)
@@ -80,7 +80,7 @@ Replace Inter with a system font or a custom `.woff2` file:
 
 #### System font (no file embedding)
 
-Use system fonts for quick prototyping or when recipients have the font installed. Use custom `.woff2` files for brand fonts that must render identically everywhere.
+Use system fonts for quick prototyping to skip embedding font files. Use custom `.woff2` files for brand fonts that must render identically everywhere.
 
 ```typescript
 import { theme as defaultTheme } from 'tycoslide-theme-default';
@@ -138,7 +138,7 @@ export const theme = {
 
 ### Overriding Spacing
 
-`theme.spacing` defines three semantic gap values used by layouts and containers:
+`theme.spacing` defines three gap sizes — normal, tight, and loose — used between elements in layouts and containers:
 
 ```typescript
 export const theme = {
@@ -157,15 +157,15 @@ All values are in inches.
 
 ### Colors
 
-Colors live as local constants in the theme file and are referenced in layout and master token maps. To change the color scheme, replace the color constants and update the token maps in `theme.layouts` and `theme.masters` accordingly.
+Colors are plain hex-string constants in the theme file, passed into `.tokenMap()` calls so layouts and masters receive consistent values. To change the color scheme, replace the color constants — every token map that references them picks up the new values.
 
 See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete reference.
 
 ---
 
-### Layout Tokens
+### Overriding Layout Tokens
 
-Component styling is controlled by layout token maps in `theme.layouts`. Each layout declares the token keys it needs; the theme provides their values via `.tokenMap()`.
+Component styling lives in layout token maps in `theme.layouts`. Each layout declares the tokens it needs; the theme supplies values via `.tokenMap()`. Layout tokens control content appearance (text colors, styles, alignment); master tokens control slide chrome (background, margins, footer).
 
 ```typescript
 import { bodyLayout } from 'tycoslide-theme-default';
@@ -185,7 +185,7 @@ layouts: {
 },
 ```
 
-The token keys available for each layout are defined in that layout's TypeScript interface. See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete reference with all token keys and default values.
+Each layout defines which token keys it accepts — the default theme's [`theme.ts`](../packages/theme-default/src/theme.ts) shows every layout with its full token set and default values.
 
 ---
 
@@ -193,7 +193,7 @@ The token keys available for each layout are defined in that layout's TypeScript
 
 ### Theme Structure
 
-A theme is a TypeScript object implementing the `Theme` interface. Use `satisfies Theme` (not `: Theme`) to preserve literal types:
+A theme is a TypeScript object implementing the `Theme` interface. Use `satisfies Theme` (not `: Theme`) — TypeScript catches missing tokens at compile time while preserving literal types for autocomplete:
 
 ```typescript
 import { SLIDE_SIZE } from 'tycoslide';
@@ -331,13 +331,13 @@ slide: { layout: 'CUSTOM', width: 10, height: 7.5 }
 
 #### 6. Declare Fonts
 
-Every font the theme uses must be listed in the `fonts` array:
+Every font the theme uses must appear in the `fonts` array so it gets embedded in the .pptx:
 
 ```typescript
 fonts: [myFont, myMonoFont],
 ```
 
-Each entry is a `FontFamily` object (see [Font Requirements](#font-requirements)). List every font family referenced in `textStyles` or layout token maps.
+Each entry is a `FontFamily` object (see [Font Requirements](#font-requirements)). Every font used in `textStyles` or layout token maps must appear here — unlisted fonts are not embedded in the .pptx.
 
 #### 7. Define Layouts with Token Maps
 
@@ -434,7 +434,7 @@ const pres = new Presentation(theme);
 
 ## Variants System
 
-Variants are defined per-layout and per-master in the theme. A layout variant controls the complete visual treatment of a slide — text colors, alignment, component styling, and slot tokens. A master variant controls background color and chrome.
+Variants are defined per-layout and per-master in the theme. A layout variant controls the complete visual treatment of a slide — text colors, alignment, component styling, and slot tokens. A master variant controls background color and chrome. When no `variant` is specified in frontmatter, the `default` variant is used.
 
 **Using variants in Markdown:**
 
@@ -509,7 +509,7 @@ const interFont: FontFamily = {
 
 ## Registering Layouts in Themes
 
-Theme packages export four named values: `theme`, `components`, `layouts`, and `masters`. The CLI registers components, layouts, and masters automatically at load time.
+Theme packages export four named values: `theme`, `components`, `layouts`, and `masters`. The CLI registers components, layouts, and masters at load time so they are available when compiling slides.
 
 ```typescript
 // my-theme/index.ts

@@ -1,12 +1,12 @@
 # Components
 
-Components are what layouts and themes are built from. Layout developers compose them in TypeScript to define how slides look; authors can also use some directly via markdown directives. All built-in components come from `tycoslide-components` and are re-exported by themes. For the default theme's token values, see [`theme.ts`](../packages/theme-default/src/theme.ts).
+Components are the building blocks of slides — text, cards, tables, images, containers. Developers use them to build layouts in TypeScript; authors use them in markdown to build slides. All built-in components come from `tycoslide-components` and are re-exported by themes. For the default theme's token values, see [`theme.ts`](../packages/theme-default/src/theme.ts).
 
 ---
 
 ## Directive Syntax
 
-Components are invoked with the triple-colon directive syntax:
+Add components to markdown with the triple-colon directive syntax:
 
 ```markdown
 :::componentName{param="value" another="value"}
@@ -126,7 +126,7 @@ text("Custom styled", { style: TEXT_STYLE.H3, color: 'FF0000' })
 
 ## plainText
 
-Text rendered exactly as written. Use `plainText()` when content comes from a fixed string or frontmatter parameter rather than user-authored markdown. Titles, eyebrow labels, captions, and attribution lines are typical uses. Available in the TypeScript DSL only.
+Text rendered exactly as written, without markdown parsing. Unlike `text()`, which parses bold, italic, links, and accent colors, `plainText()` takes a string and renders it exactly as written. Use it for titles, eyebrow labels, captions, and attribution lines — content that comes from a fixed string or frontmatter parameter. Available in the TypeScript DSL only.
 
 ### Parameters
 
@@ -155,7 +155,7 @@ plainText(props.label, { style: tokens.labelStyle, color: tokens.labelColor })
 
 ## list
 
-Renders bullet or numbered lists with support for formatting. The list component has no `:::list` directive — markdown lists auto-compile to list nodes instead. In the TypeScript DSL, use `list()` directly.
+Renders bullet or numbered lists with support for formatting. The list component has no `:::list` directive — markdown lists become list nodes automatically. In the TypeScript DSL, use `list()` directly.
 
 ### Examples
 
@@ -405,7 +405,7 @@ When any `borderTop`/`borderRight`/`borderBottom`/`borderLeft` prop is set, only
 
 ## slideNumber
 
-Displays the current slide number. Used in the default master slide footer. This component is typically placed by the theme's master layout rather than by authors directly.
+Displays the current slide number. Used in the default master slide footer. Themes place this in the master layout — authors don't add it to individual slides.
 
 No directive parameters.
 
@@ -512,7 +512,7 @@ Third.
 
 ## image
 
-Embeds an image. The image path is provided as the **directive body content** (not a parameter).
+Embeds an image. Provide the image path as the body content (not a parameter).
 
 ### Parameters
 
@@ -574,7 +574,7 @@ flowchart LR
 
 ## code
 
-Syntax-highlighted code block rendered as a PNG image. Fenced code blocks in markdown (` ```language `) auto-compile to this component. The language identifier after the opening fences is required.
+Syntax-highlighted code block rendered as a PNG image. Fenced code blocks in markdown (` ```language `) become this component automatically. The language identifier after the opening fences is required.
 
 See [`theme.ts`](../packages/theme-default/src/theme.ts) for code component token keys and defaults.
 
@@ -602,7 +602,7 @@ code(`SELECT * FROM orders WHERE status = 'active';`, 'sql')
 
 ## testimonial
 
-Quote card with optional image, quote text, and attribution. Renders as a rounded rectangle background with vertically stacked content.
+Quote card with optional image, quote text, and attribution. Renders as a rounded rectangle background (like `card`) with vertically stacked content. Unlike `quote`, which uses a left accent bar on a transparent background, `testimonial` has a filled card background and is designed for grids of customer quotes.
 
 Quote text is required -- provide it either via the `quote` attribute or as body content.
 
@@ -657,11 +657,11 @@ This changed everything for us.
 
 ## Creating Custom Components
 
-Custom components extend tycoslide with new content types. They integrate with the directive syntax in Markdown and the TypeScript DSL, and receive styling tokens from the theme.
+Custom components add new content types to tycoslide, so authors can use them in markdown the same way as built-in components. They work in both markdown and the TypeScript DSL, and get their styling tokens from the theme.
 
 ### Component Registration
 
-Components are defined with `defineComponent()` and registered with `componentRegistry.register()`. Definition is a pure factory -- it does not register the component. Registration is a separate step, typically done by the theme entry point.
+Components are defined with `defineComponent()` and registered with `componentRegistry.register()`. Defining a component does not register it. Registration is a separate step, done by the theme entry point.
 
 ```typescript
 import { defineComponent, componentRegistry, component, schema } from 'tycoslide';
@@ -691,7 +691,7 @@ Each built-in component exports its definition object (e.g., `cardComponent`, `t
 
 #### Overload Patterns
 
-`defineComponent()` accepts five signatures depending on the component's input model:
+`defineComponent()` has five forms depending on what inputs the component takes:
 
 | Pattern | Description |
 |---------|-------------|
@@ -699,7 +699,7 @@ Each built-in component exports its definition object (e.g., `cardComponent`, `t
 | `{ name, body, params: {...}, expand }` | Body text plus additional named attributes |
 | `{ name, params: {...}, expand }` | Multiple named attributes, no primary body |
 | `{ name, slots: ['children'], expand }` | Body compiled as `ComponentNode[]` (container) |
-| `{ name, expand }` | Programmatic use only, no directive support |
+| `{ name, expand }` | TypeScript DSL only — no markdown directive |
 
 ### Component Structure
 
@@ -716,7 +716,7 @@ Each built-in component exports its definition object (e.g., `cardComponent`, `t
 
 ### Defining Parameters
 
-Define parameters using the `schema` helper from `tycoslide`:
+Define parameters using the `schema` helper from `tycoslide`. Required params without `.optional()` fail the build if missing:
 
 ```typescript
 import { schema } from 'tycoslide';
@@ -739,7 +739,7 @@ params: {
 
 #### Declaring Tokens
 
-Components declare required token keys by name. The theme provides token values through layout token maps:
+Components declare required token keys by name so the theme can supply the right values through layout token maps. When a component is given explicit props in markdown (e.g., `color`), those props override the token values:
 
 ```typescript
 const BADGE_TOKEN = {
@@ -769,7 +769,7 @@ const badgeComponent = defineComponent({
 
 #### Providing Tokens in a Theme
 
-The theme defines token values for each layout in `theme.layouts`. When a layout renders your component, it passes the relevant tokens from its token map:
+Token values are set in the theme's layout token maps. The layout render function receives resolved tokens and passes them to components:
 
 ```typescript
 // In a layout render function:
@@ -779,13 +779,11 @@ render: ({ title, cards }, tokens: CardsLayoutTokens) => {
 }
 ```
 
-Layout token maps live in `theme.layouts[layoutName].variants[variantName]` and are validated via the layout's `.tokenMap()` method. See [`theme.ts`](../packages/theme-default/src/theme.ts) for all layout token maps.
-
-Missing tokens fail the build immediately.
+For how to define token maps in a theme, see [Themes — Overriding Layout Tokens](./themes.md#overriding-layout-tokens). Missing tokens fail the build immediately.
 
 ### Content Slots
 
-Slots are named content areas inside a component. The component defines the slot; the slide author fills it with markdown. Use slots when your component wraps arbitrary author-provided markdown rather than taking fixed parameters.
+Slots are named content areas inside a component. The component defines the slot; the slide author fills it with markdown. Use slots when your component wraps markdown content rather than fixed parameters — authors write freeform content inside the directive.
 
 ```typescript
 const calloutComponent = defineComponent({
@@ -815,11 +813,11 @@ This is the body content.
 
 The `children` slot receives the compiled content as an array of `ComponentNode[]`.
 
-**Slotted components in `:::directive` syntax support only one slot.** The directive body is compiled and passed to the first slot. Components with multiple named slots must be used via the TypeScript DSL, where each slot is passed as a separate prop.
+**Slotted components in directive syntax support only one slot.** The body is compiled and passed to the first slot. Components with multiple named slots must be used via the TypeScript DSL, where each slot is passed as a separate prop.
 
 ### Variants
 
-A variant is an alternative visual treatment for a layout — same structure, different styling. Authors select a variant in slide frontmatter with `variant: hero`. Each variant provides different token values to the same layout render function, so your component receives different styling without any code changes.
+Variants provide alternative token values for the same layout structure. Set `variant: hero` in frontmatter to pick a variant:
 
 ```markdown
 ---
@@ -828,7 +826,7 @@ variant: hero
 ---
 ```
 
-Create a new variant when visual values differ; create a new layout when the structure changes.
+Create a new variant when visual values differ; create a new layout when the structure changes. For the full variants system — defining variants, default fallback, and build behavior — see [Themes — Variants System](./themes.md#variants-system).
 
 ### Complete Example: Metric Component
 
@@ -920,7 +918,7 @@ The layout's token map entry for `metric` holds the `MetricTokens` object. The t
 
 ### TypeScript DSL Functions
 
-Components are used programmatically via DSL functions. All built-in DSL functions are exported from `tycoslide-components`:
+DSL functions are how you use components from TypeScript. All built-in DSL functions are exported from `tycoslide-components`:
 
 ```typescript
 import { text, plainText, list, card, quote, testimonial, table, image, mermaid, code } from 'tycoslide-components';
@@ -971,7 +969,7 @@ export function metric(props: MetricProps, tokens: MetricTokens) {
 
 ### Expansion Function
 
-Every component has an expansion function that transforms its props into a tree of primitive nodes.
+Every component has an expand function that turns its props into renderable output — text, images, shapes, or containers.
 
 ```typescript
 expand: (props, context, tokens) => {

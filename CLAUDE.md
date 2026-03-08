@@ -4,25 +4,7 @@ A build system for branded presentations. tycoslide compiles TypeScript or Markd
 
 ## Philosophy
 
-**Content as code.** Presentations are built in CI/CD pipelines, not manually in PowerPoint. tycoslide enforces brand compliance, type safety, and reproducible output. If something is wrong, it fails at build time — not after the deck ships.
-
-**Three personas, strict boundaries:**
-
-| Persona | Works in | Produces | Concerns |
-|---------|----------|----------|----------|
-| **Designer** | Design tools (Figma, Tokens Studio) | Design tokens, color palettes, typography scales | Visual identity, brand consistency |
-| **Developer** | TypeScript | Theme files, layouts, custom components | Structural correctness, component contracts, layout mechanics |
-| **Author** | Markdown | Slide decks | Content, narrative, choosing the right layout |
-
-Each layer constrains the next: designers set the visual vocabulary, developers build sanctioned layouts using that vocabulary, authors fill those layouts with content. An author cannot break the brand. A developer cannot override the designer's tokens without editing the theme.
-
-**Theme is the single source of truth.** All visual decisions — colors, typography choices, spacing, component styling — live in the theme file. Components declare what tokens they need; the theme provides them. Missing tokens fail the build immediately. This aligns with the W3C Design Tokens (DTCG) model where the token file is the complete specification. No hidden defaults in framework code.
-
-**Type the contract, not the vocabulary.** The framework enforces token shapes at compile time — every card variant must provide `backgroundColor`, `titleStyle`, etc. But variant names, accent names, and other theme-specific identifiers are open vocabulary defined by each theme, validated at runtime. Framework enums are for closed universal sets (alignments, shapes, text styles); theme-specific sets stay as strings.
-
-**Open component registry.** External developers can register custom content and layout components without modifying framework source.
-
-**Fail fast.** Invalid layouts, missing tokens, overflow errors, and malformed markdown all throw at build time with actionable error messages. Silent fallbacks are bugs.
+For design principles, see [`docs/design-principles.md`](docs/design-principles.md).
 
 ## Build & Test
 

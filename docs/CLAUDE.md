@@ -99,7 +99,8 @@ Each page owns its topic. Writers must not write content that belongs on another
 
 | Topic | Owned by |
 |-------|----------|
-| What tycoslide is, philosophy, comparison to alternatives | `introduction.md` |
+| What tycoslide is, comparison to alternatives | `introduction.md` |
+| Design philosophy, three-persona model, token alignment, fail-fast, extensibility | `design-principles.md` |
 | Install, first build, editor setup | `quick-start.md` |
 | Frontmatter, slide separators, text formatting, lists, tables (GFM), speaker notes | `markdown-syntax.md` |
 | Directive syntax, built-in component reference (params + examples), custom component authoring, DSL functions, token system, expansion function | `components.md` |
@@ -125,7 +126,7 @@ Each page owns its topic. Writers must not write content that belongs on another
 
 **No callout boxes.** No "Note:", "Warning:", "Tip:", "Important:" prefix boxes or blockquotes used as callouts. Critical information is stated directly in prose or as a bold standalone sentence.
 
-**No lengthy "why" explanations.** The docs state what things do and how to use them. They do not explain the engineering rationale or design history. Exception: `introduction.md` is explicitly the "why" page — but only there.
+**No lengthy "why" explanations.** The docs state what things do and how to use them. They do not explain the engineering rationale or design history. Exception: `design-principles.md` is explicitly the "why" page — but only there.
 
 **No "In this section, we will..." preamble.** Sections open with content, not announcements about what is coming.
 

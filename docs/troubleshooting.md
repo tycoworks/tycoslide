@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Common errors and how to fix them.
+Error messages, their causes, and how to fix them. For build flags that help with debugging (`--force`, `--preview`, `--debug`), see [Debug Tools](#debug-tools).
 
 ## Theme Errors
 
@@ -9,6 +9,8 @@ Common errors and how to fix them.
 ```
 Error: No theme specified. Add `theme: <name>` to the global frontmatter in your markdown file.
 ```
+
+**Cause:** The markdown file has no global frontmatter block, or the frontmatter is missing the `theme` field.
 
 **Fix:** Add a global frontmatter block at the very top of your file:
 
@@ -34,6 +36,8 @@ Error: Could not find theme package 'my-theme'.
 Is it installed? Try: npm install my-theme
 ```
 
+**Cause:** The theme name in frontmatter does not match any installed npm package.
+
 **Fix:** Install the theme package:
 
 ```bash
@@ -50,7 +54,9 @@ If using a local theme, make sure it is listed in `package.json` dependencies an
 Error: Theme package 'my-theme' does not export 'theme'.
 ```
 
-**Fix:** Ensure your theme package exports `theme` as a named export:
+**Cause:** The theme package's entry point does not have a named `theme` export.
+
+**Fix:** Export `theme` as a named export from your theme's `index.ts`:
 
 ```typescript
 export const theme: Theme = { /* ... */ };
@@ -62,7 +68,7 @@ export const theme: Theme = { /* ... */ };
 
 ```
 Error: Theme package 'my-theme' does not export 'layouts'.
-Layouts must be exported so that importing them registers them in the layout registry.
+Layouts must be exported so importing them registers them in the layout registry.
 ```
 
 **Fix:** Export `layouts` from your theme's `index.ts`:
@@ -80,6 +86,8 @@ export const layouts = allLayouts;
 ```
 Component 'xyz' is missing required tokens: [foo, bar]. All tokens must be provided by the parent component or layout.
 ```
+
+**Cause:** A component declares token keys that the layout's token map does not provide.
 
 **Fix:** Add the missing token keys to the layout's token map in `theme.layouts`. See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete reference.
 
@@ -201,6 +209,8 @@ Slide 4 (layout: body, title: Key Points): Content extends beyond slide bounds:
   text at (0.50, 0.42) overflows 0.23" bottom
 ```
 
+**Cause:** A measured element is taller or wider than the space the master's content bounds allow.
+
 **Fix:**
 - Reduce the amount of content on the slide
 - Break the content across multiple slides
@@ -217,7 +227,9 @@ Slide 2 (layout: body, title: Overview): Unintentional content overlap detected:
   text[0] overlaps text[1] by 0.50"x0.12" in container
 ```
 
-**Fix:** Two sibling elements are overlapping — typically because elements are too large for their container. Use `SIZE.FILL` on children to distribute space evenly, or reduce content size. Use `--preview` to view the HTML layout and identify which elements are colliding.
+**Cause:** Two sibling elements are overlapping — typically because elements are too large for their container.
+
+**Fix:** Use `SIZE.FILL` on children to distribute space evenly, or reduce content size. Use `--preview` to view the HTML layout and identify which elements are colliding.
 
 ---
 
@@ -246,7 +258,7 @@ title: "My Slide: with a colon"
 
 ### HTML preview
 
-Every build writes per-slide HTML files to `{basename}-html/`. To skip PPTX generation and just get the HTML:
+Every build writes per-slide HTML files to `{basename}-html/` for inspecting layout before opening PowerPoint. To skip PPTX generation and just get the HTML:
 
 ```bash
 tycoslide build deck.md --preview
@@ -258,7 +270,7 @@ tycoslide build deck.md --preview
 tycoslide build deck.md --debug
 ```
 
-Prints detailed build logging to the console.
+Prints per-slide timing, token resolution, and measurement details to the console.
 
 ### Force output despite errors
 
@@ -266,14 +278,8 @@ Prints detailed build logging to the console.
 tycoslide build deck.md --force
 ```
 
-Writes the PPTX even when slides have layout validation errors. Combine with `--preview` or `--debug` to diagnose the issues.
+Writes the PPTX even when slides have overflow or bounds errors. Useful for visually inspecting which element overflows. Combine with `--debug` for full diagnostics.
 
 ### Theme validation
 
-Layout and master token maps are validated at compile time via TypeScript. Use `satisfies Theme` on your theme object to catch missing or mistyped tokens:
-
-```typescript
-export const theme = {
-  // ...
-} satisfies Theme;  // TypeScript error if structure is wrong
-```
+Use `satisfies Theme` on your theme object to catch missing or mistyped tokens at compile time. See [Themes — Theme Structure](./themes.md#theme-structure) for the full pattern.

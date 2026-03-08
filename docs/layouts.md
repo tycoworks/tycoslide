@@ -1,8 +1,6 @@
 # Layouts
 
-Layouts define the structure of a slide — where the title goes, where body content renders, and what fixed elements like footers appear. Each layout accepts specific frontmatter parameters and controls how content is positioned on the slide.
-
-This page covers the built-in layouts provided by `tycoslide-theme-default` and how to create custom layouts for your own themes.
+Layouts define the structure of a slide — where the title goes, where body content renders, and what fixed elements like footers appear. Each layout accepts specific frontmatter parameters and controls where content sits on the slide. This page covers the built-in layouts from `tycoslide-theme-default` and how to create custom layouts for your own themes.
 
 ## Available Layouts
 
@@ -76,7 +74,7 @@ title: Part 1: Getting Started
 
 ## body
 
-Markdown body with optional title. This is the default layout when no `layout` is specified in frontmatter.
+Markdown body with optional title. Slides that omit `layout` from their frontmatter use `body` automatically.
 
 ### Parameters
 
@@ -93,7 +91,7 @@ Markdown body with optional title. This is the default layout when no `layout` i
 
 ### Markdown body content
 
-The body slot accepts any markdown content: text, bullets, headings, tables, and component directives.
+The body slot accepts any markdown: text, bullets, headings, tables, and components.
 
 ```markdown
 ---
@@ -210,7 +208,7 @@ Image on left, markdown prose on right. Slots: `body`.
 
 ## image-right
 
-Image on right, markdown prose on left. Slots: `body`.
+Mirror of `image-left` — image on right, markdown prose on left. Slots: `body`.
 
 ### Parameters
 
@@ -237,7 +235,7 @@ Two equal markdown columns with optional header. Slots: `left`, `right`.
 
 ## comparison
 
-Two columns with individual headers for side-by-side comparisons. Slots: `left`, `right`.
+Two columns with individual headers for side-by-side comparisons. Unlike `two-column`, which shares a single title across both columns, `comparison` gives each column its own header via `leftTitle` and `rightTitle`. Slots: `left`, `right`.
 
 ### Parameters
 
@@ -261,7 +259,7 @@ Centered body text with optional caption. Use for value propositions and key sta
 | `title` | `string` | Slide title (**required**) |
 | `eyebrow` | `string` | Small label above the title |
 | `body` | `string` | Body text, centered (**required**) |
-| `variant` | `string` | Layout variant — `hero` renders body in `h3` style |
+| `variant` | `string` | Layout variant (default: `default`). `hero` renders body in `h3` style. See [Themes — Variants](./themes.md#variants-system) |
 | `caption` | `string` | Caption below the body text |
 
 ---
@@ -341,7 +339,7 @@ Title bar with empty canvas below.
 
 ## Masters
 
-Masters control the fixed elements that appear on every slide — footers, slide numbers, background color — and define the content bounds available to layout content. Layouts reference a master by name; the master handles the chrome and the margins.
+Masters control the fixed elements that appear on every slide — footers, slide numbers, background color — and define the content bounds (the rectangle where layout content renders). A layout's available space is whatever the master leaves after accounting for margins and chrome.
 
 The default theme provides two masters:
 
@@ -354,11 +352,11 @@ Each master supports multiple variants. `minimal` provides `default` (white back
 
 ## Creating Custom Layouts
 
-Custom layouts define slide structure. Each layout controls where content appears, what frontmatter parameters are accepted, what content slots are available, and how everything is positioned on the slide.
+Custom layouts define slide structure. Each layout controls where content appears, what frontmatter it accepts, what content slots it has, and how everything is positioned.
 
 ### Layout Registration
 
-`defineLayout<TTokens>()` creates a layout definition — it declares the layout's name, accepted params, content slots, required tokens, and render function. The type parameter constrains which tokens the theme must supply.
+`defineLayout<TTokens>()` creates a layout definition — its name, params, content slots, required tokens, and render function. The type parameter constrains which tokens the theme must supply.
 
 ```typescript
 import { defineLayout, schema, GAP, SIZE, VALIGN, HALIGN } from 'tycoslide';
@@ -423,9 +421,9 @@ params: {
 }
 ```
 
-`textComponent.schema` validates the parameter as inline-markdown text. Use it for any layout parameter that authors write as human-readable text in frontmatter. Use `schema.*` helpers for generic types like booleans, numbers, and enums.
+`textComponent.schema` validates the parameter as inline-markdown text — use it for any frontmatter value that authors write as readable text. Use `schema.*` helpers for generic types like booleans, numbers, and enums.
 
-Every component definition exports a `.schema` property — a Zod schema that validates the component's primary input. Layout params can reuse these schemas directly, ensuring the same validation rules apply whether content comes from frontmatter or a directive:
+Every component definition exports a `.schema` property — a Zod schema that validates the component's primary input. Layout params can reuse these schemas directly, ensuring the same validation applies whether content comes from frontmatter or a directive:
 
 ```typescript
 params: {
@@ -436,11 +434,11 @@ params: {
 }
 ```
 
-Parameters are validated at build time. Invalid frontmatter values cause build errors.
+Invalid frontmatter values fail the build.
 
 ### Content Slots
 
-Slots allow markdown body content to be inserted into specific positions in the layout.
+Slots let authors place markdown content at specific positions in the layout.
 
 **Declaring slots:**
 
@@ -491,7 +489,7 @@ render: (props) => ({
 
 ### TypeScript DSL for Layout Development
 
-Layouts are built by composing container functions from `tycoslide-components`:
+Build layouts by composing container functions from `tycoslide-components` to control how content is arranged on the slide:
 
 ```typescript
 import { column, row, plainText } from 'tycoslide-components';
@@ -508,7 +506,7 @@ column(
 )
 ```
 
-For the complete DSL function reference including all content and container components, see [Components — TypeScript DSL Functions](./components.md#typescript-dsl-functions).
+For the full DSL function reference, see [Components — TypeScript DSL Functions](./components.md#typescript-dsl-functions).
 
 ### Render Function
 
@@ -524,7 +522,7 @@ render: (props, tokens) => ({
 })
 ```
 
-`props` contains all validated frontmatter parameters plus slot arrays. `tokens` contains the resolved token values declared in the layout's `tokens` array.
+`props` has all validated frontmatter parameters plus slot arrays. `tokens` has the resolved values for each key in the layout's `tokens` array.
 
 ### Real-World Examples
 
