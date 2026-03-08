@@ -90,15 +90,8 @@ export const textComponent = defineComponent({
 
 export const rowComponent = defineComponent({
   name: C.Row,
-  params: {
-    gap: schema.string().optional(),
-    vAlign: schema.string().optional(),
-    hAlign: schema.string().optional(),
-    padding: schema.number().optional(),
-    width: schema.string().optional(),
-    height: schema.string().optional(),
-  },
   slots: ['children'] as const,
+  markdown: false,
   tokens: [],
   expand: (props: any): any => ({
     type: NODE_TYPE.CONTAINER,
@@ -119,15 +112,8 @@ export const rowComponent = defineComponent({
 
 export const columnComponent = defineComponent({
   name: C.Column,
-  params: {
-    gap: schema.string().optional(),
-    vAlign: schema.string().optional(),
-    hAlign: schema.string().optional(),
-    padding: schema.number().optional(),
-    width: schema.string().optional(),
-    height: schema.string().optional(),
-  },
   slots: ['children'] as const,
+  markdown: false,
   tokens: [],
   expand: (props: any): any => ({
     type: NODE_TYPE.CONTAINER,

@@ -8,8 +8,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { compileSlot } from '../src/core/markdown/slotCompiler.js';
-import { HALIGN, TEXT_STYLE, VALIGN } from '../src/core/model/types.js';
-import { NODE_TYPE } from '../src/core/model/nodes.js';
 import { SYNTAX } from '../src/core/model/syntax.js';
 import { componentRegistry, defineComponent } from '../src/core/rendering/registry.js';
 import { C, testComponents } from './test-components.js';
@@ -164,102 +162,15 @@ describe('Slot Compiler', () => {
     });
   });
 
-  describe(':::row directive (slotted)', () => {
-    it('should compile :::row with card children', () => {
-      const md = '::::row\n:::card{title="A"}\nBody A\n:::\n\n:::card{title="B"}\nBody B\n:::\n::::';
-      const nodes = compileSlot(md);
-      assert.strictEqual(nodes.length, 1);
-      assert.strictEqual((nodes[0] as any).componentName, C.Row);
-      const children = props(nodes, 0).children;
-      assert.strictEqual(children.length, 2);
-      assert.strictEqual(children[0].componentName, C.Card);
-      assert.strictEqual(children[1].componentName, C.Card);
-    });
-
-    it('should pass coerced attributes to row', () => {
-      const md = '::::row{gap="tight"}\n:::card{title="X"}\n:::\n::::';
-      const nodes = compileSlot(md);
-      assert.strictEqual((nodes[0] as any).componentName, C.Row);
-      assert.strictEqual(props(nodes, 0).gap, 'tight');
-    });
-
-    it('should handle bare text inside row (auto-wrapped as text)', () => {
-      const md = '::::row\nSome bare text\n::::';
-      const nodes = compileSlot(md);
-      assert.strictEqual((nodes[0] as any).componentName, C.Row);
-      const children = props(nodes, 0).children;
-      assert.strictEqual(children.length, 1);
-      assert.strictEqual(children[0].componentName, C.Text);
-    });
-  });
-
-  describe(':::column directive (slotted)', () => {
-    it('should compile :::column with mixed children', () => {
-      const md = '::::column\nSome text\n\n:::image\npic.png\n:::\n::::';
-      const nodes = compileSlot(md);
-      assert.strictEqual(nodes.length, 1);
-      assert.strictEqual((nodes[0] as any).componentName, C.Column);
-      const children = props(nodes, 0).children;
-      assert.strictEqual(children.length, 2);
-      assert.strictEqual(children[0].componentName, C.Text);
-      assert.strictEqual(children[1].componentName, C.Image);
-    });
-
-    it('should pass coerced attributes to column', () => {
-      const md = '::::column{gap="tight" padding="0.5"}\nHello\n::::';
-      const nodes = compileSlot(md);
-      assert.strictEqual(props(nodes, 0).gap, 'tight');
-      assert.strictEqual(props(nodes, 0).padding, 0.5);
-    });
-  });
-
-  describe('nested container directives', () => {
-    it('should handle ::::row containing :::column children', () => {
-      const md = '::::row\n:::column\nLeft content\n:::\n\n:::column\nRight content\n:::\n::::';
-      const nodes = compileSlot(md);
-      assert.strictEqual(nodes.length, 1);
-      assert.strictEqual((nodes[0] as any).componentName, C.Row);
-      const children = props(nodes, 0).children;
-      assert.strictEqual(children.length, 2);
-      assert.strictEqual(children[0].componentName, C.Column);
-      assert.strictEqual(children[1].componentName, C.Column);
-    });
-
-    it('should handle 3-level nesting: row > column > card', () => {
-      const md = '::::::row\n::::column\n:::card{title="Nested"}\nDeep body\n:::\n::::\n::::::';
-      const nodes = compileSlot(md);
-      assert.strictEqual(nodes.length, 1);
-      assert.strictEqual((nodes[0] as any).componentName, C.Row);
-      const columns = props(nodes, 0).children;
-      assert.strictEqual(columns.length, 1);
-      assert.strictEqual(columns[0].componentName, C.Column);
-      const cards = columns[0].props.children;
-      assert.strictEqual(cards.length, 1);
-      assert.strictEqual(cards[0].componentName, C.Card);
-      assert.strictEqual(cards[0].props.title, 'Nested');
-      assert.strictEqual(cards[0].props.body, 'Deep body');
-    });
-  });
-
-  describe('multi-line body in nested scalar directive', () => {
-    it('should extract multi-line card body inside a row', () => {
-      const md = '::::row\n:::card{title="Rich"}\nFirst paragraph.\n\nSecond paragraph with **bold**.\n:::\n::::';
-      const nodes = compileSlot(md);
-      assert.strictEqual(nodes.length, 1);
-      assert.strictEqual((nodes[0] as any).componentName, C.Row);
-      const children = props(nodes, 0).children;
-      assert.strictEqual(children.length, 1);
-      assert.strictEqual(children[0].componentName, C.Card);
-      const body = children[0].props.body as string;
-      assert.ok(body.includes('First paragraph.'), 'should contain first paragraph');
-      assert.ok(body.includes('Second paragraph with **bold**'), 'should contain second paragraph');
-    });
-  });
-
   describe('error cases', () => {
     it('should throw on unknown directive', () => {
       const md = ':::unknown\nsome body\n:::';
       assert.throws(() => compileSlot(md), /unknown directive ":::unknown"/);
+    });
+
+    it('should throw on container directives used in markdown', () => {
+      const md = '::::row\n:::card{title="A"}\nBody\n:::\n::::';
+      assert.throws(() => compileSlot(md), /unknown directive ":::row"/);
     });
 
     it('should throw on duplicate MDAST handler registration', () => {
@@ -276,19 +187,6 @@ describe('Slot Compiler', () => {
         () => componentRegistry.register(dup),
         /MDAST node type 'paragraph' already handled by/,
       );
-    });
-
-    it('should throw on multi-slot component used as directive', () => {
-      // Register a test component with multiple slots
-      const multiSlot = defineComponent({
-        name: 'test-multi-slot',
-        slots: ['left', 'right'],
-        tokens: [],
-        expand: (props: any) => ({ type: NODE_TYPE.TEXT, content: [], style: TEXT_STYLE.BODY, color: '000000', hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP, lineHeightMultiplier: 1.2 } as any),
-      });
-      componentRegistry.register(multiSlot);
-      const md = ':::test-multi-slot\nsome body\n:::';
-      assert.throws(() => compileSlot(md), /only supports 1/);
     });
   });
 });

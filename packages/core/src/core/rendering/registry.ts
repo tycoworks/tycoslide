@@ -182,7 +182,7 @@ function buildDeserializer(
 export function defineComponent<TBody extends z.ZodTypeAny, TTokens = undefined>(def: {
   name: string;
   body: TBody;
-  directive?: boolean;
+  markdown?: boolean;
   tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
   mdast?: MdastHandler;
   expand: (props: { body: z.infer<TBody> }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
@@ -197,7 +197,7 @@ export function defineComponent<TBody extends z.ZodTypeAny, TParams extends Sche
   name: string;
   body: TBody;
   params: TParams;
-  directive?: boolean;
+  markdown?: boolean;
   tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
   mdast?: MdastHandler;
   expand: (props: { body: z.infer<TBody> } & z.infer<z.ZodObject<TParams>>, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
@@ -212,7 +212,7 @@ export function defineComponent<TBody extends z.ZodTypeAny, TParams extends Sche
 export function defineComponent<TShape extends SchemaShape, TTokens = undefined>(def: {
   name: string;
   params: TShape;
-  directive?: boolean;
+  markdown?: boolean;
   tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
   mdast?: MdastHandler;
   expand: (props: z.infer<z.ZodObject<TShape>> & { body?: string }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
@@ -227,6 +227,7 @@ export function defineComponent<TTokens = undefined>(def: {
   name: string;
   params?: SchemaShape;
   slots: readonly string[];
+  markdown?: boolean;
   tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
   mdast?: MdastHandler;
   expand: (props: any, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
@@ -262,12 +263,15 @@ export function defineComponent(def: any): ComponentDefinition & { schema?: z.Zo
   };
 
   if (slots?.length) {
-    // Slotted component: no auto-deserializer (slot compiler handles body compilation).
-    // .schema is not set — slotted components aren't usable in layout params.
+    // Slotted component: no auto-deserializer, no .schema.
+    // If markdown: false, clear slots so getDirectiveHandler() won't match.
+    if (def.markdown === false) {
+      result.slots = undefined;
+    }
   } else if (bodySchema || paramsSchema) {
     // Scalar component: auto-generate .schema and directive deserializer
     result.schema = bodySchema ?? z.object(paramsShape);
-    if (def.directive !== false) {
+    if (def.markdown !== false) {
       result.deserialize = buildDeserializer(def.name, paramsSchema);
     }
   }
@@ -326,7 +330,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
 
   /**
    * Find a component that supports :::name directive invocation.
-   * Returns the definition if it has a deserializer (scalar components) or slots (container components).
+   * Returns the definition if it has a deserializer or markdown-accessible slots.
    */
   getDirectiveHandler(name: string): ComponentDefinition | undefined {
     const def = this.get(name);

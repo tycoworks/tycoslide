@@ -8,7 +8,7 @@
 import type { Root, RootContent } from 'mdast';
 import { SYNTAX, type ContainerDirective } from '../model/syntax.js';
 import { markdownProcessor, extractDirectiveBody } from '../../utils/parser.js';
-import { componentRegistry, coerceAttributes, component, type ComponentNode } from '../rendering/registry.js';
+import { componentRegistry, type ComponentNode } from '../rendering/registry.js';
 import { type SlideNode } from '../model/nodes.js';
 
 // ============================================
@@ -90,10 +90,8 @@ function compileChildren(
 /**
  * Dispatch a :::name container directive into a ComponentNode.
  *
- * Two paths based on component definition:
- * - Slotted components (row, column, stack, grid): walk directive.children directly.
- *   The MDAST tree already has the correctly nested structure from the parser.
- * - Scalar components (card, image, text, etc.): extract body as raw text string.
+ * Scalar components (card, image, table, etc.): extract body as raw text string
+ * and pass to the component's deserializer.
  *
  * Exported for reuse by compileBareNode which also dispatches nested directives.
  */
@@ -105,30 +103,13 @@ export function dispatchDirective(
   const handler = componentRegistry.getDirectiveHandler(directive.name);
   if (!handler) {
     const available = componentRegistry.getAll()
-      .filter(d => d.deserialize || d.slots?.length)
+      .filter(d => d.deserialize)
       .map(d => d.name)
       .join(', ');
     throw new Error(
       `[tycoslide] ${errorPrefix}: unknown directive ":::${directive.name}". ` +
       `Available directives: ${available || 'none'}.`,
     );
-  }
-
-  // Slotted component: walk the already-parsed MDAST children directly.
-  // No re-parsing — the parser already built the correctly nested tree.
-  if (handler.slots?.length) {
-    if (handler.slots.length > 1) {
-      throw new Error(
-        `Component '${handler.name}' has ${handler.slots.length} slots but directive syntax only supports 1.`,
-      );
-    }
-    const attrs = coerceAttributes(directive.attributes ?? {});
-    const children = compileChildren(
-      directive.children as RootContent[],
-      source,
-      errorPrefix,
-    );
-    return component(handler.name, { ...attrs, [handler.slots[0]]: children });
   }
 
   // Scalar component: extract body as raw text string for the deserializer.

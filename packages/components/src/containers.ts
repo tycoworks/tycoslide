@@ -5,7 +5,6 @@ import {
   NODE_TYPE, type SlideNode,
   GAP, type HorizontalAlignment, type VerticalAlignment, type GapSize, type SizeValue,
   VALIGN, HALIGN, SIZE, DIRECTION,
-  schema, type SchemaShape,
   type ExpansionContext, resolveGap,
 } from 'tycoslide';
 import { Component } from './names.js';
@@ -51,19 +50,10 @@ interface RowInternalProps extends RowProps {
   children: SlideNode[];
 }
 
-const rowSchema = {
-  gap: schema.gap().optional(),
-  vAlign: schema.vAlign().optional(),
-  hAlign: schema.hAlign().optional(),
-  padding: schema.number().optional(),
-  width: schema.size().optional(),
-  height: schema.size().optional(),
-} satisfies SchemaShape;
-
 export const rowComponent = defineComponent({
   name: Component.Row,
-  params: rowSchema,
   slots: ['children'] as const,
+  markdown: false,
   tokens: [],
 
   expand: (props: RowInternalProps, context: ExpansionContext) => ({
@@ -103,19 +93,10 @@ interface ColumnInternalProps extends ColumnProps {
   children: SlideNode[];
 }
 
-const columnSchema = {
-  gap: schema.gap().optional(),
-  vAlign: schema.vAlign().optional(),
-  hAlign: schema.hAlign().optional(),
-  padding: schema.number().optional(),
-  width: schema.size().optional(),
-  height: schema.size().optional(),
-} satisfies SchemaShape;
-
 export const columnComponent = defineComponent({
   name: Component.Column,
-  params: columnSchema,
   slots: ['children'] as const,
+  markdown: false,
   tokens: [],
 
   expand: (props: ColumnInternalProps, context: ExpansionContext) => ({
@@ -151,15 +132,10 @@ interface StackInternalProps extends StackProps {
   children: SlideNode[];
 }
 
-const stackSchema = {
-  width: schema.size().optional(),
-  height: schema.size().optional(),
-} satisfies SchemaShape;
-
 export const stackComponent = defineComponent({
   name: Component.Stack,
-  params: stackSchema,
   slots: ['children'] as const,
+  markdown: false,
   tokens: [],
 
   expand: (props: StackInternalProps) => ({
@@ -202,15 +178,10 @@ interface GridInternalProps extends GridProps {
   children: SlideNode[];
 }
 
-const gridSchema = {
-  columns: schema.number(),
-  gap: schema.gap().optional(),
-} satisfies SchemaShape;
-
 export const gridComponent = defineComponent({
   name: Component.Grid,
-  params: gridSchema,
   slots: ['children'] as const,
+  markdown: false,
   tokens: [],
   expand: (props: GridInternalProps) => {
   const { columns, gap = GAP.NORMAL, children } = props;

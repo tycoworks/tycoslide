@@ -61,7 +61,7 @@ function expandPlainText(props: PlainTextComponentProps, context: ExpansionConte
 export const plainTextComponent = defineComponent({
   name: Component.PlainText,
   body: schema.string(),
-  directive: false,
+  markdown: false,
   tokens: Object.values(PLAIN_TEXT_TOKEN),
   expand: expandPlainText,
 });
