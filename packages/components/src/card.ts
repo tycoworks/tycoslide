@@ -3,7 +3,7 @@
 
 import {
   defineComponent, component, type ComponentProps, type SchemaShape,
-  SHAPE, SIZE, schema,
+  SHAPE, SIZE,
   type GapSize, type HorizontalAlignment, type VerticalAlignment,
 } from 'tycoslide';
 import { Component } from './names.js';
@@ -43,8 +43,6 @@ const cardSchema = {
   title: textComponent.schema.optional(),
   /** Card description text */
   description: textComponent.schema.optional(),
-  /** Sizing: 'fill' to share parent space equally, 'hug' for content-sized (default) */
-  height: schema.size().optional(),
 } satisfies SchemaShape;
 
 // ============================================
@@ -67,7 +65,7 @@ export const cardComponent = defineComponent({
   params: cardSchema,
   tokens: Object.values(CARD_TOKEN),
   expand(props, _context, tokens: CardTokens) {
-    const { image: imagePath, title, description, body, height: sizeHeight } = props;
+    const { image: imagePath, title, description, body } = props;
     const actualDescription = description ?? body;
     const {
       background, padding, gap, hAlign: contentHAlign, vAlign: contentVAlign,
@@ -90,7 +88,7 @@ export const cardComponent = defineComponent({
     }
 
     const contentProps = { padding, gap, hAlign: contentHAlign, vAlign: contentVAlign };
-    const outerHeight = sizeHeight ?? SIZE.FILL;
+    const outerHeight = SIZE.FILL;
 
     // Check background opacity from the ShapeTokens map
     if (background.fillOpacity === 0) {

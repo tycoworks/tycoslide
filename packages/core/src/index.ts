@@ -5,20 +5,20 @@
 export { Presentation, type WriteResult, type SlideLayout } from './core/rendering/presentation.js';
 export { LayoutValidationError, type SlideValidationResult, type ValidationResult } from './core/layout/validator.js';
 export {
-  HALIGN, HALIGN_VALUES,
-  VALIGN, VALIGN_VALUES,
-  GAP, GAP_VALUES,
+  HALIGN,
+  VALIGN,
+  GAP,
   DIRECTION,
-  SIZE, SIZE_VALUES,
+  SIZE,
   BORDER_STYLE,
   SHAPE, SHAPE_VALUES,
   ARROW_TYPE, ARROW_TYPE_VALUES,
-  DASH_TYPE, DASH_TYPE_VALUES,
+  DASH_TYPE,
   STRIKE_TYPE, UNDERLINE_STYLE,
   SLIDE_SIZE,
   CUSTOM_LAYOUT,
   FONT_WEIGHT,
-  TEXT_STYLE, TEXT_STYLE_VALUES,
+  TEXT_STYLE,
   Bounds,
 } from './core/model/types.js';
 export type {

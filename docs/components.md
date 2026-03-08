@@ -198,7 +198,6 @@ Content card with an optional image, title, and description. Renders as a rounde
 | `description` | string | Description text (or use body content) |
 | `image` | string | Path to image file |
 | `variant` | string | Theme variant (`default`, `flat`) |
-| `height` | `fill` \| `hug` | Height sizing (default: `fill`) |
 
 ### Tokens
 
@@ -254,7 +253,6 @@ Quote text is required -- provide it either via the `quote` attribute or as body
 | `attribution` | string | Attribution line |
 | `image` | string | Path to logo/image shown above quote |
 | `variant` | string | Theme variant |
-| `height` | `fill` \| `hug` | Height sizing (default: `fill`) |
 
 ### Tokens
 
@@ -484,7 +482,6 @@ Quote text is required -- provide it either via the `quote` attribute or as body
 | `attribution` | string | Attribution line, e.g. "-- Jane Smith, CTO" |
 | `image` | string | Path to image/logo displayed above the quote |
 | `variant` | string | Theme variant name |
-| `height` | `fill` \| `hug` | Height sizing (default: `fill`) |
 
 ### Tokens
 
@@ -687,7 +684,6 @@ params: {
   size: schema.enum(['small', 'medium', 'large']), // Enum
   count: schema.number(),                          // Number
   enabled: schema.boolean(),                       // Boolean
-  height: schema.size().optional(),                // SIZE enum: fill/hug
 }
 ```
 

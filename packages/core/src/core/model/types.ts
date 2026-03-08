@@ -13,8 +13,7 @@ export const HALIGN = {
 
 export type HorizontalAlignment = typeof HALIGN[keyof typeof HALIGN];
 
-/** All HALIGN values as a tuple — useful for Zod enum schemas */
-export const HALIGN_VALUES = Object.values(HALIGN) as [HorizontalAlignment, ...HorizontalAlignment[]];
+
 
 export const VALIGN = {
   TOP: 'top',
@@ -24,8 +23,7 @@ export const VALIGN = {
 
 export type VerticalAlignment = typeof VALIGN[keyof typeof VALIGN];
 
-/** All VALIGN values as a tuple — useful for Zod enum schemas */
-export const VALIGN_VALUES = Object.values(VALIGN) as [VerticalAlignment, ...VerticalAlignment[]];
+
 
 export const GAP = {
   NONE: 'none',
@@ -36,8 +34,7 @@ export const GAP = {
 
 export type GapSize = typeof GAP[keyof typeof GAP];
 
-/** All GAP values as a tuple — useful for Zod enum schemas */
-export const GAP_VALUES = Object.values(GAP) as [GapSize, ...GapSize[]];
+
 
 export const DIRECTION = {
   ROW: 'row',
@@ -53,8 +50,7 @@ export const SIZE = {
 
 export type SizeValue = typeof SIZE[keyof typeof SIZE];
 
-/** All SIZE values as a tuple — useful for Zod enum schemas */
-export const SIZE_VALUES = Object.values(SIZE) as [SizeValue, ...SizeValue[]];
+
 
 export const BORDER_STYLE = {
   FULL: 'full',
@@ -293,8 +289,6 @@ export const DASH_TYPE = {
 
 export type DashType = typeof DASH_TYPE[keyof typeof DASH_TYPE];
 
-/** All DASH_TYPE values as a tuple — useful for Zod enum schemas */
-export const DASH_TYPE_VALUES = Object.values(DASH_TYPE) as [DashType, ...DashType[]];
 
 /** pptxgenjs strikethrough styles (OpenXML a:strike values) */
 export const STRIKE_TYPE = {
@@ -384,8 +378,6 @@ export const TEXT_STYLE = {
 /** Well-known text style names from TEXT_STYLE, plus any theme-defined custom names. */
 export type TextStyleName = (typeof TEXT_STYLE)[keyof typeof TEXT_STYLE] | (string & {});
 
-/** All TEXT_STYLE values as a tuple — useful for Zod enum schemas */
-export const TEXT_STYLE_VALUES = Object.values(TEXT_STYLE) as [TextStyleName, ...TextStyleName[]];
 
 export interface TextStyle {
   fontFamily: FontFamily;

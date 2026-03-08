@@ -3,7 +3,6 @@
 // Layout authors use these instead of importing Zod directly.
 
 import { z } from 'zod';
-import { SIZE_VALUES } from './types.js';
 
 export const schema = {
   // Structural — how values compose
@@ -16,8 +15,6 @@ export const schema = {
   number:   ()                                        => z.number(),
   boolean:  ()                                        => z.boolean(),
 
-  // Domain — common enum types (saves importing _VALUES tuples)
-  size:      ()                                       => z.enum(SIZE_VALUES),
 };
 
 // ============================================
@@ -29,7 +26,6 @@ type ScalarLeaf =
   | ReturnType<typeof schema.string>
   | ReturnType<typeof schema.number>
   | ReturnType<typeof schema.boolean>
-  | ReturnType<typeof schema.size>
   | ReturnType<typeof schema.enum>
   | ReturnType<typeof schema.array>
   | ReturnType<typeof schema.object>;

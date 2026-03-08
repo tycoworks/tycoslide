@@ -4,7 +4,7 @@
 
 import {
   defineComponent, component, type ComponentProps, type SchemaShape,
-  SHAPE, SIZE, schema,
+  SHAPE, SIZE,
   type GapSize, type HorizontalAlignment, type VerticalAlignment,
 } from 'tycoslide';
 import { Component } from './names.js';
@@ -45,8 +45,6 @@ const testimonialSchema = {
   attribution: textComponent.schema.optional(),
   /** Optional image/logo displayed above the quote */
   image: imageComponent.schema.optional(),
-  /** Sizing: 'fill' to share parent space equally, 'hug' for content-sized (default) */
-  height: schema.size().optional(),
 } satisfies SchemaShape;
 
 // ============================================
@@ -73,7 +71,7 @@ export const testimonialComponent = defineComponent({
   params: testimonialSchema,
   tokens: Object.values(TESTIMONIAL_TOKEN),
   expand(props, _context, tokens: TestimonialTokens) {
-    const { quote: quoteText, body, attribution, image: imagePath, height: sizeHeight } = props;
+    const { quote: quoteText, body, attribution, image: imagePath } = props;
     const actualQuote = quoteText ?? body;
     const {
       background, padding, gap, hAlign: contentHAlign, vAlign: contentVAlign,
@@ -94,7 +92,7 @@ export const testimonialComponent = defineComponent({
     }
 
     const contentProps = { padding, gap, hAlign: contentHAlign, vAlign: contentVAlign };
-    const outerHeight = sizeHeight ?? SIZE.FILL;
+    const outerHeight = SIZE.FILL;
 
     // Check background opacity from the ShapeTokens map
     if (background.fillOpacity === 0) {

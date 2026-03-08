@@ -4,7 +4,7 @@
 
 import {
   defineComponent, component, type ComponentProps, type SchemaShape,
-  SIZE, schema, SYNTAX, extractSource,
+  SIZE, SYNTAX, extractSource,
   type GapSize,
 } from 'tycoslide';
 import type { RootContent } from 'mdast';
@@ -37,8 +37,6 @@ const quoteSchema = {
   quote: textComponent.schema.optional(),
   /** Attribution line, e.g. "— Jane Smith, CTO" */
   attribution: textComponent.schema.optional(),
-  /** Sizing: 'fill' to share parent space equally, 'hug' for content-sized (default) */
-  height: schema.size().optional(),
 } satisfies SchemaShape;
 
 // ============================================
@@ -73,7 +71,7 @@ export const quoteComponent = defineComponent({
     },
   },
   expand(props, _context, tokens: QuoteTokens) {
-    const { quote: quoteText, body, attribution, height: sizeHeight } = props;
+    const { quote: quoteText, body, attribution } = props;
     const actualQuote = quoteText ?? body;
     const {
       bar: barTokens, gap,
@@ -92,7 +90,7 @@ export const quoteComponent = defineComponent({
       children.push(plainText(attribution, attributionTokens));
     }
 
-    const outerHeight = sizeHeight ?? SIZE.HUG;
+    const outerHeight = SIZE.HUG;
 
     return row(
       { gap, height: outerHeight },
