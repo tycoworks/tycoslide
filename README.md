@@ -7,10 +7,9 @@ Generate branded PPTX presentations from Markdown or TypeScript. Theme-based sty
 A build system for presentations. tycoslide compiles Markdown or TypeScript into .pptx files with programmatic layout control and theme-based styling.
 
 **Why tycoslide?**
-- **Native PowerPoint output** — Recipients can edit slides in PowerPoint, Keynote, or Google Slides without special tools
-- **Brand compliance at build time** — Missing tokens, invalid layouts, and content overflow fail the build
-- **Markdown authoring** — Write content in Markdown
-- **TypeScript API** — Build custom themes and components
+- **Markdown authoring** — Content as code, version-controlled, reviewable
+- **TypeScript themes with build-time validation** — Missing tokens, invalid layouts, and content overflow fail the build
+- **Native PowerPoint output** — Editable presentations that open in PowerPoint, Keynote, or Google Slides
 
 **[Read the full introduction →](./docs/introduction.md)** to understand tycoslide's philosophy and how it differs from Slidev, Marp, and Reveal.js.
 

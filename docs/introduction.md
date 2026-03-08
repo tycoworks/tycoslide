@@ -19,9 +19,9 @@ For the ideas behind tycoslide's design — content as code, the three-persona m
 | Design token validation | Build-time errors | No | No | No |
 | Live preview | No | Yes | Yes | Yes |
 
-**Slidev** produces HTML presentations with live reload, Vue components, and browser-based interactivity. tycoslide produces native .pptx files that recipients open and edit in PowerPoint.
+**Slidev** produces HTML presentations with live reload, Vue components, and browser-based interactivity. tycoslide produces editable .pptx files that open in PowerPoint.
 
-**Marp** can export .pptx, but renders each slide as an image — recipients cannot edit text or shapes. tycoslide generates native PowerPoint objects (text boxes, shapes, tables).
+**Marp** can export .pptx, but renders each slide as an image — text and shapes are not editable. tycoslide generates native PowerPoint objects (text boxes, shapes, tables).
 
 **Reveal.js** creates HTML presentations with a plugin ecosystem for browser-based interactivity. tycoslide targets editable .pptx output rather than hosted web presentations.
 
