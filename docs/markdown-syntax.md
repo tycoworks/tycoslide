@@ -116,7 +116,7 @@ Standard GFM (GitHub Flavored Markdown) table syntax with optional per-column al
 | L    | C      | R     |
 ```
 
-For styled tables, use the `:::table` directive (see [Components](./components.md)).
+For styled tables, use `:::table` (see [Components — table](./components.md#table)).
 
 ## Speaker Notes
 
@@ -136,7 +136,33 @@ Notes appear in PowerPoint's presenter view.
 
 ## Code Blocks
 
-Fenced code blocks (triple backticks with a language tag) compile to the `code` component, which renders syntax-highlighted code as an image. See [Components — code](./components.md#code) for supported languages and theme tokens.
+Fenced code blocks (triple backticks with a language tag) produce syntax-highlighted code rendered as an image. See [Components — code](./components.md#code) for supported languages and theme tokens.
+
+## Directives
+
+Add cards, images, tables, diagrams, and other content with the triple-colon syntax:
+
+```markdown
+:::name{param="value"}
+Body content.
+:::
+```
+
+| Directive | What it adds |
+|-----------|-------------|
+| `:::card` | Content card with title and description |
+| `:::quote` | Blockquote with attribution |
+| `:::testimonial` | Quote card with image and attribution |
+| `:::table` | Styled table with header support |
+| `:::image` | Embedded image |
+| `:::mermaid` | Auto-themed diagram |
+| `:::code` | Syntax-highlighted code block |
+| `:::line` | Horizontal or vertical rule |
+| `:::shape` | Filled area shape |
+
+Fenced code blocks (triple backticks with a language tag) also produce syntax-highlighted output — no `:::` needed.
+
+For parameters and examples, see [Components](./components.md#content-components).
 
 ## Complete Example
 
@@ -190,6 +216,6 @@ title: Next Steps
 ## Related
 
 - [Quick Start](./quick-start.md) - Your first presentation
-- [Components](./components.md) - Directives for rich content
+- [Components](./components.md) - Content and layout reference
 - [Layouts](./layouts.md) - Available slide layouts
 - [CLI](./cli.md) - Build command options

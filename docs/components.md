@@ -1,43 +1,50 @@
 # Components
 
-Components are the building blocks of slides — text, cards, tables, images, containers. Developers use them to build layouts in TypeScript; authors use them in markdown to build slides. All built-in components come from `tycoslide-components` and are re-exported by themes. For the default theme's token values, see [`theme.ts`](../packages/theme-default/src/theme.ts).
+Components are the building blocks of tycoslide presentations. All built-in components come from `tycoslide-components` and are re-exported by themes. For the default theme's token values, see [`theme.ts`](../packages/theme-default/src/theme.ts).
 
----
+## How Components Work
 
-## Directive Syntax
-
-Add components to markdown with the triple-colon directive syntax:
+In markdown, a component looks like this:
 
 ```markdown
-:::componentName{param="value" another="value"}
-Body content goes here.
+:::card{title="Feature Name" variant="flat"}
+Description of the feature.
 :::
 ```
 
-**Nesting:** When a component contains other components, add an extra colon to the outer fence for each nesting level:
+That directive has four parts:
 
-```markdown
-::::row{gap="normal"}
-:::card{title="Left"}
-Left content.
-:::
-:::card{title="Right"}
-Right content.
-:::
-::::
-```
+**Name** — `card` identifies which component to invoke. Built-in names are defined in `tycoslide-components`. Custom components use any string.
 
-Three-deep nesting uses five colons on the outermost container, four on the middle, three on the innermost, and so on.
+**Directive** — the `:::` fence is how you use a component in markdown. Not all components have directives. Layout components (`row`, `column`, `stack`, `grid`) are TypeScript DSL only.
 
-**Parameters** are passed in curly braces after the component name, using `key="value"` syntax. Boolean and numeric values are still quoted: `columns="3"`.
+**Parameters** — `title` and `variant` configure the component. Parameters are passed in curly braces using `key="value"` syntax. Boolean and numeric values are still quoted: `columns="3"`.
 
-**Body content** is everything between the opening and closing fences. Some components use the body as their primary content (e.g., `text`, `quote`), while others ignore it or treat it as a file path (e.g., `image`).
+**Body content** — the text between the opening and closing fences. Some components use the body as primary content (e.g., `quote`, `testimonial`), some treat it as a file path (e.g., `image`), and some ignore it.
 
 ---
 
 ## Component Summary
 
-### Container Components
+### Content Components
+
+| Component | Description | Markdown |
+|-----------|-------------|----------|
+| [card](#card) | Content card with optional image, title, and description | Yes |
+| [quote](#quote) | Blockquote with optional attribution and image | Yes |
+| [testimonial](#testimonial) | Quote card with optional image and attribution | Yes |
+| [table](#table) | Native PowerPoint table with header support | Yes |
+| [image](#image) | Embedded image | Yes |
+| [mermaid](#mermaid) | Auto-themed Mermaid diagram rendered as PNG | Yes |
+| [code](#code) | Syntax-highlighted code block rendered as PNG | Yes |
+| [line](#line) | Horizontal or vertical rule | Yes |
+| [shape](#shape) | Filled/outlined area shape | Yes |
+| [text](#text) | Single paragraph of formatted text with heading style support | No (auto) |
+| [plainText](#plaintext) | Unformatted text for titles, captions, and attributions | No (DSL) |
+| [list](#list) | Bullet and numbered lists | No (auto) |
+| [slideNumber](#slidenumber) | Slide number element | No (master) |
+
+### Layout Components
 
 | Component | Description |
 |-----------|-------------|
@@ -46,35 +53,11 @@ Three-deep nesting uses five colons on the outermost container, four on the midd
 | [stack](#stack) | Z-order overlay — layer text over a background shape |
 | [grid](#grid) | Equal-column grid — uniform width for all children |
 
-### Content Components
-
-| Component | Description |
-|-----------|-------------|
-| [text](#text) | Single paragraph of formatted text with heading style support |
-| [plainText](#plaintext) | Unformatted text for titles, captions, and attributions |
-| [list](#list) | Bullet and numbered lists |
-| [card](#card) | Content card with optional image, title, and description |
-| [quote](#quote) | Blockquote with optional attribution and image |
-| [testimonial](#testimonial) | Quote card with optional image and attribution |
-| [table](#table) | Native PowerPoint table with header support |
-| [image](#image) | Embedded image |
-| [mermaid](#mermaid) | Auto-themed Mermaid diagram rendered as PNG |
-| [code](#code) | Syntax-highlighted code block rendered as PNG |
-| [line](#line) | Horizontal or vertical rule |
-| [shape](#shape) | Filled/outlined area shape |
-| [slideNumber](#slidenumber) | Slide number element (used in masters) |
-
-### Shared Value Types
-
-**Gap values:** `none`, `tight`, `normal`, `loose`
-
-**Size values:** `fill`, `hug`
-
-**Horizontal alignment (`hAlign`):** `left`, `center`, `right`
-
-**Vertical alignment (`vAlign`):** `top`, `middle`, `bottom`
+Layout components are TypeScript DSL only. They are not available as markdown directives.
 
 ---
+
+## Content Components
 
 ## text
 
@@ -155,7 +138,7 @@ plainText(props.label, { style: tokens.labelStyle, color: tokens.labelColor })
 
 ## list
 
-Renders bullet or numbered lists with support for formatting. The list component has no `:::list` directive — markdown lists become list nodes automatically. In the TypeScript DSL, use `list()` directly.
+Renders bullet or numbered lists with support for formatting. No `:::list` directive — markdown lists become list nodes automatically. In the TypeScript DSL, use `list()` directly.
 
 ### Examples
 
@@ -253,20 +236,6 @@ Description of the feature.
 :::card{title="With Image" image="./assets/diagram.png" variant="flat"}
 Supporting detail text.
 :::
-```
-
-```markdown
-::::grid{columns=3}
-:::card{title="Research" height="fill"}
-Gather requirements and user insights.
-:::
-:::card{title="Design" height="fill"}
-Create wireframes and prototypes.
-:::
-:::card{title="Deliver" height="fill"}
-Ship to production with confidence.
-:::
-::::
 ```
 
 ---
@@ -405,108 +374,9 @@ When any `borderTop`/`borderRight`/`borderBottom`/`borderLeft` prop is set, only
 
 ## slideNumber
 
-Displays the current slide number. Used in the default master slide footer. Themes place this in the master layout — authors don't add it to individual slides.
+Displays the current slide number. Used in the default master slide footer. Themes place this in the master layout — authors do not add it to individual slides.
 
 No directive parameters.
-
----
-
-## row
-
-Horizontal flex container. Children are arranged side by side.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `gap` | `none` \| `tight` \| `normal` \| `loose` | Gap between children |
-| `vAlign` | `top` \| `middle` \| `bottom` | Vertical alignment of children |
-| `hAlign` | `left` \| `center` \| `right` | Horizontal alignment |
-| `padding` | number | Internal padding (inches) |
-| `width` | `fill` \| `hug` | Width sizing (default: `fill`) |
-| `height` | `fill` \| `hug` | Height sizing (default: `hug`) |
-
-### Example
-
-```markdown
-::::row{gap="normal" vAlign="top"}
-:::card{title="Left"}
-Left content.
-:::
-:::card{title="Right"}
-Right content.
-:::
-::::
-```
-
----
-
-## column
-
-Vertical flex container. Children are stacked top to bottom. Same parameters as [row](#row).
-
-### Example
-
-```markdown
-::::column{gap="tight"}
-CONTEXT
-:::quote{attribution="— Sarah Chen, Design Lead"}
-Automating the review cycle freed up two days per sprint.
-:::
-::::
-```
-
----
-
-## stack
-
-Z-order overlay container. All children occupy the same bounds; the first child renders behind, the last child renders in front.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `width` | `fill` \| `hug` | Width sizing (default: `fill`) |
-| `height` | `fill` \| `hug` | Height sizing (default: `hug`) |
-
-### Example
-
-```markdown
-:::stack{height="fill"}
-:::shape{shape="rect" variant="primary"}
-:::
-White text over blue background
-:::
-```
-
----
-
-## grid
-
-Equal-column grid. Wraps children into rows of N columns, each cell sharing space equally.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `columns` | number | Number of columns (**required**) |
-| `gap` | GapSize | Gap between cells (default: `normal`) |
-
-### Example
-
-```markdown
-::::grid{columns=3}
-:::card{title="One" height="fill"}
-First.
-:::
-:::card{title="Two" height="fill"}
-Second.
-:::
-:::card{title="Three" height="fill"}
-Third.
-:::
-::::
-```
 
 ---
 
@@ -574,7 +444,7 @@ flowchart LR
 
 ## code
 
-Syntax-highlighted code block rendered as a PNG image. Fenced code blocks in markdown (` ```language `) become this component automatically. The language identifier after the opening fences is required.
+Syntax-highlighted code block rendered as a PNG image. Fenced code blocks in markdown (` ```language `) are rendered automatically. The language identifier after the opening fences is required.
 
 See [`theme.ts`](../packages/theme-default/src/theme.ts) for code component token keys and defaults.
 
@@ -655,6 +525,96 @@ This changed everything for us.
 
 ---
 
+## Layout Components
+
+Layout components are TypeScript DSL only — they control structure and arrangement in theme layout render functions.
+
+## row
+
+Horizontal flex container. Children are arranged side by side.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `gap` | `none` \| `tight` \| `normal` \| `loose` | Gap between children |
+| `vAlign` | `top` \| `middle` \| `bottom` | Vertical alignment of children |
+| `hAlign` | `left` \| `center` \| `right` | Horizontal alignment |
+| `padding` | number | Internal padding (inches) |
+| `width` | `fill` \| `hug` | Width sizing (default: `fill`) |
+| `height` | `fill` \| `hug` | Height sizing (default: `hug`) |
+
+### Example
+
+```typescript
+row({ gap: GAP.NORMAL, vAlign: VALIGN.TOP },
+  card({ title: 'Left' }, 'Left content.'),
+  card({ title: 'Right' }, 'Right content.'),
+)
+```
+
+---
+
+## column
+
+Vertical flex container. Children are stacked top to bottom. Same parameters as [row](#row).
+
+### Example
+
+```typescript
+column({ gap: GAP.TIGHT },
+  text('Context'),
+  quote({ attribution: '— Sarah Chen' }, 'Automating the review cycle freed up two days per sprint.'),
+)
+```
+
+---
+
+## stack
+
+Z-order overlay container. All children occupy the same bounds; the first child renders behind, the last child renders in front.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `width` | `fill` \| `hug` | Width sizing (default: `fill`) |
+| `height` | `fill` \| `hug` | Height sizing (default: `hug`) |
+
+### Example
+
+```typescript
+stack({ height: SIZE.FILL },
+  shape({ shape: SHAPE.RECT, variant: 'primary' }),
+  text('White text over blue background'),
+)
+```
+
+---
+
+## grid
+
+Equal-column grid. Wraps children into rows of N columns, each cell sharing space equally.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `columns` | number | Number of columns (**required**) |
+| `gap` | GapSize | Gap between cells (default: `normal`) |
+
+### Example
+
+```typescript
+grid(3,
+  card({ title: 'One' }, 'First.'),
+  card({ title: 'Two' }, 'Second.'),
+  card({ title: 'Three' }, 'Third.'),
+)
+```
+
+---
+
 ## Creating Custom Components
 
 Custom components add new content types to tycoslide, so authors can use them in markdown the same way as built-in components. They work in both markdown and the TypeScript DSL, and get their styling tokens from the theme.
@@ -698,7 +658,7 @@ Each built-in component exports its definition object (e.g., `cardComponent`, `t
 | `{ name, body: schema.string(), expand }` | Single body text, no named params |
 | `{ name, body, params: {...}, expand }` | Body text plus additional named attributes |
 | `{ name, params: {...}, expand }` | Multiple named attributes, no primary body |
-| `{ name, slots: ['children'], expand }` | Body compiled as `ComponentNode[]` (container) |
+| `{ name, slots: ['children'], expand }` | Body compiled as `ComponentNode[]`. Set `directive: false` to suppress markdown access. |
 | `{ name, expand }` | TypeScript DSL only — no markdown directive |
 
 ### Component Structure
@@ -727,10 +687,6 @@ params: {
   size: schema.enum(['small', 'medium', 'large']), // Enum
   count: schema.number(),                          // Number
   enabled: schema.boolean(),                       // Boolean
-  gap: schema.gap().optional(),                    // GAP enum: none/tight/normal/loose
-  align: schema.hAlign().optional(),               // HALIGN enum: left/center/right
-  valign: schema.vAlign().optional(),              // VALIGN enum: top/middle/bottom
-  style: schema.textStyle().optional(),            // TEXT_STYLE enum: h1/h2/h3/h4/body/small/eyebrow/footer
   height: schema.size().optional(),                // SIZE enum: fill/hug
 }
 ```
@@ -813,7 +769,7 @@ This is the body content.
 
 The `children` slot receives the compiled content as an array of `ComponentNode[]`.
 
-**Slotted components in directive syntax support only one slot.** The body is compiled and passed to the first slot. Components with multiple named slots must be used via the TypeScript DSL, where each slot is passed as a separate prop.
+**Slotted components are markdown-accessible by default** — the body is compiled and passed to the first slot. Components with multiple named slots must be used via the TypeScript DSL, where each slot is passed as a separate prop. Built-in containers (row, column, stack, grid) opt out of markdown access with `directive: false`.
 
 ### Variants
 

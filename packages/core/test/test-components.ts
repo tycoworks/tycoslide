@@ -91,7 +91,7 @@ export const textComponent = defineComponent({
 export const rowComponent = defineComponent({
   name: C.Row,
   slots: ['children'] as const,
-  markdown: false,
+  directive: false,
   tokens: [],
   expand: (props: any): any => ({
     type: NODE_TYPE.CONTAINER,
@@ -113,7 +113,7 @@ export const rowComponent = defineComponent({
 export const columnComponent = defineComponent({
   name: C.Column,
   slots: ['children'] as const,
-  markdown: false,
+  directive: false,
   tokens: [],
   expand: (props: any): any => ({
     type: NODE_TYPE.CONTAINER,

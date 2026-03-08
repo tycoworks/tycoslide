@@ -52,21 +52,19 @@ title: Team Priorities
 eyebrow: NEXT QUARTER
 ---
 
-Cards display structured content in a grid. Each card has a title and description.
+Cards display structured content. Each card has a title and description.
 
-::::grid{columns=3 gap="normal"}
-:::card{title="Infrastructure" height="fill"}
+:::card{title="Infrastructure"}
 Migrate remaining services to new cluster.
 :::
 
-:::card{title="Performance" height="fill"}
+:::card{title="Performance"}
 Target sub-second load times on key pages.
 :::
 
-:::card{title="Design System" height="fill"}
+:::card{title="Design System"}
 Publish component library v2 with tokens.
 :::
-::::
 
 ---
 layout: section

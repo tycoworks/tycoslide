@@ -182,7 +182,7 @@ function buildDeserializer(
 export function defineComponent<TBody extends z.ZodTypeAny, TTokens = undefined>(def: {
   name: string;
   body: TBody;
-  markdown?: boolean;
+  directive?: boolean;
   tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
   mdast?: MdastHandler;
   expand: (props: { body: z.infer<TBody> }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
@@ -197,7 +197,7 @@ export function defineComponent<TBody extends z.ZodTypeAny, TParams extends Sche
   name: string;
   body: TBody;
   params: TParams;
-  markdown?: boolean;
+  directive?: boolean;
   tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
   mdast?: MdastHandler;
   expand: (props: { body: z.infer<TBody> } & z.infer<z.ZodObject<TParams>>, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
@@ -212,7 +212,7 @@ export function defineComponent<TBody extends z.ZodTypeAny, TParams extends Sche
 export function defineComponent<TShape extends SchemaShape, TTokens = undefined>(def: {
   name: string;
   params: TShape;
-  markdown?: boolean;
+  directive?: boolean;
   tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
   mdast?: MdastHandler;
   expand: (props: z.infer<z.ZodObject<TShape>> & { body?: string }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
@@ -227,7 +227,7 @@ export function defineComponent<TTokens = undefined>(def: {
   name: string;
   params?: SchemaShape;
   slots: readonly string[];
-  markdown?: boolean;
+  directive?: boolean;
   tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
   mdast?: MdastHandler;
   expand: (props: any, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
@@ -264,14 +264,14 @@ export function defineComponent(def: any): ComponentDefinition & { schema?: z.Zo
 
   if (slots?.length) {
     // Slotted component: no auto-deserializer, no .schema.
-    // If markdown: false, clear slots so getDirectiveHandler() won't match.
-    if (def.markdown === false) {
+    // If directive: false, clear slots so getDirectiveHandler() won't match.
+    if (def.directive === false) {
       result.slots = undefined;
     }
   } else if (bodySchema || paramsSchema) {
     // Scalar component: auto-generate .schema and directive deserializer
     result.schema = bodySchema ?? z.object(paramsShape);
-    if (def.markdown !== false) {
+    if (def.directive !== false) {
       result.deserialize = buildDeserializer(def.name, paramsSchema);
     }
   }

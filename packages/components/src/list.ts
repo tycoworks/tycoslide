@@ -110,7 +110,7 @@ function extractListItems(listNode: MdastList, source: string): string[] {
 export const listComponent = defineComponent({
   name: Component.List,
   body: schema.array(schema.string()),
-  markdown: false,
+  directive: false,
   tokens: Object.values(LIST_TOKEN),
   mdast: {
     nodeTypes: [SYNTAX.LIST],

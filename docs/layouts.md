@@ -113,17 +113,17 @@ layout: body
 title: Architecture
 ---
 
-::::row{gap="normal"}
-:::card{title="Author" height="fill"}
+:::card{title="Author"}
 Writes Markdown, chooses layouts.
 :::
-:::card{title="Developer" height="fill"}
+
+:::card{title="Developer"}
 Builds themes and components.
 :::
-:::card{title="Designer" height="fill"}
+
+:::card{title="Designer"}
 Defines tokens and color palettes.
 :::
-::::
 ```
 
 ---
@@ -417,7 +417,6 @@ params: {
   subtitle: textComponent.schema.optional(),      // Optional text
   reverse: schema.boolean(),                      // Boolean
   columns: schema.number(),                       // Number
-  align: schema.hAlign().optional(),              // Horizontal alignment enum
 }
 ```
 

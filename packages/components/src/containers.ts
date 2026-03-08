@@ -53,7 +53,7 @@ interface RowInternalProps extends RowProps {
 export const rowComponent = defineComponent({
   name: Component.Row,
   slots: ['children'] as const,
-  markdown: false,
+  directive: false,
   tokens: [],
 
   expand: (props: RowInternalProps, context: ExpansionContext) => ({
@@ -96,7 +96,7 @@ interface ColumnInternalProps extends ColumnProps {
 export const columnComponent = defineComponent({
   name: Component.Column,
   slots: ['children'] as const,
-  markdown: false,
+  directive: false,
   tokens: [],
 
   expand: (props: ColumnInternalProps, context: ExpansionContext) => ({
@@ -135,7 +135,7 @@ interface StackInternalProps extends StackProps {
 export const stackComponent = defineComponent({
   name: Component.Stack,
   slots: ['children'] as const,
-  markdown: false,
+  directive: false,
   tokens: [],
 
   expand: (props: StackInternalProps) => ({
@@ -181,7 +181,7 @@ interface GridInternalProps extends GridProps {
 export const gridComponent = defineComponent({
   name: Component.Grid,
   slots: ['children'] as const,
-  markdown: false,
+  directive: false,
   tokens: [],
   expand: (props: GridInternalProps) => {
   const { columns, gap = GAP.NORMAL, children } = props;

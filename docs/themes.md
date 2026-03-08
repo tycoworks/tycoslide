@@ -583,17 +583,17 @@ layout: body
 title: Components
 ---
 
-::::grid{columns=3}
-:::card{title="Default" height="fill"}
+:::card{title="Default"}
 Test card.
 :::
-:::card{title="Flat" variant="flat" height="fill"}
+
+:::card{title="Flat" variant="flat"}
 Test card.
 :::
-:::card{title="Third" height="fill"}
+
+:::card{title="Third"}
 Test card.
 :::
-::::
 
 :::quote{attribution="Test Author"}
 Test quote text here.

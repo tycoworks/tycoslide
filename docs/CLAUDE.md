@@ -102,13 +102,15 @@ Each page owns its topic. Writers must not write content that belongs on another
 | What tycoslide is, comparison to alternatives | `introduction.md` |
 | Design philosophy, three-persona model, token alignment, fail-fast, extensibility | `design-principles.md` |
 | Install, first build, editor setup | `quick-start.md` |
-| Frontmatter, slide separators, text formatting, lists, tables (GFM), speaker notes | `markdown-syntax.md` |
-| Directive syntax, built-in component reference (params + examples), custom component authoring, DSL functions, token system, expansion function | `components.md` |
+| Frontmatter, slide separators, text formatting, lists, tables (GFM), speaker notes, directive summary table | `markdown-syntax.md` |
+| Full component reference (content + layout), directive syntax, custom component authoring, DSL functions, token system, expansion function | `components.md` |
 | Built-in layout reference (params + examples), custom layout authoring, slot mechanics, masters, testing layouts | `layouts.md` |
 | Theme structure, color/font/spacing/border/component token configuration, variants system, font requirements, registering layouts in themes, testing themes | `themes.md` |
 | CLI flags, exit codes, debug workflow | `cli.md` |
 | Error messages, causes, fixes, debug tools | `troubleshooting.md` |
 | Install + minimal example (3-slide) | `README.md` |
+
+`markdown-syntax.md` contains a summary table of available directives. This controlled duplication is by design — authors should not need to visit `components.md` for a quick reference.
 
 **Cross-reference, never duplicate.** If `layouts.md` needs to mention parameter schema helpers, it links to `components.md#defining-parameters`. It does not re-document the schema helpers. If `themes.md` needs to mention layout registration, it says "For how to package layouts with your theme entry point, see [Themes — Registering Layouts in Themes](./themes.md#registering-layouts-in-themes)" (as the current `layouts.md` does).
 
