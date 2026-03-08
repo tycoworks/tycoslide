@@ -8,10 +8,6 @@ Now / Next / Later — unified from todo, review, and roadmap docs.
 
 Before launch. Must be done before telling the world.
 
-### Remove containers from markdown
-
-I don't think we need it
-
 ### Proper Preview
 
 Collapse Master + Slide together and fix prev / next navigation.
