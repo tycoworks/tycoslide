@@ -116,7 +116,7 @@ Standard GFM (GitHub Flavored Markdown) table syntax with optional per-column al
 | L    | C      | R     |
 ```
 
-For styled tables, use `:::table` (see [Components — table](./components.md#table)).
+For more control over table styling, use `:::table` (see [Components — table](./components.md#table)).
 
 ## Speaker Notes
 

@@ -1,11 +1,11 @@
 # Themes
 
-Themes control all visual styling in tycoslide presentations — typography, spacing, colors, layout tokens, master tokens, and slide dimensions. Missing tokens fail the build immediately — if a token is wrong, the deck never ships.
+Themes control all visual styling in tycoslide presentations — typography, spacing, colors, layout tokens, master tokens, and slide dimensions. Missing tokens fail the build immediately.
 
 ## What Themes Control
 
 - **Typography** — Font families, sizes, weights for all text styles
-- **Font manifest** — Explicit list of all font families used by the theme; fonts not listed here are not embedded in the output file
+- **Font list** — Explicit list of all font families used by the theme; fonts not listed here are not embedded in the output file
 - **Spacing** — Normal, tight, and loose gap values
 - **Layout tokens** — Visual styling for each layout variant (colors, alignment, component appearance)
 - **Masters** — Background color, margins, fixed chrome (footers, slide numbers)
@@ -52,7 +52,7 @@ See the [theme source](../packages/theme-default/src/theme.ts) for all default v
 
 ## Extending an Existing Theme
 
-The primary path is to copy or spread the default theme and override what you need. The default theme is the reference implementation — it defines all required fields and serves as a starting point for any custom brand.
+Start by copying or spreading the default theme and override what you need. The default theme is the reference implementation — it defines all required fields and serves as a starting point for any custom brand.
 
 ```typescript
 import { theme as defaultTheme } from 'tycoslide-theme-default';
@@ -157,7 +157,7 @@ All values are in inches.
 
 ### Colors
 
-Colors are plain hex-string constants in the theme file, passed into `.tokenMap()` calls so layouts and masters receive consistent values. To change the color scheme, replace the color constants — every token map that references them picks up the new values.
+Colors are string constants in the theme file. Layout and master token maps reference these constants, so changing a color constant updates every token that uses it.
 
 See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete reference.
 
@@ -165,7 +165,7 @@ See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete refere
 
 ### Overriding Layout Tokens
 
-Component styling lives in layout token maps in `theme.layouts`. Each layout declares the tokens it needs; the theme supplies values via `.tokenMap()`. Layout tokens control content appearance (text colors, styles, alignment); master tokens control slide chrome (background, margins, footer).
+Component styling lives in layout token maps in `theme.layouts`. Each layout declares the tokens it needs; the theme supplies values via `.tokenMap()`. Layout tokens control content appearance (text colors, styles, alignment); master tokens control fixed elements (background, margins, footer).
 
 ```typescript
 import { bodyLayout } from 'tycoslide-theme-default';
@@ -193,7 +193,7 @@ Each layout defines which token keys it accepts — the default theme's [`theme.
 
 ### Theme Structure
 
-A theme is a TypeScript object implementing the `Theme` interface. Use `satisfies Theme` (not `: Theme`) — TypeScript catches missing tokens at compile time while preserving literal types for autocomplete:
+A theme is a TypeScript object implementing the `Theme` interface. Use `satisfies Theme` instead of `: Theme` so TypeScript preserves literal types for autocomplete while still catching missing tokens:
 
 ```typescript
 import { SLIDE_SIZE } from 'tycoslide';
@@ -268,7 +268,7 @@ const colors = {
 };
 ```
 
-All color values are 6-character hex strings without a `#` prefix. Accent names are open vocabulary — define whatever names make sense for your brand.
+All color values are hex values without a `#`. Accent names are open vocabulary — define whatever names make sense for your brand.
 
 #### 3. Configure Text Styles
 

@@ -14,7 +14,7 @@ Description of the feature.
 
 That directive has four parts:
 
-**Name** — `card` identifies which component to invoke. Built-in names are defined in `tycoslide-components`. Custom components use any string.
+**Name** — `card` identifies which component to use. Built-in names are defined in `tycoslide-components`. Custom components use any string.
 
 **Directive** — the `:::` fence is how you use a component in markdown. Not all components have directives. Layout components (`row`, `column`, `stack`, `grid`) are TypeScript DSL only.
 
@@ -61,7 +61,7 @@ Layout components are TypeScript DSL only. They are not available as markdown di
 
 ## text
 
-A single paragraph of formatted content: bold, italic, strikethrough, underline, hyperlinks, and accent colors. Headings in markdown (`# Heading`) also become text with the appropriate heading style (H1–H4). Use `text()` in layouts when the content needs formatting support — for example, a card description where the author might write `**bold**` or `:blue[highlighted]`. No `:::text` directive — use `text()` in TypeScript.
+A single paragraph of formatted content: bold, italic, strikethrough, underline, hyperlinks, and accent colors. Headings in markdown (`# Heading`) also become text with the appropriate heading style (H1–H4). Use `text()` in layouts for content that includes formatting — for example, a card description where the author might write `**bold**` or `:blue[highlighted]`. No `:::text` directive — use `text()` in TypeScript.
 
 ### Parameters
 
@@ -242,7 +242,7 @@ Supporting detail text.
 
 ## quote
 
-Blockquote with optional attribution line and optional image/logo. Same background structure as card.
+Blockquote with optional attribution line and optional image/logo. Renders as a rounded rectangle with configurable background.
 
 Quote text is required -- provide it either via the `quote` attribute or as body content.
 
@@ -290,7 +290,7 @@ Design systems reduce decision fatigue across teams.
 
 ## table
 
-Native PowerPoint table with accurate borders, cell merging, and text wrapping. GFM tables in the directive body always produce one header row.
+Native PowerPoint table with borders, cell merging, and text wrapping. GFM tables in the directive body always produce one header row.
 
 Cell content supports formatting (`**bold**`, `*italic*`, `:accent[color]`).
 
@@ -317,7 +317,7 @@ Cell content supports formatting (`**bold**`, `*italic*`, `:accent[color]`).
 
 ## line
 
-A horizontal or vertical rule. Expands to a native PowerPoint line shape. Supports arrows with `beginArrow` / `endArrow` for flow diagrams.
+A horizontal or vertical rule. Supports arrows with `beginArrow` / `endArrow` for flow diagrams.
 
 ### Parameters
 
@@ -338,7 +338,7 @@ A horizontal or vertical rule. Expands to a native PowerPoint line shape. Suppor
 
 ## shape
 
-A filled area shape.
+A shape with configurable fill and border.
 
 ### Parameters
 
@@ -382,7 +382,7 @@ No directive parameters.
 
 ## image
 
-Embeds an image. Provide the image path as the body content (not a parameter).
+Embeds an image. The image path goes in the body (not a parameter).
 
 ### Parameters
 
@@ -404,7 +404,7 @@ Image paths are resolved relative to the current working directory when the CLI 
 
 ## mermaid
 
-Renders a Mermaid diagram to PNG and embeds it as an image. Theme colors are automatically injected.
+Renders a Mermaid diagram to PNG and embeds it as an image. Theme colors are applied automatically.
 
 **Do not** add `style`, `classDef`, `linkStyle`, or `%%{init}` directives -- they will throw an error. The theme handles all styling.
 
@@ -676,7 +676,7 @@ Each built-in component exports its definition object (e.g., `cardComponent`, `t
 
 ### Defining Parameters
 
-Define parameters using the `schema` helper from `tycoslide`. Required params without `.optional()` fail the build if missing:
+Define parameters using the validation helpers from `tycoslide`. Required params without `.optional()` fail the build if missing:
 
 ```typescript
 import { schema } from 'tycoslide';
@@ -695,7 +695,7 @@ params: {
 
 #### Declaring Tokens
 
-Components declare required token keys by name so the theme can supply the right values through layout token maps. When a component is given explicit props in markdown (e.g., `color`), those props override the token values:
+Components declare required token keys by name. The theme supplies values for those keys through layout token maps. When a component is given explicit props in markdown (e.g., `color`), those props override the token values:
 
 ```typescript
 const BADGE_TOKEN = {
@@ -739,7 +739,7 @@ For how to define token maps in a theme, see [Themes — Overriding Layout Token
 
 ### Content Slots
 
-Slots are named content areas inside a component. The component defines the slot; the slide author fills it with markdown. Use slots when your component wraps markdown content rather than fixed parameters — authors write freeform content inside the directive.
+Slots let authors put markdown inside a component. The component defines the slot; the slide author fills it with markdown. Use slots when your component wraps markdown content rather than fixed parameters — authors write freeform content inside the directive.
 
 ```typescript
 const calloutComponent = defineComponent({
@@ -905,7 +905,7 @@ grid(3, ...)
 stack(backgroundNode, foregroundNode)
 ```
 
-Composition components (`text`, `plainText`, `card`, `quote`, etc.) require a token argument. In layout render functions, tokens come from the layout's token map:
+Components like `text`, `plainText`, `card`, and `quote` require a token argument. In layout render functions, tokens come from the layout's token map:
 
 ```typescript
 text(props.body, tokens.bodyText)
@@ -942,7 +942,7 @@ expand: (props, context, tokens) => {
 
 #### Canvas
 
-`context.canvas` renders arbitrary HTML to a PNG image. Use it when a component needs visuals that are not natively supported as PowerPoint objects — syntax highlighting, diagrams, or custom layouts.
+`context.canvas` lets you draw custom visuals by rendering HTML to a PNG image. Use it when a component needs visuals that PowerPoint does not support natively — syntax highlighting, diagrams, or custom layouts.
 
 ```typescript
 const pngPath = await context.canvas.renderHtml(html, transparent?);

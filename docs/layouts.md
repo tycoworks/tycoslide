@@ -339,7 +339,7 @@ Title bar with empty canvas below.
 
 ## Masters
 
-Masters control the fixed elements that appear on every slide — footers, slide numbers, background color — and define the content bounds (the rectangle where layout content renders). A layout's available space is whatever the master leaves after accounting for margins and chrome.
+Masters control the fixed elements that appear on every slide — e.g. footers, slide numbers, background color — and define the space layouts have to work with. A layout's available space is whatever the master leaves after accounting for margins and fixed elements.
 
 The default theme provides two masters:
 
@@ -356,7 +356,7 @@ Custom layouts define slide structure. Each layout controls where content appear
 
 ### Layout Registration
 
-`defineLayout<TTokens>()` creates a layout definition — its name, params, content slots, required tokens, and render function. The type parameter constrains which tokens the theme must supply.
+`defineLayout<TTokens>()` creates a layout definition — its name, params, content slots, required tokens, and render function. TypeScript catches missing tokens at compile time.
 
 ```typescript
 import { defineLayout, schema, GAP, SIZE, VALIGN, HALIGN } from 'tycoslide';
@@ -572,7 +572,7 @@ export const myMaster = defineMaster<MyMasterTokens>({
 **Key concepts:**
 - `contentBounds` defines where layout content renders (x, y, width, height in inches)
 - `contentBounds` must account for fixed chrome — reduce height by footer height if a footer bar is present
-- `getContent` receives resolved tokens and slide dimensions
+- `getContent` gets resolved tokens and slide dimensions
 - Masters are registered by exporting them from the theme entry point alongside layouts
 
 Masters are registered in the theme entry point and their tokens are provided via `theme.masters`. See [`packages/theme-default/src/master.ts`](../packages/theme-default/src/master.ts) for the complete reference implementation.
