@@ -425,7 +425,7 @@ File paths resolve relative to the working directory where the CLI runs.
 
 Renders a Mermaid diagram to PNG and embeds it as an image. Theme colors are applied automatically.
 
-**Do not** add `style`, `classDef`, `linkStyle`, or `%%{init}` directives -- they will throw an error. The theme handles all styling.
+`style`, `classDef`, `linkStyle`, and `%%{init}` directives are not supported -- the theme handles all styling automatically.
 
 ### Parameters
 
@@ -692,7 +692,7 @@ Each built-in component exports its definition object (e.g., `cardComponent`, `t
 
 ### Defining Parameters
 
-Define parameters using the validation helpers from `tycoslide`. Required params without `.optional()` fail the build if missing:
+Define parameters using the validation helpers from `tycoslide`. Required params without `.optional()` are validated at build time:
 
 ```typescript
 import { schema } from 'tycoslide';
@@ -750,7 +750,7 @@ render: ({ title, cards }, tokens: CardsLayoutTokens) => {
 }
 ```
 
-For how to define token maps in a theme, see [Themes — Overriding Layout Tokens](./themes.md#overriding-layout-tokens). Missing tokens fail the build immediately.
+For how to define token maps in a theme, see [Themes — Overriding Layout Tokens](./themes.md#overriding-layout-tokens). Missing tokens are caught at build time.
 
 ### Content Slots
 

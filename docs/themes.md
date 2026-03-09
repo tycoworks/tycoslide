@@ -1,6 +1,6 @@
 # Themes
 
-Themes control all visual styling in tycoslide presentations — typography, spacing, colors, layout tokens, master tokens, and slide dimensions. Missing tokens fail the build immediately.
+Themes control all visual styling in tycoslide presentations — typography, spacing, colors, layout tokens, master tokens, and slide dimensions. Missing tokens are caught at build time.
 
 ## What Themes Control
 
@@ -204,7 +204,7 @@ const myTheme = {
 } satisfies Theme;
 ```
 
-Layouts and masters declare required token keys; themes provide their values. Missing tokens fail the build immediately.
+Layouts and masters declare required token keys; themes provide their values.
 
 ### Step-by-Step Guide
 
@@ -446,7 +446,7 @@ statement: {
 },
 ```
 
-If a slide specifies `variant="name"` for a layout and that variant is not defined in the theme, the build fails.
+If a slide specifies `variant="name"` for a layout and that variant is not defined in the theme, the build reports the error.
 
 ---
 

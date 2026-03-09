@@ -4,7 +4,7 @@
 
 ## Product Framing
 
-tycoslide is a **markdown presentation build tool** [category] that generates **editable PowerPoint files** [use case] with theme enforcement and build-time checks.
+tycoslide is a **presentation build tool** [category] that generates **editable PowerPoint files** [use case] from markdown and TypeScript, with theme-based styling and build-time validation.
 
 ---
 
@@ -16,7 +16,7 @@ Unlike **other markdown presentation tools** [alternative] that output web slide
 
 ## Supporting Argument 2 — Packaged Themes
 
-Unlike **other markdown presentation tools** [alternative] where slide authors can freely choose colors and layouts, tycoslide **locked themes** [feature] keep every deck on brand.
+Unlike **other markdown presentation tools** [alternative] where slide authors must manually match colors and layouts to brand guidelines, tycoslide **theme-based styling** [feature] keeps every deck on brand by default.
 
 ---
 

@@ -12,6 +12,8 @@ This file guides documentation work in the `docs/` directory. It is automaticall
 
 **Formal but not academic.** No contractions. No colloquialisms. No hedging ("This might", "You could consider"). Statements are confident and direct.
 
+**Protective, not punitive.** Frame build-time checks as helpful, not restrictive. Say "catches" or "surfaces" instead of "fails." Say "handled automatically" instead of "locked" or "enforced." The tool removes effort from the author, not freedom.
+
 **No sells, no preamble.** Sections do not open with praise ("This powerful feature lets you...") or context-setting prose ("Before we dive in, it's important to understand..."). They open with a one-sentence declarative description of what the thing is, then immediately get to content.
 
 **Tight sentences.** Sentences are short and concrete. Subordinate clauses are used when they add essential information, not for variety. No filler.
@@ -100,7 +102,7 @@ Each page owns its topic. Writers must not write content that belongs on another
 | Topic | Owned by |
 |-------|----------|
 | What tycoslide is, comparison to alternatives | `introduction.md` |
-| Design philosophy, three-persona model, token alignment, fail-fast, extensibility | `design-principles.md` |
+| Design philosophy, three-persona model, token alignment, build-time validation, extensibility | `design-principles.md` |
 | Install, first build, editor setup | `quick-start.md` |
 | Frontmatter, slide separators, text formatting, lists, tables (GFM), speaker notes, directive summary table | `markdown-syntax.md` |
 | Full component reference (content + layout), directive syntax, custom component authoring, DSL functions, token system, expansion function | `components.md` |

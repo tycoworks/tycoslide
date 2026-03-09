@@ -104,7 +104,7 @@ tycoslide compiles Markdown to native PowerPoint:
 
 - Brand-compliant output without manual formatting
 - Component system for cards, tables, and diagrams
-- Fails at build time on invalid content
+- Catches invalid content at build time
 ```
 
 ```markdown
@@ -431,7 +431,7 @@ params: {
 }
 ```
 
-Invalid frontmatter values fail the build.
+Invalid frontmatter values are caught at build time.
 
 ### Content Slots
 

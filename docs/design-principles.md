@@ -20,7 +20,7 @@ tycoslide is designed to support this separation. The theme controls the visual 
 
 ## Theme as source of truth
 
-All visual decisions — colors, typography, spacing, component styling — live in the theme file. Components declare what tokens they need; the theme provides them. There are no hidden defaults buried in framework code. If a token is missing, the build fails immediately.
+All visual decisions — colors, typography, spacing, component styling — live in the theme file. Components declare what tokens they need; the theme provides them. There are no hidden defaults buried in framework code. If a token is missing, the build catches it immediately.
 
 tycoslide's token model follows the W3C Design Token Community Group standard. The goal is full compatibility — bring tokens from Figma, Tokens Studio, or any DTCG-compliant source and they work as-is. The first release supports a fixed set of font weights and a flat token structure; full DTCG nesting and arbitrary weight values are planned.
 
@@ -28,9 +28,9 @@ tycoslide's token model follows the W3C Design Token Community Group standard. T
 
 tycoslide compiles markdown into a `.pptx` file, then gets out of the way. Open the result in PowerPoint, Keynote, or Google Slides and present from there. The output is a standard file that works with whatever tool your audience already has.
 
-## Fail fast
+## Build-time validation
 
-Invalid layouts, missing tokens, overflow errors, and malformed markdown all fail at build time with the slide number, layout name, and the exact field that is wrong. Silent fallbacks are bugs — if something is wrong, the deck does not ship.
+Invalid layouts, missing tokens, overflow errors, and malformed markdown are all caught at build time with the slide number, layout name, and the exact field that is wrong. tycoslide surfaces such issues at build time so they can be fixed, rather than use silent fallbacks which can hide problems.
 
 ## Open component registry
 

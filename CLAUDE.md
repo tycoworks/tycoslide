@@ -1,6 +1,6 @@
 # tycoslide
 
-A build system for branded presentations. tycoslide compiles TypeScript or Markdown into measured, positioned, native PowerPoint files — treating marketing content like code.
+See [README.md](README.md) for what this project is.
 
 ## Philosophy
 
@@ -30,8 +30,8 @@ npx tycoslide build deck.md          # Build a single deck (outputs deck.pptx)
 tycoslide is an npm workspaces monorepo with three packages:
 
 - **`packages/core`** (npm name: `tycoslide`) — The framework
-- **`packages/components`** (npm name: `tycoslide-components`) — Standard component definitions (text, card, table, image, quote, mermaid, containers, primitives)
-- **`packages/theme-default`** (npm name: `tycoslide-theme-default`) — Default theme with Inter font, Material Design icons, three layouts
+- **`packages/components`** (npm name: `tycoslide-components`) — 16 standard components: text, plainText, list, card, quote, testimonial, table, image, mermaid, code, line, shape, slideNumber, row, column, stack, grid
+- **`packages/theme-default`** (npm name: `tycoslide-theme-default`) — Default theme with Inter font, Material Design icons, 18 layouts
 
 When consuming tycoslide from another project (e.g., a theme), `package.json` points `main` at `dist/index.js`. Always rebuild before running slides.
 
@@ -49,15 +49,14 @@ npx tsc --build      # Rebuilds tycoslide (if changed) then the theme
 - `packages/core/src/core/layout/` — HTML measurement via Playwright, flex layout pipeline
 - `packages/core/src/cli/` — CLI entry point, build command, theme loader
 - `packages/core/src/utils/` — Shared parser, font utils, image utils, units
-- `packages/components/src/` — All component definitions (text, card, table, image, quote, mermaid, containers, primitives)
-- `packages/theme-default/src/` — Default theme (Inter font, Material Design icons, title/section/body layouts)
+- `packages/components/src/` — All 16 component definitions (see Monorepo Structure above)
+- `packages/theme-default/src/` — Default theme (Inter font, Material Design icons, 18 layouts)
 - `packages/core/test/` — Tests (uses `node:test`, NOT vitest)
-- `packages/core/docs/` — Design documents and feature specs
 
 ## Architecture
 
 ```
-Markdown or TypeScript DSL
+Markdown + TypeScript DSL
     ↓
 Component tree (ComponentNodes)
     ↓ registry.expand() — resolves theme tokens, expands to primitives
@@ -72,23 +71,23 @@ Measured + positioned nodes
 
 Two registries handle component and layout registration:
 
-- **`componentRegistry.define()`** — All components (content and container). Single method with multiple signatures:
+- **`defineComponent()`** + **`componentRegistry.register()`** — All components (content and container). `defineComponent()` is a pure factory with multiple signatures:
   - Body-only: `{ name, body: schema.string(), expand }` — auto-generates directive deserializer
   - Body + params: `{ name, body, params: {...}, expand }` — body plus extra attributes
   - Params-only: `{ name, params: {...}, expand }` — multiple named attributes, no primary body
   - Slotted: `{ name, slots: ['children'], expand }` — body compiled as ComponentNode[]
   - Programmatic: `{ name, expand }` — no directive support
-- **`layoutRegistry.define()`** — Slide layouts (title, section, body). Declares params schema and a render function.
+- **`defineLayout()`** + **`layoutRegistry.register()`** — Slide layouts. Declares params schema and a render function.
 
 Each component declares:
 - A **name** — built-in names from `Component.*` const objects (`packages/components/src/names.ts`), or any string for custom components
 - A **Zod schema** for props (validated at compile time)
-- **Required tokens** — keys that the theme must provide via `theme.components`, type-constrained to `(keyof TTokens & string)[]`
+- **Required tokens** — keys delivered via `node.tokens` (set by DSL helpers or slot injection from parent layouts), type-constrained to `(keyof TTokens & string)[]`
 - An **expand function** that receives props + resolved tokens and returns a primitive node tree
 
 ## Spec-Driven Development
 
-Design docs in `docs/` define features with phased implementation plans. When implementing against a design doc:
+Design docs in `internal/` define features with phased implementation plans. When implementing against a design doc:
 
 1. **Read the spec first** — understand the phase requirements, decisions, and constraints before writing code
 2. **Execute against the spec** — implement what the doc says, not more

@@ -1,12 +1,12 @@
 # What is tycoslide?
 
-A build system for branded presentations. tycoslide compiles TypeScript or Markdown into native .pptx files.
+A presentation build tool that generates editable PowerPoint files from Markdown and TypeScript, with theme-based styling and build-time validation.
 
 tycoslide is in active development. APIs may change between releases.
 
 ## Design Principles
 
-For the ideas behind tycoslide's design — content as code, the three-persona model, and fail-fast validation — see [Design Principles](./design-principles.md).
+For the ideas behind tycoslide's design — content as code, the three-persona model, and build-time validation — see [Design Principles](./design-principles.md).
 
 ## How is tycoslide different?
 
@@ -16,7 +16,7 @@ For the ideas behind tycoslide's design — content as code, the three-persona m
 | Editable output | Yes (shapes, text, tables) | N/A (web) | No (slides rendered as images) | N/A (web) |
 | Input format | Markdown + directives | Markdown + Vue | Markdown | Markdown + HTML |
 | Component system | Typed, registry-based | Vue components | CSS themes, Markdown-It plugins | Plugins |
-| Design token validation | Build-time errors | No | No | No |
+| Design token validation | Build-time | No | No | No |
 | Live preview | No | Yes | Yes | Yes |
 
 **Slidev** produces HTML presentations with live reload, Vue components, and browser-based interactivity. tycoslide produces editable .pptx files that open in PowerPoint.
