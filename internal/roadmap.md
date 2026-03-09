@@ -58,7 +58,7 @@ Instead of the 3 hardcoded.
 
 ### Color Token Validation
 
-Validate hex color format at token boundaries — catch `#FF0000` vs `FF0000` mismatches, CSS named colors, and other invalid formats. Needs a clean approach: heuristic validation, token type metadata, or point-of-use `assertHexColor()` utility.
+Add `assertHexColor()` validation at token boundaries to catch malformed values (missing `#`, wrong length, CSS named colors).
 
 ### Charts
 

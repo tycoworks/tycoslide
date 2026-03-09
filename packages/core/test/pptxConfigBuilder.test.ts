@@ -64,7 +64,7 @@ function positioned(
 
 const baseLineNode: LineNode = {
   type: NODE_TYPE.LINE,
-  color: 'E7E0EC',
+  color: '#E7E0EC',
   width: 0.75,
   dashType: DASH_TYPE.SOLID,
 };
@@ -123,7 +123,7 @@ describe('buildLineConfig()', () => {
   test('applies color and width from lineNode', () => {
     const lineNode: LineNode = {
       ...baseLineNode,
-      color: 'FF0000',
+      color: '#FF0000',
       width: 3,
     };
     const pos = positioned(lineNode, 1, 2, 5, 0);
@@ -145,31 +145,31 @@ const baseTableNode: TableNode = {
   type: NODE_TYPE.TABLE,
   rows: [],
   borderStyle: BORDER_STYLE.FULL,
-  borderColor: '333333',
+  borderColor: '#333333',
   borderWidth: 1,
-  headerBackground: 'FFFFFF',
+  headerBackground: '#FFFFFF',
   headerBackgroundOpacity: 0,
   headerTextStyle: TEXT_STYLE.BODY,
-  cellBackground: 'FFFFFF',
+  cellBackground: '#FFFFFF',
   cellBackgroundOpacity: 0,
   cellTextStyle: TEXT_STYLE.BODY,
   cellPadding: 0.1,
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.MIDDLE,
-  linkColor: '0000FF',
+  linkColor: '#0000FF',
   linkUnderline: true,
 };
 
 /** Base cell for tests — all required fields pre-resolved */
 const baseCell: TableCellData = {
   content: 'test',
-  color: '000000',
+  color: '#000000',
   textStyle: TEXT_STYLE.BODY,
   resolvedStyle: mockTextStyle,
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.MIDDLE,
   lineHeightMultiplier: 1.2,
-  linkColor: '0000FF',
+  linkColor: '#0000FF',
   linkUnderline: true,
 };
 
@@ -178,7 +178,7 @@ describe('buildTableCell()', () => {
     const cell: TableCellData = {
       ...baseCell,
       content: 'Red text',
-      color: 'FF0000',
+      color: '#FF0000',
     };
     const tableNode: TableNode = { ...baseTableNode };
 
@@ -272,7 +272,7 @@ describe('buildTableCell()', () => {
     const cell: TableCellData = {
       ...baseCell,
       content: 'Cell with fill',
-      fill: 'FFFF00',
+      fill: '#FFFF00',
     };
     const tableNode: TableNode = { ...baseTableNode };
 
@@ -293,7 +293,7 @@ describe('buildTableCell()', () => {
     const cell: TableCellData = { ...baseCell, content: 'Header' };
     const tableNode: TableNode = {
       ...baseTableNode,
-      headerBackground: 'EEEEEE',
+      headerBackground: '#EEEEEE',
       headerBackgroundOpacity: 0,
     };
     const result = builder.buildTableCell(cell, 0, 0, 1, 1, 1, 0, tableNode);
@@ -304,7 +304,7 @@ describe('buildTableCell()', () => {
     const cell: TableCellData = { ...baseCell, content: 'Header' };
     const tableNode: TableNode = {
       ...baseTableNode,
-      headerBackground: 'AABBCC',
+      headerBackground: '#AABBCC',
       headerBackgroundOpacity: 50,
     };
     const result = builder.buildTableCell(cell, 0, 0, 1, 1, 1, 0, tableNode);
@@ -318,7 +318,7 @@ describe('buildTableCell()', () => {
     const cell: TableCellData = { ...baseCell, content: 'Data' };
     const tableNode: TableNode = {
       ...baseTableNode,
-      cellBackground: 'DDDDDD',
+      cellBackground: '#DDDDDD',
       cellBackgroundOpacity: 0,
     };
     const result = builder.buildTableCell(cell, 1, 0, 2, 1, 1, 0, tableNode);
@@ -329,7 +329,7 @@ describe('buildTableCell()', () => {
     const cell: TableCellData = { ...baseCell, content: 'Data' };
     const tableNode: TableNode = {
       ...baseTableNode,
-      cellBackground: 'DDDDDD',
+      cellBackground: '#DDDDDD',
       cellBackgroundOpacity: 80,
     };
     const result = builder.buildTableCell(cell, 1, 0, 2, 1, 1, 0, tableNode);
@@ -343,7 +343,7 @@ describe('buildTableCell()', () => {
     const cell: TableCellData = { ...baseCell, content: 'Header Col' };
     const tableNode: TableNode = {
       ...baseTableNode,
-      headerBackground: 'AABB00',
+      headerBackground: '#AABB00',
       headerBackgroundOpacity: 100,
     };
     const result = builder.buildTableCell(
@@ -361,7 +361,7 @@ describe('buildTableCell()', () => {
       ...baseCell,
       content: 'Header',
     };
-    const tableNode: TableNode = { ...baseTableNode, headerBackground: 'EEEEEE', headerBackgroundOpacity: 100 };
+    const tableNode: TableNode = { ...baseTableNode, headerBackground: '#EEEEEE', headerBackgroundOpacity: 100 };
 
     const result = builder.buildTableCell(
       cell,
@@ -383,7 +383,7 @@ describe('buildTableCell()', () => {
 
 describe('buildCellBorder()', () => {
   test('BORDER_STYLE.INTERNAL - corner cell (0,0) in 3x3 table', () => {
-    const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.INTERNAL, borderWidth: 1, borderColor: '000000' };
+    const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.INTERNAL, borderWidth: 1, borderColor: '#000000' };
 
     const border = builder.buildCellBorder(tableNode, 0, 0, 3, 3);
 
@@ -397,7 +397,7 @@ describe('buildCellBorder()', () => {
   });
 
   test('BORDER_STYLE.INTERNAL - middle cell (1,1) in 3x3 table', () => {
-    const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.INTERNAL, borderWidth: 1, borderColor: '000000' };
+    const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.INTERNAL, borderWidth: 1, borderColor: '#000000' };
 
     const border = builder.buildCellBorder(tableNode, 1, 1, 3, 3);
 
@@ -411,7 +411,7 @@ describe('buildCellBorder()', () => {
   });
 
   test('BORDER_STYLE.INTERNAL - bottom-right cell (2,2) in 3x3 table', () => {
-    const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.INTERNAL, borderWidth: 1, borderColor: '000000' };
+    const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.INTERNAL, borderWidth: 1, borderColor: '#000000' };
 
     const border = builder.buildCellBorder(tableNode, 2, 2, 3, 3);
 
@@ -425,7 +425,7 @@ describe('buildCellBorder()', () => {
   });
 
   test('BORDER_STYLE.FULL - all borders solid', () => {
-    const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.FULL, borderWidth: 1, borderColor: '000000' };
+    const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.FULL, borderWidth: 1, borderColor: '#000000' };
 
     const border = builder.buildCellBorder(tableNode, 1, 1, 3, 3);
 
@@ -438,7 +438,7 @@ describe('buildCellBorder()', () => {
   });
 
   test('BORDER_STYLE.HORIZONTAL - only top and bottom', () => {
-    const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.HORIZONTAL, borderWidth: 1, borderColor: '000000' };
+    const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.HORIZONTAL, borderWidth: 1, borderColor: '#000000' };
 
     const border = builder.buildCellBorder(tableNode, 1, 1, 3, 3);
 
@@ -451,7 +451,7 @@ describe('buildCellBorder()', () => {
   });
 
   test('BORDER_STYLE.VERTICAL - only left and right', () => {
-    const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.VERTICAL, borderWidth: 1, borderColor: '000000' };
+    const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.VERTICAL, borderWidth: 1, borderColor: '#000000' };
 
     const border = builder.buildCellBorder(tableNode, 1, 1, 3, 3);
 
@@ -472,7 +472,7 @@ describe('buildCellBorder()', () => {
   });
 
   test('border width and color applied correctly', () => {
-    const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.FULL, borderWidth: 2.5, borderColor: 'FF0000' };
+    const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.FULL, borderWidth: 2.5, borderColor: '#FF0000' };
 
     const border = builder.buildCellBorder(tableNode, 0, 0, 1, 1);
 
@@ -514,8 +514,8 @@ describe('buildColumnWidths()', () => {
 const baseShapeNode: ShapeNode = {
   type: NODE_TYPE.SHAPE,
   shape: SHAPE.ROUND_RECT,
-  fill: { color: 'EEEEEE', opacity: 100 },
-  border: { color: 'E7E0EC', width: 0.75 },
+  fill: { color: '#EEEEEE', opacity: 100 },
+  border: { color: '#E7E0EC', width: 0.75 },
   cornerRadius: 0,
 };
 
@@ -542,7 +542,7 @@ describe('buildShapeConfig() — area shapes', () => {
   });
 
   test('applies fill color and transparency', () => {
-    const shapeNode: ShapeNode = { ...baseShapeNode, fill: { color: 'FF0000', opacity: 50 } };
+    const shapeNode: ShapeNode = { ...baseShapeNode, fill: { color: '#FF0000', opacity: 50 } };
     const pos = positioned(shapeNode, 1, 2, 5, 3);
 
     const result = builder.buildShapeConfig(shapeNode, pos);
@@ -555,7 +555,7 @@ describe('buildShapeConfig() — area shapes', () => {
   });
 
   test('applies border when all sides enabled', () => {
-    const shapeNode: ShapeNode = { ...baseShapeNode, border: { color: '000000', width: 2 } };
+    const shapeNode: ShapeNode = { ...baseShapeNode, border: { color: '#000000', width: 2 } };
     const pos = positioned(shapeNode, 1, 2, 5, 3);
 
     const result = builder.buildShapeConfig(shapeNode, pos);
@@ -568,7 +568,7 @@ describe('buildShapeConfig() — area shapes', () => {
   });
 
   test('no border when any side explicitly disabled', () => {
-    const shapeNode: ShapeNode = { ...baseShapeNode, border: { color: '000000', width: 2, top: false } };
+    const shapeNode: ShapeNode = { ...baseShapeNode, border: { color: '#000000', width: 2, top: false } };
     const pos = positioned(shapeNode, 1, 2, 5, 3);
 
     const result = builder.buildShapeConfig(shapeNode, pos);
@@ -587,12 +587,12 @@ const baseTextNode: TextNode = {
   content: 'Text',
   style: TEXT_STYLE.BODY,
   resolvedStyle: mockTextStyle,
-  color: '333333',
+  color: '#333333',
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.TOP,
   lineHeightMultiplier: 1.2,
   bulletIndentPt: 0,
-  linkColor: '0000FF',
+  linkColor: '#0000FF',
   linkUnderline: true,
 };
 
@@ -647,7 +647,7 @@ describe('buildTextConfig()', () => {
     const textNode: TextNode = {
       ...baseTextNode,
       content: 'Colored text',
-      color: 'FF0000',
+      color: '#FF0000',
     };
     const pos = positioned(textNode, 1, 2, 5, 3);
 
@@ -695,7 +695,7 @@ describe('buildTextFragments()', () => {
     const fragments = builder.buildTextFragments(
       'Plain text',
       mockTextStyle,
-      '000000'
+      '#000000'
     );
 
     assert.strictEqual(fragments.length, 1);
@@ -704,9 +704,9 @@ describe('buildTextFragments()', () => {
 
   test('preserves color from text run', () => {
     const fragments = builder.buildTextFragments(
-      [{ text: 'Colored', color: 'FF0000' }],
+      [{ text: 'Colored', color: '#FF0000' }],
       mockTextStyle,
-      '000000'
+      '#000000'
     );
 
     assert.strictEqual(fragments.length, 1);
@@ -717,7 +717,7 @@ describe('buildTextFragments()', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Bold text', bold: true }],
       mockTextStyle,
-      '000000'
+      '#000000'
     );
 
     assert.strictEqual(fragments.length, 1);
@@ -728,7 +728,7 @@ describe('buildTextFragments()', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Italic text', italic: true }],
       mockTextStyle,
-      '000000'
+      '#000000'
     );
 
     assert.strictEqual(fragments.length, 1);
@@ -737,9 +737,9 @@ describe('buildTextFragments()', () => {
 
   test('applies highlight background', () => {
     const fragments = builder.buildTextFragments(
-      [{ text: 'Highlighted', highlight: { bg: 'FFFF00', text: '000000' } }],
+      [{ text: 'Highlighted', highlight: { bg: '#FFFF00', text: '#000000' } }],
       mockTextStyle,
-      '000000'
+      '#000000'
     );
 
     assert.strictEqual(fragments.length, 1);
@@ -751,7 +751,7 @@ describe('buildTextFragments()', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Bullet item', bullet: true }],
       mockTextStyle,
-      '000000',
+      '#000000',
       undefined,
       undefined,
       18,
@@ -765,7 +765,7 @@ describe('buildTextFragments()', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Struck', strikethrough: true }],
       mockTextStyle,
-      '000000'
+      '#000000'
     );
 
     assert.strictEqual(fragments.length, 1);
@@ -776,7 +776,7 @@ describe('buildTextFragments()', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Underlined', underline: true }],
       mockTextStyle,
-      '000000'
+      '#000000'
     );
 
     assert.strictEqual(fragments.length, 1);
@@ -787,8 +787,8 @@ describe('buildTextFragments()', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Click', hyperlink: 'https://example.com' }],
       mockTextStyle,
-      '000000',
-      'FF00FF',  // linkColor
+      '#000000',
+      '#FF00FF',  // linkColor
       true       // linkUnderline
     );
 
@@ -800,10 +800,10 @@ describe('buildTextFragments()', () => {
 
   test('hyperlink: explicit run.color wins over linkColor token', () => {
     const fragments = builder.buildTextFragments(
-      [{ text: 'Accent link', hyperlink: 'https://example.com', color: 'AA0000' }],
+      [{ text: 'Accent link', hyperlink: 'https://example.com', color: '#AA0000' }],
       mockTextStyle,
-      '000000',
-      'FF00FF',  // linkColor — should be overridden
+      '#000000',
+      '#FF00FF',  // linkColor — should be overridden
       true
     );
 
@@ -814,8 +814,8 @@ describe('buildTextFragments()', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Already underlined', hyperlink: 'https://example.com', underline: true }],
       mockTextStyle,
-      '000000',
-      'FF00FF',
+      '#000000',
+      '#FF00FF',
       true  // linkUnderline — should not double
     );
 
@@ -827,7 +827,7 @@ describe('buildTextFragments()', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Line 1' }, { text: 'Line 2', paragraphBreak: true }],
       mockTextStyle,
-      '000000'
+      '#000000'
     );
 
     assert.strictEqual(fragments.length, 2);
@@ -840,7 +840,7 @@ describe('buildTextFragments()', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Paragraph 1' }, { text: 'Paragraph 2', paragraphBreak: true }],
       mockTextStyle,
-      '000000'
+      '#000000'
     );
 
     assert.strictEqual(fragments.length, 2);
@@ -855,7 +855,7 @@ describe('buildTextFragments()', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'A' }, { text: 'B', paragraphBreak: true }],
       mockTextStyle,
-      '000000'
+      '#000000'
     );
 
     const h1FontSize = theme.textStyles[TEXT_STYLE.H1].fontSize;
@@ -866,7 +866,7 @@ describe('buildTextFragments()', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Bullet', bullet: true, paragraphBreak: true }],
       mockTextStyle,
-      '000000',
+      '#000000',
       undefined,
       undefined,
       18,
@@ -881,7 +881,7 @@ describe('buildTextFragments()', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Bullet', bullet: true, paragraphBreak: true }],
       mockTextStyle,
-      '000000',
+      '#000000',
       undefined,
       undefined,
       18,
@@ -898,7 +898,7 @@ describe('buildTextFragments()', () => {
         { text: 'Para 3', paragraphBreak: true },
       ],
       mockTextStyle,
-      '000000'
+      '#000000'
     );
 
     assert.strictEqual(fragments.length, 3);
@@ -914,7 +914,7 @@ describe('buildTextFragments()', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Line 1' }, { text: 'Line 2', softBreak: true }],
       mockTextStyle,
-      '000000'
+      '#000000'
     );
 
     assert.strictEqual(fragments.length, 2);
@@ -930,7 +930,7 @@ describe('buildTextFragments()', () => {
     const fragments = builder.buildTextFragments(
       [{ text: 'Run 1' }, { text: 'Run 2' }],
       mockTextStyle,
-      'FF0000'
+      '#FF0000'
     );
 
     assert.strictEqual(fragments.length, 2);
@@ -947,7 +947,7 @@ const baseSlideNumNode: SlideNumberNode = {
   type: NODE_TYPE.SLIDE_NUMBER,
   style: TEXT_STYLE.FOOTER,
   resolvedStyle: mockTextStyle,
-  color: '999999',
+  color: '#999999',
   hAlign: HALIGN.RIGHT,
   vAlign: VALIGN.MIDDLE,
 };
@@ -979,7 +979,7 @@ describe('buildSlideNumberOptions()', () => {
   test('applies color override', () => {
     const slideNumNode: SlideNumberNode = {
       ...baseSlideNumNode,
-      color: 'FF0000',
+      color: '#FF0000',
     };
     const pos = positioned(slideNumNode, 1, 2, 2, 0.3);
 
@@ -1053,7 +1053,7 @@ describe('buildTextFragments with multi-paragraph runs', () => {
       { text: 'First paragraph.' },
       { text: 'Second paragraph.', paragraphBreak: true },
     ];
-    const fragments = builder.buildTextFragments(runs, mockTextStyle, '000000');
+    const fragments = builder.buildTextFragments(runs, mockTextStyle, '#000000');
 
     assert.strictEqual(fragments.length, 2);
 
@@ -1074,7 +1074,7 @@ describe('buildTextFragments with multi-paragraph runs', () => {
       { text: 'Para 2.', paragraphBreak: true },
       { text: 'Para 3.', paragraphBreak: true },
     ];
-    const fragments = builder.buildTextFragments(runs, mockTextStyle, '000000');
+    const fragments = builder.buildTextFragments(runs, mockTextStyle, '#000000');
 
     assert.strictEqual(fragments.length, 3);
 
@@ -1100,7 +1100,7 @@ describe('buildTextFragments with multi-paragraph runs', () => {
       { text: 'Bullet one', bullet: true },
       { text: 'Bullet two', bullet: true },
     ];
-    const fragments = builder.buildTextFragments(runs, mockTextStyle, '000000', undefined, undefined, 18);
+    const fragments = builder.buildTextFragments(runs, mockTextStyle, '#000000', undefined, undefined, 18);
 
     assert.strictEqual(fragments.length, 3);
     assert.strictEqual(fragments[0].text, 'Intro.');

@@ -7,6 +7,7 @@ import type { TextStyle, TextContent, StrikeType, UnderlineStyle } from '../mode
 import { FONT_WEIGHT, BORDER_STYLE, LINE_SHAPE, STRIKE_TYPE, UNDERLINE_STYLE } from '../model/types.js';
 import { getFontFromFamily, normalizeContent, getParagraphGapRatio } from '../../utils/font.js';
 import { readImageDimensions, containFit } from '../../utils/image.js';
+import { stripHash } from '../../utils/color.js';
 
 // ============================================
 // TYPES
@@ -67,7 +68,7 @@ export class PptxConfigBuilder {
       h: positioned.height,
       fontSize: style.fontSize,
       fontFace: defaultFont.name,
-      color: textNode.color,
+      color: stripHash(textNode.color),
       margin: 0,
       wrap: true,
       lineSpacingMultiple: lineSpacing,
@@ -97,10 +98,10 @@ export class PptxConfigBuilder {
       const effectiveWeight = run.bold ? FONT_WEIGHT.BOLD : (run.weight ?? defaultWeight);
       const runFont = getFontFromFamily(style.fontFamily, effectiveWeight);
       const options: TextFragmentOptions = {
-        color: run.color ?? run.highlight?.text ?? color,
+        color: stripHash(run.color ?? run.highlight?.text ?? color),
         fontFace: runFont.name,
       };
-      if (run.highlight) options.highlight = run.highlight.bg;
+      if (run.highlight) options.highlight = stripHash(run.highlight.bg);
       // Pass through paragraph-level options
       if (run.bold) options.bold = true;
       if (run.italic) options.italic = true;
@@ -109,7 +110,7 @@ export class PptxConfigBuilder {
       if (run.hyperlink) {
         options.hyperlink = { url: run.hyperlink };
         // Apply link token styling unless run has explicit overrides
-        if (!run.color && linkColor) options.color = linkColor;
+        if (!run.color && linkColor) options.color = stripHash(linkColor);
         if (!run.underline && linkUnderline) options.underline = { style: UNDERLINE_STYLE.SINGLE };
       }
       // Record break-before for post-processing shift
@@ -164,7 +165,7 @@ export class PptxConfigBuilder {
       w: positioned.width,
       h: positioned.height,
       fill: {
-        color: shapeNode.fill.color,
+        color: stripHash(shapeNode.fill.color),
         transparency: 100 - shapeNode.fill.opacity,
       },
     };
@@ -175,7 +176,7 @@ export class PptxConfigBuilder {
 
     if (allSides) {
       options.line = {
-        color: border.color,
+        color: stripHash(border.color),
         width: border.width,
       };
     }
@@ -195,7 +196,7 @@ export class PptxConfigBuilder {
     const lineWidth = lineNode.width;
     const isVertical = positioned.height > positioned.width;
 
-    const lineOpts: Record<string, unknown> = { color, width: lineWidth };
+    const lineOpts: Record<string, unknown> = { color: stripHash(color), width: lineWidth };
     if (lineNode.beginArrow) lineOpts.beginArrowType = lineNode.beginArrow;
     if (lineNode.endArrow) lineOpts.endArrowType = lineNode.endArrow;
     lineOpts.dashType = lineNode.dashType;
@@ -226,7 +227,7 @@ export class PptxConfigBuilder {
       h: positioned.height,
       fontFace: font.name,
       fontSize: style.fontSize,
-      color: slideNumNode.color,
+      color: stripHash(slideNumNode.color),
       align: slideNumNode.hAlign,
       valign: slideNumNode.vAlign,
       margin: 0,
@@ -266,7 +267,7 @@ export class PptxConfigBuilder {
     const options: Record<string, unknown> = {
       fontFace: font.name,
       fontSize: textStyle.fontSize,
-      color: cell.color,
+      color: stripHash(cell.color),
       align: cell.hAlign,
       valign: cell.vAlign,
       margin: cellPadding,
@@ -274,12 +275,12 @@ export class PptxConfigBuilder {
 
     // Background fill: cell-level override wins, then token-driven (opacity 0 = no fill)
     if (cell.fill) {
-      options.fill = { color: cell.fill, transparency: 0 };
+      options.fill = { color: stripHash(cell.fill), transparency: 0 };
     } else {
       const bg = isHeader ? tableNode.headerBackground : tableNode.cellBackground;
       const opacity = isHeader ? tableNode.headerBackgroundOpacity : tableNode.cellBackgroundOpacity;
       if (bg && opacity > 0) {
-        options.fill = { color: bg, transparency: 100 - opacity };
+        options.fill = { color: stripHash(bg), transparency: 100 - opacity };
       }
     }
 
@@ -311,7 +312,7 @@ export class PptxConfigBuilder {
     const borderWidth = tableNode.borderWidth;
     const borderColor = tableNode.borderColor;
 
-    const solid = { pt: borderWidth, color: borderColor, type: 'solid' as const };
+    const solid = { pt: borderWidth, color: stripHash(borderColor), type: 'solid' as const };
     const none = { type: 'none' as const };
 
     // For internal borders, determine which edges are on the table boundary

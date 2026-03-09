@@ -84,42 +84,42 @@ export function buildCodeTheme(tokens: CodeTokens): ThemeRegistration {
     name: 'tycoslide',  // Shiki internal identifier — does not affect rendering
     type: 'dark',       // Fallback for unscoped tokens. If a light-background code theme is needed, add a darkMode token.
     colors: {
-      'editor.background': `#${tokens.backgroundColor}`,
-      'editor.foreground': `#${tokens.textColor}`,
+      'editor.background': tokens.backgroundColor,
+      'editor.foreground': tokens.textColor,
     },
     tokenColors: [
       {
         scope: ['keyword', 'storage', 'keyword.control', 'keyword.operator.expression', 'keyword.operator.new'],
-        settings: { foreground: `#${tokens.keywordColor}` },
+        settings: { foreground: tokens.keywordColor },
       },
       {
         scope: ['string', 'string.quoted'],
-        settings: { foreground: `#${tokens.stringColor}` },
+        settings: { foreground: tokens.stringColor },
       },
       {
         scope: ['comment', 'comment.line', 'comment.block'],
-        settings: { foreground: `#${tokens.commentColor}` },
+        settings: { foreground: tokens.commentColor },
       },
       {
         scope: ['entity.name.function', 'support.function', 'meta.function-call'],
-        settings: { foreground: `#${tokens.functionColor}` },
+        settings: { foreground: tokens.functionColor },
       },
       {
         scope: ['constant.numeric', 'constant.language'],
-        settings: { foreground: `#${tokens.numberColor}` },
+        settings: { foreground: tokens.numberColor },
       },
       {
         scope: ['keyword.operator', 'keyword.operator.assignment', 'keyword.operator.comparison',
                  'keyword.operator.arithmetic', 'keyword.operator.logical'],
-        settings: { foreground: `#${tokens.operatorColor}` },
+        settings: { foreground: tokens.operatorColor },
       },
       {
         scope: ['entity.name.type', 'entity.name.class', 'support.type', 'support.class', 'storage.type'],
-        settings: { foreground: `#${tokens.typeColor}` },
+        settings: { foreground: tokens.typeColor },
       },
       {
         scope: ['variable', 'variable.other', 'variable.parameter', 'variable.language'],
-        settings: { foreground: `#${tokens.variableColor}` },
+        settings: { foreground: tokens.variableColor },
       },
     ],
   };
@@ -155,7 +155,7 @@ body {
   background: transparent;
 }
 .code-container {
-  background: #${tokens.backgroundColor};
+  background: ${tokens.backgroundColor};
   border-radius: ${borderRadiusPx}px;
   padding: ${paddingPx}px;
   display: inline-block;

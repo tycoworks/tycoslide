@@ -46,12 +46,12 @@ describe('normalizeContent()', () => {
   test('mixed array with multiple formatting properties', () => {
     const result = normalizeContent([
       'normal',
-      { text: 'styled', bold: true, italic: true, color: 'FF0000' },
+      { text: 'styled', bold: true, italic: true, color: '#FF0000' },
       'more normal',
     ]);
     assert.deepStrictEqual(result, [
       { text: 'normal' },
-      { text: 'styled', bold: true, italic: true, color: 'FF0000' },
+      { text: 'styled', bold: true, italic: true, color: '#FF0000' },
       { text: 'more normal' },
     ]);
   });
@@ -83,7 +83,7 @@ describe('normalizeContent()', () => {
         text: 'complex',
         bold: true,
         italic: true,
-        color: '0000FF',
+        color: '#0000FF',
         bullet: true,
         paragraphBreak: true,
       },
@@ -93,7 +93,7 @@ describe('normalizeContent()', () => {
         text: 'complex',
         bold: true,
         italic: true,
-        color: '0000FF',
+        color: '#0000FF',
         bullet: true,
         paragraphBreak: true,
       },

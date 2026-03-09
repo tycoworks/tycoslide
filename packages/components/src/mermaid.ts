@@ -6,7 +6,7 @@ import type { Canvas, TextStyleName } from 'tycoslide';
 import {
   NODE_TYPE, type ImageNode,
   defineComponent, component, type ComponentNode, type ExpansionContext,
-  schema,
+  schema, hexToRgba,
 } from 'tycoslide';
 
 import fs from 'fs';
@@ -96,13 +96,6 @@ export interface MermaidRenderContext {
   accents: Record<string, string>;
 }
 
-function hexToRgba(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(0, 2), 16);
-  const g = parseInt(hex.slice(2, 4), 16);
-  const b = parseInt(hex.slice(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
 export function buildMermaidConfig(tokens: MermaidTokens, fontFamily: string): object {
   return {
     startOnLoad: false,
@@ -113,18 +106,18 @@ export function buildMermaidConfig(tokens: MermaidTokens, fontFamily: string): o
     themeVariables: {
       fontFamily,
       background: 'transparent',
-      primaryColor: `#${tokens.primaryColor}`,
-      primaryTextColor: `#${tokens.primaryTextColor}`,
-      primaryBorderColor: `#${tokens.primaryBorderColor}`,
-      lineColor: `#${tokens.lineColor}`,
-      secondaryColor: `#${tokens.secondaryColor}`,
-      tertiaryColor: `#${tokens.tertiaryColor}`,
-      textColor: `#${tokens.textColor}`,
-      titleColor: `#${tokens.titleColor}`,
-      nodeTextColor: `#${tokens.nodeTextColor}`,
+      primaryColor: tokens.primaryColor,
+      primaryTextColor: tokens.primaryTextColor,
+      primaryBorderColor: tokens.primaryBorderColor,
+      lineColor: tokens.lineColor,
+      secondaryColor: tokens.secondaryColor,
+      tertiaryColor: tokens.tertiaryColor,
+      textColor: tokens.textColor,
+      titleColor: tokens.titleColor,
+      nodeTextColor: tokens.nodeTextColor,
       clusterBkg: hexToRgba(tokens.clusterBackground, tokens.accentOpacity / 100),
-      clusterBorder: `#${tokens.clusterBorderColor}`,
-      edgeLabelBackground: `#${tokens.edgeLabelBackground}`,
+      clusterBorder: tokens.clusterBorderColor,
+      edgeLabelBackground: tokens.edgeLabelBackground,
     },
   };
 }
@@ -133,16 +126,16 @@ export function buildClassDefs(tokens: MermaidTokens, accents: Record<string, st
   const alpha = Math.round(tokens.accentOpacity / 100 * 255).toString(16).padStart(2, '0');
 
   const defs = Object.entries(accents).map(([name, color]) => {
-    return `classDef ${name} fill:#${color}${alpha}`;
+    return `classDef ${name} fill:${color}${alpha}`;
   });
   // Primary gets full opacity with themed text color for contrast
-  defs.push(`classDef primary fill:#${tokens.primaryColor},color:#${tokens.primaryTextColor}`);
+  defs.push(`classDef primary fill:${tokens.primaryColor},color:${tokens.primaryTextColor}`);
   return defs.join('\n');
 }
 
 function buildSubgraphStyles(definition: string, tokens: MermaidTokens): string {
   const alpha = Math.round(tokens.accentOpacity / 100 * 255).toString(16).padStart(2, '0');
-  const fillColor = `#${tokens.clusterBackground}${alpha}`;
+  const fillColor = `${tokens.clusterBackground}${alpha}`;
 
   const subgraphPattern = /subgraph\s+(\w+)/g;
   const ids: string[] = [];

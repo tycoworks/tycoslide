@@ -20,12 +20,12 @@ const stubTextNode = (text: string = ''): any => ({
   content: [{ text }],
   style: TEXT_STYLE.BODY,
   resolvedStyle: stubStyle,
-  color: '000000',
+  color: '#000000',
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.TOP,
   lineHeightMultiplier: 1.2,
   bulletIndentPt: 0,
-  linkColor: '0000FF',
+  linkColor: '#0000FF',
   linkUnderline: true,
 });
 

@@ -12,6 +12,7 @@ import type { Theme, Background } from '../model/types.js';
 import { CUSTOM_LAYOUT } from '../model/types.js';
 import { PptxConfigBuilder } from './pptxConfigBuilder.js';
 import { log, contentPreview } from '../../utils/log.js';
+import { stripHash } from '../../utils/color.js';
 
 // ============================================
 // RENDERER INTERFACE
@@ -82,7 +83,7 @@ export class PptxRenderer {
     this.pres.defineSlideMaster({
       title: name,
       background: {
-        ...(background.color != null && { color: background.color }),
+        ...(background.color != null && { color: stripHash(background.color) }),
         ...(background.opacity != null && { transparency: 100 - background.opacity }),
         ...(background.path != null && { path: background.path }),
       },
@@ -103,7 +104,7 @@ export class PptxRenderer {
     // Slide background overrides master background
     if (background) {
       pptxSlide.background = {
-        ...(background.color != null && { color: background.color }),
+        ...(background.color != null && { color: stripHash(background.color) }),
         ...(background.opacity != null && { transparency: 100 - background.opacity }),
         ...(background.path != null && { path: background.path }),
       };

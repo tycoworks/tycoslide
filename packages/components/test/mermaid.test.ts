@@ -133,21 +133,21 @@ flowchart LR
 // ============================================
 
 const testTokens: MermaidTokens = {
-  primaryColor: 'FF0000',
-  primaryTextColor: 'FFFFFF',
-  primaryBorderColor: '666666',
-  lineColor: '000000',
-  secondaryColor: '333333',
-  tertiaryColor: '333333',
-  textColor: '000000',
-  nodeTextColor: '111111',
-  clusterBackground: 'AABBCC',
-  clusterBorderColor: '666666',
-  edgeLabelBackground: 'FFFFFF',
-  titleColor: '222222',
+  primaryColor: '#FF0000',
+  primaryTextColor: '#FFFFFF',
+  primaryBorderColor: '#666666',
+  lineColor: '#000000',
+  secondaryColor: '#333333',
+  tertiaryColor: '#333333',
+  textColor: '#000000',
+  nodeTextColor: '#111111',
+  clusterBackground: '#AABBCC',
+  clusterBorderColor: '#666666',
+  edgeLabelBackground: '#FFFFFF',
+  titleColor: '#222222',
   textStyle: TEXT_STYLE.BODY,
   accentOpacity: 20,
-  accents: { teal: '00CCCC', pink: 'FF00FF', orange: 'FF8800' },
+  accents: { teal: '#00CCCC', pink: '#FF00FF', orange: '#FF8800' },
 };
 
 describe('buildMermaidConfig', () => {
@@ -185,7 +185,7 @@ describe('buildMermaidConfig', () => {
 
 describe('buildClassDefs', () => {
   it('generates classDef for each accent with hex alpha', () => {
-    const accents = { teal: '00CCCC', pink: 'FF00FF' };
+    const accents = { teal: '#00CCCC', pink: '#FF00FF' };
     const result = buildClassDefs(testTokens, accents);
     // 20% of 255 = 51 → hex '33'
     assert.ok(result.includes('classDef teal fill:#00CCCC33'));
@@ -205,7 +205,7 @@ describe('buildClassDefs', () => {
 });
 
 describe('injectClassDefs', () => {
-  const accents = { teal: '00CCCC' };
+  const accents = { teal: '#00CCCC' };
 
   it('injects classDefs after flowchart declaration', () => {
     const def = 'flowchart LR\n  A --> B';

@@ -217,32 +217,32 @@ describe('shape()', () => {
 
   test('uses token values for fill, border, cornerRadius', async () => {
     const node = await expand(shape(DEFAULT_SHAPE_TOKENS, { shape: SHAPE.RECT })) as ShapeNode;
-    assert.deepStrictEqual(node.fill, { color: '333333', opacity: 100 });
-    assert.deepStrictEqual(node.border, { color: 'FFFFFF', width: 0 });
+    assert.deepStrictEqual(node.fill, { color: '#333333', opacity: 100 });
+    assert.deepStrictEqual(node.border, { color: '#FFFFFF', width: 0 });
     assert.strictEqual(node.cornerRadius, 0);
   });
 
   test('passes fill color from tokens', async () => {
-    const tokens: ShapeTokens = { ...DEFAULT_SHAPE_TOKENS, fill: 'FF0000' };
+    const tokens: ShapeTokens = { ...DEFAULT_SHAPE_TOKENS, fill: '#FF0000' };
     const node = await expand(shape(tokens, { shape: SHAPE.RECT })) as ShapeNode;
-    assert.deepStrictEqual(node.fill, { color: 'FF0000', opacity: 100 });
+    assert.deepStrictEqual(node.fill, { color: '#FF0000', opacity: 100 });
   });
 
   test('passes fill color with explicit opacity from tokens', async () => {
-    const tokens: ShapeTokens = { ...DEFAULT_SHAPE_TOKENS, fill: 'FF0000', fillOpacity: 50 };
+    const tokens: ShapeTokens = { ...DEFAULT_SHAPE_TOKENS, fill: '#FF0000', fillOpacity: 50 };
     const node = await expand(shape(tokens, { shape: SHAPE.RECT })) as ShapeNode;
-    assert.deepStrictEqual(node.fill, { color: 'FF0000', opacity: 50 });
+    assert.deepStrictEqual(node.fill, { color: '#FF0000', opacity: 50 });
   });
 
   test('passes border properties from tokens', async () => {
-    const tokens: ShapeTokens = { ...DEFAULT_SHAPE_TOKENS, borderColor: '0000FF', borderWidth: 2 };
+    const tokens: ShapeTokens = { ...DEFAULT_SHAPE_TOKENS, borderColor: '#0000FF', borderWidth: 2 };
     const node = await expand(shape(tokens, { shape: SHAPE.RECT })) as ShapeNode;
-    assert.strictEqual(node.border?.color, '0000FF');
+    assert.strictEqual(node.border?.color, '#0000FF');
     assert.strictEqual(node.border?.width, 2);
   });
 
   test('passes selective border sides from props', async () => {
-    const tokens: ShapeTokens = { ...DEFAULT_SHAPE_TOKENS, borderColor: '000000', borderWidth: 1 };
+    const tokens: ShapeTokens = { ...DEFAULT_SHAPE_TOKENS, borderColor: '#000000', borderWidth: 1 };
     const node = await expand(shape(tokens, {
       shape: SHAPE.RECT,
       borderTop: true,
@@ -263,18 +263,18 @@ describe('shape()', () => {
   });
 
   test('passes specific shape with fill from tokens', async () => {
-    const tokens: ShapeTokens = { ...DEFAULT_SHAPE_TOKENS, fill: 'FF0000', fillOpacity: 50 };
+    const tokens: ShapeTokens = { ...DEFAULT_SHAPE_TOKENS, fill: '#FF0000', fillOpacity: 50 };
     const node = await expand(shape(tokens, { shape: SHAPE.TRAPEZOID })) as ShapeNode;
     assert.strictEqual(node.shape, SHAPE.TRAPEZOID);
-    assert.deepStrictEqual(node.fill, { color: 'FF0000', opacity: 50 });
+    assert.deepStrictEqual(node.fill, { color: '#FF0000', opacity: 50 });
   });
 
   test('applies all tokens and props together', async () => {
-    const tokens: ShapeTokens = { fill: 'EEEEEE', fillOpacity: 80, borderColor: '333333', borderWidth: 1, cornerRadius: 0.25 };
+    const tokens: ShapeTokens = { fill: '#EEEEEE', fillOpacity: 80, borderColor: '#333333', borderWidth: 1, cornerRadius: 0.25 };
     const node = await expand(shape(tokens, { shape: SHAPE.ELLIPSE })) as ShapeNode;
     assert.strictEqual(node.shape, SHAPE.ELLIPSE);
-    assert.deepStrictEqual(node.fill, { color: 'EEEEEE', opacity: 80 });
-    assert.strictEqual(node.border?.color, '333333');
+    assert.deepStrictEqual(node.fill, { color: '#EEEEEE', opacity: 80 });
+    assert.strictEqual(node.border?.color, '#333333');
     assert.strictEqual(node.border?.width, 1);
     assert.strictEqual(node.cornerRadius, 0.25);
   });
@@ -299,7 +299,7 @@ describe('slideNumber()', () => {
   test('uses token values for style, color, hAlign', async () => {
     const node = await expand(slideNumber(DEFAULT_SLIDE_NUMBER_TOKENS)) as SlideNumberNode;
     assert.strictEqual(node.style, TEXT_STYLE.FOOTER);
-    assert.strictEqual(node.color, '666666');
+    assert.strictEqual(node.color, '#666666');
     assert.strictEqual(node.hAlign, HALIGN.RIGHT);
   });
 
@@ -767,7 +767,7 @@ describe('table()', () => {
 
   test('TableCellData cells preserve properties after expansion', async () => {
     const tNode = table([
-      ['Header', { content: 'colored cell', textStyle: TEXT_STYLE.SMALL, color: 'FF0000', hAlign: HALIGN.CENTER }],
+      ['Header', { content: 'colored cell', textStyle: TEXT_STYLE.SMALL, color: '#FF0000', hAlign: HALIGN.CENTER }],
     ]);
     tNode.tokens = { ...DEFAULT_TABLE_TOKENS };
     const node = await expand(tNode) as TableNode;
@@ -775,7 +775,7 @@ describe('table()', () => {
     const cell = node.rows[0][1];
     assert.deepStrictEqual(cell.content, [{ text: 'colored cell' }]);
     assert.strictEqual(cell.textStyle, TEXT_STYLE.SMALL);
-    assert.strictEqual(cell.color, 'FF0000');
+    assert.strictEqual(cell.color, '#FF0000');
     assert.strictEqual(cell.hAlign, HALIGN.CENTER);
     assert.ok(cell.resolvedStyle);
     assert.strictEqual(cell.resolvedStyle.fontSize, 12); // from mockTextStyle
@@ -798,7 +798,7 @@ describe('table()', () => {
     const node = await expand(tNode) as TableNode;
     const cell = node.rows[0][0];
     assert.deepStrictEqual(cell.content, [{ text: 'plain string' }]);
-    assert.strictEqual(cell.color, '000000');           // resolved from table token cellTextColor
+    assert.strictEqual(cell.color, '#000000');           // resolved from table token cellTextColor
     assert.strictEqual(cell.textStyle, TEXT_STYLE.BODY); // resolved from table token
     assert.ok(cell.resolvedStyle);
     assert.strictEqual(cell.resolvedStyle.fontSize, 12); // from mockTextStyle

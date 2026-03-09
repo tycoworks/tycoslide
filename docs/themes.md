@@ -242,21 +242,21 @@ Colors are local constants referenced in layout and master token maps:
 
 ```typescript
 const colors = {
-  background: 'FFFFFF',
-  text: '1A1A1A',
-  textMuted: '666666',
-  primary: '0066CC',
-  secondary: 'E0E0E0',
+  background: '#FFFFFF',
+  text: '#1A1A1A',
+  textMuted: '#666666',
+  primary: '#0066CC',
+  secondary: '#E0E0E0',
   accents: {
-    blue: '4285F4',
-    green: '34A853',
-    red: 'EA4335',
-    yellow: 'FBBC05',
+    blue: '#4285F4',
+    green: '#34A853',
+    red: '#EA4335',
+    yellow: '#FBBC05',
   },
 };
 ```
 
-All color values are hex values without a `#`. Accent names are open vocabulary — define whatever names make sense for your brand.
+All color values are hex values with a `#` prefix. Accent names are open vocabulary — define whatever names make sense for your brand.
 
 #### 3. Configure Text Styles
 

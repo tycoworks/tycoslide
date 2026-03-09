@@ -49,12 +49,12 @@ function textNode(content: string | NormalizedRun[], opts?: Partial<Omit<TextNod
     content: typeof content === 'string' ? [{ text: content }] : content,
     style: TEXT_STYLE.BODY,
     resolvedStyle: bodyStyle,
-    color: '000000',
+    color: '#000000',
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.TOP,
     lineHeightMultiplier: 1.2,
     bulletIndentPt: 27,
-    linkColor: '0000FF',
+    linkColor: '#0000FF',
     linkUnderline: true,
     ...opts,
   };
@@ -105,7 +105,7 @@ function imageNode(src: string): ImageNode {
 
 /** Line node (token values baked in from mockTheme) */
 function lineNode(): LineNode {
-  return { type: NODE_TYPE.LINE, color: '666666', width: 1, dashType: DASH_TYPE.SOLID };
+  return { type: NODE_TYPE.LINE, color: '#666666', width: 1, dashType: DASH_TYPE.SOLID };
 }
 
 /** Stack node (z-order composition) */
@@ -127,8 +127,8 @@ function shapeNode(shapeName: string): ShapeNode {
   return {
     type: NODE_TYPE.SHAPE,
     shape: shapeName as any,
-    fill: { color: '666666', opacity: 100 },
-    border: { color: 'FFFFFF', width: 0 },
+    fill: { color: '#666666', opacity: 100 },
+    border: { color: '#FFFFFF', width: 0 },
     cornerRadius: 0,
   };
 }
@@ -139,7 +139,7 @@ function slideNumberNode(opts?: Partial<Omit<SlideNumberNode, 'type'>>): SlideNu
     type: NODE_TYPE.SLIDE_NUMBER,
     style: TEXT_STYLE.FOOTER,
     resolvedStyle: mockTheme.textStyles[TEXT_STYLE.FOOTER],
-    color: '666666',
+    color: '#666666',
     hAlign: HALIGN.RIGHT,
     vAlign: VALIGN.MIDDLE,
     ...opts,
@@ -150,13 +150,13 @@ function slideNumberNode(opts?: Partial<Omit<SlideNumberNode, 'type'>>): SlideNu
 function cell(text: string, opts?: Partial<TableCellData>): TableCellData {
   return {
     content: [{ text }],
-    color: '000000',
+    color: '#000000',
     textStyle: TEXT_STYLE.BODY,
     resolvedStyle: bodyStyle,
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.MIDDLE,
     lineHeightMultiplier: 1.0,
-    linkColor: '0000FF',
+    linkColor: '#0000FF',
     linkUnderline: true,
     ...opts,
   };
@@ -168,18 +168,18 @@ function tableNode(rows: TableCellData[][], opts?: Partial<Omit<TableNode, 'type
     type: NODE_TYPE.TABLE,
     rows,
     borderStyle: BORDER_STYLE.FULL,
-    borderColor: '333333',
+    borderColor: '#333333',
     borderWidth: 1,
-    headerBackground: 'AAAAAA',
+    headerBackground: '#AAAAAA',
     headerBackgroundOpacity: 100,
     headerTextStyle: TEXT_STYLE.BODY,
-    cellBackground: 'EEEEEE',
+    cellBackground: '#EEEEEE',
     cellBackgroundOpacity: 0,
     cellTextStyle: TEXT_STYLE.BODY,
     cellPadding: 0.1,
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.MIDDLE,
-    linkColor: '0000FF',
+    linkColor: '#0000FF',
     linkUnderline: true,
     ...opts,
   };
@@ -721,8 +721,8 @@ describe('HTML Measurement Generation', () => {
       const shape: ShapeNode = {
         type: NODE_TYPE.SHAPE,
         shape: SHAPE.ROUND_RECT,
-        fill: { color: 'BDB0E0', opacity: 20 },
-        border: { color: 'FFFFFF', width: 0 },
+        fill: { color: '#BDB0E0', opacity: 20 },
+        border: { color: '#FFFFFF', width: 0 },
         cornerRadius: 0,
       };
       const node = colNode(stackNode(shape, colNode(textNode('Content'))));
@@ -735,8 +735,8 @@ describe('HTML Measurement Generation', () => {
       const shape: ShapeNode = {
         type: NODE_TYPE.SHAPE,
         shape: SHAPE.ELLIPSE,
-        fill: { color: 'FF0000', opacity: 100 },
-        border: { color: 'FFFFFF', width: 0 },
+        fill: { color: '#FF0000', opacity: 100 },
+        border: { color: '#FFFFFF', width: 0 },
         cornerRadius: 0,
       };
       const node = colNode(stackNode(shape, colNode(textNode('Circle'))));
@@ -748,8 +748,8 @@ describe('HTML Measurement Generation', () => {
       const shape: ShapeNode = {
         type: NODE_TYPE.SHAPE,
         shape: SHAPE.ROUND_RECT,
-        fill: { color: '333333', opacity: 100 },
-        border: { color: 'FFFFFF', width: 0 },
+        fill: { color: '#333333', opacity: 100 },
+        border: { color: '#FFFFFF', width: 0 },
         cornerRadius: 0.1,
       };
       const node = colNode(stackNode(shape, colNode(textNode('Rounded'))));
@@ -762,8 +762,8 @@ describe('HTML Measurement Generation', () => {
       const shape: ShapeNode = {
         type: NODE_TYPE.SHAPE,
         shape: SHAPE.ROUND_RECT,
-        fill: { color: '333333', opacity: 100 },
-        border: { color: 'AABBCC', width: 2 },
+        fill: { color: '#333333', opacity: 100 },
+        border: { color: '#AABBCC', width: 2 },
         cornerRadius: 0,
       };
       const node = colNode(stackNode(shape, colNode(textNode('Bordered'))));
@@ -776,8 +776,8 @@ describe('HTML Measurement Generation', () => {
       const shape: ShapeNode = {
         type: NODE_TYPE.SHAPE,
         shape: SHAPE.ROUND_RECT,
-        fill: { color: '333333', opacity: 100 },
-        border: { color: 'FF0000', width: 2, top: true, right: false, bottom: true, left: false },
+        fill: { color: '#333333', opacity: 100 },
+        border: { color: '#FF0000', width: 2, top: true, right: false, bottom: true, left: false },
         cornerRadius: 0,
       };
       const node = colNode(stackNode(shape, colNode(textNode('Selective'))));
@@ -789,7 +789,7 @@ describe('HTML Measurement Generation', () => {
 
   describe('SlideNumber rendering', () => {
     test('slideNumber renders with correct color', async () => {
-      const node = rowNode(textNode('Footer'), slideNumberNode({ color: 'BDB0E0' }));
+      const node = rowNode(textNode('Footer'), slideNumberNode({ color: '#BDB0E0' }));
       const { html } = await genHTML(node, bounds);
       assert.ok(html.includes('color:#BDB0E0'), 'SlideNumber should render with its color');
     });
@@ -869,7 +869,7 @@ describe('HTML Measurement Generation', () => {
       ];
       const node = colNode(tableNode(rows, {
         headerRows: 1,
-        headerBackground: 'FF0000',
+        headerBackground: '#FF0000',
         headerBackgroundOpacity: 100,
       }));
       const { html } = await genHTML(node, bounds);
@@ -883,9 +883,9 @@ describe('HTML Measurement Generation', () => {
       ];
       const node = colNode(tableNode(rows, {
         headerRows: 1,
-        headerBackground: 'FF0000',
+        headerBackground: '#FF0000',
         headerBackgroundOpacity: 100,
-        cellBackground: '00FF00',
+        cellBackground: '#00FF00',
         cellBackgroundOpacity: 50,
       }));
       const { html } = await genHTML(node, bounds);
@@ -894,12 +894,12 @@ describe('HTML Measurement Generation', () => {
 
     test('table cell-level fill overrides header background', async () => {
       const rows = [
-        [cell('Header', { fill: 'AABBCC' }), cell('Header 2')],
+        [cell('Header', { fill: '#AABBCC' }), cell('Header 2')],
         [cell('Data')],
       ];
       const node = colNode(tableNode(rows, {
         headerRows: 1,
-        headerBackground: 'FF0000',
+        headerBackground: '#FF0000',
         headerBackgroundOpacity: 100,
       }));
       const { html } = await genHTML(node, bounds);
@@ -993,21 +993,21 @@ describe('HTML Measurement Generation', () => {
     });
 
     test('dashed line renders border-style: dashed', async () => {
-      const line: LineNode = { type: NODE_TYPE.LINE, color: '666666', width: 1, dashType: DASH_TYPE.DASH };
+      const line: LineNode = { type: NODE_TYPE.LINE, color: '#666666', width: 1, dashType: DASH_TYPE.DASH };
       const node = colNode(textNode('Above'), line, textNode('Below'));
       const { html } = await genHTML(node, bounds);
       assert.ok(html.includes('dashed'), 'DASH type should render as dashed border');
     });
 
     test('dotted line renders border-style: dotted', async () => {
-      const line: LineNode = { type: NODE_TYPE.LINE, color: '666666', width: 1, dashType: DASH_TYPE.SYS_DOT };
+      const line: LineNode = { type: NODE_TYPE.LINE, color: '#666666', width: 1, dashType: DASH_TYPE.SYS_DOT };
       const node = colNode(textNode('Above'), line, textNode('Below'));
       const { html } = await genHTML(node, bounds);
       assert.ok(html.includes('dotted'), 'SYS_DOT type should render as dotted border');
     });
 
     test('line in row uses border-left (vertical separator)', async () => {
-      const line: LineNode = { type: NODE_TYPE.LINE, color: 'FF0000', width: 2, dashType: DASH_TYPE.DASH };
+      const line: LineNode = { type: NODE_TYPE.LINE, color: '#FF0000', width: 2, dashType: DASH_TYPE.DASH };
       const node = rowNode(textNode('Left'), line, textNode('Right'));
       const { html } = await genHTML(node, bounds);
       assert.ok(html.includes('border-left:'), 'Line in row should use border-left (vertical separator)');
@@ -1016,14 +1016,14 @@ describe('HTML Measurement Generation', () => {
     });
 
     test('LG_DASH maps to dashed', async () => {
-      const line: LineNode = { type: NODE_TYPE.LINE, color: '000000', width: 1, dashType: DASH_TYPE.LG_DASH };
+      const line: LineNode = { type: NODE_TYPE.LINE, color: '#000000', width: 1, dashType: DASH_TYPE.LG_DASH };
       const node = colNode(line);
       const { html } = await genHTML(node, bounds);
       assert.ok(html.includes('dashed'), 'LG_DASH should map to dashed');
     });
 
     test('SYS_DASH maps to dotted', async () => {
-      const line: LineNode = { type: NODE_TYPE.LINE, color: '000000', width: 1, dashType: DASH_TYPE.SYS_DASH };
+      const line: LineNode = { type: NODE_TYPE.LINE, color: '#000000', width: 1, dashType: DASH_TYPE.SYS_DASH };
       const node = colNode(line);
       const { html } = await genHTML(node, bounds);
       assert.ok(html.includes('dotted'), 'SYS_DASH should map to dotted');
@@ -1039,7 +1039,7 @@ describe('HTML Measurement Generation', () => {
       const node = colNode(tableNode(rows, {
         headerRows: 0,
         headerColumns: 1,
-        headerBackground: 'AA00AA',
+        headerBackground: '#AA00AA',
         headerBackgroundOpacity: 100,
       }));
       const { html } = await genHTML(node, bounds);
@@ -1054,7 +1054,7 @@ describe('HTML Measurement Generation', () => {
       const node = colNode(tableNode(rows, {
         headerRows: 1,
         headerColumns: 1,
-        headerBackground: 'BB00BB',
+        headerBackground: '#BB00BB',
         headerBackgroundOpacity: 100,
       }));
       const { html } = await genHTML(node, bounds);
@@ -1072,9 +1072,9 @@ describe('HTML Measurement Generation', () => {
       ];
       const node = colNode(tableNode(rows, {
         headerRows: 1,
-        headerBackground: 'FF0000',
+        headerBackground: '#FF0000',
         headerBackgroundOpacity: 100,
-        cellBackground: '00FF00',
+        cellBackground: '#00FF00',
         cellBackgroundOpacity: 100,
       }));
       const { html } = await genHTML(node, bounds);
@@ -1153,7 +1153,7 @@ describe('HTML Measurement Generation', () => {
     test('color background renders as hex', async () => {
       const node = colNode(textNode('Hello'));
       const { html } = generateLayoutHTML(
-        [{ tree: node, bounds, background: { color: '120E22' } }],
+        [{ tree: node, bounds, background: { color: '#120E22' } }],
         mockTheme, ['test-slide'],
       );
       assert.ok(html.includes('background-color:#120E22'), 'Should render hex background color');
@@ -1163,7 +1163,7 @@ describe('HTML Measurement Generation', () => {
     test('color with opacity renders as rgba', async () => {
       const node = colNode(textNode('Hello'));
       const { html } = generateLayoutHTML(
-        [{ tree: node, bounds, background: { color: 'FF0000', opacity: 50 } }],
+        [{ tree: node, bounds, background: { color: '#FF0000', opacity: 50 } }],
         mockTheme, ['test-slide'],
       );
       assert.ok(html.includes('rgba(255,0,0,0.5)'), 'Should render rgba with 50% opacity');
@@ -1172,7 +1172,7 @@ describe('HTML Measurement Generation', () => {
     test('color with full opacity renders as hex', async () => {
       const node = colNode(textNode('Hello'));
       const { html } = generateLayoutHTML(
-        [{ tree: node, bounds, background: { color: '0000FF', opacity: 100 } }],
+        [{ tree: node, bounds, background: { color: '#0000FF', opacity: 100 } }],
         mockTheme, ['test-slide'],
       );
       assert.ok(html.includes('background-color:#0000FF'), 'Should render hex at full opacity');

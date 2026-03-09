@@ -19,10 +19,10 @@ function textNode(content: string): TextNode {
       lineHeightMultiplier: 1.0,
       bulletIndentPt: 21,
     },
-    color: '000000',
+    color: '#000000',
     lineHeightMultiplier: 1.2,
     bulletIndentPt: 18,
-    linkColor: '0000FF',
+    linkColor: '#0000FF',
     linkUnderline: true,
   };
 }

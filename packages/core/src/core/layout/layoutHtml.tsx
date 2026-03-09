@@ -255,7 +255,7 @@ function styleText(
     fontFamily: `'${defaultFont.name}'`,
     fontSize: `${fontSizePx}px`,
     lineHeight: `${cssLineHeight}`,
-    color: `#${node.color}`,
+    color: node.color,
     textAlign,
     whiteSpace: 'pre-wrap',
     wordWrap: 'break-word',
@@ -345,7 +345,7 @@ function styleLine(
   nodeId: string,
 ): StyledNode {
   const widthPx = ptToPx(node.width);
-  const color = `#${node.color}`;
+  const color = node.color;
   const borderStyle = dashTypeToCss(node.dashType);
 
   if (parent.direction === DIRECTION.ROW) {
@@ -380,7 +380,7 @@ function styleShape(
   }
   const bw = ptToPx(node.border.width);
   if (bw > 0) {
-    const bc = `#${node.border.color}`;
+    const bc = node.border.color;
     if (node.border.top === false || node.border.right === false
         || node.border.bottom === false || node.border.left === false) {
       styles.borderTop = node.border.top !== false ? `${bw}px solid ${bc}` : 'none';
@@ -411,7 +411,7 @@ function styleSlideNumber(
       justifyContent: vAlignToJustify(node.vAlign),
       fontFamily: `'${defaultFont.name}'`,
       fontSize: `${fontSizePx}px`,
-      color: `#${node.color}`,
+      color: node.color,
       textAlign,
       whiteSpace: 'nowrap',
       flex: '0 0 auto',
@@ -436,7 +436,7 @@ function styleTable(
   const isInRow = parent.direction === DIRECTION.ROW;
 
   const borderWidthPx = ptToPx(node.borderWidth);
-  const borderColor = `#${node.borderColor}`;
+  const borderColor = node.borderColor;
   const headerRows = node.headerRows ?? 0;
   const headerCols = node.headerColumns ?? 0;
 
@@ -498,7 +498,7 @@ function styleTable(
       // Cell background: cell-level fill overrides, then header/non-header cascade
       const rawCell = node.rows[ri][colIdx];
       if (rawCell.fill) {
-        cellStyles.backgroundColor = `#${rawCell.fill}`;
+        cellStyles.backgroundColor = rawCell.fill;
       } else {
         const isHeader = ri < headerRows || colIdx < headerCols;
         if (isHeader && node.headerBackground) {
@@ -656,12 +656,12 @@ function renderRunSpanHTML(
   }
 
   if (run.color) {
-    css.push(`color:#${run.color}`);
+    css.push(`color:${run.color}`);
   }
 
   if (run.highlight) {
-    css.push(`background-color:#${run.highlight.bg}`);
-    css.push(`color:#${run.highlight.text}`);
+    css.push(`background-color:${run.highlight.bg}`);
+    css.push(`color:${run.highlight.text}`);
   }
 
   // Text decorations: strikethrough and underline can combine
@@ -684,7 +684,7 @@ function renderRunSpanHTML(
   // Accent color (explicit run.color) wins over link token
   if (run.hyperlink) {
     const linkCss: string[] = [];
-    linkCss.push(!run.color && linkColor ? `color:#${linkColor}` : 'color:inherit');
+    linkCss.push(!run.color && linkColor ? `color:${linkColor}` : 'color:inherit');
     linkCss.push(linkUnderline && !run.underline ? 'text-decoration:underline' : 'text-decoration:inherit');
     html = `<a href="${escapeHtml(run.hyperlink)}" style="${linkCss.join(';')}">${html}</a>`;
   }

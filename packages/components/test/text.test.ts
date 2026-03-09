@@ -41,11 +41,11 @@ describe('Text', () => {
     });
 
     it('should pass props and tokens correctly', () => {
-      const node = plainText('Label', { ...DEFAULT_PLAIN_TEXT_TOKENS, style: TEXT_STYLE.EYEBROW, color: 'FF0000' });
+      const node = plainText('Label', { ...DEFAULT_PLAIN_TEXT_TOKENS, style: TEXT_STYLE.EYEBROW, color: '#FF0000' });
       assert.strictEqual(node.props.body, 'Label');
       // Tokens are now in node.tokens, not spread into props
       assert.strictEqual((node.tokens as any).style, 'eyebrow');
-      assert.strictEqual((node.tokens as any).color, 'FF0000');
+      assert.strictEqual((node.tokens as any).color, '#FF0000');
     });
   });
 
@@ -84,10 +84,10 @@ describe('Text', () => {
     });
 
     it('should apply style, color, and alignment', async () => {
-      const node = plainText('Label', { ...DEFAULT_PLAIN_TEXT_TOKENS, style: TEXT_STYLE.BODY, color: 'AABBCC', hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE });
+      const node = plainText('Label', { ...DEFAULT_PLAIN_TEXT_TOKENS, style: TEXT_STYLE.BODY, color: '#AABBCC', hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE });
       const expanded = await componentRegistry.expand(node, { theme, canvas: noopCanvas() }) as any;
       assert.strictEqual(expanded.style, 'body');
-      assert.strictEqual(expanded.color, 'AABBCC');
+      assert.strictEqual(expanded.color, '#AABBCC');
       assert.strictEqual(expanded.hAlign, HALIGN.CENTER);
       assert.strictEqual(expanded.vAlign, VALIGN.MIDDLE);
     });
@@ -188,10 +188,10 @@ describe('Text', () => {
     });
 
     it('should pass through style and color props', async () => {
-      const node = text('test', { ...DEFAULT_TEXT_TOKENS, style: TEXT_STYLE.BODY, color: 'AABBCC' });
+      const node = text('test', { ...DEFAULT_TEXT_TOKENS, style: TEXT_STYLE.BODY, color: '#AABBCC' });
       const result = await componentRegistry.expandTree(node, makeContext()) as any;
       assert.strictEqual(result.style, 'body');
-      assert.strictEqual(result.color, 'AABBCC');
+      assert.strictEqual(result.color, '#AABBCC');
     });
 
     it('should parse hyperlinks', async () => {
@@ -230,7 +230,7 @@ describe('Text', () => {
     it('should resolve linkColor and linkUnderline from tokens', async () => {
       const node = text('[link](https://example.com)', DEFAULT_TEXT_TOKENS);
       const result = await componentRegistry.expandTree(node, makeContext()) as any;
-      assert.strictEqual(result.linkColor, '0000FF');
+      assert.strictEqual(result.linkColor, '#0000FF');
       assert.strictEqual(result.linkUnderline, true);
     });
   });

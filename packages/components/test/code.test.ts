@@ -55,16 +55,16 @@ describe('code() DSL function', () => {
 describe('buildCodeTheme()', () => {
   const tokens: CodeTokens = {
     textStyle: TEXT_STYLE.CODE,
-    backgroundColor: '1E1E1E',
-    textColor: 'D4D4D4',
-    keywordColor: '569CD6',
-    stringColor: 'CE9178',
-    commentColor: '6A9955',
-    functionColor: 'DCDCAA',
-    numberColor: 'B5CEA8',
-    operatorColor: 'D4D4D4',
-    typeColor: '4EC9B0',
-    variableColor: '9CDCFE',
+    backgroundColor: '#1E1E1E',
+    textColor: '#D4D4D4',
+    keywordColor: '#569CD6',
+    stringColor: '#CE9178',
+    commentColor: '#6A9955',
+    functionColor: '#DCDCAA',
+    numberColor: '#B5CEA8',
+    operatorColor: '#D4D4D4',
+    typeColor: '#4EC9B0',
+    variableColor: '#9CDCFE',
     padding: 0.25,
     borderRadius: 0.1,
   };
@@ -76,12 +76,12 @@ describe('buildCodeTheme()', () => {
   });
 
   it('sets editor.background from backgroundColor token', () => {
-    const theme = buildCodeTheme({ ...tokens, backgroundColor: 'FF0000' });
+    const theme = buildCodeTheme({ ...tokens, backgroundColor: '#FF0000' });
     assert.strictEqual(theme.colors!['editor.background'], '#FF0000');
   });
 
   it('sets editor.foreground from textColor token', () => {
-    const theme = buildCodeTheme({ ...tokens, textColor: '00FF00' });
+    const theme = buildCodeTheme({ ...tokens, textColor: '#00FF00' });
     assert.strictEqual(theme.colors!['editor.foreground'], '#00FF00');
   });
 
@@ -255,7 +255,7 @@ describe('code expansion', () => {
     node.tokens = { ...DEFAULT_CODE_TOKENS };
     await componentRegistry.expand(node, context);
 
-    assert.ok(capturedHtml.includes('1E1E1E'), 'HTML should contain background color from token');
+    assert.ok(capturedHtml.includes('#1E1E1E'), 'HTML should contain background color from token');
   });
 });
 
@@ -350,16 +350,16 @@ describe('code MDAST compile handler', () => {
 describe('renderCodeToHtml()', () => {
   const tokens: CodeTokens = {
     textStyle: TEXT_STYLE.CODE,
-    backgroundColor: '1E1E1E',
-    textColor: 'D4D4D4',
-    keywordColor: '569CD6',
-    stringColor: 'CE9178',
-    commentColor: '6A9955',
-    functionColor: 'DCDCAA',
-    numberColor: 'B5CEA8',
-    operatorColor: 'D4D4D4',
-    typeColor: '4EC9B0',
-    variableColor: '9CDCFE',
+    backgroundColor: '#1E1E1E',
+    textColor: '#D4D4D4',
+    keywordColor: '#569CD6',
+    stringColor: '#CE9178',
+    commentColor: '#6A9955',
+    functionColor: '#DCDCAA',
+    numberColor: '#B5CEA8',
+    operatorColor: '#D4D4D4',
+    typeColor: '#4EC9B0',
+    variableColor: '#9CDCFE',
     padding: 0.25,
     borderRadius: 0.1,
   };
@@ -386,7 +386,7 @@ describe('renderCodeToHtml()', () => {
 
   it('contains background color from token', async () => {
     const html = await renderCodeToHtml('x', 'text', tokens, codeStyle);
-    assert.ok(html.includes('1E1E1E'), 'should contain background color');
+    assert.ok(html.includes('#1E1E1E'), 'should contain background color');
   });
 
   it('contains font-family from textStyle', async () => {
@@ -440,16 +440,16 @@ describe('renderCodeToHtml()', () => {
 describe('buildCodeTheme() — operator scope', () => {
   const tokens: CodeTokens = {
     textStyle: TEXT_STYLE.CODE,
-    backgroundColor: '1E1E1E',
-    textColor: 'D4D4D4',
-    keywordColor: '569CD6',
-    stringColor: 'CE9178',
-    commentColor: '6A9955',
-    functionColor: 'DCDCAA',
-    numberColor: 'B5CEA8',
-    operatorColor: 'FF00FF',
-    typeColor: '4EC9B0',
-    variableColor: '9CDCFE',
+    backgroundColor: '#1E1E1E',
+    textColor: '#D4D4D4',
+    keywordColor: '#569CD6',
+    stringColor: '#CE9178',
+    commentColor: '#6A9955',
+    functionColor: '#DCDCAA',
+    numberColor: '#B5CEA8',
+    operatorColor: '#FF00FF',
+    typeColor: '#4EC9B0',
+    variableColor: '#9CDCFE',
     padding: 0.25,
     borderRadius: 0.1,
   };

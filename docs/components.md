@@ -102,7 +102,7 @@ The default theme provides `blue`, `green`, `red`, `yellow`, and `purple`. Custo
 
 ```typescript
 text("**Bold** and :blue[highlighted]")
-text("Custom styled", { style: TEXT_STYLE.H3, color: 'FF0000' })
+text("Custom styled", { style: TEXT_STYLE.H3, color: '#FF0000' })
 ```
 
 ---
@@ -157,7 +157,7 @@ Renders bullet or numbered lists with support for formatting. No `:::list` direc
 ```typescript
 list(['First item', 'Second item', '**Bold** third item'])
 list(['Step one', 'Step two'], { ordered: true })
-list(['Item with :blue[accent]'], { color: '0066CC' })
+list(['Item with :blue[accent]'], { color: '#0066CC' })
 ```
 
 ### Parameters
@@ -349,9 +349,9 @@ The following properties are available in the TypeScript DSL only (not in direct
 
 | Param | Type | Description |
 |-------|------|-------------|
-| `fill` | string | Fill color (6-character hex) |
+| `fill` | string | Fill color (6-character hex with `#` prefix) |
 | `fillOpacity` | number | Fill opacity (0--1) |
-| `borderColor` | string | Border color (6-character hex) |
+| `borderColor` | string | Border color (6-character hex with `#` prefix) |
 | `borderWidth` | number | Border width in points |
 | `borderTop` | boolean | Show top border only |
 | `borderRight` | boolean | Show right border only |
@@ -902,7 +902,7 @@ table([
 image('./path/to/image.png')
 
 // Shape
-shape({ shape: SHAPE.ROUND_RECT, fill: 'FF0000', cornerRadius: 0.1 })
+shape({ shape: SHAPE.ROUND_RECT, fill: '#FF0000', cornerRadius: 0.1 })
 
 // Containers
 column({ gap: GAP.NORMAL }, ...)

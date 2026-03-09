@@ -30,25 +30,25 @@ import {
 
 // Neutral gray surfaces (zero chroma), purple primary accent.
 export const colors = {
-  background: 'FFFFFF',          // Pure white
-  text: '1A1A2E',               // Dark navy
-  textMuted: '4A4A5A',           // Neutral gray
-  primary: '7C3AED',             // Purple accent
-  onPrimary: 'FFFFFF',           // White on purple
-  secondary: 'F5F5F5',           // Neutral surface
+  background: '#FFFFFF',          // Pure white
+  text: '#1A1A2E',               // Dark navy
+  textMuted: '#4A4A5A',           // Neutral gray
+  primary: '#7C3AED',             // Purple accent
+  onPrimary: '#FFFFFF',           // White on purple
+  secondary: '#F5F5F5',           // Neutral surface
 
   // Neutral gray surface hierarchy (zero chroma)
-  surfaceContainer: 'F5F5F5',    // Cards, callouts
-  surfaceContainerLow: 'FAFAFA', // Quotes
-  surfaceContainerHigh: 'EBEBEB',// Table headers
-  outlineVariant: 'E5E5E5',      // Borders, separators
+  surfaceContainer: '#F5F5F5',    // Cards, callouts
+  surfaceContainerLow: '#FAFAFA', // Quotes
+  surfaceContainerHigh: '#EBEBEB',// Table headers
+  outlineVariant: '#E5E5E5',      // Borders, separators
 
   accents: {
-    blue: '1A1A2E',      // Dark navy (default emphasis)
-    green: '0E6245',     // Deep forest green
-    red: 'B42318',       // Deep brick red
-    yellow: 'B54708',    // Deep amber
-    purple: '7C3AED',
+    blue: '#1A1A2E',      // Dark navy (default emphasis)
+    green: '#0E6245',     // Deep forest green
+    red: '#B42318',       // Deep brick red
+    yellow: '#B54708',    // Deep amber
+    purple: '#7C3AED',
   },
 };
 
@@ -203,16 +203,16 @@ const tableTokens = {
 
 const codeTokens = {
   textStyle: TEXT_STYLE.CODE,
-  backgroundColor: '1A1A2E',
-  textColor: 'E2E8F0',
-  keywordColor: 'A78BFA',
-  stringColor: '10B981',
-  commentColor: '6B7280',
-  functionColor: '79C0FF',
-  numberColor: 'F0883E',
-  operatorColor: 'E2E8F0',
-  typeColor: 'FFA657',
-  variableColor: 'E2E8F0',
+  backgroundColor: '#1A1A2E',
+  textColor: '#E2E8F0',
+  keywordColor: '#A78BFA',
+  stringColor: '#10B981',
+  commentColor: '#6B7280',
+  functionColor: '#79C0FF',
+  numberColor: '#F0883E',
+  operatorColor: '#E2E8F0',
+  typeColor: '#FFA657',
+  variableColor: '#E2E8F0',
   padding: padding,
   borderRadius: cornerRadius,
 };

@@ -36,14 +36,14 @@ describe('LayoutRegistry.resolveTokens', () => {
       layouts: {
         title: {
           variants: {
-            ['default']: { background: 'FF0000', title: { style: 'h1', color: 'FFFFFF' } },
+            ['default']: { background: '#FF0000', title: { style: 'h1', color: '#FFFFFF' } },
           },
         },
       },
     });
     const tokens = layoutRegistry.resolveTokens('title', 'default', theme);
-    assert.strictEqual(tokens.background, 'FF0000');
-    assert.deepStrictEqual(tokens.title, { style: 'h1', color: 'FFFFFF' });
+    assert.strictEqual(tokens.background, '#FF0000');
+    assert.deepStrictEqual(tokens.title, { style: 'h1', color: '#FFFFFF' });
   });
 
   it('resolves non-default variant tokens', () => {
@@ -51,14 +51,14 @@ describe('LayoutRegistry.resolveTokens', () => {
       layouts: {
         title: {
           variants: {
-            ['default']: { background: 'FF0000' },
-            dark: { background: '000000' },
+            ['default']: { background: '#FF0000' },
+            dark: { background: '#000000' },
           },
         },
       },
     });
     const tokens = layoutRegistry.resolveTokens('title', 'dark', theme);
-    assert.strictEqual(tokens.background, '000000');
+    assert.strictEqual(tokens.background, '#000000');
   });
 
   it('throws when layout is not in theme.layouts', () => {
@@ -83,7 +83,7 @@ describe('LayoutRegistry.resolveTokens', () => {
       layouts: {
         title: {
           variants: {
-            ['default']: { background: 'FF0000' },
+            ['default']: { background: '#FF0000' },
           },
         },
       },
@@ -142,7 +142,7 @@ describe('Document Compiler: Layout Tokens', () => {
       layouts: {
         tokenSimple: {
           variants: {
-            ['default']: { background: 'AAAAAA', titleTokens: { style: 'h1', color: 'FFFFFF' } },
+            ['default']: { background: '#AAAAAA', titleTokens: { style: 'h1', color: '#FFFFFF' } },
           },
         },
       },
@@ -152,8 +152,8 @@ describe('Document Compiler: Layout Tokens', () => {
     compileDocument(md, { theme });
 
     assert.strictEqual(receivedTokens.length, 1);
-    assert.strictEqual(receivedTokens[0].background, 'AAAAAA');
-    assert.deepStrictEqual(receivedTokens[0].titleTokens, { style: 'h1', color: 'FFFFFF' });
+    assert.strictEqual(receivedTokens[0].background, '#AAAAAA');
+    assert.deepStrictEqual(receivedTokens[0].titleTokens, { style: 'h1', color: '#FFFFFF' });
   });
 
   it('passes resolved tokens with non-default variant', () => {
@@ -161,8 +161,8 @@ describe('Document Compiler: Layout Tokens', () => {
       layouts: {
         tokenSimple: {
           variants: {
-            ['default']: { background: 'AAAAAA', titleTokens: { style: 'h1' } },
-            dark: { background: '000000', titleTokens: { style: 'h2' } },
+            ['default']: { background: '#AAAAAA', titleTokens: { style: 'h1' } },
+            dark: { background: '#000000', titleTokens: { style: 'h2' } },
           },
         },
       },
@@ -172,7 +172,7 @@ describe('Document Compiler: Layout Tokens', () => {
     compileDocument(md, { theme });
 
     assert.strictEqual(receivedTokens.length, 1);
-    assert.strictEqual(receivedTokens[0].background, '000000');
+    assert.strictEqual(receivedTokens[0].background, '#000000');
   });
 
   it('defaults to default variant when variant not specified', () => {
@@ -180,8 +180,8 @@ describe('Document Compiler: Layout Tokens', () => {
       layouts: {
         tokenSimple: {
           variants: {
-            ['default']: { background: 'FFFFFF', titleTokens: {} },
-            dark: { background: '000000', titleTokens: {} },
+            ['default']: { background: '#FFFFFF', titleTokens: {} },
+            dark: { background: '#000000', titleTokens: {} },
           },
         },
       },
@@ -190,7 +190,7 @@ describe('Document Compiler: Layout Tokens', () => {
     const md = HEADER + `---\nlayout: tokenSimple\nvariant: default\ntitle: Hello\n---`;
     compileDocument(md, { theme });
 
-    assert.strictEqual(receivedTokens[0].background, 'FFFFFF');
+    assert.strictEqual(receivedTokens[0].background, '#FFFFFF');
   });
 
   it('does not strip variant from params (it is a reserved key)', () => {
@@ -198,8 +198,8 @@ describe('Document Compiler: Layout Tokens', () => {
       layouts: {
         tokenSimple: {
           variants: {
-            ['default']: { background: 'FFFFFF', titleTokens: {} },
-            dark: { background: '000000', titleTokens: {} },
+            ['default']: { background: '#FFFFFF', titleTokens: {} },
+            dark: { background: '#000000', titleTokens: {} },
           },
         },
       },
@@ -266,13 +266,13 @@ describe('Slot Token Injection', () => {
   });
 
   it('injects text tokens into slot-compiled text nodes', () => {
-    const textTokens = { style: 'h2', color: 'FF0000', lineHeightMultiplier: 1.5 };
+    const textTokens = { style: 'h2', color: '#FF0000', lineHeightMultiplier: 1.5 };
     const theme = mockTheme({
       layouts: {
         slotTokenTest: {
           variants: {
             ['default']: {
-              background: 'FFFFFF',
+              background: '#FFFFFF',
               text: textTokens,
             },
           },
@@ -296,18 +296,18 @@ describe('Slot Token Injection', () => {
     const tokens = textNode.tokens as Record<string, unknown>;
     assert.ok(tokens, 'tokens should be set on the node');
     assert.strictEqual(tokens.style, 'h2');
-    assert.strictEqual(tokens.color, 'FF0000');
+    assert.strictEqual(tokens.color, '#FF0000');
     assert.strictEqual(tokens.lineHeightMultiplier, 1.5);
   });
 
   it('preserves explicit props over injected tokens', () => {
-    const textTokens = { style: 'body', color: '000000' };
+    const textTokens = { style: 'body', color: '#000000' };
     const theme = mockTheme({
       layouts: {
         slotTokenTest: {
           variants: {
             ['default']: {
-              background: 'FFFFFF',
+              background: '#FFFFFF',
               text: textTokens,
             },
           },
@@ -327,7 +327,7 @@ describe('Slot Token Injection', () => {
     // Slot injection merges: { ...layoutDefaults, ...nodeTokens }
     // So heading's 'h2' overrides layout's 'body'.
     assert.strictEqual(tokens.style, 'h2');
-    assert.strictEqual(tokens.color, '000000');
+    assert.strictEqual(tokens.color, '#000000');
   });
 
   it('does not inject tokens when layout has no token key matching component name', () => {
@@ -336,7 +336,7 @@ describe('Slot Token Injection', () => {
         slotTokenTest: {
           variants: {
             ['default']: {
-              background: 'FFFFFF',
+              background: '#FFFFFF',
               // No 'text' key — only 'background'
               text: undefined as any,  // explicitly undefined
             },
@@ -379,8 +379,8 @@ describe('Slot Token Injection', () => {
         noSlotTokenTest: {
           variants: {
             ['default']: {
-              background: 'FFFFFF',
-              text: { style: 'body', color: '000000' },
+              background: '#FFFFFF',
+              text: { style: 'body', color: '#000000' },
             },
           },
         },

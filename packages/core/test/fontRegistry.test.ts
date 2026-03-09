@@ -98,7 +98,7 @@ describe('generateFontFaceCSS — font registry', () => {
           body: {
             variants: {
               default: {
-                color: 'FF0000',
+                color: '#FF0000',
                 style: 'body',
               },
             },
