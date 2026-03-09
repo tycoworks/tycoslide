@@ -52,6 +52,8 @@ Common parameters:
 - `subtitle` - Subtitle text (title layout only)
 - `notes` - Speaker notes
 
+Values are plain YAML — quote only when the value contains special characters like `[`, `]`, or `: ` mid-string. Plain text values do not need quotes.
+
 ## Text Formatting
 
 ```markdown

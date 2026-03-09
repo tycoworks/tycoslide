@@ -388,7 +388,7 @@ Embeds an image. The image path goes in the body (not a parameter).
 |-------|------|-------------|
 | `alt` | string (optional) | Alt text for the image |
 
-### Example
+### Examples
 
 ```markdown
 :::image{alt="Architecture diagram"}
@@ -396,7 +396,17 @@ Embeds an image. The image path goes in the body (not a parameter).
 :::
 ```
 
-Image paths are resolved relative to the current working directory when the CLI runs, not relative to the markdown file. Run the CLI from the directory containing your markdown file, or use absolute paths.
+Paths starting with `$` reference theme-bundled assets:
+
+```markdown
+:::image
+$icons.rocket
+:::
+```
+
+See the [theme source](../packages/theme-default/src/theme.ts) for available asset keys.
+
+File paths resolve relative to the working directory where the CLI runs. Use absolute paths or run the CLI from the directory containing the markdown file.
 
 ---
 

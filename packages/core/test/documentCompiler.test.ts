@@ -308,7 +308,7 @@ title: Has Title
       const md = HEADER + `---
 layout: body
 variant: default
-title: asset.images.photo
+title: $images.photo
 ---
 
 Some body text`;
@@ -316,7 +316,7 @@ Some body text`;
       compileDocument(md, { theme: mockTheme(), assets: testAssets });
       assert.strictEqual(receivedProps.length, 1);
       // Asset refs in non-image fields pass through as raw strings
-      assert.strictEqual(receivedProps[0].title, 'asset.images.photo');
+      assert.strictEqual(receivedProps[0].title, '$images.photo');
     });
   });
 

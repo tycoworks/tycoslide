@@ -118,11 +118,11 @@ describe('Slot Compiler', () => {
       assert.strictEqual(props(nodes, 0).body, '/path/to/image.png');
     });
 
-    it('should compile asset-style image in :::image directive', () => {
-      const nodes = compileSlot(':::image\nasset.illustrations.integrate\n:::');
+    it('should compile $-prefixed asset reference in :::image directive', () => {
+      const nodes = compileSlot(':::image\n$illustrations.integrate\n:::');
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual((nodes[0] as any).componentName, C.Image);
-      assert.strictEqual(props(nodes, 0).body, 'asset.illustrations.integrate');
+      assert.strictEqual(props(nodes, 0).body, '$illustrations.integrate');
     });
   });
 

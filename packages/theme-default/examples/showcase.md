@@ -30,7 +30,7 @@ title: What is tycoslide?
 eyebrow: The Product
 body: "A presentation :purple[**build tool**] that generates :purple[**native PowerPoint decks**] from markdown and TypeScript, with enforced brand compliance through :purple[**design tokens**]."
 variant: hero
-caption: "Markdown for speed. Design tokens for safety. PowerPoint for compatibility."
+caption: Markdown for speed. Design tokens for safety. PowerPoint for compatibility.
 notes: Functional description from Fletch positioning framework. One sentence, four anchors.
 ---
 
@@ -69,13 +69,13 @@ eyebrow: Solution
 cards:
   - title: Presentations as Code
     description: Markdown authoring, TypeScript automation, and CI/CD pipelines. Treat presentations as build artifacts, not manual documents.
-    image: asset.icons.editNote
+    image: $icons.editNote
   - title: Brand Compliance
     description: Design tokens encode your brand in code. Invalid designs fail the build before they ship. Brand compliance becomes a build error.
-    image: asset.icons.shield
+    image: $icons.shield
   - title: PowerPoint Output
     description: Real, editable .pptx files with native shapes, text, and tables. Works offline in PowerPoint, Keynote, and LibreOffice.
-    image: asset.icons.rocket
+    image: $icons.rocket
 variant: flat
 notes: Three pillars from Fletch positioning. Each resolves one side of the tradeoff.
 ---
@@ -85,7 +85,7 @@ layout: image-right
 variant: default
 title: Presentations as Code
 eyebrow: Pillar 1
-image: asset.icons.editNote
+image: $icons.editNote
 notes: |
   Supporting argument 1. Developer workflow automation.
 
@@ -103,7 +103,7 @@ layout: image-left
 variant: default
 title: Brand Compliance
 eyebrow: Pillar 2
-image: asset.icons.shield
+image: $icons.shield
 notes: |
   Supporting argument 2. Compile-time brand enforcement.
 
@@ -121,7 +121,7 @@ layout: image-right
 variant: default
 title: PowerPoint Output
 eyebrow: Pillar 3
-image: asset.icons.rocket
+image: $icons.rocket
 notes: |
   Supporting argument 3. Native PowerPoint compatibility.
 
@@ -218,23 +218,23 @@ variant: default
 title: Roadmap
 eyebrow: Vision
 cards:
-  - title: "On Brand"
-    description: "Design tokens enforce visual identity — colors, fonts, spacing, layouts. Theme-as-code is the foundation. Available today."
-    image: asset.icons.palette
-  - title: "On Message"
-    description: "Field guide in the theme. Content tokens with tiered messaging. Drift detection flags stale claims. A linter for marketing content."
-    image: asset.icons.lightbulb
-  - title: "Content Infrastructure"
-    description: "Dependency graph tracks what depends on what. Change positioning once, every asset rebuilds. Terraform for product marketing."
-    image: asset.icons.accountTree
+  - title: On Brand
+    description: Design tokens enforce visual identity — colors, fonts, spacing, layouts. Theme-as-code is the foundation. Available today.
+    image: $icons.palette
+  - title: On Message
+    description: Field guide in the theme. Content tokens with tiered messaging. Drift detection flags stale claims. A linter for marketing content.
+    image: $icons.lightbulb
+  - title: Content Infrastructure
+    description: Dependency graph tracks what depends on what. Change positioning once, every asset rebuilds. Terraform for product marketing.
+    image: $icons.accountTree
 notes: "Three phases: brand compliance (now) → messaging governance (next) → full content infrastructure (vision)."
 ---
 
 ---
 layout: quote
 variant: default
-quote: "The best presentations are built like software — version-controlled, token-driven, and repeatable."
-attribution: "— The tycoslide manifesto"
+quote: The best presentations are built like software — version-controlled, token-driven, and repeatable.
+attribution: — The tycoslide manifesto
 notes: Pull quote component. Left accent bar, large text, optional attribution. This is the default rendering for markdown blockquotes.
 ---
 

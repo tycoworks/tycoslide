@@ -34,19 +34,7 @@ title: My Presentation
 npm install tycoslide-theme-default
 ```
 
-**Bundled icons:**
-
-```typescript
-import { assets } from 'tycoslide-theme-default';
-
-assets.icons.barChart   // bar_chart (filled)
-assets.icons.group      // group (filled)
-assets.icons.lightbulb  // lightbulb (filled)
-assets.icons.rocket     // rocket_launch (filled)
-assets.icons.shield     // verified_user (filled)
-```
-
-See the [theme source](../packages/theme-default/src/theme.ts) for all default values.
+See the [theme source](../packages/theme-default/src/theme.ts) for all default values, including bundled icon assets.
 
 ---
 
