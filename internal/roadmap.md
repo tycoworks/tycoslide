@@ -12,19 +12,9 @@ Before launch. Must be done before telling the world.
 
 Rebrand `theme-default` as the tycoworks theme — a real brand-aligned theme that demonstrates what tycoslide enables. No generic "default" theme; the whole point is you build your own. The tycoworks theme is the only shipped example and doubles as the showcase. Layouts are done (19 across all tiers). Showcase deck needs updating to demonstrate new components (mermaid, code) and layouts not yet shown. Align tokens to website?
 
-### Test Coverage
-
-Zero-coverage files that need tests:
-
-- `pptxRenderer.ts` (316 lines) — final output stage
-- `pipeline.ts` (164 lines) — layout orchestration
-- `presentation.ts` (278 lines) — public API
-- `themeLoader.ts` — zero dedicated tests
-- Unit conversion functions (`pxToIn`, `inToPx`, `inToPt`, `ptToIn`)
-
 ### Integration Tests
 
-DSL input → full pipeline (expand → measure → layout) → assert element positions/sizes. Not pixel-perfect screenshot comparison, but geometric assertions: "this text node is at (x, y) with size (w, h)". Deterministic because Playwright measurement with embedded fonts is reproducible. The showcase deck doubles as a test fixture.
+DSL input → full pipeline (expand → measure → layout) → assert element positions/sizes. Not pixel-perfect screenshot comparison, but geometric assertions: "this text node is at (x, y) with size (w, h)". Deterministic because Playwright measurement with embedded fonts is reproducible. The showcase deck doubles as a test fixture. Covers the orchestration layers (presentation, pipeline, pptxRenderer) through their real public API boundary — unit testing those individually would just test wiring.
 
 ### Publish to npm
 
