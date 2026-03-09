@@ -390,19 +390,22 @@ Embeds an image. The image path goes in the body (not a parameter).
 
 ### Examples
 
+Standard markdown image syntax works in slots:
+
+```markdown
+![Architecture diagram](./assets/diagram.png)
+![Logo]($icons.rocket)
+```
+
+Or use the directive syntax for consistency with other components:
+
 ```markdown
 :::image{alt="Architecture diagram"}
 ./assets/diagram.png
 :::
 ```
 
-Paths starting with `$` reference theme-bundled assets:
-
-```markdown
-:::image
-$icons.rocket
-:::
-```
+Paths starting with `$` reference theme-bundled assets.
 
 See the [theme source](../packages/theme-default/src/theme.ts) for available asset keys.
 

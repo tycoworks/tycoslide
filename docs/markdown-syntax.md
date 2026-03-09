@@ -140,6 +140,17 @@ Notes appear in PowerPoint's presenter view.
 
 Fenced code blocks (triple backticks with a language tag) produce syntax-highlighted code rendered as an image. See [Components — code](./components.md#code) for supported languages and theme tokens.
 
+## Images
+
+Standard markdown image syntax works in slots:
+
+```markdown
+![Alt text](./assets/photo.png)
+![Logo]($illustrations.logo)
+```
+
+Paths starting with `$` reference theme-bundled assets.
+
 ## Directives
 
 Add cards, images, tables, diagrams, and other content with the triple-colon syntax:
