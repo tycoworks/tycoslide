@@ -5,7 +5,7 @@
 // Slots primarily contain :::directives. Consecutive bare MDAST nodes
 // are compiled via registered MDAST handlers on the component registry.
 
-import type { Root, RootContent } from 'mdast';
+import type { Root, RootContent, Paragraph } from 'mdast';
 import { SYNTAX, type ContainerDirective } from '../model/syntax.js';
 import { markdownProcessor, extractDirectiveBody } from '../../utils/parser.js';
 import { componentRegistry, type ComponentNode } from '../rendering/registry.js';
@@ -151,6 +151,15 @@ function compileBareNode(node: RootContent, source: string): SlideNode | null {
 
   // Thematic breaks (---) are reserved as slide delimiters; silently skip.
   if (node.type === SYNTAX.THEMATIC_BREAK) return null;
+
+  // Unwrap paragraph-wrapped images: remark treats ![alt](src) as inline
+  // content, always wrapping it in a paragraph. Normalize before dispatch.
+  if (node.type === SYNTAX.PARAGRAPH) {
+    const para = node as Paragraph;
+    if (para.children.length === 1 && para.children[0].type === SYNTAX.IMAGE) {
+      node = para.children[0] as RootContent;
+    }
+  }
 
   // Dispatch to registered MDAST handler
   const handler = componentRegistry.getMdastHandler(node.type);

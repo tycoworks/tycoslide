@@ -1,8 +1,9 @@
 // Image component with asset resolution
 
+import type { RootContent, Image } from 'mdast';
 import {
   defineComponent, component, type ComponentNode, type SchemaShape, type ExpansionContext,
-  NODE_TYPE, type ImageNode,
+  NODE_TYPE, type ImageNode, SYNTAX,
   schema,
 } from 'tycoslide';
 import { Component } from './names.js';
@@ -89,6 +90,14 @@ export const imageComponent = defineComponent({
   body: schema.string(),
   params: imageSchema,
   tokens: [],
+
+  mdast: {
+    nodeTypes: [SYNTAX.IMAGE],
+    compile: (node: RootContent): ComponentNode | null => {
+      const img = node as Image;
+      return component(Component.Image, { body: img.url, ...(img.alt ? { alt: img.alt } : {}) });
+    },
+  },
 
   expand: (props: ImageComponentProps, context: ExpansionContext): ImageNode => {
     let src = props.body;

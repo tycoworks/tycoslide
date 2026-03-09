@@ -110,12 +110,6 @@ export const textComponent = defineComponent({
         const content = raw.replace(/^#{1,6}\s*/, '');
         return component(Component.Text, { body: content }, { style });
       }
-      if (node.type === SYNTAX.PARAGRAPH) {
-        const para = node as { children: { type: string }[] };
-        if (para.children.length === 1 && para.children[0].type === SYNTAX.IMAGE) {
-          throw new Error('Images cannot be embedded inline in text. Use :::image directive.');
-        }
-      }
       return component(Component.Text, { body: extractSource(node, source) });
     },
   },
