@@ -81,7 +81,7 @@ export const testimonialComponent = defineComponent({
     // Build content children: optional image, quote text, attribution
     const children = [];
     if (imagePath) {
-      children.push(row({ hAlign: contentHAlign }, imageNode(imagePath)));
+      children.push(row({ hAlign: contentHAlign, height: SIZE.FILL }, imageNode(imagePath)));
     }
     if (!actualQuote) {
       throw new Error(`[tycoslide] Testimonial component requires either a 'quote' attribute or body text.`);
