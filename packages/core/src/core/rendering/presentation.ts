@@ -56,7 +56,7 @@ export class Presentation {
   private renderer: PptxRenderer;
   private _theme: Theme;
   private _assets?: Record<string, unknown>;
-  private masters = new Map<string, { contentBounds: Bounds; positioned: PositionedNode }>();
+  private masters = new Map<string, { contentBounds: Bounds; positioned: PositionedNode; background: Background }>();
   private masterBounds: Bounds;
   private slideCount = 0;
   private deferredSlides: DeferredSlide[] = [];
@@ -170,7 +170,7 @@ export class Presentation {
           const masterContent = await componentRegistry.expandTree(rawMasterContent, expansionContext);
           pendingMasters.set(masterKey, { content: masterContent, contentBounds, background });
           // Collect measurements from master content (full slide — masters position their own elements)
-          pipeline.collectFromTree(masterContent, this.masterBounds, `master-${masterName}-${masterVariant}`);
+          pipeline.collectFromTree(masterContent, this.masterBounds, `master-${masterName}-${masterVariant}`, background);
         }
       }
 
@@ -207,8 +207,9 @@ export class Presentation {
           throw error;
         }
 
-        // Collect measurements from expanded tree
-        pipeline.collectFromTree(expanded, bounds, `slide-${slideIndex + 1}`);
+        // Collect measurements from expanded tree (slide background overrides master)
+        const effectiveBg = slide.background ?? pending?.background ?? existing!.background;
+        pipeline.collectFromTree(expanded, bounds, `slide-${slideIndex + 1}`, effectiveBg);
 
         expandedSlides.push({ deferred, expanded, bounds, masterKey });
       }
@@ -225,7 +226,7 @@ export class Presentation {
         masterPositionedMap.set(masterKey, positioned);
         if (!options?.preview) {
           this.renderer.defineMaster({ name: masterKey, background, content: positioned });
-          this.masters.set(masterKey, { contentBounds, positioned });
+          this.masters.set(masterKey, { contentBounds, positioned, background });
         }
       }
 

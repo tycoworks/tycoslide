@@ -12,7 +12,7 @@ import type { FC } from 'hono/jsx';
 import type { Page } from 'playwright';
 import type { ElementNode, TextNode, ImageNode, LineNode, ShapeNode, ContainerNode, StackNode, SlideNumberNode, TableNode, TableCellData } from '../model/nodes.js';
 import { NODE_TYPE } from '../model/nodes.js';
-import type { Theme, TextStyle, FontFamily, FontWeight, VerticalAlignment, HorizontalAlignment, SizeValue, NormalizedRun, Direction, DashType } from '../model/types.js';
+import type { Theme, TextStyle, FontFamily, FontWeight, VerticalAlignment, HorizontalAlignment, SizeValue, NormalizedRun, Direction, DashType, Background } from '../model/types.js';
 import { FONT_WEIGHT, SIZE, VALIGN, HALIGN, DIRECTION, BORDER_STYLE, SHAPE, DASH_TYPE } from '../model/types.js';
 import type { Bounds } from '../model/bounds.js';
 import { normalizeContent, fontWeightToNumeric, getFontFromFamily } from '../../utils/font.js';
@@ -766,7 +766,7 @@ export interface FontDescriptor {
 }
 
 export function generateLayoutHTML(
-  slides: Array<{ tree: ElementNode; bounds: Bounds }>,
+  slides: Array<{ tree: ElementNode; bounds: Bounds; background: Background }>,
   theme: Theme,
   labels: string[],
   fontNormalRatios?: FontNormalRatios,
@@ -786,8 +786,19 @@ export function generateLayoutHTML(
     const rootCtx: ParentCtx = { direction: DIRECTION.COLUMN, heightIsConstrained: true };
     const styled = styleNode(slide.tree, rootCtx, idCtx, nodeIds, fontNormalRatios);
 
+    // Build background styles from slide's Background (color + opacity only;
+    // image backgrounds deferred to page.goto('file://') migration)
+    const bg = slide.background;
+    const rootStyles: Record<string, string> = {
+      width: `${widthPx}px`,
+      height: `${heightPx}px`,
+    };
+    if (bg.color) {
+      rootStyles.backgroundColor = bgColor(bg.color, bg.opacity ?? 100);
+    }
+
     return (
-      <div class="root" data-slide-index={`${i}`} style={{ width: `${widthPx}px`, height: `${heightPx}px`, backgroundColor: '#FFFFFF' }}>
+      <div class="root" data-slide-index={`${i}`} style={rootStyles}>
         <StyledDiv node={styled} />
       </div>
     );

@@ -5,7 +5,7 @@
 import fs from 'fs';
 import path from 'path';
 import type { Page } from 'playwright';
-import type { Theme } from '../model/types.js';
+import type { Theme, Background } from '../model/types.js';
 import type { ElementNode } from '../model/nodes.js';
 import { Bounds } from '../model/bounds.js';
 import type { HeadlessBrowser } from './browser.js';
@@ -41,7 +41,7 @@ export class LayoutMeasurer {
    * and extracts all measurements in one page.evaluate().
    */
   async measureLayout(
-    slides: Array<{ tree: ElementNode; bounds: Bounds; label: string }>,
+    slides: Array<{ tree: ElementNode; bounds: Bounds; label: string; background: Background }>,
     theme: Theme,
     outputDir: string,
   ): Promise<{ measurements: Map<ElementNode, Bounds>; outputFiles: string[] }> {

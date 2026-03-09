@@ -187,7 +187,7 @@ function tableNode(rows: TableCellData[][], opts?: Partial<Omit<TableNode, 'type
 
 /** Generate layout HTML from an element node tree */
 function genHTML(node: ElementNode, bounds: Bounds) {
-  return generateLayoutHTML([{ tree: node, bounds }], mockTheme, ['test-slide']);
+  return generateLayoutHTML([{ tree: node, bounds, background: {} }], mockTheme, ['test-slide']);
 }
 
 describe('HTML Measurement Generation', () => {
@@ -1116,9 +1116,9 @@ describe('HTML Measurement Generation', () => {
 
     test('multi-slide generates prev/next navigation links', async () => {
       const slides = [
-        { tree: colNode(textNode('Slide 1')) as ElementNode, bounds },
-        { tree: colNode(textNode('Slide 2')) as ElementNode, bounds },
-        { tree: colNode(textNode('Slide 3')) as ElementNode, bounds },
+        { tree: colNode(textNode('Slide 1')) as ElementNode, bounds, background: {} },
+        { tree: colNode(textNode('Slide 2')) as ElementNode, bounds, background: {} },
+        { tree: colNode(textNode('Slide 3')) as ElementNode, bounds, background: {} },
       ];
       const result = generateLayoutHTML(slides, mockTheme, ['slide-1', 'slide-2', 'slide-3']);
       assert.strictEqual(result.perSlideHtml.length, 3);
@@ -1146,6 +1146,45 @@ describe('HTML Measurement Generation', () => {
       assert.ok(perSlideHtml[0].startsWith('<!DOCTYPE html>'), 'Should start with DOCTYPE');
       assert.ok(perSlideHtml[0].includes('<html>'), 'Should contain html tag');
       assert.ok(perSlideHtml[0].includes('<body>'), 'Should contain body tag');
+    });
+  });
+
+  describe('Slide Background', () => {
+    test('color background renders as hex', async () => {
+      const node = colNode(textNode('Hello'));
+      const { html } = generateLayoutHTML(
+        [{ tree: node, bounds, background: { color: '120E22' } }],
+        mockTheme, ['test-slide'],
+      );
+      assert.ok(html.includes('background-color:#120E22'), 'Should render hex background color');
+      assert.ok(!html.includes('#FFFFFF'), 'Should not contain white fallback');
+    });
+
+    test('color with opacity renders as rgba', async () => {
+      const node = colNode(textNode('Hello'));
+      const { html } = generateLayoutHTML(
+        [{ tree: node, bounds, background: { color: 'FF0000', opacity: 50 } }],
+        mockTheme, ['test-slide'],
+      );
+      assert.ok(html.includes('rgba(255,0,0,0.5)'), 'Should render rgba with 50% opacity');
+    });
+
+    test('color with full opacity renders as hex', async () => {
+      const node = colNode(textNode('Hello'));
+      const { html } = generateLayoutHTML(
+        [{ tree: node, bounds, background: { color: '0000FF', opacity: 100 } }],
+        mockTheme, ['test-slide'],
+      );
+      assert.ok(html.includes('background-color:#0000FF'), 'Should render hex at full opacity');
+    });
+
+    test('empty background object sets no background-color', async () => {
+      const node = colNode(textNode('Hello'));
+      const { html } = generateLayoutHTML(
+        [{ tree: node, bounds, background: {} }],
+        mockTheme, ['test-slide'],
+      );
+      assert.ok(!html.includes('background-color:'), 'Empty background should not set any background-color');
     });
   });
 });

@@ -10,7 +10,7 @@ Before launch. Must be done before telling the world.
 
 ### Proper Preview
 
-Collapse Master + Slide together and fix prev / next navigation.
+Collapse Master + Slide together and fix prev / next navigation. Background colors now render in HTML previews (threaded through pipeline → measurement → layoutHtml). Images (content and background) don't render in Playwright screenshots because `page.setContent()` creates an `about:blank` origin where file:// silently fails. Fix: switch to `page.goto('file://...')` like Marp CLI — write measurement HTML to temp file, navigate with file:// origin, all local resources resolve naturally. Would also eliminate font base64 encoding.
 
 ### tycoworks Theme & Showcase
 

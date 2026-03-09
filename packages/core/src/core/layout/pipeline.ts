@@ -5,7 +5,7 @@
 import type { ElementNode, PositionedNode, ContainerNode, StackNode, TextNode } from '../model/nodes.js';
 import { NODE_TYPE } from '../model/nodes.js';
 import type { Bounds } from '../model/bounds.js';
-import type { Theme } from '../model/types.js';
+import type { Theme, Background } from '../model/types.js';
 import { HeadlessBrowser } from './browser.js';
 import { LayoutMeasurer } from './measurement.js';
 import { HtmlRenderer } from './htmlRenderer.js';
@@ -20,6 +20,7 @@ interface SlideMeasurementEntry {
   tree: ElementNode;
   bounds: Bounds;
   label: string;
+  background: Background;
 }
 
 // ============================================
@@ -63,8 +64,8 @@ export class LayoutPipeline {
    * Collect a slide for measurement.
    * Call this for each slide after component expansion.
    */
-  collectFromTree(node: ElementNode, bounds: Bounds, label: string): void {
-    this.slides.push({ tree: node, bounds, label });
+  collectFromTree(node: ElementNode, bounds: Bounds, label: string, background: Background): void {
+    this.slides.push({ tree: node, bounds, label, background });
   }
 
   /**
