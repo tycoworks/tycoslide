@@ -8,10 +8,6 @@ Now / Next / Later — unified from todo, review, and roadmap docs.
 
 Before launch. Must be done before telling the world.
 
-### Proper Preview
-
-Collapse Master + Slide together and fix prev / next navigation. Background colors now render in HTML previews (threaded through pipeline → measurement → layoutHtml). Images (content and background) don't render in Playwright screenshots because `page.setContent()` creates an `about:blank` origin where file:// silently fails. Fix: switch to `page.goto('file://...')` like Marp CLI — write measurement HTML to temp file, navigate with file:// origin, all local resources resolve naturally. Would also eliminate font base64 encoding.
-
 ### tycoworks Theme & Showcase
 
 Rebrand `theme-default` as the tycoworks theme — a real brand-aligned theme that demonstrates what tycoslide enables. No generic "default" theme; the whole point is you build your own. The tycoworks theme is the only shipped example and doubles as the showcase. Layouts are done (19 across all tiers). Showcase deck needs updating to demonstrate new components (mermaid, code) and layouts not yet shown. Align tokens to website?
