@@ -4,7 +4,21 @@ Components are the building blocks of tycoslide presentations. All built-in comp
 
 ## How Components Work
 
-In markdown, a component looks like this:
+Components are used in markdown in two ways.
+
+### Markdown syntax
+
+Some components have their own markdown syntax. For example, images:
+
+```markdown
+![Architecture diagram](./assets/diagram.png)
+```
+
+Use markdown syntax when default parameters are sufficient.
+
+### Directive syntax
+
+All components share a common `:::` syntax that gives access to parameters:
 
 ```markdown
 :::card{title="Feature Name"}
@@ -12,15 +26,13 @@ Description of the feature.
 :::
 ```
 
-That directive has four parts:
+Use directive syntax when you need to set parameters or when the component has no markdown shorthand.
 
-**Name** — `card` identifies which component to use. Built-in names are defined in `tycoslide-components`. Custom components use any string.
+A directive has three parts:
 
-**Directive** — the `:::` fence is how you use a component in markdown. Not all components have directives. Layout components (`row`, `column`, `stack`, `grid`) are TypeScript DSL only.
-
-**Parameters** — `title` configures the component. Parameters are passed in curly braces using `key="value"` syntax. Boolean and numeric values are still quoted: `columns="3"`.
-
-**Body content** — the text between the opening and closing fences. Some components use the body as primary content (e.g., `quote`, `testimonial`), some treat it as a file path (e.g., `image`), and some ignore it.
+- **Name** — `:::card` identifies which component to use. The `:::` markers delimit the component in markdown.
+- **Parameters** — `title` configures the component. Parameters are passed in curly braces using `key="value"` syntax. Boolean and numeric values are still quoted: `columns="3"`.
+- **Body content** — the text between the fences. Some components use the body as primary content (e.g., `quote`, `testimonial`), some treat it as a file path (e.g., `image`), and some ignore it.
 
 ---
 
@@ -28,21 +40,21 @@ That directive has four parts:
 
 ### Content Components
 
-| Component | Description | Markdown |
-|-----------|-------------|----------|
-| [card](#card) | Content card with optional image, title, and description | Yes |
-| [quote](#quote) | Blockquote with optional attribution and image | Yes |
-| [testimonial](#testimonial) | Quote card with optional image and attribution | Yes |
-| [table](#table) | Native PowerPoint table with header support | Yes |
-| [image](#image) | Embedded image | Yes |
-| [mermaid](#mermaid) | Auto-themed Mermaid diagram rendered as PNG | Yes |
-| [code](#code) | Syntax-highlighted code block rendered as PNG | Yes |
-| [line](#line) | Horizontal or vertical rule | Yes |
-| [shape](#shape) | Filled/outlined area shape | Yes |
-| [text](#text) | Single paragraph of formatted text with heading style support | No (auto) |
-| [plainText](#plaintext) | Unformatted text for titles, captions, and attributions | No (DSL) |
-| [list](#list) | Bullet and numbered lists | No (auto) |
-| [slideNumber](#slidenumber) | Slide number element | No (master) |
+| Component | Description | Syntax |
+|-----------|-------------|--------|
+| [card](#card) | Content card with optional image, title, and description | `:::card` |
+| [quote](#quote) | Blockquote with optional attribution and image | `:::quote` |
+| [testimonial](#testimonial) | Quote card with optional image and attribution | `:::testimonial` |
+| [table](#table) | Native PowerPoint table with header support | `\| table \|` or `:::table` |
+| [image](#image) | Embedded image | `![alt](path)` or `:::image` |
+| [mermaid](#mermaid) | Auto-themed Mermaid diagram rendered as PNG | `:::mermaid` |
+| [code](#code) | Syntax-highlighted code block rendered as PNG | Fenced code block or `:::code` |
+| [line](#line) | Horizontal or vertical rule | `:::line` |
+| [shape](#shape) | Filled/outlined area shape | `:::shape` |
+| [text](#text) | Single paragraph of formatted text with heading style support | Markdown and TypeScript |
+| [plainText](#plaintext) | Unformatted text for titles, captions, and attributions | TypeScript only |
+| [list](#list) | Bullet and numbered lists | Markdown and TypeScript |
+| [slideNumber](#slidenumber) | Slide number element | TypeScript only |
 
 ### Layout Components
 
@@ -284,9 +296,11 @@ Design systems reduce decision fatigue across teams.
 
 ## table
 
-Native PowerPoint table with borders, cell merging, and text wrapping. GFM tables in the directive body always produce one header row.
+Native PowerPoint table with borders, cell merging, and text wrapping.
 
 Cell content supports formatting (`**bold**`, `*italic*`, `:accent[color]`).
+
+Markdown tables render automatically with one header row. The `:::table` directive adds header column support and theme variants.
 
 ### Parameters
 
@@ -294,7 +308,15 @@ Cell content supports formatting (`**bold**`, `*italic*`, `:accent[color]`).
 |-------|------|-------------|
 | `headerColumns` | number | Number of header columns (default: 0) |
 
-### Example
+### Examples
+
+```markdown
+| Feature      | Basic | Pro   |
+|--------------|-------|-------|
+| Storage      | 10GB  | 100GB |
+| Users        | 1     | 10    |
+| Support      | Email | 24/7  |
+```
 
 ```markdown
 :::table{headerColumns=1}
@@ -373,24 +395,19 @@ No directive parameters.
 
 ## image
 
-Embeds an image. The image path goes in the body (not a parameter).
+Embeds an image. In markdown syntax, the path goes in the URL position. In the directive form, the path goes in the body.
 
 ### Parameters
 
 | Param | Type | Description |
 |-------|------|-------------|
-| `alt` | string (optional) | Alt text for the image |
+| `alt` | string | Alt text for the image |
 
 ### Examples
 
-Standard markdown image syntax works in slots:
-
 ```markdown
 ![Architecture diagram](./assets/diagram.png)
-![Logo]($icons.rocket)
 ```
-
-Or use the directive syntax for consistency with other components:
 
 ```markdown
 :::image{alt="Architecture diagram"}
@@ -398,11 +415,9 @@ Or use the directive syntax for consistency with other components:
 :::
 ```
 
-Paths starting with `$` reference theme-bundled assets.
+Paths starting with `$` reference theme-bundled assets. See the [theme source](../packages/theme-default/src/theme.ts) for available asset keys.
 
-See the [theme source](../packages/theme-default/src/theme.ts) for available asset keys.
-
-File paths resolve relative to the working directory where the CLI runs. Use absolute paths or run the CLI from the directory containing the markdown file.
+File paths resolve relative to the working directory where the CLI runs.
 
 ---
 

@@ -1,6 +1,6 @@
 # Markdown Syntax
 
-tycoslide uses GitHub Flavored Markdown (GFM) for slide content — the same dialect used in GitHub README files, with extensions for directives and inline accents.
+tycoslide uses GitHub Flavored Markdown for slide content, with extensions for directives and inline accents.
 
 ## Slide Structure
 
@@ -87,6 +87,8 @@ Accent names are defined by your theme as an open set — any key in the theme's
 
 ## Lists
 
+Bullet and numbered lists with inline text formatting.
+
 ```markdown
 - First item
 - Second item
@@ -110,7 +112,7 @@ Nested lists use 2-space indent:
 
 ## Tables
 
-Standard GFM (GitHub Flavored Markdown) table syntax with optional per-column alignment:
+Markdown tables with inline text formatting.
 
 ```markdown
 | Left | Center | Right |
@@ -118,7 +120,7 @@ Standard GFM (GitHub Flavored Markdown) table syntax with optional per-column al
 | L    | C      | R     |
 ```
 
-For more control over table styling, use `:::table` (see [Components — table](./components.md#table)).
+For header columns, content alignment, and other parameters, use `:::table`. See [Components — table](./components.md#table).
 
 ## Speaker Notes
 
@@ -138,22 +140,30 @@ Notes appear in PowerPoint's presenter view.
 
 ## Code Blocks
 
-Fenced code blocks (triple backticks with a language tag) produce syntax-highlighted code rendered as an image. See [Components — code](./components.md#code) for supported languages and theme tokens.
+Syntax-highlighted code rendered as an image. The language tag after the opening fences is required.
+
+````markdown
+```sql
+SELECT * FROM orders WHERE status = 'active';
+```
+````
+
+See [Components — code](./components.md#code) for supported languages and theme tokens.
 
 ## Images
 
-Standard markdown image syntax works in slots:
+Embed images from local files or theme-bundled assets.
 
 ```markdown
 ![Alt text](./assets/photo.png)
 ![Logo]($illustrations.logo)
 ```
 
-Paths starting with `$` reference theme-bundled assets.
+Paths starting with `$` reference theme-bundled assets. For the `:::image` directive and parameters, see [Components — image](./components.md#image).
 
 ## Directives
 
-Add cards, images, tables, diagrams, and other content with the triple-colon syntax:
+Components that do not have markdown shorthand use the `:::` directive syntax:
 
 ```markdown
 :::name{param="value"}
@@ -161,21 +171,7 @@ Body content.
 :::
 ```
 
-| Directive | What it adds |
-|-----------|-------------|
-| `:::card` | Content card with title and description |
-| `:::quote` | Blockquote with attribution |
-| `:::testimonial` | Quote card with image and attribution |
-| `:::table` | Styled table with header support |
-| `:::image` | Embedded image |
-| `:::mermaid` | Auto-themed diagram |
-| `:::code` | Syntax-highlighted code block |
-| `:::line` | Horizontal or vertical rule |
-| `:::shape` | Filled area shape |
-
-Fenced code blocks (triple backticks with a language tag) also produce syntax-highlighted output — no `:::` needed.
-
-For parameters and examples, see [Components](./components.md#content-components).
+For a complete reference of all directives, parameters, and examples, see [Components](./components.md#content-components).
 
 ## Complete Example
 
