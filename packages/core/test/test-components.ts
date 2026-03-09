@@ -46,7 +46,6 @@ export const textComponent = defineComponent({
     hAlign: schema.string().optional(),
     vAlign: schema.string().optional(),
     content: schema.string().optional(),
-    variant: schema.string().optional(),
   },
   tokens: ['color', 'style', 'linkColor', 'linkUnderline', 'hAlign', 'vAlign'],
   mdast: {
@@ -137,7 +136,6 @@ export const cardComponent = defineComponent({
   params: {
     title: schema.string().optional(),
     description: schema.string().optional(),
-    variant: schema.string().optional(),
   },
   tokens: ['background', 'padding', 'gap', 'hAlign', 'vAlign', 'title', 'description'],
   expand: (props: any, _ctx: ExpansionContext, tokens: any): any => {
@@ -162,7 +160,6 @@ export const imageComponent = defineComponent({
 export const lineComponent = defineComponent({
   name: C.Line,
   params: {
-    variant: schema.string().optional(),
     beginArrow: schema.string().optional(),
     endArrow: schema.string().optional(),
   },
@@ -174,7 +171,6 @@ export const tableComponent = defineComponent({
   name: C.Table,
   body: schema.string(),
   params: {
-    variant: schema.string().optional(),
     headerColumns: schema.number().optional(),
   },
   tokens: [

@@ -127,12 +127,11 @@ describe('Slot Compiler', () => {
   });
 
   describe(':::table directive', () => {
-    it('should deserialize :::table{variant="clean"} with GFM table body', () => {
-      const md = ':::table{variant="clean"}\n| A | B |\n|---|---|\n| C | D |\n:::';
+    it('should deserialize :::table with GFM table body', () => {
+      const md = ':::table\n| A | B |\n|---|---|\n| C | D |\n:::';
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual((nodes[0] as any).componentName, C.Table);
-      assert.strictEqual(props(nodes, 0).variant, 'clean');
       // Body contains the raw GFM table text (parsed in expand, not deserialize)
       assert.ok(props(nodes, 0).body.includes('| A | B |'));
     });
@@ -142,14 +141,19 @@ describe('Slot Compiler', () => {
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual((nodes[0] as any).componentName, C.Table);
-      assert.strictEqual(props(nodes, 0).variant, undefined);
       assert.ok(props(nodes, 0).body.includes('| X | Y |'));
     });
 
-    it('should pass headerColumns from attributes', () => {
-      const md = ':::table{variant="clean" headerColumns="1"}\n| A | B |\n|---|---|\n| C | D |\n:::';
+    it('should pass headerColumns from attributes with body', () => {
+      const md = ':::table{headerColumns="1"}\n| A | B |\n|---|---|\n| C | D |\n:::';
       const nodes = compileSlot(md);
       assert.strictEqual(props(nodes, 0).headerColumns, 1);
+      assert.ok(props(nodes, 0).body.includes('| A | B |'));
+    });
+
+    it('should reject unknown directive parameters', () => {
+      const md = ':::table{foo="bar"}\n| A | B |\n|---|---|\n| C | D |\n:::';
+      assert.throws(() => compileSlot(md), /Invalid parameters for component 'table'/);
     });
   });
 

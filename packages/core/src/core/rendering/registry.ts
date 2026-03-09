@@ -161,10 +161,23 @@ function buildDeserializer(
 ): DirectiveDeserializer {
   return (attributes, body) => {
     const coerced = coerceAttributes(attributes);
-    if (body && body.trim()) {
-      coerced.body = body.trim();
+    let props: Record<string, unknown>;
+    if (paramsSchema) {
+      try {
+        props = paramsSchema.strict().parse(coerced);
+      } catch (e: unknown) {
+        if (e instanceof z.ZodError) {
+          const issues = e.issues.map(i => i.message).join('; ');
+          throw new Error(`Invalid parameters for component '${componentName}': ${issues}`);
+        }
+        throw e;
+      }
+    } else {
+      props = coerced;
     }
-    const props = paramsSchema ? paramsSchema.passthrough().parse(coerced) : coerced;
+    if (body && body.trim()) {
+      props.body = body.trim();
+    }
     return component(componentName, props);
   };
 }
