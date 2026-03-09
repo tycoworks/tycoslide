@@ -44,6 +44,7 @@ export class LayoutMeasurer {
     slides: Array<{ tree: ElementNode; bounds: Bounds; label: string; background: Background }>,
     theme: Theme,
     outputDir: string,
+    imagePathMap: Map<string, string>,
   ): Promise<{ measurements: Map<ElementNode, Bounds>; outputFiles: string[] }> {
     if (!this.page) {
       throw new Error('Measurer not initialized. Call init() first.');
@@ -51,14 +52,14 @@ export class LayoutMeasurer {
 
     // Ensure font metrics are measured (idempotent)
     if (this.fontNormalRatios.size === 0) {
-      const result = await measureFontNormalRatios(this.page, theme);
+      const result = await measureFontNormalRatios(this.page, theme, outputDir);
       this.fontNormalRatios = result.ratios;
       this.fontDescriptors = result.fonts;
     }
 
     // Generate single HTML page containing all slides
     const labels = slides.map(s => s.label);
-    const { html, slideNodeIds, perSlideHtml } = generateLayoutHTML(slides, theme, labels, this.fontNormalRatios);
+    const { html, slideNodeIds, perSlideHtml } = generateLayoutHTML(slides, theme, labels, this.fontNormalRatios, imagePathMap);
 
     const outputFiles: string[] = [];
     for (let i = 0; i < perSlideHtml.length; i++) {
@@ -68,8 +69,10 @@ export class LayoutMeasurer {
       outputFiles.push(filePath);
     }
 
-    // One setContent, one font preload
-    await this.page.setContent(html);
+    // Write measurement HTML to file and navigate with file:// origin
+    const measurementPath = path.join(outputDir, '_measurement.html');
+    fs.writeFileSync(measurementPath, html);
+    await this.page.goto('file://' + measurementPath);
     await preloadFonts(this.page, this.fontDescriptors);
 
     // Verify all fonts loaded

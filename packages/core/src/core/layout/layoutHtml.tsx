@@ -165,7 +165,8 @@ function styleContainer(
   nodeId: string,
   idCtx: IdContext,
   nodeIds: Map<ElementNode, string>,
-  fontRatios?: FontNormalRatios,
+  fontRatios: FontNormalRatios,
+  imagePathMap: Map<string, string>,
 ): StyledNode {
   const isRow = node.direction === DIRECTION.ROW;
   const gapPx = inToPx(node.gap);
@@ -197,7 +198,7 @@ function styleContainer(
   return {
     nodeId,
     styles,
-    children: node.children.map(child => styleNode(child, ctx, idCtx, nodeIds, fontRatios)),
+    children: node.children.map(child => styleNode(child, ctx, idCtx, nodeIds, fontRatios, imagePathMap)),
   };
 }
 
@@ -207,7 +208,8 @@ function styleStack(
   nodeId: string,
   idCtx: IdContext,
   nodeIds: Map<ElementNode, string>,
-  fontRatios?: FontNormalRatios,
+  fontRatios: FontNormalRatios,
+  imagePathMap: Map<string, string>,
 ): StyledNode {
   const gridMin = 'min-content';
   const styles: Record<string, string | number> = {
@@ -225,7 +227,7 @@ function styleStack(
       // Stack child wrapper: same grid cell, flex column
       nodeId: '',
       styles: { gridArea: '1 / 1 / 2 / 2', display: 'flex', flexDirection: DIRECTION.COLUMN, containerType: 'inline-size' },
-      children: [styleNode(child, ctx, idCtx, nodeIds, fontRatios)],
+      children: [styleNode(child, ctx, idCtx, nodeIds, fontRatios, imagePathMap)],
     })),
   };
 }
@@ -234,7 +236,7 @@ function styleText(
   node: TextNode,
   parent: ParentCtx,
   nodeId: string,
-  fontRatios?: FontNormalRatios,
+  fontRatios: FontNormalRatios,
 ): StyledNode {
   const style = node.resolvedStyle;
   const runs = normalizeContent(node.content);
@@ -242,7 +244,7 @@ function styleText(
   const defaultFont = getFontFromFamily(style.fontFamily, defaultWeight);
   const lineSpacingMultiple = node.lineHeightMultiplier;
   const fontSizePx = ptToPx(style.fontSize);
-  const normalRatio = fontRatios?.get(defaultFont.name);
+  const normalRatio = fontRatios.get(defaultFont.name);
   const cssLineHeight = normalRatio ? lineSpacingMultiple * normalRatio : lineSpacingMultiple;
   const bulletIndentPx = ptToPx(node.bulletIndentPt);
   const textAlign = node.hAlign === HALIGN.RIGHT ? 'right' : node.hAlign === HALIGN.CENTER ? 'center' : 'left';
@@ -276,6 +278,7 @@ function styleImage(
   node: ImageNode,
   parent: ParentCtx,
   nodeId: string,
+  imagePathMap: Map<string, string>,
 ): StyledNode {
   const dims = readImageDimensions(node.src);
   if (!dims) {
@@ -317,11 +320,11 @@ function styleImage(
       : proportionalCap;
   }
 
-  // Add image preview: works in browser (file:// origin), degrades gracefully in Playwright.
   // Position absolute so the img's intrinsic size doesn't influence the container's flex basis.
   styles.position = 'relative';
   styles.overflow = 'hidden';
-  const imgSrc = path.resolve(node.src);
+  const resolved = path.resolve(node.src);
+  const imgSrc = imagePathMap.get(resolved) ?? resolved;
   return { nodeId, styles, children: [], innerHTML: `<img src="${imgSrc}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block" />` };
 }
 
@@ -427,7 +430,7 @@ function styleTable(
   nodeId: string,
   idCtx: IdContext,
   nodeIds: Map<ElementNode, string>,
-  fontRatios?: FontNormalRatios,
+  fontRatios: FontNormalRatios,
 ): StyledNode {
   const cellNodes = getTableCellNodes(node);
   const numCols = node.rows[0]?.length ?? 0;
@@ -537,20 +540,21 @@ export function styleNode(
   parent: ParentCtx,
   idCtx: IdContext,
   nodeIds: Map<ElementNode, string>,
-  fontRatios?: FontNormalRatios,
+  fontRatios: FontNormalRatios,
+  imagePathMap: Map<string, string>,
 ): StyledNode {
   const nodeId = generateNodeId(idCtx);
   nodeIds.set(node, nodeId);
 
   switch (node.type) {
     case NODE_TYPE.CONTAINER:
-      return styleContainer(node as ContainerNode, parent, nodeId, idCtx, nodeIds, fontRatios);
+      return styleContainer(node as ContainerNode, parent, nodeId, idCtx, nodeIds, fontRatios, imagePathMap);
     case NODE_TYPE.STACK:
-      return styleStack(node as StackNode, parent, nodeId, idCtx, nodeIds, fontRatios);
+      return styleStack(node as StackNode, parent, nodeId, idCtx, nodeIds, fontRatios, imagePathMap);
     case NODE_TYPE.TEXT:
       return styleText(node as TextNode, parent, nodeId, fontRatios);
     case NODE_TYPE.IMAGE:
-      return styleImage(node as ImageNode, parent, nodeId);
+      return styleImage(node as ImageNode, parent, nodeId, imagePathMap);
     case NODE_TYPE.LINE:
       return styleLine(node as LineNode, parent, nodeId);
     case NODE_TYPE.SHAPE:
@@ -769,7 +773,8 @@ export function generateLayoutHTML(
   slides: Array<{ tree: ElementNode; bounds: Bounds; background: Background }>,
   theme: Theme,
   labels: string[],
-  fontNormalRatios?: FontNormalRatios,
+  fontNormalRatios: FontNormalRatios,
+  imagePathMap: Map<string, string>,
 ): LayoutHtmlResult {
   const idCtx: IdContext = { counter: 0 };
   const slideNodeIds: Array<Map<ElementNode, string>> = [];
@@ -784,10 +789,8 @@ export function generateLayoutHTML(
     const heightPx = inToPx(slide.bounds.h);
 
     const rootCtx: ParentCtx = { direction: DIRECTION.COLUMN, heightIsConstrained: true };
-    const styled = styleNode(slide.tree, rootCtx, idCtx, nodeIds, fontNormalRatios);
+    const styled = styleNode(slide.tree, rootCtx, idCtx, nodeIds, fontNormalRatios, imagePathMap);
 
-    // Build background styles from slide's Background (color + opacity only;
-    // image backgrounds deferred to page.goto('file://') migration)
     const bg = slide.background;
     const rootStyles: Record<string, string> = {
       width: `${widthPx}px`,
@@ -795,6 +798,12 @@ export function generateLayoutHTML(
     };
     if (bg.color) {
       rootStyles.backgroundColor = bgColor(bg.color, bg.opacity ?? 100);
+    }
+    if (bg.path) {
+      const resolvedBg = path.resolve(bg.path);
+      const bgSrc = imagePathMap.get(resolvedBg) ?? resolvedBg;
+      rootStyles.backgroundImage = `url('${bgSrc}')`;
+      rootStyles.backgroundSize = 'cover';
     }
 
     return (
@@ -871,8 +880,6 @@ const FONT_FORMATS: Record<string, { mime: string; format: string }> = {
   '.otf': { mime: 'font/opentype', format: 'opentype' },
 };
 
-const fontFaceCSSCache = new Map<string, { css: string; fonts: FontDescriptor[] }>();
-
 const WEIGHT_KEYS: FontWeight[] = ['light', 'normal', 'bold'];
 
 /** Duck-type check: is this value a FontFamily object? */
@@ -942,12 +949,7 @@ export function generateFontFaceCSS(theme: Theme): { css: string; fonts: FontDes
     }
   }
 
-  // Cache check (after validation — validation must always run)
-  const cacheKey = JSON.stringify(fontPaths.sort());
-  const cached = fontFaceCSSCache.get(cacheKey);
-  if (cached) return cached;
-
-  // Embed fonts from theme.fonts as base64 @font-face rules
+  // Generate @font-face rules with relative paths (fonts copied to outputDir/fonts/)
   const fontFaces: string[] = [];
   const fonts: FontDescriptor[] = [];
   const seenPaths = new Set<string>();
@@ -960,8 +962,6 @@ export function generateFontFaceCSS(theme: Theme): { css: string; fonts: FontDes
       seenPaths.add(font.path);
       const numericWeight = fontWeightToNumeric(weight);
       fonts.push({ name: font.name, weight: numericWeight });
-      const fontData = fs.readFileSync(font.path);
-      const base64 = fontData.toString('base64');
       const ext = path.extname(font.path).toLowerCase();
       const fontFormat = FONT_FORMATS[ext];
       if (!fontFormat) {
@@ -970,16 +970,14 @@ export function generateFontFaceCSS(theme: Theme): { css: string; fonts: FontDes
       fontFaces.push(`
           @font-face {
             font-family: '${font.name}';
-            src: url('data:${fontFormat.mime};base64,${base64}') format('${fontFormat.format}');
+            src: url('fonts/${path.basename(font.path)}') format('${fontFormat.format}');
             font-weight: ${numericWeight};
           }
         `);
     }
   }
 
-  const result = { css: fontFaces.join('\n'), fonts };
-  fontFaceCSSCache.set(cacheKey, result);
-  return result;
+  return { css: fontFaces.join('\n'), fonts };
 }
 
 export async function preloadFonts(page: Page, fonts: FontDescriptor[]): Promise<void> {
@@ -999,11 +997,12 @@ export async function preloadFonts(page: Page, fonts: FontDescriptor[]): Promise
   }
 }
 
-export async function measureFontNormalRatios(page: Page, theme: Theme): Promise<{ ratios: FontNormalRatios; fonts: FontDescriptor[] }> {
+export async function measureFontNormalRatios(page: Page, theme: Theme, outputDir: string): Promise<{ ratios: FontNormalRatios; fonts: FontDescriptor[] }> {
   const { css: fontFaceCSS, fonts } = generateFontFaceCSS(theme);
-  await page.setContent(
-    `<!DOCTYPE html><html><head><style>${fontFaceCSS}</style></head><body></body></html>`
-  );
+  const html = `<!DOCTYPE html><html><head><style>${fontFaceCSS}</style></head><body></body></html>`;
+  const htmlPath = path.join(outputDir, '_font-ratios.html');
+  fs.writeFileSync(htmlPath, html);
+  await page.goto('file://' + htmlPath);
   await preloadFonts(page, fonts);
 
   const fontNames = new Set<string>();

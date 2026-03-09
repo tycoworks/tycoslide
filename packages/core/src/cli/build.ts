@@ -51,7 +51,8 @@ export async function build(inputPath: string, options: BuildOptions): Promise<v
   });
 
   const basename = path.basename(resolved, path.extname(resolved));
-  const outputDir = path.resolve(`${basename}-html`);
+  const outputDir = path.resolve(`${basename}-build`);
+  fs.rmSync(outputDir, { recursive: true, force: true });
   fs.mkdirSync(outputDir, { recursive: true });
 
   if (options.preview) {

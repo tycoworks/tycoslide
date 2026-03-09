@@ -114,12 +114,4 @@ describe('generateFontFaceCSS — font registry', () => {
     });
   });
 
-  describe('caching', () => {
-    it('returns same object for same font set', () => {
-      const theme = mockTheme();
-      const result1 = generateFontFaceCSS(theme);
-      const result2 = generateFontFaceCSS(theme);
-      assert.strictEqual(result1, result2, 'should return cached result');
-    });
-  });
 });

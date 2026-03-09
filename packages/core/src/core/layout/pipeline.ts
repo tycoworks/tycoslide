@@ -9,6 +9,7 @@ import type { Theme, Background } from '../model/types.js';
 import { HeadlessBrowser } from './browser.js';
 import { LayoutMeasurer } from './measurement.js';
 import { HtmlRenderer } from './htmlRenderer.js';
+import { copyFonts, copyImages } from './assetCopier.js';
 import { log } from '../../utils/log.js';
 
 // ============================================
@@ -43,7 +44,7 @@ interface SlideMeasurementEntry {
  *   }
  *
  *   // Execute all measurements
- *   await pipeline.executeMeasurements(theme);
+ *   await pipeline.executeMeasurements(theme);  // uses outputDir from constructor
  *
  *   // Build positioned tree for each slide
  *   const positioned = pipeline.computeLayout(tree, bounds);
@@ -55,9 +56,11 @@ export class LayoutPipeline {
   private renderer: HtmlRenderer;
   private measurements: Map<ElementNode, Bounds> | null = null;
   private outputFiles: string[] = [];
+  private outputDir: string;
 
-  constructor(options?: { deviceScaleFactor?: number }) {
-    this.renderer = new HtmlRenderer(this.browser, options);
+  constructor(options: { deviceScaleFactor?: number; outputDir: string }) {
+    this.outputDir = options.outputDir;
+    this.renderer = new HtmlRenderer(this.browser, options.outputDir, { deviceScaleFactor: options.deviceScaleFactor });
   }
 
   /**
@@ -69,10 +72,12 @@ export class LayoutPipeline {
   }
 
   /**
-   * Launch browser early (for component rendering during expansion).
+   * Copy fonts and launch browser for component rendering during expansion.
+   * Fonts must be on disk before any browser page loads @font-face CSS.
    * Idempotent — safe to call multiple times.
    */
-  async launch(): Promise<void> {
+  async launch(theme: Theme): Promise<void> {
+    copyFonts(theme, this.outputDir);
     await this.browser.launch();
     await this.measurer.init();
   }
@@ -89,7 +94,7 @@ export class LayoutPipeline {
    * Execute all collected measurements using the browser.
    * Stores results internally for use by computeLayout.
    */
-  async executeMeasurements(theme: Theme, outputDir: string): Promise<void> {
+  async executeMeasurements(theme: Theme): Promise<void> {
     if (this.slides.length === 0) {
       this.measurements = new Map();
       this.outputFiles = [];
@@ -98,12 +103,14 @@ export class LayoutPipeline {
 
     // Launch browser if needed (idempotent)
     if (!this.browser.isLaunched()) {
-      await this.browser.launch();
-      await this.measurer.init();
+      await this.launch(theme);
     }
 
+    // Copy images into output directory and build path map for relative references
+    const imagePathMap = copyImages(this.slides, this.outputDir);
+
     // Measure ALL slides in a single browser round-trip
-    const { measurements, outputFiles } = await this.measurer.measureLayout(this.slides, theme, outputDir);
+    const { measurements, outputFiles } = await this.measurer.measureLayout(this.slides, theme, this.outputDir, imagePathMap);
     this.measurements = measurements;
     this.outputFiles = outputFiles;
   }

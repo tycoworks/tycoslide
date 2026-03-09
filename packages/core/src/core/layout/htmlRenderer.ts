@@ -3,7 +3,6 @@
 // Theme fonts are injected automatically for brand compliance.
 
 import fs from 'fs';
-import os from 'os';
 import path from 'path';
 import type { Page } from 'playwright';
 import type { Theme } from '../model/types.js';
@@ -13,10 +12,13 @@ import { inToPx } from '../../utils/units.js';
 
 export class HtmlRenderer {
   private page: Page | null = null;
-  private tmpDir: string | null = null;
   private renderCount = 0;
 
-  constructor(private browser: HeadlessBrowser, private options?: { deviceScaleFactor?: number }) {}
+  constructor(
+    private browser: HeadlessBrowser,
+    private outputDir: string,
+    private options?: { deviceScaleFactor?: number },
+  ) {}
 
   async renderHtmlToImage(
     html: string,
@@ -36,16 +38,14 @@ export class HtmlRenderer {
       });
     }
 
-    // Create temp dir once, reuse for all renders
-    if (!this.tmpDir) {
-      this.tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tycoslide-render-'));
-    }
-
     // Inject theme fonts for brand compliance
     const { css: fontCSS, fonts: fontDescs } = generateFontFaceCSS(theme);
     const htmlWithFonts = injectFontCSS(html, fontCSS);
 
-    await this.page.setContent(htmlWithFonts, { waitUntil: 'load' });
+    // Write HTML to file and navigate with file:// origin
+    const htmlPath = path.join(this.outputDir, `_render-${this.renderCount}.html`);
+    fs.writeFileSync(htmlPath, htmlWithFonts);
+    await this.page.goto('file://' + htmlPath, { waitUntil: 'load' });
     await preloadFonts(this.page, fontDescs);
 
     // Wait for async rendering signaled by data-render-signal attribute
@@ -71,7 +71,9 @@ export class HtmlRenderer {
     // Screenshot the first child element of body
     const locator = this.page.locator('body > *:first-child');
 
-    const outputPath = path.join(this.tmpDir, `render-${this.renderCount++}.png`);
+    const imagesDir = path.join(this.outputDir, 'images');
+    fs.mkdirSync(imagesDir, { recursive: true });
+    const outputPath = path.join(imagesDir, `_render-${this.renderCount++}.png`);
     await locator.screenshot({
       path: outputPath,
       type: 'png',

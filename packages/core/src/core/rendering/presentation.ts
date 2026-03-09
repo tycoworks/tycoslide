@@ -131,11 +131,11 @@ export class Presentation {
     renderScale?: number;
     preview?: boolean;
   }): Promise<{ slides: SlideLayout[]; validationErrors: SlideValidationResult[]; outputFiles: string[] }> {
-    const pipeline = new LayoutPipeline(options?.renderScale ? { deviceScaleFactor: options.renderScale } : undefined);
+    const pipeline = new LayoutPipeline({ deviceScaleFactor: options?.renderScale, outputDir: options.outputDir });
 
     try {
-      // Launch browser early so components can use it during expansion
-      await pipeline.launch();
+      // Launch browser — also copies fonts into outputDir for @font-face CSS
+      await pipeline.launch(this._theme);
 
       // Build expansion context with canvas capability
       const expansionContext: ExpansionContext = {
@@ -216,7 +216,7 @@ export class Presentation {
 
       // Phase 3: Browser measurement (execute all measurements)
       log.pptx._('PIPELINE: Measuring %d slides...', pipeline.measurementCount);
-      await pipeline.executeMeasurements(this._theme, options.outputDir);
+      await pipeline.executeMeasurements(this._theme);
 
       // Phase 4: Compute master layouts
       const masterPositionedMap = new Map<string, PositionedNode>();

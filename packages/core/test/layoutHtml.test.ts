@@ -187,7 +187,7 @@ function tableNode(rows: TableCellData[][], opts?: Partial<Omit<TableNode, 'type
 
 /** Generate layout HTML from an element node tree */
 function genHTML(node: ElementNode, bounds: Bounds) {
-  return generateLayoutHTML([{ tree: node, bounds, background: {} }], mockTheme, ['test-slide']);
+  return generateLayoutHTML([{ tree: node, bounds, background: {} }], mockTheme, ['test-slide'], new Map(), new Map());
 }
 
 describe('HTML Measurement Generation', () => {
@@ -1120,7 +1120,7 @@ describe('HTML Measurement Generation', () => {
         { tree: colNode(textNode('Slide 2')) as ElementNode, bounds, background: {} },
         { tree: colNode(textNode('Slide 3')) as ElementNode, bounds, background: {} },
       ];
-      const result = generateLayoutHTML(slides, mockTheme, ['slide-1', 'slide-2', 'slide-3']);
+      const result = generateLayoutHTML(slides, mockTheme, ['slide-1', 'slide-2', 'slide-3'], new Map(), new Map());
       assert.strictEqual(result.perSlideHtml.length, 3);
 
       // First slide: no prev, has next
@@ -1154,7 +1154,7 @@ describe('HTML Measurement Generation', () => {
       const node = colNode(textNode('Hello'));
       const { html } = generateLayoutHTML(
         [{ tree: node, bounds, background: { color: '#120E22' } }],
-        mockTheme, ['test-slide'],
+        mockTheme, ['test-slide'], new Map(), new Map(),
       );
       assert.ok(html.includes('background-color:#120E22'), 'Should render hex background color');
       assert.ok(!html.includes('#FFFFFF'), 'Should not contain white fallback');
@@ -1164,7 +1164,7 @@ describe('HTML Measurement Generation', () => {
       const node = colNode(textNode('Hello'));
       const { html } = generateLayoutHTML(
         [{ tree: node, bounds, background: { color: '#FF0000', opacity: 50 } }],
-        mockTheme, ['test-slide'],
+        mockTheme, ['test-slide'], new Map(), new Map(),
       );
       assert.ok(html.includes('rgba(255,0,0,0.5)'), 'Should render rgba with 50% opacity');
     });
@@ -1173,7 +1173,7 @@ describe('HTML Measurement Generation', () => {
       const node = colNode(textNode('Hello'));
       const { html } = generateLayoutHTML(
         [{ tree: node, bounds, background: { color: '#0000FF', opacity: 100 } }],
-        mockTheme, ['test-slide'],
+        mockTheme, ['test-slide'], new Map(), new Map(),
       );
       assert.ok(html.includes('background-color:#0000FF'), 'Should render hex at full opacity');
     });
@@ -1182,7 +1182,7 @@ describe('HTML Measurement Generation', () => {
       const node = colNode(textNode('Hello'));
       const { html } = generateLayoutHTML(
         [{ tree: node, bounds, background: {} }],
-        mockTheme, ['test-slide'],
+        mockTheme, ['test-slide'], new Map(), new Map(),
       );
       assert.ok(!html.includes('background-color:'), 'Empty background should not set any background-color');
     });
