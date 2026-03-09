@@ -2,7 +2,7 @@
 // Generic base class, component registry, and layout registry
 
 import { NODE_TYPE, type ElementNode, type ComponentNode, type SlideNode, type ContainerNode, type StackNode } from '../model/nodes.js';
-import type { Theme, Slide } from '../model/types.js';
+import type { Theme, Slide, Background } from '../model/types.js';
 import type { SyntaxType } from '../model/syntax.js';
 import type { RootContent } from 'mdast';
 import { z } from 'zod';
@@ -550,7 +550,7 @@ export interface MasterDefinition {
   getContent: (tokens: Record<string, unknown>, slideSize: { width: number; height: number }) => {
     content: ComponentNode;
     contentBounds: Bounds;
-    background: string;
+    background: Background;
   };
 }
 
@@ -576,7 +576,7 @@ export function defineMaster<TTokens = undefined>(def: {
   ) => {
     content: ComponentNode;
     contentBounds: Bounds;
-    background: string;
+    background: Background;
   };
 }): TypedMasterDefinition<TTokens extends undefined ? Record<string, unknown> : TTokens> {
   (def as any).tokenMap = (map: any) => map;

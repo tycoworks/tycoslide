@@ -8,7 +8,7 @@ type PptxSlide = ReturnType<InstanceType<typeof PptxGenJS>['addSlide']>;
 
 import type { PositionedNode, TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode } from '../model/nodes.js';
 import { NODE_TYPE } from '../model/nodes.js';
-import type { Theme } from '../model/types.js';
+import type { Theme, Background } from '../model/types.js';
 import { CUSTOM_LAYOUT } from '../model/types.js';
 import { PptxConfigBuilder } from './pptxConfigBuilder.js';
 import { log, contentPreview } from '../../utils/log.js';
@@ -21,14 +21,14 @@ import { log, contentPreview } from '../../utils/log.js';
 export interface RenderSlideOptions {
   masterName?: string;
   masterContent?: PositionedNode;  // Master's positioned content
-  background?: string;
+  background?: Background;
   notes?: string;
 }
 
 /** Options for defining a master slide */
 export interface MasterDefinition {
   name: string;
-  background: string;
+  background: Background;
   content: PositionedNode;  // Positioned master elements
 }
 
@@ -81,9 +81,11 @@ export class PptxRenderer {
 
     this.pres.defineSlideMaster({
       title: name,
-      background: /^[0-9A-Fa-f]{6}$/.test(background)
-        ? { color: background }
-        : { path: background },
+      background: {
+        ...(background.color != null && { color: background.color }),
+        ...(background.opacity != null && { transparency: 100 - background.opacity }),
+        ...(background.path != null && { path: background.path }),
+      },
       objects: masterObjects,
     });
 
@@ -100,8 +102,11 @@ export class PptxRenderer {
 
     // Slide background overrides master background
     if (background) {
-      const isColor = /^[0-9A-Fa-f]{6}$/.test(background);
-      pptxSlide.background = isColor ? { color: background } : { path: background };
+      pptxSlide.background = {
+        ...(background.color != null && { color: background.color }),
+        ...(background.opacity != null && { transparency: 100 - background.opacity }),
+        ...(background.path != null && { path: background.path }),
+      };
     }
 
     // Propagate master's slideNumber as default (PPTXGen.js doesn't do this itself)

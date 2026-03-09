@@ -5,7 +5,7 @@
 // This enables batching all text measurements in a single browser call.
 
 import path from 'path';
-import type { Theme, Slide } from '../model/types.js';
+import type { Theme, Slide, Background } from '../model/types.js';
 import type { ElementNode, PositionedNode } from '../model/nodes.js';
 import { Bounds } from '../model/bounds.js';
 import { PptxRenderer } from './pptxRenderer.js';
@@ -153,7 +153,7 @@ export class Presentation {
       const pendingMasters = new Map<string, {
         content: ElementNode;
         contentBounds: Bounds;
-        background: string;
+        background: Background;
       }>();
 
       for (const deferred of this.deferredSlides) {

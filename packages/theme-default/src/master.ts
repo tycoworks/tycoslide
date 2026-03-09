@@ -7,6 +7,7 @@ import {
   SIZE,
   defineMaster,
   Bounds,
+  type Background,
 } from 'tycoslide';
 import type { PlainTextTokens, SlideNumberTokens } from 'tycoslide-components';
 import { row, column, plainText, slideNumber } from 'tycoslide-components';
@@ -16,7 +17,7 @@ import { row, column, plainText, slideNumber } from 'tycoslide-components';
 // ============================================
 
 interface DefaultMasterTokens {
-  background: string;
+  background: Background;
   margin: number;
   footerHeight: number;
   footerText: string;
@@ -54,7 +55,7 @@ export const defaultMaster = defineMaster<DefaultMasterTokens>({
 // ============================================
 
 interface MinimalMasterTokens {
-  background: string;
+  background: Background;
   margin: number;
 }
 

@@ -432,6 +432,21 @@ export { Bounds } from './bounds.js';
 import type { ComponentNode } from './nodes.js';
 
 // ============================================
+// BACKGROUND
+// ============================================
+
+/**
+ * Slide/master background. All fields optional — set color, path, or both.
+ * Opacity uses the same convention as ShapeNode.fill (0 = invisible, 100 = opaque).
+ * The renderer inverts to pptxgenjs's transparency at the rendering boundary.
+ */
+export interface Background {
+  color?: string;
+  opacity?: number;
+  path?: string;
+}
+
+// ============================================
 // SLIDE & THEME TYPES
 // ============================================
 
@@ -441,7 +456,7 @@ export interface Slide {
   /** Master variant — explicitly set by every layout. */
   masterVariant: string;
   /** Overrides master background if set. */
-  background?: string;
+  background?: Background;
   notes?: string;
   content: ComponentNode;
   /** Optional name for identifying slides in error messages and shared slide references. */

@@ -39,6 +39,7 @@ export type {
   TextStyle,
   HighlightPair,
   NormalizedRun,
+  Background,
   Slide, Theme,
   TextRun, TextContent,
 } from './core/model/types.js';

@@ -488,7 +488,7 @@ export const theme = {
     default: {
       variants: {
         default: defaultMaster.tokenMap({
-          background: colors.background,
+          background: { color: colors.background },
           margin: 0.5,
           footerHeight,
           footerText: 'tycoworks',
@@ -510,11 +510,11 @@ export const theme = {
     minimal: {
       variants: {
         default: minimalMaster.tokenMap({
-          background: colors.background,
+          background: { color: colors.background },
           margin: 0.5,
         }),
         dark: minimalMaster.tokenMap({
-          background: colors.text,
+          background: { color: colors.text },
           margin: 0.5,
         }),
       },
