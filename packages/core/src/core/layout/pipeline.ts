@@ -2,6 +2,8 @@
 // Coordinates browser-based layout measurement and position tree construction.
 // The browser computes all positions via CSS flexbox in a single pass per slide.
 
+import fs from 'fs';
+import path from 'path';
 import type { ElementNode, PositionedNode, ContainerNode, StackNode, TextNode } from '../model/nodes.js';
 import { NODE_TYPE } from '../model/nodes.js';
 import type { Bounds } from '../model/bounds.js';
@@ -9,6 +11,7 @@ import type { Theme, Background } from '../model/types.js';
 import { HeadlessBrowser } from './browser.js';
 import { LayoutMeasurer } from './measurement.js';
 import { HtmlRenderer } from './htmlRenderer.js';
+import { generatePreviewHTML } from './layoutHtml.js';
 import { copyFonts, copyImages } from './assetCopier.js';
 import { log } from '../../utils/log.js';
 
@@ -55,7 +58,8 @@ export class LayoutPipeline {
   private measurer = new LayoutMeasurer(this.browser);
   private renderer: HtmlRenderer;
   private measurements: Map<ElementNode, Bounds> | null = null;
-  private outputFiles: string[] = [];
+  private slideFragments: string[] = [];
+  private labels: string[] = [];
   private outputDir: string;
 
   constructor(options: { deviceScaleFactor?: number; outputDir: string }) {
@@ -97,7 +101,8 @@ export class LayoutPipeline {
   async executeMeasurements(theme: Theme): Promise<void> {
     if (this.slides.length === 0) {
       this.measurements = new Map();
-      this.outputFiles = [];
+      this.slideFragments = [];
+      this.labels = [];
       return;
     }
 
@@ -110,14 +115,45 @@ export class LayoutPipeline {
     const imagePathMap = copyImages(this.slides, this.outputDir);
 
     // Measure ALL slides in a single browser round-trip
-    const { measurements, outputFiles } = await this.measurer.measureLayout(this.slides, theme, this.outputDir, imagePathMap);
+    const { measurements, slideFragments, labels } = await this.measurer.measureLayout(this.slides, theme, this.outputDir, imagePathMap);
     this.measurements = measurements;
-    this.outputFiles = outputFiles;
+    this.slideFragments = slideFragments;
+    this.labels = labels;
   }
 
-  /** Get output files written during measurement */
-  getOutputFiles(): string[] {
-    return this.outputFiles;
+  /**
+   * Get slide fragments as a label→html map.
+   * Includes both master and content slide fragments.
+   */
+  getSlideFragments(): Map<string, string> {
+    const map = new Map<string, string>();
+    for (let i = 0; i < this.labels.length; i++) {
+      map.set(this.labels[i]!, this.slideFragments[i]!);
+    }
+    return map;
+  }
+
+  /**
+   * Write composite preview HTML files to outputDir.
+   * Each page layers a master fragment behind a slide fragment with nav bar.
+   */
+  writePreviewFiles(
+    slides: Array<{
+      masterFragment: string;
+      slideFragment: string;
+      contentBounds: Bounds;
+      label: string;
+    }>,
+    theme: Theme,
+  ): string[] {
+    const pages = generatePreviewHTML(slides, theme);
+    const outputFiles: string[] = [];
+    for (let i = 0; i < pages.length; i++) {
+      const filePath = path.join(this.outputDir, `${slides[i]!.label}.html`);
+      fs.writeFileSync(filePath, pages[i]!);
+      outputFiles.push(filePath);
+    }
+    return outputFiles;
   }
 
   /**
@@ -152,7 +188,8 @@ export class LayoutPipeline {
     await this.browser.close();
     this.slides = [];
     this.measurements = null;
-    this.outputFiles = [];
+    this.slideFragments = [];
+    this.labels = [];
   }
 
   // ============================================

@@ -45,7 +45,7 @@ export class LayoutMeasurer {
     theme: Theme,
     outputDir: string,
     imagePathMap: Map<string, string>,
-  ): Promise<{ measurements: Map<ElementNode, Bounds>; outputFiles: string[] }> {
+  ): Promise<{ measurements: Map<ElementNode, Bounds>; slideFragments: string[]; labels: string[] }> {
     if (!this.page) {
       throw new Error('Measurer not initialized. Call init() first.');
     }
@@ -59,15 +59,7 @@ export class LayoutMeasurer {
 
     // Generate single HTML page containing all slides
     const labels = slides.map(s => s.label);
-    const { html, slideNodeIds, perSlideHtml } = generateLayoutHTML(slides, theme, labels, this.fontNormalRatios, imagePathMap);
-
-    const outputFiles: string[] = [];
-    for (let i = 0; i < perSlideHtml.length; i++) {
-      const label = labels[i]!;
-      const filePath = path.join(outputDir, `${label}.html`);
-      fs.writeFileSync(filePath, perSlideHtml[i]!);
-      outputFiles.push(filePath);
-    }
+    const { html, slideNodeIds, slideFragments } = generateLayoutHTML(slides, theme, labels, this.fontNormalRatios, imagePathMap);
 
     // Write measurement HTML to file and navigate with file:// origin
     const measurementPath = path.join(outputDir, '_measurement.html');
@@ -143,7 +135,7 @@ export class LayoutMeasurer {
       }
     }
 
-    return { measurements: allResults, outputFiles };
+    return { measurements: allResults, slideFragments, labels };
   }
 
   /** Log measured dimensions for every node across all slides. */

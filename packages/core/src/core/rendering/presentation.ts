@@ -288,7 +288,20 @@ export class Presentation {
         this.deferredSlides = [];
       }
 
-      const outputFiles = pipeline.getOutputFiles();
+      // Build composite preview HTML: master chrome behind, slide content positioned within
+      const fragmentMap = pipeline.getSlideFragments();
+      const compositeSlides = expandedSlides.map(({ deferred, bounds }) => {
+        const { slide, slideIndex } = deferred;
+        const masterLabel = `master-${slide.masterName}-${slide.masterVariant}`;
+        return {
+          masterFragment: fragmentMap.get(masterLabel)!,
+          slideFragment: fragmentMap.get(`slide-${slideIndex + 1}`)!,
+          contentBounds: bounds,
+          label: `slide-${slideIndex + 1}`,
+        };
+      });
+      const outputFiles = pipeline.writePreviewFiles(compositeSlides, this._theme);
+
       return { slides, validationErrors, outputFiles };
 
     } finally {

@@ -760,7 +760,7 @@ const StyledDiv: FC<{ node: StyledNode }> = ({ node }) => {
 export interface LayoutHtmlResult {
   html: string;
   slideNodeIds: Array<Map<ElementNode, string>>;
-  perSlideHtml: string[];
+  slideFragments: string[];
 }
 
 /** Font descriptor for explicit preloading */
@@ -778,7 +778,6 @@ export function generateLayoutHTML(
 ): LayoutHtmlResult {
   const idCtx: IdContext = { counter: 0 };
   const slideNodeIds: Array<Map<ElementNode, string>> = [];
-  const { css: fontFaceCSS } = generateFontFaceCSS(theme);
 
   // Phase 1 + 2: style each slide, then wrap in JSX
   const slideJsx = slides.map((slide, i) => {
@@ -813,14 +812,7 @@ export function generateLayoutHTML(
     );
   });
 
-  // Shared CSS reset — single source of truth for measurement HTML
-  const baseCSS = `
-    ${fontFaceCSS}
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { overflow: hidden; }
-    .root { display: flex; flex-direction: column; }
-    .root > * { flex: 1 1 0; min-height: 0; }
-  `;
+  const baseCSS = generateBaseCSS(theme);
 
   // Phase 3: render to HTML string (clean measurement — no debug visuals)
   const fullJsx = (
@@ -837,36 +829,79 @@ export function generateLayoutHTML(
 
   const html = '<!DOCTYPE html>' + renderToString(fullJsx);
 
-  // Build per-slide preview HTML with nav bar
-  const previewCSS = `body { overflow: auto; }`;
-  const perSlideHtml = slideJsx.map((jsx, i) => {
-    const label = labels[i];
-    const prevLabel = i > 0 ? labels[i - 1] : null;
-    const nextLabel = i < labels.length - 1 ? labels[i + 1] : null;
+  // Content-only HTML fragments for each slide (no wrapper, no nav)
+  const slideFragments = slideJsx.map((jsx) => renderToString(jsx));
 
-    // Build nav bar HTML
-    const navParts: string[] = [];
-    if (prevLabel) navParts.push(`<a href="${prevLabel}.html" style="color:#fff;text-decoration:none">\u2190 prev</a>`);
-    navParts.push(`<strong>${label}</strong>`);
-    if (nextLabel) navParts.push(`<a href="${nextLabel}.html" style="color:#fff;text-decoration:none">next \u2192</a>`);
-    const navBarHtml = `<div style="background:#333;color:#fff;padding:4px 8px;font:14px monospace;display:flex;justify-content:center;align-items:center;gap:12px">${navParts.join('')}</div>`;
+  return { html, slideNodeIds, slideFragments };
+}
 
-    const slideDoc = (
-      <html>
-        <head>
-          <meta charset="UTF-8" />
-          <style dangerouslySetInnerHTML={{ __html: baseCSS + previewCSS }} />
-        </head>
-        <body>
-          <div dangerouslySetInnerHTML={{ __html: navBarHtml }} />
-          {jsx}
-        </body>
-      </html>
-    );
-    return '<!DOCTYPE html>' + renderToString(slideDoc);
+// ============================================
+// PREVIEW HTML GENERATION
+// ============================================
+
+/**
+ * Generate base CSS for measurement and preview HTML.
+ * Includes @font-face rules and CSS reset.
+ * Measurement uses overflow:hidden (default); preview overrides with overflow:auto.
+ */
+export function generateBaseCSS(theme: Theme): string {
+  const { css: fontFaceCSS } = generateFontFaceCSS(theme);
+  return `${fontFaceCSS}
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { overflow: hidden; }
+    .root { display: flex; flex-direction: column; }
+    .root > * { flex: 1 1 0; min-height: 0; }`;
+}
+
+/**
+ * Generate composite preview HTML pages.
+ * Each page layers a master fragment (full slide) behind a slide fragment (content area).
+ * Includes nav bar with stable prev/next arrows (dimmed when inactive).
+ */
+export function generatePreviewHTML(
+  slides: Array<{
+    masterFragment: string;
+    slideFragment: string;
+    contentBounds: Bounds;
+    label: string;
+  }>,
+  theme: Theme,
+): string[] {
+  const baseCSS = generateBaseCSS(theme);
+  const slideW = inToPx(theme.slide.width);
+  const slideH = inToPx(theme.slide.height);
+
+  return slides.map((slide, i) => {
+    const prevSlide = i > 0 ? slides[i - 1] : null;
+    const nextSlide = i < slides.length - 1 ? slides[i + 1] : null;
+
+    // Nav bar with stable arrows (both always rendered, dimmed when inactive)
+    const prevHtml = prevSlide
+      ? `<a href="${prevSlide.label}.html" style="color:#fff;text-decoration:none">\u2190 prev</a>`
+      : `<span style="color:#666">\u2190 prev</span>`;
+    const nextHtml = nextSlide
+      ? `<a href="${nextSlide.label}.html" style="color:#fff;text-decoration:none">next \u2192</a>`
+      : `<span style="color:#666">next \u2192</span>`;
+    const navBar = `<div style="background:#333;color:#fff;padding:4px 8px;font:14px monospace;display:flex;justify-content:center;align-items:center;gap:12px">${prevHtml}<strong>${slide.label}</strong>${nextHtml}</div>`;
+
+    // Content bounds in pixels
+    const cx = inToPx(slide.contentBounds.x);
+    const cy = inToPx(slide.contentBounds.y);
+    const cw = inToPx(slide.contentBounds.w);
+    const ch = inToPx(slide.contentBounds.h);
+
+    return `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><style>${baseCSS} body { overflow: auto; background: #f0f0f0; }</style></head>
+<body>
+${navBar}
+<div style="position:relative;width:${slideW}px;height:${slideH}px;box-shadow:0 0 0 1px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.08)">
+<div style="position:absolute;inset:0">${slide.masterFragment}</div>
+<div style="position:absolute;left:${cx}px;top:${cy}px;width:${cw}px;height:${ch}px">${slide.slideFragment}</div>
+</div>
+</body>
+</html>`;
   });
-
-  return { html, slideNodeIds, perSlideHtml };
 }
 
 // ============================================
