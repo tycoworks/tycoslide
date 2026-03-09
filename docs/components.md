@@ -7,7 +7,7 @@ Components are the building blocks of tycoslide presentations. All built-in comp
 In markdown, a component looks like this:
 
 ```markdown
-:::card{title="Feature Name" variant="flat"}
+:::card{title="Feature Name"}
 Description of the feature.
 :::
 ```
@@ -18,7 +18,7 @@ That directive has four parts:
 
 **Directive** — the `:::` fence is how you use a component in markdown. Not all components have directives. Layout components (`row`, `column`, `stack`, `grid`) are TypeScript DSL only.
 
-**Parameters** — `title` and `variant` configure the component. Parameters are passed in curly braces using `key="value"` syntax. Boolean and numeric values are still quoted: `columns="3"`.
+**Parameters** — `title` configures the component. Parameters are passed in curly braces using `key="value"` syntax. Boolean and numeric values are still quoted: `columns="3"`.
 
 **Body content** — the text between the opening and closing fences. Some components use the body as primary content (e.g., `quote`, `testimonial`), some treat it as a file path (e.g., `image`), and some ignore it.
 
@@ -70,7 +70,6 @@ A single paragraph of formatted content: bold, italic, strikethrough, underline,
 | `style` | TextStyleName | Override text style (`h1`--`h4`, `body`, `small`, `eyebrow`, `footer`) |
 | `hAlign` | `left` \| `center` \| `right` | Horizontal alignment |
 | `vAlign` | `top` \| `middle` \| `bottom` | Vertical alignment |
-| `variant` | string | Theme variant name |
 | `color` | string | Text color (6-character hex, DSL only) |
 | `lineHeightMultiplier` | number | Line height multiplier (DSL only) |
 | `linkColor` | string | Hyperlink text color (6-character hex, DSL only) |
@@ -172,7 +171,6 @@ list(['Item with :blue[accent]'], { color: '#0066CC' })
 | `lineHeightMultiplier` | number | Line height multiplier |
 | `linkColor` | string | Hyperlink text color (6-character hex) |
 | `linkUnderline` | boolean | Whether hyperlinks are underlined |
-| `variant` | string | Theme variant name |
 
 ### Tokens
 
@@ -197,7 +195,6 @@ Content card with an optional image, title, and description. Renders as a rounde
 | `title` | string | Card title (formatting supported) |
 | `description` | string | Description text (or use body content) |
 | `image` | string | Path to image file |
-| `variant` | string | Theme variant (`default`, `flat`) |
 
 ### Tokens
 
@@ -232,7 +229,7 @@ Description of the feature.
 ```
 
 ```markdown
-:::card{title="With Image" image="./assets/diagram.png" variant="flat"}
+:::card{title="With Image" image="./assets/diagram.png"}
 Supporting detail text.
 :::
 ```
@@ -252,7 +249,6 @@ Quote text is required -- provide it either via the `quote` attribute or as body
 | `quote` | string | Quote text (or use body content) |
 | `attribution` | string | Attribution line |
 | `image` | string | Path to logo/image shown above quote |
-| `variant` | string | Theme variant |
 
 ### Tokens
 
@@ -297,7 +293,6 @@ Cell content supports formatting (`**bold**`, `*italic*`, `:accent[color]`).
 | Param | Type | Description |
 |-------|------|-------------|
 | `headerColumns` | number | Number of header columns (default: 0) |
-| `variant` | string | Theme variant |
 
 ### Example
 
@@ -323,7 +318,6 @@ A horizontal or vertical rule. Supports arrows with `beginArrow` / `endArrow` fo
 |-------|------|-------------|
 | `beginArrow` | ArrowType | Arrow at start (`none`, `arrow`, `diamond`, `oval`, `stealth`, `triangle`) |
 | `endArrow` | ArrowType | Arrow at end (same values as `beginArrow`) |
-| `variant` | string | Theme variant |
 
 ### Example
 
@@ -343,7 +337,6 @@ A shape with configurable fill and border.
 | Param | Type | Description |
 |-------|------|-------------|
 | `shape` | ShapeName | Shape type (**required**) -- e.g. `rect`, `roundRect`, `ellipse` |
-| `variant` | string | Theme variant (`default`, `primary`, `subtle`, `outlined`, `accent`) |
 
 The following properties are available in the TypeScript DSL only (not in directive syntax):
 
@@ -364,7 +357,7 @@ When any `borderTop`/`borderRight`/`borderBottom`/`borderLeft` prop is set, only
 ### Example
 
 ```markdown
-:::shape{shape="roundRect" variant="subtle"}
+:::shape{shape="roundRect"}
 :::
 ```
 
@@ -494,7 +487,6 @@ Quote text is required -- provide it either via the `quote` attribute or as body
 | `quote` | string | Quote text (**required** unless body content provided) |
 | `attribution` | string | Attribution line, e.g. "-- Jane Smith, CTO" |
 | `image` | string | Path to image/logo displayed above the quote |
-| `variant` | string | Theme variant name |
 
 ### Tokens
 
@@ -595,7 +587,7 @@ Z-order overlay container. All children occupy the same bounds; the first child 
 
 ```typescript
 stack({ height: SIZE.FILL },
-  shape({ shape: SHAPE.RECT, variant: 'primary' }),
+  shape({ shape: SHAPE.RECT, fill: '#0066CC' }),
   text('White text over blue background'),
 )
 ```
@@ -642,7 +634,6 @@ export const badgeComponent = defineComponent({
   name: 'badge',
   params: {
     label: schema.string(),
-    variant: schema.string().optional(),
   },
   tokens: ['backgroundColor', 'textColor', 'textStyle'],
   expand: (props, context, tokens) => {
@@ -782,7 +773,7 @@ The `children` slot receives the compiled content as an array of `ComponentNode[
 
 ### Variants
 
-Variants provide alternative token values for the same layout structure. Set `variant: hero` in frontmatter to pick a variant:
+Variants apply different visual styles to the same layout structure — different colors, fonts, or spacing without changing the arrangement of elements. Variant is a slide-level setting in frontmatter, not a component parameter.
 
 ```markdown
 ---
@@ -791,7 +782,7 @@ variant: hero
 ---
 ```
 
-Create a new variant when visual values differ; create a new layout when the structure changes. For the full variants system — defining variants, default fallback, and build behavior — see [Themes — Variants System](./themes.md#variants-system).
+Use a variant when the visual values differ. Use a different layout when the structure changes. See [Themes — Variants System](./themes.md#variants-system) for defining variants in a theme.
 
 ### Complete Example: Metric Component
 

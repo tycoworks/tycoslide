@@ -259,7 +259,6 @@ Centered body text with optional caption. Use for value propositions and key sta
 | `title` | `string` | Slide title (**required**) |
 | `eyebrow` | `string` | Small label above the title |
 | `body` | `string` | Body text, centered (**required**) |
-| `variant` | `string` | Layout variant (default: `default`). `hero` renders body in `h3` style. See [Themes — Variants](./themes.md#variants-system) |
 | `caption` | `string` | Caption below the body text |
 
 ---
@@ -307,7 +306,6 @@ Card grid with optional intro text and caption. Automatically adjusts columns ba
 | `intro` | `string` | Introductory text above the cards |
 | `cards` | `object[]` | Array of card objects (each with `title`, `description`, `image`) (**required**) |
 | `caption` | `string` | Caption below the cards |
-| `variant` | `string` | Card variant applied to all cards |
 
 ---
 

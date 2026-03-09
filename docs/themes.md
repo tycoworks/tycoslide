@@ -575,7 +575,7 @@ title: Components
 Test card.
 :::
 
-:::card{title="Flat" variant="flat"}
+:::card{title="Flat"}
 Test card.
 :::
 
