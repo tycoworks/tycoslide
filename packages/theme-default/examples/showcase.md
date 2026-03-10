@@ -250,6 +250,19 @@ notes: Card-style testimonial with background, border, and optional image. Use f
 :::
 
 ---
+layout: body
+variant: default
+title: Text Wrapping Edge Case
+eyebrow: QA
+notes: |
+  Reproduces a known text wrapping discrepancy. "The persistence is the skill."
+  wraps "skill." to line 2 in Keynote/Slides/PowerPoint but fits on one line
+  in Chromium. See internal/text-wrapping-research.md.
+---
+
+*"You mentioned applications earlier — let's talk about what those need."* The persistence is the skill.
+
+---
 layout: end
 variant: default
 title: tycoslide
