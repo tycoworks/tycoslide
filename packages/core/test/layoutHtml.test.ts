@@ -283,6 +283,60 @@ describe('HTML Measurement Generation', () => {
       assert.ok(liContent.includes('Bold:'), 'li should contain bold text');
       assert.ok(liContent.includes('plain text'), 'li should contain plain text in same element');
     });
+
+    test('ordered list renders as ol with decimal markers', async () => {
+      const node = textNode([{ text: 'Step one', bullet: { type: 'number' } }]);
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('<ol'), 'Ordered bullet should render as <ol>');
+      assert.ok(html.includes('<li'), 'Ordered bullet items should render as <li>');
+      assert.ok(html.includes('list-style:decimal'), 'Ordered list should use decimal markers');
+      assert.ok(!html.includes('<ul'), 'Ordered list should not render as <ul>');
+    });
+
+    test('unordered list renders as ul with disc markers (not ol)', async () => {
+      const node = textNode([{ text: 'Item', bullet: true }]);
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('<ul'), 'Unordered bullet should render as <ul>');
+      assert.ok(html.includes('list-style:disc'), 'Unordered list should use disc markers');
+      assert.ok(!html.includes('<ol'), 'Unordered list should not render as <ol>');
+    });
+
+    test('mixed ordered then unordered list produces two separate list elements', async () => {
+      const node = textNode([
+        { text: 'Ordered item', bullet: { type: 'number' } },
+        { text: 'Unordered item', bullet: true },
+      ]);
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('<ol'), 'Mixed list should have an <ol>');
+      assert.ok(html.includes('<ul'), 'Mixed list should have a <ul>');
+      // ol must come before ul (ordered first)
+      assert.ok(html.indexOf('<ol') < html.indexOf('<ul'), 'ol should appear before ul');
+    });
+
+    test('mixed unordered then ordered list produces two separate list elements', async () => {
+      const node = textNode([
+        { text: 'Unordered item', bullet: true },
+        { text: 'Ordered item', bullet: { type: 'number' } },
+      ]);
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('<ul'), 'Mixed list should have a <ul>');
+      assert.ok(html.includes('<ol'), 'Mixed list should have an <ol>');
+      // ul must come before ol (unordered first)
+      assert.ok(html.indexOf('<ul') < html.indexOf('<ol'), 'ul should appear before ol');
+    });
+
+    test('multi-run ordered bullet item renders all runs in one li', async () => {
+      const node = textNode([
+        { text: 'Bold:', bold: true, bullet: { type: 'number' } },
+        { text: ' detail text' },
+      ]);
+      const { html } = await genHTML(node, bounds);
+      const liMatch = html.match(/<li[^>]*>(.*?)<\/li>/);
+      assert.ok(liMatch, 'Should have a <li> element');
+      const liContent = liMatch![1];
+      assert.ok(liContent.includes('Bold:'), 'li should contain bold text');
+      assert.ok(liContent.includes('detail text'), 'li should contain plain text in same li');
+    });
   });
 
   describe('Paragraph spacing', () => {

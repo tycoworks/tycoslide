@@ -596,14 +596,18 @@ function renderTextRunsToHTML(
   }
   if (currentGroup.length > 0) groups.push(currentGroup);
 
-  // Step 2: Render groups, collecting consecutive bullets into <ul>
+  // Step 2: Render groups, collecting consecutive bullets into <ul>/<ol>
   const parts: string[] = [];
   let bulletBuffer: string[] = [];
+  let bulletBufferOrdered = false;
 
   const flushBullets = () => {
     if (bulletBuffer.length > 0) {
-      parts.push(`<ul style="margin:0;padding:0 0 0 ${bulletIndentPx}px;list-style:disc outside">${bulletBuffer.join('')}</ul>`);
+      const tag = bulletBufferOrdered ? 'ol' : 'ul';
+      const listStyle = bulletBufferOrdered ? 'decimal outside' : 'disc outside';
+      parts.push(`<${tag} style="margin:0;padding:0 0 0 ${bulletIndentPx}px;list-style:${listStyle}">${bulletBuffer.join('')}</${tag}>`);
       bulletBuffer = [];
+      bulletBufferOrdered = false;
     }
   };
 
@@ -612,6 +616,12 @@ function renderTextRunsToHTML(
     const spans = group.map(run => renderRunSpanHTML(run, style, defaultWeight, linkColor, linkUnderline)).join('');
 
     if (first.bullet) {
+      const isOrdered = typeof first.bullet === 'object' && first.bullet.type === 'number';
+      // Flush if switching between ordered/unordered
+      if (bulletBuffer.length > 0 && isOrdered !== bulletBufferOrdered) {
+        flushBullets();
+      }
+      bulletBufferOrdered = isOrdered;
       bulletBuffer.push(`<li style="margin:0;padding:0">${spans}</li>`);
     } else {
       flushBullets();
