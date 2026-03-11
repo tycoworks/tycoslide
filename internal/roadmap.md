@@ -8,6 +8,10 @@ Now / Next / Later — unified from todo, review, and roadmap docs.
 
 Before launch. Must be done before telling the world.
 
+### Font Variant Validation
+
+Throw a compile-time error when markdown uses `**bold**`, `*italic*`, or `***boldItalic***` on a font whose FontFamily lacks the corresponding slot. Synthetic bold changes advance widths differently across engines (Chromium doesn't widen, PowerPoint/DirectWrite does) — a real text wrapping risk. Synthetic italic is safe (advances unchanged) but visual quality degrades. The error is overridable with `-f` (force) for users who accept the risk. Detection point: the markdown → normalized run pipeline, where bold/italic flags are resolved against the textStyle's fontFamily. See text-wrapping-research.md "Synthetic Bold" section.
+
 ### Positioning
 
 Tracked for later: positioning.md arguments 2 and 3 need rethinking — too similar, missing extensible component system as a differentiator. Also - position for AI use? Also: Compile-Time Safety - right term?

@@ -329,16 +329,15 @@ export interface CustomSlideSize {
 /**
  * A font reference for rendering and measurement.
  *
- * `path` must be an absolute path to a `.woff` file.
+ * `path` must be an absolute path to a font file (.woff2, .woff, .ttf, or .otf).
  * `weight` is the CSS font-weight (e.g. 300, 400, 700).
  *
- * `path` must be an absolute path to a `.woff` file. WOFF2 is not supported
- * (FreeType metrics require WOFF). Use `@fontsource` npm packages:
+ * Use `@fontsource` npm packages for easy font management:
  * ```typescript
  * import { createRequire } from 'module';
  * const require = createRequire(import.meta.url);
  * const font: Font = {
- *   path: require.resolve('@fontsource/inter/files/inter-latin-400-normal.woff'),
+ *   path: require.resolve('@fontsource/inter/files/inter-latin-400-normal.woff2'),
  *   weight: 400,
  * };
  * ```

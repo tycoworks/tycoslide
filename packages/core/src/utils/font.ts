@@ -4,6 +4,17 @@
 import { type Font, type FontFamily, type TextContent, type TextRun, type NormalizedRun } from '../core/model/types.js';
 
 /**
+ * Supported font formats for @font-face CSS and theme validation.
+ * Used by themeValidator (format check) and layoutHtml (CSS generation).
+ */
+export const FONT_FORMATS: Record<string, { mime: string; format: string }> = {
+  '.woff2': { mime: 'font/woff2', format: 'woff2' },
+  '.woff': { mime: 'font/woff', format: 'woff' },
+  '.ttf': { mime: 'font/ttf', format: 'truetype' },
+  '.otf': { mime: 'font/opentype', format: 'opentype' },
+};
+
+/**
  * Get the Font for a run's bold/italic flags from a FontFamily.
  * Falls back to regular when optional slots are missing.
  */

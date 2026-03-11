@@ -3,7 +3,7 @@
 // Pure computation — no I/O, no file system access.
 
 import { FONT_SLOT, type Theme, type FontFamily } from '../model/types.js';
-import { isFontFamily } from '../../utils/font.js';
+import { isFontFamily, FONT_FORMATS } from '../../utils/font.js';
 
 /**
  * Walk a token object tree and invoke callback for every FontFamily value found.
@@ -26,7 +26,7 @@ function walkTokensForFonts(
 /**
  * Validate theme font configuration.
  * Checks:
- * - All font paths must be .woff (FreeType metrics require WOFF)
+ * - All font paths must be a supported format (see FONT_FORMATS in font.ts)
  * - All textStyle fontFamilies are registered in theme.fonts
  * - All layout/master token fontFamilies are registered in theme.fonts
  *
@@ -40,12 +40,12 @@ export function validateThemeFonts(theme: Theme): void {
     for (const slot of Object.values(FONT_SLOT)) {
       const font = family[slot];
       if (font) {
-        // Only .woff is supported — FreeType prebuild lacks Brotli (no WOFF2),
-        // and raw .ttf/.otf would bypass web font subsetting.
-        if (!font.path.endsWith('.woff')) {
+        const ext = font.path.substring(font.path.lastIndexOf('.'));
+        if (!FONT_FORMATS[ext]) {
+          const supported = Object.keys(FONT_FORMATS).join(', ');
           throw new Error(
-            `[tycoslide] Font "${font.path}" is not .woff format. Only .woff is supported ` +
-            `(FreeType metrics require WOFF).`
+            `[tycoslide] Font "${font.path}" has unsupported format "${ext}". ` +
+            `Supported: ${supported}.`
           );
         }
         registeredPaths.add(font.path);

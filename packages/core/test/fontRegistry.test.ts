@@ -8,63 +8,87 @@ import { generateFontFaceCSS } from '../src/core/layout/layoutHtml.js';
 import { mockTheme } from './mocks.js';
 
 describe('validateThemeFonts', () => {
-  describe('.woff format requirement', () => {
-    it('throws when regular slot is not .woff', () => {
+  describe('font format requirement', () => {
+    it('accepts .woff paths', () => {
+      const theme = mockTheme();
+      assert.doesNotThrow(() => validateThemeFonts(theme));
+    });
+
+    it('accepts .woff2 paths', () => {
+      const theme = mockTheme();
+      const family = {
+        name: 'Inter',
+        regular: { path: '/fake/inter-400.woff2', weight: 400 },
+        bold: { path: '/fake/inter-700.woff2', weight: 700 },
+      };
+      theme.fonts = [family];
+      for (const styleName of Object.keys(theme.textStyles)) {
+        theme.textStyles[styleName] = { ...theme.textStyles[styleName], fontFamily: family };
+      }
+      assert.doesNotThrow(() => validateThemeFonts(theme));
+    });
+
+    it('accepts .ttf paths', () => {
+      const theme = mockTheme();
+      const family = {
+        name: 'Inter',
+        regular: { path: '/fake/inter-400.ttf', weight: 400 },
+      };
+      theme.fonts = [family];
+      for (const styleName of Object.keys(theme.textStyles)) {
+        theme.textStyles[styleName] = { ...theme.textStyles[styleName], fontFamily: family };
+      }
+      assert.doesNotThrow(() => validateThemeFonts(theme));
+    });
+
+    it('accepts .otf paths', () => {
+      const theme = mockTheme();
+      const family = {
+        name: 'Inter',
+        regular: { path: '/fake/inter-400.otf', weight: 400 },
+      };
+      theme.fonts = [family];
+      for (const styleName of Object.keys(theme.textStyles)) {
+        theme.textStyles[styleName] = { ...theme.textStyles[styleName], fontFamily: family };
+      }
+      assert.doesNotThrow(() => validateThemeFonts(theme));
+    });
+
+    it('throws for unsupported format (.svg)', () => {
       const theme = mockTheme();
       theme.fonts = [
-        { name: 'Bad Font', regular: { path: '/fake/bad-font.woff2', weight: 400 } },
+        { name: 'Bad Font', regular: { path: '/fake/font.svg', weight: 400 } },
       ];
       assert.throws(
         () => validateThemeFonts(theme),
-        /not \.woff format.*Only \.woff is supported/,
+        /unsupported format.*Supported:/,
       );
     });
 
-    it('throws when italic slot is not .woff', () => {
+    it('throws for unsupported format (.eot)', () => {
+      const theme = mockTheme();
+      theme.fonts = [
+        { name: 'Bad Font', regular: { path: '/fake/font.eot', weight: 400 } },
+      ];
+      assert.throws(
+        () => validateThemeFonts(theme),
+        /unsupported format.*Supported:/,
+      );
+    });
+
+    it('throws for unsupported italic format', () => {
       const theme = mockTheme();
       theme.fonts = [
         {
           name: 'Bad Italic',
           regular: { path: '/fake/regular.woff', weight: 400 },
-          italic: { path: '/fake/italic.woff2', weight: 400 },
+          italic: { path: '/fake/italic.svg', weight: 400 },
         },
       ];
       assert.throws(
         () => validateThemeFonts(theme),
-        /not \.woff format.*Only \.woff is supported/,
+        /unsupported format.*Supported:/,
       );
-    });
-
-    it('throws when boldItalic slot is not .woff', () => {
-      const theme = mockTheme();
-      theme.fonts = [
-        {
-          name: 'Bad BoldItalic',
-          regular: { path: '/fake/regular.woff', weight: 400 },
-          bold: { path: '/fake/bold.woff', weight: 700 },
-          boldItalic: { path: '/fake/bold-italic.woff2', weight: 700 },
-        },
-      ];
-      assert.throws(
-        () => validateThemeFonts(theme),
-        /not \.woff format.*Only \.woff is supported/,
-      );
-    });
-
-    it('throws for .ttf paths', () => {
-      const theme = mockTheme();
-      theme.fonts = [
-        { name: 'Raw TTF', regular: { path: '/fake/font.ttf', weight: 400 } },
-      ];
-      assert.throws(
-        () => validateThemeFonts(theme),
-        /not \.woff format.*Only \.woff is supported/,
-      );
-    });
-
-    it('does not throw for .woff paths', () => {
-      const theme = mockTheme();
-      assert.doesNotThrow(() => validateThemeFonts(theme));
     });
   });
 

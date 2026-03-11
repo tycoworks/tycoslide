@@ -258,8 +258,8 @@ Rather than applying a correction to all text (which breaks multi-line), use a s
 
 - Phase 0 (validate assumption): COMPLETE — Math.ceil predicts correctly for test case
 - Phase 1 (cleanup): COMPLETE — removed broken calc(100%-Npx), kept infrastructure
-- Phase 2 (validateTextWrapping in measurement.ts): IN PROGRESS
-- Next step: Replace fontkit with FreeType in `buildCharAdvances()` for faithful hinting
+- Phase 2 (validateTextWrapping in measurement.ts): PARKED — italic font registration fixed the primary edge case
+- FreeType binary search: PARKED — engineering investment not justified by current risk level (see "Updated Recommendation" below)
 
 ---
 
@@ -298,3 +298,161 @@ Rather than applying a correction to all text (which breaks multi-line), use a s
 ### Platform Text APIs
 - [Core Text Programming Guide — Apple](https://developer.apple.com/library/archive/documentation/StringsTextFonts/Conceptual/CoreText_Programming/Introduction/Introduction.html)
 - [Introducing DirectWrite — Microsoft Learn](https://learn.microsoft.com/en-us/windows/win32/directwrite/introducing-directwrite)
+
+---
+
+## Italic Font Registration Fix (March 2025)
+
+### What happened
+
+The FontFamily redesign (commit `e5c255d`) added proper italic/boldItalic font slots. This fixed the text wrapping edge case in the showcase — the test text now wraps identically in Chromium and PowerPoint.
+
+### Root cause analysis
+
+The old FontFamily model had weight slots (light/normal/bold) but **no italic slots**. This meant:
+
+- **HTML measurement**: No italic `@font-face` rules existed. When CSS `font-style: italic` was applied, Chromium used **synthetic italic** (visual shear transform, identical advance widths to regular).
+- **PPTX output**: `italic: true` was set on text runs, but italic font files weren't bundled. However, pptxgenjs does not embed fonts in the PPTX — it references fonts by name, and PowerPoint resolves them from system fonts at open time. If the user has Inter installed (common — it's one of the most popular Google Fonts), PowerPoint found the **real italic** Inter Light from the system and used its wider advance widths.
+
+The wrapping mismatch was caused by **real vs synthetic italic advance widths**: PowerPoint used the real italic font (wider advances) while Chromium used synthetic italic (regular advances). Real italic Inter Light has redesigned letterforms that are genuinely wider than regular — this is not a shear transform but a completely different set of glyph outlines.
+
+After registering real italic fonts:
+- **HTML**: Italic `@font-face` rules now exist → Chromium uses the **real italic font file** → same wider advances as PowerPoint
+- **PPTX**: Both engines now use the same real italic font → identical advance widths → identical wrapping
+
+**Why bold was broken differently:** Bold had its own bug in the old model. The per-font `name` field meant the PPTX builder emitted font names like "Inter Bold" rather than "Inter" as the `fontFace`. PowerPoint couldn't resolve this name, so bold text rendered in a completely different substitution font. Italic worked correctly in PPTX because there was no italic slot — the code just used the family name ("Inter Light") with `italic: true`, which PowerPoint could resolve.
+
+### Key insight: root cause fix for this case, residual GDI risk remains
+
+The italic registration fix addressed the actual root cause of this specific wrapping mismatch (real vs synthetic italic). GDI integer-pixel rounding is a separate, real phenomenon (validated in Phase 0 with fontkit + Math.ceil), but it was not the primary driver of this test case. The GDI rounding produces small per-glyph differences that are less likely to cross wrapping boundaries on their own.
+
+---
+
+## Synthetic Italic: Not a Text Wrapping Risk
+
+### Finding: synthetic italic does NOT change advance widths
+
+Research across all major rendering systems confirms that synthetic italic (faux oblique) is **purely a visual shear transform** that does not modify glyph advance widths. The layout engine sees the same horizontal metrics as the regular (upright) variant.
+
+| System | Mechanism | Shear Angle | Advances Changed? |
+|--------|-----------|-------------|-------------------|
+| FreeType `FT_GlyphSlot_Oblique` | Shear matrix on outline | 12° | **No** (source: "we don't touch the advance width") |
+| Chromium/Skia `setSkewX` | Shear at draw time | ~14° | **No** (metrics "do not account for text skew") |
+| CSS `font-synthesis: auto` | Browser oblique synthesis | 14° default | **No** (rendering-only transform) |
+| PowerPoint/DirectWrite | OS-level GDI synthetic italic | ~20° | **No** (metrics unchanged) |
+
+**Sources:**
+- FreeType ftsynth.c: explicit "don't touch advance" comment
+- Skia SkFont::getWidths() docs: advances returned "as if drawn through identity matrix"
+- FreeType mailing list: "The advance width doesn't change if you slant a glyph. This is intentional behavior."
+
+### Implication for tycoslide
+
+When a font lacks an italic variant (e.g., Fira Code) and synthetic italic kicks in:
+- Both Chromium and PowerPoint use the **regular advance widths** for line breaking
+- The visual shear (slant) differs in angle (14° vs 20°) but this is cosmetic only
+- **Line breaks will be identical** to non-italic text — the synthetic italic is invisible to the layout engine
+
+Therefore: synthetic italic is NOT a text wrapping risk factor. The FreeType binary search solution does not need to account for synthetic italic separately. Measure with regular advance widths and the result matches what both engines produce.
+
+The one visual caveat: sheared glyphs protrude slightly beyond their advance boundary (top-right corner). This is the "italic correction" problem (addressed in TeX with `/` kerning), but it only affects visual collision between adjacent italic and upright runs — not where line breaks occur.
+
+---
+
+## Synthetic Bold: A Real Text Wrapping Risk
+
+### Finding: synthetic bold behavior diverges across engines
+
+Unlike synthetic italic (which uniformly preserves advance widths), synthetic bold (faux bold / algorithmic emboldening) **changes glyph advance widths in some engines but not others**. This creates a cross-engine wrapping mismatch when a font lacks a real bold variant.
+
+| Engine | Platform | Advances Modified? | Method |
+|--------|----------|-------------------|--------|
+| Chromium/Skia (FreeType path) | Linux/Android | **No** | Calls `FT_Outline_Embolden` directly (not `FT_GlyphSlot_Embolden`), intentionally skips advance update |
+| Chromium/Skia (CoreText path) | macOS | **No** | Stroke/fill rendering, advance from `CTFontGetAdvancesForGlyphs` unchanged |
+| Chromium/Skia (DirectWrite path) | Windows | **No** | Uses Skia's own stroke-based fake bold, not `DWRITE_FONT_SIMULATIONS_BOLD` |
+| PowerPoint/DirectWrite | Windows | **Yes** | `DWRITE_FONT_SIMULATIONS_BOLD` applies a "widening algorithm", advance widths explicitly increased |
+| FreeType `FT_GlyphSlot_Embolden` | Standalone | **Yes** | Adds `units_per_EM × y_scale / 24` to `horiAdvance` (except monospace fonts) |
+
+**Sources:**
+- Skia SkFont reference: "Does not scale the advance or bounds by fake bold"
+- FreeType ftsynth.c: `slot->metrics.horiAdvance += xstr` in `FT_GlyphSlot_Embolden`
+- Microsoft Learn DWRITE_FONT_SIMULATIONS: "increases weight by applying a widening algorithm"
+- Mozilla bug 624310: documents that DirectWrite synthetic bold widens advances; HarfBuzz had to compensate
+- Mozilla bug 1587094: confirms Chrome and DirectWrite produce different advance widths for synthetic bold
+
+### Why this differs from synthetic italic
+
+Synthetic italic is a pure **shear transform** — glyphs are skewed but their horizontal extent is unchanged. The advance width is mathematically invariant under horizontal shear.
+
+Synthetic bold must **thicken strokes** by expanding outlines outward in all directions. This physically widens glyphs. The question is whether the rendering engine reports this extra width in the advance metrics:
+- **Chromium/Skia**: Intentionally does not — the emboldened glyph overflows its advance box silently
+- **DirectWrite (PowerPoint)**: Reports wider advances via the shaping API — text is measurably wider
+
+### The FreeType angle
+
+FreeType has two emboldening APIs with different advance behavior:
+- `FT_Outline_Embolden`: Modifies outline points only, does **not** touch advance metrics. This is what Chromium/Skia calls.
+- `FT_GlyphSlot_Embolden`: Calls `FT_Outline_Embolden` internally, then **additionally** widens `horiAdvance` by `~fontSize/24`. This is the higher-level API.
+
+The widening formula (`units_per_EM × y_scale / 24`) is proportional to font size: ~1px at 24px, ~2px at 48px. This may approximate DirectWrite's proprietary widening algorithm, but the exact match is unknown. A FreeType-based prediction of PowerPoint's synthetic bold wrapping would catch some cases but not guarantee pixel-perfect agreement.
+
+### Implication for tycoslide
+
+When a font lacks a real bold variant and synthetic bold is used:
+- **Chromium** (HTML measurement): advance widths unchanged — text same width as non-bold
+- **PowerPoint**: advance widths increased — text measurably wider, may wrap earlier
+
+This is a **real wrapping risk**, unlike synthetic italic. The mitigation is to require real bold font files for any font used with `**bold**` markdown. See "Recommended approach" below.
+
+---
+
+## PowerPoint Autofit: Ruled Out
+
+### What autofit does
+
+PowerPoint's `<a:normAutofit>` (shrink text on overflow) shrinks font size when text overflows a text box. OOXML properties:
+
+- `fontScale`: percentage multiplier (100000 = 100%) applied uniformly to all runs
+- `lnSpcReduction`: percentage subtracted from line spacing
+- Shrink sequence: reduce line spacing first (up to ~20%), then reduce font size in whole-point steps
+
+pptxgenjs supports this via `fit: 'shrink'` (emits `<a:normAutofit/>` with no attributes).
+
+### Why it doesn't work for tycoslide
+
+1. **Inconsistent font sizes**: Some slides render at 14pt, others at 13pt or 12pt because autofit kicked in. This is visible and distracting.
+2. **Multi-line reflow problem**: If a wrapping mismatch adds one extra line, autofit shrinks ALL text in the box (not just the overflowing line). A paragraph that was perfect at 14pt now renders at 13pt because a sibling paragraph overflowed.
+3. **Not a true safety net**: Autofit records what PowerPoint computed — the `fontScale` in the XML is an OUTPUT, not an INPUT. Other renderers (Google Slides, LibreOffice) may or may not recalculate it.
+4. **Contradicts deterministic layout**: tycoslide measures precisely in Chromium. Autofit means "trust PowerPoint to fix it" — the opposite of the design philosophy.
+5. **Already ruled out**: tycoslide uses `noAutofit` (lIns=0, rIns=0, no autofit child element).
+
+**Sources:**
+- Microsoft Learn: NormalAutoFit Class
+- python-pptx analysis: "fontScale and lnSpcReduction are outputs, not inputs"
+- pptxgenjs issues #779, #330: autofit behavior limitations
+
+---
+
+## Updated Recommendation (March 2025)
+
+### Status: wrapping risk is manageable with real font files
+
+The italic font registration fix addressed the root cause of the showcase wrapping mismatch (real vs synthetic italic). The remaining risks fall into two categories:
+
+**Synthetic font risks (preventable):**
+- **Synthetic bold**: Chromium and PowerPoint diverge on advance widths — real wrapping risk. Preventable by requiring real bold font files.
+- **Synthetic italic**: No wrapping risk (advances unchanged across all engines). Visual quality degrades but line breaks are identical.
+
+**GDI integer rounding (residual):**
+- GDI_CLASSIC integer-pixel rounding vs Chromium sub-pixel accumulation is a real phenomenon (validated in Phase 0)
+- Per-glyph differences are small — unlikely to cross wrapping boundaries for most text
+- When both engines use identical real font files, the GDI rounding is the only discrepancy source
+- A FreeType-based prediction (using `FT_GlyphSlot_Embolden`'s `~fontSize/24` formula) could approximate PowerPoint's behavior for some additional cases, but would not guarantee pixel-perfect agreement since DirectWrite's exact algorithm is proprietary
+
+### Recommended approach
+
+1. **Require real font files**: Throw a compile-time error when markdown uses `**bold**`, `*italic*`, or `***boldItalic***` on a font that lacks the corresponding slot. Overridable with the `-f` (force) flag for users who accept the risk.
+2. **Accept synthetic italic fallback**: When force-compiled, synthetic italic has no wrapping impact (advances unchanged). Synthetic bold is the real risk.
+3. **Keep optional slots in FontFamily**: The type system keeps italic/bold/boldItalic optional. The compile-time check is in the markdown → node pipeline, not the type definition.
+4. **Park FreeType prediction**: Could catch some GDI rounding edge cases in future, but engineering investment not justified by current risk level. The `~fontSize/24` widening formula is a starting point if revisited.
+5. **Reject autofit**: Contradicts deterministic layout, introduces visual inconsistency.

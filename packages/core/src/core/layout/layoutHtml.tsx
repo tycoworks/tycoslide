@@ -15,7 +15,7 @@ import { NODE_TYPE } from '../model/nodes.js';
 import type { Theme, TextStyle, VerticalAlignment, HorizontalAlignment, SizeValue, NormalizedRun, Direction, DashType, Background } from '../model/types.js';
 import { FONT_SLOT, SIZE, VALIGN, HALIGN, DIRECTION, BORDER_STYLE, SHAPE, DASH_TYPE } from '../model/types.js';
 import type { Bounds } from '../model/bounds.js';
-import { normalizeContent, getFontForRun } from '../../utils/font.js';
+import { normalizeContent, getFontForRun, FONT_FORMATS } from '../../utils/font.js';
 import { readImageDimensions } from '../../utils/image.js';
 import { inToPx, ptToPx } from '../../utils/units.js';
 import { bgColor } from '../../utils/color.js';
@@ -910,13 +910,6 @@ ${navBar}
 // ============================================
 // FONT INFRASTRUCTURE
 // ============================================
-
-const FONT_FORMATS: Record<string, { mime: string; format: string }> = {
-  '.woff2': { mime: 'font/woff2', format: 'woff2' },
-  '.woff': { mime: 'font/woff', format: 'woff' },
-  '.ttf': { mime: 'font/ttf', format: 'truetype' },
-  '.otf': { mime: 'font/opentype', format: 'opentype' },
-};
 
 /**
  * Generate @font-face CSS rules from theme.fonts.
