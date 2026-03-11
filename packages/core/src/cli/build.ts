@@ -7,6 +7,7 @@ import path from 'path';
 import createDebug from 'debug';
 import { compileDocument } from '../core/markdown/documentCompiler.js';
 import { LayoutValidationError } from '../core/layout/validator.js';
+import { MissingFontError } from '../utils/font.js';
 import { parseSlideDocument } from '../core/markdown/slideParser.js';
 import { loadTheme } from './themeLoader.js';
 
@@ -57,20 +58,29 @@ export async function build(inputPath: string, options: BuildOptions): Promise<v
 
   if (options.preview) {
     // Preview mode: HTML only, skip PPTX
-    const result = await pres.preview({ outputDir, renderScale: options.renderScale });
+    try {
+      const result = await pres.preview({ outputDir, renderScale: options.renderScale, force: options.force });
 
-    if (result.validationErrors.length > 0) {
-      console.warn(`${result.validationErrors.length} validation warning(s)`);
-      for (const err of result.validationErrors) {
-        const name = err.slideName ? ` "${err.slideName}"` : '';
-        console.warn(`  Slide ${err.slideIndex + 1}${name}`);
+      if (result.validationErrors.length > 0) {
+        console.warn(`${result.validationErrors.length} validation warning(s)`);
+        for (const err of result.validationErrors) {
+          const name = err.slideName ? ` "${err.slideName}"` : '';
+          console.warn(`  Slide ${err.slideIndex + 1}${name}`);
+        }
       }
-    }
 
-    if (result.outputFiles.length > 0) {
-      console.log(`Preview: ${result.outputFiles[0]}`);
-    } else {
-      console.log(`Preview: ${outputDir}`);
+      if (result.outputFiles.length > 0) {
+        console.log(`Preview: ${result.outputFiles[0]}`);
+      } else {
+        console.log(`Preview: ${outputDir}`);
+      }
+    } catch (error) {
+      if (error instanceof LayoutValidationError || error instanceof MissingFontError) {
+        console.error(error.message);
+        process.exitCode = 1;
+      } else {
+        throw error;
+      }
     }
   } else {
     // Build mode: PPTX + HTML
@@ -80,7 +90,7 @@ export async function build(inputPath: string, options: BuildOptions): Promise<v
       await pres.writeFile(outputPath, { force: options.force, outputDir, includeNotes: options.notes, renderScale: options.renderScale });
       console.log(`Written: ${outputPath}`);
     } catch (error) {
-      if (error instanceof LayoutValidationError) {
+      if (error instanceof LayoutValidationError || error instanceof MissingFontError) {
         console.error(error.message);
         process.exitCode = 1;
       } else {

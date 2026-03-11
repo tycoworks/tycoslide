@@ -198,6 +198,27 @@ Error: Layout 'title' params validation failed:
 
 ---
 
+## Missing Font Errors
+
+### "has no bold variant" / "has no italic variant"
+
+```
+[tycoslide] Missing font errors:
+
+  "Fira Code" has no bold variant.
+  "Fira Code" has no italic variant.
+```
+
+**Cause:** The font is missing a bold or italic variant.
+
+**Fix:**
+- Add the missing font file to your theme (ask your theme author or check the theme's documentation for how to add a bold or italic variant)
+- Remove bold/italic markdown from text using that font
+- Use a different font that includes bold and italic variants
+- Use `--force` to compile anyway (text measurements may be inaccurate without the real font file)
+
+---
+
 ## Overflow and Bounds Errors
 
 Use `tycoslide build deck.md --force` to write the PPTX anyway and inspect visually, or `--preview` to write HTML files without generating a PPTX.
@@ -278,7 +299,7 @@ Prints per-slide timing, token resolution, and measurement details to the consol
 tycoslide build deck.md --force
 ```
 
-Writes the PPTX even when slides have overflow or bounds errors. Useful for visually inspecting which element overflows. Combine with `--debug` for full diagnostics.
+Writes the PPTX even when slides have overflow, bounds, or missing font errors. Useful for visually inspecting which element overflows. Combine with `--debug` for full diagnostics.
 
 ### Theme validation
 

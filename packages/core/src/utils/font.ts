@@ -1,7 +1,8 @@
 // Font Utilities Module
 // Provides text normalization and font family helpers
 
-import { type Font, type FontFamily, type TextContent, type TextRun, type NormalizedRun } from '../core/model/types.js';
+import { type Font, type FontFamily, type TextContent, type TextRun, type NormalizedRun, FONT_SLOT, type FontSlot } from '../core/model/types.js';
+import { NODE_TYPE, type ElementNode } from '../core/model/nodes.js';
 
 /**
  * Supported font formats for @font-face CSS and theme validation.
@@ -34,6 +35,27 @@ export function getFontForRun(fontFamily: FontFamily, bold?: boolean, italic?: b
 export function resolveFontFace(family: FontFamily, bold?: boolean, italic?: boolean): string {
   const font = getFontForRun(family, bold, italic);
   return font.name ?? family.name;
+}
+
+/**
+ * Check if a run's bold/italic flags require a FontFamily slot that doesn't exist.
+ * Returns the violation (font name + missing slot) or null if OK.
+ */
+export function checkFontVariant(
+  fontFamily: FontFamily,
+  bold?: boolean,
+  italic?: boolean,
+): { fontName: string; slot: FontSlot } | null {
+  if (bold && italic && !fontFamily.boldItalic) {
+    return { fontName: fontFamily.name, slot: FONT_SLOT.BOLD_ITALIC };
+  }
+  if (bold && !fontFamily.bold) {
+    return { fontName: fontFamily.name, slot: FONT_SLOT.BOLD };
+  }
+  if (italic && !fontFamily.italic) {
+    return { fontName: fontFamily.name, slot: FONT_SLOT.ITALIC };
+  }
+  return null;
 }
 
 /**
@@ -86,4 +108,84 @@ export function normalizeContent(content: TextContent): NormalizedRun[] {
     }
     return run;
   });
+}
+
+// ============================================
+// MISSING FONT VALIDATION
+// ============================================
+
+export interface FontVariantViolation {
+  fontName: string;
+  slot: FontSlot;
+}
+
+/**
+ * Walk an expanded ElementNode tree and check for bold/italic runs
+ * on fonts that lack the corresponding variant slot.
+ * Returns deduplicated violations (unique by fontName + slot).
+ */
+export function validateFontVariants(tree: ElementNode): FontVariantViolation[] {
+  const seen = new Set<string>();
+  const violations: FontVariantViolation[] = [];
+
+  function addViolation(v: { fontName: string; slot: FontSlot }) {
+    const key = `${v.fontName}:${v.slot}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      violations.push({ fontName: v.fontName, slot: v.slot });
+    }
+  }
+
+  function walk(node: ElementNode): void {
+    if (node.type === NODE_TYPE.TEXT) {
+      const runs = normalizeContent(node.content);
+      for (const run of runs) {
+        if (run.bold || run.italic) {
+          const v = checkFontVariant(node.resolvedStyle.fontFamily, run.bold, run.italic);
+          if (v) addViolation(v);
+        }
+      }
+    } else if (node.type === NODE_TYPE.TABLE) {
+      for (const row of node.rows) {
+        for (const cell of row) {
+          const runs = normalizeContent(cell.content);
+          for (const run of runs) {
+            if (run.bold || run.italic) {
+              const v = checkFontVariant(cell.resolvedStyle.fontFamily, run.bold, run.italic);
+              if (v) addViolation(v);
+            }
+          }
+        }
+      }
+    } else if (node.type === NODE_TYPE.CONTAINER || node.type === NODE_TYPE.STACK) {
+      for (const child of node.children) {
+        walk(child);
+      }
+    }
+  }
+
+  walk(tree);
+  return violations;
+}
+
+/**
+ * Format missing font violations into a human-readable error message.
+ */
+export function formatMissingFontErrors(violations: FontVariantViolation[]): string {
+  const details = violations.map(v => `  "${v.fontName}" has no ${v.slot} variant.`);
+  return `[tycoslide] Missing font errors:\n\n${details.join('\n')}`;
+}
+
+/**
+ * Error thrown when missing font validation fails.
+ * Analogous to LayoutValidationError for layout errors.
+ */
+export class MissingFontError extends Error {
+  readonly violations: FontVariantViolation[];
+
+  constructor(violations: FontVariantViolation[]) {
+    super(formatMissingFontErrors(violations));
+    this.name = 'MissingFontError';
+    this.violations = violations;
+  }
 }

@@ -4,8 +4,12 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { validateThemeFonts } from '../src/core/rendering/themeValidator.js';
+import { validateFontVariants } from '../src/utils/font.js';
 import { generateFontFaceCSS } from '../src/core/layout/layoutHtml.js';
-import { mockTheme } from './mocks.js';
+import { mockTheme, mockTextStyle } from './mocks.js';
+import { NODE_TYPE } from '../src/core/model/nodes.js';
+import type { ElementNode, TextNode, ContainerNode } from '../src/core/model/nodes.js';
+import type { FontFamily } from '../src/core/model/types.js';
 
 describe('validateThemeFonts', () => {
   describe('font format requirement', () => {
@@ -326,5 +330,167 @@ describe('generateFontFaceCSS', () => {
     assert.ok(!result.css.includes("font-family: 'Inter';"), 'should not emit font.name as CSS font-family');
     const lightCount = (result.css.match(/font-family: 'Inter Light'/g) || []).length;
     assert.strictEqual(lightCount, 2, 'both rules should use family.name Inter Light');
+  });
+});
+
+// ============================================
+// validateFontVariants() TESTS
+// ============================================
+
+const regularOnly: FontFamily = {
+  name: 'RegularOnly',
+  regular: { path: '/fake/regular.woff', weight: 400 },
+};
+
+const fullFamily: FontFamily = {
+  name: 'Full',
+  regular: { path: '/fake/regular.woff', weight: 400 },
+  italic: { path: '/fake/italic.woff', weight: 400 },
+  bold: { path: '/fake/bold.woff', weight: 700 },
+  boldItalic: { path: '/fake/bold-italic.woff', weight: 700 },
+};
+
+function makeTextNode(content: TextNode['content'], fontFamily: FontFamily): TextNode {
+  return {
+    type: NODE_TYPE.TEXT,
+    content,
+    style: 'body',
+    resolvedStyle: { ...mockTextStyle, fontFamily },
+    color: '#000000',
+    hAlign: 'left',
+    vAlign: 'top',
+    lineHeightMultiplier: 1.0,
+    bulletIndentPt: 18,
+    linkColor: '#0000FF',
+    linkUnderline: true,
+  };
+}
+
+function wrapInContainer(...children: ElementNode[]): ContainerNode {
+  return {
+    type: NODE_TYPE.CONTAINER,
+    direction: 'column',
+    children,
+    width: 10,
+    height: 5,
+    gap: 0.25,
+    vAlign: 'top',
+    hAlign: 'left',
+  };
+}
+
+describe('validateFontVariants', () => {
+  it('returns empty for tree with no bold/italic runs', () => {
+    const tree = makeTextNode('plain text', regularOnly);
+    assert.deepStrictEqual(validateFontVariants(tree), []);
+  });
+
+  it('returns empty when font has all required slots', () => {
+    const tree = makeTextNode(
+      [{ text: 'bold', bold: true }, { text: 'italic', italic: true }],
+      fullFamily,
+    );
+    assert.deepStrictEqual(validateFontVariants(tree), []);
+  });
+
+  it('detects missing bold variant in TextNode', () => {
+    const tree = makeTextNode(
+      [{ text: 'bold text', bold: true }],
+      regularOnly,
+    );
+    const violations = validateFontVariants(tree);
+    assert.strictEqual(violations.length, 1);
+    assert.strictEqual(violations[0].fontName, 'RegularOnly');
+    assert.strictEqual(violations[0].slot, 'bold');
+  });
+
+  it('detects missing italic variant in TextNode', () => {
+    const tree = makeTextNode(
+      [{ text: 'italic text', italic: true }],
+      regularOnly,
+    );
+    const violations = validateFontVariants(tree);
+    assert.strictEqual(violations.length, 1);
+    assert.strictEqual(violations[0].slot, 'italic');
+  });
+
+  it('detects missing boldItalic variant', () => {
+    const noBoldItalic: FontFamily = {
+      name: 'NoBoldItalic',
+      regular: { path: '/fake/regular.woff', weight: 400 },
+      bold: { path: '/fake/bold.woff', weight: 700 },
+    };
+    const tree = makeTextNode(
+      [{ text: 'bold italic', bold: true, italic: true }],
+      noBoldItalic,
+    );
+    const violations = validateFontVariants(tree);
+    assert.strictEqual(violations.length, 1);
+    assert.strictEqual(violations[0].slot, 'boldItalic');
+  });
+
+  it('recurses into ContainerNode children', () => {
+    const tree = wrapInContainer(
+      makeTextNode('plain', fullFamily),
+      makeTextNode([{ text: 'bold', bold: true }], regularOnly),
+    );
+    const violations = validateFontVariants(tree);
+    assert.strictEqual(violations.length, 1);
+    assert.strictEqual(violations[0].slot, 'bold');
+  });
+
+  it('deduplicates same font+slot across multiple nodes', () => {
+    const tree = wrapInContainer(
+      makeTextNode([{ text: 'bold1', bold: true }], regularOnly),
+      makeTextNode([{ text: 'bold2', bold: true }], regularOnly),
+    );
+    const violations = validateFontVariants(tree);
+    assert.strictEqual(violations.length, 1, 'should deduplicate identical violations');
+  });
+
+  it('reports different slots separately', () => {
+    const tree = wrapInContainer(
+      makeTextNode([{ text: 'bold', bold: true }], regularOnly),
+      makeTextNode([{ text: 'italic', italic: true }], regularOnly),
+    );
+    const violations = validateFontVariants(tree);
+    assert.strictEqual(violations.length, 2);
+    const slots = violations.map(v => v.slot).sort();
+    assert.deepStrictEqual(slots, ['bold', 'italic']);
+  });
+
+  it('detects violations in TableNode cells', () => {
+    const tableNode: ElementNode = {
+      type: NODE_TYPE.TABLE,
+      rows: [[{
+        content: [{ text: 'bold cell', bold: true }],
+        color: '#000',
+        textStyle: 'body',
+        resolvedStyle: { ...mockTextStyle, fontFamily: regularOnly },
+        hAlign: 'left' as const,
+        vAlign: 'top' as const,
+        lineHeightMultiplier: 1.0,
+        linkColor: '#0000FF',
+        linkUnderline: true,
+      }]],
+      borderStyle: 'full',
+      borderColor: '#000',
+      borderWidth: 1,
+      headerBackground: '#EEE',
+      headerBackgroundOpacity: 1,
+      headerTextStyle: 'body',
+      cellBackground: '#FFF',
+      cellBackgroundOpacity: 1,
+      cellTextStyle: 'body',
+      cellPadding: 0.1,
+      hAlign: 'left' as const,
+      vAlign: 'top' as const,
+      linkColor: '#0000FF',
+      linkUnderline: true,
+    };
+    const violations = validateFontVariants(tableNode);
+    assert.strictEqual(violations.length, 1);
+    assert.strictEqual(violations[0].fontName, 'RegularOnly');
+    assert.strictEqual(violations[0].slot, 'bold');
   });
 });

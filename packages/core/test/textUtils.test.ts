@@ -3,8 +3,8 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { getFontForRun, resolveFontFace, isFontFamily } from '../src/utils/font.js';
-import { type FontFamily } from '../src/core/model/types.js';
+import { getFontForRun, resolveFontFace, isFontFamily, checkFontVariant } from '../src/utils/font.js';
+import { type FontFamily, FONT_SLOT } from '../src/core/model/types.js';
 
 // ============================================
 // TEST DATA
@@ -180,5 +180,48 @@ describe('isFontFamily', () => {
 
   it('returns false for object with regular.path not a string', () => {
     assert.strictEqual(isFontFamily({ name: 'Inter', regular: { path: 123, weight: 400 } }), false);
+  });
+});
+
+// ============================================
+// checkFontVariant() TESTS
+// ============================================
+
+describe('checkFontVariant', () => {
+  it('returns null when all slots exist', () => {
+    assert.strictEqual(checkFontVariant(mockFontFamily, true, true), null);
+    assert.strictEqual(checkFontVariant(mockFontFamily, true), null);
+    assert.strictEqual(checkFontVariant(mockFontFamily, false, true), null);
+  });
+
+  it('returns null for non-bold non-italic runs', () => {
+    assert.strictEqual(checkFontVariant(minimalFontFamily), null);
+    assert.strictEqual(checkFontVariant(minimalFontFamily, false, false), null);
+  });
+
+  it('returns violation for missing bold', () => {
+    const v = checkFontVariant(minimalFontFamily, true);
+    assert.deepStrictEqual(v, { fontName: 'Minimal', slot: FONT_SLOT.BOLD });
+  });
+
+  it('returns violation for missing italic', () => {
+    const v = checkFontVariant(minimalFontFamily, false, true);
+    assert.deepStrictEqual(v, { fontName: 'Minimal', slot: FONT_SLOT.ITALIC });
+  });
+
+  it('returns violation for missing boldItalic', () => {
+    const noBoldItalic: FontFamily = {
+      name: 'NoBoldItalic',
+      regular: { path: '/fonts/regular.woff', weight: 400 },
+      bold: { path: '/fonts/bold.woff', weight: 700 },
+    };
+    const v = checkFontVariant(noBoldItalic, true, true);
+    assert.deepStrictEqual(v, { fontName: 'NoBoldItalic', slot: FONT_SLOT.BOLD_ITALIC });
+  });
+
+  it('returns bold violation when both bold and boldItalic missing', () => {
+    // bold+italic on a regular-only font: bold check fires first
+    const v = checkFontVariant(minimalFontFamily, true, true);
+    assert.deepStrictEqual(v, { fontName: 'Minimal', slot: FONT_SLOT.BOLD_ITALIC });
   });
 });

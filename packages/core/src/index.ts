@@ -95,7 +95,7 @@ export { parseSlideDocument, FrontmatterParseError, type ParsedDocument, type Ra
 export { resolveGap, inToPx } from './utils/units.js';
 
 // Font utilities
-export { getFontForRun, resolveFontFace, normalizeContent, isFontFamily } from './utils/font.js';
+export { getFontForRun, resolveFontFace, normalizeContent, isFontFamily, MissingFontError, type FontVariantViolation } from './utils/font.js';
 
 // Color utilities
 export { hexToRgba, bgColor } from './utils/color.js';

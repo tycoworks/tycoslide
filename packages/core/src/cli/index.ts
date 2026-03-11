@@ -16,7 +16,7 @@ program
   .description('Compile a markdown file into a PPTX presentation')
   .argument('<input>', 'path to markdown file')
   .option('-p, --preview', 'skip PPTX generation, output HTML preview only')
-  .option('-f, --force', 'write PPTX despite layout validation errors')
+  .option('-f, --force', 'write PPTX despite layout or missing font errors')
   .option('-d, --debug', 'enable verbose logging')
   .option('--no-notes', 'exclude speaker notes from output')
   .option('--render-scale <factor>', 'pixel density multiplier for rendered diagrams and code (default: 2)')

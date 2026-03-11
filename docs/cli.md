@@ -15,7 +15,7 @@ tycoslide build <input> [options]
 | Flag | Default | Description |
 |------|---------|-------------|
 | `-p, --preview` | off | Skip PPTX generation; write HTML only. Validation errors become warnings instead of failures. |
-| `-f, --force` | off | Write PPTX even when layout validation errors are present. |
+| `-f, --force` | off | Write PPTX even with layout errors or missing fonts. |
 | `-d, --debug` | off | Enable verbose build logging. Does not affect output files. |
 | `--render-scale <n>` | `2` | Pixel density for rendered diagrams and code blocks. `1` = draft, `2` = retina, `3` = print. |
 | `--no-notes` | notes included | Exclude speaker notes from the output PPTX. |

@@ -15,6 +15,7 @@ import { log } from '../../utils/log.js';
 import { componentRegistry, masterRegistry, type ExpansionContext } from './registry.js';
 import { LayoutPipeline } from '../layout/pipeline.js';
 import { validateThemeFonts } from './themeValidator.js';
+import { validateFontVariants, MissingFontError } from '../../utils/font.js';
 
 export type { Slide } from '../model/types.js';
 
@@ -91,7 +92,7 @@ export class Presentation {
    * Write the presentation to a file.
    * All slides are processed here with browser-based layout.
    *
-   * By default, throws LayoutValidationError if any slides have validation errors.
+   * By default, throws MissingFontError or LayoutValidationError on validation failures.
    * Pass `force: true` to write the PPTX despite errors (for visual debugging).
    */
   async writeFile(fileName: string, options: { includeNotes?: boolean; force?: boolean; outputDir: string; renderScale?: number }): Promise<WriteResult> {
@@ -101,23 +102,13 @@ export class Presentation {
     let validationErrors: SlideValidationResult[] = [];
     let slides: SlideLayout[] = [];
     if (this.deferredSlides.length > 0) {
-      const result = await this.processDeferredSlides({ outputDir: options.outputDir, renderScale: options.renderScale });
+      const result = await this.processDeferredSlides({ outputDir: options.outputDir, renderScale: options.renderScale, force: options.force });
       validationErrors = result.validationErrors;
       slides = result.slides;
     }
 
-    // Gate: fail by default if there are validation errors
-    if (validationErrors.length > 0 && !options.force) {
-      throw new LayoutValidationError(validationErrors, this.slideCount);
-    }
-
     // Write the file (either clean, or force=true with errors)
     await this.renderer.writeFile(resolvedPath, { includeNotes: options.includeNotes });
-
-    if (validationErrors.length > 0) {
-      // force=true path: warn but don't throw
-      console.warn(new LayoutValidationError(validationErrors, this.slideCount).message);
-    }
 
     return { outputPath: resolvedPath, validationErrors, slides };
   }
@@ -132,6 +123,7 @@ export class Presentation {
     outputDir: string;
     renderScale?: number;
     preview?: boolean;
+    force?: boolean;
   }): Promise<{ slides: SlideLayout[]; validationErrors: SlideValidationResult[]; outputFiles: string[] }> {
     const pipeline = new LayoutPipeline({ deviceScaleFactor: options?.renderScale, outputDir: options.outputDir });
 
@@ -216,6 +208,26 @@ export class Presentation {
         expandedSlides.push({ deferred, expanded, bounds, masterKey });
       }
 
+      // Missing font validation: check for bold/italic on fonts without those slots
+      const allExpandedTrees = [
+        ...[...pendingMasters.values()].map(m => m.content),
+        ...expandedSlides.map(s => s.expanded),
+      ];
+      const rawViolations = allExpandedTrees.flatMap(tree => validateFontVariants(tree));
+      const seenViolations = new Set<string>();
+      const fontVariantViolations = rawViolations.filter(v => {
+        const key = `${v.fontName}:${v.slot}`;
+        if (seenViolations.has(key)) return false;
+        seenViolations.add(key);
+        return true;
+      });
+
+      if (fontVariantViolations.length > 0) {
+        const error = new MissingFontError(fontVariantViolations);
+        if (!options.force) throw error;
+        console.warn(error.message);
+      }
+
       // Phase 3: Browser measurement (execute all measurements)
       log.pptx._('PIPELINE: Measuring %d slides...', pipeline.measurementCount);
       await pipeline.executeMeasurements(this._theme);
@@ -286,6 +298,13 @@ export class Presentation {
         }
       }
 
+      // Gate: fail by default if there are layout validation errors
+      if (validationErrors.length > 0) {
+        const error = new LayoutValidationError(validationErrors, this.slideCount);
+        if (!options.force) throw error;
+        console.warn(error.message);
+      }
+
       if (!options?.preview) {
         this.deferredSlides = [];
       }
@@ -318,7 +337,7 @@ export class Presentation {
    * When outputDir is provided, writes navigable HTML files for browser preview.
    * Does NOT clear deferred slides — writeFile() can still be called after.
    */
-  async preview(options: { outputDir: string; renderScale?: number }): Promise<{ slides: SlideLayout[]; validationErrors: SlideValidationResult[]; outputFiles: string[] }> {
-    return this.processDeferredSlides({ outputDir: options.outputDir, renderScale: options.renderScale, preview: true });
+  async preview(options: { outputDir: string; renderScale?: number; force?: boolean }): Promise<{ slides: SlideLayout[]; validationErrors: SlideValidationResult[]; outputFiles: string[] }> {
+    return this.processDeferredSlides({ outputDir: options.outputDir, renderScale: options.renderScale, preview: true, force: options.force });
   }
 }
