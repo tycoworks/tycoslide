@@ -17,7 +17,7 @@ export {
   STRIKE_TYPE, UNDERLINE_STYLE,
   SLIDE_SIZE,
   CUSTOM_LAYOUT,
-  FONT_WEIGHT,
+  FONT_WEIGHT, FONT_WEIGHT_VALUES,
   TEXT_STYLE,
   Bounds,
 } from './core/model/types.js';
@@ -93,6 +93,9 @@ export { parseSlideDocument, FrontmatterParseError, type ParsedDocument, type Ra
 
 // Unit utilities (for component authors that resolve theme values during expand)
 export { resolveGap, inToPx } from './utils/units.js';
+
+// Font utilities
+export { getFontFromFamily, normalizeContent, isFontFamily } from './utils/font.js';
 
 // Color utilities
 export { hexToRgba, bgColor } from './utils/color.js';

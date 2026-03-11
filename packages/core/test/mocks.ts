@@ -13,8 +13,8 @@ const require = createRequire(import.meta.url);
 // ============================================
 
 const mockFontFamily: FontFamily = {
-  normal: { name: 'Inter', path: require.resolve('@fontsource/inter/files/inter-latin-400-normal.woff2') },
-  bold: { name: 'Inter Bold', path: require.resolve('@fontsource/inter/files/inter-latin-700-normal.woff2') },
+  normal: { name: 'Inter', path: require.resolve('@fontsource/inter/files/inter-latin-400-normal.woff'), weight: 400 },
+  bold: { name: 'Inter', path: require.resolve('@fontsource/inter/files/inter-latin-700-normal.woff'), weight: 700 },
 };
 
 export const mockTextStyle: TextStyle = {

@@ -11,13 +11,13 @@ import { FONT_WEIGHT, type FontFamily } from '../src/core/model/types.js';
 // ============================================
 
 const mockFontFamily: FontFamily = {
-  light: { name: 'Test Light', path: '/fonts/test-light.ttf' },
-  normal: { name: 'Test Normal', path: '/fonts/test-normal.ttf' },
-  bold: { name: 'Test Bold', path: '/fonts/test-bold.ttf' },
+  light: { name: 'Test Light', path: '/fonts/test-light.woff', weight: 300 },
+  normal: { name: 'Test', path: '/fonts/test-normal.woff', weight: 400 },
+  bold: { name: 'Test', path: '/fonts/test-bold.woff', weight: 700 },
 };
 
 const mockFontFamilyNoBold: FontFamily = {
-  normal: { name: 'Test Normal', path: '/fonts/test-normal.ttf' },
+  normal: { name: 'Test', path: '/fonts/test-normal.woff', weight: 400 },
 };
 
 // ============================================
@@ -27,20 +27,20 @@ const mockFontFamilyNoBold: FontFamily = {
 describe('getFontFromFamily', () => {
   it('returns normal font', () => {
     const font = getFontFromFamily(mockFontFamily, FONT_WEIGHT.NORMAL);
-    assert.strictEqual(font.name, 'Test Normal');
-    assert.strictEqual(font.path, '/fonts/test-normal.ttf');
+    assert.strictEqual(font.name, 'Test');
+    assert.strictEqual(font.path, '/fonts/test-normal.woff');
   });
 
   it('returns bold font', () => {
     const font = getFontFromFamily(mockFontFamily, FONT_WEIGHT.BOLD);
-    assert.strictEqual(font.name, 'Test Bold');
-    assert.strictEqual(font.path, '/fonts/test-bold.ttf');
+    assert.strictEqual(font.name, 'Test');
+    assert.strictEqual(font.path, '/fonts/test-bold.woff');
   });
 
-  it('returns light font', () => {
+  it('returns light font with its own PPTX typeface name', () => {
     const font = getFontFromFamily(mockFontFamily, FONT_WEIGHT.LIGHT);
     assert.strictEqual(font.name, 'Test Light');
-    assert.strictEqual(font.path, '/fonts/test-light.ttf');
+    assert.strictEqual(font.path, '/fonts/test-light.woff');
   });
 
   it('throws for missing weight', () => {
@@ -48,7 +48,7 @@ describe('getFontFromFamily', () => {
       () => getFontFromFamily(mockFontFamilyNoBold, FONT_WEIGHT.BOLD),
       {
         name: 'Error',
-        message: "Font weight 'bold' is not defined in this font family",
+        message: "Font weight 'bold' is not defined in font family 'Test'",
       }
     );
   });

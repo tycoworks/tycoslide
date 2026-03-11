@@ -365,7 +365,7 @@ describe('renderCodeToHtml()', () => {
   };
 
   const codeStyle: TextStyle = {
-    fontFamily: { normal: { name: 'Fira Code', path: '' } },
+    fontFamily: { normal: { name: 'Fira Code', path: '', weight: 400 } },
     fontSize: 12,
     defaultWeight: FONT_WEIGHT.NORMAL,
     lineHeightMultiplier: 1.4,
@@ -392,6 +392,11 @@ describe('renderCodeToHtml()', () => {
   it('contains font-family from textStyle', async () => {
     const html = await renderCodeToHtml('x', 'text', tokens, codeStyle);
     assert.ok(html.includes('Fira Code'), 'should contain font family');
+  });
+
+  it('contains font-weight from textStyle defaultWeight', async () => {
+    const html = await renderCodeToHtml('x', 'text', tokens, codeStyle);
+    assert.ok(html.includes('font-weight: 400'), 'should contain font-weight from defaultWeight');
   });
 
   it('contains font-size from textStyle', async () => {

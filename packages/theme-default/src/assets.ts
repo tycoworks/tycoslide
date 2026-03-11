@@ -11,24 +11,12 @@ const tycoworks = (name: string) => fileURLToPath(new URL(`../assets/tycoworks/$
 export const assets = {
   fonts: {
     inter: {
-      light: {
-        name: 'Inter Light',
-        path: require.resolve('@fontsource/inter/files/inter-latin-300-normal.woff2'),
-      },
-      normal: {
-        name: 'Inter',
-        path: require.resolve('@fontsource/inter/files/inter-latin-400-normal.woff2'),
-      },
-      bold: {
-        name: 'Inter Bold',
-        path: require.resolve('@fontsource/inter/files/inter-latin-700-normal.woff2'),
-      },
+      light: { name: 'Inter Light', path: require.resolve('@fontsource/inter/files/inter-latin-300-normal.woff'), weight: 300 },
+      normal: { name: 'Inter', path: require.resolve('@fontsource/inter/files/inter-latin-400-normal.woff'), weight: 400 },
+      bold: { name: 'Inter', path: require.resolve('@fontsource/inter/files/inter-latin-700-normal.woff'), weight: 700 },
     },
     firaCode: {
-      normal: {
-        name: 'Fira Code',
-        path: require.resolve('@fontsource/fira-code/files/fira-code-latin-400-normal.woff2'),
-      },
+      normal: { name: 'Fira Code', path: require.resolve('@fontsource/fira-code/files/fira-code-latin-400-normal.woff'), weight: 400 },
     },
   },
   icons: {

@@ -6,6 +6,7 @@ import { pathToFileURL } from 'url';
 import path from 'path';
 import type { Theme } from '../core/model/types.js';
 import { componentRegistry, layoutRegistry, masterRegistry } from '../core/rendering/registry.js';
+import { validateThemeFonts } from '../core/rendering/themeValidator.js';
 
 export interface LoadedTheme {
   theme: Theme;
@@ -72,6 +73,8 @@ export async function loadTheme(name: string): Promise<LoadedTheme> {
       `Theme package '${packageName}' does not export 'masters'.`,
     );
   }
+
+  validateThemeFonts(mod.theme);
 
   return {
     theme: mod.theme,

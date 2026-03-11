@@ -14,6 +14,7 @@ import type { SlideValidationResult, ValidationResult } from '../layout/validato
 import { log } from '../../utils/log.js';
 import { componentRegistry, masterRegistry, type ExpansionContext } from './registry.js';
 import { LayoutPipeline } from '../layout/pipeline.js';
+import { validateThemeFonts } from './themeValidator.js';
 
 export type { Slide } from '../model/types.js';
 
@@ -62,6 +63,7 @@ export class Presentation {
   private deferredSlides: DeferredSlide[] = [];
 
   constructor(theme: Theme, assets?: Record<string, unknown>) {
+    validateThemeFonts(theme);
     this._theme = theme;
     this._assets = assets;
     this.renderer = new PptxRenderer(theme);

@@ -13,7 +13,7 @@ function textNode(content: string): TextNode {
     vAlign: VALIGN.TOP,
     style: TEXT_STYLE.BODY,
     resolvedStyle: {
-      fontFamily: { normal: { name: 'Arial', path: '' } },
+      fontFamily: { normal: { name: 'Arial', path: '', weight: 400 } },
       fontSize: 14,
       defaultWeight: FONT_WEIGHT.NORMAL,
       lineHeightMultiplier: 1.0,

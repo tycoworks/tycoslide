@@ -12,10 +12,10 @@ import type { FC } from 'hono/jsx';
 import type { Page } from 'playwright';
 import type { ElementNode, TextNode, ImageNode, LineNode, ShapeNode, ContainerNode, StackNode, SlideNumberNode, TableNode, TableCellData } from '../model/nodes.js';
 import { NODE_TYPE } from '../model/nodes.js';
-import type { Theme, TextStyle, FontFamily, FontWeight, VerticalAlignment, HorizontalAlignment, SizeValue, NormalizedRun, Direction, DashType, Background } from '../model/types.js';
-import { FONT_WEIGHT, SIZE, VALIGN, HALIGN, DIRECTION, BORDER_STYLE, SHAPE, DASH_TYPE } from '../model/types.js';
+import type { Theme, TextStyle, FontWeight, VerticalAlignment, HorizontalAlignment, SizeValue, NormalizedRun, Direction, DashType, Background } from '../model/types.js';
+import { FONT_WEIGHT_VALUES, SIZE, VALIGN, HALIGN, DIRECTION, BORDER_STYLE, SHAPE, DASH_TYPE } from '../model/types.js';
 import type { Bounds } from '../model/bounds.js';
-import { normalizeContent, fontWeightToNumeric, getFontFromFamily } from '../../utils/font.js';
+import { normalizeContent, getFontFromFamily } from '../../utils/font.js';
 import { readImageDimensions } from '../../utils/image.js';
 import { inToPx, ptToPx } from '../../utils/units.js';
 import { bgColor } from '../../utils/color.js';
@@ -255,6 +255,7 @@ function styleText(
     flexDirection: 'column',
     justifyContent: vAlignToJustify(node.vAlign),
     fontFamily: `'${defaultFont.name}'`,
+    fontWeight: defaultFont.weight,
     fontSize: `${fontSizePx}px`,
     lineHeight: `${cssLineHeight}`,
     color: node.color,
@@ -413,6 +414,7 @@ function styleSlideNumber(
       flexDirection: DIRECTION.COLUMN,
       justifyContent: vAlignToJustify(node.vAlign),
       fontFamily: `'${defaultFont.name}'`,
+      fontWeight: defaultFont.weight,
       fontSize: `${fontSizePx}px`,
       color: node.color,
       textAlign,
@@ -650,18 +652,17 @@ function renderRunSpanHTML(
   const css: string[] = [];
 
   if (run.weight && run.weight !== defaultWeight) {
-    const font = style.fontFamily[run.weight];
-    if (font) {
-      css.push(`font-family:'${font.name}'`);
-      css.push(`font-weight:${fontWeightToNumeric(run.weight)}`);
+    const weightFont = style.fontFamily[run.weight];
+    if (weightFont) {
+      css.push(`font-family:'${style.fontFamily.normal.name}'`);
+      css.push(`font-weight:${weightFont.weight}`);
     }
   }
 
   if (run.bold) {
-    const boldFont = style.fontFamily.bold;
-    if (boldFont) {
-      css.push(`font-family:'${boldFont.name}'`);
-      css.push(`font-weight:${fontWeightToNumeric(FONT_WEIGHT.BOLD)}`);
+    if (style.fontFamily.bold) {
+      css.push(`font-family:'${style.fontFamily.normal.name}'`);
+      css.push(`font-weight:${style.fontFamily.bold.weight}`);
     }
   }
 
@@ -857,7 +858,7 @@ export function generateLayoutHTML(
 export function generateBaseCSS(theme: Theme): string {
   const { css: fontFaceCSS } = generateFontFaceCSS(theme);
   return `${fontFaceCSS}
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-variant-ligatures: none; font-feature-settings: 'liga' 0, 'calt' 0; }
     body { overflow: hidden; }
     .root { display: flex; flex-direction: column; }
     .root > * { flex: 1 1 0; min-height: 0; }`;
@@ -925,88 +926,23 @@ const FONT_FORMATS: Record<string, { mime: string; format: string }> = {
   '.otf': { mime: 'font/opentype', format: 'opentype' },
 };
 
-const WEIGHT_KEYS: FontWeight[] = ['light', 'normal', 'bold'];
-
-/** Duck-type check: is this value a FontFamily object? */
-function isFontFamily(value: unknown): value is FontFamily {
-  return typeof value === 'object' && value !== null &&
-    'normal' in value &&
-    typeof (value as any).normal === 'object' &&
-    typeof (value as any).normal.name === 'string' &&
-    typeof (value as any).normal.path === 'string';
-}
-
+/**
+ * Generate @font-face CSS rules from theme.fonts.
+ * Assumes theme fonts have been pre-validated via validateThemeFonts().
+ */
 export function generateFontFaceCSS(theme: Theme): { css: string; fonts: FontDescriptor[] } {
-  // Build cache key from theme.fonts (the sole font source)
-  const fontPaths: string[] = [];
-  for (const family of theme.fonts) {
-    for (const weight of WEIGHT_KEYS) {
-      const font = family[weight];
-      if (font && font.path) fontPaths.push(font.path);
-    }
-  }
-  // Validate before cache check — same font CSS can be cached,
-  // but different themes may have different textStyles/components referencing unregistered fonts.
-  const registeredPaths = new Set(fontPaths);
-  for (const styleName of Object.keys(theme.textStyles)) {
-    const style = theme.textStyles[styleName];
-    for (const weight of WEIGHT_KEYS) {
-      const font = style.fontFamily[weight];
-      if (font && font.path && !registeredPaths.has(font.path)) {
-        throw new Error(
-          `[tycoslide] Font "${font.name}" (${font.path}) used in textStyle "${styleName}" is not listed in theme.fonts.`
-        );
-      }
-    }
-  }
-
-  // Validate: layout and master tokens that contain FontFamily must be in theme.fonts
-  const walkTokensForFonts = (tokens: Record<string, unknown>, path: string) => {
-    for (const [key, value] of Object.entries(tokens)) {
-      if (isFontFamily(value)) {
-        for (const weight of WEIGHT_KEYS) {
-          const font = value[weight];
-          if (font && font.path && !registeredPaths.has(font.path)) {
-            throw new Error(
-              `[tycoslide] Font "${font.name}" (${font.path}) used in ${path}.${key} is not listed in theme.fonts.`
-            );
-          }
-        }
-      } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-        walkTokensForFonts(value as Record<string, unknown>, `${path}.${key}`);
-      }
-    }
-  };
-
-  if (theme.layouts) {
-    for (const [layoutName, layoutDef] of Object.entries(theme.layouts)) {
-      for (const [variantName, tokens] of Object.entries(layoutDef.variants)) {
-        walkTokensForFonts(tokens as Record<string, unknown>, `layout "${layoutName}" variant "${variantName}"`);
-      }
-    }
-  }
-
-  if (theme.masters) {
-    for (const [masterName, masterDef] of Object.entries(theme.masters)) {
-      for (const [variantName, tokens] of Object.entries(masterDef.variants)) {
-        walkTokensForFonts(tokens as Record<string, unknown>, `master "${masterName}" variant "${variantName}"`);
-      }
-    }
-  }
-
-  // Generate @font-face rules with relative paths (fonts copied to outputDir/fonts/)
   const fontFaces: string[] = [];
   const fonts: FontDescriptor[] = [];
   const seenPaths = new Set<string>();
 
   for (const family of theme.fonts) {
-    for (const weight of WEIGHT_KEYS) {
+    const cssFamily = family.normal.name;
+    for (const weight of FONT_WEIGHT_VALUES) {
       const font = family[weight];
       if (!font || !font.path) continue;
       if (seenPaths.has(font.path)) continue;
       seenPaths.add(font.path);
-      const numericWeight = fontWeightToNumeric(weight);
-      fonts.push({ name: font.name, weight: numericWeight });
+      fonts.push({ name: cssFamily, weight: font.weight });
       const ext = path.extname(font.path).toLowerCase();
       const fontFormat = FONT_FORMATS[ext];
       if (!fontFormat) {
@@ -1014,9 +950,9 @@ export function generateFontFaceCSS(theme: Theme): { css: string; fonts: FontDes
       }
       fontFaces.push(`
           @font-face {
-            font-family: '${font.name}';
+            font-family: '${cssFamily}';
             src: url('fonts/${path.basename(font.path)}') format('${fontFormat.format}');
-            font-weight: ${numericWeight};
+            font-weight: ${font.weight};
           }
         `);
     }
@@ -1053,9 +989,7 @@ export async function measureFontNormalRatios(page: Page, theme: Theme, outputDi
   const fontNames = new Set<string>();
   for (const styleName of Object.keys(theme.textStyles)) {
     const style = theme.textStyles[styleName];
-    for (const font of Object.values(style.fontFamily)) {
-      if (font?.name) fontNames.add(font.name);
-    }
+    fontNames.add(style.fontFamily.normal.name);
   }
 
   const ratios = await page.evaluate((names: string[]) => {

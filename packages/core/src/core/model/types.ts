@@ -329,14 +329,18 @@ export interface CustomSlideSize {
 /**
  * A font reference for rendering and measurement.
  *
- * For custom fonts, set `path` to the absolute path of a .woff2/.ttf file.
- * Theme authors can use @fontsource npm packages:
+ * `name` is the typeface name used in PPTX (e.g., `'Inter'` for normal/bold,
+ * `'Inter Light'` for light weight). For CSS, the family name is always
+ * derived from `FontFamily.normal.name`.
+ *
+ * `path` must be an absolute path to a `.woff` file. WOFF2 is not supported
+ * (FreeType metrics require WOFF). Use `@fontsource` npm packages:
  * ```typescript
  * import { createRequire } from 'module';
  * const require = createRequire(import.meta.url);
  * const font: Font = {
  *   name: 'Inter',
- *   path: require.resolve('@fontsource/inter/files/inter-latin-400-normal.woff2'),
+ *   path: require.resolve('@fontsource/inter/files/inter-latin-400-normal.woff'),
  * };
  * ```
  *
@@ -347,12 +351,28 @@ export interface CustomSlideSize {
 export interface Font {
   name: string;
   path: string;
+  weight: number;
 }
 
+/**
+ * A font family with one or more weight variants.
+ *
+ * Each weight is a `Font` object with `name` (PPTX typeface) and `path` (.woff file).
+ * `normal` (400) is required; `light` (300) and `bold` (700) are optional.
+ *
+ * For CSS `@font-face`, all weights share `normal.name` as the font-family,
+ * distinguished by `font-weight` descriptors (300/400/700).
+ *
+ * For PPTX, each weight's `name` is used as the typeface string:
+ * - `bold.name` must equal `normal.name` (OOXML uses a binary bold flag)
+ * - `light.name` may differ (e.g., `'Inter Light'`) since OOXML has no light flag
+ *
+ * Use `getFontFromFamily()` to resolve a weight to its `Font` reference.
+ */
 export interface FontFamily {
-  light?: Font;   // weight 300
-  normal: Font;   // weight 400 (required default)
-  bold?: Font;    // weight 700
+  light?: Font;    // e.g. { name: 'Inter Light', path: '...', weight: 300 }
+  normal: Font;    // e.g. { name: 'Inter', path: '...', weight: 400 } — name is the CSS family name
+  bold?: Font;     // e.g. { name: 'Inter', path: '...', weight: 700 } — name must equal normal.name for PPTX
 }
 
 export const FONT_WEIGHT = {
@@ -362,6 +382,9 @@ export const FONT_WEIGHT = {
 } as const;
 
 export type FontWeight = typeof FONT_WEIGHT[keyof typeof FONT_WEIGHT];
+
+/** All FONT_WEIGHT values — used to iterate FontFamily weight slots */
+export const FONT_WEIGHT_VALUES = Object.values(FONT_WEIGHT) as [FontWeight, ...FontWeight[]];
 
 export const TEXT_STYLE = {
   H1: 'h1',

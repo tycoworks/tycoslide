@@ -5,12 +5,10 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
-import type { Theme } from '../model/types.js';
+import { FONT_WEIGHT_VALUES, type Theme } from '../model/types.js';
 import type { ElementNode, ImageNode } from '../model/nodes.js';
 import { NODE_TYPE } from '../model/nodes.js';
 import type { Background } from '../model/types.js';
-
-const WEIGHT_KEYS = ['light', 'normal', 'bold'] as const;
 
 /**
  * Copy theme fonts into outputDir/fonts/.
@@ -21,10 +19,16 @@ export function copyFonts(theme: Theme, outputDir: string): void {
   fs.mkdirSync(fontsDir, { recursive: true });
   const copied = new Set<string>();
   for (const family of theme.fonts) {
-    for (const weight of WEIGHT_KEYS) {
+    for (const weight of FONT_WEIGHT_VALUES) {
       const font = family[weight];
-      if (!font?.path || copied.has(font.path)) continue;
+      if (!font || copied.has(font.path)) continue;
       copied.add(font.path);
+      if (!fs.existsSync(font.path)) {
+        throw new Error(
+          `[tycoslide] Font file not found: ${font.path}\n` +
+          `Check that the path is correct and the font package is installed.`
+        );
+      }
       fs.copyFileSync(font.path, path.join(fontsDir, path.basename(font.path)));
     }
   }

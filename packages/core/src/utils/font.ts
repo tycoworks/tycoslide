@@ -5,31 +5,27 @@ import { FONT_WEIGHT, type Font, type FontFamily, type FontWeight, type TextCont
 
 /**
  * Get the Font for a given weight from a FontFamily.
+ * Returns the Font object directly from the family.
  * Throws if requested weight is not defined.
  */
 export function getFontFromFamily(fontFamily: FontFamily, weight: FontWeight): Font {
   const font = fontFamily[weight];
   if (!font) {
-    throw new Error(`Font weight '${weight}' is not defined in this font family`);
+    throw new Error(`Font weight '${weight}' is not defined in font family '${fontFamily.normal.name}'`);
   }
   return font;
 }
 
-// ============================================
-// FONT WEIGHT
-// ============================================
-
-/** CSS numeric font weight for a FontWeight constant */
-const FONT_WEIGHT_NUMERIC: Record<FontWeight, number> = {
-  [FONT_WEIGHT.LIGHT]: 300,
-  [FONT_WEIGHT.NORMAL]: 400,
-  [FONT_WEIGHT.BOLD]: 700,
-};
-
-export function fontWeightToNumeric(weight: FontWeight): number {
-  const numeric = FONT_WEIGHT_NUMERIC[weight];
-  if (numeric === undefined) throw new Error(`Unknown font weight: ${weight}`);
-  return numeric;
+/**
+ * Duck-type check: is this value a FontFamily object?
+ * Checks for required `normal` property with `name` and `path` strings.
+ */
+export function isFontFamily(value: unknown): value is FontFamily {
+  return typeof value === 'object' && value !== null &&
+    'normal' in value && typeof (value as any).normal === 'object' &&
+    (value as any).normal !== null &&
+    typeof (value as any).normal.name === 'string' &&
+    typeof (value as any).normal.path === 'string';
 }
 
 // ============================================

@@ -1013,8 +1013,8 @@ describe('buildSlideNumberOptions()', () => {
   test('uses defaultWeight from resolvedStyle for font selection', () => {
     // SlideNumber node with bold resolvedStyle (pre-resolved by expand)
     const boldFontFamily = {
-      normal: { name: 'Inter', path: '/fonts/inter-normal.woff2' },
-      bold: { name: 'Inter Bold', path: '/fonts/inter-bold.woff2' },
+      normal: { name: 'Inter', path: '/fonts/inter-normal.woff', weight: 400 },
+      bold: { name: 'Inter', path: '/fonts/inter-bold.woff', weight: 700 },
     };
     const boldNode: SlideNumberNode = {
       ...baseSlideNumNode,
@@ -1022,7 +1022,7 @@ describe('buildSlideNumberOptions()', () => {
     };
     const pos = positioned(boldNode, 1, 2, 2, 0.3);
     const result = builder.buildSlideNumberOptions(boldNode, pos);
-    assert.strictEqual(result.fontFace, 'Inter Bold');
+    assert.strictEqual(result.fontFace, 'Inter');
   });
 
   test('position and dimensions applied', () => {
