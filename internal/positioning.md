@@ -4,22 +4,22 @@
 
 ## Product Framing
 
-tycoslide is a **presentation build tool** [category] that generates **editable PowerPoint files** [use case] from markdown and TypeScript, with theme-based styling and build-time validation.
+tycoslide is a **presentation build tool** [category] that generates **editable PowerPoint slides** [use case] from markdown, with TypeScript-based themes and build-time validation.
 
 ---
 
-## Supporting Argument 1 — Editable PowerPoint Output
+## Supporting Argument 1 — Editable PowerPoint Slides
 
-Unlike **other markdown presentation tools** [alternative] that output web slides or embed slides as images, tycoslide generates **native PowerPoint slides** [feature] that recipients can open and edit.
-
----
-
-## Supporting Argument 2 — Packaged Themes
-
-Unlike **other markdown presentation tools** [alternative] where slide authors must manually match colors and layouts to brand guidelines, tycoslide **theme-based styling** [feature] keeps every deck on brand by default.
+Unlike **other markdown presentation tools** [alternative] that output HTML or PDFs, tycoslide generates **native PowerPoint slides** [feature] that can be opened and edited in any presentation software.
 
 ---
 
-## Supporting Argument 3 — Compile-Time Safety
+## Supporting Argument 2 — Pure TypeScript Themes
 
-Unlike **other markdown presentation tools** [alternative] where layout and brand errors only surface when you open the file, tycoslide catches **overflows, missing design tokens, and invalid layouts** [feature] as build errors.
+Unlike **other markdown presentation tools** [alternative] that need complex CSS and HTML to style slides, tycoslide uses **pure TypeScript** [feature] for themes, components, and layouts.
+
+---
+
+## Supporting Argument 3 — Build-Time Validation
+
+Unlike **other markdown presentation tools** [alternative] that silently produce broken slides, tycoslide catches **layout overflows, missing tokens, and invalid parameters** [feature] at build time.

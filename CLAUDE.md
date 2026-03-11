@@ -2,7 +2,7 @@
 
 See [README.md](README.md) for what this project is.
 
-## Philosophy
+## Design Principles
 
 For design principles, see [`docs/design-principles.md`](docs/design-principles.md).
 

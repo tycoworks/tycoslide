@@ -1,17 +1,17 @@
 # tycoslide
 
-A presentation build tool that generates editable PowerPoint files from Markdown and TypeScript, with theme-based styling and build-time validation.
+A presentation build tool that generates editable PowerPoint slides from markdown, with TypeScript-based themes and build-time validation.
 
 **Why tycoslide?**
 - **Markdown authoring** — Content as code, version-controlled, reviewable
 - **TypeScript themes with build-time validation** — Catches missing tokens, invalid layouts, and content overflow as build errors
 - **Native PowerPoint output** — Editable presentations that open in PowerPoint, Keynote, or Google Slides
 
-**[Read the full introduction →](./docs/introduction.md)** to understand tycoslide's philosophy and how it differs from Slidev, Marp, and Reveal.js.
+**[How tycoslide compares →](./docs/comparison.md)** to Slidev, Marp, and Reveal.js.
 
 ## Quick Start
 
-Install tycoslide and a theme:
+Install tycoslide and the default theme:
 
 ```bash
 npm install tycoslide tycoslide-theme-default tycoslide-components
@@ -55,6 +55,10 @@ Output: `slides.pptx` — ready to open and present.
 
 Covers markdown syntax, components, layouts, themes, CLI usage, and troubleshooting.
 
+## Community
+
+[Join the Discord](https://discord.gg/r5qCW8aBEy)
+
 ## License
 
-[License information]
+[MIT](./LICENSE)
