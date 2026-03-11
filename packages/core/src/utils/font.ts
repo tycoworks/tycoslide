@@ -136,25 +136,22 @@ export function validateFontVariants(tree: ElementNode): FontVariantViolation[] 
     }
   }
 
+  function checkRuns(content: TextContent, fontFamily: FontFamily): void {
+    for (const run of normalizeContent(content)) {
+      if (run.bold || run.italic) {
+        const v = checkFontVariant(fontFamily, run.bold, run.italic);
+        if (v) addViolation(v);
+      }
+    }
+  }
+
   function walk(node: ElementNode): void {
     if (node.type === NODE_TYPE.TEXT) {
-      const runs = normalizeContent(node.content);
-      for (const run of runs) {
-        if (run.bold || run.italic) {
-          const v = checkFontVariant(node.resolvedStyle.fontFamily, run.bold, run.italic);
-          if (v) addViolation(v);
-        }
-      }
+      checkRuns(node.content, node.resolvedStyle.fontFamily);
     } else if (node.type === NODE_TYPE.TABLE) {
       for (const row of node.rows) {
         for (const cell of row) {
-          const runs = normalizeContent(cell.content);
-          for (const run of runs) {
-            if (run.bold || run.italic) {
-              const v = checkFontVariant(cell.resolvedStyle.fontFamily, run.bold, run.italic);
-              if (v) addViolation(v);
-            }
-          }
+          checkRuns(cell.content, cell.resolvedStyle.fontFamily);
         }
       }
     } else if (node.type === NODE_TYPE.CONTAINER || node.type === NODE_TYPE.STACK) {
