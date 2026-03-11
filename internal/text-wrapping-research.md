@@ -259,6 +259,7 @@ Rather than applying a correction to all text (which breaks multi-line), use a s
 - Phase 0 (validate assumption): COMPLETE — Math.ceil predicts correctly for test case
 - Phase 1 (cleanup): COMPLETE — removed broken calc(100%-Npx), kept infrastructure
 - Phase 2 (validateTextWrapping in measurement.ts): PARKED — italic font registration fixed the primary edge case
+- Missing font validation: COMPLETE — `MissingFontError` throws at compile time when bold/italic used on fonts without those slots; overridable with `--force`
 - FreeType binary search: PARKED — engineering investment not justified by current risk level (see "Updated Recommendation" below)
 
 ---
@@ -451,7 +452,7 @@ The italic font registration fix addressed the root cause of the showcase wrappi
 
 ### Recommended approach
 
-1. **Require real font files**: Throw a compile-time error when markdown uses `**bold**`, `*italic*`, or `***boldItalic***` on a font that lacks the corresponding slot. Overridable with the `-f` (force) flag for users who accept the risk.
+1. **Require real font files** ✅: `MissingFontError` throws at compile time when markdown uses `**bold**`, `*italic*`, or `***boldItalic***` on a font that lacks the corresponding slot. Overridable with `-f` (force).
 2. **Accept synthetic italic fallback**: When force-compiled, synthetic italic has no wrapping impact (advances unchanged). Synthetic bold is the real risk.
 3. **Keep optional slots in FontFamily**: The type system keeps italic/bold/boldItalic optional. The compile-time check is in the markdown → node pipeline, not the type definition.
 4. **Park FreeType prediction**: Could catch some GDI rounding edge cases in future, but engineering investment not justified by current risk level. The `~fontSize/24` widening formula is a starting point if revisited.
