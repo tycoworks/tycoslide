@@ -11,12 +11,23 @@ const tycoworks = (name: string) => fileURLToPath(new URL(`../assets/tycoworks/$
 export const assets = {
   fonts: {
     inter: {
-      light: { name: 'Inter Light', path: require.resolve('@fontsource/inter/files/inter-latin-300-normal.woff'), weight: 300 },
-      normal: { name: 'Inter', path: require.resolve('@fontsource/inter/files/inter-latin-400-normal.woff'), weight: 400 },
-      bold: { name: 'Inter', path: require.resolve('@fontsource/inter/files/inter-latin-700-normal.woff'), weight: 700 },
+      name: 'Inter',
+      regular: { path: require.resolve('@fontsource/inter/files/inter-latin-400-normal.woff'), weight: 400 },
+      italic: { path: require.resolve('@fontsource/inter/files/inter-latin-400-italic.woff'), weight: 400 },
+      bold: { path: require.resolve('@fontsource/inter/files/inter-latin-700-normal.woff'), weight: 700 },
+      boldItalic: { path: require.resolve('@fontsource/inter/files/inter-latin-700-italic.woff'), weight: 700 },
+    },
+    interLight: {
+      name: 'Inter Light',
+      regular: { path: require.resolve('@fontsource/inter/files/inter-latin-300-normal.woff'), weight: 300 },
+      italic: { path: require.resolve('@fontsource/inter/files/inter-latin-300-italic.woff'), weight: 300 },
+      bold: { path: require.resolve('@fontsource/inter/files/inter-latin-700-normal.woff'), weight: 700, name: 'Inter' },
+      boldItalic: { path: require.resolve('@fontsource/inter/files/inter-latin-700-italic.woff'), weight: 700, name: 'Inter' },
     },
     firaCode: {
-      normal: { name: 'Fira Code', path: require.resolve('@fontsource/fira-code/files/fira-code-latin-400-normal.woff'), weight: 400 },
+      name: 'Fira Code',
+      regular: { path: require.resolve('@fontsource/fira-code/files/fira-code-latin-400-normal.woff'), weight: 400 },
+      bold: { path: require.resolve('@fontsource/fira-code/files/fira-code-latin-700-normal.woff'), weight: 700 },
     },
   },
   icons: {

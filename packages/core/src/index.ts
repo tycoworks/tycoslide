@@ -17,7 +17,7 @@ export {
   STRIKE_TYPE, UNDERLINE_STYLE,
   SLIDE_SIZE,
   CUSTOM_LAYOUT,
-  FONT_WEIGHT, FONT_WEIGHT_VALUES,
+  FONT_SLOT,
   TEXT_STYLE,
   Bounds,
 } from './core/model/types.js';
@@ -34,7 +34,7 @@ export type {
   UnderlineStyle,
   SlideSize,
   TextStyleName,
-  FontWeight,
+  FontSlot,
   Font, FontFamily,
   TextStyle,
   HighlightPair,
@@ -95,7 +95,7 @@ export { parseSlideDocument, FrontmatterParseError, type ParsedDocument, type Ra
 export { resolveGap, inToPx } from './utils/units.js';
 
 // Font utilities
-export { getFontFromFamily, normalizeContent, isFontFamily } from './utils/font.js';
+export { getFontForRun, resolveFontFace, normalizeContent, isFontFamily } from './utils/font.js';
 
 // Color utilities
 export { hexToRgba, bgColor } from './utils/color.js';

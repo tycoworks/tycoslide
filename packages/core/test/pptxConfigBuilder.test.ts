@@ -24,7 +24,6 @@ import {
   BORDER_STYLE,
   SHAPE,
   LINE_SHAPE,
-  FONT_WEIGHT,
   STRIKE_TYPE,
   UNDERLINE_STYLE,
 } from '../src/core/model/types.js';
@@ -640,7 +639,7 @@ describe('buildTextConfig()', () => {
 
     const h1Style = theme.textStyles[TEXT_STYLE.H1];
     assert.strictEqual(result.options.fontSize, h1Style.fontSize);
-    assert.strictEqual(result.options.fontFace, h1Style.fontFamily.normal.name);
+    assert.strictEqual(result.options.fontFace, h1Style.fontFamily.name);
   });
 
   test('applies color override from node', () => {
@@ -960,7 +959,7 @@ describe('buildSlideNumberOptions()', () => {
 
     const footerStyle = theme.textStyles[TEXT_STYLE.FOOTER];
     assert.strictEqual(result.fontSize, footerStyle.fontSize);
-    assert.strictEqual(result.fontFace, footerStyle.fontFamily.normal.name);
+    assert.strictEqual(result.fontFace, footerStyle.fontFamily.name);
   });
 
   test('applies custom style', () => {
@@ -1010,19 +1009,19 @@ describe('buildSlideNumberOptions()', () => {
     assert.strictEqual(result.valign, VALIGN.TOP);
   });
 
-  test('uses defaultWeight from resolvedStyle for font selection', () => {
-    // SlideNumber node with bold resolvedStyle (pre-resolved by expand)
-    const boldFontFamily = {
-      normal: { name: 'Inter', path: '/fonts/inter-normal.woff', weight: 400 },
-      bold: { name: 'Inter', path: '/fonts/inter-bold.woff', weight: 700 },
+  test('uses fontFamily.name for fontFace', () => {
+    const customFontFamily = {
+      name: 'Inter Light',
+      regular: { path: '/fonts/inter-light.woff', weight: 300 },
+      bold: { path: '/fonts/inter-bold.woff', weight: 700 },
     };
-    const boldNode: SlideNumberNode = {
+    const customNode: SlideNumberNode = {
       ...baseSlideNumNode,
-      resolvedStyle: { fontSize: 12, fontFamily: boldFontFamily, defaultWeight: FONT_WEIGHT.BOLD, lineHeightMultiplier: 1.0, bulletIndentPt: 18 },
+      resolvedStyle: { fontSize: 12, fontFamily: customFontFamily, lineHeightMultiplier: 1.0, bulletIndentPt: 18 },
     };
-    const pos = positioned(boldNode, 1, 2, 2, 0.3);
-    const result = builder.buildSlideNumberOptions(boldNode, pos);
-    assert.strictEqual(result.fontFace, 'Inter');
+    const pos = positioned(customNode, 1, 2, 2, 0.3);
+    const result = builder.buildSlideNumberOptions(customNode, pos);
+    assert.strictEqual(result.fontFace, 'Inter Light');
   });
 
   test('position and dimensions applied', () => {

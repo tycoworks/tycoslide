@@ -4,7 +4,7 @@
 import * as assert from 'node:assert';
 import { createRequire } from 'module';
 import type { Theme, TextStyle, FontFamily } from 'tycoslide';
-import { TEXT_STYLE, BORDER_STYLE, DASH_TYPE, GAP, HALIGN, VALIGN, FONT_WEIGHT } from 'tycoslide';
+import { TEXT_STYLE, BORDER_STYLE, DASH_TYPE, GAP, HALIGN, VALIGN } from 'tycoslide';
 import type { TextTokens, PlainTextTokens, ListTokens, TableTokens, CodeTokens, MermaidTokens, CardTokens, QuoteTokens, TestimonialTokens, LineTokens, ShapeTokens, SlideNumberTokens } from '../src/index.js';
 
 const require = createRequire(import.meta.url);
@@ -14,14 +14,14 @@ const require = createRequire(import.meta.url);
 // ============================================
 
 const mockFontFamily: FontFamily = {
-  normal: { name: 'Inter', path: require.resolve('@fontsource/inter/files/inter-latin-400-normal.woff'), weight: 400 },
-  bold: { name: 'Inter', path: require.resolve('@fontsource/inter/files/inter-latin-700-normal.woff'), weight: 700 },
+  name: 'Inter',
+  regular: { path: require.resolve('@fontsource/inter/files/inter-latin-400-normal.woff'), weight: 400 },
+  bold: { path: require.resolve('@fontsource/inter/files/inter-latin-700-normal.woff'), weight: 700 },
 };
 
 const mockTextStyle: TextStyle = {
   fontSize: 12,
   fontFamily: mockFontFamily,
-  defaultWeight: FONT_WEIGHT.NORMAL,
   lineHeightMultiplier: 1.0,
   bulletIndentPt: 18,
 };

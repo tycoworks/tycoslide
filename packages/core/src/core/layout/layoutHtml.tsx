@@ -12,10 +12,10 @@ import type { FC } from 'hono/jsx';
 import type { Page } from 'playwright';
 import type { ElementNode, TextNode, ImageNode, LineNode, ShapeNode, ContainerNode, StackNode, SlideNumberNode, TableNode, TableCellData } from '../model/nodes.js';
 import { NODE_TYPE } from '../model/nodes.js';
-import type { Theme, TextStyle, FontWeight, VerticalAlignment, HorizontalAlignment, SizeValue, NormalizedRun, Direction, DashType, Background } from '../model/types.js';
-import { FONT_WEIGHT_VALUES, SIZE, VALIGN, HALIGN, DIRECTION, BORDER_STYLE, SHAPE, DASH_TYPE } from '../model/types.js';
+import type { Theme, TextStyle, VerticalAlignment, HorizontalAlignment, SizeValue, NormalizedRun, Direction, DashType, Background } from '../model/types.js';
+import { FONT_SLOT, SIZE, VALIGN, HALIGN, DIRECTION, BORDER_STYLE, SHAPE, DASH_TYPE } from '../model/types.js';
 import type { Bounds } from '../model/bounds.js';
-import { normalizeContent, getFontFromFamily } from '../../utils/font.js';
+import { normalizeContent, getFontForRun } from '../../utils/font.js';
 import { readImageDimensions } from '../../utils/image.js';
 import { inToPx, ptToPx } from '../../utils/units.js';
 import { bgColor } from '../../utils/color.js';
@@ -240,11 +240,10 @@ function styleText(
 ): StyledNode {
   const style = node.resolvedStyle;
   const runs = normalizeContent(node.content);
-  const defaultWeight = style.defaultWeight;
-  const defaultFont = getFontFromFamily(style.fontFamily, defaultWeight);
+  const defaultFont = getFontForRun(style.fontFamily);
   const lineSpacingMultiple = node.lineHeightMultiplier;
   const fontSizePx = ptToPx(style.fontSize);
-  const normalRatio = fontRatios.get(defaultFont.name);
+  const normalRatio = fontRatios.get(style.fontFamily.name);
   const cssLineHeight = normalRatio ? lineSpacingMultiple * normalRatio : lineSpacingMultiple;
   const bulletIndentPx = ptToPx(node.bulletIndentPt);
   const textAlign = node.hAlign === HALIGN.RIGHT ? 'right' : node.hAlign === HALIGN.CENTER ? 'center' : 'left';
@@ -254,7 +253,7 @@ function styleText(
     display: 'flex',
     flexDirection: 'column',
     justifyContent: vAlignToJustify(node.vAlign),
-    fontFamily: `'${defaultFont.name}'`,
+    fontFamily: `'${style.fontFamily.name}'`,
     fontWeight: defaultFont.weight,
     fontSize: `${fontSizePx}px`,
     lineHeight: `${cssLineHeight}`,
@@ -271,7 +270,7 @@ function styleText(
     nodeId,
     styles,
     children: [],
-    innerHTML: `<div>${renderTextRunsToHTML(runs, style, defaultWeight, bulletIndentPx, node.linkColor, node.linkUnderline)}</div>`,
+    innerHTML: `<div>${renderTextRunsToHTML(runs, style, bulletIndentPx, node.linkColor, node.linkUnderline)}</div>`,
   };
 }
 
@@ -404,7 +403,7 @@ function styleSlideNumber(
 ): StyledNode {
   const style = node.resolvedStyle;
   const fontSizePx = ptToPx(style.fontSize);
-  const defaultFont = getFontFromFamily(style.fontFamily, style.defaultWeight);
+  const defaultFont = getFontForRun(style.fontFamily);
 
   const textAlign = node.hAlign === HALIGN.RIGHT ? 'right' : node.hAlign === HALIGN.CENTER ? 'center' : 'left';
   return {
@@ -413,7 +412,7 @@ function styleSlideNumber(
       display: 'flex',
       flexDirection: DIRECTION.COLUMN,
       justifyContent: vAlignToJustify(node.vAlign),
-      fontFamily: `'${defaultFont.name}'`,
+      fontFamily: `'${style.fontFamily.name}'`,
       fontWeight: defaultFont.weight,
       fontSize: `${fontSizePx}px`,
       color: node.color,
@@ -580,7 +579,6 @@ export function styleNode(
 function renderTextRunsToHTML(
   runs: NormalizedRun[],
   style: TextStyle,
-  defaultWeight: FontWeight,
   bulletIndentPx: number,
   linkColor?: string,
   linkUnderline?: boolean,
@@ -615,7 +613,7 @@ function renderTextRunsToHTML(
 
   for (const group of groups) {
     const first = group[0];
-    const spans = group.map(run => renderRunSpanHTML(run, style, defaultWeight, linkColor, linkUnderline)).join('');
+    const spans = group.map(run => renderRunSpanHTML(run, style, linkColor, linkUnderline)).join('');
 
     if (first.bullet) {
       const isOrdered = typeof first.bullet === 'object' && first.bullet.type === 'number';
@@ -645,29 +643,23 @@ function renderTextRunsToHTML(
 function renderRunSpanHTML(
   run: NormalizedRun,
   style: TextStyle,
-  defaultWeight: FontWeight,
   linkColor?: string,
   linkUnderline?: boolean,
 ): string {
   const css: string[] = [];
+  const family = style.fontFamily;
 
-  if (run.weight && run.weight !== defaultWeight) {
-    const weightFont = style.fontFamily[run.weight];
-    if (weightFont) {
-      css.push(`font-family:'${style.fontFamily.normal.name}'`);
-      css.push(`font-weight:${weightFont.weight}`);
+  // Bold/italic: resolve font and apply CSS overrides
+  if (run.bold || run.italic) {
+    const font = getFontForRun(family, run.bold, run.italic);
+    if (run.bold) {
+      // Use the resolved font's weight if a bold slot exists,
+      // otherwise fall back to CSS 'bold' for synthetic bold
+      css.push(`font-weight:${font.weight !== family.regular.weight ? font.weight : 'bold'}`);
     }
-  }
-
-  if (run.bold) {
-    if (style.fontFamily.bold) {
-      css.push(`font-family:'${style.fontFamily.normal.name}'`);
-      css.push(`font-weight:${style.fontFamily.bold.weight}`);
+    if (run.italic) {
+      css.push('font-style:italic');
     }
-  }
-
-  if (run.italic) {
-    css.push('font-style:italic');
   }
 
   if (run.color) {
@@ -933,15 +925,20 @@ const FONT_FORMATS: Record<string, { mime: string; format: string }> = {
 export function generateFontFaceCSS(theme: Theme): { css: string; fonts: FontDescriptor[] } {
   const fontFaces: string[] = [];
   const fonts: FontDescriptor[] = [];
-  const seenPaths = new Set<string>();
+  // Dedup by (font-family name + path) — the same physical file may need
+  // separate @font-face rules for different font-family names (e.g. inter.bold
+  // and interLight.bold share a file but need distinct CSS font-family entries)
+  const seen = new Set<string>();
 
   for (const family of theme.fonts) {
-    const cssFamily = family.normal.name;
-    for (const weight of FONT_WEIGHT_VALUES) {
-      const font = family[weight];
+    const cssFamily = family.name;
+    for (const slot of Object.values(FONT_SLOT)) {
+      const font = family[slot];
       if (!font || !font.path) continue;
-      if (seenPaths.has(font.path)) continue;
-      seenPaths.add(font.path);
+      const key = `${cssFamily}\0${font.path}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const isItalic = slot === FONT_SLOT.ITALIC || slot === FONT_SLOT.BOLD_ITALIC;
       fonts.push({ name: cssFamily, weight: font.weight });
       const ext = path.extname(font.path).toLowerCase();
       const fontFormat = FONT_FORMATS[ext];
@@ -953,6 +950,7 @@ export function generateFontFaceCSS(theme: Theme): { css: string; fonts: FontDes
             font-family: '${cssFamily}';
             src: url('fonts/${path.basename(font.path)}') format('${fontFormat.format}');
             font-weight: ${font.weight};
+            font-style: ${isItalic ? 'italic' : 'normal'};
           }
         `);
     }
@@ -989,7 +987,7 @@ export async function measureFontNormalRatios(page: Page, theme: Theme, outputDi
   const fontNames = new Set<string>();
   for (const styleName of Object.keys(theme.textStyles)) {
     const style = theme.textStyles[styleName];
-    fontNames.add(style.fontFamily.normal.name);
+    fontNames.add(style.fontFamily.name);
   }
 
   const ratios = await page.evaluate((names: string[]) => {

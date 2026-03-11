@@ -8,7 +8,7 @@ import {
   schema,
   SYNTAX,
   inToPx,
-  getFontFromFamily,
+  getFontForRun,
   type TextStyle,
   type TextStyleName,
 } from 'tycoslide';
@@ -163,8 +163,8 @@ body {
 }
 .code-container pre {
   margin: 0;
-  font-family: '${style.fontFamily.normal.name}';
-  font-weight: ${getFontFromFamily(style.fontFamily, style.defaultWeight).weight};
+  font-family: '${style.fontFamily.name}';
+  font-weight: ${getFontForRun(style.fontFamily).weight};
   font-size: ${style.fontSize}pt;
   line-height: ${style.lineHeightMultiplier};
 }

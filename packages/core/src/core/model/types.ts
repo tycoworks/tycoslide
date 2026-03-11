@@ -329,9 +329,8 @@ export interface CustomSlideSize {
 /**
  * A font reference for rendering and measurement.
  *
- * `name` is the typeface name used in PPTX (e.g., `'Inter'` for normal/bold,
- * `'Inter Light'` for light weight). For CSS, the family name is always
- * derived from `FontFamily.normal.name`.
+ * `path` must be an absolute path to a `.woff` file.
+ * `weight` is the CSS font-weight (e.g. 300, 400, 700).
  *
  * `path` must be an absolute path to a `.woff` file. WOFF2 is not supported
  * (FreeType metrics require WOFF). Use `@fontsource` npm packages:
@@ -339,8 +338,8 @@ export interface CustomSlideSize {
  * import { createRequire } from 'module';
  * const require = createRequire(import.meta.url);
  * const font: Font = {
- *   name: 'Inter',
  *   path: require.resolve('@fontsource/inter/files/inter-latin-400-normal.woff'),
+ *   weight: 400,
  * };
  * ```
  *
@@ -349,42 +348,44 @@ export interface CustomSlideSize {
  * Playwright measurement (which uses fonts copied to the output directory).
  */
 export interface Font {
-  name: string;
   path: string;
   weight: number;
+  /** Family name when this font belongs to a different typeface than
+   *  its parent FontFamily. Used for PPTX fontFace resolution: bold Inter
+   *  renders as 'Inter' even when the parent family is 'Inter Light'.
+   *  Resolver: font.name ?? family.name. */
+  name?: string;
 }
 
 /**
- * A font family with one or more weight variants.
+ * A font family matching PowerPoint's 2×2 grid: typeface + bold flag + italic flag.
  *
- * Each weight is a `Font` object with `name` (PPTX typeface) and `path` (.woff file).
- * `normal` (400) is required; `light` (300) and `bold` (700) are optional.
+ * `name` is the shared CSS `font-family` and PPTX `fontFace` string.
+ * `regular` is required; `italic`, `bold`, and `boldItalic` are optional
+ * (missing slots get algorithmic fallback from the browser/PowerPoint).
  *
- * For CSS `@font-face`, all weights share `normal.name` as the font-family,
- * distinguished by `font-weight` descriptors (300/400/700).
+ * Light is modeled as a separate FontFamily (e.g., `interLight` with `name: 'Inter Light'`)
+ * because OOXML has no "light" flag — it's a distinct typeface.
  *
- * For PPTX, each weight's `name` is used as the typeface string:
- * - `bold.name` must equal `normal.name` (OOXML uses a binary bold flag)
- * - `light.name` may differ (e.g., `'Inter Light'`) since OOXML has no light flag
- *
- * Use `getFontFromFamily()` to resolve a weight to its `Font` reference.
+ * Use `getFontForRun()` to resolve bold/italic flags to the correct `Font`.
  */
 export interface FontFamily {
-  light?: Font;    // e.g. { name: 'Inter Light', path: '...', weight: 300 }
-  normal: Font;    // e.g. { name: 'Inter', path: '...', weight: 400 } — name is the CSS family name
-  bold?: Font;     // e.g. { name: 'Inter', path: '...', weight: 700 } — name must equal normal.name for PPTX
+  name: string;          // CSS font-family, PPTX fontFace
+  regular: Font;         // required — the default face
+  italic?: Font;         // optional — algorithmic italic if missing
+  bold?: Font;           // optional — algorithmic bold if missing
+  boldItalic?: Font;     // optional — algorithmic bold+italic if missing
 }
 
-export const FONT_WEIGHT = {
-  LIGHT: 'light',
-  NORMAL: 'normal',
+/** Font slot keys for iterating FontFamily (excluding name) */
+export const FONT_SLOT = {
+  REGULAR: 'regular',
+  ITALIC: 'italic',
   BOLD: 'bold',
+  BOLD_ITALIC: 'boldItalic',
 } as const;
 
-export type FontWeight = typeof FONT_WEIGHT[keyof typeof FONT_WEIGHT];
-
-/** All FONT_WEIGHT values — used to iterate FontFamily weight slots */
-export const FONT_WEIGHT_VALUES = Object.values(FONT_WEIGHT) as [FontWeight, ...FontWeight[]];
+export type FontSlot = typeof FONT_SLOT[keyof typeof FONT_SLOT];
 
 export const TEXT_STYLE = {
   H1: 'h1',
@@ -405,7 +406,6 @@ export type TextStyleName = (typeof TEXT_STYLE)[keyof typeof TEXT_STYLE] | (stri
 export interface TextStyle {
   fontFamily: FontFamily;
   fontSize: number;
-  defaultWeight: FontWeight;
   lineHeightMultiplier: number;
   bulletIndentPt: number;
 }
@@ -428,9 +428,8 @@ export interface NormalizedRun {
   text: string;
   color?: string;
   highlight?: HighlightPair;
-  weight?: FontWeight;
   // Paragraph-level options (for rich text / markdown support)
-  bold?: boolean;              // Shorthand for weight: 'bold'
+  bold?: boolean;              // Use bold font variant
   italic?: boolean;            // Italic text
   strikethrough?: boolean;     // Strikethrough text (~~text~~)
   underline?: boolean;         // Underlined text (++text++)

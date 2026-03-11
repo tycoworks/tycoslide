@@ -4,8 +4,8 @@
 
 import type { PositionedNode, TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, TableCellData } from '../model/nodes.js';
 import type { TextStyle, TextContent, StrikeType, UnderlineStyle } from '../model/types.js';
-import { FONT_WEIGHT, BORDER_STYLE, LINE_SHAPE, STRIKE_TYPE, UNDERLINE_STYLE } from '../model/types.js';
-import { getFontFromFamily, normalizeContent, getParagraphGapRatio } from '../../utils/font.js';
+import { BORDER_STYLE, LINE_SHAPE, STRIKE_TYPE, UNDERLINE_STYLE } from '../model/types.js';
+import { normalizeContent, getParagraphGapRatio, resolveFontFace } from '../../utils/font.js';
 import { readImageDimensions, containFit } from '../../utils/image.js';
 import { stripHash } from '../../utils/color.js';
 
@@ -53,7 +53,6 @@ export class PptxConfigBuilder {
     positioned: PositionedNode,
   ): { fragments: TextFragment[]; options: Record<string, unknown> } {
     const style = textNode.resolvedStyle;
-    const defaultFont = getFontFromFamily(style.fontFamily, style.defaultWeight);
     const fragments = this.buildTextFragments(textNode.content, style, textNode.color, textNode.linkColor, textNode.linkUnderline, textNode.bulletIndentPt);
 
     // Check if any fragment has bullets - affects alignment
@@ -67,7 +66,7 @@ export class PptxConfigBuilder {
       w: positioned.width,
       h: positioned.height,
       fontSize: style.fontSize,
-      fontFace: defaultFont.name,
+      fontFace: style.fontFamily.name, // default — per-run fontFace from resolveFontFace() overrides this
       color: stripHash(textNode.color),
       margin: 0,
       wrap: true,
@@ -88,18 +87,13 @@ export class PptxConfigBuilder {
     linkUnderline?: boolean,
     bulletIndentPt: number = 0,
   ): TextFragment[] {
-    const defaultWeight = style.defaultWeight;
-
     const normalized = normalizeContent(content);
     // Track which runs need a paragraph break before them
     const breakBeforeIndices = new Set<number>();
     const fragments: TextFragment[] = normalized.map((run, i) => {
-      // Bold shorthand overrides weight
-      const effectiveWeight = run.bold ? FONT_WEIGHT.BOLD : (run.weight ?? defaultWeight);
-      const runFont = getFontFromFamily(style.fontFamily, effectiveWeight);
       const options: TextFragmentOptions = {
         color: stripHash(run.color ?? run.highlight?.text ?? color),
-        fontFace: runFont.name,
+        fontFace: resolveFontFace(style.fontFamily, run.bold, run.italic),
       };
       if (run.highlight) options.highlight = stripHash(run.highlight.bg);
       // Pass through paragraph-level options
@@ -218,14 +212,13 @@ export class PptxConfigBuilder {
     positioned: PositionedNode,
   ): Record<string, unknown> {
     const style = slideNumNode.resolvedStyle;
-    const font = getFontFromFamily(style.fontFamily, style.defaultWeight);
 
     return {
       x: positioned.x,
       y: positioned.y,
       w: positioned.width,
       h: positioned.height,
-      fontFace: font.name,
+      fontFace: style.fontFamily.name, // slide numbers have no bold/italic runs
       fontSize: style.fontSize,
       color: stripHash(slideNumNode.color),
       align: slideNumNode.hAlign,
@@ -253,7 +246,6 @@ export class PptxConfigBuilder {
 
     // Cell values are pre-resolved by component expand
     const textStyle = cell.resolvedStyle;
-    const font = getFontFromFamily(textStyle.fontFamily, textStyle.defaultWeight);
 
     // Cell padding
     const cellPadding = tableNode.cellPadding;
@@ -265,7 +257,7 @@ export class PptxConfigBuilder {
     const textFragments = this.buildTextFragments(cell.content, textStyle, cell.color, cell.linkColor, cell.linkUnderline);
 
     const options: Record<string, unknown> = {
-      fontFace: font.name,
+      fontFace: textStyle.fontFamily.name, // default — per-run fontFace from resolveFontFace() overrides this
       fontSize: textStyle.fontSize,
       color: stripHash(cell.color),
       align: cell.hAlign,

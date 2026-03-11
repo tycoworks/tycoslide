@@ -2,7 +2,7 @@
 // Structural validation of theme font configuration.
 // Pure computation — no I/O, no file system access.
 
-import { FONT_WEIGHT_VALUES, type Theme, type FontFamily } from '../model/types.js';
+import { FONT_SLOT, type Theme, type FontFamily } from '../model/types.js';
 import { isFontFamily } from '../../utils/font.js';
 
 /**
@@ -26,8 +26,7 @@ function walkTokensForFonts(
 /**
  * Validate theme font configuration.
  * Checks:
- * - No WOFF2 paths in theme.fonts (FreeType metrics require WOFF)
- * - bold.name matches normal.name (OOXML uses bold flag, not distinct typeface)
+ * - All font paths must be .woff (FreeType metrics require WOFF)
  * - All textStyle fontFamilies are registered in theme.fonts
  * - All layout/master token fontFamilies are registered in theme.fonts
  *
@@ -38,37 +37,31 @@ export function validateThemeFonts(theme: Theme): void {
   // Collect all registered font paths from theme.fonts
   const registeredPaths = new Set<string>();
   for (const family of theme.fonts) {
-    for (const weight of FONT_WEIGHT_VALUES) {
-      const font = family[weight];
+    for (const slot of Object.values(FONT_SLOT)) {
+      const font = family[slot];
       if (font) {
-        // WOFF2 rejection: FreeType prebuild lacks Brotli decompression
-        if (font.path.endsWith('.woff2')) {
+        // Only .woff is supported — FreeType prebuild lacks Brotli (no WOFF2),
+        // and raw .ttf/.otf would bypass web font subsetting.
+        if (!font.path.endsWith('.woff')) {
           throw new Error(
-            `[tycoslide] Font "${font.path}" is WOFF2 format. Only .woff is supported ` +
-            `(FreeType metrics require WOFF). Use .woff format instead.`
+            `[tycoslide] Font "${font.path}" is not .woff format. Only .woff is supported ` +
+            `(FreeType metrics require WOFF).`
           );
         }
         registeredPaths.add(font.path);
       }
     }
 
-    // Validate: bold.name must match normal.name (OOXML uses bold flag)
-    if (family.bold && family.bold.name !== family.normal.name) {
-      throw new Error(
-        `[tycoslide] Font family bold.name "${family.bold.name}" does not match normal.name "${family.normal.name}". ` +
-        `PowerPoint uses a bold flag with the base typeface — bold.name must equal normal.name.`
-      );
-    }
   }
 
   // Validate: every textStyle fontFamily must be in theme.fonts
   for (const styleName of Object.keys(theme.textStyles)) {
     const style = theme.textStyles[styleName];
-    for (const weight of FONT_WEIGHT_VALUES) {
-      const font = style.fontFamily[weight];
+    for (const slot of Object.values(FONT_SLOT)) {
+      const font = style.fontFamily[slot];
       if (font && !registeredPaths.has(font.path)) {
         throw new Error(
-          `[tycoslide] Font "${style.fontFamily.normal.name}" (${font.path}) used in textStyle "${styleName}" is not listed in theme.fonts.`
+          `[tycoslide] Font "${style.fontFamily.name}" (${font.path}) used in textStyle "${styleName}" is not listed in theme.fonts.`
         );
       }
     }
@@ -76,11 +69,11 @@ export function validateThemeFonts(theme: Theme): void {
 
   // Validate: layout and master tokens that contain FontFamily must be in theme.fonts
   const validateTokenFonts = (family: FontFamily, tokenPath: string, key: string) => {
-    for (const weight of FONT_WEIGHT_VALUES) {
-      const font = family[weight];
+    for (const slot of Object.values(FONT_SLOT)) {
+      const font = family[slot];
       if (font && !registeredPaths.has(font.path)) {
         throw new Error(
-          `[tycoslide] Font "${family.normal.name}" (${font.path}) used in ${tokenPath}.${key} is not listed in theme.fonts.`
+          `[tycoslide] Font "${family.name}" (${font.path}) used in ${tokenPath}.${key} is not listed in theme.fonts.`
         );
       }
     }

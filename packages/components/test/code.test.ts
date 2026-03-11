@@ -1,6 +1,6 @@
 import { describe, it, before } from 'node:test';
 import * as assert from 'node:assert';
-import { NODE_TYPE, componentRegistry, SYNTAX, inToPx, TEXT_STYLE, FONT_WEIGHT } from 'tycoslide';
+import { NODE_TYPE, componentRegistry, SYNTAX, inToPx, TEXT_STYLE } from 'tycoslide';
 import type { RootContent } from 'mdast';
 import type { TextStyle } from 'tycoslide';
 import { Component } from '../src/names.js';
@@ -365,9 +365,8 @@ describe('renderCodeToHtml()', () => {
   };
 
   const codeStyle: TextStyle = {
-    fontFamily: { normal: { name: 'Fira Code', path: '', weight: 400 } },
+    fontFamily: { name: 'Fira Code', regular: { path: '', weight: 400 } },
     fontSize: 12,
-    defaultWeight: FONT_WEIGHT.NORMAL,
     lineHeightMultiplier: 1.4,
     bulletIndentPt: 0,
   };
@@ -394,9 +393,9 @@ describe('renderCodeToHtml()', () => {
     assert.ok(html.includes('Fira Code'), 'should contain font family');
   });
 
-  it('contains font-weight from textStyle defaultWeight', async () => {
+  it('contains font-weight from textStyle regular font', async () => {
     const html = await renderCodeToHtml('x', 'text', tokens, codeStyle);
-    assert.ok(html.includes('font-weight: 400'), 'should contain font-weight from defaultWeight');
+    assert.ok(html.includes('font-weight: 400'), 'should contain font-weight from regular font');
   });
 
   it('contains font-size from textStyle', async () => {

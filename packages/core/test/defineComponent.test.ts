@@ -9,11 +9,11 @@ import {
   type ComponentDefinition,
 } from '../src/core/rendering/registry.js';
 import { NODE_TYPE } from '../src/core/model/nodes.js';
-import { HALIGN, VALIGN, SIZE, DIRECTION, TEXT_STYLE, FONT_WEIGHT } from '../src/core/model/types.js';
+import { HALIGN, VALIGN, SIZE, DIRECTION, TEXT_STYLE } from '../src/core/model/types.js';
 import type { TextStyle } from '../src/core/model/types.js';
 import { schema } from '../src/core/model/schema.js';
 
-const stubStyle: TextStyle = { fontSize: 12, fontFamily: { normal: { name: 'Test', path: '', weight: 400 } }, defaultWeight: FONT_WEIGHT.NORMAL, lineHeightMultiplier: 1.0, bulletIndentPt: 18 };
+const stubStyle: TextStyle = { fontSize: 12, fontFamily: { name: 'Test', regular: { path: '', weight: 400 } }, lineHeightMultiplier: 1.0, bulletIndentPt: 18 };
 
 const stubTextNode = (text: string = ''): any => ({
   type: NODE_TYPE.TEXT,

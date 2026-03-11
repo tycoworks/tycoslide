@@ -42,10 +42,6 @@ Build a tycoslide skill for Claude Code — users describe a presentation and th
 
 `` `code` `` within a paragraph renders as plain text in the same body font. Distinct from fenced code blocks which use the Shiki-based code component. For inline code, want monospace font + optional background highlight. pptxgenjs supports per-fragment `fontFace` and `highlight`. Moderate: need to decide where inline code font comes from (code component token? theme-level monospace font?). Needs per-run font override — separate effort from other inline formatting.
 
-### Open Font Weights
-
-Instead of the 3 hardcoded.
-
 ### Color Token Validation
 
 Add `assertHexColor()` validation at token boundaries to catch malformed values (missing `#`, wrong length, CSS named colors).

@@ -67,12 +67,14 @@ export class LayoutMeasurer {
     await this.page.goto('file://' + measurementPath);
     await preloadFonts(this.page, this.fontDescriptors);
 
-    // Verify all fonts loaded
-    const failedFonts = await this.page.evaluate(() => {
-      return Array.from(document.fonts)
-        .filter(f => f.status !== 'loaded')
-        .map(f => `${f.family} (${f.weight}): ${f.status}`);
-    });
+    // Verify required fonts loaded (check only fonts we preloaded, not all
+    // document.fonts entries — italic @font-face rules create entries that
+    // remain unloaded when nothing on the page requests italic)
+    const failedFonts = await this.page.evaluate((descriptors: Array<{ name: string; weight: number }>) => {
+      return descriptors
+        .filter(f => !document.fonts.check(`${f.weight} 16px "${f.name}"`))
+        .map(f => `${f.name} (${f.weight})`);
+    }, this.fontDescriptors);
     if (failedFonts.length > 0) {
       throw new Error(`Font verification failed — these fonts did not load: ${failedFonts.join(', ')}`);
     }

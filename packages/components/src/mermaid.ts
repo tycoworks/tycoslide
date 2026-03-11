@@ -280,7 +280,7 @@ async function expandMermaid(props: MermaidComponentProps, context: ExpansionCon
     throw new Error('Mermaid definition is empty after sanitization');
   }
   const textStyleConfig = context.theme.textStyles[tokens.textStyle];
-  const fontFamily = textStyleConfig.fontFamily.normal.name;
+  const fontFamily = textStyleConfig.fontFamily.name;
   const renderCtx: MermaidRenderContext = {
     accents: tokens.accents,
   };

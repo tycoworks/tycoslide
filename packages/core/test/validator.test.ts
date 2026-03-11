@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { LayoutValidator, LayoutOverflowError, LayoutBoundsError } from '../src/core/layout/validator.js';
 import { NODE_TYPE, type PositionedNode, type ElementNode, type TextNode } from '../src/core/model/nodes.js';
-import { HALIGN, VALIGN, DIRECTION, SIZE, TEXT_STYLE, FONT_WEIGHT } from '../src/core/model/types.js';
+import { HALIGN, VALIGN, DIRECTION, SIZE, TEXT_STYLE } from '../src/core/model/types.js';
 
 /** Minimal text node for validator tests (validator only checks geometry, not content) */
 function textNode(content: string): TextNode {
@@ -13,9 +13,8 @@ function textNode(content: string): TextNode {
     vAlign: VALIGN.TOP,
     style: TEXT_STYLE.BODY,
     resolvedStyle: {
-      fontFamily: { normal: { name: 'Arial', path: '', weight: 400 } },
+      fontFamily: { name: 'Arial', regular: { path: '', weight: 400 } },
       fontSize: 14,
-      defaultWeight: FONT_WEIGHT.NORMAL,
       lineHeightMultiplier: 1.0,
       bulletIndentPt: 21,
     },

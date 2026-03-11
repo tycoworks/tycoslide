@@ -260,7 +260,7 @@ notes: |
   in Chromium. See internal/text-wrapping-research.md.
 ---
 
-*"You mentioned applications earlier — let's talk about what those need."* The persistence is the skill.
+*"You mentioned applications earlier — let's talk about what those need."* The persistence is the skill. *"You mentioned applications earlier — let's talk about what those need."* The persistence is the skill. *"You mentioned applications earlier — let's talk about what those need."* The persistence is the skill.
 
 ---
 layout: end

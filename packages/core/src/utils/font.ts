@@ -1,31 +1,40 @@
 // Font Utilities Module
 // Provides text normalization and font family helpers
 
-import { FONT_WEIGHT, type Font, type FontFamily, type FontWeight, type TextContent, type TextRun, type NormalizedRun } from '../core/model/types.js';
+import { type Font, type FontFamily, type TextContent, type TextRun, type NormalizedRun } from '../core/model/types.js';
 
 /**
- * Get the Font for a given weight from a FontFamily.
- * Returns the Font object directly from the family.
- * Throws if requested weight is not defined.
+ * Get the Font for a run's bold/italic flags from a FontFamily.
+ * Falls back to regular when optional slots are missing.
  */
-export function getFontFromFamily(fontFamily: FontFamily, weight: FontWeight): Font {
-  const font = fontFamily[weight];
-  if (!font) {
-    throw new Error(`Font weight '${weight}' is not defined in font family '${fontFamily.normal.name}'`);
-  }
-  return font;
+export function getFontForRun(fontFamily: FontFamily, bold?: boolean, italic?: boolean): Font {
+  if (bold && italic) return fontFamily.boldItalic ?? fontFamily.bold ?? fontFamily.regular;
+  if (bold) return fontFamily.bold ?? fontFamily.regular;
+  if (italic) return fontFamily.italic ?? fontFamily.regular;
+  return fontFamily.regular;
+}
+
+/**
+ * Resolve the PPTX fontFace for a run's bold/italic state.
+ * Uses Font.name when the font belongs to a different typeface
+ * than its parent FontFamily (e.g., interLight's bold is "Inter").
+ * Falls back to family.name when font.name is not set.
+ */
+export function resolveFontFace(family: FontFamily, bold?: boolean, italic?: boolean): string {
+  const font = getFontForRun(family, bold, italic);
+  return font.name ?? family.name;
 }
 
 /**
  * Duck-type check: is this value a FontFamily object?
- * Checks for required `normal` property with `name` and `path` strings.
+ * Checks for required `name` string and `regular` property with `path` string.
  */
 export function isFontFamily(value: unknown): value is FontFamily {
   return typeof value === 'object' && value !== null &&
-    'normal' in value && typeof (value as any).normal === 'object' &&
-    (value as any).normal !== null &&
-    typeof (value as any).normal.name === 'string' &&
-    typeof (value as any).normal.path === 'string';
+    'name' in value && typeof (value as any).name === 'string' &&
+    'regular' in value && typeof (value as any).regular === 'object' &&
+    (value as any).regular !== null &&
+    typeof (value as any).regular.path === 'string';
 }
 
 // ============================================
