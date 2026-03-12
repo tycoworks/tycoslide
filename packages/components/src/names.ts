@@ -4,24 +4,24 @@
 
 export const Component = {
   // Scalar components: have schema, support :::directives, usable in layout params
-  Image: 'image',
-  Line: 'line',
-  Shape: 'shape',
-  SlideNumber: 'slideNumber',
-  Text: 'text',
-  PlainText: 'plainText',
-  List: 'list',
-  Card: 'card',
-  Quote: 'quote',
-  Testimonial: 'testimonial',
-  Table: 'table',
-  Mermaid: 'mermaid',
-  Code: 'code',
+  Image: "image",
+  Line: "line",
+  Shape: "shape",
+  SlideNumber: "slideNumber",
+  Text: "text",
+  PlainText: "plainText",
+  List: "list",
+  Card: "card",
+  Quote: "quote",
+  Testimonial: "testimonial",
+  Table: "table",
+  Mermaid: "mermaid",
+  Code: "code",
   // Container components: have slots, support :::directives with compiled body
-  Row: 'row',
-  Column: 'column',
-  Stack: 'stack',
-  Grid: 'grid',
+  Row: "row",
+  Column: "column",
+  Stack: "stack",
+  Grid: "grid",
 } as const;
 
-export type ComponentName = typeof Component[keyof typeof Component];
+export type ComponentName = (typeof Component)[keyof typeof Component];

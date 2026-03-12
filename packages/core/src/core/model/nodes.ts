@@ -2,19 +2,18 @@
 // Pure data structures representing slide content
 
 import type {
-  TextContent,
-  TextStyleName,
-  TextStyle,
-  HorizontalAlignment,
-  VerticalAlignment,
   ArrowType,
+  BorderStyle,
   DashType,
+  Direction,
+  HorizontalAlignment,
   ShapeName,
   SizeValue,
-  BorderStyle,
-  Direction,
-
-} from './types.js';
+  TextContent,
+  TextStyle,
+  TextStyleName,
+  VerticalAlignment,
+} from "./types.js";
 
 // ============================================
 // NODE TYPE ENUM
@@ -22,21 +21,21 @@ import type {
 
 export const NODE_TYPE = {
   // Content primitives
-  TEXT: 'text',
-  IMAGE: 'image',
-  SLIDE_NUMBER: 'slideNumber',
-  TABLE: 'table',  // Native pptxgenjs table element
+  TEXT: "text",
+  IMAGE: "image",
+  SLIDE_NUMBER: "slideNumber",
+  TABLE: "table", // Native pptxgenjs table element
   // Layout primitives
-  CONTAINER: 'container',  // Flex container (row or column, determined by direction)
-  STACK: 'stack',  // Z-order composition: children overlap at same position
+  CONTAINER: "container", // Flex container (row or column, determined by direction)
+  STACK: "stack", // Z-order composition: children overlap at same position
   // Visual primitives
-  LINE: 'line',    // Stroke-only separator (zero cross-axis)
-  SHAPE: 'shape',  // Area shapes: fill, border, cornerRadius
+  LINE: "line", // Stroke-only separator (zero cross-axis)
+  SHAPE: "shape", // Area shapes: fill, border, cornerRadius
   // Higher-level abstraction (expands to primitives)
-  COMPONENT: 'component',
+  COMPONENT: "component",
 } as const;
 
-export type NodeType = typeof NODE_TYPE[keyof typeof NODE_TYPE];
+export type NodeType = (typeof NODE_TYPE)[keyof typeof NODE_TYPE];
 
 // ============================================
 // BASE NODE TYPES
@@ -46,14 +45,14 @@ export interface TextNode {
   type: typeof NODE_TYPE.TEXT;
   content: TextContent;
   style: TextStyleName;
-  resolvedStyle: TextStyle;         // pre-resolved from theme.textStyles[style]
+  resolvedStyle: TextStyle; // pre-resolved from theme.textStyles[style]
   color: string;
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;
   lineHeightMultiplier: number;
   bulletIndentPt: number;
-  linkColor: string;                // token-driven hyperlink color (render-time)
-  linkUnderline: boolean;           // token-driven hyperlink underline (render-time)
+  linkColor: string; // token-driven hyperlink color (render-time)
+  linkUnderline: boolean; // token-driven hyperlink underline (render-time)
 }
 
 export interface ImageNode {
@@ -93,7 +92,7 @@ export interface ShapeNode {
 export interface SlideNumberNode {
   type: typeof NODE_TYPE.SLIDE_NUMBER;
   style: TextStyleName;
-  resolvedStyle: TextStyle;         // pre-resolved from theme.textStyles[style]
+  resolvedStyle: TextStyle; // pre-resolved from theme.textStyles[style]
   color: string;
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;
@@ -119,14 +118,14 @@ export interface TableCellInput {
 /** Fully-resolved table cell data — all fields pre-resolved by component expand */
 export interface TableCellData {
   content: TextContent;
-  color: string;                    // pre-resolved: cell → token
-  textStyle: TextStyleName;         // pre-resolved: cell → header/cell default from table tokens
-  resolvedStyle: TextStyle;         // pre-resolved from theme.textStyles[textStyle]
-  hAlign: HorizontalAlignment;     // pre-resolved: cell → table default
-  vAlign: VerticalAlignment;       // pre-resolved: cell → table default
-  lineHeightMultiplier: number;    // pre-resolved from table cellLineHeight token
-  linkColor: string;               // pre-resolved from table token
-  linkUnderline: boolean;          // pre-resolved from table token
+  color: string; // pre-resolved: cell → token
+  textStyle: TextStyleName; // pre-resolved: cell → header/cell default from table tokens
+  resolvedStyle: TextStyle; // pre-resolved from theme.textStyles[textStyle]
+  hAlign: HorizontalAlignment; // pre-resolved: cell → table default
+  vAlign: VerticalAlignment; // pre-resolved: cell → table default
+  lineHeightMultiplier: number; // pre-resolved from table cellLineHeight token
+  linkColor: string; // pre-resolved from table token
+  linkUnderline: boolean; // pre-resolved from table token
   colspan?: number;
   rowspan?: number;
   fill?: string;
@@ -136,8 +135,8 @@ export interface TableCellData {
 export interface TableNode {
   type: typeof NODE_TYPE.TABLE;
   rows: TableCellData[][];
-  headerRows?: number;           // Number of header rows (default: 0)
-  headerColumns?: number;        // Number of header columns (default: 0)
+  headerRows?: number; // Number of header rows (default: 0)
+  headerColumns?: number; // Number of header columns (default: 0)
   // Style properties (resolved from theme tokens by component expand)
   borderStyle: BorderStyle;
   borderColor: string;
@@ -161,24 +160,23 @@ export interface TableNode {
 
 export interface ContainerNode<C extends SlideNode = ElementNode> {
   type: typeof NODE_TYPE.CONTAINER;
-  direction: Direction;           // 'row' or 'column' — determines flex-direction
-  children: C[];                  // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
-  width: number | SizeValue;      // inches (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
-  height: number | SizeValue;     // inches (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
-  gap: number;                    // inches — pre-resolved from GapSize by component expand
+  direction: Direction; // 'row' or 'column' — determines flex-direction
+  children: C[]; // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
+  width: number | SizeValue; // inches (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
+  height: number | SizeValue; // inches (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
+  gap: number; // inches — pre-resolved from GapSize by component expand
   vAlign: VerticalAlignment;
   hAlign: HorizontalAlignment;
-  padding?: number;               // inches - internal padding on all sides
+  padding?: number; // inches - internal padding on all sides
 }
 
 /** Stack is a z-order container: all children occupy the same bounds, rendered in order */
 export interface StackNode<C extends SlideNode = ElementNode> {
   type: typeof NODE_TYPE.STACK;
-  children: C[];              // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
-  width: number | SizeValue;    // inches, SIZE.FILL, or SIZE.HUG
-  height: number | SizeValue;   // inches, SIZE.FILL, or SIZE.HUG
+  children: C[]; // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
+  width: number | SizeValue; // inches, SIZE.FILL, or SIZE.HUG
+  height: number | SizeValue; // inches, SIZE.FILL, or SIZE.HUG
 }
-
 
 // ============================================
 // COMPONENT NODE (higher-level abstraction)

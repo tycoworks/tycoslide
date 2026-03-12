@@ -3,17 +3,15 @@
 // Handles plain (non-markdown) text with 3 tokens (no link tokens).
 // Use this for eyebrows, attributions, labels, and other non-rich text.
 
-import type { TextStyleName, HorizontalAlignment, VerticalAlignment, ExpansionContext } from 'tycoslide';
-import { NODE_TYPE, type ElementNode } from 'tycoslide';
-import { defineComponent, component, type ComponentNode } from 'tycoslide';
-import { schema } from 'tycoslide';
-import { Component } from './names.js';
+import type { ExpansionContext, HorizontalAlignment, TextStyleName, VerticalAlignment } from "tycoslide";
+import { type ComponentNode, component, defineComponent, type ElementNode, NODE_TYPE, schema } from "tycoslide";
+import { Component } from "./names.js";
 
 export const PLAIN_TEXT_TOKEN = {
-  COLOR: 'color',
-  STYLE: 'style',
-  HALIGN: 'hAlign',
-  VALIGN: 'vAlign',
+  COLOR: "color",
+  STYLE: "style",
+  HALIGN: "hAlign",
+  VALIGN: "vAlign",
 } as const;
 
 export type PlainTextTokens = {
@@ -36,7 +34,11 @@ export type PlainTextComponentProps = {
 // EXPAND
 // ============================================
 
-function expandPlainText(props: PlainTextComponentProps, context: ExpansionContext, tokens: PlainTextTokens): ElementNode {
+function expandPlainText(
+  props: PlainTextComponentProps,
+  context: ExpansionContext,
+  tokens: PlainTextTokens,
+): ElementNode {
   const textStyle = context.theme.textStyles[tokens.style];
 
   return {
@@ -80,9 +82,6 @@ export const plainTextComponent = defineComponent({
  * plainText("ARCHITECTURE", tokens.eyebrow)
  * ```
  */
-export function plainText(
-  body: string,
-  tokens: PlainTextTokens,
-): ComponentNode<PlainTextComponentProps> {
+export function plainText(body: string, tokens: PlainTextTokens): ComponentNode<PlainTextComponentProps> {
   return component(Component.PlainText, { body }, tokens);
 }

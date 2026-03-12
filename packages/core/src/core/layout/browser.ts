@@ -1,7 +1,7 @@
 // Browser Lifecycle
 // Shared headless browser for layout measurement and HTML rendering.
 
-import { chromium, type Browser, type Page } from 'playwright';
+import { type Browser, chromium, type Page } from "playwright";
 
 export class HeadlessBrowser {
   private browser: Browser | null = null;
@@ -17,7 +17,7 @@ export class HeadlessBrowser {
   }
 
   async newPage(options?: { width?: number; height?: number; deviceScaleFactor?: number }): Promise<Page> {
-    if (!this.browser) throw new Error('Browser not launched. Call launch() first.');
+    if (!this.browser) throw new Error("Browser not launched. Call launch() first.");
     const { width, height, deviceScaleFactor } = options ?? {};
     const page = await this.browser.newPage(deviceScaleFactor ? { deviceScaleFactor } : undefined);
     if (width && height) await page.setViewportSize({ width, height });

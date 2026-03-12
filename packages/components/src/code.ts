@@ -2,23 +2,27 @@
 // Renders syntax-highlighted code blocks using Shiki and the shared browser.
 // Theme tokens control all styling — Shiki is an implementation detail.
 
+import type { Code as MdastCode, RootContent } from "mdast";
+import type { ThemeRegistration } from "shiki";
+import { codeToHtml } from "shiki";
 import {
-  NODE_TYPE, type ImageNode,
-  defineComponent, component, type ComponentNode, type ExpansionContext, type SchemaShape,
-  schema,
-  SYNTAX,
-  inToPx,
+  type ComponentNode,
+  component,
+  defineComponent,
+  type ExpansionContext,
   getFontForRun,
+  type ImageNode,
+  inToPx,
+  NODE_TYPE,
+  type SchemaShape,
+  SYNTAX,
+  schema,
   type TextStyle,
   type TextStyleName,
-} from 'tycoslide';
-import type { RootContent } from 'mdast';
-import type { Code as MdastCode } from 'mdast';
-import { codeToHtml } from 'shiki';
-import type { ThemeRegistration } from 'shiki';
-import { Component } from './names.js';
-import type { LanguageName } from './languages.js';
-import { LANGUAGE_VALUES } from './languages.js';
+} from "tycoslide";
+import type { LanguageName } from "./languages.js";
+import { LANGUAGE_VALUES } from "./languages.js";
+import { Component } from "./names.js";
 
 const SUPPORTED_LANGUAGES = new Set<string>(LANGUAGE_VALUES);
 
@@ -28,21 +32,21 @@ const SUPPORTED_LANGUAGES = new Set<string>(LANGUAGE_VALUES);
 
 export const CODE_TOKEN = {
   // Typography (resolved via theme.textStyles)
-  TEXT_STYLE: 'textStyle',
+  TEXT_STYLE: "textStyle",
   // Syntax colors (map to Shiki TextMate scopes)
-  BACKGROUND_COLOR: 'backgroundColor',
-  TEXT_COLOR: 'textColor',
-  KEYWORD_COLOR: 'keywordColor',
-  STRING_COLOR: 'stringColor',
-  COMMENT_COLOR: 'commentColor',
-  FUNCTION_COLOR: 'functionColor',
-  NUMBER_COLOR: 'numberColor',
-  OPERATOR_COLOR: 'operatorColor',
-  TYPE_COLOR: 'typeColor',
-  VARIABLE_COLOR: 'variableColor',
+  BACKGROUND_COLOR: "backgroundColor",
+  TEXT_COLOR: "textColor",
+  KEYWORD_COLOR: "keywordColor",
+  STRING_COLOR: "stringColor",
+  COMMENT_COLOR: "commentColor",
+  FUNCTION_COLOR: "functionColor",
+  NUMBER_COLOR: "numberColor",
+  OPERATOR_COLOR: "operatorColor",
+  TYPE_COLOR: "typeColor",
+  VARIABLE_COLOR: "variableColor",
   // Structural styling
-  PADDING: 'padding',
-  BORDER_RADIUS: 'borderRadius',
+  PADDING: "padding",
+  BORDER_RADIUS: "borderRadius",
 } as const;
 
 export type CodeTokens = {
@@ -82,44 +86,49 @@ export type CodeComponentProps = { body: string; language: string };
  */
 export function buildCodeTheme(tokens: CodeTokens): ThemeRegistration {
   return {
-    name: 'tycoslide',  // Shiki internal identifier — does not affect rendering
-    type: 'dark',       // Fallback for unscoped tokens. If a light-background code theme is needed, add a darkMode token.
+    name: "tycoslide", // Shiki internal identifier — does not affect rendering
+    type: "dark", // Fallback for unscoped tokens. If a light-background code theme is needed, add a darkMode token.
     colors: {
-      'editor.background': tokens.backgroundColor,
-      'editor.foreground': tokens.textColor,
+      "editor.background": tokens.backgroundColor,
+      "editor.foreground": tokens.textColor,
     },
     tokenColors: [
       {
-        scope: ['keyword', 'storage', 'keyword.control', 'keyword.operator.expression', 'keyword.operator.new'],
+        scope: ["keyword", "storage", "keyword.control", "keyword.operator.expression", "keyword.operator.new"],
         settings: { foreground: tokens.keywordColor },
       },
       {
-        scope: ['string', 'string.quoted'],
+        scope: ["string", "string.quoted"],
         settings: { foreground: tokens.stringColor },
       },
       {
-        scope: ['comment', 'comment.line', 'comment.block'],
+        scope: ["comment", "comment.line", "comment.block"],
         settings: { foreground: tokens.commentColor },
       },
       {
-        scope: ['entity.name.function', 'support.function', 'meta.function-call'],
+        scope: ["entity.name.function", "support.function", "meta.function-call"],
         settings: { foreground: tokens.functionColor },
       },
       {
-        scope: ['constant.numeric', 'constant.language'],
+        scope: ["constant.numeric", "constant.language"],
         settings: { foreground: tokens.numberColor },
       },
       {
-        scope: ['keyword.operator', 'keyword.operator.assignment', 'keyword.operator.comparison',
-                 'keyword.operator.arithmetic', 'keyword.operator.logical'],
+        scope: [
+          "keyword.operator",
+          "keyword.operator.assignment",
+          "keyword.operator.comparison",
+          "keyword.operator.arithmetic",
+          "keyword.operator.logical",
+        ],
         settings: { foreground: tokens.operatorColor },
       },
       {
-        scope: ['entity.name.type', 'entity.name.class', 'support.type', 'support.class', 'storage.type'],
+        scope: ["entity.name.type", "entity.name.class", "support.type", "support.class", "storage.type"],
         settings: { foreground: tokens.typeColor },
       },
       {
-        scope: ['variable', 'variable.other', 'variable.parameter', 'variable.language'],
+        scope: ["variable", "variable.other", "variable.parameter", "variable.language"],
         settings: { foreground: tokens.variableColor },
       },
     ],
@@ -195,7 +204,7 @@ async function expandCode(
 ): Promise<ImageNode> {
   const code = props.body.trim();
   if (!code) {
-    throw new Error('[tycoslide] Code block is empty');
+    throw new Error("[tycoslide] Code block is empty");
   }
 
   const codeStyle = context.theme.textStyles[tokens.textStyle];
@@ -222,10 +231,14 @@ export const codeComponent = defineComponent({
     compile: (node: RootContent, _source: string): ComponentNode | null => {
       const codeNode = node as unknown as MdastCode;
       if (!codeNode.lang) {
-        throw new Error('[tycoslide] Code block has no language specified. Add a language after the opening fences, e.g. ```sql');
+        throw new Error(
+          "[tycoslide] Code block has no language specified. Add a language after the opening fences, e.g. ```sql",
+        );
       }
       if (!SUPPORTED_LANGUAGES.has(codeNode.lang)) {
-        throw new Error(`[tycoslide] Unsupported code language "${codeNode.lang}". Supported languages include: typescript, python, sql, rust, go, java. See LANGUAGE constant for full list.`);
+        throw new Error(
+          `[tycoslide] Unsupported code language "${codeNode.lang}". Supported languages include: typescript, python, sql, rust, go, java. See LANGUAGE constant for full list.`,
+        );
       }
       return component(Component.Code, {
         body: codeNode.value,

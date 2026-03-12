@@ -3,23 +3,30 @@
 // Available to layout TypeScript authors via text() DSL function.
 // Always uses rich text (inline formatting only): bold, italic, :color[highlights], no bullets/paragraphs.
 
-import type { RootContent, Heading } from 'mdast';
-import type { NormalizedRun, TextStyleName, HorizontalAlignment, VerticalAlignment, ExpansionContext } from 'tycoslide';
-import { TEXT_STYLE, SYNTAX, extractSource } from 'tycoslide';
-import { NODE_TYPE, type ElementNode } from 'tycoslide';
-import { defineComponent, component, type ComponentNode } from 'tycoslide';
-import { schema } from 'tycoslide';
-import { Component } from './names.js';
-import { transformInline, inlineParse } from './utils/inline.js';
+import type { Heading, RootContent } from "mdast";
+import type { ExpansionContext, HorizontalAlignment, NormalizedRun, TextStyleName, VerticalAlignment } from "tycoslide";
+import {
+  type ComponentNode,
+  component,
+  defineComponent,
+  type ElementNode,
+  extractSource,
+  NODE_TYPE,
+  SYNTAX,
+  schema,
+  TEXT_STYLE,
+} from "tycoslide";
+import { Component } from "./names.js";
+import { inlineParse, transformInline } from "./utils/inline.js";
 
 export const TEXT_TOKEN = {
-  COLOR: 'color',
-  STYLE: 'style',
-  LINK_COLOR: 'linkColor',
-  LINK_UNDERLINE: 'linkUnderline',
-  HALIGN: 'hAlign',
-  VALIGN: 'vAlign',
-  ACCENTS: 'accents',
+  COLOR: "color",
+  STYLE: "style",
+  LINK_COLOR: "linkColor",
+  LINK_UNDERLINE: "linkUnderline",
+  HALIGN: "hAlign",
+  VALIGN: "vAlign",
+  ACCENTS: "accents",
 } as const;
 
 export type TextTokens = {
@@ -61,11 +68,10 @@ function expandText(props: TextComponentProps, context: ExpansionContext, tokens
   const tree = inlineParse(props.body);
 
   // Validate single paragraph (no multi-block)
-  const blocks = tree.children.filter(c => c.type !== SYNTAX.THEMATIC_BREAK);
+  const blocks = tree.children.filter((c) => c.type !== SYNTAX.THEMATIC_BREAK);
   if (blocks.length > 1 || (blocks.length === 1 && blocks[0].type !== SYNTAX.PARAGRAPH)) {
     throw new Error(
-      `text() only supports inline formatting (bold, italic, colors). ` +
-      `For bullets, use the list component.`
+      `text() only supports inline formatting (bold, italic, colors). ` + `For bullets, use the list component.`,
     );
   }
 
@@ -107,7 +113,7 @@ export const textComponent = defineComponent({
         const heading = node as Heading;
         const style = HEADING_STYLE[heading.depth] ?? TEXT_STYLE.H3;
         const raw = extractSource(heading, source);
-        const content = raw.replace(/^#{1,6}\s*/, '');
+        const content = raw.replace(/^#{1,6}\s*/, "");
         return component(Component.Text, { body: content }, { style });
       }
       return component(Component.Text, { body: extractSource(node, source) });

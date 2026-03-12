@@ -2,33 +2,33 @@
 // Shared constants for markdown AST node types used across the parser layer.
 
 export const SYNTAX = {
-  ROOT: 'root',
+  ROOT: "root",
   // Block-level
-  CONTAINER_DIRECTIVE: 'containerDirective',
-  PARAGRAPH: 'paragraph',
-  LIST: 'list',
-  HEADING: 'heading',
-  TABLE: 'table',
-  IMAGE: 'image',
-  CODE: 'code',
-  BLOCKQUOTE: 'blockquote',
-  HTML: 'html',
-  DEFINITION: 'definition',
-  THEMATIC_BREAK: 'thematicBreak',
+  CONTAINER_DIRECTIVE: "containerDirective",
+  PARAGRAPH: "paragraph",
+  LIST: "list",
+  HEADING: "heading",
+  TABLE: "table",
+  IMAGE: "image",
+  CODE: "code",
+  BLOCKQUOTE: "blockquote",
+  HTML: "html",
+  DEFINITION: "definition",
+  THEMATIC_BREAK: "thematicBreak",
   // Inline
-  TEXT: 'text',
-  STRONG: 'strong',
-  EMPHASIS: 'emphasis',
-  INLINE_CODE: 'inlineCode',
-  LINK: 'link',
-  BREAK: 'break',
-  DELETE: 'delete',
-  INS: 'insert',
-  TEXT_DIRECTIVE: 'textDirective',
+  TEXT: "text",
+  STRONG: "strong",
+  EMPHASIS: "emphasis",
+  INLINE_CODE: "inlineCode",
+  LINK: "link",
+  BREAK: "break",
+  DELETE: "delete",
+  INS: "insert",
+  TEXT_DIRECTIVE: "textDirective",
 } as const;
 
 /** Union of all SYNTAX values — use for typed MDAST node type references. */
-export type SyntaxType = typeof SYNTAX[keyof typeof SYNTAX];
+export type SyntaxType = (typeof SYNTAX)[keyof typeof SYNTAX];
 
 // ============================================
 // HELPERS
@@ -41,7 +41,7 @@ export function extractSource(
 ): string {
   const start = node.position?.start.offset;
   const end = node.position?.end.offset;
-  if (start == null || end == null) return '';
+  if (start == null || end == null) return "";
   return source.slice(start, end);
 }
 
@@ -53,4 +53,3 @@ export interface ContainerDirective {
   children: { type: string; [key: string]: unknown }[];
   position?: { start: { offset?: number }; end: { offset?: number } };
 }
-

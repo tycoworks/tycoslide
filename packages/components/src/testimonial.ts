@@ -3,25 +3,31 @@
 // Expands to: stack(shape(background), column(image?, quote, attribution))
 
 import {
-  defineComponent, component, type ComponentProps, type SchemaShape,
-  SHAPE, SIZE,
-  type GapSize, type HorizontalAlignment, type VerticalAlignment,
-} from 'tycoslide';
-import { Component } from './names.js';
-import { stack, column, row } from './containers.js';
-import { shape, type ShapeTokens } from './primitives.js';
-import { image as imageNode, imageComponent } from './image.js';
-import { text, textComponent, type TextTokens } from './text.js';
-import { plainText, type PlainTextTokens } from './plainText.js';
+  type ComponentProps,
+  component,
+  defineComponent,
+  type GapSize,
+  type HorizontalAlignment,
+  type SchemaShape,
+  SHAPE,
+  SIZE,
+  type VerticalAlignment,
+} from "tycoslide";
+import { column, row, stack } from "./containers.js";
+import { imageComponent, image as imageNode } from "./image.js";
+import { Component } from "./names.js";
+import { type PlainTextTokens, plainText } from "./plainText.js";
+import { type ShapeTokens, shape } from "./primitives.js";
+import { type TextTokens, text, textComponent } from "./text.js";
 
 export const TESTIMONIAL_TOKEN = {
-  BACKGROUND: 'background',
-  PADDING: 'padding',
-  GAP: 'gap',
-  HALIGN: 'hAlign',
-  VALIGN: 'vAlign',
-  QUOTE: 'quote',
-  ATTRIBUTION: 'attribution',
+  BACKGROUND: "background",
+  PADDING: "padding",
+  GAP: "gap",
+  HALIGN: "hAlign",
+  VALIGN: "vAlign",
+  QUOTE: "quote",
+  ATTRIBUTION: "attribution",
 } as const;
 
 export type TestimonialTokens = {
@@ -74,8 +80,13 @@ export const testimonialComponent = defineComponent({
     const { quote: quoteText, body, attribution, image: imagePath } = props;
     const actualQuote = quoteText ?? body;
     const {
-      background, padding, gap, hAlign: contentHAlign, vAlign: contentVAlign,
-      quote: quoteTokens, attribution: attributionTokens,
+      background,
+      padding,
+      gap,
+      hAlign: contentHAlign,
+      vAlign: contentVAlign,
+      quote: quoteTokens,
+      attribution: attributionTokens,
     } = tokens;
 
     // Build content children: optional image, quote text, attribution

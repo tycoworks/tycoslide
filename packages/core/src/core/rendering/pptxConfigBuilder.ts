@@ -2,12 +2,21 @@
 // Pure translation layer: converts tycoslide domain types to pptxgenjs option shapes.
 // No pptxgenjs dependency — every method takes typed inputs and returns plain data.
 
-import type { PositionedNode, TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode, TableCellData } from '../model/nodes.js';
-import type { TextStyle, TextContent, StrikeType, UnderlineStyle } from '../model/types.js';
-import { BORDER_STYLE, LINE_SHAPE, STRIKE_TYPE, UNDERLINE_STYLE } from '../model/types.js';
-import { normalizeContent, getParagraphGapRatio, resolveFontFace } from '../../utils/font.js';
-import { readImageDimensions, containFit } from '../../utils/image.js';
-import { stripHash } from '../../utils/color.js';
+import { stripHash } from "../../utils/color.js";
+import { getParagraphGapRatio, normalizeContent, resolveFontFace } from "../../utils/font.js";
+import { containFit, readImageDimensions } from "../../utils/image.js";
+import type {
+  ImageNode,
+  LineNode,
+  PositionedNode,
+  ShapeNode,
+  SlideNumberNode,
+  TableCellData,
+  TableNode,
+  TextNode,
+} from "../model/nodes.js";
+import type { StrikeType, TextContent, TextStyle, UnderlineStyle } from "../model/types.js";
+import { BORDER_STYLE, LINE_SHAPE, STRIKE_TYPE, UNDERLINE_STYLE } from "../model/types.js";
 
 // ============================================
 // TYPES
@@ -47,16 +56,22 @@ export interface TextFragment {
  * Every method takes typed inputs and returns plain data.
  */
 export class PptxConfigBuilder {
-
   buildTextConfig(
     textNode: TextNode,
     positioned: PositionedNode,
   ): { fragments: TextFragment[]; options: Record<string, unknown> } {
     const style = textNode.resolvedStyle;
-    const fragments = this.buildTextFragments(textNode.content, style, textNode.color, textNode.linkColor, textNode.linkUnderline, textNode.bulletIndentPt);
+    const fragments = this.buildTextFragments(
+      textNode.content,
+      style,
+      textNode.color,
+      textNode.linkColor,
+      textNode.linkUnderline,
+      textNode.bulletIndentPt,
+    );
 
     // Check if any fragment has bullets - affects alignment
-    const hasBullets = fragments.some(f => f.options.bullet);
+    const hasBullets = fragments.some((f) => f.options.bullet);
 
     const lineSpacing = textNode.lineHeightMultiplier;
 
@@ -165,8 +180,7 @@ export class PptxConfigBuilder {
     };
 
     const border = shapeNode.border;
-    const allSides = border.top !== false && border.right !== false &&
-                     border.bottom !== false && border.left !== false;
+    const allSides = border.top !== false && border.right !== false && border.bottom !== false && border.left !== false;
 
     if (allSides) {
       options.line = {
@@ -207,10 +221,7 @@ export class PptxConfigBuilder {
     };
   }
 
-  buildSlideNumberOptions(
-    slideNumNode: SlideNumberNode,
-    positioned: PositionedNode,
-  ): Record<string, unknown> {
+  buildSlideNumberOptions(slideNumNode: SlideNumberNode, positioned: PositionedNode): Record<string, unknown> {
     const style = slideNumNode.resolvedStyle;
 
     return {
@@ -254,7 +265,13 @@ export class PptxConfigBuilder {
     const border = this.buildCellBorder(tableNode, rowIndex, colIndex, numRows, numCols);
 
     // Build rich text fragments for cell content
-    const textFragments = this.buildTextFragments(cell.content, textStyle, cell.color, cell.linkColor, cell.linkUnderline);
+    const textFragments = this.buildTextFragments(
+      cell.content,
+      textStyle,
+      cell.color,
+      cell.linkColor,
+      cell.linkUnderline,
+    );
 
     const options: Record<string, unknown> = {
       fontFace: textStyle.fontFamily.name, // default — per-run fontFace from resolveFontFace() overrides this
@@ -296,7 +313,7 @@ export class PptxConfigBuilder {
     rowIndex: number,
     colIndex: number,
     numRows: number,
-    numCols: number
+    numCols: number,
   ): Array<{ pt?: number; color?: string; type?: string }> | undefined {
     const borderStyle = tableNode.borderStyle;
     if (borderStyle === BORDER_STYLE.NONE) return undefined;
@@ -304,8 +321,8 @@ export class PptxConfigBuilder {
     const borderWidth = tableNode.borderWidth;
     const borderColor = tableNode.borderColor;
 
-    const solid = { pt: borderWidth, color: stripHash(borderColor), type: 'solid' as const };
-    const none = { type: 'none' as const };
+    const solid = { pt: borderWidth, color: stripHash(borderColor), type: "solid" as const };
+    const none = { type: "none" as const };
 
     // For internal borders, determine which edges are on the table boundary
     const isFirstRow = rowIndex === 0;
@@ -324,10 +341,10 @@ export class PptxConfigBuilder {
       case BORDER_STYLE.INTERNAL:
         // Internal borders only - no borders on outer edges
         return [
-          isFirstRow ? none : solid,  // top
-          isLastCol ? none : solid,   // right
-          isLastRow ? none : solid,   // bottom
-          isFirstCol ? none : solid,  // left
+          isFirstRow ? none : solid, // top
+          isLastCol ? none : solid, // right
+          isLastRow ? none : solid, // bottom
+          isFirstCol ? none : solid, // left
         ];
       default: {
         const _exhaustive: never = borderStyle;

@@ -2,18 +2,18 @@
 // Coordinates browser-based layout measurement and position tree construction.
 // The browser computes all positions via CSS flexbox in a single pass per slide.
 
-import fs from 'fs';
-import path from 'path';
-import type { ElementNode, PositionedNode, ContainerNode, StackNode, TextNode } from '../model/nodes.js';
-import { NODE_TYPE } from '../model/nodes.js';
-import type { Bounds } from '../model/bounds.js';
-import type { Theme, Background } from '../model/types.js';
-import { HeadlessBrowser } from './browser.js';
-import { LayoutMeasurer } from './measurement.js';
-import { HtmlRenderer } from './htmlRenderer.js';
-import { generatePreviewHTML } from './layoutHtml.js';
-import { copyFonts, copyImages } from './assetCopier.js';
-import { log } from '../../utils/log.js';
+import fs from "node:fs";
+import path from "node:path";
+import { log } from "../../utils/log.js";
+import type { Bounds } from "../model/bounds.js";
+import type { ContainerNode, ElementNode, PositionedNode, StackNode, TextNode } from "../model/nodes.js";
+import { NODE_TYPE } from "../model/nodes.js";
+import type { Background, Theme } from "../model/types.js";
+import { copyFonts, copyImages } from "./assetCopier.js";
+import { HeadlessBrowser } from "./browser.js";
+import { HtmlRenderer } from "./htmlRenderer.js";
+import { generatePreviewHTML } from "./layoutHtml.js";
+import { LayoutMeasurer } from "./measurement.js";
 
 // ============================================
 // TYPES
@@ -115,7 +115,12 @@ export class LayoutPipeline {
     const imagePathMap = copyImages(this.slides, this.outputDir);
 
     // Measure ALL slides in a single browser round-trip
-    const { measurements, slideFragments, labels } = await this.measurer.measureLayout(this.slides, theme, this.outputDir, imagePathMap);
+    const { measurements, slideFragments, labels } = await this.measurer.measureLayout(
+      this.slides,
+      theme,
+      this.outputDir,
+      imagePathMap,
+    );
     this.measurements = measurements;
     this.slideFragments = slideFragments;
     this.labels = labels;
@@ -165,7 +170,7 @@ export class LayoutPipeline {
    */
   computeLayout(tree: ElementNode, bounds: Bounds): PositionedNode {
     if (!this.measurements) {
-      throw new Error('No measurements available. Call executeMeasurements() first.');
+      throw new Error("No measurements available. Call executeMeasurements() first.");
     }
     const positioned = this.buildPositionedTree(tree, bounds);
     if (log.layout._.enabled) {
@@ -219,26 +224,32 @@ export class LayoutPipeline {
     // Recurse into container children
     if (node.type === NODE_TYPE.CONTAINER || node.type === NODE_TYPE.STACK) {
       const container = node as ContainerNode | StackNode;
-      positioned.children = container.children.map(child =>
-        this.buildPositionedTree(child, bounds)
-      );
+      positioned.children = container.children.map((child) => this.buildPositionedTree(child, bounds));
     }
 
     return positioned;
   }
 
   private debugDumpTree(node: PositionedNode, indent = 0): void {
-    const pad = '  '.repeat(indent);
+    const pad = "  ".repeat(indent);
     const type = node.node.type;
     let label: string = type;
     if (type === NODE_TYPE.TEXT) {
       const content = (node.node as TextNode).content;
-      const preview = typeof content === 'string' ? content.substring(0, 50)
-        : Array.isArray(content) ? content.map((c: any) => typeof c === 'string' ? c : c.text).join('').substring(0, 50)
-        : '';
+      const preview =
+        typeof content === "string"
+          ? content.substring(0, 50)
+          : Array.isArray(content)
+            ? content
+                .map((c: any) => (typeof c === "string" ? c : c.text))
+                .join("")
+                .substring(0, 50)
+            : "";
       label = `TEXT "${preview}"`;
     }
-    log.layout._(`${pad}${label}: x=${node.x.toFixed(3)} y=${node.y.toFixed(3)} w=${node.width.toFixed(3)} h=${node.height.toFixed(3)}`);
+    log.layout._(
+      `${pad}${label}: x=${node.x.toFixed(3)} y=${node.y.toFixed(3)} w=${node.width.toFixed(3)} h=${node.height.toFixed(3)}`,
+    );
     if (node.children) {
       for (const child of node.children) {
         this.debugDumpTree(child, indent + 1);

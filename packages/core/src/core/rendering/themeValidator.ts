@@ -2,8 +2,8 @@
 // Structural validation of theme font configuration.
 // Pure computation — no I/O, no file system access.
 
-import { FONT_SLOT, type Theme, type FontFamily } from '../model/types.js';
-import { isFontFamily, FONT_FORMATS } from '../../utils/font.js';
+import { FONT_FORMATS, isFontFamily } from "../../utils/font.js";
+import { FONT_SLOT, type FontFamily, type Theme } from "../model/types.js";
 
 /**
  * Walk a token object tree and invoke callback for every FontFamily value found.
@@ -17,7 +17,7 @@ function walkTokensForFonts(
   for (const [key, value] of Object.entries(tokens)) {
     if (isFontFamily(value)) {
       callback(value, tokenPath, key);
-    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+    } else if (typeof value === "object" && value !== null && !Array.isArray(value)) {
       walkTokensForFonts(value as Record<string, unknown>, `${tokenPath}.${key}`, callback);
     }
   }
@@ -40,18 +40,16 @@ export function validateThemeFonts(theme: Theme): void {
     for (const slot of Object.values(FONT_SLOT)) {
       const font = family[slot];
       if (font) {
-        const ext = font.path.substring(font.path.lastIndexOf('.'));
+        const ext = font.path.substring(font.path.lastIndexOf("."));
         if (!FONT_FORMATS[ext]) {
-          const supported = Object.keys(FONT_FORMATS).join(', ');
+          const supported = Object.keys(FONT_FORMATS).join(", ");
           throw new Error(
-            `[tycoslide] Font "${font.path}" has unsupported format "${ext}". ` +
-            `Supported: ${supported}.`
+            `[tycoslide] Font "${font.path}" has unsupported format "${ext}". ` + `Supported: ${supported}.`,
           );
         }
         registeredPaths.add(font.path);
       }
     }
-
   }
 
   // Validate: every textStyle fontFamily must be in theme.fonts
@@ -61,7 +59,7 @@ export function validateThemeFonts(theme: Theme): void {
       const font = style.fontFamily[slot];
       if (font && !registeredPaths.has(font.path)) {
         throw new Error(
-          `[tycoslide] Font "${style.fontFamily.name}" (${font.path}) used in textStyle "${styleName}" is not listed in theme.fonts.`
+          `[tycoslide] Font "${style.fontFamily.name}" (${font.path}) used in textStyle "${styleName}" is not listed in theme.fonts.`,
         );
       }
     }
@@ -73,7 +71,7 @@ export function validateThemeFonts(theme: Theme): void {
       const font = family[slot];
       if (font && !registeredPaths.has(font.path)) {
         throw new Error(
-          `[tycoslide] Font "${family.name}" (${font.path}) used in ${tokenPath}.${key} is not listed in theme.fonts.`
+          `[tycoslide] Font "${family.name}" (${font.path}) used in ${tokenPath}.${key} is not listed in theme.fonts.`,
         );
       }
     }
@@ -82,7 +80,11 @@ export function validateThemeFonts(theme: Theme): void {
   if (theme.layouts) {
     for (const [layoutName, layoutDef] of Object.entries(theme.layouts)) {
       for (const [variantName, tokens] of Object.entries(layoutDef.variants)) {
-        walkTokensForFonts(tokens as Record<string, unknown>, `layout "${layoutName}" variant "${variantName}"`, validateTokenFonts);
+        walkTokensForFonts(
+          tokens as Record<string, unknown>,
+          `layout "${layoutName}" variant "${variantName}"`,
+          validateTokenFonts,
+        );
       }
     }
   }
@@ -90,7 +92,11 @@ export function validateThemeFonts(theme: Theme): void {
   if (theme.masters) {
     for (const [masterName, masterDef] of Object.entries(theme.masters)) {
       for (const [variantName, tokens] of Object.entries(masterDef.variants)) {
-        walkTokensForFonts(tokens as Record<string, unknown>, `master "${masterName}" variant "${variantName}"`, validateTokenFonts);
+        walkTokensForFonts(
+          tokens as Record<string, unknown>,
+          `master "${masterName}" variant "${variantName}"`,
+          validateTokenFonts,
+        );
       }
     }
   }

@@ -1,10 +1,10 @@
 // Test Mocks
 // Shared mock utilities for testing
 
-import * as assert from 'node:assert';
-import { createRequire } from 'module';
-import type { Theme, TextStyle, FontFamily } from '../src/core/model/types.js';
-import { TEXT_STYLE } from '../src/core/model/types.js';
+import * as assert from "node:assert";
+import { createRequire } from "node:module";
+import type { FontFamily, TextStyle, Theme } from "../src/core/model/types.js";
+import { TEXT_STYLE } from "../src/core/model/types.js";
 
 const require = createRequire(import.meta.url);
 
@@ -13,9 +13,9 @@ const require = createRequire(import.meta.url);
 // ============================================
 
 const mockFontFamily: FontFamily = {
-  name: 'Inter',
-  regular: { path: require.resolve('@fontsource/inter/files/inter-latin-400-normal.woff'), weight: 400 },
-  bold: { path: require.resolve('@fontsource/inter/files/inter-latin-700-normal.woff'), weight: 700 },
+  name: "Inter",
+  regular: { path: require.resolve("@fontsource/inter/files/inter-latin-400-normal.woff"), weight: 400 },
+  bold: { path: require.resolve("@fontsource/inter/files/inter-latin-700-normal.woff"), weight: 700 },
 };
 
 export const mockTextStyle: TextStyle = {
@@ -35,13 +35,13 @@ export function mockTheme(options?: {
   gapLoose?: number;
   layouts?: Record<string, { variants: Record<string, Record<string, unknown>> }>;
   textStyles?: Partial<Record<string, Partial<TextStyle>>>;
-  slide?: Theme['slide'];
+  slide?: Theme["slide"];
 }): Theme {
   const gap = options?.gap ?? 0.25;
   const gapTight = options?.gapTight ?? 0.125;
   const gapLoose = options?.gapLoose ?? 0.5;
   return {
-    slide: options?.slide ?? { layout: 'CUSTOM' as const, width: 13.333, height: 7.5 },
+    slide: options?.slide ?? { layout: "CUSTOM" as const, width: 13.333, height: 7.5 },
     spacing: { normal: gap, tight: gapTight, loose: gapLoose },
     fonts: [mockFontFamily],
     textStyles: {
@@ -55,7 +55,7 @@ export function mockTheme(options?: {
       [TEXT_STYLE.EYEBROW]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.EYEBROW] },
       [TEXT_STYLE.CODE]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.CODE] },
     },
-    layouts: (options?.layouts ?? {}) as Theme['layouts'],
+    layouts: (options?.layouts ?? {}) as Theme["layouts"],
     masters: {},
   };
 }
@@ -65,7 +65,7 @@ export function mockTheme(options?: {
 // ============================================
 
 export function noopCanvas() {
-  return { renderHtml: async () => 'mock://render.png' };
+  return { renderHtml: async () => "mock://render.png" };
 }
 
 // ============================================
@@ -76,18 +76,12 @@ export function noopCanvas() {
  * Assert that a number is approximately equal to expected value.
  */
 export function approx(actual: number, expected: number, msg: string, tolerance = 0.01): void {
-  assert.ok(
-    Math.abs(actual - expected) < tolerance,
-    `${msg}: expected ~${expected}, got ${actual}`
-  );
+  assert.ok(Math.abs(actual - expected) < tolerance, `${msg}: expected ~${expected}, got ${actual}`);
 }
 
 /**
  * Assert that two numbers are approximately equal.
  */
 export function assertApprox(actual: number, expected: number, tolerance = 0.01): void {
-  assert.ok(
-    Math.abs(actual - expected) < tolerance,
-    `expected ~${expected}, got ${actual}`
-  );
+  assert.ok(Math.abs(actual - expected) < tolerance, `expected ~${expected}, got ${actual}`);
 }

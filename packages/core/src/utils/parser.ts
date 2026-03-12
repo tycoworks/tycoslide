@@ -3,25 +3,22 @@
 //
 // text.ts keeps its own processor (intentionally omits remarkGfm).
 
-import { unified } from 'unified';
-import remarkParse from 'remark-parse';
-import remarkDirective from 'remark-directive';
-import remarkGfm from 'remark-gfm';
-import { extractSource, type ContainerDirective } from '../core/model/syntax.js';
+import remarkDirective from "remark-directive";
+import remarkGfm from "remark-gfm";
+import remarkParse from "remark-parse";
+import { unified } from "unified";
+import { type ContainerDirective, extractSource } from "../core/model/syntax.js";
 
 // ============================================
 // PARSER
 // ============================================
 
 /** Remark processor with directive + GFM support. Used by slot compiler and block component. */
-export const markdownProcessor = unified()
-  .use(remarkParse)
-  .use(remarkDirective)
-  .use(remarkGfm);
+export const markdownProcessor = unified().use(remarkParse).use(remarkDirective).use(remarkGfm);
 
 /** Parse a markdown string into an MDAST tree. */
-export function parseMarkdown(content: string): import('mdast').Root {
-  return markdownProcessor.parse(content) as import('mdast').Root;
+export function parseMarkdown(content: string): import("mdast").Root {
+  return markdownProcessor.parse(content) as import("mdast").Root;
 }
 
 // ============================================
@@ -38,11 +35,11 @@ export function parseMarkdown(content: string): import('mdast').Root {
  */
 export function extractDirectiveBody(directive: ContainerDirective, source: string): string {
   const raw = extractSource(directive, source);
-  const lines = raw.split('\n');
-  if (lines.length < 2) return '';
+  const lines = raw.split("\n");
+  if (lines.length < 2) return "";
   const bodyLines = lines.slice(1);
-  if (bodyLines.length > 0 && bodyLines[bodyLines.length - 1].trim() === ':::') {
+  if (bodyLines.length > 0 && bodyLines[bodyLines.length - 1].trim() === ":::") {
     bodyLines.pop();
   }
-  return bodyLines.join('\n').trim();
+  return bodyLines.join("\n").trim();
 }

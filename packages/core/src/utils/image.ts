@@ -1,7 +1,8 @@
 // Image Utilities Module
 // Provides image dimension reading
 
-import imageSizeDefault from 'image-size';
+import imageSizeDefault from "image-size";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- CJS/ESM interop: .default exists at runtime but not in types
 const imageSize = (imageSizeDefault as any).default || imageSizeDefault;
 
@@ -17,11 +18,13 @@ export interface ImageDimensions {
 
 /** Contain-fit a rectangle with given aspect ratio inside a bounding box, centered. */
 export function containFit(
-  x: number, y: number, w: number, h: number, aspectRatio: number
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  aspectRatio: number,
 ): { x: number; y: number; w: number; h: number } {
-  const [fitW, fitH] = aspectRatio > w / h
-    ? [w, w / aspectRatio]
-    : [h * aspectRatio, h];
+  const [fitW, fitH] = aspectRatio > w / h ? [w, w / aspectRatio] : [h * aspectRatio, h];
   return {
     x: x + (w - fitW) / 2,
     y: y + (h - fitH) / 2,

@@ -5,11 +5,11 @@
 // Slots primarily contain :::directives. Consecutive bare MDAST nodes
 // are compiled via registered MDAST handlers on the component registry.
 
-import type { Root, RootContent, Paragraph } from 'mdast';
-import { SYNTAX, type ContainerDirective } from '../model/syntax.js';
-import { markdownProcessor, extractDirectiveBody } from '../../utils/parser.js';
-import { componentRegistry, type ComponentNode } from '../rendering/registry.js';
-import { type SlideNode } from '../model/nodes.js';
+import type { Paragraph, Root, RootContent } from "mdast";
+import { extractDirectiveBody, markdownProcessor } from "../../utils/parser.js";
+import type { SlideNode } from "../model/nodes.js";
+import { type ContainerDirective, SYNTAX } from "../model/syntax.js";
+import { type ComponentNode, componentRegistry } from "../rendering/registry.js";
 
 // ============================================
 // PUBLIC API
@@ -23,7 +23,7 @@ import { type SlideNode } from '../model/nodes.js';
  */
 export function compileSlot(markdownStr: string): SlideNode[] {
   const tree = markdownProcessor.parse(markdownStr) as Root;
-  return compileChildren(tree.children, markdownStr, 'slot');
+  return compileChildren(tree.children, markdownStr, "slot");
 }
 
 // ============================================
@@ -37,11 +37,7 @@ export function compileSlot(markdownStr: string): SlideNode[] {
  * - Container directives → dispatched through dispatchDirective (recursive)
  * - Consecutive bare MDAST → grouped and compiled via registered MDAST handlers
  */
-function compileChildren(
-  children: RootContent[],
-  source: string,
-  errorPrefix: string,
-): SlideNode[] {
+function compileChildren(children: RootContent[], source: string, errorPrefix: string): SlideNode[] {
   const nodes: SlideNode[] = [];
   let bareStart: RootContent | null = null;
   let bareEnd: RootContent | null = null;
@@ -95,20 +91,17 @@ function compileChildren(
  *
  * Exported for reuse by compileBareNode which also dispatches nested directives.
  */
-export function dispatchDirective(
-  directive: ContainerDirective,
-  source: string,
-  errorPrefix: string,
-): ComponentNode {
+export function dispatchDirective(directive: ContainerDirective, source: string, errorPrefix: string): ComponentNode {
   const handler = componentRegistry.getDirectiveHandler(directive.name);
   if (!handler) {
-    const available = componentRegistry.getAll()
-      .filter(d => d.deserialize)
-      .map(d => d.name)
-      .join(', ');
+    const available = componentRegistry
+      .getAll()
+      .filter((d) => d.deserialize)
+      .map((d) => d.name)
+      .join(", ");
     throw new Error(
       `[tycoslide] ${errorPrefix}: unknown directive ":::${directive.name}". ` +
-      `Available directives: ${available || 'none'}.`,
+        `Available directives: ${available || "none"}.`,
     );
   }
 
@@ -146,7 +139,7 @@ function compileBareMarkdown(source: string): SlideNode[] {
 function compileBareNode(node: RootContent, source: string): SlideNode | null {
   // Container directives → shared dispatch
   if (node.type === SYNTAX.CONTAINER_DIRECTIVE) {
-    return dispatchDirective(node as unknown as ContainerDirective, source, 'document');
+    return dispatchDirective(node as unknown as ContainerDirective, source, "document");
   }
 
   // Thematic breaks (---) are reserved as slide delimiters; silently skip.
@@ -170,6 +163,6 @@ function compileBareNode(node: RootContent, source: string): SlideNode | null {
   // Unknown → error
   throw new Error(
     `[tycoslide] document: unsupported markdown block type "${node.type}". ` +
-    `No component has registered an MDAST handler for this type.`,
+      `No component has registered an MDAST handler for this type.`,
   );
 }

@@ -1,18 +1,26 @@
 // Font Utilities Module
 // Provides text normalization and font family helpers
 
-import { type Font, type FontFamily, type TextContent, type TextRun, type NormalizedRun, FONT_SLOT, type FontSlot } from '../core/model/types.js';
-import { NODE_TYPE, type ElementNode } from '../core/model/nodes.js';
+import { type ElementNode, NODE_TYPE } from "../core/model/nodes.js";
+import {
+  FONT_SLOT,
+  type Font,
+  type FontFamily,
+  type FontSlot,
+  type NormalizedRun,
+  type TextContent,
+  type TextRun,
+} from "../core/model/types.js";
 
 /**
  * Supported font formats for @font-face CSS and theme validation.
  * Used by themeValidator (format check) and layoutHtml (CSS generation).
  */
 export const FONT_FORMATS: Record<string, { mime: string; format: string }> = {
-  '.woff2': { mime: 'font/woff2', format: 'woff2' },
-  '.woff': { mime: 'font/woff', format: 'woff' },
-  '.ttf': { mime: 'font/ttf', format: 'truetype' },
-  '.otf': { mime: 'font/opentype', format: 'opentype' },
+  ".woff2": { mime: "font/woff2", format: "woff2" },
+  ".woff": { mime: "font/woff", format: "woff" },
+  ".ttf": { mime: "font/ttf", format: "truetype" },
+  ".otf": { mime: "font/opentype", format: "opentype" },
 };
 
 /**
@@ -63,11 +71,16 @@ export function checkFontVariant(
  * Checks for required `name` string and `regular` property with `path` string.
  */
 export function isFontFamily(value: unknown): value is FontFamily {
-  return typeof value === 'object' && value !== null &&
-    'name' in value && typeof (value as any).name === 'string' &&
-    'regular' in value && typeof (value as any).regular === 'object' &&
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "name" in value &&
+    typeof (value as any).name === "string" &&
+    "regular" in value &&
+    typeof (value as any).regular === "object" &&
     (value as any).regular !== null &&
-    typeof (value as any).regular.path === 'string';
+    typeof (value as any).regular.path === "string"
+  );
 }
 
 // ============================================
@@ -99,11 +112,11 @@ export function getParagraphGapRatio(): number {
  * Handles both string and TextRun[] inputs.
  */
 export function normalizeContent(content: TextContent): NormalizedRun[] {
-  if (typeof content === 'string') {
+  if (typeof content === "string") {
     return [{ text: content }];
   }
   return content.map((run: TextRun) => {
-    if (typeof run === 'string') {
+    if (typeof run === "string") {
       return { text: run };
     }
     return run;
@@ -169,8 +182,8 @@ export function validateFontVariants(tree: ElementNode): FontVariantViolation[] 
  * Format missing font violations into a human-readable error message.
  */
 export function formatMissingFontErrors(violations: FontVariantViolation[]): string {
-  const details = violations.map(v => `  "${v.fontName}" has no ${v.slot} variant.`);
-  return `[tycoslide] Missing font errors:\n\n${details.join('\n')}`;
+  const details = violations.map((v) => `  "${v.fontName}" has no ${v.slot} variant.`);
+  return `[tycoslide] Missing font errors:\n\n${details.join("\n")}`;
 }
 
 /**
@@ -182,7 +195,7 @@ export class MissingFontError extends Error {
 
   constructor(violations: FontVariantViolation[]) {
     super(formatMissingFontErrors(violations));
-    this.name = 'MissingFontError';
+    this.name = "MissingFontError";
     this.violations = violations;
   }
 }

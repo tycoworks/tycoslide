@@ -2,24 +2,29 @@
 // Peer of text — handles bullet/numbered lists as its own component.
 // Internal-only (no :::list directive). Available via list() DSL and MDAST handler.
 
-import type { List as MdastList, ListItem } from 'mdast';
-import type { RootContent } from 'mdast';
-import type { NormalizedRun, TextStyleName, HorizontalAlignment, VerticalAlignment, ExpansionContext } from 'tycoslide';
-import { SYNTAX, extractSource } from 'tycoslide';
-import { NODE_TYPE, type ElementNode } from 'tycoslide';
-import { defineComponent, component, type ComponentNode } from 'tycoslide';
-import { schema } from 'tycoslide';
-import { Component } from './names.js';
-import { transformInline, inlineParse } from './utils/inline.js';
+import type { ListItem, List as MdastList, RootContent } from "mdast";
+import type { ExpansionContext, HorizontalAlignment, NormalizedRun, TextStyleName, VerticalAlignment } from "tycoslide";
+import {
+  type ComponentNode,
+  component,
+  defineComponent,
+  type ElementNode,
+  extractSource,
+  NODE_TYPE,
+  SYNTAX,
+  schema,
+} from "tycoslide";
+import { Component } from "./names.js";
+import { inlineParse, transformInline } from "./utils/inline.js";
 
 export const LIST_TOKEN = {
-  COLOR: 'color',
-  STYLE: 'style',
-  LINK_COLOR: 'linkColor',
-  LINK_UNDERLINE: 'linkUnderline',
-  HALIGN: 'hAlign',
-  VALIGN: 'vAlign',
-  ACCENTS: 'accents',
+  COLOR: "color",
+  STYLE: "style",
+  LINK_COLOR: "linkColor",
+  LINK_UNDERLINE: "linkUnderline",
+  HALIGN: "hAlign",
+  VALIGN: "vAlign",
+  ACCENTS: "accents",
 } as const;
 
 export type ListTokens = {
@@ -45,7 +50,7 @@ type ListComponentProps = { body: string[]; ordered?: boolean };
 function expandList(props: ListComponentProps, context: ExpansionContext, tokens: ListTokens): ElementNode {
   const textStyle = context.theme.textStyles[tokens.style];
 
-  const bulletType = props.ordered ? { type: 'number' as const } : true;
+  const bulletType = props.ordered ? { type: "number" as const } : true;
   const runs: NormalizedRun[] = [];
 
   for (let i = 0; i < props.body.length; i++) {

@@ -2,16 +2,22 @@
 // Browser-based measurement using Playwright
 // The browser is the single source of truth for all layout positions.
 
-import fs from 'fs';
-import path from 'path';
-import type { Page } from 'playwright';
-import type { Theme, Background } from '../model/types.js';
-import type { ElementNode } from '../model/nodes.js';
-import { Bounds } from '../model/bounds.js';
-import type { HeadlessBrowser } from './browser.js';
-import { generateLayoutHTML, preloadFonts, measureFontNormalRatios, type FontNormalRatios, type FontDescriptor } from './layoutHtml.js';
-import { pxToIn } from '../../utils/units.js';
-import { log } from '../../utils/log.js';
+import fs from "node:fs";
+import path from "node:path";
+import type { Page } from "playwright";
+import { log } from "../../utils/log.js";
+import { pxToIn } from "../../utils/units.js";
+import { Bounds } from "../model/bounds.js";
+import type { ElementNode } from "../model/nodes.js";
+import type { Background, Theme } from "../model/types.js";
+import type { HeadlessBrowser } from "./browser.js";
+import {
+  type FontDescriptor,
+  type FontNormalRatios,
+  generateLayoutHTML,
+  measureFontNormalRatios,
+  preloadFonts,
+} from "./layoutHtml.js";
 
 // ============================================
 // LAYOUT MEASURER
@@ -47,7 +53,7 @@ export class LayoutMeasurer {
     imagePathMap: Map<string, string>,
   ): Promise<{ measurements: Map<ElementNode, Bounds>; slideFragments: string[]; labels: string[] }> {
     if (!this.page) {
-      throw new Error('Measurer not initialized. Call init() first.');
+      throw new Error("Measurer not initialized. Call init() first.");
     }
 
     // Ensure font metrics are measured (idempotent)
@@ -58,13 +64,19 @@ export class LayoutMeasurer {
     }
 
     // Generate single HTML page containing all slides
-    const labels = slides.map(s => s.label);
-    const { html, slideNodeIds, slideFragments } = generateLayoutHTML(slides, theme, labels, this.fontNormalRatios, imagePathMap);
+    const labels = slides.map((s) => s.label);
+    const { html, slideNodeIds, slideFragments } = generateLayoutHTML(
+      slides,
+      theme,
+      labels,
+      this.fontNormalRatios,
+      imagePathMap,
+    );
 
     // Write measurement HTML to file and navigate with file:// origin
-    const measurementPath = path.join(outputDir, '_measurement.html');
+    const measurementPath = path.join(outputDir, "_measurement.html");
     fs.writeFileSync(measurementPath, html);
-    await this.page.goto('file://' + measurementPath);
+    await this.page.goto(`file://${measurementPath}`);
     await preloadFonts(this.page, this.fontDescriptors);
 
     // Verify required fonts loaded (check only fonts we preloaded, not all
@@ -72,16 +84,16 @@ export class LayoutMeasurer {
     // remain unloaded when nothing on the page requests italic)
     const failedFonts = await this.page.evaluate((descriptors: Array<{ name: string; weight: number }>) => {
       return descriptors
-        .filter(f => !document.fonts.check(`${f.weight} 16px "${f.name}"`))
-        .map(f => `${f.name} (${f.weight})`);
+        .filter((f) => !document.fonts.check(`${f.weight} 16px "${f.name}"`))
+        .map((f) => `${f.name} (${f.weight})`);
     }, this.fontDescriptors);
     if (failedFonts.length > 0) {
-      throw new Error(`Font verification failed — these fonts did not load: ${failedFonts.join(', ')}`);
+      throw new Error(`Font verification failed — these fonts did not load: ${failedFonts.join(", ")}`);
     }
 
-    const screenshotPath = path.join(outputDir, 'screenshot.png');
+    const screenshotPath = path.join(outputDir, "screenshot.png");
     await this.page!.screenshot({ path: screenshotPath, fullPage: true });
-    log.layout.measure('saved output files to %s', outputDir);
+    log.layout.measure("saved output files to %s", outputDir);
     if (log.layout.measure.enabled) {
       await this.logNodeDimensions();
     }
@@ -97,11 +109,11 @@ export class LayoutMeasurer {
         height: number;
       }> = [];
 
-      document.querySelectorAll('.root[data-slide-index]').forEach(root => {
+      document.querySelectorAll(".root[data-slide-index]").forEach((root) => {
         const slideIndex = parseInt((root as HTMLElement).dataset.slideIndex!, 10);
         const rootRect = root.getBoundingClientRect();
 
-        root.querySelectorAll('[data-node-id]').forEach(el => {
+        root.querySelectorAll("[data-node-id]").forEach((el) => {
           const div = el as HTMLElement;
           const rect = div.getBoundingClientRect();
           results.push({
@@ -120,19 +132,14 @@ export class LayoutMeasurer {
 
     // Build merged result map keyed by node identity
     // Pre-index by nodeId (globally unique from shared IdContext) for O(N) lookup
-    const measurementsByNodeId = new Map(allMeasurements.map(m => [m.nodeId, m]));
+    const measurementsByNodeId = new Map(allMeasurements.map((m) => [m.nodeId, m]));
     const allResults = new Map<ElementNode, Bounds>();
 
     for (const nodeIds of slideNodeIds) {
       for (const [node, nodeId] of nodeIds) {
         const m = measurementsByNodeId.get(nodeId);
         if (m) {
-          allResults.set(node, new Bounds(
-            pxToIn(m.x),
-            pxToIn(m.y),
-            pxToIn(m.width),
-            pxToIn(m.height),
-          ));
+          allResults.set(node, new Bounds(pxToIn(m.x), pxToIn(m.y), pxToIn(m.width), pxToIn(m.height)));
         }
       }
     }
@@ -144,24 +151,28 @@ export class LayoutMeasurer {
   private async logNodeDimensions(): Promise<void> {
     const allDims = await this.page!.evaluate(() => {
       const results: string[] = [];
-      document.querySelectorAll('.root[data-slide-index]').forEach(root => {
+      document.querySelectorAll(".root[data-slide-index]").forEach((root) => {
         const slideIndex = (root as HTMLElement).dataset.slideIndex;
         const rootRect = root.getBoundingClientRect();
-        results.push(`[slide ${slideIndex}] ROOT: ${rootRect.width.toFixed(1)}x${rootRect.height.toFixed(1)} at (${rootRect.left.toFixed(1)},${rootRect.top.toFixed(1)})`);
+        results.push(
+          `[slide ${slideIndex}] ROOT: ${rootRect.width.toFixed(1)}x${rootRect.height.toFixed(1)} at (${rootRect.left.toFixed(1)},${rootRect.top.toFixed(1)})`,
+        );
 
-        root.querySelectorAll('[data-node-id]').forEach(el => {
+        root.querySelectorAll("[data-node-id]").forEach((el) => {
           const div = el as HTMLElement;
           const rect = div.getBoundingClientRect();
           const computed = getComputedStyle(div);
-          const text = div.textContent?.substring(0, 40)?.trim() || '';
+          const text = div.textContent?.substring(0, 40)?.trim() || "";
           const display = computed.display;
           const width = computed.width;
           const font = computed.fontFamily?.substring(0, 30);
-          results.push(`[slide ${slideIndex}] ${div.dataset.nodeId}: ${rect.width.toFixed(1)}x${rect.height.toFixed(1)} at (${rect.left.toFixed(1)},${rect.top.toFixed(1)}) display=${display} cssW=${width} font="${font}" "${text}"`);
+          results.push(
+            `[slide ${slideIndex}] ${div.dataset.nodeId}: ${rect.width.toFixed(1)}x${rect.height.toFixed(1)} at (${rect.left.toFixed(1)},${rect.top.toFixed(1)}) display=${display} cssW=${width} font="${font}" "${text}"`,
+          );
         });
       });
       return results;
     });
-    allDims.forEach(d => log.layout.measure('node-dim: %s', d));
+    for (const d of allDims) log.layout.measure("node-dim: %s", d);
   }
 }

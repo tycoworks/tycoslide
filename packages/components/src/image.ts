@@ -1,74 +1,70 @@
 // Image component with asset resolution
 
-import type { RootContent, Image } from 'mdast';
+import type { Image, RootContent } from "mdast";
 import {
-  defineComponent, component, type ComponentNode, type SchemaShape, type ExpansionContext,
-  NODE_TYPE, type ImageNode, SYNTAX,
+  type ComponentNode,
+  component,
+  defineComponent,
+  type ExpansionContext,
+  type ImageNode,
+  NODE_TYPE,
+  type SchemaShape,
+  SYNTAX,
   schema,
-} from 'tycoslide';
-import { Component } from './names.js';
+} from "tycoslide";
+import { Component } from "./names.js";
 
 // ============================================
 // ASSET RESOLUTION
 // ============================================
 
-const ASSET_PREFIX = '$';
+const ASSET_PREFIX = "$";
 
 /**
  * Resolve a `$dot.path` reference to a string value from the assets object.
  * Throws descriptive errors if the path is invalid or the value is not a string.
  */
-function resolveAssetPath(
-  ref: string,
-  assets: Record<string, unknown> | undefined,
-): string {
+function resolveAssetPath(ref: string, assets: Record<string, unknown> | undefined): string {
   if (!assets) {
-    throw new Error(
-      `asset reference '${ref}' found but no assets provided in CompileOptions`,
-    );
+    throw new Error(`asset reference '${ref}' found but no assets provided in CompileOptions`);
   }
 
   const dotPath = ref.slice(ASSET_PREFIX.length);
-  const segments = dotPath.split('.');
+  const segments = dotPath.split(".");
   let current: unknown = assets;
 
   for (let i = 0; i < segments.length; i++) {
-    if (current === null || typeof current !== 'object') {
-      const traversed = segments.slice(0, i).join('.');
-      throw new Error(
-        `asset reference '${ref}' failed — '${traversed}' is not an object`,
-      );
+    if (current === null || typeof current !== "object") {
+      const traversed = segments.slice(0, i).join(".");
+      throw new Error(`asset reference '${ref}' failed — '${traversed}' is not an object`);
     }
 
     const key = segments[i];
     const obj = current as Record<string, unknown>;
 
     if (!(key in obj)) {
-      const available = Object.keys(obj).join(', ');
-      const at = i === 0 ? 'root' : `'${segments.slice(0, i).join('.')}'`;
-      throw new Error(
-        `asset reference '${ref}' could not be resolved. Available keys at ${at}: ${available}`,
-      );
+      const available = Object.keys(obj).join(", ");
+      const at = i === 0 ? "root" : `'${segments.slice(0, i).join(".")}'`;
+      throw new Error(`asset reference '${ref}' could not be resolved. Available keys at ${at}: ${available}`);
     }
 
     current = obj[key];
   }
 
-  if (typeof current === 'string') {
+  if (typeof current === "string") {
     return current;
   }
 
-  if (current !== null && typeof current === 'object') {
+  if (current !== null && typeof current === "object") {
     const keys = Object.keys(current as Record<string, unknown>);
-    const suggestions = keys.slice(0, 5).map(k => `${ASSET_PREFIX}${dotPath}.${k}`).join(', ');
-    throw new Error(
-      `asset reference '${ref}' resolved to an object, not a string. Did you mean ${suggestions}?`,
-    );
+    const suggestions = keys
+      .slice(0, 5)
+      .map((k) => `${ASSET_PREFIX}${dotPath}.${k}`)
+      .join(", ");
+    throw new Error(`asset reference '${ref}' resolved to an object, not a string. Did you mean ${suggestions}?`);
   }
 
-  throw new Error(
-    `asset reference '${ref}' resolved to ${typeof current}, expected a string`,
-  );
+  throw new Error(`asset reference '${ref}' resolved to ${typeof current}, expected a string`);
 }
 
 // ============================================

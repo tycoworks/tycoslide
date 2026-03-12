@@ -4,20 +4,20 @@
 // All slides are stored during add() and processed during writeFile().
 // This enables batching all text measurements in a single browser call.
 
-import path from 'path';
-import type { Theme, Slide, Background } from '../model/types.js';
-import type { ElementNode, PositionedNode } from '../model/nodes.js';
-import { Bounds } from '../model/bounds.js';
-import { PptxRenderer } from './pptxRenderer.js';
-import { LayoutValidator, LayoutValidationError } from '../layout/validator.js';
-import type { SlideValidationResult, ValidationResult } from '../layout/validator.js';
-import { log } from '../../utils/log.js';
-import { componentRegistry, masterRegistry, type ExpansionContext } from './registry.js';
-import { LayoutPipeline } from '../layout/pipeline.js';
-import { validateThemeFonts } from './themeValidator.js';
-import { validateFontVariants, MissingFontError } from '../../utils/font.js';
+import path from "node:path";
+import { MissingFontError, validateFontVariants } from "../../utils/font.js";
+import { log } from "../../utils/log.js";
+import { LayoutPipeline } from "../layout/pipeline.js";
+import type { SlideValidationResult, ValidationResult } from "../layout/validator.js";
+import { LayoutValidationError, LayoutValidator } from "../layout/validator.js";
+import { Bounds } from "../model/bounds.js";
+import type { ElementNode, PositionedNode } from "../model/nodes.js";
+import type { Background, Slide, Theme } from "../model/types.js";
+import { PptxRenderer } from "./pptxRenderer.js";
+import { componentRegistry, type ExpansionContext, masterRegistry } from "./registry.js";
+import { validateThemeFonts } from "./themeValidator.js";
 
-export type { Slide } from '../model/types.js';
+export type { Slide } from "../model/types.js";
 
 // ============================================
 // DEFERRED SLIDE (internal)
@@ -70,7 +70,7 @@ export class Presentation {
     this.renderer = new PptxRenderer(theme);
 
     const { width, height } = theme.slide;
-    this.masterBounds = new Bounds(width, height);  // Full slide — masters position their own content
+    this.masterBounds = new Bounds(width, height); // Full slide — masters position their own content
   }
 
   get theme(): Theme {
@@ -84,7 +84,7 @@ export class Presentation {
   add(slide: Slide): void {
     const slideIndex = this.slideCount;
     this.slideCount++;
-    log.pptx.slide('STORE slide #%d master=%s (deferred)', slideIndex + 1, slide.masterName);
+    log.pptx.slide("STORE slide #%d master=%s (deferred)", slideIndex + 1, slide.masterName);
     this.deferredSlides.push({ slide, slideIndex });
   }
 
@@ -95,14 +95,21 @@ export class Presentation {
    * By default, throws MissingFontError or LayoutValidationError on validation failures.
    * Pass `force: true` to write the PPTX despite errors (for visual debugging).
    */
-  async writeFile(fileName: string, options: { includeNotes?: boolean; force?: boolean; outputDir: string; renderScale?: number }): Promise<WriteResult> {
+  async writeFile(
+    fileName: string,
+    options: { includeNotes?: boolean; force?: boolean; outputDir: string; renderScale?: number },
+  ): Promise<WriteResult> {
     const resolvedPath = path.resolve(fileName);
-    log.pptx._('writing to: %s', resolvedPath);
+    log.pptx._("writing to: %s", resolvedPath);
 
     let validationErrors: SlideValidationResult[] = [];
     let slides: SlideLayout[] = [];
     if (this.deferredSlides.length > 0) {
-      const result = await this.processDeferredSlides({ outputDir: options.outputDir, renderScale: options.renderScale, force: options.force });
+      const result = await this.processDeferredSlides({
+        outputDir: options.outputDir,
+        renderScale: options.renderScale,
+        force: options.force,
+      });
       validationErrors = result.validationErrors;
       slides = result.slides;
     }
@@ -136,19 +143,21 @@ export class Presentation {
         theme: this._theme,
         assets: this._assets,
         canvas: {
-          renderHtml: (html, transparent) =>
-            pipeline.renderHtmlToImage(html, this._theme, transparent),
+          renderHtml: (html, transparent) => pipeline.renderHtmlToImage(html, this._theme, transparent),
         },
       };
 
       // Phase 1: Expand masters (collect unique master+variant combos, expand component trees)
-      log.pptx._('PIPELINE: Collecting masters and slides...');
+      log.pptx._("PIPELINE: Collecting masters and slides...");
       const { width, height } = this._theme.slide;
-      const pendingMasters = new Map<string, {
-        content: ElementNode;
-        contentBounds: Bounds;
-        background: Background;
-      }>();
+      const pendingMasters = new Map<
+        string,
+        {
+          content: ElementNode;
+          contentBounds: Bounds;
+          background: Background;
+        }
+      >();
 
       for (const deferred of this.deferredSlides) {
         const { masterName, masterVariant } = deferred.slide;
@@ -164,12 +173,17 @@ export class Presentation {
           const masterContent = await componentRegistry.expandTree(rawMasterContent, expansionContext);
           pendingMasters.set(masterKey, { content: masterContent, contentBounds, background });
           // Collect measurements from master content (full slide — masters position their own elements)
-          pipeline.collectFromTree(masterContent, this.masterBounds, `master-${masterName}-${masterVariant}`, background);
+          pipeline.collectFromTree(
+            masterContent,
+            this.masterBounds,
+            `master-${masterName}-${masterVariant}`,
+            background,
+          );
         }
       }
 
       // Phase 2: Expand slides (expand each slide's component tree, collect measurements)
-      log.pptx._('PIPELINE: Expanding %d slides...', this.deferredSlides.length);
+      log.pptx._("PIPELINE: Expanding %d slides...", this.deferredSlides.length);
       const expandedSlides: Array<{
         deferred: DeferredSlide;
         expanded: ElementNode;
@@ -210,12 +224,12 @@ export class Presentation {
 
       // Missing font validation: check for bold/italic on fonts without those slots
       const allExpandedTrees = [
-        ...[...pendingMasters.values()].map(m => m.content),
-        ...expandedSlides.map(s => s.expanded),
+        ...[...pendingMasters.values()].map((m) => m.content),
+        ...expandedSlides.map((s) => s.expanded),
       ];
-      const rawViolations = allExpandedTrees.flatMap(tree => validateFontVariants(tree));
+      const rawViolations = allExpandedTrees.flatMap((tree) => validateFontVariants(tree));
       const seenViolations = new Set<string>();
-      const fontVariantViolations = rawViolations.filter(v => {
+      const fontVariantViolations = rawViolations.filter((v) => {
         const key = `${v.fontName}:${v.slot}`;
         if (seenViolations.has(key)) return false;
         seenViolations.add(key);
@@ -229,7 +243,7 @@ export class Presentation {
       }
 
       // Phase 3: Browser measurement (execute all measurements)
-      log.pptx._('PIPELINE: Measuring %d slides...', pipeline.measurementCount);
+      log.pptx._("PIPELINE: Measuring %d slides...", pipeline.measurementCount);
       await pipeline.executeMeasurements(this._theme);
 
       // Phase 4: Compute master layouts
@@ -245,7 +259,7 @@ export class Presentation {
       }
 
       // Phase 5: Compute slide layouts + validate
-      log.pptx._('PIPELINE: Processing slides with measurements...');
+      log.pptx._("PIPELINE: Processing slides with measurements...");
       const slides: SlideLayout[] = [];
       const validationErrors: SlideValidationResult[] = [];
 
@@ -265,8 +279,8 @@ export class Presentation {
 
         // Validate (non-throwing) and collect errors
         const validator = new LayoutValidator({
-          width: bounds.x + bounds.w,   // Absolute right edge
-          height: bounds.y + bounds.h,  // Absolute bottom edge
+          width: bounds.x + bounds.w, // Absolute right edge
+          height: bounds.y + bounds.h, // Absolute bottom edge
         });
         const result = validator.validate(positioned);
 
@@ -294,7 +308,7 @@ export class Presentation {
             notes: slide.notes,
           });
 
-          log.pptx.slide('  slide #%d complete', slideIndex);
+          log.pptx.slide("  slide #%d complete", slideIndex);
         }
       }
 
@@ -324,7 +338,6 @@ export class Presentation {
       const outputFiles = pipeline.writePreviewFiles(compositeSlides, this._theme);
 
       return { slides, validationErrors, outputFiles };
-
     } finally {
       await pipeline.close();
     }
@@ -337,7 +350,16 @@ export class Presentation {
    * When outputDir is provided, writes navigable HTML files for browser preview.
    * Does NOT clear deferred slides — writeFile() can still be called after.
    */
-  async preview(options: { outputDir: string; renderScale?: number; force?: boolean }): Promise<{ slides: SlideLayout[]; validationErrors: SlideValidationResult[]; outputFiles: string[] }> {
-    return this.processDeferredSlides({ outputDir: options.outputDir, renderScale: options.renderScale, preview: true, force: options.force });
+  async preview(options: {
+    outputDir: string;
+    renderScale?: number;
+    force?: boolean;
+  }): Promise<{ slides: SlideLayout[]; validationErrors: SlideValidationResult[]; outputFiles: string[] }> {
+    return this.processDeferredSlides({
+      outputDir: options.outputDir,
+      renderScale: options.renderScale,
+      preview: true,
+      force: options.force,
+    });
   }
 }

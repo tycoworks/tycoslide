@@ -1,18 +1,18 @@
 // Inline text formatting utilities
 // Shared between text and list components.
 
-import { unified } from 'unified';
-import remarkParse from 'remark-parse';
-import remarkDirective from 'remark-directive';
-import remarkIns from 'remark-ins';
-import { gfmStrikethrough } from 'micromark-extension-gfm-strikethrough';
-import { gfmStrikethroughFromMarkdown } from 'mdast-util-gfm-strikethrough';
-import type { Processor } from 'unified';
-import type { Root, PhrasingContent, Link } from 'mdast';
-import type { Parent } from 'unist';
-import type { TextDirective } from 'mdast-util-directive';
-import type { NormalizedRun } from 'tycoslide';
-import { SYNTAX } from 'tycoslide';
+import type { Link, PhrasingContent, Root } from "mdast";
+import type { TextDirective } from "mdast-util-directive";
+import { gfmStrikethroughFromMarkdown } from "mdast-util-gfm-strikethrough";
+import { gfmStrikethrough } from "micromark-extension-gfm-strikethrough";
+import remarkDirective from "remark-directive";
+import remarkIns from "remark-ins";
+import remarkParse from "remark-parse";
+import type { NormalizedRun } from "tycoslide";
+import { SYNTAX } from "tycoslide";
+import type { Processor } from "unified";
+import { unified } from "unified";
+import type { Parent } from "unist";
 
 // ============================================
 // PARSER PLUGINS
@@ -26,8 +26,15 @@ function remarkDisableBlocks(this: Processor): void {
   ext.push({
     disable: {
       null: [
-        'list', 'headingAtx', 'setextUnderline', 'blockQuote',
-        'thematicBreak', 'codeFenced', 'codeIndented', 'htmlFlow', 'definition',
+        "list",
+        "headingAtx",
+        "setextUnderline",
+        "blockQuote",
+        "thematicBreak",
+        "codeFenced",
+        "codeIndented",
+        "htmlFlow",
+        "definition",
       ],
     },
   });
@@ -67,7 +74,7 @@ export function transformInline(
   nodes: PhrasingContent[],
   accents: Record<string, string>,
   runs: NormalizedRun[],
-  defaults: Partial<NormalizedRun>
+  defaults: Partial<NormalizedRun>,
 ): void {
   for (const node of nodes) {
     switch (node.type) {
@@ -83,46 +90,42 @@ export function transformInline(
       case SYNTAX.LINK: {
         const link = node as unknown as Link;
         transformInline(link.children as PhrasingContent[], accents, runs, {
-          ...defaults, hyperlink: link.url,
+          ...defaults,
+          hyperlink: link.url,
         });
         break;
       }
       case SYNTAX.DELETE:
         transformInline((node as unknown as Parent).children as PhrasingContent[], accents, runs, {
-          ...defaults, strikethrough: true,
+          ...defaults,
+          strikethrough: true,
         });
         break;
       case SYNTAX.INS:
         transformInline((node as unknown as Parent).children as PhrasingContent[], accents, runs, {
-          ...defaults, underline: true,
+          ...defaults,
+          underline: true,
         });
         break;
       case SYNTAX.TEXT_DIRECTIVE: {
         const directive = node as unknown as TextDirective;
         const accentColor = accents[directive.name];
         if (!accentColor) {
-          const available = Object.keys(accents).join(', ');
-          throw new Error(
-            `Unknown accent '${directive.name}'. Available: ${available}`
-          );
+          const available = Object.keys(accents).join(", ");
+          throw new Error(`Unknown accent '${directive.name}'. Available: ${available}`);
         }
-        transformInline(
-          directive.children as PhrasingContent[],
-          accents,
-          runs,
-          { ...defaults, color: accentColor }
-        );
+        transformInline(directive.children as PhrasingContent[], accents, runs, { ...defaults, color: accentColor });
         break;
       }
       case SYNTAX.BREAK:
-        runs.push({ text: '', softBreak: true, ...defaults });
+        runs.push({ text: "", softBreak: true, ...defaults });
         break;
       default:
         // Graceful degradation: recurse into children or extract value.
         // Handles: inlineCode, html, image, footnoteReference, etc.
-        if ('children' in node && Array.isArray((node as any).children)) {
+        if ("children" in node && Array.isArray((node as any).children)) {
           transformInline((node as any).children as PhrasingContent[], accents, runs, defaults);
-        } else if ('value' in node && typeof (node as any).value === 'string') {
+        } else if ("value" in node && typeof (node as any).value === "string") {
           runs.push({ text: (node as any).value, ...defaults });
         }
         break;

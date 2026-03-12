@@ -2,37 +2,41 @@
 // Renders mermaid diagrams using the mermaid JS library and the shared browser.
 // Theme fonts and colors are automatically injected for brand compliance.
 
-import type { Canvas, TextStyleName } from 'tycoslide';
+import fs from "node:fs";
+import { createRequire } from "node:module";
+import type { Canvas, TextStyleName } from "tycoslide";
 import {
-  NODE_TYPE, type ImageNode,
-  defineComponent, component, type ComponentNode, type ExpansionContext,
-  schema, hexToRgba,
-} from 'tycoslide';
-
-import fs from 'fs';
-import { createRequire } from 'module';
-import { Component } from './names.js';
+  type ComponentNode,
+  component,
+  defineComponent,
+  type ExpansionContext,
+  hexToRgba,
+  type ImageNode,
+  NODE_TYPE,
+  schema,
+} from "tycoslide";
+import { Component } from "./names.js";
 
 // ============================================
 // TOKENS
 // ============================================
 
 export const MERMAID_TOKEN = {
-  PRIMARY_COLOR: 'primaryColor',
-  PRIMARY_TEXT_COLOR: 'primaryTextColor',
-  PRIMARY_BORDER_COLOR: 'primaryBorderColor',
-  LINE_COLOR: 'lineColor',
-  SECONDARY_COLOR: 'secondaryColor',
-  TERTIARY_COLOR: 'tertiaryColor',
-  TEXT_COLOR: 'textColor',
-  NODE_TEXT_COLOR: 'nodeTextColor',
-  CLUSTER_BACKGROUND: 'clusterBackground',
-  CLUSTER_BORDER_COLOR: 'clusterBorderColor',
-  EDGE_LABEL_BACKGROUND: 'edgeLabelBackground',
-  TITLE_COLOR: 'titleColor',
-  TEXT_STYLE: 'textStyle',
-  ACCENT_OPACITY: 'accentOpacity',
-  ACCENTS: 'accents',
+  PRIMARY_COLOR: "primaryColor",
+  PRIMARY_TEXT_COLOR: "primaryTextColor",
+  PRIMARY_BORDER_COLOR: "primaryBorderColor",
+  LINE_COLOR: "lineColor",
+  SECONDARY_COLOR: "secondaryColor",
+  TERTIARY_COLOR: "tertiaryColor",
+  TEXT_COLOR: "textColor",
+  NODE_TEXT_COLOR: "nodeTextColor",
+  CLUSTER_BACKGROUND: "clusterBackground",
+  CLUSTER_BORDER_COLOR: "clusterBorderColor",
+  EDGE_LABEL_BACKGROUND: "edgeLabelBackground",
+  TITLE_COLOR: "titleColor",
+  TEXT_STYLE: "textStyle",
+  ACCENT_OPACITY: "accentOpacity",
+  ACCENTS: "accents",
 } as const;
 
 export type MermaidTokens = {
@@ -68,23 +72,35 @@ export type MermaidComponentProps = { body: string };
  * These will be injected by the theme system.
  */
 export function sanitizeMermaidDefinition(definition: string): string {
-  const lines = definition.split('\n');
+  const lines = definition.split("\n");
   const stripped: string[] = [];
-  const filtered = lines.filter(line => {
-    if (/^\s*style\s+\S+\s+/.test(line)) { stripped.push(line.trim()); return false; }
-    if (/^\s*linkStyle\s+/.test(line)) { stripped.push(line.trim()); return false; }
-    if (/^\s*classDef\s+/.test(line)) { stripped.push(line.trim()); return false; }
-    if (/^\s*%%\{init/.test(line)) { stripped.push(line.trim()); return false; }
+  const filtered = lines.filter((line) => {
+    if (/^\s*style\s+\S+\s+/.test(line)) {
+      stripped.push(line.trim());
+      return false;
+    }
+    if (/^\s*linkStyle\s+/.test(line)) {
+      stripped.push(line.trim());
+      return false;
+    }
+    if (/^\s*classDef\s+/.test(line)) {
+      stripped.push(line.trim());
+      return false;
+    }
+    if (/^\s*%%\{init/.test(line)) {
+      stripped.push(line.trim());
+      return false;
+    }
     return true;
   });
   if (stripped.length > 0) {
     throw new Error(
       `[tycoslide] Mermaid: found ${stripped.length} forbidden style directive(s). ` +
-      `Use theme classes instead (e.g. "class NodeId primary"):\n` +
-      stripped.map(s => `  - ${s}`).join('\n'),
+        `Use theme classes instead (e.g. "class NodeId primary"):\n` +
+        stripped.map((s) => `  - ${s}`).join("\n"),
     );
   }
-  return filtered.join('\n');
+  return filtered.join("\n");
 }
 
 // ============================================
@@ -101,11 +117,11 @@ export function buildMermaidConfig(tokens: MermaidTokens, fontFamily: string): o
     startOnLoad: false,
     // 'loose' enables foreignObject for richer text (e.g. <br/> in labels).
     // Safe: runs in sandboxed Playwright, input is sanitized.
-    securityLevel: 'loose',
-    theme: 'base',
+    securityLevel: "loose",
+    theme: "base",
     themeVariables: {
       fontFamily,
-      background: 'transparent',
+      background: "transparent",
       primaryColor: tokens.primaryColor,
       primaryTextColor: tokens.primaryTextColor,
       primaryBorderColor: tokens.primaryBorderColor,
@@ -123,29 +139,33 @@ export function buildMermaidConfig(tokens: MermaidTokens, fontFamily: string): o
 }
 
 export function buildClassDefs(tokens: MermaidTokens, accents: Record<string, string>): string {
-  const alpha = Math.round(tokens.accentOpacity / 100 * 255).toString(16).padStart(2, '0');
+  const alpha = Math.round((tokens.accentOpacity / 100) * 255)
+    .toString(16)
+    .padStart(2, "0");
 
   const defs = Object.entries(accents).map(([name, color]) => {
     return `classDef ${name} fill:${color}${alpha}`;
   });
   // Primary gets full opacity with themed text color for contrast
   defs.push(`classDef primary fill:${tokens.primaryColor},color:${tokens.primaryTextColor}`);
-  return defs.join('\n');
+  return defs.join("\n");
 }
 
 function buildSubgraphStyles(definition: string, tokens: MermaidTokens): string {
-  const alpha = Math.round(tokens.accentOpacity / 100 * 255).toString(16).padStart(2, '0');
+  const alpha = Math.round((tokens.accentOpacity / 100) * 255)
+    .toString(16)
+    .padStart(2, "0");
   const fillColor = `${tokens.clusterBackground}${alpha}`;
 
   const subgraphPattern = /subgraph\s+(\w+)/g;
   const ids: string[] = [];
-  let match;
+  let match: RegExpExecArray | null = null;
   while ((match = subgraphPattern.exec(definition)) !== null) {
     ids.push(match[1]);
   }
 
-  if (ids.length === 0) return '';
-  return ids.map(id => `style ${id} fill:${fillColor}`).join('\n');
+  if (ids.length === 0) return "";
+  return ids.map((id) => `style ${id} fill:${fillColor}`).join("\n");
 }
 
 export function injectClassDefs(definition: string, tokens: MermaidTokens, accents: Record<string, string>): string {
@@ -165,7 +185,7 @@ export function injectClassDefs(definition: string, tokens: MermaidTokens, accen
   const [fullMatch] = match;
   let result = definition.replace(fullMatch, `${fullMatch}${classDefs}\n`);
   if (subgraphStyles) {
-    result = result.trimEnd() + '\n' + subgraphStyles;
+    result = `${result.trimEnd()}\n${subgraphStyles}`;
   }
   return result;
 }
@@ -179,8 +199,8 @@ let bundleCache: string | null = null;
 async function getMermaidBundle(): Promise<string> {
   if (!bundleCache) {
     const require = createRequire(import.meta.url);
-    const bundlePath = require.resolve('mermaid/dist/mermaid.min.js');
-    bundleCache = await fs.promises.readFile(bundlePath, 'utf-8');
+    const bundlePath = require.resolve("mermaid/dist/mermaid.min.js");
+    bundleCache = await fs.promises.readFile(bundlePath, "utf-8");
   }
   return bundleCache;
 }
@@ -207,8 +227,8 @@ async function renderMermaidToPng(
 
   // Use JSON script blocks to safely pass data without escaping issues.
   // Escape </ sequences to prevent premature </script> closure.
-  const defJson = JSON.stringify(processed).replace(/<\//g, '<\\/');
-  const configJson = JSON.stringify(config).replace(/<\//g, '<\\/');
+  const defJson = JSON.stringify(processed).replace(/<\//g, "<\\/");
+  const configJson = JSON.stringify(config).replace(/<\//g, "<\\/");
 
   const html = `<!DOCTYPE html>
 <html><head>
@@ -274,10 +294,14 @@ async function renderMermaidToPng(
  * Expand mermaid component to ImageNode.
  * Sanitizes definition, renders via shared browser, returns image reference.
  */
-async function expandMermaid(props: MermaidComponentProps, context: ExpansionContext, tokens: MermaidTokens): Promise<ImageNode> {
+async function expandMermaid(
+  props: MermaidComponentProps,
+  context: ExpansionContext,
+  tokens: MermaidTokens,
+): Promise<ImageNode> {
   const sanitized = sanitizeMermaidDefinition(props.body);
   if (!sanitized.trim()) {
-    throw new Error('Mermaid definition is empty after sanitization');
+    throw new Error("Mermaid definition is empty after sanitization");
   }
   const textStyleConfig = context.theme.textStyles[tokens.textStyle];
   const fontFamily = textStyleConfig.fontFamily.name;

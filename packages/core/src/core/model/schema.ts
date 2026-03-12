@@ -2,19 +2,18 @@
 // Domain-specific schema helpers for layout and component definitions.
 // Layout authors use these instead of importing Zod directly.
 
-import { z } from 'zod';
+import { z } from "zod";
 
 export const schema = {
   // Structural — how values compose
-  object:   <T extends z.ZodRawShape>(shape: T)       => z.object(shape),
-  array:    <T extends z.ZodTypeAny>(item: T)         => z.array(item),
-  enum:     <T extends [string, ...string[]]>(v: T)   => z.enum(v),
+  object: <T extends z.ZodRawShape>(shape: T) => z.object(shape),
+  array: <T extends z.ZodTypeAny>(item: T) => z.array(item),
+  enum: <T extends [string, ...string[]]>(v: T) => z.enum(v),
 
   // Scalar — configuration values
-  string:   ()                                        => z.string(),
-  number:   ()                                        => z.number(),
-  boolean:  ()                                        => z.boolean(),
-
+  string: () => z.string(),
+  number: () => z.number(),
+  boolean: () => z.boolean(),
 };
 
 // ============================================
@@ -31,7 +30,4 @@ type ScalarLeaf =
   | ReturnType<typeof schema.object>;
 
 /** A param expressible in YAML frontmatter. Slots excluded. */
-export type ScalarParam =
-  | ScalarLeaf
-  | z.ZodOptional<ScalarLeaf>
-  | z.ZodDefault<ScalarLeaf>;
+export type ScalarParam = ScalarLeaf | z.ZodOptional<ScalarLeaf> | z.ZodDefault<ScalarLeaf>;

@@ -27,12 +27,7 @@ export class Bounds {
   }
 
   inset(padding: number): Bounds {
-    return new Bounds(
-      this.x + padding,
-      this.y + padding,
-      this.w - padding * 2,
-      this.h - padding * 2,
-    );
+    return new Bounds(this.x + padding, this.y + padding, this.w - padding * 2, this.h - padding * 2);
   }
 
   /** Translate position by dx/dy, keeping same dimensions */

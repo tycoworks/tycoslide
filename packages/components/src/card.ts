@@ -2,24 +2,30 @@
 // Implements card as a component using primitives: stack, column, shape, text, image
 
 import {
-  defineComponent, component, type ComponentProps, type SchemaShape,
-  SHAPE, SIZE,
-  type GapSize, type HorizontalAlignment, type VerticalAlignment,
-} from 'tycoslide';
-import { Component } from './names.js';
-import { stack, column } from './containers.js';
-import { shape, type ShapeTokens } from './primitives.js';
-import { image, imageComponent } from './image.js';
-import { text, textComponent, type TextTokens } from './text.js';
+  type ComponentProps,
+  component,
+  defineComponent,
+  type GapSize,
+  type HorizontalAlignment,
+  type SchemaShape,
+  SHAPE,
+  SIZE,
+  type VerticalAlignment,
+} from "tycoslide";
+import { column, stack } from "./containers.js";
+import { image, imageComponent } from "./image.js";
+import { Component } from "./names.js";
+import { type ShapeTokens, shape } from "./primitives.js";
+import { type TextTokens, text, textComponent } from "./text.js";
 
 export const CARD_TOKEN = {
-  BACKGROUND: 'background',
-  PADDING: 'padding',
-  GAP: 'gap',
-  HALIGN: 'hAlign',
-  VALIGN: 'vAlign',
-  TITLE: 'title',
-  DESCRIPTION: 'description',
+  BACKGROUND: "background",
+  PADDING: "padding",
+  GAP: "gap",
+  HALIGN: "hAlign",
+  VALIGN: "vAlign",
+  TITLE: "title",
+  DESCRIPTION: "description",
 } as const;
 
 export type CardTokens = {
@@ -68,8 +74,13 @@ export const cardComponent = defineComponent({
     const { image: imagePath, title, description, body } = props;
     const actualDescription = description ?? body;
     const {
-      background, padding, gap, hAlign: contentHAlign, vAlign: contentVAlign,
-      title: titleTokens, description: descriptionTokens,
+      background,
+      padding,
+      gap,
+      hAlign: contentHAlign,
+      vAlign: contentVAlign,
+      title: titleTokens,
+      description: descriptionTokens,
     } = tokens;
 
     // Build children from image/title/description props

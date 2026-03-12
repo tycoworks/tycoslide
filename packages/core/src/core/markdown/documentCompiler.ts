@@ -5,35 +5,38 @@
 // Frontmatter → scalar params, ::slot:: markers + body → slot params.
 // Params and slots are validated separately against the layout's schemas.
 
-import { z } from 'zod';
-import { parseSlideDocument, type RawSlide } from './slideParser.js';
-
-import { compileSlot } from './slotCompiler.js';
-import { layoutRegistry, RESERVED_FRONTMATTER_KEYS, isComponentNode, type LayoutDefinition } from '../rendering/registry.js';
-import type { SlideNode, ComponentNode } from '../model/nodes.js';
-import { Presentation } from '../rendering/presentation.js';
-import type { Theme, Slide } from '../model/types.js';
-
+import { z } from "zod";
+import type { ComponentNode, SlideNode } from "../model/nodes.js";
+import type { Slide, Theme } from "../model/types.js";
+import { Presentation } from "../rendering/presentation.js";
+import {
+  isComponentNode,
+  type LayoutDefinition,
+  layoutRegistry,
+  RESERVED_FRONTMATTER_KEYS,
+} from "../rendering/registry.js";
+import { parseSlideDocument, type RawSlide } from "./slideParser.js";
+import { compileSlot } from "./slotCompiler.js";
 
 /** Build a name from frontmatter for identifying slides in error messages and shared references. */
 export function buildSlideName(raw: RawSlide): string {
   // Explicit name in frontmatter takes priority
-  if (typeof raw.frontmatter.name === 'string' && raw.frontmatter.name.length > 0) {
+  if (typeof raw.frontmatter.name === "string" && raw.frontmatter.name.length > 0) {
     return raw.frontmatter.name;
   }
 
   // Auto-generate from frontmatter fields
   const parts: string[] = [];
   for (const [key, value] of Object.entries(raw.frontmatter)) {
-    if (key === 'name') continue; // already handled above
-    if (typeof value === 'string') {
-      const truncated = value.length > 50 ? value.slice(0, 50) + '...' : value;
+    if (key === "name") continue; // already handled above
+    if (typeof value === "string") {
+      const truncated = value.length > 50 ? `${value.slice(0, 50)}...` : value;
       parts.push(`${key}: ${truncated}`);
     } else if (Array.isArray(value)) {
       parts.push(`${key}: [${value.length} items]`);
     }
   }
-  return parts.join(', ');
+  return parts.join(", ");
 }
 
 // ============================================
@@ -67,9 +70,7 @@ export function validateLayout(
 ): any {
   const paramsResult = z.object(layout.params).safeParse(rawParams);
   if (!paramsResult.success) {
-    const issues = paramsResult.error.issues
-      .map(i => `  - ${i.path.join('.')}: ${i.message}`)
-      .join('\n');
+    const issues = paramsResult.error.issues.map((i) => `  - ${i.path.join(".")}: ${i.message}`).join("\n");
     throw new Error(`Layout '${layout.name}' params validation failed:\n${issues}`);
   }
 
@@ -81,9 +82,7 @@ export function validateLayout(
     }
     const slotsResult = z.object(shape).safeParse(rawSlots);
     if (!slotsResult.success) {
-      const issues = slotsResult.error.issues
-        .map(i => `  - ${i.path.join('.')}: ${i.message}`)
-        .join('\n');
+      const issues = slotsResult.error.issues.map((i) => `  - ${i.path.join(".")}: ${i.message}`).join("\n");
       throw new Error(`Layout '${layout.name}' slots validation failed:\n${issues}`);
     }
     slotsData = slotsResult.data as Record<string, unknown>;
@@ -133,27 +132,21 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
   const layoutName = raw.frontmatter.layout as string | undefined;
 
   if (!layoutName) {
-    throw new Error(
-      `Slide ${raw.index + 1}: missing 'layout' field in frontmatter`,
-    );
+    throw new Error(`Slide ${raw.index + 1}: missing 'layout' field in frontmatter`);
   }
 
   // 2. Look up layout definition
   const layout = layoutRegistry.get(layoutName);
   if (!layout) {
-    const available = layoutRegistry.getRegisteredNames().join(', ');
-    throw new Error(
-      `Slide ${raw.index + 1}: unknown layout '${layoutName}'. Available: ${available}`,
-    );
+    const available = layoutRegistry.getRegisteredNames().join(", ");
+    throw new Error(`Slide ${raw.index + 1}: unknown layout '${layoutName}'. Available: ${available}`);
   }
 
   // 3. Extract variant from frontmatter (before stripping reserved keys)
   const variant = raw.frontmatter.variant as string | undefined;
 
   if (!variant) {
-    throw new Error(
-      `Slide ${raw.index + 1}: missing 'variant' field in frontmatter`,
-    );
+    throw new Error(`Slide ${raw.index + 1}: missing 'variant' field in frontmatter`);
   }
 
   // 4. Build PARAMS — strip reserved frontmatter keys
@@ -215,7 +208,7 @@ function injectSlotTokens(nodes: SlideNode[], layoutTokens: Record<string, unkno
   for (const node of nodes) {
     if (isComponentNode(node)) {
       const tokenMap = layoutTokens[node.componentName];
-      if (tokenMap && typeof tokenMap === 'object') {
+      if (tokenMap && typeof tokenMap === "object") {
         // Layout defaults first, then node-specific overrides (e.g., heading style)
         (node as ComponentNode).tokens = {
           ...(tokenMap as Record<string, unknown>),

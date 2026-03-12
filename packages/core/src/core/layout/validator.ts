@@ -4,8 +4,8 @@
 // 2. Sibling content overlapping (except intentional Stack overlaps)
 // 3. Children positioned outside parent bounds (layout error)
 
-import type { PositionedNode } from '../model/nodes.js';
-import { NODE_TYPE } from '../model/nodes.js';
+import type { PositionedNode } from "../model/nodes.js";
+import { NODE_TYPE } from "../model/nodes.js";
 
 // ============================================
 // TYPES
@@ -26,7 +26,7 @@ export interface OverflowViolation {
 
 /** Describes an overlap violation between sibling nodes */
 export interface OverlapViolation {
-  parentNodeType: string;        // 'row' | 'column' - never 'stack'
+  parentNodeType: string; // 'row' | 'column' - never 'stack'
   node1Type: string;
   node1Index: number;
   node1Bounds: { x: number; y: number; width: number; height: number };
@@ -43,9 +43,9 @@ export interface BoundsViolation {
   childIndex: number;
   parentBounds: { x: number; y: number; width: number; height: number };
   childBounds: { x: number; y: number; width: number; height: number };
-  escapeTop: number;    // How much child extends above parent
-  escapeLeft: number;   // How much child extends left of parent
-  escapeRight: number;  // How much child extends right of parent
+  escapeTop: number; // How much child extends above parent
+  escapeLeft: number; // How much child extends left of parent
+  escapeRight: number; // How much child extends right of parent
   escapeBottom: number; // How much child extends below parent
 }
 
@@ -68,8 +68,8 @@ export interface ValidationResult {
 
 /** Build a human-readable slide prefix like "Slide 3 (layout: body, eyebrow: RECAP): " */
 function slidePrefix(slideIndex?: number, slideName?: string): string {
-  if (slideIndex === undefined) return '';
-  const suffix = slideName ? ` (${slideName})` : '';
+  if (slideIndex === undefined) return "";
+  const suffix = slideName ? ` (${slideName})` : "";
   return `Slide ${slideIndex + 1}${suffix}: `;
 }
 
@@ -88,19 +88,19 @@ export class LayoutOverflowError extends Error {
     const { violations, slideIndex, slideName } = options;
     const prefix = slidePrefix(slideIndex, slideName);
 
-    const details = violations.map(v => {
+    const details = violations.map((v) => {
       const parts: string[] = [];
       if (v.overflowRight > 0) parts.push(`${v.overflowRight.toFixed(2)}" right`);
       if (v.overflowBottom > 0) parts.push(`${v.overflowBottom.toFixed(2)}" bottom`);
       if (v.overflowLeft > 0) parts.push(`${v.overflowLeft.toFixed(2)}" left`);
       if (v.overflowTop > 0) parts.push(`${v.overflowTop.toFixed(2)}" top`);
-      return `${v.nodeType} at (${v.x.toFixed(2)}, ${v.y.toFixed(2)}) overflows ${parts.join(', ')}`;
+      return `${v.nodeType} at (${v.x.toFixed(2)}, ${v.y.toFixed(2)}) overflows ${parts.join(", ")}`;
     });
 
-    const message = `${prefix}Content extends beyond slide bounds:\n  ${details.join('\n  ')}`;
+    const message = `${prefix}Content extends beyond slide bounds:\n  ${details.join("\n  ")}`;
 
     super(message);
-    this.name = 'LayoutOverflowError';
+    this.name = "LayoutOverflowError";
     this.violations = violations;
     this.slideIndex = slideIndex;
   }
@@ -122,16 +122,17 @@ export class LayoutOverlapError extends Error {
     const { violations, slideIndex, slideName } = options;
     const prefix = slidePrefix(slideIndex, slideName);
 
-    const details = violations.map(v =>
-      `${v.node1Type}[${v.node1Index}] overlaps ${v.node2Type}[${v.node2Index}] ` +
-      `by ${v.overlapArea.width.toFixed(2)}"x${v.overlapArea.height.toFixed(2)}" ` +
-      `in ${v.parentNodeType}`
+    const details = violations.map(
+      (v) =>
+        `${v.node1Type}[${v.node1Index}] overlaps ${v.node2Type}[${v.node2Index}] ` +
+        `by ${v.overlapArea.width.toFixed(2)}"x${v.overlapArea.height.toFixed(2)}" ` +
+        `in ${v.parentNodeType}`,
     );
 
-    const message = `${prefix}Unintentional content overlap detected:\n  ${details.join('\n  ')}`;
+    const message = `${prefix}Unintentional content overlap detected:\n  ${details.join("\n  ")}`;
 
     super(message);
-    this.name = 'LayoutOverlapError';
+    this.name = "LayoutOverlapError";
     this.violations = violations;
     this.slideIndex = slideIndex;
   }
@@ -153,20 +154,22 @@ export class LayoutBoundsError extends Error {
     const { violations, slideIndex, slideName } = options;
     const prefix = slidePrefix(slideIndex, slideName);
 
-    const details = violations.map(v => {
+    const details = violations.map((v) => {
       const parts: string[] = [];
       if (v.escapeTop > 0) parts.push(`${v.escapeTop.toFixed(2)}" above`);
       if (v.escapeLeft > 0) parts.push(`${v.escapeLeft.toFixed(2)}" left`);
       if (v.escapeRight > 0) parts.push(`${v.escapeRight.toFixed(2)}" right`);
       if (v.escapeBottom > 0) parts.push(`${v.escapeBottom.toFixed(2)}" below`);
-      return `${v.childNodeType}[${v.childIndex}] escapes ${v.parentNodeType} bounds by ${parts.join(', ')} ` +
-        `(child at y=${v.childBounds.y.toFixed(2)}, parent starts at y=${v.parentBounds.y.toFixed(2)})`;
+      return (
+        `${v.childNodeType}[${v.childIndex}] escapes ${v.parentNodeType} bounds by ${parts.join(", ")} ` +
+        `(child at y=${v.childBounds.y.toFixed(2)}, parent starts at y=${v.parentBounds.y.toFixed(2)})`
+      );
     });
 
-    const message = `${prefix}Child positioned outside parent bounds (layout bug):\n  ${details.join('\n  ')}`;
+    const message = `${prefix}Child positioned outside parent bounds (layout bug):\n  ${details.join("\n  ")}`;
 
     super(message);
-    this.name = 'LayoutBoundsError';
+    this.name = "LayoutBoundsError";
     this.violations = violations;
     this.slideIndex = slideIndex;
   }
@@ -186,9 +189,8 @@ export interface SlideValidationResult {
 /** Format all errors from multiple slides into a human-readable message.
  *  Reuses the existing per-slide error classes for formatting. */
 function formatBatchErrors(slideErrors: SlideValidationResult[], totalSlides?: number): string {
-  const count = totalSlides !== undefined
-    ? `${slideErrors.length} of ${totalSlides} slides`
-    : `${slideErrors.length} slide(s)`;
+  const count =
+    totalSlides !== undefined ? `${slideErrors.length} of ${totalSlides} slides` : `${slideErrors.length} slide(s)`;
   const header = `Layout validation failed (${count}):`;
 
   const sections = slideErrors.map(({ slideIndex, slideName, result }) => {
@@ -202,10 +204,10 @@ function formatBatchErrors(slideErrors: SlideValidationResult[], totalSlides?: n
     if (result.overlaps.length > 0) {
       messages.push(new LayoutOverlapError({ violations: result.overlaps, slideIndex, slideName }).message);
     }
-    return messages.map(m => `  ${m}`).join('\n');
+    return messages.map((m) => `  ${m}`).join("\n");
   });
 
-  return `${header}\n\n${sections.join('\n\n')}`;
+  return `${header}\n\n${sections.join("\n\n")}`;
 }
 
 /**
@@ -217,7 +219,7 @@ export class LayoutValidationError extends Error {
 
   constructor(slideErrors: SlideValidationResult[], totalSlides?: number) {
     super(formatBatchErrors(slideErrors, totalSlides));
-    this.name = 'LayoutValidationError';
+    this.name = "LayoutValidationError";
     this.slideErrors = slideErrors;
   }
 }
@@ -265,9 +267,7 @@ export class LayoutValidator {
    */
   isValid(root: PositionedNode): boolean {
     const result = this.validate(root);
-    return result.overflows.length === 0
-        && result.overlaps.length === 0
-        && result.boundsEscapes.length === 0;
+    return result.overflows.length === 0 && result.overlaps.length === 0 && result.boundsEscapes.length === 0;
   }
 
   /**
@@ -305,7 +305,7 @@ export class LayoutValidator {
     node: PositionedNode,
     overflows: OverflowViolation[],
     overlaps: OverlapViolation[],
-    boundsEscapes: BoundsViolation[]
+    boundsEscapes: BoundsViolation[],
   ): void {
     // Check bounds overflow (content beyond slide edges)
     this.checkSlideOverflow(node, overflows);
@@ -334,11 +334,15 @@ export class LayoutValidator {
 
     const overflowLeft = x < 0 ? -x : 0;
     const overflowTop = y < 0 ? -y : 0;
-    const overflowRight = (x + width) > slide.width ? (x + width) - slide.width : 0;
-    const overflowBottom = (y + height) > slide.height ? (y + height) - slide.height : 0;
+    const overflowRight = x + width > slide.width ? x + width - slide.width : 0;
+    const overflowBottom = y + height > slide.height ? y + height - slide.height : 0;
 
-    if (overflowLeft > tolerance || overflowTop > tolerance ||
-        overflowRight > tolerance || overflowBottom > tolerance) {
+    if (
+      overflowLeft > tolerance ||
+      overflowTop > tolerance ||
+      overflowRight > tolerance ||
+      overflowBottom > tolerance
+    ) {
       violations.push({
         nodeType: node.node.type,
         x,
@@ -420,13 +424,13 @@ export class LayoutValidator {
       const child = parent.children[i];
 
       // Calculate how much child escapes parent bounds (only top/left matter for overlap)
-      const escapeTop = parent.y - child.y;  // Positive if child is above parent
-      const escapeLeft = parent.x - child.x;  // Positive if child is left of parent
+      const escapeTop = parent.y - child.y; // Positive if child is above parent
+      const escapeLeft = parent.x - child.x; // Positive if child is left of parent
 
       // Only report TOP or LEFT escapes (these cause sibling overlap)
       if (escapeTop > tolerance || escapeLeft > tolerance) {
-        const escapeRight = Math.max(0, (child.x + child.width) - (parent.x + parent.width));
-        const escapeBottom = Math.max(0, (child.y + child.height) - (parent.y + parent.height));
+        const escapeRight = Math.max(0, child.x + child.width - (parent.x + parent.width));
+        const escapeBottom = Math.max(0, child.y + child.height - (parent.y + parent.height));
 
         violations.push({
           parentNodeType: parent.node.type,

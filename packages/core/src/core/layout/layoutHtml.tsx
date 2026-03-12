@@ -5,20 +5,41 @@
 // Phase 2 (StyledDiv): Single generic JSX component. No logic, just maps styles to <div>.
 // Phase 3 (generateLayoutHTML): Hono renderToString, unchanged.
 
-import fs from 'fs';
-import path from 'path';
-import { renderToString } from 'hono/jsx/dom/server';
-import type { FC } from 'hono/jsx';
-import type { Page } from 'playwright';
-import type { ElementNode, TextNode, ImageNode, LineNode, ShapeNode, ContainerNode, StackNode, SlideNumberNode, TableNode, TableCellData } from '../model/nodes.js';
-import { NODE_TYPE } from '../model/nodes.js';
-import type { Theme, TextStyle, VerticalAlignment, HorizontalAlignment, SizeValue, NormalizedRun, Direction, DashType, Background } from '../model/types.js';
-import { FONT_SLOT, SIZE, VALIGN, HALIGN, DIRECTION, BORDER_STYLE, SHAPE, DASH_TYPE } from '../model/types.js';
-import type { Bounds } from '../model/bounds.js';
-import { normalizeContent, getFontForRun, FONT_FORMATS } from '../../utils/font.js';
-import { readImageDimensions } from '../../utils/image.js';
-import { inToPx, ptToPx } from '../../utils/units.js';
-import { bgColor } from '../../utils/color.js';
+import fs from "node:fs";
+import path from "node:path";
+import type { FC } from "hono/jsx";
+import { renderToString } from "hono/jsx/dom/server";
+import type { Page } from "playwright";
+import { bgColor } from "../../utils/color.js";
+import { FONT_FORMATS, getFontForRun, normalizeContent } from "../../utils/font.js";
+import { readImageDimensions } from "../../utils/image.js";
+import { inToPx, ptToPx } from "../../utils/units.js";
+import type { Bounds } from "../model/bounds.js";
+import type {
+  ContainerNode,
+  ElementNode,
+  ImageNode,
+  LineNode,
+  ShapeNode,
+  SlideNumberNode,
+  StackNode,
+  TableCellData,
+  TableNode,
+  TextNode,
+} from "../model/nodes.js";
+import { NODE_TYPE } from "../model/nodes.js";
+import type {
+  Background,
+  DashType,
+  Direction,
+  HorizontalAlignment,
+  NormalizedRun,
+  SizeValue,
+  TextStyle,
+  Theme,
+  VerticalAlignment,
+} from "../model/types.js";
+import { BORDER_STYLE, DASH_TYPE, DIRECTION, FONT_SLOT, HALIGN, SHAPE, SIZE, VALIGN } from "../model/types.js";
 
 // ============================================
 // TYPES
@@ -29,8 +50,8 @@ export interface StyledNode {
   nodeId: string;
   styles: Record<string, string | number>;
   children: StyledNode[];
-  innerHTML?: string;     // pre-built rich text (bullets, spans)
-  textContent?: string;   // plain text (slide number placeholder)
+  innerHTML?: string; // pre-built rich text (bullets, spans)
+  textContent?: string; // plain text (slide number placeholder)
 }
 
 /** Context about the parent, passed down during tree walk */
@@ -47,7 +68,7 @@ interface IdContext {
   counter: number;
 }
 
-const SLIDE_NUMBER_PLACEHOLDER = '999';
+const SLIDE_NUMBER_PLACEHOLDER = "999";
 
 // ============================================
 // PHASE 1: PURE STYLE COMPUTATION
@@ -75,27 +96,34 @@ export function flexItem(
   const crossSize = isInRow ? height : width;
 
   // Main axis → flex property
-  if (typeof mainSize === 'number') {
+  if (typeof mainSize === "number") {
     styles.flex = `0 0 ${inToPx(mainSize)}px`;
   } else if (mainSize === SIZE.FILL) {
-    styles.flex = '1 1 0';
+    styles.flex = "1 1 0";
     // Horizontal: min-width: 0 lets text reflow.
     // Vertical: min-height stays auto (padding boundary preserved).
     // Images opt into compression via their own min-height: 0 (see styleImage).
     if (isInRow) {
       styles.minWidth = 0;
     }
-  } else { // SIZE.HUG
+  } else {
+    // SIZE.HUG
     styles.flexShrink = 0;
   }
 
   // Cross axis → explicit CSS dimension
-  if (typeof crossSize === 'number') {
-    if (isInRow) { styles.height = `${inToPx(crossSize)}px`; }
-    else { styles.width = `${inToPx(crossSize)}px`; }
+  if (typeof crossSize === "number") {
+    if (isInRow) {
+      styles.height = `${inToPx(crossSize)}px`;
+    } else {
+      styles.width = `${inToPx(crossSize)}px`;
+    }
   } else if (crossSize === SIZE.FILL) {
-    if (isInRow) { styles.height = '100%'; }
-    else { styles.width = '100%'; }
+    if (isInRow) {
+      styles.height = "100%";
+    } else {
+      styles.width = "100%";
+    }
   }
   // HUG cross-axis: omit (auto sizing)
 
@@ -104,14 +132,9 @@ export function flexItem(
 
 /** Compute child context for Container or Stack nodes.
  *  heightIsConstrained propagation: number→true, HUG→false, FILL→inherit. */
-export function childContext(
-  node: ContainerNode | StackNode,
-  parent: ParentCtx,
-): ParentCtx {
+export function childContext(node: ContainerNode | StackNode, parent: ParentCtx): ParentCtx {
   const heightIsConstrained =
-    typeof node.height === 'number' ? true
-    : node.height === SIZE.HUG ? false
-    : parent.heightIsConstrained;
+    typeof node.height === "number" ? true : node.height === SIZE.HUG ? false : parent.heightIsConstrained;
 
   if (node.type === NODE_TYPE.CONTAINER) {
     const isRow = (node as ContainerNode).direction === DIRECTION.ROW;
@@ -134,26 +157,35 @@ export function childContext(
 /** Column justify-content: vertical positioning. Uses 'safe' to prevent bounds escape on overflow. */
 function vAlignToJustify(vAlign: VerticalAlignment): string {
   switch (vAlign) {
-    case VALIGN.BOTTOM: return 'safe flex-end';
-    case VALIGN.MIDDLE: return 'safe center';
-    case VALIGN.TOP: return 'flex-start';
+    case VALIGN.BOTTOM:
+      return "safe flex-end";
+    case VALIGN.MIDDLE:
+      return "safe center";
+    case VALIGN.TOP:
+      return "flex-start";
   }
 }
 
 /** Row align-items: vertical cross-axis. TOP→stretch for equal-height children. */
 function vAlignToAlignItems(vAlign: VerticalAlignment): string {
   switch (vAlign) {
-    case VALIGN.TOP: return 'stretch';
-    case VALIGN.BOTTOM: return 'flex-end';
-    case VALIGN.MIDDLE: return 'center';
+    case VALIGN.TOP:
+      return "stretch";
+    case VALIGN.BOTTOM:
+      return "flex-end";
+    case VALIGN.MIDDLE:
+      return "center";
   }
 }
 
 function hAlignToCSS(hAlign: HorizontalAlignment): string {
   switch (hAlign) {
-    case HALIGN.RIGHT: return 'flex-end';
-    case HALIGN.CENTER: return 'center';
-    case HALIGN.LEFT: return 'stretch';
+    case HALIGN.RIGHT:
+      return "flex-end";
+    case HALIGN.CENTER:
+      return "center";
+    case HALIGN.LEFT:
+      return "stretch";
   }
 }
 
@@ -173,14 +205,16 @@ function styleContainer(
   const paddingPx = node.padding ? inToPx(node.padding) : 0;
 
   const justifyContent = isRow
-    ? (node.hAlign === HALIGN.CENTER ? 'center' : node.hAlign === HALIGN.RIGHT ? 'flex-end' : 'flex-start')
+    ? node.hAlign === HALIGN.CENTER
+      ? "center"
+      : node.hAlign === HALIGN.RIGHT
+        ? "flex-end"
+        : "flex-start"
     : vAlignToJustify(node.vAlign);
-  const alignItems = isRow
-    ? vAlignToAlignItems(node.vAlign)
-    : hAlignToCSS(node.hAlign);
+  const alignItems = isRow ? vAlignToAlignItems(node.vAlign) : hAlignToCSS(node.hAlign);
 
   const styles: Record<string, string | number> = {
-    display: 'flex',
+    display: "flex",
     flexDirection: node.direction,
     gap: `${gapPx}px`,
     justifyContent,
@@ -188,7 +222,7 @@ function styleContainer(
     ...flexItem(node.width, node.height, parent.direction),
     // Containment requires definite inline size. HUG columns are content-sized —
     // containment would zero their intrinsic width, collapsing the column.
-    ...(!isRow && node.width !== SIZE.HUG ? { containerType: 'inline-size' } : {}),
+    ...(!isRow && node.width !== SIZE.HUG ? { containerType: "inline-size" } : {}),
   };
   if (paddingPx > 0) {
     styles.padding = `${paddingPx}px`;
@@ -198,7 +232,7 @@ function styleContainer(
   return {
     nodeId,
     styles,
-    children: node.children.map(child => styleNode(child, ctx, idCtx, nodeIds, fontRatios, imagePathMap)),
+    children: node.children.map((child) => styleNode(child, ctx, idCtx, nodeIds, fontRatios, imagePathMap)),
   };
 }
 
@@ -211,10 +245,10 @@ function styleStack(
   fontRatios: FontNormalRatios,
   imagePathMap: Map<string, string>,
 ): StyledNode {
-  const gridMin = 'min-content';
+  const gridMin = "min-content";
   const styles: Record<string, string | number> = {
-    position: 'relative',
-    display: 'grid',
+    position: "relative",
+    display: "grid",
     gridTemplate: `minmax(${gridMin}, 1fr) / minmax(${gridMin}, 1fr)`,
     ...flexItem(node.width, node.height, parent.direction),
   };
@@ -223,21 +257,21 @@ function styleStack(
   return {
     nodeId,
     styles,
-    children: node.children.map(child => ({
+    children: node.children.map((child) => ({
       // Stack child wrapper: same grid cell, flex column
-      nodeId: '',
-      styles: { gridArea: '1 / 1 / 2 / 2', display: 'flex', flexDirection: DIRECTION.COLUMN, containerType: 'inline-size' },
+      nodeId: "",
+      styles: {
+        gridArea: "1 / 1 / 2 / 2",
+        display: "flex",
+        flexDirection: DIRECTION.COLUMN,
+        containerType: "inline-size",
+      },
       children: [styleNode(child, ctx, idCtx, nodeIds, fontRatios, imagePathMap)],
     })),
   };
 }
 
-function styleText(
-  node: TextNode,
-  parent: ParentCtx,
-  nodeId: string,
-  fontRatios: FontNormalRatios,
-): StyledNode {
+function styleText(node: TextNode, parent: ParentCtx, nodeId: string, fontRatios: FontNormalRatios): StyledNode {
   const style = node.resolvedStyle;
   const runs = normalizeContent(node.content);
   const defaultFont = getFontForRun(style.fontFamily);
@@ -246,12 +280,12 @@ function styleText(
   const normalRatio = fontRatios.get(style.fontFamily.name);
   const cssLineHeight = normalRatio ? lineSpacingMultiple * normalRatio : lineSpacingMultiple;
   const bulletIndentPx = ptToPx(node.bulletIndentPt);
-  const textAlign = node.hAlign === HALIGN.RIGHT ? 'right' : node.hAlign === HALIGN.CENTER ? 'center' : 'left';
+  const textAlign = node.hAlign === HALIGN.RIGHT ? "right" : node.hAlign === HALIGN.CENTER ? "center" : "left";
   const isInRow = parent.direction === DIRECTION.ROW;
 
   const styles: Record<string, string | number> = {
-    display: 'flex',
-    flexDirection: 'column',
+    display: "flex",
+    flexDirection: "column",
     justifyContent: vAlignToJustify(node.vAlign),
     fontFamily: `'${style.fontFamily.name}'`,
     fontWeight: defaultFont.weight,
@@ -259,11 +293,9 @@ function styleText(
     lineHeight: `${cssLineHeight}`,
     color: node.color,
     textAlign,
-    whiteSpace: 'pre-wrap',
-    wordWrap: 'break-word',
-    ...(isInRow
-      ? { flex: '1 1 0', minWidth: 0 }
-      : { width: '100%', flexShrink: 0 }),
+    whiteSpace: "pre-wrap",
+    wordWrap: "break-word",
+    ...(isInRow ? { flex: "1 1 0", minWidth: 0 } : { width: "100%", flexShrink: 0 }),
   };
 
   return {
@@ -274,12 +306,7 @@ function styleText(
   };
 }
 
-function styleImage(
-  node: ImageNode,
-  parent: ParentCtx,
-  nodeId: string,
-  imagePathMap: Map<string, string>,
-): StyledNode {
+function styleImage(node: ImageNode, parent: ParentCtx, nodeId: string, imagePathMap: Map<string, string>): StyledNode {
   const dims = readImageDimensions(node.src);
   if (!dims) {
     throw new Error(`Cannot read image dimensions: ${node.src}`);
@@ -293,16 +320,16 @@ function styleImage(
   };
 
   if (parent.direction === DIRECTION.ROW) {
-    styles.height = '100%';
+    styles.height = "100%";
     styles.minWidth = 0;
-    styles.flex = parent.hasDefiniteCrossSize ? '0 1 auto' : '1 1 0';
+    styles.flex = parent.hasDefiniteCrossSize ? "0 1 auto" : "1 1 0";
   } else {
-    styles.width = '100%';
+    styles.width = "100%";
     if (parent.heightIsConstrained) {
-      styles.flex = '1 1 0';
+      styles.flex = "1 1 0";
       styles.minHeight = 0;
     } else {
-      styles.flex = '0 1 auto';
+      styles.flex = "0 1 auto";
     }
   }
 
@@ -315,81 +342,95 @@ function styleImage(
     // from container width. Uses container query units (cqw) to sidestep
     // the aspect-ratio-in-flex problem entirely.
     const proportionalCap = `calc(100cqw / ${dims.aspectRatio})`;
-    styles.maxHeight = maxHeightPx
-      ? `min(${maxHeightPx}px, ${proportionalCap})`
-      : proportionalCap;
+    styles.maxHeight = maxHeightPx ? `min(${maxHeightPx}px, ${proportionalCap})` : proportionalCap;
   }
 
   // Position absolute so the img's intrinsic size doesn't influence the container's flex basis.
-  styles.position = 'relative';
-  styles.overflow = 'hidden';
+  styles.position = "relative";
+  styles.overflow = "hidden";
   const resolved = path.resolve(node.src);
   const imgSrc = imagePathMap.get(resolved) ?? resolved;
-  return { nodeId, styles, children: [], innerHTML: `<img src="${imgSrc}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block" />` };
+  return {
+    nodeId,
+    styles,
+    children: [],
+    innerHTML: `<img src="${imgSrc}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block" />`,
+  };
 }
 
 /** Map pptxgenjs dash types to closest CSS border-style */
 function dashTypeToCss(dt: DashType): string {
   switch (dt) {
-    case DASH_TYPE.SOLID: return 'solid';
+    case DASH_TYPE.SOLID:
+      return "solid";
     case DASH_TYPE.DASH:
     case DASH_TYPE.LG_DASH:
     case DASH_TYPE.DASH_DOT:
-    case DASH_TYPE.LG_DASH_DOT: return 'dashed';
+    case DASH_TYPE.LG_DASH_DOT:
+      return "dashed";
     case DASH_TYPE.SYS_DASH:
-    case DASH_TYPE.SYS_DOT: return 'dotted';
-    default: return 'solid';
+    case DASH_TYPE.SYS_DOT:
+      return "dotted";
+    default:
+      return "solid";
   }
 }
 
-function styleLine(
-  node: LineNode,
-  parent: ParentCtx,
-  nodeId: string,
-): StyledNode {
+function styleLine(node: LineNode, parent: ParentCtx, nodeId: string): StyledNode {
   const widthPx = ptToPx(node.width);
   const color = node.color;
   const borderStyle = dashTypeToCss(node.dashType);
 
   if (parent.direction === DIRECTION.ROW) {
     // Vertical separator in a row
-    return { nodeId, styles: {
-      flex: `0 0 ${widthPx}px`, alignSelf: 'stretch',
-      borderLeft: `${widthPx}px ${borderStyle} ${color}`,
-    }, children: [] };
+    return {
+      nodeId,
+      styles: {
+        flex: `0 0 ${widthPx}px`,
+        alignSelf: "stretch",
+        borderLeft: `${widthPx}px ${borderStyle} ${color}`,
+      },
+      children: [],
+    };
   }
   // Horizontal separator in a column
-  return { nodeId, styles: {
-    flex: `0 0 ${widthPx}px`, width: '100%',
-    borderTop: `${widthPx}px ${borderStyle} ${color}`,
-  }, children: [] };
+  return {
+    nodeId,
+    styles: {
+      flex: `0 0 ${widthPx}px`,
+      width: "100%",
+      borderTop: `${widthPx}px ${borderStyle} ${color}`,
+    },
+    children: [],
+  };
 }
 
-function styleShape(
-  node: ShapeNode,
-  nodeId: string,
-): StyledNode {
+function styleShape(node: ShapeNode, nodeId: string): StyledNode {
   const styles: Record<string, string | number> = {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   };
   // Fill: use rgba for partial opacity so borders stay fully opaque
   styles.backgroundColor = bgColor(node.fill.color, node.fill.opacity);
   // Shape type: ellipse gets border-radius: 50%
   if (node.shape === SHAPE.ELLIPSE) {
-    styles.borderRadius = '50%';
+    styles.borderRadius = "50%";
   } else if (node.cornerRadius) {
     styles.borderRadius = `${inToPx(node.cornerRadius)}px`;
   }
   const bw = ptToPx(node.border.width);
   if (bw > 0) {
     const bc = node.border.color;
-    if (node.border.top === false || node.border.right === false
-        || node.border.bottom === false || node.border.left === false) {
-      styles.borderTop = node.border.top !== false ? `${bw}px solid ${bc}` : 'none';
-      styles.borderRight = node.border.right !== false ? `${bw}px solid ${bc}` : 'none';
-      styles.borderBottom = node.border.bottom !== false ? `${bw}px solid ${bc}` : 'none';
-      styles.borderLeft = node.border.left !== false ? `${bw}px solid ${bc}` : 'none';
+    if (
+      node.border.top === false ||
+      node.border.right === false ||
+      node.border.bottom === false ||
+      node.border.left === false
+    ) {
+      styles.borderTop = node.border.top !== false ? `${bw}px solid ${bc}` : "none";
+      styles.borderRight = node.border.right !== false ? `${bw}px solid ${bc}` : "none";
+      styles.borderBottom = node.border.bottom !== false ? `${bw}px solid ${bc}` : "none";
+      styles.borderLeft = node.border.left !== false ? `${bw}px solid ${bc}` : "none";
     } else {
       styles.border = `${bw}px solid ${bc}`;
     }
@@ -397,19 +438,16 @@ function styleShape(
   return { nodeId, styles, children: [] };
 }
 
-function styleSlideNumber(
-  node: SlideNumberNode,
-  nodeId: string,
-): StyledNode {
+function styleSlideNumber(node: SlideNumberNode, nodeId: string): StyledNode {
   const style = node.resolvedStyle;
   const fontSizePx = ptToPx(style.fontSize);
   const defaultFont = getFontForRun(style.fontFamily);
 
-  const textAlign = node.hAlign === HALIGN.RIGHT ? 'right' : node.hAlign === HALIGN.CENTER ? 'center' : 'left';
+  const textAlign = node.hAlign === HALIGN.RIGHT ? "right" : node.hAlign === HALIGN.CENTER ? "center" : "left";
   return {
     nodeId,
     styles: {
-      display: 'flex',
+      display: "flex",
       flexDirection: DIRECTION.COLUMN,
       justifyContent: vAlignToJustify(node.vAlign),
       fontFamily: `'${style.fontFamily.name}'`,
@@ -417,8 +455,8 @@ function styleSlideNumber(
       fontSize: `${fontSizePx}px`,
       color: node.color,
       textAlign,
-      whiteSpace: 'nowrap',
-      flex: '0 0 auto',
+      whiteSpace: "nowrap",
+      flex: "0 0 auto",
     },
     children: [],
     textContent: SLIDE_NUMBER_PLACEHOLDER,
@@ -445,9 +483,9 @@ function styleTable(
   const headerCols = node.headerColumns ?? 0;
 
   const styles: Record<string, string | number> = {
-    display: 'grid',
+    display: "grid",
     gridTemplateColumns: `repeat(${numCols}, 1fr)`,
-    ...(isInRow ? { flex: '1 1 0', minWidth: 0 } : { width: '100%' }),
+    ...(isInRow ? { flex: "1 1 0", minWidth: 0 } : { width: "100%" }),
   };
 
   // Outer border (FULL, HORIZONTAL, VERTICAL get outer border; INTERNAL and NONE do not)
@@ -520,18 +558,22 @@ function styleTable(
         cellStyles.gridRow = `span ${rawCell.rowspan}`;
       }
 
-      const textStyled = styleText(cellTextNode, { direction: DIRECTION.COLUMN, heightIsConstrained: false }, cellNodeId, fontRatios);
+      const textStyled = styleText(
+        cellTextNode,
+        { direction: DIRECTION.COLUMN, heightIsConstrained: false },
+        cellNodeId,
+        fontRatios,
+      );
       return {
-        nodeId: '',
+        nodeId: "",
         styles: cellStyles,
         children: [textStyled],
       };
-    })
+    }),
   );
 
   return { nodeId, styles, children: cellChildren };
 }
-
 
 // ─── The Dispatch ─────────────────────────────
 
@@ -603,9 +645,11 @@ function renderTextRunsToHTML(
 
   const flushBullets = () => {
     if (bulletBuffer.length > 0) {
-      const tag = bulletBufferOrdered ? 'ol' : 'ul';
-      const listStyle = bulletBufferOrdered ? 'decimal outside' : 'disc outside';
-      parts.push(`<${tag} style="margin:0;padding:0 0 0 ${bulletIndentPx}px;list-style:${listStyle}">${bulletBuffer.join('')}</${tag}>`);
+      const tag = bulletBufferOrdered ? "ol" : "ul";
+      const listStyle = bulletBufferOrdered ? "decimal outside" : "disc outside";
+      parts.push(
+        `<${tag} style="margin:0;padding:0 0 0 ${bulletIndentPx}px;list-style:${listStyle}">${bulletBuffer.join("")}</${tag}>`,
+      );
       bulletBuffer = [];
       bulletBufferOrdered = false;
     }
@@ -613,10 +657,10 @@ function renderTextRunsToHTML(
 
   for (const group of groups) {
     const first = group[0];
-    const spans = group.map(run => renderRunSpanHTML(run, style, linkColor, linkUnderline)).join('');
+    const spans = group.map((run) => renderRunSpanHTML(run, style, linkColor, linkUnderline)).join("");
 
     if (first.bullet) {
-      const isOrdered = typeof first.bullet === 'object' && first.bullet.type === 'number';
+      const isOrdered = typeof first.bullet === "object" && first.bullet.type === "number";
       // Flush if switching between ordered/unordered
       if (bulletBuffer.length > 0 && isOrdered !== bulletBufferOrdered) {
         flushBullets();
@@ -636,16 +680,11 @@ function renderTextRunsToHTML(
   }
   flushBullets();
 
-  return parts.join('');
+  return parts.join("");
 }
 
 /** Render a single run as an inline <span> HTML string. */
-function renderRunSpanHTML(
-  run: NormalizedRun,
-  style: TextStyle,
-  linkColor?: string,
-  linkUnderline?: boolean,
-): string {
+function renderRunSpanHTML(run: NormalizedRun, style: TextStyle, linkColor?: string, linkUnderline?: boolean): string {
   const css: string[] = [];
   const family = style.fontFamily;
 
@@ -655,10 +694,10 @@ function renderRunSpanHTML(
     if (run.bold) {
       // Use the resolved font's weight if a bold slot exists,
       // otherwise fall back to CSS 'bold' for synthetic bold
-      css.push(`font-weight:${font.weight !== family.regular.weight ? font.weight : 'bold'}`);
+      css.push(`font-weight:${font.weight !== family.regular.weight ? font.weight : "bold"}`);
     }
     if (run.italic) {
-      css.push('font-style:italic');
+      css.push("font-style:italic");
     }
   }
 
@@ -673,16 +712,16 @@ function renderRunSpanHTML(
 
   // Text decorations: strikethrough and underline can combine
   const decorations: string[] = [];
-  if (run.strikethrough) decorations.push('line-through');
-  if (run.underline) decorations.push('underline');
+  if (run.strikethrough) decorations.push("line-through");
+  if (run.underline) decorations.push("underline");
   if (decorations.length > 0) {
-    css.push(`text-decoration:${decorations.join(' ')}`);
+    css.push(`text-decoration:${decorations.join(" ")}`);
   }
 
   const escaped = escapeHtml(run.text);
   let html: string;
   if (css.length > 0) {
-    html = `<span style="${css.join(';')}">${escaped}</span>`;
+    html = `<span style="${css.join(";")}">${escaped}</span>`;
   } else {
     html = `<span>${escaped}</span>`;
   }
@@ -691,9 +730,9 @@ function renderRunSpanHTML(
   // Accent color (explicit run.color) wins over link token
   if (run.hyperlink) {
     const linkCss: string[] = [];
-    linkCss.push(!run.color && linkColor ? `color:${linkColor}` : 'color:inherit');
-    linkCss.push(linkUnderline && !run.underline ? 'text-decoration:underline' : 'text-decoration:inherit');
-    html = `<a href="${escapeHtml(run.hyperlink)}" style="${linkCss.join(';')}">${html}</a>`;
+    linkCss.push(!run.color && linkColor ? `color:${linkColor}` : "color:inherit");
+    linkCss.push(linkUnderline && !run.underline ? "text-decoration:underline" : "text-decoration:inherit");
+    html = `<a href="${escapeHtml(run.hyperlink)}" style="${linkCss.join(";")}">${html}</a>`;
   }
 
   return html;
@@ -701,30 +740,28 @@ function renderRunSpanHTML(
 
 /** Escape HTML special characters in text content */
 function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 // ─── Table Cell Nodes ─────────────────────────
 
 function getTableCellNodes(node: TableNode): TextNode[][] {
   return node.rows.map((row) =>
-    row.map((cell: TableCellData): TextNode => ({
-      type: NODE_TYPE.TEXT,
-      content: cell.content,
-      style: cell.textStyle,
-      resolvedStyle: cell.resolvedStyle,
-      color: cell.color,
-      hAlign: cell.hAlign,
-      vAlign: cell.vAlign,
-      lineHeightMultiplier: cell.lineHeightMultiplier,
-      bulletIndentPt: 0,  // Table cells never have bullets
-      linkColor: cell.linkColor,
-      linkUnderline: cell.linkUnderline,
-    }))
+    row.map(
+      (cell: TableCellData): TextNode => ({
+        type: NODE_TYPE.TEXT,
+        content: cell.content,
+        style: cell.textStyle,
+        resolvedStyle: cell.resolvedStyle,
+        color: cell.color,
+        hAlign: cell.hAlign,
+        vAlign: cell.vAlign,
+        lineHeightMultiplier: cell.lineHeightMultiplier,
+        bulletIndentPt: 0, // Table cells never have bullets
+        linkColor: cell.linkColor,
+        linkUnderline: cell.linkUnderline,
+      }),
+    ),
   );
 }
 
@@ -737,7 +774,7 @@ const StyledDiv: FC<{ node: StyledNode }> = ({ node }) => {
   // Skip wrapper divs (stack children, table cell padding) that have no nodeId
   const attrs: Record<string, string> = {};
   if (node.nodeId) {
-    attrs['data-node-id'] = node.nodeId;
+    attrs["data-node-id"] = node.nodeId;
   }
 
   // innerHTML: apply dangerouslySetInnerHTML directly on the div (no wrapper span).
@@ -748,9 +785,7 @@ const StyledDiv: FC<{ node: StyledNode }> = ({ node }) => {
 
   return (
     <div {...attrs} style={node.styles}>
-      {node.textContent
-        ? node.textContent
-        : node.children.map((child, i) => <StyledDiv key={i} node={child} />)}
+      {node.textContent ? node.textContent : node.children.map((child, i) => <StyledDiv key={i} node={child} />)}
     </div>
   );
 };
@@ -775,7 +810,7 @@ export interface FontDescriptor {
 export function generateLayoutHTML(
   slides: Array<{ tree: ElementNode; bounds: Bounds; background: Background }>,
   theme: Theme,
-  labels: string[],
+  _labels: string[],
   fontNormalRatios: FontNormalRatios,
   imagePathMap: Map<string, string>,
 ): LayoutHtmlResult {
@@ -805,7 +840,7 @@ export function generateLayoutHTML(
       const resolvedBg = path.resolve(bg.path);
       const bgSrc = imagePathMap.get(resolvedBg) ?? resolvedBg;
       rootStyles.backgroundImage = `url('${bgSrc}')`;
-      rootStyles.backgroundSize = 'cover';
+      rootStyles.backgroundSize = "cover";
     }
 
     return (
@@ -824,13 +859,11 @@ export function generateLayoutHTML(
         <meta charset="UTF-8" />
         <style dangerouslySetInnerHTML={{ __html: baseCSS }} />
       </head>
-      <body>
-        {slideJsx}
-      </body>
+      <body>{slideJsx}</body>
     </html>
   );
 
-  const html = '<!DOCTYPE html>' + renderToString(fullJsx);
+  const html = `<!DOCTYPE html>${renderToString(fullJsx)}`;
 
   // Content-only HTML fragments for each slide (no wrapper, no nav)
   const slideFragments = slideJsx.map((jsx) => renderToString(jsx));
@@ -936,20 +969,22 @@ export function generateFontFaceCSS(theme: Theme): { css: string; fonts: FontDes
       const ext = path.extname(font.path).toLowerCase();
       const fontFormat = FONT_FORMATS[ext];
       if (!fontFormat) {
-        throw new Error(`Unsupported font format "${ext}" for ${font.path}. Supported: ${Object.keys(FONT_FORMATS).join(', ')}`);
+        throw new Error(
+          `Unsupported font format "${ext}" for ${font.path}. Supported: ${Object.keys(FONT_FORMATS).join(", ")}`,
+        );
       }
       fontFaces.push(`
           @font-face {
             font-family: '${cssFamily}';
             src: url('fonts/${path.basename(font.path)}') format('${fontFormat.format}');
             font-weight: ${font.weight};
-            font-style: ${isItalic ? 'italic' : 'normal'};
+            font-style: ${isItalic ? "italic" : "normal"};
           }
         `);
     }
   }
 
-  return { css: fontFaces.join('\n'), fonts };
+  return { css: fontFaces.join("\n"), fonts };
 }
 
 export async function preloadFonts(page: Page, fonts: FontDescriptor[]): Promise<void> {
@@ -965,16 +1000,22 @@ export async function preloadFonts(page: Page, fonts: FontDescriptor[]): Promise
   }, fonts);
 
   if (failures.length > 0) {
-    throw new Error(`Fonts failed to load in Playwright: ${failures.join(', ')}. Check @font-face CSS and font file paths.`);
+    throw new Error(
+      `Fonts failed to load in Playwright: ${failures.join(", ")}. Check @font-face CSS and font file paths.`,
+    );
   }
 }
 
-export async function measureFontNormalRatios(page: Page, theme: Theme, outputDir: string): Promise<{ ratios: FontNormalRatios; fonts: FontDescriptor[] }> {
+export async function measureFontNormalRatios(
+  page: Page,
+  theme: Theme,
+  outputDir: string,
+): Promise<{ ratios: FontNormalRatios; fonts: FontDescriptor[] }> {
   const { css: fontFaceCSS, fonts } = generateFontFaceCSS(theme);
   const html = `<!DOCTYPE html><html><head><style>${fontFaceCSS}</style></head><body></body></html>`;
-  const htmlPath = path.join(outputDir, '_font-ratios.html');
+  const htmlPath = path.join(outputDir, "_font-ratios.html");
   fs.writeFileSync(htmlPath, html);
-  await page.goto('file://' + htmlPath);
+  await page.goto(`file://${htmlPath}`);
   await preloadFonts(page, fonts);
 
   const fontNames = new Set<string>();
@@ -983,22 +1024,25 @@ export async function measureFontNormalRatios(page: Page, theme: Theme, outputDi
     fontNames.add(style.fontFamily.name);
   }
 
-  const ratios = await page.evaluate((names: string[]) => {
-    const results: Array<{ name: string; ratio: number }> = [];
-    for (const name of names) {
-      const el = document.createElement('div');
-      el.style.fontFamily = `'${name}'`;
-      el.style.fontSize = '100px';
-      el.style.lineHeight = 'normal';
-      el.style.position = 'absolute';
-      el.textContent = 'X';
-      document.body.appendChild(el);
-      const ratio = el.getBoundingClientRect().height / 100;
-      document.body.removeChild(el);
-      results.push({ name, ratio });
-    }
-    return results;
-  }, [...fontNames]);
+  const ratios = await page.evaluate(
+    (names: string[]) => {
+      const results: Array<{ name: string; ratio: number }> = [];
+      for (const name of names) {
+        const el = document.createElement("div");
+        el.style.fontFamily = `'${name}'`;
+        el.style.fontSize = "100px";
+        el.style.lineHeight = "normal";
+        el.style.position = "absolute";
+        el.textContent = "X";
+        document.body.appendChild(el);
+        const ratio = el.getBoundingClientRect().height / 100;
+        document.body.removeChild(el);
+        results.push({ name, ratio });
+      }
+      return results;
+    },
+    [...fontNames],
+  );
 
   const result: FontNormalRatios = new Map();
   for (const { name, ratio } of ratios) {

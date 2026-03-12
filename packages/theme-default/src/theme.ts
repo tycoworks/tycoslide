@@ -2,26 +2,28 @@
 // Clean light theme with Inter font. Copy and customize for your brand.
 // Units: spacing/margins/radii = inches, fontSize/borderWidth = points, opacity = 0-100
 
+import { BORDER_STYLE, DASH_TYPE, GAP, HALIGN, SLIDE_SIZE, TEXT_STYLE, type Theme, VALIGN } from "tycoslide";
+import type { ListTokens, PlainTextTokens, TextTokens } from "tycoslide-components";
+import { assets } from "./assets.js";
 import {
-  TEXT_STYLE,
-  GAP,
-  BORDER_STYLE,
-  DASH_TYPE,
-  HALIGN,
-  VALIGN,
-  SLIDE_SIZE,
-  type Theme,
-} from 'tycoslide';
-import type { TextTokens, PlainTextTokens, ListTokens } from 'tycoslide-components';
-import { assets } from './assets.js';
-import { defaultMaster, minimalMaster } from './master.js';
-import {
-  titleLayout, endLayout, sectionLayout, bodyLayout,
-  statLayout, imageLayout, imageLeftLayout, imageRightLayout,
-  twoColumnLayout, comparisonLayout, statementLayout,
-  agendaLayout, cardsLayout, captionLayout,
-  titleOnlyLayout, quoteLayout,
-} from './layouts.js';
+  agendaLayout,
+  bodyLayout,
+  captionLayout,
+  cardsLayout,
+  comparisonLayout,
+  endLayout,
+  imageLayout,
+  imageLeftLayout,
+  imageRightLayout,
+  quoteLayout,
+  sectionLayout,
+  statementLayout,
+  statLayout,
+  titleLayout,
+  titleOnlyLayout,
+  twoColumnLayout,
+} from "./layouts.js";
+import { defaultMaster, minimalMaster } from "./master.js";
 
 // ============================================
 // COLOR PALETTE
@@ -29,25 +31,25 @@ import {
 
 // Neutral gray surfaces (zero chroma), purple primary accent.
 export const colors = {
-  background: '#FFFFFF',          // Pure white
-  text: '#1A1A2E',               // Dark navy
-  textMuted: '#4A4A5A',           // Neutral gray
-  primary: '#7C3AED',             // Purple accent
-  onPrimary: '#FFFFFF',           // White on purple
-  secondary: '#F5F5F5',           // Neutral surface
+  background: "#FFFFFF", // Pure white
+  text: "#1A1A2E", // Dark navy
+  textMuted: "#4A4A5A", // Neutral gray
+  primary: "#7C3AED", // Purple accent
+  onPrimary: "#FFFFFF", // White on purple
+  secondary: "#F5F5F5", // Neutral surface
 
   // Neutral gray surface hierarchy (zero chroma)
-  surfaceContainer: '#F5F5F5',    // Cards, callouts
-  surfaceContainerLow: '#FAFAFA', // Quotes
-  surfaceContainerHigh: '#EBEBEB',// Table headers
-  outlineVariant: '#E5E5E5',      // Borders, separators
+  surfaceContainer: "#F5F5F5", // Cards, callouts
+  surfaceContainerLow: "#FAFAFA", // Quotes
+  surfaceContainerHigh: "#EBEBEB", // Table headers
+  outlineVariant: "#E5E5E5", // Borders, separators
 
   accents: {
-    blue: '#1A1A2E',      // Dark navy (default emphasis)
-    green: '#0E6245',     // Deep forest green
-    red: '#B42318',       // Deep brick red
-    yellow: '#B54708',    // Deep amber
-    purple: '#7C3AED',
+    blue: "#1A1A2E", // Dark navy (default emphasis)
+    green: "#0E6245", // Deep forest green
+    red: "#B42318", // Deep brick red
+    yellow: "#B54708", // Deep amber
+    purple: "#7C3AED",
   },
 };
 
@@ -60,11 +62,11 @@ const subtleOpacity = 15;
 const unit = 0.03125; // 1/32 inch
 
 // Derived spacing constants (local to theme construction, not on Theme type)
-const gap = unit * 8;             // 0.25"
-const gapTight = unit * 4;        // 0.125"
-const gapLoose = unit * 16;       // 0.5"
-const padding = unit * 8;         // 0.25"
-const cellPadding = unit * 2;     // 0.0625"
+const gap = unit * 8; // 0.25"
+const gapTight = unit * 4; // 0.125"
+const gapLoose = unit * 16; // 0.5"
+const padding = unit * 8; // 0.25"
+const cellPadding = unit * 2; // 0.0625"
 const bulletIndentMultiplier = 1.5;
 const lineSpacing = 1.2;
 const footerHeight = unit * 8;
@@ -118,61 +120,91 @@ const quoteAttribution: PlainTextTokens = {
 // --- Shared layout token objects ---
 
 const headerTitle: PlainTextTokens = {
-  style: TEXT_STYLE.H3, color: colors.text,
-  hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE,
+  style: TEXT_STYLE.H3,
+  color: colors.text,
+  hAlign: HALIGN.LEFT,
+  vAlign: VALIGN.MIDDLE,
 };
 const headerEyebrow: PlainTextTokens = {
-  style: TEXT_STYLE.EYEBROW, color: colors.primary,
-  hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE,
+  style: TEXT_STYLE.EYEBROW,
+  color: colors.primary,
+  hAlign: HALIGN.LEFT,
+  vAlign: VALIGN.MIDDLE,
 };
 const bodyText: TextTokens = {
-  style: TEXT_STYLE.BODY, color: colors.text,
-  linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE,
+  style: TEXT_STYLE.BODY,
+  color: colors.text,
+  linkColor: colors.primary,
+  linkUnderline: true,
+  hAlign: HALIGN.LEFT,
+  vAlign: VALIGN.MIDDLE,
   accents: colors.accents,
 };
 const bodyList: ListTokens = {
-  style: TEXT_STYLE.BODY, color: colors.text,
-  linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP,
+  style: TEXT_STYLE.BODY,
+  color: colors.text,
+  linkColor: colors.primary,
+  linkUnderline: true,
+  hAlign: HALIGN.LEFT,
+  vAlign: VALIGN.TOP,
   accents: colors.accents,
 };
 const mutedCaption: TextTokens = {
-  style: TEXT_STYLE.SMALL, color: colors.textMuted,
-  linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
+  style: TEXT_STYLE.SMALL,
+  color: colors.textMuted,
+  linkColor: colors.primary,
+  linkUnderline: true,
+  hAlign: HALIGN.CENTER,
+  vAlign: VALIGN.MIDDLE,
   accents: colors.accents,
 };
 
 // --- Dark-background (hero/section) token objects ---
 
 const heroTitle: PlainTextTokens = {
-  style: TEXT_STYLE.H1, color: colors.onPrimary,
-  hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
+  style: TEXT_STYLE.H1,
+  color: colors.onPrimary,
+  hAlign: HALIGN.CENTER,
+  vAlign: VALIGN.MIDDLE,
 };
 const heroSubtitle: PlainTextTokens = {
-  style: TEXT_STYLE.H3, color: colors.onPrimary,
-  hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
+  style: TEXT_STYLE.H3,
+  color: colors.onPrimary,
+  hAlign: HALIGN.CENTER,
+  vAlign: VALIGN.MIDDLE,
 };
 const sectionHeading: PlainTextTokens = {
-  style: TEXT_STYLE.H2, color: colors.onPrimary,
-  hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
+  style: TEXT_STYLE.H2,
+  color: colors.onPrimary,
+  hAlign: HALIGN.CENTER,
+  vAlign: VALIGN.MIDDLE,
 };
 
 // --- Layout-specific token objects ---
 
 const statValue: PlainTextTokens = {
-  style: TEXT_STYLE.H1, color: colors.text,
-  hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
+  style: TEXT_STYLE.H1,
+  color: colors.text,
+  hAlign: HALIGN.CENTER,
+  vAlign: VALIGN.MIDDLE,
 };
 const statLabel: PlainTextTokens = {
-  style: TEXT_STYLE.H3, color: colors.textMuted,
-  hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
+  style: TEXT_STYLE.H3,
+  color: colors.textMuted,
+  hAlign: HALIGN.CENTER,
+  vAlign: VALIGN.MIDDLE,
 };
 const subHeading: PlainTextTokens = {
-  style: TEXT_STYLE.H4, color: colors.text,
-  hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE,
+  style: TEXT_STYLE.H4,
+  color: colors.text,
+  hAlign: HALIGN.LEFT,
+  vAlign: VALIGN.MIDDLE,
 };
 const captionPlain: PlainTextTokens = {
-  style: TEXT_STYLE.SMALL, color: colors.textMuted,
-  hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE,
+  style: TEXT_STYLE.SMALL,
+  color: colors.textMuted,
+  hAlign: HALIGN.CENTER,
+  vAlign: VALIGN.MIDDLE,
 };
 
 // ============================================
@@ -202,16 +234,16 @@ const tableTokens = {
 
 const codeTokens = {
   textStyle: TEXT_STYLE.CODE,
-  backgroundColor: '#1A1A2E',
-  textColor: '#E2E8F0',
-  keywordColor: '#A78BFA',
-  stringColor: '#10B981',
-  commentColor: '#6B7280',
-  functionColor: '#79C0FF',
-  numberColor: '#F0883E',
-  operatorColor: '#E2E8F0',
-  typeColor: '#FFA657',
-  variableColor: '#E2E8F0',
+  backgroundColor: "#1A1A2E",
+  textColor: "#E2E8F0",
+  keywordColor: "#A78BFA",
+  stringColor: "#10B981",
+  commentColor: "#6B7280",
+  functionColor: "#79C0FF",
+  numberColor: "#F0883E",
+  operatorColor: "#E2E8F0",
+  typeColor: "#FFA657",
+  variableColor: "#E2E8F0",
   padding: padding,
   borderRadius: cornerRadius,
 };
@@ -279,14 +311,54 @@ export const theme = {
   spacing: { normal: gap, tight: gapTight, loose: gapLoose },
   fonts: [assets.fonts.inter, assets.fonts.interLight, assets.fonts.firaCode],
   textStyles: {
-    h1: { fontFamily: assets.fonts.interLight, fontSize: 48, lineHeightMultiplier: lineSpacing, bulletIndentPt: 48 * bulletIndentMultiplier },
-    h2: { fontFamily: assets.fonts.interLight, fontSize: 36, lineHeightMultiplier: lineSpacing, bulletIndentPt: 36 * bulletIndentMultiplier },
-    h3: { fontFamily: assets.fonts.interLight, fontSize: 24, lineHeightMultiplier: lineSpacing, bulletIndentPt: 24 * bulletIndentMultiplier },
-    h4: { fontFamily: assets.fonts.interLight, fontSize: 16, lineHeightMultiplier: lineSpacing, bulletIndentPt: 16 * bulletIndentMultiplier },
-    body: { fontFamily: assets.fonts.interLight, fontSize: 14, lineHeightMultiplier: lineSpacing, bulletIndentPt: 14 * bulletIndentMultiplier },
-    small: { fontFamily: assets.fonts.interLight, fontSize: 12, lineHeightMultiplier: lineSpacing, bulletIndentPt: 12 * bulletIndentMultiplier },
-    eyebrow: { fontFamily: assets.fonts.inter, fontSize: 11, lineHeightMultiplier: 1.0, bulletIndentPt: 11 * bulletIndentMultiplier },
-    footer: { fontFamily: assets.fonts.interLight, fontSize: 8, lineHeightMultiplier: 1.0, bulletIndentPt: 8 * bulletIndentMultiplier },
+    h1: {
+      fontFamily: assets.fonts.interLight,
+      fontSize: 48,
+      lineHeightMultiplier: lineSpacing,
+      bulletIndentPt: 48 * bulletIndentMultiplier,
+    },
+    h2: {
+      fontFamily: assets.fonts.interLight,
+      fontSize: 36,
+      lineHeightMultiplier: lineSpacing,
+      bulletIndentPt: 36 * bulletIndentMultiplier,
+    },
+    h3: {
+      fontFamily: assets.fonts.interLight,
+      fontSize: 24,
+      lineHeightMultiplier: lineSpacing,
+      bulletIndentPt: 24 * bulletIndentMultiplier,
+    },
+    h4: {
+      fontFamily: assets.fonts.interLight,
+      fontSize: 16,
+      lineHeightMultiplier: lineSpacing,
+      bulletIndentPt: 16 * bulletIndentMultiplier,
+    },
+    body: {
+      fontFamily: assets.fonts.interLight,
+      fontSize: 14,
+      lineHeightMultiplier: lineSpacing,
+      bulletIndentPt: 14 * bulletIndentMultiplier,
+    },
+    small: {
+      fontFamily: assets.fonts.interLight,
+      fontSize: 12,
+      lineHeightMultiplier: lineSpacing,
+      bulletIndentPt: 12 * bulletIndentMultiplier,
+    },
+    eyebrow: {
+      fontFamily: assets.fonts.inter,
+      fontSize: 11,
+      lineHeightMultiplier: 1.0,
+      bulletIndentPt: 11 * bulletIndentMultiplier,
+    },
+    footer: {
+      fontFamily: assets.fonts.interLight,
+      fontSize: 8,
+      lineHeightMultiplier: 1.0,
+      bulletIndentPt: 8 * bulletIndentMultiplier,
+    },
     code: { fontFamily: assets.fonts.firaCode, fontSize: 11, lineHeightMultiplier: 1.6, bulletIndentPt: 0 },
   },
   layouts: {
@@ -341,7 +413,7 @@ export const theme = {
         }),
       },
     },
-    'image-left': {
+    "image-left": {
       variants: {
         default: imageLeftLayout.tokenMap({
           title: headerTitle,
@@ -352,7 +424,7 @@ export const theme = {
         }),
       },
     },
-    'image-right': {
+    "image-right": {
       variants: {
         default: imageRightLayout.tokenMap({
           title: headerTitle,
@@ -363,7 +435,7 @@ export const theme = {
         }),
       },
     },
-    'two-column': {
+    "two-column": {
       variants: {
         default: twoColumnLayout.tokenMap({
           title: headerTitle,
@@ -458,7 +530,7 @@ export const theme = {
         }),
       },
     },
-    'title-only': {
+    "title-only": {
       variants: {
         default: titleOnlyLayout.tokenMap({
           title: headerTitle,
@@ -490,7 +562,7 @@ export const theme = {
           background: { color: colors.background },
           margin: 0.5,
           footerHeight,
-          footerText: 'tycoworks',
+          footerText: "tycoworks",
           slideNumber: {
             style: TEXT_STYLE.FOOTER,
             color: colors.textMuted,

@@ -34,18 +34,21 @@ export const ptToPx = (pt: number): number => (pt / POINTS_PER_INCH) * SCREEN_DP
 // GAP RESOLUTION
 // ============================================
 
-import type { Theme } from '../core/model/types.js';
-import { GAP } from '../core/model/types.js';
+import type { Theme } from "../core/model/types.js";
+import { GAP } from "../core/model/types.js";
 
 /**
  * Resolve GAP constant to actual spacing value from theme.
  */
 export function resolveGap(gap: string | undefined, theme: Theme): number {
   switch (gap) {
-    case GAP.NONE: return 0;
-    case GAP.TIGHT: return theme.spacing.tight;
-    case GAP.LOOSE: return theme.spacing.loose;
-    case GAP.NORMAL:
-    default: return theme.spacing.normal;
+    case GAP.NONE:
+      return 0;
+    case GAP.TIGHT:
+      return theme.spacing.tight;
+    case GAP.LOOSE:
+      return theme.spacing.loose;
+    default:
+      return theme.spacing.normal;
   }
 }

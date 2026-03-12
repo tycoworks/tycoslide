@@ -1,18 +1,27 @@
 // PPTX Renderer
 // Renders PositionedNode trees directly to PowerPoint via pptxgenjs
 
-import PptxGenJSDefault from '@tycoworks/pptxgenjs';
+import PptxGenJSDefault from "@tycoworks/pptxgenjs";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- CJS/ESM interop: .default exists at runtime but not in types
 const PptxGenJS = (PptxGenJSDefault as any).default || PptxGenJSDefault;
-type PptxSlide = ReturnType<InstanceType<typeof PptxGenJS>['addSlide']>;
+type PptxSlide = ReturnType<InstanceType<typeof PptxGenJS>["addSlide"]>;
 
-import type { PositionedNode, TextNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, TableNode } from '../model/nodes.js';
-import { NODE_TYPE } from '../model/nodes.js';
-import type { Theme, Background } from '../model/types.js';
-import { CUSTOM_LAYOUT } from '../model/types.js';
-import { PptxConfigBuilder } from './pptxConfigBuilder.js';
-import { log, contentPreview } from '../../utils/log.js';
-import { stripHash } from '../../utils/color.js';
+import { stripHash } from "../../utils/color.js";
+import { contentPreview, log } from "../../utils/log.js";
+import type {
+  ImageNode,
+  LineNode,
+  PositionedNode,
+  ShapeNode,
+  SlideNumberNode,
+  TableNode,
+  TextNode,
+} from "../model/nodes.js";
+import { NODE_TYPE } from "../model/nodes.js";
+import type { Background, Theme } from "../model/types.js";
+import { CUSTOM_LAYOUT } from "../model/types.js";
+import { PptxConfigBuilder } from "./pptxConfigBuilder.js";
 
 // ============================================
 // RENDERER INTERFACE
@@ -21,7 +30,7 @@ import { stripHash } from '../../utils/color.js';
 /** Options for rendering a slide */
 export interface RenderSlideOptions {
   masterName?: string;
-  masterContent?: PositionedNode;  // Master's positioned content
+  masterContent?: PositionedNode; // Master's positioned content
   background?: Background;
   notes?: string;
 }
@@ -30,7 +39,7 @@ export interface RenderSlideOptions {
 export interface MasterDefinition {
   name: string;
   background: Background;
-  content: PositionedNode;  // Positioned master elements
+  content: PositionedNode; // Positioned master elements
 }
 
 /** Options for writing output */
@@ -94,12 +103,10 @@ export class PptxRenderer {
   }
 
   renderSlide(content: PositionedNode, options: RenderSlideOptions): void {
-    const { masterName, masterContent, background, notes } = options;
+    const { masterName, masterContent: _masterContent, background, notes } = options;
 
     // Create pptx slide (with master if specified)
-    const pptxSlide = this.pres.addSlide(
-      masterName ? { masterName } : undefined
-    );
+    const pptxSlide = this.pres.addSlide(masterName ? { masterName } : undefined);
 
     // Slide background overrides master background
     if (background) {
@@ -133,9 +140,7 @@ export class PptxRenderer {
     // Strip speaker notes if requested
     if (!includeNotes) {
       for (const slide of (this.pres as PptxGenJSExtended).slides) {
-        slide._slideObjects = slide._slideObjects?.filter(
-          (obj: { _type: string }) => obj._type !== 'notes'
-        );
+        slide._slideObjects = slide._slideObjects?.filter((obj: { _type: string }) => obj._type !== "notes");
       }
     }
 
@@ -149,7 +154,7 @@ export class PptxRenderer {
   private renderNode(positioned: PositionedNode, slide: PptxSlide): void {
     const { node, x, y, width, height, children } = positioned;
 
-    log.render._('render %s x=%f y=%f w=%f h=%f', node.type, x, y, width, height);
+    log.render._("render %s x=%f y=%f w=%f h=%f", node.type, x, y, width, height);
 
     switch (node.type) {
       case NODE_TYPE.TEXT:
@@ -173,7 +178,7 @@ export class PptxRenderer {
       case NODE_TYPE.CONTAINER:
       case NODE_TYPE.STACK:
         // Containers just render their children
-        log.render._('  container %s with %d children', node.type.toUpperCase(), children?.length ?? 0);
+        log.render._("  container %s with %d children", node.type.toUpperCase(), children?.length ?? 0);
         if (children) {
           for (const child of children) {
             this.renderNode(child, slide);
@@ -189,8 +194,14 @@ export class PptxRenderer {
 
   private renderText(positioned: PositionedNode, slide: PptxSlide): void {
     const textNode = positioned.node as TextNode;
-    log.render.text('RENDER text x=%f y=%f w=%f h=%f "%s"',
-      positioned.x, positioned.y, positioned.width, positioned.height, contentPreview(textNode.content));
+    log.render.text(
+      'RENDER text x=%f y=%f w=%f h=%f "%s"',
+      positioned.x,
+      positioned.y,
+      positioned.width,
+      positioned.height,
+      contentPreview(textNode.content),
+    );
 
     const { fragments, options } = this.config.buildTextConfig(textNode, positioned);
     slide.addText(fragments, options);
@@ -198,15 +209,27 @@ export class PptxRenderer {
 
   private renderImage(positioned: PositionedNode, slide: PptxSlide): void {
     const imageNode = positioned.node as ImageNode;
-    log.render.image('RENDER image x=%f y=%f w=%f h=%f src=%s',
-      positioned.x, positioned.y, positioned.width, positioned.height, imageNode.src.split('/').pop());
+    log.render.image(
+      "RENDER image x=%f y=%f w=%f h=%f src=%s",
+      positioned.x,
+      positioned.y,
+      positioned.width,
+      positioned.height,
+      imageNode.src.split("/").pop(),
+    );
     slide.addImage(this.config.buildImageConfig(imageNode, positioned));
   }
 
   private renderShape(positioned: PositionedNode, slide: PptxSlide): void {
     const shapeNode = positioned.node as ShapeNode;
-    log.render.shape('RENDER shape(%s) x=%f y=%f w=%f h=%f',
-      shapeNode.shape, positioned.x, positioned.y, positioned.width, positioned.height);
+    log.render.shape(
+      "RENDER shape(%s) x=%f y=%f w=%f h=%f",
+      shapeNode.shape,
+      positioned.x,
+      positioned.y,
+      positioned.width,
+      positioned.height,
+    );
 
     const config = this.config.buildShapeConfig(shapeNode, positioned);
     slide.addShape(config.shapeType, config.options);
@@ -214,15 +237,26 @@ export class PptxRenderer {
 
   private renderLine(positioned: PositionedNode, slide: PptxSlide): void {
     const lineNode = positioned.node as LineNode;
-    log.render.shape('RENDER line x=%f y=%f w=%f h=%f', positioned.x, positioned.y, positioned.width, positioned.height);
+    log.render.shape(
+      "RENDER line x=%f y=%f w=%f h=%f",
+      positioned.x,
+      positioned.y,
+      positioned.width,
+      positioned.height,
+    );
     const { shapeType, options } = this.config.buildLineConfig(lineNode, positioned);
     slide.addShape(shapeType, options);
   }
 
   private renderSlideNumber(positioned: PositionedNode, slide: PptxSlide): void {
     const slideNumNode = positioned.node as SlideNumberNode;
-    log.render.text('RENDER slideNumber x=%f y=%f w=%f h=%f',
-      positioned.x, positioned.y, positioned.width, positioned.height);
+    log.render.text(
+      "RENDER slideNumber x=%f y=%f w=%f h=%f",
+      positioned.x,
+      positioned.y,
+      positioned.width,
+      positioned.height,
+    );
 
     slide.slideNumber = this.config.buildSlideNumberOptions(slideNumNode, positioned);
   }
@@ -231,9 +265,15 @@ export class PptxRenderer {
     const tableNode = positioned.node as TableNode;
     const { rows, headerRows = 0, headerColumns = 0 } = tableNode;
 
-    log.render._('RENDER table x=%f y=%f w=%f h=%f rows=%d cols=%d',
-      positioned.x, positioned.y, positioned.width, positioned.height,
-      rows.length, rows[0]?.length ?? 0);
+    log.render._(
+      "RENDER table x=%f y=%f w=%f h=%f rows=%d cols=%d",
+      positioned.x,
+      positioned.y,
+      positioned.width,
+      positioned.height,
+      rows.length,
+      rows[0]?.length ?? 0,
+    );
 
     if (rows.length === 0) return;
 
@@ -245,8 +285,8 @@ export class PptxRenderer {
     const numRows = rows.length;
     const tableRows = rows.map((row, rowIndex) =>
       row.map((cell, colIndex) =>
-        this.config.buildTableCell(cell, rowIndex, colIndex, numRows, numCols, headerRows, headerColumns, tableNode)
-      )
+        this.config.buildTableCell(cell, rowIndex, colIndex, numRows, numCols, headerRows, headerColumns, tableNode),
+      ),
     );
 
     const tableOptions: Record<string, unknown> = {

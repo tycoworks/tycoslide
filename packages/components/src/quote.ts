@@ -2,23 +2,28 @@
 // Simple pull quote with left accent bar, quote text, and optional attribution.
 // Expands to: row(line(bar), column(quote, attribution?))
 
+import type { RootContent } from "mdast";
 import {
-  defineComponent, component, type ComponentProps, type SchemaShape,
-  SIZE, SYNTAX, extractSource,
+  type ComponentProps,
+  component,
+  defineComponent,
+  extractSource,
   type GapSize,
-} from 'tycoslide';
-import type { RootContent } from 'mdast';
-import { Component } from './names.js';
-import { row, column } from './containers.js';
-import { line, type LineTokens } from './primitives.js';
-import { text, textComponent, type TextTokens } from './text.js';
-import { plainText, type PlainTextTokens } from './plainText.js';
+  type SchemaShape,
+  SIZE,
+  SYNTAX,
+} from "tycoslide";
+import { column, row } from "./containers.js";
+import { Component } from "./names.js";
+import { type PlainTextTokens, plainText } from "./plainText.js";
+import { type LineTokens, line } from "./primitives.js";
+import { type TextTokens, text, textComponent } from "./text.js";
 
 export const QUOTE_TOKEN = {
-  BAR: 'bar',
-  GAP: 'gap',
-  QUOTE: 'quote',
-  ATTRIBUTION: 'attribution',
+  BAR: "bar",
+  GAP: "gap",
+  QUOTE: "quote",
+  ATTRIBUTION: "attribution",
 } as const;
 
 export type QuoteTokens = {
@@ -66,37 +71,28 @@ export const quoteComponent = defineComponent({
     compile: (node: RootContent, source: string) => {
       const raw = extractSource(node, source);
       // Strip leading `> ` or `>` from each line to get the inner content
-      const inner = raw.replace(/^>\s?/gm, '').trim();
+      const inner = raw.replace(/^>\s?/gm, "").trim();
       return component(Component.Quote, { quote: inner });
     },
   },
   expand(props, _context, tokens: QuoteTokens) {
     const { quote: quoteText, body, attribution } = props;
     const actualQuote = quoteText ?? body;
-    const {
-      bar: barTokens, gap,
-      quote: quoteTokens, attribution: attributionTokens,
-    } = tokens;
+    const { bar: barTokens, gap, quote: quoteTokens, attribution: attributionTokens } = tokens;
 
     if (!actualQuote) {
       throw new Error(`[tycoslide] Quote component requires either a 'quote' attribute or body text.`);
     }
 
     // Build content children: quote text, optional attribution
-    const children = [
-      text(actualQuote, quoteTokens),
-    ];
+    const children = [text(actualQuote, quoteTokens)];
     if (attribution) {
       children.push(plainText(attribution, attributionTokens));
     }
 
     const outerHeight = SIZE.HUG;
 
-    return row(
-      { gap, height: outerHeight },
-      line(barTokens),
-      column({ gap }, ...children),
-    );
+    return row({ gap, height: outerHeight }, line(barTokens), column({ gap }, ...children));
   },
 });
 

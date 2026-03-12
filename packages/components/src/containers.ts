@@ -1,13 +1,24 @@
 // Container DSL functions: row, column, stack, grid
 
 import {
-  defineComponent, component, type ComponentNode,
-  NODE_TYPE, type SlideNode,
-  GAP, type HorizontalAlignment, type VerticalAlignment, type GapSize, type SizeValue,
-  VALIGN, HALIGN, SIZE, DIRECTION,
-  type ExpansionContext, resolveGap,
-} from 'tycoslide';
-import { Component } from './names.js';
+  type ComponentNode,
+  component,
+  DIRECTION,
+  defineComponent,
+  type ExpansionContext,
+  GAP,
+  type GapSize,
+  HALIGN,
+  type HorizontalAlignment,
+  NODE_TYPE,
+  resolveGap,
+  SIZE,
+  type SizeValue,
+  type SlideNode,
+  VALIGN,
+  type VerticalAlignment,
+} from "tycoslide";
+import { Component } from "./names.js";
 
 // ============================================
 // SHARED HELPERS
@@ -21,7 +32,7 @@ import { Component } from './names.js';
  * Discriminates props object from nodes by checking for 'type' and 'componentName' fields.
  */
 function parseContainerArgs<TProps>(args: any[]): { props: TProps; children: SlideNode[] } {
-  if (args[0] && typeof args[0] === 'object' && !('type' in args[0]) && !('componentName' in args[0])) {
+  if (args[0] && typeof args[0] === "object" && !("type" in args[0]) && !("componentName" in args[0])) {
     return {
       props: args[0] as TProps,
       children: args.slice(1),
@@ -38,12 +49,12 @@ function parseContainerArgs<TProps>(args: any[]): { props: TProps; children: Sli
 // ============================================
 
 export type RowProps = {
-  width?: number | SizeValue;   // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
-  height?: number | SizeValue;  // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
+  width?: number | SizeValue; // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
+  height?: number | SizeValue; // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
   gap?: GapSize;
   vAlign?: VerticalAlignment;
   hAlign?: HorizontalAlignment; // justify-content: left (flex-start), center, right (flex-end)
-  padding?: number;             // inches - internal padding on all sides
+  padding?: number; // inches - internal padding on all sides
 };
 
 interface RowInternalProps extends RowProps {
@@ -52,7 +63,7 @@ interface RowInternalProps extends RowProps {
 
 export const rowComponent = defineComponent({
   name: Component.Row,
-  slots: ['children'] as const,
+  slots: ["children"] as const,
   directive: false,
   tokens: [],
 
@@ -63,8 +74,8 @@ export const rowComponent = defineComponent({
     width: props.width ?? SIZE.FILL,
     height: props.height ?? SIZE.HUG,
     gap: resolveGap(props.gap, context.theme),
-    vAlign: props.vAlign ?? VALIGN.TOP,    // Explicit default: pure alignment (not CSS stretch)
-    hAlign: props.hAlign ?? HALIGN.LEFT,   // Explicit default for consistent measurement
+    vAlign: props.vAlign ?? VALIGN.TOP, // Explicit default: pure alignment (not CSS stretch)
+    hAlign: props.hAlign ?? HALIGN.LEFT, // Explicit default for consistent measurement
     padding: props.padding,
   }),
 });
@@ -81,12 +92,12 @@ export function row(...args: any[]): ComponentNode {
 // ============================================
 
 export type ColumnProps = {
-  width?: number | SizeValue;   // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
-  height?: number | SizeValue;  // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
+  width?: number | SizeValue; // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
+  height?: number | SizeValue; // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
   gap?: GapSize;
   vAlign?: VerticalAlignment;
   hAlign?: HorizontalAlignment;
-  padding?: number;             // inches - internal padding on all sides
+  padding?: number; // inches - internal padding on all sides
 };
 
 interface ColumnInternalProps extends ColumnProps {
@@ -95,7 +106,7 @@ interface ColumnInternalProps extends ColumnProps {
 
 export const columnComponent = defineComponent({
   name: Component.Column,
-  slots: ['children'] as const,
+  slots: ["children"] as const,
   directive: false,
   tokens: [],
 
@@ -106,8 +117,8 @@ export const columnComponent = defineComponent({
     width: props.width ?? SIZE.FILL,
     height: props.height ?? SIZE.HUG,
     gap: resolveGap(props.gap, context.theme),
-    vAlign: props.vAlign ?? VALIGN.TOP,    // Explicit default for consistent measurement
-    hAlign: props.hAlign ?? HALIGN.LEFT,   // Explicit default for consistent measurement
+    vAlign: props.vAlign ?? VALIGN.TOP, // Explicit default for consistent measurement
+    hAlign: props.hAlign ?? HALIGN.LEFT, // Explicit default for consistent measurement
     padding: props.padding,
   }),
 });
@@ -124,8 +135,8 @@ export function column(...args: any[]): ComponentNode {
 // ============================================
 
 export type StackProps = {
-  width?: number | SizeValue;   // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
-  height?: number | SizeValue;  // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
+  width?: number | SizeValue; // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
+  height?: number | SizeValue; // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
 };
 
 interface StackInternalProps extends StackProps {
@@ -134,7 +145,7 @@ interface StackInternalProps extends StackProps {
 
 export const stackComponent = defineComponent({
   name: Component.Stack,
-  slots: ['children'] as const,
+  slots: ["children"] as const,
   directive: false,
   tokens: [],
 
@@ -180,23 +191,24 @@ interface GridInternalProps extends GridProps {
 
 export const gridComponent = defineComponent({
   name: Component.Grid,
-  slots: ['children'] as const,
+  slots: ["children"] as const,
   directive: false,
   tokens: [],
   expand: (props: GridInternalProps) => {
-  const { columns, gap = GAP.NORMAL, children } = props;
+    const { columns, gap = GAP.NORMAL, children } = props;
 
-  // Wrap each child in a column cell so items share row width equally
-  const cells = children.map(child => column({ width: SIZE.FILL, height: SIZE.FILL }, child));
+    // Wrap each child in a column cell so items share row width equally
+    const cells = children.map((child) => column({ width: SIZE.FILL, height: SIZE.FILL }, child));
 
-  // Chunk cells into rows of equal height
-  const rows: ComponentNode[] = [];
-  for (let i = 0; i < cells.length; i += columns) {
-    rows.push(row({ gap, height: SIZE.FILL }, ...cells.slice(i, i + columns)));
-  }
+    // Chunk cells into rows of equal height
+    const rows: ComponentNode[] = [];
+    for (let i = 0; i < cells.length; i += columns) {
+      rows.push(row({ gap, height: SIZE.FILL }, ...cells.slice(i, i + columns)));
+    }
 
-  return column({ gap, height: SIZE.FILL }, ...rows);
-}});
+    return column({ gap, height: SIZE.FILL }, ...rows);
+  },
+});
 
 /**
  * Grid arranges children into equal-sized rows of N columns.
@@ -215,7 +227,7 @@ export function grid(...args: any[]): ComponentNode {
   let gap: GapSize | undefined;
   let children: SlideNode[];
 
-  if (typeof args[0] === 'number') {
+  if (typeof args[0] === "number") {
     columns = args[0];
     children = args.slice(1);
   } else {

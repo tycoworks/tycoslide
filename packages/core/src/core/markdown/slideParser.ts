@@ -8,7 +8,7 @@
 // then YAML parser for structurally-identified frontmatter blocks.
 // This module has NO knowledge of layouts.
 
-import { parse as parseYaml } from 'yaml';
+import { parse as parseYaml } from "yaml";
 
 // ============================================
 // TYPES
@@ -98,7 +98,7 @@ function extractGlobalFrontmatter(source: string): { global: Record<string, unkn
 
   try {
     const parsed = parseYaml(match[1]);
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
       return {
         global: parsed as Record<string, unknown>,
         rest: source.slice(match[0].length),
@@ -145,17 +145,17 @@ function splitIntoSlides(text: string): SplitSlide[] {
   const slides: SplitSlide[] = [];
 
   let inFM = false;
-  let fmStarted = false;  // Have we seen any non-blank line while in FM state?
-  let fmClosed = false;   // Was FM properly closed by a --- ?
+  let fmStarted = false; // Have we seen any non-blank line while in FM state?
+  let fmClosed = false; // Was FM properly closed by a --- ?
   let fmLines: string[] = [];
   let bodyLines: string[] = [];
   let inCodeFence = false;
-  let codeFenceChar = '';
+  let codeFenceChar = "";
   let codeFenceLen = 0;
 
   function flushSlide() {
-    const fm = fmLines.join('\n').trim();
-    const body = bodyLines.join('\n').trim();
+    const fm = fmLines.join("\n").trim();
+    const body = bodyLines.join("\n").trim();
     if (fm || body) {
       slides.push({ frontmatter: fm, content: body });
     }
@@ -175,8 +175,7 @@ function splitIntoSlides(text: string): SplitSlide[] {
     } else {
       // Closing fence: same character, at least as many as opening, nothing else on line
       const trimmed = line.trim();
-      if (trimmed.length >= codeFenceLen
-        && trimmed === codeFenceChar.repeat(trimmed.length)) {
+      if (trimmed.length >= codeFenceLen && trimmed === codeFenceChar.repeat(trimmed.length)) {
         inCodeFence = false;
       }
     }
@@ -202,7 +201,7 @@ function splitIntoSlides(text: string): SplitSlide[] {
         fmClosed = false;
       }
     } else if (inFM) {
-      if (!fmStarted && line.trim() === '') {
+      if (!fmStarted && line.trim() === "") {
         // Blank line immediately after --- → no frontmatter, switch to body
         inFM = false;
         bodyLines.push(line);
@@ -243,9 +242,9 @@ function buildSlide(index: number, fmString: string, rawContent: string): RawSli
 /** Error thrown when YAML in a structurally-identified frontmatter block fails to parse. */
 export class FrontmatterParseError extends Error {
   constructor(slideIndex: number, yamlSource: string, cause: unknown) {
-    const preview = yamlSource.length > 80 ? yamlSource.slice(0, 80) + '...' : yamlSource;
+    const preview = yamlSource.length > 80 ? `${yamlSource.slice(0, 80)}...` : yamlSource;
     super(`Invalid YAML in slide ${slideIndex} frontmatter:\n${preview}`);
-    this.name = 'FrontmatterParseError';
+    this.name = "FrontmatterParseError";
     this.cause = cause;
   }
 }
@@ -255,7 +254,7 @@ function parseFrontmatter(yaml: string, slideIndex: number): Record<string, unkn
   if (!yaml) return {};
   try {
     const result = parseYaml(yaml);
-    if (result && typeof result === 'object' && !Array.isArray(result)) {
+    if (result && typeof result === "object" && !Array.isArray(result)) {
       return result as Record<string, unknown>;
     }
   } catch (err) {
@@ -283,7 +282,7 @@ function extractSlots(content: string): { defaultSlot: string; slots: Record<str
   const slotLines: Map<string | null, string[]> = new Map([[null, []]]);
 
   let inCodeFence = false;
-  let codeFenceChar = '';
+  let codeFenceChar = "";
   let codeFenceLen = 0;
 
   for (const line of lines) {
@@ -297,8 +296,7 @@ function extractSlots(content: string): { defaultSlot: string; slots: Record<str
       }
     } else {
       const trimmed = line.trim();
-      if (trimmed.length >= codeFenceLen
-        && trimmed === codeFenceChar.repeat(trimmed.length)) {
+      if (trimmed.length >= codeFenceLen && trimmed === codeFenceChar.repeat(trimmed.length)) {
         inCodeFence = false;
       }
     }
@@ -315,11 +313,11 @@ function extractSlots(content: string): { defaultSlot: string; slots: Record<str
     }
   }
 
-  const defaultSlot = slotLines.get(null)!.join('\n').trim();
+  const defaultSlot = slotLines.get(null)!.join("\n").trim();
   const slots: Record<string, string> = {};
   for (const [name, sLines] of slotLines) {
     if (name !== null) {
-      slots[name] = sLines.join('\n').trim();
+      slots[name] = sLines.join("\n").trim();
     }
   }
 

@@ -1,19 +1,25 @@
 // Registry
 // Generic base class, component registry, and layout registry
 
-import { NODE_TYPE, type ElementNode, type ComponentNode, type SlideNode, type ContainerNode, type StackNode } from '../model/nodes.js';
-import type { Theme, Slide, Background } from '../model/types.js';
-import type { SyntaxType } from '../model/syntax.js';
-import type { RootContent } from 'mdast';
-import { z } from 'zod';
-
-import type { ScalarParam } from '../model/schema.js';
+import type { RootContent } from "mdast";
+import { z } from "zod";
+import {
+  type ComponentNode,
+  type ContainerNode,
+  type ElementNode,
+  NODE_TYPE,
+  type SlideNode,
+  type StackNode,
+} from "../model/nodes.js";
+import type { ScalarParam } from "../model/schema.js";
+import type { SyntaxType } from "../model/syntax.js";
+import type { Background, Slide, Theme } from "../model/types.js";
 
 // Re-export ComponentNode for convenience
-export type { ComponentNode } from '../model/nodes.js';
+export type { ComponentNode } from "../model/nodes.js";
 
 /** Frontmatter keys consumed by the compiler — cannot be used as layout param names. */
-export const RESERVED_FRONTMATTER_KEYS = new Set(['layout', 'name', 'notes', 'variant'] as const);
+export const RESERVED_FRONTMATTER_KEYS = new Set(["layout", "name", "notes", "variant"] as const);
 
 // ============================================
 // GENERIC REGISTRY BASE CLASS
@@ -126,14 +132,17 @@ export type ScalarComponentDefinition<
 };
 
 /** Extract the props type from a component definition's schema. Hides Zod from component authors. */
-export type ComponentProps<T extends { schema: z.ZodTypeAny }> = z.infer<T['schema']>;
+export type ComponentProps<T extends { schema: z.ZodTypeAny }> = z.infer<T["schema"]>;
 
 // ============================================
 // DIRECTIVE DESERIALIZATION (private)
 // ============================================
 
 /** Deserializer: converts directive attributes + body text into a ComponentNode. */
-export type DirectiveDeserializer = (attributes: Record<string, string | null | undefined>, body: string) => ComponentNode;
+export type DirectiveDeserializer = (
+  attributes: Record<string, string | null | undefined>,
+  body: string,
+) => ComponentNode;
 
 /**
  * Coerce string attribute values from directive markup to JS types.
@@ -142,9 +151,9 @@ export type DirectiveDeserializer = (attributes: Record<string, string | null | 
 export function coerceAttributes(attrs: Record<string, string | null | undefined>): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(attrs)) {
-    if (v === 'true') result[k] = true;
-    else if (v === 'false') result[k] = false;
-    else if (typeof v === 'string' && v !== '' && !isNaN(Number(v))) result[k] = Number(v);
+    if (v === "true") result[k] = true;
+    else if (v === "false") result[k] = false;
+    else if (typeof v === "string" && v !== "" && !Number.isNaN(Number(v))) result[k] = Number(v);
     else result[k] = v;
   }
   return result;
@@ -167,7 +176,7 @@ function buildDeserializer(
         props = paramsSchema.strict().parse(coerced);
       } catch (e: unknown) {
         if (e instanceof z.ZodError) {
-          const issues = e.issues.map(i => i.message).join('; ');
+          const issues = e.issues.map((i) => i.message).join("; ");
           throw new Error(`Invalid parameters for component '${componentName}': ${issues}`);
         }
         throw e;
@@ -175,13 +184,12 @@ function buildDeserializer(
     } else {
       props = coerced;
     }
-    if (body && body.trim()) {
+    if (body?.trim()) {
       props.body = body.trim();
     }
     return component(componentName, props);
   };
 }
-
 
 // ============================================
 // DEFINE COMPONENT (standalone)
@@ -198,7 +206,11 @@ export function defineComponent<TBody extends z.ZodTypeAny, TTokens = undefined>
   directive?: boolean;
   tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
   mdast?: MdastHandler;
-  expand: (props: { body: z.infer<TBody> }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
+  expand: (
+    props: { body: z.infer<TBody> },
+    context: ExpansionContext,
+    tokens: TTokens,
+  ) => SlideNode | Promise<SlideNode>;
 }): ScalarComponentDefinition<TBody, TTokens>;
 
 /**
@@ -213,7 +225,11 @@ export function defineComponent<TBody extends z.ZodTypeAny, TParams extends Sche
   directive?: boolean;
   tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
   mdast?: MdastHandler;
-  expand: (props: { body: z.infer<TBody> } & z.infer<z.ZodObject<TParams>>, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
+  expand: (
+    props: { body: z.infer<TBody> } & z.infer<z.ZodObject<TParams>>,
+    context: ExpansionContext,
+    tokens: TTokens,
+  ) => SlideNode | Promise<SlideNode>;
 }): ScalarComponentDefinition<TBody, TTokens>;
 
 /**
@@ -228,7 +244,11 @@ export function defineComponent<TShape extends SchemaShape, TTokens = undefined>
   directive?: boolean;
   tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
   mdast?: MdastHandler;
-  expand: (props: z.infer<z.ZodObject<TShape>> & { body?: string }, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
+  expand: (
+    props: z.infer<z.ZodObject<TShape>> & { body?: string },
+    context: ExpansionContext,
+    tokens: TTokens,
+  ) => SlideNode | Promise<SlideNode>;
 }): ScalarComponentDefinition<z.ZodObject<TShape>, TTokens>;
 
 /**
@@ -259,7 +279,7 @@ export function defineComponent<TProps, TTokens = undefined>(def: {
 
 // Implementation
 export function defineComponent(def: any): ComponentDefinition & { schema?: z.ZodTypeAny } {
-  const bodySchema: z.ZodTypeAny | null = 'body' in def ? def.body : null;
+  const bodySchema: z.ZodTypeAny | null = "body" in def ? def.body : null;
   const paramsShape: SchemaShape = def.params ?? {};
   const paramsSchema = Object.keys(paramsShape).length > 0 ? z.object(paramsShape) : null;
   const slots: readonly string[] | undefined = def.slots;
@@ -268,7 +288,7 @@ export function defineComponent(def: any): ComponentDefinition & { schema?: z.Zo
 
   const result: ComponentDefinition & { schema?: z.ZodTypeAny } = {
     name: def.name as string,
-    expand: def.expand as ComponentDefinition['expand'],
+    expand: def.expand as ComponentDefinition["expand"],
     tokens: def.tokens as string[],
     params: def.params,
     slots,
@@ -303,7 +323,7 @@ export function defineComponent(def: any): ComponentDefinition & { schema?: z.Zo
  */
 class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
   constructor() {
-    super('Component');
+    super("Component");
   }
 
   /**
@@ -322,7 +342,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
         if (existing && existing.name !== def.name) {
           throw new Error(
             `MDAST node type '${nodeType}' already handled by '${existing.name}'. ` +
-            `Cannot register '${def.name}' for the same type.`,
+              `Cannot register '${def.name}' for the same type.`,
           );
         }
       }
@@ -377,17 +397,17 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     if (!node.tokens) {
       throw new Error(
         `Component '${node.componentName}' requires tokens but none were provided. ` +
-        `Tokens must be passed by the parent (layout or composition component). ` +
-        `Required: [${requiredTokens.join(', ')}]`
+          `Tokens must be passed by the parent (layout or composition component). ` +
+          `Required: [${requiredTokens.join(", ")}]`,
       );
     }
     const missing = requiredTokens.filter(
-      (key: string) => node.tokens![key] === undefined || node.tokens![key] === null
+      (key: string) => node.tokens![key] === undefined || node.tokens![key] === null,
     );
     if (missing.length) {
       throw new Error(
-        `Component '${node.componentName}' is missing required tokens: [${missing.join(', ')}]. ` +
-        `All tokens must be provided by the parent component or layout.`
+        `Component '${node.componentName}' is missing required tokens: [${missing.join(", ")}]. ` +
+          `All tokens must be provided by the parent component or layout.`,
       );
     }
     return def.expand(node.props, context, node.tokens as never);
@@ -410,18 +430,14 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
       const container = node as ContainerNode<SlideNode>;
       return {
         ...container,
-        children: await Promise.all(
-          container.children.map(c => this.expandTree(c, context))
-        ),
+        children: await Promise.all(container.children.map((c) => this.expandTree(c, context))),
       } as ContainerNode;
     }
     if (node.type === NODE_TYPE.STACK) {
       const stack = node as StackNode<SlideNode>;
       return {
         ...stack,
-        children: await Promise.all(
-          stack.children.map(c => this.expandTree(c, context))
-        ),
+        children: await Promise.all(stack.children.map((c) => this.expandTree(c, context))),
       } as StackNode;
     }
 
@@ -437,12 +453,12 @@ export const componentRegistry = new ComponentRegistry();
  */
 export function isComponentNode(node: unknown): node is ComponentNode {
   return (
-    typeof node === 'object' &&
+    typeof node === "object" &&
     node !== null &&
-    'type' in node &&
+    "type" in node &&
     (node as { type: unknown }).type === NODE_TYPE.COMPONENT &&
-    'componentName' in node &&
-    'props' in node
+    "componentName" in node &&
+    "props" in node
   );
 }
 
@@ -491,18 +507,25 @@ export interface TypedLayoutDefinition<TTokens = unknown> extends LayoutDefiniti
  * TypeScript enforces: params accepts only ScalarParam fields.
  * Slots (optional) are a string array — each becomes ComponentNode[] in render.
  */
-export function defineLayout<TParams extends ScalarShape, const TSlots extends readonly string[] = readonly [], TTokens = undefined>(def: {
+export function defineLayout<
+  TParams extends ScalarShape,
+  const TSlots extends readonly string[] = readonly [],
+  TTokens = undefined,
+>(def: {
   name: string;
   description: string;
   params: TParams;
   slots?: TSlots;
   tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
-  render: (props: z.infer<z.ZodObject<TParams>> & SlotsToProps<TSlots>, tokens: TTokens extends undefined ? (Record<string, unknown> | undefined) : TTokens) => Slide;
+  render: (
+    props: z.infer<z.ZodObject<TParams>> & SlotsToProps<TSlots>,
+    tokens: TTokens extends undefined ? Record<string, unknown> | undefined : TTokens,
+  ) => Slide;
 }): TypedLayoutDefinition<TTokens extends undefined ? Record<string, unknown> : TTokens> {
   for (const key of Object.keys(def.params)) {
     if (RESERVED_FRONTMATTER_KEYS.has(key as any)) {
       throw new Error(
-        `Layout '${def.name}': param '${key}' is a reserved frontmatter key (${[...RESERVED_FRONTMATTER_KEYS].join(', ')}). Use a different name.`,
+        `Layout '${def.name}': param '${key}' is a reserved frontmatter key (${[...RESERVED_FRONTMATTER_KEYS].join(", ")}). Use a different name.`,
       );
     }
   }
@@ -516,7 +539,7 @@ export function defineLayout<TParams extends ScalarShape, const TSlots extends r
  */
 class LayoutRegistry extends Registry<LayoutDefinition> {
   constructor() {
-    super('Layout');
+    super("Layout");
   }
 
   /**
@@ -526,17 +549,13 @@ class LayoutRegistry extends Registry<LayoutDefinition> {
   resolveTokens(layoutName: string, variant: string, theme: Theme): Record<string, unknown> {
     const config = theme.layouts?.[layoutName];
     if (!config) {
-      throw new Error(
-        `Layout '${layoutName}' requires tokens but theme.layouts.${layoutName} is missing.`
-      );
+      throw new Error(`Layout '${layoutName}' requires tokens but theme.layouts.${layoutName} is missing.`);
     }
 
     const tokens = config.variants[variant];
     if (!tokens) {
-      const available = Object.keys(config.variants).join(', ');
-      throw new Error(
-        `Unknown variant '${variant}' for layout '${layoutName}'. Available: ${available}`
-      );
+      const available = Object.keys(config.variants).join(", ");
+      throw new Error(`Unknown variant '${variant}' for layout '${layoutName}'. Available: ${available}`);
     }
 
     return tokens as Record<string, unknown>;
@@ -549,7 +568,7 @@ export const layoutRegistry = new LayoutRegistry();
 // MASTER REGISTRY
 // ============================================
 
-import { Bounds } from '../model/bounds.js';
+import type { Bounds } from "../model/bounds.js";
 
 /**
  * A master slide definition. Masters provide slide chrome (footer, slide number),
@@ -560,7 +579,10 @@ export interface MasterDefinition {
   /** Token keys that must be present in theme.masters for this master. */
   tokens: string[];
   /** Build master content from resolved tokens and slide dimensions. */
-  getContent: (tokens: Record<string, unknown>, slideSize: { width: number; height: number }) => {
+  getContent: (
+    tokens: Record<string, unknown>,
+    slideSize: { width: number; height: number },
+  ) => {
     content: ComponentNode;
     contentBounds: Bounds;
     background: Background;
@@ -602,7 +624,7 @@ export function defineMaster<TTokens = undefined>(def: {
  */
 class MasterRegistry extends Registry<MasterDefinition> {
   constructor() {
-    super('Master');
+    super("Master");
   }
 
   /**
@@ -612,17 +634,13 @@ class MasterRegistry extends Registry<MasterDefinition> {
   resolveTokens(masterName: string, variant: string, theme: Theme): Record<string, unknown> {
     const config = theme.masters?.[masterName];
     if (!config) {
-      throw new Error(
-        `Master '${masterName}' requires tokens but theme.masters.${masterName} is missing.`
-      );
+      throw new Error(`Master '${masterName}' requires tokens but theme.masters.${masterName} is missing.`);
     }
 
     const tokens = config.variants[variant];
     if (!tokens) {
-      const available = Object.keys(config.variants).join(', ');
-      throw new Error(
-        `Unknown variant '${variant}' for master '${masterName}'. Available: ${available}`
-      );
+      const available = Object.keys(config.variants).join(", ");
+      throw new Error(`Unknown variant '${variant}' for master '${masterName}'. Available: ${available}`);
     }
 
     return tokens as Record<string, unknown>;
@@ -640,7 +658,11 @@ export const masterRegistry = new MasterRegistry();
  * Tokens are stored separately from props to avoid naming conflicts
  * (e.g., card has both props.title: string and tokens.title: TextTokens).
  */
-export function component<TProps>(name: string, props: TProps, tokens?: Record<string, unknown> | object): ComponentNode<TProps> {
+export function component<TProps>(
+  name: string,
+  props: TProps,
+  tokens?: Record<string, unknown> | object,
+): ComponentNode<TProps> {
   const node: ComponentNode<TProps> = {
     type: NODE_TYPE.COMPONENT,
     componentName: name,

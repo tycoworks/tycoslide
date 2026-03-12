@@ -1,40 +1,52 @@
 // Table Component - Native pptxgenjs table element
 
+import type { Table as MdastTable, RootContent } from "mdast";
 import {
-  componentRegistry, defineComponent, component, type ComponentNode, type ExpansionContext, type SchemaShape,
-  SYNTAX, NODE_TYPE,
-  type TextNode, type TableCellData, type TableCellInput, type TextContent,
-  type BorderStyle, type TextStyleName, type HorizontalAlignment, type VerticalAlignment,
-  schema, parseMarkdown,
-} from 'tycoslide';
-import { Component } from './names.js';
-import type { TextTokens } from './text.js';
-import type { Table as MdastTable, RootContent } from 'mdast';
-import type { Root } from 'mdast';
+  type BorderStyle,
+  type ComponentNode,
+  component,
+  componentRegistry,
+  defineComponent,
+  type ExpansionContext,
+  type HorizontalAlignment,
+  NODE_TYPE,
+  parseMarkdown,
+  type SchemaShape,
+  SYNTAX,
+  schema,
+  type TableCellData,
+  type TableCellInput,
+  type TextContent,
+  type TextNode,
+  type TextStyleName,
+  type VerticalAlignment,
+} from "tycoslide";
+import { Component } from "./names.js";
+import type { TextTokens } from "./text.js";
 
 // ============================================
 // TABLE TOKENS
 // ============================================
 
 export const TABLE_TOKEN = {
-  BORDER_STYLE: 'borderStyle',
-  BORDER_COLOR: 'borderColor',
-  BORDER_WIDTH: 'borderWidth',
-  HEADER_BACKGROUND: 'headerBackground',
-  HEADER_BACKGROUND_OPACITY: 'headerBackgroundOpacity',
-  HEADER_TEXT_STYLE: 'headerTextStyle',
-  CELL_BACKGROUND: 'cellBackground',
-  CELL_BACKGROUND_OPACITY: 'cellBackgroundOpacity',
-  CELL_TEXT_STYLE: 'cellTextStyle',
-  CELL_PADDING: 'cellPadding',
-  HALIGN: 'hAlign',
-  VALIGN: 'vAlign',
-  CELL_LINE_HEIGHT: 'cellLineHeight',
-  HEADER_TEXT_COLOR: 'headerTextColor',
-  CELL_TEXT_COLOR: 'cellTextColor',
-  LINK_COLOR: 'linkColor',
-  LINK_UNDERLINE: 'linkUnderline',
-  ACCENTS: 'accents',
+  BORDER_STYLE: "borderStyle",
+  BORDER_COLOR: "borderColor",
+  BORDER_WIDTH: "borderWidth",
+  HEADER_BACKGROUND: "headerBackground",
+  HEADER_BACKGROUND_OPACITY: "headerBackgroundOpacity",
+  HEADER_TEXT_STYLE: "headerTextStyle",
+  CELL_BACKGROUND: "cellBackground",
+  CELL_BACKGROUND_OPACITY: "cellBackgroundOpacity",
+  CELL_TEXT_STYLE: "cellTextStyle",
+  CELL_PADDING: "cellPadding",
+  HALIGN: "hAlign",
+  VALIGN: "vAlign",
+  CELL_LINE_HEIGHT: "cellLineHeight",
+  HEADER_TEXT_COLOR: "headerTextColor",
+  CELL_TEXT_COLOR: "cellTextColor",
+  LINK_COLOR: "linkColor",
+  LINK_UNDERLINE: "linkUnderline",
+  ACCENTS: "accents",
 } as const;
 
 export type TableTokens = {
@@ -80,20 +92,20 @@ interface TableInternalProps {
  */
 function parseGfmTable(body: string): string[][] {
   const tree = parseMarkdown(body);
-  const tableChild = tree.children.find(c => c.type === SYNTAX.TABLE);
+  const tableChild = tree.children.find((c) => c.type === SYNTAX.TABLE);
   if (!tableChild) {
-    throw new Error(':::table body must contain a GFM table (| col1 | col2 | ...)');
+    throw new Error(":::table body must contain a GFM table (| col1 | col2 | ...)");
   }
   const tableNode = tableChild as unknown as MdastTable;
-  return tableNode.children.map(row =>
-    row.children.map(cell => {
+  return tableNode.children.map((row) =>
+    row.children.map((cell) => {
       const children = cell.children;
-      if (children.length === 0) return '';
+      if (children.length === 0) return "";
       const start = children[0].position?.start.offset;
       const end = children[children.length - 1].position?.end.offset;
-      if (start == null || end == null) return '';
+      if (start == null || end == null) return "";
       return body.slice(start, end).trim();
-    })
+    }),
   );
 }
 
@@ -110,26 +122,30 @@ export const tableComponent = defineComponent({
     nodeTypes: [SYNTAX.TABLE],
     compile: (node: RootContent, source: string): ComponentNode | null => {
       const tableNode = node as unknown as MdastTable;
-      const rows = tableNode.children.map(row =>
-        row.children.map(cell => {
+      const rows = tableNode.children.map((row) =>
+        row.children.map((cell) => {
           const children = cell.children;
-          if (children.length === 0) return '';
+          if (children.length === 0) return "";
           const start = children[0].position?.start.offset;
           const end = children[children.length - 1].position?.end.offset;
-          if (start == null || end == null) return '';
+          if (start == null || end == null) return "";
           return source.slice(start, end).trim();
-        })
+        }),
       );
       return component(Component.Table, { data: rows, tableProps: { headerRows: 1 } });
     },
   },
-  expand: (async (props: TableInternalProps & { body?: string; headerColumns?: number }, context: ExpansionContext, tokens: TableTokens) => {
+  expand: async (
+    props: TableInternalProps & { body?: string; headerColumns?: number },
+    context: ExpansionContext,
+    tokens: TableTokens,
+  ) => {
     // Determine data source: structured (DSL) or body string (directive)
     let data: (TableCellInput | TextContent)[][];
     let headerRows: number | undefined;
     let headerColumns: number | undefined;
 
-    if ('data' in props && props.data) {
+    if ("data" in props && props.data) {
       // DSL path — structured data
       data = props.data;
       headerRows = props.tableProps?.headerRows;
@@ -140,7 +156,7 @@ export const tableComponent = defineComponent({
       headerRows = 1; // GFM tables always have a header row
       headerColumns = props.headerColumns;
     } else {
-      throw new Error('Table requires either data (DSL) or body (directive)');
+      throw new Error("Table requires either data (DSL) or body (directive)");
     }
 
     // Derive text tokens from table tokens for child text components.
@@ -157,7 +173,7 @@ export const tableComponent = defineComponent({
     // Expand string content through the markdown component to support
     // rich text (**bold**, *italic*, :accent[highlights]) in table cells.
     const expandContent = async (content: TextContent): Promise<TextContent> => {
-      if (typeof content === 'string') {
+      if (typeof content === "string") {
         const expanded = await componentRegistry.expandTree(
           component(Component.Text, { body: content }, textTokens),
           context,
@@ -173,59 +189,63 @@ export const tableComponent = defineComponent({
     // Normalize cells: convert plain strings/TextContent to fully-resolved TableCellData
     const headerRowCount = headerRows ?? 0;
     const headerColumnCount = headerColumns ?? 0;
-    const rows: TableCellData[][] = await Promise.all(data.map((row, rowIndex) =>
-      Promise.all(row.map(async (cell, colIndex) => {
-        // Extract partial cell data from input
-        let partialColor: string | undefined;
-        let partialTextStyle: TextStyleName | undefined;
-        let partialHAlign: HorizontalAlignment | undefined;
-        let partialVAlign: VerticalAlignment | undefined;
-        let content: TextContent;
-        let colspan: number | undefined;
-        let rowspan: number | undefined;
-        let fill: string | undefined;
+    const rows: TableCellData[][] = await Promise.all(
+      data.map((row, rowIndex) =>
+        Promise.all(
+          row.map(async (cell, colIndex) => {
+            // Extract partial cell data from input
+            let partialColor: string | undefined;
+            let partialTextStyle: TextStyleName | undefined;
+            let partialHAlign: HorizontalAlignment | undefined;
+            let partialVAlign: VerticalAlignment | undefined;
+            let content: TextContent;
+            let colspan: number | undefined;
+            let rowspan: number | undefined;
+            let fill: string | undefined;
 
-        if (typeof cell === 'string' || Array.isArray(cell)) {
-          content = await expandContent(cell);
-        } else if ('content' in cell) {
-          const tcd = cell as TableCellInput;
-          content = await expandContent(tcd.content);
-          partialColor = tcd.color;
-          partialTextStyle = tcd.textStyle;
-          partialHAlign = tcd.hAlign;
-          partialVAlign = tcd.vAlign;
-          colspan = tcd.colspan;
-          rowspan = tcd.rowspan;
-          fill = tcd.fill;
-        } else {
-          content = cell;
-        }
+            if (typeof cell === "string" || Array.isArray(cell)) {
+              content = await expandContent(cell);
+            } else if ("content" in cell) {
+              const tcd = cell as TableCellInput;
+              content = await expandContent(tcd.content);
+              partialColor = tcd.color;
+              partialTextStyle = tcd.textStyle;
+              partialHAlign = tcd.hAlign;
+              partialVAlign = tcd.vAlign;
+              colspan = tcd.colspan;
+              rowspan = tcd.rowspan;
+              fill = tcd.fill;
+            } else {
+              content = cell;
+            }
 
-        // Resolve cascade: cell → table tokens → theme defaults
-        const isHeader = rowIndex < headerRowCount || colIndex < headerColumnCount;
-        const textStyle = partialTextStyle ?? (isHeader ? tokens.headerTextStyle : tokens.cellTextStyle);
-        const resolvedTextStyle = context.theme.textStyles[textStyle];
-        const color = partialColor ?? (isHeader ? tokens.headerTextColor : tokens.cellTextColor);
-        const hAlign = partialHAlign ?? tokens.hAlign;
-        const vAlign = partialVAlign ?? tokens.vAlign;
+            // Resolve cascade: cell → table tokens → theme defaults
+            const isHeader = rowIndex < headerRowCount || colIndex < headerColumnCount;
+            const textStyle = partialTextStyle ?? (isHeader ? tokens.headerTextStyle : tokens.cellTextStyle);
+            const resolvedTextStyle = context.theme.textStyles[textStyle];
+            const color = partialColor ?? (isHeader ? tokens.headerTextColor : tokens.cellTextColor);
+            const hAlign = partialHAlign ?? tokens.hAlign;
+            const vAlign = partialVAlign ?? tokens.vAlign;
 
-        const resolved: TableCellData = {
-          content,
-          color,
-          textStyle,
-          resolvedStyle: resolvedTextStyle,
-          hAlign,
-          vAlign,
-          lineHeightMultiplier: tokens.cellLineHeight,
-          linkColor: tokens.linkColor,
-          linkUnderline: tokens.linkUnderline,
-          ...(colspan != null && { colspan }),
-          ...(rowspan != null && { rowspan }),
-          ...(fill != null && { fill }),
-        };
-        return resolved;
-      }))
-    ));
+            const resolved: TableCellData = {
+              content,
+              color,
+              textStyle,
+              resolvedStyle: resolvedTextStyle,
+              hAlign,
+              vAlign,
+              lineHeightMultiplier: tokens.cellLineHeight,
+              linkColor: tokens.linkColor,
+              linkUnderline: tokens.linkUnderline,
+              ...(colspan != null && { colspan }),
+              ...(rowspan != null && { rowspan }),
+              ...(fill != null && { fill }),
+            };
+            return resolved;
+          }),
+        ),
+      ),
+    );
 
     return {
       type: NODE_TYPE.TABLE,
@@ -247,7 +267,7 @@ export const tableComponent = defineComponent({
       linkColor: tokens.linkColor,
       linkUnderline: tokens.linkUnderline,
     };
-  }),
+  },
 });
 
 /**
@@ -270,9 +290,6 @@ export const tableComponent = defineComponent({
  * ], { headerRows: 1 })
  * ```
  */
-export function table(
-  data: (TableCellInput | TextContent)[][],
-  props?: TableProps
-): ComponentNode {
+export function table(data: (TableCellInput | TextContent)[][], props?: TableProps): ComponentNode {
   return component(Component.Table, { data, tableProps: props });
 }

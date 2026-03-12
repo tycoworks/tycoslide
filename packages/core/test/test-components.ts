@@ -7,20 +7,23 @@
 //
 // Import testComponents array and call componentRegistry.register() in tests.
 
-import { defineComponent, component } from '../src/core/rendering/registry.js';
-import type { ExpansionContext, ComponentNode } from '../src/core/rendering/registry.js';
-import { NODE_TYPE } from '../src/core/model/nodes.js';
-
-import { HALIGN, VALIGN, SIZE, DIRECTION, TEXT_STYLE } from '../src/core/model/types.js';
-import { SYNTAX, extractSource } from '../src/core/model/syntax.js';
-import { schema } from '../src/core/model/schema.js';
-import type { RootContent, Heading, Table as MdastTable } from 'mdast';
+import type { Heading, Table as MdastTable, RootContent } from "mdast";
+import { NODE_TYPE } from "../src/core/model/nodes.js";
+import { schema } from "../src/core/model/schema.js";
+import { extractSource, SYNTAX } from "../src/core/model/syntax.js";
+import { DIRECTION, HALIGN, SIZE, TEXT_STYLE, VALIGN } from "../src/core/model/types.js";
+import type { ComponentNode, ExpansionContext } from "../src/core/rendering/registry.js";
+import { component, defineComponent } from "../src/core/rendering/registry.js";
 
 // Local component name const — core tests can't import from tycoslide-components
 export const C = {
-  Text: 'text', Card: 'card', Table: 'table',
-  Image: 'image', Line: 'line',
-  Row: 'row', Column: 'column',
+  Text: "text",
+  Card: "card",
+  Table: "table",
+  Image: "image",
+  Line: "line",
+  Row: "row",
+  Column: "column",
 } as const;
 
 // ============================================
@@ -47,7 +50,7 @@ export const textComponent = defineComponent({
     vAlign: schema.string().optional(),
     content: schema.string().optional(),
   },
-  tokens: ['color', 'style', 'linkColor', 'linkUnderline', 'hAlign', 'vAlign'],
+  tokens: ["color", "style", "linkColor", "linkUnderline", "hAlign", "vAlign"],
   mdast: {
     nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.HEADING, SYNTAX.LIST],
     compile: (node: RootContent, source: string): ComponentNode | null => {
@@ -55,13 +58,13 @@ export const textComponent = defineComponent({
         const heading = node as Heading;
         const style = HEADING_STYLE[heading.depth] ?? TEXT_STYLE.H3;
         const raw = extractSource(heading, source);
-        const content = raw.replace(/^#{1,6}\s*/, '');
+        const content = raw.replace(/^#{1,6}\s*/, "");
         return component(C.Text, { body: content }, { style });
       }
       if (node.type === SYNTAX.PARAGRAPH) {
         const para = node as { children: { type: string }[] };
         if (para.children.length === 1 && para.children[0].type === SYNTAX.IMAGE) {
-          throw new Error('Images cannot be embedded inline in text. Use :::image directive.');
+          throw new Error("Images cannot be embedded inline in text. Use :::image directive.");
         }
       }
       return component(C.Text, { body: extractSource(node, source) });
@@ -89,7 +92,7 @@ export const textComponent = defineComponent({
 
 export const rowComponent = defineComponent({
   name: C.Row,
-  slots: ['children'] as const,
+  slots: ["children"] as const,
   directive: false,
   tokens: [],
   expand: (props: any): any => ({
@@ -111,7 +114,7 @@ export const rowComponent = defineComponent({
 
 export const columnComponent = defineComponent({
   name: C.Column,
-  slots: ['children'] as const,
+  slots: ["children"] as const,
   directive: false,
   tokens: [],
   expand: (props: any): any => ({
@@ -137,10 +140,10 @@ export const cardComponent = defineComponent({
     title: schema.string().optional(),
     description: schema.string().optional(),
   },
-  tokens: ['background', 'padding', 'gap', 'hAlign', 'vAlign', 'title', 'description'],
+  tokens: ["background", "padding", "gap", "hAlign", "vAlign", "title", "description"],
   expand: (props: any, _ctx: ExpansionContext, tokens: any): any => {
     // Pass title tokens down to child Text component
-    const titleNode = component(C.Text, { body: props.title ?? props.body ?? '' }, tokens.title);
+    const titleNode = component(C.Text, { body: props.title ?? props.body ?? "" }, tokens.title);
     return component(C.Column, { children: [titleNode], padding: tokens.padding });
   },
 });
@@ -163,7 +166,7 @@ export const lineComponent = defineComponent({
     beginArrow: schema.string().optional(),
     endArrow: schema.string().optional(),
   },
-  tokens: ['color', 'width', 'dashType'],
+  tokens: ["color", "width", "dashType"],
   expand: () => ({}) as any,
 });
 
@@ -174,24 +177,32 @@ export const tableComponent = defineComponent({
     headerColumns: schema.number().optional(),
   },
   tokens: [
-    'borderStyle', 'borderColor', 'borderWidth',
-    'headerBackground', 'headerBackgroundOpacity', 'headerTextStyle',
-    'cellBackground', 'cellBackgroundOpacity', 'cellTextStyle',
-    'cellPadding', 'hAlign', 'vAlign',
+    "borderStyle",
+    "borderColor",
+    "borderWidth",
+    "headerBackground",
+    "headerBackgroundOpacity",
+    "headerTextStyle",
+    "cellBackground",
+    "cellBackgroundOpacity",
+    "cellTextStyle",
+    "cellPadding",
+    "hAlign",
+    "vAlign",
   ],
   mdast: {
     nodeTypes: [SYNTAX.TABLE],
     compile: (node: RootContent, source: string): ComponentNode | null => {
       const tableNode = node as unknown as MdastTable;
-      const rows = tableNode.children.map(row =>
-        row.children.map(cell => {
+      const rows = tableNode.children.map((row) =>
+        row.children.map((cell) => {
           const children = cell.children;
-          if (children.length === 0) return '';
+          if (children.length === 0) return "";
           const start = children[0].position?.start.offset;
           const end = children[children.length - 1].position?.end.offset;
-          if (start == null || end == null) return '';
+          if (start == null || end == null) return "";
           return source.slice(start, end).trim();
-        })
+        }),
       );
       return component(C.Table, { data: rows, tableProps: { headerRows: 1 } });
     },

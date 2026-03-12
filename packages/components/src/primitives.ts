@@ -1,18 +1,31 @@
 // Primitive components: line, shape, slideNumber
 
 import {
-  defineComponent, component, type ComponentNode, type SchemaShape, type ExpansionContext,
-  NODE_TYPE, type LineNode, type ShapeNode, type SlideNumberNode,
-  ARROW_TYPE_VALUES, SHAPE_VALUES,
-  type ShapeName, type ArrowType, type DashType, type TextStyleName, type HorizontalAlignment, type VerticalAlignment,
+  ARROW_TYPE_VALUES,
+  type ArrowType,
+  type ComponentNode,
+  component,
+  type DashType,
+  defineComponent,
+  type ExpansionContext,
+  type HorizontalAlignment,
+  type LineNode,
+  NODE_TYPE,
+  type SchemaShape,
+  SHAPE_VALUES,
+  type ShapeName,
+  type ShapeNode,
+  type SlideNumberNode,
   schema,
-} from 'tycoslide';
-import { Component } from './names.js';
+  type TextStyleName,
+  type VerticalAlignment,
+} from "tycoslide";
+import { Component } from "./names.js";
 
 export const LINE_TOKEN = {
-  COLOR: 'color',
-  WIDTH: 'width',
-  DASH_TYPE: 'dashType',
+  COLOR: "color",
+  WIDTH: "width",
+  DASH_TYPE: "dashType",
 } as const;
 
 export type LineTokens = {
@@ -22,10 +35,10 @@ export type LineTokens = {
 };
 
 export const SLIDE_NUMBER_TOKEN = {
-  STYLE: 'style',
-  COLOR: 'color',
-  HALIGN: 'hAlign',
-  VALIGN: 'vAlign',
+  STYLE: "style",
+  COLOR: "color",
+  HALIGN: "hAlign",
+  VALIGN: "vAlign",
 } as const;
 
 export type SlideNumberTokens = {
@@ -36,11 +49,11 @@ export type SlideNumberTokens = {
 };
 
 export const SHAPE_TOKEN = {
-  FILL: 'fill',
-  FILL_OPACITY: 'fillOpacity',
-  BORDER_COLOR: 'borderColor',
-  BORDER_WIDTH: 'borderWidth',
-  CORNER_RADIUS: 'cornerRadius',
+  FILL: "fill",
+  FILL_OPACITY: "fillOpacity",
+  BORDER_COLOR: "borderColor",
+  BORDER_WIDTH: "borderWidth",
+  CORNER_RADIUS: "cornerRadius",
 } as const;
 
 export type ShapeTokens = {
@@ -146,7 +159,11 @@ export function shape(tokens: ShapeTokens, props: ShapeProps): ComponentNode {
 // Full props for DSL callers (no styling overrides — all comes from tokens)
 export type SlideNumberProps = {};
 
-function expandSlideNumber(_props: SlideNumberProps, context: ExpansionContext, tokens: SlideNumberTokens): SlideNumberNode {
+function expandSlideNumber(
+  _props: SlideNumberProps,
+  context: ExpansionContext,
+  tokens: SlideNumberTokens,
+): SlideNumberNode {
   const style = tokens.style;
   return {
     type: NODE_TYPE.SLIDE_NUMBER,
