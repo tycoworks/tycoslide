@@ -14,7 +14,6 @@
     "tycoslide": "./dist/cli/index.js"
   },
   "scripts": {
-    "postinstall": "patch-package",
     "build": "tsc && chmod +x dist/cli/index.js",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
@@ -36,7 +35,7 @@
     "debug": "^4.4.3",
     "hono": "^4.11.9",
     "image-size": "^1.1.1",
-    "pptxgenjs": "4.0.1",
+    "@tycoworks/pptxgenjs": "^4.0.1",
     "remark-directive": "^4.0.0",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
@@ -48,8 +47,7 @@
     "@fontsource/inter": "^5.0.0",
     "@types/debug": "^4.1.12",
     "@types/node": "^20.19.30",
-    "patch-package": "^8.0.1",
-    "playwright": "^1.58.2",
+"playwright": "^1.58.2",
     "tsx": "^4.21.0",
     "typescript": "^5.3.0"
   }

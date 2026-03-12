@@ -1,7 +1,7 @@
 // PPTX Renderer
 // Renders PositionedNode trees directly to PowerPoint via pptxgenjs
 
-import PptxGenJSDefault from 'pptxgenjs';
+import PptxGenJSDefault from '@tycoworks/pptxgenjs';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- CJS/ESM interop: .default exists at runtime but not in types
 const PptxGenJS = (PptxGenJSDefault as any).default || PptxGenJSDefault;
 type PptxSlide = ReturnType<InstanceType<typeof PptxGenJS>['addSlide']>;
