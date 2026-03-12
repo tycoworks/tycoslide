@@ -183,6 +183,7 @@ export function stack(...args: any[]): ComponentNode {
 export type GridProps = {
   columns: number;
   gap?: GapSize;
+  height?: number | SizeValue; // inches, SIZE.FILL (equal rows), or SIZE.HUG (content-sized rows). Default: FILL
 };
 
 interface GridInternalProps extends GridProps {
@@ -195,29 +196,33 @@ export const gridComponent = defineComponent({
   directive: false,
   tokens: [],
   expand: (props: GridInternalProps) => {
-    const { columns, gap = GAP.NORMAL, children } = props;
+    const { columns, gap = GAP.NORMAL, height = SIZE.FILL, children } = props;
 
     // Wrap each child in a column cell so items share row width equally
-    const cells = children.map((child) => column({ width: SIZE.FILL, height: SIZE.FILL }, child));
+    const cells = children.map((child) => column({ width: SIZE.FILL, height }, child));
 
-    // Chunk cells into rows of equal height
+    // Chunk cells into rows
     const rows: ComponentNode[] = [];
     for (let i = 0; i < cells.length; i += columns) {
-      rows.push(row({ gap, height: SIZE.FILL }, ...cells.slice(i, i + columns)));
+      rows.push(row({ gap, height }, ...cells.slice(i, i + columns)));
     }
 
-    return column({ gap, height: SIZE.FILL }, ...rows);
+    // Wrapper column mirrors caller's height so outer containers can position it
+    return column({ gap, height }, ...rows);
   },
 });
 
 /**
- * Grid arranges children into equal-sized rows of N columns.
- * Always fills available space with equal distribution.
+ * Grid arranges children into rows of N columns with equal column widths.
+ *
+ * By default, rows fill available height equally (SIZE.FILL).
+ * Pass `height: SIZE.HUG` for content-sized rows.
  *
  * @example
  * ```typescript
- * grid(3, ...cards)
- * grid({ columns: 4, gap: GAP.TIGHT }, ...icons)
+ * grid(3, ...cards)                                           // fill-height rows
+ * grid({ columns: 2, height: SIZE.HUG }, ...items)            // content-sized rows
+ * grid({ columns: 2, height: SIZE.HUG, gap: GAP.TIGHT }, ...) // tight content grid
  * ```
  */
 export function grid(props: GridProps, ...children: SlideNode[]): ComponentNode;
@@ -225,6 +230,7 @@ export function grid(columns: number, ...children: SlideNode[]): ComponentNode;
 export function grid(...args: any[]): ComponentNode {
   let columns: number;
   let gap: GapSize | undefined;
+  let height: number | SizeValue | undefined;
   let children: SlideNode[];
 
   if (typeof args[0] === "number") {
@@ -234,8 +240,9 @@ export function grid(...args: any[]): ComponentNode {
     const props = args[0] as GridProps;
     columns = props.columns;
     gap = props.gap;
+    height = props.height;
     children = args.slice(1);
   }
 
-  return component(Component.Grid, { columns, gap, children });
+  return component(Component.Grid, { columns, gap, height, children });
 }

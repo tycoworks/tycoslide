@@ -5,10 +5,9 @@ theme: tycoslide-theme-default
 ---
 layout: title
 variant: hero
-title: tycoslide
-subtitle: Build presentations like software.
-image: $tycoworks.tycoslide
-notes: Opening slide. White background with logo.
+title: "**tycoslide**"
+subtitle: "Build presentations like software.:purple[▌]"
+notes: Opening slide. Clean centered title with cursor.
 ---
 
 ---
@@ -16,12 +15,13 @@ layout: agenda
 variant: hero
 title: Agenda
 items:
-  - 1. What is tycoslide?
-  - 2. Three pillars
-  - 3. Presentations as code
-  - 4. Where tycoslide fits
-  - 5. Roadmap
-notes: Agenda layout — split variant with title left, items right, no footer.
+  - What is tycoslide?
+  - Three Pillars
+  - Presentations as Code
+  - The Build Pipeline
+  - The Landscape
+  - The Key Metric
+notes: Agenda layout — grid variant with numbered white cards.
 ---
 
 ---
@@ -30,7 +30,6 @@ title: What is tycoslide?
 eyebrow: The Product
 body: "A presentation :purple[**build tool**] that generates :purple[**editable PowerPoint slides**] from markdown, with :purple[**TypeScript-based themes**] and :purple[**build-time validation**]."
 variant: hero
-caption: PowerPoint for compatibility. TypeScript for themes. Validation for correctness.
 notes: Positioning one-liner. Four anchors in one sentence.
 ---
 
@@ -40,32 +39,31 @@ variant: flat
 title: Three Pillars
 eyebrow: Solution
 cards:
-  - title: Editable PowerPoint Slides
+  - title: Editable PowerPoint
     description: Native .pptx files that open and edit in PowerPoint, Keynote, and Google Slides.
-    image: $icons.rocket
-  - title: Pure TypeScript Themes
-    description: Design tokens, components, and layouts defined in one language. Type-checked end to end.
-    image: $icons.editNote
+    image: $icons.description
+  - title: TypeScript Themes
+    description: Design tokens, components, and layouts in one language. Type-checked end to end.
+    image: $icons.palette
   - title: Build-Time Validation
-    description: Layout overflows, missing tokens, and invalid parameters surface at build time.
+    description: Overflows, missing tokens, and invalid parameters caught before the deck ships.
     image: $icons.shield
 notes: Three pillars from positioning framework. Each maps to one supporting argument.
 ---
 
 ---
-layout: body
+layout: two-column
 variant: default
 title: Presentations as Code
 eyebrow: How It Works
 notes: Meta slide — the code block shows the markdown source for this very slide.
 ---
 
-This is the markdown that generates the slide you are looking at:
+::left::
 
 ```markdown
 ---
 layout: body
-variant: default
 title: Presentations as Code
 eyebrow: How It Works
 ---
@@ -74,6 +72,10 @@ This is the markdown that generates
 the slide you are looking at.
 ```
 
+::right::
+
+This is the markdown that generates the slide you are looking at.
+
 tycoslide supports **bold**, *italic*, [links](https://tycoslide.com), ~~strikethrough~~, ++underline++, and :purple[accent colors].
 
 ---
@@ -81,7 +83,7 @@ layout: stat
 variant: default
 value: "0"
 label: Silent Failures
-caption: Layout overflows, missing tokens, and invalid parameters are caught at build time — not after the deck ships.
+caption: Catch layout overflows, missing design tokens, and invalid parameters at build time. Presentations are finally treated with the same rigorous QA as production software.
 notes: Stat layout — big number with label and caption.
 ---
 
@@ -168,6 +170,6 @@ notes: Pull quote with left accent bar. He did not quite say that.
 layout: end
 variant: default
 title: tycoslide
-subtitle: Build presentations like software.
+subtitle: Build presentations like software
 notes: Closing slide. Mirrors the title.
 ---
