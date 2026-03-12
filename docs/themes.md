@@ -28,7 +28,7 @@ title: My Presentation
 
 ### Available Themes
 
-**`tycoslide-theme-default`** is the currently available theme. Neutral gray surfaces with Inter font. Includes 17 layouts and all built-in components. See [Layouts](./layouts.md) for the full layout reference.
+**`tycoslide-theme-default`** is the currently available theme. Neutral gray surfaces with Inter font. Includes 11 layouts and all built-in components. See [Layouts](./layouts.md) for the full layout reference.
 
 ```bash
 npm install tycoslide-theme-default

@@ -8,19 +8,13 @@ import { assets } from "./assets.js";
 import {
   agendaLayout,
   bodyLayout,
-  captionLayout,
   cardsLayout,
-  comparisonLayout,
   endLayout,
-  imageLayout,
-  imageLeftLayout,
-  imageRightLayout,
   quoteLayout,
   sectionLayout,
   statementLayout,
   statLayout,
   titleLayout,
-  titleOnlyLayout,
   twoColumnLayout,
 } from "./layouts.js";
 import { defaultMaster, minimalMaster } from "./master.js";
@@ -70,6 +64,7 @@ const cellPadding = unit * 2; // 0.0625"
 const bulletIndentMultiplier = 1.5;
 const lineSpacing = 1.2;
 const footerHeight = unit * 8;
+const margin = 0.5;
 
 // ============================================
 // BORDERS
@@ -190,18 +185,6 @@ const statValue: PlainTextTokens = {
 };
 const statLabel: PlainTextTokens = {
   style: TEXT_STYLE.H3,
-  color: colors.textMuted,
-  hAlign: HALIGN.CENTER,
-  vAlign: VALIGN.MIDDLE,
-};
-const subHeading: PlainTextTokens = {
-  style: TEXT_STYLE.H4,
-  color: colors.text,
-  hAlign: HALIGN.LEFT,
-  vAlign: VALIGN.MIDDLE,
-};
-const captionPlain: PlainTextTokens = {
-  style: TEXT_STYLE.SMALL,
   color: colors.textMuted,
   hAlign: HALIGN.CENTER,
   vAlign: VALIGN.MIDDLE,
@@ -359,7 +342,12 @@ export const theme = {
       lineHeightMultiplier: 1.0,
       bulletIndentPt: 8 * bulletIndentMultiplier,
     },
-    code: { fontFamily: assets.fonts.firaCode, fontSize: 11, lineHeightMultiplier: 1.6, bulletIndentPt: 0 },
+    code: {
+      fontFamily: assets.fonts.firaCode,
+      fontSize: 11,
+      lineHeightMultiplier: 1.6,
+      bulletIndentPt: 0,
+    },
   },
   layouts: {
     title: {
@@ -367,6 +355,12 @@ export const theme = {
         default: titleLayout.tokenMap({
           title: heroTitle,
           subtitle: heroSubtitle,
+          masterVariant: "dark",
+        }),
+        hero: titleLayout.tokenMap({
+          title: { ...heroTitle, color: colors.text },
+          subtitle: { ...heroSubtitle, color: colors.textMuted, style: TEXT_STYLE.BODY },
+          masterVariant: "default",
         }),
       },
     },
@@ -375,6 +369,7 @@ export const theme = {
         default: endLayout.tokenMap({
           title: heroTitle,
           subtitle: heroSubtitle,
+          masterVariant: "dark",
         }),
       },
     },
@@ -405,53 +400,11 @@ export const theme = {
         }),
       },
     },
-    image: {
-      variants: {
-        default: imageLayout.tokenMap({
-          title: headerTitle,
-          eyebrow: headerEyebrow,
-        }),
-      },
-    },
-    "image-left": {
-      variants: {
-        default: imageLeftLayout.tokenMap({
-          title: headerTitle,
-          eyebrow: headerEyebrow,
-          text: bodyText,
-          list: bodyList,
-          ...bodySlotTokens,
-        }),
-      },
-    },
-    "image-right": {
-      variants: {
-        default: imageRightLayout.tokenMap({
-          title: headerTitle,
-          eyebrow: headerEyebrow,
-          text: bodyText,
-          list: bodyList,
-          ...bodySlotTokens,
-        }),
-      },
-    },
     "two-column": {
       variants: {
         default: twoColumnLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
-          text: bodyText,
-          list: bodyList,
-          ...bodySlotTokens,
-        }),
-      },
-    },
-    comparison: {
-      variants: {
-        default: comparisonLayout.tokenMap({
-          title: headerTitle,
-          eyebrow: headerEyebrow,
-          columnTitle: subHeading,
           text: bodyText,
           list: bodyList,
           ...bodySlotTokens,
@@ -474,6 +427,14 @@ export const theme = {
           eyebrow: headerEyebrow,
           intro: bodyText,
           items: bodyList,
+          mode: "default",
+        }),
+        hero: agendaLayout.tokenMap({
+          title: { ...heroTitle, color: colors.primary },
+          eyebrow: headerEyebrow,
+          intro: bodyText,
+          items: { ...bodyList, style: TEXT_STYLE.H3 },
+          mode: "split",
         }),
       },
     },
@@ -523,21 +484,6 @@ export const theme = {
         }),
       },
     },
-    caption: {
-      variants: {
-        default: captionLayout.tokenMap({
-          caption: captionPlain,
-        }),
-      },
-    },
-    "title-only": {
-      variants: {
-        default: titleOnlyLayout.tokenMap({
-          title: headerTitle,
-          eyebrow: headerEyebrow,
-        }),
-      },
-    },
     quote: {
       variants: {
         default: quoteLayout.tokenMap({
@@ -560,8 +506,9 @@ export const theme = {
       variants: {
         default: defaultMaster.tokenMap({
           background: { color: colors.background },
-          margin: 0.5,
+          margin,
           footerHeight,
+          footerLogo: assets.tycoworks.logo,
           footerText: "tycoworks",
           slideNumber: {
             style: TEXT_STYLE.FOOTER,
@@ -582,11 +529,11 @@ export const theme = {
       variants: {
         default: minimalMaster.tokenMap({
           background: { color: colors.background },
-          margin: 0.5,
+          margin,
         }),
         dark: minimalMaster.tokenMap({
           background: { color: colors.text },
-          margin: 0.5,
+          margin,
         }),
       },
     },

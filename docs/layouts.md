@@ -4,7 +4,7 @@ Layouts define the structure of a slide — where the title goes, where body con
 
 ## Available Layouts
 
-`tycoslide-theme-default` provides 17 layouts. Custom themes can define their own (see [Creating Custom Layouts](#creating-custom-layouts)).
+`tycoslide-theme-default` provides 11 layouts. Custom themes can define their own (see [Creating Custom Layouts](#creating-custom-layouts)).
 
 | Name | Purpose |
 |------|---------|
@@ -15,16 +15,10 @@ Layouts define the structure of a slide — where the title goes, where body con
 | `quote` | Standalone pull quote with accent bar and optional attribution |
 | `end` | Closing slide, mirrors the title layout |
 | `blank` | Full canvas for custom content |
-| `image` | Full image with title and optional eyebrow |
-| `image-left` | Image on left, markdown prose on right |
-| `image-right` | Image on right, markdown prose on left |
 | `two-column` | Two equal markdown columns with optional header |
-| `comparison` | Two columns with individual headers |
 | `statement` | Centered body text with optional caption |
 | `agenda` | Title, optional intro, and bullet list |
 | `cards` | Card grid with intro text and optional caption |
-| `caption` | Image with caption text below |
-| `title-only` | Title bar with empty canvas below |
 
 ---
 
@@ -178,47 +172,6 @@ None.
 
 ---
 
-## image
-
-Full image with title and optional eyebrow.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `title` | `string` | Slide title (**required**) |
-| `eyebrow` | `string` | Small label above the title |
-| `image` | `string` | Path to the image file (**required**) |
-
----
-
-## image-left
-
-Image on left, markdown prose on right. Slots: `body`.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `title` | `string` | Slide title |
-| `eyebrow` | `string` | Small label above the title |
-| `image` | `string` | Path to the image file (**required**) |
-
----
-
-## image-right
-
-Mirror of `image-left` — image on right, markdown prose on left. Slots: `body`.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `title` | `string` | Slide title |
-| `eyebrow` | `string` | Small label above the title |
-| `image` | `string` | Path to the image file (**required**) |
-
----
 
 ## two-column
 
@@ -233,20 +186,6 @@ Two equal markdown columns with optional header. Slots: `left`, `right`.
 
 ---
 
-## comparison
-
-Two columns with individual headers for side-by-side comparisons. Unlike `two-column`, which shares a single title across both columns, `comparison` gives each column its own header via `leftTitle` and `rightTitle`. Slots: `left`, `right`.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `title` | `string` | Slide title |
-| `eyebrow` | `string` | Small label above the title |
-| `leftTitle` | `string` | Left column header (**required**) |
-| `rightTitle` | `string` | Right column header (**required**) |
-
----
 
 ## statement
 
@@ -309,31 +248,6 @@ Card grid with optional intro text and caption. Automatically adjusts columns ba
 
 ---
 
-## caption
-
-Image with caption text below.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `image` | `string` | Path to the image file (**required**) |
-| `caption` | `string` | Caption text below the image (**required**) |
-
----
-
-## title-only
-
-Title bar with empty canvas below.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `title` | `string` | Slide title (**required**) |
-| `eyebrow` | `string` | Small label above the title |
-
----
 
 ## Masters
 

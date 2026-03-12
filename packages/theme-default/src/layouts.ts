@@ -1,5 +1,5 @@
 // Default Theme Layouts
-// 19 layouts covering universal presentation patterns.
+// 11 layouts covering universal presentation patterns.
 // Naming convention: kebab-case (matching SlideDev).
 
 import { component, defineLayout, GAP, HALIGN, SIZE, type Slide, type SlideNode, schema, VALIGN } from "tycoslide";
@@ -60,21 +60,6 @@ function wrapSide(content: SlideNode | SlideNode[]): SlideNode {
   return column({ vAlign: VALIGN.TOP, gap: GAP.NORMAL, height: SIZE.FILL }, ...items);
 }
 
-/** Shared implementation for image-left and image-right */
-function imageSplitSlide(
-  imagePath: string,
-  body: SlideNode[],
-  imageOnLeft: boolean,
-  tokens: HeaderTokens,
-  title?: string,
-  eyebrow?: string,
-): Slide {
-  const img = image(imagePath);
-  const prose = column({ vAlign: VALIGN.MIDDLE, gap: GAP.NORMAL, height: SIZE.FILL }, ...body);
-  const [l, r] = imageOnLeft ? [img, prose] : [prose, img];
-  return masteredSlide(...(title ? [headerBlock(title, tokens, eyebrow)] : []), row({ height: SIZE.FILL }, l, r));
-}
-
 // ============================================
 // FULL-SLIDE LAYOUTS (no master)
 // ============================================
@@ -84,36 +69,42 @@ function imageSplitSlide(
 export const TITLE_LAYOUT_TOKEN = {
   TITLE: "title",
   SUBTITLE: "subtitle",
+  MASTER_VARIANT: "masterVariant",
 } as const;
 
 export interface TitleLayoutTokens {
   [TITLE_LAYOUT_TOKEN.TITLE]: PlainTextTokens;
   [TITLE_LAYOUT_TOKEN.SUBTITLE]: PlainTextTokens;
+  [TITLE_LAYOUT_TOKEN.MASTER_VARIANT]: string;
 }
 
-// +----------------------------+
-// |                            |
-// |           TITLE            |
-// |          subtitle          |
-// |                            |
-// +----------------------------+
+// +----------------------------+       +------------------+---------+
+// |                            |       | TITLE            |         |
+// |           TITLE            |  or   | subtitle         |  IMAGE  |
+// |          subtitle          |       |                  |         |
+// +----------------------------+       +------------------+---------+
 export const titleLayout = defineLayout({
   name: "title",
   description: "Opening slide with large title and optional subtitle.",
   params: {
     title: textComponent.schema,
     subtitle: textComponent.schema.optional(),
+    image: imageComponent.schema.optional(),
   },
-  tokens: [TITLE_LAYOUT_TOKEN.TITLE, TITLE_LAYOUT_TOKEN.SUBTITLE],
-  render: ({ title, subtitle }, tokens: TitleLayoutTokens) => {
+  tokens: [TITLE_LAYOUT_TOKEN.TITLE, TITLE_LAYOUT_TOKEN.SUBTITLE, TITLE_LAYOUT_TOKEN.MASTER_VARIANT],
+  render: ({ title, subtitle, image: imagePath }, tokens: TitleLayoutTokens) => {
+    const textBlock = column(
+      { vAlign: VALIGN.MIDDLE, hAlign: tokens.title.hAlign, gap: GAP.TIGHT, height: SIZE.FILL },
+      plainText(title, tokens.title),
+      ...(subtitle ? [plainText(subtitle, tokens.subtitle)] : []),
+    );
+
     return {
       masterName: "minimal",
-      masterVariant: "dark",
-      content: column(
-        { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, gap: GAP.TIGHT, height: SIZE.FILL },
-        plainText(title, tokens.title),
-        ...(subtitle ? [plainText(subtitle, tokens.subtitle)] : []),
-      ),
+      masterVariant: tokens.masterVariant,
+      content: imagePath
+        ? row({ vAlign: VALIGN.MIDDLE, height: SIZE.FILL }, textBlock, image(imagePath))
+        : textBlock,
     };
   },
 });
@@ -150,7 +141,7 @@ export const sectionLayout = defineLayout({
   },
 });
 
-// --- body, image-left, image-right, two-column ---
+// --- body, two-column ---
 
 export const BODY_LAYOUT_TOKEN = {
   TITLE: "title",
@@ -274,11 +265,11 @@ export const endLayout = defineLayout({
     title: textComponent.schema,
     subtitle: textComponent.schema.optional(),
   },
-  tokens: [TITLE_LAYOUT_TOKEN.TITLE, TITLE_LAYOUT_TOKEN.SUBTITLE],
+  tokens: [TITLE_LAYOUT_TOKEN.TITLE, TITLE_LAYOUT_TOKEN.SUBTITLE, TITLE_LAYOUT_TOKEN.MASTER_VARIANT],
   render: ({ title, subtitle }, tokens: TitleLayoutTokens) => {
     return {
       masterName: "minimal",
-      masterVariant: "dark",
+      masterVariant: tokens.masterVariant,
       content: column(
         { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, gap: GAP.TIGHT, height: SIZE.FILL },
         plainText(title, tokens.title),
@@ -305,91 +296,6 @@ export const blankLayout = defineLayout({
   }),
 });
 
-// --- image, title-only ---
-
-export const IMAGE_LAYOUT_TOKEN = {
-  TITLE: "title",
-  EYEBROW: "eyebrow",
-} as const;
-
-export interface ImageLayoutTokens {
-  [IMAGE_LAYOUT_TOKEN.TITLE]: PlainTextTokens;
-  [IMAGE_LAYOUT_TOKEN.EYEBROW]: PlainTextTokens;
-}
-
-// +----------------------------+
-// | EYEBROW                    |
-// | Title                      |
-// |----------------------------|
-// |      +------------+        |
-// |      |            |        |
-// |      |   IMAGE    |        |
-// |      |            |        |
-// |      +------------+        |
-// +----------------------------+
-// | footer                     |
-// +----------------------------+
-export const imageLayout = defineLayout({
-  name: "image",
-  description: "Full image with title and optional eyebrow.",
-  params: {
-    title: textComponent.schema,
-    eyebrow: textComponent.schema.optional(),
-    image: imageComponent.schema,
-  },
-  tokens: [IMAGE_LAYOUT_TOKEN.TITLE, IMAGE_LAYOUT_TOKEN.EYEBROW],
-  render: ({ title, eyebrow, image: imagePath }, tokens: ImageLayoutTokens) => {
-    return masteredSlide(headerBlock(title, tokens, eyebrow), centeredBody(image(imagePath)));
-  },
-});
-
-// +----------------------------+
-// | +----------+ Prose text    |
-// | |          | flows here    |
-// | |  IMAGE   | on the right  |
-// | |          | side.         |
-// | +----------+               |
-// +----------------------------+
-// | footer                     |
-// +----------------------------+
-export const imageLeftLayout = defineLayout({
-  name: "image-left",
-  description: "Image on left, markdown prose on right.",
-  params: {
-    title: textComponent.schema.optional(),
-    eyebrow: textComponent.schema.optional(),
-    image: imageComponent.schema,
-  },
-  slots: ["body"],
-  tokens: [BODY_LAYOUT_TOKEN.TITLE, BODY_LAYOUT_TOKEN.EYEBROW, BODY_LAYOUT_TOKEN.TEXT, BODY_LAYOUT_TOKEN.LIST],
-  render: ({ title, eyebrow, image: imagePath, body }, tokens: BodyLayoutTokens) => {
-    return imageSplitSlide(imagePath, body, true, tokens, title, eyebrow);
-  },
-});
-
-// +----------------------------+
-// | Prose text  +----------+   |
-// | flows here  |          |   |
-// | on the left |  IMAGE   |   |
-// | side.       |          |   |
-// |             +----------+   |
-// +----------------------------+
-// | footer                     |
-// +----------------------------+
-export const imageRightLayout = defineLayout({
-  name: "image-right",
-  description: "Image on right, markdown prose on left.",
-  params: {
-    title: textComponent.schema.optional(),
-    eyebrow: textComponent.schema.optional(),
-    image: imageComponent.schema,
-  },
-  slots: ["body"],
-  tokens: [BODY_LAYOUT_TOKEN.TITLE, BODY_LAYOUT_TOKEN.EYEBROW, BODY_LAYOUT_TOKEN.TEXT, BODY_LAYOUT_TOKEN.LIST],
-  render: ({ title, eyebrow, image: imagePath, body }, tokens: BodyLayoutTokens) => {
-    return imageSplitSlide(imagePath, body, false, tokens, title, eyebrow);
-  },
-});
 
 // +----------------------------+
 // | EYEBROW                    |
@@ -419,73 +325,6 @@ export const twoColumnLayout = defineLayout({
   },
 });
 
-// --- comparison ---
-
-export const COMPARISON_LAYOUT_TOKEN = {
-  TITLE: "title",
-  EYEBROW: "eyebrow",
-  COLUMN_TITLE: "columnTitle",
-  TEXT: "text",
-  LIST: "list",
-} as const;
-
-export interface ComparisonLayoutTokens {
-  [COMPARISON_LAYOUT_TOKEN.TITLE]: PlainTextTokens;
-  [COMPARISON_LAYOUT_TOKEN.EYEBROW]: PlainTextTokens;
-  [COMPARISON_LAYOUT_TOKEN.COLUMN_TITLE]: PlainTextTokens;
-  [COMPARISON_LAYOUT_TOKEN.TEXT]: TextTokens;
-  [COMPARISON_LAYOUT_TOKEN.LIST]: ListTokens;
-}
-
-// +----------------------------+
-// | EYEBROW                    |
-// | Title                      |
-// |----------------------------|
-// | Left Title  | Right Title  |
-// | ::left::    | ::right::    |
-// | Markdown    | Markdown     |
-// | content     | content      |
-// +----------------------------+
-// | footer                     |
-// +----------------------------+
-export const comparisonLayout = defineLayout({
-  name: "comparison",
-  description: "Two columns with individual headers. Use for pros/cons, before/after.",
-  params: {
-    title: textComponent.schema.optional(),
-    eyebrow: textComponent.schema.optional(),
-    leftTitle: textComponent.schema,
-    rightTitle: textComponent.schema,
-  },
-  slots: ["left", "right"],
-  tokens: [
-    COMPARISON_LAYOUT_TOKEN.TITLE,
-    COMPARISON_LAYOUT_TOKEN.EYEBROW,
-    COMPARISON_LAYOUT_TOKEN.COLUMN_TITLE,
-    COMPARISON_LAYOUT_TOKEN.TEXT,
-    COMPARISON_LAYOUT_TOKEN.LIST,
-  ],
-  render: ({ title, eyebrow, leftTitle, rightTitle, left, right }, tokens: ComparisonLayoutTokens) => {
-    return masteredSlide(
-      ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
-      contentBody(
-        row(
-          { height: SIZE.FILL },
-          column(
-            { vAlign: VALIGN.TOP, gap: GAP.NORMAL, height: SIZE.FILL },
-            plainText(leftTitle, tokens.columnTitle),
-            ...left,
-          ),
-          column(
-            { vAlign: VALIGN.TOP, gap: GAP.NORMAL, height: SIZE.FILL },
-            plainText(rightTitle, tokens.columnTitle),
-            ...right,
-          ),
-        ),
-      ),
-    );
-  },
-});
 
 // --- statement ---
 
@@ -544,6 +383,7 @@ export const AGENDA_LAYOUT_TOKEN = {
   EYEBROW: "eyebrow",
   INTRO: "intro",
   ITEMS: "items",
+  MODE: "mode",
 } as const;
 
 export interface AgendaLayoutTokens {
@@ -551,17 +391,15 @@ export interface AgendaLayoutTokens {
   [AGENDA_LAYOUT_TOKEN.EYEBROW]: PlainTextTokens;
   [AGENDA_LAYOUT_TOKEN.INTRO]: TextTokens;
   [AGENDA_LAYOUT_TOKEN.ITEMS]: ListTokens;
+  [AGENDA_LAYOUT_TOKEN.MODE]: string;
 }
 
-// +----------------------------+
-// | EYEBROW                    |
-// | Title                      |
-// |----------------------------|
-// | Intro text                 |
-// |                            |
-// | - Item one                 |
-// | - Item two                 |
-// | - Item three               |
+// +----------------------------+       +----------+-------------------+
+// | EYEBROW                    |       |          |  Item one         |
+// | Title                      |       |  TITLE   |  Item two         |
+// |----------------------------|  or   |          |  Item three       |
+// | - Item one                 |       |          |  Item four        |
+// | - Item two                 |       +----------+-------------------+
 // +----------------------------+
 // | footer                     |
 // +----------------------------+
@@ -579,8 +417,26 @@ export const agendaLayout = defineLayout({
     AGENDA_LAYOUT_TOKEN.EYEBROW,
     AGENDA_LAYOUT_TOKEN.INTRO,
     AGENDA_LAYOUT_TOKEN.ITEMS,
+    AGENDA_LAYOUT_TOKEN.MODE,
   ],
   render: ({ title, eyebrow, intro, items }, tokens: AgendaLayoutTokens) => {
+    if (tokens.mode === "split") {
+      return {
+        masterName: "minimal",
+        masterVariant: "default",
+        content: row(
+          { vAlign: VALIGN.MIDDLE, height: SIZE.FILL },
+          column(
+            { vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER, height: SIZE.FILL, width: 3 },
+            plainText(title, tokens.title),
+          ),
+          column(
+            { vAlign: VALIGN.MIDDLE, gap: GAP.NORMAL, height: SIZE.FILL },
+            ...items.map((item) => text(item, tokens.items)),
+          ),
+        ),
+      };
+    }
     return masteredSlide(
       headerBlock(title, tokens, eyebrow),
       contentBody(...(intro ? [text(intro, tokens.intro)] : []), list(items, tokens.items)),
@@ -649,64 +505,6 @@ export const cardsLayout = defineLayout({
   },
 });
 
-// --- caption ---
-
-export const CAPTION_LAYOUT_TOKEN = {
-  CAPTION: "caption",
-} as const;
-
-export interface CaptionLayoutTokens {
-  [CAPTION_LAYOUT_TOKEN.CAPTION]: PlainTextTokens;
-}
-
-// +----------------------------+
-// | +------------------------+ |
-// | |                        | |
-// | |        IMAGE           | |
-// | |                        | |
-// | +------------------------+ |
-// |     Caption text below     |
-// +----------------------------+
-// | footer                     |
-// +----------------------------+
-export const captionLayout = defineLayout({
-  name: "caption",
-  description: "Image with caption text below.",
-  params: {
-    image: imageComponent.schema,
-    caption: textComponent.schema,
-  },
-  tokens: [CAPTION_LAYOUT_TOKEN.CAPTION],
-  render: ({ image: imagePath, caption }, tokens: CaptionLayoutTokens) => {
-    return masteredSlide(
-      column({ height: SIZE.FILL, gap: GAP.TIGHT }, image(imagePath), plainText(caption, tokens.caption)),
-    );
-  },
-});
-
-// +----------------------------+
-// | EYEBROW                    |
-// | Title                      |
-// |----------------------------|
-// |                            |
-// |      (empty canvas)        |
-// |                            |
-// +----------------------------+
-// | footer                     |
-// +----------------------------+
-export const titleOnlyLayout = defineLayout({
-  name: "title-only",
-  description: "Title bar with empty canvas below. Use for diagrams or screenshots.",
-  params: {
-    title: textComponent.schema,
-    eyebrow: textComponent.schema.optional(),
-  },
-  tokens: [IMAGE_LAYOUT_TOKEN.TITLE, IMAGE_LAYOUT_TOKEN.EYEBROW],
-  render: ({ title, eyebrow }, tokens: ImageLayoutTokens) => {
-    return masteredSlide(headerBlock(title, tokens, eyebrow), contentBody());
-  },
-});
-
 // ============================================
 // ALL LAYOUTS
 // ============================================
@@ -719,14 +517,8 @@ export const allLayouts = [
   quoteLayout,
   endLayout,
   blankLayout,
-  imageLayout,
-  imageLeftLayout,
-  imageRightLayout,
   twoColumnLayout,
-  comparisonLayout,
   statementLayout,
   agendaLayout,
   cardsLayout,
-  captionLayout,
-  titleOnlyLayout,
 ];
