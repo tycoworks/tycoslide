@@ -7,7 +7,7 @@ A presentation build tool that generates editable PowerPoint slides from markdow
 - **TypeScript themes with build-time validation** — Catches missing tokens, invalid layouts, and content overflow as build errors
 - **Native PowerPoint output** — Editable presentations that open in PowerPoint, Keynote, or Google Slides
 
-**[How tycoslide compares →](./docs/comparison.md)** to Slidev, Marp, and Reveal.js.
+**[About tycoslide →](./docs/about.md)** — how it works, how it compares, and FAQs.
 
 ## Quick Start
 

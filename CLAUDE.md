@@ -2,9 +2,9 @@
 
 See [README.md](README.md) for what this project is.
 
-## Design Principles
+## About
 
-For design principles, see [`docs/design-principles.md`](docs/design-principles.md).
+For design principles and FAQ, see [`docs/about.md`](docs/about.md).
 
 ## Build & Test
 

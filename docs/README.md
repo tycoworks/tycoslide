@@ -1,7 +1,6 @@
 # Documentation
 
-- [Comparison](./comparison.md) — How tycoslide compares to Slidev, Marp, and Reveal.js
-- [Design Principles](./design-principles.md) — Content as code, three personas, build-time validation
+- [About](./about.md) — How tycoslide works, how it compares, and FAQ
 - [Quick Start](./quick-start.md) — Build your first presentation
 - [Markdown Syntax](./markdown-syntax.md) — Directive syntax and frontmatter
 - [Components](./components.md) — Built-in components, custom component API, tokens, and DSL

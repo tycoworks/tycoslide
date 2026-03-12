@@ -101,8 +101,7 @@ Each page owns its topic. Writers must not write content that belongs on another
 
 | Topic | Owned by |
 |-------|----------|
-| Comparison to alternatives | `comparison.md` |
-| Design principles, three-persona model, token alignment, build-time validation, extensibility | `design-principles.md` |
+| About, comparison to alternatives, design principles, FAQ | `about.md` |
 | Install, first build, editor setup | `quick-start.md` |
 | Frontmatter, slide separators, text formatting, lists, tables (GFM), speaker notes, directive summary table | `markdown-syntax.md` |
 | Full component reference (content + layout), directive syntax, custom component authoring, DSL functions, token system, expansion function | `components.md` |
@@ -130,13 +129,13 @@ Each page owns its topic. Writers must not write content that belongs on another
 
 **No callout boxes.** No "Note:", "Warning:", "Tip:", "Important:" prefix boxes or blockquotes used as callouts. Critical information is stated directly in prose or as a bold standalone sentence.
 
-**No lengthy "why" explanations.** The docs state what things do and how to use them. They do not explain the engineering rationale or design history. Exception: `design-principles.md` is explicitly the "why" page — but only there.
+**No lengthy "why" explanations.** The docs state what things do and how to use them. They do not explain the engineering rationale or design history. Exception: `about.md` is explicitly the "why" page — but only there.
 
 **No "In this section, we will..." preamble.** Sections open with content, not announcements about what is coming.
 
 **No "As mentioned earlier" or "As we saw above."** Each section stands alone. Cross-references use links, not prose callbacks.
 
-**No tables for things that are short bullet lists.** The "Good fit / Not a good fit" in `comparison.md` uses bullet lists. The "When to create" sections use bullet lists. Tables are for structured multi-column data (params, component summaries, comparisons).
+**No tables for things that are short bullet lists.** The "Good fit / Not a good fit" in `about.md` uses bullet lists. The "When to create" sections use bullet lists. Tables are for structured multi-column data (params, component summaries, comparisons).
 
 **No passive voice for instructions.** "The body slot accepts..." (active) not "The body slot is used to accept..." (passive). "Add the missing field to the slide frontmatter." (active imperative) not "The missing field should be added..." (passive).
 
