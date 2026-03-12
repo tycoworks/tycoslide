@@ -3,9 +3,9 @@
 A presentation build tool that generates editable PowerPoint slides from markdown, with TypeScript-based themes and build-time validation.
 
 **Why tycoslide?**
-- **Markdown authoring** — Content as code, version-controlled, reviewable
-- **TypeScript themes with build-time validation** — Catches missing tokens, invalid layouts, and content overflow as build errors
-- **Native PowerPoint output** — Editable presentations that open in PowerPoint, Keynote, or Google Slides
+- **Editable PowerPoint slides** — Native .pptx files that open in PowerPoint, Keynote, or Google Slides
+- **Pure TypeScript themes** — Design tokens, layouts, and components defined in one place
+- **Build-time validation** — Catches missing tokens, invalid layouts, and content overflow as build errors
 
 **[About tycoslide →](./docs/about.md)** — how it works, how it compares, and FAQs.
 

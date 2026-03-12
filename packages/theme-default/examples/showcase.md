@@ -71,7 +71,7 @@ cards:
     description: Native PowerPoint slides that can be opened and edited in any presentation software.
     image: $icons.rocket
   - title: Pure TypeScript Themes
-    description: Pure TypeScript for themes, components, and layouts — no CSS, no HTML templates.
+    description: Pure TypeScript for design tokens, components, and layouts — no CSS, no HTML templates.
     image: $icons.editNote
   - title: Build-Time Validation
     description: Catches layout overflows, missing tokens, and invalid parameters at build time.

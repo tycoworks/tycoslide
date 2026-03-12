@@ -16,7 +16,7 @@ Unlike **other markdown presentation tools** [alternative] that output HTML or P
 
 ## Supporting Argument 2 — Pure TypeScript Themes
 
-Unlike **other markdown presentation tools** [alternative] that need complex CSS and HTML to style slides, tycoslide uses **pure TypeScript** [feature] for themes, components, and layouts.
+Unlike **other markdown presentation tools** [alternative] that need complex CSS and HTML to style slides, tycoslide uses **pure TypeScript** [feature] for design tokens, components, and layouts.
 
 ---
 
