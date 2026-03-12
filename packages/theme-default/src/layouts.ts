@@ -363,8 +363,6 @@ export const TWO_COLUMN_LAYOUT_TOKEN = {
   V_ALIGN: "vAlign",
   H_ALIGN: "hAlign",
   GAP: "gap",
-  SIDE_VALIGN: "sideVAlign",
-  SIDE_GAP: "sideGap",
 } as const;
 
 export interface TwoColumnLayoutTokens {
@@ -375,8 +373,6 @@ export interface TwoColumnLayoutTokens {
   [TWO_COLUMN_LAYOUT_TOKEN.V_ALIGN]: VerticalAlignment;
   [TWO_COLUMN_LAYOUT_TOKEN.H_ALIGN]: HorizontalAlignment;
   [TWO_COLUMN_LAYOUT_TOKEN.GAP]: GapSize;
-  [TWO_COLUMN_LAYOUT_TOKEN.SIDE_VALIGN]: VerticalAlignment;
-  [TWO_COLUMN_LAYOUT_TOKEN.SIDE_GAP]: GapSize;
 }
 
 // +----------------------------+
@@ -402,13 +398,10 @@ export const twoColumnLayout = defineLayout({
   render: ({ title, eyebrow, left, right }, tokens: TwoColumnLayoutTokens) =>
     masteredSlide(
       ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
-      column(
-        { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap },
-        row(
-          { height: SIZE.FILL },
-          column({ vAlign: tokens.sideVAlign, gap: tokens.sideGap, height: SIZE.FILL }, ...left),
-          column({ vAlign: tokens.sideVAlign, gap: tokens.sideGap, height: SIZE.FILL }, ...right),
-        ),
+      row(
+        { height: SIZE.FILL },
+        column({ vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap, height: SIZE.FILL }, ...left),
+        column({ vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap, height: SIZE.FILL }, ...right),
       ),
     ),
 });

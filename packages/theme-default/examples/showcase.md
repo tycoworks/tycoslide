@@ -4,7 +4,7 @@ theme: tycoslide-theme-default
 
 ---
 layout: title
-variant: hero
+variant: default
 title: "**tycoslide**"
 subtitle: "Build presentations like software.:purple[▌]"
 notes: Opening slide. Clean centered title with cursor.
@@ -12,7 +12,7 @@ notes: Opening slide. Clean centered title with cursor.
 
 ---
 layout: agenda
-variant: hero
+variant: default
 title: Agenda
 items:
   - What is tycoslide?
@@ -26,8 +26,8 @@ notes: Agenda layout — grid variant with numbered white cards.
 
 ---
 layout: statement
+variant: default
 body: "tycoslide is a :purple[**presentation**] :purple[**build tool**] that generates :purple[**editable PowerPoint slides**] from markdown, with :purple[**TypeScript-based themes**] and :purple[**build-time validation**]."
-variant: hero
 notes: Positioning one-liner. Four anchors in one sentence.
 ---
 
@@ -59,22 +59,28 @@ notes: Meta slide — the code block shows the markdown source for this very sli
 
 ::left::
 
+This is the markdown that generates the slide you are looking at.
+
+tycoslide supports **bold**, *italic*, [links](https://tycoslide.com), ~~strikethrough~~, ++underline++, and :purple[accent colors].
+
+::right::
+
 ```markdown
 ---
-layout: body
+layout: two-column
+variant: default
 title: Presentations as Code
 eyebrow: How It Works
 ---
 
-This is the markdown that generates
-the slide you are looking at.
-```
+::left::
+  # code block here
 
 ::right::
-
-This is the markdown that generates the slide you are looking at.
-
-tycoslide supports **bold**, *italic*, [links](https://tycoslide.com), ~~strikethrough~~, ++underline++, and :purple[accent colors].
+  Supports **bold**, *italic*,
+  [links], ~~strikethrough~~,
+  ++underline++, :purple[accents].
+```
 
 ---
 layout: stat
@@ -84,41 +90,6 @@ label: Silent Failures
 caption: Catch layout overflows, missing design tokens, and invalid parameters at build time. Presentations are finally treated with the same rigorous QA as production software.
 notes: Stat layout — big number with label and caption.
 ---
-
----
-layout: two-column
-variant: default
-title: What You Write / What You Get
-eyebrow: Workflow
-notes: Two-column layout — markdown on left, description on right.
----
-
-::left::
-
-```markdown
----
-layout: title
-title: My Deck
-subtitle: Built with tycoslide
----
-
----
-layout: body
-title: First Slide
-eyebrow: INTRO
----
-
-Your content goes here.
-```
-
-::right::
-
-A `.pptx` file with native text boxes, shapes, and tables. Not images, not HTML, not screenshots.
-
-- Opens in PowerPoint, Keynote, Google Slides
-- Field-editable — generated deck is the 80% baseline
-- Version-controlled markdown source
-- Automated builds via CI/CD
 
 ---
 layout: body

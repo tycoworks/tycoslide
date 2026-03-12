@@ -375,14 +375,6 @@ export const theme = {
     title: {
       variants: {
         default: titleLayout.tokenMap({
-          title: heroTitle,
-          subtitle: heroSubtitle,
-          masterVariant: "dark",
-          vAlign: VALIGN.MIDDLE,
-          hAlign: HALIGN.CENTER,
-          gap: GAP.TIGHT,
-        }),
-        hero: titleLayout.tokenMap({
           title: { ...heroTitle, color: palette.navy, style: "title" },
           subtitle: { ...heroSubtitle, color: palette.gray600, style: TEXT_STYLE.H3 },
           masterVariant: "default",
@@ -395,7 +387,7 @@ export const theme = {
     end: {
       variants: {
         default: endLayout.tokenMap({
-          title: heroTitle,
+          title: { ...heroTitle, style: "title" },
           subtitle: heroSubtitle,
           masterVariant: "dark",
           vAlign: VALIGN.MIDDLE,
@@ -455,47 +447,28 @@ export const theme = {
           eyebrow: headerEyebrow,
           text: bodyText,
           list: bodyList,
-          vAlign: VALIGN.TOP,
+          vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.LEFT,
           gap: GAP.NORMAL,
-          sideVAlign: VALIGN.TOP,
-          sideGap: GAP.NORMAL,
           ...bodySlotTokens,
         }),
       },
     },
     statement: {
-      variants: (() => {
-        const base = {
+      variants: {
+        default: statementLayout.tokenMap({
           caption: mutedCaption,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
           gap: GAP.NORMAL,
           masterVariant: "default",
-        };
-        return {
-          default: statementLayout.tokenMap({ ...base, body: bodyText }),
-          hero: statementLayout.tokenMap({ ...base, body: { ...bodyText, style: TEXT_STYLE.H2 } }),
-        };
-      })(),
+          body: { ...bodyText, style: TEXT_STYLE.H2 },
+        }),
+      },
     },
     agenda: {
       variants: {
         default: agendaLayout.tokenMap({
-          title: headerTitle,
-          eyebrow: headerEyebrow,
-          vAlign: VALIGN.MIDDLE,
-          hAlign: HALIGN.CENTER,
-          items: bodyText,
-          itemBackground: { fill: palette.white, fillOpacity: 0, borderColor: palette.navy, borderWidth: 0, cornerRadius: 0 },
-          itemNumber: { style: TEXT_STYLE.BODY, color: palette.gray600, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
-          itemPadding: gap + unit,
-          itemVAlign: VALIGN.MIDDLE,
-          itemGap: GAP.NORMAL,
-          gridColumns: 2,
-          gridGap: GAP.NORMAL,
-        }),
-        hero: agendaLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
           vAlign: VALIGN.MIDDLE,
