@@ -26,9 +26,7 @@ notes: Agenda layout — grid variant with numbered white cards.
 
 ---
 layout: statement
-title: What is tycoslide?
-eyebrow: The Product
-body: "A presentation :purple[**build tool**] that generates :purple[**editable PowerPoint slides**] from markdown, with :purple[**TypeScript-based themes**] and :purple[**build-time validation**]."
+body: "tycoslide is a :purple[**presentation**] :purple[**build tool**] that generates :purple[**editable PowerPoint slides**] from markdown, with :purple[**TypeScript-based themes**] and :purple[**build-time validation**]."
 variant: hero
 notes: Positioning one-liner. Four anchors in one sentence.
 ---

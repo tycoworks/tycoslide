@@ -107,7 +107,7 @@ const cardDescription: TextTokens = {
 };
 
 const quoteText: TextTokens = {
-  style: TEXT_STYLE.H3,
+  style: TEXT_STYLE.H2,
   color: palette.navy,
   linkColor: palette.purple,
   linkUnderline: true,
@@ -312,21 +312,21 @@ export const theme = {
   textStyles: {
     title: {
       fontFamily: assets.fonts.inter,
-      fontSize: 64,
+      fontSize: 56,
       lineHeightMultiplier: lineSpacing,
       bulletIndentPt: 0,
     },
     h1: {
       fontFamily: assets.fonts.interLight,
-      fontSize: 48,
+      fontSize: 44,
       lineHeightMultiplier: lineSpacing,
-      bulletIndentPt: 48 * bulletIndentMultiplier,
+      bulletIndentPt: 44 * bulletIndentMultiplier,
     },
     h2: {
       fontFamily: assets.fonts.interLight,
-      fontSize: 36,
+      fontSize: 32,
       lineHeightMultiplier: lineSpacing,
-      bulletIndentPt: 36 * bulletIndentMultiplier,
+      bulletIndentPt: 32 * bulletIndentMultiplier,
     },
     h3: {
       fontFamily: assets.fonts.interLight,
@@ -336,9 +336,9 @@ export const theme = {
     },
     h4: {
       fontFamily: assets.fonts.interLight,
-      fontSize: 16,
+      fontSize: 18,
       lineHeightMultiplier: lineSpacing,
-      bulletIndentPt: 16 * bulletIndentMultiplier,
+      bulletIndentPt: 18 * bulletIndentMultiplier,
     },
     body: {
       fontFamily: assets.fonts.interLight,
@@ -467,12 +467,11 @@ export const theme = {
     statement: {
       variants: (() => {
         const base = {
-          title: headerTitle,
-          eyebrow: headerEyebrow,
           caption: mutedCaption,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
           gap: GAP.NORMAL,
+          masterVariant: "default",
         };
         return {
           default: statementLayout.tokenMap({ ...base, body: bodyText }),

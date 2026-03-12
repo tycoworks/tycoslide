@@ -416,55 +416,46 @@ export const twoColumnLayout = defineLayout({
 // --- statement ---
 
 export const STATEMENT_LAYOUT_TOKEN = {
-  TITLE: "title",
-  EYEBROW: "eyebrow",
   BODY: "body",
   CAPTION: "caption",
   V_ALIGN: "vAlign",
   H_ALIGN: "hAlign",
   GAP: "gap",
+  MASTER_VARIANT: "masterVariant",
 } as const;
 
 export interface StatementLayoutTokens {
-  [STATEMENT_LAYOUT_TOKEN.TITLE]: PlainTextTokens;
-  [STATEMENT_LAYOUT_TOKEN.EYEBROW]: PlainTextTokens;
   [STATEMENT_LAYOUT_TOKEN.BODY]: TextTokens;
   [STATEMENT_LAYOUT_TOKEN.CAPTION]: TextTokens;
   [STATEMENT_LAYOUT_TOKEN.V_ALIGN]: VerticalAlignment;
   [STATEMENT_LAYOUT_TOKEN.H_ALIGN]: HorizontalAlignment;
   [STATEMENT_LAYOUT_TOKEN.GAP]: GapSize;
+  [STATEMENT_LAYOUT_TOKEN.MASTER_VARIANT]: string;
 }
 
 // +----------------------------+
-// | EYEBROW                    |
-// | Title                      |
-// |----------------------------|
 // |                            |
 // |   Body text, centered      |
 // |      optional caption      |
 // |                            |
 // +----------------------------+
-// | footer                     |
-// +----------------------------+
 export const statementLayout = defineLayout({
   name: "statement",
-  description: "Body text with optional caption. Use for value props.",
+  description: "Centered body text with optional caption. Use for value props and big statements.",
   params: {
-    title: textComponent.schema,
-    eyebrow: textComponent.schema.optional(),
     body: textComponent.schema,
     caption: textComponent.schema.optional(),
   },
   tokens: Object.values(STATEMENT_LAYOUT_TOKEN),
-  render: ({ title, eyebrow, body, caption }, tokens: StatementLayoutTokens) =>
-    masteredSlide(
-      headerBlock(title, tokens, eyebrow),
-      column(
-        { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap },
-        text(body, tokens.body),
-        ...(caption ? [text(caption, tokens.caption)] : []),
-      ),
+  render: ({ body, caption }, tokens: StatementLayoutTokens) => ({
+    masterName: "minimal",
+    masterVariant: tokens.masterVariant,
+    content: column(
+      { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap },
+      text(body, tokens.body),
+      ...(caption ? [text(caption, tokens.caption)] : []),
     ),
+  }),
 });
 
 // --- agenda ---
