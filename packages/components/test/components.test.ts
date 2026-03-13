@@ -116,10 +116,6 @@ describe("image()", () => {
     assert.strictEqual((node.props as any).alt, undefined);
   });
 
-  test("applies alt prop", async () => {
-    const node = (await expand(image("photo.jpg", { alt: "A beautiful photo" }))) as ImageNode;
-    assert.strictEqual(node.alt, "A beautiful photo");
-  });
 
   // Asset path resolution (tested through image expansion)
 

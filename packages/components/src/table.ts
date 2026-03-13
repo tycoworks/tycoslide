@@ -261,15 +261,9 @@ export const tableComponent = defineComponent({
       borderWidth: tokens.borderWidth,
       headerBackground: tokens.headerBackground,
       headerBackgroundOpacity: tokens.headerBackgroundOpacity,
-      headerTextStyle: tokens.headerTextStyle,
       cellBackground: tokens.cellBackground,
       cellBackgroundOpacity: tokens.cellBackgroundOpacity,
-      cellTextStyle: tokens.cellTextStyle,
       cellPadding: tokens.cellPadding,
-      hAlign: tokens.hAlign,
-      vAlign: tokens.vAlign,
-      linkColor: tokens.linkColor,
-      linkUnderline: tokens.linkUnderline,
     };
   },
 });

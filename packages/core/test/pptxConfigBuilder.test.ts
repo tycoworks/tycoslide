@@ -142,15 +142,9 @@ const baseTableNode: TableNode = {
   borderWidth: 1,
   headerBackground: "#FFFFFF",
   headerBackgroundOpacity: 0,
-  headerTextStyle: TEXT_STYLE.BODY,
   cellBackground: "#FFFFFF",
   cellBackgroundOpacity: 0,
-  cellTextStyle: TEXT_STYLE.BODY,
   cellPadding: 0.1,
-  hAlign: HALIGN.LEFT,
-  vAlign: VALIGN.MIDDLE,
-  linkColor: "#0000FF",
-  linkUnderline: true,
 };
 
 /** Base cell for tests — all required fields pre-resolved */
@@ -182,41 +176,26 @@ describe("buildTableCell()", () => {
     assert.strictEqual(result.text[0].options?.color, "FF0000");
   });
 
-  test("vAlign cascade: cell vAlign overrides table style", () => {
+  test("vAlign: uses pre-resolved cell value", () => {
     const cell: TableCellData = {
       ...baseCell,
-      content: "Cell with override",
+      content: "Cell with vAlign",
       vAlign: VALIGN.BOTTOM,
     };
-    const tableNode: TableNode = { ...baseTableNode, vAlign: VALIGN.TOP };
 
-    const result = builder.buildTableCell(cell, 0, 0, 1, 1, 0, 0, tableNode);
+    const result = builder.buildTableCell(cell, 0, 0, 1, 1, 0, 0, { ...baseTableNode });
 
     assert.strictEqual(result.options.valign, VALIGN.BOTTOM);
   });
 
-  test("vAlign: uses pre-resolved cell value directly", () => {
-    const cell: TableCellData = {
-      ...baseCell,
-      content: "Cell with default",
-      vAlign: VALIGN.TOP, // pre-resolved by expand
-    };
-    const tableNode: TableNode = { ...baseTableNode };
-
-    const result = builder.buildTableCell(cell, 0, 0, 1, 1, 0, 0, tableNode);
-
-    assert.strictEqual(result.options.valign, VALIGN.TOP);
-  });
-
-  test("hAlign cascade: cell hAlign overrides table style", () => {
+  test("hAlign: uses pre-resolved cell value", () => {
     const cell: TableCellData = {
       ...baseCell,
       content: "Right aligned",
       hAlign: HALIGN.RIGHT,
     };
-    const tableNode: TableNode = { ...baseTableNode, hAlign: HALIGN.LEFT };
 
-    const result = builder.buildTableCell(cell, 0, 0, 1, 1, 0, 0, tableNode);
+    const result = builder.buildTableCell(cell, 0, 0, 1, 1, 0, 0, { ...baseTableNode });
 
     assert.strictEqual(result.options.align, HALIGN.RIGHT);
   });

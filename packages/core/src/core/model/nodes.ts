@@ -58,7 +58,6 @@ export interface TextNode {
 export interface ImageNode {
   type: typeof NODE_TYPE.IMAGE;
   src: string;
-  alt?: string;
 }
 
 export interface LineNode {
@@ -139,15 +138,9 @@ export interface TableNode {
   borderWidth: number;
   headerBackground: string;
   headerBackgroundOpacity: number;
-  headerTextStyle: TextStyleName;
   cellBackground: string;
   cellBackgroundOpacity: number;
-  cellTextStyle: TextStyleName;
   cellPadding: number;
-  hAlign: HorizontalAlignment;
-  vAlign: VerticalAlignment;
-  linkColor: string;
-  linkUnderline: boolean;
 }
 
 // ============================================

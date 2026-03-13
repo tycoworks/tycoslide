@@ -100,7 +100,7 @@ export const imageComponent = defineComponent({
     if (src.startsWith(ASSET_PREFIX)) {
       src = resolveAssetPath(src, context.assets);
     }
-    return { type: NODE_TYPE.IMAGE, src, alt: props.alt };
+    return { type: NODE_TYPE.IMAGE, src };
   },
 });
 

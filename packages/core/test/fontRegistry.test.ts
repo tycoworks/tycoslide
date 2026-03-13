@@ -452,15 +452,9 @@ describe("validateFontVariants", () => {
       borderWidth: 1,
       headerBackground: "#EEE",
       headerBackgroundOpacity: 1,
-      headerTextStyle: "body",
       cellBackground: "#FFF",
       cellBackgroundOpacity: 1,
-      cellTextStyle: "body",
       cellPadding: 0.1,
-      hAlign: "left" as const,
-      vAlign: "top" as const,
-      linkColor: "#0000FF",
-      linkUnderline: true,
     };
     const violations = validateFontVariants(tableNode);
     assert.strictEqual(violations.length, 1);

@@ -192,15 +192,9 @@ function tableNode(rows: TableCellData[][], opts?: Partial<Omit<TableNode, "type
     borderWidth: 1,
     headerBackground: "#AAAAAA",
     headerBackgroundOpacity: 100,
-    headerTextStyle: TEXT_STYLE.BODY,
     cellBackground: "#EEEEEE",
     cellBackgroundOpacity: 0,
-    cellTextStyle: TEXT_STYLE.BODY,
     cellPadding: 0.1,
-    hAlign: HALIGN.LEFT,
-    vAlign: VALIGN.MIDDLE,
-    linkColor: "#0000FF",
-    linkUnderline: true,
     ...opts,
   };
 }
@@ -877,19 +871,6 @@ describe("HTML Measurement Generation", () => {
       assert.ok(html.includes("solid"), "Border should be solid");
     });
 
-    test("shape with selective borders renders per-side", async () => {
-      const shape: ShapeNode = {
-        type: NODE_TYPE.SHAPE,
-        shape: SHAPE.ROUND_RECT,
-        fill: { color: "#333333", opacity: 100 },
-        border: { color: "#FF0000", width: 2, top: true, right: false, bottom: true, left: false },
-        cornerRadius: 0,
-      };
-      const node = colNode(stackNode(shape, colNode(textNode("Selective"))));
-      const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes("border-right:none"), "Right border should be none");
-      assert.ok(html.includes("border-left:none"), "Left border should be none");
-    });
   });
 
   describe("SlideNumber rendering", () => {

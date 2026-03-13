@@ -21,12 +21,6 @@ export const pxToIn = (px: number): number => px / SCREEN_DPI;
 /** Convert inches to pixels */
 export const inToPx = (inches: number): number => inches * SCREEN_DPI;
 
-/** Convert points to inches */
-export const ptToIn = (pt: number): number => pt / POINTS_PER_INCH;
-
-/** Convert inches to points */
-export const inToPt = (inches: number): number => inches * POINTS_PER_INCH;
-
 /** Convert points to pixels */
 export const ptToPx = (pt: number): number => (pt / POINTS_PER_INCH) * SCREEN_DPI;
 
