@@ -180,9 +180,7 @@ export class PptxConfigBuilder {
     };
 
     const border = shapeNode.border;
-    const allSides = border.top !== false && border.right !== false && border.bottom !== false && border.left !== false;
-
-    if (allSides) {
+    if (border.width > 0) {
       options.line = {
         color: stripHash(border.color),
         width: border.width,

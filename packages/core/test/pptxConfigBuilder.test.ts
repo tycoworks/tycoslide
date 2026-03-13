@@ -573,15 +573,6 @@ describe("buildShapeConfig() — area shapes", () => {
     assert.strictEqual(line.width, 2);
   });
 
-  test("no border when any side explicitly disabled", () => {
-    const shapeNode: ShapeNode = { ...baseShapeNode, border: { color: "#000000", width: 2, top: false } };
-    const pos = positioned(shapeNode, 1, 2, 5, 3);
-
-    const result = builder.buildShapeConfig(shapeNode, pos);
-
-    assert.ok(result);
-    assert.strictEqual(result.options.line, undefined);
-  });
 });
 
 // ============================================

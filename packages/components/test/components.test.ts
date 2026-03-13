@@ -274,22 +274,6 @@ describe("shape()", () => {
     assert.strictEqual(node.border?.width, 2);
   });
 
-  test("passes selective border sides from props", async () => {
-    const tokens: ShapeTokens = { ...DEFAULT_SHAPE_TOKENS, borderColor: "#000000", borderWidth: 1 };
-    const node = (await expand(
-      shape(tokens, {
-        shape: SHAPE.RECT,
-        borderTop: true,
-        borderBottom: true,
-        borderLeft: false,
-        borderRight: false,
-      }),
-    )) as ShapeNode;
-    assert.strictEqual(node.border?.top, true);
-    assert.strictEqual(node.border?.bottom, true);
-    assert.strictEqual(node.border?.left, false);
-    assert.strictEqual(node.border?.right, false);
-  });
 
   test("passes corner radius from tokens", async () => {
     const tokens: ShapeTokens = { ...DEFAULT_SHAPE_TOKENS, cornerRadius: 0.125 };

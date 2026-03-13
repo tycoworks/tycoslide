@@ -420,20 +420,7 @@ function styleShape(node: ShapeNode, nodeId: string): StyledNode {
   }
   const bw = ptToPx(node.border.width);
   if (bw > 0) {
-    const bc = node.border.color;
-    if (
-      node.border.top === false ||
-      node.border.right === false ||
-      node.border.bottom === false ||
-      node.border.left === false
-    ) {
-      styles.borderTop = node.border.top !== false ? `${bw}px solid ${bc}` : "none";
-      styles.borderRight = node.border.right !== false ? `${bw}px solid ${bc}` : "none";
-      styles.borderBottom = node.border.bottom !== false ? `${bw}px solid ${bc}` : "none";
-      styles.borderLeft = node.border.left !== false ? `${bw}px solid ${bc}` : "none";
-    } else {
-      styles.border = `${bw}px solid ${bc}`;
-    }
+    styles.border = `${bw}px solid ${node.border.color}`;
   }
   return { nodeId, styles, children: [] };
 }

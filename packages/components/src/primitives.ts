@@ -123,10 +123,6 @@ const shapeSchema = {
 // Full props for DSL callers (only shape geometry — styling comes from tokens)
 export type ShapeProps = {
   shape: ShapeName;
-  borderTop?: boolean;
-  borderRight?: boolean;
-  borderBottom?: boolean;
-  borderLeft?: boolean;
 };
 
 function expandShape(props: ShapeProps, _context: ExpansionContext, tokens: ShapeTokens): ShapeNode {
@@ -140,10 +136,6 @@ function expandShape(props: ShapeProps, _context: ExpansionContext, tokens: Shap
     border: {
       color: tokens.borderColor,
       width: tokens.borderWidth,
-      ...(props.borderTop !== undefined && { top: props.borderTop }),
-      ...(props.borderRight !== undefined && { right: props.borderRight }),
-      ...(props.borderBottom !== undefined && { bottom: props.borderBottom }),
-      ...(props.borderLeft !== undefined && { left: props.borderLeft }),
     },
     cornerRadius: tokens.cornerRadius,
   };

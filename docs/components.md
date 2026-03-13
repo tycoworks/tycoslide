@@ -368,13 +368,7 @@ The following properties are available in the TypeScript DSL only (not in direct
 | `fillOpacity` | number | Fill opacity (0--1) |
 | `borderColor` | string | Border color (6-character hex with `#` prefix) |
 | `borderWidth` | number | Border width in points |
-| `borderTop` | boolean | Show top border only |
-| `borderRight` | boolean | Show right border only |
-| `borderBottom` | boolean | Show bottom border only |
-| `borderLeft` | boolean | Show left border only |
 | `cornerRadius` | number | Corner radius in inches |
-
-When any `borderTop`/`borderRight`/`borderBottom`/`borderLeft` prop is set, only the specified sides render a border.
 
 ### Example
 

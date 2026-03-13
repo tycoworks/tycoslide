@@ -70,14 +70,10 @@ export interface LineNode {
   endArrow?: ArrowType;
 }
 
-/** Border configuration for area shapes - can be all sides or selective */
+/** Border configuration for area shapes. */
 export interface ShapeBorder {
   color: string;
   width: number;
-  top?: boolean;
-  right?: boolean;
-  bottom?: boolean;
-  left?: boolean;
 }
 
 /** Area shape node: fill, border, cornerRadius (rectangles, ellipses, triangles, etc.) */
