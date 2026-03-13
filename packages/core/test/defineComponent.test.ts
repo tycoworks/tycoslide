@@ -41,7 +41,7 @@ describe("defineComponent", () => {
     const comp = defineComponent({
       name: "test-params-comp",
       params: testParams,
-      tokens: [],
+      tokens: {},
       expand: (props) => stubTextNode(props.title),
     });
 
@@ -91,7 +91,7 @@ describe("defineComponent", () => {
     const comp = defineComponent({
       name: "test-body-comp",
       body: schema.string(),
-      tokens: [],
+      tokens: {},
       expand: (props) => stubTextNode(props.body),
     });
 
@@ -128,7 +128,7 @@ describe("defineComponent", () => {
       name: "test-body-params-comp",
       body: schema.string(),
       params: { scale: schema.number().optional() },
-      tokens: [],
+      tokens: {},
       expand: (props) => stubTextNode(props.body),
     });
 
@@ -150,7 +150,7 @@ describe("defineComponent", () => {
     const comp = defineComponent({
       name: "test-prog-comp",
       slots: ["children"],
-      tokens: [],
+      tokens: {},
       expand: (props: { children: any[] }) => ({
         type: NODE_TYPE.CONTAINER,
         direction: DIRECTION.ROW,

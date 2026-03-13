@@ -179,7 +179,7 @@ describe("Slot Compiler", () => {
     it("should throw on duplicate MDAST handler registration", () => {
       const dup = defineComponent({
         name: "duplicate-paragraph-handler",
-        tokens: [],
+        tokens: {},
         mdast: {
           nodeTypes: [SYNTAX.PARAGRAPH],
           compile: () => null,

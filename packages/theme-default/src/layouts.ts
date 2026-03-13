@@ -12,7 +12,7 @@ import {
   SIZE,
   type Slide,
   type SlideNode,
-  schema,
+  schema,  token,
   type VerticalAlignment,
 } from "tycoslide";
 import type { CardTokens, ListTokens, PlainTextTokens, QuoteTokens, ShapeTokens, TextTokens } from "tycoslide-components";
@@ -94,7 +94,7 @@ export const titleLayout = defineLayout({
     subtitle: textComponent.schema.optional(),
     image: imageComponent.schema.optional(),
   },
-  tokens: Object.values(TITLE_LAYOUT_TOKEN),
+  tokens: token.allRequired(TITLE_LAYOUT_TOKEN),
   render: ({ title, subtitle, image: imagePath }, tokens: TitleLayoutTokens) => {
     const textBlock = column(
       { vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap, height: SIZE.FILL },
@@ -137,7 +137,7 @@ export const sectionLayout = defineLayout({
   name: "section",
   description: "Section divider with centered title.",
   params: { title: textComponent.schema },
-  tokens: Object.values(SECTION_LAYOUT_TOKEN),
+  tokens: token.allRequired(SECTION_LAYOUT_TOKEN),
   render: ({ title }, tokens: SectionLayoutTokens) => ({
     masterName: "minimal",
     masterVariant: tokens.masterVariant,
@@ -188,7 +188,7 @@ export const bodyLayout = defineLayout({
     eyebrow: textComponent.schema.optional(),
   },
   slots: ["body"],
-  tokens: Object.values(BODY_LAYOUT_TOKEN),
+  tokens: token.allRequired(BODY_LAYOUT_TOKEN),
   render: ({ title, eyebrow, body }, tokens: BodyLayoutTokens) =>
     masteredSlide(
       ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
@@ -237,7 +237,7 @@ export const statLayout = defineLayout({
     label: textComponent.schema,
     caption: textComponent.schema.optional(),
   },
-  tokens: Object.values(STAT_LAYOUT_TOKEN),
+  tokens: token.allRequired(STAT_LAYOUT_TOKEN),
   render: ({ value, label, caption }, tokens: StatLayoutTokens) => {
     const content = column(
       { vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap, height: SIZE.FILL, padding: tokens.padding },
@@ -288,7 +288,7 @@ export const quoteLayout = defineLayout({
     quote: textComponent.schema,
     attribution: textComponent.schema.optional(),
   },
-  tokens: Object.values(QUOTE_LAYOUT_TOKEN),
+  tokens: token.allRequired(QUOTE_LAYOUT_TOKEN),
   render: ({ quote: quoteText, attribution }, tokens: QuoteLayoutTokens) =>
     masteredSlide(
       column(
@@ -313,7 +313,7 @@ export const endLayout = defineLayout({
     title: textComponent.schema,
     subtitle: textComponent.schema.optional(),
   },
-  tokens: Object.values(TITLE_LAYOUT_TOKEN),
+  tokens: token.allRequired(TITLE_LAYOUT_TOKEN),
   render: ({ title, subtitle }, tokens: TitleLayoutTokens) => ({
     masterName: "minimal",
     masterVariant: tokens.masterVariant,
@@ -345,7 +345,7 @@ export const blankLayout = defineLayout({
   description: "No chrome. Full canvas for custom content.",
   params: {},
   slots: ["body"],
-  tokens: Object.values(BLANK_LAYOUT_TOKEN),
+  tokens: token.allRequired(BLANK_LAYOUT_TOKEN),
   render: ({ body }, tokens: BlankLayoutTokens) => ({
     masterName: "minimal",
     masterVariant: tokens.masterVariant,
@@ -394,7 +394,7 @@ export const twoColumnLayout = defineLayout({
     eyebrow: textComponent.schema.optional(),
   },
   slots: ["left", "right"],
-  tokens: Object.values(TWO_COLUMN_LAYOUT_TOKEN),
+  tokens: token.allRequired(TWO_COLUMN_LAYOUT_TOKEN),
   render: ({ title, eyebrow, left, right }, tokens: TwoColumnLayoutTokens) =>
     masteredSlide(
       ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
@@ -439,7 +439,7 @@ export const statementLayout = defineLayout({
     body: textComponent.schema,
     caption: textComponent.schema.optional(),
   },
-  tokens: Object.values(STATEMENT_LAYOUT_TOKEN),
+  tokens: token.allRequired(STATEMENT_LAYOUT_TOKEN),
   render: ({ body, caption }, tokens: StatementLayoutTokens) => ({
     masterName: "minimal",
     masterVariant: tokens.masterVariant,
@@ -500,7 +500,7 @@ export const agendaLayout = defineLayout({
     eyebrow: textComponent.schema.optional(),
     items: schema.array(textComponent.schema),
   },
-  tokens: Object.values(AGENDA_LAYOUT_TOKEN),
+  tokens: token.allRequired(AGENDA_LAYOUT_TOKEN),
   render: ({ title, eyebrow, items }, tokens: AgendaLayoutTokens) => {
     // Inline card component: stack composes a rounded-rect background shape
     // with padded content in a single node. Layouts can build ad-hoc visuals
@@ -573,7 +573,7 @@ export const cardsLayout = defineLayout({
     cards: schema.array(cardComponent.schema),
     caption: textComponent.schema.optional(),
   },
-  tokens: Object.values(CARDS_LAYOUT_TOKEN),
+  tokens: token.allRequired(CARDS_LAYOUT_TOKEN),
   render: ({ title, eyebrow, intro, cards: cardItems, caption }, tokens: CardsLayoutTokens) => {
     const built = cardItems.map((c) => component(Component.Card, { ...c }, tokens.card));
     const perRow = built.length <= 2 ? built.length : built.length === 4 ? 2 : built.length >= 7 ? 4 : 3;

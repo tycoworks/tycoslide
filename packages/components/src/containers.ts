@@ -65,7 +65,7 @@ export const rowComponent = defineComponent({
   name: Component.Row,
   slots: ["children"] as const,
   directive: false,
-  tokens: [],
+  tokens: {},
 
   expand: (props: RowInternalProps, context: ExpansionContext) => ({
     type: NODE_TYPE.CONTAINER,
@@ -108,7 +108,7 @@ export const columnComponent = defineComponent({
   name: Component.Column,
   slots: ["children"] as const,
   directive: false,
-  tokens: [],
+  tokens: {},
 
   expand: (props: ColumnInternalProps, context: ExpansionContext) => ({
     type: NODE_TYPE.CONTAINER,
@@ -147,7 +147,7 @@ export const stackComponent = defineComponent({
   name: Component.Stack,
   slots: ["children"] as const,
   directive: false,
-  tokens: [],
+  tokens: {},
 
   expand: (props: StackInternalProps) => ({
     type: NODE_TYPE.STACK,
@@ -194,7 +194,7 @@ export const gridComponent = defineComponent({
   name: Component.Grid,
   slots: ["children"] as const,
   directive: false,
-  tokens: [],
+  tokens: {},
   expand: (props: GridInternalProps) => {
     const { columns, gap = GAP.NORMAL, height = SIZE.FILL, children } = props;
 

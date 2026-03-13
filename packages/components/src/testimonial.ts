@@ -11,6 +11,8 @@ import {
   type SchemaShape,
   SHAPE,
   SIZE,
+  token,
+  type TokenShape,
   type VerticalAlignment,
 } from "tycoslide";
 import { column, row, stack } from "./containers.js";
@@ -39,6 +41,8 @@ export type TestimonialTokens = {
   [TESTIMONIAL_TOKEN.QUOTE]: TextTokens;
   [TESTIMONIAL_TOKEN.ATTRIBUTION]: PlainTextTokens;
 };
+
+export const TESTIMONIAL_TOKEN_SPEC: TokenShape = token.allRequired(TESTIMONIAL_TOKEN)
 
 // ============================================
 // PARAMS SCHEMA
@@ -75,7 +79,7 @@ const testimonialSchema = {
 export const testimonialComponent = defineComponent({
   name: Component.Testimonial,
   params: testimonialSchema,
-  tokens: Object.values(TESTIMONIAL_TOKEN),
+  tokens: TESTIMONIAL_TOKEN_SPEC,
   expand(props, _context, tokens: TestimonialTokens) {
     const { quote: quoteText, body, attribution, image: imagePath } = props;
     const actualQuote = quoteText ?? body;

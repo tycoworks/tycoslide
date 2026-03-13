@@ -4,7 +4,7 @@
 // Always uses rich text (inline formatting only): bold, italic, :color[highlights], no bullets/paragraphs.
 
 import type { Heading, RootContent } from "mdast";
-import type { ExpansionContext, HorizontalAlignment, NormalizedRun, TextStyleName, VerticalAlignment } from "tycoslide";
+import type { ExpansionContext, HorizontalAlignment, NormalizedRun, TextStyleName, TokenShape, VerticalAlignment } from "tycoslide";
 import {
   type ComponentNode,
   component,
@@ -15,6 +15,7 @@ import {
   SYNTAX,
   schema,
   TEXT_STYLE,
+  token,
 } from "tycoslide";
 import { Component } from "./names.js";
 import { inlineParse, transformInline } from "./utils/inline.js";
@@ -38,6 +39,8 @@ export type TextTokens = {
   [TEXT_TOKEN.VALIGN]: VerticalAlignment;
   [TEXT_TOKEN.ACCENTS]: Record<string, string>;
 };
+
+export const TEXT_TOKEN_SPEC: TokenShape = token.allRequired(TEXT_TOKEN)
 
 // ============================================
 // TYPES
@@ -105,7 +108,7 @@ export const textComponent = defineComponent({
   name: Component.Text,
   body: schema.string(),
   directive: false,
-  tokens: Object.values(TEXT_TOKEN),
+  tokens: TEXT_TOKEN_SPEC,
   mdast: {
     nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.HEADING],
     compile: (node: RootContent, source: string): ComponentNode | null => {

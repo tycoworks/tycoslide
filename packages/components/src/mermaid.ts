@@ -4,7 +4,7 @@
 
 import fs from "node:fs";
 import { createRequire } from "node:module";
-import type { Canvas, TextStyleName } from "tycoslide";
+import type { Canvas, TextStyleName, TokenShape } from "tycoslide";
 import {
   type ComponentNode,
   component,
@@ -14,6 +14,7 @@ import {
   type ImageNode,
   NODE_TYPE,
   schema,
+  token,
 } from "tycoslide";
 import { Component } from "./names.js";
 
@@ -56,6 +57,8 @@ export type MermaidTokens = {
   [MERMAID_TOKEN.ACCENT_OPACITY]: number;
   [MERMAID_TOKEN.ACCENTS]: Record<string, string>;
 };
+
+export const MERMAID_TOKEN_SPEC: TokenShape = token.allRequired(MERMAID_TOKEN)
 
 // ============================================
 // TYPES
@@ -322,7 +325,7 @@ async function expandMermaid(
 export const mermaidComponent = defineComponent({
   name: Component.Mermaid,
   body: schema.string(),
-  tokens: Object.values(MERMAID_TOKEN),
+  tokens: MERMAID_TOKEN_SPEC,
   expand: expandMermaid,
 });
 

@@ -8,6 +8,7 @@ import { beforeEach, describe, it } from "node:test";
 import { compileDocument } from "../src/core/markdown/documentCompiler.js";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
 import { schema } from "../src/core/model/schema.js";
+import { token } from "../src/core/model/token.js";
 import type { Slide } from "../src/core/model/types.js";
 import type { LayoutDefinition } from "../src/core/rendering/registry.js";
 import {
@@ -112,7 +113,7 @@ describe("Document Compiler: Layout Tokens", () => {
     description: "Test layout with tokens and body slot",
     params: { title: schema.string().optional() },
     slots: ["body"],
-    tokens: ["background", "title", "text"],
+    tokens: { background: token.required, title: token.required, text: token.required },
     render: (props: any, tokens?: Record<string, unknown>): Slide => {
       receivedProps.push(props);
       receivedTokens.push(tokens);
@@ -128,7 +129,7 @@ describe("Document Compiler: Layout Tokens", () => {
     name: "tokenSimple",
     description: "Test layout with tokens but no slots",
     params: { title: schema.string() },
-    tokens: ["background", "titleTokens"],
+    tokens: { background: token.required, titleTokens: token.required },
     render: (props: any, tokens?: Record<string, unknown>): Slide => {
       receivedProps.push(props);
       receivedTokens.push(tokens);
@@ -264,7 +265,7 @@ describe("Slot Token Injection", () => {
     description: "Layout with slot token injection",
     params: { title: schema.string().optional() },
     slots: ["body"],
-    tokens: ["background", "text"],
+    tokens: { background: token.required, text: token.required },
     render: (props: any, tokens?: Record<string, unknown>): Slide => {
       receivedProps.push(props);
       receivedTokens.push(tokens);
@@ -348,15 +349,15 @@ describe("Slot Token Injection", () => {
     assert.strictEqual(tokens.color, "#000000");
   });
 
-  it("does not inject tokens when layout has no token key matching component name", () => {
+  it("throws when required token is missing from theme variant", () => {
     const theme = mockTheme({
       layouts: {
         slotTokenTest: {
           variants: {
             default: {
               background: "#FFFFFF",
-              // No 'text' key — only 'background'
-              text: undefined as any, // explicitly undefined
+              // No 'text' key — required token missing
+              text: undefined as any,
             },
           },
         },
@@ -367,15 +368,10 @@ describe("Slot Token Injection", () => {
     delete (theme.layouts as any).slotTokenTest.variants.default.text;
 
     const md = `${HEADER}---\nlayout: slotTokenTest\nvariant: default\n---\n\nHello`;
-    compileDocument(md, { theme });
-
-    const bodyNodes = receivedProps[0].body;
-    const textNode = bodyNodes[0];
-    // No matching layout token key for 'text', so node.tokens should not be set
-    assert.strictEqual(textNode.tokens, undefined);
-    // Props should still have body content
-    const props = textNode.props as Record<string, unknown>;
-    assert.ok(props.body !== undefined);
+    assert.throws(
+      () => compileDocument(md, { theme }),
+      /missing required tokens.*text/,
+    );
   });
 
   it("does not inject tokens for layouts without slots", () => {
@@ -384,7 +380,7 @@ describe("Slot Token Injection", () => {
       name: "noSlotTokenTest",
       description: "Tokens but no slots",
       params: { title: schema.string() },
-      tokens: ["background", "text"],
+      tokens: { background: token.required, text: token.required },
       render: (props: any, _tokens?: Record<string, unknown>): Slide => {
         capturedProps = props;
         return {

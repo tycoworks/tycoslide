@@ -17,7 +17,9 @@ import {
   type ShapeNode,
   type SlideNumberNode,
   schema,
+  token,
   type TextStyleName,
+  type TokenShape,
   type VerticalAlignment,
 } from "tycoslide";
 import { Component } from "./names.js";
@@ -34,6 +36,8 @@ export type LineTokens = {
   [LINE_TOKEN.DASH_TYPE]: DashType;
 };
 
+export const LINE_TOKEN_SPEC: TokenShape = token.allRequired(LINE_TOKEN);
+
 export const SLIDE_NUMBER_TOKEN = {
   STYLE: "style",
   COLOR: "color",
@@ -47,6 +51,8 @@ export type SlideNumberTokens = {
   [SLIDE_NUMBER_TOKEN.HALIGN]: HorizontalAlignment;
   [SLIDE_NUMBER_TOKEN.VALIGN]: VerticalAlignment;
 };
+
+export const SLIDE_NUMBER_TOKEN_SPEC: TokenShape = token.allRequired(SLIDE_NUMBER_TOKEN);
 
 export const SHAPE_TOKEN = {
   FILL: "fill",
@@ -63,6 +69,8 @@ export type ShapeTokens = {
   [SHAPE_TOKEN.BORDER_WIDTH]: number;
   [SHAPE_TOKEN.CORNER_RADIUS]: number;
 };
+
+export const SHAPE_TOKEN_SPEC: TokenShape = token.allRequired(SHAPE_TOKEN);
 
 // ============================================
 // LINE
@@ -94,7 +102,7 @@ function expandLine(props: LineProps, _context: ExpansionContext, tokens: LineTo
 export const lineComponent = defineComponent({
   name: Component.Line,
   params: lineSchema,
-  tokens: Object.values(LINE_TOKEN),
+  tokens: LINE_TOKEN_SPEC,
   expand: expandLine,
 });
 
@@ -144,7 +152,7 @@ function expandShape(props: ShapeProps, _context: ExpansionContext, tokens: Shap
 export const shapeComponent = defineComponent({
   name: Component.Shape,
   params: shapeSchema,
-  tokens: Object.values(SHAPE_TOKEN),
+  tokens: SHAPE_TOKEN_SPEC,
   expand: expandShape,
 });
 
@@ -177,7 +185,7 @@ function expandSlideNumber(
 
 export const slideNumberComponent = defineComponent({
   name: Component.SlideNumber,
-  tokens: Object.values(SLIDE_NUMBER_TOKEN),
+  tokens: SLIDE_NUMBER_TOKEN_SPEC,
   expand: expandSlideNumber,
 });
 

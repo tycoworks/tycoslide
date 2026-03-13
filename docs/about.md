@@ -59,7 +59,7 @@ Yes, via the TypeScript DSL. See [Components — Creating Custom Components](./c
 
 ## How does it work under the hood?
 
-tycoslide renders your slides as HTML and CSS, measures the position and size of every element, then rebuilds the layout as native PowerPoint objects (text boxes, shapes, and tables). This relies on a few assumptions about rendering behaviour between HTML and PowerPoint — if you hit any problems, please [open an issue](https://github.com/tycoworks/tycoslide/issues).
+tycoslide renders slides as HTML and CSS, measures the position and size of every element, then rebuilds the layout as native PowerPoint objects. This relies on a few assumptions about rendering behavior between HTML and PowerPoint — if you hit any issues, please [let me know](https://github.com/tycoworks/tycoslide/issues).
 
 ---
 

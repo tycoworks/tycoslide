@@ -19,6 +19,8 @@ import {
   schema,
   type TextStyle,
   type TextStyleName,
+  token,
+  type TokenShape,
 } from "tycoslide";
 import type { LanguageName } from "./languages.js";
 import { LANGUAGE_VALUES } from "./languages.js";
@@ -64,6 +66,8 @@ export type CodeTokens = {
   [CODE_TOKEN.PADDING]: number;
   [CODE_TOKEN.BORDER_RADIUS]: number;
 };
+
+export const CODE_TOKEN_SPEC: TokenShape = token.allRequired(CODE_TOKEN)
 
 // ============================================
 // SCHEMAS & TYPES
@@ -225,7 +229,7 @@ export const codeComponent = defineComponent({
   name: Component.Code,
   body: schema.string(),
   params: codeSchema,
-  tokens: Object.values(CODE_TOKEN),
+  tokens: CODE_TOKEN_SPEC,
   mdast: {
     nodeTypes: [SYNTAX.CODE],
     compile: (node: RootContent, _source: string): ComponentNode | null => {

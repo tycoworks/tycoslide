@@ -10,6 +10,8 @@ import {
   type SchemaShape,
   SHAPE,
   SIZE,
+  token,
+  type TokenShape,
   type VerticalAlignment,
 } from "tycoslide";
 import { column, stack } from "./containers.js";
@@ -37,6 +39,8 @@ export type CardTokens = {
   [CARD_TOKEN.TITLE]: TextTokens;
   [CARD_TOKEN.DESCRIPTION]: TextTokens;
 };
+
+export const CARD_TOKEN_SPEC: TokenShape = token.allRequired(CARD_TOKEN)
 
 // ============================================
 // PARAMS SCHEMA
@@ -69,7 +73,7 @@ const cardSchema = {
 export const cardComponent = defineComponent({
   name: Component.Card,
   params: cardSchema,
-  tokens: Object.values(CARD_TOKEN),
+  tokens: CARD_TOKEN_SPEC,
   expand(props, _context, tokens: CardTokens) {
     const { image: imagePath, title, description, body } = props;
     const actualDescription = description ?? body;

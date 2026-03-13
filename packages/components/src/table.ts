@@ -19,6 +19,8 @@ import {
   type TextContent,
   type TextNode,
   type TextStyleName,
+  token,
+  type TokenShape,
   type VerticalAlignment,
 } from "tycoslide";
 import { Component } from "./names.js";
@@ -70,6 +72,8 @@ export type TableTokens = {
   [TABLE_TOKEN.ACCENTS]: Record<string, string>;
 };
 
+export const TABLE_TOKEN_SPEC: TokenShape = token.allRequired(TABLE_TOKEN)
+
 // ============================================
 // TABLE COMPONENT
 // ============================================
@@ -117,7 +121,7 @@ const tableSchema = {
 export const tableComponent = defineComponent({
   name: Component.Table,
   params: tableSchema,
-  tokens: Object.values(TABLE_TOKEN),
+  tokens: TABLE_TOKEN_SPEC,
   mdast: {
     nodeTypes: [SYNTAX.TABLE],
     compile: (node: RootContent, source: string): ComponentNode | null => {

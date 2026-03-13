@@ -11,6 +11,7 @@ import type { Heading, Table as MdastTable, RootContent } from "mdast";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
 import { schema } from "../src/core/model/schema.js";
 import { extractSource, SYNTAX } from "../src/core/model/syntax.js";
+import { token } from "../src/core/model/token.js";
 import { DIRECTION, HALIGN, SIZE, TEXT_STYLE, VALIGN } from "../src/core/model/types.js";
 import type { ComponentNode, ExpansionContext } from "../src/core/rendering/registry.js";
 import { component, defineComponent } from "../src/core/rendering/registry.js";
@@ -50,7 +51,7 @@ export const textComponent = defineComponent({
     vAlign: schema.string().optional(),
     content: schema.string().optional(),
   },
-  tokens: ["color", "style", "linkColor", "linkUnderline", "hAlign", "vAlign"],
+  tokens: { color: token.required, style: token.required, linkColor: token.required, linkUnderline: token.required, hAlign: token.required, vAlign: token.required },
   mdast: {
     nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.HEADING, SYNTAX.LIST],
     compile: (node: RootContent, source: string): ComponentNode | null => {
@@ -94,7 +95,7 @@ export const rowComponent = defineComponent({
   name: C.Row,
   slots: ["children"] as const,
   directive: false,
-  tokens: [],
+  tokens: {},
   expand: (props: any): any => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.ROW,
@@ -116,7 +117,7 @@ export const columnComponent = defineComponent({
   name: C.Column,
   slots: ["children"] as const,
   directive: false,
-  tokens: [],
+  tokens: {},
   expand: (props: any): any => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.COLUMN,
@@ -140,7 +141,7 @@ export const cardComponent = defineComponent({
     title: schema.string().optional(),
     description: schema.string().optional(),
   },
-  tokens: ["background", "padding", "gap", "hAlign", "vAlign", "title", "description"],
+  tokens: { background: token.required, padding: token.required, gap: token.required, hAlign: token.required, vAlign: token.required, title: token.required, description: token.required },
   expand: (props: any, _ctx: ExpansionContext, tokens: any): any => {
     // Pass title tokens down to child Text component
     const titleNode = component(C.Text, { body: props.title ?? props.body ?? "" }, tokens.title);
@@ -156,7 +157,7 @@ export const imageComponent = defineComponent({
   name: C.Image,
   body: schema.string(),
   params: { alt: schema.string().optional() },
-  tokens: [],
+  tokens: {},
   expand: () => ({}) as any,
 });
 
@@ -166,7 +167,7 @@ export const lineComponent = defineComponent({
     beginArrow: schema.string().optional(),
     endArrow: schema.string().optional(),
   },
-  tokens: ["color", "width", "dashType"],
+  tokens: { color: token.required, width: token.required, dashType: token.required },
   expand: () => ({}) as any,
 });
 
@@ -176,20 +177,20 @@ export const tableComponent = defineComponent({
   params: {
     headerColumns: schema.number().optional(),
   },
-  tokens: [
-    "borderStyle",
-    "borderColor",
-    "borderWidth",
-    "headerBackground",
-    "headerBackgroundOpacity",
-    "headerTextStyle",
-    "cellBackground",
-    "cellBackgroundOpacity",
-    "cellTextStyle",
-    "cellPadding",
-    "hAlign",
-    "vAlign",
-  ],
+  tokens: {
+    borderStyle: token.required,
+    borderColor: token.required,
+    borderWidth: token.required,
+    headerBackground: token.required,
+    headerBackgroundOpacity: token.required,
+    headerTextStyle: token.required,
+    cellBackground: token.required,
+    cellBackgroundOpacity: token.required,
+    cellTextStyle: token.required,
+    cellPadding: token.required,
+    hAlign: token.required,
+    vAlign: token.required,
+  },
   mdast: {
     nodeTypes: [SYNTAX.TABLE],
     compile: (node: RootContent, source: string): ComponentNode | null => {

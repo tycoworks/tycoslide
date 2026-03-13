@@ -27,7 +27,7 @@ notes: Agenda layout — grid variant with numbered white cards.
 ---
 layout: statement
 variant: default
-body: "tycoslide is a :purple[**presentation**] :purple[**build tool**] that generates :purple[**editable PowerPoint slides**] from markdown, with :purple[**TypeScript-based themes**] and :purple[**build-time validation**]."
+body: "tycoslide is a :purple[**presentation build tool**] that generates :purple[**editable PowerPoint slides from markdown**], with :purple[**TypeScript-based themes**] and :purple[**build-time validation**]."
 notes: Positioning one-liner. Four anchors in one sentence.
 ---
 
@@ -130,7 +130,7 @@ notes: Comparison table. Dimensions and facts — the audience draws their own c
 ---
 layout: quote
 variant: default
-quote: "Software is eating the world... especially presentations."
+quote: "Software is eating the world...especially presentations."
 attribution: "— Marc Andreessen (probably)"
 notes: Pull quote with left accent bar. He did not quite say that.
 ---

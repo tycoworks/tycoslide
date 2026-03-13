@@ -6,6 +6,7 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
 import { schema } from "../src/core/model/schema.js";
+import { token } from "../src/core/model/token.js";
 import type { Theme } from "../src/core/model/types.js";
 import { HALIGN, VALIGN } from "../src/core/model/types.js";
 import { component, componentRegistry, defineComponent } from "../src/core/rendering/registry.js";
@@ -22,7 +23,7 @@ const tokenTestComponent = defineComponent({
   params: {
     label: schema.string().optional(),
   },
-  tokens: ["alpha", "beta", "gamma"],
+  tokens: { alpha: token.required, beta: token.required, gamma: token.required },
   expand: (props: any, _ctx: any, tokens: any): any => ({
     type: NODE_TYPE.TEXT,
     content: [{ text: props.label ?? "" }],
@@ -143,7 +144,7 @@ describe("Token Resolution Engine", () => {
       const noTokenComp = defineComponent({
         name: NO_TOKEN_COMP as any,
         params: { value: schema.string().optional() },
-        tokens: [],
+        tokens: {},
         expand: (props: any): any => ({
           type: NODE_TYPE.TEXT,
           content: [{ text: props.value ?? "" }],

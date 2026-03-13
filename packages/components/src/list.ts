@@ -3,7 +3,7 @@
 // Internal-only (no :::list directive). Available via list() DSL and MDAST handler.
 
 import type { ListItem, List as MdastList, RootContent } from "mdast";
-import type { ExpansionContext, HorizontalAlignment, NormalizedRun, TextStyleName, VerticalAlignment } from "tycoslide";
+import type { ExpansionContext, HorizontalAlignment, NormalizedRun, TextStyleName, TokenShape, VerticalAlignment } from "tycoslide";
 import {
   type ComponentNode,
   component,
@@ -13,6 +13,7 @@ import {
   NODE_TYPE,
   SYNTAX,
   schema,
+  token,
 } from "tycoslide";
 import { Component } from "./names.js";
 import { inlineParse, transformInline } from "./utils/inline.js";
@@ -36,6 +37,8 @@ export type ListTokens = {
   [LIST_TOKEN.VALIGN]: VerticalAlignment;
   [LIST_TOKEN.ACCENTS]: Record<string, string>;
 };
+
+export const LIST_TOKEN_SPEC: TokenShape = token.allRequired(LIST_TOKEN)
 
 // ============================================
 // TYPES
@@ -116,7 +119,7 @@ export const listComponent = defineComponent({
   name: Component.List,
   body: schema.array(schema.string()),
   directive: false,
-  tokens: Object.values(LIST_TOKEN),
+  tokens: LIST_TOKEN_SPEC,
   mdast: {
     nodeTypes: [SYNTAX.LIST],
     compile: (node: RootContent, source: string): ComponentNode | null => {

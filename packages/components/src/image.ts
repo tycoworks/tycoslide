@@ -85,7 +85,7 @@ export const imageComponent = defineComponent({
   name: Component.Image,
   body: schema.string(),
   params: imageSchema,
-  tokens: [],
+  tokens: {},
 
   mdast: {
     nodeTypes: [SYNTAX.IMAGE],

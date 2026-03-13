@@ -12,6 +12,8 @@ import {
   type SchemaShape,
   SIZE,
   SYNTAX,
+  token,
+  type TokenShape,
 } from "tycoslide";
 import { column, row } from "./containers.js";
 import { Component } from "./names.js";
@@ -32,6 +34,8 @@ export type QuoteTokens = {
   [QUOTE_TOKEN.QUOTE]: TextTokens;
   [QUOTE_TOKEN.ATTRIBUTION]: PlainTextTokens;
 };
+
+export const QUOTE_TOKEN_SPEC: TokenShape = token.allRequired(QUOTE_TOKEN)
 
 // ============================================
 // PARAMS SCHEMA
@@ -65,7 +69,7 @@ const quoteSchema = {
 export const quoteComponent = defineComponent({
   name: Component.Quote,
   params: quoteSchema,
-  tokens: Object.values(QUOTE_TOKEN),
+  tokens: QUOTE_TOKEN_SPEC,
   mdast: {
     nodeTypes: [SYNTAX.BLOCKQUOTE],
     compile: (node: RootContent, source: string) => {

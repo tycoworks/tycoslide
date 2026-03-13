@@ -13,6 +13,7 @@ import {
 } from "../model/nodes.js";
 import type { ScalarParam } from "../model/schema.js";
 import type { SyntaxType } from "../model/syntax.js";
+import { parseTokenShape, type TokenShape, validateTokens } from "../model/token.js";
 import type { Background, Slide, Theme } from "../model/types.js";
 
 // Re-export ComponentNode for convenience
@@ -108,8 +109,8 @@ export interface MdastHandler {
 export interface ComponentDefinition<TProps = unknown, TTokens = undefined> {
   /** Unique name for this component (e.g., 'card', 'table') */
   name: string;
-  /** Token keys that must be present in node.tokens. Set by DSL or slot injection. Empty array = no tokens. */
-  tokens: string[];
+  /** Declared token shape — required vs optional descriptors. Empty = no tokens. */
+  tokenShape: TokenShape;
   /** Optional Zod schema shape for directive attributes (used for coercion on slotted components). */
   params?: SchemaShape;
   /** Slot names — directive body is compiled as ComponentNode[] and passed as props[slotName]. */
@@ -204,7 +205,7 @@ export function defineComponent<TBody extends z.ZodTypeAny, TTokens = undefined>
   name: string;
   body: TBody;
   directive?: boolean;
-  tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+  tokens: TokenShape;
   mdast?: MdastHandler;
   expand: (
     props: { body: z.infer<TBody> },
@@ -223,7 +224,7 @@ export function defineComponent<TBody extends z.ZodTypeAny, TParams extends Sche
   body: TBody;
   params: TParams;
   directive?: boolean;
-  tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+  tokens: TokenShape;
   mdast?: MdastHandler;
   expand: (
     props: { body: z.infer<TBody> } & z.infer<z.ZodObject<TParams>>,
@@ -242,7 +243,7 @@ export function defineComponent<TShape extends SchemaShape, TTokens = undefined>
   name: string;
   params: TShape;
   directive?: boolean;
-  tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+  tokens: TokenShape;
   mdast?: MdastHandler;
   expand: (
     props: z.infer<z.ZodObject<TShape>> & { body?: string },
@@ -261,7 +262,7 @@ export function defineComponent<TTokens = undefined>(def: {
   params?: SchemaShape;
   slots: readonly string[];
   directive?: boolean;
-  tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+  tokens: TokenShape;
   mdast?: MdastHandler;
   expand: (props: any, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
 }): ComponentDefinition<any, TTokens>;
@@ -272,7 +273,7 @@ export function defineComponent<TTokens = undefined>(def: {
  */
 export function defineComponent<TProps, TTokens = undefined>(def: {
   name: string;
-  tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+  tokens: TokenShape;
   mdast?: MdastHandler;
   expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
 }): ComponentDefinition<TProps, TTokens>;
@@ -289,7 +290,7 @@ export function defineComponent(def: any): ComponentDefinition & { schema?: z.Zo
   const result: ComponentDefinition & { schema?: z.ZodTypeAny } = {
     name: def.name as string,
     expand: def.expand as ComponentDefinition["expand"],
-    tokens: def.tokens as string[],
+    tokenShape: (def.tokens as TokenShape) ?? {},
     params: def.params,
     slots,
     mdast,
@@ -388,28 +389,24 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     if (!def) {
       throw new Error(`Unknown component: '${node.componentName}'. Did you forget to register it?`);
     }
-    const requiredTokens = def.tokens;
-    if (!requiredTokens?.length) {
+    const shape = parseTokenShape(def.tokenShape);
+    if (!shape.allKeys.size) {
       return def.expand(node.props, context, undefined as never);
     }
 
     // Read from node.tokens (set by DSL or slot injection)
     if (!node.tokens) {
-      throw new Error(
-        `Component '${node.componentName}' requires tokens but none were provided. ` +
-          `Tokens must be passed by the parent (layout or composition component). ` +
-          `Required: [${requiredTokens.join(", ")}]`,
-      );
+      if (shape.requiredKeys.length) {
+        throw new Error(
+          `Component '${node.componentName}' requires tokens but none were provided. ` +
+            `Tokens must be passed by the parent (layout or composition component). ` +
+            `Required: [${shape.requiredKeys.join(", ")}]`,
+        );
+      }
+      return def.expand(node.props, context, undefined as never);
     }
-    const missing = requiredTokens.filter(
-      (key: string) => node.tokens![key] === undefined || node.tokens![key] === null,
-    );
-    if (missing.length) {
-      throw new Error(
-        `Component '${node.componentName}' is missing required tokens: [${missing.join(", ")}]. ` +
-          `All tokens must be provided by the parent component or layout.`,
-      );
-    }
+
+    validateTokens(shape, node.tokens, `Component '${node.componentName}'`);
     return def.expand(node.props, context, node.tokens as never);
   }
 
@@ -486,8 +483,8 @@ export interface LayoutDefinition {
   description: string;
   params: SchemaShape;
   slots?: readonly string[];
-  /** Token keys that must be present in theme.layouts for this layout. Empty or undefined = no tokens. */
-  tokens?: string[];
+  /** Declared token shape — required vs optional descriptors. Undefined = no tokens. */
+  tokenShape?: TokenShape;
   render: (props: any, tokens: unknown) => Slide;
 }
 
@@ -516,7 +513,7 @@ export function defineLayout<
   description: string;
   params: TParams;
   slots?: TSlots;
-  tokens?: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+  tokens?: TokenShape;
   render: (
     props: z.infer<z.ZodObject<TParams>> & SlotsToProps<TSlots>,
     tokens: TTokens extends undefined ? Record<string, unknown> | undefined : TTokens,
@@ -528,6 +525,9 @@ export function defineLayout<
         `Layout '${def.name}': param '${key}' is a reserved frontmatter key (${[...RESERVED_FRONTMATTER_KEYS].join(", ")}). Use a different name.`,
       );
     }
+  }
+  if (def.tokens) {
+    (def as any).tokenShape = def.tokens;
   }
   (def as any).tokenMap = (map: any) => map;
   return def as unknown as TypedLayoutDefinition<any>;
@@ -551,13 +551,18 @@ class LayoutRegistry extends Registry<LayoutDefinition> {
     if (!config) {
       throw new Error(`Layout '${layoutName}' requires tokens but theme.layouts.${layoutName} is missing.`);
     }
-
     const tokens = config.variants[variant];
     if (!tokens) {
       const available = Object.keys(config.variants).join(", ");
       throw new Error(`Unknown variant '${variant}' for layout '${layoutName}'. Available: ${available}`);
     }
-
+    const def = this.get(layoutName);
+    if (def?.tokenShape) {
+      const shape = parseTokenShape(def.tokenShape);
+      if (shape.allKeys.size) {
+        validateTokens(shape, tokens as Record<string, unknown>, `Layout '${layoutName}' variant '${variant}'`);
+      }
+    }
     return tokens as Record<string, unknown>;
   }
 }
@@ -576,8 +581,8 @@ import type { Bounds } from "../model/bounds.js";
  */
 export interface MasterDefinition {
   name: string;
-  /** Token keys that must be present in theme.masters for this master. */
-  tokens: string[];
+  /** Declared token shape — required vs optional descriptors. */
+  tokenShape: TokenShape;
   /** Build master content from resolved tokens and slide dimensions. */
   getContent: (
     tokens: Record<string, unknown>,
@@ -604,7 +609,7 @@ export interface TypedMasterDefinition<TTokens = unknown> extends MasterDefiniti
  */
 export function defineMaster<TTokens = undefined>(def: {
   name: string;
-  tokens: TTokens extends undefined ? string[] : (keyof TTokens & string)[];
+  tokens: TokenShape;
   getContent: (
     tokens: TTokens extends undefined ? Record<string, unknown> : TTokens,
     slideSize: { width: number; height: number },
@@ -614,6 +619,7 @@ export function defineMaster<TTokens = undefined>(def: {
     background: Background;
   };
 }): TypedMasterDefinition<TTokens extends undefined ? Record<string, unknown> : TTokens> {
+  (def as any).tokenShape = def.tokens;
   (def as any).tokenMap = (map: any) => map;
   return def as unknown as TypedMasterDefinition<any>;
 }
@@ -636,13 +642,18 @@ class MasterRegistry extends Registry<MasterDefinition> {
     if (!config) {
       throw new Error(`Master '${masterName}' requires tokens but theme.masters.${masterName} is missing.`);
     }
-
     const tokens = config.variants[variant];
     if (!tokens) {
       const available = Object.keys(config.variants).join(", ");
       throw new Error(`Unknown variant '${variant}' for master '${masterName}'. Available: ${available}`);
     }
-
+    const def = this.get(masterName);
+    if (def?.tokenShape) {
+      const shape = parseTokenShape(def.tokenShape);
+      if (shape.allKeys.size) {
+        validateTokens(shape, tokens as Record<string, unknown>, `Master '${masterName}' variant '${variant}'`);
+      }
+    }
     return tokens as Record<string, unknown>;
   }
 }
