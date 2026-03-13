@@ -4,23 +4,23 @@
 import type { RootContent } from "mdast";
 import { z } from "zod";
 import {
+  component,
   type ComponentNode,
   type ContainerNode,
   type ElementNode,
+  isComponentNode,
   NODE_TYPE,
   type SlideNode,
   type StackNode,
 } from "../model/nodes.js";
 import type { ScalarParam } from "../model/schema.js";
-import type { SyntaxType } from "../model/syntax.js";
+import { RESERVED_FRONTMATTER_KEYS, type SyntaxType } from "../model/syntax.js";
 import { parseTokenShape, type TokenShape, validateTokens } from "../model/token.js";
+import type { Bounds } from "../model/bounds.js";
 import type { Background, Slide, Theme } from "../model/types.js";
 
-// Re-export ComponentNode for convenience
+// Re-export ComponentNode — required for declaration emit (defineComponent return type)
 export type { ComponentNode } from "../model/nodes.js";
-
-/** Frontmatter keys consumed by the compiler — cannot be used as layout param names. */
-export const RESERVED_FRONTMATTER_KEYS = new Set(["layout", "name", "notes", "variant"] as const);
 
 // ============================================
 // GENERIC REGISTRY BASE CLASS
@@ -149,7 +149,7 @@ export type DirectiveDeserializer = (
  * Coerce string attribute values from directive markup to JS types.
  * Directive attributes are always strings; schemas expect booleans/numbers.
  */
-export function coerceAttributes(attrs: Record<string, string | null | undefined>): Record<string, unknown> {
+function coerceAttributes(attrs: Record<string, string | null | undefined>): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(attrs)) {
     if (v === "true") result[k] = true;
@@ -445,20 +445,6 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
 
 export const componentRegistry = new ComponentRegistry();
 
-/**
- * Type guard to check if a node is a component node.
- */
-export function isComponentNode(node: unknown): node is ComponentNode {
-  return (
-    typeof node === "object" &&
-    node !== null &&
-    "type" in node &&
-    (node as { type: unknown }).type === NODE_TYPE.COMPONENT &&
-    "componentName" in node &&
-    "props" in node
-  );
-}
-
 // ============================================
 // LAYOUT REGISTRY
 // ============================================
@@ -533,47 +519,11 @@ export function defineLayout<
   return def as unknown as TypedLayoutDefinition<any>;
 }
 
-/**
- * Registry for layout definitions.
- * Layouts are defined with `defineLayout()` and registered via `layoutRegistry.register()`.
- */
-class LayoutRegistry extends Registry<LayoutDefinition> {
-  constructor() {
-    super("Layout");
-  }
-
-  /**
-   * Resolve layout tokens for a given layout name and variant from the theme.
-   * @throws Error if the layout is not found in theme.layouts or the variant doesn't exist
-   */
-  resolveTokens(layoutName: string, variant: string, theme: Theme): Record<string, unknown> {
-    const config = theme.layouts?.[layoutName];
-    if (!config) {
-      throw new Error(`Layout '${layoutName}' requires tokens but theme.layouts.${layoutName} is missing.`);
-    }
-    const tokens = config.variants[variant];
-    if (!tokens) {
-      const available = Object.keys(config.variants).join(", ");
-      throw new Error(`Unknown variant '${variant}' for layout '${layoutName}'. Available: ${available}`);
-    }
-    const def = this.get(layoutName);
-    if (def?.tokenShape) {
-      const shape = parseTokenShape(def.tokenShape);
-      if (shape.allKeys.size) {
-        validateTokens(shape, tokens as Record<string, unknown>, `Layout '${layoutName}' variant '${variant}'`);
-      }
-    }
-    return tokens as Record<string, unknown>;
-  }
-}
-
-export const layoutRegistry = new LayoutRegistry();
+export const layoutRegistry = new Registry<LayoutDefinition>("Layout");
 
 // ============================================
 // MASTER REGISTRY
 // ============================================
-
-import type { Bounds } from "../model/bounds.js";
 
 /**
  * A master slide definition. Masters provide slide chrome (footer, slide number),
@@ -624,61 +574,5 @@ export function defineMaster<TTokens = undefined>(def: {
   return def as unknown as TypedMasterDefinition<any>;
 }
 
-/**
- * Registry for master slide definitions.
- * Masters are defined with `defineMaster()` and registered via `masterRegistry.register()`.
- */
-class MasterRegistry extends Registry<MasterDefinition> {
-  constructor() {
-    super("Master");
-  }
+export const masterRegistry = new Registry<MasterDefinition>("Master");
 
-  /**
-   * Resolve master tokens for a given master name and variant from the theme.
-   * @throws Error if the master is not found in theme.masters or the variant doesn't exist
-   */
-  resolveTokens(masterName: string, variant: string, theme: Theme): Record<string, unknown> {
-    const config = theme.masters?.[masterName];
-    if (!config) {
-      throw new Error(`Master '${masterName}' requires tokens but theme.masters.${masterName} is missing.`);
-    }
-    const tokens = config.variants[variant];
-    if (!tokens) {
-      const available = Object.keys(config.variants).join(", ");
-      throw new Error(`Unknown variant '${variant}' for master '${masterName}'. Available: ${available}`);
-    }
-    const def = this.get(masterName);
-    if (def?.tokenShape) {
-      const shape = parseTokenShape(def.tokenShape);
-      if (shape.allKeys.size) {
-        validateTokens(shape, tokens as Record<string, unknown>, `Master '${masterName}' variant '${variant}'`);
-      }
-    }
-    return tokens as Record<string, unknown>;
-  }
-}
-
-export const masterRegistry = new MasterRegistry();
-
-// ============================================
-// DSL HELPER
-// ============================================
-
-/**
- * Create a component node.
- * Tokens are stored separately from props to avoid naming conflicts
- * (e.g., card has both props.title: string and tokens.title: TextTokens).
- */
-export function component<TProps>(
-  name: string,
-  props: TProps,
-  tokens?: Record<string, unknown> | object,
-): ComponentNode<TProps> {
-  const node: ComponentNode<TProps> = {
-    type: NODE_TYPE.COMPONENT,
-    componentName: name,
-    props,
-  };
-  if (tokens) node.tokens = tokens as Record<string, unknown>;
-  return node;
-}

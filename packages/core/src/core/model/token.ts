@@ -75,6 +75,48 @@ export function parseTokenShape(shape: TokenShape): ParsedTokenShape {
  * @param label - Human-readable context for error messages (e.g. "Component 'card'")
  * @throws Error with contextual message if validation fails
  */
+// ============================================
+// VARIANT RESOLUTION
+// ============================================
+
+/**
+ * Resolve tokens for a named variant from a theme config block.
+ * Used by documentCompiler (layout tokens) and presentation (master tokens).
+ *
+ * @param variantConfig - The theme config for this layout/master (e.g. theme.layouts.body)
+ * @param name - Layout or master name (for error messages)
+ * @param variant - Variant name to resolve
+ * @param tokenShape - Token shape from the definition (for validation), or undefined if no tokens declared
+ * @param label - "Layout" or "Master" (for error messages)
+ */
+export function resolveVariantTokens(
+  variantConfig: { variants: Record<string, unknown> } | undefined,
+  name: string,
+  variant: string,
+  tokenShape: TokenShape | undefined,
+  label: string,
+): Record<string, unknown> {
+  if (!variantConfig) {
+    throw new Error(`${label} '${name}' requires tokens but theme.${label.toLowerCase()}s.${name} is missing.`);
+  }
+  const tokens = variantConfig.variants[variant];
+  if (!tokens) {
+    const available = Object.keys(variantConfig.variants).join(", ");
+    throw new Error(`Unknown variant '${variant}' for ${label.toLowerCase()} '${name}'. Available: ${available}`);
+  }
+  if (tokenShape) {
+    const shape = parseTokenShape(tokenShape);
+    if (shape.allKeys.size) {
+      validateTokens(shape, tokens as Record<string, unknown>, `${label} '${name}' variant '${variant}'`);
+    }
+  }
+  return tokens as Record<string, unknown>;
+}
+
+// ============================================
+// VALIDATION
+// ============================================
+
 export function validateTokens(shape: ParsedTokenShape, tokens: Record<string, unknown>, label: string): void {
   const missing = shape.requiredKeys.filter(
     (key) => tokens[key] === undefined || tokens[key] === null,

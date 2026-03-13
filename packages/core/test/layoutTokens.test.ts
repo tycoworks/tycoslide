@@ -1,22 +1,19 @@
 // Layout Token Tests
-// - LayoutRegistry.resolveTokens() for variant lookup
+// - resolveVariantTokens() for variant lookup
 // - Slot token injection in documentCompiler
 // - Backward compatibility (layouts without tokens)
 
 import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
 import { compileDocument } from "../src/core/markdown/documentCompiler.js";
-import { NODE_TYPE } from "../src/core/model/nodes.js";
+import { isComponentNode, NODE_TYPE } from "../src/core/model/nodes.js";
 import { schema } from "../src/core/model/schema.js";
-import { token } from "../src/core/model/token.js";
+import { resolveVariantTokens, token } from "../src/core/model/token.js";
 import type { Slide } from "../src/core/model/types.js";
-import type { LayoutDefinition } from "../src/core/rendering/registry.js";
 import {
   componentRegistry,
   defineLayout,
-  isComponentNode,
   layoutRegistry,
-  type Registry,
 } from "../src/core/rendering/registry.js";
 import { mockTheme } from "./mocks.js";
 import { testComponents } from "./test-components.js";
@@ -25,17 +22,10 @@ import { testComponents } from "./test-components.js";
 componentRegistry.register(testComponents);
 
 // ============================================
-// LAYOUT TOKEN RESOLUTION (LayoutRegistry)
+// LAYOUT TOKEN RESOLUTION (resolveVariantTokens)
 // ============================================
 
-describe("LayoutRegistry.resolveTokens", () => {
-  // Use a fresh registry for isolation
-  let _registry: InstanceType<typeof Registry<LayoutDefinition>>;
-
-  beforeEach(() => {
-    // We test resolveTokens on the singleton layoutRegistry
-    // but the method only needs theme data, not registration state
-  });
+describe("resolveVariantTokens", () => {
 
   it("resolves default variant tokens", () => {
     const theme = mockTheme({
@@ -47,7 +37,7 @@ describe("LayoutRegistry.resolveTokens", () => {
         },
       },
     });
-    const tokens = layoutRegistry.resolveTokens("title", "default", theme);
+    const tokens = resolveVariantTokens(theme.layouts?.title, "title", "default", undefined, "Layout");
     assert.strictEqual(tokens.background, "#FF0000");
     assert.deepStrictEqual(tokens.title, { style: "h1", color: "#FFFFFF" });
   });
@@ -63,22 +53,24 @@ describe("LayoutRegistry.resolveTokens", () => {
         },
       },
     });
-    const tokens = layoutRegistry.resolveTokens("title", "dark", theme);
+    const tokens = resolveVariantTokens(theme.layouts?.title, "title", "dark", undefined, "Layout");
     assert.strictEqual(tokens.background, "#000000");
   });
 
   it("throws when layout is not in theme.layouts", () => {
     const theme = mockTheme({ layouts: {} });
     assert.throws(
-      () => layoutRegistry.resolveTokens("nonexistent", "default", theme),
+      () => resolveVariantTokens(theme.layouts?.nonexistent, "nonexistent", "default", undefined, "Layout"),
       /theme\.layouts\.nonexistent is missing/,
     );
   });
 
   it("throws when theme has no layouts at all", () => {
     const theme = mockTheme();
-    // theme.layouts is undefined by default
-    assert.throws(() => layoutRegistry.resolveTokens("title", "default", theme), /theme\.layouts\.title is missing/);
+    assert.throws(
+      () => resolveVariantTokens(theme.layouts?.title, "title", "default", undefined, "Layout"),
+      /theme\.layouts\.title is missing/,
+    );
   });
 
   it("throws when requested variant does not exist", () => {
@@ -92,7 +84,7 @@ describe("LayoutRegistry.resolveTokens", () => {
       },
     });
     assert.throws(
-      () => layoutRegistry.resolveTokens("title", "nonexistent", theme),
+      () => resolveVariantTokens(theme.layouts?.title, "title", "nonexistent", undefined, "Layout"),
       /Unknown variant 'nonexistent' for layout 'title'/,
     );
   });

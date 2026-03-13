@@ -1,11 +1,9 @@
 import assert from "node:assert/strict";
 import { beforeEach, describe, test } from "node:test";
-import { NODE_TYPE } from "../src/core/model/nodes.js";
+import { component, isComponentNode, NODE_TYPE } from "../src/core/model/nodes.js";
 import type { Slide } from "../src/core/model/types.js";
 import {
-  component,
   componentRegistry,
-  isComponentNode,
   type LayoutDefinition,
   Registry,
 } from "../src/core/rendering/registry.js";

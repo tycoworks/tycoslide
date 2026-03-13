@@ -13,8 +13,9 @@ import { schema } from "../src/core/model/schema.js";
 import { extractSource, SYNTAX } from "../src/core/model/syntax.js";
 import { token } from "../src/core/model/token.js";
 import { DIRECTION, HALIGN, SIZE, TEXT_STYLE, VALIGN } from "../src/core/model/types.js";
-import type { ComponentNode, ExpansionContext } from "../src/core/rendering/registry.js";
-import { component, defineComponent } from "../src/core/rendering/registry.js";
+import { component, type ComponentNode } from "../src/core/model/nodes.js";
+import type { ExpansionContext } from "../src/core/rendering/registry.js";
+import { defineComponent } from "../src/core/rendering/registry.js";
 
 // Local component name const — core tests can't import from tycoslide-components
 export const C = {

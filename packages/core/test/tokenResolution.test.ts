@@ -4,12 +4,12 @@
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { NODE_TYPE } from "../src/core/model/nodes.js";
+import { component, NODE_TYPE } from "../src/core/model/nodes.js";
 import { schema } from "../src/core/model/schema.js";
 import { token } from "../src/core/model/token.js";
 import type { Theme } from "../src/core/model/types.js";
 import { HALIGN, VALIGN } from "../src/core/model/types.js";
-import { component, componentRegistry, defineComponent } from "../src/core/rendering/registry.js";
+import { componentRegistry, defineComponent } from "../src/core/rendering/registry.js";
 import { noopCanvas } from "./mocks.js";
 
 // ============================================

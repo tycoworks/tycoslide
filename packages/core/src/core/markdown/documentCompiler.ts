@@ -6,14 +6,14 @@
 // Params and slots are validated separately against the layout's schemas.
 
 import { z } from "zod";
-import type { ComponentNode, SlideNode } from "../model/nodes.js";
+import { isComponentNode, type ComponentNode, type SlideNode } from "../model/nodes.js";
+import { RESERVED_FRONTMATTER_KEYS } from "../model/syntax.js";
+import { resolveVariantTokens } from "../model/token.js";
 import type { Slide, Theme } from "../model/types.js";
 import { Presentation } from "../rendering/presentation.js";
 import {
-  isComponentNode,
   type LayoutDefinition,
   layoutRegistry,
-  RESERVED_FRONTMATTER_KEYS,
 } from "../rendering/registry.js";
 import { parseSlideDocument, type RawSlide } from "./slideParser.js";
 import { compileSlot } from "./slotCompiler.js";
@@ -159,7 +159,9 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
   // 5. Resolve layout tokens (if the layout declares them)
   let resolvedTokens: Record<string, unknown> | undefined;
   if (layout.tokenShape && Object.keys(layout.tokenShape).length) {
-    resolvedTokens = layoutRegistry.resolveTokens(layoutName, variant, options.theme);
+    resolvedTokens = resolveVariantTokens(
+      options.theme.layouts?.[layoutName], layoutName, variant, layout.tokenShape, "Layout",
+    );
   }
 
   // 6. Build SLOTS — from ::name:: markers and body only

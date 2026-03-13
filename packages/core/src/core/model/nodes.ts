@@ -214,6 +214,43 @@ export type ElementNode =
 export type SlideNode = ElementNode | ComponentNode | ContainerNode<SlideNode> | StackNode<SlideNode>;
 
 // ============================================
+// DSL HELPER
+// ============================================
+
+/**
+ * Create a component node.
+ * Tokens are stored separately from props to avoid naming conflicts
+ * (e.g., card has both props.title: string and tokens.title: TextTokens).
+ */
+export function component<TProps>(
+  name: string,
+  props: TProps,
+  tokens?: Record<string, unknown> | object,
+): ComponentNode<TProps> {
+  const node: ComponentNode<TProps> = {
+    type: NODE_TYPE.COMPONENT,
+    componentName: name,
+    props,
+  };
+  if (tokens) node.tokens = tokens as Record<string, unknown>;
+  return node;
+}
+
+/**
+ * Type guard to check if a node is a component node.
+ */
+export function isComponentNode(node: unknown): node is ComponentNode {
+  return (
+    typeof node === "object" &&
+    node !== null &&
+    "type" in node &&
+    (node as { type: unknown }).type === NODE_TYPE.COMPONENT &&
+    "componentName" in node &&
+    "props" in node
+  );
+}
+
+// ============================================
 // POSITIONED NODE (after layout)
 // ============================================
 

@@ -12,6 +12,7 @@ import type { SlideValidationResult, ValidationResult } from "../layout/validato
 import { LayoutValidationError, LayoutValidator } from "../layout/validator.js";
 import { Bounds } from "../model/bounds.js";
 import type { ElementNode, PositionedNode } from "../model/nodes.js";
+import { resolveVariantTokens } from "../model/token.js";
 import type { Background, Slide, Theme } from "../model/types.js";
 import { PptxRenderer } from "./pptxRenderer.js";
 import { componentRegistry, type ExpansionContext, masterRegistry } from "./registry.js";
@@ -168,7 +169,9 @@ export class Presentation {
           if (!def) {
             throw new Error(`Unknown master: '${masterName}'. Did you forget to register it?`);
           }
-          const tokens = masterRegistry.resolveTokens(masterName, masterVariant, this._theme);
+          const tokens = resolveVariantTokens(
+            this._theme.masters?.[masterName], masterName, masterVariant, def.tokenShape, "Master",
+          );
           const { content: rawMasterContent, contentBounds, background } = def.getContent(tokens, { width, height });
           const masterContent = await componentRegistry.expandTree(rawMasterContent, expansionContext);
           pendingMasters.set(masterKey, { content: masterContent, contentBounds, background });

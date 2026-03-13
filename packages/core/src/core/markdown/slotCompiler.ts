@@ -9,7 +9,8 @@ import type { Paragraph, Root, RootContent } from "mdast";
 import { extractDirectiveBody, markdownProcessor } from "../../utils/parser.js";
 import type { SlideNode } from "../model/nodes.js";
 import { type ContainerDirective, SYNTAX } from "../model/syntax.js";
-import { type ComponentNode, componentRegistry } from "../rendering/registry.js";
+import type { ComponentNode } from "../model/nodes.js";
+import { componentRegistry } from "../rendering/registry.js";
 
 // ============================================
 // PUBLIC API

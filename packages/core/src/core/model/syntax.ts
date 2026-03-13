@@ -30,6 +30,9 @@ export const SYNTAX = {
 /** Union of all SYNTAX values — use for typed MDAST node type references. */
 export type SyntaxType = (typeof SYNTAX)[keyof typeof SYNTAX];
 
+/** Frontmatter keys consumed by the compiler — cannot be used as layout param names. */
+export const RESERVED_FRONTMATTER_KEYS = new Set(["layout", "name", "notes", "variant"] as const);
+
 // ============================================
 // HELPERS
 // ============================================
