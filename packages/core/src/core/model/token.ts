@@ -1,7 +1,7 @@
 // Token module
 // Domain-specific descriptors for token declarations.
 // Component authors use these to declare required vs optional tokens.
-// Parallel to schema.ts (which wraps Zod for param declarations).
+// Parallel to param.ts (which wraps Zod for param declarations).
 
 // ============================================
 // DESCRIPTORS

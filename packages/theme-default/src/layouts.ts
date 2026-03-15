@@ -13,6 +13,7 @@ import {
   SIZE,
   type Slide,
   type SlideNode,
+  param,
   schema,
   token,
   type VerticalAlignment,
@@ -85,9 +86,9 @@ export const titleLayout = defineLayout({
   name: "title",
   description: "Opening slide with large title and optional subtitle.",
   params: {
-    title: textComponent.schema,
-    subtitle: textComponent.schema.optional(),
-    image: imageComponent.schema.optional(),
+    title: param.required(textComponent.schema),
+    subtitle: param.optional(textComponent.schema),
+    image: param.optional(imageComponent.schema),
   },
   tokens: titleLayoutTokens,
   render: ({ title, subtitle, image: imagePath }, tokens: TitleLayoutTokens) => {
@@ -126,7 +127,7 @@ export type SectionLayoutTokens = InferTokens<typeof sectionLayoutTokens>;
 export const sectionLayout = defineLayout({
   name: "section",
   description: "Section divider with centered title.",
-  params: { title: textComponent.schema },
+  params: { title: param.required(textComponent.schema) },
   tokens: sectionLayoutTokens,
   render: ({ title }, tokens: SectionLayoutTokens) => ({
     masterName: "minimal",
@@ -166,8 +167,8 @@ export const bodyLayout = defineLayout({
   name: "body",
   description: "Markdown body with optional title. Default layout.",
   params: {
-    title: textComponent.schema.optional(),
-    eyebrow: textComponent.schema.optional(),
+    title: param.optional(textComponent.schema),
+    eyebrow: param.optional(textComponent.schema),
   },
   slots: ["body"],
   tokens: bodyLayoutTokens,
@@ -206,9 +207,9 @@ export const statLayout = defineLayout({
   name: "stat",
   description: "Big number or key metric with label and optional caption.",
   params: {
-    value: textComponent.schema,
-    label: textComponent.schema,
-    caption: textComponent.schema.optional(),
+    value: param.required(textComponent.schema),
+    label: param.required(textComponent.schema),
+    caption: param.optional(textComponent.schema),
   },
   tokens: statLayoutTokens,
   render: ({ value, label, caption }, tokens: StatLayoutTokens) => {
@@ -252,8 +253,8 @@ export const quoteLayout = defineLayout({
   name: "quote",
   description: "Standalone pull quote with left accent bar and optional attribution.",
   params: {
-    quote: textComponent.schema,
-    attribution: textComponent.schema.optional(),
+    quote: param.required(textComponent.schema),
+    attribution: param.optional(textComponent.schema),
   },
   tokens: quoteLayoutTokens,
   render: ({ quote: quoteText, attribution }, tokens: QuoteLayoutTokens) =>
@@ -277,8 +278,8 @@ export const endLayout = defineLayout({
   name: "end",
   description: "Closing slide. Mirrors the title layout.",
   params: {
-    title: textComponent.schema,
-    subtitle: textComponent.schema.optional(),
+    title: param.required(textComponent.schema),
+    subtitle: param.optional(textComponent.schema),
   },
   tokens: titleLayoutTokens,
   render: ({ title, subtitle }, tokens: TitleLayoutTokens) => ({
@@ -347,8 +348,8 @@ export const twoColumnLayout = defineLayout({
   name: "two-column",
   description: "Two equal markdown columns with optional header.",
   params: {
-    title: textComponent.schema.optional(),
-    eyebrow: textComponent.schema.optional(),
+    title: param.optional(textComponent.schema),
+    eyebrow: param.optional(textComponent.schema),
   },
   slots: ["left", "right"],
   tokens: twoColumnLayoutTokens,
@@ -386,8 +387,8 @@ export const statementLayout = defineLayout({
   name: "statement",
   description: "Centered body text with optional caption. Use for value props and big statements.",
   params: {
-    body: textComponent.schema,
-    caption: textComponent.schema.optional(),
+    body: param.required(textComponent.schema),
+    caption: param.optional(textComponent.schema),
   },
   tokens: statementLayoutTokens,
   render: ({ body, caption }, tokens: StatementLayoutTokens) => ({
@@ -433,9 +434,9 @@ export const agendaLayout = defineLayout({
   name: "agenda",
   description: "Eyebrow, title, and numbered card grid.",
   params: {
-    title: textComponent.schema,
-    eyebrow: textComponent.schema.optional(),
-    items: schema.array(textComponent.schema),
+    title: param.required(textComponent.schema),
+    eyebrow: param.optional(textComponent.schema),
+    items: param.required(schema.array(textComponent.schema)),
   },
   tokens: agendaLayoutTokens,
   render: ({ title, eyebrow, items }, tokens: AgendaLayoutTokens) => {
@@ -494,11 +495,11 @@ export const cardsLayout = defineLayout({
   name: "cards",
   description: "Card grid with intro text and optional caption.",
   params: {
-    title: textComponent.schema,
-    eyebrow: textComponent.schema.optional(),
-    intro: textComponent.schema.optional(),
-    cards: schema.array(cardComponent.schema),
-    caption: textComponent.schema.optional(),
+    title: param.required(textComponent.schema),
+    eyebrow: param.optional(textComponent.schema),
+    intro: param.optional(textComponent.schema),
+    cards: param.required(schema.array(cardComponent.schema)),
+    caption: param.optional(textComponent.schema),
   },
   tokens: cardsLayoutTokens,
   render: ({ title, eyebrow, intro, cards: cardItems, caption }, tokens: CardsLayoutTokens) => {

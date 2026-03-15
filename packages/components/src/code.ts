@@ -15,7 +15,7 @@ import {
   inToPx,
   NODE_TYPE,
   type RenderContext,
-  type SchemaShape,
+  param,
   SYNTAX,
   schema,
   type TextStyle,
@@ -49,14 +49,6 @@ export const codeTokens = token.shape({
 });
 
 export type CodeTokens = InferTokens<typeof codeTokens>;
-
-// ============================================
-// SCHEMAS & TYPES
-// ============================================
-
-const codeSchema = {
-  language: schema.string(),
-} satisfies SchemaShape;
 
 export type CodeComponentProps = { body: string; language: string };
 
@@ -209,7 +201,9 @@ async function renderCode(
 export const codeComponent = defineComponent({
   name: Component.Code,
   body: schema.string(),
-  params: codeSchema,
+  params: {
+    language: param.required(schema.string()),
+  },
   tokens: codeTokens,
   mdast: {
     nodeTypes: [SYNTAX.CODE],

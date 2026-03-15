@@ -3,12 +3,12 @@
 
 import {
   type ComponentProps,
+  type InferTokens,
   component,
   defineComponent,
-  type InferTokens,
   type GapSize,
   type HorizontalAlignment,
-  type SchemaShape,
+  param,
   SHAPE,
   SIZE,
   token,
@@ -20,6 +20,10 @@ import { Component } from "./names.js";
 import { type ShapeTokens, shape } from "./primitives.js";
 import { type TextTokens, text, textComponent } from "./text.js";
 
+// ============================================
+// TOKENS
+// ============================================
+
 export const cardTokens = token.shape({
   background: token.optional<ShapeTokens>(),
   padding: token.required<number>(),
@@ -29,21 +33,6 @@ export const cardTokens = token.shape({
   title: token.required<TextTokens>(),
   description: token.required<TextTokens>(),
 });
-
-export type CardTokens = InferTokens<typeof cardTokens>;
-
-// ============================================
-// PARAMS SCHEMA
-// ============================================
-
-const cardSchema = {
-  /** Card image (path) - displayed at top */
-  image: imageComponent.schema.optional(),
-  /** Card title (supports markdown: bold, color highlights, etc.) */
-  title: textComponent.schema.optional(),
-  /** Card description text */
-  description: textComponent.schema.optional(),
-} satisfies SchemaShape;
 
 // ============================================
 // COMPONENT DEFINITION
@@ -62,9 +51,13 @@ const cardSchema = {
  */
 export const cardComponent = defineComponent({
   name: Component.Card,
-  params: cardSchema,
+  params: {
+    image: param.optional(imageComponent.schema),
+    title: param.optional(textComponent.schema),
+    description: param.optional(textComponent.schema),
+  },
   tokens: cardTokens,
-  render(props, _context, tokens: CardTokens) {
+  render(props, _context, tokens) {
     const { image: imagePath, title, description, body } = props;
     const actualDescription = description ?? body;
     const {
@@ -111,9 +104,10 @@ export const cardComponent = defineComponent({
 });
 
 // ============================================
-// DSL FUNCTION
+// EXPORTED TYPES
 // ============================================
 
+export type CardTokens = InferTokens<typeof cardTokens>;
 export type CardProps = ComponentProps<typeof cardComponent>;
 
 /**

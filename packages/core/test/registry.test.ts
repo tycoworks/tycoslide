@@ -32,6 +32,7 @@ function makeLayout(name: string, render: (params: any) => Slide): LayoutDefinit
     name,
     description: `Test layout: ${name}`,
     params: {} as any,
+    tokens: {},
     render,
   };
 }

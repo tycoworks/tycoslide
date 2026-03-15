@@ -12,7 +12,7 @@ import {
   type LineNode,
   NODE_TYPE,
   type Shadow,
-  type SchemaShape,
+  param,
   SHAPE_VALUES,
   type ShapeName,
   type ShapeNode,
@@ -57,12 +57,6 @@ export type ShapeTokens = InferTokens<typeof shapeTokens>;
 // LINE
 // ============================================
 
-// Directive schema — author-facing props only.
-const lineSchema = {
-  beginArrow: schema.enum(ARROW_TYPE_VALUES).optional(),
-  endArrow: schema.enum(ARROW_TYPE_VALUES).optional(),
-} satisfies SchemaShape;
-
 // Full props for DSL callers (only arrow overrides — styling comes from tokens)
 export type LineProps = {
   beginArrow?: ArrowType;
@@ -82,7 +76,10 @@ function renderLine(props: LineProps, _context: RenderContext, tokens: LineToken
 
 export const lineComponent = defineComponent({
   name: Component.Line,
-  params: lineSchema,
+  params: {
+    beginArrow: param.optional(schema.enum(ARROW_TYPE_VALUES)),
+    endArrow: param.optional(schema.enum(ARROW_TYPE_VALUES)),
+  },
   tokens: lineTokens,
   render: renderLine,
 });
@@ -94,12 +91,6 @@ export function line(tokens: LineTokens, props?: LineProps): ComponentNode {
 // ============================================
 // SHAPE (all area shapes)
 // ============================================
-
-// Directive schema — author-facing props only.
-// Styling props removed: visual values come from tokens.
-const shapeSchema = {
-  shape: schema.enum(SHAPE_VALUES),
-} satisfies SchemaShape;
 
 // Full props for DSL callers (only shape geometry — styling comes from tokens)
 export type ShapeProps = {
@@ -128,7 +119,9 @@ function renderShape(props: ShapeProps, _context: RenderContext, tokens: ShapeTo
 
 export const shapeComponent = defineComponent({
   name: Component.Shape,
-  params: shapeSchema,
+  params: {
+    shape: param.required(schema.enum(SHAPE_VALUES)),
+  },
   tokens: shapeTokens,
   render: renderShape,
 });

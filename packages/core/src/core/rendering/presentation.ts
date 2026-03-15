@@ -170,7 +170,7 @@ export class Presentation {
             throw new Error(`Unknown master: '${masterName}'. Did you forget to register it?`);
           }
           const tokens = resolveVariantTokens(
-            this._theme.masters?.[masterName], masterName, masterVariant, def.tokenShape, "Master",
+            this._theme.masters?.[masterName], masterName, masterVariant, def.tokens, "Master",
           );
           const { content: rawMasterContent, contentBounds, background } = def.render(tokens, { width, height });
           const masterContent = await componentRegistry.renderTree(rawMasterContent, renderContext);

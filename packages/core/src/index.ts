@@ -31,8 +31,8 @@ export type {
 } from "./core/model/nodes.js";
 
 export { component, isComponentNode, NODE_TYPE } from "./core/model/nodes.js";
-// Schema helpers (domain-specific wrappers for layout Zod schemas)
-export { type ScalarParam, schema } from "./core/model/schema.js";
+// Param helpers (schema type builders + param declaration wrappers)
+export { param, schema, type ScalarParam } from "./core/model/param.js";
 // Token descriptors (required/optional markers for component token declarations)
 export { token, type InferTokens, type TokenDescriptor, type TokenShape } from "./core/model/token.js";
 export type { ContainerDirective, SyntaxType } from "./core/model/syntax.js";

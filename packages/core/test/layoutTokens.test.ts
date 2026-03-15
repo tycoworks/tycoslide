@@ -7,7 +7,8 @@ import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
 import { compileDocument } from "../src/core/markdown/documentCompiler.js";
 import { isComponentNode, NODE_TYPE } from "../src/core/model/nodes.js";
-import { schema } from "../src/core/model/schema.js";
+import { param, schema } from "../src/core/model/param.js";
+
 import { resolveVariantTokens, token } from "../src/core/model/token.js";
 import type { Slide } from "../src/core/model/types.js";
 import {
@@ -136,7 +137,7 @@ describe("Document Compiler: Layout Tokens", () => {
   const tokenLayout = defineLayout({
     name: "tokenBody",
     description: "Test layout with tokens and body slot",
-    params: { title: schema.string().optional() },
+    params: { title: param.optional(schema.string()) },
     slots: ["body"],
     tokens: { background: token.required<any>(), title: token.required<any>(), text: token.required<any>() },
     render: (props: any, tokens?: Record<string, unknown>): Slide => {
@@ -258,6 +259,7 @@ describe("Document Compiler: Layout Tokens", () => {
       name: "noTokenTest",
       description: "no tokens layout",
       params: { title: schema.string() },
+      tokens: {},
       render: (props: any, tokens?: Record<string, unknown>): Slide => {
         capturedTokens = tokens;
         return {
@@ -288,7 +290,7 @@ describe("Slot Token Injection", () => {
   const slotTokenLayout = defineLayout({
     name: "slotTokenTest",
     description: "Layout with slot token injection",
-    params: { title: schema.string().optional() },
+    params: { title: param.optional(schema.string()) },
     slots: ["body"],
     tokens: { background: token.required<any>(), text: token.required<any>() },
     render: (props: any, tokens?: Record<string, unknown>): Slide => {
@@ -450,6 +452,7 @@ describe("RESERVED_FRONTMATTER_KEYS includes variant", () => {
           name: "badLayout",
           description: "test",
           params: { variant: schema.string() },
+          tokens: {},
           render: () => ({
             masterName: "default",
             masterVariant: "default",

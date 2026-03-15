@@ -8,7 +8,6 @@ import {
   type RenderContext,
   type ImageNode,
   NODE_TYPE,
-  type SchemaShape,
   SYNTAX,
   schema,
 } from "tycoslide";
@@ -71,31 +70,20 @@ function resolveAssetPath(ref: string, assets: Record<string, unknown> | undefin
 // IMAGE COMPONENT
 // ============================================
 
-const imageSchema = {
-  alt: schema.string().optional(),
-} satisfies SchemaShape;
-
-export type ImageProps = {
-  alt?: string;
-};
-
-export type ImageComponentProps = { body: string } & ImageProps;
-
 export const imageComponent = defineComponent({
   name: Component.Image,
   body: schema.string(),
-  params: imageSchema,
   tokens: {},
 
   mdast: {
     nodeTypes: [SYNTAX.IMAGE],
     compile: (node: RootContent): ComponentNode | null => {
       const img = node as Image;
-      return component(Component.Image, { body: img.url, ...(img.alt ? { alt: img.alt } : {}) });
+      return component(Component.Image, { body: img.url });
     },
   },
 
-  render: (props: ImageComponentProps, context: RenderContext): ImageNode => {
+  render: (props: { body: string }, context: RenderContext): ImageNode => {
     let src = props.body;
     if (src.startsWith(ASSET_PREFIX)) {
       src = resolveAssetPath(src, context.assets);
@@ -104,6 +92,6 @@ export const imageComponent = defineComponent({
   },
 });
 
-export function image(src: string, options?: ImageProps): ComponentNode {
-  return component(Component.Image, { body: src, ...options });
+export function image(src: string): ComponentNode {
+  return component(Component.Image, { body: src });
 }

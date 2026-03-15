@@ -12,7 +12,7 @@ import {
   NODE_TYPE,
   parseMarkdown,
   type RenderContext,
-  type SchemaShape,
+  param,
   SYNTAX,
   schema,
   type TableCellData,
@@ -92,14 +92,11 @@ function parseGfmTable(body: string): string[][] {
   );
 }
 
-/** Params accepted from :::table directive attributes. */
-const tableSchema = {
-  headerColumns: schema.number().optional(),
-} satisfies SchemaShape;
-
 export const tableComponent = defineComponent({
   name: Component.Table,
-  params: tableSchema,
+  params: {
+    headerColumns: param.optional(schema.number()),
+  },
   tokens: tableTokens,
   mdast: {
     nodeTypes: [SYNTAX.TABLE],

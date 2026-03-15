@@ -9,7 +9,8 @@
 
 import type { Heading, Table as MdastTable, RootContent } from "mdast";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
-import { schema } from "../src/core/model/schema.js";
+import { param, schema } from "../src/core/model/param.js";
+
 import { extractSource, SYNTAX } from "../src/core/model/syntax.js";
 import { token } from "../src/core/model/token.js";
 import { DIRECTION, HALIGN, SIZE, TEXT_STYLE, VALIGN } from "../src/core/model/types.js";
@@ -47,10 +48,10 @@ export const textComponent = defineComponent({
   name: C.Text,
   body: schema.string(),
   params: {
-    style: schema.string().optional(),
-    hAlign: schema.string().optional(),
-    vAlign: schema.string().optional(),
-    content: schema.string().optional(),
+    style: param.optional(schema.string()),
+    hAlign: param.optional(schema.string()),
+    vAlign: param.optional(schema.string()),
+    content: param.optional(schema.string()),
   },
   tokens: { color: token.required<any>(), style: token.required<any>(), linkColor: token.required<any>(), linkUnderline: token.required<any>(), hAlign: token.required<any>(), vAlign: token.required<any>() },
   mdast: {
@@ -139,8 +140,8 @@ export const columnComponent = defineComponent({
 export const cardComponent = defineComponent({
   name: C.Card,
   params: {
-    title: schema.string().optional(),
-    description: schema.string().optional(),
+    title: param.optional(schema.string()),
+    description: param.optional(schema.string()),
   },
   tokens: { background: token.required<any>(), padding: token.required<any>(), gap: token.required<any>(), hAlign: token.required<any>(), vAlign: token.required<any>(), title: token.required<any>(), description: token.required<any>() },
   render: (props: any, _ctx: RenderContext, tokens: any): any => {
@@ -157,7 +158,7 @@ export const cardComponent = defineComponent({
 export const imageComponent = defineComponent({
   name: C.Image,
   body: schema.string(),
-  params: { alt: schema.string().optional() },
+  params: { alt: param.optional(schema.string()) },
   tokens: {},
   render: () => ({}) as any,
 });
@@ -165,8 +166,8 @@ export const imageComponent = defineComponent({
 export const lineComponent = defineComponent({
   name: C.Line,
   params: {
-    beginArrow: schema.string().optional(),
-    endArrow: schema.string().optional(),
+    beginArrow: param.optional(schema.string()),
+    endArrow: param.optional(schema.string()),
   },
   tokens: { color: token.required<any>(), width: token.required<any>(), dashType: token.required<any>() },
   render: () => ({}) as any,
@@ -176,7 +177,7 @@ export const tableComponent = defineComponent({
   name: C.Table,
   body: schema.string(),
   params: {
-    headerColumns: schema.number().optional(),
+    headerColumns: param.optional(schema.number()),
   },
   tokens: {
     borderStyle: token.required<any>(),

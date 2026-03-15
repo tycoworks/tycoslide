@@ -33,12 +33,7 @@ export {
   stackComponent,
 } from "./containers.js";
 // Image (with asset resolution)
-export {
-  type ImageComponentProps,
-  type ImageProps,
-  image,
-  imageComponent,
-} from "./image.js";
+export { image, imageComponent } from "./image.js";
 // Languages (supported syntax highlighting languages)
 export { LANGUAGE, LANGUAGE_VALUES, type LanguageName } from "./languages.js";
 // List

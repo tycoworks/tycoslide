@@ -4,12 +4,12 @@
 
 import {
   type ComponentProps,
+  type InferTokens,
   component,
   defineComponent,
-  type InferTokens,
   type GapSize,
   type HorizontalAlignment,
-  type SchemaShape,
+  param,
   SHAPE,
   SIZE,
   token,
@@ -32,21 +32,6 @@ export const testimonialTokens = token.shape({
   attribution: token.required<PlainTextTokens>(),
 });
 
-export type TestimonialTokens = InferTokens<typeof testimonialTokens>;
-
-// ============================================
-// PARAMS SCHEMA
-// ============================================
-
-const testimonialSchema = {
-  /** Quote text (markdown supported). From directives, can come via body instead. */
-  quote: textComponent.schema.optional(),
-  /** Attribution line, e.g. "— Jane Smith, CTO" */
-  attribution: textComponent.schema.optional(),
-  /** Optional image/logo displayed above the quote */
-  image: imageComponent.schema.optional(),
-} satisfies SchemaShape;
-
 // ============================================
 // COMPONENT DEFINITION
 // ============================================
@@ -68,9 +53,13 @@ const testimonialSchema = {
  */
 export const testimonialComponent = defineComponent({
   name: Component.Testimonial,
-  params: testimonialSchema,
+  params: {
+    quote: param.optional(textComponent.schema),
+    attribution: param.optional(textComponent.schema),
+    image: param.optional(imageComponent.schema),
+  },
   tokens: testimonialTokens,
-  render(props, _context, tokens: TestimonialTokens) {
+  render(props, _context, tokens) {
     const { quote: quoteText, body, attribution, image: imagePath } = props;
     const actualQuote = quoteText ?? body;
     const {
@@ -114,9 +103,10 @@ export const testimonialComponent = defineComponent({
 });
 
 // ============================================
-// DSL FUNCTION
+// EXPORTED TYPES
 // ============================================
 
+export type TestimonialTokens = InferTokens<typeof testimonialTokens>;
 export type TestimonialProps = ComponentProps<typeof testimonialComponent>;
 
 /**

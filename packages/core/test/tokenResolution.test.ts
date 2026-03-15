@@ -5,7 +5,8 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import { component, NODE_TYPE } from "../src/core/model/nodes.js";
-import { schema } from "../src/core/model/schema.js";
+import { param, schema } from "../src/core/model/param.js";
+
 import { token } from "../src/core/model/token.js";
 import type { Theme } from "../src/core/model/types.js";
 import { HALIGN, VALIGN } from "../src/core/model/types.js";
@@ -21,7 +22,7 @@ const TOKEN_COMP = "test-token-engine";
 const tokenTestComponent = defineComponent({
   name: TOKEN_COMP as any,
   params: {
-    label: schema.string().optional(),
+    label: param.optional(schema.string()),
   },
   tokens: { alpha: token.required<any>(), beta: token.required<any>(), gamma: token.required<any>() },
   render: (props: any, _ctx: any, tokens: any): any => ({
@@ -143,7 +144,7 @@ describe("Token Resolution Engine", () => {
       const NO_TOKEN_COMP = "test-no-tokens";
       const noTokenComp = defineComponent({
         name: NO_TOKEN_COMP as any,
-        params: { value: schema.string().optional() },
+        params: { value: param.optional(schema.string()) },
         tokens: {},
         render: (props: any): any => ({
           type: NODE_TYPE.TEXT,

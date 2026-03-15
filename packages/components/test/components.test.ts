@@ -112,12 +112,6 @@ describe("image()", () => {
     assert.strictEqual(node.src, "test.png");
   });
 
-  test("applies no props by default", () => {
-    const node = image("photo.jpg");
-    assert.strictEqual((node.props as any).alt, undefined);
-  });
-
-
   // Asset path resolution (tested through image expansion)
 
   test("resolves $dot.path to string value", async () => {

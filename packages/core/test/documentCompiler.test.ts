@@ -10,7 +10,8 @@ import { beforeEach, describe, it } from "node:test";
 
 import { buildSlideName, compileDocument } from "../src/core/markdown/documentCompiler.js";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
-import { schema } from "../src/core/model/schema.js";
+import { param, schema } from "../src/core/model/param.js";
+
 import type { Slide } from "../src/core/model/types.js";
 import { componentRegistry, layoutRegistry } from "../src/core/rendering/registry.js";
 import { mockTheme } from "./mocks.js";
@@ -46,14 +47,16 @@ const simpleLayout = {
   name: "simple",
   description: "Test layout with just title",
   params: { title: schema.string() },
+  tokens: {},
   render: (props: any): Slide => mockSlide(props),
 };
 
 const bodyLayout = {
   name: "body",
   description: "Body layout with title and body",
-  params: { title: schema.string().optional() },
+  params: { title: param.optional(schema.string()) },
   slots: ["body"],
+  tokens: {},
   render: (props: any): Slide => mockSlide(props),
 };
 
@@ -62,6 +65,7 @@ const slotLayout = {
   description: "Slot layout with named slots",
   params: { title: schema.string(), eyebrow: schema.string() },
   slots: ["left", "right"],
+  tokens: {},
   render: (props: any): Slide => mockSlide(props),
 };
 
@@ -69,13 +73,15 @@ const strictLayout = {
   name: "strict",
   description: "Strict layout with required field",
   params: { title: schema.string(), required_field: schema.string() },
+  tokens: {},
   render: (props: any): Slide => mockSlide(props),
 };
 
 const defaultLayout = {
   name: "default",
   description: "Default layout with optional body",
-  params: { title: schema.string().optional(), body: schema.string().optional() },
+  params: { title: param.optional(schema.string()), body: param.optional(schema.string()) },
+  tokens: {},
   render: (props: any): Slide => mockSlide(props),
 };
 

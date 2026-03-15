@@ -5,7 +5,7 @@ import { describe, it } from "node:test";
 import { z } from "zod";
 import { compileSlot } from "../src/core/markdown/slotCompiler.js";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
-import { schema } from "../src/core/model/schema.js";
+import { schema } from "../src/core/model/param.js";
 import { componentRegistry, defineLayout } from "../src/core/rendering/registry.js";
 import { C, testComponents } from "./test-components.js";
 
@@ -91,6 +91,7 @@ describe("schema", () => {
           // @ts-expect-error: z.custom() is not a ScalarParam
           content: z.custom<string[]>(),
         },
+        tokens: {},
         render: () => ({ masterName: "default", masterVariant: "default", content: dummy }),
       });
     });
@@ -104,6 +105,7 @@ describe("schema", () => {
           // @ts-expect-error: z.any() is not a ScalarParam
           data: z.any(),
         },
+        tokens: {},
         render: () => ({ masterName: "default", masterVariant: "default", content: dummy }),
       });
     });

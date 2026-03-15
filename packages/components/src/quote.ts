@@ -5,12 +5,12 @@
 import type { RootContent } from "mdast";
 import {
   type ComponentProps,
+  type InferTokens,
   component,
   defineComponent,
-  type InferTokens,
   extractSource,
   type GapSize,
-  type SchemaShape,
+  param,
   SIZE,
   SYNTAX,
   token,
@@ -27,19 +27,6 @@ export const quoteTokens = token.shape({
   quote: token.required<TextTokens>(),
   attribution: token.required<PlainTextTokens>(),
 });
-
-export type QuoteTokens = InferTokens<typeof quoteTokens>;
-
-// ============================================
-// PARAMS SCHEMA
-// ============================================
-
-const quoteSchema = {
-  /** Quote text (markdown supported). From directives, can come via body instead. */
-  quote: textComponent.schema.optional(),
-  /** Attribution line, e.g. "— Jane Smith, CTO" */
-  attribution: textComponent.schema.optional(),
-} satisfies SchemaShape;
 
 // ============================================
 // COMPONENT DEFINITION
@@ -61,7 +48,10 @@ const quoteSchema = {
  */
 export const quoteComponent = defineComponent({
   name: Component.Quote,
-  params: quoteSchema,
+  params: {
+    quote: param.optional(textComponent.schema),
+    attribution: param.optional(textComponent.schema),
+  },
   tokens: quoteTokens,
   mdast: {
     nodeTypes: [SYNTAX.BLOCKQUOTE],
@@ -72,7 +62,7 @@ export const quoteComponent = defineComponent({
       return component(Component.Quote, { quote: inner });
     },
   },
-  render(props, _context, tokens: QuoteTokens) {
+  render(props, _context, tokens) {
     const { quote: quoteText, body, attribution } = props;
     const actualQuote = quoteText ?? body;
     const { bar: barTokens, gap, quote: quoteTokens, attribution: attributionTokens } = tokens;
@@ -94,9 +84,10 @@ export const quoteComponent = defineComponent({
 });
 
 // ============================================
-// DSL FUNCTION
+// EXPORTED TYPES
 // ============================================
 
+export type QuoteTokens = InferTokens<typeof quoteTokens>;
 export type QuoteProps = ComponentProps<typeof quoteComponent>;
 
 /**

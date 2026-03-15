@@ -13,7 +13,7 @@ import {
   type SlideNode,
   type StackNode,
 } from "../model/nodes.js";
-import type { ScalarParam } from "../model/schema.js";
+import type { ScalarParam } from "../model/param.js";
 import { RESERVED_FRONTMATTER_KEYS, type SyntaxType } from "../model/syntax.js";
 import { type InferTokens, parseTokenShape, type TokenShape, validateTokens } from "../model/token.js";
 import type { Bounds } from "../model/bounds.js";
@@ -110,7 +110,7 @@ export interface ComponentDefinition<TProps = unknown, TTokens = undefined> {
   /** Unique name for this component (e.g., 'card', 'table') */
   name: string;
   /** Declared token shape — required vs optional descriptors. Empty = no tokens. */
-  tokenShape: TokenShape;
+  tokens: TokenShape;
   /** Optional Zod schema shape for directive attributes (used for coercion on slotted components). */
   params?: SchemaShape;
   /** Slot names — directive body is compiled as ComponentNode[] and passed as props[slotName]. */
@@ -295,7 +295,7 @@ export function defineComponent(def: any): ComponentDefinition<any, any> & { sch
   const result: ComponentDefinition & { schema?: z.ZodTypeAny } = {
     name: def.name as string,
     render: def.render as ComponentDefinition["render"],
-    tokenShape: (def.tokens as TokenShape) ?? {},
+    tokens: (def.tokens as TokenShape) ?? {},
     params: def.params,
     slots,
     mdast,
@@ -394,7 +394,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
     if (!def) {
       throw new Error(`Unknown component: '${node.componentName}'. Did you forget to register it?`);
     }
-    const shape = parseTokenShape(def.tokenShape);
+    const shape = parseTokenShape(def.tokens);
     if (!shape.allKeys.size) {
       return def.render(node.props, context, undefined as never);
     }
@@ -474,8 +474,8 @@ export interface LayoutDefinition {
   description: string;
   params: SchemaShape;
   slots?: readonly string[];
-  /** Declared token shape — required vs optional descriptors. Undefined = no tokens. */
-  tokenShape?: TokenShape;
+  /** Declared token shape — required vs optional descriptors. Use `{}` for no tokens. */
+  tokens: TokenShape;
   render: (props: any, tokens: unknown) => Slide;
 }
 
@@ -504,7 +504,7 @@ export function defineLayout<
   description: string;
   params: TParams;
   slots?: TSlots;
-  tokens?: TShape;
+  tokens: TShape;
   render: (
     props: z.infer<z.ZodObject<TParams>> & SlotsToProps<TSlots>,
     tokens: InferTokens<TShape>,
@@ -516,9 +516,6 @@ export function defineLayout<
         `Layout '${def.name}': param '${key}' is a reserved frontmatter key (${[...RESERVED_FRONTMATTER_KEYS].join(", ")}). Use a different name.`,
       );
     }
-  }
-  if (def.tokens) {
-    (def as any).tokenShape = def.tokens;
   }
   (def as any).tokenMap = (map: any) => map;
   return def as unknown as TypedLayoutDefinition<any>;
@@ -537,7 +534,7 @@ export const layoutRegistry = new Registry<LayoutDefinition>("Layout");
 export interface MasterDefinition {
   name: string;
   /** Declared token shape — required vs optional descriptors. */
-  tokenShape: TokenShape;
+  tokens: TokenShape;
   /** Build master content from resolved tokens and slide dimensions. */
   render: (
     tokens: Record<string, unknown>,
@@ -574,7 +571,6 @@ export function defineMaster<TShape extends TokenShape = TokenShape>(def: {
     background: Background;
   };
 }): TypedMasterDefinition<InferTokens<TShape>> {
-  (def as any).tokenShape = def.tokens;
   (def as any).tokenMap = (map: any) => map;
   return def as unknown as TypedMasterDefinition<any>;
 }

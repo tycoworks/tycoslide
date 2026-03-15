@@ -4,7 +4,7 @@
 
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
-import { schema } from "tycoslide";
+import { param, schema } from "tycoslide";
 import { z } from "zod";
 import { cardComponent } from "../src/card.js";
 import { imageComponent } from "../src/image.js";
@@ -76,8 +76,8 @@ describe("Component .schema properties", () => {
     test("mixed component schemas in layout params object", () => {
       const layoutParams = z.object({
         title: textComponent.schema,
-        eyebrow: textComponent.schema.optional(),
-        logo: imageComponent.schema.optional(),
+        eyebrow: param.optional(textComponent.schema),
+        logo: param.optional(imageComponent.schema),
         cards: schema.array(cardComponent.schema),
       });
 

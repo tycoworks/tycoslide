@@ -158,9 +158,9 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
 
   // 5. Resolve layout tokens (if the layout declares them)
   let resolvedTokens: Record<string, unknown> | undefined;
-  if (layout.tokenShape && Object.keys(layout.tokenShape).length) {
+  if (layout.tokens && Object.keys(layout.tokens).length) {
     resolvedTokens = resolveVariantTokens(
-      options.theme.layouts?.[layoutName], layoutName, variant, layout.tokenShape, "Layout",
+      options.theme.layouts?.[layoutName], layoutName, variant, layout.tokens, "Layout",
       !layout.slots?.length,
     );
   }

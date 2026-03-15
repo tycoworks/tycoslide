@@ -12,20 +12,21 @@ import { testComponents } from "./test-components.js";
 componentRegistry.register(testComponents);
 
 import { NODE_TYPE } from "../src/core/model/nodes.js";
-import { schema } from "../src/core/model/schema.js";
+import { param, schema } from "../src/core/model/param.js";
 
 // Create a test layout with a known schema shape
 const testShape = {
   title: schema.string(),
   count: z.number().int().positive(),
-  tags: schema.array(schema.string()).optional(),
-  active: schema.boolean().optional(),
+  tags: param.optional(schema.array(schema.string())),
+  active: param.optional(schema.boolean()),
 };
 
 const testLayout: LayoutDefinition = {
   name: "test",
   description: "Test layout for validation",
   params: testShape,
+  tokens: {},
   render: (props) => ({
     masterName: "default",
     masterVariant: "default",
@@ -142,6 +143,7 @@ describe("validateLayout with enum schema", () => {
     name: "enumTest",
     description: "Test enum validation",
     params: enumShape,
+    tokens: {},
     render: (props) => ({
       masterName: "default",
       masterVariant: "default",
@@ -172,6 +174,7 @@ describe("validateLayout (params and slots)", () => {
     description: "Test layout with params and slots",
     params: { title: schema.string() },
     slots: ["body"],
+    tokens: {},
     render: (props) => ({
       masterName: "default",
       masterVariant: "default",
@@ -183,6 +186,7 @@ describe("validateLayout (params and slots)", () => {
     name: "noSlotTest",
     description: "Test layout with params only",
     params: { title: schema.string() },
+    tokens: {},
     render: (props) => ({
       masterName: "default",
       masterVariant: "default",

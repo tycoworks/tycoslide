@@ -4,7 +4,8 @@ import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import { z } from "zod";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
-import { schema } from "../src/core/model/schema.js";
+import { param, schema } from "../src/core/model/param.js";
+
 import type { TextStyle } from "../src/core/model/types.js";
 import { DIRECTION, HALIGN, SIZE, TEXT_STYLE, VALIGN } from "../src/core/model/types.js";
 import { componentRegistry, defineComponent } from "../src/core/rendering/registry.js";
@@ -35,7 +36,7 @@ describe("defineComponent", () => {
     const testParams = {
       title: schema.string(),
       count: schema.number(),
-      enabled: schema.boolean().optional(),
+      enabled: param.optional(schema.boolean()),
     };
 
     const comp = defineComponent({
@@ -127,7 +128,7 @@ describe("defineComponent", () => {
     const comp = defineComponent({
       name: "test-body-params-comp",
       body: schema.string(),
-      params: { scale: schema.number().optional() },
+      params: { scale: param.optional(schema.number()) },
       tokens: {},
       render: (props) => stubTextNode(props.body),
     });
