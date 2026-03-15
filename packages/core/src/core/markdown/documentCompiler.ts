@@ -161,6 +161,7 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
   if (layout.tokenShape && Object.keys(layout.tokenShape).length) {
     resolvedTokens = resolveVariantTokens(
       options.theme.layouts?.[layoutName], layoutName, variant, layout.tokenShape, "Layout",
+      !layout.slots?.length,
     );
   }
 
@@ -178,8 +179,10 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
   // They are resolved later by the image component's render function.
   const validated = validateLayout(layout, params, slots);
 
-  // 8. Inject layout tokens into slot-compiled ComponentNodes
-  if (resolvedTokens && layout.slots?.length) {
+  // 8. Inject tokens into slot-compiled ComponentNodes
+  // Token keys matching component names (text, list, table, code, etc.)
+  // are forwarded to slot-compiled components as base styling.
+  if (layout.slots?.length && resolvedTokens) {
     for (const slotName of layout.slots) {
       const slotNodes = validated[slotName];
       if (Array.isArray(slotNodes)) {

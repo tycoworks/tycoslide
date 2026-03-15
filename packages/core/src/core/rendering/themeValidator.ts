@@ -80,11 +80,7 @@ export function validateThemeFonts(theme: Theme): void {
   if (theme.layouts) {
     for (const [layoutName, layoutDef] of Object.entries(theme.layouts)) {
       for (const [variantName, tokens] of Object.entries(layoutDef.variants)) {
-        walkTokensForFonts(
-          tokens as Record<string, unknown>,
-          `layout "${layoutName}" variant "${variantName}"`,
-          validateTokenFonts,
-        );
+        walkTokensForFonts(tokens, `layout "${layoutName}" variant "${variantName}"`, validateTokenFonts);
       }
     }
   }
@@ -92,11 +88,7 @@ export function validateThemeFonts(theme: Theme): void {
   if (theme.masters) {
     for (const [masterName, masterDef] of Object.entries(theme.masters)) {
       for (const [variantName, tokens] of Object.entries(masterDef.variants)) {
-        walkTokensForFonts(
-          tokens as Record<string, unknown>,
-          `master "${masterName}" variant "${variantName}"`,
-          validateTokenFonts,
-        );
+        walkTokensForFonts(tokens, `master "${masterName}" variant "${variantName}"`, validateTokenFonts);
       }
     }
   }

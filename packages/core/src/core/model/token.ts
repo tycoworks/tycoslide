@@ -94,13 +94,16 @@ export function parseTokenShape(shape: TokenShape): ParsedTokenShape {
  * @param variant - Variant name to resolve
  * @param tokenShape - Token shape from the definition (for validation), or undefined if no tokens declared
  * @param label - "Layout" or "Master" (for error messages)
+ * @param strict - When true (default), unknown keys in the variant map are rejected.
+ *   Set to false to allow extra keys (e.g., slot injection tokens for slotted layouts).
  */
 export function resolveVariantTokens(
-  variantConfig: { variants: Record<string, unknown> } | undefined,
+  variantConfig: { variants: Record<string, Record<string, unknown>> } | undefined,
   name: string,
   variant: string,
   tokenShape: TokenShape | undefined,
   label: string,
+  strict = true,
 ): Record<string, unknown> {
   if (!variantConfig) {
     throw new Error(`${label} '${name}' requires tokens but theme.${label.toLowerCase()}s.${name} is missing.`);
@@ -110,32 +113,33 @@ export function resolveVariantTokens(
     const available = Object.keys(variantConfig.variants).join(", ");
     throw new Error(`Unknown variant '${variant}' for ${label.toLowerCase()} '${name}'. Available: ${available}`);
   }
+
   if (tokenShape) {
     const shape = parseTokenShape(tokenShape);
     if (shape.allKeys.size) {
-      validateTokens(shape, tokens as Record<string, unknown>, `${label} '${name}' variant '${variant}'`);
+      validateTokens(shape, tokens, `${label} '${name}' variant '${variant}'`, strict);
     }
   }
-  return tokens as Record<string, unknown>;
+  return tokens;
 }
 
 // ============================================
 // VALIDATION
 // ============================================
 
-export function validateTokens(shape: ParsedTokenShape, tokens: Record<string, unknown>, label: string): void {
+export function validateTokens(shape: ParsedTokenShape, tokens: Record<string, unknown>, label: string, strict = true): void {
   const missing = shape.requiredKeys.filter(
     (key) => tokens[key] === undefined || tokens[key] === null,
   );
   if (missing.length) {
     throw new Error(`${label} is missing required tokens: [${missing.join(", ")}].`);
   }
-
-  const unknown = Object.keys(tokens).filter((k) => !shape.allKeys.has(k));
-  if (unknown.length) {
-    throw new Error(
-      `${label} received unknown tokens: [${unknown.join(", ")}]. ` +
-        `Valid tokens: [${[...shape.allKeys].join(", ")}]`,
-    );
+  if (strict) {
+    const unknown = Object.keys(tokens).filter((key) => !shape.allKeys.has(key));
+    if (unknown.length) {
+      throw new Error(`${label} has unknown tokens: [${unknown.join(", ")}]. Declared: [${[...shape.allKeys].join(", ")}].`);
+    }
   }
+  // When strict=false, extra keys are allowed — slotted layouts pass slot injection tokens
+  // (table, code, etc.) alongside their own declared tokens.
 }

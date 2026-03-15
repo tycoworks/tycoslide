@@ -50,6 +50,7 @@ export type {
   GapSize,
   HighlightPair,
   HorizontalAlignment,
+  VariantConfig,
   NormalizedRun,
   ShadowType,
   ShapeName,

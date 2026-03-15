@@ -481,11 +481,11 @@ export interface LayoutDefinition {
 
 /**
  * A layout definition that preserves its token type for compile-time validation.
- * The `.tokenMap()` identity method validates token maps against the layout's required shape.
- * Extra properties (e.g. slot injection tokens) are allowed — only declared tokens are checked.
+ * The `.tokenMap()` method validates required tokens at theme construction time.
+ * Returns the token map unchanged for storage in Theme.layouts.
  */
 export interface TypedLayoutDefinition<TTokens = unknown> extends LayoutDefinition {
-  /** Validate a token map against this layout's required token shape. Returns the map unchanged. */
+  /** Validate a token map against this layout's required token shape. Returns the map for theme storage. */
   tokenMap<T extends TTokens>(map: T): T;
 }
 

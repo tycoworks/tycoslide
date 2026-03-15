@@ -33,7 +33,7 @@ export function mockTheme(options?: {
   gap?: number;
   gapTight?: number;
   gapLoose?: number;
-  layouts?: Record<string, { variants: Record<string, Record<string, unknown>> }>;
+  layouts?: Theme["layouts"];
   textStyles?: Partial<Record<string, Partial<TextStyle>>>;
   slide?: Theme["slide"];
 }): Theme {
@@ -55,7 +55,7 @@ export function mockTheme(options?: {
       [TEXT_STYLE.EYEBROW]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.EYEBROW] },
       [TEXT_STYLE.CODE]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.CODE] },
     },
-    layouts: (options?.layouts ?? {}) as Theme["layouts"],
+    layouts: options?.layouts ?? {},
     masters: {},
   };
 }

@@ -552,6 +552,7 @@ export const theme = defineTheme({
       variants: {
         default: blankLayout.tokenMap({
           masterVariant: "default",
+          ...bodySlotTokens,
         }),
       },
     },

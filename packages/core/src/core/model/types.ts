@@ -479,6 +479,10 @@ export interface Slide {
   name?: string;
 }
 
+/** Variant configuration — a named map of token values.
+ *  Used identically for both layouts and masters. */
+export type VariantConfig = Record<string, Record<string, unknown>>;
+
 export interface Theme {
   slide: SlideSize | CustomSlideSize;
   /** Semantic spacing scale for container gaps (W3C DTCG convention). */
@@ -491,19 +495,9 @@ export interface Theme {
    *  `generateFontFaceCSS()` reads exclusively from this list. */
   fonts: FontFamily[];
   textStyles: Record<string, TextStyle>;
-  /** Layout tokens. Each layout that declares token keys gets its visual values from here. */
-  layouts: Record<
-    string,
-    {
-      variants: Record<string, Record<string, unknown>>;
-    }
-  >;
-  /** Master tokens. Each master that declares token keys gets its visual values from here.
-   *  Same variant structure as layouts — framework resolves tokens before calling render. */
-  masters: Record<
-    string,
-    {
-      variants: Record<string, Record<string, unknown>>;
-    }
-  >;
+  /** Layout tokens. Each layout that declares token keys gets its visual values from here.
+   *  Layouts with slots may include extra keys for slot injection (keyed by component name). */
+  layouts: Record<string, { variants: VariantConfig }>;
+  /** Master tokens. Each master that declares token keys gets its visual values from here. */
+  masters: Record<string, { variants: VariantConfig }>;
 }

@@ -6,7 +6,7 @@ theme: tycoslide-theme-default
 layout: title
 variant: default
 title: "**tycoslide**"
-subtitle: "Build slides like software.:purple[▎]"
+subtitle: "Build slides like software.:purple[▌]"
 notes: Opening slide. Clean centered title with cursor.
 ---
 

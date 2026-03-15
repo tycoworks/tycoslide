@@ -37,9 +37,9 @@ describe("resolveVariantTokens", () => {
         },
       },
     });
-    const tokens = resolveVariantTokens(theme.layouts?.title, "title", "default", undefined, "Layout");
-    assert.strictEqual(tokens.background, "#FF0000");
-    assert.deepStrictEqual(tokens.title, { style: "h1", color: "#FFFFFF" });
+    const result = resolveVariantTokens(theme.layouts?.title, "title", "default", undefined, "Layout");
+    assert.strictEqual(result.background, "#FF0000");
+    assert.deepStrictEqual(result.title, { style: "h1", color: "#FFFFFF" });
   });
 
   it("resolves non-default variant tokens", () => {
@@ -53,8 +53,8 @@ describe("resolveVariantTokens", () => {
         },
       },
     });
-    const tokens = resolveVariantTokens(theme.layouts?.title, "title", "dark", undefined, "Layout");
-    assert.strictEqual(tokens.background, "#000000");
+    const result = resolveVariantTokens(theme.layouts?.title, "title", "dark", undefined, "Layout");
+    assert.strictEqual(result.background, "#000000");
   });
 
   it("throws when layout is not in theme.layouts", () => {
@@ -87,6 +87,39 @@ describe("resolveVariantTokens", () => {
       () => resolveVariantTokens(theme.layouts?.title, "title", "nonexistent", undefined, "Layout"),
       /Unknown variant 'nonexistent' for layout 'title'/,
     );
+  });
+
+  it("rejects unknown keys for non-slotted layouts", () => {
+    const shape = { background: token.required<any>() };
+    const theme = mockTheme({
+      layouts: {
+        title: {
+          variants: {
+            default: { background: "#FF0000", bogus: "oops" },
+          },
+        },
+      },
+    });
+    assert.throws(
+      () => resolveVariantTokens(theme.layouts?.title, "title", "default", shape, "Layout"),
+      /unknown tokens.*bogus/,
+    );
+  });
+
+  it("allows extra keys for slotted layouts", () => {
+    const shape = { background: token.required<any>() };
+    const theme = mockTheme({
+      layouts: {
+        body: {
+          variants: {
+            default: { background: "#FF0000", text: { style: "body" }, table: { headerBg: "#CCC" } },
+          },
+        },
+      },
+    });
+    // strict = false → extra keys allowed (slot injection tokens)
+    const result = resolveVariantTokens(theme.layouts?.body, "body", "default", shape, "Layout", false);
+    assert.strictEqual(result.background, "#FF0000");
   });
 });
 
@@ -178,7 +211,7 @@ describe("Document Compiler: Layout Tokens", () => {
     assert.strictEqual(receivedTokens[0].background, "#000000");
   });
 
-  it("defaults to default variant when variant not specified", () => {
+  it("resolves tokens for explicitly specified default variant", () => {
     const theme = mockTheme({
       layouts: {
         tokenSimple: {
