@@ -6,7 +6,7 @@ theme: tycoslide-theme-default
 layout: title
 variant: default
 title: "**tycoslide**"
-subtitle: "Build presentations like software.:purple[▌]"
+subtitle: "Build slides like software.:purple[▎]"
 notes: Opening slide. Clean centered title with cursor.
 ---
 
@@ -33,18 +33,18 @@ notes: Positioning one-liner. Four anchors in one sentence.
 
 ---
 layout: cards
-variant: flat
+variant: default
 title: Three Pillars
 eyebrow: Solution
 cards:
-  - title: Editable PowerPoint
-    description: Native .pptx files that open and edit in PowerPoint, Keynote, and Google Slides.
+  - title: Editable PowerPoint Slides
+    description: Native PowerPoint slides that can be edited in any presentation software.
     image: $icons.description
-  - title: TypeScript Themes
-    description: Design tokens, components, and layouts in one language. Type-checked end to end.
+  - title: Pure TypeScript Themes
+    description: Pure TypeScript for design tokens, components, and layouts — no CSS required.
     image: $icons.palette
   - title: Build-Time Validation
-    description: Overflows, missing tokens, and invalid parameters caught before the deck ships.
+    description: Catches layout overflows, missing tokens, and invalid parameters at build time.
     image: $icons.shield
 notes: Three pillars from positioning framework. Each maps to one supporting argument.
 ---
@@ -58,8 +58,6 @@ notes: Meta slide — the code block shows the markdown source for this very sli
 ---
 
 ::left::
-
-This is the markdown that generates the slide you are looking at.
 
 tycoslide supports **bold**, *italic*, [links](https://tycoslide.com), ~~strikethrough~~, ++underline++, and :purple[accent colors].
 

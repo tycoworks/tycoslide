@@ -3,7 +3,7 @@
 // Internal-only (no :::list directive). Available via list() DSL and MDAST handler.
 
 import type { ListItem, List as MdastList, RootContent } from "mdast";
-import type { ExpansionContext, HorizontalAlignment, NormalizedRun, TextStyleName, TokenShape, VerticalAlignment } from "tycoslide";
+import type { ExpansionContext, HorizontalAlignment, NormalizedRun, TextStyleName, VerticalAlignment } from "tycoslide";
 import {
   type ComponentNode,
   component,
@@ -38,7 +38,7 @@ export type ListTokens = {
   [LIST_TOKEN.ACCENTS]: Record<string, string>;
 };
 
-export const LIST_TOKEN_SPEC: TokenShape = token.allRequired(LIST_TOKEN)
+export const LIST_TOKEN_SPEC = token.allRequired(LIST_TOKEN);
 
 // ============================================
 // TYPES

@@ -103,11 +103,11 @@ export const DEFAULT_TABLE_TOKENS: TableTokens = {
   borderColor: "#333333",
   borderWidth: 1,
   headerBackground: "#FFFFFF",
-  headerBackgroundOpacity: 0,
+  headerBackgroundOpacity: 100,
   headerTextStyle: TEXT_STYLE.BODY,
   headerTextColor: "#000000",
   cellBackground: "#FFFFFF",
-  cellBackgroundOpacity: 0,
+  cellBackgroundOpacity: 100,
   cellTextStyle: TEXT_STYLE.BODY,
   cellTextColor: "#000000",
   cellPadding: 0.1,
@@ -132,7 +132,7 @@ export const DEFAULT_CODE_TOKENS: CodeTokens = {
   typeColor: "#4EC9B0",
   variableColor: "#9CDCFE",
   padding: 0.25,
-  borderRadius: 0.1,
+  borderRadius: 0,
 };
 
 export const DEFAULT_MERMAID_TOKENS: MermaidTokens = {
@@ -149,17 +149,17 @@ export const DEFAULT_MERMAID_TOKENS: MermaidTokens = {
   edgeLabelBackground: "#FFFFFF",
   titleColor: "#000000",
   textStyle: TEXT_STYLE.BODY,
-  accentOpacity: 20,
   accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
+  accentOpacity: 100,
 };
 
 export const DEFAULT_CARD_TOKENS: CardTokens = {
   background: {
     fill: "#333333",
-    fillOpacity: 20,
-    borderColor: "#333333",
-    borderWidth: 1,
-    cornerRadius: 0.1,
+    fillOpacity: 100,
+    borderColor: "#000000",
+    borderWidth: 0,
+    cornerRadius: 0,
   },
   padding: 0.25,
   gap: GAP.TIGHT,
@@ -212,10 +212,10 @@ export const DEFAULT_QUOTE_TOKENS: QuoteTokens = {
 export const DEFAULT_TESTIMONIAL_TOKENS: TestimonialTokens = {
   background: {
     fill: "#333333",
-    fillOpacity: 20,
-    borderColor: "#333333",
-    borderWidth: 1,
-    cornerRadius: 0.1,
+    fillOpacity: 100,
+    borderColor: "#000000",
+    borderWidth: 0,
+    cornerRadius: 0,
   },
   padding: 0.5,
   gap: GAP.NORMAL,
@@ -247,7 +247,7 @@ export const DEFAULT_LINE_TOKENS: LineTokens = {
 export const DEFAULT_SHAPE_TOKENS: ShapeTokens = {
   fill: "#333333",
   fillOpacity: 100,
-  borderColor: "#FFFFFF",
+  borderColor: "#000000",
   borderWidth: 0,
   cornerRadius: 0,
 };

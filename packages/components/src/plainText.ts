@@ -3,7 +3,7 @@
 // Handles plain (non-markdown) text with 3 tokens (no link tokens).
 // Use this for eyebrows, attributions, labels, and other non-rich text.
 
-import type { ExpansionContext, HorizontalAlignment, TextStyleName, TokenShape, VerticalAlignment } from "tycoslide";
+import type { ExpansionContext, HorizontalAlignment, TextStyleName, VerticalAlignment } from "tycoslide";
 import { type ComponentNode, component, defineComponent, type ElementNode, NODE_TYPE, schema, token } from "tycoslide";
 import { Component } from "./names.js";
 
@@ -21,7 +21,7 @@ export type PlainTextTokens = {
   [PLAIN_TEXT_TOKEN.VALIGN]: VerticalAlignment;
 };
 
-export const PLAIN_TEXT_TOKEN_SPEC: TokenShape = token.allRequired(PLAIN_TEXT_TOKEN)
+export const PLAIN_TEXT_TOKEN_SPEC = token.allRequired(PLAIN_TEXT_TOKEN);
 
 // ============================================
 // TYPES

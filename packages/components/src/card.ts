@@ -11,7 +11,6 @@ import {
   SHAPE,
   SIZE,
   token,
-  type TokenShape,
   type VerticalAlignment,
 } from "tycoslide";
 import { column, stack } from "./containers.js";
@@ -31,7 +30,7 @@ export const CARD_TOKEN = {
 } as const;
 
 export type CardTokens = {
-  [CARD_TOKEN.BACKGROUND]: ShapeTokens;
+  [CARD_TOKEN.BACKGROUND]?: ShapeTokens;
   [CARD_TOKEN.PADDING]: number;
   [CARD_TOKEN.GAP]: GapSize;
   [CARD_TOKEN.HALIGN]: HorizontalAlignment;
@@ -40,7 +39,9 @@ export type CardTokens = {
   [CARD_TOKEN.DESCRIPTION]: TextTokens;
 };
 
-export const CARD_TOKEN_SPEC: TokenShape = token.allRequired(CARD_TOKEN)
+export const CARD_TOKEN_SPEC = token.spec(CARD_TOKEN, {
+  optional: [CARD_TOKEN.BACKGROUND],
+});
 
 // ============================================
 // PARAMS SCHEMA
@@ -105,8 +106,8 @@ export const cardComponent = defineComponent({
     const contentProps = { padding, gap, hAlign: contentHAlign, vAlign: contentVAlign };
     const outerHeight = SIZE.FILL;
 
-    // Check background opacity from the ShapeTokens map
-    if (background.fillOpacity === 0) {
+    // No background token — skip background shape
+    if (!background) {
       return column({ ...contentProps, height: outerHeight }, ...children);
     }
 

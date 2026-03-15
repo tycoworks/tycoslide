@@ -213,7 +213,7 @@ export interface StatLayoutTokens {
   [STAT_LAYOUT_TOKEN.VALUE]: PlainTextTokens;
   [STAT_LAYOUT_TOKEN.LABEL]: PlainTextTokens;
   [STAT_LAYOUT_TOKEN.CAPTION]: TextTokens;
-  [STAT_LAYOUT_TOKEN.SURFACE]: ShapeTokens;
+  [STAT_LAYOUT_TOKEN.SURFACE]?: ShapeTokens;
   [STAT_LAYOUT_TOKEN.V_ALIGN]: VerticalAlignment;
   [STAT_LAYOUT_TOKEN.H_ALIGN]: HorizontalAlignment;
   [STAT_LAYOUT_TOKEN.GAP]: GapSize;
@@ -237,7 +237,10 @@ export const statLayout = defineLayout({
     label: textComponent.schema,
     caption: textComponent.schema.optional(),
   },
-  tokens: token.allRequired(STAT_LAYOUT_TOKEN),
+  tokens: {
+    ...token.allRequired(STAT_LAYOUT_TOKEN),
+    [STAT_LAYOUT_TOKEN.SURFACE]: token.optional,
+  },
   render: ({ value, label, caption }, tokens: StatLayoutTokens) => {
     const content = column(
       { vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap, height: SIZE.FILL, padding: tokens.padding },
@@ -246,10 +249,9 @@ export const statLayout = defineLayout({
       ...(caption ? [text(caption, tokens.caption)] : []),
     );
 
-    const surfaced =
-      tokens.surface.fillOpacity > 0
-        ? stack({ height: SIZE.FILL }, shape(tokens.surface, { shape: SHAPE.ROUND_RECT }), content)
-        : content;
+    const surfaced = tokens.surface
+      ? stack({ height: SIZE.FILL }, shape(tokens.surface, { shape: SHAPE.ROUND_RECT }), content)
+      : content;
 
     return masteredSlide(
       column({ height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign }, surfaced),
@@ -575,7 +577,7 @@ export const cardsLayout = defineLayout({
   },
   tokens: token.allRequired(CARDS_LAYOUT_TOKEN),
   render: ({ title, eyebrow, intro, cards: cardItems, caption }, tokens: CardsLayoutTokens) => {
-    const built = cardItems.map((c) => component(Component.Card, { ...c }, tokens.card));
+    const built = cardItems.map((c) => component(Component.Card, c as Record<string, unknown>, tokens.card));
     const perRow = built.length <= 2 ? built.length : built.length === 4 ? 2 : built.length >= 7 ? 4 : 3;
     return masteredSlide(
       headerBlock(title, tokens, eyebrow),

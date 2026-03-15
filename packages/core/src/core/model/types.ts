@@ -44,6 +44,13 @@ export const SIZE = {
 
 export type SizeValue = (typeof SIZE)[keyof typeof SIZE];
 
+export const SHADOW_TYPE = {
+  OUTER: "outer",
+  INNER: "inner",
+} as const;
+
+export type ShadowType = (typeof SHADOW_TYPE)[keyof typeof SHADOW_TYPE];
+
 export const BORDER_STYLE = {
   FULL: "full",
   INTERNAL: "internal",

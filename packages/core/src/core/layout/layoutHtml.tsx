@@ -10,7 +10,7 @@ import path from "node:path";
 import type { FC } from "hono/jsx";
 import { renderToString } from "hono/jsx/dom/server";
 import type { Page } from "playwright";
-import { bgColor } from "../../utils/color.js";
+import { bgColor, hexToRgba } from "../../utils/color.js";
 import { FONT_FORMATS, getFontForRun, normalizeContent } from "../../utils/font.js";
 import { readImageDimensions } from "../../utils/image.js";
 import { inToPx, ptToPx } from "../../utils/units.js";
@@ -421,6 +421,14 @@ function styleShape(node: ShapeNode, nodeId: string): StyledNode {
   const bw = ptToPx(node.border.width);
   if (bw > 0) {
     styles.border = `${bw}px solid ${node.border.color}`;
+  }
+  if (node.shadow) {
+    const rad = (node.shadow.angle * Math.PI) / 180;
+    const x = node.shadow.offset * Math.sin(rad);
+    const y = -node.shadow.offset * Math.cos(rad);
+    const inset = node.shadow.type === "inner" ? "inset " : "";
+    const rgba = hexToRgba(node.shadow.color, node.shadow.opacity / 100);
+    styles.boxShadow = `${inset}${ptToPx(x)}px ${ptToPx(y)}px ${ptToPx(node.shadow.blur)}px ${rgba}`;
   }
   return { nodeId, styles, children: [] };
 }

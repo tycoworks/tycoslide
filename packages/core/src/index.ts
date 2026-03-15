@@ -20,6 +20,7 @@ export type {
   PositionedNode,
   ShapeBorder,
   ShapeNode,
+  Shadow,
   SlideNode,
   SlideNumberNode,
   StackNode,
@@ -33,7 +34,7 @@ export { component, isComponentNode, NODE_TYPE } from "./core/model/nodes.js";
 // Schema helpers (domain-specific wrappers for layout Zod schemas)
 export { type ScalarParam, schema } from "./core/model/schema.js";
 // Token descriptors (required/optional markers for component token declarations)
-export { token, type TokenShape, type TokenSpec } from "./core/model/token.js";
+export { token, type TokenOptional, type TokenRequired, type TokenShape, type TokenSpec, type ValidTokenShape } from "./core/model/token.js";
 export type { ContainerDirective, SyntaxType } from "./core/model/syntax.js";
 // Markdown utilities (for component authors)
 export { extractSource, RESERVED_FRONTMATTER_KEYS, SYNTAX } from "./core/model/syntax.js";
@@ -50,6 +51,7 @@ export type {
   HighlightPair,
   HorizontalAlignment,
   NormalizedRun,
+  ShadowType,
   ShapeName,
   SizeValue,
   Slide,
@@ -74,6 +76,7 @@ export {
   FONT_SLOT,
   GAP,
   HALIGN,
+  SHADOW_TYPE,
   SHAPE,
   SHAPE_VALUES,
   SIZE,

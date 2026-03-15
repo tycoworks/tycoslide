@@ -4,7 +4,7 @@
 // Always uses rich text (inline formatting only): bold, italic, :color[highlights], no bullets/paragraphs.
 
 import type { Heading, RootContent } from "mdast";
-import type { ExpansionContext, HorizontalAlignment, NormalizedRun, TextStyleName, TokenShape, VerticalAlignment } from "tycoslide";
+import type { ExpansionContext, HorizontalAlignment, NormalizedRun, TextStyleName, VerticalAlignment } from "tycoslide";
 import {
   type ComponentNode,
   component,
@@ -40,7 +40,7 @@ export type TextTokens = {
   [TEXT_TOKEN.ACCENTS]: Record<string, string>;
 };
 
-export const TEXT_TOKEN_SPEC: TokenShape = token.allRequired(TEXT_TOKEN)
+export const TEXT_TOKEN_SPEC = token.allRequired(TEXT_TOKEN);
 
 // ============================================
 // TYPES

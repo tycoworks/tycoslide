@@ -13,7 +13,6 @@ import {
   SIZE,
   SYNTAX,
   token,
-  type TokenShape,
 } from "tycoslide";
 import { column, row } from "./containers.js";
 import { Component } from "./names.js";
@@ -35,7 +34,7 @@ export type QuoteTokens = {
   [QUOTE_TOKEN.ATTRIBUTION]: PlainTextTokens;
 };
 
-export const QUOTE_TOKEN_SPEC: TokenShape = token.allRequired(QUOTE_TOKEN)
+export const QUOTE_TOKEN_SPEC = token.allRequired(QUOTE_TOKEN);
 
 // ============================================
 // PARAMS SCHEMA

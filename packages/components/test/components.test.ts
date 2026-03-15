@@ -13,6 +13,7 @@ import {
   GAP,
   HALIGN,
   NODE_TYPE,
+  SHADOW_TYPE,
   SHAPE,
   SIZE,
   TEXT_STYLE,
@@ -244,10 +245,10 @@ describe("shape()", () => {
     assert.strictEqual(node.shape, SHAPE.PLUS);
   });
 
-  test("uses token values for fill, border, cornerRadius", async () => {
+  test("uses token values for fill, defaults for omitted tokens", async () => {
     const node = (await expand(shape(DEFAULT_SHAPE_TOKENS, { shape: SHAPE.RECT }))) as ShapeNode;
     assert.deepStrictEqual(node.fill, { color: "#333333", opacity: 100 });
-    assert.deepStrictEqual(node.border, { color: "#FFFFFF", width: 0 });
+    assert.deepStrictEqual(node.border, { color: "#000000", width: 0 });
     assert.strictEqual(node.cornerRadius, 0);
   });
 
@@ -298,6 +299,35 @@ describe("shape()", () => {
     assert.strictEqual(node.border?.color, "#333333");
     assert.strictEqual(node.border?.width, 1);
     assert.strictEqual(node.cornerRadius, 0.25);
+  });
+
+  test("no shadow when shadow token omitted", async () => {
+    const node = (await expand(shape(DEFAULT_SHAPE_TOKENS, { shape: SHAPE.RECT }))) as ShapeNode;
+    assert.strictEqual(node.shadow, undefined);
+  });
+
+  test("passes shadow from tokens when present", async () => {
+    const tokens: ShapeTokens = {
+      ...DEFAULT_SHAPE_TOKENS,
+      shadow: { type: SHADOW_TYPE.OUTER, color: "#000000", opacity: 25, blur: 8, offset: 3, angle: 315 },
+    };
+    const node = (await expand(shape(tokens, { shape: SHAPE.ROUND_RECT }))) as ShapeNode;
+    assert.ok(node.shadow);
+    assert.strictEqual(node.shadow.type, SHADOW_TYPE.OUTER);
+    assert.strictEqual(node.shadow.color, "#000000");
+    assert.strictEqual(node.shadow.opacity, 25);
+    assert.strictEqual(node.shadow.blur, 8);
+    assert.strictEqual(node.shadow.offset, 3);
+    assert.strictEqual(node.shadow.angle, 315);
+  });
+
+  test("shadow absent when not provided in tokens", async () => {
+    const tokens = { fill: "#FF0000", fillOpacity: 100, borderColor: "#000000", borderWidth: 0, cornerRadius: 0 };
+    const node = (await expand(shape(tokens, { shape: SHAPE.RECT }))) as ShapeNode;
+    assert.deepStrictEqual(node.fill, { color: "#FF0000", opacity: 100 });
+    assert.deepStrictEqual(node.border, { color: "#000000", width: 0 });
+    assert.strictEqual(node.cornerRadius, 0);
+    assert.strictEqual(node.shadow, undefined);
   });
 });
 

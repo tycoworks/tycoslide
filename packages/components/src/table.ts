@@ -20,7 +20,6 @@ import {
   type TextNode,
   type TextStyleName,
   token,
-  type TokenShape,
   type VerticalAlignment,
 } from "tycoslide";
 import { Component } from "./names.js";
@@ -72,7 +71,7 @@ export type TableTokens = {
   [TABLE_TOKEN.ACCENTS]: Record<string, string>;
 };
 
-export const TABLE_TOKEN_SPEC: TokenShape = token.allRequired(TABLE_TOKEN)
+export const TABLE_TOKEN_SPEC = token.allRequired(TABLE_TOKEN);
 
 // ============================================
 // TABLE COMPONENT

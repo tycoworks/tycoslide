@@ -7,6 +7,7 @@ import type {
   DashType,
   Direction,
   HorizontalAlignment,
+  ShadowType,
   ShapeName,
   SizeValue,
   TextContent,
@@ -75,6 +76,16 @@ export interface ShapeBorder {
   width: number;
 }
 
+/** Shadow configuration — shared across shapes, images, and text boxes */
+export interface Shadow {
+  type: ShadowType;
+  color: string;
+  opacity: number;
+  blur: number;
+  offset: number;
+  angle: number;
+}
+
 /** Area shape node: fill, border, cornerRadius (rectangles, ellipses, triangles, etc.) */
 export interface ShapeNode {
   type: typeof NODE_TYPE.SHAPE;
@@ -82,6 +93,7 @@ export interface ShapeNode {
   fill: { color: string; opacity: number };
   border: ShapeBorder;
   cornerRadius: number;
+  shadow?: Shadow;
 }
 
 export interface SlideNumberNode {

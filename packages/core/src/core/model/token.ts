@@ -12,6 +12,30 @@ export type TokenOptional = { readonly _optional: true };
 export type TokenSpec = TokenRequired | TokenOptional;
 export type TokenShape = Record<string, TokenSpec>;
 
+// ============================================
+// TYPE-LEVEL ENFORCEMENT
+// ============================================
+
+/** Extract keys where T[K] is optional (has `?`). */
+type OptionalKeys<T> = { [K in keyof T]-?: undefined extends T[K] ? K : never }[keyof T];
+
+/** Extract keys where T[K] is required (no `?`). */
+type RequiredKeys<T> = { [K in keyof T]-?: undefined extends T[K] ? never : K }[keyof T];
+
+/**
+ * Compile-time constraint: ensures token spec matches the TypeScript type.
+ * - Required fields in TTokens → must use `token.required`
+ * - Optional fields in TTokens → must use `token.optional`
+ *
+ * Prevents spec/type disagreement: if `fillOpacity` is required in the type,
+ * the spec can't accidentally mark it `token.optional` (and vice versa).
+ */
+export type ValidTokenShape<TTokens> = {
+  [K in RequiredKeys<TTokens> & string]: TokenRequired;
+} & {
+  [K in OptionalKeys<TTokens> & string]: TokenOptional;
+};
+
 const required: TokenRequired = { _optional: false };
 const optional: TokenOptional = { _optional: true };
 
@@ -33,6 +57,27 @@ export const token = {
     return Object.fromEntries(Object.values(tokenConst).map((k) => [k, required])) as {
       [K in T[keyof T]]: TokenRequired;
     };
+  },
+
+  /**
+   * Build a token shape with mixed required/optional from a TOKEN const object.
+   * Keys listed in `options.optional` get `token.optional`; all others get `token.required`.
+   *
+   * @example
+   * ```typescript
+   * export const CARD_TOKEN_SPEC = token.spec(CARD_TOKEN, {
+   *   optional: [CARD_TOKEN.BACKGROUND],
+   * });
+   * ```
+   */
+  spec<T extends Record<string, string>, O extends T[keyof T] = never>(
+    tokenConst: T,
+    options?: { optional?: O[] },
+  ): { [K in T[keyof T]]: K extends O ? TokenOptional : TokenRequired } {
+    const optSet = new Set<string>(options?.optional ?? []);
+    return Object.fromEntries(
+      Object.values(tokenConst).map((k) => [k, optSet.has(k) ? optional : required]),
+    ) as { [K in T[keyof T]]: K extends O ? TokenOptional : TokenRequired };
   },
 };
 
@@ -61,20 +106,6 @@ export function parseTokenShape(shape: TokenShape): ParsedTokenShape {
   };
 }
 
-// ============================================
-// VALIDATION
-// ============================================
-
-/**
- * Validate a token map against a parsed token shape.
- * 1. All required keys must be present (not undefined/null).
- * 2. No unknown keys allowed (fail fast on typos).
- *
- * @param shape - Parsed token shape from parseTokenShape()
- * @param tokens - Actual token map to validate
- * @param label - Human-readable context for error messages (e.g. "Component 'card'")
- * @throws Error with contextual message if validation fails
- */
 // ============================================
 // VARIANT RESOLUTION
 // ============================================

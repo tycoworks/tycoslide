@@ -15,7 +15,7 @@ import {
 } from "../model/nodes.js";
 import type { ScalarParam } from "../model/schema.js";
 import { RESERVED_FRONTMATTER_KEYS, type SyntaxType } from "../model/syntax.js";
-import { parseTokenShape, type TokenShape, validateTokens } from "../model/token.js";
+import { parseTokenShape, type TokenShape, type ValidTokenShape, validateTokens } from "../model/token.js";
 import type { Bounds } from "../model/bounds.js";
 import type { Background, Slide, Theme } from "../model/types.js";
 
@@ -205,7 +205,8 @@ export function defineComponent<TBody extends z.ZodTypeAny, TTokens = undefined>
   name: string;
   body: TBody;
   directive?: boolean;
-  tokens: TokenShape;
+  tokens: TTokens extends undefined ? TokenShape : ValidTokenShape<TTokens>;
+
   mdast?: MdastHandler;
   expand: (
     props: { body: z.infer<TBody> },
@@ -224,7 +225,8 @@ export function defineComponent<TBody extends z.ZodTypeAny, TParams extends Sche
   body: TBody;
   params: TParams;
   directive?: boolean;
-  tokens: TokenShape;
+  tokens: TTokens extends undefined ? TokenShape : ValidTokenShape<TTokens>;
+
   mdast?: MdastHandler;
   expand: (
     props: { body: z.infer<TBody> } & z.infer<z.ZodObject<TParams>>,
@@ -243,7 +245,8 @@ export function defineComponent<TShape extends SchemaShape, TTokens = undefined>
   name: string;
   params: TShape;
   directive?: boolean;
-  tokens: TokenShape;
+  tokens: TTokens extends undefined ? TokenShape : ValidTokenShape<TTokens>;
+
   mdast?: MdastHandler;
   expand: (
     props: z.infer<z.ZodObject<TShape>> & { body?: string },
@@ -262,7 +265,8 @@ export function defineComponent<TTokens = undefined>(def: {
   params?: SchemaShape;
   slots: readonly string[];
   directive?: boolean;
-  tokens: TokenShape;
+  tokens: TTokens extends undefined ? TokenShape : ValidTokenShape<TTokens>;
+
   mdast?: MdastHandler;
   expand: (props: any, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
 }): ComponentDefinition<any, TTokens>;
@@ -273,7 +277,8 @@ export function defineComponent<TTokens = undefined>(def: {
  */
 export function defineComponent<TProps, TTokens = undefined>(def: {
   name: string;
-  tokens: TokenShape;
+  tokens: TTokens extends undefined ? TokenShape : ValidTokenShape<TTokens>;
+
   mdast?: MdastHandler;
   expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
 }): ComponentDefinition<TProps, TTokens>;
@@ -499,7 +504,7 @@ export function defineLayout<
   description: string;
   params: TParams;
   slots?: TSlots;
-  tokens?: TokenShape;
+  tokens?: TTokens extends undefined ? TokenShape : ValidTokenShape<TTokens>;
   render: (
     props: z.infer<z.ZodObject<TParams>> & SlotsToProps<TSlots>,
     tokens: TTokens extends undefined ? Record<string, unknown> | undefined : TTokens,
@@ -559,7 +564,7 @@ export interface TypedMasterDefinition<TTokens = unknown> extends MasterDefiniti
  */
 export function defineMaster<TTokens = undefined>(def: {
   name: string;
-  tokens: TokenShape;
+  tokens: TTokens extends undefined ? TokenShape : ValidTokenShape<TTokens>;
   getContent: (
     tokens: TTokens extends undefined ? Record<string, unknown> : TTokens,
     slideSize: { width: number; height: number },

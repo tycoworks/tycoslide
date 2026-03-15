@@ -165,7 +165,7 @@ flowchart LR
 // THEME INTEGRATION (pure functions)
 // ============================================
 
-const testTokens: MermaidTokens = {
+const testTokens: Required<MermaidTokens> = {
   primaryColor: "#FF0000",
   primaryTextColor: "#FFFFFF",
   primaryBorderColor: "#666666",

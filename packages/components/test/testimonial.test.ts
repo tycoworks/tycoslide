@@ -87,10 +87,10 @@ describe("Testimonial Component", () => {
       }
     });
 
-    it("should expand to column only when tokens have backgroundOpacity=0", async () => {
+    it("should expand to column only when background is absent", async () => {
       const flatTokens: TestimonialTokens = {
         ...DEFAULT_TESTIMONIAL_TOKENS,
-        background: { fill: "#333333", fillOpacity: 0, borderColor: "#333333", borderWidth: 0, cornerRadius: 0.1 },
+        background: undefined,
       };
       const node = testimonial({ quote: "Test" }, flatTokens);
       const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });

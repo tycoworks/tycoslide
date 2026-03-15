@@ -353,7 +353,7 @@ describe("code MDAST compile handler", () => {
 // ============================================
 
 describe("renderCodeToHtml()", () => {
-  const tokens: CodeTokens = {
+  const tokens: Required<CodeTokens> = {
     textStyle: TEXT_STYLE.CODE,
     backgroundColor: "#1E1E1E",
     textColor: "#D4D4D4",

@@ -4,7 +4,7 @@
 
 import fs from "node:fs";
 import { createRequire } from "node:module";
-import type { Canvas, TextStyleName, TokenShape } from "tycoslide";
+import type { Canvas, TextStyleName } from "tycoslide";
 import {
   type ComponentNode,
   component,
@@ -58,7 +58,7 @@ export type MermaidTokens = {
   [MERMAID_TOKEN.ACCENTS]: Record<string, string>;
 };
 
-export const MERMAID_TOKEN_SPEC: TokenShape = token.allRequired(MERMAID_TOKEN)
+export const MERMAID_TOKEN_SPEC = token.allRequired(MERMAID_TOKEN);
 
 // ============================================
 // TYPES

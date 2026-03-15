@@ -552,6 +552,57 @@ describe("buildShapeConfig() — area shapes", () => {
     assert.strictEqual(line.width, 2);
   });
 
+  test("no shadow when shadow not set", () => {
+    const shapeNode: ShapeNode = { ...baseShapeNode };
+    const pos = positioned(shapeNode, 1, 2, 5, 3);
+
+    const result = builder.buildShapeConfig(shapeNode, pos);
+
+    assert.ok(result);
+    assert.strictEqual(result.options.shadow, undefined);
+  });
+
+  test("translates outer shadow with opacity conversion and color strip", () => {
+    const shapeNode: ShapeNode = {
+      ...baseShapeNode,
+      shadow: { type: "outer", color: "#000000", opacity: 25, blur: 8, offset: 3, angle: 315 },
+    };
+    const pos = positioned(shapeNode, 1, 2, 5, 3);
+
+    const result = builder.buildShapeConfig(shapeNode, pos);
+
+    assert.ok(result);
+    const shadow = result.options.shadow as {
+      type: string;
+      color: string;
+      opacity: number;
+      blur: number;
+      offset: number;
+      angle: number;
+    };
+    assert.strictEqual(shadow.type, "outer");
+    assert.strictEqual(shadow.color, "000000");
+    assert.strictEqual(shadow.opacity, 0.25);
+    assert.strictEqual(shadow.blur, 8);
+    assert.strictEqual(shadow.offset, 3);
+    assert.strictEqual(shadow.angle, 315);
+  });
+
+  test("translates inner shadow", () => {
+    const shapeNode: ShapeNode = {
+      ...baseShapeNode,
+      shadow: { type: "inner", color: "#FF0000", opacity: 50, blur: 4, offset: 1, angle: 180 },
+    };
+    const pos = positioned(shapeNode, 1, 2, 5, 3);
+
+    const result = builder.buildShapeConfig(shapeNode, pos);
+
+    assert.ok(result);
+    const shadow = result.options.shadow as { type: string; color: string; opacity: number };
+    assert.strictEqual(shadow.type, "inner");
+    assert.strictEqual(shadow.color, "FF0000");
+    assert.strictEqual(shadow.opacity, 0.5);
+  });
 });
 
 // ============================================

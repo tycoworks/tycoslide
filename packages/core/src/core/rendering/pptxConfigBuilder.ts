@@ -191,6 +191,17 @@ export class PptxConfigBuilder {
       options.rectRadius = shapeNode.cornerRadius;
     }
 
+    if (shapeNode.shadow) {
+      options.shadow = {
+        type: shapeNode.shadow.type,
+        color: stripHash(shapeNode.shadow.color),
+        opacity: shapeNode.shadow.opacity / 100,
+        blur: shapeNode.shadow.blur,
+        offset: shapeNode.shadow.offset,
+        angle: shapeNode.shadow.angle,
+      };
+    }
+
     return { shapeType: shapeNode.shape, options };
   }
 

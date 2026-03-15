@@ -2,8 +2,8 @@
 // Clean light theme with Inter font. Copy and customize for your brand.
 // Units: spacing/margins/radii = inches, fontSize/borderWidth = points, opacity = 0-100
 
-import { BORDER_STYLE, DASH_TYPE, GAP, HALIGN, SLIDE_SIZE, TEXT_STYLE, type Theme, VALIGN } from "tycoslide";
-import type { ListTokens, PlainTextTokens, TextTokens } from "tycoslide-components";
+import { BORDER_STYLE, DASH_TYPE, GAP, HALIGN, SHADOW_TYPE, SLIDE_SIZE, TEXT_STYLE, type Theme, VALIGN } from "tycoslide";
+import { type ListTokens, type PlainTextTokens, type TextTokens } from "tycoslide-components";
 import { assets } from "./assets.js";
 import {
   agendaLayout,
@@ -82,6 +82,11 @@ const borderWidth = 0.75;
 const cornerRadius = 0.08;
 const cornerRadiusLarge = 0.12;
 const accentBarWidth = 2;
+const shadowOpacity = 8;
+const shadowBlur = 4;
+const shadowOffset = 1;
+const shadowAngle = 180;
+const defaultOpacity = 100;
 
 // ============================================
 // SHARED TOKEN OBJECTS FOR COMPOSITION COMPONENTS
@@ -215,10 +220,10 @@ const tableTokens = {
   borderColor: palette.gray300,
   borderWidth,
   headerBackground: palette.gray200,
-  headerBackgroundOpacity: 100,
   headerTextStyle: TEXT_STYLE.BODY,
   headerTextColor: palette.navy,
   cellBackground: palette.gray50,
+  headerBackgroundOpacity: defaultOpacity,
   cellBackgroundOpacity: 0,
   cellTextStyle: TEXT_STYLE.BODY,
   cellTextColor: palette.navy,
@@ -261,7 +266,7 @@ const quoteSlotTokens = {
 const testimonialSlotTokens = {
   background: {
     fill: palette.gray100,
-    fillOpacity: 100,
+    fillOpacity: defaultOpacity,
     borderColor: palette.gray300,
     borderWidth,
     cornerRadius,
@@ -428,7 +433,7 @@ export const theme = {
           caption: mutedCaption,
           surface: {
             fill: palette.white,
-            fillOpacity: 100,
+            fillOpacity: defaultOpacity,
             borderColor: palette.gray300,
             borderWidth,
             cornerRadius: cornerRadiusLarge,
@@ -476,7 +481,7 @@ export const theme = {
           items: { ...bodyText, style: TEXT_STYLE.H4, color: palette.navy },
           itemBackground: {
             fill: palette.white,
-            fillOpacity: 100,
+            fillOpacity: defaultOpacity,
             borderColor: palette.gray300,
             borderWidth,
             cornerRadius,
@@ -509,10 +514,11 @@ export const theme = {
           card: {
             background: {
               fill: palette.white,
-              fillOpacity: 100,
+              fillOpacity: defaultOpacity,
               borderColor: palette.gray300,
               borderWidth,
               cornerRadius,
+              shadow: { type: SHADOW_TYPE.OUTER, color: palette.navy, opacity: shadowOpacity, blur: shadowBlur, offset: shadowOffset, angle: shadowAngle },
             },
             padding: padding,
             gap: GAP.TIGHT,
@@ -532,13 +538,6 @@ export const theme = {
           gap: GAP.NORMAL,
           gridGap: GAP.NORMAL,
           card: {
-            background: {
-              fill: palette.gray50,
-              fillOpacity: 0,
-              borderColor: palette.gray300,
-              borderWidth: 0,
-              cornerRadius,
-            },
             padding: padding,
             gap: GAP.TIGHT,
             hAlign: HALIGN.LEFT,

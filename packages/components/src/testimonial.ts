@@ -12,7 +12,6 @@ import {
   SHAPE,
   SIZE,
   token,
-  type TokenShape,
   type VerticalAlignment,
 } from "tycoslide";
 import { column, row, stack } from "./containers.js";
@@ -33,7 +32,7 @@ export const TESTIMONIAL_TOKEN = {
 } as const;
 
 export type TestimonialTokens = {
-  [TESTIMONIAL_TOKEN.BACKGROUND]: ShapeTokens;
+  [TESTIMONIAL_TOKEN.BACKGROUND]?: ShapeTokens;
   [TESTIMONIAL_TOKEN.PADDING]: number;
   [TESTIMONIAL_TOKEN.GAP]: GapSize;
   [TESTIMONIAL_TOKEN.HALIGN]: HorizontalAlignment;
@@ -42,7 +41,9 @@ export type TestimonialTokens = {
   [TESTIMONIAL_TOKEN.ATTRIBUTION]: PlainTextTokens;
 };
 
-export const TESTIMONIAL_TOKEN_SPEC: TokenShape = token.allRequired(TESTIMONIAL_TOKEN)
+export const TESTIMONIAL_TOKEN_SPEC = token.spec(TESTIMONIAL_TOKEN, {
+  optional: [TESTIMONIAL_TOKEN.BACKGROUND],
+});
 
 // ============================================
 // PARAMS SCHEMA
@@ -109,8 +110,8 @@ export const testimonialComponent = defineComponent({
     const contentProps = { padding, gap, hAlign: contentHAlign, vAlign: contentVAlign };
     const outerHeight = SIZE.FILL;
 
-    // Check background opacity from the ShapeTokens map
-    if (background.fillOpacity === 0) {
+    // No background token — skip background shape
+    if (!background) {
       return column({ ...contentProps, height: outerHeight }, ...children);
     }
 

@@ -20,7 +20,6 @@ import {
   type TextStyle,
   type TextStyleName,
   token,
-  type TokenShape,
 } from "tycoslide";
 import type { LanguageName } from "./languages.js";
 import { LANGUAGE_VALUES } from "./languages.js";
@@ -67,7 +66,7 @@ export type CodeTokens = {
   [CODE_TOKEN.BORDER_RADIUS]: number;
 };
 
-export const CODE_TOKEN_SPEC: TokenShape = token.allRequired(CODE_TOKEN)
+export const CODE_TOKEN_SPEC = token.allRequired(CODE_TOKEN);
 
 // ============================================
 // SCHEMAS & TYPES

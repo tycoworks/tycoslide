@@ -11,6 +11,7 @@ import {
   type HorizontalAlignment,
   type LineNode,
   NODE_TYPE,
+  type Shadow,
   type SchemaShape,
   SHAPE_VALUES,
   type ShapeName,
@@ -19,7 +20,6 @@ import {
   schema,
   token,
   type TextStyleName,
-  type TokenShape,
   type VerticalAlignment,
 } from "tycoslide";
 import { Component } from "./names.js";
@@ -36,7 +36,7 @@ export type LineTokens = {
   [LINE_TOKEN.DASH_TYPE]: DashType;
 };
 
-export const LINE_TOKEN_SPEC: TokenShape = token.allRequired(LINE_TOKEN);
+export const LINE_TOKEN_SPEC = token.allRequired(LINE_TOKEN);
 
 export const SLIDE_NUMBER_TOKEN = {
   STYLE: "style",
@@ -52,7 +52,7 @@ export type SlideNumberTokens = {
   [SLIDE_NUMBER_TOKEN.VALIGN]: VerticalAlignment;
 };
 
-export const SLIDE_NUMBER_TOKEN_SPEC: TokenShape = token.allRequired(SLIDE_NUMBER_TOKEN);
+export const SLIDE_NUMBER_TOKEN_SPEC = token.allRequired(SLIDE_NUMBER_TOKEN);
 
 export const SHAPE_TOKEN = {
   FILL: "fill",
@@ -60,6 +60,7 @@ export const SHAPE_TOKEN = {
   BORDER_COLOR: "borderColor",
   BORDER_WIDTH: "borderWidth",
   CORNER_RADIUS: "cornerRadius",
+  SHADOW: "shadow",
 } as const;
 
 export type ShapeTokens = {
@@ -68,9 +69,12 @@ export type ShapeTokens = {
   [SHAPE_TOKEN.BORDER_COLOR]: string;
   [SHAPE_TOKEN.BORDER_WIDTH]: number;
   [SHAPE_TOKEN.CORNER_RADIUS]: number;
+  [SHAPE_TOKEN.SHADOW]?: Shadow;
 };
 
-export const SHAPE_TOKEN_SPEC: TokenShape = token.allRequired(SHAPE_TOKEN);
+export const SHAPE_TOKEN_SPEC = token.spec(SHAPE_TOKEN, {
+  optional: [SHAPE_TOKEN.SHADOW],
+});
 
 // ============================================
 // LINE
@@ -126,7 +130,7 @@ export type ShapeProps = {
 };
 
 function expandShape(props: ShapeProps, _context: ExpansionContext, tokens: ShapeTokens): ShapeNode {
-  return {
+  const node: ShapeNode = {
     type: NODE_TYPE.SHAPE,
     shape: props.shape,
     fill: {
@@ -139,6 +143,10 @@ function expandShape(props: ShapeProps, _context: ExpansionContext, tokens: Shap
     },
     cornerRadius: tokens.cornerRadius,
   };
+  if (tokens.shadow) {
+    node.shadow = tokens.shadow;
+  }
+  return node;
 }
 
 export const shapeComponent = defineComponent({
