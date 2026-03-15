@@ -3,7 +3,7 @@
 // Renders to: stack(shape(background), column(image?, quote, attribution))
 
 import {
-  type ComponentProps,
+  type InferParams,
   type InferTokens,
   component,
   defineComponent,
@@ -22,7 +22,11 @@ import { type PlainTextTokens, plainText } from "./plainText.js";
 import { type ShapeTokens, shape } from "./primitives.js";
 import { type TextTokens, text, textComponent } from "./text.js";
 
-export const testimonialTokens = token.shape({
+// ============================================
+// TOKENS
+// ============================================
+
+const testimonialTokens = token.shape({
   background: token.optional<ShapeTokens>(),
   padding: token.required<number>(),
   gap: token.required<GapSize>(),
@@ -31,6 +35,18 @@ export const testimonialTokens = token.shape({
   quote: token.required<TextTokens>(),
   attribution: token.required<PlainTextTokens>(),
 });
+export type TestimonialTokens = InferTokens<typeof testimonialTokens>;
+
+// ============================================
+// PARAMS
+// ============================================
+
+const testimonialParams = param.shape({
+  quote: param.optional(textComponent.schema),
+  attribution: param.optional(textComponent.schema),
+  image: param.optional(imageComponent.schema),
+});
+export type TestimonialParams = InferParams<typeof testimonialParams>;
 
 // ============================================
 // COMPONENT DEFINITION
@@ -53,14 +69,10 @@ export const testimonialTokens = token.shape({
  */
 export const testimonialComponent = defineComponent({
   name: Component.Testimonial,
-  params: {
-    quote: param.optional(textComponent.schema),
-    attribution: param.optional(textComponent.schema),
-    image: param.optional(imageComponent.schema),
-  },
+  params: testimonialParams,
   tokens: testimonialTokens,
-  render(props, _context, tokens) {
-    const { quote: quoteText, body, attribution, image: imagePath } = props;
+  render(params, _context, tokens) {
+    const { quote: quoteText, body, attribution, image: imagePath } = params;
     const actualQuote = quoteText ?? body;
     const {
       background,
@@ -103,11 +115,8 @@ export const testimonialComponent = defineComponent({
 });
 
 // ============================================
-// EXPORTED TYPES
+// DSL FUNCTION
 // ============================================
-
-export type TestimonialTokens = InferTokens<typeof testimonialTokens>;
-export type TestimonialProps = ComponentProps<typeof testimonialComponent>;
 
 /**
  * Create a testimonial card with optional image, quote text, and attribution.
@@ -121,6 +130,6 @@ export type TestimonialProps = ComponentProps<typeof testimonialComponent>;
  * })
  * ```
  */
-export function testimonial(props: TestimonialProps, tokens: TestimonialTokens) {
-  return component(Component.Testimonial, props, tokens);
+export function testimonial(params: TestimonialParams, tokens: TestimonialTokens) {
+  return component(Component.Testimonial, params, tokens);
 }

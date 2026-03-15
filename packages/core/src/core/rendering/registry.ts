@@ -132,8 +132,6 @@ export type ScalarComponentDefinition<
   schema: TSchema;
 };
 
-/** Extract the props type from a component definition's schema. Hides Zod from component authors. */
-export type ComponentProps<T extends { schema: z.ZodTypeAny }> = z.infer<T["schema"]>;
 
 // ============================================
 // DIRECTIVE DESERIALIZATION (private)

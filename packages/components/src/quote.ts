@@ -4,7 +4,7 @@
 
 import type { RootContent } from "mdast";
 import {
-  type ComponentProps,
+  type InferParams,
   type InferTokens,
   component,
   defineComponent,
@@ -21,12 +21,27 @@ import { type PlainTextTokens, plainText } from "./plainText.js";
 import { type LineTokens, line } from "./primitives.js";
 import { type TextTokens, text, textComponent } from "./text.js";
 
-export const quoteTokens = token.shape({
+// ============================================
+// TOKENS
+// ============================================
+
+const quoteTokens = token.shape({
   bar: token.required<LineTokens>(),
   gap: token.required<GapSize>(),
   quote: token.required<TextTokens>(),
   attribution: token.required<PlainTextTokens>(),
 });
+export type QuoteTokens = InferTokens<typeof quoteTokens>;
+
+// ============================================
+// PARAMS
+// ============================================
+
+const quoteParams = param.shape({
+  quote: param.optional(textComponent.schema),
+  attribution: param.optional(textComponent.schema),
+});
+export type QuoteParams = InferParams<typeof quoteParams>;
 
 // ============================================
 // COMPONENT DEFINITION
@@ -48,10 +63,7 @@ export const quoteTokens = token.shape({
  */
 export const quoteComponent = defineComponent({
   name: Component.Quote,
-  params: {
-    quote: param.optional(textComponent.schema),
-    attribution: param.optional(textComponent.schema),
-  },
+  params: quoteParams,
   tokens: quoteTokens,
   mdast: {
     nodeTypes: [SYNTAX.BLOCKQUOTE],
@@ -62,8 +74,8 @@ export const quoteComponent = defineComponent({
       return component(Component.Quote, { quote: inner });
     },
   },
-  render(props, _context, tokens) {
-    const { quote: quoteText, body, attribution } = props;
+  render(params, _context, tokens) {
+    const { quote: quoteText, body, attribution } = params;
     const actualQuote = quoteText ?? body;
     const { bar: barTokens, gap, quote: quoteTokens, attribution: attributionTokens } = tokens;
 
@@ -84,11 +96,8 @@ export const quoteComponent = defineComponent({
 });
 
 // ============================================
-// EXPORTED TYPES
+// DSL FUNCTION
 // ============================================
-
-export type QuoteTokens = InferTokens<typeof quoteTokens>;
-export type QuoteProps = ComponentProps<typeof quoteComponent>;
 
 /**
  * Create a pull quote with left accent bar, quote text, and optional attribution.
@@ -101,6 +110,6 @@ export type QuoteProps = ComponentProps<typeof quoteComponent>;
  * })
  * ```
  */
-export function quote(props: QuoteProps, tokens: QuoteTokens) {
-  return component(Component.Quote, props, tokens);
+export function quote(params: QuoteParams, tokens: QuoteTokens) {
+  return component(Component.Quote, params, tokens);
 }

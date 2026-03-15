@@ -207,7 +207,7 @@ export const tableComponent = defineComponent({
           return source.slice(start, end).trim();
         }),
       );
-      return component(C.Table, { data: rows, tableProps: { headerRows: 1 } });
+      return component(C.Table, { data: rows, tableParams: { headerRows: 1 } });
     },
   },
   render: () => ({}) as any,

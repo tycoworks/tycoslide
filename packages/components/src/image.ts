@@ -83,8 +83,8 @@ export const imageComponent = defineComponent({
     },
   },
 
-  render: (props: { body: string }, context: RenderContext): ImageNode => {
-    let src = props.body;
+  render: (params: { body: string }, context: RenderContext): ImageNode => {
+    let src = params.body;
     if (src.startsWith(ASSET_PREFIX)) {
       src = resolveAssetPath(src, context.assets);
     }

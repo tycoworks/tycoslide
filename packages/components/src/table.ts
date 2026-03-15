@@ -30,7 +30,7 @@ import type { TextTokens } from "./text.js";
 // TABLE TOKENS
 // ============================================
 
-export const tableTokens = token.shape({
+const tableTokens = token.shape({
   borderStyle: token.required<BorderStyle>(),
   borderColor: token.required<string>(),
   borderWidth: token.required<number>(),
@@ -57,16 +57,20 @@ export type TableTokens = InferTokens<typeof tableTokens>;
 // TABLE COMPONENT
 // ============================================
 
-export type TableProps = {
+export type TableParams = {
   /** Number of header rows (default: 0) */
   headerRows?: number;
   /** Number of header columns (default: 0) */
   headerColumns?: number;
 };
 
-interface TableInternalProps {
+const tableParamShape = param.shape({
+  headerColumns: param.optional(schema.number()),
+});
+
+interface TableInternalParams {
   data?: (TableCellInput | TextContent)[][];
-  tableProps?: TableProps;
+  tableParams?: TableParams;
 }
 
 /**
@@ -94,9 +98,7 @@ function parseGfmTable(body: string): string[][] {
 
 export const tableComponent = defineComponent({
   name: Component.Table,
-  params: {
-    headerColumns: param.optional(schema.number()),
-  },
+  params: tableParamShape,
   tokens: tableTokens,
   mdast: {
     nodeTypes: [SYNTAX.TABLE],
@@ -112,11 +114,11 @@ export const tableComponent = defineComponent({
           return source.slice(start, end).trim();
         }),
       );
-      return component(Component.Table, { data: rows, tableProps: { headerRows: 1 } });
+      return component(Component.Table, { data: rows, tableParams: { headerRows: 1 } });
     },
   },
   render: async (
-    props: TableInternalProps & { body?: string; headerColumns?: number },
+    params: TableInternalParams & { body?: string; headerColumns?: number },
     context: RenderContext,
     tokens: TableTokens,
   ) => {
@@ -125,16 +127,16 @@ export const tableComponent = defineComponent({
     let headerRows: number | undefined;
     let headerColumns: number | undefined;
 
-    if ("data" in props && props.data) {
+    if ("data" in params && params.data) {
       // DSL path — structured data
-      data = props.data;
-      headerRows = props.tableProps?.headerRows;
-      headerColumns = props.tableProps?.headerColumns;
-    } else if (props.body) {
+      data = params.data;
+      headerRows = params.tableParams?.headerRows;
+      headerColumns = params.tableParams?.headerColumns;
+    } else if (params.body) {
       // Directive path — parse GFM body string
-      data = parseGfmTable(props.body);
+      data = parseGfmTable(params.body);
       headerRows = 1; // GFM tables always have a header row
-      headerColumns = props.headerColumns;
+      headerColumns = params.headerColumns;
     } else {
       throw new Error("Table requires either data (DSL) or body (directive)");
     }
@@ -264,6 +266,6 @@ export const tableComponent = defineComponent({
  * ], { headerRows: 1 })
  * ```
  */
-export function table(data: (TableCellInput | TextContent)[][], props?: TableProps): ComponentNode {
-  return component(Component.Table, { data, tableProps: props });
+export function table(data: (TableCellInput | TextContent)[][], params?: TableParams): ComponentNode {
+  return component(Component.Table, { data, tableParams: params });
 }

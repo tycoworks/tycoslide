@@ -32,7 +32,7 @@ const SUPPORTED_LANGUAGES = new Set<string>(LANGUAGE_VALUES);
 // TOKENS
 // ============================================
 
-export const codeTokens = token.shape({
+const codeTokens = token.shape({
   textStyle: token.required<TextStyleName>(),
   backgroundColor: token.required<string>(),
   textColor: token.required<string>(),
@@ -50,7 +50,11 @@ export const codeTokens = token.shape({
 
 export type CodeTokens = InferTokens<typeof codeTokens>;
 
-export type CodeComponentProps = { body: string; language: string };
+export type CodeParams = { body: string; language: string };
+
+const codeParamShape = param.shape({
+  language: param.required(schema.string()),
+});
 
 // ============================================
 // SHIKI THEME BUILDER
@@ -175,17 +179,17 @@ body {
  * Renders syntax-highlighted code via Shiki + shared browser, returns image reference.
  */
 async function renderCode(
-  props: CodeComponentProps,
+  params: CodeParams,
   context: RenderContext,
   tokens: CodeTokens,
 ): Promise<ImageNode> {
-  const code = props.body.trim();
+  const code = params.body.trim();
   if (!code) {
     throw new Error("[tycoslide] Code block is empty");
   }
 
   const codeStyle = context.theme.textStyles[tokens.textStyle];
-  const html = await renderCodeToHtml(code, props.language, tokens, codeStyle);
+  const html = await renderCodeToHtml(code, params.language, tokens, codeStyle);
   const pngPath = await context.canvas.renderHtml(html, false);
 
   return {
@@ -201,9 +205,7 @@ async function renderCode(
 export const codeComponent = defineComponent({
   name: Component.Code,
   body: schema.string(),
-  params: {
-    language: param.required(schema.string()),
-  },
+  params: codeParamShape,
   tokens: codeTokens,
   mdast: {
     nodeTypes: [SYNTAX.CODE],
@@ -237,6 +239,6 @@ export const codeComponent = defineComponent({
  * pres.add(contentSlide('Query Example', snippet));
  * ```
  */
-export function code(source: string, language: LanguageName): ComponentNode<CodeComponentProps> {
+export function code(source: string, language: LanguageName): ComponentNode<CodeParams> {
   return component(Component.Code, { body: source, language });
 }

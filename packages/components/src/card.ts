@@ -2,7 +2,7 @@
 // Implements card as a component using primitives: stack, column, shape, text, image
 
 import {
-  type ComponentProps,
+  type InferParams,
   type InferTokens,
   component,
   defineComponent,
@@ -24,7 +24,7 @@ import { type TextTokens, text, textComponent } from "./text.js";
 // TOKENS
 // ============================================
 
-export const cardTokens = token.shape({
+const cardTokens = token.shape({
   background: token.optional<ShapeTokens>(),
   padding: token.required<number>(),
   gap: token.required<GapSize>(),
@@ -33,6 +33,18 @@ export const cardTokens = token.shape({
   title: token.required<TextTokens>(),
   description: token.required<TextTokens>(),
 });
+export type CardTokens = InferTokens<typeof cardTokens>;
+
+// ============================================
+// PARAMS
+// ============================================
+
+const cardParams = param.shape({
+  image: param.optional(imageComponent.schema),
+  title: param.optional(textComponent.schema),
+  description: param.optional(textComponent.schema),
+});
+export type CardParams = InferParams<typeof cardParams>;
 
 // ============================================
 // COMPONENT DEFINITION
@@ -51,14 +63,10 @@ export const cardTokens = token.shape({
  */
 export const cardComponent = defineComponent({
   name: Component.Card,
-  params: {
-    image: param.optional(imageComponent.schema),
-    title: param.optional(textComponent.schema),
-    description: param.optional(textComponent.schema),
-  },
+  params: cardParams,
   tokens: cardTokens,
-  render(props, _context, tokens) {
-    const { image: imagePath, title, description, body } = props;
+  render(params, _context, tokens) {
+    const { image: imagePath, title, description, body } = params;
     const actualDescription = description ?? body;
     const {
       background,
@@ -70,7 +78,7 @@ export const cardComponent = defineComponent({
       description: descriptionTokens,
     } = tokens;
 
-    // Build children from image/title/description props
+    // Build children from image/title/description params
     const children = [];
 
     if (imagePath) {
@@ -104,11 +112,8 @@ export const cardComponent = defineComponent({
 });
 
 // ============================================
-// EXPORTED TYPES
+// DSL FUNCTION
 // ============================================
-
-export type CardTokens = InferTokens<typeof cardTokens>;
-export type CardProps = ComponentProps<typeof cardComponent>;
 
 /**
  * Create a card component node.
@@ -122,6 +127,6 @@ export type CardProps = ComponentProps<typeof cardComponent>;
  * })
  * ```
  */
-export function card(props: CardProps, tokens: CardTokens) {
-  return component(Component.Card, props, tokens);
+export function card(params: CardParams, tokens: CardTokens) {
+  return component(Component.Card, params, tokens);
 }

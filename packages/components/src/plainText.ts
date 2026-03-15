@@ -7,7 +7,7 @@ import type { HorizontalAlignment, RenderContext, TextStyleName, VerticalAlignme
 import { type ComponentNode, component, defineComponent, type ElementNode, type InferTokens, NODE_TYPE, schema, token } from "tycoslide";
 import { Component } from "./names.js";
 
-export const plainTextTokens = token.shape({
+const plainTextTokens = token.shape({
   color: token.required<string>(),
   style: token.required<TextStyleName>(),
   hAlign: token.required<HorizontalAlignment>(),
@@ -20,8 +20,8 @@ export type PlainTextTokens = InferTokens<typeof plainTextTokens>;
 // TYPES
 // ============================================
 
-/** Full props including body content (used internally by rendering). */
-export type PlainTextComponentProps = {
+/** Full params including body content (used internally by rendering). */
+export type PlainTextParams = {
   body: string;
 };
 
@@ -30,7 +30,7 @@ export type PlainTextComponentProps = {
 // ============================================
 
 function renderPlainText(
-  props: PlainTextComponentProps,
+  params: PlainTextParams,
   context: RenderContext,
   tokens: PlainTextTokens,
 ): ElementNode {
@@ -38,7 +38,7 @@ function renderPlainText(
 
   return {
     type: NODE_TYPE.TEXT,
-    content: [{ text: props.body }],
+    content: [{ text: params.body }],
     style: tokens.style,
     resolvedStyle: textStyle,
     color: tokens.color,
@@ -77,6 +77,6 @@ export const plainTextComponent = defineComponent({
  * plainText("ARCHITECTURE", tokens.eyebrow)
  * ```
  */
-export function plainText(body: string, tokens: PlainTextTokens): ComponentNode<PlainTextComponentProps> {
+export function plainText(body: string, tokens: PlainTextTokens): ComponentNode<PlainTextParams> {
   return component(Component.PlainText, { body }, tokens);
 }

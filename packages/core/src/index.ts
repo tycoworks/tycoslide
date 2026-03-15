@@ -32,7 +32,7 @@ export type {
 
 export { component, isComponentNode, NODE_TYPE } from "./core/model/nodes.js";
 // Param helpers (schema type builders + param declaration wrappers)
-export { param, schema, type ScalarParam } from "./core/model/param.js";
+export { param, schema, type InferParams, type ScalarParam } from "./core/model/param.js";
 // Token descriptors (required/optional markers for component token declarations)
 export { token, type InferTokens, type TokenDescriptor, type TokenShape } from "./core/model/token.js";
 export type { ContainerDirective, SyntaxType } from "./core/model/syntax.js";
@@ -94,7 +94,6 @@ export {
   type Canvas,
   type ComponentDefinition,
   type ComponentNode,
-  type ComponentProps,
   componentRegistry,
   defineComponent,
   defineLayout,

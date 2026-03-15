@@ -23,7 +23,7 @@ import { Component } from "./names.js";
 // TOKENS
 // ============================================
 
-export const mermaidTokens = token.shape({
+const mermaidTokens = token.shape({
   primaryColor: token.required<string>(),
   primaryTextColor: token.required<string>(),
   primaryBorderColor: token.required<string>(),
@@ -47,7 +47,7 @@ export type MermaidTokens = InferTokens<typeof mermaidTokens>;
 // TYPES
 // ============================================
 
-export type MermaidComponentProps = { body: string };
+export type MermaidParams = { body: string };
 
 // ============================================
 // SANITIZATION
@@ -281,11 +281,11 @@ async function renderMermaidToPng(
  * Sanitizes definition, renders via shared browser, returns image reference.
  */
 async function renderMermaid(
-  props: MermaidComponentProps,
+  params: MermaidParams,
   context: RenderContext,
   tokens: MermaidTokens,
 ): Promise<ImageNode> {
-  const sanitized = sanitizeMermaidDefinition(props.body);
+  const sanitized = sanitizeMermaidDefinition(params.body);
   if (!sanitized.trim()) {
     throw new Error("Mermaid definition is empty after sanitization");
   }
@@ -328,6 +328,6 @@ export const mermaidComponent = defineComponent({
  * pres.add(contentSlide('Architecture', diagram));
  * ```
  */
-export function mermaid(definition: string): ComponentNode<MermaidComponentProps> {
+export function mermaid(definition: string): ComponentNode<MermaidParams> {
   return component(Component.Mermaid, { body: definition });
 }

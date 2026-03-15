@@ -19,7 +19,7 @@ import {
 import { Component } from "./names.js";
 import { inlineParse, transformInline } from "./utils/inline.js";
 
-export const listTokens = token.shape({
+const listTokens = token.shape({
   color: token.required<string>(),
   style: token.required<TextStyleName>(),
   linkColor: token.required<string>(),
@@ -35,20 +35,20 @@ export type ListTokens = InferTokens<typeof listTokens>;
 // TYPES
 // ============================================
 
-type ListComponentProps = { body: string[]; ordered?: boolean };
+type ListParams = { body: string[]; ordered?: boolean };
 
 // ============================================
 // RENDER
 // ============================================
 
-function renderList(props: ListComponentProps, context: RenderContext, tokens: ListTokens): ElementNode {
+function renderList(params: ListParams, context: RenderContext, tokens: ListTokens): ElementNode {
   const textStyle = context.theme.textStyles[tokens.style];
 
-  const bulletType = props.ordered ? { type: "number" as const } : true;
+  const bulletType = params.ordered ? { type: "number" as const } : true;
   const runs: NormalizedRun[] = [];
 
-  for (let i = 0; i < props.body.length; i++) {
-    const item = props.body[i];
+  for (let i = 0; i < params.body.length; i++) {
+    const item = params.body[i];
     // Parse each item as RICH (inline formatting)
     const tree = inlineParse(item);
     const itemRuns: NormalizedRun[] = [];
@@ -135,6 +135,6 @@ export const listComponent = defineComponent({
  * list(['Step one', 'Step two'], tokens.list, true)
  * ```
  */
-export function list(items: string[], tokens: ListTokens, ordered?: boolean): ComponentNode<ListComponentProps> {
+export function list(items: string[], tokens: ListTokens, ordered?: boolean): ComponentNode<ListParams> {
   return component(Component.List, { body: items, ordered: ordered ?? false }, tokens);
 }

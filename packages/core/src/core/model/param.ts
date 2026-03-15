@@ -65,3 +65,23 @@ type ScalarLeaf =
 
 /** A param expressible in YAML frontmatter. Slots excluded. */
 export type ScalarParam = ScalarLeaf | z.ZodOptional<ScalarLeaf> | z.ZodDefault<ScalarLeaf>;
+
+// ============================================
+// TYPE INFERENCE
+// ============================================
+
+/**
+ * Derive a TypeScript type from a param shape.
+ * Required fields stay required; optional fields become optional.
+ *
+ * @example
+ * ```typescript
+ * const cardParams = param.shape({
+ *   image: param.optional(imageComponent.schema),
+ *   title: param.optional(textComponent.schema),
+ * });
+ * type CardParams = InferParams<typeof cardParams>;
+ * // → { image?: string; title?: string }
+ * ```
+ */
+export type InferParams<S extends z.ZodRawShape> = z.infer<z.ZodObject<S>>;

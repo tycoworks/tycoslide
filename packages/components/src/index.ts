@@ -3,32 +3,30 @@
 
 // Card (composition component)
 export {
-  cardTokens,
-  type CardProps,
+  type CardParams,
   type CardTokens,
   card,
   cardComponent,
 } from "./card.js";
 // Code (I/O component — shared browser rendering via Shiki)
 export {
-  codeTokens,
-  type CodeComponentProps,
+  type CodeParams,
   type CodeTokens,
   code,
   codeComponent,
 } from "./code.js";
 // Containers (row, column, stack, grid)
 export {
-  type ColumnProps,
+  type ColumnParams,
   column,
   columnComponent,
-  type GridProps,
+  type GridParams,
   grid,
   gridComponent,
-  type RowProps,
+  type RowParams,
   row,
   rowComponent,
-  type StackProps,
+  type StackParams,
   stack,
   stackComponent,
 } from "./containers.js";
@@ -38,15 +36,13 @@ export { image, imageComponent } from "./image.js";
 export { LANGUAGE, LANGUAGE_VALUES, type LanguageName } from "./languages.js";
 // List
 export {
-  listTokens,
   type ListTokens,
   list,
   listComponent,
 } from "./list.js";
 // Mermaid diagram (I/O component — shared browser rendering)
 export {
-  mermaidTokens,
-  type MermaidComponentProps,
+  type MermaidParams,
   type MermaidRenderContext,
   type MermaidTokens,
   mermaid,
@@ -56,58 +52,50 @@ export {
 export { Component, type ComponentName } from "./names.js";
 // PlainText (plain string text — no markdown, no link tokens)
 export {
-  plainTextTokens,
-  type PlainTextComponentProps,
+  type PlainTextParams,
   type PlainTextTokens,
   plainText,
   plainTextComponent,
 } from "./plainText.js";
 // Primitives (line, shape, slideNumber)
 export {
-  lineTokens,
-  type LineProps,
+  type LineParams,
   type LineTokens,
   line,
   lineComponent,
-  shapeTokens,
-  type ShapeProps,
+  type ShapeParams,
   type ShapeTokens,
-  slideNumberTokens,
-  type SlideNumberProps,
+  slideNumber,
+  slideNumberComponent,
+  type SlideNumberParams,
   type SlideNumberTokens,
   shape,
   shapeComponent,
-  slideNumber,
-  slideNumberComponent,
 } from "./primitives.js";
 // Quote (simple pull quote — composition component)
 export {
-  quoteTokens,
-  type QuoteProps,
+  type QuoteParams,
   type QuoteTokens,
   quote,
   quoteComponent,
 } from "./quote.js";
 // Table
 export {
-  tableTokens,
-  type TableProps,
+  type TableParams,
   type TableTokens,
   table,
   tableComponent,
 } from "./table.js";
 // Testimonial (card-style quote — composition component)
 export {
-  testimonialTokens,
-  type TestimonialProps,
+  type TestimonialParams,
   type TestimonialTokens,
   testimonial,
   testimonialComponent,
 } from "./testimonial.js";
 // Text
 export {
-  textTokens,
-  type TextComponentProps,
+  type TextParams,
   type TextTokens,
   text,
   textComponent,

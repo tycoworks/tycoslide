@@ -21,7 +21,7 @@ import {
 import { Component } from "./names.js";
 import { inlineParse, transformInline } from "./utils/inline.js";
 
-export const textTokens = token.shape({
+const textTokens = token.shape({
   color: token.required<string>(),
   style: token.required<TextStyleName>(),
   linkColor: token.required<string>(),
@@ -37,8 +37,8 @@ export type TextTokens = InferTokens<typeof textTokens>;
 // TYPES
 // ============================================
 
-/** Full props including body content (used internally by expansion) */
-export type TextComponentProps = { body: string };
+/** Full params including body content (used internally by expansion) */
+export type TextParams = { body: string };
 
 // ============================================
 // HEADING STYLE MAP (exported for document component)
@@ -55,11 +55,11 @@ export const HEADING_STYLE: Record<number, TextStyleName> = {
 // RENDER — always rich text (inline markdown)
 // ============================================
 
-function renderText(props: TextComponentProps, context: RenderContext, tokens: TextTokens): ElementNode {
+function renderText(params: TextParams, context: RenderContext, tokens: TextTokens): ElementNode {
   const textStyle = context.theme.textStyles[tokens.style];
 
   // Parse inline markdown only (bold, italic, :color[highlights])
-  const tree = inlineParse(props.body);
+  const tree = inlineParse(params.body);
 
   // Validate single paragraph (no multi-block)
   const blocks = tree.children.filter((c) => c.type !== SYNTAX.THEMATIC_BREAK);
@@ -128,6 +128,6 @@ export const textComponent = defineComponent({
  * text("**Bold** and :teal[highlighted]", tokens.text)
  * ```
  */
-export function text(body: string, tokens: TextTokens): ComponentNode<TextComponentProps> {
+export function text(body: string, tokens: TextTokens): ComponentNode<TextParams> {
   return component(Component.Text, { body }, tokens);
 }
