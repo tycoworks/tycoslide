@@ -34,7 +34,7 @@ export { component, isComponentNode, NODE_TYPE } from "./core/model/nodes.js";
 // Schema helpers (domain-specific wrappers for layout Zod schemas)
 export { type ScalarParam, schema } from "./core/model/schema.js";
 // Token descriptors (required/optional markers for component token declarations)
-export { token, type TokenOptional, type TokenRequired, type TokenShape, type TokenSpec, type ValidTokenShape } from "./core/model/token.js";
+export { token, type InferTokens, type TokenDescriptor, type TokenShape } from "./core/model/token.js";
 export type { ContainerDirective, SyntaxType } from "./core/model/syntax.js";
 // Markdown utilities (for component authors)
 export { extractSource, RESERVED_FRONTMATTER_KEYS, SYNTAX } from "./core/model/syntax.js";
@@ -98,12 +98,13 @@ export {
   defineComponent,
   defineLayout,
   defineMaster,
-  type ExpansionContext,
+  defineTheme,
   type LayoutDefinition,
   layoutRegistry,
   type MasterDefinition,
   type MdastHandler,
   masterRegistry,
+  type RenderContext,
   type ScalarComponentDefinition,
   type ScalarShape,
   type SchemaShape,
@@ -122,5 +123,5 @@ export {
   resolveFontFace,
 } from "./utils/font.js";
 export { parseMarkdown } from "./utils/parser.js";
-// Unit utilities (for component authors that resolve theme values during expand)
+// Unit utilities (for component authors that resolve theme values during render)
 export { inToPx, resolveGap } from "./utils/units.js";

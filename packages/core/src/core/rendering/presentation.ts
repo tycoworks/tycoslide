@@ -15,7 +15,7 @@ import type { ElementNode, PositionedNode } from "../model/nodes.js";
 import { resolveVariantTokens } from "../model/token.js";
 import type { Background, Slide, Theme } from "../model/types.js";
 import { PptxRenderer } from "./pptxRenderer.js";
-import { componentRegistry, type ExpansionContext, masterRegistry } from "./registry.js";
+import { componentRegistry, type RenderContext, masterRegistry } from "./registry.js";
 import { validateThemeFonts } from "./themeValidator.js";
 
 export type { Slide } from "../model/types.js";
@@ -139,8 +139,8 @@ export class Presentation {
       // Launch browser — also copies fonts into outputDir for @font-face CSS
       await pipeline.launch(this._theme);
 
-      // Build expansion context with canvas capability
-      const expansionContext: ExpansionContext = {
+      // Build render context with canvas capability
+      const renderContext: RenderContext = {
         theme: this._theme,
         assets: this._assets,
         canvas: {
@@ -148,7 +148,7 @@ export class Presentation {
         },
       };
 
-      // Phase 1: Expand masters (collect unique master+variant combos, expand component trees)
+      // Phase 1: Render masters (collect unique master+variant combos, render component trees)
       log.pptx._("PIPELINE: Collecting masters and slides...");
       const { width, height } = this._theme.slide;
       const pendingMasters = new Map<
@@ -172,8 +172,8 @@ export class Presentation {
           const tokens = resolveVariantTokens(
             this._theme.masters?.[masterName], masterName, masterVariant, def.tokenShape, "Master",
           );
-          const { content: rawMasterContent, contentBounds, background } = def.getContent(tokens, { width, height });
-          const masterContent = await componentRegistry.expandTree(rawMasterContent, expansionContext);
+          const { content: rawMasterContent, contentBounds, background } = def.render(tokens, { width, height });
+          const masterContent = await componentRegistry.renderTree(rawMasterContent, renderContext);
           pendingMasters.set(masterKey, { content: masterContent, contentBounds, background });
           // Collect measurements from master content (full slide — masters position their own elements)
           pipeline.collectFromTree(
@@ -185,11 +185,11 @@ export class Presentation {
         }
       }
 
-      // Phase 2: Expand slides (expand each slide's component tree, collect measurements)
-      log.pptx._("PIPELINE: Expanding %d slides...", this.deferredSlides.length);
-      const expandedSlides: Array<{
+      // Phase 2: Render slides (render each slide's component tree, collect measurements)
+      log.pptx._("PIPELINE: Rendering %d slides...", this.deferredSlides.length);
+      const renderedSlides: Array<{
         deferred: DeferredSlide;
-        expanded: ElementNode;
+        rendered: ElementNode;
         bounds: Bounds;
         masterKey: string;
       }> = [];
@@ -207,10 +207,10 @@ export class Presentation {
           throw new Error(`Slide ${slideIndex + 1}: master '${masterKey}' not found.`);
         }
 
-        // Expand components
-        let expanded: ElementNode;
+        // Render components
+        let rendered: ElementNode;
         try {
-          expanded = await componentRegistry.expandTree(slide.content, expansionContext);
+          rendered = await componentRegistry.renderTree(slide.content, renderContext);
         } catch (error) {
           if (error instanceof Error) {
             error.message = `Slide ${slideIndex + 1}: ${error.message}`;
@@ -218,19 +218,19 @@ export class Presentation {
           throw error;
         }
 
-        // Collect measurements from expanded tree (slide background overrides master)
+        // Collect measurements from rendered tree (slide background overrides master)
         const effectiveBg = slide.background ?? pending?.background ?? existing!.background;
-        pipeline.collectFromTree(expanded, bounds, `slide-${slideIndex + 1}`, effectiveBg);
+        pipeline.collectFromTree(rendered, bounds, `slide-${slideIndex + 1}`, effectiveBg);
 
-        expandedSlides.push({ deferred, expanded, bounds, masterKey });
+        renderedSlides.push({ deferred, rendered, bounds, masterKey });
       }
 
       // Missing font validation: check for bold/italic on fonts without those slots
-      const allExpandedTrees = [
+      const allRenderedTrees = [
         ...[...pendingMasters.values()].map((m) => m.content),
-        ...expandedSlides.map((s) => s.expanded),
+        ...renderedSlides.map((s) => s.rendered),
       ];
-      const rawViolations = allExpandedTrees.flatMap((tree) => validateFontVariants(tree));
+      const rawViolations = allRenderedTrees.flatMap((tree) => validateFontVariants(tree));
       const seenViolations = new Set<string>();
       const fontVariantViolations = rawViolations.filter((v) => {
         const key = `${v.fontName}:${v.slot}`;
@@ -266,13 +266,13 @@ export class Presentation {
       const slides: SlideLayout[] = [];
       const validationErrors: SlideValidationResult[] = [];
 
-      for (const { deferred, expanded, bounds, masterKey } of expandedSlides) {
+      for (const { deferred, rendered, bounds, masterKey } of renderedSlides) {
         const { slide, slideIndex } = deferred;
 
         // Build positioned tree — computation crashes are still fatal
         let positioned: PositionedNode;
         try {
-          positioned = pipeline.computeLayout(expanded, bounds);
+          positioned = pipeline.computeLayout(rendered, bounds);
         } catch (error) {
           if (error instanceof Error) {
             error.message = `Slide ${slideIndex + 1}: ${error.message}`;
@@ -328,7 +328,7 @@ export class Presentation {
 
       // Build composite preview HTML: master chrome behind, slide content positioned within
       const fragmentMap = pipeline.getSlideFragments();
-      const compositeSlides = expandedSlides.map(({ deferred, bounds }) => {
+      const compositeSlides = renderedSlides.map(({ deferred, bounds }) => {
         const { slide, slideIndex } = deferred;
         const masterLabel = `master-${slide.masterName}-${slide.masterVariant}`;
         return {

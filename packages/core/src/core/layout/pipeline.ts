@@ -43,7 +43,7 @@ interface SlideMeasurementEntry {
  *
  *   // Collect from all slides
  *   for (const slide of slides) {
- *     pipeline.collectFromTree(expandedTree, bounds);
+ *     pipeline.collectFromTree(renderedTree, bounds);
  *   }
  *
  *   // Execute all measurements

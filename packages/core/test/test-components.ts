@@ -2,8 +2,8 @@
 // Minimal component definitions for core tests.
 // Used by core tests that need components registered (slotCompiler, schema, registry, etc.)
 //
-// Text, Card, Row, Column have real expand functions (needed by registry.test.ts).
-// Image, Table, Line register metadata only — slotCompiler never calls expand.
+// Text, Card, Row, Column have real render functions (needed by registry.test.ts).
+// Image, Table, Line register metadata only — slotCompiler never calls render.
 //
 // Import testComponents array and call componentRegistry.register() in tests.
 
@@ -14,7 +14,7 @@ import { extractSource, SYNTAX } from "../src/core/model/syntax.js";
 import { token } from "../src/core/model/token.js";
 import { DIRECTION, HALIGN, SIZE, TEXT_STYLE, VALIGN } from "../src/core/model/types.js";
 import { component, type ComponentNode } from "../src/core/model/nodes.js";
-import type { ExpansionContext } from "../src/core/rendering/registry.js";
+import type { RenderContext } from "../src/core/rendering/registry.js";
 import { defineComponent } from "../src/core/rendering/registry.js";
 
 // Local component name const — core tests can't import from tycoslide-components
@@ -40,7 +40,7 @@ const HEADING_STYLE: Record<number, string> = {
 };
 
 // ============================================
-// TEXT (real expand — used by registry.test.ts)
+// TEXT (real render — used by registry.test.ts)
 // ============================================
 
 export const textComponent = defineComponent({
@@ -52,7 +52,7 @@ export const textComponent = defineComponent({
     vAlign: schema.string().optional(),
     content: schema.string().optional(),
   },
-  tokens: { color: token.required, style: token.required, linkColor: token.required, linkUnderline: token.required, hAlign: token.required, vAlign: token.required },
+  tokens: { color: token.required<any>(), style: token.required<any>(), linkColor: token.required<any>(), linkUnderline: token.required<any>(), hAlign: token.required<any>(), vAlign: token.required<any>() },
   mdast: {
     nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.HEADING, SYNTAX.LIST],
     compile: (node: RootContent, source: string): ComponentNode | null => {
@@ -72,7 +72,7 @@ export const textComponent = defineComponent({
       return component(C.Text, { body: extractSource(node, source) });
     },
   },
-  expand: (props: any, ctx: ExpansionContext, tokens: any): any => {
+  render: (props: any, ctx: RenderContext, tokens: any): any => {
     const style = props.style ?? tokens?.style;
     return {
       type: NODE_TYPE.TEXT,
@@ -89,7 +89,7 @@ export const textComponent = defineComponent({
 });
 
 // ============================================
-// ROW (real expand — used by registry.test.ts)
+// ROW (real render — used by registry.test.ts)
 // ============================================
 
 export const rowComponent = defineComponent({
@@ -97,7 +97,7 @@ export const rowComponent = defineComponent({
   slots: ["children"] as const,
   directive: false,
   tokens: {},
-  expand: (props: any): any => ({
+  render: (props: any): any => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.ROW,
     children: props.children,
@@ -111,7 +111,7 @@ export const rowComponent = defineComponent({
 });
 
 // ============================================
-// COLUMN (real expand — used by registry.test.ts via Card)
+// COLUMN (real render — used by registry.test.ts via Card)
 // ============================================
 
 export const columnComponent = defineComponent({
@@ -119,7 +119,7 @@ export const columnComponent = defineComponent({
   slots: ["children"] as const,
   directive: false,
   tokens: {},
-  expand: (props: any): any => ({
+  render: (props: any): any => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.COLUMN,
     children: props.children,
@@ -133,7 +133,7 @@ export const columnComponent = defineComponent({
 });
 
 // ============================================
-// CARD (real expand — used by registry.test.ts)
+// CARD (real render — used by registry.test.ts)
 // ============================================
 
 export const cardComponent = defineComponent({
@@ -142,8 +142,8 @@ export const cardComponent = defineComponent({
     title: schema.string().optional(),
     description: schema.string().optional(),
   },
-  tokens: { background: token.required, padding: token.required, gap: token.required, hAlign: token.required, vAlign: token.required, title: token.required, description: token.required },
-  expand: (props: any, _ctx: ExpansionContext, tokens: any): any => {
+  tokens: { background: token.required<any>(), padding: token.required<any>(), gap: token.required<any>(), hAlign: token.required<any>(), vAlign: token.required<any>(), title: token.required<any>(), description: token.required<any>() },
+  render: (props: any, _ctx: RenderContext, tokens: any): any => {
     // Pass title tokens down to child Text component
     const titleNode = component(C.Text, { body: props.title ?? props.body ?? "" }, tokens.title);
     return component(C.Column, { children: [titleNode], padding: tokens.padding });
@@ -151,7 +151,7 @@ export const cardComponent = defineComponent({
 });
 
 // ============================================
-// METADATA-ONLY STUBS (slotCompiler needs registration, not expand)
+// METADATA-ONLY STUBS (slotCompiler needs registration, not render)
 // ============================================
 
 export const imageComponent = defineComponent({
@@ -159,7 +159,7 @@ export const imageComponent = defineComponent({
   body: schema.string(),
   params: { alt: schema.string().optional() },
   tokens: {},
-  expand: () => ({}) as any,
+  render: () => ({}) as any,
 });
 
 export const lineComponent = defineComponent({
@@ -168,8 +168,8 @@ export const lineComponent = defineComponent({
     beginArrow: schema.string().optional(),
     endArrow: schema.string().optional(),
   },
-  tokens: { color: token.required, width: token.required, dashType: token.required },
-  expand: () => ({}) as any,
+  tokens: { color: token.required<any>(), width: token.required<any>(), dashType: token.required<any>() },
+  render: () => ({}) as any,
 });
 
 export const tableComponent = defineComponent({
@@ -179,18 +179,18 @@ export const tableComponent = defineComponent({
     headerColumns: schema.number().optional(),
   },
   tokens: {
-    borderStyle: token.required,
-    borderColor: token.required,
-    borderWidth: token.required,
-    headerBackground: token.required,
-    headerBackgroundOpacity: token.required,
-    headerTextStyle: token.required,
-    cellBackground: token.required,
-    cellBackgroundOpacity: token.required,
-    cellTextStyle: token.required,
-    cellPadding: token.required,
-    hAlign: token.required,
-    vAlign: token.required,
+    borderStyle: token.required<any>(),
+    borderColor: token.required<any>(),
+    borderWidth: token.required<any>(),
+    headerBackground: token.required<any>(),
+    headerBackgroundOpacity: token.required<any>(),
+    headerTextStyle: token.required<any>(),
+    cellBackground: token.required<any>(),
+    cellBackgroundOpacity: token.required<any>(),
+    cellTextStyle: token.required<any>(),
+    cellPadding: token.required<any>(),
+    hAlign: token.required<any>(),
+    vAlign: token.required<any>(),
   },
   mdast: {
     nodeTypes: [SYNTAX.TABLE],
@@ -209,7 +209,7 @@ export const tableComponent = defineComponent({
       return component(C.Table, { data: rows, tableProps: { headerRows: 1 } });
     },
   },
-  expand: () => ({}) as any,
+  render: () => ({}) as any,
 });
 
 // ============================================

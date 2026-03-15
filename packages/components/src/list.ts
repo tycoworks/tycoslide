@@ -3,13 +3,14 @@
 // Internal-only (no :::list directive). Available via list() DSL and MDAST handler.
 
 import type { ListItem, List as MdastList, RootContent } from "mdast";
-import type { ExpansionContext, HorizontalAlignment, NormalizedRun, TextStyleName, VerticalAlignment } from "tycoslide";
+import type { HorizontalAlignment, NormalizedRun, RenderContext, TextStyleName, VerticalAlignment } from "tycoslide";
 import {
   type ComponentNode,
   component,
   defineComponent,
   type ElementNode,
   extractSource,
+  type InferTokens,
   NODE_TYPE,
   SYNTAX,
   schema,
@@ -18,27 +19,17 @@ import {
 import { Component } from "./names.js";
 import { inlineParse, transformInline } from "./utils/inline.js";
 
-export const LIST_TOKEN = {
-  COLOR: "color",
-  STYLE: "style",
-  LINK_COLOR: "linkColor",
-  LINK_UNDERLINE: "linkUnderline",
-  HALIGN: "hAlign",
-  VALIGN: "vAlign",
-  ACCENTS: "accents",
-} as const;
+export const listTokens = token.shape({
+  color: token.required<string>(),
+  style: token.required<TextStyleName>(),
+  linkColor: token.required<string>(),
+  linkUnderline: token.required<boolean>(),
+  hAlign: token.required<HorizontalAlignment>(),
+  vAlign: token.required<VerticalAlignment>(),
+  accents: token.required<Record<string, string>>(),
+});
 
-export type ListTokens = {
-  [LIST_TOKEN.COLOR]: string;
-  [LIST_TOKEN.STYLE]: TextStyleName;
-  [LIST_TOKEN.LINK_COLOR]: string;
-  [LIST_TOKEN.LINK_UNDERLINE]: boolean;
-  [LIST_TOKEN.HALIGN]: HorizontalAlignment;
-  [LIST_TOKEN.VALIGN]: VerticalAlignment;
-  [LIST_TOKEN.ACCENTS]: Record<string, string>;
-};
-
-export const LIST_TOKEN_SPEC = token.allRequired(LIST_TOKEN);
+export type ListTokens = InferTokens<typeof listTokens>;
 
 // ============================================
 // TYPES
@@ -47,10 +38,10 @@ export const LIST_TOKEN_SPEC = token.allRequired(LIST_TOKEN);
 type ListComponentProps = { body: string[]; ordered?: boolean };
 
 // ============================================
-// EXPAND
+// RENDER
 // ============================================
 
-function expandList(props: ListComponentProps, context: ExpansionContext, tokens: ListTokens): ElementNode {
+function renderList(props: ListComponentProps, context: RenderContext, tokens: ListTokens): ElementNode {
   const textStyle = context.theme.textStyles[tokens.style];
 
   const bulletType = props.ordered ? { type: "number" as const } : true;
@@ -119,7 +110,7 @@ export const listComponent = defineComponent({
   name: Component.List,
   body: schema.array(schema.string()),
   directive: false,
-  tokens: LIST_TOKEN_SPEC,
+  tokens: listTokens,
   mdast: {
     nodeTypes: [SYNTAX.LIST],
     compile: (node: RootContent, source: string): ComponentNode | null => {
@@ -128,7 +119,7 @@ export const listComponent = defineComponent({
       return component(Component.List, { body: items, ordered: listNode.ordered ?? false });
     },
   },
-  expand: expandList,
+  render: renderList,
 });
 
 // ============================================

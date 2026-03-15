@@ -92,7 +92,7 @@ describe("Registry (generic base class)", () => {
 });
 
 // ============================================
-// COMPONENT REGISTRY (expand / expandTree)
+// COMPONENT REGISTRY (render / renderTree)
 // ============================================
 
 describe("ComponentRegistry", () => {
@@ -117,8 +117,8 @@ describe("ComponentRegistry", () => {
     });
   });
 
-  describe("expand", () => {
-    test("expands a registered component", async () => {
+  describe("render", () => {
+    test("renders a registered component", async () => {
       // text component requires tokens — provide them via node.tokens
       const textTokens = {
         color: "#000000",
@@ -129,20 +129,20 @@ describe("ComponentRegistry", () => {
         vAlign: VALIGN.TOP,
       };
       const node = component(C.Text, { body: "hello" }, textTokens);
-      const expanded = await componentRegistry.expand(node, { theme, canvas: noopCanvas() });
-      assert.strictEqual((expanded as any).type, NODE_TYPE.TEXT);
+      const rendered = await componentRegistry.render(node, { theme, canvas: noopCanvas() });
+      assert.strictEqual((rendered as any).type, NODE_TYPE.TEXT);
     });
 
     test("throws for unknown component", async () => {
       const node = component("nonexistent-component", {});
       await assert.rejects(
-        () => componentRegistry.expand(node, { theme, canvas: noopCanvas() }),
+        () => componentRegistry.render(node, { theme, canvas: noopCanvas() }),
         /Unknown component: 'nonexistent-component'/,
       );
     });
   });
 
-  describe("expandTree", () => {
+  describe("renderTree", () => {
     test("passes primitives through unchanged", async () => {
       const textNode = {
         type: NODE_TYPE.TEXT,
@@ -157,11 +157,11 @@ describe("ComponentRegistry", () => {
         linkColor: "#0000FF",
         linkUnderline: true,
       };
-      const result = await componentRegistry.expandTree(textNode, { theme, canvas: noopCanvas() });
+      const result = await componentRegistry.renderTree(textNode, { theme, canvas: noopCanvas() });
       assert.strictEqual(result, textNode);
     });
 
-    test("recursively expands nested components", async () => {
+    test("recursively renders nested components", async () => {
       // Card requires tokens — provide them via node.tokens
       const cardTokens = {
         background: { fill: "#333333", fillOpacity: 0, borderColor: "#333333", borderWidth: 1, cornerRadius: 0.1 },
@@ -187,16 +187,16 @@ describe("ComponentRegistry", () => {
         },
       };
       const node = component(C.Card, { title: "Test" }, cardTokens);
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
-      // Card expand creates a Column containing a Text child
-      assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
-      if (expanded.type === NODE_TYPE.CONTAINER) {
-        assert.strictEqual(expanded.children[0].type, NODE_TYPE.TEXT);
+      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      // Card render creates a Column containing a Text child
+      assert.strictEqual(rendered.type, NODE_TYPE.CONTAINER);
+      if (rendered.type === NODE_TYPE.CONTAINER) {
+        assert.strictEqual(rendered.children[0].type, NODE_TYPE.TEXT);
       }
     });
 
     test("recurses into element children", async () => {
-      // A container with a component child should expand the child
+      // A container with a component child should render the child
       const textTokens = {
         color: "#000000",
         style: TEXT_STYLE.BODY,
@@ -206,10 +206,10 @@ describe("ComponentRegistry", () => {
         vAlign: VALIGN.TOP,
       };
       const node = component(C.Row, { children: [component(C.Text, { body: "hi" }, textTokens)] });
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
-      assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
-      if (expanded.type === NODE_TYPE.CONTAINER) {
-        assert.strictEqual(expanded.children[0].type, NODE_TYPE.TEXT);
+      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      assert.strictEqual(rendered.type, NODE_TYPE.CONTAINER);
+      if (rendered.type === NODE_TYPE.CONTAINER) {
+        assert.strictEqual(rendered.children[0].type, NODE_TYPE.TEXT);
       }
     });
   });

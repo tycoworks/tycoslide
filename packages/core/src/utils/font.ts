@@ -133,7 +133,7 @@ export interface FontVariantViolation {
 }
 
 /**
- * Walk an expanded ElementNode tree and check for bold/italic runs
+ * Walk a rendered ElementNode tree and check for bold/italic runs
  * on fonts that lack the corresponding variant slot.
  * Returns deduplicated violations (unique by fontName + slot).
  */

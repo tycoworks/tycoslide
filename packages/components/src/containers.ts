@@ -5,7 +5,7 @@ import {
   component,
   DIRECTION,
   defineComponent,
-  type ExpansionContext,
+  type RenderContext,
   GAP,
   type GapSize,
   HALIGN,
@@ -67,7 +67,7 @@ export const rowComponent = defineComponent({
   directive: false,
   tokens: {},
 
-  expand: (props: RowInternalProps, context: ExpansionContext) => ({
+  render: (props: RowInternalProps, context: RenderContext) => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.ROW,
     children: props.children,
@@ -110,7 +110,7 @@ export const columnComponent = defineComponent({
   directive: false,
   tokens: {},
 
-  expand: (props: ColumnInternalProps, context: ExpansionContext) => ({
+  render: (props: ColumnInternalProps, context: RenderContext) => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.COLUMN,
     children: props.children,
@@ -149,7 +149,7 @@ export const stackComponent = defineComponent({
   directive: false,
   tokens: {},
 
-  expand: (props: StackInternalProps) => ({
+  render: (props: StackInternalProps) => ({
     type: NODE_TYPE.STACK,
     children: props.children,
     width: props.width ?? SIZE.FILL,
@@ -195,7 +195,7 @@ export const gridComponent = defineComponent({
   slots: ["children"] as const,
   directive: false,
   tokens: {},
-  expand: (props: GridInternalProps) => {
+  render: (props: GridInternalProps) => {
     const { columns, gap = GAP.NORMAL, height = SIZE.FILL, children } = props;
 
     // Wrap each child in a column cell so items share row width equally

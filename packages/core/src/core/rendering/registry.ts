@@ -15,7 +15,7 @@ import {
 } from "../model/nodes.js";
 import type { ScalarParam } from "../model/schema.js";
 import { RESERVED_FRONTMATTER_KEYS, type SyntaxType } from "../model/syntax.js";
-import { parseTokenShape, type TokenShape, type ValidTokenShape, validateTokens } from "../model/token.js";
+import { type InferTokens, parseTokenShape, type TokenShape, validateTokens } from "../model/token.js";
 import type { Bounds } from "../model/bounds.js";
 import type { Background, Slide, Theme } from "../model/types.js";
 
@@ -76,7 +76,7 @@ export class Registry<TDef extends { name: string }> {
 // ============================================
 
 /**
- * Browser-backed capabilities available to components during expansion.
+ * Browser-backed capabilities available to components during rendering.
  * Today: render HTML to PNG. Tomorrow: SVG, LaTeX, font metrics, etc.
  */
 export interface Canvas {
@@ -84,9 +84,9 @@ export interface Canvas {
 }
 
 /**
- * Context passed to component expansion functions.
+ * Context passed to component render functions.
  */
-export interface ExpansionContext {
+export interface RenderContext {
   theme: Theme;
   assets?: Record<string, unknown>;
   canvas: Canvas;
@@ -104,7 +104,7 @@ export interface MdastHandler {
 }
 
 /**
- * A component definition describes how to expand a component into primitives.
+ * A component definition describes how to render a component into primitives.
  */
 export interface ComponentDefinition<TProps = unknown, TTokens = undefined> {
   /** Unique name for this component (e.g., 'card', 'table') */
@@ -115,8 +115,8 @@ export interface ComponentDefinition<TProps = unknown, TTokens = undefined> {
   params?: SchemaShape;
   /** Slot names — directive body is compiled as ComponentNode[] and passed as props[slotName]. */
   slots?: readonly string[];
-  /** Expand props into a node tree (may contain components that get further expanded) */
-  expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
+  /** Render props into a node tree (may contain components that get further rendered) */
+  render: (props: TProps, context: RenderContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
   /** Deserialize a :::name directive into a ComponentNode. Auto-generated for content components. */
   deserialize?: DirectiveDeserializer;
   /** MDAST handler — declares which bare markdown node types this component compiles. */
@@ -163,7 +163,7 @@ function coerceAttributes(attrs: Record<string, string | null | undefined>): Rec
 /**
  * Build a deserializer for :::name directives.
  * Attributes → typed params (with coercion), body → props.body (always a string).
- * Each component's expand function decides what to do with body.
+ * Each component's render function decides what to do with body.
  */
 function buildDeserializer(
   componentName: string,
@@ -201,39 +201,39 @@ function buildDeserializer(
  * Returns a definition with `.schema` (= body type) for use in layout params.
  * Pure factory — does NOT register the component.
  */
-export function defineComponent<TBody extends z.ZodTypeAny, TTokens = undefined>(def: {
+export function defineComponent<TBody extends z.ZodTypeAny, TShape extends TokenShape = TokenShape>(def: {
   name: string;
   body: TBody;
   directive?: boolean;
-  tokens: TTokens extends undefined ? TokenShape : ValidTokenShape<TTokens>;
+  tokens: TShape;
 
   mdast?: MdastHandler;
-  expand: (
+  render: (
     props: { body: z.infer<TBody> },
-    context: ExpansionContext,
-    tokens: TTokens,
+    context: RenderContext,
+    tokens: InferTokens<TShape>,
   ) => SlideNode | Promise<SlideNode>;
-}): ScalarComponentDefinition<TBody, TTokens>;
+}): ScalarComponentDefinition<TBody, InferTokens<TShape>>;
 
 /**
  * Define a component with a body field (primary content) and extra params.
  * Returns a definition with `.schema` (= body type) for use in layout params.
  * Pure factory — does NOT register the component.
  */
-export function defineComponent<TBody extends z.ZodTypeAny, TParams extends SchemaShape, TTokens = undefined>(def: {
+export function defineComponent<TBody extends z.ZodTypeAny, TParams extends SchemaShape, TShape extends TokenShape = TokenShape>(def: {
   name: string;
   body: TBody;
   params: TParams;
   directive?: boolean;
-  tokens: TTokens extends undefined ? TokenShape : ValidTokenShape<TTokens>;
+  tokens: TShape;
 
   mdast?: MdastHandler;
-  expand: (
+  render: (
     props: { body: z.infer<TBody> } & z.infer<z.ZodObject<TParams>>,
-    context: ExpansionContext,
-    tokens: TTokens,
+    context: RenderContext,
+    tokens: InferTokens<TShape>,
   ) => SlideNode | Promise<SlideNode>;
-}): ScalarComponentDefinition<TBody, TTokens>;
+}): ScalarComponentDefinition<TBody, InferTokens<TShape>>;
 
 /**
  * Define a component with typed params inferred from a Zod shape.
@@ -241,50 +241,50 @@ export function defineComponent<TBody extends z.ZodTypeAny, TParams extends Sche
  * When invoked from a :::directive, body text arrives as `props.body` (string).
  * Pure factory — does NOT register the component.
  */
-export function defineComponent<TShape extends SchemaShape, TTokens = undefined>(def: {
+export function defineComponent<TParams extends SchemaShape, TShape extends TokenShape = TokenShape>(def: {
   name: string;
-  params: TShape;
+  params: TParams;
   directive?: boolean;
-  tokens: TTokens extends undefined ? TokenShape : ValidTokenShape<TTokens>;
+  tokens: TShape;
 
   mdast?: MdastHandler;
-  expand: (
-    props: z.infer<z.ZodObject<TShape>> & { body?: string },
-    context: ExpansionContext,
-    tokens: TTokens,
+  render: (
+    props: z.infer<z.ZodObject<TParams>> & { body?: string },
+    context: RenderContext,
+    tokens: InferTokens<TShape>,
   ) => SlideNode | Promise<SlideNode>;
-}): ScalarComponentDefinition<z.ZodObject<TShape>, TTokens>;
+}): ScalarComponentDefinition<z.ZodObject<TParams>, InferTokens<TShape>>;
 
 /**
  * Define a slotted component (body compiled as ComponentNode[]).
  * No `.schema` — slotted components aren't usable in layout params.
  * Pure factory — does NOT register the component.
  */
-export function defineComponent<TTokens = undefined>(def: {
+export function defineComponent<TShape extends TokenShape = TokenShape>(def: {
   name: string;
   params?: SchemaShape;
   slots: readonly string[];
   directive?: boolean;
-  tokens: TTokens extends undefined ? TokenShape : ValidTokenShape<TTokens>;
+  tokens: TShape;
 
   mdast?: MdastHandler;
-  expand: (props: any, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
-}): ComponentDefinition<any, TTokens>;
+  render: (props: any, context: RenderContext, tokens: InferTokens<TShape>) => SlideNode | Promise<SlideNode>;
+}): ComponentDefinition<any, InferTokens<TShape>>;
 
 /**
  * Define a programmatic-only component (no directive support, no schema).
  * Pure factory — does NOT register the component.
  */
-export function defineComponent<TProps, TTokens = undefined>(def: {
+export function defineComponent<TProps, TShape extends TokenShape = TokenShape>(def: {
   name: string;
-  tokens: TTokens extends undefined ? TokenShape : ValidTokenShape<TTokens>;
+  tokens: TShape;
 
   mdast?: MdastHandler;
-  expand: (props: TProps, context: ExpansionContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
-}): ComponentDefinition<TProps, TTokens>;
+  render: (props: TProps, context: RenderContext, tokens: InferTokens<TShape>) => SlideNode | Promise<SlideNode>;
+}): ComponentDefinition<TProps, InferTokens<TShape>>;
 
 // Implementation
-export function defineComponent(def: any): ComponentDefinition & { schema?: z.ZodTypeAny } {
+export function defineComponent(def: any): ComponentDefinition<any, any> & { schema?: z.ZodTypeAny } {
   const bodySchema: z.ZodTypeAny | null = "body" in def ? def.body : null;
   const paramsShape: SchemaShape = def.params ?? {};
   const paramsSchema = Object.keys(paramsShape).length > 0 ? z.object(paramsShape) : null;
@@ -294,7 +294,7 @@ export function defineComponent(def: any): ComponentDefinition & { schema?: z.Zo
 
   const result: ComponentDefinition & { schema?: z.ZodTypeAny } = {
     name: def.name as string,
-    expand: def.expand as ComponentDefinition["expand"],
+    render: def.render as ComponentDefinition["render"],
     tokenShape: (def.tokens as TokenShape) ?? {},
     params: def.params,
     slots,
@@ -380,7 +380,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
   }
 
   /**
-   * Expand a single component node to its primitive representation.
+   * Render a single component node to its primitive representation.
    *
    * Tokens are read from node.tokens, which is set by:
    * - DSL component() helper (e.g., text(body, tokens))
@@ -389,14 +389,14 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
    * Token completeness is validated here, AFTER slot injection has already run.
    * @throws Error if the component is not registered or tokens are incomplete
    */
-  async expand(node: ComponentNode, context: ExpansionContext): Promise<SlideNode> {
+  async render(node: ComponentNode, context: RenderContext): Promise<SlideNode> {
     const def = this.get(node.componentName);
     if (!def) {
       throw new Error(`Unknown component: '${node.componentName}'. Did you forget to register it?`);
     }
     const shape = parseTokenShape(def.tokenShape);
     if (!shape.allKeys.size) {
-      return def.expand(node.props, context, undefined as never);
+      return def.render(node.props, context, undefined as never);
     }
 
     // Read from node.tokens (set by DSL or slot injection)
@@ -408,22 +408,22 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
             `Required: [${shape.requiredKeys.join(", ")}]`,
         );
       }
-      return def.expand(node.props, context, undefined as never);
+      return def.render(node.props, context, undefined as never);
     }
 
     validateTokens(shape, node.tokens, `Component '${node.componentName}'`);
-    return def.expand(node.props, context, node.tokens as never);
+    return def.render(node.props, context, node.tokens as never);
   }
 
   /**
-   * Recursively expand all components in a node tree.
-   * Primitives pass through unchanged; components are expanded and their
+   * Recursively render all components in a node tree.
+   * Primitives pass through unchanged; components are rendered and their
    * results are recursively processed (in case they contain more components).
    */
-  async expandTree(node: SlideNode, context: ExpansionContext): Promise<ElementNode> {
+  async renderTree(node: SlideNode, context: RenderContext): Promise<ElementNode> {
     if (isComponentNode(node)) {
-      const expanded = await this.expand(node, context);
-      return this.expandTree(expanded, context);
+      const rendered = await this.render(node, context);
+      return this.renderTree(rendered, context);
     }
 
     // After the ComponentNode guard above, node is either a leaf ElementNode
@@ -432,14 +432,14 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any>> {
       const container = node as ContainerNode<SlideNode>;
       return {
         ...container,
-        children: await Promise.all(container.children.map((c) => this.expandTree(c, context))),
+        children: await Promise.all(container.children.map((c) => this.renderTree(c, context))),
       } as ContainerNode;
     }
     if (node.type === NODE_TYPE.STACK) {
       const stack = node as StackNode<SlideNode>;
       return {
         ...stack,
-        children: await Promise.all(stack.children.map((c) => this.expandTree(c, context))),
+        children: await Promise.all(stack.children.map((c) => this.renderTree(c, context))),
       } as StackNode;
     }
 
@@ -498,18 +498,18 @@ export interface TypedLayoutDefinition<TTokens = unknown> extends LayoutDefiniti
 export function defineLayout<
   TParams extends ScalarShape,
   const TSlots extends readonly string[] = readonly [],
-  TTokens = undefined,
+  TShape extends TokenShape = TokenShape,
 >(def: {
   name: string;
   description: string;
   params: TParams;
   slots?: TSlots;
-  tokens?: TTokens extends undefined ? TokenShape : ValidTokenShape<TTokens>;
+  tokens?: TShape;
   render: (
     props: z.infer<z.ZodObject<TParams>> & SlotsToProps<TSlots>,
-    tokens: TTokens extends undefined ? Record<string, unknown> | undefined : TTokens,
+    tokens: InferTokens<TShape>,
   ) => Slide;
-}): TypedLayoutDefinition<TTokens extends undefined ? Record<string, unknown> : TTokens> {
+}): TypedLayoutDefinition<InferTokens<TShape>> {
   for (const key of Object.keys(def.params)) {
     if (RESERVED_FRONTMATTER_KEYS.has(key as any)) {
       throw new Error(
@@ -539,7 +539,7 @@ export interface MasterDefinition {
   /** Declared token shape — required vs optional descriptors. */
   tokenShape: TokenShape;
   /** Build master content from resolved tokens and slide dimensions. */
-  getContent: (
+  render: (
     tokens: Record<string, unknown>,
     slideSize: { width: number; height: number },
   ) => {
@@ -562,18 +562,18 @@ export interface TypedMasterDefinition<TTokens = unknown> extends MasterDefiniti
  * Define a master slide with type-checked tokens.
  * Pure factory — does NOT register the master.
  */
-export function defineMaster<TTokens = undefined>(def: {
+export function defineMaster<TShape extends TokenShape = TokenShape>(def: {
   name: string;
-  tokens: TTokens extends undefined ? TokenShape : ValidTokenShape<TTokens>;
-  getContent: (
-    tokens: TTokens extends undefined ? Record<string, unknown> : TTokens,
+  tokens: TShape;
+  render: (
+    tokens: InferTokens<TShape>,
     slideSize: { width: number; height: number },
   ) => {
     content: ComponentNode;
     contentBounds: Bounds;
     background: Background;
   };
-}): TypedMasterDefinition<TTokens extends undefined ? Record<string, unknown> : TTokens> {
+}): TypedMasterDefinition<InferTokens<TShape>> {
   (def as any).tokenShape = def.tokens;
   (def as any).tokenMap = (map: any) => map;
   return def as unknown as TypedMasterDefinition<any>;
@@ -581,3 +581,13 @@ export function defineMaster<TTokens = undefined>(def: {
 
 export const masterRegistry = new Registry<MasterDefinition>("Master");
 
+// ============================================
+// DEFINE THEME
+// ============================================
+
+/**
+ * Define a theme. Thin factory for consistency with defineComponent/defineLayout/defineMaster.
+ */
+export function defineTheme(theme: Theme): Theme {
+  return theme;
+}

@@ -7,10 +7,11 @@ import {
   component,
   componentRegistry,
   defineComponent,
-  type ExpansionContext,
   type HorizontalAlignment,
+  type InferTokens,
   NODE_TYPE,
   parseMarkdown,
+  type RenderContext,
   type SchemaShape,
   SYNTAX,
   schema,
@@ -29,49 +30,28 @@ import type { TextTokens } from "./text.js";
 // TABLE TOKENS
 // ============================================
 
-export const TABLE_TOKEN = {
-  BORDER_STYLE: "borderStyle",
-  BORDER_COLOR: "borderColor",
-  BORDER_WIDTH: "borderWidth",
-  HEADER_BACKGROUND: "headerBackground",
-  HEADER_BACKGROUND_OPACITY: "headerBackgroundOpacity",
-  HEADER_TEXT_STYLE: "headerTextStyle",
-  CELL_BACKGROUND: "cellBackground",
-  CELL_BACKGROUND_OPACITY: "cellBackgroundOpacity",
-  CELL_TEXT_STYLE: "cellTextStyle",
-  CELL_PADDING: "cellPadding",
-  HALIGN: "hAlign",
-  VALIGN: "vAlign",
-  CELL_LINE_HEIGHT: "cellLineHeight",
-  HEADER_TEXT_COLOR: "headerTextColor",
-  CELL_TEXT_COLOR: "cellTextColor",
-  LINK_COLOR: "linkColor",
-  LINK_UNDERLINE: "linkUnderline",
-  ACCENTS: "accents",
-} as const;
+export const tableTokens = token.shape({
+  borderStyle: token.required<BorderStyle>(),
+  borderColor: token.required<string>(),
+  borderWidth: token.required<number>(),
+  headerBackground: token.required<string>(),
+  headerBackgroundOpacity: token.required<number>(),
+  headerTextStyle: token.required<TextStyleName>(),
+  headerTextColor: token.required<string>(),
+  cellBackground: token.required<string>(),
+  cellBackgroundOpacity: token.required<number>(),
+  cellTextStyle: token.required<TextStyleName>(),
+  cellTextColor: token.required<string>(),
+  cellPadding: token.required<number>(),
+  hAlign: token.required<HorizontalAlignment>(),
+  vAlign: token.required<VerticalAlignment>(),
+  cellLineHeight: token.required<number>(),
+  linkColor: token.required<string>(),
+  linkUnderline: token.required<boolean>(),
+  accents: token.required<Record<string, string>>(),
+});
 
-export type TableTokens = {
-  [TABLE_TOKEN.BORDER_STYLE]: BorderStyle;
-  [TABLE_TOKEN.BORDER_COLOR]: string;
-  [TABLE_TOKEN.BORDER_WIDTH]: number;
-  [TABLE_TOKEN.HEADER_BACKGROUND]: string;
-  [TABLE_TOKEN.HEADER_BACKGROUND_OPACITY]: number;
-  [TABLE_TOKEN.HEADER_TEXT_STYLE]: TextStyleName;
-  [TABLE_TOKEN.HEADER_TEXT_COLOR]: string;
-  [TABLE_TOKEN.CELL_BACKGROUND]: string;
-  [TABLE_TOKEN.CELL_BACKGROUND_OPACITY]: number;
-  [TABLE_TOKEN.CELL_TEXT_STYLE]: TextStyleName;
-  [TABLE_TOKEN.CELL_TEXT_COLOR]: string;
-  [TABLE_TOKEN.CELL_PADDING]: number;
-  [TABLE_TOKEN.HALIGN]: HorizontalAlignment;
-  [TABLE_TOKEN.VALIGN]: VerticalAlignment;
-  [TABLE_TOKEN.CELL_LINE_HEIGHT]: number;
-  [TABLE_TOKEN.LINK_COLOR]: string;
-  [TABLE_TOKEN.LINK_UNDERLINE]: boolean;
-  [TABLE_TOKEN.ACCENTS]: Record<string, string>;
-};
-
-export const TABLE_TOKEN_SPEC = token.allRequired(TABLE_TOKEN);
+export type TableTokens = InferTokens<typeof tableTokens>;
 
 // ============================================
 // TABLE COMPONENT
@@ -120,7 +100,7 @@ const tableSchema = {
 export const tableComponent = defineComponent({
   name: Component.Table,
   params: tableSchema,
-  tokens: TABLE_TOKEN_SPEC,
+  tokens: tableTokens,
   mdast: {
     nodeTypes: [SYNTAX.TABLE],
     compile: (node: RootContent, source: string): ComponentNode | null => {
@@ -138,9 +118,9 @@ export const tableComponent = defineComponent({
       return component(Component.Table, { data: rows, tableProps: { headerRows: 1 } });
     },
   },
-  expand: async (
+  render: async (
     props: TableInternalProps & { body?: string; headerColumns?: number },
-    context: ExpansionContext,
+    context: RenderContext,
     tokens: TableTokens,
   ) => {
     // Determine data source: structured (DSL) or body string (directive)
@@ -173,18 +153,18 @@ export const tableComponent = defineComponent({
       accents: tokens.accents,
     };
 
-    // Expand string content through the markdown component to support
+    // Resolve string content through the markdown component to support
     // rich text (**bold**, *italic*, :accent[highlights]) in table cells.
-    const expandContent = async (content: TextContent): Promise<TextContent> => {
+    const resolveContent = async (content: TextContent): Promise<TextContent> => {
       if (typeof content === "string") {
-        const expanded = await componentRegistry.expandTree(
+        const rendered = await componentRegistry.renderTree(
           component(Component.Text, { body: content }, textTokens),
           context,
         );
-        if (expanded.type !== NODE_TYPE.TEXT) {
-          throw new Error(`Expected TextNode from text component, got ${expanded.type}`);
+        if (rendered.type !== NODE_TYPE.TEXT) {
+          throw new Error(`Expected TextNode from text component, got ${rendered.type}`);
         }
-        return (expanded as TextNode).content;
+        return (rendered as TextNode).content;
       }
       return content;
     };
@@ -207,10 +187,10 @@ export const tableComponent = defineComponent({
             let fill: string | undefined;
 
             if (typeof cell === "string" || Array.isArray(cell)) {
-              content = await expandContent(cell);
+              content = await resolveContent(cell);
             } else if ("content" in cell) {
               const tcd = cell as TableCellInput;
-              content = await expandContent(tcd.content);
+              content = await resolveContent(tcd.content);
               partialColor = tcd.color;
               partialTextStyle = tcd.textStyle;
               partialHAlign = tcd.hAlign;

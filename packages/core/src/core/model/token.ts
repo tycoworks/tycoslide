@@ -7,78 +7,53 @@
 // DESCRIPTORS
 // ============================================
 
-export type TokenRequired = { readonly _optional: false };
-export type TokenOptional = { readonly _optional: true };
-export type TokenSpec = TokenRequired | TokenOptional;
-export type TokenShape = Record<string, TokenSpec>;
+/**
+ * A typed token descriptor carrying value type info via phantom field.
+ * Required tokens use `Opt = false`, optional use `Opt = true`.
+ * The `_type` field exists only at the type level — erased at runtime.
+ */
+export interface TokenDescriptor<T = unknown, Opt extends boolean = false> {
+  readonly _optional: Opt;
+  readonly _type?: T;
+}
+
+export type TokenShape = Record<string, TokenDescriptor<any, boolean>>;
 
 // ============================================
-// TYPE-LEVEL ENFORCEMENT
+// TYPE INFERENCE
 // ============================================
-
-/** Extract keys where T[K] is optional (has `?`). */
-type OptionalKeys<T> = { [K in keyof T]-?: undefined extends T[K] ? K : never }[keyof T];
-
-/** Extract keys where T[K] is required (no `?`). */
-type RequiredKeys<T> = { [K in keyof T]-?: undefined extends T[K] ? never : K }[keyof T];
 
 /**
- * Compile-time constraint: ensures token spec matches the TypeScript type.
- * - Required fields in TTokens → must use `token.required`
- * - Optional fields in TTokens → must use `token.optional`
+ * Derive a TypeScript type from a token shape.
+ * Required descriptors become required fields; optional descriptors become optional fields.
  *
- * Prevents spec/type disagreement: if `fillOpacity` is required in the type,
- * the spec can't accidentally mark it `token.optional` (and vice versa).
+ * @example
+ * ```typescript
+ * const cardTokens = token.shape({
+ *   background: token.optional<ShapeTokens>(),
+ *   padding: token.required<number>(),
+ * });
+ * type CardTokens = InferTokens<typeof cardTokens>;
+ * // → { padding: number; background?: ShapeTokens }
+ * ```
  */
-export type ValidTokenShape<TTokens> = {
-  [K in RequiredKeys<TTokens> & string]: TokenRequired;
-} & {
-  [K in OptionalKeys<TTokens> & string]: TokenOptional;
-};
+export type InferTokens<S extends Record<string, TokenDescriptor<any, boolean>>> =
+  { [K in keyof S as S[K] extends { _optional: true } ? never : K]:
+      S[K] extends TokenDescriptor<infer T, any> ? T : never } &
+  { [K in keyof S as S[K] extends { _optional: true } ? K : never]?:
+      S[K] extends TokenDescriptor<infer T, any> ? T : never };
 
-const required: TokenRequired = { _optional: false };
-const optional: TokenOptional = { _optional: true };
+// ============================================
+// TOKEN NAMESPACE
+// ============================================
 
 export const token = {
-  required,
-  optional,
-
-  /**
-   * Build an all-required token shape from a TOKEN const object.
-   * Shorthand for the common case where every token is required.
-   *
-   * @example
-   * ```typescript
-   * export const TEXT_TOKEN_SPEC = token.allRequired(TEXT_TOKEN);
-   * // Equivalent to: { color: token.required, style: token.required, ... }
-   * ```
-   */
-  allRequired<T extends Record<string, string>>(tokenConst: T): { [K in T[keyof T]]: TokenRequired } {
-    return Object.fromEntries(Object.values(tokenConst).map((k) => [k, required])) as {
-      [K in T[keyof T]]: TokenRequired;
-    };
-  },
-
-  /**
-   * Build a token shape with mixed required/optional from a TOKEN const object.
-   * Keys listed in `options.optional` get `token.optional`; all others get `token.required`.
-   *
-   * @example
-   * ```typescript
-   * export const CARD_TOKEN_SPEC = token.spec(CARD_TOKEN, {
-   *   optional: [CARD_TOKEN.BACKGROUND],
-   * });
-   * ```
-   */
-  spec<T extends Record<string, string>, O extends T[keyof T] = never>(
-    tokenConst: T,
-    options?: { optional?: O[] },
-  ): { [K in T[keyof T]]: K extends O ? TokenOptional : TokenRequired } {
-    const optSet = new Set<string>(options?.optional ?? []);
-    return Object.fromEntries(
-      Object.values(tokenConst).map((k) => [k, optSet.has(k) ? optional : required]),
-    ) as { [K in T[keyof T]]: K extends O ? TokenOptional : TokenRequired };
-  },
+  /** Declare a required token of type T. */
+  required: <T>(): TokenDescriptor<T, false> => ({ _optional: false }) as TokenDescriptor<T, false>,
+  /** Declare an optional token of type T. */
+  optional: <T>(): TokenDescriptor<T, true> => ({ _optional: true }) as TokenDescriptor<T, true>,
+  /** Identity function for type inference — groups descriptors into a typed shape. */
+  shape: <S extends TokenShape>(s: S): S => s,
 };
 
 // ============================================

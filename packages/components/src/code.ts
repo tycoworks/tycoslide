@@ -9,11 +9,12 @@ import {
   type ComponentNode,
   component,
   defineComponent,
-  type ExpansionContext,
   getFontForRun,
   type ImageNode,
+  type InferTokens,
   inToPx,
   NODE_TYPE,
+  type RenderContext,
   type SchemaShape,
   SYNTAX,
   schema,
@@ -31,42 +32,23 @@ const SUPPORTED_LANGUAGES = new Set<string>(LANGUAGE_VALUES);
 // TOKENS
 // ============================================
 
-export const CODE_TOKEN = {
-  // Typography (resolved via theme.textStyles)
-  TEXT_STYLE: "textStyle",
-  // Syntax colors (map to Shiki TextMate scopes)
-  BACKGROUND_COLOR: "backgroundColor",
-  TEXT_COLOR: "textColor",
-  KEYWORD_COLOR: "keywordColor",
-  STRING_COLOR: "stringColor",
-  COMMENT_COLOR: "commentColor",
-  FUNCTION_COLOR: "functionColor",
-  NUMBER_COLOR: "numberColor",
-  OPERATOR_COLOR: "operatorColor",
-  TYPE_COLOR: "typeColor",
-  VARIABLE_COLOR: "variableColor",
-  // Structural styling
-  PADDING: "padding",
-  BORDER_RADIUS: "borderRadius",
-} as const;
+export const codeTokens = token.shape({
+  textStyle: token.required<TextStyleName>(),
+  backgroundColor: token.required<string>(),
+  textColor: token.required<string>(),
+  keywordColor: token.required<string>(),
+  stringColor: token.required<string>(),
+  commentColor: token.required<string>(),
+  functionColor: token.required<string>(),
+  numberColor: token.required<string>(),
+  operatorColor: token.required<string>(),
+  typeColor: token.required<string>(),
+  variableColor: token.required<string>(),
+  padding: token.required<number>(),
+  borderRadius: token.required<number>(),
+});
 
-export type CodeTokens = {
-  [CODE_TOKEN.TEXT_STYLE]: TextStyleName;
-  [CODE_TOKEN.BACKGROUND_COLOR]: string;
-  [CODE_TOKEN.TEXT_COLOR]: string;
-  [CODE_TOKEN.KEYWORD_COLOR]: string;
-  [CODE_TOKEN.STRING_COLOR]: string;
-  [CODE_TOKEN.COMMENT_COLOR]: string;
-  [CODE_TOKEN.FUNCTION_COLOR]: string;
-  [CODE_TOKEN.NUMBER_COLOR]: string;
-  [CODE_TOKEN.OPERATOR_COLOR]: string;
-  [CODE_TOKEN.TYPE_COLOR]: string;
-  [CODE_TOKEN.VARIABLE_COLOR]: string;
-  [CODE_TOKEN.PADDING]: number;
-  [CODE_TOKEN.BORDER_RADIUS]: number;
-};
-
-export const CODE_TOKEN_SPEC = token.allRequired(CODE_TOKEN);
+export type CodeTokens = InferTokens<typeof codeTokens>;
 
 // ============================================
 // SCHEMAS & TYPES
@@ -193,16 +175,16 @@ body {
 }
 
 // ============================================
-// COMPONENT EXPANSION
+// COMPONENT RENDERING
 // ============================================
 
 /**
- * Expand code component to ImageNode.
+ * Render code component to ImageNode.
  * Renders syntax-highlighted code via Shiki + shared browser, returns image reference.
  */
-async function expandCode(
+async function renderCode(
   props: CodeComponentProps,
-  context: ExpansionContext,
+  context: RenderContext,
   tokens: CodeTokens,
 ): Promise<ImageNode> {
   const code = props.body.trim();
@@ -228,7 +210,7 @@ export const codeComponent = defineComponent({
   name: Component.Code,
   body: schema.string(),
   params: codeSchema,
-  tokens: CODE_TOKEN_SPEC,
+  tokens: codeTokens,
   mdast: {
     nodeTypes: [SYNTAX.CODE],
     compile: (node: RootContent, _source: string): ComponentNode | null => {
@@ -249,7 +231,7 @@ export const codeComponent = defineComponent({
       });
     },
   },
-  expand: expandCode,
+  render: renderCode,
 });
 
 /**

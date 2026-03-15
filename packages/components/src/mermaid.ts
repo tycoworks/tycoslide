@@ -9,10 +9,11 @@ import {
   type ComponentNode,
   component,
   defineComponent,
-  type ExpansionContext,
   hexToRgba,
   type ImageNode,
+  type InferTokens,
   NODE_TYPE,
+  type RenderContext,
   schema,
   token,
 } from "tycoslide";
@@ -22,43 +23,25 @@ import { Component } from "./names.js";
 // TOKENS
 // ============================================
 
-export const MERMAID_TOKEN = {
-  PRIMARY_COLOR: "primaryColor",
-  PRIMARY_TEXT_COLOR: "primaryTextColor",
-  PRIMARY_BORDER_COLOR: "primaryBorderColor",
-  LINE_COLOR: "lineColor",
-  SECONDARY_COLOR: "secondaryColor",
-  TERTIARY_COLOR: "tertiaryColor",
-  TEXT_COLOR: "textColor",
-  NODE_TEXT_COLOR: "nodeTextColor",
-  CLUSTER_BACKGROUND: "clusterBackground",
-  CLUSTER_BORDER_COLOR: "clusterBorderColor",
-  EDGE_LABEL_BACKGROUND: "edgeLabelBackground",
-  TITLE_COLOR: "titleColor",
-  TEXT_STYLE: "textStyle",
-  ACCENT_OPACITY: "accentOpacity",
-  ACCENTS: "accents",
-} as const;
+export const mermaidTokens = token.shape({
+  primaryColor: token.required<string>(),
+  primaryTextColor: token.required<string>(),
+  primaryBorderColor: token.required<string>(),
+  lineColor: token.required<string>(),
+  secondaryColor: token.required<string>(),
+  tertiaryColor: token.required<string>(),
+  textColor: token.required<string>(),
+  nodeTextColor: token.required<string>(),
+  clusterBackground: token.required<string>(),
+  clusterBorderColor: token.required<string>(),
+  edgeLabelBackground: token.required<string>(),
+  titleColor: token.required<string>(),
+  textStyle: token.required<TextStyleName>(),
+  accentOpacity: token.required<number>(),
+  accents: token.required<Record<string, string>>(),
+});
 
-export type MermaidTokens = {
-  [MERMAID_TOKEN.PRIMARY_COLOR]: string;
-  [MERMAID_TOKEN.PRIMARY_TEXT_COLOR]: string;
-  [MERMAID_TOKEN.PRIMARY_BORDER_COLOR]: string;
-  [MERMAID_TOKEN.LINE_COLOR]: string;
-  [MERMAID_TOKEN.SECONDARY_COLOR]: string;
-  [MERMAID_TOKEN.TERTIARY_COLOR]: string;
-  [MERMAID_TOKEN.TEXT_COLOR]: string;
-  [MERMAID_TOKEN.NODE_TEXT_COLOR]: string;
-  [MERMAID_TOKEN.CLUSTER_BACKGROUND]: string;
-  [MERMAID_TOKEN.CLUSTER_BORDER_COLOR]: string;
-  [MERMAID_TOKEN.EDGE_LABEL_BACKGROUND]: string;
-  [MERMAID_TOKEN.TITLE_COLOR]: string;
-  [MERMAID_TOKEN.TEXT_STYLE]: TextStyleName;
-  [MERMAID_TOKEN.ACCENT_OPACITY]: number;
-  [MERMAID_TOKEN.ACCENTS]: Record<string, string>;
-};
-
-export const MERMAID_TOKEN_SPEC = token.allRequired(MERMAID_TOKEN);
+export type MermaidTokens = InferTokens<typeof mermaidTokens>;
 
 // ============================================
 // TYPES
@@ -290,16 +273,16 @@ async function renderMermaidToPng(
 }
 
 // ============================================
-// COMPONENT EXPANSION
+// COMPONENT RENDERING
 // ============================================
 
 /**
- * Expand mermaid component to ImageNode.
+ * Render mermaid component to ImageNode.
  * Sanitizes definition, renders via shared browser, returns image reference.
  */
-async function expandMermaid(
+async function renderMermaid(
   props: MermaidComponentProps,
-  context: ExpansionContext,
+  context: RenderContext,
   tokens: MermaidTokens,
 ): Promise<ImageNode> {
   const sanitized = sanitizeMermaidDefinition(props.body);
@@ -325,8 +308,8 @@ async function expandMermaid(
 export const mermaidComponent = defineComponent({
   name: Component.Mermaid,
   body: schema.string(),
-  tokens: MERMAID_TOKEN_SPEC,
-  expand: expandMermaid,
+  tokens: mermaidTokens,
+  render: renderMermaid,
 });
 
 /**

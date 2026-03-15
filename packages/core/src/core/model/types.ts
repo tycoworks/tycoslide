@@ -499,7 +499,7 @@ export interface Theme {
     }
   >;
   /** Master tokens. Each master that declares token keys gets its visual values from here.
-   *  Same variant structure as layouts — framework resolves tokens before calling getContent. */
+   *  Same variant structure as layouts — framework resolves tokens before calling render. */
   masters: Record<
     string,
     {

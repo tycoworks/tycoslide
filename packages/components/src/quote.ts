@@ -1,12 +1,13 @@
 // Quote Component
 // Simple pull quote with left accent bar, quote text, and optional attribution.
-// Expands to: row(line(bar), column(quote, attribution?))
+// Renders to: row(line(bar), column(quote, attribution?))
 
 import type { RootContent } from "mdast";
 import {
   type ComponentProps,
   component,
   defineComponent,
+  type InferTokens,
   extractSource,
   type GapSize,
   type SchemaShape,
@@ -20,21 +21,14 @@ import { type PlainTextTokens, plainText } from "./plainText.js";
 import { type LineTokens, line } from "./primitives.js";
 import { type TextTokens, text, textComponent } from "./text.js";
 
-export const QUOTE_TOKEN = {
-  BAR: "bar",
-  GAP: "gap",
-  QUOTE: "quote",
-  ATTRIBUTION: "attribution",
-} as const;
+export const quoteTokens = token.shape({
+  bar: token.required<LineTokens>(),
+  gap: token.required<GapSize>(),
+  quote: token.required<TextTokens>(),
+  attribution: token.required<PlainTextTokens>(),
+});
 
-export type QuoteTokens = {
-  [QUOTE_TOKEN.BAR]: LineTokens;
-  [QUOTE_TOKEN.GAP]: GapSize;
-  [QUOTE_TOKEN.QUOTE]: TextTokens;
-  [QUOTE_TOKEN.ATTRIBUTION]: PlainTextTokens;
-};
-
-export const QUOTE_TOKEN_SPEC = token.allRequired(QUOTE_TOKEN);
+export type QuoteTokens = InferTokens<typeof quoteTokens>;
 
 // ============================================
 // PARAMS SCHEMA
@@ -52,7 +46,7 @@ const quoteSchema = {
 // ============================================
 
 /**
- * Expand quote params into primitive node tree.
+ * Render quote params into primitive node tree.
  *
  * Structure:
  * ```
@@ -68,7 +62,7 @@ const quoteSchema = {
 export const quoteComponent = defineComponent({
   name: Component.Quote,
   params: quoteSchema,
-  tokens: QUOTE_TOKEN_SPEC,
+  tokens: quoteTokens,
   mdast: {
     nodeTypes: [SYNTAX.BLOCKQUOTE],
     compile: (node: RootContent, source: string) => {
@@ -78,7 +72,7 @@ export const quoteComponent = defineComponent({
       return component(Component.Quote, { quote: inner });
     },
   },
-  expand(props, _context, tokens: QuoteTokens) {
+  render(props, _context, tokens: QuoteTokens) {
     const { quote: quoteText, body, attribution } = props;
     const actualQuote = quoteText ?? body;
     const { bar: barTokens, gap, quote: quoteTokens, attribution: attributionTokens } = tokens;

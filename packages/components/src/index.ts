@@ -3,7 +3,7 @@
 
 // Card (composition component)
 export {
-  CARD_TOKEN,
+  cardTokens,
   type CardProps,
   type CardTokens,
   card,
@@ -11,7 +11,7 @@ export {
 } from "./card.js";
 // Code (I/O component — shared browser rendering via Shiki)
 export {
-  CODE_TOKEN,
+  codeTokens,
   type CodeComponentProps,
   type CodeTokens,
   code,
@@ -43,14 +43,14 @@ export {
 export { LANGUAGE, LANGUAGE_VALUES, type LanguageName } from "./languages.js";
 // List
 export {
-  LIST_TOKEN,
+  listTokens,
   type ListTokens,
   list,
   listComponent,
 } from "./list.js";
 // Mermaid diagram (I/O component — shared browser rendering)
 export {
-  MERMAID_TOKEN,
+  mermaidTokens,
   type MermaidComponentProps,
   type MermaidRenderContext,
   type MermaidTokens,
@@ -61,7 +61,7 @@ export {
 export { Component, type ComponentName } from "./names.js";
 // PlainText (plain string text — no markdown, no link tokens)
 export {
-  PLAIN_TEXT_TOKEN,
+  plainTextTokens,
   type PlainTextComponentProps,
   type PlainTextTokens,
   plainText,
@@ -69,15 +69,15 @@ export {
 } from "./plainText.js";
 // Primitives (line, shape, slideNumber)
 export {
-  LINE_TOKEN,
+  lineTokens,
   type LineProps,
   type LineTokens,
   line,
   lineComponent,
-  SHAPE_TOKEN,
+  shapeTokens,
   type ShapeProps,
   type ShapeTokens,
-  SLIDE_NUMBER_TOKEN,
+  slideNumberTokens,
   type SlideNumberProps,
   type SlideNumberTokens,
   shape,
@@ -87,7 +87,7 @@ export {
 } from "./primitives.js";
 // Quote (simple pull quote — composition component)
 export {
-  QUOTE_TOKEN,
+  quoteTokens,
   type QuoteProps,
   type QuoteTokens,
   quote,
@@ -95,7 +95,7 @@ export {
 } from "./quote.js";
 // Table
 export {
-  TABLE_TOKEN,
+  tableTokens,
   type TableProps,
   type TableTokens,
   table,
@@ -103,7 +103,7 @@ export {
 } from "./table.js";
 // Testimonial (card-style quote — composition component)
 export {
-  TESTIMONIAL_TOKEN,
+  testimonialTokens,
   type TestimonialProps,
   type TestimonialTokens,
   testimonial,
@@ -111,7 +111,7 @@ export {
 } from "./testimonial.js";
 // Text
 export {
-  TEXT_TOKEN,
+  textTokens,
   type TextComponentProps,
   type TextTokens,
   text,

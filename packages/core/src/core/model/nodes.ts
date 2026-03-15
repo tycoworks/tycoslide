@@ -32,7 +32,7 @@ export const NODE_TYPE = {
   // Visual primitives
   LINE: "line", // Stroke-only separator (zero cross-axis)
   SHAPE: "shape", // Area shapes: fill, border, cornerRadius
-  // Higher-level abstraction (expands to primitives)
+  // Higher-level abstraction (renders to primitives)
   COMPONENT: "component",
 } as const;
 
@@ -110,7 +110,7 @@ export interface SlideNumberNode {
 // ============================================
 
 /** Individual table cell data */
-/** User-facing input for table cells — optional fields resolved by expand */
+/** User-facing input for table cells — optional fields resolved by render */
 export interface TableCellInput {
   content: TextContent;
   color?: string;
@@ -122,7 +122,7 @@ export interface TableCellInput {
   fill?: string;
 }
 
-/** Fully-resolved table cell data — all fields pre-resolved by component expand */
+/** Fully-resolved table cell data — all fields pre-resolved by component render */
 export interface TableCellData {
   content: TextContent;
   color: string; // pre-resolved: cell → token
@@ -144,7 +144,7 @@ export interface TableNode {
   rows: TableCellData[][];
   headerRows?: number; // Number of header rows (default: 0)
   headerColumns?: number; // Number of header columns (default: 0)
-  // Style properties (resolved from theme tokens by component expand)
+  // Style properties (resolved from theme tokens by component render)
   borderStyle: BorderStyle;
   borderColor: string;
   borderWidth: number;
@@ -165,7 +165,7 @@ export interface ContainerNode<C extends SlideNode = ElementNode> {
   children: C[]; // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
   width: number | SizeValue; // inches (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
   height: number | SizeValue; // inches (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
-  gap: number; // inches — pre-resolved from GapSize by component expand
+  gap: number; // inches — pre-resolved from GapSize by component render
   vAlign: VerticalAlignment;
   hAlign: HorizontalAlignment;
   padding?: number; // inches - internal padding on all sides
@@ -184,8 +184,8 @@ export interface StackNode<C extends SlideNode = ElementNode> {
 // ============================================
 
 /**
- * A component node before expansion.
- * Components are higher-level abstractions (card, list, table) that expand
+ * A component node before rendering.
+ * Components are higher-level abstractions (card, list, table) that render
  * into primitive ElementNodes at Presentation.add() time.
  */
 export interface ComponentNode<TProps = unknown> {

@@ -696,8 +696,8 @@ describe("buildTextConfig()", () => {
     assert.strictEqual(result.options.lineSpacingMultiple, 1.5);
   });
 
-  test("bullet text uses lineHeightMultiplier from node (set by expand to bulletSpacing)", () => {
-    // The expand function sets lineHeightMultiplier to bulletSpacing for bullet text.
+  test("bullet text uses lineHeightMultiplier from node (set by render to bulletSpacing)", () => {
+    // The render function sets lineHeightMultiplier to bulletSpacing for bullet text.
     // The renderer just passes it through — no special bullet logic needed here.
     // Use a distinct value (1.5) to prove the node's value wins, not a coincidence.
     const textNode: TextNode = {
@@ -1033,7 +1033,7 @@ describe("buildSlideNumberOptions()", () => {
 });
 
 // ============================================
-// INTEGRATION: text() → expandTree → buildTextFragments
+// INTEGRATION: text() → renderTree → buildTextFragments
 // End-to-end: markdown string in, PPTX fragments out
 // Uses public text() API instead of internal parseMarkdown/mdastToRuns
 // ============================================

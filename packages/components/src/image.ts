@@ -5,7 +5,7 @@ import {
   type ComponentNode,
   component,
   defineComponent,
-  type ExpansionContext,
+  type RenderContext,
   type ImageNode,
   NODE_TYPE,
   type SchemaShape,
@@ -95,7 +95,7 @@ export const imageComponent = defineComponent({
     },
   },
 
-  expand: (props: ImageComponentProps, context: ExpansionContext): ImageNode => {
+  render: (props: ImageComponentProps, context: RenderContext): ImageNode => {
     let src = props.body;
     if (src.startsWith(ASSET_PREFIX)) {
       src = resolveAssetPath(src, context.assets);

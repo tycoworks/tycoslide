@@ -2,7 +2,7 @@
 // Clean light theme with Inter font. Copy and customize for your brand.
 // Units: spacing/margins/radii = inches, fontSize/borderWidth = points, opacity = 0-100
 
-import { BORDER_STYLE, DASH_TYPE, GAP, HALIGN, SHADOW_TYPE, SLIDE_SIZE, TEXT_STYLE, type Theme, VALIGN } from "tycoslide";
+import { BORDER_STYLE, DASH_TYPE, defineTheme, GAP, HALIGN, SHADOW_TYPE, SLIDE_SIZE, TEXT_STYLE, type Theme, VALIGN } from "tycoslide";
 import { type ListTokens, type PlainTextTokens, type TextTokens } from "tycoslide-components";
 import { assets } from "./assets.js";
 import {
@@ -310,7 +310,7 @@ const bodySlotTokens = {
   testimonial: testimonialSlotTokens,
 };
 
-export const theme = {
+export const theme = defineTheme({
   slide: SLIDE_SIZE.S16x9,
   spacing: { normal: gap, tight: gapTight, loose: gapLoose },
   fonts: [assets.fonts.inter, assets.fonts.interLight, assets.fonts.firaCode],
@@ -612,4 +612,4 @@ export const theme = {
       },
     },
   },
-} satisfies Theme;
+});

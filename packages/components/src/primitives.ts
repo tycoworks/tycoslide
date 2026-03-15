@@ -7,8 +7,8 @@ import {
   component,
   type DashType,
   defineComponent,
-  type ExpansionContext,
   type HorizontalAlignment,
+  type InferTokens,
   type LineNode,
   NODE_TYPE,
   type Shadow,
@@ -17,6 +17,7 @@ import {
   type ShapeName,
   type ShapeNode,
   type SlideNumberNode,
+  type RenderContext,
   schema,
   token,
   type TextStyleName,
@@ -24,57 +25,33 @@ import {
 } from "tycoslide";
 import { Component } from "./names.js";
 
-export const LINE_TOKEN = {
-  COLOR: "color",
-  WIDTH: "width",
-  DASH_TYPE: "dashType",
-} as const;
-
-export type LineTokens = {
-  [LINE_TOKEN.COLOR]: string;
-  [LINE_TOKEN.WIDTH]: number;
-  [LINE_TOKEN.DASH_TYPE]: DashType;
-};
-
-export const LINE_TOKEN_SPEC = token.allRequired(LINE_TOKEN);
-
-export const SLIDE_NUMBER_TOKEN = {
-  STYLE: "style",
-  COLOR: "color",
-  HALIGN: "hAlign",
-  VALIGN: "vAlign",
-} as const;
-
-export type SlideNumberTokens = {
-  [SLIDE_NUMBER_TOKEN.STYLE]: TextStyleName;
-  [SLIDE_NUMBER_TOKEN.COLOR]: string;
-  [SLIDE_NUMBER_TOKEN.HALIGN]: HorizontalAlignment;
-  [SLIDE_NUMBER_TOKEN.VALIGN]: VerticalAlignment;
-};
-
-export const SLIDE_NUMBER_TOKEN_SPEC = token.allRequired(SLIDE_NUMBER_TOKEN);
-
-export const SHAPE_TOKEN = {
-  FILL: "fill",
-  FILL_OPACITY: "fillOpacity",
-  BORDER_COLOR: "borderColor",
-  BORDER_WIDTH: "borderWidth",
-  CORNER_RADIUS: "cornerRadius",
-  SHADOW: "shadow",
-} as const;
-
-export type ShapeTokens = {
-  [SHAPE_TOKEN.FILL]: string;
-  [SHAPE_TOKEN.FILL_OPACITY]: number;
-  [SHAPE_TOKEN.BORDER_COLOR]: string;
-  [SHAPE_TOKEN.BORDER_WIDTH]: number;
-  [SHAPE_TOKEN.CORNER_RADIUS]: number;
-  [SHAPE_TOKEN.SHADOW]?: Shadow;
-};
-
-export const SHAPE_TOKEN_SPEC = token.spec(SHAPE_TOKEN, {
-  optional: [SHAPE_TOKEN.SHADOW],
+export const lineTokens = token.shape({
+  color: token.required<string>(),
+  width: token.required<number>(),
+  dashType: token.required<DashType>(),
 });
+
+export type LineTokens = InferTokens<typeof lineTokens>;
+
+export const slideNumberTokens = token.shape({
+  style: token.required<TextStyleName>(),
+  color: token.required<string>(),
+  hAlign: token.required<HorizontalAlignment>(),
+  vAlign: token.required<VerticalAlignment>(),
+});
+
+export type SlideNumberTokens = InferTokens<typeof slideNumberTokens>;
+
+export const shapeTokens = token.shape({
+  fill: token.required<string>(),
+  fillOpacity: token.required<number>(),
+  borderColor: token.required<string>(),
+  borderWidth: token.required<number>(),
+  cornerRadius: token.required<number>(),
+  shadow: token.optional<Shadow>(),
+});
+
+export type ShapeTokens = InferTokens<typeof shapeTokens>;
 
 // ============================================
 // LINE
@@ -92,7 +69,7 @@ export type LineProps = {
   endArrow?: ArrowType;
 };
 
-function expandLine(props: LineProps, _context: ExpansionContext, tokens: LineTokens): LineNode {
+function renderLine(props: LineProps, _context: RenderContext, tokens: LineTokens): LineNode {
   return {
     type: NODE_TYPE.LINE,
     color: tokens.color,
@@ -106,8 +83,8 @@ function expandLine(props: LineProps, _context: ExpansionContext, tokens: LineTo
 export const lineComponent = defineComponent({
   name: Component.Line,
   params: lineSchema,
-  tokens: LINE_TOKEN_SPEC,
-  expand: expandLine,
+  tokens: lineTokens,
+  render: renderLine,
 });
 
 export function line(tokens: LineTokens, props?: LineProps): ComponentNode {
@@ -129,7 +106,7 @@ export type ShapeProps = {
   shape: ShapeName;
 };
 
-function expandShape(props: ShapeProps, _context: ExpansionContext, tokens: ShapeTokens): ShapeNode {
+function renderShape(props: ShapeProps, _context: RenderContext, tokens: ShapeTokens): ShapeNode {
   const node: ShapeNode = {
     type: NODE_TYPE.SHAPE,
     shape: props.shape,
@@ -152,8 +129,8 @@ function expandShape(props: ShapeProps, _context: ExpansionContext, tokens: Shap
 export const shapeComponent = defineComponent({
   name: Component.Shape,
   params: shapeSchema,
-  tokens: SHAPE_TOKEN_SPEC,
-  expand: expandShape,
+  tokens: shapeTokens,
+  render: renderShape,
 });
 
 export function shape(tokens: ShapeTokens, props: ShapeProps): ComponentNode {
@@ -167,9 +144,9 @@ export function shape(tokens: ShapeTokens, props: ShapeProps): ComponentNode {
 // Full props for DSL callers (no styling overrides — all comes from tokens)
 export type SlideNumberProps = {};
 
-function expandSlideNumber(
+function renderSlideNumber(
   _props: SlideNumberProps,
-  context: ExpansionContext,
+  context: RenderContext,
   tokens: SlideNumberTokens,
 ): SlideNumberNode {
   const style = tokens.style;
@@ -185,8 +162,8 @@ function expandSlideNumber(
 
 export const slideNumberComponent = defineComponent({
   name: Component.SlideNumber,
-  tokens: SLIDE_NUMBER_TOKEN_SPEC,
-  expand: expandSlideNumber,
+  tokens: slideNumberTokens,
+  render: renderSlideNumber,
 });
 
 export function slideNumber(tokens: SlideNumberTokens, props?: SlideNumberProps): ComponentNode {

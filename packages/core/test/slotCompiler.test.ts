@@ -131,7 +131,7 @@ describe("Slot Compiler", () => {
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual((nodes[0] as any).componentName, C.Table);
-      // Body contains the raw GFM table text (parsed in expand, not deserialize)
+      // Body contains the raw GFM table text (parsed in render, not deserialize)
       assert.ok(props(nodes, 0).body.includes("| A | B |"));
     });
 
@@ -184,7 +184,7 @@ describe("Slot Compiler", () => {
           nodeTypes: [SYNTAX.PARAGRAPH],
           compile: () => null,
         },
-        expand: () => ({}) as any,
+        render: () => ({}) as any,
       });
       assert.throws(() => componentRegistry.register(dup), /MDAST node type 'paragraph' already handled by/);
     });

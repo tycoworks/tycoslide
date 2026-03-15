@@ -1,11 +1,12 @@
 // Testimonial Component
 // Card with optional image, quote text, and attribution.
-// Expands to: stack(shape(background), column(image?, quote, attribution))
+// Renders to: stack(shape(background), column(image?, quote, attribution))
 
 import {
   type ComponentProps,
   component,
   defineComponent,
+  type InferTokens,
   type GapSize,
   type HorizontalAlignment,
   type SchemaShape,
@@ -21,29 +22,17 @@ import { type PlainTextTokens, plainText } from "./plainText.js";
 import { type ShapeTokens, shape } from "./primitives.js";
 import { type TextTokens, text, textComponent } from "./text.js";
 
-export const TESTIMONIAL_TOKEN = {
-  BACKGROUND: "background",
-  PADDING: "padding",
-  GAP: "gap",
-  HALIGN: "hAlign",
-  VALIGN: "vAlign",
-  QUOTE: "quote",
-  ATTRIBUTION: "attribution",
-} as const;
-
-export type TestimonialTokens = {
-  [TESTIMONIAL_TOKEN.BACKGROUND]?: ShapeTokens;
-  [TESTIMONIAL_TOKEN.PADDING]: number;
-  [TESTIMONIAL_TOKEN.GAP]: GapSize;
-  [TESTIMONIAL_TOKEN.HALIGN]: HorizontalAlignment;
-  [TESTIMONIAL_TOKEN.VALIGN]: VerticalAlignment;
-  [TESTIMONIAL_TOKEN.QUOTE]: TextTokens;
-  [TESTIMONIAL_TOKEN.ATTRIBUTION]: PlainTextTokens;
-};
-
-export const TESTIMONIAL_TOKEN_SPEC = token.spec(TESTIMONIAL_TOKEN, {
-  optional: [TESTIMONIAL_TOKEN.BACKGROUND],
+export const testimonialTokens = token.shape({
+  background: token.optional<ShapeTokens>(),
+  padding: token.required<number>(),
+  gap: token.required<GapSize>(),
+  hAlign: token.required<HorizontalAlignment>(),
+  vAlign: token.required<VerticalAlignment>(),
+  quote: token.required<TextTokens>(),
+  attribution: token.required<PlainTextTokens>(),
 });
+
+export type TestimonialTokens = InferTokens<typeof testimonialTokens>;
 
 // ============================================
 // PARAMS SCHEMA
@@ -63,7 +52,7 @@ const testimonialSchema = {
 // ============================================
 
 /**
- * Expand testimonial params into primitive node tree.
+ * Render testimonial params into primitive node tree.
  *
  * Structure:
  * ```
@@ -80,8 +69,8 @@ const testimonialSchema = {
 export const testimonialComponent = defineComponent({
   name: Component.Testimonial,
   params: testimonialSchema,
-  tokens: TESTIMONIAL_TOKEN_SPEC,
-  expand(props, _context, tokens: TestimonialTokens) {
+  tokens: testimonialTokens,
+  render(props, _context, tokens: TestimonialTokens) {
     const { quote: quoteText, body, attribution, image: imagePath } = props;
     const actualQuote = quoteText ?? body;
     const {

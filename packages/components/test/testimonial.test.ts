@@ -74,37 +74,37 @@ describe("Testimonial Component", () => {
   });
 
   describe("expansion", () => {
-    it("should expand to stack with background and content", async () => {
+    it("should render to stack with background and content", async () => {
       const node = testimonial({ quote: "Test" }, DEFAULT_TESTIMONIAL_TOKENS);
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
 
       // With background (default): stack(shape, column)
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        assert.strictEqual(expanded.children.length, 2);
-        assert.strictEqual(expanded.children[0].type, NODE_TYPE.SHAPE);
-        assert.strictEqual(expanded.children[1].type, NODE_TYPE.CONTAINER);
+      assert.strictEqual(rendered.type, NODE_TYPE.STACK);
+      if (rendered.type === NODE_TYPE.STACK) {
+        assert.strictEqual(rendered.children.length, 2);
+        assert.strictEqual(rendered.children[0].type, NODE_TYPE.SHAPE);
+        assert.strictEqual(rendered.children[1].type, NODE_TYPE.CONTAINER);
       }
     });
 
-    it("should expand to column only when background is absent", async () => {
+    it("should render to column only when background is absent", async () => {
       const flatTokens: TestimonialTokens = {
         ...DEFAULT_TESTIMONIAL_TOKENS,
         background: undefined,
       };
       const node = testimonial({ quote: "Test" }, flatTokens);
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
 
-      assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
+      assert.strictEqual(rendered.type, NODE_TYPE.CONTAINER);
     });
 
     it("should include quote text as markdown", async () => {
       const node = testimonial({ quote: "A wise saying" }, DEFAULT_TESTIMONIAL_TOKENS);
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
 
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        const contentColumn = expanded.children[1];
+      assert.strictEqual(rendered.type, NODE_TYPE.STACK);
+      if (rendered.type === NODE_TYPE.STACK) {
+        const contentColumn = rendered.children[1];
         assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
         if (contentColumn.type === NODE_TYPE.CONTAINER) {
           // Quote text should be first child
@@ -120,11 +120,11 @@ describe("Testimonial Component", () => {
 
     it("should include attribution when provided", async () => {
       const node = testimonial({ quote: "Quote text", attribution: "— Jane Smith" }, DEFAULT_TESTIMONIAL_TOKENS);
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
 
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        const contentColumn = expanded.children[1];
+      assert.strictEqual(rendered.type, NODE_TYPE.STACK);
+      if (rendered.type === NODE_TYPE.STACK) {
+        const contentColumn = rendered.children[1];
         assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
         if (contentColumn.type === NODE_TYPE.CONTAINER) {
           assert.strictEqual(contentColumn.children.length, 2);
@@ -143,11 +143,11 @@ describe("Testimonial Component", () => {
 
     it("should include image when provided", async () => {
       const node = testimonial({ quote: "Quote text", image: "logo.png" }, DEFAULT_TESTIMONIAL_TOKENS);
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
 
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        const contentColumn = expanded.children[1];
+      assert.strictEqual(rendered.type, NODE_TYPE.STACK);
+      if (rendered.type === NODE_TYPE.STACK) {
+        const contentColumn = rendered.children[1];
         assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
         if (contentColumn.type === NODE_TYPE.CONTAINER) {
           assert.strictEqual(contentColumn.children.length, 2);
@@ -171,11 +171,11 @@ describe("Testimonial Component", () => {
         },
         DEFAULT_TESTIMONIAL_TOKENS,
       );
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
 
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        const contentColumn = expanded.children[1];
+      assert.strictEqual(rendered.type, NODE_TYPE.STACK);
+      if (rendered.type === NODE_TYPE.STACK) {
+        const contentColumn = rendered.children[1];
         assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
         if (contentColumn.type === NODE_TYPE.CONTAINER) {
           assert.strictEqual(contentColumn.children.length, 3);
@@ -192,11 +192,11 @@ describe("Testimonial Component", () => {
 
     it("should vertically center content", async () => {
       const node = testimonial({ quote: "Test" }, DEFAULT_TESTIMONIAL_TOKENS);
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
 
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        const contentColumn = expanded.children[1];
+      assert.strictEqual(rendered.type, NODE_TYPE.STACK);
+      if (rendered.type === NODE_TYPE.STACK) {
+        const contentColumn = rendered.children[1];
         assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
         if (contentColumn.type === NODE_TYPE.CONTAINER) {
           assert.strictEqual(contentColumn.vAlign, VALIGN.MIDDLE);
@@ -207,7 +207,7 @@ describe("Testimonial Component", () => {
     it("should throw error when quote text is missing", () => {
       assert.rejects(async () => {
         const node = testimonial({} as any, DEFAULT_TESTIMONIAL_TOKENS);
-        await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
+        await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
       }, /Testimonial component requires/);
     });
   });

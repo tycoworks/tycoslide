@@ -175,7 +175,7 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
 
   // 7. Validate params and slots separately, merge for render
   // Asset references ($dot.path) flow through as strings here.
-  // They are resolved later by the image component's expand function.
+  // They are resolved later by the image component's render function.
   const validated = validateLayout(layout, params, slots);
 
   // 8. Inject layout tokens into slot-compiled ComponentNodes

@@ -78,19 +78,19 @@ describe("Text", () => {
       assert.ok(componentRegistry.has("plainText"));
     });
 
-    it("should expand to a TextNode with single run", async () => {
+    it("should render to a TextNode with single run", async () => {
       const node = plainText("Hello world", DEFAULT_PLAIN_TEXT_TOKENS);
-      const expanded = (await componentRegistry.expand(node, { theme, canvas: noopCanvas() })) as any;
-      assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
-      const runs = expanded.content as NormalizedRun[];
+      const rendered = (await componentRegistry.render(node, { theme, canvas: noopCanvas() })) as any;
+      assert.strictEqual(rendered.type, NODE_TYPE.TEXT);
+      const runs = rendered.content as NormalizedRun[];
       assert.strictEqual(runs.length, 1);
       assert.strictEqual(runs[0].text, "Hello world");
     });
 
     it("should NOT parse markdown — bold stays literal", async () => {
       const node = plainText("**not bold**", DEFAULT_PLAIN_TEXT_TOKENS);
-      const expanded = (await componentRegistry.expand(node, { theme, canvas: noopCanvas() })) as any;
-      const runs = expanded.content as NormalizedRun[];
+      const rendered = (await componentRegistry.render(node, { theme, canvas: noopCanvas() })) as any;
+      const runs = rendered.content as NormalizedRun[];
       assert.strictEqual(runs.length, 1);
       assert.strictEqual(runs[0].text, "**not bold**");
       assert.strictEqual(runs[0].bold, undefined);
@@ -98,8 +98,8 @@ describe("Text", () => {
 
     it("should NOT parse directives — stays literal", async () => {
       const node = plainText(":teal[not highlighted]", DEFAULT_PLAIN_TEXT_TOKENS);
-      const expanded = (await componentRegistry.expand(node, { theme, canvas: noopCanvas() })) as any;
-      const runs = expanded.content as NormalizedRun[];
+      const rendered = (await componentRegistry.render(node, { theme, canvas: noopCanvas() })) as any;
+      const runs = rendered.content as NormalizedRun[];
       assert.strictEqual(runs.length, 1);
       assert.strictEqual(runs[0].text, ":teal[not highlighted]");
       assert.strictEqual(runs[0].highlight, undefined);
@@ -113,25 +113,25 @@ describe("Text", () => {
         hAlign: HALIGN.CENTER,
         vAlign: VALIGN.MIDDLE,
       });
-      const expanded = (await componentRegistry.expand(node, { theme, canvas: noopCanvas() })) as any;
-      assert.strictEqual(expanded.style, "body");
-      assert.strictEqual(expanded.color, "#AABBCC");
-      assert.strictEqual(expanded.hAlign, HALIGN.CENTER);
-      assert.strictEqual(expanded.vAlign, VALIGN.MIDDLE);
+      const rendered = (await componentRegistry.render(node, { theme, canvas: noopCanvas() })) as any;
+      assert.strictEqual(rendered.style, "body");
+      assert.strictEqual(rendered.color, "#AABBCC");
+      assert.strictEqual(rendered.hAlign, HALIGN.CENTER);
+      assert.strictEqual(rendered.vAlign, VALIGN.MIDDLE);
     });
 
     it("should default hAlign to LEFT and vAlign to TOP", async () => {
       const node = plainText("Label", DEFAULT_PLAIN_TEXT_TOKENS);
-      const expanded = (await componentRegistry.expand(node, { theme, canvas: noopCanvas() })) as any;
-      assert.strictEqual(expanded.hAlign, HALIGN.LEFT);
-      assert.strictEqual(expanded.vAlign, VALIGN.TOP);
+      const rendered = (await componentRegistry.render(node, { theme, canvas: noopCanvas() })) as any;
+      assert.strictEqual(rendered.hAlign, HALIGN.LEFT);
+      assert.strictEqual(rendered.vAlign, VALIGN.TOP);
     });
 
     it("should hardcode linkColor to text color and linkUnderline to false", async () => {
       const node = plainText("Label", DEFAULT_PLAIN_TEXT_TOKENS);
-      const expanded = (await componentRegistry.expand(node, { theme, canvas: noopCanvas() })) as any;
-      assert.strictEqual(expanded.linkColor, expanded.color);
-      assert.strictEqual(expanded.linkUnderline, false);
+      const rendered = (await componentRegistry.render(node, { theme, canvas: noopCanvas() })) as any;
+      assert.strictEqual(rendered.linkColor, rendered.color);
+      assert.strictEqual(rendered.linkUnderline, false);
     });
   });
 
@@ -154,7 +154,7 @@ describe("Text", () => {
 
     it("should parse bold and italic", async () => {
       const node = text("Hello **world** and *italic*", DEFAULT_TEXT_TOKENS);
-      const result = (await componentRegistry.expandTree(node, makeContext())) as any;
+      const result = (await componentRegistry.renderTree(node, makeContext())) as any;
       assert.strictEqual(result.type, NODE_TYPE.TEXT);
       const runs = result.content as any[];
       assert.ok(runs.some((r: any) => r.bold === true));
@@ -163,14 +163,14 @@ describe("Text", () => {
 
     it("should parse color directives", async () => {
       const node = text(":teal[highlighted]", DEFAULT_TEXT_TOKENS);
-      const result = (await componentRegistry.expandTree(node, makeContext())) as any;
+      const result = (await componentRegistry.renderTree(node, makeContext())) as any;
       const runs = result.content as any[];
       assert.ok(runs.some((r: any) => r.color !== undefined));
     });
 
     it("should handle numbered text without creating ordered list", async () => {
       const node = text("1. Problem statement", DEFAULT_TEXT_TOKENS);
-      const result = (await componentRegistry.expandTree(node, makeContext())) as any;
+      const result = (await componentRegistry.renderTree(node, makeContext())) as any;
       const runs = result.content as any[];
       // Should be plain inline text, not a bullet
       assert.ok(runs.every((r: any) => !r.bullet));
@@ -180,7 +180,7 @@ describe("Text", () => {
 
     it("should treat bullet syntax as literal text (micromark disable prevents list parsing)", async () => {
       const node = text("- bullet item", DEFAULT_TEXT_TOKENS);
-      const result = (await componentRegistry.expandTree(node, makeContext())) as any;
+      const result = (await componentRegistry.renderTree(node, makeContext())) as any;
       const runs = result.content as any[];
       // Micromark disable prevents "- " from being parsed as a list, so it becomes literal text
       assert.strictEqual(runs.length, 1);
@@ -190,7 +190,7 @@ describe("Text", () => {
 
     it("should treat heading syntax as literal text", async () => {
       const node = text("# heading text", DEFAULT_TEXT_TOKENS);
-      const result = (await componentRegistry.expandTree(node, makeContext())) as any;
+      const result = (await componentRegistry.renderTree(node, makeContext())) as any;
       const runs = result.content as any[];
       assert.strictEqual(runs.length, 1);
       assert.strictEqual(runs[0].text, "# heading text");
@@ -198,7 +198,7 @@ describe("Text", () => {
 
     it("should treat blockquote syntax as literal text", async () => {
       const node = text("> quoted text", DEFAULT_TEXT_TOKENS);
-      const result = (await componentRegistry.expandTree(node, makeContext())) as any;
+      const result = (await componentRegistry.renderTree(node, makeContext())) as any;
       const runs = result.content as any[];
       assert.strictEqual(runs.length, 1);
       assert.strictEqual(runs[0].text, "> quoted text");
@@ -207,7 +207,7 @@ describe("Text", () => {
     it("should reject multiple paragraphs", async () => {
       const node = text("First\n\nSecond", DEFAULT_TEXT_TOKENS);
       await assert.rejects(
-        () => componentRegistry.expandTree(node, makeContext()),
+        () => componentRegistry.renderTree(node, makeContext()),
         (err: any) => {
           assert.ok(err.message.includes("list component"));
           return true;
@@ -217,14 +217,14 @@ describe("Text", () => {
 
     it("should pass through style and color props", async () => {
       const node = text("test", { ...DEFAULT_TEXT_TOKENS, style: TEXT_STYLE.BODY, color: "#AABBCC" });
-      const result = (await componentRegistry.expandTree(node, makeContext())) as any;
+      const result = (await componentRegistry.renderTree(node, makeContext())) as any;
       assert.strictEqual(result.style, "body");
       assert.strictEqual(result.color, "#AABBCC");
     });
 
     it("should parse hyperlinks", async () => {
       const node = text("[Click here](https://example.com)", DEFAULT_TEXT_TOKENS);
-      const result = (await componentRegistry.expandTree(node, makeContext())) as any;
+      const result = (await componentRegistry.renderTree(node, makeContext())) as any;
       const runs = result.content as NormalizedRun[];
       assert.ok(runs.some((r) => r.hyperlink === "https://example.com"));
       assert.ok(runs.some((r) => r.text === "Click here"));
@@ -232,21 +232,21 @@ describe("Text", () => {
 
     it("should parse strikethrough", async () => {
       const node = text("~~struck~~", DEFAULT_TEXT_TOKENS);
-      const result = (await componentRegistry.expandTree(node, makeContext())) as any;
+      const result = (await componentRegistry.renderTree(node, makeContext())) as any;
       const runs = result.content as NormalizedRun[];
       assert.ok(runs.some((r) => r.strikethrough === true && r.text === "struck"));
     });
 
     it("should parse underline", async () => {
       const node = text("++underlined++", DEFAULT_TEXT_TOKENS);
-      const result = (await componentRegistry.expandTree(node, makeContext())) as any;
+      const result = (await componentRegistry.renderTree(node, makeContext())) as any;
       const runs = result.content as NormalizedRun[];
       assert.ok(runs.some((r) => r.underline === true && r.text === "underlined"));
     });
 
     it("should compose bold + strikethrough + hyperlink", async () => {
       const node = text("[**~~bold struck link~~**](https://example.com)", DEFAULT_TEXT_TOKENS);
-      const result = (await componentRegistry.expandTree(node, makeContext())) as any;
+      const result = (await componentRegistry.renderTree(node, makeContext())) as any;
       const runs = result.content as NormalizedRun[];
       const composedRun = runs.find((r: NormalizedRun) => r.text === "bold struck link");
       assert.ok(composedRun, "Should have a composed run");
@@ -257,7 +257,7 @@ describe("Text", () => {
 
     it("should resolve linkColor and linkUnderline from tokens", async () => {
       const node = text("[link](https://example.com)", DEFAULT_TEXT_TOKENS);
-      const result = (await componentRegistry.expandTree(node, makeContext())) as any;
+      const result = (await componentRegistry.renderTree(node, makeContext())) as any;
       assert.strictEqual(result.linkColor, "#0000FF");
       assert.strictEqual(result.linkUnderline, true);
     });

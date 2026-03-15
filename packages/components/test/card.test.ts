@@ -70,43 +70,43 @@ describe("Card Component", () => {
   });
 
   describe("expansion", () => {
-    it("should expand to stack with background and content", async () => {
+    it("should render to stack with background and content", async () => {
       const node = card({ title: "Test" }, DEFAULT_CARD_TOKENS);
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
 
       // With background (default): stack(rectangle, column)
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        assert.strictEqual(expanded.children.length, 2);
-        assert.strictEqual(expanded.children[0].type, NODE_TYPE.SHAPE);
-        assert.strictEqual(expanded.children[1].type, NODE_TYPE.CONTAINER);
+      assert.strictEqual(rendered.type, NODE_TYPE.STACK);
+      if (rendered.type === NODE_TYPE.STACK) {
+        assert.strictEqual(rendered.children.length, 2);
+        assert.strictEqual(rendered.children[0].type, NODE_TYPE.SHAPE);
+        assert.strictEqual(rendered.children[1].type, NODE_TYPE.CONTAINER);
       }
     });
 
-    it("should expand to column only when background is absent", async () => {
+    it("should render to column only when background is absent", async () => {
       const flatTokens: CardTokens = {
         ...DEFAULT_CARD_TOKENS,
         background: undefined,
       };
       const node = card({ title: "Test" }, flatTokens);
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
 
-      assert.strictEqual(expanded.type, NODE_TYPE.CONTAINER);
+      assert.strictEqual(rendered.type, NODE_TYPE.CONTAINER);
     });
 
     it("should build children from title prop", async () => {
       const node = card({ title: "My Title" }, DEFAULT_CARD_TOKENS);
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
 
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        const contentColumn = expanded.children[1];
+      assert.strictEqual(rendered.type, NODE_TYPE.STACK);
+      if (rendered.type === NODE_TYPE.STACK) {
+        const contentColumn = rendered.children[1];
         assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
         if (contentColumn.type === NODE_TYPE.CONTAINER) {
           assert.strictEqual(contentColumn.children.length, 1);
           assert.strictEqual(contentColumn.children[0].type, NODE_TYPE.TEXT);
           if (contentColumn.children[0].type === NODE_TYPE.TEXT) {
-            // After expandTree, content is NormalizedRun[]
+            // After renderTree, content is NormalizedRun[]
             const runs = contentColumn.children[0].content as any[];
             assert.strictEqual(runs[0].text, "My Title");
           }
@@ -122,11 +122,11 @@ describe("Card Component", () => {
         },
         DEFAULT_CARD_TOKENS,
       );
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
 
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        const contentColumn = expanded.children[1];
+      assert.strictEqual(rendered.type, NODE_TYPE.STACK);
+      if (rendered.type === NODE_TYPE.STACK) {
+        const contentColumn = rendered.children[1];
         assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
         if (contentColumn.type === NODE_TYPE.CONTAINER) {
           assert.strictEqual(contentColumn.children.length, 2);
@@ -144,11 +144,11 @@ describe("Card Component", () => {
 
     it("should return empty column when no content", async () => {
       const node = card({}, DEFAULT_CARD_TOKENS);
-      const expanded = await componentRegistry.expandTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
 
-      assert.strictEqual(expanded.type, NODE_TYPE.STACK);
-      if (expanded.type === NODE_TYPE.STACK) {
-        const contentColumn = expanded.children[1];
+      assert.strictEqual(rendered.type, NODE_TYPE.STACK);
+      if (rendered.type === NODE_TYPE.STACK) {
+        const contentColumn = rendered.children[1];
         assert.strictEqual(contentColumn.type, NODE_TYPE.CONTAINER);
         if (contentColumn.type === NODE_TYPE.CONTAINER) {
           assert.strictEqual(contentColumn.children.length, 0);

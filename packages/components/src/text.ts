@@ -4,13 +4,14 @@
 // Always uses rich text (inline formatting only): bold, italic, :color[highlights], no bullets/paragraphs.
 
 import type { Heading, RootContent } from "mdast";
-import type { ExpansionContext, HorizontalAlignment, NormalizedRun, TextStyleName, VerticalAlignment } from "tycoslide";
+import type { HorizontalAlignment, NormalizedRun, RenderContext, TextStyleName, VerticalAlignment } from "tycoslide";
 import {
   type ComponentNode,
   component,
   defineComponent,
   type ElementNode,
   extractSource,
+  type InferTokens,
   NODE_TYPE,
   SYNTAX,
   schema,
@@ -20,27 +21,17 @@ import {
 import { Component } from "./names.js";
 import { inlineParse, transformInline } from "./utils/inline.js";
 
-export const TEXT_TOKEN = {
-  COLOR: "color",
-  STYLE: "style",
-  LINK_COLOR: "linkColor",
-  LINK_UNDERLINE: "linkUnderline",
-  HALIGN: "hAlign",
-  VALIGN: "vAlign",
-  ACCENTS: "accents",
-} as const;
+export const textTokens = token.shape({
+  color: token.required<string>(),
+  style: token.required<TextStyleName>(),
+  linkColor: token.required<string>(),
+  linkUnderline: token.required<boolean>(),
+  hAlign: token.required<HorizontalAlignment>(),
+  vAlign: token.required<VerticalAlignment>(),
+  accents: token.required<Record<string, string>>(),
+});
 
-export type TextTokens = {
-  [TEXT_TOKEN.COLOR]: string;
-  [TEXT_TOKEN.STYLE]: TextStyleName;
-  [TEXT_TOKEN.LINK_COLOR]: string;
-  [TEXT_TOKEN.LINK_UNDERLINE]: boolean;
-  [TEXT_TOKEN.HALIGN]: HorizontalAlignment;
-  [TEXT_TOKEN.VALIGN]: VerticalAlignment;
-  [TEXT_TOKEN.ACCENTS]: Record<string, string>;
-};
-
-export const TEXT_TOKEN_SPEC = token.allRequired(TEXT_TOKEN);
+export type TextTokens = InferTokens<typeof textTokens>;
 
 // ============================================
 // TYPES
@@ -61,10 +52,10 @@ export const HEADING_STYLE: Record<number, TextStyleName> = {
 };
 
 // ============================================
-// EXPAND — always rich text (inline markdown)
+// RENDER — always rich text (inline markdown)
 // ============================================
 
-function expandText(props: TextComponentProps, context: ExpansionContext, tokens: TextTokens): ElementNode {
+function renderText(props: TextComponentProps, context: RenderContext, tokens: TextTokens): ElementNode {
   const textStyle = context.theme.textStyles[tokens.style];
 
   // Parse inline markdown only (bold, italic, :color[highlights])
@@ -108,7 +99,7 @@ export const textComponent = defineComponent({
   name: Component.Text,
   body: schema.string(),
   directive: false,
-  tokens: TEXT_TOKEN_SPEC,
+  tokens: textTokens,
   mdast: {
     nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.HEADING],
     compile: (node: RootContent, source: string): ComponentNode | null => {
@@ -122,7 +113,7 @@ export const textComponent = defineComponent({
       return component(Component.Text, { body: extractSource(node, source) });
     },
   },
-  expand: expandText,
+  render: renderText,
 });
 
 // ============================================

@@ -1,6 +1,6 @@
 // HTML Measurement Tests
 // Tests generateLayoutHTML using direct ElementNode construction.
-// No component DSL, no registry, no expandTree — pure element node trees.
+// No component DSL, no registry, no renderTree — pure element node trees.
 
 import * as assert from "node:assert";
 import path from "node:path";

@@ -42,7 +42,7 @@ describe("defineComponent", () => {
       name: "test-params-comp",
       params: testParams,
       tokens: {},
-      expand: (props) => stubTextNode(props.title),
+      render: (props) => stubTextNode(props.title),
     });
 
     test("has .schema property (ZodObject)", () => {
@@ -69,13 +69,13 @@ describe("defineComponent", () => {
       assert.strictEqual(result.success, true);
     });
 
-    test("expand function works", async () => {
-      const expanded = await comp.expand(
+    test("render function works", async () => {
+      const rendered = await comp.render(
         { title: "Hello", count: 1 },
         { theme: {} as any, canvas: { renderHtml: async () => "" } },
-        undefined,
+        {} as any,
       );
-      assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
+      assert.strictEqual(rendered.type, NODE_TYPE.TEXT);
     });
 
     test("auto-generates deserializer", () => {
@@ -92,7 +92,7 @@ describe("defineComponent", () => {
       name: "test-body-comp",
       body: schema.string(),
       tokens: {},
-      expand: (props) => stubTextNode(props.body),
+      render: (props) => stubTextNode(props.body),
     });
 
     test("has .schema property (= body type)", () => {
@@ -129,20 +129,20 @@ describe("defineComponent", () => {
       body: schema.string(),
       params: { scale: schema.number().optional() },
       tokens: {},
-      expand: (props) => stubTextNode(props.body),
+      render: (props) => stubTextNode(props.body),
     });
 
     test(".schema is body type (not full object)", () => {
       assert.ok(comp.schema instanceof z.ZodString);
     });
 
-    test("expand receives body + params", async () => {
-      const expanded = await comp.expand(
+    test("render receives body + params", async () => {
+      const rendered = await comp.render(
         { body: "hello", scale: 2 },
         { theme: {} as any, canvas: { renderHtml: async () => "" } },
-        undefined,
+        {} as any,
       );
-      assert.strictEqual(expanded.type, NODE_TYPE.TEXT);
+      assert.strictEqual(rendered.type, NODE_TYPE.TEXT);
     });
   });
 
@@ -151,7 +151,7 @@ describe("defineComponent", () => {
       name: "test-prog-comp",
       slots: ["children"],
       tokens: {},
-      expand: (props: { children: any[] }) => ({
+      render: (props: { children: any[] }) => ({
         type: NODE_TYPE.CONTAINER,
         direction: DIRECTION.ROW,
         children: props.children,
@@ -167,9 +167,9 @@ describe("defineComponent", () => {
       assert.strictEqual((comp as any).schema, undefined);
     });
 
-    test("has name and expand", () => {
+    test("has name and render", () => {
       assert.strictEqual(comp.name, "test-prog-comp");
-      assert.ok(typeof comp.expand === "function");
+      assert.ok(typeof comp.render === "function");
     });
 
     test("does NOT have deserializer", () => {

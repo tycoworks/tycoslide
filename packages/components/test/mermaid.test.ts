@@ -282,10 +282,10 @@ describe("mermaid expansion", () => {
     assert.ok(registered, "mermaid component should be registered");
   });
 
-  it("expands to ImageNode via canvas", async () => {
+  it("renders to ImageNode via canvas", async () => {
     const m = mermaid("flowchart LR\n  A[Start] --> B[End]");
     m.tokens = { ...DEFAULT_MERMAID_TOKENS };
-    const expanded = await componentRegistry.expand(m, {
+    const rendered = await componentRegistry.render(m, {
       theme: mockTheme(),
       canvas: {
         renderHtml: async (html: string, transparent?: boolean) => {
@@ -296,7 +296,7 @@ describe("mermaid expansion", () => {
       },
     });
 
-    assert.strictEqual(expanded.type, NODE_TYPE.IMAGE);
-    assert.strictEqual((expanded as any).src, "mock://mermaid.png");
+    assert.strictEqual(rendered.type, NODE_TYPE.IMAGE);
+    assert.strictEqual((rendered as any).src, "mock://mermaid.png");
   });
 });

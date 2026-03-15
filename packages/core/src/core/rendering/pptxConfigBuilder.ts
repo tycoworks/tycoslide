@@ -264,7 +264,7 @@ export class PptxConfigBuilder {
   ): { text: TextFragment[]; options: Record<string, unknown> } {
     const isHeader = rowIndex < headerRows || colIndex < headerColumns;
 
-    // Cell values are pre-resolved by component expand
+    // Cell values are pre-resolved by component render
     const textStyle = cell.resolvedStyle;
 
     // Cell padding

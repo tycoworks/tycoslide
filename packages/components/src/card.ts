@@ -5,6 +5,7 @@ import {
   type ComponentProps,
   component,
   defineComponent,
+  type InferTokens,
   type GapSize,
   type HorizontalAlignment,
   type SchemaShape,
@@ -19,29 +20,17 @@ import { Component } from "./names.js";
 import { type ShapeTokens, shape } from "./primitives.js";
 import { type TextTokens, text, textComponent } from "./text.js";
 
-export const CARD_TOKEN = {
-  BACKGROUND: "background",
-  PADDING: "padding",
-  GAP: "gap",
-  HALIGN: "hAlign",
-  VALIGN: "vAlign",
-  TITLE: "title",
-  DESCRIPTION: "description",
-} as const;
-
-export type CardTokens = {
-  [CARD_TOKEN.BACKGROUND]?: ShapeTokens;
-  [CARD_TOKEN.PADDING]: number;
-  [CARD_TOKEN.GAP]: GapSize;
-  [CARD_TOKEN.HALIGN]: HorizontalAlignment;
-  [CARD_TOKEN.VALIGN]: VerticalAlignment;
-  [CARD_TOKEN.TITLE]: TextTokens;
-  [CARD_TOKEN.DESCRIPTION]: TextTokens;
-};
-
-export const CARD_TOKEN_SPEC = token.spec(CARD_TOKEN, {
-  optional: [CARD_TOKEN.BACKGROUND],
+export const cardTokens = token.shape({
+  background: token.optional<ShapeTokens>(),
+  padding: token.required<number>(),
+  gap: token.required<GapSize>(),
+  hAlign: token.required<HorizontalAlignment>(),
+  vAlign: token.required<VerticalAlignment>(),
+  title: token.required<TextTokens>(),
+  description: token.required<TextTokens>(),
 });
+
+export type CardTokens = InferTokens<typeof cardTokens>;
 
 // ============================================
 // PARAMS SCHEMA
@@ -61,7 +50,7 @@ const cardSchema = {
 // ============================================
 
 /**
- * Expand card params into primitive node tree.
+ * Render card params into primitive node tree.
  *
  * Structure:
  * ```
@@ -74,8 +63,8 @@ const cardSchema = {
 export const cardComponent = defineComponent({
   name: Component.Card,
   params: cardSchema,
-  tokens: CARD_TOKEN_SPEC,
-  expand(props, _context, tokens: CardTokens) {
+  tokens: cardTokens,
+  render(props, _context, tokens: CardTokens) {
     const { image: imagePath, title, description, body } = props;
     const actualDescription = description ?? body;
     const {

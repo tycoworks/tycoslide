@@ -105,7 +105,7 @@ describe("Document Compiler: Layout Tokens", () => {
     description: "Test layout with tokens and body slot",
     params: { title: schema.string().optional() },
     slots: ["body"],
-    tokens: { background: token.required, title: token.required, text: token.required },
+    tokens: { background: token.required<any>(), title: token.required<any>(), text: token.required<any>() },
     render: (props: any, tokens?: Record<string, unknown>): Slide => {
       receivedProps.push(props);
       receivedTokens.push(tokens);
@@ -121,7 +121,7 @@ describe("Document Compiler: Layout Tokens", () => {
     name: "tokenSimple",
     description: "Test layout with tokens but no slots",
     params: { title: schema.string() },
-    tokens: { background: token.required, titleTokens: token.required },
+    tokens: { background: token.required<any>(), titleTokens: token.required<any>() },
     render: (props: any, tokens?: Record<string, unknown>): Slide => {
       receivedProps.push(props);
       receivedTokens.push(tokens);
@@ -257,7 +257,7 @@ describe("Slot Token Injection", () => {
     description: "Layout with slot token injection",
     params: { title: schema.string().optional() },
     slots: ["body"],
-    tokens: { background: token.required, text: token.required },
+    tokens: { background: token.required<any>(), text: token.required<any>() },
     render: (props: any, tokens?: Record<string, unknown>): Slide => {
       receivedProps.push(props);
       receivedTokens.push(tokens);
@@ -372,7 +372,7 @@ describe("Slot Token Injection", () => {
       name: "noSlotTokenTest",
       description: "Tokens but no slots",
       params: { title: schema.string() },
-      tokens: { background: token.required, text: token.required },
+      tokens: { background: token.required<any>(), text: token.required<any>() },
       render: (props: any, _tokens?: Record<string, unknown>): Slide => {
         capturedProps = props;
         return {

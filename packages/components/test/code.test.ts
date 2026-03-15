@@ -189,14 +189,14 @@ describe("code component registration", () => {
 // ============================================
 
 describe("code expansion", () => {
-  it("expands to ImageNode via canvas", async () => {
+  it("renders to ImageNode via canvas", async () => {
     const theme = mockTheme();
     const canvas = noopCanvas();
     const context = { theme, assets: undefined, canvas } as any;
 
     const node = code("SELECT 1", "sql");
     node.tokens = { ...DEFAULT_CODE_TOKENS };
-    const result = await componentRegistry.expand(node, context);
+    const result = await componentRegistry.render(node, context);
 
     assert.strictEqual(result.type, NODE_TYPE.IMAGE);
     assert.strictEqual((result as any).src, "mock://render.png");
@@ -215,7 +215,7 @@ describe("code expansion", () => {
 
     const node = code("SELECT 1", "sql");
     node.tokens = { ...DEFAULT_CODE_TOKENS };
-    await componentRegistry.expand(node, context);
+    await componentRegistry.render(node, context);
 
     assert.strictEqual(capturedTransparent, false);
   });
@@ -227,7 +227,7 @@ describe("code expansion", () => {
 
     const node = code("   ", "text");
     node.tokens = { ...DEFAULT_CODE_TOKENS };
-    await assert.rejects(() => componentRegistry.expand(node, context), /Code block is empty/);
+    await assert.rejects(() => componentRegistry.render(node, context), /Code block is empty/);
   });
 
   it("HTML passed to render contains the code text", async () => {
@@ -243,7 +243,7 @@ describe("code expansion", () => {
 
     const node = code("SELECT * FROM orders", "sql");
     node.tokens = { ...DEFAULT_CODE_TOKENS };
-    await componentRegistry.expand(node, context);
+    await componentRegistry.render(node, context);
 
     assert.ok(capturedHtml.includes("SELECT"), "HTML should contain code text");
   });
@@ -261,7 +261,7 @@ describe("code expansion", () => {
 
     const node = code("x = 1", "python");
     node.tokens = { ...DEFAULT_CODE_TOKENS };
-    await componentRegistry.expand(node, context);
+    await componentRegistry.render(node, context);
 
     assert.ok(capturedHtml.includes("#1E1E1E"), "HTML should contain background color from token");
   });
@@ -491,7 +491,7 @@ describe("code expansion — additional", () => {
 
     const node = code("  \n  SELECT 1  \n  ", "sql");
     node.tokens = { ...DEFAULT_CODE_TOKENS };
-    await componentRegistry.expand(node, context);
+    await componentRegistry.render(node, context);
 
     // The trimmed code should be passed to Shiki (Shiki tokenizes words into separate spans)
     assert.ok(capturedHtml.includes("SELECT"), "should contain trimmed code");
@@ -511,7 +511,7 @@ describe("code expansion — additional", () => {
     const multiline = 'function hello() {\n  return "world";\n}';
     const node = code(multiline, "javascript");
     node.tokens = { ...DEFAULT_CODE_TOKENS };
-    const result = await componentRegistry.expand(node, context);
+    const result = await componentRegistry.render(node, context);
 
     assert.strictEqual(result.type, NODE_TYPE.IMAGE);
     assert.ok(capturedHtml.includes("hello"), "HTML should contain function name");
