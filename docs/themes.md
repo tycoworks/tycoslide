@@ -43,13 +43,13 @@ See the [theme source](../packages/theme-default/src/theme.ts) for all default v
 Start by copying or spreading the default theme and override what you need. The default theme is the reference implementation — it defines all required fields and serves as a starting point for any custom brand.
 
 ```typescript
+import { defineTheme } from 'tycoslide';
 import { theme as defaultTheme } from 'tycoslide-theme-default';
-import type { Theme } from 'tycoslide';
 
-export const theme = {
+export const theme = defineTheme({
   ...defaultTheme,
   // Override textStyles, spacing, layouts, or masters
-} satisfies Theme;
+});
 ```
 
 Then reference your package in the presentation frontmatter:
@@ -71,15 +71,16 @@ Replace Inter with a system font or a custom `.woff2` file:
 Use system fonts for quick prototyping to skip embedding font files. Use custom `.woff2` files for brand fonts that must render identically everywhere.
 
 ```typescript
+import { defineTheme } from 'tycoslide';
+import type { FontFamily } from 'tycoslide';
 import { theme as defaultTheme } from 'tycoslide-theme-default';
-import type { Theme, FontFamily } from 'tycoslide';
 
 const helvetica: FontFamily = {
   normal: { name: 'Helvetica', path: '' },  // path: '' = system font
   bold:   { name: 'Helvetica', path: '' },
 };
 
-export const theme = {
+export const theme = defineTheme({
   ...defaultTheme,
   textStyles: {
     h1:     { ...defaultTheme.textStyles.h1,     fontFamily: helvetica },
@@ -91,7 +92,7 @@ export const theme = {
     eyebrow:{ ...defaultTheme.textStyles.eyebrow,fontFamily: helvetica },
     footer: { ...defaultTheme.textStyles.footer, fontFamily: helvetica },
   },
-} satisfies Theme;
+});
 ```
 
 #### Custom font via @fontsource
@@ -112,14 +113,17 @@ const plusJakarta: FontFamily = {
 #### Adjusting font sizes only
 
 ```typescript
-export const theme = {
+import { defineTheme } from 'tycoslide';
+import { theme as defaultTheme } from 'tycoslide-theme-default';
+
+export const theme = defineTheme({
   ...defaultTheme,
   textStyles: {
     ...defaultTheme.textStyles,
     h1: { ...defaultTheme.textStyles.h1, fontSize: 44 },
     h2: { ...defaultTheme.textStyles.h2, fontSize: 32 },
   },
-} satisfies Theme;
+});
 ```
 
 ---
@@ -129,14 +133,17 @@ export const theme = {
 `theme.spacing` defines three gap sizes — normal, tight, and loose — used between elements in layouts and containers:
 
 ```typescript
-export const theme = {
+import { defineTheme } from 'tycoslide';
+import { theme as defaultTheme } from 'tycoslide-theme-default';
+
+export const theme = defineTheme({
   ...defaultTheme,
   spacing: {
     normal: 0.25,   // Standard gap between elements (inches)
     tight:  0.125,  // Compact gap (inches)
     loose:  0.5,    // Generous gap (inches)
   },
-} satisfies Theme;
+});
 ```
 
 All values are in inches.
@@ -153,7 +160,7 @@ See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete refere
 
 ### Overriding Layout Tokens
 
-Component styling lives in layout token maps in `theme.layouts`. Each layout declares the tokens it needs; the theme supplies values via `.tokenMap()`. Layout tokens control content appearance (text colors, styles, alignment); master tokens control fixed elements (background, margins, footer).
+Component styling lives in layout token maps in `theme.layouts`. Each layout declares the tokens it needs; the theme supplies values via `.tokenMap()`. Layout tokens control content appearance (text colors, styles, alignment); master tokens control fixed elements (background, margins, footer). `.tokenMap()` validates that all required tokens are present. For layouts without slots, unknown keys are also rejected — typos are caught at theme construction time. Slotted layouts allow extra keys because slot-injected component tokens are passed through the same map.
 
 ```typescript
 import { bodyLayout } from 'tycoslide-theme-default';
@@ -177,17 +184,36 @@ Each layout defines which token keys it accepts — the default theme's [`theme.
 
 ---
 
+### Optional Tokens
+
+Layouts and components may declare tokens as optional using `token.optional<T>()`. Omitting an optional token suppresses the associated visual feature. For example, the `card.background` token is optional — omitting it removes the card's background shape entirely. The `stat` layout's `surface` token is optional — omitting it suppresses the stat cell background.
+
+Theme authors use `token.optional<T>()` when defining custom components or layouts to allow themes to opt out of a feature without error:
+
+```typescript
+import { token } from 'tycoslide';
+import type { ShapeTokens } from 'tycoslide';
+
+const tokens = token.shape({
+  background: token.optional<ShapeTokens>(),
+  padding:    token.required<number>(),
+});
+```
+
+Required tokens must always be provided in `.tokenMap()`. Optional tokens may be omitted.
+
+---
+
 ## Building a Custom Theme
 
 ### Theme Structure
 
-A theme is a TypeScript object implementing the `Theme` interface. Use `satisfies Theme` instead of `: Theme` so TypeScript preserves literal types for autocomplete while still catching missing tokens:
+A theme is a TypeScript object passed to `defineTheme()`, which validates font configuration at definition time and returns the theme object:
 
 ```typescript
-import { SLIDE_SIZE } from 'tycoslide';
-import type { Theme } from 'tycoslide';
+import { defineTheme, SLIDE_SIZE } from 'tycoslide';
 
-const myTheme = {
+export const theme = defineTheme({
   slide: SLIDE_SIZE.S16x9,
   spacing: { normal: 0.25, tight: 0.125, loose: 0.5 },
   fonts: [...],
@@ -201,7 +227,7 @@ const myTheme = {
     default: { variants: { default: defaultMaster.tokenMap({...}) } },
     minimal: { variants: { default: minimalMaster.tokenMap({...}), dark: minimalMaster.tokenMap({...}) } },
   },
-} satisfies Theme;
+});
 ```
 
 Layouts and masters declare required token keys; themes provide their values.
@@ -221,11 +247,11 @@ Create `theme.ts` for your theme object and `index.ts` as the entry point:
 
 ```typescript
 // theme.ts
-import type { Theme } from 'tycoslide';
+import { defineTheme } from 'tycoslide';
 
-export const theme = {
+export const theme = defineTheme({
   // Filled in step by step below
-} satisfies Theme;
+});
 ```
 
 ```typescript
@@ -329,7 +355,7 @@ Each entry is a `FontFamily` object (see [Font Requirements](#font-requirements)
 
 #### 7. Define Layouts with Token Maps
 
-Each layout in the theme gets a `variants` object. The `default` variant is required. Call `.tokenMap()` on the layout definition to produce a typed token record:
+Each layout in the theme gets a `variants` object. The `default` variant is required. Call `.tokenMap()` on the layout definition to produce a typed token record. `.tokenMap()` validates that all required tokens are present and rejects unknown keys — slotted layouts allow extra keys for slot injection.
 
 ```typescript
 import { bodyLayout, titleLayout, sectionLayout } from './layouts.js';

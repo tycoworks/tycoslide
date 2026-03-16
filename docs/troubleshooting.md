@@ -105,7 +105,7 @@ Error: Unknown component: 'xyz'. Did you forget to register it?
 
 ```typescript
 import { defineComponent, componentRegistry } from 'tycoslide';
-const myComponent = defineComponent({ name: 'my-component', tokens: [], expand: ... });
+const myComponent = defineComponent({ name: 'my-component', tokens: {}, render: ... });
 componentRegistry.register(myComponent);
 ```
 
@@ -124,7 +124,7 @@ Error: Unknown variant 'highlight' for layout 'cards'. Available: default, flat
 ### "Code block has no language specified"
 
 ```
-Error: [tycoslide] Code block has no language specified. Add a language after the opening fences, e.g. ```sql
+Error: Code block has no language specified. Add a language after the opening fences, e.g. ```sql
 ```
 
 **Fix:**
@@ -140,7 +140,7 @@ const x = 1;
 ### "Unsupported code language"
 
 ```
-Error: [tycoslide] Unsupported code language "xyz". Supported languages include: typescript, python, sql, rust, go, java. See LANGUAGE constant for full list.
+Error: Unsupported code language "xyz". Supported languages include: typescript, python, sql, rust, go, java. See LANGUAGE constant for full list.
 ```
 
 **Fix:** Use a supported language identifier. Common values: `typescript`, `javascript`, `python`, `sql`, `rust`, `go`, `java`, `bash`, `json`. See the `LANGUAGE` constant in `tycoslide-components` for the full list.
@@ -203,7 +203,7 @@ Error: Layout 'title' params validation failed:
 ### "has no bold variant" / "has no italic variant"
 
 ```
-[tycoslide] Missing font errors:
+Missing font errors:
 
   "Fira Code" has no bold variant.
   "Fira Code" has no italic variant.
@@ -275,6 +275,81 @@ title: "My Slide: with a colon"
 
 ---
 
+## Slot and Layout Errors
+
+### "Unknown slots"
+
+```
+Layout 'body' has unknown slots: [unknown]. Declared slots: [body].
+```
+
+**Cause:** A slide uses `::slotname::` for a slot the layout does not declare.
+
+**Fix:** Check the layout's declared slot names in [Layouts](./layouts.md). Use only slots that appear in the layout's `slots` definition.
+
+---
+
+### "No-slot body content"
+
+```
+Layout 'title' does not accept body content, but body was provided. Move content into params or use a layout with slots.
+```
+
+**Cause:** Adding body content to a layout with no slots (like `title`). Layouts that accept only params cannot process markdown body content.
+
+**Fix:** Use a layout that accepts body content (like `body`), or move the content to frontmatter params.
+
+---
+
+### "Horizontal rules not supported"
+
+```
+horizontal rules (---, ***, ___) are not supported in slide content. Use :::line to insert a line element.
+```
+
+**Cause:** Using `---`, `***`, or `___` inside a slide body. These characters are reserved for YAML frontmatter separators.
+
+**Fix:** Replace horizontal rule syntax with the `:::line` directive:
+
+```markdown
+---
+layout: body
+title: My Slide
+---
+
+Some content
+
+:::line
+
+More content
+```
+
+---
+
+### "Malformed frontmatter YAML"
+
+```
+Global frontmatter must be a YAML mapping (key: value pairs), got array.
+```
+
+**Cause:** The global frontmatter block at the top of the file is formatted as a YAML array instead of key-value pairs.
+
+**Fix:** Use `key: value` format in frontmatter:
+
+```markdown
+---
+theme: tycoslide-theme-default
+author: John Doe
+---
+
+---
+layout: title
+title: My Presentation
+---
+```
+
+---
+
 ## Debug Tools
 
 ### HTML preview
@@ -303,4 +378,4 @@ Writes the PPTX even when slides have overflow, bounds, or missing font errors. 
 
 ### Theme validation
 
-Use `satisfies Theme` on your theme object to catch missing or mistyped tokens at compile time. See [Themes — Theme Structure](./themes.md#theme-structure) for the full pattern.
+Use `defineTheme()` to catch missing or mistyped tokens at definition time. See [Themes — Theme Structure](./themes.md#theme-structure) for the full pattern.

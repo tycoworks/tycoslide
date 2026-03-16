@@ -268,28 +268,30 @@ Custom layouts define slide structure. Each layout controls where content appear
 
 ### Layout Registration
 
-`defineLayout<TTokens>()` creates a layout definition — its name, params, content slots, required tokens, and render function. TypeScript catches missing tokens at compile time.
+`defineLayout()` creates a layout definition — its name, params, content slots, required tokens, and render function. TypeScript catches missing tokens at compile time.
 
 ```typescript
-import { defineLayout, schema, GAP, SIZE, VALIGN, HALIGN } from 'tycoslide';
+import { defineLayout, param, token, GAP, SIZE, type InferTokens } from 'tycoslide';
 import { textComponent, plainText, row, column } from 'tycoslide-components';
 import type { PlainTextTokens } from 'tycoslide-components';
 
-type TwoColumnTokens = {
-  title: PlainTextTokens;
-  eyebrow: PlainTextTokens;
-};
+const twoColumnTokens = token.shape({
+  title: token.required<PlainTextTokens>(),
+  eyebrow: token.required<PlainTextTokens>(),
+});
 
-export const twoColumnLayout = defineLayout<TwoColumnTokens>({
+type TwoColumnTokens = InferTokens<typeof twoColumnTokens>;
+
+export const twoColumnLayout = defineLayout({
   name: 'two-column',
   description: 'Two equal markdown columns with optional header.',
   params: {
-    title: textComponent.schema.optional(),
-    eyebrow: textComponent.schema.optional(),
+    title: param.optional(textComponent.schema),
+    eyebrow: param.optional(textComponent.schema),
   },
   slots: ['left', 'right'],
-  tokens: ['title', 'eyebrow'],
-  render: ({ title, eyebrow, left, right }, tokens) => ({
+  tokens: twoColumnTokens,
+  render: ({ title, eyebrow }, { left, right }, tokens: TwoColumnTokens) => ({
     masterName: 'default',
     masterVariant: 'default',
     content: column(
@@ -307,41 +309,41 @@ export const twoColumnLayout = defineLayout<TwoColumnTokens>({
 
 ```typescript
 interface LayoutDefinition {
-  name: string;                     // Layout name (used in frontmatter)
-  description: string;              // Human-readable description
-  params: ScalarShape;              // Schema for frontmatter parameters
-  slots?: readonly string[];        // Content slot names
-  tokens?: string[];                // Required token keys
-  render: (props, tokens) => Slide; // Render with resolved tokens
+  name: string;                              // Layout name (used in frontmatter)
+  description: string;                       // Human-readable description
+  params: ScalarShape;                       // Schema for frontmatter parameters
+  slots?: readonly string[];                 // Content slot names
+  tokens: TokenShape;                        // Required token shape (use {} for no tokens)
+  render: (params, slots, tokens) => Slide;  // Render with resolved tokens
 }
 ```
 
 ### Parameters
 
-Define parameters using `schema` helpers and component schemas:
+Define parameters using `param` helpers and component schemas:
 
 ```typescript
-import { schema } from 'tycoslide';
+import { param, schema } from 'tycoslide';
 import { textComponent } from 'tycoslide-components';
 
 params: {
-  title: textComponent.schema,                    // Required text (validated like text component)
-  subtitle: textComponent.schema.optional(),      // Optional text
-  reverse: schema.boolean(),                      // Boolean
-  columns: schema.number(),                       // Number
+  title: param.required(textComponent.schema),    // Required text (validated like text component)
+  subtitle: param.optional(textComponent.schema), // Optional text
+  reverse: param.required(schema.boolean()),      // Boolean
+  columns: param.optional(schema.number()),       // Number
 }
 ```
 
 `textComponent.schema` validates the parameter as inline-markdown text — use it for any frontmatter value that authors write as readable text. Use `schema.*` helpers for generic types like booleans, numbers, and enums.
 
-Every component definition exports a `.schema` property — a Zod schema that validates the component's primary input. Layout params can reuse these schemas directly, ensuring the same validation applies whether content comes from frontmatter or a directive:
+Every component definition exports a `.schema` property — a schema that validates the component's primary input. Layout params can reuse these schemas directly, ensuring the same validation applies whether content comes from frontmatter or a directive:
 
 ```typescript
 params: {
-  title: textComponent.schema,            // Validates as inline-markdown text
-  image: imageComponent.schema,           // Validates as an image path or asset ref
-  card: cardComponent.schema.optional(),  // Reuses card's full schema, optional
-  count: schema.number(),                 // Generic number — no component owns this
+  title: param.required(textComponent.schema),            // Validates as inline-markdown text
+  image: param.required(imageComponent.schema),           // Validates as an image path or asset ref
+  card: param.optional(cardComponent.schema),             // Reuses card's full schema, optional
+  count: param.required(schema.number()),                 // Generic number — no component owns this
 }
 ```
 
@@ -372,15 +374,15 @@ Main body content here.
 Sidebar content here.
 ```
 
-Content before the first slot marker goes into the first declared slot (or `body` if that name is used).
+Content before the first slot marker goes into the first declared slot.
 
-**In the render function**, slots are available as arrays of `ComponentNode[]`:
+**In the render function**, slots are available as arrays of `ComponentNode[]` in the second argument:
 
 ```typescript
-render: (props) => ({
+render: (params, slots) => ({
   content: row(
-    column(...props.body),     // Main content
-    column(...props.sidebar)   // Sidebar content
+    column(...slots.body),     // Main content
+    column(...slots.sidebar)   // Sidebar content
   ),
 })
 ```
@@ -390,10 +392,10 @@ render: (props) => ({
 ```typescript
 slots: ['body'],
 
-render: (props) => ({
+render: (params, { body }, tokens) => ({
   content: column(
-    plainText(props.title, { style: TEXT_STYLE.H3 }),
-    column(...props.body)
+    plainText(params.title, tokens.title),
+    column(...body)
   ),
 })
 ```
@@ -408,11 +410,11 @@ import { GAP, TEXT_STYLE } from 'tycoslide';
 
 column(
   { gap: GAP.NORMAL },
-  plainText("Section Header", { style: TEXT_STYLE.EYEBROW }),
+  plainText("Section Header", tokens.eyebrow),
   row(
     { gap: GAP.NORMAL },
-    column(...props.left),
-    column(...props.right)
+    column(...slots.left),
+    column(...slots.right)
   )
 )
 ```
@@ -421,10 +423,10 @@ For the full DSL function reference, see [Components — TypeScript DSL Function
 
 ### Render Function
 
-The render function receives validated props and resolved tokens, and returns a Slide object:
+The render function receives validated params, slot arrays, and resolved tokens, and returns a Slide object:
 
 ```typescript
-render: (props, tokens) => ({
+render: (params, slots, tokens) => ({
   masterName: string,       // Which master to use (required)
   masterVariant: string,    // Which master variant (required)
   background?: string,      // Overrides master background if set
@@ -433,7 +435,7 @@ render: (props, tokens) => ({
 })
 ```
 
-`props` has all validated frontmatter parameters plus slot arrays. `tokens` has the resolved values for each key in the layout's `tokens` array.
+`params` holds validated frontmatter parameters. `slots` holds slot content arrays (keyed by slot name). `tokens` holds the resolved values for each key in the layout's `tokens` shape. For slot-less layouts, use `_slots` to indicate the argument is unused.
 
 ### Real-World Examples
 
@@ -441,26 +443,28 @@ The default theme's `title`, `section`, and `body` layouts in [`packages/theme-d
 
 ### Using Masters
 
-`defineMaster<TTokens>()` creates a master definition. A master returns fixed chrome elements and the `contentBounds` that tells layouts how much space they have to work with.
+`defineMaster()` creates a master definition. A master returns fixed chrome elements and the `contentBounds` that tells layouts how much space they have to work with.
 
 ```typescript
-import { defineMaster, VALIGN, GAP, SIZE, Bounds } from 'tycoslide';
+import { defineMaster, token, GAP, SIZE, VALIGN, Bounds, type InferTokens } from 'tycoslide';
 import type { PlainTextTokens, SlideNumberTokens } from 'tycoslide-components';
 import { row, column, plainText, slideNumber } from 'tycoslide-components';
 
-interface MyMasterTokens {
-  background: string;
-  margin: number;
-  footerHeight: number;
-  footerText: string;
-  slideNumber: SlideNumberTokens;
-  footer: PlainTextTokens;
-}
+const myMasterTokens = token.shape({
+  background: token.required<string>(),
+  margin: token.required<number>(),
+  footerHeight: token.required<number>(),
+  footerText: token.required<string>(),
+  slideNumber: token.required<SlideNumberTokens>(),
+  footer: token.required<PlainTextTokens>(),
+});
 
-export const myMaster = defineMaster<MyMasterTokens>({
+type MyMasterTokens = InferTokens<typeof myMasterTokens>;
+
+export const myMaster = defineMaster({
   name: 'default',
-  tokens: ['background', 'margin', 'footerHeight', 'footerText', 'slideNumber', 'footer'],
-  getContent: (tokens, slideSize) => {
+  tokens: myMasterTokens,
+  render: (tokens: MyMasterTokens, slideSize) => {
     const { background, margin, footerHeight } = tokens;
     const contentBounds = new Bounds(
       margin,
@@ -484,7 +488,7 @@ export const myMaster = defineMaster<MyMasterTokens>({
 **Key concepts:**
 - `contentBounds` defines where layout content renders (x, y, width, height in inches)
 - `contentBounds` must account for fixed chrome — reduce height by footer height if a footer bar is present
-- `getContent` gets resolved tokens and slide dimensions
+- `render` receives resolved tokens and slide dimensions
 - Masters are registered by exporting them from the theme entry point alongside layouts
 
 Masters are registered in the theme entry point and their tokens are provided via `theme.masters`. See [`packages/theme-default/src/master.ts`](../packages/theme-default/src/master.ts) for the complete reference implementation.

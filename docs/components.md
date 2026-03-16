@@ -43,7 +43,7 @@ A directive has three parts:
 | Component | Description | Syntax |
 |-----------|-------------|--------|
 | [card](#card) | Content card with optional image, title, and description | `:::card` |
-| [quote](#quote) | Blockquote with optional attribution and image | `:::quote` |
+| [quote](#quote) | Blockquote with optional attribution line | `:::quote` |
 | [testimonial](#testimonial) | Quote card with optional image and attribution | `:::testimonial` |
 | [table](#table) | Native PowerPoint table with header support | `\| table \|` or `:::table` |
 | [image](#image) | Embedded image | `![alt](path)` or `:::image` |
@@ -75,27 +75,18 @@ Layout components are TypeScript DSL only. They are not available as markdown di
 
 A single paragraph of formatted content: bold, italic, strikethrough, underline, hyperlinks, and accent colors. Headings in markdown (`# Heading`) also become text with the appropriate heading style (H1–H4). Use `text()` in layouts for content that includes formatting — for example, a card description where the author might write `**bold**` or `:blue[highlighted]`. No `:::text` directive — use `text()` in TypeScript.
 
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `style` | TextStyleName | Override text style (`h1`--`h4`, `body`, `small`, `eyebrow`, `footer`) |
-| `hAlign` | `left` \| `center` \| `right` | Horizontal alignment |
-| `vAlign` | `top` \| `middle` \| `bottom` | Vertical alignment |
-| `color` | string | Text color (6-character hex, DSL only) |
-| `lineHeightMultiplier` | number | Line height multiplier (DSL only) |
-| `linkColor` | string | Hyperlink text color (6-character hex, DSL only) |
-| `linkUnderline` | boolean | Whether hyperlinks are underlined (DSL only) |
-
 ### Tokens
 
 | Token | Type | Description |
 |-------|------|-------------|
 | `color` | string | Default text color |
 | `style` | TextStyleName | Default text style |
-| `lineHeightMultiplier` | number | Default line height multiplier |
 | `linkColor` | string | Hyperlink text color (6-character hex) |
 | `linkUnderline` | boolean | Whether hyperlinks are underlined |
+| `hAlign` | HorizontalAlignment | Default horizontal alignment |
+| `vAlign` | VerticalAlignment | Default vertical alignment |
+| `accents` | Record\<string, string\> | Accent color map (name → hex) |
+| `shadow` | Shadow | Drop shadow (optional — omit to suppress) |
 
 ### Formatting
 
@@ -112,8 +103,8 @@ The default theme provides `blue`, `green`, `red`, `yellow`, and `purple`. Custo
 ### Examples
 
 ```typescript
-text("**Bold** and :blue[highlighted]")
-text("Custom styled", { style: TEXT_STYLE.H3, color: '#FF0000' })
+text("**Bold** and :blue[highlighted]", tokens.body)
+text("Section heading", tokens.h3)
 ```
 
 ---
@@ -122,27 +113,21 @@ text("Custom styled", { style: TEXT_STYLE.H3, color: '#FF0000' })
 
 Text rendered exactly as written, without markdown parsing. Unlike `text()`, which parses bold, italic, links, and accent colors, `plainText()` takes a string and renders it exactly as written. Use it for titles, eyebrow labels, captions, and attribution lines — content that comes from a fixed string or frontmatter parameter. Available in the TypeScript DSL only.
 
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `style` | TextStyleName | Override text style (`h1`--`h4`, `body`, `small`, `eyebrow`, `footer`) |
-| `color` | string | Text color (6-character hex) |
-| `lineHeightMultiplier` | number | Line height multiplier |
-
 ### Tokens
 
 | Token | Type | Description |
 |-------|------|-------------|
-| `style` | TextStyleName | Default text style |
-| `color` | string | Default text color |
-| `lineHeightMultiplier` | number | Default line height multiplier |
+| `style` | TextStyleName | Text style |
+| `color` | string | Text color |
+| `hAlign` | HorizontalAlignment | Horizontal alignment |
+| `vAlign` | VerticalAlignment | Vertical alignment |
+| `shadow` | Shadow | Drop shadow (optional — omit to suppress) |
 
 ### Examples
 
 ```typescript
-plainText("ARCHITECTURE", { style: TEXT_STYLE.EYEBROW })
-plainText(props.label, { style: tokens.labelStyle, color: tokens.labelColor })
+plainText("ARCHITECTURE", tokens.eyebrow)
+plainText(props.label, tokens.label)
 ```
 
 ---
@@ -166,23 +151,15 @@ Renders bullet or numbered lists with support for formatting. No `:::list` direc
 ```
 
 ```typescript
-list(['First item', 'Second item', '**Bold** third item'])
-list(['Step one', 'Step two'], { ordered: true })
-list(['Item with :blue[accent]'], { color: '#0066CC' })
+list(['First item', 'Second item', '**Bold** third item'], tokens.list)
+list(['Step one', 'Step two'], tokens.list, true)
 ```
 
 ### Parameters
 
-| Prop | Type | Description |
-|------|------|-------------|
+| Param | Type | Description |
+|-------|------|-------------|
 | `ordered` | boolean | Numbered list instead of bullets (default: `false`) |
-| `style` | TextStyleName | Override text style |
-| `color` | string | Text color (6-character hex) |
-| `hAlign` | `left` \| `center` \| `right` | Horizontal alignment |
-| `vAlign` | `top` \| `middle` \| `bottom` | Vertical alignment |
-| `lineHeightMultiplier` | number | Line height multiplier |
-| `linkColor` | string | Hyperlink text color (6-character hex) |
-| `linkUnderline` | boolean | Whether hyperlinks are underlined |
 
 ### Tokens
 
@@ -190,9 +167,12 @@ list(['Item with :blue[accent]'], { color: '#0066CC' })
 |-------|------|-------------|
 | `color` | string | Default text color |
 | `style` | TextStyleName | Default text style |
-| `lineHeightMultiplier` | number | Default line height multiplier |
 | `linkColor` | string | Hyperlink text color (6-character hex) |
 | `linkUnderline` | boolean | Whether hyperlinks are underlined |
+| `hAlign` | HorizontalAlignment | Default horizontal alignment |
+| `vAlign` | VerticalAlignment | Default vertical alignment |
+| `accents` | Record\<string, string\> | Accent color map (name → hex) |
+| `shadow` | Shadow | Drop shadow (optional — omit to suppress) |
 
 ---
 
@@ -212,25 +192,15 @@ Content card with an optional image, title, and description. Renders as a rounde
 
 | Token | Type | Description |
 |-------|------|-------------|
+| `background` | ShapeTokens | Background shape (optional — omit to render without background) |
 | `padding` | number | Inner padding (inches) |
-| `cornerRadius` | number | Corner radius (inches) |
-| `backgroundColor` | string | Background fill color |
-| `backgroundOpacity` | number | Background opacity (0--100) |
-| `borderColor` | string | Border color |
-| `borderWidth` | number | Border width (pt) |
-| `titleStyle` | TextStyleName | Title text style |
-| `titleColor` | string | Title text color |
-| `titleLineHeightMultiplier` | number | Title line height multiplier |
-| `titleLinkColor` | string | Title hyperlink color |
-| `titleLinkUnderline` | boolean | Title hyperlink underline |
-| `descriptionStyle` | TextStyleName | Description text style |
-| `descriptionColor` | string | Description text color |
-| `descriptionLineHeightMultiplier` | number | Description line height multiplier |
-| `descriptionLinkColor` | string | Description hyperlink color |
-| `descriptionLinkUnderline` | boolean | Description hyperlink underline |
 | `gap` | GapSize | Gap between title and description |
 | `hAlign` | HorizontalAlignment | Content horizontal alignment |
 | `vAlign` | VerticalAlignment | Content vertical alignment |
+| `title` | TextTokens | Title text tokens |
+| `description` | TextTokens | Description text tokens |
+
+`ShapeTokens` includes `fill`, `fillOpacity`, `borderColor`, `borderWidth`, `cornerRadius`, and optional `shadow`. See [`theme.ts`](../packages/theme-default/src/theme.ts) for default values.
 
 ### Examples
 
@@ -250,7 +220,7 @@ Supporting detail text.
 
 ## quote
 
-Blockquote with optional attribution line and optional image/logo. Renders as a rounded rectangle with configurable background.
+Blockquote with optional attribution line. Renders as a left accent bar with quote text alongside.
 
 Quote text is required -- provide it either via the `quote` attribute or as body content.
 
@@ -260,35 +230,21 @@ Quote text is required -- provide it either via the `quote` attribute or as body
 |-------|------|-------------|
 | `quote` | string | Quote text (or use body content) |
 | `attribution` | string | Attribution line |
-| `image` | string | Path to logo/image shown above quote |
 
 ### Tokens
 
 | Token | Type | Description |
 |-------|------|-------------|
-| `barColor` | string | Accent bar color |
-| `barWidth` | number | Accent bar width (pt) |
-| `quoteStyle` | TextStyleName | Quote text style |
-| `quoteColor` | string | Quote text color |
-| `quoteLineHeightMultiplier` | number | Quote line height multiplier |
-| `quoteLinkColor` | string | Quote hyperlink color |
-| `quoteLinkUnderline` | boolean | Quote hyperlink underline |
-| `attributionStyle` | TextStyleName | Attribution text style |
-| `attributionColor` | string | Attribution text color |
-| `attributionLineHeightMultiplier` | number | Attribution line height multiplier |
-| `gap` | GapSize | Gap between quote and attribution |
+| `bar` | LineTokens | Accent bar style (color, width, dash type) |
+| `gap` | GapSize | Gap between bar and text, and between quote and attribution |
+| `quote` | TextTokens | Quote text tokens |
+| `attribution` | PlainTextTokens | Attribution text tokens |
 
 ### Examples
 
 ```markdown
 :::quote{attribution="— Sarah Chen, Design Lead"}
 Consistent formatting saved us hours of manual review.
-:::
-```
-
-```markdown
-:::quote{attribution="— Sarah Chen, Design Lead" image="./assets/logo.png"}
-Design systems reduce decision fatigue across teams.
 :::
 ```
 
@@ -341,6 +297,15 @@ A horizontal or vertical rule. Supports arrows with `beginArrow` / `endArrow` fo
 | `beginArrow` | ArrowType | Arrow at start (`none`, `arrow`, `diamond`, `oval`, `stealth`, `triangle`) |
 | `endArrow` | ArrowType | Arrow at end (same values as `beginArrow`) |
 
+### Tokens
+
+| Token | Type | Description |
+|-------|------|-------------|
+| `color` | string | Line color |
+| `width` | number | Line width in points |
+| `dashType` | DashType | Dash pattern |
+| `shadow` | Shadow | Drop shadow (optional — omit to suppress) |
+
 ### Example
 
 ```markdown
@@ -360,15 +325,16 @@ A shape with configurable fill and border.
 |-------|------|-------------|
 | `shape` | ShapeName | Shape type (**required**) -- e.g. `rect`, `roundRect`, `ellipse` |
 
-The following properties are available in the TypeScript DSL only (not in directive syntax):
+### Tokens
 
-| Param | Type | Description |
+| Token | Type | Description |
 |-------|------|-------------|
 | `fill` | string | Fill color (6-character hex with `#` prefix) |
 | `fillOpacity` | number | Fill opacity (0--1) |
 | `borderColor` | string | Border color (6-character hex with `#` prefix) |
 | `borderWidth` | number | Border width in points |
 | `cornerRadius` | number | Corner radius in inches |
+| `shadow` | Shadow | Drop shadow (optional — omit to suppress) |
 
 ### Example
 
@@ -391,11 +357,11 @@ No directive parameters.
 
 Embeds an image. In markdown syntax, the path goes in the URL position. In the directive form, the path goes in the body.
 
-### Parameters
+### Tokens
 
-| Param | Type | Description |
+| Token | Type | Description |
 |-------|------|-------------|
-| `alt` | string | Alt text for the image |
+| `shadow` | Shadow | Drop shadow (optional — omit to suppress) |
 
 ### Examples
 
@@ -404,7 +370,7 @@ Embeds an image. In markdown syntax, the path goes in the URL position. In the d
 ```
 
 ```markdown
-:::image{alt="Architecture diagram"}
+:::image
 ./assets/diagram.png
 :::
 ```
@@ -421,11 +387,13 @@ Renders a Mermaid diagram to PNG and embeds it as an image. Theme colors are app
 
 `style`, `classDef`, `linkStyle`, and `%%{init}` directives are not supported -- the theme handles all styling automatically.
 
-### Parameters
+### Tokens
 
-| Param | Type | Description |
+| Token | Type | Description |
 |-------|------|-------------|
-| `scale` | number | Render scale factor (default: `2`) |
+| `shadow` | Shadow | Drop shadow (optional — omit to suppress) |
+
+See [`theme.ts`](../packages/theme-default/src/theme.ts) for the full mermaid token reference (colors, font, accent opacity).
 
 ### Class Names
 
@@ -459,15 +427,24 @@ flowchart LR
 
 Syntax-highlighted code block rendered as a PNG image. Fenced code blocks in markdown (` ```language `) are rendered automatically. The language identifier after the opening fences is required.
 
-See [`theme.ts`](../packages/theme-default/src/theme.ts) for code component token keys and defaults.
-
 ### Parameters
 
 | Param | Type | Description |
 |-------|------|-------------|
 | `language` | string | Language identifier (**required**) -- e.g. `typescript`, `python`, `sql` |
 
-The `body` contains the source code. In markdown, this is the content between the fences. In the DSL, pass it as the first argument to `code()`.
+The content is the source code. In markdown, this is the content between the fences. In the DSL, pass it as the first argument to `code()`.
+
+### Tokens
+
+| Token | Type | Description |
+|-------|------|-------------|
+| `background` | ShapeTokens | Background shape (fill, border, corner radius, optional shadow) |
+| `padding` | number | Inner padding (inches) |
+| `textStyle` | TextStyleName | Code font style |
+| `textColor` | string | Default code text color |
+
+`ShapeTokens` includes `fill`, `fillOpacity`, `borderColor`, `borderWidth`, `cornerRadius`, and optional `shadow`. See [`theme.ts`](../packages/theme-default/src/theme.ts) for the full code token reference (syntax colors and defaults).
 
 ### Examples
 
@@ -501,24 +478,15 @@ Quote text is required -- provide it either via the `quote` attribute or as body
 
 | Token | Type | Description |
 |-------|------|-------------|
+| `background` | ShapeTokens | Background shape (optional — omit to render without background) |
 | `padding` | number | Inner padding (inches) |
-| `cornerRadius` | number | Corner radius (inches) |
-| `backgroundColor` | string | Background fill color |
-| `backgroundOpacity` | number | Background opacity (0--100) |
-| `borderColor` | string | Border color |
-| `borderWidth` | number | Border width (pt) |
-| `quoteStyle` | TextStyleName | Quote text style |
-| `quoteColor` | string | Quote text color |
-| `quoteLineHeightMultiplier` | number | Quote line height multiplier |
-| `quoteLinkColor` | string | Quote hyperlink color |
-| `quoteLinkUnderline` | boolean | Quote hyperlink underline |
-| `attributionStyle` | TextStyleName | Attribution text style |
-| `attributionColor` | string | Attribution text color |
-| `attributionLineHeightMultiplier` | number | Attribution line height multiplier |
-| `attributionHAlign` | HorizontalAlignment | Attribution horizontal alignment |
 | `gap` | GapSize | Gap between content sections |
 | `hAlign` | HorizontalAlignment | Content horizontal alignment |
 | `vAlign` | VerticalAlignment | Content vertical alignment |
+| `quote` | TextTokens | Quote text tokens |
+| `attribution` | PlainTextTokens | Attribution text tokens |
+
+`ShapeTokens` includes `fill`, `fillOpacity`, `borderColor`, `borderWidth`, `cornerRadius`, and optional `shadow`. See [`theme.ts`](../packages/theme-default/src/theme.ts) for default values.
 
 ### Examples
 
@@ -559,8 +527,8 @@ Horizontal flex container. Children are arranged side by side.
 
 ```typescript
 row({ gap: GAP.NORMAL, vAlign: VALIGN.TOP },
-  card({ title: 'Left' }, 'Left content.'),
-  card({ title: 'Right' }, 'Right content.'),
+  card({ title: 'Left', description: 'Left content.' }, tokens.card),
+  card({ title: 'Right', description: 'Right content.' }, tokens.card),
 )
 ```
 
@@ -574,8 +542,8 @@ Vertical flex container. Children are stacked top to bottom. Same parameters as 
 
 ```typescript
 column({ gap: GAP.TIGHT },
-  text('Context'),
-  quote({ attribution: '— Sarah Chen' }, 'Automating the review cycle freed up two days per sprint.'),
+  text('Context', tokens.body),
+  quote({ attribution: '— Sarah Chen', quote: 'Automating the review cycle freed up two days per sprint.' }, tokens.quote),
 )
 ```
 
@@ -596,8 +564,8 @@ Z-order overlay container. All children occupy the same bounds; the first child 
 
 ```typescript
 stack({ height: SIZE.FILL },
-  shape({ shape: SHAPE.RECT, fill: '#0066CC' }),
-  text('White text over blue background'),
+  shape(tokens.background, { shape: SHAPE.RECT }),
+  text('White text over blue background', tokens.body),
 )
 ```
 
@@ -618,9 +586,9 @@ Equal-column grid. Wraps children into rows of N columns, each cell sharing spac
 
 ```typescript
 grid(3,
-  card({ title: 'One' }, 'First.'),
-  card({ title: 'Two' }, 'Second.'),
-  card({ title: 'Three' }, 'Third.'),
+  card({ title: 'One', description: 'First.' }, tokens.card),
+  card({ title: 'Two', description: 'Second.' }, tokens.card),
+  card({ title: 'Three', description: 'Third.' }, tokens.card),
 )
 ```
 
@@ -635,21 +603,29 @@ Custom components add new content types to tycoslide, so authors can use them in
 Components are defined with `defineComponent()` and registered with `componentRegistry.register()`. Defining a component does not register it. Registration is a separate step, done by the theme entry point.
 
 ```typescript
-import { defineComponent, componentRegistry, component, schema } from 'tycoslide';
-import { text } from 'tycoslide-components';
+import { defineComponent, componentRegistry, component, param, token, schema } from 'tycoslide';
+import { plainText } from 'tycoslide-components';
+import type { InferParams, InferTokens, TextStyleName } from 'tycoslide';
+
+const badgeParams = param.shape({
+  label: param.required(schema.string()),
+});
+
+const badgeTokens = token.shape({
+  backgroundColor: token.required<string>(),
+  textColor: token.required<string>(),
+  textStyle: token.required<TextStyleName>(),
+});
+
+export type BadgeTokens = InferTokens<typeof badgeTokens>;
 
 // 1. Define the component (pure factory -- no side effects)
 export const badgeComponent = defineComponent({
   name: 'badge',
-  params: {
-    label: schema.string(),
-  },
-  tokens: ['backgroundColor', 'textColor', 'textStyle'],
-  expand: (props, context, tokens) => {
-    return text(props.label, {
-      style: tokens.textStyle,
-      color: tokens.textColor,
-    });
+  params: badgeParams,
+  tokens: badgeTokens,
+  render: (params, _content, _context, tokens) => {
+    return plainText(params.label, { color: tokens.textColor, style: tokens.textStyle });
   },
 });
 
@@ -661,73 +637,70 @@ Each built-in component exports its definition object (e.g., `cardComponent`, `t
 
 #### Overload Patterns
 
-`defineComponent()` has five forms depending on what inputs the component takes:
+`defineComponent()` has three forms depending on what inputs the component takes:
 
 | Pattern | Description |
 |---------|-------------|
-| `{ name, body: schema.string(), expand }` | Single body text, no named params |
-| `{ name, body, params: {...}, expand }` | Body text plus additional named attributes |
-| `{ name, params: {...}, expand }` | Multiple named attributes, no primary body |
-| `{ name, slots: ['children'], expand }` | Body compiled as `ComponentNode[]`. Set `directive: false` to suppress markdown access. |
-| `{ name, expand }` | TypeScript DSL only — no markdown directive |
+| `{ name, content: schema.string(), params?, tokens, render }` | Content component — has primary content (string or other scalar). Auto-generates directive deserializer. |
+| `{ name, children: true, tokens, render }` | Container component — receives compiled `SlideNode[]` as content. DSL only. |
+| `{ name, params?, tokens, render }` | Params-only component — no primary content. Supports directive if params are declared. |
 
 ### Component Structure
 
 ```typescript
 {
-  name: string;           // Unique component name
-  params?: SchemaShape;   // Zod schema for directive attributes
-  body?: ZodType;         // Schema for body content (e.g., schema.string())
-  tokens?: string[];      // Token keys this component needs (provided by the layout's token map)
-  slots?: string[];       // Named content slots (for container components)
-  expand: Function;       // Expansion to primitives
+  name: string;
+  content?: schema.string() | schema.array(...);  // Primary content
+  params?: param.shape({ ... });                   // Validated input params
+  tokens: token.shape({ ... });                    // Theme-injected styling
+  children?: true;                                 // Container — receives SlideNode[]
+  render: (params, content, context, tokens) => SlideNode;
 }
 ```
 
 ### Defining Parameters
 
-Define parameters using the validation helpers from `tycoslide`. Required params without `.optional()` are validated at build time:
+Declare parameters with `param.shape()`. Required params are validated at build time:
 
 ```typescript
-import { schema } from 'tycoslide';
+import { param, schema } from 'tycoslide';
+import type { InferParams } from 'tycoslide';
 
-params: {
-  title: schema.string(),                          // Required string
-  description: schema.string().optional(),         // Optional string
-  size: schema.enum(['small', 'medium', 'large']), // Enum
-  count: schema.number(),                          // Number
-  enabled: schema.boolean(),                       // Boolean
-}
+const myParams = param.shape({
+  title: param.required(schema.string()),                          // Required string
+  description: param.optional(schema.string()),                    // Optional string
+  size: param.required(schema.enum(['small', 'medium', 'large'])), // Enum
+  count: param.optional(schema.number()),                          // Optional number
+  enabled: param.optional(schema.boolean()),                       // Optional boolean
+});
+
+export type MyParams = InferParams<typeof myParams>;
 ```
 
 ### Token System
 
 #### Declaring Tokens
 
-Components declare required token keys by name. The theme supplies values for those keys through layout token maps. When a component is given explicit props in markdown (e.g., `color`), those props override the token values:
+Declare tokens with `token.shape()`. Use `token.required<T>()` for tokens the theme must always provide, and `token.optional<T>()` for tokens that may be omitted to suppress a feature. `InferTokens<>` derives the TypeScript type from the shape:
 
 ```typescript
-const BADGE_TOKEN = {
-  BACKGROUND_COLOR: 'backgroundColor',
-  TEXT_COLOR: 'textColor',
-  TEXT_STYLE: 'textStyle',
-} as const;
+import { token } from 'tycoslide';
+import type { InferTokens, TextStyleName } from 'tycoslide';
 
-export type BadgeTokens = {
-  [BADGE_TOKEN.BACKGROUND_COLOR]: string;
-  [BADGE_TOKEN.TEXT_COLOR]: string;
-  [BADGE_TOKEN.TEXT_STYLE]: TextStyleName;
-};
+const badgeTokens = token.shape({
+  backgroundColor: token.required<string>(),
+  textColor: token.required<string>(),
+  textStyle: token.required<TextStyleName>(),
+});
+
+export type BadgeTokens = InferTokens<typeof badgeTokens>;
 
 const badgeComponent = defineComponent({
   name: 'badge',
-  params: { label: schema.string() },
-  tokens: Object.values(BADGE_TOKEN),
-  expand: (props, context, tokens: BadgeTokens) => {
-    return text(props.label, {
-      style: tokens.textStyle,
-      color: tokens.textColor,
-    });
+  params: badgeParams,
+  tokens: badgeTokens,
+  render: (params, _content, _context, tokens) => {
+    return plainText(params.label, { color: tokens.textColor, style: tokens.textStyle });
   },
 });
 ```
@@ -738,8 +711,8 @@ Token values are set in the theme's layout token maps. The layout render functio
 
 ```typescript
 // In a layout render function:
-render: ({ title, cards }, tokens: CardsLayoutTokens) => {
-  const built = cards.map(c => component(Component.Card, c, tokens.card));
+render: ({ title, cards }, _slots, tokens: CardsLayoutTokens) => {
+  const built = cards.map(c => component(Component.Card, c, undefined, tokens.card));
   // ...
 }
 ```
@@ -748,18 +721,18 @@ For how to define token maps in a theme, see [Themes — Overriding Layout Token
 
 ### Content Slots
 
-Slots let authors put markdown inside a component. The component defines the slot; the slide author fills it with markdown. Use slots when your component wraps markdown content rather than fixed parameters — authors write freeform content inside the directive.
+Container components accept children (compiled `SlideNode[]`) instead of scalar content. Declare `children: true` to enable this mode. The compiled markdown body is passed as the second argument to `render`.
 
 ```typescript
 const calloutComponent = defineComponent({
   name: 'callout',
-  params: { title: schema.string() },
-  slots: ['children'],
-  tokens: [],
-  expand: (props, context, tokens) => {
+  params: param.shape({ title: param.required(schema.string()) }),
+  children: true,
+  tokens: token.shape({}),
+  render: (params, children, _context, _tokens) => {
     return column(
-      text(props.title, { style: TEXT_STYLE.H3 }),
-      column(...props.children)
+      text(params.title, titleTokens),
+      column(...children)
     );
   },
 });
@@ -776,9 +749,7 @@ This is the body content.
 :::
 ```
 
-The `children` slot receives the compiled content as an array of `ComponentNode[]`.
-
-**Slotted components are markdown-accessible by default** — the body is compiled and passed to the first slot. Components with multiple named slots must be used via the TypeScript DSL, where each slot is passed as a separate prop. Built-in containers (row, column, stack, grid) opt out of markdown access with `directive: false`.
+**Container components are markdown-accessible by default** — the body is compiled and passed as children. Set `directive: false` to suppress markdown access. Built-in containers (row, column, stack, grid) use `directive: false`.
 
 ### Variants
 
@@ -798,56 +769,48 @@ Use a variant when the visual values differ. Use a different layout when the str
 Display a large metric value with a label and optional change indicator:
 
 ```typescript
-import { defineComponent, componentRegistry, component, schema } from 'tycoslide';
-import { column, text, plainText } from 'tycoslide-components';
-import type { TextStyleName, GapSize } from 'tycoslide';
+import { defineComponent, componentRegistry, component, param, token, schema } from 'tycoslide';
+import { column, plainText } from 'tycoslide-components';
+import type { PlainTextTokens } from 'tycoslide-components';
+import type { GapSize, InferParams, InferTokens } from 'tycoslide';
 
-// 1. Define token constants and types
-const METRIC_TOKEN = {
-  VALUE_STYLE: 'valueStyle',
-  VALUE_COLOR: 'valueColor',
-  LABEL_STYLE: 'labelStyle',
-  LABEL_COLOR: 'labelColor',
-  CHANGE_STYLE: 'changeStyle',
-  POSITIVE_COLOR: 'positiveColor',
-  NEGATIVE_COLOR: 'negativeColor',
-  GAP: 'gap',
-} as const;
+// 1. Declare params and tokens
+const metricParams = param.shape({
+  value: param.required(schema.string()),
+  label: param.required(schema.string()),
+  change: param.optional(schema.string()),
+});
 
-export type MetricTokens = {
-  valueStyle: TextStyleName;
-  valueColor: string;
-  labelStyle: TextStyleName;
-  labelColor: string;
-  changeStyle: TextStyleName;
-  positiveColor: string;
-  negativeColor: string;
-  gap: GapSize;
-};
+const metricTokens = token.shape({
+  value: token.required<PlainTextTokens>(),
+  label: token.required<PlainTextTokens>(),
+  change: token.required<PlainTextTokens>(),
+  positiveColor: token.required<string>(),
+  negativeColor: token.required<string>(),
+  gap: token.required<GapSize>(),
+});
+
+export type MetricParams = InferParams<typeof metricParams>;
+export type MetricTokens = InferTokens<typeof metricTokens>;
 
 // 2. Define component
 export const metricComponent = defineComponent({
   name: 'metric',
-  params: {
-    value: schema.string(),
-    label: schema.string(),
-    change: schema.string().optional(),
-  },
-  tokens: Object.values(METRIC_TOKEN),
-  expand: (props, context, tokens: MetricTokens) => {
+  params: metricParams,
+  tokens: metricTokens,
+  render: (params, _content, _context, tokens) => {
     const elements = [
-      plainText(props.value, { style: tokens.valueStyle, color: tokens.valueColor }),
-      plainText(props.label, { style: tokens.labelStyle, color: tokens.labelColor }),
+      plainText(params.value, tokens.value),
+      plainText(params.label, tokens.label),
     ];
 
-    if (props.change) {
-      const isPositive = props.change.startsWith('+');
-      elements.push(
-        plainText(props.change, {
-          style: tokens.changeStyle,
-          color: isPositive ? tokens.positiveColor : tokens.negativeColor,
-        })
-      );
+    if (params.change) {
+      const isPositive = params.change.startsWith('+');
+      const changeTokens = {
+        ...tokens.change,
+        color: isPositive ? tokens.positiveColor : tokens.negativeColor,
+      };
+      elements.push(plainText(params.change, changeTokens));
     }
 
     return column({ gap: tokens.gap }, ...elements);
@@ -858,8 +821,8 @@ export const metricComponent = defineComponent({
 componentRegistry.register(metricComponent);
 
 // 4. Export DSL function — tokens passed by caller
-export function metric(props: MetricProps, tokens: MetricTokens) {
-  return component('metric', props, tokens);
+export function metric(params: MetricParams, tokens: MetricTokens) {
+  return component('metric', params, undefined, tokens);
 }
 ```
 
@@ -872,7 +835,7 @@ export function metric(props: MetricProps, tokens: MetricTokens) {
 **Wiring tokens in a layout:** Provide token values when calling the component from a layout render function. Define the metric token object in the layout's token map and pass it through:
 
 ```typescript
-render: ({ metrics }, tokens: MyLayoutTokens) => {
+render: ({ metrics }, _slots, tokens: MyLayoutTokens) => {
   return masteredSlide(
     ...metrics.map(m => metric(m, tokens.metric)),
   );
@@ -892,8 +855,8 @@ import { line, shape, slideNumber } from 'tycoslide-components';
 import { TEXT_STYLE, GAP, SIZE, SHAPE, HALIGN, VALIGN } from 'tycoslide';
 
 // Lists
-list(["First item", "Second **bold** item", "Third item"])       // Unordered
-list(["Step one", "Step two"], { ordered: true })                 // Ordered
+list(["First item", "Second **bold** item", "Third item"], tokens.list)         // Unordered
+list(["Step one", "Step two"], tokens.list, true)                               // Ordered
 
 // Table (data array + options)
 table([
@@ -904,8 +867,8 @@ table([
 // Image
 image('./path/to/image.png')
 
-// Shape
-shape({ shape: SHAPE.ROUND_RECT, fill: '#FF0000', cornerRadius: 0.1 })
+// Shape (tokens first, then params)
+shape(tokens.background, { shape: SHAPE.ROUND_RECT })
 
 // Containers
 column({ gap: GAP.NORMAL }, ...)
@@ -917,9 +880,9 @@ stack(backgroundNode, foregroundNode)
 Components like `text`, `plainText`, `card`, and `quote` require a token argument. In layout render functions, tokens come from the layout's token map:
 
 ```typescript
-text(props.body, tokens.bodyText)
-plainText(props.title, tokens.headerTitle)
-card({ title: props.cardTitle }, tokens.card)
+text(slots.body, tokens.bodyText)
+plainText(params.title, tokens.headerTitle)
+card({ title: params.cardTitle }, tokens.card)  // params, then tokens
 ```
 
 Custom components export their own DSL functions using `component()` from `tycoslide`:
@@ -927,27 +890,28 @@ Custom components export their own DSL functions using `component()` from `tycos
 ```typescript
 import { component } from 'tycoslide';
 
-export function metric(props: MetricProps, tokens: MetricTokens) {
-  return component('metric', props, tokens);
+export function metric(params: MetricParams, tokens: MetricTokens) {
+  return component('metric', params, undefined, tokens);
 }
 ```
 
-### Expansion Function
+### Render Function
 
-Every component has an expand function that turns its props into renderable output — text, images, shapes, or containers.
+Every component has a render function that turns its params and content into renderable output — text, images, shapes, or containers.
 
 ```typescript
-expand: (props, context, tokens) => {
+render: (params, content, context, tokens) => {
   return primitiveNode;
 }
 ```
 
 **Parameters:**
-- `props` — Validated component properties. Includes `body` if a body schema is defined, or parsed directive body.
-- `context` — Expansion context: `{ theme, assets?, canvas }`
-- `tokens` — Token values provided by the caller (layout render function or DSL user). Present only if the component declared tokens; `undefined` otherwise.
+- `params` — Validated directive attributes, typed by the `params` shape.
+- `content` — Primary content: a scalar value for content components, `SlideNode[]` for container components, `undefined` for params-only components.
+- `context` — Render context: `{ theme, assets?, canvas }`
+- `tokens` — Token values provided by the caller (layout render function or DSL user). `undefined` if the component declared no tokens.
 
-**Return:** A `SlideNode` — either a primitive node (text, image, shape, container) or another component node for composition. Component nodes are further expanded by the registry.
+**Return:** A `SlideNode` — either a primitive node (text, image, shape, container) or another component node for composition. Component nodes are further rendered by the registry.
 
 #### Canvas
 
@@ -957,7 +921,7 @@ expand: (props, context, tokens) => {
 const pngPath = await context.canvas.renderHtml(html, transparent?);
 ```
 
-The first argument is a complete HTML document string. The optional second argument controls background transparency (default: `false`). The return value is a file path to the rendered PNG, suitable for use as an `ImageNode.src`. All theme fonts are automatically available in the HTML document — reference them by name exactly as defined in `FontFamily.name`. The rendered PNG is only valid for the duration of the build; do not store the returned path beyond the expand function's lifetime.
+The first argument is a complete HTML document string. The optional second argument controls background transparency (default: `false`). The return value is a file path to the rendered PNG, suitable for use as an `ImageNode.src`. All theme fonts are automatically available in the HTML document — reference them by name exactly as defined in `FontFamily.name`. The rendered PNG is only valid for the duration of the build; do not store the returned path beyond the render function's lifetime.
 
 The [mermaid](#mermaid) and [code](#code) components use Canvas internally. Those implementations serve as reference for components that render HTML to PNG.
 
@@ -974,8 +938,8 @@ const pres = new Presentation(theme);
 
 pres.add({
   content: column(
-    metric({ value: "$2.4M", label: "Revenue" }),
-    metric({ value: "150K", label: "Users", change: "+25%" })
+    metric({ value: "$2.4M", label: "Revenue" }, tokens.metric),
+    metric({ value: "150K", label: "Users", change: "+25%" }, tokens.metric)
   ),
 });
 
