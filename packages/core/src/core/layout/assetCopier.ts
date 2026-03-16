@@ -25,7 +25,7 @@ export function copyFonts(theme: Theme, outputDir: string): void {
       copied.add(font.path);
       if (!fs.existsSync(font.path)) {
         throw new Error(
-          `[tycoslide] Font file not found: ${font.path}\n` +
+          `Font file not found: ${font.path}\n` +
             `Check that the path is correct and the font package is installed.`,
         );
       }

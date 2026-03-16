@@ -186,7 +186,7 @@ async function renderCode(
 ): Promise<ImageNode> {
   const code = content.trim();
   if (!code) {
-    throw new Error("[tycoslide] Code block is empty");
+    throw new Error("Code block is empty");
   }
 
   const codeStyle = context.theme.textStyles[tokens.textStyle];
@@ -214,12 +214,12 @@ export const codeComponent = defineComponent({
       const codeNode = node as unknown as MdastCode;
       if (!codeNode.lang) {
         throw new Error(
-          "[tycoslide] Code block has no language specified. Add a language after the opening fences, e.g. ```sql",
+          "Code block has no language specified. Add a language after the opening fences, e.g. ```sql",
         );
       }
       if (!SUPPORTED_LANGUAGES.has(codeNode.lang)) {
         throw new Error(
-          `[tycoslide] Unsupported code language "${codeNode.lang}". Supported languages include: typescript, python, sql, rust, go, java. See LANGUAGE constant for full list.`,
+          `Unsupported code language "${codeNode.lang}". Supported languages include: typescript, python, sql, rust, go, java. See LANGUAGE constant for full list.`,
         );
       }
       return component(Component.Code, { language: codeNode.lang }, codeNode.value);

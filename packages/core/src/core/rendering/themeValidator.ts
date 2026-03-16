@@ -42,7 +42,7 @@ export function validateThemeFonts(theme: Theme): void {
       if (font) {
         if (!font.path) {
           throw new Error(
-            `[tycoslide] Font in "${family.name}" (slot: ${slot}) has an empty path. ` +
+            `Font in "${family.name}" (slot: ${slot}) has an empty path. ` +
               `All fonts must have a valid file path.`,
           );
         }
@@ -50,7 +50,7 @@ export function validateThemeFonts(theme: Theme): void {
         if (!FONT_FORMATS[ext]) {
           const supported = Object.keys(FONT_FORMATS).join(", ");
           throw new Error(
-            `[tycoslide] Font "${font.path}" has unsupported format "${ext}". ` + `Supported: ${supported}.`,
+            `Font "${font.path}" has unsupported format "${ext}". ` + `Supported: ${supported}.`,
           );
         }
         registeredPaths.add(font.path);
@@ -65,7 +65,7 @@ export function validateThemeFonts(theme: Theme): void {
       const font = style.fontFamily[slot];
       if (font && !registeredPaths.has(font.path)) {
         throw new Error(
-          `[tycoslide] Font "${style.fontFamily.name}" (${font.path}) used in textStyle "${styleName}" is not listed in theme.fonts.`,
+          `Font "${style.fontFamily.name}" (${font.path}) used in textStyle "${styleName}" is not listed in theme.fonts.`,
         );
       }
     }
@@ -77,7 +77,7 @@ export function validateThemeFonts(theme: Theme): void {
       const font = family[slot];
       if (font && !registeredPaths.has(font.path)) {
         throw new Error(
-          `[tycoslide] Font "${family.name}" (${font.path}) used in ${tokenPath}.${key} is not listed in theme.fonts.`,
+          `Font "${family.name}" (${font.path}) used in ${tokenPath}.${key} is not listed in theme.fonts.`,
         );
       }
     }

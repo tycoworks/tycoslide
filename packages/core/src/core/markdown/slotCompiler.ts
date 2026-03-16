@@ -48,7 +48,7 @@ function compileChildren(children: RootContent[], source: string, errorPrefix: s
     const startOffset = bareStart.position?.start.offset;
     const endOffset = bareEnd.position?.end.offset;
     if (startOffset === undefined || endOffset === undefined) {
-      throw new Error(`[tycoslide] ${errorPrefix}: bare MDAST node missing position data.`);
+      throw new Error(`${errorPrefix}: bare MDAST node missing position data.`);
     }
     const rawSource = source.slice(startOffset, endOffset).trim();
     if (rawSource) {
@@ -106,7 +106,7 @@ export function dispatchDirective(directive: ContainerDirective, source: string,
       .map((d) => d.name)
       .join(", ");
     throw new Error(
-      `[tycoslide] ${errorPrefix}: unknown directive ":::${directive.name}". ` +
+      `${errorPrefix}: unknown directive ":::${directive.name}". ` +
         `Available directives: ${available || "none"}.`,
     );
   }
@@ -173,7 +173,7 @@ function compileBareNode(node: RootContent, source: string): SlideNode | null {
 
   // Unknown → error
   throw new Error(
-    `[tycoslide] document: unsupported markdown block type "${node.type}". ` +
+    `document: unsupported markdown block type "${node.type}". ` +
       `No component has registered an MDAST handler for this type.`,
   );
 }

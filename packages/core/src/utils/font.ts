@@ -183,7 +183,7 @@ export function validateFontVariants(tree: ElementNode): FontVariantViolation[] 
  */
 export function formatMissingFontErrors(violations: FontVariantViolation[]): string {
   const details = violations.map((v) => `  "${v.fontName}" has no ${v.slot} variant.`);
-  return `[tycoslide] Missing font errors:\n\n${details.join("\n")}`;
+  return `Missing font errors:\n\n${details.join("\n")}`;
 }
 
 /**

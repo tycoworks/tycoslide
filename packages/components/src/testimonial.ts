@@ -92,7 +92,7 @@ export const testimonialComponent = defineComponent({
       children.push(row({ hAlign: contentHAlign, height: SIZE.FILL }, imageNode(imagePath)));
     }
     if (!actualQuote) {
-      throw new Error(`[tycoslide] Testimonial component requires either a 'quote' attribute or body text.`);
+      throw new Error(`Testimonial component requires either a 'quote' attribute or body text.`);
     }
     children.push(text(actualQuote, quoteTokens));
     if (attribution) {

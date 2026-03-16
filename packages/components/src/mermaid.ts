@@ -81,7 +81,7 @@ export function sanitizeMermaidDefinition(definition: string): string {
   });
   if (stripped.length > 0) {
     throw new Error(
-      `[tycoslide] Mermaid: found ${stripped.length} forbidden style directive(s). ` +
+      `Mermaid: found ${stripped.length} forbidden style directive(s). ` +
         `Use theme classes instead (e.g. "class NodeId primary"):\n` +
         stripped.map((s) => `  - ${s}`).join("\n"),
     );

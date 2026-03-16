@@ -82,7 +82,7 @@ export const quoteComponent = defineComponent({
     const { bar: barTokens, gap, quote: quoteTokens, attribution: attributionTokens } = tokens;
 
     if (!actualQuote) {
-      throw new Error(`[tycoslide] Quote component requires either a 'quote' attribute or body text.`);
+      throw new Error(`Quote component requires either a 'quote' attribute or body text.`);
     }
 
     // Build content children: quote text, optional attribution
