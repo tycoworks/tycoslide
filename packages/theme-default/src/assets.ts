@@ -44,7 +44,6 @@ export const assets = {
     shield: icon("verified_user.png"),
   },
   tycoworks: {
-
     tycoslide: tycoworks("tycoslide.png"),
     background: tycoworks("tycoworks background.png"),
     logo: tycoworks("tycoworks logo.png"),

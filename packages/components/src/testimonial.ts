@@ -3,16 +3,16 @@
 // Renders to: stack(shape(background), column(image?, quote, attribution))
 
 import {
-  type InferParams,
-  type InferTokens,
   component,
   defineComponent,
   type GapSize,
   type HorizontalAlignment,
+  type InferParams,
+  type InferTokens,
   param,
-  schema,
   SHAPE,
   SIZE,
+  schema,
   token,
   type VerticalAlignment,
 } from "tycoslide";

@@ -11,11 +11,7 @@ import { param, schema } from "../src/core/model/param.js";
 
 import { resolveVariantTokens, token } from "../src/core/model/token.js";
 import type { Slide } from "../src/core/model/types.js";
-import {
-  componentRegistry,
-  defineLayout,
-  layoutRegistry,
-} from "../src/core/rendering/registry.js";
+import { componentRegistry, defineLayout, layoutRegistry } from "../src/core/rendering/registry.js";
 import { mockTheme } from "./mocks.js";
 import { testComponents } from "./test-components.js";
 
@@ -27,7 +23,6 @@ componentRegistry.register(testComponents);
 // ============================================
 
 describe("resolveVariantTokens", () => {
-
   it("resolves default variant tokens", () => {
     const theme = mockTheme({
       layouts: {
@@ -395,10 +390,7 @@ describe("Slot Token Injection", () => {
     delete (theme.layouts as any).slotTokenTest.variants.default.text;
 
     const md = `${HEADER}---\nlayout: slotTokenTest\nvariant: default\n---\n\nHello`;
-    assert.throws(
-      () => compileDocument(md, { theme }),
-      /missing required tokens.*text/,
-    );
+    assert.throws(() => compileDocument(md, { theme }), /missing required tokens.*text/);
   });
 
   it("does not inject tokens for layouts without slots", () => {

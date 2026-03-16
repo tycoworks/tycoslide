@@ -25,8 +25,7 @@ export function copyFonts(theme: Theme, outputDir: string): void {
       copied.add(font.path);
       if (!fs.existsSync(font.path)) {
         throw new Error(
-          `Font file not found: ${font.path}\n` +
-            `Check that the path is correct and the font package is installed.`,
+          `Font file not found: ${font.path}\nCheck that the path is correct and the font package is installed.`,
         );
       }
       fs.copyFileSync(font.path, path.join(fontsDir, path.basename(font.path)));

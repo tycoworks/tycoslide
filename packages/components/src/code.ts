@@ -14,8 +14,8 @@ import {
   type InferParams,
   type InferTokens,
   inToPx,
-  type RenderContext,
   param,
+  type RenderContext,
   SYNTAX,
   schema,
   type TextStyle,
@@ -216,9 +216,7 @@ export const codeComponent = defineComponent({
     compile: (node: RootContent, _source: string): ComponentNode | null => {
       const codeNode = node as unknown as MdastCode;
       if (!codeNode.lang) {
-        throw new Error(
-          "Code block has no language specified. Add a language after the opening fences, e.g. ```sql",
-        );
+        throw new Error("Code block has no language specified. Add a language after the opening fences, e.g. ```sql");
       }
       if (!SUPPORTED_LANGUAGES.has(codeNode.lang)) {
         throw new Error(

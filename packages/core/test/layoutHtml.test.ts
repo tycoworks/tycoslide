@@ -870,7 +870,6 @@ describe("HTML Measurement Generation", () => {
       assert.ok(html.includes("#AABBCC"), "Border color should appear in HTML");
       assert.ok(html.includes("solid"), "Border should be solid");
     });
-
   });
 
   describe("SlideNumber rendering", () => {

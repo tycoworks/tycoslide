@@ -745,7 +745,14 @@ describe("buildTextConfig()", () => {
     const result = builder.buildTextConfig(textNode, pos);
 
     assert.ok(result.options.shadow);
-    const shadow = result.options.shadow as { type: string; color: string; opacity: number; blur: number; offset: number; angle: number };
+    const shadow = result.options.shadow as {
+      type: string;
+      color: string;
+      opacity: number;
+      blur: number;
+      offset: number;
+      angle: number;
+    };
     assert.strictEqual(shadow.type, "outer");
     assert.strictEqual(shadow.color, "1A1A2E");
     assert.strictEqual(shadow.opacity, 0.4);

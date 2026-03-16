@@ -3,10 +3,11 @@
 
 import type { RootContent } from "mdast";
 import { z } from "zod";
+import type { Bounds } from "../model/bounds.js";
 import {
-  component,
   type ComponentNode,
   type ContainerNode,
+  component,
   type ElementNode,
   isComponentNode,
   NODE_TYPE,
@@ -16,7 +17,6 @@ import {
 import type { ScalarParam } from "../model/param.js";
 import { RESERVED_FRONTMATTER_KEYS, type SyntaxType } from "../model/syntax.js";
 import { type InferTokens, parseTokenShape, type TokenShape, validateTokens } from "../model/token.js";
-import type { Bounds } from "../model/bounds.js";
 import type { Background, Slide, Theme } from "../model/types.js";
 import { validateThemeFonts } from "./themeValidator.js";
 
@@ -118,7 +118,12 @@ export interface ComponentDefinition<TParams = unknown, TContent = unknown, TTok
   /** Whether this component accepts children (SlideNode[]) as content. */
   children?: boolean;
   /** Render params + content into a node tree (may contain components that get further rendered) */
-  render: (params: TParams, content: TContent, context: RenderContext, tokens: TTokens) => SlideNode | Promise<SlideNode>;
+  render: (
+    params: TParams,
+    content: TContent,
+    context: RenderContext,
+    tokens: TTokens,
+  ) => SlideNode | Promise<SlideNode>;
   /** Deserialize a :::name directive into a ComponentNode. Auto-generated for content components. */
   deserialize?: DirectiveDeserializer;
   /** MDAST handler — declares which bare markdown node types this component compiles. */
@@ -135,7 +140,6 @@ export type ScalarComponentDefinition<
   /** Params ZodObject schema (when component has both content and params). */
   paramsSchema?: z.ZodObject<any>;
 };
-
 
 // ============================================
 // DIRECTIVE DESERIALIZATION (private)
@@ -186,9 +190,7 @@ function buildDeserializer(
     } else {
       const keys = Object.keys(coerced);
       if (keys.length) {
-        throw new Error(
-          `Component '${componentName}' does not accept parameters, but received: [${keys.join(", ")}].`,
-        );
+        throw new Error(`Component '${componentName}' does not accept parameters, but received: [${keys.join(", ")}].`);
       }
       params = {};
     }
@@ -230,10 +232,7 @@ export function defineComponent<
  * No `.schema` — container components aren't usable in layout params.
  * Pure factory — does NOT register the component.
  */
-export function defineComponent<
-  TParams,
-  TShape extends TokenShape = TokenShape,
->(def: {
+export function defineComponent<TParams, TShape extends TokenShape = TokenShape>(def: {
   name: string;
   children: true;
   directive?: boolean;
@@ -490,11 +489,7 @@ export function defineLayout<
   params: TParams;
   slots?: TSlots;
   tokens: TShape;
-  render: (
-    params: z.infer<z.ZodObject<TParams>>,
-    slots: SlotsToProps<TSlots>,
-    tokens: InferTokens<TShape>,
-  ) => Slide;
+  render: (params: z.infer<z.ZodObject<TParams>>, slots: SlotsToProps<TSlots>, tokens: InferTokens<TShape>) => Slide;
 }): TypedLayoutDefinition<InferTokens<TShape>> {
   for (const key of Object.keys(def.params)) {
     if (RESERVED_FRONTMATTER_KEYS.has(key as any)) {

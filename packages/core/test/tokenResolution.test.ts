@@ -57,7 +57,11 @@ describe("Token Resolution Engine", () => {
   describe("tokens from node.tokens", () => {
     it("resolves tokens from node.tokens", async () => {
       const theme = minimalTheme();
-      const node = component(TOKEN_COMP as any, { label: "test" }, undefined, { alpha: "AAA", beta: "BBB", gamma: "CCC" });
+      const node = component(TOKEN_COMP as any, { label: "test" }, undefined, {
+        alpha: "AAA",
+        beta: "BBB",
+        gamma: "CCC",
+      });
       const rendered = (await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() })) as any;
       assert.strictEqual(rendered._tokens.alpha, "AAA");
       assert.strictEqual(rendered._tokens.beta, "BBB");
@@ -66,7 +70,11 @@ describe("Token Resolution Engine", () => {
 
     it("custom token values are passed through", async () => {
       const theme = minimalTheme();
-      const node = component(TOKEN_COMP as any, { label: "test" }, undefined, { alpha: "CUSTOM", beta: "VALUES", gamma: "HERE" });
+      const node = component(TOKEN_COMP as any, { label: "test" }, undefined, {
+        alpha: "CUSTOM",
+        beta: "VALUES",
+        gamma: "HERE",
+      });
       const rendered = (await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() })) as any;
       assert.strictEqual(rendered._tokens.alpha, "CUSTOM");
       assert.strictEqual(rendered._tokens.beta, "VALUES");
@@ -76,12 +84,11 @@ describe("Token Resolution Engine", () => {
     it("params and tokens are separate — no key conflicts", async () => {
       const theme = minimalTheme();
       // Simulate card-like scenario: params.alpha is a string, tokens.alpha is an object
-      const node = component(
-        TOKEN_COMP as any,
-        { label: "test", alpha: "content-string" },
-        undefined,
-        { alpha: { nested: true }, beta: "B", gamma: "G" },
-      );
+      const node = component(TOKEN_COMP as any, { label: "test", alpha: "content-string" }, undefined, {
+        alpha: { nested: true },
+        beta: "B",
+        gamma: "G",
+      });
       const rendered = (await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() })) as any;
       // tokens.alpha should be the object, not the string
       assert.deepStrictEqual(rendered._tokens.alpha, { nested: true });

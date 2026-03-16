@@ -2,16 +2,16 @@
 // Implements card as a component using primitives: stack, column, shape, text, image
 
 import {
-  type InferParams,
-  type InferTokens,
   component,
   defineComponent,
   type GapSize,
   type HorizontalAlignment,
+  type InferParams,
+  type InferTokens,
   param,
-  schema,
   SHAPE,
   SIZE,
+  schema,
   token,
   type VerticalAlignment,
 } from "tycoslide";

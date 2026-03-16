@@ -166,10 +166,7 @@ export class PptxConfigBuilder {
     return fragments;
   }
 
-  buildImageConfig(
-    imageNode: ImageNode,
-    positioned: PositionedNode,
-  ): Record<string, unknown> {
+  buildImageConfig(imageNode: ImageNode, positioned: PositionedNode): Record<string, unknown> {
     // Compute contain placement ourselves.
     // pptxgenjs sizing: { type: 'contain' } is broken — it uses the placement
     // dimensions as both imgSize and boxDim, making it a no-op.

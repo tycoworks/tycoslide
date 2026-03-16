@@ -11,15 +11,15 @@ import {
   type InferTokens,
   type LineNode,
   NODE_TYPE,
-  type Shadow,
   param,
+  type RenderContext,
   SHAPE_VALUES,
+  type Shadow,
   type ShapeNode,
   type SlideNumberNode,
-  type RenderContext,
   schema,
-  token,
   type TextStyleName,
+  token,
   type VerticalAlignment,
 } from "tycoslide";
 import { Component } from "./names.js";
@@ -98,7 +98,12 @@ const shapeParamShape = param.shape({
 });
 export type ShapeParams = InferParams<typeof shapeParamShape>;
 
-function renderShape(params: ShapeParams, _content: undefined, _context: RenderContext, tokens: ShapeTokens): ShapeNode {
+function renderShape(
+  params: ShapeParams,
+  _content: undefined,
+  _context: RenderContext,
+  tokens: ShapeTokens,
+): ShapeNode {
   const node: ShapeNode = {
     type: NODE_TYPE.SHAPE,
     shape: params.shape,

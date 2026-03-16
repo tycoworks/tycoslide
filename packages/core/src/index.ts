@@ -18,9 +18,9 @@ export type {
   LineNode,
   NodeType,
   PositionedNode,
+  Shadow,
   ShapeBorder,
   ShapeNode,
-  Shadow,
   SlideNode,
   SlideNumberNode,
   StackNode,
@@ -32,12 +32,12 @@ export type {
 
 export { component, isComponentNode, NODE_TYPE } from "./core/model/nodes.js";
 // Param helpers (schema type builders + param declaration wrappers)
-export { param, schema, type InferParams, type ScalarParam } from "./core/model/param.js";
-// Token descriptors (required/optional markers for component token declarations)
-export { token, type InferTokens, type TokenDescriptor, type TokenShape } from "./core/model/token.js";
+export { type InferParams, param, type ScalarParam, schema } from "./core/model/param.js";
 export type { ContainerDirective, SyntaxType } from "./core/model/syntax.js";
 // Markdown utilities (for component authors)
 export { extractSource, RESERVED_FRONTMATTER_KEYS, SYNTAX } from "./core/model/syntax.js";
+// Token descriptors (required/optional markers for component token declarations)
+export { type InferTokens, type TokenDescriptor, type TokenShape, token } from "./core/model/token.js";
 export type {
   ArrowType,
   Background,
@@ -50,7 +50,6 @@ export type {
   GapSize,
   HighlightPair,
   HorizontalAlignment,
-  VariantConfig,
   NormalizedRun,
   ShadowType,
   ShapeName,
@@ -64,6 +63,7 @@ export type {
   TextStyleName,
   Theme,
   UnderlineStyle,
+  VariantConfig,
   VerticalAlignment,
 } from "./core/model/types.js";
 export {

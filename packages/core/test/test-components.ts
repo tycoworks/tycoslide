@@ -8,13 +8,11 @@
 // Import testComponents array and call componentRegistry.register() in tests.
 
 import type { Heading, Table as MdastTable, RootContent } from "mdast";
-import { NODE_TYPE } from "../src/core/model/nodes.js";
+import { type ComponentNode, component, NODE_TYPE } from "../src/core/model/nodes.js";
 import { param, schema } from "../src/core/model/param.js";
-
 import { extractSource, SYNTAX } from "../src/core/model/syntax.js";
 import { token } from "../src/core/model/token.js";
 import { DIRECTION, HALIGN, SIZE, TEXT_STYLE, VALIGN } from "../src/core/model/types.js";
-import { component, type ComponentNode } from "../src/core/model/nodes.js";
 import type { RenderContext } from "../src/core/rendering/registry.js";
 import { defineComponent } from "../src/core/rendering/registry.js";
 
@@ -53,7 +51,14 @@ export const textComponent = defineComponent({
     vAlign: param.optional(schema.string()),
     content: param.optional(schema.string()),
   },
-  tokens: { color: token.required<any>(), style: token.required<any>(), linkColor: token.required<any>(), linkUnderline: token.required<any>(), hAlign: token.required<any>(), vAlign: token.required<any>() },
+  tokens: {
+    color: token.required<any>(),
+    style: token.required<any>(),
+    linkColor: token.required<any>(),
+    linkUnderline: token.required<any>(),
+    hAlign: token.required<any>(),
+    vAlign: token.required<any>(),
+  },
   mdast: {
     nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.HEADING, SYNTAX.LIST],
     compile: (node: RootContent, source: string): ComponentNode | null => {
@@ -143,7 +148,15 @@ export const cardComponent = defineComponent({
     title: param.optional(schema.string()),
     description: param.optional(schema.string()),
   },
-  tokens: { background: token.required<any>(), padding: token.required<any>(), gap: token.required<any>(), hAlign: token.required<any>(), vAlign: token.required<any>(), title: token.required<any>(), description: token.required<any>() },
+  tokens: {
+    background: token.required<any>(),
+    padding: token.required<any>(),
+    gap: token.required<any>(),
+    hAlign: token.required<any>(),
+    vAlign: token.required<any>(),
+    title: token.required<any>(),
+    description: token.required<any>(),
+  },
   render: (params: any, content: any, _ctx: RenderContext, tokens: any): any => {
     // Pass title tokens down to child Text component
     const titleNode = component(C.Text, {}, params.title ?? content ?? "", tokens.title);

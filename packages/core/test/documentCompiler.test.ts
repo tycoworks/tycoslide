@@ -222,10 +222,7 @@ body: Frontmatter body content
 ---
 
 Markdown body content`;
-      assert.throws(
-        () => compileDocument(md, makeOptions()),
-        /does not accept body content/,
-      );
+      assert.throws(() => compileDocument(md, makeOptions()), /does not accept body content/);
     });
 
     it("should throw on ::slot:: markers for undeclared slots", () => {
@@ -246,10 +243,7 @@ Right content
 
 ::eyebrow::
 FROM_SLOT`;
-      assert.throws(
-        () => compileDocument(md, makeOptions()),
-        /unknown slots.*eyebrow/,
-      );
+      assert.throws(() => compileDocument(md, makeOptions()), /unknown slots.*eyebrow/);
     });
   });
 

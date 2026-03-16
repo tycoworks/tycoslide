@@ -65,12 +65,12 @@ export {
   lineComponent,
   type ShapeParams,
   type ShapeTokens,
-  slideNumber,
-  slideNumberComponent,
   type SlideNumberParams,
   type SlideNumberTokens,
   shape,
   shapeComponent,
+  slideNumber,
+  slideNumberComponent,
 } from "./primitives.js";
 // Quote (simple pull quote — composition component)
 export {

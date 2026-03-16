@@ -4,7 +4,17 @@
 // Use this for eyebrows, attributions, labels, and other non-rich text.
 
 import type { HorizontalAlignment, RenderContext, TextStyleName, VerticalAlignment } from "tycoslide";
-import { type ComponentNode, component, defineComponent, type InferTokens, NODE_TYPE, type Shadow, schema, type TextNode, token } from "tycoslide";
+import {
+  type ComponentNode,
+  component,
+  defineComponent,
+  type InferTokens,
+  NODE_TYPE,
+  type Shadow,
+  schema,
+  type TextNode,
+  token,
+} from "tycoslide";
 import { Component } from "./names.js";
 
 const plainTextTokens = token.shape({

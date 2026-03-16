@@ -148,7 +148,12 @@ describe("validateLayout with enum schema", () => {
     render: (params: any, _slots: any) => ({
       masterName: "default",
       masterVariant: "default",
-      content: { type: NODE_TYPE.COMPONENT, componentName: "test", params: { style: params.style }, content: undefined },
+      content: {
+        type: NODE_TYPE.COMPONENT,
+        componentName: "test",
+        params: { style: params.style },
+        content: undefined,
+      },
     }),
   };
 
@@ -179,7 +184,12 @@ describe("validateLayout (params and slots)", () => {
     render: (params: any, slots: any) => ({
       masterName: "default",
       masterVariant: "default",
-      content: { type: NODE_TYPE.COMPONENT, componentName: "test", params: { ...params, ...slots }, content: undefined },
+      content: {
+        type: NODE_TYPE.COMPONENT,
+        componentName: "test",
+        params: { ...params, ...slots },
+        content: undefined,
+      },
     }),
   };
 

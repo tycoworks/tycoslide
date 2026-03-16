@@ -265,7 +265,6 @@ describe("shape()", () => {
     assert.strictEqual(node.border?.width, 2);
   });
 
-
   test("passes corner radius from tokens", async () => {
     const tokens: ShapeTokens = { ...DEFAULT_SHAPE_TOKENS, cornerRadius: 0.125 };
     const node = (await render(shape(tokens, { shape: SHAPE.ROUND_RECT }))) as ShapeNode;

@@ -6,15 +6,12 @@
 // Params and slots are validated separately against the layout's schemas.
 
 import { z } from "zod";
-import { isComponentNode, type ComponentNode, type SlideNode } from "../model/nodes.js";
+import { type ComponentNode, isComponentNode, type SlideNode } from "../model/nodes.js";
 import { RESERVED_FRONTMATTER_KEYS } from "../model/syntax.js";
 import { resolveVariantTokens } from "../model/token.js";
 import type { Slide, Theme } from "../model/types.js";
 import { Presentation } from "../rendering/presentation.js";
-import {
-  type LayoutDefinition,
-  layoutRegistry,
-} from "../rendering/registry.js";
+import { type LayoutDefinition, layoutRegistry } from "../rendering/registry.js";
 import { parseSlideDocument, type RawSlide } from "./slideParser.js";
 import { compileSlot } from "./slotCompiler.js";
 
@@ -178,7 +175,11 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
   let resolvedTokens: Record<string, unknown> | undefined;
   if (layout.tokens && Object.keys(layout.tokens).length) {
     resolvedTokens = resolveVariantTokens(
-      options.theme.layouts?.[layoutName], layoutName, variant, layout.tokens, "Layout",
+      options.theme.layouts?.[layoutName],
+      layoutName,
+      variant,
+      layout.tokens,
+      "Layout",
       !layout.slots?.length,
     );
   }

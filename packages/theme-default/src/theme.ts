@@ -2,8 +2,18 @@
 // Clean light theme with Inter font. Copy and customize for your brand.
 // Units: spacing/margins/radii = inches, fontSize/borderWidth = points, opacity = 0-100
 
-import { BORDER_STYLE, DASH_TYPE, defineTheme, GAP, HALIGN, SHADOW_TYPE, SLIDE_SIZE, TEXT_STYLE, type Theme, VALIGN } from "tycoslide";
-import { type ListTokens, type PlainTextTokens, type TextTokens } from "tycoslide-components";
+import {
+  BORDER_STYLE,
+  DASH_TYPE,
+  defineTheme,
+  GAP,
+  HALIGN,
+  SHADOW_TYPE,
+  SLIDE_SIZE,
+  TEXT_STYLE,
+  VALIGN,
+} from "tycoslide";
+import type { ListTokens, PlainTextTokens, TextTokens } from "tycoslide-components";
 import { assets } from "./assets.js";
 import {
   agendaLayout,
@@ -254,7 +264,14 @@ const codeTokens = {
     borderColor: palette.navy,
     borderWidth: 0,
     cornerRadius,
-    shadow: { type: SHADOW_TYPE.OUTER, color: palette.navy, opacity: shadowOpacity, blur: shadowBlur, offset: shadowOffset, angle: shadowAngle },
+    shadow: {
+      type: SHADOW_TYPE.OUTER,
+      color: palette.navy,
+      opacity: shadowOpacity,
+      blur: shadowBlur,
+      offset: shadowOffset,
+      angle: shadowAngle,
+    },
   },
 };
 

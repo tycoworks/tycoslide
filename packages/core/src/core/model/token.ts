@@ -37,11 +37,15 @@ export type TokenShape = Record<string, TokenDescriptor<any, boolean>>;
  * // → { padding: number; background?: ShapeTokens }
  * ```
  */
-export type InferTokens<S extends Record<string, TokenDescriptor<any, boolean>>> =
-  { [K in keyof S as S[K] extends { _optional: true } ? never : K]:
-      S[K] extends TokenDescriptor<infer T, any> ? T : never } &
-  { [K in keyof S as S[K] extends { _optional: true } ? K : never]?:
-      S[K] extends TokenDescriptor<infer T, any> ? T : never };
+export type InferTokens<S extends Record<string, TokenDescriptor<any, boolean>>> = {
+  [K in keyof S as S[K] extends { _optional: true } ? never : K]: S[K] extends TokenDescriptor<infer T, any>
+    ? T
+    : never;
+} & {
+  [K in keyof S as S[K] extends { _optional: true } ? K : never]?: S[K] extends TokenDescriptor<infer T, any>
+    ? T
+    : never;
+};
 
 // ============================================
 // TOKEN NAMESPACE
@@ -127,17 +131,22 @@ export function resolveVariantTokens(
 // VALIDATION
 // ============================================
 
-export function validateTokens(shape: ParsedTokenShape, tokens: Record<string, unknown>, label: string, strict = true): void {
-  const missing = shape.requiredKeys.filter(
-    (key) => tokens[key] === undefined || tokens[key] === null,
-  );
+export function validateTokens(
+  shape: ParsedTokenShape,
+  tokens: Record<string, unknown>,
+  label: string,
+  strict = true,
+): void {
+  const missing = shape.requiredKeys.filter((key) => tokens[key] === undefined || tokens[key] === null);
   if (missing.length) {
     throw new Error(`${label} is missing required tokens: [${missing.join(", ")}].`);
   }
   if (strict) {
     const unknown = Object.keys(tokens).filter((key) => !shape.allKeys.has(key));
     if (unknown.length) {
-      throw new Error(`${label} has unknown tokens: [${unknown.join(", ")}]. Declared: [${[...shape.allKeys].join(", ")}].`);
+      throw new Error(
+        `${label} has unknown tokens: [${unknown.join(", ")}]. Declared: [${[...shape.allKeys].join(", ")}].`,
+      );
     }
   }
   // When strict=false, extra keys are allowed — slotted layouts pass slot injection tokens

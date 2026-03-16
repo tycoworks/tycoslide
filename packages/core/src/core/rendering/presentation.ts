@@ -15,7 +15,7 @@ import type { ElementNode, PositionedNode } from "../model/nodes.js";
 import { resolveVariantTokens } from "../model/token.js";
 import type { Background, Slide, Theme } from "../model/types.js";
 import { PptxRenderer } from "./pptxRenderer.js";
-import { componentRegistry, type RenderContext, masterRegistry } from "./registry.js";
+import { componentRegistry, masterRegistry, type RenderContext } from "./registry.js";
 
 export type { Slide } from "../model/types.js";
 
@@ -168,7 +168,11 @@ export class Presentation {
             throw new Error(`Unknown master: '${masterName}'. Did you forget to register it?`);
           }
           const tokens = resolveVariantTokens(
-            this._theme.masters?.[masterName], masterName, masterVariant, def.tokens, "Master",
+            this._theme.masters?.[masterName],
+            masterName,
+            masterVariant,
+            def.tokens,
+            "Master",
           );
           const { content: rawMasterContent, contentBounds, background } = def.render(tokens, { width, height });
           const masterContent = await componentRegistry.renderTree(rawMasterContent, renderContext);

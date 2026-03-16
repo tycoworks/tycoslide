@@ -7,9 +7,8 @@
 
 import type { Paragraph, Root, RootContent } from "mdast";
 import { extractDirectiveBody, markdownProcessor } from "../../utils/parser.js";
-import type { SlideNode } from "../model/nodes.js";
+import type { ComponentNode, SlideNode } from "../model/nodes.js";
 import { type ContainerDirective, SYNTAX } from "../model/syntax.js";
-import type { ComponentNode } from "../model/nodes.js";
 import { componentRegistry } from "../rendering/registry.js";
 
 // ============================================
@@ -106,8 +105,7 @@ export function dispatchDirective(directive: ContainerDirective, source: string,
       .map((d) => d.name)
       .join(", ");
     throw new Error(
-      `${errorPrefix}: unknown directive ":::${directive.name}". ` +
-        `Available directives: ${available || "none"}.`,
+      `${errorPrefix}: unknown directive ":::${directive.name}". ` + `Available directives: ${available || "none"}.`,
     );
   }
 
@@ -151,8 +149,7 @@ function compileBareNode(node: RootContent, source: string): SlideNode | null {
   // Thematic breaks (---, ***, ___) are not supported in slide content.
   if (node.type === SYNTAX.THEMATIC_BREAK) {
     throw new Error(
-      "Horizontal rules (---, ***, ___) are not supported in slide content. " +
-        "Use :::line to insert a line element.",
+      "Horizontal rules (---, ***, ___) are not supported in slide content. " + "Use :::line to insert a line element.",
     );
   }
 

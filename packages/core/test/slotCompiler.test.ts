@@ -101,10 +101,7 @@ describe("Slot Compiler", () => {
 
     it("should throw on thematic breaks in slot content", () => {
       const md = "Before\n\n---\n\nAfter";
-      assert.throws(
-        () => compileSlot(md),
-        /horizontal rules.*not supported.*Use :::line/,
-      );
+      assert.throws(() => compileSlot(md), /horizontal rules.*not supported.*Use :::line/);
     });
   });
 

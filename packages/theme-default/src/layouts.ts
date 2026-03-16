@@ -9,16 +9,23 @@ import {
   type GapSize,
   type HorizontalAlignment,
   type InferTokens,
+  param,
   SHAPE,
   SIZE,
   type Slide,
   type SlideNode,
-  param,
   schema,
   token,
   type VerticalAlignment,
 } from "tycoslide";
-import type { CardTokens, ListTokens, PlainTextTokens, QuoteTokens, ShapeTokens, TextTokens } from "tycoslide-components";
+import type {
+  CardTokens,
+  ListTokens,
+  PlainTextTokens,
+  QuoteTokens,
+  ShapeTokens,
+  TextTokens,
+} from "tycoslide-components";
 import {
   Component,
   cardComponent,
@@ -101,9 +108,7 @@ export const titleLayout = defineLayout({
     return {
       masterName: "minimal",
       masterVariant: tokens.masterVariant,
-      content: imagePath
-        ? row({ vAlign: tokens.vAlign, height: SIZE.FILL }, textBlock, image(imagePath))
-        : textBlock,
+      content: imagePath ? row({ vAlign: tokens.vAlign, height: SIZE.FILL }, textBlock, image(imagePath)) : textBlock,
     };
   },
 });
@@ -224,9 +229,7 @@ export const statLayout = defineLayout({
       ? stack({ height: SIZE.FILL }, shape(tokens.surface, { shape: SHAPE.ROUND_RECT }), content)
       : content;
 
-    return masteredSlide(
-      column({ height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign }, surfaced),
-    );
+    return masteredSlide(column({ height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign }, surfaced));
   },
 });
 
@@ -503,7 +506,9 @@ export const cardsLayout = defineLayout({
   },
   tokens: cardsLayoutTokens,
   render: ({ title, eyebrow, intro, cards: cardItems, caption }, _slots, tokens: CardsLayoutTokens) => {
-    const built = cardItems.map((c) => component(Component.Card, c as unknown as Record<string, unknown>, undefined, tokens.card));
+    const built = cardItems.map((c) =>
+      component(Component.Card, c as unknown as Record<string, unknown>, undefined, tokens.card),
+    );
     const perRow = built.length <= 2 ? built.length : built.length === 4 ? 2 : built.length >= 7 ? 4 : 3;
     return masteredSlide(
       headerBlock(title, tokens, eyebrow),

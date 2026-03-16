@@ -2,11 +2,7 @@ import assert from "node:assert/strict";
 import { beforeEach, describe, test } from "node:test";
 import { component, isComponentNode, NODE_TYPE } from "../src/core/model/nodes.js";
 import type { Slide } from "../src/core/model/types.js";
-import {
-  componentRegistry,
-  type LayoutDefinition,
-  Registry,
-} from "../src/core/rendering/registry.js";
+import { componentRegistry, type LayoutDefinition, Registry } from "../src/core/rendering/registry.js";
 import { mockTextStyle, mockTheme, noopCanvas } from "./mocks.js";
 
 import { C, testComponents } from "./test-components.js";

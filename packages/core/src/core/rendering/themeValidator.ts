@@ -42,16 +42,13 @@ export function validateThemeFonts(theme: Theme): void {
       if (font) {
         if (!font.path) {
           throw new Error(
-            `Font in "${family.name}" (slot: ${slot}) has an empty path. ` +
-              `All fonts must have a valid file path.`,
+            `Font in "${family.name}" (slot: ${slot}) has an empty path. All fonts must have a valid file path.`,
           );
         }
         const ext = font.path.substring(font.path.lastIndexOf("."));
         if (!FONT_FORMATS[ext]) {
           const supported = Object.keys(FONT_FORMATS).join(", ");
-          throw new Error(
-            `Font "${font.path}" has unsupported format "${ext}". ` + `Supported: ${supported}.`,
-          );
+          throw new Error(`Font "${font.path}" has unsupported format "${ext}". ` + `Supported: ${supported}.`);
         }
         registeredPaths.add(font.path);
       }

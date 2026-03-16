@@ -4,16 +4,16 @@
 
 import type { RootContent } from "mdast";
 import {
-  type InferParams,
-  type InferTokens,
   component,
   defineComponent,
   extractSource,
   type GapSize,
+  type InferParams,
+  type InferTokens,
   param,
-  schema,
   SIZE,
   SYNTAX,
+  schema,
   token,
 } from "tycoslide";
 import { column, row } from "./containers.js";
