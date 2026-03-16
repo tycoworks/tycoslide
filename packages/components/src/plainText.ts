@@ -20,17 +20,16 @@ export type PlainTextTokens = InferTokens<typeof plainTextTokens>;
 // TYPES
 // ============================================
 
-/** Full params including body content (used internally by rendering). */
-export type PlainTextParams = {
-  body: string;
-};
+/** Params for plainText component (empty — content is the body string). */
+export type PlainTextParams = {};
 
 // ============================================
 // RENDER
 // ============================================
 
 function renderPlainText(
-  params: PlainTextParams,
+  _params: PlainTextParams,
+  content: string,
   context: RenderContext,
   tokens: PlainTextTokens,
 ): ElementNode {
@@ -38,7 +37,7 @@ function renderPlainText(
 
   return {
     type: NODE_TYPE.TEXT,
-    content: [{ text: params.body }],
+    content: [{ text: content }],
     style: tokens.style,
     resolvedStyle: textStyle,
     color: tokens.color,
@@ -57,7 +56,7 @@ function renderPlainText(
 
 export const plainTextComponent = defineComponent({
   name: Component.PlainText,
-  body: schema.string(),
+  content: schema.string(),
   directive: false,
   tokens: plainTextTokens,
   render: renderPlainText,
@@ -77,6 +76,6 @@ export const plainTextComponent = defineComponent({
  * plainText("ARCHITECTURE", tokens.eyebrow)
  * ```
  */
-export function plainText(body: string, tokens: PlainTextTokens): ComponentNode<PlainTextParams> {
-  return component(Component.PlainText, { body }, tokens);
+export function plainText(body: string, tokens: PlainTextTokens): ComponentNode {
+  return component(Component.PlainText, {}, body, tokens);
 }

@@ -98,6 +98,7 @@ function parseGfmTable(body: string): string[][] {
 
 export const tableComponent = defineComponent({
   name: Component.Table,
+  content: schema.string().optional(),
   params: tableParamShape,
   tokens: tableTokens,
   mdast: {
@@ -118,11 +119,12 @@ export const tableComponent = defineComponent({
     },
   },
   render: async (
-    params: TableInternalParams & { body?: string; headerColumns?: number },
+    params: TableInternalParams & { headerColumns?: number },
+    content: string | undefined,
     context: RenderContext,
     tokens: TableTokens,
   ) => {
-    // Determine data source: structured (DSL) or body string (directive)
+    // Determine data source: structured (DSL) or content string (directive)
     let data: (TableCellInput | TextContent)[][];
     let headerRows: number | undefined;
     let headerColumns: number | undefined;
@@ -132,13 +134,13 @@ export const tableComponent = defineComponent({
       data = params.data;
       headerRows = params.tableParams?.headerRows;
       headerColumns = params.tableParams?.headerColumns;
-    } else if (params.body) {
-      // Directive path — parse GFM body string
-      data = parseGfmTable(params.body);
+    } else if (content) {
+      // Directive path — parse GFM content string
+      data = parseGfmTable(content);
       headerRows = 1; // GFM tables always have a header row
       headerColumns = params.headerColumns;
     } else {
-      throw new Error("Table requires either data (DSL) or body (directive)");
+      throw new Error("Table requires either data (DSL) or content (directive)");
     }
 
     // Derive text tokens from table tokens for child text components.
@@ -157,7 +159,7 @@ export const tableComponent = defineComponent({
     const resolveContent = async (content: TextContent): Promise<TextContent> => {
       if (typeof content === "string") {
         const rendered = await componentRegistry.renderTree(
-          component(Component.Text, { body: content }, textTokens),
+          component(Component.Text, {}, content, textTokens),
           context,
         );
         if (rendered.type !== NODE_TYPE.TEXT) {

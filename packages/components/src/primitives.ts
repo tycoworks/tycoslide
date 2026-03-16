@@ -2,19 +2,18 @@
 
 import {
   ARROW_TYPE_VALUES,
-  type ArrowType,
   type ComponentNode,
   component,
   type DashType,
   defineComponent,
   type HorizontalAlignment,
+  type InferParams,
   type InferTokens,
   type LineNode,
   NODE_TYPE,
   type Shadow,
   param,
   SHAPE_VALUES,
-  type ShapeName,
   type ShapeNode,
   type SlideNumberNode,
   type RenderContext,
@@ -57,18 +56,13 @@ export type ShapeTokens = InferTokens<typeof shapeTokens>;
 // LINE
 // ============================================
 
-// Full params for DSL callers (only arrow overrides — styling comes from tokens)
-export type LineParams = {
-  beginArrow?: ArrowType;
-  endArrow?: ArrowType;
-};
-
 const lineParamShape = param.shape({
   beginArrow: param.optional(schema.enum(ARROW_TYPE_VALUES)),
   endArrow: param.optional(schema.enum(ARROW_TYPE_VALUES)),
 });
+export type LineParams = InferParams<typeof lineParamShape>;
 
-function renderLine(params: LineParams, _context: RenderContext, tokens: LineTokens): LineNode {
+function renderLine(params: LineParams, _content: undefined, _context: RenderContext, tokens: LineTokens): LineNode {
   return {
     type: NODE_TYPE.LINE,
     color: tokens.color,
@@ -87,23 +81,19 @@ export const lineComponent = defineComponent({
 });
 
 export function line(tokens: LineTokens, params?: LineParams): ComponentNode {
-  return component(Component.Line, params ?? {}, tokens);
+  return component(Component.Line, params ?? {}, undefined, tokens);
 }
 
 // ============================================
 // SHAPE (all area shapes)
 // ============================================
 
-// Full params for DSL callers (only shape geometry — styling comes from tokens)
-export type ShapeParams = {
-  shape: ShapeName;
-};
-
 const shapeParamShape = param.shape({
   shape: param.required(schema.enum(SHAPE_VALUES)),
 });
+export type ShapeParams = InferParams<typeof shapeParamShape>;
 
-function renderShape(params: ShapeParams, _context: RenderContext, tokens: ShapeTokens): ShapeNode {
+function renderShape(params: ShapeParams, _content: undefined, _context: RenderContext, tokens: ShapeTokens): ShapeNode {
   const node: ShapeNode = {
     type: NODE_TYPE.SHAPE,
     shape: params.shape,
@@ -131,18 +121,18 @@ export const shapeComponent = defineComponent({
 });
 
 export function shape(tokens: ShapeTokens, params: ShapeParams): ComponentNode {
-  return component(Component.Shape, params, tokens);
+  return component(Component.Shape, params, undefined, tokens);
 }
 
 // ============================================
 // SLIDE NUMBER
 // ============================================
 
-// Full params for DSL callers (no styling overrides — all comes from tokens)
 export type SlideNumberParams = {};
 
 function renderSlideNumber(
   _params: SlideNumberParams,
+  _content: undefined,
   context: RenderContext,
   tokens: SlideNumberTokens,
 ): SlideNumberNode {
@@ -164,5 +154,5 @@ export const slideNumberComponent = defineComponent({
 });
 
 export function slideNumber(tokens: SlideNumberTokens, params?: SlideNumberParams): ComponentNode {
-  return component(Component.SlideNumber, params ?? {}, tokens);
+  return component(Component.SlideNumber, params ?? {}, undefined, tokens);
 }

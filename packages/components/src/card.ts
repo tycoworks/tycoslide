@@ -9,6 +9,7 @@ import {
   type GapSize,
   type HorizontalAlignment,
   param,
+  schema,
   SHAPE,
   SIZE,
   token,
@@ -63,11 +64,12 @@ export type CardParams = InferParams<typeof cardParams>;
  */
 export const cardComponent = defineComponent({
   name: Component.Card,
+  content: schema.string().optional(),
   params: cardParams,
   tokens: cardTokens,
-  render(params, _context, tokens) {
-    const { image: imagePath, title, description, body } = params;
-    const actualDescription = description ?? body;
+  render(params, content, _context, tokens) {
+    const { image: imagePath, title, description } = params;
+    const actualDescription = description ?? content;
     const {
       background,
       padding,
@@ -93,12 +95,12 @@ export const cardComponent = defineComponent({
       children.push(text(actualDescription, descriptionTokens));
     }
 
-    const contentProps = { padding, gap, hAlign: contentHAlign, vAlign: contentVAlign };
+    const containerParams = { padding, gap, hAlign: contentHAlign, vAlign: contentVAlign };
     const outerHeight = SIZE.FILL;
 
     // No background token — skip background shape
     if (!background) {
-      return column({ ...contentProps, height: outerHeight }, ...children);
+      return column({ ...containerParams, height: outerHeight }, ...children);
     }
 
     // Build background rectangle using ShapeTokens directly
@@ -106,7 +108,7 @@ export const cardComponent = defineComponent({
 
     // Stack: background behind, content in front
     // Content layer fills the stack so padding/alignment works consistently
-    const contentLayer = column({ ...contentProps, height: SIZE.FILL }, ...children);
+    const contentLayer = column({ ...containerParams, height: SIZE.FILL }, ...children);
     return stack({ height: outerHeight }, backgroundRect, contentLayer);
   },
 });
@@ -128,5 +130,5 @@ export const cardComponent = defineComponent({
  * ```
  */
 export function card(params: CardParams, tokens: CardTokens) {
-  return component(Component.Card, params, tokens);
+  return component(Component.Card, params, undefined, tokens);
 }

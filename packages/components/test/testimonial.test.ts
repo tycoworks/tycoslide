@@ -68,8 +68,8 @@ describe("Testimonial Component", () => {
         },
         DEFAULT_TESTIMONIAL_TOKENS,
       );
-      assert.strictEqual(node.props.quote, "A great quote");
-      assert.strictEqual(node.props.attribution, "— Author");
+      assert.strictEqual(node.params.quote, "A great quote");
+      assert.strictEqual(node.params.attribution, "— Author");
     });
   });
 

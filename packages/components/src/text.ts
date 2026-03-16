@@ -37,8 +37,8 @@ export type TextTokens = InferTokens<typeof textTokens>;
 // TYPES
 // ============================================
 
-/** Full params including body content (used internally by expansion) */
-export type TextParams = { body: string };
+/** Params for text component (empty — content is the body string). */
+export type TextParams = {};
 
 // ============================================
 // HEADING STYLE MAP (exported for document component)
@@ -55,11 +55,11 @@ export const HEADING_STYLE: Record<number, TextStyleName> = {
 // RENDER — always rich text (inline markdown)
 // ============================================
 
-function renderText(params: TextParams, context: RenderContext, tokens: TextTokens): ElementNode {
+function renderText(_params: TextParams, content: string, context: RenderContext, tokens: TextTokens): ElementNode {
   const textStyle = context.theme.textStyles[tokens.style];
 
   // Parse inline markdown only (bold, italic, :color[highlights])
-  const tree = inlineParse(params.body);
+  const tree = inlineParse(content);
 
   // Validate single paragraph (no multi-block)
   const blocks = tree.children.filter((c) => c.type !== SYNTAX.THEMATIC_BREAK);
@@ -97,7 +97,7 @@ function renderText(params: TextParams, context: RenderContext, tokens: TextToke
 
 export const textComponent = defineComponent({
   name: Component.Text,
-  body: schema.string(),
+  content: schema.string(),
   directive: false,
   tokens: textTokens,
   mdast: {
@@ -107,10 +107,10 @@ export const textComponent = defineComponent({
         const heading = node as Heading;
         const style = HEADING_STYLE[heading.depth] ?? TEXT_STYLE.H3;
         const raw = extractSource(heading, source);
-        const content = raw.replace(/^#{1,6}\s*/, "");
-        return component(Component.Text, { body: content }, { style });
+        const headingContent = raw.replace(/^#{1,6}\s*/, "");
+        return component(Component.Text, {}, headingContent, { style });
       }
-      return component(Component.Text, { body: extractSource(node, source) });
+      return component(Component.Text, {}, extractSource(node, source));
     },
   },
   render: renderText,
@@ -128,6 +128,6 @@ export const textComponent = defineComponent({
  * text("**Bold** and :teal[highlighted]", tokens.text)
  * ```
  */
-export function text(body: string, tokens: TextTokens): ComponentNode<TextParams> {
-  return component(Component.Text, { body }, tokens);
+export function text(body: string, tokens: TextTokens): ComponentNode {
+  return component(Component.Text, {}, body, tokens);
 }

@@ -338,9 +338,6 @@ export interface CustomSlideSize {
  * };
  * ```
  *
- * For system fonts, set `path` to `''` (empty string). System fonts are used
- * for PPTX rendering (where the viewer resolves them) but skipped during
- * Playwright measurement (which uses fonts copied to the output directory).
  */
 export interface Font {
   path: string;

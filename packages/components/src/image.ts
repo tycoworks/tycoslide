@@ -72,19 +72,19 @@ function resolveAssetPath(ref: string, assets: Record<string, unknown> | undefin
 
 export const imageComponent = defineComponent({
   name: Component.Image,
-  body: schema.string(),
+  content: schema.string(),
   tokens: {},
 
   mdast: {
     nodeTypes: [SYNTAX.IMAGE],
     compile: (node: RootContent): ComponentNode | null => {
       const img = node as Image;
-      return component(Component.Image, { body: img.url });
+      return component(Component.Image, {}, img.url);
     },
   },
 
-  render: (params: { body: string }, context: RenderContext): ImageNode => {
-    let src = params.body;
+  render: (_params: {}, content: string, context: RenderContext): ImageNode => {
+    let src = content;
     if (src.startsWith(ASSET_PREFIX)) {
       src = resolveAssetPath(src, context.assets);
     }
@@ -93,5 +93,5 @@ export const imageComponent = defineComponent({
 });
 
 export function image(src: string): ComponentNode {
-  return component(Component.Image, { body: src });
+  return component(Component.Image, {}, src);
 }

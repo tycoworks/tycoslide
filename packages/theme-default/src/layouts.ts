@@ -91,7 +91,7 @@ export const titleLayout = defineLayout({
     image: param.optional(imageComponent.schema),
   },
   tokens: titleLayoutTokens,
-  render: ({ title, subtitle, image: imagePath }, tokens: TitleLayoutTokens) => {
+  render: ({ title, subtitle, image: imagePath }, _slots, tokens: TitleLayoutTokens) => {
     const textBlock = column(
       { vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap, height: SIZE.FILL },
       text(title, tokens.title),
@@ -129,7 +129,7 @@ export const sectionLayout = defineLayout({
   description: "Section divider with centered title.",
   params: { title: param.required(textComponent.schema) },
   tokens: sectionLayoutTokens,
-  render: ({ title }, tokens: SectionLayoutTokens) => ({
+  render: ({ title }, _slots, tokens: SectionLayoutTokens) => ({
     masterName: "minimal",
     masterVariant: tokens.masterVariant,
     content: column(
@@ -172,7 +172,7 @@ export const bodyLayout = defineLayout({
   },
   slots: ["body"],
   tokens: bodyLayoutTokens,
-  render: ({ title, eyebrow, body }, tokens: BodyLayoutTokens) =>
+  render: ({ title, eyebrow }, { body }, tokens: BodyLayoutTokens) =>
     masteredSlide(
       ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
       column({ height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap }, ...body),
@@ -212,7 +212,7 @@ export const statLayout = defineLayout({
     caption: param.optional(textComponent.schema),
   },
   tokens: statLayoutTokens,
-  render: ({ value, label, caption }, tokens: StatLayoutTokens) => {
+  render: ({ value, label, caption }, _slots, tokens: StatLayoutTokens) => {
     const content = column(
       { vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap, height: SIZE.FILL, padding: tokens.padding },
       plainText(value, tokens.value),
@@ -257,11 +257,11 @@ export const quoteLayout = defineLayout({
     attribution: param.optional(textComponent.schema),
   },
   tokens: quoteLayoutTokens,
-  render: ({ quote: quoteText, attribution }, tokens: QuoteLayoutTokens) =>
+  render: ({ quote: quoteText, attribution }, _slots, tokens: QuoteLayoutTokens) =>
     masteredSlide(
       column(
         { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap },
-        component(Component.Quote, { quote: quoteText, attribution }, tokens.quote),
+        component(Component.Quote, { quote: quoteText, attribution }, undefined, tokens.quote),
       ),
     ),
 });
@@ -282,7 +282,7 @@ export const endLayout = defineLayout({
     subtitle: param.optional(textComponent.schema),
   },
   tokens: titleLayoutTokens,
-  render: ({ title, subtitle }, tokens: TitleLayoutTokens) => ({
+  render: ({ title, subtitle }, _slots, tokens: TitleLayoutTokens) => ({
     masterName: "minimal",
     masterVariant: tokens.masterVariant,
     content: column(
@@ -312,7 +312,7 @@ export const blankLayout = defineLayout({
   params: {},
   slots: ["body"],
   tokens: blankLayoutTokens,
-  render: ({ body }, tokens: BlankLayoutTokens) => ({
+  render: (_params, { body }, tokens: BlankLayoutTokens) => ({
     masterName: "minimal",
     masterVariant: tokens.masterVariant,
     content: column({ height: SIZE.FILL }, ...body),
@@ -353,7 +353,7 @@ export const twoColumnLayout = defineLayout({
   },
   slots: ["left", "right"],
   tokens: twoColumnLayoutTokens,
-  render: ({ title, eyebrow, left, right }, tokens: TwoColumnLayoutTokens) =>
+  render: ({ title, eyebrow }, { left, right }, tokens: TwoColumnLayoutTokens) =>
     masteredSlide(
       ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
       row(
@@ -391,7 +391,7 @@ export const statementLayout = defineLayout({
     caption: param.optional(textComponent.schema),
   },
   tokens: statementLayoutTokens,
-  render: ({ body, caption }, tokens: StatementLayoutTokens) => ({
+  render: ({ body, caption }, _slots, tokens: StatementLayoutTokens) => ({
     masterName: "minimal",
     masterVariant: tokens.masterVariant,
     content: column(
@@ -439,7 +439,7 @@ export const agendaLayout = defineLayout({
     items: param.required(schema.array(textComponent.schema)),
   },
   tokens: agendaLayoutTokens,
-  render: ({ title, eyebrow, items }, tokens: AgendaLayoutTokens) => {
+  render: ({ title, eyebrow, items }, _slots, tokens: AgendaLayoutTokens) => {
     // Inline card component: stack composes a rounded-rect background shape
     // with padded content in a single node. Layouts can build ad-hoc visuals
     // by composing primitives directly — not everything needs to be a registered component.
@@ -498,12 +498,12 @@ export const cardsLayout = defineLayout({
     title: param.required(textComponent.schema),
     eyebrow: param.optional(textComponent.schema),
     intro: param.optional(textComponent.schema),
-    cards: param.required(schema.array(cardComponent.schema)),
+    cards: param.required(schema.array(cardComponent.paramsSchema!)),
     caption: param.optional(textComponent.schema),
   },
   tokens: cardsLayoutTokens,
-  render: ({ title, eyebrow, intro, cards: cardItems, caption }, tokens: CardsLayoutTokens) => {
-    const built = cardItems.map((c) => component(Component.Card, c as Record<string, unknown>, tokens.card));
+  render: ({ title, eyebrow, intro, cards: cardItems, caption }, _slots, tokens: CardsLayoutTokens) => {
+    const built = cardItems.map((c) => component(Component.Card, c as unknown as Record<string, unknown>, undefined, tokens.card));
     const perRow = built.length <= 2 ? built.length : built.length === 4 ? 2 : built.length >= 7 ? 4 : 3;
     return masteredSlide(
       headerBlock(title, tokens, eyebrow),

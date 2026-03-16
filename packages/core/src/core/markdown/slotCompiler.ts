@@ -66,8 +66,13 @@ function compileChildren(children: RootContent[], source: string, errorPrefix: s
       continue;
     }
 
-    // Thematic breaks (---) are reserved as slide delimiters; silently skip.
-    if (child.type === SYNTAX.THEMATIC_BREAK) continue;
+    // Thematic breaks (---, ***, ___) are not supported in slide content.
+    if (child.type === SYNTAX.THEMATIC_BREAK) {
+      throw new Error(
+        `${errorPrefix}: horizontal rules (---, ***, ___) are not supported in slide content. ` +
+          `Use :::line to insert a line element.`,
+      );
+    }
 
     // Bare MDAST → accumulate (flush will wrap)
     if (!bareStart) bareStart = child;
@@ -143,8 +148,13 @@ function compileBareNode(node: RootContent, source: string): SlideNode | null {
     return dispatchDirective(node as unknown as ContainerDirective, source, "document");
   }
 
-  // Thematic breaks (---) are reserved as slide delimiters; silently skip.
-  if (node.type === SYNTAX.THEMATIC_BREAK) return null;
+  // Thematic breaks (---, ***, ___) are not supported in slide content.
+  if (node.type === SYNTAX.THEMATIC_BREAK) {
+    throw new Error(
+      "Horizontal rules (---, ***, ___) are not supported in slide content. " +
+        "Use :::line to insert a line element.",
+    );
+  }
 
   // Unwrap paragraph-wrapped images: remark treats ![alt](src) as inline
   // content, always wrapping it in a paragraph. Normalize before dispatch.

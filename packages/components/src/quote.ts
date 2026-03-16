@@ -11,6 +11,7 @@ import {
   extractSource,
   type GapSize,
   param,
+  schema,
   SIZE,
   SYNTAX,
   token,
@@ -63,6 +64,7 @@ export type QuoteParams = InferParams<typeof quoteParams>;
  */
 export const quoteComponent = defineComponent({
   name: Component.Quote,
+  content: schema.string().optional(),
   params: quoteParams,
   tokens: quoteTokens,
   mdast: {
@@ -74,9 +76,9 @@ export const quoteComponent = defineComponent({
       return component(Component.Quote, { quote: inner });
     },
   },
-  render(params, _context, tokens) {
-    const { quote: quoteText, body, attribution } = params;
-    const actualQuote = quoteText ?? body;
+  render(params, content, _context, tokens) {
+    const { quote: quoteText, attribution } = params;
+    const actualQuote = quoteText ?? content;
     const { bar: barTokens, gap, quote: quoteTokens, attribution: attributionTokens } = tokens;
 
     if (!actualQuote) {
@@ -111,5 +113,5 @@ export const quoteComponent = defineComponent({
  * ```
  */
 export function quote(params: QuoteParams, tokens: QuoteTokens) {
-  return component(Component.Quote, params, tokens);
+  return component(Component.Quote, params, undefined, tokens);
 }

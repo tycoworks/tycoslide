@@ -46,7 +46,7 @@ const HEADING_STYLE: Record<number, string> = {
 
 export const textComponent = defineComponent({
   name: C.Text,
-  body: schema.string(),
+  content: schema.string(),
   params: {
     style: param.optional(schema.string()),
     hAlign: param.optional(schema.string()),
@@ -61,8 +61,8 @@ export const textComponent = defineComponent({
         const heading = node as Heading;
         const style = HEADING_STYLE[heading.depth] ?? TEXT_STYLE.H3;
         const raw = extractSource(heading, source);
-        const content = raw.replace(/^#{1,6}\s*/, "");
-        return component(C.Text, { body: content }, { style });
+        const headingContent = raw.replace(/^#{1,6}\s*/, "");
+        return component(C.Text, {}, headingContent, { style });
       }
       if (node.type === SYNTAX.PARAGRAPH) {
         const para = node as { children: { type: string }[] };
@@ -70,19 +70,19 @@ export const textComponent = defineComponent({
           throw new Error("Images cannot be embedded inline in text. Use :::image directive.");
         }
       }
-      return component(C.Text, { body: extractSource(node, source) });
+      return component(C.Text, {}, extractSource(node, source));
     },
   },
-  render: (props: any, ctx: RenderContext, tokens: any): any => {
-    const style = props.style ?? tokens?.style;
+  render: (params: any, content: string, ctx: RenderContext, tokens: any): any => {
+    const style = params.style ?? tokens?.style;
     return {
       type: NODE_TYPE.TEXT,
-      content: [{ text: props.body }],
+      content: [{ text: content }],
       style,
       resolvedStyle: (ctx.theme.textStyles as any)[style],
-      color: props.color ?? tokens?.color,
-      hAlign: (props.hAlign ?? HALIGN.LEFT) as any,
-      vAlign: (props.vAlign ?? VALIGN.TOP) as any,
+      color: params.color ?? tokens?.color,
+      hAlign: (params.hAlign ?? HALIGN.LEFT) as any,
+      vAlign: (params.vAlign ?? VALIGN.TOP) as any,
       lineHeightMultiplier: (ctx.theme.textStyles as any)[style]?.lineHeightMultiplier ?? 1.0,
       bulletIndentPt: 18,
     };
@@ -95,19 +95,19 @@ export const textComponent = defineComponent({
 
 export const rowComponent = defineComponent({
   name: C.Row,
-  slots: ["children"] as const,
+  children: true,
   directive: false,
   tokens: {},
-  render: (props: any): any => ({
+  render: (params: any, children: any[]): any => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.ROW,
-    children: props.children,
-    width: props.width ?? SIZE.FILL,
-    height: props.height ?? SIZE.HUG,
-    gap: props.gap ?? 0,
-    vAlign: props.vAlign ?? VALIGN.TOP,
-    hAlign: props.hAlign ?? HALIGN.LEFT,
-    padding: props.padding,
+    children,
+    width: params.width ?? SIZE.FILL,
+    height: params.height ?? SIZE.HUG,
+    gap: params.gap ?? 0,
+    vAlign: params.vAlign ?? VALIGN.TOP,
+    hAlign: params.hAlign ?? HALIGN.LEFT,
+    padding: params.padding,
   }),
 });
 
@@ -117,19 +117,19 @@ export const rowComponent = defineComponent({
 
 export const columnComponent = defineComponent({
   name: C.Column,
-  slots: ["children"] as const,
+  children: true,
   directive: false,
   tokens: {},
-  render: (props: any): any => ({
+  render: (params: any, children: any[]): any => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.COLUMN,
-    children: props.children,
-    width: props.width ?? SIZE.FILL,
-    height: props.height ?? SIZE.HUG,
-    gap: props.gap ?? 0,
-    vAlign: props.vAlign ?? VALIGN.TOP,
-    hAlign: props.hAlign ?? HALIGN.LEFT,
-    padding: props.padding,
+    children,
+    width: params.width ?? SIZE.FILL,
+    height: params.height ?? SIZE.HUG,
+    gap: params.gap ?? 0,
+    vAlign: params.vAlign ?? VALIGN.TOP,
+    hAlign: params.hAlign ?? HALIGN.LEFT,
+    padding: params.padding,
   }),
 });
 
@@ -144,10 +144,10 @@ export const cardComponent = defineComponent({
     description: param.optional(schema.string()),
   },
   tokens: { background: token.required<any>(), padding: token.required<any>(), gap: token.required<any>(), hAlign: token.required<any>(), vAlign: token.required<any>(), title: token.required<any>(), description: token.required<any>() },
-  render: (props: any, _ctx: RenderContext, tokens: any): any => {
+  render: (params: any, content: any, _ctx: RenderContext, tokens: any): any => {
     // Pass title tokens down to child Text component
-    const titleNode = component(C.Text, { body: props.title ?? props.body ?? "" }, tokens.title);
-    return component(C.Column, { children: [titleNode], padding: tokens.padding });
+    const titleNode = component(C.Text, {}, params.title ?? content ?? "", tokens.title);
+    return component(C.Column, { padding: tokens.padding }, [titleNode]);
   },
 });
 
@@ -157,8 +157,7 @@ export const cardComponent = defineComponent({
 
 export const imageComponent = defineComponent({
   name: C.Image,
-  body: schema.string(),
-  params: { alt: param.optional(schema.string()) },
+  content: schema.string(),
   tokens: {},
   render: () => ({}) as any,
 });
@@ -175,7 +174,7 @@ export const lineComponent = defineComponent({
 
 export const tableComponent = defineComponent({
   name: C.Table,
-  body: schema.string(),
+  content: schema.string(),
   params: {
     headerColumns: param.optional(schema.number()),
   },

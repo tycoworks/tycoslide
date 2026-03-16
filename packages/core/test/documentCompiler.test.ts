@@ -37,7 +37,7 @@ function mockSlide(props: any): Slide {
   const slide: Slide = {
     masterName: "default",
     masterVariant: "default",
-    content: { type: NODE_TYPE.COMPONENT, componentName: "test", props },
+    content: { type: NODE_TYPE.COMPONENT, componentName: "test", params: props, content: undefined },
   };
   renderedSlides.push(slide);
   return slide;
@@ -48,7 +48,7 @@ const simpleLayout = {
   description: "Test layout with just title",
   params: { title: schema.string() },
   tokens: {},
-  render: (props: any): Slide => mockSlide(props),
+  render: (params: any, slots: any): Slide => mockSlide({ ...params, ...slots }),
 };
 
 const bodyLayout = {
@@ -57,7 +57,7 @@ const bodyLayout = {
   params: { title: param.optional(schema.string()) },
   slots: ["body"],
   tokens: {},
-  render: (props: any): Slide => mockSlide(props),
+  render: (params: any, slots: any): Slide => mockSlide({ ...params, ...slots }),
 };
 
 const slotLayout = {
@@ -66,7 +66,7 @@ const slotLayout = {
   params: { title: schema.string(), eyebrow: schema.string() },
   slots: ["left", "right"],
   tokens: {},
-  render: (props: any): Slide => mockSlide(props),
+  render: (params: any, slots: any): Slide => mockSlide({ ...params, ...slots }),
 };
 
 const strictLayout = {
@@ -74,7 +74,7 @@ const strictLayout = {
   description: "Strict layout with required field",
   params: { title: schema.string(), required_field: schema.string() },
   tokens: {},
-  render: (props: any): Slide => mockSlide(props),
+  render: (params: any, slots: any): Slide => mockSlide({ ...params, ...slots }),
 };
 
 const defaultLayout = {
@@ -82,7 +82,7 @@ const defaultLayout = {
   description: "Default layout with optional body",
   params: { title: param.optional(schema.string()), body: param.optional(schema.string()) },
   tokens: {},
-  render: (props: any): Slide => mockSlide(props),
+  render: (params: any, slots: any): Slide => mockSlide({ ...params, ...slots }),
 };
 
 // ============================================
@@ -212,7 +212,7 @@ title: Slide Three
       assert.strictEqual(receivedProps[2].title, "Slide Three");
     });
 
-    it("should prefer frontmatter body over markdown body", () => {
+    it("should throw when body content is present but layout has no slots", () => {
       const md =
         HEADER +
         `---
@@ -222,12 +222,13 @@ body: Frontmatter body content
 ---
 
 Markdown body content`;
-      compileDocument(md, makeOptions());
-      assert.strictEqual(receivedProps.length, 1);
-      assert.strictEqual(receivedProps[0].body, "Frontmatter body content");
+      assert.throws(
+        () => compileDocument(md, makeOptions()),
+        /does not accept body content/,
+      );
     });
 
-    it("should ignore ::slot:: markers that match param names (separate namespaces)", () => {
+    it("should throw on ::slot:: markers for undeclared slots", () => {
       const md =
         HEADER +
         `---
@@ -245,10 +246,10 @@ Right content
 
 ::eyebrow::
 FROM_SLOT`;
-      compileDocument(md, makeOptions());
-      assert.strictEqual(receivedProps.length, 1);
-      // eyebrow comes from params (frontmatter), not slots — ::eyebrow:: is ignored
-      assert.strictEqual(receivedProps[0].eyebrow, "FROM_FM");
+      assert.throws(
+        () => compileDocument(md, makeOptions()),
+        /unknown slots.*eyebrow/,
+      );
     });
   });
 

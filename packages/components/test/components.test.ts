@@ -789,8 +789,8 @@ describe("card()", () => {
       },
       DEFAULT_CARD_TOKENS,
     );
-    assert.strictEqual(node.props.title, "Test Title");
-    assert.strictEqual(node.props.description, "Test Description");
+    assert.strictEqual(node.params.title, "Test Title");
+    assert.strictEqual(node.params.description, "Test Description");
   });
 
   test("preserves all props", () => {
@@ -802,9 +802,9 @@ describe("card()", () => {
     const node = card(props, DEFAULT_CARD_TOKENS);
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
     assert.strictEqual(node.componentName, Component.Card);
-    assert.strictEqual(node.props.image, "hero.jpg");
-    assert.strictEqual(node.props.title, "Title");
-    assert.strictEqual(node.props.description, "Description");
+    assert.strictEqual(node.params.image, "hero.jpg");
+    assert.strictEqual(node.params.title, "Title");
+    assert.strictEqual(node.params.description, "Description");
   });
 });
 

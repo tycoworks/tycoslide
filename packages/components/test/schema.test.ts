@@ -33,30 +33,20 @@ describe("Component .schema properties", () => {
       assert.strictEqual(mermaidComponent.schema.safeParse(42).success, false);
     });
 
-    test("cardComponent.schema is a ZodObject (params component)", () => {
+    test("cardComponent.schema is content schema (optional string)", () => {
       assert.ok(cardComponent.schema);
-      assert.ok(cardComponent.schema instanceof z.ZodObject);
+      // Card now has content: schema.string().optional() — schema is the content type
+      assert.strictEqual(cardComponent.schema.safeParse("some body text").success, true);
+      assert.strictEqual(cardComponent.schema.safeParse(undefined).success, true);
+      assert.strictEqual(cardComponent.schema.safeParse(42).success, false);
     });
 
-    test("cardComponent.schema validates card props", () => {
-      const result = cardComponent.schema.safeParse({
-        title: "Test Card",
-        description: "A **description**",
-      });
-      assert.strictEqual(result.success, true);
-    });
-
-    test("quoteComponent.schema is a ZodObject (params component)", () => {
+    test("quoteComponent.schema is content schema (optional string)", () => {
       assert.ok(quoteComponent.schema);
-      assert.ok(quoteComponent.schema instanceof z.ZodObject);
-    });
-
-    test("quoteComponent.schema validates quote props", () => {
-      const result = quoteComponent.schema.safeParse({
-        quote: '"This changed everything."',
-        attribution: "— Jane Smith",
-      });
-      assert.strictEqual(result.success, true);
+      // Quote now has content: schema.string().optional() — schema is the content type
+      assert.strictEqual(quoteComponent.schema.safeParse("quote body").success, true);
+      assert.strictEqual(quoteComponent.schema.safeParse(undefined).success, true);
+      assert.strictEqual(quoteComponent.schema.safeParse(42).success, false);
     });
   });
 
@@ -68,8 +58,9 @@ describe("Component .schema properties", () => {
     });
 
     test("cardComponent.schema usable in schema.array()", () => {
+      // Card schema is now optional string (content type), not ZodObject
       const arr = schema.array(cardComponent.schema);
-      const result = arr.safeParse([{ title: "Card 1" }, { description: "**Bold** desc" }]);
+      const result = arr.safeParse(["body 1", "body 2"]);
       assert.strictEqual(result.success, true);
     });
 
@@ -84,7 +75,7 @@ describe("Component .schema properties", () => {
       const result = layoutParams.safeParse({
         title: "**Welcome**",
         logo: "logo.png",
-        cards: [{ title: "Card 1" }],
+        cards: ["card body 1"],
       });
       assert.strictEqual(result.success, true);
     });

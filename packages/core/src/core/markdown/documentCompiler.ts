@@ -68,10 +68,28 @@ export function validateLayout(
   rawParams: Record<string, unknown>,
   rawSlots: Record<string, unknown>,
 ): any {
-  const paramsResult = z.object(layout.params).safeParse(rawParams);
+  const paramsResult = z.object(layout.params).strict().safeParse(rawParams);
   if (!paramsResult.success) {
     const issues = paramsResult.error.issues.map((i) => `  - ${i.path.join(".")}: ${i.message}`).join("\n");
     throw new Error(`Layout '${layout.name}' params validation failed:\n${issues}`);
+  }
+
+  // Reject unknown slot names
+  if (layout.slots?.length) {
+    const declaredSlots = new Set(layout.slots);
+    const unknownSlots = Object.keys(rawSlots).filter((k) => !declaredSlots.has(k));
+    if (unknownSlots.length) {
+      throw new Error(
+        `Layout '${layout.name}' has unknown slots: [${unknownSlots.join(", ")}]. ` +
+          `Declared slots: [${layout.slots.join(", ")}].`,
+      );
+    }
+  } else if (Object.keys(rawSlots).length) {
+    const slotNames = Object.keys(rawSlots).join(", ");
+    throw new Error(
+      `Layout '${layout.name}' does not accept slots, but found: [${slotNames}]. ` +
+        `Remove ::${Object.keys(rawSlots)[0]}:: markers or use a layout with slots.`,
+    );
   }
 
   let slotsData: Record<string, unknown> = {};
@@ -88,7 +106,7 @@ export function validateLayout(
     slotsData = slotsResult.data as Record<string, unknown>;
   }
 
-  return { ...paramsResult.data, ...slotsData };
+  return { params: paramsResult.data, slots: slotsData };
 }
 
 // ============================================
@@ -165,16 +183,26 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
     );
   }
 
-  // 6. Build SLOTS — from ::name:: markers and body only
+  // 6. Build SLOTS — from ::name:: markers and body content
   const slots: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(raw.slots)) {
     slots[key] = value;
   }
+  // Default content → first declared slot (or error if layout has no slots)
   if (raw.body.trim()) {
-    slots.body = raw.body;
+    if (!layout.slots?.length) {
+      throw new Error(
+        `Layout '${layout.name}' does not accept body content, but body was provided. ` +
+          `Move content into params or use a layout with slots (e.g., 'body', 'blank', 'two-column').`,
+      );
+    }
+    const defaultSlotName = layout.slots[0];
+    if (!slots[defaultSlotName]) {
+      slots[defaultSlotName] = raw.body;
+    }
   }
 
-  // 7. Validate params and slots separately, merge for render
+  // 7. Validate params and slots separately
   // Asset references ($dot.path) flow through as strings here.
   // They are resolved later by the image component's render function.
   const validated = validateLayout(layout, params, slots);
@@ -184,15 +212,15 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
   // are forwarded to slot-compiled components as base styling.
   if (layout.slots?.length && resolvedTokens) {
     for (const slotName of layout.slots) {
-      const slotNodes = validated[slotName];
+      const slotNodes = validated.slots[slotName];
       if (Array.isArray(slotNodes)) {
         injectSlotTokens(slotNodes as SlideNode[], resolvedTokens);
       }
     }
   }
 
-  // 9. Render (pass tokens if layout declares them)
-  const slide = layout.render(validated, resolvedTokens);
+  // 9. Render with params, slots, and tokens
+  const slide = layout.render(validated.params, validated.slots, resolvedTokens);
 
   // 10. Attach speaker notes from frontmatter
   if (notes) {

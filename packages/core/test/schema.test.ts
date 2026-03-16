@@ -81,7 +81,7 @@ describe("schema", () => {
 
   describe("ScalarParam constraint (params rejects non-scalar types)", () => {
     it("rejects z.custom() in layout params", () => {
-      const dummy = { type: NODE_TYPE.COMPONENT, componentName: "x", props: {} } as const;
+      const dummy = { type: NODE_TYPE.COMPONENT, componentName: "x", params: {}, content: undefined } as const;
       // Type-level test: z.custom() should not be assignable to ScalarParam.
       // If this @ts-expect-error becomes "unused", the constraint was loosened.
       defineLayout({
@@ -97,7 +97,7 @@ describe("schema", () => {
     });
 
     it("rejects z.any() in layout params", () => {
-      const dummy = { type: NODE_TYPE.COMPONENT, componentName: "x", props: {} } as const;
+      const dummy = { type: NODE_TYPE.COMPONENT, componentName: "x", params: {}, content: undefined } as const;
       defineLayout({
         name: "test-bad-any",
         description: "should not compile",

@@ -47,7 +47,7 @@ export type MermaidTokens = InferTokens<typeof mermaidTokens>;
 // TYPES
 // ============================================
 
-export type MermaidParams = { body: string };
+export type MermaidParams = {};
 
 // ============================================
 // SANITIZATION
@@ -281,11 +281,12 @@ async function renderMermaidToPng(
  * Sanitizes definition, renders via shared browser, returns image reference.
  */
 async function renderMermaid(
-  params: MermaidParams,
+  _params: MermaidParams,
+  content: string,
   context: RenderContext,
   tokens: MermaidTokens,
 ): Promise<ImageNode> {
-  const sanitized = sanitizeMermaidDefinition(params.body);
+  const sanitized = sanitizeMermaidDefinition(content);
   if (!sanitized.trim()) {
     throw new Error("Mermaid definition is empty after sanitization");
   }
@@ -307,7 +308,7 @@ async function renderMermaid(
 
 export const mermaidComponent = defineComponent({
   name: Component.Mermaid,
-  body: schema.string(),
+  content: schema.string(),
   tokens: mermaidTokens,
   render: renderMermaid,
 });
@@ -328,6 +329,6 @@ export const mermaidComponent = defineComponent({
  * pres.add(contentSlide('Architecture', diagram));
  * ```
  */
-export function mermaid(definition: string): ComponentNode<MermaidParams> {
-  return component(Component.Mermaid, { body: definition });
+export function mermaid(definition: string): ComponentNode {
+  return component(Component.Mermaid, {}, definition);
 }

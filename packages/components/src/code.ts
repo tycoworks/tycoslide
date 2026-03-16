@@ -11,6 +11,7 @@ import {
   defineComponent,
   getFontForRun,
   type ImageNode,
+  type InferParams,
   type InferTokens,
   inToPx,
   NODE_TYPE,
@@ -50,11 +51,10 @@ const codeTokens = token.shape({
 
 export type CodeTokens = InferTokens<typeof codeTokens>;
 
-export type CodeParams = { body: string; language: string };
-
 const codeParamShape = param.shape({
   language: param.required(schema.string()),
 });
+export type CodeParams = InferParams<typeof codeParamShape>;
 
 // ============================================
 // SHIKI THEME BUILDER
@@ -180,10 +180,11 @@ body {
  */
 async function renderCode(
   params: CodeParams,
+  content: string,
   context: RenderContext,
   tokens: CodeTokens,
 ): Promise<ImageNode> {
-  const code = params.body.trim();
+  const code = content.trim();
   if (!code) {
     throw new Error("[tycoslide] Code block is empty");
   }
@@ -204,7 +205,7 @@ async function renderCode(
 
 export const codeComponent = defineComponent({
   name: Component.Code,
-  body: schema.string(),
+  content: schema.string(),
   params: codeParamShape,
   tokens: codeTokens,
   mdast: {
@@ -221,10 +222,7 @@ export const codeComponent = defineComponent({
           `[tycoslide] Unsupported code language "${codeNode.lang}". Supported languages include: typescript, python, sql, rust, go, java. See LANGUAGE constant for full list.`,
         );
       }
-      return component(Component.Code, {
-        body: codeNode.value,
-        language: codeNode.lang,
-      });
+      return component(Component.Code, { language: codeNode.lang }, codeNode.value);
     },
   },
   render: renderCode,
@@ -239,6 +237,6 @@ export const codeComponent = defineComponent({
  * pres.add(contentSlide('Query Example', snippet));
  * ```
  */
-export function code(source: string, language: LanguageName): ComponentNode<CodeParams> {
-  return component(Component.Code, { body: source, language });
+export function code(source: string, language: LanguageName): ComponentNode {
+  return component(Component.Code, { language }, source);
 }

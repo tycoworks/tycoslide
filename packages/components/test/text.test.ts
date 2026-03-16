@@ -59,12 +59,12 @@ describe("Text", () => {
       const node = plainText("ARCHITECTURE", DEFAULT_PLAIN_TEXT_TOKENS);
       assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
       assert.strictEqual(node.componentName, "plainText");
-      assert.strictEqual(node.props.body, "ARCHITECTURE");
+      assert.strictEqual(node.content, "ARCHITECTURE");
     });
 
     it("should pass props and tokens correctly", () => {
       const node = plainText("Label", { ...DEFAULT_PLAIN_TEXT_TOKENS, style: TEXT_STYLE.EYEBROW, color: "#FF0000" });
-      assert.strictEqual(node.props.body, "Label");
+      assert.strictEqual(node.content, "Label");
       // Tokens are now in node.tokens, not spread into props
       assert.strictEqual((node.tokens as any).style, "eyebrow");
       assert.strictEqual((node.tokens as any).color, "#FF0000");
@@ -145,7 +145,7 @@ describe("Text", () => {
     it("should create a text component node", () => {
       const node = text("Hello **world**", DEFAULT_TEXT_TOKENS);
       assert.strictEqual(node.componentName, Component.Text);
-      assert.strictEqual(node.props.body, "Hello **world**");
+      assert.strictEqual(node.content, "Hello **world**");
     });
 
     it("should be registered", () => {

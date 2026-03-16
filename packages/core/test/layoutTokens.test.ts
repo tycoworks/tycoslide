@@ -140,13 +140,13 @@ describe("Document Compiler: Layout Tokens", () => {
     params: { title: param.optional(schema.string()) },
     slots: ["body"],
     tokens: { background: token.required<any>(), title: token.required<any>(), text: token.required<any>() },
-    render: (props: any, tokens?: Record<string, unknown>): Slide => {
-      receivedProps.push(props);
+    render: (params: any, slots: any, tokens?: Record<string, unknown>): Slide => {
+      receivedProps.push({ ...params, ...slots });
       receivedTokens.push(tokens);
       return {
         masterName: "default",
         masterVariant: "default",
-        content: { type: NODE_TYPE.COMPONENT, componentName: "test", props },
+        content: { type: NODE_TYPE.COMPONENT, componentName: "test", params, content: undefined },
       };
     },
   });
@@ -156,13 +156,13 @@ describe("Document Compiler: Layout Tokens", () => {
     description: "Test layout with tokens but no slots",
     params: { title: schema.string() },
     tokens: { background: token.required<any>(), titleTokens: token.required<any>() },
-    render: (props: any, tokens?: Record<string, unknown>): Slide => {
-      receivedProps.push(props);
+    render: (params: any, _slots: any, tokens?: Record<string, unknown>): Slide => {
+      receivedProps.push(params);
       receivedTokens.push(tokens);
       return {
         masterName: "default",
         masterVariant: "default",
-        content: { type: NODE_TYPE.COMPONENT, componentName: "test", props },
+        content: { type: NODE_TYPE.COMPONENT, componentName: "test", params, content: undefined },
       };
     },
   });
@@ -260,12 +260,12 @@ describe("Document Compiler: Layout Tokens", () => {
       description: "no tokens layout",
       params: { title: schema.string() },
       tokens: {},
-      render: (props: any, tokens?: Record<string, unknown>): Slide => {
+      render: (params: any, _slots: any, tokens?: Record<string, unknown>): Slide => {
         capturedTokens = tokens;
         return {
           masterName: "default",
           masterVariant: "default",
-          content: { type: NODE_TYPE.COMPONENT, componentName: "test", props },
+          content: { type: NODE_TYPE.COMPONENT, componentName: "test", params, content: undefined },
         };
       },
     });
@@ -293,13 +293,13 @@ describe("Slot Token Injection", () => {
     params: { title: param.optional(schema.string()) },
     slots: ["body"],
     tokens: { background: token.required<any>(), text: token.required<any>() },
-    render: (props: any, tokens?: Record<string, unknown>): Slide => {
-      receivedProps.push(props);
+    render: (params: any, slots: any, tokens?: Record<string, unknown>): Slide => {
+      receivedProps.push({ ...params, ...slots });
       receivedTokens.push(tokens);
       return {
         masterName: "default",
         masterVariant: "default",
-        content: { type: NODE_TYPE.COMPONENT, componentName: "test", props },
+        content: { type: NODE_TYPE.COMPONENT, componentName: "test", params, content: undefined },
       };
     },
   });
@@ -408,12 +408,12 @@ describe("Slot Token Injection", () => {
       description: "Tokens but no slots",
       params: { title: schema.string() },
       tokens: { background: token.required<any>(), text: token.required<any>() },
-      render: (props: any, _tokens?: Record<string, unknown>): Slide => {
-        capturedProps = props;
+      render: (params: any, _slots: any, _tokens?: Record<string, unknown>): Slide => {
+        capturedProps = params;
         return {
           masterName: "default",
           masterVariant: "default",
-          content: { type: NODE_TYPE.COMPONENT, componentName: "test", props },
+          content: { type: NODE_TYPE.COMPONENT, componentName: "test", params, content: undefined },
         };
       },
     });
@@ -456,7 +456,7 @@ describe("RESERVED_FRONTMATTER_KEYS includes variant", () => {
           render: () => ({
             masterName: "default",
             masterVariant: "default",
-            content: { type: NODE_TYPE.COMPONENT, componentName: "test", props: {} },
+            content: { type: NODE_TYPE.COMPONENT, componentName: "test", params: {}, content: undefined },
           }),
         }),
       /reserved frontmatter key/,

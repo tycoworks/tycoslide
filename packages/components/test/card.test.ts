@@ -64,8 +64,8 @@ describe("Card Component", () => {
         },
         DEFAULT_CARD_TOKENS,
       );
-      assert.strictEqual(node.props.title, "My Title");
-      assert.strictEqual(node.props.description, "My description");
+      assert.strictEqual(node.params.title, "My Title");
+      assert.strictEqual(node.params.description, "My description");
     });
   });
 

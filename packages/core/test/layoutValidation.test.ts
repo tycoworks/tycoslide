@@ -27,18 +27,18 @@ const testLayout: LayoutDefinition = {
   description: "Test layout for validation",
   params: testShape,
   tokens: {},
-  render: (props) => ({
+  render: (params: any, _slots: any) => ({
     masterName: "default",
     masterVariant: "default",
-    content: { type: NODE_TYPE.COMPONENT, componentName: "test", props: { text: props.title } },
+    content: { type: NODE_TYPE.COMPONENT, componentName: "test", params: { text: params.title }, content: undefined },
   }),
 };
 
 describe("validateLayout (params only)", () => {
   it("should return validated props for valid input", () => {
     const result = validateLayout(testLayout, { title: "Hello", count: 5 }, {});
-    assert.strictEqual(result.title, "Hello");
-    assert.strictEqual(result.count, 5);
+    assert.strictEqual(result.params.title, "Hello");
+    assert.strictEqual(result.params.count, 5);
   });
 
   it("should accept optional fields when present", () => {
@@ -52,14 +52,14 @@ describe("validateLayout (params only)", () => {
       },
       {},
     );
-    assert.deepStrictEqual(result.tags, ["a", "b"]);
-    assert.strictEqual(result.active, true);
+    assert.deepStrictEqual(result.params.tags, ["a", "b"]);
+    assert.strictEqual(result.params.active, true);
   });
 
   it("should accept optional fields when absent", () => {
     const result = validateLayout(testLayout, { title: "Hello", count: 1 }, {});
-    assert.strictEqual(result.tags, undefined);
-    assert.strictEqual(result.active, undefined);
+    assert.strictEqual(result.params.tags, undefined);
+    assert.strictEqual(result.params.active, undefined);
   });
 
   it("should throw on missing required field", () => {
@@ -119,19 +119,20 @@ describe("validateLayout (params only)", () => {
     );
   });
 
-  it("should strip unknown fields via Zod passthrough behavior", () => {
-    // By default z.object is strict about output but allows extra input keys
-    const result = validateLayout(
-      testLayout,
-      {
-        title: "Hello",
-        count: 1,
-        unknownField: "should be stripped",
-      },
-      {},
+  it("should reject unknown fields in params", () => {
+    assert.throws(
+      () =>
+        validateLayout(
+          testLayout,
+          {
+            title: "Hello",
+            count: 1,
+            unknownField: "should be rejected",
+          },
+          {},
+        ),
+      /Unrecognized key.*unknownField/,
     );
-    assert.strictEqual(result.title, "Hello");
-    assert.strictEqual((result as any).unknownField, undefined);
   });
 });
 
@@ -144,16 +145,16 @@ describe("validateLayout with enum schema", () => {
     description: "Test enum validation",
     params: enumShape,
     tokens: {},
-    render: (props) => ({
+    render: (params: any, _slots: any) => ({
       masterName: "default",
       masterVariant: "default",
-      content: { type: NODE_TYPE.COMPONENT, componentName: "test", props: { style: props.style } },
+      content: { type: NODE_TYPE.COMPONENT, componentName: "test", params: { style: params.style }, content: undefined },
     }),
   };
 
   it("should accept valid enum value", () => {
     const result = validateLayout(enumLayout, { style: "h1" }, {});
-    assert.strictEqual(result.style, "h1");
+    assert.strictEqual(result.params.style, "h1");
   });
 
   it("should reject invalid enum value", () => {
@@ -175,10 +176,10 @@ describe("validateLayout (params and slots)", () => {
     params: { title: schema.string() },
     slots: ["body"],
     tokens: {},
-    render: (props) => ({
+    render: (params: any, slots: any) => ({
       masterName: "default",
       masterVariant: "default",
-      content: { type: NODE_TYPE.COMPONENT, componentName: "test", props },
+      content: { type: NODE_TYPE.COMPONENT, componentName: "test", params: { ...params, ...slots }, content: undefined },
     }),
   };
 
@@ -187,18 +188,18 @@ describe("validateLayout (params and slots)", () => {
     description: "Test layout with params only",
     params: { title: schema.string() },
     tokens: {},
-    render: (props) => ({
+    render: (params: any, _slots: any) => ({
       masterName: "default",
       masterVariant: "default",
-      content: { type: NODE_TYPE.COMPONENT, componentName: "test", props },
+      content: { type: NODE_TYPE.COMPONENT, componentName: "test", params, content: undefined },
     }),
   };
 
-  it("validates params and slots separately then merges", () => {
+  it("validates params and slots separately", () => {
     const result = validateLayout(layoutWithSlots, { title: "Hello" }, { body: "Content" });
-    assert.strictEqual(result.title, "Hello");
-    assert.ok(Array.isArray(result.body));
-    assert.strictEqual(result.body.length, 1);
+    assert.strictEqual(result.params.title, "Hello");
+    assert.ok(Array.isArray(result.slots.body));
+    assert.strictEqual((result.slots.body as any[]).length, 1);
   });
 
   it("throws on missing required param", () => {
@@ -227,12 +228,13 @@ describe("validateLayout (params and slots)", () => {
 
   it("works for layout with no slots", () => {
     const result = validateLayout(layoutNoSlots, { title: "Hello" }, {});
-    assert.strictEqual(result.title, "Hello");
+    assert.strictEqual(result.params.title, "Hello");
   });
 
-  it("ignores extra slot data when layout has no slots", () => {
-    const result = validateLayout(layoutNoSlots, { title: "Hello" }, { body: "some content" });
-    assert.strictEqual(result.title, "Hello");
-    assert.strictEqual(result.body, undefined);
+  it("rejects extra slot data when layout has no slots", () => {
+    assert.throws(
+      () => validateLayout(layoutNoSlots, { title: "Hello" }, { body: "some content" }),
+      /does not accept slots.*body/,
+    );
   });
 });

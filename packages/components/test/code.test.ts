@@ -56,14 +56,14 @@ describe("code() DSL function", () => {
     assert.strictEqual(node.componentName, Component.Code);
   });
 
-  it("stores code string in props.body", () => {
+  it("stores code string in content", () => {
     const node = code("SELECT 1", "sql");
-    assert.strictEqual(node.props.body, "SELECT 1");
+    assert.strictEqual(node.content, "SELECT 1");
   });
 
-  it("stores language in props.language", () => {
+  it("stores language in params.language", () => {
     const node = code("SELECT 1", "sql");
-    assert.strictEqual(node.props.language, "sql");
+    assert.strictEqual((node.params as any).language, "sql");
   });
 });
 
@@ -287,7 +287,7 @@ describe("code MDAST compile handler", () => {
     const result = handler.mdast!.compile(mdastNode, "```sql\nSELECT 1\n```");
     assert.ok(result);
     assert.strictEqual(result!.componentName, Component.Code);
-    assert.strictEqual((result!.props as any).body, "SELECT 1");
+    assert.strictEqual(result!.content, "SELECT 1");
   });
 
   it("compiles code fence with language", () => {
@@ -301,7 +301,7 @@ describe("code MDAST compile handler", () => {
 
     const result = handler.mdast!.compile(mdastNode, "");
     assert.ok(result);
-    assert.strictEqual((result!.props as any).language, "typescript");
+    assert.strictEqual((result!.params as any).language, "typescript");
   });
 
   it("throws when code fence has no language", () => {
@@ -343,7 +343,7 @@ describe("code MDAST compile handler", () => {
       } as unknown as RootContent;
       const result = handler.mdast!.compile(mdastNode, "");
       assert.ok(result, `Language "${lang}" should be accepted`);
-      assert.strictEqual((result!.props as any).language, lang);
+      assert.strictEqual((result!.params as any).language, lang);
     }
   });
 });
@@ -370,7 +370,7 @@ describe("renderCodeToHtml()", () => {
   };
 
   const codeStyle: TextStyle = {
-    fontFamily: { name: "Fira Code", regular: { path: "", weight: 400 } },
+    fontFamily: { name: "Fira Code", regular: { path: "/fake/fira-code.woff", weight: 400 } },
     fontSize: 12,
     lineHeightMultiplier: 1.4,
     bulletIndentPt: 0,

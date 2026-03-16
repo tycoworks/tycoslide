@@ -24,10 +24,10 @@ import { HALIGN, TEXT_STYLE, VALIGN } from "../src/core/model/types.js";
 const stubSlide: Slide = {
   masterName: "default",
   masterVariant: "default",
-  content: { type: NODE_TYPE.COMPONENT, componentName: "test", props: {} },
+  content: { type: NODE_TYPE.COMPONENT, componentName: "test", params: {}, content: undefined },
 };
 
-function makeLayout(name: string, render: (params: any) => Slide): LayoutDefinition {
+function makeLayout(name: string, render: (params: any, slots: any, tokens: any) => Slide): LayoutDefinition {
   return {
     name,
     description: `Test layout: ${name}`,
@@ -129,7 +129,7 @@ describe("ComponentRegistry", () => {
         hAlign: HALIGN.LEFT,
         vAlign: VALIGN.TOP,
       };
-      const node = component(C.Text, { body: "hello" }, textTokens);
+      const node = component(C.Text, {}, "hello", textTokens);
       const rendered = await componentRegistry.render(node, { theme, canvas: noopCanvas() });
       assert.strictEqual((rendered as any).type, NODE_TYPE.TEXT);
     });
@@ -187,7 +187,7 @@ describe("ComponentRegistry", () => {
           vAlign: VALIGN.TOP,
         },
       };
-      const node = component(C.Card, { title: "Test" }, cardTokens);
+      const node = component(C.Card, { title: "Test" }, undefined, cardTokens);
       const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
       // Card render creates a Column containing a Text child
       assert.strictEqual(rendered.type, NODE_TYPE.CONTAINER);
@@ -206,7 +206,7 @@ describe("ComponentRegistry", () => {
         hAlign: HALIGN.LEFT,
         vAlign: VALIGN.TOP,
       };
-      const node = component(C.Row, { children: [component(C.Text, { body: "hi" }, textTokens)] });
+      const node = component(C.Row, {}, [component(C.Text, {}, "hi", textTokens)]);
       const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
       assert.strictEqual(rendered.type, NODE_TYPE.CONTAINER);
       if (rendered.type === NODE_TYPE.CONTAINER) {
@@ -220,7 +220,7 @@ describe("ComponentRegistry", () => {
       const node = component("myComp", { x: 1 });
       assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
       assert.strictEqual(node.componentName, "myComp");
-      assert.deepStrictEqual(node.props, { x: 1 });
+      assert.deepStrictEqual(node.params, { x: 1 });
     });
   });
 });

@@ -58,6 +58,12 @@ describe("validateThemeFonts", () => {
       assert.doesNotThrow(() => validateThemeFonts(theme));
     });
 
+    it("throws for empty font path", () => {
+      const theme = mockTheme();
+      theme.fonts = [{ name: "System Mono", regular: { path: "", weight: 400 } }];
+      assert.throws(() => validateThemeFonts(theme), /empty path/);
+    });
+
     it("throws for unsupported format (.svg)", () => {
       const theme = mockTheme();
       theme.fonts = [{ name: "Bad Font", regular: { path: "/fake/font.svg", weight: 400 } }];
@@ -266,11 +272,11 @@ describe("generateFontFaceCSS", () => {
     assert.strictEqual(lightCount, 2, "Inter Light should have 2 rules (regular + bold) despite shared bold file");
   });
 
-  it("skips fonts with empty path", () => {
+  it("skips fonts with empty path (validation catches this earlier)", () => {
     const theme = mockTheme();
     theme.fonts = [...theme.fonts, { name: "System Mono", regular: { path: "", weight: 400 } }];
     const result = generateFontFaceCSS(theme);
-    assert.ok(!result.css.includes("System Mono"), "should skip system fonts with empty path");
+    assert.ok(!result.css.includes("System Mono"), "should skip fonts with empty path");
   });
 
   it("generates exactly one @font-face rule for regular-only FontFamily", () => {

@@ -10,6 +10,7 @@ import {
   type GapSize,
   type HorizontalAlignment,
   param,
+  schema,
   SHAPE,
   SIZE,
   token,
@@ -69,11 +70,12 @@ export type TestimonialParams = InferParams<typeof testimonialParams>;
  */
 export const testimonialComponent = defineComponent({
   name: Component.Testimonial,
+  content: schema.string().optional(),
   params: testimonialParams,
   tokens: testimonialTokens,
-  render(params, _context, tokens) {
-    const { quote: quoteText, body, attribution, image: imagePath } = params;
-    const actualQuote = quoteText ?? body;
+  render(params, content, _context, tokens) {
+    const { quote: quoteText, attribution, image: imagePath } = params;
+    const actualQuote = quoteText ?? content;
     const {
       background,
       padding,
@@ -97,19 +99,19 @@ export const testimonialComponent = defineComponent({
       children.push(plainText(attribution, attributionTokens));
     }
 
-    const contentProps = { padding, gap, hAlign: contentHAlign, vAlign: contentVAlign };
+    const containerParams = { padding, gap, hAlign: contentHAlign, vAlign: contentVAlign };
     const outerHeight = SIZE.FILL;
 
     // No background token — skip background shape
     if (!background) {
-      return column({ ...contentProps, height: outerHeight }, ...children);
+      return column({ ...containerParams, height: outerHeight }, ...children);
     }
 
     // Build background rectangle using ShapeTokens directly
     const backgroundRect = shape(background, { shape: SHAPE.ROUND_RECT });
 
     // Content layer fills the stack so vAlign: MIDDLE centering works
-    const contentLayer = column({ ...contentProps, height: SIZE.FILL }, ...children);
+    const contentLayer = column({ ...containerParams, height: SIZE.FILL }, ...children);
     return stack({ height: outerHeight }, backgroundRect, contentLayer);
   },
 });
@@ -131,5 +133,5 @@ export const testimonialComponent = defineComponent({
  * ```
  */
 export function testimonial(params: TestimonialParams, tokens: TestimonialTokens) {
-  return component(Component.Testimonial, params, tokens);
+  return component(Component.Testimonial, params, undefined, tokens);
 }

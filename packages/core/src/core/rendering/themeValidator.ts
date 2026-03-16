@@ -40,6 +40,12 @@ export function validateThemeFonts(theme: Theme): void {
     for (const slot of Object.values(FONT_SLOT)) {
       const font = family[slot];
       if (font) {
+        if (!font.path) {
+          throw new Error(
+            `[tycoslide] Font in "${family.name}" (slot: ${slot}) has an empty path. ` +
+              `All fonts must have a valid file path.`,
+          );
+        }
         const ext = font.path.substring(font.path.lastIndexOf("."));
         if (!FONT_FORMATS[ext]) {
           const supported = Object.keys(FONT_FORMATS).join(", ");

@@ -127,10 +127,11 @@ describe("Slide Parser", () => {
       );
     });
 
-    it("should NOT throw on valid but non-object YAML (scalar)", () => {
-      // "just a string" is valid YAML but not an object → returns {}
-      const doc = parseSlideDocument("---\ntheme: test\n---\n\n---\njust a string\n---\n\nBody.");
-      assert.deepStrictEqual(doc.slides[0].frontmatter, {});
+    it("should throw on valid but non-object YAML (scalar)", () => {
+      assert.throws(
+        () => parseSlideDocument("---\ntheme: test\n---\n\n---\njust a string\n---\n\nBody."),
+        /frontmatter must be a YAML mapping/,
+      );
     });
   });
 

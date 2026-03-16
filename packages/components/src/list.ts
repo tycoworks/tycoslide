@@ -10,8 +10,10 @@ import {
   defineComponent,
   type ElementNode,
   extractSource,
+  type InferParams,
   type InferTokens,
   NODE_TYPE,
+  param,
   SYNTAX,
   schema,
   token,
@@ -35,20 +37,23 @@ export type ListTokens = InferTokens<typeof listTokens>;
 // TYPES
 // ============================================
 
-type ListParams = { body: string[]; ordered?: boolean };
+const listParamShape = param.shape({
+  ordered: param.optional(schema.boolean()),
+});
+export type ListParams = InferParams<typeof listParamShape>;
 
 // ============================================
 // RENDER
 // ============================================
 
-function renderList(params: ListParams, context: RenderContext, tokens: ListTokens): ElementNode {
+function renderList(params: ListParams, content: string[], context: RenderContext, tokens: ListTokens): ElementNode {
   const textStyle = context.theme.textStyles[tokens.style];
 
   const bulletType = params.ordered ? { type: "number" as const } : true;
   const runs: NormalizedRun[] = [];
 
-  for (let i = 0; i < params.body.length; i++) {
-    const item = params.body[i];
+  for (let i = 0; i < content.length; i++) {
+    const item = content[i];
     // Parse each item as RICH (inline formatting)
     const tree = inlineParse(item);
     const itemRuns: NormalizedRun[] = [];
@@ -108,7 +113,8 @@ function extractListItems(listNode: MdastList, source: string): string[] {
 
 export const listComponent = defineComponent({
   name: Component.List,
-  body: schema.array(schema.string()),
+  content: schema.array(schema.string()),
+  params: listParamShape,
   directive: false,
   tokens: listTokens,
   mdast: {
@@ -116,7 +122,7 @@ export const listComponent = defineComponent({
     compile: (node: RootContent, source: string): ComponentNode | null => {
       const listNode = node as unknown as MdastList;
       const items = extractListItems(listNode, source);
-      return component(Component.List, { body: items, ordered: listNode.ordered ?? false });
+      return component(Component.List, { ordered: listNode.ordered ?? false }, items);
     },
   },
   render: renderList,
@@ -135,6 +141,6 @@ export const listComponent = defineComponent({
  * list(['Step one', 'Step two'], tokens.list, true)
  * ```
  */
-export function list(items: string[], tokens: ListTokens, ordered?: boolean): ComponentNode<ListParams> {
-  return component(Component.List, { body: items, ordered: ordered ?? false }, tokens);
+export function list(items: string[], tokens: ListTokens, ordered?: boolean): ComponentNode {
+  return component(Component.List, { ordered: ordered ?? false }, items, tokens);
 }

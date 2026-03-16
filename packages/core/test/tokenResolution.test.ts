@@ -25,9 +25,9 @@ const tokenTestComponent = defineComponent({
     label: param.optional(schema.string()),
   },
   tokens: { alpha: token.required<any>(), beta: token.required<any>(), gamma: token.required<any>() },
-  render: (props: any, _ctx: any, tokens: any): any => ({
+  render: (params: any, _content: any, _ctx: any, tokens: any): any => ({
     type: NODE_TYPE.TEXT,
-    content: [{ text: props.label ?? "" }],
+    content: [{ text: params.label ?? "" }],
     hAlign: HALIGN.LEFT as any,
     vAlign: VALIGN.TOP as any,
     // Stash resolved tokens for assertion
@@ -57,7 +57,7 @@ describe("Token Resolution Engine", () => {
   describe("tokens from node.tokens", () => {
     it("resolves tokens from node.tokens", async () => {
       const theme = minimalTheme();
-      const node = component(TOKEN_COMP as any, { label: "test" }, { alpha: "AAA", beta: "BBB", gamma: "CCC" });
+      const node = component(TOKEN_COMP as any, { label: "test" }, undefined, { alpha: "AAA", beta: "BBB", gamma: "CCC" });
       const rendered = (await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() })) as any;
       assert.strictEqual(rendered._tokens.alpha, "AAA");
       assert.strictEqual(rendered._tokens.beta, "BBB");
@@ -66,19 +66,20 @@ describe("Token Resolution Engine", () => {
 
     it("custom token values are passed through", async () => {
       const theme = minimalTheme();
-      const node = component(TOKEN_COMP as any, { label: "test" }, { alpha: "CUSTOM", beta: "VALUES", gamma: "HERE" });
+      const node = component(TOKEN_COMP as any, { label: "test" }, undefined, { alpha: "CUSTOM", beta: "VALUES", gamma: "HERE" });
       const rendered = (await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() })) as any;
       assert.strictEqual(rendered._tokens.alpha, "CUSTOM");
       assert.strictEqual(rendered._tokens.beta, "VALUES");
       assert.strictEqual(rendered._tokens.gamma, "HERE");
     });
 
-    it("props and tokens are separate — no key conflicts", async () => {
+    it("params and tokens are separate — no key conflicts", async () => {
       const theme = minimalTheme();
-      // Simulate card-like scenario: props.alpha is a string, tokens.alpha is an object
+      // Simulate card-like scenario: params.alpha is a string, tokens.alpha is an object
       const node = component(
         TOKEN_COMP as any,
         { label: "test", alpha: "content-string" },
+        undefined,
         { alpha: { nested: true }, beta: "B", gamma: "G" },
       );
       const rendered = (await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() })) as any;
@@ -107,7 +108,7 @@ describe("Token Resolution Engine", () => {
 
     it("throws when a required token is missing from node.tokens", async () => {
       const theme = minimalTheme();
-      const node = component(TOKEN_COMP as any, { label: "test" }, { alpha: "A", beta: "B" }); // gamma missing
+      const node = component(TOKEN_COMP as any, { label: "test" }, undefined, { alpha: "A", beta: "B" }); // gamma missing
 
       await assert.rejects(
         () => componentRegistry.renderTree(node, { theme, canvas: noopCanvas() }),
@@ -121,7 +122,7 @@ describe("Token Resolution Engine", () => {
 
     it("error message lists ALL missing tokens", async () => {
       const theme = minimalTheme();
-      const node = component(TOKEN_COMP as any, { label: "test" }, { alpha: "A" }); // beta and gamma missing
+      const node = component(TOKEN_COMP as any, { label: "test" }, undefined, { alpha: "A" }); // beta and gamma missing
 
       await assert.rejects(
         () => componentRegistry.renderTree(node, { theme, canvas: noopCanvas() }),
@@ -135,7 +136,7 @@ describe("Token Resolution Engine", () => {
 
     it("succeeds when all required tokens are provided via node.tokens", async () => {
       const theme = minimalTheme();
-      const node = component(TOKEN_COMP as any, { label: "test" }, { alpha: "A", beta: "B", gamma: "G" });
+      const node = component(TOKEN_COMP as any, { label: "test" }, undefined, { alpha: "A", beta: "B", gamma: "G" });
       const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
       assert.strictEqual(rendered.type, NODE_TYPE.TEXT);
     });
@@ -146,9 +147,9 @@ describe("Token Resolution Engine", () => {
         name: NO_TOKEN_COMP as any,
         params: { value: param.optional(schema.string()) },
         tokens: {},
-        render: (props: any): any => ({
+        render: (params: any, _content: any): any => ({
           type: NODE_TYPE.TEXT,
-          content: [{ text: props.value ?? "" }],
+          content: [{ text: params.value ?? "" }],
           hAlign: HALIGN.LEFT,
           vAlign: VALIGN.TOP,
         }),

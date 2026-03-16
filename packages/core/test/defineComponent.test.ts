@@ -12,7 +12,7 @@ import { componentRegistry, defineComponent } from "../src/core/rendering/regist
 
 const stubStyle: TextStyle = {
   fontSize: 12,
-  fontFamily: { name: "Test", regular: { path: "", weight: 400 } },
+  fontFamily: { name: "Test", regular: { path: "/fake/test.woff", weight: 400 } },
   lineHeightMultiplier: 1.0,
   bulletIndentPt: 18,
 };
@@ -43,7 +43,7 @@ describe("defineComponent", () => {
       name: "test-params-comp",
       params: testParams,
       tokens: {},
-      render: (props) => stubTextNode(props.title),
+      render: (params) => stubTextNode(params.title),
     });
 
     test("has .schema property (ZodObject)", () => {
@@ -73,6 +73,7 @@ describe("defineComponent", () => {
     test("render function works", async () => {
       const rendered = await comp.render(
         { title: "Hello", count: 1 },
+        undefined,
         { theme: {} as any, canvas: { renderHtml: async () => "" } },
         {} as any,
       );
@@ -88,12 +89,12 @@ describe("defineComponent", () => {
     });
   });
 
-  describe("define with body", () => {
+  describe("define with content", () => {
     const comp = defineComponent({
       name: "test-body-comp",
-      body: schema.string(),
+      content: schema.string(),
       tokens: {},
-      render: (props) => stubTextNode(props.body),
+      render: (_params, content) => stubTextNode(content),
     });
 
     test("has .schema property (= body type)", () => {
@@ -124,22 +125,23 @@ describe("defineComponent", () => {
     });
   });
 
-  describe("define with body + params", () => {
+  describe("define with content + params", () => {
     const comp = defineComponent({
       name: "test-body-params-comp",
-      body: schema.string(),
+      content: schema.string(),
       params: { scale: param.optional(schema.number()) },
       tokens: {},
-      render: (props) => stubTextNode(props.body),
+      render: (_params, content) => stubTextNode(content),
     });
 
-    test(".schema is body type (not full object)", () => {
+    test(".schema is content type (not full object)", () => {
       assert.ok(comp.schema instanceof z.ZodString);
     });
 
-    test("render receives body + params", async () => {
+    test("render receives content + params", async () => {
       const rendered = await comp.render(
-        { body: "hello", scale: 2 },
+        { scale: 2 },
+        "hello",
         { theme: {} as any, canvas: { renderHtml: async () => "" } },
         {} as any,
       );
@@ -147,15 +149,15 @@ describe("defineComponent", () => {
     });
   });
 
-  describe("define with slots (no schema)", () => {
+  describe("define with children (no schema)", () => {
     const comp = defineComponent({
       name: "test-prog-comp",
-      slots: ["children"],
+      children: true,
       tokens: {},
-      render: (props: { children: any[] }) => ({
+      render: (_params: any, children: any[]) => ({
         type: NODE_TYPE.CONTAINER,
         direction: DIRECTION.ROW,
-        children: props.children,
+        children,
         width: SIZE.FILL,
         height: SIZE.HUG,
         gap: 0,

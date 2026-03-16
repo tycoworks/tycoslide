@@ -15,9 +15,9 @@ import { C, testComponents } from "./test-components.js";
 // Register test components before tests run
 componentRegistry.register(testComponents);
 
-/** Helper: get props as any to avoid unknown type errors in tests */
-function props(nodes: any[], index: number): any {
-  return nodes[index].props;
+/** Helper: get node as any to avoid unknown type errors in tests */
+function node(nodes: any[], index: number): any {
+  return nodes[index];
 }
 
 describe("Slot Compiler", () => {
@@ -26,7 +26,7 @@ describe("Slot Compiler", () => {
       const nodes = compileSlot("Hello world");
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual((nodes[0] as any).componentName, C.Text);
-      assert.strictEqual(props(nodes, 0).body, "Hello world");
+      assert.strictEqual(node(nodes, 0).content, "Hello world");
     });
 
     it("should return multiple paragraphs as separate text nodes", () => {
@@ -99,13 +99,12 @@ describe("Slot Compiler", () => {
       assert.strictEqual(nodes.length, 0);
     });
 
-    it("should skip thematic breaks and return surrounding content as separate nodes", () => {
+    it("should throw on thematic breaks in slot content", () => {
       const md = "Before\n\n---\n\nAfter";
-      const nodes = compileSlot(md);
-      // Thematic break is skipped, Before and After are separate text nodes
-      assert.strictEqual(nodes.length, 2);
-      assert.strictEqual((nodes[0] as any).componentName, C.Text);
-      assert.strictEqual((nodes[1] as any).componentName, C.Text);
+      assert.throws(
+        () => compileSlot(md),
+        /horizontal rules.*not supported.*Use :::line/,
+      );
     });
   });
 
@@ -114,14 +113,14 @@ describe("Slot Compiler", () => {
       const nodes = compileSlot(":::image\n/path/to/image.png\n:::");
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual((nodes[0] as any).componentName, C.Image);
-      assert.strictEqual(props(nodes, 0).body, "/path/to/image.png");
+      assert.strictEqual(node(nodes, 0).content, "/path/to/image.png");
     });
 
     it("should compile $-prefixed asset reference in :::image directive", () => {
       const nodes = compileSlot(":::image\n$illustrations.integrate\n:::");
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual((nodes[0] as any).componentName, C.Image);
-      assert.strictEqual(props(nodes, 0).body, "$illustrations.integrate");
+      assert.strictEqual(node(nodes, 0).content, "$illustrations.integrate");
     });
   });
 
@@ -132,7 +131,7 @@ describe("Slot Compiler", () => {
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual((nodes[0] as any).componentName, C.Table);
       // Body contains the raw GFM table text (parsed in render, not deserialize)
-      assert.ok(props(nodes, 0).body.includes("| A | B |"));
+      assert.ok(node(nodes, 0).content.includes("| A | B |"));
     });
 
     it("should deserialize :::table without attributes as plain table", () => {
@@ -140,14 +139,14 @@ describe("Slot Compiler", () => {
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual((nodes[0] as any).componentName, C.Table);
-      assert.ok(props(nodes, 0).body.includes("| X | Y |"));
+      assert.ok(node(nodes, 0).content.includes("| X | Y |"));
     });
 
     it("should pass headerColumns from attributes with body", () => {
       const md = ':::table{headerColumns="1"}\n| A | B |\n|---|---|\n| C | D |\n:::';
       const nodes = compileSlot(md);
-      assert.strictEqual(props(nodes, 0).headerColumns, 1);
-      assert.ok(props(nodes, 0).body.includes("| A | B |"));
+      assert.strictEqual(node(nodes, 0).params.headerColumns, 1);
+      assert.ok(node(nodes, 0).content.includes("| A | B |"));
     });
 
     it("should reject unknown directive parameters", () => {
@@ -166,6 +165,11 @@ describe("Slot Compiler", () => {
   });
 
   describe("error cases", () => {
+    it("should reject parameters on components that accept none", () => {
+      const md = ':::image{foo="bar"}\nphoto.png\n:::';
+      assert.throws(() => compileSlot(md), /does not accept parameters/);
+    });
+
     it("should throw on unknown directive", () => {
       const md = ":::unknown\nsome body\n:::";
       assert.throws(() => compileSlot(md), /unknown directive ":::unknown"/);

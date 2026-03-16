@@ -96,16 +96,17 @@ function extractGlobalFrontmatter(source: string): { global: Record<string, unkn
   const match = source.match(GLOBAL_FM_RE);
   if (!match) return { global: {}, rest: source };
 
-  try {
-    const parsed = parseYaml(match[1]);
-    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-      return {
-        global: parsed as Record<string, unknown>,
-        rest: source.slice(match[0].length),
-      };
-    }
-  } catch {
-    // Not valid YAML — treat entire file as content
+  const parsed = parseYaml(match[1]);
+  if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+    return {
+      global: parsed as Record<string, unknown>,
+      rest: source.slice(match[0].length),
+    };
+  }
+  if (parsed !== null && parsed !== undefined) {
+    throw new Error(
+      `Global frontmatter must be a YAML mapping (key: value pairs), got ${Array.isArray(parsed) ? "array" : typeof parsed}.`,
+    );
   }
 
   return { global: {}, rest: source };
@@ -260,7 +261,9 @@ function parseFrontmatter(yaml: string, slideIndex: number): Record<string, unkn
   } catch (err) {
     throw new FrontmatterParseError(slideIndex, yaml, err);
   }
-  return {};
+  throw new Error(
+    `Slide ${slideIndex + 1}: frontmatter must be a YAML mapping (key: value pairs), got ${Array.isArray(parseYaml(yaml)) ? "array" : typeof parseYaml(yaml)}.`,
+  );
 }
 
 // ============================================

@@ -187,12 +187,17 @@ export interface StackNode<C extends SlideNode = ElementNode> {
  * A component node before rendering.
  * Components are higher-level abstractions (card, list, table) that render
  * into primitive ElementNodes at Presentation.add() time.
+ *
+ * Two separate channels:
+ * - `params` — scalar configuration (language, headerColumns, etc.)
+ * - `content` — the thing being rendered (body string, list items, children array, etc.)
  */
-export interface ComponentNode<TProps = unknown> {
+export interface ComponentNode<TParams = unknown, TContent = unknown> {
   type: typeof NODE_TYPE.COMPONENT;
   componentName: string;
-  props: TProps;
-  /** Visual tokens provided by parent (DSL) or slot injection. Separate from content props. */
+  params: TParams;
+  content: TContent;
+  /** Visual tokens provided by parent (DSL) or slot injection. Separate from params/content. */
   tokens?: Record<string, unknown>;
 }
 
@@ -220,18 +225,20 @@ export type SlideNode = ElementNode | ComponentNode | ContainerNode<SlideNode> |
 
 /**
  * Create a component node.
- * Tokens are stored separately from props to avoid naming conflicts
- * (e.g., card has both props.title: string and tokens.title: TextTokens).
+ * Params hold configuration, content holds the thing being rendered,
+ * tokens hold visual styling from the parent (separate to avoid naming conflicts).
  */
-export function component<TProps>(
+export function component<TParams, TContent = undefined>(
   name: string,
-  props: TProps,
+  params: TParams,
+  content?: TContent,
   tokens?: Record<string, unknown> | object,
-): ComponentNode<TProps> {
-  const node: ComponentNode<TProps> = {
+): ComponentNode<TParams, TContent> {
+  const node: ComponentNode<TParams, TContent> = {
     type: NODE_TYPE.COMPONENT,
     componentName: name,
-    props,
+    params,
+    content: content as TContent,
   };
   if (tokens) node.tokens = tokens as Record<string, unknown>;
   return node;
@@ -247,7 +254,7 @@ export function isComponentNode(node: unknown): node is ComponentNode {
     "type" in node &&
     (node as { type: unknown }).type === NODE_TYPE.COMPONENT &&
     "componentName" in node &&
-    "props" in node
+    "params" in node
   );
 }
 
