@@ -16,7 +16,6 @@ import { resolveVariantTokens } from "../model/token.js";
 import type { Background, Slide, Theme } from "../model/types.js";
 import { PptxRenderer } from "./pptxRenderer.js";
 import { componentRegistry, type RenderContext, masterRegistry } from "./registry.js";
-import { validateThemeFonts } from "./themeValidator.js";
 
 export type { Slide } from "../model/types.js";
 
@@ -65,7 +64,6 @@ export class Presentation {
   private deferredSlides: DeferredSlide[] = [];
 
   constructor(theme: Theme, assets?: Record<string, unknown>) {
-    validateThemeFonts(theme);
     this._theme = theme;
     this._assets = assets;
     this.renderer = new PptxRenderer(theme);

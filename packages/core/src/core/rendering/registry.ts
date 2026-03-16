@@ -18,6 +18,7 @@ import { RESERVED_FRONTMATTER_KEYS, type SyntaxType } from "../model/syntax.js";
 import { type InferTokens, parseTokenShape, type TokenShape, validateTokens } from "../model/token.js";
 import type { Bounds } from "../model/bounds.js";
 import type { Background, Slide, Theme } from "../model/types.js";
+import { validateThemeFonts } from "./themeValidator.js";
 
 // Re-export ComponentNode — required for declaration emit (defineComponent return type)
 export type { ComponentNode } from "../model/nodes.js";
@@ -567,8 +568,10 @@ export const masterRegistry = new Registry<MasterDefinition>("Master");
 // ============================================
 
 /**
- * Define a theme. Thin factory for consistency with defineComponent/defineLayout/defineMaster.
+ * Define a theme. Validates font configuration and returns the theme object.
+ * All font paths must be non-empty, use a supported format, and be registered in theme.fonts.
  */
 export function defineTheme(theme: Theme): Theme {
+  validateThemeFonts(theme);
   return theme;
 }
