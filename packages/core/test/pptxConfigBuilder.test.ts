@@ -4,6 +4,7 @@
 import * as assert from "node:assert";
 import { describe, test } from "node:test";
 import {
+  type ImageNode,
   type LineNode,
   NODE_TYPE,
   type PositionedNode,
@@ -588,20 +589,41 @@ describe("buildShapeConfig() — area shapes", () => {
     assert.strictEqual(shadow.angle, 315);
   });
 
-  test("translates inner shadow", () => {
-    const shapeNode: ShapeNode = {
-      ...baseShapeNode,
-      shadow: { type: "inner", color: "#FF0000", opacity: 50, blur: 4, offset: 1, angle: 180 },
+  test("translates shadow on image", () => {
+    const imageNode: ImageNode = {
+      type: NODE_TYPE.IMAGE,
+      src: "test.png",
+      shadow: { type: "outer", color: "#FF0000", opacity: 50, blur: 4, offset: 1, angle: 180 },
     };
-    const pos = positioned(shapeNode, 1, 2, 5, 3);
+    const pos = positioned(imageNode, 1, 2, 5, 3);
 
-    const result = builder.buildShapeConfig(shapeNode, pos);
+    const result = builder.buildImageConfig(imageNode, pos);
 
     assert.ok(result);
-    const shadow = result.options.shadow as { type: string; color: string; opacity: number };
-    assert.strictEqual(shadow.type, "inner");
+    const shadow = result.shadow as { type: string; color: string; opacity: number };
+    assert.strictEqual(shadow.type, "outer");
     assert.strictEqual(shadow.color, "FF0000");
     assert.strictEqual(shadow.opacity, 0.5);
+  });
+
+  test("translates shadow on line", () => {
+    const lineNode: LineNode = {
+      type: NODE_TYPE.LINE,
+      color: "#333333",
+      width: 1,
+      dashType: DASH_TYPE.SOLID,
+      shadow: { type: "outer", color: "#000000", opacity: 30, blur: 6, offset: 2, angle: 270 },
+    };
+    const pos = positioned(lineNode, 0, 0, 10, 0);
+
+    const result = builder.buildLineConfig(lineNode, pos);
+
+    assert.ok(result);
+    const shadow = result.options.shadow as { type: string; color: string; opacity: number; blur: number };
+    assert.strictEqual(shadow.type, "outer");
+    assert.strictEqual(shadow.color, "000000");
+    assert.strictEqual(shadow.opacity, 0.3);
+    assert.strictEqual(shadow.blur, 6);
   });
 });
 
@@ -710,6 +732,26 @@ describe("buildTextConfig()", () => {
     const result = builder.buildTextConfig(textNode, pos);
 
     assert.strictEqual(result.options.lineSpacingMultiple, 1.5);
+  });
+
+  test("translates shadow on text", () => {
+    const textNode: TextNode = {
+      ...baseTextNode,
+      content: "Shadow text",
+      shadow: { type: "outer", color: "#1A1A2E", opacity: 40, blur: 6, offset: 3, angle: 225 },
+    };
+    const pos = positioned(textNode, 1, 2, 5, 3);
+
+    const result = builder.buildTextConfig(textNode, pos);
+
+    assert.ok(result.options.shadow);
+    const shadow = result.options.shadow as { type: string; color: string; opacity: number; blur: number; offset: number; angle: number };
+    assert.strictEqual(shadow.type, "outer");
+    assert.strictEqual(shadow.color, "1A1A2E");
+    assert.strictEqual(shadow.opacity, 0.4);
+    assert.strictEqual(shadow.blur, 6);
+    assert.strictEqual(shadow.offset, 3);
+    assert.strictEqual(shadow.angle, 225);
   });
 });
 

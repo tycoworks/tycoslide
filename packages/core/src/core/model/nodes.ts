@@ -54,11 +54,13 @@ export interface TextNode {
   bulletIndentPt: number;
   linkColor: string; // token-driven hyperlink color (render-time)
   linkUnderline: boolean; // token-driven hyperlink underline (render-time)
+  shadow?: Shadow;
 }
 
 export interface ImageNode {
   type: typeof NODE_TYPE.IMAGE;
   src: string;
+  shadow?: Shadow;
 }
 
 export interface LineNode {
@@ -68,6 +70,7 @@ export interface LineNode {
   dashType: DashType;
   beginArrow?: ArrowType;
   endArrow?: ArrowType;
+  shadow?: Shadow;
 }
 
 /** Border configuration for area shapes. */

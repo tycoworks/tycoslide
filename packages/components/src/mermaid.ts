@@ -10,13 +10,13 @@ import {
   component,
   defineComponent,
   hexToRgba,
-  type ImageNode,
   type InferTokens,
-  NODE_TYPE,
   type RenderContext,
+  type Shadow,
   schema,
   token,
 } from "tycoslide";
+import { image } from "./image.js";
 import { Component } from "./names.js";
 
 // ============================================
@@ -39,6 +39,7 @@ const mermaidTokens = token.shape({
   textStyle: token.required<TextStyleName>(),
   accentOpacity: token.required<number>(),
   accents: token.required<Record<string, string>>(),
+  shadow: token.optional<Shadow>(),
 });
 
 export type MermaidTokens = InferTokens<typeof mermaidTokens>;
@@ -277,7 +278,7 @@ async function renderMermaidToPng(
 // ============================================
 
 /**
- * Render mermaid component to ImageNode.
+ * Render mermaid component to image component.
  * Sanitizes definition, renders via shared browser, returns image reference.
  */
 async function renderMermaid(
@@ -285,7 +286,7 @@ async function renderMermaid(
   content: string,
   context: RenderContext,
   tokens: MermaidTokens,
-): Promise<ImageNode> {
+): Promise<ComponentNode> {
   const sanitized = sanitizeMermaidDefinition(content);
   if (!sanitized.trim()) {
     throw new Error("Mermaid definition is empty after sanitization");
@@ -296,10 +297,11 @@ async function renderMermaid(
     accents: tokens.accents,
   };
   const pngPath = await renderMermaidToPng(sanitized, tokens, fontFamily, renderCtx, context.canvas);
-  return {
-    type: NODE_TYPE.IMAGE,
-    src: pngPath,
-  };
+  const mermaidImage = image(pngPath);
+  if (tokens.shadow) {
+    mermaidImage.tokens = { shadow: tokens.shadow };
+  }
+  return mermaidImage;
 }
 
 // ============================================

@@ -13,9 +13,11 @@ import {
   extractSource,
   type InferTokens,
   NODE_TYPE,
+  type Shadow,
   SYNTAX,
   schema,
   TEXT_STYLE,
+  type TextNode,
   token,
 } from "tycoslide";
 import { Component } from "./names.js";
@@ -29,6 +31,7 @@ const textTokens = token.shape({
   hAlign: token.required<HorizontalAlignment>(),
   vAlign: token.required<VerticalAlignment>(),
   accents: token.required<Record<string, string>>(),
+  shadow: token.optional<Shadow>(),
 });
 
 export type TextTokens = InferTokens<typeof textTokens>;
@@ -76,7 +79,7 @@ function renderText(_params: TextParams, content: string, context: RenderContext
     }
   }
 
-  return {
+  const node: TextNode = {
     type: NODE_TYPE.TEXT,
     content: runs,
     style: tokens.style,
@@ -89,6 +92,10 @@ function renderText(_params: TextParams, content: string, context: RenderContext
     linkColor: tokens.linkColor,
     linkUnderline: tokens.linkUnderline,
   };
+  if (tokens.shadow) {
+    node.shadow = tokens.shadow;
+  }
+  return node;
 }
 
 // ============================================

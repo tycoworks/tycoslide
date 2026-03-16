@@ -82,9 +82,9 @@ const borderWidth = 0.75;
 const cornerRadius = 0.08;
 const cornerRadiusLarge = 0.12;
 const accentBarWidth = 2;
-const shadowOpacity = 8;
-const shadowBlur = 4;
-const shadowOffset = 1;
+const shadowOpacity = 24;
+const shadowBlur = 10;
+const shadowOffset = 3;
 const shadowAngle = 180;
 const defaultOpacity = 100;
 
@@ -238,7 +238,6 @@ const tableTokens = {
 
 const codeTokens = {
   textStyle: TEXT_STYLE.CODE,
-  backgroundColor: palette.navy,
   textColor: palette.slate,
   keywordColor: palette.lavender,
   stringColor: palette.emerald,
@@ -249,7 +248,14 @@ const codeTokens = {
   typeColor: palette.gold,
   variableColor: palette.slate,
   padding: padding,
-  borderRadius: cornerRadius,
+  background: {
+    fill: palette.navy,
+    fillOpacity: defaultOpacity,
+    borderColor: palette.navy,
+    borderWidth: 0,
+    cornerRadius,
+    shadow: { type: SHADOW_TYPE.OUTER, color: palette.navy, opacity: shadowOpacity, blur: shadowBlur, offset: shadowOffset, angle: shadowAngle },
+  },
 };
 
 const quoteSlotTokens = {
@@ -518,7 +524,6 @@ export const theme = defineTheme({
               borderColor: palette.gray300,
               borderWidth,
               cornerRadius,
-              shadow: { type: SHADOW_TYPE.OUTER, color: palette.navy, opacity: shadowOpacity, blur: shadowBlur, offset: shadowOffset, angle: shadowAngle },
             },
             padding: padding,
             gap: GAP.TIGHT,

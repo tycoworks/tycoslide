@@ -4,7 +4,7 @@
 // Use this for eyebrows, attributions, labels, and other non-rich text.
 
 import type { HorizontalAlignment, RenderContext, TextStyleName, VerticalAlignment } from "tycoslide";
-import { type ComponentNode, component, defineComponent, type ElementNode, type InferTokens, NODE_TYPE, schema, token } from "tycoslide";
+import { type ComponentNode, component, defineComponent, type InferTokens, NODE_TYPE, type Shadow, schema, type TextNode, token } from "tycoslide";
 import { Component } from "./names.js";
 
 const plainTextTokens = token.shape({
@@ -12,6 +12,7 @@ const plainTextTokens = token.shape({
   style: token.required<TextStyleName>(),
   hAlign: token.required<HorizontalAlignment>(),
   vAlign: token.required<VerticalAlignment>(),
+  shadow: token.optional<Shadow>(),
 });
 
 export type PlainTextTokens = InferTokens<typeof plainTextTokens>;
@@ -32,10 +33,10 @@ function renderPlainText(
   content: string,
   context: RenderContext,
   tokens: PlainTextTokens,
-): ElementNode {
+): TextNode {
   const textStyle = context.theme.textStyles[tokens.style];
 
-  return {
+  const node: TextNode = {
     type: NODE_TYPE.TEXT,
     content: [{ text: content }],
     style: tokens.style,
@@ -48,6 +49,10 @@ function renderPlainText(
     linkColor: tokens.color,
     linkUnderline: false,
   };
+  if (tokens.shadow) {
+    node.shadow = tokens.shadow;
+  }
+  return node;
 }
 
 // ============================================

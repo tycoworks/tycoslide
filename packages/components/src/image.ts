@@ -5,11 +5,14 @@ import {
   type ComponentNode,
   component,
   defineComponent,
+  type InferTokens,
   type RenderContext,
   type ImageNode,
   NODE_TYPE,
+  type Shadow,
   SYNTAX,
   schema,
+  token,
 } from "tycoslide";
 import { Component } from "./names.js";
 
@@ -67,13 +70,23 @@ function resolveAssetPath(ref: string, assets: Record<string, unknown> | undefin
 }
 
 // ============================================
+// TOKENS
+// ============================================
+
+const imageTokens = token.shape({
+  shadow: token.optional<Shadow>(),
+});
+
+export type ImageTokens = InferTokens<typeof imageTokens>;
+
+// ============================================
 // IMAGE COMPONENT
 // ============================================
 
 export const imageComponent = defineComponent({
   name: Component.Image,
   content: schema.string(),
-  tokens: {},
+  tokens: imageTokens,
 
   mdast: {
     nodeTypes: [SYNTAX.IMAGE],
@@ -83,12 +96,16 @@ export const imageComponent = defineComponent({
     },
   },
 
-  render: (_params: {}, content: string, context: RenderContext): ImageNode => {
+  render: (_params: {}, content: string, context: RenderContext, tokens: ImageTokens): ImageNode => {
     let src = content;
     if (src.startsWith(ASSET_PREFIX)) {
       src = resolveAssetPath(src, context.assets);
     }
-    return { type: NODE_TYPE.IMAGE, src };
+    const node: ImageNode = { type: NODE_TYPE.IMAGE, src };
+    if (tokens?.shadow) {
+      node.shadow = tokens.shadow;
+    }
+    return node;
   },
 });
 

@@ -28,6 +28,7 @@ const lineTokens = token.shape({
   color: token.required<string>(),
   width: token.required<number>(),
   dashType: token.required<DashType>(),
+  shadow: token.optional<Shadow>(),
 });
 
 export type LineTokens = InferTokens<typeof lineTokens>;
@@ -63,7 +64,7 @@ const lineParamShape = param.shape({
 export type LineParams = InferParams<typeof lineParamShape>;
 
 function renderLine(params: LineParams, _content: undefined, _context: RenderContext, tokens: LineTokens): LineNode {
-  return {
+  const node: LineNode = {
     type: NODE_TYPE.LINE,
     color: tokens.color,
     width: tokens.width,
@@ -71,6 +72,10 @@ function renderLine(params: LineParams, _content: undefined, _context: RenderCon
     beginArrow: params.beginArrow,
     endArrow: params.endArrow,
   };
+  if (tokens.shadow) {
+    node.shadow = tokens.shadow;
+  }
+  return node;
 }
 
 export const lineComponent = defineComponent({

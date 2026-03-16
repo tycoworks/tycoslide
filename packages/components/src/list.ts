@@ -8,14 +8,15 @@ import {
   type ComponentNode,
   component,
   defineComponent,
-  type ElementNode,
   extractSource,
   type InferParams,
   type InferTokens,
   NODE_TYPE,
   param,
+  type Shadow,
   SYNTAX,
   schema,
+  type TextNode,
   token,
 } from "tycoslide";
 import { Component } from "./names.js";
@@ -29,6 +30,7 @@ const listTokens = token.shape({
   hAlign: token.required<HorizontalAlignment>(),
   vAlign: token.required<VerticalAlignment>(),
   accents: token.required<Record<string, string>>(),
+  shadow: token.optional<Shadow>(),
 });
 
 export type ListTokens = InferTokens<typeof listTokens>;
@@ -46,7 +48,7 @@ export type ListParams = InferParams<typeof listParamShape>;
 // RENDER
 // ============================================
 
-function renderList(params: ListParams, content: string[], context: RenderContext, tokens: ListTokens): ElementNode {
+function renderList(params: ListParams, content: string[], context: RenderContext, tokens: ListTokens): TextNode {
   const textStyle = context.theme.textStyles[tokens.style];
 
   const bulletType = params.ordered ? { type: "number" as const } : true;
@@ -73,7 +75,7 @@ function renderList(params: ListParams, content: string[], context: RenderContex
     }
   }
 
-  return {
+  const node: TextNode = {
     type: NODE_TYPE.TEXT,
     content: runs,
     style: tokens.style,
@@ -86,6 +88,10 @@ function renderList(params: ListParams, content: string[], context: RenderContex
     linkColor: tokens.linkColor,
     linkUnderline: tokens.linkUnderline,
   };
+  if (tokens.shadow) {
+    node.shadow = tokens.shadow;
+  }
+  return node;
 }
 
 // ============================================

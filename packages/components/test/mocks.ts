@@ -121,7 +121,6 @@ export const DEFAULT_TABLE_TOKENS: TableTokens = {
 
 export const DEFAULT_CODE_TOKENS: CodeTokens = {
   textStyle: TEXT_STYLE.CODE,
-  backgroundColor: "#1E1E1E",
   textColor: "#D4D4D4",
   keywordColor: "#569CD6",
   stringColor: "#CE9178",
@@ -132,7 +131,13 @@ export const DEFAULT_CODE_TOKENS: CodeTokens = {
   typeColor: "#4EC9B0",
   variableColor: "#9CDCFE",
   padding: 0.25,
-  borderRadius: 0,
+  background: {
+    fill: "#1E1E1E",
+    fillOpacity: 100,
+    borderColor: "#1E1E1E",
+    borderWidth: 0,
+    cornerRadius: 0,
+  },
 };
 
 export const DEFAULT_MERMAID_TOKENS: MermaidTokens = {

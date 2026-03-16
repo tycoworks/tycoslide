@@ -165,7 +165,7 @@ flowchart LR
 // THEME INTEGRATION (pure functions)
 // ============================================
 
-const testTokens: Required<MermaidTokens> = {
+const testTokens: MermaidTokens = {
   primaryColor: "#FF0000",
   primaryTextColor: "#FFFFFF",
   primaryBorderColor: "#666666",
@@ -282,7 +282,7 @@ describe("mermaid expansion", () => {
     assert.ok(registered, "mermaid component should be registered");
   });
 
-  it("renders to ImageNode via canvas", async () => {
+  it("renders to image component via canvas", async () => {
     const m = mermaid("flowchart LR\n  A[Start] --> B[End]");
     m.tokens = { ...DEFAULT_MERMAID_TOKENS };
     const rendered = await componentRegistry.render(m, {
@@ -296,7 +296,8 @@ describe("mermaid expansion", () => {
       },
     });
 
-    assert.strictEqual(rendered.type, NODE_TYPE.IMAGE);
-    assert.strictEqual((rendered as any).src, "mock://mermaid.png");
+    assert.strictEqual(rendered.type, NODE_TYPE.COMPONENT);
+    assert.strictEqual((rendered as any).componentName, "image");
+    assert.strictEqual((rendered as any).content, "mock://mermaid.png");
   });
 });

@@ -2,7 +2,7 @@ import * as assert from "node:assert";
 import { describe, it } from "node:test";
 import type { RootContent } from "mdast";
 import type { TextStyle } from "tycoslide";
-import { componentRegistry, inToPx, NODE_TYPE, SYNTAX, TEXT_STYLE } from "tycoslide";
+import { componentRegistry, NODE_TYPE, SYNTAX, TEXT_STYLE } from "tycoslide";
 import { buildCodeTheme, type CodeTokens, code, codeComponent, renderCodeToHtml } from "../src/code.js";
 import {
   cardComponent,
@@ -74,7 +74,6 @@ describe("code() DSL function", () => {
 describe("buildCodeTheme()", () => {
   const tokens: CodeTokens = {
     textStyle: TEXT_STYLE.CODE,
-    backgroundColor: "#1E1E1E",
     textColor: "#D4D4D4",
     keywordColor: "#569CD6",
     stringColor: "#CE9178",
@@ -85,7 +84,7 @@ describe("buildCodeTheme()", () => {
     typeColor: "#4EC9B0",
     variableColor: "#9CDCFE",
     padding: 0.25,
-    borderRadius: 0.1,
+    background: { fill: "#1E1E1E", fillOpacity: 100, borderColor: "#1E1E1E", borderWidth: 0, cornerRadius: 0.1 },
   };
 
   it("maps all color tokens to #-prefixed hex values", () => {
@@ -94,8 +93,8 @@ describe("buildCodeTheme()", () => {
     assert.strictEqual(theme.colors!["editor.foreground"], "#D4D4D4");
   });
 
-  it("sets editor.background from backgroundColor token", () => {
-    const theme = buildCodeTheme({ ...tokens, backgroundColor: "#FF0000" });
+  it("sets editor.background from background.fill token", () => {
+    const theme = buildCodeTheme({ ...tokens, background: { ...tokens.background!, fill: "#FF0000" } });
     assert.strictEqual(theme.colors!["editor.background"], "#FF0000");
   });
 
@@ -189,7 +188,7 @@ describe("code component registration", () => {
 // ============================================
 
 describe("code expansion", () => {
-  it("renders to ImageNode via canvas", async () => {
+  it("renders to image component via canvas", async () => {
     const theme = mockTheme();
     const canvas = noopCanvas();
     const context = { theme, assets: undefined, canvas } as any;
@@ -198,11 +197,11 @@ describe("code expansion", () => {
     node.tokens = { ...DEFAULT_CODE_TOKENS };
     const result = await componentRegistry.render(node, context);
 
-    assert.strictEqual(result.type, NODE_TYPE.IMAGE);
-    assert.strictEqual((result as any).src, "mock://render.png");
+    assert.strictEqual(result.type, NODE_TYPE.COMPONENT);
+    assert.strictEqual(result.componentName, "image");
   });
 
-  it("passes transparent: false to canvas.renderHtml", async () => {
+  it("passes transparent: true to canvas.renderHtml", async () => {
     const theme = mockTheme();
     let capturedTransparent: boolean | undefined;
     const canvas = {
@@ -217,7 +216,7 @@ describe("code expansion", () => {
     node.tokens = { ...DEFAULT_CODE_TOKENS };
     await componentRegistry.render(node, context);
 
-    assert.strictEqual(capturedTransparent, false);
+    assert.strictEqual(capturedTransparent, true);
   });
 
   it("throws on empty code body", async () => {
@@ -353,9 +352,8 @@ describe("code MDAST compile handler", () => {
 // ============================================
 
 describe("renderCodeToHtml()", () => {
-  const tokens: Required<CodeTokens> = {
+  const tokens: CodeTokens = {
     textStyle: TEXT_STYLE.CODE,
-    backgroundColor: "#1E1E1E",
     textColor: "#D4D4D4",
     keywordColor: "#569CD6",
     stringColor: "#CE9178",
@@ -366,7 +364,7 @@ describe("renderCodeToHtml()", () => {
     typeColor: "#4EC9B0",
     variableColor: "#9CDCFE",
     padding: 0.25,
-    borderRadius: 0.1,
+    background: { fill: "#1E1E1E", fillOpacity: 100, borderColor: "#1E1E1E", borderWidth: 0, cornerRadius: 0.1 },
   };
 
   const codeStyle: TextStyle = {
@@ -413,18 +411,6 @@ describe("renderCodeToHtml()", () => {
     assert.ok(html.includes("1.4"), "should contain line height");
   });
 
-  it("uses inToPx for padding", async () => {
-    const html = await renderCodeToHtml("x", "text", tokens, codeStyle);
-    const expectedPadding = `${inToPx(0.25)}px`;
-    assert.ok(html.includes(expectedPadding), `should contain padding ${expectedPadding}`);
-  });
-
-  it("uses inToPx for border-radius", async () => {
-    const html = await renderCodeToHtml("x", "text", tokens, codeStyle);
-    const expectedRadius = `${inToPx(0.1)}px`;
-    assert.ok(html.includes(expectedRadius), `should contain border-radius ${expectedRadius}`);
-  });
-
   it("preserves multiline code", async () => {
     const multiline = "line 1\nline 2\nline 3";
     const html = await renderCodeToHtml(multiline, "text", tokens, codeStyle);
@@ -449,7 +435,6 @@ describe("renderCodeToHtml()", () => {
 describe("buildCodeTheme() — operator scope", () => {
   const tokens: CodeTokens = {
     textStyle: TEXT_STYLE.CODE,
-    backgroundColor: "#1E1E1E",
     textColor: "#D4D4D4",
     keywordColor: "#569CD6",
     stringColor: "#CE9178",
@@ -460,7 +445,7 @@ describe("buildCodeTheme() — operator scope", () => {
     typeColor: "#4EC9B0",
     variableColor: "#9CDCFE",
     padding: 0.25,
-    borderRadius: 0.1,
+    background: { fill: "#1E1E1E", fillOpacity: 100, borderColor: "#1E1E1E", borderWidth: 0, cornerRadius: 0.1 },
   };
 
   it("operatorColor maps to keyword.operator scope", () => {
@@ -513,7 +498,7 @@ describe("code expansion — additional", () => {
     node.tokens = { ...DEFAULT_CODE_TOKENS };
     const result = await componentRegistry.render(node, context);
 
-    assert.strictEqual(result.type, NODE_TYPE.IMAGE);
+    assert.strictEqual(result.type, NODE_TYPE.COMPONENT);
     assert.ok(capturedHtml.includes("hello"), "HTML should contain function name");
     assert.ok(capturedHtml.includes("world"), "HTML should contain string content");
   });

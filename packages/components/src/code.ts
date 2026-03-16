@@ -10,11 +10,10 @@ import {
   component,
   defineComponent,
   getFontForRun,
-  type ImageNode,
+  hexToRgba,
   type InferParams,
   type InferTokens,
   inToPx,
-  NODE_TYPE,
   type RenderContext,
   param,
   SYNTAX,
@@ -23,9 +22,11 @@ import {
   type TextStyleName,
   token,
 } from "tycoslide";
+import { image } from "./image.js";
 import type { LanguageName } from "./languages.js";
 import { LANGUAGE_VALUES } from "./languages.js";
 import { Component } from "./names.js";
+import type { ShapeTokens } from "./primitives.js";
 
 const SUPPORTED_LANGUAGES = new Set<string>(LANGUAGE_VALUES);
 
@@ -35,7 +36,6 @@ const SUPPORTED_LANGUAGES = new Set<string>(LANGUAGE_VALUES);
 
 const codeTokens = token.shape({
   textStyle: token.required<TextStyleName>(),
-  backgroundColor: token.required<string>(),
   textColor: token.required<string>(),
   keywordColor: token.required<string>(),
   stringColor: token.required<string>(),
@@ -46,7 +46,7 @@ const codeTokens = token.shape({
   typeColor: token.required<string>(),
   variableColor: token.required<string>(),
   padding: token.required<number>(),
-  borderRadius: token.required<number>(),
+  background: token.required<ShapeTokens>(),
 });
 
 export type CodeTokens = InferTokens<typeof codeTokens>;
@@ -70,7 +70,7 @@ export function buildCodeTheme(tokens: CodeTokens): ThemeRegistration {
     name: "tycoslide", // Shiki internal identifier — does not affect rendering
     type: "dark", // Fallback for unscoped tokens. If a light-background code theme is needed, add a darkMode token.
     colors: {
-      "editor.background": tokens.backgroundColor,
+      "editor.background": tokens.background.fill,
       "editor.foreground": tokens.textColor,
     },
     tokenColors: [
@@ -134,25 +134,27 @@ export async function renderCodeToHtml(
 
   const highlighted = await codeToHtml(code, { lang: language, theme });
 
-  const paddingPx = inToPx(tokens.padding);
-  const borderRadiusPx = inToPx(tokens.borderRadius);
+  const bg = tokens.background;
 
   return `<!DOCTYPE html>
 <html><head>
 <style>
-body {
+html, body {
   margin: 0;
   padding: 0;
   background: transparent;
 }
 .code-container {
-  background: ${tokens.backgroundColor};
-  border-radius: ${borderRadiusPx}px;
-  padding: ${paddingPx}px;
   display: inline-block;
+  background: ${hexToRgba(bg.fill, bg.fillOpacity / 100)};
+  padding: ${inToPx(tokens.padding)}px;
+  border-radius: ${inToPx(bg.cornerRadius)}px;
+  overflow: hidden;
+  ${bg.borderWidth > 0 ? `border: ${inToPx(bg.borderWidth)}px solid ${bg.borderColor};` : "border: none;"}
 }
 .code-container pre {
   margin: 0;
+  background: transparent !important;
   font-family: '${style.fontFamily.name}';
   font-weight: ${getFontForRun(style.fontFamily).weight};
   font-size: ${style.fontSize}pt;
@@ -183,7 +185,7 @@ async function renderCode(
   content: string,
   context: RenderContext,
   tokens: CodeTokens,
-): Promise<ImageNode> {
+): Promise<ComponentNode> {
   const code = content.trim();
   if (!code) {
     throw new Error("Code block is empty");
@@ -191,12 +193,13 @@ async function renderCode(
 
   const codeStyle = context.theme.textStyles[tokens.textStyle];
   const html = await renderCodeToHtml(code, params.language, tokens, codeStyle);
-  const pngPath = await context.canvas.renderHtml(html, false);
+  const pngPath = await context.canvas.renderHtml(html, true);
 
-  return {
-    type: NODE_TYPE.IMAGE,
-    src: pngPath,
-  };
+  const codeImage = image(pngPath);
+  if (tokens.background.shadow) {
+    codeImage.tokens = { shadow: tokens.background.shadow };
+  }
+  return codeImage;
 }
 
 // ============================================

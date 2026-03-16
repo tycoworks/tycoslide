@@ -9,6 +9,7 @@ import type {
   ImageNode,
   LineNode,
   PositionedNode,
+  Shadow,
   ShapeNode,
   SlideNumberNode,
   TableCellData,
@@ -47,6 +48,18 @@ export interface TextFragment {
 // ============================================
 // PPTX CONFIG BUILDER
 // ============================================
+
+/** Convert tycoslide Shadow to pptxgenjs ShadowProps. */
+function buildShadowOptions(shadow: Shadow): Record<string, unknown> {
+  return {
+    type: shadow.type,
+    color: stripHash(shadow.color),
+    opacity: shadow.opacity / 100,
+    blur: shadow.blur,
+    offset: shadow.offset,
+    angle: shadow.angle,
+  };
+}
 
 /**
  * Translates tycoslide domain objects (nodes, positioned)
@@ -90,6 +103,10 @@ export class PptxConfigBuilder {
       ...(hasBullets ? {} : { align: textNode.hAlign }),
       valign: textNode.vAlign,
     };
+
+    if (textNode.shadow) {
+      options.shadow = buildShadowOptions(textNode.shadow);
+    }
 
     return { fragments, options };
   }
@@ -152,7 +169,7 @@ export class PptxConfigBuilder {
   buildImageConfig(
     imageNode: ImageNode,
     positioned: PositionedNode,
-  ): { path: string; x: number; y: number; w: number; h: number } {
+  ): Record<string, unknown> {
     // Compute contain placement ourselves.
     // pptxgenjs sizing: { type: 'contain' } is broken — it uses the placement
     // dimensions as both imgSize and boxDim, making it a no-op.
@@ -161,7 +178,11 @@ export class PptxConfigBuilder {
       ? containFit(positioned.x, positioned.y, positioned.width, positioned.height, dims.aspectRatio)
       : { x: positioned.x, y: positioned.y, w: positioned.width, h: positioned.height };
 
-    return { path: imageNode.src, ...fitted };
+    const result: Record<string, unknown> = { path: imageNode.src, ...fitted };
+    if (imageNode.shadow) {
+      result.shadow = buildShadowOptions(imageNode.shadow);
+    }
+    return result;
   }
 
   buildShapeConfig(
@@ -192,14 +213,7 @@ export class PptxConfigBuilder {
     }
 
     if (shapeNode.shadow) {
-      options.shadow = {
-        type: shapeNode.shadow.type,
-        color: stripHash(shapeNode.shadow.color),
-        opacity: shapeNode.shadow.opacity / 100,
-        blur: shapeNode.shadow.blur,
-        offset: shapeNode.shadow.offset,
-        angle: shapeNode.shadow.angle,
-      };
+      options.shadow = buildShadowOptions(shapeNode.shadow);
     }
 
     return { shapeType: shapeNode.shape, options };
@@ -218,16 +232,19 @@ export class PptxConfigBuilder {
     if (lineNode.endArrow) lineOpts.endArrowType = lineNode.endArrow;
     lineOpts.dashType = lineNode.dashType;
 
-    return {
-      shapeType: LINE_SHAPE,
-      options: {
-        x: positioned.x,
-        y: positioned.y,
-        w: isVertical ? 0 : positioned.width,
-        h: isVertical ? positioned.height : 0,
-        line: lineOpts,
-      },
+    const options: Record<string, unknown> = {
+      x: positioned.x,
+      y: positioned.y,
+      w: isVertical ? 0 : positioned.width,
+      h: isVertical ? positioned.height : 0,
+      line: lineOpts,
     };
+
+    if (lineNode.shadow) {
+      options.shadow = buildShadowOptions(lineNode.shadow);
+    }
+
+    return { shapeType: LINE_SHAPE, options };
   }
 
   buildSlideNumberOptions(slideNumNode: SlideNumberNode, positioned: PositionedNode): Record<string, unknown> {

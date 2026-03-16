@@ -20,6 +20,7 @@ import type {
   ElementNode,
   ImageNode,
   LineNode,
+  Shadow,
   ShapeNode,
   SlideNumberNode,
   StackNode,
@@ -298,6 +299,8 @@ function styleText(node: TextNode, parent: ParentCtx, nodeId: string, fontRatios
     ...(isInRow ? { flex: "1 1 0", minWidth: 0 } : { width: "100%", flexShrink: 0 }),
   };
 
+  applyShadowCSS(node.shadow, styles);
+
   return {
     nodeId,
     styles,
@@ -345,16 +348,25 @@ function styleImage(node: ImageNode, parent: ParentCtx, nodeId: string, imagePat
     styles.maxHeight = maxHeightPx ? `min(${maxHeightPx}px, ${proportionalCap})` : proportionalCap;
   }
 
-  // Position absolute so the img's intrinsic size doesn't influence the container's flex basis.
-  styles.position = "relative";
-  styles.overflow = "hidden";
   const resolved = path.resolve(node.src);
   const imgSrc = imagePathMap.get(resolved) ?? resolved;
+
+  styles.position = "relative";
+  styles.overflow = node.shadow ? "visible" : "hidden";
+
+  let imgStyle = "position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block";
+  if (node.shadow) {
+    // Use drop-shadow (not box-shadow) so the shadow follows the PNG's
+    // alpha channel — e.g. rounded corners from code blocks.
+    const { x, y, rgba } = shadowOffsets(node.shadow);
+    imgStyle += `;filter:drop-shadow(${ptToPx(x)}px ${ptToPx(y)}px ${ptToPx(node.shadow.blur)}px ${rgba})`;
+  }
+
   return {
     nodeId,
     styles,
     children: [],
-    innerHTML: `<img src="${imgSrc}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block" />`,
+    innerHTML: `<img src="${imgSrc}" style="${imgStyle}" />`,
   };
 }
 
@@ -383,26 +395,39 @@ function styleLine(node: LineNode, parent: ParentCtx, nodeId: string): StyledNod
 
   if (parent.direction === DIRECTION.ROW) {
     // Vertical separator in a row
-    return {
-      nodeId,
-      styles: {
-        flex: `0 0 ${widthPx}px`,
-        alignSelf: "stretch",
-        borderLeft: `${widthPx}px ${borderStyle} ${color}`,
-      },
-      children: [],
+    const styles: Record<string, string | number> = {
+      flex: `0 0 ${widthPx}px`,
+      alignSelf: "stretch",
+      borderLeft: `${widthPx}px ${borderStyle} ${color}`,
     };
+    applyShadowCSS(node.shadow, styles);
+    return { nodeId, styles, children: [] };
   }
   // Horizontal separator in a column
-  return {
-    nodeId,
-    styles: {
-      flex: `0 0 ${widthPx}px`,
-      width: "100%",
-      borderTop: `${widthPx}px ${borderStyle} ${color}`,
-    },
-    children: [],
+  const styles: Record<string, string | number> = {
+    flex: `0 0 ${widthPx}px`,
+    width: "100%",
+    borderTop: `${widthPx}px ${borderStyle} ${color}`,
   };
+  applyShadowCSS(node.shadow, styles);
+  return { nodeId, styles, children: [] };
+}
+
+/** Compute shadow x/y offsets and rgba color from a Shadow config. */
+function shadowOffsets(shadow: Shadow): { x: number; y: number; rgba: string } {
+  const rad = (shadow.angle * Math.PI) / 180;
+  return {
+    x: shadow.offset * Math.sin(rad),
+    y: -shadow.offset * Math.cos(rad),
+    rgba: hexToRgba(shadow.color, shadow.opacity / 100),
+  };
+}
+
+/** Apply box-shadow CSS from a Shadow config. Mutates styles in place. */
+function applyShadowCSS(shadow: Shadow | undefined, styles: Record<string, string | number>): void {
+  if (!shadow) return;
+  const { x, y, rgba } = shadowOffsets(shadow);
+  styles.boxShadow = `${ptToPx(x)}px ${ptToPx(y)}px ${ptToPx(shadow.blur)}px ${rgba}`;
 }
 
 function styleShape(node: ShapeNode, nodeId: string): StyledNode {
@@ -422,14 +447,7 @@ function styleShape(node: ShapeNode, nodeId: string): StyledNode {
   if (bw > 0) {
     styles.border = `${bw}px solid ${node.border.color}`;
   }
-  if (node.shadow) {
-    const rad = (node.shadow.angle * Math.PI) / 180;
-    const x = node.shadow.offset * Math.sin(rad);
-    const y = -node.shadow.offset * Math.cos(rad);
-    const inset = node.shadow.type === "inner" ? "inset " : "";
-    const rgba = hexToRgba(node.shadow.color, node.shadow.opacity / 100);
-    styles.boxShadow = `${inset}${ptToPx(x)}px ${ptToPx(y)}px ${ptToPx(node.shadow.blur)}px ${rgba}`;
-  }
+  applyShadowCSS(node.shadow, styles);
   return { nodeId, styles, children: [] };
 }
 
