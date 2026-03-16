@@ -109,6 +109,7 @@ export const imageComponent = defineComponent({
   },
 });
 
-export function image(src: string): ComponentNode {
-  return component(Component.Image, {}, src);
+export function image(src: string, tokens?: ImageTokens): ComponentNode {
+  return component(Component.Image, {}, src, tokens);
 }
+

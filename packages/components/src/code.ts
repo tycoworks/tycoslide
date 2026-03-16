@@ -234,10 +234,10 @@ export const codeComponent = defineComponent({
  *
  * @example
  * ```typescript
- * const snippet = code(`SELECT * FROM orders WHERE status = 'active';`, 'sql');
+ * const snippet = code(`SELECT * FROM orders WHERE status = 'active';`, 'sql', tokens.code);
  * pres.add(contentSlide('Query Example', snippet));
  * ```
  */
-export function code(source: string, language: LanguageName): ComponentNode {
-  return component(Component.Code, { language }, source);
+export function code(source: string, language: LanguageName, tokens: CodeTokens): ComponentNode {
+  return component(Component.Code, { language }, source, tokens);
 }

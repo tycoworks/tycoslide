@@ -138,7 +138,8 @@ export function shape(tokens: ShapeTokens, params: ShapeParams): ComponentNode {
 // SLIDE NUMBER
 // ============================================
 
-export type SlideNumberParams = {};
+const slideNumberParamShape = param.shape({});
+export type SlideNumberParams = InferParams<typeof slideNumberParamShape>;
 
 function renderSlideNumber(
   _params: SlideNumberParams,

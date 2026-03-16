@@ -11,8 +11,10 @@ import {
   defineComponent,
   type ElementNode,
   extractSource,
+  type InferParams,
   type InferTokens,
   NODE_TYPE,
+  param,
   type Shadow,
   SYNTAX,
   schema,
@@ -40,8 +42,8 @@ export type TextTokens = InferTokens<typeof textTokens>;
 // TYPES
 // ============================================
 
-/** Params for text component (empty — content is the body string). */
-export type TextParams = {};
+const textParams = param.shape({});
+export type TextParams = InferParams<typeof textParams>;
 
 // ============================================
 // HEADING STYLE MAP (exported for document component)

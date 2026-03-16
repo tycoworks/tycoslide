@@ -47,22 +47,22 @@ componentRegistry.register([
 
 describe("code() DSL function", () => {
   it("returns ComponentNode with correct type", () => {
-    const node = code("SELECT 1", "sql");
+    const node = code("SELECT 1", "sql", DEFAULT_CODE_TOKENS);
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
   });
 
   it("returns ComponentNode with correct componentName", () => {
-    const node = code("SELECT 1", "sql");
+    const node = code("SELECT 1", "sql", DEFAULT_CODE_TOKENS);
     assert.strictEqual(node.componentName, Component.Code);
   });
 
   it("stores code string in content", () => {
-    const node = code("SELECT 1", "sql");
+    const node = code("SELECT 1", "sql", DEFAULT_CODE_TOKENS);
     assert.strictEqual(node.content, "SELECT 1");
   });
 
   it("stores language in params.language", () => {
-    const node = code("SELECT 1", "sql");
+    const node = code("SELECT 1", "sql", DEFAULT_CODE_TOKENS);
     assert.strictEqual((node.params as any).language, "sql");
   });
 });
@@ -193,8 +193,7 @@ describe("code expansion", () => {
     const canvas = noopCanvas();
     const context = { theme, assets: undefined, canvas } as any;
 
-    const node = code("SELECT 1", "sql");
-    node.tokens = { ...DEFAULT_CODE_TOKENS };
+    const node = code("SELECT 1", "sql", DEFAULT_CODE_TOKENS);
     const result = await componentRegistry.render(node, context);
 
     assert.strictEqual(result.type, NODE_TYPE.COMPONENT);
@@ -212,8 +211,7 @@ describe("code expansion", () => {
     };
     const context = { theme, assets: undefined, canvas } as any;
 
-    const node = code("SELECT 1", "sql");
-    node.tokens = { ...DEFAULT_CODE_TOKENS };
+    const node = code("SELECT 1", "sql", DEFAULT_CODE_TOKENS);
     await componentRegistry.render(node, context);
 
     assert.strictEqual(capturedTransparent, true);
@@ -224,8 +222,7 @@ describe("code expansion", () => {
     const canvas = noopCanvas();
     const context = { theme, assets: undefined, canvas } as any;
 
-    const node = code("   ", "text");
-    node.tokens = { ...DEFAULT_CODE_TOKENS };
+    const node = code("   ", "text", DEFAULT_CODE_TOKENS);
     await assert.rejects(() => componentRegistry.render(node, context), /Code block is empty/);
   });
 
@@ -240,8 +237,7 @@ describe("code expansion", () => {
     };
     const context = { theme, assets: undefined, canvas } as any;
 
-    const node = code("SELECT * FROM orders", "sql");
-    node.tokens = { ...DEFAULT_CODE_TOKENS };
+    const node = code("SELECT * FROM orders", "sql", DEFAULT_CODE_TOKENS);
     await componentRegistry.render(node, context);
 
     assert.ok(capturedHtml.includes("SELECT"), "HTML should contain code text");
@@ -258,8 +254,7 @@ describe("code expansion", () => {
     };
     const context = { theme, assets: undefined, canvas } as any;
 
-    const node = code("x = 1", "python");
-    node.tokens = { ...DEFAULT_CODE_TOKENS };
+    const node = code("x = 1", "python", DEFAULT_CODE_TOKENS);
     await componentRegistry.render(node, context);
 
     assert.ok(capturedHtml.includes("#1E1E1E"), "HTML should contain background color from token");
@@ -474,8 +469,7 @@ describe("code expansion — additional", () => {
     };
     const context = { theme, assets: undefined, canvas } as any;
 
-    const node = code("  \n  SELECT 1  \n  ", "sql");
-    node.tokens = { ...DEFAULT_CODE_TOKENS };
+    const node = code("  \n  SELECT 1  \n  ", "sql", DEFAULT_CODE_TOKENS);
     await componentRegistry.render(node, context);
 
     // The trimmed code should be passed to Shiki (Shiki tokenizes words into separate spans)
@@ -494,8 +488,7 @@ describe("code expansion — additional", () => {
     const context = { theme, assets: undefined, canvas } as any;
 
     const multiline = 'function hello() {\n  return "world";\n}';
-    const node = code(multiline, "javascript");
-    node.tokens = { ...DEFAULT_CODE_TOKENS };
+    const node = code(multiline, "javascript", DEFAULT_CODE_TOKENS);
     const result = await componentRegistry.render(node, context);
 
     assert.strictEqual(result.type, NODE_TYPE.COMPONENT);

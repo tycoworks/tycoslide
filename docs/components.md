@@ -455,7 +455,7 @@ SELECT * FROM orders WHERE status = 'active';
 ````
 
 ```typescript
-code(`SELECT * FROM orders WHERE status = 'active';`, 'sql')
+code(`SELECT * FROM orders WHERE status = 'active';`, 'sql', tokens.code)
 ```
 
 ---
@@ -862,7 +862,7 @@ list(["Step one", "Step two"], tokens.list, true)                               
 table([
   ['Name', 'Role'],
   ['Alice', 'Engineer'],
-], { headerRows: 1 })
+], { headerRows: 1 }, tokens.table)
 
 // Image
 image('./path/to/image.png')

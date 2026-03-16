@@ -8,8 +8,10 @@ import {
   type ComponentNode,
   component,
   defineComponent,
+  type InferParams,
   type InferTokens,
   NODE_TYPE,
+  param,
   type Shadow,
   schema,
   type TextNode,
@@ -31,8 +33,8 @@ export type PlainTextTokens = InferTokens<typeof plainTextTokens>;
 // TYPES
 // ============================================
 
-/** Params for plainText component (empty — content is the body string). */
-export type PlainTextParams = {};
+const plainTextParams = param.shape({});
+export type PlainTextParams = InferParams<typeof plainTextParams>;
 
 // ============================================
 // RENDER

@@ -10,7 +10,9 @@ import {
   component,
   defineComponent,
   hexToRgba,
+  type InferParams,
   type InferTokens,
+  param,
   type RenderContext,
   type Shadow,
   schema,
@@ -48,7 +50,8 @@ export type MermaidTokens = InferTokens<typeof mermaidTokens>;
 // TYPES
 // ============================================
 
-export type MermaidParams = {};
+const mermaidParams = param.shape({});
+export type MermaidParams = InferParams<typeof mermaidParams>;
 
 // ============================================
 // SANITIZATION
@@ -327,10 +330,10 @@ export const mermaidComponent = defineComponent({
  *     A[Client] --> B[Server]
  *     B --> C[(Database)]
  *     class B primary
- * `);
+ * `, tokens.mermaid);
  * pres.add(contentSlide('Architecture', diagram));
  * ```
  */
-export function mermaid(definition: string): ComponentNode {
-  return component(Component.Mermaid, {}, definition);
+export function mermaid(definition: string, tokens: MermaidTokens): ComponentNode {
+  return component(Component.Mermaid, {}, definition, tokens);
 }

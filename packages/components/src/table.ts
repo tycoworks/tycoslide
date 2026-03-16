@@ -259,15 +259,19 @@ export const tableComponent = defineComponent({
  * table([
  *   [{ content: 'Name' }, { content: 'Role' }],
  *   [{ content: 'Alice' }, { content: 'Engineer' }],
- * ], { headerRows: 1 })
+ * ], { headerRows: 1 }, tokens.table)
  *
  * // Convenience: string arrays auto-convert to cells
  * table([
  *   ['Name', 'Role'],
  *   ['Alice', 'Engineer'],
- * ], { headerRows: 1 })
+ * ], { headerRows: 1 }, tokens.table)
  * ```
  */
-export function table(data: (TableCellInput | TextContent)[][], params?: TableParams): ComponentNode {
-  return component(Component.Table, { data, tableParams: params });
+export function table(
+  data: (TableCellInput | TextContent)[][],
+  params: TableParams | undefined,
+  tokens: TableTokens,
+): ComponentNode {
+  return component(Component.Table, { data, tableParams: params }, undefined, tokens);
 }

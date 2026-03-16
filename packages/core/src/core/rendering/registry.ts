@@ -380,7 +380,7 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any, any>> {
     }
     const shape = parseTokenShape(def.tokens);
     if (!shape.allKeys.size) {
-      return def.render(node.params, node.content, context, undefined as never);
+      return def.render(node.params, node.content, context, undefined as any);
     }
 
     // Read from node.tokens (set by DSL or slot injection)
@@ -392,11 +392,11 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any, any>> {
             `Required: [${shape.requiredKeys.join(", ")}]`,
         );
       }
-      return def.render(node.params, node.content, context, undefined as never);
+      return def.render(node.params, node.content, context, undefined as any);
     }
 
     validateTokens(shape, node.tokens, `Component '${node.componentName}'`);
-    return def.render(node.params, node.content, context, node.tokens as never);
+    return def.render(node.params, node.content, context, node.tokens as any);
   }
 
   /**

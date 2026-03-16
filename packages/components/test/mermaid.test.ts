@@ -51,18 +51,18 @@ componentRegistry.register([
 
 describe("mermaid() DSL function", () => {
   it("returns ComponentNode with correct type", () => {
-    const m = mermaid("flowchart LR\n  A --> B");
+    const m = mermaid("flowchart LR\n  A --> B", DEFAULT_MERMAID_TOKENS);
     assert.strictEqual(m.type, NODE_TYPE.COMPONENT);
   });
 
   it("returns ComponentNode with correct componentName", () => {
-    const m = mermaid("flowchart LR\n  A --> B");
+    const m = mermaid("flowchart LR\n  A --> B", DEFAULT_MERMAID_TOKENS);
     assert.strictEqual(m.componentName, Component.Mermaid);
   });
 
   it("stores definition in content", () => {
     const definition = "flowchart LR\n  A --> B";
-    const m = mermaid(definition);
+    const m = mermaid(definition, DEFAULT_MERMAID_TOKENS);
     assert.strictEqual(m.content, definition);
   });
 });
@@ -283,8 +283,7 @@ describe("mermaid expansion", () => {
   });
 
   it("renders to image component via canvas", async () => {
-    const m = mermaid("flowchart LR\n  A[Start] --> B[End]");
-    m.tokens = { ...DEFAULT_MERMAID_TOKENS };
+    const m = mermaid("flowchart LR\n  A[Start] --> B[End]", DEFAULT_MERMAID_TOKENS);
     const rendered = await componentRegistry.render(m, {
       theme: mockTheme(),
       canvas: {

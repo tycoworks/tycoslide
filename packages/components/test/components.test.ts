@@ -813,7 +813,7 @@ describe("card()", () => {
 
 describe("table()", () => {
   test("returns ComponentNode", () => {
-    const node = table([["Header"]]);
+    const node = table([["Header"]], undefined, DEFAULT_TABLE_TOKENS);
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
     assert.strictEqual(node.componentName, Component.Table);
   });
@@ -821,8 +821,7 @@ describe("table()", () => {
   test("TableCellData cells preserve properties after expansion", async () => {
     const tNode = table([
       ["Header", { content: "colored cell", textStyle: TEXT_STYLE.SMALL, color: "#FF0000", hAlign: HALIGN.CENTER }],
-    ]);
-    tNode.tokens = { ...DEFAULT_TABLE_TOKENS };
+    ], undefined, DEFAULT_TABLE_TOKENS);
     const node = (await render(tNode)) as TableNode;
     assert.strictEqual(node.type, NODE_TYPE.TABLE);
     const cell = node.rows[0][1];
@@ -836,16 +835,14 @@ describe("table()", () => {
   });
 
   test("TableCellData without vAlign resolves to table default", async () => {
-    const tNode = table([[{ content: "cell with default vAlign" }]]);
-    tNode.tokens = { ...DEFAULT_TABLE_TOKENS };
+    const tNode = table([[{ content: "cell with default vAlign" }]], undefined, DEFAULT_TABLE_TOKENS);
     const node = (await render(tNode)) as TableNode;
     const cell = node.rows[0][0];
     assert.strictEqual(cell.vAlign, VALIGN.MIDDLE);
   });
 
   test("string cells are fully resolved as TableCellData", async () => {
-    const tNode = table([["plain string"]]);
-    tNode.tokens = { ...DEFAULT_TABLE_TOKENS };
+    const tNode = table([["plain string"]], undefined, DEFAULT_TABLE_TOKENS);
     const node = (await render(tNode)) as TableNode;
     const cell = node.rows[0][0];
     assert.deepStrictEqual(cell.content, [{ text: "plain string" }]);
@@ -860,8 +857,7 @@ describe("table()", () => {
     const tNode = table([["a"]], {
       headerRows: 1,
       headerColumns: 1,
-    });
-    tNode.tokens = { ...DEFAULT_TABLE_TOKENS };
+    }, DEFAULT_TABLE_TOKENS);
     const node = (await render(tNode)) as TableNode;
     assert.strictEqual(node.headerRows, 1);
     assert.strictEqual(node.headerColumns, 1);

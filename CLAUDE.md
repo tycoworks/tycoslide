@@ -59,7 +59,7 @@ npx tsc --build      # Rebuilds tycoslide (if changed) then the theme
 Markdown + TypeScript DSL
     ↓
 Component tree (ComponentNodes)
-    ↓ registry.expand() — resolves theme tokens, expands to primitives
+    ↓ registry.render() — resolves theme tokens, renders to primitives
 Primitive node tree (TextNode, ImageNode, ShapeNode, etc.)
     ↓ measurement.ts / pipeline.ts — generates HTML, measures via Playwright
 Measured + positioned nodes
@@ -71,19 +71,17 @@ Measured + positioned nodes
 
 Two registries handle component and layout registration:
 
-- **`defineComponent()`** + **`componentRegistry.register()`** — All components (content and container). `defineComponent()` is a pure factory with multiple signatures:
-  - Body-only: `{ name, body: schema.string(), expand }` — auto-generates directive deserializer
-  - Body + params: `{ name, body, params: {...}, expand }` — body plus extra attributes
-  - Params-only: `{ name, params: {...}, expand }` — multiple named attributes, no primary body
-  - Slotted: `{ name, slots: ['children'], expand }` — body compiled as ComponentNode[]
-  - Programmatic: `{ name, expand }` — no directive support
+- **`defineComponent()`** + **`componentRegistry.register()`** — All components (content and container). `defineComponent()` is a pure factory with three patterns:
+  - Content: `{ name, content: schema.string(), tokens, render }` — auto-generates directive deserializer
+  - Content + params: `{ name, content, params: param.shape({...}), tokens, render }` — content plus extra attributes
+  - Children: `{ name, children: true, tokens, render }` — body compiled as ComponentNode[]
 - **`defineLayout()`** + **`layoutRegistry.register()`** — Slide layouts. Declares params schema and a render function.
 
 Each component declares:
 - A **name** — built-in names from `Component.*` const objects (`packages/components/src/names.ts`), or any string for custom components
-- A **Zod schema** for props (validated at compile time)
-- **Required tokens** — keys delivered via `node.tokens` (set by DSL helpers or slot injection from parent layouts), type-constrained to `(keyof TTokens & string)[]`
-- An **expand function** that receives props + resolved tokens and returns a primitive node tree
+- A **params schema** via `param.shape({...})` (validated at compile time)
+- **Token shape** via `token.shape({...})` — delivered via `node.tokens` (set by DSL helpers or slot injection from parent layouts)
+- A **render function** `(params, content, context, tokens) => SlideNode` that returns a primitive node tree
 
 ## Spec-Driven Development
 
