@@ -81,15 +81,24 @@ const borderWidth = 0.75;
 const cornerRadius = 0.08;
 const cornerRadiusLarge = 0.12;
 const accentBarWidth = 2;
-const shadowOpacity = 24;
-const shadowBlur = 10;
-const shadowOffset = 3;
+const shadowOpacity = 12;
+const shadowBlur = 6;
+const shadowOffset = 2;
 const shadowAngle = 180;
 const defaultOpacity = 100;
 
 // ============================================
 // SHARED TOKEN OBJECTS FOR COMPOSITION COMPONENTS
 // ============================================
+
+const shadow = {
+  type: SHADOW_TYPE.OUTER,
+  color: palette.navy,
+  opacity: shadowOpacity,
+  blur: shadowBlur,
+  offset: shadowOffset,
+  angle: shadowAngle,
+};
 
 const cardTitle: TextTokens = {
   style: TEXT_STYLE.H4,
@@ -245,14 +254,7 @@ const codeTokens = {
     borderColor: palette.navy,
     borderWidth: 0,
     cornerRadius,
-    shadow: {
-      type: SHADOW_TYPE.OUTER,
-      color: palette.navy,
-      opacity: shadowOpacity,
-      blur: shadowBlur,
-      offset: shadowOffset,
-      angle: shadowAngle,
-    },
+    shadow,
   },
 };
 
@@ -305,13 +307,37 @@ const mermaidTokens = {
 // THEME EXPORT
 // ============================================
 
-// Shared slot injection tokens for layouts with markdown body slots
+// Base card tokens shared across slot injection and layout variants
+const cardBase = {
+  padding,
+  spacing: spacingTight,
+  hAlign: HALIGN.LEFT,
+  title: cardTitle,
+  description: cardDescription,
+};
+
+const cardBackground = {
+  fill: palette.white,
+  fillOpacity: defaultOpacity,
+  borderColor: palette.gray300,
+  borderWidth,
+  cornerRadius,
+};
+
+// Slot injection tokens for inline :::card{} directives in markdown body slots
+const cardSlotTokens = {
+  ...cardBase,
+  vAlign: VALIGN.MIDDLE,
+  background: { ...cardBackground, shadow: shadow },
+};
+
 const bodySlotTokens = {
   table: tableTokens,
   code: codeTokens,
   mermaid: mermaidTokens,
   quote: quoteSlotTokens,
   testimonial: testimonialSlotTokens,
+  card: cardSlotTokens,
 };
 
 export const theme = defineTheme({
@@ -518,21 +544,7 @@ export const theme = defineTheme({
           hAlign: HALIGN.CENTER,
           spacing: spacing,
           gridSpacing: spacing,
-          card: {
-            background: {
-              fill: palette.white,
-              fillOpacity: defaultOpacity,
-              borderColor: palette.gray300,
-              borderWidth,
-              cornerRadius,
-            },
-            padding,
-            spacing: spacingTight,
-            hAlign: HALIGN.LEFT,
-            vAlign: VALIGN.TOP,
-            title: cardTitle,
-            description: cardDescription,
-          },
+          card: { ...cardBase, vAlign: VALIGN.TOP, background: cardBackground },
         }),
         flat: cardsLayout.tokenMap({
           title: headerTitle,
@@ -544,14 +556,7 @@ export const theme = defineTheme({
           hAlign: HALIGN.CENTER,
           spacing: spacing,
           gridSpacing: spacing,
-          card: {
-            padding,
-            spacing: spacingTight,
-            hAlign: HALIGN.LEFT,
-            vAlign: VALIGN.TOP,
-            title: cardTitle,
-            description: cardDescription,
-          },
+          card: { ...cardBase, vAlign: VALIGN.TOP },
         }),
       },
     },

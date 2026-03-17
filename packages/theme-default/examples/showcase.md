@@ -54,31 +54,27 @@ layout: two-column
 variant: default
 title: Presentations as Code
 eyebrow: How It Works
-notes: Meta slide — the code block shows the markdown source for this very slide.
+notes: Side-by-side showing markdown input on the left and the resulting slide content on the right.
 ---
 
 ::left::
-
-tycoslide supports **bold**, *italic*, [links](https://tycoslide.com), ~~strikethrough~~, ++underline++, and :purple[accent colors].
-
-::right::
 
 ```markdown
 ---
-layout: two-column
-variant: default
-title: Presentations as Code
-eyebrow: How It Works
+layout: body
+title: Q3 Infrastructure Review
 ---
 
-::left::
-  # code block here
+The new pipeline *increased*
+throughput by **40%** with
+:purple[zero downtime].
+++[See report](https://example.com)++
+```
 
 ::right::
-  Supports **bold**, *italic*,
-  [links], ~~strikethrough~~,
-  ++underline++, :purple[accents].
-```
+
+:::card{title="Q3 Infrastructure Review" description="The new pipeline *increased* throughput by **40%** with :purple[zero downtime]. [See report](https://example.com)"}
+:::
 
 ---
 layout: stat

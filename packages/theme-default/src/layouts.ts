@@ -372,15 +372,13 @@ export const twoColumnLayout = defineLayout({
   },
   slots: ["left", "right"],
   tokens: twoColumnLayoutTokens,
-  render: ({ title, eyebrow }, { left, right }, tokens: TwoColumnLayoutTokens) =>
-    masteredSlide(
+  render: ({ title, eyebrow }, { left, right }, tokens: TwoColumnLayoutTokens) => {
+    const colProps = { vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL };
+    return masteredSlide(
       ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
-      row(
-        { spacing: 0, height: SIZE.FILL },
-        column({ vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL }, ...left),
-        column({ vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL }, ...right),
-      ),
-    ),
+      row({ spacing: tokens.spacing, height: SIZE.FILL }, column(colProps, ...left), column(colProps, ...right)),
+    );
+  },
 });
 
 // --- statement ---
