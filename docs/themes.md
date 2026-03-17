@@ -6,7 +6,7 @@ Themes control all visual styling in tycoslide presentations — typography, spa
 
 - **Typography** — Font families, sizes, weights for all text styles
 - **Font list** — Explicit list of all font families used by the theme; fonts not listed here are not embedded in the output file
-- **Spacing** — Normal, tight, and loose gap values
+- **Spacing** — Spacing values (inches) set in layout and component token maps
 - **Layout tokens** — Visual styling for each layout variant (colors, alignment, component appearance)
 - **Masters** — Background color, margins, fixed chrome (footers, slide numbers)
 - **Slide size** — 16:9, 4:3, etc.
@@ -128,28 +128,6 @@ export const theme = defineTheme({
 
 ---
 
-### Overriding Spacing
-
-`theme.spacing` defines three gap sizes — normal, tight, and loose — used between elements in layouts and containers:
-
-```typescript
-import { defineTheme } from 'tycoslide';
-import { theme as defaultTheme } from 'tycoslide-theme-default';
-
-export const theme = defineTheme({
-  ...defaultTheme,
-  spacing: {
-    normal: 0.25,   // Standard gap between elements (inches)
-    tight:  0.125,  // Compact gap (inches)
-    loose:  0.5,    // Generous gap (inches)
-  },
-});
-```
-
-All values are in inches.
-
----
-
 ### Colors
 
 Colors are string constants in the theme file. Layout and master token maps reference these constants, so changing a color constant updates every token that uses it.
@@ -215,7 +193,6 @@ import { defineTheme, SLIDE_SIZE } from 'tycoslide';
 
 export const theme = defineTheme({
   slide: SLIDE_SIZE.S16x9,
-  spacing: { normal: 0.25, tight: 0.125, loose: 0.5 },
   fonts: [...],
   textStyles: { h1: {...}, h2: {...}, h3: {...}, h4: {...}, body: {...}, small: {...}, eyebrow: {...}, footer: {...}, code: {...} },
   layouts: {
@@ -310,17 +287,7 @@ textStyles: {
 `lineHeightMultiplier` — dimensionless multiplier applied to `fontSize`
 `bulletIndentPt` — indent distance for bulleted list items, in points
 
-#### 4. Set Spacing
-
-```typescript
-spacing: {
-  normal: 0.25,   // Standard gap (inches)
-  tight:  0.125,  // Compact gap (inches)
-  loose:  0.5,    // Generous gap (inches)
-},
-```
-
-#### 5. Set Slide Size
+#### 4. Set Slide Size
 
 ```typescript
 import { SLIDE_SIZE } from 'tycoslide';
@@ -343,7 +310,7 @@ Custom dimensions:
 slide: { layout: 'CUSTOM', width: 10, height: 7.5 }
 ```
 
-#### 6. Declare Fonts
+#### 5. Declare Fonts
 
 Every font the theme uses must appear in the `fonts` array so it gets embedded in the .pptx:
 
@@ -353,7 +320,7 @@ fonts: [myFont, myMonoFont],
 
 Each entry is a `FontFamily` object (see [Font Requirements](#font-requirements)). Every font used in `textStyles` or layout token maps must appear here — unlisted fonts are not embedded in the .pptx.
 
-#### 7. Define Layouts with Token Maps
+#### 6. Define Layouts with Token Maps
 
 Each layout in the theme gets a `variants` object. The `default` variant is required. Call `.tokenMap()` on the layout definition to produce a typed token record. `.tokenMap()` validates that all required tokens are present and rejects unknown keys — slotted layouts allow extra keys for slot injection.
 
@@ -387,7 +354,7 @@ layouts: {
 
 See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete reference with all layouts and their full token sets.
 
-#### 8. Define Masters
+#### 7. Define Masters
 
 Each master in the theme gets a `variants` object. Call `.tokenMap()` on the master definition:
 

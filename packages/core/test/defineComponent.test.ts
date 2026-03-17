@@ -160,7 +160,7 @@ describe("defineComponent", () => {
         children,
         width: SIZE.FILL,
         height: SIZE.HUG,
-        gap: 0,
+        spacing: 0,
         hAlign: HALIGN.LEFT,
         vAlign: VALIGN.TOP,
       }),

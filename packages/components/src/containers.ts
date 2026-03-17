@@ -5,16 +5,14 @@ import {
   component,
   DIRECTION,
   defineComponent,
-  GAP,
-  type GapSize,
   HALIGN,
   type HorizontalAlignment,
   NODE_TYPE,
   type RenderContext,
-  resolveGap,
   SIZE,
   type SizeValue,
   type SlideNode,
+  type SpacingMode,
   VALIGN,
   type VerticalAlignment,
 } from "tycoslide";
@@ -51,7 +49,8 @@ function parseContainerArgs<TParams>(args: any[]): { params: TParams; children: 
 export type RowParams = {
   width?: number | SizeValue; // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
   height?: number | SizeValue; // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
-  gap?: GapSize;
+  spacing: number;
+  spacingMode?: SpacingMode;
   vAlign?: VerticalAlignment;
   hAlign?: HorizontalAlignment; // justify-content: left (flex-start), center, right (flex-end)
   padding?: number; // inches - internal padding on all sides
@@ -63,23 +62,21 @@ export const rowComponent = defineComponent({
   directive: false,
   tokens: {},
 
-  render: (params: RowParams, children: SlideNode[], context: RenderContext) => ({
+  render: (params: RowParams, children: SlideNode[], _context: RenderContext) => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.ROW,
     children,
     width: params.width ?? SIZE.FILL,
     height: params.height ?? SIZE.HUG,
-    gap: resolveGap(params.gap, context.theme),
+    spacing: params.spacing,
+    spacingMode: params.spacingMode,
     vAlign: params.vAlign ?? VALIGN.TOP, // Explicit default: pure alignment (not CSS stretch)
     hAlign: params.hAlign ?? HALIGN.LEFT, // Explicit default for consistent measurement
     padding: params.padding,
   }),
 });
 
-export function row(params: RowParams, ...children: SlideNode[]): ComponentNode;
-export function row(...children: SlideNode[]): ComponentNode;
-export function row(...args: any[]): ComponentNode {
-  const { params, children } = parseContainerArgs<RowParams>(args);
+export function row(params: RowParams, ...children: SlideNode[]): ComponentNode {
   return component(Component.Row, params, children);
 }
 
@@ -90,7 +87,8 @@ export function row(...args: any[]): ComponentNode {
 export type ColumnParams = {
   width?: number | SizeValue; // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
   height?: number | SizeValue; // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
-  gap?: GapSize;
+  spacing: number;
+  spacingMode?: SpacingMode;
   vAlign?: VerticalAlignment;
   hAlign?: HorizontalAlignment;
   padding?: number; // inches - internal padding on all sides
@@ -102,23 +100,21 @@ export const columnComponent = defineComponent({
   directive: false,
   tokens: {},
 
-  render: (params: ColumnParams, children: SlideNode[], context: RenderContext) => ({
+  render: (params: ColumnParams, children: SlideNode[], _context: RenderContext) => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.COLUMN,
     children,
     width: params.width ?? SIZE.FILL,
     height: params.height ?? SIZE.HUG,
-    gap: resolveGap(params.gap, context.theme),
+    spacing: params.spacing,
+    spacingMode: params.spacingMode,
     vAlign: params.vAlign ?? VALIGN.TOP, // Explicit default for consistent measurement
     hAlign: params.hAlign ?? HALIGN.LEFT, // Explicit default for consistent measurement
     padding: params.padding,
   }),
 });
 
-export function column(params: ColumnParams, ...children: SlideNode[]): ComponentNode;
-export function column(...children: SlideNode[]): ComponentNode;
-export function column(...args: any[]): ComponentNode {
-  const { params, children } = parseContainerArgs<ColumnParams>(args);
+export function column(params: ColumnParams, ...children: SlideNode[]): ComponentNode {
   return component(Component.Column, params, children);
 }
 
@@ -170,7 +166,7 @@ export function stack(...args: any[]): ComponentNode {
 
 export type GridParams = {
   columns: number;
-  gap?: GapSize;
+  spacing: number;
   height?: number | SizeValue; // inches, SIZE.FILL (equal rows), or SIZE.HUG (content-sized rows). Default: FILL
 };
 
@@ -180,19 +176,19 @@ export const gridComponent = defineComponent({
   directive: false,
   tokens: {},
   render: (params: GridParams, children: SlideNode[]) => {
-    const { columns, gap = GAP.NORMAL, height = SIZE.FILL } = params;
+    const { columns, spacing, height = SIZE.FILL } = params;
 
     // Wrap each child in a column cell so items share row width equally
-    const cells = children.map((child) => column({ width: SIZE.FILL, height }, child));
+    const cells = children.map((child) => column({ spacing: 0, width: SIZE.FILL, height }, child));
 
     // Chunk cells into rows
     const rows: ComponentNode[] = [];
     for (let i = 0; i < cells.length; i += columns) {
-      rows.push(row({ gap, height }, ...cells.slice(i, i + columns)));
+      rows.push(row({ spacing, height }, ...cells.slice(i, i + columns)));
     }
 
     // Wrapper column mirrors caller's height so outer containers can position it
-    return column({ gap, height }, ...rows);
+    return column({ spacing, height }, ...rows);
   },
 });
 
@@ -204,29 +200,11 @@ export const gridComponent = defineComponent({
  *
  * @example
  * ```typescript
- * grid(3, ...cards)                                           // fill-height rows
- * grid({ columns: 2, height: SIZE.HUG }, ...items)            // content-sized rows
- * grid({ columns: 2, height: SIZE.HUG, gap: GAP.TIGHT }, ...) // tight content grid
+ * grid({ columns: 3, spacing: 0.25 }, ...cards)                  // fill-height rows
+ * grid({ columns: 2, spacing: 0.25, height: SIZE.HUG }, ...items) // content-sized rows
+ * grid({ columns: 2, spacing: 0.125, height: SIZE.HUG }, ...)     // tight content grid
  * ```
  */
-export function grid(params: GridParams, ...children: SlideNode[]): ComponentNode;
-export function grid(columns: number, ...children: SlideNode[]): ComponentNode;
-export function grid(...args: any[]): ComponentNode {
-  let columns: number;
-  let gap: GapSize | undefined;
-  let height: number | SizeValue | undefined;
-  let children: SlideNode[];
-
-  if (typeof args[0] === "number") {
-    columns = args[0];
-    children = args.slice(1);
-  } else {
-    const params = args[0] as GridParams;
-    columns = params.columns;
-    gap = params.gap;
-    height = params.height;
-    children = args.slice(1);
-  }
-
-  return component(Component.Grid, { columns, gap, height }, children);
+export function grid(params: GridParams, ...children: SlideNode[]): ComponentNode {
+  return component(Component.Grid, params, children);
 }

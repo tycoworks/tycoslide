@@ -94,7 +94,7 @@ function rowNode(...args: any[]): ContainerNode {
     height: opts.height ?? SIZE.HUG,
     vAlign: opts.vAlign ?? VALIGN.TOP,
     hAlign: opts.hAlign ?? HALIGN.LEFT,
-    gap: opts.gap ?? 0,
+    spacing: opts.spacing ?? 0,
     padding: opts.padding,
   };
 }
@@ -113,7 +113,7 @@ function colNode(...args: any[]): ContainerNode {
     height: opts.height ?? SIZE.HUG,
     vAlign: opts.vAlign ?? VALIGN.TOP,
     hAlign: opts.hAlign ?? HALIGN.LEFT,
-    gap: opts.gap ?? 0,
+    spacing: opts.spacing ?? 0,
     padding: opts.padding,
   };
 }
@@ -806,7 +806,7 @@ describe("HTML Measurement Generation", () => {
   });
 
   // ============================================
-  // Property gap coverage tests
+  // Property spacing coverage tests
   // ============================================
 
   describe("Shape rendering", () => {

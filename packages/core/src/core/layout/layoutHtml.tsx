@@ -40,7 +40,17 @@ import type {
   Theme,
   VerticalAlignment,
 } from "../model/types.js";
-import { BORDER_STYLE, DASH_TYPE, DIRECTION, FONT_SLOT, HALIGN, SHAPE, SIZE, VALIGN } from "../model/types.js";
+import {
+  BORDER_STYLE,
+  DASH_TYPE,
+  DIRECTION,
+  FONT_SLOT,
+  HALIGN,
+  SHAPE,
+  SIZE,
+  SPACING_MODE,
+  VALIGN,
+} from "../model/types.js";
 
 // ============================================
 // TYPES
@@ -202,8 +212,10 @@ function styleContainer(
   imagePathMap: Map<string, string>,
 ): StyledNode {
   const isRow = node.direction === DIRECTION.ROW;
-  const gapPx = inToPx(node.gap);
-  const paddingPx = node.padding ? inToPx(node.padding) : 0;
+  const spacingPx = inToPx(node.spacing);
+  const basePaddingPx = node.padding ? inToPx(node.padding) : 0;
+  const mainAxisPad = basePaddingPx + (node.spacingMode === SPACING_MODE.AROUND ? spacingPx : 0);
+  const crossAxisPad = basePaddingPx;
 
   const justifyContent = isRow
     ? node.hAlign === HALIGN.CENTER
@@ -217,7 +229,7 @@ function styleContainer(
   const styles: Record<string, string | number> = {
     display: "flex",
     flexDirection: node.direction,
-    gap: `${gapPx}px`,
+    gap: `${spacingPx}px`, // CSS gap property
     justifyContent,
     alignItems,
     ...flexItem(node.width, node.height, parent.direction),
@@ -225,8 +237,10 @@ function styleContainer(
     // containment would zero their intrinsic width, collapsing the column.
     ...(!isRow && node.width !== SIZE.HUG ? { containerType: "inline-size" } : {}),
   };
-  if (paddingPx > 0) {
-    styles.padding = `${paddingPx}px`;
+  if (mainAxisPad > 0 || crossAxisPad > 0) {
+    styles.padding = isRow
+      ? `${crossAxisPad}px ${mainAxisPad}px`
+      : `${mainAxisPad}px ${crossAxisPad}px`;
   }
 
   const ctx = childContext(node, parent);

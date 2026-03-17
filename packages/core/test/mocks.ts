@@ -26,23 +26,16 @@ export const mockTextStyle: TextStyle = {
 };
 
 /**
- * Create a mock Theme with configurable spacing.
+ * Create a mock Theme.
  * All text styles point to the same mock style.
  */
 export function mockTheme(options?: {
-  gap?: number;
-  gapTight?: number;
-  gapLoose?: number;
   layouts?: Theme["layouts"];
   textStyles?: Partial<Record<string, Partial<TextStyle>>>;
   slide?: Theme["slide"];
 }): Theme {
-  const gap = options?.gap ?? 0.25;
-  const gapTight = options?.gapTight ?? 0.125;
-  const gapLoose = options?.gapLoose ?? 0.5;
   return {
     slide: options?.slide ?? { layout: "CUSTOM" as const, width: 13.333, height: 7.5 },
-    spacing: { normal: gap, tight: gapTight, loose: gapLoose },
     fonts: [mockFontFamily],
     textStyles: {
       [TEXT_STYLE.H1]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.H1] },

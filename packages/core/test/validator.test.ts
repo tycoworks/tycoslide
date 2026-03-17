@@ -34,7 +34,7 @@ function containerNode(): ElementNode {
     direction: DIRECTION.ROW,
     width: SIZE.FILL,
     height: SIZE.HUG,
-    gap: 0,
+    spacing: 0,
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.TOP,
   } as ElementNode;

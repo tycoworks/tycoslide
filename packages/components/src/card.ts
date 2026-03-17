@@ -4,7 +4,6 @@
 import {
   component,
   defineComponent,
-  type GapSize,
   type HorizontalAlignment,
   type InferParams,
   type InferTokens,
@@ -28,7 +27,7 @@ import { type TextTokens, text, textComponent } from "./text.js";
 const cardTokens = token.shape({
   background: token.optional<ShapeTokens>(),
   padding: token.required<number>(),
-  gap: token.required<GapSize>(),
+  spacing: token.required<number>(),
   hAlign: token.required<HorizontalAlignment>(),
   vAlign: token.required<VerticalAlignment>(),
   title: token.required<TextTokens>(),
@@ -58,7 +57,7 @@ export type CardParams = InferParams<typeof cardParams>;
  * ```
  * stack(
  *   rectangle(background),  // Background layer (z-index 0)
- *   column({ padding, gap }, ...children)  // Content layer (z-index 1)
+ *   column({ padding, spacing }, ...children)  // Content layer (z-index 1)
  * )
  * ```
  */
@@ -73,7 +72,7 @@ export const cardComponent = defineComponent({
     const {
       background,
       padding,
-      gap,
+      spacing,
       hAlign: contentHAlign,
       vAlign: contentVAlign,
       title: titleTokens,
@@ -95,7 +94,7 @@ export const cardComponent = defineComponent({
       children.push(text(actualDescription, descriptionTokens));
     }
 
-    const containerParams = { padding, gap, hAlign: contentHAlign, vAlign: contentVAlign };
+    const containerParams = { padding, spacing, hAlign: contentHAlign, vAlign: contentVAlign };
     const outerHeight = SIZE.FILL;
 
     // No background token — skip background shape

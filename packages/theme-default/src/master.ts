@@ -1,7 +1,7 @@
 // Master Slide Definitions
 // Two masters: default (footer chrome) and minimal (margin + background only).
 
-import { type Background, Bounds, defineMaster, GAP, HALIGN, type InferTokens, SIZE, token, VALIGN } from "tycoslide";
+import { type Background, Bounds, defineMaster, HALIGN, type InferTokens, SIZE, token, VALIGN } from "tycoslide";
 import type { PlainTextTokens, SlideNumberTokens } from "tycoslide-components";
 import { column, image, plainText, row, slideNumber } from "tycoslide-components";
 
@@ -15,6 +15,7 @@ export const defaultMasterTokens = token.shape({
   footerHeight: token.required<number>(),
   footerLogo: token.required<string>(),
   footerText: token.required<string>(),
+  footerSpacing: token.required<number>(),
   slideNumber: token.required<SlideNumberTokens>(),
   footer: token.required<PlainTextTokens>(),
 });
@@ -35,9 +36,14 @@ export const defaultMaster = defineMaster({
     );
 
     const content = column(
-      { height: SIZE.FILL, vAlign: VALIGN.BOTTOM, padding: margin / 4, hAlign: HALIGN.CENTER },
+      { spacing: 0, height: SIZE.FILL, vAlign: VALIGN.BOTTOM, padding: margin / 4, hAlign: HALIGN.CENTER },
       row(
-        { gap: GAP.TIGHT, height: footerHeight, vAlign: VALIGN.MIDDLE, width: slideSize.width - margin * 2 },
+        {
+          spacing: tokens.footerSpacing,
+          height: footerHeight,
+          vAlign: VALIGN.MIDDLE,
+          width: slideSize.width - margin * 2,
+        },
         image(tokens.footerLogo),
         plainText(tokens.footerText, tokens.footer),
         slideNumber(tokens.slideNumber),
@@ -67,7 +73,7 @@ export const minimalMaster = defineMaster({
     const contentBounds = new Bounds(margin, margin, slideSize.width - margin * 2, slideSize.height - margin * 2);
 
     return {
-      content: column({ height: SIZE.FILL }),
+      content: column({ spacing: 0, height: SIZE.FILL }),
       contentBounds,
       background,
     };

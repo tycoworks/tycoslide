@@ -21,15 +21,6 @@ export const VALIGN = {
 
 export type VerticalAlignment = (typeof VALIGN)[keyof typeof VALIGN];
 
-export const GAP = {
-  NONE: "none",
-  TIGHT: "tight",
-  NORMAL: "normal",
-  LOOSE: "loose",
-} as const;
-
-export type GapSize = (typeof GAP)[keyof typeof GAP];
-
 export const DIRECTION = {
   ROW: "row",
   COLUMN: "column",
@@ -43,6 +34,13 @@ export const SIZE = {
 } as const;
 
 export type SizeValue = (typeof SIZE)[keyof typeof SIZE];
+
+export const SPACING_MODE = {
+  BETWEEN: "between",
+  AROUND: "around",
+} as const;
+
+export type SpacingMode = (typeof SPACING_MODE)[keyof typeof SPACING_MODE];
 
 export const SHADOW_TYPE = {
   OUTER: "outer",
@@ -481,12 +479,6 @@ export type VariantConfig = Record<string, Record<string, unknown>>;
 
 export interface Theme {
   slide: SlideSize | CustomSlideSize;
-  /** Semantic spacing scale for container gaps (W3C DTCG convention). */
-  spacing: {
-    normal: number;
-    tight: number;
-    loose: number;
-  };
   /** Explicit font manifest. Every font the theme uses must be listed here.
    *  `generateFontFaceCSS()` reads exclusively from this list. */
   fonts: FontFamily[];

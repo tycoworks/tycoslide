@@ -112,4 +112,3 @@ export const imageComponent = defineComponent({
 export function image(src: string, tokens?: ImageTokens): ComponentNode {
   return component(Component.Image, {}, src, tokens);
 }
-

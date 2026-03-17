@@ -4,7 +4,7 @@
 import * as assert from "node:assert";
 import { createRequire } from "node:module";
 import type { FontFamily, TextStyle, Theme } from "tycoslide";
-import { BORDER_STYLE, DASH_TYPE, GAP, HALIGN, TEXT_STYLE, VALIGN } from "tycoslide";
+import { BORDER_STYLE, DASH_TYPE, HALIGN, TEXT_STYLE, VALIGN } from "tycoslide";
 import type {
   CardTokens,
   CodeTokens,
@@ -40,16 +40,12 @@ const mockTextStyle: TextStyle = {
 };
 
 /**
- * Create a mock Theme with configurable spacing.
+ * Create a mock Theme.
  * All text styles point to the same mock style.
  */
-export function mockTheme(options?: { gap?: number; gapTight?: number; gapLoose?: number }): Theme {
-  const gap = options?.gap ?? 0.25;
-  const gapTight = options?.gapTight ?? 0.125;
-  const gapLoose = options?.gapLoose ?? 0.5;
+export function mockTheme(): Theme {
   return {
     slide: { layout: "CUSTOM" as const, width: 13.333, height: 7.5 },
-    spacing: { normal: gap, tight: gapTight, loose: gapLoose },
     fonts: [mockFontFamily],
     textStyles: {
       [TEXT_STYLE.H1]: mockTextStyle,
@@ -167,7 +163,7 @@ export const DEFAULT_CARD_TOKENS: CardTokens = {
     cornerRadius: 0,
   },
   padding: 0.25,
-  gap: GAP.TIGHT,
+  spacing: 0.125,
   hAlign: HALIGN.CENTER,
   vAlign: VALIGN.TOP,
   title: {
@@ -196,7 +192,7 @@ export const DEFAULT_QUOTE_TOKENS: QuoteTokens = {
     width: 3,
     dashType: DASH_TYPE.SOLID,
   },
-  gap: GAP.TIGHT,
+  spacing: 0.125,
   quote: {
     style: TEXT_STYLE.BODY,
     color: "#FFFFFF",
@@ -223,7 +219,7 @@ export const DEFAULT_TESTIMONIAL_TOKENS: TestimonialTokens = {
     cornerRadius: 0,
   },
   padding: 0.5,
-  gap: GAP.NORMAL,
+  spacing: 0.25,
   hAlign: HALIGN.CENTER,
   vAlign: VALIGN.MIDDLE,
   quote: {

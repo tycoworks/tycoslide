@@ -271,7 +271,7 @@ Custom layouts define slide structure. Each layout controls where content appear
 `defineLayout()` creates a layout definition — its name, params, content slots, required tokens, and render function. TypeScript catches missing tokens at compile time.
 
 ```typescript
-import { defineLayout, param, token, GAP, SIZE, type InferTokens } from 'tycoslide';
+import { defineLayout, param, token, SIZE, type InferTokens } from 'tycoslide';
 import { textComponent, plainText, row, column } from 'tycoslide-components';
 import type { PlainTextTokens } from 'tycoslide-components';
 
@@ -295,9 +295,9 @@ export const twoColumnLayout = defineLayout({
     masterName: 'default',
     masterVariant: 'default',
     content: column(
-      { gap: GAP.NONE, height: SIZE.FILL },
+      { spacing: 0, height: SIZE.FILL },
       ...(title ? [plainText(title, tokens.title)] : []),
-      row({ height: SIZE.FILL }, column(...left), column(...right)),
+      row({ spacing: 0, height: SIZE.FILL }, column({ spacing: 0 }, ...left), column({ spacing: 0 }, ...right)),
     ),
   }),
 });
@@ -406,15 +406,13 @@ Build layouts by composing container functions from `tycoslide-components` to co
 
 ```typescript
 import { column, row, plainText } from 'tycoslide-components';
-import { GAP, TEXT_STYLE } from 'tycoslide';
-
 column(
-  { gap: GAP.NORMAL },
+  { spacing: tokens.spacing },
   plainText("Section Header", tokens.eyebrow),
   row(
-    { gap: GAP.NORMAL },
-    column(...slots.left),
-    column(...slots.right)
+    { spacing: tokens.spacing },
+    column({ spacing: 0 }, ...slots.left),
+    column({ spacing: 0 }, ...slots.right)
   )
 )
 ```
@@ -446,7 +444,7 @@ The default theme's `title`, `section`, and `body` layouts in [`packages/theme-d
 `defineMaster()` creates a master definition. A master returns fixed chrome elements and the `contentBounds` that tells layouts how much space they have to work with.
 
 ```typescript
-import { defineMaster, token, GAP, SIZE, VALIGN, Bounds, type InferTokens } from 'tycoslide';
+import { defineMaster, token, SIZE, VALIGN, Bounds, type InferTokens } from 'tycoslide';
 import type { PlainTextTokens, SlideNumberTokens } from 'tycoslide-components';
 import { row, column, plainText, slideNumber } from 'tycoslide-components';
 
@@ -454,6 +452,7 @@ const myMasterTokens = token.shape({
   background: token.required<string>(),
   margin: token.required<number>(),
   footerHeight: token.required<number>(),
+  footerSpacing: token.required<number>(),
   footerText: token.required<string>(),
   slideNumber: token.required<SlideNumberTokens>(),
   footer: token.required<PlainTextTokens>(),
@@ -473,9 +472,9 @@ export const myMaster = defineMaster({
       slideSize.height - margin * 2 - footerHeight,
     );
     const content = column(
-      { height: SIZE.FILL, vAlign: VALIGN.BOTTOM, padding: margin },
+      { spacing: 0, height: SIZE.FILL, vAlign: VALIGN.BOTTOM, padding: margin },
       row(
-        { gap: GAP.TIGHT, height: footerHeight, vAlign: VALIGN.MIDDLE },
+        { spacing: tokens.footerSpacing, height: footerHeight, vAlign: VALIGN.MIDDLE },
         plainText(tokens.footerText, tokens.footer),
         slideNumber(tokens.slideNumber),
       ),

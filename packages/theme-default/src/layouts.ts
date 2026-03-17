@@ -5,8 +5,6 @@
 import {
   component,
   defineLayout,
-  GAP,
-  type GapSize,
   type HorizontalAlignment,
   type InferTokens,
   param,
@@ -14,6 +12,7 @@ import {
   SIZE,
   type Slide,
   type SlideNode,
+  SPACING_MODE,
   schema,
   token,
   type VerticalAlignment,
@@ -48,12 +47,17 @@ import {
 interface HeaderTokens {
   title: PlainTextTokens;
   eyebrow: PlainTextTokens;
+  headerSpacing: number;
 }
 
 /** Title header block with optional eyebrow */
 export function headerBlock(title: string, tokens: HeaderTokens, eyebrow?: string): SlideNode {
   if (eyebrow) {
-    return column({ gap: GAP.TIGHT }, plainText(eyebrow, tokens.eyebrow), plainText(title, tokens.title));
+    return column(
+      { spacing: tokens.headerSpacing },
+      plainText(eyebrow, tokens.eyebrow),
+      plainText(title, tokens.title),
+    );
   }
   return plainText(title, tokens.title);
 }
@@ -63,7 +67,7 @@ export function masteredSlide(...content: SlideNode[]): Slide {
   return {
     masterName: "default",
     masterVariant: "default",
-    content: column({ gap: GAP.NONE, height: SIZE.FILL }, ...content),
+    content: column({ spacing: 0, height: SIZE.FILL }, ...content),
   };
 }
 
@@ -79,7 +83,7 @@ export const titleLayoutTokens = token.shape({
   masterVariant: token.required<string>(),
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
-  gap: token.required<GapSize>(),
+  spacing: token.required<number>(),
 });
 
 export type TitleLayoutTokens = InferTokens<typeof titleLayoutTokens>;
@@ -100,7 +104,7 @@ export const titleLayout = defineLayout({
   tokens: titleLayoutTokens,
   render: ({ title, subtitle, image: imagePath }, _slots, tokens: TitleLayoutTokens) => {
     const textBlock = column(
-      { vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap, height: SIZE.FILL },
+      { vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL },
       text(title, tokens.title),
       ...(subtitle ? [text(subtitle, tokens.subtitle)] : []),
     );
@@ -108,7 +112,9 @@ export const titleLayout = defineLayout({
     return {
       masterName: "minimal",
       masterVariant: tokens.masterVariant,
-      content: imagePath ? row({ vAlign: tokens.vAlign, height: SIZE.FILL }, textBlock, image(imagePath)) : textBlock,
+      content: imagePath
+        ? row({ spacing: 0, vAlign: tokens.vAlign, height: SIZE.FILL }, textBlock, image(imagePath))
+        : textBlock,
     };
   },
 });
@@ -138,7 +144,7 @@ export const sectionLayout = defineLayout({
     masterName: "minimal",
     masterVariant: tokens.masterVariant,
     content: column(
-      { vAlign: tokens.vAlign, hAlign: tokens.hAlign, height: SIZE.FILL },
+      { spacing: 0, vAlign: tokens.vAlign, hAlign: tokens.hAlign, height: SIZE.FILL },
       plainText(title, tokens.title),
     ),
   }),
@@ -153,7 +159,8 @@ export const bodyLayoutTokens = token.shape({
   list: token.required<ListTokens>(),
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
-  gap: token.required<GapSize>(),
+  spacing: token.required<number>(),
+  headerSpacing: token.required<number>(),
 });
 
 export type BodyLayoutTokens = InferTokens<typeof bodyLayoutTokens>;
@@ -180,7 +187,7 @@ export const bodyLayout = defineLayout({
   render: ({ title, eyebrow }, { body }, tokens: BodyLayoutTokens) =>
     masteredSlide(
       ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
-      column({ height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap }, ...body),
+      column({ height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing }, ...body),
     ),
 });
 
@@ -193,7 +200,7 @@ export const statLayoutTokens = token.shape({
   surface: token.optional<ShapeTokens>(),
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
-  gap: token.required<GapSize>(),
+  spacing: token.required<number>(),
   padding: token.required<number>(),
 });
 
@@ -219,7 +226,13 @@ export const statLayout = defineLayout({
   tokens: statLayoutTokens,
   render: ({ value, label, caption }, _slots, tokens: StatLayoutTokens) => {
     const content = column(
-      { vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap, height: SIZE.FILL, padding: tokens.padding },
+      {
+        vAlign: tokens.vAlign,
+        hAlign: tokens.hAlign,
+        spacing: tokens.spacing,
+        height: SIZE.FILL,
+        padding: tokens.padding,
+      },
       plainText(value, tokens.value),
       plainText(label, tokens.label),
       ...(caption ? [text(caption, tokens.caption)] : []),
@@ -229,7 +242,9 @@ export const statLayout = defineLayout({
       ? stack({ height: SIZE.FILL }, shape(tokens.surface, { shape: SHAPE.ROUND_RECT }), content)
       : content;
 
-    return masteredSlide(column({ height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign }, surfaced));
+    return masteredSlide(
+      column({ spacing: 0, height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign }, surfaced),
+    );
   },
 });
 
@@ -239,7 +254,7 @@ export const quoteLayoutTokens = token.shape({
   quote: token.required<QuoteTokens>(),
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
-  gap: token.required<GapSize>(),
+  spacing: token.required<number>(),
 });
 
 export type QuoteLayoutTokens = InferTokens<typeof quoteLayoutTokens>;
@@ -263,7 +278,7 @@ export const quoteLayout = defineLayout({
   render: ({ quote: quoteText, attribution }, _slots, tokens: QuoteLayoutTokens) =>
     masteredSlide(
       column(
-        { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap },
+        { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing },
         component(Component.Quote, { quote: quoteText, attribution }, undefined, tokens.quote),
       ),
     ),
@@ -289,7 +304,7 @@ export const endLayout = defineLayout({
     masterName: "minimal",
     masterVariant: tokens.masterVariant,
     content: column(
-      { vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap, height: SIZE.FILL },
+      { vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL },
       text(title, tokens.title),
       ...(subtitle ? [text(subtitle, tokens.subtitle)] : []),
     ),
@@ -318,7 +333,7 @@ export const blankLayout = defineLayout({
   render: (_params, { body }, tokens: BlankLayoutTokens) => ({
     masterName: "minimal",
     masterVariant: tokens.masterVariant,
-    content: column({ height: SIZE.FILL }, ...body),
+    content: column({ spacing: 0, height: SIZE.FILL }, ...body),
   }),
 });
 
@@ -331,7 +346,8 @@ export const twoColumnLayoutTokens = token.shape({
   list: token.required<ListTokens>(),
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
-  gap: token.required<GapSize>(),
+  spacing: token.required<number>(),
+  headerSpacing: token.required<number>(),
 });
 
 export type TwoColumnLayoutTokens = InferTokens<typeof twoColumnLayoutTokens>;
@@ -360,9 +376,9 @@ export const twoColumnLayout = defineLayout({
     masteredSlide(
       ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
       row(
-        { height: SIZE.FILL },
-        column({ vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap, height: SIZE.FILL }, ...left),
-        column({ vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap, height: SIZE.FILL }, ...right),
+        { spacing: 0, height: SIZE.FILL },
+        column({ vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL }, ...left),
+        column({ vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL }, ...right),
       ),
     ),
 });
@@ -374,7 +390,7 @@ export const statementLayoutTokens = token.shape({
   caption: token.required<TextTokens>(),
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
-  gap: token.required<GapSize>(),
+  spacing: token.required<number>(),
   masterVariant: token.required<string>(),
 });
 
@@ -398,7 +414,7 @@ export const statementLayout = defineLayout({
     masterName: "minimal",
     masterVariant: tokens.masterVariant,
     content: column(
-      { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap },
+      { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing },
       text(body, tokens.body),
       ...(caption ? [text(caption, tokens.caption)] : []),
     ),
@@ -410,6 +426,7 @@ export const statementLayout = defineLayout({
 export const agendaLayoutTokens = token.shape({
   title: token.required<PlainTextTokens>(),
   eyebrow: token.required<PlainTextTokens>(),
+  headerSpacing: token.required<number>(),
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
   items: token.required<TextTokens>(),
@@ -417,9 +434,9 @@ export const agendaLayoutTokens = token.shape({
   itemNumber: token.required<PlainTextTokens>(),
   itemPadding: token.required<number>(),
   itemVAlign: token.required<VerticalAlignment>(),
-  itemGap: token.required<GapSize>(),
+  itemSpacing: token.required<number>(),
   gridColumns: token.required<number>(),
-  gridGap: token.required<GapSize>(),
+  gridSpacing: token.required<number>(),
 });
 
 export type AgendaLayoutTokens = InferTokens<typeof agendaLayoutTokens>;
@@ -450,8 +467,11 @@ export const agendaLayout = defineLayout({
       stack(
         shape(tokens.itemBackground, { shape: SHAPE.ROUND_RECT }),
         row(
-          { padding: tokens.itemPadding, vAlign: tokens.itemVAlign, gap: tokens.itemGap },
-          column({ width: SIZE.HUG, vAlign: tokens.itemVAlign }, plainText(String(i + 1), tokens.itemNumber)),
+          { padding: tokens.itemPadding, vAlign: tokens.itemVAlign, spacing: tokens.itemSpacing },
+          column(
+            { spacing: 0, width: SIZE.HUG, vAlign: tokens.itemVAlign },
+            plainText(String(i + 1), tokens.itemNumber),
+          ),
           text(item, tokens.items),
         ),
       ),
@@ -459,8 +479,8 @@ export const agendaLayout = defineLayout({
     return masteredSlide(
       headerBlock(title, tokens, eyebrow),
       column(
-        { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign },
-        grid({ columns: tokens.gridColumns, gap: tokens.gridGap, height: SIZE.HUG }, ...itemCards),
+        { spacing: 0, height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign },
+        grid({ columns: tokens.gridColumns, spacing: tokens.gridSpacing, height: SIZE.HUG }, ...itemCards),
       ),
     );
   },
@@ -471,13 +491,14 @@ export const agendaLayout = defineLayout({
 export const cardsLayoutTokens = token.shape({
   title: token.required<PlainTextTokens>(),
   eyebrow: token.required<PlainTextTokens>(),
+  headerSpacing: token.required<number>(),
   intro: token.required<TextTokens>(),
   caption: token.required<TextTokens>(),
   card: token.required<CardTokens>(),
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
-  gap: token.required<GapSize>(),
-  gridGap: token.required<GapSize>(),
+  spacing: token.required<number>(),
+  gridSpacing: token.required<number>(),
 });
 
 export type CardsLayoutTokens = InferTokens<typeof cardsLayoutTokens>;
@@ -513,9 +534,15 @@ export const cardsLayout = defineLayout({
     return masteredSlide(
       headerBlock(title, tokens, eyebrow),
       column(
-        { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, gap: tokens.gap },
+        {
+          height: SIZE.FILL,
+          vAlign: tokens.vAlign,
+          hAlign: tokens.hAlign,
+          spacing: tokens.spacing,
+          spacingMode: SPACING_MODE.AROUND,
+        },
         ...(intro ? [text(intro, tokens.intro)] : []),
-        grid({ columns: perRow, gap: tokens.gridGap }, ...built),
+        grid({ columns: perRow, spacing: tokens.gridSpacing }, ...built),
         ...(caption ? [text(caption, tokens.caption)] : []),
       ),
     );

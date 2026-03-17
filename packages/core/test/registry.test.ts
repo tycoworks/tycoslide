@@ -163,7 +163,7 @@ describe("ComponentRegistry", () => {
       const cardTokens = {
         background: { fill: "#333333", fillOpacity: 0, borderColor: "#333333", borderWidth: 1, cornerRadius: 0.1 },
         padding: 0.25,
-        gap: 0.125,
+        spacing: 0.125,
         hAlign: HALIGN.CENTER,
         vAlign: VALIGN.TOP,
         title: {

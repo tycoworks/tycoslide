@@ -47,7 +47,6 @@ export type {
   Font,
   FontFamily,
   FontSlot,
-  GapSize,
   HighlightPair,
   HorizontalAlignment,
   NormalizedRun,
@@ -56,6 +55,7 @@ export type {
   SizeValue,
   Slide,
   SlideSize,
+  SpacingMode,
   StrikeType,
   TextContent,
   TextRun,
@@ -75,13 +75,13 @@ export {
   DASH_TYPE,
   DIRECTION,
   FONT_SLOT,
-  GAP,
   HALIGN,
   SHADOW_TYPE,
   SHAPE,
   SHAPE_VALUES,
   SIZE,
   SLIDE_SIZE,
+  SPACING_MODE,
   STRIKE_TYPE,
   TEXT_STYLE,
   UNDERLINE_STYLE,
@@ -124,4 +124,4 @@ export {
 } from "./utils/font.js";
 export { parseMarkdown } from "./utils/parser.js";
 // Unit utilities (for component authors that resolve theme values during render)
-export { inToPx, resolveGap } from "./utils/units.js";
+export { inToPx } from "./utils/units.js";

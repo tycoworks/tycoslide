@@ -10,7 +10,6 @@ import {
   componentRegistry,
   DASH_TYPE,
   DIRECTION,
-  GAP,
   HALIGN,
   NODE_TYPE,
   SHADOW_TYPE,
@@ -364,13 +363,13 @@ describe("row()", () => {
   const child3 = text("C", DEFAULT_TEXT_TOKENS);
 
   test("returns ComponentNode", () => {
-    const node = row(child1);
+    const node = row({ spacing: 0 }, child1);
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
     assert.strictEqual(node.componentName, Component.Row);
   });
 
-  test("accepts children without props", async () => {
-    const node = row(child1, child2, child3);
+  test("accepts children with spacing: 0", async () => {
+    const node = row({ spacing: 0 }, child1, child2, child3);
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.type, NODE_TYPE.CONTAINER);
     assert.strictEqual(rendered.direction, DIRECTION.ROW);
@@ -378,94 +377,94 @@ describe("row()", () => {
   });
 
   test("defaults to width: FILL, height: HUG", async () => {
-    const node = row(child1);
+    const node = row({ spacing: 0 }, child1);
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.width, SIZE.FILL);
     assert.strictEqual(rendered.height, SIZE.HUG);
   });
 
   test("applies default vAlign", async () => {
-    const node = row(child1);
+    const node = row({ spacing: 0 }, child1);
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.vAlign, VALIGN.TOP);
   });
 
   test("applies default hAlign", async () => {
-    const node = row(child1);
+    const node = row({ spacing: 0 }, child1);
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.hAlign, HALIGN.LEFT);
   });
 
   test("applies hAlign prop", async () => {
-    const node = row({ hAlign: HALIGN.CENTER }, child1);
+    const node = row({ spacing: 0, hAlign: HALIGN.CENTER }, child1);
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.hAlign, HALIGN.CENTER);
   });
 
   test("applies vAlign prop", async () => {
-    const node = row({ vAlign: VALIGN.MIDDLE }, child1);
+    const node = row({ spacing: 0, vAlign: VALIGN.MIDDLE }, child1);
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.vAlign, VALIGN.MIDDLE);
   });
 
   test("applies padding prop", async () => {
-    const node = row({ padding: 0.5 }, child1);
+    const node = row({ spacing: 0, padding: 0.5 }, child1);
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.padding, 0.5);
   });
 
-  test("applies gap prop", async () => {
-    const node = row({ gap: GAP.TIGHT }, child1, child2);
+  test("applies spacing prop", async () => {
+    const node = row({ spacing: 0.125 }, child1, child2);
     const rendered = (await render(node)) as ContainerNode;
-    assert.strictEqual(rendered.gap, 0.125);
+    assert.strictEqual(rendered.spacing, 0.125);
   });
 
   test("applies width prop", async () => {
-    const node = row({ width: SIZE.FILL }, child1);
+    const node = row({ spacing: 0, width: SIZE.FILL }, child1);
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.width, SIZE.FILL);
   });
 
   test("applies height prop", async () => {
-    const node = row({ height: 2.5 }, child1);
+    const node = row({ spacing: 0, height: 2.5 }, child1);
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.height, 2.5);
   });
 
   test("distinguishes props from children", async () => {
-    const node = row({ gap: GAP.TIGHT }, text("A", DEFAULT_TEXT_TOKENS));
+    const node = row({ spacing: 0.125 }, text("A", DEFAULT_TEXT_TOKENS));
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.children.length, 1);
-    assert.strictEqual(rendered.gap, 0.125);
+    assert.strictEqual(rendered.spacing, 0.125);
   });
 
   test("accepts props with children (props first)", async () => {
-    const node = row({ gap: GAP.TIGHT }, text("A", DEFAULT_TEXT_TOKENS), text("B", DEFAULT_TEXT_TOKENS));
+    const node = row({ spacing: 0.125 }, text("A", DEFAULT_TEXT_TOKENS), text("B", DEFAULT_TEXT_TOKENS));
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.children.length, 2);
-    assert.strictEqual(rendered.gap, 0.125);
+    assert.strictEqual(rendered.spacing, 0.125);
   });
 
   test("applies all props together", async () => {
     const node = row(
-      { gap: GAP.NORMAL, vAlign: VALIGN.MIDDLE },
+      { spacing: 0.25, vAlign: VALIGN.MIDDLE },
       text("A", DEFAULT_TEXT_TOKENS),
       text("B", DEFAULT_TEXT_TOKENS),
     );
     const rendered = (await render(node)) as ContainerNode;
-    assert.strictEqual(rendered.gap, 0.25);
+    assert.strictEqual(rendered.spacing, 0.25);
     assert.strictEqual(rendered.vAlign, VALIGN.MIDDLE);
     assert.strictEqual(rendered.children.length, 2);
   });
 
   test("handles single child", async () => {
-    const node = row(text("A", DEFAULT_TEXT_TOKENS));
+    const node = row({ spacing: 0 }, text("A", DEFAULT_TEXT_TOKENS));
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.children.length, 1);
   });
 
   test("handles empty children", async () => {
-    const node = row();
+    const node = row({ spacing: 0 });
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.children.length, 0);
   });
@@ -481,13 +480,13 @@ describe("column()", () => {
   const child3 = text("C", DEFAULT_TEXT_TOKENS);
 
   test("returns ComponentNode", () => {
-    const node = column(child1);
+    const node = column({ spacing: 0 }, child1);
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
     assert.strictEqual(node.componentName, Component.Column);
   });
 
-  test("accepts children without props", async () => {
-    const node = column(child1, child2, child3);
+  test("accepts children with spacing: 0", async () => {
+    const node = column({ spacing: 0 }, child1, child2, child3);
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.type, NODE_TYPE.CONTAINER);
     assert.strictEqual(rendered.direction, DIRECTION.COLUMN);
@@ -495,102 +494,102 @@ describe("column()", () => {
   });
 
   test("defaults to width: FILL, height: HUG", async () => {
-    const node = column(child1);
+    const node = column({ spacing: 0 }, child1);
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.width, SIZE.FILL);
     assert.strictEqual(rendered.height, SIZE.HUG);
   });
 
   test("applies default vAlign", async () => {
-    const node = column(child1);
+    const node = column({ spacing: 0 }, child1);
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.vAlign, VALIGN.TOP);
   });
 
   test("applies default hAlign", async () => {
-    const node = column(child1);
+    const node = column({ spacing: 0 }, child1);
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.hAlign, HALIGN.LEFT);
   });
 
   test("applies hAlign prop", async () => {
-    const node = column({ hAlign: HALIGN.RIGHT }, child1);
+    const node = column({ spacing: 0, hAlign: HALIGN.RIGHT }, child1);
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.hAlign, HALIGN.RIGHT);
   });
 
   test("applies vAlign prop", async () => {
-    const node = column({ vAlign: VALIGN.BOTTOM }, child1);
+    const node = column({ spacing: 0, vAlign: VALIGN.BOTTOM }, child1);
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.vAlign, VALIGN.BOTTOM);
   });
 
   test("applies height prop", async () => {
-    const node = column({ height: SIZE.FILL }, child1);
+    const node = column({ spacing: 0, height: SIZE.FILL }, child1);
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.height, SIZE.FILL);
   });
 
   test("applies width prop", async () => {
-    const node = column({ width: 3.0 }, child1);
+    const node = column({ spacing: 0, width: 3.0 }, child1);
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.width, 3.0);
   });
 
-  test("applies gap prop", async () => {
-    const node = column({ gap: GAP.LOOSE }, child1, child2);
+  test("applies spacing prop", async () => {
+    const node = column({ spacing: 0.5 }, child1, child2);
     const rendered = (await render(node)) as ContainerNode;
-    assert.strictEqual(rendered.gap, 0.5);
+    assert.strictEqual(rendered.spacing, 0.5);
   });
 
   test("applies padding prop", async () => {
-    const node = column({ padding: 0.25 }, child1);
+    const node = column({ spacing: 0, padding: 0.25 }, child1);
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.padding, 0.25);
   });
 
   test("applies numeric height", async () => {
-    const node = column({ height: 2.5 }, text("A", DEFAULT_TEXT_TOKENS));
+    const node = column({ spacing: 0, height: 2.5 }, text("A", DEFAULT_TEXT_TOKENS));
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.height, 2.5);
   });
 
   test("distinguishes props from children", async () => {
-    const node = column({ gap: GAP.TIGHT }, text("A", DEFAULT_TEXT_TOKENS));
+    const node = column({ spacing: 0.125 }, text("A", DEFAULT_TEXT_TOKENS));
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.children.length, 1);
-    assert.strictEqual(rendered.gap, 0.125);
+    assert.strictEqual(rendered.spacing, 0.125);
   });
 
   test("accepts props with children (props first)", async () => {
-    const node = column({ gap: GAP.TIGHT }, text("A", DEFAULT_TEXT_TOKENS), text("B", DEFAULT_TEXT_TOKENS));
+    const node = column({ spacing: 0.125 }, text("A", DEFAULT_TEXT_TOKENS), text("B", DEFAULT_TEXT_TOKENS));
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.children.length, 2);
-    assert.strictEqual(rendered.gap, 0.125);
+    assert.strictEqual(rendered.spacing, 0.125);
   });
 
   test("applies all props together", async () => {
     const node = column(
-      { height: SIZE.FILL, gap: GAP.NORMAL, vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER },
+      { height: SIZE.FILL, spacing: 0.25, vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER },
       text("A", DEFAULT_TEXT_TOKENS),
       text("B", DEFAULT_TEXT_TOKENS),
     );
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.height, SIZE.FILL);
-    assert.strictEqual(rendered.gap, 0.25);
+    assert.strictEqual(rendered.spacing, 0.25);
     assert.strictEqual(rendered.vAlign, VALIGN.MIDDLE);
     assert.strictEqual(rendered.hAlign, HALIGN.CENTER);
     assert.strictEqual(rendered.children.length, 2);
   });
 
   test("handles single child", async () => {
-    const node = column(text("A", DEFAULT_TEXT_TOKENS));
+    const node = column({ spacing: 0 }, text("A", DEFAULT_TEXT_TOKENS));
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.children.length, 1);
   });
 
   test("handles empty children", async () => {
-    const node = column();
+    const node = column({ spacing: 0 });
     const rendered = (await render(node)) as ContainerNode;
     assert.strictEqual(rendered.children.length, 0);
   });
@@ -674,50 +673,50 @@ describe("grid()", () => {
   }
 
   test("returns a single ComponentNode", () => {
-    const g = grid(2, child1, child2);
+    const g = grid({ columns: 2, spacing: 0.25 }, child1, child2);
     assert.strictEqual(g.type, NODE_TYPE.COMPONENT);
     assert.strictEqual(g.componentName, Component.Grid);
   });
 
   test("renders to ColumnNode containing rows", async () => {
-    const col = (await render(grid(2, child1, child2))) as ContainerNode;
+    const col = (await render(grid({ columns: 2, spacing: 0.25 }, child1, child2))) as ContainerNode;
     assert.strictEqual(col.type, NODE_TYPE.CONTAINER);
     assert.strictEqual(col.children.length, 1); // 2 items / 2 cols = 1 row
     assert.strictEqual(col.children[0].type, NODE_TYPE.CONTAINER);
   });
 
   test("chunks children into rows (2 columns, 4 children = 2 rows)", async () => {
-    const rows = await renderGrid(grid(2, child1, child2, child3, child4));
+    const rows = await renderGrid(grid({ columns: 2, spacing: 0.25 }, child1, child2, child3, child4));
     assert.strictEqual(rows.length, 2);
     assert.strictEqual(rows[0].children.length, 2);
     assert.strictEqual(rows[1].children.length, 2);
   });
 
-  test("applies gap to rows when specified", async () => {
-    const rows = await renderGrid(grid({ columns: 2, gap: GAP.TIGHT }, child1, child2, child3, child4));
-    assert.strictEqual(rows[0].gap, 0.125);
+  test("applies spacing to rows when specified", async () => {
+    const rows = await renderGrid(grid({ columns: 2, spacing: 0.125 }, child1, child2, child3, child4));
+    assert.strictEqual(rows[0].spacing, 0.125);
   });
 
   test("handles odd number of children (2 columns, 5 children = 3 rows)", async () => {
-    const rows = await renderGrid(grid(2, child1, child2, child3, child4, child5));
+    const rows = await renderGrid(grid({ columns: 2, spacing: 0.25 }, child1, child2, child3, child4, child5));
     assert.strictEqual(rows.length, 3);
     assert.strictEqual(rows[2].children.length, 1);
   });
 
   test("accepts props object with columns", async () => {
-    const rows = await renderGrid(grid({ columns: 2 }, child1, child2, child3));
+    const rows = await renderGrid(grid({ columns: 2, spacing: 0.25 }, child1, child2, child3));
     assert.strictEqual(rows.length, 2);
     assert.strictEqual(rows[0].children.length, 2);
     assert.strictEqual(rows[1].children.length, 1);
   });
 
-  test("defaults to GAP.NORMAL when gap not specified", async () => {
-    const rows = await renderGrid(grid(2, child1, child2));
-    assert.strictEqual(rows[0].gap, 0.25);
+  test("defaults to 0.25 when spacing not specified", async () => {
+    const rows = await renderGrid(grid({ columns: 2, spacing: 0.25 }, child1, child2));
+    assert.strictEqual(rows[0].spacing, 0.25);
   });
 
   test("preserves child order (each wrapped in column cell)", async () => {
-    const rows = await renderGrid(grid(2, child1, child2));
+    const rows = await renderGrid(grid({ columns: 2, spacing: 0.25 }, child1, child2));
     const firstRow = rows[0];
     // Each child is wrapped in a ContainerNode (column) with width: SIZE.FILL
     assert.strictEqual(firstRow.children.length, 2);
@@ -733,37 +732,37 @@ describe("grid()", () => {
   });
 
   test("wrapper column has height: SIZE.FILL", async () => {
-    const col = (await render(grid(2, child1, child2))) as ContainerNode;
+    const col = (await render(grid({ columns: 2, spacing: 0.25 }, child1, child2))) as ContainerNode;
     assert.strictEqual(col.height, SIZE.FILL);
   });
 
   test("rows have height: SIZE.FILL", async () => {
-    const rows = await renderGrid(grid(2, child1, child2));
+    const rows = await renderGrid(grid({ columns: 2, spacing: 0.25 }, child1, child2));
     assert.strictEqual(rows[0].height, SIZE.FILL);
     assert.strictEqual(rows[0].vAlign, VALIGN.TOP);
   });
 
   test("cells have width and height: SIZE.FILL", async () => {
-    const rows = await renderGrid(grid(2, child1, child2));
+    const rows = await renderGrid(grid({ columns: 2, spacing: 0.25 }, child1, child2));
     const col0 = rows[0].children[0] as ContainerNode;
     assert.strictEqual(col0.height, SIZE.FILL);
     assert.strictEqual(col0.width, SIZE.FILL);
   });
 
   test("handles single row (columns >= children)", async () => {
-    const rows = await renderGrid(grid(4, child1, child2));
+    const rows = await renderGrid(grid({ columns: 4, spacing: 0.25 }, child1, child2));
     assert.strictEqual(rows.length, 1);
     assert.strictEqual(rows[0].children.length, 2);
   });
 
   test("handles empty children (renders to column with no rows)", async () => {
-    const col = (await render(grid(2))) as ContainerNode;
+    const col = (await render(grid({ columns: 2, spacing: 0.25 }))) as ContainerNode;
     assert.strictEqual(col.type, NODE_TYPE.CONTAINER);
     assert.strictEqual(col.children.length, 0);
   });
 
   test("handles single child", async () => {
-    const rows = await renderGrid(grid(2, child1));
+    const rows = await renderGrid(grid({ columns: 2, spacing: 0.25 }, child1));
     assert.strictEqual(rows.length, 1);
     assert.strictEqual(rows[0].children.length, 1);
   });
@@ -819,9 +818,11 @@ describe("table()", () => {
   });
 
   test("TableCellData cells preserve properties after expansion", async () => {
-    const tNode = table([
-      ["Header", { content: "colored cell", textStyle: TEXT_STYLE.SMALL, color: "#FF0000", hAlign: HALIGN.CENTER }],
-    ], undefined, DEFAULT_TABLE_TOKENS);
+    const tNode = table(
+      [["Header", { content: "colored cell", textStyle: TEXT_STYLE.SMALL, color: "#FF0000", hAlign: HALIGN.CENTER }]],
+      undefined,
+      DEFAULT_TABLE_TOKENS,
+    );
     const node = (await render(tNode)) as TableNode;
     assert.strictEqual(node.type, NODE_TYPE.TABLE);
     const cell = node.rows[0][1];
@@ -854,10 +855,14 @@ describe("table()", () => {
   });
 
   test("preserves table props", async () => {
-    const tNode = table([["a"]], {
-      headerRows: 1,
-      headerColumns: 1,
-    }, DEFAULT_TABLE_TOKENS);
+    const tNode = table(
+      [["a"]],
+      {
+        headerRows: 1,
+        headerColumns: 1,
+      },
+      DEFAULT_TABLE_TOKENS,
+    );
     const node = (await render(tNode)) as TableNode;
     assert.strictEqual(node.headerRows, 1);
     assert.strictEqual(node.headerColumns, 1);

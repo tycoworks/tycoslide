@@ -7,7 +7,6 @@ import {
   component,
   defineComponent,
   extractSource,
-  type GapSize,
   type InferParams,
   type InferTokens,
   param,
@@ -28,7 +27,7 @@ import { type TextTokens, text, textComponent } from "./text.js";
 
 const quoteTokens = token.shape({
   bar: token.required<LineTokens>(),
-  gap: token.required<GapSize>(),
+  spacing: token.required<number>(),
   quote: token.required<TextTokens>(),
   attribution: token.required<PlainTextTokens>(),
 });
@@ -53,9 +52,9 @@ export type QuoteParams = InferParams<typeof quoteParams>;
  *
  * Structure:
  * ```
- * row({ gap },
+ * row({ spacing },
  *   line({ color, width }),   // vertical accent bar
- *   column({ gap },
+ *   column({ spacing },
  *     text(quote),
  *     text(attribution)?
  *   )
@@ -79,7 +78,7 @@ export const quoteComponent = defineComponent({
   render(params, content, _context, tokens) {
     const { quote: quoteText, attribution } = params;
     const actualQuote = quoteText ?? content;
-    const { bar: barTokens, gap, quote: quoteTokens, attribution: attributionTokens } = tokens;
+    const { bar: barTokens, spacing, quote: quoteTokens, attribution: attributionTokens } = tokens;
 
     if (!actualQuote) {
       throw new Error(`Quote component requires either a 'quote' attribute or body text.`);
@@ -93,7 +92,7 @@ export const quoteComponent = defineComponent({
 
     const outerHeight = SIZE.HUG;
 
-    return row({ gap, height: outerHeight }, line(barTokens), column({ gap }, ...children));
+    return row({ spacing, height: outerHeight }, line(barTokens), column({ spacing }, ...children));
   },
 });
 

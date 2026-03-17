@@ -2,17 +2,7 @@
 // Clean light theme with Inter font. Copy and customize for your brand.
 // Units: spacing/margins/radii = inches, fontSize/borderWidth = points, opacity = 0-100
 
-import {
-  BORDER_STYLE,
-  DASH_TYPE,
-  defineTheme,
-  GAP,
-  HALIGN,
-  SHADOW_TYPE,
-  SLIDE_SIZE,
-  TEXT_STYLE,
-  VALIGN,
-} from "tycoslide";
+import { BORDER_STYLE, DASH_TYPE, defineTheme, HALIGN, SHADOW_TYPE, SLIDE_SIZE, TEXT_STYLE, VALIGN } from "tycoslide";
 import type { ListTokens, PlainTextTokens, TextTokens } from "tycoslide-components";
 import { assets } from "./assets.js";
 import {
@@ -73,11 +63,9 @@ const subtleOpacity = 15;
 const unit = 0.03125; // 1/32 inch
 
 // Derived spacing constants (local to theme construction, not on Theme type)
-const gap = unit * 8; // 0.25"
-const gapTight = unit * 4; // 0.125"
-const gapLoose = unit * 16; // 0.5"
+const spacing = unit * 8; // 0.25"
+const spacingTight = unit * 4; // 0.125"
 const padding = unit * 8; // 0.25"
-const paddingLarge = 0.4;
 const cellPadding = unit * 2; // 0.0625"
 const bulletIndentMultiplier = 1.5;
 const lineSpacing = 1.2;
@@ -281,7 +269,7 @@ const quoteSlotTokens = {
     width: accentBarWidth,
     dashType: DASH_TYPE.SOLID,
   },
-  gap: GAP.NORMAL,
+  spacing: spacing,
   quote: quoteText,
   attribution: quoteAttribution,
 };
@@ -295,7 +283,7 @@ const testimonialSlotTokens = {
     cornerRadius,
   },
   padding: padding,
-  gap: GAP.TIGHT,
+  spacing: spacingTight,
   hAlign: HALIGN.CENTER,
   vAlign: VALIGN.MIDDLE,
   quote: quoteText,
@@ -335,7 +323,6 @@ const bodySlotTokens = {
 
 export const theme = defineTheme({
   slide: SLIDE_SIZE.S16x9,
-  spacing: { normal: gap, tight: gapTight, loose: gapLoose },
   fonts: [assets.fonts.inter, assets.fonts.interLight, assets.fonts.firaCode],
   textStyles: {
     title: {
@@ -408,7 +395,7 @@ export const theme = defineTheme({
           masterVariant: "default",
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
-          gap: GAP.TIGHT,
+          spacing: spacingTight,
         }),
       },
     },
@@ -420,7 +407,7 @@ export const theme = defineTheme({
           masterVariant: "dark",
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
-          gap: GAP.TIGHT,
+          spacing: spacingTight,
         }),
       },
     },
@@ -439,11 +426,12 @@ export const theme = defineTheme({
         default: bodyLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
+          headerSpacing: spacingTight,
           text: bodyText,
           list: bodyList,
           vAlign: VALIGN.TOP,
           hAlign: HALIGN.LEFT,
-          gap: GAP.NORMAL,
+          spacing: spacing,
           ...bodySlotTokens,
         }),
       },
@@ -463,8 +451,8 @@ export const theme = defineTheme({
           },
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
-          gap: GAP.NORMAL,
-          padding: paddingLarge,
+          spacing: spacing,
+          padding,
         }),
       },
     },
@@ -473,11 +461,12 @@ export const theme = defineTheme({
         default: twoColumnLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
+          headerSpacing: spacingTight,
           text: bodyText,
           list: bodyList,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.LEFT,
-          gap: GAP.NORMAL,
+          spacing: spacing,
           ...bodySlotTokens,
         }),
       },
@@ -488,7 +477,7 @@ export const theme = defineTheme({
           caption: mutedCaption,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
-          gap: GAP.NORMAL,
+          spacing: spacing,
           masterVariant: "default",
           body: { ...bodyText, style: TEXT_STYLE.H2 },
         }),
@@ -499,6 +488,7 @@ export const theme = defineTheme({
         default: agendaLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
+          headerSpacing: spacingTight,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
           items: { ...bodyText, style: TEXT_STYLE.H4, color: palette.navy },
@@ -515,11 +505,11 @@ export const theme = defineTheme({
             hAlign: HALIGN.LEFT,
             vAlign: VALIGN.MIDDLE,
           },
-          itemPadding: gapTight + unit,
+          itemPadding: spacingTight + unit,
           itemVAlign: VALIGN.MIDDLE,
-          itemGap: GAP.NORMAL,
+          itemSpacing: spacing,
           gridColumns: 2,
-          gridGap: GAP.TIGHT,
+          gridSpacing: spacingTight,
         }),
       },
     },
@@ -528,12 +518,13 @@ export const theme = defineTheme({
         default: cardsLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
+          headerSpacing: spacingTight,
           intro: bodyText,
           caption: mutedCaption,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
-          gap: GAP.NORMAL,
-          gridGap: GAP.NORMAL,
+          spacing: spacing,
+          gridSpacing: spacing,
           card: {
             background: {
               fill: palette.white,
@@ -542,8 +533,8 @@ export const theme = defineTheme({
               borderWidth,
               cornerRadius,
             },
-            padding: padding,
-            gap: GAP.TIGHT,
+            padding,
+            spacing: spacingTight,
             hAlign: HALIGN.LEFT,
             vAlign: VALIGN.TOP,
             title: cardTitle,
@@ -553,15 +544,16 @@ export const theme = defineTheme({
         flat: cardsLayout.tokenMap({
           title: headerTitle,
           eyebrow: headerEyebrow,
+          headerSpacing: spacingTight,
           intro: bodyText,
           caption: mutedCaption,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
-          gap: GAP.NORMAL,
-          gridGap: GAP.NORMAL,
+          spacing: spacing,
+          gridSpacing: spacing,
           card: {
-            padding: padding,
-            gap: GAP.TIGHT,
+            padding,
+            spacing: spacingTight,
             hAlign: HALIGN.LEFT,
             vAlign: VALIGN.TOP,
             title: cardTitle,
@@ -587,13 +579,13 @@ export const theme = defineTheme({
               width: accentBarWidth,
               dashType: DASH_TYPE.SOLID,
             },
-            gap: GAP.NORMAL,
+            spacing: spacing,
             quote: quoteText,
             attribution: quoteAttribution,
           },
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
-          gap: GAP.NORMAL,
+          spacing: spacing,
         }),
       },
     },
@@ -607,6 +599,7 @@ export const theme = defineTheme({
           footerHeight,
           footerLogo: assets.tycoworks.logo,
           footerText: "tycoworks",
+          footerSpacing: spacingTight,
           slideNumber: {
             style: TEXT_STYLE.FOOTER,
             color: palette.gray600,

@@ -194,7 +194,7 @@ Content card with an optional image, title, and description. Renders as a rounde
 |-------|------|-------------|
 | `background` | ShapeTokens | Background shape (optional — omit to render without background) |
 | `padding` | number | Inner padding (inches) |
-| `gap` | GapSize | Gap between title and description |
+| `spacing` | number | Spacing between title and description (inches) |
 | `hAlign` | HorizontalAlignment | Content horizontal alignment |
 | `vAlign` | VerticalAlignment | Content vertical alignment |
 | `title` | TextTokens | Title text tokens |
@@ -236,7 +236,7 @@ Quote text is required -- provide it either via the `quote` attribute or as body
 | Token | Type | Description |
 |-------|------|-------------|
 | `bar` | LineTokens | Accent bar style (color, width, dash type) |
-| `gap` | GapSize | Gap between bar and text, and between quote and attribution |
+| `spacing` | number | Spacing between bar and text, and between quote and attribution (inches) |
 | `quote` | TextTokens | Quote text tokens |
 | `attribution` | PlainTextTokens | Attribution text tokens |
 
@@ -480,7 +480,7 @@ Quote text is required -- provide it either via the `quote` attribute or as body
 |-------|------|-------------|
 | `background` | ShapeTokens | Background shape (optional — omit to render without background) |
 | `padding` | number | Inner padding (inches) |
-| `gap` | GapSize | Gap between content sections |
+| `spacing` | number | Spacing between content sections (inches) |
 | `hAlign` | HorizontalAlignment | Content horizontal alignment |
 | `vAlign` | VerticalAlignment | Content vertical alignment |
 | `quote` | TextTokens | Quote text tokens |
@@ -516,7 +516,8 @@ Horizontal flex container. Children are arranged side by side.
 
 | Param | Type | Description |
 |-------|------|-------------|
-| `gap` | `none` \| `tight` \| `normal` \| `loose` | Gap between children |
+| `spacing` | number | Spacing between children in inches (**required**) |
+| `spacingMode` | `between` \| `around` | `between` (default): spacing between children only. `around`: spacing between children and on main-axis edges |
 | `vAlign` | `top` \| `middle` \| `bottom` | Vertical alignment of children |
 | `hAlign` | `left` \| `center` \| `right` | Horizontal alignment |
 | `padding` | number | Internal padding (inches) |
@@ -526,7 +527,7 @@ Horizontal flex container. Children are arranged side by side.
 ### Example
 
 ```typescript
-row({ gap: GAP.NORMAL, vAlign: VALIGN.TOP },
+row({ spacing: tokens.spacing, vAlign: VALIGN.TOP },
   card({ title: 'Left', description: 'Left content.' }, tokens.card),
   card({ title: 'Right', description: 'Right content.' }, tokens.card),
 )
@@ -541,7 +542,7 @@ Vertical flex container. Children are stacked top to bottom. Same parameters as 
 ### Example
 
 ```typescript
-column({ gap: GAP.TIGHT },
+column({ spacing: tokens.spacing },
   text('Context', tokens.body),
   quote({ attribution: '— Sarah Chen', quote: 'Automating the review cycle freed up two days per sprint.' }, tokens.quote),
 )
@@ -580,12 +581,12 @@ Equal-column grid. Wraps children into rows of N columns, each cell sharing spac
 | Param | Type | Description |
 |-------|------|-------------|
 | `columns` | number | Number of columns (**required**) |
-| `gap` | GapSize | Gap between cells (default: `normal`) |
+| `spacing` | number | Spacing between cells in inches (**required**) |
 
 ### Example
 
 ```typescript
-grid(3,
+grid({ columns: 3, spacing: tokens.gridSpacing },
   card({ title: 'One', description: 'First.' }, tokens.card),
   card({ title: 'Two', description: 'Second.' }, tokens.card),
   card({ title: 'Three', description: 'Third.' }, tokens.card),
@@ -772,7 +773,7 @@ Display a large metric value with a label and optional change indicator:
 import { defineComponent, componentRegistry, component, param, token, schema } from 'tycoslide';
 import { column, plainText } from 'tycoslide-components';
 import type { PlainTextTokens } from 'tycoslide-components';
-import type { GapSize, InferParams, InferTokens } from 'tycoslide';
+import type { InferParams, InferTokens } from 'tycoslide';
 
 // 1. Declare params and tokens
 const metricParams = param.shape({
@@ -787,7 +788,7 @@ const metricTokens = token.shape({
   change: token.required<PlainTextTokens>(),
   positiveColor: token.required<string>(),
   negativeColor: token.required<string>(),
-  gap: token.required<GapSize>(),
+  spacing: token.required<number>(),
 });
 
 export type MetricParams = InferParams<typeof metricParams>;
@@ -813,7 +814,7 @@ export const metricComponent = defineComponent({
       elements.push(plainText(params.change, changeTokens));
     }
 
-    return column({ gap: tokens.gap }, ...elements);
+    return column({ spacing: tokens.spacing }, ...elements); // spacing from theme token map
   },
 });
 
@@ -852,7 +853,7 @@ DSL functions are how you use components from TypeScript. All built-in DSL funct
 import { text, plainText, list, card, quote, testimonial, table, image, mermaid, code } from 'tycoslide-components';
 import { row, column, stack, grid } from 'tycoslide-components';
 import { line, shape, slideNumber } from 'tycoslide-components';
-import { TEXT_STYLE, GAP, SIZE, SHAPE, HALIGN, VALIGN } from 'tycoslide';
+import { TEXT_STYLE, SIZE, SHAPE, HALIGN, VALIGN, SPACING_MODE } from 'tycoslide';
 
 // Lists
 list(["First item", "Second **bold** item", "Third item"], tokens.list)         // Unordered
@@ -870,10 +871,10 @@ image('./path/to/image.png')
 // Shape (tokens first, then params)
 shape(tokens.background, { shape: SHAPE.ROUND_RECT })
 
-// Containers
-column({ gap: GAP.NORMAL }, ...)
-row({ gap: GAP.NORMAL }, ...)
-grid(3, ...)
+// Containers (spacing is required)
+column({ spacing: tokens.spacing }, ...)
+row({ spacing: tokens.spacing }, ...)
+grid({ columns: 3, spacing: tokens.gridSpacing }, ...)
 stack(backgroundNode, foregroundNode)
 ```
 

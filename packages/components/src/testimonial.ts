@@ -5,7 +5,6 @@
 import {
   component,
   defineComponent,
-  type GapSize,
   type HorizontalAlignment,
   type InferParams,
   type InferTokens,
@@ -30,7 +29,7 @@ import { type TextTokens, text, textComponent } from "./text.js";
 const testimonialTokens = token.shape({
   background: token.optional<ShapeTokens>(),
   padding: token.required<number>(),
-  gap: token.required<GapSize>(),
+  spacing: token.required<number>(),
   hAlign: token.required<HorizontalAlignment>(),
   vAlign: token.required<VerticalAlignment>(),
   quote: token.required<TextTokens>(),
@@ -60,7 +59,7 @@ export type TestimonialParams = InferParams<typeof testimonialParams>;
  * ```
  * stack(
  *   shape(background),
- *   column({ padding, gap, vAlign: MIDDLE },
+ *   column({ padding, spacing, vAlign: MIDDLE },
  *     image?,         // Optional logo/image
  *     text(quote),
  *     text(attribution, { style: SMALL, hAlign: RIGHT })
@@ -79,7 +78,7 @@ export const testimonialComponent = defineComponent({
     const {
       background,
       padding,
-      gap,
+      spacing,
       hAlign: contentHAlign,
       vAlign: contentVAlign,
       quote: quoteTokens,
@@ -89,7 +88,7 @@ export const testimonialComponent = defineComponent({
     // Build content children: optional image, quote text, attribution
     const children = [];
     if (imagePath) {
-      children.push(row({ hAlign: contentHAlign, height: SIZE.FILL }, imageNode(imagePath)));
+      children.push(row({ spacing: 0, hAlign: contentHAlign, height: SIZE.FILL }, imageNode(imagePath)));
     }
     if (!actualQuote) {
       throw new Error(`Testimonial component requires either a 'quote' attribute or body text.`);
@@ -99,7 +98,7 @@ export const testimonialComponent = defineComponent({
       children.push(plainText(attribution, attributionTokens));
     }
 
-    const containerParams = { padding, gap, hAlign: contentHAlign, vAlign: contentVAlign };
+    const containerParams = { padding, spacing, hAlign: contentHAlign, vAlign: contentVAlign };
     const outerHeight = SIZE.FILL;
 
     // No background token — skip background shape

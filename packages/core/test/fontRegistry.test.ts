@@ -355,7 +355,7 @@ function wrapInContainer(...children: ElementNode[]): ContainerNode {
     children,
     width: 10,
     height: 5,
-    gap: 0.25,
+    spacing: 0.25,
     vAlign: "top",
     hAlign: "left",
   };
