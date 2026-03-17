@@ -1,9 +1,8 @@
 // Code Component
-// Renders syntax-highlighted code blocks using Shiki and the shared browser.
-// Theme tokens control all styling — Shiki is an implementation detail.
+// Renders syntax-highlighted code blocks using the shared browser.
+// Theme tokens control all styling — the highlighter is an implementation detail.
 
 import type { Code as MdastCode, RootContent } from "mdast";
-import type { ThemeRegistration } from "shiki";
 import { codeToHtml } from "shiki";
 import {
   type ComponentNode,
@@ -22,9 +21,9 @@ import {
   type TextStyleName,
   token,
 } from "tycoslide";
+import type { HighlightThemeName } from "./highlighting.js";
+import { LANGUAGE_VALUES } from "./highlighting.js";
 import { image } from "./image.js";
-import type { LanguageName } from "./languages.js";
-import { LANGUAGE_VALUES } from "./languages.js";
 import { Component } from "./names.js";
 import type { ShapeTokens } from "./primitives.js";
 
@@ -36,15 +35,7 @@ const SUPPORTED_LANGUAGES = new Set<string>(LANGUAGE_VALUES);
 
 const codeTokens = token.shape({
   textStyle: token.required<TextStyleName>(),
-  textColor: token.required<string>(),
-  keywordColor: token.required<string>(),
-  stringColor: token.required<string>(),
-  commentColor: token.required<string>(),
-  functionColor: token.required<string>(),
-  numberColor: token.required<string>(),
-  operatorColor: token.required<string>(),
-  typeColor: token.required<string>(),
-  variableColor: token.required<string>(),
+  theme: token.required<HighlightThemeName>(),
   padding: token.required<number>(),
   background: token.required<ShapeTokens>(),
 });
@@ -57,72 +48,12 @@ const codeParamShape = param.shape({
 export type CodeParams = InferParams<typeof codeParamShape>;
 
 // ============================================
-// SHIKI THEME BUILDER
-// ============================================
-
-/**
- * Build a Shiki ThemeRegistration from code tokens.
- * Maps tycoslide token colors to TextMate scopes.
- * Pure function — no side effects.
- */
-export function buildCodeTheme(tokens: CodeTokens): ThemeRegistration {
-  return {
-    name: "tycoslide", // Shiki internal identifier — does not affect rendering
-    type: "dark", // Fallback for unscoped tokens. If a light-background code theme is needed, add a darkMode token.
-    colors: {
-      "editor.background": tokens.background.fill,
-      "editor.foreground": tokens.textColor,
-    },
-    tokenColors: [
-      {
-        scope: ["keyword", "storage", "keyword.control", "keyword.operator.expression", "keyword.operator.new"],
-        settings: { foreground: tokens.keywordColor },
-      },
-      {
-        scope: ["string", "string.quoted"],
-        settings: { foreground: tokens.stringColor },
-      },
-      {
-        scope: ["comment", "comment.line", "comment.block"],
-        settings: { foreground: tokens.commentColor },
-      },
-      {
-        scope: ["entity.name.function", "support.function", "meta.function-call"],
-        settings: { foreground: tokens.functionColor },
-      },
-      {
-        scope: ["constant.numeric", "constant.language"],
-        settings: { foreground: tokens.numberColor },
-      },
-      {
-        scope: [
-          "keyword.operator",
-          "keyword.operator.assignment",
-          "keyword.operator.comparison",
-          "keyword.operator.arithmetic",
-          "keyword.operator.logical",
-        ],
-        settings: { foreground: tokens.operatorColor },
-      },
-      {
-        scope: ["entity.name.type", "entity.name.class", "support.type", "support.class", "storage.type"],
-        settings: { foreground: tokens.typeColor },
-      },
-      {
-        scope: ["variable", "variable.other", "variable.parameter", "variable.language"],
-        settings: { foreground: tokens.variableColor },
-      },
-    ],
-  };
-}
-
-// ============================================
 // HTML RENDERING
 // ============================================
 
 /**
  * Render syntax-highlighted code to a complete HTML document for Playwright screenshot.
- * Calls Shiki's codeToHtml server-side, wraps in a themed container.
+ * Calls the highlighter server-side, wraps in a themed container.
  */
 export async function renderCodeToHtml(
   code: string,
@@ -130,9 +61,10 @@ export async function renderCodeToHtml(
   tokens: CodeTokens,
   style: TextStyle,
 ): Promise<string> {
-  const theme = buildCodeTheme(tokens);
-
-  const highlighted = await codeToHtml(code, { lang: language, theme });
+  const highlighted = await codeToHtml(code, {
+    lang: language,
+    theme: tokens.theme,
+  });
 
   const bg = tokens.background;
 
@@ -178,7 +110,7 @@ html, body {
 
 /**
  * Render code component to ImageNode.
- * Renders syntax-highlighted code via Shiki + shared browser, returns image reference.
+ * Renders syntax-highlighted code via shared browser, returns image reference.
  */
 async function renderCode(
   params: CodeParams,
@@ -238,6 +170,6 @@ export const codeComponent = defineComponent({
  * pres.add(contentSlide('Query Example', snippet));
  * ```
  */
-export function code(source: string, language: LanguageName, tokens: CodeTokens): ComponentNode {
+export function code(source: string, language: string, tokens: CodeTokens): ComponentNode {
   return component(Component.Code, { language }, source, tokens);
 }

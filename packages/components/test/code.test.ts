@@ -3,7 +3,8 @@ import { describe, it } from "node:test";
 import type { RootContent } from "mdast";
 import type { TextStyle } from "tycoslide";
 import { componentRegistry, NODE_TYPE, SYNTAX, TEXT_STYLE } from "tycoslide";
-import { buildCodeTheme, type CodeTokens, code, codeComponent, renderCodeToHtml } from "../src/code.js";
+import { type CodeTokens, code, codeComponent, renderCodeToHtml } from "../src/code.js";
+import { HIGHLIGHT_THEME, HIGHLIGHT_THEME_VALUES, LANGUAGE, LANGUAGE_VALUES } from "../src/highlighting.js";
 import {
   cardComponent,
   columnComponent,
@@ -19,7 +20,6 @@ import {
   tableComponent,
   textComponent,
 } from "../src/index.js";
-import { LANGUAGE, LANGUAGE_VALUES } from "../src/languages.js";
 import { Component } from "../src/names.js";
 import { DEFAULT_CODE_TOKENS, mockTheme, noopCanvas } from "./mocks.js";
 
@@ -64,112 +64,6 @@ describe("code() DSL function", () => {
   it("stores language in params.language", () => {
     const node = code("SELECT 1", "sql", DEFAULT_CODE_TOKENS);
     assert.strictEqual((node.params as any).language, "sql");
-  });
-});
-
-// ============================================
-// BUILD SHIKI THEME
-// ============================================
-
-describe("buildCodeTheme()", () => {
-  const tokens: CodeTokens = {
-    textStyle: TEXT_STYLE.CODE,
-    textColor: "#D4D4D4",
-    keywordColor: "#569CD6",
-    stringColor: "#CE9178",
-    commentColor: "#6A9955",
-    functionColor: "#DCDCAA",
-    numberColor: "#B5CEA8",
-    operatorColor: "#D4D4D4",
-    typeColor: "#4EC9B0",
-    variableColor: "#9CDCFE",
-    padding: 0.25,
-    background: { fill: "#1E1E1E", fillOpacity: 100, borderColor: "#1E1E1E", borderWidth: 0, cornerRadius: 0.1 },
-  };
-
-  it("maps all color tokens to #-prefixed hex values", () => {
-    const theme = buildCodeTheme(tokens);
-    assert.strictEqual(theme.colors!["editor.background"], "#1E1E1E");
-    assert.strictEqual(theme.colors!["editor.foreground"], "#D4D4D4");
-  });
-
-  it("sets editor.background from background.fill token", () => {
-    const theme = buildCodeTheme({ ...tokens, background: { ...tokens.background!, fill: "#FF0000" } });
-    assert.strictEqual(theme.colors!["editor.background"], "#FF0000");
-  });
-
-  it("sets editor.foreground from textColor token", () => {
-    const theme = buildCodeTheme({ ...tokens, textColor: "#00FF00" });
-    assert.strictEqual(theme.colors!["editor.foreground"], "#00FF00");
-  });
-
-  it("generates tokenColors array with correct scope mappings", () => {
-    const theme = buildCodeTheme(tokens);
-    assert.ok(Array.isArray(theme.tokenColors));
-    assert.ok(theme.tokenColors!.length > 0);
-  });
-
-  it("keywordColor maps to keyword scope", () => {
-    const theme = buildCodeTheme(tokens);
-    const entry = theme.tokenColors!.find((tc: any) => Array.isArray(tc.scope) && tc.scope.includes("keyword"));
-    assert.ok(entry);
-    assert.strictEqual((entry as any).settings.foreground, "#569CD6");
-  });
-
-  it("stringColor maps to string scope", () => {
-    const theme = buildCodeTheme(tokens);
-    const entry = theme.tokenColors!.find((tc: any) => Array.isArray(tc.scope) && tc.scope.includes("string"));
-    assert.ok(entry);
-    assert.strictEqual((entry as any).settings.foreground, "#CE9178");
-  });
-
-  it("commentColor maps to comment scope", () => {
-    const theme = buildCodeTheme(tokens);
-    const entry = theme.tokenColors!.find((tc: any) => Array.isArray(tc.scope) && tc.scope.includes("comment"));
-    assert.ok(entry);
-    assert.strictEqual((entry as any).settings.foreground, "#6A9955");
-  });
-
-  it("functionColor maps to entity.name.function scope", () => {
-    const theme = buildCodeTheme(tokens);
-    const entry = theme.tokenColors!.find(
-      (tc: any) => Array.isArray(tc.scope) && tc.scope.includes("entity.name.function"),
-    );
-    assert.ok(entry);
-    assert.strictEqual((entry as any).settings.foreground, "#DCDCAA");
-  });
-
-  it("numberColor maps to constant.numeric scope", () => {
-    const theme = buildCodeTheme(tokens);
-    const entry = theme.tokenColors!.find(
-      (tc: any) => Array.isArray(tc.scope) && tc.scope.includes("constant.numeric"),
-    );
-    assert.ok(entry);
-    assert.strictEqual((entry as any).settings.foreground, "#B5CEA8");
-  });
-
-  it("typeColor maps to entity.name.type scope", () => {
-    const theme = buildCodeTheme(tokens);
-    const entry = theme.tokenColors!.find(
-      (tc: any) => Array.isArray(tc.scope) && tc.scope.includes("entity.name.type"),
-    );
-    assert.ok(entry);
-    assert.strictEqual((entry as any).settings.foreground, "#4EC9B0");
-  });
-
-  it("variableColor maps to variable scope", () => {
-    const theme = buildCodeTheme(tokens);
-    const entry = theme.tokenColors!.find((tc: any) => Array.isArray(tc.scope) && tc.scope.includes("variable"));
-    assert.ok(entry);
-    assert.strictEqual((entry as any).settings.foreground, "#9CDCFE");
-  });
-
-  it("returns valid ThemeRegistration shape", () => {
-    const theme = buildCodeTheme(tokens);
-    assert.strictEqual(theme.name, "tycoslide");
-    assert.strictEqual(theme.type, "dark");
-    assert.ok(theme.colors);
-    assert.ok(theme.tokenColors);
   });
 });
 
@@ -257,7 +151,7 @@ describe("code expansion", () => {
     const node = code("x = 1", "python", DEFAULT_CODE_TOKENS);
     await componentRegistry.render(node, context);
 
-    assert.ok(capturedHtml.includes("#1E1E1E"), "HTML should contain background color from token");
+    assert.ok(capturedHtml.includes("30, 30, 30"), "HTML should contain background color (rgba) from token");
   });
 });
 
@@ -349,15 +243,7 @@ describe("code MDAST compile handler", () => {
 describe("renderCodeToHtml()", () => {
   const tokens: CodeTokens = {
     textStyle: TEXT_STYLE.CODE,
-    textColor: "#D4D4D4",
-    keywordColor: "#569CD6",
-    stringColor: "#CE9178",
-    commentColor: "#6A9955",
-    functionColor: "#DCDCAA",
-    numberColor: "#B5CEA8",
-    operatorColor: "#D4D4D4",
-    typeColor: "#4EC9B0",
-    variableColor: "#9CDCFE",
+    theme: HIGHLIGHT_THEME.GITHUB_DARK,
     padding: 0.25,
     background: { fill: "#1E1E1E", fillOpacity: 100, borderColor: "#1E1E1E", borderWidth: 0, cornerRadius: 0.1 },
   };
@@ -383,7 +269,7 @@ describe("renderCodeToHtml()", () => {
 
   it("contains background color from token", async () => {
     const html = await renderCodeToHtml("x", "text", tokens, codeStyle);
-    assert.ok(html.includes("#1E1E1E"), "should contain background color");
+    assert.ok(html.includes("30, 30, 30"), "should contain background color (rgba)");
   });
 
   it("contains font-family from textStyle", async () => {
@@ -416,40 +302,8 @@ describe("renderCodeToHtml()", () => {
   it("handles special characters in code", async () => {
     const code = 'if (x < 10 && y > 20) { return "ok"; }';
     const html = await renderCodeToHtml(code, "javascript", tokens, codeStyle);
-    // Shiki should produce valid HTML with entities
     assert.ok(html.includes("10"), "should contain the code content");
-    // Should not contain raw unescaped < in code content (Shiki escapes to &lt;)
-    assert.ok(!html.includes("x < 10 &&"), "angle brackets should be escaped by Shiki");
-  });
-});
-
-// ============================================
-// BUILD CODE THEME — ADDITIONAL SCOPE TESTS
-// ============================================
-
-describe("buildCodeTheme() — operator scope", () => {
-  const tokens: CodeTokens = {
-    textStyle: TEXT_STYLE.CODE,
-    textColor: "#D4D4D4",
-    keywordColor: "#569CD6",
-    stringColor: "#CE9178",
-    commentColor: "#6A9955",
-    functionColor: "#DCDCAA",
-    numberColor: "#B5CEA8",
-    operatorColor: "#FF00FF",
-    typeColor: "#4EC9B0",
-    variableColor: "#9CDCFE",
-    padding: 0.25,
-    background: { fill: "#1E1E1E", fillOpacity: 100, borderColor: "#1E1E1E", borderWidth: 0, cornerRadius: 0.1 },
-  };
-
-  it("operatorColor maps to keyword.operator scope", () => {
-    const theme = buildCodeTheme(tokens);
-    const entry = theme.tokenColors!.find(
-      (tc: any) => Array.isArray(tc.scope) && tc.scope.includes("keyword.operator"),
-    );
-    assert.ok(entry);
-    assert.strictEqual((entry as any).settings.foreground, "#FF00FF");
+    assert.ok(!html.includes("x < 10 &&"), "angle brackets should be escaped");
   });
 });
 
@@ -472,8 +326,34 @@ describe("code expansion — additional", () => {
     const node = code("  \n  SELECT 1  \n  ", "sql", DEFAULT_CODE_TOKENS);
     await componentRegistry.render(node, context);
 
-    // The trimmed code should be passed to Shiki (Shiki tokenizes words into separate spans)
     assert.ok(capturedHtml.includes("SELECT"), "should contain trimmed code");
+  });
+
+  it("forwards shadow from background token to image", async () => {
+    const theme = mockTheme();
+    const canvas = noopCanvas();
+    const context = { theme, assets: undefined, canvas } as any;
+
+    const shadow = { type: "outer" as const, color: "#000000", opacity: 50, blur: 4, offset: 2, angle: 45 };
+    const tokensWithShadow: CodeTokens = {
+      ...DEFAULT_CODE_TOKENS,
+      background: { ...DEFAULT_CODE_TOKENS.background, shadow },
+    };
+    const node = code("SELECT 1", "sql", tokensWithShadow);
+    const result = await componentRegistry.render(node, context);
+
+    assert.deepStrictEqual((result as any).tokens?.shadow, shadow, "shadow should be forwarded to image component");
+  });
+
+  it("does not set shadow when background has none", async () => {
+    const theme = mockTheme();
+    const canvas = noopCanvas();
+    const context = { theme, assets: undefined, canvas } as any;
+
+    const node = code("SELECT 1", "sql", DEFAULT_CODE_TOKENS);
+    const result = await componentRegistry.render(node, context);
+
+    assert.strictEqual((result as any).tokens, undefined, "tokens should not be set when no shadow");
   });
 
   it("multiline code produces valid HTML", async () => {
@@ -498,7 +378,7 @@ describe("code expansion — additional", () => {
 });
 
 // ============================================
-// LANGUAGE CONST
+// LANGUAGE CONSTANT
 // ============================================
 
 describe("LANGUAGE constant", () => {
@@ -528,5 +408,38 @@ describe("LANGUAGE constant", () => {
     assert.strictEqual(LANGUAGE.TYPESCRIPT, "typescript");
     assert.strictEqual(LANGUAGE.PY, "py");
     assert.strictEqual(LANGUAGE.PYTHON, "python");
+  });
+});
+
+// ============================================
+// HIGHLIGHT_THEME CONSTANT
+// ============================================
+
+describe("HIGHLIGHT_THEME constant", () => {
+  it("HIGHLIGHT_THEME_VALUES is non-empty", () => {
+    assert.ok(HIGHLIGHT_THEME_VALUES.length > 0, "should have theme values");
+  });
+
+  it("contains common themes", () => {
+    const values = new Set(HIGHLIGHT_THEME_VALUES);
+    assert.ok(values.has("github-dark"), "should contain github-dark");
+    assert.ok(values.has("github-light"), "should contain github-light");
+    assert.ok(values.has("dracula"), "should contain dracula");
+    assert.ok(values.has("nord"), "should contain nord");
+    assert.ok(values.has("monokai"), "should contain monokai");
+    assert.ok(values.has("one-dark-pro"), "should contain one-dark-pro");
+  });
+
+  it("HIGHLIGHT_THEME keys are UPPER_SNAKE_CASE", () => {
+    for (const key of Object.keys(HIGHLIGHT_THEME)) {
+      assert.match(key, /^[A-Z][A-Z0-9_]*$/, `Key "${key}" should be UPPER_SNAKE_CASE`);
+    }
+  });
+
+  it("includes light and dark variants", () => {
+    assert.strictEqual(HIGHLIGHT_THEME.GITHUB_DARK, "github-dark");
+    assert.strictEqual(HIGHLIGHT_THEME.GITHUB_LIGHT, "github-light");
+    assert.strictEqual(HIGHLIGHT_THEME.SOLARIZED_DARK, "solarized-dark");
+    assert.strictEqual(HIGHLIGHT_THEME.SOLARIZED_LIGHT, "solarized-light");
   });
 });

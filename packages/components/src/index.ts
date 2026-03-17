@@ -8,7 +8,7 @@ export {
   card,
   cardComponent,
 } from "./card.js";
-// Code (I/O component — shared browser rendering via Shiki)
+// Code (I/O component — shared browser rendering)
 export {
   type CodeParams,
   type CodeTokens,
@@ -30,10 +30,17 @@ export {
   stack,
   stackComponent,
 } from "./containers.js";
+// Highlighting (supported languages and highlight themes for code blocks)
+export {
+  HIGHLIGHT_THEME,
+  HIGHLIGHT_THEME_VALUES,
+  type HighlightThemeName,
+  LANGUAGE,
+  LANGUAGE_VALUES,
+  type LanguageName,
+} from "./highlighting.js";
 // Image (with asset resolution)
 export { type ImageTokens, image, imageComponent } from "./image.js";
-// Languages (supported syntax highlighting languages)
-export { LANGUAGE, LANGUAGE_VALUES, type LanguageName } from "./languages.js";
 // List
 export {
   type ListParams,

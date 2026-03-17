@@ -4,6 +4,7 @@
 
 import { BORDER_STYLE, DASH_TYPE, defineTheme, HALIGN, SHADOW_TYPE, SLIDE_SIZE, TEXT_STYLE, VALIGN } from "tycoslide";
 import type { ListTokens, PlainTextTokens, TextTokens } from "tycoslide-components";
+import { HIGHLIGHT_THEME } from "tycoslide-components";
 import { assets } from "./assets.js";
 import {
   agendaLayout,
@@ -236,15 +237,7 @@ const tableTokens = {
 
 const codeTokens = {
   textStyle: TEXT_STYLE.CODE,
-  textColor: palette.slate,
-  keywordColor: palette.lavender,
-  stringColor: palette.emerald,
-  commentColor: palette.gray500,
-  functionColor: palette.skyBlue,
-  numberColor: palette.orange,
-  operatorColor: palette.slate,
-  typeColor: palette.gold,
-  variableColor: palette.slate,
+  theme: HIGHLIGHT_THEME.GITHUB_DARK,
   padding: padding,
   background: {
     fill: palette.navy,

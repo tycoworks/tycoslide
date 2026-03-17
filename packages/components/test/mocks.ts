@@ -5,6 +5,7 @@ import * as assert from "node:assert";
 import { createRequire } from "node:module";
 import type { FontFamily, TextStyle, Theme } from "tycoslide";
 import { BORDER_STYLE, DASH_TYPE, HALIGN, TEXT_STYLE, VALIGN } from "tycoslide";
+import { HIGHLIGHT_THEME } from "../src/highlighting.js";
 import type {
   CardTokens,
   CodeTokens,
@@ -117,15 +118,7 @@ export const DEFAULT_TABLE_TOKENS: TableTokens = {
 
 export const DEFAULT_CODE_TOKENS: CodeTokens = {
   textStyle: TEXT_STYLE.CODE,
-  textColor: "#D4D4D4",
-  keywordColor: "#569CD6",
-  stringColor: "#CE9178",
-  commentColor: "#6A9955",
-  functionColor: "#DCDCAA",
-  numberColor: "#B5CEA8",
-  operatorColor: "#D4D4D4",
-  typeColor: "#4EC9B0",
-  variableColor: "#9CDCFE",
+  theme: HIGHLIGHT_THEME.GITHUB_DARK,
   padding: 0.25,
   background: {
     fill: "#1E1E1E",

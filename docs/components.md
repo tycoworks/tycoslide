@@ -439,12 +439,12 @@ The content is the source code. In markdown, this is the content between the fen
 
 | Token | Type | Description |
 |-------|------|-------------|
-| `background` | ShapeTokens | Background shape (fill, border, corner radius, optional shadow) |
+| `textStyle` | TextStyleName | Code font style (font family, size, line height) |
+| `theme` | HighlightThemeName | Syntax highlighting theme (e.g. `github-dark`, `dracula`, `nord`) |
 | `padding` | number | Inner padding (inches) |
-| `textStyle` | TextStyleName | Code font style |
-| `textColor` | string | Default code text color |
+| `background` | ShapeTokens | Background shape (fill, border, corner radius, optional shadow) |
 
-`ShapeTokens` includes `fill`, `fillOpacity`, `borderColor`, `borderWidth`, `cornerRadius`, and optional `shadow`. See [`theme.ts`](../packages/theme-default/src/theme.ts) for the full code token reference (syntax colors and defaults).
+`ShapeTokens` includes `fill`, `fillOpacity`, `borderColor`, `borderWidth`, `cornerRadius`, and optional `shadow`. Use the `HIGHLIGHT_THEME` constant for available theme names and `LANGUAGE` for supported language identifiers. See [`highlighting.ts`](../packages/components/src/highlighting.ts) for the full list.
 
 ### Examples
 
