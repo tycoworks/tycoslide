@@ -238,9 +238,7 @@ function styleContainer(
     ...(!isRow && node.width !== SIZE.HUG ? { containerType: "inline-size" } : {}),
   };
   if (mainAxisPad > 0 || crossAxisPad > 0) {
-    styles.padding = isRow
-      ? `${crossAxisPad}px ${mainAxisPad}px`
-      : `${mainAxisPad}px ${crossAxisPad}px`;
+    styles.padding = isRow ? `${crossAxisPad}px ${mainAxisPad}px` : `${mainAxisPad}px ${crossAxisPad}px`;
   }
 
   const ctx = childContext(node, parent);
@@ -452,20 +450,55 @@ function styleShape(node: ShapeNode, nodeId: string): StyledNode {
     width: "100%",
     height: "100%",
   };
-  // Fill: use rgba for partial opacity so borders stay fully opaque
-  styles.backgroundColor = bgColor(node.fill.color, node.fill.opacity);
-  // Shape type: ellipse gets border-radius: 50%
-  if (node.shape === SHAPE.ELLIPSE) {
-    styles.borderRadius = "50%";
-  } else if (node.cornerRadius) {
-    styles.borderRadius = `${inToPx(node.cornerRadius)}px`;
+  // Exhaustive switch ensures new shapes must be handled here at compile time.
+  // Rectangle/ellipse use pure CSS (borders follow border-radius naturally).
+  // Polygon shapes use inline SVG so stroke follows the shape outline.
+  switch (node.shape) {
+    case SHAPE.RECTANGLE:
+      styles.backgroundColor = bgColor(node.fill.color, node.fill.opacity);
+      if (node.cornerRadius) styles.borderRadius = `${inToPx(node.cornerRadius)}px`;
+      applyCSSBorder(node, styles);
+      applyShadowCSS(node.shadow, styles);
+      return { nodeId, styles, children: [] };
+    case SHAPE.ELLIPSE:
+      styles.backgroundColor = bgColor(node.fill.color, node.fill.opacity);
+      styles.borderRadius = "50%";
+      applyCSSBorder(node, styles);
+      applyShadowCSS(node.shadow, styles);
+      return { nodeId, styles, children: [] };
+    case SHAPE.TRIANGLE:
+      return styleSvgPolygon(node, nodeId, styles, "50,0 0,100 100,100");
+    case SHAPE.DIAMOND:
+      return styleSvgPolygon(node, nodeId, styles, "50,0 100,50 50,100 0,50");
+    default: {
+      const _exhaustive: never = node.shape;
+      throw new Error(`Unsupported shape: ${_exhaustive}`);
+    }
   }
+}
+
+function applyCSSBorder(node: ShapeNode, styles: Record<string, string | number>): void {
   const bw = ptToPx(node.border.width);
-  if (bw > 0) {
-    styles.border = `${bw}px solid ${node.border.color}`;
+  if (bw > 0) styles.border = `${bw}px solid ${node.border.color}`;
+}
+
+/** Render a polygon shape as inline SVG. */
+function styleSvgPolygon(
+  node: ShapeNode,
+  nodeId: string,
+  styles: Record<string, string | number>,
+  points: string,
+): StyledNode {
+  const fillOpacity = node.fill.opacity / 100;
+  const bw = ptToPx(node.border.width);
+  const stroke = bw > 0 ? ` stroke="${node.border.color}" stroke-width="${bw}" vector-effect="non-scaling-stroke"` : "";
+  // Shadow: CSS filter drop-shadow follows the visual shape (unlike box-shadow which follows the box)
+  if (node.shadow) {
+    const { x, y, rgba } = shadowOffsets(node.shadow);
+    styles.filter = `drop-shadow(${ptToPx(x)}px ${ptToPx(y)}px ${ptToPx(node.shadow.blur)}px ${rgba})`;
   }
-  applyShadowCSS(node.shadow, styles);
-  return { nodeId, styles, children: [] };
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="${points}" fill="${node.fill.color}" fill-opacity="${fillOpacity}"${stroke}/></svg>`;
+  return { nodeId, styles, children: [], innerHTML: svg };
 }
 
 function styleSlideNumber(node: SlideNumberNode, nodeId: string): StyledNode {

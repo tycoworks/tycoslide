@@ -27,6 +27,7 @@ import {
   DASH_TYPE,
   DIRECTION,
   HALIGN,
+  SHADOW_TYPE,
   SHAPE,
   SIZE,
   TEXT_STYLE,
@@ -496,7 +497,7 @@ describe("HTML Measurement Generation", () => {
 
     test("stack grid uses minmax(min-content, 1fr) to prevent content collapse", async () => {
       // Grid tracks must be at least content-sized to prevent children from collapsing to zero height
-      const node = colNode(stackNode(shapeNode(SHAPE.ROUND_RECT), colNode(textNode("Content"))));
+      const node = colNode(stackNode(shapeNode(SHAPE.RECTANGLE), colNode(textNode("Content"))));
       const { html } = await genHTML(node, bounds);
       assert.ok(html.includes("minmax(min-content, 1fr)"), "Stack grid should use minmax(min-content, 1fr)");
     });
@@ -516,7 +517,7 @@ describe("HTML Measurement Generation", () => {
 
     test("stack in row omits height (stretch handles card equal height)", async () => {
       // Stacks (used by card component) in rows rely on align-items: stretch for equal height.
-      const node = rowNode(stackNode(shapeNode(SHAPE.ROUND_RECT), colNode(textNode("Card"))));
+      const node = rowNode(stackNode(shapeNode(SHAPE.RECTANGLE), colNode(textNode("Card"))));
       const { html } = await genHTML(node, bounds);
       const stackMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
       assert.ok(stackMatch, "Should find the stack div");
@@ -530,7 +531,7 @@ describe("HTML Measurement Generation", () => {
       // Grid items inside stack must be flex containers so children fill the grid cell.
       // Compression is handled by LayoutStack's grid template (heightIsConstrained),
       // not by min-height/overflow on the grid item wrapper.
-      const node = colNode(stackNode(shapeNode(SHAPE.ROUND_RECT), colNode(textNode("Content"))));
+      const node = colNode(stackNode(shapeNode(SHAPE.RECTANGLE), colNode(textNode("Content"))));
       const { html } = await genHTML(node, bounds);
       assert.ok(
         html.includes("grid-area:1 / 1 / 2 / 2;display:flex;flex-direction:column"),
@@ -545,7 +546,7 @@ describe("HTML Measurement Generation", () => {
     test("stack children get incrementing zIndex for correct z-order", async () => {
       // Explicit zIndex ensures array order = visual z-order even when
       // children create new stacking contexts (e.g. filter, box-shadow).
-      const node = colNode(stackNode(shapeNode(SHAPE.ROUND_RECT), colNode(textNode("Content"))));
+      const node = colNode(stackNode(shapeNode(SHAPE.RECTANGLE), colNode(textNode("Content"))));
       const { html } = await genHTML(node, bounds);
       // First child (shape background) should get z-index:0
       const firstChild = html.match(/grid-area:1 \/ 1 \/ 2 \/ 2[^"]*z-index:0/);
@@ -560,7 +561,7 @@ describe("HTML Measurement Generation", () => {
       // so that vAlign: MIDDLE centering works when the stack has definite height.
       // Node IDs: stack=node-1, shape=node-2, column=node-3, text=node-4
       const node = stackNode(
-        shapeNode(SHAPE.ROUND_RECT),
+        shapeNode(SHAPE.RECTANGLE),
         colNode({ vAlign: VALIGN.MIDDLE, height: SIZE.FILL }, textNode("Centered")),
       );
       const { html } = await genHTML(node, bounds);
@@ -580,7 +581,7 @@ describe("HTML Measurement Generation", () => {
       // Cards and other stack-based components without explicit SIZE.FILL should
       // preserve intrinsic content height — no flex:1 that could collapse content.
       // Node IDs: stack=node-1, shape=node-2, column=node-3, text=node-4
-      const node = stackNode(shapeNode(SHAPE.ROUND_RECT), colNode({ vAlign: VALIGN.MIDDLE }, textNode("Content")));
+      const node = stackNode(shapeNode(SHAPE.RECTANGLE), colNode({ vAlign: VALIGN.MIDDLE }, textNode("Content")));
       const { html } = await genHTML(node, bounds);
       const columnMatch = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
       assert.ok(columnMatch, "Should find the column inside stack (node-3)");
@@ -748,7 +749,7 @@ describe("HTML Measurement Generation", () => {
       // node-1: column, node-2: stack, node-3: shape, node-4: column, node-5: text
       const node = colNode(
         { height: SIZE.FILL },
-        stackNode({ height: SIZE.FILL }, shapeNode(SHAPE.ROUND_RECT), colNode(textNode("Content"))),
+        stackNode({ height: SIZE.FILL }, shapeNode(SHAPE.RECTANGLE), colNode(textNode("Content"))),
       );
       const { html } = await genHTML(node, bounds);
       const stackMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
@@ -824,7 +825,7 @@ describe("HTML Measurement Generation", () => {
 
   describe("Shape rendering", () => {
     test("shape with full opacity uses hex background color", async () => {
-      const node = colNode(stackNode(shapeNode(SHAPE.ROUND_RECT), colNode(textNode("Content"))));
+      const node = colNode(stackNode(shapeNode(SHAPE.RECTANGLE), colNode(textNode("Content"))));
       const { html } = await genHTML(node, bounds);
       assert.ok(html.includes("background-color:#666666"), "Shape with 100% opacity should use hex color");
     });
@@ -832,7 +833,7 @@ describe("HTML Measurement Generation", () => {
     test("shape with partial opacity uses rgba background", async () => {
       const shape: ShapeNode = {
         type: NODE_TYPE.SHAPE,
-        shape: SHAPE.ROUND_RECT,
+        shape: SHAPE.RECTANGLE,
         fill: { color: "#BDB0E0", opacity: 20 },
         border: { color: "#FFFFFF", width: 0 },
         cornerRadius: 0,
@@ -859,7 +860,7 @@ describe("HTML Measurement Generation", () => {
     test("shape with cornerRadius gets pixel border-radius", async () => {
       const shape: ShapeNode = {
         type: NODE_TYPE.SHAPE,
-        shape: SHAPE.ROUND_RECT,
+        shape: SHAPE.RECTANGLE,
         fill: { color: "#333333", opacity: 100 },
         border: { color: "#FFFFFF", width: 0 },
         cornerRadius: 0.1,
@@ -873,7 +874,7 @@ describe("HTML Measurement Generation", () => {
     test("shape with border renders solid border", async () => {
       const shape: ShapeNode = {
         type: NODE_TYPE.SHAPE,
-        shape: SHAPE.ROUND_RECT,
+        shape: SHAPE.RECTANGLE,
         fill: { color: "#333333", opacity: 100 },
         border: { color: "#AABBCC", width: 2 },
         cornerRadius: 0,
@@ -882,6 +883,67 @@ describe("HTML Measurement Generation", () => {
       const { html } = await genHTML(node, bounds);
       assert.ok(html.includes("#AABBCC"), "Border color should appear in HTML");
       assert.ok(html.includes("solid"), "Border should be solid");
+    });
+
+    test("triangle renders as inline SVG polygon", async () => {
+      const shape: ShapeNode = {
+        type: NODE_TYPE.SHAPE,
+        shape: SHAPE.TRIANGLE,
+        fill: { color: "#10B981", opacity: 60 },
+        border: { color: "#FFFFFF", width: 0 },
+        cornerRadius: 0,
+      };
+      const node = colNode(stackNode(shape, colNode(textNode("Tri"))));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes("<svg"), "Triangle should render as inline SVG");
+      assert.ok(html.includes('points="50,0 0,100 100,100"'), "Triangle polygon points");
+      assert.ok(html.includes('preserveAspectRatio="none"'), "SVG should stretch to fill container");
+      assert.ok(html.includes('fill="#10B981"'), "SVG fill color");
+      assert.ok(html.includes('fill-opacity="0.6"'), "SVG fill opacity");
+    });
+
+    test("diamond renders as inline SVG polygon", async () => {
+      const shape: ShapeNode = {
+        type: NODE_TYPE.SHAPE,
+        shape: SHAPE.DIAMOND,
+        fill: { color: "#79C0FF", opacity: 100 },
+        border: { color: "#FFFFFF", width: 0 },
+        cornerRadius: 0,
+      };
+      const node = colNode(stackNode(shape, colNode(textNode("Dia"))));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes("<svg"), "Diamond should render as inline SVG");
+      assert.ok(html.includes('points="50,0 100,50 50,100 0,50"'), "Diamond polygon points");
+    });
+
+    test("polygon shape with border uses SVG stroke (not CSS border)", async () => {
+      const shape: ShapeNode = {
+        type: NODE_TYPE.SHAPE,
+        shape: SHAPE.DIAMOND,
+        fill: { color: "#79C0FF", opacity: 100 },
+        border: { color: "#1A1A2E", width: 2 },
+        cornerRadius: 0,
+      };
+      const node = colNode(stackNode(shape, colNode(textNode("Bordered"))));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('stroke="#1A1A2E"'), "Border should render as SVG stroke");
+      assert.ok(html.includes('vector-effect="non-scaling-stroke"'), "Stroke width should not scale with viewBox");
+      assert.ok(!html.includes("border:"), "Should NOT use CSS border on polygon shapes");
+    });
+
+    test("polygon shape shadow uses filter drop-shadow (not box-shadow)", async () => {
+      const shape: ShapeNode = {
+        type: NODE_TYPE.SHAPE,
+        shape: SHAPE.TRIANGLE,
+        fill: { color: "#FF0000", opacity: 100 },
+        border: { color: "#FFFFFF", width: 0 },
+        cornerRadius: 0,
+        shadow: { type: SHADOW_TYPE.OUTER, color: "#000000", opacity: 25, blur: 8, offset: 3, angle: 180 },
+      };
+      const node = colNode(stackNode(shape, colNode(textNode("Shadow"))));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes("drop-shadow"), "Polygon shadow should use filter: drop-shadow (follows shape outline)");
+      assert.ok(!html.includes("box-shadow"), "Polygon shadow should NOT use box-shadow (follows bounding box)");
     });
   });
 

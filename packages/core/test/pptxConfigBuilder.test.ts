@@ -499,31 +499,31 @@ describe("buildColumnWidths()", () => {
 
 const baseShapeNode: ShapeNode = {
   type: NODE_TYPE.SHAPE,
-  shape: SHAPE.ROUND_RECT,
+  shape: SHAPE.RECTANGLE,
   fill: { color: "#EEEEEE", opacity: 100 },
   border: { color: "#E7E0EC", width: 0.75 },
   cornerRadius: 0,
 };
 
 describe("buildShapeConfig() — area shapes", () => {
-  test("returns ROUND_RECT shape type", () => {
+  test("returns RECTANGLE shape type", () => {
     const shapeNode: ShapeNode = { ...baseShapeNode };
     const pos = positioned(shapeNode, 1, 2, 5, 3);
 
     const result = builder.buildShapeConfig(shapeNode, pos);
 
     assert.ok(result);
-    assert.strictEqual(result.shapeType, SHAPE.ROUND_RECT);
+    assert.strictEqual(result.shapeType, SHAPE.RECTANGLE);
   });
 
-  test("returns ROUND_RECT shape when cornerRadius specified", () => {
+  test("returns RECTANGLE shape when cornerRadius specified", () => {
     const shapeNode: ShapeNode = { ...baseShapeNode, cornerRadius: 0.125 };
     const pos = positioned(shapeNode, 1, 2, 5, 3);
 
     const result = builder.buildShapeConfig(shapeNode, pos);
 
     assert.ok(result);
-    assert.strictEqual(result.shapeType, SHAPE.ROUND_RECT);
+    assert.strictEqual(result.shapeType, SHAPE.RECTANGLE);
     assert.strictEqual(result.options.rectRadius, 0.125);
   });
 

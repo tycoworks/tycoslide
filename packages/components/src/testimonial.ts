@@ -107,7 +107,7 @@ export const testimonialComponent = defineComponent({
     }
 
     // Build background rectangle using ShapeTokens directly
-    const backgroundRect = shape(background, { shape: SHAPE.ROUND_RECT });
+    const backgroundRect = shape(background, { shape: SHAPE.RECTANGLE });
 
     // Content layer fills the stack so vAlign: MIDDLE centering works
     const contentLayer = column({ ...containerParams, height: SIZE.FILL }, ...children);

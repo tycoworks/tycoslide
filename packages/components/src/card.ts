@@ -103,7 +103,7 @@ export const cardComponent = defineComponent({
     }
 
     // Build background rectangle using ShapeTokens directly
-    const backgroundRect = shape(background, { shape: SHAPE.ROUND_RECT });
+    const backgroundRect = shape(background, { shape: SHAPE.RECTANGLE });
 
     // Stack: background behind, content in front
     // Content layer fills the stack so padding/alignment works consistently

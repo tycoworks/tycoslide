@@ -46,13 +46,9 @@ Add `assertHexColor()` validation at token boundaries to catch malformed values 
 
 Chart components for data visualization (bar, line, pie, etc.). pptxgenjs has native chart support — wrap it as a tycoslide component with theme-aware colors. High demand for sales and analytics decks.
 
-### Shadows
+### Rotation
 
-Shadow support on shapes and images. Standard business deck polish. pptxgenjs has native shadow options.
-
-### Shape Rotation
-
-Rotation property on shapes and images. Needed for decorative elements. pptxgenjs supports `rotate` on all shape types.
+Rotation property on shapes, images, and potentially text. pptxgenjs supports `rotate` on shapes, images, and text. Shapes and images are straightforward: `transform: rotate()` in HTML, `rotate` option in PPTX. Text rotation is more complex — interacts with auto-sizing, measurement pipeline, and container layout. CSS supports `transform: rotate()` on text elements but Playwright measurement with rotated text may produce unexpected bounding boxes. Needs investigation into whether rotated text affects layout flow or is purely decorative (post-layout transform).
 
 ### Card Image Placement
 

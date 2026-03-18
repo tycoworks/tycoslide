@@ -323,7 +323,7 @@ A shape with configurable fill and border.
 
 | Param | Type | Description |
 |-------|------|-------------|
-| `shape` | ShapeName | Shape type (**required**) -- e.g. `rect`, `roundRect`, `ellipse` |
+| `shape` | ShapeName | Shape type (**required**) -- `roundRect`, `ellipse`, `triangle`, `diamond` |
 
 ### Tokens
 
@@ -336,11 +336,23 @@ A shape with configurable fill and border.
 | `cornerRadius` | number | Corner radius in inches |
 | `shadow` | Shadow | Drop shadow (optional — omit to suppress) |
 
-### Example
+### Examples
 
 ```markdown
 :::shape{shape="roundRect"}
 :::
+```
+
+```markdown
+:::shape{shape="triangle"}
+:::
+```
+
+```typescript
+shape(tokens.background, { shape: SHAPE.RECTANGLE })  // SHAPE.RECTANGLE = "roundRect"
+shape(tokens.accent, { shape: SHAPE.ELLIPSE })
+shape(tokens.highlight, { shape: SHAPE.TRIANGLE })
+shape(tokens.marker, { shape: SHAPE.DIAMOND })
 ```
 
 ---
@@ -565,7 +577,7 @@ Z-order overlay container. All children occupy the same bounds; the first child 
 
 ```typescript
 stack({ height: SIZE.FILL },
-  shape(tokens.background, { shape: SHAPE.RECT }),
+  shape(tokens.background, { shape: SHAPE.RECTANGLE }),
   text('White text over blue background', tokens.body),
 )
 ```
@@ -869,7 +881,7 @@ table([
 image('./path/to/image.png')
 
 // Shape (tokens first, then params)
-shape(tokens.background, { shape: SHAPE.ROUND_RECT })
+shape(tokens.background, { shape: SHAPE.RECTANGLE })
 
 // Containers (spacing is required)
 column({ spacing: tokens.spacing }, ...)
