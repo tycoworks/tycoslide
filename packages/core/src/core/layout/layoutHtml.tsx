@@ -819,7 +819,7 @@ function getTableCellNodes(node: TableNode): TextNode[][] {
         color: cell.color,
         hAlign: cell.hAlign,
         vAlign: cell.vAlign,
-        lineHeightMultiplier: cell.lineHeightMultiplier,
+        lineHeightMultiplier: cell.resolvedStyle.lineHeightMultiplier,
         bulletIndentPt: 0, // Table cells never have bullets
         linkColor: cell.linkColor,
         linkUnderline: cell.linkUnderline,

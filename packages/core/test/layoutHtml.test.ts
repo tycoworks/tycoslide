@@ -176,7 +176,6 @@ function cell(text: string, opts?: Partial<TableCellData>): TableCellData {
     resolvedStyle: bodyStyle,
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.MIDDLE,
-    lineHeightMultiplier: 1.0,
     linkColor: "#0000FF",
     linkUnderline: true,
     ...opts,

@@ -134,7 +134,6 @@ export interface TableCellData {
   resolvedStyle: TextStyle; // pre-resolved from theme.textStyles[textStyle]
   hAlign: HorizontalAlignment; // pre-resolved: cell → table default
   vAlign: VerticalAlignment; // pre-resolved: cell → table default
-  lineHeightMultiplier: number; // pre-resolved from table cellLineHeight token
   linkColor: string; // pre-resolved from table token
   linkUnderline: boolean; // pre-resolved from table token
   colspan?: number;

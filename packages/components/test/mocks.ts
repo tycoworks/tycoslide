@@ -110,7 +110,6 @@ export const DEFAULT_TABLE_TOKENS: TableTokens = {
   cellPadding: 0.1,
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.MIDDLE,
-  cellLineHeight: 1.0,
   linkColor: "#0000FF",
   linkUnderline: true,
   accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },

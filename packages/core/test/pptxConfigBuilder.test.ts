@@ -156,7 +156,6 @@ const baseCell: TableCellData = {
   resolvedStyle: mockTextStyle,
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.MIDDLE,
-  lineHeightMultiplier: 1.2,
   linkColor: "#0000FF",
   linkUnderline: true,
 };

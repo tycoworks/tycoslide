@@ -303,6 +303,7 @@ export class PptxConfigBuilder {
       align: cell.hAlign,
       valign: cell.vAlign,
       margin: cellPadding,
+      lineSpacingMultiple: textStyle.lineHeightMultiplier,
     };
 
     // Background fill: cell-level override wins, then token-driven (opacity 0 = no fill)

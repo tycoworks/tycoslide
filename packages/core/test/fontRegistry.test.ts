@@ -447,7 +447,6 @@ describe("validateFontVariants", () => {
             resolvedStyle: { ...mockTextStyle, fontFamily: regularOnly },
             hAlign: "left" as const,
             vAlign: "top" as const,
-            lineHeightMultiplier: 1.0,
             linkColor: "#0000FF",
             linkUnderline: true,
           },
