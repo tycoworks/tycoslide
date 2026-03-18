@@ -542,6 +542,19 @@ describe("HTML Measurement Generation", () => {
       );
     });
 
+    test("stack children get incrementing zIndex for correct z-order", async () => {
+      // Explicit zIndex ensures array order = visual z-order even when
+      // children create new stacking contexts (e.g. filter, box-shadow).
+      const node = colNode(stackNode(shapeNode(SHAPE.ROUND_RECT), colNode(textNode("Content"))));
+      const { html } = await genHTML(node, bounds);
+      // First child (shape background) should get z-index:0
+      const firstChild = html.match(/grid-area:1 \/ 1 \/ 2 \/ 2[^"]*z-index:0/);
+      assert.ok(firstChild, "First stack child should have z-index:0");
+      // Second child (content) should get z-index:1
+      const secondChild = html.match(/grid-area:1 \/ 1 \/ 2 \/ 2[^"]*z-index:1/);
+      assert.ok(secondChild, "Second stack child should have z-index:1");
+    });
+
     test("column with SIZE.FILL inside stack gets flex:1 1 0 (fills stack for centering)", async () => {
       // Components like quote() explicitly set height: SIZE.FILL on their content column
       // so that vAlign: MIDDLE centering works when the stack has definite height.

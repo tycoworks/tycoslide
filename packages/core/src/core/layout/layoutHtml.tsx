@@ -272,14 +272,17 @@ function styleStack(
   return {
     nodeId,
     styles,
-    children: node.children.map((child) => ({
-      // Stack child wrapper: same grid cell, flex column
+    children: node.children.map((child, i) => ({
+      // Stack child wrapper: same grid cell, flex column.
+      // Explicit zIndex ensures array order = visual z-order even when
+      // children create new stacking contexts (e.g. filter, box-shadow).
       nodeId: "",
       styles: {
         gridArea: "1 / 1 / 2 / 2",
         display: "flex",
         flexDirection: DIRECTION.COLUMN,
         containerType: "inline-size",
+        zIndex: i,
       },
       children: [styleNode(child, ctx, idCtx, nodeIds, fontRatios, imagePathMap)],
     })),
