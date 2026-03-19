@@ -10,9 +10,7 @@ import {
   component,
   defineComponent,
   hexToRgba,
-  type InferParams,
   type InferTokens,
-  param,
   type RenderContext,
   type Shadow,
   schema,
@@ -45,13 +43,6 @@ const mermaidTokens = token.shape({
 });
 
 export type MermaidTokens = InferTokens<typeof mermaidTokens>;
-
-// ============================================
-// TYPES
-// ============================================
-
-const mermaidParams = param.shape({});
-export type MermaidParams = InferParams<typeof mermaidParams>;
 
 // ============================================
 // SANITIZATION
@@ -285,7 +276,7 @@ async function renderMermaidToPng(
  * Sanitizes definition, renders via shared browser, returns image reference.
  */
 async function renderMermaid(
-  _params: MermaidParams,
+  _params: {},
   content: string,
   context: RenderContext,
   tokens: MermaidTokens,

@@ -11,10 +11,8 @@ import {
   defineComponent,
   type ElementNode,
   extractSource,
-  type InferParams,
   type InferTokens,
   NODE_TYPE,
-  param,
   type Shadow,
   SYNTAX,
   schema,
@@ -39,13 +37,6 @@ const textTokens = token.shape({
 export type TextTokens = InferTokens<typeof textTokens>;
 
 // ============================================
-// TYPES
-// ============================================
-
-const textParams = param.shape({});
-export type TextParams = InferParams<typeof textParams>;
-
-// ============================================
 // HEADING STYLE MAP (exported for document component)
 // ============================================
 
@@ -60,7 +51,7 @@ export const HEADING_STYLE: Record<number, TextStyleName> = {
 // RENDER — always rich text (inline markdown)
 // ============================================
 
-function renderText(_params: TextParams, content: string, context: RenderContext, tokens: TextTokens): ElementNode {
+function renderText(_params: {}, content: string, context: RenderContext, tokens: TextTokens): ElementNode {
   const textStyle = context.theme.textStyles[tokens.style];
 
   // Parse inline markdown only (bold, italic, :color[highlights])

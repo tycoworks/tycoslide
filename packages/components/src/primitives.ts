@@ -140,11 +140,8 @@ export function shape(tokens: ShapeTokens, params: ShapeParams): ComponentNode {
 // SLIDE NUMBER
 // ============================================
 
-const slideNumberParamShape = param.shape({});
-export type SlideNumberParams = InferParams<typeof slideNumberParamShape>;
-
 function renderSlideNumber(
-  _params: SlideNumberParams,
+  _params: {},
   _content: undefined,
   context: RenderContext,
   tokens: SlideNumberTokens,
@@ -167,6 +164,6 @@ export const slideNumberComponent = defineComponent({
   render: renderSlideNumber,
 });
 
-export function slideNumber(tokens: SlideNumberTokens, params?: SlideNumberParams): ComponentNode {
-  return component(Component.SlideNumber, params ?? {}, undefined, tokens);
+export function slideNumber(tokens: SlideNumberTokens): ComponentNode {
+  return component(Component.SlideNumber, {}, undefined, tokens);
 }

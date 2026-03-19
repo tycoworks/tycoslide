@@ -50,7 +50,6 @@ export {
 } from "./list.js";
 // Mermaid diagram (I/O component — shared browser rendering)
 export {
-  type MermaidParams,
   type MermaidRenderContext,
   type MermaidTokens,
   mermaid,
@@ -60,7 +59,6 @@ export {
 export { Component, type ComponentName } from "./names.js";
 // PlainText (plain string text — no markdown, no link tokens)
 export {
-  type PlainTextParams,
   type PlainTextTokens,
   plainText,
   plainTextComponent,
@@ -73,7 +71,6 @@ export {
   lineComponent,
   type ShapeParams,
   type ShapeTokens,
-  type SlideNumberParams,
   type SlideNumberTokens,
   shape,
   shapeComponent,
@@ -103,7 +100,6 @@ export {
 } from "./testimonial.js";
 // Text
 export {
-  type TextParams,
   type TextTokens,
   text,
   textComponent,

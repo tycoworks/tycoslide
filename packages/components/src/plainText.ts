@@ -8,10 +8,8 @@ import {
   type ComponentNode,
   component,
   defineComponent,
-  type InferParams,
   type InferTokens,
   NODE_TYPE,
-  param,
   type Shadow,
   schema,
   type TextNode,
@@ -30,18 +28,11 @@ const plainTextTokens = token.shape({
 export type PlainTextTokens = InferTokens<typeof plainTextTokens>;
 
 // ============================================
-// TYPES
-// ============================================
-
-const plainTextParams = param.shape({});
-export type PlainTextParams = InferParams<typeof plainTextParams>;
-
-// ============================================
 // RENDER
 // ============================================
 
 function renderPlainText(
-  _params: PlainTextParams,
+  _params: {},
   content: string,
   context: RenderContext,
   tokens: PlainTextTokens,
