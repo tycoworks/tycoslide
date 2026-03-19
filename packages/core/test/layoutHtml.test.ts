@@ -573,12 +573,10 @@ describe("HTML Measurement Generation", () => {
       const columnMatch = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
       assert.ok(columnMatch, "Should find the column inside stack (node-3)");
       assert.ok(columnMatch![1].includes("flex:1 1 0"), "Column with SIZE.FILL in stack should get flex:1 1 0");
-      // No min-height:0 here — the stack defaults to HUG, which breaks the
-      // heightIsConstrained chain. min-height:0 only appears when the full
-      // height chain from slide root is definite (FILL or fixed px).
+      // Containers keep min-height:auto — only images opt into min-height:0.
       assert.ok(
         !columnMatch![1].includes("min-height:0"),
-        "Column in HUG stack should NOT have min-height:0 (chain is broken)",
+        "FILL column should NOT have min-height:0 (padding boundary preserved)",
       );
     });
 
@@ -722,10 +720,10 @@ describe("HTML Measurement Generation", () => {
         imageMatch![1].includes("min-height:0"),
         "Image at end of FILL chain should be compressible (min-height:0)",
       );
-      // The inner column should NOT have min-height:0 (padding preserved)
+      // Containers keep min-height:auto — only images opt into min-height:0.
       const colMatch = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
       assert.ok(colMatch, "Should find the inner column (node-3)");
-      assert.ok(!colMatch![1].includes("min-height:0"), "Column container should NOT have min-height:0 (padding fix)");
+      assert.ok(!colMatch![1].includes("min-height:0"), "FILL column should NOT have min-height:0 (padding boundary preserved)");
     });
 
     test("HUG breaks chain, fixed px restarts it", async () => {
@@ -741,11 +739,11 @@ describe("HTML Measurement Generation", () => {
         imageMatch![1].includes("min-height:0"),
         "Fixed px parent should restart chain — image gets min-height:0",
       );
-      // The FILL column should NOT have min-height:0
+      // Containers keep min-height:auto — only images opt into min-height:0.
       const innerCol = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
       assert.ok(innerCol, "Should find inner FILL column (node-3)");
       assert.ok(innerCol![1].includes("flex:1 1 0"), "Inner column should be FILL");
-      assert.ok(!innerCol![1].includes("min-height:0"), "FILL column should NOT have min-height:0 (padding fix)");
+      assert.ok(!innerCol![1].includes("min-height:0"), "FILL column should NOT have min-height:0 (padding boundary preserved)");
     });
 
     test("stack preserves min-content grid template even in constrained context", async () => {

@@ -94,9 +94,9 @@ function generateNodeId(ctx: IdContext): string {
 /** Map of font name → line-height: normal ratio. */
 export type FontNormalRatios = Map<string, number>;
 
-/** Compute flex-item CSS for a node based on its parent's direction.
+/** Compute flex CSS for a container (column/stack) based on its parent's direction.
  *  Three size types: number (fixed inches), SIZE.FILL (share space), SIZE.HUG (content-sized). */
-export function flexItem(
+export function flexContainer(
   width: number | SizeValue,
   height: number | SizeValue,
   parentDir: Direction,
@@ -111,9 +111,9 @@ export function flexItem(
     styles.flex = `0 0 ${inToPx(mainSize)}px`;
   } else if (mainSize === SIZE.FILL) {
     styles.flex = "1 1 0";
-    // Horizontal: min-width: 0 lets text reflow.
-    // Vertical: min-height stays auto (padding boundary preserved).
-    // Images opt into compression via their own min-height: 0 (see styleImage).
+    // Row: min-width: 0 lets text reflow to narrower widths (word-wrap: break-word).
+    // Column: min-height MUST stay auto — vertical content cannot reflow, so
+    // shrinking below content height causes overlap. Only images opt in (see styleImage).
     if (isInRow) {
       styles.minWidth = 0;
     }
@@ -232,7 +232,7 @@ function styleContainer(
     gap: `${spacingPx}px`, // CSS gap property
     justifyContent,
     alignItems,
-    ...flexItem(node.width, node.height, parent.direction),
+    ...flexContainer(node.width, node.height, parent.direction),
     // Containment requires definite inline size. HUG columns are content-sized —
     // containment would zero their intrinsic width, collapsing the column.
     ...(!isRow && node.width !== SIZE.HUG ? { containerType: "inline-size" } : {}),
@@ -263,7 +263,7 @@ function styleStack(
     position: "relative",
     display: "grid",
     gridTemplate: `minmax(${gridMin}, 1fr) / minmax(${gridMin}, 1fr)`,
-    ...flexItem(node.width, node.height, parent.direction),
+    ...flexContainer(node.width, node.height, parent.direction),
   };
 
   const ctx = childContext(node, parent);
@@ -422,9 +422,12 @@ function styleLine(node: LineNode, _parent: ParentCtx, nodeId: string): StyledNo
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" overflow="visible"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${widthPx}"${dashAttr}/></svg>`;
 
+  // Explicit width/height prevents SVG width="100%" height="100%" from falling
+  // back to the CSS default intrinsic size (300×150px) when the flex basis alone
+  // doesn't set the corresponding CSS dimension.
   const styles: Record<string, string | number> = isVertical
-    ? { flex: `0 0 ${widthPx}px`, alignSelf: "stretch" }
-    : { flex: `0 0 ${widthPx}px`, width: "100%" };
+    ? { flex: `0 0 ${widthPx}px`, alignSelf: "stretch", width: `${widthPx}px` }
+    : { flex: `0 0 ${widthPx}px`, width: "100%", height: `${widthPx}px` };
 
   applyShadowCSS(node.shadow, styles);
   return { nodeId, styles, children: [], innerHTML: svg };
