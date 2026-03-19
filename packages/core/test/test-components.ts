@@ -177,10 +177,7 @@ export const imageComponent = defineComponent({
 
 export const lineComponent = defineComponent({
   name: C.Line,
-  params: {
-    beginArrow: param.optional(schema.string()),
-    endArrow: param.optional(schema.string()),
-  },
+  directive: false,
   tokens: { color: token.required<any>(), width: token.required<any>(), dashType: token.required<any>() },
   render: () => ({}) as any,
 });

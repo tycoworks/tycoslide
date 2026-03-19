@@ -297,8 +297,10 @@ export function defineComponent(def: any): ComponentDefinition<any, any, any> & 
     if (def.directive !== false) {
       result.deserialize = buildDeserializer(def.name, paramsSchema);
     }
+  } else if (def.directive !== false) {
+    // No content or params, but still directive-invocable (e.g. :::line)
+    result.deserialize = buildDeserializer(def.name as string, null);
   }
-  // else: programmatic only — no directive support, no schema
 
   return result;
 }

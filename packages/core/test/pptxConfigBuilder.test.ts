@@ -15,11 +15,10 @@ import {
   type TextNode,
 } from "../src/core/model/nodes.js";
 import {
-  ARROW_TYPE,
   BORDER_STYLE,
   DASH_TYPE,
+  DIRECTION,
   HALIGN,
-  LINE_SHAPE,
   SHAPE,
   STRIKE_TYPE,
   TEXT_STYLE,
@@ -58,29 +57,13 @@ function positioned(node: any, x: number, y: number, width: number, height: numb
 
 const baseLineNode: LineNode = {
   type: NODE_TYPE.LINE,
+  direction: DIRECTION.ROW,
   color: "#E7E0EC",
   width: 0.75,
   dashType: DASH_TYPE.SOLID,
 };
 
 describe("buildLineConfig()", () => {
-  test("places arrows inside line sub-object", () => {
-    const lineNode: LineNode = {
-      ...baseLineNode,
-      beginArrow: ARROW_TYPE.TRIANGLE,
-      endArrow: ARROW_TYPE.TRIANGLE,
-    };
-    const pos = positioned(lineNode, 1, 2, 5, 0);
-
-    const result = builder.buildLineConfig(lineNode, pos);
-
-    assert.strictEqual(result.shapeType, LINE_SHAPE);
-    assert.ok(result.options.line, "line sub-object should exist");
-    const lineOpts = result.options.line as Record<string, unknown>;
-    assert.strictEqual(lineOpts.beginArrowType, ARROW_TYPE.TRIANGLE);
-    assert.strictEqual(lineOpts.endArrowType, ARROW_TYPE.TRIANGLE);
-  });
-
   test("places dashType inside line sub-object", () => {
     const lineNode: LineNode = {
       ...baseLineNode,
@@ -94,8 +77,8 @@ describe("buildLineConfig()", () => {
     assert.strictEqual(lineOpts.dashType, DASH_TYPE.DASH);
   });
 
-  test("vertical line when height > width", () => {
-    const lineNode: LineNode = { ...baseLineNode };
+  test("vertical line when node direction is column", () => {
+    const lineNode: LineNode = { ...baseLineNode, direction: DIRECTION.COLUMN };
     const pos = positioned(lineNode, 1, 2, 0.1, 5);
 
     const result = builder.buildLineConfig(lineNode, pos);
@@ -104,8 +87,8 @@ describe("buildLineConfig()", () => {
     assert.strictEqual(result.options.h, 5);
   });
 
-  test("horizontal line when width >= height", () => {
-    const lineNode: LineNode = { ...baseLineNode };
+  test("horizontal line when node direction is row", () => {
+    const lineNode: LineNode = { ...baseLineNode, direction: DIRECTION.ROW };
     const pos = positioned(lineNode, 1, 2, 5, 0.1);
 
     const result = builder.buildLineConfig(lineNode, pos);
@@ -608,6 +591,7 @@ describe("buildShapeConfig() — area shapes", () => {
   test("translates shadow on line", () => {
     const lineNode: LineNode = {
       type: NODE_TYPE.LINE,
+      direction: DIRECTION.ROW,
       color: "#333333",
       width: 1,
       dashType: DASH_TYPE.SOLID,

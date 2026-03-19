@@ -39,7 +39,6 @@ export { extractSource, RESERVED_FRONTMATTER_KEYS, SYNTAX } from "./core/model/s
 // Token descriptors (required/optional markers for component token declarations)
 export { type InferTokens, type TokenDescriptor, type TokenShape, token } from "./core/model/token.js";
 export type {
-  ArrowType,
   Background,
   BorderStyle,
   DashType,
@@ -67,13 +66,12 @@ export type {
   VerticalAlignment,
 } from "./core/model/types.js";
 export {
-  ARROW_TYPE,
-  ARROW_TYPE_VALUES,
   BORDER_STYLE,
   Bounds,
   CUSTOM_LAYOUT,
   DASH_TYPE,
   DIRECTION,
+  DIRECTION_VALUES,
   FONT_SLOT,
   HALIGN,
   SHADOW_TYPE,

@@ -1,10 +1,12 @@
 // Primitive components: line, shape, slideNumber
 
 import {
-  ARROW_TYPE_VALUES,
   type ComponentNode,
   component,
   type DashType,
+  DIRECTION,
+  DIRECTION_VALUES,
+  type Direction,
   defineComponent,
   type HorizontalAlignment,
   type InferParams,
@@ -58,19 +60,17 @@ export type ShapeTokens = InferTokens<typeof shapeTokens>;
 // ============================================
 
 const lineParamShape = param.shape({
-  beginArrow: param.optional(schema.enum(ARROW_TYPE_VALUES)),
-  endArrow: param.optional(schema.enum(ARROW_TYPE_VALUES)),
+  direction: param.optional(schema.enum(DIRECTION_VALUES)),
 });
 export type LineParams = InferParams<typeof lineParamShape>;
 
 function renderLine(params: LineParams, _content: undefined, _context: RenderContext, tokens: LineTokens): LineNode {
   const node: LineNode = {
     type: NODE_TYPE.LINE,
+    direction: params.direction ?? DIRECTION.ROW,
     color: tokens.color,
     width: tokens.width,
     dashType: tokens.dashType,
-    beginArrow: params.beginArrow,
-    endArrow: params.endArrow,
   };
   if (tokens.shadow) {
     node.shadow = tokens.shadow;
@@ -80,13 +80,14 @@ function renderLine(params: LineParams, _content: undefined, _context: RenderCon
 
 export const lineComponent = defineComponent({
   name: Component.Line,
+  directive: false,
   params: lineParamShape,
   tokens: lineTokens,
   render: renderLine,
 });
 
-export function line(tokens: LineTokens, params?: LineParams): ComponentNode {
-  return component(Component.Line, params ?? {}, undefined, tokens);
+export function line(tokens: LineTokens, direction?: Direction): ComponentNode {
+  return component(Component.Line, { direction }, undefined, tokens);
 }
 
 // ============================================
@@ -125,6 +126,7 @@ function renderShape(
 
 export const shapeComponent = defineComponent({
   name: Component.Shape,
+  directive: false,
   params: shapeParamShape,
   tokens: shapeTokens,
   render: renderShape,
@@ -160,6 +162,7 @@ function renderSlideNumber(
 
 export const slideNumberComponent = defineComponent({
   name: Component.SlideNumber,
+  directive: false,
   tokens: slideNumberTokens,
   render: renderSlideNumber,
 });

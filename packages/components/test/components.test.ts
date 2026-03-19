@@ -6,7 +6,6 @@ import * as assert from "node:assert";
 import { describe, test } from "node:test";
 import type { ContainerNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, StackNode, TableNode } from "tycoslide";
 import {
-  ARROW_TYPE,
   componentRegistry,
   DASH_TYPE,
   DIRECTION,
@@ -188,33 +187,6 @@ describe("line()", () => {
 
   test("uses token values for color, width, dashType", async () => {
     const node = (await render(line(DEFAULT_LINE_TOKENS))) as LineNode;
-    assert.strictEqual(node.color, DEFAULT_LINE_TOKENS.color);
-    assert.strictEqual(node.width, DEFAULT_LINE_TOKENS.width);
-    assert.strictEqual(node.dashType, DASH_TYPE.SOLID);
-    assert.strictEqual(node.beginArrow, undefined);
-    assert.strictEqual(node.endArrow, undefined);
-  });
-
-  test("applies beginArrow prop", async () => {
-    const node = (await render(line(DEFAULT_LINE_TOKENS, { beginArrow: ARROW_TYPE.ARROW }))) as LineNode;
-    assert.strictEqual(node.beginArrow, ARROW_TYPE.ARROW);
-  });
-
-  test("applies endArrow prop", async () => {
-    const node = (await render(line(DEFAULT_LINE_TOKENS, { endArrow: ARROW_TYPE.TRIANGLE }))) as LineNode;
-    assert.strictEqual(node.endArrow, ARROW_TYPE.TRIANGLE);
-  });
-
-  test("applies both arrow props together", async () => {
-    const node = (await render(
-      line(DEFAULT_LINE_TOKENS, {
-        beginArrow: ARROW_TYPE.DIAMOND,
-        endArrow: ARROW_TYPE.STEALTH,
-      }),
-    )) as LineNode;
-    assert.strictEqual(node.beginArrow, ARROW_TYPE.DIAMOND);
-    assert.strictEqual(node.endArrow, ARROW_TYPE.STEALTH);
-    // Token values still apply
     assert.strictEqual(node.color, DEFAULT_LINE_TOKENS.color);
     assert.strictEqual(node.width, DEFAULT_LINE_TOKENS.width);
     assert.strictEqual(node.dashType, DASH_TYPE.SOLID);

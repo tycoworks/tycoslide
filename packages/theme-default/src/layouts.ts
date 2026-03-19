@@ -13,12 +13,14 @@ import {
   type Slide,
   type SlideNode,
   SPACING_MODE,
+  VALIGN,
   schema,
   token,
   type VerticalAlignment,
 } from "tycoslide";
 import type {
   CardTokens,
+  LineTokens,
   ListTokens,
   PlainTextTokens,
   QuoteTokens,
@@ -32,6 +34,7 @@ import {
   grid,
   image,
   imageComponent,
+  line,
   plainText,
   row,
   shape,
@@ -239,7 +242,7 @@ export const statLayout = defineLayout({
     );
 
     const surfaced = tokens.surface
-      ? stack({ height: SIZE.FILL }, shape(tokens.surface, { shape: SHAPE.ROUND_RECT }), content)
+      ? stack({ height: SIZE.FILL }, shape(tokens.surface, { shape: SHAPE.RECTANGLE }), content)
       : content;
 
     return masteredSlide(
@@ -376,7 +379,7 @@ export const twoColumnLayout = defineLayout({
     const colProps = { vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL };
     return masteredSlide(
       ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
-      row({ spacing: tokens.spacing, height: SIZE.FILL }, column(colProps, ...left), column(colProps, ...right)),
+      row({ spacing: tokens.spacing, height: SIZE.HUG }, column(colProps, ...left), column(colProps, ...right)),
     );
   },
 });
@@ -463,7 +466,7 @@ export const agendaLayout = defineLayout({
     // by composing primitives directly — not everything needs to be a registered component.
     const itemCards = items.map((item, i) =>
       stack(
-        shape(tokens.itemBackground, { shape: SHAPE.ROUND_RECT }),
+        shape(tokens.itemBackground, { shape: SHAPE.RECTANGLE }),
         row(
           { padding: tokens.itemPadding, vAlign: tokens.itemVAlign, spacing: tokens.itemSpacing },
           column(
@@ -547,6 +550,165 @@ export const cardsLayout = defineLayout({
   },
 });
 
+// --- transform ---
+
+export const transformLayoutTokens = token.shape({
+  title: token.required<PlainTextTokens>(),
+  eyebrow: token.required<PlainTextTokens>(),
+  text: token.required<TextTokens>(),
+  list: token.required<ListTokens>(),
+  vAlign: token.required<VerticalAlignment>(),
+  hAlign: token.required<HorizontalAlignment>(),
+  spacing: token.required<number>(),
+  headerSpacing: token.required<number>(),
+});
+
+export type TransformLayoutTokens = InferTokens<typeof transformLayoutTokens>;
+
+// +----------------------------+
+// | ::left::     ::right::     |
+// +----------------------------+
+export const transformLayout = defineLayout({
+  name: "transform",
+  description: "Side-by-side comparison layout.",
+  params: {
+    title: param.optional(textComponent.schema),
+    eyebrow: param.optional(textComponent.schema),
+  },
+  slots: ["left", "right"],
+  tokens: transformLayoutTokens,
+  render: ({ title, eyebrow }, { left, right }, tokens: TransformLayoutTokens) => {
+    const colProps = { vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL };
+    const content = row(
+      { spacing: tokens.spacing, height: SIZE.HUG },
+      column(colProps, ...left),
+      column(colProps, ...right),
+    );
+    return masteredSlide(
+      column(
+        { vAlign: tokens.vAlign, height: SIZE.FILL, spacing: tokens.spacing },
+        ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
+        content,
+      ),
+    );
+  },
+});
+
+// --- shapes (demo) ---
+
+export const shapesLayoutTokens = token.shape({
+  title: token.required<PlainTextTokens>(),
+  eyebrow: token.required<PlainTextTokens>(),
+  headerSpacing: token.required<number>(),
+  label: token.required<PlainTextTokens>(),
+  rectangle: token.required<ShapeTokens>(),
+  ellipse: token.required<ShapeTokens>(),
+  triangle: token.required<ShapeTokens>(),
+  diamond: token.required<ShapeTokens>(),
+  vAlign: token.required<VerticalAlignment>(),
+  hAlign: token.required<HorizontalAlignment>(),
+  spacing: token.required<number>(),
+});
+
+export type ShapesLayoutTokens = InferTokens<typeof shapesLayoutTokens>;
+
+// +----------------------------+
+// | eyebrow                    |
+// | Title                      |
+// | [rect] [ellipse] [tri] [◇] |
+// |  label   label   label lbl |
+// +----------------------------+
+export const shapesLayout = defineLayout({
+  name: "shapes",
+  description: "Demo layout showing all 4 shape primitives with varied properties.",
+  params: {
+    title: param.optional(textComponent.schema),
+    eyebrow: param.optional(textComponent.schema),
+  },
+  tokens: shapesLayoutTokens,
+  render: ({ title, eyebrow }, _slots, tokens: ShapesLayoutTokens) => {
+    const cell = (t: ShapeTokens, s: (typeof SHAPE)[keyof typeof SHAPE], label: string) =>
+      column(
+        { spacing: tokens.spacing, hAlign: tokens.hAlign, height: SIZE.FILL },
+        stack({ height: SIZE.FILL }, shape(t, { shape: s })),
+        plainText(label, tokens.label),
+      );
+
+    return masteredSlide(
+      column(
+        { vAlign: tokens.vAlign, height: SIZE.FILL, spacing: tokens.spacing },
+        ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
+        row(
+          { spacing: tokens.spacing, height: SIZE.FILL },
+          cell(tokens.rectangle, SHAPE.RECTANGLE, "Rectangle"),
+          cell(tokens.ellipse, SHAPE.ELLIPSE, "Ellipse"),
+          cell(tokens.triangle, SHAPE.TRIANGLE, "Triangle"),
+          cell(tokens.diamond, SHAPE.DIAMOND, "Diamond"),
+        ),
+      ),
+    );
+  },
+});
+
+// --- lines (demo) ---
+
+export const linesLayoutTokens = token.shape({
+  title: token.required<PlainTextTokens>(),
+  eyebrow: token.required<PlainTextTokens>(),
+  headerSpacing: token.required<number>(),
+  label: token.required<PlainTextTokens>(),
+  solid: token.required<LineTokens>(),
+  dash: token.required<LineTokens>(),
+  lgDash: token.required<LineTokens>(),
+  dashDot: token.required<LineTokens>(),
+  lgDashDot: token.required<LineTokens>(),
+  sysDot: token.required<LineTokens>(),
+  sysDash: token.required<LineTokens>(),
+  vAlign: token.required<VerticalAlignment>(),
+  hAlign: token.required<HorizontalAlignment>(),
+  spacing: token.required<number>(),
+});
+
+export type LinesLayoutTokens = InferTokens<typeof linesLayoutTokens>;
+
+// +----------------------------+
+// | eyebrow                    |
+// | Title                      |
+// |  Solid  ────────────────── |
+// |  Dash   ── ── ── ── ── ── |
+// |  ...                       |
+// +----------------------------+
+export const linesLayout = defineLayout({
+  name: "lines",
+  description: "Demo layout showing all 7 dash types.",
+  params: {
+    title: param.optional(textComponent.schema),
+    eyebrow: param.optional(textComponent.schema),
+  },
+  tokens: linesLayoutTokens,
+  render: ({ title, eyebrow }, _slots, tokens: LinesLayoutTokens) => {
+    const sample = (t: LineTokens, label: string) =>
+      column({ spacing: 0, height: SIZE.FILL, vAlign: VALIGN.BOTTOM }, plainText(label, tokens.label), line(t));
+
+    return masteredSlide(
+      column(
+        { vAlign: tokens.vAlign, height: SIZE.FILL, spacing: tokens.spacing },
+        ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
+        column(
+          { spacing: tokens.spacing, height: SIZE.FILL, vAlign: VALIGN.MIDDLE },
+          sample(tokens.solid, "Solid"),
+          sample(tokens.dash, "Dash"),
+          sample(tokens.lgDash, "Long Dash"),
+          sample(tokens.dashDot, "Dash Dot"),
+          sample(tokens.lgDashDot, "Long Dash Dot"),
+          sample(tokens.sysDot, "Dot"),
+          sample(tokens.sysDash, "Short Dash"),
+        ),
+      ),
+    );
+  },
+});
+
 // ============================================
 // ALL LAYOUTS
 // ============================================
@@ -563,4 +725,7 @@ export const allLayouts = [
   statementLayout,
   agendaLayout,
   cardsLayout,
+  transformLayout,
+  shapesLayout,
+  linesLayout,
 ];

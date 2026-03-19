@@ -2,7 +2,6 @@
 // Pure data structures representing slide content
 
 import type {
-  ArrowType,
   BorderStyle,
   DashType,
   Direction,
@@ -66,11 +65,10 @@ export interface ImageNode {
 
 export interface LineNode {
   type: typeof NODE_TYPE.LINE;
+  direction: Direction;
   color: string;
   width: number;
   dashType: DashType;
-  beginArrow?: ArrowType;
-  endArrow?: ArrowType;
   shadow?: Shadow;
 }
 

@@ -21,7 +21,7 @@ import type {
   TextNode,
 } from "../src/core/model/nodes.js";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
-import type { NormalizedRun } from "../src/core/model/types.js";
+import type { Direction, NormalizedRun } from "../src/core/model/types.js";
 import {
   BORDER_STYLE,
   DASH_TYPE,
@@ -125,8 +125,8 @@ function imageNode(src: string): ImageNode {
 }
 
 /** Line node (token values baked in from mockTheme) */
-function lineNode(): LineNode {
-  return { type: NODE_TYPE.LINE, color: "#666666", width: 1, dashType: DASH_TYPE.SOLID };
+function lineNode(direction: Direction = DIRECTION.ROW): LineNode {
+  return { type: NODE_TYPE.LINE, direction, color: "#666666", width: 1, dashType: DASH_TYPE.SOLID };
 }
 
 /** Stack node (z-order composition) */
@@ -427,17 +427,23 @@ describe("HTML Measurement Generation", () => {
   });
 
   describe("Line direction awareness", () => {
-    test("line in column gets width: 100% (horizontal separator)", async () => {
-      const node = colNode(textNode("Above"), lineNode(), textNode("Below"));
+    test("horizontal line (direction=row) renders as horizontal SVG line", async () => {
+      const node = colNode(textNode("Above"), lineNode(DIRECTION.ROW), textNode("Below"));
       const { html } = await genHTML(node, bounds);
-      // Line in column = horizontal separator
-      assert.ok(html.includes("width:100%"), "Line in column should be full-width horizontal separator");
+      assert.ok(html.includes("width:100%"), "Horizontal line should be full-width");
+      assert.ok(html.includes("<svg"), "Line should render as SVG");
+      assert.ok(html.includes("<line"), "SVG should contain a line element");
+      assert.ok(html.includes('x1="0"'), "Horizontal line starts at x=0");
+      assert.ok(html.includes('x2="100%"'), "Horizontal line ends at x=100%");
     });
 
-    test("line in row gets align-self: stretch (vertical separator)", async () => {
-      const node = rowNode(textNode("Left"), lineNode(), textNode("Right"));
+    test("vertical line (direction=column) renders as vertical SVG line", async () => {
+      const node = rowNode(textNode("Left"), lineNode(DIRECTION.COLUMN), textNode("Right"));
       const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes("align-self:stretch"), "Line in row should stretch vertically");
+      assert.ok(html.includes("align-self:stretch"), "Vertical line should stretch");
+      assert.ok(html.includes("<svg"), "Line should render as SVG");
+      assert.ok(html.includes('y1="0"'), "Vertical line starts at y=0");
+      assert.ok(html.includes('y2="100%"'), "Vertical line ends at y=100%");
     });
   });
 
@@ -1132,48 +1138,102 @@ describe("HTML Measurement Generation", () => {
   });
 
   describe("Line dashType rendering", () => {
-    test("solid line in column uses border-top with solid style", async () => {
+    test("solid line has no stroke-dasharray", async () => {
       const node = colNode(textNode("Above"), lineNode(), textNode("Below"));
       const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes("border-top:"), "Line in column should use border-top");
-      assert.ok(html.includes("solid"), "Solid line should have solid border style");
+      assert.ok(html.includes("<line"), "Line should render as SVG line");
+      assert.ok(!html.includes("stroke-dasharray"), "Solid line should have no stroke-dasharray");
     });
 
-    test("dashed line renders border-style: dashed", async () => {
-      const line: LineNode = { type: NODE_TYPE.LINE, color: "#666666", width: 1, dashType: DASH_TYPE.DASH };
-      const node = colNode(textNode("Above"), line, textNode("Below"));
+    test("DASH renders stroke-dasharray 6 3", async () => {
+      const line: LineNode = {
+        type: NODE_TYPE.LINE,
+        direction: DIRECTION.ROW,
+        color: "#666666",
+        width: 1,
+        dashType: DASH_TYPE.DASH,
+      };
+      const node = colNode(line);
       const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes("dashed"), "DASH type should render as dashed border");
+      assert.ok(html.includes('stroke-dasharray="6 3"'), "DASH should render as 6 3");
     });
 
-    test("dotted line renders border-style: dotted", async () => {
-      const line: LineNode = { type: NODE_TYPE.LINE, color: "#666666", width: 1, dashType: DASH_TYPE.SYS_DOT };
-      const node = colNode(textNode("Above"), line, textNode("Below"));
+    test("LG_DASH renders stroke-dasharray 12 3", async () => {
+      const line: LineNode = {
+        type: NODE_TYPE.LINE,
+        direction: DIRECTION.ROW,
+        color: "#000000",
+        width: 1,
+        dashType: DASH_TYPE.LG_DASH,
+      };
+      const node = colNode(line);
       const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes("dotted"), "SYS_DOT type should render as dotted border");
+      assert.ok(html.includes('stroke-dasharray="12 3"'), "LG_DASH should render as 12 3");
     });
 
-    test("line in row uses border-left (vertical separator)", async () => {
-      const line: LineNode = { type: NODE_TYPE.LINE, color: "#FF0000", width: 2, dashType: DASH_TYPE.DASH };
+    test("DASH_DOT renders stroke-dasharray 6 3 1 3", async () => {
+      const line: LineNode = {
+        type: NODE_TYPE.LINE,
+        direction: DIRECTION.ROW,
+        color: "#000000",
+        width: 1,
+        dashType: DASH_TYPE.DASH_DOT,
+      };
+      const node = colNode(line);
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('stroke-dasharray="6 3 1 3"'), "DASH_DOT should render as 6 3 1 3");
+    });
+
+    test("SYS_DOT renders stroke-dasharray 1 3", async () => {
+      const line: LineNode = {
+        type: NODE_TYPE.LINE,
+        direction: DIRECTION.ROW,
+        color: "#666666",
+        width: 1,
+        dashType: DASH_TYPE.SYS_DOT,
+      };
+      const node = colNode(line);
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('stroke-dasharray="1 3"'), "SYS_DOT should render as 1 3");
+    });
+
+    test("SYS_DASH renders stroke-dasharray 3 1", async () => {
+      const line: LineNode = {
+        type: NODE_TYPE.LINE,
+        direction: DIRECTION.ROW,
+        color: "#000000",
+        width: 1,
+        dashType: DASH_TYPE.SYS_DASH,
+      };
+      const node = colNode(line);
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('stroke-dasharray="3 1"'), "SYS_DASH should render as 3 1");
+    });
+
+    test("LG_DASH_DOT renders stroke-dasharray 12 3 1 3", async () => {
+      const line: LineNode = {
+        type: NODE_TYPE.LINE,
+        direction: DIRECTION.ROW,
+        color: "#000000",
+        width: 1,
+        dashType: DASH_TYPE.LG_DASH_DOT,
+      };
+      const node = colNode(line);
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('stroke-dasharray="12 3 1 3"'), "LG_DASH_DOT should render as 12 3 1 3");
+    });
+
+    test("line color passes through to SVG stroke", async () => {
+      const line: LineNode = {
+        type: NODE_TYPE.LINE,
+        direction: DIRECTION.ROW,
+        color: "#FF0000",
+        width: 2,
+        dashType: DASH_TYPE.DASH,
+      };
       const node = rowNode(textNode("Left"), line, textNode("Right"));
       const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes("border-left:"), "Line in row should use border-left (vertical separator)");
-      assert.ok(html.includes("dashed"), "Dashed line in row should have dashed style");
-      assert.ok(html.includes("#FF0000"), "Line should use its color");
-    });
-
-    test("LG_DASH maps to dashed", async () => {
-      const line: LineNode = { type: NODE_TYPE.LINE, color: "#000000", width: 1, dashType: DASH_TYPE.LG_DASH };
-      const node = colNode(line);
-      const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes("dashed"), "LG_DASH should map to dashed");
-    });
-
-    test("SYS_DASH maps to dotted", async () => {
-      const line: LineNode = { type: NODE_TYPE.LINE, color: "#000000", width: 1, dashType: DASH_TYPE.SYS_DASH };
-      const node = colNode(line);
-      const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes("dotted"), "SYS_DASH should map to dotted");
+      assert.ok(html.includes('stroke="#FF0000"'), "Line color should be SVG stroke");
     });
   });
 

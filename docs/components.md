@@ -40,6 +40,8 @@ A directive has three parts:
 
 ### Content Components
 
+Content building blocks. Available in markdown via directives or native syntax.
+
 | Component | Description | Syntax |
 |-----------|-------------|--------|
 | [card](#card) | Content card with optional image, title, and description | `:::card` |
@@ -49,23 +51,30 @@ A directive has three parts:
 | [image](#image) | Embedded image | `![alt](path)` or `:::image` |
 | [mermaid](#mermaid) | Auto-themed Mermaid diagram rendered as PNG | `:::mermaid` |
 | [code](#code) | Syntax-highlighted code block rendered as PNG | Fenced code block or `:::code` |
-| [line](#line) | Horizontal or vertical rule | `:::line` |
-| [shape](#shape) | Filled/outlined area shape | `:::shape` |
 | [text](#text) | Single paragraph of formatted text with heading style support | Markdown and TypeScript |
-| [plainText](#plaintext) | Unformatted text for titles, captions, and attributions | TypeScript only |
 | [list](#list) | Bullet and numbered lists | Markdown and TypeScript |
-| [slideNumber](#slidenumber) | Slide number element | TypeScript only |
+
+### Visual Primitives
+
+Low-level building blocks for layout construction. TypeScript DSL only.
+
+| Component | Description | Use |
+|-----------|-------------|-----|
+| [line](#line) | Horizontal or vertical rule | TypeScript DSL |
+| [shape](#shape) | Filled or outlined shape | TypeScript DSL |
+| [plainText](#plaintext) | Unformatted text for titles, captions, and attributions | TypeScript DSL |
+| [slideNumber](#slidenumber) | Slide number element | TypeScript DSL |
 
 ### Layout Components
 
+Structural containers that arrange content. TypeScript DSL only.
+
 | Component | Description |
 |-----------|-------------|
-| [row](#row) | Horizontal flex container — children side by side |
-| [column](#column) | Vertical flex container — children stacked top to bottom |
-| [stack](#stack) | Z-order overlay — layer text over a background shape |
-| [grid](#grid) | Equal-column grid — uniform width for all children |
-
-Layout components are TypeScript DSL only. They are not available as markdown directives.
+| [row](#row) | Horizontal flex container, children side by side |
+| [column](#column) | Vertical flex container, children stacked top to bottom |
+| [stack](#stack) | Z-order overlay, layers content over a background shape |
+| [grid](#grid) | Equal-column grid with uniform width for all children |
 
 ---
 
@@ -288,14 +297,13 @@ Markdown tables render automatically with one header row. The `:::table` directi
 
 ## line
 
-A horizontal or vertical rule. Supports arrows with `beginArrow` / `endArrow` for flow diagrams.
+A horizontal or vertical rule. Renders as a separator between content blocks. Available in the TypeScript DSL only.
 
 ### Parameters
 
 | Param | Type | Description |
 |-------|------|-------------|
-| `beginArrow` | ArrowType | Arrow at start (`none`, `arrow`, `diamond`, `oval`, `stealth`, `triangle`) |
-| `endArrow` | ArrowType | Arrow at end (same values as `beginArrow`) |
+| `direction` | Direction | `"row"` for horizontal (default), `"column"` for vertical |
 
 ### Tokens
 
@@ -306,18 +314,27 @@ A horizontal or vertical rule. Supports arrows with `beginArrow` / `endArrow` fo
 | `dashType` | DashType | Dash pattern |
 | `shadow` | Shadow | Drop shadow (optional — omit to suppress) |
 
-### Example
+### Examples
 
-```markdown
-:::line
-:::
+Horizontal line (default):
+
+```typescript
+line(tokens.separator)
 ```
+
+Vertical line:
+
+```typescript
+line(tokens.separator, DIRECTION.COLUMN)
+```
+
+For a complete layout example, see the default theme's layouts in [Layouts — Masters and Fixed Elements](./layouts.md#masters-and-fixed-elements).
 
 ---
 
 ## shape
 
-A shape with configurable fill and border.
+A filled or outlined shape. Available in the TypeScript DSL only.
 
 ### Parameters
 
@@ -337,16 +354,6 @@ A shape with configurable fill and border.
 | `shadow` | Shadow | Drop shadow (optional — omit to suppress) |
 
 ### Examples
-
-```markdown
-:::shape{shape="roundRect"}
-:::
-```
-
-```markdown
-:::shape{shape="triangle"}
-:::
-```
 
 ```typescript
 shape(tokens.background, { shape: SHAPE.RECTANGLE })  // SHAPE.RECTANGLE = "roundRect"

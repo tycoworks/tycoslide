@@ -304,25 +304,22 @@ Layout 'title' does not accept body content, but body was provided. Move content
 ### "Horizontal rules not supported"
 
 ```
-horizontal rules (---, ***, ___) are not supported in slide content. Use :::line to insert a line element.
+horizontal rules (---, ***, ___) are not supported in slide content. Use the line() primitive in your layout to insert a separator.
 ```
 
 **Cause:** Using `---`, `***`, or `___` inside a slide body. These characters are reserved for YAML frontmatter separators.
 
-**Fix:** Replace horizontal rule syntax with the `:::line` directive:
+**Fix:** Use the `line()` primitive in your layout's render function:
 
-```markdown
----
-layout: body
-title: My Slide
----
-
-Some content
-
-:::line
-
-More content
+```typescript
+column(
+  text('Some content', tokens.body),
+  line(tokens.separator),
+  text('More content', tokens.body),
+)
 ```
+
+Horizontal rules cannot be used directly in markdown body content. If you are authoring slides and need a separator, contact your theme author to add a layout that includes a line element.
 
 ---
 

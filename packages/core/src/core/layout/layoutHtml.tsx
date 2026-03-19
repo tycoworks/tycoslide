@@ -385,47 +385,49 @@ function styleImage(node: ImageNode, parent: ParentCtx, nodeId: string, imagePat
   };
 }
 
-/** Map pptxgenjs dash types to closest CSS border-style */
-function dashTypeToCss(dt: DashType): string {
+/** Map pptxgenjs dash types to SVG stroke-dasharray values (multiples of stroke width). */
+function dashTypeToSvgArray(dt: DashType): string | undefined {
   switch (dt) {
     case DASH_TYPE.SOLID:
-      return "solid";
+      return undefined;
     case DASH_TYPE.DASH:
+      return "6 3";
     case DASH_TYPE.LG_DASH:
+      return "12 3";
     case DASH_TYPE.DASH_DOT:
+      return "6 3 1 3";
     case DASH_TYPE.LG_DASH_DOT:
-      return "dashed";
-    case DASH_TYPE.SYS_DASH:
+      return "12 3 1 3";
     case DASH_TYPE.SYS_DOT:
-      return "dotted";
+      return "1 3";
+    case DASH_TYPE.SYS_DASH:
+      return "3 1";
     default:
-      return "solid";
+      return undefined;
   }
 }
 
-function styleLine(node: LineNode, parent: ParentCtx, nodeId: string): StyledNode {
+function styleLine(node: LineNode, _parent: ParentCtx, nodeId: string): StyledNode {
   const widthPx = ptToPx(node.width);
   const color = node.color;
-  const borderStyle = dashTypeToCss(node.dashType);
+  const isVertical = node.direction === DIRECTION.COLUMN;
 
-  if (parent.direction === DIRECTION.ROW) {
-    // Vertical separator in a row
-    const styles: Record<string, string | number> = {
-      flex: `0 0 ${widthPx}px`,
-      alignSelf: "stretch",
-      borderLeft: `${widthPx}px ${borderStyle} ${color}`,
-    };
-    applyShadowCSS(node.shadow, styles);
-    return { nodeId, styles, children: [] };
-  }
-  // Horizontal separator in a column
-  const styles: Record<string, string | number> = {
-    flex: `0 0 ${widthPx}px`,
-    width: "100%",
-    borderTop: `${widthPx}px ${borderStyle} ${color}`,
-  };
+  const x1 = isVertical ? "50%" : "0";
+  const y1 = isVertical ? "0" : "50%";
+  const x2 = isVertical ? "50%" : "100%";
+  const y2 = isVertical ? "100%" : "50%";
+
+  const dashArray = dashTypeToSvgArray(node.dashType);
+  const dashAttr = dashArray ? ` stroke-dasharray="${dashArray}"` : "";
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" overflow="visible"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${widthPx}"${dashAttr}/></svg>`;
+
+  const styles: Record<string, string | number> = isVertical
+    ? { flex: `0 0 ${widthPx}px`, alignSelf: "stretch" }
+    : { flex: `0 0 ${widthPx}px`, width: "100%" };
+
   applyShadowCSS(node.shadow, styles);
-  return { nodeId, styles, children: [] };
+  return { nodeId, styles, children: [], innerHTML: svg };
 }
 
 /** Compute shadow x/y offsets and rgba color from a Shadow config. */

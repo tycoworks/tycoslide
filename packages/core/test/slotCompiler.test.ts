@@ -101,7 +101,7 @@ describe("Slot Compiler", () => {
 
     it("should throw on thematic breaks in slot content", () => {
       const md = "Before\n\n---\n\nAfter";
-      assert.throws(() => compileSlot(md), /horizontal rules.*not supported.*Use :::line/);
+      assert.throws(() => compileSlot(md), /Horizontal rules.*not supported.*line\(\) primitive/);
     });
   });
 
@@ -149,15 +149,6 @@ describe("Slot Compiler", () => {
     it("should reject unknown directive parameters", () => {
       const md = ':::table{foo="bar"}\n| A | B |\n|---|---|\n| C | D |\n:::';
       assert.throws(() => compileSlot(md), /Invalid parameters for component 'table'/);
-    });
-  });
-
-  describe(":::line directive", () => {
-    it("should compile :::line directive with empty body", () => {
-      const md = ":::line\n:::";
-      const nodes = compileSlot(md);
-      assert.strictEqual(nodes.length, 1);
-      assert.strictEqual((nodes[0] as any).componentName, C.Line);
     });
   });
 

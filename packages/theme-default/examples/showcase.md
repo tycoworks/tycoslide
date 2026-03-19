@@ -16,8 +16,8 @@ variant: default
 title: Agenda
 items:
   - What is tycoslide?
+  - Markdown → .pptx
   - Three Pillars
-  - Presentations as Code
   - The Build Pipeline
   - The Landscape
   - The Key Metric
@@ -30,6 +30,35 @@ variant: default
 body: "tycoslide is a :purple[**presentation build tool**] that generates :purple[**editable PowerPoint slides from markdown**], with :purple[**TypeScript-based themes**] and :purple[**build-time validation**]."
 notes: Positioning one-liner. Four anchors in one sentence.
 ---
+
+---
+layout: transform
+variant: default
+notes: Side-by-side showing markdown input on the left and the resulting slide output on the right.
+---
+
+::left::
+
+review.md
+
+```markdown
+---
+layout: body
+title: Q3 Infrastructure Review
+---
+
+The new pipeline *increased*
+throughput by **40%** with
+:purple[zero downtime].
+++[See report](https://example.com)++
+```
+
+::right::
+
+review.pptx
+
+:::card{title="Q3 Infrastructure Review" description="The new pipeline *increased* throughput by **40%** with :purple[zero downtime]. [See report](https://example.com)"}
+:::
 
 ---
 layout: cards
@@ -50,39 +79,28 @@ notes: Three pillars from positioning framework. Each maps to one supporting arg
 ---
 
 ---
-layout: two-column
-variant: default
-title: Presentations as Code
-eyebrow: How It Works
-notes: Side-by-side showing markdown input on the left and the resulting slide content on the right.
----
-
-::left::
-
-```markdown
----
-layout: body
-title: Q3 Infrastructure Review
----
-
-The new pipeline *increased*
-throughput by **40%** with
-:purple[zero downtime].
-++[See report](https://example.com)++
-```
-
-::right::
-
-:::card{title="Q3 Infrastructure Review" description="The new pipeline *increased* throughput by **40%** with :purple[zero downtime]. [See report](https://example.com)"}
-:::
-
----
 layout: stat
 variant: default
 value: "0"
 label: Silent Failures
 caption: Catch layout overflows, missing design tokens, and invalid parameters at build time. Presentations are finally treated with the same rigorous QA as production software.
 notes: Stat layout — big number with label and caption.
+---
+
+---
+layout: shapes
+variant: default
+title: Shape Primitives
+eyebrow: Demo
+notes: All 4 shape primitives with fill, border, cornerRadius, opacity, and shadow.
+---
+
+---
+layout: lines
+variant: default
+title: Line Dash Types
+eyebrow: Demo
+notes: All 7 SVG dash types with distinct stroke-dasharray patterns.
 ---
 
 ---

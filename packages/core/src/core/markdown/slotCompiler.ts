@@ -11,6 +11,10 @@ import type { ComponentNode, SlideNode } from "../model/nodes.js";
 import { type ContainerDirective, SYNTAX } from "../model/syntax.js";
 import { componentRegistry } from "../rendering/registry.js";
 
+const THEMATIC_BREAK_ERROR =
+  "Horizontal rules (---, ***, ___) are not supported in slide content. " +
+  "Use the line() primitive to insert a separator.";
+
 // ============================================
 // PUBLIC API
 // ============================================
@@ -65,12 +69,8 @@ function compileChildren(children: RootContent[], source: string, errorPrefix: s
       continue;
     }
 
-    // Thematic breaks (---, ***, ___) are not supported in slide content.
     if (child.type === SYNTAX.THEMATIC_BREAK) {
-      throw new Error(
-        `${errorPrefix}: horizontal rules (---, ***, ___) are not supported in slide content. ` +
-          `Use :::line to insert a line element.`,
-      );
+      throw new Error(`${errorPrefix}: ${THEMATIC_BREAK_ERROR}`);
     }
 
     // Bare MDAST → accumulate (flush will wrap)
@@ -146,11 +146,8 @@ function compileBareNode(node: RootContent, source: string): SlideNode | null {
     return dispatchDirective(node as unknown as ContainerDirective, source, "document");
   }
 
-  // Thematic breaks (---, ***, ___) are not supported in slide content.
   if (node.type === SYNTAX.THEMATIC_BREAK) {
-    throw new Error(
-      "Horizontal rules (---, ***, ___) are not supported in slide content. " + "Use :::line to insert a line element.",
-    );
+    throw new Error(THEMATIC_BREAK_ERROR);
   }
 
   // Unwrap paragraph-wrapped images: remark treats ![alt](src) as inline

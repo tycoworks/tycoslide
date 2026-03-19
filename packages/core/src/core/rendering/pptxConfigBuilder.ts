@@ -17,7 +17,7 @@ import type {
   TextNode,
 } from "../model/nodes.js";
 import type { StrikeType, TextContent, TextStyle, UnderlineStyle } from "../model/types.js";
-import { BORDER_STYLE, LINE_SHAPE, STRIKE_TYPE, UNDERLINE_STYLE } from "../model/types.js";
+import { BORDER_STYLE, DIRECTION, LINE_SHAPE, STRIKE_TYPE, UNDERLINE_STYLE } from "../model/types.js";
 
 // ============================================
 // TYPES
@@ -222,11 +222,9 @@ export class PptxConfigBuilder {
   ): { shapeType: string; options: Record<string, unknown> } {
     const color = lineNode.color;
     const lineWidth = lineNode.width;
-    const isVertical = positioned.height > positioned.width;
+    const isVertical = lineNode.direction === DIRECTION.COLUMN;
 
     const lineOpts: Record<string, unknown> = { color: stripHash(color), width: lineWidth };
-    if (lineNode.beginArrow) lineOpts.beginArrowType = lineNode.beginArrow;
-    if (lineNode.endArrow) lineOpts.endArrowType = lineNode.endArrow;
     lineOpts.dashType = lineNode.dashType;
 
     const options: Record<string, unknown> = {

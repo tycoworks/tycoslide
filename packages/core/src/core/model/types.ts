@@ -28,6 +28,9 @@ export const DIRECTION = {
 
 export type Direction = (typeof DIRECTION)[keyof typeof DIRECTION];
 
+/** All DIRECTION values as a tuple — useful for schema enum validation */
+export const DIRECTION_VALUES = Object.values(DIRECTION) as [Direction, ...Direction[]];
+
 export const SIZE = {
   FILL: "fill",
   HUG: "hug",
@@ -77,20 +80,6 @@ export const SHAPE_VALUES = Object.values(SHAPE) as [ShapeName, ...ShapeName[]];
 
 /** pptxgenjs line shape name — used internally by buildLineConfig */
 export const LINE_SHAPE = "line" as const;
-
-export const ARROW_TYPE = {
-  NONE: "none",
-  ARROW: "arrow",
-  DIAMOND: "diamond",
-  OVAL: "oval",
-  STEALTH: "stealth",
-  TRIANGLE: "triangle",
-} as const;
-
-export type ArrowType = (typeof ARROW_TYPE)[keyof typeof ARROW_TYPE];
-
-/** All ARROW_TYPE values as a tuple — useful for Zod enum schemas */
-export const ARROW_TYPE_VALUES = Object.values(ARROW_TYPE) as [ArrowType, ...ArrowType[]];
 
 export const DASH_TYPE = {
   SOLID: "solid",
