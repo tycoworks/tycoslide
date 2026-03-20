@@ -385,23 +385,23 @@ function styleImage(node: ImageNode, parent: ParentCtx, nodeId: string, imagePat
   };
 }
 
-/** Map pptxgenjs dash types to SVG stroke-dasharray values (multiples of stroke width). */
-function dashTypeToSvgArray(dt: DashType): string | undefined {
+/** Dash patterns as multiples of stroke width (approximate — OOXML presets are implementation-defined). */
+function dashTypeMultipliers(dt: DashType): number[] | undefined {
   switch (dt) {
     case DASH_TYPE.SOLID:
       return undefined;
     case DASH_TYPE.DASH:
-      return "6 3";
+      return [4, 3];
     case DASH_TYPE.LG_DASH:
-      return "12 3";
+      return [8, 3];
     case DASH_TYPE.DASH_DOT:
-      return "6 3 1 3";
+      return [4, 3, 1, 3];
     case DASH_TYPE.LG_DASH_DOT:
-      return "12 3 1 3";
+      return [8, 3, 1, 3];
     case DASH_TYPE.SYS_DOT:
-      return "1 3";
+      return [1, 1];
     case DASH_TYPE.SYS_DASH:
-      return "3 1";
+      return [3, 1];
     default:
       return undefined;
   }
@@ -417,10 +417,13 @@ function styleLine(node: LineNode, _parent: ParentCtx, nodeId: string): StyledNo
   const x2 = isVertical ? "50%" : "100%";
   const y2 = isVertical ? "100%" : "50%";
 
-  const dashArray = dashTypeToSvgArray(node.dashType);
-  const dashAttr = dashArray ? ` stroke-dasharray="${dashArray}"` : "";
+  const multipliers = dashTypeMultipliers(node.dashType);
+  const dashAttr = multipliers ? ` stroke-dasharray="${multipliers.map((m) => m * widthPx).join(" ")}"` : "";
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" overflow="visible"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${widthPx}"${dashAttr}/></svg>`;
+  // display:block prevents the inline SVG line-box problem — without it the browser
+  // creates a line box whose height (based on inherited font metrics) inflates the
+  // flex item's min-height:auto beyond the intended stroke-width basis.
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" overflow="visible" style="display:block"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${widthPx}"${dashAttr}/></svg>`;
 
   // Explicit width/height prevents SVG width="100%" height="100%" from falling
   // back to the CSS default intrinsic size (300×150px) when the flex basis alone

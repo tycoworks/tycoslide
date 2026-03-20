@@ -1143,7 +1143,7 @@ describe("HTML Measurement Generation", () => {
       assert.ok(!html.includes("stroke-dasharray"), "Solid line should have no stroke-dasharray");
     });
 
-    test("DASH renders stroke-dasharray 6 3", async () => {
+    test("DASH renders scaled stroke-dasharray", async () => {
       const line: LineNode = {
         type: NODE_TYPE.LINE,
         direction: DIRECTION.ROW,
@@ -1153,10 +1153,12 @@ describe("HTML Measurement Generation", () => {
       };
       const node = colNode(line);
       const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes('stroke-dasharray="6 3"'), "DASH should render as 6 3");
+      assert.ok(html.includes("stroke-dasharray"), "DASH should have stroke-dasharray");
+      // Multipliers [4,3] scaled by ptToPx(1) = 1.333...
+      assert.ok(html.includes('stroke-dasharray="5.333'), "DASH dasharray should start with 5.333");
     });
 
-    test("LG_DASH renders stroke-dasharray 12 3", async () => {
+    test("LG_DASH renders scaled stroke-dasharray", async () => {
       const line: LineNode = {
         type: NODE_TYPE.LINE,
         direction: DIRECTION.ROW,
@@ -1166,10 +1168,10 @@ describe("HTML Measurement Generation", () => {
       };
       const node = colNode(line);
       const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes('stroke-dasharray="12 3"'), "LG_DASH should render as 12 3");
+      assert.ok(html.includes('stroke-dasharray="10.666'), "LG_DASH dasharray should start with 10.666");
     });
 
-    test("DASH_DOT renders stroke-dasharray 6 3 1 3", async () => {
+    test("DASH_DOT renders scaled stroke-dasharray", async () => {
       const line: LineNode = {
         type: NODE_TYPE.LINE,
         direction: DIRECTION.ROW,
@@ -1179,10 +1181,11 @@ describe("HTML Measurement Generation", () => {
       };
       const node = colNode(line);
       const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes('stroke-dasharray="6 3 1 3"'), "DASH_DOT should render as 6 3 1 3");
+      assert.ok(html.includes('stroke-dasharray="5.333'), "DASH_DOT dasharray should start with 5.333");
+      assert.ok(html.includes(" 1.333"), "DASH_DOT dasharray should contain dot segment");
     });
 
-    test("SYS_DOT renders stroke-dasharray 1 3", async () => {
+    test("SYS_DOT renders scaled stroke-dasharray", async () => {
       const line: LineNode = {
         type: NODE_TYPE.LINE,
         direction: DIRECTION.ROW,
@@ -1192,10 +1195,10 @@ describe("HTML Measurement Generation", () => {
       };
       const node = colNode(line);
       const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes('stroke-dasharray="1 3"'), "SYS_DOT should render as 1 3");
+      assert.ok(html.includes('stroke-dasharray="1.333'), "SYS_DOT dasharray should start with 1.333");
     });
 
-    test("SYS_DASH renders stroke-dasharray 3 1", async () => {
+    test("SYS_DASH renders scaled stroke-dasharray", async () => {
       const line: LineNode = {
         type: NODE_TYPE.LINE,
         direction: DIRECTION.ROW,
@@ -1205,10 +1208,10 @@ describe("HTML Measurement Generation", () => {
       };
       const node = colNode(line);
       const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes('stroke-dasharray="3 1"'), "SYS_DASH should render as 3 1");
+      assert.ok(html.includes('stroke-dasharray="4 1.333'), "SYS_DASH dasharray should be 4 1.333...");
     });
 
-    test("LG_DASH_DOT renders stroke-dasharray 12 3 1 3", async () => {
+    test("LG_DASH_DOT renders scaled stroke-dasharray", async () => {
       const line: LineNode = {
         type: NODE_TYPE.LINE,
         direction: DIRECTION.ROW,
@@ -1218,7 +1221,8 @@ describe("HTML Measurement Generation", () => {
       };
       const node = colNode(line);
       const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes('stroke-dasharray="12 3 1 3"'), "LG_DASH_DOT should render as 12 3 1 3");
+      assert.ok(html.includes('stroke-dasharray="10.666'), "LG_DASH_DOT dasharray should start with 10.666");
+      assert.ok(html.includes(" 1.333"), "LG_DASH_DOT dasharray should contain dot segment");
     });
 
     test("line color passes through to SVG stroke", async () => {
