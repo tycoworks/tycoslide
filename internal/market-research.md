@@ -1,12 +1,12 @@
-# Competitor Research
+# Presentation-from-Code Tools
 
-Research into presentation-from-code tools and how they compare to tycoslide. Last updated: March 2026.
+Survey of markdown and code-based presentation tools. Last updated: March 2026.
 
 ---
 
-## Key Differentiators
+## Landscape
 
-tycoslide is the only tool in this space that generates **.pptx files with native PowerPoint objects** — editable text, shapes, and tables. Every other tool either produces HTML for browser-based presenting, or exports .pptx as screenshot images.
+tycoslide generates **.pptx files with native PowerPoint objects** — editable text, shapes, and tables. Other tools in this space produce HTML for browser-based presenting, or export .pptx as screenshot images.
 
 ---
 

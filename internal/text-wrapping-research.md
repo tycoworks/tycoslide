@@ -457,3 +457,44 @@ The italic font registration fix addressed the root cause of the showcase wrappi
 3. **Keep optional slots in FontFamily**: The type system keeps italic/bold/boldItalic optional. The compile-time check is in the markdown → node pipeline, not the type definition.
 4. **Park FreeType prediction**: Could catch some GDI rounding edge cases in future, but engineering investment not justified by current risk level. The `~fontSize/24` widening formula is a starting point if revisited.
 5. **Reject autofit**: Contradicts deterministic layout, introduces visual inconsistency.
+
+---
+
+## CSS Half-Leading Gap (March 2025)
+
+### The problem
+
+CSS `line-height` adds symmetric padding (half-leading) above and below text glyphs. PowerPoint, Keynote, and Google Slides place glyphs using font metrics directly — no half-leading. This causes a visible ~1px gap below text in HTML previews that is not present in PPTX output. The gap is proportional to `(line-height - 1) * fontSize / 2`.
+
+### Investigation
+
+**`text-box-trim` / `text-box` shorthand**: CSS has a property designed to eliminate half-leading. Chrome 133+ supports the `text-box` shorthand (`text-box: trim-both cap text`). Tested and confirmed working — dramatically reduces text box heights to match slide-tool rendering.
+
+**Browser support quirk**: Chrome 145 (Playwright's bundled Chromium) supports the `text-box` shorthand but NOT the `text-box-trim` longhand. `CSS.supports('text-box-trim', 'both')` returns false; `CSS.supports('text-box', 'trim-both cap alphabetic')` returns true.
+
+**`text-box-edge` values**:
+- `cap alphabetic`: Trims to baseline — cuts off descenders (too aggressive)
+- `cap text`: Preserves descender space — correct visual result
+
+### Why we can't use it
+
+The same HTML serves both measurement (Playwright extracts bounding boxes) and preview. `text-box-trim` changes the element's measured bounding box — it is defined in the W3C spec as a **layout operation**, not a visual one (CSSWG issue #8829). This means:
+
+- **With `text-box-trim`**: HTML preview looks correct (matches slide tools), but measurements shrink → PPTX text boxes are too small → PowerPoint text overflows
+- **Without `text-box-trim`**: PPTX looks correct (Chrome's half-leading roughly matches PowerPoint's internal text spacing), but HTML preview has the ~1px gap
+
+### Alternatives exhaustively ruled out
+
+| Technique | Changes visual? | Changes measured box? | Usable? |
+|---|---|---|---|
+| `text-box: trim-both cap text` | Yes | Yes | No — breaks PPTX |
+| `ascent-override` / `descent-override` | Only with `line-height: normal` | Only with `line-height: normal` | No — we use fixed `line-height` |
+| `line-gap-override: 0%` | No-op for Inter | No-op for Inter | N/A — Inter has 0 line gap |
+| Capsize (negative margins) | Yes | Yes — box shrinks | No — same as text-box-trim |
+| `transform: translateY()` | Shifts whole element | No | Shifts, doesn't trim |
+| `clip-path` / `overflow: hidden` | Clips ink | No | Clips, doesn't close gap |
+| `leading-trim` | Renamed to text-box-trim | Same | Same behavior |
+
+### Conclusion
+
+The ~1px HTML gap is an accepted known limitation. CSS has no mechanism to eliminate half-leading without also changing the element's measured bounding box. Decoupling measurement CSS from preview CSS would work but adds architectural complexity for a minor cosmetic improvement. The PPTX output (the primary deliverable) renders correctly.
