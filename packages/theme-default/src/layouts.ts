@@ -559,31 +559,46 @@ export const transformLayoutTokens = token.shape({
   list: token.required<ListTokens>(),
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
+  overlayVAlign: token.required<VerticalAlignment>(),
+  overlayHAlign: token.required<HorizontalAlignment>(),
   spacing: token.required<number>(),
+  contentSpacing: token.required<number>(),
   headerSpacing: token.required<number>(),
+  overlaySize: token.required<number>(),
 });
 
 export type TransformLayoutTokens = InferTokens<typeof transformLayoutTokens>;
 
 // +----------------------------+
 // | ::left::     ::right::     |
+// |       ::overlay::          |
 // +----------------------------+
 export const transformLayout = defineLayout({
   name: "transform",
-  description: "Side-by-side comparison layout.",
+  description: "Side-by-side comparison layout with optional overlay.",
   params: {
     title: param.optional(textComponent.schema),
     eyebrow: param.optional(textComponent.schema),
   },
-  slots: ["left", "right"],
+  slots: ["left", "right", "overlay"],
   tokens: transformLayoutTokens,
-  render: ({ title, eyebrow }, { left, right }, tokens: TransformLayoutTokens) => {
-    const colProps = { vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL };
-    const content = row(
-      { spacing: tokens.spacing, height: SIZE.HUG },
-      column(colProps, ...left),
-      column(colProps, ...right),
-    );
+  render: ({ title, eyebrow }, { left, right, overlay }, tokens: TransformLayoutTokens) => {
+    const colProps = { vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.contentSpacing, height: SIZE.FILL };
+    const layers: SlideNode[] = [
+      row(
+        { spacing: tokens.spacing, height: SIZE.HUG },
+        column(colProps, ...left),
+        column(colProps, ...right),
+      ),
+    ];
+    if (overlay.length > 0) {
+      layers.push(
+        column({ width: tokens.overlaySize, height: tokens.overlaySize, spacing: 0, vAlign: tokens.overlayVAlign, hAlign: tokens.overlayHAlign },
+          ...overlay,
+        ),
+      );
+    }
+    const content = layers.length === 1 ? layers[0] : stack({ height: SIZE.HUG }, ...layers);
     return masteredSlide(
       column(
         { vAlign: tokens.vAlign, height: SIZE.FILL, spacing: tokens.spacing },

@@ -590,6 +590,40 @@ describe("HTML Measurement Generation", () => {
       assert.ok(columnMatch, "Should find the column inside stack (node-3)");
       assert.ok(!columnMatch![1].includes("flex:1 1 0"), "Column without SIZE.FILL should NOT get flex:1 1 0");
     });
+
+    test("stack wrapper propagates child vAlign:MIDDLE as justify-content:safe center", async () => {
+      // Overlay layers need the wrapper to position them within the grid cell.
+      // The child's vAlign should propagate to the wrapper's justify-content.
+      const node = stackNode(shapeNode(SHAPE.RECTANGLE), colNode({ vAlign: VALIGN.MIDDLE }, textNode("Centered")));
+      const { html } = await genHTML(node, bounds);
+      // Second wrapper (z-index:1) should have justify-content from vAlign:MIDDLE
+      const wrapperMatch = html.match(/z-index:1[^"]*justify-content:safe center/);
+      assert.ok(wrapperMatch, "Stack wrapper for vAlign:MIDDLE child should have justify-content:safe center");
+    });
+
+    test("stack wrapper propagates child vAlign:BOTTOM as justify-content:safe flex-end", async () => {
+      const node = stackNode(shapeNode(SHAPE.RECTANGLE), colNode({ vAlign: VALIGN.BOTTOM }, textNode("Bottom")));
+      const { html } = await genHTML(node, bounds);
+      const wrapperMatch = html.match(/z-index:1[^"]*justify-content:safe flex-end/);
+      assert.ok(wrapperMatch, "Stack wrapper for vAlign:BOTTOM child should have justify-content:safe flex-end");
+    });
+
+    test("stack wrapper propagates child hAlign:CENTER as align-items:center", async () => {
+      const node = stackNode(
+        shapeNode(SHAPE.RECTANGLE),
+        colNode({ vAlign: VALIGN.MIDDLE, hAlign: HALIGN.CENTER }, textNode("Centered")),
+      );
+      const { html } = await genHTML(node, bounds);
+      const wrapperMatch = html.match(/z-index:1[^"]*align-items:center/);
+      assert.ok(wrapperMatch, "Stack wrapper for hAlign:CENTER child should have align-items:center");
+    });
+
+    test("stack wrapper for vAlign:TOP child uses flex-start (no regression)", async () => {
+      const node = stackNode(shapeNode(SHAPE.RECTANGLE), colNode({ vAlign: VALIGN.TOP }, textNode("Top")));
+      const { html } = await genHTML(node, bounds);
+      const wrapperMatch = html.match(/z-index:1[^"]*justify-content:flex-start/);
+      assert.ok(wrapperMatch, "Stack wrapper for vAlign:TOP child should have justify-content:flex-start");
+    });
   });
 
   describe("Compressibility rules", () => {

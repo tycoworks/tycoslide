@@ -42,6 +42,7 @@ export const assets = {
     description: icon("description.png"),
     palette: icon("palette.png"),
     shield: icon("verified_user.png"),
+    redo: icon("redo.png"),
   },
   tycoworks: {
     tycoslide: tycoworks("tycoslide.png"),

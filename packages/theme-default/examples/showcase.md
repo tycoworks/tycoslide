@@ -44,8 +44,9 @@ review.md
 ```markdown
 ---
 layout: body
-title: Q3 Infrastructure Review
 ---
+
+# Q3 Infrastructure Review
 
 The new pipeline *increased*
 throughput by **40%** with
@@ -59,6 +60,10 @@ review.pptx
 
 :::card{title="Q3 Infrastructure Review" description="The new pipeline *increased* throughput by **40%** with :purple[zero downtime]. [See report](https://example.com)"}
 :::
+
+::overlay::
+
+![redo]($icons.redo)
 
 ---
 layout: cards

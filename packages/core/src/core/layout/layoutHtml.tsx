@@ -270,20 +270,33 @@ function styleStack(
   return {
     nodeId,
     styles,
-    children: node.children.map((child, i) => ({
+    children: node.children.map((child, i) => {
       // Stack child wrapper: same grid cell, flex column.
       // Explicit zIndex ensures array order = visual z-order even when
       // children create new stacking contexts (e.g. filter, box-shadow).
-      nodeId: "",
-      styles: {
+      const wrapperStyles: Record<string, string | number> = {
         gridArea: "1 / 1 / 2 / 2",
         display: "flex",
         flexDirection: DIRECTION.COLUMN,
         containerType: "inline-size",
         zIndex: i,
-      },
-      children: [styleNode(child, ctx, idCtx, nodeIds, fontRatios, imagePathMap)],
-    })),
+      };
+      // Propagate child alignment to wrapper so overlay layers can position
+      // content within the grid cell (e.g. vAlign: MIDDLE centers vertically).
+      // Without this, the wrapper defaults to flex-start and the child's own
+      // justify-content has no effect when the child is content-sized.
+      if ("vAlign" in child) {
+        wrapperStyles.justifyContent = vAlignToJustify((child as { vAlign: VerticalAlignment }).vAlign);
+      }
+      if ("hAlign" in child) {
+        wrapperStyles.alignItems = hAlignToCSS((child as { hAlign: HorizontalAlignment }).hAlign);
+      }
+      return {
+        nodeId: "",
+        styles: wrapperStyles,
+        children: [styleNode(child, ctx, idCtx, nodeIds, fontRatios, imagePathMap)],
+      };
+    }),
   };
 }
 
