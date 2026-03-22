@@ -294,7 +294,6 @@ export class PptxRenderer {
       y: positioned.y,
       w: positioned.width,
       colW,
-      margin: 0,
     };
 
     slide.addTable(tableRows, tableOptions);
