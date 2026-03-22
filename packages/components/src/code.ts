@@ -127,7 +127,7 @@ async function renderCode(
   const html = await renderCodeToHtml(code, params.language, tokens, codeStyle);
   const pngPath = await context.canvas.renderHtml(html, true);
 
-  const codeImage = image(pngPath);
+  const codeImage = image(pngPath, undefined, code);
   if (tokens.background.shadow) {
     codeImage.tokens = { shadow: tokens.background.shadow };
   }

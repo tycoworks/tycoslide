@@ -6,8 +6,10 @@ import {
   component,
   defineComponent,
   type ImageNode,
+  type InferParams,
   type InferTokens,
   NODE_TYPE,
+  param,
   type RenderContext,
   type Shadow,
   SYNTAX,
@@ -73,6 +75,12 @@ function resolveAssetPath(ref: string, assets: Record<string, unknown> | undefin
 // TOKENS
 // ============================================
 
+const imageParamShape = param.shape({
+  alt: param.optional(schema.string()),
+});
+
+type ImageParams = InferParams<typeof imageParamShape>;
+
 const imageTokens = token.shape({
   shadow: token.optional<Shadow>(),
 });
@@ -86,22 +94,26 @@ export type ImageTokens = InferTokens<typeof imageTokens>;
 export const imageComponent = defineComponent({
   name: Component.Image,
   content: schema.string(),
+  params: imageParamShape,
   tokens: imageTokens,
 
   mdast: {
     nodeTypes: [SYNTAX.IMAGE],
     compile: (node: RootContent): ComponentNode | null => {
       const img = node as Image;
-      return component(Component.Image, {}, img.url);
+      return component(Component.Image, { alt: img.alt || undefined }, img.url);
     },
   },
 
-  render: (_params: {}, content: string, context: RenderContext, tokens: ImageTokens): ImageNode => {
+  render: (params: ImageParams, content: string, context: RenderContext, tokens: ImageTokens): ImageNode => {
     let src = content;
     if (src.startsWith(ASSET_PREFIX)) {
       src = resolveAssetPath(src, context.assets);
     }
     const node: ImageNode = { type: NODE_TYPE.IMAGE, src };
+    if (params.alt) {
+      node.alt = params.alt;
+    }
     if (tokens?.shadow) {
       node.shadow = tokens.shadow;
     }
@@ -109,6 +121,6 @@ export const imageComponent = defineComponent({
   },
 });
 
-export function image(src: string, tokens?: ImageTokens): ComponentNode {
-  return component(Component.Image, {}, src, tokens);
+export function image(src: string, tokens?: ImageTokens, alt?: string): ComponentNode {
+  return component(Component.Image, { ...(alt != null && { alt }) }, src, tokens);
 }

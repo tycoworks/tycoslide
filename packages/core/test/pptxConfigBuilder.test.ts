@@ -588,6 +588,33 @@ describe("buildShapeConfig() — area shapes", () => {
     assert.strictEqual(shadow.opacity, 0.5);
   });
 
+  test("translates alt text on image", () => {
+    const imageNode: ImageNode = {
+      type: NODE_TYPE.IMAGE,
+      src: "test.png",
+      alt: "A test image description",
+    };
+    const pos = positioned(imageNode, 1, 2, 5, 3);
+
+    const result = builder.buildImageConfig(imageNode, pos);
+
+    assert.ok(result);
+    assert.strictEqual(result.altText, "A test image description");
+  });
+
+  test("omits altText when alt is not set", () => {
+    const imageNode: ImageNode = {
+      type: NODE_TYPE.IMAGE,
+      src: "test.png",
+    };
+    const pos = positioned(imageNode, 1, 2, 5, 3);
+
+    const result = builder.buildImageConfig(imageNode, pos);
+
+    assert.ok(result);
+    assert.strictEqual(result.altText, undefined);
+  });
+
   test("translates shadow on line", () => {
     const lineNode: LineNode = {
       type: NODE_TYPE.LINE,

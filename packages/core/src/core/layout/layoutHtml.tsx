@@ -394,7 +394,7 @@ function styleImage(node: ImageNode, parent: ParentCtx, nodeId: string, imagePat
     nodeId,
     styles,
     children: [],
-    innerHTML: `<img src="${imgSrc}" style="${imgStyle}" />`,
+    innerHTML: `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(node.alt ?? "")}" style="${imgStyle}" />`,
   };
 }
 
@@ -915,7 +915,7 @@ export function generateLayoutHTML(
     if (bg.path) {
       const resolvedBg = path.resolve(bg.path);
       const bgSrc = imagePathMap.get(resolvedBg) ?? resolvedBg;
-      rootStyles.backgroundImage = `url('${bgSrc}')`;
+      rootStyles.backgroundImage = `url('${bgSrc.replace(/'/g, "\\'")}')`;
       rootStyles.backgroundSize = "cover";
     }
 

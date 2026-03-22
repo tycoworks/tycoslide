@@ -60,6 +60,7 @@ export interface TextNode {
 export interface ImageNode {
   type: typeof NODE_TYPE.IMAGE;
   src: string;
+  alt?: string;
   shadow?: Shadow;
 }
 

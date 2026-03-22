@@ -412,7 +412,13 @@ No directive parameters.
 
 ## image
 
-Embeds an image. In markdown syntax, the path goes in the URL position. In the directive form, the path goes in the body.
+Embeds an image with optional alt text for accessibility.
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `alt` | string | Alt text for accessibility (mapped to PowerPoint alt text and HTML alt attribute) |
 
 ### Tokens
 
@@ -427,7 +433,7 @@ Embeds an image. In markdown syntax, the path goes in the URL position. In the d
 ```
 
 ```markdown
-:::image
+:::image{alt="Architecture diagram"}
 ./assets/diagram.png
 :::
 ```
@@ -440,7 +446,7 @@ File paths resolve relative to the working directory where the CLI runs.
 
 ## mermaid
 
-Renders a Mermaid diagram to PNG and embeds it as an image. Theme colors are applied automatically.
+Renders a Mermaid diagram to PNG and embeds it as an image. Theme colors are applied automatically. The Mermaid definition is set as alt text on the rendered image.
 
 `style`, `classDef`, `linkStyle`, and `%%{init}` directives are not supported -- the theme handles all styling automatically.
 
@@ -482,7 +488,7 @@ flowchart LR
 
 ## code
 
-Syntax-highlighted code block rendered as a PNG image. Fenced code blocks in markdown (` ```language `) are rendered automatically. The language identifier after the opening fences is required.
+Syntax-highlighted code block rendered as a PNG image. Fenced code blocks in markdown (` ```language `) are rendered automatically. The language identifier after the opening fences is required. The source code is set as alt text on the rendered image.
 
 ### Parameters
 

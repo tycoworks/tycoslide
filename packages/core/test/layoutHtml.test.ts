@@ -424,6 +424,18 @@ describe("HTML Measurement Generation", () => {
       const { html } = await genHTML(node, bounds);
       assert.ok(html.includes("height:100%"), "Image in row should get height:100%");
     });
+
+    test("image with alt text renders alt attribute", async () => {
+      const node = colNode({ type: NODE_TYPE.IMAGE, src: testImage, alt: "Diagram of build pipeline" });
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('alt="Diagram of build pipeline"'), "Image should render alt attribute");
+    });
+
+    test("image without alt text renders empty alt attribute", async () => {
+      const node = colNode(imageNode(testImage));
+      const { html } = await genHTML(node, bounds);
+      assert.ok(html.includes('alt=""'), "Image without alt should render empty alt attribute");
+    });
   });
 
   describe("Line direction awareness", () => {
@@ -757,7 +769,10 @@ describe("HTML Measurement Generation", () => {
       // Containers keep min-height:auto — only images opt into min-height:0.
       const colMatch = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
       assert.ok(colMatch, "Should find the inner column (node-3)");
-      assert.ok(!colMatch![1].includes("min-height:0"), "FILL column should NOT have min-height:0 (padding boundary preserved)");
+      assert.ok(
+        !colMatch![1].includes("min-height:0"),
+        "FILL column should NOT have min-height:0 (padding boundary preserved)",
+      );
     });
 
     test("HUG breaks chain, fixed px restarts it", async () => {
@@ -777,7 +792,10 @@ describe("HTML Measurement Generation", () => {
       const innerCol = html.match(/data-node-id="node-3"[^>]*style="([^"]*)"/);
       assert.ok(innerCol, "Should find inner FILL column (node-3)");
       assert.ok(innerCol![1].includes("flex:1 1 0"), "Inner column should be FILL");
-      assert.ok(!innerCol![1].includes("min-height:0"), "FILL column should NOT have min-height:0 (padding boundary preserved)");
+      assert.ok(
+        !innerCol![1].includes("min-height:0"),
+        "FILL column should NOT have min-height:0 (padding boundary preserved)",
+      );
     });
 
     test("stack preserves min-content grid template even in constrained context", async () => {

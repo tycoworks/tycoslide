@@ -291,7 +291,7 @@ async function renderMermaid(
     accents: tokens.accents,
   };
   const pngPath = await renderMermaidToPng(sanitized, tokens, fontFamily, renderCtx, context.canvas);
-  const mermaidImage = image(pngPath);
+  const mermaidImage = image(pngPath, undefined, sanitized);
   if (tokens.shadow) {
     mermaidImage.tokens = { shadow: tokens.shadow };
   }
