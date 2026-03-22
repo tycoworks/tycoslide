@@ -176,6 +176,9 @@ export class PptxConfigBuilder {
       : { x: positioned.x, y: positioned.y, w: positioned.width, h: positioned.height };
 
     const result: Record<string, unknown> = { path: imageNode.src, ...fitted };
+    if (imageNode.alt) {
+      result.altText = imageNode.alt;
+    }
     if (imageNode.shadow) {
       result.shadow = buildShadowOptions(imageNode.shadow);
     }
@@ -357,9 +360,9 @@ export class PptxConfigBuilder {
       case BORDER_STYLE.FULL:
         return [solid, solid, solid, solid];
       case BORDER_STYLE.HORIZONTAL:
-        return [solid, none, solid, none];
+        return [isFirstRow ? none : solid, none, isLastRow ? none : solid, none];
       case BORDER_STYLE.VERTICAL:
-        return [none, solid, none, solid];
+        return [none, isLastCol ? none : solid, none, isFirstCol ? none : solid];
       case BORDER_STYLE.INTERNAL:
         // Internal borders only - no borders on outer edges
         return [

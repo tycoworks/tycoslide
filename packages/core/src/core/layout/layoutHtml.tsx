@@ -572,20 +572,10 @@ function styleTable(
     ...(isInRow ? { flex: "1 1 0", minWidth: 0 } : { width: "100%" }),
   };
 
-  // Outer border (FULL, HORIZONTAL, VERTICAL get outer border; INTERNAL and NONE do not)
-  if (node.borderStyle !== BORDER_STYLE.NONE && node.borderStyle !== BORDER_STYLE.INTERNAL) {
-    const bs = `${borderWidthPx}px solid ${borderColor}`;
-    if (node.borderStyle === BORDER_STYLE.HORIZONTAL) {
-      styles.borderTop = bs;
-      styles.borderBottom = bs;
-    } else if (node.borderStyle === BORDER_STYLE.VERTICAL) {
-      styles.borderLeft = bs;
-      styles.borderRight = bs;
-    } else {
-      // FULL
-      styles.outline = `${borderWidthPx}px solid ${borderColor}`;
-      styles.outlineOffset = `-${borderWidthPx}px`;
-    }
+  // Outer border (only FULL gets outer border; INTERNAL, HORIZONTAL, VERTICAL, NONE do not)
+  if (node.borderStyle === BORDER_STYLE.FULL) {
+    styles.outline = `${borderWidthPx}px solid ${borderColor}`;
+    styles.outlineOffset = `-${borderWidthPx}px`;
   }
 
   const numRows = cellNodes.length;
@@ -611,10 +601,12 @@ function styleTable(
           break;
         }
         case BORDER_STYLE.HORIZONTAL: {
+          // Inner horizontal only — between rows, not on outer edges
           if (ri < numRows - 1) cellStyles.borderBottom = bs;
           break;
         }
         case BORDER_STYLE.VERTICAL: {
+          // Inner vertical only — between columns, not on outer edges
           if (colIdx < numCols - 1) cellStyles.borderRight = bs;
           break;
         }

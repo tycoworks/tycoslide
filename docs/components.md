@@ -273,6 +273,44 @@ Markdown tables render automatically with one header row. The `:::table` directi
 |-------|------|-------------|
 | `headerColumns` | number | Number of header columns (default: 0) |
 
+### Tokens
+
+| Token | Type | Description |
+|-------|------|-------------|
+| `borderStyle` | BorderStyle | Border visibility (see Border Styles below) |
+| `borderColor` | string | Border color |
+| `borderWidth` | number | Border width in points |
+| `headerBackground` | string | Header cell background color |
+| `headerBackgroundOpacity` | number | Header background opacity (0–100) |
+| `headerTextStyle` | TextStyleName | Header cell text style |
+| `headerTextColor` | string | Header cell text color |
+| `cellBackground` | string | Data cell background color |
+| `cellBackgroundOpacity` | number | Data cell background opacity (0–100) |
+| `cellTextStyle` | TextStyleName | Data cell text style |
+| `cellTextColor` | string | Data cell text color |
+| `cellPadding` | number | Cell padding (inches) |
+| `hAlign` | HorizontalAlignment | Horizontal text alignment |
+| `vAlign` | VerticalAlignment | Vertical text alignment |
+| `linkColor` | string | Hyperlink color in cells |
+| `linkUnderline` | boolean | Whether cell hyperlinks are underlined |
+| `accents` | Record\<string, string\> | Accent color map for `:accent[text]` in cells |
+| `background` | ShapeTokens | Card-effect background shape (optional — omit to render without background) |
+| `backgroundPadding` | number | Inset between the table and the background shape edge in inches (optional) |
+
+`ShapeTokens` includes `fill`, `fillOpacity`, `borderColor`, `borderWidth`, `cornerRadius`, and optional `shadow`. See [`theme.ts`](../packages/theme-default/src/theme.ts) for default values.
+
+### Border Styles
+
+| Value | Description |
+|-------|-------------|
+| `"full"` | All cell borders including outer edges |
+| `"horizontal"` | Inside horizontal borders only — between rows, no top or bottom outer edge |
+| `"vertical"` | Inside vertical borders only — between columns, no left or right outer edge |
+| `"internal"` | All inside borders, no outer edges |
+| `"none"` | No borders |
+
+`"horizontal"` and `"vertical"` match PowerPoint's "Inside Horizontal Border" and "Inside Vertical Border" options.
+
 ### Examples
 
 ```markdown

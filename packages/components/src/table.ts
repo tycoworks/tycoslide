@@ -13,6 +13,8 @@ import {
   param,
   parseMarkdown,
   type RenderContext,
+  SHAPE,
+  SIZE,
   SYNTAX,
   schema,
   type TableCellData,
@@ -23,7 +25,9 @@ import {
   token,
   type VerticalAlignment,
 } from "tycoslide";
+import { column, stack } from "./containers.js";
 import { Component } from "./names.js";
+import { type ShapeTokens, shape } from "./primitives.js";
 import type { TextTokens } from "./text.js";
 
 // ============================================
@@ -48,6 +52,8 @@ const tableTokens = token.shape({
   linkColor: token.required<string>(),
   linkUnderline: token.required<boolean>(),
   accents: token.required<Record<string, string>>(),
+  background: token.optional<ShapeTokens>(),
+  backgroundPadding: token.optional<number>(),
 });
 
 export type TableTokens = InferTokens<typeof tableTokens>;
@@ -229,7 +235,7 @@ export const tableComponent = defineComponent({
       ),
     );
 
-    return {
+    const tableNode = {
       type: NODE_TYPE.TABLE,
       rows,
       headerRows,
@@ -243,6 +249,16 @@ export const tableComponent = defineComponent({
       cellBackgroundOpacity: tokens.cellBackgroundOpacity,
       cellPadding: tokens.cellPadding,
     };
+
+    if (!tokens.background) {
+      return tableNode;
+    }
+
+    // Wrap table in a stack with a shape background (card effect)
+    const backgroundRect = shape(tokens.background, { shape: SHAPE.RECTANGLE });
+    const padding = tokens.backgroundPadding ?? 0;
+    const contentLayer = padding > 0 ? column({ padding, spacing: 0 }, tableNode) : tableNode;
+    return stack({}, backgroundRect, contentLayer);
   },
 });
 

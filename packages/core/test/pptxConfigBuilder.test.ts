@@ -390,7 +390,7 @@ describe("buildCellBorder()", () => {
     assert.strictEqual(border[3].type, "solid");
   });
 
-  test("BORDER_STYLE.HORIZONTAL - only top and bottom", () => {
+  test("BORDER_STYLE.HORIZONTAL - inner horizontal lines only", () => {
     const tableNode: TableNode = {
       ...baseTableNode,
       borderStyle: BORDER_STYLE.HORIZONTAL,
@@ -408,7 +408,7 @@ describe("buildCellBorder()", () => {
     assert.strictEqual(border[3].type, "none"); // left
   });
 
-  test("BORDER_STYLE.VERTICAL - only left and right", () => {
+  test("BORDER_STYLE.VERTICAL - inner vertical lines only", () => {
     const tableNode: TableNode = {
       ...baseTableNode,
       borderStyle: BORDER_STYLE.VERTICAL,

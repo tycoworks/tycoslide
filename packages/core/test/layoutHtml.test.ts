@@ -1048,15 +1048,16 @@ describe("HTML Measurement Generation", () => {
       assert.ok(!html.includes("outline:"), "NONE border should have no outline");
     });
 
-    test("table HORIZONTAL border style renders top/bottom only", async () => {
+    test("table HORIZONTAL border style renders inner horizontal lines only (no outer border)", async () => {
       const rows = [[cell("A"), cell("B")]];
       const node = colNode(tableNode(rows, { borderStyle: BORDER_STYLE.HORIZONTAL }));
       const { html } = await genHTML(node, bounds);
-      // The outer table div should have border-top and border-bottom
+      // Inner-only: no outer table border
       const tableMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
       assert.ok(tableMatch, "Should find table div");
-      assert.ok(tableMatch![1].includes("border-top:"), "HORIZONTAL should have top border");
-      assert.ok(tableMatch![1].includes("border-bottom:"), "HORIZONTAL should have bottom border");
+      assert.ok(!tableMatch![1].includes("border-top:"), "HORIZONTAL should not have outer top border");
+      assert.ok(!tableMatch![1].includes("border-bottom:"), "HORIZONTAL should not have outer bottom border");
+      assert.ok(!tableMatch![1].includes("outline:"), "HORIZONTAL should not have outline");
     });
 
     test("table header row gets background color", async () => {
