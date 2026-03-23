@@ -263,7 +263,9 @@ export class PptxRenderer {
 
   private renderTable(positioned: PositionedNode, slide: PptxSlide): void {
     const tableNode = positioned.node as TableNode;
-    const { rows, headerRows = 0, headerColumns = 0 } = tableNode;
+    const { rows } = tableNode;
+    const headerRows = tableNode.headerRow ? 1 : 0;
+    const headerColumns = tableNode.headerCol ? 1 : 0;
 
     log.render._(
       "RENDER table x=%f y=%f w=%f h=%f rows=%d cols=%d",

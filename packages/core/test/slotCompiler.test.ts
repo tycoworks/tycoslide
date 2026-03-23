@@ -139,16 +139,14 @@ describe("Slot Compiler", () => {
       assert.ok(node(nodes, 0).content.includes("| X | Y |"));
     });
 
-    it("should pass headerColumns from attributes with body", () => {
+    it("should reject headerColumns as unknown directive parameter", () => {
       const md = ':::table{headerColumns="1"}\n| A | B |\n|---|---|\n| C | D |\n:::';
-      const nodes = compileSlot(md);
-      assert.strictEqual(node(nodes, 0).params.headerColumns, 1);
-      assert.ok(node(nodes, 0).content.includes("| A | B |"));
+      assert.throws(() => compileSlot(md), /does not accept parameters/);
     });
 
     it("should reject unknown directive parameters", () => {
       const md = ':::table{foo="bar"}\n| A | B |\n|---|---|\n| C | D |\n:::';
-      assert.throws(() => compileSlot(md), /Invalid parameters for component 'table'/);
+      assert.throws(() => compileSlot(md), /does not accept parameters/);
     });
   });
 

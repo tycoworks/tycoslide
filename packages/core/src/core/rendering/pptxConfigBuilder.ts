@@ -277,8 +277,6 @@ export class PptxConfigBuilder {
     headerColumns: number,
     tableNode: TableNode,
   ): { text: TextFragment[]; options: Record<string, unknown> } {
-    const isHeader = rowIndex < headerRows || colIndex < headerColumns;
-
     // Cell values are pre-resolved by component render
     const textStyle = cell.resolvedStyle;
 
@@ -307,12 +305,24 @@ export class PptxConfigBuilder {
       lineSpacingMultiple: textStyle.lineHeightMultiplier,
     };
 
-    // Background fill: cell-level override wins, then token-driven (opacity 0 = no fill)
+    // Background fill: cell-level override wins, then 3-zone cascade (headerRow > headerCol > cell)
     if (cell.fill) {
       options.fill = { color: stripHash(cell.fill), transparency: 0 };
     } else {
-      const bg = isHeader ? tableNode.headerBackground : tableNode.cellBackground;
-      const opacity = isHeader ? tableNode.headerBackgroundOpacity : tableNode.cellBackgroundOpacity;
+      const isHeaderRow = rowIndex < headerRows;
+      const isHeaderCol = !isHeaderRow && colIndex < headerColumns;
+      let bg: string | undefined;
+      let opacity: number;
+      if (isHeaderRow && tableNode.headerRow) {
+        bg = tableNode.headerRow.background;
+        opacity = tableNode.headerRow.backgroundOpacity;
+      } else if (isHeaderCol && tableNode.headerCol) {
+        bg = tableNode.headerCol.background;
+        opacity = tableNode.headerCol.backgroundOpacity;
+      } else {
+        bg = tableNode.cellBackground;
+        opacity = tableNode.cellBackgroundOpacity;
+      }
       if (bg && opacity > 0) {
         options.fill = { color: stripHash(bg), transparency: 100 - opacity };
       }

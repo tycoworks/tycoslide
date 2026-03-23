@@ -26,6 +26,7 @@ export type {
   StackNode,
   TableCellData,
   TableCellInput,
+  TableHeaderStyle,
   TableNode,
   TextNode,
 } from "./core/model/nodes.js";

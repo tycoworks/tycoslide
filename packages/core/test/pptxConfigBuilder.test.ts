@@ -124,8 +124,6 @@ const baseTableNode: TableNode = {
   borderStyle: BORDER_STYLE.FULL,
   borderColor: "#333333",
   borderWidth: 1,
-  headerBackground: "#FFFFFF",
-  headerBackgroundOpacity: 0,
   cellBackground: "#FFFFFF",
   cellBackgroundOpacity: 0,
   cellPadding: 0.1,
@@ -214,23 +212,21 @@ describe("buildTableCell()", () => {
     assert.strictEqual(fill.transparency, 0); // cell-level fill always fully opaque
   });
 
-  test("header cell with opacity 0 produces no fill", () => {
+  test("header row cell with opacity 0 produces no fill", () => {
     const cell: TableCellData = { ...baseCell, content: "Header" };
     const tableNode: TableNode = {
       ...baseTableNode,
-      headerBackground: "#EEEEEE",
-      headerBackgroundOpacity: 0,
+      headerRow: { textStyle: TEXT_STYLE.BODY, textColor: "#000000", background: "#EEEEEE", backgroundOpacity: 0 },
     };
     const result = builder.buildTableCell(cell, 0, 0, 1, 1, 1, 0, tableNode);
     assert.strictEqual(result.options.fill, undefined);
   });
 
-  test("header cell with opacity 50 produces fill with transparency 50", () => {
+  test("header row cell with opacity 50 produces fill with transparency 50", () => {
     const cell: TableCellData = { ...baseCell, content: "Header" };
     const tableNode: TableNode = {
       ...baseTableNode,
-      headerBackground: "#AABBCC",
-      headerBackgroundOpacity: 50,
+      headerRow: { textStyle: TEXT_STYLE.BODY, textColor: "#000000", background: "#AABBCC", backgroundOpacity: 50 },
     };
     const result = builder.buildTableCell(cell, 0, 0, 1, 1, 1, 0, tableNode);
     assert.ok(result.options.fill);
@@ -264,12 +260,11 @@ describe("buildTableCell()", () => {
     assert.strictEqual(fill.transparency, 20);
   });
 
-  test("header column cell (not header row) uses headerBackground", () => {
+  test("header column cell (not header row) uses headerCol background", () => {
     const cell: TableCellData = { ...baseCell, content: "Header Col" };
     const tableNode: TableNode = {
       ...baseTableNode,
-      headerBackground: "#AABB00",
-      headerBackgroundOpacity: 100,
+      headerCol: { textStyle: TEXT_STYLE.BODY, textColor: "#000000", background: "#AABB00", backgroundOpacity: 100 },
     };
     const result = builder.buildTableCell(
       cell,
@@ -285,12 +280,15 @@ describe("buildTableCell()", () => {
     assert.strictEqual(fill.color, "AABB00");
   });
 
-  test("header cell uses headerBackground from table style", () => {
+  test("header row cell uses headerRow background from table style", () => {
     const cell: TableCellData = {
       ...baseCell,
       content: "Header",
     };
-    const tableNode: TableNode = { ...baseTableNode, headerBackground: "#EEEEEE", headerBackgroundOpacity: 100 };
+    const tableNode: TableNode = {
+      ...baseTableNode,
+      headerRow: { textStyle: TEXT_STYLE.BODY, textColor: "#000000", background: "#EEEEEE", backgroundOpacity: 100 },
+    };
 
     const result = builder.buildTableCell(
       cell,

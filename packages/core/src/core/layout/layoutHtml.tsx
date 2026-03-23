@@ -563,8 +563,8 @@ function styleTable(
 
   const borderWidthPx = ptToPx(node.borderWidth);
   const borderColor = node.borderColor;
-  const headerRows = node.headerRows ?? 0;
-  const headerCols = node.headerColumns ?? 0;
+  const headerRows = node.headerRow ? 1 : 0;
+  const headerCols = node.headerCol ? 1 : 0;
 
   const styles: Record<string, string | number> = {
     display: "grid",
@@ -613,15 +613,18 @@ function styleTable(
         // NONE: no cell borders
       }
 
-      // Cell background: cell-level fill overrides, then header/non-header cascade
+      // Cell background: cell-level fill overrides, then 3-zone cascade (headerRow > headerCol > cell)
       const rawCell = node.rows[ri][colIdx];
       if (rawCell.fill) {
         cellStyles.backgroundColor = rawCell.fill;
       } else {
-        const isHeader = ri < headerRows || colIdx < headerCols;
-        if (isHeader && node.headerBackground) {
-          cellStyles.backgroundColor = bgColor(node.headerBackground, node.headerBackgroundOpacity);
-        } else if (!isHeader && node.cellBackground && node.cellBackgroundOpacity > 0) {
+        const isHeaderRow = ri < headerRows;
+        const isHeaderCol = !isHeaderRow && colIdx < headerCols;
+        if (isHeaderRow && node.headerRow) {
+          cellStyles.backgroundColor = bgColor(node.headerRow.background, node.headerRow.backgroundOpacity);
+        } else if (isHeaderCol && node.headerCol) {
+          cellStyles.backgroundColor = bgColor(node.headerCol.background, node.headerCol.backgroundOpacity);
+        } else if (!isHeaderRow && !isHeaderCol && node.cellBackground && node.cellBackgroundOpacity > 0) {
           cellStyles.backgroundColor = bgColor(node.cellBackground, node.cellBackgroundOpacity);
         }
       }

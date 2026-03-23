@@ -185,22 +185,18 @@ export const lineComponent = defineComponent({
 export const tableComponent = defineComponent({
   name: C.Table,
   content: schema.string(),
-  params: {
-    headerColumns: param.optional(schema.number()),
-  },
   tokens: {
     borderStyle: token.required<any>(),
     borderColor: token.required<any>(),
     borderWidth: token.required<any>(),
-    headerBackground: token.required<any>(),
-    headerBackgroundOpacity: token.required<any>(),
-    headerTextStyle: token.required<any>(),
     cellBackground: token.required<any>(),
     cellBackgroundOpacity: token.required<any>(),
     cellTextStyle: token.required<any>(),
+    cellTextColor: token.required<any>(),
     cellPadding: token.required<any>(),
     hAlign: token.required<any>(),
     vAlign: token.required<any>(),
+    headerRow: token.optional<any>(),
   },
   mdast: {
     nodeTypes: [SYNTAX.TABLE],
@@ -216,7 +212,7 @@ export const tableComponent = defineComponent({
           return source.slice(start, end).trim();
         }),
       );
-      return component(C.Table, { data: rows, tableParams: { headerRows: 1 } });
+      return component(C.Table, { data: rows });
     },
   },
   render: () => ({}) as any,

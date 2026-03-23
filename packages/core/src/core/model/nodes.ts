@@ -140,18 +140,26 @@ export interface TableCellData {
   fill?: string;
 }
 
+/** Shared style for optional header zones (headerRow / headerCol) */
+export interface TableHeaderStyle {
+  textStyle: TextStyleName;
+  textColor: string;
+  background: string;
+  backgroundOpacity: number;
+  hAlign?: HorizontalAlignment;
+}
+
 /** Native table element - renders directly via slide.addTable() */
 export interface TableNode {
   type: typeof NODE_TYPE.TABLE;
   rows: TableCellData[][];
-  headerRows?: number; // Number of header rows (default: 0)
-  headerColumns?: number; // Number of header columns (default: 0)
   // Style properties (resolved from theme tokens by component render)
   borderStyle: BorderStyle;
   borderColor: string;
   borderWidth: number;
-  headerBackground: string;
-  headerBackgroundOpacity: number;
+  // 3-zone backgrounds: presence indicates zone is active (like fill/border on ShapeNode)
+  headerRow?: TableHeaderStyle;
+  headerCol?: TableHeaderStyle;
   cellBackground: string;
   cellBackgroundOpacity: number;
   cellPadding: number;
@@ -192,7 +200,7 @@ export interface StackNode<C extends SlideNode = ElementNode> {
  * into primitive ElementNodes at Presentation.add() time.
  *
  * Two separate channels:
- * - `params` — scalar configuration (language, headerColumns, etc.)
+ * - `params` — scalar configuration (language, etc.)
  * - `content` — the thing being rendered (body string, list items, children array, etc.)
  */
 export interface ComponentNode<TParams = unknown, TContent = unknown> {

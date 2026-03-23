@@ -190,8 +190,7 @@ function tableNode(rows: TableCellData[][], opts?: Partial<Omit<TableNode, "type
     borderStyle: BORDER_STYLE.FULL,
     borderColor: "#333333",
     borderWidth: 1,
-    headerBackground: "#AAAAAA",
-    headerBackgroundOpacity: 100,
+    headerRow: { textStyle: "body" as any, textColor: "#000000", background: "#AAAAAA", backgroundOpacity: 100 },
     cellBackground: "#EEEEEE",
     cellBackgroundOpacity: 0,
     cellPadding: 0.1,
@@ -1085,9 +1084,7 @@ describe("HTML Measurement Generation", () => {
       ];
       const node = colNode(
         tableNode(rows, {
-          headerRows: 1,
-          headerBackground: "#FF0000",
-          headerBackgroundOpacity: 100,
+          headerRow: { textStyle: "body" as any, textColor: "#000000", background: "#FF0000", backgroundOpacity: 100 },
         }),
       );
       const { html } = await genHTML(node, bounds);
@@ -1098,9 +1095,7 @@ describe("HTML Measurement Generation", () => {
       const rows = [[cell("Header")], [cell("Data")]];
       const node = colNode(
         tableNode(rows, {
-          headerRows: 1,
-          headerBackground: "#FF0000",
-          headerBackgroundOpacity: 100,
+          headerRow: { textStyle: "body" as any, textColor: "#000000", background: "#FF0000", backgroundOpacity: 100 },
           cellBackground: "#00FF00",
           cellBackgroundOpacity: 50,
         }),
@@ -1113,9 +1108,7 @@ describe("HTML Measurement Generation", () => {
       const rows = [[cell("Header", { fill: "#AABBCC" }), cell("Header 2")], [cell("Data")]];
       const node = colNode(
         tableNode(rows, {
-          headerRows: 1,
-          headerBackground: "#FF0000",
-          headerBackgroundOpacity: 100,
+          headerRow: { textStyle: "body" as any, textColor: "#000000", background: "#FF0000", backgroundOpacity: 100 },
         }),
       );
       const { html } = await genHTML(node, bounds);
@@ -1292,35 +1285,31 @@ describe("HTML Measurement Generation", () => {
     });
   });
 
-  describe("Table headerColumns", () => {
-    test("headerColumns marks left column cells as header with background", async () => {
+  describe("Table headerCol", () => {
+    test("headerCol marks left column cells as header with background", async () => {
       const rows = [
         [cell("Row Label"), cell("Data 1")],
         [cell("Row Label 2"), cell("Data 2")],
       ];
       const node = colNode(
         tableNode(rows, {
-          headerRows: 0,
-          headerColumns: 1,
-          headerBackground: "#AA00AA",
-          headerBackgroundOpacity: 100,
+          headerRow: undefined,
+          headerCol: { textStyle: "body" as any, textColor: "#000000", background: "#AA00AA", backgroundOpacity: 100 },
         }),
       );
       const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes("#AA00AA"), "Left column cells should get header background from headerColumns");
+      assert.ok(html.includes("#AA00AA"), "Left column cells should get header background from headerCol");
     });
 
-    test("headerColumns + headerRows both apply header background", async () => {
+    test("headerCol + headerRow both apply header background", async () => {
       const rows = [
         [cell("Corner"), cell("Col Header")],
         [cell("Row Header"), cell("Data")],
       ];
       const node = colNode(
         tableNode(rows, {
-          headerRows: 1,
-          headerColumns: 1,
-          headerBackground: "#BB00BB",
-          headerBackgroundOpacity: 100,
+          headerRow: { textStyle: "body" as any, textColor: "#000000", background: "#BB00BB", backgroundOpacity: 100 },
+          headerCol: { textStyle: "body" as any, textColor: "#000000", background: "#BB00BB", backgroundOpacity: 100 },
         }),
       );
       const { html } = await genHTML(node, bounds);
@@ -1338,9 +1327,7 @@ describe("HTML Measurement Generation", () => {
       const rows = [[cell("Header")], [cell("Data")]];
       const node = colNode(
         tableNode(rows, {
-          headerRows: 1,
-          headerBackground: "#FF0000",
-          headerBackgroundOpacity: 100,
+          headerRow: { textStyle: "body" as any, textColor: "#000000", background: "#FF0000", backgroundOpacity: 100 },
           cellBackground: "#00FF00",
           cellBackgroundOpacity: 100,
         }),
