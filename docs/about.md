@@ -8,12 +8,11 @@ tycoslide is a presentation build tool that generates editable PowerPoint slides
 
 | Dimension | tycoslide | Slidev | Marp | Reveal.js |
 |-----------|-----------|--------|------|-----------|
-| Output format | .pptx (native objects) | HTML, PDF, .pptx (image-based) | PDF, HTML, .pptx (image-based) | HTML, PDF |
-| Editable output | Yes (shapes, text, tables) | No (slides rendered as images) | No (slides rendered as images) | N/A (web + PDF) |
-| Input format | Markdown + directives | Markdown + Vue | Markdown | Markdown + HTML |
-| Component system | Typed, registry-based | Vue components | CSS themes, Markdown-It plugins | Plugins |
-| Design token validation | Build-time | No | No | No |
-| Live preview | No | Yes | Yes | Yes |
+| Output | .pptx (editable) | HTML, PDF, .pptx (images) | PDF, HTML, .pptx (images) | HTML, PDF |
+| Components | TypeScript | Vue | Markdown-It | JavaScript |
+| Design tokens | TypeScript | CSS | CSS | CSS |
+| Validation | Build-time | None | None | None |
+| Preview | Static | Live | Live | Live |
 
 ---
 

@@ -91,12 +91,11 @@ notes: Comparison table with tycoslide column highlighted. The audience sees "No
 :::table
 | | :purple[**tycoslide**] | Slidev | Marp | Reveal.js |
 |---|---|---|---|---|
-| Output | :purple[Editable .pptx] | HTML / PDF | PDF / HTML | HTML / PDF |
-| .pptx export | :purple[Native objects] | Image-based | Image-based | None |
-| Components | :purple[Typed registry] | Vue components | Markdown-It plugins | Plugins |
-| Theme system | :purple[TypeScript tokens] | CSS + UnoCSS | CSS themes | CSS |
-| Token validation | :purple[Build-time] | None | None | None |
-| Overflow detection | :purple[Build-time] | None | None | None |
+| Output | :purple[.pptx (editable)] | HTML, PDF, .pptx (images) | PDF, HTML, .pptx (images) | HTML, PDF |
+| Components | :purple[TypeScript] | Vue | Markdown-It | JavaScript |
+| Design tokens | :purple[TypeScript] | CSS | CSS | CSS |
+| Validation | :purple[Build-time] | None | None | None |
+| Preview | :purple[Static] | Live | Live | Live |
 :::
 
 ---
