@@ -10,15 +10,14 @@ import {
   type HorizontalAlignment,
   type InferTokens,
   NODE_TYPE,
-  param,
   parseMarkdown,
   type RenderContext,
   SHAPE,
-  SIZE,
   SYNTAX,
   schema,
   type TableCellData,
   type TableCellInput,
+  type TableHeaderStyle,
   type TextContent,
   type TextNode,
   type TextStyleName,
@@ -35,20 +34,21 @@ import type { TextTokens } from "./text.js";
 // ============================================
 
 const tableTokens = token.shape({
+  // Optional header zones (presence = zone enabled)
+  headerRow: token.optional<TableHeaderStyle>(),
+  headerCol: token.optional<TableHeaderStyle>(),
+  // Data cell zone
+  cellTextStyle: token.required<TextStyleName>(),
+  cellTextColor: token.required<string>(),
+  cellBackground: token.required<string>(),
+  cellBackgroundOpacity: token.required<number>(),
+  // Shared defaults
+  hAlign: token.required<HorizontalAlignment>(),
+  vAlign: token.required<VerticalAlignment>(),
   borderStyle: token.required<BorderStyle>(),
   borderColor: token.required<string>(),
   borderWidth: token.required<number>(),
-  headerBackground: token.required<string>(),
-  headerBackgroundOpacity: token.required<number>(),
-  headerTextStyle: token.required<TextStyleName>(),
-  headerTextColor: token.required<string>(),
-  cellBackground: token.required<string>(),
-  cellBackgroundOpacity: token.required<number>(),
-  cellTextStyle: token.required<TextStyleName>(),
-  cellTextColor: token.required<string>(),
   cellPadding: token.required<number>(),
-  hAlign: token.required<HorizontalAlignment>(),
-  vAlign: token.required<VerticalAlignment>(),
   linkColor: token.required<string>(),
   linkUnderline: token.required<boolean>(),
   accents: token.required<Record<string, string>>(),
@@ -61,22 +61,6 @@ export type TableTokens = InferTokens<typeof tableTokens>;
 // ============================================
 // TABLE COMPONENT
 // ============================================
-
-export type TableParams = {
-  /** Number of header rows (default: 0) */
-  headerRows?: number;
-  /** Number of header columns (default: 0) */
-  headerColumns?: number;
-};
-
-const tableParamShape = param.shape({
-  headerColumns: param.optional(schema.number()),
-});
-
-interface TableInternalParams {
-  data?: (TableCellInput | TextContent)[][];
-  tableParams?: TableParams;
-}
 
 /**
  * Parse a GFM table string into rows of cell strings.
@@ -104,7 +88,6 @@ function parseGfmTable(body: string): string[][] {
 export const tableComponent = defineComponent({
   name: Component.Table,
   content: schema.string().optional(),
-  params: tableParamShape,
   tokens: tableTokens,
   mdast: {
     nodeTypes: [SYNTAX.TABLE],
@@ -120,33 +103,29 @@ export const tableComponent = defineComponent({
           return source.slice(start, end).trim();
         }),
       );
-      return component(Component.Table, { data: rows, tableParams: { headerRows: 1 } });
+      return component(Component.Table, { data: rows });
     },
   },
   render: async (
-    params: TableInternalParams & { headerColumns?: number },
+    params: { data?: (TableCellInput | TextContent)[][] },
     content: string | undefined,
     context: RenderContext,
     tokens: TableTokens,
   ) => {
     // Determine data source: structured (DSL) or content string (directive)
     let data: (TableCellInput | TextContent)[][];
-    let headerRows: number | undefined;
-    let headerColumns: number | undefined;
 
     if ("data" in params && params.data) {
-      // DSL path — structured data
       data = params.data;
-      headerRows = params.tableParams?.headerRows;
-      headerColumns = params.tableParams?.headerColumns;
     } else if (content) {
-      // Directive path — parse GFM content string
       data = parseGfmTable(content);
-      headerRows = 1; // GFM tables always have a header row
-      headerColumns = params.headerColumns;
     } else {
       throw new Error("Table requires either data (DSL) or content (directive)");
     }
+
+    // Header zone counts derived from token presence
+    const headerRowCount = tokens.headerRow ? 1 : 0;
+    const headerColCount = tokens.headerCol ? 1 : 0;
 
     // Derive text tokens from table tokens for child text components.
     const textTokens: TextTokens = {
@@ -176,8 +155,6 @@ export const tableComponent = defineComponent({
     };
 
     // Normalize cells: convert plain strings/TextContent to fully-resolved TableCellData
-    const headerRowCount = headerRows ?? 0;
-    const headerColumnCount = headerColumns ?? 0;
     const rows: TableCellData[][] = await Promise.all(
       data.map((row, rowIndex) =>
         Promise.all(
@@ -208,12 +185,29 @@ export const tableComponent = defineComponent({
               content = cell;
             }
 
-            // Resolve cascade: cell → table tokens → theme defaults
-            const isHeader = rowIndex < headerRowCount || colIndex < headerColumnCount;
-            const textStyle = partialTextStyle ?? (isHeader ? tokens.headerTextStyle : tokens.cellTextStyle);
+            // 3-zone cascade: headerRow > headerCol > cell
+            // Priority: row header wins for intersection cell [0,0]
+            const isHeaderRow = rowIndex < headerRowCount;
+            const isHeaderCol = !isHeaderRow && colIndex < headerColCount;
+
+            let textStyle: TextStyleName;
+            let color: string;
+            let hAlign: HorizontalAlignment;
+            if (isHeaderRow && tokens.headerRow) {
+              textStyle = partialTextStyle ?? tokens.headerRow.textStyle;
+              color = partialColor ?? tokens.headerRow.textColor;
+              hAlign = partialHAlign ?? tokens.headerRow.hAlign ?? tokens.hAlign;
+            } else if (isHeaderCol && tokens.headerCol) {
+              textStyle = partialTextStyle ?? tokens.headerCol.textStyle;
+              color = partialColor ?? tokens.headerCol.textColor;
+              hAlign = partialHAlign ?? tokens.headerCol.hAlign ?? tokens.hAlign;
+            } else {
+              textStyle = partialTextStyle ?? tokens.cellTextStyle;
+              color = partialColor ?? tokens.cellTextColor;
+              hAlign = partialHAlign ?? tokens.hAlign;
+            }
+
             const resolvedTextStyle = context.theme.textStyles[textStyle];
-            const color = partialColor ?? (isHeader ? tokens.headerTextColor : tokens.cellTextColor);
-            const hAlign = partialHAlign ?? tokens.hAlign;
             const vAlign = partialVAlign ?? tokens.vAlign;
 
             const resolved: TableCellData = {
@@ -238,13 +232,11 @@ export const tableComponent = defineComponent({
     const tableNode = {
       type: NODE_TYPE.TABLE,
       rows,
-      headerRows,
-      headerColumns,
       borderStyle: tokens.borderStyle,
       borderColor: tokens.borderColor,
       borderWidth: tokens.borderWidth,
-      headerBackground: tokens.headerBackground,
-      headerBackgroundOpacity: tokens.headerBackgroundOpacity,
+      ...(tokens.headerRow && { headerRow: tokens.headerRow }),
+      ...(tokens.headerCol && { headerCol: tokens.headerCol }),
       cellBackground: tokens.cellBackground,
       cellBackgroundOpacity: tokens.cellBackgroundOpacity,
       cellPadding: tokens.cellPadding,
@@ -265,27 +257,18 @@ export const tableComponent = defineComponent({
 /**
  * Create a native table element that renders directly via pptxgenjs.
  *
- * Uses slide.addTable() for accurate borders, cell merging, and native text wrapping.
+ * Header row/column styling is controlled by token presence:
+ * provide `headerRow` and/or `headerCol` in the tokens to enable header zones.
  *
  * @example
  * ```typescript
- * // Simple table with header row
- * table([
- *   [{ content: 'Name' }, { content: 'Role' }],
- *   [{ content: 'Alice' }, { content: 'Engineer' }],
- * ], { headerRows: 1 }, tokens.table)
- *
- * // Convenience: string arrays auto-convert to cells
+ * // Simple table — header row styling determined by tokens
  * table([
  *   ['Name', 'Role'],
  *   ['Alice', 'Engineer'],
- * ], { headerRows: 1 }, tokens.table)
+ * ], tokens.table)
  * ```
  */
-export function table(
-  data: (TableCellInput | TextContent)[][],
-  params: TableParams | undefined,
-  tokens: TableTokens,
-): ComponentNode {
-  return component(Component.Table, { data, tableParams: params }, undefined, tokens);
+export function table(data: (TableCellInput | TextContent)[][], tokens: TableTokens): ComponentNode {
+  return component(Component.Table, { data }, undefined, tokens);
 }

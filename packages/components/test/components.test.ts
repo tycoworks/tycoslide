@@ -784,7 +784,7 @@ describe("card()", () => {
 
 describe("table()", () => {
   test("returns ComponentNode", () => {
-    const node = table([["Header"]], undefined, DEFAULT_TABLE_TOKENS);
+    const node = table([["Header"]], DEFAULT_TABLE_TOKENS);
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
     assert.strictEqual(node.componentName, Component.Table);
   });
@@ -792,7 +792,6 @@ describe("table()", () => {
   test("TableCellData cells preserve properties after expansion", async () => {
     const tNode = table(
       [["Header", { content: "colored cell", textStyle: TEXT_STYLE.SMALL, color: "#FF0000", hAlign: HALIGN.CENTER }]],
-      undefined,
       DEFAULT_TABLE_TOKENS,
     );
     const node = (await render(tNode)) as TableNode;
@@ -807,14 +806,14 @@ describe("table()", () => {
   });
 
   test("TableCellData without vAlign resolves to table default", async () => {
-    const tNode = table([[{ content: "cell with default vAlign" }]], undefined, DEFAULT_TABLE_TOKENS);
+    const tNode = table([[{ content: "cell with default vAlign" }]], DEFAULT_TABLE_TOKENS);
     const node = (await render(tNode)) as TableNode;
     const cell = node.rows[0][0];
     assert.strictEqual(cell.vAlign, VALIGN.MIDDLE);
   });
 
   test("string cells are fully resolved as TableCellData", async () => {
-    const tNode = table([["plain string"]], undefined, DEFAULT_TABLE_TOKENS);
+    const tNode = table([["plain string"]], DEFAULT_TABLE_TOKENS);
     const node = (await render(tNode)) as TableNode;
     const cell = node.rows[0][0];
     assert.deepStrictEqual(cell.content, [{ text: "plain string" }]);
@@ -824,17 +823,131 @@ describe("table()", () => {
     assert.strictEqual(cell.resolvedStyle.fontSize, 12); // from mockTextStyle
   });
 
-  test("preserves table props", async () => {
-    const tNode = table(
-      [["a"]],
-      {
-        headerRows: 1,
-        headerColumns: 1,
+  test("headerRow token presence puts headerRow on TableNode", async () => {
+    const tNode = table([["a", "b"]], DEFAULT_TABLE_TOKENS);
+    const node = (await render(tNode)) as TableNode;
+    assert.ok(node.headerRow); // DEFAULT_TABLE_TOKENS has headerRow set
+    assert.strictEqual(node.headerCol, undefined); // no headerCol in DEFAULT_TABLE_TOKENS
+  });
+
+  test("headerCol token presence puts headerCol on TableNode", async () => {
+    const tokens = {
+      ...DEFAULT_TABLE_TOKENS,
+      headerCol: {
+        textStyle: TEXT_STYLE.BODY,
+        textColor: "#000000",
+        background: "#EEEEEE",
+        backgroundOpacity: 100,
       },
-      DEFAULT_TABLE_TOKENS,
+    };
+    const tNode = table([["a", "b"]], tokens);
+    const node = (await render(tNode)) as TableNode;
+    assert.ok(node.headerRow);
+    assert.ok(node.headerCol);
+    assert.strictEqual(node.headerCol.background, "#EEEEEE");
+  });
+
+  test("no header tokens means no header zones", async () => {
+    const { headerRow: _, ...noHeaderTokens } = DEFAULT_TABLE_TOKENS;
+    const tNode = table([["a", "b"]], noHeaderTokens as typeof DEFAULT_TABLE_TOKENS);
+    const node = (await render(tNode)) as TableNode;
+    assert.strictEqual(node.headerRow, undefined);
+    assert.strictEqual(node.headerCol, undefined);
+  });
+
+  test("intersection cell [0,0] uses headerRow styling over headerCol", async () => {
+    const tokens = {
+      ...DEFAULT_TABLE_TOKENS,
+      headerRow: {
+        textStyle: TEXT_STYLE.H1,
+        textColor: "#FF0000",
+        background: "#AAAAAA",
+        backgroundOpacity: 100,
+      },
+      headerCol: {
+        textStyle: TEXT_STYLE.H2,
+        textColor: "#00FF00",
+        background: "#BBBBBB",
+        backgroundOpacity: 100,
+      },
+    };
+    const tNode = table(
+      [
+        ["corner", "col header"],
+        ["row header", "data"],
+      ],
+      tokens,
     );
     const node = (await render(tNode)) as TableNode;
-    assert.strictEqual(node.headerRows, 1);
-    assert.strictEqual(node.headerColumns, 1);
+    const corner = node.rows[0][0];
+    assert.strictEqual(corner.textStyle, TEXT_STYLE.H1, "intersection cell should use headerRow textStyle");
+    assert.strictEqual(corner.color, "#FF0000", "intersection cell should use headerRow textColor");
+  });
+
+  test("headerCol token controls text styling for column header cells", async () => {
+    const { headerRow: _, ...noHeaderRow } = DEFAULT_TABLE_TOKENS;
+    const tokens = {
+      ...noHeaderRow,
+      headerCol: {
+        textStyle: TEXT_STYLE.H3,
+        textColor: "#PURPLE",
+        background: "#CCCCCC",
+        backgroundOpacity: 100,
+      },
+    };
+    const tNode = table(
+      [
+        ["row header", "data 1"],
+        ["row header 2", "data 2"],
+      ],
+      tokens as typeof DEFAULT_TABLE_TOKENS,
+    );
+    const node = (await render(tNode)) as TableNode;
+    const colHeaderCell = node.rows[0][0];
+    assert.strictEqual(colHeaderCell.textStyle, TEXT_STYLE.H3, "column header cell should use headerCol textStyle");
+    assert.strictEqual(colHeaderCell.color, "#PURPLE", "column header cell should use headerCol textColor");
+    const dataCell = node.rows[0][1];
+    assert.strictEqual(
+      dataCell.textStyle,
+      DEFAULT_TABLE_TOKENS.cellTextStyle,
+      "non-header cell should use cell defaults",
+    );
+  });
+
+  test("headerRow.hAlign overrides shared hAlign", async () => {
+    const tokens = {
+      ...DEFAULT_TABLE_TOKENS,
+      headerRow: {
+        textStyle: TEXT_STYLE.BODY,
+        textColor: "#000000",
+        background: "#FFFFFF",
+        backgroundOpacity: 100,
+        hAlign: HALIGN.CENTER,
+      },
+    };
+    const tNode = table([["header"], ["data"]], tokens);
+    const node = (await render(tNode)) as TableNode;
+    assert.strictEqual(node.rows[0][0].hAlign, HALIGN.CENTER, "headerRow.hAlign should override shared hAlign");
+    assert.strictEqual(node.rows[1][0].hAlign, DEFAULT_TABLE_TOKENS.hAlign, "data cell should use shared hAlign");
+  });
+
+  test("headerRow.hAlign fallback to shared hAlign when omitted", async () => {
+    const tokens = {
+      ...DEFAULT_TABLE_TOKENS,
+      headerRow: {
+        textStyle: TEXT_STYLE.BODY,
+        textColor: "#000000",
+        background: "#FFFFFF",
+        backgroundOpacity: 100,
+        // hAlign intentionally omitted
+      },
+    };
+    const tNode = table([["header"], ["data"]], tokens);
+    const node = (await render(tNode)) as TableNode;
+    assert.strictEqual(
+      node.rows[0][0].hAlign,
+      DEFAULT_TABLE_TOKENS.hAlign,
+      "should fall back to shared hAlign when headerRow.hAlign omitted",
+    );
   });
 });

@@ -86,7 +86,6 @@ export {
 } from "./quote.js";
 // Table
 export {
-  type TableParams,
   type TableTokens,
   table,
   tableComponent,

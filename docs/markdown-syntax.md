@@ -120,7 +120,7 @@ Markdown tables with inline text formatting.
 | L    | C      | R     |
 ```
 
-For header columns, content alignment, and other parameters, use `:::table`. See [Components — table](./components.md#table).
+The `:::table` directive is also available. See [Components — table](./components.md#table).
 
 ## Speaker Notes
 

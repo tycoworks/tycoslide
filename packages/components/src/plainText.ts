@@ -31,12 +31,7 @@ export type PlainTextTokens = InferTokens<typeof plainTextTokens>;
 // RENDER
 // ============================================
 
-function renderPlainText(
-  _params: {},
-  content: string,
-  context: RenderContext,
-  tokens: PlainTextTokens,
-): TextNode {
+function renderPlainText(_params: {}, content: string, context: RenderContext, tokens: PlainTextTokens): TextNode {
   const textStyle = context.theme.textStyles[tokens.style];
 
   const node: TextNode = {

@@ -265,14 +265,6 @@ Native PowerPoint table with borders, cell merging, and text wrapping.
 
 Cell content supports formatting (`**bold**`, `*italic*`, `:accent[color]`).
 
-Markdown tables render automatically with one header row. The `:::table` directive adds header column support and theme variants.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `headerColumns` | number | Number of header columns (default: 0) |
-
 ### Tokens
 
 | Token | Type | Description |
@@ -280,10 +272,8 @@ Markdown tables render automatically with one header row. The `:::table` directi
 | `borderStyle` | BorderStyle | Border visibility (see Border Styles below) |
 | `borderColor` | string | Border color |
 | `borderWidth` | number | Border width in points |
-| `headerBackground` | string | Header cell background color |
-| `headerBackgroundOpacity` | number | Header background opacity (0–100) |
-| `headerTextStyle` | TextStyleName | Header cell text style |
-| `headerTextColor` | string | Header cell text color |
+| `headerRow` | TableHeaderStyle | Header row zone style (omit to disable header row styling) |
+| `headerCol` | TableHeaderStyle | Header column zone style (omit to disable header column styling) |
 | `cellBackground` | string | Data cell background color |
 | `cellBackgroundOpacity` | number | Data cell background opacity (0–100) |
 | `cellTextStyle` | TextStyleName | Data cell text style |
@@ -298,6 +288,8 @@ Markdown tables render automatically with one header row. The `:::table` directi
 | `backgroundPadding` | number | Inset between the table and the background shape edge in inches (optional) |
 
 `ShapeTokens` includes `fill`, `fillOpacity`, `borderColor`, `borderWidth`, `cornerRadius`, and optional `shadow`. See [`theme.ts`](../packages/theme-default/src/theme.ts) for default values.
+
+`TableHeaderStyle` includes `textStyle`, `textColor`, `background`, `backgroundOpacity`, and optional `hAlign`. Header zones are enabled by presence — omit the token to leave that zone unstyled.
 
 ### Border Styles
 
@@ -322,7 +314,7 @@ Markdown tables render automatically with one header row. The `:::table` directi
 ```
 
 ```markdown
-:::table{headerColumns=1}
+:::table
 | Feature      | Basic | Pro   |
 |--------------|-------|-------|
 | Storage      | 10GB  | 100GB |
@@ -922,11 +914,11 @@ import { TEXT_STYLE, SIZE, SHAPE, HALIGN, VALIGN, SPACING_MODE } from 'tycoslide
 list(["First item", "Second **bold** item", "Third item"], tokens.list)         // Unordered
 list(["Step one", "Step two"], tokens.list, true)                               // Ordered
 
-// Table (data array + options)
+// Table (data array + tokens)
 table([
   ['Name', 'Role'],
   ['Alice', 'Engineer'],
-], { headerRows: 1 }, tokens.table)
+], tokens.table)
 
 // Image
 image('./path/to/image.png')
