@@ -45,43 +45,31 @@ const mermaidTokens = token.shape({
 export type MermaidTokens = InferTokens<typeof mermaidTokens>;
 
 // ============================================
-// SANITIZATION
+// VALIDATION
 // ============================================
 
+const FORBIDDEN_PATTERNS = [/^\s*style\s+\S+\s+/, /^\s*linkStyle\s+/, /^\s*classDef\s+/, /^\s*%%\{init/];
+
 /**
- * Sanitize mermaid definition by removing style and config directives.
- * These will be injected by the theme system.
+ * Validate a mermaid definition, rejecting forbidden style and config directives.
+ * Throws if any `style`, `linkStyle`, `classDef`, or `%%{init}` directives are found —
+ * these are injected by the theme system and must not be authored manually.
  */
-export function sanitizeMermaidDefinition(definition: string): string {
-  const lines = definition.split("\n");
-  const stripped: string[] = [];
-  const filtered = lines.filter((line) => {
-    if (/^\s*style\s+\S+\s+/.test(line)) {
-      stripped.push(line.trim());
-      return false;
+export function validateMermaidDefinition(definition: string): string {
+  const forbidden: string[] = [];
+  for (const line of definition.split("\n")) {
+    if (FORBIDDEN_PATTERNS.some((p) => p.test(line))) {
+      forbidden.push(line.trim());
     }
-    if (/^\s*linkStyle\s+/.test(line)) {
-      stripped.push(line.trim());
-      return false;
-    }
-    if (/^\s*classDef\s+/.test(line)) {
-      stripped.push(line.trim());
-      return false;
-    }
-    if (/^\s*%%\{init/.test(line)) {
-      stripped.push(line.trim());
-      return false;
-    }
-    return true;
-  });
-  if (stripped.length > 0) {
+  }
+  if (forbidden.length > 0) {
     throw new Error(
-      `Mermaid: found ${stripped.length} forbidden style directive(s). ` +
+      `Mermaid: found ${forbidden.length} forbidden style directive(s). ` +
         `Use theme classes instead (e.g. "class NodeId primary"):\n` +
-        stripped.map((s) => `  - ${s}`).join("\n"),
+        forbidden.map((s) => `  - ${s}`).join("\n"),
     );
   }
-  return filtered.join("\n");
+  return definition;
 }
 
 // ============================================
@@ -273,7 +261,7 @@ async function renderMermaidToPng(
 
 /**
  * Render mermaid component to image component.
- * Sanitizes definition, renders via shared browser, returns image reference.
+ * Validates definition, renders via shared browser, returns image reference.
  */
 async function renderMermaid(
   _params: {},
@@ -281,17 +269,17 @@ async function renderMermaid(
   context: RenderContext,
   tokens: MermaidTokens,
 ): Promise<ComponentNode> {
-  const sanitized = sanitizeMermaidDefinition(content);
-  if (!sanitized.trim()) {
-    throw new Error("Mermaid definition is empty after sanitization");
+  const definition = validateMermaidDefinition(content);
+  if (!definition.trim()) {
+    throw new Error("Mermaid definition is empty");
   }
   const textStyleConfig = context.theme.textStyles[tokens.textStyle];
   const fontFamily = textStyleConfig.fontFamily.name;
   const renderCtx: MermaidRenderContext = {
     accents: tokens.accents,
   };
-  const pngPath = await renderMermaidToPng(sanitized, tokens, fontFamily, renderCtx, context.canvas);
-  const mermaidImage = image(pngPath, undefined, sanitized);
+  const pngPath = await renderMermaidToPng(definition, tokens, fontFamily, renderCtx, context.canvas);
+  const mermaidImage = image(pngPath, undefined, definition);
   if (tokens.shadow) {
     mermaidImage.tokens = { shadow: tokens.shadow };
   }
@@ -311,8 +299,8 @@ export const mermaidComponent = defineComponent({
 
 /**
  * Create a mermaid diagram from raw mermaid definition string.
- * Style directives (style, linkStyle, classDef, %%{init}) are stripped
- * and replaced with theme-based styling.
+ * Style directives (style, linkStyle, classDef, %%{init}) are forbidden
+ * and will fail the build — theme-based styling is injected automatically.
  *
  * @example
  * ```typescript

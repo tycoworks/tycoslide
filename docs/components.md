@@ -440,7 +440,7 @@ File paths resolve relative to the working directory where the CLI runs.
 
 Renders a Mermaid diagram to PNG and embeds it as an image. Theme colors are applied automatically. The Mermaid definition is set as alt text on the rendered image.
 
-`style`, `classDef`, `linkStyle`, and `%%{init}` directives are not supported -- the theme handles all styling automatically.
+`style`, `classDef`, `linkStyle`, and `%%{init}` directives are forbidden and will fail the build — the theme handles all styling automatically.
 
 ### Tokens
 

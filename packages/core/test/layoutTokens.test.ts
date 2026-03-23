@@ -96,10 +96,7 @@ describe("resolveVariantTokens", () => {
         },
       },
     });
-    assert.throws(
-      () => resolveVariantTokens(theme.layouts?.title, "title", "default", shape),
-      /unknown tokens.*bogus/,
-    );
+    assert.throws(() => resolveVariantTokens(theme.layouts?.title, "title", "default", shape), /unknown tokens.*bogus/);
   });
 
   it("allows extra keys for slotted layouts", () => {

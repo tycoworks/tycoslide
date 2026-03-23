@@ -49,7 +49,6 @@ export function mockTheme(options?: {
       [TEXT_STYLE.CODE]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.CODE] },
     },
     layouts: options?.layouts ?? {},
-    masters: {},
   };
 }
 

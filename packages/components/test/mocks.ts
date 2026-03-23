@@ -60,7 +60,6 @@ export function mockTheme(): Theme {
       [TEXT_STYLE.CODE]: mockTextStyle,
     },
     layouts: {},
-    masters: {},
   };
 }
 

@@ -1,5 +1,5 @@
 // Mermaid Tests
-// Tests for mermaid() DSL function and sanitizeMermaidDefinition
+// Tests for mermaid() DSL function and validateMermaidDefinition
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
@@ -26,7 +26,7 @@ import {
   injectClassDefs,
   type MermaidTokens,
   mermaid,
-  sanitizeMermaidDefinition,
+  validateMermaidDefinition,
 } from "../src/mermaid.js";
 import { Component } from "../src/names.js";
 import { DEFAULT_MERMAID_TOKENS, mockTheme } from "./mocks.js";
@@ -67,41 +67,41 @@ describe("mermaid() DSL function", () => {
   });
 });
 
-describe("sanitizeMermaidDefinition", () => {
+describe("validateMermaidDefinition", () => {
   it("throws on style NodeId fill:#f00 lines", () => {
     const input = `flowchart LR
   A[Node A]
   style A fill:#ff0000
   B[Node B]`;
-    assert.throws(() => sanitizeMermaidDefinition(input), /forbidden style directive/);
+    assert.throws(() => validateMermaidDefinition(input), /forbidden style directive/);
   });
 
   it("throws on linkStyle 0 stroke:#f00 lines", () => {
     const input = `flowchart LR
   A --> B
   linkStyle 0 stroke:#ff0000`;
-    assert.throws(() => sanitizeMermaidDefinition(input), /forbidden style directive/);
+    assert.throws(() => validateMermaidDefinition(input), /forbidden style directive/);
   });
 
   it("throws on classDef myClass fill:#f00 lines", () => {
     const input = `flowchart LR
   classDef myClass fill:#ff0000
   A[Node A]`;
-    assert.throws(() => sanitizeMermaidDefinition(input), /forbidden style directive/);
+    assert.throws(() => validateMermaidDefinition(input), /forbidden style directive/);
   });
 
   it("throws on %%{init: ...}%% lines", () => {
     const input = `%%{init: {"flowchart": {"curve": "linear"}}}%%
 flowchart LR
   A --> B`;
-    assert.throws(() => sanitizeMermaidDefinition(input), /forbidden style directive/);
+    assert.throws(() => validateMermaidDefinition(input), /forbidden style directive/);
   });
 
   it("preserves class NodeId primary lines", () => {
     const input = `flowchart LR
   A[Node A]
   class A primary`;
-    const result = sanitizeMermaidDefinition(input);
+    const result = validateMermaidDefinition(input);
     assert.strictEqual(
       result,
       `flowchart LR
@@ -114,7 +114,7 @@ flowchart LR
     const input = `flowchart LR
   A[Node A]:::primary
   B[Node B]`;
-    const result = sanitizeMermaidDefinition(input);
+    const result = validateMermaidDefinition(input);
     assert.strictEqual(
       result,
       `flowchart LR
@@ -130,7 +130,7 @@ flowchart LR
   end
   A[Start] --> B[End]
   B --> C{Decision}`;
-    const result = sanitizeMermaidDefinition(input);
+    const result = validateMermaidDefinition(input);
     assert.strictEqual(result, input);
   });
 
@@ -144,7 +144,7 @@ flowchart LR
   class A primary
   A --> B
   linkStyle 0 stroke:#0000ff`;
-    assert.throws(() => sanitizeMermaidDefinition(input), /4 forbidden style directive/);
+    assert.throws(() => validateMermaidDefinition(input), /4 forbidden style directive/);
   });
 
   it("includes offending lines in error message", () => {
@@ -152,7 +152,7 @@ flowchart LR
   A[Node A]
   style A fill:#ff0000`;
     try {
-      sanitizeMermaidDefinition(input);
+      validateMermaidDefinition(input);
       assert.fail("should have thrown");
     } catch (e: any) {
       assert.ok(e.message.includes("style A fill:#ff0000"), "error should include the offending line");

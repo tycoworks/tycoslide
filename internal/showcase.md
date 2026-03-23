@@ -101,3 +101,30 @@ Recommendation: convention, not hard requirement. Name it `example.md`. Document
 **Markdown-authorable components demonstrated:** text formatting (bold, italic, strikethrough, underline, accent colors, hyperlinks), list, code, mermaid, table, testimonial, quote, card (via cards layout), image (via image slots).
 
 **Not demonstrated (DSL-only):** row, column, stack, grid, shape, line, slideNumber, plainText. These belong in developer docs, not the showcase.
+
+---
+
+## Outstanding Work
+
+### Slide 2 (Agenda)
+- Second item "Markdown → .pptx" title might need tweaking. TBD.
+
+### Slide 4 (Transform)
+- Needs a title.
+
+### Slide 5 (Cards — Key Features)
+- Icons feel too big. Try increasing card padding from 0.25 to 0.3 to contract them slightly.
+
+### Slide 7 (Mermaid — Build Pipeline)
+- Needs redesign. Details TBD.
+
+### Slide 8/9 (Stat + Quote)
+- Narrative issue: "Zero Silent Failures" feels out of place after the table.
+- Options: move stat earlier, make stat the dark slide instead of quote, or restructure.
+- Consider: stat on dark background as section closer before design system slides.
+
+### Slide 10 (Color Palette)
+- Doesn't match Materialize reference screenshots. Needs more/better squares.
+
+### Slide 11 (Typography)
+- Doesn't match Materialize reference closely. Should include font sizes in the type specimens.
