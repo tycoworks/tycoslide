@@ -361,6 +361,31 @@ const bodySlotTokens = {
   card: cardSlotTokens,
 };
 
+// ============================================
+// MASTER CONFIGS
+// ============================================
+
+const defaultMasterConfig = defaultMaster.tokenMap({
+  background: { color: palette.gray50 },
+  margin,
+  footerHeight,
+  footerLogo: assets.tycoworks.logo,
+  footerText: "tycoworks",
+  footerSpacing: spacingTight,
+  slideNumber: { style: TEXT_STYLE.FOOTER, color: palette.gray600, hAlign: HALIGN.RIGHT, vAlign: VALIGN.MIDDLE },
+  footer: { style: TEXT_STYLE.FOOTER, color: palette.gray600, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
+});
+
+const lightMinimalMaster = minimalMaster.tokenMap({
+  background: { color: palette.gray50 },
+  margin,
+});
+
+const darkMinimalMaster = minimalMaster.tokenMap({
+  background: { color: palette.navy },
+  margin,
+});
+
 export const theme = defineTheme({
   slide: SLIDE_SIZE.S16x9,
   fonts: [assets.fonts.inter, assets.fonts.interLight, assets.fonts.firaCode],
@@ -432,7 +457,7 @@ export const theme = defineTheme({
         default: titleLayout.tokenMap({
           title: { ...heroTitle, color: palette.navy, style: "title" },
           subtitle: { ...heroSubtitle, color: palette.gray600, style: TEXT_STYLE.H3 },
-          masterVariant: "default",
+          master: lightMinimalMaster,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
           spacing: spacingTight,
@@ -444,7 +469,7 @@ export const theme = defineTheme({
         default: endLayout.tokenMap({
           title: { ...heroTitle, style: "title" },
           subtitle: heroSubtitle,
-          masterVariant: "dark",
+          master: darkMinimalMaster,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
           spacing: spacingTight,
@@ -455,7 +480,7 @@ export const theme = defineTheme({
       variants: {
         default: sectionLayout.tokenMap({
           title: sectionHeading,
-          masterVariant: "dark",
+          master: darkMinimalMaster,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
         }),
@@ -464,6 +489,7 @@ export const theme = defineTheme({
     body: {
       variants: {
         default: bodyLayout.tokenMap({
+          master: defaultMasterConfig,
           title: headerTitle,
           eyebrow: headerEyebrow,
           headerSpacing: spacingTight,
@@ -475,6 +501,7 @@ export const theme = defineTheme({
           ...bodySlotTokens,
         }),
         centered: bodyLayout.tokenMap({
+          master: defaultMasterConfig,
           title: headerTitle,
           eyebrow: headerEyebrow,
           headerSpacing: spacingTight,
@@ -490,6 +517,7 @@ export const theme = defineTheme({
     stat: {
       variants: {
         default: statLayout.tokenMap({
+          master: defaultMasterConfig,
           value: statValue,
           label: statLabel,
           caption: mutedCaption,
@@ -511,6 +539,7 @@ export const theme = defineTheme({
     "two-column": {
       variants: {
         default: twoColumnLayout.tokenMap({
+          master: defaultMasterConfig,
           title: headerTitle,
           eyebrow: headerEyebrow,
           headerSpacing: spacingTight,
@@ -530,7 +559,7 @@ export const theme = defineTheme({
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
           spacing: spacing,
-          masterVariant: "default",
+          master: lightMinimalMaster,
           body: { ...bodyText, style: TEXT_STYLE.H2 },
         }),
       },
@@ -538,6 +567,7 @@ export const theme = defineTheme({
     agenda: {
       variants: {
         default: agendaLayout.tokenMap({
+          master: defaultMasterConfig,
           title: headerTitle,
           eyebrow: headerEyebrow,
           headerSpacing: spacingTight,
@@ -568,6 +598,7 @@ export const theme = defineTheme({
     cards: {
       variants: {
         default: cardsLayout.tokenMap({
+          master: defaultMasterConfig,
           title: headerTitle,
           eyebrow: headerEyebrow,
           headerSpacing: spacingTight,
@@ -580,6 +611,7 @@ export const theme = defineTheme({
           card: { ...cardBase, vAlign: VALIGN.TOP, background: cardBackground },
         }),
         flat: cardsLayout.tokenMap({
+          master: defaultMasterConfig,
           title: headerTitle,
           eyebrow: headerEyebrow,
           headerSpacing: spacingTight,
@@ -596,7 +628,7 @@ export const theme = defineTheme({
     blank: {
       variants: {
         default: blankLayout.tokenMap({
-          masterVariant: "default",
+          master: lightMinimalMaster,
           ...bodySlotTokens,
         }),
       },
@@ -614,7 +646,7 @@ export const theme = defineTheme({
             quote: quoteText,
             attribution: quoteAttribution,
           },
-          masterVariant: "default",
+          master: lightMinimalMaster,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
           spacing: spacing,
@@ -637,7 +669,7 @@ export const theme = defineTheme({
               color: palette.gray400,
             },
           },
-          masterVariant: "dark",
+          master: darkMinimalMaster,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
           spacing: spacing,
@@ -647,6 +679,7 @@ export const theme = defineTheme({
     shapes: {
       variants: {
         default: shapesLayout.tokenMap({
+          master: defaultMasterConfig,
           title: headerTitle,
           eyebrow: headerEyebrow,
           subtitle: { style: TEXT_STYLE.BODY, color: palette.gray500, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
@@ -689,6 +722,7 @@ export const theme = defineTheme({
     transform: {
       variants: {
         default: transformLayout.tokenMap({
+          master: defaultMasterConfig,
           title: headerTitle,
           eyebrow: headerEyebrow,
           headerSpacing: spacingTight,
@@ -708,6 +742,7 @@ export const theme = defineTheme({
     lines: {
       variants: {
         default: linesLayout.tokenMap({
+          master: defaultMasterConfig,
           title: headerTitle,
           eyebrow: headerEyebrow,
           headerSpacing: spacingTight,
@@ -722,44 +757,6 @@ export const theme = defineTheme({
           vAlign: VALIGN.TOP,
           hAlign: HALIGN.LEFT,
           spacing: spacing,
-        }),
-      },
-    },
-  },
-  masters: {
-    default: {
-      variants: {
-        default: defaultMaster.tokenMap({
-          background: { color: palette.gray50 },
-          margin,
-          footerHeight,
-          footerLogo: assets.tycoworks.logo,
-          footerText: "tycoworks",
-          footerSpacing: spacingTight,
-          slideNumber: {
-            style: TEXT_STYLE.FOOTER,
-            color: palette.gray600,
-            hAlign: HALIGN.RIGHT,
-            vAlign: VALIGN.MIDDLE,
-          },
-          footer: {
-            style: TEXT_STYLE.FOOTER,
-            color: palette.gray600,
-            hAlign: HALIGN.LEFT,
-            vAlign: VALIGN.MIDDLE,
-          },
-        }),
-      },
-    },
-    minimal: {
-      variants: {
-        default: minimalMaster.tokenMap({
-          background: { color: palette.gray50 },
-          margin,
-        }),
-        dark: minimalMaster.tokenMap({
-          background: { color: palette.navy },
-          margin,
         }),
       },
     },

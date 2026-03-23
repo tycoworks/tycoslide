@@ -179,7 +179,6 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
       layoutName,
       variant,
       layout.tokens,
-      "Layout",
       !layout.slots?.length,
     );
   }

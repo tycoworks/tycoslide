@@ -273,8 +273,8 @@ export interface Background {
 export interface Slide {
   /** Master name — every slide must reference a registered master. */
   masterName: string;
-  /** Master variant — explicitly set by every layout. */
-  masterVariant: string;
+  /** Master tokens — resolved values passed directly from layout tokens. */
+  masterTokens: Record<string, unknown>;
   /** Overrides master background if set. */
   background?: Background;
   notes?: string;
@@ -283,8 +283,7 @@ export interface Slide {
   name?: string;
 }
 
-/** Variant configuration — a named map of token values.
- *  Used identically for both layouts and masters. */
+/** Variant configuration — a named map of token values for layout variants. */
 export type VariantConfig = Record<string, Record<string, unknown>>;
 
 export interface Theme {
@@ -296,6 +295,4 @@ export interface Theme {
   /** Layout tokens. Each layout that declares token keys gets its visual values from here.
    *  Layouts with slots may include extra keys for slot injection (keyed by component name). */
   layouts: Record<string, { variants: VariantConfig }>;
-  /** Master tokens. Each master that declares token keys gets its visual values from here. */
-  masters: Record<string, { variants: VariantConfig }>;
 }

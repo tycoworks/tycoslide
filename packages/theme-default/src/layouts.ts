@@ -42,6 +42,7 @@ import {
   text,
   textComponent,
 } from "tycoslide-components";
+import { type DefaultMasterTokens, MASTER, type MinimalMasterTokens } from "./master.js";
 
 // ============================================
 // COMPOSITION PRIMITIVES
@@ -66,10 +67,10 @@ export function headerBlock(title: string, tokens: HeaderTokens, eyebrow?: strin
 }
 
 /** Wrap content in the default master (footer chrome + content bounds) */
-export function masteredSlide(...content: SlideNode[]): Slide {
+export function masteredSlide(masterTokens: DefaultMasterTokens, ...content: SlideNode[]): Slide {
   return {
-    masterName: "default",
-    masterVariant: "default",
+    masterName: MASTER.DEFAULT,
+    masterTokens,
     content: column({ spacing: 0, height: SIZE.FILL }, ...content),
   };
 }
@@ -83,7 +84,7 @@ export function masteredSlide(...content: SlideNode[]): Slide {
 export const titleLayoutTokens = token.shape({
   title: token.required<TextTokens>(),
   subtitle: token.required<TextTokens>(),
-  masterVariant: token.required<string>(),
+  master: token.required<MinimalMasterTokens>(),
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
   spacing: token.required<number>(),
@@ -113,8 +114,8 @@ export const titleLayout = defineLayout({
     );
 
     return {
-      masterName: "minimal",
-      masterVariant: tokens.masterVariant,
+      masterName: MASTER.MINIMAL,
+      masterTokens: tokens.master,
       content: imagePath
         ? row({ spacing: 0, vAlign: tokens.vAlign, height: SIZE.FILL }, textBlock, image(imagePath))
         : textBlock,
@@ -126,7 +127,7 @@ export const titleLayout = defineLayout({
 
 export const sectionLayoutTokens = token.shape({
   title: token.required<PlainTextTokens>(),
-  masterVariant: token.required<string>(),
+  master: token.required<MinimalMasterTokens>(),
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
 });
@@ -144,8 +145,8 @@ export const sectionLayout = defineLayout({
   params: { title: param.required(textComponent.schema) },
   tokens: sectionLayoutTokens,
   render: ({ title }, _slots, tokens: SectionLayoutTokens) => ({
-    masterName: "minimal",
-    masterVariant: tokens.masterVariant,
+    masterName: MASTER.MINIMAL,
+    masterTokens: tokens.master,
     content: column(
       { spacing: 0, vAlign: tokens.vAlign, hAlign: tokens.hAlign, height: SIZE.FILL },
       plainText(title, tokens.title),
@@ -156,6 +157,7 @@ export const sectionLayout = defineLayout({
 // --- body ---
 
 export const bodyLayoutTokens = token.shape({
+  master: token.required<DefaultMasterTokens>(),
   title: token.required<PlainTextTokens>(),
   eyebrow: token.required<PlainTextTokens>(),
   text: token.required<TextTokens>(),
@@ -189,6 +191,7 @@ export const bodyLayout = defineLayout({
   tokens: bodyLayoutTokens,
   render: ({ title, eyebrow }, { body }, tokens: BodyLayoutTokens) =>
     masteredSlide(
+      tokens.master,
       ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
       column({ height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing }, ...body),
     ),
@@ -197,6 +200,7 @@ export const bodyLayout = defineLayout({
 // --- stat ---
 
 export const statLayoutTokens = token.shape({
+  master: token.required<DefaultMasterTokens>(),
   value: token.required<PlainTextTokens>(),
   label: token.required<PlainTextTokens>(),
   caption: token.required<TextTokens>(),
@@ -251,6 +255,7 @@ export const statLayout = defineLayout({
       : content;
 
     return masteredSlide(
+      tokens.master,
       column({ spacing: 0, height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign }, wrapped),
     );
   },
@@ -260,7 +265,7 @@ export const statLayout = defineLayout({
 
 export const quoteLayoutTokens = token.shape({
   quote: token.required<QuoteTokens>(),
-  masterVariant: token.required<string>(),
+  master: token.required<MinimalMasterTokens>(),
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
   spacing: token.required<number>(),
@@ -285,8 +290,8 @@ export const quoteLayout = defineLayout({
   },
   tokens: quoteLayoutTokens,
   render: ({ quote: quoteText, attribution }, _slots, tokens: QuoteLayoutTokens) => ({
-    masterName: "minimal",
-    masterVariant: tokens.masterVariant,
+    masterName: MASTER.MINIMAL,
+    masterTokens: tokens.master,
     content: column(
       { spacing: 0, height: SIZE.FILL },
       column(
@@ -314,8 +319,8 @@ export const endLayout = defineLayout({
   },
   tokens: titleLayoutTokens,
   render: ({ title, subtitle }, _slots, tokens: TitleLayoutTokens) => ({
-    masterName: "minimal",
-    masterVariant: tokens.masterVariant,
+    masterName: MASTER.MINIMAL,
+    masterTokens: tokens.master,
     content: column(
       { vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL },
       text(title, tokens.title),
@@ -332,7 +337,7 @@ export const endLayout = defineLayout({
 // |                            |
 // +----------------------------+
 export const blankLayoutTokens = token.shape({
-  masterVariant: token.required<string>(),
+  master: token.required<MinimalMasterTokens>(),
 });
 
 export type BlankLayoutTokens = InferTokens<typeof blankLayoutTokens>;
@@ -344,8 +349,8 @@ export const blankLayout = defineLayout({
   slots: ["body"],
   tokens: blankLayoutTokens,
   render: (_params, { body }, tokens: BlankLayoutTokens) => ({
-    masterName: "minimal",
-    masterVariant: tokens.masterVariant,
+    masterName: MASTER.MINIMAL,
+    masterTokens: tokens.master,
     content: column({ spacing: 0, height: SIZE.FILL }, ...body),
   }),
 });
@@ -353,6 +358,7 @@ export const blankLayout = defineLayout({
 // --- two-column ---
 
 export const twoColumnLayoutTokens = token.shape({
+  master: token.required<DefaultMasterTokens>(),
   title: token.required<PlainTextTokens>(),
   eyebrow: token.required<PlainTextTokens>(),
   text: token.required<TextTokens>(),
@@ -388,6 +394,7 @@ export const twoColumnLayout = defineLayout({
   render: ({ title, eyebrow }, { left, right }, tokens: TwoColumnLayoutTokens) => {
     const colProps = { vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL };
     return masteredSlide(
+      tokens.master,
       ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
       row({ spacing: tokens.spacing, height: SIZE.HUG }, column(colProps, ...left), column(colProps, ...right)),
     );
@@ -402,7 +409,7 @@ export const statementLayoutTokens = token.shape({
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
   spacing: token.required<number>(),
-  masterVariant: token.required<string>(),
+  master: token.required<MinimalMasterTokens>(),
 });
 
 export type StatementLayoutTokens = InferTokens<typeof statementLayoutTokens>;
@@ -422,8 +429,8 @@ export const statementLayout = defineLayout({
   },
   tokens: statementLayoutTokens,
   render: ({ body, caption }, _slots, tokens: StatementLayoutTokens) => ({
-    masterName: "minimal",
-    masterVariant: tokens.masterVariant,
+    masterName: MASTER.MINIMAL,
+    masterTokens: tokens.master,
     content: column(
       { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing },
       text(body, tokens.body),
@@ -435,6 +442,7 @@ export const statementLayout = defineLayout({
 // --- agenda ---
 
 export const agendaLayoutTokens = token.shape({
+  master: token.required<DefaultMasterTokens>(),
   title: token.required<PlainTextTokens>(),
   eyebrow: token.required<PlainTextTokens>(),
   headerSpacing: token.required<number>(),
@@ -488,6 +496,7 @@ export const agendaLayout = defineLayout({
       ),
     );
     return masteredSlide(
+      tokens.master,
       headerBlock(title, tokens, eyebrow),
       column(
         { spacing: 0, height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign },
@@ -500,6 +509,7 @@ export const agendaLayout = defineLayout({
 // --- cards ---
 
 export const cardsLayoutTokens = token.shape({
+  master: token.required<DefaultMasterTokens>(),
   title: token.required<PlainTextTokens>(),
   eyebrow: token.required<PlainTextTokens>(),
   headerSpacing: token.required<number>(),
@@ -543,6 +553,7 @@ export const cardsLayout = defineLayout({
     );
     const perRow = built.length <= 2 ? built.length : built.length === 4 ? 2 : built.length >= 7 ? 4 : 3;
     return masteredSlide(
+      tokens.master,
       headerBlock(title, tokens, eyebrow),
       column(
         {
@@ -563,6 +574,7 @@ export const cardsLayout = defineLayout({
 // --- transform ---
 
 export const transformLayoutTokens = token.shape({
+  master: token.required<DefaultMasterTokens>(),
   title: token.required<PlainTextTokens>(),
   eyebrow: token.required<PlainTextTokens>(),
   text: token.required<TextTokens>(),
@@ -618,6 +630,7 @@ export const transformLayout = defineLayout({
     }
     const content = layers.length === 1 ? layers[0] : stack({ height: SIZE.HUG }, ...layers);
     return masteredSlide(
+      tokens.master,
       column(
         { vAlign: tokens.vAlign, height: SIZE.FILL, spacing: tokens.spacing },
         ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
@@ -630,6 +643,7 @@ export const transformLayout = defineLayout({
 // --- shapes (demo) ---
 
 export const shapesLayoutTokens = token.shape({
+  master: token.required<DefaultMasterTokens>(),
   title: token.required<PlainTextTokens>(),
   eyebrow: token.required<PlainTextTokens>(),
   subtitle: token.optional<PlainTextTokens>(),
@@ -670,6 +684,7 @@ export const shapesLayout = defineLayout({
       );
 
     return masteredSlide(
+      tokens.master,
       column(
         { vAlign: tokens.vAlign, height: SIZE.FILL, spacing: tokens.spacing },
         ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
@@ -689,6 +704,7 @@ export const shapesLayout = defineLayout({
 // --- lines (demo) ---
 
 export const linesLayoutTokens = token.shape({
+  master: token.required<DefaultMasterTokens>(),
   title: token.required<PlainTextTokens>(),
   eyebrow: token.required<PlainTextTokens>(),
   headerSpacing: token.required<number>(),
@@ -727,6 +743,7 @@ export const linesLayout = defineLayout({
       column({ spacing: 0, height: SIZE.FILL, vAlign: VALIGN.BOTTOM }, plainText(label, tokens.label), line(t));
 
     return masteredSlide(
+      tokens.master,
       column(
         { vAlign: tokens.vAlign, height: SIZE.FILL, spacing: tokens.spacing },
         ...(title ? [headerBlock(title, tokens, eyebrow)] : []),

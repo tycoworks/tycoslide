@@ -29,7 +29,7 @@ const testLayout: LayoutDefinition = {
   tokens: {},
   render: (params: any, _slots: any) => ({
     masterName: "default",
-    masterVariant: "default",
+    masterTokens: {},
     content: { type: NODE_TYPE.COMPONENT, componentName: "test", params: { text: params.title }, content: undefined },
   }),
 };
@@ -147,7 +147,7 @@ describe("validateLayout with enum schema", () => {
     tokens: {},
     render: (params: any, _slots: any) => ({
       masterName: "default",
-      masterVariant: "default",
+      masterTokens: {},
       content: {
         type: NODE_TYPE.COMPONENT,
         componentName: "test",
@@ -183,7 +183,7 @@ describe("validateLayout (params and slots)", () => {
     tokens: {},
     render: (params: any, slots: any) => ({
       masterName: "default",
-      masterVariant: "default",
+      masterTokens: {},
       content: {
         type: NODE_TYPE.COMPONENT,
         componentName: "test",
@@ -200,7 +200,7 @@ describe("validateLayout (params and slots)", () => {
     tokens: {},
     render: (params: any, _slots: any) => ({
       masterName: "default",
-      masterVariant: "default",
+      masterTokens: {},
       content: { type: NODE_TYPE.COMPONENT, componentName: "test", params, content: undefined },
     }),
   };

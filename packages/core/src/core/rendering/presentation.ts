@@ -12,7 +12,6 @@ import type { SlideValidationResult, ValidationResult } from "../layout/validato
 import { LayoutValidationError, LayoutValidator } from "../layout/validator.js";
 import { Bounds } from "../model/bounds.js";
 import type { ElementNode, PositionedNode } from "../model/nodes.js";
-import { resolveVariantTokens } from "../model/token.js";
 import type { Background, Slide, Theme } from "../model/types.js";
 import { PptxRenderer } from "./pptxRenderer.js";
 import { componentRegistry, masterRegistry, type RenderContext } from "./registry.js";
@@ -62,6 +61,8 @@ export class Presentation {
   private masterBounds: Bounds;
   private slideCount = 0;
   private deferredSlides: DeferredSlide[] = [];
+  private masterTokenIds = new Map<Record<string, unknown>, string>();
+  private masterTokenCounter = 0;
 
   constructor(theme: Theme, assets?: Record<string, unknown>) {
     this._theme = theme;
@@ -74,6 +75,16 @@ export class Presentation {
 
   get theme(): Theme {
     return this._theme;
+  }
+
+  /** Stable dedup key for master tokens using object identity. */
+  private getMasterKey(masterName: string, masterTokens: Record<string, unknown>): string {
+    let key = this.masterTokenIds.get(masterTokens);
+    if (!key) {
+      key = `${masterName}/${this.masterTokenCounter++}`;
+      this.masterTokenIds.set(masterTokens, key);
+    }
+    return key;
   }
 
   /**
@@ -159,31 +170,19 @@ export class Presentation {
       >();
 
       for (const deferred of this.deferredSlides) {
-        const { masterName, masterVariant } = deferred.slide;
-        const masterKey = `${masterName}/${masterVariant}`;
+        const { masterName, masterTokens } = deferred.slide;
+        const masterKey = this.getMasterKey(masterName, masterTokens);
 
         if (!this.masters.has(masterKey) && !pendingMasters.has(masterKey)) {
           const def = masterRegistry.get(masterName);
           if (!def) {
             throw new Error(`Unknown master: '${masterName}'. Did you forget to register it?`);
           }
-          const tokens = resolveVariantTokens(
-            this._theme.masters?.[masterName],
-            masterName,
-            masterVariant,
-            def.tokens,
-            "Master",
-          );
-          const { content: rawMasterContent, contentBounds, background } = def.render(tokens, { width, height });
+          const { content: rawMasterContent, contentBounds, background } = def.render(masterTokens, { width, height });
           const masterContent = await componentRegistry.renderTree(rawMasterContent, renderContext);
           pendingMasters.set(masterKey, { content: masterContent, contentBounds, background });
           // Collect measurements from master content (full slide — masters position their own elements)
-          pipeline.collectFromTree(
-            masterContent,
-            this.masterBounds,
-            `master-${masterName}-${masterVariant}`,
-            background,
-          );
+          pipeline.collectFromTree(masterContent, this.masterBounds, `master-${masterKey}`, background);
         }
       }
 
@@ -198,8 +197,8 @@ export class Presentation {
 
       for (const deferred of this.deferredSlides) {
         const { slide, slideIndex } = deferred;
-        const { masterName, masterVariant } = slide;
-        const masterKey = `${masterName}/${masterVariant}`;
+        const { masterName, masterTokens } = slide;
+        const masterKey = this.getMasterKey(masterName, masterTokens);
 
         // Get bounds from pending or existing master
         const pending = pendingMasters.get(masterKey);
@@ -330,9 +329,9 @@ export class Presentation {
 
       // Build composite preview HTML: master chrome behind, slide content positioned within
       const fragmentMap = pipeline.getSlideFragments();
-      const compositeSlides = renderedSlides.map(({ deferred, bounds }) => {
-        const { slide, slideIndex } = deferred;
-        const masterLabel = `master-${slide.masterName}-${slide.masterVariant}`;
+      const compositeSlides = renderedSlides.map(({ deferred, bounds, masterKey }) => {
+        const { slideIndex } = deferred;
+        const masterLabel = `master-${masterKey}`;
         return {
           masterFragment: fragmentMap.get(masterLabel)!,
           slideFragment: fragmentMap.get(`slide-${slideIndex + 1}`)!,

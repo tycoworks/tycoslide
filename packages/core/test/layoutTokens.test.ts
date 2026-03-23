@@ -33,7 +33,7 @@ describe("resolveVariantTokens", () => {
         },
       },
     });
-    const result = resolveVariantTokens(theme.layouts?.title, "title", "default", undefined, "Layout");
+    const result = resolveVariantTokens(theme.layouts?.title, "title", "default", undefined);
     assert.strictEqual(result.background, "#FF0000");
     assert.deepStrictEqual(result.title, { style: "h1", color: "#FFFFFF" });
   });
@@ -49,14 +49,14 @@ describe("resolveVariantTokens", () => {
         },
       },
     });
-    const result = resolveVariantTokens(theme.layouts?.title, "title", "dark", undefined, "Layout");
+    const result = resolveVariantTokens(theme.layouts?.title, "title", "dark", undefined);
     assert.strictEqual(result.background, "#000000");
   });
 
   it("throws when layout is not in theme.layouts", () => {
     const theme = mockTheme({ layouts: {} });
     assert.throws(
-      () => resolveVariantTokens(theme.layouts?.nonexistent, "nonexistent", "default", undefined, "Layout"),
+      () => resolveVariantTokens(theme.layouts?.nonexistent, "nonexistent", "default", undefined),
       /theme\.layouts\.nonexistent is missing/,
     );
   });
@@ -64,7 +64,7 @@ describe("resolveVariantTokens", () => {
   it("throws when theme has no layouts at all", () => {
     const theme = mockTheme();
     assert.throws(
-      () => resolveVariantTokens(theme.layouts?.title, "title", "default", undefined, "Layout"),
+      () => resolveVariantTokens(theme.layouts?.title, "title", "default", undefined),
       /theme\.layouts\.title is missing/,
     );
   });
@@ -80,7 +80,7 @@ describe("resolveVariantTokens", () => {
       },
     });
     assert.throws(
-      () => resolveVariantTokens(theme.layouts?.title, "title", "nonexistent", undefined, "Layout"),
+      () => resolveVariantTokens(theme.layouts?.title, "title", "nonexistent", undefined),
       /Unknown variant 'nonexistent' for layout 'title'/,
     );
   });
@@ -97,7 +97,7 @@ describe("resolveVariantTokens", () => {
       },
     });
     assert.throws(
-      () => resolveVariantTokens(theme.layouts?.title, "title", "default", shape, "Layout"),
+      () => resolveVariantTokens(theme.layouts?.title, "title", "default", shape),
       /unknown tokens.*bogus/,
     );
   });
@@ -114,7 +114,7 @@ describe("resolveVariantTokens", () => {
       },
     });
     // strict = false → extra keys allowed (slot injection tokens)
-    const result = resolveVariantTokens(theme.layouts?.body, "body", "default", shape, "Layout", false);
+    const result = resolveVariantTokens(theme.layouts?.body, "body", "default", shape, false);
     assert.strictEqual(result.background, "#FF0000");
   });
 });
@@ -140,7 +140,7 @@ describe("Document Compiler: Layout Tokens", () => {
       receivedTokens.push(tokens);
       return {
         masterName: "default",
-        masterVariant: "default",
+        masterTokens: {},
         content: { type: NODE_TYPE.COMPONENT, componentName: "test", params, content: undefined },
       };
     },
@@ -156,7 +156,7 @@ describe("Document Compiler: Layout Tokens", () => {
       receivedTokens.push(tokens);
       return {
         masterName: "default",
-        masterVariant: "default",
+        masterTokens: {},
         content: { type: NODE_TYPE.COMPONENT, componentName: "test", params, content: undefined },
       };
     },
@@ -259,7 +259,7 @@ describe("Document Compiler: Layout Tokens", () => {
         capturedTokens = tokens;
         return {
           masterName: "default",
-          masterVariant: "default",
+          masterTokens: {},
           content: { type: NODE_TYPE.COMPONENT, componentName: "test", params, content: undefined },
         };
       },
@@ -293,7 +293,7 @@ describe("Slot Token Injection", () => {
       receivedTokens.push(tokens);
       return {
         masterName: "default",
-        masterVariant: "default",
+        masterTokens: {},
         content: { type: NODE_TYPE.COMPONENT, componentName: "test", params, content: undefined },
       };
     },
@@ -404,7 +404,7 @@ describe("Slot Token Injection", () => {
         capturedProps = params;
         return {
           masterName: "default",
-          masterVariant: "default",
+          masterTokens: {},
           content: { type: NODE_TYPE.COMPONENT, componentName: "test", params, content: undefined },
         };
       },
@@ -447,7 +447,7 @@ describe("RESERVED_FRONTMATTER_KEYS includes variant", () => {
           tokens: {},
           render: () => ({
             masterName: "default",
-            masterVariant: "default",
+            masterTokens: {},
             content: { type: NODE_TYPE.COMPONENT, componentName: "test", params: {}, content: undefined },
           }),
         }),

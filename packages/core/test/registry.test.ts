@@ -19,7 +19,7 @@ import { HALIGN, TEXT_STYLE, VALIGN } from "../src/core/model/types.js";
 // Minimal stub slide for testing
 const stubSlide: Slide = {
   masterName: "default",
-  masterVariant: "default",
+  masterTokens: {},
   content: { type: NODE_TYPE.COMPONENT, componentName: "test", params: {}, content: undefined },
 };
 

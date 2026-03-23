@@ -87,12 +87,4 @@ export function validateThemeFonts(theme: Theme): void {
       }
     }
   }
-
-  if (theme.masters) {
-    for (const [masterName, masterDef] of Object.entries(theme.masters)) {
-      for (const [variantName, tokens] of Object.entries(masterDef.variants)) {
-        walkTokensForFonts(tokens, `master "${masterName}" variant "${variantName}"`, validateTokenFonts);
-      }
-    }
-  }
 }

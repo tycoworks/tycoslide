@@ -92,7 +92,7 @@ describe("schema", () => {
           content: z.custom<string[]>(),
         },
         tokens: {},
-        render: () => ({ masterName: "default", masterVariant: "default", content: dummy }),
+        render: () => ({ masterName: "default", masterTokens: {}, content: dummy }),
       });
     });
 
@@ -106,7 +106,7 @@ describe("schema", () => {
           data: z.any(),
         },
         tokens: {},
-        render: () => ({ masterName: "default", masterVariant: "default", content: dummy }),
+        render: () => ({ masterName: "default", masterTokens: {}, content: dummy }),
       });
     });
   });

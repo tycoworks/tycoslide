@@ -200,14 +200,10 @@ export const theme = defineTheme({
     title:   { variants: { default: titleLayout.tokenMap({...}) } },
     // ... one entry per layout
   },
-  masters: {
-    default: { variants: { default: defaultMaster.tokenMap({...}) } },
-    minimal: { variants: { default: minimalMaster.tokenMap({...}), dark: minimalMaster.tokenMap({...}) } },
-  },
 });
 ```
 
-Layouts and masters declare required token keys; themes provide their values.
+Layouts declare required token keys; themes provide their values. Master tokens are included in layout token maps — each layout carries a `master` token typed to its master's interface.
 
 ### Step-by-Step Guide
 
@@ -354,37 +350,40 @@ layouts: {
 
 See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete reference with all layouts and their full token sets.
 
-#### 7. Define Masters
+#### 7. Define Master Configs
 
-Each master in the theme gets a `variants` object. Call `.tokenMap()` on the master definition:
+Master tokens flow through layout token maps as shared constants. Define them once, reference from multiple layouts:
 
 ```typescript
 import { defaultMaster, minimalMaster } from './masters.js';
 import { TEXT_STYLE, HALIGN, VALIGN } from 'tycoslide';
 
-masters: {
-  default: {
-    variants: {
-      default: defaultMaster.tokenMap({
-        background:  colors.background,
-        margin:      0.5,
-        footerHeight: 0.25,
-        footerText:  'My Company',
-        slideNumber: { style: TEXT_STYLE.FOOTER, color: colors.textMuted, hAlign: HALIGN.RIGHT, vAlign: VALIGN.MIDDLE },
-        footer:      { style: TEXT_STYLE.FOOTER, color: colors.textMuted, hAlign: HALIGN.LEFT,  vAlign: VALIGN.MIDDLE },
-      }),
-    },
-  },
-  minimal: {
-    variants: {
-      default: minimalMaster.tokenMap({ background: colors.background, margin: 0.5 }),
-      dark:    minimalMaster.tokenMap({ background: colors.text,       margin: 0.5 }),
-    },
-  },
+// Shared master config constants — define once, reference from multiple layouts
+const defaultMasterConfig = defaultMaster.tokenMap({
+  background:  colors.background,
+  margin:      0.5,
+  footerHeight: 0.25,
+  footerText:  'My Company',
+  slideNumber: { style: TEXT_STYLE.FOOTER, color: colors.textMuted, hAlign: HALIGN.RIGHT, vAlign: VALIGN.MIDDLE },
+  footer:      { style: TEXT_STYLE.FOOTER, color: colors.textMuted, hAlign: HALIGN.LEFT,  vAlign: VALIGN.MIDDLE },
+});
+
+const lightMinimalMaster = minimalMaster.tokenMap({ background: colors.background, margin: 0.5 });
+const darkMinimalMaster  = minimalMaster.tokenMap({ background: colors.text,       margin: 0.5 });
+```
+
+Then include in layout token maps:
+
+```typescript
+layouts: {
+  body:    { variants: { default: bodyLayout.tokenMap({ ..., master: defaultMasterConfig }) } },
+  title:   { variants: { default: titleLayout.tokenMap({ ..., master: darkMinimalMaster }) } },
+  section: { variants: { default: sectionLayout.tokenMap({ ..., master: darkMinimalMaster }) } },
+  // ...
 },
 ```
 
-The `default` master with a `default` variant is required. Layouts reference masters by name and variant in their render functions.
+Layouts sharing the same config constant produce the same PPTX slide master.
 
 ---
 

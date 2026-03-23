@@ -258,7 +258,7 @@ The default theme provides two masters:
 - **`default`** — footer chrome with company name and slide number. Most content layouts use this master.
 - **`minimal`** — margin and background only, no footer. `title`, `section`, `end`, and `blank` layouts use this master.
 
-Each master supports multiple variants. `minimal` provides `default` (white background) and `dark` variants. `title`, `section`, and `end` use `minimal` with the `dark` variant.
+Master tokens (background, margin, footer config, etc.) are passed to layouts via their token shapes — just like any other token. Theme authors define master configs as shared constants and reference them from layout token maps.
 
 ---
 
@@ -275,7 +275,11 @@ import { defineLayout, param, token, SIZE, type InferTokens } from 'tycoslide';
 import { textComponent, plainText, row, column } from 'tycoslide-components';
 import type { PlainTextTokens } from 'tycoslide-components';
 
+import type { DefaultMasterTokens } from './master.js';
+import { MASTER } from './master.js';
+
 const twoColumnTokens = token.shape({
+  master: token.required<DefaultMasterTokens>(),
   title: token.required<PlainTextTokens>(),
   eyebrow: token.required<PlainTextTokens>(),
 });
@@ -292,8 +296,8 @@ export const twoColumnLayout = defineLayout({
   slots: ['left', 'right'],
   tokens: twoColumnTokens,
   render: ({ title, eyebrow }, { left, right }, tokens: TwoColumnTokens) => ({
-    masterName: 'default',
-    masterVariant: 'default',
+    masterName: MASTER.DEFAULT,
+    masterTokens: tokens.master,
     content: column(
       { spacing: 0, height: SIZE.FILL },
       ...(title ? [plainText(title, tokens.title)] : []),
@@ -425,11 +429,11 @@ The render function receives validated params, slot arrays, and resolved tokens,
 
 ```typescript
 render: (params, slots, tokens) => ({
-  masterName: string,       // Which master to use (required)
-  masterVariant: string,    // Which master variant (required)
-  background?: string,      // Overrides master background if set
-  notes?: string,           // Speaker notes
-  content: ComponentNode,   // Slide content (required)
+  masterName: string,                    // Which master to use (required)
+  masterTokens: Record<string, unknown>, // Master token values (required)
+  background?: string,                   // Overrides master background if set
+  notes?: string,                        // Speaker notes
+  content: ComponentNode,                // Slide content (required)
 })
 ```
 
@@ -490,7 +494,7 @@ export const myMaster = defineMaster({
 - `render` receives resolved tokens and slide dimensions
 - Masters are registered by exporting them from the theme entry point alongside layouts
 
-Masters are registered in the theme entry point and their tokens are provided via `theme.masters`. See [`packages/theme-default/src/master.ts`](../packages/theme-default/src/master.ts) for the complete reference implementation.
+Masters are registered by exporting them from the theme entry point. Master tokens flow through layout token shapes — each layout declares a `master` token typed to its master's token interface. See [`packages/theme-default/src/master.ts`](../packages/theme-default/src/master.ts) for the complete reference implementation.
 
 ### Registering Layouts in Themes
 

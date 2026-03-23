@@ -36,7 +36,7 @@ function mockSlide(props: any): Slide {
   receivedProps.push(props);
   const slide: Slide = {
     masterName: "default",
-    masterVariant: "default",
+    masterTokens: {},
     content: { type: NODE_TYPE.COMPONENT, componentName: "test", params: props, content: undefined },
   };
   renderedSlides.push(slide);

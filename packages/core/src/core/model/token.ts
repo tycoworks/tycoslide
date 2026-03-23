@@ -91,13 +91,12 @@ export function parseTokenShape(shape: TokenShape): ParsedTokenShape {
 
 /**
  * Resolve tokens for a named variant from a theme config block.
- * Used by documentCompiler (layout tokens) and presentation (master tokens).
+ * Used by documentCompiler for layout token resolution.
  *
- * @param variantConfig - The theme config for this layout/master (e.g. theme.layouts.body)
- * @param name - Layout or master name (for error messages)
+ * @param variantConfig - The theme config for this layout (e.g. theme.layouts.body)
+ * @param name - Layout name (for error messages)
  * @param variant - Variant name to resolve
  * @param tokenShape - Token shape from the definition (for validation), or undefined if no tokens declared
- * @param label - "Layout" or "Master" (for error messages)
  * @param strict - When true (default), unknown keys in the variant map are rejected.
  *   Set to false to allow extra keys (e.g., slot injection tokens for slotted layouts).
  */
@@ -106,22 +105,21 @@ export function resolveVariantTokens(
   name: string,
   variant: string,
   tokenShape: TokenShape | undefined,
-  label: string,
   strict = true,
 ): Record<string, unknown> {
   if (!variantConfig) {
-    throw new Error(`${label} '${name}' requires tokens but theme.${label.toLowerCase()}s.${name} is missing.`);
+    throw new Error(`Layout '${name}' requires tokens but theme.layouts.${name} is missing.`);
   }
   const tokens = variantConfig.variants[variant];
   if (!tokens) {
     const available = Object.keys(variantConfig.variants).join(", ");
-    throw new Error(`Unknown variant '${variant}' for ${label.toLowerCase()} '${name}'. Available: ${available}`);
+    throw new Error(`Unknown variant '${variant}' for layout '${name}'. Available: ${available}`);
   }
 
   if (tokenShape) {
     const shape = parseTokenShape(tokenShape);
     if (shape.allKeys.size) {
-      validateTokens(shape, tokens, `${label} '${name}' variant '${variant}'`, strict);
+      validateTokens(shape, tokens, `Layout '${name}' variant '${variant}'`, strict);
     }
   }
   return tokens;
