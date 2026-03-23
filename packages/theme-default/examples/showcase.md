@@ -17,11 +17,11 @@ title: Agenda
 items:
   - What is tycoslide?
   - Markdown → .pptx
-  - Three Pillars
-  - The Build Pipeline
+  - Key Features
   - The Landscape
-  - The Key Metric
-notes: Agenda layout — grid variant with numbered white cards.
+  - The Build Pipeline
+  - The Design System
+notes: Agenda layout — six sections matching the narrative arc.
 ---
 
 ---
@@ -51,14 +51,13 @@ layout: body
 The new pipeline *increased*
 throughput by **40%** with
 :purple[zero downtime].
-++[See report](https://example.com)++
 ```
 
 ::right::
 
 review.pptx
 
-:::card{title="Q3 Infrastructure Review" description="The new pipeline *increased* throughput by **40%** with :purple[zero downtime]. [See report](https://example.com)"}
+:::card{title="Q3 Infrastructure Review" description="The new pipeline *increased* throughput by **40%** with :purple[zero downtime]."}
 :::
 
 ::overlay::
@@ -68,8 +67,7 @@ review.pptx
 ---
 layout: cards
 variant: default
-title: Three Pillars
-eyebrow: Solution
+title: Key Features
 cards:
   - title: Editable PowerPoint Slides
     description: Native PowerPoint slides that can be edited in any presentation software.
@@ -84,78 +82,95 @@ notes: Three pillars from positioning framework. Each maps to one supporting arg
 ---
 
 ---
-layout: stat
-variant: default
-value: "0"
-label: Silent Failures
-caption: Catch layout overflows, missing design tokens, and invalid parameters at build time. Presentations are finally treated with the same rigorous QA as production software.
-notes: Stat layout — big number with label and caption.
----
-
----
-layout: shapes
-variant: default
-title: Shape Primitives
-eyebrow: Demo
-notes: All 4 shape primitives with fill, border, cornerRadius, opacity, and shadow.
----
-
----
-layout: lines
-variant: default
-title: Line Dash Types
-eyebrow: Demo
-notes: All 7 SVG dash types with distinct stroke-dasharray patterns.
----
-
----
 layout: body
-variant: default
-title: Build Pipeline
-eyebrow: Architecture
-notes: Mermaid diagram — the build process from markdown to PowerPoint.
+variant: centered
+title: The Landscape
+notes: Comparison table with tycoslide column highlighted. The audience sees "None" for build validation in every competitor.
 ---
 
-:::mermaid
-flowchart LR
-  MD["Markdown<br/>+ YAML"] --> PARSE["Parse"]
-  TS["TypeScript<br/>DSL"] --> PARSE
-  PARSE --> EXPAND["Expand<br/>Components"]
-  EXPAND --> LAYOUT["Browser<br/>Layout"]
-  LAYOUT --> RENDER["Build<br/>.pptx"]
-  RENDER --> FILE[".pptx"]
-  class PARSE,EXPAND,LAYOUT,RENDER primary
+:::table
+| | :purple[**tycoslide**] | Slidev | Marp | Reveal.js |
+|---|---|---|---|---|
+| Output | :purple[Editable .pptx] | HTML / PDF | PDF / HTML | HTML / PDF |
+| .pptx export | :purple[Native objects] | Image-based | Image-based | None |
+| Components | :purple[Typed registry] | Vue components | Markdown-It plugins | Plugins |
+| Theme system | :purple[TypeScript tokens] | CSS + UnoCSS | CSS themes | CSS |
+| Token validation | :purple[Build-time] | None | None | None |
+| Overflow detection | :purple[Build-time] | None | None | None |
 :::
 
 ---
 layout: body
 variant: default
-title: Where tycoslide Fits
-eyebrow: Landscape
-notes: Comparison table. Dimensions and facts — the audience draws their own conclusion.
+title: The Build Pipeline
+notes: Mermaid diagram — the build process from markdown to PowerPoint. Vertical flow inside the Build Engine subgraph.
 ---
 
-| | tycoslide | PowerPoint | Slidev / Marp | Gamma |
-|---|---|---|---|---|
-| Output | Editable .pptx | .pptx / .key | HTML / PDF | Web / PDF |
-| Theme system | TypeScript tokens | Manual templates | CSS + HTML | AI-generated |
-| Authoring | Markdown + TypeScript | GUI | Markdown | AI prompt |
-| Version control | Git (text files) | Binary files | Git (text files) | Cloud history |
-| Build validation | Overflows, tokens, params | None | None | None |
-| Automation | CI/CD pipelines | VBA macros | Build scripts | API |
+:::mermaid
+flowchart LR
+  MD["Markdown +<br/>YAML Frontmatter"] -.-> BUILD
+  TS["TypeScript Theme<br/>(Tokens & Components)"] -.-> BUILD
+  subgraph BUILD ["Build Engine"]
+    direction TB
+    PARSE["Parse<br/>Markdown"] --> EXPAND["Expand<br/>Components"] --> MEASURE["Measure Layout<br/>(Browser)"]
+  end
+  BUILD --> PPTX["Native, Editable<br/>PowerPoint"]
+  class PARSE,EXPAND,MEASURE primary
+:::
+
+---
+layout: stat
+variant: default
+value: "Zero"
+label: Silent Failures
+caption: Catch layout overflows, missing design tokens, and invalid parameters at build time. Presentations are finally treated with the same rigorous QA as production software.
+notes: Lands after the pipeline explains HOW. The proof point — zero silent failures.
+---
 
 ---
 layout: quote
-variant: default
+variant: dark
 quote: "Software is eating the world...especially presentations."
 attribution: "— Marc Andreessen (probably)"
-notes: Pull quote with left accent bar. He did not quite say that.
+notes: Dark pull quote — emotional beat and visual contrast before the design system section.
 ---
+
+---
+layout: section
+variant: default
+title: Design System
+notes: Section divider before the design system slides. Dark background with centered title.
+---
+
+---
+layout: shapes
+variant: default
+title: Color Palette
+subtitle: Approved brand colors
+notes: Four key palette colors rendered as swatches with role names and hex values.
+---
+
+---
+layout: body
+variant: default
+title: Typography
+notes: Font hierarchy — Inter font family at different weights and sizes.
+---
+
+## Inter Bold — Display Heading
+
+### Inter Bold — Section Heading
+
+#### Inter Bold — Card Heading
+
+The default body text is set in **Inter Regular** at 16pt. Inline styles include **bold**, *italic*, ++underline++, ~~strikethrough~~, and :purple[accent colors].
+
+`Inter Light` is used for subtitles and captions, set at a lighter weight for visual hierarchy.
 
 ---
 layout: end
 variant: default
 title: tycoslide
 subtitle: Build presentations like software
-notes: Closing slide. Mirrors the title.
+notes: Closing slide. Mirrors the title. Light background contrasts with the dark quote.
 ---

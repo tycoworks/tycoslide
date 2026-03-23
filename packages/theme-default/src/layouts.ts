@@ -13,9 +13,9 @@ import {
   type Slide,
   type SlideNode,
   SPACING_MODE,
-  VALIGN,
   schema,
   token,
+  VALIGN,
   type VerticalAlignment,
 } from "tycoslide";
 import type {
@@ -200,7 +200,8 @@ export const statLayoutTokens = token.shape({
   value: token.required<PlainTextTokens>(),
   label: token.required<PlainTextTokens>(),
   caption: token.required<TextTokens>(),
-  surface: token.optional<ShapeTokens>(),
+  background: token.optional<ShapeTokens>(),
+  backgroundWidth: token.optional<number>(),
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
   spacing: token.required<number>(),
@@ -241,12 +242,16 @@ export const statLayout = defineLayout({
       ...(caption ? [text(caption, tokens.caption)] : []),
     );
 
-    const surfaced = tokens.surface
-      ? stack({ height: SIZE.FILL }, shape(tokens.surface, { shape: SHAPE.RECTANGLE }), content)
+    const wrapProps = {
+      height: SIZE.FILL,
+      ...(tokens.backgroundWidth != null ? { width: tokens.backgroundWidth } : {}),
+    };
+    const wrapped = tokens.background
+      ? stack(wrapProps, shape(tokens.background, { shape: SHAPE.RECTANGLE }), content)
       : content;
 
     return masteredSlide(
-      column({ spacing: 0, height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign }, surfaced),
+      column({ spacing: 0, height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign }, wrapped),
     );
   },
 });
@@ -255,6 +260,7 @@ export const statLayout = defineLayout({
 
 export const quoteLayoutTokens = token.shape({
   quote: token.required<QuoteTokens>(),
+  masterVariant: token.required<string>(),
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
   spacing: token.required<number>(),
@@ -278,13 +284,17 @@ export const quoteLayout = defineLayout({
     attribution: param.optional(textComponent.schema),
   },
   tokens: quoteLayoutTokens,
-  render: ({ quote: quoteText, attribution }, _slots, tokens: QuoteLayoutTokens) =>
-    masteredSlide(
+  render: ({ quote: quoteText, attribution }, _slots, tokens: QuoteLayoutTokens) => ({
+    masterName: "minimal",
+    masterVariant: tokens.masterVariant,
+    content: column(
+      { spacing: 0, height: SIZE.FILL },
       column(
         { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing },
         component(Component.Quote, { quote: quoteText, attribution }, undefined, tokens.quote),
       ),
     ),
+  }),
 });
 
 // --- end ---
@@ -583,17 +593,25 @@ export const transformLayout = defineLayout({
   slots: ["left", "right", "overlay"],
   tokens: transformLayoutTokens,
   render: ({ title, eyebrow }, { left, right, overlay }, tokens: TransformLayoutTokens) => {
-    const colProps = { vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.contentSpacing, height: SIZE.FILL };
+    const colProps = {
+      vAlign: tokens.vAlign,
+      hAlign: tokens.hAlign,
+      spacing: tokens.contentSpacing,
+      height: SIZE.FILL,
+    };
     const layers: SlideNode[] = [
-      row(
-        { spacing: tokens.spacing, height: SIZE.HUG },
-        column(colProps, ...left),
-        column(colProps, ...right),
-      ),
+      row({ spacing: tokens.spacing, height: SIZE.HUG }, column(colProps, ...left), column(colProps, ...right)),
     ];
     if (overlay.length > 0) {
       layers.push(
-        column({ width: tokens.overlaySize, height: tokens.overlaySize, spacing: 0, vAlign: tokens.overlayVAlign, hAlign: tokens.overlayHAlign },
+        column(
+          {
+            width: tokens.overlaySize,
+            height: tokens.overlaySize,
+            spacing: 0,
+            vAlign: tokens.overlayVAlign,
+            hAlign: tokens.overlayHAlign,
+          },
           ...overlay,
         ),
       );
@@ -614,6 +632,7 @@ export const transformLayout = defineLayout({
 export const shapesLayoutTokens = token.shape({
   title: token.required<PlainTextTokens>(),
   eyebrow: token.required<PlainTextTokens>(),
+  subtitle: token.optional<PlainTextTokens>(),
   headerSpacing: token.required<number>(),
   label: token.required<PlainTextTokens>(),
   rectangle: token.required<ShapeTokens>(),
@@ -639,9 +658,10 @@ export const shapesLayout = defineLayout({
   params: {
     title: param.optional(textComponent.schema),
     eyebrow: param.optional(textComponent.schema),
+    subtitle: param.optional(textComponent.schema),
   },
   tokens: shapesLayoutTokens,
-  render: ({ title, eyebrow }, _slots, tokens: ShapesLayoutTokens) => {
+  render: ({ title, eyebrow, subtitle }, _slots, tokens: ShapesLayoutTokens) => {
     const cell = (t: ShapeTokens, s: (typeof SHAPE)[keyof typeof SHAPE], label: string) =>
       column(
         { spacing: tokens.spacing, hAlign: tokens.hAlign, height: SIZE.FILL },
@@ -653,12 +673,13 @@ export const shapesLayout = defineLayout({
       column(
         { vAlign: tokens.vAlign, height: SIZE.FILL, spacing: tokens.spacing },
         ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
+        ...(subtitle && tokens.subtitle ? [plainText(subtitle, tokens.subtitle)] : []),
         row(
           { spacing: tokens.spacing, height: SIZE.FILL },
-          cell(tokens.rectangle, SHAPE.RECTANGLE, "Rectangle"),
-          cell(tokens.ellipse, SHAPE.ELLIPSE, "Ellipse"),
-          cell(tokens.triangle, SHAPE.TRIANGLE, "Triangle"),
-          cell(tokens.diamond, SHAPE.DIAMOND, "Diamond"),
+          cell(tokens.rectangle, SHAPE.RECTANGLE, "Primary\n#7C3AED"),
+          cell(tokens.ellipse, SHAPE.RECTANGLE, "Dark\n#1A1A2E"),
+          cell(tokens.triangle, SHAPE.RECTANGLE, "Accent\n#10B981"),
+          cell(tokens.diamond, SHAPE.RECTANGLE, "Surface\n#E2E8F0"),
         ),
       ),
     );
