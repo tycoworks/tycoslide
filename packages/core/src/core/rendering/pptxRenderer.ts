@@ -177,6 +177,7 @@ export class PptxRenderer {
         break;
       case NODE_TYPE.CONTAINER:
       case NODE_TYPE.STACK:
+      case NODE_TYPE.GRID:
         // Containers just render their children
         log.render._("  container %s with %d children", node.type.toUpperCase(), children?.length ?? 0);
         if (children) {
@@ -345,6 +346,7 @@ export class PptxRenderer {
       }
       case NODE_TYPE.CONTAINER:
       case NODE_TYPE.STACK:
+      case NODE_TYPE.GRID:
         // Recurse into children
         if (children) {
           for (const child of children) {

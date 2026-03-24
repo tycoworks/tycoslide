@@ -18,7 +18,9 @@ import type { Bounds } from "../model/bounds.js";
 import type {
   ContainerNode,
   ElementNode,
+  GridNode,
   ImageNode,
+  LayoutNode,
   LineNode,
   Shadow,
   ShapeNode,
@@ -141,26 +143,35 @@ export function flexContainer(
   return styles;
 }
 
-/** Compute child context for Container or Stack nodes.
+/** Compute child context for Container, Stack, or Grid nodes.
  *  heightIsConstrained propagation: number→true, HUG→false, FILL→inherit. */
-export function childContext(node: ContainerNode | StackNode, parent: ParentCtx): ParentCtx {
+export function childContext(node: LayoutNode, parent: ParentCtx): ParentCtx {
   const heightIsConstrained =
     typeof node.height === "number" ? true : node.height === SIZE.HUG ? false : parent.heightIsConstrained;
 
-  if (node.type === NODE_TYPE.CONTAINER) {
-    const isRow = (node as ContainerNode).direction === DIRECTION.ROW;
-    return {
-      direction: (node as ContainerNode).direction,
-      hasDefiniteCrossSize: isRow ? node.height !== SIZE.HUG : undefined,
-      heightIsConstrained,
-    };
+  switch (node.type) {
+    case NODE_TYPE.CONTAINER: {
+      const isRow = (node as ContainerNode).direction === DIRECTION.ROW;
+      return {
+        direction: (node as ContainerNode).direction,
+        hasDefiniteCrossSize: isRow ? node.height !== SIZE.HUG : undefined,
+        heightIsConstrained,
+      };
+    }
+    case NODE_TYPE.GRID:
+      // Grid items fill left-to-right in rows of N columns.
+      // Width comes from column tracks (main axis), height from row tracks (cross axis).
+      return {
+        direction: DIRECTION.ROW,
+        hasDefiniteCrossSize: node.height !== SIZE.HUG,
+        heightIsConstrained,
+      };
+    case NODE_TYPE.STACK:
+      return {
+        direction: DIRECTION.COLUMN,
+        heightIsConstrained,
+      };
   }
-
-  // Stack: children are in column context
-  return {
-    direction: DIRECTION.COLUMN,
-    heightIsConstrained,
-  };
 }
 
 // ─── Alignment Helpers ────────────────────────
@@ -297,6 +308,33 @@ function styleStack(
         children: [styleNode(child, ctx, idCtx, nodeIds, fontRatios, imagePathMap)],
       };
     }),
+  };
+}
+
+function styleGrid(
+  node: GridNode,
+  parent: ParentCtx,
+  nodeId: string,
+  idCtx: IdContext,
+  nodeIds: Map<ElementNode, string>,
+  fontRatios: FontNormalRatios,
+  imagePathMap: Map<string, string>,
+): StyledNode {
+  const spacingPx = inToPx(node.spacing);
+
+  const styles: Record<string, string | number> = {
+    display: "grid",
+    gridTemplateColumns: `repeat(${node.columns}, 1fr)`,
+    gap: `${spacingPx}px`,
+    ...flexContainer(node.width, node.height, parent.direction),
+  };
+
+  const ctx = childContext(node, parent);
+
+  return {
+    nodeId,
+    styles,
+    children: node.children.map((child) => styleNode(child, ctx, idCtx, nodeIds, fontRatios, imagePathMap)),
   };
 }
 
@@ -673,6 +711,8 @@ export function styleNode(
       return styleContainer(node as ContainerNode, parent, nodeId, idCtx, nodeIds, fontRatios, imagePathMap);
     case NODE_TYPE.STACK:
       return styleStack(node as StackNode, parent, nodeId, idCtx, nodeIds, fontRatios, imagePathMap);
+    case NODE_TYPE.GRID:
+      return styleGrid(node as GridNode, parent, nodeId, idCtx, nodeIds, fontRatios, imagePathMap);
     case NODE_TYPE.TEXT:
       return styleText(node as TextNode, parent, nodeId, fontRatios);
     case NODE_TYPE.IMAGE:

@@ -14,7 +14,9 @@ export {
 export type {
   ContainerNode,
   ElementNode,
+  GridNode,
   ImageNode,
+  LayoutNode,
   LineNode,
   NodeType,
   PositionedNode,
@@ -31,7 +33,7 @@ export type {
   TextNode,
 } from "./core/model/nodes.js";
 
-export { component, isComponentNode, NODE_TYPE } from "./core/model/nodes.js";
+export { component, isComponentNode, isLayoutNode, NODE_TYPE } from "./core/model/nodes.js";
 // Param helpers (schema type builders + param declaration wrappers)
 export { type InferParams, param, type ScalarParam, schema } from "./core/model/param.js";
 export type { ContainerDirective, SyntaxType } from "./core/model/syntax.js";

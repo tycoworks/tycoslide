@@ -1,7 +1,7 @@
 // Font Utilities Module
 // Provides text normalization and font family helpers
 
-import { type ElementNode, NODE_TYPE } from "../core/model/nodes.js";
+import { type ElementNode, isLayoutNode, NODE_TYPE } from "../core/model/nodes.js";
 import {
   FONT_SLOT,
   type Font,
@@ -167,7 +167,7 @@ export function validateFontVariants(tree: ElementNode): FontVariantViolation[] 
           checkRuns(cell.content, cell.resolvedStyle.fontFamily);
         }
       }
-    } else if (node.type === NODE_TYPE.CONTAINER || node.type === NODE_TYPE.STACK) {
+    } else if (isLayoutNode(node)) {
       for (const child of node.children) {
         walk(child);
       }

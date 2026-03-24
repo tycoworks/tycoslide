@@ -4,7 +4,7 @@
 
 import * as assert from "node:assert";
 import { describe, test } from "node:test";
-import type { ContainerNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, StackNode, TableNode } from "tycoslide";
+import type { ContainerNode, GridNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, StackNode, TableNode } from "tycoslide";
 import {
   componentRegistry,
   DASH_TYPE,
@@ -634,15 +634,6 @@ describe("grid()", () => {
   const child2 = text("B", DEFAULT_TEXT_TOKENS);
   const child3 = text("C", DEFAULT_TEXT_TOKENS);
   const child4 = text("D", DEFAULT_TEXT_TOKENS);
-  const child5 = text("E", DEFAULT_TEXT_TOKENS);
-  const _child6 = text("F", DEFAULT_TEXT_TOKENS);
-
-  /** Expand grid ComponentNode to ContainerNode (column) and return its row children */
-  async function renderGrid(gridNode: ReturnType<typeof grid>): Promise<ContainerNode[]> {
-    const col = (await render(gridNode)) as ContainerNode;
-    assert.strictEqual(col.type, NODE_TYPE.CONTAINER);
-    return col.children as ContainerNode[];
-  }
 
   test("returns a single ComponentNode", () => {
     const g = grid({ columns: 2, spacing: 0.25 }, child1, child2);
@@ -650,93 +641,50 @@ describe("grid()", () => {
     assert.strictEqual(g.componentName, Component.Grid);
   });
 
-  test("renders to ColumnNode containing rows", async () => {
-    const col = (await render(grid({ columns: 2, spacing: 0.25 }, child1, child2))) as ContainerNode;
-    assert.strictEqual(col.type, NODE_TYPE.CONTAINER);
-    assert.strictEqual(col.children.length, 1); // 2 items / 2 cols = 1 row
-    assert.strictEqual(col.children[0].type, NODE_TYPE.CONTAINER);
+  test("renders to GridNode", async () => {
+    const node = (await render(grid({ columns: 2, spacing: 0.25 }, child1, child2))) as GridNode;
+    assert.strictEqual(node.type, NODE_TYPE.GRID);
   });
 
-  test("chunks children into rows (2 columns, 4 children = 2 rows)", async () => {
-    const rows = await renderGrid(grid({ columns: 2, spacing: 0.25 }, child1, child2, child3, child4));
-    assert.strictEqual(rows.length, 2);
-    assert.strictEqual(rows[0].children.length, 2);
-    assert.strictEqual(rows[1].children.length, 2);
+  test("sets columns from params", async () => {
+    const node = (await render(grid({ columns: 3, spacing: 0.25 }, child1, child2))) as GridNode;
+    assert.strictEqual(node.columns, 3);
   });
 
-  test("applies spacing to rows when specified", async () => {
-    const rows = await renderGrid(grid({ columns: 2, spacing: 0.125 }, child1, child2, child3, child4));
-    assert.strictEqual(rows[0].spacing, 0.125);
+  test("sets spacing from params", async () => {
+    const node = (await render(grid({ columns: 2, spacing: 0.125 }, child1, child2))) as GridNode;
+    assert.strictEqual(node.spacing, 0.125);
   });
 
-  test("handles odd number of children (2 columns, 5 children = 3 rows)", async () => {
-    const rows = await renderGrid(grid({ columns: 2, spacing: 0.25 }, child1, child2, child3, child4, child5));
-    assert.strictEqual(rows.length, 3);
-    assert.strictEqual(rows[2].children.length, 1);
+  test("defaults to height: SIZE.FILL", async () => {
+    const node = (await render(grid({ columns: 2, spacing: 0.25 }, child1, child2))) as GridNode;
+    assert.strictEqual(node.height, SIZE.FILL);
   });
 
-  test("accepts props object with columns", async () => {
-    const rows = await renderGrid(grid({ columns: 2, spacing: 0.25 }, child1, child2, child3));
-    assert.strictEqual(rows.length, 2);
-    assert.strictEqual(rows[0].children.length, 2);
-    assert.strictEqual(rows[1].children.length, 1);
+  test("passes height through from params", async () => {
+    const node = (await render(grid({ columns: 2, spacing: 0.25, height: SIZE.HUG }, child1, child2))) as GridNode;
+    assert.strictEqual(node.height, SIZE.HUG);
   });
 
-  test("defaults to 0.25 when spacing not specified", async () => {
-    const rows = await renderGrid(grid({ columns: 2, spacing: 0.25 }, child1, child2));
-    assert.strictEqual(rows[0].spacing, 0.25);
+  test("width is SIZE.FILL", async () => {
+    const node = (await render(grid({ columns: 2, spacing: 0.25 }, child1, child2))) as GridNode;
+    assert.strictEqual(node.width, SIZE.FILL);
   });
 
-  test("preserves child order (each wrapped in column cell)", async () => {
-    const rows = await renderGrid(grid({ columns: 2, spacing: 0.25 }, child1, child2));
-    const firstRow = rows[0];
-    // Each child is wrapped in a ContainerNode (column) with width: SIZE.FILL
-    assert.strictEqual(firstRow.children.length, 2);
-    const col0 = firstRow.children[0] as ContainerNode;
-    assert.strictEqual(col0.type, NODE_TYPE.CONTAINER);
-    assert.strictEqual(col0.width, SIZE.FILL);
-    const col1 = firstRow.children[1] as ContainerNode;
-    assert.strictEqual(col1.type, NODE_TYPE.CONTAINER);
-    assert.strictEqual(col1.width, SIZE.FILL);
-    // The original child (after expansion) is inside each column
-    assert.strictEqual(col0.children.length, 1);
-    assert.strictEqual(col1.children.length, 1);
+  test("children are flat (not chunked into rows)", async () => {
+    const node = (await render(grid({ columns: 2, spacing: 0.25 }, child1, child2, child3, child4))) as GridNode;
+    assert.strictEqual(node.children.length, 4);
   });
 
-  test("wrapper column has height: SIZE.FILL", async () => {
-    const col = (await render(grid({ columns: 2, spacing: 0.25 }, child1, child2))) as ContainerNode;
-    assert.strictEqual(col.height, SIZE.FILL);
-  });
-
-  test("rows have height: SIZE.FILL", async () => {
-    const rows = await renderGrid(grid({ columns: 2, spacing: 0.25 }, child1, child2));
-    assert.strictEqual(rows[0].height, SIZE.FILL);
-    assert.strictEqual(rows[0].vAlign, VALIGN.TOP);
-  });
-
-  test("cells have width and height: SIZE.FILL", async () => {
-    const rows = await renderGrid(grid({ columns: 2, spacing: 0.25 }, child1, child2));
-    const col0 = rows[0].children[0] as ContainerNode;
-    assert.strictEqual(col0.height, SIZE.FILL);
-    assert.strictEqual(col0.width, SIZE.FILL);
-  });
-
-  test("handles single row (columns >= children)", async () => {
-    const rows = await renderGrid(grid({ columns: 4, spacing: 0.25 }, child1, child2));
-    assert.strictEqual(rows.length, 1);
-    assert.strictEqual(rows[0].children.length, 2);
-  });
-
-  test("handles empty children (renders to column with no rows)", async () => {
-    const col = (await render(grid({ columns: 2, spacing: 0.25 }))) as ContainerNode;
-    assert.strictEqual(col.type, NODE_TYPE.CONTAINER);
-    assert.strictEqual(col.children.length, 0);
+  test("handles empty children", async () => {
+    const node = (await render(grid({ columns: 2, spacing: 0.25 }))) as GridNode;
+    assert.strictEqual(node.type, NODE_TYPE.GRID);
+    assert.strictEqual(node.children.length, 0);
   });
 
   test("handles single child", async () => {
-    const rows = await renderGrid(grid({ columns: 2, spacing: 0.25 }, child1));
-    assert.strictEqual(rows.length, 1);
-    assert.strictEqual(rows[0].children.length, 1);
+    const node = (await render(grid({ columns: 2, spacing: 0.25 }, child1))) as GridNode;
+    assert.strictEqual(node.children.length, 1);
   });
 });
 

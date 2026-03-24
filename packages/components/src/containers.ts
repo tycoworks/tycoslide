@@ -161,7 +161,7 @@ export function stack(...args: any[]): ComponentNode {
 }
 
 // ============================================
-// GRID (component - chunks children into column of rows)
+// GRID (equal-column grid with cross-sibling height coordination)
 // ============================================
 
 export type GridParams = {
@@ -178,17 +178,14 @@ export const gridComponent = defineComponent({
   render: (params: GridParams, children: SlideNode[]) => {
     const { columns, spacing, height = SIZE.FILL } = params;
 
-    // Wrap each child in a column cell so items share row width equally
-    const cells = children.map((child) => column({ spacing: 0, width: SIZE.FILL, height }, child));
-
-    // Chunk cells into rows
-    const rows: ComponentNode[] = [];
-    for (let i = 0; i < cells.length; i += columns) {
-      rows.push(row({ spacing, height }, ...cells.slice(i, i + columns)));
-    }
-
-    // Wrapper column mirrors caller's height so outer containers can position it
-    return column({ spacing, height }, ...rows);
+    return {
+      type: NODE_TYPE.GRID,
+      children,
+      columns,
+      spacing,
+      width: SIZE.FILL as SizeValue,
+      height,
+    };
   },
 });
 

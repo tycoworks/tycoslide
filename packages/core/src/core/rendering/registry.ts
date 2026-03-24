@@ -6,13 +6,12 @@ import { z } from "zod";
 import type { Bounds } from "../model/bounds.js";
 import {
   type ComponentNode,
-  type ContainerNode,
   component,
   type ElementNode,
   isComponentNode,
-  NODE_TYPE,
+  isLayoutNode,
+  type LayoutNode,
   type SlideNode,
-  type StackNode,
 } from "../model/nodes.js";
 import type { ScalarParam } from "../model/param.js";
 import { RESERVED_FRONTMATTER_KEYS, type SyntaxType } from "../model/syntax.js";
@@ -413,20 +412,13 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any, any>> {
     }
 
     // After the ComponentNode guard above, node is either a leaf ElementNode
-    // or a container/stack whose children may still contain ComponentNodes.
-    if (node.type === NODE_TYPE.CONTAINER) {
-      const container = node as ContainerNode<SlideNode>;
+    // or a layout node whose children may still contain ComponentNodes.
+    if (isLayoutNode(node as ElementNode)) {
+      const layout = node as LayoutNode;
       return {
-        ...container,
-        children: await Promise.all(container.children.map((c) => this.renderTree(c, context))),
-      } as ContainerNode;
-    }
-    if (node.type === NODE_TYPE.STACK) {
-      const stack = node as StackNode<SlideNode>;
-      return {
-        ...stack,
-        children: await Promise.all(stack.children.map((c) => this.renderTree(c, context))),
-      } as StackNode;
+        ...layout,
+        children: await Promise.all(layout.children.map((c) => this.renderTree(c, context))),
+      } as LayoutNode;
     }
 
     // Leaf node (text, image, line, shape, slideNumber, table) — no children to resolve

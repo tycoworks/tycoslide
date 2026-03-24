@@ -629,7 +629,7 @@ stack({ height: SIZE.FILL },
 
 ## grid
 
-Equal-column grid. Wraps children into rows of N columns, each cell sharing space equally.
+Equal-column grid. Children are laid out in rows of N columns with equal widths. Items in the same row share height, and columns align across rows.
 
 ### Parameters
 
@@ -637,6 +637,7 @@ Equal-column grid. Wraps children into rows of N columns, each cell sharing spac
 |-------|------|-------------|
 | `columns` | number | Number of columns (**required**) |
 | `spacing` | number | Spacing between cells in inches (**required**) |
+| `height` | SizeValue \| number | `SIZE.FILL` (default) distributes available height; `SIZE.HUG` sizes to content |
 
 ### Example
 

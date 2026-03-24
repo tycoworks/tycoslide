@@ -6,8 +6,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { log } from "../../utils/log.js";
 import type { Bounds } from "../model/bounds.js";
-import type { ContainerNode, ElementNode, PositionedNode, StackNode, TextNode } from "../model/nodes.js";
-import { NODE_TYPE } from "../model/nodes.js";
+import type { ElementNode, LayoutNode, PositionedNode, TextNode } from "../model/nodes.js";
+import { isLayoutNode, NODE_TYPE } from "../model/nodes.js";
 import type { Background, Theme } from "../model/types.js";
 import { copyFonts, copyImages } from "./assetCopier.js";
 import { HeadlessBrowser } from "./browser.js";
@@ -222,8 +222,8 @@ export class LayoutPipeline {
     };
 
     // Recurse into container children
-    if (node.type === NODE_TYPE.CONTAINER || node.type === NODE_TYPE.STACK) {
-      const container = node as ContainerNode | StackNode;
+    if (isLayoutNode(node)) {
+      const container = node as LayoutNode;
       positioned.children = container.children.map((child) => this.buildPositionedTree(child, bounds));
     }
 

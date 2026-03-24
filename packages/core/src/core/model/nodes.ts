@@ -29,6 +29,7 @@ export const NODE_TYPE = {
   // Layout primitives
   CONTAINER: "container", // Flex container (row or column, determined by direction)
   STACK: "stack", // Z-order composition: children overlap at same position
+  GRID: "grid", // CSS Grid container: equal-width columns with cross-sibling coordination
   // Visual primitives
   LINE: "line", // Stroke-only separator (zero cross-axis)
   SHAPE: "shape", // Area shapes: fill, border, cornerRadius
@@ -190,6 +191,16 @@ export interface StackNode<C extends SlideNode = ElementNode> {
   height: number | SizeValue; // inches, SIZE.FILL, or SIZE.HUG
 }
 
+/** Grid is a CSS Grid container: equal-width columns with cross-sibling height coordination */
+export interface GridNode<C extends SlideNode = ElementNode> {
+  type: typeof NODE_TYPE.GRID;
+  children: C[]; // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
+  columns: number; // number of equal-width columns
+  spacing: number; // inches — gap between cells
+  width: number | SizeValue; // inches, SIZE.FILL, or SIZE.HUG
+  height: number | SizeValue; // inches, SIZE.FILL, or SIZE.HUG
+}
+
 // ============================================
 // COMPONENT NODE (higher-level abstraction)
 // ============================================
@@ -216,19 +227,19 @@ export interface ComponentNode<TParams = unknown, TContent = unknown> {
 // UNION TYPES
 // ============================================
 
+/** Container nodes that hold children — used for layout dispatch and recursion */
+export type LayoutNode = ContainerNode | StackNode | GridNode;
+
 /** Primitive layout nodes - what layout/render systems work with */
-export type ElementNode =
-  | TextNode
-  | ImageNode
-  | LineNode
-  | ShapeNode
-  | SlideNumberNode
-  | TableNode
-  | ContainerNode
-  | StackNode;
+export type ElementNode = TextNode | ImageNode | LineNode | ShapeNode | SlideNumberNode | TableNode | LayoutNode;
 
 /** Content that can appear in slides and containers - primitives, components, or pre-expansion containers */
-export type SlideNode = ElementNode | ComponentNode | ContainerNode<SlideNode> | StackNode<SlideNode>;
+export type SlideNode =
+  | ElementNode
+  | ComponentNode
+  | ContainerNode<SlideNode>
+  | StackNode<SlideNode>
+  | GridNode<SlideNode>;
 
 // ============================================
 // DSL HELPER
@@ -253,6 +264,13 @@ export function component<TParams, TContent = undefined>(
   };
   if (tokens) node.tokens = tokens as Record<string, unknown>;
   return node;
+}
+
+/**
+ * Type guard to check if a node is a layout node (container, stack, or grid).
+ */
+export function isLayoutNode(node: ElementNode): node is LayoutNode {
+  return node.type === NODE_TYPE.CONTAINER || node.type === NODE_TYPE.STACK || node.type === NODE_TYPE.GRID;
 }
 
 /**
