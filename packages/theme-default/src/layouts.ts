@@ -612,7 +612,7 @@ export const transformLayout = defineLayout({
       height: SIZE.FILL,
     };
     const layers: SlideNode[] = [
-      row({ spacing: tokens.spacing, height: SIZE.FILL }, column(colProps, ...left), column(colProps, ...right)),
+      row({ spacing: tokens.spacing, height: SIZE.HUG }, column(colProps, ...left), column(colProps, ...right)),
     ];
     if (overlay.length > 0) {
       layers.push(

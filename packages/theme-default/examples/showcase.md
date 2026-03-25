@@ -34,7 +34,6 @@ notes: Positioning one-liner. Four anchors in one sentence.
 ---
 layout: transform
 variant: default
-title: "Markdown → PowerPoint"
 notes: Side-by-side showing markdown input on the left and the resulting slide output on the right.
 ---
 
