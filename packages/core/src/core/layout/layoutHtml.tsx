@@ -329,6 +329,12 @@ function styleGrid(
     ...flexContainer(node.width, node.height, parent.direction),
   };
 
+  // When the grid has definite height (FILL or fixed inches), distribute rows equally.
+  // Without this, rows hug content and empty space pools at the bottom.
+  if (node.height === SIZE.FILL || typeof node.height === "number") {
+    styles.gridAutoRows = "1fr";
+  }
+
   const ctx = childContext(node, parent);
 
   return {

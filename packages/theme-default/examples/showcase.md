@@ -16,10 +16,10 @@ variant: default
 title: Agenda
 items:
   - What is tycoslide?
-  - Markdown → .pptx
+  - Markdown → PowerPoint
   - Key Features
-  - The Landscape
-  - The Build Pipeline
+  - How It Compares
+  - How It Works
   - The Design System
 notes: Agenda layout — six sections matching the narrative arc.
 ---
@@ -34,6 +34,7 @@ notes: Positioning one-liner. Four anchors in one sentence.
 ---
 layout: transform
 variant: default
+title: "Markdown → PowerPoint"
 notes: Side-by-side showing markdown input on the left and the resulting slide output on the right.
 ---
 
@@ -84,7 +85,7 @@ notes: Three pillars from positioning framework. Each maps to one supporting arg
 ---
 layout: body
 variant: centered
-title: The Landscape
+title: How It Compares
 notes: Comparison table with tycoslide column highlighted. The audience sees "None" for build validation in every competitor.
 ---
 
@@ -101,7 +102,7 @@ notes: Comparison table with tycoslide column highlighted. The audience sees "No
 ---
 layout: body
 variant: default
-title: The Build Pipeline
+title: How It Works
 notes: Mermaid diagram — the build process from markdown to PowerPoint. Vertical flow inside the Build Engine subgraph.
 ---
 

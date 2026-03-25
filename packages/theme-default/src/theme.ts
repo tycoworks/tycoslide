@@ -608,7 +608,7 @@ export const theme = defineTheme({
           hAlign: HALIGN.CENTER,
           spacing: spacing,
           gridSpacing: spacing,
-          card: { ...cardBase, vAlign: VALIGN.TOP, background: cardBackground },
+          card: { ...cardBase, padding: unit * 11, vAlign: VALIGN.TOP, background: cardBackground },
         }),
         flat: cardsLayout.tokenMap({
           master: defaultMasterConfig,
@@ -621,7 +621,7 @@ export const theme = defineTheme({
           hAlign: HALIGN.CENTER,
           spacing: spacing,
           gridSpacing: spacing,
-          card: { ...cardBase, vAlign: VALIGN.TOP },
+          card: { ...cardBase, padding: unit * 11, vAlign: VALIGN.TOP },
         }),
       },
     },

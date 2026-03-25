@@ -612,7 +612,7 @@ export const transformLayout = defineLayout({
       height: SIZE.FILL,
     };
     const layers: SlideNode[] = [
-      row({ spacing: tokens.spacing, height: SIZE.HUG }, column(colProps, ...left), column(colProps, ...right)),
+      row({ spacing: tokens.spacing, height: SIZE.FILL }, column(colProps, ...left), column(colProps, ...right)),
     ];
     if (overlay.length > 0) {
       layers.push(
@@ -628,7 +628,7 @@ export const transformLayout = defineLayout({
         ),
       );
     }
-    const content = layers.length === 1 ? layers[0] : stack({ height: SIZE.HUG }, ...layers);
+    const content = layers.length === 1 ? layers[0] : stack({ height: SIZE.FILL }, ...layers);
     return masteredSlide(
       tokens.master,
       column(
