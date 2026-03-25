@@ -16,8 +16,22 @@ import type {
   TableNode,
   TextNode,
 } from "../model/nodes.js";
-import type { StrikeType, TextContent, TextStyle, UnderlineStyle } from "../model/types.js";
-import { BORDER_STYLE, DIRECTION, LINE_SHAPE, STRIKE_TYPE, UNDERLINE_STYLE } from "../model/types.js";
+import type { DashType, StrikeType, TextContent, TextStyle, UnderlineStyle } from "../model/types.js";
+import { BORDER_STYLE, DASH_TYPE, DIRECTION, LINE_SHAPE, STRIKE_TYPE, UNDERLINE_STYLE } from "../model/types.js";
+
+/** Map CSS-compatible dash type names to pptxgenjs values. */
+function pptxDashType(dt: DashType): string {
+  switch (dt) {
+    case DASH_TYPE.SOLID:
+      return "solid";
+    case DASH_TYPE.DASHED:
+      return "dash";
+    case DASH_TYPE.DOTTED:
+      return "sysDot";
+    default:
+      throw new Error(`Unknown dash type: '${dt as string}'`);
+  }
+}
 
 // ============================================
 // TYPES
@@ -205,12 +219,13 @@ export class PptxConfigBuilder {
       options.line = {
         color: stripHash(border.color),
         width: border.width,
+        dashType: pptxDashType(border.dashType),
       };
     }
 
-    if (shapeNode.cornerRadius > 0) {
-      options.rectRadius = shapeNode.cornerRadius;
-    }
+    // Always pass rectRadius so explicit 0 produces sharp corners.
+    // Requires pptxgenjs fix: `if (rectRadius != null)` instead of `if (rectRadius)`.
+    options.rectRadius = shapeNode.cornerRadius;
 
     if (shapeNode.shadow) {
       options.shadow = buildShadowOptions(shapeNode.shadow);
@@ -223,12 +238,11 @@ export class PptxConfigBuilder {
     lineNode: LineNode,
     positioned: PositionedNode,
   ): { shapeType: string; options: Record<string, unknown> } {
-    const color = lineNode.color;
-    const lineWidth = lineNode.width;
+    const { color, width: strokeWidth, dashType } = lineNode.stroke;
     const isVertical = lineNode.direction === DIRECTION.COLUMN;
 
-    const lineOpts: Record<string, unknown> = { color: stripHash(color), width: lineWidth };
-    lineOpts.dashType = lineNode.dashType;
+    const lineOpts: Record<string, unknown> = { color: stripHash(color), width: strokeWidth };
+    lineOpts.dashType = pptxDashType(dashType);
 
     const options: Record<string, unknown> = {
       x: positioned.x,

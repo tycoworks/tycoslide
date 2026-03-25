@@ -3,6 +3,7 @@
 import {
   type ComponentNode,
   component,
+  DASH_TYPE,
   type DashType,
   DIRECTION,
   DIRECTION_VALUES,
@@ -18,6 +19,7 @@ import {
   SHAPE_VALUES,
   type Shadow,
   type ShapeNode,
+  SIZE,
   type SlideNumberNode,
   schema,
   type TextStyleName,
@@ -68,9 +70,7 @@ function renderLine(params: LineParams, _content: undefined, _context: RenderCon
   const node: LineNode = {
     type: NODE_TYPE.LINE,
     direction: params.direction ?? DIRECTION.ROW,
-    color: tokens.color,
-    width: tokens.width,
-    dashType: tokens.dashType,
+    stroke: { color: tokens.color, width: tokens.width, dashType: tokens.dashType },
   };
   if (tokens.shadow) {
     node.shadow = tokens.shadow;
@@ -107,6 +107,8 @@ function renderShape(
 ): ShapeNode {
   const node: ShapeNode = {
     type: NODE_TYPE.SHAPE,
+    width: SIZE.FILL,
+    height: SIZE.FILL,
     shape: params.shape,
     fill: {
       color: tokens.fill,
@@ -115,6 +117,7 @@ function renderShape(
     border: {
       color: tokens.borderColor,
       width: tokens.borderWidth,
+      dashType: DASH_TYPE.SOLID,
     },
     cornerRadius: tokens.cornerRadius,
   };
@@ -149,6 +152,8 @@ function renderSlideNumber(
   const style = tokens.style;
   return {
     type: NODE_TYPE.SLIDE_NUMBER,
+    width: SIZE.HUG,
+    height: SIZE.HUG,
     style,
     resolvedStyle: context.theme.textStyles[style],
     color: tokens.color,

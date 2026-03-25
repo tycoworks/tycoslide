@@ -14,14 +14,12 @@ notes: Opening slide. Clean centered title with cursor.
 layout: agenda
 variant: default
 title: Agenda
+image: $tycoworks.tycoslide
 items:
-  - What is tycoslide?
-  - Markdown → PowerPoint
-  - Key Features
-  - How It Compares
-  - How It Works
-  - The Design System
-notes: Agenda layout — six sections matching the narrative arc.
+  - tycoslide
+  - Gallery
+  - Design System
+notes: "Agenda layout — three sections: the tool, the art of the possible, the visual identity."
 ---
 
 ---
@@ -67,7 +65,7 @@ review.pptx
 ---
 layout: cards
 variant: default
-title: Key Features
+title: Capabilities
 cards:
   - title: Editable PowerPoint Slides
     description: Native PowerPoint slides that can be edited in any presentation software.
@@ -118,12 +116,43 @@ flowchart LR
 :::
 
 ---
+layout: section
+variant: default
+title: Gallery
+notes: Section divider — transition from the pitch to art of the possible. Dark background.
+---
+
+---
+layout: two-column
+variant: default
+title: Rich Markdown Authoring
+notes: Two-column layout — left shows what you write, right shows what tycoslide supports. Demonstrates the two-column slot system.
+---
+
+::left::
+
+### What You Write
+
+Plain markdown with a few extensions. No custom syntax to learn — just headings, lists, bold, italic, and accent colors.
+
+::right::
+
+### What You Get
+
+- **Bold** and *italic* text
+- :purple[Accent colors] inline
+- ++Underline++ and ~~strikethrough~~
+- `Code spans` for monospace
+- [Hyperlinks](https://example.com)
+- Tables, diagrams, and code blocks
+
+---
 layout: stat
 variant: default
 value: "Zero"
 label: Silent Failures
 caption: Catch layout overflows, missing design tokens, and invalid parameters at build time. Presentations are finally treated with the same rigorous QA as production software.
-notes: Lands after the pipeline explains HOW. The proof point — zero silent failures.
+notes: Stat layout — the proof point. Zero silent failures at build time.
 ---
 
 ---
@@ -131,14 +160,39 @@ layout: quote
 variant: dark
 quote: "Software is eating the world...especially presentations."
 attribution: "— Marc Andreessen (probably)"
-notes: Dark pull quote — emotional beat and visual contrast before the design system section.
+notes: Dark pull quote — emotional beat and visual contrast.
+---
+
+---
+layout: cards
+variant: flat
+title: What You Can Build
+cards:
+  - title: Team Updates
+    description: Weekly standups, sprint reviews, and quarterly business reviews.
+    image: $icons.description
+  - title: Technical Decks
+    description: Architecture diagrams, API overviews, and infrastructure proposals.
+    image: $icons.palette
+  - title: Brand Presentations
+    description: On-brand pitch decks with enforced design tokens and validated layouts.
+    image: $icons.shield
+notes: Flat cards variant — no background shape. Shows practical use cases for tycoslide.
+---
+
+---
+layout: quote
+variant: default
+quote: "The best slide decks are the ones nobody had to manually format."
+attribution: "— Every design team, eventually"
+notes: Light quote variant — contrasts with the dark quote above. Softer emotional beat before the design system section.
 ---
 
 ---
 layout: section
 variant: default
 title: Design System
-notes: Section divider before the design system slides. Dark background with centered title.
+notes: Section divider — the visual identity layer. Colors, typography, icons.
 ---
 
 ---
@@ -147,6 +201,13 @@ variant: default
 title: Color Palette
 subtitle: Approved brand colors
 notes: Four key palette colors rendered as swatches with role names and hex values.
+---
+
+---
+layout: lines
+variant: default
+title: Line Styles
+notes: Lines layout — solid, dashed, and dotted strokes. Visual verification of the unified Stroke type.
 ---
 
 ---

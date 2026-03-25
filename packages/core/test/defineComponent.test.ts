@@ -19,6 +19,8 @@ const stubStyle: TextStyle = {
 
 const stubTextNode = (text: string = ""): any => ({
   type: NODE_TYPE.TEXT,
+  width: SIZE.FILL,
+  height: SIZE.HUG,
   content: [{ text }],
   style: TEXT_STYLE.BODY,
   resolvedStyle: stubStyle,

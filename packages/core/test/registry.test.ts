@@ -10,7 +10,7 @@ import { C, testComponents } from "./test-components.js";
 // Register test components
 componentRegistry.register(testComponents);
 
-import { HALIGN, TEXT_STYLE, VALIGN } from "../src/core/model/types.js";
+import { HALIGN, SIZE, TEXT_STYLE, VALIGN } from "../src/core/model/types.js";
 
 // ============================================
 // GENERIC REGISTRY BASE CLASS
@@ -143,6 +143,8 @@ describe("ComponentRegistry", () => {
     test("passes primitives through unchanged", async () => {
       const textNode = {
         type: NODE_TYPE.TEXT,
+        width: SIZE.FILL,
+        height: SIZE.HUG,
         content: [],
         style: TEXT_STYLE.BODY,
         resolvedStyle: mockTextStyle,

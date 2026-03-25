@@ -4,7 +4,16 @@
 
 import * as assert from "node:assert";
 import { describe, test } from "node:test";
-import type { ContainerNode, GridNode, ImageNode, LineNode, ShapeNode, SlideNumberNode, StackNode, TableNode } from "tycoslide";
+import type {
+  ContainerNode,
+  GridNode,
+  ImageNode,
+  LineNode,
+  ShapeNode,
+  SlideNumberNode,
+  StackNode,
+  TableNode,
+} from "tycoslide";
 import {
   componentRegistry,
   DASH_TYPE,
@@ -187,9 +196,9 @@ describe("line()", () => {
 
   test("uses token values for color, width, dashType", async () => {
     const node = (await render(line(DEFAULT_LINE_TOKENS))) as LineNode;
-    assert.strictEqual(node.color, DEFAULT_LINE_TOKENS.color);
-    assert.strictEqual(node.width, DEFAULT_LINE_TOKENS.width);
-    assert.strictEqual(node.dashType, DASH_TYPE.SOLID);
+    assert.strictEqual(node.stroke.color, DEFAULT_LINE_TOKENS.color);
+    assert.strictEqual(node.stroke.width, DEFAULT_LINE_TOKENS.width);
+    assert.strictEqual(node.stroke.dashType, DASH_TYPE.SOLID);
   });
 });
 
@@ -213,7 +222,7 @@ describe("shape()", () => {
   test("uses token values for fill, defaults for omitted tokens", async () => {
     const node = (await render(shape(DEFAULT_SHAPE_TOKENS, { shape: SHAPE.RECTANGLE }))) as ShapeNode;
     assert.deepStrictEqual(node.fill, { color: "#333333", opacity: 100 });
-    assert.deepStrictEqual(node.border, { color: "#000000", width: 0 });
+    assert.deepStrictEqual(node.border, { color: "#000000", width: 0, dashType: DASH_TYPE.SOLID });
     assert.strictEqual(node.cornerRadius, 0);
   });
 
@@ -289,7 +298,7 @@ describe("shape()", () => {
     const tokens = { fill: "#FF0000", fillOpacity: 100, borderColor: "#000000", borderWidth: 0, cornerRadius: 0 };
     const node = (await render(shape(tokens, { shape: SHAPE.RECTANGLE }))) as ShapeNode;
     assert.deepStrictEqual(node.fill, { color: "#FF0000", opacity: 100 });
-    assert.deepStrictEqual(node.border, { color: "#000000", width: 0 });
+    assert.deepStrictEqual(node.border, { color: "#000000", width: 0, dashType: DASH_TYPE.SOLID });
     assert.strictEqual(node.cornerRadius, 0);
     assert.strictEqual(node.shadow, undefined);
   });

@@ -45,6 +45,8 @@ export type NodeType = (typeof NODE_TYPE)[keyof typeof NODE_TYPE];
 
 export interface TextNode {
   type: typeof NODE_TYPE.TEXT;
+  width: SizeValue;
+  height: SizeValue;
   content: TextContent;
   style: TextStyleName;
   resolvedStyle: TextStyle; // pre-resolved from theme.textStyles[style]
@@ -60,6 +62,8 @@ export interface TextNode {
 
 export interface ImageNode {
   type: typeof NODE_TYPE.IMAGE;
+  width: SizeValue;
+  height: SizeValue;
   src: string;
   alt?: string;
   shadow?: Shadow;
@@ -68,16 +72,16 @@ export interface ImageNode {
 export interface LineNode {
   type: typeof NODE_TYPE.LINE;
   direction: Direction;
-  color: string;
-  width: number;
-  dashType: DashType;
+  stroke: Stroke;
   shadow?: Shadow;
 }
 
-/** Border configuration for area shapes. */
-export interface ShapeBorder {
+/** Stroke configuration — shared by lines and shape borders.
+ *  Width is in points (visual styling convention; layout geometry uses inches). */
+export interface Stroke {
   color: string;
   width: number;
+  dashType: DashType;
 }
 
 /** Shadow configuration — shared across shapes, images, and text boxes */
@@ -93,15 +97,19 @@ export interface Shadow {
 /** Area shape node: fill, border, cornerRadius (rectangles, ellipses, triangles, etc.) */
 export interface ShapeNode {
   type: typeof NODE_TYPE.SHAPE;
+  width: SizeValue;
+  height: SizeValue;
   shape: ShapeName;
   fill: { color: string; opacity: number };
-  border: ShapeBorder;
+  border: Stroke;
   cornerRadius: number;
   shadow?: Shadow;
 }
 
 export interface SlideNumberNode {
   type: typeof NODE_TYPE.SLIDE_NUMBER;
+  width: SizeValue;
+  height: SizeValue;
   style: TextStyleName;
   resolvedStyle: TextStyle; // pre-resolved from theme.textStyles[style]
   color: string;
@@ -129,6 +137,8 @@ export interface TableCellInput {
 /** Fully-resolved table cell data — all fields pre-resolved by component render */
 export interface TableCellData {
   content: TextContent;
+  width: SizeValue;
+  height: SizeValue;
   color: string; // pre-resolved: cell → token
   textStyle: TextStyleName; // pre-resolved: cell → header/cell default from table tokens
   resolvedStyle: TextStyle; // pre-resolved from theme.textStyles[textStyle]
@@ -153,6 +163,8 @@ export interface TableHeaderStyle {
 /** Native table element - renders directly via slide.addTable() */
 export interface TableNode {
   type: typeof NODE_TYPE.TABLE;
+  width: SizeValue;
+  height: SizeValue;
   rows: TableCellData[][];
   // Style properties (resolved from theme tokens by component render)
   borderStyle: BorderStyle;

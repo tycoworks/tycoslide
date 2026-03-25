@@ -82,6 +82,8 @@ export const textComponent = defineComponent({
     const style = params.style ?? tokens?.style;
     return {
       type: NODE_TYPE.TEXT,
+      width: SIZE.FILL,
+      height: SIZE.HUG,
       content: [{ text: content }],
       style,
       resolvedStyle: (ctx.theme.textStyles as any)[style],

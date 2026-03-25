@@ -14,6 +14,7 @@ import {
   NODE_TYPE,
   param,
   type Shadow,
+  SIZE,
   SYNTAX,
   schema,
   type TextNode,
@@ -77,6 +78,8 @@ function renderList(params: ListParams, content: string[], context: RenderContex
 
   const node: TextNode = {
     type: NODE_TYPE.TEXT,
+    width: SIZE.FILL,
+    height: SIZE.HUG,
     content: runs,
     style: tokens.style,
     resolvedStyle: textStyle,

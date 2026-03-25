@@ -83,12 +83,8 @@ export const LINE_SHAPE = "line" as const;
 
 export const DASH_TYPE = {
   SOLID: "solid",
-  DASH: "dash",
-  DASH_DOT: "dashDot",
-  LG_DASH: "lgDash",
-  LG_DASH_DOT: "lgDashDot",
-  SYS_DASH: "sysDash",
-  SYS_DOT: "sysDot",
+  DASHED: "dashed",
+  DOTTED: "dotted",
 } as const;
 
 export type DashType = (typeof DASH_TYPE)[keyof typeof DASH_TYPE];

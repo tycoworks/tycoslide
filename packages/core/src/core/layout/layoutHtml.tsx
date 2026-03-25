@@ -96,9 +96,9 @@ function generateNodeId(ctx: IdContext): string {
 /** Map of font name → line-height: normal ratio. */
 export type FontNormalRatios = Map<string, number>;
 
-/** Compute flex CSS for a container (column/stack) based on its parent's direction.
+/** Compute flex CSS for a node based on its parent's direction.
  *  Three size types: number (fixed inches), SIZE.FILL (share space), SIZE.HUG (content-sized). */
-export function flexContainer(
+export function flexSize(
   width: number | SizeValue,
   height: number | SizeValue,
   parentDir: Direction,
@@ -243,7 +243,7 @@ function styleContainer(
     gap: `${spacingPx}px`, // CSS gap property
     justifyContent,
     alignItems,
-    ...flexContainer(node.width, node.height, parent.direction),
+    ...flexSize(node.width, node.height, parent.direction),
     // Containment requires definite inline size. HUG columns are content-sized —
     // containment would zero their intrinsic width, collapsing the column.
     ...(!isRow && node.width !== SIZE.HUG ? { containerType: "inline-size" } : {}),
@@ -274,7 +274,7 @@ function styleStack(
     position: "relative",
     display: "grid",
     gridTemplate: `minmax(${gridMin}, 1fr) / minmax(${gridMin}, 1fr)`,
-    ...flexContainer(node.width, node.height, parent.direction),
+    ...flexSize(node.width, node.height, parent.direction),
   };
 
   const ctx = childContext(node, parent);
@@ -326,7 +326,7 @@ function styleGrid(
     display: "grid",
     gridTemplateColumns: `repeat(${node.columns}, 1fr)`,
     gap: `${spacingPx}px`,
-    ...flexContainer(node.width, node.height, parent.direction),
+    ...flexSize(node.width, node.height, parent.direction),
   };
 
   // When the grid has definite height (FILL or fixed inches), distribute rows equally.
@@ -442,52 +442,44 @@ function styleImage(node: ImageNode, parent: ParentCtx, nodeId: string, imagePat
   };
 }
 
-/** Dash patterns as multiples of stroke width (approximate — OOXML presets are implementation-defined). */
+/** Dash patterns as multiples of stroke width. */
 function dashTypeMultipliers(dt: DashType): number[] | undefined {
   switch (dt) {
     case DASH_TYPE.SOLID:
       return undefined;
-    case DASH_TYPE.DASH:
+    case DASH_TYPE.DASHED:
       return [4, 3];
-    case DASH_TYPE.LG_DASH:
-      return [8, 3];
-    case DASH_TYPE.DASH_DOT:
-      return [4, 3, 1, 3];
-    case DASH_TYPE.LG_DASH_DOT:
-      return [8, 3, 1, 3];
-    case DASH_TYPE.SYS_DOT:
+    case DASH_TYPE.DOTTED:
       return [1, 1];
-    case DASH_TYPE.SYS_DASH:
-      return [3, 1];
     default:
       return undefined;
   }
 }
 
 function styleLine(node: LineNode, _parent: ParentCtx, nodeId: string): StyledNode {
-  const widthPx = ptToPx(node.width);
-  const color = node.color;
+  const { color, width: strokePt, dashType } = node.stroke;
   const isVertical = node.direction === DIRECTION.COLUMN;
+  const strokePx = ptToPx(strokePt);
 
   const x1 = isVertical ? "50%" : "0";
   const y1 = isVertical ? "0" : "50%";
   const x2 = isVertical ? "50%" : "100%";
   const y2 = isVertical ? "100%" : "50%";
 
-  const multipliers = dashTypeMultipliers(node.dashType);
-  const dashAttr = multipliers ? ` stroke-dasharray="${multipliers.map((m) => m * widthPx).join(" ")}"` : "";
+  const multipliers = dashTypeMultipliers(dashType);
+  const dashAttr = multipliers ? ` stroke-dasharray="${multipliers.map((m) => m * strokePx).join(" ")}"` : "";
 
   // display:block prevents the inline SVG line-box problem — without it the browser
   // creates a line box whose height (based on inherited font metrics) inflates the
   // flex item's min-height:auto beyond the intended stroke-width basis.
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" overflow="visible" style="display:block"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${widthPx}"${dashAttr}/></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" overflow="visible" style="display:block"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${strokePx}"${dashAttr}/></svg>`;
 
   // Explicit width/height prevents SVG width="100%" height="100%" from falling
   // back to the CSS default intrinsic size (300×150px) when the flex basis alone
   // doesn't set the corresponding CSS dimension.
   const styles: Record<string, string | number> = isVertical
-    ? { flex: `0 0 ${widthPx}px`, alignSelf: "stretch", width: `${widthPx}px` }
-    : { flex: `0 0 ${widthPx}px`, width: "100%", height: `${widthPx}px` };
+    ? { flex: `0 0 ${strokePx}px`, alignSelf: "stretch", width: `${strokePx}px` }
+    : { flex: `0 0 ${strokePx}px`, width: "100%", height: `${strokePx}px` };
 
   applyShadowCSS(node.shadow, styles);
   return { nodeId, styles, children: [], innerHTML: svg };
@@ -544,7 +536,7 @@ function styleShape(node: ShapeNode, nodeId: string): StyledNode {
 
 function applyCSSBorder(node: ShapeNode, styles: Record<string, string | number>): void {
   const bw = ptToPx(node.border.width);
-  if (bw > 0) styles.border = `${bw}px solid ${node.border.color}`;
+  if (bw > 0) styles.border = `${bw}px ${node.border.dashType} ${node.border.color}`;
 }
 
 /** Render a polygon shape as inline SVG. */
@@ -875,6 +867,8 @@ function getTableCellNodes(node: TableNode): TextNode[][] {
     row.map(
       (cell: TableCellData): TextNode => ({
         type: NODE_TYPE.TEXT,
+        width: cell.width,
+        height: cell.height,
         content: cell.content,
         style: cell.textStyle,
         resolvedStyle: cell.resolvedStyle,

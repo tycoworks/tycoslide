@@ -7,6 +7,7 @@ import { generateFontFaceCSS } from "../src/core/layout/layoutHtml.js";
 import type { ContainerNode, ElementNode, TextNode } from "../src/core/model/nodes.js";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
 import type { FontFamily } from "../src/core/model/types.js";
+import { HALIGN, SIZE, TEXT_STYLE, VALIGN } from "../src/core/model/types.js";
 import { validateThemeFonts } from "../src/core/rendering/themeValidator.js";
 import { validateFontVariants } from "../src/utils/font.js";
 import { mockTextStyle, mockTheme } from "./mocks.js";
@@ -335,12 +336,14 @@ const fullFamily: FontFamily = {
 function makeTextNode(content: TextNode["content"], fontFamily: FontFamily): TextNode {
   return {
     type: NODE_TYPE.TEXT,
+    width: SIZE.FILL,
+    height: SIZE.HUG,
     content,
-    style: "body",
+    style: TEXT_STYLE.BODY,
     resolvedStyle: { ...mockTextStyle, fontFamily },
     color: "#000000",
-    hAlign: "left",
-    vAlign: "top",
+    hAlign: HALIGN.LEFT,
+    vAlign: VALIGN.TOP,
     lineHeightMultiplier: 1.0,
     bulletIndentPt: 18,
     linkColor: "#0000FF",
@@ -438,15 +441,19 @@ describe("validateFontVariants", () => {
   it("detects violations in TableNode cells", () => {
     const tableNode: ElementNode = {
       type: NODE_TYPE.TABLE,
+      width: SIZE.FILL,
+      height: SIZE.HUG,
       rows: [
         [
           {
             content: [{ text: "bold cell", bold: true }],
+            width: SIZE.FILL,
+            height: SIZE.HUG,
             color: "#000",
-            textStyle: "body",
+            textStyle: TEXT_STYLE.BODY,
             resolvedStyle: { ...mockTextStyle, fontFamily: regularOnly },
-            hAlign: "left" as const,
-            vAlign: "top" as const,
+            hAlign: HALIGN.LEFT,
+            vAlign: VALIGN.TOP,
             linkColor: "#0000FF",
             linkUnderline: true,
           },

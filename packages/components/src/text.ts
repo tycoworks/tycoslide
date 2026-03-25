@@ -14,6 +14,7 @@ import {
   type InferTokens,
   NODE_TYPE,
   type Shadow,
+  SIZE,
   SYNTAX,
   schema,
   TEXT_STYLE,
@@ -74,6 +75,8 @@ function renderText(_params: {}, content: string, context: RenderContext, tokens
 
   const node: TextNode = {
     type: NODE_TYPE.TEXT,
+    width: SIZE.FILL,
+    height: SIZE.HUG,
     content: runs,
     style: tokens.style,
     resolvedStyle: textStyle,

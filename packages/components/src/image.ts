@@ -12,6 +12,7 @@ import {
   param,
   type RenderContext,
   type Shadow,
+  SIZE,
   SYNTAX,
   schema,
   token,
@@ -110,7 +111,7 @@ export const imageComponent = defineComponent({
     if (src.startsWith(ASSET_PREFIX)) {
       src = resolveAssetPath(src, context.assets);
     }
-    const node: ImageNode = { type: NODE_TYPE.IMAGE, src };
+    const node: ImageNode = { type: NODE_TYPE.IMAGE, width: SIZE.FILL, height: SIZE.FILL, src };
     if (params.alt) {
       node.alt = params.alt;
     }

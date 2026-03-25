@@ -97,8 +97,8 @@ describe("Quote Component (Pull Quote)", () => {
         const bar = rendered.children[0];
         assert.strictEqual(bar.type, NODE_TYPE.LINE);
         if (bar.type === NODE_TYPE.LINE) {
-          assert.strictEqual(bar.color, "#FF0000"); // mock theme barColor
-          assert.strictEqual(bar.width, 3); // mock theme barWidth
+          assert.strictEqual(bar.stroke.color, "#FF0000"); // mock theme barColor
+          assert.strictEqual(bar.stroke.width, 3); // mock theme barWidth
         }
       }
     });

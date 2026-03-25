@@ -21,11 +21,11 @@ export type {
   NodeType,
   PositionedNode,
   Shadow,
-  ShapeBorder,
   ShapeNode,
   SlideNode,
   SlideNumberNode,
   StackNode,
+  Stroke,
   TableCellData,
   TableCellInput,
   TableHeaderStyle,
@@ -125,4 +125,4 @@ export {
 } from "./utils/font.js";
 export { parseMarkdown } from "./utils/parser.js";
 // Unit utilities (for component authors that resolve theme values during render)
-export { inToPx } from "./utils/units.js";
+export { inToPx, ptToIn } from "./utils/units.js";

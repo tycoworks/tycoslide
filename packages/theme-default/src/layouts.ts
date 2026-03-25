@@ -476,12 +476,10 @@ export const agendaLayout = defineLayout({
     title: param.required(textComponent.schema),
     eyebrow: param.optional(textComponent.schema),
     items: param.required(schema.array(textComponent.schema)),
+    image: param.required(imageComponent.schema),
   },
   tokens: agendaLayoutTokens,
-  render: ({ title, eyebrow, items }, _slots, tokens: AgendaLayoutTokens) => {
-    // Inline card component: stack composes a rounded-rect background shape
-    // with padded content in a single node. Layouts can build ad-hoc visuals
-    // by composing primitives directly — not everything needs to be a registered component.
+  render: ({ title, eyebrow, items, image: imageSrc }, _slots, tokens: AgendaLayoutTokens) => {
     const itemCards = items.map((item, i) =>
       stack(
         shape(tokens.itemBackground, { shape: SHAPE.RECTANGLE }),
@@ -495,12 +493,17 @@ export const agendaLayout = defineLayout({
         ),
       ),
     );
+
     return masteredSlide(
       tokens.master,
       headerBlock(title, tokens, eyebrow),
-      column(
-        { spacing: 0, height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign },
-        grid({ columns: tokens.gridColumns, spacing: tokens.gridSpacing, height: SIZE.HUG }, ...itemCards),
+      row(
+        { spacing: tokens.gridSpacing, height: SIZE.FILL },
+        image(imageSrc),
+        column(
+          { spacing: tokens.gridSpacing, width: SIZE.FILL, height: SIZE.FILL, vAlign: VALIGN.MIDDLE },
+          ...itemCards,
+        ),
       ),
     );
   },
@@ -710,12 +713,8 @@ export const linesLayoutTokens = token.shape({
   headerSpacing: token.required<number>(),
   label: token.required<PlainTextTokens>(),
   solid: token.required<LineTokens>(),
-  dash: token.required<LineTokens>(),
-  lgDash: token.required<LineTokens>(),
-  dashDot: token.required<LineTokens>(),
-  lgDashDot: token.required<LineTokens>(),
-  sysDot: token.required<LineTokens>(),
-  sysDash: token.required<LineTokens>(),
+  dashed: token.required<LineTokens>(),
+  dotted: token.required<LineTokens>(),
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
   spacing: token.required<number>(),
@@ -727,12 +726,12 @@ export type LinesLayoutTokens = InferTokens<typeof linesLayoutTokens>;
 // | eyebrow                    |
 // | Title                      |
 // |  Solid  ────────────────── |
-// |  Dash   ── ── ── ── ── ── |
-// |  ...                       |
+// |  Dashed ── ── ── ── ── ── |
+// |  Dotted ·· ·· ·· ·· ·· ·· |
 // +----------------------------+
 export const linesLayout = defineLayout({
   name: "lines",
-  description: "Demo layout showing all 7 dash types.",
+  description: "Demo layout showing all 3 dash types.",
   params: {
     title: param.optional(textComponent.schema),
     eyebrow: param.optional(textComponent.schema),
@@ -750,12 +749,8 @@ export const linesLayout = defineLayout({
         column(
           { spacing: tokens.spacing, height: SIZE.FILL, vAlign: VALIGN.MIDDLE },
           sample(tokens.solid, "Solid"),
-          sample(tokens.dash, "Dash"),
-          sample(tokens.lgDash, "Long Dash"),
-          sample(tokens.dashDot, "Dash Dot"),
-          sample(tokens.lgDashDot, "Long Dash Dot"),
-          sample(tokens.sysDot, "Dot"),
-          sample(tokens.sysDash, "Short Dash"),
+          sample(tokens.dashed, "Dashed"),
+          sample(tokens.dotted, "Dotted"),
         ),
       ),
     );

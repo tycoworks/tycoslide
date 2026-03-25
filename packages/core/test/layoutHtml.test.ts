@@ -67,6 +67,8 @@ const bodyStyle = mockTheme.textStyles[TEXT_STYLE.BODY];
 function textNode(content: string | NormalizedRun[], opts?: Partial<Omit<TextNode, "type">>): TextNode {
   return {
     type: NODE_TYPE.TEXT,
+    width: SIZE.FILL,
+    height: SIZE.HUG,
     content: typeof content === "string" ? [{ text: content }] : content,
     style: TEXT_STYLE.BODY,
     resolvedStyle: bodyStyle,
@@ -121,12 +123,16 @@ function colNode(...args: any[]): ContainerNode {
 
 /** Image node */
 function imageNode(src: string): ImageNode {
-  return { type: NODE_TYPE.IMAGE, src };
+  return { type: NODE_TYPE.IMAGE, width: SIZE.FILL, height: SIZE.FILL, src };
 }
 
 /** Line node (token values baked in from mockTheme) */
 function lineNode(direction: Direction = DIRECTION.ROW): LineNode {
-  return { type: NODE_TYPE.LINE, direction, color: "#666666", width: 1, dashType: DASH_TYPE.SOLID };
+  return {
+    type: NODE_TYPE.LINE,
+    direction,
+    stroke: { color: "#666666", width: 1, dashType: DASH_TYPE.SOLID },
+  };
 }
 
 /** Stack node (z-order composition) */
@@ -147,9 +153,11 @@ function stackNode(...args: any[]): StackNode {
 function shapeNode(shapeName: string): ShapeNode {
   return {
     type: NODE_TYPE.SHAPE,
+    width: SIZE.FILL,
+    height: SIZE.FILL,
     shape: shapeName as any,
     fill: { color: "#666666", opacity: 100 },
-    border: { color: "#FFFFFF", width: 0 },
+    border: { color: "#FFFFFF", width: 0, dashType: DASH_TYPE.SOLID },
     cornerRadius: 0,
   };
 }
@@ -158,6 +166,8 @@ function shapeNode(shapeName: string): ShapeNode {
 function slideNumberNode(opts?: Partial<Omit<SlideNumberNode, "type">>): SlideNumberNode {
   return {
     type: NODE_TYPE.SLIDE_NUMBER,
+    width: SIZE.HUG,
+    height: SIZE.HUG,
     style: TEXT_STYLE.FOOTER,
     resolvedStyle: mockTheme.textStyles[TEXT_STYLE.FOOTER],
     color: "#666666",
@@ -171,6 +181,8 @@ function slideNumberNode(opts?: Partial<Omit<SlideNumberNode, "type">>): SlideNu
 function cell(text: string, opts?: Partial<TableCellData>): TableCellData {
   return {
     content: [{ text }],
+    width: SIZE.FILL,
+    height: SIZE.HUG,
     color: "#000000",
     textStyle: TEXT_STYLE.BODY,
     resolvedStyle: bodyStyle,
@@ -186,6 +198,8 @@ function cell(text: string, opts?: Partial<TableCellData>): TableCellData {
 function tableNode(rows: TableCellData[][], opts?: Partial<Omit<TableNode, "type" | "rows">>): TableNode {
   return {
     type: NODE_TYPE.TABLE,
+    width: SIZE.FILL,
+    height: SIZE.HUG,
     rows,
     borderStyle: BORDER_STYLE.FULL,
     borderColor: "#333333",
@@ -425,7 +439,13 @@ describe("HTML Measurement Generation", () => {
     });
 
     test("image with alt text renders alt attribute", async () => {
-      const node = colNode({ type: NODE_TYPE.IMAGE, src: testImage, alt: "Diagram of build pipeline" });
+      const node = colNode({
+        type: NODE_TYPE.IMAGE,
+        width: SIZE.FILL,
+        height: SIZE.FILL,
+        src: testImage,
+        alt: "Diagram of build pipeline",
+      });
       const { html } = await genHTML(node, bounds);
       assert.ok(html.includes('alt="Diagram of build pipeline"'), "Image should render alt attribute");
     });
@@ -887,9 +907,11 @@ describe("HTML Measurement Generation", () => {
     test("shape with partial opacity uses rgba background", async () => {
       const shape: ShapeNode = {
         type: NODE_TYPE.SHAPE,
+        width: SIZE.FILL,
+        height: SIZE.FILL,
         shape: SHAPE.RECTANGLE,
         fill: { color: "#BDB0E0", opacity: 20 },
-        border: { color: "#FFFFFF", width: 0 },
+        border: { color: "#FFFFFF", width: 0, dashType: DASH_TYPE.SOLID },
         cornerRadius: 0,
       };
       const node = colNode(stackNode(shape, colNode(textNode("Content"))));
@@ -901,9 +923,11 @@ describe("HTML Measurement Generation", () => {
     test("ellipse shape gets border-radius: 50%", async () => {
       const shape: ShapeNode = {
         type: NODE_TYPE.SHAPE,
+        width: SIZE.FILL,
+        height: SIZE.FILL,
         shape: SHAPE.ELLIPSE,
         fill: { color: "#FF0000", opacity: 100 },
-        border: { color: "#FFFFFF", width: 0 },
+        border: { color: "#FFFFFF", width: 0, dashType: DASH_TYPE.SOLID },
         cornerRadius: 0,
       };
       const node = colNode(stackNode(shape, colNode(textNode("Circle"))));
@@ -914,9 +938,11 @@ describe("HTML Measurement Generation", () => {
     test("shape with cornerRadius gets pixel border-radius", async () => {
       const shape: ShapeNode = {
         type: NODE_TYPE.SHAPE,
+        width: SIZE.FILL,
+        height: SIZE.FILL,
         shape: SHAPE.RECTANGLE,
         fill: { color: "#333333", opacity: 100 },
-        border: { color: "#FFFFFF", width: 0 },
+        border: { color: "#FFFFFF", width: 0, dashType: DASH_TYPE.SOLID },
         cornerRadius: 0.1,
       };
       const node = colNode(stackNode(shape, colNode(textNode("Rounded"))));
@@ -928,9 +954,11 @@ describe("HTML Measurement Generation", () => {
     test("shape with border renders solid border", async () => {
       const shape: ShapeNode = {
         type: NODE_TYPE.SHAPE,
+        width: SIZE.FILL,
+        height: SIZE.FILL,
         shape: SHAPE.RECTANGLE,
         fill: { color: "#333333", opacity: 100 },
-        border: { color: "#AABBCC", width: 2 },
+        border: { color: "#AABBCC", width: 2, dashType: DASH_TYPE.SOLID },
         cornerRadius: 0,
       };
       const node = colNode(stackNode(shape, colNode(textNode("Bordered"))));
@@ -942,9 +970,11 @@ describe("HTML Measurement Generation", () => {
     test("triangle renders as inline SVG polygon", async () => {
       const shape: ShapeNode = {
         type: NODE_TYPE.SHAPE,
+        width: SIZE.FILL,
+        height: SIZE.FILL,
         shape: SHAPE.TRIANGLE,
         fill: { color: "#10B981", opacity: 60 },
-        border: { color: "#FFFFFF", width: 0 },
+        border: { color: "#FFFFFF", width: 0, dashType: DASH_TYPE.SOLID },
         cornerRadius: 0,
       };
       const node = colNode(stackNode(shape, colNode(textNode("Tri"))));
@@ -959,9 +989,11 @@ describe("HTML Measurement Generation", () => {
     test("diamond renders as inline SVG polygon", async () => {
       const shape: ShapeNode = {
         type: NODE_TYPE.SHAPE,
+        width: SIZE.FILL,
+        height: SIZE.FILL,
         shape: SHAPE.DIAMOND,
         fill: { color: "#79C0FF", opacity: 100 },
-        border: { color: "#FFFFFF", width: 0 },
+        border: { color: "#FFFFFF", width: 0, dashType: DASH_TYPE.SOLID },
         cornerRadius: 0,
       };
       const node = colNode(stackNode(shape, colNode(textNode("Dia"))));
@@ -973,9 +1005,11 @@ describe("HTML Measurement Generation", () => {
     test("polygon shape with border uses SVG stroke (not CSS border)", async () => {
       const shape: ShapeNode = {
         type: NODE_TYPE.SHAPE,
+        width: SIZE.FILL,
+        height: SIZE.FILL,
         shape: SHAPE.DIAMOND,
         fill: { color: "#79C0FF", opacity: 100 },
-        border: { color: "#1A1A2E", width: 2 },
+        border: { color: "#1A1A2E", width: 2, dashType: DASH_TYPE.SOLID },
         cornerRadius: 0,
       };
       const node = colNode(stackNode(shape, colNode(textNode("Bordered"))));
@@ -988,9 +1022,11 @@ describe("HTML Measurement Generation", () => {
     test("polygon shape shadow uses filter drop-shadow (not box-shadow)", async () => {
       const shape: ShapeNode = {
         type: NODE_TYPE.SHAPE,
+        width: SIZE.FILL,
+        height: SIZE.FILL,
         shape: SHAPE.TRIANGLE,
         fill: { color: "#FF0000", opacity: 100 },
-        border: { color: "#FFFFFF", width: 0 },
+        border: { color: "#FFFFFF", width: 0, dashType: DASH_TYPE.SOLID },
         cornerRadius: 0,
         shadow: { type: SHADOW_TYPE.OUTER, color: "#000000", opacity: 25, blur: 8, offset: 3, angle: 180 },
       };
@@ -1189,95 +1225,36 @@ describe("HTML Measurement Generation", () => {
       assert.ok(!html.includes("stroke-dasharray"), "Solid line should have no stroke-dasharray");
     });
 
-    test("DASH renders scaled stroke-dasharray", async () => {
+    test("DASHED renders scaled stroke-dasharray", async () => {
       const line: LineNode = {
         type: NODE_TYPE.LINE,
         direction: DIRECTION.ROW,
-        color: "#666666",
-        width: 1,
-        dashType: DASH_TYPE.DASH,
+        stroke: { color: "#666666", width: 1, dashType: DASH_TYPE.DASHED },
       };
       const node = colNode(line);
       const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes("stroke-dasharray"), "DASH should have stroke-dasharray");
+      assert.ok(html.includes("stroke-dasharray"), "DASHED should have stroke-dasharray");
       // Multipliers [4,3] scaled by ptToPx(1) = 1.333...
-      assert.ok(html.includes('stroke-dasharray="5.333'), "DASH dasharray should start with 5.333");
+      assert.ok(html.includes('stroke-dasharray="5.333'), "DASHED dasharray should start with 5.333");
     });
 
-    test("LG_DASH renders scaled stroke-dasharray", async () => {
+    test("DOTTED renders scaled stroke-dasharray", async () => {
       const line: LineNode = {
         type: NODE_TYPE.LINE,
         direction: DIRECTION.ROW,
-        color: "#000000",
-        width: 1,
-        dashType: DASH_TYPE.LG_DASH,
+        stroke: { color: "#666666", width: 1, dashType: DASH_TYPE.DOTTED },
       };
       const node = colNode(line);
       const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes('stroke-dasharray="10.666'), "LG_DASH dasharray should start with 10.666");
-    });
-
-    test("DASH_DOT renders scaled stroke-dasharray", async () => {
-      const line: LineNode = {
-        type: NODE_TYPE.LINE,
-        direction: DIRECTION.ROW,
-        color: "#000000",
-        width: 1,
-        dashType: DASH_TYPE.DASH_DOT,
-      };
-      const node = colNode(line);
-      const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes('stroke-dasharray="5.333'), "DASH_DOT dasharray should start with 5.333");
-      assert.ok(html.includes(" 1.333"), "DASH_DOT dasharray should contain dot segment");
-    });
-
-    test("SYS_DOT renders scaled stroke-dasharray", async () => {
-      const line: LineNode = {
-        type: NODE_TYPE.LINE,
-        direction: DIRECTION.ROW,
-        color: "#666666",
-        width: 1,
-        dashType: DASH_TYPE.SYS_DOT,
-      };
-      const node = colNode(line);
-      const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes('stroke-dasharray="1.333'), "SYS_DOT dasharray should start with 1.333");
-    });
-
-    test("SYS_DASH renders scaled stroke-dasharray", async () => {
-      const line: LineNode = {
-        type: NODE_TYPE.LINE,
-        direction: DIRECTION.ROW,
-        color: "#000000",
-        width: 1,
-        dashType: DASH_TYPE.SYS_DASH,
-      };
-      const node = colNode(line);
-      const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes('stroke-dasharray="4 1.333'), "SYS_DASH dasharray should be 4 1.333...");
-    });
-
-    test("LG_DASH_DOT renders scaled stroke-dasharray", async () => {
-      const line: LineNode = {
-        type: NODE_TYPE.LINE,
-        direction: DIRECTION.ROW,
-        color: "#000000",
-        width: 1,
-        dashType: DASH_TYPE.LG_DASH_DOT,
-      };
-      const node = colNode(line);
-      const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes('stroke-dasharray="10.666'), "LG_DASH_DOT dasharray should start with 10.666");
-      assert.ok(html.includes(" 1.333"), "LG_DASH_DOT dasharray should contain dot segment");
+      // Multipliers [1,1] scaled by ptToPx(1) = 1.333...
+      assert.ok(html.includes('stroke-dasharray="1.333'), "DOTTED dasharray should start with 1.333");
     });
 
     test("line color passes through to SVG stroke", async () => {
       const line: LineNode = {
         type: NODE_TYPE.LINE,
         direction: DIRECTION.ROW,
-        color: "#FF0000",
-        width: 2,
-        dashType: DASH_TYPE.DASH,
+        stroke: { color: "#FF0000", width: 2, dashType: DASH_TYPE.DASHED },
       };
       const node = rowNode(textNode("Left"), line, textNode("Right"));
       const { html } = await genHTML(node, bounds);

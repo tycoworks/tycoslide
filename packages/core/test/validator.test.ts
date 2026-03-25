@@ -8,6 +8,8 @@ import { DIRECTION, HALIGN, SIZE, TEXT_STYLE, VALIGN } from "../src/core/model/t
 function textNode(content: string): TextNode {
   return {
     type: NODE_TYPE.TEXT,
+    width: SIZE.FILL,
+    height: SIZE.HUG,
     content,
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.TOP,

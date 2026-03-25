@@ -13,6 +13,7 @@ import {
   parseMarkdown,
   type RenderContext,
   SHAPE,
+  SIZE,
   SYNTAX,
   schema,
   type TableCellData,
@@ -212,6 +213,8 @@ export const tableComponent = defineComponent({
 
             const resolved: TableCellData = {
               content,
+              width: SIZE.FILL,
+              height: SIZE.HUG,
               color,
               textStyle,
               resolvedStyle: resolvedTextStyle,
@@ -231,6 +234,8 @@ export const tableComponent = defineComponent({
 
     const tableNode = {
       type: NODE_TYPE.TABLE,
+      width: SIZE.FILL,
+      height: SIZE.HUG,
       rows,
       borderStyle: tokens.borderStyle,
       borderColor: tokens.borderColor,

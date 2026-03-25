@@ -20,6 +20,7 @@ import {
   DIRECTION,
   HALIGN,
   SHAPE,
+  SIZE,
   STRIKE_TYPE,
   TEXT_STYLE,
   UNDERLINE_STYLE,
@@ -58,23 +59,32 @@ function positioned(node: any, x: number, y: number, width: number, height: numb
 const baseLineNode: LineNode = {
   type: NODE_TYPE.LINE,
   direction: DIRECTION.ROW,
-  color: "#E7E0EC",
-  width: 0.75,
-  dashType: DASH_TYPE.SOLID,
+  stroke: { color: "#E7E0EC", width: 0.75, dashType: DASH_TYPE.SOLID },
 };
 
 describe("buildLineConfig()", () => {
   test("places dashType inside line sub-object", () => {
     const lineNode: LineNode = {
       ...baseLineNode,
-      dashType: DASH_TYPE.DASH,
+      stroke: { ...baseLineNode.stroke, dashType: DASH_TYPE.DASHED },
     };
     const pos = positioned(lineNode, 1, 2, 5, 0);
 
     const result = builder.buildLineConfig(lineNode, pos);
 
     const lineOpts = result.options.line as Record<string, unknown>;
-    assert.strictEqual(lineOpts.dashType, DASH_TYPE.DASH);
+    assert.strictEqual(lineOpts.dashType, "dash");
+  });
+
+  test("maps DOTTED to pptxgenjs sysDot", () => {
+    const lineNode: LineNode = {
+      ...baseLineNode,
+      stroke: { ...baseLineNode.stroke, dashType: DASH_TYPE.DOTTED },
+    };
+    const pos = positioned(lineNode, 1, 2, 5, 0);
+    const result = builder.buildLineConfig(lineNode, pos);
+    const lineOpts = result.options.line as Record<string, unknown>;
+    assert.strictEqual(lineOpts.dashType, "sysDot");
   });
 
   test("vertical line when node direction is column", () => {
@@ -97,11 +107,10 @@ describe("buildLineConfig()", () => {
     assert.strictEqual(result.options.h, 0);
   });
 
-  test("applies color and width from lineNode", () => {
+  test("applies color and width from stroke", () => {
     const lineNode: LineNode = {
       ...baseLineNode,
-      color: "#FF0000",
-      width: 3,
+      stroke: { color: "#FF0000", width: 3, dashType: DASH_TYPE.SOLID },
     };
     const pos = positioned(lineNode, 1, 2, 5, 0);
 
@@ -120,6 +129,8 @@ describe("buildLineConfig()", () => {
 /** Base table node for tests — spread with overrides per test */
 const baseTableNode: TableNode = {
   type: NODE_TYPE.TABLE,
+  width: SIZE.FILL,
+  height: SIZE.HUG,
   rows: [],
   borderStyle: BORDER_STYLE.FULL,
   borderColor: "#333333",
@@ -132,6 +143,8 @@ const baseTableNode: TableNode = {
 /** Base cell for tests — all required fields pre-resolved */
 const baseCell: TableCellData = {
   content: "test",
+  width: SIZE.FILL,
+  height: SIZE.HUG,
   color: "#000000",
   textStyle: TEXT_STYLE.BODY,
   resolvedStyle: mockTextStyle,
@@ -479,9 +492,11 @@ describe("buildColumnWidths()", () => {
 
 const baseShapeNode: ShapeNode = {
   type: NODE_TYPE.SHAPE,
+  width: SIZE.FILL,
+  height: SIZE.FILL,
   shape: SHAPE.RECTANGLE,
   fill: { color: "#EEEEEE", opacity: 100 },
-  border: { color: "#E7E0EC", width: 0.75 },
+  border: { color: "#E7E0EC", width: 0.75, dashType: DASH_TYPE.SOLID },
   cornerRadius: 0,
 };
 
@@ -521,7 +536,10 @@ describe("buildShapeConfig() — area shapes", () => {
   });
 
   test("applies border when all sides enabled", () => {
-    const shapeNode: ShapeNode = { ...baseShapeNode, border: { color: "#000000", width: 2 } };
+    const shapeNode: ShapeNode = {
+      ...baseShapeNode,
+      border: { color: "#000000", width: 2, dashType: DASH_TYPE.SOLID },
+    };
     const pos = positioned(shapeNode, 1, 2, 5, 3);
 
     const result = builder.buildShapeConfig(shapeNode, pos);
@@ -572,6 +590,8 @@ describe("buildShapeConfig() — area shapes", () => {
   test("translates shadow on image", () => {
     const imageNode: ImageNode = {
       type: NODE_TYPE.IMAGE,
+      width: SIZE.FILL,
+      height: SIZE.FILL,
       src: "test.png",
       shadow: { type: "outer", color: "#FF0000", opacity: 50, blur: 4, offset: 1, angle: 180 },
     };
@@ -589,6 +609,8 @@ describe("buildShapeConfig() — area shapes", () => {
   test("translates alt text on image", () => {
     const imageNode: ImageNode = {
       type: NODE_TYPE.IMAGE,
+      width: SIZE.FILL,
+      height: SIZE.FILL,
       src: "test.png",
       alt: "A test image description",
     };
@@ -603,6 +625,8 @@ describe("buildShapeConfig() — area shapes", () => {
   test("omits altText when alt is not set", () => {
     const imageNode: ImageNode = {
       type: NODE_TYPE.IMAGE,
+      width: SIZE.FILL,
+      height: SIZE.FILL,
       src: "test.png",
     };
     const pos = positioned(imageNode, 1, 2, 5, 3);
@@ -617,9 +641,7 @@ describe("buildShapeConfig() — area shapes", () => {
     const lineNode: LineNode = {
       type: NODE_TYPE.LINE,
       direction: DIRECTION.ROW,
-      color: "#333333",
-      width: 1,
-      dashType: DASH_TYPE.SOLID,
+      stroke: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
       shadow: { type: "outer", color: "#000000", opacity: 30, blur: 6, offset: 2, angle: 270 },
     };
     const pos = positioned(lineNode, 0, 0, 10, 0);
@@ -641,6 +663,8 @@ describe("buildShapeConfig() — area shapes", () => {
 
 const baseTextNode: TextNode = {
   type: NODE_TYPE.TEXT,
+  width: SIZE.FILL,
+  height: SIZE.HUG,
   content: "Text",
   style: TEXT_STYLE.BODY,
   resolvedStyle: mockTextStyle,
@@ -997,6 +1021,8 @@ describe("buildTextFragments()", () => {
 
 const baseSlideNumNode: SlideNumberNode = {
   type: NODE_TYPE.SLIDE_NUMBER,
+  width: SIZE.HUG,
+  height: SIZE.HUG,
   style: TEXT_STYLE.FOOTER,
   resolvedStyle: mockTextStyle,
   color: "#999999",
