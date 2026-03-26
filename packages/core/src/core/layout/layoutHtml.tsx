@@ -201,7 +201,8 @@ function vAlignToAlignItems(vAlign: VerticalAlignment): string {
   }
 }
 
-function hAlignToCSS(hAlign: HorizontalAlignment): string {
+/** Column align-items: horizontal positioning of children. */
+function hAlignToAlignItems(hAlign: HorizontalAlignment): string {
   switch (hAlign) {
     case HALIGN.RIGHT:
       return "flex-end";
@@ -209,6 +210,30 @@ function hAlignToCSS(hAlign: HorizontalAlignment): string {
       return "center";
     case HALIGN.LEFT:
       return "stretch";
+  }
+}
+
+/** Row justify-content: horizontal positioning. */
+function hAlignToJustify(hAlign: HorizontalAlignment): string {
+  switch (hAlign) {
+    case HALIGN.RIGHT:
+      return "flex-end";
+    case HALIGN.CENTER:
+      return "center";
+    case HALIGN.LEFT:
+      return "flex-start";
+  }
+}
+
+/** CSS text-align from horizontal alignment. */
+function hAlignToTextAlign(hAlign: HorizontalAlignment): string {
+  switch (hAlign) {
+    case HALIGN.RIGHT:
+      return "right";
+    case HALIGN.CENTER:
+      return "center";
+    case HALIGN.LEFT:
+      return "left";
   }
 }
 
@@ -229,14 +254,8 @@ function styleContainer(
   const mainAxisPad = basePaddingPx + (node.spacingMode === SPACING_MODE.AROUND ? spacingPx : 0);
   const crossAxisPad = basePaddingPx;
 
-  const justifyContent = isRow
-    ? node.hAlign === HALIGN.CENTER
-      ? "center"
-      : node.hAlign === HALIGN.RIGHT
-        ? "flex-end"
-        : "flex-start"
-    : vAlignToJustify(node.vAlign);
-  const alignItems = isRow ? vAlignToAlignItems(node.vAlign) : hAlignToCSS(node.hAlign);
+  const justifyContent = isRow ? hAlignToJustify(node.hAlign) : vAlignToJustify(node.vAlign);
+  const alignItems = isRow ? vAlignToAlignItems(node.vAlign) : hAlignToAlignItems(node.hAlign);
 
   const styles: Record<string, string | number> = {
     display: "flex",
@@ -301,7 +320,7 @@ function styleStack(
         wrapperStyles.justifyContent = vAlignToJustify((child as { vAlign: VerticalAlignment }).vAlign);
       }
       if ("hAlign" in child) {
-        wrapperStyles.alignItems = hAlignToCSS((child as { hAlign: HorizontalAlignment }).hAlign);
+        wrapperStyles.alignItems = hAlignToAlignItems((child as { hAlign: HorizontalAlignment }).hAlign);
       }
       return {
         nodeId: "",
@@ -354,8 +373,6 @@ function styleText(node: TextNode, parent: ParentCtx, nodeId: string, fontRatios
   const normalRatio = fontRatios.get(style.fontFamily.name);
   const cssLineHeight = normalRatio ? lineSpacingMultiple * normalRatio : lineSpacingMultiple;
   const bulletIndentPx = ptToPx(node.bulletIndentPt);
-  const textAlign = node.hAlign === HALIGN.RIGHT ? "right" : node.hAlign === HALIGN.CENTER ? "center" : "left";
-
   const styles: Record<string, string | number> = {
     display: "flex",
     flexDirection: "column",
@@ -365,7 +382,7 @@ function styleText(node: TextNode, parent: ParentCtx, nodeId: string, fontRatios
     fontSize: `${fontSizePx}px`,
     lineHeight: `${cssLineHeight}`,
     color: node.color,
-    textAlign,
+    textAlign: hAlignToTextAlign(node.hAlign),
     whiteSpace: "pre-wrap",
     wordWrap: "break-word",
     ...flexSize(node.width, node.height, parent.direction),
@@ -580,7 +597,6 @@ function styleSlideNumber(node: SlideNumberNode, parent: ParentCtx, nodeId: stri
   const fontSizePx = ptToPx(style.fontSize);
   const defaultFont = getFontForRun(style.fontFamily);
 
-  const textAlign = node.hAlign === HALIGN.RIGHT ? "right" : node.hAlign === HALIGN.CENTER ? "center" : "left";
   return {
     nodeId,
     styles: {
@@ -591,7 +607,7 @@ function styleSlideNumber(node: SlideNumberNode, parent: ParentCtx, nodeId: stri
       fontWeight: defaultFont.weight,
       fontSize: `${fontSizePx}px`,
       color: node.color,
-      textAlign,
+      textAlign: hAlignToTextAlign(node.hAlign),
       whiteSpace: "nowrap",
       ...flexSize(node.width, node.height, parent.direction),
     },
