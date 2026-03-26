@@ -499,11 +499,11 @@ export const agendaLayout = defineLayout({
       headerBlock(title, tokens, eyebrow),
       row(
         { spacing: tokens.gridSpacing, height: SIZE.FILL },
-        image(imageSrc),
         column(
           { spacing: tokens.gridSpacing, width: SIZE.FILL, height: SIZE.FILL, vAlign: VALIGN.MIDDLE },
           ...itemCards,
         ),
+        image(imageSrc),
       ),
     );
   },

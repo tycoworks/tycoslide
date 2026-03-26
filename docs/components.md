@@ -95,7 +95,8 @@ A single paragraph of formatted content: bold, italic, strikethrough, underline,
 | `hAlign` | HorizontalAlignment | Default horizontal alignment |
 | `vAlign` | VerticalAlignment | Default vertical alignment |
 | `accents` | Record\<string, string\> | Accent color map (name → hex) |
-| `shadow` | Shadow | Drop shadow (optional — omit to suppress) |
+| `border` | Stroke | Border stroke (optional — omit for no border) |
+| `shadow` | Shadow | Drop shadow (optional — omit for no shadow) |
 
 ### Formatting
 
@@ -130,7 +131,8 @@ Text rendered exactly as written, without markdown parsing. Unlike `text()`, whi
 | `color` | string | Text color |
 | `hAlign` | HorizontalAlignment | Horizontal alignment |
 | `vAlign` | VerticalAlignment | Vertical alignment |
-| `shadow` | Shadow | Drop shadow (optional — omit to suppress) |
+| `border` | Stroke | Border stroke (optional — omit for no border) |
+| `shadow` | Shadow | Drop shadow (optional — omit for no shadow) |
 
 ### Examples
 
@@ -181,7 +183,8 @@ list(['Step one', 'Step two'], tokens.list, true)
 | `hAlign` | HorizontalAlignment | Default horizontal alignment |
 | `vAlign` | VerticalAlignment | Default vertical alignment |
 | `accents` | Record\<string, string\> | Accent color map (name → hex) |
-| `shadow` | Shadow | Drop shadow (optional — omit to suppress) |
+| `border` | Stroke | Border stroke (optional — omit for no border) |
+| `shadow` | Shadow | Drop shadow (optional — omit for no shadow) |
 
 ---
 
@@ -342,7 +345,7 @@ A horizontal or vertical rule. Renders as a separator between content blocks. Av
 | `color` | string | Line color |
 | `width` | number | Line width in points |
 | `dashType` | DashType | Dash pattern — `DASH_TYPE.SOLID`, `DASH_TYPE.DASHED`, or `DASH_TYPE.DOTTED` |
-| `shadow` | Shadow | Drop shadow (optional — omit to suppress) |
+| `shadow` | Shadow | Drop shadow (optional — omit for no shadow) |
 
 ### Examples
 
@@ -380,7 +383,7 @@ A filled or outlined shape. Available in the TypeScript DSL only.
 | `fillOpacity` | number | Fill opacity (0--100) |
 | `border` | Stroke | Border stroke (optional — omit for no border) |
 | `cornerRadius` | number | Corner radius in inches |
-| `shadow` | Shadow | Drop shadow (optional — omit to suppress) |
+| `shadow` | Shadow | Drop shadow (optional — omit for no shadow) |
 
 ### Examples
 
@@ -415,7 +418,7 @@ Embeds an image with optional alt text for accessibility.
 
 | Token | Type | Description |
 |-------|------|-------------|
-| `shadow` | Shadow | Drop shadow (optional — omit to suppress) |
+| `shadow` | Shadow | Drop shadow (optional — omit for no shadow) |
 
 ### Examples
 
@@ -445,7 +448,7 @@ Renders a Mermaid diagram to PNG and embeds it as an image. Theme colors are app
 
 | Token | Type | Description |
 |-------|------|-------------|
-| `shadow` | Shadow | Drop shadow (optional — omit to suppress) |
+| `shadow` | Shadow | Drop shadow (optional — omit for no shadow) |
 
 See [`theme.ts`](../packages/theme-default/src/theme.ts) for the full mermaid token reference (colors, font, accent opacity).
 

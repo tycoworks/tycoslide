@@ -371,6 +371,10 @@ function styleText(node: TextNode, parent: ParentCtx, nodeId: string, fontRatios
     ...(isInRow ? { flex: "1 1 0", minWidth: 0 } : { width: "100%", flexShrink: 0 }),
   };
 
+  if (node.border) {
+    const bw = ptToPx(node.border.width);
+    if (bw > 0) styles.border = `${bw}px ${node.border.dashType} ${node.border.color}`;
+  }
   applyShadowCSS(node.shadow, styles);
 
   return {

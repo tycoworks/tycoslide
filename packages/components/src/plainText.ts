@@ -12,6 +12,7 @@ import {
   NODE_TYPE,
   type Shadow,
   SIZE,
+  type Stroke,
   schema,
   type TextNode,
   token,
@@ -23,6 +24,7 @@ const plainTextTokens = token.shape({
   style: token.required<TextStyleName>(),
   hAlign: token.required<HorizontalAlignment>(),
   vAlign: token.required<VerticalAlignment>(),
+  border: token.optional<Stroke>(),
   shadow: token.optional<Shadow>(),
 });
 
@@ -50,6 +52,9 @@ function renderPlainText(_params: {}, content: string, context: RenderContext, t
     linkColor: tokens.color,
     linkUnderline: false,
   };
+  if (tokens.border) {
+    node.border = tokens.border;
+  }
   if (tokens.shadow) {
     node.shadow = tokens.shadow;
   }

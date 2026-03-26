@@ -15,6 +15,7 @@ import {
   param,
   type Shadow,
   SIZE,
+  type Stroke,
   SYNTAX,
   schema,
   type TextNode,
@@ -31,6 +32,7 @@ const listTokens = token.shape({
   hAlign: token.required<HorizontalAlignment>(),
   vAlign: token.required<VerticalAlignment>(),
   accents: token.required<Record<string, string>>(),
+  border: token.optional<Stroke>(),
   shadow: token.optional<Shadow>(),
 });
 
@@ -91,6 +93,9 @@ function renderList(params: ListParams, content: string[], context: RenderContex
     linkColor: tokens.linkColor,
     linkUnderline: tokens.linkUnderline,
   };
+  if (tokens.border) {
+    node.border = tokens.border;
+  }
   if (tokens.shadow) {
     node.shadow = tokens.shadow;
   }

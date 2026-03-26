@@ -8,36 +8,59 @@ Analysis of how `packages/theme-default/examples/showcase.md` should be structur
 
 Each slide serves double duty — makes a product point while demonstrating a layout. No dedicated "layout catalog" section. The advertisement content naturally exercises every layout in the theme.
 
+The showcase is organized into **three sections** matching the agenda:
+
+1. **tycoslide** — the pitch (what it is, how it works, why it matters)
+2. **Gallery** — art of the possible (what you can build, emotional beats)
+3. **Design System** — the visual identity (colors, typography)
+
 ---
 
-## Slide Sequence (20 slides)
+## Slide Sequence (17 slides)
+
+### Section 1: tycoslide (slides 1–7)
 
 | # | Layout | Variant | Content | Demonstrates |
 |---|--------|---------|---------|-------------|
-| 1 | `title` | default | tycoslide / Build presentations like software | Title layout |
-| 2 | `agenda` | default | Overview items | Agenda, list component |
-| 3 | `statement` | hero | One-liner from positioning framework | Statement hero, accent colors |
-| 4 | `comparison` | default | Brand Compliance vs Developer Velocity | Comparison, two-slot |
-| 5 | `cards` | flat | Three Pillars (Editable PowerPoint Slides, Pure TypeScript Themes, Build-Time Validation) | Cards flat variant |
-| 6 | `stat` | default | "17 layouts" or "0 silent failures" | Stat layout |
-| 7 | `section` | default | "How It Works" | Section divider |
-| 8 | `body` | default | Pipeline mermaid diagram | Mermaid component |
-| 9 | `image-right` | default | Markdown In, PowerPoint Out | Image-right, code in body |
-| 10 | `image-left` | default | TypeScript Themes / token system | Image-left, list in body |
-| 11 | `two-column` | default | What You Write / What You Get | Two-column, slot-based |
-| 12 | `body` | default | Rich Text Formatting | Text formatting components |
-| 13 | `body` | default | Presentations as Code (TypeScript DSL) | Code component |
-| 14 | `image` | default | Centered diagram or icon | Image layout |
-| 15 | `caption` | default | Architecture with caption | Caption layout |
-| 16 | `cards` | default | Roadmap (On Brand / On Message / Content Infrastructure) | Cards default variant |
-| 17 | `quote` | default | Manifesto quote | Quote component |
-| 18 | `body` | default | Customer testimonial | Testimonial component |
-| 19 | `title-only` | default | "Try It Yourself" CTA | Title-only layout |
-| 20 | `end` | default | Mirrors title | End layout |
+| 1 | `title` | default | tycoslide / Build slides like software | Title layout |
+| 2 | `agenda` | default | tycoslide, Gallery, Design System | Agenda layout |
+| 3 | `statement` | default | Positioning one-liner with accent colors | Statement layout |
+| 4 | `transform` | default | Markdown → PowerPoint side-by-side | Transform layout, card component, code component |
+| 5 | `cards` | default | Key Features — three pillars | Cards default variant |
+| 6 | `body` | centered | How It Compares — competitor table | Body centered variant, table component |
+| 7 | `body` | default | How It Works — mermaid pipeline | Body default variant, mermaid component |
+
+### Section 2: Gallery (slides 8–13)
+
+| # | Layout | Variant | Content | Demonstrates |
+|---|--------|---------|---------|-------------|
+| 8 | `section` | default | "Gallery" | Section divider |
+| 9 | `two-column` | default | Rich Markdown Authoring — what you write / what you get | Two-column layout, slot system |
+| 10 | `stat` | default | Zero Silent Failures | Stat layout |
+| 11 | `quote` | dark | "Software is eating the world..." | Quote dark variant |
+| 12 | `cards` | flat | What You Can Build — use cases | Cards flat variant |
+| 13 | `quote` | default | "The best slide decks..." | Quote default (light) variant |
+
+### Section 3: Design System (slides 14–17)
+
+| # | Layout | Variant | Content | Demonstrates |
+|---|--------|---------|---------|-------------|
+| 14 | `section` | default | "Design System" | Section divider (second use) |
+| 15 | `shapes` | default | Color Palette | Shapes layout |
+| 16 | `body` | default | Typography specimens | Body layout (third use), text formatting |
+| 17 | `end` | default | tycoslide / Build presentations like software | End layout |
 
 ---
 
 ## Decisions
+
+### Three-section narrative
+
+The original flat 6-item agenda was replaced with a 3-section structure. Each section maps to one agenda item: **tycoslide** (the tool), **Gallery** (art of the possible), **Design System** (the visual identity). This gives the presentation a clear narrative arc.
+
+### Stat and quote moved to Gallery
+
+"Zero Silent Failures" and the dark quote felt narratively disconnected between the pipeline slide and the design system. Moving them to the Gallery section creates a better emotional arc: two-column (informational) → stat (proof point) → dark quote (emotional) → flat cards (practical) → light quote (closing beat).
 
 ### Kill the pillar detail slides
 
@@ -45,27 +68,15 @@ The three dedicated pillar slides (Editable PowerPoint Slides, Pure TypeScript T
 
 ### `body` layout repeats are intentional
 
-`body` appears three times because it is the workhorse layout and demonstrates different components each time (mermaid, text formatting, code, testimonial).
+`body` appears three times because it is the workhorse layout and demonstrates different components each time (table, mermaid, typography).
 
-### `blank` layout
+### Icons grid dropped
 
-Hardest to showcase — empty by design. Options: use for a full-bleed composition, or skip and note in speaker notes. Decision pending.
+Only 4 `$icons.*` are available (`description`, `palette`, `shield`, `redo`). Not enough for a meaningful icons grid slide. Dropped from the plan.
 
-### Image placeholders
+### `blank` and `lines` layouts omitted
 
-`$icons.*` works for cards and image-left/right but undersells `caption` and `image` layouts. Real images would be more impressive but add asset management. Decision pending.
-
----
-
-## Two-Birds Examples
-
-How specific slides serve both ad and showcase purposes:
-
-- **`stat` layout + "build-time validation"**: Use "0 silent failures / Every error caught before the deck ships." Layout demonstrated; positioning point made.
-- **`two-column` layout + "markdown authoring"**: Left column shows raw markdown, right column describes what it produces. Layout demonstrated; authoring experience shown.
-- **`image-right` layout + "PowerPoint output"**: Body explains native .pptx with real text and shapes. Image slot shows icon or screenshot. Layout demonstrated; output story told.
-- **`comparison` layout + market positioning**: Brand Compliance vs Developer Velocity naturally fits the comparison layout. Positioning argument made; layout shown.
-- **The .pptx file itself IS the proof**: The audience opens it in PowerPoint, edits a slide, sees real text. No slide needed to argue this.
+`blank` is empty by design — no natural showcase content. `lines` is a demo/utility layout. Both omitted intentionally.
 
 ---
 
@@ -73,32 +84,23 @@ How specific slides serve both ad and showcase purposes:
 
 Every theme should ship an `examples/example.md` that exercises every layout at least once. The default theme's example doubles as a product showcase. Other themes' examples would be simpler.
 
-Pros:
-- Built-in layout reference that doubles as a visual test
-- Users get an immediate "what does this theme look like?" artifact
-- Copy-paste source material for authors who want a specific layout
-- Catches rendering bugs — theme authors must exercise every layout
-
-Cons:
-- Maintenance burden on theme authors
-- Conflates "reference" with "showcase" — one file cannot be both perfectly
-- Minimal themes with few layouts do not need a 20-slide showcase
-
 Recommendation: convention, not hard requirement. Name it `example.md`. Document in theme authoring guide.
 
 ---
 
 ## Layout Coverage
 
-**17 layouts in the default theme:** `title`, `section`, `body`, `stat`, `quote`, `end`, `blank`, `image`, `image-left`, `image-right`, `two-column`, `comparison`, `statement`, `agenda`, `cards`, `caption`, `title-only`
+**14 layouts in the default theme:** `title`, `section`, `body`, `stat`, `quote`, `end`, `blank`, `two-column`, `statement`, `agenda`, `cards`, `transform`, `shapes`, `lines`
 
-**Current showcase uses 8 of 17.** The proposed sequence covers 15 of 17 (missing `blank`, which is intentionally empty). The `body` layout appears multiple times to demonstrate different components.
+**Current showcase uses 11 of 14.** Missing: `blank` (empty by design), `lines` (demo/utility). The `body` layout appears three times to demonstrate different components. Both `cards` variants (default, flat) and both `quote` variants (default, dark) are shown.
 
 ---
 
+ Then I feel like we're not quite on the right approach with the overall narrative. What I would like to do is instead of having the middle section be whatever it is right now, gallery. Instead of a gallery, we should have a features section because we haven't really talked about the way that we do flexbox layouts. For example, like we have containers of different types, rows, columns, grids that we could show in a couple of slides. We can show all the different types of components. We can have a slide for text formatting. I think instead of a gallery, it should be more like a 10 slides showing the key features or something like that. We'd want to show containers, so stacks, grids, rows, columns, and the kinds of layouts you can create with those. Obviously, the design token stuff, that can still be a separate section. What I would like to do is for you to spin up another research agent to look through all the documentation that we have for this product and see what key features you might want to show in that middle section. And then maybe the last section is called default theme or something like that. That might make more sense.
+
 ## Component Coverage
 
-**Markdown-authorable components demonstrated:** text formatting (bold, italic, strikethrough, underline, accent colors, hyperlinks), list, code, mermaid, table, testimonial, quote, card (via cards layout), image (via image slots).
+**Markdown-authorable components demonstrated:** text formatting (bold, italic, strikethrough, underline, accent colors, hyperlinks), list, code, mermaid, table, card (via cards layout), image (via image slots).
 
 **Not demonstrated (DSL-only):** row, column, stack, grid, shape, line, slideNumber, plainText. These belong in developer docs, not the showcase.
 
@@ -106,25 +108,14 @@ Recommendation: convention, not hard requirement. Name it `example.md`. Document
 
 ## Outstanding Work
 
-### Slide 2 (Agenda)
-- Second item "Markdown → .pptx" title might need tweaking. TBD.
-
-### Slide 4 (Transform)
-- Needs a title.
-
 ### Slide 5 (Cards — Key Features)
 - Icons feel too big. Try increasing card padding from 0.25 to 0.3 to contract them slightly.
 
 ### Slide 7 (Mermaid — Build Pipeline)
 - Needs redesign. Details TBD.
 
-### Slide 8/9 (Stat + Quote)
-- Narrative issue: "Zero Silent Failures" feels out of place after the table.
-- Options: move stat earlier, make stat the dark slide instead of quote, or restructure.
-- Consider: stat on dark background as section closer before design system slides.
-
-### Slide 10 (Color Palette)
+### Slide 15 (Color Palette)
 - Doesn't match Materialize reference screenshots. Needs more/better squares.
 
-### Slide 11 (Typography)
+### Slide 16 (Typography)
 - Doesn't match Materialize reference closely. Should include font sizes in the type specimens.

@@ -57,6 +57,7 @@ export interface TextNode {
   bulletIndentPt: number;
   linkColor: string; // token-driven hyperlink color (render-time)
   linkUnderline: boolean; // token-driven hyperlink underline (render-time)
+  border?: Stroke;
   shadow?: Shadow;
 }
 

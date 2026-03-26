@@ -584,7 +584,7 @@ export const theme = defineTheme({
           itemVAlign: VALIGN.MIDDLE,
           itemSpacing: spacing,
           gridColumns: 2,
-          gridSpacing: spacingTight,
+          gridSpacing: spacing,
         }),
       },
     },
@@ -677,7 +677,13 @@ export const theme = defineTheme({
           eyebrow: headerEyebrow,
           subtitle: { style: TEXT_STYLE.BODY, color: palette.gray500, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
           headerSpacing: spacingTight,
-          label: { style: TEXT_STYLE.BODY, color: palette.gray600, hAlign: HALIGN.CENTER, vAlign: VALIGN.TOP },
+          label: {
+            style: TEXT_STYLE.BODY,
+            color: palette.gray600,
+            hAlign: HALIGN.CENTER,
+            vAlign: VALIGN.TOP,
+            border: { color: palette.purple, width: 1, dashType: DASH_TYPE.SOLID },
+          },
           rectangle: {
             fill: palette.purple,
             fillOpacity: defaultOpacity,

@@ -12,6 +12,7 @@ import type {
   Shadow,
   ShapeNode,
   SlideNumberNode,
+  Stroke,
   TableCellData,
   TableNode,
   TextNode,
@@ -62,6 +63,15 @@ export interface TextFragment {
 // ============================================
 // PPTX CONFIG BUILDER
 // ============================================
+
+/** Convert tycoslide Stroke to pptxgenjs ShapeLineProps. */
+function buildLineOptions(stroke: Stroke): Record<string, unknown> {
+  return {
+    color: stripHash(stroke.color),
+    width: stroke.width,
+    dashType: pptxDashType(stroke.dashType),
+  };
+}
 
 /** Convert tycoslide Shadow to pptxgenjs ShadowProps. */
 function buildShadowOptions(shadow: Shadow): Record<string, unknown> {
@@ -118,6 +128,9 @@ export class PptxConfigBuilder {
       valign: textNode.vAlign,
     };
 
+    if (textNode.border && textNode.border.width > 0) {
+      options.line = buildLineOptions(textNode.border);
+    }
     if (textNode.shadow) {
       options.shadow = buildShadowOptions(textNode.shadow);
     }
@@ -215,11 +228,7 @@ export class PptxConfigBuilder {
     };
 
     if (shapeNode.border && shapeNode.border.width > 0) {
-      options.line = {
-        color: stripHash(shapeNode.border.color),
-        width: shapeNode.border.width,
-        dashType: pptxDashType(shapeNode.border.dashType),
-      };
+      options.line = buildLineOptions(shapeNode.border);
     }
 
     // Always pass rectRadius so explicit 0 produces sharp corners.
@@ -237,18 +246,14 @@ export class PptxConfigBuilder {
     lineNode: LineNode,
     positioned: PositionedNode,
   ): { shapeType: string; options: Record<string, unknown> } {
-    const { color, width: strokeWidth, dashType } = lineNode.stroke;
     const isVertical = lineNode.direction === DIRECTION.COLUMN;
-
-    const lineOpts: Record<string, unknown> = { color: stripHash(color), width: strokeWidth };
-    lineOpts.dashType = pptxDashType(dashType);
 
     const options: Record<string, unknown> = {
       x: positioned.x,
       y: positioned.y,
       w: isVertical ? 0 : positioned.width,
       h: isVertical ? positioned.height : 0,
-      line: lineOpts,
+      line: buildLineOptions(lineNode.stroke),
     };
 
     if (lineNode.shadow) {

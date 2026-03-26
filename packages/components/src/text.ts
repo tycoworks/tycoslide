@@ -15,6 +15,7 @@ import {
   NODE_TYPE,
   type Shadow,
   SIZE,
+  type Stroke,
   SYNTAX,
   schema,
   TEXT_STYLE,
@@ -32,6 +33,7 @@ const textTokens = token.shape({
   hAlign: token.required<HorizontalAlignment>(),
   vAlign: token.required<VerticalAlignment>(),
   accents: token.required<Record<string, string>>(),
+  border: token.optional<Stroke>(),
   shadow: token.optional<Shadow>(),
 });
 
@@ -88,6 +90,9 @@ function renderText(_params: {}, content: string, context: RenderContext, tokens
     linkColor: tokens.linkColor,
     linkUnderline: tokens.linkUnderline,
   };
+  if (tokens.border) {
+    node.border = tokens.border;
+  }
   if (tokens.shadow) {
     node.shadow = tokens.shadow;
   }
