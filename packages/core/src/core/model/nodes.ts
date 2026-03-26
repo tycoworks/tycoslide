@@ -101,7 +101,7 @@ export interface ShapeNode {
   height: SizeValue;
   shape: ShapeName;
   fill: { color: string; opacity: number };
-  border: Stroke;
+  border?: Stroke;
   cornerRadius: number;
   shadow?: Shadow;
 }

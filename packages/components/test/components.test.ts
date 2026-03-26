@@ -222,7 +222,7 @@ describe("shape()", () => {
   test("uses token values for fill, defaults for omitted tokens", async () => {
     const node = (await render(shape(DEFAULT_SHAPE_TOKENS, { shape: SHAPE.RECTANGLE }))) as ShapeNode;
     assert.deepStrictEqual(node.fill, { color: "#333333", opacity: 100 });
-    assert.deepStrictEqual(node.border, { color: "#000000", width: 0, dashType: DASH_TYPE.SOLID });
+    assert.strictEqual(node.border, undefined);
     assert.strictEqual(node.cornerRadius, 0);
   });
 
@@ -239,7 +239,10 @@ describe("shape()", () => {
   });
 
   test("passes border properties from tokens", async () => {
-    const tokens: ShapeTokens = { ...DEFAULT_SHAPE_TOKENS, borderColor: "#0000FF", borderWidth: 2 };
+    const tokens: ShapeTokens = {
+      ...DEFAULT_SHAPE_TOKENS,
+      border: { color: "#0000FF", width: 2, dashType: DASH_TYPE.SOLID },
+    };
     const node = (await render(shape(tokens, { shape: SHAPE.RECTANGLE }))) as ShapeNode;
     assert.strictEqual(node.border?.color, "#0000FF");
     assert.strictEqual(node.border?.width, 2);
@@ -262,8 +265,7 @@ describe("shape()", () => {
     const tokens: ShapeTokens = {
       fill: "#EEEEEE",
       fillOpacity: 80,
-      borderColor: "#333333",
-      borderWidth: 1,
+      border: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
       cornerRadius: 0.25,
     };
     const node = (await render(shape(tokens, { shape: SHAPE.ELLIPSE }))) as ShapeNode;
@@ -295,10 +297,10 @@ describe("shape()", () => {
   });
 
   test("shadow absent when not provided in tokens", async () => {
-    const tokens = { fill: "#FF0000", fillOpacity: 100, borderColor: "#000000", borderWidth: 0, cornerRadius: 0 };
+    const tokens = { fill: "#FF0000", fillOpacity: 100, cornerRadius: 0 };
     const node = (await render(shape(tokens, { shape: SHAPE.RECTANGLE }))) as ShapeNode;
     assert.deepStrictEqual(node.fill, { color: "#FF0000", opacity: 100 });
-    assert.deepStrictEqual(node.border, { color: "#000000", width: 0, dashType: DASH_TYPE.SOLID });
+    assert.strictEqual(node.border, undefined);
     assert.strictEqual(node.cornerRadius, 0);
     assert.strictEqual(node.shadow, undefined);
   });

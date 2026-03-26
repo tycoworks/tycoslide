@@ -157,7 +157,6 @@ function shapeNode(shapeName: string): ShapeNode {
     height: SIZE.FILL,
     shape: shapeName as any,
     fill: { color: "#666666", opacity: 100 },
-    border: { color: "#FFFFFF", width: 0, dashType: DASH_TYPE.SOLID },
     cornerRadius: 0,
   };
 }
@@ -911,7 +910,6 @@ describe("HTML Measurement Generation", () => {
         height: SIZE.FILL,
         shape: SHAPE.RECTANGLE,
         fill: { color: "#BDB0E0", opacity: 20 },
-        border: { color: "#FFFFFF", width: 0, dashType: DASH_TYPE.SOLID },
         cornerRadius: 0,
       };
       const node = colNode(stackNode(shape, colNode(textNode("Content"))));
@@ -927,7 +925,6 @@ describe("HTML Measurement Generation", () => {
         height: SIZE.FILL,
         shape: SHAPE.ELLIPSE,
         fill: { color: "#FF0000", opacity: 100 },
-        border: { color: "#FFFFFF", width: 0, dashType: DASH_TYPE.SOLID },
         cornerRadius: 0,
       };
       const node = colNode(stackNode(shape, colNode(textNode("Circle"))));
@@ -942,7 +939,6 @@ describe("HTML Measurement Generation", () => {
         height: SIZE.FILL,
         shape: SHAPE.RECTANGLE,
         fill: { color: "#333333", opacity: 100 },
-        border: { color: "#FFFFFF", width: 0, dashType: DASH_TYPE.SOLID },
         cornerRadius: 0.1,
       };
       const node = colNode(stackNode(shape, colNode(textNode("Rounded"))));
@@ -974,7 +970,6 @@ describe("HTML Measurement Generation", () => {
         height: SIZE.FILL,
         shape: SHAPE.TRIANGLE,
         fill: { color: "#10B981", opacity: 60 },
-        border: { color: "#FFFFFF", width: 0, dashType: DASH_TYPE.SOLID },
         cornerRadius: 0,
       };
       const node = colNode(stackNode(shape, colNode(textNode("Tri"))));
@@ -993,7 +988,6 @@ describe("HTML Measurement Generation", () => {
         height: SIZE.FILL,
         shape: SHAPE.DIAMOND,
         fill: { color: "#79C0FF", opacity: 100 },
-        border: { color: "#FFFFFF", width: 0, dashType: DASH_TYPE.SOLID },
         cornerRadius: 0,
       };
       const node = colNode(stackNode(shape, colNode(textNode("Dia"))));
@@ -1026,7 +1020,6 @@ describe("HTML Measurement Generation", () => {
         height: SIZE.FILL,
         shape: SHAPE.TRIANGLE,
         fill: { color: "#FF0000", opacity: 100 },
-        border: { color: "#FFFFFF", width: 0, dashType: DASH_TYPE.SOLID },
         cornerRadius: 0,
         shadow: { type: SHADOW_TYPE.OUTER, color: "#000000", opacity: 25, blur: 8, offset: 3, angle: 180 },
       };

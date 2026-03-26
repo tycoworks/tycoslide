@@ -535,6 +535,7 @@ function styleShape(node: ShapeNode, nodeId: string): StyledNode {
 }
 
 function applyCSSBorder(node: ShapeNode, styles: Record<string, string | number>): void {
+  if (!node.border) return;
   const bw = ptToPx(node.border.width);
   if (bw > 0) styles.border = `${bw}px ${node.border.dashType} ${node.border.color}`;
 }
@@ -547,8 +548,13 @@ function styleSvgPolygon(
   points: string,
 ): StyledNode {
   const fillOpacity = node.fill.opacity / 100;
-  const bw = ptToPx(node.border.width);
-  const stroke = bw > 0 ? ` stroke="${node.border.color}" stroke-width="${bw}" vector-effect="non-scaling-stroke"` : "";
+  const bw = node.border ? ptToPx(node.border.width) : 0;
+  let stroke = "";
+  if (bw > 0 && node.border) {
+    const multipliers = dashTypeMultipliers(node.border.dashType);
+    const dashAttr = multipliers ? ` stroke-dasharray="${multipliers.map((m) => m * bw).join(" ")}"` : "";
+    stroke = ` stroke="${node.border.color}" stroke-width="${bw}" vector-effect="non-scaling-stroke"${dashAttr}`;
+  }
   // Shadow: CSS filter drop-shadow follows the visual shape (unlike box-shadow which follows the box)
   if (node.shadow) {
     const { x, y, rgba } = shadowOffsets(node.shadow);

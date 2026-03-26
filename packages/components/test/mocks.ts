@@ -123,8 +123,6 @@ export const DEFAULT_CODE_TOKENS: CodeTokens = {
   background: {
     fill: "#1E1E1E",
     fillOpacity: 100,
-    borderColor: "#1E1E1E",
-    borderWidth: 0,
     cornerRadius: 0,
   },
 };
@@ -151,8 +149,6 @@ export const DEFAULT_CARD_TOKENS: CardTokens = {
   background: {
     fill: "#333333",
     fillOpacity: 100,
-    borderColor: "#000000",
-    borderWidth: 0,
     cornerRadius: 0,
   },
   padding: 0.25,
@@ -207,8 +203,6 @@ export const DEFAULT_TESTIMONIAL_TOKENS: TestimonialTokens = {
   background: {
     fill: "#333333",
     fillOpacity: 100,
-    borderColor: "#000000",
-    borderWidth: 0,
     cornerRadius: 0,
   },
   padding: 0.5,
@@ -241,8 +235,6 @@ export const DEFAULT_LINE_TOKENS: LineTokens = {
 export const DEFAULT_SHAPE_TOKENS: ShapeTokens = {
   fill: "#333333",
   fillOpacity: 100,
-  borderColor: "#000000",
-  borderWidth: 0,
   cornerRadius: 0,
 };
 

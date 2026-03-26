@@ -14,6 +14,7 @@ import {
   type InferTokens,
   inToPx,
   param,
+  ptToPx,
   type RenderContext,
   SYNTAX,
   schema,
@@ -82,7 +83,7 @@ html, body {
   padding: ${inToPx(tokens.padding)}px;
   border-radius: ${inToPx(bg.cornerRadius)}px;
   overflow: hidden;
-  ${bg.borderWidth > 0 ? `border: ${inToPx(bg.borderWidth)}px solid ${bg.borderColor};` : "border: none;"}
+  ${bg.border ? `border: ${ptToPx(bg.border.width)}px ${bg.border.dashType} ${bg.border.color};` : "border: none;"}
 }
 .code-container pre {
   margin: 0;

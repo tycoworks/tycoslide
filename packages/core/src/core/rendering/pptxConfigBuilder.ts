@@ -214,12 +214,11 @@ export class PptxConfigBuilder {
       },
     };
 
-    const border = shapeNode.border;
-    if (border.width > 0) {
+    if (shapeNode.border && shapeNode.border.width > 0) {
       options.line = {
-        color: stripHash(border.color),
-        width: border.width,
-        dashType: pptxDashType(border.dashType),
+        color: stripHash(shapeNode.border.color),
+        width: shapeNode.border.width,
+        dashType: pptxDashType(shapeNode.border.dashType),
       };
     }
 

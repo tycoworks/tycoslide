@@ -3,7 +3,6 @@
 import {
   type ComponentNode,
   component,
-  DASH_TYPE,
   type DashType,
   DIRECTION,
   DIRECTION_VALUES,
@@ -21,6 +20,7 @@ import {
   type ShapeNode,
   SIZE,
   type SlideNumberNode,
+  type Stroke,
   schema,
   type TextStyleName,
   token,
@@ -49,8 +49,7 @@ export type SlideNumberTokens = InferTokens<typeof slideNumberTokens>;
 const shapeTokens = token.shape({
   fill: token.required<string>(),
   fillOpacity: token.required<number>(),
-  borderColor: token.required<string>(),
-  borderWidth: token.required<number>(),
+  border: token.optional<Stroke>(),
   cornerRadius: token.required<number>(),
   shadow: token.optional<Shadow>(),
 });
@@ -114,13 +113,11 @@ function renderShape(
       color: tokens.fill,
       opacity: tokens.fillOpacity,
     },
-    border: {
-      color: tokens.borderColor,
-      width: tokens.borderWidth,
-      dashType: DASH_TYPE.SOLID,
-    },
     cornerRadius: tokens.cornerRadius,
   };
+  if (tokens.border) {
+    node.border = tokens.border;
+  }
   if (tokens.shadow) {
     node.shadow = tokens.shadow;
   }

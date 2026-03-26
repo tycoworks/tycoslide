@@ -125,4 +125,4 @@ export {
 } from "./utils/font.js";
 export { parseMarkdown } from "./utils/parser.js";
 // Unit utilities (for component authors that resolve theme values during render)
-export { inToPx, ptToIn } from "./utils/units.js";
+export { inToPx, ptToIn, ptToPx } from "./utils/units.js";

@@ -209,7 +209,7 @@ Content card with an optional image, title, and description. Renders as a rounde
 | `title` | TextTokens | Title text tokens |
 | `description` | TextTokens | Description text tokens |
 
-`ShapeTokens` includes `fill`, `fillOpacity`, `borderColor`, `borderWidth`, `cornerRadius`, and optional `shadow`. See [`theme.ts`](../packages/theme-default/src/theme.ts) for default values.
+`ShapeTokens` includes `fill`, `fillOpacity`, `cornerRadius`, and optional `border` (`Stroke`) and `shadow`. See [`theme.ts`](../packages/theme-default/src/theme.ts) for default values.
 
 ### Examples
 
@@ -287,7 +287,7 @@ Cell content supports formatting (`**bold**`, `*italic*`, `:accent[color]`).
 | `background` | ShapeTokens | Card-effect background shape (optional — omit to render without background) |
 | `backgroundPadding` | number | Inset between the table and the background shape edge in inches (optional) |
 
-`ShapeTokens` includes `fill`, `fillOpacity`, `borderColor`, `borderWidth`, `cornerRadius`, and optional `shadow`. See [`theme.ts`](../packages/theme-default/src/theme.ts) for default values.
+`ShapeTokens` includes `fill`, `fillOpacity`, `cornerRadius`, and optional `border` (`Stroke`) and `shadow`. See [`theme.ts`](../packages/theme-default/src/theme.ts) for default values.
 
 `TableHeaderStyle` includes `textStyle`, `textColor`, `background`, `backgroundOpacity`, and optional `hAlign`. Header zones are enabled by presence — omit the token to leave that zone unstyled.
 
@@ -341,7 +341,7 @@ A horizontal or vertical rule. Renders as a separator between content blocks. Av
 |-------|------|-------------|
 | `color` | string | Line color |
 | `width` | number | Line width in points |
-| `dashType` | DashType | Dash pattern |
+| `dashType` | DashType | Dash pattern — `DASH_TYPE.SOLID`, `DASH_TYPE.DASHED`, or `DASH_TYPE.DOTTED` |
 | `shadow` | Shadow | Drop shadow (optional — omit to suppress) |
 
 ### Examples
@@ -377,9 +377,8 @@ A filled or outlined shape. Available in the TypeScript DSL only.
 | Token | Type | Description |
 |-------|------|-------------|
 | `fill` | string | Fill color (6-character hex with `#` prefix) |
-| `fillOpacity` | number | Fill opacity (0--1) |
-| `borderColor` | string | Border color (6-character hex with `#` prefix) |
-| `borderWidth` | number | Border width in points |
+| `fillOpacity` | number | Fill opacity (0--100) |
+| `border` | Stroke | Border stroke (optional — omit for no border) |
 | `cornerRadius` | number | Corner radius in inches |
 | `shadow` | Shadow | Drop shadow (optional — omit to suppress) |
 
@@ -499,7 +498,7 @@ The content is the source code. In markdown, this is the content between the fen
 | `padding` | number | Inner padding (inches) |
 | `background` | ShapeTokens | Background shape (fill, border, corner radius, optional shadow) |
 
-`ShapeTokens` includes `fill`, `fillOpacity`, `borderColor`, `borderWidth`, `cornerRadius`, and optional `shadow`. Use the `HIGHLIGHT_THEME` constant for available theme names and `LANGUAGE` for supported language identifiers. See [`highlighting.ts`](../packages/components/src/highlighting.ts) for the full list.
+`ShapeTokens` includes `fill`, `fillOpacity`, `cornerRadius`, and optional `border` (`Stroke`) and `shadow`. Use the `HIGHLIGHT_THEME` constant for available theme names and `LANGUAGE` for supported language identifiers. See [`highlighting.ts`](../packages/components/src/highlighting.ts) for the full list.
 
 ### Examples
 
@@ -541,7 +540,7 @@ Quote text is required -- provide it either via the `quote` attribute or as body
 | `quote` | TextTokens | Quote text tokens |
 | `attribution` | PlainTextTokens | Attribution text tokens |
 
-`ShapeTokens` includes `fill`, `fillOpacity`, `borderColor`, `borderWidth`, `cornerRadius`, and optional `shadow`. See [`theme.ts`](../packages/theme-default/src/theme.ts) for default values.
+`ShapeTokens` includes `fill`, `fillOpacity`, `cornerRadius`, and optional `border` (`Stroke`) and `shadow`. See [`theme.ts`](../packages/theme-default/src/theme.ts) for default values.
 
 ### Examples
 

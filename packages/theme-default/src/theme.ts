@@ -257,8 +257,7 @@ const tableTokens = {
   background: {
     fill: palette.white,
     fillOpacity: defaultOpacity,
-    borderColor: palette.gray300,
-    borderWidth,
+    border: { color: palette.gray300, width: borderWidth, dashType: DASH_TYPE.SOLID },
     cornerRadius: cornerRadiusLarge,
     shadow,
   },
@@ -272,8 +271,6 @@ const codeTokens = {
   background: {
     fill: palette.navy,
     fillOpacity: defaultOpacity,
-    borderColor: palette.navy,
-    borderWidth: 0,
     cornerRadius,
     shadow,
   },
@@ -294,8 +291,7 @@ const testimonialSlotTokens = {
   background: {
     fill: palette.gray100,
     fillOpacity: defaultOpacity,
-    borderColor: palette.gray300,
-    borderWidth,
+    border: { color: palette.gray300, width: borderWidth, dashType: DASH_TYPE.SOLID },
     cornerRadius,
   },
   padding: padding,
@@ -340,8 +336,7 @@ const cardBase = {
 const cardBackground = {
   fill: palette.white,
   fillOpacity: defaultOpacity,
-  borderColor: palette.gray300,
-  borderWidth,
+  border: { color: palette.gray300, width: borderWidth, dashType: DASH_TYPE.SOLID },
   cornerRadius,
 };
 
@@ -524,8 +519,7 @@ export const theme = defineTheme({
           background: {
             fill: palette.white,
             fillOpacity: defaultOpacity,
-            borderColor: palette.gray300,
-            borderWidth,
+            border: { color: palette.gray300, width: borderWidth, dashType: DASH_TYPE.SOLID },
             cornerRadius: cornerRadiusLarge,
           },
           backgroundWidth: 6,
@@ -577,8 +571,7 @@ export const theme = defineTheme({
           itemBackground: {
             fill: palette.white,
             fillOpacity: defaultOpacity,
-            borderColor: palette.gray300,
-            borderWidth,
+            border: { color: palette.gray300, width: borderWidth, dashType: DASH_TYPE.SOLID },
             cornerRadius,
           },
           itemNumber: {
@@ -688,29 +681,25 @@ export const theme = defineTheme({
           rectangle: {
             fill: palette.purple,
             fillOpacity: defaultOpacity,
-            borderColor: palette.purple,
-            borderWidth: 0,
+            border: { color: palette.navy, width: 2, dashType: DASH_TYPE.SOLID },
             cornerRadius: 0,
           },
           ellipse: {
             fill: palette.navy,
             fillOpacity: defaultOpacity,
-            borderColor: palette.navy,
-            borderWidth: 0,
+            border: { color: palette.purple, width: 2, dashType: DASH_TYPE.DASHED },
             cornerRadius: 0,
           },
           triangle: {
             fill: palette.emerald,
             fillOpacity: defaultOpacity,
-            borderColor: palette.emerald,
-            borderWidth: 0,
+            border: { color: palette.brick, width: 3, dashType: DASH_TYPE.DASHED },
             cornerRadius: 0,
           },
           diamond: {
             fill: palette.slate,
             fillOpacity: defaultOpacity,
-            borderColor: palette.slate,
-            borderWidth: 0,
+            border: { color: palette.emerald, width: 2, dashType: DASH_TYPE.DOTTED },
             cornerRadius: 0,
           },
           vAlign: VALIGN.TOP,

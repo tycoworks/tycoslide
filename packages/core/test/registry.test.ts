@@ -10,7 +10,7 @@ import { C, testComponents } from "./test-components.js";
 // Register test components
 componentRegistry.register(testComponents);
 
-import { HALIGN, SIZE, TEXT_STYLE, VALIGN } from "../src/core/model/types.js";
+import { DASH_TYPE, HALIGN, SIZE, TEXT_STYLE, VALIGN } from "../src/core/model/types.js";
 
 // ============================================
 // GENERIC REGISTRY BASE CLASS
@@ -163,7 +163,12 @@ describe("ComponentRegistry", () => {
     test("recursively renders nested components", async () => {
       // Card requires tokens — provide them via node.tokens
       const cardTokens = {
-        background: { fill: "#333333", fillOpacity: 0, borderColor: "#333333", borderWidth: 1, cornerRadius: 0.1 },
+        background: {
+          fill: "#333333",
+          fillOpacity: 0,
+          border: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
+          cornerRadius: 0.1,
+        },
         padding: 0.25,
         spacing: 0.125,
         hAlign: HALIGN.CENTER,

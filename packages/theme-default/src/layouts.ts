@@ -695,9 +695,9 @@ export const shapesLayout = defineLayout({
         row(
           { spacing: tokens.spacing, height: SIZE.FILL },
           cell(tokens.rectangle, SHAPE.RECTANGLE, "Primary\n#7C3AED"),
-          cell(tokens.ellipse, SHAPE.RECTANGLE, "Dark\n#1A1A2E"),
-          cell(tokens.triangle, SHAPE.RECTANGLE, "Accent\n#10B981"),
-          cell(tokens.diamond, SHAPE.RECTANGLE, "Surface\n#E2E8F0"),
+          cell(tokens.ellipse, SHAPE.ELLIPSE, "Dark\n#1A1A2E"),
+          cell(tokens.triangle, SHAPE.TRIANGLE, "Accent\n#10B981"),
+          cell(tokens.diamond, SHAPE.DIAMOND, "Surface\n#E2E8F0"),
         ),
       ),
     );

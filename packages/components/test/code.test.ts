@@ -245,7 +245,7 @@ describe("renderCodeToHtml()", () => {
     textStyle: TEXT_STYLE.CODE,
     theme: HIGHLIGHT_THEME.GITHUB_DARK,
     padding: 0.25,
-    background: { fill: "#1E1E1E", fillOpacity: 100, borderColor: "#1E1E1E", borderWidth: 0, cornerRadius: 0.1 },
+    background: { fill: "#1E1E1E", fillOpacity: 100, cornerRadius: 0.1 },
   };
 
   const codeStyle: TextStyle = {
