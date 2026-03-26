@@ -113,9 +113,10 @@ export function flexSize(
     styles.flex = `0 0 ${inToPx(mainSize)}px`;
   } else if (mainSize === SIZE.FILL) {
     styles.flex = "1 1 0";
-    // Row: min-width: 0 lets text reflow to narrower widths (word-wrap: break-word).
-    // Column: min-height MUST stay auto — vertical content cannot reflow, so
-    // shrinking below content height causes overlap. Only images opt in (see styleImage).
+    // Row: min-width: 0 overrides the flex default (min-width: auto) so FILL items
+    // can share space. Without it, items refuse to shrink below content width.
+    // Column: min-height stays auto — vertical content can't reflow, so shrinking
+    // below content height causes overlap. Images opt in to minHeight:0 separately.
     if (isInRow) {
       styles.minWidth = 0;
     }
@@ -384,6 +385,8 @@ function styleText(node: TextNode, parent: ParentCtx, nodeId: string, fontRatios
   };
 }
 
+// Image does NOT use flexSize() — aspect-ratio coupling requires a different flex strategy
+// per parent context (hasDefiniteCrossSize, heightIsConstrained). See architect review.
 function styleImage(node: ImageNode, parent: ParentCtx, nodeId: string, imagePathMap: Map<string, string>): StyledNode {
   const dims = readImageDimensions(node.src);
   if (!dims) {
