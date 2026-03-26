@@ -231,8 +231,6 @@ export class PptxConfigBuilder {
       options.line = buildLineOptions(shapeNode.border);
     }
 
-    // Always pass rectRadius so explicit 0 produces sharp corners.
-    // Requires pptxgenjs fix: `if (rectRadius != null)` instead of `if (rectRadius)`.
     options.rectRadius = shapeNode.cornerRadius;
 
     if (shapeNode.shadow) {
