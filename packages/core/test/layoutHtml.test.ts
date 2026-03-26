@@ -470,7 +470,7 @@ describe("HTML Measurement Generation", () => {
     test("vertical line (direction=column) renders as vertical SVG line", async () => {
       const node = rowNode(textNode("Left"), lineNode(DIRECTION.COLUMN), textNode("Right"));
       const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes("align-self:stretch"), "Vertical line should stretch");
+      assert.ok(html.includes("height:100%"), "Vertical line should fill height via flexSize");
       assert.ok(html.includes("<svg"), "Line should render as SVG");
       assert.ok(html.includes('y1="0"'), "Vertical line starts at y=0");
       assert.ok(html.includes('y2="100%"'), "Vertical line ends at y=100%");
@@ -1055,10 +1055,10 @@ describe("HTML Measurement Generation", () => {
       assert.ok(html.includes("safe center"), "SlideNumber with MIDDLE should use safe center");
     });
 
-    test("slideNumber uses flex: 0 0 auto (content-sized)", async () => {
+    test("slideNumber uses flexShrink:0 (content-sized via flexSize)", async () => {
       const node = rowNode(textNode("Footer"), slideNumberNode());
       const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes("flex:0 0 auto"), "SlideNumber should be content-sized (flex:0 0 auto)");
+      assert.ok(html.includes("flex-shrink:0"), "SlideNumber should be content-sized (flexShrink:0 via flexSize)");
     });
 
     test("slideNumber renders placeholder text", async () => {

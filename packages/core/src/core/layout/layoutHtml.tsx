@@ -354,7 +354,6 @@ function styleText(node: TextNode, parent: ParentCtx, nodeId: string, fontRatios
   const cssLineHeight = normalRatio ? lineSpacingMultiple * normalRatio : lineSpacingMultiple;
   const bulletIndentPx = ptToPx(node.bulletIndentPt);
   const textAlign = node.hAlign === HALIGN.RIGHT ? "right" : node.hAlign === HALIGN.CENTER ? "center" : "left";
-  const isInRow = parent.direction === DIRECTION.ROW;
 
   const styles: Record<string, string | number> = {
     display: "flex",
@@ -368,7 +367,7 @@ function styleText(node: TextNode, parent: ParentCtx, nodeId: string, fontRatios
     textAlign,
     whiteSpace: "pre-wrap",
     wordWrap: "break-word",
-    ...(isInRow ? { flex: "1 1 0", minWidth: 0 } : { width: "100%", flexShrink: 0 }),
+    ...flexSize(node.width, node.height, parent.direction),
   };
 
   if (node.border) {
@@ -460,7 +459,7 @@ function dashTypeMultipliers(dt: DashType): number[] | undefined {
   }
 }
 
-function styleLine(node: LineNode, _parent: ParentCtx, nodeId: string): StyledNode {
+function styleLine(node: LineNode, parent: ParentCtx, nodeId: string): StyledNode {
   const { color, width: strokePt, dashType } = node.stroke;
   const isVertical = node.direction === DIRECTION.COLUMN;
   const strokePx = ptToPx(strokePt);
@@ -478,12 +477,18 @@ function styleLine(node: LineNode, _parent: ParentCtx, nodeId: string): StyledNo
   // flex item's min-height:auto beyond the intended stroke-width basis.
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" overflow="visible" style="display:block"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${strokePx}"${dashAttr}/></svg>`;
 
-  // Explicit width/height prevents SVG width="100%" height="100%" from falling
-  // back to the CSS default intrinsic size (300×150px) when the flex basis alone
-  // doesn't set the corresponding CSS dimension.
-  const styles: Record<string, string | number> = isVertical
-    ? { flex: `0 0 ${strokePx}px`, alignSelf: "stretch", width: `${strokePx}px` }
-    : { flex: `0 0 ${strokePx}px`, width: "100%", height: `${strokePx}px` };
+  // Line has no width/height fields — derive from direction:
+  // Main axis of the line itself FILLs, cross axis HUGs (overridden with stroke px below).
+  const lineWidth = isVertical ? SIZE.HUG : SIZE.FILL;
+  const lineHeight = isVertical ? SIZE.FILL : SIZE.HUG;
+  const styles: Record<string, string | number> = flexSize(lineWidth, lineHeight, parent.direction);
+
+  // Override cross-axis with the stroke pixel dimension so the SVG has an explicit size.
+  if (isVertical) {
+    styles.width = `${strokePx}px`;
+  } else {
+    styles.height = `${strokePx}px`;
+  }
 
   applyShadowCSS(node.shadow, styles);
   return { nodeId, styles, children: [], innerHTML: svg };
@@ -506,10 +511,9 @@ function applyShadowCSS(shadow: Shadow | undefined, styles: Record<string, strin
   styles.boxShadow = `${ptToPx(x)}px ${ptToPx(y)}px ${ptToPx(shadow.blur)}px ${rgba}`;
 }
 
-function styleShape(node: ShapeNode, nodeId: string): StyledNode {
+function styleShape(node: ShapeNode, parent: ParentCtx, nodeId: string): StyledNode {
   const styles: Record<string, string | number> = {
-    width: "100%",
-    height: "100%",
+    ...flexSize(node.width, node.height, parent.direction),
   };
   // Exhaustive switch ensures new shapes must be handled here at compile time.
   // Rectangle/ellipse use pure CSS (borders follow border-radius naturally).
@@ -568,7 +572,7 @@ function styleSvgPolygon(
   return { nodeId, styles, children: [], innerHTML: svg };
 }
 
-function styleSlideNumber(node: SlideNumberNode, nodeId: string): StyledNode {
+function styleSlideNumber(node: SlideNumberNode, parent: ParentCtx, nodeId: string): StyledNode {
   const style = node.resolvedStyle;
   const fontSizePx = ptToPx(style.fontSize);
   const defaultFont = getFontForRun(style.fontFamily);
@@ -586,7 +590,7 @@ function styleSlideNumber(node: SlideNumberNode, nodeId: string): StyledNode {
       color: node.color,
       textAlign,
       whiteSpace: "nowrap",
-      flex: "0 0 auto",
+      ...flexSize(node.width, node.height, parent.direction),
     },
     children: [],
     textContent: SLIDE_NUMBER_PLACEHOLDER,
@@ -605,7 +609,6 @@ function styleTable(
   const numCols = node.rows[0]?.length ?? 0;
   const cellPadding = node.cellPadding;
   const cellPaddingPx = inToPx(cellPadding);
-  const isInRow = parent.direction === DIRECTION.ROW;
 
   const borderWidthPx = ptToPx(node.borderWidth);
   const borderColor = node.borderColor;
@@ -615,7 +618,7 @@ function styleTable(
   const styles: Record<string, string | number> = {
     display: "grid",
     gridTemplateColumns: `repeat(${numCols}, 1fr)`,
-    ...(isInRow ? { flex: "1 1 0", minWidth: 0 } : { width: "100%" }),
+    ...flexSize(node.width, node.height, parent.direction),
   };
 
   // Outer border (only FULL gets outer border; INTERNAL, HORIZONTAL, VERTICAL, NONE do not)
@@ -728,9 +731,9 @@ export function styleNode(
     case NODE_TYPE.LINE:
       return styleLine(node as LineNode, parent, nodeId);
     case NODE_TYPE.SHAPE:
-      return styleShape(node as ShapeNode, nodeId);
+      return styleShape(node as ShapeNode, parent, nodeId);
     case NODE_TYPE.SLIDE_NUMBER:
-      return styleSlideNumber(node as SlideNumberNode, nodeId);
+      return styleSlideNumber(node as SlideNumberNode, parent, nodeId);
     case NODE_TYPE.TABLE:
       return styleTable(node as TableNode, parent, nodeId, idCtx, nodeIds, fontRatios);
     default:
