@@ -442,30 +442,43 @@ File paths resolve relative to the working directory where the CLI runs.
 
 Renders a Mermaid diagram to PNG and embeds it as an image. Theme colors are applied automatically. The Mermaid definition is set as alt text on the rendered image.
 
-`style`, `classDef`, `linkStyle`, and `%%{init}` directives are forbidden and will fail the build — the theme handles all styling automatically.
+`style`, `classDef`, `linkStyle`, and `%%{init}` directives are not permitted — the build catches them with an error. The theme handles all styling automatically.
 
 ### Tokens
 
 | Token | Type | Description |
 |-------|------|-------------|
+| `primaryColor` | string | Default node fill color |
+| `primaryTextColor` | string | Default node text color |
+| `primaryBorderColor` | string | Default node border color |
+| `lineColor` | string | Arrow/edge color |
+| `secondaryColor` | string | Secondary node color |
+| `tertiaryColor` | string | Tertiary node color |
+| `textColor` | string | General text color |
+| `nodeTextColor` | string | Node label text color |
+| `titleColor` | string | Diagram title color |
+| `edgeLabelBackground` | string | Background behind edge labels |
+| `clusterBackground` | string | Subgraph fill color (rendered at `accentOpacity`) |
+| `clusterBorderColor` | string | Subgraph border color |
+| `clusterCornerRadius` | number | Subgraph corner radius in inches |
+| `accentOpacity` | number | Fill opacity for accent nodes and subgraphs (0--100) |
+| `accentTextColor` | string | Text color inside accent-classed nodes |
+| `accents` | Record\<string, string\> | Named accent colors (keys become class names) |
+| `textStyle` | TextStyleName | Font style for diagram text |
 | `shadow` | Shadow | Drop shadow (optional — omit for no shadow) |
 
-See [`theme.ts`](../packages/theme-default/src/theme.ts) for the full mermaid token reference (colors, font, accent opacity).
+Default nodes use the `primary*` color tokens. Accent-classed nodes use tinted fill at `accentOpacity`, full-color stroke, and `accentTextColor` text. Subgraphs are filled at `accentOpacity` with rounded corners. Class names apply to `flowchart` and `graph` diagrams only — all other diagram types (sequence, state, ER) are themed through the color tokens.
+
+See [`theme.ts`](../packages/theme-default/src/theme.ts) for default values.
 
 ### Class Names
 
-Apply theme colors to nodes using Mermaid's `class` keyword:
+Apply theme colors to flowchart nodes using Mermaid's `class` keyword:
 
-| Class | Color |
-|-------|-------|
-| `primary` | primary color (full opacity) |
-| `blue` | blue (subtle) |
-| `green` | green (subtle) |
-| `red` | red (subtle) |
-| `yellow` | yellow (subtle) |
-| `purple` | purple (subtle) |
+- **`primary`** — full-opacity `primaryColor` fill with `primaryTextColor` text.
+- **Any key from `accents`** — tinted fill at `accentOpacity`, full-color stroke, `accentTextColor` text.
 
-Supported diagram types: `flowchart`, `sequenceDiagram`, `classDiagram`, `stateDiagram`, and all other Mermaid types. Theme variables are injected for all types; class definitions are only injected for `flowchart`/`graph`.
+Class names are defined by the theme's `accents` token map. The default theme provides `blue`, `green`, `red`, `yellow`, and `purple` — but themes can add or change them.
 
 ### Example
 
@@ -474,7 +487,7 @@ Supported diagram types: `flowchart`, `sequenceDiagram`, `classDiagram`, `stateD
 flowchart LR
     A[Client] --> B[API]
     B --> C[(Database)]
-    class B primary
+    class B purple
 :::
 ```
 

@@ -16,10 +16,10 @@ variant: default
 title: Agenda
 image: $tycoworks.tycoslide
 items:
-  - tycoslide
-  - Gallery
-  - Design System
-notes: "Agenda layout — three sections: the tool, the art of the possible, the visual identity."
+  - What it is
+  - How it compares
+  - How it works
+notes: "Agenda layout — three numbered items with background cards."
 ---
 
 ---
@@ -98,139 +98,26 @@ notes: Comparison table with tycoslide column highlighted. The audience sees "No
 
 ---
 layout: body
-variant: default
+variant: centered
 title: How It Works
-notes: Mermaid diagram — the build process from markdown to PowerPoint. Vertical flow inside the Build Engine subgraph.
+notes: Mermaid diagram — the build process from markdown to PowerPoint. Horizontal flow throughout.
 ---
 
 :::mermaid
 flowchart LR
-  MD["Markdown +<br/>YAML Frontmatter"] -.-> BUILD
-  TS["TypeScript Theme<br/>(Tokens & Components)"] -.-> BUILD
+  MD("Markdown +<br/>YAML Frontmatter") -.-> BUILD
+  TS("TypeScript Tokens<br/>+ Components") -.-> BUILD
   subgraph BUILD ["Build Engine"]
-    direction TB
-    PARSE["Parse<br/>Markdown"] --> EXPAND["Expand<br/>Components"] --> MEASURE["Measure Layout<br/>(Browser)"]
+    direction LR
+    PARSE("<b>Parse<br/>Markdown</b>") --> EXPAND("<b>Render<br/>Components</b>") --> MEASURE("<b>Measure<br/>Layout</b>")
   end
-  BUILD --> PPTX["Native, Editable<br/>PowerPoint"]
-  class PARSE,EXPAND,MEASURE primary
+  BUILD -.-> PPTX("Native, Editable<br/>PowerPoint")
+  class PARSE,EXPAND,MEASURE purple
 :::
-
----
-layout: section
-variant: default
-title: Gallery
-notes: Section divider — transition from the pitch to art of the possible. Dark background.
----
-
----
-layout: two-column
-variant: default
-title: Rich Markdown Authoring
-notes: Two-column layout — left shows what you write, right shows what tycoslide supports. Demonstrates the two-column slot system.
----
-
-::left::
-
-### What You Write
-
-Plain markdown with a few extensions. No custom syntax to learn — just headings, lists, bold, italic, and accent colors.
-
-::right::
-
-### What You Get
-
-- **Bold** and *italic* text
-- :purple[Accent colors] inline
-- ++Underline++ and ~~strikethrough~~
-- `Code spans` for monospace
-- [Hyperlinks](https://example.com)
-- Tables, diagrams, and code blocks
-
----
-layout: stat
-variant: default
-value: "Zero"
-label: Silent Failures
-caption: Catch layout overflows, missing design tokens, and invalid parameters at build time. Presentations are finally treated with the same rigorous QA as production software.
-notes: Stat layout — the proof point. Zero silent failures at build time.
----
-
----
-layout: quote
-variant: dark
-quote: "Software is eating the world...especially presentations."
-attribution: "— Marc Andreessen (probably)"
-notes: Dark pull quote — emotional beat and visual contrast.
----
-
----
-layout: cards
-variant: flat
-title: What You Can Build
-cards:
-  - title: Team Updates
-    description: Weekly standups, sprint reviews, and quarterly business reviews.
-    image: $icons.description
-  - title: Technical Decks
-    description: Architecture diagrams, API overviews, and infrastructure proposals.
-    image: $icons.palette
-  - title: Brand Presentations
-    description: On-brand pitch decks with enforced design tokens and validated layouts.
-    image: $icons.shield
-notes: Flat cards variant — no background shape. Shows practical use cases for tycoslide.
----
-
----
-layout: quote
-variant: default
-quote: "The best slide decks are the ones nobody had to manually format."
-attribution: "— Every design team, eventually"
-notes: Light quote variant — contrasts with the dark quote above. Softer emotional beat before the design system section.
----
-
----
-layout: section
-variant: default
-title: Design System
-notes: Section divider — the visual identity layer. Colors, typography, icons.
----
-
----
-layout: shapes
-variant: default
-title: Color Palette
-subtitle: Approved brand colors
-notes: Four key palette colors rendered as swatches with role names and hex values.
----
-
----
-layout: lines
-variant: default
-title: Line Styles
-notes: Lines layout — solid, dashed, and dotted strokes. Visual verification of the unified Stroke type.
----
-
----
-layout: body
-variant: default
-title: Typography
-notes: Font hierarchy — Inter font family at different weights and sizes.
----
-
-## Inter Bold — Display Heading
-
-### Inter Bold — Section Heading
-
-#### Inter Bold — Card Heading
-
-The default body text is set in **Inter Regular** at 16pt. Inline styles include **bold**, *italic*, ++underline++, ~~strikethrough~~, and :purple[accent colors].
-
-`Inter Light` is used for subtitles and captions, set at a lighter weight for visual hierarchy.
 
 ---
 layout: end
 variant: default
 title: tycoslide
-subtitle: Build presentations like software
-notes: Closing slide. Mirrors the title. Light background contrasts with the dark quote.
+notes: Closing slide.
 ---

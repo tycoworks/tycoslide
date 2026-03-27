@@ -39,6 +39,7 @@ const palette = {
   gray600: "#4A4A5A",
   navy: "#1A1A2E",
   purple: "#7C3AED",
+  purpleDeep: "#652593",
   forest: "#0E6245",
   brick: "#B42318",
   amber: "#B54708",
@@ -303,20 +304,22 @@ const testimonialSlotTokens = {
 };
 
 const mermaidTokens = {
-  primaryColor: palette.purple,
-  primaryTextColor: palette.white,
+  primaryColor: palette.white,
+  primaryTextColor: palette.navy,
   primaryBorderColor: palette.gray300,
-  lineColor: palette.navy,
+  lineColor: palette.purple,
   secondaryColor: palette.gray100,
   tertiaryColor: palette.gray100,
   textColor: palette.navy,
   nodeTextColor: palette.navy,
   clusterBackground: palette.gray100,
-  clusterBorderColor: palette.gray300,
+  clusterBorderColor: palette.purple,
+  clusterCornerRadius: cornerRadius,
   edgeLabelBackground: palette.gray50,
   titleColor: palette.navy,
   textStyle: TEXT_STYLE.BODY,
   accentOpacity: subtleOpacity,
+  accentTextColor: palette.purpleDeep,
   accents: accents,
 };
 

@@ -1,6 +1,17 @@
 // Mermaid Component
 // Renders mermaid diagrams using the mermaid JS library and the shared browser.
 // Theme fonts and colors are automatically injected for brand compliance.
+//
+// Theming strategy:
+//   - Default nodes: styled via mermaid's themeVariables (primaryColor, primaryTextColor, etc.)
+//   - Accent nodes: styled via injected classDef directives — fill at accentOpacity,
+//     full-color stroke, and accentTextColor for text. Apply with `class NodeId purple`.
+//   - Primary class: full-opacity primaryColor fill with primaryTextColor text.
+//   - Subgraphs: filled at accentOpacity with rounded corners (clusterCornerRadius, inches).
+//   - Non-flowchart diagrams (sequence, state, ER): themed via themeVariables only (no classDef).
+//
+// Units: all color tokens are #-prefixed hex. clusterCornerRadius is in inches (converted to SVG px
+// internally via inToPx). accentOpacity is 0-100 (percentage).
 
 import fs from "node:fs";
 import { createRequire } from "node:module";
@@ -11,6 +22,7 @@ import {
   defineComponent,
   hexToRgba,
   type InferTokens,
+  inToPx,
   type RenderContext,
   type Shadow,
   schema,
@@ -24,22 +36,31 @@ import { Component } from "./names.js";
 // ============================================
 
 const mermaidTokens = token.shape({
-  primaryColor: token.required<string>(),
-  primaryTextColor: token.required<string>(),
-  primaryBorderColor: token.required<string>(),
-  lineColor: token.required<string>(),
-  secondaryColor: token.required<string>(),
-  tertiaryColor: token.required<string>(),
-  textColor: token.required<string>(),
-  nodeTextColor: token.required<string>(),
-  clusterBackground: token.required<string>(),
-  clusterBorderColor: token.required<string>(),
-  edgeLabelBackground: token.required<string>(),
-  titleColor: token.required<string>(),
-  textStyle: token.required<TextStyleName>(),
-  accentOpacity: token.required<number>(),
-  accents: token.required<Record<string, string>>(),
-  shadow: token.optional<Shadow>(),
+  // --- Default node appearance (mermaid themeVariables) ---
+  primaryColor: token.required<string>(), // Default node fill
+  primaryTextColor: token.required<string>(), // Default node text color
+  primaryBorderColor: token.required<string>(), // Default node border
+  lineColor: token.required<string>(), // Arrow/edge color
+  secondaryColor: token.required<string>(), // Mermaid secondary (alt nodes)
+  tertiaryColor: token.required<string>(), // Mermaid tertiary
+  textColor: token.required<string>(), // General text color
+  nodeTextColor: token.required<string>(), // Node label text
+  titleColor: token.required<string>(), // Diagram title color
+  edgeLabelBackground: token.required<string>(), // Background behind edge labels
+
+  // --- Subgraph (cluster) appearance ---
+  clusterBackground: token.required<string>(), // Subgraph fill (at accentOpacity)
+  clusterBorderColor: token.required<string>(), // Subgraph border color
+  clusterCornerRadius: token.required<number>(), // Subgraph corner radius (inches, converted to SVG px internally)
+
+  // --- Accent classes (injected classDefs for flowcharts) ---
+  accentOpacity: token.required<number>(), // Fill opacity for accent nodes (0-100)
+  accentTextColor: token.required<string>(), // Text color inside accent nodes
+  accents: token.required<Record<string, string>>(), // Named accent colors (e.g. { purple: "#7C3AED" })
+
+  // --- Typography and effects ---
+  textStyle: token.required<TextStyleName>(), // Font style for text measurement
+  shadow: token.optional<Shadow>(), // Optional drop shadow on rendered image
 });
 
 export type MermaidTokens = InferTokens<typeof mermaidTokens>;
@@ -107,19 +128,29 @@ export function buildMermaidConfig(tokens: MermaidTokens, fontFamily: string): o
   };
 }
 
+/**
+ * Build classDef directives for flowchart accent classes.
+ * Each accent gets: tinted fill (color at accentOpacity), full-color stroke, accentTextColor text.
+ * The `primary` class gets full-opacity primaryColor fill with primaryTextColor for contrast.
+ */
 export function buildClassDefs(tokens: MermaidTokens, accents: Record<string, string>): string {
   const alpha = Math.round((tokens.accentOpacity / 100) * 255)
     .toString(16)
     .padStart(2, "0");
 
   const defs = Object.entries(accents).map(([name, color]) => {
-    return `classDef ${name} fill:${color}${alpha}`;
+    return `classDef ${name} fill:${color}${alpha},stroke:${color},color:${tokens.accentTextColor}`;
   });
   // Primary gets full opacity with themed text color for contrast
   defs.push(`classDef primary fill:${tokens.primaryColor},color:${tokens.primaryTextColor}`);
   return defs.join("\n");
 }
 
+/**
+ * Build inline style directives for subgraph containers.
+ * Applies clusterBackground at accentOpacity, with rounded corners (clusterCornerRadius in inches).
+ * Only emitted for flowchart/graph diagrams where `subgraph ID` declarations are found.
+ */
 function buildSubgraphStyles(definition: string, tokens: MermaidTokens): string {
   const alpha = Math.round((tokens.accentOpacity / 100) * 255)
     .toString(16)
@@ -134,7 +165,9 @@ function buildSubgraphStyles(definition: string, tokens: MermaidTokens): string 
   }
 
   if (ids.length === 0) return "";
-  return ids.map((id) => `style ${id} fill:${fillColor}`).join("\n");
+  const radiusPx = Math.round(inToPx(tokens.clusterCornerRadius));
+  const radiusPart = radiusPx > 0 ? `,rx:${radiusPx},ry:${radiusPx}` : "";
+  return ids.map((id) => `style ${id} fill:${fillColor}${radiusPart}`).join("\n");
 }
 
 export function injectClassDefs(definition: string, tokens: MermaidTokens, accents: Record<string, string>): string {
@@ -302,13 +335,17 @@ export const mermaidComponent = defineComponent({
  * Style directives (style, linkStyle, classDef, %%{init}) are forbidden
  * and will fail the build — theme-based styling is injected automatically.
  *
+ * Use `class NodeId <accent>` to apply themed accent colors (e.g. `class B purple`).
+ * Use `class NodeId primary` for full-opacity primary fill.
+ * Available accent names come from the theme's `accents` token map.
+ *
  * @example
  * ```typescript
  * const diagram = mermaid(`
  *   flowchart LR
  *     A[Client] --> B[Server]
  *     B --> C[(Database)]
- *     class B primary
+ *     class B purple
  * `, tokens.mermaid);
  * pres.add(contentSlide('Architecture', diagram));
  * ```
