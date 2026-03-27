@@ -7,7 +7,7 @@ import { generateFontFaceCSS } from "../src/core/layout/layoutHtml.js";
 import type { ContainerNode, ElementNode, TextNode } from "../src/core/model/nodes.js";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
 import type { FontFamily } from "../src/core/model/types.js";
-import { HALIGN, SIZE, TEXT_STYLE, VALIGN } from "../src/core/model/types.js";
+import { DASH_TYPE, GRID_STYLE, HALIGN, SIZE, TEXT_STYLE, VALIGN } from "../src/core/model/types.js";
 import { validateThemeFonts } from "../src/core/rendering/themeValidator.js";
 import { validateFontVariants } from "../src/utils/font.js";
 import { mockTextStyle, mockTheme } from "./mocks.js";
@@ -459,9 +459,9 @@ describe("validateFontVariants", () => {
           },
         ],
       ],
-      borderStyle: "full",
-      borderColor: "#000",
-      borderWidth: 1,
+      border: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
+      gridStyle: GRID_STYLE.BOTH,
+      gridStroke: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
       headerRow: { textStyle: "body", textColor: "#000", background: "#EEE", backgroundOpacity: 1 },
       cellBackground: "#FFF",
       cellBackgroundOpacity: 1,

@@ -15,9 +15,9 @@ import {
   type TextNode,
 } from "../src/core/model/nodes.js";
 import {
-  BORDER_STYLE,
   DASH_TYPE,
   DIRECTION,
+  GRID_STYLE,
   HALIGN,
   SHAPE,
   SIZE,
@@ -132,9 +132,9 @@ const baseTableNode: TableNode = {
   width: SIZE.FILL,
   height: SIZE.HUG,
   rows: [],
-  borderStyle: BORDER_STYLE.FULL,
-  borderColor: "#333333",
-  borderWidth: 1,
+  border: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
+  gridStyle: GRID_STYLE.BOTH,
+  gridStroke: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
   cellBackground: "#FFFFFF",
   cellBackgroundOpacity: 0,
   cellPadding: 0.1,
@@ -326,12 +326,12 @@ describe("buildTableCell()", () => {
 // ============================================
 
 describe("buildCellBorder()", () => {
-  test("BORDER_STYLE.INTERNAL - corner cell (0,0) in 3x3 table", () => {
+  test("GRID_STYLE.BOTH (no outer border) - corner cell (0,0) in 3x3 table", () => {
     const tableNode: TableNode = {
       ...baseTableNode,
-      borderStyle: BORDER_STYLE.INTERNAL,
-      borderWidth: 1,
-      borderColor: "#000000",
+      border: undefined,
+      gridStyle: GRID_STYLE.BOTH,
+      gridStroke: { color: "#000000", width: 1, dashType: DASH_TYPE.SOLID },
     };
 
     const border = builder.buildCellBorder(tableNode, 0, 0, 3, 3);
@@ -339,18 +339,18 @@ describe("buildCellBorder()", () => {
     assert.ok(border);
     assert.strictEqual(border.length, 4);
     // [top, right, bottom, left]
-    assert.strictEqual(border[0].type, "none"); // top (first row)
-    assert.strictEqual(border[1].type, "solid"); // right (not last col)
-    assert.strictEqual(border[2].type, "solid"); // bottom (not last row)
-    assert.strictEqual(border[3].type, "none"); // left (first col)
+    assert.strictEqual(border[0].type, "none"); // top (first row, no outer border)
+    assert.strictEqual(border[1].type, "solid"); // right (not last col → grid)
+    assert.strictEqual(border[2].type, "solid"); // bottom (not last row → grid)
+    assert.strictEqual(border[3].type, "none"); // left (first col, no outer border)
   });
 
-  test("BORDER_STYLE.INTERNAL - middle cell (1,1) in 3x3 table", () => {
+  test("GRID_STYLE.BOTH (no outer border) - middle cell (1,1) in 3x3 table", () => {
     const tableNode: TableNode = {
       ...baseTableNode,
-      borderStyle: BORDER_STYLE.INTERNAL,
-      borderWidth: 1,
-      borderColor: "#000000",
+      border: undefined,
+      gridStyle: GRID_STYLE.BOTH,
+      gridStroke: { color: "#000000", width: 1, dashType: DASH_TYPE.SOLID },
     };
 
     const border = builder.buildCellBorder(tableNode, 1, 1, 3, 3);
@@ -364,31 +364,31 @@ describe("buildCellBorder()", () => {
     assert.strictEqual(border[3].type, "solid"); // left
   });
 
-  test("BORDER_STYLE.INTERNAL - bottom-right cell (2,2) in 3x3 table", () => {
+  test("GRID_STYLE.BOTH (no outer border) - bottom-right cell (2,2) in 3x3 table", () => {
     const tableNode: TableNode = {
       ...baseTableNode,
-      borderStyle: BORDER_STYLE.INTERNAL,
-      borderWidth: 1,
-      borderColor: "#000000",
+      border: undefined,
+      gridStyle: GRID_STYLE.BOTH,
+      gridStroke: { color: "#000000", width: 1, dashType: DASH_TYPE.SOLID },
     };
 
     const border = builder.buildCellBorder(tableNode, 2, 2, 3, 3);
 
+    // Bottom-right cell: top and left are internal (solid), right and bottom are outer edges (none)
     assert.ok(border);
     assert.strictEqual(border.length, 4);
-    // [top, right, bottom, left]
-    assert.strictEqual(border[0].type, "solid"); // top (not first row)
-    assert.strictEqual(border[1].type, "none"); // right (last col)
-    assert.strictEqual(border[2].type, "none"); // bottom (last row)
-    assert.strictEqual(border[3].type, "solid"); // left (not first col)
+    assert.strictEqual(border[0].type, "solid"); // top (internal)
+    assert.strictEqual(border[1].type, "none"); // right (outer edge, no border)
+    assert.strictEqual(border[2].type, "none"); // bottom (outer edge, no border)
+    assert.strictEqual(border[3].type, "solid"); // left (internal)
   });
 
-  test("BORDER_STYLE.FULL - all borders solid", () => {
+  test("GRID_STYLE.BOTH with outer border - all borders solid for middle cell", () => {
     const tableNode: TableNode = {
       ...baseTableNode,
-      borderStyle: BORDER_STYLE.FULL,
-      borderWidth: 1,
-      borderColor: "#000000",
+      border: { color: "#000000", width: 1, dashType: DASH_TYPE.SOLID },
+      gridStyle: GRID_STYLE.BOTH,
+      gridStroke: { color: "#000000", width: 1, dashType: DASH_TYPE.SOLID },
     };
 
     const border = builder.buildCellBorder(tableNode, 1, 1, 3, 3);
@@ -401,12 +401,12 @@ describe("buildCellBorder()", () => {
     assert.strictEqual(border[3].type, "solid");
   });
 
-  test("BORDER_STYLE.HORIZONTAL - inner horizontal lines only", () => {
+  test("GRID_STYLE.HORIZONTAL - inner horizontal lines only", () => {
     const tableNode: TableNode = {
       ...baseTableNode,
-      borderStyle: BORDER_STYLE.HORIZONTAL,
-      borderWidth: 1,
-      borderColor: "#000000",
+      border: undefined,
+      gridStyle: GRID_STYLE.HORIZONTAL,
+      gridStroke: { color: "#000000", width: 1, dashType: DASH_TYPE.SOLID },
     };
 
     const border = builder.buildCellBorder(tableNode, 1, 1, 3, 3);
@@ -419,12 +419,12 @@ describe("buildCellBorder()", () => {
     assert.strictEqual(border[3].type, "none"); // left
   });
 
-  test("BORDER_STYLE.VERTICAL - inner vertical lines only", () => {
+  test("GRID_STYLE.VERTICAL - inner vertical lines only", () => {
     const tableNode: TableNode = {
       ...baseTableNode,
-      borderStyle: BORDER_STYLE.VERTICAL,
-      borderWidth: 1,
-      borderColor: "#000000",
+      border: undefined,
+      gridStyle: GRID_STYLE.VERTICAL,
+      gridStroke: { color: "#000000", width: 1, dashType: DASH_TYPE.SOLID },
     };
 
     const border = builder.buildCellBorder(tableNode, 1, 1, 3, 3);
@@ -437,20 +437,20 @@ describe("buildCellBorder()", () => {
     assert.strictEqual(border[3].type, "solid"); // left
   });
 
-  test("BORDER_STYLE.NONE - returns undefined", () => {
-    const tableNode: TableNode = { ...baseTableNode, borderStyle: BORDER_STYLE.NONE };
+  test("GRID_STYLE.NONE with no outer border - returns undefined", () => {
+    const tableNode: TableNode = { ...baseTableNode, border: undefined, gridStyle: GRID_STYLE.NONE, gridStroke: undefined };
 
     const border = builder.buildCellBorder(tableNode, 1, 1, 3, 3);
 
     assert.strictEqual(border, undefined);
   });
 
-  test("border width and color applied correctly", () => {
+  test("outer border width and color applied correctly", () => {
     const tableNode: TableNode = {
       ...baseTableNode,
-      borderStyle: BORDER_STYLE.FULL,
-      borderWidth: 2.5,
-      borderColor: "#FF0000",
+      border: { color: "#FF0000", width: 2.5, dashType: DASH_TYPE.SOLID },
+      gridStyle: GRID_STYLE.NONE,
+      gridStroke: undefined,
     };
 
     const border = builder.buildCellBorder(tableNode, 0, 0, 1, 1);

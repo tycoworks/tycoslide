@@ -188,9 +188,9 @@ export const tableComponent = defineComponent({
   name: C.Table,
   content: schema.string(),
   tokens: {
-    borderStyle: token.required<any>(),
-    borderColor: token.required<any>(),
-    borderWidth: token.required<any>(),
+    border: token.optional<any>(),
+    gridStyle: token.required<any>(),
+    gridStroke: token.optional<any>(),
     cellBackground: token.required<any>(),
     cellBackgroundOpacity: token.required<any>(),
     cellTextStyle: token.required<any>(),

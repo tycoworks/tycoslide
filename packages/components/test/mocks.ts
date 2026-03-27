@@ -4,7 +4,7 @@
 import * as assert from "node:assert";
 import { createRequire } from "node:module";
 import type { FontFamily, TextStyle, Theme } from "tycoslide";
-import { BORDER_STYLE, DASH_TYPE, HALIGN, TEXT_STYLE, VALIGN } from "tycoslide";
+import { DASH_TYPE, GRID_STYLE, HALIGN, TEXT_STYLE, VALIGN } from "tycoslide";
 import { HIGHLIGHT_THEME } from "../src/highlighting.js";
 import type {
   CardTokens,
@@ -107,9 +107,9 @@ export const DEFAULT_TABLE_TOKENS: TableTokens = {
   cellBackgroundOpacity: 100,
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.MIDDLE,
-  borderStyle: BORDER_STYLE.FULL,
-  borderColor: "#333333",
-  borderWidth: 1,
+  border: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
+  gridStyle: GRID_STYLE.BOTH,
+  gridStroke: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
   cellPadding: 0.1,
   linkColor: "#0000FF",
   linkUnderline: true,
@@ -143,6 +143,8 @@ export const DEFAULT_MERMAID_TOKENS: MermaidTokens = {
   textStyle: TEXT_STYLE.BODY,
   accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
   accentOpacity: 100,
+  clusterCornerRadius: 0.08,
+  accentTextColor: "#000000",
 };
 
 export const DEFAULT_CARD_TOKENS: CardTokens = {

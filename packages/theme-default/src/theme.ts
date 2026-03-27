@@ -2,7 +2,7 @@
 // Clean light theme with Inter font. Copy and customize for your brand.
 // Units: spacing/margins/radii = inches, fontSize/borderWidth = points, opacity = 0-100
 
-import { BORDER_STYLE, DASH_TYPE, defineTheme, HALIGN, SHADOW_TYPE, SLIDE_SIZE, TEXT_STYLE, VALIGN } from "tycoslide";
+import { DASH_TYPE, defineTheme, GRID_STYLE, HALIGN, SHADOW_TYPE, SLIDE_SIZE, TEXT_STYLE, VALIGN } from "tycoslide";
 import type { ListTokens, PlainTextTokens, TextTokens } from "tycoslide-components";
 import { HIGHLIGHT_THEME } from "tycoslide-components";
 import { assets } from "./assets.js";
@@ -248,9 +248,8 @@ const tableTokens = {
   cellBackgroundOpacity: 0,
   hAlign: HALIGN.CENTER,
   vAlign: VALIGN.MIDDLE,
-  borderStyle: BORDER_STYLE.HORIZONTAL,
-  borderColor: palette.gray300,
-  borderWidth,
+  gridStyle: GRID_STYLE.HORIZONTAL,
+  gridStroke: { color: palette.gray300, width: borderWidth, dashType: DASH_TYPE.SOLID },
   cellPadding: cellPadding * 2,
   linkColor: palette.purple,
   linkUnderline: true,

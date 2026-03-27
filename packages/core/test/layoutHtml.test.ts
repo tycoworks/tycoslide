@@ -23,9 +23,9 @@ import type {
 import { NODE_TYPE } from "../src/core/model/nodes.js";
 import type { Direction, NormalizedRun } from "../src/core/model/types.js";
 import {
-  BORDER_STYLE,
   DASH_TYPE,
   DIRECTION,
+  GRID_STYLE,
   HALIGN,
   SHADOW_TYPE,
   SHAPE,
@@ -200,9 +200,9 @@ function tableNode(rows: TableCellData[][], opts?: Partial<Omit<TableNode, "type
     width: SIZE.FILL,
     height: SIZE.HUG,
     rows,
-    borderStyle: BORDER_STYLE.FULL,
-    borderColor: "#333333",
-    borderWidth: 1,
+    border: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
+    gridStyle: GRID_STYLE.BOTH,
+    gridStroke: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
     headerRow: { textStyle: "body" as any, textColor: "#000000", background: "#AAAAAA", backgroundOpacity: 100 },
     cellBackground: "#EEEEEE",
     cellBackgroundOpacity: 0,
@@ -1080,23 +1080,23 @@ describe("HTML Measurement Generation", () => {
       assert.ok(html.includes("repeat(3"), "Table with 3 columns should have repeat(3, ...)");
     });
 
-    test("table FULL border style renders outline", async () => {
+    test("table with outer border renders outline", async () => {
       const rows = [[cell("A"), cell("B")]];
-      const node = colNode(tableNode(rows, { borderStyle: BORDER_STYLE.FULL }));
+      const node = colNode(tableNode(rows, { border: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID } }));
       const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes("outline:"), "FULL border should use outline for outer border");
+      assert.ok(html.includes("outline:"), "outer border should use outline");
     });
 
-    test("table NONE border style renders no outline", async () => {
+    test("table with no outer border renders no outline", async () => {
       const rows = [[cell("A"), cell("B")]];
-      const node = colNode(tableNode(rows, { borderStyle: BORDER_STYLE.NONE }));
+      const node = colNode(tableNode(rows, { border: undefined, gridStyle: GRID_STYLE.NONE, gridStroke: undefined }));
       const { html } = await genHTML(node, bounds);
-      assert.ok(!html.includes("outline:"), "NONE border should have no outline");
+      assert.ok(!html.includes("outline:"), "no border should have no outline");
     });
 
-    test("table HORIZONTAL border style renders inner horizontal lines only (no outer border)", async () => {
+    test("table GRID_STYLE.HORIZONTAL renders inner horizontal lines only (no outer border)", async () => {
       const rows = [[cell("A"), cell("B")]];
-      const node = colNode(tableNode(rows, { borderStyle: BORDER_STYLE.HORIZONTAL }));
+      const node = colNode(tableNode(rows, { border: undefined, gridStyle: GRID_STYLE.HORIZONTAL, gridStroke: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID } }));
       const { html } = await genHTML(node, bounds);
       // Inner-only: no outer table border
       const tableMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);

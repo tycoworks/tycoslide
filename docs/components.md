@@ -272,9 +272,9 @@ Cell content supports formatting (`**bold**`, `*italic*`, `:accent[color]`).
 
 | Token | Type | Description |
 |-------|------|-------------|
-| `borderStyle` | BorderStyle | Border visibility (see Border Styles below) |
-| `borderColor` | string | Border color |
-| `borderWidth` | number | Border width in points |
+| `border` | Stroke | Outer border around the table (optional — omit for no border) |
+| `gridStyle` | GridStyle | Internal grid lines: `HORIZONTAL`, `VERTICAL`, `BOTH`, or `NONE` |
+| `gridStroke` | Stroke | Stroke for grid lines (optional — omit for no grid lines) |
 | `headerRow` | TableHeaderStyle | Header row zone style (omit to disable header row styling) |
 | `headerCol` | TableHeaderStyle | Header column zone style (omit to disable header column styling) |
 | `cellBackground` | string | Data cell background color |
@@ -294,17 +294,16 @@ Cell content supports formatting (`**bold**`, `*italic*`, `:accent[color]`).
 
 `TableHeaderStyle` includes `textStyle`, `textColor`, `background`, `backgroundOpacity`, and optional `hAlign`. Header zones are enabled by presence — omit the token to leave that zone unstyled.
 
-### Border Styles
+### Grid Styles
 
 | Value | Description |
 |-------|-------------|
-| `"full"` | All cell borders including outer edges |
-| `"horizontal"` | Inside horizontal borders only — between rows, no top or bottom outer edge |
-| `"vertical"` | Inside vertical borders only — between columns, no left or right outer edge |
-| `"internal"` | All inside borders, no outer edges |
-| `"none"` | No borders |
+| `"both"` | All internal grid lines (horizontal and vertical) |
+| `"horizontal"` | Horizontal grid lines only — between rows |
+| `"vertical"` | Vertical grid lines only — between columns |
+| `"none"` | No grid lines |
 
-`"horizontal"` and `"vertical"` match PowerPoint's "Inside Horizontal Border" and "Inside Vertical Border" options.
+Outer border and grid lines are controlled independently. Omit `border` for no outer border. Omit `gridStroke` for no grid lines.
 
 ### Examples
 

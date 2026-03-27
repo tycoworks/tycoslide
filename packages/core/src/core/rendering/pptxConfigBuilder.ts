@@ -18,7 +18,7 @@ import type {
   TextNode,
 } from "../model/nodes.js";
 import type { DashType, StrikeType, TextContent, TextStyle, UnderlineStyle } from "../model/types.js";
-import { BORDER_STYLE, DASH_TYPE, DIRECTION, LINE_SHAPE, STRIKE_TYPE, UNDERLINE_STYLE } from "../model/types.js";
+import { DASH_TYPE, DIRECTION, GRID_STYLE, LINE_SHAPE, STRIKE_TYPE, UNDERLINE_STYLE } from "../model/types.js";
 
 /** Map CSS-compatible dash type names to pptxgenjs values. */
 function pptxDashType(dt: DashType): string {
@@ -366,41 +366,40 @@ export class PptxConfigBuilder {
     numRows: number,
     numCols: number,
   ): Array<{ pt?: number; color?: string; type?: string }> | undefined {
-    const borderStyle = tableNode.borderStyle;
-    if (borderStyle === BORDER_STYLE.NONE) return undefined;
-
-    const borderWidth = tableNode.borderWidth;
-    const borderColor = tableNode.borderColor;
-
-    const solid = { pt: borderWidth, color: stripHash(borderColor), type: "solid" as const };
     const none = { type: "none" as const };
 
-    // For internal borders, determine which edges are on the table boundary
+    // Resolve outer-border stroke for this cell's edges (if present)
+    const outerStroke = tableNode.border
+      ? { pt: tableNode.border.width, color: stripHash(tableNode.border.color), type: "solid" as const }
+      : none;
+
+    // Resolve grid stroke for internal lines (if present)
+    const gridStroke = tableNode.gridStroke
+      ? { pt: tableNode.gridStroke.width, color: stripHash(tableNode.gridStroke.color), type: "solid" as const }
+      : none;
+
     const isFirstRow = rowIndex === 0;
     const isLastRow = rowIndex === numRows - 1;
     const isFirstCol = colIndex === 0;
     const isLastCol = colIndex === numCols - 1;
 
-    // Return [top, right, bottom, left] border array
-    switch (borderStyle) {
-      case BORDER_STYLE.FULL:
-        return [solid, solid, solid, solid];
-      case BORDER_STYLE.HORIZONTAL:
-        return [isFirstRow ? none : solid, none, isLastRow ? none : solid, none];
-      case BORDER_STYLE.VERTICAL:
-        return [none, isLastCol ? none : solid, none, isFirstCol ? none : solid];
-      case BORDER_STYLE.INTERNAL:
-        // Internal borders only - no borders on outer edges
-        return [
-          isFirstRow ? none : solid, // top
-          isLastCol ? none : solid, // right
-          isLastRow ? none : solid, // bottom
-          isFirstCol ? none : solid, // left
-        ];
-      default: {
-        const _exhaustive: never = borderStyle;
-        return _exhaustive;
-      }
-    }
+    // Determine grid line eligibility for each edge
+    const gridStyle = tableNode.gridStyle;
+    const hasHGrid = gridStyle === GRID_STYLE.HORIZONTAL || gridStyle === GRID_STYLE.BOTH;
+    const hasVGrid = gridStyle === GRID_STYLE.VERTICAL || gridStyle === GRID_STYLE.BOTH;
+
+    // top edge: outer border if first row, grid if internal horizontal
+    const top = isFirstRow ? outerStroke : hasHGrid ? gridStroke : none;
+    // right edge: outer border if last col, grid if internal vertical
+    const right = isLastCol ? outerStroke : hasVGrid ? gridStroke : none;
+    // bottom edge: outer border if last row, grid if internal horizontal
+    const bottom = isLastRow ? outerStroke : hasHGrid ? gridStroke : none;
+    // left edge: outer border if first col, grid if internal vertical
+    const left = isFirstCol ? outerStroke : hasVGrid ? gridStroke : none;
+
+    // If all edges resolve to "none", skip the border entirely
+    if (top === none && right === none && bottom === none && left === none) return undefined;
+
+    return [top, right, bottom, left];
   }
 }

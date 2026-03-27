@@ -51,15 +51,14 @@ export const SHADOW_TYPE = {
 
 export type ShadowType = (typeof SHADOW_TYPE)[keyof typeof SHADOW_TYPE];
 
-export const BORDER_STYLE = {
-  FULL: "full",
-  INTERNAL: "internal",
+export const GRID_STYLE = {
   HORIZONTAL: "horizontal",
   VERTICAL: "vertical",
+  BOTH: "both",
   NONE: "none",
 } as const;
 
-export type BorderStyle = (typeof BORDER_STYLE)[keyof typeof BORDER_STYLE];
+export type GridStyle = (typeof GRID_STYLE)[keyof typeof GRID_STYLE];
 
 /**
  * Supported shape presets. Only shapes with exact CSS equivalents are included —

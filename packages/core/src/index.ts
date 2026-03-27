@@ -43,10 +43,10 @@ export { extractSource, RESERVED_FRONTMATTER_KEYS, SYNTAX } from "./core/model/s
 export { type InferTokens, type TokenDescriptor, type TokenShape, token } from "./core/model/token.js";
 export type {
   Background,
-  BorderStyle,
   DashType,
   Direction,
   Font,
+  GridStyle,
   FontFamily,
   FontSlot,
   HighlightPair,
@@ -69,10 +69,10 @@ export type {
   VerticalAlignment,
 } from "./core/model/types.js";
 export {
-  BORDER_STYLE,
   Bounds,
   CUSTOM_LAYOUT,
   DASH_TYPE,
+  GRID_STYLE,
   DIRECTION,
   DIRECTION_VALUES,
   FONT_SLOT,

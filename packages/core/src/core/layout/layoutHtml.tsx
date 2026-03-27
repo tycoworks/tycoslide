@@ -43,9 +43,9 @@ import type {
   VerticalAlignment,
 } from "../model/types.js";
 import {
-  BORDER_STYLE,
   DASH_TYPE,
   DIRECTION,
+  GRID_STYLE,
   FONT_SLOT,
   HALIGN,
   SHAPE,
@@ -629,8 +629,6 @@ function styleTable(
   const cellPadding = node.cellPadding;
   const cellPaddingPx = inToPx(cellPadding);
 
-  const borderWidthPx = ptToPx(node.borderWidth);
-  const borderColor = node.borderColor;
   const headerRows = node.headerRow ? 1 : 0;
   const headerCols = node.headerCol ? 1 : 0;
 
@@ -640,10 +638,11 @@ function styleTable(
     ...flexSize(node.width, node.height, parent.direction),
   };
 
-  // Outer border (only FULL gets outer border; INTERNAL, HORIZONTAL, VERTICAL, NONE do not)
-  if (node.borderStyle === BORDER_STYLE.FULL) {
-    styles.outline = `${borderWidthPx}px solid ${borderColor}`;
-    styles.outlineOffset = `-${borderWidthPx}px`;
+  // Outer border — present only when node.border is set
+  if (node.border) {
+    const outerWidthPx = ptToPx(node.border.width);
+    styles.outline = `${outerWidthPx}px solid ${node.border.color}`;
+    styles.outlineOffset = `-${outerWidthPx}px`;
   }
 
   const numRows = cellNodes.length;
@@ -658,27 +657,26 @@ function styleTable(
         padding: `${cellPaddingPx}px`,
       };
 
-      // Cell borders — directional based on borderStyle
-      const bs = `${borderWidthPx}px solid ${borderColor}`;
-      switch (node.borderStyle) {
-        case BORDER_STYLE.FULL:
-        case BORDER_STYLE.INTERNAL: {
-          // All internal lines. Use border on right/bottom edges to avoid doubling.
-          if (ri < numRows - 1) cellStyles.borderBottom = bs;
-          if (colIdx < numCols - 1) cellStyles.borderRight = bs;
-          break;
+      // Cell grid lines — directional based on gridStyle + gridStroke
+      if (node.gridStroke && node.gridStyle !== GRID_STYLE.NONE) {
+        const gridWidthPx = ptToPx(node.gridStroke.width);
+        const gs = `${gridWidthPx}px solid ${node.gridStroke.color}`;
+        switch (node.gridStyle) {
+          case GRID_STYLE.BOTH: {
+            if (ri < numRows - 1) cellStyles.borderBottom = gs;
+            if (colIdx < numCols - 1) cellStyles.borderRight = gs;
+            break;
+          }
+          case GRID_STYLE.HORIZONTAL: {
+            if (ri < numRows - 1) cellStyles.borderBottom = gs;
+            break;
+          }
+          case GRID_STYLE.VERTICAL: {
+            if (colIdx < numCols - 1) cellStyles.borderRight = gs;
+            break;
+          }
+          // NONE: no cell borders
         }
-        case BORDER_STYLE.HORIZONTAL: {
-          // Inner horizontal only — between rows, not on outer edges
-          if (ri < numRows - 1) cellStyles.borderBottom = bs;
-          break;
-        }
-        case BORDER_STYLE.VERTICAL: {
-          // Inner vertical only — between columns, not on outer edges
-          if (colIdx < numCols - 1) cellStyles.borderRight = bs;
-          break;
-        }
-        // NONE: no cell borders
       }
 
       // Cell background: cell-level fill overrides, then 3-zone cascade (headerRow > headerCol > cell)
