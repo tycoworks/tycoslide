@@ -84,7 +84,6 @@ export {
   SLIDE_SIZE,
   SPACING_MODE,
   STRIKE_TYPE,
-  TEXT_STYLE,
   UNDERLINE_STYLE,
   VALIGN,
 } from "./core/model/types.js";

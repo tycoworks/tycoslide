@@ -10,7 +10,7 @@ import { C, testComponents } from "./test-components.js";
 // Register test components
 componentRegistry.register(testComponents);
 
-import { DASH_TYPE, HALIGN, SIZE, TEXT_STYLE, VALIGN } from "../src/core/model/types.js";
+import { DASH_TYPE, HALIGN, SIZE, VALIGN } from "../src/core/model/types.js";
 
 // ============================================
 // GENERIC REGISTRY BASE CLASS
@@ -119,7 +119,7 @@ describe("ComponentRegistry", () => {
       // text component requires tokens — provide them via node.tokens
       const textTokens = {
         color: "#000000",
-        style: TEXT_STYLE.BODY,
+        style: "body",
         linkColor: "#0000FF",
         linkUnderline: true,
         hAlign: HALIGN.LEFT,
@@ -146,7 +146,7 @@ describe("ComponentRegistry", () => {
         width: SIZE.FILL,
         height: SIZE.HUG,
         content: [],
-        style: TEXT_STYLE.BODY,
+        style: "body",
         resolvedStyle: mockTextStyle,
         color: "#000000",
         hAlign: HALIGN.LEFT,
@@ -174,7 +174,7 @@ describe("ComponentRegistry", () => {
         hAlign: HALIGN.CENTER,
         vAlign: VALIGN.TOP,
         title: {
-          style: TEXT_STYLE.H4,
+          style: "h4",
           color: "#FFFFFF",
           linkColor: "#0000FF",
           linkUnderline: true,
@@ -182,7 +182,7 @@ describe("ComponentRegistry", () => {
           vAlign: VALIGN.TOP,
         },
         description: {
-          style: TEXT_STYLE.SMALL,
+          style: "small",
           color: "#CCCCCC",
           linkColor: "#0000FF",
           linkUnderline: true,
@@ -203,7 +203,7 @@ describe("ComponentRegistry", () => {
       // A container with a component child should render the child
       const textTokens = {
         color: "#000000",
-        style: TEXT_STYLE.BODY,
+        style: "body",
         linkColor: "#0000FF",
         linkUnderline: true,
         hAlign: HALIGN.LEFT,

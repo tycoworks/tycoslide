@@ -7,7 +7,7 @@ import { NODE_TYPE } from "../src/core/model/nodes.js";
 import { param, schema } from "../src/core/model/param.js";
 
 import type { TextStyle } from "../src/core/model/types.js";
-import { DIRECTION, HALIGN, SIZE, TEXT_STYLE, VALIGN } from "../src/core/model/types.js";
+import { DIRECTION, HALIGN, SIZE, VALIGN } from "../src/core/model/types.js";
 import { componentRegistry, defineComponent } from "../src/core/rendering/registry.js";
 
 const stubStyle: TextStyle = {
@@ -22,7 +22,7 @@ const stubTextNode = (text: string = ""): any => ({
   width: SIZE.FILL,
   height: SIZE.HUG,
   content: [{ text }],
-  style: TEXT_STYLE.BODY,
+  style: "body",
   resolvedStyle: stubStyle,
   color: "#000000",
   hAlign: HALIGN.LEFT,

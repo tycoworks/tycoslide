@@ -23,9 +23,9 @@ import {
   SHADOW_TYPE,
   SHAPE,
   SIZE,
-  TEXT_STYLE,
   VALIGN,
 } from "tycoslide";
+import { TEXT_STYLE } from "../src/text.js";
 import { card } from "../src/card.js";
 import {
   cardComponent,

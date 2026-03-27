@@ -12,7 +12,7 @@ import { type ComponentNode, component, NODE_TYPE } from "../src/core/model/node
 import { param, schema } from "../src/core/model/param.js";
 import { extractSource, SYNTAX } from "../src/core/model/syntax.js";
 import { token } from "../src/core/model/token.js";
-import { DIRECTION, HALIGN, SIZE, TEXT_STYLE, VALIGN } from "../src/core/model/types.js";
+import { DIRECTION, HALIGN, SIZE, VALIGN } from "../src/core/model/types.js";
 import type { RenderContext } from "../src/core/rendering/registry.js";
 import { defineComponent } from "../src/core/rendering/registry.js";
 
@@ -32,10 +32,10 @@ export const C = {
 // ============================================
 
 const HEADING_STYLE: Record<number, string> = {
-  1: TEXT_STYLE.H1,
-  2: TEXT_STYLE.H2,
-  3: TEXT_STYLE.H3,
-  4: TEXT_STYLE.H4,
+  1: "h1",
+  2: "h2",
+  3: "h3",
+  4: "h4",
 };
 
 // ============================================
@@ -64,7 +64,7 @@ export const textComponent = defineComponent({
     compile: (node: RootContent, source: string): ComponentNode | null => {
       if (node.type === SYNTAX.HEADING) {
         const heading = node as Heading;
-        const style = HEADING_STYLE[heading.depth] ?? TEXT_STYLE.H3;
+        const style = HEADING_STYLE[heading.depth] ?? "h3";
         const raw = extractSource(heading, source);
         const headingContent = raw.replace(/^#{1,6}\s*/, "");
         return component(C.Text, {}, headingContent, { style });

@@ -18,10 +18,26 @@ import {
   type Stroke,
   SYNTAX,
   schema,
-  TEXT_STYLE,
   type TextNode,
   token,
 } from "tycoslide";
+
+// ============================================
+// TEXT STYLE CONSTANTS
+// ============================================
+
+/** Well-known text style names. Convenience constants — themes may define additional custom names. */
+export const TEXT_STYLE = {
+  H1: "h1",
+  H2: "h2",
+  H3: "h3",
+  H4: "h4",
+  BODY: "body",
+  SMALL: "small",
+  EYEBROW: "eyebrow",
+  FOOTER: "footer",
+  CODE: "code",
+} as const;
 import { Component } from "./names.js";
 import { inlineParse, transformInline } from "./utils/inline.js";
 

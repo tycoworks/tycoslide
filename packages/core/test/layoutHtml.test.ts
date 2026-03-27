@@ -30,7 +30,6 @@ import {
   SHADOW_TYPE,
   SHAPE,
   SIZE,
-  TEXT_STYLE,
   VALIGN,
 } from "../src/core/model/types.js";
 import { mockTheme as createMockTheme } from "./mocks.js";
@@ -46,14 +45,14 @@ const testImage = path.join(__dirname, "fixtures", "test.png");
 const mockTheme = createMockTheme({
   slide: { layout: "LAYOUT_16x9", width: 10, height: 5.625 } as any,
   textStyles: {
-    [TEXT_STYLE.H1]: { fontSize: 36 },
-    [TEXT_STYLE.H2]: { fontSize: 28 },
-    [TEXT_STYLE.H3]: { fontSize: 24 },
-    [TEXT_STYLE.H4]: { fontSize: 20 },
-    [TEXT_STYLE.BODY]: { fontSize: 18 },
-    [TEXT_STYLE.SMALL]: { fontSize: 14 },
-    [TEXT_STYLE.EYEBROW]: { fontSize: 12 },
-    [TEXT_STYLE.FOOTER]: { fontSize: 12 },
+    h1: { fontSize: 36 },
+    h2: { fontSize: 28 },
+    h3: { fontSize: 24 },
+    h4: { fontSize: 20 },
+    body: { fontSize: 18 },
+    small: { fontSize: 14 },
+    eyebrow: { fontSize: 12 },
+    footer: { fontSize: 12 },
   },
 });
 
@@ -61,7 +60,7 @@ const mockTheme = createMockTheme({
 // ELEMENT NODE BUILDERS
 // ============================================
 
-const bodyStyle = mockTheme.textStyles[TEXT_STYLE.BODY];
+const bodyStyle = mockTheme.textStyles["body"];
 
 /** Plain text node with sensible defaults matching theme tokens */
 function textNode(content: string | NormalizedRun[], opts?: Partial<Omit<TextNode, "type">>): TextNode {
@@ -70,7 +69,7 @@ function textNode(content: string | NormalizedRun[], opts?: Partial<Omit<TextNod
     width: SIZE.FILL,
     height: SIZE.HUG,
     content: typeof content === "string" ? [{ text: content }] : content,
-    style: TEXT_STYLE.BODY,
+    style: "body",
     resolvedStyle: bodyStyle,
     color: "#000000",
     hAlign: HALIGN.LEFT,
@@ -167,8 +166,8 @@ function slideNumberNode(opts?: Partial<Omit<SlideNumberNode, "type">>): SlideNu
     type: NODE_TYPE.SLIDE_NUMBER,
     width: SIZE.HUG,
     height: SIZE.HUG,
-    style: TEXT_STYLE.FOOTER,
-    resolvedStyle: mockTheme.textStyles[TEXT_STYLE.FOOTER],
+    style: "footer",
+    resolvedStyle: mockTheme.textStyles["footer"],
     color: "#666666",
     hAlign: HALIGN.RIGHT,
     vAlign: VALIGN.MIDDLE,
@@ -183,7 +182,7 @@ function cell(text: string, opts?: Partial<TableCellData>): TableCellData {
     width: SIZE.FILL,
     height: SIZE.HUG,
     color: "#000000",
-    textStyle: TEXT_STYLE.BODY,
+    textStyle: "body",
     resolvedStyle: bodyStyle,
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.MIDDLE,

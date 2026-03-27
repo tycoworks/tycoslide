@@ -4,7 +4,8 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import type { NormalizedRun } from "tycoslide";
-import { componentRegistry, HALIGN, NODE_TYPE, TEXT_STYLE, VALIGN } from "tycoslide";
+import { componentRegistry, HALIGN, NODE_TYPE, VALIGN } from "tycoslide";
+import { TEXT_STYLE } from "../src/text.js";
 import {
   cardComponent,
   codeComponent,

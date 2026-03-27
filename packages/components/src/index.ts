@@ -99,6 +99,7 @@ export {
 } from "./testimonial.js";
 // Text
 export {
+  TEXT_STYLE,
   type TextTokens,
   text,
   textComponent,

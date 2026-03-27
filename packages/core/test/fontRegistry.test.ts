@@ -7,7 +7,7 @@ import { generateFontFaceCSS } from "../src/core/layout/layoutHtml.js";
 import type { ContainerNode, ElementNode, TextNode } from "../src/core/model/nodes.js";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
 import type { FontFamily } from "../src/core/model/types.js";
-import { DASH_TYPE, GRID_STYLE, HALIGN, SIZE, TEXT_STYLE, VALIGN } from "../src/core/model/types.js";
+import { DASH_TYPE, GRID_STYLE, HALIGN, SIZE, VALIGN } from "../src/core/model/types.js";
 import { validateThemeFonts } from "../src/core/rendering/themeValidator.js";
 import { validateFontVariants } from "../src/utils/font.js";
 import { mockTextStyle, mockTheme } from "./mocks.js";
@@ -339,7 +339,7 @@ function makeTextNode(content: TextNode["content"], fontFamily: FontFamily): Tex
     width: SIZE.FILL,
     height: SIZE.HUG,
     content,
-    style: TEXT_STYLE.BODY,
+    style: "body",
     resolvedStyle: { ...mockTextStyle, fontFamily },
     color: "#000000",
     hAlign: HALIGN.LEFT,
@@ -450,7 +450,7 @@ describe("validateFontVariants", () => {
             width: SIZE.FILL,
             height: SIZE.HUG,
             color: "#000",
-            textStyle: TEXT_STYLE.BODY,
+            textStyle: "body",
             resolvedStyle: { ...mockTextStyle, fontFamily: regularOnly },
             hAlign: HALIGN.LEFT,
             vAlign: VALIGN.TOP,

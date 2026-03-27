@@ -4,7 +4,8 @@
 import * as assert from "node:assert";
 import { createRequire } from "node:module";
 import type { FontFamily, TextStyle, Theme } from "tycoslide";
-import { DASH_TYPE, GRID_STYLE, HALIGN, TEXT_STYLE, VALIGN } from "tycoslide";
+import { DASH_TYPE, GRID_STYLE, HALIGN, VALIGN } from "tycoslide";
+import { TEXT_STYLE } from "../src/text.js";
 import { HIGHLIGHT_THEME } from "../src/highlighting.js";
 import type {
   CardTokens,

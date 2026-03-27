@@ -4,7 +4,6 @@
 import * as assert from "node:assert";
 import { createRequire } from "node:module";
 import type { FontFamily, TextStyle, Theme } from "../src/core/model/types.js";
-import { TEXT_STYLE } from "../src/core/model/types.js";
 
 const require = createRequire(import.meta.url);
 
@@ -38,15 +37,15 @@ export function mockTheme(options?: {
     slide: options?.slide ?? { layout: "CUSTOM" as const, width: 13.333, height: 7.5 },
     fonts: [mockFontFamily],
     textStyles: {
-      [TEXT_STYLE.H1]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.H1] },
-      [TEXT_STYLE.H2]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.H2] },
-      [TEXT_STYLE.H3]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.H3] },
-      [TEXT_STYLE.H4]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.H4] },
-      [TEXT_STYLE.BODY]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.BODY] },
-      [TEXT_STYLE.SMALL]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.SMALL] },
-      [TEXT_STYLE.FOOTER]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.FOOTER] },
-      [TEXT_STYLE.EYEBROW]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.EYEBROW] },
-      [TEXT_STYLE.CODE]: { ...mockTextStyle, ...options?.textStyles?.[TEXT_STYLE.CODE] },
+      h1: { ...mockTextStyle, ...options?.textStyles?.["h1"] },
+      h2: { ...mockTextStyle, ...options?.textStyles?.["h2"] },
+      h3: { ...mockTextStyle, ...options?.textStyles?.["h3"] },
+      h4: { ...mockTextStyle, ...options?.textStyles?.["h4"] },
+      body: { ...mockTextStyle, ...options?.textStyles?.["body"] },
+      small: { ...mockTextStyle, ...options?.textStyles?.["small"] },
+      footer: { ...mockTextStyle, ...options?.textStyles?.["footer"] },
+      eyebrow: { ...mockTextStyle, ...options?.textStyles?.["eyebrow"] },
+      code: { ...mockTextStyle, ...options?.textStyles?.["code"] },
     },
     layouts: options?.layouts ?? {},
   };

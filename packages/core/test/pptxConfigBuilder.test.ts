@@ -22,7 +22,6 @@ import {
   SHAPE,
   SIZE,
   STRIKE_TYPE,
-  TEXT_STYLE,
   UNDERLINE_STYLE,
   VALIGN,
 } from "../src/core/model/types.js";
@@ -146,7 +145,7 @@ const baseCell: TableCellData = {
   width: SIZE.FILL,
   height: SIZE.HUG,
   color: "#000000",
-  textStyle: TEXT_STYLE.BODY,
+  textStyle: "body",
   resolvedStyle: mockTextStyle,
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.MIDDLE,
@@ -229,7 +228,7 @@ describe("buildTableCell()", () => {
     const cell: TableCellData = { ...baseCell, content: "Header" };
     const tableNode: TableNode = {
       ...baseTableNode,
-      headerRow: { textStyle: TEXT_STYLE.BODY, textColor: "#000000", background: "#EEEEEE", backgroundOpacity: 0 },
+      headerRow: { textStyle: "body", textColor: "#000000", background: "#EEEEEE", backgroundOpacity: 0 },
     };
     const result = builder.buildTableCell(cell, 0, 0, 1, 1, 1, 0, tableNode);
     assert.strictEqual(result.options.fill, undefined);
@@ -239,7 +238,7 @@ describe("buildTableCell()", () => {
     const cell: TableCellData = { ...baseCell, content: "Header" };
     const tableNode: TableNode = {
       ...baseTableNode,
-      headerRow: { textStyle: TEXT_STYLE.BODY, textColor: "#000000", background: "#AABBCC", backgroundOpacity: 50 },
+      headerRow: { textStyle: "body", textColor: "#000000", background: "#AABBCC", backgroundOpacity: 50 },
     };
     const result = builder.buildTableCell(cell, 0, 0, 1, 1, 1, 0, tableNode);
     assert.ok(result.options.fill);
@@ -277,7 +276,7 @@ describe("buildTableCell()", () => {
     const cell: TableCellData = { ...baseCell, content: "Header Col" };
     const tableNode: TableNode = {
       ...baseTableNode,
-      headerCol: { textStyle: TEXT_STYLE.BODY, textColor: "#000000", background: "#AABB00", backgroundOpacity: 100 },
+      headerCol: { textStyle: "body", textColor: "#000000", background: "#AABB00", backgroundOpacity: 100 },
     };
     const result = builder.buildTableCell(
       cell,
@@ -300,7 +299,7 @@ describe("buildTableCell()", () => {
     };
     const tableNode: TableNode = {
       ...baseTableNode,
-      headerRow: { textStyle: TEXT_STYLE.BODY, textColor: "#000000", background: "#EEEEEE", backgroundOpacity: 100 },
+      headerRow: { textStyle: "body", textColor: "#000000", background: "#EEEEEE", backgroundOpacity: 100 },
     };
 
     const result = builder.buildTableCell(
@@ -666,7 +665,7 @@ const baseTextNode: TextNode = {
   width: SIZE.FILL,
   height: SIZE.HUG,
   content: "Text",
-  style: TEXT_STYLE.BODY,
+  style: "body",
   resolvedStyle: mockTextStyle,
   color: "#333333",
   hAlign: HALIGN.LEFT,
@@ -713,13 +712,13 @@ describe("buildTextConfig()", () => {
     const textNode: TextNode = {
       ...baseTextNode,
       content: "Styled text",
-      style: TEXT_STYLE.H1,
+      style: "h1",
     };
     const pos = positioned(textNode, 1, 2, 5, 3);
 
     const result = builder.buildTextConfig(textNode, pos);
 
-    const h1Style = theme.textStyles[TEXT_STYLE.H1];
+    const h1Style = theme.textStyles["h1"];
     assert.strictEqual(result.options.fontSize, h1Style.fontSize);
     assert.strictEqual(result.options.fontFace, h1Style.fontFamily.name);
   });
@@ -942,7 +941,7 @@ describe("buildTextFragments()", () => {
       "#000000",
     );
 
-    const h1FontSize = theme.textStyles[TEXT_STYLE.H1].fontSize;
+    const h1FontSize = theme.textStyles["h1"].fontSize;
     assert.strictEqual(fragments[1].options?.paraSpaceBefore, h1FontSize);
   });
 
@@ -1023,7 +1022,7 @@ const baseSlideNumNode: SlideNumberNode = {
   type: NODE_TYPE.SLIDE_NUMBER,
   width: SIZE.HUG,
   height: SIZE.HUG,
-  style: TEXT_STYLE.FOOTER,
+  style: "footer",
   resolvedStyle: mockTextStyle,
   color: "#999999",
   hAlign: HALIGN.RIGHT,
@@ -1036,7 +1035,7 @@ describe("buildSlideNumberOptions()", () => {
 
     const result = builder.buildSlideNumberOptions(baseSlideNumNode, pos);
 
-    const footerStyle = theme.textStyles[TEXT_STYLE.FOOTER];
+    const footerStyle = theme.textStyles["footer"];
     assert.strictEqual(result.fontSize, footerStyle.fontSize);
     assert.strictEqual(result.fontFace, footerStyle.fontFamily.name);
   });
@@ -1044,13 +1043,13 @@ describe("buildSlideNumberOptions()", () => {
   test("applies custom style", () => {
     const slideNumNode: SlideNumberNode = {
       ...baseSlideNumNode,
-      style: TEXT_STYLE.SMALL,
+      style: "small",
     };
     const pos = positioned(slideNumNode, 1, 2, 2, 0.3);
 
     const result = builder.buildSlideNumberOptions(slideNumNode, pos);
 
-    const smallStyle = theme.textStyles[TEXT_STYLE.SMALL];
+    const smallStyle = theme.textStyles["small"];
     assert.strictEqual(result.fontSize, smallStyle.fontSize);
   });
 
@@ -1124,7 +1123,7 @@ describe("buildSlideNumberOptions()", () => {
 import type { NormalizedRun } from "../src/core/model/types.js";
 
 describe("buildTextFragments with multi-paragraph runs", () => {
-  const fontSize = theme.textStyles[TEXT_STYLE.BODY].fontSize; // 12
+  const fontSize = theme.textStyles["body"].fontSize; // 12
 
   test("two paragraphs produce correct PPTX fragments with paragraph spacing", () => {
     const runs: NormalizedRun[] = [{ text: "First paragraph." }, { text: "Second paragraph.", paragraphBreak: true }];

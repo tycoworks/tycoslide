@@ -181,20 +181,8 @@ export const FONT_SLOT = {
 
 export type FontSlot = (typeof FONT_SLOT)[keyof typeof FONT_SLOT];
 
-export const TEXT_STYLE = {
-  H1: "h1",
-  H2: "h2",
-  H3: "h3",
-  H4: "h4",
-  BODY: "body",
-  SMALL: "small",
-  EYEBROW: "eyebrow",
-  FOOTER: "footer",
-  CODE: "code",
-} as const;
-
-/** Well-known text style names from TEXT_STYLE, plus any theme-defined custom names. */
-export type TextStyleName = (typeof TEXT_STYLE)[keyof typeof TEXT_STYLE] | (string & {});
+/** A text style name defined in a theme's `textStyles` map. */
+export type TextStyleName = string & {};
 
 export interface TextStyle {
   fontFamily: FontFamily;

@@ -3,7 +3,8 @@
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { componentRegistry, NODE_TYPE, TEXT_STYLE } from "tycoslide";
+import { componentRegistry, NODE_TYPE } from "tycoslide";
+import { TEXT_STYLE } from "../src/text.js";
 import {
   cardComponent,
   codeComponent,
