@@ -319,7 +319,7 @@ const mermaidTokens = {
   titleColor: palette.navy,
   textStyle: TEXT_STYLE.BODY,
   accentOpacity: subtleOpacity,
-  accentTextColor: palette.purpleDeep,
+  accentTextColor: palette.purple,
   accents: accents,
 };
 
