@@ -4,7 +4,8 @@
 
 import { DASH_TYPE, defineTheme, GRID_STYLE, HALIGN, SHADOW_TYPE, SLIDE_SIZE, VALIGN } from "tycoslide";
 import type { ListTokens, PlainTextTokens, TextTokens } from "tycoslide-components";
-import { HIGHLIGHT_THEME, TEXT_STYLE } from "tycoslide-components";
+import { HIGHLIGHT_THEME } from "tycoslide-components";
+import type { HeadingStyles } from "tycoslide-components";
 import { assets } from "./assets.js";
 import {
   agendaLayout,
@@ -23,6 +24,33 @@ import {
   twoColumnLayout,
 } from "./layouts.js";
 import { defaultMaster, minimalMaster } from "./master.js";
+
+// ============================================
+// TEXT STYLE NAMES
+// ============================================
+
+/** Well-known text style names used by this theme. */
+const TEXT_STYLE = {
+  H1: "h1",
+  H2: "h2",
+  H3: "h3",
+  H4: "h4",
+  BODY: "body",
+  SMALL: "small",
+  EYEBROW: "eyebrow",
+  FOOTER: "footer",
+  CODE: "code",
+} as const;
+
+/** Default heading-depth → style mapping. Depths 5-6 fall back to h4. */
+const headingStyles: HeadingStyles = {
+  1: TEXT_STYLE.H1,
+  2: TEXT_STYLE.H2,
+  3: TEXT_STYLE.H3,
+  4: TEXT_STYLE.H4,
+  5: TEXT_STYLE.H4,
+  6: TEXT_STYLE.H4,
+};
 
 // ============================================
 // COLOR PALETTE
@@ -161,6 +189,7 @@ const bodyText: TextTokens = {
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.MIDDLE,
   accents: accents,
+  headingStyles,
 };
 const bodyList: ListTokens = {
   style: TEXT_STYLE.BODY,

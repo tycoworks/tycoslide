@@ -1,7 +1,6 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import { componentRegistry, HALIGN, NODE_TYPE } from "tycoslide";
-import { TEXT_STYLE } from "../src/text.js";
 import {
   cardComponent,
   codeComponent,
@@ -140,7 +139,7 @@ describe("Quote Component (Pull Quote)", () => {
             const runs = attribution.content as any[];
             assert.strictEqual(runs[0].text, "— Jane Smith");
             assert.strictEqual(attribution.hAlign, HALIGN.LEFT);
-            assert.strictEqual(attribution.style, TEXT_STYLE.SMALL);
+            assert.strictEqual(attribution.style, "small");
           }
         }
       }

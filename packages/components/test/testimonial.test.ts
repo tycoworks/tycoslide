@@ -1,7 +1,6 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import { componentRegistry, HALIGN, NODE_TYPE, VALIGN } from "tycoslide";
-import { TEXT_STYLE } from "../src/text.js";
 import type { TestimonialTokens } from "../src/index.js";
 import {
   cardComponent,
@@ -136,7 +135,7 @@ describe("Testimonial Component", () => {
             const runs = attribution.content as any[];
             assert.strictEqual(runs[0].text, "— Jane Smith");
             assert.strictEqual(attribution.hAlign, HALIGN.RIGHT);
-            assert.strictEqual(attribution.style, TEXT_STYLE.SMALL);
+            assert.strictEqual(attribution.style, "small");
           }
         }
       }

@@ -28,17 +28,6 @@ export const C = {
 } as const;
 
 // ============================================
-// HEADING STYLE MAP (matches real text component)
-// ============================================
-
-const HEADING_STYLE: Record<number, string> = {
-  1: "h1",
-  2: "h2",
-  3: "h3",
-  4: "h4",
-};
-
-// ============================================
 // TEXT (real render — used by registry.test.ts)
 // ============================================
 
@@ -64,10 +53,9 @@ export const textComponent = defineComponent({
     compile: (node: RootContent, source: string): ComponentNode | null => {
       if (node.type === SYNTAX.HEADING) {
         const heading = node as Heading;
-        const style = HEADING_STYLE[heading.depth] ?? "h3";
         const raw = extractSource(heading, source);
         const headingContent = raw.replace(/^#{1,6}\s*/, "");
-        return component(C.Text, {}, headingContent, { style });
+        return component(C.Text, { headingDepth: heading.depth }, headingContent);
       }
       if (node.type === SYNTAX.PARAGRAPH) {
         const para = node as { children: { type: string }[] };

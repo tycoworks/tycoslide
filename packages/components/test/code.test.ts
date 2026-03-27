@@ -3,7 +3,6 @@ import { describe, it } from "node:test";
 import type { RootContent } from "mdast";
 import type { TextStyle } from "tycoslide";
 import { componentRegistry, NODE_TYPE, SYNTAX } from "tycoslide";
-import { TEXT_STYLE } from "../src/text.js";
 import { type CodeTokens, code, codeComponent, renderCodeToHtml } from "../src/code.js";
 import { HIGHLIGHT_THEME, HIGHLIGHT_THEME_VALUES, LANGUAGE, LANGUAGE_VALUES } from "../src/highlighting.js";
 import {
@@ -243,7 +242,7 @@ describe("code MDAST compile handler", () => {
 
 describe("renderCodeToHtml()", () => {
   const tokens: CodeTokens = {
-    textStyle: TEXT_STYLE.CODE,
+    textStyle: "code",
     theme: HIGHLIGHT_THEME.GITHUB_DARK,
     padding: 0.25,
     background: { fill: "#1E1E1E", fillOpacity: 100, cornerRadius: 0.1 },

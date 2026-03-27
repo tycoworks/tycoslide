@@ -25,7 +25,6 @@ import {
   SIZE,
   VALIGN,
 } from "tycoslide";
-import { TEXT_STYLE } from "../src/text.js";
 import { card } from "../src/card.js";
 import {
   cardComponent,
@@ -324,7 +323,7 @@ describe("slideNumber()", () => {
 
   test("uses token values for style, color, hAlign", async () => {
     const node = (await render(slideNumber(DEFAULT_SLIDE_NUMBER_TOKENS))) as SlideNumberNode;
-    assert.strictEqual(node.style, TEXT_STYLE.FOOTER);
+    assert.strictEqual(node.style, "footer");
     assert.strictEqual(node.color, "#666666");
     assert.strictEqual(node.hAlign, HALIGN.RIGHT);
   });
@@ -750,14 +749,14 @@ describe("table()", () => {
 
   test("TableCellData cells preserve properties after expansion", async () => {
     const tNode = table(
-      [["Header", { content: "colored cell", textStyle: TEXT_STYLE.SMALL, color: "#FF0000", hAlign: HALIGN.CENTER }]],
+      [["Header", { content: "colored cell", textStyle: "small", color: "#FF0000", hAlign: HALIGN.CENTER }]],
       DEFAULT_TABLE_TOKENS,
     );
     const node = (await render(tNode)) as TableNode;
     assert.strictEqual(node.type, NODE_TYPE.TABLE);
     const cell = node.rows[0][1];
     assert.deepStrictEqual(cell.content, [{ text: "colored cell" }]);
-    assert.strictEqual(cell.textStyle, TEXT_STYLE.SMALL);
+    assert.strictEqual(cell.textStyle, "small");
     assert.strictEqual(cell.color, "#FF0000");
     assert.strictEqual(cell.hAlign, HALIGN.CENTER);
     assert.ok(cell.resolvedStyle);
@@ -777,7 +776,7 @@ describe("table()", () => {
     const cell = node.rows[0][0];
     assert.deepStrictEqual(cell.content, [{ text: "plain string" }]);
     assert.strictEqual(cell.color, "#000000"); // resolved from table token cellTextColor
-    assert.strictEqual(cell.textStyle, TEXT_STYLE.BODY); // resolved from table token
+    assert.strictEqual(cell.textStyle, "body"); // resolved from table token
     assert.ok(cell.resolvedStyle);
     assert.strictEqual(cell.resolvedStyle.fontSize, 12); // from mockTextStyle
   });
@@ -793,7 +792,7 @@ describe("table()", () => {
     const tokens = {
       ...DEFAULT_TABLE_TOKENS,
       headerCol: {
-        textStyle: TEXT_STYLE.BODY,
+        textStyle: "body",
         textColor: "#000000",
         background: "#EEEEEE",
         backgroundOpacity: 100,
@@ -818,13 +817,13 @@ describe("table()", () => {
     const tokens = {
       ...DEFAULT_TABLE_TOKENS,
       headerRow: {
-        textStyle: TEXT_STYLE.H1,
+        textStyle: "h1",
         textColor: "#FF0000",
         background: "#AAAAAA",
         backgroundOpacity: 100,
       },
       headerCol: {
-        textStyle: TEXT_STYLE.H2,
+        textStyle: "h2",
         textColor: "#00FF00",
         background: "#BBBBBB",
         backgroundOpacity: 100,
@@ -839,7 +838,7 @@ describe("table()", () => {
     );
     const node = (await render(tNode)) as TableNode;
     const corner = node.rows[0][0];
-    assert.strictEqual(corner.textStyle, TEXT_STYLE.H1, "intersection cell should use headerRow textStyle");
+    assert.strictEqual(corner.textStyle, "h1", "intersection cell should use headerRow textStyle");
     assert.strictEqual(corner.color, "#FF0000", "intersection cell should use headerRow textColor");
   });
 
@@ -848,7 +847,7 @@ describe("table()", () => {
     const tokens = {
       ...noHeaderRow,
       headerCol: {
-        textStyle: TEXT_STYLE.H3,
+        textStyle: "h3",
         textColor: "#PURPLE",
         background: "#CCCCCC",
         backgroundOpacity: 100,
@@ -863,7 +862,7 @@ describe("table()", () => {
     );
     const node = (await render(tNode)) as TableNode;
     const colHeaderCell = node.rows[0][0];
-    assert.strictEqual(colHeaderCell.textStyle, TEXT_STYLE.H3, "column header cell should use headerCol textStyle");
+    assert.strictEqual(colHeaderCell.textStyle, "h3", "column header cell should use headerCol textStyle");
     assert.strictEqual(colHeaderCell.color, "#PURPLE", "column header cell should use headerCol textColor");
     const dataCell = node.rows[0][1];
     assert.strictEqual(
@@ -877,7 +876,7 @@ describe("table()", () => {
     const tokens = {
       ...DEFAULT_TABLE_TOKENS,
       headerRow: {
-        textStyle: TEXT_STYLE.BODY,
+        textStyle: "body",
         textColor: "#000000",
         background: "#FFFFFF",
         backgroundOpacity: 100,
@@ -894,7 +893,7 @@ describe("table()", () => {
     const tokens = {
       ...DEFAULT_TABLE_TOKENS,
       headerRow: {
-        textStyle: TEXT_STYLE.BODY,
+        textStyle: "body",
         textColor: "#000000",
         background: "#FFFFFF",
         backgroundOpacity: 100,

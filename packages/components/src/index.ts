@@ -99,7 +99,8 @@ export {
 } from "./testimonial.js";
 // Text
 export {
-  TEXT_STYLE,
+  type HeadingDepth,
+  type HeadingStyles,
   type TextTokens,
   text,
   textComponent,

@@ -5,7 +5,6 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import type { NormalizedRun } from "tycoslide";
 import { componentRegistry, HALIGN, NODE_TYPE, VALIGN } from "tycoslide";
-import { TEXT_STYLE } from "../src/text.js";
 import {
   cardComponent,
   codeComponent,
@@ -64,7 +63,7 @@ describe("Text", () => {
     });
 
     it("should pass props and tokens correctly", () => {
-      const node = plainText("Label", { ...DEFAULT_PLAIN_TEXT_TOKENS, style: TEXT_STYLE.EYEBROW, color: "#FF0000" });
+      const node = plainText("Label", { ...DEFAULT_PLAIN_TEXT_TOKENS, style: "eyebrow", color: "#FF0000" });
       assert.strictEqual(node.content, "Label");
       // Tokens are now in node.tokens, not spread into props
       assert.strictEqual((node.tokens as any).style, "eyebrow");
@@ -109,7 +108,7 @@ describe("Text", () => {
     it("should apply style, color, and alignment", async () => {
       const node = plainText("Label", {
         ...DEFAULT_PLAIN_TEXT_TOKENS,
-        style: TEXT_STYLE.BODY,
+        style: "body",
         color: "#AABBCC",
         hAlign: HALIGN.CENTER,
         vAlign: VALIGN.MIDDLE,
@@ -217,7 +216,7 @@ describe("Text", () => {
     });
 
     it("should pass through style and color props", async () => {
-      const node = text("test", { ...DEFAULT_TEXT_TOKENS, style: TEXT_STYLE.BODY, color: "#AABBCC" });
+      const node = text("test", { ...DEFAULT_TEXT_TOKENS, style: "body", color: "#AABBCC" });
       const result = (await componentRegistry.renderTree(node, makeContext())) as any;
       assert.strictEqual(result.style, "body");
       assert.strictEqual(result.color, "#AABBCC");

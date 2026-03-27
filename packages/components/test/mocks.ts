@@ -5,7 +5,6 @@ import * as assert from "node:assert";
 import { createRequire } from "node:module";
 import type { FontFamily, TextStyle, Theme } from "tycoslide";
 import { DASH_TYPE, GRID_STYLE, HALIGN, VALIGN } from "tycoslide";
-import { TEXT_STYLE } from "../src/text.js";
 import { HIGHLIGHT_THEME } from "../src/highlighting.js";
 import type {
   CardTokens,
@@ -50,15 +49,15 @@ export function mockTheme(): Theme {
     slide: { layout: "CUSTOM" as const, width: 13.333, height: 7.5 },
     fonts: [mockFontFamily],
     textStyles: {
-      [TEXT_STYLE.H1]: mockTextStyle,
-      [TEXT_STYLE.H2]: mockTextStyle,
-      [TEXT_STYLE.H3]: mockTextStyle,
-      [TEXT_STYLE.H4]: mockTextStyle,
-      [TEXT_STYLE.BODY]: mockTextStyle,
-      [TEXT_STYLE.SMALL]: mockTextStyle,
-      [TEXT_STYLE.FOOTER]: mockTextStyle,
-      [TEXT_STYLE.EYEBROW]: mockTextStyle,
-      [TEXT_STYLE.CODE]: mockTextStyle,
+      h1: mockTextStyle,
+      h2: mockTextStyle,
+      h3: mockTextStyle,
+      h4: mockTextStyle,
+      body: mockTextStyle,
+      small: mockTextStyle,
+      footer: mockTextStyle,
+      eyebrow: mockTextStyle,
+      code: mockTextStyle,
     },
     layouts: {},
   };
@@ -70,7 +69,7 @@ export function mockTheme(): Theme {
 
 export const DEFAULT_TEXT_TOKENS: TextTokens = {
   color: "#000000",
-  style: TEXT_STYLE.BODY,
+  style: "body",
   linkColor: "#0000FF",
   linkUnderline: true,
   hAlign: HALIGN.LEFT,
@@ -80,14 +79,14 @@ export const DEFAULT_TEXT_TOKENS: TextTokens = {
 
 export const DEFAULT_PLAIN_TEXT_TOKENS: PlainTextTokens = {
   color: "#000000",
-  style: TEXT_STYLE.BODY,
+  style: "body",
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.TOP,
 };
 
 export const DEFAULT_LIST_TOKENS: ListTokens = {
   color: "#000000",
-  style: TEXT_STYLE.BODY,
+  style: "body",
   linkColor: "#0000FF",
   linkUnderline: true,
   hAlign: HALIGN.LEFT,
@@ -97,12 +96,12 @@ export const DEFAULT_LIST_TOKENS: ListTokens = {
 
 export const DEFAULT_TABLE_TOKENS: TableTokens = {
   headerRow: {
-    textStyle: TEXT_STYLE.BODY,
+    textStyle: "body",
     textColor: "#000000",
     background: "#FFFFFF",
     backgroundOpacity: 100,
   },
-  cellTextStyle: TEXT_STYLE.BODY,
+  cellTextStyle: "body",
   cellTextColor: "#000000",
   cellBackground: "#FFFFFF",
   cellBackgroundOpacity: 100,
@@ -118,7 +117,7 @@ export const DEFAULT_TABLE_TOKENS: TableTokens = {
 };
 
 export const DEFAULT_CODE_TOKENS: CodeTokens = {
-  textStyle: TEXT_STYLE.CODE,
+  textStyle: "code",
   theme: HIGHLIGHT_THEME.GITHUB_DARK,
   padding: 0.25,
   background: {
@@ -141,7 +140,7 @@ export const DEFAULT_MERMAID_TOKENS: MermaidTokens = {
   clusterBorderColor: "#666666",
   edgeLabelBackground: "#FFFFFF",
   titleColor: "#000000",
-  textStyle: TEXT_STYLE.BODY,
+  textStyle: "body",
   accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
   accentOpacity: 100,
   clusterCornerRadius: 0.08,
@@ -159,7 +158,7 @@ export const DEFAULT_CARD_TOKENS: CardTokens = {
   hAlign: HALIGN.CENTER,
   vAlign: VALIGN.TOP,
   title: {
-    style: TEXT_STYLE.H4,
+    style: "h4",
     color: "#FFFFFF",
     linkColor: "#0000FF",
     linkUnderline: true,
@@ -168,7 +167,7 @@ export const DEFAULT_CARD_TOKENS: CardTokens = {
     accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
   },
   description: {
-    style: TEXT_STYLE.SMALL,
+    style: "small",
     color: "#CCCCCC",
     linkColor: "#0000FF",
     linkUnderline: true,
@@ -186,7 +185,7 @@ export const DEFAULT_QUOTE_TOKENS: QuoteTokens = {
   },
   spacing: 0.125,
   quote: {
-    style: TEXT_STYLE.BODY,
+    style: "body",
     color: "#FFFFFF",
     linkColor: "#0000FF",
     linkUnderline: true,
@@ -195,7 +194,7 @@ export const DEFAULT_QUOTE_TOKENS: QuoteTokens = {
     accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
   },
   attribution: {
-    style: TEXT_STYLE.SMALL,
+    style: "small",
     color: "#666666",
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.TOP,
@@ -213,7 +212,7 @@ export const DEFAULT_TESTIMONIAL_TOKENS: TestimonialTokens = {
   hAlign: HALIGN.CENTER,
   vAlign: VALIGN.MIDDLE,
   quote: {
-    style: TEXT_STYLE.BODY,
+    style: "body",
     color: "#FFFFFF",
     linkColor: "#0000FF",
     linkUnderline: true,
@@ -222,7 +221,7 @@ export const DEFAULT_TESTIMONIAL_TOKENS: TestimonialTokens = {
     accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
   },
   attribution: {
-    style: TEXT_STYLE.SMALL,
+    style: "small",
     color: "#666666",
     hAlign: HALIGN.RIGHT,
     vAlign: VALIGN.TOP,
@@ -242,7 +241,7 @@ export const DEFAULT_SHAPE_TOKENS: ShapeTokens = {
 };
 
 export const DEFAULT_SLIDE_NUMBER_TOKENS: SlideNumberTokens = {
-  style: TEXT_STYLE.FOOTER,
+  style: "footer",
   color: "#666666",
   hAlign: HALIGN.RIGHT,
   vAlign: VALIGN.MIDDLE,

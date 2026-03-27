@@ -923,7 +923,8 @@ DSL functions are how you use components from TypeScript. All built-in DSL funct
 import { text, plainText, list, card, quote, testimonial, table, image, mermaid, code } from 'tycoslide-components';
 import { row, column, stack, grid } from 'tycoslide-components';
 import { line, shape, slideNumber } from 'tycoslide-components';
-import { TEXT_STYLE, SIZE, SHAPE, HALIGN, VALIGN, SPACING_MODE } from 'tycoslide';
+import { SIZE, SHAPE, HALIGN, VALIGN, SPACING_MODE } from 'tycoslide';
+const TEXT_STYLE = { H1: "h1", H2: "h2", H3: "h3", H4: "h4", BODY: "body", SMALL: "small", EYEBROW: "eyebrow", FOOTER: "footer", CODE: "code" } as const;
 
 // Lists
 list(["First item", "Second **bold** item", "Third item"], tokens.list)         // Unordered

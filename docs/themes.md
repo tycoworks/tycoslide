@@ -322,7 +322,8 @@ Each layout in the theme gets a `variants` object. The `default` variant is requ
 
 ```typescript
 import { bodyLayout, titleLayout, sectionLayout } from './layouts.js';
-import { TEXT_STYLE, HALIGN, VALIGN } from 'tycoslide';
+import { HALIGN, VALIGN } from 'tycoslide';
+const TEXT_STYLE = { H1: "h1", H2: "h2", H3: "h3", H4: "h4", BODY: "body", SMALL: "small", EYEBROW: "eyebrow", FOOTER: "footer", CODE: "code" } as const;
 
 layouts: {
   title: {
@@ -356,7 +357,8 @@ Master tokens flow through layout token maps as shared constants. Define them on
 
 ```typescript
 import { defaultMaster, minimalMaster } from './masters.js';
-import { TEXT_STYLE, HALIGN, VALIGN } from 'tycoslide';
+import { HALIGN, VALIGN } from 'tycoslide';
+const TEXT_STYLE = { H1: "h1", H2: "h2", H3: "h3", H4: "h4", BODY: "body", SMALL: "small", EYEBROW: "eyebrow", FOOTER: "footer", CODE: "code" } as const;
 
 // Shared master config constants — define once, reference from multiple layouts
 const defaultMasterConfig = defaultMaster.tokenMap({

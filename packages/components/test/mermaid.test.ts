@@ -4,7 +4,6 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import { componentRegistry, NODE_TYPE } from "tycoslide";
-import { TEXT_STYLE } from "../src/text.js";
 import {
   cardComponent,
   codeComponent,
@@ -179,7 +178,7 @@ const testTokens: MermaidTokens = {
   clusterBorderColor: "#666666",
   edgeLabelBackground: "#FFFFFF",
   titleColor: "#222222",
-  textStyle: TEXT_STYLE.BODY,
+  textStyle: "body",
   accentOpacity: 20,
   accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
   clusterCornerRadius: 0.08,
