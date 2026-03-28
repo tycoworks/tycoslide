@@ -105,7 +105,7 @@ Create a minimal test deck and build it:
 
 ```markdown
 ---
-theme: @tycoworks/tycoslide-theme
+theme: "@tycoworks/tycoslide-theme"
 ---
 
 ---

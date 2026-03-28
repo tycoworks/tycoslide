@@ -517,7 +517,7 @@ The theme entry point exports both a `layouts` array and a `masters` array. The 
 
 ```markdown
 ---
-theme: @tycoworks/tycoslide-theme
+theme: "@tycoworks/tycoslide-theme"
 ---
 
 ---

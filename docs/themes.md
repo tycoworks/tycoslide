@@ -17,7 +17,7 @@ Specify the theme in global frontmatter (the first frontmatter block in a markdo
 
 ```markdown
 ---
-theme: @tycoworks/tycoslide-theme
+theme: "@tycoworks/tycoslide-theme"
 ---
 
 ---

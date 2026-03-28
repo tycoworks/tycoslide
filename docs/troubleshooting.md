@@ -16,7 +16,7 @@ Error: No theme specified. Add `theme: <name>` to the global frontmatter in your
 
 ```markdown
 ---
-theme: @tycoworks/tycoslide-theme
+theme: "@tycoworks/tycoslide-theme"
 ---
 
 ---
@@ -335,7 +335,7 @@ Global frontmatter must be a YAML mapping (key: value pairs), got array.
 
 ```markdown
 ---
-theme: @tycoworks/tycoslide-theme
+theme: "@tycoworks/tycoslide-theme"
 author: John Doe
 ---
 

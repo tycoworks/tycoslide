@@ -1,5 +1,5 @@
 ---
-theme: @tycoworks/tycoslide-theme
+theme: "@tycoworks/tycoslide-theme"
 ---
 
 ---

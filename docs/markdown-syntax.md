@@ -29,7 +29,7 @@ The first frontmatter block configures the entire presentation:
 
 ```markdown
 ---
-theme: @tycoworks/tycoslide-theme
+theme: "@tycoworks/tycoslide-theme"
 ---
 ```
 
@@ -177,7 +177,7 @@ For a complete reference of all directives, parameters, and examples, see [Compo
 
 ```markdown
 ---
-theme: @tycoworks/tycoslide-theme
+theme: "@tycoworks/tycoslide-theme"
 ---
 
 ---

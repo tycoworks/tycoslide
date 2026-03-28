@@ -20,7 +20,7 @@ Create a file called `slides.md`:
 
 ```markdown
 ---
-theme: @tycoworks/tycoslide-theme
+theme: "@tycoworks/tycoslide-theme"
 ---
 
 ---
