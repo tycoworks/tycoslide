@@ -4,7 +4,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import type { Page } from "playwright";
+import type { Page } from "playwright-core";
 import { inToPx } from "../../utils/units.js";
 import type { Theme } from "../model/types.js";
 import type { HeadlessBrowser } from "./browser.js";

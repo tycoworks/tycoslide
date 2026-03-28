@@ -1,7 +1,7 @@
 // Browser Lifecycle
 // Shared headless browser for layout measurement and HTML rendering.
 
-import { type Browser, chromium, type Page } from "playwright";
+import { type Browser, chromium, type Page } from "playwright-core";
 
 export class HeadlessBrowser {
   private browser: Browser | null = null;

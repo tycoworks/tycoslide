@@ -4,7 +4,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import type { Page } from "playwright";
+import type { Page } from "playwright-core";
 import { log } from "../../utils/log.js";
 import { pxToIn } from "../../utils/units.js";
 import { Bounds } from "../model/bounds.js";

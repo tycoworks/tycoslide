@@ -34,10 +34,11 @@ Slides created from the tycoworks theme:
 
 ## Quick Start
 
-Install tycoslide and the tycoworks theme:
+Install tycoslide and playwright:
 
 ```bash
 npm install @tycoworks/tycoslide @tycoworks/tycoslide-theme
+npx playwright install chromium
 ```
 
 Create `slides.md`:

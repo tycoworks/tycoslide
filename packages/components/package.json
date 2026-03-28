@@ -1,6 +1,6 @@
 {
   "name": "@tycoworks/tycoslide-components",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Standard component library for tycoslide presentations",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -37,7 +37,9 @@
     "remark-parse": "^11.0.0",
     "shiki": "^4.0.0",
     "@tycoworks/tycoslide": "^0.1.0",
-    "unified": "^11.0.5"
+    "unified": "^11.0.5",
+    "@types/mdast": "^4.0.0",
+    "@types/unist": "^3.0.0"
   },
   "devDependencies": {
     "@fontsource/inter": "^5.0.0",

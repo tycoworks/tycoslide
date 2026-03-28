@@ -6,7 +6,7 @@ import { build } from "./build.js";
 
 const program = new Command();
 
-program.name("tycoslide").description("Build editable PowerPoint presentations from markdown").version("1.0.0");
+program.name("tycoslide").description("Build editable PowerPoint presentations from markdown").version("0.1.1");
 
 program
   .command("build")

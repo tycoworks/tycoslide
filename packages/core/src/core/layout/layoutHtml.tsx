@@ -9,7 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { FC } from "hono/jsx";
 import { renderToString } from "hono/jsx/dom/server";
-import type { Page } from "playwright";
+import type { Page } from "playwright-core";
 import { bgColor, hexToRgba } from "../../utils/color.js";
 import { FONT_FORMATS, getFontForRun, normalizeContent } from "../../utils/font.js";
 import { readImageDimensions } from "../../utils/image.js";
