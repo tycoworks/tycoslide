@@ -168,9 +168,9 @@ export interface TableNode {
   height: SizeValue;
   rows: TableCellData[][];
   // Style properties (resolved from theme tokens by component render)
-  border?: Stroke;         // outer border (same as shapes — present = has border)
-  gridStyle: GridStyle;    // HORIZONTAL | VERTICAL | BOTH | NONE
-  gridStroke?: Stroke;     // grid line appearance (independent, no fallback to border)
+  border?: Stroke; // outer border (same as shapes — present = has border)
+  gridStyle: GridStyle; // HORIZONTAL | VERTICAL | BOTH | NONE
+  gridStroke?: Stroke; // grid line appearance (independent, no fallback to border)
   // 3-zone backgrounds: presence indicates zone is active (like fill/border on ShapeNode)
   headerRow?: TableHeaderStyle;
   headerCol?: TableHeaderStyle;

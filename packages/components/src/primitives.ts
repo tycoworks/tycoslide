@@ -25,7 +25,7 @@ import {
   type TextStyleName,
   token,
   type VerticalAlignment,
-} from "tycoslide";
+} from "@tycoworks/tycoslide";
 import { Component } from "./names.js";
 
 const lineTokens = token.shape({

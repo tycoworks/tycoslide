@@ -1,6 +1,6 @@
 # Components
 
-Components are the building blocks of tycoslide presentations. All built-in components come from `tycoslide-components` and are re-exported by themes. For the default theme's token values, see [`theme.ts`](../packages/theme-default/src/theme.ts).
+Components are the building blocks of tycoslide presentations. All built-in components come from `@tycoworks/tycoslide-components` and are re-exported by themes. For the tycoworks theme's token values, see [`theme.ts`](../packages/theme-tycoworks/src/theme.ts).
 
 ## How Components Work
 
@@ -215,7 +215,7 @@ Content card with an optional image, title, and description. Renders as a rounde
 | `title` | TextTokens | Title text tokens |
 | `description` | TextTokens | Description text tokens |
 
-`ShapeTokens` includes `fill`, `fillOpacity`, `cornerRadius`, and optional `border` (`Stroke`) and `shadow`. See [`theme.ts`](../packages/theme-default/src/theme.ts) for default values.
+`ShapeTokens` includes `fill`, `fillOpacity`, `cornerRadius`, and optional `border` (`Stroke`) and `shadow`. See [`theme.ts`](../packages/theme-tycoworks/src/theme.ts) for default values.
 
 ### Examples
 
@@ -293,7 +293,7 @@ Cell content supports formatting (`**bold**`, `*italic*`, `:accent[color]`).
 | `background` | ShapeTokens | Card-effect background shape (optional — omit to render without background) |
 | `backgroundPadding` | number | Inset between the table and the background shape edge in inches (optional) |
 
-`ShapeTokens` includes `fill`, `fillOpacity`, `cornerRadius`, and optional `border` (`Stroke`) and `shadow`. See [`theme.ts`](../packages/theme-default/src/theme.ts) for default values.
+`ShapeTokens` includes `fill`, `fillOpacity`, `cornerRadius`, and optional `border` (`Stroke`) and `shadow`. See [`theme.ts`](../packages/theme-tycoworks/src/theme.ts) for default values.
 
 `TableHeaderStyle` includes `textStyle`, `textColor`, `background`, `backgroundOpacity`, and optional `hAlign`. Header zones are enabled by presence — omit the token to leave that zone unstyled.
 
@@ -434,7 +434,7 @@ Embeds an image with optional alt text for accessibility.
 :::
 ```
 
-Paths starting with `$` reference theme-bundled assets. See the [theme source](../packages/theme-default/src/theme.ts) for available asset keys.
+Paths starting with `$` reference theme-bundled assets. See the [theme source](../packages/theme-tycoworks/src/theme.ts) for available asset keys.
 
 File paths resolve relative to the working directory where the CLI runs.
 
@@ -469,7 +469,7 @@ Default nodes use `primary` fill with `primaryContrast` text. Accent-classed nod
 
 When `background` is set, the diagram renders inside a background shape with fill, border, corner radius, and optional shadow. `backgroundPadding` adds space between the background edge and the diagram image.
 
-See [`theme.ts`](../packages/theme-default/src/theme.ts) for default values.
+See [`theme.ts`](../packages/theme-tycoworks/src/theme.ts) for default values.
 
 ### Class Names
 
@@ -556,7 +556,7 @@ Quote text is required -- provide it either via the `quote` attribute or as body
 | `quote` | TextTokens | Quote text tokens |
 | `attribution` | LabelTokens | Attribution text tokens |
 
-`ShapeTokens` includes `fill`, `fillOpacity`, `cornerRadius`, and optional `border` (`Stroke`) and `shadow`. See [`theme.ts`](../packages/theme-default/src/theme.ts) for default values.
+`ShapeTokens` includes `fill`, `fillOpacity`, `cornerRadius`, and optional `border` (`Stroke`) and `shadow`. See [`theme.ts`](../packages/theme-tycoworks/src/theme.ts) for default values.
 
 ### Examples
 
@@ -675,9 +675,9 @@ Custom components add new content types to tycoslide, so authors can use them in
 Components are defined with `defineComponent()` and registered with `componentRegistry.register()`. Defining a component does not register it. Registration is a separate step, done by the theme entry point.
 
 ```typescript
-import { defineComponent, componentRegistry, component, param, token, schema } from 'tycoslide';
-import { label } from 'tycoslide-components';
-import type { InferParams, InferTokens, TextStyleName } from 'tycoslide';
+import { defineComponent, componentRegistry, component, param, token, schema } from '@tycoworks/tycoslide';
+import { label } from '@tycoworks/tycoslide-components';
+import type { InferParams, InferTokens, TextStyleName } from '@tycoworks/tycoslide';
 
 const badgeParams = param.shape({
   label: param.required(schema.string()),
@@ -735,8 +735,8 @@ Each built-in component exports its definition object (e.g., `cardComponent`, `t
 Declare parameters with `param.shape()`. Required params are validated at build time:
 
 ```typescript
-import { param, schema } from 'tycoslide';
-import type { InferParams } from 'tycoslide';
+import { param, schema } from '@tycoworks/tycoslide';
+import type { InferParams } from '@tycoworks/tycoslide';
 
 const myParams = param.shape({
   title: param.required(schema.string()),                          // Required string
@@ -756,8 +756,8 @@ export type MyParams = InferParams<typeof myParams>;
 Declare tokens with `token.shape()`. Use `token.required<T>()` for tokens the theme must always provide, and `token.optional<T>()` for tokens that may be omitted to suppress a feature. `InferTokens<>` derives the TypeScript type from the shape:
 
 ```typescript
-import { token } from 'tycoslide';
-import type { InferTokens, TextStyleName } from 'tycoslide';
+import { token } from '@tycoworks/tycoslide';
+import type { InferTokens, TextStyleName } from '@tycoworks/tycoslide';
 
 const badgeTokens = token.shape({
   backgroundColor: token.required<string>(),
@@ -841,10 +841,10 @@ Use a variant when the visual values differ. Use a different layout when the str
 Display a large metric value with a label and optional change indicator:
 
 ```typescript
-import { defineComponent, componentRegistry, component, param, token, schema } from 'tycoslide';
-import { column, label } from 'tycoslide-components';
-import type { LabelTokens } from 'tycoslide-components';
-import type { InferParams, InferTokens } from 'tycoslide';
+import { defineComponent, componentRegistry, component, param, token, schema } from '@tycoworks/tycoslide';
+import { column, label } from '@tycoworks/tycoslide-components';
+import type { LabelTokens } from '@tycoworks/tycoslide-components';
+import type { InferParams, InferTokens } from '@tycoworks/tycoslide';
 
 // 1. Declare params and tokens
 const metricParams = param.shape({
@@ -918,13 +918,13 @@ The layout's token map entry for `metric` holds the `MetricTokens` object. The t
 
 ### TypeScript DSL Functions
 
-DSL functions are how you use components from TypeScript. All built-in DSL functions are exported from `tycoslide-components`:
+DSL functions are how you use components from TypeScript. All built-in DSL functions are exported from `@tycoworks/tycoslide-components`:
 
 ```typescript
-import { text, label, list, card, quote, testimonial, table, image, mermaid, code } from 'tycoslide-components';
-import { row, column, stack, grid } from 'tycoslide-components';
-import { line, shape, slideNumber } from 'tycoslide-components';
-import { SIZE, SHAPE, HALIGN, VALIGN, SPACING_MODE } from 'tycoslide';
+import { text, label, list, card, quote, testimonial, table, image, mermaid, code } from '@tycoworks/tycoslide-components';
+import { row, column, stack, grid } from '@tycoworks/tycoslide-components';
+import { line, shape, slideNumber } from '@tycoworks/tycoslide-components';
+import { SIZE, SHAPE, HALIGN, VALIGN, SPACING_MODE } from '@tycoworks/tycoslide';
 const TEXT_STYLE = { H1: "h1", H2: "h2", H3: "h3", H4: "h4", BODY: "body", SMALL: "small", EYEBROW: "eyebrow", FOOTER: "footer", CODE: "code" } as const;
 
 // Lists
@@ -961,7 +961,7 @@ card({ title: params.cardTitle }, tokens.card)  // params, then tokens
 Custom components export their own DSL functions using `component()` from `tycoslide`:
 
 ```typescript
-import { component } from 'tycoslide';
+import { component } from '@tycoworks/tycoslide';
 
 export function metric(params: MetricParams, tokens: MetricTokens) {
   return component('metric', params, undefined, tokens);
@@ -1001,9 +1001,9 @@ The [mermaid](#mermaid) and [code](#code) components use Canvas internally. Thos
 ### Testing Components
 
 ```typescript
-import { Presentation, componentRegistry } from 'tycoslide';
-import { theme } from 'tycoslide-theme-default';
-import { column } from 'tycoslide-components';
+import { Presentation, componentRegistry } from '@tycoworks/tycoslide';
+import { theme } from '@tycoworks/tycoslide-theme';
+import { column } from '@tycoworks/tycoslide-components';
 import { metricComponent } from './my-component';
 
 componentRegistry.register(metricComponent);

@@ -13,7 +13,7 @@ import {
   schema,
   token,
   type VerticalAlignment,
-} from "tycoslide";
+} from "@tycoworks/tycoslide";
 import { column, stack } from "./containers.js";
 import { image, imageComponent } from "./image.js";
 import { Component } from "./names.js";

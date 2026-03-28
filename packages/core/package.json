@@ -1,7 +1,7 @@
 {
-  "name": "tycoslide",
-  "version": "1.0.0",
-  "description": "Declarative slide generation library built on pptxgenjs",
+  "name": "@tycoworks/tycoslide",
+  "version": "0.1.0",
+  "description": "Create editable PowerPoint slides from markdown",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -13,11 +13,12 @@
   "bin": {
     "tycoslide": "./dist/cli/index.js"
   },
+  "files": ["dist/"],
   "scripts": {
     "build": "tsc && chmod +x dist/cli/index.js",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
-    "prepare": "tsc && chmod +x dist/cli/index.js",
+    "prepublishOnly": "npm run build",
     "typecheck": "tsc --project tsconfig.test.json",
     "test": "tsc --project tsconfig.test.json && tsx --test test/*.test.ts"
   },
@@ -28,8 +29,16 @@
     "presentation"
   ],
   "author": "tycoworks",
-  "license": "ISC",
+  "license": "MIT",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tycoworks/tycoslide.git",
+    "directory": "packages/core"
+  },
   "dependencies": {
     "commander": "^14.0.3",
     "debug": "^4.4.3",
@@ -47,7 +56,7 @@
     "@fontsource/inter": "^5.0.0",
     "@types/debug": "^4.1.12",
     "@types/node": "^20.19.30",
-"playwright": "^1.58.2",
+    "playwright": "^1.58.2",
     "tsx": "^4.21.0",
     "typescript": "^5.3.0"
   }

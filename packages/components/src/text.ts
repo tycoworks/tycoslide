@@ -3,8 +3,13 @@
 // Available to layout TypeScript authors via text() DSL function.
 // Always uses rich text (inline formatting only): bold, italic, :color[highlights], no bullets/paragraphs.
 
-import type { RootContent } from "mdast";
-import type { HorizontalAlignment, NormalizedRun, RenderContext, TextStyleName, VerticalAlignment } from "tycoslide";
+import type {
+  HorizontalAlignment,
+  NormalizedRun,
+  RenderContext,
+  TextStyleName,
+  VerticalAlignment,
+} from "@tycoworks/tycoslide";
 import {
   type ComponentNode,
   component,
@@ -20,7 +25,8 @@ import {
   schema,
   type TextNode,
   token,
-} from "tycoslide";
+} from "@tycoworks/tycoslide";
+import type { RootContent } from "mdast";
 
 import { Component } from "./names.js";
 import { inlineParse, transformInline } from "./utils/inline.js";
@@ -43,17 +49,12 @@ export type TextTokens = InferTokens<typeof textTokens>;
 // RENDER — always rich text (inline markdown)
 // ============================================
 
-function renderText(
-  _params: {},
-  content: string,
-  context: RenderContext,
-  tokens: TextTokens,
-): ElementNode {
+function renderText(_params: {}, content: string, context: RenderContext, tokens: TextTokens): ElementNode {
   const textStyle = context.theme.textStyles[tokens.style];
   if (!textStyle) {
     throw new Error(
       `Text style "${tokens.style}" not found in theme.textStyles. ` +
-      `Available: [${Object.keys(context.theme.textStyles).join(", ")}].`,
+        `Available: [${Object.keys(context.theme.textStyles).join(", ")}].`,
     );
   }
 

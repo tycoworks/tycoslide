@@ -5,7 +5,7 @@ Get your first presentation built in 5 minutes.
 ## Install tycoslide
 
 ```bash
-npm install tycoslide tycoslide-components tycoslide-theme-default
+npm install @tycoworks/tycoslide @tycoworks/tycoslide-theme
 ```
 
 Verify the installation:
@@ -20,7 +20,7 @@ Create a file called `slides.md`:
 
 ```markdown
 ---
-theme: tycoslide-theme-default
+theme: @tycoworks/tycoslide-theme
 ---
 
 ---

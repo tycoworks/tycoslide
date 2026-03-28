@@ -1,6 +1,8 @@
 // Inline text formatting utilities
 // Shared between text and list components.
 
+import type { NormalizedRun } from "@tycoworks/tycoslide";
+import { SYNTAX } from "@tycoworks/tycoslide";
 import type { Link, PhrasingContent, Root } from "mdast";
 import type { TextDirective } from "mdast-util-directive";
 import { gfmStrikethroughFromMarkdown } from "mdast-util-gfm-strikethrough";
@@ -8,8 +10,6 @@ import { gfmStrikethrough } from "micromark-extension-gfm-strikethrough";
 import remarkDirective from "remark-directive";
 import remarkIns from "remark-ins";
 import remarkParse from "remark-parse";
-import type { NormalizedRun } from "tycoslide";
-import { SYNTAX } from "tycoslide";
 import type { Processor } from "unified";
 import { unified } from "unified";
 import type { Parent } from "unist";

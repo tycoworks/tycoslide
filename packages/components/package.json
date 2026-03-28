@@ -1,7 +1,7 @@
 {
-  "name": "tycoslide-components",
-  "version": "1.0.0",
-  "description": "Standard component definitions for tycoslide",
+  "name": "@tycoworks/tycoslide-components",
+  "version": "0.1.0",
+  "description": "Standard component library for tycoslide presentations",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -10,13 +10,24 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "files": ["dist/"],
   "scripts": {
     "build": "tsc",
     "test": "tsc --project tsconfig.test.json && tsx --test test/*.test.ts",
     "typecheck": "tsc --project tsconfig.test.json",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build"
   },
   "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tycoworks/tycoslide.git",
+    "directory": "packages/components"
+  },
   "dependencies": {
     "mermaid": "^11.4.0",
     "mdast-util-gfm-strikethrough": "^2.0.0",
@@ -25,7 +36,7 @@
     "remark-ins": "^1.2.3",
     "remark-parse": "^11.0.0",
     "shiki": "^4.0.0",
-    "tycoslide": "*",
+    "@tycoworks/tycoslide": "^0.1.0",
     "unified": "^11.0.5"
   },
   "devDependencies": {

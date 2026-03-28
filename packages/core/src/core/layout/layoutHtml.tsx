@@ -45,8 +45,8 @@ import type {
 import {
   DASH_TYPE,
   DIRECTION,
-  GRID_STYLE,
   FONT_SLOT,
+  GRID_STYLE,
   HALIGN,
   SHAPE,
   SIZE,
@@ -425,10 +425,7 @@ function styleText(node: TextNode, parent: ParentCtx, nodeId: string, fontRatios
  * Column, constrained     → height=FILL (grow into available height budget)
  * Column, unconstrained   → height=HUG (render at aspect-ratio-derived height)
  */
-function resolveImageSizing(
-  node: ImageNode,
-  parent: ParentCtx,
-): { width: SizeValue; height: SizeValue } {
+function resolveImageSizing(node: ImageNode, parent: ParentCtx): { width: SizeValue; height: SizeValue } {
   const isRow = parent.direction === DIRECTION.ROW;
 
   return {

@@ -437,7 +437,12 @@ describe("buildCellBorder()", () => {
   });
 
   test("GRID_STYLE.NONE with no outer border - returns undefined", () => {
-    const tableNode: TableNode = { ...baseTableNode, border: undefined, gridStyle: GRID_STYLE.NONE, gridStroke: undefined };
+    const tableNode: TableNode = {
+      ...baseTableNode,
+      border: undefined,
+      gridStyle: GRID_STYLE.NONE,
+      gridStroke: undefined,
+    };
 
     const border = builder.buildCellBorder(tableNode, 1, 1, 3, 3);
 

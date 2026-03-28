@@ -15,7 +15,7 @@
 
 import fs from "node:fs";
 import { createRequire } from "node:module";
-import type { Canvas, TextStyleName } from "tycoslide";
+import type { Canvas, TextStyleName } from "@tycoworks/tycoslide";
 import {
   type ComponentNode,
   component,
@@ -26,7 +26,7 @@ import {
   SHAPE,
   schema,
   token,
-} from "tycoslide";
+} from "@tycoworks/tycoslide";
 import { column, stack } from "./containers.js";
 import { image } from "./image.js";
 import { Component } from "./names.js";

@@ -17,7 +17,7 @@ import {
   token,
   VALIGN,
   type VerticalAlignment,
-} from "tycoslide";
+} from "@tycoworks/tycoslide";
 import type {
   CardTokens,
   LabelTokens,
@@ -26,7 +26,7 @@ import type {
   QuoteTokens,
   ShapeTokens,
   TextTokens,
-} from "tycoslide-components";
+} from "@tycoworks/tycoslide-components";
 import {
   Component,
   cardComponent,
@@ -42,7 +42,7 @@ import {
   stack,
   text,
   textComponent,
-} from "tycoslide-components";
+} from "@tycoworks/tycoslide-components";
 import { type DefaultMasterTokens, MASTER, type MinimalMasterTokens } from "./master.js";
 
 // ============================================
@@ -58,11 +58,7 @@ interface HeaderTokens {
 /** Title header block with optional eyebrow */
 export function headerBlock(title: string, tokens: HeaderTokens, eyebrow?: string): SlideNode {
   if (eyebrow) {
-    return column(
-      { spacing: tokens.headerSpacing },
-      label(eyebrow, tokens.eyebrow),
-      label(title, tokens.title),
-    );
+    return column({ spacing: tokens.headerSpacing }, label(eyebrow, tokens.eyebrow), label(title, tokens.title));
   }
   return label(title, tokens.title);
 }
@@ -486,10 +482,7 @@ export const agendaLayout = defineLayout({
         shape(tokens.itemBackground, { shape: SHAPE.RECTANGLE }),
         row(
           { padding: tokens.itemPadding, vAlign: tokens.itemVAlign, spacing: tokens.itemSpacing },
-          column(
-            { spacing: 0, width: SIZE.HUG, vAlign: tokens.itemVAlign },
-            label(String(i + 1), tokens.itemNumber),
-          ),
+          column({ spacing: 0, width: SIZE.HUG, vAlign: tokens.itemVAlign }, label(String(i + 1), tokens.itemNumber)),
           text(item, tokens.items),
         ),
       ),

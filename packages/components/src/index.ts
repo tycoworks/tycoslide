@@ -41,6 +41,14 @@ export {
 } from "./highlighting.js";
 // Image (with asset resolution)
 export { type ImageTokens, image, imageComponent } from "./image.js";
+// Label (display text — eyebrows, footers, headings, attributions)
+export {
+  type HeadingDepth,
+  type LabelSlotTokens,
+  type LabelTokens,
+  label,
+  labelComponent,
+} from "./label.js";
 // List
 export {
   type ListParams,
@@ -57,14 +65,6 @@ export {
 } from "./mermaid.js";
 // Component names (canonical registry of built-in identifiers)
 export { Component, type ComponentName } from "./names.js";
-// Label (display text — eyebrows, footers, headings, attributions)
-export {
-  type HeadingDepth,
-  type LabelSlotTokens,
-  type LabelTokens,
-  label,
-  labelComponent,
-} from "./label.js";
 // Primitives (line, shape, slideNumber)
 export {
   type LineParams,

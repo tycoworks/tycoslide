@@ -4,6 +4,8 @@
 
 Create editable PowerPoint slides from markdown, with TypeScript-based themes and build-time validation.
 
+> **Early release (v0.1.0)** — tycoslide is under active development. The API may change between minor versions.
+
 **Why tycoslide?**
 - **Editable PowerPoint slides**: Native .pptx files that open in PowerPoint, Keynote, or Google Slides
 - **Pure TypeScript themes**: Design tokens, layouts, and components defined in TypeScript — no CSS needed
@@ -13,7 +15,7 @@ Create editable PowerPoint slides from markdown, with TypeScript-based themes an
 
 ## Examples
 
-Slides created from the default theme:
+Slides created from the tycoworks theme:
 
 <table>
 <tr>
@@ -32,17 +34,17 @@ Slides created from the default theme:
 
 ## Quick Start
 
-Install tycoslide and the default theme:
+Install tycoslide and the tycoworks theme:
 
 ```bash
-npm install tycoslide tycoslide-theme-default tycoslide-components
+npm install @tycoworks/tycoslide @tycoworks/tycoslide-theme
 ```
 
 Create `slides.md`:
 
 ```markdown
 ---
-theme: tycoslide-theme-default
+theme: @tycoworks/tycoslide-theme
 ---
 
 ---

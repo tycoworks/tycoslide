@@ -8,31 +8,23 @@ Now / Next / Later — unified from todo, review, and roadmap docs.
 
 Before launch. Must be done before telling the world.
 
-### tycoworks Theme & Showcase
-
-Rebrand `theme-default` as the tycoworks theme — a real brand-aligned theme that demonstrates what tycoslide enables. No generic "default" theme; the whole point is you build your own. The tycoworks theme is the only shipped example and doubles as the showcase. Layouts are done (19 across all tiers). Showcase deck needs updating to demonstrate new components (mermaid, code) and layouts not yet shown. Align tokens to website?
-
-### Integration Tests
-
-DSL input → full pipeline (expand → measure → layout) → assert element positions/sizes. Not pixel-perfect screenshot comparison, but geometric assertions: "this text node is at (x, y) with size (w, h)". Deterministic because Playwright measurement with embedded fonts is reproducible. The showcase deck doubles as a test fixture. Covers the orchestration layers (presentation, pipeline, pptxRenderer) through their real public API boundary — unit testing those individually would just test wiring.
-
-### Publish to npm
-
-Publish all three packages (`tycoslide`, `tycoslide-components`, `tycoslide-theme-default`) to npm. End-to-end install experience: `npm install tycoslide tycoslide-theme-default`, create a markdown file, `npx tycoslide build deck.md`, get a .pptx. Starter template or `npm create tycoslide` scaffolding so new users have a working example immediately.
-
 ---
 
 ## Next
 
 Immediate next priorities after launch.
 
+### Claude Code Skill
+
+Build a tycoslide skill for Claude Code — users describe a presentation and the skill generates a markdown deck. Reference: Slidev skill (https://github.com/slidevjs/slidev/tree/main/skills/slidev). Study frontend-slides' progressive disclosure pattern (concise core file, supporting docs loaded on demand) and their style selection UX (3 visual previews before generating).
+
 ### Distribution & Integrations
 
 tycoslide as a compilation target for other tools. frontend-slides (https://github.com/zarazhangrui/frontend-slides, 8.7k stars) generates HTML presentation decks from natural language descriptions — could it compile to tycoslide markdown instead, producing editable .pptx output? Explore what an integration would look like: tycoslide as a backend for AI-driven presentation tools that currently produce throwaway HTML.
 
-### Claude Code Skill
+### Integration Tests
 
-Build a tycoslide skill for Claude Code — users describe a presentation and the skill generates a markdown deck. Reference: Slidev skill (https://github.com/slidevjs/slidev/tree/main/skills/slidev). Study frontend-slides' progressive disclosure pattern (concise core file, supporting docs loaded on demand) and their style selection UX (3 visual previews before generating).
+DSL input → full pipeline (expand → measure → layout) → assert element positions/sizes. Not pixel-perfect screenshot comparison, but geometric assertions: "this text node is at (x, y) with size (w, h)". Deterministic because Playwright measurement with embedded fonts is reproducible. The showcase deck doubles as a test fixture. Covers the orchestration layers (presentation, pipeline, pptxRenderer) through their real public API boundary — unit testing those individually would just test wiring.
 
 ### Inline Code
 
@@ -61,10 +53,6 @@ Composite components (cards) currently render all shapes individually. They shou
 ### Theme Building CLI
 
 Make it easier to bootstrap themes. `tycoslide theme-init --from-dtcg tokens.json` consumes W3C DTCG JSON and emits a TypeScript theme scaffold. One-time codegen, not runtime. Document the recommended multi-size theme file structure (shared palette/fonts/components, size-specific spacing/textStyles). Or scrapes website / existing presentations.
-
-### Dark Mode
-
-Per-slide color modes. Each slide specifies `mode: 'dark' | 'light'`. Theme defines complete component variant sets per mode.
 
 ### HTML Live Preview
 

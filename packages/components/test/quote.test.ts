@@ -1,15 +1,15 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { componentRegistry, HALIGN, NODE_TYPE } from "tycoslide";
+import { componentRegistry, HALIGN, NODE_TYPE } from "@tycoworks/tycoslide";
 import {
   cardComponent,
   codeComponent,
   columnComponent,
   gridComponent,
   imageComponent,
+  labelComponent,
   lineComponent,
   mermaidComponent,
-  labelComponent,
   quoteComponent,
   rowComponent,
   shapeComponent,

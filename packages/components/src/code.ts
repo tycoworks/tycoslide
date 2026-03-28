@@ -2,8 +2,6 @@
 // Renders syntax-highlighted code blocks using the shared browser.
 // Theme tokens control all styling — the highlighter is an implementation detail.
 
-import type { Code as MdastCode, RootContent } from "mdast";
-import { codeToHtml } from "shiki";
 import {
   type ComponentNode,
   component,
@@ -22,7 +20,9 @@ import {
   type TextStyleName,
   token,
   VALIGN,
-} from "tycoslide";
+} from "@tycoworks/tycoslide";
+import type { Code as MdastCode, RootContent } from "mdast";
+import { codeToHtml } from "shiki";
 import { column, stack } from "./containers.js";
 import type { HighlightThemeName } from "./highlighting.js";
 import { LANGUAGE_VALUES } from "./highlighting.js";

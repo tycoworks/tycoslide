@@ -29,7 +29,7 @@ The first frontmatter block configures the entire presentation:
 
 ```markdown
 ---
-theme: tycoslide-theme-default
+theme: @tycoworks/tycoslide-theme
 ---
 ```
 
@@ -75,7 +75,7 @@ This is :green[styled as a metric].
 This is :red[styled as a warning].
 ```
 
-Accent names are defined by your theme as an open set — any key in the theme's `accents` map is valid. Common names like `blue`, `green`, and `red` are provided by `tycoslide-theme-default`.
+Accent names are defined by your theme as an open set — any key in the theme's `accents` map is valid.
 
 ### Headings
 
@@ -177,7 +177,7 @@ For a complete reference of all directives, parameters, and examples, see [Compo
 
 ```markdown
 ---
-theme: tycoslide-theme-default
+theme: @tycoworks/tycoslide-theme
 ---
 
 ---

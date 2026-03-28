@@ -1,6 +1,5 @@
 // Table Component - Native pptxgenjs table element
 
-import type { Table as MdastTable, RootContent } from "mdast";
 import {
   type ComponentNode,
   component,
@@ -25,7 +24,8 @@ import {
   type TextStyleName,
   token,
   type VerticalAlignment,
-} from "tycoslide";
+} from "@tycoworks/tycoslide";
+import type { Table as MdastTable, RootContent } from "mdast";
 import { column, stack } from "./containers.js";
 import { Component } from "./names.js";
 import { type ShapeTokens, shape } from "./primitives.js";

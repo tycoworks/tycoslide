@@ -1,6 +1,5 @@
 // Image component with asset resolution
 
-import type { Image, RootContent } from "mdast";
 import {
   type ComponentNode,
   component,
@@ -16,7 +15,8 @@ import {
   SYNTAX,
   schema,
   token,
-} from "tycoslide";
+} from "@tycoworks/tycoslide";
+import type { Image, RootContent } from "mdast";
 import { Component } from "./names.js";
 
 // ============================================

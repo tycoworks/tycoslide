@@ -29,9 +29,9 @@ npx tycoslide build deck.md          # Build a single deck (outputs deck.pptx)
 
 tycoslide is an npm workspaces monorepo with three packages:
 
-- **`packages/core`** (npm name: `tycoslide`) — The framework
-- **`packages/components`** (npm name: `tycoslide-components`) — 16 standard components: text, plainText, list, card, quote, testimonial, table, image, mermaid, code, line, shape, slideNumber, row, column, stack, grid
-- **`packages/theme-default`** (npm name: `tycoslide-theme-default`) — Default theme with Inter font, Material Design icons, 11 layouts
+- **`packages/core`** (npm: `@tycoworks/tycoslide`) — The framework
+- **`packages/components`** (npm: `@tycoworks/tycoslide-components`) — 16 standard components: text, plainText, list, card, quote, testimonial, table, image, mermaid, code, line, shape, slideNumber, row, column, stack, grid
+- **`packages/theme-tycoworks`** (npm: `@tycoworks/tycoslide-theme`) — tycoworks theme with Inter font, Material Design icons, 11 layouts
 
 When consuming tycoslide from another project (e.g., a theme), `package.json` points `main` at `dist/index.js`. Always rebuild before running slides.
 
@@ -50,7 +50,7 @@ npx tsc --build      # Rebuilds tycoslide (if changed) then the theme
 - `packages/core/src/cli/` — CLI entry point, build command, theme loader
 - `packages/core/src/utils/` — Shared parser, font utils, image utils, units
 - `packages/components/src/` — All 16 component definitions (see Monorepo Structure above)
-- `packages/theme-default/src/` — Default theme (Inter font, Material Design icons, 11 layouts)
+- `packages/theme-tycoworks/src/` — tycoworks theme (Inter font, Material Design icons, 11 layouts)
 - `packages/core/test/` — Tests (uses `node:test`, NOT vitest)
 
 ## Architecture

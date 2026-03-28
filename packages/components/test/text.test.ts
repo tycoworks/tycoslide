@@ -3,8 +3,8 @@
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import type { NormalizedRun } from "tycoslide";
-import { componentRegistry, HALIGN, NODE_TYPE, VALIGN } from "tycoslide";
+import type { NormalizedRun } from "@tycoworks/tycoslide";
+import { componentRegistry, HALIGN, NODE_TYPE, VALIGN } from "@tycoworks/tycoslide";
 import {
   cardComponent,
   codeComponent,
@@ -23,8 +23,8 @@ import {
   tableComponent,
   textComponent,
 } from "../src/index.js";
-import { Component } from "../src/names.js";
 import { label } from "../src/label.js";
+import { Component } from "../src/names.js";
 import { text } from "../src/text.js";
 import { DEFAULT_LABEL_TOKENS, DEFAULT_TEXT_TOKENS, mockTheme, noopCanvas } from "./mocks.js";
 

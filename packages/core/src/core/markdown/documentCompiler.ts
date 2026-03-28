@@ -11,7 +11,7 @@ import { RESERVED_FRONTMATTER_KEYS } from "../model/syntax.js";
 import { resolveVariantTokens } from "../model/token.js";
 import type { Slide, Theme } from "../model/types.js";
 import { Presentation } from "../rendering/presentation.js";
-import { type LayoutDefinition, componentRegistry, layoutRegistry } from "../rendering/registry.js";
+import { componentRegistry, type LayoutDefinition, layoutRegistry } from "../rendering/registry.js";
 import { parseSlideDocument, type RawSlide } from "./slideParser.js";
 import { compileSlot } from "./slotCompiler.js";
 

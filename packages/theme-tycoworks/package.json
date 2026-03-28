@@ -1,0 +1,41 @@
+{
+  "name": "@tycoworks/tycoslide-theme",
+  "version": "0.1.0",
+  "description": "tycoworks theme for tycoslide — Inter font, purple/navy palette, 11 layouts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist/"],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build"
+  },
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tycoworks/tycoslide.git",
+    "directory": "packages/theme-tycoworks"
+  },
+  "dependencies": {
+    "@fontsource/fira-code": "^5.2.7",
+    "@fontsource/inter": "^5.0.0",
+    "@material-design-icons/svg": "^0.14.0",
+    "@tycoworks/tycoslide": "^0.1.0",
+    "@tycoworks/tycoslide-components": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.30",
+    "typescript": "^5.3.0"
+  }
+}

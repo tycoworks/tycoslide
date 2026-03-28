@@ -22,16 +22,7 @@ import type {
 } from "../src/core/model/nodes.js";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
 import type { Direction, NormalizedRun } from "../src/core/model/types.js";
-import {
-  DASH_TYPE,
-  DIRECTION,
-  GRID_STYLE,
-  HALIGN,
-  SHADOW_TYPE,
-  SHAPE,
-  SIZE,
-  VALIGN,
-} from "../src/core/model/types.js";
+import { DASH_TYPE, DIRECTION, GRID_STYLE, HALIGN, SHADOW_TYPE, SHAPE, SIZE, VALIGN } from "../src/core/model/types.js";
 import { mockTheme as createMockTheme } from "./mocks.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -1094,7 +1085,13 @@ describe("HTML Measurement Generation", () => {
 
     test("table GRID_STYLE.HORIZONTAL renders inner horizontal lines only (no outer border)", async () => {
       const rows = [[cell("A"), cell("B")]];
-      const node = colNode(tableNode(rows, { border: undefined, gridStyle: GRID_STYLE.HORIZONTAL, gridStroke: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID } }));
+      const node = colNode(
+        tableNode(rows, {
+          border: undefined,
+          gridStyle: GRID_STYLE.HORIZONTAL,
+          gridStroke: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
+        }),
+      );
       const { html } = await genHTML(node, bounds);
       // Inner-only: no outer table border
       const tableMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);

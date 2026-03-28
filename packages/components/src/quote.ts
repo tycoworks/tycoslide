@@ -2,7 +2,6 @@
 // Simple pull quote with left accent bar, quote text, and optional attribution.
 // Renders to: row(line(bar), column(quote, attribution?))
 
-import type { RootContent } from "mdast";
 import {
   component,
   defineComponent,
@@ -14,10 +13,11 @@ import {
   SYNTAX,
   schema,
   token,
-} from "tycoslide";
+} from "@tycoworks/tycoslide";
+import type { RootContent } from "mdast";
 import { column, row } from "./containers.js";
-import { Component } from "./names.js";
 import { type LabelTokens, label } from "./label.js";
+import { Component } from "./names.js";
 import { type LineTokens, line } from "./primitives.js";
 import { type TextTokens, text, textComponent } from "./text.js";
 

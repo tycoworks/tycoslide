@@ -14,11 +14,11 @@ import {
   schema,
   token,
   type VerticalAlignment,
-} from "tycoslide";
+} from "@tycoworks/tycoslide";
 import { column, row, stack } from "./containers.js";
 import { imageComponent, image as imageNode } from "./image.js";
-import { Component } from "./names.js";
 import { type LabelTokens, label } from "./label.js";
+import { Component } from "./names.js";
 import { type ShapeTokens, shape } from "./primitives.js";
 import { type TextTokens, text, textComponent } from "./text.js";
 

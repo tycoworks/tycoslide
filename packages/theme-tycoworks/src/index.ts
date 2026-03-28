@@ -1,17 +1,17 @@
 // tycoslide-theme-default
 // Default theme package for tycoslide
 
-import type { MasterDefinition } from "tycoslide";
+import type { MasterDefinition } from "@tycoworks/tycoslide";
 import {
   cardComponent,
   codeComponent,
   columnComponent,
   gridComponent,
   imageComponent,
+  labelComponent,
   lineComponent,
   listComponent,
   mermaidComponent,
-  labelComponent,
   quoteComponent,
   rowComponent,
   shapeComponent,
@@ -20,7 +20,7 @@ import {
   tableComponent,
   testimonialComponent,
   textComponent,
-} from "tycoslide-components";
+} from "@tycoworks/tycoslide-components";
 import { allLayouts } from "./layouts.js";
 import { defaultMaster, minimalMaster } from "./master.js";
 
@@ -50,7 +50,7 @@ export const layouts = allLayouts;
 export const masters: MasterDefinition[] = [defaultMaster, minimalMaster];
 
 // Re-export component DSL functions for theme consumers
-export * from "tycoslide-components";
+export * from "@tycoworks/tycoslide-components";
 export type { Assets } from "./assets.js";
 export { assets } from "./assets.js";
 // Theme and assets

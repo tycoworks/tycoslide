@@ -2,8 +2,13 @@
 // Peer of text — handles bullet/numbered lists as its own component.
 // Internal-only (no :::list directive). Available via list() DSL and MDAST handler.
 
-import type { ListItem, List as MdastList, RootContent } from "mdast";
-import type { HorizontalAlignment, NormalizedRun, RenderContext, TextStyleName, VerticalAlignment } from "tycoslide";
+import type {
+  HorizontalAlignment,
+  NormalizedRun,
+  RenderContext,
+  TextStyleName,
+  VerticalAlignment,
+} from "@tycoworks/tycoslide";
 import {
   type ComponentNode,
   component,
@@ -20,7 +25,8 @@ import {
   schema,
   type TextNode,
   token,
-} from "tycoslide";
+} from "@tycoworks/tycoslide";
+import type { ListItem, List as MdastList, RootContent } from "mdast";
 import { Component } from "./names.js";
 import { inlineParse, transformInline } from "./utils/inline.js";
 

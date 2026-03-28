@@ -4,14 +4,13 @@
 // Use for eyebrows, attributions, footers, headings, and other display text.
 // Headings resolve their style from depth via resolveTokens hook (depth-keyed LabelSlotTokens).
 
-import type { Heading, RootContent } from "mdast";
-import type { HorizontalAlignment, RenderContext, TextStyleName, VerticalAlignment } from "tycoslide";
+import type { HorizontalAlignment, RenderContext, TextStyleName, VerticalAlignment } from "@tycoworks/tycoslide";
 import {
   type ComponentNode,
   component,
   defineComponent,
-  type InferTokens,
   extractSource,
+  type InferTokens,
   NODE_TYPE,
   type Shadow,
   SIZE,
@@ -20,7 +19,8 @@ import {
   schema,
   type TextNode,
   token,
-} from "tycoslide";
+} from "@tycoworks/tycoslide";
+import type { Heading, RootContent } from "mdast";
 import { Component } from "./names.js";
 
 // ============================================
@@ -58,10 +58,7 @@ export type LabelTokens = InferTokens<typeof labelTokens>;
  * full LabelTokens for that depth. Tokens must be a Record<HeadingDepth, LabelTokens>.
  * DSL label() calls have no headingDepth — tokens are already flat LabelTokens.
  */
-function resolveLabelTokens(
-  tokens: Record<string, unknown>,
-  params: Record<string, unknown>,
-): Record<string, unknown> {
+function resolveLabelTokens(tokens: Record<string, unknown>, params: Record<string, unknown>): Record<string, unknown> {
   const depth = params.headingDepth as HeadingDepth | undefined;
   if (depth === undefined) return tokens; // DSL label — tokens are already flat LabelTokens
 
@@ -69,7 +66,7 @@ function resolveLabelTokens(
   if (!entry) {
     throw new Error(
       `Label with headingDepth=${depth} requires a token entry for depth ${depth}. ` +
-      `Provide label slot tokens as Record<HeadingDepth, LabelTokens>.`,
+        `Provide label slot tokens as Record<HeadingDepth, LabelTokens>.`,
     );
   }
   return entry;
@@ -79,17 +76,12 @@ function resolveLabelTokens(
 // RENDER
 // ============================================
 
-function renderLabel(
-  _params: {},
-  content: string,
-  context: RenderContext,
-  tokens: LabelTokens,
-): TextNode {
+function renderLabel(_params: {}, content: string, context: RenderContext, tokens: LabelTokens): TextNode {
   const textStyle = context.theme.textStyles[tokens.style];
   if (!textStyle) {
     throw new Error(
       `Text style "${tokens.style}" not found in theme.textStyles. ` +
-      `Available: [${Object.keys(context.theme.textStyles).join(", ")}].`,
+        `Available: [${Object.keys(context.theme.textStyles).join(", ")}].`,
     );
   }
 

@@ -1,8 +1,8 @@
 import * as assert from "node:assert";
 import { describe, it } from "node:test";
+import type { TextStyle } from "@tycoworks/tycoslide";
+import { componentRegistry, NODE_TYPE, SYNTAX } from "@tycoworks/tycoslide";
 import type { RootContent } from "mdast";
-import type { TextStyle } from "tycoslide";
-import { componentRegistry, NODE_TYPE, SYNTAX } from "tycoslide";
 import { type CodeTokens, code, codeComponent, renderCodeToHtml } from "../src/code.js";
 import { HIGHLIGHT_THEME, HIGHLIGHT_THEME_VALUES, LANGUAGE, LANGUAGE_VALUES } from "../src/highlighting.js";
 import {

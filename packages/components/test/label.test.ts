@@ -3,8 +3,8 @@
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
+import { componentRegistry, HALIGN, NODE_TYPE, VALIGN } from "@tycoworks/tycoslide";
 import type { Heading } from "mdast";
-import { componentRegistry, HALIGN, NODE_TYPE, VALIGN } from "tycoslide";
 import {
   cardComponent,
   codeComponent,
@@ -23,9 +23,9 @@ import {
   tableComponent,
   textComponent,
 } from "../src/index.js";
-import { Component } from "../src/names.js";
-import { label } from "../src/label.js";
 import type { LabelSlotTokens, LabelTokens } from "../src/label.js";
+import { label } from "../src/label.js";
+import { Component } from "../src/names.js";
 import { DEFAULT_LABEL_TOKENS, mockTheme, noopCanvas } from "./mocks.js";
 
 // Register components explicitly

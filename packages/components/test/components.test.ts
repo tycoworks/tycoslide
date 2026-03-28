@@ -13,7 +13,7 @@ import type {
   SlideNumberNode,
   StackNode,
   TableNode,
-} from "tycoslide";
+} from "@tycoworks/tycoslide";
 import {
   componentRegistry,
   DASH_TYPE,
@@ -24,7 +24,7 @@ import {
   SHAPE,
   SIZE,
   VALIGN,
-} from "tycoslide";
+} from "@tycoworks/tycoslide";
 import { card } from "../src/card.js";
 import {
   cardComponent,

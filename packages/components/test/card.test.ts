@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { componentRegistry, NODE_TYPE } from "tycoslide";
+import { componentRegistry, NODE_TYPE } from "@tycoworks/tycoslide";
 import { card } from "../src/card.js";
 import type { CardTokens } from "../src/index.js";
 import {

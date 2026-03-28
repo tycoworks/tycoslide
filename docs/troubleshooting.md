@@ -16,7 +16,7 @@ Error: No theme specified. Add `theme: <name>` to the global frontmatter in your
 
 ```markdown
 ---
-theme: tycoslide-theme-default
+theme: @tycoworks/tycoslide-theme
 ---
 
 ---
@@ -41,7 +41,7 @@ Is it installed? Try: npm install my-theme
 **Fix:** Install the theme package:
 
 ```bash
-npm install tycoslide-theme-default
+npm install @tycoworks/tycoslide-theme
 ```
 
 If using a local theme, make sure it is listed in `package.json` dependencies and `npm install` has been run.
@@ -89,7 +89,7 @@ Component 'xyz' is missing required tokens: [foo, bar]. All tokens must be provi
 
 **Cause:** A component declares token keys that the layout's token map does not provide.
 
-**Fix:** Add the missing token keys to the layout's token map in `theme.layouts`. See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete reference.
+**Fix:** Add the missing token keys to the layout's token map in `theme.layouts`. See [`theme.ts`](../packages/theme-tycoworks/src/theme.ts) for the complete reference.
 
 ---
 
@@ -104,7 +104,7 @@ Error: Unknown component: 'xyz'. Did you forget to register it?
 **Fix:** Make sure the component is defined and registered before compiling:
 
 ```typescript
-import { defineComponent, componentRegistry } from 'tycoslide';
+import { defineComponent, componentRegistry } from '@tycoworks/tycoslide';
 const myComponent = defineComponent({ name: 'my-component', tokens: {}, render: ... });
 componentRegistry.register(myComponent);
 ```
@@ -143,7 +143,7 @@ const x = 1;
 Error: Unsupported code language "xyz". Supported languages include: typescript, python, sql, rust, go, java. See LANGUAGE constant for full list.
 ```
 
-**Fix:** Use a supported language identifier. Common values: `typescript`, `javascript`, `python`, `sql`, `rust`, `go`, `java`, `bash`, `json`. See the `LANGUAGE` constant in `tycoslide-components` for the full list.
+**Fix:** Use a supported language identifier. Common values: `typescript`, `javascript`, `python`, `sql`, `rust`, `go`, `java`, `bash`, `json`. See the `LANGUAGE` constant in `@tycoworks/tycoslide-components` for the full list.
 
 ---
 
@@ -335,7 +335,7 @@ Global frontmatter must be a YAML mapping (key: value pairs), got array.
 
 ```markdown
 ---
-theme: tycoslide-theme-default
+theme: @tycoworks/tycoslide-theme
 author: John Doe
 ---
 

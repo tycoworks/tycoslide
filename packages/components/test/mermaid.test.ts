@@ -3,7 +3,7 @@
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { componentRegistry, NODE_TYPE } from "tycoslide";
+import { componentRegistry, NODE_TYPE } from "@tycoworks/tycoslide";
 import {
   cardComponent,
   codeComponent,
