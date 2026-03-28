@@ -467,7 +467,7 @@ Renders a Mermaid diagram to PNG and embeds it as an image. Theme colors are app
 
 Default nodes use `primary` fill with `primaryContrast` text. Accent-classed nodes use tinted fill at `accentStyle.opacity`, full-color stroke, and `accentStyle.textColor` text. Subgraphs are filled at `accentStyle.opacity` with rounded corners. Class names apply to `flowchart` and `graph` diagrams only — all other diagram types (sequence, state, ER) are themed through the color tokens.
 
-When `background` is set, the diagram renders inside a native shape (same pattern as code and table). The shape provides fill, border, corner radius, and shadow. `backgroundPadding` adds space between the shape edge and the diagram image.
+When `background` is set, the diagram renders inside a background shape with fill, border, corner radius, and optional shadow. `backgroundPadding` adds space between the background edge and the diagram image.
 
 See [`theme.ts`](../packages/theme-default/src/theme.ts) for default values.
 
