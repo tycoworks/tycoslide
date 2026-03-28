@@ -667,8 +667,7 @@ describe("HTML Measurement Generation", () => {
         imageMatch![1].includes("min-height:0"),
         "Image in constrained column should be compressible (min-height:0)",
       );
-      // max-height uses min() with cqw to cap at proportional height from container width
-      assert.ok(imageMatch![1].includes("min("), "Image in constrained column should have min() max-height");
+      // FILL: max-height uses cqw proportional cap only (no natural pixel cap — FILL grows beyond natural)
       assert.ok(imageMatch![1].includes("cqw"), "Image max-height should use container query units (cqw)");
     });
 

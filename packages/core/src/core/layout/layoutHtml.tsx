@@ -97,11 +97,15 @@ function generateNodeId(ctx: IdContext): string {
 export type FontNormalRatios = Map<string, number>;
 
 /** Compute flex CSS for a node based on its parent's direction.
- *  Three size types: number (fixed inches), SIZE.FILL (share space), SIZE.HUG (content-sized). */
+ *  Three size types: number (fixed inches), SIZE.FILL (share space), SIZE.HUG (content-sized).
+ *  opts.shrinkable: for elements (like images) that can compress below their content size.
+ *  When true: HUG emits flex:0 1 auto (can shrink) instead of flex-shrink:0 (rigid),
+ *  and min-width/min-height:0 overrides are applied so flex can actually compress the item. */
 export function flexSize(
   width: number | SizeValue,
   height: number | SizeValue,
   parentDir: Direction,
+  opts?: { shrinkable?: boolean },
 ): Record<string, string | number> {
   const styles: Record<string, string | number> = {};
   const isInRow = parentDir === DIRECTION.ROW;
@@ -113,16 +117,25 @@ export function flexSize(
     styles.flex = `0 0 ${inToPx(mainSize)}px`;
   } else if (mainSize === SIZE.FILL) {
     styles.flex = "1 1 0";
-    // Row: min-width: 0 overrides the flex default (min-width: auto) so FILL items
-    // can share space. Without it, items refuse to shrink below content width.
-    // Column: min-height stays auto — vertical content can't reflow, so shrinking
-    // below content height causes overlap. Images opt in to minHeight:0 separately.
+    // min-width:0 (rows) lets FILL items shrink below content width to share space.
+    // min-height:0 (columns) is only safe for shrinkable items (images) — text can't
+    // reflow vertically, so shrinking below content height causes overlap.
     if (isInRow) {
       styles.minWidth = 0;
+    } else if (opts?.shrinkable) {
+      styles.minHeight = 0;
     }
   } else {
-    // SIZE.HUG
-    styles.flexShrink = 0;
+    // SIZE.HUG: content-sized. Rigid by default, shrinkable for images.
+    if (opts?.shrinkable) {
+      styles.flex = "0 1 auto";
+      // Shrinkable HUG items need min-width/min-height:0 to compress below
+      // their aspect-ratio-derived size under pressure.
+      if (isInRow) styles.minWidth = 0;
+      else styles.minHeight = 0;
+    } else {
+      styles.flexShrink = 0;
+    }
   }
 
   // Cross axis → explicit CSS dimension
@@ -402,50 +415,70 @@ function styleText(node: TextNode, parent: ParentCtx, nodeId: string, fontRatios
   };
 }
 
-// Image does NOT use flexSize() — aspect-ratio coupling requires a different flex strategy
-// per parent context (hasDefiniteCrossSize, heightIsConstrained). See architect review.
+/**
+ * Resolve effective size values for an image based on parent context.
+ * Images have aspect-ratio coupling: one axis can derive from the other,
+ * so the effective sizing depends on which axis has a definite anchor.
+ *
+ * Row with definite height → width=HUG (aspect-ratio derives width from height)
+ * Row with auto height    → width=FILL (share width equally with siblings)
+ * Column, constrained     → height=FILL (grow into available height budget)
+ * Column, unconstrained   → height=HUG (render at aspect-ratio-derived height)
+ */
+function resolveImageSizing(
+  node: ImageNode,
+  parent: ParentCtx,
+): { width: SizeValue; height: SizeValue } {
+  const isRow = parent.direction === DIRECTION.ROW;
+
+  return {
+    width: isRow && parent.hasDefiniteCrossSize ? SIZE.HUG : node.width,
+    height: isRow || parent.heightIsConstrained ? node.height : SIZE.HUG,
+  };
+}
+
 function styleImage(node: ImageNode, parent: ParentCtx, nodeId: string, imagePathMap: Map<string, string>): StyledNode {
   const dims = readImageDimensions(node.src);
   if (!dims) {
     throw new Error(`Cannot read image dimensions: ${node.src}`);
   }
 
-  const maxWidthPx = dims.width;
-  const maxHeightPx = dims.height;
+  // 1. Resolve effective sizing (aspect-ratio-aware)
+  const { width: effWidth, height: effHeight } = resolveImageSizing(node, parent);
 
+  // 2. Start from standard flex sizing (shrinkable: min-width/min-height handled by flexSize)
   const styles: Record<string, string | number> = {
+    ...flexSize(effWidth, effHeight, parent.direction, { shrinkable: true }),
     aspectRatio: `${dims.aspectRatio}`,
   };
 
+  // 3. Natural pixel caps — HUG axes only. FILL grows beyond natural size.
   if (parent.direction === DIRECTION.ROW) {
-    styles.height = "100%";
-    styles.minWidth = 0;
-    styles.flex = parent.hasDefiniteCrossSize ? "0 1 auto" : "1 1 0";
+    if (effWidth === SIZE.HUG && dims.width) styles.maxWidth = `${dims.width}px`;
+    if (effHeight === SIZE.HUG && dims.height) styles.maxHeight = `${dims.height}px`;
   } else {
-    styles.width = "100%";
-    if (parent.heightIsConstrained) {
-      styles.flex = "1 1 0";
-      styles.minHeight = 0;
+    // Column cross-axis: HUG width caps at natural pixels (enables centering via align-items).
+    // Uses min(100%, Npx) instead of width:100% + max-width to avoid a container-query
+    // interaction that defeats align-items:center (container-type:inline-size on parent).
+    // No symmetric height case needed: effHeight is never HUG in a row
+    // (resolveImageSizing always keeps declaredHeight when isRow), and in columns
+    // height is the main axis handled by flexSize, not a CSS dimension.
+    if (effWidth === SIZE.HUG && dims.width) {
+      styles.width = `min(100%, ${dims.width}px)`;
+    }
+    // Proportional height cap via container query units — always needed for
+    // layout correctness (Chromium aspect-ratio-in-flex, CSSWG #11690).
+    const proportionalCap = `calc(100cqw / ${dims.aspectRatio})`;
+    if (effHeight === SIZE.HUG && dims.height) {
+      styles.maxHeight = `min(${dims.height}px, ${proportionalCap})`;
     } else {
-      styles.flex = "0 1 auto";
+      styles.maxHeight = proportionalCap;
     }
   }
 
-  if (maxWidthPx) styles.maxWidth = `${maxWidthPx}px`;
-  if (parent.direction === DIRECTION.ROW) {
-    // Row: simple pixel cap (height is the cross axis, no cqw needed)
-    if (maxHeightPx) styles.maxHeight = `${maxHeightPx}px`;
-  } else {
-    // Column: cap at the SMALLER of native pixels and proportional height
-    // from container width. Uses container query units (cqw) to sidestep
-    // the aspect-ratio-in-flex problem entirely.
-    const proportionalCap = `calc(100cqw / ${dims.aspectRatio})`;
-    styles.maxHeight = maxHeightPx ? `min(${maxHeightPx}px, ${proportionalCap})` : proportionalCap;
-  }
-
+  // 6. Image rendering
   const resolved = path.resolve(node.src);
   const imgSrc = imagePathMap.get(resolved) ?? resolved;
-
   styles.position = "relative";
   styles.overflow = node.shadow ? "visible" : "hidden";
 
