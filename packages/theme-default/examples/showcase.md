@@ -116,6 +116,24 @@ flowchart LR
 :::
 
 ---
+layout: body
+variant: default
+title: Code Block Test
+---
+
+```markdown
+---
+layout: body
+---
+
+# Q3 Infrastructure Review
+
+The new pipeline *increased*
+throughput by **40%** with
+:purple[zero downtime].
+```
+
+---
 layout: end
 variant: default
 title: tycoslide

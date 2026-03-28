@@ -9,16 +9,19 @@ import {
   component,
   defineComponent,
   getFontForRun,
+  HALIGN,
   type InferParams,
   type InferTokens,
   param,
   type RenderContext,
   SHAPE,
+  SIZE,
   SYNTAX,
   schema,
   type TextStyle,
   type TextStyleName,
   token,
+  VALIGN,
 } from "tycoslide";
 import { column, stack } from "./containers.js";
 import type { HighlightThemeName } from "./highlighting.js";
@@ -125,8 +128,11 @@ async function renderCode(
 
   const codeImage = image(pngPath, undefined, code);
   const backgroundRect = shape(tokens.background, { shape: SHAPE.RECTANGLE });
-  const contentLayer = column({ spacing: 0, padding: tokens.padding }, codeImage);
-  return stack(backgroundRect, contentLayer);
+  const contentLayer = column(
+    { spacing: 0, padding: tokens.padding, height: SIZE.FILL, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE },
+    codeImage,
+  );
+  return stack({ height: SIZE.FILL }, backgroundRect, contentLayer);
 }
 
 // ============================================
