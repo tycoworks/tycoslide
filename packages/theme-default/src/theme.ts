@@ -231,23 +231,18 @@ const testimonialSlotTokens = {
 };
 
 const mermaidTokens = {
-  primaryColor: palette.white,
-  primaryTextColor: palette.navy,
-  primaryBorderColor: palette.gray300,
-  lineColor: palette.purple,
-  secondaryColor: palette.gray100,
-  tertiaryColor: palette.gray100,
-  textColor: palette.navy,
-  nodeTextColor: palette.navy,
-  clusterBackground: palette.gray100,
-  clusterBorderColor: palette.purple,
-  clusterCornerRadius: cornerRadius,
-  edgeLabelBackground: palette.gray50,
-  titleColor: palette.navy,
-  textStyle: TEXT_STYLE.BODY,
-  accentOpacity: subtleOpacity,
-  accentTextColor: palette.purple,
+  primary: palette.white,
+  primaryContrast: palette.navy,
+  text: palette.navy,
+  line: palette.purple,
+  surface: palette.gray100,
+  surfaceBorder: palette.gray300,
+  surfaceSubtle: palette.gray50,
+  group: palette.gray100,
+  groupCornerRadius: cornerRadius,
   accents: accents,
+  accentStyle: { opacity: subtleOpacity, textColor: palette.purple },
+  textStyle: TEXT_STYLE.BODY,
 };
 
 // ============================================

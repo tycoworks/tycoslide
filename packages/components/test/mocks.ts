@@ -128,23 +128,18 @@ export const DEFAULT_CODE_TOKENS: CodeTokens = {
 };
 
 export const DEFAULT_MERMAID_TOKENS: MermaidTokens = {
-  primaryColor: "#FF0000",
-  primaryTextColor: "#FFFFFF",
-  primaryBorderColor: "#666666",
-  lineColor: "#000000",
-  secondaryColor: "#333333",
-  tertiaryColor: "#333333",
-  textColor: "#000000",
-  nodeTextColor: "#000000",
-  clusterBackground: "#333333",
-  clusterBorderColor: "#666666",
-  edgeLabelBackground: "#FFFFFF",
-  titleColor: "#000000",
-  textStyle: "body",
+  primary: "#FF0000",
+  primaryContrast: "#FFFFFF",
+  text: "#000000",
+  line: "#000000",
+  surface: "#333333",
+  surfaceBorder: "#666666",
+  surfaceSubtle: "#FFFFFF",
+  group: "#333333",
+  groupCornerRadius: 0.08,
   accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
-  accentOpacity: 100,
-  clusterCornerRadius: 0.08,
-  accentTextColor: "#000000",
+  accentStyle: { opacity: 100, textColor: "#000000" },
+  textStyle: "body",
 };
 
 export const DEFAULT_CARD_TOKENS: CardTokens = {

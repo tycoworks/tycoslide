@@ -450,26 +450,25 @@ Renders a Mermaid diagram to PNG and embeds it as an image. Theme colors are app
 
 | Token | Type | Description |
 |-------|------|-------------|
-| `primaryColor` | string | Default node fill color |
-| `primaryTextColor` | string | Default node text color |
-| `primaryBorderColor` | string | Default node border color |
-| `lineColor` | string | Arrow/edge color |
-| `secondaryColor` | string | Secondary node color |
-| `tertiaryColor` | string | Tertiary node color |
-| `textColor` | string | General text color |
-| `nodeTextColor` | string | Node label text color |
-| `titleColor` | string | Diagram title color |
-| `edgeLabelBackground` | string | Background behind edge labels |
-| `clusterBackground` | string | Subgraph fill color (rendered at `accentOpacity`) |
-| `clusterBorderColor` | string | Subgraph border color |
-| `clusterCornerRadius` | number | Subgraph corner radius in inches |
-| `accentOpacity` | number | Fill opacity for accent nodes and subgraphs (0--100) |
-| `accentTextColor` | string | Text color inside accent-classed nodes |
+| `primary` | string | Default node fill color |
+| `primaryContrast` | string | Default node text color |
+| `text` | string | All diagram text (labels, titles, edge text) |
+| `line` | string | Arrow/edge color |
+| `surface` | string | Secondary/tertiary node fills |
+| `surfaceBorder` | string | Node and subgraph border color |
+| `surfaceSubtle` | string | Edge label background color |
+| `group` | string | Subgraph fill color (tinted at `accentStyle.opacity` for flowcharts) |
+| `groupCornerRadius` | number | Subgraph corner radius in inches |
 | `accents` | Record\<string, string\> | Named accent colors (keys become class names) |
+| `accentStyle` | { opacity, textColor } | Fill opacity (0--100) and text color for accent nodes and subgraphs |
 | `textStyle` | TextStyleName | Font style for diagram text |
 | `shadow` | Shadow | Drop shadow (optional — omit for no shadow) |
+| `background` | ShapeTokens | Background shape behind the diagram (optional — omit for bare image) |
+| `backgroundPadding` | number | Padding between background edge and diagram in inches (optional) |
 
-Default nodes use the `primary*` color tokens. Accent-classed nodes use tinted fill at `accentOpacity`, full-color stroke, and `accentTextColor` text. Subgraphs are filled at `accentOpacity` with rounded corners. Class names apply to `flowchart` and `graph` diagrams only — all other diagram types (sequence, state, ER) are themed through the color tokens.
+Default nodes use `primary` fill with `primaryContrast` text. Accent-classed nodes use tinted fill at `accentStyle.opacity`, full-color stroke, and `accentStyle.textColor` text. Subgraphs are filled at `accentStyle.opacity` with rounded corners. Class names apply to `flowchart` and `graph` diagrams only — all other diagram types (sequence, state, ER) are themed through the color tokens.
+
+When `background` is set, the diagram renders inside a native shape (same pattern as code and table). The shape provides fill, border, corner radius, and shadow. `backgroundPadding` adds space between the shape edge and the diagram image.
 
 See [`theme.ts`](../packages/theme-default/src/theme.ts) for default values.
 
@@ -477,8 +476,8 @@ See [`theme.ts`](../packages/theme-default/src/theme.ts) for default values.
 
 Apply theme colors to flowchart nodes using Mermaid's `class` keyword:
 
-- **`primary`** — full-opacity `primaryColor` fill with `primaryTextColor` text.
-- **Any key from `accents`** — tinted fill at `accentOpacity`, full-color stroke, `accentTextColor` text.
+- **`primary`** — full-opacity `primary` fill with `primaryContrast` text.
+- **Any key from `accents`** — tinted fill at `accentStyle.opacity`, full-color stroke, `accentStyle.textColor` text.
 
 Class names are defined by the theme's `accents` token map. The default theme provides `blue`, `green`, `red`, `yellow`, and `purple` — but themes can add or change them.
 

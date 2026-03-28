@@ -166,34 +166,49 @@ flowchart LR
 // ============================================
 
 const testTokens: MermaidTokens = {
-  primaryColor: "#FF0000",
-  primaryTextColor: "#FFFFFF",
-  primaryBorderColor: "#666666",
-  lineColor: "#000000",
-  secondaryColor: "#333333",
-  tertiaryColor: "#333333",
-  textColor: "#000000",
-  nodeTextColor: "#111111",
-  clusterBackground: "#AABBCC",
-  clusterBorderColor: "#666666",
-  edgeLabelBackground: "#FFFFFF",
-  titleColor: "#222222",
-  textStyle: "body",
-  accentOpacity: 20,
+  primary: "#FF0000",
+  primaryContrast: "#FFFFFF",
+  text: "#000000",
+  line: "#000000",
+  surface: "#333333",
+  surfaceBorder: "#666666",
+  surfaceSubtle: "#FFFFFF",
+  group: "#AABBCC",
+  groupCornerRadius: 0.08,
   accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
-  clusterCornerRadius: 0.08,
-  accentTextColor: "#000000",
+  accentStyle: { opacity: 20, textColor: "#000000" },
+  textStyle: "body",
 };
 
 describe("buildMermaidConfig", () => {
-  it("maps all tokens to #-prefixed themeVariables", () => {
+  it("maps semantic tokens to mermaid themeVariables", () => {
     const config = buildMermaidConfig(testTokens, "Inter") as any;
     assert.strictEqual(config.themeVariables.primaryColor, "#FF0000");
     assert.strictEqual(config.themeVariables.primaryTextColor, "#FFFFFF");
+    assert.strictEqual(config.themeVariables.primaryBorderColor, "#666666");
     assert.strictEqual(config.themeVariables.lineColor, "#000000");
-    assert.strictEqual(config.themeVariables.nodeTextColor, "#111111");
-    assert.strictEqual(config.themeVariables.titleColor, "#222222");
+    assert.strictEqual(config.themeVariables.secondaryColor, "#333333");
+    assert.strictEqual(config.themeVariables.tertiaryColor, "#333333");
     assert.strictEqual(config.themeVariables.edgeLabelBackground, "#FFFFFF");
+  });
+
+  it("fans text token into textColor, nodeTextColor, and titleColor", () => {
+    const config = buildMermaidConfig(testTokens, "Inter") as any;
+    assert.strictEqual(config.themeVariables.textColor, "#000000");
+    assert.strictEqual(config.themeVariables.nodeTextColor, "#000000");
+    assert.strictEqual(config.themeVariables.titleColor, "#000000");
+  });
+
+  it("fans surfaceBorder into primaryBorderColor and clusterBorder", () => {
+    const config = buildMermaidConfig(testTokens, "Inter") as any;
+    assert.strictEqual(config.themeVariables.primaryBorderColor, "#666666");
+    assert.strictEqual(config.themeVariables.clusterBorder, "#666666");
+  });
+
+  it("passes raw cluster color as clusterBkg (no opacity)", () => {
+    const config = buildMermaidConfig(testTokens, "Inter") as any;
+    // Raw color — opacity is applied only by buildSubgraphStyles for flowcharts
+    assert.strictEqual(config.themeVariables.clusterBkg, "#AABBCC");
   });
 
   it("sets fontFamily from parameter", () => {
@@ -204,12 +219,6 @@ describe("buildMermaidConfig", () => {
   it("sets background to transparent", () => {
     const config = buildMermaidConfig(testTokens, "Inter") as any;
     assert.strictEqual(config.themeVariables.background, "transparent");
-  });
-
-  it("converts clusterBkg to rgba with accentOpacity", () => {
-    const config = buildMermaidConfig(testTokens, "Inter") as any;
-    // AABBCC at 20% → rgba(170, 187, 204, 0.2)
-    assert.strictEqual(config.themeVariables.clusterBkg, "rgba(170, 187, 204, 0.2)");
   });
 
   it("uses mermaid base theme", () => {
@@ -267,7 +276,7 @@ describe("injectClassDefs", () => {
   it("adds subgraph style directives when subgraphs present", () => {
     const def = "flowchart LR\n  subgraph Sources\n    A[Node]\n  end";
     const result = injectClassDefs(def, testTokens, accents);
-    // Subgraph style uses clusterBackground + accentOpacity hex alpha
+    // Subgraph style uses cluster color + accentStyle.opacity hex alpha
     assert.ok(result.includes("style Sources fill:#AABBCC33"));
   });
 
@@ -298,7 +307,88 @@ describe("mermaid expansion", () => {
     });
 
     assert.strictEqual(rendered.type, NODE_TYPE.COMPONENT);
-    assert.strictEqual((rendered as any).componentName, "image");
+    assert.strictEqual((rendered as any).componentName, Component.Image);
     assert.strictEqual((rendered as any).content, "mock://mermaid.png");
+  });
+
+  it("wraps in stack+shape when background token is set", async () => {
+    const tokens: MermaidTokens = {
+      ...DEFAULT_MERMAID_TOKENS,
+      background: { fill: "#FFFFFF", fillOpacity: 100, cornerRadius: 0.1 },
+    };
+    const m = mermaid("flowchart LR\n  A --> B", tokens);
+    const rendered = await componentRegistry.render(m, {
+      theme: mockTheme(),
+      canvas: { renderHtml: async () => "mock://mermaid.png" },
+    });
+
+    assert.strictEqual((rendered as any).componentName, Component.Stack);
+    const content = (rendered as any).content as any[];
+    assert.strictEqual(content.length, 2);
+    assert.strictEqual(content[0].componentName, Component.Shape);
+    assert.strictEqual(content[1].componentName, Component.Image);
+  });
+
+  it("wraps image in column when backgroundPadding is set", async () => {
+    const tokens: MermaidTokens = {
+      ...DEFAULT_MERMAID_TOKENS,
+      background: { fill: "#FFFFFF", fillOpacity: 100, cornerRadius: 0.1 },
+      backgroundPadding: 0.2,
+    };
+    const m = mermaid("flowchart LR\n  A --> B", tokens);
+    const rendered = await componentRegistry.render(m, {
+      theme: mockTheme(),
+      canvas: { renderHtml: async () => "mock://mermaid.png" },
+    });
+
+    assert.strictEqual((rendered as any).componentName, Component.Stack);
+    const content = (rendered as any).content as any[];
+    assert.strictEqual(content.length, 2);
+    assert.strictEqual(content[0].componentName, Component.Shape);
+    assert.strictEqual(content[1].componentName, Component.Column);
+  });
+
+  it("returns bare image when no background token", async () => {
+    const m = mermaid("flowchart LR\n  A --> B", DEFAULT_MERMAID_TOKENS);
+    const rendered = await componentRegistry.render(m, {
+      theme: mockTheme(),
+      canvas: { renderHtml: async () => "mock://mermaid.png" },
+    });
+
+    assert.strictEqual((rendered as any).componentName, Component.Image);
+  });
+
+  it("applies shadow to bare image when no background", async () => {
+    const tokens: MermaidTokens = {
+      ...DEFAULT_MERMAID_TOKENS,
+      shadow: { type: "outer", color: "#000000", blur: 4, offset: 2, angle: 45, opacity: 50 },
+    };
+    const m = mermaid("flowchart LR\n  A --> B", tokens);
+    const rendered = await componentRegistry.render(m, {
+      theme: mockTheme(),
+      canvas: { renderHtml: async () => "mock://mermaid.png" },
+    });
+
+    assert.strictEqual((rendered as any).componentName, Component.Image);
+    assert.deepStrictEqual((rendered as any).tokens.shadow, tokens.shadow);
+  });
+
+  it("skips column wrapper when backgroundPadding is 0", async () => {
+    const tokens: MermaidTokens = {
+      ...DEFAULT_MERMAID_TOKENS,
+      background: { fill: "#FFFFFF", fillOpacity: 100, cornerRadius: 0.1 },
+      backgroundPadding: 0,
+    };
+    const m = mermaid("flowchart LR\n  A --> B", tokens);
+    const rendered = await componentRegistry.render(m, {
+      theme: mockTheme(),
+      canvas: { renderHtml: async () => "mock://mermaid.png" },
+    });
+
+    assert.strictEqual((rendered as any).componentName, Component.Stack);
+    const content = (rendered as any).content as any[];
+    assert.strictEqual(content.length, 2);
+    assert.strictEqual(content[0].componentName, Component.Shape);
+    assert.strictEqual(content[1].componentName, Component.Image);
   });
 });
