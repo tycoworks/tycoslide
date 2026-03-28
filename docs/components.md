@@ -462,7 +462,6 @@ Renders a Mermaid diagram to PNG and embeds it as an image. Theme colors are app
 | `accents` | Record\<string, string\> | Named accent colors (keys become class names) |
 | `accentStyle` | { opacity, textColor } | Fill opacity (0--100) and text color for accent nodes and subgraphs |
 | `textStyle` | TextStyleName | Font style for diagram text |
-| `shadow` | Shadow | Drop shadow (optional — omit for no shadow) |
 | `background` | ShapeTokens | Background shape behind the diagram (optional — omit for bare image) |
 | `backgroundPadding` | number | Padding between background edge and diagram in inches (optional) |
 

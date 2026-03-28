@@ -358,21 +358,6 @@ describe("mermaid expansion", () => {
     assert.strictEqual((rendered as any).componentName, Component.Image);
   });
 
-  it("applies shadow to bare image when no background", async () => {
-    const tokens: MermaidTokens = {
-      ...DEFAULT_MERMAID_TOKENS,
-      shadow: { type: "outer", color: "#000000", blur: 4, offset: 2, angle: 45, opacity: 50 },
-    };
-    const m = mermaid("flowchart LR\n  A --> B", tokens);
-    const rendered = await componentRegistry.render(m, {
-      theme: mockTheme(),
-      canvas: { renderHtml: async () => "mock://mermaid.png" },
-    });
-
-    assert.strictEqual((rendered as any).componentName, Component.Image);
-    assert.deepStrictEqual((rendered as any).tokens.shadow, tokens.shadow);
-  });
-
   it("skips column wrapper when backgroundPadding is 0", async () => {
     const tokens: MermaidTokens = {
       ...DEFAULT_MERMAID_TOKENS,

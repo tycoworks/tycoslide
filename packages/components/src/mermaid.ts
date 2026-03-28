@@ -24,7 +24,6 @@ import {
   inToPx,
   type RenderContext,
   SHAPE,
-  type Shadow,
   schema,
   token,
 } from "tycoslide";
@@ -53,9 +52,8 @@ const mermaidTokens = token.shape({
   accents: token.required<Record<string, string>>(), // Named accent colors (e.g. { purple: "#7C3AED" })
   accentStyle: token.required<{ opacity: number; textColor: string }>(), // Fill opacity (0-100) and text color for accent nodes
 
-  // --- Typography and effects ---
+  // --- Typography ---
   textStyle: token.required<TextStyleName>(), // Font style for text measurement
-  shadow: token.optional<Shadow>(), // Optional drop shadow on rendered image
 
   // --- Background (optional, like table) ---
   background: token.optional<ShapeTokens>(), // Background shape (fill, border, cornerRadius, shadow)
@@ -323,10 +321,6 @@ async function renderMermaid(
     return stack({}, backgroundRect, contentLayer);
   }
 
-  // No background — bare image with optional shadow
-  if (tokens.shadow) {
-    mermaidImage.tokens = { shadow: tokens.shadow };
-  }
   return mermaidImage;
 }
 
