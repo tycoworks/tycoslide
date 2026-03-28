@@ -17,7 +17,7 @@ import {
 } from "tycoslide";
 import { column, row } from "./containers.js";
 import { Component } from "./names.js";
-import { type PlainTextTokens, plainText } from "./plainText.js";
+import { type LabelTokens, label } from "./label.js";
 import { type LineTokens, line } from "./primitives.js";
 import { type TextTokens, text, textComponent } from "./text.js";
 
@@ -29,7 +29,7 @@ const quoteTokens = token.shape({
   bar: token.required<LineTokens>(),
   spacing: token.required<number>(),
   quote: token.required<TextTokens>(),
-  attribution: token.required<PlainTextTokens>(),
+  attribution: token.required<LabelTokens>(),
 });
 export type QuoteTokens = InferTokens<typeof quoteTokens>;
 
@@ -87,7 +87,7 @@ export const quoteComponent = defineComponent({
     // Build content children: quote text, optional attribution
     const children = [text(actualQuote, quoteTokens)];
     if (attribution) {
-      children.push(plainText(attribution, attributionTokens));
+      children.push(label(attribution, attributionTokens));
     }
 
     const outerHeight = SIZE.HUG;

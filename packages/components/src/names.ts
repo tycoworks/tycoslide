@@ -9,7 +9,7 @@ export const Component = {
   Shape: "shape",
   SlideNumber: "slideNumber",
   Text: "text",
-  PlainText: "plainText",
+  Label: "label",
   List: "list",
   Card: "card",
   Quote: "quote",

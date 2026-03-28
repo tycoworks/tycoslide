@@ -82,7 +82,7 @@ This creates `slides.pptx` and a `slides-html/` directory containing a per-slide
 
 ## Open the Output
 
-Open `slides.pptx` in PowerPoint, Keynote, or LibreOffice Impress.
+Open `slides.pptx` in PowerPoint, Keynote, or Google Slides.
 
 ## Next Steps
 

@@ -9,10 +9,10 @@ import { HIGHLIGHT_THEME } from "../src/highlighting.js";
 import type {
   CardTokens,
   CodeTokens,
+  LabelTokens,
   LineTokens,
   ListTokens,
   MermaidTokens,
-  PlainTextTokens,
   QuoteTokens,
   ShapeTokens,
   SlideNumberTokens,
@@ -77,7 +77,7 @@ export const DEFAULT_TEXT_TOKENS: TextTokens = {
   accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
 };
 
-export const DEFAULT_PLAIN_TEXT_TOKENS: PlainTextTokens = {
+export const DEFAULT_LABEL_TOKENS: LabelTokens = {
   color: "#000000",
   style: "body",
   hAlign: HALIGN.LEFT,

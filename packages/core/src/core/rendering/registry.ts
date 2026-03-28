@@ -127,6 +127,9 @@ export interface ComponentDefinition<TParams = unknown, TContent = unknown, TTok
   deserialize?: DirectiveDeserializer;
   /** MDAST handler — declares which bare markdown node types this component compiles. */
   mdast?: MdastHandler;
+  /** Optional token transform — runs during slot injection, after layout tokens are merged but before render.
+   * Receives merged tokens and the node's params. Returns the final tokens for render. */
+  resolveTokens?: (tokens: Record<string, unknown>, params: Record<string, unknown>) => Record<string, unknown>;
 }
 
 /** A scalar component definition — has .schema for YAML validation and layout params. */
@@ -218,6 +221,7 @@ export function defineComponent<
   directive?: boolean;
   tokens: TShape;
   mdast?: MdastHandler;
+  resolveTokens?: (tokens: Record<string, unknown>, params: Record<string, unknown>) => Record<string, unknown>;
   render: (
     params: z.infer<z.ZodObject<TParams>>,
     content: z.infer<TContent>,
@@ -236,6 +240,7 @@ export function defineComponent<TParams, TShape extends TokenShape = TokenShape>
   children: true;
   directive?: boolean;
   tokens: TShape;
+  resolveTokens?: (tokens: Record<string, unknown>, params: Record<string, unknown>) => Record<string, unknown>;
   render: (
     params: TParams,
     children: SlideNode[],
@@ -258,6 +263,7 @@ export function defineComponent<
   directive?: boolean;
   tokens: TShape;
   mdast?: MdastHandler;
+  resolveTokens?: (tokens: Record<string, unknown>, params: Record<string, unknown>) => Record<string, unknown>;
   render: (
     params: z.infer<z.ZodObject<TParams>>,
     content: undefined,
@@ -282,6 +288,7 @@ export function defineComponent(def: any): ComponentDefinition<any, any, any> & 
     params: def.params,
     children: isContainer || undefined,
     mdast,
+    resolveTokens: def.resolveTokens,
   };
 
   if (isContainer) {

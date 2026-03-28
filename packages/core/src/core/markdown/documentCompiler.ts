@@ -11,7 +11,7 @@ import { RESERVED_FRONTMATTER_KEYS } from "../model/syntax.js";
 import { resolveVariantTokens } from "../model/token.js";
 import type { Slide, Theme } from "../model/types.js";
 import { Presentation } from "../rendering/presentation.js";
-import { type LayoutDefinition, layoutRegistry } from "../rendering/registry.js";
+import { type LayoutDefinition, componentRegistry, layoutRegistry } from "../rendering/registry.js";
 import { parseSlideDocument, type RawSlide } from "./slideParser.js";
 import { compileSlot } from "./slotCompiler.js";
 
@@ -233,20 +233,24 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
 /**
  * Walk slot-compiled nodes and inject layout tokens into ComponentNodes.
  * For each ComponentNode, if the layout tokens contain a key matching
- * node.componentName, set node.tokens with layout defaults merged under
- * any node-specific token overrides (e.g., heading style: 'h2' from mdast compile).
- * This is how slot-compiled text/list nodes get their visual tokens from the layout.
+ * node.componentName, assign complete tokens from the layout.
+ * Components with a resolveTokens hook (e.g., label) can transform
+ * the tokens based on params (e.g., selecting by heading depth).
  */
 function injectSlotTokens(nodes: SlideNode[], layoutTokens: Record<string, unknown>): void {
   for (const node of nodes) {
     if (isComponentNode(node)) {
       const tokenMap = layoutTokens[node.componentName];
       if (tokenMap && typeof tokenMap === "object") {
-        // Layout defaults first, then node-specific overrides (e.g., heading style)
-        (node as ComponentNode).tokens = {
-          ...(tokenMap as Record<string, unknown>),
-          ...(node.tokens ?? {}),
-        };
+        let tokens = tokenMap as Record<string, unknown>;
+
+        // Run component's resolveTokens hook if registered
+        const def = componentRegistry.get(node.componentName);
+        if (def?.resolveTokens) {
+          tokens = def.resolveTokens(tokens, (node as ComponentNode).params as Record<string, unknown>);
+        }
+
+        (node as ComponentNode).tokens = tokens;
       }
     }
   }

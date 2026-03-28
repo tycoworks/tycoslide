@@ -13,7 +13,7 @@ import { resolveVariantTokens, token } from "../src/core/model/token.js";
 import type { Slide } from "../src/core/model/types.js";
 import { componentRegistry, defineLayout, layoutRegistry } from "../src/core/rendering/registry.js";
 import { mockTheme } from "./mocks.js";
-import { testComponents } from "./test-components.js";
+import { C, testComponents } from "./test-components.js";
 
 // Register test components (idempotent — may already be registered by other test files)
 componentRegistry.register(testComponents);
@@ -329,7 +329,7 @@ describe("Slot Token Injection", () => {
     // The first body node should be a text ComponentNode with injected tokens
     const textNode = bodyNodes[0];
     assert.ok(isComponentNode(textNode), "body node should be a ComponentNode");
-    assert.strictEqual(textNode.componentName, "text");
+    assert.strictEqual(textNode.componentName, C.Text);
     // Token values should be in node.tokens (not merged into props)
     const tokens = textNode.tokens as Record<string, unknown>;
     assert.ok(tokens, "tokens should be set on the node");
@@ -340,6 +340,15 @@ describe("Slot Token Injection", () => {
 
   it("preserves explicit props over injected tokens", () => {
     const textTokens = { style: "body", color: "#000000" };
+    // label slot tokens must be depth-keyed: Record<HeadingDepth, LabelTokens>
+    const labelDepthTokens = {
+      1: { style: "h1", color: "#000000", hAlign: "left", vAlign: "middle" },
+      2: { style: "body", color: "#000000", hAlign: "left", vAlign: "middle" },
+      3: { style: "body", color: "#000000", hAlign: "left", vAlign: "middle" },
+      4: { style: "body", color: "#000000", hAlign: "left", vAlign: "middle" },
+      5: { style: "body", color: "#000000", hAlign: "left", vAlign: "middle" },
+      6: { style: "body", color: "#000000", hAlign: "left", vAlign: "middle" },
+    };
     const theme = mockTheme({
       layouts: {
         slotTokenTest: {
@@ -347,24 +356,24 @@ describe("Slot Token Injection", () => {
             default: {
               background: "#FFFFFF",
               text: textTokens,
+              label: labelDepthTokens,
             },
           },
         },
       },
     });
 
-    // Use a heading which sets style explicitly
+    // Use a heading which maps to label component
     const md = `${HEADER}---\nlayout: slotTokenTest\nvariant: default\n---\n\n## Heading`;
     compileDocument(md, { theme });
 
     const bodyNodes = receivedProps[0].body;
-    const textNode = bodyNodes[0];
-    const tokens = textNode.tokens as Record<string, unknown>;
+    const labelNode = bodyNodes[0];
+    assert.strictEqual(labelNode.componentName, C.Label);
+    assert.strictEqual((labelNode as any).params?.headingDepth, 2);
+    const tokens = labelNode.tokens as Record<string, unknown>;
     assert.ok(tokens, "tokens should be set on the node");
-    // Heading mdast compile puts style:'h2' in node.tokens.
-    // Slot injection merges: { ...layoutDefaults, ...nodeTokens }
-    // So heading's 'h2' overrides layout's 'body'.
-    assert.strictEqual(tokens.style, "h2");
+    // resolveTokens returns depth[2] entry directly — check color
     assert.strictEqual(tokens.color, "#000000");
   });
 

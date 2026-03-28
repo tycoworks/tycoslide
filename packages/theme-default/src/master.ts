@@ -2,8 +2,8 @@
 // Two masters: default (footer chrome) and minimal (margin + background only).
 
 import { type Background, Bounds, defineMaster, HALIGN, type InferTokens, SIZE, token, VALIGN } from "tycoslide";
-import type { PlainTextTokens, SlideNumberTokens } from "tycoslide-components";
-import { column, image, plainText, row, slideNumber } from "tycoslide-components";
+import type { LabelTokens, SlideNumberTokens } from "tycoslide-components";
+import { column, image, label, row, slideNumber } from "tycoslide-components";
 
 /** Registered master names. */
 export const MASTER = { DEFAULT: "default", MINIMAL: "minimal" } as const;
@@ -20,7 +20,7 @@ export const defaultMasterTokens = token.shape({
   footerText: token.required<string>(),
   footerSpacing: token.required<number>(),
   slideNumber: token.required<SlideNumberTokens>(),
-  footer: token.required<PlainTextTokens>(),
+  footer: token.required<LabelTokens>(),
 });
 
 export type DefaultMasterTokens = InferTokens<typeof defaultMasterTokens>;
@@ -48,7 +48,7 @@ export const defaultMaster = defineMaster({
           width: slideSize.width - margin * 2,
         },
         image(tokens.footerLogo),
-        plainText(tokens.footerText, tokens.footer),
+        label(tokens.footerText, tokens.footer),
         slideNumber(tokens.slideNumber),
       ),
     );

@@ -62,7 +62,7 @@ Low-level building blocks for layout construction. TypeScript DSL only.
 |-----------|-------------|-----|
 | [line](#line) | Horizontal or vertical rule | TypeScript DSL |
 | [shape](#shape) | Filled or outlined shape | TypeScript DSL |
-| [plainText](#plaintext) | Unformatted text for titles, captions, and attributions | TypeScript DSL |
+| [label](#label) | Text for headings, labels, and captions | TypeScript DSL |
 | [slideNumber](#slidenumber) | Slide number element | TypeScript DSL |
 
 ### Layout Components
@@ -119,9 +119,11 @@ text("Section heading", tokens.h3)
 
 ---
 
-## plainText
+## label
 
-Text rendered exactly as written, without markdown parsing. Unlike `text()`, which parses bold, italic, links, and accent colors, `plainText()` takes a string and renders it exactly as written. Use it for titles, eyebrow labels, captions, and attribution lines — content that comes from a fixed string or frontmatter parameter. Available in the TypeScript DSL only.
+Text for titles, captions, and attribution lines with optional heading style support. Unlike `text()`, which parses bold, italic, links, and accent colors, `label()` takes a string and renders it exactly as written. Use it for eyebrow labels, captions, and attribution lines — content that comes from a fixed string or frontmatter parameter. Available in the TypeScript DSL only.
+
+`label()` supports heading styles (h1–h4) via the `headingStyles` token, allowing visual hierarchy without markdown parsing.
 
 ### Tokens
 
@@ -131,14 +133,15 @@ Text rendered exactly as written, without markdown parsing. Unlike `text()`, whi
 | `color` | string | Text color |
 | `hAlign` | HorizontalAlignment | Horizontal alignment |
 | `vAlign` | VerticalAlignment | Vertical alignment |
+| `headingStyles` | HeadingStyleMap | Optional heading style overrides (h1–h4) |
 | `border` | Stroke | Border stroke (optional — omit for no border) |
 | `shadow` | Shadow | Drop shadow (optional — omit for no shadow) |
 
 ### Examples
 
 ```typescript
-plainText("ARCHITECTURE", tokens.eyebrow)
-plainText(props.label, tokens.label)
+label("ARCHITECTURE", tokens.eyebrow)
+label(props.label, tokens.label)
 ```
 
 ---
@@ -250,7 +253,7 @@ Quote text is required -- provide it either via the `quote` attribute or as body
 | `bar` | LineTokens | Accent bar style (color, width, dash type) |
 | `spacing` | number | Spacing between bar and text, and between quote and attribution (inches) |
 | `quote` | TextTokens | Quote text tokens |
-| `attribution` | PlainTextTokens | Attribution text tokens |
+| `attribution` | LabelTokens | Attribution text tokens |
 
 ### Examples
 
@@ -553,7 +556,7 @@ Quote text is required -- provide it either via the `quote` attribute or as body
 | `hAlign` | HorizontalAlignment | Content horizontal alignment |
 | `vAlign` | VerticalAlignment | Content vertical alignment |
 | `quote` | TextTokens | Quote text tokens |
-| `attribution` | PlainTextTokens | Attribution text tokens |
+| `attribution` | LabelTokens | Attribution text tokens |
 
 `ShapeTokens` includes `fill`, `fillOpacity`, `cornerRadius`, and optional `border` (`Stroke`) and `shadow`. See [`theme.ts`](../packages/theme-default/src/theme.ts) for default values.
 
@@ -675,7 +678,7 @@ Components are defined with `defineComponent()` and registered with `componentRe
 
 ```typescript
 import { defineComponent, componentRegistry, component, param, token, schema } from 'tycoslide';
-import { plainText } from 'tycoslide-components';
+import { label } from 'tycoslide-components';
 import type { InferParams, InferTokens, TextStyleName } from 'tycoslide';
 
 const badgeParams = param.shape({
@@ -696,7 +699,7 @@ export const badgeComponent = defineComponent({
   params: badgeParams,
   tokens: badgeTokens,
   render: (params, _content, _context, tokens) => {
-    return plainText(params.label, { color: tokens.textColor, style: tokens.textStyle });
+    return label(params.label, { color: tokens.textColor, style: tokens.textStyle });
   },
 });
 
@@ -841,8 +844,8 @@ Display a large metric value with a label and optional change indicator:
 
 ```typescript
 import { defineComponent, componentRegistry, component, param, token, schema } from 'tycoslide';
-import { column, plainText } from 'tycoslide-components';
-import type { PlainTextTokens } from 'tycoslide-components';
+import { column, label } from 'tycoslide-components';
+import type { LabelTokens } from 'tycoslide-components';
 import type { InferParams, InferTokens } from 'tycoslide';
 
 // 1. Declare params and tokens
@@ -853,9 +856,9 @@ const metricParams = param.shape({
 });
 
 const metricTokens = token.shape({
-  value: token.required<PlainTextTokens>(),
-  label: token.required<PlainTextTokens>(),
-  change: token.required<PlainTextTokens>(),
+  value: token.required<LabelTokens>(),
+  label: token.required<LabelTokens>(),
+  change: token.required<LabelTokens>(),
   positiveColor: token.required<string>(),
   negativeColor: token.required<string>(),
   spacing: token.required<number>(),
@@ -871,8 +874,8 @@ export const metricComponent = defineComponent({
   tokens: metricTokens,
   render: (params, _content, _context, tokens) => {
     const elements = [
-      plainText(params.value, tokens.value),
-      plainText(params.label, tokens.label),
+      label(params.value, tokens.value),
+      label(params.label, tokens.label),
     ];
 
     if (params.change) {
@@ -881,7 +884,7 @@ export const metricComponent = defineComponent({
         ...tokens.change,
         color: isPositive ? tokens.positiveColor : tokens.negativeColor,
       };
-      elements.push(plainText(params.change, changeTokens));
+      elements.push(label(params.change, changeTokens));
     }
 
     return column({ spacing: tokens.spacing }, ...elements); // spacing from theme token map
@@ -920,7 +923,7 @@ The layout's token map entry for `metric` holds the `MetricTokens` object. The t
 DSL functions are how you use components from TypeScript. All built-in DSL functions are exported from `tycoslide-components`:
 
 ```typescript
-import { text, plainText, list, card, quote, testimonial, table, image, mermaid, code } from 'tycoslide-components';
+import { text, label, list, card, quote, testimonial, table, image, mermaid, code } from 'tycoslide-components';
 import { row, column, stack, grid } from 'tycoslide-components';
 import { line, shape, slideNumber } from 'tycoslide-components';
 import { SIZE, SHAPE, HALIGN, VALIGN, SPACING_MODE } from 'tycoslide';
@@ -949,11 +952,11 @@ grid({ columns: 3, spacing: tokens.gridSpacing }, ...)
 stack(backgroundNode, foregroundNode)
 ```
 
-Components like `text`, `plainText`, `card`, and `quote` require a token argument. In layout render functions, tokens come from the layout's token map:
+Components like `text`, `label`, `card`, and `quote` require a token argument. In layout render functions, tokens come from the layout's token map:
 
 ```typescript
 text(slots.body, tokens.bodyText)
-plainText(params.title, tokens.headerTitle)
+label(params.title, tokens.headerTitle)
 card({ title: params.cardTitle }, tokens.card)  // params, then tokens
 ```
 

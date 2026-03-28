@@ -3,7 +3,7 @@
 // Available to layout TypeScript authors via text() DSL function.
 // Always uses rich text (inline formatting only): bold, italic, :color[highlights], no bullets/paragraphs.
 
-import type { Heading, RootContent } from "mdast";
+import type { RootContent } from "mdast";
 import type { HorizontalAlignment, NormalizedRun, RenderContext, TextStyleName, VerticalAlignment } from "tycoslide";
 import {
   type ComponentNode,
@@ -22,16 +22,6 @@ import {
   token,
 } from "tycoslide";
 
-// ============================================
-// HEADING TYPES
-// ============================================
-
-/** CommonMark heading depths. Matches MDAST Heading.depth. */
-export type HeadingDepth = 1 | 2 | 3 | 4 | 5 | 6;
-
-/** Theme-controlled mapping from heading depth to text style name. All 6 depths required. */
-export type HeadingStyles = Record<HeadingDepth, TextStyleName>;
-
 import { Component } from "./names.js";
 import { inlineParse, transformInline } from "./utils/inline.js";
 
@@ -45,7 +35,6 @@ const textTokens = token.shape({
   accents: token.required<Record<string, string>>(),
   border: token.optional<Stroke>(),
   shadow: token.optional<Shadow>(),
-  headingStyles: token.optional<HeadingStyles>(),
 });
 
 export type TextTokens = InferTokens<typeof textTokens>;
@@ -55,35 +44,15 @@ export type TextTokens = InferTokens<typeof textTokens>;
 // ============================================
 
 function renderText(
-  params: { headingDepth?: number },
+  _params: {},
   content: string,
   context: RenderContext,
   tokens: TextTokens,
 ): ElementNode {
-  // Resolve the effective style name: heading depth overrides base style
-  let styleName: TextStyleName = tokens.style;
-
-  if (params.headingDepth !== undefined) {
-    if (!tokens.headingStyles) {
-      throw new Error(
-        `Heading (depth ${params.headingDepth}) appeared in a text slot without headingStyles. ` +
-        `Add headingStyles to this slot's text token configuration.`,
-      );
-    }
-    const mapped = tokens.headingStyles[params.headingDepth as HeadingDepth];
-    if (mapped === undefined) {
-      throw new Error(
-        `Heading depth ${params.headingDepth} is not mapped in headingStyles. ` +
-        `Provide a mapping for all depths 1-6.`,
-      );
-    }
-    styleName = mapped;
-  }
-
-  const textStyle = context.theme.textStyles[styleName];
+  const textStyle = context.theme.textStyles[tokens.style];
   if (!textStyle) {
     throw new Error(
-      `Text style "${styleName}" not found in theme.textStyles. ` +
+      `Text style "${tokens.style}" not found in theme.textStyles. ` +
       `Available: [${Object.keys(context.theme.textStyles).join(", ")}].`,
     );
   }
@@ -111,7 +80,7 @@ function renderText(
     width: SIZE.FILL,
     height: SIZE.HUG,
     content: runs,
-    style: styleName,
+    style: tokens.style,
     resolvedStyle: textStyle,
     color: tokens.color,
     hAlign: tokens.hAlign,
@@ -140,14 +109,8 @@ export const textComponent = defineComponent({
   directive: false,
   tokens: textTokens,
   mdast: {
-    nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.HEADING],
+    nodeTypes: [SYNTAX.PARAGRAPH],
     compile: (node: RootContent, source: string): ComponentNode | null => {
-      if (node.type === SYNTAX.HEADING) {
-        const heading = node as Heading;
-        const raw = extractSource(heading, source);
-        const headingContent = raw.replace(/^#{1,6}\s*/, "");
-        return component(Component.Text, { headingDepth: heading.depth }, headingContent);
-      }
       return component(Component.Text, {}, extractSource(node, source));
     },
   },

@@ -40,7 +40,7 @@ describe("Slot Compiler", () => {
       const md = "## Overview\n\nIntro paragraph.\n\n- Point one\n- Point two";
       const nodes = compileSlot(md);
       assert.strictEqual(nodes.length, 3);
-      assert.strictEqual((nodes[0] as any).componentName, C.Text); // heading
+      assert.strictEqual((nodes[0] as any).componentName, C.Label); // heading
       assert.strictEqual((nodes[1] as any).componentName, C.Text); // paragraph
       assert.strictEqual((nodes[2] as any).componentName, C.Text); // list
     });
@@ -48,8 +48,8 @@ describe("Slot Compiler", () => {
     it("should compile a single heading to a text node with style", () => {
       const nodes = compileSlot("## Subheading");
       assert.strictEqual(nodes.length, 1);
-      assert.strictEqual((nodes[0] as any).componentName, C.Text);
-      assert.ok((nodes[0] as any).tokens?.style); // heading style now in node.tokens
+      assert.strictEqual((nodes[0] as any).componentName, C.Label);
+      assert.strictEqual((nodes[0] as any).params?.headingDepth, 2);
     });
 
     it("should compile a GFM table to a table node", () => {

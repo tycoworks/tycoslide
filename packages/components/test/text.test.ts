@@ -11,10 +11,10 @@ import {
   columnComponent,
   gridComponent,
   imageComponent,
+  labelComponent,
   lineComponent,
   listComponent,
   mermaidComponent,
-  plainTextComponent,
   quoteComponent,
   rowComponent,
   shapeComponent,
@@ -24,9 +24,9 @@ import {
   textComponent,
 } from "../src/index.js";
 import { Component } from "../src/names.js";
-import { plainText } from "../src/plainText.js";
+import { label } from "../src/label.js";
 import { text } from "../src/text.js";
-import { DEFAULT_PLAIN_TEXT_TOKENS, DEFAULT_TEXT_TOKENS, mockTheme, noopCanvas } from "./mocks.js";
+import { DEFAULT_LABEL_TOKENS, DEFAULT_TEXT_TOKENS, mockTheme, noopCanvas } from "./mocks.js";
 
 // Register components explicitly
 componentRegistry.register([
@@ -45,7 +45,7 @@ componentRegistry.register([
   stackComponent,
   gridComponent,
   listComponent,
-  plainTextComponent,
+  labelComponent,
 ]);
 
 // Test accents for directive resolution
@@ -54,16 +54,16 @@ function themeWithAccents() {
 }
 
 describe("Text", () => {
-  describe("plainText() DSL", () => {
-    it("should create a component node with plainText component name", () => {
-      const node = plainText("ARCHITECTURE", DEFAULT_PLAIN_TEXT_TOKENS);
+  describe("label() DSL", () => {
+    it("should create a component node with label component name", () => {
+      const node = label("ARCHITECTURE", DEFAULT_LABEL_TOKENS);
       assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
-      assert.strictEqual(node.componentName, "plainText");
+      assert.strictEqual(node.componentName, "label");
       assert.strictEqual(node.content, "ARCHITECTURE");
     });
 
     it("should pass props and tokens correctly", () => {
-      const node = plainText("Label", { ...DEFAULT_PLAIN_TEXT_TOKENS, style: "eyebrow", color: "#FF0000" });
+      const node = label("Label", { ...DEFAULT_LABEL_TOKENS, style: "eyebrow", color: "#FF0000" });
       assert.strictEqual(node.content, "Label");
       // Tokens are now in node.tokens, not spread into props
       assert.strictEqual((node.tokens as any).style, "eyebrow");
@@ -71,15 +71,15 @@ describe("Text", () => {
     });
   });
 
-  describe("plainText expansion", () => {
+  describe("label expansion", () => {
     const theme = themeWithAccents();
 
     it("should be available after register()", () => {
-      assert.ok(componentRegistry.has("plainText"));
+      assert.ok(componentRegistry.has("label"));
     });
 
     it("should render to a TextNode with single run", async () => {
-      const node = plainText("Hello world", DEFAULT_PLAIN_TEXT_TOKENS);
+      const node = label("Hello world", DEFAULT_LABEL_TOKENS);
       const rendered = (await componentRegistry.render(node, { theme, canvas: noopCanvas() })) as any;
       assert.strictEqual(rendered.type, NODE_TYPE.TEXT);
       const runs = rendered.content as NormalizedRun[];
@@ -88,7 +88,7 @@ describe("Text", () => {
     });
 
     it("should NOT parse markdown — bold stays literal", async () => {
-      const node = plainText("**not bold**", DEFAULT_PLAIN_TEXT_TOKENS);
+      const node = label("**not bold**", DEFAULT_LABEL_TOKENS);
       const rendered = (await componentRegistry.render(node, { theme, canvas: noopCanvas() })) as any;
       const runs = rendered.content as NormalizedRun[];
       assert.strictEqual(runs.length, 1);
@@ -97,7 +97,7 @@ describe("Text", () => {
     });
 
     it("should NOT parse directives — stays literal", async () => {
-      const node = plainText(":teal[not highlighted]", DEFAULT_PLAIN_TEXT_TOKENS);
+      const node = label(":teal[not highlighted]", DEFAULT_LABEL_TOKENS);
       const rendered = (await componentRegistry.render(node, { theme, canvas: noopCanvas() })) as any;
       const runs = rendered.content as NormalizedRun[];
       assert.strictEqual(runs.length, 1);
@@ -106,8 +106,8 @@ describe("Text", () => {
     });
 
     it("should apply style, color, and alignment", async () => {
-      const node = plainText("Label", {
-        ...DEFAULT_PLAIN_TEXT_TOKENS,
+      const node = label("Label", {
+        ...DEFAULT_LABEL_TOKENS,
         style: "body",
         color: "#AABBCC",
         hAlign: HALIGN.CENTER,
@@ -121,14 +121,14 @@ describe("Text", () => {
     });
 
     it("should default hAlign to LEFT and vAlign to TOP", async () => {
-      const node = plainText("Label", DEFAULT_PLAIN_TEXT_TOKENS);
+      const node = label("Label", DEFAULT_LABEL_TOKENS);
       const rendered = (await componentRegistry.render(node, { theme, canvas: noopCanvas() })) as any;
       assert.strictEqual(rendered.hAlign, HALIGN.LEFT);
       assert.strictEqual(rendered.vAlign, VALIGN.TOP);
     });
 
     it("should hardcode linkColor to text color and linkUnderline to false", async () => {
-      const node = plainText("Label", DEFAULT_PLAIN_TEXT_TOKENS);
+      const node = label("Label", DEFAULT_LABEL_TOKENS);
       const rendered = (await componentRegistry.render(node, { theme, canvas: noopCanvas() })) as any;
       assert.strictEqual(rendered.linkColor, rendered.color);
       assert.strictEqual(rendered.linkUnderline, false);

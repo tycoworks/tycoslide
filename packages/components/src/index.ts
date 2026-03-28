@@ -57,12 +57,14 @@ export {
 } from "./mermaid.js";
 // Component names (canonical registry of built-in identifiers)
 export { Component, type ComponentName } from "./names.js";
-// PlainText (plain string text — no markdown, no link tokens)
+// Label (display text — eyebrows, footers, headings, attributions)
 export {
-  type PlainTextTokens,
-  plainText,
-  plainTextComponent,
-} from "./plainText.js";
+  type HeadingDepth,
+  type LabelSlotTokens,
+  type LabelTokens,
+  label,
+  labelComponent,
+} from "./label.js";
 // Primitives (line, shape, slideNumber)
 export {
   type LineParams,
@@ -97,10 +99,8 @@ export {
   testimonial,
   testimonialComponent,
 } from "./testimonial.js";
-// Text
+// Text (rich inline markdown — bold, italic, colors, links)
 export {
-  type HeadingDepth,
-  type HeadingStyles,
   type TextTokens,
   text,
   textComponent,

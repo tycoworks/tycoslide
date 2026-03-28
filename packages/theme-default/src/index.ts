@@ -11,7 +11,7 @@ import {
   lineComponent,
   listComponent,
   mermaidComponent,
-  plainTextComponent,
+  labelComponent,
   quoteComponent,
   rowComponent,
   shapeComponent,
@@ -27,7 +27,7 @@ import { defaultMaster, minimalMaster } from "./master.js";
 // Explicit component, layout, and master lists — themes declare what they use
 export const components = [
   textComponent,
-  plainTextComponent,
+  labelComponent,
   imageComponent,
   cardComponent,
   quoteComponent,

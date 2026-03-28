@@ -3,9 +3,8 @@
 // Units: spacing/margins/radii = inches, fontSize/borderWidth = points, opacity = 0-100
 
 import { DASH_TYPE, defineTheme, GRID_STYLE, HALIGN, SHADOW_TYPE, SLIDE_SIZE, VALIGN } from "tycoslide";
-import type { ListTokens, PlainTextTokens, TextTokens } from "tycoslide-components";
+import type { LabelTokens, ListTokens, TextTokens } from "tycoslide-components";
 import { HIGHLIGHT_THEME } from "tycoslide-components";
-import type { HeadingStyles } from "tycoslide-components";
 import { assets } from "./assets.js";
 import {
   agendaLayout,
@@ -31,6 +30,7 @@ import { defaultMaster, minimalMaster } from "./master.js";
 
 /** Well-known text style names used by this theme. */
 const TEXT_STYLE = {
+  TITLE: "title",
   H1: "h1",
   H2: "h2",
   H3: "h3",
@@ -41,16 +41,6 @@ const TEXT_STYLE = {
   FOOTER: "footer",
   CODE: "code",
 } as const;
-
-/** Default heading-depth → style mapping. Depths 5-6 fall back to h4. */
-const headingStyles: HeadingStyles = {
-  1: TEXT_STYLE.H1,
-  2: TEXT_STYLE.H2,
-  3: TEXT_STYLE.H3,
-  4: TEXT_STYLE.H4,
-  5: TEXT_STYLE.H4,
-  6: TEXT_STYLE.H4,
-};
 
 // ============================================
 // COLOR PALETTE
@@ -132,145 +122,54 @@ const shadow = {
   angle: shadowAngle,
 };
 
-const cardTitle: TextTokens = {
-  style: TEXT_STYLE.H4,
-  color: palette.navy,
+// --- Rich text base (shared link/accent wiring) ---
+const richTextBase = {
   linkColor: palette.purple,
   linkUnderline: true,
-  hAlign: HALIGN.LEFT,
-  vAlign: VALIGN.MIDDLE,
   accents: accents,
-};
-const cardDescription: TextTokens = {
-  style: TEXT_STYLE.SMALL,
-  color: palette.gray600,
-  linkColor: palette.purple,
-  linkUnderline: true,
-  hAlign: HALIGN.LEFT,
-  vAlign: VALIGN.MIDDLE,
-  accents: accents,
-};
+} as const;
 
-const quoteText: TextTokens = {
-  style: TEXT_STYLE.H2,
-  color: palette.navy,
-  linkColor: palette.purple,
-  linkUnderline: true,
-  hAlign: HALIGN.LEFT,
-  vAlign: VALIGN.MIDDLE,
-  accents: accents,
-};
-const quoteAttribution: PlainTextTokens = {
-  style: TEXT_STYLE.SMALL,
-  color: palette.gray600,
-  hAlign: HALIGN.LEFT,
-  vAlign: VALIGN.MIDDLE,
-};
+// --- Standard body text tokens ---
+const cardTitle: TextTokens = { ...richTextBase, style: TEXT_STYLE.H4, color: palette.navy, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
+const cardDescription: TextTokens = { ...richTextBase, style: TEXT_STYLE.SMALL, color: palette.gray600, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
+const quoteText: TextTokens = { ...richTextBase, style: TEXT_STYLE.H2, color: palette.navy, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
+const bodyText: TextTokens = { ...richTextBase, style: TEXT_STYLE.BODY, color: palette.navy, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
+const bodyList: ListTokens = { ...bodyText, vAlign: VALIGN.TOP };
+const mutedCaption: TextTokens = { ...richTextBase, style: TEXT_STYLE.SMALL, color: palette.gray600, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE };
 
-// --- Shared layout token objects ---
+// --- Dark-background (hero/section) text tokens ---
+const heroBase = { ...richTextBase, linkUnderline: false, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } as const;
+const heroTitle: TextTokens = { ...heroBase, style: TEXT_STYLE.H1, color: palette.white };
+const heroSubtitle: TextTokens = { ...heroBase, style: TEXT_STYLE.H3, color: palette.white };
 
-const headerTitle: PlainTextTokens = {
-  style: TEXT_STYLE.H3,
-  color: palette.navy,
-  hAlign: HALIGN.LEFT,
-  vAlign: VALIGN.MIDDLE,
-};
-const headerEyebrow: PlainTextTokens = {
-  style: TEXT_STYLE.EYEBROW,
-  color: palette.purple,
-  hAlign: HALIGN.LEFT,
-  vAlign: VALIGN.MIDDLE,
-};
-const bodyText: TextTokens = {
-  style: TEXT_STYLE.BODY,
-  color: palette.navy,
-  linkColor: palette.purple,
-  linkUnderline: true,
-  hAlign: HALIGN.LEFT,
-  vAlign: VALIGN.MIDDLE,
-  accents: accents,
-  headingStyles,
-};
-const bodyList: ListTokens = {
-  style: TEXT_STYLE.BODY,
-  color: palette.navy,
-  linkColor: palette.purple,
-  linkUnderline: true,
-  hAlign: HALIGN.LEFT,
-  vAlign: VALIGN.TOP,
-  accents: accents,
-};
-const mutedCaption: TextTokens = {
-  style: TEXT_STYLE.SMALL,
-  color: palette.gray600,
-  linkColor: palette.purple,
-  linkUnderline: true,
-  hAlign: HALIGN.CENTER,
-  vAlign: VALIGN.MIDDLE,
-  accents: accents,
-};
+// --- Heading scale (standard left-aligned navy labels) ---
+const labelH1: LabelTokens = { style: TEXT_STYLE.H1, color: palette.navy, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
+const labelH2: LabelTokens = { style: TEXT_STYLE.H2, color: palette.navy, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
+const labelH3: LabelTokens = { style: TEXT_STYLE.H3, color: palette.navy, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
+const labelH4: LabelTokens = { style: TEXT_STYLE.H4, color: palette.navy, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
 
-// --- Dark-background (hero/section) token objects ---
+// --- Functional labels ---
+const labelEyebrow: LabelTokens = { style: TEXT_STYLE.EYEBROW, color: palette.purple, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
+const labelMutedSmall: LabelTokens = { style: TEXT_STYLE.SMALL, color: palette.gray600, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
+const labelFooter: LabelTokens = { style: TEXT_STYLE.FOOTER, color: palette.gray600, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
 
-const heroTitle: TextTokens = {
-  style: TEXT_STYLE.H1,
-  color: palette.white,
-  linkColor: palette.purple,
-  linkUnderline: false,
-  hAlign: HALIGN.CENTER,
-  vAlign: VALIGN.MIDDLE,
-  accents: accents,
-};
-const heroSubtitle: TextTokens = {
-  style: TEXT_STYLE.H3,
-  color: palette.white,
-  linkColor: palette.purple,
-  linkUnderline: false,
-  hAlign: HALIGN.CENTER,
-  vAlign: VALIGN.MIDDLE,
-  accents: accents,
-};
-const sectionHeading: PlainTextTokens = {
-  style: TEXT_STYLE.H2,
-  color: palette.white,
-  hAlign: HALIGN.CENTER,
-  vAlign: VALIGN.MIDDLE,
-};
-
-// --- Layout-specific token objects ---
-
-const statValue: PlainTextTokens = {
-  style: TEXT_STYLE.H1,
-  color: palette.purple,
-  hAlign: HALIGN.CENTER,
-  vAlign: VALIGN.MIDDLE,
-};
-const statLabel: PlainTextTokens = {
-  style: TEXT_STYLE.H3,
-  color: palette.gray600,
-  hAlign: HALIGN.CENTER,
-  vAlign: VALIGN.MIDDLE,
-};
-
+// --- Accent / dark-background labels ---
+const labelSectionHeading: LabelTokens = { style: TEXT_STYLE.H2, color: palette.white, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE };
+const labelStatValue: LabelTokens = { style: TEXT_STYLE.H1, color: palette.purple, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE };
+const labelStatLabel: LabelTokens = { style: TEXT_STYLE.H3, color: palette.gray600, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE };
 // ============================================
 // SLOT COMPONENT TOKEN OBJECTS (shared across layouts)
 // ============================================
 
+const tableHeaderBase = {
+  textStyle: TEXT_STYLE.EYEBROW,
+  textColor: palette.gray500,
+  backgroundOpacity: 0,
+};
+
 const tableTokens = {
-  headerRow: {
-    textStyle: TEXT_STYLE.EYEBROW,
-    textColor: palette.gray500,
-    background: palette.gray200,
-    backgroundOpacity: 0,
-    hAlign: HALIGN.CENTER,
-  },
-  headerCol: {
-    textStyle: TEXT_STYLE.EYEBROW,
-    textColor: palette.gray500,
-    background: palette.white,
-    backgroundOpacity: 0,
-    hAlign: HALIGN.LEFT,
-  },
+  headerRow: { ...tableHeaderBase, background: palette.gray200, hAlign: HALIGN.CENTER },
+  headerCol: { ...tableHeaderBase, background: palette.white, hAlign: HALIGN.LEFT },
   cellTextStyle: TEXT_STYLE.EYEBROW,
   cellTextColor: palette.navy,
   cellBackground: palette.gray50,
@@ -313,7 +212,7 @@ const quoteSlotTokens = {
   },
   spacing: spacing,
   quote: quoteText,
-  attribution: quoteAttribution,
+  attribution: labelMutedSmall,
 };
 
 const testimonialSlotTokens = {
@@ -328,7 +227,7 @@ const testimonialSlotTokens = {
   hAlign: HALIGN.CENTER,
   vAlign: VALIGN.MIDDLE,
   quote: quoteText,
-  attribution: quoteAttribution,
+  attribution: labelMutedSmall,
 };
 
 const mermaidTokens = {
@@ -385,6 +284,7 @@ const bodySlotTokens = {
   quote: quoteSlotTokens,
   testimonial: testimonialSlotTokens,
   card: cardSlotTokens,
+  label: { 1: labelH1, 2: labelH2, 3: labelH3, 4: labelH4, 5: labelH4, 6: labelH4 },
 };
 
 // ============================================
@@ -398,8 +298,8 @@ const defaultMasterConfig = defaultMaster.tokenMap({
   footerLogo: assets.tycoworks.logo,
   footerText: "tycoworks",
   footerSpacing: spacingTight,
-  slideNumber: { style: TEXT_STYLE.FOOTER, color: palette.gray600, hAlign: HALIGN.RIGHT, vAlign: VALIGN.MIDDLE },
-  footer: { style: TEXT_STYLE.FOOTER, color: palette.gray600, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
+  slideNumber: { ...labelFooter, hAlign: HALIGN.RIGHT },
+  footer: labelFooter,
 });
 
 const lightMinimalMaster = minimalMaster.tokenMap({
@@ -416,61 +316,61 @@ export const theme = defineTheme({
   slide: SLIDE_SIZE.S16x9,
   fonts: [assets.fonts.inter, assets.fonts.interLight, assets.fonts.firaCode],
   textStyles: {
-    title: {
+    [TEXT_STYLE.TITLE]: {
       fontFamily: assets.fonts.inter,
       fontSize: 56,
       lineHeightMultiplier: lineSpacing,
       bulletIndentPt: 0,
     },
-    h1: {
+    [TEXT_STYLE.H1]: {
       fontFamily: assets.fonts.interLight,
       fontSize: 44,
       lineHeightMultiplier: lineSpacing,
       bulletIndentPt: 44 * bulletIndentMultiplier,
     },
-    h2: {
+    [TEXT_STYLE.H2]: {
       fontFamily: assets.fonts.interLight,
       fontSize: 32,
       lineHeightMultiplier: lineSpacing,
       bulletIndentPt: 32 * bulletIndentMultiplier,
     },
-    h3: {
+    [TEXT_STYLE.H3]: {
       fontFamily: assets.fonts.interLight,
       fontSize: 24,
       lineHeightMultiplier: lineSpacing,
       bulletIndentPt: 24 * bulletIndentMultiplier,
     },
-    h4: {
+    [TEXT_STYLE.H4]: {
       fontFamily: assets.fonts.interLight,
       fontSize: 18,
       lineHeightMultiplier: lineSpacing,
       bulletIndentPt: 18 * bulletIndentMultiplier,
     },
-    body: {
+    [TEXT_STYLE.BODY]: {
       fontFamily: assets.fonts.interLight,
       fontSize: 14,
       lineHeightMultiplier: lineSpacing,
       bulletIndentPt: 14 * bulletIndentMultiplier,
     },
-    small: {
+    [TEXT_STYLE.SMALL]: {
       fontFamily: assets.fonts.interLight,
       fontSize: 12,
       lineHeightMultiplier: lineSpacing,
       bulletIndentPt: 12 * bulletIndentMultiplier,
     },
-    eyebrow: {
+    [TEXT_STYLE.EYEBROW]: {
       fontFamily: assets.fonts.inter,
       fontSize: 11,
       lineHeightMultiplier: 1.0,
       bulletIndentPt: 11 * bulletIndentMultiplier,
     },
-    footer: {
+    [TEXT_STYLE.FOOTER]: {
       fontFamily: assets.fonts.interLight,
       fontSize: 8,
       lineHeightMultiplier: 1.0,
       bulletIndentPt: 8 * bulletIndentMultiplier,
     },
-    code: {
+    [TEXT_STYLE.CODE]: {
       fontFamily: assets.fonts.firaCode,
       fontSize: 11,
       lineHeightMultiplier: 1.6,
@@ -481,7 +381,7 @@ export const theme = defineTheme({
     title: {
       variants: {
         default: titleLayout.tokenMap({
-          title: { ...heroTitle, color: palette.navy, style: "title" },
+          title: { ...heroTitle, color: palette.navy, style: TEXT_STYLE.TITLE },
           subtitle: { ...heroSubtitle, color: palette.gray600, style: TEXT_STYLE.H3 },
           master: lightMinimalMaster,
           vAlign: VALIGN.MIDDLE,
@@ -493,7 +393,7 @@ export const theme = defineTheme({
     end: {
       variants: {
         default: endLayout.tokenMap({
-          title: { ...heroTitle, style: "title" },
+          title: { ...heroTitle, style: TEXT_STYLE.TITLE },
           subtitle: heroSubtitle,
           master: darkMinimalMaster,
           vAlign: VALIGN.MIDDLE,
@@ -505,7 +405,7 @@ export const theme = defineTheme({
     section: {
       variants: {
         default: sectionLayout.tokenMap({
-          title: sectionHeading,
+          title: labelSectionHeading,
           master: darkMinimalMaster,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
@@ -516,8 +416,8 @@ export const theme = defineTheme({
       variants: {
         default: bodyLayout.tokenMap({
           master: defaultMasterConfig,
-          title: headerTitle,
-          eyebrow: headerEyebrow,
+          title: labelH3,
+          eyebrow: labelEyebrow,
           headerSpacing: spacingTight,
           text: bodyText,
           list: bodyList,
@@ -528,8 +428,8 @@ export const theme = defineTheme({
         }),
         centered: bodyLayout.tokenMap({
           master: defaultMasterConfig,
-          title: headerTitle,
-          eyebrow: headerEyebrow,
+          title: labelH3,
+          eyebrow: labelEyebrow,
           headerSpacing: spacingTight,
           text: bodyText,
           list: bodyList,
@@ -544,8 +444,8 @@ export const theme = defineTheme({
       variants: {
         default: statLayout.tokenMap({
           master: defaultMasterConfig,
-          value: statValue,
-          label: statLabel,
+          value: labelStatValue,
+          label: labelStatLabel,
           caption: mutedCaption,
           background: {
             fill: palette.white,
@@ -565,8 +465,8 @@ export const theme = defineTheme({
       variants: {
         default: twoColumnLayout.tokenMap({
           master: defaultMasterConfig,
-          title: headerTitle,
-          eyebrow: headerEyebrow,
+          title: labelH3,
+          eyebrow: labelEyebrow,
           headerSpacing: spacingTight,
           text: bodyText,
           list: bodyList,
@@ -593,8 +493,8 @@ export const theme = defineTheme({
       variants: {
         default: agendaLayout.tokenMap({
           master: defaultMasterConfig,
-          title: headerTitle,
-          eyebrow: headerEyebrow,
+          title: labelH3,
+          eyebrow: labelEyebrow,
           headerSpacing: spacingTight,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
@@ -623,8 +523,8 @@ export const theme = defineTheme({
       variants: {
         default: cardsLayout.tokenMap({
           master: defaultMasterConfig,
-          title: headerTitle,
-          eyebrow: headerEyebrow,
+          title: labelH3,
+          eyebrow: labelEyebrow,
           headerSpacing: spacingTight,
           intro: bodyText,
           caption: mutedCaption,
@@ -636,8 +536,8 @@ export const theme = defineTheme({
         }),
         flat: cardsLayout.tokenMap({
           master: defaultMasterConfig,
-          title: headerTitle,
-          eyebrow: headerEyebrow,
+          title: labelH3,
+          eyebrow: labelEyebrow,
           headerSpacing: spacingTight,
           intro: bodyText,
           caption: mutedCaption,
@@ -668,7 +568,7 @@ export const theme = defineTheme({
             },
             spacing: spacing,
             quote: quoteText,
-            attribution: quoteAttribution,
+            attribution: labelMutedSmall,
           },
           master: lightMinimalMaster,
           vAlign: VALIGN.MIDDLE,
@@ -689,7 +589,7 @@ export const theme = defineTheme({
               linkColor: palette.lavender,
             },
             attribution: {
-              ...quoteAttribution,
+              ...labelMutedSmall,
               color: palette.gray400,
             },
           },
@@ -704,8 +604,8 @@ export const theme = defineTheme({
       variants: {
         default: shapesLayout.tokenMap({
           master: defaultMasterConfig,
-          title: headerTitle,
-          eyebrow: headerEyebrow,
+          title: labelH3,
+          eyebrow: labelEyebrow,
           subtitle: { style: TEXT_STYLE.BODY, color: palette.gray500, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
           headerSpacing: spacingTight,
           label: {
@@ -749,8 +649,8 @@ export const theme = defineTheme({
       variants: {
         default: transformLayout.tokenMap({
           master: defaultMasterConfig,
-          title: headerTitle,
-          eyebrow: headerEyebrow,
+          title: labelH3,
+          eyebrow: labelEyebrow,
           headerSpacing: spacingTight,
           text: cardDescription,
           list: bodyList,
@@ -777,10 +677,10 @@ export const theme = defineTheme({
       variants: {
         default: linesLayout.tokenMap({
           master: defaultMasterConfig,
-          title: headerTitle,
-          eyebrow: headerEyebrow,
+          title: labelH3,
+          eyebrow: labelEyebrow,
           headerSpacing: spacingTight,
-          label: { style: TEXT_STYLE.SMALL, color: palette.gray600, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
+          label: labelMutedSmall,
           solid: { color: palette.navy, width: 2, dashType: DASH_TYPE.SOLID },
           dashed: { color: palette.purple, width: 2, dashType: DASH_TYPE.DASHED },
           dotted: { color: palette.skyBlue, width: 2, dashType: DASH_TYPE.DOTTED },

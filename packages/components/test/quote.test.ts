@@ -9,7 +9,7 @@ import {
   imageComponent,
   lineComponent,
   mermaidComponent,
-  plainTextComponent,
+  labelComponent,
   quoteComponent,
   rowComponent,
   shapeComponent,
@@ -40,7 +40,7 @@ componentRegistry.register([
   stackComponent,
   gridComponent,
   testimonialComponent,
-  plainTextComponent,
+  labelComponent,
 ]);
 
 describe("Quote Component (Pull Quote)", () => {

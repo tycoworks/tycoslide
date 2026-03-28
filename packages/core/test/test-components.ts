@@ -23,6 +23,7 @@ export const C = {
   Table: "table",
   Image: "image",
   Line: "line",
+  Label: "label",
   Row: "row",
   Column: "column",
 } as const;
@@ -49,14 +50,8 @@ export const textComponent = defineComponent({
     vAlign: token.required<any>(),
   },
   mdast: {
-    nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.HEADING, SYNTAX.LIST],
+    nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.LIST],
     compile: (node: RootContent, source: string): ComponentNode | null => {
-      if (node.type === SYNTAX.HEADING) {
-        const heading = node as Heading;
-        const raw = extractSource(heading, source);
-        const headingContent = raw.replace(/^#{1,6}\s*/, "");
-        return component(C.Text, { headingDepth: heading.depth }, headingContent);
-      }
       if (node.type === SYNTAX.PARAGRAPH) {
         const para = node as { children: { type: string }[] };
         if (para.children.length === 1 && para.children[0].type === SYNTAX.IMAGE) {
@@ -155,6 +150,39 @@ export const cardComponent = defineComponent({
 });
 
 // ============================================
+// LABEL (metadata-only — heading handler for slotCompiler tests)
+// ============================================
+
+export const labelComponent = defineComponent({
+  name: C.Label,
+  content: schema.string(),
+  directive: false,
+  tokens: {
+    color: token.required<any>(),
+    style: token.required<any>(),
+    hAlign: token.required<any>(),
+    vAlign: token.required<any>(),
+  },
+  resolveTokens: (tokens: Record<string, unknown>, params: Record<string, unknown>) => {
+    const depth = (params as any).headingDepth;
+    if (depth === undefined) return tokens;
+    const entry = tokens[depth] as Record<string, unknown> | undefined;
+    if (!entry) return tokens;
+    return entry;
+  },
+  mdast: {
+    nodeTypes: [SYNTAX.HEADING],
+    compile: (node: RootContent, source: string): ComponentNode => {
+      const heading = node as Heading;
+      const raw = extractSource(heading, source);
+      const headingContent = raw.replace(/^#{1,6}\s*/, "");
+      return component(C.Label, { headingDepth: heading.depth }, headingContent);
+    },
+  },
+  render: () => ({}) as any,
+});
+
+// ============================================
 // METADATA-ONLY STUBS (slotCompiler needs registration, not render)
 // ============================================
 
@@ -214,6 +242,7 @@ export const tableComponent = defineComponent({
 
 export const testComponents = [
   textComponent,
+  labelComponent,
   rowComponent,
   columnComponent,
   cardComponent,

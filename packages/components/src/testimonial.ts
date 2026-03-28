@@ -18,7 +18,7 @@ import {
 import { column, row, stack } from "./containers.js";
 import { imageComponent, image as imageNode } from "./image.js";
 import { Component } from "./names.js";
-import { type PlainTextTokens, plainText } from "./plainText.js";
+import { type LabelTokens, label } from "./label.js";
 import { type ShapeTokens, shape } from "./primitives.js";
 import { type TextTokens, text, textComponent } from "./text.js";
 
@@ -33,7 +33,7 @@ const testimonialTokens = token.shape({
   hAlign: token.required<HorizontalAlignment>(),
   vAlign: token.required<VerticalAlignment>(),
   quote: token.required<TextTokens>(),
-  attribution: token.required<PlainTextTokens>(),
+  attribution: token.required<LabelTokens>(),
 });
 export type TestimonialTokens = InferTokens<typeof testimonialTokens>;
 
@@ -95,7 +95,7 @@ export const testimonialComponent = defineComponent({
     }
     children.push(text(actualQuote, quoteTokens));
     if (attribution) {
-      children.push(plainText(attribution, attributionTokens));
+      children.push(label(attribution, attributionTokens));
     }
 
     const containerParams = { padding, spacing, hAlign: contentHAlign, vAlign: contentVAlign };
