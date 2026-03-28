@@ -9,24 +9,23 @@ import {
   component,
   defineComponent,
   getFontForRun,
-  hexToRgba,
   type InferParams,
   type InferTokens,
-  inToPx,
   param,
-  ptToPx,
   type RenderContext,
+  SHAPE,
   SYNTAX,
   schema,
   type TextStyle,
   type TextStyleName,
   token,
 } from "tycoslide";
+import { column, stack } from "./containers.js";
 import type { HighlightThemeName } from "./highlighting.js";
 import { LANGUAGE_VALUES } from "./highlighting.js";
 import { image } from "./image.js";
 import { Component } from "./names.js";
-import type { ShapeTokens } from "./primitives.js";
+import { type ShapeTokens, shape } from "./primitives.js";
 
 const SUPPORTED_LANGUAGES = new Set<string>(LANGUAGE_VALUES);
 
@@ -54,7 +53,8 @@ export type CodeParams = InferParams<typeof codeParamShape>;
 
 /**
  * Render syntax-highlighted code to a complete HTML document for Playwright screenshot.
- * Calls the highlighter server-side, wraps in a themed container.
+ * Returns a transparent PNG of just the highlighted text — background and padding
+ * are handled by the stack+shape wrapper in renderCode.
  */
 export async function renderCodeToHtml(
   code: string,
@@ -67,8 +67,6 @@ export async function renderCodeToHtml(
     theme: tokens.theme,
   });
 
-  const bg = tokens.background;
-
   return `<!DOCTYPE html>
 <html><head>
 <style>
@@ -79,11 +77,6 @@ html, body {
 }
 .code-container {
   display: inline-block;
-  background: ${hexToRgba(bg.fill, bg.fillOpacity / 100)};
-  padding: ${inToPx(tokens.padding)}px;
-  border-radius: ${inToPx(bg.cornerRadius)}px;
-  overflow: hidden;
-  ${bg.border ? `border: ${ptToPx(bg.border.width)}px ${bg.border.dashType} ${bg.border.color};` : "border: none;"}
 }
 .code-container pre {
   margin: 0;
@@ -110,8 +103,10 @@ html, body {
 // ============================================
 
 /**
- * Render code component to ImageNode.
- * Renders syntax-highlighted code via shared browser, returns image reference.
+ * Render code component to stack(shape, column(image)).
+ * The shape provides a native PPTX background (fill, border, corner radius, shadow).
+ * The column adds padding around the code screenshot.
+ * The HUG-sized stack shrink-wraps to the code image dimensions.
  */
 async function renderCode(
   params: CodeParams,
@@ -129,10 +124,9 @@ async function renderCode(
   const pngPath = await context.canvas.renderHtml(html, true);
 
   const codeImage = image(pngPath, undefined, code);
-  if (tokens.background.shadow) {
-    codeImage.tokens = { shadow: tokens.background.shadow };
-  }
-  return codeImage;
+  const backgroundRect = shape(tokens.background, { shape: SHAPE.RECTANGLE });
+  const contentLayer = column({ spacing: 0, padding: tokens.padding }, codeImage);
+  return stack(backgroundRect, contentLayer);
 }
 
 // ============================================

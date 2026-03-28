@@ -82,7 +82,7 @@ describe("code component registration", () => {
 // ============================================
 
 describe("code expansion", () => {
-  it("renders to image component via canvas", async () => {
+  it("renders to stack(shape, column(image)) via canvas", async () => {
     const theme = mockTheme();
     const canvas = noopCanvas();
     const context = { theme, assets: undefined, canvas } as any;
@@ -91,7 +91,16 @@ describe("code expansion", () => {
     const result = await componentRegistry.render(node, context);
 
     assert.strictEqual(result.type, NODE_TYPE.COMPONENT);
-    assert.strictEqual(result.componentName, "image");
+    assert.strictEqual(result.componentName, Component.Stack);
+    // Stack children stored in content: [shape, column]
+    const content = (result as any).content as any[];
+    assert.strictEqual(content.length, 2);
+    assert.strictEqual(content[0].componentName, Component.Shape);
+    assert.strictEqual(content[1].componentName, Component.Column);
+    // Column wraps the image (in content array)
+    const columnContent = content[1].content as any[];
+    assert.strictEqual(columnContent.length, 1);
+    assert.strictEqual(columnContent[0].componentName, Component.Image);
   });
 
   it("passes transparent: true to canvas.renderHtml", async () => {
@@ -137,7 +146,7 @@ describe("code expansion", () => {
     assert.ok(capturedHtml.includes("SELECT"), "HTML should contain code text");
   });
 
-  it("HTML contains background style from token", async () => {
+  it("HTML does not contain background style (handled by shape)", async () => {
     const theme = mockTheme();
     let capturedHtml = "";
     const canvas = {
@@ -151,7 +160,8 @@ describe("code expansion", () => {
     const node = code("x = 1", "python", DEFAULT_CODE_TOKENS);
     await componentRegistry.render(node, context);
 
-    assert.ok(capturedHtml.includes("30, 30, 30"), "HTML should contain background color (rgba) from token");
+    assert.ok(!capturedHtml.includes("30, 30, 30"), "HTML should not contain background color (now on shape)");
+    assert.ok(!capturedHtml.includes("border-radius"), "HTML should not contain border-radius (now on shape)");
   });
 });
 
@@ -267,9 +277,9 @@ describe("renderCodeToHtml()", () => {
     assert.ok(html.includes('data-render-signal="done"'), "should have render signal for Playwright");
   });
 
-  it("contains background color from token", async () => {
+  it("does not contain background color (handled by shape)", async () => {
     const html = await renderCodeToHtml("x", "text", tokens, codeStyle);
-    assert.ok(html.includes("30, 30, 30"), "should contain background color (rgba)");
+    assert.ok(!html.includes("30, 30, 30"), "should not contain background color (now on shape)");
   });
 
   it("contains font-family from textStyle", async () => {
@@ -329,7 +339,7 @@ describe("code expansion — additional", () => {
     assert.ok(capturedHtml.includes("SELECT"), "should contain trimmed code");
   });
 
-  it("forwards shadow from background token to image", async () => {
+  it("shadow on background token is passed to shape child", async () => {
     const theme = mockTheme();
     const canvas = noopCanvas();
     const context = { theme, assets: undefined, canvas } as any;
@@ -342,10 +352,14 @@ describe("code expansion — additional", () => {
     const node = code("SELECT 1", "sql", tokensWithShadow);
     const result = await componentRegistry.render(node, context);
 
-    assert.deepStrictEqual((result as any).tokens?.shadow, shadow, "shadow should be forwarded to image component");
+    // Stack content[0] is the shape — shadow is in its tokens
+    const content = (result as any).content as any[];
+    const shapeNode = content[0];
+    assert.strictEqual(shapeNode.componentName, Component.Shape);
+    assert.deepStrictEqual(shapeNode.tokens?.shadow, shadow, "shadow should be on the shape component");
   });
 
-  it("does not set shadow when background has none", async () => {
+  it("image child has no shadow", async () => {
     const theme = mockTheme();
     const canvas = noopCanvas();
     const context = { theme, assets: undefined, canvas } as any;
@@ -353,7 +367,11 @@ describe("code expansion — additional", () => {
     const node = code("SELECT 1", "sql", DEFAULT_CODE_TOKENS);
     const result = await componentRegistry.render(node, context);
 
-    assert.strictEqual((result as any).tokens, undefined, "tokens should not be set when no shadow");
+    // Stack content[1] = column, column content[0] = image
+    const content = (result as any).content as any[];
+    const imageNode = content[1].content[0];
+    assert.strictEqual(imageNode.componentName, Component.Image);
+    assert.strictEqual(imageNode.tokens, undefined, "image should not have shadow tokens");
   });
 
   it("multiline code produces valid HTML", async () => {
