@@ -48,162 +48,181 @@ const TEXT_STYLE = {
 
 const palette = {
   white: "#FFFFFF",
-  gray50: "#FAFAFA",
-  gray100: "#F5F5F5",
-  gray200: "#EBEBEB",
-  gray300: "#E5E5E5",
-  gray400: "#C8C8D0",
-  gray500: "#6B7280",
-  gray600: "#4A4A5A",
+  surface: "#F5F5F5",
+  border: "#E5E5E5",
+  textMuted: "#6B7280",
+  textSecondary: "#4A4A5A",
   navy: "#1A1A2E",
   purple: "#7C3AED",
-  purpleDeep: "#652593",
-  forest: "#0E6245",
-  brick: "#B42318",
-  amber: "#B54708",
-  slate: "#E2E8F0",
   lavender: "#A78BFA",
-  emerald: "#10B981",
-  skyBlue: "#79C0FF",
-  orange: "#F0883E",
-  gold: "#FFA657",
+  teal: "#0D9488",
 };
 
 const accents: Record<string, string> = {
   blue: palette.navy,
-  green: palette.forest,
-  red: palette.brick,
-  yellow: palette.amber,
+  green: palette.teal,
+  red: palette.purple,
+  yellow: palette.lavender,
   purple: palette.purple,
 };
 
-const subtleOpacity = 15;
-
 // ============================================
-// SPACING
+// SPACING & BORDERS
 // ============================================
 
 const unit = 0.03125; // 1/32 inch
 
-// Derived spacing constants (local to theme construction, not on Theme type)
 const spacing = unit * 8; // 0.25"
 const spacingTight = unit * 4; // 0.125"
 const padding = unit * 8; // 0.25"
-const cellPadding = unit * 2; // 0.0625"
 const bulletIndentMultiplier = 1.5;
 const lineSpacing = 1.2;
 const footerHeight = unit * 8;
 const margin = 0.5;
 
-// ============================================
-// BORDERS
-// ============================================
-
 const borderWidth = 0.75;
 const cornerRadius = 0.08;
 const cornerRadiusLarge = 0.12;
 const accentBarWidth = 2;
-const shadowOpacity = 12;
-const shadowBlur = 6;
-const shadowOffset = 2;
-const shadowAngle = 180;
-const defaultOpacity = 100;
-
-// ============================================
-// SHARED TOKEN OBJECTS FOR COMPOSITION COMPONENTS
-// ============================================
+const subtleBorder = { color: palette.border, width: borderWidth, dashType: DASH_TYPE.SOLID };
 
 const shadow = {
   type: SHADOW_TYPE.OUTER,
   color: palette.navy,
-  opacity: shadowOpacity,
-  blur: shadowBlur,
-  offset: shadowOffset,
-  angle: shadowAngle,
+  opacity: 12,
+  blur: 6,
+  offset: 2,
+  angle: 180,
 };
 
-// --- Rich text base (shared link/accent wiring) ---
+// ============================================
+// TEXT & LABEL TOKENS
+// ============================================
+
+// --- Alignment bases ---
+const alignLeft = { hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE } as const;
+const alignCenter = { hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } as const;
+
+// --- Text bases ---
 const richTextBase = {
   linkColor: palette.purple,
   linkUnderline: true,
   accents: accents,
 } as const;
 
-// --- Standard body text tokens ---
-const cardTitle: TextTokens = { ...richTextBase, style: TEXT_STYLE.H4, color: palette.navy, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
-const cardDescription: TextTokens = { ...richTextBase, style: TEXT_STYLE.SMALL, color: palette.gray600, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
-const quoteText: TextTokens = { ...richTextBase, style: TEXT_STYLE.H2, color: palette.navy, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
-const bodyText: TextTokens = { ...richTextBase, style: TEXT_STYLE.BODY, color: palette.navy, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
-const bodyList: ListTokens = { ...bodyText, vAlign: VALIGN.TOP };
-const mutedCaption: TextTokens = { ...richTextBase, style: TEXT_STYLE.SMALL, color: palette.gray600, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE };
+const heroBase = { ...richTextBase, linkUnderline: false, ...alignCenter } as const;
+const labelBase = { color: palette.navy, ...alignLeft } as const;
 
-// --- Dark-background (hero/section) text tokens ---
-const heroBase = { ...richTextBase, linkUnderline: false, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } as const;
+// --- Body text ---
+const bodyText: TextTokens = { ...richTextBase, ...alignLeft, style: TEXT_STYLE.BODY, color: palette.navy };
+const bodyList: ListTokens = { ...bodyText, vAlign: VALIGN.TOP };
+const cardTitle: TextTokens = { ...richTextBase, ...alignLeft, style: TEXT_STYLE.H4, color: palette.navy };
+const cardDescription: TextTokens = {
+  ...richTextBase,
+  ...alignLeft,
+  style: TEXT_STYLE.SMALL,
+  color: palette.textSecondary,
+};
+const quoteText: TextTokens = { ...richTextBase, ...alignLeft, style: TEXT_STYLE.H2, color: palette.navy };
+const mutedCaption: TextTokens = {
+  ...richTextBase,
+  ...alignCenter,
+  style: TEXT_STYLE.SMALL,
+  color: palette.textSecondary,
+};
+
+// --- Hero text ---
 const heroTitle: TextTokens = { ...heroBase, style: TEXT_STYLE.H1, color: palette.white };
 const heroSubtitle: TextTokens = { ...heroBase, style: TEXT_STYLE.H3, color: palette.white };
 
-// --- Heading scale (standard left-aligned navy labels) ---
-const labelH1: LabelTokens = { style: TEXT_STYLE.H1, color: palette.navy, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
-const labelH2: LabelTokens = { style: TEXT_STYLE.H2, color: palette.navy, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
-const labelH3: LabelTokens = { style: TEXT_STYLE.H3, color: palette.navy, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
-const labelH4: LabelTokens = { style: TEXT_STYLE.H4, color: palette.navy, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
+// --- Heading labels ---
+const labelH1: LabelTokens = { ...labelBase, style: TEXT_STYLE.H1 };
+const labelH2: LabelTokens = { ...labelBase, style: TEXT_STYLE.H2 };
+const labelH3: LabelTokens = { ...labelBase, style: TEXT_STYLE.H3 };
+const labelH4: LabelTokens = { ...labelBase, style: TEXT_STYLE.H4 };
 
 // --- Functional labels ---
-const labelEyebrow: LabelTokens = { style: TEXT_STYLE.EYEBROW, color: palette.purple, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
-const labelMutedSmall: LabelTokens = { style: TEXT_STYLE.SMALL, color: palette.gray600, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
-const labelFooter: LabelTokens = { style: TEXT_STYLE.FOOTER, color: palette.gray600, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
+const labelEyebrow: LabelTokens = { ...alignLeft, style: TEXT_STYLE.EYEBROW, color: palette.purple };
+const labelMutedSmall: LabelTokens = { ...alignLeft, style: TEXT_STYLE.SMALL, color: palette.textSecondary };
+const labelFooter: LabelTokens = { ...alignLeft, style: TEXT_STYLE.FOOTER, color: palette.textSecondary };
 
-// --- Accent / dark-background labels ---
-const labelSectionHeading: LabelTokens = { style: TEXT_STYLE.H2, color: palette.white, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE };
-const labelStatValue: LabelTokens = { style: TEXT_STYLE.H1, color: palette.purple, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE };
-const labelStatLabel: LabelTokens = { style: TEXT_STYLE.H3, color: palette.gray600, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE };
+// --- Accent labels ---
+const labelSectionHeading: LabelTokens = { ...alignCenter, style: TEXT_STYLE.H2, color: palette.white };
+const labelStatValue: LabelTokens = { ...alignCenter, style: TEXT_STYLE.H1, color: palette.purple };
+const labelStatLabel: LabelTokens = { ...alignCenter, style: TEXT_STYLE.H3, color: palette.textSecondary };
+
 // ============================================
-// SLOT COMPONENT TOKEN OBJECTS (shared across layouts)
+// COMPONENT TOKENS
 // ============================================
 
+// --- Card ---
+const cardBase = {
+  padding,
+  spacing: spacingTight,
+  hAlign: HALIGN.LEFT,
+  title: cardTitle,
+  description: cardDescription,
+};
+
+const cardBackground = {
+  fill: palette.white,
+  fillOpacity: 100,
+  border: subtleBorder,
+  cornerRadius,
+};
+
+const cardSlotTokens = {
+  ...cardBase,
+  vAlign: VALIGN.MIDDLE,
+  background: { ...cardBackground, shadow },
+};
+
+// --- Table ---
 const tableHeaderBase = {
   textStyle: TEXT_STYLE.EYEBROW,
-  textColor: palette.gray500,
+  textColor: palette.textMuted,
   backgroundOpacity: 0,
 };
 
 const tableTokens = {
-  headerRow: { ...tableHeaderBase, background: palette.gray200, hAlign: HALIGN.CENTER },
+  headerRow: { ...tableHeaderBase, background: palette.border, hAlign: HALIGN.CENTER },
   headerCol: { ...tableHeaderBase, background: palette.white, hAlign: HALIGN.LEFT },
   cellTextStyle: TEXT_STYLE.EYEBROW,
   cellTextColor: palette.navy,
-  cellBackground: palette.gray50,
+  cellBackground: palette.surface,
   cellBackgroundOpacity: 0,
   hAlign: HALIGN.CENTER,
   vAlign: VALIGN.MIDDLE,
   gridStyle: GRID_STYLE.HORIZONTAL,
-  gridStroke: { color: palette.gray300, width: borderWidth, dashType: DASH_TYPE.SOLID },
-  cellPadding: cellPadding * 2,
+  gridStroke: subtleBorder,
+  cellPadding: unit * 4,
   linkColor: palette.purple,
   linkUnderline: true,
   accents: accents,
   background: {
     fill: palette.white,
-    fillOpacity: defaultOpacity,
-    border: { color: palette.gray300, width: borderWidth, dashType: DASH_TYPE.SOLID },
+    fillOpacity: 100,
+    border: subtleBorder,
     cornerRadius: cornerRadiusLarge,
     shadow,
   },
   backgroundPadding: unit * 4,
 };
 
+// --- Code ---
 const codeTokens = {
   textStyle: TEXT_STYLE.CODE,
   theme: HIGHLIGHT_THEME.GITHUB_DARK,
   padding: padding,
   background: {
     fill: palette.navy,
-    fillOpacity: defaultOpacity,
+    fillOpacity: 100,
     cornerRadius,
     shadow,
   },
 };
 
+// --- Quote ---
 const quoteSlotTokens = {
   bar: {
     color: palette.purple,
@@ -215,11 +234,12 @@ const quoteSlotTokens = {
   attribution: labelMutedSmall,
 };
 
+// --- Testimonial ---
 const testimonialSlotTokens = {
   background: {
-    fill: palette.gray100,
-    fillOpacity: defaultOpacity,
-    border: { color: palette.gray300, width: borderWidth, dashType: DASH_TYPE.SOLID },
+    fill: palette.surface,
+    fillOpacity: 100,
+    border: subtleBorder,
     cornerRadius,
   },
   padding: padding,
@@ -230,48 +250,23 @@ const testimonialSlotTokens = {
   attribution: labelMutedSmall,
 };
 
+// --- Mermaid ---
 const mermaidTokens = {
   primary: palette.white,
   primaryContrast: palette.navy,
   text: palette.navy,
   line: palette.purple,
-  surface: palette.gray100,
-  surfaceBorder: palette.gray300,
-  surfaceSubtle: palette.gray50,
-  group: palette.gray100,
+  surface: palette.surface,
+  surfaceBorder: palette.border,
+  surfaceSubtle: palette.surface,
+  group: palette.surface,
   groupCornerRadius: cornerRadius,
   accents: accents,
-  accentStyle: { opacity: subtleOpacity, textColor: palette.purple },
+  accentStyle: { opacity: 15, textColor: palette.purple },
   textStyle: TEXT_STYLE.BODY,
 };
 
-// ============================================
-// THEME EXPORT
-// ============================================
-
-// Base card tokens shared across slot injection and layout variants
-const cardBase = {
-  padding,
-  spacing: spacingTight,
-  hAlign: HALIGN.LEFT,
-  title: cardTitle,
-  description: cardDescription,
-};
-
-const cardBackground = {
-  fill: palette.white,
-  fillOpacity: defaultOpacity,
-  border: { color: palette.gray300, width: borderWidth, dashType: DASH_TYPE.SOLID },
-  cornerRadius,
-};
-
-// Slot injection tokens for inline :::card{} directives in markdown body slots
-const cardSlotTokens = {
-  ...cardBase,
-  vAlign: VALIGN.MIDDLE,
-  background: { ...cardBackground, shadow },
-};
-
+// --- Body slot bundle (wires all component tokens into layouts) ---
 const bodySlotTokens = {
   table: tableTokens,
   code: codeTokens,
@@ -287,7 +282,7 @@ const bodySlotTokens = {
 // ============================================
 
 const defaultMasterConfig = defaultMaster.tokenMap({
-  background: { color: palette.gray50 },
+  background: { color: palette.surface },
   margin,
   footerHeight,
   footerLogo: assets.tycoworks.logo,
@@ -298,7 +293,7 @@ const defaultMasterConfig = defaultMaster.tokenMap({
 });
 
 const lightMinimalMaster = minimalMaster.tokenMap({
-  background: { color: palette.gray50 },
+  background: { color: palette.surface },
   margin,
 });
 
@@ -306,6 +301,37 @@ const darkMinimalMaster = minimalMaster.tokenMap({
   background: { color: palette.navy },
   margin,
 });
+
+// ============================================
+// LAYOUT HELPERS & THEME EXPORT
+// ============================================
+
+const headerTokens = {
+  title: labelH3,
+  eyebrow: labelEyebrow,
+  headerSpacing: spacingTight,
+};
+
+const bodyBase = {
+  master: defaultMasterConfig,
+  ...headerTokens,
+  text: bodyText,
+  list: bodyList,
+  hAlign: HALIGN.LEFT,
+  spacing,
+  ...bodySlotTokens,
+};
+
+const cardsBase = {
+  master: defaultMasterConfig,
+  ...headerTokens,
+  intro: bodyText,
+  caption: mutedCaption,
+  vAlign: VALIGN.MIDDLE,
+  hAlign: HALIGN.CENTER,
+  spacing,
+  gridSpacing: spacing,
+};
 
 export const theme = defineTheme({
   slide: SLIDE_SIZE.S16x9,
@@ -377,7 +403,7 @@ export const theme = defineTheme({
       variants: {
         default: titleLayout.tokenMap({
           title: { ...heroTitle, color: palette.navy, style: TEXT_STYLE.TITLE },
-          subtitle: { ...heroSubtitle, color: palette.gray600, style: TEXT_STYLE.H3 },
+          subtitle: { ...heroSubtitle, color: palette.textSecondary, style: TEXT_STYLE.H3 },
           master: lightMinimalMaster,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
@@ -409,30 +435,8 @@ export const theme = defineTheme({
     },
     body: {
       variants: {
-        default: bodyLayout.tokenMap({
-          master: defaultMasterConfig,
-          title: labelH3,
-          eyebrow: labelEyebrow,
-          headerSpacing: spacingTight,
-          text: bodyText,
-          list: bodyList,
-          vAlign: VALIGN.TOP,
-          hAlign: HALIGN.LEFT,
-          spacing: spacing,
-          ...bodySlotTokens,
-        }),
-        centered: bodyLayout.tokenMap({
-          master: defaultMasterConfig,
-          title: labelH3,
-          eyebrow: labelEyebrow,
-          headerSpacing: spacingTight,
-          text: bodyText,
-          list: bodyList,
-          vAlign: VALIGN.MIDDLE,
-          hAlign: HALIGN.LEFT,
-          spacing: spacing,
-          ...bodySlotTokens,
-        }),
+        default: bodyLayout.tokenMap({ ...bodyBase, vAlign: VALIGN.TOP }),
+        centered: bodyLayout.tokenMap({ ...bodyBase, vAlign: VALIGN.MIDDLE }),
       },
     },
     stat: {
@@ -442,12 +446,7 @@ export const theme = defineTheme({
           value: labelStatValue,
           label: labelStatLabel,
           caption: mutedCaption,
-          background: {
-            fill: palette.white,
-            fillOpacity: defaultOpacity,
-            border: { color: palette.gray300, width: borderWidth, dashType: DASH_TYPE.SOLID },
-            cornerRadius: cornerRadiusLarge,
-          },
+          background: { ...cardBackground, cornerRadius: cornerRadiusLarge },
           backgroundWidth: 6,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
@@ -458,18 +457,7 @@ export const theme = defineTheme({
     },
     "two-column": {
       variants: {
-        default: twoColumnLayout.tokenMap({
-          master: defaultMasterConfig,
-          title: labelH3,
-          eyebrow: labelEyebrow,
-          headerSpacing: spacingTight,
-          text: bodyText,
-          list: bodyList,
-          vAlign: VALIGN.MIDDLE,
-          hAlign: HALIGN.LEFT,
-          spacing: spacing,
-          ...bodySlotTokens,
-        }),
+        default: twoColumnLayout.tokenMap({ ...bodyBase, vAlign: VALIGN.MIDDLE }),
       },
     },
     statement: {
@@ -488,24 +476,12 @@ export const theme = defineTheme({
       variants: {
         default: agendaLayout.tokenMap({
           master: defaultMasterConfig,
-          title: labelH3,
-          eyebrow: labelEyebrow,
-          headerSpacing: spacingTight,
+          ...headerTokens,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
           items: { ...bodyText, style: TEXT_STYLE.H4, color: palette.navy },
-          itemBackground: {
-            fill: palette.white,
-            fillOpacity: defaultOpacity,
-            border: { color: palette.gray300, width: borderWidth, dashType: DASH_TYPE.SOLID },
-            cornerRadius,
-          },
-          itemNumber: {
-            style: TEXT_STYLE.H2,
-            color: palette.gray400,
-            hAlign: HALIGN.LEFT,
-            vAlign: VALIGN.MIDDLE,
-          },
+          itemBackground: cardBackground,
+          itemNumber: { ...alignLeft, style: TEXT_STYLE.H2, color: palette.border },
           itemPadding: spacingTight + unit,
           itemVAlign: VALIGN.MIDDLE,
           itemSpacing: spacing,
@@ -517,31 +493,10 @@ export const theme = defineTheme({
     cards: {
       variants: {
         default: cardsLayout.tokenMap({
-          master: defaultMasterConfig,
-          title: labelH3,
-          eyebrow: labelEyebrow,
-          headerSpacing: spacingTight,
-          intro: bodyText,
-          caption: mutedCaption,
-          vAlign: VALIGN.MIDDLE,
-          hAlign: HALIGN.CENTER,
-          spacing: spacing,
-          gridSpacing: spacing,
+          ...cardsBase,
           card: { ...cardBase, padding: unit * 11, vAlign: VALIGN.TOP, background: cardBackground },
         }),
-        flat: cardsLayout.tokenMap({
-          master: defaultMasterConfig,
-          title: labelH3,
-          eyebrow: labelEyebrow,
-          headerSpacing: spacingTight,
-          intro: bodyText,
-          caption: mutedCaption,
-          vAlign: VALIGN.MIDDLE,
-          hAlign: HALIGN.CENTER,
-          spacing: spacing,
-          gridSpacing: spacing,
-          card: { ...cardBase, padding: unit * 11, vAlign: VALIGN.TOP },
-        }),
+        flat: cardsLayout.tokenMap({ ...cardsBase, card: { ...cardBase, padding: unit * 11, vAlign: VALIGN.TOP } }),
       },
     },
     blank: {
@@ -555,20 +510,11 @@ export const theme = defineTheme({
     quote: {
       variants: {
         default: quoteLayout.tokenMap({
-          quote: {
-            bar: {
-              color: palette.purple,
-              width: accentBarWidth,
-              dashType: DASH_TYPE.SOLID,
-            },
-            spacing: spacing,
-            quote: quoteText,
-            attribution: labelMutedSmall,
-          },
+          quote: quoteSlotTokens,
           master: lightMinimalMaster,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
-          spacing: spacing,
+          spacing,
         }),
         dark: quoteLayout.tokenMap({
           quote: {
@@ -585,7 +531,7 @@ export const theme = defineTheme({
             },
             attribution: {
               ...labelMutedSmall,
-              color: palette.gray400,
+              color: palette.textMuted,
             },
           },
           master: darkMinimalMaster,
@@ -599,39 +545,37 @@ export const theme = defineTheme({
       variants: {
         default: shapesLayout.tokenMap({
           master: defaultMasterConfig,
-          title: labelH3,
-          eyebrow: labelEyebrow,
-          subtitle: { style: TEXT_STYLE.BODY, color: palette.gray500, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
-          headerSpacing: spacingTight,
+          ...headerTokens,
+          subtitle: { ...alignLeft, style: TEXT_STYLE.BODY, color: palette.textMuted },
           label: {
             style: TEXT_STYLE.BODY,
-            color: palette.gray600,
+            color: palette.textSecondary,
             hAlign: HALIGN.CENTER,
             vAlign: VALIGN.TOP,
             border: { color: palette.purple, width: 1, dashType: DASH_TYPE.SOLID },
           },
           rectangle: {
             fill: palette.purple,
-            fillOpacity: defaultOpacity,
+            fillOpacity: 100,
             border: { color: palette.navy, width: 2, dashType: DASH_TYPE.SOLID },
             cornerRadius: 0,
           },
           ellipse: {
             fill: palette.navy,
-            fillOpacity: defaultOpacity,
+            fillOpacity: 100,
             border: { color: palette.purple, width: 2, dashType: DASH_TYPE.DASHED },
             cornerRadius: 0,
           },
           triangle: {
-            fill: palette.emerald,
-            fillOpacity: defaultOpacity,
-            border: { color: palette.brick, width: 3, dashType: DASH_TYPE.DASHED },
+            fill: palette.teal,
+            fillOpacity: 100,
+            border: { color: palette.navy, width: 3, dashType: DASH_TYPE.DASHED },
             cornerRadius: 0,
           },
           diamond: {
-            fill: palette.slate,
-            fillOpacity: defaultOpacity,
-            border: { color: palette.emerald, width: 2, dashType: DASH_TYPE.DOTTED },
+            fill: palette.border,
+            fillOpacity: 100,
+            border: { color: palette.teal, width: 2, dashType: DASH_TYPE.DOTTED },
             cornerRadius: 0,
           },
           vAlign: VALIGN.TOP,
@@ -644,9 +588,7 @@ export const theme = defineTheme({
       variants: {
         default: transformLayout.tokenMap({
           master: defaultMasterConfig,
-          title: labelH3,
-          eyebrow: labelEyebrow,
-          headerSpacing: spacingTight,
+          ...headerTokens,
           text: cardDescription,
           list: bodyList,
           vAlign: VALIGN.MIDDLE,
@@ -672,13 +614,11 @@ export const theme = defineTheme({
       variants: {
         default: linesLayout.tokenMap({
           master: defaultMasterConfig,
-          title: labelH3,
-          eyebrow: labelEyebrow,
-          headerSpacing: spacingTight,
+          ...headerTokens,
           label: labelMutedSmall,
           solid: { color: palette.navy, width: 2, dashType: DASH_TYPE.SOLID },
           dashed: { color: palette.purple, width: 2, dashType: DASH_TYPE.DASHED },
-          dotted: { color: palette.skyBlue, width: 2, dashType: DASH_TYPE.DOTTED },
+          dotted: { color: palette.lavender, width: 2, dashType: DASH_TYPE.DOTTED },
           vAlign: VALIGN.TOP,
           hAlign: HALIGN.LEFT,
           spacing: spacing,
