@@ -9,6 +9,7 @@ Slides are separated by `---` on its own line. Each slide has a YAML frontmatter
 ```markdown
 ---
 layout: body
+variant: default
 title: Slide Title
 eyebrow: SECTION NAME
 ---
@@ -17,6 +18,7 @@ Body content goes here.
 
 ---
 layout: body
+variant: default
 title: Next Slide
 ---
 
@@ -40,17 +42,19 @@ Each slide must specify a layout and any layout-specific parameters:
 ```markdown
 ---
 layout: body
+variant: default
 title: My Slide Title
 eyebrow: CHAPTER 1
 ---
 ```
 
-Common parameters:
-- `layout` - Which layout to use (required)
+Frontmatter fields:
+- `layout` - Which layout to use (**required**)
+- `variant` - Which variant of the layout (**required**, e.g. `default`)
 - `title` - Slide title
-- `eyebrow` - Small label above title
-- `subtitle` - Subtitle text (title layout only)
 - `notes` - Speaker notes
+
+Available layouts and parameters are defined by the theme.
 
 Values are plain YAML — quote only when the value contains special characters like `[`, `]`, or `: ` mid-string. Plain text values do not need quotes.
 
@@ -127,6 +131,7 @@ The `:::table` directive is also available. See [Components — table](./compone
 ```markdown
 ---
 layout: body
+variant: default
 title: Important Slide
 notes: |
   Remember to emphasize the key point.
@@ -182,12 +187,14 @@ theme: "@tycoslide/theme-default"
 
 ---
 layout: title
+variant: default
 title: Markdown Basics
 subtitle: Essential Syntax for tycoslide
 ---
 
 ---
 layout: body
+variant: default
 title: Text Formatting
 eyebrow: BASICS
 notes: Demo each formatting style
@@ -201,6 +208,7 @@ Add [clickable links](https://example.com) to any slide.
 
 ---
 layout: body
+variant: default
 title: Lists and Structure
 ---
 
@@ -218,6 +226,7 @@ title: Lists and Structure
 
 ---
 layout: section
+variant: default
 title: Next Steps
 ---
 ```

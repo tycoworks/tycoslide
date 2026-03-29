@@ -2,10 +2,18 @@
 
 Get your first presentation built in 5 minutes.
 
+## Create a New Project
+
+```bash
+mkdir my-slides && cd my-slides
+npm init -y
+```
+
 ## Install tycoslide
 
 ```bash
 npm install @tycoslide/cli @tycoslide/theme-default
+npx playwright-core install chromium
 ```
 
 Verify the installation:
@@ -25,51 +33,23 @@ theme: "@tycoslide/theme-default"
 
 ---
 layout: title
-title: Q3 Team Update
-subtitle: Engineering & Design
----
-
----
-layout: section
-title: Summary
+variant: default
+title: My Presentation
+subtitle: Built with tycoslide
 ---
 
 ---
 layout: body
-title: What We Shipped
-eyebrow: ENGINEERING
+variant: default
+title: First Slide
+eyebrow: INTRODUCTION
 ---
 
-This slide uses the **body** layout with an eyebrow label, title, and bullet list.
+Your content goes here.
 
-- Migrated auth service to new provider
-- Reduced page load time by 400ms
-- Shipped dashboard redesign to beta
-
----
-layout: body
-title: Team Priorities
-eyebrow: NEXT QUARTER
----
-
-Cards display structured content. Each card has a title and description.
-
-:::card{title="Infrastructure"}
-Migrate remaining services to new cluster.
-:::
-
-:::card{title="Performance"}
-Target sub-second load times on key pages.
-:::
-
-:::card{title="Design System"}
-Publish component library v2 with tokens.
-:::
-
----
-layout: section
-title: Questions?
----
+- First point
+- Second point
+- Third point
 ```
 
 ## Build the Presentation
@@ -78,11 +58,19 @@ title: Questions?
 npx tycoslide build slides.md
 ```
 
-This creates `slides.pptx` and a `slides-html/` directory containing a per-slide HTML preview.
+Output: `slides.pptx` — ready to open and present. A `slides-html/` directory is also generated with per-slide HTML previews for quick inspection without opening PowerPoint.
 
 ## Open the Output
 
 Open `slides.pptx` in PowerPoint, Keynote, or Google Slides.
+
+## See What's Possible
+
+The [showcase example](../examples/showcase.md) demonstrates all built-in layouts and components — title, agenda, statement, cards, comparison tables, mermaid diagrams, and more. Build it the same way:
+
+```bash
+npx tycoslide build examples/showcase.md
+```
 
 ## Next Steps
 

@@ -34,9 +34,11 @@ Slides created from the default theme:
 
 ## Quick Start
 
-Install tycoslide and playwright:
+Create a new project and install tycoslide:
 
 ```bash
+mkdir my-slides && cd my-slides
+npm init -y
 npm install @tycoslide/cli @tycoslide/theme-default
 npx playwright-core install chromium
 ```
@@ -50,12 +52,14 @@ theme: "@tycoslide/theme-default"
 
 ---
 layout: title
+variant: default
 title: My Presentation
 subtitle: Built with tycoslide
 ---
 
 ---
 layout: body
+variant: default
 title: First Slide
 eyebrow: INTRODUCTION
 ---
@@ -70,6 +74,8 @@ npx tycoslide build slides.md
 ```
 
 Output: `slides.pptx` — ready to open and present.
+
+See [examples/showcase.md](./examples/showcase.md) for a full-featured deck with cards, tables, mermaid diagrams, and more.
 
 **[Full quick start guide →](./docs/quick-start.md)**
 

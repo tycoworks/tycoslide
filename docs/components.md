@@ -400,7 +400,7 @@ shape(tokens.marker, { shape: SHAPE.DIAMOND })
 
 ## slideNumber
 
-Displays the current slide number. Used in the default master slide footer. Themes place this in the master layout — authors do not add it to individual slides.
+Displays the current slide number. Themes place this in the master layout — authors do not add it to individual slides.
 
 No directive parameters.
 

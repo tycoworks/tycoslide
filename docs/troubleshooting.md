@@ -21,6 +21,7 @@ theme: "@tycoslide/theme-default"
 
 ---
 layout: title
+variant: default
 title: My Presentation
 ---
 ```
@@ -171,6 +172,7 @@ Error: Slide 3: missing 'layout' field in frontmatter
 ```markdown
 ---
 layout: body
+variant: default
 title: My Slide
 ---
 ```
@@ -180,10 +182,12 @@ title: My Slide
 ### "Unknown layout"
 
 ```
-Error: Slide 3: unknown layout 'hero'. Available: title, section, body
+Error: Slide 3: unknown layout 'hero'. Available: title, section, body, ...
 ```
 
-**Fix:** Use one of the layouts listed in the error, or verify that your theme package exports the correct layouts. For the full list of available layouts, see [Layouts](./layouts.md).
+The available layouts listed in the error come from your theme.
+
+**Fix:** Use one of the layouts listed in the error, or verify that your theme package exports the correct layouts.
 
 ---
 
@@ -205,8 +209,8 @@ Error: Layout 'title' params validation failed:
 ```
 Missing font errors:
 
-  "Fira Code" has no bold variant.
-  "Fira Code" has no italic variant.
+  "FontName" has no bold variant.
+  "FontName" has no italic variant.
 ```
 
 **Cause:** The font is missing a bold or italic variant.
@@ -269,6 +273,7 @@ title: My Slide: with a colon
 ```yaml
 ---
 layout: body
+variant: default
 title: "My Slide: with a colon"
 ---
 ```
@@ -341,6 +346,7 @@ author: John Doe
 
 ---
 layout: title
+variant: default
 title: My Presentation
 ---
 ```

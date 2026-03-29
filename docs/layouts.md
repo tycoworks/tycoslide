@@ -1,264 +1,6 @@
 # Layouts
 
-Layouts define the structure of a slide — where the title goes, where body content renders, and what fixed elements like footers appear. Each layout accepts specific frontmatter parameters and controls where content sits on the slide. This page covers the built-in layouts from `@tycoslide/theme-default` and how to create custom layouts for your own themes.
-
-## Available Layouts
-
-`@tycoslide/theme-default` provides 11 layouts. Custom themes can define their own (see [Creating Custom Layouts](#creating-custom-layouts)).
-
-| Name | Purpose |
-|------|---------|
-| `title` | Opening slide with large centered title and optional subtitle |
-| `section` | Section divider with centered heading |
-| `body` | Default content slide with optional title/eyebrow and markdown body |
-| `stat` | Big number or key metric with label and optional caption |
-| `quote` | Standalone pull quote with accent bar and optional attribution |
-| `end` | Closing slide, mirrors the title layout |
-| `blank` | Full canvas for custom content |
-| `two-column` | Two equal markdown columns with optional header |
-| `statement` | Centered body text with optional caption |
-| `agenda` | Title, optional intro, and bullet list |
-| `cards` | Card grid with intro text and optional caption |
-
----
-
-## title
-
-Opening slide with large title and optional subtitle, centered on a dark background.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `title` | `string` | Main title text (**required**) |
-| `subtitle` | `string` | Subtitle text below the title |
-
-### Example
-
-```markdown
----
-layout: title
-title: My Presentation
-subtitle: A Brief Overview
----
-```
-
----
-
-## section
-
-Section divider with centered title on a dark background.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `title` | `string` | Section name (**required**) |
-
-### Example
-
-```markdown
----
-layout: section
-title: Part 1: Getting Started
----
-```
-
----
-
-## body
-
-Markdown body with optional title. Slides that omit `layout` from their frontmatter use `body` automatically.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `title` | `string` | Slide title, rendered as `h3` style |
-| `eyebrow` | `string` | Small label above the title, rendered in `eyebrow` style |
-
-### Slots
-
-| Slot | Description |
-|------|-------------|
-| `body` | Main content area — accepts any markdown |
-
-### Markdown body content
-
-The body slot accepts any markdown: text, bullets, headings, tables, and components.
-
-```markdown
----
-layout: body
-title: Key Features
-eyebrow: OVERVIEW
----
-
-tycoslide compiles Markdown to native PowerPoint:
-
-- Brand-compliant output without manual formatting
-- Component system for cards, tables, and diagrams
-- Catches invalid content at build time
-```
-
-```markdown
----
-layout: body
-title: Architecture
----
-
-:::card{title="Author"}
-Writes Markdown, chooses layouts.
-:::
-
-:::card{title="Developer"}
-Builds themes and components.
-:::
-
-:::card{title="Designer"}
-Defines tokens and color palettes.
-:::
-```
-
----
-
-## stat
-
-Big number or key metric with label and optional caption.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `value` | `string` | The metric value, rendered as `h1` (**required**) |
-| `label` | `string` | Label below the value, rendered as `h3` (**required**) |
-| `caption` | `string` | Optional caption below the label |
-
----
-
-## quote
-
-Standalone pull quote with left accent bar and optional attribution.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `quote` | `string` | Quote text (**required**) |
-| `attribution` | `string` | Attribution line below the quote |
-
----
-
-## end
-
-Closing slide. Mirrors the title layout with centered text on a dark background.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `title` | `string` | Closing title text (**required**) |
-| `subtitle` | `string` | Subtitle text below the title |
-
----
-
-## blank
-
-Full canvas for custom content. The `body` slot accepts any markdown.
-
-### Parameters
-
-None.
-
----
-
-
-## two-column
-
-Two equal markdown columns with optional header. Slots: `left`, `right`.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `title` | `string` | Slide title |
-| `eyebrow` | `string` | Small label above the title |
-
----
-
-
-## statement
-
-Centered body text with optional caption. Use for value propositions and key statements.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `title` | `string` | Slide title (**required**) |
-| `eyebrow` | `string` | Small label above the title |
-| `body` | `string` | Body text, centered (**required**) |
-| `caption` | `string` | Caption below the body text |
-
----
-
-## agenda
-
-Title, optional intro text, and a bullet list of items.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `title` | `string` | Slide title (**required**) |
-| `eyebrow` | `string` | Small label above the title |
-| `intro` | `string` | Introductory text above the list |
-| `items` | `string[]` | List of agenda items (**required**) |
-
-### YAML Array Syntax
-
-Array parameters use YAML block sequence syntax:
-
-```markdown
----
-layout: agenda
-title: Today's Agenda
-items:
-  - Introduction and context
-  - Live demo
-  - Q&A
----
-```
-
----
-
-## cards
-
-Card grid with optional intro text and caption. Automatically adjusts columns based on card count.
-
-### Parameters
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `title` | `string` | Slide title (**required**) |
-| `eyebrow` | `string` | Small label above the title |
-| `intro` | `string` | Introductory text above the cards |
-| `cards` | `object[]` | Array of card objects (each with `title`, `description`, `image`) (**required**) |
-| `caption` | `string` | Caption below the cards |
-
----
-
-
-## Masters
-
-Masters control the fixed elements that appear on every slide — e.g. footers, slide numbers, background color — and define the space layouts have to work with. A layout's available space is whatever the master leaves after accounting for margins and fixed elements.
-
-The default theme provides two masters:
-
-- **`default`** — footer chrome with company name and slide number. Most content layouts use this master.
-- **`minimal`** — margin and background only, no footer. `title`, `section`, `end`, and `blank` layouts use this master.
-
-Master tokens (background, margin, footer config, etc.) are passed to layouts via their token shapes — just like any other token. Theme authors define master configs as shared constants and reference them from layout token maps.
+Layouts define the structure of a slide — where the title goes, where body content renders, and what fixed elements like footers appear. Each layout accepts specific frontmatter parameters and controls where content sits on the slide. Themes package layouts alongside tokens and masters.
 
 ---
 
@@ -368,6 +110,7 @@ slots: ['body', 'sidebar']
 ```markdown
 ---
 layout: my-layout
+variant: default
 title: Title
 ---
 
@@ -443,7 +186,11 @@ render: (params, slots, tokens) => ({
 
 The default theme's `title`, `section`, and `body` layouts in [`packages/theme-default/src/layouts.ts`](../packages/theme-default/src/layouts.ts) demonstrate all of these patterns — params, slots, masters, and composition with DSL functions.
 
-### Using Masters
+---
+
+## Masters
+
+Masters control the fixed elements that appear on every slide — e.g. footers, slide numbers, background color — and define the space layouts have to work with. A layout's available space is whatever the master leaves after accounting for margins and fixed elements.
 
 `defineMaster()` creates a master definition. A master returns fixed chrome elements and the `contentBounds` that tells layouts how much space they have to work with.
 
@@ -496,7 +243,9 @@ export const myMaster = defineMaster({
 
 Masters are registered by exporting them from the theme entry point. Master tokens flow through layout token shapes — each layout declares a `master` token typed to its master's token interface.
 
-### Registering Layouts in Themes
+---
+
+## Registering Layouts in Themes
 
 Layout files export definition objects created with `defineLayout()`:
 
@@ -511,17 +260,20 @@ export const allLayouts = [myLayout];
 
 The theme entry point exports both a `layouts` array and a `masters` array. The CLI registers them automatically. See [Themes — Registering Layouts in Themes](./themes.md#registering-layouts-in-themes) for the full pattern.
 
-### Testing Layouts
+---
+
+## Testing Layouts
 
 **Using Markdown:**
 
 ```markdown
 ---
-theme: "@tycoslide/theme-default"
+theme: my-theme
 ---
 
 ---
 layout: two-column
+variant: default
 title: Test Layout
 ---
 
@@ -536,7 +288,7 @@ Right content.
 
 ```typescript
 import { Presentation, layoutRegistry } from '@tycoslide/core';
-import { theme, components, layouts } from '@tycoslide/theme-default';
+import { theme, components, layouts } from 'my-theme';
 import { componentRegistry } from '@tycoslide/core';
 
 componentRegistry.register(components);
@@ -547,3 +299,11 @@ const pres = new Presentation(theme);
 // Add slides programmatically to test DSL usage,
 // or use compileDocument() for markdown-based testing.
 ```
+
+---
+
+## Related
+
+- [Components](./components.md) - Component reference and custom components
+- [Themes](./themes.md) - Theme structure and token configuration
+- [Markdown Syntax](./markdown-syntax.md) - Frontmatter and slide syntax

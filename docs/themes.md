@@ -22,6 +22,7 @@ theme: "@tycoslide/theme-default"
 
 ---
 layout: title
+variant: default
 title: My Presentation
 ---
 ```
@@ -548,12 +549,14 @@ theme: my-theme
 
 ---
 layout: title
+variant: default
 title: Theme Test
 subtitle: Verifying all components
 ---
 
 ---
 layout: body
+variant: default
 title: Components
 ---
 

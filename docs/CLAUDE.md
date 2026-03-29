@@ -103,7 +103,7 @@ Each page owns its topic. Writers must not write content that belongs on another
 | Install, first build, editor setup | `quick-start.md` |
 | Frontmatter, slide separators, text formatting, lists, tables (GFM), speaker notes, directive summary table | `markdown-syntax.md` |
 | Full component reference (content + layout), directive syntax, custom component authoring, DSL functions, token system, expansion function | `components.md` |
-| Built-in layout reference (params + examples), custom layout authoring, slot mechanics, masters, testing layouts | `layouts.md` |
+| Custom layout authoring, slot mechanics, masters, render function, testing layouts | `layouts.md` |
 | Theme structure, color/font/spacing/border/component token configuration, variants system, font requirements, registering layouts in themes, testing themes | `themes.md` |
 | CLI flags, exit codes, debug workflow | `cli.md` |
 | Error messages, causes, fixes, debug tools | `troubleshooting.md` |
