@@ -73,7 +73,7 @@ Build your presentation:
 npx tycoslide build slides.md
 ```
 
-Output: `slides.pptx` — ready to open and present.
+Output: `slides.pptx` and a `slides-build/` directory with per-slide HTML previews.
 
 See [examples/showcase.md](./examples/showcase.md) for a full-featured deck with cards, tables, mermaid diagrams, and more.
 
