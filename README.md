@@ -64,7 +64,7 @@ Output: `slides.pptx` and a `slides-build/` directory with per-slide HTML previe
 
 ## Examples
 
-See [examples/showcase.md](./examples/showcase.md) for the full deck with cards, tables, mermaid diagrams, and more.
+See [examples/showcase.md](./examples/showcase.md) for the full deck.
 
 <table>
 <tr>
@@ -83,9 +83,7 @@ See [examples/showcase.md](./examples/showcase.md) for the full deck with cards,
 
 ## Documentation
 
-**[Read the documentation →](./docs/)**
-
-Covers markdown syntax, components, layouts, themes, CLI usage, and troubleshooting.
+[Read the documentation →](./docs/) — markdown syntax, components, layouts, themes, CLI usage, and troubleshooting.
 
 ## Community
 
