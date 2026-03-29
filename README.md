@@ -13,24 +13,9 @@ Create editable PowerPoint slides from markdown, with TypeScript-based themes an
 
 **[About tycoslide →](./docs/about.md)** — how it works, how it compares, and FAQs.
 
-## Examples
-
-Slides created from the default theme:
-
-<table>
-<tr>
-<td><img src="assets/slide-1.png" alt="Title slide" /></td>
-<td><img src="assets/slide-2.png" alt="Agenda slide" /></td>
-<td><img src="assets/slide-3.png" alt="Statement slide" /></td>
-<td><img src="assets/slide-4.png" alt="Transform slide" /></td>
-</tr>
-<tr>
-<td><img src="assets/slide-5.png" alt="Cards slide" /></td>
-<td><img src="assets/slide-6.png" alt="Comparison table slide" /></td>
-<td><img src="assets/slide-7.png" alt="Mermaid diagram slide" /></td>
-<td><img src="assets/slide-8.png" alt="End slide" /></td>
-</tr>
-</table>
+<p align="center">
+  <img src="assets/demo.gif" alt="tycoslide demo — markdown to PowerPoint in one command" width="700" />
+</p>
 
 ## Quick Start
 
@@ -78,6 +63,25 @@ Output: `slides.pptx` and a `slides-build/` directory with per-slide HTML previe
 See [examples/showcase.md](./examples/showcase.md) for a full-featured deck with cards, tables, mermaid diagrams, and more.
 
 **[Full quick start guide →](./docs/quick-start.md)**
+
+## Examples
+
+Slides created from the default theme:
+
+<table>
+<tr>
+<td><img src="assets/slide-1.png" alt="Title slide" /></td>
+<td><img src="assets/slide-2.png" alt="Agenda slide" /></td>
+<td><img src="assets/slide-3.png" alt="Statement slide" /></td>
+<td><img src="assets/slide-4.png" alt="Transform slide" /></td>
+</tr>
+<tr>
+<td><img src="assets/slide-5.png" alt="Cards slide" /></td>
+<td><img src="assets/slide-6.png" alt="Comparison table slide" /></td>
+<td><img src="assets/slide-7.png" alt="Mermaid diagram slide" /></td>
+<td><img src="assets/slide-8.png" alt="End slide" /></td>
+</tr>
+</table>
 
 ## Documentation
 
