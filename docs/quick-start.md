@@ -58,7 +58,7 @@ Your content goes here.
 npx tycoslide build slides.md
 ```
 
-Output: `slides.pptx` — ready to open and present. A `slides-html/` directory is also generated with per-slide HTML previews for quick inspection without opening PowerPoint.
+Output: `slides.pptx` — ready to open and present. A `slides-build/` directory is also generated with per-slide HTML previews for quick inspection without opening PowerPoint.
 
 ## Open the Output
 

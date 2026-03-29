@@ -357,7 +357,7 @@ title: My Presentation
 
 ### HTML preview
 
-Every build writes per-slide HTML files to `{basename}-html/` for inspecting layout before opening PowerPoint. To skip PPTX generation and just get the HTML:
+Every build writes per-slide HTML files to `{basename}-build/` for inspecting layout before opening PowerPoint. To skip PPTX generation and just get the HTML:
 
 ```bash
 tycoslide build deck.md --preview

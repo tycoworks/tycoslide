@@ -4,7 +4,7 @@ Complete reference for the tycoslide command-line interface.
 
 ## tycoslide build
 
-Compiles a Markdown file to PowerPoint. Every build also writes a `{basename}-html/` directory containing a per-slide HTML preview you can open in a browser to check how your slides look.
+Compiles a Markdown file to PowerPoint. Every build also writes a `{basename}-build/` directory containing a per-slide HTML preview you can open in a browser to check how your slides look.
 
 ```
 tycoslide build <input> [options]
@@ -35,7 +35,7 @@ When a slide overflows or renders incorrectly, use `--preview` to skip PPTX gene
 tycoslide build slides.md --preview
 ```
 
-Open `slides-html/slide-N.html` in a browser to see where each element landed. Add `--debug` for verbose logging.
+Open `slides-build/slide-N.html` in a browser to see where each element landed. Add `--debug` for verbose logging.
 
 For a full debugging walkthrough, see [Troubleshooting](./troubleshooting.md).
 

@@ -64,11 +64,7 @@ export async function build(inputPath: string, options: BuildOptions): Promise<v
         }
       }
 
-      if (result.outputFiles.length > 0) {
-        console.log(`Preview: ${result.outputFiles[0]}`);
-      } else {
-        console.log(`Preview: ${outputDir}`);
-      }
+      console.log(`Preview: ${path.join(outputDir, "slide-1.html")}`);
     } catch (error) {
       if (error instanceof LayoutValidationError || error instanceof MissingFontError) {
         console.error(error.message);
@@ -88,7 +84,8 @@ export async function build(inputPath: string, options: BuildOptions): Promise<v
         includeNotes: options.notes,
         renderScale: options.renderScale,
       });
-      console.log(`Written: ${outputPath}`);
+      console.log(`Slides:  ${outputPath}`);
+      console.log(`Preview: ${path.join(outputDir, "slide-1.html")}`);
     } catch (error) {
       if (error instanceof LayoutValidationError || error instanceof MissingFontError) {
         console.error(error.message);
