@@ -1,6 +1,6 @@
 # @tycoslide/cli
 
-> **Early release (v0.2.0)** — under active development. API may change between minor versions.
+> **Early release** — under active development. API may change between minor versions.
 
 Command-line interface for tycoslide. Compiles Markdown to editable PowerPoint slides.
 

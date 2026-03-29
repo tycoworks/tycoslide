@@ -4,7 +4,7 @@
 
 Create editable PowerPoint slides from markdown, with TypeScript-based themes and build-time validation.
 
-> **Early release (v0.2.0)** — tycoslide is under active development. The API may change between minor versions.
+> **Early release** — tycoslide is under active development. The API may change between minor versions.
 
 **Why tycoslide?**
 - **Editable PowerPoint slides**: Native .pptx files that open in PowerPoint, Keynote, or Google Slides

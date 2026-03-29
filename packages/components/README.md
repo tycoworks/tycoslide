@@ -1,6 +1,6 @@
 # @tycoslide/components
 
-> **Early release (v0.2.0)** — under active development. API may change between minor versions.
+> **Early release** — under active development. API may change between minor versions.
 
 Standard component library for tycoslide presentations. Provides text, image, card, table, mermaid diagram, code block, and other components.
 

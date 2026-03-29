@@ -1,6 +1,6 @@
 # @tycoslide/core
 
-> **Early release (v0.2.0)** — under active development. API may change between minor versions.
+> **Early release** — under active development. API may change between minor versions.
 
 The framework engine for tycoslide presentations — rendering, layout, model, and markdown compilation.
 

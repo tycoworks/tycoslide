@@ -1,6 +1,6 @@
 # @tycoslide/theme-default
 
-> **Early release (v0.2.0)** — under active development. API may change between minor versions.
+> **Early release** — under active development. API may change between minor versions.
 
 Default theme for tycoslide — Inter font, purple/navy palette, 14 layouts.
 
