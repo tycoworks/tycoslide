@@ -60,13 +60,11 @@ npx tycoslide build slides.md
 
 Output: `slides.pptx` and a `slides-build/` directory with per-slide HTML previews.
 
-See [examples/showcase.md](./examples/showcase.md) for a full-featured deck with cards, tables, mermaid diagrams, and more.
-
 **[Full quick start guide →](./docs/quick-start.md)**
 
 ## Examples
 
-Slides created from the default theme:
+See [examples/showcase.md](./examples/showcase.md) for the full deck with cards, tables, mermaid diagrams, and more.
 
 <table>
 <tr>
