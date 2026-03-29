@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, test } from "node:test";
 
-const CLI = join(import.meta.dirname, "..", "dist", "cli", "index.js");
+const CLI = join(import.meta.dirname, "..", "dist", "index.js");
 
 function run(args: string[], cwd?: string): { stdout: string; exitCode: number } {
   try {

@@ -4,7 +4,7 @@
 // Use for eyebrows, attributions, footers, headings, and other display text.
 // Headings resolve their style from depth via resolveTokens hook (depth-keyed LabelSlotTokens).
 
-import type { HorizontalAlignment, RenderContext, TextStyleName, VerticalAlignment } from "@tycoworks/tycoslide";
+import type { HorizontalAlignment, RenderContext, TextStyleName, VerticalAlignment } from "@tycoslide/core";
 import {
   type ComponentNode,
   component,
@@ -19,7 +19,7 @@ import {
   schema,
   type TextNode,
   token,
-} from "@tycoworks/tycoslide";
+} from "@tycoslide/core";
 import type { Heading, RootContent } from "mdast";
 import { Component } from "./names.js";
 

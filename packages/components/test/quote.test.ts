@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { componentRegistry, HALIGN, NODE_TYPE } from "@tycoworks/tycoslide";
+import { componentRegistry, HALIGN, NODE_TYPE } from "@tycoslide/core";
 import {
   cardComponent,
   codeComponent,

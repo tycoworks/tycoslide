@@ -20,7 +20,7 @@ import {
   type TextStyleName,
   token,
   VALIGN,
-} from "@tycoworks/tycoslide";
+} from "@tycoslide/core";
 import type { Code as MdastCode, RootContent } from "mdast";
 import { codeToHtml } from "shiki";
 import { column, stack } from "./containers.js";

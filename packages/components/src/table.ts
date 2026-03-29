@@ -24,7 +24,7 @@ import {
   type TextStyleName,
   token,
   type VerticalAlignment,
-} from "@tycoworks/tycoslide";
+} from "@tycoslide/core";
 import type { Table as MdastTable, RootContent } from "mdast";
 import { column, stack } from "./containers.js";
 import { Component } from "./names.js";

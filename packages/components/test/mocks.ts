@@ -3,8 +3,8 @@
 
 import * as assert from "node:assert";
 import { createRequire } from "node:module";
-import type { FontFamily, TextStyle, Theme } from "@tycoworks/tycoslide";
-import { DASH_TYPE, GRID_STYLE, HALIGN, VALIGN } from "@tycoworks/tycoslide";
+import type { FontFamily, TextStyle, Theme } from "@tycoslide/core";
+import { DASH_TYPE, GRID_STYLE, HALIGN, VALIGN } from "@tycoslide/core";
 import { HIGHLIGHT_THEME } from "../src/highlighting.js";
 import type {
   CardTokens,

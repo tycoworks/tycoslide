@@ -15,7 +15,7 @@ import {
   SYNTAX,
   schema,
   token,
-} from "@tycoworks/tycoslide";
+} from "@tycoslide/core";
 import type { Image, RootContent } from "mdast";
 import { Component } from "./names.js";
 

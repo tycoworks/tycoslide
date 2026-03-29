@@ -17,7 +17,7 @@ Specify the theme in global frontmatter (the first frontmatter block in a markdo
 
 ```markdown
 ---
-theme: "@tycoworks/tycoslide-theme"
+theme: "@tycoslide/theme-default"
 ---
 
 ---
@@ -28,23 +28,21 @@ title: My Presentation
 
 ### Available Themes
 
-**`@tycoworks/tycoslide-theme`** is the currently available theme. Inter font, purple/navy palette, 11 layouts and all built-in components. See [Layouts](./layouts.md) for the full layout reference.
+**`@tycoslide/theme-default`** is the currently available theme. Inter font, purple/navy palette, 11 layouts and all built-in components. See [Layouts](./layouts.md) for the full layout reference.
 
 ```bash
-npm install @tycoworks/tycoslide-theme
+npm install @tycoslide/theme-default
 ```
-
-See the [theme source](../packages/theme-tycoworks/src/theme.ts) for all default values, including bundled icon assets.
 
 ---
 
 ## Extending an Existing Theme
 
-Start by copying or spreading the tycoworks theme and override what you need. The tycoworks theme is the reference implementation — it defines all required fields and serves as a starting point for any custom brand.
+Start by copying or spreading the default theme and override what you need. The default theme is the reference implementation — it defines all required fields and serves as a starting point for any custom brand.
 
 ```typescript
-import { defineTheme } from '@tycoworks/tycoslide';
-import { theme as defaultTheme } from '@tycoworks/tycoslide-theme';
+import { defineTheme } from '@tycoslide/core';
+import { theme as defaultTheme } from '@tycoslide/theme-default';
 
 export const theme = defineTheme({
   ...defaultTheme,
@@ -71,9 +69,9 @@ Replace Inter with a system font or a custom `.woff2` file:
 Use system fonts for quick prototyping to skip embedding font files. Use custom `.woff2` files for brand fonts that must render identically everywhere.
 
 ```typescript
-import { defineTheme } from '@tycoworks/tycoslide';
-import type { FontFamily } from '@tycoworks/tycoslide';
-import { theme as defaultTheme } from '@tycoworks/tycoslide-theme';
+import { defineTheme } from '@tycoslide/core';
+import type { FontFamily } from '@tycoslide/core';
+import { theme as defaultTheme } from '@tycoslide/theme-default';
 
 const helvetica: FontFamily = {
   normal: { name: 'Helvetica', path: '' },  // path: '' = system font
@@ -99,7 +97,7 @@ export const theme = defineTheme({
 
 ```typescript
 import { createRequire } from 'module';
-import type { FontFamily } from '@tycoworks/tycoslide';
+import type { FontFamily } from '@tycoslide/core';
 
 const require = createRequire(import.meta.url);
 
@@ -113,8 +111,8 @@ const plusJakarta: FontFamily = {
 #### Adjusting font sizes only
 
 ```typescript
-import { defineTheme } from '@tycoworks/tycoslide';
-import { theme as defaultTheme } from '@tycoworks/tycoslide-theme';
+import { defineTheme } from '@tycoslide/core';
+import { theme as defaultTheme } from '@tycoslide/theme-default';
 
 export const theme = defineTheme({
   ...defaultTheme,
@@ -132,8 +130,6 @@ export const theme = defineTheme({
 
 Colors are string constants in the theme file. Layout and master token maps reference these constants, so changing a color constant updates every token that uses it.
 
-See [`theme.ts`](../packages/theme-tycoworks/src/theme.ts) for the complete reference.
-
 ---
 
 ### Overriding Layout Tokens
@@ -141,7 +137,7 @@ See [`theme.ts`](../packages/theme-tycoworks/src/theme.ts) for the complete refe
 Component styling lives in layout token maps in `theme.layouts`. Each layout declares the tokens it needs; the theme supplies values via `.tokenMap()`. Layout tokens control content appearance (text colors, styles, alignment); master tokens control fixed elements (background, margins, footer). `.tokenMap()` validates that all required tokens are present. For layouts without slots, unknown keys are also rejected — typos are caught at theme construction time. Slotted layouts allow extra keys because slot-injected component tokens are passed through the same map.
 
 ```typescript
-import { bodyLayout } from '@tycoworks/tycoslide-theme';
+import { bodyLayout } from '@tycoslide/theme-default';
 
 layouts: {
   body: {
@@ -158,7 +154,7 @@ layouts: {
 },
 ```
 
-Each layout defines which token keys it accepts — the default theme's [`theme.ts`](../packages/theme-tycoworks/src/theme.ts) shows every layout with its full token set and default values.
+Each layout defines which token keys it accepts — the default theme's [`theme.ts`](../packages/theme-default/src/theme.ts) shows every layout with its full token set and default values.
 
 ---
 
@@ -169,8 +165,8 @@ Layouts and components may declare tokens as optional using `token.optional<T>()
 Theme authors use `token.optional<T>()` when defining custom components or layouts to allow themes to opt out of a feature without error:
 
 ```typescript
-import { token } from '@tycoworks/tycoslide';
-import type { ShapeTokens } from '@tycoworks/tycoslide';
+import { token } from '@tycoslide/core';
+import type { ShapeTokens } from '@tycoslide/core';
 
 const tokens = token.shape({
   background: token.optional<ShapeTokens>(),
@@ -189,7 +185,7 @@ Required tokens must always be provided in `.tokenMap()`. Optional tokens may be
 A theme is a TypeScript object passed to `defineTheme()`, which validates font configuration at definition time and returns the theme object:
 
 ```typescript
-import { defineTheme, SLIDE_SIZE } from '@tycoworks/tycoslide';
+import { defineTheme, SLIDE_SIZE } from '@tycoslide/core';
 
 export const theme = defineTheme({
   slide: SLIDE_SIZE.S16x9,
@@ -213,14 +209,14 @@ Layouts declare required token keys; themes provide their values. Master tokens 
 mkdir my-theme
 cd my-theme
 npm init -y
-npm install @tycoworks/tycoslide @tycoworks/tycoslide-components
+npm install @tycoslide/core @tycoslide/components
 ```
 
 Create `theme.ts` for your theme object and `index.ts` as the entry point:
 
 ```typescript
 // theme.ts
-import { defineTheme } from '@tycoworks/tycoslide';
+import { defineTheme } from '@tycoslide/core';
 
 export const theme = defineTheme({
   // Filled in step by step below
@@ -262,7 +258,7 @@ All color values are hex values with a `#` prefix. Accent names are open vocabul
 Define styles for all required text style names. Each `TextStyle` includes:
 
 ```typescript
-import { FONT_WEIGHT } from '@tycoworks/tycoslide';
+import { FONT_WEIGHT } from '@tycoslide/core';
 
 textStyles: {
   h1:      { fontFamily: myFont, fontSize: 48, defaultWeight: FONT_WEIGHT.LIGHT,   lineHeightMultiplier: 1.2, bulletIndentPt: 72 },
@@ -286,7 +282,7 @@ textStyles: {
 #### 4. Set Slide Size
 
 ```typescript
-import { SLIDE_SIZE } from '@tycoworks/tycoslide';
+import { SLIDE_SIZE } from '@tycoslide/core';
 
 slide: SLIDE_SIZE.S16x9,  // 16:9 aspect ratio (10" × 5.625")
 ```
@@ -322,7 +318,7 @@ Each layout in the theme gets a `variants` object. The `default` variant is requ
 
 ```typescript
 import { bodyLayout, titleLayout, sectionLayout } from './layouts.js';
-import { HALIGN, VALIGN } from '@tycoworks/tycoslide';
+import { HALIGN, VALIGN } from '@tycoslide/core';
 const TEXT_STYLE = { H1: "h1", H2: "h2", H3: "h3", H4: "h4", BODY: "body", SMALL: "small", EYEBROW: "eyebrow", FOOTER: "footer", CODE: "code" } as const;
 
 layouts: {
@@ -349,15 +345,13 @@ layouts: {
 },
 ```
 
-See [`theme.ts`](../packages/theme-tycoworks/src/theme.ts) for the complete reference with all layouts and their full token sets.
-
 #### 7. Define Master Configs
 
 Master tokens flow through layout token maps as shared constants. Define them once, reference from multiple layouts:
 
 ```typescript
 import { defaultMaster, minimalMaster } from './masters.js';
-import { HALIGN, VALIGN } from '@tycoworks/tycoslide';
+import { HALIGN, VALIGN } from '@tycoslide/core';
 const TEXT_STYLE = { H1: "h1", H2: "h2", H3: "h3", H4: "h4", BODY: "body", SMALL: "small", EYEBROW: "eyebrow", FOOTER: "footer", CODE: "code" } as const;
 
 // Shared master config constants — define once, reference from multiple layouts
@@ -406,7 +400,7 @@ theme: my-custom-theme
 **As a local module (TypeScript DSL):**
 
 ```typescript
-import { Presentation } from '@tycoworks/tycoslide';
+import { Presentation } from '@tycoslide/core';
 import { theme } from './my-theme';
 
 const pres = new Presentation(theme);
@@ -452,7 +446,7 @@ Fonts must be:
 - At minimum, `normal` weight is required; `bold` and `light` are optional
 
 ```typescript
-import type { FontFamily } from '@tycoworks/tycoslide';
+import type { FontFamily } from '@tycoslide/core';
 
 const font: FontFamily = {
   light: { name: 'Inter Light', path: './fonts/Inter-Light.woff2' },
@@ -511,8 +505,8 @@ import {
   columnComponent,
   stackComponent,
   gridComponent,
-} from '@tycoworks/tycoslide-components';
-import type { MasterDefinition } from '@tycoworks/tycoslide';
+} from '@tycoslide/components';
+import type { MasterDefinition } from '@tycoslide/core';
 import { allLayouts } from './layouts.js';
 import { defaultMaster, minimalMaster } from './masters.js';
 
@@ -540,8 +534,6 @@ export const masters: MasterDefinition[] = [defaultMaster, minimalMaster];
 
 export { theme } from './theme.js';
 ```
-
-See [`packages/theme-tycoworks/src/index.ts`](../packages/theme-tycoworks/src/index.ts) for the complete reference entry point.
 
 ---
 

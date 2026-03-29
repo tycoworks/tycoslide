@@ -14,7 +14,7 @@ import {
   schema,
   token,
   type VerticalAlignment,
-} from "@tycoworks/tycoslide";
+} from "@tycoslide/core";
 import { column, row, stack } from "./containers.js";
 import { imageComponent, image as imageNode } from "./image.js";
 import { type LabelTokens, label } from "./label.js";

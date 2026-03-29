@@ -4,8 +4,8 @@
 import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import type { Theme } from "../core/model/types.js";
-import { componentRegistry, layoutRegistry, masterRegistry } from "../core/rendering/registry.js";
+import type { Theme } from "@tycoslide/core";
+import { componentRegistry, layoutRegistry, masterRegistry } from "@tycoslide/core";
 
 export interface LoadedTheme {
   theme: Theme;

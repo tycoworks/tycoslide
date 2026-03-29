@@ -3,8 +3,8 @@
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import type { NormalizedRun } from "@tycoworks/tycoslide";
-import { componentRegistry, HALIGN, NODE_TYPE, VALIGN } from "@tycoworks/tycoslide";
+import type { NormalizedRun } from "@tycoslide/core";
+import { componentRegistry, HALIGN, NODE_TYPE, VALIGN } from "@tycoslide/core";
 import {
   cardComponent,
   codeComponent,

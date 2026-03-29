@@ -1,14 +1,19 @@
-# @tycoworks/tycoslide
+# @tycoslide/core
 
-> **Early release (v0.1.0)** — under active development. API may change between minor versions.
+> **Early release (v0.2.0)** — under active development. API may change between minor versions.
 
-Create editable PowerPoint slides from markdown with TypeScript themes.
+The framework engine for tycoslide presentations — rendering, layout, model, and markdown compilation.
 
-## Quick Start
+## Install
 
 ```bash
-npm install @tycoworks/tycoslide @tycoworks/tycoslide-theme
-npx tycoslide build slides.md
+npm install @tycoslide/cli @tycoslide/theme-default
+```
+
+`@tycoslide/core` is installed automatically as a dependency of theme and CLI packages. Install directly if building a custom theme or component:
+
+```bash
+npm install @tycoslide/core @tycoslide/components
 ```
 
 See the [full documentation](https://github.com/tycoworks/tycoslide) for details.

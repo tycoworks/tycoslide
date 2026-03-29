@@ -3,6 +3,7 @@
   "references": [
     { "path": "packages/core" },
     { "path": "packages/components" },
-    { "path": "packages/theme-tycoworks" }
+    { "path": "packages/cli" },
+    { "path": "packages/theme-default" }
   ]
 }

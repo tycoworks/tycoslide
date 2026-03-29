@@ -13,7 +13,7 @@ import {
   SYNTAX,
   schema,
   token,
-} from "@tycoworks/tycoslide";
+} from "@tycoslide/core";
 import type { RootContent } from "mdast";
 import { column, row } from "./containers.js";
 import { type LabelTokens, label } from "./label.js";

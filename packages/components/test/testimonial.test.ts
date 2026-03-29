@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { componentRegistry, HALIGN, NODE_TYPE, VALIGN } from "@tycoworks/tycoslide";
+import { componentRegistry, HALIGN, NODE_TYPE, VALIGN } from "@tycoslide/core";
 import type { TestimonialTokens } from "../src/index.js";
 import {
   cardComponent,

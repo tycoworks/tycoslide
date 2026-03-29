@@ -8,7 +8,7 @@ import type {
   RenderContext,
   TextStyleName,
   VerticalAlignment,
-} from "@tycoworks/tycoslide";
+} from "@tycoslide/core";
 import {
   type ComponentNode,
   component,
@@ -25,7 +25,7 @@ import {
   schema,
   type TextNode,
   token,
-} from "@tycoworks/tycoslide";
+} from "@tycoslide/core";
 import type { ListItem, List as MdastList, RootContent } from "mdast";
 import { Component } from "./names.js";
 import { inlineParse, transformInline } from "./utils/inline.js";

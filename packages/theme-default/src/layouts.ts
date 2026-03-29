@@ -2,22 +2,6 @@
 // 11 layouts covering universal presentation patterns.
 // Naming convention: kebab-case (matching SlideDev).
 
-import {
-  component,
-  defineLayout,
-  type HorizontalAlignment,
-  type InferTokens,
-  param,
-  SHAPE,
-  SIZE,
-  type Slide,
-  type SlideNode,
-  SPACING_MODE,
-  schema,
-  token,
-  VALIGN,
-  type VerticalAlignment,
-} from "@tycoworks/tycoslide";
 import type {
   CardTokens,
   LabelTokens,
@@ -26,7 +10,7 @@ import type {
   QuoteTokens,
   ShapeTokens,
   TextTokens,
-} from "@tycoworks/tycoslide-components";
+} from "@tycoslide/components";
 import {
   Component,
   cardComponent,
@@ -42,7 +26,23 @@ import {
   stack,
   text,
   textComponent,
-} from "@tycoworks/tycoslide-components";
+} from "@tycoslide/components";
+import {
+  component,
+  defineLayout,
+  type HorizontalAlignment,
+  type InferTokens,
+  param,
+  SHAPE,
+  SIZE,
+  type Slide,
+  type SlideNode,
+  SPACING_MODE,
+  schema,
+  token,
+  VALIGN,
+  type VerticalAlignment,
+} from "@tycoslide/core";
 import { type DefaultMasterTokens, MASTER, type MinimalMasterTokens } from "./master.js";
 
 // ============================================

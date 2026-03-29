@@ -1,6 +1,6 @@
 {
-  "name": "@tycoworks/tycoslide",
-  "version": "0.1.1",
+  "name": "@tycoslide/core",
+  "version": "0.2.0",
   "description": "Create editable PowerPoint slides from markdown",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,12 +10,9 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "bin": {
-    "tycoslide": "./dist/cli/index.js"
-  },
   "files": ["dist/"],
   "scripts": {
-    "build": "tsc && chmod +x dist/cli/index.js",
+    "build": "tsc",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run build",
@@ -40,8 +37,6 @@
     "directory": "packages/core"
   },
   "dependencies": {
-    "commander": "^14.0.3",
-    "debug": "^4.4.3",
     "hono": "^4.11.9",
     "image-size": "^1.1.1",
     "playwright-core": "^1.58.2",
@@ -56,7 +51,6 @@
   },
   "devDependencies": {
     "@fontsource/inter": "^5.0.0",
-    "@types/debug": "^4.1.12",
     "@types/node": "^20.19.30",
     "tsx": "^4.21.0",
     "typescript": "^5.3.0"

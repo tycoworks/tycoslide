@@ -4,11 +4,8 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { compileDocument, LayoutValidationError, MissingFontError, parseSlideDocument } from "@tycoslide/core";
 import createDebug from "debug";
-import { LayoutValidationError } from "../core/layout/validator.js";
-import { compileDocument } from "../core/markdown/documentCompiler.js";
-import { parseSlideDocument } from "../core/markdown/slideParser.js";
-import { MissingFontError } from "../utils/font.js";
 import { loadTheme } from "./themeLoader.js";
 
 export interface BuildOptions {

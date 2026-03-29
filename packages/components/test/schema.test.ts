@@ -4,7 +4,7 @@
 
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
-import { param, schema } from "@tycoworks/tycoslide";
+import { param, schema } from "@tycoslide/core";
 import { z } from "zod";
 import { cardComponent } from "../src/card.js";
 import { imageComponent } from "../src/image.js";

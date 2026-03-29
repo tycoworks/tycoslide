@@ -1,8 +1,8 @@
 // Inline text formatting utilities
 // Shared between text and list components.
 
-import type { NormalizedRun } from "@tycoworks/tycoslide";
-import { SYNTAX } from "@tycoworks/tycoslide";
+import type { NormalizedRun } from "@tycoslide/core";
+import { SYNTAX } from "@tycoslide/core";
 import type { Link, PhrasingContent, Root } from "mdast";
 import type { TextDirective } from "mdast-util-directive";
 import { gfmStrikethroughFromMarkdown } from "mdast-util-gfm-strikethrough";

@@ -85,9 +85,7 @@ Dash separator, brief description. No full stops.
 
 **Author-facing content (markdown-syntax.md, quick-start.md) is shallow.** It shows what to type and what happens. It does not explain internal mechanics. It defers immediately to other pages: "For component directives and parameters, see [Components](./components.md)."
 
-**Developer-facing content (custom sections in components.md, layouts.md, themes.md) is deeper.** It documents the TypeScript API, schema helpers, token system, slot mechanics, and testing approach. But even here: "See [source file] for the complete reference" is the pattern when full enumeration would be exhaustive. The `theme.ts` source is explicitly pointed to for all token keys rather than listed inline.
-
-**When a subsection has a complete reference implementation, link it.** Format: "See [`theme.ts`](../packages/theme-default/src/theme.ts) for the complete reference implementation with all token keys and default values." Used in `themes.md` and `troubleshooting.md`. Writers must use this pattern instead of reproducing all token keys inline.
+**Developer-facing content (custom sections in components.md, layouts.md, themes.md) is deeper.** It documents the TypeScript API, schema helpers, token system, slot mechanics, and testing approach. Do not add "See [source file] for the complete reference" sentences — if content is important enough to mention, document it inline.
 
 **Error messages are quoted verbatim in troubleshooting.** Each error entry shows the exact error string in a plain code block (no language tag), then **Cause:** and **Fix:** in bold. No "Note:", no callout boxes.
 

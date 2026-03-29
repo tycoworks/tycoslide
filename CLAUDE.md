@@ -27,11 +27,12 @@ npx tycoslide build deck.md          # Build a single deck (outputs deck.pptx)
 
 ## Monorepo Structure
 
-tycoslide is an npm workspaces monorepo with three packages:
+tycoslide is an npm workspaces monorepo with four packages:
 
-- **`packages/core`** (npm: `@tycoworks/tycoslide`) — The framework
-- **`packages/components`** (npm: `@tycoworks/tycoslide-components`) — 16 standard components: text, plainText, list, card, quote, testimonial, table, image, mermaid, code, line, shape, slideNumber, row, column, stack, grid
-- **`packages/theme-tycoworks`** (npm: `@tycoworks/tycoslide-theme`) — tycoworks theme with Inter font, Material Design icons, 11 layouts
+- **`packages/core`** (npm: `@tycoslide/core`) — The framework engine (rendering, layout, model, markdown compilation)
+- **`packages/components`** (npm: `@tycoslide/components`) — 16 standard components: text, plainText, list, card, quote, testimonial, table, image, mermaid, code, line, shape, slideNumber, row, column, stack, grid
+- **`packages/cli`** (npm: `@tycoslide/cli`) — CLI entry point (`tycoslide` binary), build command, theme loader
+- **`packages/theme-default`** (npm: `@tycoslide/theme-default`) — Default theme with Inter font and Material Design icons
 
 When consuming tycoslide from another project (e.g., a theme), `package.json` points `main` at `dist/index.js`. Always rebuild before running slides.
 
@@ -47,10 +48,10 @@ npx tsc --build      # Rebuilds tycoslide (if changed) then the theme
 - `packages/core/src/core/rendering/` — Component registry, PPTX renderer, presentation
 - `packages/core/src/core/markdown/` — Document compiler, slot compiler, slide parser
 - `packages/core/src/core/layout/` — HTML measurement via Playwright, flex layout pipeline
-- `packages/core/src/cli/` — CLI entry point, build command, theme loader
+- `packages/cli/src/` — CLI entry point, build command, theme loader
 - `packages/core/src/utils/` — Shared parser, font utils, image utils, units
 - `packages/components/src/` — All 16 component definitions (see Monorepo Structure above)
-- `packages/theme-tycoworks/src/` — tycoworks theme (Inter font, Material Design icons, 11 layouts)
+- `packages/theme-default/src/` — Default theme (Inter font, Material Design icons)
 - `packages/core/test/` — Tests (uses `node:test`, NOT vitest)
 
 ## Architecture

@@ -1,5 +1,5 @@
 ---
-theme: "@tycoworks/tycoslide-theme"
+theme: "@tycoslide/theme-default"
 ---
 
 ---
@@ -14,7 +14,7 @@ notes: Opening slide. Clean centered title with cursor.
 layout: agenda
 variant: default
 title: Agenda
-image: $tycoworks.tycoslide
+image: $tycoslide.logo
 items:
   - What it is
   - How it compares

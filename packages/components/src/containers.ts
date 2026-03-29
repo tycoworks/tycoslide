@@ -15,7 +15,7 @@ import {
   type SpacingMode,
   VALIGN,
   type VerticalAlignment,
-} from "@tycoworks/tycoslide";
+} from "@tycoslide/core";
 import { Component } from "./names.js";
 
 // ============================================
