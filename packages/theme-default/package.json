@@ -1,6 +1,6 @@
 {
   "name": "@tycoslide/theme-default",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Default reference theme for tycoslide — Inter font, purple/navy palette, 14 layouts",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

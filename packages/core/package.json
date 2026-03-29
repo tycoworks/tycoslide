@@ -1,6 +1,6 @@
 {
   "name": "@tycoslide/core",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Create editable PowerPoint slides from markdown",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
