@@ -178,6 +178,7 @@ const testTokens: MermaidTokens = {
   accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
   accentStyle: { opacity: 20, textColor: "#000000" },
   textStyle: "body",
+  image: { padding: 0 },
 };
 
 describe("buildMermaidConfig", () => {

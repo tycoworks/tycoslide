@@ -4,6 +4,7 @@
 
 import type {
   CardTokens,
+  ImageTokens,
   LabelTokens,
   LineTokens,
   ListTokens,
@@ -85,6 +86,7 @@ export const titleLayoutTokens = token.shape({
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
   spacing: token.required<number>(),
+  image: token.required<ImageTokens>(),
 });
 
 export type TitleLayoutTokens = InferTokens<typeof titleLayoutTokens>;
@@ -114,7 +116,7 @@ export const titleLayout = defineLayout({
       masterName: MASTER.MINIMAL,
       masterTokens: tokens.master,
       content: imagePath
-        ? row({ spacing: 0, vAlign: tokens.vAlign, height: SIZE.FILL }, textBlock, image(imagePath))
+        ? row({ spacing: 0, vAlign: tokens.vAlign, height: SIZE.FILL }, textBlock, image(imagePath, tokens.image))
         : textBlock,
     };
   },
@@ -453,6 +455,7 @@ export const agendaLayoutTokens = token.shape({
   itemSpacing: token.required<number>(),
   gridColumns: token.required<number>(),
   gridSpacing: token.required<number>(),
+  image: token.required<ImageTokens>(),
 });
 
 export type AgendaLayoutTokens = InferTokens<typeof agendaLayoutTokens>;
@@ -497,7 +500,7 @@ export const agendaLayout = defineLayout({
           { spacing: tokens.gridSpacing, width: SIZE.FILL, height: SIZE.FILL, vAlign: VALIGN.MIDDLE },
           ...itemCards,
         ),
-        image(imageSrc),
+        image(imageSrc, tokens.image),
       ),
     );
   },

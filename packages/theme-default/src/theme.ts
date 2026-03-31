@@ -2,7 +2,7 @@
 // Clean light theme with Inter font. Copy and customize for your brand.
 // Units: spacing/margins/radii = inches, fontSize/borderWidth = points, opacity = 0-100
 
-import type { LabelTokens, ListTokens, TextTokens } from "@tycoslide/components";
+import type { ImageTokens, LabelTokens, ListTokens, TextTokens } from "@tycoslide/components";
 import { HIGHLIGHT_THEME } from "@tycoslide/components";
 import { DASH_TYPE, defineTheme, GRID_STYLE, HALIGN, SHADOW_TYPE, SLIDE_SIZE, VALIGN } from "@tycoslide/core";
 import { assets } from "./assets.js";
@@ -155,9 +155,13 @@ const labelStatLabel: LabelTokens = { ...alignCenter, style: TEXT_STYLE.H3, colo
 // COMPONENT TOKENS
 // ============================================
 
+// --- Image ---
+const imageBase: ImageTokens = { padding: 0 };
+
 // --- Card ---
 const cardBase = {
   padding,
+  image: { padding: 0.125 } as ImageTokens,
   spacing: spacingTight,
   hAlign: HALIGN.LEFT,
   title: cardTitle,
@@ -220,6 +224,7 @@ const codeTokens = {
     cornerRadius,
     shadow,
   },
+  image: imageBase,
 };
 
 // --- Quote ---
@@ -248,6 +253,7 @@ const testimonialSlotTokens = {
   vAlign: VALIGN.MIDDLE,
   quote: quoteText,
   attribution: labelMutedSmall,
+  image: imageBase,
 };
 
 // --- Mermaid ---
@@ -264,6 +270,7 @@ const mermaidTokens = {
   accents: accents,
   accentStyle: { opacity: 15, textColor: palette.purple },
   textStyle: TEXT_STYLE.BODY,
+  image: imageBase,
 };
 
 // --- Body slot bundle (wires all component tokens into layouts) ---
@@ -274,6 +281,7 @@ const bodySlotTokens = {
   quote: quoteSlotTokens,
   testimonial: testimonialSlotTokens,
   card: cardSlotTokens,
+  image: imageBase,
   label: { 1: labelH1, 2: labelH2, 3: labelH3, 4: labelH4, 5: labelH4, 6: labelH4 },
 };
 
@@ -290,6 +298,7 @@ const defaultMasterConfig = defaultMaster.tokenMap({
   footerSpacing: spacingTight,
   slideNumber: { ...labelFooter, hAlign: HALIGN.RIGHT },
   footer: labelFooter,
+  footerImage: imageBase,
 });
 
 const lightMinimalMaster = minimalMaster.tokenMap({
@@ -408,6 +417,7 @@ export const theme = defineTheme({
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
           spacing: spacingTight,
+          image: imageBase,
         }),
       },
     },
@@ -420,6 +430,7 @@ export const theme = defineTheme({
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
           spacing: spacingTight,
+          image: imageBase,
         }),
       },
     },
@@ -487,6 +498,7 @@ export const theme = defineTheme({
           itemSpacing: spacing,
           gridColumns: 2,
           gridSpacing: spacing,
+          image: imageBase,
         }),
       },
     },

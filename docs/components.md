@@ -214,6 +214,7 @@ Content card with an optional image, title, and description. Renders as a rounde
 | `vAlign` | VerticalAlignment | Content vertical alignment |
 | `title` | TextTokens | Title text tokens |
 | `description` | TextTokens | Description text tokens |
+| `image` | ImageTokens | Image styling tokens |
 
 `ShapeTokens` includes `fill`, `fillOpacity`, `cornerRadius`, and optional `border` (`Stroke`) and `shadow`.
 
@@ -420,7 +421,10 @@ Embeds an image with optional alt text for accessibility.
 
 | Token | Type | Description |
 |-------|------|-------------|
+| `padding` | number | Inset padding around the image in inches (**required**) |
 | `shadow` | Shadow | Drop shadow (optional — omit for no shadow) |
+
+`ImageTokens` includes `padding` (required) and optional `shadow`. Components that embed images internally (card, code, mermaid, testimonial) declare an `image` token typed as `ImageTokens`.
 
 ### Examples
 
@@ -464,6 +468,7 @@ Renders a Mermaid diagram to PNG and embeds it as an image. Theme colors are app
 | `textStyle` | TextStyleName | Font style for diagram text |
 | `background` | ShapeTokens | Background shape behind the diagram (optional — omit for bare image) |
 | `backgroundPadding` | number | Padding between background edge and diagram in inches (optional) |
+| `image` | ImageTokens | Image styling tokens for the rendered diagram |
 
 Default nodes use `primary` fill with `primaryContrast` text. Accent-classed nodes use tinted fill at `accentStyle.opacity`, full-color stroke, and `accentStyle.textColor` text. Subgraphs are filled at `accentStyle.opacity` with rounded corners. Class names apply to `flowchart` and `graph` diagrams only — all other diagram types (sequence, state, ER) are themed through the color tokens.
 
@@ -511,6 +516,7 @@ The content is the source code. In markdown, this is the content between the fen
 | `theme` | HighlightThemeName | Syntax highlighting theme (e.g. `github-dark`, `dracula`, `nord`) |
 | `padding` | number | Inner padding (inches) |
 | `background` | ShapeTokens | Background shape (fill, border, corner radius, optional shadow) |
+| `image` | ImageTokens | Image styling tokens for the rendered code image |
 
 `ShapeTokens` includes `fill`, `fillOpacity`, `cornerRadius`, and optional `border` (`Stroke`) and `shadow`. Use the `HIGHLIGHT_THEME` constant for available theme names and `LANGUAGE` for supported language identifiers. See [`highlighting.ts`](../packages/components/src/highlighting.ts) for the full list.
 
@@ -553,6 +559,7 @@ Quote text is required -- provide it either via the `quote` attribute or as body
 | `vAlign` | VerticalAlignment | Content vertical alignment |
 | `quote` | TextTokens | Quote text tokens |
 | `attribution` | LabelTokens | Attribution text tokens |
+| `image` | ImageTokens | Image styling tokens |
 
 `ShapeTokens` includes `fill`, `fillOpacity`, `cornerRadius`, and optional `border` (`Stroke`) and `shadow`.
 
@@ -936,7 +943,7 @@ table([
 ], tokens.table)
 
 // Image
-image('./path/to/image.png')
+image('./path/to/image.png', tokens.image)
 
 // Shape (tokens first, then params)
 shape(tokens.background, { shape: SHAPE.RECTANGLE })

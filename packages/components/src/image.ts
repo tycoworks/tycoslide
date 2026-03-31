@@ -17,6 +17,8 @@ import {
   token,
 } from "@tycoslide/core";
 import type { Image, RootContent } from "mdast";
+import type { SlideNode } from "@tycoslide/core";
+import { column } from "./containers.js";
 import { Component } from "./names.js";
 
 // ============================================
@@ -84,6 +86,7 @@ type ImageParams = InferParams<typeof imageParamShape>;
 
 const imageTokens = token.shape({
   shadow: token.optional<Shadow>(),
+  padding: token.required<number>(),
 });
 
 export type ImageTokens = InferTokens<typeof imageTokens>;
@@ -106,7 +109,7 @@ export const imageComponent = defineComponent({
     },
   },
 
-  render: (params: ImageParams, content: string, context: RenderContext, tokens: ImageTokens): ImageNode => {
+  render: (params: ImageParams, content: string, context: RenderContext, tokens: ImageTokens): SlideNode => {
     let src = content;
     if (src.startsWith(ASSET_PREFIX)) {
       src = resolveAssetPath(src, context.assets);
@@ -118,10 +121,13 @@ export const imageComponent = defineComponent({
     if (tokens?.shadow) {
       node.shadow = tokens.shadow;
     }
+    if (tokens?.padding) {
+      return column({ padding: tokens.padding, spacing: 0, height: SIZE.FILL }, node);
+    }
     return node;
   },
 });
 
-export function image(src: string, tokens?: ImageTokens, alt?: string): ComponentNode {
+export function image(src: string, tokens: ImageTokens, alt?: string): ComponentNode {
   return component(Component.Image, { ...(alt != null && { alt }) }, src, tokens);
 }

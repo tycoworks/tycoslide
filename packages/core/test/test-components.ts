@@ -136,6 +136,7 @@ export const cardComponent = defineComponent({
   tokens: {
     background: token.required<any>(),
     padding: token.required<any>(),
+    image: token.required<any>(),
     spacing: token.required<any>(),
     hAlign: token.required<any>(),
     vAlign: token.required<any>(),

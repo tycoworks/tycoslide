@@ -16,7 +16,7 @@ import {
   type VerticalAlignment,
 } from "@tycoslide/core";
 import { column, row, stack } from "./containers.js";
-import { imageComponent, image as imageNode } from "./image.js";
+import { type ImageTokens, imageComponent, image as imageNode } from "./image.js";
 import { type LabelTokens, label } from "./label.js";
 import { Component } from "./names.js";
 import { type ShapeTokens, shape } from "./primitives.js";
@@ -34,6 +34,7 @@ const testimonialTokens = token.shape({
   vAlign: token.required<VerticalAlignment>(),
   quote: token.required<TextTokens>(),
   attribution: token.required<LabelTokens>(),
+  image: token.required<ImageTokens>(),
 });
 export type TestimonialTokens = InferTokens<typeof testimonialTokens>;
 
@@ -88,7 +89,7 @@ export const testimonialComponent = defineComponent({
     // Build content children: optional image, quote text, attribution
     const children = [];
     if (imagePath) {
-      children.push(row({ spacing: 0, hAlign: contentHAlign, height: SIZE.FILL }, imageNode(imagePath)));
+      children.push(row({ spacing: 0, hAlign: contentHAlign, height: SIZE.FILL }, imageNode(imagePath, tokens.image)));
     }
     if (!actualQuote) {
       throw new Error(`Testimonial component requires either a 'quote' attribute or body text.`);

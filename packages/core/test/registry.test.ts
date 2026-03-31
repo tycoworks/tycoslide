@@ -170,6 +170,7 @@ describe("ComponentRegistry", () => {
           cornerRadius: 0.1,
         },
         padding: 0.25,
+        image: { padding: 0 },
         spacing: 0.125,
         hAlign: HALIGN.CENTER,
         vAlign: VALIGN.TOP,

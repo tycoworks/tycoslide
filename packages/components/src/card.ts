@@ -15,7 +15,7 @@ import {
   type VerticalAlignment,
 } from "@tycoslide/core";
 import { column, stack } from "./containers.js";
-import { image, imageComponent } from "./image.js";
+import { image, type ImageTokens, imageComponent } from "./image.js";
 import { Component } from "./names.js";
 import { type ShapeTokens, shape } from "./primitives.js";
 import { type TextTokens, text, textComponent } from "./text.js";
@@ -27,6 +27,7 @@ import { type TextTokens, text, textComponent } from "./text.js";
 const cardTokens = token.shape({
   background: token.optional<ShapeTokens>(),
   padding: token.required<number>(),
+  image: token.required<ImageTokens>(),
   spacing: token.required<number>(),
   hAlign: token.required<HorizontalAlignment>(),
   vAlign: token.required<VerticalAlignment>(),
@@ -72,6 +73,7 @@ export const cardComponent = defineComponent({
     const {
       background,
       padding,
+      image: imageTokens,
       spacing,
       hAlign: contentHAlign,
       vAlign: contentVAlign,
@@ -83,7 +85,7 @@ export const cardComponent = defineComponent({
     const children = [];
 
     if (imagePath) {
-      children.push(image(imagePath));
+      children.push(image(imagePath, imageTokens));
     }
 
     if (title) {

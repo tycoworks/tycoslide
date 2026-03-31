@@ -148,7 +148,7 @@ layouts: {
         eyebrow: { style: TEXT_STYLE.EYEBROW, color: colors.primary, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
         text:    { style: TEXT_STYLE.BODY, color: colors.text, linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE, accents: colors.accents },
         list:    { style: TEXT_STYLE.BODY, color: colors.text, linkColor: colors.primary, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP, accents: colors.accents },
-        // slot component tokens (table, code, mermaid, quote, testimonial)
+        // slot component tokens (table, code, mermaid, quote, testimonial, image)
       }),
     },
   },

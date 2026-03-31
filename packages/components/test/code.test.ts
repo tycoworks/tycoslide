@@ -256,6 +256,7 @@ describe("renderCodeToHtml()", () => {
     theme: HIGHLIGHT_THEME.GITHUB_DARK,
     padding: 0.25,
     background: { fill: "#1E1E1E", fillOpacity: 100, cornerRadius: 0.1 },
+    image: { padding: 0 },
   };
 
   const codeStyle: TextStyle = {

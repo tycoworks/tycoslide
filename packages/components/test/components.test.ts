@@ -58,6 +58,7 @@ import { Component } from "../src/names.js";
 import {
   mockTheme as createMockTheme,
   DEFAULT_CARD_TOKENS,
+  DEFAULT_IMAGE_TOKENS,
   DEFAULT_LINE_TOKENS,
   DEFAULT_SHAPE_TOKENS,
   DEFAULT_SLIDE_NUMBER_TOKENS,
@@ -103,18 +104,18 @@ async function render(node: any) {
 
 describe("image()", () => {
   test("returns ComponentNode", () => {
-    const node = image("photo.jpg");
+    const node = image("photo.jpg", DEFAULT_IMAGE_TOKENS);
     assert.strictEqual(node.type, NODE_TYPE.COMPONENT);
     assert.strictEqual(node.componentName, Component.Image);
   });
 
   test("renders to correct NODE_TYPE", async () => {
-    const node = (await render(image("photo.jpg"))) as ImageNode;
+    const node = (await render(image("photo.jpg", DEFAULT_IMAGE_TOKENS))) as ImageNode;
     assert.strictEqual(node.type, NODE_TYPE.IMAGE);
   });
 
   test("sets src correctly", async () => {
-    const node = (await render(image("test.png"))) as ImageNode;
+    const node = (await render(image("test.png", DEFAULT_IMAGE_TOKENS))) as ImageNode;
     assert.strictEqual(node.src, "test.png");
   });
 
@@ -122,7 +123,7 @@ describe("image()", () => {
 
   test("resolves $dot.path to string value", async () => {
     const assets = { icons: { rocket: "/path/to/rocket.svg" } };
-    const node = (await componentRegistry.renderTree(image("$icons.rocket"), {
+    const node = (await componentRegistry.renderTree(image("$icons.rocket", DEFAULT_IMAGE_TOKENS), {
       theme,
       assets,
       canvas: noopCanvas(),
@@ -132,7 +133,7 @@ describe("image()", () => {
 
   test("resolves deeply nested asset path", async () => {
     const assets = { images: { heroes: { landing: "/hero.png" } } };
-    const node = (await componentRegistry.renderTree(image("$images.heroes.landing"), {
+    const node = (await componentRegistry.renderTree(image("$images.heroes.landing", DEFAULT_IMAGE_TOKENS), {
       theme,
       assets,
       canvas: noopCanvas(),
@@ -142,7 +143,7 @@ describe("image()", () => {
 
   test("throws when assets not provided for asset reference", async () => {
     await assert.rejects(
-      () => componentRegistry.renderTree(image("$icons.rocket"), { theme, canvas: noopCanvas() }),
+      () => componentRegistry.renderTree(image("$icons.rocket", DEFAULT_IMAGE_TOKENS), { theme, canvas: noopCanvas() }),
       /asset reference.*no assets provided/,
     );
   });
@@ -150,7 +151,7 @@ describe("image()", () => {
   test("throws when asset key not found", async () => {
     const assets = { icons: { star: "/star.svg" } };
     await assert.rejects(
-      () => componentRegistry.renderTree(image("$icons.rocket"), { theme, assets, canvas: noopCanvas() }),
+      () => componentRegistry.renderTree(image("$icons.rocket", DEFAULT_IMAGE_TOKENS), { theme, assets, canvas: noopCanvas() }),
       /could not be resolved/,
     );
   });
@@ -158,7 +159,7 @@ describe("image()", () => {
   test("throws when asset path resolves to object (with suggestions)", async () => {
     const assets = { icons: { rocket: "/rocket.svg", star: "/star.svg" } };
     await assert.rejects(
-      () => componentRegistry.renderTree(image("$icons"), { theme, assets, canvas: noopCanvas() }),
+      () => componentRegistry.renderTree(image("$icons", DEFAULT_IMAGE_TOKENS), { theme, assets, canvas: noopCanvas() }),
       /resolved to an object.*Did you mean/,
     );
   });
@@ -166,13 +167,13 @@ describe("image()", () => {
   test("throws when traversal hits non-object mid-path", async () => {
     const assets = { icons: { rocket: "/rocket.svg" } };
     await assert.rejects(
-      () => componentRegistry.renderTree(image("$icons.rocket.size"), { theme, assets, canvas: noopCanvas() }),
+      () => componentRegistry.renderTree(image("$icons.rocket.size", DEFAULT_IMAGE_TOKENS), { theme, assets, canvas: noopCanvas() }),
       /is not an object/,
     );
   });
 
   test("passes through non-asset paths unchanged", async () => {
-    const node = (await render(image("https://example.com/photo.jpg"))) as ImageNode;
+    const node = (await render(image("https://example.com/photo.jpg", DEFAULT_IMAGE_TOKENS))) as ImageNode;
     assert.strictEqual(node.src, "https://example.com/photo.jpg");
   });
 });

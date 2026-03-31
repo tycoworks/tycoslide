@@ -28,7 +28,7 @@ import {
   token,
 } from "@tycoslide/core";
 import { column, stack } from "./containers.js";
-import { image } from "./image.js";
+import { type ImageTokens, image } from "./image.js";
 import { Component } from "./names.js";
 import { type ShapeTokens, shape } from "./primitives.js";
 
@@ -58,6 +58,7 @@ const mermaidTokens = token.shape({
   // --- Background (optional, like table) ---
   background: token.optional<ShapeTokens>(), // Background shape (fill, border, cornerRadius, shadow)
   backgroundPadding: token.optional<number>(), // Padding between background edge and diagram
+  image: token.required<ImageTokens>(),
 });
 
 export type MermaidTokens = InferTokens<typeof mermaidTokens>;
@@ -312,7 +313,7 @@ async function renderMermaid(
     accents: tokens.accents,
   };
   const pngPath = await renderMermaidToPng(definition, tokens, fontFamily, renderCtx, context.canvas);
-  const mermaidImage = image(pngPath, undefined, definition);
+  const mermaidImage = image(pngPath, tokens.image, definition);
 
   if (tokens.background) {
     const backgroundRect = shape(tokens.background, { shape: SHAPE.RECTANGLE });

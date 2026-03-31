@@ -26,7 +26,7 @@ import { codeToHtml } from "shiki";
 import { column, stack } from "./containers.js";
 import type { HighlightThemeName } from "./highlighting.js";
 import { LANGUAGE_VALUES } from "./highlighting.js";
-import { image } from "./image.js";
+import { type ImageTokens, image } from "./image.js";
 import { Component } from "./names.js";
 import { type ShapeTokens, shape } from "./primitives.js";
 
@@ -41,6 +41,7 @@ const codeTokens = token.shape({
   theme: token.required<HighlightThemeName>(),
   padding: token.required<number>(),
   background: token.required<ShapeTokens>(),
+  image: token.required<ImageTokens>(),
 });
 
 export type CodeTokens = InferTokens<typeof codeTokens>;
@@ -126,7 +127,7 @@ async function renderCode(
   const html = await renderCodeToHtml(code, params.language, tokens, codeStyle);
   const pngPath = await context.canvas.renderHtml(html, true);
 
-  const codeImage = image(pngPath, undefined, code);
+  const codeImage = image(pngPath, tokens.image, code);
   const backgroundRect = shape(tokens.background, { shape: SHAPE.RECTANGLE });
   const contentLayer = column(
     { spacing: 0, padding: tokens.padding, height: SIZE.FILL, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE },

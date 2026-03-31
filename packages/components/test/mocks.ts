@@ -116,6 +116,8 @@ export const DEFAULT_TABLE_TOKENS: TableTokens = {
   accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
 };
 
+export const DEFAULT_IMAGE_TOKENS = { padding: 0 };
+
 export const DEFAULT_CODE_TOKENS: CodeTokens = {
   textStyle: "code",
   theme: HIGHLIGHT_THEME.GITHUB_DARK,
@@ -125,6 +127,7 @@ export const DEFAULT_CODE_TOKENS: CodeTokens = {
     fillOpacity: 100,
     cornerRadius: 0,
   },
+  image: DEFAULT_IMAGE_TOKENS,
 };
 
 export const DEFAULT_MERMAID_TOKENS: MermaidTokens = {
@@ -140,6 +143,7 @@ export const DEFAULT_MERMAID_TOKENS: MermaidTokens = {
   accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
   accentStyle: { opacity: 100, textColor: "#000000" },
   textStyle: "body",
+  image: DEFAULT_IMAGE_TOKENS,
 };
 
 export const DEFAULT_CARD_TOKENS: CardTokens = {
@@ -170,6 +174,7 @@ export const DEFAULT_CARD_TOKENS: CardTokens = {
     vAlign: VALIGN.TOP,
     accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
   },
+  image: DEFAULT_IMAGE_TOKENS,
 };
 
 export const DEFAULT_QUOTE_TOKENS: QuoteTokens = {
@@ -221,6 +226,7 @@ export const DEFAULT_TESTIMONIAL_TOKENS: TestimonialTokens = {
     hAlign: HALIGN.RIGHT,
     vAlign: VALIGN.TOP,
   },
+  image: DEFAULT_IMAGE_TOKENS,
 };
 
 export const DEFAULT_LINE_TOKENS: LineTokens = {
