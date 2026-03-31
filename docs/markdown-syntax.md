@@ -4,7 +4,7 @@ tycoslide uses GitHub Flavored Markdown for slide content, with extensions for d
 
 ## Slide Structure
 
-Slides are separated by `---` on its own line. Each slide has a YAML frontmatter block followed by optional body content.
+Each slide is a YAML frontmatter block enclosed by `---`, followed by optional body content.
 
 ```markdown
 ---
