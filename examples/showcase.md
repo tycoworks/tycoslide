@@ -19,7 +19,7 @@ items:
   - What it is
   - How it compares
   - How it works
-notes: "Agenda layout — three numbered items with background cards."
+notes: "Agenda layout — numbered items with divider lines."
 ---
 
 ---

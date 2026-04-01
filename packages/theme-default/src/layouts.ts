@@ -446,15 +446,12 @@ export const agendaLayoutTokens = token.shape({
   eyebrow: token.required<LabelTokens>(),
   headerSpacing: token.required<number>(),
   vAlign: token.required<VerticalAlignment>(),
-  hAlign: token.required<HorizontalAlignment>(),
   items: token.required<TextTokens>(),
-  itemBackground: token.required<ShapeTokens>(),
+  divider: token.required<LineTokens>(),
   itemNumber: token.required<LabelTokens>(),
-  itemPadding: token.required<number>(),
   itemVAlign: token.required<VerticalAlignment>(),
   itemSpacing: token.required<number>(),
-  gridColumns: token.required<number>(),
-  gridSpacing: token.required<number>(),
+  spacing: token.required<number>(),
   image: token.required<ImageTokens>(),
 });
 
@@ -464,44 +461,46 @@ export type AgendaLayoutTokens = InferTokens<typeof agendaLayoutTokens>;
 // | EYEBROW                    |
 // | Title                      |
 // |----------------------------|
-// | +--1 Item--+ +--2 Item--+  |
-// | +--3 Item--+ +--4 Item--+  |
+// |  1  Item        |          |
+// |  ────────────── |  IMAGE   |
+// |  2  Item        |          |
+// |  ────────────── |          |
+// |  3  Item        |          |
 // +----------------------------+
 // | footer                     |
 // +----------------------------+
 export const agendaLayout = defineLayout({
   name: "agenda",
-  description: "Eyebrow, title, and numbered card grid.",
+  description: "Eyebrow, title, and numbered item list with divider lines.",
   params: {
     title: param.required(textComponent.schema),
     eyebrow: param.optional(textComponent.schema),
     items: param.required(schema.array(textComponent.schema)),
-    image: param.required(imageComponent.schema),
+    image: param.optional(imageComponent.schema),
   },
   tokens: agendaLayoutTokens,
   render: ({ title, eyebrow, items, image: imageSrc }, _slots, tokens: AgendaLayoutTokens) => {
-    const itemCards = items.map((item, i) =>
-      stack(
-        shape(tokens.itemBackground, { shape: SHAPE.RECTANGLE }),
-        row(
-          { padding: tokens.itemPadding, vAlign: tokens.itemVAlign, spacing: tokens.itemSpacing },
-          column({ spacing: 0, width: SIZE.HUG, vAlign: tokens.itemVAlign }, label(String(i + 1), tokens.itemNumber)),
-          text(item, tokens.items),
-        ),
+    const itemRows = items.flatMap((item, i) => [
+      ...(i > 0 ? [line(tokens.divider)] : []),
+      row(
+        { vAlign: tokens.itemVAlign, spacing: tokens.itemSpacing },
+        // HUG-width column keeps number from stretching in the row
+        column({ spacing: 0, width: SIZE.HUG, vAlign: tokens.itemVAlign }, label(String(i + 1), tokens.itemNumber)),
+        text(item, tokens.items),
       ),
+    ]);
+
+    const itemsColumn = column(
+      { spacing: tokens.spacing, vAlign: tokens.vAlign, height: SIZE.FILL },
+      ...itemRows,
     );
 
     return masteredSlide(
       tokens.master,
       headerBlock(title, tokens, eyebrow),
-      row(
-        { spacing: tokens.gridSpacing, height: SIZE.FILL },
-        column(
-          { spacing: tokens.gridSpacing, width: SIZE.FILL, height: SIZE.FILL, vAlign: VALIGN.MIDDLE },
-          ...itemCards,
-        ),
-        image(imageSrc, tokens.image),
-      ),
+      imageSrc
+        ? row({ spacing: tokens.spacing, height: SIZE.FILL }, itemsColumn, image(imageSrc, tokens.image))
+        : itemsColumn,
     );
   },
 });

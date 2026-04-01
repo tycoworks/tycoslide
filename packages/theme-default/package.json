@@ -11,7 +11,10 @@
       "default": "./dist/index.js"
     }
   },
-  "files": ["dist/", "assets/"],
+  "files": [
+    "dist/",
+    "assets/"
+  ],
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",

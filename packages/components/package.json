@@ -10,7 +10,9 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist/"],
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "tsc --project tsconfig.test.json && tsx --test test/*.test.ts",
