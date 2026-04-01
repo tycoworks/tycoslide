@@ -1,6 +1,6 @@
 {
   "name": "@tycoslide/theme-default",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Default reference theme for tycoslide — Inter font, purple/navy palette, 14 layouts",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -33,8 +33,8 @@
   "dependencies": {
     "@fontsource/fira-code": "^5.2.7",
     "@fontsource/inter": "^5.0.0",
-    "@tycoslide/core": "^0.2.0",
-    "@tycoslide/components": "^0.2.0"
+    "@tycoslide/core": "^0.3.0",
+    "@tycoslide/components": "^0.3.0"
   },
   "devDependencies": {
     "@material-design-icons/svg": "^0.14.0",

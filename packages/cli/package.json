@@ -1,6 +1,6 @@
 {
   "name": "@tycoslide/cli",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "CLI for tycoslide — build PowerPoint presentations from markdown",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -33,7 +33,7 @@
     "directory": "packages/cli"
   },
   "dependencies": {
-    "@tycoslide/core": "^0.2.0",
+    "@tycoslide/core": "^0.3.0",
     "commander": "^14.0.3",
     "debug": "^4.4.3"
   },
