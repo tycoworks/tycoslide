@@ -10,6 +10,7 @@ dist/
 # Editor directories and files
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 *~
