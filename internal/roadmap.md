@@ -1,87 +1,73 @@
 # tycoslide Roadmap
 
-Now / Next / Later — unified from todo, review, and roadmap docs.
+Now / Next / Later.
 
 ---
 
 ## Now
 
-Before launch. Must be done before telling the world.
+### Multi-Format Themes
+
+Single theme package, multiple output formats — 16:9 presentations, US letter fact sheets, A4 documents. Shared brand identity, format-specific dimensions, typography, spacing, and layout tokens. See [multi-format-themes.md](multi-format-themes.md).
+
+### Theme Bootstrap Skill
+
+AI skill that bootstraps themes from existing materials — scans PPTX slides, PDFs, or Figma exports, extracts structural skeletons (layout geometry, spacing, font sizes, colors), and generates draft TypeScript layout definitions. Combines the theme building CLI concept with PPTX/Figma extraction. Reduces theme authoring from "write from scratch" to "review and refine."
+
+### Create & Edit Skill
+
+Collateral authoring skill for Claude Code. Teaches AI tycoslide's markdown dialect, layout selection, composition rules (via sequences), error translation, and build workflow. See [skills.md](skills.md).
 
 ---
 
 ## Next
 
-Immediate next priorities after launch.
+### Sequence-Based Composition
 
-### Claude Code Skill
-
-Build a tycoslide skill for Claude Code — users describe a presentation and the skill generates a markdown deck. Reference: Slidev skill (https://github.com/slidevjs/slidev/tree/main/skills/slidev). Study frontend-slides' progressive disclosure pattern (concise core file, supporting docs loaded on demand) and their style selection UX (3 visual previews before generating).
-
-### Distribution & Integrations
-
-tycoslide as a compilation target for other tools. frontend-slides (https://github.com/zarazhangrui/frontend-slides, 8.7k stars) generates HTML presentation decks from natural language descriptions — could it compile to tycoslide markdown instead, producing editable .pptx output? Explore what an integration would look like: tycoslide as a backend for AI-driven presentation tools that currently produce throwaway HTML.
+Slide sequences as a compositional primitive — reusable patterns of 3-7 slides forming coherent rhetorical units (Problem-Solution-Proof, Feature Tour, Case Study, etc.). The missing abstraction between individual layouts and complete decks. See [sequences.md](sequences.md).
 
 ### Integration Tests
 
-DSL input → full pipeline (expand → measure → layout) → assert element positions/sizes. Not pixel-perfect screenshot comparison, but geometric assertions: "this text node is at (x, y) with size (w, h)". Deterministic because Playwright measurement with embedded fonts is reproducible. The showcase deck doubles as a test fixture. Covers the orchestration layers (presentation, pipeline, pptxRenderer) through their real public API boundary — unit testing those individually would just test wiring.
+DSL input → full pipeline (expand → measure → layout) → assert element positions/sizes. Geometric assertions, not pixel-perfect screenshots. Deterministic because Playwright measurement with embedded fonts is reproducible.
 
 ### Inline Code
 
-`` `code` `` within a paragraph renders as plain text in the same body font. Distinct from fenced code blocks which use the Shiki-based code component. For inline code, want monospace font + optional background highlight. pptxgenjs supports per-fragment `fontFace` and `highlight`. Moderate: need to decide where inline code font comes from (code component token? theme-level monospace font?). Needs per-run font override — separate effort from other inline formatting.
+`` `code` `` within paragraphs renders as monospace font + optional background highlight. Needs per-run font override — separate from fenced code blocks (which use Shiki-based code component).
 
 ### Color Token Validation
 
-Add `assertHexColor()` validation at token boundaries to catch malformed values (missing `#`, wrong length, CSS named colors).
-
-### Charts
-
-Chart components for data visualization (bar, line, pie, etc.). pptxgenjs has native chart support — wrap it as a tycoslide component with theme-aware colors. High demand for sales and analytics decks.
-
-### Rotation
-
-Rotation property on shapes, images, and potentially text. pptxgenjs supports `rotate` on shapes, images, and text. Shapes and images are straightforward: `transform: rotate()` in HTML, `rotate` option in PPTX. Text rotation is more complex — interacts with auto-sizing, measurement pipeline, and container layout. CSS supports `transform: rotate()` on text elements but Playwright measurement with rotated text may produce unexpected bounding boxes. Needs investigation into whether rotated text affects layout flow or is purely decorative (post-layout transform).
+`assertHexColor()` validation at token boundaries to catch malformed values (missing `#`, wrong length, CSS named colors).
 
 ### Card Image Placement
 
-Cards currently only show images at the top. Add support for image on the left side (horizontal card layout).
+Support image on the left side (horizontal card layout), not just top.
 
 ### PPTX Groups
 
-Composite components (cards) currently render all shapes individually. They should be grouped in PPTX output. Blocked by pptxgenjs not supporting groups natively — may need to work around or contribute upstream.
+Composite components (cards) should be grouped in PPTX output. Blocked by pptxgenjs not supporting groups natively.
 
-### Theme Building CLI
+### Rotation
 
-Make it easier to bootstrap themes. `tycoslide theme-init --from-dtcg tokens.json` consumes W3C DTCG JSON and emits a TypeScript theme scaffold. One-time codegen, not runtime. Document the recommended multi-size theme file structure (shared palette/fonts/components, size-specific spacing/textStyles). Or scrapes website / existing presentations.
-
-### HTML Live Preview
-
-Better developer experience for previewing slides. Bundle with debug HTML improvements — Chrome DevTools may already provide container visualization, reducing the need for custom red-line debug overlays. Explore preview server and VS Code extension.
-
+Rotation property on shapes, images, and potentially text. Needs investigation into how rotated elements interact with the measurement pipeline.
 
 ---
 
 ## Later
 
-Future exploration. No timeline.
+### HTML Live Preview
 
-### Portrait & Different Slide Sizes
+Hot-reloading preview server and potential VS Code extension for faster iteration during development.
 
-Support portrait orientation, A4 format, and other sizes. Opens the door to content beyond presentations — documents, handouts, posters. Includes the multi-size theme pattern (shared base, size-specific spacing).
+### Charts
 
-### Theme from PPTX or Figma
-
-Detect and bootstrap themes from existing materials. Figma pipeline: Tokens Studio plugin syncs to GitHub as DTCG JSON, CLI scaffolds TypeScript theme. Deeper integration: extract Figma component structure (Auto Layout, variant properties) and map to tycoslide definitions.
+Chart components for data visualization (bar, line, pie). pptxgenjs has native chart support — wrap as tycoslide components with theme-aware colors.
 
 ### Real Mermaid
 
-Currently mermaid diagrams render as images. Explore creating them as native PPTX shapes for better quality and editability.
+Currently mermaid diagrams render as images. Explore native PPTX shapes for better quality and editability.
 
 ---
 
 ## Bugs
 
-Tracked separately from roadmap — different scope and size.
-
-- **Right-aligned bullet points** — pptxgenjs renders right-aligned text in bullet points incorrectly. Edge case, unlikely to hit in practice.
-
+- **Right-aligned bullet points** — pptxgenjs renders right-aligned text in bullet points incorrectly. Edge case.

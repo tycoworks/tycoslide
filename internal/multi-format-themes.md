@@ -2,8 +2,8 @@
 
 Design doc for multi-format theme support in tycoslide. Enables a single theme package to produce output in multiple formats — 16:9 presentations, US letter fact sheets, A4 documents, etc. — with shared brand identity but format-specific dimensions, typography, spacing, and layout tokens.
 
-**Status**: Design  
-**Breaking change**: Yes — new `ThemeDefinition` / `ThemeFormat` types, mandatory `format:` frontmatter key
+**Status**: Design
+**Breaking change**: Yes — mandatory `format:` frontmatter key, `SLIDE_SIZE` removed from core
 
 ## Problem
 
@@ -98,29 +98,51 @@ No existing tool combines: markdown input + design token system + component arch
 
 ## Design
 
+### Architectural Principle: Core Is Format-Agnostic
+
+The core compiler only ever needs one complete, flattened theme for a single build run. It does not need to know about formats, multi-format definitions, or format resolution. Multi-format is a **theme authoring concern** layered on top of the core.
+
+```
+Layer 1 — Core (pure compiler)
+  Theme = { slide: { width, height }, fonts, textStyles, layouts }
+  compileDocument(source, { theme })  ← the real boundary
+
+Layer 2 — CLI (orchestrator, temporary home for multi-format)
+  ThemeDefinition = { fonts, formats: Record<string, ThemeFormat> }
+  ThemeFormat = { slide, textStyles, layouts }
+  resolveThemeFormat(definition, formatName) → Theme
+  validateThemeFonts(definition) → void
+
+Layer 3 — Future: @tycoslide/theme-tools (when a second theme exists)
+  Extract ThemeDefinition, defineTheme, resolveThemeFormat from CLI
+```
+
 ### Type Changes
 
-Three types. `Theme` (what the compiler uses) keeps its current shape unchanged. Two new types sit above it:
+Core's `Theme` is the only type the compiler sees. It keeps its current shape, with one simplification — `slide` becomes `{ width: number; height: number }` (removing the pptxgenjs `layout` string leak):
 
 ```typescript
-// What defineTheme() produces. What theme packages export.
+// Core: what the compiler receives. One complete theme for one build run.
+interface Theme {
+  slide: { width: number; height: number };  // inches
+  fonts: FontFamily[];
+  textStyles: Record<string, TextStyle>;
+  layouts: Record<string, { variants: VariantConfig }>;
+}
+```
+
+Two types live in the CLI (or future theme-tools), not in core:
+
+```typescript
+// CLI: what a theme package exports.
 interface ThemeDefinition {
   fonts: FontFamily[];
   formats: Record<string, ThemeFormat>;
 }
 
-// Per-format config within a ThemeDefinition.
+// CLI: per-format config within a ThemeDefinition.
 interface ThemeFormat {
-  slide: SlideSize | CustomSlideSize;
-  textStyles: Record<string, TextStyle>;
-  layouts: Record<string, { variants: VariantConfig }>;
-}
-
-// What the compiler receives. Resolved from ThemeDefinition + format name.
-// This is today's Theme interface — unchanged in shape.
-interface Theme {
-  slide: SlideSize | CustomSlideSize;
-  fonts: FontFamily[];
+  slide: { width: number; height: number };
   textStyles: Record<string, TextStyle>;
   layouts: Record<string, { variants: VariantConfig }>;
 }
@@ -129,18 +151,16 @@ interface Theme {
 ### Resolution Flow
 
 ```
-defineTheme({ fonts, formats })  →  ThemeDefinition
-                                        ↓
-theme loader reads format: "factsheet" from global frontmatter
-                                        ↓
-resolveThemeFormat(definition, "factsheet")  →  Theme
-                                                  ↓
-compileDocument(source, { theme })  ←  unchanged from here down
+Theme package exports ThemeDefinition  →  { fonts, formats: { presentation: {...}, factsheet: {...} } }
+                                              ↓
+CLI reads format: "factsheet" from global frontmatter
+                                              ↓
+CLI calls resolveThemeFormat(definition, "factsheet")  →  Theme
+                                                            ↓
+CLI passes flat Theme to compileDocument(source, { theme })  ←  core boundary
 ```
 
-Resolution is analogous to how layouts resolve variants:
-- `layout: body` + `variant: centered` → specific layout token map
-- `theme: @brand/theme` + `format: factsheet` → specific Theme (slide + textStyles + layouts)
+Core never sees ThemeDefinition. It receives a flat Theme and compiles.
 
 ### Frontmatter
 
@@ -167,15 +187,37 @@ Error messages follow tycoslide's pattern of listing available options:
 
 Brand identity tokens (colors, accents, borders, shadows, visual styling) live in the theme author's source code as shared constants. They are used when constructing each format's layout token maps. The framework doesn't need to know about them — they flow through the existing token system.
 
-### Framework Concepts vs Theme Concepts
+### Slide Size: No Presets in Core
 
-The framework knows about:
+`SLIDE_SIZE` is removed from core. The `layout` field was a pptxgenjs implementation detail leaking into the model layer. Themes define their own slide dimensions freely as `{ width: number; height: number }`.
+
+Convenience presets live in theme-default (or a future shared utils package), not core:
+
+```typescript
+// In @tycoslide/theme-default or shared utils
+export const SLIDE_PRESETS = {
+  S16x9: { width: 10, height: 5.625 },
+  S16x10: { width: 10, height: 6.25 },
+  S4x3: { width: 10, height: 7.5 },
+  US_LETTER_PORTRAIT: { width: 7.5, height: 10 },
+  A4_PORTRAIT: { width: 7.5, height: 10.5 },
+} as const;
+```
+
+The pptxRenderer always uses `defineLayout()` with custom dimensions — no more built-in layout name strings.
+
+### Framework vs Theme Concepts
+
+The core framework knows about:
+- `Theme` — flat, single-format theme for the compiler
+- `compileDocument()` — the compiler boundary
+
+The CLI / theme-tools layer knows about:
 - `ThemeDefinition` — multi-format container
 - `ThemeFormat` — per-format slide/textStyles/layouts
-- `Theme` — resolved single-format theme for the compiler
 - `format:` — mandatory global frontmatter key
 - `resolveThemeFormat()` — resolution function
-- `SLIDE_SIZE` presets (including new portrait sizes)
+- `validateThemeFonts()` — multi-format validation
 
 The framework does NOT know about:
 - Margins (theme master tokens)
@@ -189,11 +231,13 @@ The framework does NOT know about:
 #### Single-format theme
 
 ```typescript
+import { defineTheme } from '@tycoslide/cli';  // or future @tycoslide/theme-tools
+
 export const theme = defineTheme({
   fonts: [myFont],
   formats: {
     default: {
-      slide: SLIDE_SIZE.S16x9,
+      slide: { width: 10, height: 5.625 },
       textStyles: { h1: {...}, body: {...}, ... },
       layouts: {
         body: { variants: { default: bodyLayout.tokenMap({...}) } },
@@ -229,7 +273,7 @@ my-theme/src/
 
 ```typescript
 // theme.ts
-import { defineTheme } from '@tycoslide/core';
+import { defineTheme } from '@tycoslide/cli';  // or future @tycoslide/theme-tools
 import * as base from './base.js';
 import { presentationConfig } from './formats/presentation.js';
 import { factsheetConfig } from './formats/factsheet.js';
@@ -246,69 +290,94 @@ export const theme = defineTheme({
 
 The `buildThemeFormat` factory is theme-specific code (not a framework function). It takes shared brand tokens + format-specific dimensional values and assembles the complete `ThemeFormat` — building intermediate token objects, master configs, and layout token maps.
 
-### Portrait Slide Size Presets
-
-New convenience presets in `SLIDE_SIZE`:
-
-```typescript
-export const SLIDE_SIZE = {
-  // Existing
-  S16x9:  { layout: "LAYOUT_16x9",  width: 10, height: 5.625 },
-  S16x10: { layout: "LAYOUT_16x10", width: 10, height: 6.25 },
-  S4x3:   { layout: "LAYOUT_4x3",   width: 10, height: 7.5 },
-  WIDE:   { layout: "LAYOUT_WIDE",  width: 13.33, height: 7.5 },
-  // New
-  US_LETTER_PORTRAIT: { layout: "CUSTOM" as typeof CUSTOM_LAYOUT, width: 7.5, height: 10 },
-  A4_PORTRAIT:        { layout: "CUSTOM" as typeof CUSTOM_LAYOUT, width: 7.5, height: 10.5 },
-} as const;
-```
-
-`US_LETTER_PORTRAIT` uses 7.5" × 10" — the printable area of US Letter (matching PowerPoint's standard letter slide size). `CustomSlideSize` still supports arbitrary dimensions.
-
 ## Implementation
 
-### Phase 1: Core Framework Changes
+### Phase 0: Core Cleanup (SLIDE_SIZE Removal)
 
-#### Step 1: Add types and resolution function
+#### Step 0a: Simplify `Theme.slide`
 
 **File**: `packages/core/src/core/model/types.ts`
 
-- Add `ThemeDefinition` and `ThemeFormat` interfaces
-- Add `resolveThemeFormat(definition: ThemeDefinition, format: string): Theme`
-- Add `US_LETTER_PORTRAIT` and `A4_PORTRAIT` to `SLIDE_SIZE`
-- `Theme` interface stays exactly as-is
+- Remove `SLIDE_SIZE` const object
+- Remove `SlideSize` type (the union of built-in layout strings)
+- Remove `CustomSlideSize` type
+- Remove `CUSTOM_LAYOUT` const
+- Change `Theme.slide` to `{ width: number; height: number }`
 
-#### Step 2: Update `defineTheme()`
+#### Step 0b: Update pptxRenderer
 
-**File**: `packages/core/src/core/rendering/registry.ts`
+**File**: `packages/core/src/core/rendering/pptxRenderer.ts`
 
-- `defineTheme()` accepts `{ fonts, formats }` (the `ThemeDefinition` shape)
-- Validates font paths (existing behavior)
-- Returns `ThemeDefinition`
+- Always use `defineLayout()` with dimensions from `theme.slide`
+- Remove conditional logic for built-in layout names
+- Always set `pres.layout = "CUSTOM"`
 
-#### Step 3: Export new types
+#### Step 0c: Move presets to theme-default
 
-**File**: `packages/core/src/index.ts`
+**File**: `packages/theme-default/src/slidePresets.ts` (**new**)
 
-- Export `ThemeDefinition`, `ThemeFormat`, `resolveThemeFormat`
+- Export `SLIDE_PRESETS` with convenience dimension objects
+- Update `packages/theme-default/src/theme.ts` to use presets
+
+#### Step 0d: Update all consumers
+
+- Fix all imports/references to removed types across packages
+- Update test mocks that reference `SlideSize`, `CUSTOM_LAYOUT`, etc.
+- Update docs that reference `SLIDE_SIZE`
+
+### Phase 1: Multi-Format Support
+
+#### Step 1: Add multi-format types to CLI
+
+**File**: `packages/cli/src/themeDefinition.ts` (**new**)
+
+- Define `ThemeDefinition` and `ThemeFormat` interfaces
+- Export `defineTheme(definition: ThemeDefinition): ThemeDefinition` — validates and returns
+
+#### Step 2: Add resolution function to CLI
+
+**File**: `packages/cli/src/themeFormat.ts` (**new**)
+
+- `resolveThemeFormat(definition: ThemeDefinition, format: string | undefined): Theme`
+- Validates format is provided and exists in definition
+- Error messages list available formats
+- Assembles `Theme` from `definition.fonts` + `definition.formats[format]`
+
+#### Step 3: Add multi-format validation to CLI
+
+**File**: `packages/cli/src/themeValidator.ts` (**new**)
+
+- `validateThemeFonts(definition: ThemeDefinition): void`
+- Validates font paths on shared `fonts` array
+- Iterates each format's `textStyles` and `layouts` to validate font registration per-format
 
 #### Step 4: Update theme loader
 
 **File**: `packages/cli/src/build.ts`
 
-- After `parseSlideDocument()`, extract `format` from `parsed.global.format`
-- Error if missing: `"No format specified. Add 'format: <name>' to the global frontmatter."`
+- Extract `format` from `parsed.global.format`
 - Pass `format` to `loadTheme()`
 
 **File**: `packages/cli/src/themeLoader.ts`
 
-- Accept `format: string` parameter
-- Call `resolveThemeFormat(mod.theme, format)` to resolve `ThemeDefinition` → `Theme`
-- Return `LoadedTheme` with the resolved `Theme` (everything downstream unchanged)
+- Accept `format: string | undefined` parameter
+- Call `resolveThemeFormat(mod.theme, format)` to get flat `Theme`
+- Return `LoadedTheme` with resolved `Theme`
+
+#### Step 4b: Programmatic API
+
+Users who call `compileDocument()` directly (not through the CLI) work with the flat `Theme` type — no format resolution needed. If they want multi-format support, they import `resolveThemeFormat` from the CLI package (or future theme-tools).
+
+#### Step 5: Core's `defineTheme()` stays flat
+
+**File**: `packages/core/src/core/rendering/registry.ts`
+
+- `defineTheme()` accepts and returns flat `Theme` (no change from pre-multi-format)
+- `validateThemeFonts()` in core validates a flat `Theme` (font paths + textStyle font registration)
 
 ### Phase 2: Default Theme Refactor
 
-#### Step 5: Extract shared base tokens
+#### Step 6: Extract shared base tokens
 
 **New file**: `packages/theme-default/src/base.ts`
 
@@ -326,12 +395,12 @@ Move all format-independent constants from `theme.ts`:
 
 These are all brand-identity values. Colors, visual styling, font families — things that define the brand regardless of output format.
 
-#### Step 6: Create format configs
+#### Step 7: Create format configs
 
 **New file**: `packages/theme-default/src/formats/presentation.ts`
 
 Extract from current `theme.ts` — all dimensional values for the existing 16:9 format:
-- `slide: SLIDE_SIZE.S16x9`
+- `slide: SLIDE_PRESETS.S16x9`
 - `unit = 0.03125` (1/32 inch), `spacing = unit * 8`, `spacingTight = unit * 4`
 - `padding = unit * 8`, `margin = 0.5`, `footerHeight = unit * 8`
 - `lineSpacing = 1.2`, `bulletIndentMultiplier = 1.5`
@@ -340,12 +409,12 @@ Extract from current `theme.ts` — all dimensional values for the existing 16:9
 **New file**: `packages/theme-default/src/formats/factsheet.ts`
 
 New format-specific values for US letter portrait:
-- `slide: SLIDE_SIZE.US_LETTER_PORTRAIT` (7.5" × 10")
+- `slide: SLIDE_PRESETS.US_LETTER_PORTRAIT` (7.5" × 10")
 - Adjusted spacing scale for document density (smaller base unit)
 - `margin = 0.75` (wider margins for print)
 - Smaller text styles appropriate for a document: h1 28pt, h2 22pt, h3 18pt, h4 14pt, body 11pt, small 10pt, eyebrow 9pt, footer 7pt, code 9pt
 
-#### Step 7: Create theme build function
+#### Step 8: Create theme build function
 
 **New file**: `packages/theme-default/src/buildTheme.ts`
 
@@ -362,12 +431,12 @@ Takes shared brand tokens (base) + format-specific dimensional config. Assembles
 
 This is the function that replaces the current inline construction in `theme.ts`. All the intermediate objects (`bodyText`, `cardBase`, `bodySlotTokens`, `bodyBase`, `cardsBase`, etc.) are built inside this function using both base and format values.
 
-#### Step 8: Update theme entry points
+#### Step 9: Update theme entry points
 
 **Update**: `packages/theme-default/src/theme.ts` — becomes a thin orchestrator:
 
 ```typescript
-import { defineTheme } from '@tycoslide/core';
+import { defineTheme } from '@tycoslide/cli';
 import * as base from './base.js';
 import { presentationConfig } from './formats/presentation.js';
 import { factsheetConfig } from './formats/factsheet.js';
@@ -386,16 +455,15 @@ export const theme = defineTheme({
 
 ### Phase 3: Tests & Docs
 
-#### Step 9: Update tests
+#### Step 10: Update tests
 
-- Update tests that construct `Theme` via `defineTheme()` to use new multi-format shape
 - Update test markdown fixtures to include `format:` in global frontmatter
 - Add tests for format resolution:
   - Valid format → correct `Theme` returned
   - Unknown format → error listing available formats
   - Missing format → error with guidance
 
-#### Step 10: Update docs
+#### Step 11: Update docs
 
 - `docs/themes.md` — update `defineTheme()` examples, document `ThemeDefinition`/`ThemeFormat`, add format docs
 - `docs/markdown-syntax.md` — document mandatory `format:` global frontmatter key
@@ -415,11 +483,14 @@ export const theme = defineTheme({
 
 | File | Change |
 |------|--------|
-| `packages/core/src/core/model/types.ts` | Add `ThemeDefinition`, `ThemeFormat`, portrait presets, `resolveThemeFormat()` |
-| `packages/core/src/core/rendering/registry.ts` | Update `defineTheme()` to accept `{ fonts, formats }` |
-| `packages/core/src/index.ts` | Export new types and function |
+| `packages/core/src/core/model/types.ts` | Remove `SLIDE_SIZE`, `SlideSize`, `CustomSlideSize`, `CUSTOM_LAYOUT`; simplify `Theme.slide` |
+| `packages/core/src/core/rendering/pptxRenderer.ts` | Always use `defineLayout()` with dimensions |
+| `packages/cli/src/themeDefinition.ts` | **New** — `ThemeDefinition`, `ThemeFormat`, multi-format `defineTheme()` |
+| `packages/cli/src/themeFormat.ts` | **New** — `resolveThemeFormat()` with format validation |
+| `packages/cli/src/themeValidator.ts` | **New** — multi-format `validateThemeFonts()` |
 | `packages/cli/src/build.ts` | Extract mandatory `format:`, pass to `loadTheme()` |
 | `packages/cli/src/themeLoader.ts` | Accept `format`, call `resolveThemeFormat()` |
+| `packages/theme-default/src/slidePresets.ts` | **New** — convenience dimension presets |
 | `packages/theme-default/src/base.ts` | **New** — shared brand tokens |
 | `packages/theme-default/src/formats/presentation.ts` | **New** — 16:9 format config |
 | `packages/theme-default/src/formats/factsheet.ts` | **New** — US letter portrait format config |
@@ -428,10 +499,11 @@ export const theme = defineTheme({
 
 ## Unchanged
 
-- **`Theme` type shape** — `{ slide, fonts, textStyles, layouts }` stays exactly the same
+- **`Theme` type name** — stays as `Theme` (no rename needed)
+- **`Theme` type shape** — `{ slide, fonts, textStyles, layouts }` (slide simplified to `{ width, height }`)
 - **Compiler** (`documentCompiler.ts`) — receives `Theme`, no changes
 - **Presentation class** (`presentation.ts`) — receives `Theme`, no changes
-- **PPTX renderer** (`pptxRenderer.ts`) — receives `Theme`, no changes
+- **PPTX renderer** (`pptxRenderer.ts`) — minor change to always use `defineLayout()`
 - **Layout pipeline** (`pipeline.ts`, `htmlRenderer.ts`) — no changes
 - **Component definitions** — shared across all formats, no changes
 - **Layout definitions** (`layouts.ts`) — shared across all formats, no changes
