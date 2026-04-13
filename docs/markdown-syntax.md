@@ -32,8 +32,15 @@ The first frontmatter block configures the entire presentation:
 ```markdown
 ---
 theme: "@tycoslide/theme-default"
+format: presentation
 ---
 ```
+
+Global frontmatter fields:
+- `theme` - Theme package or path (**required**)
+- `format` - Output format selected from the theme (**required**, e.g. `presentation`, `factsheet`)
+
+See [Themes — Specifying a Format](./themes.md#specifying-a-format).
 
 ## Per-Slide Frontmatter
 
@@ -183,6 +190,7 @@ For a complete reference of all directives, parameters, and examples, see [Compo
 ```markdown
 ---
 theme: "@tycoslide/theme-default"
+format: presentation
 ---
 
 ---

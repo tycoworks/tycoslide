@@ -29,6 +29,7 @@ Create a file called `slides.md`:
 ```markdown
 ---
 theme: "@tycoslide/theme-default"
+format: presentation
 ---
 
 ---

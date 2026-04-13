@@ -94,6 +94,25 @@ Component 'xyz' is missing required tokens: [foo, bar]. All tokens must be provi
 
 ---
 
+### "Theme has no format matching '...'"
+
+```
+Error: Theme has no format matching 'factsheet'. Available formats: presentation
+```
+
+**Cause:** The `format` field in global frontmatter names a format the theme does not define.
+
+**Fix:** Use a format the theme supports, or add the missing format to the theme definition. See [Themes — Specifying a Format](./themes.md#specifying-a-format).
+
+```markdown
+---
+theme: "@tycoslide/theme-default"
+format: presentation
+---
+```
+
+---
+
 ## Component Errors
 
 ### "Unknown component: 'xyz'"

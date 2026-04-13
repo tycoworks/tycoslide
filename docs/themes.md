@@ -35,6 +35,23 @@ title: My Presentation
 npm install @tycoslide/theme-default
 ```
 
+### Specifying a Format
+
+Themes define one or more output formats. A format controls slide dimensions and layout configuration — for example, `presentation` for 16:9 slides or `factsheet` for US letter portrait.
+
+The `format:` field in global frontmatter selects which format to build:
+
+```markdown
+---
+theme: "@tycoslide/theme-default"
+format: presentation
+---
+```
+
+**`format:` is required. Omitting it is an error.**
+
+The available format names are determined by the theme. Consult your theme's documentation for the formats it defines.
+
 ---
 
 ## Extending an Existing Theme
