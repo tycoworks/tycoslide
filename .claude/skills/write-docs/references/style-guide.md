@@ -1,6 +1,6 @@
-# Documentation Style Guide
+# tycoslide Documentation Style Guide
 
-This file guides documentation work in the `docs/` directory. It is automatically loaded by Claude Code when editing docs. Follow every rule here when writing, editing, or reviewing any file under `docs/`.
+Complete style reference for all user-facing documentation under `docs/`.
 
 ---
 
@@ -38,7 +38,7 @@ This file guides documentation work in the `docs/` directory. It is automaticall
 
 **No comments explaining what the code does when prose already does it.** Comments in code blocks are used sparingly: to label sections of a longer block ("// 1. Define token constants", "// 2. Define and register component"), or to show default values inline. They are not used to restate what the surrounding prose already says.
 
-**Language tags are always present** on fenced code blocks: `bash`, `markdown`, `typescript`, `typescript`. Never use ` ``` ` without a language.
+**Language tags are always present** on fenced code blocks: `bash`, `markdown`, `typescript`. Never use bare fences.
 
 ---
 
@@ -56,7 +56,7 @@ This file guides documentation work in the `docs/` directory. It is automaticall
 5. `### Example` or `### Examples` with 1–3 code blocks
 6. `---` horizontal rule to close the section
 
-**Parameter tables use three columns: Param | Type | Description.** Required params are marked `(**required**)` in the Description field. Optional params have no marker (absence of "required" means optional). Default values appear in the Description: "(default: `fill`)". The Type column uses the actual type name or union, e.g., `fill \| hug`, `string`, `number`, not vague placeholders.
+**Parameter tables use three columns: Param | Type | Description.** Required params are marked `(**required**)` in the Description field. Optional params have no marker (absence of "required" means optional). Default values appear in the Description: "(default: `fill`)". The Type column uses the actual type name or union, e.g., `fill | hug`, `string`, `number`, not vague placeholders.
 
 **"Best Practices" sections use bold lead-ins, not bullets with prose.** The pattern is:
 ```
@@ -95,7 +95,7 @@ Dash separator, brief description. No full stops.
 
 ## Content Partitioning
 
-Each page owns its topic. Writers must not write content that belongs on another page.
+Each page owns its topic. Do not write content that belongs on another page.
 
 | Topic | Owned by |
 |-------|----------|
@@ -104,7 +104,7 @@ Each page owns its topic. Writers must not write content that belongs on another
 | Frontmatter, slide separators, text formatting, lists, tables (GFM), speaker notes, directive summary table | `markdown-syntax.md` |
 | Full component reference (content + layout), directive syntax, custom component authoring, DSL functions, token system, expansion function | `components.md` |
 | Custom layout authoring, slot mechanics, masters, render function, testing layouts | `layouts.md` |
-| Theme structure, color/font/spacing/border/component token configuration, variants system, font requirements, registering layouts in themes, testing themes | `themes.md` |
+| Theme structure, color/font/spacing/border/component token configuration, variants system, font requirements, registering layouts in themes, testing themes, multi-format themes | `themes.md` |
 | CLI flags, exit codes, debug workflow | `cli.md` |
 | Error messages, causes, fixes, debug tools | `troubleshooting.md` |
 | Install + minimal example (3-slide) | `README.md` |

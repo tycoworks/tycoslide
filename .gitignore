@@ -10,7 +10,11 @@ dist/
 # Editor directories and files
 .vscode/
 .idea/
-.claude/
+# Claude Code (ignore personal state, allow project config)
+.claude/*
+!.claude/skills/
+!.claude/agents/
+!.claude/CLAUDE.md
 *.swp
 *.swo
 *~
