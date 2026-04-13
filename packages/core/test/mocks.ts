@@ -34,7 +34,7 @@ export function mockTheme(options?: {
   slide?: Theme["slide"];
 }): Theme {
   return {
-    slide: options?.slide ?? { layout: "CUSTOM" as const, width: 13.333, height: 7.5 },
+    slide: options?.slide ?? { width: 13.333, height: 7.5 },
     fonts: [mockFontFamily],
     textStyles: {
       h1: { ...mockTextStyle, ...options?.textStyles?.["h1"] },

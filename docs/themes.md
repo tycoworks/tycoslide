@@ -186,10 +186,11 @@ Required tokens must always be provided in `.tokenMap()`. Optional tokens may be
 A theme is a TypeScript object passed to `defineTheme()`, which validates font configuration at definition time and returns the theme object:
 
 ```typescript
-import { defineTheme, SLIDE_SIZE } from '@tycoslide/core';
+import { SlideFormat } from '@tycoslide/components';
+import { defineTheme } from '@tycoslide/core';
 
 export const theme = defineTheme({
-  slide: SLIDE_SIZE.S16x9,
+  slide: SlideFormat.s16x9,
   fonts: [...],
   textStyles: { h1: {...}, h2: {...}, h3: {...}, h4: {...}, body: {...}, small: {...}, eyebrow: {...}, footer: {...}, code: {...} },
   layouts: {
@@ -282,25 +283,28 @@ textStyles: {
 
 #### 4. Set Slide Size
 
-```typescript
-import { SLIDE_SIZE } from '@tycoslide/core';
+Use `SlideFormat` presets from `@tycoslide/components` or specify custom dimensions in inches:
 
-slide: SLIDE_SIZE.S16x9,  // 16:9 aspect ratio (10" × 5.625")
+```typescript
+import { SlideFormat } from '@tycoslide/components';
+
+slide: SlideFormat.s16x9,
 ```
 
 **Available presets:**
 
-| Constant | Dimensions |
-|----------|-----------|
-| `SLIDE_SIZE.S16x9` | 10" × 5.625" |
-| `SLIDE_SIZE.S16x10` | 10" × 6.25" |
-| `SLIDE_SIZE.S4x3` | 10" × 7.5" |
-| `SLIDE_SIZE.WIDE` | 13.33" × 7.5" |
+| Preset | Dimensions |
+|--------|-----------|
+| `SlideFormat.s16x9` | 10" × 5.625" |
+| `SlideFormat.s16x10` | 10" × 6.25" |
+| `SlideFormat.s4x3` | 10" × 7.5" |
+| `SlideFormat.letterPortrait` | 8.5" × 11" |
+| `SlideFormat.a4Portrait` | 8.27" × 11.69" |
 
 Custom dimensions:
 
 ```typescript
-slide: { layout: 'CUSTOM', width: 10, height: 7.5 }
+slide: { width: 10, height: 7.5 },
 ```
 
 #### 5. Declare Fonts

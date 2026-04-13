@@ -20,7 +20,9 @@ import type {
 } from "../model/nodes.js";
 import { NODE_TYPE } from "../model/nodes.js";
 import type { Background, Theme } from "../model/types.js";
-import { CUSTOM_LAYOUT } from "../model/types.js";
+
+/** pptxgenjs layout name for custom dimensions */
+const PPTX_CUSTOM_LAYOUT = "CUSTOM";
 import { PptxConfigBuilder } from "./pptxConfigBuilder.js";
 
 // ============================================
@@ -71,11 +73,9 @@ export class PptxRenderer {
 
   constructor(theme: Theme) {
     this.pres = new PptxGenJS();
-    const { layout, width, height } = theme.slide;
-    if (layout === CUSTOM_LAYOUT) {
-      this.pres.defineLayout({ name: CUSTOM_LAYOUT, width, height });
-    }
-    this.pres.layout = layout;
+    const { width, height } = theme.slide;
+    this.pres.defineLayout({ name: PPTX_CUSTOM_LAYOUT, width, height });
+    this.pres.layout = PPTX_CUSTOM_LAYOUT;
   }
 
   defineMaster(master: MasterDefinition): void {

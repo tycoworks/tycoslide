@@ -3,8 +3,8 @@
 // Units: spacing/margins/radii = inches, fontSize/borderWidth = points, opacity = 0-100
 
 import type { ImageTokens, LabelTokens, ListTokens, TextTokens } from "@tycoslide/components";
-import { HIGHLIGHT_THEME } from "@tycoslide/components";
-import { DASH_TYPE, defineTheme, GRID_STYLE, HALIGN, SHADOW_TYPE, SLIDE_SIZE, VALIGN } from "@tycoslide/core";
+import { HIGHLIGHT_THEME, SlideFormat } from "@tycoslide/components";
+import { DASH_TYPE, defineTheme, GRID_STYLE, HALIGN, SHADOW_TYPE, VALIGN } from "@tycoslide/core";
 import { assets } from "./assets.js";
 import {
   agendaLayout,
@@ -343,7 +343,7 @@ const cardsBase = {
 };
 
 export const theme = defineTheme({
-  slide: SLIDE_SIZE.S16x9,
+  slide: SlideFormat.s16x9,
   fonts: [assets.fonts.inter, assets.fonts.interLight, assets.fonts.firaCode],
   textStyles: {
     [TEXT_STYLE.TITLE]: {

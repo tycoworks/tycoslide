@@ -65,6 +65,8 @@ export {
 } from "./mermaid.js";
 // Component names (canonical registry of built-in identifiers)
 export { Component, type ComponentName } from "./names.js";
+// Slide format presets (standard dimensions for common aspect ratios and paper sizes)
+export { SlideFormat } from "./slideFormats.js";
 // Primitives (line, shape, slideNumber)
 export {
   type LineParams,

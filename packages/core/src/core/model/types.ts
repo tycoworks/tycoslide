@@ -103,23 +103,6 @@ export const UNDERLINE_STYLE = {
 
 export type UnderlineStyle = (typeof UNDERLINE_STYLE)[keyof typeof UNDERLINE_STYLE];
 
-export const SLIDE_SIZE = {
-  S16x9: { layout: "LAYOUT_16x9", width: 10, height: 5.625 },
-  S16x10: { layout: "LAYOUT_16x10", width: 10, height: 6.25 },
-  S4x3: { layout: "LAYOUT_4x3", width: 10, height: 7.5 },
-  WIDE: { layout: "LAYOUT_WIDE", width: 13.33, height: 7.5 },
-} as const;
-
-export type SlideSize = (typeof SLIDE_SIZE)[keyof typeof SLIDE_SIZE];
-
-export const CUSTOM_LAYOUT = "CUSTOM" as const;
-
-export interface CustomSlideSize {
-  layout: typeof CUSTOM_LAYOUT;
-  width: number;
-  height: number;
-}
-
 // ============================================
 // STYLING TYPES
 // ============================================
@@ -270,7 +253,7 @@ export interface Slide {
 export type VariantConfig = Record<string, Record<string, unknown>>;
 
 export interface Theme {
-  slide: SlideSize | CustomSlideSize;
+  slide: { width: number; height: number };
   /** Explicit font manifest. Every font the theme uses must be listed here.
    *  `generateFontFaceCSS()` reads exclusively from this list. */
   fonts: FontFamily[];

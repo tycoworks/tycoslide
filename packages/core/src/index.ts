@@ -56,7 +56,6 @@ export type {
   ShapeName,
   SizeValue,
   Slide,
-  SlideSize,
   SpacingMode,
   StrikeType,
   TextContent,
@@ -70,7 +69,6 @@ export type {
 } from "./core/model/types.js";
 export {
   Bounds,
-  CUSTOM_LAYOUT,
   DASH_TYPE,
   DIRECTION,
   DIRECTION_VALUES,
@@ -81,7 +79,6 @@ export {
   SHAPE,
   SHAPE_VALUES,
   SIZE,
-  SLIDE_SIZE,
   SPACING_MODE,
   STRIKE_TYPE,
   UNDERLINE_STYLE,
