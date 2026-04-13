@@ -1,5 +1,6 @@
 ---
 theme: "@tycoslide/theme-default"
+format: presentation
 ---
 
 ---
