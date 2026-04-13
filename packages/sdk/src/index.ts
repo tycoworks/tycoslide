@@ -112,3 +112,9 @@ export {
 export { Component, type ComponentName } from "./presets/names.js";
 // Slide format presets (standard dimensions for common aspect ratios and paper sizes)
 export { SlideFormat } from "./presets/slideFormats.js";
+
+// ── Theme ───────────────────────────────────────────────────────────────────
+
+export type { ThemeDefinition, ThemeFormat } from "./theme.js";
+// Multi-format theme definition and resolution
+export { defineTheme, resolveThemeFormat } from "./theme.js";

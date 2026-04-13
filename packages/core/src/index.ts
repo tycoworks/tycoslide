@@ -95,7 +95,6 @@ export {
   defineComponent,
   defineLayout,
   defineMaster,
-  defineTheme,
   type LayoutDefinition,
   layoutRegistry,
   type MasterDefinition,
@@ -107,6 +106,7 @@ export {
   type SchemaShape,
   type TypedLayoutDefinition,
   type TypedMasterDefinition,
+  validateThemeFonts,
 } from "./core/rendering/registry.js";
 // Color utilities
 export { bgColor, hexToRgba } from "./utils/color.js";

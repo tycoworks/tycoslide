@@ -17,10 +17,10 @@ import type { ScalarParam } from "../model/param.js";
 import { RESERVED_FRONTMATTER_KEYS, type SyntaxType } from "../model/syntax.js";
 import { type InferTokens, parseTokenShape, type TokenShape, validateTokens } from "../model/token.js";
 import type { Background, Slide, Theme } from "../model/types.js";
-import { validateThemeFonts } from "./themeValidator.js";
 
 // Re-export ComponentNode — required for declaration emit (defineComponent return type)
 export type { ComponentNode } from "../model/nodes.js";
+export { validateThemeFonts } from "./themeValidator.js";
 
 // ============================================
 // GENERIC REGISTRY BASE CLASS
@@ -560,14 +560,3 @@ export function defineMaster<TShape extends TokenShape = TokenShape>(def: {
 export const masterRegistry = new Registry<MasterDefinition>("Master");
 
 // ============================================
-// DEFINE THEME
-// ============================================
-
-/**
- * Define a theme. Validates font configuration and returns the theme object.
- * All font paths must be non-empty, use a supported format, and be registered in theme.fonts.
- */
-export function defineTheme(theme: Theme): Theme {
-  validateThemeFonts(theme);
-  return theme;
-}

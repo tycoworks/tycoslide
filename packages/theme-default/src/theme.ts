@@ -2,9 +2,9 @@
 // Clean light theme with Inter font. Copy and customize for your brand.
 // Units: spacing/margins/radii = inches, fontSize/borderWidth = points, opacity = 0-100
 
-import { DASH_TYPE, defineTheme, GRID_STYLE, HALIGN, SHADOW_TYPE, VALIGN } from "@tycoslide/core";
+import { DASH_TYPE, GRID_STYLE, HALIGN, SHADOW_TYPE, VALIGN } from "@tycoslide/core";
 import type { ImageTokens, LabelTokens, ListTokens, TextTokens } from "@tycoslide/sdk";
-import { HIGHLIGHT_THEME, SlideFormat } from "@tycoslide/sdk";
+import { defineTheme, HIGHLIGHT_THEME, SlideFormat } from "@tycoslide/sdk";
 import { assets } from "./assets.js";
 import {
   agendaLayout,
@@ -343,295 +343,299 @@ const cardsBase = {
 };
 
 export const theme = defineTheme({
-  slide: SlideFormat.s16x9,
   fonts: [assets.fonts.inter, assets.fonts.interLight, assets.fonts.firaCode],
-  textStyles: {
-    [TEXT_STYLE.TITLE]: {
-      fontFamily: assets.fonts.inter,
-      fontSize: 56,
-      lineHeightMultiplier: lineSpacing,
-      bulletIndentPt: 0,
-    },
-    [TEXT_STYLE.H1]: {
-      fontFamily: assets.fonts.interLight,
-      fontSize: 44,
-      lineHeightMultiplier: lineSpacing,
-      bulletIndentPt: 44 * bulletIndentMultiplier,
-    },
-    [TEXT_STYLE.H2]: {
-      fontFamily: assets.fonts.interLight,
-      fontSize: 32,
-      lineHeightMultiplier: lineSpacing,
-      bulletIndentPt: 32 * bulletIndentMultiplier,
-    },
-    [TEXT_STYLE.H3]: {
-      fontFamily: assets.fonts.interLight,
-      fontSize: 24,
-      lineHeightMultiplier: lineSpacing,
-      bulletIndentPt: 24 * bulletIndentMultiplier,
-    },
-    [TEXT_STYLE.H4]: {
-      fontFamily: assets.fonts.interLight,
-      fontSize: 18,
-      lineHeightMultiplier: lineSpacing,
-      bulletIndentPt: 18 * bulletIndentMultiplier,
-    },
-    [TEXT_STYLE.BODY]: {
-      fontFamily: assets.fonts.interLight,
-      fontSize: 14,
-      lineHeightMultiplier: lineSpacing,
-      bulletIndentPt: 14 * bulletIndentMultiplier,
-    },
-    [TEXT_STYLE.SMALL]: {
-      fontFamily: assets.fonts.interLight,
-      fontSize: 12,
-      lineHeightMultiplier: lineSpacing,
-      bulletIndentPt: 12 * bulletIndentMultiplier,
-    },
-    [TEXT_STYLE.EYEBROW]: {
-      fontFamily: assets.fonts.inter,
-      fontSize: 11,
-      lineHeightMultiplier: 1.0,
-      bulletIndentPt: 11 * bulletIndentMultiplier,
-    },
-    [TEXT_STYLE.FOOTER]: {
-      fontFamily: assets.fonts.interLight,
-      fontSize: 8,
-      lineHeightMultiplier: 1.0,
-      bulletIndentPt: 8 * bulletIndentMultiplier,
-    },
-    [TEXT_STYLE.CODE]: {
-      fontFamily: assets.fonts.firaCode,
-      fontSize: 11,
-      lineHeightMultiplier: 1.6,
-      bulletIndentPt: 0,
-    },
-  },
-  layouts: {
-    title: {
-      variants: {
-        default: titleLayout.tokenMap({
-          title: { ...heroTitle, color: palette.navy, style: TEXT_STYLE.TITLE },
-          subtitle: { ...heroSubtitle, color: palette.textSecondary, style: TEXT_STYLE.H3 },
-          master: lightMinimalMaster,
-          vAlign: VALIGN.MIDDLE,
-          hAlign: HALIGN.CENTER,
-          spacing: spacingTight,
-          image: imageBase,
-        }),
+  formats: {
+    presentation: {
+      slide: SlideFormat.s16x9,
+      textStyles: {
+        [TEXT_STYLE.TITLE]: {
+          fontFamily: assets.fonts.inter,
+          fontSize: 56,
+          lineHeightMultiplier: lineSpacing,
+          bulletIndentPt: 0,
+        },
+        [TEXT_STYLE.H1]: {
+          fontFamily: assets.fonts.interLight,
+          fontSize: 44,
+          lineHeightMultiplier: lineSpacing,
+          bulletIndentPt: 44 * bulletIndentMultiplier,
+        },
+        [TEXT_STYLE.H2]: {
+          fontFamily: assets.fonts.interLight,
+          fontSize: 32,
+          lineHeightMultiplier: lineSpacing,
+          bulletIndentPt: 32 * bulletIndentMultiplier,
+        },
+        [TEXT_STYLE.H3]: {
+          fontFamily: assets.fonts.interLight,
+          fontSize: 24,
+          lineHeightMultiplier: lineSpacing,
+          bulletIndentPt: 24 * bulletIndentMultiplier,
+        },
+        [TEXT_STYLE.H4]: {
+          fontFamily: assets.fonts.interLight,
+          fontSize: 18,
+          lineHeightMultiplier: lineSpacing,
+          bulletIndentPt: 18 * bulletIndentMultiplier,
+        },
+        [TEXT_STYLE.BODY]: {
+          fontFamily: assets.fonts.interLight,
+          fontSize: 14,
+          lineHeightMultiplier: lineSpacing,
+          bulletIndentPt: 14 * bulletIndentMultiplier,
+        },
+        [TEXT_STYLE.SMALL]: {
+          fontFamily: assets.fonts.interLight,
+          fontSize: 12,
+          lineHeightMultiplier: lineSpacing,
+          bulletIndentPt: 12 * bulletIndentMultiplier,
+        },
+        [TEXT_STYLE.EYEBROW]: {
+          fontFamily: assets.fonts.inter,
+          fontSize: 11,
+          lineHeightMultiplier: 1.0,
+          bulletIndentPt: 11 * bulletIndentMultiplier,
+        },
+        [TEXT_STYLE.FOOTER]: {
+          fontFamily: assets.fonts.interLight,
+          fontSize: 8,
+          lineHeightMultiplier: 1.0,
+          bulletIndentPt: 8 * bulletIndentMultiplier,
+        },
+        [TEXT_STYLE.CODE]: {
+          fontFamily: assets.fonts.firaCode,
+          fontSize: 11,
+          lineHeightMultiplier: 1.6,
+          bulletIndentPt: 0,
+        },
       },
-    },
-    end: {
-      variants: {
-        default: endLayout.tokenMap({
-          title: { ...heroTitle, style: TEXT_STYLE.TITLE },
-          subtitle: heroSubtitle,
-          master: darkMinimalMaster,
-          vAlign: VALIGN.MIDDLE,
-          hAlign: HALIGN.CENTER,
-          spacing: spacingTight,
-          image: imageBase,
-        }),
-      },
-    },
-    section: {
-      variants: {
-        default: sectionLayout.tokenMap({
-          title: labelSectionHeading,
-          master: darkMinimalMaster,
-          vAlign: VALIGN.MIDDLE,
-          hAlign: HALIGN.CENTER,
-        }),
-      },
-    },
-    body: {
-      variants: {
-        default: bodyLayout.tokenMap({ ...bodyBase, vAlign: VALIGN.TOP }),
-        centered: bodyLayout.tokenMap({ ...bodyBase, vAlign: VALIGN.MIDDLE }),
-      },
-    },
-    stat: {
-      variants: {
-        default: statLayout.tokenMap({
-          master: defaultMasterConfig,
-          value: labelStatValue,
-          label: labelStatLabel,
-          caption: mutedCaption,
-          background: { ...cardBackground, cornerRadius: cornerRadiusLarge },
-          backgroundWidth: 6,
-          vAlign: VALIGN.MIDDLE,
-          hAlign: HALIGN.CENTER,
-          spacing: spacing,
-          padding,
-        }),
-      },
-    },
-    "two-column": {
-      variants: {
-        default: twoColumnLayout.tokenMap({ ...bodyBase, vAlign: VALIGN.MIDDLE }),
-      },
-    },
-    statement: {
-      variants: {
-        default: statementLayout.tokenMap({
-          caption: mutedCaption,
-          vAlign: VALIGN.MIDDLE,
-          hAlign: HALIGN.CENTER,
-          spacing: spacing,
-          master: lightMinimalMaster,
-          body: { ...bodyText, style: TEXT_STYLE.H2 },
-        }),
-      },
-    },
-    agenda: {
-      variants: {
-        default: agendaLayout.tokenMap({
-          master: defaultMasterConfig,
-          ...headerTokens,
-          vAlign: VALIGN.MIDDLE,
-          items: { ...bodyText, style: TEXT_STYLE.H4, color: palette.navy },
-          divider: subtleBorder,
-          itemNumber: { ...alignLeft, style: TEXT_STYLE.H2, color: palette.lavender },
-          itemVAlign: VALIGN.MIDDLE,
-          itemSpacing: spacing,
-          spacing: spacingTight,
-          image: imageBase,
-        }),
-      },
-    },
-    cards: {
-      variants: {
-        default: cardsLayout.tokenMap({
-          ...cardsBase,
-          card: { ...cardBase, padding: unit * 11, vAlign: VALIGN.TOP, background: cardBackground },
-        }),
-        flat: cardsLayout.tokenMap({ ...cardsBase, card: { ...cardBase, padding: unit * 11, vAlign: VALIGN.TOP } }),
-      },
-    },
-    blank: {
-      variants: {
-        default: blankLayout.tokenMap({
-          master: lightMinimalMaster,
-          ...bodySlotTokens,
-        }),
-      },
-    },
-    quote: {
-      variants: {
-        default: quoteLayout.tokenMap({
-          quote: quoteSlotTokens,
-          master: lightMinimalMaster,
-          vAlign: VALIGN.MIDDLE,
-          hAlign: HALIGN.CENTER,
-          spacing,
-        }),
-        dark: quoteLayout.tokenMap({
-          quote: {
-            bar: {
-              color: palette.lavender,
-              width: accentBarWidth,
-              dashType: DASH_TYPE.SOLID,
-            },
-            spacing: spacing,
-            quote: {
-              ...quoteText,
-              color: palette.white,
-              linkColor: palette.lavender,
-            },
-            attribution: {
-              ...labelMutedSmall,
-              color: palette.textMuted,
-            },
+      layouts: {
+        title: {
+          variants: {
+            default: titleLayout.tokenMap({
+              title: { ...heroTitle, color: palette.navy, style: TEXT_STYLE.TITLE },
+              subtitle: { ...heroSubtitle, color: palette.textSecondary, style: TEXT_STYLE.H3 },
+              master: lightMinimalMaster,
+              vAlign: VALIGN.MIDDLE,
+              hAlign: HALIGN.CENTER,
+              spacing: spacingTight,
+              image: imageBase,
+            }),
           },
-          master: darkMinimalMaster,
-          vAlign: VALIGN.MIDDLE,
-          hAlign: HALIGN.CENTER,
-          spacing: spacing,
-        }),
-      },
-    },
-    shapes: {
-      variants: {
-        default: shapesLayout.tokenMap({
-          master: defaultMasterConfig,
-          ...headerTokens,
-          subtitle: { ...alignLeft, style: TEXT_STYLE.BODY, color: palette.textMuted },
-          label: {
-            style: TEXT_STYLE.BODY,
-            color: palette.textSecondary,
-            hAlign: HALIGN.CENTER,
-            vAlign: VALIGN.TOP,
-            border: { color: palette.purple, width: 1, dashType: DASH_TYPE.SOLID },
+        },
+        end: {
+          variants: {
+            default: endLayout.tokenMap({
+              title: { ...heroTitle, style: TEXT_STYLE.TITLE },
+              subtitle: heroSubtitle,
+              master: darkMinimalMaster,
+              vAlign: VALIGN.MIDDLE,
+              hAlign: HALIGN.CENTER,
+              spacing: spacingTight,
+              image: imageBase,
+            }),
           },
-          rectangle: {
-            fill: palette.purple,
-            fillOpacity: 100,
-            border: { color: palette.navy, width: 2, dashType: DASH_TYPE.SOLID },
-            cornerRadius: 0,
+        },
+        section: {
+          variants: {
+            default: sectionLayout.tokenMap({
+              title: labelSectionHeading,
+              master: darkMinimalMaster,
+              vAlign: VALIGN.MIDDLE,
+              hAlign: HALIGN.CENTER,
+            }),
           },
-          ellipse: {
-            fill: palette.navy,
-            fillOpacity: 100,
-            border: { color: palette.purple, width: 2, dashType: DASH_TYPE.DASHED },
-            cornerRadius: 0,
+        },
+        body: {
+          variants: {
+            default: bodyLayout.tokenMap({ ...bodyBase, vAlign: VALIGN.TOP }),
+            centered: bodyLayout.tokenMap({ ...bodyBase, vAlign: VALIGN.MIDDLE }),
           },
-          triangle: {
-            fill: palette.teal,
-            fillOpacity: 100,
-            border: { color: palette.navy, width: 3, dashType: DASH_TYPE.DASHED },
-            cornerRadius: 0,
+        },
+        stat: {
+          variants: {
+            default: statLayout.tokenMap({
+              master: defaultMasterConfig,
+              value: labelStatValue,
+              label: labelStatLabel,
+              caption: mutedCaption,
+              background: { ...cardBackground, cornerRadius: cornerRadiusLarge },
+              backgroundWidth: 6,
+              vAlign: VALIGN.MIDDLE,
+              hAlign: HALIGN.CENTER,
+              spacing: spacing,
+              padding,
+            }),
           },
-          diamond: {
-            fill: palette.border,
-            fillOpacity: 100,
-            border: { color: palette.teal, width: 2, dashType: DASH_TYPE.DOTTED },
-            cornerRadius: 0,
+        },
+        "two-column": {
+          variants: {
+            default: twoColumnLayout.tokenMap({ ...bodyBase, vAlign: VALIGN.MIDDLE }),
           },
-          vAlign: VALIGN.TOP,
-          hAlign: HALIGN.CENTER,
-          spacing: spacing,
-        }),
-      },
-    },
-    transform: {
-      variants: {
-        default: transformLayout.tokenMap({
-          master: defaultMasterConfig,
-          ...headerTokens,
-          text: cardDescription,
-          list: bodyList,
-          vAlign: VALIGN.MIDDLE,
-          hAlign: HALIGN.LEFT,
-          overlayVAlign: VALIGN.MIDDLE,
-          overlayHAlign: HALIGN.CENTER,
-          spacing: spacing,
-          contentSpacing: 0,
-          overlaySize: 0.9,
-          ...bodySlotTokens,
-          card: {
-            ...cardBase,
-            hAlign: HALIGN.CENTER,
-            title: { ...cardTitle, hAlign: HALIGN.CENTER },
-            description: { ...cardDescription, hAlign: HALIGN.CENTER },
-            vAlign: VALIGN.MIDDLE,
-            background: { ...cardBackground, shadow },
+        },
+        statement: {
+          variants: {
+            default: statementLayout.tokenMap({
+              caption: mutedCaption,
+              vAlign: VALIGN.MIDDLE,
+              hAlign: HALIGN.CENTER,
+              spacing: spacing,
+              master: lightMinimalMaster,
+              body: { ...bodyText, style: TEXT_STYLE.H2 },
+            }),
           },
-        }),
-      },
-    },
-    lines: {
-      variants: {
-        default: linesLayout.tokenMap({
-          master: defaultMasterConfig,
-          ...headerTokens,
-          label: labelMutedSmall,
-          solid: { color: palette.navy, width: 2, dashType: DASH_TYPE.SOLID },
-          dashed: { color: palette.purple, width: 2, dashType: DASH_TYPE.DASHED },
-          dotted: { color: palette.lavender, width: 2, dashType: DASH_TYPE.DOTTED },
-          vAlign: VALIGN.TOP,
-          hAlign: HALIGN.LEFT,
-          spacing: spacing,
-        }),
+        },
+        agenda: {
+          variants: {
+            default: agendaLayout.tokenMap({
+              master: defaultMasterConfig,
+              ...headerTokens,
+              vAlign: VALIGN.MIDDLE,
+              items: { ...bodyText, style: TEXT_STYLE.H4, color: palette.navy },
+              divider: subtleBorder,
+              itemNumber: { ...alignLeft, style: TEXT_STYLE.H2, color: palette.lavender },
+              itemVAlign: VALIGN.MIDDLE,
+              itemSpacing: spacing,
+              spacing: spacingTight,
+              image: imageBase,
+            }),
+          },
+        },
+        cards: {
+          variants: {
+            default: cardsLayout.tokenMap({
+              ...cardsBase,
+              card: { ...cardBase, padding: unit * 11, vAlign: VALIGN.TOP, background: cardBackground },
+            }),
+            flat: cardsLayout.tokenMap({ ...cardsBase, card: { ...cardBase, padding: unit * 11, vAlign: VALIGN.TOP } }),
+          },
+        },
+        blank: {
+          variants: {
+            default: blankLayout.tokenMap({
+              master: lightMinimalMaster,
+              ...bodySlotTokens,
+            }),
+          },
+        },
+        quote: {
+          variants: {
+            default: quoteLayout.tokenMap({
+              quote: quoteSlotTokens,
+              master: lightMinimalMaster,
+              vAlign: VALIGN.MIDDLE,
+              hAlign: HALIGN.CENTER,
+              spacing,
+            }),
+            dark: quoteLayout.tokenMap({
+              quote: {
+                bar: {
+                  color: palette.lavender,
+                  width: accentBarWidth,
+                  dashType: DASH_TYPE.SOLID,
+                },
+                spacing: spacing,
+                quote: {
+                  ...quoteText,
+                  color: palette.white,
+                  linkColor: palette.lavender,
+                },
+                attribution: {
+                  ...labelMutedSmall,
+                  color: palette.textMuted,
+                },
+              },
+              master: darkMinimalMaster,
+              vAlign: VALIGN.MIDDLE,
+              hAlign: HALIGN.CENTER,
+              spacing: spacing,
+            }),
+          },
+        },
+        shapes: {
+          variants: {
+            default: shapesLayout.tokenMap({
+              master: defaultMasterConfig,
+              ...headerTokens,
+              subtitle: { ...alignLeft, style: TEXT_STYLE.BODY, color: palette.textMuted },
+              label: {
+                style: TEXT_STYLE.BODY,
+                color: palette.textSecondary,
+                hAlign: HALIGN.CENTER,
+                vAlign: VALIGN.TOP,
+                border: { color: palette.purple, width: 1, dashType: DASH_TYPE.SOLID },
+              },
+              rectangle: {
+                fill: palette.purple,
+                fillOpacity: 100,
+                border: { color: palette.navy, width: 2, dashType: DASH_TYPE.SOLID },
+                cornerRadius: 0,
+              },
+              ellipse: {
+                fill: palette.navy,
+                fillOpacity: 100,
+                border: { color: palette.purple, width: 2, dashType: DASH_TYPE.DASHED },
+                cornerRadius: 0,
+              },
+              triangle: {
+                fill: palette.teal,
+                fillOpacity: 100,
+                border: { color: palette.navy, width: 3, dashType: DASH_TYPE.DASHED },
+                cornerRadius: 0,
+              },
+              diamond: {
+                fill: palette.border,
+                fillOpacity: 100,
+                border: { color: palette.teal, width: 2, dashType: DASH_TYPE.DOTTED },
+                cornerRadius: 0,
+              },
+              vAlign: VALIGN.TOP,
+              hAlign: HALIGN.CENTER,
+              spacing: spacing,
+            }),
+          },
+        },
+        transform: {
+          variants: {
+            default: transformLayout.tokenMap({
+              master: defaultMasterConfig,
+              ...headerTokens,
+              text: cardDescription,
+              list: bodyList,
+              vAlign: VALIGN.MIDDLE,
+              hAlign: HALIGN.LEFT,
+              overlayVAlign: VALIGN.MIDDLE,
+              overlayHAlign: HALIGN.CENTER,
+              spacing: spacing,
+              contentSpacing: 0,
+              overlaySize: 0.9,
+              ...bodySlotTokens,
+              card: {
+                ...cardBase,
+                hAlign: HALIGN.CENTER,
+                title: { ...cardTitle, hAlign: HALIGN.CENTER },
+                description: { ...cardDescription, hAlign: HALIGN.CENTER },
+                vAlign: VALIGN.MIDDLE,
+                background: { ...cardBackground, shadow },
+              },
+            }),
+          },
+        },
+        lines: {
+          variants: {
+            default: linesLayout.tokenMap({
+              master: defaultMasterConfig,
+              ...headerTokens,
+              label: labelMutedSmall,
+              solid: { color: palette.navy, width: 2, dashType: DASH_TYPE.SOLID },
+              dashed: { color: palette.purple, width: 2, dashType: DASH_TYPE.DASHED },
+              dotted: { color: palette.lavender, width: 2, dashType: DASH_TYPE.DOTTED },
+              vAlign: VALIGN.TOP,
+              hAlign: HALIGN.LEFT,
+              spacing: spacing,
+            }),
+          },
+        },
       },
     },
   },

@@ -6,6 +6,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import type { Theme } from "@tycoslide/core";
 import { componentRegistry, layoutRegistry, masterRegistry } from "@tycoslide/core";
+import { resolveThemeFormat } from "@tycoslide/sdk";
 
 export interface LoadedTheme {
   theme: Theme;
@@ -13,16 +14,15 @@ export interface LoadedTheme {
 }
 
 /**
- * Load a theme package by name.
- * The name is the exact npm package name (e.g., "acme_theme").
+ * Load a theme package by name, resolving the given format to a flat Theme.
  *
  * The theme package must export:
- *   - theme: Theme (required)
+ *   - theme: ThemeDefinition (required)
  *   - components: ComponentDefinition[] (required — explicitly registered)
  *   - layouts: LayoutDefinition[] (required — explicitly registered)
  *   - assets: Record<string, unknown> (optional)
  */
-export async function loadTheme(name: string): Promise<LoadedTheme> {
+export async function loadTheme(name: string, format: string | undefined): Promise<LoadedTheme> {
   const packageName = name;
 
   // Resolve from the user's working directory, not from tycoslide's install location
@@ -64,8 +64,11 @@ export async function loadTheme(name: string): Promise<LoadedTheme> {
     throw new Error(`Theme package '${packageName}' does not export 'masters'.`);
   }
 
+  // Resolve format to flat Theme
+  const theme = resolveThemeFormat(mod.theme, format);
+
   return {
-    theme: mod.theme,
+    theme,
     assets: mod.assets,
   };
 }

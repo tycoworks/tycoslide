@@ -37,8 +37,11 @@ export async function build(inputPath: string, options: BuildOptions): Promise<v
     throw new Error("No theme specified. Add `theme: <name>` to the global frontmatter in your markdown file.");
   }
 
-  // Load theme package
-  const loaded = await loadTheme(themeName);
+  // Extract format from global frontmatter
+  const format = typeof parsed.global.format === "string" ? parsed.global.format : undefined;
+
+  // Load theme package and resolve format
+  const loaded = await loadTheme(themeName, format);
 
   // Compile markdown to presentation
   const pres = compileDocument(source, {
