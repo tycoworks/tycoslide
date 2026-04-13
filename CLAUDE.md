@@ -29,9 +29,9 @@ npx tycoslide build deck.md          # Build a single deck (outputs deck.pptx)
 
 tycoslide is an npm workspaces monorepo with four packages:
 
-- **`packages/core`** (npm: `@tycoslide/core`) — The framework engine (rendering, layout, model, markdown compilation)
-- **`packages/sdk`** (npm: `@tycoslide/sdk`) — SDK with 16 standard components, presets (SlideFormat, Component names, highlighting themes), and theme-authoring helpers
-- **`packages/cli`** (npm: `@tycoslide/cli`) — CLI entry point (`tycoslide` binary), build command, theme loader
+- **`packages/core`** (npm: `@tycoslide/core`) — Format-agnostic engine: rendering, layout, model, markdown compilation. Knows only flat `Theme` type, node types, and token maps
+- **`packages/sdk`** (npm: `@tycoslide/sdk`) — Everything theme authors need: 16 standard components, presets (SlideFormat, Component names, highlighting), multi-format theme types (`ThemeDefinition`, `ThemeFormat`, `resolveThemeFormat`), and theme-authoring helpers
+- **`packages/cli`** (npm: `@tycoslide/cli`) — Terminal wiring: reads markdown, loads themes, calls SDK's format resolution, passes flat `Theme` to core
 - **`packages/theme-default`** (npm: `@tycoslide/theme-default`) — Default theme with Inter font and Material Design icons
 
 When consuming tycoslide from another project (e.g., a theme), `package.json` points `main` at `dist/index.js`. Always rebuild before running slides.
@@ -52,6 +52,7 @@ npx tsc --build      # Rebuilds tycoslide (if changed) then the theme
 - `packages/core/src/utils/` — Shared parser, font utils, image utils, units
 - `packages/sdk/src/components/` — All 16 component definitions
 - `packages/sdk/src/presets/` — SlideFormat, Component names, highlighting themes
+- `packages/sdk/src/theme/` — Multi-format theme types and resolution (ThemeDefinition, ThemeFormat, resolveThemeFormat)
 - `packages/theme-default/src/` — Default theme (Inter font, Material Design icons)
 - `packages/core/test/` — Tests (uses `node:test`, NOT vitest)
 
