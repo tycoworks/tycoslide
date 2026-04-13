@@ -26,7 +26,7 @@ import {
   token,
   type VerticalAlignment,
 } from "@tycoslide/core";
-import { Component } from "./names.js";
+import { Component } from "../presets/names.js";
 
 const lineTokens = token.shape({
   color: token.required<string>(),

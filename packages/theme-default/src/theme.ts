@@ -2,9 +2,9 @@
 // Clean light theme with Inter font. Copy and customize for your brand.
 // Units: spacing/margins/radii = inches, fontSize/borderWidth = points, opacity = 0-100
 
-import type { ImageTokens, LabelTokens, ListTokens, TextTokens } from "@tycoslide/components";
-import { HIGHLIGHT_THEME, SlideFormat } from "@tycoslide/components";
 import { DASH_TYPE, defineTheme, GRID_STYLE, HALIGN, SHADOW_TYPE, VALIGN } from "@tycoslide/core";
+import type { ImageTokens, LabelTokens, ListTokens, TextTokens } from "@tycoslide/sdk";
+import { HIGHLIGHT_THEME, SlideFormat } from "@tycoslide/sdk";
 import { assets } from "./assets.js";
 import {
   agendaLayout,

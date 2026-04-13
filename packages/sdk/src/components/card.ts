@@ -14,9 +14,9 @@ import {
   token,
   type VerticalAlignment,
 } from "@tycoslide/core";
+import { Component } from "../presets/names.js";
 import { column, stack } from "./containers.js";
-import { image, type ImageTokens, imageComponent } from "./image.js";
-import { Component } from "./names.js";
+import { type ImageTokens, image, imageComponent } from "./image.js";
 import { type ShapeTokens, shape } from "./primitives.js";
 import { type TextTokens, text, textComponent } from "./text.js";
 

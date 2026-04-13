@@ -30,7 +30,7 @@ npx tycoslide build deck.md          # Build a single deck (outputs deck.pptx)
 tycoslide is an npm workspaces monorepo with four packages:
 
 - **`packages/core`** (npm: `@tycoslide/core`) — The framework engine (rendering, layout, model, markdown compilation)
-- **`packages/components`** (npm: `@tycoslide/components`) — 16 standard components: text, plainText, list, card, quote, testimonial, table, image, mermaid, code, line, shape, slideNumber, row, column, stack, grid
+- **`packages/sdk`** (npm: `@tycoslide/sdk`) — SDK with 16 standard components, presets (SlideFormat, Component names, highlighting themes), and theme-authoring helpers
 - **`packages/cli`** (npm: `@tycoslide/cli`) — CLI entry point (`tycoslide` binary), build command, theme loader
 - **`packages/theme-default`** (npm: `@tycoslide/theme-default`) — Default theme with Inter font and Material Design icons
 
@@ -50,7 +50,8 @@ npx tsc --build      # Rebuilds tycoslide (if changed) then the theme
 - `packages/core/src/core/layout/` — HTML measurement via Playwright, flex layout pipeline
 - `packages/cli/src/` — CLI entry point, build command, theme loader
 - `packages/core/src/utils/` — Shared parser, font utils, image utils, units
-- `packages/components/src/` — All 16 component definitions (see Monorepo Structure above)
+- `packages/sdk/src/components/` — All 16 component definitions
+- `packages/sdk/src/presets/` — SlideFormat, Component names, highlighting themes
 - `packages/theme-default/src/` — Default theme (Inter font, Material Design icons)
 - `packages/core/test/` — Tests (uses `node:test`, NOT vitest)
 
@@ -79,7 +80,7 @@ Two registries handle component and layout registration:
 - **`defineLayout()`** + **`layoutRegistry.register()`** — Slide layouts. Declares params schema and a render function.
 
 Each component declares:
-- A **name** — built-in names from `Component.*` const objects (`packages/components/src/names.ts`), or any string for custom components
+- A **name** — built-in names from `Component.*` const objects (`packages/sdk/src/presets/names.ts`), or any string for custom components
 - A **params schema** via `param.shape({...})` (validated at compile time)
 - **Token shape** via `token.shape({...})` — delivered via `node.tokens` (set by DSL helpers or slot injection from parent layouts)
 - A **render function** `(params, content, context, tokens) => SlideNode` that returns a primitive node tree

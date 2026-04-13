@@ -14,8 +14,8 @@ Custom layouts define slide structure. Each layout controls where content appear
 
 ```typescript
 import { defineLayout, param, token, SIZE, type InferTokens } from '@tycoslide/core';
-import { textComponent, plainText, row, column } from '@tycoslide/components';
-import type { PlainTextTokens } from '@tycoslide/components';
+import { textComponent, plainText, row, column } from '@tycoslide/sdk';
+import type { PlainTextTokens } from '@tycoslide/sdk';
 
 import type { DefaultMasterTokens } from './master.js';
 import { MASTER } from './master.js';
@@ -70,7 +70,7 @@ Define parameters using `param` helpers and component schemas:
 
 ```typescript
 import { param, schema } from '@tycoslide/core';
-import { textComponent } from '@tycoslide/components';
+import { textComponent } from '@tycoslide/sdk';
 
 params: {
   title: param.required(textComponent.schema),    // Required text (validated like text component)
@@ -149,10 +149,10 @@ render: (params, { body }, tokens) => ({
 
 ### TypeScript DSL for Layout Development
 
-Build layouts by composing container functions from `@tycoslide/components` to control how content is arranged on the slide:
+Build layouts by composing container functions from `@tycoslide/sdk` to control how content is arranged on the slide:
 
 ```typescript
-import { column, row, plainText } from '@tycoslide/components';
+import { column, row, plainText } from '@tycoslide/sdk';
 column(
   { spacing: tokens.spacing },
   plainText("Section Header", tokens.eyebrow),
@@ -196,8 +196,8 @@ Masters control the fixed elements that appear on every slide — e.g. footers, 
 
 ```typescript
 import { defineMaster, token, SIZE, VALIGN, Bounds, type InferTokens } from '@tycoslide/core';
-import type { PlainTextTokens, SlideNumberTokens } from '@tycoslide/components';
-import { row, column, plainText, slideNumber } from '@tycoslide/components';
+import type { PlainTextTokens, SlideNumberTokens } from '@tycoslide/sdk';
+import { row, column, plainText, slideNumber } from '@tycoslide/sdk';
 
 const myMasterTokens = token.shape({
   background: token.required<string>(),

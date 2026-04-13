@@ -1,6 +1,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import { componentRegistry, HALIGN, NODE_TYPE } from "@tycoslide/core";
+import { quote } from "../src/components/quote.js";
 import {
   cardComponent,
   codeComponent,
@@ -19,8 +20,7 @@ import {
   testimonialComponent,
   textComponent,
 } from "../src/index.js";
-import { Component } from "../src/names.js";
-import { quote } from "../src/quote.js";
+import { Component } from "../src/presets/names.js";
 import { DEFAULT_QUOTE_TOKENS, mockTheme, noopCanvas } from "./mocks.js";
 
 // Register components explicitly

@@ -6,11 +6,11 @@ import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import { param, schema } from "@tycoslide/core";
 import { z } from "zod";
-import { cardComponent } from "../src/card.js";
-import { imageComponent } from "../src/image.js";
-import { mermaidComponent } from "../src/mermaid.js";
-import { quoteComponent } from "../src/quote.js";
-import { textComponent } from "../src/text.js";
+import { cardComponent } from "../src/components/card.js";
+import { imageComponent } from "../src/components/image.js";
+import { mermaidComponent } from "../src/components/mermaid.js";
+import { quoteComponent } from "../src/components/quote.js";
+import { textComponent } from "../src/components/text.js";
 
 describe("Component .schema properties", () => {
   describe("real component .schema properties", () => {

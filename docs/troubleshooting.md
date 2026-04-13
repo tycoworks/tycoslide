@@ -144,7 +144,7 @@ const x = 1;
 Error: Unsupported code language "xyz". Supported languages include: typescript, python, sql, rust, go, java. See LANGUAGE constant for full list.
 ```
 
-**Fix:** Use a supported language identifier. Common values: `typescript`, `javascript`, `python`, `sql`, `rust`, `go`, `java`, `bash`, `json`. See the `LANGUAGE` constant in `@tycoslide/components` for the full list.
+**Fix:** Use a supported language identifier. Common values: `typescript`, `javascript`, `python`, `sql`, `rust`, `go`, `java`, `bash`, `json`. See the `LANGUAGE` constant in `@tycoslide/sdk` for the full list.
 
 ---
 

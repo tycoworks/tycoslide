@@ -1,6 +1,6 @@
 # Components
 
-Components are the building blocks of tycoslide presentations. All built-in components come from `@tycoslide/components` and are re-exported by themes. For default token values, see your theme's source.
+Components are the building blocks of tycoslide presentations. All built-in components come from `@tycoslide/sdk` and are re-exported by themes. For default token values, see your theme's source.
 
 ## How Components Work
 
@@ -518,7 +518,7 @@ The content is the source code. In markdown, this is the content between the fen
 | `background` | ShapeTokens | Background shape (fill, border, corner radius, optional shadow) |
 | `image` | ImageTokens | Image styling tokens for the rendered code image |
 
-`ShapeTokens` includes `fill`, `fillOpacity`, `cornerRadius`, and optional `border` (`Stroke`) and `shadow`. Use the `HIGHLIGHT_THEME` constant for available theme names and `LANGUAGE` for supported language identifiers. See [`highlighting.ts`](../packages/components/src/highlighting.ts) for the full list.
+`ShapeTokens` includes `fill`, `fillOpacity`, `cornerRadius`, and optional `border` (`Stroke`) and `shadow`. Use the `HIGHLIGHT_THEME` constant for available theme names and `LANGUAGE` for supported language identifiers. See [`highlighting.ts`](../packages/sdk/src/presets/highlighting.ts) for the full list.
 
 ### Examples
 
@@ -681,7 +681,7 @@ Components are defined with `defineComponent()` and registered with `componentRe
 
 ```typescript
 import { defineComponent, componentRegistry, component, param, token, schema } from '@tycoslide/core';
-import { label } from '@tycoslide/components';
+import { label } from '@tycoslide/sdk';
 import type { InferParams, InferTokens, TextStyleName } from '@tycoslide/core';
 
 const badgeParams = param.shape({
@@ -847,8 +847,8 @@ Display a large metric value with a label and optional change indicator:
 
 ```typescript
 import { defineComponent, componentRegistry, component, param, token, schema } from '@tycoslide/core';
-import { column, label } from '@tycoslide/components';
-import type { LabelTokens } from '@tycoslide/components';
+import { column, label } from '@tycoslide/sdk';
+import type { LabelTokens } from '@tycoslide/sdk';
 import type { InferParams, InferTokens } from '@tycoslide/core';
 
 // 1. Declare params and tokens
@@ -923,12 +923,12 @@ The layout's token map entry for `metric` holds the `MetricTokens` object. The t
 
 ### TypeScript DSL Functions
 
-DSL functions are how you use components from TypeScript. All built-in DSL functions are exported from `@tycoslide/components`:
+DSL functions are how you use components from TypeScript. All built-in DSL functions are exported from `@tycoslide/sdk`:
 
 ```typescript
-import { text, label, list, card, quote, testimonial, table, image, mermaid, code } from '@tycoslide/components';
-import { row, column, stack, grid } from '@tycoslide/components';
-import { line, shape, slideNumber } from '@tycoslide/components';
+import { text, label, list, card, quote, testimonial, table, image, mermaid, code } from '@tycoslide/sdk';
+import { row, column, stack, grid } from '@tycoslide/sdk';
+import { line, shape, slideNumber } from '@tycoslide/sdk';
 import { SIZE, SHAPE, HALIGN, VALIGN, SPACING_MODE } from '@tycoslide/core';
 const TEXT_STYLE = { H1: "h1", H2: "h2", H3: "h3", H4: "h4", BODY: "body", SMALL: "small", EYEBROW: "eyebrow", FOOTER: "footer", CODE: "code" } as const;
 
@@ -1008,7 +1008,7 @@ The [mermaid](#mermaid) and [code](#code) components use Canvas internally. Thos
 ```typescript
 import { Presentation, componentRegistry } from '@tycoslide/core';
 import { theme } from '@tycoslide/theme-default';
-import { column } from '@tycoslide/components';
+import { column } from '@tycoslide/sdk';
 import { metricComponent } from './my-component';
 
 componentRegistry.register(metricComponent);

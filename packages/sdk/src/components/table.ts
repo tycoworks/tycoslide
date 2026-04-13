@@ -26,8 +26,8 @@ import {
   type VerticalAlignment,
 } from "@tycoslide/core";
 import type { Table as MdastTable, RootContent } from "mdast";
+import { Component } from "../presets/names.js";
 import { column, stack } from "./containers.js";
-import { Component } from "./names.js";
 import { type ShapeTokens, shape } from "./primitives.js";
 import type { TextTokens } from "./text.js";
 

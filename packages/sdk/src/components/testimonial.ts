@@ -15,10 +15,10 @@ import {
   token,
   type VerticalAlignment,
 } from "@tycoslide/core";
+import { Component } from "../presets/names.js";
 import { column, row, stack } from "./containers.js";
 import { type ImageTokens, imageComponent, image as imageNode } from "./image.js";
 import { type LabelTokens, label } from "./label.js";
-import { Component } from "./names.js";
 import { type ShapeTokens, shape } from "./primitives.js";
 import { type TextTokens, text, textComponent } from "./text.js";
 

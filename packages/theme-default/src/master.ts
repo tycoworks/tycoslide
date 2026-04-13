@@ -1,9 +1,9 @@
 // Master Slide Definitions
 // Two masters: default (footer chrome) and minimal (margin + background only).
 
-import type { ImageTokens, LabelTokens, SlideNumberTokens } from "@tycoslide/components";
-import { column, image, label, row, slideNumber } from "@tycoslide/components";
 import { type Background, Bounds, defineMaster, HALIGN, type InferTokens, SIZE, token, VALIGN } from "@tycoslide/core";
+import type { ImageTokens, LabelTokens, SlideNumberTokens } from "@tycoslide/sdk";
+import { column, image, label, row, slideNumber } from "@tycoslide/sdk";
 
 /** Registered master names. */
 export const MASTER = { DEFAULT: "default", MINIMAL: "minimal" } as const;

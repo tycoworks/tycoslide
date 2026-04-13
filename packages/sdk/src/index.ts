@@ -1,5 +1,7 @@
-// tycoslide-components — Standard component definitions
+// @tycoslide/sdk — Components, presets, and theme-authoring helpers
 // Barrel export — components are inert definitions until explicitly registered by a theme
+
+// ── Components ──────────────────────────────────────────────────────────────
 
 // Card (composition component)
 export {
@@ -7,14 +9,14 @@ export {
   type CardTokens,
   card,
   cardComponent,
-} from "./card.js";
+} from "./components/card.js";
 // Code (I/O component — shared browser rendering)
 export {
   type CodeParams,
   type CodeTokens,
   code,
   codeComponent,
-} from "./code.js";
+} from "./components/code.js";
 // Containers (row, column, stack, grid)
 export {
   type ColumnParams,
@@ -29,18 +31,9 @@ export {
   type StackParams,
   stack,
   stackComponent,
-} from "./containers.js";
-// Highlighting (supported languages and highlight themes for code blocks)
-export {
-  HIGHLIGHT_THEME,
-  HIGHLIGHT_THEME_VALUES,
-  type HighlightThemeName,
-  LANGUAGE,
-  LANGUAGE_VALUES,
-  type LanguageName,
-} from "./highlighting.js";
+} from "./components/containers.js";
 // Image (with asset resolution)
-export { type ImageTokens, image, imageComponent } from "./image.js";
+export { type ImageTokens, image, imageComponent } from "./components/image.js";
 // Label (display text — eyebrows, footers, headings, attributions)
 export {
   type HeadingDepth,
@@ -48,25 +41,21 @@ export {
   type LabelTokens,
   label,
   labelComponent,
-} from "./label.js";
+} from "./components/label.js";
 // List
 export {
   type ListParams,
   type ListTokens,
   list,
   listComponent,
-} from "./list.js";
+} from "./components/list.js";
 // Mermaid diagram (I/O component — shared browser rendering)
 export {
   type MermaidRenderContext,
   type MermaidTokens,
   mermaid,
   mermaidComponent,
-} from "./mermaid.js";
-// Component names (canonical registry of built-in identifiers)
-export { Component, type ComponentName } from "./names.js";
-// Slide format presets (standard dimensions for common aspect ratios and paper sizes)
-export { SlideFormat } from "./slideFormats.js";
+} from "./components/mermaid.js";
 // Primitives (line, shape, slideNumber)
 export {
   type LineParams,
@@ -80,30 +69,46 @@ export {
   shapeComponent,
   slideNumber,
   slideNumberComponent,
-} from "./primitives.js";
+} from "./components/primitives.js";
 // Quote (simple pull quote — composition component)
 export {
   type QuoteParams,
   type QuoteTokens,
   quote,
   quoteComponent,
-} from "./quote.js";
+} from "./components/quote.js";
 // Table
 export {
   type TableTokens,
   table,
   tableComponent,
-} from "./table.js";
+} from "./components/table.js";
 // Testimonial (card-style quote — composition component)
 export {
   type TestimonialParams,
   type TestimonialTokens,
   testimonial,
   testimonialComponent,
-} from "./testimonial.js";
+} from "./components/testimonial.js";
 // Text (rich inline markdown — bold, italic, colors, links)
 export {
   type TextTokens,
   text,
   textComponent,
-} from "./text.js";
+} from "./components/text.js";
+
+// ── Presets ─────────────────────────────────────────────────────────────────
+
+// Highlighting (supported languages and highlight themes for code blocks)
+export {
+  HIGHLIGHT_THEME,
+  HIGHLIGHT_THEME_VALUES,
+  type HighlightThemeName,
+  LANGUAGE,
+  LANGUAGE_VALUES,
+  type LanguageName,
+} from "./presets/highlighting.js";
+// Component names (canonical registry of built-in identifiers)
+export { Component, type ComponentName } from "./presets/names.js";
+// Slide format presets (standard dimensions for common aspect ratios and paper sizes)
+export { SlideFormat } from "./presets/slideFormats.js";

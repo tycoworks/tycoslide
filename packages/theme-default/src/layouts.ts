@@ -2,32 +2,6 @@
 // 11 layouts covering universal presentation patterns.
 // Naming convention: kebab-case (matching SlideDev).
 
-import type {
-  CardTokens,
-  ImageTokens,
-  LabelTokens,
-  LineTokens,
-  ListTokens,
-  QuoteTokens,
-  ShapeTokens,
-  TextTokens,
-} from "@tycoslide/components";
-import {
-  Component,
-  cardComponent,
-  column,
-  grid,
-  image,
-  imageComponent,
-  label,
-  labelComponent,
-  line,
-  row,
-  shape,
-  stack,
-  text,
-  textComponent,
-} from "@tycoslide/components";
 import {
   component,
   defineLayout,
@@ -44,6 +18,32 @@ import {
   VALIGN,
   type VerticalAlignment,
 } from "@tycoslide/core";
+import type {
+  CardTokens,
+  ImageTokens,
+  LabelTokens,
+  LineTokens,
+  ListTokens,
+  QuoteTokens,
+  ShapeTokens,
+  TextTokens,
+} from "@tycoslide/sdk";
+import {
+  Component,
+  cardComponent,
+  column,
+  grid,
+  image,
+  imageComponent,
+  label,
+  labelComponent,
+  line,
+  row,
+  shape,
+  stack,
+  text,
+  textComponent,
+} from "@tycoslide/sdk";
 import { type DefaultMasterTokens, MASTER, type MinimalMasterTokens } from "./master.js";
 
 // ============================================
@@ -490,10 +490,7 @@ export const agendaLayout = defineLayout({
       ),
     ]);
 
-    const itemsColumn = column(
-      { spacing: tokens.spacing, vAlign: tokens.vAlign, height: SIZE.FILL },
-      ...itemRows,
-    );
+    const itemsColumn = column({ spacing: tokens.spacing, vAlign: tokens.vAlign, height: SIZE.FILL }, ...itemRows);
 
     return masteredSlide(
       tokens.master,

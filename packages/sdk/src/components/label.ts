@@ -21,7 +21,7 @@ import {
   token,
 } from "@tycoslide/core";
 import type { Heading, RootContent } from "mdast";
-import { Component } from "./names.js";
+import { Component } from "../presets/names.js";
 
 // ============================================
 // HEADING TYPES

@@ -16,7 +16,7 @@ import {
   VALIGN,
   type VerticalAlignment,
 } from "@tycoslide/core";
-import { Component } from "./names.js";
+import { Component } from "../presets/names.js";
 
 // ============================================
 // SHARED HELPERS

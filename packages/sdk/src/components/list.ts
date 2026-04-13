@@ -27,7 +27,7 @@ import {
   token,
 } from "@tycoslide/core";
 import type { ListItem, List as MdastList, RootContent } from "mdast";
-import { Component } from "./names.js";
+import { Component } from "../presets/names.js";
 import { inlineParse, transformInline } from "./utils/inline.js";
 
 const listTokens = token.shape({

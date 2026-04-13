@@ -28,7 +28,7 @@ import {
 } from "@tycoslide/core";
 import type { RootContent } from "mdast";
 
-import { Component } from "./names.js";
+import { Component } from "../presets/names.js";
 import { inlineParse, transformInline } from "./utils/inline.js";
 
 const textTokens = token.shape({

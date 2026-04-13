@@ -27,9 +27,9 @@ import {
   schema,
   token,
 } from "@tycoslide/core";
+import { Component } from "../presets/names.js";
 import { column, stack } from "./containers.js";
 import { type ImageTokens, image } from "./image.js";
-import { Component } from "./names.js";
 import { type ShapeTokens, shape } from "./primitives.js";
 
 // ============================================

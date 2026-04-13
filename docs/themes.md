@@ -186,7 +186,7 @@ Required tokens must always be provided in `.tokenMap()`. Optional tokens may be
 A theme is a TypeScript object passed to `defineTheme()`, which validates font configuration at definition time and returns the theme object:
 
 ```typescript
-import { SlideFormat } from '@tycoslide/components';
+import { SlideFormat } from '@tycoslide/sdk';
 import { defineTheme } from '@tycoslide/core';
 
 export const theme = defineTheme({
@@ -211,7 +211,7 @@ Layouts declare required token keys; themes provide their values. Master tokens 
 mkdir my-theme
 cd my-theme
 npm init -y
-npm install @tycoslide/core @tycoslide/components
+npm install @tycoslide/core @tycoslide/sdk
 ```
 
 Create `theme.ts` for your theme object and `index.ts` as the entry point:
@@ -283,10 +283,10 @@ textStyles: {
 
 #### 4. Set Slide Size
 
-Use `SlideFormat` presets from `@tycoslide/components` or specify custom dimensions in inches:
+Use `SlideFormat` presets from `@tycoslide/sdk` or specify custom dimensions in inches:
 
 ```typescript
-import { SlideFormat } from '@tycoslide/components';
+import { SlideFormat } from '@tycoslide/sdk';
 
 slide: SlideFormat.s16x9,
 ```
@@ -510,7 +510,7 @@ import {
   columnComponent,
   stackComponent,
   gridComponent,
-} from '@tycoslide/components';
+} from '@tycoslide/sdk';
 import type { MasterDefinition } from '@tycoslide/core';
 import { allLayouts } from './layouts.js';
 import { defaultMaster, minimalMaster } from './masters.js';

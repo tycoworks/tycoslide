@@ -23,11 +23,11 @@ import {
 } from "@tycoslide/core";
 import type { Code as MdastCode, RootContent } from "mdast";
 import { codeToHtml } from "shiki";
+import type { HighlightThemeName } from "../presets/highlighting.js";
+import { LANGUAGE_VALUES } from "../presets/highlighting.js";
+import { Component } from "../presets/names.js";
 import { column, stack } from "./containers.js";
-import type { HighlightThemeName } from "./highlighting.js";
-import { LANGUAGE_VALUES } from "./highlighting.js";
 import { type ImageTokens, image } from "./image.js";
-import { Component } from "./names.js";
 import { type ShapeTokens, shape } from "./primitives.js";
 
 const SUPPORTED_LANGUAGES = new Set<string>(LANGUAGE_VALUES);

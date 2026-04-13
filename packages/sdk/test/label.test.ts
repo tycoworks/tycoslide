@@ -5,6 +5,8 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import { componentRegistry, HALIGN, NODE_TYPE, VALIGN } from "@tycoslide/core";
 import type { Heading } from "mdast";
+import type { LabelSlotTokens, LabelTokens } from "../src/components/label.js";
+import { label } from "../src/components/label.js";
 import {
   cardComponent,
   codeComponent,
@@ -23,9 +25,7 @@ import {
   tableComponent,
   textComponent,
 } from "../src/index.js";
-import type { LabelSlotTokens, LabelTokens } from "../src/label.js";
-import { label } from "../src/label.js";
-import { Component } from "../src/names.js";
+import { Component } from "../src/presets/names.js";
 import { DEFAULT_LABEL_TOKENS, mockTheme, noopCanvas } from "./mocks.js";
 
 // Register components explicitly

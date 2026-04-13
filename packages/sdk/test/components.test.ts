@@ -25,7 +25,7 @@ import {
   SIZE,
   VALIGN,
 } from "@tycoslide/core";
-import { card } from "../src/card.js";
+import { card } from "../src/components/card.js";
 import {
   cardComponent,
   codeComponent,
@@ -54,7 +54,7 @@ import {
   text,
   textComponent,
 } from "../src/index.js";
-import { Component } from "../src/names.js";
+import { Component } from "../src/presets/names.js";
 import {
   mockTheme as createMockTheme,
   DEFAULT_CARD_TOKENS,
@@ -151,7 +151,12 @@ describe("image()", () => {
   test("throws when asset key not found", async () => {
     const assets = { icons: { star: "/star.svg" } };
     await assert.rejects(
-      () => componentRegistry.renderTree(image("$icons.rocket", DEFAULT_IMAGE_TOKENS), { theme, assets, canvas: noopCanvas() }),
+      () =>
+        componentRegistry.renderTree(image("$icons.rocket", DEFAULT_IMAGE_TOKENS), {
+          theme,
+          assets,
+          canvas: noopCanvas(),
+        }),
       /could not be resolved/,
     );
   });
@@ -159,7 +164,8 @@ describe("image()", () => {
   test("throws when asset path resolves to object (with suggestions)", async () => {
     const assets = { icons: { rocket: "/rocket.svg", star: "/star.svg" } };
     await assert.rejects(
-      () => componentRegistry.renderTree(image("$icons", DEFAULT_IMAGE_TOKENS), { theme, assets, canvas: noopCanvas() }),
+      () =>
+        componentRegistry.renderTree(image("$icons", DEFAULT_IMAGE_TOKENS), { theme, assets, canvas: noopCanvas() }),
       /resolved to an object.*Did you mean/,
     );
   });
@@ -167,7 +173,12 @@ describe("image()", () => {
   test("throws when traversal hits non-object mid-path", async () => {
     const assets = { icons: { rocket: "/rocket.svg" } };
     await assert.rejects(
-      () => componentRegistry.renderTree(image("$icons.rocket.size", DEFAULT_IMAGE_TOKENS), { theme, assets, canvas: noopCanvas() }),
+      () =>
+        componentRegistry.renderTree(image("$icons.rocket.size", DEFAULT_IMAGE_TOKENS), {
+          theme,
+          assets,
+          canvas: noopCanvas(),
+        }),
       /is not an object/,
     );
   });

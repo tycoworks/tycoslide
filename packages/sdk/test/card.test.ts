@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import { componentRegistry, NODE_TYPE } from "@tycoslide/core";
-import { card } from "../src/card.js";
+import { card } from "../src/components/card.js";
 import type { CardTokens } from "../src/index.js";
 import {
   cardComponent,
@@ -19,7 +19,7 @@ import {
   tableComponent,
   textComponent,
 } from "../src/index.js";
-import { Component } from "../src/names.js";
+import { Component } from "../src/presets/names.js";
 import { DEFAULT_CARD_TOKENS, mockTheme, noopCanvas } from "./mocks.js";
 
 // Register components explicitly

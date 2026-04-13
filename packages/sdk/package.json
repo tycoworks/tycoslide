@@ -1,7 +1,7 @@
 {
-  "name": "@tycoslide/components",
+  "name": "@tycoslide/sdk",
   "version": "0.3.0",
-  "description": "Standard component library for tycoslide presentations",
+  "description": "SDK for tycoslide — components, presets, and theme-authoring helpers",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -28,7 +28,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/tycoworks/tycoslide.git",
-    "directory": "packages/components"
+    "directory": "packages/sdk"
   },
   "dependencies": {
     "mermaid": "^11.4.0",

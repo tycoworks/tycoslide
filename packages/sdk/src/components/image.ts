@@ -1,5 +1,6 @@
 // Image component with asset resolution
 
+import type { SlideNode } from "@tycoslide/core";
 import {
   type ComponentNode,
   component,
@@ -17,9 +18,8 @@ import {
   token,
 } from "@tycoslide/core";
 import type { Image, RootContent } from "mdast";
-import type { SlideNode } from "@tycoslide/core";
+import { Component } from "../presets/names.js";
 import { column } from "./containers.js";
-import { Component } from "./names.js";
 
 // ============================================
 // ASSET RESOLUTION

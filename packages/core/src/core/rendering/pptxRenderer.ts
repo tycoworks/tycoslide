@@ -23,6 +23,7 @@ import type { Background, Theme } from "../model/types.js";
 
 /** pptxgenjs layout name for custom dimensions */
 const PPTX_CUSTOM_LAYOUT = "CUSTOM";
+
 import { PptxConfigBuilder } from "./pptxConfigBuilder.js";
 
 // ============================================

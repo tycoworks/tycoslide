@@ -3,8 +3,7 @@ import { describe, it } from "node:test";
 import type { TextStyle } from "@tycoslide/core";
 import { componentRegistry, NODE_TYPE, SYNTAX } from "@tycoslide/core";
 import type { RootContent } from "mdast";
-import { type CodeTokens, code, codeComponent, renderCodeToHtml } from "../src/code.js";
-import { HIGHLIGHT_THEME, HIGHLIGHT_THEME_VALUES, LANGUAGE, LANGUAGE_VALUES } from "../src/highlighting.js";
+import { type CodeTokens, code, codeComponent, renderCodeToHtml } from "../src/components/code.js";
 import {
   cardComponent,
   columnComponent,
@@ -20,7 +19,8 @@ import {
   tableComponent,
   textComponent,
 } from "../src/index.js";
-import { Component } from "../src/names.js";
+import { HIGHLIGHT_THEME, HIGHLIGHT_THEME_VALUES, LANGUAGE, LANGUAGE_VALUES } from "../src/presets/highlighting.js";
+import { Component } from "../src/presets/names.js";
 import { DEFAULT_CODE_TOKENS, mockTheme, noopCanvas } from "./mocks.js";
 
 // Register components explicitly

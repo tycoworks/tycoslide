@@ -15,9 +15,9 @@ import {
   token,
 } from "@tycoslide/core";
 import type { RootContent } from "mdast";
+import { Component } from "../presets/names.js";
 import { column, row } from "./containers.js";
 import { type LabelTokens, label } from "./label.js";
-import { Component } from "./names.js";
 import { type LineTokens, line } from "./primitives.js";
 import { type TextTokens, text, textComponent } from "./text.js";
 

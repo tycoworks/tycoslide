@@ -5,6 +5,14 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import { componentRegistry, NODE_TYPE } from "@tycoslide/core";
 import {
+  buildClassDefs,
+  buildMermaidConfig,
+  injectClassDefs,
+  type MermaidTokens,
+  mermaid,
+  validateMermaidDefinition,
+} from "../src/components/mermaid.js";
+import {
   cardComponent,
   codeComponent,
   columnComponent,
@@ -20,15 +28,7 @@ import {
   tableComponent,
   textComponent,
 } from "../src/index.js";
-import {
-  buildClassDefs,
-  buildMermaidConfig,
-  injectClassDefs,
-  type MermaidTokens,
-  mermaid,
-  validateMermaidDefinition,
-} from "../src/mermaid.js";
-import { Component } from "../src/names.js";
+import { Component } from "../src/presets/names.js";
 import { DEFAULT_MERMAID_TOKENS, mockTheme } from "./mocks.js";
 
 // Register components explicitly
