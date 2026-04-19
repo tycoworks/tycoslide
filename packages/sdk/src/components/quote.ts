@@ -92,7 +92,11 @@ export const quoteComponent = defineComponent({
 
     const outerHeight = SIZE.HUG;
 
-    return row({ spacing, height: outerHeight }, line(barTokens, "column"), column({ spacing }, ...children));
+    return row(
+      { spacing: 0, height: outerHeight },
+      line(barTokens, "column"),
+      column({ spacing, padding: spacing }, ...children),
+    );
   },
 });
 

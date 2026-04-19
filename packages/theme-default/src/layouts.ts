@@ -36,7 +36,6 @@ import {
   image,
   imageComponent,
   label,
-  labelComponent,
   line,
   row,
   shape,
@@ -44,7 +43,7 @@ import {
   text,
   textComponent,
 } from "@tycoslide/sdk";
-import { type DefaultMasterTokens, MASTER, type MinimalMasterTokens } from "./master.js";
+import type { MasterRef } from "./master.js";
 
 // ============================================
 // COMPOSITION PRIMITIVES
@@ -64,11 +63,11 @@ export function headerBlock(title: string, tokens: HeaderTokens, eyebrow?: strin
   return label(title, tokens.title);
 }
 
-/** Wrap content in the default master (footer chrome + content bounds) */
-export function masteredSlide(masterTokens: DefaultMasterTokens, ...content: SlideNode[]): Slide {
+/** Wrap content in a master (chrome + content bounds). Format-agnostic via MasterRef. */
+export function masteredSlide(master: MasterRef, ...content: SlideNode[]): Slide {
   return {
-    masterName: MASTER.DEFAULT,
-    masterTokens,
+    masterName: master.masterName,
+    masterTokens: master.tokens,
     content: column({ spacing: 0, height: SIZE.FILL }, ...content),
   };
 }
@@ -82,7 +81,7 @@ export function masteredSlide(masterTokens: DefaultMasterTokens, ...content: Sli
 export const titleLayoutTokens = token.shape({
   title: token.required<TextTokens>(),
   subtitle: token.required<TextTokens>(),
-  master: token.required<MinimalMasterTokens>(),
+  master: token.required<MasterRef>(),
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
   spacing: token.required<number>(),
@@ -113,8 +112,8 @@ export const titleLayout = defineLayout({
     );
 
     return {
-      masterName: MASTER.MINIMAL,
-      masterTokens: tokens.master,
+      masterName: tokens.master.masterName,
+      masterTokens: tokens.master.tokens,
       content: imagePath
         ? row({ spacing: 0, vAlign: tokens.vAlign, height: SIZE.FILL }, textBlock, image(imagePath, tokens.image))
         : textBlock,
@@ -126,7 +125,7 @@ export const titleLayout = defineLayout({
 
 export const sectionLayoutTokens = token.shape({
   title: token.required<LabelTokens>(),
-  master: token.required<MinimalMasterTokens>(),
+  master: token.required<MasterRef>(),
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
 });
@@ -144,8 +143,8 @@ export const sectionLayout = defineLayout({
   params: { title: param.required(textComponent.schema) },
   tokens: sectionLayoutTokens,
   render: ({ title }, _slots, tokens: SectionLayoutTokens) => ({
-    masterName: MASTER.MINIMAL,
-    masterTokens: tokens.master,
+    masterName: tokens.master.masterName,
+    masterTokens: tokens.master.tokens,
     content: column(
       { spacing: 0, vAlign: tokens.vAlign, hAlign: tokens.hAlign, height: SIZE.FILL },
       label(title, tokens.title),
@@ -156,7 +155,7 @@ export const sectionLayout = defineLayout({
 // --- body ---
 
 export const bodyLayoutTokens = token.shape({
-  master: token.required<DefaultMasterTokens>(),
+  master: token.required<MasterRef>(),
   title: token.required<LabelTokens>(),
   eyebrow: token.required<LabelTokens>(),
   text: token.required<TextTokens>(),
@@ -191,15 +190,18 @@ export const bodyLayout = defineLayout({
   render: ({ title, eyebrow }, { body }, tokens: BodyLayoutTokens) =>
     masteredSlide(
       tokens.master,
-      ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
-      column({ height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing }, ...body),
+      column(
+        { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing },
+        ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
+        ...body,
+      ),
     ),
 });
 
 // --- stat ---
 
 export const statLayoutTokens = token.shape({
-  master: token.required<DefaultMasterTokens>(),
+  master: token.required<MasterRef>(),
   value: token.required<LabelTokens>(),
   label: token.required<LabelTokens>(),
   caption: token.required<TextTokens>(),
@@ -264,7 +266,7 @@ export const statLayout = defineLayout({
 
 export const quoteLayoutTokens = token.shape({
   quote: token.required<QuoteTokens>(),
-  master: token.required<MinimalMasterTokens>(),
+  master: token.required<MasterRef>(),
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
   spacing: token.required<number>(),
@@ -289,8 +291,8 @@ export const quoteLayout = defineLayout({
   },
   tokens: quoteLayoutTokens,
   render: ({ quote: quoteText, attribution }, _slots, tokens: QuoteLayoutTokens) => ({
-    masterName: MASTER.MINIMAL,
-    masterTokens: tokens.master,
+    masterName: tokens.master.masterName,
+    masterTokens: tokens.master.tokens,
     content: column(
       { spacing: 0, height: SIZE.FILL },
       column(
@@ -318,8 +320,8 @@ export const endLayout = defineLayout({
   },
   tokens: titleLayoutTokens,
   render: ({ title, subtitle }, _slots, tokens: TitleLayoutTokens) => ({
-    masterName: MASTER.MINIMAL,
-    masterTokens: tokens.master,
+    masterName: tokens.master.masterName,
+    masterTokens: tokens.master.tokens,
     content: column(
       { vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL },
       text(title, tokens.title),
@@ -336,7 +338,7 @@ export const endLayout = defineLayout({
 // |                            |
 // +----------------------------+
 export const blankLayoutTokens = token.shape({
-  master: token.required<MinimalMasterTokens>(),
+  master: token.required<MasterRef>(),
 });
 
 export type BlankLayoutTokens = InferTokens<typeof blankLayoutTokens>;
@@ -348,8 +350,8 @@ export const blankLayout = defineLayout({
   slots: ["body"],
   tokens: blankLayoutTokens,
   render: (_params, { body }, tokens: BlankLayoutTokens) => ({
-    masterName: MASTER.MINIMAL,
-    masterTokens: tokens.master,
+    masterName: tokens.master.masterName,
+    masterTokens: tokens.master.tokens,
     content: column({ spacing: 0, height: SIZE.FILL }, ...body),
   }),
 });
@@ -357,7 +359,7 @@ export const blankLayout = defineLayout({
 // --- two-column ---
 
 export const twoColumnLayoutTokens = token.shape({
-  master: token.required<DefaultMasterTokens>(),
+  master: token.required<MasterRef>(),
   title: token.required<LabelTokens>(),
   eyebrow: token.required<LabelTokens>(),
   text: token.required<TextTokens>(),
@@ -408,7 +410,7 @@ export const statementLayoutTokens = token.shape({
   vAlign: token.required<VerticalAlignment>(),
   hAlign: token.required<HorizontalAlignment>(),
   spacing: token.required<number>(),
-  master: token.required<MinimalMasterTokens>(),
+  master: token.required<MasterRef>(),
 });
 
 export type StatementLayoutTokens = InferTokens<typeof statementLayoutTokens>;
@@ -428,8 +430,8 @@ export const statementLayout = defineLayout({
   },
   tokens: statementLayoutTokens,
   render: ({ body, caption }, _slots, tokens: StatementLayoutTokens) => ({
-    masterName: MASTER.MINIMAL,
-    masterTokens: tokens.master,
+    masterName: tokens.master.masterName,
+    masterTokens: tokens.master.tokens,
     content: column(
       { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing },
       text(body, tokens.body),
@@ -441,7 +443,7 @@ export const statementLayout = defineLayout({
 // --- agenda ---
 
 export const agendaLayoutTokens = token.shape({
-  master: token.required<DefaultMasterTokens>(),
+  master: token.required<MasterRef>(),
   title: token.required<LabelTokens>(),
   eyebrow: token.required<LabelTokens>(),
   headerSpacing: token.required<number>(),
@@ -505,7 +507,7 @@ export const agendaLayout = defineLayout({
 // --- cards ---
 
 export const cardsLayoutTokens = token.shape({
-  master: token.required<DefaultMasterTokens>(),
+  master: token.required<MasterRef>(),
   title: token.required<LabelTokens>(),
   eyebrow: token.required<LabelTokens>(),
   headerSpacing: token.required<number>(),
@@ -570,7 +572,7 @@ export const cardsLayout = defineLayout({
 // --- transform ---
 
 export const transformLayoutTokens = token.shape({
-  master: token.required<DefaultMasterTokens>(),
+  master: token.required<MasterRef>(),
   title: token.required<LabelTokens>(),
   eyebrow: token.required<LabelTokens>(),
   text: token.required<TextTokens>(),
@@ -639,7 +641,7 @@ export const transformLayout = defineLayout({
 // --- shapes (demo) ---
 
 export const shapesLayoutTokens = token.shape({
-  master: token.required<DefaultMasterTokens>(),
+  master: token.required<MasterRef>(),
   title: token.required<LabelTokens>(),
   eyebrow: token.required<LabelTokens>(),
   subtitle: token.optional<LabelTokens>(),
@@ -700,7 +702,7 @@ export const shapesLayout = defineLayout({
 // --- lines (demo) ---
 
 export const linesLayoutTokens = token.shape({
-  master: token.required<DefaultMasterTokens>(),
+  master: token.required<MasterRef>(),
   title: token.required<LabelTokens>(),
   eyebrow: token.required<LabelTokens>(),
   headerSpacing: token.required<number>(),

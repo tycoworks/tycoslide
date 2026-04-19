@@ -23,10 +23,15 @@ import {
   transformLayout,
   twoColumnLayout,
 } from "./layouts.js";
-import { defaultMaster, minimalMaster } from "./master.js";
+import { defaultMaster, factsheetMaster, MASTER, type MasterRef, minimalMaster } from "./master.js";
 
-function buildThemeFormat(base: typeof Base, config: FormatConfig): ThemeFormat {
-  const { unit, spacing, spacingTight, padding, margin, footerHeight } = config;
+// ============================================
+// SHARED TOKEN BUILDERS
+// ============================================
+
+/** Build text, label, and component tokens shared by all formats. */
+function buildSharedTokens(base: typeof Base, config: FormatConfig) {
+  const { unit, spacing, spacingTight, padding } = config;
   const {
     palette,
     accents,
@@ -198,58 +203,107 @@ function buildThemeFormat(base: typeof Base, config: FormatConfig): ThemeFormat 
     label: { 1: labelH1, 2: labelH2, 3: labelH3, 4: labelH4, 5: labelH4, 6: labelH4 },
   };
 
-  // --- Master configs ---
-  const defaultMasterConfig = defaultMaster.tokenMap({
-    background: { color: palette.surface },
-    margin,
-    footerHeight,
-    footerLogo: assets.tycoslide.logo,
-    footerText: "tycoslide",
-    footerSpacing: spacingTight,
-    slideNumber: { ...labelFooter, hAlign: HALIGN.RIGHT },
-    footer: labelFooter,
-    footerImage: imageBase,
-  });
-
-  const lightMinimalMaster = minimalMaster.tokenMap({
-    background: { color: palette.surface },
-    margin,
-  });
-
-  const darkMinimalMaster = minimalMaster.tokenMap({
-    background: { color: palette.navy },
-    margin,
-  });
-
-  // --- Layout helpers ---
+  // --- Header tokens (shared by layouts with title + eyebrow) ---
   const headerTokens = {
     title: labelH3,
     eyebrow: labelEyebrow,
     headerSpacing: spacingTight,
   };
 
+  return {
+    bodyText,
+    bodyList,
+    cardTitle,
+    cardDescription,
+    quoteText,
+    mutedCaption,
+    heroTitle,
+    heroSubtitle,
+    labelH1,
+    labelH2,
+    labelH3,
+    labelH4,
+    labelEyebrow,
+    labelMutedSmall,
+    labelFooter,
+    labelSectionHeading,
+    labelStatValue,
+    labelStatLabel,
+    cardBase,
+    cardSlotTokens,
+    tableTokens,
+    codeTokens,
+    quoteSlotTokens,
+    testimonialSlotTokens,
+    mermaidTokens,
+    bodySlotTokens,
+    headerTokens,
+  };
+}
+
+// ============================================
+// PRESENTATION FORMAT
+// ============================================
+
+function buildPresentationFormat(base: typeof Base, config: FormatConfig): ThemeFormat {
+  const { spacing, spacingTight, padding, margin, footerHeight, unit } = config;
+  const { palette, TEXT_STYLE, alignLeft, subtleBorder, shadow, cardBackground, imageBase } = base;
+
+  const t = buildSharedTokens(base, config);
+
+  // --- Master refs ---
+  const defaultMasterRef: MasterRef = {
+    masterName: MASTER.DEFAULT,
+    tokens: defaultMaster.tokenMap({
+      background: { color: palette.surface },
+      margin,
+      footerHeight,
+      footerLogo: assets.tycoslide.logo,
+      footerText: "tycoslide",
+      footerSpacing: spacingTight,
+      slideNumber: { ...t.labelFooter, hAlign: HALIGN.RIGHT },
+      footer: t.labelFooter,
+      footerImage: imageBase,
+    }),
+  };
+
+  const lightMinimalMaster: MasterRef = {
+    masterName: MASTER.MINIMAL,
+    tokens: minimalMaster.tokenMap({
+      background: { color: palette.surface },
+      margin,
+    }),
+  };
+
+  const darkMinimalMaster: MasterRef = {
+    masterName: MASTER.MINIMAL,
+    tokens: minimalMaster.tokenMap({
+      background: { color: palette.navy },
+      margin,
+    }),
+  };
+
   const bodyBase = {
-    master: defaultMasterConfig,
-    ...headerTokens,
-    text: bodyText,
-    list: bodyList,
+    master: defaultMasterRef,
+    ...t.headerTokens,
+    text: t.bodyText,
+    list: t.bodyList,
     hAlign: HALIGN.LEFT,
     spacing,
-    ...bodySlotTokens,
+    ...t.bodySlotTokens,
   };
 
   const cardsBase = {
-    master: defaultMasterConfig,
-    ...headerTokens,
-    intro: bodyText,
-    caption: mutedCaption,
+    master: defaultMasterRef,
+    ...t.headerTokens,
+    intro: t.bodyText,
+    caption: t.mutedCaption,
     vAlign: VALIGN.MIDDLE,
     hAlign: HALIGN.CENTER,
     spacing,
     gridSpacing: spacing,
   };
 
-  // --- Layout token maps ---
   return {
     slide: config.slide,
     textStyles: config.textStyles,
@@ -257,8 +311,8 @@ function buildThemeFormat(base: typeof Base, config: FormatConfig): ThemeFormat 
       title: {
         variants: {
           default: titleLayout.tokenMap({
-            title: { ...heroTitle, color: palette.navy, style: TEXT_STYLE.TITLE },
-            subtitle: { ...heroSubtitle, color: palette.textSecondary, style: TEXT_STYLE.H3 },
+            title: { ...t.heroTitle, color: palette.navy, style: TEXT_STYLE.TITLE },
+            subtitle: { ...t.heroSubtitle, color: palette.textSecondary, style: TEXT_STYLE.H3 },
             master: lightMinimalMaster,
             vAlign: VALIGN.MIDDLE,
             hAlign: HALIGN.CENTER,
@@ -270,8 +324,8 @@ function buildThemeFormat(base: typeof Base, config: FormatConfig): ThemeFormat 
       end: {
         variants: {
           default: endLayout.tokenMap({
-            title: { ...heroTitle, style: TEXT_STYLE.TITLE },
-            subtitle: heroSubtitle,
+            title: { ...t.heroTitle, style: TEXT_STYLE.TITLE },
+            subtitle: t.heroSubtitle,
             master: darkMinimalMaster,
             vAlign: VALIGN.MIDDLE,
             hAlign: HALIGN.CENTER,
@@ -283,7 +337,7 @@ function buildThemeFormat(base: typeof Base, config: FormatConfig): ThemeFormat 
       section: {
         variants: {
           default: sectionLayout.tokenMap({
-            title: labelSectionHeading,
+            title: t.labelSectionHeading,
             master: darkMinimalMaster,
             vAlign: VALIGN.MIDDLE,
             hAlign: HALIGN.CENTER,
@@ -299,11 +353,11 @@ function buildThemeFormat(base: typeof Base, config: FormatConfig): ThemeFormat 
       stat: {
         variants: {
           default: statLayout.tokenMap({
-            master: defaultMasterConfig,
-            value: labelStatValue,
-            label: labelStatLabel,
-            caption: mutedCaption,
-            background: { ...cardBackground, cornerRadius: cornerRadiusLarge },
+            master: defaultMasterRef,
+            value: t.labelStatValue,
+            label: t.labelStatLabel,
+            caption: t.mutedCaption,
+            background: { ...cardBackground, cornerRadius: base.cornerRadiusLarge },
             backgroundWidth: 6,
             vAlign: VALIGN.MIDDLE,
             hAlign: HALIGN.CENTER,
@@ -320,22 +374,22 @@ function buildThemeFormat(base: typeof Base, config: FormatConfig): ThemeFormat 
       statement: {
         variants: {
           default: statementLayout.tokenMap({
-            caption: mutedCaption,
+            caption: t.mutedCaption,
             vAlign: VALIGN.MIDDLE,
             hAlign: HALIGN.CENTER,
             spacing: spacing,
             master: lightMinimalMaster,
-            body: { ...bodyText, style: TEXT_STYLE.H2 },
+            body: { ...t.bodyText, style: TEXT_STYLE.H2 },
           }),
         },
       },
       agenda: {
         variants: {
           default: agendaLayout.tokenMap({
-            master: defaultMasterConfig,
-            ...headerTokens,
+            master: defaultMasterRef,
+            ...t.headerTokens,
             vAlign: VALIGN.MIDDLE,
-            items: { ...bodyText, style: TEXT_STYLE.H4, color: palette.navy },
+            items: { ...t.bodyText, style: TEXT_STYLE.H4, color: palette.navy },
             divider: subtleBorder,
             itemNumber: { ...alignLeft, style: TEXT_STYLE.H2, color: palette.lavender },
             itemVAlign: VALIGN.MIDDLE,
@@ -349,23 +403,23 @@ function buildThemeFormat(base: typeof Base, config: FormatConfig): ThemeFormat 
         variants: {
           default: cardsLayout.tokenMap({
             ...cardsBase,
-            card: { ...cardBase, padding: unit * 11, vAlign: VALIGN.TOP, background: cardBackground },
+            card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP, background: cardBackground },
           }),
-          flat: cardsLayout.tokenMap({ ...cardsBase, card: { ...cardBase, padding: unit * 11, vAlign: VALIGN.TOP } }),
+          flat: cardsLayout.tokenMap({ ...cardsBase, card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP } }),
         },
       },
       blank: {
         variants: {
           default: blankLayout.tokenMap({
             master: lightMinimalMaster,
-            ...bodySlotTokens,
+            ...t.bodySlotTokens,
           }),
         },
       },
       quote: {
         variants: {
           default: quoteLayout.tokenMap({
-            quote: quoteSlotTokens,
+            quote: t.quoteSlotTokens,
             master: lightMinimalMaster,
             vAlign: VALIGN.MIDDLE,
             hAlign: HALIGN.CENTER,
@@ -375,17 +429,17 @@ function buildThemeFormat(base: typeof Base, config: FormatConfig): ThemeFormat 
             quote: {
               bar: {
                 color: palette.lavender,
-                width: accentBarWidth,
+                width: base.accentBarWidth,
                 dashType: DASH_TYPE.SOLID,
               },
               spacing: spacing,
               quote: {
-                ...quoteText,
+                ...t.quoteText,
                 color: palette.white,
                 linkColor: palette.lavender,
               },
               attribution: {
-                ...labelMutedSmall,
+                ...t.labelMutedSmall,
                 color: palette.textMuted,
               },
             },
@@ -399,8 +453,8 @@ function buildThemeFormat(base: typeof Base, config: FormatConfig): ThemeFormat 
       shapes: {
         variants: {
           default: shapesLayout.tokenMap({
-            master: defaultMasterConfig,
-            ...headerTokens,
+            master: defaultMasterRef,
+            ...t.headerTokens,
             subtitle: { ...alignLeft, style: TEXT_STYLE.BODY, color: palette.textMuted },
             label: {
               style: TEXT_STYLE.BODY,
@@ -442,10 +496,10 @@ function buildThemeFormat(base: typeof Base, config: FormatConfig): ThemeFormat 
       transform: {
         variants: {
           default: transformLayout.tokenMap({
-            master: defaultMasterConfig,
-            ...headerTokens,
-            text: cardDescription,
-            list: bodyList,
+            master: defaultMasterRef,
+            ...t.headerTokens,
+            text: t.cardDescription,
+            list: t.bodyList,
             vAlign: VALIGN.MIDDLE,
             hAlign: HALIGN.LEFT,
             overlayVAlign: VALIGN.MIDDLE,
@@ -453,12 +507,12 @@ function buildThemeFormat(base: typeof Base, config: FormatConfig): ThemeFormat 
             spacing: spacing,
             contentSpacing: 0,
             overlaySize: 0.9,
-            ...bodySlotTokens,
+            ...t.bodySlotTokens,
             card: {
-              ...cardBase,
+              ...t.cardBase,
               hAlign: HALIGN.CENTER,
-              title: { ...cardTitle, hAlign: HALIGN.CENTER },
-              description: { ...cardDescription, hAlign: HALIGN.CENTER },
+              title: { ...t.cardTitle, hAlign: HALIGN.CENTER },
+              description: { ...t.cardDescription, hAlign: HALIGN.CENTER },
               vAlign: VALIGN.MIDDLE,
               background: { ...cardBackground, shadow },
             },
@@ -468,9 +522,9 @@ function buildThemeFormat(base: typeof Base, config: FormatConfig): ThemeFormat 
       lines: {
         variants: {
           default: linesLayout.tokenMap({
-            master: defaultMasterConfig,
-            ...headerTokens,
-            label: labelMutedSmall,
+            master: defaultMasterRef,
+            ...t.headerTokens,
+            label: t.labelMutedSmall,
             solid: { color: palette.navy, width: 2, dashType: DASH_TYPE.SOLID },
             dashed: { color: palette.purple, width: 2, dashType: DASH_TYPE.DASHED },
             dotted: { color: palette.lavender, width: 2, dashType: DASH_TYPE.DOTTED },
@@ -484,10 +538,235 @@ function buildThemeFormat(base: typeof Base, config: FormatConfig): ThemeFormat 
   };
 }
 
+// ============================================
+// FACTSHEET FORMAT
+// ============================================
+
+function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFormat {
+  const { spacing, spacingTight, padding, margin, footerHeight, unit } = config;
+  const { palette, TEXT_STYLE, alignLeft, subtleBorder, cardBackground, imageBase } = base;
+
+  const t = buildSharedTokens(base, config);
+
+  // Factsheet body slides use the factsheet master (header chrome + slide number).
+  const factsheetMasterRef: MasterRef = {
+    masterName: MASTER.FACTSHEET,
+    tokens: factsheetMaster.tokenMap({
+      background: { color: palette.white },
+      margin,
+      topBarHeight: unit * 36, // 0.9 inches
+      topBarFill: { fill: palette.navy, fillOpacity: 100, cornerRadius: 0 },
+      topBarLogo: assets.tycoslide.logomarkWhite,
+      topBarLogoTokens: { padding: 0 },
+      topBarLogoHeight: unit * 10, // 0.25 inches
+      topBarLogoWidth: unit * 37, // 0.925 inches (aspect ratio of logomark)
+      topBarLabel: "PRODUCT SHEET",
+      topBarLabelTokens: {
+        hAlign: HALIGN.RIGHT,
+        vAlign: VALIGN.MIDDLE,
+        style: TEXT_STYLE.EYEBROW,
+        color: palette.white,
+      },
+      footerHeight,
+      footerText: "\u00A9 2026 tycoslide | www.tycoslide.com",
+      footerTokens: { ...t.labelFooter, hAlign: HALIGN.LEFT },
+      slideNumber: { ...t.labelFooter, hAlign: HALIGN.RIGHT },
+    }),
+  };
+
+  const lightMinimalMaster: MasterRef = {
+    masterName: MASTER.MINIMAL,
+    tokens: minimalMaster.tokenMap({
+      background: { color: palette.white },
+      margin,
+    }),
+  };
+
+  const darkMinimalMaster: MasterRef = {
+    masterName: MASTER.MINIMAL,
+    tokens: minimalMaster.tokenMap({
+      background: { color: palette.navy },
+      margin,
+    }),
+  };
+
+  // Factsheet header tokens: H1/24pt title (instead of shared H3/12pt)
+  const factsheetHeaderTokens = {
+    title: { ...t.labelH1, style: TEXT_STYLE.H1 },
+    eyebrow: t.labelEyebrow,
+    headerSpacing: spacingTight,
+  };
+
+  // Factsheet body slot tokens: purple H2 headings, refined quote styling
+  const factsheetBodySlotTokens = {
+    ...t.bodySlotTokens,
+    label: {
+      ...t.bodySlotTokens.label,
+      2: { ...t.labelH2, color: palette.purple },
+    },
+    quote: {
+      ...t.quoteSlotTokens,
+      bar: { ...t.quoteSlotTokens.bar, width: 1 },
+      attribution: { ...t.labelMutedSmall, style: TEXT_STYLE.BODY, hAlign: HALIGN.RIGHT },
+    },
+  };
+
+  const bodyBase = {
+    master: factsheetMasterRef,
+    ...factsheetHeaderTokens,
+    text: t.bodyText,
+    list: t.bodyList,
+    hAlign: HALIGN.LEFT,
+    spacing,
+    ...factsheetBodySlotTokens,
+  };
+
+  const cardsBase = {
+    master: factsheetMasterRef,
+    ...factsheetHeaderTokens,
+    intro: t.bodyText,
+    caption: t.mutedCaption,
+    vAlign: VALIGN.MIDDLE,
+    hAlign: HALIGN.CENTER,
+    spacing,
+    gridSpacing: spacing,
+  };
+
+  return {
+    slide: config.slide,
+    textStyles: config.textStyles,
+    layouts: {
+      title: {
+        variants: {
+          default: titleLayout.tokenMap({
+            title: { ...t.heroTitle, color: palette.navy, style: TEXT_STYLE.TITLE },
+            subtitle: { ...t.heroSubtitle, color: palette.purple, style: TEXT_STYLE.H3 },
+            master: lightMinimalMaster,
+            vAlign: VALIGN.MIDDLE,
+            hAlign: HALIGN.CENTER,
+            spacing: spacingTight,
+            image: imageBase,
+          }),
+        },
+      },
+      end: {
+        variants: {
+          default: endLayout.tokenMap({
+            title: { ...t.heroTitle, style: TEXT_STYLE.TITLE },
+            subtitle: t.heroSubtitle,
+            master: factsheetMasterRef,
+            vAlign: VALIGN.MIDDLE,
+            hAlign: HALIGN.LEFT,
+            spacing: spacingTight,
+            image: imageBase,
+          }),
+        },
+      },
+      section: {
+        variants: {
+          default: sectionLayout.tokenMap({
+            title: t.labelSectionHeading,
+            master: darkMinimalMaster,
+            vAlign: VALIGN.MIDDLE,
+            hAlign: HALIGN.CENTER,
+          }),
+        },
+      },
+      body: {
+        variants: {
+          default: bodyLayout.tokenMap({ ...bodyBase, vAlign: VALIGN.TOP }),
+          centered: bodyLayout.tokenMap({ ...bodyBase, vAlign: VALIGN.MIDDLE }),
+        },
+      },
+      stat: {
+        variants: {
+          default: statLayout.tokenMap({
+            master: factsheetMasterRef,
+            value: t.labelStatValue,
+            label: t.labelStatLabel,
+            caption: t.mutedCaption,
+            background: { ...cardBackground, cornerRadius: base.cornerRadiusLarge },
+            backgroundWidth: 6,
+            vAlign: VALIGN.MIDDLE,
+            hAlign: HALIGN.CENTER,
+            spacing: spacing,
+            padding,
+          }),
+        },
+      },
+      "two-column": {
+        variants: {
+          default: twoColumnLayout.tokenMap({ ...bodyBase, vAlign: VALIGN.MIDDLE }),
+        },
+      },
+      statement: {
+        variants: {
+          default: statementLayout.tokenMap({
+            caption: t.mutedCaption,
+            vAlign: VALIGN.MIDDLE,
+            hAlign: HALIGN.CENTER,
+            spacing: spacing,
+            master: lightMinimalMaster,
+            body: { ...t.bodyText, style: TEXT_STYLE.H2 },
+          }),
+        },
+      },
+      agenda: {
+        variants: {
+          default: agendaLayout.tokenMap({
+            master: factsheetMasterRef,
+            ...t.headerTokens,
+            vAlign: VALIGN.MIDDLE,
+            items: { ...t.bodyText, style: TEXT_STYLE.H4, color: palette.navy },
+            divider: subtleBorder,
+            itemNumber: { ...alignLeft, style: TEXT_STYLE.H2, color: palette.lavender },
+            itemVAlign: VALIGN.MIDDLE,
+            itemSpacing: spacing,
+            spacing: spacingTight,
+            image: imageBase,
+          }),
+        },
+      },
+      cards: {
+        variants: {
+          default: cardsLayout.tokenMap({
+            ...cardsBase,
+            card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP, background: cardBackground },
+          }),
+          flat: cardsLayout.tokenMap({ ...cardsBase, card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP } }),
+        },
+      },
+      blank: {
+        variants: {
+          default: blankLayout.tokenMap({
+            master: lightMinimalMaster,
+            ...t.bodySlotTokens,
+          }),
+        },
+      },
+      quote: {
+        variants: {
+          default: quoteLayout.tokenMap({
+            quote: t.quoteSlotTokens,
+            master: lightMinimalMaster,
+            vAlign: VALIGN.MIDDLE,
+            hAlign: HALIGN.CENTER,
+            spacing,
+          }),
+        },
+      },
+    },
+  };
+}
+
+// ============================================
+// THEME EXPORT
+// ============================================
+
 export const theme = defineTheme({
   fonts: [assets.fonts.inter, assets.fonts.interLight, assets.fonts.firaCode],
   formats: {
-    presentation: buildThemeFormat(base, presentationConfig),
-    factsheet: buildThemeFormat(base, factsheetConfig),
+    presentation: buildPresentationFormat(base, presentationConfig),
+    factsheet: buildFactsheetFormat(base, factsheetConfig),
   },
 });

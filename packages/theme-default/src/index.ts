@@ -22,7 +22,7 @@ import {
   textComponent,
 } from "@tycoslide/sdk";
 import { allLayouts } from "./layouts.js";
-import { defaultMaster, minimalMaster } from "./master.js";
+import { defaultMaster, factsheetMaster, minimalMaster } from "./master.js";
 
 // Explicit component, layout, and master lists — themes declare what they use
 export const components = [
@@ -47,7 +47,7 @@ export const components = [
 
 export const layouts = allLayouts;
 
-export const masters: MasterDefinition[] = [defaultMaster, minimalMaster];
+export const masters: MasterDefinition[] = [defaultMaster, minimalMaster, factsheetMaster];
 
 // Re-export component DSL functions for theme consumers
 export * from "@tycoslide/sdk";
