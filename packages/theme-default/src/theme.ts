@@ -52,16 +52,16 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
   } = base;
 
   // --- Text tokens ---
-  const bodyText: TextTokens = { ...richTextBase, ...alignLeft, style: TEXT_STYLE.BODY, color: palette.navy };
+  const bodyText: TextTokens = { ...richTextBase, ...alignLeft, style: TEXT_STYLE.BODY, color: palette.textPrimary };
   const bodyList: ListTokens = { ...bodyText, vAlign: VALIGN.TOP };
-  const cardTitle: TextTokens = { ...richTextBase, ...alignLeft, style: TEXT_STYLE.H4, color: palette.purple };
+  const cardTitle: TextTokens = { ...richTextBase, ...alignLeft, style: TEXT_STYLE.H4, color: palette.brand };
   const cardDescription: TextTokens = {
     ...richTextBase,
     ...alignLeft,
     style: TEXT_STYLE.SMALL,
     color: palette.textSecondary,
   };
-  const quoteText: TextTokens = { ...richTextBase, ...alignLeft, style: TEXT_STYLE.H2, color: palette.navy };
+  const quoteText: TextTokens = { ...richTextBase, ...alignLeft, style: TEXT_STYLE.H2, color: palette.textPrimary };
   const mutedCaption: TextTokens = {
     ...richTextBase,
     ...alignCenter,
@@ -80,13 +80,13 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
   const labelH4: LabelTokens = { ...labelBase, style: TEXT_STYLE.H4 };
 
   // --- Functional labels ---
-  const labelEyebrow: LabelTokens = { ...alignLeft, style: TEXT_STYLE.EYEBROW, color: palette.purple };
+  const labelEyebrow: LabelTokens = { ...alignLeft, style: TEXT_STYLE.EYEBROW, color: palette.brand };
   const labelMutedSmall: LabelTokens = { ...alignLeft, style: TEXT_STYLE.SMALL, color: palette.textSecondary };
   const labelFooter: LabelTokens = { ...alignLeft, style: TEXT_STYLE.FOOTER, color: palette.textSecondary };
 
   // --- Accent labels ---
   const labelSectionHeading: LabelTokens = { ...alignCenter, style: TEXT_STYLE.H2, color: palette.white };
-  const labelStatValue: LabelTokens = { ...alignCenter, style: TEXT_STYLE.H1, color: palette.purple };
+  const labelStatValue: LabelTokens = { ...alignCenter, style: TEXT_STYLE.H1, color: palette.brand };
   const labelStatLabel: LabelTokens = { ...alignCenter, style: TEXT_STYLE.H3, color: palette.textSecondary };
 
   // --- Component tokens ---
@@ -115,7 +115,7 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
     headerRow: { ...tableHeaderBase, background: palette.border, hAlign: HALIGN.CENTER },
     headerCol: { ...tableHeaderBase, background: palette.white, hAlign: HALIGN.LEFT },
     cellTextStyle: TEXT_STYLE.EYEBROW,
-    cellTextColor: palette.navy,
+    cellTextColor: palette.textPrimary,
     cellBackground: palette.surface,
     cellBackgroundOpacity: 0,
     hAlign: HALIGN.CENTER,
@@ -123,7 +123,7 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
     gridStyle: GRID_STYLE.HORIZONTAL,
     gridStroke: subtleBorder,
     cellPadding: unit * 4,
-    linkColor: palette.purple,
+    linkColor: palette.brand,
     linkUnderline: true,
     accents: accents,
     background: {
@@ -141,7 +141,7 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
     theme: highlightTheme,
     padding: padding,
     background: {
-      fill: palette.navy,
+      fill: palette.textPrimary,
       fillOpacity: 100,
       cornerRadius,
       shadow,
@@ -151,7 +151,7 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
 
   const quoteSlotTokens = {
     bar: {
-      color: palette.purple,
+      color: palette.brand,
       width: accentBarWidth,
       dashType: DASH_TYPE.SOLID,
     },
@@ -178,16 +178,16 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
 
   const mermaidTokens = {
     primary: palette.white,
-    primaryContrast: palette.navy,
-    text: palette.navy,
-    line: palette.purple,
+    primaryContrast: palette.textPrimary,
+    text: palette.textPrimary,
+    line: palette.brand,
     surface: palette.surface,
     surfaceBorder: palette.border,
     surfaceSubtle: palette.surface,
     group: palette.surface,
     groupCornerRadius: cornerRadius,
     accents: accents,
-    accentStyle: { opacity: 15, textColor: palette.purple },
+    accentStyle: { opacity: 15, textColor: palette.brand },
     textStyle: TEXT_STYLE.BODY,
     image: imageBase,
   };
@@ -200,7 +200,7 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
     testimonial: testimonialSlotTokens,
     card: cardSlotTokens,
     image: imageBase,
-    label: { 1: labelH1, 2: { ...labelH2, color: palette.purple }, 3: labelH3, 4: labelH4, 5: labelH4, 6: labelH4 },
+    label: { 1: labelH1, 2: { ...labelH2, color: palette.brand }, 3: labelH3, 4: labelH4, 5: labelH4, 6: labelH4 },
   };
 
   // --- Header tokens (shared by layouts with title + eyebrow) ---
@@ -278,7 +278,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
   const darkMinimalMaster: MasterRef = {
     masterName: MASTER.MINIMAL,
     tokens: minimalMaster.tokenMap({
-      background: { color: palette.navy },
+      background: { color: palette.textPrimary },
       margin,
     }),
   };
@@ -311,7 +311,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
       title: {
         variants: {
           default: titleLayout.tokenMap({
-            title: { ...t.heroTitle, color: palette.navy, style: TEXT_STYLE.TITLE },
+            title: { ...t.heroTitle, color: palette.textPrimary, style: TEXT_STYLE.TITLE },
             subtitle: { ...t.heroSubtitle, color: palette.textSecondary, style: TEXT_STYLE.H3 },
             master: lightMinimalMaster,
             vAlign: VALIGN.MIDDLE,
@@ -389,9 +389,9 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
             master: defaultMasterRef,
             ...t.headerTokens,
             vAlign: VALIGN.MIDDLE,
-            items: { ...t.bodyText, style: TEXT_STYLE.H4, color: palette.navy },
+            items: { ...t.bodyText, style: TEXT_STYLE.H4, color: palette.textPrimary },
             divider: subtleBorder,
-            itemNumber: { ...alignLeft, style: TEXT_STYLE.H2, color: palette.lavender },
+            itemNumber: { ...alignLeft, style: TEXT_STYLE.H2, color: palette.brandLight },
             itemVAlign: VALIGN.MIDDLE,
             itemSpacing: spacing,
             spacing: spacingTight,
@@ -428,7 +428,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
           dark: quoteLayout.tokenMap({
             quote: {
               bar: {
-                color: palette.lavender,
+                color: palette.brandLight,
                 width: base.accentBarWidth,
                 dashType: DASH_TYPE.SOLID,
               },
@@ -436,7 +436,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
               quote: {
                 ...t.quoteText,
                 color: palette.white,
-                linkColor: palette.lavender,
+                linkColor: palette.brandLight,
               },
               attribution: {
                 ...t.labelMutedSmall,
@@ -461,24 +461,24 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
               color: palette.textSecondary,
               hAlign: HALIGN.CENTER,
               vAlign: VALIGN.TOP,
-              border: { color: palette.purple, width: 1, dashType: DASH_TYPE.SOLID },
+              border: { color: palette.brand, width: 1, dashType: DASH_TYPE.SOLID },
             },
             rectangle: {
-              fill: palette.purple,
+              fill: palette.brand,
               fillOpacity: 100,
-              border: { color: palette.navy, width: 2, dashType: DASH_TYPE.SOLID },
+              border: { color: palette.textPrimary, width: 2, dashType: DASH_TYPE.SOLID },
               cornerRadius: 0,
             },
             ellipse: {
-              fill: palette.navy,
+              fill: palette.textPrimary,
               fillOpacity: 100,
-              border: { color: palette.purple, width: 2, dashType: DASH_TYPE.DASHED },
+              border: { color: palette.brand, width: 2, dashType: DASH_TYPE.DASHED },
               cornerRadius: 0,
             },
             triangle: {
               fill: palette.teal,
               fillOpacity: 100,
-              border: { color: palette.navy, width: 3, dashType: DASH_TYPE.DASHED },
+              border: { color: palette.textPrimary, width: 3, dashType: DASH_TYPE.DASHED },
               cornerRadius: 0,
             },
             diamond: {
@@ -525,9 +525,9 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
             master: defaultMasterRef,
             ...t.headerTokens,
             label: t.labelMutedSmall,
-            solid: { color: palette.navy, width: 2, dashType: DASH_TYPE.SOLID },
-            dashed: { color: palette.purple, width: 2, dashType: DASH_TYPE.DASHED },
-            dotted: { color: palette.lavender, width: 2, dashType: DASH_TYPE.DOTTED },
+            solid: { color: palette.textPrimary, width: 2, dashType: DASH_TYPE.SOLID },
+            dashed: { color: palette.brand, width: 2, dashType: DASH_TYPE.DASHED },
+            dotted: { color: palette.brandLight, width: 2, dashType: DASH_TYPE.DOTTED },
             vAlign: VALIGN.TOP,
             hAlign: HALIGN.LEFT,
             spacing: spacing,
@@ -555,7 +555,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
       background: { color: palette.white },
       margin,
       topBarHeight: unit * 36, // 0.9 inches
-      topBarFill: { fill: palette.navy, fillOpacity: 100, cornerRadius: 0 },
+      topBarFill: { fill: palette.textPrimary, fillOpacity: 100, cornerRadius: 0 },
       topBarLogo: assets.tycoslide.logomarkWhite,
       topBarLogoTokens: { padding: 0 },
       topBarLogoHeight: unit * 10, // 0.25 inches
@@ -585,7 +585,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
   const darkMinimalMaster: MasterRef = {
     masterName: MASTER.MINIMAL,
     tokens: minimalMaster.tokenMap({
-      background: { color: palette.navy },
+      background: { color: palette.textPrimary },
       margin,
     }),
   };
@@ -635,7 +635,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
       title: {
         variants: {
           default: titleLayout.tokenMap({
-            title: { ...t.heroTitle, color: palette.navy, style: TEXT_STYLE.TITLE },
+            title: { ...t.heroTitle, color: palette.textPrimary, style: TEXT_STYLE.TITLE },
             subtitle: { ...t.heroSubtitle, color: palette.textSecondary, style: TEXT_STYLE.H3 },
             master: lightMinimalMaster,
             vAlign: VALIGN.MIDDLE,
@@ -713,9 +713,9 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
             master: factsheetMasterRef,
             ...t.headerTokens,
             vAlign: VALIGN.MIDDLE,
-            items: { ...t.bodyText, style: TEXT_STYLE.H4, color: palette.navy },
+            items: { ...t.bodyText, style: TEXT_STYLE.H4, color: palette.textPrimary },
             divider: subtleBorder,
-            itemNumber: { ...alignLeft, style: TEXT_STYLE.H2, color: palette.lavender },
+            itemNumber: { ...alignLeft, style: TEXT_STYLE.H2, color: palette.brandLight },
             itemVAlign: VALIGN.MIDDLE,
             itemSpacing: spacing,
             spacing: spacingTight,
@@ -752,7 +752,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
           dark: quoteLayout.tokenMap({
             quote: {
               bar: {
-                color: palette.lavender,
+                color: palette.brandLight,
                 width: base.accentBarWidth,
                 dashType: DASH_TYPE.SOLID,
               },
@@ -760,7 +760,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
               quote: {
                 ...t.quoteText,
                 color: palette.white,
-                linkColor: palette.lavender,
+                linkColor: palette.brandLight,
               },
               attribution: {
                 ...t.labelMutedSmall,

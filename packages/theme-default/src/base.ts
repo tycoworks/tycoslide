@@ -21,16 +21,16 @@ export const palette = {
   border: "#E5E5E5",
   textMuted: "#6B7280",
   textSecondary: "#4A4A5A",
-  navy: "#1A1A2E",
-  purple: "#7C3AED",
-  lavender: "#A78BFA",
+  textPrimary: "#1A1A2E",
+  brand: "#7C3AED",
+  brandLight: "#A78BFA",
   teal: "#0D9488",
 };
 
 export const accents: Record<string, string> = {
-  accent: palette.purple,
-  soft: palette.lavender,
-  dark: palette.navy,
+  accent: palette.brand,
+  soft: palette.brandLight,
+  dark: palette.textPrimary,
 };
 
 export const borderWidth = 0.75;
@@ -42,7 +42,7 @@ export const subtleBorder = { color: palette.border, width: borderWidth, dashTyp
 
 export const shadow = {
   type: SHADOW_TYPE.OUTER,
-  color: palette.navy,
+  color: palette.textPrimary,
   opacity: 12,
   blur: 6,
   offset: 2,
@@ -53,13 +53,13 @@ export const alignLeft = { hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE } as const
 export const alignCenter = { hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } as const;
 
 export const richTextBase = {
-  linkColor: palette.purple,
+  linkColor: palette.brand,
   linkUnderline: true,
   accents: accents,
 } as const;
 
 export const heroBase = { ...richTextBase, linkUnderline: false, ...alignCenter } as const;
-export const labelBase = { color: palette.navy, ...alignLeft } as const;
+export const labelBase = { color: palette.textPrimary, ...alignLeft } as const;
 
 export const cardBackground = {
   fill: palette.white,
