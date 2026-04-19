@@ -1,29 +1,54 @@
-import type { TextStyle } from "@tycoslide/core";
+import { HALIGN, VALIGN } from "@tycoslide/core";
 import { SlideFormat } from "@tycoslide/sdk";
 import { assets } from "../assets.js";
-import { TEXT_STYLE } from "../base.js";
-
-export interface FormatConfig {
-  slide: { width: number; height: number };
-  unit: number;
-  spacing: number;
-  spacingTight: number;
-  padding: number;
-  margin: number;
-  footerHeight: number;
-  textStyles: Record<string, TextStyle>;
-}
+import { TEXT_STYLE, imageBase, palette } from "../base.js";
+import type { Format } from "../buildFormat.js";
+import { defaultMaster, MASTER, minimalMaster } from "../master.js";
 
 const unit = 0.03125;
+const spacingTight = unit * 4;
+const margin = 0.5;
+const footerHeight = unit * 8;
 
-export const presentationConfig: FormatConfig = {
+const labelFooter = { style: TEXT_STYLE.FOOTER, color: palette.textSecondary, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
+
+export const presentationFormat: Format = {
   slide: SlideFormat.s16x9,
   unit,
   spacing: unit * 8,
-  spacingTight: unit * 4,
+  spacingTight,
   padding: unit * 8,
-  margin: 0.5,
-  footerHeight: unit * 8,
+  margin,
+  footerHeight,
+  headerTitleStyle: TEXT_STYLE.H3,
+  primaryMaster: {
+    masterName: MASTER.DEFAULT,
+    tokens: defaultMaster.tokenMap({
+      background: { color: palette.surface },
+      margin,
+      footerHeight,
+      footerLogo: assets.tycoslide.logo,
+      footerText: "tycoslide",
+      footerSpacing: spacingTight,
+      slideNumber: { ...labelFooter, hAlign: HALIGN.RIGHT },
+      footer: labelFooter,
+      footerImage: imageBase,
+    }),
+  },
+  lightMinimalMaster: {
+    masterName: MASTER.MINIMAL,
+    tokens: minimalMaster.tokenMap({
+      background: { color: palette.surface },
+      margin,
+    }),
+  },
+  darkMinimalMaster: {
+    masterName: MASTER.MINIMAL,
+    tokens: minimalMaster.tokenMap({
+      background: { color: palette.textPrimary },
+      margin,
+    }),
+  },
   textStyles: {
     [TEXT_STYLE.TITLE]: {
       fontFamily: assets.fonts.inter,
