@@ -217,9 +217,130 @@ The single highest-impact change for AI authoring is 1a (declarative master buil
 
 All proposals are SDK-layer additions. Core remains untouched. Theme authors who prefer the raw `defineMaster` / `defineComponent` / `defineLayout` APIs can continue using them directly.
 
+## Architect Consensus: Theme Restructure (4/4 agreement)
+
+**Status**: Decided (April 2026, 4 independent architect analyses)
+
+Four independent architect analyses converged on the same design. This section captures the consensus.
+
+### Decision: Single Factory, Not deriveFormat
+
+All four architects rejected the `deriveFormat` proposal (2b above) and recommended a single `buildFormat()` factory driven by a typed policy object.
+
+**Why not deriveFormat:**
+- Formats are peers, not parent/child. Factsheet is not "a modified presentation."
+- Deep merge semantics are debugging poison — must mentally reconstruct merged output
+- Breaks the "no defaults" philosophy — anything not overridden silently inherits
+- When a third format arrives (battle card), which format does it derive from?
+
+**The factory approach:**
+```typescript
+buildFormat(base, format: Format) → ThemeFormat
+```
+
+One function builds all ~40 intermediate token objects and wires all layout token maps. Each format declares its differences via a typed `Format` object. The factory applies those differences at construction time — no merge, no inheritance.
+
+### Decision: File Structure
+
+```
+packages/theme-default/src/
+  base.ts              — Brand constants (UNCHANGED)
+  assets.ts            — Font/image paths (UNCHANGED)
+  master.ts            — All master definitions (UNCHANGED)
+  layouts.ts           — All layout definitions (UNCHANGED)
+  formats/
+    presentation.ts    — Format (dimensions + masters + overrides)
+    factsheet.ts       — Format (dimensions + masters + overrides)
+  buildFormat.ts       — NEW: single buildFormat() factory (~280 lines)
+  theme.ts             — THIN: ~15-30 lines (defineTheme + two factory calls)
+  index.ts             — Re-exports (UNCHANGED)
+```
+
+### Decision: No Per-Format Directories or Sub-Packages
+
+Layouts and most masters are genuinely shared. Splitting into per-format directories would create duplication. Sub-packages add dependency management overhead for no benefit within a single theme.
+
+### Decision: Layouts Stay Format-Agnostic
+
+Layouts define spatial relationships. Token maps are the extension point. The factory builds different token maps for each format and passes them to the same layout definitions.
+
+### The 8 Verified Deltas Between Formats
+
+| # | Delta | Presentation | Factsheet |
+|---|-------|-------------|-----------|
+| 1 | Primary master | `defaultMasterRef` | `factsheetMasterRef` |
+| 2 | Light minimal background | `palette.surface` | `palette.white` |
+| 3 | Header title style | H3 (compact) | H1 (prominent) |
+| 4 | Body slot label[2] color | default | `palette.purple` |
+| 5 | Quote bar width | `accentBarWidth` (2) | `1` |
+| 6 | Quote attribution style | default `labelMutedSmall` | `TEXT_STYLE.BODY, HALIGN.RIGHT` |
+| 7 | Title subtitle color | `palette.textSecondary` | `palette.purple` |
+| 8 | End layout master + alignment | dark minimal, centered | factsheet master, left-aligned |
+
+Plus one structural difference: factsheet excludes 3 layouts (shapes, lines, transform).
+
+### Open: Layout Override Mechanism
+
+The factory needs a way for formats to express per-layout token tweaks (deltas 7 and 8 above). Three approaches under consideration:
+
+- **Named semantic fields**: Flat, exhaustive fields like `titleSubtitleColor`, `endLayout.master`. Most explicit but requires extending the type for each new delta.
+- **Per-layout partial overrides**: `layoutOverrides: { title: { subtitle: { color } }, end: { master, hAlign } }`. More flexible but introduces shallow merge.
+- **Callback per layout**: Format provides a function that customizes the token map. Most powerful but least declarative.
+
+See detailed analysis in the "Layout Override Mechanism" section below.
+
+### Relationship to Other Proposals
+
+| Proposal | Status |
+|----------|--------|
+| 1a. Declarative master builder (`defineMasterChrome`) | Still valuable, independent workstream |
+| 1b. Typed slot token bundles | Still valuable, independent workstream |
+| 2a. Text style scale generator | Still valuable, can simplify Format configs |
+| 2b. `deriveFormat` | **Rejected** — replaced by single factory approach |
+| 3a. Directional padding | Deprioritized |
+| 3b. Master debug overlay | Still valuable, independent |
+
+## Layout Override Mechanism
+
+The factory builds layout token maps from shared tokens. Most layouts use the same tokens across formats. But a few layouts need per-format tweaks:
+
+**Affected layouts:**
+- `title`: subtitle color (`palette.textSecondary` vs `palette.purple`)
+- `end`: master ref (`darkMinimalMaster` vs `factsheetMasterRef`) and alignment (center vs left)
+- `quote`: factsheet omits the `dark` variant
+
+**Approach A — Named semantic fields:**
+```typescript
+interface Format {
+  // ...
+  titleSubtitleColor: string;
+  endLayout: { master: MasterRef; hAlign: HorizontalAlignment };
+}
+```
+Pro: Flat, explicit, self-documenting. Con: Must extend type for each new delta.
+
+**Approach B — Per-layout partial overrides:**
+```typescript
+interface Format {
+  // ...
+  layoutOverrides?: {
+    title?: { default?: { subtitle?: Partial<TextTokens> } };
+    end?: { default?: { master?: MasterRef; hAlign?: HorizontalAlignment } };
+    quote?: { dark?: null }; // null = remove variant
+  };
+}
+```
+Pro: Flexible, handles future formats. Con: Introduces merge semantics (the thing we're trying to avoid).
+
+**Approach C — Hybrid:**
+Named fields for the known deltas (A), plus a generic `layoutOverrides` escape hatch (B) for unforeseen needs. Start with A, add B only if a real format needs it.
+
 ## Next Steps
 
-1. Finish factsheet format iteration — continue surfacing pain points
-2. Prioritize proposals based on which foot guns hurt most in practice
-3. Design typed slot token registry (1b) — likely highest ROI for effort
-4. Prototype `defineMasterChrome` (1a) — validate the top/bottom/left/right model covers real masters
+1. Decide on layout override mechanism (A, B, or C above)
+2. Implement `buildFormat.ts` with single factory
+3. Expand `Format` type with masters, header style, overrides
+4. Convert presentation and factsheet to `Format` objects
+5. Reduce `theme.ts` to thin orchestrator
+6. Verify byte-identical output for both formats
+7. Future: typed slot tokens (1b), declarative masters (1a) as separate workstreams

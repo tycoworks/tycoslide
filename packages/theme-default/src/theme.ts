@@ -640,7 +640,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
         variants: {
           default: titleLayout.tokenMap({
             title: { ...t.heroTitle, color: palette.navy, style: TEXT_STYLE.TITLE },
-            subtitle: { ...t.heroSubtitle, color: palette.purple, style: TEXT_STYLE.H3 },
+            subtitle: { ...t.heroSubtitle, color: palette.textSecondary, style: TEXT_STYLE.H3 },
             master: lightMinimalMaster,
             vAlign: VALIGN.MIDDLE,
             hAlign: HALIGN.CENTER,
@@ -654,9 +654,9 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
           default: endLayout.tokenMap({
             title: { ...t.heroTitle, style: TEXT_STYLE.TITLE },
             subtitle: t.heroSubtitle,
-            master: factsheetMasterRef,
+            master: darkMinimalMaster,
             vAlign: VALIGN.MIDDLE,
-            hAlign: HALIGN.LEFT,
+            hAlign: HALIGN.CENTER,
             spacing: spacingTight,
             image: imageBase,
           }),
@@ -752,6 +752,29 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
             vAlign: VALIGN.MIDDLE,
             hAlign: HALIGN.CENTER,
             spacing,
+          }),
+          dark: quoteLayout.tokenMap({
+            quote: {
+              bar: {
+                color: palette.lavender,
+                width: base.accentBarWidth,
+                dashType: DASH_TYPE.SOLID,
+              },
+              spacing: spacing,
+              quote: {
+                ...t.quoteText,
+                color: palette.white,
+                linkColor: palette.lavender,
+              },
+              attribution: {
+                ...t.labelMutedSmall,
+                color: palette.textMuted,
+              },
+            },
+            master: darkMinimalMaster,
+            vAlign: VALIGN.MIDDLE,
+            hAlign: HALIGN.CENTER,
+            spacing: spacing,
           }),
         },
       },
