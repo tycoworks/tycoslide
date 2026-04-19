@@ -127,7 +127,7 @@ export const textComponent = defineComponent({
  *
  * @example
  * ```typescript
- * text("**Bold** and :teal[highlighted]", tokens.text)
+ * text("**Bold** and :accent[highlighted]", tokens.text)
  * ```
  */
 export function text(body: string, tokens: TextTokens): ComponentNode {

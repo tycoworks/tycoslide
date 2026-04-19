@@ -28,11 +28,9 @@ export const palette = {
 };
 
 export const accents: Record<string, string> = {
-  blue: palette.navy,
-  green: palette.teal,
-  red: palette.purple,
-  yellow: palette.lavender,
-  purple: palette.purple,
+  accent: palette.purple,
+  soft: palette.lavender,
+  dark: palette.navy,
 };
 
 export const borderWidth = 0.75;

@@ -82,7 +82,7 @@ Structural containers that arrange content. TypeScript DSL only.
 
 ## text
 
-A single paragraph of formatted content: bold, italic, strikethrough, underline, hyperlinks, and accent colors. Headings in markdown (`# Heading`) also become text with the appropriate heading style (H1–H4). Use `text()` in layouts for content that includes formatting — for example, a card description where the author might write `**bold**` or `:blue[highlighted]`. No `:::text` directive — use `text()` in TypeScript.
+A single paragraph of formatted content: bold, italic, strikethrough, underline, hyperlinks, and accent colors. Headings in markdown (`# Heading`) also become text with the appropriate heading style (H1–H4). Use `text()` in layouts for content that includes formatting — for example, a card description where the author might write `**bold**` or `:accent[highlighted]`. No `:::text` directive — use `text()` in TypeScript.
 
 ### Tokens
 
@@ -105,10 +105,10 @@ Supports `**bold**`, `*italic*`, `[hyperlinks](url)`, `~~strikethrough~~`, `++un
 Use the `:name[text]` syntax to apply accent colors inline:
 
 ```markdown
-Normal text with :blue[blue highlight] and :green[green highlight].
+Normal text with :accent[accent highlight] and :soft[soft highlight].
 ```
 
-The default theme provides `blue`, `green`, `red`, `yellow`, and `purple`. Custom themes can define any accent names. See [Themes](./themes.md) for details.
+The default theme provides `accent`, `soft`, and `dark`. Custom themes can define any accent names. See [Themes](./themes.md) for details.
 
 ### Examples
 
@@ -154,7 +154,7 @@ Renders bullet or numbered lists with support for formatting. No `:::list` direc
 
 ```markdown
 - First item with **bold** text
-- Second item with :blue[accent color]
+- Second item with :accent[accent color]
 - Third item
 ```
 

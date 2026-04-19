@@ -74,7 +74,7 @@ export const DEFAULT_TEXT_TOKENS: TextTokens = {
   linkUnderline: true,
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.TOP,
-  accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
+  accents: { accent: "#00CCCC", soft: "#FF00FF", dark: "#FF8800" },
 };
 
 export const DEFAULT_LABEL_TOKENS: LabelTokens = {
@@ -91,7 +91,7 @@ export const DEFAULT_LIST_TOKENS: ListTokens = {
   linkUnderline: true,
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.TOP,
-  accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
+  accents: { accent: "#00CCCC", soft: "#FF00FF", dark: "#FF8800" },
 };
 
 export const DEFAULT_TABLE_TOKENS: TableTokens = {
@@ -113,7 +113,7 @@ export const DEFAULT_TABLE_TOKENS: TableTokens = {
   cellPadding: 0.1,
   linkColor: "#0000FF",
   linkUnderline: true,
-  accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
+  accents: { accent: "#00CCCC", soft: "#FF00FF", dark: "#FF8800" },
 };
 
 export const DEFAULT_IMAGE_TOKENS = { padding: 0 };
@@ -140,7 +140,7 @@ export const DEFAULT_MERMAID_TOKENS: MermaidTokens = {
   surfaceSubtle: "#FFFFFF",
   group: "#333333",
   groupCornerRadius: 0.08,
-  accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
+  accents: { accent: "#00CCCC", soft: "#FF00FF", dark: "#FF8800" },
   accentStyle: { opacity: 100, textColor: "#000000" },
   textStyle: "body",
   image: DEFAULT_IMAGE_TOKENS,
@@ -163,7 +163,7 @@ export const DEFAULT_CARD_TOKENS: CardTokens = {
     linkUnderline: true,
     hAlign: HALIGN.CENTER,
     vAlign: VALIGN.TOP,
-    accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
+    accents: { accent: "#00CCCC", soft: "#FF00FF", dark: "#FF8800" },
   },
   description: {
     style: "small",
@@ -172,7 +172,7 @@ export const DEFAULT_CARD_TOKENS: CardTokens = {
     linkUnderline: true,
     hAlign: HALIGN.CENTER,
     vAlign: VALIGN.TOP,
-    accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
+    accents: { accent: "#00CCCC", soft: "#FF00FF", dark: "#FF8800" },
   },
   image: DEFAULT_IMAGE_TOKENS,
 };
@@ -191,7 +191,7 @@ export const DEFAULT_QUOTE_TOKENS: QuoteTokens = {
     linkUnderline: true,
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.TOP,
-    accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
+    accents: { accent: "#00CCCC", soft: "#FF00FF", dark: "#FF8800" },
   },
   attribution: {
     style: "small",
@@ -218,7 +218,7 @@ export const DEFAULT_TESTIMONIAL_TOKENS: TestimonialTokens = {
     linkUnderline: true,
     hAlign: HALIGN.CENTER,
     vAlign: VALIGN.TOP,
-    accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
+    accents: { accent: "#00CCCC", soft: "#FF00FF", dark: "#FF8800" },
   },
   attribution: {
     style: "small",

@@ -97,11 +97,11 @@ describe("Text", () => {
     });
 
     it("should NOT parse directives — stays literal", async () => {
-      const node = label(":teal[not highlighted]", DEFAULT_LABEL_TOKENS);
+      const node = label(":accent[not highlighted]", DEFAULT_LABEL_TOKENS);
       const rendered = (await componentRegistry.render(node, { theme, canvas: noopCanvas() })) as any;
       const runs = rendered.content as NormalizedRun[];
       assert.strictEqual(runs.length, 1);
-      assert.strictEqual(runs[0].text, ":teal[not highlighted]");
+      assert.strictEqual(runs[0].text, ":accent[not highlighted]");
       assert.strictEqual(runs[0].highlight, undefined);
     });
 
@@ -162,7 +162,7 @@ describe("Text", () => {
     });
 
     it("should parse color directives", async () => {
-      const node = text(":teal[highlighted]", DEFAULT_TEXT_TOKENS);
+      const node = text(":accent[highlighted]", DEFAULT_TEXT_TOKENS);
       const result = (await componentRegistry.renderTree(node, makeContext())) as any;
       const runs = result.content as any[];
       assert.ok(runs.some((r: any) => r.color !== undefined));

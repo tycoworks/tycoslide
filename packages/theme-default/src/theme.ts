@@ -54,7 +54,7 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
   // --- Text tokens ---
   const bodyText: TextTokens = { ...richTextBase, ...alignLeft, style: TEXT_STYLE.BODY, color: palette.navy };
   const bodyList: ListTokens = { ...bodyText, vAlign: VALIGN.TOP };
-  const cardTitle: TextTokens = { ...richTextBase, ...alignLeft, style: TEXT_STYLE.H4, color: palette.navy };
+  const cardTitle: TextTokens = { ...richTextBase, ...alignLeft, style: TEXT_STYLE.H4, color: palette.purple };
   const cardDescription: TextTokens = {
     ...richTextBase,
     ...alignLeft,
@@ -200,7 +200,7 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
     testimonial: testimonialSlotTokens,
     card: cardSlotTokens,
     image: imageBase,
-    label: { 1: labelH1, 2: labelH2, 3: labelH3, 4: labelH4, 5: labelH4, 6: labelH4 },
+    label: { 1: labelH1, 2: { ...labelH2, color: palette.purple }, 3: labelH3, 4: labelH4, 5: labelH4, 6: labelH4 },
   };
 
   // --- Header tokens (shared by layouts with title + eyebrow) ---
@@ -577,7 +577,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
   const lightMinimalMaster: MasterRef = {
     masterName: MASTER.MINIMAL,
     tokens: minimalMaster.tokenMap({
-      background: { color: palette.white },
+      background: { color: palette.surface },
       margin,
     }),
   };
@@ -597,13 +597,9 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
     headerSpacing: spacingTight,
   };
 
-  // Factsheet body slot tokens: purple H2 headings, refined quote styling
+  // Factsheet body slot tokens: refined quote styling
   const factsheetBodySlotTokens = {
     ...t.bodySlotTokens,
-    label: {
-      ...t.bodySlotTokens.label,
-      2: { ...t.labelH2, color: palette.purple },
-    },
     quote: {
       ...t.quoteSlotTokens,
       bar: { ...t.quoteSlotTokens.bar, width: 1 },

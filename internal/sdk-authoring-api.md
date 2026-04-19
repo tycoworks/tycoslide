@@ -264,30 +264,21 @@ Layouts and most masters are genuinely shared. Splitting into per-format directo
 
 Layouts define spatial relationships. Token maps are the extension point. The factory builds different token maps for each format and passes them to the same layout definitions.
 
-### The 8 Verified Deltas Between Formats
+### The 3 Remaining Deltas Between Formats
 
-| # | Delta | Presentation | Factsheet |
-|---|-------|-------------|-----------|
-| 1 | Primary master | `defaultMasterRef` | `factsheetMasterRef` |
-| 2 | Light minimal background | `palette.surface` | `palette.white` |
-| 3 | Header title style | H3 (compact) | H1 (prominent) |
-| 4 | Body slot label[2] color | default | `palette.purple` |
-| 5 | Quote bar width | `accentBarWidth` (2) | `1` |
-| 6 | Quote attribution style | default `labelMutedSmall` | `TEXT_STYLE.BODY, HALIGN.RIGHT` |
-| 7 | Title subtitle color | `palette.textSecondary` | `palette.purple` |
-| 8 | End layout master + alignment | dark minimal, centered | factsheet master, left-aligned |
+After normalizing title subtitle color, end layout, quote dark variant (commit f7af09d), light minimal background, and body slot label[2] color (shared purple subheading), the original 8 deltas reduced to 3. All 3 feed into the shared token assembly — none require per-layout token map tweaks.
+
+| # | Delta | Presentation | Factsheet | Applies to |
+|---|-------|-------------|-----------|------------|
+| 1 | Primary master | `defaultMasterRef` | `factsheetMasterRef` | `bodyBase` (body, cards, stat, agenda) |
+| 2 | Header title style | H3 (compact) | H1 (prominent) | `headerTokens` |
+| 3 | Quote bar width + attribution | `accentBarWidth` (2), default | `1`, `TEXT_STYLE.BODY, HALIGN.RIGHT` | `bodySlotTokens` |
 
 Plus one structural difference: factsheet excludes 3 layouts (shapes, lines, transform).
 
-### Open: Layout Override Mechanism
+### Resolved: Layout Override Mechanism — Not Needed
 
-The factory needs a way for formats to express per-layout token tweaks (deltas 7 and 8 above). Three approaches under consideration:
-
-- **Named semantic fields**: Flat, exhaustive fields like `titleSubtitleColor`, `endLayout.master`. Most explicit but requires extending the type for each new delta.
-- **Per-layout partial overrides**: `layoutOverrides: { title: { subtitle: { color } }, end: { master, hAlign } }`. More flexible but introduces shallow merge.
-- **Callback per layout**: Format provides a function that customizes the token map. Most powerful but least declarative.
-
-See detailed analysis in the "Layout Override Mechanism" section below.
+The three deltas that would have required per-layout overrides (title subtitle color, end layout master/alignment, quote dark variant) turned out to be unintentional divergences. After normalizing them, all remaining deltas are expressible as fields on the `Format` type directly. No per-layout override mechanism is needed.
 
 ### Relationship to Other Proposals
 
@@ -297,50 +288,15 @@ See detailed analysis in the "Layout Override Mechanism" section below.
 | 1b. Typed slot token bundles | Still valuable, independent workstream |
 | 2a. Text style scale generator | Still valuable, can simplify Format configs |
 | 2b. `deriveFormat` | **Rejected** — replaced by single factory approach |
+| 2c. Layout override mechanism | **Resolved** — not needed after normalizing deltas |
 | 3a. Directional padding | Deprioritized |
 | 3b. Master debug overlay | Still valuable, independent |
 
-## Layout Override Mechanism
-
-The factory builds layout token maps from shared tokens. Most layouts use the same tokens across formats. But a few layouts need per-format tweaks:
-
-**Affected layouts:**
-- `title`: subtitle color (`palette.textSecondary` vs `palette.purple`)
-- `end`: master ref (`darkMinimalMaster` vs `factsheetMasterRef`) and alignment (center vs left)
-- `quote`: factsheet omits the `dark` variant
-
-**Approach A — Named semantic fields:**
-```typescript
-interface Format {
-  // ...
-  titleSubtitleColor: string;
-  endLayout: { master: MasterRef; hAlign: HorizontalAlignment };
-}
-```
-Pro: Flat, explicit, self-documenting. Con: Must extend type for each new delta.
-
-**Approach B — Per-layout partial overrides:**
-```typescript
-interface Format {
-  // ...
-  layoutOverrides?: {
-    title?: { default?: { subtitle?: Partial<TextTokens> } };
-    end?: { default?: { master?: MasterRef; hAlign?: HorizontalAlignment } };
-    quote?: { dark?: null }; // null = remove variant
-  };
-}
-```
-Pro: Flexible, handles future formats. Con: Introduces merge semantics (the thing we're trying to avoid).
-
-**Approach C — Hybrid:**
-Named fields for the known deltas (A), plus a generic `layoutOverrides` escape hatch (B) for unforeseen needs. Start with A, add B only if a real format needs it.
-
 ## Next Steps
 
-1. Decide on layout override mechanism (A, B, or C above)
-2. Implement `buildFormat.ts` with single factory
-3. Expand `Format` type with masters, header style, overrides
-4. Convert presentation and factsheet to `Format` objects
-5. Reduce `theme.ts` to thin orchestrator
-6. Verify byte-identical output for both formats
-7. Future: typed slot tokens (1b), declarative masters (1a) as separate workstreams
+1. Implement `buildFormat.ts` with single factory
+2. Define `Format` type with: dimensions, textStyles, primary master, light background, header style, body slot overrides, excluded layouts
+3. Convert presentation and factsheet configs to `Format` objects
+4. Reduce `theme.ts` to thin orchestrator (~15-30 lines)
+5. Verify byte-identical output for both formats
+6. Future: typed slot tokens (1b), declarative masters (1a) as separate workstreams

@@ -7,7 +7,7 @@ format: presentation
 layout: title
 variant: default
 title: "**tycoslide**"
-subtitle: "Build slides like software.:purple[▌]"
+subtitle: "Build slides like software.:accent[▌]"
 notes: Opening slide. Clean centered title with cursor.
 ---
 
@@ -26,7 +26,7 @@ notes: "Agenda layout — numbered items with divider lines."
 ---
 layout: statement
 variant: default
-body: "tycoslide is a :purple[**presentation build tool**] that generates :purple[**editable PowerPoint slides from markdown**], with :purple[**TypeScript-based themes**] and :purple[**build-time validation**]."
+body: "tycoslide is a :accent[**presentation build tool**] that generates :accent[**editable PowerPoint slides from markdown**], with :accent[**TypeScript-based themes**] and :accent[**build-time validation**]."
 notes: Positioning one-liner. Four anchors in one sentence.
 ---
 
@@ -49,14 +49,14 @@ layout: body
 
 The new pipeline *increased*
 throughput by **40%** with
-:purple[zero downtime].
+:accent[zero downtime].
 ```
 
 ::right::
 
 review.pptx
 
-:::card{title="Q3 Infrastructure Review" description="The new pipeline *increased* throughput by **40%** with :purple[zero downtime]."}
+:::card{title="Q3 Infrastructure Review" description="The new pipeline *increased* throughput by **40%** with :accent[zero downtime]."}
 :::
 
 ::overlay::
@@ -88,13 +88,13 @@ notes: Comparison table with tycoslide column highlighted. The audience sees "No
 ---
 
 :::table
-| | :purple[**tycoslide**] | Slidev | Marp | Reveal.js |
+| | :accent[**tycoslide**] | Slidev | Marp | Reveal.js |
 |---|---|---|---|---|
-| Output | :purple[.pptx (editable)] | HTML, PDF, .pptx (images) | PDF, HTML, .pptx (images) | HTML, PDF |
-| Components | :purple[TypeScript] | Vue | Markdown-It | JavaScript |
-| Design tokens | :purple[TypeScript] | CSS | CSS | CSS |
-| Validation | :purple[Build-time] | None | None | None |
-| Preview | :purple[Static] | Live | Live | Live |
+| Output | :accent[.pptx (editable)] | HTML, PDF, .pptx (images) | PDF, HTML, .pptx (images) | HTML, PDF |
+| Components | :accent[TypeScript] | Vue | Markdown-It | JavaScript |
+| Design tokens | :accent[TypeScript] | CSS | CSS | CSS |
+| Validation | :accent[Build-time] | None | None | None |
+| Preview | :accent[Static] | Live | Live | Live |
 :::
 
 ---

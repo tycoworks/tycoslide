@@ -81,9 +81,9 @@ _Italic text_
 Use named accents to highlight text:
 
 ```markdown
-This is :blue[highlighted in blue].
-This is :green[styled as a metric].
-This is :red[styled as a warning].
+This is :accent[highlighted with accent].
+This is :soft[styled with soft accent].
+This is :dark[styled with dark accent].
 ```
 
 Accent names are defined by your theme as an open set — any key in the theme's `accents` map is valid.
@@ -210,7 +210,7 @@ notes: Demo each formatting style
 
 You can use **bold**, _italic_, **_bold italic_**, ~~strikethrough~~, and ++underlined++ text.
 
-Highlight with :blue[accent colors] from your theme.
+Highlight with :accent[accent colors] from your theme.
 
 Add [clickable links](https://example.com) to any slide.
 
