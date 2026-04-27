@@ -3,6 +3,7 @@
 import {
   type ComponentNode,
   component,
+  DASH_TYPE,
   type DashType,
   DIRECTION,
   DIRECTION_VALUES,
@@ -24,12 +25,13 @@ import {
   type TextStyleName,
   type VerticalAlignment,
 } from "@tycoslide/core";
+import { DEFAULTS } from "../presets/defaults.js";
 import { Component } from "../presets/names.js";
 
 export interface LineTokens {
   color: string;
   width: number;
-  dashType: DashType;
+  dashType?: DashType;
   shadow?: Shadow;
 }
 
@@ -42,9 +44,9 @@ export interface SlideNumberTokens {
 
 export interface ShapeTokens {
   fill: string;
-  fillOpacity: number;
+  fillOpacity?: number;
   border?: Stroke;
-  cornerRadius: number;
+  cornerRadius?: number;
   shadow?: Shadow;
 }
 
@@ -61,7 +63,7 @@ function renderLine(params: LineParams, _content: undefined, _context: RenderCon
   const node: LineNode = {
     type: NODE_TYPE.LINE,
     direction: params.direction ?? DIRECTION.ROW,
-    stroke: { color: tokens.color, width: tokens.width, dashType: tokens.dashType },
+    stroke: { color: tokens.color, width: tokens.width, dashType: tokens.dashType ?? DEFAULTS.dashType },
   };
   if (tokens.shadow) {
     node.shadow = tokens.shadow;

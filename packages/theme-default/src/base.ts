@@ -49,25 +49,22 @@ export const shadow = {
   angle: 180,
 };
 
-export const alignLeft = { hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE } as const;
 export const alignCenter = { hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } as const;
 
 export const richTextBase = {
   linkColor: palette.brand,
-  linkUnderline: true,
   accents: accents,
 } as const;
 
-export const heroBase = { ...richTextBase, linkUnderline: false, ...alignCenter } as const;
-export const labelBase = { color: palette.textPrimary, ...alignLeft } as const;
+export const heroBase = { ...richTextBase, linkUnderline: false, hAlign: HALIGN.CENTER } as const;
+export const labelBase = { color: palette.textPrimary } as const;
 
 export const cardBackground = {
   fill: palette.white,
-  fillOpacity: 100,
   border: subtleBorder,
   cornerRadius,
 };
 
-export const imageBase: ImageTokens = { padding: 0 };
+export const imageBase: ImageTokens = {};
 
 export const highlightTheme = HIGHLIGHT_THEME.GITHUB_DARK;

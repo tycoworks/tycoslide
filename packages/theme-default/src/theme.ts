@@ -20,7 +20,6 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
     palette,
     accents,
     TEXT_STYLE,
-    alignLeft,
     alignCenter,
     richTextBase,
     heroBase,
@@ -36,16 +35,15 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
   } = base;
 
   // --- Text tokens ---
-  const bodyText: TextTokens = { ...richTextBase, ...alignLeft, style: TEXT_STYLE.BODY, color: palette.textPrimary };
+  const bodyText: TextTokens = { ...richTextBase, style: TEXT_STYLE.BODY, color: palette.textPrimary };
   const bodyList: ListTokens = { ...bodyText, vAlign: VALIGN.TOP };
-  const cardTitle: TextTokens = { ...richTextBase, ...alignLeft, style: TEXT_STYLE.H4, color: palette.brand };
+  const cardTitle: TextTokens = { ...richTextBase, style: TEXT_STYLE.H4, color: palette.brand };
   const cardDescription: TextTokens = {
     ...richTextBase,
-    ...alignLeft,
     style: TEXT_STYLE.SMALL,
     color: palette.textSecondary,
   };
-  const quoteText: TextTokens = { ...richTextBase, ...alignLeft, style: TEXT_STYLE.H2, color: palette.textPrimary };
+  const quoteText: TextTokens = { ...richTextBase, style: TEXT_STYLE.H2, color: palette.textPrimary };
   const mutedCaption: TextTokens = {
     ...richTextBase,
     ...alignCenter,
@@ -64,14 +62,14 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
   const labelH4: LabelTokens = { ...labelBase, style: TEXT_STYLE.H4 };
 
   // --- Functional labels ---
-  const labelEyebrow: LabelTokens = { ...alignLeft, style: TEXT_STYLE.EYEBROW, color: palette.brand };
-  const labelMutedSmall: LabelTokens = { ...alignLeft, style: TEXT_STYLE.SMALL, color: palette.textSecondary };
-  const labelFooter: LabelTokens = { ...alignLeft, style: TEXT_STYLE.FOOTER, color: palette.textSecondary };
+  const labelEyebrow: LabelTokens = { style: TEXT_STYLE.EYEBROW, color: palette.brand };
+  const labelMutedSmall: LabelTokens = { style: TEXT_STYLE.SMALL, color: palette.textSecondary };
+  const labelFooter: LabelTokens = { style: TEXT_STYLE.FOOTER, color: palette.textSecondary };
 
   // --- Accent labels ---
-  const labelSectionHeading: LabelTokens = { ...alignCenter, style: TEXT_STYLE.H2, color: palette.white };
-  const labelStatValue: LabelTokens = { ...alignCenter, style: TEXT_STYLE.H1, color: palette.brand };
-  const labelStatLabel: LabelTokens = { ...alignCenter, style: TEXT_STYLE.H3, color: palette.textSecondary };
+  const labelSectionHeading: LabelTokens = { hAlign: HALIGN.CENTER, style: TEXT_STYLE.H2, color: palette.white };
+  const labelStatValue: LabelTokens = { hAlign: HALIGN.CENTER, style: TEXT_STYLE.H1, color: palette.brand };
+  const labelStatLabel: LabelTokens = { hAlign: HALIGN.CENTER, style: TEXT_STYLE.H3, color: palette.textSecondary };
 
   // --- Component tokens ---
   const cardBase = {
@@ -112,7 +110,6 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
     accents: accents,
     background: {
       fill: palette.white,
-      fillOpacity: 100,
       border: subtleBorder,
       cornerRadius: cornerRadiusLarge,
       shadow,
@@ -126,7 +123,6 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
     padding: padding,
     background: {
       fill: palette.textPrimary,
-      fillOpacity: 100,
       cornerRadius,
       shadow,
     },
@@ -147,7 +143,6 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
   const testimonialSlotTokens = {
     background: {
       fill: palette.surface,
-      fillOpacity: 100,
       border: subtleBorder,
       cornerRadius,
     },
@@ -231,7 +226,7 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
 
 function buildPresentationFormat(base: typeof Base, config: FormatConfig): ThemeFormat {
   const { spacing, spacingTight, padding, margin, footerHeight, unit } = config;
-  const { palette, TEXT_STYLE, alignLeft, subtleBorder, shadow, cardBackground, imageBase } = base;
+  const { palette, TEXT_STYLE, subtleBorder, shadow, cardBackground, imageBase } = base;
 
   const t = buildSharedTokens(base, config);
 
@@ -375,7 +370,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
             vAlign: VALIGN.MIDDLE,
             items: { ...t.bodyText, style: TEXT_STYLE.H4, color: palette.textPrimary },
             divider: subtleBorder,
-            itemNumber: { ...alignLeft, style: TEXT_STYLE.H2, color: palette.brandLight },
+            itemNumber: { style: TEXT_STYLE.H2, color: palette.brandLight },
             itemVAlign: VALIGN.MIDDLE,
             itemSpacing: spacing,
             spacing: spacingTight,
@@ -439,7 +434,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
           default: {
             master: defaultMasterRef,
             ...t.headerTokens,
-            subtitle: { ...alignLeft, style: TEXT_STYLE.BODY, color: palette.textMuted },
+            subtitle: { style: TEXT_STYLE.BODY, color: palette.textMuted },
             label: {
               style: TEXT_STYLE.BODY,
               color: palette.textSecondary,
@@ -449,25 +444,21 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
             },
             rectangle: {
               fill: palette.brand,
-              fillOpacity: 100,
               border: { color: palette.textPrimary, width: 2, dashType: DASH_TYPE.SOLID },
               cornerRadius: 0,
             },
             ellipse: {
               fill: palette.textPrimary,
-              fillOpacity: 100,
               border: { color: palette.brand, width: 2, dashType: DASH_TYPE.DASHED },
               cornerRadius: 0,
             },
             triangle: {
               fill: palette.teal,
-              fillOpacity: 100,
               border: { color: palette.textPrimary, width: 3, dashType: DASH_TYPE.DASHED },
               cornerRadius: 0,
             },
             diamond: {
               fill: palette.border,
-              fillOpacity: 100,
               border: { color: palette.teal, width: 2, dashType: DASH_TYPE.DOTTED },
               cornerRadius: 0,
             },
@@ -528,7 +519,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
 
 function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFormat {
   const { spacing, spacingTight, padding, margin, footerHeight, unit } = config;
-  const { palette, TEXT_STYLE, alignLeft, subtleBorder, cardBackground, imageBase } = base;
+  const { palette, TEXT_STYLE, subtleBorder, cardBackground, imageBase } = base;
 
   const t = buildSharedTokens(base, config);
 
@@ -539,7 +530,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
       background: { color: palette.white },
       margin,
       topBarHeight: unit * 36, // 0.9 inches
-      topBarFill: { fill: palette.textPrimary, fillOpacity: 100, cornerRadius: 0 },
+      topBarFill: { fill: palette.textPrimary, cornerRadius: 0 },
       topBarLogo: assets.tycoslide.logomarkWhite,
       topBarLogoTokens: { padding: 0 },
       topBarLogoHeight: unit * 10, // 0.25 inches
@@ -699,7 +690,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
             vAlign: VALIGN.MIDDLE,
             items: { ...t.bodyText, style: TEXT_STYLE.H4, color: palette.textPrimary },
             divider: subtleBorder,
-            itemNumber: { ...alignLeft, style: TEXT_STYLE.H2, color: palette.brandLight },
+            itemNumber: { style: TEXT_STYLE.H2, color: palette.brandLight },
             itemVAlign: VALIGN.MIDDLE,
             itemSpacing: spacing,
             spacing: spacingTight,

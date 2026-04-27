@@ -115,6 +115,7 @@ export { SlideFormat } from "./presets/slideFormats.js";
 
 // ── Theme ───────────────────────────────────────────────────────────────────
 
+export { DEFAULTS } from "./presets/defaults.js";
 export type { ThemeDefinition, ThemeFormat } from "./theme.js";
 // Multi-format theme definition and resolution
 export { defineTheme, resolveThemeFormat } from "./theme.js";

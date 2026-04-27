@@ -84,7 +84,7 @@ type ImageParams = InferParams<typeof imageParamShape>;
 
 export interface ImageTokens {
   shadow?: Shadow;
-  padding: number;
+  padding?: number;
 }
 
 // ============================================
