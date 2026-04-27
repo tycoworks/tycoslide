@@ -7,7 +7,6 @@ import {
   defineComponent,
   type ImageNode,
   type InferParams,
-  type InferTokens,
   NODE_TYPE,
   param,
   type RenderContext,
@@ -15,7 +14,6 @@ import {
   SIZE,
   SYNTAX,
   schema,
-  token,
 } from "@tycoslide/core";
 import type { Image, RootContent } from "mdast";
 import { Component } from "../presets/names.js";
@@ -84,12 +82,10 @@ const imageParamShape = param.shape({
 
 type ImageParams = InferParams<typeof imageParamShape>;
 
-const imageTokens = token.shape({
-  shadow: token.optional<Shadow>(),
-  padding: token.required<number>(),
-});
-
-export type ImageTokens = InferTokens<typeof imageTokens>;
+export interface ImageTokens {
+  shadow?: Shadow;
+  padding: number;
+}
 
 // ============================================
 // IMAGE COMPONENT
@@ -99,7 +95,6 @@ export const imageComponent = defineComponent({
   name: Component.Image,
   content: schema.string(),
   params: imageParamShape,
-  tokens: imageTokens,
 
   mdast: {
     nodeTypes: [SYNTAX.IMAGE],

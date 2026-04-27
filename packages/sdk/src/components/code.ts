@@ -9,7 +9,6 @@ import {
   getFontForRun,
   HALIGN,
   type InferParams,
-  type InferTokens,
   param,
   type RenderContext,
   SHAPE,
@@ -18,7 +17,6 @@ import {
   schema,
   type TextStyle,
   type TextStyleName,
-  token,
   VALIGN,
 } from "@tycoslide/core";
 import type { Code as MdastCode, RootContent } from "mdast";
@@ -36,15 +34,13 @@ const SUPPORTED_LANGUAGES = new Set<string>(LANGUAGE_VALUES);
 // TOKENS
 // ============================================
 
-const codeTokens = token.shape({
-  textStyle: token.required<TextStyleName>(),
-  theme: token.required<HighlightThemeName>(),
-  padding: token.required<number>(),
-  background: token.required<ShapeTokens>(),
-  image: token.required<ImageTokens>(),
-});
-
-export type CodeTokens = InferTokens<typeof codeTokens>;
+export interface CodeTokens {
+  textStyle: TextStyleName;
+  theme: HighlightThemeName;
+  padding: number;
+  background: ShapeTokens;
+  image: ImageTokens;
+}
 
 const codeParamShape = param.shape({
   language: param.required(schema.string()),
@@ -144,7 +140,6 @@ export const codeComponent = defineComponent({
   name: Component.Code,
   content: schema.string(),
   params: codeParamShape,
-  tokens: codeTokens,
   mdast: {
     nodeTypes: [SYNTAX.CODE],
     compile: (node: RootContent, _source: string): ComponentNode | null => {

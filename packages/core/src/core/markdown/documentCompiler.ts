@@ -171,16 +171,11 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
     delete params[key];
   }
 
-  // 5. Resolve layout tokens (if the layout declares them)
+  // 5. Resolve layout tokens (if the theme provides them for this layout)
   let resolvedTokens: Record<string, unknown> | undefined;
-  if (layout.tokens && Object.keys(layout.tokens).length) {
-    resolvedTokens = resolveVariantTokens(
-      options.theme.layouts?.[layoutName],
-      layoutName,
-      variant,
-      layout.tokens,
-      !layout.slots?.length,
-    );
+  const themeLayoutConfig = options.theme.layouts?.[layoutName];
+  if (themeLayoutConfig) {
+    resolvedTokens = resolveVariantTokens(themeLayoutConfig, layoutName, variant, undefined, !layout.slots?.length);
   }
 
   // 6. Build SLOTS — from ::name:: markers and body content

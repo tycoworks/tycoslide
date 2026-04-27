@@ -15,7 +15,6 @@ import {
   defineComponent,
   extractSource,
   type InferParams,
-  type InferTokens,
   NODE_TYPE,
   param,
   type Shadow,
@@ -24,25 +23,22 @@ import {
   SYNTAX,
   schema,
   type TextNode,
-  token,
 } from "@tycoslide/core";
 import type { ListItem, List as MdastList, RootContent } from "mdast";
 import { Component } from "../presets/names.js";
 import { inlineParse, transformInline } from "./utils/inline.js";
 
-const listTokens = token.shape({
-  color: token.required<string>(),
-  style: token.required<TextStyleName>(),
-  linkColor: token.required<string>(),
-  linkUnderline: token.required<boolean>(),
-  hAlign: token.required<HorizontalAlignment>(),
-  vAlign: token.required<VerticalAlignment>(),
-  accents: token.required<Record<string, string>>(),
-  border: token.optional<Stroke>(),
-  shadow: token.optional<Shadow>(),
-});
-
-export type ListTokens = InferTokens<typeof listTokens>;
+export interface ListTokens {
+  color: string;
+  style: TextStyleName;
+  linkColor: string;
+  linkUnderline: boolean;
+  hAlign: HorizontalAlignment;
+  vAlign: VerticalAlignment;
+  accents: Record<string, string>;
+  border?: Stroke;
+  shadow?: Shadow;
+}
 
 // ============================================
 // TYPES
@@ -136,7 +132,6 @@ export const listComponent = defineComponent({
   content: schema.array(schema.string()),
   params: listParamShape,
   directive: false,
-  tokens: listTokens,
   mdast: {
     nodeTypes: [SYNTAX.LIST],
     compile: (node: RootContent, source: string): ComponentNode | null => {

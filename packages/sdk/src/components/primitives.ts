@@ -10,7 +10,6 @@ import {
   defineComponent,
   type HorizontalAlignment,
   type InferParams,
-  type InferTokens,
   type LineNode,
   NODE_TYPE,
   param,
@@ -23,38 +22,31 @@ import {
   type Stroke,
   schema,
   type TextStyleName,
-  token,
   type VerticalAlignment,
 } from "@tycoslide/core";
 import { Component } from "../presets/names.js";
 
-const lineTokens = token.shape({
-  color: token.required<string>(),
-  width: token.required<number>(),
-  dashType: token.required<DashType>(),
-  shadow: token.optional<Shadow>(),
-});
+export interface LineTokens {
+  color: string;
+  width: number;
+  dashType: DashType;
+  shadow?: Shadow;
+}
 
-export type LineTokens = InferTokens<typeof lineTokens>;
+export interface SlideNumberTokens {
+  style: TextStyleName;
+  color: string;
+  hAlign: HorizontalAlignment;
+  vAlign: VerticalAlignment;
+}
 
-const slideNumberTokens = token.shape({
-  style: token.required<TextStyleName>(),
-  color: token.required<string>(),
-  hAlign: token.required<HorizontalAlignment>(),
-  vAlign: token.required<VerticalAlignment>(),
-});
-
-export type SlideNumberTokens = InferTokens<typeof slideNumberTokens>;
-
-const shapeTokens = token.shape({
-  fill: token.required<string>(),
-  fillOpacity: token.required<number>(),
-  border: token.optional<Stroke>(),
-  cornerRadius: token.required<number>(),
-  shadow: token.optional<Shadow>(),
-});
-
-export type ShapeTokens = InferTokens<typeof shapeTokens>;
+export interface ShapeTokens {
+  fill: string;
+  fillOpacity: number;
+  border?: Stroke;
+  cornerRadius: number;
+  shadow?: Shadow;
+}
 
 // ============================================
 // LINE
@@ -81,7 +73,6 @@ export const lineComponent = defineComponent({
   name: Component.Line,
   directive: false,
   params: lineParamShape,
-  tokens: lineTokens,
   render: renderLine,
 });
 
@@ -111,9 +102,9 @@ function renderShape(
     shape: params.shape,
     fill: {
       color: tokens.fill,
-      opacity: tokens.fillOpacity,
+      opacity: tokens.fillOpacity ?? 100,
     },
-    cornerRadius: tokens.cornerRadius,
+    cornerRadius: tokens.cornerRadius ?? 0,
   };
   if (tokens.border) {
     node.border = tokens.border;
@@ -128,7 +119,6 @@ export const shapeComponent = defineComponent({
   name: Component.Shape,
   directive: false,
   params: shapeParamShape,
-  tokens: shapeTokens,
   render: renderShape,
 });
 
@@ -162,7 +152,6 @@ function renderSlideNumber(
 export const slideNumberComponent = defineComponent({
   name: Component.SlideNumber,
   directive: false,
-  tokens: slideNumberTokens,
   render: renderSlideNumber,
 });
 

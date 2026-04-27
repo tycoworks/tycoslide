@@ -20,12 +20,10 @@ import {
   type ComponentNode,
   component,
   defineComponent,
-  type InferTokens,
   inToPx,
   type RenderContext,
   SHAPE,
   schema,
-  token,
 } from "@tycoslide/core";
 import { Component } from "../presets/names.js";
 import { column, stack } from "./containers.js";
@@ -36,32 +34,30 @@ import { type ShapeTokens, shape } from "./primitives.js";
 // TOKENS
 // ============================================
 
-const mermaidTokens = token.shape({
+export interface MermaidTokens {
   // --- Semantic color scheme ---
-  primary: token.required<string>(), // Default node fill
-  primaryContrast: token.required<string>(), // Default node text color
-  text: token.required<string>(), // All diagram text (labels, titles, edge text)
-  line: token.required<string>(), // Arrow/edge color
-  surface: token.required<string>(), // Secondary/tertiary fills (alt nodes)
-  surfaceBorder: token.required<string>(), // Node and subgraph border color
-  surfaceSubtle: token.required<string>(), // Edge label background
-  group: token.required<string>(), // Subgraph fill (tinted at accentStyle.opacity)
-  groupCornerRadius: token.required<number>(), // Subgraph corner radius (inches)
+  primary: string; // Default node fill
+  primaryContrast: string; // Default node text color
+  text: string; // All diagram text (labels, titles, edge text)
+  line: string; // Arrow/edge color
+  surface: string; // Secondary/tertiary fills (alt nodes)
+  surfaceBorder: string; // Node and subgraph border color
+  surfaceSubtle: string; // Edge label background
+  group: string; // Subgraph fill (tinted at accentStyle.opacity)
+  groupCornerRadius: number; // Subgraph corner radius (inches)
 
   // --- Accent classes (injected classDefs for flowcharts) ---
-  accents: token.required<Record<string, string>>(), // Named accent colors (e.g. { purple: "#7C3AED" })
-  accentStyle: token.required<{ opacity: number; textColor: string }>(), // Fill opacity (0-100) and text color for accent nodes
+  accents: Record<string, string>; // Named accent colors (e.g. { purple: "#7C3AED" })
+  accentStyle: { opacity: number; textColor: string }; // Fill opacity (0-100) and text color for accent nodes
 
   // --- Typography ---
-  textStyle: token.required<TextStyleName>(), // Font style for text measurement
+  textStyle: TextStyleName; // Font style for text measurement
 
   // --- Background (optional, like table) ---
-  background: token.optional<ShapeTokens>(), // Background shape (fill, border, cornerRadius, shadow)
-  backgroundPadding: token.optional<number>(), // Padding between background edge and diagram
-  image: token.required<ImageTokens>(),
-});
-
-export type MermaidTokens = InferTokens<typeof mermaidTokens>;
+  background?: ShapeTokens; // Background shape (fill, border, cornerRadius, shadow)
+  backgroundPadding?: number; // Padding between background edge and diagram
+  image: ImageTokens;
+}
 
 // ============================================
 // VALIDATION
@@ -332,7 +328,6 @@ async function renderMermaid(
 export const mermaidComponent = defineComponent({
   name: Component.Mermaid,
   content: schema.string(),
-  tokens: mermaidTokens,
   render: renderMermaid,
 });
 

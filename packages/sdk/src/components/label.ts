@@ -10,7 +10,6 @@ import {
   component,
   defineComponent,
   extractSource,
-  type InferTokens,
   NODE_TYPE,
   type Shadow,
   SIZE,
@@ -18,7 +17,6 @@ import {
   SYNTAX,
   schema,
   type TextNode,
-  token,
 } from "@tycoslide/core";
 import type { Heading, RootContent } from "mdast";
 import { Component } from "../presets/names.js";
@@ -37,16 +35,14 @@ export type LabelSlotTokens = Record<HeadingDepth, LabelTokens>;
 // TOKENS
 // ============================================
 
-const labelTokens = token.shape({
-  color: token.required<string>(),
-  style: token.required<TextStyleName>(),
-  hAlign: token.required<HorizontalAlignment>(),
-  vAlign: token.required<VerticalAlignment>(),
-  border: token.optional<Stroke>(),
-  shadow: token.optional<Shadow>(),
-});
-
-export type LabelTokens = InferTokens<typeof labelTokens>;
+export interface LabelTokens {
+  color: string;
+  style: TextStyleName;
+  hAlign: HorizontalAlignment;
+  vAlign: VerticalAlignment;
+  border?: Stroke;
+  shadow?: Shadow;
+}
 
 // ============================================
 // RESOLVE TOKENS
@@ -117,7 +113,6 @@ export const labelComponent = defineComponent({
   name: Component.Label,
   content: schema.string(),
   directive: false,
-  tokens: labelTokens,
   resolveTokens: resolveLabelTokens,
   mdast: {
     nodeTypes: [SYNTAX.HEADING],

@@ -7,7 +7,6 @@ import {
   defineComponent,
   type GridStyle,
   type HorizontalAlignment,
-  type InferTokens,
   NODE_TYPE,
   parseMarkdown,
   type RenderContext,
@@ -22,7 +21,6 @@ import {
   type TextContent,
   type TextNode,
   type TextStyleName,
-  token,
   type VerticalAlignment,
 } from "@tycoslide/core";
 import type { Table as MdastTable, RootContent } from "mdast";
@@ -35,30 +33,28 @@ import type { TextTokens } from "./text.js";
 // TABLE TOKENS
 // ============================================
 
-const tableTokens = token.shape({
+export interface TableTokens {
   // Optional header zones (presence = zone enabled)
-  headerRow: token.optional<TableHeaderStyle>(),
-  headerCol: token.optional<TableHeaderStyle>(),
+  headerRow?: TableHeaderStyle;
+  headerCol?: TableHeaderStyle;
   // Data cell zone
-  cellTextStyle: token.required<TextStyleName>(),
-  cellTextColor: token.required<string>(),
-  cellBackground: token.required<string>(),
-  cellBackgroundOpacity: token.required<number>(),
+  cellTextStyle: TextStyleName;
+  cellTextColor: string;
+  cellBackground: string;
+  cellBackgroundOpacity: number;
   // Shared defaults
-  hAlign: token.required<HorizontalAlignment>(),
-  vAlign: token.required<VerticalAlignment>(),
-  border: token.optional<Stroke>(),
-  gridStyle: token.required<GridStyle>(),
-  gridStroke: token.optional<Stroke>(),
-  cellPadding: token.required<number>(),
-  linkColor: token.required<string>(),
-  linkUnderline: token.required<boolean>(),
-  accents: token.required<Record<string, string>>(),
-  background: token.optional<ShapeTokens>(),
-  backgroundPadding: token.optional<number>(),
-});
-
-export type TableTokens = InferTokens<typeof tableTokens>;
+  hAlign: HorizontalAlignment;
+  vAlign: VerticalAlignment;
+  border?: Stroke;
+  gridStyle: GridStyle;
+  gridStroke?: Stroke;
+  cellPadding: number;
+  linkColor: string;
+  linkUnderline: boolean;
+  accents: Record<string, string>;
+  background?: ShapeTokens;
+  backgroundPadding?: number;
+}
 
 // ============================================
 // TABLE COMPONENT
@@ -90,7 +86,6 @@ function parseGfmTable(body: string): string[][] {
 export const tableComponent = defineComponent({
   name: Component.Table,
   content: schema.string().optional(),
-  tokens: tableTokens,
   mdast: {
     nodeTypes: [SYNTAX.TABLE],
     compile: (node: RootContent, source: string): ComponentNode | null => {

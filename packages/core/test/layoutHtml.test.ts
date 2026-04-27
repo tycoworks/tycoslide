@@ -51,7 +51,7 @@ const mockTheme = createMockTheme({
 // ELEMENT NODE BUILDERS
 // ============================================
 
-const bodyStyle = mockTheme.textStyles["body"];
+const bodyStyle = mockTheme.textStyles.body;
 
 /** Plain text node with sensible defaults matching theme tokens */
 function textNode(content: string | NormalizedRun[], opts?: Partial<Omit<TextNode, "type">>): TextNode {
@@ -158,7 +158,7 @@ function slideNumberNode(opts?: Partial<Omit<SlideNumberNode, "type">>): SlideNu
     width: SIZE.HUG,
     height: SIZE.HUG,
     style: "footer",
-    resolvedStyle: mockTheme.textStyles["footer"],
+    resolvedStyle: mockTheme.textStyles.footer,
     color: "#666666",
     hAlign: HALIGN.RIGHT,
     vAlign: VALIGN.MIDDLE,

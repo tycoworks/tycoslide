@@ -57,10 +57,7 @@ describe("defineTheme()", () => {
 
   it("throws when formats is empty (zero formats)", () => {
     const def = makeDefinition({ formats: {} });
-    assert.throws(
-      () => defineTheme(def),
-      /ThemeDefinition must have at least one format/,
-    );
+    assert.throws(() => defineTheme(def), /ThemeDefinition must have at least one format/);
   });
 
   it("validates fonts across all formats — throws when second format has invalid fonts", () => {
@@ -89,10 +86,7 @@ describe("defineTheme()", () => {
       },
     };
 
-    assert.throws(
-      () => defineTheme(def),
-      /Roboto.*not listed in theme\.fonts/,
-    );
+    assert.throws(() => defineTheme(def), /Roboto.*not listed in theme\.fonts/);
   });
 });
 
@@ -104,9 +98,9 @@ describe("resolveThemeFormat()", () => {
     const theme = resolveThemeFormat(def, "presentation");
 
     assert.deepStrictEqual(theme.fonts, def.fonts);
-    assert.deepStrictEqual(theme.slide, def.formats["presentation"].slide);
-    assert.deepStrictEqual(theme.textStyles, def.formats["presentation"].textStyles);
-    assert.deepStrictEqual(theme.layouts, def.formats["presentation"].layouts);
+    assert.deepStrictEqual(theme.slide, def.formats.presentation.slide);
+    assert.deepStrictEqual(theme.textStyles, def.formats.presentation.textStyles);
+    assert.deepStrictEqual(theme.layouts, def.formats.presentation.layouts);
   });
 
   it("undefined format throws with 'No format specified' and lists available names", () => {

@@ -7,23 +7,7 @@ import * as base from "./base.js";
 import { factsheetConfig } from "./formats/factsheet.js";
 import type { FormatConfig } from "./formats/presentation.js";
 import { presentationConfig } from "./formats/presentation.js";
-import {
-  agendaLayout,
-  blankLayout,
-  bodyLayout,
-  cardsLayout,
-  endLayout,
-  linesLayout,
-  quoteLayout,
-  sectionLayout,
-  shapesLayout,
-  statementLayout,
-  statLayout,
-  titleLayout,
-  transformLayout,
-  twoColumnLayout,
-} from "./layouts.js";
-import { defaultMaster, factsheetMaster, MASTER, type MasterRef, minimalMaster } from "./master.js";
+import { MASTER, type MasterRef } from "./master.js";
 
 // ============================================
 // SHARED TOKEN BUILDERS
@@ -254,7 +238,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
   // --- Master refs ---
   const defaultMasterRef: MasterRef = {
     masterName: MASTER.DEFAULT,
-    tokens: defaultMaster.tokenMap({
+    tokens: {
       background: { color: palette.surface },
       margin,
       footerHeight,
@@ -264,23 +248,23 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
       slideNumber: { ...t.labelFooter, hAlign: HALIGN.RIGHT },
       footer: t.labelFooter,
       footerImage: imageBase,
-    }),
+    },
   };
 
   const lightMinimalMaster: MasterRef = {
     masterName: MASTER.MINIMAL,
-    tokens: minimalMaster.tokenMap({
+    tokens: {
       background: { color: palette.surface },
       margin,
-    }),
+    },
   };
 
   const darkMinimalMaster: MasterRef = {
     masterName: MASTER.MINIMAL,
-    tokens: minimalMaster.tokenMap({
+    tokens: {
       background: { color: palette.textPrimary },
       margin,
-    }),
+    },
   };
 
   const bodyBase = {
@@ -310,7 +294,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
     layouts: {
       title: {
         variants: {
-          default: titleLayout.tokenMap({
+          default: {
             title: { ...t.heroTitle, color: palette.textPrimary, style: TEXT_STYLE.TITLE },
             subtitle: { ...t.heroSubtitle, color: palette.textSecondary, style: TEXT_STYLE.H3 },
             master: lightMinimalMaster,
@@ -318,12 +302,12 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
             hAlign: HALIGN.CENTER,
             spacing: spacingTight,
             image: imageBase,
-          }),
+          },
         },
       },
       end: {
         variants: {
-          default: endLayout.tokenMap({
+          default: {
             title: { ...t.heroTitle, style: TEXT_STYLE.TITLE },
             subtitle: t.heroSubtitle,
             master: darkMinimalMaster,
@@ -331,28 +315,28 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
             hAlign: HALIGN.CENTER,
             spacing: spacingTight,
             image: imageBase,
-          }),
+          },
         },
       },
       section: {
         variants: {
-          default: sectionLayout.tokenMap({
+          default: {
             title: t.labelSectionHeading,
             master: darkMinimalMaster,
             vAlign: VALIGN.MIDDLE,
             hAlign: HALIGN.CENTER,
-          }),
+          },
         },
       },
       body: {
         variants: {
-          default: bodyLayout.tokenMap({ ...bodyBase, vAlign: VALIGN.TOP }),
-          centered: bodyLayout.tokenMap({ ...bodyBase, vAlign: VALIGN.MIDDLE }),
+          default: { ...bodyBase, vAlign: VALIGN.TOP },
+          centered: { ...bodyBase, vAlign: VALIGN.MIDDLE },
         },
       },
       stat: {
         variants: {
-          default: statLayout.tokenMap({
+          default: {
             master: defaultMasterRef,
             value: t.labelStatValue,
             label: t.labelStatLabel,
@@ -363,29 +347,29 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
             hAlign: HALIGN.CENTER,
             spacing: spacing,
             padding,
-          }),
+          },
         },
       },
       "two-column": {
         variants: {
-          default: twoColumnLayout.tokenMap({ ...bodyBase, vAlign: VALIGN.MIDDLE }),
+          default: { ...bodyBase, vAlign: VALIGN.MIDDLE },
         },
       },
       statement: {
         variants: {
-          default: statementLayout.tokenMap({
+          default: {
             caption: t.mutedCaption,
             vAlign: VALIGN.MIDDLE,
             hAlign: HALIGN.CENTER,
             spacing: spacing,
             master: lightMinimalMaster,
             body: { ...t.bodyText, style: TEXT_STYLE.H2 },
-          }),
+          },
         },
       },
       agenda: {
         variants: {
-          default: agendaLayout.tokenMap({
+          default: {
             master: defaultMasterRef,
             ...t.headerTokens,
             vAlign: VALIGN.MIDDLE,
@@ -396,36 +380,36 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
             itemSpacing: spacing,
             spacing: spacingTight,
             image: imageBase,
-          }),
+          },
         },
       },
       cards: {
         variants: {
-          default: cardsLayout.tokenMap({
+          default: {
             ...cardsBase,
             card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP, background: cardBackground },
-          }),
-          flat: cardsLayout.tokenMap({ ...cardsBase, card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP } }),
+          },
+          flat: { ...cardsBase, card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP } },
         },
       },
       blank: {
         variants: {
-          default: blankLayout.tokenMap({
+          default: {
             master: lightMinimalMaster,
             ...t.bodySlotTokens,
-          }),
+          },
         },
       },
       quote: {
         variants: {
-          default: quoteLayout.tokenMap({
+          default: {
             quote: t.quoteSlotTokens,
             master: lightMinimalMaster,
             vAlign: VALIGN.MIDDLE,
             hAlign: HALIGN.CENTER,
             spacing,
-          }),
-          dark: quoteLayout.tokenMap({
+          },
+          dark: {
             quote: {
               bar: {
                 color: palette.brandLight,
@@ -447,12 +431,12 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
             vAlign: VALIGN.MIDDLE,
             hAlign: HALIGN.CENTER,
             spacing: spacing,
-          }),
+          },
         },
       },
       shapes: {
         variants: {
-          default: shapesLayout.tokenMap({
+          default: {
             master: defaultMasterRef,
             ...t.headerTokens,
             subtitle: { ...alignLeft, style: TEXT_STYLE.BODY, color: palette.textMuted },
@@ -490,12 +474,12 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
             vAlign: VALIGN.TOP,
             hAlign: HALIGN.CENTER,
             spacing: spacing,
-          }),
+          },
         },
       },
       transform: {
         variants: {
-          default: transformLayout.tokenMap({
+          default: {
             master: defaultMasterRef,
             ...t.headerTokens,
             text: t.cardDescription,
@@ -516,12 +500,12 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
               vAlign: VALIGN.MIDDLE,
               background: { ...cardBackground, shadow },
             },
-          }),
+          },
         },
       },
       lines: {
         variants: {
-          default: linesLayout.tokenMap({
+          default: {
             master: defaultMasterRef,
             ...t.headerTokens,
             label: t.labelMutedSmall,
@@ -531,7 +515,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
             vAlign: VALIGN.TOP,
             hAlign: HALIGN.LEFT,
             spacing: spacing,
-          }),
+          },
         },
       },
     },
@@ -551,7 +535,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
   // Factsheet body slides use the factsheet master (header chrome + slide number).
   const factsheetMasterRef: MasterRef = {
     masterName: MASTER.FACTSHEET,
-    tokens: factsheetMaster.tokenMap({
+    tokens: {
       background: { color: palette.white },
       margin,
       topBarHeight: unit * 36, // 0.9 inches
@@ -571,23 +555,23 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
       footerText: "\u00A9 2026 tycoslide | www.tycoslide.com",
       footerTokens: { ...t.labelFooter, hAlign: HALIGN.LEFT },
       slideNumber: { ...t.labelFooter, hAlign: HALIGN.RIGHT },
-    }),
+    },
   };
 
   const lightMinimalMaster: MasterRef = {
     masterName: MASTER.MINIMAL,
-    tokens: minimalMaster.tokenMap({
+    tokens: {
       background: { color: palette.surface },
       margin,
-    }),
+    },
   };
 
   const darkMinimalMaster: MasterRef = {
     masterName: MASTER.MINIMAL,
-    tokens: minimalMaster.tokenMap({
+    tokens: {
       background: { color: palette.textPrimary },
       margin,
-    }),
+    },
   };
 
   // Factsheet header tokens: H1/24pt title (instead of shared H3/12pt)
@@ -634,7 +618,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
     layouts: {
       title: {
         variants: {
-          default: titleLayout.tokenMap({
+          default: {
             title: { ...t.heroTitle, color: palette.textPrimary, style: TEXT_STYLE.TITLE },
             subtitle: { ...t.heroSubtitle, color: palette.textSecondary, style: TEXT_STYLE.H3 },
             master: lightMinimalMaster,
@@ -642,12 +626,12 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
             hAlign: HALIGN.CENTER,
             spacing: spacingTight,
             image: imageBase,
-          }),
+          },
         },
       },
       end: {
         variants: {
-          default: endLayout.tokenMap({
+          default: {
             title: { ...t.heroTitle, style: TEXT_STYLE.TITLE },
             subtitle: t.heroSubtitle,
             master: darkMinimalMaster,
@@ -655,28 +639,28 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
             hAlign: HALIGN.CENTER,
             spacing: spacingTight,
             image: imageBase,
-          }),
+          },
         },
       },
       section: {
         variants: {
-          default: sectionLayout.tokenMap({
+          default: {
             title: t.labelSectionHeading,
             master: darkMinimalMaster,
             vAlign: VALIGN.MIDDLE,
             hAlign: HALIGN.CENTER,
-          }),
+          },
         },
       },
       body: {
         variants: {
-          default: bodyLayout.tokenMap({ ...bodyBase, vAlign: VALIGN.TOP }),
-          centered: bodyLayout.tokenMap({ ...bodyBase, vAlign: VALIGN.MIDDLE }),
+          default: { ...bodyBase, vAlign: VALIGN.TOP },
+          centered: { ...bodyBase, vAlign: VALIGN.MIDDLE },
         },
       },
       stat: {
         variants: {
-          default: statLayout.tokenMap({
+          default: {
             master: factsheetMasterRef,
             value: t.labelStatValue,
             label: t.labelStatLabel,
@@ -687,29 +671,29 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
             hAlign: HALIGN.CENTER,
             spacing: spacing,
             padding,
-          }),
+          },
         },
       },
       "two-column": {
         variants: {
-          default: twoColumnLayout.tokenMap({ ...bodyBase, vAlign: VALIGN.MIDDLE }),
+          default: { ...bodyBase, vAlign: VALIGN.MIDDLE },
         },
       },
       statement: {
         variants: {
-          default: statementLayout.tokenMap({
+          default: {
             caption: t.mutedCaption,
             vAlign: VALIGN.MIDDLE,
             hAlign: HALIGN.CENTER,
             spacing: spacing,
             master: lightMinimalMaster,
             body: { ...t.bodyText, style: TEXT_STYLE.H2 },
-          }),
+          },
         },
       },
       agenda: {
         variants: {
-          default: agendaLayout.tokenMap({
+          default: {
             master: factsheetMasterRef,
             ...t.headerTokens,
             vAlign: VALIGN.MIDDLE,
@@ -720,36 +704,36 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
             itemSpacing: spacing,
             spacing: spacingTight,
             image: imageBase,
-          }),
+          },
         },
       },
       cards: {
         variants: {
-          default: cardsLayout.tokenMap({
+          default: {
             ...cardsBase,
             card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP, background: cardBackground },
-          }),
-          flat: cardsLayout.tokenMap({ ...cardsBase, card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP } }),
+          },
+          flat: { ...cardsBase, card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP } },
         },
       },
       blank: {
         variants: {
-          default: blankLayout.tokenMap({
+          default: {
             master: lightMinimalMaster,
             ...t.bodySlotTokens,
-          }),
+          },
         },
       },
       quote: {
         variants: {
-          default: quoteLayout.tokenMap({
+          default: {
             quote: t.quoteSlotTokens,
             master: lightMinimalMaster,
             vAlign: VALIGN.MIDDLE,
             hAlign: HALIGN.CENTER,
             spacing,
-          }),
-          dark: quoteLayout.tokenMap({
+          },
+          dark: {
             quote: {
               bar: {
                 color: palette.brandLight,
@@ -771,7 +755,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
             vAlign: VALIGN.MIDDLE,
             hAlign: HALIGN.CENTER,
             spacing: spacing,
-          }),
+          },
         },
       },
     },

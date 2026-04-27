@@ -7,12 +7,10 @@ import {
   defineComponent,
   type HorizontalAlignment,
   type InferParams,
-  type InferTokens,
   param,
   SHAPE,
   SIZE,
   schema,
-  token,
   type VerticalAlignment,
 } from "@tycoslide/core";
 import { Component } from "../presets/names.js";
@@ -26,17 +24,16 @@ import { type TextTokens, text, textComponent } from "./text.js";
 // TOKENS
 // ============================================
 
-const testimonialTokens = token.shape({
-  background: token.optional<ShapeTokens>(),
-  padding: token.required<number>(),
-  spacing: token.required<number>(),
-  hAlign: token.required<HorizontalAlignment>(),
-  vAlign: token.required<VerticalAlignment>(),
-  quote: token.required<TextTokens>(),
-  attribution: token.required<LabelTokens>(),
-  image: token.required<ImageTokens>(),
-});
-export type TestimonialTokens = InferTokens<typeof testimonialTokens>;
+export interface TestimonialTokens {
+  background?: ShapeTokens;
+  padding: number;
+  spacing: number;
+  hAlign: HorizontalAlignment;
+  vAlign: VerticalAlignment;
+  quote: TextTokens;
+  attribution: LabelTokens;
+  image: ImageTokens;
+}
 
 // ============================================
 // PARAMS
@@ -72,8 +69,7 @@ export const testimonialComponent = defineComponent({
   name: Component.Testimonial,
   content: schema.string().optional(),
   params: testimonialParams,
-  tokens: testimonialTokens,
-  render(params, content, _context, tokens) {
+  render(params, content, _context, tokens: TestimonialTokens) {
     const { quote: quoteText, attribution, image: imagePath } = params;
     const actualQuote = quoteText ?? content;
     const {

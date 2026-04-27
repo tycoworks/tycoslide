@@ -16,7 +16,6 @@ import {
   defineComponent,
   type ElementNode,
   extractSource,
-  type InferTokens,
   NODE_TYPE,
   type Shadow,
   SIZE,
@@ -24,26 +23,23 @@ import {
   SYNTAX,
   schema,
   type TextNode,
-  token,
 } from "@tycoslide/core";
 import type { RootContent } from "mdast";
 
 import { Component } from "../presets/names.js";
 import { inlineParse, transformInline } from "./utils/inline.js";
 
-const textTokens = token.shape({
-  color: token.required<string>(),
-  style: token.required<TextStyleName>(),
-  linkColor: token.required<string>(),
-  linkUnderline: token.required<boolean>(),
-  hAlign: token.required<HorizontalAlignment>(),
-  vAlign: token.required<VerticalAlignment>(),
-  accents: token.required<Record<string, string>>(),
-  border: token.optional<Stroke>(),
-  shadow: token.optional<Shadow>(),
-});
-
-export type TextTokens = InferTokens<typeof textTokens>;
+export interface TextTokens {
+  color: string;
+  style: TextStyleName;
+  linkColor: string;
+  linkUnderline: boolean;
+  hAlign: HorizontalAlignment;
+  vAlign: VerticalAlignment;
+  accents: Record<string, string>;
+  border?: Stroke;
+  shadow?: Shadow;
+}
 
 // ============================================
 // RENDER — always rich text (inline markdown)
@@ -108,7 +104,6 @@ export const textComponent = defineComponent({
   name: Component.Text,
   content: schema.string(),
   directive: false,
-  tokens: textTokens,
   mdast: {
     nodeTypes: [SYNTAX.PARAGRAPH],
     compile: (node: RootContent, source: string): ComponentNode | null => {

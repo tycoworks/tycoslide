@@ -6,7 +6,6 @@ import {
   component,
   defineLayout,
   type HorizontalAlignment,
-  type InferTokens,
   param,
   SHAPE,
   SIZE,
@@ -14,7 +13,6 @@ import {
   type SlideNode,
   SPACING_MODE,
   schema,
-  token,
   VALIGN,
   type VerticalAlignment,
 } from "@tycoslide/core";
@@ -78,17 +76,15 @@ export function masteredSlide(master: MasterRef, ...content: SlideNode[]): Slide
 
 // --- title, end ---
 
-export const titleLayoutTokens = token.shape({
-  title: token.required<TextTokens>(),
-  subtitle: token.required<TextTokens>(),
-  master: token.required<MasterRef>(),
-  vAlign: token.required<VerticalAlignment>(),
-  hAlign: token.required<HorizontalAlignment>(),
-  spacing: token.required<number>(),
-  image: token.required<ImageTokens>(),
-});
-
-export type TitleLayoutTokens = InferTokens<typeof titleLayoutTokens>;
+export interface TitleLayoutTokens {
+  title: TextTokens;
+  subtitle: TextTokens;
+  master: MasterRef;
+  vAlign: VerticalAlignment;
+  hAlign: HorizontalAlignment;
+  spacing: number;
+  image: ImageTokens;
+}
 
 // +----------------------------+       +------------------+---------+
 // |                            |       | TITLE            |         |
@@ -103,7 +99,6 @@ export const titleLayout = defineLayout({
     subtitle: param.optional(textComponent.schema),
     image: param.optional(imageComponent.schema),
   },
-  tokens: titleLayoutTokens,
   render: ({ title, subtitle, image: imagePath }, _slots, tokens: TitleLayoutTokens) => {
     const textBlock = column(
       { vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL },
@@ -123,14 +118,12 @@ export const titleLayout = defineLayout({
 
 // --- section ---
 
-export const sectionLayoutTokens = token.shape({
-  title: token.required<LabelTokens>(),
-  master: token.required<MasterRef>(),
-  vAlign: token.required<VerticalAlignment>(),
-  hAlign: token.required<HorizontalAlignment>(),
-});
-
-export type SectionLayoutTokens = InferTokens<typeof sectionLayoutTokens>;
+export interface SectionLayoutTokens {
+  title: LabelTokens;
+  master: MasterRef;
+  vAlign: VerticalAlignment;
+  hAlign: HorizontalAlignment;
+}
 
 // +----------------------------+
 // |                            |
@@ -141,7 +134,6 @@ export const sectionLayout = defineLayout({
   name: "section",
   description: "Section divider with centered title.",
   params: { title: param.required(textComponent.schema) },
-  tokens: sectionLayoutTokens,
   render: ({ title }, _slots, tokens: SectionLayoutTokens) => ({
     masterName: tokens.master.masterName,
     masterTokens: tokens.master.tokens,
@@ -154,19 +146,17 @@ export const sectionLayout = defineLayout({
 
 // --- body ---
 
-export const bodyLayoutTokens = token.shape({
-  master: token.required<MasterRef>(),
-  title: token.required<LabelTokens>(),
-  eyebrow: token.required<LabelTokens>(),
-  text: token.required<TextTokens>(),
-  list: token.required<ListTokens>(),
-  vAlign: token.required<VerticalAlignment>(),
-  hAlign: token.required<HorizontalAlignment>(),
-  spacing: token.required<number>(),
-  headerSpacing: token.required<number>(),
-});
-
-export type BodyLayoutTokens = InferTokens<typeof bodyLayoutTokens>;
+export interface BodyLayoutTokens {
+  master: MasterRef;
+  title: LabelTokens;
+  eyebrow: LabelTokens;
+  text: TextTokens;
+  list: ListTokens;
+  vAlign: VerticalAlignment;
+  hAlign: HorizontalAlignment;
+  spacing: number;
+  headerSpacing: number;
+}
 
 // +----------------------------+
 // | EYEBROW                    |
@@ -186,7 +176,6 @@ export const bodyLayout = defineLayout({
     eyebrow: param.optional(textComponent.schema),
   },
   slots: ["body"],
-  tokens: bodyLayoutTokens,
   render: ({ title, eyebrow }, { body }, tokens: BodyLayoutTokens) =>
     masteredSlide(
       tokens.master,
@@ -200,20 +189,18 @@ export const bodyLayout = defineLayout({
 
 // --- stat ---
 
-export const statLayoutTokens = token.shape({
-  master: token.required<MasterRef>(),
-  value: token.required<LabelTokens>(),
-  label: token.required<LabelTokens>(),
-  caption: token.required<TextTokens>(),
-  background: token.optional<ShapeTokens>(),
-  backgroundWidth: token.optional<number>(),
-  vAlign: token.required<VerticalAlignment>(),
-  hAlign: token.required<HorizontalAlignment>(),
-  spacing: token.required<number>(),
-  padding: token.required<number>(),
-});
-
-export type StatLayoutTokens = InferTokens<typeof statLayoutTokens>;
+export interface StatLayoutTokens {
+  master: MasterRef;
+  value: LabelTokens;
+  label: LabelTokens;
+  caption: TextTokens;
+  background?: ShapeTokens;
+  backgroundWidth?: number;
+  vAlign: VerticalAlignment;
+  hAlign: HorizontalAlignment;
+  spacing: number;
+  padding: number;
+}
 
 // +----------------------------+
 // |                            |
@@ -232,7 +219,6 @@ export const statLayout = defineLayout({
     label: param.required(textComponent.schema),
     caption: param.optional(textComponent.schema),
   },
-  tokens: statLayoutTokens,
   render: ({ value, label: labelText, caption }, _slots, tokens: StatLayoutTokens) => {
     const content = column(
       {
@@ -264,15 +250,13 @@ export const statLayout = defineLayout({
 
 // --- quote ---
 
-export const quoteLayoutTokens = token.shape({
-  quote: token.required<QuoteTokens>(),
-  master: token.required<MasterRef>(),
-  vAlign: token.required<VerticalAlignment>(),
-  hAlign: token.required<HorizontalAlignment>(),
-  spacing: token.required<number>(),
-});
-
-export type QuoteLayoutTokens = InferTokens<typeof quoteLayoutTokens>;
+export interface QuoteLayoutTokens {
+  quote: QuoteTokens;
+  master: MasterRef;
+  vAlign: VerticalAlignment;
+  hAlign: HorizontalAlignment;
+  spacing: number;
+}
 
 // +----------------------------+
 // |                            |
@@ -289,7 +273,6 @@ export const quoteLayout = defineLayout({
     quote: param.required(textComponent.schema),
     attribution: param.optional(textComponent.schema),
   },
-  tokens: quoteLayoutTokens,
   render: ({ quote: quoteText, attribution }, _slots, tokens: QuoteLayoutTokens) => ({
     masterName: tokens.master.masterName,
     masterTokens: tokens.master.tokens,
@@ -318,7 +301,6 @@ export const endLayout = defineLayout({
     title: param.required(textComponent.schema),
     subtitle: param.optional(textComponent.schema),
   },
-  tokens: titleLayoutTokens,
   render: ({ title, subtitle }, _slots, tokens: TitleLayoutTokens) => ({
     masterName: tokens.master.masterName,
     masterTokens: tokens.master.tokens,
@@ -337,18 +319,15 @@ export const endLayout = defineLayout({
 // |       (raw content)        |
 // |                            |
 // +----------------------------+
-export const blankLayoutTokens = token.shape({
-  master: token.required<MasterRef>(),
-});
-
-export type BlankLayoutTokens = InferTokens<typeof blankLayoutTokens>;
+export interface BlankLayoutTokens {
+  master: MasterRef;
+}
 
 export const blankLayout = defineLayout({
   name: "blank",
   description: "No chrome. Full canvas for custom content.",
   params: {},
   slots: ["body"],
-  tokens: blankLayoutTokens,
   render: (_params, { body }, tokens: BlankLayoutTokens) => ({
     masterName: tokens.master.masterName,
     masterTokens: tokens.master.tokens,
@@ -358,19 +337,17 @@ export const blankLayout = defineLayout({
 
 // --- two-column ---
 
-export const twoColumnLayoutTokens = token.shape({
-  master: token.required<MasterRef>(),
-  title: token.required<LabelTokens>(),
-  eyebrow: token.required<LabelTokens>(),
-  text: token.required<TextTokens>(),
-  list: token.required<ListTokens>(),
-  vAlign: token.required<VerticalAlignment>(),
-  hAlign: token.required<HorizontalAlignment>(),
-  spacing: token.required<number>(),
-  headerSpacing: token.required<number>(),
-});
-
-export type TwoColumnLayoutTokens = InferTokens<typeof twoColumnLayoutTokens>;
+export interface TwoColumnLayoutTokens {
+  master: MasterRef;
+  title: LabelTokens;
+  eyebrow: LabelTokens;
+  text: TextTokens;
+  list: ListTokens;
+  vAlign: VerticalAlignment;
+  hAlign: HorizontalAlignment;
+  spacing: number;
+  headerSpacing: number;
+}
 
 // +----------------------------+
 // | EYEBROW                    |
@@ -391,7 +368,6 @@ export const twoColumnLayout = defineLayout({
     eyebrow: param.optional(textComponent.schema),
   },
   slots: ["left", "right"],
-  tokens: twoColumnLayoutTokens,
   render: ({ title, eyebrow }, { left, right }, tokens: TwoColumnLayoutTokens) => {
     const colProps = { vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL };
     return masteredSlide(
@@ -404,16 +380,14 @@ export const twoColumnLayout = defineLayout({
 
 // --- statement ---
 
-export const statementLayoutTokens = token.shape({
-  body: token.required<TextTokens>(),
-  caption: token.required<TextTokens>(),
-  vAlign: token.required<VerticalAlignment>(),
-  hAlign: token.required<HorizontalAlignment>(),
-  spacing: token.required<number>(),
-  master: token.required<MasterRef>(),
-});
-
-export type StatementLayoutTokens = InferTokens<typeof statementLayoutTokens>;
+export interface StatementLayoutTokens {
+  body: TextTokens;
+  caption: TextTokens;
+  vAlign: VerticalAlignment;
+  hAlign: HorizontalAlignment;
+  spacing: number;
+  master: MasterRef;
+}
 
 // +----------------------------+
 // |                            |
@@ -428,7 +402,6 @@ export const statementLayout = defineLayout({
     body: param.required(textComponent.schema),
     caption: param.optional(textComponent.schema),
   },
-  tokens: statementLayoutTokens,
   render: ({ body, caption }, _slots, tokens: StatementLayoutTokens) => ({
     masterName: tokens.master.masterName,
     masterTokens: tokens.master.tokens,
@@ -442,22 +415,20 @@ export const statementLayout = defineLayout({
 
 // --- agenda ---
 
-export const agendaLayoutTokens = token.shape({
-  master: token.required<MasterRef>(),
-  title: token.required<LabelTokens>(),
-  eyebrow: token.required<LabelTokens>(),
-  headerSpacing: token.required<number>(),
-  vAlign: token.required<VerticalAlignment>(),
-  items: token.required<TextTokens>(),
-  divider: token.required<LineTokens>(),
-  itemNumber: token.required<LabelTokens>(),
-  itemVAlign: token.required<VerticalAlignment>(),
-  itemSpacing: token.required<number>(),
-  spacing: token.required<number>(),
-  image: token.required<ImageTokens>(),
-});
-
-export type AgendaLayoutTokens = InferTokens<typeof agendaLayoutTokens>;
+export interface AgendaLayoutTokens {
+  master: MasterRef;
+  title: LabelTokens;
+  eyebrow: LabelTokens;
+  headerSpacing: number;
+  vAlign: VerticalAlignment;
+  items: TextTokens;
+  divider: LineTokens;
+  itemNumber: LabelTokens;
+  itemVAlign: VerticalAlignment;
+  itemSpacing: number;
+  spacing: number;
+  image: ImageTokens;
+}
 
 // +----------------------------+
 // | EYEBROW                    |
@@ -480,7 +451,6 @@ export const agendaLayout = defineLayout({
     items: param.required(schema.array(textComponent.schema)),
     image: param.optional(imageComponent.schema),
   },
-  tokens: agendaLayoutTokens,
   render: ({ title, eyebrow, items, image: imageSrc }, _slots, tokens: AgendaLayoutTokens) => {
     const itemRows = items.flatMap((item, i) => [
       ...(i > 0 ? [line(tokens.divider)] : []),
@@ -506,21 +476,19 @@ export const agendaLayout = defineLayout({
 
 // --- cards ---
 
-export const cardsLayoutTokens = token.shape({
-  master: token.required<MasterRef>(),
-  title: token.required<LabelTokens>(),
-  eyebrow: token.required<LabelTokens>(),
-  headerSpacing: token.required<number>(),
-  intro: token.required<TextTokens>(),
-  caption: token.required<TextTokens>(),
-  card: token.required<CardTokens>(),
-  vAlign: token.required<VerticalAlignment>(),
-  hAlign: token.required<HorizontalAlignment>(),
-  spacing: token.required<number>(),
-  gridSpacing: token.required<number>(),
-});
-
-export type CardsLayoutTokens = InferTokens<typeof cardsLayoutTokens>;
+export interface CardsLayoutTokens {
+  master: MasterRef;
+  title: LabelTokens;
+  eyebrow: LabelTokens;
+  headerSpacing: number;
+  intro: TextTokens;
+  caption: TextTokens;
+  card: CardTokens;
+  vAlign: VerticalAlignment;
+  hAlign: HorizontalAlignment;
+  spacing: number;
+  gridSpacing: number;
+}
 
 // +----------------------------+
 // | EYEBROW                    |
@@ -544,7 +512,6 @@ export const cardsLayout = defineLayout({
     cards: param.required(schema.array(cardComponent.paramsSchema!)),
     caption: param.optional(textComponent.schema),
   },
-  tokens: cardsLayoutTokens,
   render: ({ title, eyebrow, intro, cards: cardItems, caption }, _slots, tokens: CardsLayoutTokens) => {
     const built = cardItems.map((c) =>
       component(Component.Card, c as unknown as Record<string, unknown>, undefined, tokens.card),
@@ -571,23 +538,21 @@ export const cardsLayout = defineLayout({
 
 // --- transform ---
 
-export const transformLayoutTokens = token.shape({
-  master: token.required<MasterRef>(),
-  title: token.required<LabelTokens>(),
-  eyebrow: token.required<LabelTokens>(),
-  text: token.required<TextTokens>(),
-  list: token.required<ListTokens>(),
-  vAlign: token.required<VerticalAlignment>(),
-  hAlign: token.required<HorizontalAlignment>(),
-  overlayVAlign: token.required<VerticalAlignment>(),
-  overlayHAlign: token.required<HorizontalAlignment>(),
-  spacing: token.required<number>(),
-  contentSpacing: token.required<number>(),
-  headerSpacing: token.required<number>(),
-  overlaySize: token.required<number>(),
-});
-
-export type TransformLayoutTokens = InferTokens<typeof transformLayoutTokens>;
+export interface TransformLayoutTokens {
+  master: MasterRef;
+  title: LabelTokens;
+  eyebrow: LabelTokens;
+  text: TextTokens;
+  list: ListTokens;
+  vAlign: VerticalAlignment;
+  hAlign: HorizontalAlignment;
+  overlayVAlign: VerticalAlignment;
+  overlayHAlign: HorizontalAlignment;
+  spacing: number;
+  contentSpacing: number;
+  headerSpacing: number;
+  overlaySize: number;
+}
 
 // +----------------------------+
 // | ::left::     ::right::     |
@@ -601,7 +566,6 @@ export const transformLayout = defineLayout({
     eyebrow: param.optional(textComponent.schema),
   },
   slots: ["left", "right", "overlay"],
-  tokens: transformLayoutTokens,
   render: ({ title, eyebrow }, { left, right, overlay }, tokens: TransformLayoutTokens) => {
     const colProps = {
       vAlign: tokens.vAlign,
@@ -640,23 +604,21 @@ export const transformLayout = defineLayout({
 
 // --- shapes (demo) ---
 
-export const shapesLayoutTokens = token.shape({
-  master: token.required<MasterRef>(),
-  title: token.required<LabelTokens>(),
-  eyebrow: token.required<LabelTokens>(),
-  subtitle: token.optional<LabelTokens>(),
-  headerSpacing: token.required<number>(),
-  label: token.required<LabelTokens>(),
-  rectangle: token.required<ShapeTokens>(),
-  ellipse: token.required<ShapeTokens>(),
-  triangle: token.required<ShapeTokens>(),
-  diamond: token.required<ShapeTokens>(),
-  vAlign: token.required<VerticalAlignment>(),
-  hAlign: token.required<HorizontalAlignment>(),
-  spacing: token.required<number>(),
-});
-
-export type ShapesLayoutTokens = InferTokens<typeof shapesLayoutTokens>;
+export interface ShapesLayoutTokens {
+  master: MasterRef;
+  title: LabelTokens;
+  eyebrow: LabelTokens;
+  subtitle?: LabelTokens;
+  headerSpacing: number;
+  label: LabelTokens;
+  rectangle: ShapeTokens;
+  ellipse: ShapeTokens;
+  triangle: ShapeTokens;
+  diamond: ShapeTokens;
+  vAlign: VerticalAlignment;
+  hAlign: HorizontalAlignment;
+  spacing: number;
+}
 
 // +----------------------------+
 // | eyebrow                    |
@@ -672,7 +634,6 @@ export const shapesLayout = defineLayout({
     eyebrow: param.optional(textComponent.schema),
     subtitle: param.optional(textComponent.schema),
   },
-  tokens: shapesLayoutTokens,
   render: ({ title, eyebrow, subtitle }, _slots, tokens: ShapesLayoutTokens) => {
     const cell = (t: ShapeTokens, s: (typeof SHAPE)[keyof typeof SHAPE], labelText: string) =>
       column(
@@ -701,21 +662,19 @@ export const shapesLayout = defineLayout({
 
 // --- lines (demo) ---
 
-export const linesLayoutTokens = token.shape({
-  master: token.required<MasterRef>(),
-  title: token.required<LabelTokens>(),
-  eyebrow: token.required<LabelTokens>(),
-  headerSpacing: token.required<number>(),
-  label: token.required<LabelTokens>(),
-  solid: token.required<LineTokens>(),
-  dashed: token.required<LineTokens>(),
-  dotted: token.required<LineTokens>(),
-  vAlign: token.required<VerticalAlignment>(),
-  hAlign: token.required<HorizontalAlignment>(),
-  spacing: token.required<number>(),
-});
-
-export type LinesLayoutTokens = InferTokens<typeof linesLayoutTokens>;
+export interface LinesLayoutTokens {
+  master: MasterRef;
+  title: LabelTokens;
+  eyebrow: LabelTokens;
+  headerSpacing: number;
+  label: LabelTokens;
+  solid: LineTokens;
+  dashed: LineTokens;
+  dotted: LineTokens;
+  vAlign: VerticalAlignment;
+  hAlign: HorizontalAlignment;
+  spacing: number;
+}
 
 // +----------------------------+
 // | eyebrow                    |
@@ -731,7 +690,6 @@ export const linesLayout = defineLayout({
     title: param.optional(textComponent.schema),
     eyebrow: param.optional(textComponent.schema),
   },
-  tokens: linesLayoutTokens,
   render: ({ title, eyebrow }, _slots, tokens: LinesLayoutTokens) => {
     const sample = (t: LineTokens, labelText: string) =>
       column({ spacing: 0, height: SIZE.FILL, vAlign: VALIGN.BOTTOM }, label(labelText, tokens.label), line(t));

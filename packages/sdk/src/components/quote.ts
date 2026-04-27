@@ -7,12 +7,10 @@ import {
   defineComponent,
   extractSource,
   type InferParams,
-  type InferTokens,
   param,
   SIZE,
   SYNTAX,
   schema,
-  token,
 } from "@tycoslide/core";
 import type { RootContent } from "mdast";
 import { Component } from "../presets/names.js";
@@ -25,13 +23,12 @@ import { type TextTokens, text, textComponent } from "./text.js";
 // TOKENS
 // ============================================
 
-const quoteTokens = token.shape({
-  bar: token.required<LineTokens>(),
-  spacing: token.required<number>(),
-  quote: token.required<TextTokens>(),
-  attribution: token.required<LabelTokens>(),
-});
-export type QuoteTokens = InferTokens<typeof quoteTokens>;
+export interface QuoteTokens {
+  bar: LineTokens;
+  spacing: number;
+  quote: TextTokens;
+  attribution: LabelTokens;
+}
 
 // ============================================
 // PARAMS
@@ -65,7 +62,6 @@ export const quoteComponent = defineComponent({
   name: Component.Quote,
   content: schema.string().optional(),
   params: quoteParams,
-  tokens: quoteTokens,
   mdast: {
     nodeTypes: [SYNTAX.BLOCKQUOTE],
     compile: (node: RootContent, source: string) => {
@@ -75,7 +71,7 @@ export const quoteComponent = defineComponent({
       return component(Component.Quote, { quote: inner });
     },
   },
-  render(params, content, _context, tokens) {
+  render(params, content, _context, tokens: QuoteTokens) {
     const { quote: quoteText, attribution } = params;
     const actualQuote = quoteText ?? content;
     const { bar: barTokens, spacing, quote: quoteTokens, attribution: attributionTokens } = tokens;

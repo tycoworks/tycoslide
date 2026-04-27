@@ -60,7 +60,6 @@ export const rowComponent = defineComponent({
   name: Component.Row,
   children: true,
   directive: false,
-  tokens: {},
 
   render: (params: RowParams, children: SlideNode[], _context: RenderContext) => ({
     type: NODE_TYPE.CONTAINER,
@@ -98,7 +97,6 @@ export const columnComponent = defineComponent({
   name: Component.Column,
   children: true,
   directive: false,
-  tokens: {},
 
   render: (params: ColumnParams, children: SlideNode[], _context: RenderContext) => ({
     type: NODE_TYPE.CONTAINER,
@@ -131,7 +129,6 @@ export const stackComponent = defineComponent({
   name: Component.Stack,
   children: true,
   directive: false,
-  tokens: {},
 
   render: (params: StackParams, children: SlideNode[]) => ({
     type: NODE_TYPE.STACK,
@@ -174,7 +171,6 @@ export const gridComponent = defineComponent({
   name: Component.Grid,
   children: true,
   directive: false,
-  tokens: {},
   render: (params: GridParams, children: SlideNode[]) => {
     const { columns, spacing, height = SIZE.FILL } = params;
 

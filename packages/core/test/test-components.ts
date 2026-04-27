@@ -11,7 +11,6 @@ import type { Heading, Table as MdastTable, RootContent } from "mdast";
 import { type ComponentNode, component, NODE_TYPE } from "../src/core/model/nodes.js";
 import { param, schema } from "../src/core/model/param.js";
 import { extractSource, SYNTAX } from "../src/core/model/syntax.js";
-import { token } from "../src/core/model/token.js";
 import { DIRECTION, HALIGN, SIZE, VALIGN } from "../src/core/model/types.js";
 import type { RenderContext } from "../src/core/rendering/registry.js";
 import { defineComponent } from "../src/core/rendering/registry.js";
@@ -40,14 +39,6 @@ export const textComponent = defineComponent({
     hAlign: param.optional(schema.string()),
     vAlign: param.optional(schema.string()),
     content: param.optional(schema.string()),
-  },
-  tokens: {
-    color: token.required<any>(),
-    style: token.required<any>(),
-    linkColor: token.required<any>(),
-    linkUnderline: token.required<any>(),
-    hAlign: token.required<any>(),
-    vAlign: token.required<any>(),
   },
   mdast: {
     nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.LIST],
@@ -87,7 +78,6 @@ export const rowComponent = defineComponent({
   name: C.Row,
   children: true,
   directive: false,
-  tokens: {},
   render: (params: any, children: any[]): any => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.ROW,
@@ -109,7 +99,6 @@ export const columnComponent = defineComponent({
   name: C.Column,
   children: true,
   directive: false,
-  tokens: {},
   render: (params: any, children: any[]): any => ({
     type: NODE_TYPE.CONTAINER,
     direction: DIRECTION.COLUMN,
@@ -133,16 +122,6 @@ export const cardComponent = defineComponent({
     title: param.optional(schema.string()),
     description: param.optional(schema.string()),
   },
-  tokens: {
-    background: token.required<any>(),
-    padding: token.required<any>(),
-    image: token.required<any>(),
-    spacing: token.required<any>(),
-    hAlign: token.required<any>(),
-    vAlign: token.required<any>(),
-    title: token.required<any>(),
-    description: token.required<any>(),
-  },
   render: (params: any, content: any, _ctx: RenderContext, tokens: any): any => {
     // Pass title tokens down to child Text component
     const titleNode = component(C.Text, {}, params.title ?? content ?? "", tokens.title);
@@ -158,12 +137,6 @@ export const labelComponent = defineComponent({
   name: C.Label,
   content: schema.string(),
   directive: false,
-  tokens: {
-    color: token.required<any>(),
-    style: token.required<any>(),
-    hAlign: token.required<any>(),
-    vAlign: token.required<any>(),
-  },
   resolveTokens: (tokens: Record<string, unknown>, params: Record<string, unknown>) => {
     const depth = (params as any).headingDepth;
     if (depth === undefined) return tokens;
@@ -190,33 +163,18 @@ export const labelComponent = defineComponent({
 export const imageComponent = defineComponent({
   name: C.Image,
   content: schema.string(),
-  tokens: {},
   render: () => ({}) as any,
 });
 
 export const lineComponent = defineComponent({
   name: C.Line,
   directive: false,
-  tokens: { color: token.required<any>(), width: token.required<any>(), dashType: token.required<any>() },
   render: () => ({}) as any,
 });
 
 export const tableComponent = defineComponent({
   name: C.Table,
   content: schema.string(),
-  tokens: {
-    border: token.optional<any>(),
-    gridStyle: token.required<any>(),
-    gridStroke: token.optional<any>(),
-    cellBackground: token.required<any>(),
-    cellBackgroundOpacity: token.required<any>(),
-    cellTextStyle: token.required<any>(),
-    cellTextColor: token.required<any>(),
-    cellPadding: token.required<any>(),
-    hAlign: token.required<any>(),
-    vAlign: token.required<any>(),
-    headerRow: token.optional<any>(),
-  },
   mdast: {
     nodeTypes: [SYNTAX.TABLE],
     compile: (node: RootContent, source: string): ComponentNode | null => {

@@ -6,12 +6,10 @@ import {
   defineComponent,
   type HorizontalAlignment,
   type InferParams,
-  type InferTokens,
   param,
   SHAPE,
   SIZE,
   schema,
-  token,
   type VerticalAlignment,
 } from "@tycoslide/core";
 import { Component } from "../presets/names.js";
@@ -24,17 +22,16 @@ import { type TextTokens, text, textComponent } from "./text.js";
 // TOKENS
 // ============================================
 
-const cardTokens = token.shape({
-  background: token.optional<ShapeTokens>(),
-  padding: token.required<number>(),
-  image: token.required<ImageTokens>(),
-  spacing: token.required<number>(),
-  hAlign: token.required<HorizontalAlignment>(),
-  vAlign: token.required<VerticalAlignment>(),
-  title: token.required<TextTokens>(),
-  description: token.required<TextTokens>(),
-});
-export type CardTokens = InferTokens<typeof cardTokens>;
+export interface CardTokens {
+  background?: ShapeTokens;
+  padding: number;
+  image: ImageTokens;
+  spacing: number;
+  hAlign: HorizontalAlignment;
+  vAlign: VerticalAlignment;
+  title: TextTokens;
+  description: TextTokens;
+}
 
 // ============================================
 // PARAMS
@@ -66,8 +63,7 @@ export const cardComponent = defineComponent({
   name: Component.Card,
   content: schema.string().optional(),
   params: cardParams,
-  tokens: cardTokens,
-  render(params, content, _context, tokens) {
+  render(params, content, _context, tokens: CardTokens) {
     const { image: imagePath, title, description } = params;
     const actualDescription = description ?? content;
     const {

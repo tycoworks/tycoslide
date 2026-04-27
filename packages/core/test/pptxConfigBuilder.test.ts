@@ -723,7 +723,7 @@ describe("buildTextConfig()", () => {
 
     const result = builder.buildTextConfig(textNode, pos);
 
-    const h1Style = theme.textStyles["h1"];
+    const h1Style = theme.textStyles.h1;
     assert.strictEqual(result.options.fontSize, h1Style.fontSize);
     assert.strictEqual(result.options.fontFace, h1Style.fontFamily.name);
   });
@@ -946,7 +946,7 @@ describe("buildTextFragments()", () => {
       "#000000",
     );
 
-    const h1FontSize = theme.textStyles["h1"].fontSize;
+    const h1FontSize = theme.textStyles.h1.fontSize;
     assert.strictEqual(fragments[1].options?.paraSpaceBefore, h1FontSize);
   });
 
@@ -1040,7 +1040,7 @@ describe("buildSlideNumberOptions()", () => {
 
     const result = builder.buildSlideNumberOptions(baseSlideNumNode, pos);
 
-    const footerStyle = theme.textStyles["footer"];
+    const footerStyle = theme.textStyles.footer;
     assert.strictEqual(result.fontSize, footerStyle.fontSize);
     assert.strictEqual(result.fontFace, footerStyle.fontFamily.name);
   });
@@ -1054,7 +1054,7 @@ describe("buildSlideNumberOptions()", () => {
 
     const result = builder.buildSlideNumberOptions(slideNumNode, pos);
 
-    const smallStyle = theme.textStyles["small"];
+    const smallStyle = theme.textStyles.small;
     assert.strictEqual(result.fontSize, smallStyle.fontSize);
   });
 
@@ -1128,7 +1128,7 @@ describe("buildSlideNumberOptions()", () => {
 import type { NormalizedRun } from "../src/core/model/types.js";
 
 describe("buildTextFragments with multi-paragraph runs", () => {
-  const fontSize = theme.textStyles["body"].fontSize; // 12
+  const fontSize = theme.textStyles.body.fontSize; // 12
 
   test("two paragraphs produce correct PPTX fragments with paragraph spacing", () => {
     const runs: NormalizedRun[] = [{ text: "First paragraph." }, { text: "Second paragraph.", paragraphBreak: true }];

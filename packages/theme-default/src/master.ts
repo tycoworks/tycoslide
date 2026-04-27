@@ -2,17 +2,7 @@
 // Three masters: default (footer chrome), minimal (margin + background only),
 // factsheet (header chrome + footer slide number).
 
-import {
-  type Background,
-  Bounds,
-  defineMaster,
-  HALIGN,
-  type InferTokens,
-  SHAPE,
-  SIZE,
-  token,
-  VALIGN,
-} from "@tycoslide/core";
+import { type Background, Bounds, defineMaster, HALIGN, SHAPE, SIZE, VALIGN } from "@tycoslide/core";
 import type { ImageTokens, LabelTokens, ShapeTokens, SlideNumberTokens } from "@tycoslide/sdk";
 import { column, image, label, row, shape, slideNumber, stack } from "@tycoslide/sdk";
 
@@ -29,24 +19,21 @@ export const MASTER = { DEFAULT: "default", MINIMAL: "minimal", FACTSHEET: "fact
 // DEFAULT MASTER — footer chrome + margin
 // ============================================
 
-export const defaultMasterTokens = token.shape({
-  background: token.required<Background>(),
-  margin: token.required<number>(),
-  footerHeight: token.required<number>(),
-  footerLogo: token.required<string>(),
-  footerText: token.required<string>(),
-  footerSpacing: token.required<number>(),
-  slideNumber: token.required<SlideNumberTokens>(),
-  footer: token.required<LabelTokens>(),
-  footerImage: token.required<ImageTokens>(),
-});
-
-export type DefaultMasterTokens = InferTokens<typeof defaultMasterTokens>;
+export interface DefaultMasterTokens {
+  background: Background;
+  margin: number;
+  footerHeight: number;
+  footerLogo: string;
+  footerText: string;
+  footerSpacing: number;
+  slideNumber: SlideNumberTokens;
+  footer: LabelTokens;
+  footerImage: ImageTokens;
+}
 
 export const defaultMaster = defineMaster({
   name: MASTER.DEFAULT,
-  tokens: defaultMasterTokens,
-  render: (tokens, slideSize) => {
+  render: (tokens: DefaultMasterTokens, slideSize) => {
     const { background, margin, footerHeight } = tokens;
     const breathing = footerHeight / 2;
     const contentBounds = new Bounds(
@@ -79,17 +66,14 @@ export const defaultMaster = defineMaster({
 // MINIMAL MASTER — margin + background, no chrome
 // ============================================
 
-export const minimalMasterTokens = token.shape({
-  background: token.required<Background>(),
-  margin: token.required<number>(),
-});
-
-export type MinimalMasterTokens = InferTokens<typeof minimalMasterTokens>;
+export interface MinimalMasterTokens {
+  background: Background;
+  margin: number;
+}
 
 export const minimalMaster = defineMaster({
   name: MASTER.MINIMAL,
-  tokens: minimalMasterTokens,
-  render: (tokens, slideSize) => {
+  render: (tokens: MinimalMasterTokens, slideSize) => {
     const { background, margin } = tokens;
     const contentBounds = new Bounds(margin, margin, slideSize.width - margin * 2, slideSize.height - margin * 2);
 
@@ -105,29 +89,26 @@ export const minimalMaster = defineMaster({
 // FACTSHEET MASTER — header chrome + footer slide number
 // ============================================
 
-export const factsheetMasterTokens = token.shape({
-  background: token.required<Background>(),
-  margin: token.required<number>(),
-  topBarHeight: token.required<number>(),
-  topBarFill: token.required<ShapeTokens>(),
-  topBarLogo: token.required<string>(),
-  topBarLogoTokens: token.required<ImageTokens>(),
-  topBarLogoHeight: token.required<number>(),
-  topBarLogoWidth: token.required<number>(),
-  topBarLabel: token.required<string>(),
-  topBarLabelTokens: token.required<LabelTokens>(),
-  footerHeight: token.required<number>(),
-  footerText: token.required<string>(),
-  footerTokens: token.required<LabelTokens>(),
-  slideNumber: token.required<SlideNumberTokens>(),
-});
-
-export type FactsheetMasterTokens = InferTokens<typeof factsheetMasterTokens>;
+export interface FactsheetMasterTokens {
+  background: Background;
+  margin: number;
+  topBarHeight: number;
+  topBarFill: ShapeTokens;
+  topBarLogo: string;
+  topBarLogoTokens: ImageTokens;
+  topBarLogoHeight: number;
+  topBarLogoWidth: number;
+  topBarLabel: string;
+  topBarLabelTokens: LabelTokens;
+  footerHeight: number;
+  footerText: string;
+  footerTokens: LabelTokens;
+  slideNumber: SlideNumberTokens;
+}
 
 export const factsheetMaster = defineMaster({
   name: MASTER.FACTSHEET,
-  tokens: factsheetMasterTokens,
-  render: (tokens, slideSize) => {
+  render: (tokens: FactsheetMasterTokens, slideSize) => {
     const { background, margin, topBarHeight, footerHeight } = tokens;
     const contentWidth = slideSize.width - margin * 2;
 

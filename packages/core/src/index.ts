@@ -104,8 +104,6 @@ export {
   type ScalarComponentDefinition,
   type ScalarShape,
   type SchemaShape,
-  type TypedLayoutDefinition,
-  type TypedMasterDefinition,
   validateThemeFonts,
 } from "./core/rendering/registry.js";
 // Color utilities

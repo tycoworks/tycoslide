@@ -15,7 +15,6 @@ import {
 } from "../model/nodes.js";
 import type { ScalarParam } from "../model/param.js";
 import { RESERVED_FRONTMATTER_KEYS, type SyntaxType } from "../model/syntax.js";
-import { type InferTokens, parseTokenShape, type TokenShape, validateTokens } from "../model/token.js";
 import type { Background, Slide, Theme } from "../model/types.js";
 
 // Re-export ComponentNode — required for declaration emit (defineComponent return type)
@@ -110,8 +109,6 @@ export interface MdastHandler {
 export interface ComponentDefinition<TParams = unknown, TContent = unknown, TTokens = undefined> {
   /** Unique name for this component (e.g., 'card', 'table') */
   name: string;
-  /** Declared token shape — required vs optional descriptors. Empty = no tokens. */
-  tokens: TokenShape;
   /** Optional Zod schema shape for directive attributes. */
   params?: SchemaShape;
   /** Whether this component accepts children (SlideNode[]) as content. */
@@ -213,41 +210,39 @@ function buildDeserializer(
 export function defineComponent<
   TContent extends z.ZodTypeAny,
   TParams extends SchemaShape = Record<string, never>,
-  TShape extends TokenShape = TokenShape,
+  TTokens extends object = Record<string, unknown>,
 >(def: {
   name: string;
   content: TContent;
   params?: TParams;
   directive?: boolean;
-  tokens: TShape;
   mdast?: MdastHandler;
   resolveTokens?: (tokens: Record<string, unknown>, params: Record<string, unknown>) => Record<string, unknown>;
   render: (
     params: z.infer<z.ZodObject<TParams>>,
     content: z.infer<TContent>,
     context: RenderContext,
-    tokens: InferTokens<TShape>,
+    tokens: TTokens,
   ) => SlideNode | Promise<SlideNode>;
-}): ScalarComponentDefinition<TContent, InferTokens<TShape>>;
+}): ScalarComponentDefinition<TContent, TTokens>;
 
 /**
  * Define a container component — accepts children (SlideNode[]) as content.
  * No `.schema` — container components aren't usable in layout params.
  * Pure factory — does NOT register the component.
  */
-export function defineComponent<TParams, TShape extends TokenShape = TokenShape>(def: {
+export function defineComponent<TParams, TTokens extends object = Record<string, unknown>>(def: {
   name: string;
   children: true;
   directive?: boolean;
-  tokens: TShape;
   resolveTokens?: (tokens: Record<string, unknown>, params: Record<string, unknown>) => Record<string, unknown>;
   render: (
     params: TParams,
     children: SlideNode[],
     context: RenderContext,
-    tokens: InferTokens<TShape>,
+    tokens: TTokens,
   ) => SlideNode | Promise<SlideNode>;
-}): ComponentDefinition<TParams, SlideNode[], InferTokens<TShape>>;
+}): ComponentDefinition<TParams, SlideNode[], TTokens>;
 
 /**
  * Define a params-only component (no content, no children).
@@ -256,21 +251,20 @@ export function defineComponent<TParams, TShape extends TokenShape = TokenShape>
  */
 export function defineComponent<
   TParams extends SchemaShape = Record<string, never>,
-  TShape extends TokenShape = TokenShape,
+  TTokens extends object = Record<string, unknown>,
 >(def: {
   name: string;
   params?: TParams;
   directive?: boolean;
-  tokens: TShape;
   mdast?: MdastHandler;
   resolveTokens?: (tokens: Record<string, unknown>, params: Record<string, unknown>) => Record<string, unknown>;
   render: (
     params: z.infer<z.ZodObject<TParams>>,
     content: undefined,
     context: RenderContext,
-    tokens: InferTokens<TShape>,
+    tokens: TTokens,
   ) => SlideNode | Promise<SlideNode>;
-}): ScalarComponentDefinition<z.ZodObject<TParams>, InferTokens<TShape>>;
+}): ScalarComponentDefinition<z.ZodObject<TParams>, TTokens>;
 
 // Implementation
 export function defineComponent(def: any): ComponentDefinition<any, any, any> & { schema?: z.ZodTypeAny } {
@@ -284,7 +278,6 @@ export function defineComponent(def: any): ComponentDefinition<any, any, any> & 
   const result: ComponentDefinition & { schema?: z.ZodTypeAny; paramsSchema?: z.ZodObject<any> } = {
     name: def.name as string,
     render: def.render as ComponentDefinition["render"],
-    tokens: (def.tokens as TokenShape) ?? {},
     params: def.params,
     children: isContainer || undefined,
     mdast,
@@ -386,24 +379,6 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any, any>> {
     if (!def) {
       throw new Error(`Unknown component: '${node.componentName}'. Did you forget to register it?`);
     }
-    const shape = parseTokenShape(def.tokens);
-    if (!shape.allKeys.size) {
-      return def.render(node.params, node.content, context, undefined as any);
-    }
-
-    // Read from node.tokens (set by DSL or slot injection)
-    if (!node.tokens) {
-      if (shape.requiredKeys.length) {
-        throw new Error(
-          `Component '${node.componentName}' requires tokens but none were provided. ` +
-            `Tokens must be passed by the parent (layout or composition component). ` +
-            `Required: [${shape.requiredKeys.join(", ")}]`,
-        );
-      }
-      return def.render(node.params, node.content, context, undefined as any);
-    }
-
-    validateTokens(shape, node.tokens, `Component '${node.componentName}'`);
     return def.render(node.params, node.content, context, node.tokens as any);
   }
 
@@ -459,39 +434,26 @@ export interface LayoutDefinition {
   description: string;
   params: SchemaShape;
   slots?: readonly string[];
-  /** Declared token shape — required vs optional descriptors. Use `{}` for no tokens. */
-  tokens: TokenShape;
   render: (params: any, slots: any, tokens: unknown) => Slide;
 }
 
 /**
- * A layout definition that preserves its token type for compile-time validation.
- * The `.tokenMap()` method validates required tokens at theme construction time.
- * Returns the token map unchanged for storage in Theme.layouts.
- */
-export interface TypedLayoutDefinition<TTokens = unknown> extends LayoutDefinition {
-  /** Validate a token map against this layout's required token shape. Returns the map for theme storage. */
-  tokenMap<T extends TTokens>(map: T): T;
-}
-
-/**
- * Define a layout with type-checked render params.
- * Pure factory — does NOT register the layout.
- * TypeScript enforces: params accepts only ScalarParam fields.
- * Slots (optional) are a string array — each becomes ComponentNode[] in render.
+ * Define a layout. Pure factory — does NOT register the layout.
+ *
+ * Annotate the `tokens` parameter in the render callback with your token interface
+ * (e.g., `tokens: BodyLayoutTokens`) for compile-time type checking.
  */
 export function defineLayout<
-  TParams extends ScalarShape,
+  TTokens extends object = Record<string, unknown>,
+  TParams extends ScalarShape = ScalarShape,
   const TSlots extends readonly string[] = readonly [],
-  TShape extends TokenShape = TokenShape,
 >(def: {
   name: string;
   description: string;
   params: TParams;
   slots?: TSlots;
-  tokens: TShape;
-  render: (params: z.infer<z.ZodObject<TParams>>, slots: SlotsToProps<TSlots>, tokens: InferTokens<TShape>) => Slide;
-}): TypedLayoutDefinition<InferTokens<TShape>> {
+  render: (params: z.infer<z.ZodObject<TParams>>, slots: SlotsToProps<TSlots>, tokens: TTokens) => Slide;
+}): LayoutDefinition {
   for (const key of Object.keys(def.params)) {
     if (RESERVED_FRONTMATTER_KEYS.has(key as any)) {
       throw new Error(
@@ -499,8 +461,7 @@ export function defineLayout<
       );
     }
   }
-  (def as any).tokenMap = (map: any) => map;
-  return def as unknown as TypedLayoutDefinition<any>;
+  return def as unknown as LayoutDefinition;
 }
 
 export const layoutRegistry = new Registry<LayoutDefinition>("Layout");
@@ -515,8 +476,6 @@ export const layoutRegistry = new Registry<LayoutDefinition>("Layout");
  */
 export interface MasterDefinition {
   name: string;
-  /** Declared token shape — required vs optional descriptors. */
-  tokens: TokenShape;
   /** Build master content from resolved tokens and slide dimensions. */
   render: (
     tokens: Record<string, unknown>,
@@ -529,32 +488,23 @@ export interface MasterDefinition {
 }
 
 /**
- * A master definition that preserves its token type for compile-time validation.
- * The `.tokenMap()` identity method validates token maps against the master's required shape.
+ * Define a master slide. Pure factory — does NOT register the master.
+ *
+ * Annotate the `tokens` parameter in the render callback with your token interface
+ * (e.g., `tokens: DefaultMasterTokens`) for compile-time type checking.
  */
-export interface TypedMasterDefinition<TTokens = unknown> extends MasterDefinition {
-  /** Validate a token map against this master's required token shape. Returns the map unchanged. */
-  tokenMap<T extends TTokens>(map: T): T;
-}
-
-/**
- * Define a master slide with type-checked tokens.
- * Pure factory — does NOT register the master.
- */
-export function defineMaster<TShape extends TokenShape = TokenShape>(def: {
+export function defineMaster<TTokens extends object = Record<string, unknown>>(def: {
   name: string;
-  tokens: TShape;
   render: (
-    tokens: InferTokens<TShape>,
+    tokens: TTokens,
     slideSize: { width: number; height: number },
   ) => {
     content: ComponentNode;
     contentBounds: Bounds;
     background: Background;
   };
-}): TypedMasterDefinition<InferTokens<TShape>> {
-  (def as any).tokenMap = (map: any) => map;
-  return def as unknown as TypedMasterDefinition<any>;
+}): MasterDefinition {
+  return def as unknown as MasterDefinition;
 }
 
 export const masterRegistry = new Registry<MasterDefinition>("Master");
