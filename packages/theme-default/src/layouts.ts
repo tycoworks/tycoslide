@@ -41,7 +41,28 @@ import {
   text,
   textComponent,
 } from "@tycoslide/sdk";
-import type { MasterRef } from "./master.js";
+import type { MasterRef } from "./masters.js";
+
+// ============================================
+// LAYOUT NAMES
+// ============================================
+
+export const LAYOUT = {
+  TITLE: "title",
+  END: "end",
+  SECTION: "section",
+  BODY: "body",
+  STAT: "stat",
+  TWO_COLUMN: "two-column",
+  STATEMENT: "statement",
+  AGENDA: "agenda",
+  CARDS: "cards",
+  BLANK: "blank",
+  QUOTE: "quote",
+  SHAPES: "shapes",
+  TRANSFORM: "transform",
+  LINES: "lines",
+} as const;
 
 // ============================================
 // COMPOSITION PRIMITIVES
@@ -92,7 +113,7 @@ export interface TitleLayoutTokens {
 // |          subtitle          |       |                  |         |
 // +----------------------------+       +------------------+---------+
 export const titleLayout = defineLayout({
-  name: "title",
+  name: LAYOUT.TITLE,
   description: "Opening slide with large title and optional subtitle.",
   params: {
     title: param.required(textComponent.schema),
@@ -131,7 +152,7 @@ export interface SectionLayoutTokens {
 // |                            |
 // +----------------------------+
 export const sectionLayout = defineLayout({
-  name: "section",
+  name: LAYOUT.SECTION,
   description: "Section divider with centered title.",
   params: { title: param.required(textComponent.schema) },
   render: ({ title }, _slots, tokens: SectionLayoutTokens) => ({
@@ -169,7 +190,7 @@ export interface BodyLayoutTokens {
 // | footer                     |
 // +----------------------------+
 export const bodyLayout = defineLayout({
-  name: "body",
+  name: LAYOUT.BODY,
   description: "Markdown body with optional title. Default layout.",
   params: {
     title: param.optional(textComponent.schema),
@@ -212,7 +233,7 @@ export interface StatLayoutTokens {
 // | footer                     |
 // +----------------------------+
 export const statLayout = defineLayout({
-  name: "stat",
+  name: LAYOUT.STAT,
   description: "Big number or key metric with label and optional caption.",
   params: {
     value: param.required(textComponent.schema),
@@ -267,7 +288,7 @@ export interface QuoteLayoutTokens {
 // | footer                     |
 // +----------------------------+
 export const quoteLayout = defineLayout({
-  name: "quote",
+  name: LAYOUT.QUOTE,
   description: "Standalone pull quote with left accent bar and optional attribution.",
   params: {
     quote: param.required(textComponent.schema),
@@ -295,7 +316,7 @@ export const quoteLayout = defineLayout({
 // |                            |
 // +----------------------------+
 export const endLayout = defineLayout({
-  name: "end",
+  name: LAYOUT.END,
   description: "Closing slide. Mirrors the title layout.",
   params: {
     title: param.required(textComponent.schema),
@@ -324,7 +345,7 @@ export interface BlankLayoutTokens {
 }
 
 export const blankLayout = defineLayout({
-  name: "blank",
+  name: LAYOUT.BLANK,
   description: "No chrome. Full canvas for custom content.",
   params: {},
   slots: ["body"],
@@ -361,7 +382,7 @@ export interface TwoColumnLayoutTokens {
 // | footer                     |
 // +----------------------------+
 export const twoColumnLayout = defineLayout({
-  name: "two-column",
+  name: LAYOUT.TWO_COLUMN,
   description: "Two equal markdown columns with optional header.",
   params: {
     title: param.optional(textComponent.schema),
@@ -396,7 +417,7 @@ export interface StatementLayoutTokens {
 // |                            |
 // +----------------------------+
 export const statementLayout = defineLayout({
-  name: "statement",
+  name: LAYOUT.STATEMENT,
   description: "Centered body text with optional caption. Use for value props and big statements.",
   params: {
     body: param.required(textComponent.schema),
@@ -443,7 +464,7 @@ export interface AgendaLayoutTokens {
 // | footer                     |
 // +----------------------------+
 export const agendaLayout = defineLayout({
-  name: "agenda",
+  name: LAYOUT.AGENDA,
   description: "Eyebrow, title, and numbered item list with divider lines.",
   params: {
     title: param.required(textComponent.schema),
@@ -503,7 +524,7 @@ export interface CardsLayoutTokens {
 // | footer                     |
 // +----------------------------+
 export const cardsLayout = defineLayout({
-  name: "cards",
+  name: LAYOUT.CARDS,
   description: "Card grid with intro text and optional caption.",
   params: {
     title: param.required(textComponent.schema),
@@ -559,7 +580,7 @@ export interface TransformLayoutTokens {
 // |       ::overlay::          |
 // +----------------------------+
 export const transformLayout = defineLayout({
-  name: "transform",
+  name: LAYOUT.TRANSFORM,
   description: "Side-by-side comparison layout with optional overlay.",
   params: {
     title: param.optional(textComponent.schema),
@@ -627,7 +648,7 @@ export interface ShapesLayoutTokens {
 // |  label   label   label lbl |
 // +----------------------------+
 export const shapesLayout = defineLayout({
-  name: "shapes",
+  name: LAYOUT.SHAPES,
   description: "Demo layout showing all 4 shape primitives with varied properties.",
   params: {
     title: param.optional(textComponent.schema),
@@ -684,7 +705,7 @@ export interface LinesLayoutTokens {
 // |  Dotted ·· ·· ·· ·· ·· ·· |
 // +----------------------------+
 export const linesLayout = defineLayout({
-  name: "lines",
+  name: LAYOUT.LINES,
   description: "Demo layout showing all 3 dash types.",
   params: {
     title: param.optional(textComponent.schema),
@@ -714,19 +735,19 @@ export const linesLayout = defineLayout({
 // ALL LAYOUTS
 // ============================================
 
-export const allLayouts = [
+export const layouts = [
   titleLayout,
+  endLayout,
   sectionLayout,
   bodyLayout,
   statLayout,
-  quoteLayout,
-  endLayout,
-  blankLayout,
   twoColumnLayout,
   statementLayout,
   agendaLayout,
   cardsLayout,
-  transformLayout,
+  blankLayout,
+  quoteLayout,
   shapesLayout,
+  transformLayout,
   linesLayout,
 ];

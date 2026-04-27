@@ -7,7 +7,7 @@ import * as base from "./base.js";
 import { factsheetConfig } from "./formats/factsheet.js";
 import type { FormatConfig } from "./formats/presentation.js";
 import { presentationConfig } from "./formats/presentation.js";
-import { MASTER, type MasterRef } from "./master.js";
+import { MASTER, type MasterRef } from "./masters.js";
 
 // ============================================
 // SHARED TOKEN BUILDERS

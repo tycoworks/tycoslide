@@ -1,7 +1,6 @@
 // tycoslide-theme-default
 // Default theme package for tycoslide
 
-import type { MasterDefinition } from "@tycoslide/core";
 import {
   cardComponent,
   codeComponent,
@@ -21,10 +20,8 @@ import {
   testimonialComponent,
   textComponent,
 } from "@tycoslide/sdk";
-import { allLayouts } from "./layouts.js";
-import { defaultMaster, factsheetMaster, minimalMaster } from "./master.js";
 
-// Explicit component, layout, and master lists — themes declare what they use
+// Explicit component list — themes declare what they use
 export const components = [
   textComponent,
   labelComponent,
@@ -45,13 +42,11 @@ export const components = [
   listComponent,
 ];
 
-export const layouts = allLayouts;
-
-export const masters: MasterDefinition[] = [defaultMaster, minimalMaster, factsheetMaster];
-
 // Re-export component DSL functions for theme consumers
 export * from "@tycoslide/sdk";
 export type { Assets } from "./assets.js";
 export { assets } from "./assets.js";
+export { layouts } from "./layouts.js";
+export { masters } from "./masters.js";
 // Theme and assets
 export { theme } from "./theme.js";

@@ -155,3 +155,9 @@ export const factsheetMaster = defineMaster({
     return { content, contentBounds, background };
   },
 });
+
+// ============================================
+// ALL MASTERS
+// ============================================
+
+export const masters = [defaultMaster, minimalMaster, factsheetMaster];
