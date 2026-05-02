@@ -12,6 +12,7 @@ export interface ThemeFormat {
   slide: { width: number; height: number };
   textStyles: Record<string, TextStyle>;
   layouts: Record<string, { variants: VariantConfig }>;
+  templates?: Record<string, Record<string, unknown>>;  // flat: template name → tokens
 }
 
 /** Multi-format theme declaration. Theme packages export this. */
@@ -52,7 +53,7 @@ export function defineTheme(definition: ThemeDefinition): ThemeDefinition {
  * Resolve a ThemeDefinition to a flat Theme for a specific format.
  * Throws with available format names if the format is missing or unknown.
  */
-export function resolveThemeFormat(definition: ThemeDefinition, format: string | undefined): Theme {
+export function resolveThemeFormat(definition: ThemeDefinition, format: string | undefined): Theme & { templates?: Record<string, Record<string, unknown>> } {
   const available = Object.keys(definition.formats);
 
   if (!format) {
@@ -71,5 +72,6 @@ export function resolveThemeFormat(definition: ThemeDefinition, format: string |
     fonts: definition.fonts,
     textStyles: themeFormat.textStyles,
     layouts: themeFormat.layouts,
+    ...(themeFormat.templates && { templates: themeFormat.templates }),
   };
 }
