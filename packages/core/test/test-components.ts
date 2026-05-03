@@ -1,11 +1,9 @@
 // Test Component Stubs
 // Minimal component definitions for core tests.
-// Used by core tests that need components registered (slotCompiler, schema, registry, etc.)
+// Used by core tests that need components (slotCompiler, schema, tokenResolution, etc.)
 //
-// Text, Card, Row, Column have real render functions (needed by registry.test.ts).
+// Text, Card, Row, Column have real render functions.
 // Image, Table, Line register metadata only — slotCompiler never calls render.
-//
-// Import testComponents array and call componentRegistry.register() in tests.
 
 import type { Heading, Table as MdastTable, RootContent } from "mdast";
 import { type ComponentNode, component, NODE_TYPE } from "../src/core/model/nodes.js";
@@ -28,7 +26,7 @@ export const C = {
 } as const;
 
 // ============================================
-// TEXT (real render — used by registry.test.ts)
+// TEXT (real render)
 // ============================================
 
 export const textComponent = defineComponent({
@@ -71,7 +69,7 @@ export const textComponent = defineComponent({
 });
 
 // ============================================
-// ROW (real render — used by registry.test.ts)
+// ROW (real render)
 // ============================================
 
 export const rowComponent = defineComponent({
@@ -92,7 +90,7 @@ export const rowComponent = defineComponent({
 });
 
 // ============================================
-// COLUMN (real render — used by registry.test.ts via Card)
+// COLUMN (real render)
 // ============================================
 
 export const columnComponent = defineComponent({
@@ -113,7 +111,7 @@ export const columnComponent = defineComponent({
 });
 
 // ============================================
-// CARD (real render — used by registry.test.ts)
+// CARD (real render)
 // ============================================
 
 export const cardComponent = defineComponent({

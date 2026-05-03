@@ -22,7 +22,7 @@ import {
   textComponent,
 } from "../src/index.js";
 import { Component } from "../src/presets/names.js";
-import { DEFAULT_TESTIMONIAL_TOKENS, mockTheme, noopCanvas } from "./mocks.js";
+import { DEFAULT_TESTIMONIAL_TOKENS, mockTheme, noopCanvas, renderTree } from "./mocks.js";
 
 // Register components explicitly
 componentRegistry.register([
@@ -76,7 +76,7 @@ describe("Testimonial Component", () => {
   describe("expansion", () => {
     it("should render to stack with background and content", async () => {
       const node = testimonial({ quote: "Test" }, DEFAULT_TESTIMONIAL_TOKENS);
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n });
 
       // With background (default): stack(shape, column)
       assert.strictEqual(rendered.type, NODE_TYPE.STACK);
@@ -93,14 +93,14 @@ describe("Testimonial Component", () => {
         background: undefined,
       };
       const node = testimonial({ quote: "Test" }, flatTokens);
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n });
 
       assert.strictEqual(rendered.type, NODE_TYPE.CONTAINER);
     });
 
     it("should include quote text as markdown", async () => {
       const node = testimonial({ quote: "A wise saying" }, DEFAULT_TESTIMONIAL_TOKENS);
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n });
 
       assert.strictEqual(rendered.type, NODE_TYPE.STACK);
       if (rendered.type === NODE_TYPE.STACK) {
@@ -120,7 +120,7 @@ describe("Testimonial Component", () => {
 
     it("should include attribution when provided", async () => {
       const node = testimonial({ quote: "Quote text", attribution: "— Jane Smith" }, DEFAULT_TESTIMONIAL_TOKENS);
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n });
 
       assert.strictEqual(rendered.type, NODE_TYPE.STACK);
       if (rendered.type === NODE_TYPE.STACK) {
@@ -143,7 +143,7 @@ describe("Testimonial Component", () => {
 
     it("should include image when provided", async () => {
       const node = testimonial({ quote: "Quote text", image: "logo.png" }, DEFAULT_TESTIMONIAL_TOKENS);
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n });
 
       assert.strictEqual(rendered.type, NODE_TYPE.STACK);
       if (rendered.type === NODE_TYPE.STACK) {
@@ -171,7 +171,7 @@ describe("Testimonial Component", () => {
         },
         DEFAULT_TESTIMONIAL_TOKENS,
       );
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n });
 
       assert.strictEqual(rendered.type, NODE_TYPE.STACK);
       if (rendered.type === NODE_TYPE.STACK) {
@@ -192,7 +192,7 @@ describe("Testimonial Component", () => {
 
     it("should vertically center content", async () => {
       const node = testimonial({ quote: "Test" }, DEFAULT_TESTIMONIAL_TOKENS);
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n });
 
       assert.strictEqual(rendered.type, NODE_TYPE.STACK);
       if (rendered.type === NODE_TYPE.STACK) {
@@ -207,7 +207,7 @@ describe("Testimonial Component", () => {
     it("should throw error when quote text is missing", () => {
       assert.rejects(async () => {
         const node = testimonial({} as any, DEFAULT_TESTIMONIAL_TOKENS);
-        await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+        await renderTree(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n });
       }, /Testimonial component requires/);
     });
   });

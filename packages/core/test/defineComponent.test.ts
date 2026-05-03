@@ -75,7 +75,7 @@ describe("defineComponent", () => {
       const rendered = await comp.render(
         { title: "Hello", count: 1 },
         undefined,
-        { theme: {} as any, canvas: { renderHtml: async () => "" } },
+        { theme: {} as any, canvas: { renderHtml: async () => "" } } as any,
         {} as any,
       );
       assert.strictEqual(rendered.type, NODE_TYPE.TEXT);
@@ -141,7 +141,7 @@ describe("defineComponent", () => {
       const rendered = await comp.render(
         { scale: 2 },
         "hello",
-        { theme: {} as any, canvas: { renderHtml: async () => "" } },
+        { theme: {} as any, canvas: { renderHtml: async () => "" } } as any,
         {} as any,
       );
       assert.strictEqual(rendered.type, NODE_TYPE.TEXT);

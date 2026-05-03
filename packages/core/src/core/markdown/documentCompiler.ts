@@ -10,8 +10,8 @@ import { type ComponentNode, isComponentNode, type SlideNode } from "../model/no
 import { RESERVED_FRONTMATTER_KEYS } from "../model/syntax.js";
 
 import type { Slide, TemplateConfig, Theme } from "../model/types.js";
-import { Presentation } from "../rendering/presentation.js";
-import { componentRegistry, type LayoutDefinition, layoutRegistry } from "../rendering/registry.js";
+import { createPresentation, type Presentation } from "../rendering/presentation.js";
+import type { ComponentDefinition, LayoutDefinition, MasterDefinition } from "../rendering/registry.js";
 import { parseSlideDocument, type RawSlide } from "./slideParser.js";
 import { compileSlot } from "./slotCompiler.js";
 
@@ -46,14 +46,17 @@ export interface CompileOptions {
   theme: Theme;
   /** Nested assets object for resolving `$dot.path` references in frontmatter. */
   assets?: Record<string, unknown>;
+  /** Layout definitions (looked up by template name). */
+  layouts: LayoutDefinition[];
+  /** Component definitions (for resolveTokens hooks). */
+  components: ComponentDefinition<any, any, any>[];
+  /** Master definitions (passed to Presentation). */
+  masters: MasterDefinition[];
 }
 
 // ============================================
 // VALIDATION
 // ============================================
-
-/** Zod schema for a single slot: string → SlideNode[] via compileSlot. */
-const slotSchema = z.string().transform((s): SlideNode[] => compileSlot(s));
 
 /**
  * Validate raw params and slots against a layout's schemas.
@@ -64,6 +67,7 @@ export function validateLayout(
   layout: LayoutDefinition,
   rawParams: Record<string, unknown>,
   rawSlots: Record<string, unknown>,
+  components: ComponentDefinition<any, any, any>[],
 ): any {
   const paramsResult = z.object(layout.params).strict().safeParse(rawParams);
   if (!paramsResult.success) {
@@ -91,6 +95,7 @@ export function validateLayout(
 
   let slotsData: Record<string, unknown> = {};
   if (layout.slots && layout.slots.length > 0) {
+    const slotSchema = z.string().transform((s): SlideNode[] => compileSlot(s, components));
     const shape: Record<string, z.ZodTypeAny> = {};
     for (const name of layout.slots) {
       shape[name] = slotSchema;
@@ -122,7 +127,12 @@ export function validateLayout(
  */
 export function compileDocument(source: string, options: CompileOptions): Presentation {
   const parsed = parseSlideDocument(source);
-  const presentation = new Presentation(options.theme, options.assets);
+  const presentation = createPresentation({
+    theme: options.theme,
+    assets: options.assets,
+    masters: options.masters,
+    components: options.components,
+  });
 
   for (const raw of parsed.slides) {
     presentation.add(compileSlide(raw, options));
@@ -151,9 +161,9 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
   }
 
   // 2. Look up layout definition
-  const layout = layoutRegistry.get(layoutName);
+  const layout = options.layouts.find((l) => l.name === layoutName);
   if (!layout) {
-    const available = layoutRegistry.getRegisteredNames().join(", ");
+    const available = options.layouts.map((l) => l.name).join(", ");
     throw new Error(`Slide ${raw.index + 1}: unknown template '${layoutName}'. Available: ${available}`);
   }
 
@@ -190,7 +200,7 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
   }
 
   // 6. Validate params and slots
-  const validated = validateLayout(layout, params, slots);
+  const validated = validateLayout(layout, params, slots, options.components);
 
   // 7. Inject tokens into slot-compiled ComponentNodes
   const { layoutTokens } = layoutConfig;
@@ -198,7 +208,7 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
     for (const slotName of layout.slots) {
       const slotNodes = validated.slots[slotName];
       if (Array.isArray(slotNodes)) {
-        injectSlotTokens(slotNodes as SlideNode[], layoutTokens);
+        injectSlotTokens(slotNodes as SlideNode[], layoutTokens, options.components);
       }
     }
   }
@@ -228,7 +238,11 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
  * Components with a resolveTokens hook (e.g., label) can transform
  * the tokens based on params (e.g., selecting by heading depth).
  */
-function injectSlotTokens(nodes: SlideNode[], layoutTokens: Record<string, unknown>): void {
+function injectSlotTokens(
+  nodes: SlideNode[],
+  layoutTokens: Record<string, unknown>,
+  components: ComponentDefinition<any, any, any>[],
+): void {
   for (const node of nodes) {
     if (isComponentNode(node)) {
       const tokenMap = layoutTokens[node.componentName];
@@ -236,7 +250,7 @@ function injectSlotTokens(nodes: SlideNode[], layoutTokens: Record<string, unkno
         let tokens = tokenMap as Record<string, unknown>;
 
         // Run component's resolveTokens hook if registered
-        const def = componentRegistry.get(node.componentName);
+        const def = components.find((c) => c.name === node.componentName);
         if (def?.resolveTokens) {
           tokens = def.resolveTokens(tokens, (node as ComponentNode).params as Record<string, unknown>);
         }

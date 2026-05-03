@@ -3,13 +3,13 @@
 //
 // A slot is a named content region in a layout (e.g. body, left, right).
 // Slots primarily contain :::directives. Consecutive bare MDAST nodes
-// are compiled via registered MDAST handlers on the component registry.
+// are compiled via matching MDAST handlers on the provided components.
 
 import type { Paragraph, Root, RootContent } from "mdast";
 import { extractDirectiveBody, markdownProcessor } from "../../utils/parser.js";
 import type { ComponentNode, SlideNode } from "../model/nodes.js";
 import { type ContainerDirective, SYNTAX } from "../model/syntax.js";
-import { componentRegistry } from "../rendering/registry.js";
+import type { ComponentDefinition } from "../rendering/registry.js";
 
 const THEMATIC_BREAK_ERROR =
   "Horizontal rules (---, ***, ___) are not supported in slide content. " +
@@ -22,12 +22,12 @@ const THEMATIC_BREAK_ERROR =
 /**
  * Compile a slot's markdown content into SlideNode[].
  *
- * - :::directives → dispatched through the component registry
+ * - :::directives → dispatched through the component definitions
  * - Bare MDAST → compiled via registered MDAST handlers
  */
-export function compileSlot(markdownStr: string): SlideNode[] {
+export function compileSlot(markdownStr: string, components: ComponentDefinition<any, any, any>[]): SlideNode[] {
   const tree = markdownProcessor.parse(markdownStr) as Root;
-  return compileChildren(tree.children, markdownStr, "slot");
+  return compileChildren(tree.children, markdownStr, "slot", components);
 }
 
 // ============================================
@@ -41,7 +41,12 @@ export function compileSlot(markdownStr: string): SlideNode[] {
  * - Container directives → dispatched through dispatchDirective (recursive)
  * - Consecutive bare MDAST → grouped and compiled via registered MDAST handlers
  */
-function compileChildren(children: RootContent[], source: string, errorPrefix: string): SlideNode[] {
+function compileChildren(
+  children: RootContent[],
+  source: string,
+  errorPrefix: string,
+  components: ComponentDefinition<any, any, any>[],
+): SlideNode[] {
   const nodes: SlideNode[] = [];
   let bareStart: RootContent | null = null;
   let bareEnd: RootContent | null = null;
@@ -55,7 +60,7 @@ function compileChildren(children: RootContent[], source: string, errorPrefix: s
     }
     const rawSource = source.slice(startOffset, endOffset).trim();
     if (rawSource) {
-      nodes.push(...compileBareMarkdown(rawSource));
+      nodes.push(...compileBareMarkdown(rawSource, components));
     }
     bareStart = null;
     bareEnd = null;
@@ -65,7 +70,7 @@ function compileChildren(children: RootContent[], source: string, errorPrefix: s
     // Container directives → flush bare group, then dispatch
     if (child.type === SYNTAX.CONTAINER_DIRECTIVE) {
       flushBareGroup();
-      nodes.push(dispatchDirective(child as unknown as ContainerDirective, source, errorPrefix));
+      nodes.push(dispatchDirective(child as unknown as ContainerDirective, source, errorPrefix, components));
       continue;
     }
 
@@ -93,14 +98,16 @@ function compileChildren(children: RootContent[], source: string, errorPrefix: s
  *
  * Scalar components (card, image, table, etc.): extract body as raw text string
  * and pass to the component's deserializer.
- *
- * Exported for reuse by compileBareNode which also dispatches nested directives.
  */
-export function dispatchDirective(directive: ContainerDirective, source: string, errorPrefix: string): ComponentNode {
-  const handler = componentRegistry.getDirectiveHandler(directive.name);
+function dispatchDirective(
+  directive: ContainerDirective,
+  source: string,
+  errorPrefix: string,
+  components: ComponentDefinition<any, any, any>[],
+): ComponentNode {
+  const handler = components.find((c) => c.deserialize && c.name === directive.name);
   if (!handler) {
-    const available = componentRegistry
-      .getAll()
+    const available = components
       .filter((d) => d.deserialize)
       .map((d) => d.name)
       .join(", ");
@@ -124,12 +131,12 @@ export function dispatchDirective(directive: ContainerDirective, source: string,
  * Callers insert these directly into their parent container, whose gap
  * (set by the layout with theme access) controls inter-block spacing.
  */
-function compileBareMarkdown(source: string): SlideNode[] {
+function compileBareMarkdown(source: string, components: ComponentDefinition<any, any, any>[]): SlideNode[] {
   const tree = markdownProcessor.parse(source) as Root;
   const nodes: SlideNode[] = [];
 
   for (const child of tree.children) {
-    const compiled = compileBareNode(child, source);
+    const compiled = compileBareNode(child, source, components);
     if (compiled) nodes.push(compiled);
   }
 
@@ -138,12 +145,16 @@ function compileBareMarkdown(source: string): SlideNode[] {
 
 /**
  * Compile a single MDAST block node into a SlideNode.
- * Dispatches to registered MDAST handlers on the component registry.
+ * Dispatches to registered MDAST handlers on the component definitions.
  */
-function compileBareNode(node: RootContent, source: string): SlideNode | null {
+function compileBareNode(
+  node: RootContent,
+  source: string,
+  components: ComponentDefinition<any, any, any>[],
+): SlideNode | null {
   // Container directives → shared dispatch
   if (node.type === SYNTAX.CONTAINER_DIRECTIVE) {
-    return dispatchDirective(node as unknown as ContainerDirective, source, "document");
+    return dispatchDirective(node as unknown as ContainerDirective, source, "document", components);
   }
 
   if (node.type === SYNTAX.THEMATIC_BREAK) {
@@ -160,7 +171,7 @@ function compileBareNode(node: RootContent, source: string): SlideNode | null {
   }
 
   // Dispatch to registered MDAST handler
-  const handler = componentRegistry.getMdastHandler(node.type);
+  const handler = components.find((c) => c.mdast?.nodeTypes.includes(node.type as any));
   if (handler?.mdast) {
     return handler.mdast.compile(node, source);
   }

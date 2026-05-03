@@ -4,15 +4,7 @@
 import type { RootContent } from "mdast";
 import { z } from "zod";
 import type { Bounds } from "../model/bounds.js";
-import {
-  type ComponentNode,
-  component,
-  type ElementNode,
-  isComponentNode,
-  isLayoutNode,
-  type LayoutNode,
-  type SlideNode,
-} from "../model/nodes.js";
+import { type ComponentNode, component, type ElementNode, type SlideNode } from "../model/nodes.js";
 import type { ScalarParam } from "../model/param.js";
 import { RESERVED_FRONTMATTER_KEYS, type SyntaxType } from "../model/syntax.js";
 import type { Background, Theme } from "../model/types.js";
@@ -89,6 +81,8 @@ export interface RenderContext {
   theme: Theme;
   assets?: Record<string, unknown>;
   canvas: Canvas;
+  /** Recursively render a component tree to primitives. Components call this for nested content. */
+  renderTree: (node: SlideNode) => Promise<ElementNode>;
 }
 
 /**
@@ -350,61 +344,6 @@ class ComponentRegistry extends Registry<ComponentDefinition<any, any, any>> {
       if (def.mdast?.nodeTypes.includes(nodeType as SyntaxType)) return def;
     }
     return undefined;
-  }
-
-  /**
-   * Find a component that supports :::name directive invocation.
-   * Returns the definition if it has a deserializer.
-   */
-  getDirectiveHandler(name: string): ComponentDefinition | undefined {
-    const def = this.get(name);
-    if (def?.deserialize) {
-      return def;
-    }
-    return undefined;
-  }
-
-  /**
-   * Render a single component node to its primitive representation.
-   *
-   * Tokens are read from node.tokens, which is set by:
-   * - DSL component() helper (e.g., text(body, tokens))
-   * - Slot injection from parent layouts/components
-   *
-   * Token completeness is validated here, AFTER slot injection has already run.
-   * @throws Error if the component is not registered or tokens are incomplete
-   */
-  async render(node: ComponentNode, context: RenderContext): Promise<SlideNode> {
-    const def = this.get(node.componentName);
-    if (!def) {
-      throw new Error(`Unknown component: '${node.componentName}'. Did you forget to register it?`);
-    }
-    return def.render(node.params, node.content, context, node.tokens as any);
-  }
-
-  /**
-   * Recursively render all components in a node tree.
-   * Primitives pass through unchanged; components are rendered and their
-   * results are recursively processed (in case they contain more components).
-   */
-  async renderTree(node: SlideNode, context: RenderContext): Promise<ElementNode> {
-    if (isComponentNode(node)) {
-      const rendered = await this.render(node, context);
-      return this.renderTree(rendered, context);
-    }
-
-    // After the ComponentNode guard above, node is either a leaf ElementNode
-    // or a layout node whose children may still contain ComponentNodes.
-    if (isLayoutNode(node as ElementNode)) {
-      const layout = node as LayoutNode;
-      return {
-        ...layout,
-        children: await Promise.all(layout.children.map((c) => this.renderTree(c, context))),
-      } as LayoutNode;
-    }
-
-    // Leaf node (text, image, line, shape, slideNumber, table) — no children to resolve
-    return node as ElementNode;
   }
 }
 

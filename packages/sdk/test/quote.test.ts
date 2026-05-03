@@ -21,7 +21,7 @@ import {
   textComponent,
 } from "../src/index.js";
 import { Component } from "../src/presets/names.js";
-import { DEFAULT_QUOTE_TOKENS, mockTheme, noopCanvas } from "./mocks.js";
+import { DEFAULT_QUOTE_TOKENS, mockTheme, noopCanvas, renderTree } from "./mocks.js";
 
 // Register components explicitly
 componentRegistry.register([
@@ -75,7 +75,7 @@ describe("Quote Component (Pull Quote)", () => {
   describe("expansion", () => {
     it("should render to row with line (bar) and content column", async () => {
       const node = quote({ quote: "Test" }, DEFAULT_QUOTE_TOKENS);
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n });
 
       // row(line, column(text))
       assert.strictEqual(rendered.type, NODE_TYPE.CONTAINER);
@@ -90,7 +90,7 @@ describe("Quote Component (Pull Quote)", () => {
 
     it("should apply bar tokens to the line node", async () => {
       const node = quote({ quote: "Test" }, DEFAULT_QUOTE_TOKENS);
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n });
 
       assert.strictEqual(rendered.type, NODE_TYPE.CONTAINER);
       if (rendered.type === NODE_TYPE.CONTAINER) {
@@ -105,7 +105,7 @@ describe("Quote Component (Pull Quote)", () => {
 
     it("should include quote text as RICH content", async () => {
       const node = quote({ quote: "A wise saying" }, DEFAULT_QUOTE_TOKENS);
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n });
 
       assert.strictEqual(rendered.type, NODE_TYPE.CONTAINER);
       if (rendered.type === NODE_TYPE.CONTAINER) {
@@ -125,7 +125,7 @@ describe("Quote Component (Pull Quote)", () => {
 
     it("should include attribution with LEFT alignment when provided", async () => {
       const node = quote({ quote: "Quote text", attribution: "— Jane Smith" }, DEFAULT_QUOTE_TOKENS);
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n });
 
       assert.strictEqual(rendered.type, NODE_TYPE.CONTAINER);
       if (rendered.type === NODE_TYPE.CONTAINER) {
@@ -147,7 +147,7 @@ describe("Quote Component (Pull Quote)", () => {
 
     it("should have only quote text when no attribution", async () => {
       const node = quote({ quote: "Just a quote" }, DEFAULT_QUOTE_TOKENS);
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n });
 
       assert.strictEqual(rendered.type, NODE_TYPE.CONTAINER);
       if (rendered.type === NODE_TYPE.CONTAINER) {
@@ -163,7 +163,7 @@ describe("Quote Component (Pull Quote)", () => {
     it("should throw on missing quote text", () => {
       assert.rejects(async () => {
         const node = quote({} as any, DEFAULT_QUOTE_TOKENS);
-        await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+        await renderTree(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n });
       }, /Quote component requires/);
     });
   });

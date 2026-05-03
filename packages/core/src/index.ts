@@ -85,7 +85,13 @@ export {
   VALIGN,
 } from "./core/model/types.js";
 // Core
-export { Presentation, type SlideLayout, type WriteResult } from "./core/rendering/presentation.js";
+export {
+  createPresentation,
+  Presentation,
+  type PresentationConfig,
+  type SlideLayout,
+  type WriteResult,
+} from "./core/rendering/presentation.js";
 // Component system (for custom component authors)
 export {
   type Canvas,

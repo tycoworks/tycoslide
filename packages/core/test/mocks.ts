@@ -3,7 +3,10 @@
 
 import * as assert from "node:assert";
 import { createRequire } from "node:module";
+import type { ComponentNode, ElementNode, LayoutNode, SlideNode } from "../src/core/model/nodes.js";
+import { isComponentNode, isLayoutNode } from "../src/core/model/nodes.js";
 import type { FontFamily, TextStyle, Theme } from "../src/core/model/types.js";
+import type { ComponentDefinition, RenderContext } from "../src/core/rendering/registry.js";
 
 const require = createRequire(import.meta.url);
 
@@ -75,4 +78,39 @@ export function approx(actual: number, expected: number, msg: string, tolerance 
  */
 export function assertApprox(actual: number, expected: number, tolerance = 0.01): void {
   assert.ok(Math.abs(actual - expected) < tolerance, `expected ~${expected}, got ${actual}`);
+}
+
+// ============================================
+// RENDER HELPERS
+// ============================================
+
+/** Recursively render a component tree using provided component definitions. */
+export async function renderTree(
+  node: SlideNode,
+  components: ComponentDefinition<any, any, any>[],
+  context: RenderContext,
+): Promise<ElementNode> {
+  if (isComponentNode(node)) {
+    const def = components.find((c) => c.name === (node as ComponentNode).componentName);
+    if (!def) {
+      throw new Error(`Unknown component: '${(node as ComponentNode).componentName}'.`);
+    }
+    const rendered = await def.render(
+      (node as ComponentNode).params,
+      (node as ComponentNode).content,
+      context,
+      (node as ComponentNode).tokens as any,
+    );
+    return renderTree(rendered, components, context);
+  }
+
+  if (isLayoutNode(node as ElementNode)) {
+    const layout = node as LayoutNode;
+    return {
+      ...layout,
+      children: await Promise.all(layout.children.map((c) => renderTree(c, components, context))),
+    } as LayoutNode;
+  }
+
+  return node as ElementNode;
 }

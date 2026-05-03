@@ -29,7 +29,7 @@ import {
   textComponent,
 } from "../src/index.js";
 import { Component } from "../src/presets/names.js";
-import { DEFAULT_MERMAID_TOKENS, mockTheme } from "./mocks.js";
+import { DEFAULT_MERMAID_TOKENS, mockTheme, renderComponent } from "./mocks.js";
 
 // Register components explicitly
 componentRegistry.register([
@@ -296,7 +296,7 @@ describe("mermaid expansion", () => {
 
   it("renders to image component via canvas", async () => {
     const m = mermaid("flowchart LR\n  A[Start] --> B[End]", DEFAULT_MERMAID_TOKENS);
-    const rendered = await componentRegistry.render(m, {
+    const rendered = await renderComponent(m, {
       theme: mockTheme(),
       canvas: {
         renderHtml: async (html: string, transparent?: boolean) => {
@@ -305,6 +305,7 @@ describe("mermaid expansion", () => {
           return "mock://mermaid.png";
         },
       },
+      renderTree: async (n: any) => n,
     });
 
     assert.strictEqual(rendered.type, NODE_TYPE.COMPONENT);
@@ -318,9 +319,10 @@ describe("mermaid expansion", () => {
       background: { fill: "#FFFFFF", fillOpacity: 100, cornerRadius: 0.1 },
     };
     const m = mermaid("flowchart LR\n  A --> B", tokens);
-    const rendered = await componentRegistry.render(m, {
+    const rendered = await renderComponent(m, {
       theme: mockTheme(),
       canvas: { renderHtml: async () => "mock://mermaid.png" },
+      renderTree: async (n: any) => n,
     });
 
     assert.strictEqual((rendered as any).componentName, Component.Stack);
@@ -337,9 +339,10 @@ describe("mermaid expansion", () => {
       backgroundPadding: 0.2,
     };
     const m = mermaid("flowchart LR\n  A --> B", tokens);
-    const rendered = await componentRegistry.render(m, {
+    const rendered = await renderComponent(m, {
       theme: mockTheme(),
       canvas: { renderHtml: async () => "mock://mermaid.png" },
+      renderTree: async (n: any) => n,
     });
 
     assert.strictEqual((rendered as any).componentName, Component.Stack);
@@ -351,9 +354,10 @@ describe("mermaid expansion", () => {
 
   it("returns bare image when no background token", async () => {
     const m = mermaid("flowchart LR\n  A --> B", DEFAULT_MERMAID_TOKENS);
-    const rendered = await componentRegistry.render(m, {
+    const rendered = await renderComponent(m, {
       theme: mockTheme(),
       canvas: { renderHtml: async () => "mock://mermaid.png" },
+      renderTree: async (n: any) => n,
     });
 
     assert.strictEqual((rendered as any).componentName, Component.Image);
@@ -366,9 +370,10 @@ describe("mermaid expansion", () => {
       backgroundPadding: 0,
     };
     const m = mermaid("flowchart LR\n  A --> B", tokens);
-    const rendered = await componentRegistry.render(m, {
+    const rendered = await renderComponent(m, {
       theme: mockTheme(),
       canvas: { renderHtml: async () => "mock://mermaid.png" },
+      renderTree: async (n: any) => n,
     });
 
     assert.strictEqual((rendered as any).componentName, Component.Stack);

@@ -20,7 +20,7 @@ import {
   textComponent,
 } from "../src/index.js";
 import { Component } from "../src/presets/names.js";
-import { DEFAULT_CARD_TOKENS, mockTheme, noopCanvas } from "./mocks.js";
+import { DEFAULT_CARD_TOKENS, mockTheme, noopCanvas, renderTree } from "./mocks.js";
 
 // Register components explicitly
 componentRegistry.register([
@@ -72,7 +72,7 @@ describe("Card Component", () => {
   describe("expansion", () => {
     it("should render to stack with background and content", async () => {
       const node = card({ title: "Test" }, DEFAULT_CARD_TOKENS);
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n });
 
       // With background (default): stack(rectangle, column)
       assert.strictEqual(rendered.type, NODE_TYPE.STACK);
@@ -89,14 +89,14 @@ describe("Card Component", () => {
         background: undefined,
       };
       const node = card({ title: "Test" }, flatTokens);
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n });
 
       assert.strictEqual(rendered.type, NODE_TYPE.CONTAINER);
     });
 
     it("should build children from title prop", async () => {
       const node = card({ title: "My Title" }, DEFAULT_CARD_TOKENS);
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n });
 
       assert.strictEqual(rendered.type, NODE_TYPE.STACK);
       if (rendered.type === NODE_TYPE.STACK) {
@@ -122,7 +122,7 @@ describe("Card Component", () => {
         },
         DEFAULT_CARD_TOKENS,
       );
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n });
 
       assert.strictEqual(rendered.type, NODE_TYPE.STACK);
       if (rendered.type === NODE_TYPE.STACK) {
@@ -144,7 +144,7 @@ describe("Card Component", () => {
 
     it("should return empty column when no content", async () => {
       const node = card({}, DEFAULT_CARD_TOKENS);
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n });
 
       assert.strictEqual(rendered.type, NODE_TYPE.STACK);
       if (rendered.type === NODE_TYPE.STACK) {

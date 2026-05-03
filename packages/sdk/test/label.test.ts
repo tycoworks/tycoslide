@@ -26,7 +26,7 @@ import {
   textComponent,
 } from "../src/index.js";
 import { Component } from "../src/presets/names.js";
-import { DEFAULT_LABEL_TOKENS, mockTheme, noopCanvas } from "./mocks.js";
+import { DEFAULT_LABEL_TOKENS, mockTheme, noopCanvas, renderComponent } from "./mocks.js";
 
 // Register components explicitly
 componentRegistry.register([
@@ -209,7 +209,11 @@ describe("Label Component", () => {
         vAlign: VALIGN.MIDDLE,
       };
       const node = label("Section Title", tokens);
-      const rendered = (await componentRegistry.render(node, { theme, canvas: noopCanvas() })) as any;
+      const rendered = (await renderComponent(node, {
+        theme,
+        canvas: noopCanvas(),
+        renderTree: async (n: any) => n,
+      })) as any;
 
       assert.strictEqual(rendered.type, NODE_TYPE.TEXT);
       assert.strictEqual(rendered.style, "h2");
@@ -230,7 +234,11 @@ describe("Label Component", () => {
         vAlign: VALIGN.TOP,
       };
       const node = label("Link test", tokens);
-      const rendered = (await componentRegistry.render(node, { theme, canvas: noopCanvas() })) as any;
+      const rendered = (await renderComponent(node, {
+        theme,
+        canvas: noopCanvas(),
+        renderTree: async (n: any) => n,
+      })) as any;
 
       assert.strictEqual(rendered.linkColor, "#FF0000");
       assert.strictEqual(rendered.linkUnderline, false);
@@ -245,7 +253,7 @@ describe("Label Component", () => {
       };
       const node = label("Bad style", tokens);
       await assert.rejects(
-        () => componentRegistry.render(node, { theme, canvas: noopCanvas() }),
+        () => renderComponent(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n }),
         (err: unknown) => {
           assert.ok(err instanceof Error);
           assert.ok(err.message.includes("nonexistent_style"));
@@ -256,7 +264,11 @@ describe("Label Component", () => {
 
     it("should use DEFAULT_LABEL_TOKENS defaults correctly", async () => {
       const node = label("Default label", DEFAULT_LABEL_TOKENS);
-      const rendered = (await componentRegistry.render(node, { theme, canvas: noopCanvas() })) as any;
+      const rendered = (await renderComponent(node, {
+        theme,
+        canvas: noopCanvas(),
+        renderTree: async (n: any) => n,
+      })) as any;
 
       assert.strictEqual(rendered.type, NODE_TYPE.TEXT);
       assert.strictEqual(rendered.hAlign, HALIGN.LEFT);

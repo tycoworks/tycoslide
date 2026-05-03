@@ -62,7 +62,7 @@ npx tsc --build      # Rebuilds tycoslide (if changed) then the theme
 Markdown + TypeScript DSL
     ↓
 Component tree (ComponentNodes)
-    ↓ registry.render() — resolves theme tokens, renders to primitives
+    ↓ Presentation.renderTree() — resolves tokens, renders to primitives
 Primitive node tree (TextNode, ImageNode, ShapeNode, etc.)
     ↓ measurement.ts / pipeline.ts — generates HTML, measures via Playwright
 Measured + positioned nodes

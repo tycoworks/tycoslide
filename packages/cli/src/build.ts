@@ -47,6 +47,9 @@ export async function build(inputPath: string, options: BuildOptions): Promise<v
   const pres = compileDocument(source, {
     theme: loaded.theme,
     assets: loaded.assets,
+    components: loaded.components,
+    layouts: loaded.layouts,
+    masters: loaded.masters,
   });
 
   const basename = path.basename(resolved, path.extname(resolved));

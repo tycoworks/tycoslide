@@ -2,7 +2,7 @@
 // Tests for compileSlot: slot markdown string → ComponentNode[]
 //
 // compileSlot is the slot compiler:
-// - :::directives → dispatched through registry
+// - :::directives → dispatched through component definitions
 // - Bare MDAST → compiled inline via compileBareMarkdown()
 
 import assert from "node:assert";
@@ -23,14 +23,14 @@ function node(nodes: any[], index: number): any {
 describe("Slot Compiler", () => {
   describe("bare MDAST compilation", () => {
     it("should compile a single paragraph to a text node", () => {
-      const nodes = compileSlot("Hello world");
+      const nodes = compileSlot("Hello world", testComponents);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual((nodes[0] as any).componentName, C.Text);
       assert.strictEqual(node(nodes, 0).content, "Hello world");
     });
 
     it("should return multiple paragraphs as separate text nodes", () => {
-      const nodes = compileSlot("First paragraph.\n\nSecond paragraph.");
+      const nodes = compileSlot("First paragraph.\n\nSecond paragraph.", testComponents);
       assert.strictEqual(nodes.length, 2);
       assert.strictEqual((nodes[0] as any).componentName, C.Text);
       assert.strictEqual((nodes[1] as any).componentName, C.Text);
@@ -38,7 +38,7 @@ describe("Slot Compiler", () => {
 
     it("should return heading + paragraph + list as separate nodes", () => {
       const md = "## Overview\n\nIntro paragraph.\n\n- Point one\n- Point two";
-      const nodes = compileSlot(md);
+      const nodes = compileSlot(md, testComponents);
       assert.strictEqual(nodes.length, 3);
       assert.strictEqual((nodes[0] as any).componentName, C.Label); // heading
       assert.strictEqual((nodes[1] as any).componentName, C.Text); // paragraph
@@ -46,7 +46,7 @@ describe("Slot Compiler", () => {
     });
 
     it("should compile a single heading to a text node with style", () => {
-      const nodes = compileSlot("## Subheading");
+      const nodes = compileSlot("## Subheading", testComponents);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual((nodes[0] as any).componentName, C.Label);
       assert.strictEqual((nodes[0] as any).params?.headingDepth, 2);
@@ -54,13 +54,13 @@ describe("Slot Compiler", () => {
 
     it("should compile a GFM table to a table node", () => {
       const md = "| A | B |\n|---|---|\n| C | D |";
-      const nodes = compileSlot(md);
+      const nodes = compileSlot(md, testComponents);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual((nodes[0] as any).componentName, C.Table);
     });
 
     it("should compile a list to a text component node", () => {
-      const nodes = compileSlot("- First\n- Second\n- Third");
+      const nodes = compileSlot("- First\n- Second\n- Third", testComponents);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual((nodes[0] as any).componentName, C.Text);
     });
@@ -69,7 +69,7 @@ describe("Slot Compiler", () => {
   describe("bare MDAST + directive interleaving", () => {
     it("should split bare MDAST around a directive", () => {
       const md = "Before image.\n\n:::image\npic.png\n:::\n\nAfter image.";
-      const nodes = compileSlot(md);
+      const nodes = compileSlot(md, testComponents);
       assert.strictEqual(nodes.length, 3);
       assert.strictEqual((nodes[0] as any).componentName, C.Text);
       assert.strictEqual((nodes[1] as any).componentName, C.Image);
@@ -78,7 +78,7 @@ describe("Slot Compiler", () => {
 
     it("should handle directive at start with trailing bare MDAST", () => {
       const md = ":::image\npic.png\n:::\n\nAfter image.";
-      const nodes = compileSlot(md);
+      const nodes = compileSlot(md, testComponents);
       assert.strictEqual(nodes.length, 2);
       assert.strictEqual((nodes[0] as any).componentName, C.Image);
       assert.strictEqual((nodes[1] as any).componentName, C.Text);
@@ -86,7 +86,7 @@ describe("Slot Compiler", () => {
 
     it("should handle bare MDAST followed by directive", () => {
       const md = "Some text.\n\n:::card\ntitle: Hello\n:::";
-      const nodes = compileSlot(md);
+      const nodes = compileSlot(md, testComponents);
       assert.strictEqual(nodes.length, 2);
       assert.strictEqual((nodes[0] as any).componentName, C.Text);
       assert.strictEqual((nodes[1] as any).componentName, C.Card);
@@ -95,26 +95,26 @@ describe("Slot Compiler", () => {
 
   describe("empty input and thematic breaks", () => {
     it("should return empty array for empty input", () => {
-      const nodes = compileSlot("");
+      const nodes = compileSlot("", testComponents);
       assert.strictEqual(nodes.length, 0);
     });
 
     it("should throw on thematic breaks in slot content", () => {
       const md = "Before\n\n---\n\nAfter";
-      assert.throws(() => compileSlot(md), /Horizontal rules.*not supported.*line\(\) primitive/);
+      assert.throws(() => compileSlot(md, testComponents), /Horizontal rules.*not supported.*line\(\) primitive/);
     });
   });
 
   describe(":::image directive", () => {
     it("should compile :::image directive to an image() node", () => {
-      const nodes = compileSlot(":::image\n/path/to/image.png\n:::");
+      const nodes = compileSlot(":::image\n/path/to/image.png\n:::", testComponents);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual((nodes[0] as any).componentName, C.Image);
       assert.strictEqual(node(nodes, 0).content, "/path/to/image.png");
     });
 
     it("should compile $-prefixed asset reference in :::image directive", () => {
-      const nodes = compileSlot(":::image\n$illustrations.integrate\n:::");
+      const nodes = compileSlot(":::image\n$illustrations.integrate\n:::", testComponents);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual((nodes[0] as any).componentName, C.Image);
       assert.strictEqual(node(nodes, 0).content, "$illustrations.integrate");
@@ -124,7 +124,7 @@ describe("Slot Compiler", () => {
   describe(":::table directive", () => {
     it("should deserialize :::table with GFM table body", () => {
       const md = ":::table\n| A | B |\n|---|---|\n| C | D |\n:::";
-      const nodes = compileSlot(md);
+      const nodes = compileSlot(md, testComponents);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual((nodes[0] as any).componentName, C.Table);
       // Body contains the raw GFM table text (parsed in render, not deserialize)
@@ -133,7 +133,7 @@ describe("Slot Compiler", () => {
 
     it("should deserialize :::table without attributes as plain table", () => {
       const md = ":::table\n| X | Y |\n|---|---|\n| 1 | 2 |\n:::";
-      const nodes = compileSlot(md);
+      const nodes = compileSlot(md, testComponents);
       assert.strictEqual(nodes.length, 1);
       assert.strictEqual((nodes[0] as any).componentName, C.Table);
       assert.ok(node(nodes, 0).content.includes("| X | Y |"));
@@ -141,29 +141,29 @@ describe("Slot Compiler", () => {
 
     it("should reject headerColumns as unknown directive parameter", () => {
       const md = ':::table{headerColumns="1"}\n| A | B |\n|---|---|\n| C | D |\n:::';
-      assert.throws(() => compileSlot(md), /does not accept parameters/);
+      assert.throws(() => compileSlot(md, testComponents), /does not accept parameters/);
     });
 
     it("should reject unknown directive parameters", () => {
       const md = ':::table{foo="bar"}\n| A | B |\n|---|---|\n| C | D |\n:::';
-      assert.throws(() => compileSlot(md), /does not accept parameters/);
+      assert.throws(() => compileSlot(md, testComponents), /does not accept parameters/);
     });
   });
 
   describe("error cases", () => {
     it("should reject parameters on components that accept none", () => {
       const md = ':::image{foo="bar"}\nphoto.png\n:::';
-      assert.throws(() => compileSlot(md), /does not accept parameters/);
+      assert.throws(() => compileSlot(md, testComponents), /does not accept parameters/);
     });
 
     it("should throw on unknown directive", () => {
       const md = ":::unknown\nsome body\n:::";
-      assert.throws(() => compileSlot(md), /unknown directive ":::unknown"/);
+      assert.throws(() => compileSlot(md, testComponents), /unknown directive ":::unknown"/);
     });
 
     it("should throw on container directives used in markdown", () => {
       const md = '::::row\n:::card{title="A"}\nBody\n:::\n::::';
-      assert.throws(() => compileSlot(md), /unknown directive ":::row"/);
+      assert.throws(() => compileSlot(md, testComponents), /unknown directive ":::row"/);
     });
 
     it("should throw on duplicate MDAST handler registration", () => {

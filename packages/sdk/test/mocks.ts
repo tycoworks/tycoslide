@@ -3,8 +3,25 @@
 
 import * as assert from "node:assert";
 import { createRequire } from "node:module";
-import type { FontFamily, TextStyle, Theme } from "@tycoslide/core";
-import { DASH_TYPE, GRID_STYLE, HALIGN, VALIGN } from "@tycoslide/core";
+import type {
+  ComponentNode,
+  ElementNode,
+  FontFamily,
+  LayoutNode,
+  RenderContext,
+  SlideNode,
+  TextStyle,
+  Theme,
+} from "@tycoslide/core";
+import {
+  componentRegistry,
+  DASH_TYPE,
+  GRID_STYLE,
+  HALIGN,
+  isComponentNode,
+  isLayoutNode,
+  VALIGN,
+} from "@tycoslide/core";
 import type {
   CardTokens,
   CodeTokens,
@@ -257,6 +274,21 @@ export function noopCanvas() {
 }
 
 // ============================================
+// RENDER CONTEXT MOCK
+// ============================================
+
+/** Build a mock RenderContext with no-op canvas and passthrough renderTree. */
+export function mockRenderContext(theme?: Theme) {
+  const t = theme ?? mockTheme();
+  const ctx: any = {
+    theme: t,
+    canvas: noopCanvas(),
+    renderTree: async (node: any) => node,
+  };
+  return ctx;
+}
+
+// ============================================
 // ASSERTION HELPERS
 // ============================================
 
@@ -272,4 +304,44 @@ export function approx(actual: number, expected: number, msg: string, tolerance 
  */
 export function assertApprox(actual: number, expected: number, tolerance = 0.01): void {
   assert.ok(Math.abs(actual - expected) < tolerance, `expected ~${expected}, got ${actual}`);
+}
+
+// ============================================
+// RENDER HELPERS
+// ============================================
+
+/** Render a single component node using registered components. */
+export async function renderComponent(node: ComponentNode, context: RenderContext): Promise<SlideNode> {
+  const def = componentRegistry.get(node.componentName);
+  if (!def) {
+    throw new Error(`Unknown component: '${node.componentName}'. Did you forget to register it?`);
+  }
+  return def.render(node.params, node.content, context, node.tokens as any);
+}
+
+/** Recursively render a component tree to primitives using registered components. */
+export async function renderTree(node: SlideNode, context: RenderContext): Promise<ElementNode> {
+  if (isComponentNode(node)) {
+    const def = componentRegistry.get((node as ComponentNode).componentName);
+    if (!def) {
+      throw new Error(`Unknown component: '${(node as ComponentNode).componentName}'.`);
+    }
+    const rendered = await def.render(
+      (node as ComponentNode).params,
+      (node as ComponentNode).content,
+      context,
+      (node as ComponentNode).tokens as any,
+    );
+    return renderTree(rendered, context);
+  }
+
+  if (isLayoutNode(node as ElementNode)) {
+    const layout = node as LayoutNode;
+    return {
+      ...layout,
+      children: await Promise.all(layout.children.map((c) => renderTree(c, context))),
+    } as LayoutNode;
+  }
+
+  return node as ElementNode;
 }

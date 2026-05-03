@@ -21,7 +21,7 @@ import {
 } from "../src/index.js";
 import { HIGHLIGHT_THEME, HIGHLIGHT_THEME_VALUES, LANGUAGE, LANGUAGE_VALUES } from "../src/presets/highlighting.js";
 import { Component } from "../src/presets/names.js";
-import { DEFAULT_CODE_TOKENS, mockTheme, noopCanvas } from "./mocks.js";
+import { DEFAULT_CODE_TOKENS, mockTheme, noopCanvas, renderComponent } from "./mocks.js";
 
 // Register components explicitly
 componentRegistry.register([
@@ -88,7 +88,7 @@ describe("code expansion", () => {
     const context = { theme, assets: undefined, canvas } as any;
 
     const node = code("SELECT 1", "sql", DEFAULT_CODE_TOKENS);
-    const result = await componentRegistry.render(node, context);
+    const result = await renderComponent(node, context);
 
     assert.strictEqual(result.type, NODE_TYPE.COMPONENT);
     assert.strictEqual(result.componentName, Component.Stack);
@@ -115,7 +115,7 @@ describe("code expansion", () => {
     const context = { theme, assets: undefined, canvas } as any;
 
     const node = code("SELECT 1", "sql", DEFAULT_CODE_TOKENS);
-    await componentRegistry.render(node, context);
+    await renderComponent(node, context);
 
     assert.strictEqual(capturedTransparent, true);
   });
@@ -126,7 +126,7 @@ describe("code expansion", () => {
     const context = { theme, assets: undefined, canvas } as any;
 
     const node = code("   ", "text", DEFAULT_CODE_TOKENS);
-    await assert.rejects(() => componentRegistry.render(node, context), /Code block is empty/);
+    await assert.rejects(() => renderComponent(node, context), /Code block is empty/);
   });
 
   it("HTML passed to render contains the code text", async () => {
@@ -141,7 +141,7 @@ describe("code expansion", () => {
     const context = { theme, assets: undefined, canvas } as any;
 
     const node = code("SELECT * FROM orders", "sql", DEFAULT_CODE_TOKENS);
-    await componentRegistry.render(node, context);
+    await renderComponent(node, context);
 
     assert.ok(capturedHtml.includes("SELECT"), "HTML should contain code text");
   });
@@ -158,7 +158,7 @@ describe("code expansion", () => {
     const context = { theme, assets: undefined, canvas } as any;
 
     const node = code("x = 1", "python", DEFAULT_CODE_TOKENS);
-    await componentRegistry.render(node, context);
+    await renderComponent(node, context);
 
     assert.ok(!capturedHtml.includes("30, 30, 30"), "HTML should not contain background color (now on shape)");
     assert.ok(!capturedHtml.includes("border-radius"), "HTML should not contain border-radius (now on shape)");
@@ -335,7 +335,7 @@ describe("code expansion — additional", () => {
     const context = { theme, assets: undefined, canvas } as any;
 
     const node = code("  \n  SELECT 1  \n  ", "sql", DEFAULT_CODE_TOKENS);
-    await componentRegistry.render(node, context);
+    await renderComponent(node, context);
 
     assert.ok(capturedHtml.includes("SELECT"), "should contain trimmed code");
   });
@@ -351,7 +351,7 @@ describe("code expansion — additional", () => {
       background: { ...DEFAULT_CODE_TOKENS.background, shadow },
     };
     const node = code("SELECT 1", "sql", tokensWithShadow);
-    const result = await componentRegistry.render(node, context);
+    const result = await renderComponent(node, context);
 
     // Stack content[0] is the shape — shadow is in its tokens
     const content = (result as any).content as any[];
@@ -366,7 +366,7 @@ describe("code expansion — additional", () => {
     const context = { theme, assets: undefined, canvas } as any;
 
     const node = code("SELECT 1", "sql", DEFAULT_CODE_TOKENS);
-    const result = await componentRegistry.render(node, context);
+    const result = await renderComponent(node, context);
 
     // Stack content[1] = column, column content[0] = image
     const content = (result as any).content as any[];
@@ -388,7 +388,7 @@ describe("code expansion — additional", () => {
 
     const multiline = 'function hello() {\n  return "world";\n}';
     const node = code(multiline, "javascript", DEFAULT_CODE_TOKENS);
-    const result = await componentRegistry.render(node, context);
+    const result = await renderComponent(node, context);
 
     assert.strictEqual(result.type, NODE_TYPE.COMPONENT);
     assert.ok(capturedHtml.includes("hello"), "HTML should contain function name");

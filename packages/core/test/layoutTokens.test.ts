@@ -4,16 +4,34 @@
 
 import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
+import type { CompileOptions } from "../src/core/markdown/documentCompiler.js";
 import { compileDocument } from "../src/core/markdown/documentCompiler.js";
+import { Bounds } from "../src/core/model/bounds.js";
 import type { SlideNode } from "../src/core/model/nodes.js";
-import { isComponentNode, NODE_TYPE } from "../src/core/model/nodes.js";
+import { component, isComponentNode, NODE_TYPE } from "../src/core/model/nodes.js";
 import { param, schema } from "../src/core/model/param.js";
-import { componentRegistry, defineLayout, layoutRegistry } from "../src/core/rendering/registry.js";
+import type { Theme } from "../src/core/model/types.js";
+import { defineLayout, type LayoutDefinition, type MasterDefinition } from "../src/core/rendering/registry.js";
 import { mockTheme } from "./mocks.js";
 import { C, testComponents } from "./test-components.js";
 
-// Register test components (idempotent — may already be registered by other test files)
-componentRegistry.register(testComponents);
+/** Mock master for tests */
+const mockMaster: MasterDefinition = {
+  name: "default",
+  render: (_tokens, slideSize) => ({
+    content: component("test", {}),
+    contentBounds: new Bounds(0, 0, slideSize.width, slideSize.height),
+    background: { color: "#FFFFFF" },
+  }),
+};
+
+/** All layouts collected for test options */
+const allLayouts: LayoutDefinition[] = [];
+
+/** Build CompileOptions from a theme, using all registered test layouts */
+function opts(theme: Theme): CompileOptions {
+  return { theme, layouts: allLayouts, components: testComponents, masters: [mockMaster] };
+}
 
 // ============================================
 // DOCUMENT COMPILER: TOKEN PASSING
@@ -48,7 +66,7 @@ describe("Document Compiler: Layout Tokens", () => {
     },
   });
 
-  layoutRegistry.register([tokenLayout, tokenNoSlotLayout]);
+  allLayouts.push(tokenLayout, tokenNoSlotLayout);
 
   beforeEach(() => {
     receivedProps = [];
@@ -64,7 +82,7 @@ describe("Document Compiler: Layout Tokens", () => {
     });
 
     const md = `${HEADER}---\ntemplate: tokenSimple\ntitle: Hello\n---`;
-    compileDocument(md, { theme });
+    compileDocument(md, opts(theme));
 
     assert.strictEqual(receivedTokens.length, 1);
     assert.strictEqual(receivedTokens[0].background, "#AAAAAA");
@@ -80,7 +98,7 @@ describe("Document Compiler: Layout Tokens", () => {
     });
 
     const md = `${HEADER}---\ntemplate: tokenSimple\ntitle: Hello\n---`;
-    compileDocument(md, { theme });
+    compileDocument(md, opts(theme));
 
     assert.strictEqual(receivedTokens.length, 1);
     assert.strictEqual(receivedTokens[0].background, "#000000");
@@ -98,7 +116,7 @@ describe("Document Compiler: Layout Tokens", () => {
         return { type: NODE_TYPE.COMPONENT, componentName: "test", params, content: undefined };
       },
     });
-    layoutRegistry.register(noTokenLayout);
+    allLayouts.push(noTokenLayout);
 
     const theme = mockTheme({
       layouts: {
@@ -107,7 +125,7 @@ describe("Document Compiler: Layout Tokens", () => {
     });
 
     const md = `${HEADER}---\ntemplate: noTokenTest\ntitle: Hello\n---`;
-    compileDocument(md, { theme });
+    compileDocument(md, opts(theme));
 
     // layoutTokens is {} which is passed through to layout render
     assert.deepStrictEqual(capturedTokens, {});
@@ -135,7 +153,7 @@ describe("Slot Token Injection", () => {
     },
   });
 
-  layoutRegistry.register(slotTokenLayout);
+  allLayouts.push(slotTokenLayout);
 
   beforeEach(() => {
     receivedProps = [];
@@ -158,7 +176,7 @@ describe("Slot Token Injection", () => {
     });
 
     const md = `${HEADER}---\ntemplate: slotTokenTest\n---\n\nHello world`;
-    compileDocument(md, { theme });
+    compileDocument(md, opts(theme));
 
     assert.strictEqual(receivedProps.length, 1);
     const bodyNodes = receivedProps[0].body;
@@ -203,7 +221,7 @@ describe("Slot Token Injection", () => {
 
     // Use a heading which maps to label component
     const md = `${HEADER}---\ntemplate: slotTokenTest\n---\n\n## Heading`;
-    compileDocument(md, { theme });
+    compileDocument(md, opts(theme));
 
     const bodyNodes = receivedProps[0].body;
     const labelNode = bodyNodes[0];
@@ -225,7 +243,7 @@ describe("Slot Token Injection", () => {
         return { type: NODE_TYPE.COMPONENT, componentName: "test", params, content: undefined };
       },
     });
-    layoutRegistry.register(noSlotTokenLayout);
+    allLayouts.push(noSlotTokenLayout);
 
     const theme = mockTheme({
       layouts: {
@@ -241,7 +259,7 @@ describe("Slot Token Injection", () => {
     });
 
     const md = `${HEADER}---\ntemplate: noSlotTokenTest\ntitle: Hello\n---`;
-    compileDocument(md, { theme });
+    compileDocument(md, opts(theme));
 
     // Props should just be the validated params, no injection
     assert.strictEqual(capturedProps.title, "Hello");

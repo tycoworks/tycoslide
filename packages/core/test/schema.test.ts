@@ -54,26 +54,26 @@ describe("schema", () => {
 
   describe("compileSlot", () => {
     it("compiles markdown to ComponentNode[]", () => {
-      const result = compileSlot("Hello world");
+      const result = compileSlot("Hello world", testComponents);
       assert.ok(Array.isArray(result));
       assert.strictEqual(result.length, 1);
       assert.strictEqual((result[0] as any).componentName, C.Text);
     });
 
     it("compiles mixed content", () => {
-      const result = compileSlot("Some text.\n\n:::image\npic.png\n:::");
+      const result = compileSlot("Some text.\n\n:::image\npic.png\n:::", testComponents);
       assert.strictEqual(result.length, 2);
       assert.strictEqual((result[0] as any).componentName, C.Text);
       assert.strictEqual((result[1] as any).componentName, C.Image);
     });
 
     it("empty string → empty array", () => {
-      const result = compileSlot("");
+      const result = compileSlot("", testComponents);
       assert.strictEqual(result.length, 0);
     });
 
     it("compiles bare MDAST inline to text node", () => {
-      const result = compileSlot("Hello world");
+      const result = compileSlot("Hello world", testComponents);
       assert.strictEqual(result.length, 1);
       assert.strictEqual((result[0] as any).componentName, C.Text);
     });

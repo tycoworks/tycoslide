@@ -11,10 +11,11 @@ import { LayoutPipeline } from "../layout/pipeline.js";
 import type { SlideValidationResult, ValidationResult } from "../layout/validator.js";
 import { LayoutValidationError, LayoutValidator } from "../layout/validator.js";
 import { Bounds } from "../model/bounds.js";
-import type { ElementNode, PositionedNode } from "../model/nodes.js";
+import type { ElementNode, LayoutNode, PositionedNode, SlideNode } from "../model/nodes.js";
+import { isComponentNode, isLayoutNode } from "../model/nodes.js";
 import type { Background, Slide, Theme } from "../model/types.js";
 import { PptxRenderer } from "./pptxRenderer.js";
-import { componentRegistry, masterRegistry, type RenderContext } from "./registry.js";
+import type { ComponentDefinition, MasterDefinition, RenderContext } from "./registry.js";
 
 export type { Slide } from "../model/types.js";
 
@@ -53,10 +54,25 @@ export interface SlideLayout {
 // PRESENTATION CLASS
 // ============================================
 
+/** Configuration for creating a presentation. */
+export interface PresentationConfig {
+  theme: Theme;
+  assets?: Record<string, unknown>;
+  masters: MasterDefinition[];
+  components: ComponentDefinition<any, any, any>[];
+}
+
+/** Create a stateless presentation instance. No global registries needed. */
+export function createPresentation(config: PresentationConfig): Presentation {
+  return new Presentation(config);
+}
+
 export class Presentation {
   private renderer: PptxRenderer;
   private _theme: Theme;
   private _assets?: Record<string, unknown>;
+  private masterDefs: Map<string, MasterDefinition>;
+  private componentDefs: Map<string, ComponentDefinition<any, any, any>>;
   private masters = new Map<string, { contentBounds: Bounds; positioned: PositionedNode; background: Background }>();
   private masterBounds: Bounds;
   private slideCount = 0;
@@ -64,17 +80,43 @@ export class Presentation {
   private masterTokenIds = new Map<Record<string, unknown>, string>();
   private masterTokenCounter = 0;
 
-  constructor(theme: Theme, assets?: Record<string, unknown>) {
-    this._theme = theme;
-    this._assets = assets;
-    this.renderer = new PptxRenderer(theme);
+  constructor(config: PresentationConfig) {
+    this._theme = config.theme;
+    this._assets = config.assets;
+    this.renderer = new PptxRenderer(config.theme);
 
-    const { width, height } = theme.slide;
-    this.masterBounds = new Bounds(width, height); // Full slide — masters position their own content
+    // Build local maps from definition arrays
+    this.masterDefs = new Map(config.masters.map((m) => [m.name, m]));
+    this.componentDefs = new Map(config.components.map((c) => [c.name, c]));
+
+    const { width, height } = config.theme.slide;
+    this.masterBounds = new Bounds(width, height);
   }
 
   get theme(): Theme {
     return this._theme;
+  }
+
+  /** Recursively render a component tree using local component definitions. */
+  private async renderTree(node: SlideNode, context: RenderContext): Promise<ElementNode> {
+    if (isComponentNode(node)) {
+      const def = this.componentDefs.get(node.componentName);
+      if (!def) {
+        throw new Error(`Unknown component: '${node.componentName}'. Did you forget to register it?`);
+      }
+      const rendered = await def.render(node.params, node.content, context, node.tokens as any);
+      return this.renderTree(rendered, context);
+    }
+
+    if (isLayoutNode(node as ElementNode)) {
+      const layout = node as LayoutNode;
+      return {
+        ...layout,
+        children: await Promise.all(layout.children.map((c) => this.renderTree(c, context))),
+      } as LayoutNode;
+    }
+
+    return node as ElementNode;
   }
 
   /** Stable dedup key for master tokens using object identity. */
@@ -148,13 +190,14 @@ export class Presentation {
       // Launch browser — also copies fonts into outputDir for @font-face CSS
       await pipeline.launch(this._theme);
 
-      // Build render context with canvas capability
+      // Build render context with canvas capability and renderTree
       const renderContext: RenderContext = {
         theme: this._theme,
         assets: this._assets,
         canvas: {
           renderHtml: (html, transparent) => pipeline.renderHtmlToImage(html, this._theme, transparent),
         },
+        renderTree: (node) => this.renderTree(node, renderContext),
       };
 
       // Phase 1: Render masters (collect unique master+token identity pairs, render component trees)
@@ -174,12 +217,12 @@ export class Presentation {
         const masterKey = this.getMasterKey(masterName, masterTokens);
 
         if (!this.masters.has(masterKey) && !pendingMasters.has(masterKey)) {
-          const def = masterRegistry.get(masterName);
+          const def = this.masterDefs.get(masterName);
           if (!def) {
             throw new Error(`Unknown master: '${masterName}'. Did you forget to register it?`);
           }
           const { content: rawMasterContent, contentBounds, background } = def.render(masterTokens, { width, height });
-          const masterContent = await componentRegistry.renderTree(rawMasterContent, renderContext);
+          const masterContent = await this.renderTree(rawMasterContent, renderContext);
           pendingMasters.set(masterKey, { content: masterContent, contentBounds, background });
           // Collect measurements from master content (full slide — masters position their own elements)
           pipeline.collectFromTree(masterContent, this.masterBounds, `master-${masterKey}`, background);
@@ -211,7 +254,7 @@ export class Presentation {
         // Render components
         let rendered: ElementNode;
         try {
-          rendered = await componentRegistry.renderTree(slide.content, renderContext);
+          rendered = await this.renderTree(slide.content, renderContext);
         } catch (error) {
           if (error instanceof Error) {
             error.message = `Slide ${slideIndex + 1}: ${error.message}`;

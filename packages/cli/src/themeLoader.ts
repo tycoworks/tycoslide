@@ -4,12 +4,21 @@
 import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { Bounds, componentRegistry, layoutRegistry, masterRegistry, type Theme } from "@tycoslide/core";
+import {
+  Bounds,
+  type ComponentDefinition,
+  type LayoutDefinition,
+  type MasterDefinition,
+  type Theme,
+} from "@tycoslide/core";
 import { resolveThemeFormat } from "@tycoslide/sdk";
 
 export interface LoadedTheme {
   theme: Theme;
   assets?: Record<string, unknown>;
+  components: ComponentDefinition<any, any, any>[];
+  layouts: LayoutDefinition[];
+  masters: MasterDefinition[];
 }
 
 /**
@@ -17,7 +26,7 @@ export interface LoadedTheme {
  *
  * The theme package must export:
  *   - theme: ThemeDefinition (required)
- *   - components: ComponentDefinition[] (required — explicitly registered)
+ *   - components: ComponentDefinition[] (required)
  *   - assets: Record<string, unknown> (optional)
  *
  * Masters and layouts are discovered from templates embedded in theme formats.
@@ -45,14 +54,15 @@ export async function loadTheme(name: string, format: string | undefined): Promi
     throw new Error(`Theme package '${packageName}' does not export 'theme'.`);
   }
 
-  // Explicit component registration
-  if (mod.components) {
-    componentRegistry.register(mod.components);
-  } else {
+  if (!mod.components) {
     throw new Error(`Theme package '${packageName}' does not export 'components'.`);
   }
 
-  // Discover and register layouts + masters from templates in theme formats
+  const components: ComponentDefinition<any, any, any>[] = mod.components;
+
+  // Discover layouts + masters from templates in theme formats
+  const layouts: LayoutDefinition[] = [];
+  const masters: MasterDefinition[] = [];
   const layoutsSeen = new Set<string>();
   const mastersSeen = new Set<string>();
 
@@ -61,24 +71,22 @@ export async function loadTheme(name: string, format: string | undefined): Promi
       for (const t of fmt.templates) {
         if (t.layout && !layoutsSeen.has(t.layout.name)) {
           layoutsSeen.add(t.layout.name);
-          layoutRegistry.register([t.layout]);
+          layouts.push(t.layout);
         }
         if (t.master && !mastersSeen.has(t.master.name)) {
           mastersSeen.add(t.master.name);
           const master = t.master;
-          masterRegistry.register([
-            {
-              name: master.name,
-              render: (tokens: Record<string, unknown>, slideSize: { width: number; height: number }) => {
-                const result = master.render(tokens, slideSize);
-                return {
-                  content: result.content,
-                  contentBounds: result.contentBounds ?? new Bounds(0, 0, slideSize.width, slideSize.height),
-                  background: result.background,
-                };
-              },
+          masters.push({
+            name: master.name,
+            render: (tokens: Record<string, unknown>, slideSize: { width: number; height: number }) => {
+              const result = master.render(tokens, slideSize);
+              return {
+                content: result.content,
+                contentBounds: result.contentBounds ?? new Bounds(0, 0, slideSize.width, slideSize.height),
+                background: result.background,
+              };
             },
-          ]);
+          });
         }
       }
     }
@@ -98,5 +106,8 @@ export async function loadTheme(name: string, format: string | undefined): Promi
   return {
     theme,
     assets: mod.assets,
+    components,
+    layouts,
+    masters,
   };
 }

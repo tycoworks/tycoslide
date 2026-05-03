@@ -9,8 +9,8 @@ import { param, schema } from "../src/core/model/param.js";
 
 import type { Theme } from "../src/core/model/types.js";
 import { HALIGN, VALIGN } from "../src/core/model/types.js";
-import { componentRegistry, defineComponent } from "../src/core/rendering/registry.js";
-import { noopCanvas } from "./mocks.js";
+import { defineComponent } from "../src/core/rendering/registry.js";
+import { noopCanvas, renderTree } from "./mocks.js";
 
 // ============================================
 // TEST COMPONENT WITH DECLARED TOKENS
@@ -32,8 +32,6 @@ const tokenTestComponent = defineComponent({
     _tokens: { ...tokens },
   }),
 });
-
-componentRegistry.register(tokenTestComponent);
 
 /** Minimal theme for tests (no layout tokens needed). */
 function minimalTheme(): Theme {
@@ -58,7 +56,11 @@ describe("Token Resolution Engine", () => {
         beta: "BBB",
         gamma: "CCC",
       });
-      const rendered = (await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() })) as any;
+      const rendered = (await renderTree(node, [tokenTestComponent], {
+        theme,
+        canvas: noopCanvas(),
+        renderTree: async (n: any) => n,
+      })) as any;
       assert.strictEqual(rendered._tokens.alpha, "AAA");
       assert.strictEqual(rendered._tokens.beta, "BBB");
       assert.strictEqual(rendered._tokens.gamma, "CCC");
@@ -71,7 +73,11 @@ describe("Token Resolution Engine", () => {
         beta: "VALUES",
         gamma: "HERE",
       });
-      const rendered = (await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() })) as any;
+      const rendered = (await renderTree(node, [tokenTestComponent], {
+        theme,
+        canvas: noopCanvas(),
+        renderTree: async (n: any) => n,
+      })) as any;
       assert.strictEqual(rendered._tokens.alpha, "CUSTOM");
       assert.strictEqual(rendered._tokens.beta, "VALUES");
       assert.strictEqual(rendered._tokens.gamma, "HERE");
@@ -85,7 +91,11 @@ describe("Token Resolution Engine", () => {
         beta: "B",
         gamma: "G",
       });
-      const rendered = (await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() })) as any;
+      const rendered = (await renderTree(node, [tokenTestComponent], {
+        theme,
+        canvas: noopCanvas(),
+        renderTree: async (n: any) => n,
+      })) as any;
       // tokens.alpha should be the object, not the string
       assert.deepStrictEqual(rendered._tokens.alpha, { nested: true });
     });
@@ -99,7 +109,11 @@ describe("Token Resolution Engine", () => {
     it("succeeds when all tokens are provided via node.tokens", async () => {
       const theme = minimalTheme();
       const node = component(TOKEN_COMP as any, { label: "test" }, undefined, { alpha: "A", beta: "B", gamma: "G" });
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, [tokenTestComponent], {
+        theme,
+        canvas: noopCanvas(),
+        renderTree: async (n: any) => n,
+      });
       assert.strictEqual(rendered.type, NODE_TYPE.TEXT);
     });
 
@@ -115,11 +129,13 @@ describe("Token Resolution Engine", () => {
           vAlign: VALIGN.TOP,
         }),
       });
-      componentRegistry.register(noTokenComp);
-
       const theme = minimalTheme();
       const node = component(NO_TOKEN_COMP as any, { value: "hello" });
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, [noTokenComp], {
+        theme,
+        canvas: noopCanvas(),
+        renderTree: async (n: any) => n,
+      });
       assert.strictEqual(rendered.type, NODE_TYPE.TEXT);
     });
   });

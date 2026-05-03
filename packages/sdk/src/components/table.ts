@@ -3,7 +3,6 @@
 import {
   type ComponentNode,
   component,
-  componentRegistry,
   defineComponent,
   type GridStyle,
   type HorizontalAlignment,
@@ -139,10 +138,7 @@ export const tableComponent = defineComponent({
     // rich text (**bold**, *italic*, :accent[highlights]) in table cells.
     const resolveContent = async (content: TextContent): Promise<TextContent> => {
       if (typeof content === "string") {
-        const rendered = await componentRegistry.renderTree(
-          component(Component.Text, {}, content, textTokens),
-          context,
-        );
+        const rendered = await context.renderTree(component(Component.Text, {}, content, textTokens));
         if (rendered.type !== NODE_TYPE.TEXT) {
           throw new Error(`Expected TextNode from text component, got ${rendered.type}`);
         }

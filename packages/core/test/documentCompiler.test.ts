@@ -9,11 +9,12 @@ import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
 
 import { buildSlideName, compileDocument } from "../src/core/markdown/documentCompiler.js";
+import { Bounds } from "../src/core/model/bounds.js";
 import type { SlideNode } from "../src/core/model/nodes.js";
-import { NODE_TYPE } from "../src/core/model/nodes.js";
+import { component, NODE_TYPE } from "../src/core/model/nodes.js";
 import { param, schema } from "../src/core/model/param.js";
 import type { TemplateConfig } from "../src/core/model/types.js";
-import { componentRegistry, layoutRegistry } from "../src/core/rendering/registry.js";
+import type { MasterDefinition } from "../src/core/rendering/registry.js";
 import { mockTheme } from "./mocks.js";
 import { testComponents } from "./test-components.js";
 
@@ -29,6 +30,16 @@ const HEADER = `---\ntheme: test\n---\n\n`;
 /** Default TemplateConfig for test layouts */
 const defaultConfig: TemplateConfig = { masterName: "default", masterTokens: {}, layoutTokens: {} };
 
+/** Mock master that returns full-slide content bounds */
+const mockMaster: MasterDefinition = {
+  name: "default",
+  render: (_tokens, slideSize) => ({
+    content: component("test", {}),
+    contentBounds: new Bounds(0, 0, slideSize.width, slideSize.height),
+    background: { color: "#FFFFFF" },
+  }),
+};
+
 function makeOptions() {
   return {
     theme: mockTheme({
@@ -40,6 +51,9 @@ function makeOptions() {
         default: defaultConfig,
       },
     }),
+    layouts: [simpleLayout, bodyLayout, slotLayout, strictLayout, defaultLayout],
+    components: testComponents,
+    masters: [mockMaster],
   };
 }
 
@@ -87,11 +101,8 @@ const defaultLayout = {
 };
 
 // ============================================
-// REGISTRATION (module-level, once)
+// (no global registration needed — arrays passed via makeOptions())
 // ============================================
-
-componentRegistry.register(testComponents);
-layoutRegistry.register([simpleLayout, bodyLayout, slotLayout, strictLayout, defaultLayout]);
 
 // ============================================
 // TESTS
@@ -192,7 +203,12 @@ notes: These are speaker notes.
         },
       });
       const md = `${HEADER}---\ntemplate: simple\ntitle: Test\n---`;
-      const pres = compileDocument(md, { theme });
+      const pres = compileDocument(md, {
+        theme,
+        layouts: [simpleLayout, bodyLayout, slotLayout, strictLayout, defaultLayout],
+        components: testComponents,
+        masters: [mockMaster],
+      });
       const slides = (pres as any).deferredSlides as { slide: any }[];
       assert.strictEqual(slides[0].slide.masterName, "custom-master");
       assert.deepStrictEqual(slides[0].slide.masterTokens, { bg: "#000" });
@@ -201,7 +217,11 @@ notes: These are speaker notes.
     it("throws when theme has no config for the layout", () => {
       const theme = mockTheme({ layouts: {} });
       const md = `${HEADER}---\ntemplate: simple\ntitle: Test\n---`;
-      assert.throws(() => compileDocument(md, { theme }), /theme has no config for template 'simple'/);
+      assert.throws(
+        () =>
+          compileDocument(md, { theme, layouts: [simpleLayout], components: testComponents, masters: [mockMaster] }),
+        /theme has no config for template 'simple'/,
+      );
     });
 
     it("should compile multiple slides", () => {

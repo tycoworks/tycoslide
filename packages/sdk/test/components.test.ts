@@ -65,6 +65,7 @@ import {
   DEFAULT_TABLE_TOKENS,
   DEFAULT_TEXT_TOKENS,
   noopCanvas,
+  renderTree,
 } from "./mocks.js";
 
 // Register components explicitly
@@ -91,7 +92,8 @@ const theme = createMockTheme();
 
 /** Expand a ComponentNode to its ElementNode form */
 async function render(node: any) {
-  return componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+  const ctx: any = { theme, canvas: noopCanvas(), renderTree: (n: any) => renderTree(n, ctx) };
+  return renderTree(node, ctx);
 }
 
 // ============================================
@@ -123,27 +125,34 @@ describe("image()", () => {
 
   test("resolves $dot.path to string value", async () => {
     const assets = { icons: { rocket: "/path/to/rocket.svg" } };
-    const node = (await componentRegistry.renderTree(image("$icons.rocket", DEFAULT_IMAGE_TOKENS), {
+    const node = (await renderTree(image("$icons.rocket", DEFAULT_IMAGE_TOKENS), {
       theme,
       assets,
       canvas: noopCanvas(),
+      renderTree: async (n: any) => n,
     })) as ImageNode;
     assert.strictEqual(node.src, "/path/to/rocket.svg");
   });
 
   test("resolves deeply nested asset path", async () => {
     const assets = { images: { heroes: { landing: "/hero.png" } } };
-    const node = (await componentRegistry.renderTree(image("$images.heroes.landing", DEFAULT_IMAGE_TOKENS), {
+    const node = (await renderTree(image("$images.heroes.landing", DEFAULT_IMAGE_TOKENS), {
       theme,
       assets,
       canvas: noopCanvas(),
+      renderTree: async (n: any) => n,
     })) as ImageNode;
     assert.strictEqual(node.src, "/hero.png");
   });
 
   test("throws when assets not provided for asset reference", async () => {
     await assert.rejects(
-      () => componentRegistry.renderTree(image("$icons.rocket", DEFAULT_IMAGE_TOKENS), { theme, canvas: noopCanvas() }),
+      () =>
+        renderTree(image("$icons.rocket", DEFAULT_IMAGE_TOKENS), {
+          theme,
+          canvas: noopCanvas(),
+          renderTree: async (n: any) => n,
+        }),
       /asset reference.*no assets provided/,
     );
   });
@@ -152,10 +161,11 @@ describe("image()", () => {
     const assets = { icons: { star: "/star.svg" } };
     await assert.rejects(
       () =>
-        componentRegistry.renderTree(image("$icons.rocket", DEFAULT_IMAGE_TOKENS), {
+        renderTree(image("$icons.rocket", DEFAULT_IMAGE_TOKENS), {
           theme,
           assets,
           canvas: noopCanvas(),
+          renderTree: async (n: any) => n,
         }),
       /could not be resolved/,
     );
@@ -165,7 +175,12 @@ describe("image()", () => {
     const assets = { icons: { rocket: "/rocket.svg", star: "/star.svg" } };
     await assert.rejects(
       () =>
-        componentRegistry.renderTree(image("$icons", DEFAULT_IMAGE_TOKENS), { theme, assets, canvas: noopCanvas() }),
+        renderTree(image("$icons", DEFAULT_IMAGE_TOKENS), {
+          theme,
+          assets,
+          canvas: noopCanvas(),
+          renderTree: async (n: any) => n,
+        }),
       /resolved to an object.*Did you mean/,
     );
   });
@@ -174,10 +189,11 @@ describe("image()", () => {
     const assets = { icons: { rocket: "/rocket.svg" } };
     await assert.rejects(
       () =>
-        componentRegistry.renderTree(image("$icons.rocket.size", DEFAULT_IMAGE_TOKENS), {
+        renderTree(image("$icons.rocket.size", DEFAULT_IMAGE_TOKENS), {
           theme,
           assets,
           canvas: noopCanvas(),
+          renderTree: async (n: any) => n,
         }),
       /is not an object/,
     );
