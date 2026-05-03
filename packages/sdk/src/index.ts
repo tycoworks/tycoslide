@@ -122,4 +122,4 @@ export { defineTheme, resolveThemeFormat } from "./theme.js";
 
 // ── Templates ────────────────────────────────────────────────────────────────
 
-export { defineMaster, defineTemplate } from "./template.js";
+export { defineTemplate, type Layout, type Master, type MasterLayer, type Template } from "./template.js";

@@ -4,8 +4,7 @@
 import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import type { Theme } from "@tycoslide/core";
-import { componentRegistry, layoutRegistry, masterRegistry } from "@tycoslide/core";
+import { Bounds, componentRegistry, layoutRegistry, masterRegistry, type Theme } from "@tycoslide/core";
 import { resolveThemeFormat } from "@tycoslide/sdk";
 
 export interface LoadedTheme {
@@ -19,8 +18,9 @@ export interface LoadedTheme {
  * The theme package must export:
  *   - theme: ThemeDefinition (required)
  *   - components: ComponentDefinition[] (required — explicitly registered)
- *   - layouts: LayoutDefinition[] (required — explicitly registered)
  *   - assets: Record<string, unknown> (optional)
+ *
+ * Masters and layouts are discovered from templates embedded in theme formats.
  */
 export async function loadTheme(name: string, format: string | undefined): Promise<LoadedTheme> {
   const packageName = name;
@@ -45,23 +45,51 @@ export async function loadTheme(name: string, format: string | undefined): Promi
     throw new Error(`Theme package '${packageName}' does not export 'theme'.`);
   }
 
-  // Explicit registration from theme exports
+  // Explicit component registration
   if (mod.components) {
     componentRegistry.register(mod.components);
   } else {
     throw new Error(`Theme package '${packageName}' does not export 'components'.`);
   }
 
-  if (mod.layouts) {
-    layoutRegistry.register(mod.layouts);
-  } else {
-    throw new Error(`Theme package '${packageName}' does not export 'layouts'.`);
+  // Discover and register layouts + masters from templates in theme formats
+  const layoutsSeen = new Set<string>();
+  const mastersSeen = new Set<string>();
+
+  for (const fmt of Object.values(mod.theme.formats) as any[]) {
+    if (fmt.templates) {
+      for (const t of fmt.templates) {
+        if (t.layout && !layoutsSeen.has(t.layout.name)) {
+          layoutsSeen.add(t.layout.name);
+          layoutRegistry.register([t.layout]);
+        }
+        if (t.master && !mastersSeen.has(t.master.name)) {
+          mastersSeen.add(t.master.name);
+          const master = t.master;
+          masterRegistry.register([
+            {
+              name: master.name,
+              render: (tokens: Record<string, unknown>, slideSize: { width: number; height: number }) => {
+                const result = master.render(tokens, slideSize);
+                return {
+                  content: result.content,
+                  contentBounds: result.contentBounds ?? new Bounds(0, 0, slideSize.width, slideSize.height),
+                  background: result.background,
+                };
+              },
+            },
+          ]);
+        }
+      }
+    }
   }
 
-  if (mod.masters) {
-    masterRegistry.register(mod.masters);
-  } else {
-    throw new Error(`Theme package '${packageName}' does not export 'masters'.`);
+  if (layoutsSeen.size === 0) {
+    throw new Error(`Theme package '${packageName}' has no layouts in its templates.`);
+  }
+
+  if (mastersSeen.size === 0) {
+    throw new Error(`Theme package '${packageName}' has no masters in its templates.`);
   }
 
   // Resolve format to flat Theme

@@ -1,25 +1,19 @@
-// Template DSL: defineMaster() and defineTemplate()
-// Wraps core's defineLayout/defineMaster with the unified "template" authoring concept.
+// Template DSL: defineTemplate()
 // Masters provide a shared base layer (chrome, background).
 // Templates declare content and wire into a master by name.
 
 import {
   type Background,
-  Bounds,
+  type Bounds,
   type ComponentNode,
   defineLayout,
-  defineMaster as coreDefineMaster,
-  layoutRegistry,
-  masterRegistry,
+  type LayoutDefinition,
   type ScalarShape,
   SIZE,
   type Slide,
   type SlideNode,
 } from "@tycoslide/core";
 import { column } from "./components/containers.js";
-
-/** Reserved token key — tokens under this key are forwarded to the master's render function. */
-const MASTER_TOKEN_KEY = "master" as const;
 
 // ============================================
 // TYPES
@@ -31,71 +25,51 @@ const MASTER_TOKEN_KEY = "master" as const;
  * `contentBounds` is optional — when present, template content is positioned within these bounds.
  * `background` is the slide background.
  */
-export interface MasterResult {
+export interface MasterLayer {
   content: ComponentNode;
   contentBounds?: Bounds;
   background: Background;
 }
 
 /**
- * A master definition — typed wrapper around core's MasterDefinition.
- * TTokens is the master's token interface (e.g., { background: string; footerHeight: number }).
+ * A master chrome blueprint — plain generic interface like Layout<TTokens>.
+ * Masters are plain objects with a typed render function.
+ * No factory needed — just implement the interface.
  */
-export interface MasterDefinition<TTokens = Record<string, unknown>> {
+export interface Master<TTokens extends object = Record<string, unknown>> {
   name: string;
-  render: (tokens: TTokens, slideSize: { width: number; height: number }) => MasterResult;
+  render: (tokens: TTokens, slideSize: { width: number; height: number }) => MasterLayer;
 }
 
 /**
- * A template definition — the result of calling defineTemplate().
- * Carries the original definition shape plus a reference to the registered layout.
+ * A reusable structural blueprint — params + slots + render function.
+ * Layouts capture the spatial structure of a slide (where content goes)
+ * without any design tokens. Multiple templates can share the same layout
+ * with different token values.
  */
-export interface TemplateDefinition<
-  TTokens = Record<string, unknown>,
-  TParams = Record<string, unknown>,
+export interface Layout<
+  TTokens extends object = Record<string, unknown>,
+  TParams extends ScalarShape = ScalarShape,
   TSlots extends readonly string[] = readonly [],
 > {
-  name: string;
-  description: string;
-  params: ScalarShape;
+  params: TParams;
   slots?: TSlots;
-  master: MasterDefinition<any>;
-  render: (params: TParams, slots: { [K in TSlots[number]]: SlideNode[] }, tokens: TTokens) => SlideNode;
+  render: (
+    params: Record<string, unknown>,
+    slots: { [K in TSlots[number]]: SlideNode[] },
+    tokens: TTokens,
+  ) => SlideNode;
 }
 
-// ============================================
-// defineMaster()
-// ============================================
-
 /**
- * Define a master slide and auto-register it with core's masterRegistry.
- *
- * Masters provide the shared base layer for a set of templates:
- * - Background (color, image, or both)
- * - Chrome nodes (footer, logo, slide number, decorative elements)
- * - Optional contentBounds — constrains where template content is placed
+ * A complete template: layout + master + tokens (explicitly separated).
+ * The master and its tokens are first-class fields — no magic token-bag key.
  */
-export function defineMaster<TTokens extends object = Record<string, unknown>>(def: {
-  name: string;
-  render: (tokens: TTokens, slideSize: { width: number; height: number }) => MasterResult;
-}): MasterDefinition<TTokens> {
-  // Register with core's master registry (core's defineMaster is a pure factory)
-  const coreMaster = coreDefineMaster({
-    name: def.name,
-    render: (tokens, slideSize) => {
-      const result = def.render(tokens as TTokens, slideSize);
-      return {
-        content: result.content,
-        // Core requires contentBounds — provide a zero-inset fallback if not given
-        contentBounds: result.contentBounds ?? new Bounds(0, 0, slideSize.width, slideSize.height),
-        background: result.background,
-      };
-    },
-  });
-  masterRegistry.register(coreMaster);
-
-  // Return the typed SDK definition (keeps TTokens on the render signature)
-  return def as MasterDefinition<TTokens>;
+export interface Template {
+  layout: LayoutDefinition;
+  master: Master<any>;
+  masterTokens: Record<string, unknown>;
+  layoutTokens: Record<string, unknown>;
 }
 
 // ============================================
@@ -103,16 +77,18 @@ export function defineMaster<TTokens extends object = Record<string, unknown>>(d
 // ============================================
 
 /**
- * Define a slide template and auto-register it as a layout with core's layoutRegistry.
+ * Define a slide template — a named layout + master + separated tokens.
  *
  * A template is the unified authoring concept replacing separate master + layout + variant.
- * It declares:
- * - params — scalar frontmatter fields
- * - slots — named body regions (optional)
- * - master — the shared chrome/background layer
- * - render — produces content nodes (NOT the full Slide — framework handles that)
+ * It accepts:
+ * - layout: a Layout object (reusable structural blueprint)
+ * - master: a Master object (chrome/background blueprint)
+ * - masterTokens: token values for the master's render function
+ * - layoutTokens: token values for the layout's render function
  *
- * Token split: the `master` key in tokens is forwarded to the master; the rest go to render.
+ * Returns a Template carrying the LayoutDefinition, master, and separated tokens.
+ * The layout is NOT auto-registered — the CLI extracts and registers layouts
+ * from the resolved theme format.
  */
 export function defineTemplate<
   TTokens extends object = Record<string, unknown>,
@@ -121,49 +97,38 @@ export function defineTemplate<
 >(def: {
   name: string;
   description: string;
-  params: TParams;
-  slots?: TSlots;
-  master: MasterDefinition<any>;
-  render: (
-    params: Record<string, unknown>,
-    slots: { [K in TSlots[number]]: SlideNode[] },
-    tokens: TTokens,
-  ) => SlideNode;
-}): TemplateDefinition<TTokens, Record<string, unknown>, TSlots> {
-  // Build the core layout. The layout's tokens come from theme.templates[name].
-  // We split the `master` key out and forward the rest to the template render.
-  const layout = defineLayout({
-    name: def.name,
-    description: def.description,
-    params: def.params,
-    slots: def.slots,
-    render: (params, slots, tokens: Record<string, unknown>): Slide => {
-      // Split tokens: master bag vs content bag
-      const { [MASTER_TOKEN_KEY]: masterTokens, ...contentTokens } = tokens;
+  layout: Layout<TTokens, TParams, TSlots>;
+  master: Master<any>;
+  masterTokens: Record<string, unknown>;
+  layoutTokens: Record<string, unknown>;
+}): Template {
+  const { layout: templateLayout, master, masterTokens, layoutTokens, ...rest } = def;
 
-      // Call the template's render to get the content node tree
-      const contentNode = def.render(params as Record<string, unknown>, slots as any, contentTokens as TTokens);
+  // Build the core layout. At render time, core passes the flat token bag
+  // (assembled by templatesToLayouts). The render wrapper splits it back out.
+  const coreLayout = defineLayout({
+    ...rest,
+    params: templateLayout.params,
+    slots: templateLayout.slots,
+    render: (params, slots, flatTokens: Record<string, unknown>): Slide => {
+      // The flat bag has master info under the "master" key (put there by templatesToLayouts).
+      // Strip it and pass only content tokens to the layout render.
+      const { master: masterInfo, ...contentTokens } = flatTokens;
+      const ref = masterInfo as { masterName: string; tokens: Record<string, unknown> } | undefined;
 
-      // Wrap content in a fill-height column (framework wrapper)
-      const wrappedContent = column({ spacing: 0, height: SIZE.FILL }, contentNode);
+      const contentNode = templateLayout.render(
+        params as Record<string, unknown>,
+        slots as any,
+        contentTokens as TTokens,
+      );
 
       return {
-        masterName: def.master.name,
-        masterTokens: (masterTokens as Record<string, unknown>) ?? {},
-        content: wrappedContent,
+        masterName: ref?.masterName ?? "",
+        masterTokens: ref?.tokens ?? {},
+        content: column({ spacing: 0, height: SIZE.FILL }, contentNode),
       };
     },
   });
 
-  layoutRegistry.register(layout);
-
-  const templateDef: TemplateDefinition<TTokens, Record<string, unknown>, TSlots> = {
-    name: def.name,
-    description: def.description,
-    params: def.params,
-    slots: def.slots,
-    master: def.master,
-    render: def.render as TemplateDefinition<TTokens, Record<string, unknown>, TSlots>["render"],
-  };
-  return templateDef;
+  return { layout: coreLayout, master, masterTokens, layoutTokens };
 }

@@ -1,15 +1,15 @@
 // Default Theme Layouts
-// 11 layouts covering universal presentation patterns.
-// Naming convention: kebab-case (matching SlideDev).
+// 14 reusable structural blueprints for slide templates.
+// Each layout is a self-contained section: token interface, ASCII diagram, Layout object.
+// Templates are defined per-format in theme.ts using defineTemplate() with these layouts.
 
 import {
   component,
-  defineLayout,
   type HorizontalAlignment,
   param,
   SHAPE,
   SIZE,
-  type Slide,
+  type ScalarShape,
   type SlideNode,
   SPACING_MODE,
   schema,
@@ -17,6 +17,7 @@ import {
   type VerticalAlignment,
 } from "@tycoslide/core";
 import type {
+  Layout,
   CardTokens,
   ImageTokens,
   LabelTokens,
@@ -41,28 +42,6 @@ import {
   text,
   textComponent,
 } from "@tycoslide/sdk";
-import type { MasterRef } from "./masters.js";
-
-// ============================================
-// LAYOUT NAMES
-// ============================================
-
-export const LAYOUT = {
-  TITLE: "title",
-  END: "end",
-  SECTION: "section",
-  BODY: "body",
-  STAT: "stat",
-  TWO_COLUMN: "two-column",
-  STATEMENT: "statement",
-  AGENDA: "agenda",
-  CARDS: "cards",
-  BLANK: "blank",
-  QUOTE: "quote",
-  SHAPES: "shapes",
-  TRANSFORM: "transform",
-  LINES: "lines",
-} as const;
 
 // ============================================
 // COMPOSITION PRIMITIVES
@@ -75,24 +54,15 @@ interface HeaderTokens {
 }
 
 /** Title header block with optional eyebrow */
-export function headerBlock(title: string, tokens: HeaderTokens, eyebrow?: string): SlideNode {
+function headerBlock(title: string, tokens: HeaderTokens, eyebrow?: string): SlideNode {
   if (eyebrow) {
     return column({ spacing: tokens.headerSpacing }, label(eyebrow, tokens.eyebrow), label(title, tokens.title));
   }
   return label(title, tokens.title);
 }
 
-/** Wrap content in a master (chrome + content bounds). Format-agnostic via MasterRef. */
-export function masteredSlide(master: MasterRef, ...content: SlideNode[]): Slide {
-  return {
-    masterName: master.masterName,
-    masterTokens: master.tokens,
-    content: column({ spacing: 0, height: SIZE.FILL }, ...content),
-  };
-}
-
 // ============================================
-// FULL-SLIDE LAYOUTS (no master)
+// LAYOUTS
 // ============================================
 
 // --- title, end ---
@@ -100,7 +70,6 @@ export function masteredSlide(master: MasterRef, ...content: SlideNode[]): Slide
 export interface TitleLayoutTokens {
   title: TextTokens;
   subtitle: TextTokens;
-  master: MasterRef;
   vAlign: VerticalAlignment;
   hAlign: HorizontalAlignment;
   spacing: number;
@@ -112,36 +81,54 @@ export interface TitleLayoutTokens {
 // |           TITLE            |  or   | subtitle         |  IMAGE  |
 // |          subtitle          |       |                  |         |
 // +----------------------------+       +------------------+---------+
-export const titleLayout = defineLayout({
-  name: LAYOUT.TITLE,
-  description: "Opening slide with large title and optional subtitle.",
+export const title: Layout<TitleLayoutTokens> = {
   params: {
     title: param.required(textComponent.schema),
     subtitle: param.optional(textComponent.schema),
     image: param.optional(imageComponent.schema),
   },
-  render: ({ title, subtitle, image: imagePath }, _slots, tokens: TitleLayoutTokens) => {
+  render: (params, _slots, tokens) => {
+    const titleText = params.title as string;
+    const subtitle = params.subtitle as string | undefined;
+    const imagePath = params.image as string | undefined;
     const textBlock = column(
       { vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL },
-      text(title, tokens.title),
+      text(titleText, tokens.title),
       ...(subtitle ? [text(subtitle, tokens.subtitle)] : []),
     );
 
-    return {
-      masterName: tokens.master.masterName,
-      masterTokens: tokens.master.tokens,
-      content: imagePath
-        ? row({ spacing: 0, vAlign: tokens.vAlign, height: SIZE.FILL }, textBlock, image(imagePath, tokens.image))
-        : textBlock,
-    };
+    return imagePath
+      ? row({ spacing: 0, vAlign: tokens.vAlign, height: SIZE.FILL }, textBlock, image(imagePath, tokens.image))
+      : textBlock;
   },
-});
+};
+
+// +----------------------------+
+// |                            |
+// |           TITLE            |
+// |          subtitle          |
+// |                            |
+// +----------------------------+
+export const end: Layout<TitleLayoutTokens> = {
+  params: {
+    title: param.required(textComponent.schema),
+    subtitle: param.optional(textComponent.schema),
+  },
+  render: (params, _slots, tokens) => {
+    const titleText = params.title as string;
+    const subtitle = params.subtitle as string | undefined;
+    return column(
+      { vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL },
+      text(titleText, tokens.title),
+      ...(subtitle ? [text(subtitle, tokens.subtitle)] : []),
+    );
+  },
+};
 
 // --- section ---
 
 export interface SectionLayoutTokens {
   title: LabelTokens;
-  master: MasterRef;
   vAlign: VerticalAlignment;
   hAlign: HorizontalAlignment;
 }
@@ -151,24 +138,20 @@ export interface SectionLayoutTokens {
 // |           TITLE            |
 // |                            |
 // +----------------------------+
-export const sectionLayout = defineLayout({
-  name: LAYOUT.SECTION,
-  description: "Section divider with centered title.",
-  params: { title: param.required(textComponent.schema) },
-  render: ({ title }, _slots, tokens: SectionLayoutTokens) => ({
-    masterName: tokens.master.masterName,
-    masterTokens: tokens.master.tokens,
-    content: column(
+export const section: Layout<SectionLayoutTokens> = {
+  params: {
+    title: param.required(textComponent.schema),
+  },
+  render: (params, _slots, tokens) =>
+    column(
       { spacing: 0, vAlign: tokens.vAlign, hAlign: tokens.hAlign, height: SIZE.FILL },
-      label(title, tokens.title),
+      label(params.title as string, tokens.title),
     ),
-  }),
-});
+};
 
 // --- body ---
 
 export interface BodyLayoutTokens {
-  master: MasterRef;
   title: LabelTokens;
   eyebrow: LabelTokens;
   text: TextTokens;
@@ -187,31 +170,26 @@ export interface BodyLayoutTokens {
 // |                            |
 // |                            |
 // +----------------------------+
-// | footer                     |
-// +----------------------------+
-export const bodyLayout = defineLayout({
-  name: LAYOUT.BODY,
-  description: "Markdown body with optional title. Default layout.",
+export const body: Layout<BodyLayoutTokens, ScalarShape, readonly ["body"]> = {
   params: {
     title: param.optional(textComponent.schema),
     eyebrow: param.optional(textComponent.schema),
   },
-  slots: ["body"],
-  render: ({ title, eyebrow }, { body }, tokens: BodyLayoutTokens) =>
-    masteredSlide(
-      tokens.master,
-      column(
-        { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing },
-        ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
-        ...body,
-      ),
-    ),
-});
+  slots: ["body"] as const,
+  render: (params, { body: bodySlot }, tokens) => {
+    const titleText = params.title as string | undefined;
+    const eyebrow = params.eyebrow as string | undefined;
+    return column(
+      { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing },
+      ...(titleText ? [headerBlock(titleText, tokens, eyebrow)] : []),
+      ...bodySlot,
+    );
+  },
+};
 
 // --- stat ---
 
 export interface StatLayoutTokens {
-  master: MasterRef;
   value: LabelTokens;
   label: LabelTokens;
   caption: TextTokens;
@@ -230,17 +208,16 @@ export interface StatLayoutTokens {
 // |      optional caption      |
 // |                            |
 // +----------------------------+
-// | footer                     |
-// +----------------------------+
-export const statLayout = defineLayout({
-  name: LAYOUT.STAT,
-  description: "Big number or key metric with label and optional caption.",
+export const stat: Layout<StatLayoutTokens> = {
   params: {
     value: param.required(textComponent.schema),
     label: param.required(textComponent.schema),
     caption: param.optional(textComponent.schema),
   },
-  render: ({ value, label: labelText, caption }, _slots, tokens: StatLayoutTokens) => {
+  render: (params, _slots, tokens) => {
+    const value = params.value as string;
+    const labelText = params.label as string;
+    const caption = params.caption as string | undefined;
     const content = column(
       {
         vAlign: tokens.vAlign,
@@ -262,18 +239,14 @@ export const statLayout = defineLayout({
       ? stack(wrapProps, shape(tokens.background, { shape: SHAPE.RECTANGLE }), content)
       : content;
 
-    return masteredSlide(
-      tokens.master,
-      column({ spacing: 0, height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign }, wrapped),
-    );
+    return column({ spacing: 0, height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign }, wrapped);
   },
-});
+};
 
 // --- quote ---
 
 export interface QuoteLayoutTokens {
   quote: QuoteTokens;
-  master: MasterRef;
   vAlign: VerticalAlignment;
   hAlign: HorizontalAlignment;
   spacing: number;
@@ -285,81 +258,43 @@ export interface QuoteLayoutTokens {
 // |       -- Attribution       |
 // |                            |
 // +----------------------------+
-// | footer                     |
-// +----------------------------+
-export const quoteLayout = defineLayout({
-  name: LAYOUT.QUOTE,
-  description: "Standalone pull quote with left accent bar and optional attribution.",
+export const quote: Layout<QuoteLayoutTokens> = {
   params: {
     quote: param.required(textComponent.schema),
     attribution: param.optional(textComponent.schema),
   },
-  render: ({ quote: quoteText, attribution }, _slots, tokens: QuoteLayoutTokens) => ({
-    masterName: tokens.master.masterName,
-    masterTokens: tokens.master.tokens,
-    content: column(
+  render: (params, _slots, tokens) => {
+    const quoteText = params.quote as string;
+    const attribution = params.attribution as string | undefined;
+    return column(
       { spacing: 0, height: SIZE.FILL },
       column(
         { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing },
         component(Component.Quote, { quote: quoteText, attribution }, undefined, tokens.quote),
       ),
-    ),
-  }),
-});
-
-// --- end ---
-
-// +----------------------------+
-// |                            |
-// |           TITLE            |
-// |          subtitle          |
-// |                            |
-// +----------------------------+
-export const endLayout = defineLayout({
-  name: LAYOUT.END,
-  description: "Closing slide. Mirrors the title layout.",
-  params: {
-    title: param.required(textComponent.schema),
-    subtitle: param.optional(textComponent.schema),
+    );
   },
-  render: ({ title, subtitle }, _slots, tokens: TitleLayoutTokens) => ({
-    masterName: tokens.master.masterName,
-    masterTokens: tokens.master.tokens,
-    content: column(
-      { vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL },
-      text(title, tokens.title),
-      ...(subtitle ? [text(subtitle, tokens.subtitle)] : []),
-    ),
-  }),
-});
+};
 
 // --- blank ---
+
+export interface BlankLayoutTokens {}
 
 // +----------------------------+
 // |                            |
 // |       (raw content)        |
 // |                            |
 // +----------------------------+
-export interface BlankLayoutTokens {
-  master: MasterRef;
-}
-
-export const blankLayout = defineLayout({
-  name: LAYOUT.BLANK,
-  description: "No chrome. Full canvas for custom content.",
+export const blank: Layout<BlankLayoutTokens, ScalarShape, readonly ["body"]> = {
   params: {},
-  slots: ["body"],
-  render: (_params, { body }, tokens: BlankLayoutTokens) => ({
-    masterName: tokens.master.masterName,
-    masterTokens: tokens.master.tokens,
-    content: column({ spacing: 0, height: SIZE.FILL }, ...body),
-  }),
-});
+  slots: ["body"] as const,
+  render: (_params, { body: bodySlot }, _tokens) =>
+    column({ spacing: 0, height: SIZE.FILL }, ...bodySlot),
+};
 
 // --- two-column ---
 
 export interface TwoColumnLayoutTokens {
-  master: MasterRef;
   title: LabelTokens;
   eyebrow: LabelTokens;
   text: TextTokens;
@@ -379,25 +314,23 @@ export interface TwoColumnLayoutTokens {
 // | content     | content      |
 // |             |              |
 // +----------------------------+
-// | footer                     |
-// +----------------------------+
-export const twoColumnLayout = defineLayout({
-  name: LAYOUT.TWO_COLUMN,
-  description: "Two equal markdown columns with optional header.",
+export const twoColumn: Layout<TwoColumnLayoutTokens, ScalarShape, readonly ["left", "right"]> = {
   params: {
     title: param.optional(textComponent.schema),
     eyebrow: param.optional(textComponent.schema),
   },
-  slots: ["left", "right"],
-  render: ({ title, eyebrow }, { left, right }, tokens: TwoColumnLayoutTokens) => {
+  slots: ["left", "right"] as const,
+  render: (params, slots, tokens) => {
+    const titleText = params.title as string | undefined;
+    const eyebrow = params.eyebrow as string | undefined;
     const colProps = { vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL };
-    return masteredSlide(
-      tokens.master,
-      ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
-      row({ spacing: tokens.spacing, height: SIZE.HUG }, column(colProps, ...left), column(colProps, ...right)),
+    return column(
+      { spacing: 0, height: SIZE.FILL },
+      ...(titleText ? [headerBlock(titleText, tokens, eyebrow)] : []),
+      row({ spacing: tokens.spacing, height: SIZE.HUG }, column(colProps, ...slots.left), column(colProps, ...slots.right)),
     );
   },
-});
+};
 
 // --- statement ---
 
@@ -407,7 +340,6 @@ export interface StatementLayoutTokens {
   vAlign: VerticalAlignment;
   hAlign: HorizontalAlignment;
   spacing: number;
-  master: MasterRef;
 }
 
 // +----------------------------+
@@ -416,28 +348,25 @@ export interface StatementLayoutTokens {
 // |      optional caption      |
 // |                            |
 // +----------------------------+
-export const statementLayout = defineLayout({
-  name: LAYOUT.STATEMENT,
-  description: "Centered body text with optional caption. Use for value props and big statements.",
+export const statement: Layout<StatementLayoutTokens> = {
   params: {
     body: param.required(textComponent.schema),
     caption: param.optional(textComponent.schema),
   },
-  render: ({ body, caption }, _slots, tokens: StatementLayoutTokens) => ({
-    masterName: tokens.master.masterName,
-    masterTokens: tokens.master.tokens,
-    content: column(
+  render: (params, _slots, tokens) => {
+    const bodyText = params.body as string;
+    const caption = params.caption as string | undefined;
+    return column(
       { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing },
-      text(body, tokens.body),
+      text(bodyText, tokens.body),
       ...(caption ? [text(caption, tokens.caption)] : []),
-    ),
-  }),
-});
+    );
+  },
+};
 
 // --- agenda ---
 
 export interface AgendaLayoutTokens {
-  master: MasterRef;
   title: LabelTokens;
   eyebrow: LabelTokens;
   headerSpacing: number;
@@ -461,23 +390,22 @@ export interface AgendaLayoutTokens {
 // |  ────────────── |          |
 // |  3  Item        |          |
 // +----------------------------+
-// | footer                     |
-// +----------------------------+
-export const agendaLayout = defineLayout({
-  name: LAYOUT.AGENDA,
-  description: "Eyebrow, title, and numbered item list with divider lines.",
+export const agenda: Layout<AgendaLayoutTokens> = {
   params: {
     title: param.required(textComponent.schema),
     eyebrow: param.optional(textComponent.schema),
     items: param.required(schema.array(textComponent.schema)),
     image: param.optional(imageComponent.schema),
   },
-  render: ({ title, eyebrow, items, image: imageSrc }, _slots, tokens: AgendaLayoutTokens) => {
-    const itemRows = items.flatMap((item, i) => [
+  render: (params, _slots, tokens) => {
+    const titleText = params.title as string;
+    const eyebrow = params.eyebrow as string | undefined;
+    const items = params.items as string[];
+    const imageSrc = params.image as string | undefined;
+    const itemRows = items.flatMap((item: string, i: number) => [
       ...(i > 0 ? [line(tokens.divider)] : []),
       row(
         { vAlign: tokens.itemVAlign, spacing: tokens.itemSpacing },
-        // HUG-width column keeps number from stretching in the row
         column({ spacing: 0, width: SIZE.HUG, vAlign: tokens.itemVAlign }, label(String(i + 1), tokens.itemNumber)),
         text(item, tokens.items),
       ),
@@ -485,20 +413,19 @@ export const agendaLayout = defineLayout({
 
     const itemsColumn = column({ spacing: tokens.spacing, vAlign: tokens.vAlign, height: SIZE.FILL }, ...itemRows);
 
-    return masteredSlide(
-      tokens.master,
-      headerBlock(title, tokens, eyebrow),
+    return column(
+      { spacing: 0, height: SIZE.FILL },
+      headerBlock(titleText, tokens, eyebrow),
       imageSrc
         ? row({ spacing: tokens.spacing, height: SIZE.FILL }, itemsColumn, image(imageSrc, tokens.image))
         : itemsColumn,
     );
   },
-});
+};
 
 // --- cards ---
 
 export interface CardsLayoutTokens {
-  master: MasterRef;
   title: LabelTokens;
   eyebrow: LabelTokens;
   headerSpacing: number;
@@ -521,11 +448,7 @@ export interface CardsLayoutTokens {
 // | +------+ +------+ +------+ |
 // |      optional caption      |
 // +----------------------------+
-// | footer                     |
-// +----------------------------+
-export const cardsLayout = defineLayout({
-  name: LAYOUT.CARDS,
-  description: "Card grid with intro text and optional caption.",
+export const cards: Layout<CardsLayoutTokens> = {
   params: {
     title: param.required(textComponent.schema),
     eyebrow: param.optional(textComponent.schema),
@@ -533,14 +456,19 @@ export const cardsLayout = defineLayout({
     cards: param.required(schema.array(cardComponent.paramsSchema!)),
     caption: param.optional(textComponent.schema),
   },
-  render: ({ title, eyebrow, intro, cards: cardItems, caption }, _slots, tokens: CardsLayoutTokens) => {
+  render: (params, _slots, tokens) => {
+    const titleText = params.title as string;
+    const eyebrow = params.eyebrow as string | undefined;
+    const intro = params.intro as string | undefined;
+    const cardItems = params.cards as Record<string, unknown>[];
+    const caption = params.caption as string | undefined;
     const built = cardItems.map((c) =>
       component(Component.Card, c as unknown as Record<string, unknown>, undefined, tokens.card),
     );
     const perRow = built.length <= 2 ? built.length : built.length === 4 ? 2 : built.length >= 7 ? 4 : 3;
-    return masteredSlide(
-      tokens.master,
-      headerBlock(title, tokens, eyebrow),
+    return column(
+      { spacing: 0, height: SIZE.FILL },
+      headerBlock(titleText, tokens, eyebrow),
       column(
         {
           height: SIZE.FILL,
@@ -555,12 +483,11 @@ export const cardsLayout = defineLayout({
       ),
     );
   },
-});
+};
 
 // --- transform ---
 
 export interface TransformLayoutTokens {
-  master: MasterRef;
   title: LabelTokens;
   eyebrow: LabelTokens;
   text: TextTokens;
@@ -579,15 +506,15 @@ export interface TransformLayoutTokens {
 // | ::left::     ::right::     |
 // |       ::overlay::          |
 // +----------------------------+
-export const transformLayout = defineLayout({
-  name: LAYOUT.TRANSFORM,
-  description: "Side-by-side comparison layout with optional overlay.",
+export const transform: Layout<TransformLayoutTokens, ScalarShape, readonly ["left", "right", "overlay"]> = {
   params: {
     title: param.optional(textComponent.schema),
     eyebrow: param.optional(textComponent.schema),
   },
-  slots: ["left", "right", "overlay"],
-  render: ({ title, eyebrow }, { left, right, overlay }, tokens: TransformLayoutTokens) => {
+  slots: ["left", "right", "overlay"] as const,
+  render: (params, slots, tokens) => {
+    const titleText = params.title as string | undefined;
+    const eyebrow = params.eyebrow as string | undefined;
     const colProps = {
       vAlign: tokens.vAlign,
       hAlign: tokens.hAlign,
@@ -595,9 +522,9 @@ export const transformLayout = defineLayout({
       height: SIZE.FILL,
     };
     const layers: SlideNode[] = [
-      row({ spacing: tokens.spacing, height: SIZE.HUG }, column(colProps, ...left), column(colProps, ...right)),
+      row({ spacing: tokens.spacing, height: SIZE.HUG }, column(colProps, ...slots.left), column(colProps, ...slots.right)),
     ];
-    if (overlay.length > 0) {
+    if (slots.overlay.length > 0) {
       layers.push(
         column(
           {
@@ -607,26 +534,22 @@ export const transformLayout = defineLayout({
             vAlign: tokens.overlayVAlign,
             hAlign: tokens.overlayHAlign,
           },
-          ...overlay,
+          ...slots.overlay,
         ),
       );
     }
     const content = layers.length === 1 ? layers[0] : stack({ height: SIZE.FILL }, ...layers);
-    return masteredSlide(
-      tokens.master,
-      column(
-        { vAlign: tokens.vAlign, height: SIZE.FILL, spacing: tokens.spacing },
-        ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
-        content,
-      ),
+    return column(
+      { vAlign: tokens.vAlign, height: SIZE.FILL, spacing: tokens.spacing },
+      ...(titleText ? [headerBlock(titleText, tokens, eyebrow)] : []),
+      content,
     );
   },
-});
+};
 
 // --- shapes (demo) ---
 
 export interface ShapesLayoutTokens {
-  master: MasterRef;
   title: LabelTokens;
   eyebrow: LabelTokens;
   subtitle?: LabelTokens;
@@ -647,15 +570,16 @@ export interface ShapesLayoutTokens {
 // | [rect] [ellipse] [tri] [◇] |
 // |  label   label   label lbl |
 // +----------------------------+
-export const shapesLayout = defineLayout({
-  name: LAYOUT.SHAPES,
-  description: "Demo layout showing all 4 shape primitives with varied properties.",
+export const shapes: Layout<ShapesLayoutTokens> = {
   params: {
     title: param.optional(textComponent.schema),
     eyebrow: param.optional(textComponent.schema),
     subtitle: param.optional(textComponent.schema),
   },
-  render: ({ title, eyebrow, subtitle }, _slots, tokens: ShapesLayoutTokens) => {
+  render: (params, _slots, tokens) => {
+    const titleText = params.title as string | undefined;
+    const eyebrow = params.eyebrow as string | undefined;
+    const subtitle = params.subtitle as string | undefined;
     const cell = (t: ShapeTokens, s: (typeof SHAPE)[keyof typeof SHAPE], labelText: string) =>
       column(
         { spacing: tokens.spacing, hAlign: tokens.hAlign, height: SIZE.FILL },
@@ -663,28 +587,24 @@ export const shapesLayout = defineLayout({
         label(labelText, tokens.label),
       );
 
-    return masteredSlide(
-      tokens.master,
-      column(
-        { vAlign: tokens.vAlign, height: SIZE.FILL, spacing: tokens.spacing },
-        ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
-        ...(subtitle && tokens.subtitle ? [label(subtitle, tokens.subtitle)] : []),
-        row(
-          { spacing: tokens.spacing, height: SIZE.FILL },
-          cell(tokens.rectangle, SHAPE.RECTANGLE, "Primary\n#7C3AED"),
-          cell(tokens.ellipse, SHAPE.ELLIPSE, "Dark\n#1A1A2E"),
-          cell(tokens.triangle, SHAPE.TRIANGLE, "Accent\n#10B981"),
-          cell(tokens.diamond, SHAPE.DIAMOND, "Surface\n#E2E8F0"),
-        ),
+    return column(
+      { vAlign: tokens.vAlign, height: SIZE.FILL, spacing: tokens.spacing },
+      ...(titleText ? [headerBlock(titleText, tokens, eyebrow)] : []),
+      ...(subtitle && tokens.subtitle ? [label(subtitle, tokens.subtitle)] : []),
+      row(
+        { spacing: tokens.spacing, height: SIZE.FILL },
+        cell(tokens.rectangle, SHAPE.RECTANGLE, "Primary\n#7C3AED"),
+        cell(tokens.ellipse, SHAPE.ELLIPSE, "Dark\n#1A1A2E"),
+        cell(tokens.triangle, SHAPE.TRIANGLE, "Accent\n#10B981"),
+        cell(tokens.diamond, SHAPE.DIAMOND, "Surface\n#E2E8F0"),
       ),
     );
   },
-});
+};
 
 // --- lines (demo) ---
 
 export interface LinesLayoutTokens {
-  master: MasterRef;
   title: LabelTokens;
   eyebrow: LabelTokens;
   headerSpacing: number;
@@ -704,50 +624,26 @@ export interface LinesLayoutTokens {
 // |  Dashed ── ── ── ── ── ── |
 // |  Dotted ·· ·· ·· ·· ·· ·· |
 // +----------------------------+
-export const linesLayout = defineLayout({
-  name: LAYOUT.LINES,
-  description: "Demo layout showing all 3 dash types.",
+export const lines: Layout<LinesLayoutTokens> = {
   params: {
     title: param.optional(textComponent.schema),
     eyebrow: param.optional(textComponent.schema),
   },
-  render: ({ title, eyebrow }, _slots, tokens: LinesLayoutTokens) => {
+  render: (params, _slots, tokens) => {
+    const titleText = params.title as string | undefined;
+    const eyebrow = params.eyebrow as string | undefined;
     const sample = (t: LineTokens, labelText: string) =>
       column({ spacing: 0, height: SIZE.FILL, vAlign: VALIGN.BOTTOM }, label(labelText, tokens.label), line(t));
 
-    return masteredSlide(
-      tokens.master,
+    return column(
+      { vAlign: tokens.vAlign, height: SIZE.FILL, spacing: tokens.spacing },
+      ...(titleText ? [headerBlock(titleText, tokens, eyebrow)] : []),
       column(
-        { vAlign: tokens.vAlign, height: SIZE.FILL, spacing: tokens.spacing },
-        ...(title ? [headerBlock(title, tokens, eyebrow)] : []),
-        column(
-          { spacing: tokens.spacing, height: SIZE.FILL, vAlign: VALIGN.MIDDLE },
-          sample(tokens.solid, "Solid"),
-          sample(tokens.dashed, "Dashed"),
-          sample(tokens.dotted, "Dotted"),
-        ),
+        { spacing: tokens.spacing, height: SIZE.FILL, vAlign: VALIGN.MIDDLE },
+        sample(tokens.solid, "Solid"),
+        sample(tokens.dashed, "Dashed"),
+        sample(tokens.dotted, "Dotted"),
       ),
     );
   },
-});
-
-// ============================================
-// ALL LAYOUTS
-// ============================================
-
-export const layouts = [
-  titleLayout,
-  endLayout,
-  sectionLayout,
-  bodyLayout,
-  statLayout,
-  twoColumnLayout,
-  statementLayout,
-  agendaLayout,
-  cardsLayout,
-  blankLayout,
-  quoteLayout,
-  shapesLayout,
-  transformLayout,
-  linesLayout,
-];
+};

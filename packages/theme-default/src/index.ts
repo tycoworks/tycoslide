@@ -46,7 +46,6 @@ export const components = [
 export * from "@tycoslide/sdk";
 export type { Assets } from "./assets.js";
 export { assets } from "./assets.js";
-export { layouts } from "./layouts.js";
-export { masters } from "./masters.js";
+export { TEMPLATE } from "./theme.js";
 // Theme and assets
 export { theme } from "./theme.js";

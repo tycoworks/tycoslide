@@ -1,16 +1,11 @@
 // Master Slide Definitions
 // Three masters: default (footer chrome), minimal (margin + background only),
 // factsheet (header chrome + footer slide number).
+// Masters are plain objects implementing Master<TTokens> — no factory, no auto-registration.
 
-import { type Background, Bounds, defineMaster, HALIGN, SHAPE, SIZE, VALIGN } from "@tycoslide/core";
-import type { ImageTokens, LabelTokens, ShapeTokens, SlideNumberTokens } from "@tycoslide/sdk";
+import { type Background, Bounds, HALIGN, SHAPE, SIZE, VALIGN } from "@tycoslide/core";
+import type { ImageTokens, LabelTokens, Master, MasterLayer, ShapeTokens, SlideNumberTokens } from "@tycoslide/sdk";
 import { column, image, label, row, shape, slideNumber, stack } from "@tycoslide/sdk";
-
-/** Pairs a master name with its token values. Layouts use this to stay format-agnostic. */
-export interface MasterRef {
-  masterName: string;
-  tokens: Record<string, unknown>;
-}
 
 /** Registered master names. */
 export const MASTER = { DEFAULT: "default", MINIMAL: "minimal", FACTSHEET: "factsheet" } as const;
@@ -31,9 +26,9 @@ export interface DefaultMasterTokens {
   footerImage: ImageTokens;
 }
 
-export const defaultMaster = defineMaster({
+export const defaultMaster: Master<DefaultMasterTokens> = {
   name: MASTER.DEFAULT,
-  render: (tokens: DefaultMasterTokens, slideSize) => {
+  render: (tokens, slideSize): MasterLayer => {
     const { background, margin, footerHeight } = tokens;
     const breathing = footerHeight / 2;
     const contentBounds = new Bounds(
@@ -60,7 +55,7 @@ export const defaultMaster = defineMaster({
 
     return { content, contentBounds, background };
   },
-});
+};
 
 // ============================================
 // MINIMAL MASTER — margin + background, no chrome
@@ -71,9 +66,9 @@ export interface MinimalMasterTokens {
   margin: number;
 }
 
-export const minimalMaster = defineMaster({
+export const minimalMaster: Master<MinimalMasterTokens> = {
   name: MASTER.MINIMAL,
-  render: (tokens: MinimalMasterTokens, slideSize) => {
+  render: (tokens, slideSize): MasterLayer => {
     const { background, margin } = tokens;
     const contentBounds = new Bounds(margin, margin, slideSize.width - margin * 2, slideSize.height - margin * 2);
 
@@ -83,7 +78,7 @@ export const minimalMaster = defineMaster({
       background,
     };
   },
-});
+};
 
 // ============================================
 // FACTSHEET MASTER — header chrome + footer slide number
@@ -106,15 +101,15 @@ export interface FactsheetMasterTokens {
   slideNumber: SlideNumberTokens;
 }
 
-export const factsheetMaster = defineMaster({
+export const factsheetMaster: Master<FactsheetMasterTokens> = {
   name: MASTER.FACTSHEET,
-  render: (tokens: FactsheetMasterTokens, slideSize) => {
+  render: (tokens, slideSize): MasterLayer => {
     const { background, margin, topBarHeight, footerHeight } = tokens;
     const contentWidth = slideSize.width - margin * 2;
 
     // Content bounds: below top bar + breathing room, above footer + breathing room
     const contentTop = topBarHeight + margin;
-    const bottomReserved = footerHeight + margin; // footer row + bottom breathing spacer
+    const bottomReserved = footerHeight + margin;
     const contentBounds = new Bounds(margin, contentTop, contentWidth, slideSize.height - contentTop - bottomReserved);
 
     const content = column(
@@ -125,14 +120,14 @@ export const factsheetMaster = defineMaster({
         shape(tokens.topBarFill, { shape: SHAPE.RECTANGLE }),
         row(
           { spacing: 0, height: topBarHeight, vAlign: VALIGN.MIDDLE },
-          column({ spacing: 0, width: margin }), // left spacer to align with content margin
+          column({ spacing: 0, width: margin }),
           column(
             { spacing: 0, width: tokens.topBarLogoWidth, height: tokens.topBarLogoHeight },
             image(tokens.topBarLogo, tokens.topBarLogoTokens),
           ),
-          column({ spacing: 0, width: SIZE.FILL }), // flexible spacer pushes label right
+          column({ spacing: 0, width: SIZE.FILL }),
           label(tokens.topBarLabel, tokens.topBarLabelTokens),
-          column({ spacing: 0, width: margin }), // right spacer
+          column({ spacing: 0, width: margin }),
         ),
       ),
       // Spacer fills middle
@@ -144,17 +139,17 @@ export const factsheetMaster = defineMaster({
           height: bottomReserved,
           vAlign: VALIGN.MIDDLE,
         },
-        column({ spacing: 0, width: margin }), // left spacer to align with content margin
+        column({ spacing: 0, width: margin }),
         label(tokens.footerText, tokens.footerTokens),
-        column({ spacing: 0, width: SIZE.FILL }), // flexible spacer
+        column({ spacing: 0, width: SIZE.FILL }),
         slideNumber(tokens.slideNumber),
-        column({ spacing: 0, width: margin }), // right spacer to align with content margin
+        column({ spacing: 0, width: margin }),
       ),
     );
 
     return { content, contentBounds, background };
   },
-});
+};
 
 // ============================================
 // ALL MASTERS

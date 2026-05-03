@@ -1,14 +1,7 @@
 import * as assert from "node:assert";
 import { describe, it } from "node:test";
-import {
-  Bounds,
-  component,
-  layoutRegistry,
-  masterRegistry,
-  NODE_TYPE,
-  SIZE,
-} from "@tycoslide/core";
-import { defineMaster, defineTemplate } from "../src/template.js";
+import { component, layoutRegistry } from "@tycoslide/core";
+import { defineTemplate } from "../src/template.js";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -17,7 +10,7 @@ function makeComponent(name: string) {
   return component(name, {}, undefined);
 }
 
-/** Minimal master render — returns required MasterResult shape */
+/** Minimal master render — returns MasterLayer shape */
 function minimalMasterRender(_tokens: Record<string, unknown>, _slideSize: { width: number; height: number }) {
   return {
     content: makeComponent("column"),
@@ -25,91 +18,56 @@ function minimalMasterRender(_tokens: Record<string, unknown>, _slideSize: { wid
   };
 }
 
-// ── defineMaster() ────────────────────────────────────────────────────────────
-
-describe("defineMaster()", () => {
-  it("registers a master with masterRegistry", () => {
-    const name = "test-master-register";
-    defineMaster({ name, render: minimalMasterRender });
-    assert.ok(masterRegistry.has(name), `masterRegistry should have '${name}'`);
-  });
-
-  it("returns a definition with the correct name", () => {
-    const name = "test-master-name";
-    const def = defineMaster({ name, render: minimalMasterRender });
-    assert.strictEqual(def.name, name);
-  });
-
-  it("falls back to full-slide contentBounds when master omits it", () => {
-    const name = "test-master-bounds-fallback";
-    defineMaster({ name, render: minimalMasterRender });
-    const registered = masterRegistry.get(name);
-    assert.ok(registered, "master should be registered");
-    const result = registered!.render({}, { width: 13.333, height: 7.5 });
-    // Core requires contentBounds — SDK fills it in from slideSize
-    assert.ok(result.contentBounds instanceof Bounds, "contentBounds should be a Bounds");
-    assert.strictEqual(result.contentBounds.x, 0);
-    assert.strictEqual(result.contentBounds.y, 0);
-    assert.strictEqual(result.contentBounds.w, 13.333);
-    assert.strictEqual(result.contentBounds.h, 7.5);
-  });
-
-  it("preserves contentBounds when master provides it", () => {
-    const name = "test-master-bounds-provided";
-    defineMaster({
-      name,
-      render: (_tokens, slideSize) => ({
-        content: makeComponent("column"),
-        background: { color: "#000000" },
-        contentBounds: new Bounds(0.5, 0.5, slideSize.width - 1, slideSize.height - 1),
-      }),
-    });
-    const registered = masterRegistry.get(name);
-    assert.ok(registered);
-    const result = registered!.render({}, { width: 13.333, height: 7.5 });
-    assert.ok(result.contentBounds instanceof Bounds);
-    assert.strictEqual(result.contentBounds.x, 0.5);
-    assert.strictEqual(result.contentBounds.y, 0.5);
-  });
-});
+/** A plain master object (no defineMaster registration) for use with defineTemplate */
+const plainMaster = { name: "plain-master", render: minimalMasterRender };
 
 // ── defineTemplate() ─────────────────────────────────────────────────────────
 
 describe("defineTemplate()", () => {
-  it("registers a layout with layoutRegistry", () => {
+  it("returns a Template with layout, master, masterTokens, and layoutTokens", () => {
     const masterName = "test-tmpl-master-1";
     const templateName = "test-tmpl-layout-1";
 
-    const master = defineMaster({ name: masterName, render: minimalMasterRender });
-    defineTemplate({
+    const master = { name: masterName, render: minimalMasterRender };
+    const template = defineTemplate({
       name: templateName,
       description: "Test template",
-      params: {},
+      layout: { params: {}, render: (_params: any, _slots: any, _tokens: any) => makeComponent("column") },
       master,
-      render: (_params, _slots, _tokens) => makeComponent("column"),
+      masterTokens: { bg: "red" },
+      layoutTokens: { title: "hello" },
     });
 
+    assert.ok(template.layout, "template should have a layout");
+    assert.strictEqual(template.layout.name, templateName);
+    assert.strictEqual(template.master, master);
+    assert.deepStrictEqual(template.masterTokens, { bg: "red" });
+    assert.deepStrictEqual(template.layoutTokens, { title: "hello" });
+
+    // Register manually for subsequent tests
+    layoutRegistry.register([template.layout]);
     assert.ok(layoutRegistry.has(templateName), `layoutRegistry should have '${templateName}'`);
   });
 
-  it("render extracts master tokens from the token bag", () => {
+  it("render extracts master tokens from the flat token bag", () => {
     const masterName = "test-tmpl-master-2";
     const templateName = "test-tmpl-layout-2";
 
-    const master = defineMaster({ name: masterName, render: minimalMasterRender });
-    defineTemplate({
+    const template = defineTemplate({
       name: templateName,
       description: "Token split test",
-      params: {},
-      master,
-      render: (_params, _slots, _tokens) => makeComponent("column"),
+      layout: { params: {}, render: (_params: any, _slots: any, _tokens: any) => makeComponent("column") },
+      master: { name: masterName, render: minimalMasterRender },
+      masterTokens: { bg: "red" },
+      layoutTokens: {},
     });
 
+    layoutRegistry.register([template.layout]);
     const layout = layoutRegistry.get(templateName);
     assert.ok(layout, "layout should be registered");
 
-    // Call layout render with a token bag that has both master and content tokens
-    const tokens = { master: { bg: "red" }, title: "hello" };
+    // Core passes a flat token bag to the layout render at runtime
+    const tokens = { master: { masterName: masterName, tokens: { bg: "red" } }, title: "hello" };
     const slide = layout!.render({}, {}, tokens);
 
     assert.strictEqual(slide.masterName, masterName);
@@ -122,22 +80,27 @@ describe("defineTemplate()", () => {
 
     let capturedTokens: Record<string, unknown> = {};
 
-    const master = defineMaster({ name: masterName, render: minimalMasterRender });
-    defineTemplate({
+    const template = defineTemplate({
       name: templateName,
       description: "Content token passthrough test",
-      params: {},
-      master,
-      render: (_params, _slots, tokens) => {
-        capturedTokens = tokens as Record<string, unknown>;
-        return makeComponent("column");
+      layout: {
+        params: {},
+        render: (_params: any, _slots: any, tokens: any) => {
+          capturedTokens = tokens as Record<string, unknown>;
+          return makeComponent("column");
+        },
       },
+      master: { name: masterName, render: minimalMasterRender },
+      masterTokens: {},
+      layoutTokens: { title: "hello", color: "#333" },
     });
 
+    layoutRegistry.register([template.layout]);
     const layout = layoutRegistry.get(templateName);
     assert.ok(layout);
 
-    const tokens = { master: { bg: "red" }, title: "hello", color: "#333" };
+    // Core passes flat bag at runtime (assembled by templatesToLayouts)
+    const tokens = { master: { masterName: masterName, tokens: {} }, title: "hello", color: "#333" };
     layout!.render({}, {}, tokens);
 
     // The `master` key should NOT be in the content tokens
@@ -147,18 +110,19 @@ describe("defineTemplate()", () => {
   });
 
   it("returned Slide has content wrapped in a column with SIZE.FILL height", () => {
-    const masterName = "test-tmpl-master-4";
+    const _masterName = "test-tmpl-master-4";
     const templateName = "test-tmpl-layout-4";
 
-    const master = defineMaster({ name: masterName, render: minimalMasterRender });
-    defineTemplate({
+    const template = defineTemplate({
       name: templateName,
       description: "Content wrapping test",
-      params: {},
-      master,
-      render: (_params, _slots, _tokens) => makeComponent("column"),
+      layout: { params: {}, render: (_params: any, _slots: any, _tokens: any) => makeComponent("column") },
+      master: plainMaster,
+      masterTokens: {},
+      layoutTokens: {},
     });
 
+    layoutRegistry.register([template.layout]);
     const layout = layoutRegistry.get(templateName);
     assert.ok(layout);
 
@@ -169,25 +133,47 @@ describe("defineTemplate()", () => {
     assert.strictEqual(slide.content.componentName, "column");
   });
 
-  it("masterTokens defaults to empty object when master key is absent", () => {
-    const masterName = "test-tmpl-master-5";
+  it("masterTokens defaults to empty object when master key is absent in flat bag", () => {
+    const _masterName = "test-tmpl-master-5";
     const templateName = "test-tmpl-layout-5";
 
-    const master = defineMaster({ name: masterName, render: minimalMasterRender });
-    defineTemplate({
+    const template = defineTemplate({
       name: templateName,
       description: "Missing master token fallback",
-      params: {},
-      master,
-      render: (_params, _slots, _tokens) => makeComponent("column"),
+      layout: { params: {}, render: (_params: any, _slots: any, _tokens: any) => makeComponent("column") },
+      master: plainMaster,
+      masterTokens: {},
+      layoutTokens: { title: "hello" },
     });
 
+    layoutRegistry.register([template.layout]);
     const layout = layoutRegistry.get(templateName);
     assert.ok(layout);
 
-    // No `master` key in tokens at all
+    // No `master` key in the flat bag at runtime
     const slide = layout!.render({}, {}, { title: "hello" });
 
+    assert.strictEqual(slide.masterName, "");
     assert.deepStrictEqual(slide.masterTokens, {});
+  });
+
+  it("master and tokens are preserved on the returned Template object", () => {
+    const templateName = "test-tmpl-tokens-preserved";
+    const master = { name: "m", render: minimalMasterRender };
+    const masterTokens = { bg: "blue" };
+    const layoutTokens = { color: "blue", size: 42 };
+
+    const template = defineTemplate({
+      name: templateName,
+      description: "Token preservation test",
+      layout: { params: {}, render: (_params: any, _slots: any, _tokens: any) => makeComponent("column") },
+      master,
+      masterTokens,
+      layoutTokens,
+    });
+
+    assert.strictEqual(template.master, master);
+    assert.deepStrictEqual(template.masterTokens, masterTokens);
+    assert.deepStrictEqual(template.layoutTokens, layoutTokens);
   });
 });
