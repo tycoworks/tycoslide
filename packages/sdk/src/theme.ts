@@ -2,17 +2,16 @@
 // A ThemeDefinition maps format names to ThemeFormats.
 // resolveThemeFormat() flattens a ThemeDefinition + format name into a core Theme.
 
-import type { FontFamily, TextStyle, Theme, VariantConfig } from "@tycoslide/core";
+import type { FontFamily, TemplateConfig, TextStyle, Theme } from "@tycoslide/core";
 import { validateThemeFonts } from "@tycoslide/core";
 import type { Template } from "./template.js";
 
-// ── Types ──────────────────────────────────────────────────────��─────────────
+// ── Types ──────────────────────────────────────────────────────────────────────
 
 /** Per-format configuration within a ThemeDefinition. */
 export interface ThemeFormat {
   slide: { width: number; height: number };
   textStyles: Record<string, TextStyle>;
-  layouts?: Record<string, { variants: VariantConfig }>;
   templates?: Template[];
 }
 
@@ -22,31 +21,22 @@ export interface ThemeDefinition {
   formats: Record<string, ThemeFormat>;
 }
 
-// ── Helpers ──────────────────��───────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────────────────
 
-/** Convert Template[] to the layouts structure core expects. */
-function templatesToLayouts(templates: Template[]): Record<string, { variants: VariantConfig }> {
-  const layouts: Record<string, { variants: VariantConfig }> = {};
+/** Convert Template[] to the structured TemplateConfig map core expects. */
+function templatesToLayouts(templates: Template[]): Record<string, TemplateConfig> {
+  const layouts: Record<string, TemplateConfig> = {};
   for (const t of templates) {
-    // Assemble the flat token bag core expects: master info under "master" key + layoutTokens
-    const masterRef = { masterName: t.master.name, tokens: t.masterTokens };
-    layouts[t.layout.name] = { variants: { default: { master: masterRef, ...t.layoutTokens } } };
+    layouts[t.layout.name] = {
+      masterName: t.master.name,
+      masterTokens: t.masterTokens,
+      layoutTokens: t.layoutTokens,
+    };
   }
   return layouts;
 }
 
-/** Resolve layouts from a ThemeFormat, preferring explicit layouts over templates. */
-function resolveLayouts(format: ThemeFormat): Record<string, { variants: VariantConfig }> {
-  if (format.layouts) {
-    return format.layouts;
-  }
-  if (format.templates) {
-    return templatesToLayouts(format.templates);
-  }
-  return {};
-}
-
-// ── defineTheme ──────────────────────────────────────���───────────────────────
+// ── defineTheme ────────────────────────────────────────────────────────────────
 
 /**
  * Define a multi-format theme. Validates font configuration across all formats
@@ -65,14 +55,14 @@ export function defineTheme(definition: ThemeDefinition): ThemeDefinition {
       slide: format.slide,
       fonts: definition.fonts,
       textStyles: format.textStyles,
-      layouts: resolveLayouts(format),
+      layouts: templatesToLayouts(format.templates ?? []),
     });
   }
 
   return definition;
 }
 
-// ── resolveThemeFormat ────────────────────────���──────────────────────────────
+// ── resolveThemeFormat ──────────────────────────────────────────────────────────
 
 /**
  * Resolve a ThemeDefinition to a flat Theme for a specific format.
@@ -96,6 +86,6 @@ export function resolveThemeFormat(definition: ThemeDefinition, format: string |
     slide: themeFormat.slide,
     fonts: definition.fonts,
     textStyles: themeFormat.textStyles,
-    layouts: resolveLayouts(themeFormat),
+    layouts: templatesToLayouts(themeFormat.templates ?? []),
   };
 }

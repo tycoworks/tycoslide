@@ -8,8 +8,8 @@
 import { z } from "zod";
 import { type ComponentNode, isComponentNode, type SlideNode } from "../model/nodes.js";
 import { RESERVED_FRONTMATTER_KEYS } from "../model/syntax.js";
-import { resolveVariantTokens } from "../model/token.js";
-import type { Slide, Theme } from "../model/types.js";
+
+import type { Slide, TemplateConfig, Theme } from "../model/types.js";
 import { Presentation } from "../rendering/presentation.js";
 import { componentRegistry, type LayoutDefinition, layoutRegistry } from "../rendering/registry.js";
 import { parseSlideDocument, type RawSlide } from "./slideParser.js";
@@ -157,11 +157,10 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
     throw new Error(`Slide ${raw.index + 1}: unknown layout '${layoutName}'. Available: ${available}`);
   }
 
-  // 3. Extract variant from frontmatter (before stripping reserved keys)
-  const variant = raw.frontmatter.variant as string | undefined;
-
-  if (!variant) {
-    throw new Error(`Slide ${raw.index + 1}: missing 'variant' field in frontmatter`);
+  // 3. Look up structured layout config from theme
+  const layoutConfig: TemplateConfig | undefined = options.theme.layouts?.[layoutName];
+  if (!layoutConfig) {
+    throw new Error(`Slide ${raw.index + 1}: theme has no config for layout '${layoutName}'.`);
   }
 
   // 4. Build PARAMS — strip reserved frontmatter keys
@@ -171,14 +170,7 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
     delete params[key];
   }
 
-  // 5. Resolve layout tokens (if the theme provides them for this layout)
-  let resolvedTokens: Record<string, unknown> | undefined;
-  const themeLayoutConfig = options.theme.layouts?.[layoutName];
-  if (themeLayoutConfig) {
-    resolvedTokens = resolveVariantTokens(themeLayoutConfig, layoutName, variant, undefined, !layout.slots?.length);
-  }
-
-  // 6. Build SLOTS — from ::name:: markers and body content
+  // 5. Build SLOTS — from ::name:: markers and body content
   const slots: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(raw.slots)) {
     slots[key] = value;
@@ -197,25 +189,29 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
     }
   }
 
-  // 7. Validate params and slots separately
-  // Asset references ($dot.path) flow through as strings here.
-  // They are resolved later by the image component's render function.
+  // 6. Validate params and slots
   const validated = validateLayout(layout, params, slots);
 
-  // 8. Inject tokens into slot-compiled ComponentNodes
-  // Token keys matching component names (text, list, table, code, etc.)
-  // are forwarded to slot-compiled components as base styling.
-  if (layout.slots?.length && resolvedTokens) {
+  // 7. Inject tokens into slot-compiled ComponentNodes
+  const { layoutTokens } = layoutConfig;
+  if (layout.slots?.length && layoutTokens) {
     for (const slotName of layout.slots) {
       const slotNodes = validated.slots[slotName];
       if (Array.isArray(slotNodes)) {
-        injectSlotTokens(slotNodes as SlideNode[], resolvedTokens);
+        injectSlotTokens(slotNodes as SlideNode[], layoutTokens);
       }
     }
   }
 
-  // 9. Render with params, slots, and tokens
-  const slide = layout.render(validated.params, validated.slots, resolvedTokens);
+  // 8. Render layout — returns content only (SlideNode)
+  const content = layout.render(validated.params, validated.slots, layoutTokens);
+
+  // 9. Assemble Slide with master info from config
+  const slide: Slide = {
+    masterName: layoutConfig.masterName,
+    masterTokens: layoutConfig.masterTokens,
+    content,
+  };
 
   // 10. Attach speaker notes from frontmatter
   if (notes) {

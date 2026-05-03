@@ -58,13 +58,13 @@ export type {
   Slide,
   SpacingMode,
   StrikeType,
+  TemplateConfig,
   TextContent,
   TextRun,
   TextStyle,
   TextStyleName,
   Theme,
   UnderlineStyle,
-  VariantConfig,
   VerticalAlignment,
 } from "./core/model/types.js";
 export {

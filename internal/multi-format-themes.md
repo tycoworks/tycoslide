@@ -1,76 +1,55 @@
-# Multi-Format Themes
+# Multi-Format Themes & Template Unification
 
-Design doc for multi-format theme support in tycoslide. Enables a single theme package to produce output in multiple formats — 16:9 presentations, US letter fact sheets, A4 documents, etc. — with shared brand identity but format-specific dimensions, typography, spacing, and layout tokens.
+Single design doc for tycoslide's multi-format theme system and template unification. Covers the full journey from single-format themes → multi-format support → unified template authoring model.
 
-**Status**: Design
+**Status**: Implementation (Multi-format done; Template unification Step 3 done — May 2026)
+**Branch**: multi-format-themes
 **Breaking change**: Yes — mandatory `format:` frontmatter key, `SLIDE_SIZE` removed from core
+
+---
+
+## Table of Contents
+
+- [Problem](#problem)
+- [Prior Art](#prior-art)
+- [Design: Multi-Format Themes](#design-multi-format-themes)
+- [Design: Template Unification](#design-template-unification)
+- [Current Architecture](#current-architecture-may-2026)
+- [Implementation: Multi-Format (Done)](#implementation-multi-format-done)
+- [Implementation: Template Unification](#implementation-template-unification)
+- [File Inventory](#file-inventory)
+- [Future Steps](#future-steps)
+
+---
 
 ## Problem
 
-tycoslide binds a theme to a single slide size. The `Theme` interface hardcodes one set of dimensions, text styles, and layout tokens:
+### Multi-Format
 
-```typescript
-interface Theme {
-  slide: SlideSize | CustomSlideSize;  // Single dimensions
-  fonts: FontFamily[];
-  textStyles: Record<string, TextStyle>;  // Single set of font sizes
-  layouts: Record<string, { variants: VariantConfig }>;  // Single set of layout tokens
-}
-```
+tycoslide bound a theme to a single slide size. The `Theme` interface hardcoded one set of dimensions, text styles, and layout tokens. A company that wants both presentations (16:9) and fact sheets (US letter portrait) from the same brand must maintain two completely independent themes — duplicating all brand identity and creating drift risk.
 
-A company that wants both presentations (16:9) and fact sheets (US letter portrait) from the same brand must maintain two completely independent themes. This duplicates all brand identity — colors, fonts, accents, visual component tokens — and creates drift risk.
+### Template Authoring
+
+The theme authoring model had 3 layers between Brand and Content:
+
+1. **Master** — slide chrome (background, footer, logo). `defineMaster()` + `masterRegistry.register()`
+2. **Layout** — content arrangement (title+body, two-column, cards). `defineLayout()` + `layoutRegistry.register()`
+3. **Variants** — token-level diffs on a layout (body/default, body/centered)
+
+Plus `MasterRef` wiring connecting layouts to masters through tokens.
+
+**Issues:**
+- Three concepts for theme authors to learn
+- `MasterRef` plumbing in every layout token interface
+- Variant dispatch adds indirection (`resolveVariantTokens`)
+- Invalid combinations possible (dark master + light layout tokens)
+- Markdown requires two frontmatter keys (`layout:` + `variant:`)
+
+---
 
 ## Prior Art
 
-### Canva
-
-Canva's architecture separates brand from format:
-
-- **Brand Kit** — centralized identity (logos, fonts, colors). Shared across ALL content types.
-- **Templates per content type** — presentations, social media, documents are separate template categories with different dimensions and layouts, but all pull from the Brand Kit.
-- **Magic Resize** — AI-powered adaptation that rearranges elements (not just scales) to fit new formats.
-
-Canva's model: **shared brand identity + separate templates per format + AI bridging**. Our approach is the same conceptually — shared brand tokens + separate layout tokens per format — but declarative at build time.
-
-### Marp
-
-Themes declare named size presets via `@size` metadata in CSS. Authors select via `size:` global directive in frontmatter:
-
-```css
-/** @theme gaia
- *  @size 4:3 960px 720px
- *  @size 16:9 1280px 720px
- */
-section { width: 1280px; height: 720px; }
-```
-
-```yaml
----
-theme: gaia
-size: 4:3
----
-```
-
-Key constraint: **sizes only change dimensions — CSS styling stays identical.** No per-size typography or spacing.
-
-### Slidev
-
-Dimensions are presentation-level config, decoupled from themes:
-
-```yaml
----
-aspectRatio: 16/9
-canvasWidth: 980
----
-```
-
-Themes can set defaults via `package.json`, but the author can override. No concept of different styling per size.
-
-### Reveal.js
-
-Dimensions set in JavaScript initialization. Themes are pure CSS files, fully decoupled from dimensions. No multi-format concept.
-
-### Comparison
+### Multi-Format Prior Art
 
 | Framework | Dimensions owned by | Multi-size in theme? | Different tokens per size? |
 |---|---|---|---|
@@ -80,7 +59,19 @@ Dimensions set in JavaScript initialization. Themes are pure CSS files, fully de
 | **Reveal.js** | JS init config | No | No |
 | **tycoslide** | Theme (`formats`) + author selects via `format:` | **Yes** | **Yes** |
 
-Our `format:` key is analogous to Marp's `size:` directive — theme declares named formats, author selects in frontmatter. But tycoslide goes further: each format has its own text sizes, spacing, and layout tokens. This is necessary because PPTX is absolute-positioned (not reflowed CSS), so a 14pt body font designed for projection on a 10"-wide slide doesn't work on a 7.5" × 10" printed fact sheet.
+Our `format:` key is analogous to Marp's `size:` directive — theme declares named formats, author selects in frontmatter. But tycoslide goes further: each format has its own text sizes, spacing, and layout tokens. This is necessary because PPTX is absolute-positioned (not reflowed CSS).
+
+### Template Prior Art
+
+| Tool | Chrome + Layout union | Variant mechanism |
+|------|----------------------|-------------------|
+| PowerPoint | Slide Layout inherits from Slide Master | Multiple masters (light/dark) |
+| Keynote | Master Slide fuses both | Duplicate masters |
+| Canva | Template (locked + unlocked elements) | Separate templates |
+| Slidev | Layout (Vue component) + Theme (CSS) | CSS variables |
+| Figma | Variables + Modes | Mode switching |
+
+Key finding: PPTX has NO content area concept. Slide content can be placed anywhere — including on top of master chrome. `contentBounds` is a tycoslide invention.
 
 ### Competitive Landscape
 
@@ -92,11 +83,12 @@ No existing tool combines: markdown input + design token system + component arch
 | Slidev | No (images in PPTX) | CSS/Vue | No |
 | md2pptx | Yes (basic) | Reference template | No |
 | Pandoc | Yes (basic) | Reference template | No |
-| frontend-slides | No (HTML only) | None | No |
 | PPTAgent/Presenton | Yes (AI-generated) | Template-based | No |
-| **tycoslide** | **Yes** | **TypeScript tokens + components** | **Proposed** |
+| **tycoslide** | **Yes** | **TypeScript tokens + components** | **Yes** |
 
-## Design
+---
+
+## Design: Multi-Format Themes
 
 ### Architectural Principle: Core Is Format-Agnostic
 
@@ -107,44 +99,40 @@ Layer 1 — Core (pure compiler)
   Theme = { slide: { width, height }, fonts, textStyles, layouts }
   compileDocument(source, { theme })  ← the real boundary
 
-Layer 2 — CLI (orchestrator, temporary home for multi-format)
+Layer 2 — SDK (theme authoring)
   ThemeDefinition = { fonts, formats: Record<string, ThemeFormat> }
-  ThemeFormat = { slide, textStyles, layouts }
+  ThemeFormat = { slide, textStyles, templates }
   resolveThemeFormat(definition, formatName) → Theme
-  validateThemeFonts(definition) → void
 
-Layer 3 — Future: @tycoslide/theme-tools (when a second theme exists)
-  Extract ThemeDefinition, defineTheme, resolveThemeFormat from CLI
+Layer 3 — CLI (orchestrator)
+  Reads format: from frontmatter, calls resolveThemeFormat, passes Theme to core
 ```
 
-### Type Changes
+### Core Type: Theme
 
-Core's `Theme` is the only type the compiler sees. It keeps its current shape, with one simplification — `slide` becomes `{ width: number; height: number }` (removing the pptxgenjs `layout` string leak):
+Core's `Theme` is the only type the compiler sees — flat, single-format:
 
 ```typescript
-// Core: what the compiler receives. One complete theme for one build run.
 interface Theme {
   slide: { width: number; height: number };  // inches
   fonts: FontFamily[];
   textStyles: Record<string, TextStyle>;
-  layouts: Record<string, { variants: VariantConfig }>;
+  layouts: Record<string, TemplateConfig>;   // one config per template name
 }
 ```
 
-Two types live in the CLI (or future theme-tools), not in core:
+### SDK Types: ThemeDefinition + ThemeFormat
 
 ```typescript
-// CLI: what a theme package exports.
 interface ThemeDefinition {
   fonts: FontFamily[];
   formats: Record<string, ThemeFormat>;
 }
 
-// CLI: per-format config within a ThemeDefinition.
 interface ThemeFormat {
   slide: { width: number; height: number };
   textStyles: Record<string, TextStyle>;
-  layouts: Record<string, { variants: VariantConfig }>;
+  templates: Template[];
 }
 ```
 
@@ -160,8 +148,6 @@ CLI calls resolveThemeFormat(definition, "factsheet")  →  Theme
 CLI passes flat Theme to compileDocument(source, { theme })  ←  core boundary
 ```
 
-Core never sees ThemeDefinition. It receives a flat Theme and compiles.
-
 ### Frontmatter
 
 `format:` is **mandatory** in global frontmatter:
@@ -173,8 +159,8 @@ format: presentation
 ---
 ```
 
-Error messages follow tycoslide's pattern of listing available options:
-- Missing `format:` → `"No format specified. Add 'format: <name>' to the global frontmatter. Available formats in this theme: presentation, factsheet"`
+Error messages list available options:
+- Missing `format:` → `"No format specified. Available formats: presentation, factsheet"`
 - Unknown format → `"Unknown format 'factcheat'. Available formats: presentation, factsheet"`
 
 ### What Changes Between Formats
@@ -183,329 +169,305 @@ Error messages follow tycoslide's pattern of listing available options:
 |---|---|
 | `fonts` (font families) | `slide` (dimensions) |
 | | `textStyles` (font sizes, line heights) |
-| | `layouts` (layout token maps with spacing, padding, margins) |
+| | `templates` (layouts + tokens for that format) |
 
-Brand identity tokens (colors, accents, borders, shadows, visual styling) live in the theme author's source code as shared constants. They are used when constructing each format's layout token maps. The framework doesn't need to know about them — they flow through the existing token system.
+Brand identity tokens (colors, accents, borders, shadows) live in theme source as shared constants. They flow through the token system.
 
 ### Slide Size: No Presets in Core
 
-`SLIDE_SIZE` is removed from core. The `layout` field was a pptxgenjs implementation detail leaking into the model layer. Themes define their own slide dimensions freely as `{ width: number; height: number }`.
-
-Convenience presets live in theme-default (or a future shared utils package), not core:
+`SLIDE_SIZE` removed from core. Themes define dimensions freely as `{ width, height }`. Convenience presets live in theme-default:
 
 ```typescript
-// In @tycoslide/theme-default or shared utils
 export const SLIDE_PRESETS = {
   S16x9: { width: 10, height: 5.625 },
-  S16x10: { width: 10, height: 6.25 },
-  S4x3: { width: 10, height: 7.5 },
   US_LETTER_PORTRAIT: { width: 7.5, height: 10 },
   A4_PORTRAIT: { width: 7.5, height: 10.5 },
 } as const;
 ```
 
-The pptxRenderer always uses `defineLayout()` with custom dimensions — no more built-in layout name strings.
+---
 
-### Framework vs Theme Concepts
+## Design: Template Unification
 
-The core framework knows about:
-- `Theme` — flat, single-format theme for the compiler
-- `compileDocument()` — the compiler boundary
+### Design Decisions
 
-The CLI / theme-tools layer knows about:
-- `ThemeDefinition` — multi-format container
-- `ThemeFormat` — per-format slide/textStyles/layouts
-- `format:` — mandatory global frontmatter key
-- `resolveThemeFormat()` — resolution function
-- `validateThemeFonts()` — multi-format validation
+1. **Template = the single authoring concept.** One field in markdown: `template: body-centered`. Replaces `layout: body` + `variant: centered`.
 
-The framework does NOT know about:
-- Margins (theme master tokens)
-- Footers, sidebars, chrome (theme master render functions)
-- Spacing scales, padding (theme layout token values)
-- Color palettes, accents (theme constants)
-- Brand identity sharing patterns (theme author's TypeScript)
+2. **Variants eliminated.** Token resolution is direct lookup. Templates that share a content arrangement reuse the same Layout object with different tokens.
 
-### Theme Author Experience
+3. **Three-level internal separation** (Layout / Master / Template). Theme authors work with Templates. Layouts and Masters are implementation details for reuse.
 
-#### Single-format theme
+4. **Core is master-aware but template-agnostic.** Core knows masters and layouts — two independent rendering layers. "Template" lives only in SDK.
+
+### Three-Level Pattern
+
+Blueprint (reusable) → Template (blueprint + tokens) → Registration (invisible plumbing)
+
+#### Layout — structural content blueprint
 
 ```typescript
-import { defineTheme } from '@tycoslide/cli';  // or future @tycoslide/theme-tools
-
-export const theme = defineTheme({
-  fonts: [myFont],
-  formats: {
-    default: {
-      slide: { width: 10, height: 5.625 },
-      textStyles: { h1: {...}, body: {...}, ... },
-      layouts: {
-        body: { variants: { default: bodyLayout.tokenMap({...}) } },
-        title: { variants: { default: titleLayout.tokenMap({...}) } },
-      },
-    },
-  },
-});
+interface Layout<TTokens> {
+  params: ScalarShape;
+  slots?: readonly string[];
+  render: (params, slots, tokens: TTokens) => SlideNode;
+}
 ```
 
-```yaml
----
-theme: my-theme
-format: default
----
-```
+- 14 unique layouts → 17 templates
+- Token interfaces named `*TemplateTokens`
+- No name, no registration — just a structural blueprint
 
-#### Multi-format theme (recommended pattern)
-
-```
-my-theme/src/
-├── base.ts              ← Shared: palette, fonts, accents, visual token bases
-├── formats/
-│   ├── presentation.ts  ← Dimensions, spacing, text sizes for 16:9
-│   └── factsheet.ts     ← Dimensions, spacing, text sizes for US letter
-├── buildTheme.ts        ← Factory: base + format config → ThemeFormat
-├── theme.ts             ← defineTheme() orchestrator
-├── layouts.ts           ← Layout definitions (shared across formats)
-├── master.ts            ← Master definitions (shared across formats)
-├── assets.ts            ← Fonts, images (shared across formats)
-└── index.ts             ← Exports theme, components, layouts, masters
-```
+#### Master — chrome/background blueprint
 
 ```typescript
-// theme.ts
-import { defineTheme } from '@tycoslide/cli';  // or future @tycoslide/theme-tools
-import * as base from './base.js';
+interface Master<TTokens> {
+  name: string;
+  render: (tokens: TTokens, slideSize: { width: number; height: number }) => MasterResult;
+}
+```
+
+- 3 masters: default, minimal, factsheet
+- Plain objects — NO `defineMaster()` factory for theme authors
+
+#### Template — the complete styled thing
+
+```typescript
+defineTemplate({
+  name: TEMPLATE.BODY,
+  description: "Markdown body with optional title.",
+  layout: body,                          // Layout object
+  master: defaultMaster,                 // Master object
+  masterTokens: { background, margin },  // tokens for the master
+  layoutTokens: { text, list, ... },     // tokens for the layout
+})
+```
+
+### Core TemplateConfig
+
+Core receives structured config per template name — no opaque token bags, no smuggling:
+
+```typescript
+export interface TemplateConfig {
+  masterName: string;
+  masterTokens: Record<string, unknown>;
+  layoutTokens: Record<string, unknown>;
+}
+
+export interface Theme {
+  slide: { width: number; height: number };
+  fonts: FontFamily[];
+  textStyles: Record<string, TextStyle>;
+  layouts: Record<string, TemplateConfig>;
+}
+```
+
+### Pipeline Flow
+
+```
+1. Theme author writes:
+   defineTemplate({ layout: body, master: defaultMaster, masterTokens: {...}, layoutTokens: {...} })
+
+2. SDK resolveThemeFormat() → templatesToLayouts() produces:
+   theme.layouts["body"] = {
+     masterName: "default",
+     masterTokens: { background, margin, footerHeight, ... },
+     layoutTokens: { text, list, spacing, ... },
+   }
+
+3. Core documentCompiler → compileLayoutSlide:
+   a. Reads layoutName from frontmatter
+   b. Looks up theme.layouts[layoutName] → { masterName, masterTokens, layoutTokens }
+   c. Calls layout.render(params, slots, layoutTokens) → SlideNode (content only)
+   d. Assembles Slide { masterName, masterTokens, content }
+
+4. Core Presentation.processDeferredSlides:
+   a. masterRegistry.get(masterName).render(masterTokens, slideSize) → { content, background }
+   b. Render master component tree (full slide bounds)
+   c. Render slide content tree (full slide bounds)
+   d. Compose: master behind, content on top
+```
+
+---
+
+## Current Architecture (May 2026)
+
+### What's implemented
+
+Multi-format themes and template unification Steps 1–3 are complete:
+
+| Feature | Status |
+|---------|--------|
+| Core format-agnostic (`Theme` flat type) | Done |
+| SDK multi-format (`ThemeDefinition`, `ThemeFormat`, `resolveThemeFormat`) | Done |
+| CLI wiring (reads `format:`, resolves, passes to core) | Done |
+| `defineTemplate()` with explicit master + tokens | Done |
+| `Master<T>` as plain interface (no factory) | Done |
+| Core `TemplateConfig` (structured, no smuggling) | Done |
+| `LayoutDefinition.render` → `SlideNode` (content only) | Done |
+| `resolveVariantTokens` eliminated | Done |
+| Presentation + factsheet formats working | Done |
+| 712 tests passing | Done |
+
+### What was eliminated
+
+| Removed | Replacement |
+|---------|-------------|
+| `SLIDE_SIZE`, `SlideSize`, `CustomSlideSize` | `{ width, height }` on Theme |
+| `VariantConfig` type | `TemplateConfig` (structured) |
+| `variants` nesting in `Theme.layouts` | Direct `Record<string, TemplateConfig>` |
+| `MasterRef` type | Direct master object reference |
+| `defineMaster()` in theme-default | Plain `Master<T>` objects |
+| `mod.masters` separate export | Masters discovered from templates |
+| Magic `"master"` key in token bag | Explicit `master` + `masterTokens` fields |
+| `LayoutDefinition.render` returning `Slide` | Returns `SlideNode` (content only) |
+| `resolveVariantTokens` | Direct `layoutTokens` read from `TemplateConfig` |
+| `variant:` frontmatter key | Single `template:` name |
+
+### SDK exports (template.ts)
+
+```typescript
+interface Master<TTokens extends object = Record<string, unknown>> {
+  name: string;
+  render: (tokens: TTokens, slideSize: { width: number; height: number }) => MasterResult;
+}
+
+interface MasterResult {
+  content: ComponentNode;
+  contentBounds?: Bounds;
+  background: Background;
+}
+
+interface Template {
+  layout: LayoutDefinition;
+  master: Master<any>;
+  masterTokens: Record<string, unknown>;
+  layoutTokens: Record<string, unknown>;
+}
+```
+
+### Theme author experience
+
+```typescript
+// theme.ts — thin orchestrator
+import { defineTheme } from '@tycoslide/sdk';
+import * as base from './foundations/base.js';
 import { presentationConfig } from './formats/presentation.js';
 import { factsheetConfig } from './formats/factsheet.js';
-import { buildThemeFormat } from './buildTheme.js';
 
 export const theme = defineTheme({
   fonts: [base.fonts.inter, base.fonts.interLight, base.fonts.firaCode],
   formats: {
-    presentation: buildThemeFormat(base, presentationConfig),
-    factsheet: buildThemeFormat(base, factsheetConfig),
+    presentation: presentationConfig,
+    factsheet: factsheetConfig,
   },
 });
 ```
 
-The `buildThemeFormat` factory is theme-specific code (not a framework function). It takes shared brand tokens + format-specific dimensional values and assembles the complete `ThemeFormat` — building intermediate token objects, master configs, and layout token maps.
+---
 
-## Implementation
+## Implementation: Multi-Format (Done)
 
 ### Phase 0: Core Cleanup (SLIDE_SIZE Removal)
 
-#### Step 0a: Simplify `Theme.slide`
+- Removed `SLIDE_SIZE`, `SlideSize`, `CustomSlideSize`, `CUSTOM_LAYOUT` from core types
+- Changed `Theme.slide` to `{ width: number; height: number }`
+- pptxRenderer always uses `defineLayout()` with custom dimensions
+- Presets moved to theme-default
 
-**File**: `packages/core/src/core/model/types.ts`
+### Phase 1: Multi-Format Types
 
-- Remove `SLIDE_SIZE` const object
-- Remove `SlideSize` type (the union of built-in layout strings)
-- Remove `CustomSlideSize` type
-- Remove `CUSTOM_LAYOUT` const
-- Change `Theme.slide` to `{ width: number; height: number }`
-
-#### Step 0b: Update pptxRenderer
-
-**File**: `packages/core/src/core/rendering/pptxRenderer.ts`
-
-- Always use `defineLayout()` with dimensions from `theme.slide`
-- Remove conditional logic for built-in layout names
-- Always set `pres.layout = "CUSTOM"`
-
-#### Step 0c: Move presets to theme-default
-
-**File**: `packages/theme-default/src/slidePresets.ts` (**new**)
-
-- Export `SLIDE_PRESETS` with convenience dimension objects
-- Update `packages/theme-default/src/theme.ts` to use presets
-
-#### Step 0d: Update all consumers
-
-- Fix all imports/references to removed types across packages
-- Update test mocks that reference `SlideSize`, `CUSTOM_LAYOUT`, etc.
-- Update docs that reference `SLIDE_SIZE`
-
-### Phase 1: Multi-Format Support
-
-#### Step 1: Add multi-format types to CLI
-
-**File**: `packages/cli/src/themeDefinition.ts` (**new**)
-
-- Define `ThemeDefinition` and `ThemeFormat` interfaces
-- Export `defineTheme(definition: ThemeDefinition): ThemeDefinition` — validates and returns
-
-#### Step 2: Add resolution function to CLI
-
-**File**: `packages/cli/src/themeFormat.ts` (**new**)
-
-- `resolveThemeFormat(definition: ThemeDefinition, format: string | undefined): Theme`
-- Validates format is provided and exists in definition
-- Error messages list available formats
-- Assembles `Theme` from `definition.fonts` + `definition.formats[format]`
-
-#### Step 3: Add multi-format validation to CLI
-
-**File**: `packages/cli/src/themeValidator.ts` (**new**)
-
-- `validateThemeFonts(definition: ThemeDefinition): void`
-- Validates font paths on shared `fonts` array
-- Iterates each format's `textStyles` and `layouts` to validate font registration per-format
-
-#### Step 4: Update theme loader
-
-**File**: `packages/cli/src/build.ts`
-
-- Extract `format` from `parsed.global.format`
-- Pass `format` to `loadTheme()`
-
-**File**: `packages/cli/src/themeLoader.ts`
-
-- Accept `format: string | undefined` parameter
-- Call `resolveThemeFormat(mod.theme, format)` to get flat `Theme`
-- Return `LoadedTheme` with resolved `Theme`
-
-#### Step 4b: Programmatic API
-
-Users who call `compileDocument()` directly (not through the CLI) work with the flat `Theme` type — no format resolution needed. If they want multi-format support, they import `resolveThemeFormat` from the CLI package (or future theme-tools).
-
-#### Step 5: Core's `defineTheme()` stays flat
-
-**File**: `packages/core/src/core/rendering/registry.ts`
-
-- `defineTheme()` accepts and returns flat `Theme` (no change from pre-multi-format)
-- `validateThemeFonts()` in core validates a flat `Theme` (font paths + textStyle font registration)
+- `ThemeDefinition` and `ThemeFormat` interfaces in SDK
+- `resolveThemeFormat(definition, format)` → flat `Theme`
+- `validateThemeFonts()` iterates all formats
+- CLI extracts `format:` from frontmatter, passes to theme loader
 
 ### Phase 2: Default Theme Refactor
 
-#### Step 6: Extract shared base tokens
+- Shared brand tokens extracted to `foundations/`
+- Format-specific configs in `formats/presentation.ts` and `formats/factsheet.ts`
+- Factory function builds complete `ThemeFormat` from base + format config
 
-**New file**: `packages/theme-default/src/base.ts`
+---
 
-Move all format-independent constants from `theme.ts`:
-- `TEXT_STYLE` names (current lines 32-43)
-- `palette`, `accents` — colors (current lines 49-67)
-- `borderWidth`, `cornerRadius`, `cornerRadiusLarge`, `accentBarWidth` — visual decoration constants (current lines 83-86)
-- `subtleBorder`, `shadow` — visual decoration objects (current lines 87-96)
-- `richTextBase`, `heroBase`, `labelBase` — text token bases that reference palette (current lines 107-114)
-- `cardBackground` — visual card styling (current lines 171-176)
-- `imageBase` — base image tokens (current line 159)
-- `HIGHLIGHT_THEME.GITHUB_DARK` reference
-- Alignment constants (`alignLeft`, `alignCenter`)
-- Font references from `assets.ts`
+## Implementation: Template Unification
 
-These are all brand-identity values. Colors, visual styling, font families — things that define the brand regardless of output format.
+### Step 1: defineTemplate + Layout in SDK (Done)
 
-#### Step 7: Create format configs
+Added `defineTemplate()` factory and `Layout<TTokens>` interface to SDK.
 
-**New file**: `packages/theme-default/src/formats/presentation.ts`
+### Step 2: Master as first-class SDK type (Done)
 
-Extract from current `theme.ts` — all dimensional values for the existing 16:9 format:
-- `slide: SLIDE_PRESETS.S16x9`
-- `unit = 0.03125` (1/32 inch), `spacing = unit * 8`, `spacingTight = unit * 4`
-- `padding = unit * 8`, `margin = 0.5`, `footerHeight = unit * 8`
-- `lineSpacing = 1.2`, `bulletIndentMultiplier = 1.5`
-- `textStyles` with current font sizes: title 56pt, h1 44pt, h2 32pt, h3 24pt, h4 18pt, body 14pt, small 12pt, eyebrow 11pt, footer 8pt, code 11pt
+- `Master<T>` interface (plain objects, no factory)
+- `Template` type with explicit `master` + `masterTokens` + `layoutTokens`
+- `defineTemplate()` accepts separated fields
+- `MasterRef` and old `MasterDefinition` eliminated from SDK exports
+- All theme-default templates use new signature
 
-**New file**: `packages/theme-default/src/formats/factsheet.ts`
+### Step 3: Core structured config (Done)
 
-New format-specific values for US letter portrait:
-- `slide: SLIDE_PRESETS.US_LETTER_PORTRAIT` (7.5" × 10")
-- Adjusted spacing scale for document density (smaller base unit)
-- `margin = 0.75` (wider margins for print)
-- Smaller text styles appropriate for a document: h1 28pt, h2 22pt, h3 18pt, h4 14pt, body 11pt, small 10pt, eyebrow 9pt, footer 7pt, code 9pt
+- Added `TemplateConfig` to core types, replaced `VariantConfig`
+- `Theme.layouts` is now `Record<string, TemplateConfig>` (no variants nesting)
+- `LayoutDefinition.render` returns `SlideNode` (content only)
+- Document compiler reads structured config, assembles `Slide`
+- `resolveVariantTokens` deleted entirely
+- SDK `templatesToLayouts()` produces structured `TemplateConfig`
+- `defineTemplate` is a simple passthrough (no render wrapper)
+- All 712 tests pass
 
-#### Step 8: Create theme build function
+---
 
-**New file**: `packages/theme-default/src/buildTheme.ts`
+## File Inventory
 
-Factory function: `buildThemeFormat(base, formatConfig) → ThemeFormat`
+| File | Role |
+|------|------|
+| `core/model/types.ts` | `Theme`, `TemplateConfig`, `Slide` |
+| `core/rendering/registry.ts` | `LayoutDefinition` (render → SlideNode), `MasterDefinition` |
+| `core/rendering/presentation.ts` | Assembles master + content layers |
+| `core/markdown/documentCompiler.ts` | Reads `TemplateConfig`, calls layout.render, builds `Slide` |
+| `core/model/token.ts` | Token utilities (no variant resolution) |
+| `sdk/template.ts` | `defineTemplate`, `Master<T>`, `Template` interface |
+| `sdk/theme.ts` | `ThemeDefinition`, `ThemeFormat`, `resolveThemeFormat`, `templatesToLayouts` |
+| `cli/src/build.ts` | Reads `format:`, calls `resolveThemeFormat` |
+| `cli/src/themeLoader.ts` | Loads theme, resolves format |
+| `theme-default/src/theme.ts` | Thin orchestrator — defineTheme with formats |
+| `theme-default/src/foundations/` | Shared brand tokens (palette, fonts, accents) |
+| `theme-default/src/formats/` | Per-format configs (presentation, factsheet) |
 
-Takes shared brand tokens (base) + format-specific dimensional config. Assembles:
-1. Body text tokens — base colors + format text style names
-2. Heading label tokens — base colors + format text style names
-3. Component token groups (card, table, code, quote, mermaid, testimonial) — base visual tokens + format spacing/padding
-4. Body slot token bundle — aggregates all component tokens
-5. Master configs — format margins/footerHeight + base colors
-6. Layout token maps — format spacing + base visual tokens + master configs
-7. Returns `{ slide, textStyles, layouts }` — a complete `ThemeFormat`
+---
 
-This is the function that replaces the current inline construction in `theme.ts`. All the intermediate objects (`bodyText`, `cardBase`, `bodySlotTokens`, `bodyBase`, `cardsBase`, etc.) are built inside this function using both base and format values.
+## Future Steps
 
-#### Step 9: Update theme entry points
+### Move Markdown Compilation from Core to SDK
 
-**Update**: `packages/theme-default/src/theme.ts` — becomes a thin orchestrator:
+The markdown layer (`documentCompiler.ts`, `slideParser.ts`, `slotCompiler.ts`) currently lives in `packages/core/src/core/markdown/`. This should move to `packages/sdk/src/markdown/` so that core becomes a pure renderer:
 
-```typescript
-import { defineTheme } from '@tycoslide/cli';
-import * as base from './base.js';
-import { presentationConfig } from './formats/presentation.js';
-import { factsheetConfig } from './formats/factsheet.js';
-import { buildThemeFormat } from './buildTheme.js';
+- Core receives: `Slide[]` + `Theme` → produces `.pptx`
+- SDK owns: markdown parsing, slot compilation, layout token injection, template resolution
+- Already done on the `multi-format-themes` branch of the `tycoslide` repo (not yet merged to `tycoslide-clean`)
 
-export const theme = defineTheme({
-  fonts: [base.fonts.inter, base.fonts.interLight, base.fonts.firaCode],
-  formats: {
-    presentation: buildThemeFormat(base, presentationConfig),
-    factsheet: buildThemeFormat(base, factsheetConfig),
-  },
-});
-```
+### Eliminate Registries from Core
 
-**Update**: `packages/theme-default/src/index.ts` — still exports `theme`, `components`, `layouts`, `masters`. No structural change needed.
+Currently `masterRegistry` and `layoutRegistry` are global singletons in core. With markdown compilation moved to SDK:
 
-### Phase 3: Tests & Docs
+- `layoutRegistry` moves with markdown (SDK looks up layouts during compilation)
+- `masterRegistry` can be eliminated if the `Slide` type carries the master definition directly (not just a name string)
+- Core becomes a pure function: `(slides: Slide[], theme: Theme) → .pptx` — no global state, no registries
+- `componentRegistry` remains (used at render time to expand ComponentNodes to primitives)
 
-#### Step 10: Update tests
+### Master as Layout Composition (Investigate)
 
-- Update test markdown fixtures to include `format:` in global frontmatter
-- Add tests for format resolution:
-  - Valid format → correct `Theme` returned
-  - Unknown format → error listing available formats
-  - Missing format → error with guidance
+Masters and layouts use the same component primitives. A master could be decomposed into:
+- **Background**: pure function from tokens → Background
+- **Chrome layout**: a `Layout` that renders decorative nodes (footer, logo, bars)
+- **Chrome tokens**: token values for the chrome layout
 
-#### Step 11: Update docs
+Benefits if viable: masters become declarative, chrome layouts are reusable across masters, converges the type system. Investigate after markdown moves to SDK.
 
-- `docs/themes.md` — update `defineTheme()` examples, document `ThemeDefinition`/`ThemeFormat`, add format docs
-- `docs/markdown-syntax.md` — document mandatory `format:` global frontmatter key
-- `docs/quick-start.md` — add `format: presentation` to example frontmatter
+### SDK Authoring API (future)
 
-### Phase 4: Verify
+Higher-level helpers proposed in `sdk-authoring-api.md`:
+- **Declarative master builder** (`defineMasterChrome`) — uses SDK-side `contentBounds` to compute layout padding
+- **Typed slot token bundles** — compile-time validation of component token keys
+- **Text style scale generator** — generates textStyles from base size + scale ratio
 
-- `npm run build` — all four packages compile
-- `npm test` — all existing tests pass (with format fixtures updated)
-- Build test deck with `format: presentation` → identical PPTX output as before (regression)
-- Build test deck with `format: factsheet` → portrait US letter PPTX (7.5" × 10")
-- Build test deck without `format:` → clear error message
-- Build test deck with `format: nonexistent` → error listing available formats
-- Open both outputs in PowerPoint/Google Slides to verify dimensions and visual quality
-
-## Critical Files
-
-| File | Change |
-|------|--------|
-| `packages/core/src/core/model/types.ts` | Remove `SLIDE_SIZE`, `SlideSize`, `CustomSlideSize`, `CUSTOM_LAYOUT`; simplify `Theme.slide` |
-| `packages/core/src/core/rendering/pptxRenderer.ts` | Always use `defineLayout()` with dimensions |
-| `packages/cli/src/themeDefinition.ts` | **New** — `ThemeDefinition`, `ThemeFormat`, multi-format `defineTheme()` |
-| `packages/cli/src/themeFormat.ts` | **New** — `resolveThemeFormat()` with format validation |
-| `packages/cli/src/themeValidator.ts` | **New** — multi-format `validateThemeFonts()` |
-| `packages/cli/src/build.ts` | Extract mandatory `format:`, pass to `loadTheme()` |
-| `packages/cli/src/themeLoader.ts` | Accept `format`, call `resolveThemeFormat()` |
-| `packages/theme-default/src/slidePresets.ts` | **New** — convenience dimension presets |
-| `packages/theme-default/src/base.ts` | **New** — shared brand tokens |
-| `packages/theme-default/src/formats/presentation.ts` | **New** — 16:9 format config |
-| `packages/theme-default/src/formats/factsheet.ts` | **New** — US letter portrait format config |
-| `packages/theme-default/src/buildTheme.ts` | **New** — factory: base + format → ThemeFormat |
-| `packages/theme-default/src/theme.ts` | Simplified — calls defineTheme with formats |
-
-## Unchanged
-
-- **`Theme` type name** — stays as `Theme` (no rename needed)
-- **`Theme` type shape** — `{ slide, fonts, textStyles, layouts }` (slide simplified to `{ width, height }`)
-- **Compiler** (`documentCompiler.ts`) — receives `Theme`, no changes
-- **Presentation class** (`presentation.ts`) — receives `Theme`, no changes
-- **PPTX renderer** (`pptxRenderer.ts`) — minor change to always use `defineLayout()`
-- **Layout pipeline** (`pipeline.ts`, `htmlRenderer.ts`) — no changes
-- **Component definitions** — shared across all formats, no changes
-- **Layout definitions** (`layouts.ts`) — shared across all formats, no changes
-- **Master definitions** (`master.ts`) — shared across all formats, no changes
-- **Token system** — `token.shape()`, `.tokenMap()`, validation unchanged
+These build on top of the completed template unification and are independent workstreams.

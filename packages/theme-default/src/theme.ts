@@ -23,7 +23,7 @@ import {
   transform,
   twoColumn,
 } from "./layouts.js";
-import { defaultMaster, factsheetMaster, MASTER, minimalMaster } from "./masters.js";
+import { defaultMaster, factsheetMaster, minimalMaster } from "./masters.js";
 
 // ============================================
 // TEMPLATE NAMES
@@ -298,7 +298,7 @@ function buildMasterTokens(base: typeof Base, config: FormatConfig) {
 // ============================================
 
 function buildPresentationFormat(base: typeof Base, config: FormatConfig): ThemeFormat {
-  const { spacing, spacingTight, padding, margin, footerHeight, unit } = config;
+  const { spacing, spacingTight, padding, unit } = config;
   const { palette, TEXT_STYLE, subtleBorder, shadow, cardBackground, imageBase } = base;
 
   const t = buildSharedTokens(base, config);

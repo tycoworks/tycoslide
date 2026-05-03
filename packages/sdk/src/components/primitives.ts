@@ -3,7 +3,6 @@
 import {
   type ComponentNode,
   component,
-  DASH_TYPE,
   type DashType,
   DIRECTION,
   DIRECTION_VALUES,

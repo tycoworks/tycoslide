@@ -133,10 +133,10 @@ describe("validateThemeFonts", () => {
       const theme = mockTheme({
         layouts: {
           body: {
-            variants: {
-              default: {
-                heading: { fontFamily: unregisteredFamily },
-              },
+            masterName: "default",
+            masterTokens: {},
+            layoutTokens: {
+              heading: { fontFamily: unregisteredFamily },
             },
           },
         },
@@ -149,11 +149,11 @@ describe("validateThemeFonts", () => {
       const theme = mockTheme({
         layouts: {
           body: {
-            variants: {
-              default: {
-                color: "#FF0000",
-                style: "body",
-              },
+            masterName: "default",
+            masterTokens: {},
+            layoutTokens: {
+              color: "#FF0000",
+              style: "body",
             },
           },
         },

@@ -9,10 +9,10 @@ import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
 
 import { buildSlideName, compileDocument } from "../src/core/markdown/documentCompiler.js";
+import type { SlideNode } from "../src/core/model/nodes.js";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
 import { param, schema } from "../src/core/model/param.js";
-
-import type { Slide } from "../src/core/model/types.js";
+import type { TemplateConfig } from "../src/core/model/types.js";
 import { componentRegistry, layoutRegistry } from "../src/core/rendering/registry.js";
 import { mockTheme } from "./mocks.js";
 import { testComponents } from "./test-components.js";
@@ -22,33 +22,38 @@ import { testComponents } from "./test-components.js";
 // ============================================
 
 let receivedProps: any[] = [];
-let renderedSlides: Slide[] = [];
 
 /** Global FM header — required before any slide frontmatter */
 const HEADER = `---\ntheme: test\n---\n\n`;
 
+/** Default TemplateConfig for test layouts */
+const defaultConfig: TemplateConfig = { masterName: "default", masterTokens: {}, layoutTokens: {} };
+
 function makeOptions() {
-  return { theme: mockTheme() };
+  return {
+    theme: mockTheme({
+      layouts: {
+        simple: defaultConfig,
+        body: defaultConfig,
+        slots: defaultConfig,
+        strict: defaultConfig,
+        default: defaultConfig,
+      },
+    }),
+  };
 }
 
-// Mock layouts
-function mockSlide(props: any): Slide {
+// Mock layouts — return SlideNode (content only)
+function mockContent(props: any): SlideNode {
   receivedProps.push(props);
-  const slide: Slide = {
-    masterName: "default",
-    masterTokens: {},
-    content: { type: NODE_TYPE.COMPONENT, componentName: "test", params: props, content: undefined },
-  };
-  renderedSlides.push(slide);
-  return slide;
+  return { type: NODE_TYPE.COMPONENT, componentName: "test", params: props, content: undefined };
 }
 
 const simpleLayout = {
   name: "simple",
   description: "Test layout with just title",
   params: { title: schema.string() },
-  tokens: {},
-  render: (params: any, slots: any): Slide => mockSlide({ ...params, ...slots }),
+  render: (params: any, slots: any): SlideNode => mockContent({ ...params, ...slots }),
 };
 
 const bodyLayout = {
@@ -56,8 +61,7 @@ const bodyLayout = {
   description: "Body layout with title and body",
   params: { title: param.optional(schema.string()) },
   slots: ["body"],
-  tokens: {},
-  render: (params: any, slots: any): Slide => mockSlide({ ...params, ...slots }),
+  render: (params: any, slots: any): SlideNode => mockContent({ ...params, ...slots }),
 };
 
 const slotLayout = {
@@ -65,24 +69,21 @@ const slotLayout = {
   description: "Slot layout with named slots",
   params: { title: schema.string(), eyebrow: schema.string() },
   slots: ["left", "right"],
-  tokens: {},
-  render: (params: any, slots: any): Slide => mockSlide({ ...params, ...slots }),
+  render: (params: any, slots: any): SlideNode => mockContent({ ...params, ...slots }),
 };
 
 const strictLayout = {
   name: "strict",
   description: "Strict layout with required field",
   params: { title: schema.string(), required_field: schema.string() },
-  tokens: {},
-  render: (params: any, slots: any): Slide => mockSlide({ ...params, ...slots }),
+  render: (params: any, slots: any): SlideNode => mockContent({ ...params, ...slots }),
 };
 
 const defaultLayout = {
   name: "default",
   description: "Default layout with optional body",
   params: { title: param.optional(schema.string()), body: param.optional(schema.string()) },
-  tokens: {},
-  render: (params: any, slots: any): Slide => mockSlide({ ...params, ...slots }),
+  render: (params: any, slots: any): SlideNode => mockContent({ ...params, ...slots }),
 };
 
 // ============================================
@@ -99,7 +100,6 @@ layoutRegistry.register([simpleLayout, bodyLayout, slotLayout, strictLayout, def
 describe("Document Compiler", () => {
   beforeEach(() => {
     receivedProps = [];
-    renderedSlides = [];
   });
 
   describe("parameter mapping", () => {
@@ -108,7 +108,6 @@ describe("Document Compiler", () => {
         HEADER +
         `---
 layout: simple
-variant: default
 title: Hello World
 ---`;
       compileDocument(md, makeOptions());
@@ -121,7 +120,6 @@ title: Hello World
         HEADER +
         `---
 layout: simple
-variant: default
 title: Frontmatter Title
 ---`;
       compileDocument(md, makeOptions());
@@ -134,7 +132,6 @@ title: Frontmatter Title
         HEADER +
         `---
 layout: body
-variant: default
 ---
 
 This is the body content.
@@ -151,7 +148,6 @@ Multiple paragraphs are preserved.`;
         HEADER +
         `---
 layout: slots
-variant: default
 title: Two Column Slide
 eyebrow: ARCHITECTURE
 ---
@@ -176,13 +172,36 @@ Right column content here.`;
         HEADER +
         `---
 layout: simple
-variant: default
 title: Slide with Notes
 notes: These are speaker notes.
 ---`;
-      compileDocument(md, makeOptions());
-      assert.strictEqual(renderedSlides.length, 1);
-      assert.strictEqual(renderedSlides[0].notes, "These are speaker notes.");
+      const pres = compileDocument(md, makeOptions());
+      const slides = (pres as any).deferredSlides as { slide: any }[];
+      assert.strictEqual(slides.length, 1);
+      assert.strictEqual(slides[0].slide.notes, "These are speaker notes.");
+    });
+
+    it("populates masterName and masterTokens from TemplateConfig", () => {
+      const theme = mockTheme({
+        layouts: {
+          simple: { masterName: "custom-master", masterTokens: { bg: "#000" }, layoutTokens: {} },
+          body: defaultConfig,
+          slots: defaultConfig,
+          strict: defaultConfig,
+          default: defaultConfig,
+        },
+      });
+      const md = `${HEADER}---\nlayout: simple\ntitle: Test\n---`;
+      const pres = compileDocument(md, { theme });
+      const slides = (pres as any).deferredSlides as { slide: any }[];
+      assert.strictEqual(slides[0].slide.masterName, "custom-master");
+      assert.deepStrictEqual(slides[0].slide.masterTokens, { bg: "#000" });
+    });
+
+    it("throws when theme has no config for the layout", () => {
+      const theme = mockTheme({ layouts: {} });
+      const md = `${HEADER}---\nlayout: simple\ntitle: Test\n---`;
+      assert.throws(() => compileDocument(md, { theme }), /theme has no config for layout 'simple'/);
     });
 
     it("should compile multiple slides", () => {
@@ -190,19 +209,16 @@ notes: These are speaker notes.
         HEADER +
         `---
 layout: simple
-variant: default
 title: Slide One
 ---
 
 ---
 layout: simple
-variant: default
 title: Slide Two
 ---
 
 ---
 layout: simple
-variant: default
 title: Slide Three
 ---`;
       compileDocument(md, makeOptions());
@@ -217,7 +233,6 @@ title: Slide Three
         HEADER +
         `---
 layout: default
-variant: default
 body: Frontmatter body content
 ---
 
@@ -230,7 +245,6 @@ Markdown body content`;
         HEADER +
         `---
 layout: slots
-variant: default
 title: Title
 eyebrow: FROM_FM
 ---
@@ -293,29 +307,11 @@ layout: nonexistent
       );
     });
 
-    it("should throw when variant is omitted", () => {
-      const md =
-        HEADER +
-        `---
-layout: simple
-title: No Variant
----`;
-      assert.throws(
-        () => compileDocument(md, makeOptions()),
-        (err: any) => {
-          assert.ok(err.message.includes("missing 'variant'"));
-          assert.ok(err.message.includes("Slide 1"));
-          return true;
-        },
-      );
-    });
-
     it("should throw on validation failure with missing required field", () => {
       const md =
         HEADER +
         `---
 layout: strict
-variant: default
 title: Has Title
 ---`;
       assert.throws(
@@ -334,13 +330,12 @@ title: Has Title
         HEADER +
         `---
 layout: body
-variant: default
 title: $images.photo
 ---
 
 Some body text`;
       const testAssets = { images: { photo: "/resolved/photo.png" } };
-      compileDocument(md, { theme: mockTheme(), assets: testAssets });
+      compileDocument(md, { ...makeOptions(), assets: testAssets });
       assert.strictEqual(receivedProps.length, 1);
       // Asset refs in non-image fields pass through as raw strings
       assert.strictEqual(receivedProps[0].title, "$images.photo");

@@ -157,7 +157,7 @@ export class Presentation {
         },
       };
 
-      // Phase 1: Render masters (collect unique master+variant combos, render component trees)
+      // Phase 1: Render masters (collect unique master+token identity pairs, render component trees)
       log.pptx._("PIPELINE: Collecting masters and slides...");
       const { width, height } = this._theme.slide;
       const pendingMasters = new Map<

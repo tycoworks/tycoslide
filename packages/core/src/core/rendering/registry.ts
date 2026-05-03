@@ -15,7 +15,7 @@ import {
 } from "../model/nodes.js";
 import type { ScalarParam } from "../model/param.js";
 import { RESERVED_FRONTMATTER_KEYS, type SyntaxType } from "../model/syntax.js";
-import type { Background, Slide, Theme } from "../model/types.js";
+import type { Background, Theme } from "../model/types.js";
 
 // Re-export ComponentNode — required for declaration emit (defineComponent return type)
 export type { ComponentNode } from "../model/nodes.js";
@@ -434,7 +434,7 @@ export interface LayoutDefinition {
   description: string;
   params: SchemaShape;
   slots?: readonly string[];
-  render: (params: any, slots: any, tokens: unknown) => Slide;
+  render: (params: any, slots: any, tokens: unknown) => SlideNode;
 }
 
 /**
@@ -452,7 +452,7 @@ export function defineLayout<
   description: string;
   params: TParams;
   slots?: TSlots;
-  render: (params: z.infer<z.ZodObject<TParams>>, slots: SlotsToProps<TSlots>, tokens: TTokens) => Slide;
+  render: (params: z.infer<z.ZodObject<TParams>>, slots: SlotsToProps<TSlots>, tokens: TTokens) => SlideNode;
 }): LayoutDefinition {
   for (const key of Object.keys(def.params)) {
     if (RESERVED_FRONTMATTER_KEYS.has(key as any)) {

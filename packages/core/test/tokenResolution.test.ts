@@ -7,7 +7,6 @@ import { describe, it } from "node:test";
 import { component, NODE_TYPE } from "../src/core/model/nodes.js";
 import { param, schema } from "../src/core/model/param.js";
 
-import { token } from "../src/core/model/token.js";
 import type { Theme } from "../src/core/model/types.js";
 import { HALIGN, VALIGN } from "../src/core/model/types.js";
 import { componentRegistry, defineComponent } from "../src/core/rendering/registry.js";
@@ -24,7 +23,6 @@ const tokenTestComponent = defineComponent({
   params: {
     label: param.optional(schema.string()),
   },
-  tokens: { alpha: token.required<any>(), beta: token.required<any>(), gamma: token.required<any>() },
   render: (params: any, _content: any, _ctx: any, tokens: any): any => ({
     type: NODE_TYPE.TEXT,
     content: [{ text: params.label ?? "" }],
@@ -94,52 +92,11 @@ describe("Token Resolution Engine", () => {
   });
 
   // ============================================
-  // 2. REQUIRED TOKEN VALIDATION (FAIL-FAST)
+  // 2. TOKEN PASSING
   // ============================================
 
-  describe("required token validation", () => {
-    it("throws when no tokens are provided at all", async () => {
-      const theme = minimalTheme();
-      const node = component(TOKEN_COMP as any, { label: "test" });
-
-      await assert.rejects(
-        () => componentRegistry.renderTree(node, { theme, canvas: noopCanvas() }),
-        (err: Error) => {
-          assert.match(err.message, /requires tokens but none were provided/);
-          return true;
-        },
-      );
-    });
-
-    it("throws when a required token is missing from node.tokens", async () => {
-      const theme = minimalTheme();
-      const node = component(TOKEN_COMP as any, { label: "test" }, undefined, { alpha: "A", beta: "B" }); // gamma missing
-
-      await assert.rejects(
-        () => componentRegistry.renderTree(node, { theme, canvas: noopCanvas() }),
-        (err: Error) => {
-          assert.match(err.message, /missing required tokens/);
-          assert.match(err.message, /gamma/);
-          return true;
-        },
-      );
-    });
-
-    it("error message lists ALL missing tokens", async () => {
-      const theme = minimalTheme();
-      const node = component(TOKEN_COMP as any, { label: "test" }, undefined, { alpha: "A" }); // beta and gamma missing
-
-      await assert.rejects(
-        () => componentRegistry.renderTree(node, { theme, canvas: noopCanvas() }),
-        (err: Error) => {
-          assert.match(err.message, /beta/);
-          assert.match(err.message, /gamma/);
-          return true;
-        },
-      );
-    });
-
-    it("succeeds when all required tokens are provided via node.tokens", async () => {
+  describe("token passing", () => {
+    it("succeeds when all tokens are provided via node.tokens", async () => {
       const theme = minimalTheme();
       const node = component(TOKEN_COMP as any, { label: "test" }, undefined, { alpha: "A", beta: "B", gamma: "G" });
       const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
@@ -151,7 +108,6 @@ describe("Token Resolution Engine", () => {
       const noTokenComp = defineComponent({
         name: NO_TOKEN_COMP as any,
         params: { value: param.optional(schema.string()) },
-        tokens: {},
         render: (params: any, _content: any): any => ({
           type: NODE_TYPE.TEXT,
           content: [{ text: params.value ?? "" }],

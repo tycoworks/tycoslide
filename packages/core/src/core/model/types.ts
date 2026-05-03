@@ -215,7 +215,7 @@ export type TextContent = string | TextRun[];
 
 export { Bounds } from "./bounds.js";
 
-import type { ComponentNode } from "./nodes.js";
+import type { SlideNode } from "./nodes.js";
 
 // ============================================
 // BACKGROUND
@@ -244,13 +244,17 @@ export interface Slide {
   /** Overrides master background if set. */
   background?: Background;
   notes?: string;
-  content: ComponentNode;
+  content: SlideNode;
   /** Optional name for identifying slides in error messages and shared slide references. */
   name?: string;
 }
 
-/** Variant configuration — a named map of token values for layout variants. */
-export type VariantConfig = Record<string, Record<string, unknown>>;
+/** Structured config for a layout — master assignment + layout tokens. */
+export interface TemplateConfig {
+  masterName: string;
+  masterTokens: Record<string, unknown>;
+  layoutTokens: Record<string, unknown>;
+}
 
 export interface Theme {
   slide: { width: number; height: number };
@@ -258,7 +262,6 @@ export interface Theme {
    *  `generateFontFaceCSS()` reads exclusively from this list. */
   fonts: FontFamily[];
   textStyles: Record<string, TextStyle>;
-  /** Layout tokens. Each layout that declares token keys gets its visual values from here.
-   *  Layouts with slots may include extra keys for slot injection (keyed by component name). */
-  layouts: Record<string, { variants: VariantConfig }>;
+  /** Layout config. Each template name maps to its master assignment and tokens. */
+  layouts: Record<string, TemplateConfig>;
 }

@@ -9,11 +9,8 @@ import {
   defineLayout,
   type LayoutDefinition,
   type ScalarShape,
-  SIZE,
-  type Slide,
   type SlideNode,
 } from "@tycoslide/core";
-import { column } from "./components/containers.js";
 
 // ============================================
 // TYPES
@@ -104,29 +101,13 @@ export function defineTemplate<
 }): Template {
   const { layout: templateLayout, master, masterTokens, layoutTokens, ...rest } = def;
 
-  // Build the core layout. At render time, core passes the flat token bag
-  // (assembled by templatesToLayouts). The render wrapper splits it back out.
+  // Build core layout — render delegates directly to the Layout blueprint.
   const coreLayout = defineLayout({
     ...rest,
     params: templateLayout.params,
     slots: templateLayout.slots,
-    render: (params, slots, flatTokens: Record<string, unknown>): Slide => {
-      // The flat bag has master info under the "master" key (put there by templatesToLayouts).
-      // Strip it and pass only content tokens to the layout render.
-      const { master: masterInfo, ...contentTokens } = flatTokens;
-      const ref = masterInfo as { masterName: string; tokens: Record<string, unknown> } | undefined;
-
-      const contentNode = templateLayout.render(
-        params as Record<string, unknown>,
-        slots as any,
-        contentTokens as TTokens,
-      );
-
-      return {
-        masterName: ref?.masterName ?? "",
-        masterTokens: ref?.tokens ?? {},
-        content: column({ spacing: 0, height: SIZE.FILL }, contentNode),
-      };
+    render: (params, slots, tokens: TTokens): SlideNode => {
+      return templateLayout.render(params as Record<string, unknown>, slots as any, tokens);
     },
   });
 

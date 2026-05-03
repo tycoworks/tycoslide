@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { beforeEach, describe, test } from "node:test";
+import type { SlideNode } from "../src/core/model/nodes.js";
 import { component, isComponentNode, NODE_TYPE } from "../src/core/model/nodes.js";
-import type { Slide } from "../src/core/model/types.js";
 import { componentRegistry, type LayoutDefinition, Registry } from "../src/core/rendering/registry.js";
 import { mockTextStyle, mockTheme, noopCanvas } from "./mocks.js";
 
@@ -16,19 +16,19 @@ import { DASH_TYPE, HALIGN, SIZE, VALIGN } from "../src/core/model/types.js";
 // GENERIC REGISTRY BASE CLASS
 // ============================================
 
-// Minimal stub slide for testing
-const stubSlide: Slide = {
-  masterName: "default",
-  masterTokens: {},
-  content: { type: NODE_TYPE.COMPONENT, componentName: "test", params: {}, content: undefined },
+// Minimal stub content for testing
+const stubContent: SlideNode = {
+  type: NODE_TYPE.COMPONENT,
+  componentName: "test",
+  params: {},
+  content: undefined,
 };
 
-function makeLayout(name: string, render: (params: any, slots: any, tokens: any) => Slide): LayoutDefinition {
+function makeLayout(name: string, render: (params: any, slots: any, tokens: any) => SlideNode): LayoutDefinition {
   return {
     name,
     description: `Test layout: ${name}`,
     params: {} as any,
-    tokens: {},
     render,
   };
 }
@@ -41,7 +41,7 @@ describe("Registry (generic base class)", () => {
   });
 
   test("register and retrieve a definition", () => {
-    const layout = makeLayout("title", () => stubSlide);
+    const layout = makeLayout("title", () => stubContent);
     registry.register(layout);
     assert.strictEqual(registry.has("title"), true);
     assert.strictEqual(registry.get("title"), layout);
@@ -56,7 +56,7 @@ describe("Registry (generic base class)", () => {
   });
 
   test("idempotent registration (same identity)", () => {
-    const render = () => stubSlide;
+    const render = () => stubContent;
     const layout = makeLayout("title", render);
     registry.register(layout);
     registry.register(layout); // should not throw
@@ -64,21 +64,21 @@ describe("Registry (generic base class)", () => {
   });
 
   test("throws on duplicate name with different identity", () => {
-    registry.register(makeLayout("title", () => stubSlide));
-    assert.throws(() => registry.register(makeLayout("title", () => stubSlide)), /already registered/);
+    registry.register(makeLayout("title", () => stubContent));
+    assert.throws(() => registry.register(makeLayout("title", () => stubContent)), /already registered/);
   });
 
   test("getRegisteredNames returns all names", () => {
-    registry.register(makeLayout("title", () => stubSlide));
-    registry.register(makeLayout("section", () => stubSlide));
-    registry.register(makeLayout("content", () => stubSlide));
+    registry.register(makeLayout("title", () => stubContent));
+    registry.register(makeLayout("section", () => stubContent));
+    registry.register(makeLayout("content", () => stubContent));
     const names = registry.getRegisteredNames();
     assert.deepStrictEqual(names.sort(), ["content", "section", "title"]);
   });
 
   test("getAll returns all definitions", () => {
-    const a = makeLayout("a", () => stubSlide);
-    const b = makeLayout("b", () => stubSlide);
+    const a = makeLayout("a", () => stubContent);
+    const b = makeLayout("b", () => stubContent);
     registry.register(a);
     registry.register(b);
     const all = registry.getAll();

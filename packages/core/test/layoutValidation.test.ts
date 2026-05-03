@@ -26,11 +26,11 @@ const testLayout: LayoutDefinition = {
   name: "test",
   description: "Test layout for validation",
   params: testShape,
-  tokens: {},
   render: (params: any, _slots: any) => ({
-    masterName: "default",
-    masterTokens: {},
-    content: { type: NODE_TYPE.COMPONENT, componentName: "test", params: { text: params.title }, content: undefined },
+    type: NODE_TYPE.COMPONENT,
+    componentName: "test",
+    params: { text: params.title },
+    content: undefined,
   }),
 };
 
@@ -144,16 +144,11 @@ describe("validateLayout with enum schema", () => {
     name: "enumTest",
     description: "Test enum validation",
     params: enumShape,
-    tokens: {},
     render: (params: any, _slots: any) => ({
-      masterName: "default",
-      masterTokens: {},
-      content: {
-        type: NODE_TYPE.COMPONENT,
-        componentName: "test",
-        params: { style: params.style },
-        content: undefined,
-      },
+      type: NODE_TYPE.COMPONENT,
+      componentName: "test",
+      params: { style: params.style },
+      content: undefined,
     }),
   };
 
@@ -180,16 +175,11 @@ describe("validateLayout (params and slots)", () => {
     description: "Test layout with params and slots",
     params: { title: schema.string() },
     slots: ["body"],
-    tokens: {},
     render: (params: any, slots: any) => ({
-      masterName: "default",
-      masterTokens: {},
-      content: {
-        type: NODE_TYPE.COMPONENT,
-        componentName: "test",
-        params: { ...params, ...slots },
-        content: undefined,
-      },
+      type: NODE_TYPE.COMPONENT,
+      componentName: "test",
+      params: { ...params, ...slots },
+      content: undefined,
     }),
   };
 
@@ -197,11 +187,11 @@ describe("validateLayout (params and slots)", () => {
     name: "noSlotTest",
     description: "Test layout with params only",
     params: { title: schema.string() },
-    tokens: {},
     render: (params: any, _slots: any) => ({
-      masterName: "default",
-      masterTokens: {},
-      content: { type: NODE_TYPE.COMPONENT, componentName: "test", params, content: undefined },
+      type: NODE_TYPE.COMPONENT,
+      componentName: "test",
+      params,
+      content: undefined,
     }),
   };
 

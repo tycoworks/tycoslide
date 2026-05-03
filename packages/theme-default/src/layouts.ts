@@ -7,9 +7,9 @@ import {
   component,
   type HorizontalAlignment,
   param,
+  type ScalarShape,
   SHAPE,
   SIZE,
-  type ScalarShape,
   type SlideNode,
   SPACING_MODE,
   schema,
@@ -17,10 +17,10 @@ import {
   type VerticalAlignment,
 } from "@tycoslide/core";
 import type {
-  Layout,
   CardTokens,
   ImageTokens,
   LabelTokens,
+  Layout,
   LineTokens,
   ListTokens,
   QuoteTokens,
@@ -278,6 +278,7 @@ export const quote: Layout<QuoteLayoutTokens> = {
 
 // --- blank ---
 
+// biome-ignore lint/suspicious/noEmptyInterface: consistent with other layout token interfaces
 export interface BlankLayoutTokens {}
 
 // +----------------------------+
@@ -288,8 +289,7 @@ export interface BlankLayoutTokens {}
 export const blank: Layout<BlankLayoutTokens, ScalarShape, readonly ["body"]> = {
   params: {},
   slots: ["body"] as const,
-  render: (_params, { body: bodySlot }, _tokens) =>
-    column({ spacing: 0, height: SIZE.FILL }, ...bodySlot),
+  render: (_params, { body: bodySlot }, _tokens) => column({ spacing: 0, height: SIZE.FILL }, ...bodySlot),
 };
 
 // --- two-column ---
@@ -327,7 +327,11 @@ export const twoColumn: Layout<TwoColumnLayoutTokens, ScalarShape, readonly ["le
     return column(
       { spacing: 0, height: SIZE.FILL },
       ...(titleText ? [headerBlock(titleText, tokens, eyebrow)] : []),
-      row({ spacing: tokens.spacing, height: SIZE.HUG }, column(colProps, ...slots.left), column(colProps, ...slots.right)),
+      row(
+        { spacing: tokens.spacing, height: SIZE.HUG },
+        column(colProps, ...slots.left),
+        column(colProps, ...slots.right),
+      ),
     );
   },
 };
@@ -522,7 +526,11 @@ export const transform: Layout<TransformLayoutTokens, ScalarShape, readonly ["le
       height: SIZE.FILL,
     };
     const layers: SlideNode[] = [
-      row({ spacing: tokens.spacing, height: SIZE.HUG }, column(colProps, ...slots.left), column(colProps, ...slots.right)),
+      row(
+        { spacing: tokens.spacing, height: SIZE.HUG },
+        column(colProps, ...slots.left),
+        column(colProps, ...slots.right),
+      ),
     ];
     if (slots.overlay.length > 0) {
       layers.push(

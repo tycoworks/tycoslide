@@ -2,6 +2,7 @@ import * as assert from "node:assert";
 import { createRequire } from "node:module";
 import { describe, it } from "node:test";
 import type { FontFamily, TextStyle } from "@tycoslide/core";
+import { defineTemplate } from "../src/template.js";
 import type { ThemeDefinition, ThemeFormat } from "../src/theme.js";
 import { defineTheme, resolveThemeFormat } from "../src/theme.js";
 
@@ -31,7 +32,6 @@ function makeFormat(overrides?: Partial<ThemeFormat>): ThemeFormat {
   return {
     slide: { width: 13.333, height: 7.5 },
     textStyles: validTextStyles,
-    layouts: {},
     ...overrides,
   };
 }
@@ -100,7 +100,7 @@ describe("resolveThemeFormat()", () => {
     assert.deepStrictEqual(theme.fonts, def.fonts);
     assert.deepStrictEqual(theme.slide, def.formats.presentation.slide);
     assert.deepStrictEqual(theme.textStyles, def.formats.presentation.textStyles);
-    assert.deepStrictEqual(theme.layouts, def.formats.presentation.layouts);
+    assert.deepStrictEqual(theme.layouts, {});
   });
 
   it("undefined format throws with 'No format specified' and lists available names", () => {
@@ -144,5 +144,32 @@ describe("resolveThemeFormat()", () => {
 
     assert.deepStrictEqual(presentation.slide, wideSlide);
     assert.deepStrictEqual(factsheet.slide, narrowSlide);
+  });
+
+  it("resolves templates into structured TemplateConfig map", () => {
+    const master = { name: "test-master", render: () => ({ content: {}, background: {} }) } as any;
+    const layout = {
+      params: {},
+      render: () => ({ type: "component", componentName: "x", params: {}, content: undefined }),
+    } as any;
+    const template = defineTemplate({
+      name: "hero",
+      description: "Hero layout",
+      layout,
+      master,
+      masterTokens: { bg: "#000" },
+      layoutTokens: { titleColor: "#FFF" },
+    });
+
+    const def: ThemeDefinition = {
+      fonts: [validFont],
+      formats: { presentation: { ...makeFormat(), templates: [template] } },
+    };
+    const theme = resolveThemeFormat(def, "presentation");
+    assert.deepStrictEqual(theme.layouts.hero, {
+      masterName: "test-master",
+      masterTokens: { bg: "#000" },
+      layoutTokens: { titleColor: "#FFF" },
+    });
   });
 });
