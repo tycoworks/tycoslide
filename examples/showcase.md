@@ -5,7 +5,6 @@ format: presentation
 
 ---
 layout: title
-variant: default
 title: "**tycoslide**"
 subtitle: "Build slides like software.:accent[▌]"
 notes: Opening slide. Clean centered title with cursor.
@@ -13,7 +12,6 @@ notes: Opening slide. Clean centered title with cursor.
 
 ---
 layout: agenda
-variant: default
 title: Agenda
 image: $tycoslide.logo
 items:
@@ -25,14 +23,12 @@ notes: "Agenda layout — numbered items with divider lines."
 
 ---
 layout: statement
-variant: default
 body: "tycoslide is a :accent[**presentation build tool**] that generates :accent[**editable PowerPoint slides from markdown**], with :accent[**TypeScript-based themes**] and :accent[**build-time validation**]."
 notes: Positioning one-liner. Four anchors in one sentence.
 ---
 
 ---
 layout: transform
-variant: default
 notes: Side-by-side showing markdown input on the left and the resulting slide output on the right.
 ---
 
@@ -65,7 +61,6 @@ review.pptx
 
 ---
 layout: cards
-variant: default
 title: Capabilities
 cards:
   - title: Editable PowerPoint Slides
@@ -81,8 +76,7 @@ notes: Three pillars from positioning framework. Each maps to one supporting arg
 ---
 
 ---
-layout: body
-variant: centered
+layout: body-centered
 title: How It Compares
 notes: Comparison table with tycoslide column highlighted. The audience sees "None" for build validation in every competitor.
 ---
@@ -98,8 +92,7 @@ notes: Comparison table with tycoslide column highlighted. The audience sees "No
 :::
 
 ---
-layout: body
-variant: centered
+layout: body-centered
 title: How It Works
 notes: Mermaid diagram — the build process from markdown to PowerPoint. Horizontal flow throughout.
 ---
@@ -118,7 +111,6 @@ flowchart LR
 
 ---
 layout: end
-variant: default
 title: tycoslide
 notes: Closing slide.
 ---

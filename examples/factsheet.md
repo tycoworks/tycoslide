@@ -5,7 +5,6 @@ format: factsheet
 
 ---
 layout: body
-variant: default
 title: "Presentations as code for teams"
 ---
 
@@ -31,7 +30,6 @@ Output is native PowerPoint with real text runs, grouped shapes, and proper slid
 
 ---
 layout: cards
-variant: default
 title: "Three ways to use tycoslide"
 cards:
   - title: Author
