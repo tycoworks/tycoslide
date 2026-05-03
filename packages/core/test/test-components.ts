@@ -10,8 +10,8 @@ import { type ComponentNode, component, NODE_TYPE } from "../src/core/model/node
 import { param, schema } from "../src/core/model/param.js";
 import { extractSource, SYNTAX } from "../src/core/model/syntax.js";
 import { DIRECTION, HALIGN, SIZE, VALIGN } from "../src/core/model/types.js";
-import type { RenderContext } from "../src/core/rendering/registry.js";
-import { defineComponent } from "../src/core/rendering/registry.js";
+import type { RenderContext } from "../src/core/rendering/definitions.js";
+import { defineComponent } from "../src/core/rendering/definitions.js";
 
 // Local component name const — core tests can't import from tycoslide-components
 export const C = {

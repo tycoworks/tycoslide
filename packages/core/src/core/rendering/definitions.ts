@@ -1,5 +1,6 @@
-// Registry
-// Generic base class, component registry, and layout registry
+// Definitions
+// Component, layout, and master definition types and factories.
+// Pure data — no global singletons.
 
 import type { RootContent } from "mdast";
 import { z } from "zod";
@@ -14,56 +15,7 @@ export type { ComponentNode } from "../model/nodes.js";
 export { validateThemeFonts } from "./themeValidator.js";
 
 // ============================================
-// GENERIC REGISTRY BASE CLASS
-// ============================================
-
-/**
- * A generic registry for named definitions.
- * Provides idempotent registration, lookup, and enumeration.
- */
-export class Registry<TDef extends { name: string }> {
-  private definitions = new Map<string, TDef>();
-
-  constructor(private label: string) {}
-
-  /**
-   * Register one or more definitions.
-   * Idempotent: re-registering the same object is a no-op.
-   * @throws Error if a different definition with the same name is already registered
-   */
-  register(input: TDef | readonly TDef[]): void {
-    if (Array.isArray(input)) {
-      for (const def of input) this.register(def);
-      return;
-    }
-    const def = input as TDef;
-    const existing = this.definitions.get(def.name);
-    if (existing) {
-      if (existing === def) return;
-      throw new Error(`${this.label} '${def.name}' already registered`);
-    }
-    this.definitions.set(def.name, def);
-  }
-
-  has(name: string): boolean {
-    return this.definitions.has(name);
-  }
-
-  get(name: string): TDef | undefined {
-    return this.definitions.get(name);
-  }
-
-  getAll(): TDef[] {
-    return Array.from(this.definitions.values());
-  }
-
-  getRegisteredNames(): string[] {
-    return Array.from(this.definitions.keys());
-  }
-}
-
-// ============================================
-// COMPONENT REGISTRY
+// COMPONENT TYPES
 // ============================================
 
 /**
@@ -299,58 +251,7 @@ export function defineComponent(def: any): ComponentDefinition<any, any, any> & 
 }
 
 // ============================================
-// COMPONENT REGISTRY
-// ============================================
-
-/**
- * Registry for component definitions.
- * Components are defined with `defineComponent()` and registered via `componentRegistry.register()`.
- */
-class ComponentRegistry extends Registry<ComponentDefinition<any, any, any>> {
-  constructor() {
-    super("Component");
-  }
-
-  /**
-   * Register one or more component definitions.
-   * Validates MDAST node type uniqueness — no two components may claim the same node type.
-   */
-  override register(input: ComponentDefinition<any, any, any> | readonly ComponentDefinition<any, any, any>[]): void {
-    if (Array.isArray(input)) {
-      for (const def of input) this.register(def);
-      return;
-    }
-    const def = input as ComponentDefinition<any, any, any>;
-    if (def.mdast) {
-      for (const nodeType of def.mdast.nodeTypes) {
-        const existing = this.getMdastHandler(nodeType);
-        if (existing && existing.name !== def.name) {
-          throw new Error(
-            `MDAST node type '${nodeType}' already handled by '${existing.name}'. ` +
-              `Cannot register '${def.name}' for the same type.`,
-          );
-        }
-      }
-    }
-    super.register(def);
-  }
-
-  /**
-   * Find the component that handles a given bare MDAST node type.
-   * Returns undefined if no component has registered for this type.
-   */
-  getMdastHandler(nodeType: string): ComponentDefinition | undefined {
-    for (const def of this.getAll()) {
-      if (def.mdast?.nodeTypes.includes(nodeType as SyntaxType)) return def;
-    }
-    return undefined;
-  }
-}
-
-export const componentRegistry = new ComponentRegistry();
-
-// ============================================
-// LAYOUT REGISTRY
+// LAYOUT TYPES
 // ============================================
 
 /** Raw Zod shape — a record of field names to Zod types. */
@@ -403,15 +304,13 @@ export function defineLayout<
   return def as unknown as LayoutDefinition;
 }
 
-export const layoutRegistry = new Registry<LayoutDefinition>("Layout");
-
 // ============================================
-// MASTER REGISTRY
+// MASTER TYPES
 // ============================================
 
 /**
  * A master slide definition. Masters provide slide chrome (footer, slide number),
- * content bounds, and background. Registered via `masterRegistry.register()`.
+ * content bounds, and background.
  */
 export interface MasterDefinition {
   name: string;
@@ -445,7 +344,3 @@ export function defineMaster<TTokens extends object = Record<string, unknown>>(d
 }): MasterDefinition {
   return def as unknown as MasterDefinition;
 }
-
-export const masterRegistry = new Registry<MasterDefinition>("Master");
-
-// ============================================

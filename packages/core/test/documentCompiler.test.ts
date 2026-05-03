@@ -14,7 +14,7 @@ import type { SlideNode } from "../src/core/model/nodes.js";
 import { component, NODE_TYPE } from "../src/core/model/nodes.js";
 import { param, schema } from "../src/core/model/param.js";
 import type { TemplateConfig } from "../src/core/model/types.js";
-import type { MasterDefinition } from "../src/core/rendering/registry.js";
+import type { MasterDefinition } from "../src/core/rendering/definitions.js";
 import { mockTheme } from "./mocks.js";
 import { testComponents } from "./test-components.js";
 

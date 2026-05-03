@@ -14,8 +14,8 @@ import { Bounds } from "../model/bounds.js";
 import type { ElementNode, LayoutNode, PositionedNode, SlideNode } from "../model/nodes.js";
 import { isComponentNode, isLayoutNode } from "../model/nodes.js";
 import type { Background, Slide, Theme } from "../model/types.js";
+import type { ComponentDefinition, MasterDefinition, RenderContext } from "./definitions.js";
 import { PptxRenderer } from "./pptxRenderer.js";
-import type { ComponentDefinition, MasterDefinition, RenderContext } from "./registry.js";
 
 export type { Slide } from "../model/types.js";
 

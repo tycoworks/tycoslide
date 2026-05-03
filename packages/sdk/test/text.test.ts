@@ -4,7 +4,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import type { NormalizedRun } from "@tycoslide/core";
-import { componentRegistry, HALIGN, NODE_TYPE, VALIGN } from "@tycoslide/core";
+import { HALIGN, NODE_TYPE, VALIGN } from "@tycoslide/core";
 import { label } from "../src/components/label.js";
 import { text } from "../src/components/text.js";
 import {
@@ -33,10 +33,11 @@ import {
   noopCanvas,
   renderComponent,
   renderTree,
+  testRegistry,
 } from "./mocks.js";
 
 // Register components explicitly
-componentRegistry.register([
+testRegistry.register([
   textComponent,
   imageComponent,
   cardComponent,
@@ -82,7 +83,7 @@ describe("Text", () => {
     const theme = themeWithAccents();
 
     it("should be available after register()", () => {
-      assert.ok(componentRegistry.has(Component.Label));
+      assert.ok(testRegistry.has(Component.Label));
     });
 
     it("should render to a TextNode with single run", async () => {
@@ -180,7 +181,7 @@ describe("Text", () => {
     });
 
     it("should be registered", () => {
-      assert.ok(componentRegistry.has(Component.Text));
+      assert.ok(testRegistry.has(Component.Text));
     });
 
     it("should parse bold and italic", async () => {

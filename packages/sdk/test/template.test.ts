@@ -1,7 +1,9 @@
 import * as assert from "node:assert";
 import { describe, it } from "node:test";
-import { component, layoutRegistry } from "@tycoslide/core";
+import { component, type LayoutDefinition } from "@tycoslide/core";
 import { defineTemplate } from "../src/template.js";
+
+const testLayouts = new Map<string, LayoutDefinition>();
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -60,8 +62,8 @@ describe("defineTemplate()", () => {
       layoutTokens: { title: "hello", color: "#333" },
     });
 
-    layoutRegistry.register([template.layout]);
-    const layout = layoutRegistry.get(templateName);
+    testLayouts.set(template.layout.name, template.layout);
+    const layout = testLayouts.get(templateName);
     assert.ok(layout);
 
     // Core passes layoutTokens directly — no extra keys
@@ -83,8 +85,8 @@ describe("defineTemplate()", () => {
       layoutTokens: {},
     });
 
-    layoutRegistry.register([template.layout]);
-    const layout = layoutRegistry.get(templateName);
+    testLayouts.set(template.layout.name, template.layout);
+    const layout = testLayouts.get(templateName);
     assert.ok(layout);
 
     const result = layout!.render({}, {}, {});

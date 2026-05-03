@@ -1,7 +1,7 @@
 import * as assert from "node:assert";
 import { describe, it } from "node:test";
 import type { TextStyle } from "@tycoslide/core";
-import { componentRegistry, NODE_TYPE, SYNTAX } from "@tycoslide/core";
+import { NODE_TYPE, SYNTAX } from "@tycoslide/core";
 import type { RootContent } from "mdast";
 import { type CodeTokens, code, codeComponent, renderCodeToHtml } from "../src/components/code.js";
 import {
@@ -21,10 +21,10 @@ import {
 } from "../src/index.js";
 import { HIGHLIGHT_THEME, HIGHLIGHT_THEME_VALUES, LANGUAGE, LANGUAGE_VALUES } from "../src/presets/highlighting.js";
 import { Component } from "../src/presets/names.js";
-import { DEFAULT_CODE_TOKENS, mockTheme, noopCanvas, renderComponent } from "./mocks.js";
+import { DEFAULT_CODE_TOKENS, mockTheme, noopCanvas, renderComponent, testRegistry } from "./mocks.js";
 
 // Register components explicitly
-componentRegistry.register([
+testRegistry.register([
   textComponent,
   imageComponent,
   cardComponent,
@@ -73,7 +73,7 @@ describe("code() DSL function", () => {
 
 describe("code component registration", () => {
   it("should be available after register()", () => {
-    assert.ok(componentRegistry.has(Component.Code));
+    assert.ok(testRegistry.has(Component.Code));
   });
 });
 
@@ -171,7 +171,7 @@ describe("code expansion", () => {
 
 describe("code MDAST compile handler", () => {
   it("compiles code fence to ComponentNode with correct body", () => {
-    const handler = componentRegistry.getMdastHandler(SYNTAX.CODE);
+    const handler = testRegistry.getMdastHandler(SYNTAX.CODE);
     assert.ok(handler, "MDAST handler should be registered for code");
 
     const mdastNode = {
@@ -189,7 +189,7 @@ describe("code MDAST compile handler", () => {
   });
 
   it("compiles code fence with language", () => {
-    const handler = componentRegistry.getMdastHandler(SYNTAX.CODE)!;
+    const handler = testRegistry.getMdastHandler(SYNTAX.CODE)!;
     const mdastNode = {
       type: "code",
       value: "const x = 1;",
@@ -203,7 +203,7 @@ describe("code MDAST compile handler", () => {
   });
 
   it("throws when code fence has no language", () => {
-    const handler = componentRegistry.getMdastHandler(SYNTAX.CODE)!;
+    const handler = testRegistry.getMdastHandler(SYNTAX.CODE)!;
     const mdastNode = {
       type: "code",
       value: "hello world",
@@ -215,7 +215,7 @@ describe("code MDAST compile handler", () => {
   });
 
   it("throws on unsupported language", () => {
-    const handler = componentRegistry.getMdastHandler(SYNTAX.CODE)!;
+    const handler = testRegistry.getMdastHandler(SYNTAX.CODE)!;
     const mdastNode = {
       type: "code",
       value: "hello world",
@@ -230,7 +230,7 @@ describe("code MDAST compile handler", () => {
   });
 
   it("accepts all LANGUAGE_VALUES as valid", () => {
-    const handler = componentRegistry.getMdastHandler(SYNTAX.CODE)!;
+    const handler = testRegistry.getMdastHandler(SYNTAX.CODE)!;
     // Spot-check a few common languages
     for (const lang of ["sql", "typescript", "python", "rust", "go"]) {
       const mdastNode = {

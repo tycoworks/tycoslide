@@ -84,6 +84,23 @@ export {
   UNDERLINE_STYLE,
   VALIGN,
 } from "./core/model/types.js";
+// Component system (for custom component authors)
+export {
+  type Canvas,
+  type ComponentDefinition,
+  type ComponentNode,
+  defineComponent,
+  defineLayout,
+  defineMaster,
+  type LayoutDefinition,
+  type MasterDefinition,
+  type MdastHandler,
+  type RenderContext,
+  type ScalarComponentDefinition,
+  type ScalarShape,
+  type SchemaShape,
+  validateThemeFonts,
+} from "./core/rendering/definitions.js";
 // Core
 export {
   createPresentation,
@@ -92,26 +109,6 @@ export {
   type SlideLayout,
   type WriteResult,
 } from "./core/rendering/presentation.js";
-// Component system (for custom component authors)
-export {
-  type Canvas,
-  type ComponentDefinition,
-  type ComponentNode,
-  componentRegistry,
-  defineComponent,
-  defineLayout,
-  defineMaster,
-  type LayoutDefinition,
-  layoutRegistry,
-  type MasterDefinition,
-  type MdastHandler,
-  masterRegistry,
-  type RenderContext,
-  type ScalarComponentDefinition,
-  type ScalarShape,
-  type SchemaShape,
-  validateThemeFonts,
-} from "./core/rendering/registry.js";
 // Color utilities
 export { bgColor, hexToRgba } from "./utils/color.js";
 // Font utilities

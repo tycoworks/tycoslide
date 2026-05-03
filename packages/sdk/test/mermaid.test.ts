@@ -3,7 +3,7 @@
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { componentRegistry, NODE_TYPE } from "@tycoslide/core";
+import { NODE_TYPE } from "@tycoslide/core";
 import {
   buildClassDefs,
   buildMermaidConfig,
@@ -29,10 +29,10 @@ import {
   textComponent,
 } from "../src/index.js";
 import { Component } from "../src/presets/names.js";
-import { DEFAULT_MERMAID_TOKENS, mockTheme, renderComponent } from "./mocks.js";
+import { DEFAULT_MERMAID_TOKENS, mockTheme, renderComponent, testRegistry } from "./mocks.js";
 
 // Register components explicitly
-componentRegistry.register([
+testRegistry.register([
   textComponent,
   imageComponent,
   cardComponent,
@@ -290,7 +290,7 @@ describe("injectClassDefs", () => {
 
 describe("mermaid expansion", () => {
   it("should be available after register()", () => {
-    const registered = componentRegistry.has(Component.Mermaid);
+    const registered = testRegistry.has(Component.Mermaid);
     assert.ok(registered, "mermaid component should be registered");
   });
 

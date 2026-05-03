@@ -1,4 +1,4 @@
-// defineComponent Tests — define(), .schema, body convention, registry compat
+// defineComponent Tests — define(), .schema, body convention
 
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
@@ -8,7 +8,7 @@ import { param, schema } from "../src/core/model/param.js";
 
 import type { TextStyle } from "../src/core/model/types.js";
 import { DIRECTION, HALIGN, SIZE, VALIGN } from "../src/core/model/types.js";
-import { componentRegistry, defineComponent } from "../src/core/rendering/registry.js";
+import { defineComponent } from "../src/core/rendering/definitions.js";
 
 const stubStyle: TextStyle = {
   fontSize: 12,
@@ -84,10 +84,6 @@ describe("defineComponent", () => {
     test("auto-generates deserializer", () => {
       assert.ok(comp.deserialize, "params component should have auto-generated deserializer");
     });
-
-    test("is registerable in componentRegistry", () => {
-      componentRegistry.register(comp);
-    });
   });
 
   describe("define with content", () => {
@@ -118,10 +114,6 @@ describe("defineComponent", () => {
 
     test("auto-generates deserializer", () => {
       assert.ok(comp.deserialize, "body component should have auto-generated deserializer");
-    });
-
-    test("is registerable in componentRegistry", () => {
-      componentRegistry.register(comp);
     });
   });
 
@@ -175,10 +167,6 @@ describe("defineComponent", () => {
 
     test("does NOT have deserializer", () => {
       assert.strictEqual(comp.deserialize, undefined);
-    });
-
-    test("is registerable in componentRegistry", () => {
-      componentRegistry.register(comp);
     });
   });
 });

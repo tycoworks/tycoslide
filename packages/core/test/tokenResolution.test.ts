@@ -9,7 +9,7 @@ import { param, schema } from "../src/core/model/param.js";
 
 import type { Theme } from "../src/core/model/types.js";
 import { HALIGN, VALIGN } from "../src/core/model/types.js";
-import { defineComponent } from "../src/core/rendering/registry.js";
+import { defineComponent } from "../src/core/rendering/definitions.js";
 import { noopCanvas, renderTree } from "./mocks.js";
 
 // ============================================

@@ -6,11 +6,8 @@ import { z } from "zod";
 import { compileSlot } from "../src/core/markdown/slotCompiler.js";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
 import { schema } from "../src/core/model/param.js";
-import { componentRegistry, defineLayout } from "../src/core/rendering/registry.js";
+import { defineLayout } from "../src/core/rendering/definitions.js";
 import { C, testComponents } from "./test-components.js";
-
-// Register test components before tests run
-componentRegistry.register(testComponents);
 
 describe("schema", () => {
   describe("scalar types", () => {

@@ -6,7 +6,7 @@ import { createRequire } from "node:module";
 import type { ComponentNode, ElementNode, LayoutNode, SlideNode } from "../src/core/model/nodes.js";
 import { isComponentNode, isLayoutNode } from "../src/core/model/nodes.js";
 import type { FontFamily, TextStyle, Theme } from "../src/core/model/types.js";
-import type { ComponentDefinition, RenderContext } from "../src/core/rendering/registry.js";
+import type { ComponentDefinition, RenderContext } from "../src/core/rendering/definitions.js";
 
 const require = createRequire(import.meta.url);
 

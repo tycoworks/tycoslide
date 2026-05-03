@@ -8,12 +8,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import { compileSlot } from "../src/core/markdown/slotCompiler.js";
-import { SYNTAX } from "../src/core/model/syntax.js";
-import { componentRegistry, defineComponent } from "../src/core/rendering/registry.js";
 import { C, testComponents } from "./test-components.js";
-
-// Register test components before tests run
-componentRegistry.register(testComponents);
 
 /** Helper: get node as any to avoid unknown type errors in tests */
 function node(nodes: any[], index: number): any {
@@ -164,18 +159,6 @@ describe("Slot Compiler", () => {
     it("should throw on container directives used in markdown", () => {
       const md = '::::row\n:::card{title="A"}\nBody\n:::\n::::';
       assert.throws(() => compileSlot(md, testComponents), /unknown directive ":::row"/);
-    });
-
-    it("should throw on duplicate MDAST handler registration", () => {
-      const dup = defineComponent({
-        name: "duplicate-paragraph-handler",
-        mdast: {
-          nodeTypes: [SYNTAX.PARAGRAPH],
-          compile: () => null,
-        },
-        render: () => ({}) as any,
-      });
-      assert.throws(() => componentRegistry.register(dup), /MDAST node type 'paragraph' already handled by/);
     });
   });
 });

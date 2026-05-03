@@ -447,12 +447,39 @@ The markdown layer (`documentCompiler.ts`, `slideParser.ts`, `slotCompiler.ts`) 
 
 ### Eliminate Registries from Core
 
-Currently `masterRegistry` and `layoutRegistry` are global singletons in core. With markdown compilation moved to SDK:
+Make core a pure, stateless function — no global singletons. Single entry point receives everything it needs.
 
-- `layoutRegistry` moves with markdown (SDK looks up layouts during compilation)
-- `masterRegistry` can be eliminated if the `Slide` type carries the master definition directly (not just a name string)
-- Core becomes a pure function: `(slides: Slide[], theme: Theme) → .pptx` — no global state, no registries
-- `componentRegistry` remains (used at render time to expand ComponentNodes to primitives)
+#### Target API
+
+```typescript
+interface PresentationConfig {
+  theme: Theme;
+  assets?: Record<string, unknown>;
+  masters: MasterDefinition[];
+  components: ComponentDefinition[];
+}
+
+function createPresentation(config: PresentationConfig): Presentation;
+```
+
+#### Design Decisions
+
+- **Pass registries as parameters, not inline on slides.** Slides stay pure data (`{ masterName, masterTokens, content }`). Masters and components are loaded once per build.
+- **Add `renderTree` to `RenderContext`.** Components that contain sub-components (e.g., table) call `context.renderTree(node)` instead of importing a global registry. Presentation class wires this via closure over its local component Map.
+- **Single entry point, not builder pattern.** One-shot operation — you have all data, create the engine, call writeFile.
+- **`layoutRegistry` already only used by SDK.** Moves with markdown compilation.
+- **`componentRegistry` also becomes a parameter.** Passed into `createPresentation()`, stored as local Map, accessed via `context.renderTree`.
+
+#### Implementation Steps
+
+1. Add `renderTree` to `RenderContext` interface (additive, non-breaking)
+2. `Presentation` constructor accepts `PresentationConfig` (masters + components arrays), builds internal Maps
+3. Wire `renderTree` on context to use local component Map (closure)
+4. Update table.ts (and any other components) to use `context.renderTree()` instead of importing `componentRegistry`
+5. Update `documentCompiler.ts` to receive components list (for `resolveTokens` lookups)
+6. Export `createPresentation()` as public entry point
+7. Remove `componentRegistry`, `masterRegistry`, `layoutRegistry` singleton exports from `core/index.ts`
+8. Update CLI `themeLoader.ts` to pass data through instead of mutating globals
 
 ### Master as Layout Composition (Investigate)
 

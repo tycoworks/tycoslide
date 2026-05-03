@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { componentRegistry, NODE_TYPE } from "@tycoslide/core";
+import { NODE_TYPE } from "@tycoslide/core";
 import { card } from "../src/components/card.js";
 import type { CardTokens } from "../src/index.js";
 import {
@@ -20,10 +20,10 @@ import {
   textComponent,
 } from "../src/index.js";
 import { Component } from "../src/presets/names.js";
-import { DEFAULT_CARD_TOKENS, mockTheme, noopCanvas, renderTree } from "./mocks.js";
+import { DEFAULT_CARD_TOKENS, mockTheme, noopCanvas, renderTree, testRegistry } from "./mocks.js";
 
 // Register components explicitly
-componentRegistry.register([
+testRegistry.register([
   textComponent,
   imageComponent,
   cardComponent,
@@ -45,7 +45,7 @@ describe("Card Component", () => {
 
   describe("registration", () => {
     it("should be registered after register()", () => {
-      assert.ok(componentRegistry.has(Component.Card));
+      assert.ok(testRegistry.has(Component.Card));
     });
   });
 

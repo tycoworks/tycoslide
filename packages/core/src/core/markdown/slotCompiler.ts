@@ -9,7 +9,7 @@ import type { Paragraph, Root, RootContent } from "mdast";
 import { extractDirectiveBody, markdownProcessor } from "../../utils/parser.js";
 import type { ComponentNode, SlideNode } from "../model/nodes.js";
 import { type ContainerDirective, SYNTAX } from "../model/syntax.js";
-import type { ComponentDefinition } from "../rendering/registry.js";
+import type { ComponentDefinition } from "../rendering/definitions.js";
 
 const THEMATIC_BREAK_ERROR =
   "Horizontal rules (---, ***, ___) are not supported in slide content. " +

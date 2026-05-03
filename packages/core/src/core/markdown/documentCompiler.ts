@@ -10,8 +10,8 @@ import { type ComponentNode, isComponentNode, type SlideNode } from "../model/no
 import { RESERVED_FRONTMATTER_KEYS } from "../model/syntax.js";
 
 import type { Slide, TemplateConfig, Theme } from "../model/types.js";
+import type { ComponentDefinition, LayoutDefinition, MasterDefinition } from "../rendering/definitions.js";
 import { createPresentation, type Presentation } from "../rendering/presentation.js";
-import type { ComponentDefinition, LayoutDefinition, MasterDefinition } from "../rendering/registry.js";
 import { parseSlideDocument, type RawSlide } from "./slideParser.js";
 import { compileSlot } from "./slotCompiler.js";
 

@@ -3,7 +3,7 @@
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { componentRegistry, HALIGN, NODE_TYPE, VALIGN } from "@tycoslide/core";
+import { HALIGN, NODE_TYPE, VALIGN } from "@tycoslide/core";
 import type { Heading } from "mdast";
 import type { LabelSlotTokens, LabelTokens } from "../src/components/label.js";
 import { label } from "../src/components/label.js";
@@ -26,10 +26,10 @@ import {
   textComponent,
 } from "../src/index.js";
 import { Component } from "../src/presets/names.js";
-import { DEFAULT_LABEL_TOKENS, mockTheme, noopCanvas, renderComponent } from "./mocks.js";
+import { DEFAULT_LABEL_TOKENS, mockTheme, noopCanvas, renderComponent, testRegistry } from "./mocks.js";
 
 // Register components explicitly
-componentRegistry.register([
+testRegistry.register([
   textComponent,
   imageComponent,
   cardComponent,

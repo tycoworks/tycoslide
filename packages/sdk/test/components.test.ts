@@ -14,17 +14,7 @@ import type {
   StackNode,
   TableNode,
 } from "@tycoslide/core";
-import {
-  componentRegistry,
-  DASH_TYPE,
-  DIRECTION,
-  HALIGN,
-  NODE_TYPE,
-  SHADOW_TYPE,
-  SHAPE,
-  SIZE,
-  VALIGN,
-} from "@tycoslide/core";
+import { DASH_TYPE, DIRECTION, HALIGN, NODE_TYPE, SHADOW_TYPE, SHAPE, SIZE, VALIGN } from "@tycoslide/core";
 import { card } from "../src/components/card.js";
 import {
   cardComponent,
@@ -66,10 +56,11 @@ import {
   DEFAULT_TEXT_TOKENS,
   noopCanvas,
   renderTree,
+  testRegistry,
 } from "./mocks.js";
 
 // Register components explicitly
-componentRegistry.register([
+testRegistry.register([
   textComponent,
   imageComponent,
   cardComponent,

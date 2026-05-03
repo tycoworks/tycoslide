@@ -4,6 +4,7 @@
 import * as assert from "node:assert";
 import { createRequire } from "node:module";
 import type {
+  ComponentDefinition,
   ComponentNode,
   ElementNode,
   FontFamily,
@@ -13,15 +14,7 @@ import type {
   TextStyle,
   Theme,
 } from "@tycoslide/core";
-import {
-  componentRegistry,
-  DASH_TYPE,
-  GRID_STYLE,
-  HALIGN,
-  isComponentNode,
-  isLayoutNode,
-  VALIGN,
-} from "@tycoslide/core";
+import { DASH_TYPE, GRID_STYLE, HALIGN, isComponentNode, isLayoutNode, VALIGN } from "@tycoslide/core";
 import type {
   CardTokens,
   CodeTokens,
@@ -39,6 +32,31 @@ import type {
 import { HIGHLIGHT_THEME } from "../src/presets/highlighting.js";
 
 const require = createRequire(import.meta.url);
+
+// ============================================
+// SHARED TEST COMPONENT MAP
+// ============================================
+
+const componentMap = new Map<string, ComponentDefinition<any, any, any>>();
+
+export const testRegistry = {
+  register(input: ComponentDefinition<any, any, any> | readonly ComponentDefinition<any, any, any>[]): void {
+    const arr = Array.isArray(input) ? input : [input];
+    for (const d of arr) componentMap.set(d.name, d);
+  },
+  has(name: string): boolean {
+    return componentMap.has(name);
+  },
+  get(name: string): ComponentDefinition<any, any, any> | undefined {
+    return componentMap.get(name);
+  },
+  getMdastHandler(nodeType: string): ComponentDefinition<any, any, any> | undefined {
+    for (const def of componentMap.values()) {
+      if (def.mdast?.nodeTypes.includes(nodeType as any)) return def;
+    }
+    return undefined;
+  },
+};
 
 // ============================================
 // MOCK THEME
@@ -312,7 +330,7 @@ export function assertApprox(actual: number, expected: number, tolerance = 0.01)
 
 /** Render a single component node using registered components. */
 export async function renderComponent(node: ComponentNode, context: RenderContext): Promise<SlideNode> {
-  const def = componentRegistry.get(node.componentName);
+  const def = testRegistry.get(node.componentName);
   if (!def) {
     throw new Error(`Unknown component: '${node.componentName}'. Did you forget to register it?`);
   }
@@ -322,7 +340,7 @@ export async function renderComponent(node: ComponentNode, context: RenderContex
 /** Recursively render a component tree to primitives using registered components. */
 export async function renderTree(node: SlideNode, context: RenderContext): Promise<ElementNode> {
   if (isComponentNode(node)) {
-    const def = componentRegistry.get((node as ComponentNode).componentName);
+    const def = testRegistry.get((node as ComponentNode).componentName);
     if (!def) {
       throw new Error(`Unknown component: '${(node as ComponentNode).componentName}'.`);
     }

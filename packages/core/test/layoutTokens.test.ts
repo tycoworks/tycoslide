@@ -11,7 +11,7 @@ import type { SlideNode } from "../src/core/model/nodes.js";
 import { component, isComponentNode, NODE_TYPE } from "../src/core/model/nodes.js";
 import { param, schema } from "../src/core/model/param.js";
 import type { Theme } from "../src/core/model/types.js";
-import { defineLayout, type LayoutDefinition, type MasterDefinition } from "../src/core/rendering/registry.js";
+import { defineLayout, type LayoutDefinition, type MasterDefinition } from "../src/core/rendering/definitions.js";
 import { mockTheme } from "./mocks.js";
 import { C, testComponents } from "./test-components.js";
 

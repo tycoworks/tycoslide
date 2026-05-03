@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { componentRegistry, HALIGN, NODE_TYPE } from "@tycoslide/core";
+import { HALIGN, NODE_TYPE } from "@tycoslide/core";
 import { quote } from "../src/components/quote.js";
 import {
   cardComponent,
@@ -21,10 +21,10 @@ import {
   textComponent,
 } from "../src/index.js";
 import { Component } from "../src/presets/names.js";
-import { DEFAULT_QUOTE_TOKENS, mockTheme, noopCanvas, renderTree } from "./mocks.js";
+import { DEFAULT_QUOTE_TOKENS, mockTheme, noopCanvas, renderTree, testRegistry } from "./mocks.js";
 
 // Register components explicitly
-componentRegistry.register([
+testRegistry.register([
   textComponent,
   imageComponent,
   cardComponent,
@@ -48,7 +48,7 @@ describe("Quote Component (Pull Quote)", () => {
 
   describe("registration", () => {
     it("should be registered after register()", () => {
-      assert.ok(componentRegistry.has(Component.Quote));
+      assert.ok(testRegistry.has(Component.Quote));
     });
   });
 
