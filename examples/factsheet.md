@@ -4,7 +4,7 @@ format: factsheet
 ---
 
 ---
-layout: body
+template: body
 title: "Presentations as code for teams"
 ---
 
@@ -29,7 +29,7 @@ Themes are TypeScript packages built on W3C design token principles. A single pa
 Output is native PowerPoint with real text runs, grouped shapes, and proper slide masters. Recipients can edit text, reposition elements, and add slides -- no re-export from images.
 
 ---
-layout: cards
+template: cards
 title: "Three ways to use tycoslide"
 cards:
   - title: Author

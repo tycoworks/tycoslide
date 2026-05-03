@@ -109,7 +109,7 @@ slots: ['body', 'sidebar']
 
 ```markdown
 ---
-layout: my-layout
+template: my-layout
 variant: default
 title: Title
 ---
@@ -272,7 +272,7 @@ theme: my-theme
 ---
 
 ---
-layout: two-column
+template: two-column
 variant: default
 title: Test Layout
 ---

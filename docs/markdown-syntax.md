@@ -8,7 +8,7 @@ Each slide is a YAML frontmatter block enclosed by `---`, followed by optional b
 
 ```markdown
 ---
-layout: body
+template: body
 variant: default
 title: Slide Title
 eyebrow: SECTION NAME
@@ -17,7 +17,7 @@ eyebrow: SECTION NAME
 Body content goes here.
 
 ---
-layout: body
+template: body
 variant: default
 title: Next Slide
 ---
@@ -48,7 +48,7 @@ Each slide must specify a layout and any layout-specific parameters:
 
 ```markdown
 ---
-layout: body
+template: body
 variant: default
 title: My Slide Title
 eyebrow: CHAPTER 1
@@ -137,7 +137,7 @@ The `:::table` directive is also available. See [Components — table](./compone
 
 ```markdown
 ---
-layout: body
+template: body
 variant: default
 title: Important Slide
 notes: |
@@ -194,14 +194,14 @@ format: presentation
 ---
 
 ---
-layout: title
+template: title
 variant: default
 title: Markdown Basics
 subtitle: Essential Syntax for tycoslide
 ---
 
 ---
-layout: body
+template: body
 variant: default
 title: Text Formatting
 eyebrow: BASICS
@@ -215,7 +215,7 @@ Highlight with :accent[accent colors] from your theme.
 Add [clickable links](https://example.com) to any slide.
 
 ---
-layout: body
+template: body
 variant: default
 title: Lists and Structure
 ---
@@ -233,7 +233,7 @@ title: Lists and Structure
 1. Open in PowerPoint
 
 ---
-layout: section
+template: section
 variant: default
 title: Next Steps
 ---

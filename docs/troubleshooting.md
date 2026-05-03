@@ -20,7 +20,7 @@ theme: "@tycoslide/theme-default"
 ---
 
 ---
-layout: title
+template: title
 variant: default
 title: My Presentation
 ---
@@ -190,7 +190,7 @@ Error: Slide 3: missing 'layout' field in frontmatter
 
 ```markdown
 ---
-layout: body
+template: body
 variant: default
 title: My Slide
 ---
@@ -249,7 +249,7 @@ Use `tycoslide build deck.md --force` to write the PPTX anyway and inspect visua
 ### "Content extends beyond slide bounds"
 
 ```
-Slide 4 (layout: body, title: Key Points): Content extends beyond slide bounds:
+Slide 4 (template: body, title: Key Points): Content extends beyond slide bounds:
   text at (0.50, 0.42) overflows 0.23" bottom
 ```
 
@@ -267,7 +267,7 @@ Slide 4 (layout: body, title: Key Points): Content extends beyond slide bounds:
 ### "Unintentional content overlap detected"
 
 ```
-Slide 2 (layout: body, title: Overview): Unintentional content overlap detected:
+Slide 2 (template: body, title: Overview): Unintentional content overlap detected:
   text[0] overlaps text[1] by 0.50"x0.12" in container
 ```
 
@@ -283,7 +283,7 @@ Slide 2 (layout: body, title: Overview): Unintentional content overlap detected:
 
 ```
 Error: Invalid YAML in slide 2 frontmatter:
-layout: body
+template: body
 title: My Slide: with a colon
 ```
 
@@ -291,7 +291,7 @@ title: My Slide: with a colon
 
 ```yaml
 ---
-layout: body
+template: body
 variant: default
 title: "My Slide: with a colon"
 ---
@@ -364,7 +364,7 @@ author: John Doe
 ---
 
 ---
-layout: title
+template: title
 variant: default
 title: My Presentation
 ---

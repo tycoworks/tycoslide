@@ -147,12 +147,12 @@ describe("Layout Validation", () => {
       };
       const validator = new LayoutValidator(slideBounds);
       try {
-        validator.validateOrThrow(positioned, 5, "layout: customerStory, eyebrow: STORY");
+        validator.validateOrThrow(positioned, 5, "template: customerStory, eyebrow: STORY");
         assert.fail("Should have thrown");
       } catch (e) {
         assert.ok(e instanceof LayoutOverflowError);
         assert.ok(e.message.includes("Slide 6"));
-        assert.ok(e.message.includes("layout: customerStory, eyebrow: STORY"));
+        assert.ok(e.message.includes("template: customerStory, eyebrow: STORY"));
       }
     });
 
@@ -193,12 +193,12 @@ describe("Layout Validation", () => {
       };
       const validator = new LayoutValidator(slideBounds);
       try {
-        validator.validateOrThrow(positioned, 3, "layout: body, title: Test");
+        validator.validateOrThrow(positioned, 3, "template: body, title: Test");
         assert.fail("Should have thrown");
       } catch (e) {
         assert.ok(e instanceof LayoutBoundsError);
         assert.ok(e.message.includes("Slide 4"));
-        assert.ok(e.message.includes("layout: body, title: Test"));
+        assert.ok(e.message.includes("template: body, title: Test"));
       }
     });
 
@@ -212,12 +212,12 @@ describe("Layout Validation", () => {
       };
       const validator = new LayoutValidator(slideBounds);
       try {
-        validator.validateOrThrow(positioned, 0, "layout: title");
+        validator.validateOrThrow(positioned, 0, "template: title");
         assert.fail("Should have thrown");
       } catch (e) {
         assert.ok(e instanceof LayoutOverflowError);
         assert.ok(e.message.includes("Slide 1"));
-        assert.ok(e.message.includes("layout: title"));
+        assert.ok(e.message.includes("template: title"));
       }
     });
   });

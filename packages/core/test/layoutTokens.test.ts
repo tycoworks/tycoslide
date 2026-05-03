@@ -63,7 +63,7 @@ describe("Document Compiler: Layout Tokens", () => {
       },
     });
 
-    const md = `${HEADER}---\nlayout: tokenSimple\ntitle: Hello\n---`;
+    const md = `${HEADER}---\ntemplate: tokenSimple\ntitle: Hello\n---`;
     compileDocument(md, { theme });
 
     assert.strictEqual(receivedTokens.length, 1);
@@ -79,7 +79,7 @@ describe("Document Compiler: Layout Tokens", () => {
       },
     });
 
-    const md = `${HEADER}---\nlayout: tokenSimple\ntitle: Hello\n---`;
+    const md = `${HEADER}---\ntemplate: tokenSimple\ntitle: Hello\n---`;
     compileDocument(md, { theme });
 
     assert.strictEqual(receivedTokens.length, 1);
@@ -106,7 +106,7 @@ describe("Document Compiler: Layout Tokens", () => {
       },
     });
 
-    const md = `${HEADER}---\nlayout: noTokenTest\ntitle: Hello\n---`;
+    const md = `${HEADER}---\ntemplate: noTokenTest\ntitle: Hello\n---`;
     compileDocument(md, { theme });
 
     // layoutTokens is {} which is passed through to layout render
@@ -157,7 +157,7 @@ describe("Slot Token Injection", () => {
       },
     });
 
-    const md = `${HEADER}---\nlayout: slotTokenTest\n---\n\nHello world`;
+    const md = `${HEADER}---\ntemplate: slotTokenTest\n---\n\nHello world`;
     compileDocument(md, { theme });
 
     assert.strictEqual(receivedProps.length, 1);
@@ -202,7 +202,7 @@ describe("Slot Token Injection", () => {
     });
 
     // Use a heading which maps to label component
-    const md = `${HEADER}---\nlayout: slotTokenTest\n---\n\n## Heading`;
+    const md = `${HEADER}---\ntemplate: slotTokenTest\n---\n\n## Heading`;
     compileDocument(md, { theme });
 
     const bodyNodes = receivedProps[0].body;
@@ -240,7 +240,7 @@ describe("Slot Token Injection", () => {
       },
     });
 
-    const md = `${HEADER}---\nlayout: noSlotTokenTest\ntitle: Hello\n---`;
+    const md = `${HEADER}---\ntemplate: noSlotTokenTest\ntitle: Hello\n---`;
     compileDocument(md, { theme });
 
     // Props should just be the validated params, no injection
@@ -249,17 +249,17 @@ describe("Slot Token Injection", () => {
 });
 
 // ============================================
-// RESERVED FRONTMATTER KEYS includes variant
+// RESERVED FRONTMATTER KEYS
 // ============================================
 
-describe("RESERVED_FRONTMATTER_KEYS includes variant", () => {
-  it("rejects layout param named variant", () => {
+describe("RESERVED_FRONTMATTER_KEYS rejects reserved param names", () => {
+  it("rejects layout param named template", () => {
     assert.throws(
       () =>
         defineLayout({
           name: "badLayout",
           description: "test",
-          params: { variant: schema.string() },
+          params: { template: schema.string() },
           render: () => ({
             type: NODE_TYPE.COMPONENT,
             componentName: "test",

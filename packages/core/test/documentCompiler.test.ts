@@ -107,7 +107,7 @@ describe("Document Compiler", () => {
       const md =
         HEADER +
         `---
-layout: simple
+template: simple
 title: Hello World
 ---`;
       compileDocument(md, makeOptions());
@@ -119,7 +119,7 @@ title: Hello World
       const md =
         HEADER +
         `---
-layout: simple
+template: simple
 title: Frontmatter Title
 ---`;
       compileDocument(md, makeOptions());
@@ -131,7 +131,7 @@ title: Frontmatter Title
       const md =
         HEADER +
         `---
-layout: body
+template: body
 ---
 
 This is the body content.
@@ -147,7 +147,7 @@ Multiple paragraphs are preserved.`;
       const md =
         HEADER +
         `---
-layout: slots
+template: slots
 title: Two Column Slide
 eyebrow: ARCHITECTURE
 ---
@@ -171,7 +171,7 @@ Right column content here.`;
       const md =
         HEADER +
         `---
-layout: simple
+template: simple
 title: Slide with Notes
 notes: These are speaker notes.
 ---`;
@@ -191,7 +191,7 @@ notes: These are speaker notes.
           default: defaultConfig,
         },
       });
-      const md = `${HEADER}---\nlayout: simple\ntitle: Test\n---`;
+      const md = `${HEADER}---\ntemplate: simple\ntitle: Test\n---`;
       const pres = compileDocument(md, { theme });
       const slides = (pres as any).deferredSlides as { slide: any }[];
       assert.strictEqual(slides[0].slide.masterName, "custom-master");
@@ -200,25 +200,25 @@ notes: These are speaker notes.
 
     it("throws when theme has no config for the layout", () => {
       const theme = mockTheme({ layouts: {} });
-      const md = `${HEADER}---\nlayout: simple\ntitle: Test\n---`;
-      assert.throws(() => compileDocument(md, { theme }), /theme has no config for layout 'simple'/);
+      const md = `${HEADER}---\ntemplate: simple\ntitle: Test\n---`;
+      assert.throws(() => compileDocument(md, { theme }), /theme has no config for template 'simple'/);
     });
 
     it("should compile multiple slides", () => {
       const md =
         HEADER +
         `---
-layout: simple
+template: simple
 title: Slide One
 ---
 
 ---
-layout: simple
+template: simple
 title: Slide Two
 ---
 
 ---
-layout: simple
+template: simple
 title: Slide Three
 ---`;
       compileDocument(md, makeOptions());
@@ -232,7 +232,7 @@ title: Slide Three
       const md =
         HEADER +
         `---
-layout: default
+template: default
 body: Frontmatter body content
 ---
 
@@ -244,7 +244,7 @@ Markdown body content`;
       const md =
         HEADER +
         `---
-layout: slots
+template: slots
 title: Title
 eyebrow: FROM_FM
 ---
@@ -271,7 +271,7 @@ title: Missing Layout
       assert.throws(
         () => compileDocument(md, makeOptions()),
         (err: any) => {
-          assert.ok(err.message.includes("missing 'layout'"));
+          assert.ok(err.message.includes("missing 'template'"));
           assert.ok(err.message.includes("Slide 1"));
           return true;
         },
@@ -284,23 +284,23 @@ title: Missing Layout
       assert.throws(
         () => compileDocument(md, makeOptions()),
         (err: any) => {
-          assert.ok(err.message.includes("missing 'layout'"));
+          assert.ok(err.message.includes("missing 'template'"));
           return true;
         },
       );
     });
 
-    it("should throw on unknown layout name", () => {
+    it("should throw on unknown template name", () => {
       const md =
         HEADER +
         `---
-layout: nonexistent
+template: nonexistent
 ---`;
       assert.throws(
         () => compileDocument(md, makeOptions()),
         (err: any) => {
           assert.ok(err.message.includes("nonexistent"));
-          assert.ok(err.message.includes("unknown layout"));
+          assert.ok(err.message.includes("unknown template"));
           assert.ok(err.message.includes("Available:"));
           return true;
         },
@@ -311,7 +311,7 @@ layout: nonexistent
       const md =
         HEADER +
         `---
-layout: strict
+template: strict
 title: Has Title
 ---`;
       assert.throws(
@@ -329,7 +329,7 @@ title: Has Title
       const md =
         HEADER +
         `---
-layout: body
+template: body
 title: $images.photo
 ---
 
@@ -346,19 +346,19 @@ Some body text`;
     it("should build name from string frontmatter values", () => {
       const raw = {
         index: 0,
-        frontmatter: { layout: "body", eyebrow: "RECAP" },
+        frontmatter: { template: "body", eyebrow: "RECAP" },
         body: "",
         slots: {},
       };
       const name = buildSlideName(raw as any);
-      assert.ok(name.includes("layout: body"));
+      assert.ok(name.includes("template: body"));
       assert.ok(name.includes("eyebrow: RECAP"));
     });
 
     it("should use explicit name from frontmatter", () => {
       const raw = {
         index: 0,
-        frontmatter: { layout: "body", name: "Day AI Story", eyebrow: "STORY" },
+        frontmatter: { template: "body", name: "Day AI Story", eyebrow: "STORY" },
         body: "",
         slots: {},
       };
@@ -370,7 +370,7 @@ Some body text`;
       const longValue = "A".repeat(60);
       const raw = {
         index: 0,
-        frontmatter: { layout: "body", description: longValue },
+        frontmatter: { template: "body", description: longValue },
         body: "",
         slots: {},
       };
@@ -382,7 +382,7 @@ Some body text`;
     it("should show array fields as [N items]", () => {
       const raw = {
         index: 0,
-        frontmatter: { layout: "cards", items: ["a", "b", "c"] },
+        frontmatter: { template: "cards", items: ["a", "b", "c"] },
         body: "",
         slots: {},
       };
@@ -393,7 +393,7 @@ Some body text`;
     it("should include title from frontmatter in name", () => {
       const raw = {
         index: 0,
-        frontmatter: { layout: "body", title: "FM Title" },
+        frontmatter: { template: "body", title: "FM Title" },
         body: "",
         slots: {},
       };

@@ -141,26 +141,26 @@ function compileSlide(raw: RawSlide, options: CompileOptions): Slide {
   return slide;
 }
 
-/** Compile a `layout: name` slide — layout template with content params. */
+/** Compile a `template: name` slide — layout template with content params. */
 function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
-  // 1. Resolve layout name
-  const layoutName = raw.frontmatter.layout as string | undefined;
+  // 1. Resolve template name
+  const layoutName = raw.frontmatter.template as string | undefined;
 
   if (!layoutName) {
-    throw new Error(`Slide ${raw.index + 1}: missing 'layout' field in frontmatter`);
+    throw new Error(`Slide ${raw.index + 1}: missing 'template' field in frontmatter`);
   }
 
   // 2. Look up layout definition
   const layout = layoutRegistry.get(layoutName);
   if (!layout) {
     const available = layoutRegistry.getRegisteredNames().join(", ");
-    throw new Error(`Slide ${raw.index + 1}: unknown layout '${layoutName}'. Available: ${available}`);
+    throw new Error(`Slide ${raw.index + 1}: unknown template '${layoutName}'. Available: ${available}`);
   }
 
   // 3. Look up structured layout config from theme
   const layoutConfig: TemplateConfig | undefined = options.theme.layouts?.[layoutName];
   if (!layoutConfig) {
-    throw new Error(`Slide ${raw.index + 1}: theme has no config for layout '${layoutName}'.`);
+    throw new Error(`Slide ${raw.index + 1}: theme has no config for template '${layoutName}'.`);
   }
 
   // 4. Build PARAMS — strip reserved frontmatter keys

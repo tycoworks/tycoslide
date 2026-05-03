@@ -33,14 +33,14 @@ format: presentation
 ---
 
 ---
-layout: title
+template: title
 variant: default
 title: My Presentation
 subtitle: Built with tycoslide
 ---
 
 ---
-layout: body
+template: body
 variant: default
 title: First Slide
 eyebrow: INTRODUCTION

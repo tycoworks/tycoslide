@@ -61,18 +61,18 @@ describe("Slide Parser", () => {
   describe("per-slide frontmatter (--- pairs)", () => {
     it("should extract YAML frontmatter between --- pairs", () => {
       const doc = parseSlideDocument(
-        "---\ntheme: test\n---\n\n---\nlayout: statement\neyebrow: INTRO\n---\n\nBody text",
+        "---\ntheme: test\n---\n\n---\ntemplate: statement\neyebrow: INTRO\n---\n\nBody text",
       );
       assert.strictEqual(doc.slides.length, 1);
-      assert.strictEqual(doc.slides[0].frontmatter.layout, "statement");
+      assert.strictEqual(doc.slides[0].frontmatter.template, "statement");
       assert.strictEqual(doc.slides[0].frontmatter.eyebrow, "INTRO");
       assert.strictEqual(doc.slides[0].body, "Body text");
     });
 
     it("should handle slide with only frontmatter (no body)", () => {
-      const doc = parseSlideDocument("---\ntheme: test\n---\n\n---\nlayout: section\ntitle: Overview\n---\n");
+      const doc = parseSlideDocument("---\ntheme: test\n---\n\n---\ntemplate: section\ntitle: Overview\n---\n");
       assert.strictEqual(doc.slides.length, 1);
-      assert.strictEqual(doc.slides[0].frontmatter.layout, "section");
+      assert.strictEqual(doc.slides[0].frontmatter.template, "section");
       assert.strictEqual(doc.slides[0].body, "");
     });
 
@@ -85,19 +85,19 @@ describe("Slide Parser", () => {
 
     it("should handle frontmatter with multi-line YAML values", () => {
       const doc = parseSlideDocument(
-        "---\ntheme: test\n---\n\n---\nlayout: statement\nbody: |\n  Line one.\n  Line two.\n---\n",
+        "---\ntheme: test\n---\n\n---\ntemplate: statement\nbody: |\n  Line one.\n  Line two.\n---\n",
       );
-      assert.strictEqual(doc.slides[0].frontmatter.layout, "statement");
+      assert.strictEqual(doc.slides[0].frontmatter.template, "statement");
       assert.ok((doc.slides[0].frontmatter.body as string).includes("Line one."));
       assert.ok((doc.slides[0].frontmatter.body as string).includes("Line two."));
     });
 
     it("should treat unterminated frontmatter as body content", () => {
-      // No closing --- before EOF → "layout: statement" is body, not FM
-      const doc = parseSlideDocument("---\ntheme: test\n---\n\n---\nlayout: statement");
+      // No closing --- before EOF → "template: statement" is body, not FM
+      const doc = parseSlideDocument("---\ntheme: test\n---\n\n---\ntemplate: statement");
       assert.strictEqual(doc.slides.length, 1);
       assert.deepStrictEqual(doc.slides[0].frontmatter, {});
-      assert.strictEqual(doc.slides[0].body, "layout: statement");
+      assert.strictEqual(doc.slides[0].body, "template: statement");
     });
 
     it("should throw FrontmatterParseError on invalid YAML in --- pair", () => {
@@ -117,7 +117,7 @@ describe("Slide Parser", () => {
       assert.throws(
         () =>
           parseSlideDocument(
-            "---\ntheme: test\n---\n\n---\nlayout: ok\n---\n\nSlide 0.\n\n---\n  bad:\n    - [unclosed\n---\n\nSlide 1.",
+            "---\ntheme: test\n---\n\n---\ntemplate: ok\n---\n\nSlide 0.\n\n---\n  bad:\n    - [unclosed\n---\n\nSlide 1.",
           ),
         (err: unknown) => {
           assert.ok(err instanceof FrontmatterParseError);
@@ -138,18 +138,18 @@ describe("Slide Parser", () => {
   describe("colon-in-body (regression: YAML false positives)", () => {
     it('should NOT treat "Takeaway: text" as frontmatter', () => {
       const doc = parseSlideDocument(
-        "---\ntheme: test\n---\n\n---\nlayout: statement\n---\n\nTakeaway: Acme makes data fresh.",
+        "---\ntheme: test\n---\n\n---\ntemplate: statement\n---\n\nTakeaway: Acme makes data fresh.",
       );
-      assert.strictEqual(doc.slides[0].frontmatter.layout, "statement");
+      assert.strictEqual(doc.slides[0].frontmatter.template, "statement");
       assert.strictEqual(doc.slides[0].body, "Takeaway: Acme makes data fresh.");
     });
 
     it('should NOT treat "Problem: text" as frontmatter', () => {
       const doc = parseSlideDocument(
-        "---\ntheme: test\n---\n\n---\nlayout: card\n---\n\nProblem: Legacy systems are slow.\n\nSolution: Use Acme.",
+        "---\ntheme: test\n---\n\n---\ntemplate: card\n---\n\nProblem: Legacy systems are slow.\n\nSolution: Use Acme.",
       );
       assert.strictEqual(doc.slides[0].body, "Problem: Legacy systems are slow.\n\nSolution: Use Acme.");
-      assert.strictEqual(doc.slides[0].frontmatter.layout, "card");
+      assert.strictEqual(doc.slides[0].frontmatter.template, "card");
     });
 
     it("should handle body-only slide starting with colon text", () => {
@@ -243,12 +243,12 @@ theme: acme
 ---
 
 ---
-layout: section
+template: section
 title: My Presentation
 ---
 
 ---
-layout: statement
+template: statement
 eyebrow: INTRO
 title: Value Proposition
 notes: Emphasize real-time capabilities.
@@ -257,7 +257,7 @@ notes: Emphasize real-time capabilities.
 Acme is a live data layer.
 
 ---
-layout: twoColumn
+template: twoColumn
 eyebrow: COMPARISON
 ---
 
@@ -273,19 +273,19 @@ Acme provides real-time views.`;
       assert.strictEqual(doc.global.theme, "acme");
 
       // Slide 0: section with title in frontmatter
-      assert.strictEqual(doc.slides[0].frontmatter.layout, "section");
+      assert.strictEqual(doc.slides[0].frontmatter.template, "section");
       assert.strictEqual(doc.slides[0].frontmatter.title, "My Presentation");
       assert.strictEqual(doc.slides[0].body, "");
 
       // Slide 1: statement with title and notes in frontmatter
-      assert.strictEqual(doc.slides[1].frontmatter.layout, "statement");
+      assert.strictEqual(doc.slides[1].frontmatter.template, "statement");
       assert.strictEqual(doc.slides[1].frontmatter.eyebrow, "INTRO");
       assert.strictEqual(doc.slides[1].frontmatter.title, "Value Proposition");
       assert.strictEqual(doc.slides[1].frontmatter.notes, "Emphasize real-time capabilities.");
       assert.strictEqual(doc.slides[1].body, "Acme is a live data layer.");
 
       // Slide 2: twoColumn with slots
-      assert.strictEqual(doc.slides[2].frontmatter.layout, "twoColumn");
+      assert.strictEqual(doc.slides[2].frontmatter.template, "twoColumn");
       assert.strictEqual(doc.slides[2].body, "Legacy systems can't keep up.");
       assert.strictEqual(doc.slides[2].slots.right, "Acme provides real-time views.");
     });
@@ -307,10 +307,10 @@ Acme provides real-time views.`;
 
     it("should handle CRLF line endings", () => {
       const doc = parseSlideDocument(
-        "---\r\ntheme: test\r\n---\r\n\r\n---\r\nlayout: body\r\ntitle: Hello\r\n---\r\n\r\nBody content.",
+        "---\r\ntheme: test\r\n---\r\n\r\n---\r\ntemplate: body\r\ntitle: Hello\r\n---\r\n\r\nBody content.",
       );
       assert.strictEqual(doc.global.theme, "test");
-      assert.strictEqual(doc.slides[0].frontmatter.layout, "body");
+      assert.strictEqual(doc.slides[0].frontmatter.template, "body");
       assert.strictEqual(doc.slides[0].frontmatter.title, "Hello");
       assert.strictEqual(doc.slides[0].body, "Body content.");
     });

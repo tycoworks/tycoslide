@@ -834,7 +834,7 @@ Variants apply different visual styles to the same layout structure — differen
 
 ```markdown
 ---
-layout: statement
+template: statement
 variant: hero
 ---
 ```

@@ -21,7 +21,7 @@ theme: "@tycoslide/theme-default"
 ---
 
 ---
-layout: title
+template: title
 variant: default
 title: My Presentation
 ---
@@ -438,7 +438,7 @@ Variants are defined per-layout and per-master in the theme. A layout variant co
 
 ```markdown
 ---
-layout: statement
+template: statement
 variant: hero
 ---
 ```
@@ -569,14 +569,14 @@ theme: my-theme
 ---
 
 ---
-layout: title
+template: title
 variant: default
 title: Theme Test
 subtitle: Verifying all components
 ---
 
 ---
-layout: body
+template: body
 variant: default
 title: Components
 ---
