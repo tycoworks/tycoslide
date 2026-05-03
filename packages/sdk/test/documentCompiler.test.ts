@@ -8,13 +8,17 @@
 import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
 
-import { buildSlideName, compileDocument } from "../src/core/markdown/documentCompiler.js";
-import { Bounds } from "../src/core/model/bounds.js";
-import type { SlideNode } from "../src/core/model/nodes.js";
-import { component, NODE_TYPE } from "../src/core/model/nodes.js";
-import { param, schema } from "../src/core/model/param.js";
-import type { TemplateConfig } from "../src/core/model/types.js";
-import type { MasterDefinition } from "../src/core/rendering/definitions.js";
+import {
+  Bounds,
+  component,
+  type MasterDefinition,
+  NODE_TYPE,
+  param,
+  type SlideNode,
+  schema,
+  type TemplateConfig,
+} from "@tycoslide/core";
+import { buildSlideName, compileDocument } from "../src/markdown/documentCompiler.js";
 import { mockTheme } from "./mocks.js";
 import { testComponents } from "./test-components.js";
 
@@ -99,10 +103,6 @@ const defaultLayout = {
   params: { title: param.optional(schema.string()), body: param.optional(schema.string()) },
   render: (params: any, slots: any): SlideNode => mockContent({ ...params, ...slots }),
 };
-
-// ============================================
-// (no global registration needed — arrays passed via makeOptions())
-// ============================================
 
 // ============================================
 // TESTS

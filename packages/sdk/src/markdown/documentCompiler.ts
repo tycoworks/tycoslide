@@ -5,13 +5,21 @@
 // Frontmatter → scalar params, ::slot:: markers + body → slot params.
 // Params and slots are validated separately against the layout's schemas.
 
+import {
+  type ComponentDefinition,
+  type ComponentNode,
+  createPresentation,
+  isComponentNode,
+  type LayoutDefinition,
+  type MasterDefinition,
+  type Presentation,
+  RESERVED_FRONTMATTER_KEYS,
+  type Slide,
+  type SlideNode,
+  type TemplateConfig,
+  type Theme,
+} from "@tycoslide/core";
 import { z } from "zod";
-import { type ComponentNode, isComponentNode, type SlideNode } from "../model/nodes.js";
-import { RESERVED_FRONTMATTER_KEYS } from "../model/syntax.js";
-
-import type { Slide, TemplateConfig, Theme } from "../model/types.js";
-import type { ComponentDefinition, LayoutDefinition, MasterDefinition } from "../rendering/definitions.js";
-import { createPresentation, type Presentation } from "../rendering/presentation.js";
 import { parseSlideDocument, type RawSlide } from "./slideParser.js";
 import { compileSlot } from "./slotCompiler.js";
 

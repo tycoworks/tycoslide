@@ -3,11 +3,9 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import { z } from "zod";
-import { compileSlot } from "../src/core/markdown/slotCompiler.js";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
 import { schema } from "../src/core/model/param.js";
 import { defineLayout } from "../src/core/rendering/definitions.js";
-import { C, testComponents } from "./test-components.js";
 
 describe("schema", () => {
   describe("scalar types", () => {
@@ -46,33 +44,6 @@ describe("schema", () => {
       const s = schema.array(schema.string());
       assert.strictEqual(s.safeParse(["a", "b"]).success, true);
       assert.strictEqual(s.safeParse([1, 2]).success, false);
-    });
-  });
-
-  describe("compileSlot", () => {
-    it("compiles markdown to ComponentNode[]", () => {
-      const result = compileSlot("Hello world", testComponents);
-      assert.ok(Array.isArray(result));
-      assert.strictEqual(result.length, 1);
-      assert.strictEqual((result[0] as any).componentName, C.Text);
-    });
-
-    it("compiles mixed content", () => {
-      const result = compileSlot("Some text.\n\n:::image\npic.png\n:::", testComponents);
-      assert.strictEqual(result.length, 2);
-      assert.strictEqual((result[0] as any).componentName, C.Text);
-      assert.strictEqual((result[1] as any).componentName, C.Image);
-    });
-
-    it("empty string → empty array", () => {
-      const result = compileSlot("", testComponents);
-      assert.strictEqual(result.length, 0);
-    });
-
-    it("compiles bare MDAST inline to text node", () => {
-      const result = compileSlot("Hello world", testComponents);
-      assert.strictEqual(result.length, 1);
-      assert.strictEqual((result[0] as any).componentName, C.Text);
     });
   });
 

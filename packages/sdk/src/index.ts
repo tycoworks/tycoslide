@@ -123,3 +123,15 @@ export { defineTheme, resolveThemeFormat } from "./theme.js";
 // ── Templates ────────────────────────────────────────────────────────────────
 
 export { defineTemplate, type Layout, type Master, type MasterLayer, type Template } from "./template.js";
+
+// ── Markdown Compilation ──────────────────────────────────────────────────
+
+// Document compiler (markdown source → Presentation)
+export { type CompileOptions, compileDocument, validateLayout } from "./markdown/documentCompiler.js";
+// Slide parser (multi-slide markdown → structured document)
+export {
+  FrontmatterParseError,
+  type ParsedDocument,
+  parseSlideDocument,
+  type RawSlide,
+} from "./markdown/slideParser.js";

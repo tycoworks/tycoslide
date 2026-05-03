@@ -46,15 +46,17 @@ npx tsc --build      # Rebuilds tycoslide (if changed) then the theme
 
 - `packages/core/src/core/model/` — Types, schema, nodes, syntax constants
 - `packages/core/src/core/rendering/` — Component registry, PPTX renderer, presentation
-- `packages/core/src/core/markdown/` — Document compiler, slot compiler, slide parser
+- `packages/sdk/src/markdown/` — Document compiler, slot compiler, slide parser
 - `packages/core/src/core/layout/` — HTML measurement via Playwright, flex layout pipeline
 - `packages/cli/src/` — CLI entry point, build command, theme loader
-- `packages/core/src/utils/` — Shared parser, font utils, image utils, units
+- `packages/core/src/utils/` — Font utils, image utils, units
 - `packages/sdk/src/components/` — All 16 component definitions
 - `packages/sdk/src/presets/` — SlideFormat, Component names, highlighting themes
-- `packages/sdk/src/theme/` — Multi-format theme types and resolution (ThemeDefinition, ThemeFormat, resolveThemeFormat)
+- `packages/sdk/src/theme.ts` — Multi-format theme types and resolution (ThemeDefinition, ThemeFormat, resolveThemeFormat)
+- `packages/sdk/src/template.ts` — Template authoring (defineTemplate, Master, Layout, Template)
 - `packages/theme-default/src/` — Default theme (Inter font, Material Design icons)
-- `packages/core/test/` — Tests (uses `node:test`, NOT vitest)
+- `packages/core/test/` — Core tests (uses `node:test`, NOT vitest)
+- `packages/sdk/test/` — SDK + markdown compilation tests (uses `node:test`, NOT vitest)
 
 ## Architecture
 

@@ -78,23 +78,28 @@ const mockTextStyle: TextStyle = {
 /**
  * Create a mock Theme.
  * All text styles point to the same mock style.
+ * Accepts optional overrides for layouts, textStyles, and slide dimensions.
  */
-export function mockTheme(): Theme {
+export function mockTheme(options?: {
+  layouts?: Theme["layouts"];
+  textStyles?: Partial<Record<string, Partial<TextStyle>>>;
+  slide?: Theme["slide"];
+}): Theme {
   return {
-    slide: { width: 13.333, height: 7.5 },
+    slide: options?.slide ?? { width: 13.333, height: 7.5 },
     fonts: [mockFontFamily],
     textStyles: {
-      h1: mockTextStyle,
-      h2: mockTextStyle,
-      h3: mockTextStyle,
-      h4: mockTextStyle,
-      body: mockTextStyle,
-      small: mockTextStyle,
-      footer: mockTextStyle,
-      eyebrow: mockTextStyle,
-      code: mockTextStyle,
+      h1: { ...mockTextStyle, ...options?.textStyles?.h1 },
+      h2: { ...mockTextStyle, ...options?.textStyles?.h2 },
+      h3: { ...mockTextStyle, ...options?.textStyles?.h3 },
+      h4: { ...mockTextStyle, ...options?.textStyles?.h4 },
+      body: { ...mockTextStyle, ...options?.textStyles?.body },
+      small: { ...mockTextStyle, ...options?.textStyles?.small },
+      footer: { ...mockTextStyle, ...options?.textStyles?.footer },
+      eyebrow: { ...mockTextStyle, ...options?.textStyles?.eyebrow },
+      code: { ...mockTextStyle, ...options?.textStyles?.code },
     },
-    layouts: {},
+    layouts: options?.layouts ?? {},
   };
 }
 

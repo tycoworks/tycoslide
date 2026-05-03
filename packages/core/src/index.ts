@@ -2,15 +2,6 @@
 // Main barrel export
 
 export { LayoutValidationError, type SlideValidationResult, type ValidationResult } from "./core/layout/validator.js";
-// Document compiler (markdown file → Presentation)
-export { type CompileOptions, compileDocument, validateLayout } from "./core/markdown/documentCompiler.js";
-// Slide parser (multi-slide markdown file → structured document)
-export {
-  FrontmatterParseError,
-  type ParsedDocument,
-  parseSlideDocument,
-  type RawSlide,
-} from "./core/markdown/slideParser.js";
 export type {
   ContainerNode,
   ElementNode,
@@ -120,6 +111,5 @@ export {
   normalizeContent,
   resolveFontFace,
 } from "./utils/font.js";
-export { parseMarkdown } from "./utils/parser.js";
 // Unit utilities (for component authors that resolve theme values during render)
 export { inToPx, ptToIn, ptToPx } from "./utils/units.js";

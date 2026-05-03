@@ -3,11 +3,9 @@
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
+import { type LayoutDefinition, NODE_TYPE, param, schema } from "@tycoslide/core";
 import { z } from "zod";
-import { validateLayout } from "../src/core/markdown/documentCompiler.js";
-import { NODE_TYPE } from "../src/core/model/nodes.js";
-import { param, schema } from "../src/core/model/param.js";
-import type { LayoutDefinition } from "../src/core/rendering/definitions.js";
+import { validateLayout } from "../src/markdown/documentCompiler.js";
 import { testComponents } from "./test-components.js";
 
 // Create a test layout with a known schema shape

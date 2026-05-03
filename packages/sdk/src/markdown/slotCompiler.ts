@@ -5,15 +5,39 @@
 // Slots primarily contain :::directives. Consecutive bare MDAST nodes
 // are compiled via matching MDAST handlers on the provided components.
 
+import {
+  type ComponentDefinition,
+  type ComponentNode,
+  type ContainerDirective,
+  extractSource,
+  type SlideNode,
+  SYNTAX,
+} from "@tycoslide/core";
 import type { Paragraph, Root, RootContent } from "mdast";
-import { extractDirectiveBody, markdownProcessor } from "../../utils/parser.js";
-import type { ComponentNode, SlideNode } from "../model/nodes.js";
-import { type ContainerDirective, SYNTAX } from "../model/syntax.js";
-import type { ComponentDefinition } from "../rendering/definitions.js";
+import { parseMarkdown } from "./parser.js";
 
 const THEMATIC_BREAK_ERROR =
   "Horizontal rules (---, ***, ___) are not supported in slide content. " +
   "Use the line() primitive to insert a separator.";
+
+// ============================================
+// DIRECTIVE BODY EXTRACTION
+// ============================================
+
+/**
+ * Extract the raw body text from a scalar container directive,
+ * stripping the :::name opener and ::: closer.
+ */
+function extractDirectiveBody(directive: ContainerDirective, source: string): string {
+  const raw = extractSource(directive, source);
+  const lines = raw.split("\n");
+  if (lines.length < 2) return "";
+  const bodyLines = lines.slice(1);
+  if (bodyLines.length > 0 && bodyLines[bodyLines.length - 1].trim() === ":::") {
+    bodyLines.pop();
+  }
+  return bodyLines.join("\n").trim();
+}
 
 // ============================================
 // PUBLIC API
@@ -26,7 +50,7 @@ const THEMATIC_BREAK_ERROR =
  * - Bare MDAST → compiled via registered MDAST handlers
  */
 export function compileSlot(markdownStr: string, components: ComponentDefinition<any, any, any>[]): SlideNode[] {
-  const tree = markdownProcessor.parse(markdownStr) as Root;
+  const tree = parseMarkdown(markdownStr) as Root;
   return compileChildren(tree.children, markdownStr, "slot", components);
 }
 
@@ -132,7 +156,7 @@ function dispatchDirective(
  * (set by the layout with theme access) controls inter-block spacing.
  */
 function compileBareMarkdown(source: string, components: ComponentDefinition<any, any, any>[]): SlideNode[] {
-  const tree = markdownProcessor.parse(source) as Root;
+  const tree = parseMarkdown(source) as Root;
   const nodes: SlideNode[] = [];
 
   for (const child of tree.children) {

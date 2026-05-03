@@ -4,7 +4,8 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { compileDocument, LayoutValidationError, MissingFontError, parseSlideDocument } from "@tycoslide/core";
+import { LayoutValidationError, MissingFontError } from "@tycoslide/core";
+import { compileDocument, parseSlideDocument } from "@tycoslide/sdk";
 import createDebug from "debug";
 import { loadTheme } from "./themeLoader.js";
 

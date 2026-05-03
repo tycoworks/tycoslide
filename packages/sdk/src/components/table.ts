@@ -7,7 +7,6 @@ import {
   type GridStyle,
   type HorizontalAlignment,
   NODE_TYPE,
-  parseMarkdown,
   type RenderContext,
   SHAPE,
   SIZE,
@@ -23,6 +22,7 @@ import {
   type VerticalAlignment,
 } from "@tycoslide/core";
 import type { Table as MdastTable, RootContent } from "mdast";
+import { parseMarkdown } from "../markdown/parser.js";
 import { Component } from "../presets/names.js";
 import { column, stack } from "./containers.js";
 import { type ShapeTokens, shape } from "./primitives.js";

@@ -1,17 +1,26 @@
 // Test Component Stubs
-// Minimal component definitions for core tests.
-// Used by core tests that need components (slotCompiler, schema, tokenResolution, etc.)
+// Minimal component definitions for markdown compilation tests.
+// Used by SDK tests that need components (slotCompiler, documentCompiler, etc.)
 //
 // Text, Card, Row, Column have real render functions.
 // Image, Table, Line register metadata only — slotCompiler never calls render.
 
+import {
+  type ComponentNode,
+  component,
+  DIRECTION,
+  defineComponent,
+  extractSource,
+  HALIGN,
+  NODE_TYPE,
+  param,
+  type RenderContext,
+  SIZE,
+  SYNTAX,
+  schema,
+  VALIGN,
+} from "@tycoslide/core";
 import type { Heading, Table as MdastTable, RootContent } from "mdast";
-import { type ComponentNode, component, NODE_TYPE } from "../src/core/model/nodes.js";
-import { param, schema } from "../src/core/model/param.js";
-import { extractSource, SYNTAX } from "../src/core/model/syntax.js";
-import { DIRECTION, HALIGN, SIZE, VALIGN } from "../src/core/model/types.js";
-import type { RenderContext } from "../src/core/rendering/definitions.js";
-import { defineComponent } from "../src/core/rendering/definitions.js";
 
 // Local component name const — core tests can't import from tycoslide-components
 export const C = {

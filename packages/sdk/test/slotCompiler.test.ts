@@ -7,7 +7,7 @@
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { compileSlot } from "../src/core/markdown/slotCompiler.js";
+import { compileSlot } from "../src/markdown/slotCompiler.js";
 import { C, testComponents } from "./test-components.js";
 
 /** Helper: get node as any to avoid unknown type errors in tests */

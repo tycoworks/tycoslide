@@ -2,7 +2,7 @@
 
 Single design doc for tycoslide's multi-format theme system and template unification. Covers the full journey from single-format themes → multi-format support → unified template authoring model.
 
-**Status**: Implementation (Multi-format done; Template unification Step 3 done — May 2026)
+**Status**: Implementation (Multi-format done; Template unification Step 3 done; Markdown moved to SDK — May 2026)
 **Branch**: multi-format-themes
 **Breaking change**: Yes — mandatory `format:` frontmatter key, `SLIDE_SIZE` removed from core
 
@@ -423,7 +423,9 @@ Added `defineTemplate()` factory and `Layout<TTokens>` interface to SDK.
 | `core/model/types.ts` | `Theme`, `TemplateConfig`, `Slide` |
 | `core/rendering/registry.ts` | `LayoutDefinition` (render → SlideNode), `MasterDefinition` |
 | `core/rendering/presentation.ts` | Assembles master + content layers |
-| `core/markdown/documentCompiler.ts` | Reads `TemplateConfig`, calls layout.render, builds `Slide` |
+| `sdk/markdown/documentCompiler.ts` | Reads `TemplateConfig`, calls layout.render, builds `Slide` |
+| `sdk/markdown/slideParser.ts` | Parses multi-slide markdown into structured document |
+| `sdk/markdown/slotCompiler.ts` | Compiles slot markdown to `ComponentNode[]` |
 | `core/model/token.ts` | Token utilities (no variant resolution) |
 | `sdk/template.ts` | `defineTemplate`, `Master<T>`, `Template` interface |
 | `sdk/theme.ts` | `ThemeDefinition`, `ThemeFormat`, `resolveThemeFormat`, `templatesToLayouts` |
@@ -437,17 +439,19 @@ Added `defineTemplate()` factory and `Layout<TTokens>` interface to SDK.
 
 ## Future Steps
 
-### Move Markdown Compilation from Core to SDK
+### Move Markdown Compilation from Core to SDK (Done)
 
-The markdown layer (`documentCompiler.ts`, `slideParser.ts`, `slotCompiler.ts`) currently lives in `packages/core/src/core/markdown/`. This should move to `packages/sdk/src/markdown/` so that core becomes a pure renderer:
+The markdown layer (`documentCompiler.ts`, `slideParser.ts`, `slotCompiler.ts`) moved from `packages/core/src/core/markdown/` to `packages/sdk/src/markdown/`. Core is now a pure renderer:
 
 - Core receives: `Slide[]` + `Theme` → produces `.pptx`
 - SDK owns: markdown parsing, slot compilation, layout token injection, template resolution
-- Already done on the `multi-format-themes` branch of the `tycoslide` repo (not yet merged to `tycoslide-clean`)
+- `extractDirectiveBody` inlined into SDK's `slotCompiler.ts`
+- `parseMarkdown()` moved to `sdk/src/markdown/parser.ts` (no longer exported from core)
+- `remark-directive`, `remark-gfm`, `remark-parse`, `unified`, `yaml` removed from core dependencies
 
-### Eliminate Registries from Core
+### Eliminate Registries from Core (Done)
 
-Make core a pure, stateless function — no global singletons. Single entry point receives everything it needs.
+Core is a pure, stateless function — no global singletons. Single entry point receives everything it needs.
 
 #### Target API
 

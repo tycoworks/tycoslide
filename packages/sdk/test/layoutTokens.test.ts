@@ -4,14 +4,21 @@
 
 import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
-import type { CompileOptions } from "../src/core/markdown/documentCompiler.js";
-import { compileDocument } from "../src/core/markdown/documentCompiler.js";
-import { Bounds } from "../src/core/model/bounds.js";
-import type { SlideNode } from "../src/core/model/nodes.js";
-import { component, isComponentNode, NODE_TYPE } from "../src/core/model/nodes.js";
-import { param, schema } from "../src/core/model/param.js";
-import type { Theme } from "../src/core/model/types.js";
-import { defineLayout, type LayoutDefinition, type MasterDefinition } from "../src/core/rendering/definitions.js";
+import {
+  Bounds,
+  component,
+  defineLayout,
+  isComponentNode,
+  type LayoutDefinition,
+  type MasterDefinition,
+  NODE_TYPE,
+  param,
+  type SlideNode,
+  schema,
+  type Theme,
+} from "@tycoslide/core";
+import type { CompileOptions } from "../src/markdown/documentCompiler.js";
+import { compileDocument } from "../src/markdown/documentCompiler.js";
 import { mockTheme } from "./mocks.js";
 import { C, testComponents } from "./test-components.js";
 
