@@ -239,8 +239,6 @@ export interface Background {
 export interface Slide {
   /** Master name — every slide must reference a registered master. */
   masterName: string;
-  /** Master tokens — resolved values passed directly from layout tokens. */
-  masterTokens: Record<string, unknown>;
   /** Overrides master background if set. */
   background?: Background;
   notes?: string;
@@ -252,7 +250,6 @@ export interface Slide {
 /** Structured config for a layout — master assignment + layout tokens. */
 export interface TemplateConfig {
   masterName: string;
-  masterTokens: Record<string, unknown>;
   layoutTokens: Record<string, unknown>;
 }
 

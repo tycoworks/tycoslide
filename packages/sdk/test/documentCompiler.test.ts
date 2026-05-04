@@ -32,16 +32,14 @@ let receivedProps: any[] = [];
 const HEADER = `---\ntheme: test\n---\n\n`;
 
 /** Default TemplateConfig for test layouts */
-const defaultConfig: TemplateConfig = { masterName: "default", masterTokens: {}, layoutTokens: {} };
+const defaultConfig: TemplateConfig = { masterName: "default", layoutTokens: {} };
 
-/** Mock master that returns full-slide content bounds */
+/** Mock master — plain data object */
 const mockMaster: MasterDefinition = {
   name: "default",
-  render: (_tokens, slideSize) => ({
-    content: component("test", {}),
-    contentBounds: new Bounds(0, 0, slideSize.width, slideSize.height),
-    background: { color: "#FFFFFF" },
-  }),
+  content: component("test", {}),
+  contentBounds: new Bounds(0, 0, 13.333, 7.5),
+  background: { color: "#FFFFFF" },
 };
 
 function makeOptions() {
@@ -192,10 +190,10 @@ notes: These are speaker notes.
       assert.strictEqual(slides[0].slide.notes, "These are speaker notes.");
     });
 
-    it("populates masterName and masterTokens from TemplateConfig", () => {
+    it("populates masterName from TemplateConfig", () => {
       const theme = mockTheme({
         layouts: {
-          simple: { masterName: "custom-master", masterTokens: { bg: "#000" }, layoutTokens: {} },
+          simple: { masterName: "custom-master", layoutTokens: {} },
           body: defaultConfig,
           slots: defaultConfig,
           strict: defaultConfig,
@@ -211,7 +209,6 @@ notes: These are speaker notes.
       });
       const slides = (pres as any).deferredSlides as { slide: any }[];
       assert.strictEqual(slides[0].slide.masterName, "custom-master");
-      assert.deepStrictEqual(slides[0].slide.masterTokens, { bg: "#000" });
     });
 
     it("throws when theme has no config for the layout", () => {

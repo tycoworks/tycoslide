@@ -77,8 +77,6 @@ export class Presentation {
   private masterBounds: Bounds;
   private slideCount = 0;
   private deferredSlides: DeferredSlide[] = [];
-  private masterTokenIds = new Map<Record<string, unknown>, string>();
-  private masterTokenCounter = 0;
 
   constructor(config: PresentationConfig) {
     this._theme = config.theme;
@@ -117,16 +115,6 @@ export class Presentation {
     }
 
     return node as ElementNode;
-  }
-
-  /** Stable dedup key for master tokens using object identity. */
-  private getMasterKey(masterName: string, masterTokens: Record<string, unknown>): string {
-    let key = this.masterTokenIds.get(masterTokens);
-    if (!key) {
-      key = `${masterName}/${this.masterTokenCounter++}`;
-      this.masterTokenIds.set(masterTokens, key);
-    }
-    return key;
   }
 
   /**
@@ -200,9 +188,8 @@ export class Presentation {
         renderTree: (node) => this.renderTree(node, renderContext),
       };
 
-      // Phase 1: Render masters (collect unique master+token identity pairs, render component trees)
+      // Phase 1: Render masters (dedup by name, render component trees)
       log.pptx._("PIPELINE: Collecting masters and slides...");
-      const { width, height } = this._theme.slide;
       const pendingMasters = new Map<
         string,
         {
@@ -213,19 +200,18 @@ export class Presentation {
       >();
 
       for (const deferred of this.deferredSlides) {
-        const { masterName, masterTokens } = deferred.slide;
-        const masterKey = this.getMasterKey(masterName, masterTokens);
+        const { masterName } = deferred.slide;
 
-        if (!this.masters.has(masterKey) && !pendingMasters.has(masterKey)) {
+        if (!this.masters.has(masterName) && !pendingMasters.has(masterName)) {
           const def = this.masterDefs.get(masterName);
           if (!def) {
             throw new Error(`Unknown master: '${masterName}'. Did you forget to register it?`);
           }
-          const { content: rawMasterContent, contentBounds, background } = def.render(masterTokens, { width, height });
-          const masterContent = await this.renderTree(rawMasterContent, renderContext);
-          pendingMasters.set(masterKey, { content: masterContent, contentBounds, background });
+          const contentBounds = def.contentBounds ?? this.masterBounds;
+          const masterContent = await this.renderTree(def.content, renderContext);
+          pendingMasters.set(masterName, { content: masterContent, contentBounds, background: def.background });
           // Collect measurements from master content (full slide — masters position their own elements)
-          pipeline.collectFromTree(masterContent, this.masterBounds, `master-${masterKey}`, background);
+          pipeline.collectFromTree(masterContent, this.masterBounds, `master-${masterName}`, def.background);
         }
       }
 
@@ -235,20 +221,19 @@ export class Presentation {
         deferred: DeferredSlide;
         rendered: ElementNode;
         bounds: Bounds;
-        masterKey: string;
+        masterName: string;
       }> = [];
 
       for (const deferred of this.deferredSlides) {
         const { slide, slideIndex } = deferred;
-        const { masterName, masterTokens } = slide;
-        const masterKey = this.getMasterKey(masterName, masterTokens);
+        const { masterName } = slide;
 
         // Get bounds from pending or existing master
-        const pending = pendingMasters.get(masterKey);
-        const existing = this.masters.get(masterKey);
+        const pending = pendingMasters.get(masterName);
+        const existing = this.masters.get(masterName);
         const bounds = pending?.contentBounds ?? existing?.contentBounds;
         if (!bounds) {
-          throw new Error(`Slide ${slideIndex + 1}: master '${masterKey}' not found.`);
+          throw new Error(`Slide ${slideIndex + 1}: master '${masterName}' not found.`);
         }
 
         // Render components
@@ -266,7 +251,7 @@ export class Presentation {
         const effectiveBg = slide.background ?? pending?.background ?? existing!.background;
         pipeline.collectFromTree(rendered, bounds, `slide-${slideIndex + 1}`, effectiveBg);
 
-        renderedSlides.push({ deferred, rendered, bounds, masterKey });
+        renderedSlides.push({ deferred, rendered, bounds, masterName });
       }
 
       // Missing font validation: check for bold/italic on fonts without those slots
@@ -310,7 +295,7 @@ export class Presentation {
       const slides: SlideLayout[] = [];
       const validationErrors: SlideValidationResult[] = [];
 
-      for (const { deferred, rendered, bounds, masterKey } of renderedSlides) {
+      for (const { deferred, rendered, bounds, masterName } of renderedSlides) {
         const { slide, slideIndex } = deferred;
 
         // Build positioned tree — computation crashes are still fatal
@@ -346,10 +331,10 @@ export class Presentation {
         slides.push(slideLayout);
 
         if (!options?.preview) {
-          const masterPositioned = masterPositionedMap.get(masterKey) ?? this.masters.get(masterKey)?.positioned;
+          const masterPositioned = masterPositionedMap.get(masterName) ?? this.masters.get(masterName)?.positioned;
 
           this.renderer.renderSlide(positioned, {
-            masterName: masterKey,
+            masterName,
             masterContent: masterPositioned,
             background: slide.background,
             notes: slide.notes,
@@ -372,9 +357,9 @@ export class Presentation {
 
       // Build composite preview HTML: master chrome behind, slide content positioned within
       const fragmentMap = pipeline.getSlideFragments();
-      const compositeSlides = renderedSlides.map(({ deferred, bounds, masterKey }) => {
+      const compositeSlides = renderedSlides.map(({ deferred, bounds, masterName }) => {
         const { slideIndex } = deferred;
-        const masterLabel = `master-${masterKey}`;
+        const masterLabel = `master-${masterName}`;
         return {
           masterFragment: fragmentMap.get(masterLabel)!,
           slideFragment: fragmentMap.get(`slide-${slideIndex + 1}`)!,

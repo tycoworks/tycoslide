@@ -83,7 +83,6 @@ export function validateThemeFonts(theme: Theme): void {
   if (theme.layouts) {
     for (const [layoutName, layoutConfig] of Object.entries(theme.layouts)) {
       walkTokensForFonts(layoutConfig.layoutTokens, `layout "${layoutName}"`, validateTokenFonts);
-      walkTokensForFonts(layoutConfig.masterTokens, `layout "${layoutName}" master`, validateTokenFonts);
     }
   }
 }

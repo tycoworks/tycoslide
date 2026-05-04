@@ -66,7 +66,7 @@ export const token = {
 
 /**
  * Parse a TokenShape into its required keys and full key set.
- * Used by defineComponent, defineLayout, and defineMaster to avoid duplicating parsing logic.
+ * Used by defineComponent and defineLayout to avoid duplicating parsing logic.
  */
 export interface ParsedTokenShape {
   requiredKeys: string[];
@@ -75,7 +75,7 @@ export interface ParsedTokenShape {
 
 /**
  * Parse a TokenShape into its required keys and full key set.
- * Used by defineComponent, defineLayout, and defineMaster to avoid duplicating parsing logic.
+ * Used by defineComponent and defineLayout to avoid duplicating parsing logic.
  */
 export function parseTokenShape(shape: TokenShape): ParsedTokenShape {
   const entries = Object.entries(shape);

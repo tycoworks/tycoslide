@@ -1,42 +1,11 @@
 // Template DSL: defineTemplate()
-// Masters provide a shared base layer (chrome, background).
 // Templates declare content and wire into a master by name.
 
-import {
-  type Background,
-  type Bounds,
-  type ComponentNode,
-  defineLayout,
-  type LayoutDefinition,
-  type ScalarShape,
-  type SlideNode,
-} from "@tycoslide/core";
+import { defineLayout, type LayoutDefinition, type ScalarShape, type SlideNode } from "@tycoslide/core";
 
 // ============================================
 // TYPES
 // ============================================
-
-/**
- * The return type from a master's render function.
- * `content` is the master layer nodes (footer, logo, slide number, etc).
- * `contentBounds` is optional — when present, template content is positioned within these bounds.
- * `background` is the slide background.
- */
-export interface MasterLayer {
-  content: ComponentNode;
-  contentBounds?: Bounds;
-  background: Background;
-}
-
-/**
- * A master chrome blueprint — plain generic interface like Layout<TTokens>.
- * Masters are plain objects with a typed render function.
- * No factory needed — just implement the interface.
- */
-export interface Master<TTokens extends object = Record<string, unknown>> {
-  name: string;
-  render: (tokens: TTokens, slideSize: { width: number; height: number }) => MasterLayer;
-}
 
 /**
  * A reusable structural blueprint — params + slots + render function.
@@ -59,13 +28,12 @@ export interface Layout<
 }
 
 /**
- * A complete template: layout + master + tokens (explicitly separated).
- * The master and its tokens are first-class fields — no magic token-bag key.
+ * A complete template: layout + master reference + layout tokens.
+ * Masters are referenced by name — the master objects live on ThemeFormat.
  */
 export interface Template {
   layout: LayoutDefinition;
-  master: Master<any>;
-  masterTokens: Record<string, unknown>;
+  masterName: string;
   layoutTokens: Record<string, unknown>;
 }
 
@@ -74,16 +42,15 @@ export interface Template {
 // ============================================
 
 /**
- * Define a slide template — a named layout + master + separated tokens.
+ * Define a slide template — a named layout + master name + layout tokens.
  *
  * A template is the unified authoring concept replacing separate master + layout + variant.
  * It accepts:
  * - layout: a Layout object (reusable structural blueprint)
- * - master: a Master object (chrome/background blueprint)
- * - masterTokens: token values for the master's render function
+ * - masterName: name of the master this template uses
  * - layoutTokens: token values for the layout's render function
  *
- * Returns a Template carrying the LayoutDefinition, master, and separated tokens.
+ * Returns a Template carrying the LayoutDefinition, master name, and layout tokens.
  * The layout is NOT auto-registered — the CLI extracts and registers layouts
  * from the resolved theme format.
  */
@@ -95,11 +62,10 @@ export function defineTemplate<
   name: string;
   description: string;
   layout: Layout<TTokens, TParams, TSlots>;
-  master: Master<any>;
-  masterTokens: Record<string, unknown>;
+  masterName: string;
   layoutTokens: Record<string, unknown>;
 }): Template {
-  const { layout: templateLayout, master, masterTokens, layoutTokens, ...rest } = def;
+  const { layout: templateLayout, masterName, layoutTokens, ...rest } = def;
 
   // Build core layout — render delegates directly to the Layout blueprint.
   const coreLayout = defineLayout({
@@ -111,5 +77,5 @@ export function defineTemplate<
     },
   });
 
-  return { layout: coreLayout, master, masterTokens, layoutTokens };
+  return { layout: coreLayout, masterName, layoutTokens };
 }

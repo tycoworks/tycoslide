@@ -134,7 +134,7 @@ describe("validateThemeFonts", () => {
         layouts: {
           body: {
             masterName: "default",
-            masterTokens: {},
+
             layoutTokens: {
               heading: { fontFamily: unregisteredFamily },
             },
@@ -150,7 +150,7 @@ describe("validateThemeFonts", () => {
         layouts: {
           body: {
             masterName: "default",
-            masterTokens: {},
+
             layoutTokens: {
               color: "#FF0000",
               style: "body",

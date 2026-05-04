@@ -1,8 +1,8 @@
 // Multi-format theme types, definition, and resolution.
 // A ThemeDefinition maps format names to ThemeFormats.
-// resolveThemeFormat() flattens a ThemeDefinition + format name into a core Theme.
+// resolveThemeFormat() flattens a ThemeDefinition + format name into a core Theme + masters.
 
-import type { FontFamily, TemplateConfig, TextStyle, Theme } from "@tycoslide/core";
+import type { FontFamily, MasterDefinition, TemplateConfig, TextStyle, Theme } from "@tycoslide/core";
 import { validateThemeFonts } from "@tycoslide/core";
 import type { Template } from "./template.js";
 
@@ -13,6 +13,8 @@ export interface ThemeFormat {
   slide: { width: number; height: number };
   textStyles: Record<string, TextStyle>;
   templates?: Template[];
+  /** Format-specific masters — pre-built data objects with content baked in. */
+  masters?: MasterDefinition[];
 }
 
 /** Multi-format theme declaration. Theme packages export this. */
@@ -28,8 +30,7 @@ function templatesToLayouts(templates: Template[]): Record<string, TemplateConfi
   const layouts: Record<string, TemplateConfig> = {};
   for (const t of templates) {
     layouts[t.layout.name] = {
-      masterName: t.master.name,
-      masterTokens: t.masterTokens,
+      masterName: t.masterName,
       layoutTokens: t.layoutTokens,
     };
   }
@@ -65,10 +66,13 @@ export function defineTheme(definition: ThemeDefinition): ThemeDefinition {
 // ── resolveThemeFormat ──────────────────────────────────────────────────────────
 
 /**
- * Resolve a ThemeDefinition to a flat Theme for a specific format.
+ * Resolve a ThemeDefinition to a flat Theme + masters for a specific format.
  * Throws with available format names if the format is missing or unknown.
  */
-export function resolveThemeFormat(definition: ThemeDefinition, format: string | undefined): Theme {
+export function resolveThemeFormat(
+  definition: ThemeDefinition,
+  format: string | undefined,
+): { theme: Theme; masters: MasterDefinition[] } {
   const available = Object.keys(definition.formats);
 
   if (!format) {
@@ -83,9 +87,12 @@ export function resolveThemeFormat(definition: ThemeDefinition, format: string |
   }
 
   return {
-    slide: themeFormat.slide,
-    fonts: definition.fonts,
-    textStyles: themeFormat.textStyles,
-    layouts: templatesToLayouts(themeFormat.templates ?? []),
+    theme: {
+      slide: themeFormat.slide,
+      fonts: definition.fonts,
+      textStyles: themeFormat.textStyles,
+      layouts: templatesToLayouts(themeFormat.templates ?? []),
+    },
+    masters: themeFormat.masters ?? [],
   };
 }

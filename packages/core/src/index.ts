@@ -82,7 +82,6 @@ export {
   type ComponentNode,
   defineComponent,
   defineLayout,
-  defineMaster,
   type LayoutDefinition,
   type MasterDefinition,
   type MdastHandler,

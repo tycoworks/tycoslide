@@ -95,7 +95,7 @@ describe("defineTheme()", () => {
 describe("resolveThemeFormat()", () => {
   it("valid format name returns correct flat Theme", () => {
     const def = makeDefinition();
-    const theme = resolveThemeFormat(def, "presentation");
+    const { theme } = resolveThemeFormat(def, "presentation");
 
     assert.deepStrictEqual(theme.fonts, def.fonts);
     assert.deepStrictEqual(theme.slide, def.formats.presentation.slide);
@@ -139,15 +139,14 @@ describe("resolveThemeFormat()", () => {
       },
     };
 
-    const presentation = resolveThemeFormat(def, "presentation");
-    const factsheet = resolveThemeFormat(def, "factsheet");
+    const { theme: presentation } = resolveThemeFormat(def, "presentation");
+    const { theme: factsheet } = resolveThemeFormat(def, "factsheet");
 
     assert.deepStrictEqual(presentation.slide, wideSlide);
     assert.deepStrictEqual(factsheet.slide, narrowSlide);
   });
 
   it("resolves templates into structured TemplateConfig map", () => {
-    const master = { name: "test-master", render: () => ({ content: {}, background: {} }) } as any;
     const layout = {
       params: {},
       render: () => ({ type: "component", componentName: "x", params: {}, content: undefined }),
@@ -156,8 +155,7 @@ describe("resolveThemeFormat()", () => {
       name: "hero",
       description: "Hero layout",
       layout,
-      master,
-      masterTokens: { bg: "#000" },
+      masterName: "test-master",
       layoutTokens: { titleColor: "#FFF" },
     });
 
@@ -165,10 +163,9 @@ describe("resolveThemeFormat()", () => {
       fonts: [validFont],
       formats: { presentation: { ...makeFormat(), templates: [template] } },
     };
-    const theme = resolveThemeFormat(def, "presentation");
+    const { theme } = resolveThemeFormat(def, "presentation");
     assert.deepStrictEqual(theme.layouts.hero, {
       masterName: "test-master",
-      masterTokens: { bg: "#000" },
       layoutTokens: { titleColor: "#FFF" },
     });
   });

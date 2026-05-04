@@ -4,13 +4,7 @@
 import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import {
-  Bounds,
-  type ComponentDefinition,
-  type LayoutDefinition,
-  type MasterDefinition,
-  type Theme,
-} from "@tycoslide/core";
+import type { ComponentDefinition, LayoutDefinition, MasterDefinition, Theme } from "@tycoslide/core";
 import { resolveThemeFormat } from "@tycoslide/sdk";
 
 export interface LoadedTheme {
@@ -29,7 +23,7 @@ export interface LoadedTheme {
  *   - components: ComponentDefinition[] (required)
  *   - assets: Record<string, unknown> (optional)
  *
- * Masters and layouts are discovered from templates embedded in theme formats.
+ * Masters come from the resolved format. Layouts are discovered from templates.
  */
 export async function loadTheme(name: string, format: string | undefined): Promise<LoadedTheme> {
   const packageName = name;
@@ -60,11 +54,9 @@ export async function loadTheme(name: string, format: string | undefined): Promi
 
   const components: ComponentDefinition<any, any, any>[] = mod.components;
 
-  // Discover layouts + masters from templates in theme formats
+  // Discover layouts from templates across all formats
   const layouts: LayoutDefinition[] = [];
-  const masters: MasterDefinition[] = [];
   const layoutsSeen = new Set<string>();
-  const mastersSeen = new Set<string>();
 
   for (const fmt of Object.values(mod.theme.formats) as any[]) {
     if (fmt.templates) {
@@ -72,21 +64,6 @@ export async function loadTheme(name: string, format: string | undefined): Promi
         if (t.layout && !layoutsSeen.has(t.layout.name)) {
           layoutsSeen.add(t.layout.name);
           layouts.push(t.layout);
-        }
-        if (t.master && !mastersSeen.has(t.master.name)) {
-          mastersSeen.add(t.master.name);
-          const master = t.master;
-          masters.push({
-            name: master.name,
-            render: (tokens: Record<string, unknown>, slideSize: { width: number; height: number }) => {
-              const result = master.render(tokens, slideSize);
-              return {
-                content: result.content,
-                contentBounds: result.contentBounds ?? new Bounds(0, 0, slideSize.width, slideSize.height),
-                background: result.background,
-              };
-            },
-          });
         }
       }
     }
@@ -96,12 +73,12 @@ export async function loadTheme(name: string, format: string | undefined): Promi
     throw new Error(`Theme package '${packageName}' has no layouts in its templates.`);
   }
 
-  if (mastersSeen.size === 0) {
-    throw new Error(`Theme package '${packageName}' has no masters in its templates.`);
-  }
+  // Resolve format to flat Theme + format-specific masters
+  const { theme, masters } = resolveThemeFormat(mod.theme, format);
 
-  // Resolve format to flat Theme
-  const theme = resolveThemeFormat(mod.theme, format);
+  if (masters.length === 0) {
+    throw new Error(`Theme package '${packageName}' has no masters for format '${format}'.`);
+  }
 
   return {
     theme,

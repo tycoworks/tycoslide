@@ -1,4 +1,4 @@
-import { DASH_TYPE, GRID_STYLE, HALIGN, VALIGN } from "@tycoslide/core";
+import { DASH_TYPE, GRID_STYLE, HALIGN, type MasterDefinition, VALIGN } from "@tycoslide/core";
 import type { LabelTokens, ListTokens, TextTokens, ThemeFormat } from "@tycoslide/sdk";
 import { defineTemplate, defineTheme } from "@tycoslide/sdk";
 import { assets } from "./assets.js";
@@ -23,7 +23,7 @@ import {
   transform,
   twoColumn,
 } from "./layouts.js";
-import { defaultMaster, factsheetMaster, minimalMaster } from "./masters.js";
+import { buildDefaultMaster, buildFactsheetMaster, buildMinimalMaster, MASTER } from "./masters.js";
 
 // ============================================
 // TEMPLATE NAMES
@@ -278,7 +278,7 @@ function buildMasterTokens(base: typeof Base, config: FormatConfig) {
       footerLogo: assets.tycoslide.logo,
       footerText: "tycoslide",
       footerSpacing: spacingTight,
-      slideNumber: { ...labelFooter, hAlign: HALIGN.RIGHT },
+      slideNumber: { ...labelFooter, hAlign: HALIGN.RIGHT, vAlign: VALIGN.MIDDLE },
       footer: labelFooter,
       footerImage: imageBase,
     },
@@ -304,6 +304,13 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
   const t = buildSharedTokens(base, config);
   const m = buildMasterTokens(base, config);
 
+  // Build format-specific masters
+  const masters: MasterDefinition[] = [
+    buildDefaultMaster(MASTER.DEFAULT, m.default, config.slide),
+    buildMinimalMaster(MASTER.LIGHT_MINIMAL, m.lightMinimal, config.slide),
+    buildMinimalMaster(MASTER.DARK_MINIMAL, m.darkMinimal, config.slide),
+  ];
+
   const bodyBase = {
     ...t.headerTokens,
     text: t.bodyText,
@@ -326,13 +333,13 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
   return {
     slide: config.slide,
     textStyles: config.textStyles,
+    masters,
     templates: [
       defineTemplate({
         name: TEMPLATE.TITLE,
         description: "Opening slide with large title and optional subtitle.",
         layout: title,
-        master: minimalMaster,
-        masterTokens: m.lightMinimal,
+        masterName: MASTER.LIGHT_MINIMAL,
         layoutTokens: {
           title: { ...t.heroTitle, color: palette.textPrimary, style: TEXT_STYLE.TITLE },
           subtitle: { ...t.heroSubtitle, color: palette.textSecondary, style: TEXT_STYLE.H3 },
@@ -346,8 +353,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         name: TEMPLATE.END,
         description: "Closing slide. Mirrors the title layout.",
         layout: end,
-        master: minimalMaster,
-        masterTokens: m.darkMinimal,
+        masterName: MASTER.DARK_MINIMAL,
         layoutTokens: {
           title: { ...t.heroTitle, style: TEXT_STYLE.TITLE },
           subtitle: t.heroSubtitle,
@@ -361,8 +367,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         name: TEMPLATE.SECTION,
         description: "Section divider with centered title.",
         layout: section,
-        master: minimalMaster,
-        masterTokens: m.darkMinimal,
+        masterName: MASTER.DARK_MINIMAL,
         layoutTokens: {
           title: t.labelSectionHeading,
           vAlign: VALIGN.MIDDLE,
@@ -373,24 +378,21 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         name: TEMPLATE.BODY,
         description: "Markdown body with optional title. Default layout.",
         layout: body,
-        master: defaultMaster,
-        masterTokens: m.default,
+        masterName: MASTER.DEFAULT,
         layoutTokens: { ...bodyBase, vAlign: VALIGN.TOP },
       }),
       defineTemplate({
         name: TEMPLATE.BODY_CENTERED,
         description: "Centered markdown body with optional title.",
         layout: body,
-        master: defaultMaster,
-        masterTokens: m.default,
+        masterName: MASTER.DEFAULT,
         layoutTokens: { ...bodyBase, vAlign: VALIGN.MIDDLE },
       }),
       defineTemplate({
         name: TEMPLATE.STAT,
         description: "Big number or key metric with label and optional caption.",
         layout: stat,
-        master: defaultMaster,
-        masterTokens: m.default,
+        masterName: MASTER.DEFAULT,
         layoutTokens: {
           value: t.labelStatValue,
           label: t.labelStatLabel,
@@ -407,16 +409,14 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         name: TEMPLATE.TWO_COLUMN,
         description: "Two equal markdown columns with optional header.",
         layout: twoColumn,
-        master: defaultMaster,
-        masterTokens: m.default,
+        masterName: MASTER.DEFAULT,
         layoutTokens: { ...bodyBase, vAlign: VALIGN.MIDDLE },
       }),
       defineTemplate({
         name: TEMPLATE.STATEMENT,
         description: "Centered body text with optional caption. Use for value props and big statements.",
         layout: statement,
-        master: minimalMaster,
-        masterTokens: m.lightMinimal,
+        masterName: MASTER.LIGHT_MINIMAL,
         layoutTokens: {
           caption: t.mutedCaption,
           vAlign: VALIGN.MIDDLE,
@@ -429,8 +429,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         name: TEMPLATE.AGENDA,
         description: "Eyebrow, title, and numbered item list with divider lines.",
         layout: agenda,
-        master: defaultMaster,
-        masterTokens: m.default,
+        masterName: MASTER.DEFAULT,
         layoutTokens: {
           ...t.headerTokens,
           vAlign: VALIGN.MIDDLE,
@@ -447,8 +446,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         name: TEMPLATE.CARDS,
         description: "Card grid with intro text and optional caption.",
         layout: cards,
-        master: defaultMaster,
-        masterTokens: m.default,
+        masterName: MASTER.DEFAULT,
         layoutTokens: {
           ...cardsBase,
           card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP, background: cardBackground },
@@ -458,8 +456,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         name: TEMPLATE.CARDS_FLAT,
         description: "Flat card grid (no background) with intro text and optional caption.",
         layout: cards,
-        master: defaultMaster,
-        masterTokens: m.default,
+        masterName: MASTER.DEFAULT,
         layoutTokens: {
           ...cardsBase,
           card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP },
@@ -469,8 +466,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         name: TEMPLATE.BLANK,
         description: "No chrome. Full canvas for custom content.",
         layout: blank,
-        master: minimalMaster,
-        masterTokens: m.lightMinimal,
+        masterName: MASTER.LIGHT_MINIMAL,
         layoutTokens: {
           ...t.bodySlotTokens,
         },
@@ -479,8 +475,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         name: TEMPLATE.QUOTE,
         description: "Standalone pull quote with left accent bar and optional attribution.",
         layout: quote,
-        master: minimalMaster,
-        masterTokens: m.lightMinimal,
+        masterName: MASTER.LIGHT_MINIMAL,
         layoutTokens: {
           quote: t.quoteSlotTokens,
           vAlign: VALIGN.MIDDLE,
@@ -492,8 +487,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         name: TEMPLATE.QUOTE_DARK,
         description: "Dark variant of the pull quote with left accent bar and optional attribution.",
         layout: quote,
-        master: minimalMaster,
-        masterTokens: m.darkMinimal,
+        masterName: MASTER.DARK_MINIMAL,
         layoutTokens: {
           quote: {
             bar: {
@@ -521,8 +515,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         name: TEMPLATE.SHAPES,
         description: "Demo layout showing all 4 shape primitives with varied properties.",
         layout: shapes,
-        master: defaultMaster,
-        masterTokens: m.default,
+        masterName: MASTER.DEFAULT,
         layoutTokens: {
           ...t.headerTokens,
           subtitle: { style: TEXT_STYLE.BODY, color: palette.textMuted },
@@ -562,8 +555,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         name: TEMPLATE.TRANSFORM,
         description: "Side-by-side comparison layout with optional overlay.",
         layout: transform,
-        master: defaultMaster,
-        masterTokens: m.default,
+        masterName: MASTER.DEFAULT,
         layoutTokens: {
           ...t.headerTokens,
           text: t.cardDescription,
@@ -590,8 +582,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         name: TEMPLATE.LINES,
         description: "Demo layout showing all 3 dash types.",
         layout: lines,
-        master: defaultMaster,
-        masterTokens: m.default,
+        masterName: MASTER.DEFAULT,
         layoutTokens: {
           ...t.headerTokens,
           label: t.labelMutedSmall,
@@ -637,7 +628,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
     footerHeight,
     footerText: "\u00A9 2026 tycoslide | www.tycoslide.com",
     footerTokens: { ...t.labelFooter, hAlign: HALIGN.LEFT },
-    slideNumber: { ...t.labelFooter, hAlign: HALIGN.RIGHT },
+    slideNumber: { ...t.labelFooter, hAlign: HALIGN.RIGHT, vAlign: VALIGN.MIDDLE },
   };
 
   const lightMinimalTokens = {
@@ -649,6 +640,13 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
     background: { color: palette.textPrimary },
     margin,
   };
+
+  // Build format-specific masters
+  const masters: MasterDefinition[] = [
+    buildFactsheetMaster(MASTER.FACTSHEET, factsheetMasterTokens, config.slide),
+    buildMinimalMaster(MASTER.LIGHT_MINIMAL, lightMinimalTokens, config.slide),
+    buildMinimalMaster(MASTER.DARK_MINIMAL, darkMinimalTokens, config.slide),
+  ];
 
   // Factsheet header tokens: H1/24pt title (instead of shared H3/12pt)
   const factsheetHeaderTokens = {
@@ -689,13 +687,13 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
   return {
     slide: config.slide,
     textStyles: config.textStyles,
+    masters,
     templates: [
       defineTemplate({
         name: TEMPLATE.TITLE,
         description: "Opening slide with large title and optional subtitle.",
         layout: title,
-        master: minimalMaster,
-        masterTokens: lightMinimalTokens,
+        masterName: MASTER.LIGHT_MINIMAL,
         layoutTokens: {
           title: { ...t.heroTitle, color: palette.textPrimary, style: TEXT_STYLE.TITLE },
           subtitle: { ...t.heroSubtitle, color: palette.textSecondary, style: TEXT_STYLE.H3 },
@@ -709,8 +707,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
         name: TEMPLATE.END,
         description: "Closing slide. Mirrors the title layout.",
         layout: end,
-        master: minimalMaster,
-        masterTokens: darkMinimalTokens,
+        masterName: MASTER.DARK_MINIMAL,
         layoutTokens: {
           title: { ...t.heroTitle, style: TEXT_STYLE.TITLE },
           subtitle: t.heroSubtitle,
@@ -724,8 +721,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
         name: TEMPLATE.SECTION,
         description: "Section divider with centered title.",
         layout: section,
-        master: minimalMaster,
-        masterTokens: darkMinimalTokens,
+        masterName: MASTER.DARK_MINIMAL,
         layoutTokens: {
           title: t.labelSectionHeading,
           vAlign: VALIGN.MIDDLE,
@@ -736,24 +732,21 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
         name: TEMPLATE.BODY,
         description: "Markdown body with optional title. Default layout.",
         layout: body,
-        master: factsheetMaster,
-        masterTokens: factsheetMasterTokens,
+        masterName: MASTER.FACTSHEET,
         layoutTokens: { ...bodyBase, vAlign: VALIGN.TOP },
       }),
       defineTemplate({
         name: TEMPLATE.BODY_CENTERED,
         description: "Centered markdown body with optional title.",
         layout: body,
-        master: factsheetMaster,
-        masterTokens: factsheetMasterTokens,
+        masterName: MASTER.FACTSHEET,
         layoutTokens: { ...bodyBase, vAlign: VALIGN.MIDDLE },
       }),
       defineTemplate({
         name: TEMPLATE.STAT,
         description: "Big number or key metric with label and optional caption.",
         layout: stat,
-        master: factsheetMaster,
-        masterTokens: factsheetMasterTokens,
+        masterName: MASTER.FACTSHEET,
         layoutTokens: {
           value: t.labelStatValue,
           label: t.labelStatLabel,
@@ -770,16 +763,14 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
         name: TEMPLATE.TWO_COLUMN,
         description: "Two equal markdown columns with optional header.",
         layout: twoColumn,
-        master: factsheetMaster,
-        masterTokens: factsheetMasterTokens,
+        masterName: MASTER.FACTSHEET,
         layoutTokens: { ...bodyBase, vAlign: VALIGN.MIDDLE },
       }),
       defineTemplate({
         name: TEMPLATE.STATEMENT,
         description: "Centered body text with optional caption. Use for value props and big statements.",
         layout: statement,
-        master: minimalMaster,
-        masterTokens: lightMinimalTokens,
+        masterName: MASTER.LIGHT_MINIMAL,
         layoutTokens: {
           caption: t.mutedCaption,
           vAlign: VALIGN.MIDDLE,
@@ -792,8 +783,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
         name: TEMPLATE.AGENDA,
         description: "Eyebrow, title, and numbered item list with divider lines.",
         layout: agenda,
-        master: factsheetMaster,
-        masterTokens: factsheetMasterTokens,
+        masterName: MASTER.FACTSHEET,
         layoutTokens: {
           ...t.headerTokens,
           vAlign: VALIGN.MIDDLE,
@@ -810,8 +800,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
         name: TEMPLATE.CARDS,
         description: "Card grid with intro text and optional caption.",
         layout: cards,
-        master: factsheetMaster,
-        masterTokens: factsheetMasterTokens,
+        masterName: MASTER.FACTSHEET,
         layoutTokens: {
           ...cardsBase,
           card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP, background: cardBackground },
@@ -821,8 +810,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
         name: TEMPLATE.CARDS_FLAT,
         description: "Flat card grid (no background) with intro text and optional caption.",
         layout: cards,
-        master: factsheetMaster,
-        masterTokens: factsheetMasterTokens,
+        masterName: MASTER.FACTSHEET,
         layoutTokens: {
           ...cardsBase,
           card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP },
@@ -832,8 +820,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
         name: TEMPLATE.BLANK,
         description: "No chrome. Full canvas for custom content.",
         layout: blank,
-        master: minimalMaster,
-        masterTokens: lightMinimalTokens,
+        masterName: MASTER.LIGHT_MINIMAL,
         layoutTokens: {
           ...t.bodySlotTokens,
         },
@@ -842,8 +829,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
         name: TEMPLATE.QUOTE,
         description: "Standalone pull quote with left accent bar and optional attribution.",
         layout: quote,
-        master: minimalMaster,
-        masterTokens: lightMinimalTokens,
+        masterName: MASTER.LIGHT_MINIMAL,
         layoutTokens: {
           quote: t.quoteSlotTokens,
           vAlign: VALIGN.MIDDLE,
@@ -855,8 +841,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
         name: TEMPLATE.QUOTE_DARK,
         description: "Dark variant of the pull quote with left accent bar and optional attribution.",
         layout: quote,
-        master: minimalMaster,
-        masterTokens: darkMinimalTokens,
+        masterName: MASTER.DARK_MINIMAL,
         layoutTokens: {
           quote: {
             bar: {

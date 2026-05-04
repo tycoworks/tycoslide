@@ -309,38 +309,17 @@ export function defineLayout<
 // ============================================
 
 /**
- * A master slide definition. Masters provide slide chrome (footer, slide number),
- * content bounds, and background.
+ * A master slide definition — pure data, no render function.
+ * Masters provide slide chrome (footer, slide number), content bounds, and background.
+ * Content and tokens are baked in at theme definition time.
+ * When `contentBounds` is omitted, content is positioned at full slide bounds (layer mode).
  */
 export interface MasterDefinition {
   name: string;
-  /** Build master content from resolved tokens and slide dimensions. */
-  render: (
-    tokens: Record<string, unknown>,
-    slideSize: { width: number; height: number },
-  ) => {
-    content: ComponentNode;
-    contentBounds: Bounds;
-    background: Background;
-  };
-}
-
-/**
- * Define a master slide. Pure factory — does NOT register the master.
- *
- * Annotate the `tokens` parameter in the render callback with your token interface
- * (e.g., `tokens: DefaultMasterTokens`) for compile-time type checking.
- */
-export function defineMaster<TTokens extends object = Record<string, unknown>>(def: {
-  name: string;
-  render: (
-    tokens: TTokens,
-    slideSize: { width: number; height: number },
-  ) => {
-    content: ComponentNode;
-    contentBounds: Bounds;
-    background: Background;
-  };
-}): MasterDefinition {
-  return def as unknown as MasterDefinition;
+  /** Pre-built chrome layer (footer, logo, slide number, etc). */
+  content: ComponentNode;
+  /** Region where template content is placed. Omit for full-slide layer mode. */
+  contentBounds?: Bounds;
+  /** Slide background. */
+  background: Background;
 }

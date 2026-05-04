@@ -227,7 +227,6 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
   // 9. Assemble Slide with master info from config
   const slide: Slide = {
     masterName: layoutConfig.masterName,
-    masterTokens: layoutConfig.masterTokens,
     content,
   };
 

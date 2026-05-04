@@ -25,11 +25,9 @@ import { C, testComponents } from "./test-components.js";
 /** Mock master for tests */
 const mockMaster: MasterDefinition = {
   name: "default",
-  render: (_tokens, slideSize) => ({
-    content: component("test", {}),
-    contentBounds: new Bounds(0, 0, slideSize.width, slideSize.height),
-    background: { color: "#FFFFFF" },
-  }),
+  content: component("test", {}),
+  contentBounds: new Bounds(0, 0, 13.333, 7.5),
+  background: { color: "#FFFFFF" },
 };
 
 /** All layouts collected for test options */
@@ -84,7 +82,7 @@ describe("Document Compiler: Layout Tokens", () => {
     const layoutTokens = { background: "#AAAAAA", titleTokens: { style: "h1", color: "#FFFFFF" } };
     const theme = mockTheme({
       layouts: {
-        tokenSimple: { masterName: "default", masterTokens: {}, layoutTokens },
+        tokenSimple: { masterName: "default", layoutTokens },
       },
     });
 
@@ -100,7 +98,7 @@ describe("Document Compiler: Layout Tokens", () => {
     const layoutTokens = { background: "#000000", titleTokens: { style: "h2" } };
     const theme = mockTheme({
       layouts: {
-        tokenSimple: { masterName: "default", masterTokens: {}, layoutTokens },
+        tokenSimple: { masterName: "default", layoutTokens },
       },
     });
 
@@ -127,7 +125,7 @@ describe("Document Compiler: Layout Tokens", () => {
 
     const theme = mockTheme({
       layouts: {
-        noTokenTest: { masterName: "default", masterTokens: {}, layoutTokens: {} },
+        noTokenTest: { masterName: "default", layoutTokens: {} },
       },
     });
 
@@ -173,7 +171,6 @@ describe("Slot Token Injection", () => {
       layouts: {
         slotTokenTest: {
           masterName: "default",
-          masterTokens: {},
           layoutTokens: {
             background: "#FFFFFF",
             text: textTokens,
@@ -216,7 +213,6 @@ describe("Slot Token Injection", () => {
       layouts: {
         slotTokenTest: {
           masterName: "default",
-          masterTokens: {},
           layoutTokens: {
             background: "#FFFFFF",
             text: textTokens,
@@ -256,7 +252,6 @@ describe("Slot Token Injection", () => {
       layouts: {
         noSlotTokenTest: {
           masterName: "default",
-          masterTokens: {},
           layoutTokens: {
             background: "#FFFFFF",
             text: { style: "body", color: "#000000" },

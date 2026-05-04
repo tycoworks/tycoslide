@@ -220,14 +220,17 @@ interface Layout<TTokens> {
 #### Master — chrome/background blueprint
 
 ```typescript
-interface Master<TTokens> {
+interface MasterDefinition {
   name: string;
-  render: (tokens: TTokens, slideSize: { width: number; height: number }) => MasterResult;
+  content: ComponentNode;
+  contentBounds?: Bounds;   // optional — omit for full-slide layer mode
+  background: Background;
 }
 ```
 
-- 3 masters: default, minimal, factsheet
-- Plain objects — NO `defineMaster()` factory for theme authors
+- Pre-built data objects — tokens + slide dimensions baked in at theme definition time
+- Format-specific: each format builds its own masters via builder functions
+- 4 masters: default, light-minimal, dark-minimal, factsheet
 
 #### Template — the complete styled thing
 
@@ -236,8 +239,7 @@ defineTemplate({
   name: TEMPLATE.BODY,
   description: "Markdown body with optional title.",
   layout: body,                          // Layout object
-  master: defaultMaster,                 // Master object
-  masterTokens: { background, margin },  // tokens for the master
+  masterName: MASTER.DEFAULT,            // string reference to a pre-built master
   layoutTokens: { text, list, ... },     // tokens for the layout
 })
 ```
@@ -249,7 +251,6 @@ Core receives structured config per template name — no opaque token bags, no s
 ```typescript
 export interface TemplateConfig {
   masterName: string;
-  masterTokens: Record<string, unknown>;
   layoutTokens: Record<string, unknown>;
 }
 
@@ -265,25 +266,23 @@ export interface Theme {
 
 ```
 1. Theme author writes:
-   defineTemplate({ layout: body, master: defaultMaster, masterTokens: {...}, layoutTokens: {...} })
+   - Masters as pre-built data objects (tokens + slide dimensions baked in)
+   - defineTemplate({ layout: body, masterName: "default", layoutTokens: {...} })
 
-2. SDK resolveThemeFormat() → templatesToLayouts() produces:
-   theme.layouts["body"] = {
-     masterName: "default",
-     masterTokens: { background, margin, footerHeight, ... },
-     layoutTokens: { text, list, spacing, ... },
-   }
+2. SDK resolveThemeFormat() produces:
+   theme.layouts["body"] = { masterName: "default", layoutTokens: { text, list, ... } }
+   masters = [defaultMaster, lightMinimalMaster, ...]  // MasterDefinition[]
 
-3. Core documentCompiler → compileLayoutSlide:
+3. SDK documentCompiler → compileLayoutSlide:
    a. Reads layoutName from frontmatter
-   b. Looks up theme.layouts[layoutName] → { masterName, masterTokens, layoutTokens }
+   b. Looks up theme.layouts[layoutName] → { masterName, layoutTokens }
    c. Calls layout.render(params, slots, layoutTokens) → SlideNode (content only)
-   d. Assembles Slide { masterName, masterTokens, content }
+   d. Assembles Slide { masterName, content }
 
 4. Core Presentation.processDeferredSlides:
-   a. masterRegistry.get(masterName).render(masterTokens, slideSize) → { content, background }
+   a. Looks up MasterDefinition by name → { content, contentBounds?, background }
    b. Render master component tree (full slide bounds)
-   c. Render slide content tree (full slide bounds)
+   c. Render slide content tree (contentBounds or full slide bounds)
    d. Compose: master behind, content on top
 ```
 
@@ -315,10 +314,11 @@ Multi-format themes and template unification Steps 1–3 are complete:
 | `SLIDE_SIZE`, `SlideSize`, `CustomSlideSize` | `{ width, height }` on Theme |
 | `VariantConfig` type | `TemplateConfig` (structured) |
 | `variants` nesting in `Theme.layouts` | Direct `Record<string, TemplateConfig>` |
-| `MasterRef` type | Direct master object reference |
-| `defineMaster()` in theme-default | Plain `Master<T>` objects |
-| `mod.masters` separate export | Masters discovered from templates |
-| Magic `"master"` key in token bag | Explicit `master` + `masterTokens` fields |
+| `MasterRef` type | Direct `MasterDefinition` data object |
+| `defineMaster()` in theme-default | Builder functions returning `MasterDefinition` |
+| `mod.masters` separate export | Masters from `resolveThemeFormat()` per format |
+| Magic `"master"` key in token bag | `masterName` string + pre-built `MasterDefinition` |
+| `Master<TTokens>` generic, `masterTokens` | Tokens baked into `MasterDefinition` at theme definition time |
 | `LayoutDefinition.render` returning `Slide` | Returns `SlideNode` (content only) |
 | `resolveVariantTokens` | Direct `layoutTokens` read from `TemplateConfig` |
 | `variant:` frontmatter key | Single `template:` name |
@@ -326,24 +326,14 @@ Multi-format themes and template unification Steps 1–3 are complete:
 ### SDK exports (template.ts)
 
 ```typescript
-interface Master<TTokens extends object = Record<string, unknown>> {
-  name: string;
-  render: (tokens: TTokens, slideSize: { width: number; height: number }) => MasterResult;
-}
-
-interface MasterResult {
-  content: ComponentNode;
-  contentBounds?: Bounds;
-  background: Background;
-}
-
 interface Template {
   layout: LayoutDefinition;
-  master: Master<any>;
-  masterTokens: Record<string, unknown>;
+  masterName: string;
   layoutTokens: Record<string, unknown>;
 }
 ```
+
+Masters are now `MasterDefinition` (pure data, defined in core) — no SDK wrapper needed.
 
 ### Theme author experience
 
@@ -397,11 +387,14 @@ Added `defineTemplate()` factory and `Layout<TTokens>` interface to SDK.
 
 ### Step 2: Master as first-class SDK type (Done)
 
-- `Master<T>` interface (plain objects, no factory)
-- `Template` type with explicit `master` + `masterTokens` + `layoutTokens`
-- `defineTemplate()` accepts separated fields
-- `MasterRef` and old `MasterDefinition` eliminated from SDK exports
-- All theme-default templates use new signature
+- `Master<T>` generic eliminated — masters are now `MasterDefinition` (pure data, defined in core)
+- `Template` type has `masterName: string` + `layoutTokens` (no `master` object or `masterTokens`)
+- `defineTemplate()` accepts `masterName` string instead of `master` + `masterTokens`
+- `MasterRef`, `MasterLayer`, old `MasterDefinition` render interface eliminated from SDK
+- All theme-default templates use `masterName: MASTER.*` constants
+- Masters are pre-built data objects (tokens + slide dimensions baked in at theme definition time)
+- `ThemeFormat` gains `masters: MasterDefinition[]` — format-specific, pre-built
+- `resolveThemeFormat()` returns `{ theme, masters }` instead of just `Theme`
 
 ### Step 3: Core structured config (Done)
 
@@ -427,7 +420,7 @@ Added `defineTemplate()` factory and `Layout<TTokens>` interface to SDK.
 | `sdk/markdown/slideParser.ts` | Parses multi-slide markdown into structured document |
 | `sdk/markdown/slotCompiler.ts` | Compiles slot markdown to `ComponentNode[]` |
 | `core/model/token.ts` | Token utilities (no variant resolution) |
-| `sdk/template.ts` | `defineTemplate`, `Master<T>`, `Template` interface |
+| `sdk/template.ts` | `defineTemplate`, `Template` interface |
 | `sdk/theme.ts` | `ThemeDefinition`, `ThemeFormat`, `resolveThemeFormat`, `templatesToLayouts` |
 | `cli/src/build.ts` | Reads `format:`, calls `resolveThemeFormat` |
 | `cli/src/themeLoader.ts` | Loads theme, resolves format |
@@ -468,7 +461,7 @@ function createPresentation(config: PresentationConfig): Presentation;
 
 #### Design Decisions
 
-- **Pass registries as parameters, not inline on slides.** Slides stay pure data (`{ masterName, masterTokens, content }`). Masters and components are loaded once per build.
+- **Pass registries as parameters, not inline on slides.** Slides stay pure data (`{ masterName, content }`). Masters and components are loaded once per build.
 - **Add `renderTree` to `RenderContext`.** Components that contain sub-components (e.g., table) call `context.renderTree(node)` instead of importing a global registry. Presentation class wires this via closure over its local component Map.
 - **Single entry point, not builder pattern.** One-shot operation — you have all data, create the engine, call writeFile.
 - **`layoutRegistry` already only used by SDK.** Moves with markdown compilation.

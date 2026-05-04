@@ -12,34 +12,22 @@ function makeComponent(name: string) {
   return component(name, {}, undefined);
 }
 
-/** Minimal master render — returns MasterLayer shape */
-function minimalMasterRender(_tokens: Record<string, unknown>, _slideSize: { width: number; height: number }) {
-  return {
-    content: makeComponent("column"),
-    background: { color: "#FFFFFF" },
-  };
-}
-
 // ── defineTemplate() ─────────────────────────────────────────────────────────
 
 describe("defineTemplate()", () => {
-  it("returns a Template with layout, master, masterTokens, and layoutTokens", () => {
-    const masterName = "test-tmpl-master-1";
+  it("returns a Template with layout, masterName, and layoutTokens", () => {
     const templateName = "test-tmpl-layout-1";
 
-    const master = { name: masterName, render: minimalMasterRender };
     const template = defineTemplate({
       name: templateName,
       description: "Test template",
       layout: { params: {}, render: (_params: any, _slots: any, _tokens: any) => makeComponent("column") },
-      master,
-      masterTokens: { bg: "red" },
+      masterName: "test-tmpl-master-1",
       layoutTokens: { title: "hello" },
     });
 
     assert.strictEqual(template.layout.name, templateName);
-    assert.strictEqual(template.master, master);
-    assert.deepStrictEqual(template.masterTokens, { bg: "red" });
+    assert.strictEqual(template.masterName, "test-tmpl-master-1");
     assert.deepStrictEqual(template.layoutTokens, { title: "hello" });
   });
 
@@ -57,8 +45,7 @@ describe("defineTemplate()", () => {
           return makeComponent("column");
         },
       },
-      master: { name: "m", render: minimalMasterRender },
-      masterTokens: {},
+      masterName: "m",
       layoutTokens: { title: "hello", color: "#333" },
     });
 
@@ -80,8 +67,7 @@ describe("defineTemplate()", () => {
       name: templateName,
       description: "SlideNode return test",
       layout: { params: {}, render: (_params: any, _slots: any, _tokens: any) => makeComponent("text") },
-      master: { name: "m2", render: minimalMasterRender },
-      masterTokens: {},
+      masterName: "m2",
       layoutTokens: {},
     });
 
