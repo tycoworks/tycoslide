@@ -4,11 +4,10 @@
 
 import type { RootContent } from "mdast";
 import { z } from "zod";
-import type { Bounds } from "../model/bounds.js";
 import { type ComponentNode, component, type ElementNode, type SlideNode } from "../model/nodes.js";
 import type { ScalarParam } from "../model/param.js";
 import { RESERVED_FRONTMATTER_KEYS, type SyntaxType } from "../model/syntax.js";
-import type { Background, Theme } from "../model/types.js";
+import type { Theme } from "../model/types.js";
 
 // Re-export ComponentNode — required for declaration emit (defineComponent return type)
 export type { ComponentNode } from "../model/nodes.js";
@@ -308,18 +307,5 @@ export function defineLayout<
 // MASTER TYPES
 // ============================================
 
-/**
- * A master slide definition — pure data, no render function.
- * Masters provide slide chrome (footer, slide number), content bounds, and background.
- * Content and tokens are baked in at theme definition time.
- * When `contentBounds` is omitted, content is positioned at full slide bounds (layer mode).
- */
-export interface MasterDefinition {
-  name: string;
-  /** Pre-built chrome layer (footer, logo, slide number, etc). */
-  content: ComponentNode;
-  /** Region where template content is placed. Omit for full-slide layer mode. */
-  contentBounds?: Bounds;
-  /** Slide background. */
-  background: Background;
-}
+// MasterDefinition is defined in types.ts (to avoid circular deps with TemplateConfig)
+export type { MasterDefinition } from "../model/types.js";

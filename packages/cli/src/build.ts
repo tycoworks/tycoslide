@@ -50,7 +50,6 @@ export async function build(inputPath: string, options: BuildOptions): Promise<v
     assets: loaded.assets,
     components: loaded.components,
     layouts: loaded.layouts,
-    masters: loaded.masters,
   });
 
   const basename = path.basename(resolved, path.extname(resolved));

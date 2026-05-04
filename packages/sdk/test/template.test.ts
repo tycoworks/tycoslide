@@ -1,6 +1,6 @@
 import * as assert from "node:assert";
 import { describe, it } from "node:test";
-import { component, type LayoutDefinition } from "@tycoslide/core";
+import { Bounds, component, type LayoutDefinition, type MasterDefinition } from "@tycoslide/core";
 import { defineTemplate } from "../src/template.js";
 
 const testLayouts = new Map<string, LayoutDefinition>();
@@ -15,19 +15,26 @@ function makeComponent(name: string) {
 // ── defineTemplate() ─────────────────────────────────────────────────────────
 
 describe("defineTemplate()", () => {
-  it("returns a Template with layout, masterName, and layoutTokens", () => {
+  it("returns a Template with layout, master, and layoutTokens", () => {
     const templateName = "test-tmpl-layout-1";
+
+    const mockMaster1: MasterDefinition = {
+      name: "test-tmpl-master-1",
+      content: makeComponent("bg"),
+      contentBounds: new Bounds(0, 0, 13.333, 7.5),
+      background: { color: "#FFF" },
+    };
 
     const template = defineTemplate({
       name: templateName,
       description: "Test template",
       layout: { params: {}, render: (_params: any, _slots: any, _tokens: any) => makeComponent("column") },
-      masterName: "test-tmpl-master-1",
+      master: mockMaster1,
       layoutTokens: { title: "hello" },
     });
 
     assert.strictEqual(template.layout.name, templateName);
-    assert.strictEqual(template.masterName, "test-tmpl-master-1");
+    assert.strictEqual(template.master.name, "test-tmpl-master-1");
     assert.deepStrictEqual(template.layoutTokens, { title: "hello" });
   });
 
@@ -45,7 +52,12 @@ describe("defineTemplate()", () => {
           return makeComponent("column");
         },
       },
-      masterName: "m",
+      master: {
+        name: "m",
+        content: makeComponent("bg"),
+        contentBounds: new Bounds(0, 0, 13.333, 7.5),
+        background: { color: "#FFF" },
+      },
       layoutTokens: { title: "hello", color: "#333" },
     });
 
@@ -67,7 +79,12 @@ describe("defineTemplate()", () => {
       name: templateName,
       description: "SlideNode return test",
       layout: { params: {}, render: (_params: any, _slots: any, _tokens: any) => makeComponent("text") },
-      masterName: "m2",
+      master: {
+        name: "m2",
+        content: makeComponent("bg"),
+        contentBounds: new Bounds(0, 0, 13.333, 7.5),
+        background: { color: "#FFF" },
+      },
       layoutTokens: {},
     });
 

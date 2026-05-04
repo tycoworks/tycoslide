@@ -1,7 +1,13 @@
 // Template DSL: defineTemplate()
 // Templates declare content and wire into a master by name.
 
-import { defineLayout, type LayoutDefinition, type ScalarShape, type SlideNode } from "@tycoslide/core";
+import {
+  defineLayout,
+  type LayoutDefinition,
+  type MasterDefinition,
+  type ScalarShape,
+  type SlideNode,
+} from "@tycoslide/core";
 
 // ============================================
 // TYPES
@@ -28,12 +34,12 @@ export interface Layout<
 }
 
 /**
- * A complete template: layout + master reference + layout tokens.
- * Masters are referenced by name — the master objects live on ThemeFormat.
+ * A complete template: layout + master object + layout tokens.
+ * The master is the actual MasterDefinition — no string indirection.
  */
 export interface Template {
   layout: LayoutDefinition;
-  masterName: string;
+  master: MasterDefinition;
   layoutTokens: Record<string, unknown>;
 }
 
@@ -42,15 +48,15 @@ export interface Template {
 // ============================================
 
 /**
- * Define a slide template — a named layout + master name + layout tokens.
+ * Define a slide template — a named layout + master object + layout tokens.
  *
  * A template is the unified authoring concept replacing separate master + layout + variant.
  * It accepts:
  * - layout: a Layout object (reusable structural blueprint)
- * - masterName: name of the master this template uses
+ * - master: the MasterDefinition this template uses (pre-built data object)
  * - layoutTokens: token values for the layout's render function
  *
- * Returns a Template carrying the LayoutDefinition, master name, and layout tokens.
+ * Returns a Template carrying the LayoutDefinition, master, and layout tokens.
  * The layout is NOT auto-registered — the CLI extracts and registers layouts
  * from the resolved theme format.
  */
@@ -62,10 +68,10 @@ export function defineTemplate<
   name: string;
   description: string;
   layout: Layout<TTokens, TParams, TSlots>;
-  masterName: string;
+  master: MasterDefinition;
   layoutTokens: Record<string, unknown>;
 }): Template {
-  const { layout: templateLayout, masterName, layoutTokens, ...rest } = def;
+  const { layout: templateLayout, master, layoutTokens, ...rest } = def;
 
   // Build core layout — render delegates directly to the Layout blueprint.
   const coreLayout = defineLayout({
@@ -77,5 +83,5 @@ export function defineTemplate<
     },
   });
 
-  return { layout: coreLayout, masterName, layoutTokens };
+  return { layout: coreLayout, master, layoutTokens };
 }

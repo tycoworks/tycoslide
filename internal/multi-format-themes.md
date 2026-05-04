@@ -239,7 +239,7 @@ defineTemplate({
   name: TEMPLATE.BODY,
   description: "Markdown body with optional title.",
   layout: body,                          // Layout object
-  masterName: MASTER.DEFAULT,            // string reference to a pre-built master
+  master: defaultMaster,                 // MasterDefinition object (pre-built data)
   layoutTokens: { text, list, ... },     // tokens for the layout
 })
 ```
@@ -250,7 +250,7 @@ Core receives structured config per template name — no opaque token bags, no s
 
 ```typescript
 export interface TemplateConfig {
-  masterName: string;
+  master: MasterDefinition;
   layoutTokens: Record<string, unknown>;
 }
 
@@ -267,19 +267,23 @@ export interface Theme {
 ```
 1. Theme author writes:
    - Masters as pre-built data objects (tokens + slide dimensions baked in)
-   - defineTemplate({ layout: body, masterName: "default", layoutTokens: {...} })
+   - defineTemplate({ layout: body, master: defaultMaster, layoutTokens: {...} })
 
-2. SDK resolveThemeFormat() produces:
-   theme.layouts["body"] = { masterName: "default", layoutTokens: { text, list, ... } }
-   masters = [defaultMaster, lightMinimalMaster, ...]  // MasterDefinition[]
+2. SDK resolveThemeFormat() produces a flat Theme:
+   theme.layouts["body"] = { master: <MasterDefinition>, layoutTokens: { text, list, ... } }
+   (masters embedded in TemplateConfig — no separate array)
 
 3. SDK documentCompiler → compileLayoutSlide:
    a. Reads layoutName from frontmatter
-   b. Looks up theme.layouts[layoutName] → { masterName, layoutTokens }
+   b. Looks up theme.layouts[layoutName] → { master, layoutTokens }
    c. Calls layout.render(params, slots, layoutTokens) → SlideNode (content only)
-   d. Assembles Slide { masterName, content }
+   d. Assembles Slide { masterName: master.name, content }
 
-4. Core Presentation.processDeferredSlides:
+4. Core Presentation constructor:
+   a. Derives unique masters from theme.layouts (object identity dedup)
+   b. Builds Map<string, MasterDefinition> for PPTX dedup
+
+5. Core Presentation.processDeferredSlides:
    a. Looks up MasterDefinition by name → { content, contentBounds?, background }
    b. Render master component tree (full slide bounds)
    c. Render slide content tree (contentBounds or full slide bounds)
@@ -317,7 +321,7 @@ Multi-format themes and template unification Steps 1–3 are complete:
 | `MasterRef` type | Direct `MasterDefinition` data object |
 | `defineMaster()` in theme-default | Builder functions returning `MasterDefinition` |
 | `mod.masters` separate export | Masters from `resolveThemeFormat()` per format |
-| Magic `"master"` key in token bag | `masterName` string + pre-built `MasterDefinition` |
+| Magic `"master"` key in token bag | `master: MasterDefinition` object on `TemplateConfig` |
 | `Master<TTokens>` generic, `masterTokens` | Tokens baked into `MasterDefinition` at theme definition time |
 | `LayoutDefinition.render` returning `Slide` | Returns `SlideNode` (content only) |
 | `resolveVariantTokens` | Direct `layoutTokens` read from `TemplateConfig` |
@@ -328,7 +332,7 @@ Multi-format themes and template unification Steps 1–3 are complete:
 ```typescript
 interface Template {
   layout: LayoutDefinition;
-  masterName: string;
+  master: MasterDefinition;
   layoutTokens: Record<string, unknown>;
 }
 ```
@@ -388,13 +392,13 @@ Added `defineTemplate()` factory and `Layout<TTokens>` interface to SDK.
 ### Step 2: Master as first-class SDK type (Done)
 
 - `Master<T>` generic eliminated — masters are now `MasterDefinition` (pure data, defined in core)
-- `Template` type has `masterName: string` + `layoutTokens` (no `master` object or `masterTokens`)
-- `defineTemplate()` accepts `masterName` string instead of `master` + `masterTokens`
+- `Template` type has `master: MasterDefinition` + `layoutTokens` (no `masterTokens`)
+- `defineTemplate()` accepts `master: MasterDefinition` directly
 - `MasterRef`, `MasterLayer`, old `MasterDefinition` render interface eliminated from SDK
-- All theme-default templates use `masterName: MASTER.*` constants
+- All theme-default templates pass master objects directly (e.g., `master: defaultMaster`)
 - Masters are pre-built data objects (tokens + slide dimensions baked in at theme definition time)
-- `ThemeFormat` gains `masters: MasterDefinition[]` — format-specific, pre-built
-- `resolveThemeFormat()` returns `{ theme, masters }` instead of just `Theme`
+- Masters embedded directly on `TemplateConfig.master` — no separate `masters[]` array
+- `resolveThemeFormat()` returns a flat `Theme` (masters inside `TemplateConfig`)
 
 ### Step 3: Core structured config (Done)
 
@@ -413,8 +417,8 @@ Added `defineTemplate()` factory and `Layout<TTokens>` interface to SDK.
 
 | File | Role |
 |------|------|
-| `core/model/types.ts` | `Theme`, `TemplateConfig`, `Slide` |
-| `core/rendering/registry.ts` | `LayoutDefinition` (render → SlideNode), `MasterDefinition` |
+| `core/model/types.ts` | `Theme`, `TemplateConfig`, `Slide`, `MasterDefinition` |
+| `core/rendering/definitions.ts` | `LayoutDefinition` (render → SlideNode), re-exports `MasterDefinition` |
 | `core/rendering/presentation.ts` | Assembles master + content layers |
 | `sdk/markdown/documentCompiler.ts` | Reads `TemplateConfig`, calls layout.render, builds `Slide` |
 | `sdk/markdown/slideParser.ts` | Parses multi-slide markdown into structured document |
@@ -452,11 +456,11 @@ Core is a pure, stateless function — no global singletons. Single entry point 
 interface PresentationConfig {
   theme: Theme;
   assets?: Record<string, unknown>;
-  masters: MasterDefinition[];
   components: ComponentDefinition[];
 }
 
 function createPresentation(config: PresentationConfig): Presentation;
+// Masters derived from theme.layouts in the Presentation constructor (object identity dedup)
 ```
 
 #### Design Decisions

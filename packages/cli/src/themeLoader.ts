@@ -4,7 +4,7 @@
 import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import type { ComponentDefinition, LayoutDefinition, MasterDefinition, Theme } from "@tycoslide/core";
+import type { ComponentDefinition, LayoutDefinition, Theme } from "@tycoslide/core";
 import { resolveThemeFormat } from "@tycoslide/sdk";
 
 export interface LoadedTheme {
@@ -12,7 +12,6 @@ export interface LoadedTheme {
   assets?: Record<string, unknown>;
   components: ComponentDefinition<any, any, any>[];
   layouts: LayoutDefinition[];
-  masters: MasterDefinition[];
 }
 
 /**
@@ -73,18 +72,13 @@ export async function loadTheme(name: string, format: string | undefined): Promi
     throw new Error(`Theme package '${packageName}' has no layouts in its templates.`);
   }
 
-  // Resolve format to flat Theme + format-specific masters
-  const { theme, masters } = resolveThemeFormat(mod.theme, format);
-
-  if (masters.length === 0) {
-    throw new Error(`Theme package '${packageName}' has no masters for format '${format}'.`);
-  }
+  // Resolve format to flat Theme (masters are embedded in TemplateConfig)
+  const theme = resolveThemeFormat(mod.theme, format);
 
   return {
     theme,
     assets: mod.assets,
     components,
     layouts,
-    masters,
   };
 }

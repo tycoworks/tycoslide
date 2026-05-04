@@ -1,7 +1,7 @@
 import * as assert from "node:assert";
 import { createRequire } from "node:module";
 import { describe, it } from "node:test";
-import type { FontFamily, TextStyle } from "@tycoslide/core";
+import { Bounds, component, type FontFamily, type MasterDefinition, type TextStyle } from "@tycoslide/core";
 import { defineTemplate } from "../src/template.js";
 import type { ThemeDefinition, ThemeFormat } from "../src/theme.js";
 import { defineTheme, resolveThemeFormat } from "../src/theme.js";
@@ -95,7 +95,7 @@ describe("defineTheme()", () => {
 describe("resolveThemeFormat()", () => {
   it("valid format name returns correct flat Theme", () => {
     const def = makeDefinition();
-    const { theme } = resolveThemeFormat(def, "presentation");
+    const theme = resolveThemeFormat(def, "presentation");
 
     assert.deepStrictEqual(theme.fonts, def.fonts);
     assert.deepStrictEqual(theme.slide, def.formats.presentation.slide);
@@ -139,8 +139,8 @@ describe("resolveThemeFormat()", () => {
       },
     };
 
-    const { theme: presentation } = resolveThemeFormat(def, "presentation");
-    const { theme: factsheet } = resolveThemeFormat(def, "factsheet");
+    const presentation = resolveThemeFormat(def, "presentation");
+    const factsheet = resolveThemeFormat(def, "factsheet");
 
     assert.deepStrictEqual(presentation.slide, wideSlide);
     assert.deepStrictEqual(factsheet.slide, narrowSlide);
@@ -151,11 +151,17 @@ describe("resolveThemeFormat()", () => {
       params: {},
       render: () => ({ type: "component", componentName: "x", params: {}, content: undefined }),
     } as any;
+    const mockMaster: MasterDefinition = {
+      name: "test-master",
+      content: component("bg", {}),
+      contentBounds: new Bounds(0, 0, 13.333, 7.5),
+      background: { color: "#FFFFFF" },
+    };
     const template = defineTemplate({
       name: "hero",
       description: "Hero layout",
       layout,
-      masterName: "test-master",
+      master: mockMaster,
       layoutTokens: { titleColor: "#FFF" },
     });
 
@@ -163,10 +169,8 @@ describe("resolveThemeFormat()", () => {
       fonts: [validFont],
       formats: { presentation: { ...makeFormat(), templates: [template] } },
     };
-    const { theme } = resolveThemeFormat(def, "presentation");
-    assert.deepStrictEqual(theme.layouts.hero, {
-      masterName: "test-master",
-      layoutTokens: { titleColor: "#FFF" },
-    });
+    const theme = resolveThemeFormat(def, "presentation");
+    assert.strictEqual(theme.layouts.hero.master.name, "test-master");
+    assert.deepStrictEqual(theme.layouts.hero.layoutTokens, { titleColor: "#FFF" });
   });
 });

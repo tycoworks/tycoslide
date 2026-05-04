@@ -31,9 +31,6 @@ let receivedProps: any[] = [];
 /** Global FM header — required before any slide frontmatter */
 const HEADER = `---\ntheme: test\n---\n\n`;
 
-/** Default TemplateConfig for test layouts */
-const defaultConfig: TemplateConfig = { masterName: "default", layoutTokens: {} };
-
 /** Mock master — plain data object */
 const mockMaster: MasterDefinition = {
   name: "default",
@@ -41,6 +38,9 @@ const mockMaster: MasterDefinition = {
   contentBounds: new Bounds(0, 0, 13.333, 7.5),
   background: { color: "#FFFFFF" },
 };
+
+/** Default TemplateConfig for test layouts */
+const defaultConfig: TemplateConfig = { master: mockMaster, layoutTokens: {} };
 
 function makeOptions() {
   return {
@@ -55,7 +55,6 @@ function makeOptions() {
     }),
     layouts: [simpleLayout, bodyLayout, slotLayout, strictLayout, defaultLayout],
     components: testComponents,
-    masters: [mockMaster],
   };
 }
 
@@ -191,9 +190,15 @@ notes: These are speaker notes.
     });
 
     it("populates masterName from TemplateConfig", () => {
+      const customMaster: MasterDefinition = {
+        name: "custom-master",
+        content: component("test", {}),
+        contentBounds: new Bounds(0, 0, 13.333, 7.5),
+        background: { color: "#FFFFFF" },
+      };
       const theme = mockTheme({
         layouts: {
-          simple: { masterName: "custom-master", layoutTokens: {} },
+          simple: { master: customMaster, layoutTokens: {} },
           body: defaultConfig,
           slots: defaultConfig,
           strict: defaultConfig,
@@ -205,18 +210,47 @@ notes: These are speaker notes.
         theme,
         layouts: [simpleLayout, bodyLayout, slotLayout, strictLayout, defaultLayout],
         components: testComponents,
-        masters: [mockMaster],
       });
       const slides = (pres as any).deferredSlides as { slide: any }[];
       assert.strictEqual(slides[0].slide.masterName, "custom-master");
+    });
+
+    it("deduplicates masters by object identity", () => {
+      // Two templates share the same master object — should produce one master, not two
+      const sharedMaster: MasterDefinition = {
+        name: "shared",
+        content: component("test", {}),
+        contentBounds: new Bounds(0, 0, 13.333, 7.5),
+        background: { color: "#FFFFFF" },
+      };
+      const theme = mockTheme({
+        layouts: {
+          simple: { master: sharedMaster, layoutTokens: {} },
+          body: { master: sharedMaster, layoutTokens: {} },
+          slots: { master: sharedMaster, layoutTokens: {} },
+          strict: { master: sharedMaster, layoutTokens: {} },
+          default: { master: sharedMaster, layoutTokens: {} },
+        },
+      });
+      const pres = compileDocument(
+        `${HEADER}---\ntemplate: simple\ntitle: A\n---\n\n---\ntemplate: simple\ntitle: B\n---`,
+        {
+          theme,
+          layouts: [simpleLayout, bodyLayout, slotLayout, strictLayout, defaultLayout],
+          components: testComponents,
+        },
+      );
+      // Access internal masterDefs map to verify dedup
+      const masterDefs = (pres as any).masterDefs as Map<string, unknown>;
+      assert.strictEqual(masterDefs.size, 1, "should have exactly 1 unique master");
+      assert.ok(masterDefs.has("shared"));
     });
 
     it("throws when theme has no config for the layout", () => {
       const theme = mockTheme({ layouts: {} });
       const md = `${HEADER}---\ntemplate: simple\ntitle: Test\n---`;
       assert.throws(
-        () =>
-          compileDocument(md, { theme, layouts: [simpleLayout], components: testComponents, masters: [mockMaster] }),
+        () => compileDocument(md, { theme, layouts: [simpleLayout], components: testComponents }),
         /theme has no config for template 'simple'/,
       );
     });

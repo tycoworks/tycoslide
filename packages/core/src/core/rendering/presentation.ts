@@ -58,7 +58,6 @@ export interface SlideLayout {
 export interface PresentationConfig {
   theme: Theme;
   assets?: Record<string, unknown>;
-  masters: MasterDefinition[];
   components: ComponentDefinition<any, any, any>[];
 }
 
@@ -83,8 +82,12 @@ export class Presentation {
     this._assets = config.assets;
     this.renderer = new PptxRenderer(config.theme);
 
-    // Build local maps from definition arrays
-    this.masterDefs = new Map(config.masters.map((m) => [m.name, m]));
+    // Derive unique masters from theme.layouts (dedup by object identity)
+    const seen = new Set<MasterDefinition>();
+    for (const layoutConfig of Object.values(config.theme.layouts)) {
+      seen.add(layoutConfig.master);
+    }
+    this.masterDefs = new Map([...seen].map((m) => [m.name, m]));
     this.componentDefs = new Map(config.components.map((c) => [c.name, c]));
 
     const { width, height } = config.theme.slide;

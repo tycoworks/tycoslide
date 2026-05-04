@@ -11,7 +11,6 @@ import {
   createPresentation,
   isComponentNode,
   type LayoutDefinition,
-  type MasterDefinition,
   type Presentation,
   RESERVED_FRONTMATTER_KEYS,
   type Slide,
@@ -58,8 +57,6 @@ export interface CompileOptions {
   layouts: LayoutDefinition[];
   /** Component definitions (for resolveTokens hooks). */
   components: ComponentDefinition<any, any, any>[];
-  /** Master definitions (passed to Presentation). */
-  masters: MasterDefinition[];
 }
 
 // ============================================
@@ -138,7 +135,6 @@ export function compileDocument(source: string, options: CompileOptions): Presen
   const presentation = createPresentation({
     theme: options.theme,
     assets: options.assets,
-    masters: options.masters,
     components: options.components,
   });
 
@@ -226,7 +222,7 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
 
   // 9. Assemble Slide with master info from config
   const slide: Slide = {
-    masterName: layoutConfig.masterName,
+    masterName: layoutConfig.master.name,
     content,
   };
 

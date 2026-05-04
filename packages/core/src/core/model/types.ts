@@ -215,7 +215,8 @@ export type TextContent = string | TextRun[];
 
 export { Bounds } from "./bounds.js";
 
-import type { SlideNode } from "./nodes.js";
+import type { Bounds } from "./bounds.js";
+import type { ComponentNode, SlideNode } from "./nodes.js";
 
 // ============================================
 // BACKGROUND
@@ -247,9 +248,25 @@ export interface Slide {
   name?: string;
 }
 
+/**
+ * A master slide definition — pure data, no render function.
+ * Masters provide slide chrome (footer, slide number), content bounds, and background.
+ * Content and tokens are baked in at theme definition time.
+ * When `contentBounds` is omitted, content is positioned at full slide bounds (layer mode).
+ */
+export interface MasterDefinition {
+  name: string;
+  /** Pre-built chrome layer (footer, logo, slide number, etc). */
+  content: ComponentNode;
+  /** Region where template content is placed. Omit for full-slide layer mode. */
+  contentBounds?: Bounds;
+  /** Slide background. */
+  background: Background;
+}
+
 /** Structured config for a layout — master assignment + layout tokens. */
 export interface TemplateConfig {
-  masterName: string;
+  master: MasterDefinition;
   layoutTokens: Record<string, unknown>;
 }
 
