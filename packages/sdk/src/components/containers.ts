@@ -72,7 +72,7 @@ export const rowComponent = defineComponent({
     spacingMode: params.spacingMode ?? SPACING_MODE.BETWEEN,
     vAlign: params.vAlign ?? VALIGN.TOP, // Explicit default: pure alignment (not CSS stretch)
     hAlign: params.hAlign ?? HALIGN.LEFT, // Explicit default for consistent measurement
-    padding: params.padding,
+    padding: params.padding ?? 0,
   }),
 });
 
@@ -109,7 +109,7 @@ export const columnComponent = defineComponent({
     spacingMode: params.spacingMode ?? SPACING_MODE.BETWEEN,
     vAlign: params.vAlign ?? VALIGN.TOP, // Explicit default for consistent measurement
     hAlign: params.hAlign ?? HALIGN.LEFT, // Explicit default for consistent measurement
-    padding: params.padding,
+    padding: params.padding ?? 0,
   }),
 });
 

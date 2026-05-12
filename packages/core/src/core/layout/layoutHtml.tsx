@@ -263,7 +263,7 @@ function styleContainer(
 ): StyledNode {
   const isRow = node.direction === DIRECTION.ROW;
   const spacingPx = inToPx(node.spacing);
-  const basePaddingPx = node.padding ? inToPx(node.padding) : 0;
+  const basePaddingPx = inToPx(node.padding);
   const mainAxisPad = basePaddingPx + (node.spacingMode === SPACING_MODE.AROUND ? spacingPx : 0);
   const crossAxisPad = basePaddingPx;
 

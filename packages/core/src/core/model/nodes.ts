@@ -204,7 +204,7 @@ export interface ContainerNode<C extends SlideNode = ElementNode> {
   spacingMode: SpacingMode; // BETWEEN: between children only; AROUND: between + edges
   vAlign: VerticalAlignment;
   hAlign: HorizontalAlignment;
-  padding?: number; // inches - internal padding on all sides
+  padding: number; // inches - internal padding on all sides
   layer?: Layer; // render target: master (shared/deduped) or content (per-slide)
 }
 
