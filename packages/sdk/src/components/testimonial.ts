@@ -85,7 +85,7 @@ export const testimonialComponent = defineComponent({
     // Build content children: optional image, quote text, attribution
     const children = [];
     if (imagePath) {
-      children.push(row({ spacing: 0, hAlign: contentHAlign, height: SIZE.FILL }, imageNode(imagePath, tokens.image)));
+      children.push(row({ hAlign: contentHAlign, height: SIZE.FILL }, imageNode(imagePath, tokens.image)));
     }
     if (!actualQuote) {
       throw new Error(`Testimonial component requires either a 'quote' attribute or body text.`);

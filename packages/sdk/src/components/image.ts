@@ -117,7 +117,7 @@ export const imageComponent = defineComponent({
       node.shadow = tokens.shadow;
     }
     if (tokens?.padding) {
-      return column({ padding: tokens.padding, spacing: 0, height: SIZE.FILL }, node);
+      return column({ padding: tokens.padding, height: SIZE.FILL }, node);
     }
     return node;
   },

@@ -246,7 +246,7 @@ export const tableComponent = defineComponent({
     // Wrap table in a stack with a shape background (card effect)
     const backgroundRect = shape(tokens.background, { shape: SHAPE.RECTANGLE });
     const padding = tokens.backgroundPadding ?? 0;
-    const contentLayer = padding > 0 ? column({ padding, spacing: 0 }, tableNode) : tableNode;
+    const contentLayer = padding > 0 ? column({ padding }, tableNode) : tableNode;
     return stack({}, backgroundRect, contentLayer);
   },
 });

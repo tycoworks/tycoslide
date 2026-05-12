@@ -314,7 +314,7 @@ async function renderMermaid(
   if (tokens.background) {
     const backgroundRect = shape(tokens.background, { shape: SHAPE.RECTANGLE });
     const padding = tokens.backgroundPadding ?? 0;
-    const contentLayer = padding > 0 ? column({ padding, spacing: 0 }, mermaidImage) : mermaidImage;
+    const contentLayer = padding > 0 ? column({ padding }, mermaidImage) : mermaidImage;
     return stack({}, backgroundRect, contentLayer);
   }
 

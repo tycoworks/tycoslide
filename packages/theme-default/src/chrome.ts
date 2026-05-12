@@ -62,27 +62,26 @@ export function withFooterChrome<
       // Footer row: original footerHeight, horizontally inset by margin
       const footerRow = row(
         {
-          spacing: 0,
           height: chrome.footerHeight,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
         },
-        column({ spacing: 0, width: chrome.margin }),
+        column({ width: chrome.margin }),
         image(chrome.footerLogo, chrome.footerImage),
-        column({ spacing: 0, width: chrome.footerSpacing }),
+        column({ width: chrome.footerSpacing }),
         label(chrome.footerText, chrome.footer),
-        column({ spacing: 0, width: chrome.footerSpacing }),
+        column({ width: chrome.footerSpacing }),
         slideNumber(chrome.slideNumber),
-        column({ spacing: 0, width: chrome.margin }),
+        column({ width: chrome.margin }),
       );
       footerRow.layer = LAYER.MASTER;
       // Bottom breathing (matches old master's margin/4 padding)
-      const bottomSpacer = column({ spacing: 0, height: chrome.margin / 4 });
+      const bottomSpacer = column({ height: chrome.margin / 4 });
       bottomSpacer.layer = LAYER.MASTER;
       return column(
-        { spacing: 0, height: SIZE.FILL },
+        { height: SIZE.FILL },
         // Content area with margin padding fills remaining space
-        column({ spacing: 0, height: SIZE.FILL, padding: chrome.margin }, content),
+        column({ height: SIZE.FILL, padding: chrome.margin }, content),
         // Footer on master layer (shared/deduped across slides)
         footerRow,
         bottomSpacer,
@@ -104,7 +103,7 @@ export function withMarginChrome<
     slots: innerLayout.slots,
     render: (params, slots, tokens) => {
       const content = innerLayout.render(params, slots, tokens);
-      return column({ spacing: 0, height: SIZE.FILL, padding: chrome.margin }, content);
+      return column({ height: SIZE.FILL, padding: chrome.margin }, content);
     },
   };
 }
@@ -128,37 +127,36 @@ export function withFactsheetChrome<
         { height: chrome.topBarHeight },
         shape(chrome.topBarFill, { shape: SHAPE.RECTANGLE }),
         row(
-          { spacing: 0, height: chrome.topBarHeight, vAlign: VALIGN.MIDDLE },
-          column({ spacing: 0, width: chrome.margin }),
+          { height: chrome.topBarHeight, vAlign: VALIGN.MIDDLE },
+          column({ width: chrome.margin }),
           column(
-            { spacing: 0, width: chrome.topBarLogoWidth, height: chrome.topBarLogoHeight },
+            { width: chrome.topBarLogoWidth, height: chrome.topBarLogoHeight },
             image(chrome.topBarLogo, chrome.topBarLogoTokens),
           ),
-          column({ spacing: 0, width: SIZE.FILL }),
+          column({ width: SIZE.FILL }),
           label(chrome.topBarLabel, chrome.topBarLabelTokens),
-          column({ spacing: 0, width: chrome.margin }),
+          column({ width: chrome.margin }),
         ),
       );
       topBar.layer = LAYER.MASTER;
       // Footer on master layer
       const footerRow = row(
         {
-          spacing: 0,
           height: chrome.footerHeight + chrome.margin,
           vAlign: VALIGN.MIDDLE,
         },
-        column({ spacing: 0, width: chrome.margin }),
+        column({ width: chrome.margin }),
         label(chrome.footerText, chrome.footerTokens),
-        column({ spacing: 0, width: SIZE.FILL }),
+        column({ width: SIZE.FILL }),
         slideNumber(chrome.slideNumber),
-        column({ spacing: 0, width: chrome.margin }),
+        column({ width: chrome.margin }),
       );
       footerRow.layer = LAYER.MASTER;
       return column(
-        { spacing: 0, height: SIZE.FILL },
+        { height: SIZE.FILL },
         topBar,
         // Content area with side + vertical margins
-        column({ spacing: 0, height: SIZE.FILL, padding: chrome.margin }, content),
+        column({ height: SIZE.FILL, padding: chrome.margin }, content),
         footerRow,
       );
     },

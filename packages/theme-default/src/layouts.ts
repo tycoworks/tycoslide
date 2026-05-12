@@ -98,7 +98,7 @@ export const title: Layout<TitleLayoutTokens> = {
     );
 
     return imagePath
-      ? row({ spacing: 0, vAlign: tokens.vAlign, height: SIZE.FILL }, textBlock, image(imagePath, tokens.image))
+      ? row({ vAlign: tokens.vAlign, height: SIZE.FILL }, textBlock, image(imagePath, tokens.image))
       : textBlock;
   },
 };
@@ -144,7 +144,7 @@ export const section: Layout<SectionLayoutTokens> = {
   },
   render: (params, _slots, tokens) =>
     column(
-      { spacing: 0, vAlign: tokens.vAlign, hAlign: tokens.hAlign, height: SIZE.FILL },
+      { vAlign: tokens.vAlign, hAlign: tokens.hAlign, height: SIZE.FILL },
       label(params.title as string, tokens.title),
     ),
 };
@@ -239,7 +239,7 @@ export const stat: Layout<StatLayoutTokens> = {
       ? stack(wrapProps, shape(tokens.background, { shape: SHAPE.RECTANGLE }), content)
       : content;
 
-    return column({ spacing: 0, height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign }, wrapped);
+    return column({ height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign }, wrapped);
   },
 };
 
@@ -267,7 +267,7 @@ export const quote: Layout<QuoteLayoutTokens> = {
     const quoteText = params.quote as string;
     const attribution = params.attribution as string | undefined;
     return column(
-      { spacing: 0, height: SIZE.FILL },
+      { height: SIZE.FILL },
       column(
         { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing },
         component(Component.Quote, { quote: quoteText, attribution }, undefined, tokens.quote),
@@ -289,7 +289,7 @@ export interface BlankLayoutTokens {}
 export const blank: Layout<BlankLayoutTokens, ScalarShape, readonly ["body"]> = {
   params: {},
   slots: ["body"] as const,
-  render: (_params, { body: bodySlot }, _tokens) => column({ spacing: 0, height: SIZE.FILL }, ...bodySlot),
+  render: (_params, { body: bodySlot }, _tokens) => column({ height: SIZE.FILL }, ...bodySlot),
 };
 
 // --- two-column ---
@@ -325,7 +325,7 @@ export const twoColumn: Layout<TwoColumnLayoutTokens, ScalarShape, readonly ["le
     const eyebrow = params.eyebrow as string | undefined;
     const colProps = { vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL };
     return column(
-      { spacing: 0, height: SIZE.FILL },
+      { height: SIZE.FILL },
       ...(titleText ? [headerBlock(titleText, tokens, eyebrow)] : []),
       row(
         { spacing: tokens.spacing, height: SIZE.HUG },
@@ -410,7 +410,7 @@ export const agenda: Layout<AgendaLayoutTokens> = {
       ...(i > 0 ? [line(tokens.divider)] : []),
       row(
         { vAlign: tokens.itemVAlign, spacing: tokens.itemSpacing },
-        column({ spacing: 0, width: SIZE.HUG, vAlign: tokens.itemVAlign }, label(String(i + 1), tokens.itemNumber)),
+        column({ width: SIZE.HUG, vAlign: tokens.itemVAlign }, label(String(i + 1), tokens.itemNumber)),
         text(item, tokens.items),
       ),
     ]);
@@ -418,7 +418,7 @@ export const agenda: Layout<AgendaLayoutTokens> = {
     const itemsColumn = column({ spacing: tokens.spacing, vAlign: tokens.vAlign, height: SIZE.FILL }, ...itemRows);
 
     return column(
-      { spacing: 0, height: SIZE.FILL },
+      { height: SIZE.FILL },
       headerBlock(titleText, tokens, eyebrow),
       imageSrc
         ? row({ spacing: tokens.spacing, height: SIZE.FILL }, itemsColumn, image(imageSrc, tokens.image))
@@ -471,7 +471,7 @@ export const cards: Layout<CardsLayoutTokens> = {
     );
     const perRow = built.length <= 2 ? built.length : built.length === 4 ? 2 : built.length >= 7 ? 4 : 3;
     return column(
-      { spacing: 0, height: SIZE.FILL },
+      { height: SIZE.FILL },
       headerBlock(titleText, tokens, eyebrow),
       column(
         {

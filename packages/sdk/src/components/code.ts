@@ -126,7 +126,7 @@ async function renderCode(
   const codeImage = image(pngPath, tokens.image, code);
   const backgroundRect = shape(tokens.background, { shape: SHAPE.RECTANGLE });
   const contentLayer = column(
-    { spacing: 0, padding: tokens.padding, height: SIZE.FILL, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE },
+    { padding: tokens.padding, height: SIZE.FILL, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE },
     codeImage,
   );
   return stack({ height: SIZE.FILL }, backgroundRect, contentLayer);
