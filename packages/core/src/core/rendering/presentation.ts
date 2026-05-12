@@ -268,10 +268,7 @@ export class Presentation {
           throw error;
         }
 
-        // Resolve background: slide override > theme layout background
-        const layoutConfig = this._theme.layouts[layoutName];
-        const effectiveBg = slide.background ?? layoutConfig?.background ?? { color: "FFFFFF" };
-        pipeline.collectFromTree(rendered, this.slideBounds, `slide-${slideIndex + 1}`, effectiveBg);
+        pipeline.collectFromTree(rendered, this.slideBounds, `slide-${slideIndex + 1}`, slide.background);
 
         renderedSlides.push({ deferred, rendered, layoutName });
       }

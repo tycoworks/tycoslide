@@ -103,9 +103,9 @@ function renderShape(
     shape: params.shape,
     fill: {
       color: tokens.fill,
-      opacity: tokens.fillOpacity ?? 100,
+      opacity: tokens.fillOpacity ?? DEFAULTS.fillOpacity,
     },
-    cornerRadius: tokens.cornerRadius ?? 0,
+    cornerRadius: tokens.cornerRadius ?? DEFAULTS.cornerRadius,
   };
   if (tokens.border) {
     node.border = tokens.border;

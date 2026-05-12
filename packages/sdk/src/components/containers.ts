@@ -12,6 +12,7 @@ import {
   SIZE,
   type SizeValue,
   type SlideNode,
+  SPACING_MODE,
   type SpacingMode,
   VALIGN,
   type VerticalAlignment,
@@ -49,7 +50,7 @@ function parseContainerArgs<TParams>(args: any[]): { params: TParams; children: 
 export type RowParams = {
   width?: number | SizeValue; // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
   height?: number | SizeValue; // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
-  spacing: number;
+  spacing?: number; // inches — space between children. Default: 0
   spacingMode?: SpacingMode;
   vAlign?: VerticalAlignment;
   hAlign?: HorizontalAlignment; // justify-content: left (flex-start), center, right (flex-end)
@@ -67,8 +68,8 @@ export const rowComponent = defineComponent({
     children,
     width: params.width ?? SIZE.FILL,
     height: params.height ?? SIZE.HUG,
-    spacing: params.spacing,
-    spacingMode: params.spacingMode,
+    spacing: params.spacing ?? 0,
+    spacingMode: params.spacingMode ?? SPACING_MODE.BETWEEN,
     vAlign: params.vAlign ?? VALIGN.TOP, // Explicit default: pure alignment (not CSS stretch)
     hAlign: params.hAlign ?? HALIGN.LEFT, // Explicit default for consistent measurement
     padding: params.padding,
@@ -86,7 +87,7 @@ export function row(params: RowParams, ...children: SlideNode[]): ComponentNode 
 export type ColumnParams = {
   width?: number | SizeValue; // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
   height?: number | SizeValue; // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
-  spacing: number;
+  spacing?: number; // inches — space between children. Default: 0
   spacingMode?: SpacingMode;
   vAlign?: VerticalAlignment;
   hAlign?: HorizontalAlignment;
@@ -104,8 +105,8 @@ export const columnComponent = defineComponent({
     children,
     width: params.width ?? SIZE.FILL,
     height: params.height ?? SIZE.HUG,
-    spacing: params.spacing,
-    spacingMode: params.spacingMode,
+    spacing: params.spacing ?? 0,
+    spacingMode: params.spacingMode ?? SPACING_MODE.BETWEEN,
     vAlign: params.vAlign ?? VALIGN.TOP, // Explicit default for consistent measurement
     hAlign: params.hAlign ?? HALIGN.LEFT, // Explicit default for consistent measurement
     padding: params.padding,
@@ -163,7 +164,7 @@ export function stack(...args: any[]): ComponentNode {
 
 export type GridParams = {
   columns: number;
-  spacing: number;
+  spacing?: number; // inches — gap between cells. Default: 0
   height?: number | SizeValue; // inches, SIZE.FILL (equal rows), or SIZE.HUG (content-sized rows). Default: FILL
 };
 
@@ -172,7 +173,7 @@ export const gridComponent = defineComponent({
   children: true,
   directive: false,
   render: (params: GridParams, children: SlideNode[]) => {
-    const { columns, spacing, height = SIZE.FILL } = params;
+    const { columns, spacing = 0, height = SIZE.FILL } = params;
 
     return {
       type: NODE_TYPE.GRID,

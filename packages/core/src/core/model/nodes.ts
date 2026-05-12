@@ -201,7 +201,7 @@ export interface ContainerNode<C extends SlideNode = ElementNode> {
   width: number | SizeValue; // inches (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
   height: number | SizeValue; // inches (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
   spacing: number; // inches — space between children (and edges when spacingMode is AROUND)
-  spacingMode?: SpacingMode; // BETWEEN (default): between children only; AROUND: between + edges
+  spacingMode: SpacingMode; // BETWEEN: between children only; AROUND: between + edges
   vAlign: VerticalAlignment;
   hAlign: HorizontalAlignment;
   padding?: number; // inches - internal padding on all sides

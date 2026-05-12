@@ -239,8 +239,8 @@ export interface Background {
 export interface Slide {
   /** Layout name — identifies the template this slide uses. */
   layoutName: string;
-  /** Per-slide background override. */
-  background?: Background;
+  /** Slide background — resolved from template config by SDK at compile time. */
+  background: Background;
   notes?: string;
   content: SlideNode;
   /** Optional name for identifying slides in error messages and shared slide references. */
