@@ -22,7 +22,6 @@ export const log = {
   // PPTX generation
   pptx: {
     _: createDebug("tycoslide:pptx"),
-    master: createDebug("tycoslide:pptx:master"),
     slide: createDebug("tycoslide:pptx:slide"),
   },
 

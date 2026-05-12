@@ -5,12 +5,10 @@
 import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
 import {
-  Bounds,
-  component,
+  type Background,
   defineLayout,
   isComponentNode,
   type LayoutDefinition,
-  type MasterDefinition,
   NODE_TYPE,
   param,
   type SlideNode,
@@ -22,13 +20,8 @@ import { compileDocument } from "../src/markdown/documentCompiler.js";
 import { mockTheme } from "./mocks.js";
 import { C, testComponents } from "./test-components.js";
 
-/** Mock master for tests */
-const mockMaster: MasterDefinition = {
-  name: "default",
-  content: component("test", {}),
-  contentBounds: new Bounds(0, 0, 13.333, 7.5),
-  background: { color: "#FFFFFF" },
-};
+/** Mock background for tests */
+const mockBackground: Background = { color: "#FFFFFF" };
 
 /** All layouts collected for test options */
 const allLayouts: LayoutDefinition[] = [];
@@ -82,7 +75,7 @@ describe("Document Compiler: Layout Tokens", () => {
     const layoutTokens = { background: "#AAAAAA", titleTokens: { style: "h1", color: "#FFFFFF" } };
     const theme = mockTheme({
       layouts: {
-        tokenSimple: { master: mockMaster, layoutTokens },
+        tokenSimple: { background: mockBackground, layoutTokens },
       },
     });
 
@@ -98,7 +91,7 @@ describe("Document Compiler: Layout Tokens", () => {
     const layoutTokens = { background: "#000000", titleTokens: { style: "h2" } };
     const theme = mockTheme({
       layouts: {
-        tokenSimple: { master: mockMaster, layoutTokens },
+        tokenSimple: { background: mockBackground, layoutTokens },
       },
     });
 
@@ -125,7 +118,7 @@ describe("Document Compiler: Layout Tokens", () => {
 
     const theme = mockTheme({
       layouts: {
-        noTokenTest: { master: mockMaster, layoutTokens: {} },
+        noTokenTest: { background: mockBackground, layoutTokens: {} },
       },
     });
 
@@ -170,7 +163,7 @@ describe("Slot Token Injection", () => {
     const theme = mockTheme({
       layouts: {
         slotTokenTest: {
-          master: mockMaster,
+          background: mockBackground,
           layoutTokens: {
             background: "#FFFFFF",
             text: textTokens,
@@ -212,7 +205,7 @@ describe("Slot Token Injection", () => {
     const theme = mockTheme({
       layouts: {
         slotTokenTest: {
-          master: mockMaster,
+          background: mockBackground,
           layoutTokens: {
             background: "#FFFFFF",
             text: textTokens,
@@ -251,7 +244,7 @@ describe("Slot Token Injection", () => {
     const theme = mockTheme({
       layouts: {
         noSlotTokenTest: {
-          master: mockMaster,
+          background: mockBackground,
           layoutTokens: {
             background: "#FFFFFF",
             text: { style: "body", color: "#000000" },

@@ -22,7 +22,7 @@ export interface LoadedTheme {
  *   - components: ComponentDefinition[] (required)
  *   - assets: Record<string, unknown> (optional)
  *
- * Masters come from the resolved format. Layouts are discovered from templates.
+ * Layouts are discovered from templates across all formats.
  */
 export async function loadTheme(name: string, format: string | undefined): Promise<LoadedTheme> {
   const packageName = name;
@@ -72,7 +72,7 @@ export async function loadTheme(name: string, format: string | undefined): Promi
     throw new Error(`Theme package '${packageName}' has no layouts in its templates.`);
   }
 
-  // Resolve format to flat Theme (masters are embedded in TemplateConfig)
+  // Resolve format to flat Theme (background embedded in each TemplateConfig)
   const theme = resolveThemeFormat(mod.theme, format);
 
   return {

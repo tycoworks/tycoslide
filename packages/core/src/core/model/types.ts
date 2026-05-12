@@ -215,15 +215,14 @@ export type TextContent = string | TextRun[];
 
 export { Bounds } from "./bounds.js";
 
-import type { Bounds } from "./bounds.js";
-import type { ComponentNode, SlideNode } from "./nodes.js";
+import type { SlideNode } from "./nodes.js";
 
 // ============================================
 // BACKGROUND
 // ============================================
 
 /**
- * Slide/master background. All fields optional — set color, path, or both.
+ * Slide background. All fields optional — set color, path, or both.
  * Opacity uses the same convention as ShapeNode.fill (0 = invisible, 100 = opaque).
  * The renderer inverts to pptxgenjs's transparency at the rendering boundary.
  */
@@ -238,9 +237,9 @@ export interface Background {
 // ============================================
 
 export interface Slide {
-  /** Master name — every slide must reference a registered master. */
-  masterName: string;
-  /** Overrides master background if set. */
+  /** Layout name — identifies the template this slide uses. */
+  layoutName: string;
+  /** Per-slide background override. */
   background?: Background;
   notes?: string;
   content: SlideNode;
@@ -248,25 +247,9 @@ export interface Slide {
   name?: string;
 }
 
-/**
- * A master slide definition — pure data, no render function.
- * Masters provide slide chrome (footer, slide number), content bounds, and background.
- * Content and tokens are baked in at theme definition time.
- * When `contentBounds` is omitted, content is positioned at full slide bounds (layer mode).
- */
-export interface MasterDefinition {
-  name: string;
-  /** Pre-built chrome layer (footer, logo, slide number, etc). */
-  content: ComponentNode;
-  /** Region where template content is placed. Omit for full-slide layer mode. */
-  contentBounds?: Bounds;
-  /** Slide background. */
-  background: Background;
-}
-
-/** Structured config for a layout — master assignment + layout tokens. */
+/** Structured config for a layout — background + layout tokens. */
 export interface TemplateConfig {
-  master: MasterDefinition;
+  background: Background;
   layoutTokens: Record<string, unknown>;
 }
 
@@ -276,6 +259,6 @@ export interface Theme {
    *  `generateFontFaceCSS()` reads exclusively from this list. */
   fonts: FontFamily[];
   textStyles: Record<string, TextStyle>;
-  /** Layout config. Each template name maps to its master assignment and tokens. */
+  /** Layout config. Each template name maps to its background and layout tokens. */
   layouts: Record<string, TemplateConfig>;
 }

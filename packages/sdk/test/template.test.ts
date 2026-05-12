@@ -1,40 +1,32 @@
 import * as assert from "node:assert";
 import { describe, it } from "node:test";
-import { Bounds, component, type LayoutDefinition, type MasterDefinition } from "@tycoslide/core";
+import type { Background, LayoutDefinition } from "@tycoslide/core";
 import { defineTemplate } from "../src/template.js";
 
 const testLayouts = new Map<string, LayoutDefinition>();
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-/** Minimal ComponentNode for use in master content */
-function makeComponent(name: string) {
-  return component(name, {}, undefined);
-}
-
 // ── defineTemplate() ─────────────────────────────────────────────────────────
 
 describe("defineTemplate()", () => {
-  it("returns a Template with layout, master, and layoutTokens", () => {
+  it("returns a Template with layout, background, and layoutTokens", () => {
     const templateName = "test-tmpl-layout-1";
 
-    const mockMaster1: MasterDefinition = {
-      name: "test-tmpl-master-1",
-      content: makeComponent("bg"),
-      contentBounds: new Bounds(0, 0, 13.333, 7.5),
-      background: { color: "#FFF" },
-    };
+    const mockBackground: Background = { color: "#FFF" };
 
     const template = defineTemplate({
       name: templateName,
       description: "Test template",
-      layout: { params: {}, render: (_params: any, _slots: any, _tokens: any) => makeComponent("column") },
-      master: mockMaster1,
+      layout: {
+        params: {},
+        render: (_params: any, _slots: any, _tokens: any) =>
+          ({ type: "component", componentName: "column", params: {}, content: undefined }) as any,
+      },
+      background: mockBackground,
       layoutTokens: { title: "hello" },
     });
 
     assert.strictEqual(template.layout.name, templateName);
-    assert.strictEqual(template.master.name, "test-tmpl-master-1");
+    assert.deepStrictEqual(template.background, { color: "#FFF" });
     assert.deepStrictEqual(template.layoutTokens, { title: "hello" });
   });
 
@@ -49,15 +41,10 @@ describe("defineTemplate()", () => {
         params: {},
         render: (_params: any, _slots: any, tokens: any) => {
           capturedTokens = tokens as Record<string, unknown>;
-          return makeComponent("column");
+          return { type: "component", componentName: "column", params: {}, content: undefined } as any;
         },
       },
-      master: {
-        name: "m",
-        content: makeComponent("bg"),
-        contentBounds: new Bounds(0, 0, 13.333, 7.5),
-        background: { color: "#FFF" },
-      },
+      background: { color: "#FFF" },
       layoutTokens: { title: "hello", color: "#333" },
     });
 
@@ -78,13 +65,12 @@ describe("defineTemplate()", () => {
     const template = defineTemplate({
       name: templateName,
       description: "SlideNode return test",
-      layout: { params: {}, render: (_params: any, _slots: any, _tokens: any) => makeComponent("text") },
-      master: {
-        name: "m2",
-        content: makeComponent("bg"),
-        contentBounds: new Bounds(0, 0, 13.333, 7.5),
-        background: { color: "#FFF" },
+      layout: {
+        params: {},
+        render: (_params: any, _slots: any, _tokens: any) =>
+          ({ type: "component", componentName: "text", params: {}, content: undefined }) as any,
       },
+      background: { color: "#FFF" },
       layoutTokens: {},
     });
 

@@ -28,7 +28,7 @@ function templatesToLayouts(templates: Template[]): Record<string, TemplateConfi
   const layouts: Record<string, TemplateConfig> = {};
   for (const t of templates) {
     layouts[t.layout.name] = {
-      master: t.master,
+      background: t.background,
       layoutTokens: t.layoutTokens,
     };
   }
@@ -65,7 +65,7 @@ export function defineTheme(definition: ThemeDefinition): ThemeDefinition {
 
 /**
  * Resolve a ThemeDefinition to a flat Theme for a specific format.
- * Masters are embedded in each TemplateConfig — no separate array needed.
+ * Background is embedded in each TemplateConfig — no separate master layer.
  * Throws with available format names if the format is missing or unknown.
  */
 export function resolveThemeFormat(definition: ThemeDefinition, format: string | undefined): Theme {

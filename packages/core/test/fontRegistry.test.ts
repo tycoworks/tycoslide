@@ -5,19 +5,14 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import { generateFontFaceCSS } from "../src/core/layout/layoutHtml.js";
 import type { ContainerNode, ElementNode, TextNode } from "../src/core/model/nodes.js";
-import { component, NODE_TYPE } from "../src/core/model/nodes.js";
-import type { FontFamily, MasterDefinition } from "../src/core/model/types.js";
-import { Bounds, DASH_TYPE, GRID_STYLE, HALIGN, SIZE, VALIGN } from "../src/core/model/types.js";
+import { NODE_TYPE } from "../src/core/model/nodes.js";
+import type { Background, FontFamily } from "../src/core/model/types.js";
+import { DASH_TYPE, GRID_STYLE, HALIGN, SIZE, VALIGN } from "../src/core/model/types.js";
 import { validateThemeFonts } from "../src/core/rendering/themeValidator.js";
 import { validateFontVariants } from "../src/utils/font.js";
 import { mockTextStyle, mockTheme } from "./mocks.js";
 
-const mockMaster: MasterDefinition = {
-  name: "default",
-  content: component("test", {}),
-  contentBounds: new Bounds(0, 0, 13.333, 7.5),
-  background: { color: "#FFFFFF" },
-};
+const mockBackground: Background = { color: "#FFFFFF" };
 
 describe("validateThemeFonts", () => {
   describe("font format requirement", () => {
@@ -131,7 +126,7 @@ describe("validateThemeFonts", () => {
     });
   });
 
-  describe("layout and master token validation", () => {
+  describe("layout token validation", () => {
     it("throws when layout FontFamily token is not in theme.fonts", () => {
       const unregisteredFamily = {
         name: "Unknown Mono",
@@ -140,7 +135,7 @@ describe("validateThemeFonts", () => {
       const theme = mockTheme({
         layouts: {
           body: {
-            master: mockMaster,
+            background: mockBackground,
 
             layoutTokens: {
               heading: { fontFamily: unregisteredFamily },
@@ -156,7 +151,7 @@ describe("validateThemeFonts", () => {
       const theme = mockTheme({
         layouts: {
           body: {
-            master: mockMaster,
+            background: mockBackground,
 
             layoutTokens: {
               color: "#FF0000",

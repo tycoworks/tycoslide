@@ -40,6 +40,17 @@ export const NODE_TYPE = {
 export type NodeType = (typeof NODE_TYPE)[keyof typeof NODE_TYPE];
 
 // ============================================
+// RENDER LAYERS
+// ============================================
+
+/** Render layer target — determines whether a node is placed on the shared master or per-slide content. */
+export const LAYER = {
+  MASTER: "master",
+  CONTENT: "content",
+} as const;
+export type Layer = (typeof LAYER)[keyof typeof LAYER];
+
+// ============================================
 // BASE NODE TYPES
 // ============================================
 
@@ -194,6 +205,7 @@ export interface ContainerNode<C extends SlideNode = ElementNode> {
   vAlign: VerticalAlignment;
   hAlign: HorizontalAlignment;
   padding?: number; // inches - internal padding on all sides
+  layer?: Layer; // render target: master (shared/deduped) or content (per-slide)
 }
 
 /** Stack is a z-order container: all children occupy the same bounds, rendered in order */
@@ -202,6 +214,7 @@ export interface StackNode<C extends SlideNode = ElementNode> {
   children: C[]; // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
   width: number | SizeValue; // inches, SIZE.FILL, or SIZE.HUG
   height: number | SizeValue; // inches, SIZE.FILL, or SIZE.HUG
+  layer?: Layer; // render target: master (shared/deduped) or content (per-slide)
 }
 
 /** Grid is a CSS Grid container: equal-width columns with cross-sibling height coordination */
@@ -212,6 +225,7 @@ export interface GridNode<C extends SlideNode = ElementNode> {
   spacing: number; // inches — gap between cells
   width: number | SizeValue; // inches, SIZE.FILL, or SIZE.HUG
   height: number | SizeValue; // inches, SIZE.FILL, or SIZE.HUG
+  layer?: Layer; // render target: master (shared/deduped) or content (per-slide)
 }
 
 // ============================================
@@ -234,6 +248,8 @@ export interface ComponentNode<TParams = unknown, TContent = unknown> {
   content: TContent;
   /** Visual tokens provided by parent (DSL) or slot injection. Separate from params/content. */
   tokens?: Record<string, unknown>;
+  /** Render layer — propagated to the resolved element during renderTree(). */
+  layer?: Layer;
 }
 
 // ============================================
@@ -284,6 +300,11 @@ export function component<TParams, TContent = undefined>(
  */
 export function isLayoutNode(node: ElementNode): node is LayoutNode {
   return node.type === NODE_TYPE.CONTAINER || node.type === NODE_TYPE.STACK || node.type === NODE_TYPE.GRID;
+}
+
+/** Get the render layer of an element node (only layout nodes can have a layer). */
+export function getLayer(node: ElementNode): Layer | undefined {
+  return isLayoutNode(node) ? node.layer : undefined;
 }
 
 /**

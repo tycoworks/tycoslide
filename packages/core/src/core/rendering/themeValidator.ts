@@ -7,7 +7,7 @@ import { FONT_SLOT, type FontFamily, type Theme } from "../model/types.js";
 
 /**
  * Walk a token object tree and invoke callback for every FontFamily value found.
- * Used to validate layout/master token font registration.
+ * Used to validate layout token font registration.
  */
 function walkTokensForFonts(
   tokens: Record<string, unknown>,
@@ -28,7 +28,7 @@ function walkTokensForFonts(
  * Checks:
  * - All font paths must be a supported format (see FONT_FORMATS in font.ts)
  * - All textStyle fontFamilies are registered in theme.fonts
- * - All layout/master token fontFamilies are registered in theme.fonts
+ * - All layout token fontFamilies are registered in theme.fonts
  *
  * Called from themeLoader (CLI path) and Presentation constructor (programmatic API).
  * Pure and idempotent — safe to call multiple times.
@@ -68,7 +68,7 @@ export function validateThemeFonts(theme: Theme): void {
     }
   }
 
-  // Validate: layout and master tokens that contain FontFamily must be in theme.fonts
+  // Validate: layout tokens that contain FontFamily must be in theme.fonts
   const validateTokenFonts = (family: FontFamily, tokenPath: string, key: string) => {
     for (const slot of Object.values(FONT_SLOT)) {
       const font = family[slot];

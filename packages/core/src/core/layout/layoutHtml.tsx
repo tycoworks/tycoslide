@@ -1069,15 +1069,12 @@ export function generateBaseCSS(theme: Theme): string {
 }
 
 /**
- * Generate composite preview HTML pages.
- * Each page layers a master fragment (full slide) behind a slide fragment (content area).
- * Includes nav bar with stable prev/next arrows (dimmed when inactive).
+ * Generate preview HTML pages.
+ * Each page renders the slide fragment at full slide bounds with a nav bar.
  */
 export function generatePreviewHTML(
   slides: Array<{
-    masterFragment: string;
-    slideFragment: string;
-    contentBounds: Bounds;
+    fragment: string;
     label: string;
   }>,
   theme: Theme,
@@ -1090,7 +1087,6 @@ export function generatePreviewHTML(
     const prevSlide = i > 0 ? slides[i - 1] : null;
     const nextSlide = i < slides.length - 1 ? slides[i + 1] : null;
 
-    // Nav bar with stable arrows (both always rendered, dimmed when inactive)
     const prevHtml = prevSlide
       ? `<a href="${prevSlide.label}.html" style="color:#fff;text-decoration:none">\u2190 prev</a>`
       : `<span style="color:#666">\u2190 prev</span>`;
@@ -1099,20 +1095,13 @@ export function generatePreviewHTML(
       : `<span style="color:#666">next \u2192</span>`;
     const navBar = `<div style="background:#333;color:#fff;padding:4px 8px;font:14px monospace;display:flex;justify-content:center;align-items:center;gap:12px">${prevHtml}<strong>${slide.label}</strong>${nextHtml}</div>`;
 
-    // Content bounds in pixels
-    const cx = inToPx(slide.contentBounds.x);
-    const cy = inToPx(slide.contentBounds.y);
-    const cw = inToPx(slide.contentBounds.w);
-    const ch = inToPx(slide.contentBounds.h);
-
     return `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><style>${baseCSS} body { overflow: auto; background: #f0f0f0; }</style></head>
 <body>
 ${navBar}
 <div style="position:relative;width:${slideW}px;height:${slideH}px;box-shadow:0 0 0 1px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.08)">
-<div style="position:absolute;inset:0">${slide.masterFragment}</div>
-<div style="position:absolute;left:${cx}px;top:${cy}px;width:${cw}px;height:${ch}px">${slide.slideFragment}</div>
+${slide.fragment}
 </div>
 </body>
 </html>`;

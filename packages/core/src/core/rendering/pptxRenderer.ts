@@ -32,17 +32,9 @@ import { PptxConfigBuilder } from "./pptxConfigBuilder.js";
 
 /** Options for rendering a slide */
 export interface RenderSlideOptions {
-  masterName?: string;
-  masterContent?: PositionedNode; // Master's positioned content
+  layoutName?: string;
   background?: Background;
   notes?: string;
-}
-
-/** Options for defining a master slide */
-export interface MasterDefinition {
-  name: string;
-  background: Background;
-  content: PositionedNode; // Positioned master elements
 }
 
 /** Options for writing output */
@@ -69,7 +61,7 @@ type PptxGenJSExtended = InstanceType<typeof PptxGenJS> & {
 
 export class PptxRenderer {
   private pres: InstanceType<typeof PptxGenJS>;
-  private masters = new Map<string, { slideNumberOptions?: object }>();
+  private definedMasters = new Set<string>();
   private config = new PptxConfigBuilder();
 
   constructor(theme: Theme) {
@@ -79,16 +71,15 @@ export class PptxRenderer {
     this.pres.layout = PPTX_CUSTOM_LAYOUT;
   }
 
-  defineMaster(master: MasterDefinition): void {
-    const { name, background, content } = master;
+  /**
+   * Define a PPTX slide master with background and optional master-layer objects.
+   * Deduped by name — subsequent calls with the same name are no-ops.
+   */
+  defineMaster(name: string, background: Background, masterNodes: PositionedNode[]): void {
+    if (this.definedMasters.has(name)) return;
+    this.definedMasters.add(name);
 
-    // Collect master objects (excluding slideNumber which is handled separately)
-    const masterObjects: object[] = [];
-    let slideNumberOptions: object | undefined;
-
-    this.collectMasterObjects(content, masterObjects, (opts) => {
-      slideNumberOptions = opts;
-    });
+    const { objects, slideNumber } = this.collectMasterObjects(masterNodes);
 
     this.pres.defineSlideMaster({
       title: name,
@@ -97,17 +88,16 @@ export class PptxRenderer {
         ...(background.opacity != null && { transparency: 100 - background.opacity }),
         ...(background.path != null && { path: background.path }),
       },
-      objects: masterObjects,
+      ...(objects.length > 0 && { objects }),
+      ...(slideNumber && { slideNumber }),
     });
-
-    this.masters.set(name, { slideNumberOptions });
   }
 
   renderSlide(content: PositionedNode, options: RenderSlideOptions): void {
-    const { masterName, masterContent: _masterContent, background, notes } = options;
+    const { layoutName, background, notes } = options;
 
     // Create pptx slide (with master if specified)
-    const pptxSlide = this.pres.addSlide(masterName ? { masterName } : undefined);
+    const pptxSlide = this.pres.addSlide(layoutName ? { masterName: layoutName } : undefined);
 
     // Slide background overrides master background
     if (background) {
@@ -116,14 +106,6 @@ export class PptxRenderer {
         ...(background.opacity != null && { transparency: 100 - background.opacity }),
         ...(background.path != null && { path: background.path }),
       };
-    }
-
-    // Propagate master's slideNumber as default (PPTXGen.js doesn't do this itself)
-    if (masterName) {
-      const master = this.masters.get(masterName);
-      if (master?.slideNumberOptions) {
-        pptxSlide.slideNumber = master.slideNumberOptions;
-      }
     }
 
     // Render the positioned tree directly to the slide
@@ -307,54 +289,56 @@ export class PptxRenderer {
   // MASTER OBJECT COLLECTION
   // ============================================
 
-  private collectMasterObjects(
-    positioned: PositionedNode,
-    objects: object[],
-    onSlideNumber: (opts: object) => void,
-  ): void {
-    const { node, children } = positioned;
+  private collectMasterObjects(nodes: PositionedNode[]): {
+    objects: Record<string, unknown>[];
+    slideNumber?: Record<string, unknown>;
+  } {
+    const objects: Record<string, unknown>[] = [];
+    let slideNumber: Record<string, unknown> | undefined;
 
-    switch (node.type) {
-      case NODE_TYPE.TEXT: {
-        const textNode = node as TextNode;
-        const { fragments, options } = this.config.buildTextConfig(textNode, positioned);
-        // Pass fragments array — patched pptxgenjs handles Array.isArray in createSlideMaster.
-        // See patches/pptxgenjs+4.0.1.patch (root level for hoisted node_modules).
-        objects.push({ text: { text: fragments, options } });
-        break;
-      }
-      case NODE_TYPE.IMAGE: {
-        const imageNode = node as ImageNode;
-        objects.push({ image: this.config.buildImageConfig(imageNode, positioned) });
-        break;
-      }
-      case NODE_TYPE.SHAPE: {
-        const shapeNode = node as ShapeNode;
-        const config = this.config.buildShapeConfig(shapeNode, positioned);
-        objects.push({ [config.shapeType]: config.options });
-        break;
-      }
-      case NODE_TYPE.LINE: {
-        const lineNode = node as LineNode;
-        const { shapeType, options } = this.config.buildLineConfig(lineNode, positioned);
-        objects.push({ [shapeType]: options });
-        break;
-      }
-      case NODE_TYPE.SLIDE_NUMBER: {
-        const slideNumNode = node as SlideNumberNode;
-        onSlideNumber(this.config.buildSlideNumberOptions(slideNumNode, positioned));
-        break;
-      }
-      case NODE_TYPE.CONTAINER:
-      case NODE_TYPE.STACK:
-      case NODE_TYPE.GRID:
-        // Recurse into children
-        if (children) {
-          for (const child of children) {
-            this.collectMasterObjects(child, objects, onSlideNumber);
-          }
+    const collect = (positioned: PositionedNode): void => {
+      const { node, children } = positioned;
+      switch (node.type) {
+        case NODE_TYPE.TEXT: {
+          const { fragments, options } = this.config.buildTextConfig(node as TextNode, positioned);
+          objects.push({ text: { text: fragments, options } });
+          break;
         }
-        break;
+        case NODE_TYPE.IMAGE:
+          objects.push({ image: this.config.buildImageConfig(node as ImageNode, positioned) });
+          break;
+        case NODE_TYPE.SHAPE: {
+          const { options } = this.config.buildShapeConfig(node as ShapeNode, positioned);
+          objects.push({ rect: options });
+          break;
+        }
+        case NODE_TYPE.LINE: {
+          const { options } = this.config.buildLineConfig(node as LineNode, positioned);
+          objects.push({ line: options });
+          break;
+        }
+        case NODE_TYPE.SLIDE_NUMBER:
+          slideNumber = this.config.buildSlideNumberOptions(node as SlideNumberNode, positioned);
+          break;
+        case NODE_TYPE.CONTAINER:
+        case NODE_TYPE.STACK:
+        case NODE_TYPE.GRID:
+          if (children) {
+            for (const child of children) {
+              collect(child);
+            }
+          }
+          break;
+        default:
+          log.render._("  master-unsupported %s, skipped", node.type);
+          break;
+      }
+    };
+
+    for (const node of nodes) {
+      collect(node);
     }
+
+    return { objects, slideNumber };
   }
 }

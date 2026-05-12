@@ -126,10 +126,7 @@ export class LayoutPipeline {
     this.labels = labels;
   }
 
-  /**
-   * Get slide fragments as a label→html map.
-   * Includes both master and content slide fragments.
-   */
+  /** Get slide fragments as a label→html map. */
   getSlideFragments(): Map<string, string> {
     const map = new Map<string, string>();
     for (let i = 0; i < this.labels.length; i++) {
@@ -139,14 +136,11 @@ export class LayoutPipeline {
   }
 
   /**
-   * Write composite preview HTML files to outputDir.
-   * Each page layers a master fragment behind a slide fragment with nav bar.
+   * Write preview HTML files to outputDir.
    */
   writePreviewFiles(
     slides: Array<{
-      masterFragment: string;
-      slideFragment: string;
-      contentBounds: Bounds;
+      fragment: string;
       label: string;
     }>,
     theme: Theme,

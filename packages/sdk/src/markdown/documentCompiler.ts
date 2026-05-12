@@ -220,9 +220,9 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
   // 8. Render layout — returns content only (SlideNode)
   const content = layout.render(validated.params, validated.slots, layoutTokens);
 
-  // 9. Assemble Slide with master info from config
+  // 9. Assemble Slide — layoutName identifies the template (pipeline handles background dedup)
   const slide: Slide = {
-    masterName: layoutConfig.master.name,
+    layoutName,
     content,
   };
 

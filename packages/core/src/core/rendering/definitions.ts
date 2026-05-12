@@ -1,5 +1,5 @@
 // Definitions
-// Component, layout, and master definition types and factories.
+// Component and layout definition types and factories.
 // Pure data — no global singletons.
 
 import type { RootContent } from "mdast";
@@ -302,10 +302,3 @@ export function defineLayout<
   }
   return def as unknown as LayoutDefinition;
 }
-
-// ============================================
-// MASTER TYPES
-// ============================================
-
-// MasterDefinition is defined in types.ts (to avoid circular deps with TemplateConfig)
-export type { MasterDefinition } from "../model/types.js";

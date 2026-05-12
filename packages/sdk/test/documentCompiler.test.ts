@@ -8,16 +8,7 @@
 import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
 
-import {
-  Bounds,
-  component,
-  type MasterDefinition,
-  NODE_TYPE,
-  param,
-  type SlideNode,
-  schema,
-  type TemplateConfig,
-} from "@tycoslide/core";
+import { type Background, NODE_TYPE, param, type SlideNode, schema, type TemplateConfig } from "@tycoslide/core";
 import { buildSlideName, compileDocument } from "../src/markdown/documentCompiler.js";
 import { mockTheme } from "./mocks.js";
 import { testComponents } from "./test-components.js";
@@ -31,16 +22,11 @@ let receivedProps: any[] = [];
 /** Global FM header — required before any slide frontmatter */
 const HEADER = `---\ntheme: test\n---\n\n`;
 
-/** Mock master — plain data object */
-const mockMaster: MasterDefinition = {
-  name: "default",
-  content: component("test", {}),
-  contentBounds: new Bounds(0, 0, 13.333, 7.5),
-  background: { color: "#FFFFFF" },
-};
+/** Mock background — plain data object */
+const mockBackground: Background = { color: "#FFFFFF" };
 
 /** Default TemplateConfig for test layouts */
-const defaultConfig: TemplateConfig = { master: mockMaster, layoutTokens: {} };
+const defaultConfig: TemplateConfig = { background: mockBackground, layoutTokens: {} };
 
 function makeOptions() {
   return {
@@ -189,16 +175,10 @@ notes: These are speaker notes.
       assert.strictEqual(slides[0].slide.notes, "These are speaker notes.");
     });
 
-    it("populates masterName from TemplateConfig", () => {
-      const customMaster: MasterDefinition = {
-        name: "custom-master",
-        content: component("test", {}),
-        contentBounds: new Bounds(0, 0, 13.333, 7.5),
-        background: { color: "#FFFFFF" },
-      };
+    it("populates layoutName from TemplateConfig", () => {
       const theme = mockTheme({
         layouts: {
-          simple: { master: customMaster, layoutTokens: {} },
+          simple: { background: { color: "#FFFFFF" }, layoutTokens: {} },
           body: defaultConfig,
           slots: defaultConfig,
           strict: defaultConfig,
@@ -212,38 +192,7 @@ notes: These are speaker notes.
         components: testComponents,
       });
       const slides = (pres as any).deferredSlides as { slide: any }[];
-      assert.strictEqual(slides[0].slide.masterName, "custom-master");
-    });
-
-    it("deduplicates masters by object identity", () => {
-      // Two templates share the same master object — should produce one master, not two
-      const sharedMaster: MasterDefinition = {
-        name: "shared",
-        content: component("test", {}),
-        contentBounds: new Bounds(0, 0, 13.333, 7.5),
-        background: { color: "#FFFFFF" },
-      };
-      const theme = mockTheme({
-        layouts: {
-          simple: { master: sharedMaster, layoutTokens: {} },
-          body: { master: sharedMaster, layoutTokens: {} },
-          slots: { master: sharedMaster, layoutTokens: {} },
-          strict: { master: sharedMaster, layoutTokens: {} },
-          default: { master: sharedMaster, layoutTokens: {} },
-        },
-      });
-      const pres = compileDocument(
-        `${HEADER}---\ntemplate: simple\ntitle: A\n---\n\n---\ntemplate: simple\ntitle: B\n---`,
-        {
-          theme,
-          layouts: [simpleLayout, bodyLayout, slotLayout, strictLayout, defaultLayout],
-          components: testComponents,
-        },
-      );
-      // Access internal masterDefs map to verify dedup
-      const masterDefs = (pres as any).masterDefs as Map<string, unknown>;
-      assert.strictEqual(masterDefs.size, 1, "should have exactly 1 unique master");
-      assert.ok(masterDefs.has("shared"));
+      assert.strictEqual(slides[0].slide.layoutName, "simple");
     });
 
     it("throws when theme has no config for the layout", () => {

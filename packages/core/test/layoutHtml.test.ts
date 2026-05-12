@@ -1336,24 +1336,11 @@ describe("HTML Measurement Generation", () => {
     });
   });
 
-  describe("generatePreviewHTML composite nav bar", () => {
-    const contentBounds = new Bounds(0.5, 1.0, 9, 4);
-
+  describe("generatePreviewHTML nav bar", () => {
     test("single slide has dimmed prev/next arrows", () => {
-      const pages = generatePreviewHTML(
-        [
-          {
-            masterFragment: '<div class="root">master</div>',
-            slideFragment: '<div class="root">slide</div>',
-            contentBounds,
-            label: "slide-1",
-          },
-        ],
-        mockTheme,
-      );
+      const pages = generatePreviewHTML([{ fragment: '<div class="root">slide</div>', label: "slide-1" }], mockTheme);
       assert.strictEqual(pages.length, 1);
       assert.ok(pages[0].includes("<strong>slide-1</strong>"), "Nav bar should show slide label");
-      // Both arrows present but dimmed (span, not link)
       assert.ok(pages[0].includes("prev"), "Should have prev text");
       assert.ok(pages[0].includes("next"), "Should have next text");
       assert.ok(!pages[0].includes("href"), "Single slide should have no links");
@@ -1362,45 +1349,30 @@ describe("HTML Measurement Generation", () => {
 
     test("multi-slide generates stable prev/next navigation", () => {
       const slides = [
-        { masterFragment: "<div>m</div>", slideFragment: "<div>s1</div>", contentBounds, label: "slide-1" },
-        { masterFragment: "<div>m</div>", slideFragment: "<div>s2</div>", contentBounds, label: "slide-2" },
-        { masterFragment: "<div>m</div>", slideFragment: "<div>s3</div>", contentBounds, label: "slide-3" },
+        { fragment: "<div>s1</div>", label: "slide-1" },
+        { fragment: "<div>s2</div>", label: "slide-2" },
+        { fragment: "<div>s3</div>", label: "slide-3" },
       ];
       const pages = generatePreviewHTML(slides, mockTheme);
       assert.strictEqual(pages.length, 3);
 
-      // First slide: dimmed prev, active next
       assert.ok(pages[0].includes("prev"), "First slide should have prev text");
       assert.ok(pages[0].includes("slide-2.html"), "First slide next should link to slide-2.html");
 
-      // Middle slide: active prev and next
       assert.ok(pages[1].includes("slide-1.html"), "Middle slide prev should link to slide-1.html");
       assert.ok(pages[1].includes("slide-3.html"), "Middle slide next should link to slide-3.html");
 
-      // Last slide: active prev, dimmed next
       assert.ok(pages[2].includes("slide-2.html"), "Last slide prev should link to slide-2.html");
       assert.ok(pages[2].includes("next"), "Last slide should have next text");
     });
 
-    test("composite HTML has DOCTYPE and layers master behind slide", () => {
+    test("preview HTML has DOCTYPE and contains slide content", () => {
       const pages = generatePreviewHTML(
-        [
-          {
-            masterFragment: '<div class="root">MASTER_CONTENT</div>',
-            slideFragment: '<div class="root">SLIDE_CONTENT</div>',
-            contentBounds,
-            label: "slide-1",
-          },
-        ],
+        [{ fragment: '<div class="root">SLIDE_CONTENT</div>', label: "slide-1" }],
         mockTheme,
       );
       assert.ok(pages[0].startsWith("<!DOCTYPE html>"), "Should start with DOCTYPE");
-      assert.ok(pages[0].includes("MASTER_CONTENT"), "Should contain master fragment");
       assert.ok(pages[0].includes("SLIDE_CONTENT"), "Should contain slide fragment");
-      // Master should appear before slide in the HTML (behind in layering)
-      const masterPos = pages[0].indexOf("MASTER_CONTENT");
-      const slidePos = pages[0].indexOf("SLIDE_CONTENT");
-      assert.ok(masterPos < slidePos, "Master should appear before slide content");
     });
   });
 

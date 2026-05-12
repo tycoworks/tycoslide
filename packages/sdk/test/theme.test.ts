@@ -1,7 +1,7 @@
 import * as assert from "node:assert";
 import { createRequire } from "node:module";
 import { describe, it } from "node:test";
-import { Bounds, component, type FontFamily, type MasterDefinition, type TextStyle } from "@tycoslide/core";
+import type { Background, FontFamily, TextStyle } from "@tycoslide/core";
 import { defineTemplate } from "../src/template.js";
 import type { ThemeDefinition, ThemeFormat } from "../src/theme.js";
 import { defineTheme, resolveThemeFormat } from "../src/theme.js";
@@ -151,17 +151,12 @@ describe("resolveThemeFormat()", () => {
       params: {},
       render: () => ({ type: "component", componentName: "x", params: {}, content: undefined }),
     } as any;
-    const mockMaster: MasterDefinition = {
-      name: "test-master",
-      content: component("bg", {}),
-      contentBounds: new Bounds(0, 0, 13.333, 7.5),
-      background: { color: "#FFFFFF" },
-    };
+    const mockBackground: Background = { color: "#FFFFFF" };
     const template = defineTemplate({
       name: "hero",
       description: "Hero layout",
       layout,
-      master: mockMaster,
+      background: mockBackground,
       layoutTokens: { titleColor: "#FFF" },
     });
 
@@ -170,7 +165,7 @@ describe("resolveThemeFormat()", () => {
       formats: { presentation: { ...makeFormat(), templates: [template] } },
     };
     const theme = resolveThemeFormat(def, "presentation");
-    assert.strictEqual(theme.layouts.hero.master.name, "test-master");
+    assert.strictEqual(theme.layouts.hero.background.color, "#FFFFFF");
     assert.deepStrictEqual(theme.layouts.hero.layoutTokens, { titleColor: "#FFF" });
   });
 });
