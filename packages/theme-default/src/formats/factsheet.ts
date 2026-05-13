@@ -1,6 +1,5 @@
-import { SlideFormat } from "@tycoslide/sdk";
+import { SlideFormat, TEXT_STYLE } from "@tycoslide/sdk";
 import { assets } from "../assets.js";
-import { TEXT_STYLE } from "../base.js";
 import type { FormatConfig } from "./presentation.js";
 
 const unit = 0.025;

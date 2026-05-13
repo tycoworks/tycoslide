@@ -1,7 +1,6 @@
 import type { TextStyle } from "@tycoslide/core";
-import { SlideFormat } from "@tycoslide/sdk";
+import { SlideFormat, TEXT_STYLE } from "@tycoslide/sdk";
 import { assets } from "../assets.js";
-import { TEXT_STYLE } from "../base.js";
 
 export interface FormatConfig {
   slide: { width: number; height: number };
