@@ -21,27 +21,27 @@ export const factsheetConfig: FormatConfig = {
     },
     [TEXT_STYLE.H1]: {
       fontFamily: assets.fonts.inter,
-      fontSize: 24,
+      fontSize: 20,
       lineHeightMultiplier: 1.2,
-      bulletIndentPt: 24 * 1.5,
+      bulletIndentPt: 20 * 1.5,
     },
     [TEXT_STYLE.H2]: {
       fontFamily: assets.fonts.inter,
+      fontSize: 16,
+      lineHeightMultiplier: 1.3,
+      bulletIndentPt: 16 * 1.5,
+    },
+    [TEXT_STYLE.H3]: {
+      fontFamily: assets.fonts.interLight,
       fontSize: 14,
       lineHeightMultiplier: 1.3,
       bulletIndentPt: 14 * 1.5,
     },
-    [TEXT_STYLE.H3]: {
-      fontFamily: assets.fonts.interLight,
-      fontSize: 12,
-      lineHeightMultiplier: 1.3,
-      bulletIndentPt: 12 * 1.5,
-    },
     [TEXT_STYLE.H4]: {
       fontFamily: assets.fonts.interLight,
-      fontSize: 10,
+      fontSize: 11,
       lineHeightMultiplier: 1.3,
-      bulletIndentPt: 10 * 1.5,
+      bulletIndentPt: 11 * 1.5,
     },
     [TEXT_STYLE.BODY]: {
       fontFamily: assets.fonts.interLight,

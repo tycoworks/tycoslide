@@ -682,34 +682,17 @@ function buildFactsheetFormat(palette: Palette, config: FormatConfig): ThemeForm
     l: Layout<T, P, S>,
   ) => withMarginChrome(l, { margin });
 
-  // Factsheet header tokens: H1/24pt title (instead of shared H3/12pt)
-  const factsheetHeaderTokens = {
-    title: { ...t.labelH1, style: TEXT_STYLE.H1 },
-    eyebrow: t.labelEyebrow,
-    headerSpacing: spacingTight,
-  };
-
-  // Factsheet body slot tokens: refined quote styling
-  const factsheetBodySlotTokens = {
-    ...t.bodySlotTokens,
-    quote: {
-      ...t.quoteSlotTokens,
-      bar: { ...t.quoteSlotTokens.bar, width: 1 },
-      attribution: { ...t.labelMutedSmall, style: TEXT_STYLE.BODY, hAlign: HALIGN.RIGHT },
-    },
-  };
-
   const bodyBase = {
-    ...factsheetHeaderTokens,
+    ...t.headerTokens,
     text: t.bodyText,
     list: t.bodyList,
     hAlign: HALIGN.LEFT,
     spacing,
-    ...factsheetBodySlotTokens,
+    ...t.bodySlotTokens,
   };
 
   const cardsBase = {
-    ...factsheetHeaderTokens,
+    ...t.headerTokens,
     intro: t.bodyText,
     caption: t.mutedCaption,
     vAlign: VALIGN.MIDDLE,
