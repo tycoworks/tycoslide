@@ -7,7 +7,7 @@ import { generateFontFaceCSS } from "../src/core/layout/layoutHtml.js";
 import type { ContainerNode, ElementNode, TextNode } from "../src/core/model/nodes.js";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
 import type { Background, FontFamily } from "../src/core/model/types.js";
-import { DASH_TYPE, GRID_STYLE, HALIGN, SIZE, VALIGN } from "../src/core/model/types.js";
+import { DASH_TYPE, GRID_STYLE, HALIGN, SIZE, SPACING_MODE, VALIGN } from "../src/core/model/types.js";
 import { validateThemeFonts } from "../src/core/rendering/themeValidator.js";
 import { validateFontVariants } from "../src/utils/font.js";
 import { mockTextStyle, mockTheme } from "./mocks.js";
@@ -361,6 +361,8 @@ function wrapInContainer(...children: ElementNode[]): ContainerNode {
     width: 10,
     height: 5,
     spacing: 0.25,
+    spacingMode: SPACING_MODE.BETWEEN,
+    padding: 0,
     vAlign: "top",
     hAlign: "left",
   };

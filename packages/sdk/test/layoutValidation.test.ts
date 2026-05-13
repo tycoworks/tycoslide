@@ -3,7 +3,7 @@
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { type LayoutDefinition, NODE_TYPE, param, schema } from "@tycoslide/core";
+import { type LayoutConfig, NODE_TYPE, param, schema } from "@tycoslide/core";
 import { z } from "zod";
 import { validateLayout } from "../src/markdown/documentCompiler.js";
 import { testComponents } from "./test-components.js";
@@ -16,9 +16,8 @@ const testShape = {
   active: param.optional(schema.boolean()),
 };
 
-const testLayout: LayoutDefinition = {
+const testLayout: LayoutConfig = {
   name: "test",
-  description: "Test layout for validation",
   params: testShape,
   render: (params: any, _slots: any) => ({
     type: NODE_TYPE.COMPONENT,
@@ -136,9 +135,8 @@ describe("validateLayout with enum schema", () => {
   const enumShape = {
     style: schema.enum(["h1", "h2", "h3", "body"]),
   };
-  const enumLayout: LayoutDefinition = {
+  const enumLayout: LayoutConfig = {
     name: "enumTest",
-    description: "Test enum validation",
     params: enumShape,
     render: (params: any, _slots: any) => ({
       type: NODE_TYPE.COMPONENT,
@@ -166,9 +164,8 @@ describe("validateLayout with enum schema", () => {
 });
 
 describe("validateLayout (params and slots)", () => {
-  const layoutWithSlots: LayoutDefinition = {
+  const layoutWithSlots: LayoutConfig = {
     name: "slotTest",
-    description: "Test layout with params and slots",
     params: { title: schema.string() },
     slots: ["body"],
     render: (params: any, slots: any) => ({
@@ -179,9 +176,8 @@ describe("validateLayout (params and slots)", () => {
     }),
   };
 
-  const layoutNoSlots: LayoutDefinition = {
+  const layoutNoSlots: LayoutConfig = {
     name: "noSlotTest",
-    description: "Test layout with params only",
     params: { title: schema.string() },
     render: (params: any, _slots: any) => ({
       type: NODE_TYPE.COMPONENT,

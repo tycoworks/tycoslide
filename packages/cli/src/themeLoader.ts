@@ -4,14 +4,14 @@
 import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import type { ComponentDefinition, LayoutDefinition, Theme } from "@tycoslide/core";
+import type { ComponentDefinition, LayoutConfig, Theme } from "@tycoslide/core";
 import { resolveThemeFormat } from "@tycoslide/sdk";
 
 export interface LoadedTheme {
   theme: Theme;
   assets?: Record<string, unknown>;
   components: ComponentDefinition<any, any, any>[];
-  layouts: LayoutDefinition[];
+  layouts: LayoutConfig[];
 }
 
 /**
@@ -54,7 +54,7 @@ export async function loadTheme(name: string, format: string | undefined): Promi
   const components: ComponentDefinition<any, any, any>[] = mod.components;
 
   // Discover layouts from templates across all formats
-  const layouts: LayoutDefinition[] = [];
+  const layouts: LayoutConfig[] = [];
   const layoutsSeen = new Set<string>();
 
   for (const fmt of Object.values(mod.theme.formats) as any[]) {

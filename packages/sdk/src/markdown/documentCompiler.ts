@@ -10,7 +10,7 @@ import {
   type ComponentNode,
   createPresentation,
   isComponentNode,
-  type LayoutDefinition,
+  type LayoutConfig,
   type Presentation,
   RESERVED_FRONTMATTER_KEYS,
   type Slide,
@@ -54,7 +54,7 @@ export interface CompileOptions {
   /** Nested assets object for resolving `$dot.path` references in frontmatter. */
   assets?: Record<string, unknown>;
   /** Layout definitions (looked up by template name). */
-  layouts: LayoutDefinition[];
+  layouts: LayoutConfig[];
   /** Component definitions (for resolveTokens hooks). */
   components: ComponentDefinition<any, any, any>[];
 }
@@ -69,7 +69,7 @@ export interface CompileOptions {
  * Slots compiled from markdown strings into SlideNode[].
  */
 export function validateLayout(
-  layout: LayoutDefinition,
+  layout: LayoutConfig,
   rawParams: Record<string, unknown>,
   rawSlots: Record<string, unknown>,
   components: ComponentDefinition<any, any, any>[],

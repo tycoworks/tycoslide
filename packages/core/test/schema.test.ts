@@ -54,7 +54,6 @@ describe("schema", () => {
       // If this @ts-expect-error becomes "unused", the constraint was loosened.
       defineLayout({
         name: "test-bad-custom",
-        description: "should not compile",
         params: {
           // @ts-expect-error: z.custom() is not a ScalarParam
           content: z.custom<string[]>(),
@@ -67,7 +66,6 @@ describe("schema", () => {
       const dummy = { type: NODE_TYPE.COMPONENT, componentName: "x", params: {}, content: undefined } as const;
       defineLayout({
         name: "test-bad-any",
-        description: "should not compile",
         params: {
           // @ts-expect-error: z.any() is not a ScalarParam
           data: z.any(),

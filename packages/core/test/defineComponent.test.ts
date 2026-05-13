@@ -7,7 +7,7 @@ import { NODE_TYPE } from "../src/core/model/nodes.js";
 import { param, schema } from "../src/core/model/param.js";
 
 import type { TextStyle } from "../src/core/model/types.js";
-import { DIRECTION, HALIGN, SIZE, VALIGN } from "../src/core/model/types.js";
+import { DIRECTION, HALIGN, SIZE, SPACING_MODE, VALIGN } from "../src/core/model/types.js";
 import { defineComponent } from "../src/core/rendering/definitions.js";
 
 const stubStyle: TextStyle = {
@@ -151,6 +151,8 @@ describe("defineComponent", () => {
         width: SIZE.FILL,
         height: SIZE.HUG,
         spacing: 0,
+        spacingMode: SPACING_MODE.BETWEEN,
+        padding: 0,
         hAlign: HALIGN.LEFT,
         vAlign: VALIGN.TOP,
       }),

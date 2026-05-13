@@ -3,7 +3,7 @@
 import {
   type Background,
   defineLayout,
-  type LayoutDefinition,
+  type LayoutConfig,
   type ScalarShape,
   type SlideNode,
 } from "@tycoslide/core";
@@ -37,7 +37,8 @@ export interface Layout<
  * No master indirection — chrome is composed into the layout.
  */
 export interface Template {
-  layout: LayoutDefinition;
+  description: string;
+  layout: LayoutConfig;
   background: Background;
   layoutTokens: Record<string, unknown>;
 }
@@ -52,7 +53,7 @@ export interface Template {
  * A template is the unified authoring concept. Chrome is composed into the layout
  * via composition functions (chromed). Background is provided directly.
  *
- * Returns a Template carrying the LayoutDefinition, background, and layout tokens.
+ * Returns a Template carrying the core Layout, background, and layout tokens.
  * The layout is NOT auto-registered — the CLI extracts and registers layouts
  * from the resolved theme format.
  */
@@ -67,11 +68,11 @@ export function defineTemplate<
   background: Background;
   layoutTokens: Record<string, unknown>;
 }): Template {
-  const { layout: templateLayout, background, layoutTokens, ...rest } = def;
+  const { layout: templateLayout, background, layoutTokens, name, description } = def;
 
   // Build core layout — render delegates directly to the Layout blueprint.
   const coreLayout = defineLayout({
-    ...rest,
+    name,
     params: templateLayout.params,
     slots: templateLayout.slots,
     render: (params, slots, tokens: TTokens): SlideNode => {
@@ -79,5 +80,5 @@ export function defineTemplate<
     },
   });
 
-  return { layout: coreLayout, background, layoutTokens };
+  return { description, layout: coreLayout, background, layoutTokens };
 }

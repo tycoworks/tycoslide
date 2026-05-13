@@ -113,6 +113,10 @@ export { Component, type ComponentName } from "./presets/names.js";
 // Slide format presets (standard dimensions for common aspect ratios and paper sizes)
 export { SlideFormat } from "./presets/slideFormats.js";
 
+// ── Format & Brand ────────────────────────────────────────────────────────
+
+export { brandFonts, TEXT_STYLE, type Brand, type Format, type Hex, type Palette, type TextStyleKey } from "./format.js";
+
 // ── Theme ───────────────────────────────────────────────────────────────────
 
 export { DEFAULTS } from "./presets/defaults.js";

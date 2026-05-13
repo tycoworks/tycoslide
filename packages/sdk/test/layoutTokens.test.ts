@@ -8,7 +8,7 @@ import {
   type Background,
   defineLayout,
   isComponentNode,
-  type LayoutDefinition,
+  type LayoutConfig,
   NODE_TYPE,
   param,
   type SlideNode,
@@ -24,7 +24,7 @@ import { C, testComponents } from "./test-components.js";
 const mockBackground: Background = { color: "#FFFFFF" };
 
 /** All layouts collected for test options */
-const allLayouts: LayoutDefinition[] = [];
+const allLayouts: LayoutConfig[] = [];
 
 /** Build CompileOptions from a theme, using all registered test layouts */
 function opts(theme: Theme): CompileOptions {
@@ -43,7 +43,6 @@ describe("Document Compiler: Layout Tokens", () => {
   // Register a token-bearing layout for testing
   const tokenLayout = defineLayout({
     name: "tokenBody",
-    description: "Test layout with tokens and body slot",
     params: { title: param.optional(schema.string()) },
     slots: ["body"],
     render: (params: any, slots: any, tokens: any): SlideNode => {
@@ -55,7 +54,6 @@ describe("Document Compiler: Layout Tokens", () => {
 
   const tokenNoSlotLayout = defineLayout({
     name: "tokenSimple",
-    description: "Test layout with tokens but no slots",
     params: { title: schema.string() },
     render: (params: any, _slots: any, tokens: any): SlideNode => {
       receivedProps.push(params);
@@ -107,7 +105,6 @@ describe("Document Compiler: Layout Tokens", () => {
 
     const noTokenLayout = defineLayout({
       name: "noTokenTest",
-      description: "no tokens layout",
       params: { title: schema.string() },
       render: (params: any, _slots: any, tokens?: object): SlideNode => {
         capturedTokens = tokens;
@@ -141,7 +138,6 @@ describe("Slot Token Injection", () => {
 
   const slotTokenLayout = defineLayout({
     name: "slotTokenTest",
-    description: "Layout with slot token injection",
     params: { title: param.optional(schema.string()) },
     slots: ["body"],
     render: (params: any, slots: any, tokens: any): SlideNode => {
@@ -232,7 +228,6 @@ describe("Slot Token Injection", () => {
     let capturedProps: any;
     const noSlotTokenLayout = defineLayout({
       name: "noSlotTokenTest",
-      description: "Tokens but no slots",
       params: { title: schema.string() },
       render: (params: any, _slots: any, _tokens: any): SlideNode => {
         capturedProps = params;
@@ -271,7 +266,6 @@ describe("RESERVED_FRONTMATTER_KEYS rejects reserved param names", () => {
       () =>
         defineLayout({
           name: "badLayout",
-          description: "test",
           params: { template: schema.string() },
           render: () => ({
             type: NODE_TYPE.COMPONENT,

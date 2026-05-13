@@ -266,11 +266,10 @@ type SlotsToProps<T extends readonly string[]> = { [K in T[number]]: SlideNode[]
  * A named, described, typed slide factory.
  * `params` holds scalar fields (from YAML frontmatter).
  * `slots` lists slot names (from ::name:: body markers), optional.
- * Use `defineLayout()` to create layout definitions.
+ * Use `defineLayout()` to create layouts.
  */
-export interface LayoutDefinition {
+export interface LayoutConfig {
   name: string;
-  description: string;
   params: SchemaShape;
   slots?: readonly string[];
   render: (params: any, slots: any, tokens: unknown) => SlideNode;
@@ -288,11 +287,10 @@ export function defineLayout<
   const TSlots extends readonly string[] = readonly [],
 >(def: {
   name: string;
-  description: string;
   params: TParams;
   slots?: TSlots;
   render: (params: z.infer<z.ZodObject<TParams>>, slots: SlotsToProps<TSlots>, tokens: TTokens) => SlideNode;
-}): LayoutDefinition {
+}): LayoutConfig {
   for (const key of Object.keys(def.params)) {
     if (RESERVED_FRONTMATTER_KEYS.has(key as any)) {
       throw new Error(
@@ -300,5 +298,5 @@ export function defineLayout<
       );
     }
   }
-  return def as unknown as LayoutDefinition;
+  return def as unknown as LayoutConfig;
 }

@@ -83,7 +83,7 @@ export {
   type ComponentNode,
   defineComponent,
   defineLayout,
-  type LayoutDefinition,
+  type LayoutConfig,
   type MdastHandler,
   type RenderContext,
   type ScalarComponentDefinition,

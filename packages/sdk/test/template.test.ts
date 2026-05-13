@@ -1,14 +1,14 @@
 import * as assert from "node:assert";
 import { describe, it } from "node:test";
-import type { Background, LayoutDefinition } from "@tycoslide/core";
+import type { Background, LayoutConfig } from "@tycoslide/core";
 import { defineTemplate } from "../src/template.js";
 
-const testLayouts = new Map<string, LayoutDefinition>();
+const testLayouts = new Map<string, LayoutConfig>();
 
 // ── defineTemplate() ─────────────────────────────────────────────────────────
 
 describe("defineTemplate()", () => {
-  it("returns a Template with layout, background, and layoutTokens", () => {
+  it("returns a Template with description, layout, background, and layoutTokens", () => {
     const templateName = "test-tmpl-layout-1";
 
     const mockBackground: Background = { color: "#FFF" };
@@ -25,6 +25,7 @@ describe("defineTemplate()", () => {
       layoutTokens: { title: "hello" },
     });
 
+    assert.strictEqual(template.description, "Test template");
     assert.strictEqual(template.layout.name, templateName);
     assert.deepStrictEqual(template.background, { color: "#FFF" });
     assert.deepStrictEqual(template.layoutTokens, { title: "hello" });
