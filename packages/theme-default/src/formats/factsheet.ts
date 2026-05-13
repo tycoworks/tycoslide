@@ -14,7 +14,7 @@ export const factsheetConfig: FormatConfig = {
   margin: 0.5,
   footerHeight: unit * 6,
   textStyles: {
-    [TEXT_STYLE.TITLE]: {
+    [TEXT_STYLE.QUOTE]: {
       fontFamily: assets.fonts.inter,
       fontSize: 28,
       lineHeightMultiplier: 1.2,
@@ -50,16 +50,10 @@ export const factsheetConfig: FormatConfig = {
       lineHeightMultiplier: 1.4,
       bulletIndentPt: 10 * 1.5,
     },
-    [TEXT_STYLE.SMALL]: {
+    [TEXT_STYLE.CAPTION]: {
       fontFamily: assets.fonts.interLight,
       fontSize: 8,
       lineHeightMultiplier: 1.3,
-      bulletIndentPt: 8 * 1.5,
-    },
-    [TEXT_STYLE.EYEBROW]: {
-      fontFamily: assets.fonts.inter,
-      fontSize: 8,
-      lineHeightMultiplier: 1.0,
       bulletIndentPt: 8 * 1.5,
     },
     [TEXT_STYLE.FOOTER]: {

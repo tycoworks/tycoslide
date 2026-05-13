@@ -25,7 +25,7 @@ export const presentationConfig: FormatConfig = {
   margin: 0.5,
   footerHeight: unit * 8,
   textStyles: {
-    [TEXT_STYLE.TITLE]: {
+    [TEXT_STYLE.QUOTE]: {
       fontFamily: assets.fonts.inter,
       fontSize: 56,
       lineHeightMultiplier: 1.2,
@@ -61,17 +61,11 @@ export const presentationConfig: FormatConfig = {
       lineHeightMultiplier: 1.2,
       bulletIndentPt: 14 * 1.5,
     },
-    [TEXT_STYLE.SMALL]: {
+    [TEXT_STYLE.CAPTION]: {
       fontFamily: assets.fonts.interLight,
       fontSize: 12,
       lineHeightMultiplier: 1.2,
       bulletIndentPt: 12 * 1.5,
-    },
-    [TEXT_STYLE.EYEBROW]: {
-      fontFamily: assets.fonts.inter,
-      fontSize: 11,
-      lineHeightMultiplier: 1.0,
-      bulletIndentPt: 11 * 1.5,
     },
     [TEXT_STYLE.FOOTER]: {
       fontFamily: assets.fonts.interLight,

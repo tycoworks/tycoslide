@@ -1,19 +1,8 @@
 import { DASH_TYPE, HALIGN, SHADOW_TYPE, VALIGN } from "@tycoslide/core";
 import type { ImageTokens } from "@tycoslide/sdk";
-import { HIGHLIGHT_THEME } from "@tycoslide/sdk";
+import { HIGHLIGHT_THEME, TEXT_STYLE } from "@tycoslide/sdk";
 
-export const TEXT_STYLE = {
-  TITLE: "title",
-  H1: "h1",
-  H2: "h2",
-  H3: "h3",
-  H4: "h4",
-  BODY: "body",
-  SMALL: "small",
-  EYEBROW: "eyebrow",
-  FOOTER: "footer",
-  CODE: "code",
-} as const;
+export { TEXT_STYLE };
 
 export const palette = {
   white: "#FFFFFF",

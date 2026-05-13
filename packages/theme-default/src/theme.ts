@@ -87,14 +87,14 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
   const cardTitle: TextTokens = { ...richTextBase, style: TEXT_STYLE.H4, color: palette.brand };
   const cardDescription: TextTokens = {
     ...richTextBase,
-    style: TEXT_STYLE.SMALL,
+    style: TEXT_STYLE.CAPTION,
     color: palette.textSecondary,
   };
   const quoteText: TextTokens = { ...richTextBase, style: TEXT_STYLE.H2, color: palette.textPrimary };
   const mutedCaption: TextTokens = {
     ...richTextBase,
     ...alignCenter,
-    style: TEXT_STYLE.SMALL,
+    style: TEXT_STYLE.CAPTION,
     color: palette.textSecondary,
   };
 
@@ -109,8 +109,8 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
   const labelH4: LabelTokens = { ...labelBase, style: TEXT_STYLE.H4 };
 
   // --- Functional labels ---
-  const labelEyebrow: LabelTokens = { style: TEXT_STYLE.EYEBROW, color: palette.brand };
-  const labelMutedSmall: LabelTokens = { style: TEXT_STYLE.SMALL, color: palette.textSecondary };
+  const labelEyebrow: LabelTokens = { style: TEXT_STYLE.CAPTION, color: palette.brand };
+  const labelMutedSmall: LabelTokens = { style: TEXT_STYLE.CAPTION, color: palette.textSecondary };
   const labelFooter: LabelTokens = { style: TEXT_STYLE.FOOTER, color: palette.textSecondary };
 
   // --- Accent labels ---
@@ -135,7 +135,7 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
   };
 
   const tableHeaderBase = {
-    textStyle: TEXT_STYLE.EYEBROW,
+    textStyle: TEXT_STYLE.CAPTION,
     textColor: palette.textMuted,
     backgroundOpacity: 0,
   };
@@ -143,7 +143,7 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
   const tableTokens = {
     headerRow: { ...tableHeaderBase, background: palette.border, hAlign: HALIGN.CENTER },
     headerCol: { ...tableHeaderBase, background: palette.white, hAlign: HALIGN.LEFT },
-    cellTextStyle: TEXT_STYLE.EYEBROW,
+    cellTextStyle: TEXT_STYLE.CAPTION,
     cellTextColor: palette.textPrimary,
     cellBackground: palette.surface,
     cellBackgroundOpacity: 0,
@@ -357,7 +357,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         layout: lightMargin(title),
         background: bg.surface,
         layoutTokens: {
-          title: { ...t.heroTitle, color: palette.textPrimary, style: TEXT_STYLE.TITLE },
+          title: { ...t.heroTitle, color: palette.textPrimary, style: TEXT_STYLE.QUOTE },
           subtitle: { ...t.heroSubtitle, color: palette.textSecondary, style: TEXT_STYLE.H3 },
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
@@ -371,7 +371,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         layout: darkMargin(end),
         background: bg.dark,
         layoutTokens: {
-          title: { ...t.heroTitle, style: TEXT_STYLE.TITLE },
+          title: { ...t.heroTitle, style: TEXT_STYLE.QUOTE },
           subtitle: t.heroSubtitle,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
@@ -638,7 +638,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
     topBarLabelTokens: {
       hAlign: HALIGN.RIGHT,
       vAlign: VALIGN.MIDDLE,
-      style: TEXT_STYLE.EYEBROW,
+      style: TEXT_STYLE.CAPTION,
       color: palette.white,
     },
     footerHeight,
@@ -704,7 +704,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
         layout: lightMargin(title),
         background: bg.surface,
         layoutTokens: {
-          title: { ...t.heroTitle, color: palette.textPrimary, style: TEXT_STYLE.TITLE },
+          title: { ...t.heroTitle, color: palette.textPrimary, style: TEXT_STYLE.QUOTE },
           subtitle: { ...t.heroSubtitle, color: palette.textSecondary, style: TEXT_STYLE.H3 },
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
@@ -718,7 +718,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
         layout: darkMargin(end),
         background: bg.dark,
         layoutTokens: {
-          title: { ...t.heroTitle, style: TEXT_STYLE.TITLE },
+          title: { ...t.heroTitle, style: TEXT_STYLE.QUOTE },
           subtitle: t.heroSubtitle,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
