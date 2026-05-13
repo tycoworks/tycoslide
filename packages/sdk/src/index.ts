@@ -115,7 +115,15 @@ export { SlideFormat } from "./presets/slideFormats.js";
 
 // ── Format & Brand ────────────────────────────────────────────────────────
 
-export { brandFonts, TEXT_STYLE, type Brand, type Format, type Hex, type Palette, type TextStyleKey } from "./format.js";
+export {
+  type Brand,
+  brandFonts,
+  type Format,
+  type Hex,
+  type Palette,
+  TEXT_STYLE,
+  type TextStyleKey,
+} from "./format.js";
 
 // ── Theme ───────────────────────────────────────────────────────────────────
 

@@ -22,7 +22,17 @@ import type {
 } from "../src/core/model/nodes.js";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
 import type { Direction, NormalizedRun } from "../src/core/model/types.js";
-import { DASH_TYPE, DIRECTION, GRID_STYLE, HALIGN, SHADOW_TYPE, SHAPE, SIZE, SPACING_MODE, VALIGN } from "../src/core/model/types.js";
+import {
+  DASH_TYPE,
+  DIRECTION,
+  GRID_STYLE,
+  HALIGN,
+  SHADOW_TYPE,
+  SHAPE,
+  SIZE,
+  SPACING_MODE,
+  VALIGN,
+} from "../src/core/model/types.js";
 import { mockTheme as createMockTheme } from "./mocks.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

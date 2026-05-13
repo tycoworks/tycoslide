@@ -2,13 +2,7 @@
 // Brand is the typed input contract for visual identity — shared across all formats.
 // Format is the per-format spatial configuration — all spatial values in inches, strokes in pt.
 
-import type {
-  FontFamily,
-  HorizontalAlignment,
-  ShadowType,
-  TextStyle,
-  VerticalAlignment,
-} from "@tycoslide/core";
+import type { FontFamily, HorizontalAlignment, ShadowType, TextStyle, VerticalAlignment } from "@tycoslide/core";
 import type { HighlightThemeName } from "./presets/highlighting.js";
 
 // ── Scalars ──────────────────────────────────────────────────────────────────

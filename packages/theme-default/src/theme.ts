@@ -1,9 +1,8 @@
-import { DASH_TYPE, GRID_STYLE, HALIGN, VALIGN } from "@tycoslide/core";
-import type { LabelTokens, Layout, ListTokens, TextTokens, ThemeFormat } from "@tycoslide/sdk";
-import { defineTemplate, defineTheme } from "@tycoslide/sdk";
+import { DASH_TYPE, GRID_STYLE, HALIGN, SHADOW_TYPE, VALIGN } from "@tycoslide/core";
+import type { LabelTokens, Layout, ListTokens, Palette, TextTokens, ThemeFormat } from "@tycoslide/sdk";
+import { brandFonts, defineTemplate, defineTheme, TEXT_STYLE } from "@tycoslide/sdk";
 import { assets } from "./assets.js";
-import type * as Base from "./base.js";
-import * as base from "./base.js";
+import { brand } from "./brand.js";
 import {
   type FactsheetChromeTokens,
   type FooterChromeTokens,
@@ -57,71 +56,97 @@ export const TEMPLATE = {
 } as const;
 
 // ============================================
+// SPATIAL CONSTANTS (not palette-dependent)
+// ============================================
+
+const BORDER_WIDTH = 0.75;
+const CORNER_RADIUS = 0.08;
+const CORNER_RADIUS_LARGE = 0.12;
+const ACCENT_BAR_WIDTH = 2;
+const IMAGE_BASE = {};
+const ALIGN_CENTER = { hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } as const;
+
+/** Theme-specific accent not in the standard Palette. */
+const TEAL = "#0D9488";
+
+// ============================================
+// PALETTE → DERIVED VALUES
+// ============================================
+
+/** Derive visual token primitives from a Palette. */
+function derivePaletteValues(palette: Palette) {
+  const accents: Record<string, string> = {
+    accent: palette.accent,
+    soft: palette.accentSoft,
+    dark: palette.heading,
+  };
+  const subtleBorder = { color: palette.divider, width: BORDER_WIDTH, dashType: DASH_TYPE.SOLID };
+  const shadow = {
+    type: SHADOW_TYPE.OUTER,
+    color: palette.shadow,
+    opacity: 12,
+    blur: 6,
+    offset: 2,
+    angle: 180,
+  };
+  const cardBackground = { fill: palette.background, border: subtleBorder, cornerRadius: CORNER_RADIUS };
+  const richTextBase = { linkColor: palette.accent, accents };
+  const heroBase = { ...richTextBase, linkUnderline: false, hAlign: HALIGN.CENTER } as const;
+  const labelBase = { color: palette.heading };
+
+  return { accents, subtleBorder, shadow, cardBackground, richTextBase, heroBase, labelBase };
+}
+
+// ============================================
 // SHARED TOKEN BUILDERS
 // ============================================
 
 /** Build text, label, and component tokens shared by all formats. */
-function buildSharedTokens(base: typeof Base, config: FormatConfig) {
+function buildSharedTokens(palette: Palette, config: FormatConfig) {
   const { unit, spacing, spacingTight, padding } = config;
-  const {
-    palette,
-    accents,
-    TEXT_STYLE,
-    alignCenter,
-    richTextBase,
-    heroBase,
-    labelBase,
-    subtleBorder,
-    shadow,
-    cornerRadius,
-    cornerRadiusLarge,
-    accentBarWidth,
-    cardBackground,
-    imageBase,
-    highlightTheme,
-  } = base;
+  const d = derivePaletteValues(palette);
 
   // --- Text tokens ---
-  const bodyText: TextTokens = { ...richTextBase, style: TEXT_STYLE.BODY, color: palette.textPrimary };
+  const bodyText: TextTokens = { ...d.richTextBase, style: TEXT_STYLE.BODY, color: palette.body };
   const bodyList: ListTokens = { ...bodyText, vAlign: VALIGN.TOP };
-  const cardTitle: TextTokens = { ...richTextBase, style: TEXT_STYLE.H4, color: palette.brand };
+  const cardTitle: TextTokens = { ...d.richTextBase, style: TEXT_STYLE.H4, color: palette.accent };
   const cardDescription: TextTokens = {
-    ...richTextBase,
+    ...d.richTextBase,
     style: TEXT_STYLE.CAPTION,
-    color: palette.textSecondary,
+    color: palette.secondary,
   };
-  const quoteText: TextTokens = { ...richTextBase, style: TEXT_STYLE.H2, color: palette.textPrimary };
+  const quoteText: TextTokens = { ...d.richTextBase, style: TEXT_STYLE.H2, color: palette.heading };
   const mutedCaption: TextTokens = {
-    ...richTextBase,
-    ...alignCenter,
+    ...d.richTextBase,
+    ...ALIGN_CENTER,
     style: TEXT_STYLE.CAPTION,
-    color: palette.textSecondary,
+    color: palette.secondary,
   };
 
   // --- Hero text ---
-  const heroTitle: TextTokens = { ...heroBase, style: TEXT_STYLE.H1, color: palette.white };
-  const heroSubtitle: TextTokens = { ...heroBase, style: TEXT_STYLE.H3, color: palette.white };
+  const heroTitle: TextTokens = { ...d.heroBase, style: TEXT_STYLE.H1, color: palette.background };
+  const heroSubtitle: TextTokens = { ...d.heroBase, style: TEXT_STYLE.H3, color: palette.background };
 
   // --- Heading labels ---
-  const labelH1: LabelTokens = { ...labelBase, style: TEXT_STYLE.H1 };
-  const labelH2: LabelTokens = { ...labelBase, style: TEXT_STYLE.H2 };
-  const labelH3: LabelTokens = { ...labelBase, style: TEXT_STYLE.H3 };
-  const labelH4: LabelTokens = { ...labelBase, style: TEXT_STYLE.H4 };
+  const labelH1: LabelTokens = { ...d.labelBase, style: TEXT_STYLE.H1 };
+  const labelH2: LabelTokens = { ...d.labelBase, style: TEXT_STYLE.H2 };
+  const labelH3: LabelTokens = { ...d.labelBase, style: TEXT_STYLE.H3 };
+  const labelH4: LabelTokens = { ...d.labelBase, style: TEXT_STYLE.H4 };
 
   // --- Functional labels ---
-  const labelEyebrow: LabelTokens = { style: TEXT_STYLE.CAPTION, color: palette.brand };
-  const labelMutedSmall: LabelTokens = { style: TEXT_STYLE.CAPTION, color: palette.textSecondary };
-  const labelFooter: LabelTokens = { style: TEXT_STYLE.FOOTER, color: palette.textSecondary };
+  const labelEyebrow: LabelTokens = { style: TEXT_STYLE.CAPTION, color: palette.accent };
+  const labelMutedSmall: LabelTokens = { style: TEXT_STYLE.CAPTION, color: palette.secondary };
+  const labelFooter: LabelTokens = { style: TEXT_STYLE.FOOTER, color: palette.secondary };
 
   // --- Accent labels ---
-  const labelSectionHeading: LabelTokens = { hAlign: HALIGN.CENTER, style: TEXT_STYLE.H2, color: palette.white };
-  const labelStatValue: LabelTokens = { hAlign: HALIGN.CENTER, style: TEXT_STYLE.H1, color: palette.brand };
-  const labelStatLabel: LabelTokens = { hAlign: HALIGN.CENTER, style: TEXT_STYLE.H3, color: palette.textSecondary };
+  const labelSectionHeading: LabelTokens = { hAlign: HALIGN.CENTER, style: TEXT_STYLE.H2, color: palette.background };
+  const labelStatValue: LabelTokens = { hAlign: HALIGN.CENTER, style: TEXT_STYLE.H1, color: palette.accent };
+  const labelStatLabel: LabelTokens = { hAlign: HALIGN.CENTER, style: TEXT_STYLE.H3, color: palette.secondary };
 
   // --- Component tokens ---
   const cardBase = {
     padding,
-    image: { padding: 0.125 } as typeof imageBase,
+    image: { padding: 0.125 } as typeof IMAGE_BASE,
     spacing: spacingTight,
     hAlign: HALIGN.LEFT,
     title: cardTitle,
@@ -131,55 +156,55 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
   const cardSlotTokens = {
     ...cardBase,
     vAlign: VALIGN.MIDDLE,
-    background: { ...cardBackground, shadow },
+    background: { ...d.cardBackground, shadow: d.shadow },
   };
 
   const tableHeaderBase = {
     textStyle: TEXT_STYLE.CAPTION,
-    textColor: palette.textMuted,
+    textColor: palette.muted,
     backgroundOpacity: 0,
   };
 
   const tableTokens = {
-    headerRow: { ...tableHeaderBase, background: palette.border, hAlign: HALIGN.CENTER },
-    headerCol: { ...tableHeaderBase, background: palette.white, hAlign: HALIGN.LEFT },
+    headerRow: { ...tableHeaderBase, background: palette.divider, hAlign: HALIGN.CENTER },
+    headerCol: { ...tableHeaderBase, background: palette.background, hAlign: HALIGN.LEFT },
     cellTextStyle: TEXT_STYLE.CAPTION,
-    cellTextColor: palette.textPrimary,
+    cellTextColor: palette.body,
     cellBackground: palette.surface,
     cellBackgroundOpacity: 0,
     hAlign: HALIGN.CENTER,
     vAlign: VALIGN.MIDDLE,
     gridStyle: GRID_STYLE.HORIZONTAL,
-    gridStroke: subtleBorder,
+    gridStroke: d.subtleBorder,
     cellPadding: unit * 4,
-    linkColor: palette.brand,
+    linkColor: palette.accent,
     linkUnderline: true,
-    accents: accents,
+    accents: d.accents,
     background: {
-      fill: palette.white,
-      border: subtleBorder,
-      cornerRadius: cornerRadiusLarge,
-      shadow,
+      fill: palette.background,
+      border: d.subtleBorder,
+      cornerRadius: CORNER_RADIUS_LARGE,
+      shadow: d.shadow,
     },
     backgroundPadding: unit * 4,
   };
 
   const codeTokens = {
     textStyle: TEXT_STYLE.CODE,
-    theme: highlightTheme,
+    theme: palette.highlightTheme,
     padding: padding,
     background: {
-      fill: palette.textPrimary,
-      cornerRadius,
-      shadow,
+      fill: palette.heading,
+      cornerRadius: CORNER_RADIUS,
+      shadow: d.shadow,
     },
-    image: imageBase,
+    image: IMAGE_BASE,
   };
 
   const quoteSlotTokens = {
     bar: {
-      color: palette.brand,
-      width: accentBarWidth,
+      color: palette.accent,
+      width: ACCENT_BAR_WIDTH,
       dashType: DASH_TYPE.SOLID,
     },
     spacing: spacing,
@@ -190,8 +215,8 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
   const testimonialSlotTokens = {
     background: {
       fill: palette.surface,
-      border: subtleBorder,
-      cornerRadius,
+      border: d.subtleBorder,
+      cornerRadius: CORNER_RADIUS,
     },
     padding: padding,
     spacing: spacingTight,
@@ -199,23 +224,23 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
     vAlign: VALIGN.MIDDLE,
     quote: quoteText,
     attribution: labelMutedSmall,
-    image: imageBase,
+    image: IMAGE_BASE,
   };
 
   const mermaidTokens = {
-    primary: palette.white,
-    primaryContrast: palette.textPrimary,
-    text: palette.textPrimary,
-    line: palette.brand,
+    primary: palette.background,
+    primaryContrast: palette.heading,
+    text: palette.heading,
+    line: palette.accent,
     surface: palette.surface,
-    surfaceBorder: palette.border,
+    surfaceBorder: palette.divider,
     surfaceSubtle: palette.surface,
     group: palette.surface,
-    groupCornerRadius: cornerRadius,
-    accents: accents,
-    accentStyle: { opacity: 15, textColor: palette.brand },
+    groupCornerRadius: CORNER_RADIUS,
+    accents: d.accents,
+    accentStyle: { opacity: 15, textColor: palette.accent },
     textStyle: TEXT_STYLE.BODY,
-    image: imageBase,
+    image: IMAGE_BASE,
   };
 
   const bodySlotTokens = {
@@ -225,8 +250,8 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
     quote: quoteSlotTokens,
     testimonial: testimonialSlotTokens,
     card: cardSlotTokens,
-    image: imageBase,
-    label: { 1: labelH1, 2: { ...labelH2, color: palette.brand }, 3: labelH3, 4: labelH4, 5: labelH4, 6: labelH4 },
+    image: IMAGE_BASE,
+    label: { 1: labelH1, 2: { ...labelH2, color: palette.accent }, 3: labelH3, 4: labelH4, 5: labelH4, 6: labelH4 },
   };
 
   // --- Header tokens (shared by layouts with title + eyebrow) ---
@@ -272,10 +297,9 @@ function buildSharedTokens(base: typeof Base, config: FormatConfig) {
 // ============================================
 
 /** Build chrome token sets for a format. */
-function buildChromeTokens(base: typeof Base, config: FormatConfig) {
+function buildChromeTokens(palette: Palette, config: FormatConfig) {
   const { margin, footerHeight, spacingTight } = config;
-  const { palette, imageBase } = base;
-  const labelFooter: LabelTokens = { style: base.TEXT_STYLE.FOOTER, color: palette.textSecondary };
+  const labelFooter: LabelTokens = { style: TEXT_STYLE.FOOTER, color: palette.secondary };
 
   const footer: FooterChromeTokens = {
     margin,
@@ -285,7 +309,7 @@ function buildChromeTokens(base: typeof Base, config: FormatConfig) {
     footerSpacing: spacingTight,
     slideNumber: { ...labelFooter, hAlign: HALIGN.RIGHT, vAlign: VALIGN.MIDDLE },
     footer: labelFooter,
-    footerImage: imageBase,
+    footerImage: IMAGE_BASE,
   };
 
   const lightMargin: MarginChromeTokens = { margin };
@@ -298,11 +322,11 @@ function buildChromeTokens(base: typeof Base, config: FormatConfig) {
 // BACKGROUNDS
 // ============================================
 
-function buildBackgrounds(base: typeof Base) {
+function buildBackgrounds(palette: Palette) {
   return {
-    surface: { color: base.palette.surface },
-    dark: { color: base.palette.textPrimary },
-    white: { color: base.palette.white },
+    surface: { color: palette.surface },
+    dark: { color: palette.heading },
+    white: { color: palette.background },
   };
 }
 
@@ -310,13 +334,13 @@ function buildBackgrounds(base: typeof Base) {
 // PRESENTATION FORMAT
 // ============================================
 
-function buildPresentationFormat(base: typeof Base, config: FormatConfig): ThemeFormat {
+function buildPresentationFormat(palette: Palette, config: FormatConfig): ThemeFormat {
   const { spacing, spacingTight, padding, unit } = config;
-  const { palette, TEXT_STYLE, subtleBorder, shadow, cardBackground, imageBase } = base;
+  const d = derivePaletteValues(palette);
 
-  const t = buildSharedTokens(base, config);
-  const c = buildChromeTokens(base, config);
-  const bg = buildBackgrounds(base);
+  const t = buildSharedTokens(palette, config);
+  const c = buildChromeTokens(palette, config);
+  const bg = buildBackgrounds(palette);
 
   // Chrome wrapper helpers — bind chrome tokens for this format
   const footer = <T extends object, P extends Record<string, any>, S extends readonly string[]>(l: Layout<T, P, S>) =>
@@ -357,12 +381,12 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         layout: lightMargin(title),
         background: bg.surface,
         layoutTokens: {
-          title: { ...t.heroTitle, color: palette.textPrimary, style: TEXT_STYLE.QUOTE },
-          subtitle: { ...t.heroSubtitle, color: palette.textSecondary, style: TEXT_STYLE.H3 },
+          title: { ...t.heroTitle, color: palette.heading, style: TEXT_STYLE.QUOTE },
+          subtitle: { ...t.heroSubtitle, color: palette.secondary, style: TEXT_STYLE.H3 },
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
           spacing: spacingTight,
-          image: imageBase,
+          image: IMAGE_BASE,
         },
       }),
       defineTemplate({
@@ -376,7 +400,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
           spacing: spacingTight,
-          image: imageBase,
+          image: IMAGE_BASE,
         },
       }),
       defineTemplate({
@@ -413,7 +437,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
           value: t.labelStatValue,
           label: t.labelStatLabel,
           caption: t.mutedCaption,
-          background: { ...cardBackground, cornerRadius: base.cornerRadiusLarge },
+          background: { ...d.cardBackground, cornerRadius: CORNER_RADIUS_LARGE },
           backgroundWidth: 6,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
@@ -449,13 +473,13 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         layoutTokens: {
           ...t.headerTokens,
           vAlign: VALIGN.MIDDLE,
-          items: { ...t.bodyText, style: TEXT_STYLE.H4, color: palette.textPrimary },
-          divider: subtleBorder,
-          itemNumber: { style: TEXT_STYLE.H2, color: palette.brandLight },
+          items: { ...t.bodyText, style: TEXT_STYLE.H4, color: palette.heading },
+          divider: d.subtleBorder,
+          itemNumber: { style: TEXT_STYLE.H2, color: palette.accentSoft },
           itemVAlign: VALIGN.MIDDLE,
           itemSpacing: spacing,
           spacing: spacingTight,
-          image: imageBase,
+          image: IMAGE_BASE,
         },
       }),
       defineTemplate({
@@ -465,7 +489,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         background: bg.surface,
         layoutTokens: {
           ...cardsBase,
-          card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP, background: cardBackground },
+          card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP, background: d.cardBackground },
         },
       }),
       defineTemplate({
@@ -507,19 +531,19 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         layoutTokens: {
           quote: {
             bar: {
-              color: palette.brandLight,
-              width: base.accentBarWidth,
+              color: palette.accentSoft,
+              width: ACCENT_BAR_WIDTH,
               dashType: DASH_TYPE.SOLID,
             },
             spacing: spacing,
             quote: {
               ...t.quoteText,
-              color: palette.white,
-              linkColor: palette.brandLight,
+              color: palette.background,
+              linkColor: palette.accentSoft,
             },
             attribution: {
               ...t.labelMutedSmall,
-              color: palette.textMuted,
+              color: palette.muted,
             },
           },
           vAlign: VALIGN.MIDDLE,
@@ -534,32 +558,32 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         background: bg.surface,
         layoutTokens: {
           ...t.headerTokens,
-          subtitle: { style: TEXT_STYLE.BODY, color: palette.textMuted },
+          subtitle: { style: TEXT_STYLE.BODY, color: palette.muted },
           label: {
             style: TEXT_STYLE.BODY,
-            color: palette.textSecondary,
+            color: palette.secondary,
             hAlign: HALIGN.CENTER,
             vAlign: VALIGN.TOP,
-            border: { color: palette.brand, width: 1, dashType: DASH_TYPE.SOLID },
+            border: { color: palette.accent, width: 1, dashType: DASH_TYPE.SOLID },
           },
           rectangle: {
-            fill: palette.brand,
-            border: { color: palette.textPrimary, width: 2, dashType: DASH_TYPE.SOLID },
+            fill: palette.accent,
+            border: { color: palette.heading, width: 2, dashType: DASH_TYPE.SOLID },
             cornerRadius: 0,
           },
           ellipse: {
-            fill: palette.textPrimary,
-            border: { color: palette.brand, width: 2, dashType: DASH_TYPE.DASHED },
+            fill: palette.heading,
+            border: { color: palette.accent, width: 2, dashType: DASH_TYPE.DASHED },
             cornerRadius: 0,
           },
           triangle: {
-            fill: palette.teal,
-            border: { color: palette.textPrimary, width: 3, dashType: DASH_TYPE.DASHED },
+            fill: TEAL,
+            border: { color: palette.heading, width: 3, dashType: DASH_TYPE.DASHED },
             cornerRadius: 0,
           },
           diamond: {
-            fill: palette.border,
-            border: { color: palette.teal, width: 2, dashType: DASH_TYPE.DOTTED },
+            fill: palette.divider,
+            border: { color: TEAL, width: 2, dashType: DASH_TYPE.DOTTED },
             cornerRadius: 0,
           },
           vAlign: VALIGN.TOP,
@@ -590,7 +614,7 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
             title: { ...t.cardTitle, hAlign: HALIGN.CENTER },
             description: { ...t.cardDescription, hAlign: HALIGN.CENTER },
             vAlign: VALIGN.MIDDLE,
-            background: { ...cardBackground, shadow },
+            background: { ...d.cardBackground, shadow: d.shadow },
           },
         },
       }),
@@ -602,9 +626,9 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
         layoutTokens: {
           ...t.headerTokens,
           label: t.labelMutedSmall,
-          solid: { color: palette.textPrimary, width: 2, dashType: DASH_TYPE.SOLID },
-          dashed: { color: palette.brand, width: 2, dashType: DASH_TYPE.DASHED },
-          dotted: { color: palette.brandLight, width: 2, dashType: DASH_TYPE.DOTTED },
+          solid: { color: palette.heading, width: 2, dashType: DASH_TYPE.SOLID },
+          dashed: { color: palette.accent, width: 2, dashType: DASH_TYPE.DASHED },
+          dotted: { color: palette.accentSoft, width: 2, dashType: DASH_TYPE.DOTTED },
           vAlign: VALIGN.TOP,
           hAlign: HALIGN.LEFT,
           spacing: spacing,
@@ -618,18 +642,18 @@ function buildPresentationFormat(base: typeof Base, config: FormatConfig): Theme
 // FACTSHEET FORMAT
 // ============================================
 
-function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFormat {
+function buildFactsheetFormat(palette: Palette, config: FormatConfig): ThemeFormat {
   const { spacing, spacingTight, padding, margin, footerHeight, unit } = config;
-  const { palette, TEXT_STYLE, subtleBorder, cardBackground, imageBase } = base;
+  const d = derivePaletteValues(palette);
 
-  const t = buildSharedTokens(base, config);
-  const bg = buildBackgrounds(base);
+  const t = buildSharedTokens(palette, config);
+  const bg = buildBackgrounds(palette);
 
   // Factsheet chrome tokens
   const factsheetChrome: FactsheetChromeTokens = {
     margin,
     topBarHeight: unit * 36,
-    topBarFill: { fill: palette.textPrimary, cornerRadius: 0 },
+    topBarFill: { fill: palette.heading, cornerRadius: 0 },
     topBarLogo: assets.tycoslide.logomarkWhite,
     topBarLogoTokens: { padding: 0 },
     topBarLogoHeight: unit * 10,
@@ -639,7 +663,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
       hAlign: HALIGN.RIGHT,
       vAlign: VALIGN.MIDDLE,
       style: TEXT_STYLE.CAPTION,
-      color: palette.white,
+      color: palette.background,
     },
     footerHeight,
     footerText: "\u00A9 2026 tycoslide | www.tycoslide.com",
@@ -704,12 +728,12 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
         layout: lightMargin(title),
         background: bg.surface,
         layoutTokens: {
-          title: { ...t.heroTitle, color: palette.textPrimary, style: TEXT_STYLE.QUOTE },
-          subtitle: { ...t.heroSubtitle, color: palette.textSecondary, style: TEXT_STYLE.H3 },
+          title: { ...t.heroTitle, color: palette.heading, style: TEXT_STYLE.QUOTE },
+          subtitle: { ...t.heroSubtitle, color: palette.secondary, style: TEXT_STYLE.H3 },
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
           spacing: spacingTight,
-          image: imageBase,
+          image: IMAGE_BASE,
         },
       }),
       defineTemplate({
@@ -723,7 +747,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
           spacing: spacingTight,
-          image: imageBase,
+          image: IMAGE_BASE,
         },
       }),
       defineTemplate({
@@ -760,7 +784,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
           value: t.labelStatValue,
           label: t.labelStatLabel,
           caption: t.mutedCaption,
-          background: { ...cardBackground, cornerRadius: base.cornerRadiusLarge },
+          background: { ...d.cardBackground, cornerRadius: CORNER_RADIUS_LARGE },
           backgroundWidth: 6,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
@@ -796,13 +820,13 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
         layoutTokens: {
           ...t.headerTokens,
           vAlign: VALIGN.MIDDLE,
-          items: { ...t.bodyText, style: TEXT_STYLE.H4, color: palette.textPrimary },
-          divider: subtleBorder,
-          itemNumber: { style: TEXT_STYLE.H2, color: palette.brandLight },
+          items: { ...t.bodyText, style: TEXT_STYLE.H4, color: palette.heading },
+          divider: d.subtleBorder,
+          itemNumber: { style: TEXT_STYLE.H2, color: palette.accentSoft },
           itemVAlign: VALIGN.MIDDLE,
           itemSpacing: spacing,
           spacing: spacingTight,
-          image: imageBase,
+          image: IMAGE_BASE,
         },
       }),
       defineTemplate({
@@ -812,7 +836,7 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
         background: bg.white,
         layoutTokens: {
           ...cardsBase,
-          card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP, background: cardBackground },
+          card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP, background: d.cardBackground },
         },
       }),
       defineTemplate({
@@ -854,19 +878,19 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
         layoutTokens: {
           quote: {
             bar: {
-              color: palette.brandLight,
-              width: base.accentBarWidth,
+              color: palette.accentSoft,
+              width: ACCENT_BAR_WIDTH,
               dashType: DASH_TYPE.SOLID,
             },
             spacing: spacing,
             quote: {
               ...t.quoteText,
-              color: palette.white,
-              linkColor: palette.brandLight,
+              color: palette.background,
+              linkColor: palette.accentSoft,
             },
             attribution: {
               ...t.labelMutedSmall,
-              color: palette.textMuted,
+              color: palette.muted,
             },
           },
           vAlign: VALIGN.MIDDLE,
@@ -883,9 +907,9 @@ function buildFactsheetFormat(base: typeof Base, config: FormatConfig): ThemeFor
 // ============================================
 
 export const theme = defineTheme({
-  fonts: [assets.fonts.inter, assets.fonts.interLight, assets.fonts.firaCode],
+  fonts: brandFonts(brand),
   formats: {
-    presentation: buildPresentationFormat(base, presentationConfig),
-    factsheet: buildFactsheetFormat(base, factsheetConfig),
+    presentation: buildPresentationFormat(brand.colors.light, presentationConfig),
+    factsheet: buildFactsheetFormat(brand.colors.light, factsheetConfig),
   },
 });
