@@ -1,5 +1,5 @@
-import { DASH_TYPE, GRID_STYLE, HALIGN, SHADOW_TYPE, VALIGN } from "@tycoslide/core";
-import type { LabelTokens, Layout, ListTokens, Palette, TextTokens, ThemeFormat } from "@tycoslide/sdk";
+import { DASH_TYPE, GRID_STYLE, HALIGN, VALIGN } from "@tycoslide/core";
+import type { Format, LabelTokens, Layout, ListTokens, Palette, TextTokens, ThemeFormat } from "@tycoslide/sdk";
 import { brandFonts, defineTemplate, defineTheme, TEXT_STYLE } from "@tycoslide/sdk";
 import { assets } from "./assets.js";
 import { brand } from "./brand.js";
@@ -11,9 +11,9 @@ import {
   withFooterChrome,
   withMarginChrome,
 } from "./chrome.js";
-import { factsheetConfig } from "./formats/factsheet.js";
-import type { FormatConfig } from "./formats/presentation.js";
-import { presentationConfig } from "./formats/presentation.js";
+import { factsheetChrome, factsheetFormat } from "./formats/factsheet.js";
+import type { ChromeConfig } from "./formats/presentation.js";
+import { presentationChrome, presentationFormat } from "./formats/presentation.js";
 import {
   agenda,
   blank,
@@ -59,10 +59,6 @@ export const TEMPLATE = {
 // SPATIAL CONSTANTS (not palette-dependent)
 // ============================================
 
-const BORDER_WIDTH = 0.75;
-const CORNER_RADIUS = 0.08;
-const CORNER_RADIUS_LARGE = 0.12;
-const ACCENT_BAR_WIDTH = 2;
 const IMAGE_BASE = {};
 const ALIGN_CENTER = { hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } as const;
 
@@ -73,23 +69,23 @@ const TEAL = "#0D9488";
 // PALETTE → DERIVED VALUES
 // ============================================
 
-/** Derive visual token primitives from a Palette. */
-function derivePaletteValues(palette: Palette) {
+/** Derive visual token primitives from a Palette + Format. */
+function derivePaletteValues(palette: Palette, format: Format) {
   const accents: Record<string, string> = {
     accent: palette.accent,
     soft: palette.accentSoft,
     dark: palette.heading,
   };
-  const subtleBorder = { color: palette.divider, width: BORDER_WIDTH, dashType: DASH_TYPE.SOLID };
+  const subtleBorder = { color: palette.divider, width: format.strokes.thin, dashType: DASH_TYPE.SOLID };
   const shadow = {
-    type: SHADOW_TYPE.OUTER,
+    type: format.shadow.type,
     color: palette.shadow,
-    opacity: 12,
-    blur: 6,
-    offset: 2,
-    angle: 180,
+    opacity: format.shadow.opacity,
+    blur: format.shadow.blur,
+    offset: format.shadow.offset,
+    angle: format.shadow.angle,
   };
-  const cardBackground = { fill: palette.background, border: subtleBorder, cornerRadius: CORNER_RADIUS };
+  const cardBackground = { fill: palette.background, border: subtleBorder, cornerRadius: format.radius };
   const richTextBase = { linkColor: palette.accent, accents };
   const heroBase = { ...richTextBase, linkUnderline: false, hAlign: HALIGN.CENTER } as const;
   const labelBase = { color: palette.heading };
@@ -102,9 +98,11 @@ function derivePaletteValues(palette: Palette) {
 // ============================================
 
 /** Build text, label, and component tokens shared by all formats. */
-function buildSharedTokens(palette: Palette, config: FormatConfig) {
-  const { unit, spacing, spacingTight, padding } = config;
-  const d = derivePaletteValues(palette);
+function buildSharedTokens(palette: Palette, config: Format) {
+  const spacing = config.spacing.base;
+  const spacingTight = config.spacing.tight;
+  const { padding } = config;
+  const d = derivePaletteValues(palette, config);
 
   // --- Text tokens ---
   const bodyText: TextTokens = { ...d.richTextBase, style: TEXT_STYLE.BODY, color: palette.body };
@@ -176,17 +174,17 @@ function buildSharedTokens(palette: Palette, config: FormatConfig) {
     vAlign: VALIGN.MIDDLE,
     gridStyle: GRID_STYLE.HORIZONTAL,
     gridStroke: d.subtleBorder,
-    cellPadding: unit * 4,
+    cellPadding: spacingTight,
     linkColor: palette.accent,
     linkUnderline: true,
     accents: d.accents,
     background: {
       fill: palette.background,
       border: d.subtleBorder,
-      cornerRadius: CORNER_RADIUS_LARGE,
+      cornerRadius: config.radius * 1.5,
       shadow: d.shadow,
     },
-    backgroundPadding: unit * 4,
+    backgroundPadding: spacingTight,
   };
 
   const codeTokens = {
@@ -195,7 +193,7 @@ function buildSharedTokens(palette: Palette, config: FormatConfig) {
     padding: padding,
     background: {
       fill: palette.heading,
-      cornerRadius: CORNER_RADIUS,
+      cornerRadius: config.radius,
       shadow: d.shadow,
     },
     image: IMAGE_BASE,
@@ -204,7 +202,7 @@ function buildSharedTokens(palette: Palette, config: FormatConfig) {
   const quoteSlotTokens = {
     bar: {
       color: palette.accent,
-      width: ACCENT_BAR_WIDTH,
+      width: config.strokes.thick,
       dashType: DASH_TYPE.SOLID,
     },
     spacing: spacing,
@@ -216,7 +214,7 @@ function buildSharedTokens(palette: Palette, config: FormatConfig) {
     background: {
       fill: palette.surface,
       border: d.subtleBorder,
-      cornerRadius: CORNER_RADIUS,
+      cornerRadius: config.radius,
     },
     padding: padding,
     spacing: spacingTight,
@@ -236,7 +234,7 @@ function buildSharedTokens(palette: Palette, config: FormatConfig) {
     surfaceBorder: palette.divider,
     surfaceSubtle: palette.surface,
     group: palette.surface,
-    groupCornerRadius: CORNER_RADIUS,
+    groupCornerRadius: config.radius,
     accents: d.accents,
     accentStyle: { opacity: 15, textColor: palette.accent },
     textStyle: TEXT_STYLE.BODY,
@@ -297,8 +295,9 @@ function buildSharedTokens(palette: Palette, config: FormatConfig) {
 // ============================================
 
 /** Build chrome token sets for a format. */
-function buildChromeTokens(palette: Palette, config: FormatConfig) {
-  const { margin, footerHeight, spacingTight } = config;
+function buildChromeTokens(palette: Palette, config: Format, chrome: ChromeConfig) {
+  const { margin, footerHeight } = chrome;
+  const spacingTight = config.spacing.tight;
   const labelFooter: LabelTokens = { style: TEXT_STYLE.FOOTER, color: palette.secondary };
 
   const footer: FooterChromeTokens = {
@@ -334,12 +333,14 @@ function buildBackgrounds(palette: Palette) {
 // PRESENTATION FORMAT
 // ============================================
 
-function buildPresentationFormat(palette: Palette, config: FormatConfig): ThemeFormat {
-  const { spacing, spacingTight, padding, unit } = config;
-  const d = derivePaletteValues(palette);
+function buildPresentationFormat(palette: Palette, config: Format, chrome: ChromeConfig): ThemeFormat {
+  const spacing = config.spacing.base;
+  const spacingTight = config.spacing.tight;
+  const { padding } = config;
+  const d = derivePaletteValues(palette, config);
 
   const t = buildSharedTokens(palette, config);
-  const c = buildChromeTokens(palette, config);
+  const c = buildChromeTokens(palette, config, chrome);
   const bg = buildBackgrounds(palette);
 
   // Chrome wrapper helpers — bind chrome tokens for this format
@@ -437,7 +438,7 @@ function buildPresentationFormat(palette: Palette, config: FormatConfig): ThemeF
           value: t.labelStatValue,
           label: t.labelStatLabel,
           caption: t.mutedCaption,
-          background: { ...d.cardBackground, cornerRadius: CORNER_RADIUS_LARGE },
+          background: { ...d.cardBackground, cornerRadius: config.radius * 1.5 },
           backgroundWidth: 6,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
@@ -489,7 +490,7 @@ function buildPresentationFormat(palette: Palette, config: FormatConfig): ThemeF
         background: bg.surface,
         layoutTokens: {
           ...cardsBase,
-          card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP, background: d.cardBackground },
+          card: { ...t.cardBase, padding: 0.34375, vAlign: VALIGN.TOP, background: d.cardBackground },
         },
       }),
       defineTemplate({
@@ -499,7 +500,7 @@ function buildPresentationFormat(palette: Palette, config: FormatConfig): ThemeF
         background: bg.surface,
         layoutTokens: {
           ...cardsBase,
-          card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP },
+          card: { ...t.cardBase, padding: 0.34375, vAlign: VALIGN.TOP },
         },
       }),
       defineTemplate({
@@ -532,7 +533,7 @@ function buildPresentationFormat(palette: Palette, config: FormatConfig): ThemeF
           quote: {
             bar: {
               color: palette.accentSoft,
-              width: ACCENT_BAR_WIDTH,
+              width: config.strokes.thick,
               dashType: DASH_TYPE.SOLID,
             },
             spacing: spacing,
@@ -642,9 +643,12 @@ function buildPresentationFormat(palette: Palette, config: FormatConfig): ThemeF
 // FACTSHEET FORMAT
 // ============================================
 
-function buildFactsheetFormat(palette: Palette, config: FormatConfig): ThemeFormat {
-  const { spacing, spacingTight, padding, margin, footerHeight, unit } = config;
-  const d = derivePaletteValues(palette);
+function buildFactsheetFormat(palette: Palette, config: Format, chrome: ChromeConfig): ThemeFormat {
+  const spacing = config.spacing.base;
+  const spacingTight = config.spacing.tight;
+  const { padding } = config;
+  const { margin, footerHeight } = chrome;
+  const d = derivePaletteValues(palette, config);
 
   const t = buildSharedTokens(palette, config);
   const bg = buildBackgrounds(palette);
@@ -652,12 +656,12 @@ function buildFactsheetFormat(palette: Palette, config: FormatConfig): ThemeForm
   // Factsheet chrome tokens
   const factsheetChrome: FactsheetChromeTokens = {
     margin,
-    topBarHeight: unit * 36,
+    topBarHeight: 0.9,
     topBarFill: { fill: palette.heading, cornerRadius: 0 },
     topBarLogo: assets.tycoslide.logomarkWhite,
     topBarLogoTokens: { padding: 0 },
-    topBarLogoHeight: unit * 10,
-    topBarLogoWidth: unit * 37,
+    topBarLogoHeight: 0.25,
+    topBarLogoWidth: 0.925,
     topBarLabel: "PRODUCT SHEET",
     topBarLabelTokens: {
       hAlign: HALIGN.RIGHT,
@@ -767,7 +771,7 @@ function buildFactsheetFormat(palette: Palette, config: FormatConfig): ThemeForm
           value: t.labelStatValue,
           label: t.labelStatLabel,
           caption: t.mutedCaption,
-          background: { ...d.cardBackground, cornerRadius: CORNER_RADIUS_LARGE },
+          background: { ...d.cardBackground, cornerRadius: config.radius * 1.5 },
           backgroundWidth: 6,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
@@ -819,7 +823,7 @@ function buildFactsheetFormat(palette: Palette, config: FormatConfig): ThemeForm
         background: bg.white,
         layoutTokens: {
           ...cardsBase,
-          card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP, background: d.cardBackground },
+          card: { ...t.cardBase, padding: 0.275, vAlign: VALIGN.TOP, background: d.cardBackground },
         },
       }),
       defineTemplate({
@@ -829,7 +833,7 @@ function buildFactsheetFormat(palette: Palette, config: FormatConfig): ThemeForm
         background: bg.white,
         layoutTokens: {
           ...cardsBase,
-          card: { ...t.cardBase, padding: unit * 11, vAlign: VALIGN.TOP },
+          card: { ...t.cardBase, padding: 0.275, vAlign: VALIGN.TOP },
         },
       }),
       defineTemplate({
@@ -862,7 +866,7 @@ function buildFactsheetFormat(palette: Palette, config: FormatConfig): ThemeForm
           quote: {
             bar: {
               color: palette.accentSoft,
-              width: ACCENT_BAR_WIDTH,
+              width: config.strokes.thick,
               dashType: DASH_TYPE.SOLID,
             },
             spacing: spacing,
@@ -892,7 +896,7 @@ function buildFactsheetFormat(palette: Palette, config: FormatConfig): ThemeForm
 export const theme = defineTheme({
   fonts: brandFonts(brand),
   formats: {
-    presentation: buildPresentationFormat(brand.colors.light, presentationConfig),
-    factsheet: buildFactsheetFormat(brand.colors.light, factsheetConfig),
+    presentation: buildPresentationFormat(brand.colors.light, presentationFormat, presentationChrome),
+    factsheet: buildFactsheetFormat(brand.colors.light, factsheetFormat, factsheetChrome),
   },
 });

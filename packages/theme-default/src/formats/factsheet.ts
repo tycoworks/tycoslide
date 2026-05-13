@@ -1,17 +1,20 @@
+import { HALIGN, SHADOW_TYPE, VALIGN } from "@tycoslide/core";
+import type { Format } from "@tycoslide/sdk";
 import { SlideFormat, TEXT_STYLE } from "@tycoslide/sdk";
 import { assets } from "../assets.js";
-import type { FormatConfig } from "./presentation.js";
+import type { ChromeConfig } from "./presentation.js";
 
 const unit = 0.025;
 
-export const factsheetConfig: FormatConfig = {
+export const factsheetFormat: Format = {
   slide: SlideFormat.letterPortrait,
-  unit,
-  spacing: unit * 5,
-  spacingTight: unit * 2.5,
+  spacing: { base: unit * 5, tight: unit * 2.5 },
   padding: unit * 6,
-  margin: 0.5,
-  footerHeight: unit * 6,
+  radius: 0.08,
+  strokes: { hairline: 0.5, thin: 0.75, base: 1, thick: 2 },
+  shadow: { type: SHADOW_TYPE.OUTER, opacity: 12, blur: 6, offset: 2, angle: 180 },
+  hAlign: HALIGN.LEFT,
+  vAlign: VALIGN.MIDDLE,
   textStyles: {
     [TEXT_STYLE.QUOTE]: {
       fontFamily: assets.fonts.inter,
@@ -68,4 +71,9 @@ export const factsheetConfig: FormatConfig = {
       bulletIndentPt: 0,
     },
   },
+};
+
+export const factsheetChrome: ChromeConfig = {
+  margin: 0.5,
+  footerHeight: unit * 6,
 };

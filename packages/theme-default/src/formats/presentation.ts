@@ -1,28 +1,25 @@
-import type { TextStyle } from "@tycoslide/core";
+import { HALIGN, SHADOW_TYPE, VALIGN } from "@tycoslide/core";
+import type { Format } from "@tycoslide/sdk";
 import { SlideFormat, TEXT_STYLE } from "@tycoslide/sdk";
 import { assets } from "../assets.js";
 
-export interface FormatConfig {
-  slide: { width: number; height: number };
-  unit: number;
-  spacing: number;
-  spacingTight: number;
-  padding: number;
+/** Chrome-specific spatial config (not token-relevant). */
+export interface ChromeConfig {
   margin: number;
   footerHeight: number;
-  textStyles: Record<string, TextStyle>;
 }
 
 const unit = 0.03125;
 
-export const presentationConfig: FormatConfig = {
+export const presentationFormat: Format = {
   slide: SlideFormat.s16x9,
-  unit,
-  spacing: unit * 8,
-  spacingTight: unit * 4,
+  spacing: { base: unit * 8, tight: unit * 4 },
   padding: unit * 8,
-  margin: 0.5,
-  footerHeight: unit * 8,
+  radius: 0.08,
+  strokes: { hairline: 0.5, thin: 0.75, base: 1, thick: 2 },
+  shadow: { type: SHADOW_TYPE.OUTER, opacity: 12, blur: 6, offset: 2, angle: 180 },
+  hAlign: HALIGN.LEFT,
+  vAlign: VALIGN.MIDDLE,
   textStyles: {
     [TEXT_STYLE.QUOTE]: {
       fontFamily: assets.fonts.inter,
@@ -79,4 +76,9 @@ export const presentationConfig: FormatConfig = {
       bulletIndentPt: 0,
     },
   },
+};
+
+export const presentationChrome: ChromeConfig = {
+  margin: 0.5,
+  footerHeight: unit * 8,
 };
