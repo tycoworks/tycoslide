@@ -1,32 +1,20 @@
 // Default Theme Layouts
-// 14 reusable structural blueprints for slide templates.
+// Reusable structural blueprints for slide templates.
 // Each layout is a self-contained section: token interface, ASCII diagram, Layout object.
-// Templates are defined per-format in theme.ts using defineTemplate() with these layouts.
+// Templates are defined per-format using defineTemplate() with these layouts.
 
 import {
   component,
   type HorizontalAlignment,
   param,
   type ScalarShape,
-  SHAPE,
   SIZE,
   type SlideNode,
   SPACING_MODE,
   schema,
-  VALIGN,
   type VerticalAlignment,
 } from "@tycoslide/core";
-import type {
-  CardTokens,
-  ImageTokens,
-  LabelTokens,
-  Layout,
-  LineTokens,
-  ListTokens,
-  QuoteTokens,
-  ShapeTokens,
-  TextTokens,
-} from "@tycoslide/sdk";
+import type { CardTokens, ImageTokens, LabelTokens, Layout, LineTokens, ListTokens, TextTokens } from "@tycoslide/sdk";
 import {
   Component,
   cardComponent,
@@ -37,7 +25,6 @@ import {
   label,
   line,
   row,
-  shape,
   stack,
   text,
   textComponent,
@@ -65,7 +52,7 @@ function headerBlock(title: string, tokens: HeaderTokens, eyebrow?: string): Sli
 // LAYOUTS
 // ============================================
 
-// --- title, end ---
+// --- title ---
 
 export interface TitleLayoutTokens {
   title: TextTokens;
@@ -100,28 +87,6 @@ export const title: Layout<TitleLayoutTokens> = {
     return imagePath
       ? row({ vAlign: tokens.vAlign, height: SIZE.FILL }, textBlock, image(imagePath, tokens.image))
       : textBlock;
-  },
-};
-
-// +----------------------------+
-// |                            |
-// |           TITLE            |
-// |          subtitle          |
-// |                            |
-// +----------------------------+
-export const end: Layout<TitleLayoutTokens> = {
-  params: {
-    title: param.required(textComponent.schema),
-    subtitle: param.optional(textComponent.schema),
-  },
-  render: (params, _slots, tokens) => {
-    const titleText = params.title as string;
-    const subtitle = params.subtitle as string | undefined;
-    return column(
-      { vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL },
-      text(titleText, tokens.title),
-      ...(subtitle ? [text(subtitle, tokens.subtitle)] : []),
-    );
   },
 };
 
@@ -183,155 +148,6 @@ export const body: Layout<BodyLayoutTokens, ScalarShape, readonly ["body"]> = {
       { height: SIZE.FILL },
       ...(titleText ? [headerBlock(titleText, tokens, eyebrow)] : []),
       column({ height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing }, ...bodySlot),
-    );
-  },
-};
-
-// --- stat ---
-
-export interface StatLayoutTokens {
-  value: LabelTokens;
-  label: LabelTokens;
-  caption: TextTokens;
-  background?: ShapeTokens;
-  backgroundWidth?: number;
-  vAlign: VerticalAlignment;
-  hAlign: HorizontalAlignment;
-  spacing: number;
-  padding: number;
-}
-
-// +----------------------------+
-// |                            |
-// |            47%             |
-// |       Metric Label         |
-// |      optional caption      |
-// |                            |
-// +----------------------------+
-export const stat: Layout<StatLayoutTokens> = {
-  params: {
-    value: param.required(textComponent.schema),
-    label: param.required(textComponent.schema),
-    caption: param.optional(textComponent.schema),
-  },
-  render: (params, _slots, tokens) => {
-    const value = params.value as string;
-    const labelText = params.label as string;
-    const caption = params.caption as string | undefined;
-    const content = column(
-      {
-        vAlign: tokens.vAlign,
-        hAlign: tokens.hAlign,
-        spacing: tokens.spacing,
-        height: SIZE.FILL,
-        padding: tokens.padding,
-      },
-      label(value, tokens.value),
-      label(labelText, tokens.label),
-      ...(caption ? [text(caption, tokens.caption)] : []),
-    );
-
-    const wrapProps = {
-      height: SIZE.FILL,
-      ...(tokens.backgroundWidth != null ? { width: tokens.backgroundWidth } : {}),
-    };
-    const wrapped = tokens.background
-      ? stack(wrapProps, shape(tokens.background, { shape: SHAPE.RECTANGLE }), content)
-      : content;
-
-    return column({ height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign }, wrapped);
-  },
-};
-
-// --- quote ---
-
-export interface QuoteLayoutTokens {
-  quote: QuoteTokens;
-  vAlign: VerticalAlignment;
-  hAlign: HorizontalAlignment;
-  spacing: number;
-}
-
-// +----------------------------+
-// |                            |
-// |  "Quote text here..."      |
-// |       -- Attribution       |
-// |                            |
-// +----------------------------+
-export const quote: Layout<QuoteLayoutTokens> = {
-  params: {
-    quote: param.required(textComponent.schema),
-    attribution: param.optional(textComponent.schema),
-  },
-  render: (params, _slots, tokens) => {
-    const quoteText = params.quote as string;
-    const attribution = params.attribution as string | undefined;
-    return column(
-      { height: SIZE.FILL },
-      column(
-        { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing },
-        component(Component.Quote, { quote: quoteText, attribution }, undefined, tokens.quote),
-      ),
-    );
-  },
-};
-
-// --- blank ---
-
-// biome-ignore lint/suspicious/noEmptyInterface: consistent with other layout token interfaces
-export interface BlankLayoutTokens {}
-
-// +----------------------------+
-// |                            |
-// |       (raw content)        |
-// |                            |
-// +----------------------------+
-export const blank: Layout<BlankLayoutTokens, ScalarShape, readonly ["body"]> = {
-  params: {},
-  slots: ["body"] as const,
-  render: (_params, { body: bodySlot }, _tokens) => column({ height: SIZE.FILL }, ...bodySlot),
-};
-
-// --- two-column ---
-
-export interface TwoColumnLayoutTokens {
-  title: LabelTokens;
-  eyebrow: LabelTokens;
-  text: TextTokens;
-  list: ListTokens;
-  vAlign: VerticalAlignment;
-  hAlign: HorizontalAlignment;
-  spacing: number;
-  headerSpacing: number;
-}
-
-// +----------------------------+
-// | EYEBROW                    |
-// | Title                      |
-// |----------------------------|
-// | ::left::    | ::right::    |
-// | Markdown    | Markdown     |
-// | content     | content      |
-// |             |              |
-// +----------------------------+
-export const twoColumn: Layout<TwoColumnLayoutTokens, ScalarShape, readonly ["left", "right"]> = {
-  params: {
-    title: param.optional(textComponent.schema),
-    eyebrow: param.optional(textComponent.schema),
-  },
-  slots: ["left", "right"] as const,
-  render: (params, slots, tokens) => {
-    const titleText = params.title as string | undefined;
-    const eyebrow = params.eyebrow as string | undefined;
-    const colProps = { vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing, height: SIZE.FILL };
-    return column(
-      { height: SIZE.FILL },
-      ...(titleText ? [headerBlock(titleText, tokens, eyebrow)] : []),
-      row(
-        { spacing: tokens.spacing, height: SIZE.HUG },
-        column(colProps, ...slots.left),
-        column(colProps, ...slots.right),
-      ),
     );
   },
 };
@@ -551,107 +367,6 @@ export const transform: Layout<TransformLayoutTokens, ScalarShape, readonly ["le
       { vAlign: tokens.vAlign, height: SIZE.FILL, spacing: tokens.spacing },
       ...(titleText ? [headerBlock(titleText, tokens, eyebrow)] : []),
       content,
-    );
-  },
-};
-
-// --- shapes (demo) ---
-
-export interface ShapesLayoutTokens {
-  title: LabelTokens;
-  eyebrow: LabelTokens;
-  subtitle?: LabelTokens;
-  headerSpacing: number;
-  label: LabelTokens;
-  rectangle: ShapeTokens;
-  ellipse: ShapeTokens;
-  triangle: ShapeTokens;
-  diamond: ShapeTokens;
-  vAlign: VerticalAlignment;
-  hAlign: HorizontalAlignment;
-  spacing: number;
-}
-
-// +----------------------------+
-// | eyebrow                    |
-// | Title                      |
-// | [rect] [ellipse] [tri] [◇] |
-// |  label   label   label lbl |
-// +----------------------------+
-export const shapes: Layout<ShapesLayoutTokens> = {
-  params: {
-    title: param.optional(textComponent.schema),
-    eyebrow: param.optional(textComponent.schema),
-    subtitle: param.optional(textComponent.schema),
-  },
-  render: (params, _slots, tokens) => {
-    const titleText = params.title as string | undefined;
-    const eyebrow = params.eyebrow as string | undefined;
-    const subtitle = params.subtitle as string | undefined;
-    const cell = (t: ShapeTokens, s: (typeof SHAPE)[keyof typeof SHAPE], labelText: string) =>
-      column(
-        { spacing: tokens.spacing, hAlign: tokens.hAlign, height: SIZE.FILL },
-        stack({ height: SIZE.FILL }, shape(t, { shape: s })),
-        label(labelText, tokens.label),
-      );
-
-    return column(
-      { vAlign: tokens.vAlign, height: SIZE.FILL, spacing: tokens.spacing },
-      ...(titleText ? [headerBlock(titleText, tokens, eyebrow)] : []),
-      ...(subtitle && tokens.subtitle ? [label(subtitle, tokens.subtitle)] : []),
-      row(
-        { spacing: tokens.spacing, height: SIZE.FILL },
-        cell(tokens.rectangle, SHAPE.RECTANGLE, "Primary\n#7C3AED"),
-        cell(tokens.ellipse, SHAPE.ELLIPSE, "Dark\n#1A1A2E"),
-        cell(tokens.triangle, SHAPE.TRIANGLE, "Accent\n#10B981"),
-        cell(tokens.diamond, SHAPE.DIAMOND, "Surface\n#E2E8F0"),
-      ),
-    );
-  },
-};
-
-// --- lines (demo) ---
-
-export interface LinesLayoutTokens {
-  title: LabelTokens;
-  eyebrow: LabelTokens;
-  headerSpacing: number;
-  label: LabelTokens;
-  solid: LineTokens;
-  dashed: LineTokens;
-  dotted: LineTokens;
-  vAlign: VerticalAlignment;
-  hAlign: HorizontalAlignment;
-  spacing: number;
-}
-
-// +----------------------------+
-// | eyebrow                    |
-// | Title                      |
-// |  Solid  ────────────────── |
-// |  Dashed ── ── ── ── ── ── |
-// |  Dotted ·· ·· ·· ·· ·· ·· |
-// +----------------------------+
-export const lines: Layout<LinesLayoutTokens> = {
-  params: {
-    title: param.optional(textComponent.schema),
-    eyebrow: param.optional(textComponent.schema),
-  },
-  render: (params, _slots, tokens) => {
-    const titleText = params.title as string | undefined;
-    const eyebrow = params.eyebrow as string | undefined;
-    const sample = (t: LineTokens, labelText: string) =>
-      column({ spacing: 0, height: SIZE.FILL, vAlign: VALIGN.BOTTOM }, label(labelText, tokens.label), line(t));
-
-    return column(
-      { vAlign: tokens.vAlign, height: SIZE.FILL, spacing: tokens.spacing },
-      ...(titleText ? [headerBlock(titleText, tokens, eyebrow)] : []),
-      column(
-        { spacing: tokens.spacing, height: SIZE.FILL, vAlign: VALIGN.MIDDLE },
-        sample(tokens.solid, "Solid"),
-        sample(tokens.dashed, "Dashed"),
-        sample(tokens.dotted, "Dotted"),
-      ),
     );
   },
 };

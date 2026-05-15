@@ -15,12 +15,6 @@ Now / Next / Later.
 
 ## Next
 
-### Layout Bugs
-
-- [ ] `stat.backgroundWidth: 6` → SIZE.FILL
-- [ ] `transform.overlaySize: 0.9` → SIZE.FILL
-- [ ] `cards perRow` formula → token-driven
-
 ### Code Quality
 
 - [ ] Audit post-unification simplifications (dead types)
