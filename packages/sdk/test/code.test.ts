@@ -3,43 +3,17 @@ import { describe, it } from "node:test";
 import type { TextStyle } from "@tycoslide/core";
 import { NODE_TYPE, SYNTAX } from "@tycoslide/core";
 import type { RootContent } from "mdast";
-import { type CodeTokens, code, codeComponent, renderCodeToHtml } from "../src/components/code.js";
-import {
-  cardComponent,
-  columnComponent,
-  gridComponent,
-  imageComponent,
-  lineComponent,
-  mermaidComponent,
-  quoteComponent,
-  rowComponent,
-  shapeComponent,
-  slideNumberComponent,
-  stackComponent,
-  tableComponent,
-  textComponent,
-} from "../src/index.js";
+import { type CodeTokens, code, renderCodeToHtml } from "../src/components/code.js";
 import { HIGHLIGHT_THEME, HIGHLIGHT_THEME_VALUES, LANGUAGE, LANGUAGE_VALUES } from "../src/presets/highlighting.js";
 import { Component } from "../src/presets/names.js";
-import { DEFAULT_CODE_TOKENS, mockTheme, noopCanvas, renderComponent, testRegistry } from "./mocks.js";
-
-// Register components explicitly
-testRegistry.register([
-  textComponent,
-  imageComponent,
-  cardComponent,
-  quoteComponent,
-  tableComponent,
+import {
   codeComponent,
-  mermaidComponent,
-  lineComponent,
-  shapeComponent,
-  slideNumberComponent,
-  rowComponent,
-  columnComponent,
-  stackComponent,
-  gridComponent,
-]);
+  DEFAULT_CODE_TOKENS,
+  findMdastHandler,
+  mockTheme,
+  noopCanvas,
+  renderComponent,
+} from "./mocks.js";
 
 // ============================================
 // DSL FUNCTION
@@ -73,7 +47,7 @@ describe("code() DSL function", () => {
 
 describe("code component registration", () => {
   it("should be available after register()", () => {
-    assert.ok(testRegistry.has(Component.Code));
+    assert.ok(codeComponent);
   });
 });
 
@@ -171,7 +145,7 @@ describe("code expansion", () => {
 
 describe("code MDAST compile handler", () => {
   it("compiles code fence to ComponentNode with correct body", () => {
-    const handler = testRegistry.getMdastHandler(SYNTAX.CODE);
+    const handler = findMdastHandler(SYNTAX.CODE);
     assert.ok(handler, "MDAST handler should be registered for code");
 
     const mdastNode = {
@@ -189,7 +163,7 @@ describe("code MDAST compile handler", () => {
   });
 
   it("compiles code fence with language", () => {
-    const handler = testRegistry.getMdastHandler(SYNTAX.CODE)!;
+    const handler = findMdastHandler(SYNTAX.CODE)!;
     const mdastNode = {
       type: "code",
       value: "const x = 1;",
@@ -203,7 +177,7 @@ describe("code MDAST compile handler", () => {
   });
 
   it("throws when code fence has no language", () => {
-    const handler = testRegistry.getMdastHandler(SYNTAX.CODE)!;
+    const handler = findMdastHandler(SYNTAX.CODE)!;
     const mdastNode = {
       type: "code",
       value: "hello world",
@@ -215,7 +189,7 @@ describe("code MDAST compile handler", () => {
   });
 
   it("throws on unsupported language", () => {
-    const handler = testRegistry.getMdastHandler(SYNTAX.CODE)!;
+    const handler = findMdastHandler(SYNTAX.CODE)!;
     const mdastNode = {
       type: "code",
       value: "hello world",
@@ -230,7 +204,7 @@ describe("code MDAST compile handler", () => {
   });
 
   it("accepts all LANGUAGE_VALUES as valid", () => {
-    const handler = testRegistry.getMdastHandler(SYNTAX.CODE)!;
+    const handler = findMdastHandler(SYNTAX.CODE)!;
     // Spot-check a few common languages
     for (const lang of ["sql", "typescript", "python", "rust", "go"]) {
       const mdastNode = {
@@ -372,7 +346,7 @@ describe("code expansion — additional", () => {
     const content = (result as any).content as any[];
     const imageNode = content[1].content[0];
     assert.strictEqual(imageNode.componentName, Component.Image);
-    assert.strictEqual(imageNode.tokens, undefined, "image should not have shadow tokens");
+    assert.deepStrictEqual(imageNode.tokens, { padding: 0 }, "image should have base image tokens, no shadow");
   });
 
   it("multiline code produces valid HTML", async () => {

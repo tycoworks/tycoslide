@@ -1,6 +1,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import { LayoutBoundsError, LayoutOverflowError, LayoutValidator } from "../src/core/layout/validator.js";
+import { Insets } from "../src/core/model/bounds.js";
 import { type ElementNode, NODE_TYPE, type PositionedNode, type TextNode } from "../src/core/model/nodes.js";
 import { DIRECTION, HALIGN, SIZE, SPACING_MODE, VALIGN } from "../src/core/model/types.js";
 
@@ -38,7 +39,7 @@ function containerNode(): ElementNode {
     height: SIZE.HUG,
     spacing: 0,
     spacingMode: SPACING_MODE.BETWEEN,
-    padding: 0,
+    padding: new Insets(0),
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.TOP,
   } as ElementNode;

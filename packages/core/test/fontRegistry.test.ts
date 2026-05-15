@@ -4,6 +4,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import { generateFontFaceCSS } from "../src/core/layout/layoutHtml.js";
+import { Insets } from "../src/core/model/bounds.js";
 import type { ContainerNode, ElementNode, TextNode } from "../src/core/model/nodes.js";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
 import type { Background, FontFamily } from "../src/core/model/types.js";
@@ -362,7 +363,7 @@ function wrapInContainer(...children: ElementNode[]): ContainerNode {
     height: 5,
     spacing: 0.25,
     spacingMode: SPACING_MODE.BETWEEN,
-    padding: 0,
+    padding: new Insets(0),
     vAlign: "top",
     hAlign: "left",
   };

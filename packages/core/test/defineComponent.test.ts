@@ -3,9 +3,9 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import { z } from "zod";
+import { Insets } from "../src/core/model/bounds.js";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
 import { param, schema } from "../src/core/model/param.js";
-
 import type { TextStyle } from "../src/core/model/types.js";
 import { DIRECTION, HALIGN, SIZE, SPACING_MODE, VALIGN } from "../src/core/model/types.js";
 import { defineComponent } from "../src/core/rendering/definitions.js";
@@ -152,7 +152,7 @@ describe("defineComponent", () => {
         height: SIZE.HUG,
         spacing: 0,
         spacingMode: SPACING_MODE.BETWEEN,
-        padding: 0,
+        padding: new Insets(0),
         hAlign: HALIGN.LEFT,
         vAlign: VALIGN.TOP,
       }),
