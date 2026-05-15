@@ -54,7 +54,7 @@ function headerBlock(title: string, tokens: HeaderTokens, eyebrow?: string): Sli
 
 // --- title ---
 
-export interface TitleLayoutTokens {
+interface TitleLayoutTokens {
   title: TextTokens;
   subtitle: TextTokens;
   vAlign: VerticalAlignment;
@@ -92,7 +92,7 @@ export const title: Layout<TitleLayoutTokens> = {
 
 // --- section ---
 
-export interface SectionLayoutTokens {
+interface SectionLayoutTokens {
   title: LabelTokens;
   vAlign: VerticalAlignment;
   hAlign: HorizontalAlignment;
@@ -116,7 +116,7 @@ export const section: Layout<SectionLayoutTokens> = {
 
 // --- body ---
 
-export interface BodyLayoutTokens {
+interface BodyLayoutTokens {
   title: LabelTokens;
   eyebrow: LabelTokens;
   text: TextTokens;
@@ -154,7 +154,7 @@ export const body: Layout<BodyLayoutTokens, ScalarShape, readonly ["body"]> = {
 
 // --- statement ---
 
-export interface StatementLayoutTokens {
+interface StatementLayoutTokens {
   body: TextTokens;
   caption: TextTokens;
   vAlign: VerticalAlignment;
@@ -186,7 +186,7 @@ export const statement: Layout<StatementLayoutTokens> = {
 
 // --- agenda ---
 
-export interface AgendaLayoutTokens {
+interface AgendaLayoutTokens {
   title: LabelTokens;
   eyebrow: LabelTokens;
   headerSpacing: number;
@@ -245,7 +245,7 @@ export const agenda: Layout<AgendaLayoutTokens> = {
 
 // --- cards ---
 
-export interface CardsLayoutTokens {
+interface CardsLayoutTokens {
   title: LabelTokens;
   eyebrow: LabelTokens;
   headerSpacing: number;
@@ -307,7 +307,7 @@ export const cards: Layout<CardsLayoutTokens> = {
 
 // --- transform ---
 
-export interface TransformLayoutTokens {
+interface TransformLayoutTokens {
   title: LabelTokens;
   eyebrow: LabelTokens;
   text: TextTokens;

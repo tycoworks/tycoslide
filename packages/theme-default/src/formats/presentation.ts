@@ -7,14 +7,14 @@ import { TEMPLATE } from "../index.js";
 import { agenda, body, cards, section, statement, title, transform } from "../layouts.js";
 
 /** Chrome-specific spatial config (not token-relevant). */
-export interface ChromeConfig {
+interface ChromeConfig {
   margin: number;
   footerHeight: number;
 }
 
 const unit = 0.03125;
 
-export const presentationFormat: Format = {
+const presentationFormat: Format = {
   slide: SlideFormat.s16x9,
   spacing: { base: unit * 8, tight: unit * 4 },
   padding: unit * 8,
@@ -81,7 +81,7 @@ export const presentationFormat: Format = {
   },
 };
 
-export const presentationChrome: ChromeConfig = {
+const presentationChrome: ChromeConfig = {
   margin: 0.5,
   footerHeight: unit * 8,
 };
@@ -91,7 +91,7 @@ export const presentationChrome: ChromeConfig = {
 // ============================================
 
 /** Build chrome token sets for a format. */
-export function buildChromeTokens(palette: Palette, config: Format, chrome: ChromeConfig) {
+function buildChromeTokens(palette: Palette, config: Format, chrome: ChromeConfig) {
   const { margin, footerHeight } = chrome;
   const spacingTight = config.spacing.tight;
   const labelFooter: LabelTokens = {
