@@ -104,7 +104,7 @@ export function buildChromeTokens(palette: Palette, config: Format, chrome: Chro
   const footer: FooterChromeTokens = {
     margin,
     footerHeight,
-    bottomPadding: margin / 4,
+    bottomPadding: margin / 2,
     footerLogo: assets.tycoslide.logo,
     footerText: "tycoslide",
     footerSpacing: spacingTight,

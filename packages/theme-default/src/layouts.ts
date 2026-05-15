@@ -180,9 +180,9 @@ export const body: Layout<BodyLayoutTokens, ScalarShape, readonly ["body"]> = {
     const titleText = params.title as string | undefined;
     const eyebrow = params.eyebrow as string | undefined;
     return column(
-      { height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing },
+      { height: SIZE.FILL },
       ...(titleText ? [headerBlock(titleText, tokens, eyebrow)] : []),
-      ...bodySlot,
+      column({ height: SIZE.FILL, vAlign: tokens.vAlign, hAlign: tokens.hAlign, spacing: tokens.spacing }, ...bodySlot),
     );
   },
 };
