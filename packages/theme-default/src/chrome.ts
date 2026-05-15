@@ -2,9 +2,9 @@
 // Higher-order layout wrappers that add slide chrome (footer, top bar, margins).
 // Replaces the old MasterDefinition concept — chrome is now part of the layout tree.
 
-import { HALIGN, LAYER, SHAPE, SIZE, VALIGN } from "@tycoslide/core";
-import type { ImageTokens, LabelTokens, Layout, ShapeTokens, SlideNumberTokens } from "@tycoslide/sdk";
-import { column, image, label, row, shape, slideNumber, stack } from "@tycoslide/sdk";
+import { HALIGN, LAYER, SIZE, VALIGN } from "@tycoslide/core";
+import type { ImageTokens, LabelTokens, Layout, SlideNumberTokens } from "@tycoslide/sdk";
+import { column, image, label, row, slideNumber } from "@tycoslide/sdk";
 
 // ============================================
 // CHROME TOKEN INTERFACES
@@ -23,22 +23,6 @@ export interface FooterChromeTokens {
 
 export interface MarginChromeTokens {
   margin: number;
-}
-
-export interface FactsheetChromeTokens {
-  margin: number;
-  topBarHeight: number;
-  topBarFill: ShapeTokens;
-  topBarLogo: string;
-  topBarLogoTokens: ImageTokens;
-  topBarLogoHeight: number;
-  topBarLogoWidth: number;
-  topBarLabel: string;
-  topBarLabelTokens: LabelTokens;
-  footerHeight: number;
-  footerText: string;
-  footerTokens: LabelTokens;
-  slideNumber: SlideNumberTokens;
 }
 
 // ============================================
@@ -104,61 +88,6 @@ export function withMarginChrome<
     render: (params, slots, tokens) => {
       const content = innerLayout.render(params, slots, tokens);
       return column({ height: SIZE.FILL, padding: chrome.margin }, content);
-    },
-  };
-}
-
-/**
- * Wrap a layout with factsheet chrome: top bar + footer.
- * Content fills the space between top bar and footer.
- */
-export function withFactsheetChrome<
-  TTokens extends object,
-  TParams extends Record<string, any>,
-  TSlots extends readonly string[],
->(innerLayout: Layout<TTokens, TParams, TSlots>, chrome: FactsheetChromeTokens): Layout<TTokens, TParams, TSlots> {
-  return {
-    params: innerLayout.params,
-    slots: innerLayout.slots,
-    render: (params, slots, tokens) => {
-      const content = innerLayout.render(params, slots, tokens);
-      // Top bar on master layer (shared/deduped across slides)
-      const topBar = stack(
-        { height: chrome.topBarHeight },
-        shape(chrome.topBarFill, { shape: SHAPE.RECTANGLE }),
-        row(
-          { height: chrome.topBarHeight, vAlign: VALIGN.MIDDLE },
-          column({ width: chrome.margin }),
-          column(
-            { width: chrome.topBarLogoWidth, height: chrome.topBarLogoHeight },
-            image(chrome.topBarLogo, chrome.topBarLogoTokens),
-          ),
-          column({ width: SIZE.FILL }),
-          label(chrome.topBarLabel, chrome.topBarLabelTokens),
-          column({ width: chrome.margin }),
-        ),
-      );
-      topBar.layer = LAYER.MASTER;
-      // Footer on master layer
-      const footerRow = row(
-        {
-          height: chrome.footerHeight + chrome.margin,
-          vAlign: VALIGN.MIDDLE,
-        },
-        column({ width: chrome.margin }),
-        label(chrome.footerText, chrome.footerTokens),
-        column({ width: SIZE.FILL }),
-        slideNumber(chrome.slideNumber),
-        column({ width: chrome.margin }),
-      );
-      footerRow.layer = LAYER.MASTER;
-      return column(
-        { height: SIZE.FILL },
-        topBar,
-        // Content area with side + vertical margins
-        column({ height: SIZE.FILL, padding: chrome.margin }, content),
-        footerRow,
-      );
     },
   };
 }

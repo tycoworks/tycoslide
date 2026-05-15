@@ -110,7 +110,7 @@ flowchart LR
 :::
 
 ---
-template: end
+template: title-dark
 title: tycoslide
 notes: Closing slide.
 ---
