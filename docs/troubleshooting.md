@@ -70,9 +70,9 @@ export const theme: Theme = { /* ... */ };
 Component 'xyz' is missing required tokens: [foo, bar]. All tokens must be provided by the parent component or layout.
 ```
 
-**Cause:** A component declares token keys that the template's `layoutTokens` does not provide.
+**Cause:** A component declares token keys that the template's `tokens` does not provide.
 
-**Fix:** Add the missing token keys to the template's `layoutTokens` in `defineTemplate()`.
+**Fix:** Add the missing token keys to the template's `tokens` in `defineTemplate()`.
 
 ---
 

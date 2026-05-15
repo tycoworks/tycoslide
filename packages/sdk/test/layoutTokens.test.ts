@@ -69,11 +69,11 @@ describe("Document Compiler: Layout Tokens", () => {
     receivedTokens = [];
   });
 
-  it("passes layoutTokens to layout render (no slots)", () => {
-    const layoutTokens = { background: "#AAAAAA", titleTokens: { style: "h1", color: "#FFFFFF" } };
+  it("passes tokens to layout render (no slots)", () => {
+    const tokens = { background: "#AAAAAA", titleTokens: { style: "h1", color: "#FFFFFF" } };
     const theme = mockTheme({
       layouts: {
-        tokenSimple: { background: mockBackground, layoutTokens },
+        tokenSimple: { background: mockBackground, tokens },
       },
     });
 
@@ -85,11 +85,11 @@ describe("Document Compiler: Layout Tokens", () => {
     assert.deepStrictEqual(receivedTokens[0].titleTokens, { style: "h1", color: "#FFFFFF" });
   });
 
-  it("passes layoutTokens directly to layout render", () => {
-    const layoutTokens = { background: "#000000", titleTokens: { style: "h2" } };
+  it("passes tokens directly to layout render", () => {
+    const tokens = { background: "#000000", titleTokens: { style: "h2" } };
     const theme = mockTheme({
       layouts: {
-        tokenSimple: { background: mockBackground, layoutTokens },
+        tokenSimple: { background: mockBackground, tokens },
       },
     });
 
@@ -115,14 +115,14 @@ describe("Document Compiler: Layout Tokens", () => {
 
     const theme = mockTheme({
       layouts: {
-        noTokenTest: { background: mockBackground, layoutTokens: {} },
+        noTokenTest: { background: mockBackground, tokens: {} },
       },
     });
 
     const md = `${HEADER}---\ntemplate: noTokenTest\ntitle: Hello\n---`;
     compileDocument(md, opts(theme));
 
-    // layoutTokens is {} which is passed through to layout render
+    // tokens is {} which is passed through to layout render
     assert.deepStrictEqual(capturedTokens, {});
   });
 });
@@ -160,7 +160,7 @@ describe("Slot Token Injection", () => {
       layouts: {
         slotTokenTest: {
           background: mockBackground,
-          layoutTokens: {
+          tokens: {
             background: "#FFFFFF",
             text: textTokens,
           },
@@ -200,7 +200,7 @@ describe("Slot Token Injection", () => {
       layouts: {
         slotTokenTest: {
           background: mockBackground,
-          layoutTokens: {
+          tokens: {
             background: "#FFFFFF",
             text: textTokens,
             label: labelDepthTokens,
@@ -232,7 +232,7 @@ describe("Slot Token Injection", () => {
       layouts: {
         slotTokenTest: {
           background: mockBackground,
-          layoutTokens: {
+          tokens: {
             background: "#FFFFFF",
             text: { style: "body", color: "#000000" },
             label: labelDepthTokens,
@@ -270,7 +270,7 @@ describe("Slot Token Injection", () => {
       layouts: {
         noSlotTokenTest: {
           background: mockBackground,
-          layoutTokens: {
+          tokens: {
             background: "#FFFFFF",
             text: { style: "body", color: "#000000" },
           },

@@ -26,7 +26,7 @@ const HEADER = `---\ntheme: test\n---\n\n`;
 const mockBackground: Background = { color: "#FFFFFF" };
 
 /** Default TemplateConfig for test layouts */
-const defaultConfig: TemplateConfig = { background: mockBackground, layoutTokens: {} };
+const defaultConfig: TemplateConfig = { background: mockBackground, tokens: {} };
 
 function makeOptions() {
   return {
@@ -178,7 +178,7 @@ notes: These are speaker notes.
     it("populates layoutName from TemplateConfig", () => {
       const theme = mockTheme({
         layouts: {
-          simple: { background: { color: "#FFFFFF" }, layoutTokens: {} },
+          simple: { background: { color: "#FFFFFF" }, tokens: {} },
           body: defaultConfig,
           slots: defaultConfig,
           strict: defaultConfig,

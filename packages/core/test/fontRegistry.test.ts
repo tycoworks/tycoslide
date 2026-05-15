@@ -138,7 +138,7 @@ describe("validateThemeFonts", () => {
           body: {
             background: mockBackground,
 
-            layoutTokens: {
+            tokens: {
               heading: { fontFamily: unregisteredFamily },
             },
           },
@@ -154,7 +154,7 @@ describe("validateThemeFonts", () => {
           body: {
             background: mockBackground,
 
-            layoutTokens: {
+            tokens: {
               color: "#FF0000",
               style: "body",
             },

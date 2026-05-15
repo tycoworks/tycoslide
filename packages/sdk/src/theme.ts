@@ -29,7 +29,7 @@ function templatesToLayouts(templates: Template[]): Record<string, TemplateConfi
   for (const t of templates) {
     layouts[t.layout.name] = {
       background: t.background,
-      layoutTokens: t.layoutTokens,
+      tokens: t.tokens,
     };
   }
   return layouts;

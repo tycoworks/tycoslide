@@ -300,7 +300,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
         description: "Opening slide with large title and optional subtitle.",
         layout: margin(title),
         background: t.surfaces.elevated,
-        layoutTokens: {
+        tokens: {
           title: { ...t.onLight.headings.h1, ...centered, ...richText, linkUnderline: false, style: TEXT_STYLE.QUOTE },
           subtitle: {
             ...t.onLight.headings.h3,
@@ -321,7 +321,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
         description: "Closing slide. Dark variant of the title layout.",
         layout: margin(title),
         background: t.surfaces.emphasis,
-        layoutTokens: {
+        tokens: {
           title: { ...t.onDark.headings.h1, ...centered, ...richText, linkUnderline: false, style: TEXT_STYLE.QUOTE },
           subtitle: { ...t.onDark.headings.h3, ...centered, ...richText, linkUnderline: false },
           ...centered,
@@ -336,7 +336,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
         description: "Section divider with centered title.",
         layout: margin(section),
         background: t.surfaces.emphasis,
-        layoutTokens: {
+        tokens: {
           title: { ...t.onDark.headings.h2, hAlign: HALIGN.CENTER },
           ...centered,
         },
@@ -348,7 +348,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
         description: "Markdown body with optional title. Default layout.",
         layout: footer(body),
         background: t.surfaces.elevated,
-        layoutTokens: { ...bodyBase, vAlign: VALIGN.TOP },
+        tokens: { ...bodyBase, vAlign: VALIGN.TOP },
       }),
 
       // ── Body centered (light) ─────────────────────────────────────────
@@ -357,7 +357,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
         description: "Centered markdown body with optional title.",
         layout: footer(body),
         background: t.surfaces.elevated,
-        layoutTokens: { ...bodyBase, vAlign: VALIGN.MIDDLE },
+        tokens: { ...bodyBase, vAlign: VALIGN.MIDDLE },
       }),
 
       // ── Statement (light) ─────────────────────────────────────────────
@@ -366,7 +366,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
         description: "Centered body text with optional caption. Use for value props and big statements.",
         layout: margin(statement),
         background: t.surfaces.elevated,
-        layoutTokens: {
+        tokens: {
           caption: mutedCaption,
           ...centered,
           spacing,
@@ -380,7 +380,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
         description: "Eyebrow, title, and numbered item list with divider lines.",
         layout: footer(agenda),
         background: t.surfaces.elevated,
-        layoutTokens: {
+        tokens: {
           ...headerTokens,
           vAlign: VALIGN.MIDDLE,
           items: { ...t.onLight.text, style: TEXT_STYLE.H4, color: palette.heading },
@@ -399,7 +399,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
         description: "Card grid with intro text and optional caption.",
         layout: footer(cards),
         background: t.surfaces.elevated,
-        layoutTokens: {
+        tokens: {
           ...headerTokens,
           intro: t.onLight.text,
           caption: mutedCaption,
@@ -416,7 +416,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
         description: "Side-by-side comparison layout with optional overlay.",
         layout: footer(transform),
         background: t.surfaces.elevated,
-        layoutTokens: {
+        tokens: {
           ...headerTokens,
           text: cardDescription,
           list: t.onLight.list,

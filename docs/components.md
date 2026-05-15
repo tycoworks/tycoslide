@@ -790,7 +790,7 @@ render: ({ title, cards }, _slots, tokens: CardsLayoutTokens) => {
 }
 ```
 
-Token values are provided via `layoutTokens` in each template's `defineTemplate()` call. Missing tokens are caught at build time. See [Templates — Assembling Templates](./templates.md#assembling-templates-in-a-format).
+Token values are provided via `tokens` in each template's `defineTemplate()` call. Missing tokens are caught at build time. See [Templates — Assembling Templates](./templates.md#assembling-templates-in-a-format).
 
 ### Content Slots
 
@@ -900,7 +900,7 @@ render: ({ metrics }, _slots, tokens: MyLayoutTokens) => {
 }
 ```
 
-The `metric` key in `layoutTokens` holds the `MetricTokens` object. Values are set in the template's `defineTemplate()` call.
+The `metric` key in `tokens` holds the `MetricTokens` object. Values are set in the template's `defineTemplate()` call.
 
 ### TypeScript DSL Functions
 

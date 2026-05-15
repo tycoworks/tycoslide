@@ -8,7 +8,7 @@ A template has four parts:
 
 - **Layout** — spatial blueprint that controls where content goes (params, slots, render function)
 - **Background** — slide background (color fill or gradient)
-- **Layout tokens** — all visual values injected into the layout (text styles, colors, spacing, component tokens)
+- **Tokens** — all visual values injected into the layout (text styles, colors, spacing, component tokens)
 - **Chrome** — fixed elements like footers and margins, composed into the layout via wrapper functions
 
 ```typescript
@@ -19,7 +19,7 @@ defineTemplate({
   description: 'Markdown body with optional title. Default layout.',
   layout: withFooterChrome(body, chromeTokens),
   background: tokens.surfaces.elevated,
-  layoutTokens: {
+  tokens: {
     title: tokens.onLight.headings.h3,
     text: tokens.onLight.text,
     list: tokens.onLight.list,
@@ -238,14 +238,14 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
         description: 'Opening slide with large title.',
         layout: withMarginChrome(title, chrome.margin),
         background: t.surfaces.elevated,
-        layoutTokens: { title: t.onLight.headings.h1, subtitle: t.onLight.headings.h3 },
+        tokens: { title: t.onLight.headings.h1, subtitle: t.onLight.headings.h3 },
       }),
       defineTemplate({
         name: 'body',
         description: 'Markdown body with optional title.',
         layout: withFooterChrome(body, chrome.footer),
         background: t.surfaces.elevated,
-        layoutTokens: { title: t.onLight.headings.h3, text: t.onLight.text, ...componentTokens },
+        tokens: { title: t.onLight.headings.h3, text: t.onLight.text, ...componentTokens },
       }),
       // ... more templates
     ],

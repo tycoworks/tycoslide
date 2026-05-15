@@ -27,14 +27,14 @@ export interface Layout<
 }
 
 /**
- * A complete template: layout + background + layout tokens.
+ * A complete template: layout + background + tokens.
  * No master indirection — chrome is composed into the layout.
  */
 export interface Template {
   description: string;
   layout: LayoutConfig;
   background: Background;
-  layoutTokens: Record<string, unknown>;
+  tokens: Record<string, unknown>;
 }
 
 // ============================================
@@ -42,12 +42,12 @@ export interface Template {
 // ============================================
 
 /**
- * Define a slide template — a named layout + background + layout tokens.
+ * Define a slide template — a named layout + background + tokens.
  *
  * A template is the unified authoring concept. Chrome is composed into the layout
  * via composition functions (chromed). Background is provided directly.
  *
- * Returns a Template carrying the core Layout, background, and layout tokens.
+ * Returns a Template carrying the core Layout, background, and tokens.
  * The layout is NOT auto-registered — the CLI extracts and registers layouts
  * from the resolved theme format.
  */
@@ -60,9 +60,9 @@ export function defineTemplate<
   description: string;
   layout: Layout<TTokens, TParams, TSlots>;
   background: Background;
-  layoutTokens: Record<string, unknown>;
+  tokens: Record<string, unknown>;
 }): Template {
-  const { layout: templateLayout, background, layoutTokens, name, description } = def;
+  const { layout: templateLayout, background, tokens, name, description } = def;
 
   // Build core layout — render delegates directly to the Layout blueprint.
   const coreLayout = defineLayout({
@@ -74,5 +74,5 @@ export function defineTemplate<
     },
   });
 
-  return { description, layout: coreLayout, background, layoutTokens };
+  return { description, layout: coreLayout, background, tokens };
 }

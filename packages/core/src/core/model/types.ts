@@ -247,10 +247,10 @@ export interface Slide {
   name?: string;
 }
 
-/** Structured config for a layout — background + layout tokens. */
+/** Structured config for a layout — background + tokens. */
 export interface TemplateConfig {
   background: Background;
-  layoutTokens: Record<string, unknown>;
+  tokens: Record<string, unknown>;
 }
 
 export interface Theme {

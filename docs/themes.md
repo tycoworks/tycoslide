@@ -340,7 +340,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
         description: 'Opening slide with large title.',
         layout: withMarginChrome(title, { margin: 0.5 }),
         background: t.surfaces.elevated,
-        layoutTokens: {
+        tokens: {
           title: { ...t.onLight.headings.h1, hAlign: HALIGN.CENTER },
           // ...
         },

@@ -157,7 +157,7 @@ describe("resolveThemeFormat()", () => {
       description: "Hero layout",
       layout,
       background: mockBackground,
-      layoutTokens: { titleColor: "#FFF" },
+      tokens: { titleColor: "#FFF" },
     });
 
     const def: ThemeDefinition = {
@@ -166,6 +166,6 @@ describe("resolveThemeFormat()", () => {
     };
     const theme = resolveThemeFormat(def, "presentation");
     assert.strictEqual(theme.layouts.hero.background.color, "#FFFFFF");
-    assert.deepStrictEqual(theme.layouts.hero.layoutTokens, { titleColor: "#FFF" });
+    assert.deepStrictEqual(theme.layouts.hero.tokens, { titleColor: "#FFF" });
   });
 });

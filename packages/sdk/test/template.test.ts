@@ -8,7 +8,7 @@ const testLayouts = new Map<string, LayoutConfig>();
 // ── defineTemplate() ─────────────────────────────────────────────────────────
 
 describe("defineTemplate()", () => {
-  it("returns a Template with description, layout, background, and layoutTokens", () => {
+  it("returns a Template with description, layout, background, and tokens", () => {
     const templateName = "test-tmpl-layout-1";
 
     const mockBackground: Background = { color: "#FFF" };
@@ -22,13 +22,13 @@ describe("defineTemplate()", () => {
           ({ type: "component", componentName: "column", params: {}, content: undefined }) as any,
       },
       background: mockBackground,
-      layoutTokens: { title: "hello" },
+      tokens: { title: "hello" },
     });
 
     assert.strictEqual(template.description, "Test template");
     assert.strictEqual(template.layout.name, templateName);
     assert.deepStrictEqual(template.background, { color: "#FFF" });
-    assert.deepStrictEqual(template.layoutTokens, { title: "hello" });
+    assert.deepStrictEqual(template.tokens, { title: "hello" });
   });
 
   it("layout render delegates tokens directly to the Layout blueprint", () => {
@@ -46,14 +46,14 @@ describe("defineTemplate()", () => {
         },
       },
       background: { color: "#FFF" },
-      layoutTokens: { title: "hello", color: "#333" },
+      tokens: { title: "hello", color: "#333" },
     });
 
     testLayouts.set(template.layout.name, template.layout);
     const layout = testLayouts.get(templateName);
     assert.ok(layout);
 
-    // Core passes layoutTokens directly — no extra keys
+    // Core passes tokens directly — no extra keys
     layout!.render({}, {}, { title: "hello", color: "#333" });
 
     assert.strictEqual(capturedTokens.title, "hello");
@@ -72,7 +72,7 @@ describe("defineTemplate()", () => {
           ({ type: "component", componentName: "text", params: {}, content: undefined }) as any,
       },
       background: { color: "#FFF" },
-      layoutTokens: {},
+      tokens: {},
     });
 
     testLayouts.set(template.layout.name, template.layout);

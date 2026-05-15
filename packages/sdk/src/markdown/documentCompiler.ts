@@ -208,18 +208,18 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
   const validated = validateLayout(layout, params, slots, options.components);
 
   // 7. Inject tokens into slot-compiled ComponentNodes
-  const { layoutTokens } = layoutConfig;
-  if (layout.slots?.length && layoutTokens) {
+  const { tokens } = layoutConfig;
+  if (layout.slots?.length && tokens) {
     for (const slotName of layout.slots) {
       const slotNodes = validated.slots[slotName];
       if (Array.isArray(slotNodes)) {
-        injectSlotTokens(slotNodes as SlideNode[], layoutTokens);
+        injectSlotTokens(slotNodes as SlideNode[], tokens);
       }
     }
   }
 
   // 8. Render layout — returns content only (SlideNode)
-  const content = layout.render(validated.params, validated.slots, layoutTokens);
+  const content = layout.render(validated.params, validated.slots, tokens);
 
   // 9. Assemble Slide — background from template config, layoutName for master dedup
   const slide: Slide = {
