@@ -19,6 +19,7 @@ import {
   type Theme,
 } from "@tycoslide/core";
 import { z } from "zod";
+import type { HeadingDepth } from "../components/label.js";
 import { parseSlideDocument, type RawSlide } from "./slideParser.js";
 import { compileSlot } from "./slotCompiler.js";
 
@@ -55,7 +56,7 @@ export interface CompileOptions {
   assets?: Record<string, unknown>;
   /** Layout definitions (looked up by template name). */
   layouts: LayoutConfig[];
-  /** Component definitions (for resolveTokens hooks). */
+  /** Component definitions (for slot compilation and rendering). */
   components: ComponentDefinition<any, any, any>[];
 }
 
@@ -212,7 +213,7 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
     for (const slotName of layout.slots) {
       const slotNodes = validated.slots[slotName];
       if (Array.isArray(slotNodes)) {
-        injectSlotTokens(slotNodes as SlideNode[], layoutTokens, options.components);
+        injectSlotTokens(slotNodes as SlideNode[], layoutTokens);
       }
     }
   }
@@ -239,24 +240,35 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
  * Walk slot-compiled nodes and inject layout tokens into ComponentNodes.
  * For each ComponentNode, if the layout tokens contain a key matching
  * node.componentName, assign complete tokens from the layout.
- * Components with a resolveTokens hook (e.g., label) can transform
- * the tokens based on params (e.g., selecting by heading depth).
+ * Depth-keyed token maps (used by label for heading styles) are resolved
+ * inline: headingDepth in params indexes into the map. Missing depths
+ * auto-fill from the nearest defined depth at or below the requested depth.
  */
-function injectSlotTokens(
-  nodes: SlideNode[],
-  layoutTokens: Record<string, unknown>,
-  components: ComponentDefinition<any, any, any>[],
-): void {
+function injectSlotTokens(nodes: SlideNode[], layoutTokens: Record<string, unknown>): void {
   for (const node of nodes) {
     if (isComponentNode(node)) {
       const tokenMap = layoutTokens[node.componentName];
       if (tokenMap && typeof tokenMap === "object") {
         let tokens = tokenMap as Record<string, unknown>;
 
-        // Run component's resolveTokens hook if registered
-        const def = components.find((c) => c.name === node.componentName);
-        if (def?.resolveTokens) {
-          tokens = def.resolveTokens(tokens, (node as ComponentNode).params as Record<string, unknown>);
+        // Resolve depth-keyed tokens for heading components (auto-fill missing depths)
+        const depth = ((node as ComponentNode).params as Record<string, unknown>)?.headingDepth as
+          | HeadingDepth
+          | undefined;
+        if (depth !== undefined) {
+          let entry = tokens[depth] as Record<string, unknown> | undefined;
+          if (!entry) {
+            // Auto-fill: find highest defined depth and use as fallback
+            let fallbackDepth = depth;
+            while (fallbackDepth > 0 && !tokens[fallbackDepth]) {
+              fallbackDepth--;
+            }
+            entry = (fallbackDepth > 0 ? tokens[fallbackDepth] : undefined) as Record<string, unknown> | undefined;
+          }
+          if (!entry) {
+            throw new Error(`Label with headingDepth=${depth} has no token entry and no lower depth to fall back to.`);
+          }
+          tokens = entry;
         }
 
         (node as ComponentNode).tokens = tokens;

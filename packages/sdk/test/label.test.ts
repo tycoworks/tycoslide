@@ -5,7 +5,7 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import { HALIGN, NODE_TYPE, VALIGN } from "@tycoslide/core";
 import type { Heading } from "mdast";
-import type { LabelSlotTokens, LabelTokens } from "../src/components/label.js";
+import type { LabelTokens } from "../src/components/label.js";
 import { label } from "../src/components/label.js";
 import {
   cardComponent,
@@ -124,80 +124,7 @@ describe("Label Component", () => {
   });
 
   // ============================================
-  // 3. resolveLabelTokens: flat tokens (DSL path, no headingDepth)
-  // ============================================
-
-  describe("resolveLabelTokens: flat tokens (DSL path)", () => {
-    it("should return tokens unchanged when headingDepth is undefined", () => {
-      const flatTokens: Record<string, unknown> = {
-        color: "#FF0000",
-        style: "body",
-        hAlign: HALIGN.LEFT,
-        vAlign: VALIGN.TOP,
-      };
-      const params: Record<string, unknown> = {};
-
-      const result = labelComponent.resolveTokens!(flatTokens, params);
-      assert.strictEqual(result, flatTokens, "should return the same object reference");
-    });
-  });
-
-  // ============================================
-  // 4. resolveLabelTokens: depth-keyed tokens (heading path)
-  // ============================================
-
-  describe("resolveLabelTokens: depth-keyed tokens (heading path)", () => {
-    it("should return the entry for headingDepth 2 when tokens are depth-keyed", () => {
-      const depth2Tokens: LabelTokens = {
-        color: "#0000FF",
-        style: "h2",
-        hAlign: HALIGN.CENTER,
-        vAlign: VALIGN.TOP,
-      };
-      const slotTokens: LabelSlotTokens = {
-        1: { color: "#111111", style: "h1", hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP },
-        2: depth2Tokens,
-        3: { color: "#333333", style: "h3", hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP },
-        4: { color: "#444444", style: "h4", hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP },
-        5: { color: "#555555", style: "small", hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP },
-        6: { color: "#666666", style: "footer", hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP },
-      };
-      const params: Record<string, unknown> = { headingDepth: 2 };
-
-      const result = labelComponent.resolveTokens!(slotTokens as unknown as Record<string, unknown>, params);
-      assert.deepStrictEqual(result, depth2Tokens);
-    });
-  });
-
-  // ============================================
-  // 5. resolveLabelTokens: throws on missing depth entry
-  // ============================================
-
-  describe("resolveLabelTokens: throws on missing depth entry", () => {
-    it("should throw when headingDepth is 3 but tokens have no entry for 3", () => {
-      const partialTokens: Record<string, unknown> = {
-        1: { color: "#111111", style: "h1", hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP },
-        2: { color: "#222222", style: "h2", hAlign: HALIGN.LEFT, vAlign: VALIGN.TOP },
-        // depth 3 intentionally missing
-      };
-      const params: Record<string, unknown> = { headingDepth: 3 };
-
-      assert.throws(
-        () => labelComponent.resolveTokens!(partialTokens, params),
-        (err: unknown) => {
-          assert.ok(err instanceof Error);
-          assert.ok(
-            err.message.includes("headingDepth=3"),
-            `Expected error message to mention headingDepth=3, got: ${err.message}`,
-          );
-          return true;
-        },
-      );
-    });
-  });
-
-  // ============================================
-  // 6. renderLabel: produces correct TextNode
+  // 3. renderLabel: produces correct TextNode
   // ============================================
 
   describe("renderLabel: produces correct TextNode", () => {

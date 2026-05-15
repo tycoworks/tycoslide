@@ -144,13 +144,6 @@ export const labelComponent = defineComponent({
   name: C.Label,
   content: schema.string(),
   directive: false,
-  resolveTokens: (tokens: Record<string, unknown>, params: Record<string, unknown>) => {
-    const depth = (params as any).headingDepth;
-    if (depth === undefined) return tokens;
-    const entry = tokens[depth] as Record<string, unknown> | undefined;
-    if (!entry) return tokens;
-    return entry;
-  },
   mdast: {
     nodeTypes: [SYNTAX.HEADING],
     compile: (node: RootContent, source: string): ComponentNode => {

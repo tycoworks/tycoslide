@@ -37,7 +37,6 @@ export { type ImageTokens, image, imageComponent } from "./components/image.js";
 // Label (display text — eyebrows, footers, headings, attributions)
 export {
   type HeadingDepth,
-  type LabelSlotTokens,
   type LabelTokens,
   label,
   labelComponent,

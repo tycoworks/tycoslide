@@ -6,54 +6,26 @@ Now / Next / Later.
 
 ## Now
 
-### Token System Migration
+### Token System Smells
 
-Spatial/visual token split. Single `layoutTokens` → two independent axes.
-
-Key decisions:
-- **Palette** (not ColorScheme) — 10 semantic color roles
-- **Brand** — identity (fonts + light/dark Palettes)
-- **Format** — spatial config (dimensions, spacing, text styles)
-- **Layout** (renamed from LayoutDefinition)
-- No masters (background on template, chrome composed into layout)
-- No componentOverrides — design system should be expressive enough
-- Token mapper stays in theme-default first, graduate to SDK later
-- TEXT_STYLE renames: TITLE→QUOTE, SMALL→CAPTION, EYEBROW removed
-- All component tokens passed to every layout (already works today)
-
-### Defaults Cleanup (Phase 0)
-
-- [ ] Make `spacing` optional on Row/Column/Grid (default 0)
-- [ ] Make `spacingMode` default explicit
-- [ ] Remove white background fallback (throw if missing)
-- [ ] Shape: use DEFAULTS constants instead of inline
-
-### Multi-Format Themes
-
-In progress on `multi-format-themes` branch.
+- [ ] **Remove resolveTokens from core** — SDK concern leaked into core. Only used by label for heading depth selection via depth-keyed map. With fixed TEXT_STYLE headings, label can receive flat tokens — no depth map hack needed.
+- [ ] **Heading handling cleanup** — old open vocabulary replaced by fixed set. Residual complexity in core around arbitrary heading depths.
+- [ ] **Font walking** — walking token bags to extract fonts. Needs investigation.
+- [ ] **lineHeightMultiplier / bulletIndentPt on TextStyle** — currently required on every text style in format configs. Test whether these can be removed or defaulted — they were added to match HTML text wrapping but may not be needed.
 
 ---
 
 ## Next
-
-### Token System Smells
-
-- [ ] **Remove resolveTokens from core** — SDK concern leaked into core. Only used by label for heading depth selection via depth-keyed map. With fixed TEXT_STYLE headings, label can receive flat tokens — no depth map hack needed.
-- [ ] **Font walking** — walking token bags to extract fonts. Needs investigation.
-- [ ] **Heading handling cleanup** — old open vocabulary replaced by fixed set. Residual complexity.
-- [ ] **lineHeightMultiplier / bulletIndentPt on TextStyle** — currently required on every text style in format configs. Test whether these can be removed or defaulted — they were added to match HTML text wrapping but may not be needed.
 
 ### Layout Bugs
 
 - [ ] `stat.backgroundWidth: 6` → SIZE.FILL
 - [ ] `transform.overlaySize: 0.9` → SIZE.FILL
 - [ ] `cards perRow` formula → token-driven
-- [ ] `chrome.ts` bottomSpacer `margin/4` → tokenize
 
 ### Code Quality
 
 - [ ] Audit post-unification simplifications (dead types)
-- [ ] Factsheet master tokens simplification (too many explicit tokens)
 
 ### Skills
 
@@ -94,6 +66,35 @@ DSL → pipeline → geometric assertions.
 
 ---
 
+## Done
+
+### Token System Migration ✓
+
+Spatial/visual token split. Palette + Brand + Format. No masters, no componentOverrides.
+
+### Multi-Format Themes ✓
+
+`multi-format-themes` branch. ThemeDefinition, ThemeFormat, resolveThemeFormat in SDK. Presentation format complete with showcase.
+
+### Master/Layout Unification ✓
+
+MasterDefinition eliminated. Chrome composers, layer system, splitByLayer. See `internal/master-layout-unification.md`.
+
+### SDK Authoring API (deriveTokens) ✓
+
+`visualTokens.ts`: deriveTokens(palette, format) → onLight/onDark/surfaces/primitives. Zero theme-specific concepts in SDK. Component tokens live in theme-default format files.
+
+### Insets ✓
+
+`Insets` class in core (bounds.ts). Per-side padding for containers. Chrome uses proper Insets instead of spacer hacks.
+
+### Defaults Cleanup (partial) ✓
+
+- [x] Make `spacingMode` default explicit
+- [ ] Shape: use DEFAULTS constants instead of inline
+
+---
+
 ## Design Decisions
 
 | Decision | Rationale |
@@ -101,7 +102,7 @@ DSL → pipeline → geometric assertions.
 | No masters | Background on template, chrome composed into layout |
 | No componentOverrides | Design system should be expressive enough |
 | Palette not ColorScheme | Single-word noun, consistent naming |
-| Token mapper in theme-default | Work out pattern first, graduate to SDK later |
 | All tokens to every layout | Slot system requires it |
 | LAYER system kept | More compositional. Re-evaluate later. |
+| Insets class, not interface | Constructor handles normalization, consistent with Bounds |
 | resolveTokens removal | Not needed with fixed headings |

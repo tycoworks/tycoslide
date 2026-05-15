@@ -2,7 +2,7 @@
 // DSL-only component — not reachable via :::directives in markdown.
 // Handles plain (non-markdown) text with token-controlled styling.
 // Use for eyebrows, attributions, footers, headings, and other display text.
-// Headings resolve their style from depth via resolveTokens hook (depth-keyed LabelSlotTokens).
+// Headings get depth-keyed tokens resolved at compile time in documentCompiler.
 
 import type { HorizontalAlignment, RenderContext, TextStyleName, VerticalAlignment } from "@tycoslide/core";
 import {
@@ -25,11 +25,8 @@ import { Component } from "../presets/names.js";
 // HEADING TYPES
 // ============================================
 
-/** CommonMark heading depths. Matches MDAST Heading.depth. */
+/** All CommonMark heading depths (1–6). */
 export type HeadingDepth = 1 | 2 | 3 | 4 | 5 | 6;
-
-/** Slot token type for the label component. Maps each heading depth to a complete LabelTokens object. */
-export type LabelSlotTokens = Record<HeadingDepth, LabelTokens>;
 
 // ============================================
 // TOKENS
@@ -42,30 +39,6 @@ export interface LabelTokens {
   vAlign: VerticalAlignment;
   border?: Stroke;
   shadow?: Shadow;
-}
-
-// ============================================
-// RESOLVE TOKENS
-// ============================================
-
-/**
- * Token transform hook — runs during slot injection, after layout tokens merge.
- * If headingDepth is present (markdown heading), look up tokens[depth] to get the
- * full LabelTokens for that depth. Tokens must be a Record<HeadingDepth, LabelTokens>.
- * DSL label() calls have no headingDepth — tokens are already flat LabelTokens.
- */
-function resolveLabelTokens(tokens: Record<string, unknown>, params: Record<string, unknown>): Record<string, unknown> {
-  const depth = params.headingDepth as HeadingDepth | undefined;
-  if (depth === undefined) return tokens; // DSL label — tokens are already flat LabelTokens
-
-  const entry = tokens[depth] as Record<string, unknown> | undefined;
-  if (!entry) {
-    throw new Error(
-      `Label with headingDepth=${depth} requires a token entry for depth ${depth}. ` +
-        `Provide label slot tokens as Record<HeadingDepth, LabelTokens>.`,
-    );
-  }
-  return entry;
 }
 
 // ============================================
@@ -113,7 +86,6 @@ export const labelComponent = defineComponent({
   name: Component.Label,
   content: schema.string(),
   directive: false,
-  resolveTokens: resolveLabelTokens,
   mdast: {
     nodeTypes: [SYNTAX.HEADING],
     compile: (node: RootContent, source: string): ComponentNode => {

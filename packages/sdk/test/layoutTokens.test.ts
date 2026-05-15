@@ -195,8 +195,6 @@ describe("Slot Token Injection", () => {
       2: { style: "body", color: "#000000", hAlign: "left", vAlign: "middle" },
       3: { style: "body", color: "#000000", hAlign: "left", vAlign: "middle" },
       4: { style: "body", color: "#000000", hAlign: "left", vAlign: "middle" },
-      5: { style: "body", color: "#000000", hAlign: "left", vAlign: "middle" },
-      6: { style: "body", color: "#000000", hAlign: "left", vAlign: "middle" },
     };
     const theme = mockTheme({
       layouts: {
@@ -222,6 +220,38 @@ describe("Slot Token Injection", () => {
     const tokens = labelNode.tokens as Record<string, unknown>;
     assert.ok(tokens, "tokens should be set on the node");
     assert.strictEqual(tokens.color, "#000000");
+  });
+
+  it("auto-fills missing heading depth from nearest lower depth", () => {
+    const labelDepthTokens = {
+      1: { style: "h1", color: "#111111", hAlign: "left", vAlign: "middle" },
+      2: { style: "h2", color: "#222222", hAlign: "left", vAlign: "middle" },
+      4: { style: "h4", color: "#444444", hAlign: "left", vAlign: "middle" },
+    };
+    const theme = mockTheme({
+      layouts: {
+        slotTokenTest: {
+          background: mockBackground,
+          layoutTokens: {
+            background: "#FFFFFF",
+            text: { style: "body", color: "#000000" },
+            label: labelDepthTokens,
+          },
+        },
+      },
+    });
+
+    // ##### is depth 5 — should fall back to depth 4
+    const md = `${HEADER}---\ntemplate: slotTokenTest\n---\n\n##### Deep Heading`;
+    compileDocument(md, opts(theme));
+
+    const bodyNodes = receivedProps[0].body;
+    const labelNode = bodyNodes[0];
+    assert.strictEqual(labelNode.componentName, C.Label);
+    assert.strictEqual((labelNode as any).params?.headingDepth, 5);
+    const tokens = labelNode.tokens as Record<string, unknown>;
+    assert.ok(tokens, "tokens should be set on the node");
+    assert.strictEqual(tokens.color, "#444444", "depth 5 should fall back to depth 4");
   });
 
   it("does not inject tokens for layouts without slots", () => {

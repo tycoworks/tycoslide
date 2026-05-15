@@ -274,8 +274,6 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       2: t.onLight.headings.h2,
       3: t.onLight.headings.h3,
       4: t.onLight.headings.h4,
-      5: t.onLight.headings.h4,
-      6: t.onLight.headings.h4,
     },
   };
 
