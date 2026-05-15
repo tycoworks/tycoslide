@@ -1,6 +1,8 @@
 // Declarative Node Types
 // Pure data structures representing slide content
 
+import type { Insets } from "./bounds.js";
+
 import type {
   DashType,
   Direction,
@@ -204,7 +206,7 @@ export interface ContainerNode<C extends SlideNode = ElementNode> {
   spacingMode: SpacingMode; // BETWEEN: between children only; AROUND: between + edges
   vAlign: VerticalAlignment;
   hAlign: HorizontalAlignment;
-  padding: number; // inches - internal padding on all sides
+  padding: Insets; // inches - per-side internal padding (normalized at construction)
   layer?: Layer; // render target: master (shared/deduped) or content (per-slide)
 }
 

@@ -14,7 +14,7 @@ import type {
   StackNode,
   TableNode,
 } from "@tycoslide/core";
-import { DASH_TYPE, DIRECTION, HALIGN, NODE_TYPE, SHADOW_TYPE, SHAPE, SIZE, VALIGN } from "@tycoslide/core";
+import { DASH_TYPE, DIRECTION, HALIGN, Insets, NODE_TYPE, SHADOW_TYPE, SHAPE, SIZE, VALIGN } from "@tycoslide/core";
 import { card } from "../src/components/card.js";
 import {
   cardComponent,
@@ -411,7 +411,7 @@ describe("row()", () => {
   test("applies padding prop", async () => {
     const node = row({ spacing: 0, padding: 0.5 }, child1);
     const rendered = (await render(node)) as ContainerNode;
-    assert.strictEqual(rendered.padding, 0.5);
+    assert.deepStrictEqual(rendered.padding, new Insets(0.5));
   });
 
   test("applies spacing prop", async () => {
@@ -546,7 +546,7 @@ describe("column()", () => {
   test("applies padding prop", async () => {
     const node = column({ spacing: 0, padding: 0.25 }, child1);
     const rendered = (await render(node)) as ContainerNode;
-    assert.strictEqual(rendered.padding, 0.25);
+    assert.deepStrictEqual(rendered.padding, new Insets(0.25));
   });
 
   test("applies numeric height", async () => {

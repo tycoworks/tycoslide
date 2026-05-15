@@ -7,6 +7,7 @@ import {
   defineComponent,
   HALIGN,
   type HorizontalAlignment,
+  Insets,
   NODE_TYPE,
   type RenderContext,
   SIZE,
@@ -54,7 +55,7 @@ export type RowParams = {
   spacingMode?: SpacingMode;
   vAlign?: VerticalAlignment;
   hAlign?: HorizontalAlignment; // justify-content: left (flex-start), center, right (flex-end)
-  padding?: number; // inches - internal padding on all sides
+  padding?: number | Insets; // inches - uniform or per-side internal padding
 };
 
 export const rowComponent = defineComponent({
@@ -72,7 +73,7 @@ export const rowComponent = defineComponent({
     spacingMode: params.spacingMode ?? SPACING_MODE.BETWEEN,
     vAlign: params.vAlign ?? VALIGN.TOP, // Explicit default: pure alignment (not CSS stretch)
     hAlign: params.hAlign ?? HALIGN.LEFT, // Explicit default for consistent measurement
-    padding: params.padding ?? 0,
+    padding: params.padding instanceof Insets ? params.padding : new Insets(params.padding ?? 0),
   }),
 });
 
@@ -91,7 +92,7 @@ export type ColumnParams = {
   spacingMode?: SpacingMode;
   vAlign?: VerticalAlignment;
   hAlign?: HorizontalAlignment;
-  padding?: number; // inches - internal padding on all sides
+  padding?: number | Insets; // inches - uniform or per-side internal padding
 };
 
 export const columnComponent = defineComponent({
@@ -109,7 +110,7 @@ export const columnComponent = defineComponent({
     spacingMode: params.spacingMode ?? SPACING_MODE.BETWEEN,
     vAlign: params.vAlign ?? VALIGN.TOP, // Explicit default for consistent measurement
     hAlign: params.hAlign ?? HALIGN.LEFT, // Explicit default for consistent measurement
-    padding: params.padding ?? 0,
+    padding: params.padding instanceof Insets ? params.padding : new Insets(params.padding ?? 0),
   }),
 });
 

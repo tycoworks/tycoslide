@@ -67,6 +67,7 @@ export {
   FONT_SLOT,
   GRID_STYLE,
   HALIGN,
+  Insets,
   SHADOW_TYPE,
   SHAPE,
   SHAPE_VALUES,

@@ -2,7 +2,7 @@
 // Higher-order layout wrappers that add slide chrome (footer, top bar, margins).
 // Replaces the old MasterDefinition concept — chrome is now part of the layout tree.
 
-import { HALIGN, LAYER, SIZE, VALIGN } from "@tycoslide/core";
+import { HALIGN, Insets, LAYER, SIZE, VALIGN } from "@tycoslide/core";
 import type { ImageTokens, LabelTokens, Layout, SlideNumberTokens } from "@tycoslide/sdk";
 import { column, image, label, row, slideNumber } from "@tycoslide/sdk";
 
@@ -65,9 +65,13 @@ export function withFooterChrome<
       bottomSpacer.layer = LAYER.MASTER;
       return column(
         { height: SIZE.FILL },
-        // Content area with margin padding fills remaining space
-        column({ height: SIZE.FILL, padding: chrome.margin }, content),
-        // Footer on master layer (shared/deduped across slides)
+        column(
+          {
+            height: SIZE.FILL,
+            padding: new Insets(chrome.margin, chrome.margin, 0, chrome.margin),
+          },
+          content,
+        ),
         footerRow,
         bottomSpacer,
       );

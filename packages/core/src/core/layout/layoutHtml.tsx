@@ -263,9 +263,21 @@ function styleContainer(
 ): StyledNode {
   const isRow = node.direction === DIRECTION.ROW;
   const spacingPx = inToPx(node.spacing);
-  const basePaddingPx = inToPx(node.padding);
-  const mainAxisPad = basePaddingPx + (node.spacingMode === SPACING_MODE.AROUND ? spacingPx : 0);
-  const crossAxisPad = basePaddingPx;
+  const p = node.padding;
+  let topPx = inToPx(p.top);
+  let rightPx = inToPx(p.right);
+  let bottomPx = inToPx(p.bottom);
+  let leftPx = inToPx(p.left);
+  // AROUND mode adds spacing to main-axis start/end edges
+  if (node.spacingMode === SPACING_MODE.AROUND) {
+    if (isRow) {
+      leftPx += spacingPx;
+      rightPx += spacingPx;
+    } else {
+      topPx += spacingPx;
+      bottomPx += spacingPx;
+    }
+  }
 
   const justifyContent = isRow ? hAlignToJustify(node.hAlign) : vAlignToJustify(node.vAlign);
   const alignItems = isRow ? vAlignToAlignItems(node.vAlign) : hAlignToAlignItems(node.hAlign);
@@ -281,8 +293,8 @@ function styleContainer(
     // containment would zero their intrinsic width, collapsing the column.
     ...(!isRow && node.width !== SIZE.HUG ? { containerType: "inline-size" } : {}),
   };
-  if (mainAxisPad > 0 || crossAxisPad > 0) {
-    styles.padding = isRow ? `${crossAxisPad}px ${mainAxisPad}px` : `${mainAxisPad}px ${crossAxisPad}px`;
+  if (topPx > 0 || rightPx > 0 || bottomPx > 0 || leftPx > 0) {
+    styles.padding = `${topPx}px ${rightPx}px ${bottomPx}px ${leftPx}px`;
   }
 
   const ctx = childContext(node, parent);

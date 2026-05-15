@@ -7,7 +7,7 @@ import path from "node:path";
 import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { generateLayoutHTML, generatePreviewHTML } from "../src/core/layout/layoutHtml.js";
-import { Bounds } from "../src/core/model/bounds.js";
+import { Bounds, Insets } from "../src/core/model/bounds.js";
 import type {
   ContainerNode,
   ElementNode,
@@ -99,7 +99,7 @@ function rowNode(...args: any[]): ContainerNode {
     hAlign: opts.hAlign ?? HALIGN.LEFT,
     spacing: opts.spacing ?? 0,
     spacingMode: opts.spacingMode ?? SPACING_MODE.BETWEEN,
-    padding: opts.padding ?? 0,
+    padding: opts.padding instanceof Insets ? opts.padding : new Insets(opts.padding ?? 0),
   };
 }
 
@@ -119,7 +119,7 @@ function colNode(...args: any[]): ContainerNode {
     hAlign: opts.hAlign ?? HALIGN.LEFT,
     spacing: opts.spacing ?? 0,
     spacingMode: opts.spacingMode ?? SPACING_MODE.BETWEEN,
-    padding: opts.padding ?? 0,
+    padding: opts.padding instanceof Insets ? opts.padding : new Insets(opts.padding ?? 0),
   };
 }
 

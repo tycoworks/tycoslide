@@ -1,5 +1,26 @@
-// Bounds Class
-// Immutable rectangle representing a positioned region on a slide
+// Geometric Primitives
+// Immutable value types for layout: positioned rectangles and per-side insets
+
+/** Per-side padding/inset specification (inches). Immutable. */
+export class Insets {
+  readonly top: number;
+  readonly right: number;
+  readonly bottom: number;
+  readonly left: number;
+
+  constructor(uniform: number);
+  constructor(top: number, right: number, bottom: number, left: number);
+  constructor(a: number, b?: number, c?: number, d?: number) {
+    if (b !== undefined) {
+      this.top = a;
+      this.right = b;
+      this.bottom = c!;
+      this.left = d!;
+    } else {
+      this.top = this.right = this.bottom = this.left = a;
+    }
+  }
+}
 
 export class Bounds {
   readonly x: number;
@@ -24,10 +45,6 @@ export class Bounds {
       this.w = a - m * 2;
       this.h = b - m * 2;
     }
-  }
-
-  inset(padding: number): Bounds {
-    return new Bounds(this.x + padding, this.y + padding, this.w - padding * 2, this.h - padding * 2);
   }
 
   /** Translate position by dx/dy, keeping same dimensions */

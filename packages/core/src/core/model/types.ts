@@ -210,10 +210,10 @@ export type TextRun = string | NormalizedRun;
 export type TextContent = string | TextRun[];
 
 // ============================================
-// BOUNDS
+// GEOMETRIC PRIMITIVES
 // ============================================
 
-export { Bounds } from "./bounds.js";
+export { Bounds, Insets } from "./bounds.js";
 
 import type { SlideNode } from "./nodes.js";
 
