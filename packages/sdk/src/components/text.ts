@@ -26,7 +26,6 @@ import {
 } from "@tycoslide/core";
 import type { RootContent } from "mdast";
 
-import { DEFAULTS } from "../presets/defaults.js";
 import { Component } from "../presets/names.js";
 import { inlineParse, transformInline } from "./utils/inline.js";
 
@@ -34,9 +33,9 @@ export interface TextTokens {
   color: string;
   style: TextStyleName;
   linkColor: string;
-  linkUnderline?: boolean;
-  hAlign?: HorizontalAlignment;
-  vAlign?: VerticalAlignment;
+  linkUnderline: boolean;
+  hAlign: HorizontalAlignment;
+  vAlign: VerticalAlignment;
   accents: Record<string, string>;
   border?: Stroke;
   shadow?: Shadow;
@@ -81,12 +80,12 @@ function renderText(_params: {}, content: string, context: RenderContext, tokens
     style: tokens.style,
     resolvedStyle: textStyle,
     color: tokens.color,
-    hAlign: tokens.hAlign ?? DEFAULTS.hAlign,
-    vAlign: tokens.vAlign ?? DEFAULTS.vAlign,
+    hAlign: tokens.hAlign,
+    vAlign: tokens.vAlign,
     lineHeightMultiplier: textStyle.lineHeightMultiplier,
     bulletIndentPt: textStyle.bulletIndentPt,
     linkColor: tokens.linkColor,
-    linkUnderline: tokens.linkUnderline ?? DEFAULTS.linkUnderline,
+    linkUnderline: tokens.linkUnderline,
   };
   if (tokens.border) {
     node.border = tokens.border;

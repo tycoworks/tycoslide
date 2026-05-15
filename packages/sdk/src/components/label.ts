@@ -19,7 +19,6 @@ import {
   type TextNode,
 } from "@tycoslide/core";
 import type { Heading, RootContent } from "mdast";
-import { DEFAULTS } from "../presets/defaults.js";
 import { Component } from "../presets/names.js";
 
 // ============================================
@@ -39,8 +38,8 @@ export type LabelSlotTokens = Record<HeadingDepth, LabelTokens>;
 export interface LabelTokens {
   color: string;
   style: TextStyleName;
-  hAlign?: HorizontalAlignment;
-  vAlign?: VerticalAlignment;
+  hAlign: HorizontalAlignment;
+  vAlign: VerticalAlignment;
   border?: Stroke;
   shadow?: Shadow;
 }
@@ -90,8 +89,8 @@ function renderLabel(_params: {}, content: string, context: RenderContext, token
     style: tokens.style,
     resolvedStyle: textStyle,
     color: tokens.color,
-    hAlign: tokens.hAlign ?? DEFAULTS.hAlign,
-    vAlign: tokens.vAlign ?? DEFAULTS.vAlign,
+    hAlign: tokens.hAlign,
+    vAlign: tokens.vAlign,
     lineHeightMultiplier: textStyle.lineHeightMultiplier,
     bulletIndentPt: textStyle.bulletIndentPt,
     linkColor: tokens.color,

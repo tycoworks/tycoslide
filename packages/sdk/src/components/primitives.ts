@@ -3,6 +3,7 @@
 import {
   type ComponentNode,
   component,
+  DASH_TYPE,
   type DashType,
   DIRECTION,
   DIRECTION_VALUES,
@@ -24,7 +25,6 @@ import {
   type TextStyleName,
   type VerticalAlignment,
 } from "@tycoslide/core";
-import { DEFAULTS } from "../presets/defaults.js";
 import { Component } from "../presets/names.js";
 
 export interface LineTokens {
@@ -62,7 +62,7 @@ function renderLine(params: LineParams, _content: undefined, _context: RenderCon
   const node: LineNode = {
     type: NODE_TYPE.LINE,
     direction: params.direction ?? DIRECTION.ROW,
-    stroke: { color: tokens.color, width: tokens.width, dashType: tokens.dashType ?? DEFAULTS.dashType },
+    stroke: { color: tokens.color, width: tokens.width, dashType: tokens.dashType ?? DASH_TYPE.SOLID },
   };
   if (tokens.shadow) {
     node.shadow = tokens.shadow;
@@ -103,9 +103,9 @@ function renderShape(
     shape: params.shape,
     fill: {
       color: tokens.fill,
-      opacity: tokens.fillOpacity ?? DEFAULTS.fillOpacity,
+      opacity: tokens.fillOpacity ?? 100,
     },
-    cornerRadius: tokens.cornerRadius ?? DEFAULTS.cornerRadius,
+    cornerRadius: tokens.cornerRadius ?? 0,
   };
   if (tokens.border) {
     node.border = tokens.border;

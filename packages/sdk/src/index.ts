@@ -127,7 +127,6 @@ export {
 
 // ── Theme ───────────────────────────────────────────────────────────────────
 
-export { DEFAULTS } from "./presets/defaults.js";
 export type { ThemeDefinition, ThemeFormat } from "./theme.js";
 // Multi-format theme definition and resolution
 export { defineTheme, resolveThemeFormat } from "./theme.js";
@@ -135,6 +134,10 @@ export { defineTheme, resolveThemeFormat } from "./theme.js";
 // ── Templates ────────────────────────────────────────────────────────────────
 
 export { defineTemplate, type Layout, type Template } from "./template.js";
+
+// ── Token Derivation ────────────────────────────────────────────────────────
+
+export { deriveTokens, type VisualTokens } from "./visualTokens.js";
 
 // ── Markdown Compilation ──────────────────────────────────────────────────
 
