@@ -15,10 +15,6 @@ Now / Next / Later.
 
 ## Next
 
-### Code Quality
-
-- [ ] Audit post-unification simplifications (dead types)
-
 ### Skills
 
 - [ ] Theme Bootstrap Skill (AI extracts from PPTX/Figma)
