@@ -15,7 +15,6 @@ import {
   schema,
   type TableCellData,
   type TableCellInput,
-  type TableHeaderStyle,
   type TextContent,
   type TextNode,
   type TextStyleName,
@@ -32,15 +31,24 @@ import type { TextTokens } from "./text.js";
 // TABLE TOKENS
 // ============================================
 
+/** SDK-side header style — backgroundOpacity optional (defaults to 0 = transparent). */
+export interface TableHeaderTokens {
+  textStyle: TextStyleName;
+  textColor: string;
+  background: string;
+  backgroundOpacity?: number;
+  hAlign?: HorizontalAlignment;
+}
+
 export interface TableTokens {
   // Optional header zones (presence = zone enabled)
-  headerRow?: TableHeaderStyle;
-  headerCol?: TableHeaderStyle;
+  headerRow?: TableHeaderTokens;
+  headerCol?: TableHeaderTokens;
   // Data cell zone
   cellTextStyle: TextStyleName;
   cellTextColor: string;
   cellBackground: string;
-  cellBackgroundOpacity: number;
+  cellBackgroundOpacity?: number;
   // Shared defaults
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;
@@ -232,10 +240,26 @@ export const tableComponent = defineComponent({
       ...(tokens.border && { border: tokens.border }),
       gridStyle: tokens.gridStyle,
       ...(tokens.gridStroke && { gridStroke: tokens.gridStroke }),
-      ...(tokens.headerRow && { headerRow: tokens.headerRow }),
-      ...(tokens.headerCol && { headerCol: tokens.headerCol }),
+      ...(tokens.headerRow && {
+        headerRow: {
+          textStyle: tokens.headerRow.textStyle,
+          textColor: tokens.headerRow.textColor,
+          background: tokens.headerRow.background,
+          backgroundOpacity: tokens.headerRow.backgroundOpacity ?? 0,
+          ...(tokens.headerRow.hAlign != null && { hAlign: tokens.headerRow.hAlign }),
+        },
+      }),
+      ...(tokens.headerCol && {
+        headerCol: {
+          textStyle: tokens.headerCol.textStyle,
+          textColor: tokens.headerCol.textColor,
+          background: tokens.headerCol.background,
+          backgroundOpacity: tokens.headerCol.backgroundOpacity ?? 0,
+          ...(tokens.headerCol.hAlign != null && { hAlign: tokens.headerCol.hAlign }),
+        },
+      }),
       cellBackground: tokens.cellBackground,
-      cellBackgroundOpacity: tokens.cellBackgroundOpacity,
+      cellBackgroundOpacity: tokens.cellBackgroundOpacity ?? 0,
       cellPadding: tokens.cellPadding,
     };
 

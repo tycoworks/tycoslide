@@ -104,6 +104,7 @@ export function buildChromeTokens(palette: Palette, config: Format, chrome: Chro
   const footer: FooterChromeTokens = {
     margin,
     footerHeight,
+    bottomPadding: margin / 4,
     footerLogo: assets.tycoslide.logo,
     footerText: "tycoslide",
     footerSpacing: spacingTight,
@@ -138,7 +139,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
 
   // ── Composition atoms ───────────────────────────────────────────────────
   const centered = { hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } as const;
-  const richText = { linkColor: palette.accent, accents: t.primitives.accents, linkUnderline: false };
+  const richText = { linkColor: palette.accent, accents: t.primitives.accents, linkUnderline: true };
 
   // ── Header tokens (shared by body, cards, agenda, transform) ────────────
   const headerTokens = {
@@ -162,14 +163,30 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
     vAlign: VALIGN.MIDDLE,
   };
 
-  const quoteText = {
-    linkColor: palette.accent,
-    accents: t.primitives.accents,
-    linkUnderline: true,
+  const quoteText = { ...t.onLight.headings.h2, ...richText };
+
+  // ── Card tokens (used by cards + transform templates) ───────────────────
+  const cardTitle = {
+    ...richText,
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.MIDDLE,
-    style: TEXT_STYLE.H2,
-    color: palette.heading,
+    style: TEXT_STYLE.H4,
+    color: palette.accent,
+  };
+  const cardDescription = {
+    ...richText,
+    hAlign: HALIGN.LEFT,
+    vAlign: VALIGN.MIDDLE,
+    style: TEXT_STYLE.CAPTION,
+    color: palette.secondary,
+  };
+  const cardBase = {
+    padding,
+    image: { padding: spacingTight },
+    spacing: spacingTight,
+    hAlign: HALIGN.LEFT,
+    title: cardTitle,
+    description: cardDescription,
   };
 
   const componentTokens = {
@@ -177,21 +194,18 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       headerRow: {
         textStyle: TEXT_STYLE.CAPTION,
         textColor: palette.muted,
-        backgroundOpacity: 0,
         background: palette.divider,
         hAlign: HALIGN.CENTER,
       },
       headerCol: {
         textStyle: TEXT_STYLE.CAPTION,
         textColor: palette.muted,
-        backgroundOpacity: 0,
         background: palette.background,
         hAlign: HALIGN.LEFT,
       },
       cellTextStyle: TEXT_STYLE.CAPTION,
       cellTextColor: palette.body,
       cellBackground: palette.surface,
-      cellBackgroundOpacity: 0,
       hAlign: HALIGN.CENTER,
       vAlign: VALIGN.MIDDLE,
       gridStyle: GRID_STYLE.HORIZONTAL,
@@ -253,30 +267,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       attribution: labelMutedSmall,
       image: imageTokens,
     },
-    card: {
-      padding,
-      image: { padding: 0.125 },
-      spacing: spacingTight,
-      hAlign: HALIGN.LEFT,
-      title: {
-        ...richText,
-        linkUnderline: true,
-        hAlign: HALIGN.LEFT,
-        vAlign: VALIGN.MIDDLE,
-        style: TEXT_STYLE.H4,
-        color: palette.accent,
-      },
-      description: {
-        ...richText,
-        linkUnderline: true,
-        hAlign: HALIGN.LEFT,
-        vAlign: VALIGN.MIDDLE,
-        style: TEXT_STYLE.CAPTION,
-        color: palette.secondary,
-      },
-      vAlign: VALIGN.MIDDLE,
-      background: { ...t.surfaces.card, shadow: t.primitives.shadow },
-    },
+    card: { ...cardBase, vAlign: VALIGN.MIDDLE, background: { ...t.surfaces.card, shadow: t.primitives.shadow } },
     image: imageTokens,
     label: {
       1: t.onLight.headings.h1,
@@ -286,32 +277,6 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       5: t.onLight.headings.h4,
       6: t.onLight.headings.h4,
     },
-  };
-
-  // ── Card tokens (used by cards + transform templates) ───────────────────
-  const cardTitle = {
-    ...richText,
-    linkUnderline: true,
-    hAlign: HALIGN.LEFT,
-    vAlign: VALIGN.MIDDLE,
-    style: TEXT_STYLE.H4,
-    color: palette.accent,
-  };
-  const cardDescription = {
-    ...richText,
-    linkUnderline: true,
-    hAlign: HALIGN.LEFT,
-    vAlign: VALIGN.MIDDLE,
-    style: TEXT_STYLE.CAPTION,
-    color: palette.secondary,
-  };
-  const cardBase = {
-    padding,
-    image: { padding: 0.125 },
-    spacing: spacingTight,
-    hAlign: HALIGN.LEFT,
-    title: cardTitle,
-    description: cardDescription,
   };
 
   // ── Shared body spread ──────────────────────────────────────────────────
@@ -338,8 +303,14 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
         layout: margin(title),
         background: t.surfaces.elevated,
         layoutTokens: {
-          title: { ...t.onLight.headings.h1, ...centered, ...richText, style: TEXT_STYLE.QUOTE },
-          subtitle: { ...t.onLight.headings.h3, ...centered, ...richText, color: palette.secondary },
+          title: { ...t.onLight.headings.h1, ...centered, ...richText, linkUnderline: false, style: TEXT_STYLE.QUOTE },
+          subtitle: {
+            ...t.onLight.headings.h3,
+            ...centered,
+            ...richText,
+            linkUnderline: false,
+            color: palette.secondary,
+          },
           ...centered,
           spacing: spacingTight,
           image: {},
@@ -353,8 +324,8 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
         layout: margin(title),
         background: t.surfaces.emphasis,
         layoutTokens: {
-          title: { ...t.onDark.headings.h1, ...centered, ...richText, style: TEXT_STYLE.QUOTE },
-          subtitle: { ...t.onDark.headings.h3, ...centered, ...richText },
+          title: { ...t.onDark.headings.h1, ...centered, ...richText, linkUnderline: false, style: TEXT_STYLE.QUOTE },
+          subtitle: { ...t.onDark.headings.h3, ...centered, ...richText, linkUnderline: false },
           ...centered,
           spacing: spacingTight,
           image: {},
@@ -437,7 +408,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
           ...centered,
           spacing,
           gridSpacing: spacing,
-          card: { ...cardBase, padding: 0.34375, vAlign: VALIGN.TOP, background: t.surfaces.card },
+          card: { ...cardBase, padding: unit * 11, vAlign: VALIGN.TOP, background: t.surfaces.card },
         },
       }),
 

@@ -16,6 +16,7 @@ export interface FooterChromeTokens {
   footerLogo: string;
   footerText: string;
   footerSpacing: number;
+  bottomPadding: number;
   slideNumber: SlideNumberTokens;
   footer: LabelTokens;
   footerImage: ImageTokens;
@@ -60,7 +61,7 @@ export function withFooterChrome<
       );
       footerRow.layer = LAYER.MASTER;
       // Bottom breathing (matches old master's margin/4 padding)
-      const bottomSpacer = column({ height: chrome.margin / 4 });
+      const bottomSpacer = column({ height: chrome.bottomPadding });
       bottomSpacer.layer = LAYER.MASTER;
       return column(
         { height: SIZE.FILL },
