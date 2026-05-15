@@ -3,12 +3,12 @@
 // role-based surfaces, and visual primitives.
 // Zero theme-specific concepts — no "hero", "eyebrow", "stat", "section heading".
 
-import { DASH_TYPE, HALIGN, VALIGN } from "@tycoslide/core";
-import type { Format, Palette } from "./format.js";
-import { TEXT_STYLE } from "./format.js";
+import { DASH_TYPE, VALIGN } from "@tycoslide/core";
 import type { LabelTokens } from "./components/label.js";
 import type { ListTokens } from "./components/list.js";
 import type { TextTokens } from "./components/text.js";
+import type { Format, Palette } from "./format.js";
+import { TEXT_STYLE } from "./format.js";
 
 /**
  * Derive a complete set of visual tokens from a Palette and Format.
@@ -35,7 +35,13 @@ export function deriveTokens(palette: Palette, format: Format) {
     offset: format.shadow.offset,
     angle: format.shadow.angle,
   };
-  const richTextBase = { linkColor: palette.accent, linkUnderline: true, hAlign: format.hAlign, vAlign: format.vAlign, accents };
+  const richTextBase = {
+    linkColor: palette.accent,
+    linkUnderline: true,
+    hAlign: format.hAlign,
+    vAlign: format.vAlign,
+    accents,
+  };
 
   // ── onLight text tokens (for light/neutral backgrounds) ──────────────
 
@@ -72,10 +78,30 @@ export function deriveTokens(palette: Palette, format: Format) {
   };
 
   const darkHeadings = {
-    h1: { color: palette.background, style: TEXT_STYLE.H1, hAlign: format.hAlign, vAlign: format.vAlign } as LabelTokens,
-    h2: { color: palette.background, style: TEXT_STYLE.H2, hAlign: format.hAlign, vAlign: format.vAlign } as LabelTokens,
-    h3: { color: palette.background, style: TEXT_STYLE.H3, hAlign: format.hAlign, vAlign: format.vAlign } as LabelTokens,
-    h4: { color: palette.background, style: TEXT_STYLE.H4, hAlign: format.hAlign, vAlign: format.vAlign } as LabelTokens,
+    h1: {
+      color: palette.background,
+      style: TEXT_STYLE.H1,
+      hAlign: format.hAlign,
+      vAlign: format.vAlign,
+    } as LabelTokens,
+    h2: {
+      color: palette.background,
+      style: TEXT_STYLE.H2,
+      hAlign: format.hAlign,
+      vAlign: format.vAlign,
+    } as LabelTokens,
+    h3: {
+      color: palette.background,
+      style: TEXT_STYLE.H3,
+      hAlign: format.hAlign,
+      vAlign: format.vAlign,
+    } as LabelTokens,
+    h4: {
+      color: palette.background,
+      style: TEXT_STYLE.H4,
+      hAlign: format.hAlign,
+      vAlign: format.vAlign,
+    } as LabelTokens,
   };
 
   const onDark = {

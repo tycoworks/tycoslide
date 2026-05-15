@@ -1,26 +1,10 @@
 import { GRID_STYLE, HALIGN, SHADOW_TYPE, VALIGN } from "@tycoslide/core";
 import type { Format, LabelTokens, Layout, Palette, ThemeFormat } from "@tycoslide/sdk";
-import { SlideFormat, TEXT_STYLE, defineTemplate, deriveTokens } from "@tycoslide/sdk";
+import { defineTemplate, deriveTokens, SlideFormat, TEXT_STYLE } from "@tycoslide/sdk";
 import { assets } from "../assets.js";
-import {
-  type FactsheetChromeTokens,
-  withFactsheetChrome,
-  withMarginChrome,
-} from "../chrome.js";
-import {
-  agenda,
-  blank,
-  body,
-  cards,
-  end,
-  quote,
-  section,
-  stat,
-  statement,
-  title,
-  twoColumn,
-} from "../layouts.js";
+import { type FactsheetChromeTokens, withFactsheetChrome, withMarginChrome } from "../chrome.js";
 import { TEMPLATE } from "../index.js";
+import { agenda, blank, body, cards, end, quote, section, stat, statement, title, twoColumn } from "../layouts.js";
 import type { ChromeConfig } from "./presentation.js";
 
 const unit = 0.025;
@@ -113,24 +97,82 @@ export function buildFactsheetFormat(palette: Palette): ThemeFormat {
 
   const richTextBase = { linkColor: palette.accent, accents: t.primitives.accents };
 
-  const heroTitle = { ...richTextBase, linkUnderline: false, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE, style: TEXT_STYLE.H1, color: palette.background };
-  const heroSubtitle = { ...richTextBase, linkUnderline: false, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE, style: TEXT_STYLE.H3, color: palette.background };
+  const heroTitle = {
+    ...richTextBase,
+    linkUnderline: false,
+    hAlign: HALIGN.CENTER,
+    vAlign: VALIGN.MIDDLE,
+    style: TEXT_STYLE.H1,
+    color: palette.background,
+  };
+  const heroSubtitle = {
+    ...richTextBase,
+    linkUnderline: false,
+    hAlign: HALIGN.CENTER,
+    vAlign: VALIGN.MIDDLE,
+    style: TEXT_STYLE.H3,
+    color: palette.background,
+  };
 
   const headerTokens = {
     title: t.onLight.headings.h3,
-    eyebrow: { style: TEXT_STYLE.CAPTION, color: palette.accent, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE } as LabelTokens,
+    eyebrow: {
+      style: TEXT_STYLE.CAPTION,
+      color: palette.accent,
+      hAlign: HALIGN.LEFT,
+      vAlign: VALIGN.MIDDLE,
+    } as LabelTokens,
     headerSpacing: spacingTight,
   };
 
-  const sectionHeading: LabelTokens = { hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE, style: TEXT_STYLE.H2, color: palette.background };
-  const statValue: LabelTokens = { hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE, style: TEXT_STYLE.H1, color: palette.accent };
-  const statLabel: LabelTokens = { hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE, style: TEXT_STYLE.H3, color: palette.secondary };
+  const sectionHeading: LabelTokens = {
+    hAlign: HALIGN.CENTER,
+    vAlign: VALIGN.MIDDLE,
+    style: TEXT_STYLE.H2,
+    color: palette.background,
+  };
+  const statValue: LabelTokens = {
+    hAlign: HALIGN.CENTER,
+    vAlign: VALIGN.MIDDLE,
+    style: TEXT_STYLE.H1,
+    color: palette.accent,
+  };
+  const statLabel: LabelTokens = {
+    hAlign: HALIGN.CENTER,
+    vAlign: VALIGN.MIDDLE,
+    style: TEXT_STYLE.H3,
+    color: palette.secondary,
+  };
   const mutedCaption = { ...t.onLight.caption, hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE };
-  const labelMutedSmall: LabelTokens = { style: TEXT_STYLE.CAPTION, color: palette.secondary, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
-  const labelFooter: LabelTokens = { style: TEXT_STYLE.FOOTER, color: palette.secondary, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE };
+  const labelMutedSmall: LabelTokens = {
+    style: TEXT_STYLE.CAPTION,
+    color: palette.secondary,
+    hAlign: HALIGN.LEFT,
+    vAlign: VALIGN.MIDDLE,
+  };
+  const labelFooter: LabelTokens = {
+    style: TEXT_STYLE.FOOTER,
+    color: palette.secondary,
+    hAlign: HALIGN.LEFT,
+    vAlign: VALIGN.MIDDLE,
+  };
 
-  const cardTitle = { ...richTextBase, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE, style: TEXT_STYLE.H4, color: palette.accent };
-  const cardDescription = { ...richTextBase, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE, style: TEXT_STYLE.CAPTION, color: palette.secondary };
+  const cardTitle = {
+    ...richTextBase,
+    linkUnderline: true,
+    hAlign: HALIGN.LEFT,
+    vAlign: VALIGN.MIDDLE,
+    style: TEXT_STYLE.H4,
+    color: palette.accent,
+  };
+  const cardDescription = {
+    ...richTextBase,
+    linkUnderline: true,
+    hAlign: HALIGN.LEFT,
+    vAlign: VALIGN.MIDDLE,
+    style: TEXT_STYLE.CAPTION,
+    color: palette.secondary,
+  };
   const cardBase = {
     padding,
     image: { padding: 0.125 },
@@ -145,8 +187,20 @@ export function buildFactsheetFormat(palette: Palette): ThemeFormat {
   const imageTokens = {};
 
   const tableTokens = {
-    headerRow: { textStyle: TEXT_STYLE.CAPTION, textColor: palette.muted, backgroundOpacity: 0, background: palette.divider, hAlign: HALIGN.CENTER },
-    headerCol: { textStyle: TEXT_STYLE.CAPTION, textColor: palette.muted, backgroundOpacity: 0, background: palette.background, hAlign: HALIGN.LEFT },
+    headerRow: {
+      textStyle: TEXT_STYLE.CAPTION,
+      textColor: palette.muted,
+      backgroundOpacity: 0,
+      background: palette.divider,
+      hAlign: HALIGN.CENTER,
+    },
+    headerCol: {
+      textStyle: TEXT_STYLE.CAPTION,
+      textColor: palette.muted,
+      backgroundOpacity: 0,
+      background: palette.background,
+      hAlign: HALIGN.LEFT,
+    },
     cellTextStyle: TEXT_STYLE.CAPTION,
     cellTextColor: palette.body,
     cellBackground: palette.surface,
@@ -180,7 +234,14 @@ export function buildFactsheetFormat(palette: Palette): ThemeFormat {
     image: imageTokens,
   };
 
-  const quoteText = { ...richTextBase, linkUnderline: true, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE, style: TEXT_STYLE.H2, color: palette.heading };
+  const quoteText = {
+    ...richTextBase,
+    linkUnderline: true,
+    hAlign: HALIGN.LEFT,
+    vAlign: VALIGN.MIDDLE,
+    style: TEXT_STYLE.H2,
+    color: palette.heading,
+  };
 
   const quoteTokens = {
     bar: {
