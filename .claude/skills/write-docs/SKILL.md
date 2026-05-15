@@ -61,7 +61,7 @@ These are the mistakes most likely to slip through. Catch them before finishing:
 | Install, first build, editor setup | `quick-start.md` |
 | Frontmatter, separators, text, lists, tables, notes, directive summary | `markdown-syntax.md` |
 | Component reference, directive syntax, custom components, DSL, tokens | `components.md` |
-| Layout authoring, slots, masters, render function | `layouts.md` |
+| Template authoring, layouts, chrome, slots, render function | `templates.md` |
 | Theme config, colors, fonts, spacing, variants, multi-format | `themes.md` |
 | CLI flags, exit codes, debug | `cli.md` |
 | Error messages, causes, fixes | `troubleshooting.md` |

@@ -85,7 +85,7 @@ Dash separator, brief description. No full stops.
 
 **Author-facing content (markdown-syntax.md, quick-start.md) is shallow.** It shows what to type and what happens. It does not explain internal mechanics. It defers immediately to other pages: "For component directives and parameters, see [Components](./components.md)."
 
-**Developer-facing content (custom sections in components.md, layouts.md, themes.md) is deeper.** It documents the TypeScript API, schema helpers, token system, slot mechanics, and testing approach. Do not add "See [source file] for the complete reference" sentences — if content is important enough to mention, document it inline.
+**Developer-facing content (custom sections in components.md, templates.md, themes.md) is deeper.** It documents the TypeScript API, schema helpers, token system, slot mechanics, and testing approach. Do not add "See [source file] for the complete reference" sentences — if content is important enough to mention, document it inline.
 
 **Error messages are quoted verbatim in troubleshooting.** Each error entry shows the exact error string in a plain code block (no language tag), then **Cause:** and **Fix:** in bold. No "Note:", no callout boxes.
 
@@ -103,7 +103,7 @@ Each page owns its topic. Do not write content that belongs on another page.
 | Install, first build, editor setup | `quick-start.md` |
 | Frontmatter, slide separators, text formatting, lists, tables (GFM), speaker notes, directive summary table | `markdown-syntax.md` |
 | Full component reference (content + layout), directive syntax, custom component authoring, DSL functions, token system, expansion function | `components.md` |
-| Custom layout authoring, slot mechanics, masters, render function, testing layouts | `layouts.md` |
+| Template authoring (defineTemplate), Layout blueprints, chrome composition, slot mechanics, render function, testing templates | `templates.md` |
 | Theme structure, color/font/spacing/border/component token configuration, variants system, font requirements, registering layouts in themes, testing themes, multi-format themes | `themes.md` |
 | CLI flags, exit codes, debug workflow | `cli.md` |
 | Error messages, causes, fixes, debug tools | `troubleshooting.md` |
@@ -111,7 +111,7 @@ Each page owns its topic. Do not write content that belongs on another page.
 
 `markdown-syntax.md` contains a summary table of available directives. This controlled duplication is by design — authors should not need to visit `components.md` for a quick reference.
 
-**Cross-reference, never duplicate.** If `layouts.md` needs to mention parameter schema helpers, it links to `components.md#defining-parameters`. It does not re-document the schema helpers. If `themes.md` needs to mention layout registration, it says "For how to package layouts with your theme entry point, see [Themes — Registering Layouts in Themes](./themes.md#registering-layouts-in-themes)" (as the current `layouts.md` does).
+**Cross-reference, never duplicate.** If `templates.md` needs to mention parameter schema helpers, it links to `components.md#defining-parameters`. It does not re-document the schema helpers.
 
 **The "Common Patterns" section in `components.md` is the one place for multi-component usage examples.** Individual component sections show that component in isolation. Patterns that combine multiple components (row + card, column + quote + text) belong in Common Patterns.
 

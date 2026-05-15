@@ -9,7 +9,6 @@ Each slide is a YAML frontmatter block enclosed by `---`, followed by optional b
 ```markdown
 ---
 template: body
-variant: default
 title: Slide Title
 eyebrow: SECTION NAME
 ---
@@ -18,7 +17,6 @@ Body content goes here.
 
 ---
 template: body
-variant: default
 title: Next Slide
 ---
 
@@ -40,28 +38,26 @@ Global frontmatter fields:
 - `theme` - Theme package or path (**required**)
 - `format` - Output format selected from the theme (**required**, e.g. `presentation`, `factsheet`)
 
-See [Themes — Specifying a Format](./themes.md#specifying-a-format).
+See [Themes — Using a Theme](./themes.md#using-a-theme).
 
 ## Per-Slide Frontmatter
 
-Each slide must specify a layout and any layout-specific parameters:
+Each slide must specify a template and any template-specific parameters:
 
 ```markdown
 ---
 template: body
-variant: default
 title: My Slide Title
 eyebrow: CHAPTER 1
 ---
 ```
 
 Frontmatter fields:
-- `layout` - Which layout to use (**required**)
-- `variant` - Which variant of the layout (**required**, e.g. `default`)
+- `template` - Which template to use (**required**)
 - `title` - Slide title
 - `notes` - Speaker notes
 
-Available layouts and parameters are defined by the theme.
+Available templates and parameters are defined by the theme.
 
 Values are plain YAML — quote only when the value contains special characters like `[`, `]`, or `: ` mid-string. Plain text values do not need quotes.
 
@@ -138,7 +134,6 @@ The `:::table` directive is also available. See [Components — table](./compone
 ```markdown
 ---
 template: body
-variant: default
 title: Important Slide
 notes: |
   Remember to emphasize the key point.
@@ -195,14 +190,12 @@ format: presentation
 
 ---
 template: title
-variant: default
 title: Markdown Basics
 subtitle: Essential Syntax for tycoslide
 ---
 
 ---
 template: body
-variant: default
 title: Text Formatting
 eyebrow: BASICS
 notes: Demo each formatting style
@@ -216,7 +209,6 @@ Add [clickable links](https://example.com) to any slide.
 
 ---
 template: body
-variant: default
 title: Lists and Structure
 ---
 
@@ -234,7 +226,6 @@ title: Lists and Structure
 
 ---
 template: section
-variant: default
 title: Next Steps
 ---
 ```
@@ -243,5 +234,5 @@ title: Next Steps
 
 - [Quick Start](./quick-start.md) - Your first presentation
 - [Components](./components.md) - Content and layout reference
-- [Layouts](./layouts.md) - Available slide layouts
+- [Templates](./templates.md) - Available slide templates
 - [CLI](./cli.md) - Build command options

@@ -34,14 +34,12 @@ format: presentation
 
 ---
 template: title
-variant: default
 title: My Presentation
 subtitle: Built with tycoslide
 ---
 
 ---
 template: body
-variant: default
 title: First Slide
 eyebrow: INTRODUCTION
 ---
@@ -77,6 +75,6 @@ npx tycoslide build examples/showcase.md
 
 - **Markdown syntax:** See [Markdown Syntax](./markdown-syntax.md)
 - **Add components:** See [Components](./components.md)
-- **Slide layouts:** See [Layouts](./layouts.md)
+- **Slide templates:** See [Templates](./templates.md)
 - **Customize themes:** See [Themes](./themes.md)
 - **CLI options:** See [CLI](./cli.md)

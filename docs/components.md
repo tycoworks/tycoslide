@@ -364,7 +364,7 @@ Vertical line:
 line(tokens.separator, DIRECTION.COLUMN)
 ```
 
-For a complete layout example, see the default theme's layouts in [Layouts — Masters and Fixed Elements](./layouts.md#masters-and-fixed-elements).
+For a complete layout example, see the default theme's templates in [Templates](./templates.md).
 
 ---
 
@@ -677,12 +677,12 @@ Custom components add new content types to tycoslide, so authors can use them in
 
 ### Component Registration
 
-Components are defined with `defineComponent()` and registered with `componentRegistry.register()`. Defining a component does not register it. Registration is a separate step, done by the theme entry point.
+Components are defined with `defineComponent()` and included in the theme's `components` array. The theme entry point collects all component definitions — the CLI registers them at build time.
 
 ```typescript
-import { defineComponent, componentRegistry, component, param, token, schema } from '@tycoslide/core';
+import { defineComponent, component, param, token, schema } from '@tycoslide/core';
 import { label } from '@tycoslide/sdk';
-import type { InferParams, InferTokens, TextStyleName } from '@tycoslide/core';
+import type { InferTokens, TextStyleName } from '@tycoslide/core';
 
 const badgeParams = param.shape({
   label: param.required(schema.string()),
@@ -696,7 +696,6 @@ const badgeTokens = token.shape({
 
 export type BadgeTokens = InferTokens<typeof badgeTokens>;
 
-// 1. Define the component (pure factory -- no side effects)
 export const badgeComponent = defineComponent({
   name: 'badge',
   params: badgeParams,
@@ -705,12 +704,9 @@ export const badgeComponent = defineComponent({
     return label(params.label, { color: tokens.textColor, style: tokens.textStyle });
   },
 });
-
-// 2. Register (theme entry point does this)
-componentRegistry.register(badgeComponent);
 ```
 
-Each built-in component exports its definition object (e.g., `cardComponent`, `textComponent`, `codeComponent`) alongside its DSL function. Theme entry points collect these into a `components` array and register them. `componentRegistry.register()` accepts either a single definition or an array. See [Themes -- Theme Entry Point](./themes.md#registering-layouts-in-themes).
+Each built-in component exports its definition object (e.g., `cardComponent`, `textComponent`, `codeComponent`) alongside its DSL function. Theme entry points collect these into a `components` array. See [Themes — Theme Entry Point](./themes.md#theme-entry-point).
 
 #### Overload Patterns
 
@@ -794,7 +790,7 @@ render: ({ title, cards }, _slots, tokens: CardsLayoutTokens) => {
 }
 ```
 
-For how to define token maps in a theme, see [Themes — Overriding Layout Tokens](./themes.md#overriding-layout-tokens). Missing tokens are caught at build time.
+Token values are provided via `layoutTokens` in each template's `defineTemplate()` call. Missing tokens are caught at build time. See [Templates — Assembling Templates](./templates.md#assembling-templates-in-a-format).
 
 ### Content Slots
 
@@ -828,25 +824,12 @@ This is the body content.
 
 **Container components are markdown-accessible by default** — the body is compiled and passed as children. Set `directive: false` to suppress markdown access. Built-in containers (row, column, stack, grid) use `directive: false`.
 
-### Variants
-
-Variants apply different visual styles to the same layout structure — different colors, fonts, or spacing without changing the arrangement of elements. Variant is a slide-level setting in frontmatter, not a component parameter.
-
-```markdown
----
-template: statement
-variant: hero
----
-```
-
-Use a variant when the visual values differ. Use a different layout when the structure changes. See [Themes — Variants System](./themes.md#variants-system) for defining variants in a theme.
-
 ### Complete Example: Metric Component
 
 Display a large metric value with a label and optional change indicator:
 
 ```typescript
-import { defineComponent, componentRegistry, component, param, token, schema } from '@tycoslide/core';
+import { defineComponent, component, param, token, schema } from '@tycoslide/core';
 import { column, label } from '@tycoslide/sdk';
 import type { LabelTokens } from '@tycoslide/sdk';
 import type { InferParams, InferTokens } from '@tycoslide/core';
@@ -894,10 +877,7 @@ export const metricComponent = defineComponent({
   },
 });
 
-// 3. Register (theme entry point does this)
-componentRegistry.register(metricComponent);
-
-// 4. Export DSL function — tokens passed by caller
+// 3. Export DSL function — tokens passed by caller
 export function metric(params: MetricParams, tokens: MetricTokens) {
   return component('metric', params, undefined, tokens);
 }
@@ -913,13 +893,14 @@ export function metric(params: MetricParams, tokens: MetricTokens) {
 
 ```typescript
 render: ({ metrics }, _slots, tokens: MyLayoutTokens) => {
-  return masteredSlide(
+  return column(
+    { spacing: tokens.spacing },
     ...metrics.map(m => metric(m, tokens.metric)),
   );
 }
 ```
 
-The layout's token map entry for `metric` holds the `MetricTokens` object. The theme sets these values in `theme.layouts[layoutName].variants[variantName]`.
+The `metric` key in `layoutTokens` holds the `MetricTokens` object. Values are set in the template's `defineTemplate()` call.
 
 ### TypeScript DSL Functions
 
@@ -1006,12 +987,10 @@ The [mermaid](#mermaid) and [code](#code) components use Canvas internally. Thos
 ### Testing Components
 
 ```typescript
-import { Presentation, componentRegistry } from '@tycoslide/core';
+import { Presentation } from '@tycoslide/core';
 import { theme } from '@tycoslide/theme-default';
 import { column } from '@tycoslide/sdk';
-import { metricComponent } from './my-component';
 
-componentRegistry.register(metricComponent);
 const pres = new Presentation(theme);
 
 pres.add({
