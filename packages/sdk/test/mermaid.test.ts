@@ -12,42 +12,8 @@ import {
   mermaid,
   validateMermaidDefinition,
 } from "../src/components/mermaid.js";
-import {
-  cardComponent,
-  codeComponent,
-  columnComponent,
-  gridComponent,
-  imageComponent,
-  lineComponent,
-  mermaidComponent,
-  quoteComponent,
-  rowComponent,
-  shapeComponent,
-  slideNumberComponent,
-  stackComponent,
-  tableComponent,
-  textComponent,
-} from "../src/index.js";
 import { Component } from "../src/presets/names.js";
-import { DEFAULT_MERMAID_TOKENS, mockTheme, renderComponent, testRegistry } from "./mocks.js";
-
-// Register components explicitly
-testRegistry.register([
-  textComponent,
-  imageComponent,
-  cardComponent,
-  quoteComponent,
-  tableComponent,
-  codeComponent,
-  mermaidComponent,
-  lineComponent,
-  shapeComponent,
-  slideNumberComponent,
-  rowComponent,
-  columnComponent,
-  stackComponent,
-  gridComponent,
-]);
+import { DEFAULT_MERMAID_TOKENS, mermaidComponent, mockTheme, renderComponent } from "./mocks.js";
 
 describe("mermaid() DSL function", () => {
   it("returns ComponentNode with correct type", () => {
@@ -290,8 +256,7 @@ describe("injectClassDefs", () => {
 
 describe("mermaid expansion", () => {
   it("should be available after register()", () => {
-    const registered = testRegistry.has(Component.Mermaid);
-    assert.ok(registered, "mermaid component should be registered");
+    assert.ok(mermaidComponent);
   });
 
   it("renders to image component via canvas", async () => {

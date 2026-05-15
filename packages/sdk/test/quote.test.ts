@@ -2,53 +2,15 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import { HALIGN, NODE_TYPE } from "@tycoslide/core";
 import { quote } from "../src/components/quote.js";
-import {
-  cardComponent,
-  codeComponent,
-  columnComponent,
-  gridComponent,
-  imageComponent,
-  labelComponent,
-  lineComponent,
-  mermaidComponent,
-  quoteComponent,
-  rowComponent,
-  shapeComponent,
-  slideNumberComponent,
-  stackComponent,
-  tableComponent,
-  testimonialComponent,
-  textComponent,
-} from "../src/index.js";
 import { Component } from "../src/presets/names.js";
-import { DEFAULT_QUOTE_TOKENS, mockTheme, noopCanvas, renderTree, testRegistry } from "./mocks.js";
-
-// Register components explicitly
-testRegistry.register([
-  textComponent,
-  imageComponent,
-  cardComponent,
-  quoteComponent,
-  tableComponent,
-  codeComponent,
-  mermaidComponent,
-  lineComponent,
-  shapeComponent,
-  slideNumberComponent,
-  rowComponent,
-  columnComponent,
-  stackComponent,
-  gridComponent,
-  testimonialComponent,
-  labelComponent,
-]);
+import { DEFAULT_QUOTE_TOKENS, mockTheme, noopCanvas, quoteComponent, renderTree } from "./mocks.js";
 
 describe("Quote Component (Pull Quote)", () => {
   const theme = mockTheme();
 
   describe("registration", () => {
     it("should be registered after register()", () => {
-      assert.ok(testRegistry.has(Component.Quote));
+      assert.ok(quoteComponent);
     });
   });
 

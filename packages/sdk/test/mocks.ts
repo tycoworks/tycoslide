@@ -29,34 +29,78 @@ import type {
   TestimonialTokens,
   TextTokens,
 } from "../src/index.js";
+import {
+  cardComponent,
+  codeComponent,
+  columnComponent,
+  gridComponent,
+  imageComponent,
+  labelComponent,
+  lineComponent,
+  listComponent,
+  mermaidComponent,
+  quoteComponent,
+  rowComponent,
+  shapeComponent,
+  slideNumberComponent,
+  stackComponent,
+  tableComponent,
+  testimonialComponent,
+  textComponent,
+} from "../src/index.js";
+export {
+  cardComponent,
+  codeComponent,
+  columnComponent,
+  gridComponent,
+  imageComponent,
+  labelComponent,
+  lineComponent,
+  listComponent,
+  mermaidComponent,
+  quoteComponent,
+  rowComponent,
+  shapeComponent,
+  slideNumberComponent,
+  stackComponent,
+  tableComponent,
+  testimonialComponent,
+  textComponent,
+};
+
 import { HIGHLIGHT_THEME } from "../src/presets/highlighting.js";
 
 const require = createRequire(import.meta.url);
 
 // ============================================
-// SHARED TEST COMPONENT MAP
+// SHARED TEST COMPONENT ARRAY
 // ============================================
 
-const componentMap = new Map<string, ComponentDefinition<any, any, any>>();
+/** All standard SDK components for testing. */
+export const testComponents: ComponentDefinition<any, any, any>[] = [
+  textComponent,
+  imageComponent,
+  cardComponent,
+  quoteComponent,
+  tableComponent,
+  codeComponent,
+  mermaidComponent,
+  lineComponent,
+  shapeComponent,
+  slideNumberComponent,
+  rowComponent,
+  columnComponent,
+  stackComponent,
+  gridComponent,
+  labelComponent,
+  listComponent,
+  testimonialComponent,
+];
 
-export const testRegistry = {
-  register(input: ComponentDefinition<any, any, any> | readonly ComponentDefinition<any, any, any>[]): void {
-    const arr = Array.isArray(input) ? input : [input];
-    for (const d of arr) componentMap.set(d.name, d);
-  },
-  has(name: string): boolean {
-    return componentMap.has(name);
-  },
-  get(name: string): ComponentDefinition<any, any, any> | undefined {
-    return componentMap.get(name);
-  },
-  getMdastHandler(nodeType: string): ComponentDefinition<any, any, any> | undefined {
-    for (const def of componentMap.values()) {
-      if (def.mdast?.nodeTypes.includes(nodeType as any)) return def;
-    }
-    return undefined;
-  },
-};
+/** Find a component that handles a specific MDAST node type. */
+export function findMdastHandler(nodeType: string): ComponentDefinition<any, any, any> | undefined {
+  return testComponents.find((def) => def.mdast?.nodeTypes.includes(nodeType as any));
+}
 
 // ============================================
 // MOCK THEME
@@ -335,9 +379,9 @@ export function assertApprox(actual: number, expected: number, tolerance = 0.01)
 
 /** Render a single component node using registered components. */
 export async function renderComponent(node: ComponentNode, context: RenderContext): Promise<SlideNode> {
-  const def = testRegistry.get(node.componentName);
+  const def = testComponents.find((c) => c.name === node.componentName);
   if (!def) {
-    throw new Error(`Unknown component: '${node.componentName}'. Did you forget to register it?`);
+    throw new Error(`Unknown component: '${node.componentName}'.`);
   }
   return def.render(node.params, node.content, context, node.tokens as any);
 }
@@ -345,7 +389,7 @@ export async function renderComponent(node: ComponentNode, context: RenderContex
 /** Recursively render a component tree to primitives using registered components. */
 export async function renderTree(node: SlideNode, context: RenderContext): Promise<ElementNode> {
   if (isComponentNode(node)) {
-    const def = testRegistry.get((node as ComponentNode).componentName);
+    const def = testComponents.find((c) => c.name === (node as ComponentNode).componentName);
     if (!def) {
       throw new Error(`Unknown component: '${(node as ComponentNode).componentName}'.`);
     }

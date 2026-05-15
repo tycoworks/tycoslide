@@ -7,54 +7,17 @@ import type { NormalizedRun } from "@tycoslide/core";
 import { HALIGN, NODE_TYPE, VALIGN } from "@tycoslide/core";
 import { label } from "../src/components/label.js";
 import { text } from "../src/components/text.js";
-import {
-  cardComponent,
-  codeComponent,
-  columnComponent,
-  gridComponent,
-  imageComponent,
-  labelComponent,
-  lineComponent,
-  listComponent,
-  mermaidComponent,
-  quoteComponent,
-  rowComponent,
-  shapeComponent,
-  slideNumberComponent,
-  stackComponent,
-  tableComponent,
-  textComponent,
-} from "../src/index.js";
 import { Component } from "../src/presets/names.js";
 import {
   DEFAULT_LABEL_TOKENS,
   DEFAULT_TEXT_TOKENS,
+  labelComponent,
   mockTheme,
   noopCanvas,
   renderComponent,
   renderTree,
-  testRegistry,
-} from "./mocks.js";
-
-// Register components explicitly
-testRegistry.register([
   textComponent,
-  imageComponent,
-  cardComponent,
-  quoteComponent,
-  tableComponent,
-  codeComponent,
-  mermaidComponent,
-  lineComponent,
-  shapeComponent,
-  slideNumberComponent,
-  rowComponent,
-  columnComponent,
-  stackComponent,
-  gridComponent,
-  listComponent,
-  labelComponent,
-]);
+} from "./mocks.js";
 
 // Test accents for directive resolution
 function themeWithAccents() {
@@ -83,7 +46,7 @@ describe("Text", () => {
     const theme = themeWithAccents();
 
     it("should be available after register()", () => {
-      assert.ok(testRegistry.has(Component.Label));
+      assert.ok(labelComponent);
     });
 
     it("should render to a TextNode with single run", async () => {
@@ -181,7 +144,7 @@ describe("Text", () => {
     });
 
     it("should be registered", () => {
-      assert.ok(testRegistry.has(Component.Text));
+      assert.ok(textComponent);
     });
 
     it("should parse bold and italic", async () => {

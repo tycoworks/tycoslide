@@ -3,49 +3,15 @@ import { describe, it } from "node:test";
 import { NODE_TYPE } from "@tycoslide/core";
 import { card } from "../src/components/card.js";
 import type { CardTokens } from "../src/index.js";
-import {
-  cardComponent,
-  codeComponent,
-  columnComponent,
-  gridComponent,
-  imageComponent,
-  lineComponent,
-  mermaidComponent,
-  quoteComponent,
-  rowComponent,
-  shapeComponent,
-  slideNumberComponent,
-  stackComponent,
-  tableComponent,
-  textComponent,
-} from "../src/index.js";
 import { Component } from "../src/presets/names.js";
-import { DEFAULT_CARD_TOKENS, mockTheme, noopCanvas, renderTree, testRegistry } from "./mocks.js";
-
-// Register components explicitly
-testRegistry.register([
-  textComponent,
-  imageComponent,
-  cardComponent,
-  quoteComponent,
-  tableComponent,
-  codeComponent,
-  mermaidComponent,
-  lineComponent,
-  shapeComponent,
-  slideNumberComponent,
-  rowComponent,
-  columnComponent,
-  stackComponent,
-  gridComponent,
-]);
+import { cardComponent, DEFAULT_CARD_TOKENS, mockTheme, noopCanvas, renderTree } from "./mocks.js";
 
 describe("Card Component", () => {
   const theme = mockTheme();
 
   describe("registration", () => {
     it("should be registered after register()", () => {
-      assert.ok(testRegistry.has(Component.Card));
+      assert.ok(cardComponent);
     });
   });
 

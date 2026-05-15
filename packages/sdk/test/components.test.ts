@@ -17,32 +17,17 @@ import type {
 import { DASH_TYPE, DIRECTION, HALIGN, Insets, NODE_TYPE, SHADOW_TYPE, SHAPE, SIZE, VALIGN } from "@tycoslide/core";
 import { card } from "../src/components/card.js";
 import {
-  cardComponent,
-  codeComponent,
   column,
-  columnComponent,
   grid,
-  gridComponent,
   image,
-  imageComponent,
   line,
-  lineComponent,
-  listComponent,
-  mermaidComponent,
-  quoteComponent,
   row,
-  rowComponent,
   type ShapeTokens,
   shape,
-  shapeComponent,
   slideNumber,
-  slideNumberComponent,
   stack,
-  stackComponent,
   table,
-  tableComponent,
   text,
-  textComponent,
 } from "../src/index.js";
 import { Component } from "../src/presets/names.js";
 import {
@@ -56,27 +41,7 @@ import {
   DEFAULT_TEXT_TOKENS,
   noopCanvas,
   renderTree,
-  testRegistry,
 } from "./mocks.js";
-
-// Register components explicitly
-testRegistry.register([
-  textComponent,
-  imageComponent,
-  cardComponent,
-  quoteComponent,
-  tableComponent,
-  codeComponent,
-  mermaidComponent,
-  lineComponent,
-  shapeComponent,
-  slideNumberComponent,
-  rowComponent,
-  columnComponent,
-  stackComponent,
-  gridComponent,
-  listComponent,
-]);
 
 // Theme for text expansion
 const theme = createMockTheme();
