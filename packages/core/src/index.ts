@@ -1,7 +1,7 @@
 // tycoslide - Declarative slide generation library
 // Main barrel export
 
-export { LayoutValidationError, type SlideValidationResult, type ValidationResult } from "./core/layout/validator.js";
+export { LayoutValidationError } from "./core/layout/validator.js";
 export type {
   ContainerNode,
   ElementNode,
@@ -25,7 +25,7 @@ export type {
   TextNode,
 } from "./core/model/nodes.js";
 
-export { component, getLayer, isComponentNode, isLayoutNode, LAYER, NODE_TYPE } from "./core/model/nodes.js";
+export { component, isComponentNode, isLayoutNode, LAYER, NODE_TYPE } from "./core/model/nodes.js";
 // Param helpers (schema type builders + param declaration wrappers)
 export { type InferParams, param, type ScalarParam, schema } from "./core/model/param.js";
 export type { ContainerDirective, SyntaxType } from "./core/model/syntax.js";
@@ -98,18 +98,8 @@ export {
   Presentation,
   type PresentationConfig,
   type SlideLayout,
-  type WriteResult,
 } from "./core/rendering/presentation.js";
-// Color utilities
-export { bgColor, hexToRgba } from "./utils/color.js";
 // Font utilities
-export {
-  type FontVariantViolation,
-  getFontForRun,
-  isFontFamily,
-  MissingFontError,
-  normalizeContent,
-  resolveFontFace,
-} from "./utils/font.js";
+export { getFontForRun, MissingFontError } from "./utils/font.js";
 // Unit utilities (for component authors that resolve theme values during render)
-export { inToPx, ptToIn, ptToPx } from "./utils/units.js";
+export { inToPx } from "./utils/units.js";
