@@ -56,9 +56,7 @@ The render function receives validated params, slot content arrays, and resolved
 ### Defining a Layout
 
 ```typescript
-import { param, SIZE } from '@tycoslide/core';
-import { column, row, plainText } from '@tycoslide/sdk';
-import { textComponent } from '@tycoslide/sdk';
+import { param, SIZE, column, row, plainText, textComponent } from '@tycoslide/sdk';
 
 export const body = {
   params: {
@@ -124,8 +122,7 @@ Chrome elements are tagged with `LAYER.MASTER` so they render on the slide maste
 Define parameters using `param` helpers and component schemas:
 
 ```typescript
-import { param, schema } from '@tycoslide/core';
-import { textComponent, imageComponent } from '@tycoslide/sdk';
+import { param, schema, textComponent, imageComponent } from '@tycoslide/sdk';
 
 params: {
   title: param.required(textComponent.schema),
@@ -282,7 +279,7 @@ Right content.
 **Using the TypeScript DSL:**
 
 ```typescript
-import { Presentation } from '@tycoslide/core';
+import { Presentation } from '@tycoslide/sdk';
 import { theme, components } from 'my-theme';
 
 const pres = new Presentation(theme);

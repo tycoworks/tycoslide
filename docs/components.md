@@ -680,9 +680,8 @@ Custom components add new content types to tycoslide, so authors can use them in
 Components are defined with `defineComponent()` and included in the theme's `components` array. The theme entry point collects all component definitions — the CLI registers them at build time.
 
 ```typescript
-import { defineComponent, component, param, token, schema } from '@tycoslide/core';
-import { label } from '@tycoslide/sdk';
-import type { InferTokens, TextStyleName } from '@tycoslide/core';
+import { defineComponent, component, param, token, schema, label } from '@tycoslide/sdk';
+import type { InferTokens, TextStyleName } from '@tycoslide/sdk';
 
 const badgeParams = param.shape({
   label: param.required(schema.string()),
@@ -736,8 +735,8 @@ Each built-in component exports its definition object (e.g., `cardComponent`, `t
 Declare parameters with `param.shape()`. Required params are validated at build time:
 
 ```typescript
-import { param, schema } from '@tycoslide/core';
-import type { InferParams } from '@tycoslide/core';
+import { param, schema } from '@tycoslide/sdk';
+import type { InferParams } from '@tycoslide/sdk';
 
 const myParams = param.shape({
   title: param.required(schema.string()),                          // Required string
@@ -757,8 +756,8 @@ export type MyParams = InferParams<typeof myParams>;
 Declare tokens with `token.shape()`. Use `token.required<T>()` for tokens the theme must always provide, and `token.optional<T>()` for tokens that may be omitted to suppress a feature. `InferTokens<>` derives the TypeScript type from the shape:
 
 ```typescript
-import { token } from '@tycoslide/core';
-import type { InferTokens, TextStyleName } from '@tycoslide/core';
+import { token } from '@tycoslide/sdk';
+import type { InferTokens, TextStyleName } from '@tycoslide/sdk';
 
 const badgeTokens = token.shape({
   backgroundColor: token.required<string>(),
@@ -829,10 +828,8 @@ This is the body content.
 Display a large metric value with a label and optional change indicator:
 
 ```typescript
-import { defineComponent, component, param, token, schema } from '@tycoslide/core';
-import { column, label } from '@tycoslide/sdk';
-import type { LabelTokens } from '@tycoslide/sdk';
-import type { InferParams, InferTokens } from '@tycoslide/core';
+import { defineComponent, component, param, token, schema, column, label } from '@tycoslide/sdk';
+import type { LabelTokens, InferParams, InferTokens } from '@tycoslide/sdk';
 
 // 1. Declare params and tokens
 const metricParams = param.shape({
@@ -910,7 +907,7 @@ DSL functions are how you use components from TypeScript. All built-in DSL funct
 import { text, label, list, card, quote, testimonial, table, image, mermaid, code } from '@tycoslide/sdk';
 import { row, column, stack, grid } from '@tycoslide/sdk';
 import { line, shape, slideNumber } from '@tycoslide/sdk';
-import { SIZE, SHAPE, HALIGN, VALIGN, SPACING_MODE } from '@tycoslide/core';
+import { SIZE, SHAPE, HALIGN, VALIGN, SPACING_MODE } from '@tycoslide/sdk';
 const TEXT_STYLE = { H1: "h1", H2: "h2", H3: "h3", H4: "h4", BODY: "body", SMALL: "small", EYEBROW: "eyebrow", FOOTER: "footer", CODE: "code" } as const;
 
 // Lists
@@ -947,7 +944,7 @@ card({ title: params.cardTitle }, tokens.card)  // params, then tokens
 Custom components export their own DSL functions using `component()` from `tycoslide`:
 
 ```typescript
-import { component } from '@tycoslide/core';
+import { component } from '@tycoslide/sdk';
 
 export function metric(params: MetricParams, tokens: MetricTokens) {
   return component('metric', params, undefined, tokens);
@@ -987,9 +984,8 @@ The [mermaid](#mermaid) and [code](#code) components use Canvas internally. Thos
 ### Testing Components
 
 ```typescript
-import { Presentation } from '@tycoslide/core';
+import { Presentation, column } from '@tycoslide/sdk';
 import { theme } from '@tycoslide/theme-default';
-import { column } from '@tycoslide/sdk';
 
 const pres = new Presentation(theme);
 

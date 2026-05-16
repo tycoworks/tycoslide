@@ -170,7 +170,7 @@ Fonts must be:
 - At minimum, `normal` weight is required; `bold` and `light` are optional
 
 ```typescript
-import type { FontFamily } from '@tycoslide/core';
+import type { FontFamily } from '@tycoslide/sdk';
 
 const font: FontFamily = {
   light: { name: 'Inter Light', path: './fonts/Inter-Light.woff2' },
@@ -276,7 +276,7 @@ export const theme = defineTheme({
 ```bash
 mkdir my-theme && cd my-theme
 npm init -y
-npm install @tycoslide/core @tycoslide/sdk
+npm install @tycoslide/sdk
 ```
 
 #### 2. Define Brand Identity
@@ -411,7 +411,7 @@ format: presentation
 **As a local module (TypeScript DSL):**
 
 ```typescript
-import { Presentation } from '@tycoslide/core';
+import { Presentation } from '@tycoslide/sdk';
 import { theme, components } from './my-theme/index.js';
 
 const pres = new Presentation(theme);
@@ -453,8 +453,8 @@ title: My Slide
 Templates and components may declare tokens as optional using `token.optional<T>()`. Omitting an optional token suppresses the associated visual feature — for example, omitting a card's `background` token removes the card's background shape entirely.
 
 ```typescript
-import { token } from '@tycoslide/core';
-import type { ShapeTokens } from '@tycoslide/core';
+import { token } from '@tycoslide/sdk';
+import type { ShapeTokens } from '@tycoslide/sdk';
 
 const tokens = token.shape({
   background: token.optional<ShapeTokens>(),

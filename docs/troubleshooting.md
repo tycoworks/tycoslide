@@ -106,7 +106,7 @@ Error: Unknown component: 'xyz'. Did you forget to register it?
 **Fix:** Make sure the component is included in the theme's `components` array:
 
 ```typescript
-import { defineComponent } from '@tycoslide/core';
+import { defineComponent } from '@tycoslide/sdk';
 
 const myComponent = defineComponent({ name: 'my-component', tokens: {}, render: ... });
 
