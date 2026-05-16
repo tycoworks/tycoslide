@@ -75,7 +75,7 @@ function textNode(content: string | NormalizedRun[], opts?: Partial<Omit<TextNod
     color: "#000000",
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.TOP,
-    lineHeightMultiplier: 1.2,
+    lineHeight: 1.2,
     bulletIndentPt: 27,
     linkColor: "#0000FF",
     linkUnderline: true,

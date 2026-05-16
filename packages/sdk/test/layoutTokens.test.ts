@@ -155,7 +155,7 @@ describe("Slot Token Injection", () => {
   });
 
   it("injects text tokens into slot-compiled text nodes", () => {
-    const textTokens = { style: "h2", color: "#FF0000", lineHeightMultiplier: 1.5 };
+    const textTokens = { style: "h2", color: "#FF0000", lineHeight: 1.5 };
     const theme = mockTheme({
       layouts: {
         slotTokenTest: {
@@ -185,7 +185,7 @@ describe("Slot Token Injection", () => {
     assert.ok(tokens, "tokens should be set on the node");
     assert.strictEqual(tokens.style, "h2");
     assert.strictEqual(tokens.color, "#FF0000");
-    assert.strictEqual(tokens.lineHeightMultiplier, 1.5);
+    assert.strictEqual(tokens.lineHeight, 1.5);
   });
 
   it("preserves explicit props over injected tokens", () => {

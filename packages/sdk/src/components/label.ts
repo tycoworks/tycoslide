@@ -64,7 +64,7 @@ function renderLabel(_params: {}, content: string, context: RenderContext, token
     color: tokens.color,
     hAlign: tokens.hAlign,
     vAlign: tokens.vAlign,
-    lineHeightMultiplier: textStyle.lineHeightMultiplier,
+    lineHeight: textStyle.lineHeight,
     bulletIndentPt: textStyle.bulletIndentPt,
     linkColor: tokens.color,
     linkUnderline: false,

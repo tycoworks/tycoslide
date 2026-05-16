@@ -2,8 +2,10 @@
 // A ThemeDefinition maps format names to ThemeFormats.
 // resolveThemeFormat() flattens a ThemeDefinition + format name into a core Theme.
 
-import type { FontFamily, TemplateConfig, TextStyle, Theme } from "@tycoslide/core";
+import type { TemplateConfig, TextStyleConfig, Theme } from "@tycoslide/core";
 import { validateThemeFonts } from "@tycoslide/core";
+import type { FontFamily, TextStyle } from "./format.js";
+import { resolveFontFamily, resolveTextStyle } from "./format.js";
 import type { Template } from "./template.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -35,6 +37,15 @@ function templatesToLayouts(templates: Template[]): Record<string, TemplateConfi
   return layouts;
 }
 
+/** Resolve all text styles in a record from SDK TextStyle to core TextStyleConfig. */
+function resolveTextStyles(styles: Record<string, TextStyle>): Record<string, TextStyleConfig> {
+  const resolved: Record<string, TextStyleConfig> = {};
+  for (const [name, style] of Object.entries(styles)) {
+    resolved[name] = resolveTextStyle(style);
+  }
+  return resolved;
+}
+
 // ── defineTheme ────────────────────────────────────────────────────────────────
 
 /**
@@ -47,13 +58,13 @@ export function defineTheme(definition: ThemeDefinition): ThemeDefinition {
     throw new Error("ThemeDefinition must have at least one format.");
   }
 
-  // Validate fonts against each format
+  // Validate fonts against each format (resolve to core types for validation)
   for (const name of formatNames) {
     const format = definition.formats[name];
     validateThemeFonts({
       slide: format.slide,
-      fonts: definition.fonts,
-      textStyles: format.textStyles,
+      fonts: definition.fonts.map(resolveFontFamily),
+      textStyles: resolveTextStyles(format.textStyles),
       layouts: templatesToLayouts(format.templates ?? []),
     });
   }
@@ -84,8 +95,8 @@ export function resolveThemeFormat(definition: ThemeDefinition, format: string |
 
   return {
     slide: themeFormat.slide,
-    fonts: definition.fonts,
-    textStyles: themeFormat.textStyles,
+    fonts: definition.fonts.map(resolveFontFamily),
+    textStyles: resolveTextStyles(themeFormat.textStyles),
     layouts: templatesToLayouts(themeFormat.templates ?? []),
   };
 }

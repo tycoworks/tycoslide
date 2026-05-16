@@ -147,7 +147,7 @@ const textStyles = textStyleScale({
   baseFontSize: 14,   // body size in pt
   scale: 1.33,        // type scale ratio (perfect fourth)
   // Generates: title, h1-h4, body, small, eyebrow, footer, code
-  // lineHeightMultiplier, bulletIndentPt derived automatically
+  // lineHeight, bulletIndentPt derived automatically
 });
 ```
 

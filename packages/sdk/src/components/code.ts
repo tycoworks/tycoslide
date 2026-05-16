@@ -15,7 +15,7 @@ import {
   SIZE,
   SYNTAX,
   schema,
-  type TextStyle,
+  type TextStyleConfig,
   type TextStyleName,
   VALIGN,
 } from "@tycoslide/core";
@@ -60,7 +60,7 @@ export async function renderCodeToHtml(
   code: string,
   language: string,
   tokens: CodeTokens,
-  style: TextStyle,
+  style: TextStyleConfig,
 ): Promise<string> {
   const highlighted = await codeToHtml(code, {
     lang: language,
@@ -84,7 +84,7 @@ html, body {
   font-family: '${style.fontFamily.name}';
   font-weight: ${getFontForRun(style.fontFamily).weight};
   font-size: ${style.fontSize}pt;
-  line-height: ${style.lineHeightMultiplier};
+  line-height: ${style.lineHeight};
 }
 .code-container code {
   font-family: inherit;

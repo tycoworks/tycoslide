@@ -5,7 +5,7 @@ import { type ElementNode, isLayoutNode, NODE_TYPE } from "../core/model/nodes.j
 import {
   FONT_SLOT,
   type Font,
-  type FontFamily,
+  type FontFamilyConfig,
   type FontSlot,
   type NormalizedRun,
   type TextContent,
@@ -24,10 +24,10 @@ export const FONT_FORMATS: Record<string, { mime: string; format: string }> = {
 };
 
 /**
- * Get the Font for a run's bold/italic flags from a FontFamily.
+ * Get the Font for a run's bold/italic flags from a FontFamilyConfig.
  * Falls back to regular when optional slots are missing.
  */
-export function getFontForRun(fontFamily: FontFamily, bold?: boolean, italic?: boolean): Font {
+export function getFontForRun(fontFamily: FontFamilyConfig, bold?: boolean, italic?: boolean): Font {
   if (bold && italic) return fontFamily.boldItalic ?? fontFamily.bold ?? fontFamily.regular;
   if (bold) return fontFamily.bold ?? fontFamily.regular;
   if (italic) return fontFamily.italic ?? fontFamily.regular;
@@ -37,20 +37,20 @@ export function getFontForRun(fontFamily: FontFamily, bold?: boolean, italic?: b
 /**
  * Resolve the PPTX fontFace for a run's bold/italic state.
  * Uses Font.name when the font belongs to a different typeface
- * than its parent FontFamily (e.g., interLight's bold is "Inter").
+ * than its parent FontFamilyConfig (e.g., interLight's bold is "Inter").
  * Falls back to family.name when font.name is not set.
  */
-export function resolveFontFace(family: FontFamily, bold?: boolean, italic?: boolean): string {
+export function resolveFontFace(family: FontFamilyConfig, bold?: boolean, italic?: boolean): string {
   const font = getFontForRun(family, bold, italic);
   return font.name ?? family.name;
 }
 
 /**
- * Check if a run's bold/italic flags require a FontFamily slot that doesn't exist.
+ * Check if a run's bold/italic flags require a FontFamilyConfig slot that doesn't exist.
  * Returns the violation (font name + missing slot) or null if OK.
  */
 export function checkFontVariant(
-  fontFamily: FontFamily,
+  fontFamily: FontFamilyConfig,
   bold?: boolean,
   italic?: boolean,
 ): { fontName: string; slot: FontSlot } | null {
@@ -67,10 +67,10 @@ export function checkFontVariant(
 }
 
 /**
- * Duck-type check: is this value a FontFamily object?
+ * Duck-type check: is this value a FontFamilyConfig object?
  * Checks for required `name` string and `regular` property with `path` string.
  */
-export function isFontFamily(value: unknown): value is FontFamily {
+export function isFontFamilyConfig(value: unknown): value is FontFamilyConfig {
   return (
     typeof value === "object" &&
     value !== null &&
@@ -149,7 +149,7 @@ export function validateFontVariants(tree: ElementNode): FontVariantViolation[] 
     }
   }
 
-  function checkRuns(content: TextContent, fontFamily: FontFamily): void {
+  function checkRuns(content: TextContent, fontFamily: FontFamilyConfig): void {
     for (const run of normalizeContent(content)) {
       if (run.bold || run.italic) {
         const v = checkFontVariant(fontFamily, run.bold, run.italic);

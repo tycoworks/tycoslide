@@ -82,7 +82,7 @@ function renderText(_params: {}, content: string, context: RenderContext, tokens
     color: tokens.color,
     hAlign: tokens.hAlign,
     vAlign: tokens.vAlign,
-    lineHeightMultiplier: textStyle.lineHeightMultiplier,
+    lineHeight: textStyle.lineHeight,
     bulletIndentPt: textStyle.bulletIndentPt,
     linkColor: tokens.linkColor,
     linkUnderline: tokens.linkUnderline,

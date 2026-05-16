@@ -13,7 +13,7 @@ import type {
   SizeValue,
   SpacingMode,
   TextContent,
-  TextStyle,
+  TextStyleConfig,
   TextStyleName,
   VerticalAlignment,
 } from "./types.js";
@@ -62,12 +62,12 @@ export interface TextNode {
   height: SizeValue;
   content: TextContent;
   style: TextStyleName;
-  resolvedStyle: TextStyle; // pre-resolved from theme.textStyles[style]
+  resolvedStyle: TextStyleConfig; // pre-resolved from theme.textStyles[style]
   color: string;
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;
-  lineHeightMultiplier: number;
-  bulletIndentPt: number;
+  lineHeight: number; // CSS-semantic: multiplier of fontSize (resolved value)
+  bulletIndentPt: number; // resolved value (SDK defaults to fontSize * 1.5)
   linkColor: string; // token-driven hyperlink color (render-time)
   linkUnderline: boolean; // token-driven hyperlink underline (render-time)
   border?: Stroke;
@@ -125,7 +125,7 @@ export interface SlideNumberNode {
   width: SizeValue;
   height: SizeValue;
   style: TextStyleName;
-  resolvedStyle: TextStyle; // pre-resolved from theme.textStyles[style]
+  resolvedStyle: TextStyleConfig; // pre-resolved from theme.textStyles[style]
   color: string;
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;
@@ -155,7 +155,7 @@ export interface TableCellData {
   height: SizeValue;
   color: string; // pre-resolved: cell → token
   textStyle: TextStyleName; // pre-resolved: cell → header/cell default from table tokens
-  resolvedStyle: TextStyle; // pre-resolved from theme.textStyles[textStyle]
+  resolvedStyle: TextStyleConfig; // pre-resolved from theme.textStyles[textStyle]
   hAlign: HorizontalAlignment; // pre-resolved: cell → table default
   vAlign: VerticalAlignment; // pre-resolved: cell → table default
   linkColor: string; // pre-resolved from table token

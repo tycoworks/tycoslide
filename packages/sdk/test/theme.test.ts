@@ -1,7 +1,8 @@
 import * as assert from "node:assert";
 import { createRequire } from "node:module";
 import { describe, it } from "node:test";
-import type { Background, FontFamily, TextStyle } from "@tycoslide/core";
+import type { Background } from "@tycoslide/core";
+import type { FontFamily, TextStyle } from "../src/format.js";
 import { defineTemplate } from "../src/template.js";
 import type { ThemeDefinition, ThemeFormat } from "../src/theme.js";
 import { defineTheme, resolveThemeFormat } from "../src/theme.js";
@@ -19,7 +20,7 @@ const validFont: FontFamily = {
 const validTextStyle: TextStyle = {
   fontSize: 14,
   fontFamily: validFont,
-  lineHeightMultiplier: 1.2,
+  lineHeight: 1.2,
   bulletIndentPt: 18,
 };
 
@@ -69,7 +70,7 @@ describe("defineTheme()", () => {
     const badTextStyle: TextStyle = {
       fontSize: 14,
       fontFamily: foreignFont,
-      lineHeightMultiplier: 1.2,
+      lineHeight: 1.2,
       bulletIndentPt: 18,
     };
 

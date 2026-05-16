@@ -146,12 +146,13 @@ export interface Font {
  *
  * Use `getFontForRun()` to resolve bold/italic flags to the correct `Font`.
  */
-export interface FontFamily {
+export interface FontFamilyConfig {
   name: string; // CSS font-family, PPTX fontFace
   regular: Font; // required — the default face
   italic?: Font; // optional — algorithmic italic if missing
   bold?: Font; // optional — algorithmic bold if missing
   boldItalic?: Font; // optional — algorithmic bold+italic if missing
+  normalRatio: number; // measured at runtime by Playwright — used by PPTX renderer to convert CSS lineHeight back to lineSpacingMultiple
 }
 
 /** Font slot keys for iterating FontFamily (excluding name) */
@@ -167,11 +168,11 @@ export type FontSlot = (typeof FONT_SLOT)[keyof typeof FONT_SLOT];
 /** A text style name defined in a theme's `textStyles` map. */
 export type TextStyleName = string & {};
 
-export interface TextStyle {
-  fontFamily: FontFamily;
+export interface TextStyleConfig {
+  fontFamily: FontFamilyConfig;
   fontSize: number;
-  lineHeightMultiplier: number;
-  bulletIndentPt: number;
+  lineHeight: number; // CSS-semantic: multiplier of fontSize
+  bulletIndentPt: number; // required — resolved in SDK (default: fontSize * 1.5)
 }
 
 // ============================================
@@ -257,8 +258,8 @@ export interface Theme {
   slide: { width: number; height: number };
   /** Explicit font manifest. Every font the theme uses must be listed here.
    *  `generateFontFaceCSS()` reads exclusively from this list. */
-  fonts: FontFamily[];
-  textStyles: Record<string, TextStyle>;
+  fonts: FontFamilyConfig[];
+  textStyles: Record<string, TextStyleConfig>;
   /** Layout config. Each template name maps to its background and layout tokens. */
   layouts: Record<string, TemplateConfig>;
 }

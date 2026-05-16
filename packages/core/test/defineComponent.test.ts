@@ -13,7 +13,7 @@ import { defineComponent } from "../src/core/rendering/definitions.js";
 const stubStyle: TextStyle = {
   fontSize: 12,
   fontFamily: { name: "Test", regular: { path: "/fake/test.woff", weight: 400 } },
-  lineHeightMultiplier: 1.0,
+  lineHeight: 1.0,
   bulletIndentPt: 18,
 };
 
@@ -27,7 +27,7 @@ const stubTextNode = (text: string = ""): any => ({
   color: "#000000",
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.TOP,
-  lineHeightMultiplier: 1.2,
+  lineHeight: 1.2,
   bulletIndentPt: 0,
   linkColor: "#0000FF",
   linkUnderline: true,

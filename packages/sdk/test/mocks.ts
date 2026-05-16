@@ -7,11 +7,11 @@ import type {
   ComponentDefinition,
   ComponentNode,
   ElementNode,
-  FontFamily,
+  FontFamilyConfig,
   LayoutNode,
   RenderContext,
   SlideNode,
-  TextStyle,
+  TextStyleConfig,
   Theme,
 } from "@tycoslide/core";
 import { DASH_TYPE, GRID_STYLE, HALIGN, isComponentNode, isLayoutNode, VALIGN } from "@tycoslide/core";
@@ -106,16 +106,17 @@ export function findMdastHandler(nodeType: string): ComponentDefinition<any, any
 // MOCK THEME
 // ============================================
 
-const mockFontFamily: FontFamily = {
+const mockFontFamily: FontFamilyConfig = {
   name: "Inter",
   regular: { path: require.resolve("@fontsource/inter/files/inter-latin-400-normal.woff"), weight: 400 },
   bold: { path: require.resolve("@fontsource/inter/files/inter-latin-700-normal.woff"), weight: 700 },
+  normalRatio: 1.0,
 };
 
-const mockTextStyle: TextStyle = {
+const mockTextStyle: TextStyleConfig = {
   fontSize: 12,
   fontFamily: mockFontFamily,
-  lineHeightMultiplier: 1.0,
+  lineHeight: 1.0,
   bulletIndentPt: 18,
 };
 
@@ -126,7 +127,7 @@ const mockTextStyle: TextStyle = {
  */
 export function mockTheme(options?: {
   layouts?: Theme["layouts"];
-  textStyles?: Partial<Record<string, Partial<TextStyle>>>;
+  textStyles?: Partial<Record<string, Partial<TextStyleConfig>>>;
   slide?: Theme["slide"];
 }): Theme {
   return {

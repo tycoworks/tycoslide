@@ -117,10 +117,14 @@ export { SlideFormat } from "./presets/slideFormats.js";
 export {
   type Brand,
   brandFonts,
+  type FontFamily,
   type Format,
   type Hex,
   type Palette,
+  resolveFontFamily,
+  resolveTextStyle,
   TEXT_STYLE,
+  type TextStyle,
   type TextStyleKey,
 } from "./format.js";
 

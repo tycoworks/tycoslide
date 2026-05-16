@@ -18,11 +18,11 @@ function textNode(content: string): TextNode {
     resolvedStyle: {
       fontFamily: { name: "Arial", regular: { path: "/fake/arial.woff", weight: 400 } },
       fontSize: 14,
-      lineHeightMultiplier: 1.0,
+      lineHeight: 1.0,
       bulletIndentPt: 21,
     },
     color: "#000000",
-    lineHeightMultiplier: 1.2,
+    lineHeight: 1.2,
     bulletIndentPt: 18,
     linkColor: "#0000FF",
     linkUnderline: true,

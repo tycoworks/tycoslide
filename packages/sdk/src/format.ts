@@ -2,8 +2,52 @@
 // Brand is the typed input contract for visual identity — shared across all formats.
 // Format is the per-format spatial configuration — all spatial values in inches, strokes in pt.
 
-import type { FontFamily, HorizontalAlignment, ShadowType, TextStyle, VerticalAlignment } from "@tycoslide/core";
+import type {
+  Font,
+  FontFamilyConfig,
+  HorizontalAlignment,
+  ShadowType,
+  TextStyleConfig,
+  VerticalAlignment,
+} from "@tycoslide/core";
 import type { HighlightThemeName } from "./presets/highlighting.js";
+
+// ── SDK-friendly input types ─────────────────────────────────────────────────
+
+/** Font family as theme authors write it (normalRatio populated by measurement). */
+export interface FontFamily {
+  name: string;
+  regular: Font;
+  italic?: Font;
+  bold?: Font;
+  boldItalic?: Font;
+  normalRatio?: number; // optional — populated by Playwright measurement
+}
+
+/** Text style as theme authors write it (bulletIndentPt defaults to fontSize * 1.5). */
+export interface TextStyle {
+  fontFamily: FontFamily;
+  fontSize: number;
+  lineHeight: number;
+  bulletIndentPt?: number; // optional — defaults to fontSize * 1.5
+}
+
+// ── Resolution helpers ───────────────────────────────────────────────────────
+
+/** Resolve an SDK FontFamily to a core FontFamilyConfig. */
+export function resolveFontFamily(family: FontFamily): FontFamilyConfig {
+  return family as FontFamilyConfig;
+}
+
+/** Resolve an SDK TextStyle to a core TextStyleConfig (applies defaults). */
+export function resolveTextStyle(style: TextStyle): TextStyleConfig {
+  return {
+    fontFamily: style.fontFamily as FontFamilyConfig,
+    fontSize: style.fontSize,
+    lineHeight: style.lineHeight,
+    bulletIndentPt: style.bulletIndentPt ?? style.fontSize * 1.5,
+  };
+}
 
 // ── Scalars ──────────────────────────────────────────────────────────────────
 

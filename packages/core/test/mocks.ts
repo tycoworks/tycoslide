@@ -5,7 +5,7 @@ import * as assert from "node:assert";
 import { createRequire } from "node:module";
 import type { ComponentNode, ElementNode, LayoutNode, SlideNode } from "../src/core/model/nodes.js";
 import { isComponentNode, isLayoutNode } from "../src/core/model/nodes.js";
-import type { FontFamily, TextStyle, Theme } from "../src/core/model/types.js";
+import type { FontFamilyConfig, TextStyleConfig, Theme } from "../src/core/model/types.js";
 import type { ComponentDefinition, RenderContext } from "../src/core/rendering/definitions.js";
 
 const require = createRequire(import.meta.url);
@@ -14,16 +14,17 @@ const require = createRequire(import.meta.url);
 // MOCK THEME
 // ============================================
 
-const mockFontFamily: FontFamily = {
+const mockFontFamily: FontFamilyConfig = {
   name: "Inter",
   regular: { path: require.resolve("@fontsource/inter/files/inter-latin-400-normal.woff"), weight: 400 },
   bold: { path: require.resolve("@fontsource/inter/files/inter-latin-700-normal.woff"), weight: 700 },
+  normalRatio: 1.0,
 };
 
-export const mockTextStyle: TextStyle = {
+export const mockTextStyle: TextStyleConfig = {
   fontSize: 12,
   fontFamily: mockFontFamily,
-  lineHeightMultiplier: 1.0,
+  lineHeight: 1.0,
   bulletIndentPt: 18,
 };
 
@@ -33,7 +34,7 @@ export const mockTextStyle: TextStyle = {
  */
 export function mockTheme(options?: {
   layouts?: Theme["layouts"];
-  textStyles?: Partial<Record<string, Partial<TextStyle>>>;
+  textStyles?: Partial<Record<string, Partial<TextStyleConfig>>>;
   slide?: Theme["slide"];
 }): Theme {
   return {

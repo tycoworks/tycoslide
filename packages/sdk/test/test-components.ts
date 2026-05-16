@@ -71,7 +71,7 @@ export const textComponent = defineComponent({
       color: params.color ?? tokens?.color,
       hAlign: (params.hAlign ?? HALIGN.LEFT) as any,
       vAlign: (params.vAlign ?? VALIGN.TOP) as any,
-      lineHeightMultiplier: (ctx.theme.textStyles as any)[style]?.lineHeightMultiplier ?? 1.0,
+      lineHeight: (ctx.theme.textStyles as any)[style]?.lineHeight ?? 1.0,
       bulletIndentPt: 18,
     };
   },

@@ -90,7 +90,7 @@ function renderList(params: ListParams, content: string[], context: RenderContex
     color: tokens.color,
     hAlign: tokens.hAlign,
     vAlign: tokens.vAlign,
-    lineHeightMultiplier: textStyle.lineHeightMultiplier,
+    lineHeight: textStyle.lineHeight,
     bulletIndentPt: textStyle.bulletIndentPt,
     linkColor: tokens.linkColor,
     linkUnderline: tokens.linkUnderline,

@@ -119,8 +119,8 @@ const presentationFormat: Format = {
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.MIDDLE,
   textStyles: {
-    [TEXT_STYLE.H1]: { fontFamily: headingFont, fontSize: 44, lineHeightMultiplier: 1.2, bulletIndentPt: 66 },
-    [TEXT_STYLE.BODY]: { fontFamily: bodyFont, fontSize: 14, lineHeightMultiplier: 1.2, bulletIndentPt: 21 },
+    [TEXT_STYLE.H1]: { fontFamily: headingFont, fontSize: 44, lineHeight: 1.4 },
+    [TEXT_STYLE.BODY]: { fontFamily: bodyFont, fontSize: 14, lineHeight: 1.4 },
     // ... all text style keys
   },
 };

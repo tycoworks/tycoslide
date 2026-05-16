@@ -6,10 +6,8 @@ Now / Next / Later.
 
 ## Now
 
-### Token System Smells
-
-- [ ] **Font walking** — walking token bags to extract fonts. Needs investigation.
-- [ ] **lineHeightMultiplier / bulletIndentPt on TextStyle** — currently required on every text style in format configs. Test whether these can be removed or defaulted — they were added to match HTML text wrapping but may not be needed.
+- [ ] Move to pixels
+- [ ] Create & Edit Skill (AI authoring in markdown dialect)
 
 ---
 
@@ -18,7 +16,6 @@ Now / Next / Later.
 ### Skills
 
 - [ ] Theme Bootstrap Skill (AI extracts from PPTX/Figma)
-- [ ] Create & Edit Skill (AI authoring in markdown dialect)
 
 ### Sequence-Based Composition
 
