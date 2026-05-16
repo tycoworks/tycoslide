@@ -67,7 +67,7 @@ const presentationFormat: Format = {
     [TEXT_STYLE.CODE]: {
       fontFamily: assets.fonts.firaCode,
       fontSize: 11,
-      lineHeight: 2.0,
+      lineHeight: 1.6,
     },
   },
 };
