@@ -3,7 +3,8 @@
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { type LayoutConfig, NODE_TYPE, param, schema } from "@tycoslide/core";
+import { NODE_TYPE } from "@tycoslide/core";
+import { type LayoutConfig, param, schema } from "@tycoslide/sdk";
 import { z } from "zod";
 import { validateLayout } from "../src/markdown/documentCompiler.js";
 import { testComponents } from "./test-components.js";

@@ -8,16 +8,15 @@ import type { HorizontalAlignment, RenderContext, TextStyleName, VerticalAlignme
 import {
   type ComponentNode,
   component,
-  defineComponent,
   extractSource,
   NODE_TYPE,
   type Shadow,
   SIZE,
   type Stroke,
   SYNTAX,
-  schema,
   type TextNode,
 } from "@tycoslide/core";
+import { defineComponent, schema } from "../authoring/index.js";
 import type { Heading, RootContent } from "mdast";
 import { Component } from "../presets/names.js";
 

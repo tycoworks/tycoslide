@@ -19,12 +19,11 @@ import type { Canvas, TextStyleName } from "@tycoslide/core";
 import {
   type ComponentNode,
   component,
-  defineComponent,
   inToPx,
   type RenderContext,
   SHAPE,
-  schema,
 } from "@tycoslide/core";
+import { defineComponent, schema } from "../authoring/index.js";
 import { Component } from "../presets/names.js";
 import { column, stack } from "./containers.js";
 import { type ImageTokens, image } from "./image.js";

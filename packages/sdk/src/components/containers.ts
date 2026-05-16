@@ -4,7 +4,6 @@ import {
   type ComponentNode,
   component,
   DIRECTION,
-  defineComponent,
   HALIGN,
   type HorizontalAlignment,
   Insets,
@@ -18,6 +17,7 @@ import {
   VALIGN,
   type VerticalAlignment,
 } from "@tycoslide/core";
+import { defineComponent } from "../authoring/index.js";
 import { Component } from "../presets/names.js";
 
 // ============================================

@@ -5,20 +5,17 @@
 import {
   type ComponentNode,
   component,
-  defineComponent,
   getFontForRun,
   HALIGN,
-  type InferParams,
-  param,
   type RenderContext,
   SHAPE,
   SIZE,
   SYNTAX,
-  schema,
   type TextStyleConfig,
   type TextStyleName,
   VALIGN,
 } from "@tycoslide/core";
+import { defineComponent, type InferParams, param, schema } from "../authoring/index.js";
 import type { Code as MdastCode, RootContent } from "mdast";
 import { codeToHtml } from "shiki";
 import type { HighlightThemeName } from "../presets/highlighting.js";

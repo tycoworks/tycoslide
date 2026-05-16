@@ -9,17 +9,15 @@ import {
   type ComponentNode,
   component,
   DIRECTION,
-  defineComponent,
   extractSource,
   HALIGN,
   NODE_TYPE,
-  param,
   type RenderContext,
   SIZE,
   SYNTAX,
-  schema,
   VALIGN,
 } from "@tycoslide/core";
+import { defineComponent, param, schema } from "@tycoslide/sdk";
 import type { Heading, Table as MdastTable, RootContent } from "mdast";
 
 // Local component name const — core tests can't import from tycoslide-components

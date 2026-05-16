@@ -13,7 +13,6 @@ import type {
 import {
   type ComponentNode,
   component,
-  defineComponent,
   type ElementNode,
   extractSource,
   NODE_TYPE,
@@ -21,9 +20,9 @@ import {
   SIZE,
   type Stroke,
   SYNTAX,
-  schema,
   type TextNode,
 } from "@tycoslide/core";
+import { defineComponent, schema } from "../authoring/index.js";
 import type { RootContent } from "mdast";
 
 import { Component } from "../presets/names.js";

@@ -2,17 +2,14 @@
 
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
+import type { TextStyleConfig } from "@tycoslide/core";
+import { DIRECTION, HALIGN, Insets, NODE_TYPE, SIZE, SPACING_MODE, VALIGN } from "@tycoslide/core";
+import { defineComponent, param, schema } from "@tycoslide/sdk";
 import { z } from "zod";
-import { Insets } from "../src/core/model/bounds.js";
-import { NODE_TYPE } from "../src/core/model/nodes.js";
-import { param, schema } from "../src/core/model/param.js";
-import type { TextStyle } from "../src/core/model/types.js";
-import { DIRECTION, HALIGN, SIZE, SPACING_MODE, VALIGN } from "../src/core/model/types.js";
-import { defineComponent } from "../src/core/rendering/definitions.js";
 
-const stubStyle: TextStyle = {
+const stubStyle: TextStyleConfig = {
   fontSize: 12,
-  fontFamily: { name: "Test", regular: { path: "/fake/test.woff", weight: 400 } },
+  fontFamily: { name: "Test", regular: { path: "/fake/test.woff", weight: 400 }, normalRatio: 1.2 },
   lineHeight: 1.0,
   bulletIndentPt: 18,
 };

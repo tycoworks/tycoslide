@@ -4,14 +4,11 @@
 
 import {
   component,
-  defineComponent,
   extractSource,
-  type InferParams,
-  param,
   SIZE,
   SYNTAX,
-  schema,
 } from "@tycoslide/core";
+import { defineComponent, type InferParams, param, schema } from "../authoring/index.js";
 import type { RootContent } from "mdast";
 import { Component } from "../presets/names.js";
 import { column, row } from "./containers.js";

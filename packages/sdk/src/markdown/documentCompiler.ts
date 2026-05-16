@@ -10,7 +10,6 @@ import {
   type ComponentNode,
   createPresentation,
   isComponentNode,
-  type LayoutConfig,
   type Presentation,
   RESERVED_FRONTMATTER_KEYS,
   type Slide,
@@ -19,6 +18,7 @@ import {
   type Theme,
 } from "@tycoslide/core";
 import { z } from "zod";
+import type { LayoutConfig } from "../authoring/index.js";
 import type { HeadingDepth } from "../components/label.js";
 import { parseSlideDocument, type RawSlide } from "./slideParser.js";
 import { compileSlot } from "./slotCompiler.js";

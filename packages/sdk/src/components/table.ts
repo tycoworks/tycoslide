@@ -3,7 +3,6 @@
 import {
   type ComponentNode,
   component,
-  defineComponent,
   type GridStyle,
   type HorizontalAlignment,
   NODE_TYPE,
@@ -12,7 +11,6 @@ import {
   SIZE,
   type Stroke,
   SYNTAX,
-  schema,
   type TableCellData,
   type TableCellInput,
   type TextContent,
@@ -20,6 +18,7 @@ import {
   type TextStyleName,
   type VerticalAlignment,
 } from "@tycoslide/core";
+import { defineComponent, schema } from "../authoring/index.js";
 import type { Table as MdastTable, RootContent } from "mdast";
 import { parseMarkdown } from "../markdown/parser.js";
 import { Component } from "../presets/names.js";

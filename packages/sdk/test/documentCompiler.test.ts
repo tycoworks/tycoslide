@@ -8,7 +8,8 @@
 import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
 
-import { type Background, NODE_TYPE, param, type SlideNode, schema, type TemplateConfig } from "@tycoslide/core";
+import { type Background, NODE_TYPE, type SlideNode, type TemplateConfig } from "@tycoslide/core";
+import { param, schema } from "@tycoslide/sdk";
 import { buildSlideName, compileDocument } from "../src/markdown/documentCompiler.js";
 import { mockTheme } from "./mocks.js";
 import { testComponents } from "./test-components.js";

@@ -142,28 +142,27 @@ export { defineTemplate, type Layout, type Template } from "./template.js";
 
 export { deriveTokens, type VisualTokens } from "./visualTokens.js";
 
-// ── Component & Layout Authoring (re-exported from core) ────────────────
+// ── Component & Layout Authoring ────────────────────────────────────────
 
 // Factories for defining custom components and layouts
-export { defineComponent, defineLayout } from "@tycoslide/core";
+export { defineComponent, defineLayout } from "./authoring/index.js";
+export type { DirectiveDeserializer, LayoutConfig, ScalarComponentDefinition } from "./authoring/index.js";
+// Token descriptors (required/optional markers for component token declarations)
+export { token } from "./authoring/index.js";
+export type { InferTokens, TokenDescriptor, TokenShape } from "./authoring/index.js";
+// Param helpers (schema type builders + param declaration wrappers)
+export { param, schema } from "./authoring/index.js";
+export type { InferParams, ParamShape, ScalarParam, ScalarShape } from "./authoring/index.js";
+// Runtime types (still from core)
 export type {
   Canvas,
   ComponentDefinition,
   ComponentNode,
-  LayoutConfig,
   MdastHandler,
   RenderContext,
-  ScalarComponentDefinition,
-  SchemaShape,
 } from "@tycoslide/core";
 // Component node factory (for layouts that instantiate components dynamically)
 export { component } from "@tycoslide/core";
-// Token descriptors (required/optional markers for component token declarations)
-export { token } from "@tycoslide/core";
-export type { InferTokens, TokenDescriptor, TokenShape } from "@tycoslide/core";
-// Param helpers (schema type builders + param declaration wrappers)
-export { param, schema } from "@tycoslide/core";
-export type { InferParams, ScalarParam } from "@tycoslide/core";
 
 // ── Layout Primitives (re-exported from core for theme authors) ──────────
 
@@ -180,7 +179,6 @@ export {
 } from "@tycoslide/core";
 export type {
   HorizontalAlignment,
-  ScalarShape,
   SlideNode,
   TextStyleName,
   VerticalAlignment,

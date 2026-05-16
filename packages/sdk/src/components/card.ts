@@ -3,15 +3,12 @@
 
 import {
   component,
-  defineComponent,
   type HorizontalAlignment,
-  type InferParams,
-  param,
   SHAPE,
   SIZE,
-  schema,
   type VerticalAlignment,
 } from "@tycoslide/core";
+import { defineComponent, type InferParams, param, schema } from "../authoring/index.js";
 import { Component } from "../presets/names.js";
 import { column, stack } from "./containers.js";
 import { type ImageTokens, image, imageComponent } from "./image.js";

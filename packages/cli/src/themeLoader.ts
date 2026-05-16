@@ -4,8 +4,8 @@
 import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import type { ComponentDefinition, LayoutConfig, Theme } from "@tycoslide/core";
-import { resolveThemeFormat } from "@tycoslide/sdk";
+import type { ComponentDefinition, Theme } from "@tycoslide/core";
+import { type LayoutConfig, resolveThemeFormat } from "@tycoslide/sdk";
 
 export interface LoadedTheme {
   theme: Theme;

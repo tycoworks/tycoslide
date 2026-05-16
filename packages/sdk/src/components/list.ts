@@ -12,18 +12,15 @@ import type {
 import {
   type ComponentNode,
   component,
-  defineComponent,
   extractSource,
-  type InferParams,
   NODE_TYPE,
-  param,
   type Shadow,
   SIZE,
   type Stroke,
   SYNTAX,
-  schema,
   type TextNode,
 } from "@tycoslide/core";
+import { defineComponent, type InferParams, param, schema } from "../authoring/index.js";
 import type { ListItem, List as MdastList, RootContent } from "mdast";
 import { Component } from "../presets/names.js";
 import { inlineParse, transformInline } from "./utils/inline.js";

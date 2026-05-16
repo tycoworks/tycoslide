@@ -26,13 +26,9 @@ export type {
 } from "./core/model/nodes.js";
 
 export { component, isComponentNode, isLayoutNode, LAYER, NODE_TYPE } from "./core/model/nodes.js";
-// Param helpers (schema type builders + param declaration wrappers)
-export { type InferParams, param, type ScalarParam, schema } from "./core/model/param.js";
 export type { ContainerDirective, SyntaxType } from "./core/model/syntax.js";
 // Markdown utilities (for component authors)
 export { extractSource, RESERVED_FRONTMATTER_KEYS, SYNTAX } from "./core/model/syntax.js";
-// Token descriptors (required/optional markers for component token declarations)
-export { type InferTokens, type TokenDescriptor, type TokenShape, token } from "./core/model/token.js";
 export type {
   Background,
   DashType,
@@ -77,19 +73,13 @@ export {
   UNDERLINE_STYLE,
   VALIGN,
 } from "./core/model/types.js";
-// Component system (for custom component authors)
+// Component system (runtime types)
 export {
   type Canvas,
   type ComponentDefinition,
   type ComponentNode,
-  defineComponent,
-  defineLayout,
-  type LayoutConfig,
   type MdastHandler,
   type RenderContext,
-  type ScalarComponentDefinition,
-  type ScalarShape,
-  type SchemaShape,
   validateThemeFonts,
 } from "./core/rendering/definitions.js";
 // Core
