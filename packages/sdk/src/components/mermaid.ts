@@ -7,24 +7,17 @@
 //   - Accent nodes: styled via injected classDef directives — fill at accentOpacity,
 //     full-color stroke, and accentTextColor for text. Apply with `class NodeId purple`.
 //   - Primary class: full-opacity primaryColor fill with primaryTextColor text.
-//   - Subgraphs: filled at accentOpacity with rounded corners (groupCornerRadius, inches).
+//   - Subgraphs: filled at accentOpacity with rounded corners (groupCornerRadius, pixels).
 //   - Non-flowchart diagrams (sequence, state, ER): themed via themeVariables only (no classDef).
 //
-// Units: all color tokens are #-prefixed hex. groupCornerRadius is in inches (converted to SVG px
-// internally via inToPx). accentOpacity is 0-100 (percentage).
+// Units: all color tokens are #-prefixed hex. groupCornerRadius is in pixels.
+// accentOpacity is 0-100 (percentage).
 
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import type { Canvas, TextStyleName } from "@tycoslide/core";
-import {
-  type ComponentNode,
-  component,
-  defineComponent,
-  inToPx,
-  type RenderContext,
-  SHAPE,
-  schema,
-} from "@tycoslide/core";
+import { type ComponentNode, component, type RenderContext, SHAPE } from "@tycoslide/core";
+import { defineComponent, schema } from "../authoring/index.js";
 import { Component } from "../presets/names.js";
 import { column, stack } from "./containers.js";
 import { type ImageTokens, image } from "./image.js";
@@ -44,7 +37,7 @@ export interface MermaidTokens {
   surfaceBorder: string; // Node and subgraph border color
   surfaceSubtle: string; // Edge label background
   group: string; // Subgraph fill (tinted at accentStyle.opacity)
-  groupCornerRadius: number; // Subgraph corner radius (inches)
+  groupCornerRadius: number; // Subgraph corner radius (pixels)
 
   // --- Accent classes (injected classDefs for flowcharts) ---
   accents: Record<string, string>; // Named accent colors (e.g. { purple: "#7C3AED" })
@@ -144,7 +137,7 @@ export function buildClassDefs(tokens: MermaidTokens, accents: Record<string, st
 
 /**
  * Build inline style directives for subgraph containers.
- * Applies group fill at accentOpacity, with rounded corners (groupCornerRadius in inches).
+ * Applies group fill at accentOpacity, with rounded corners (groupCornerRadius in pixels).
  * Only emitted for flowchart/graph diagrams where `subgraph ID` declarations are found.
  */
 function buildSubgraphStyles(definition: string, tokens: MermaidTokens): string {
@@ -161,7 +154,7 @@ function buildSubgraphStyles(definition: string, tokens: MermaidTokens): string 
   }
 
   if (ids.length === 0) return "";
-  const radiusPx = Math.round(inToPx(tokens.groupCornerRadius));
+  const radiusPx = Math.round(tokens.groupCornerRadius);
   const radiusPart = radiusPx > 0 ? `,rx:${radiusPx},ry:${radiusPx}` : "";
   return ids.map((id) => `style ${id} fill:${fillColor}${radiusPart}`).join("\n");
 }

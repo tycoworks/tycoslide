@@ -6,7 +6,6 @@ import fs from "node:fs";
 import path from "node:path";
 import type { Page } from "playwright-core";
 import { log } from "../../utils/log.js";
-import { pxToIn } from "../../utils/units.js";
 import { Bounds } from "../model/bounds.js";
 import type { ElementNode } from "../model/nodes.js";
 import type { Background, Theme } from "../model/types.js";
@@ -133,7 +132,7 @@ export class LayoutMeasurer {
       for (const [node, nodeId] of nodeIds) {
         const m = measurementsByNodeId.get(nodeId);
         if (m) {
-          allResults.set(node, new Bounds(pxToIn(m.x), pxToIn(m.y), pxToIn(m.width), pxToIn(m.height)));
+          allResults.set(node, new Bounds(m.x, m.y, m.width, m.height));
         }
       }
     }

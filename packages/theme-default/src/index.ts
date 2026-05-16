@@ -3,6 +3,7 @@
 
 import {
   brandFonts,
+  type ComponentConfig,
   cardComponent,
   codeComponent,
   columnComponent,
@@ -26,7 +27,7 @@ import { brand } from "./brand.js";
 import { buildPresentationFormat } from "./formats/presentation.js";
 
 // Explicit component list — themes declare what they use
-export const components = [
+export const components: ComponentConfig[] = [
   textComponent,
   labelComponent,
   imageComponent,

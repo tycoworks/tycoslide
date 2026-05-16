@@ -1,7 +1,8 @@
 import * as assert from "node:assert";
 import { describe, it } from "node:test";
-import type { Background, LayoutConfig } from "@tycoslide/core";
-import { defineTemplate } from "../src/template.js";
+import type { Background } from "@tycoslide/core";
+import type { LayoutConfig } from "@tycoslide/sdk";
+import { defineTemplate } from "../src/theme/template.js";
 
 const testLayouts = new Map<string, LayoutConfig>();
 

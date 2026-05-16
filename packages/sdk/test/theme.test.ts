@@ -2,10 +2,10 @@ import * as assert from "node:assert";
 import { createRequire } from "node:module";
 import { describe, it } from "node:test";
 import type { Background } from "@tycoslide/core";
-import type { FontFamily, TextStyle } from "../src/format.js";
-import { defineTemplate } from "../src/template.js";
-import type { ThemeDefinition, ThemeFormat } from "../src/theme.js";
-import { defineTheme, resolveThemeFormat } from "../src/theme.js";
+import type { FontFamily, TextStyle } from "../src/theme/format.js";
+import type { ThemeDefinition, ThemeFormat } from "../src/theme/index.js";
+import { defineTheme, resolveThemeFormat } from "../src/theme/index.js";
+import { defineTemplate } from "../src/theme/template.js";
 
 const require = createRequire(import.meta.url);
 
@@ -31,7 +31,7 @@ const validTextStyles: Record<string, TextStyle> = {
 
 function makeFormat(overrides?: Partial<ThemeFormat>): ThemeFormat {
   return {
-    slide: { width: 13.333, height: 7.5 },
+    slide: { width: 960, height: 540 },
     textStyles: validTextStyles,
     ...overrides,
   };

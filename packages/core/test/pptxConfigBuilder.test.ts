@@ -47,8 +47,12 @@ describe("getParagraphGapRatio()", () => {
 const builder = new PptxConfigBuilder();
 const theme = mockTheme();
 
+// Test values are expressed in inches for readability (matching pptxgenjs output).
+// The helper converts to pixels (core's native unit); pptxConfigBuilder converts back to inches.
+const IN = 96; // pixels per inch
+
 function positioned(node: any, x: number, y: number, width: number, height: number): PositionedNode {
-  return { node, x, y, width, height };
+  return { node, x: x * IN, y: y * IN, width: width * IN, height: height * IN };
 }
 
 // ============================================
@@ -136,7 +140,7 @@ const baseTableNode: TableNode = {
   gridStroke: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
   cellBackground: "#FFFFFF",
   cellBackgroundOpacity: 0,
-  cellPadding: 0.1,
+  cellPadding: 0.1 * IN,
 };
 
 /** Base cell for tests — all required fields pre-resolved */
@@ -516,7 +520,7 @@ describe("buildShapeConfig() — area shapes", () => {
   });
 
   test("returns RECTANGLE shape when cornerRadius specified", () => {
-    const shapeNode: ShapeNode = { ...baseShapeNode, cornerRadius: 0.125 };
+    const shapeNode: ShapeNode = { ...baseShapeNode, cornerRadius: 0.125 * IN };
     const pos = positioned(shapeNode, 1, 2, 5, 3);
 
     const result = builder.buildShapeConfig(shapeNode, pos);

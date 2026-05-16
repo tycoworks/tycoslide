@@ -5,7 +5,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { Page } from "playwright-core";
-import { inToPx } from "../../utils/units.js";
 import type { Theme } from "../model/types.js";
 import type { HeadlessBrowser } from "./browser.js";
 import { generateFontFaceCSS, preloadFonts } from "./layoutHtml.js";
@@ -25,8 +24,8 @@ export class HtmlRenderer {
     // deviceScaleFactor controls PNG pixel density (default 2x for Retina quality).
     if (!this.page) {
       this.page = await this.browser.newPage({
-        width: Math.round(inToPx(theme.slide.width)),
-        height: Math.round(inToPx(theme.slide.height)),
+        width: Math.round(theme.slide.width),
+        height: Math.round(theme.slide.height),
         deviceScaleFactor: this.options?.deviceScaleFactor ?? 2,
       });
       this.page.on("pageerror", (err) => {

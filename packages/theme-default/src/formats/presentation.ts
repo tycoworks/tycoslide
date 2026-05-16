@@ -1,6 +1,14 @@
-import { GRID_STYLE, HALIGN, SHADOW_TYPE, VALIGN } from "@tycoslide/core";
 import type { Format, LabelTokens, Layout, Palette, ThemeFormat } from "@tycoslide/sdk";
-import { defineTemplate, deriveTokens, SlideFormat, TEXT_STYLE } from "@tycoslide/sdk";
+import {
+  defineTemplate,
+  deriveTokens,
+  GRID_STYLE,
+  HALIGN,
+  SHADOW_TYPE,
+  SlideFormat,
+  TEXT_STYLE,
+  VALIGN,
+} from "@tycoslide/sdk";
 import { assets } from "../assets.js";
 import { type FooterChromeTokens, type MarginChromeTokens, withFooterChrome, withMarginChrome } from "../chrome.js";
 import { TEMPLATE } from "../index.js";
@@ -12,13 +20,13 @@ interface ChromeConfig {
   footerHeight: number;
 }
 
-const unit = 0.03125;
+const unit = 3;
 
 const presentationFormat: Format = {
   slide: SlideFormat.s16x9,
   spacing: { base: unit * 8, tight: unit * 4 },
   padding: unit * 8,
-  radius: 0.08,
+  radius: unit * 3,
   strokes: { hairline: 0.5, thin: 0.75, base: 1, thick: 2 },
   shadow: { type: SHADOW_TYPE.OUTER, opacity: 12, blur: 6, offset: 2, angle: 180 },
   hAlign: HALIGN.LEFT,
@@ -73,7 +81,7 @@ const presentationFormat: Format = {
 };
 
 const presentationChrome: ChromeConfig = {
-  margin: 0.5,
+  margin: unit * 16,
   footerHeight: unit * 8,
 };
 

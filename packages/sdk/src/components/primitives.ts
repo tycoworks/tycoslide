@@ -8,12 +8,9 @@ import {
   DIRECTION,
   DIRECTION_VALUES,
   type Direction,
-  defineComponent,
   type HorizontalAlignment,
-  type InferParams,
   type LineNode,
   NODE_TYPE,
-  param,
   type RenderContext,
   SHAPE_VALUES,
   type Shadow,
@@ -21,10 +18,10 @@ import {
   SIZE,
   type SlideNumberNode,
   type Stroke,
-  schema,
   type TextStyleName,
   type VerticalAlignment,
 } from "@tycoslide/core";
+import { defineComponent, type InferParams, param, schema } from "../authoring/index.js";
 import { Component } from "../presets/names.js";
 
 export interface LineTokens {

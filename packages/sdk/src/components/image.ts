@@ -4,18 +4,15 @@ import type { SlideNode } from "@tycoslide/core";
 import {
   type ComponentNode,
   component,
-  defineComponent,
   type ImageNode,
-  type InferParams,
   NODE_TYPE,
-  param,
   type RenderContext,
   type Shadow,
   SIZE,
   SYNTAX,
-  schema,
 } from "@tycoslide/core";
 import type { Image, RootContent } from "mdast";
+import { defineComponent, type InferParams, param, schema } from "../authoring/index.js";
 import { Component } from "../presets/names.js";
 import { column } from "./containers.js";
 
@@ -96,7 +93,7 @@ export const imageComponent = defineComponent({
   content: schema.string(),
   params: imageParamShape,
 
-  mdast: {
+  syntax: {
     nodeTypes: [SYNTAX.IMAGE],
     compile: (node: RootContent): ComponentNode | null => {
       const img = node as Image;

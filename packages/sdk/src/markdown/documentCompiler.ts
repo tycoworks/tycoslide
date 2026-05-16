@@ -6,11 +6,9 @@
 // Params and slots are validated separately against the layout's schemas.
 
 import {
-  type ComponentDefinition,
   type ComponentNode,
   createPresentation,
   isComponentNode,
-  type LayoutConfig,
   type Presentation,
   RESERVED_FRONTMATTER_KEYS,
   type Slide,
@@ -19,6 +17,8 @@ import {
   type Theme,
 } from "@tycoslide/core";
 import { z } from "zod";
+import type { ComponentConfig } from "../authoring/component.js";
+import type { LayoutConfig } from "../authoring/index.js";
 import type { HeadingDepth } from "../components/label.js";
 import { parseSlideDocument, type RawSlide } from "./slideParser.js";
 import { compileSlot } from "./slotCompiler.js";
@@ -57,7 +57,7 @@ export interface CompileOptions {
   /** Layout definitions (looked up by template name). */
   layouts: LayoutConfig[];
   /** Component definitions (for slot compilation and rendering). */
-  components: ComponentDefinition<any, any, any>[];
+  components: ComponentConfig[];
 }
 
 // ============================================
@@ -73,7 +73,7 @@ export function validateLayout(
   layout: LayoutConfig,
   rawParams: Record<string, unknown>,
   rawSlots: Record<string, unknown>,
-  components: ComponentDefinition<any, any, any>[],
+  components: ComponentConfig[],
 ): any {
   const paramsResult = z.object(layout.params).strict().safeParse(rawParams);
   if (!paramsResult.success) {

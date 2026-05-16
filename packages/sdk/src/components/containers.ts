@@ -4,7 +4,6 @@ import {
   type ComponentNode,
   component,
   DIRECTION,
-  defineComponent,
   HALIGN,
   type HorizontalAlignment,
   Insets,
@@ -18,6 +17,7 @@ import {
   VALIGN,
   type VerticalAlignment,
 } from "@tycoslide/core";
+import { defineComponent } from "../authoring/index.js";
 import { Component } from "../presets/names.js";
 
 // ============================================
@@ -49,13 +49,13 @@ function parseContainerArgs<TParams>(args: any[]): { params: TParams; children: 
 // ============================================
 
 export type RowParams = {
-  width?: number | SizeValue; // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
-  height?: number | SizeValue; // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
-  spacing?: number; // inches — space between children. Default: 0
+  width?: number | SizeValue; // pixels, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
+  height?: number | SizeValue; // pixels, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
+  spacing?: number; // pixels — space between children. Default: 0
   spacingMode?: SpacingMode;
   vAlign?: VerticalAlignment;
   hAlign?: HorizontalAlignment; // justify-content: left (flex-start), center, right (flex-end)
-  padding?: number | Insets; // inches - uniform or per-side internal padding
+  padding?: number | Insets; // pixels - uniform or per-side internal padding
 };
 
 export const rowComponent = defineComponent({
@@ -86,13 +86,13 @@ export function row(params: RowParams, ...children: SlideNode[]): ComponentNode 
 // ============================================
 
 export type ColumnParams = {
-  width?: number | SizeValue; // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
-  height?: number | SizeValue; // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
-  spacing?: number; // inches — space between children. Default: 0
+  width?: number | SizeValue; // pixels, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
+  height?: number | SizeValue; // pixels, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
+  spacing?: number; // pixels — space between children. Default: 0
   spacingMode?: SpacingMode;
   vAlign?: VerticalAlignment;
   hAlign?: HorizontalAlignment;
-  padding?: number | Insets; // inches - uniform or per-side internal padding
+  padding?: number | Insets; // pixels - uniform or per-side internal padding
 };
 
 export const columnComponent = defineComponent({
@@ -123,8 +123,8 @@ export function column(params: ColumnParams, ...children: SlideNode[]): Componen
 // ============================================
 
 export type StackParams = {
-  width?: number | SizeValue; // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
-  height?: number | SizeValue; // inches, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
+  width?: number | SizeValue; // pixels, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
+  height?: number | SizeValue; // pixels, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
 };
 
 export const stackComponent = defineComponent({
@@ -165,8 +165,8 @@ export function stack(...args: any[]): ComponentNode {
 
 export type GridParams = {
   columns: number;
-  spacing?: number; // inches — gap between cells. Default: 0
-  height?: number | SizeValue; // inches, SIZE.FILL (equal rows), or SIZE.HUG (content-sized rows). Default: FILL
+  spacing?: number; // pixels — gap between cells. Default: 0
+  height?: number | SizeValue; // pixels, SIZE.FILL (equal rows), or SIZE.HUG (content-sized rows). Default: FILL
 };
 
 export const gridComponent = defineComponent({
@@ -195,9 +195,9 @@ export const gridComponent = defineComponent({
  *
  * @example
  * ```typescript
- * grid({ columns: 3, spacing: 0.25 }, ...cards)                  // fill-height rows
- * grid({ columns: 2, spacing: 0.25, height: SIZE.HUG }, ...items) // content-sized rows
- * grid({ columns: 2, spacing: 0.125, height: SIZE.HUG }, ...)     // tight content grid
+ * grid({ columns: 3, spacing: 24 }, ...cards)                  // fill-height rows
+ * grid({ columns: 2, spacing: 24, height: SIZE.HUG }, ...items) // content-sized rows
+ * grid({ columns: 2, spacing: 12, height: SIZE.HUG }, ...)      // tight content grid
  * ```
  */
 export function grid(params: GridParams, ...children: SlideNode[]): ComponentNode {

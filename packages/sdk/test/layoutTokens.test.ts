@@ -4,17 +4,8 @@
 
 import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
-import {
-  type Background,
-  defineLayout,
-  isComponentNode,
-  type LayoutConfig,
-  NODE_TYPE,
-  param,
-  type SlideNode,
-  schema,
-  type Theme,
-} from "@tycoslide/core";
+import { type Background, isComponentNode, NODE_TYPE, type SlideNode, type Theme } from "@tycoslide/core";
+import { defineLayout, type LayoutConfig, param, schema } from "@tycoslide/sdk";
 import type { CompileOptions } from "../src/markdown/documentCompiler.js";
 import { compileDocument } from "../src/markdown/documentCompiler.js";
 import { mockTheme } from "./mocks.js";

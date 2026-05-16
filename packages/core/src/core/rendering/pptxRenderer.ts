@@ -9,6 +9,7 @@ type PptxSlide = ReturnType<InstanceType<typeof PptxGenJS>["addSlide"]>;
 
 import { stripHash } from "../../utils/color.js";
 import { contentPreview, log } from "../../utils/log.js";
+import { pxToIn } from "../../utils/units.js";
 import type {
   ImageNode,
   LineNode,
@@ -67,7 +68,7 @@ export class PptxRenderer {
   constructor(theme: Theme) {
     this.pres = new PptxGenJS();
     const { width, height } = theme.slide;
-    this.pres.defineLayout({ name: PPTX_CUSTOM_LAYOUT, width, height });
+    this.pres.defineLayout({ name: PPTX_CUSTOM_LAYOUT, width: pxToIn(width), height: pxToIn(height) });
     this.pres.layout = PPTX_CUSTOM_LAYOUT;
   }
 
@@ -276,9 +277,9 @@ export class PptxRenderer {
     );
 
     const tableOptions: Record<string, unknown> = {
-      x: positioned.x,
-      y: positioned.y,
-      w: positioned.width,
+      x: pxToIn(positioned.x),
+      y: pxToIn(positioned.y),
+      w: pxToIn(positioned.width),
       colW,
     };
 

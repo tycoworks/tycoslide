@@ -9,7 +9,7 @@ import { Component } from "../src/presets/names.js";
 import {
   codeComponent,
   DEFAULT_CODE_TOKENS,
-  findMdastHandler,
+  findSyntaxHandler,
   mockTheme,
   noopCanvas,
   renderComponent,
@@ -145,7 +145,7 @@ describe("code expansion", () => {
 
 describe("code MDAST compile handler", () => {
   it("compiles code fence to ComponentNode with correct body", () => {
-    const handler = findMdastHandler(SYNTAX.CODE);
+    const handler = findSyntaxHandler(SYNTAX.CODE);
     assert.ok(handler, "MDAST handler should be registered for code");
 
     const mdastNode = {
@@ -156,14 +156,14 @@ describe("code MDAST compile handler", () => {
       position: { start: { line: 1, column: 1, offset: 0 }, end: { line: 3, column: 4, offset: 20 } },
     } as unknown as RootContent;
 
-    const result = handler.mdast!.compile(mdastNode, "```sql\nSELECT 1\n```");
+    const result = handler.syntax!.compile(mdastNode, "```sql\nSELECT 1\n```");
     assert.ok(result);
     assert.strictEqual(result!.componentName, Component.Code);
     assert.strictEqual(result!.content, "SELECT 1");
   });
 
   it("compiles code fence with language", () => {
-    const handler = findMdastHandler(SYNTAX.CODE)!;
+    const handler = findSyntaxHandler(SYNTAX.CODE)!;
     const mdastNode = {
       type: "code",
       value: "const x = 1;",
@@ -171,13 +171,13 @@ describe("code MDAST compile handler", () => {
       meta: null,
     } as unknown as RootContent;
 
-    const result = handler.mdast!.compile(mdastNode, "");
+    const result = handler.syntax!.compile(mdastNode, "");
     assert.ok(result);
     assert.strictEqual((result!.params as any).language, "typescript");
   });
 
   it("throws when code fence has no language", () => {
-    const handler = findMdastHandler(SYNTAX.CODE)!;
+    const handler = findSyntaxHandler(SYNTAX.CODE)!;
     const mdastNode = {
       type: "code",
       value: "hello world",
@@ -185,11 +185,11 @@ describe("code MDAST compile handler", () => {
       meta: null,
     } as unknown as RootContent;
 
-    assert.throws(() => handler.mdast!.compile(mdastNode, ""), /no language specified/);
+    assert.throws(() => handler.syntax!.compile(mdastNode, ""), /no language specified/);
   });
 
   it("throws on unsupported language", () => {
-    const handler = findMdastHandler(SYNTAX.CODE)!;
+    const handler = findSyntaxHandler(SYNTAX.CODE)!;
     const mdastNode = {
       type: "code",
       value: "hello world",
@@ -198,13 +198,13 @@ describe("code MDAST compile handler", () => {
     } as unknown as RootContent;
 
     assert.throws(
-      () => handler.mdast!.compile(mdastNode, ""),
+      () => handler.syntax!.compile(mdastNode, ""),
       /Unsupported code language "notareallanguage".*Supported languages include/,
     );
   });
 
   it("accepts all LANGUAGE_VALUES as valid", () => {
-    const handler = findMdastHandler(SYNTAX.CODE)!;
+    const handler = findSyntaxHandler(SYNTAX.CODE)!;
     // Spot-check a few common languages
     for (const lang of ["sql", "typescript", "python", "rust", "go"]) {
       const mdastNode = {
@@ -213,7 +213,7 @@ describe("code MDAST compile handler", () => {
         lang,
         meta: null,
       } as unknown as RootContent;
-      const result = handler.mdast!.compile(mdastNode, "");
+      const result = handler.syntax!.compile(mdastNode, "");
       assert.ok(result, `Language "${lang}" should be accepted`);
       assert.strictEqual((result!.params as any).language, lang);
     }

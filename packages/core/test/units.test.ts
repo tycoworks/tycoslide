@@ -2,11 +2,19 @@
 
 import * as assert from "node:assert";
 import { describe, it } from "node:test";
-import { inToPx } from "../src/utils/units.js";
+import { pxToIn, ptToPx } from "../src/utils/units.js";
 
-describe("inToPx()", () => {
-  it("converts inches to pixels at 96 DPI", () => {
-    assert.strictEqual(inToPx(1), 96);
-    assert.strictEqual(inToPx(0.5), 48);
+describe("pxToIn()", () => {
+  it("converts pixels to inches at 96 DPI", () => {
+    assert.strictEqual(pxToIn(96), 1);
+    assert.strictEqual(pxToIn(48), 0.5);
+  });
+});
+
+describe("ptToPx()", () => {
+  it("converts points to pixels at 96 DPI", () => {
+    // 72 pt = 1 inch = 96 px
+    assert.strictEqual(ptToPx(72), 96);
+    assert.strictEqual(ptToPx(36), 48);
   });
 });

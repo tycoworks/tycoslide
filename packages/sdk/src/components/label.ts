@@ -8,17 +8,16 @@ import type { HorizontalAlignment, RenderContext, TextStyleName, VerticalAlignme
 import {
   type ComponentNode,
   component,
-  defineComponent,
   extractSource,
   NODE_TYPE,
   type Shadow,
   SIZE,
   type Stroke,
   SYNTAX,
-  schema,
   type TextNode,
 } from "@tycoslide/core";
 import type { Heading, RootContent } from "mdast";
+import { defineComponent, schema } from "../authoring/index.js";
 import { Component } from "../presets/names.js";
 
 // ============================================
@@ -86,7 +85,7 @@ export const labelComponent = defineComponent({
   name: Component.Label,
   content: schema.string(),
   directive: false,
-  mdast: {
+  syntax: {
     nodeTypes: [SYNTAX.HEADING],
     compile: (node: RootContent, source: string): ComponentNode => {
       const heading = node as Heading;

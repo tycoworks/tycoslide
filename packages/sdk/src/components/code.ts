@@ -5,22 +5,19 @@
 import {
   type ComponentNode,
   component,
-  defineComponent,
   getFontForRun,
   HALIGN,
-  type InferParams,
-  param,
   type RenderContext,
   SHAPE,
   SIZE,
   SYNTAX,
-  schema,
   type TextStyleConfig,
   type TextStyleName,
   VALIGN,
 } from "@tycoslide/core";
 import type { Code as MdastCode, RootContent } from "mdast";
 import { codeToHtml } from "shiki";
+import { defineComponent, type InferParams, param, schema } from "../authoring/index.js";
 import type { HighlightThemeName } from "../presets/highlighting.js";
 import { LANGUAGE_VALUES } from "../presets/highlighting.js";
 import { Component } from "../presets/names.js";
@@ -140,7 +137,7 @@ export const codeComponent = defineComponent({
   name: Component.Code,
   content: schema.string(),
   params: codeParamShape,
-  mdast: {
+  syntax: {
     nodeTypes: [SYNTAX.CODE],
     compile: (node: RootContent, _source: string): ComponentNode | null => {
       const codeNode = node as unknown as MdastCode;

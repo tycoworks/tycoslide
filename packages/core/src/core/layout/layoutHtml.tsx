@@ -13,7 +13,7 @@ import type { Page } from "playwright-core";
 import { bgColor, hexToRgba } from "../../utils/color.js";
 import { FONT_FORMATS, getFontForRun, normalizeContent } from "../../utils/font.js";
 import { readImageDimensions } from "../../utils/image.js";
-import { inToPx, ptToPx } from "../../utils/units.js";
+import { ptToPx } from "../../utils/units.js";
 import type { Bounds } from "../model/bounds.js";
 import type {
   ContainerNode,
@@ -97,7 +97,7 @@ function generateNodeId(ctx: IdContext): string {
 export type FontNormalRatios = Map<string, number>;
 
 /** Compute flex CSS for a node based on its parent's direction.
- *  Three size types: number (fixed inches), SIZE.FILL (share space), SIZE.HUG (content-sized).
+ *  Three size types: number (fixed pixels), SIZE.FILL (share space), SIZE.HUG (content-sized).
  *  opts.shrinkable: for elements (like images) that can compress below their content size.
  *  When true: HUG emits flex:0 1 auto (can shrink) instead of flex-shrink:0 (rigid),
  *  and min-width/min-height:0 overrides are applied so flex can actually compress the item. */
@@ -114,7 +114,7 @@ export function flexSize(
 
   // Main axis → flex property
   if (typeof mainSize === "number") {
-    styles.flex = `0 0 ${inToPx(mainSize)}px`;
+    styles.flex = `0 0 ${mainSize}px`;
   } else if (mainSize === SIZE.FILL) {
     styles.flex = "1 1 0";
     // min-width:0 (rows) lets FILL items shrink below content width to share space.
@@ -141,9 +141,9 @@ export function flexSize(
   // Cross axis → explicit CSS dimension
   if (typeof crossSize === "number") {
     if (isInRow) {
-      styles.height = `${inToPx(crossSize)}px`;
+      styles.height = `${crossSize}px`;
     } else {
-      styles.width = `${inToPx(crossSize)}px`;
+      styles.width = `${crossSize}px`;
     }
   } else if (crossSize === SIZE.FILL) {
     if (isInRow) {
@@ -261,12 +261,12 @@ function styleContainer(
   imagePathMap: Map<string, string>,
 ): StyledNode {
   const isRow = node.direction === DIRECTION.ROW;
-  const spacingPx = inToPx(node.spacing);
+  const spacingPx = node.spacing;
   const p = node.padding;
-  let topPx = inToPx(p.top);
-  let rightPx = inToPx(p.right);
-  let bottomPx = inToPx(p.bottom);
-  let leftPx = inToPx(p.left);
+  let topPx = p.top;
+  let rightPx = p.right;
+  let bottomPx = p.bottom;
+  let leftPx = p.left;
   // AROUND mode adds spacing to main-axis start/end edges
   if (node.spacingMode === SPACING_MODE.AROUND) {
     if (isRow) {
@@ -362,7 +362,7 @@ function styleGrid(
   nodeIds: Map<ElementNode, string>,
   imagePathMap: Map<string, string>,
 ): StyledNode {
-  const spacingPx = inToPx(node.spacing);
+  const spacingPx = node.spacing;
 
   const styles: Record<string, string | number> = {
     display: "grid",
@@ -371,7 +371,7 @@ function styleGrid(
     ...flexSize(node.width, node.height, parent.direction),
   };
 
-  // When the grid has definite height (FILL or fixed inches), distribute rows equally.
+  // When the grid has definite height (FILL or fixed pixels), distribute rows equally.
   // Without this, rows hug content and empty space pools at the bottom.
   if (node.height === SIZE.FILL || typeof node.height === "number") {
     styles.gridAutoRows = "1fr";
@@ -578,7 +578,7 @@ function styleShape(node: ShapeNode, parent: ParentCtx, nodeId: string): StyledN
   switch (node.shape) {
     case SHAPE.RECTANGLE:
       styles.backgroundColor = bgColor(node.fill.color, node.fill.opacity);
-      if (node.cornerRadius) styles.borderRadius = `${inToPx(node.cornerRadius)}px`;
+      if (node.cornerRadius) styles.borderRadius = `${node.cornerRadius}px`;
       applyCSSBorder(node, styles);
       applyShadowCSS(node.shadow, styles);
       return { nodeId, styles, children: [] };
@@ -663,7 +663,7 @@ function styleTable(
   const cellNodes = getTableCellNodes(node);
   const numCols = node.rows[0]?.length ?? 0;
   const cellPadding = node.cellPadding;
-  const cellPaddingPx = inToPx(cellPadding);
+  const cellPaddingPx = cellPadding;
 
   const headerRows = node.headerRow ? 1 : 0;
   const headerCols = node.headerCol ? 1 : 0;
@@ -1009,8 +1009,8 @@ export function generateLayoutHTML(
     const nodeIds: Map<ElementNode, string> = new Map();
     slideNodeIds.push(nodeIds);
 
-    const widthPx = inToPx(slide.bounds.w);
-    const heightPx = inToPx(slide.bounds.h);
+    const widthPx = slide.bounds.w;
+    const heightPx = slide.bounds.h;
 
     const rootCtx: ParentCtx = { direction: DIRECTION.COLUMN, heightIsConstrained: true };
     const styled = styleNode(slide.tree, rootCtx, idCtx, nodeIds, imagePathMap);
@@ -1088,8 +1088,8 @@ export function generatePreviewHTML(
   theme: Theme,
 ): string[] {
   const baseCSS = generateBaseCSS(theme);
-  const slideW = inToPx(theme.slide.width);
-  const slideH = inToPx(theme.slide.height);
+  const slideW = theme.slide.width;
+  const slideH = theme.slide.height;
 
   return slides.map((slide, i) => {
     const prevSlide = i > 0 ? slides[i - 1] : null;

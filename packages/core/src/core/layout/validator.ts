@@ -90,11 +90,11 @@ export class LayoutOverflowError extends Error {
 
     const details = violations.map((v) => {
       const parts: string[] = [];
-      if (v.overflowRight > 0) parts.push(`${v.overflowRight.toFixed(2)}" right`);
-      if (v.overflowBottom > 0) parts.push(`${v.overflowBottom.toFixed(2)}" bottom`);
-      if (v.overflowLeft > 0) parts.push(`${v.overflowLeft.toFixed(2)}" left`);
-      if (v.overflowTop > 0) parts.push(`${v.overflowTop.toFixed(2)}" top`);
-      return `${v.nodeType} at (${v.x.toFixed(2)}, ${v.y.toFixed(2)}) overflows ${parts.join(", ")}`;
+      if (v.overflowRight > 0) parts.push(`${v.overflowRight.toFixed(0)}px right`);
+      if (v.overflowBottom > 0) parts.push(`${v.overflowBottom.toFixed(0)}px bottom`);
+      if (v.overflowLeft > 0) parts.push(`${v.overflowLeft.toFixed(0)}px left`);
+      if (v.overflowTop > 0) parts.push(`${v.overflowTop.toFixed(0)}px top`);
+      return `${v.nodeType} at (${v.x.toFixed(0)}, ${v.y.toFixed(0)}) overflows ${parts.join(", ")}`;
     });
 
     const message = `${prefix}Content extends beyond slide bounds:\n  ${details.join("\n  ")}`;
@@ -125,7 +125,7 @@ export class LayoutOverlapError extends Error {
     const details = violations.map(
       (v) =>
         `${v.node1Type}[${v.node1Index}] overlaps ${v.node2Type}[${v.node2Index}] ` +
-        `by ${v.overlapArea.width.toFixed(2)}"x${v.overlapArea.height.toFixed(2)}" ` +
+        `by ${v.overlapArea.width.toFixed(0)}x${v.overlapArea.height.toFixed(0)}px ` +
         `in ${v.parentNodeType}`,
     );
 
@@ -156,13 +156,13 @@ export class LayoutBoundsError extends Error {
 
     const details = violations.map((v) => {
       const parts: string[] = [];
-      if (v.escapeTop > 0) parts.push(`${v.escapeTop.toFixed(2)}" above`);
-      if (v.escapeLeft > 0) parts.push(`${v.escapeLeft.toFixed(2)}" left`);
-      if (v.escapeRight > 0) parts.push(`${v.escapeRight.toFixed(2)}" right`);
-      if (v.escapeBottom > 0) parts.push(`${v.escapeBottom.toFixed(2)}" below`);
+      if (v.escapeTop > 0) parts.push(`${v.escapeTop.toFixed(0)}px above`);
+      if (v.escapeLeft > 0) parts.push(`${v.escapeLeft.toFixed(0)}px left`);
+      if (v.escapeRight > 0) parts.push(`${v.escapeRight.toFixed(0)}px right`);
+      if (v.escapeBottom > 0) parts.push(`${v.escapeBottom.toFixed(0)}px below`);
       return (
         `${v.childNodeType}[${v.childIndex}] escapes ${v.parentNodeType} bounds by ${parts.join(", ")} ` +
-        `(child at y=${v.childBounds.y.toFixed(2)}, parent starts at y=${v.parentBounds.y.toFixed(2)})`
+        `(child at y=${v.childBounds.y.toFixed(0)}, parent starts at y=${v.parentBounds.y.toFixed(0)})`
       );
     });
 
@@ -238,13 +238,13 @@ export class LayoutValidationError extends Error {
  *
  * @example
  * ```typescript
- * const validator = new LayoutValidator({ width: 10, height: 7.5 });
+ * const validator = new LayoutValidator({ width: 960, height: 540 });
  * validator.validateOrThrow(positionedTree, slideIndex);
  * ```
  */
 export class LayoutValidator {
-  /** Tolerance for floating-point comparisons (in inches) */
-  private static readonly TOLERANCE = 0.01;
+  /** Tolerance for floating-point comparisons (in pixels) */
+  private static readonly TOLERANCE = 1;
 
   constructor(private readonly slideBounds: SlideBounds) {}
 

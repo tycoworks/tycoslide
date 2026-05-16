@@ -5,6 +5,7 @@
 import { stripHash } from "../../utils/color.js";
 import { getParagraphGapRatio, normalizeContent, resolveFontFace } from "../../utils/font.js";
 import { containFit, readImageDimensions } from "../../utils/image.js";
+import { pxToIn } from "../../utils/units.js";
 import type {
   ImageNode,
   LineNode,
@@ -113,10 +114,10 @@ export class PptxConfigBuilder {
     const normalRatio = style.fontFamily.normalRatio;
 
     const options: Record<string, unknown> = {
-      x: positioned.x,
-      y: positioned.y,
-      w: positioned.width,
-      h: positioned.height,
+      x: pxToIn(positioned.x),
+      y: pxToIn(positioned.y),
+      w: pxToIn(positioned.width),
+      h: pxToIn(positioned.height),
       fontSize: style.fontSize,
       fontFace: style.fontFamily.name, // default — per-run fontFace from resolveFontFace() overrides this
       color: stripHash(textNode.color),
@@ -202,7 +203,13 @@ export class PptxConfigBuilder {
       ? containFit(positioned.x, positioned.y, positioned.width, positioned.height, dims.aspectRatio)
       : { x: positioned.x, y: positioned.y, w: positioned.width, h: positioned.height };
 
-    const result: Record<string, unknown> = { path: imageNode.src, ...fitted };
+    const result: Record<string, unknown> = {
+      path: imageNode.src,
+      x: pxToIn(fitted.x),
+      y: pxToIn(fitted.y),
+      w: pxToIn(fitted.w),
+      h: pxToIn(fitted.h),
+    };
     if (imageNode.alt) {
       result.altText = imageNode.alt;
     }
@@ -217,10 +224,10 @@ export class PptxConfigBuilder {
     positioned: PositionedNode,
   ): { shapeType: string; options: Record<string, unknown> } {
     const options: Record<string, unknown> = {
-      x: positioned.x,
-      y: positioned.y,
-      w: positioned.width,
-      h: positioned.height,
+      x: pxToIn(positioned.x),
+      y: pxToIn(positioned.y),
+      w: pxToIn(positioned.width),
+      h: pxToIn(positioned.height),
       fill: {
         color: stripHash(shapeNode.fill.color),
         transparency: 100 - shapeNode.fill.opacity,
@@ -231,7 +238,7 @@ export class PptxConfigBuilder {
       options.line = buildLineOptions(shapeNode.border);
     }
 
-    options.rectRadius = shapeNode.cornerRadius;
+    options.rectRadius = pxToIn(shapeNode.cornerRadius);
 
     if (shapeNode.shadow) {
       options.shadow = buildShadowOptions(shapeNode.shadow);
@@ -247,10 +254,10 @@ export class PptxConfigBuilder {
     const isVertical = lineNode.direction === DIRECTION.COLUMN;
 
     const options: Record<string, unknown> = {
-      x: positioned.x,
-      y: positioned.y,
-      w: isVertical ? 0 : positioned.width,
-      h: isVertical ? positioned.height : 0,
+      x: pxToIn(positioned.x),
+      y: pxToIn(positioned.y),
+      w: isVertical ? 0 : pxToIn(positioned.width),
+      h: isVertical ? pxToIn(positioned.height) : 0,
       line: buildLineOptions(lineNode.stroke),
     };
 
@@ -265,10 +272,10 @@ export class PptxConfigBuilder {
     const style = slideNumNode.resolvedStyle;
 
     return {
-      x: positioned.x,
-      y: positioned.y,
-      w: positioned.width,
-      h: positioned.height,
+      x: pxToIn(positioned.x),
+      y: pxToIn(positioned.y),
+      w: pxToIn(positioned.width),
+      h: pxToIn(positioned.height),
       fontFace: style.fontFamily.name, // slide numbers have no bold/italic runs
       fontSize: style.fontSize,
       color: stripHash(slideNumNode.color),
@@ -279,7 +286,7 @@ export class PptxConfigBuilder {
   }
 
   buildColumnWidths(numCols: number, totalWidth: number): number[] {
-    const colWidth = totalWidth / numCols;
+    const colWidth = pxToIn(totalWidth) / numCols;
     return Array(numCols).fill(colWidth);
   }
 
@@ -317,7 +324,7 @@ export class PptxConfigBuilder {
       color: stripHash(cell.color),
       align: cell.hAlign,
       valign: cell.vAlign,
-      margin: cellPadding,
+      margin: pxToIn(cellPadding),
       lineSpacingMultiple: textStyle.lineHeight / textStyle.fontFamily.normalRatio,
     };
 

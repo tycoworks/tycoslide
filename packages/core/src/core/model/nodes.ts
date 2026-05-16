@@ -91,7 +91,7 @@ export interface LineNode {
 }
 
 /** Stroke configuration — shared by lines and shape borders.
- *  Width is in points (visual styling convention; layout geometry uses inches). */
+ *  Width is in points (visual styling convention; layout geometry uses pixels). */
 export interface Stroke {
   color: string;
   width: number;
@@ -200,13 +200,13 @@ export interface ContainerNode<C extends SlideNode = ElementNode> {
   type: typeof NODE_TYPE.CONTAINER;
   direction: Direction; // 'row' or 'column' — determines flex-direction
   children: C[]; // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
-  width: number | SizeValue; // inches (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
-  height: number | SizeValue; // inches (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
-  spacing: number; // inches — space between children (and edges when spacingMode is AROUND)
+  width: number | SizeValue; // pixels (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
+  height: number | SizeValue; // pixels (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
+  spacing: number; // pixels — space between children (and edges when spacingMode is AROUND)
   spacingMode: SpacingMode; // BETWEEN: between children only; AROUND: between + edges
   vAlign: VerticalAlignment;
   hAlign: HorizontalAlignment;
-  padding: Insets; // inches - per-side internal padding (normalized at construction)
+  padding: Insets; // pixels - per-side internal padding (normalized at construction)
   layer?: Layer; // render target: master (shared/deduped) or content (per-slide)
 }
 
@@ -214,8 +214,8 @@ export interface ContainerNode<C extends SlideNode = ElementNode> {
 export interface StackNode<C extends SlideNode = ElementNode> {
   type: typeof NODE_TYPE.STACK;
   children: C[]; // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
-  width: number | SizeValue; // inches, SIZE.FILL, or SIZE.HUG
-  height: number | SizeValue; // inches, SIZE.FILL, or SIZE.HUG
+  width: number | SizeValue; // pixels, SIZE.FILL, or SIZE.HUG
+  height: number | SizeValue; // pixels, SIZE.FILL, or SIZE.HUG
   layer?: Layer; // render target: master (shared/deduped) or content (per-slide)
 }
 
@@ -224,9 +224,9 @@ export interface GridNode<C extends SlideNode = ElementNode> {
   type: typeof NODE_TYPE.GRID;
   children: C[]; // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
   columns: number; // number of equal-width columns
-  spacing: number; // inches — gap between cells
-  width: number | SizeValue; // inches, SIZE.FILL, or SIZE.HUG
-  height: number | SizeValue; // inches, SIZE.FILL, or SIZE.HUG
+  spacing: number; // pixels — gap between cells
+  width: number | SizeValue; // pixels, SIZE.FILL, or SIZE.HUG
+  height: number | SizeValue; // pixels, SIZE.FILL, or SIZE.HUG
   layer?: Layer; // render target: master (shared/deduped) or content (per-slide)
 }
 

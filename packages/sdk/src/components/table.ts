@@ -3,7 +3,6 @@
 import {
   type ComponentNode,
   component,
-  defineComponent,
   type GridStyle,
   type HorizontalAlignment,
   NODE_TYPE,
@@ -12,7 +11,6 @@ import {
   SIZE,
   type Stroke,
   SYNTAX,
-  schema,
   type TableCellData,
   type TableCellInput,
   type TextContent,
@@ -21,6 +19,7 @@ import {
   type VerticalAlignment,
 } from "@tycoslide/core";
 import type { Table as MdastTable, RootContent } from "mdast";
+import { defineComponent, schema } from "../authoring/index.js";
 import { parseMarkdown } from "../markdown/parser.js";
 import { Component } from "../presets/names.js";
 import { column, stack } from "./containers.js";
@@ -93,7 +92,7 @@ function parseGfmTable(body: string): string[][] {
 export const tableComponent = defineComponent({
   name: Component.Table,
   content: schema.string().optional(),
-  mdast: {
+  syntax: {
     nodeTypes: [SYNTAX.TABLE],
     compile: (node: RootContent, source: string): ComponentNode | null => {
       const tableNode = node as unknown as MdastTable;

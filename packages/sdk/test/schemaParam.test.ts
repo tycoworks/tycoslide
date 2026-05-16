@@ -1,11 +1,11 @@
-// Schema Module Tests
+// Schema & Param Module Tests
+// Tests the schema namespace (type builders) and ScalarParam constraint.
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
+import { NODE_TYPE } from "@tycoslide/core";
+import { defineLayout, schema } from "@tycoslide/sdk";
 import { z } from "zod";
-import { NODE_TYPE } from "../src/core/model/nodes.js";
-import { schema } from "../src/core/model/param.js";
-import { defineLayout } from "../src/core/rendering/definitions.js";
 
 describe("schema", () => {
   describe("scalar types", () => {

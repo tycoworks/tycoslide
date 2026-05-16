@@ -54,6 +54,12 @@ export const param = {
 // PARAM TYPES
 // ============================================
 
+/** Raw Zod shape — a record of field names to Zod types. */
+export type ParamShape = Record<string, z.ZodTypeAny>;
+
+/** A Zod shape where every field is a scalar param (YAML-expressible). */
+export type ScalarShape = Record<string, ScalarParam>;
+
 // Scalar leaf types — expressible in YAML frontmatter
 type ScalarLeaf =
   | ReturnType<typeof schema.string>
@@ -72,7 +78,7 @@ export type ScalarParam = ScalarLeaf | z.ZodOptional<ScalarLeaf> | z.ZodDefault<
 
 /**
  * Derive a TypeScript type from a param shape.
- * Required fields stay required; optional fields become optional.
+ * Required fields stay required; optional fields become optional..
  *
  * @example
  * ```typescript

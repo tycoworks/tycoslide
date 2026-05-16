@@ -23,7 +23,7 @@ defineTemplate({
     title: tokens.onLight.headings.h3,
     text: tokens.onLight.text,
     list: tokens.onLight.list,
-    spacing: 0.25,
+    spacing: 24,
     // component tokens (table, code, mermaid, quote, etc.)
   },
 });
@@ -56,9 +56,7 @@ The render function receives validated params, slot content arrays, and resolved
 ### Defining a Layout
 
 ```typescript
-import { param, SIZE } from '@tycoslide/core';
-import { column, row, plainText } from '@tycoslide/sdk';
-import { textComponent } from '@tycoslide/sdk';
+import { param, SIZE, column, row, plainText, textComponent } from '@tycoslide/sdk';
 
 export const body = {
   params: {
@@ -91,12 +89,12 @@ Wraps a layout with uniform margin padding and a footer row at the bottom:
 import { withFooterChrome } from './chrome.js';
 
 const chromed = withFooterChrome(body, {
-  margin: 0.5,
-  footerHeight: 0.25,
-  bottomPadding: 0.25,
+  margin: 48,
+  footerHeight: 24,
+  bottomPadding: 24,
   footerLogo: assets.logo,
   footerText: 'My Company',
-  footerSpacing: 0.125,
+  footerSpacing: 12,
   slideNumber: { style: TEXT_STYLE.FOOTER, color: palette.secondary, hAlign: HALIGN.RIGHT, vAlign: VALIGN.MIDDLE },
   footer: { style: TEXT_STYLE.FOOTER, color: palette.secondary, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
   footerImage: {},
@@ -110,7 +108,7 @@ Wraps a layout with uniform padding only — no footer or other fixed elements:
 ```typescript
 import { withMarginChrome } from './chrome.js';
 
-const chromed = withMarginChrome(title, { margin: 0.5 });
+const chromed = withMarginChrome(title, { margin: 48 });
 ```
 
 ### Layers
@@ -124,8 +122,7 @@ Chrome elements are tagged with `LAYER.MASTER` so they render on the slide maste
 Define parameters using `param` helpers and component schemas:
 
 ```typescript
-import { param, schema } from '@tycoslide/core';
-import { textComponent, imageComponent } from '@tycoslide/sdk';
+import { param, schema, textComponent, imageComponent } from '@tycoslide/sdk';
 
 params: {
   title: param.required(textComponent.schema),
@@ -282,7 +279,7 @@ Right content.
 **Using the TypeScript DSL:**
 
 ```typescript
-import { Presentation } from '@tycoslide/core';
+import { Presentation } from '@tycoslide/sdk';
 import { theme, components } from 'my-theme';
 
 const pres = new Presentation(theme);

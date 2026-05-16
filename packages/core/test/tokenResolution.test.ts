@@ -4,12 +4,10 @@
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
+import { defineComponent, param, schema } from "@tycoslide/sdk";
 import { component, NODE_TYPE } from "../src/core/model/nodes.js";
-import { param, schema } from "../src/core/model/param.js";
-
 import type { Theme } from "../src/core/model/types.js";
 import { HALIGN, VALIGN } from "../src/core/model/types.js";
-import { defineComponent } from "../src/core/rendering/definitions.js";
 import { noopCanvas, renderTree } from "./mocks.js";
 
 // ============================================
@@ -36,7 +34,7 @@ const tokenTestComponent = defineComponent({
 /** Minimal theme for tests (no layout tokens needed). */
 function minimalTheme(): Theme {
   return {
-    slide: { width: 10, height: 5.625 } as any,
+    slide: { width: 960, height: 540 },
     fonts: [],
     textStyles: {} as any,
     layouts: {},

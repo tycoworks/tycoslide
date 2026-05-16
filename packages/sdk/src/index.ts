@@ -126,21 +126,77 @@ export {
   TEXT_STYLE,
   type TextStyle,
   type TextStyleKey,
-} from "./format.js";
+} from "./theme/format.js";
 
 // ── Theme ───────────────────────────────────────────────────────────────────
 
-export type { ThemeDefinition, ThemeFormat } from "./theme.js";
+export type { ThemeDefinition, ThemeFormat } from "./theme/index.js";
 // Multi-format theme definition and resolution
-export { defineTheme, resolveThemeFormat } from "./theme.js";
+export { defineTheme, resolveThemeFormat } from "./theme/index.js";
 
 // ── Templates ────────────────────────────────────────────────────────────────
 
-export { defineTemplate, type Layout, type Template } from "./template.js";
+export { defineTemplate, type Layout, type Template } from "./theme/template.js";
 
 // ── Token Derivation ────────────────────────────────────────────────────────
 
-export { deriveTokens, type VisualTokens } from "./visualTokens.js";
+export { deriveTokens, type VisualTokens } from "./theme/tokens.js";
+
+// ── Component & Layout Authoring ────────────────────────────────────────
+
+// Runtime types (still from core)
+export type {
+  Canvas,
+  ComponentDefinition,
+  ComponentNode,
+  RenderContext,
+} from "@tycoslide/core";
+// Component node factory (for layouts that instantiate components dynamically)
+export { component } from "@tycoslide/core";
+export type {
+  ComponentConfig,
+  InferParams,
+  InferTokens,
+  LayoutConfig,
+  ParamShape,
+  ScalarShape,
+  SyntaxHandler,
+  TokenDescriptor,
+  TokenShape,
+} from "./authoring/index.js";
+// Factories for defining custom components and layouts
+// Token descriptors (required/optional markers for component token declarations)
+// Param helpers (schema type builders + param declaration wrappers)
+export { defineComponent, defineLayout, param, schema, token } from "./authoring/index.js";
+
+// ── Layout Primitives (re-exported from core for theme authors) ──────────
+
+export type {
+  HorizontalAlignment,
+  SlideNode,
+  TextStyleName,
+  VerticalAlignment,
+} from "@tycoslide/core";
+export {
+  GRID_STYLE,
+  HALIGN,
+  Insets,
+  LAYER,
+  SHADOW_TYPE,
+  SHAPE,
+  SIZE,
+  SPACING_MODE,
+  VALIGN,
+} from "@tycoslide/core";
+
+// ── Presentation (programmatic slide building) ──────────────────────────
+
+export {
+  createPresentation,
+  Presentation,
+  type PresentationConfig,
+  type SlideLayout,
+} from "@tycoslide/core";
 
 // ── Markdown Compilation ──────────────────────────────────────────────────
 
