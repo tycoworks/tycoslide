@@ -155,7 +155,7 @@ describe("resolveThemeFormat()", () => {
     const mockBackground: Background = { color: "#FFFFFF" };
     const template = defineTemplate({
       name: "hero",
-      description: "Hero layout",
+      documentation: { description: "Hero layout" },
       layout,
       background: mockBackground,
       tokens: { titleColor: "#FFF" },

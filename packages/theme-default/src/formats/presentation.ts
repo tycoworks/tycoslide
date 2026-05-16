@@ -296,7 +296,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       // ── Title (light) ─────────────────────────────────────────────────
       defineTemplate({
         name: TEMPLATE.TITLE,
-        description: "Opening slide with large title and optional subtitle.",
+        documentation: { description: "Opening slide with large title and optional subtitle." },
         layout: margin(title),
         background: t.surfaces.elevated,
         tokens: {
@@ -317,7 +317,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       // ── End (dark, uses title layout) ─────────────────────────────────
       defineTemplate({
         name: TEMPLATE.TITLE_DARK,
-        description: "Closing slide. Dark variant of the title layout.",
+        documentation: { description: "Closing slide. Dark variant of the title layout." },
         layout: margin(title),
         background: t.surfaces.emphasis,
         tokens: {
@@ -332,7 +332,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       // ── Section (dark) ────────────────────────────────────────────────
       defineTemplate({
         name: TEMPLATE.SECTION,
-        description: "Section divider with centered title.",
+        documentation: { description: "Section divider with centered title." },
         layout: margin(section),
         background: t.surfaces.emphasis,
         tokens: {
@@ -344,7 +344,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       // ── Body (light, top-aligned) ─────────────────────────────────────
       defineTemplate({
         name: TEMPLATE.BODY,
-        description: "Markdown body with optional title. Default layout.",
+        documentation: { description: "Markdown body with optional title. Default layout." },
         layout: footer(body),
         background: t.surfaces.elevated,
         tokens: { ...bodyBase, vAlign: VALIGN.TOP },
@@ -353,7 +353,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       // ── Body centered (light) ─────────────────────────────────────────
       defineTemplate({
         name: TEMPLATE.BODY_CENTERED,
-        description: "Centered markdown body with optional title.",
+        documentation: { description: "Centered markdown body with optional title." },
         layout: footer(body),
         background: t.surfaces.elevated,
         tokens: { ...bodyBase, vAlign: VALIGN.MIDDLE },
@@ -362,7 +362,9 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       // ── Statement (light) ─────────────────────────────────────────────
       defineTemplate({
         name: TEMPLATE.STATEMENT,
-        description: "Centered body text with optional caption. Use for value props and big statements.",
+        documentation: {
+          description: "Centered body text with optional caption. Use for value props and big statements.",
+        },
         layout: margin(statement),
         background: t.surfaces.elevated,
         tokens: {
@@ -376,7 +378,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       // ── Agenda (light) ────────────────────────────────────────────────
       defineTemplate({
         name: TEMPLATE.AGENDA,
-        description: "Eyebrow, title, and numbered item list with divider lines.",
+        documentation: { description: "Eyebrow, title, and numbered item list with divider lines." },
         layout: footer(agenda),
         background: t.surfaces.elevated,
         tokens: {
@@ -395,7 +397,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       // ── Cards (light) ─────────────────────────────────────────────────
       defineTemplate({
         name: TEMPLATE.CARDS,
-        description: "Card grid with intro text and optional caption.",
+        documentation: { description: "Card grid with intro text and optional caption." },
         layout: footer(cards),
         background: t.surfaces.elevated,
         tokens: {
@@ -412,7 +414,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       // ── Transform (light) ─────────────────────────────────────────────
       defineTemplate({
         name: TEMPLATE.TRANSFORM,
-        description: "Side-by-side comparison layout with optional overlay.",
+        documentation: { description: "Side-by-side comparison layout with optional overlay." },
         layout: footer(transform),
         background: t.surfaces.elevated,
         tokens: {
