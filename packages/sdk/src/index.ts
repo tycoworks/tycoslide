@@ -201,11 +201,15 @@ export {
 // ── Skill Compiler ──────────────────────────────────────────────────────────
 
 export {
-  compileSkill,
   type CompileSkillOptions,
   type CompileSkillResult,
+  compileSkill,
+  introspectParams,
+  PARAM_TYPE,
+  type ParamInfo,
+  type ParamType,
+  SKILL_PATHS,
 } from "./skill/index.js";
-export { introspectParams, PARAM_TYPE, type ParamInfo, type ParamType } from "./skill/index.js";
 
 // ── Markdown Compilation ──────────────────────────────────────────────────
 

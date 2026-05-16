@@ -5,6 +5,17 @@ import type { Template } from "../theme/template.js";
 import { introspectParams, type ParamInfo } from "./introspect.js";
 
 // ============================================
+// CONSTANTS
+// ============================================
+
+/** Output paths for generated skill files (relative to theme root). */
+export const SKILL_PATHS = {
+  SKILL_MD: "skills/tycoslide/SKILL.md",
+  PLUGIN_JSON: ".claude-plugin/plugin.json",
+  REFERENCES_DIR: "skills/tycoslide/references",
+} as const;
+
+// ============================================
 // TYPES
 // ============================================
 
@@ -125,25 +136,30 @@ function generateSkillMd(definition: ThemeDefinition, options: CompileSkillOptio
     }
   }
 
-  // Quick syntax reference
-  sections.push("## Syntax Quick Reference");
-  sections.push("");
-  sections.push("See `references/markdown-syntax.md` for the full markdown dialect.");
-  sections.push("");
-  sections.push("```markdown");
-  sections.push("---");
-  sections.push(`theme: "${options.name}"`);
-  sections.push(`format: ${Object.keys(definition.formats)[0] ?? "<format-name>"}`);
-  sections.push("---");
-  sections.push("");
-  sections.push("---");
-  sections.push("template: body");
-  sections.push("title: Slide Title");
-  sections.push("---");
-  sections.push("");
-  sections.push("Body content here.");
-  sections.push("```");
-  sections.push("");
+  // Quick syntax reference (only if we have a real format + template to show)
+  const firstFormat = Object.keys(definition.formats)[0];
+  const firstTemplate = firstFormat ? definition.formats[firstFormat]?.templates?.[0] : undefined;
+
+  if (firstFormat && firstTemplate) {
+    sections.push("## Syntax Quick Reference");
+    sections.push("");
+    sections.push("See `references/markdown-syntax.md` for the full markdown dialect.");
+    sections.push("");
+    sections.push("```markdown");
+    sections.push("---");
+    sections.push(`theme: "${options.name}"`);
+    sections.push(`format: ${firstFormat}`);
+    sections.push("---");
+    sections.push("");
+    sections.push("---");
+    sections.push(`template: ${firstTemplate.layout.name}`);
+    sections.push("title: Slide Title");
+    sections.push("---");
+    sections.push("");
+    sections.push("Body content here.");
+    sections.push("```");
+    sections.push("");
+  }
 
   // Error recovery
   sections.push("## Error Recovery");
@@ -188,11 +204,18 @@ function generatePluginJson(options: CompileSkillOptions): string {
  * writing them to disk (the CLI command handles that).
  */
 export function compileSkill(definition: ThemeDefinition, options: CompileSkillOptions): CompileSkillResult {
+  if (!options.name) {
+    throw new Error("compileSkill: options.name is required.");
+  }
+  if (!definition.formats || Object.keys(definition.formats).length === 0) {
+    throw new Error("compileSkill: ThemeDefinition must have at least one format.");
+  }
+
   const version = options.version ?? "0.0.0";
 
   const files: Record<string, string> = {
-    "skills/tycoslide/SKILL.md": generateSkillMd(definition, options),
-    ".claude-plugin/plugin.json": generatePluginJson(options),
+    [SKILL_PATHS.SKILL_MD]: generateSkillMd(definition, options),
+    [SKILL_PATHS.PLUGIN_JSON]: generatePluginJson(options),
   };
 
   return {

@@ -464,6 +464,46 @@ const tokens = token.shape({
 
 ---
 
+## Building a Theme Package
+
+`build-theme` compiles TypeScript, generates an AI authoring skill from template metadata, and copies documentation references into the package.
+
+```bash
+npx tycoslide build-theme
+```
+
+Output:
+
+```bash
+my-theme/
+  dist/           # Compiled JS + types
+  skills/         # AI authoring skill (generated)
+  .claude-plugin/ # Plugin manifest (generated)
+```
+
+Add `skills/` and `.claude-plugin/` to `.gitignore`. Both directories are generated output that ships in the npm tarball — the published package works as both a runtime theme and an AI authoring plugin.
+
+### Options
+
+| Flag | Description |
+|------|-------------|
+| `--dir <path>` | Theme directory (default: cwd) |
+| `--no-tsc` | Skip TypeScript compilation (use pre-built `dist/`) |
+
+### Package Configuration
+
+```json
+{
+  "scripts": {
+    "build": "tycoslide build-theme",
+    "clean": "rm -rf dist skills .claude-plugin"
+  },
+  "files": ["dist/", "assets/", "skills/", ".claude-plugin/"]
+}
+```
+
+---
+
 ## Testing a Theme
 
 Test with all built-in components to verify every token is correct:

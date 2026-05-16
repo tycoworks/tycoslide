@@ -40,6 +40,9 @@ function unwrap(schema: z.ZodTypeAny): { inner: z.ZodTypeAny; required: boolean 
   if (schema instanceof z.ZodDefault) {
     return { inner: schema.unwrap() as z.ZodTypeAny, required: false };
   }
+  if (schema instanceof z.ZodNullable) {
+    return { inner: schema.unwrap() as z.ZodTypeAny, required: false };
+  }
   return { inner: schema, required: true };
 }
 

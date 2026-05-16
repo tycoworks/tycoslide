@@ -3,6 +3,7 @@
 
 import { Command } from "commander";
 import { build } from "./build.js";
+import { buildTheme } from "./compileTheme.js";
 
 const program = new Command();
 
@@ -29,5 +30,14 @@ program
       await build(input, { ...opts, renderScale });
     },
   );
+
+program
+  .command("build-theme")
+  .description("Build a distributable theme package")
+  .option("--dir <path>", "theme directory (default: cwd)")
+  .option("--no-tsc", "skip TypeScript compilation (use pre-built dist/)")
+  .action(async (opts: { dir?: string; tsc?: boolean }) => {
+    await buildTheme({ dir: opts.dir, noTsc: opts.tsc === false });
+  });
 
 program.parse();
