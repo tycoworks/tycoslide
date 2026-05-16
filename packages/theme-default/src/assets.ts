@@ -46,6 +46,9 @@ export const assets = {
   },
   tycoslide: {
     logo: tycoslide("logo.png"),
+    logoWhite: tycoslide("logo-white.png"),
+    logomark: tycoslide("logomark.png"),
+    logomarkWhite: tycoslide("logomark-white.png"),
     background: tycoslide("background.png"),
   },
 };

@@ -1,6 +1,6 @@
 # NPM Publishing
 
-Standard operating procedure for publishing `@tycoslide/core`, `@tycoslide/components`, `@tycoslide/cli`, and `@tycoslide/theme-default` to npm.
+Standard operating procedure for publishing `@tycoslide/core`, `@tycoslide/sdk`, `@tycoslide/cli`, and `@tycoslide/theme-default` to npm.
 
 ---
 
@@ -12,7 +12,7 @@ A user runs:
 npm install @tycoslide/cli @tycoslide/theme-default
 ```
 
-(`@tycoslide/core` and `@tycoslide/components` come transitively as dependencies.)
+(`@tycoslide/core` and `@tycoslide/sdk` come transitively as dependencies.)
 
 Creates `slides.md`, then:
 
@@ -48,9 +48,9 @@ npm version <patch|minor|major> --workspaces --no-git-tag-version
 
 Then update inter-workspace dependency ranges to match:
 
-- `packages/components/package.json` — `"@tycoslide/core": "^X.Y.0"`
+- `packages/sdk/package.json` — `"@tycoslide/core": "^X.Y.0"`
 - `packages/cli/package.json` — `"@tycoslide/core": "^X.Y.0"`
-- `packages/theme-default/package.json` — `"@tycoslide/core": "^X.Y.0"`, `"@tycoslide/components": "^X.Y.0"`
+- `packages/theme-default/package.json` — `"@tycoslide/core": "^X.Y.0"`, `"@tycoslide/sdk": "^X.Y.0"`
 
 ### 2. Build and test
 
@@ -76,7 +76,7 @@ Check each package:
 
 ```bash
 npm publish --workspace=packages/core --access public
-npm publish --workspace=packages/components --access public
+npm publish --workspace=packages/sdk --access public
 npm publish --workspace=packages/cli --access public
 npm publish --workspace=packages/theme-default --access public
 ```
@@ -91,7 +91,7 @@ On the first release under the new scope, deprecate the old `@tycoworks` package
 
 ```bash
 npm deprecate @tycoworks/tycoslide "Moved to @tycoslide/core and @tycoslide/cli"
-npm deprecate @tycoworks/tycoslide-components "Moved to @tycoslide/components"
+npm deprecate @tycoworks/tycoslide-components "Moved to @tycoslide/sdk"
 npm deprecate @tycoworks/tycoslide-theme "Moved to @tycoslide/theme-default"
 ```
 
@@ -141,11 +141,11 @@ npx tycoslide build test.md
 | Package | npm name | Directory |
 |---------|----------|-----------|
 | Core | `@tycoslide/core` | `packages/core` |
-| Components | `@tycoslide/components` | `packages/components` |
+| SDK | `@tycoslide/sdk` | `packages/sdk` |
 | CLI | `@tycoslide/cli` | `packages/cli` |
 | Theme | `@tycoslide/theme-default` | `packages/theme-default` |
 
-Users install two packages (CLI + theme). Core and components are transitive dependencies.
+Users install two packages (CLI + theme). Core and SDK are transitive dependencies.
 
 ---
 

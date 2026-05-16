@@ -2,9 +2,11 @@
 // Default theme package for tycoslide
 
 import {
+  brandFonts,
   cardComponent,
   codeComponent,
   columnComponent,
+  defineTheme,
   gridComponent,
   imageComponent,
   labelComponent,
@@ -19,12 +21,11 @@ import {
   tableComponent,
   testimonialComponent,
   textComponent,
-} from "@tycoslide/components";
-import type { MasterDefinition } from "@tycoslide/core";
-import { allLayouts } from "./layouts.js";
-import { defaultMaster, minimalMaster } from "./master.js";
+} from "@tycoslide/sdk";
+import { brand } from "./brand.js";
+import { buildPresentationFormat } from "./formats/presentation.js";
 
-// Explicit component, layout, and master lists — themes declare what they use
+// Explicit component list — themes declare what they use
 export const components = [
   textComponent,
   labelComponent,
@@ -45,13 +46,26 @@ export const components = [
   listComponent,
 ];
 
-export const layouts = allLayouts;
-
-export const masters: MasterDefinition[] = [defaultMaster, minimalMaster];
-
 // Re-export component DSL functions for theme consumers
-export * from "@tycoslide/components";
+export * from "@tycoslide/sdk";
 export type { Assets } from "./assets.js";
 export { assets } from "./assets.js";
-// Theme and assets
-export { theme } from "./theme.js";
+
+export const TEMPLATE = {
+  TITLE: "title",
+  TITLE_DARK: "title-dark",
+  SECTION: "section",
+  BODY: "body",
+  BODY_CENTERED: "body-centered",
+  STATEMENT: "statement",
+  AGENDA: "agenda",
+  CARDS: "cards",
+  TRANSFORM: "transform",
+} as const;
+
+export const theme = defineTheme({
+  fonts: brandFonts(brand),
+  formats: {
+    presentation: buildPresentationFormat(brand.colors.light),
+  },
+});

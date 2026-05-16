@@ -65,13 +65,7 @@ export class LayoutMeasurer {
 
     // Generate single HTML page containing all slides
     const labels = slides.map((s) => s.label);
-    const { html, slideNodeIds, slideFragments } = generateLayoutHTML(
-      slides,
-      theme,
-      labels,
-      this.fontNormalRatios,
-      imagePathMap,
-    );
+    const { html, slideNodeIds, slideFragments } = generateLayoutHTML(slides, theme, labels, imagePathMap);
 
     // Write measurement HTML to file and navigate with file:// origin
     const measurementPath = path.join(outputDir, "_measurement.html");

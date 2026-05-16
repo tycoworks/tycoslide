@@ -20,8 +20,7 @@ theme: "@tycoslide/theme-default"
 ---
 
 ---
-layout: title
-variant: default
+template: title
 title: My Presentation
 ---
 ```
@@ -65,32 +64,34 @@ export const theme: Theme = { /* ... */ };
 
 ---
 
-### "Theme package does not export 'layouts'"
-
-```
-Error: Theme package 'my-theme' does not export 'layouts'.
-Layouts must be exported so importing them registers them in the layout registry.
-```
-
-**Fix:** Export `layouts` from your theme's `index.ts`:
-
-```typescript
-import { allLayouts } from './layouts.js';
-
-export const layouts = allLayouts;
-```
-
----
-
 ### "Missing tokens for component"
 
 ```
 Component 'xyz' is missing required tokens: [foo, bar]. All tokens must be provided by the parent component or layout.
 ```
 
-**Cause:** A component declares token keys that the layout's token map does not provide.
+**Cause:** A component declares token keys that the template's `tokens` does not provide.
 
-**Fix:** Add the missing token keys to the layout's token map in `theme.layouts`.
+**Fix:** Add the missing token keys to the template's `tokens` in `defineTemplate()`.
+
+---
+
+### "Theme has no format matching '...'"
+
+```
+Error: Theme has no format matching 'factsheet'. Available formats: presentation
+```
+
+**Cause:** The `format` field in global frontmatter names a format the theme does not define.
+
+**Fix:** Use a format the theme supports, or add the missing format to the theme definition. See [Themes — Using a Theme](./themes.md#using-a-theme).
+
+```markdown
+---
+theme: "@tycoslide/theme-default"
+format: presentation
+---
+```
 
 ---
 
@@ -102,23 +103,16 @@ Component 'xyz' is missing required tokens: [foo, bar]. All tokens must be provi
 Error: Unknown component: 'xyz'. Did you forget to register it?
 ```
 
-**Fix:** Make sure the component is defined and registered before compiling:
+**Fix:** Make sure the component is included in the theme's `components` array:
 
 ```typescript
-import { defineComponent, componentRegistry } from '@tycoslide/core';
+import { defineComponent } from '@tycoslide/core';
+
 const myComponent = defineComponent({ name: 'my-component', tokens: {}, render: ... });
-componentRegistry.register(myComponent);
+
+// In your theme's index.ts:
+export const components = [myComponent, ...otherComponents];
 ```
-
----
-
-### "Unknown variant"
-
-```
-Error: Unknown variant 'highlight' for layout 'cards'. Available: default, flat
-```
-
-**Fix:** Either add the variant to your theme's layout token map, or use one of the listed available variants.
 
 ---
 
@@ -144,7 +138,7 @@ const x = 1;
 Error: Unsupported code language "xyz". Supported languages include: typescript, python, sql, rust, go, java. See LANGUAGE constant for full list.
 ```
 
-**Fix:** Use a supported language identifier. Common values: `typescript`, `javascript`, `python`, `sql`, `rust`, `go`, `java`, `bash`, `json`. See the `LANGUAGE` constant in `@tycoslide/components` for the full list.
+**Fix:** Use a supported language identifier. Common values: `typescript`, `javascript`, `python`, `sql`, `rust`, `go`, `java`, `bash`, `json`. See the `LANGUAGE` constant in `@tycoslide/sdk` for the full list.
 
 ---
 
@@ -161,44 +155,43 @@ Cannot register 'my-component' for the same type.
 
 ## Layout Errors
 
-### "Missing 'layout' field in frontmatter"
+### "Missing 'template' field in frontmatter"
 
 ```
-Error: Slide 3: missing 'layout' field in frontmatter
+Error: Slide 3: missing 'template' field in frontmatter
 ```
 
 **Fix:**
 
 ```markdown
 ---
-layout: body
-variant: default
+template: body
 title: My Slide
 ---
 ```
 
 ---
 
-### "Unknown layout"
+### "Unknown template"
 
 ```
-Error: Slide 3: unknown layout 'hero'. Available: title, section, body, ...
+Error: Slide 3: unknown template 'hero'. Available: title, section, body, ...
 ```
 
-The available layouts listed in the error come from your theme.
+The available templates listed in the error come from your theme.
 
-**Fix:** Use one of the layouts listed in the error, or verify that your theme package exports the correct layouts.
+**Fix:** Use one of the templates listed in the error, or verify that the theme defines the template in its format.
 
 ---
 
-### "Layout params validation failed"
+### "Template params validation failed"
 
 ```
-Error: Layout 'title' params validation failed:
+Error: Template 'title' params validation failed:
   - title: Required
 ```
 
-**Fix:** Add the missing field to the slide frontmatter. Check the layout's documentation for required parameters.
+**Fix:** Add the missing field to the slide frontmatter. Check the template's documentation for required parameters.
 
 ---
 
@@ -230,11 +223,11 @@ Use `tycoslide build deck.md --force` to write the PPTX anyway and inspect visua
 ### "Content extends beyond slide bounds"
 
 ```
-Slide 4 (layout: body, title: Key Points): Content extends beyond slide bounds:
+Slide 4 (template: body, title: Key Points): Content extends beyond slide bounds:
   text at (0.50, 0.42) overflows 0.23" bottom
 ```
 
-**Cause:** A measured element is taller or wider than the space the master's content bounds allow.
+**Cause:** A measured element is taller or wider than the available slide area.
 
 **Fix:**
 - Reduce the amount of content on the slide
@@ -248,7 +241,7 @@ Slide 4 (layout: body, title: Key Points): Content extends beyond slide bounds:
 ### "Unintentional content overlap detected"
 
 ```
-Slide 2 (layout: body, title: Overview): Unintentional content overlap detected:
+Slide 2 (template: body, title: Overview): Unintentional content overlap detected:
   text[0] overlaps text[1] by 0.50"x0.12" in container
 ```
 
@@ -264,7 +257,7 @@ Slide 2 (layout: body, title: Overview): Unintentional content overlap detected:
 
 ```
 Error: Invalid YAML in slide 2 frontmatter:
-layout: body
+template: body
 title: My Slide: with a colon
 ```
 
@@ -272,8 +265,7 @@ title: My Slide: with a colon
 
 ```yaml
 ---
-layout: body
-variant: default
+template: body
 title: "My Slide: with a colon"
 ---
 ```
@@ -290,7 +282,7 @@ Layout 'body' has unknown slots: [unknown]. Declared slots: [body].
 
 **Cause:** A slide uses `::slotname::` for a slot the layout does not declare.
 
-**Fix:** Check the layout's declared slot names in [Layouts](./layouts.md). Use only slots that appear in the layout's `slots` definition.
+**Fix:** Check the template's declared slot names in [Templates](./templates.md). Use only slots that appear in the layout's `slots` definition.
 
 ---
 
@@ -345,8 +337,7 @@ author: John Doe
 ---
 
 ---
-layout: title
-variant: default
+template: title
 title: My Presentation
 ---
 ```
@@ -381,4 +372,4 @@ Writes the PPTX even when slides have overflow, bounds, or missing font errors. 
 
 ### Theme validation
 
-Use `defineTheme()` to catch missing or mistyped tokens at definition time. See [Themes — Theme Structure](./themes.md#theme-structure) for the full pattern.
+Use `defineTheme()` to catch missing or mistyped tokens at definition time. See [Themes — Building a Custom Theme](./themes.md#building-a-custom-theme) for the full pattern.

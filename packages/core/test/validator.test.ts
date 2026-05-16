@@ -1,8 +1,9 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import { LayoutBoundsError, LayoutOverflowError, LayoutValidator } from "../src/core/layout/validator.js";
+import { Insets } from "../src/core/model/bounds.js";
 import { type ElementNode, NODE_TYPE, type PositionedNode, type TextNode } from "../src/core/model/nodes.js";
-import { DIRECTION, HALIGN, SIZE, VALIGN } from "../src/core/model/types.js";
+import { DIRECTION, HALIGN, SIZE, SPACING_MODE, VALIGN } from "../src/core/model/types.js";
 
 /** Minimal text node for validator tests (validator only checks geometry, not content) */
 function textNode(content: string): TextNode {
@@ -17,11 +18,11 @@ function textNode(content: string): TextNode {
     resolvedStyle: {
       fontFamily: { name: "Arial", regular: { path: "/fake/arial.woff", weight: 400 } },
       fontSize: 14,
-      lineHeightMultiplier: 1.0,
+      lineHeight: 1.0,
       bulletIndentPt: 21,
     },
     color: "#000000",
-    lineHeightMultiplier: 1.2,
+    lineHeight: 1.2,
     bulletIndentPt: 18,
     linkColor: "#0000FF",
     linkUnderline: true,
@@ -37,6 +38,8 @@ function containerNode(): ElementNode {
     width: SIZE.FILL,
     height: SIZE.HUG,
     spacing: 0,
+    spacingMode: SPACING_MODE.BETWEEN,
+    padding: new Insets(0),
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.TOP,
   } as ElementNode;
@@ -147,12 +150,12 @@ describe("Layout Validation", () => {
       };
       const validator = new LayoutValidator(slideBounds);
       try {
-        validator.validateOrThrow(positioned, 5, "layout: customerStory, eyebrow: STORY");
+        validator.validateOrThrow(positioned, 5, "template: customerStory, eyebrow: STORY");
         assert.fail("Should have thrown");
       } catch (e) {
         assert.ok(e instanceof LayoutOverflowError);
         assert.ok(e.message.includes("Slide 6"));
-        assert.ok(e.message.includes("layout: customerStory, eyebrow: STORY"));
+        assert.ok(e.message.includes("template: customerStory, eyebrow: STORY"));
       }
     });
 
@@ -193,12 +196,12 @@ describe("Layout Validation", () => {
       };
       const validator = new LayoutValidator(slideBounds);
       try {
-        validator.validateOrThrow(positioned, 3, "layout: body, title: Test");
+        validator.validateOrThrow(positioned, 3, "template: body, title: Test");
         assert.fail("Should have thrown");
       } catch (e) {
         assert.ok(e instanceof LayoutBoundsError);
         assert.ok(e.message.includes("Slide 4"));
-        assert.ok(e.message.includes("layout: body, title: Test"));
+        assert.ok(e.message.includes("template: body, title: Test"));
       }
     });
 
@@ -212,12 +215,12 @@ describe("Layout Validation", () => {
       };
       const validator = new LayoutValidator(slideBounds);
       try {
-        validator.validateOrThrow(positioned, 0, "layout: title");
+        validator.validateOrThrow(positioned, 0, "template: title");
         assert.fail("Should have thrown");
       } catch (e) {
         assert.ok(e instanceof LayoutOverflowError);
         assert.ok(e.message.includes("Slide 1"));
-        assert.ok(e.message.includes("layout: title"));
+        assert.ok(e.message.includes("template: title"));
       }
     });
   });

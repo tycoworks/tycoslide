@@ -1,19 +1,19 @@
-// defineComponent Tests — define(), .schema, body convention, registry compat
+// defineComponent Tests — define(), .schema, body convention
 
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import { z } from "zod";
+import { Insets } from "../src/core/model/bounds.js";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
 import { param, schema } from "../src/core/model/param.js";
-
 import type { TextStyle } from "../src/core/model/types.js";
-import { DIRECTION, HALIGN, SIZE, VALIGN } from "../src/core/model/types.js";
-import { componentRegistry, defineComponent } from "../src/core/rendering/registry.js";
+import { DIRECTION, HALIGN, SIZE, SPACING_MODE, VALIGN } from "../src/core/model/types.js";
+import { defineComponent } from "../src/core/rendering/definitions.js";
 
 const stubStyle: TextStyle = {
   fontSize: 12,
   fontFamily: { name: "Test", regular: { path: "/fake/test.woff", weight: 400 } },
-  lineHeightMultiplier: 1.0,
+  lineHeight: 1.0,
   bulletIndentPt: 18,
 };
 
@@ -27,7 +27,7 @@ const stubTextNode = (text: string = ""): any => ({
   color: "#000000",
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.TOP,
-  lineHeightMultiplier: 1.2,
+  lineHeight: 1.2,
   bulletIndentPt: 0,
   linkColor: "#0000FF",
   linkUnderline: true,
@@ -44,7 +44,6 @@ describe("defineComponent", () => {
     const comp = defineComponent({
       name: "test-params-comp",
       params: testParams,
-      tokens: {},
       render: (params) => stubTextNode(params.title),
     });
 
@@ -76,7 +75,7 @@ describe("defineComponent", () => {
       const rendered = await comp.render(
         { title: "Hello", count: 1 },
         undefined,
-        { theme: {} as any, canvas: { renderHtml: async () => "" } },
+        { theme: {} as any, canvas: { renderHtml: async () => "" } } as any,
         {} as any,
       );
       assert.strictEqual(rendered.type, NODE_TYPE.TEXT);
@@ -85,17 +84,12 @@ describe("defineComponent", () => {
     test("auto-generates deserializer", () => {
       assert.ok(comp.deserialize, "params component should have auto-generated deserializer");
     });
-
-    test("is registerable in componentRegistry", () => {
-      componentRegistry.register(comp);
-    });
   });
 
   describe("define with content", () => {
     const comp = defineComponent({
       name: "test-body-comp",
       content: schema.string(),
-      tokens: {},
       render: (_params, content) => stubTextNode(content),
     });
 
@@ -121,10 +115,6 @@ describe("defineComponent", () => {
     test("auto-generates deserializer", () => {
       assert.ok(comp.deserialize, "body component should have auto-generated deserializer");
     });
-
-    test("is registerable in componentRegistry", () => {
-      componentRegistry.register(comp);
-    });
   });
 
   describe("define with content + params", () => {
@@ -132,7 +122,6 @@ describe("defineComponent", () => {
       name: "test-body-params-comp",
       content: schema.string(),
       params: { scale: param.optional(schema.number()) },
-      tokens: {},
       render: (_params, content) => stubTextNode(content),
     });
 
@@ -144,7 +133,7 @@ describe("defineComponent", () => {
       const rendered = await comp.render(
         { scale: 2 },
         "hello",
-        { theme: {} as any, canvas: { renderHtml: async () => "" } },
+        { theme: {} as any, canvas: { renderHtml: async () => "" } } as any,
         {} as any,
       );
       assert.strictEqual(rendered.type, NODE_TYPE.TEXT);
@@ -155,7 +144,6 @@ describe("defineComponent", () => {
     const comp = defineComponent({
       name: "test-prog-comp",
       children: true,
-      tokens: {},
       render: (_params: any, children: any[]) => ({
         type: NODE_TYPE.CONTAINER,
         direction: DIRECTION.ROW,
@@ -163,6 +151,8 @@ describe("defineComponent", () => {
         width: SIZE.FILL,
         height: SIZE.HUG,
         spacing: 0,
+        spacingMode: SPACING_MODE.BETWEEN,
+        padding: new Insets(0),
         hAlign: HALIGN.LEFT,
         vAlign: VALIGN.TOP,
       }),
@@ -179,10 +169,6 @@ describe("defineComponent", () => {
 
     test("does NOT have deserializer", () => {
       assert.strictEqual(comp.deserialize, undefined);
-    });
-
-    test("is registerable in componentRegistry", () => {
-      componentRegistry.register(comp);
     });
   });
 });

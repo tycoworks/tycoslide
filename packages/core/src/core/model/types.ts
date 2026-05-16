@@ -103,23 +103,6 @@ export const UNDERLINE_STYLE = {
 
 export type UnderlineStyle = (typeof UNDERLINE_STYLE)[keyof typeof UNDERLINE_STYLE];
 
-export const SLIDE_SIZE = {
-  S16x9: { layout: "LAYOUT_16x9", width: 10, height: 5.625 },
-  S16x10: { layout: "LAYOUT_16x10", width: 10, height: 6.25 },
-  S4x3: { layout: "LAYOUT_4x3", width: 10, height: 7.5 },
-  WIDE: { layout: "LAYOUT_WIDE", width: 13.33, height: 7.5 },
-} as const;
-
-export type SlideSize = (typeof SLIDE_SIZE)[keyof typeof SLIDE_SIZE];
-
-export const CUSTOM_LAYOUT = "CUSTOM" as const;
-
-export interface CustomSlideSize {
-  layout: typeof CUSTOM_LAYOUT;
-  width: number;
-  height: number;
-}
-
 // ============================================
 // STYLING TYPES
 // ============================================
@@ -163,12 +146,13 @@ export interface Font {
  *
  * Use `getFontForRun()` to resolve bold/italic flags to the correct `Font`.
  */
-export interface FontFamily {
+export interface FontFamilyConfig {
   name: string; // CSS font-family, PPTX fontFace
   regular: Font; // required — the default face
   italic?: Font; // optional — algorithmic italic if missing
   bold?: Font; // optional — algorithmic bold if missing
   boldItalic?: Font; // optional — algorithmic bold+italic if missing
+  normalRatio: number; // measured at runtime by Playwright — used by PPTX renderer to convert CSS lineHeight back to lineSpacingMultiple
 }
 
 /** Font slot keys for iterating FontFamily (excluding name) */
@@ -184,11 +168,11 @@ export type FontSlot = (typeof FONT_SLOT)[keyof typeof FONT_SLOT];
 /** A text style name defined in a theme's `textStyles` map. */
 export type TextStyleName = string & {};
 
-export interface TextStyle {
-  fontFamily: FontFamily;
+export interface TextStyleConfig {
+  fontFamily: FontFamilyConfig;
   fontSize: number;
-  lineHeightMultiplier: number;
-  bulletIndentPt: number;
+  lineHeight: number; // CSS-semantic: multiplier of fontSize
+  bulletIndentPt: number; // required — resolved in SDK (default: fontSize * 1.5)
 }
 
 // ============================================
@@ -227,19 +211,19 @@ export type TextRun = string | NormalizedRun;
 export type TextContent = string | TextRun[];
 
 // ============================================
-// BOUNDS
+// GEOMETRIC PRIMITIVES
 // ============================================
 
-export { Bounds } from "./bounds.js";
+export { Bounds, Insets } from "./bounds.js";
 
-import type { ComponentNode } from "./nodes.js";
+import type { SlideNode } from "./nodes.js";
 
 // ============================================
 // BACKGROUND
 // ============================================
 
 /**
- * Slide/master background. All fields optional — set color, path, or both.
+ * Slide background. All fields optional — set color, path, or both.
  * Opacity uses the same convention as ShapeNode.fill (0 = invisible, 100 = opaque).
  * The renderer inverts to pptxgenjs's transparency at the rendering boundary.
  */
@@ -254,28 +238,28 @@ export interface Background {
 // ============================================
 
 export interface Slide {
-  /** Master name — every slide must reference a registered master. */
-  masterName: string;
-  /** Master tokens — resolved values passed directly from layout tokens. */
-  masterTokens: Record<string, unknown>;
-  /** Overrides master background if set. */
-  background?: Background;
+  /** Layout name — identifies the template this slide uses. */
+  layoutName: string;
+  /** Slide background — resolved from template config by SDK at compile time. */
+  background: Background;
   notes?: string;
-  content: ComponentNode;
+  content: SlideNode;
   /** Optional name for identifying slides in error messages and shared slide references. */
   name?: string;
 }
 
-/** Variant configuration — a named map of token values for layout variants. */
-export type VariantConfig = Record<string, Record<string, unknown>>;
+/** Structured config for a layout — background + tokens. */
+export interface TemplateConfig {
+  background: Background;
+  tokens: Record<string, unknown>;
+}
 
 export interface Theme {
-  slide: SlideSize | CustomSlideSize;
+  slide: { width: number; height: number };
   /** Explicit font manifest. Every font the theme uses must be listed here.
    *  `generateFontFaceCSS()` reads exclusively from this list. */
-  fonts: FontFamily[];
-  textStyles: Record<string, TextStyle>;
-  /** Layout tokens. Each layout that declares token keys gets its visual values from here.
-   *  Layouts with slots may include extra keys for slot injection (keyed by component name). */
-  layouts: Record<string, { variants: VariantConfig }>;
+  fonts: FontFamilyConfig[];
+  textStyles: Record<string, TextStyleConfig>;
+  /** Layout config. Each template name maps to its background and layout tokens. */
+  layouts: Record<string, TemplateConfig>;
 }

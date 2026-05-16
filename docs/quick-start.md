@@ -29,18 +29,17 @@ Create a file called `slides.md`:
 ```markdown
 ---
 theme: "@tycoslide/theme-default"
+format: presentation
 ---
 
 ---
-layout: title
-variant: default
+template: title
 title: My Presentation
 subtitle: Built with tycoslide
 ---
 
 ---
-layout: body
-variant: default
+template: body
 title: First Slide
 eyebrow: INTRODUCTION
 ---
@@ -76,6 +75,6 @@ npx tycoslide build examples/showcase.md
 
 - **Markdown syntax:** See [Markdown Syntax](./markdown-syntax.md)
 - **Add components:** See [Components](./components.md)
-- **Slide layouts:** See [Layouts](./layouts.md)
+- **Slide templates:** See [Templates](./templates.md)
 - **Customize themes:** See [Themes](./themes.md)
 - **CLI options:** See [CLI](./cli.md)

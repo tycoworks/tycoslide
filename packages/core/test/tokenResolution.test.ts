@@ -7,11 +7,10 @@ import { describe, it } from "node:test";
 import { component, NODE_TYPE } from "../src/core/model/nodes.js";
 import { param, schema } from "../src/core/model/param.js";
 
-import { token } from "../src/core/model/token.js";
 import type { Theme } from "../src/core/model/types.js";
 import { HALIGN, VALIGN } from "../src/core/model/types.js";
-import { componentRegistry, defineComponent } from "../src/core/rendering/registry.js";
-import { noopCanvas } from "./mocks.js";
+import { defineComponent } from "../src/core/rendering/definitions.js";
+import { noopCanvas, renderTree } from "./mocks.js";
 
 // ============================================
 // TEST COMPONENT WITH DECLARED TOKENS
@@ -24,7 +23,6 @@ const tokenTestComponent = defineComponent({
   params: {
     label: param.optional(schema.string()),
   },
-  tokens: { alpha: token.required<any>(), beta: token.required<any>(), gamma: token.required<any>() },
   render: (params: any, _content: any, _ctx: any, tokens: any): any => ({
     type: NODE_TYPE.TEXT,
     content: [{ text: params.label ?? "" }],
@@ -35,12 +33,10 @@ const tokenTestComponent = defineComponent({
   }),
 });
 
-componentRegistry.register(tokenTestComponent);
-
 /** Minimal theme for tests (no layout tokens needed). */
 function minimalTheme(): Theme {
   return {
-    slide: { layout: "LAYOUT_16x9", width: 10, height: 5.625 } as any,
+    slide: { width: 10, height: 5.625 } as any,
     fonts: [],
     textStyles: {} as any,
     layouts: {},
@@ -60,7 +56,11 @@ describe("Token Resolution Engine", () => {
         beta: "BBB",
         gamma: "CCC",
       });
-      const rendered = (await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() })) as any;
+      const rendered = (await renderTree(node, [tokenTestComponent], {
+        theme,
+        canvas: noopCanvas(),
+        renderTree: async (n: any) => n,
+      })) as any;
       assert.strictEqual(rendered._tokens.alpha, "AAA");
       assert.strictEqual(rendered._tokens.beta, "BBB");
       assert.strictEqual(rendered._tokens.gamma, "CCC");
@@ -73,7 +73,11 @@ describe("Token Resolution Engine", () => {
         beta: "VALUES",
         gamma: "HERE",
       });
-      const rendered = (await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() })) as any;
+      const rendered = (await renderTree(node, [tokenTestComponent], {
+        theme,
+        canvas: noopCanvas(),
+        renderTree: async (n: any) => n,
+      })) as any;
       assert.strictEqual(rendered._tokens.alpha, "CUSTOM");
       assert.strictEqual(rendered._tokens.beta, "VALUES");
       assert.strictEqual(rendered._tokens.gamma, "HERE");
@@ -87,62 +91,29 @@ describe("Token Resolution Engine", () => {
         beta: "B",
         gamma: "G",
       });
-      const rendered = (await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() })) as any;
+      const rendered = (await renderTree(node, [tokenTestComponent], {
+        theme,
+        canvas: noopCanvas(),
+        renderTree: async (n: any) => n,
+      })) as any;
       // tokens.alpha should be the object, not the string
       assert.deepStrictEqual(rendered._tokens.alpha, { nested: true });
     });
   });
 
   // ============================================
-  // 2. REQUIRED TOKEN VALIDATION (FAIL-FAST)
+  // 2. TOKEN PASSING
   // ============================================
 
-  describe("required token validation", () => {
-    it("throws when no tokens are provided at all", async () => {
-      const theme = minimalTheme();
-      const node = component(TOKEN_COMP as any, { label: "test" });
-
-      await assert.rejects(
-        () => componentRegistry.renderTree(node, { theme, canvas: noopCanvas() }),
-        (err: Error) => {
-          assert.match(err.message, /requires tokens but none were provided/);
-          return true;
-        },
-      );
-    });
-
-    it("throws when a required token is missing from node.tokens", async () => {
-      const theme = minimalTheme();
-      const node = component(TOKEN_COMP as any, { label: "test" }, undefined, { alpha: "A", beta: "B" }); // gamma missing
-
-      await assert.rejects(
-        () => componentRegistry.renderTree(node, { theme, canvas: noopCanvas() }),
-        (err: Error) => {
-          assert.match(err.message, /missing required tokens/);
-          assert.match(err.message, /gamma/);
-          return true;
-        },
-      );
-    });
-
-    it("error message lists ALL missing tokens", async () => {
-      const theme = minimalTheme();
-      const node = component(TOKEN_COMP as any, { label: "test" }, undefined, { alpha: "A" }); // beta and gamma missing
-
-      await assert.rejects(
-        () => componentRegistry.renderTree(node, { theme, canvas: noopCanvas() }),
-        (err: Error) => {
-          assert.match(err.message, /beta/);
-          assert.match(err.message, /gamma/);
-          return true;
-        },
-      );
-    });
-
-    it("succeeds when all required tokens are provided via node.tokens", async () => {
+  describe("token passing", () => {
+    it("succeeds when all tokens are provided via node.tokens", async () => {
       const theme = minimalTheme();
       const node = component(TOKEN_COMP as any, { label: "test" }, undefined, { alpha: "A", beta: "B", gamma: "G" });
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, [tokenTestComponent], {
+        theme,
+        canvas: noopCanvas(),
+        renderTree: async (n: any) => n,
+      });
       assert.strictEqual(rendered.type, NODE_TYPE.TEXT);
     });
 
@@ -151,7 +122,6 @@ describe("Token Resolution Engine", () => {
       const noTokenComp = defineComponent({
         name: NO_TOKEN_COMP as any,
         params: { value: param.optional(schema.string()) },
-        tokens: {},
         render: (params: any, _content: any): any => ({
           type: NODE_TYPE.TEXT,
           content: [{ text: params.value ?? "" }],
@@ -159,11 +129,13 @@ describe("Token Resolution Engine", () => {
           vAlign: VALIGN.TOP,
         }),
       });
-      componentRegistry.register(noTokenComp);
-
       const theme = minimalTheme();
       const node = component(NO_TOKEN_COMP as any, { value: "hello" });
-      const rendered = await componentRegistry.renderTree(node, { theme, canvas: noopCanvas() });
+      const rendered = await renderTree(node, [noTokenComp], {
+        theme,
+        canvas: noopCanvas(),
+        renderTree: async (n: any) => n,
+      });
       assert.strictEqual(rendered.type, NODE_TYPE.TEXT);
     });
   });

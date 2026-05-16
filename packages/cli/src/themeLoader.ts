@@ -4,25 +4,27 @@
 import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import type { Theme } from "@tycoslide/core";
-import { componentRegistry, layoutRegistry, masterRegistry } from "@tycoslide/core";
+import type { ComponentDefinition, LayoutConfig, Theme } from "@tycoslide/core";
+import { resolveThemeFormat } from "@tycoslide/sdk";
 
 export interface LoadedTheme {
   theme: Theme;
   assets?: Record<string, unknown>;
+  components: ComponentDefinition<any, any, any>[];
+  layouts: LayoutConfig[];
 }
 
 /**
- * Load a theme package by name.
- * The name is the exact npm package name (e.g., "acme_theme").
+ * Load a theme package by name, resolving the given format to a flat Theme.
  *
  * The theme package must export:
- *   - theme: Theme (required)
- *   - components: ComponentDefinition[] (required — explicitly registered)
- *   - layouts: LayoutDefinition[] (required — explicitly registered)
+ *   - theme: ThemeDefinition (required)
+ *   - components: ComponentDefinition[] (required)
  *   - assets: Record<string, unknown> (optional)
+ *
+ * Layouts are discovered from templates across all formats.
  */
-export async function loadTheme(name: string): Promise<LoadedTheme> {
+export async function loadTheme(name: string, format: string | undefined): Promise<LoadedTheme> {
   const packageName = name;
 
   // Resolve from the user's working directory, not from tycoslide's install location
@@ -45,27 +47,38 @@ export async function loadTheme(name: string): Promise<LoadedTheme> {
     throw new Error(`Theme package '${packageName}' does not export 'theme'.`);
   }
 
-  // Explicit registration from theme exports
-  if (mod.components) {
-    componentRegistry.register(mod.components);
-  } else {
+  if (!mod.components) {
     throw new Error(`Theme package '${packageName}' does not export 'components'.`);
   }
 
-  if (mod.layouts) {
-    layoutRegistry.register(mod.layouts);
-  } else {
-    throw new Error(`Theme package '${packageName}' does not export 'layouts'.`);
+  const components: ComponentDefinition<any, any, any>[] = mod.components;
+
+  // Discover layouts from templates across all formats
+  const layouts: LayoutConfig[] = [];
+  const layoutsSeen = new Set<string>();
+
+  for (const fmt of Object.values(mod.theme.formats) as any[]) {
+    if (fmt.templates) {
+      for (const t of fmt.templates) {
+        if (t.layout && !layoutsSeen.has(t.layout.name)) {
+          layoutsSeen.add(t.layout.name);
+          layouts.push(t.layout);
+        }
+      }
+    }
   }
 
-  if (mod.masters) {
-    masterRegistry.register(mod.masters);
-  } else {
-    throw new Error(`Theme package '${packageName}' does not export 'masters'.`);
+  if (layoutsSeen.size === 0) {
+    throw new Error(`Theme package '${packageName}' has no layouts in its templates.`);
   }
+
+  // Resolve format to flat Theme (background embedded in each TemplateConfig)
+  const theme = resolveThemeFormat(mod.theme, format);
 
   return {
-    theme: mod.theme,
+    theme,
     assets: mod.assets,
+    components,
+    layouts,
   };
 }

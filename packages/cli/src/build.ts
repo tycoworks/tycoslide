@@ -4,7 +4,8 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { compileDocument, LayoutValidationError, MissingFontError, parseSlideDocument } from "@tycoslide/core";
+import { LayoutValidationError, MissingFontError } from "@tycoslide/core";
+import { compileDocument, parseSlideDocument } from "@tycoslide/sdk";
 import createDebug from "debug";
 import { loadTheme } from "./themeLoader.js";
 
@@ -37,13 +38,18 @@ export async function build(inputPath: string, options: BuildOptions): Promise<v
     throw new Error("No theme specified. Add `theme: <name>` to the global frontmatter in your markdown file.");
   }
 
-  // Load theme package
-  const loaded = await loadTheme(themeName);
+  // Extract format from global frontmatter
+  const format = typeof parsed.global.format === "string" ? parsed.global.format : undefined;
+
+  // Load theme package and resolve format
+  const loaded = await loadTheme(themeName, format);
 
   // Compile markdown to presentation
   const pres = compileDocument(source, {
     theme: loaded.theme,
     assets: loaded.assets,
+    components: loaded.components,
+    layouts: loaded.layouts,
   });
 
   const basename = path.basename(resolved, path.extname(resolved));

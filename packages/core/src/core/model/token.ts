@@ -66,7 +66,7 @@ export const token = {
 
 /**
  * Parse a TokenShape into its required keys and full key set.
- * Used by defineComponent, defineLayout, and defineMaster to avoid duplicating parsing logic.
+ * Used by defineComponent and defineLayout to avoid duplicating parsing logic.
  */
 export interface ParsedTokenShape {
   requiredKeys: string[];
@@ -75,7 +75,7 @@ export interface ParsedTokenShape {
 
 /**
  * Parse a TokenShape into its required keys and full key set.
- * Used by defineComponent, defineLayout, and defineMaster to avoid duplicating parsing logic.
+ * Used by defineComponent and defineLayout to avoid duplicating parsing logic.
  */
 export function parseTokenShape(shape: TokenShape): ParsedTokenShape {
   const entries = Object.entries(shape);
@@ -83,46 +83,6 @@ export function parseTokenShape(shape: TokenShape): ParsedTokenShape {
     requiredKeys: entries.filter(([, v]) => !v._optional).map(([k]) => k),
     allKeys: new Set(entries.map(([k]) => k)),
   };
-}
-
-// ============================================
-// VARIANT RESOLUTION
-// ============================================
-
-/**
- * Resolve tokens for a named variant from a theme config block.
- * Used by documentCompiler for layout token resolution.
- *
- * @param variantConfig - The theme config for this layout (e.g. theme.layouts.body)
- * @param name - Layout name (for error messages)
- * @param variant - Variant name to resolve
- * @param tokenShape - Token shape from the definition (for validation), or undefined if no tokens declared
- * @param strict - When true (default), unknown keys in the variant map are rejected.
- *   Set to false to allow extra keys (e.g., slot injection tokens for slotted layouts).
- */
-export function resolveVariantTokens(
-  variantConfig: { variants: Record<string, Record<string, unknown>> } | undefined,
-  name: string,
-  variant: string,
-  tokenShape: TokenShape | undefined,
-  strict = true,
-): Record<string, unknown> {
-  if (!variantConfig) {
-    throw new Error(`Layout '${name}' requires tokens but theme.layouts.${name} is missing.`);
-  }
-  const tokens = variantConfig.variants[variant];
-  if (!tokens) {
-    const available = Object.keys(variantConfig.variants).join(", ");
-    throw new Error(`Unknown variant '${variant}' for layout '${name}'. Available: ${available}`);
-  }
-
-  if (tokenShape) {
-    const shape = parseTokenShape(tokenShape);
-    if (shape.allKeys.size) {
-      validateTokens(shape, tokens, `Layout '${name}' variant '${variant}'`, strict);
-    }
-  }
-  return tokens;
 }
 
 // ============================================

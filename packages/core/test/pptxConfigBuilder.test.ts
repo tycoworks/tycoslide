@@ -675,7 +675,7 @@ const baseTextNode: TextNode = {
   color: "#333333",
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.TOP,
-  lineHeightMultiplier: 1.2,
+  lineHeight: 1.2,
   bulletIndentPt: 0,
   linkColor: "#0000FF",
   linkUnderline: true,
@@ -723,7 +723,7 @@ describe("buildTextConfig()", () => {
 
     const result = builder.buildTextConfig(textNode, pos);
 
-    const h1Style = theme.textStyles["h1"];
+    const h1Style = theme.textStyles.h1;
     assert.strictEqual(result.options.fontSize, h1Style.fontSize);
     assert.strictEqual(result.options.fontFace, h1Style.fontFamily.name);
   });
@@ -745,7 +745,7 @@ describe("buildTextConfig()", () => {
     const textNode: TextNode = {
       ...baseTextNode,
       content: "Text with custom spacing",
-      lineHeightMultiplier: 1.5,
+      lineHeight: 1.5,
     };
     const pos = positioned(textNode, 1, 2, 5, 3);
 
@@ -754,14 +754,14 @@ describe("buildTextConfig()", () => {
     assert.strictEqual(result.options.lineSpacingMultiple, 1.5);
   });
 
-  test("bullet text uses lineHeightMultiplier from node (set by render to bulletSpacing)", () => {
-    // The render function sets lineHeightMultiplier to bulletSpacing for bullet text.
+  test("bullet text uses lineHeight from node (set by render to bulletSpacing)", () => {
+    // The render function sets lineHeight to bulletSpacing for bullet text.
     // The renderer just passes it through — no special bullet logic needed here.
     // Use a distinct value (1.5) to prove the node's value wins, not a coincidence.
     const textNode: TextNode = {
       ...baseTextNode,
       content: [{ text: "Bullet", bullet: true }],
-      lineHeightMultiplier: 1.5,
+      lineHeight: 1.5,
     };
     const pos = positioned(textNode, 1, 2, 5, 3);
 
@@ -946,7 +946,7 @@ describe("buildTextFragments()", () => {
       "#000000",
     );
 
-    const h1FontSize = theme.textStyles["h1"].fontSize;
+    const h1FontSize = theme.textStyles.h1.fontSize;
     assert.strictEqual(fragments[1].options?.paraSpaceBefore, h1FontSize);
   });
 
@@ -1040,7 +1040,7 @@ describe("buildSlideNumberOptions()", () => {
 
     const result = builder.buildSlideNumberOptions(baseSlideNumNode, pos);
 
-    const footerStyle = theme.textStyles["footer"];
+    const footerStyle = theme.textStyles.footer;
     assert.strictEqual(result.fontSize, footerStyle.fontSize);
     assert.strictEqual(result.fontFace, footerStyle.fontFamily.name);
   });
@@ -1054,7 +1054,7 @@ describe("buildSlideNumberOptions()", () => {
 
     const result = builder.buildSlideNumberOptions(slideNumNode, pos);
 
-    const smallStyle = theme.textStyles["small"];
+    const smallStyle = theme.textStyles.small;
     assert.strictEqual(result.fontSize, smallStyle.fontSize);
   });
 
@@ -1100,7 +1100,7 @@ describe("buildSlideNumberOptions()", () => {
     };
     const customNode: SlideNumberNode = {
       ...baseSlideNumNode,
-      resolvedStyle: { fontSize: 12, fontFamily: customFontFamily, lineHeightMultiplier: 1.0, bulletIndentPt: 18 },
+      resolvedStyle: { fontSize: 12, fontFamily: customFontFamily, lineHeight: 1.0, bulletIndentPt: 18 },
     };
     const pos = positioned(customNode, 1, 2, 2, 0.3);
     const result = builder.buildSlideNumberOptions(customNode, pos);
@@ -1128,7 +1128,7 @@ describe("buildSlideNumberOptions()", () => {
 import type { NormalizedRun } from "../src/core/model/types.js";
 
 describe("buildTextFragments with multi-paragraph runs", () => {
-  const fontSize = theme.textStyles["body"].fontSize; // 12
+  const fontSize = theme.textStyles.body.fontSize; // 12
 
   test("two paragraphs produce correct PPTX fragments with paragraph spacing", () => {
     const runs: NormalizedRun[] = [{ text: "First paragraph." }, { text: "Second paragraph.", paragraphBreak: true }];

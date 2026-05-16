@@ -1,6 +1,8 @@
 // Declarative Node Types
 // Pure data structures representing slide content
 
+import type { Insets } from "./bounds.js";
+
 import type {
   DashType,
   Direction,
@@ -11,7 +13,7 @@ import type {
   SizeValue,
   SpacingMode,
   TextContent,
-  TextStyle,
+  TextStyleConfig,
   TextStyleName,
   VerticalAlignment,
 } from "./types.js";
@@ -40,6 +42,17 @@ export const NODE_TYPE = {
 export type NodeType = (typeof NODE_TYPE)[keyof typeof NODE_TYPE];
 
 // ============================================
+// RENDER LAYERS
+// ============================================
+
+/** Render layer target — determines whether a node is placed on the shared master or per-slide content. */
+export const LAYER = {
+  MASTER: "master",
+  CONTENT: "content",
+} as const;
+export type Layer = (typeof LAYER)[keyof typeof LAYER];
+
+// ============================================
 // BASE NODE TYPES
 // ============================================
 
@@ -49,12 +62,12 @@ export interface TextNode {
   height: SizeValue;
   content: TextContent;
   style: TextStyleName;
-  resolvedStyle: TextStyle; // pre-resolved from theme.textStyles[style]
+  resolvedStyle: TextStyleConfig; // pre-resolved from theme.textStyles[style]
   color: string;
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;
-  lineHeightMultiplier: number;
-  bulletIndentPt: number;
+  lineHeight: number; // CSS-semantic: multiplier of fontSize (resolved value)
+  bulletIndentPt: number; // resolved value (SDK defaults to fontSize * 1.5)
   linkColor: string; // token-driven hyperlink color (render-time)
   linkUnderline: boolean; // token-driven hyperlink underline (render-time)
   border?: Stroke;
@@ -112,7 +125,7 @@ export interface SlideNumberNode {
   width: SizeValue;
   height: SizeValue;
   style: TextStyleName;
-  resolvedStyle: TextStyle; // pre-resolved from theme.textStyles[style]
+  resolvedStyle: TextStyleConfig; // pre-resolved from theme.textStyles[style]
   color: string;
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;
@@ -142,7 +155,7 @@ export interface TableCellData {
   height: SizeValue;
   color: string; // pre-resolved: cell → token
   textStyle: TextStyleName; // pre-resolved: cell → header/cell default from table tokens
-  resolvedStyle: TextStyle; // pre-resolved from theme.textStyles[textStyle]
+  resolvedStyle: TextStyleConfig; // pre-resolved from theme.textStyles[textStyle]
   hAlign: HorizontalAlignment; // pre-resolved: cell → table default
   vAlign: VerticalAlignment; // pre-resolved: cell → table default
   linkColor: string; // pre-resolved from table token
@@ -190,10 +203,11 @@ export interface ContainerNode<C extends SlideNode = ElementNode> {
   width: number | SizeValue; // inches (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
   height: number | SizeValue; // inches (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
   spacing: number; // inches — space between children (and edges when spacingMode is AROUND)
-  spacingMode?: SpacingMode; // BETWEEN (default): between children only; AROUND: between + edges
+  spacingMode: SpacingMode; // BETWEEN: between children only; AROUND: between + edges
   vAlign: VerticalAlignment;
   hAlign: HorizontalAlignment;
-  padding?: number; // inches - internal padding on all sides
+  padding: Insets; // inches - per-side internal padding (normalized at construction)
+  layer?: Layer; // render target: master (shared/deduped) or content (per-slide)
 }
 
 /** Stack is a z-order container: all children occupy the same bounds, rendered in order */
@@ -202,6 +216,7 @@ export interface StackNode<C extends SlideNode = ElementNode> {
   children: C[]; // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
   width: number | SizeValue; // inches, SIZE.FILL, or SIZE.HUG
   height: number | SizeValue; // inches, SIZE.FILL, or SIZE.HUG
+  layer?: Layer; // render target: master (shared/deduped) or content (per-slide)
 }
 
 /** Grid is a CSS Grid container: equal-width columns with cross-sibling height coordination */
@@ -212,6 +227,7 @@ export interface GridNode<C extends SlideNode = ElementNode> {
   spacing: number; // inches — gap between cells
   width: number | SizeValue; // inches, SIZE.FILL, or SIZE.HUG
   height: number | SizeValue; // inches, SIZE.FILL, or SIZE.HUG
+  layer?: Layer; // render target: master (shared/deduped) or content (per-slide)
 }
 
 // ============================================
@@ -234,6 +250,8 @@ export interface ComponentNode<TParams = unknown, TContent = unknown> {
   content: TContent;
   /** Visual tokens provided by parent (DSL) or slot injection. Separate from params/content. */
   tokens?: Record<string, unknown>;
+  /** Render layer — propagated to the resolved element during renderTree(). */
+  layer?: Layer;
 }
 
 // ============================================
@@ -284,6 +302,11 @@ export function component<TParams, TContent = undefined>(
  */
 export function isLayoutNode(node: ElementNode): node is LayoutNode {
   return node.type === NODE_TYPE.CONTAINER || node.type === NODE_TYPE.STACK || node.type === NODE_TYPE.GRID;
+}
+
+/** Get the render layer of an element node (only layout nodes can have a layer). */
+export function getLayer(node: ElementNode): Layer | undefined {
+  return isLayoutNode(node) ? node.layer : undefined;
 }
 
 /**

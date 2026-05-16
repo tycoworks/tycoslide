@@ -106,7 +106,7 @@ Key content limits worth preserving:
 | cards | 3 cards is the sweet spot. Descriptions under 80 chars. Grid: 2=1row, 3=1row, 4=2x2, 5-6=2x3. |
 | stat | `value` under 6 chars. Always quote in YAML. |
 | quote | 2-3 sentences max. |
-| statement | 1-2 sentences. Use `:purple[**bold accent**]` for key phrases. |
+| statement | 1-2 sentences. Use `:accent[**bold accent**]` for key phrases. |
 | two-column | Keep columns roughly equal. Code blocks will overflow. |
 | transform | Left and right should be parallel content. Overlay is optional, keep small. |
 | agenda | Items are auto-numbered. Don't prefix with numbers. |

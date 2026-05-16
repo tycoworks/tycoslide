@@ -68,4 +68,4 @@ tycoslide renders slides as HTML and CSS, measures the position and size of ever
 - **[Markdown Syntax](./markdown-syntax.md)** — Learn the essential markdown syntax for authoring
 - **[Components](./components.md)** — Built-in components and creating custom ones
 - **[Themes](./themes.md)** — Theme system, customization, and building themes
-- **[Layouts](./layouts.md)** — Default layouts and creating custom layouts
+- **[Templates](./templates.md)** — Template authoring and creating custom templates

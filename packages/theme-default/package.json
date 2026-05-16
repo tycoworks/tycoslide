@@ -34,7 +34,7 @@
     "@fontsource/fira-code": "^5.2.7",
     "@fontsource/inter": "^5.0.0",
     "@tycoslide/core": "^0.3.0",
-    "@tycoslide/components": "^0.3.0"
+    "@tycoslide/sdk": "^0.3.0"
   },
   "devDependencies": {
     "@material-design-icons/svg": "^0.14.0",

@@ -38,7 +38,7 @@ import type {
   HorizontalAlignment,
   NormalizedRun,
   SizeValue,
-  TextStyle,
+  TextStyleConfig,
   Theme,
   VerticalAlignment,
 } from "../model/types.js";
@@ -258,14 +258,25 @@ function styleContainer(
   nodeId: string,
   idCtx: IdContext,
   nodeIds: Map<ElementNode, string>,
-  fontRatios: FontNormalRatios,
   imagePathMap: Map<string, string>,
 ): StyledNode {
   const isRow = node.direction === DIRECTION.ROW;
   const spacingPx = inToPx(node.spacing);
-  const basePaddingPx = node.padding ? inToPx(node.padding) : 0;
-  const mainAxisPad = basePaddingPx + (node.spacingMode === SPACING_MODE.AROUND ? spacingPx : 0);
-  const crossAxisPad = basePaddingPx;
+  const p = node.padding;
+  let topPx = inToPx(p.top);
+  let rightPx = inToPx(p.right);
+  let bottomPx = inToPx(p.bottom);
+  let leftPx = inToPx(p.left);
+  // AROUND mode adds spacing to main-axis start/end edges
+  if (node.spacingMode === SPACING_MODE.AROUND) {
+    if (isRow) {
+      leftPx += spacingPx;
+      rightPx += spacingPx;
+    } else {
+      topPx += spacingPx;
+      bottomPx += spacingPx;
+    }
+  }
 
   const justifyContent = isRow ? hAlignToJustify(node.hAlign) : vAlignToJustify(node.vAlign);
   const alignItems = isRow ? vAlignToAlignItems(node.vAlign) : hAlignToAlignItems(node.hAlign);
@@ -281,15 +292,15 @@ function styleContainer(
     // containment would zero their intrinsic width, collapsing the column.
     ...(!isRow && node.width !== SIZE.HUG ? { containerType: "inline-size" } : {}),
   };
-  if (mainAxisPad > 0 || crossAxisPad > 0) {
-    styles.padding = isRow ? `${crossAxisPad}px ${mainAxisPad}px` : `${mainAxisPad}px ${crossAxisPad}px`;
+  if (topPx > 0 || rightPx > 0 || bottomPx > 0 || leftPx > 0) {
+    styles.padding = `${topPx}px ${rightPx}px ${bottomPx}px ${leftPx}px`;
   }
 
   const ctx = childContext(node, parent);
   return {
     nodeId,
     styles,
-    children: node.children.map((child) => styleNode(child, ctx, idCtx, nodeIds, fontRatios, imagePathMap)),
+    children: node.children.map((child) => styleNode(child, ctx, idCtx, nodeIds, imagePathMap)),
   };
 }
 
@@ -299,7 +310,6 @@ function styleStack(
   nodeId: string,
   idCtx: IdContext,
   nodeIds: Map<ElementNode, string>,
-  fontRatios: FontNormalRatios,
   imagePathMap: Map<string, string>,
 ): StyledNode {
   const gridMin = "min-content";
@@ -338,7 +348,7 @@ function styleStack(
       return {
         nodeId: "",
         styles: wrapperStyles,
-        children: [styleNode(child, ctx, idCtx, nodeIds, fontRatios, imagePathMap)],
+        children: [styleNode(child, ctx, idCtx, nodeIds, imagePathMap)],
       };
     }),
   };
@@ -350,7 +360,6 @@ function styleGrid(
   nodeId: string,
   idCtx: IdContext,
   nodeIds: Map<ElementNode, string>,
-  fontRatios: FontNormalRatios,
   imagePathMap: Map<string, string>,
 ): StyledNode {
   const spacingPx = inToPx(node.spacing);
@@ -373,18 +382,16 @@ function styleGrid(
   return {
     nodeId,
     styles,
-    children: node.children.map((child) => styleNode(child, ctx, idCtx, nodeIds, fontRatios, imagePathMap)),
+    children: node.children.map((child) => styleNode(child, ctx, idCtx, nodeIds, imagePathMap)),
   };
 }
 
-function styleText(node: TextNode, parent: ParentCtx, nodeId: string, fontRatios: FontNormalRatios): StyledNode {
+function styleText(node: TextNode, parent: ParentCtx, nodeId: string): StyledNode {
   const style = node.resolvedStyle;
   const runs = normalizeContent(node.content);
   const defaultFont = getFontForRun(style.fontFamily);
-  const lineSpacingMultiple = node.lineHeightMultiplier;
   const fontSizePx = ptToPx(style.fontSize);
-  const normalRatio = fontRatios.get(style.fontFamily.name);
-  const cssLineHeight = normalRatio ? lineSpacingMultiple * normalRatio : lineSpacingMultiple;
+  const cssLineHeight = node.lineHeight;
   const bulletIndentPx = ptToPx(node.bulletIndentPt);
   const styles: Record<string, string | number> = {
     display: "flex",
@@ -652,7 +659,6 @@ function styleTable(
   nodeId: string,
   idCtx: IdContext,
   nodeIds: Map<ElementNode, string>,
-  fontRatios: FontNormalRatios,
 ): StyledNode {
   const cellNodes = getTableCellNodes(node);
   const numCols = node.rows[0]?.length ?? 0;
@@ -737,7 +743,6 @@ function styleTable(
         cellTextNode,
         { direction: DIRECTION.COLUMN, heightIsConstrained: false },
         cellNodeId,
-        fontRatios,
       );
       return {
         nodeId: "",
@@ -758,7 +763,6 @@ export function styleNode(
   parent: ParentCtx,
   idCtx: IdContext,
   nodeIds: Map<ElementNode, string>,
-  fontRatios: FontNormalRatios,
   imagePathMap: Map<string, string>,
 ): StyledNode {
   const nodeId = generateNodeId(idCtx);
@@ -766,13 +770,13 @@ export function styleNode(
 
   switch (node.type) {
     case NODE_TYPE.CONTAINER:
-      return styleContainer(node as ContainerNode, parent, nodeId, idCtx, nodeIds, fontRatios, imagePathMap);
+      return styleContainer(node as ContainerNode, parent, nodeId, idCtx, nodeIds, imagePathMap);
     case NODE_TYPE.STACK:
-      return styleStack(node as StackNode, parent, nodeId, idCtx, nodeIds, fontRatios, imagePathMap);
+      return styleStack(node as StackNode, parent, nodeId, idCtx, nodeIds, imagePathMap);
     case NODE_TYPE.GRID:
-      return styleGrid(node as GridNode, parent, nodeId, idCtx, nodeIds, fontRatios, imagePathMap);
+      return styleGrid(node as GridNode, parent, nodeId, idCtx, nodeIds, imagePathMap);
     case NODE_TYPE.TEXT:
-      return styleText(node as TextNode, parent, nodeId, fontRatios);
+      return styleText(node as TextNode, parent, nodeId);
     case NODE_TYPE.IMAGE:
       return styleImage(node as ImageNode, parent, nodeId, imagePathMap);
     case NODE_TYPE.LINE:
@@ -782,7 +786,7 @@ export function styleNode(
     case NODE_TYPE.SLIDE_NUMBER:
       return styleSlideNumber(node as SlideNumberNode, parent, nodeId);
     case NODE_TYPE.TABLE:
-      return styleTable(node as TableNode, parent, nodeId, idCtx, nodeIds, fontRatios);
+      return styleTable(node as TableNode, parent, nodeId, idCtx, nodeIds);
     default:
       return { nodeId, styles: {}, children: [] };
   }
@@ -797,7 +801,7 @@ export function styleNode(
  *  Consecutive bullet lines are wrapped in a single <ul> with native disc markers. */
 function renderTextRunsToHTML(
   runs: NormalizedRun[],
-  style: TextStyle,
+  style: TextStyleConfig,
   bulletIndentPx: number,
   linkColor?: string,
   linkUnderline?: boolean,
@@ -861,7 +865,12 @@ function renderTextRunsToHTML(
 }
 
 /** Render a single run as an inline <span> HTML string. */
-function renderRunSpanHTML(run: NormalizedRun, style: TextStyle, linkColor?: string, linkUnderline?: boolean): string {
+function renderRunSpanHTML(
+  run: NormalizedRun,
+  style: TextStyleConfig,
+  linkColor?: string,
+  linkUnderline?: boolean,
+): string {
   const css: string[] = [];
   const family = style.fontFamily;
 
@@ -935,8 +944,8 @@ function getTableCellNodes(node: TableNode): TextNode[][] {
         color: cell.color,
         hAlign: cell.hAlign,
         vAlign: cell.vAlign,
-        lineHeightMultiplier: cell.resolvedStyle.lineHeightMultiplier,
-        bulletIndentPt: 0, // Table cells never have bullets
+        lineHeight: cell.resolvedStyle.lineHeight,
+        bulletIndentPt: cell.resolvedStyle.bulletIndentPt,
         linkColor: cell.linkColor,
         linkUnderline: cell.linkUnderline,
       }),
@@ -990,7 +999,6 @@ export function generateLayoutHTML(
   slides: Array<{ tree: ElementNode; bounds: Bounds; background: Background }>,
   theme: Theme,
   _labels: string[],
-  fontNormalRatios: FontNormalRatios,
   imagePathMap: Map<string, string>,
 ): LayoutHtmlResult {
   const idCtx: IdContext = { counter: 0 };
@@ -1005,7 +1013,7 @@ export function generateLayoutHTML(
     const heightPx = inToPx(slide.bounds.h);
 
     const rootCtx: ParentCtx = { direction: DIRECTION.COLUMN, heightIsConstrained: true };
-    const styled = styleNode(slide.tree, rootCtx, idCtx, nodeIds, fontNormalRatios, imagePathMap);
+    const styled = styleNode(slide.tree, rootCtx, idCtx, nodeIds, imagePathMap);
 
     const bg = slide.background;
     const rootStyles: Record<string, string> = {
@@ -1069,15 +1077,12 @@ export function generateBaseCSS(theme: Theme): string {
 }
 
 /**
- * Generate composite preview HTML pages.
- * Each page layers a master fragment (full slide) behind a slide fragment (content area).
- * Includes nav bar with stable prev/next arrows (dimmed when inactive).
+ * Generate preview HTML pages.
+ * Each page renders the slide fragment at full slide bounds with a nav bar.
  */
 export function generatePreviewHTML(
   slides: Array<{
-    masterFragment: string;
-    slideFragment: string;
-    contentBounds: Bounds;
+    fragment: string;
     label: string;
   }>,
   theme: Theme,
@@ -1090,7 +1095,6 @@ export function generatePreviewHTML(
     const prevSlide = i > 0 ? slides[i - 1] : null;
     const nextSlide = i < slides.length - 1 ? slides[i + 1] : null;
 
-    // Nav bar with stable arrows (both always rendered, dimmed when inactive)
     const prevHtml = prevSlide
       ? `<a href="${prevSlide.label}.html" style="color:#fff;text-decoration:none">\u2190 prev</a>`
       : `<span style="color:#666">\u2190 prev</span>`;
@@ -1099,20 +1103,13 @@ export function generatePreviewHTML(
       : `<span style="color:#666">next \u2192</span>`;
     const navBar = `<div style="background:#333;color:#fff;padding:4px 8px;font:14px monospace;display:flex;justify-content:center;align-items:center;gap:12px">${prevHtml}<strong>${slide.label}</strong>${nextHtml}</div>`;
 
-    // Content bounds in pixels
-    const cx = inToPx(slide.contentBounds.x);
-    const cy = inToPx(slide.contentBounds.y);
-    const cw = inToPx(slide.contentBounds.w);
-    const ch = inToPx(slide.contentBounds.h);
-
     return `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><style>${baseCSS} body { overflow: auto; background: #f0f0f0; }</style></head>
 <body>
 ${navBar}
 <div style="position:relative;width:${slideW}px;height:${slideH}px;box-shadow:0 0 0 1px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.08)">
-<div style="position:absolute;inset:0">${slide.masterFragment}</div>
-<div style="position:absolute;left:${cx}px;top:${cy}px;width:${cw}px;height:${ch}px">${slide.slideFragment}</div>
+${slide.fragment}
 </div>
 </body>
 </html>`;
@@ -1227,5 +1224,12 @@ export async function measureFontNormalRatios(
   for (const { name, ratio } of ratios) {
     result.set(name, ratio);
   }
+
+  // Stamp normalRatio onto FontFamilyConfig objects so PPTX renderer can access them
+  for (const styleName of Object.keys(theme.textStyles)) {
+    const ratio = result.get(theme.textStyles[styleName].fontFamily.name);
+    if (ratio !== undefined) theme.textStyles[styleName].fontFamily.normalRatio = ratio;
+  }
+
   return { ratios: result, fonts };
 }

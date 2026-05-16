@@ -17,7 +17,7 @@ import type {
   TableNode,
   TextNode,
 } from "../model/nodes.js";
-import type { DashType, StrikeType, TextContent, TextStyle, UnderlineStyle } from "../model/types.js";
+import type { DashType, StrikeType, TextContent, TextStyleConfig, UnderlineStyle } from "../model/types.js";
 import { DASH_TYPE, DIRECTION, GRID_STYLE, LINE_SHAPE, STRIKE_TYPE, UNDERLINE_STYLE } from "../model/types.js";
 
 /** Map CSS-compatible dash type names to pptxgenjs values. */
@@ -110,7 +110,7 @@ export class PptxConfigBuilder {
     // Check if any fragment has bullets - affects alignment
     const hasBullets = fragments.some((f) => f.options.bullet);
 
-    const lineSpacing = textNode.lineHeightMultiplier;
+    const normalRatio = style.fontFamily.normalRatio;
 
     const options: Record<string, unknown> = {
       x: positioned.x,
@@ -122,7 +122,7 @@ export class PptxConfigBuilder {
       color: stripHash(textNode.color),
       margin: 0,
       wrap: true,
-      lineSpacingMultiple: lineSpacing,
+      lineSpacingMultiple: textNode.lineHeight / normalRatio,
       // WORKAROUND: pptxgenjs bug - align option breaks bullet rendering
       ...(hasBullets ? {} : { align: textNode.hAlign }),
       valign: textNode.vAlign,
@@ -140,7 +140,7 @@ export class PptxConfigBuilder {
 
   buildTextFragments(
     content: TextContent,
-    style: TextStyle,
+    style: TextStyleConfig,
     color: string,
     linkColor?: string,
     linkUnderline?: boolean,
@@ -318,7 +318,7 @@ export class PptxConfigBuilder {
       align: cell.hAlign,
       valign: cell.vAlign,
       margin: cellPadding,
-      lineSpacingMultiple: textStyle.lineHeightMultiplier,
+      lineSpacingMultiple: textStyle.lineHeight / textStyle.fontFamily.normalRatio,
     };
 
     // Background fill: cell-level override wins, then 3-zone cascade (headerRow > headerCol > cell)

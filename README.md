@@ -33,18 +33,17 @@ Create `slides.md`:
 ```markdown
 ---
 theme: "@tycoslide/theme-default"
+format: presentation
 ---
 
 ---
-layout: title
-variant: default
+template: title
 title: My Presentation
 subtitle: Built with tycoslide
 ---
 
 ---
-layout: body
-variant: default
+template: body
 title: First Slide
 eyebrow: INTRODUCTION
 ---

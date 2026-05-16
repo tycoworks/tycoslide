@@ -8,8 +8,7 @@ Each slide is a YAML frontmatter block enclosed by `---`, followed by optional b
 
 ```markdown
 ---
-layout: body
-variant: default
+template: body
 title: Slide Title
 eyebrow: SECTION NAME
 ---
@@ -17,8 +16,7 @@ eyebrow: SECTION NAME
 Body content goes here.
 
 ---
-layout: body
-variant: default
+template: body
 title: Next Slide
 ---
 
@@ -32,29 +30,34 @@ The first frontmatter block configures the entire presentation:
 ```markdown
 ---
 theme: "@tycoslide/theme-default"
+format: presentation
 ---
 ```
 
+Global frontmatter fields:
+- `theme` - Theme package or path (**required**)
+- `format` - Output format selected from the theme (**required**, e.g. `presentation`, `factsheet`)
+
+See [Themes — Using a Theme](./themes.md#using-a-theme).
+
 ## Per-Slide Frontmatter
 
-Each slide must specify a layout and any layout-specific parameters:
+Each slide must specify a template and any template-specific parameters:
 
 ```markdown
 ---
-layout: body
-variant: default
+template: body
 title: My Slide Title
 eyebrow: CHAPTER 1
 ---
 ```
 
 Frontmatter fields:
-- `layout` - Which layout to use (**required**)
-- `variant` - Which variant of the layout (**required**, e.g. `default`)
+- `template` - Which template to use (**required**)
 - `title` - Slide title
 - `notes` - Speaker notes
 
-Available layouts and parameters are defined by the theme.
+Available templates and parameters are defined by the theme.
 
 Values are plain YAML — quote only when the value contains special characters like `[`, `]`, or `: ` mid-string. Plain text values do not need quotes.
 
@@ -74,9 +77,9 @@ _Italic text_
 Use named accents to highlight text:
 
 ```markdown
-This is :blue[highlighted in blue].
-This is :green[styled as a metric].
-This is :red[styled as a warning].
+This is :accent[highlighted with accent].
+This is :soft[styled with soft accent].
+This is :dark[styled with dark accent].
 ```
 
 Accent names are defined by your theme as an open set — any key in the theme's `accents` map is valid.
@@ -130,8 +133,7 @@ The `:::table` directive is also available. See [Components — table](./compone
 
 ```markdown
 ---
-layout: body
-variant: default
+template: body
 title: Important Slide
 notes: |
   Remember to emphasize the key point.
@@ -183,18 +185,17 @@ For a complete reference of all directives, parameters, and examples, see [Compo
 ```markdown
 ---
 theme: "@tycoslide/theme-default"
+format: presentation
 ---
 
 ---
-layout: title
-variant: default
+template: title
 title: Markdown Basics
 subtitle: Essential Syntax for tycoslide
 ---
 
 ---
-layout: body
-variant: default
+template: body
 title: Text Formatting
 eyebrow: BASICS
 notes: Demo each formatting style
@@ -202,13 +203,12 @@ notes: Demo each formatting style
 
 You can use **bold**, _italic_, **_bold italic_**, ~~strikethrough~~, and ++underlined++ text.
 
-Highlight with :blue[accent colors] from your theme.
+Highlight with :accent[accent colors] from your theme.
 
 Add [clickable links](https://example.com) to any slide.
 
 ---
-layout: body
-variant: default
+template: body
 title: Lists and Structure
 ---
 
@@ -225,8 +225,7 @@ title: Lists and Structure
 1. Open in PowerPoint
 
 ---
-layout: section
-variant: default
+template: section
 title: Next Steps
 ---
 ```
@@ -235,5 +234,5 @@ title: Next Steps
 
 - [Quick Start](./quick-start.md) - Your first presentation
 - [Components](./components.md) - Content and layout reference
-- [Layouts](./layouts.md) - Available slide layouts
+- [Templates](./templates.md) - Available slide templates
 - [CLI](./cli.md) - Build command options

@@ -1,18 +1,17 @@
 ---
 theme: "@tycoslide/theme-default"
+format: presentation
 ---
 
 ---
-layout: title
-variant: default
+template: title
 title: "**tycoslide**"
-subtitle: "Build slides like software.:purple[▌]"
+subtitle: "Build slides like software.:accent[▌]"
 notes: Opening slide. Clean centered title with cursor.
 ---
 
 ---
-layout: agenda
-variant: default
+template: agenda
 title: Agenda
 image: $tycoslide.logo
 items:
@@ -23,15 +22,13 @@ notes: "Agenda layout — numbered items with divider lines."
 ---
 
 ---
-layout: statement
-variant: default
-body: "tycoslide is a :purple[**presentation build tool**] that generates :purple[**editable PowerPoint slides from markdown**], with :purple[**TypeScript-based themes**] and :purple[**build-time validation**]."
+template: statement
+body: "tycoslide is a :accent[**presentation build tool**] that generates :accent[**editable PowerPoint slides from markdown**], with :accent[**TypeScript-based themes**] and :accent[**build-time validation**]."
 notes: Positioning one-liner. Four anchors in one sentence.
 ---
 
 ---
-layout: transform
-variant: default
+template: transform
 notes: Side-by-side showing markdown input on the left and the resulting slide output on the right.
 ---
 
@@ -41,21 +38,21 @@ review.md
 
 ```markdown
 ---
-layout: body
+template: body
 ---
 
 # Q3 Infrastructure Review
 
 The new pipeline *increased*
 throughput by **40%** with
-:purple[zero downtime].
+:accent[zero downtime].
 ```
 
 ::right::
 
 review.pptx
 
-:::card{title="Q3 Infrastructure Review" description="The new pipeline *increased* throughput by **40%** with :purple[zero downtime]."}
+:::card{title="Q3 Infrastructure Review" description="The new pipeline *increased* throughput by **40%** with :accent[zero downtime]."}
 :::
 
 ::overlay::
@@ -63,8 +60,7 @@ review.pptx
 ![redo]($icons.redo)
 
 ---
-layout: cards
-variant: default
+template: cards
 title: Capabilities
 cards:
   - title: Editable PowerPoint Slides
@@ -80,25 +76,23 @@ notes: Three pillars from positioning framework. Each maps to one supporting arg
 ---
 
 ---
-layout: body
-variant: centered
+template: body-centered
 title: How It Compares
 notes: Comparison table with tycoslide column highlighted. The audience sees "None" for build validation in every competitor.
 ---
 
 :::table
-| | :purple[**tycoslide**] | Slidev | Marp | Reveal.js |
+| | :accent[**tycoslide**] | Slidev | Marp | Reveal.js |
 |---|---|---|---|---|
-| Output | :purple[.pptx (editable)] | HTML, PDF, .pptx (images) | PDF, HTML, .pptx (images) | HTML, PDF |
-| Components | :purple[TypeScript] | Vue | Markdown-It | JavaScript |
-| Design tokens | :purple[TypeScript] | CSS | CSS | CSS |
-| Validation | :purple[Build-time] | None | None | None |
-| Preview | :purple[Static] | Live | Live | Live |
+| Output | :accent[.pptx (editable)] | HTML, PDF, .pptx (images) | PDF, HTML, .pptx (images) | HTML, PDF |
+| Components | :accent[TypeScript] | Vue | Markdown-It | JavaScript |
+| Design tokens | :accent[TypeScript] | CSS | CSS | CSS |
+| Validation | :accent[Build-time] | None | None | None |
+| Preview | :accent[Static] | Live | Live | Live |
 :::
 
 ---
-layout: body
-variant: centered
+template: body-centered
 title: How It Works
 notes: Mermaid diagram — the build process from markdown to PowerPoint. Horizontal flow throughout.
 ---
@@ -116,8 +110,7 @@ flowchart LR
 :::
 
 ---
-layout: end
-variant: default
+template: title-dark
 title: tycoslide
 notes: Closing slide.
 ---
