@@ -90,5 +90,5 @@ export {
 } from "./core/rendering/presentation.js";
 // Font utilities
 export { getFontForRun, MissingFontError } from "./utils/font.js";
-// Unit utilities (for component authors that resolve theme values during render)
-export { inToPx } from "./utils/units.js";
+// Unit utilities (used internally by PPTX renderer)
+export { ptToPx } from "./utils/units.js";

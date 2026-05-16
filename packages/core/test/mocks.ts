@@ -38,7 +38,7 @@ export function mockTheme(options?: {
   slide?: Theme["slide"];
 }): Theme {
   return {
-    slide: options?.slide ?? { width: 13.333, height: 7.5 },
+    slide: options?.slide ?? { width: 960, height: 540 },
     fonts: [mockFontFamily],
     textStyles: {
       h1: { ...mockTextStyle, ...options?.textStyles?.h1 },
@@ -70,14 +70,14 @@ export function noopCanvas() {
 /**
  * Assert that a number is approximately equal to expected value.
  */
-export function approx(actual: number, expected: number, msg: string, tolerance = 0.01): void {
+export function approx(actual: number, expected: number, msg: string, tolerance = 1): void {
   assert.ok(Math.abs(actual - expected) < tolerance, `${msg}: expected ~${expected}, got ${actual}`);
 }
 
 /**
  * Assert that two numbers are approximately equal.
  */
-export function assertApprox(actual: number, expected: number, tolerance = 0.01): void {
+export function assertApprox(actual: number, expected: number, tolerance = 1): void {
   assert.ok(Math.abs(actual - expected) < tolerance, `expected ~${expected}, got ${actual}`);
 }
 

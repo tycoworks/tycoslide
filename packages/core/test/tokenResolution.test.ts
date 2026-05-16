@@ -34,7 +34,7 @@ const tokenTestComponent = defineComponent({
 /** Minimal theme for tests (no layout tokens needed). */
 function minimalTheme(): Theme {
   return {
-    slide: { width: 10, height: 5.625 } as any,
+    slide: { width: 960, height: 540 },
     fonts: [],
     textStyles: {} as any,
     layouts: {},

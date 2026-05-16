@@ -31,7 +31,7 @@ const validTextStyles: Record<string, TextStyle> = {
 
 function makeFormat(overrides?: Partial<ThemeFormat>): ThemeFormat {
   return {
-    slide: { width: 13.333, height: 7.5 },
+    slide: { width: 960, height: 540 },
     textStyles: validTextStyles,
     ...overrides,
   };

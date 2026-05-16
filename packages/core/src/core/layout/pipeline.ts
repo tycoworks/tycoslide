@@ -242,7 +242,7 @@ export class LayoutPipeline {
       label = `TEXT "${preview}"`;
     }
     log.layout._(
-      `${pad}${label}: x=${node.x.toFixed(3)} y=${node.y.toFixed(3)} w=${node.width.toFixed(3)} h=${node.height.toFixed(3)}`,
+      `${pad}${label}: x=${node.x.toFixed(1)} y=${node.y.toFixed(1)} w=${node.width.toFixed(1)} h=${node.height.toFixed(1)}`,
     );
     if (node.children) {
       for (const child of node.children) {

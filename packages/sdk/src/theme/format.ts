@@ -1,6 +1,6 @@
 // Brand, Palette, and Format types for the SDK authoring API.
 // Brand is the typed input contract for visual identity — shared across all formats.
-// Format is the per-format spatial configuration — all spatial values in inches, strokes in pt.
+// Format is the per-format spatial configuration — all spatial values in pixels (96 DPI), strokes in pt.
 
 import type {
   Font,
@@ -94,15 +94,15 @@ export interface Brand {
 
 // ── Format ───────────────────────────────────────────────────────────────────
 
-/** Per-format spatial configuration. Spatial values in inches, strokes in pt, font sizes in pt. */
+/** Per-format spatial configuration. Spatial values in pixels (96 DPI), strokes in pt, font sizes in pt. */
 export interface Format {
-  slide: { width: number; height: number }; // inches
+  slide: { width: number; height: number }; // pixels
   spacing: {
-    base: number; // inches — layout-level gaps between sections, grid gaps
-    tight: number; // inches — component-internal gaps (card content, header eyebrow-to-title)
+    base: number; // pixels — layout-level gaps between sections, grid gaps
+    tight: number; // pixels — component-internal gaps (card content, header eyebrow-to-title)
   };
-  padding: number; // inches — internal padding (cards, code blocks, tables)
-  radius: number; // inches — base corner radius
+  padding: number; // pixels — internal padding (cards, code blocks, tables)
+  radius: number; // pixels — base corner radius
   strokes: {
     hairline: number; // pt — very subtle (mermaid grid, table grid)
     thin: number; // pt — default borders (cards, tables)

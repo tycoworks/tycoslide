@@ -1,7 +1,7 @@
 // Geometric Primitives
 // Immutable value types for layout: positioned rectangles and per-side insets
 
-/** Per-side padding/inset specification (inches). Immutable. */
+/** Per-side padding/inset specification (pixels). Immutable. */
 export class Insets {
   readonly top: number;
   readonly right: number;

@@ -131,7 +131,7 @@ export function mockTheme(options?: {
   slide?: Theme["slide"];
 }): Theme {
   return {
-    slide: options?.slide ?? { width: 13.333, height: 7.5 },
+    slide: options?.slide ?? { width: 960, height: 540 },
     fonts: [mockFontFamily],
     textStyles: {
       h1: { ...mockTextStyle, ...options?.textStyles?.h1 },
@@ -195,7 +195,7 @@ export const DEFAULT_TABLE_TOKENS: TableTokens = {
   border: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
   gridStyle: GRID_STYLE.BOTH,
   gridStroke: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
-  cellPadding: 0.1,
+  cellPadding: 10,
   linkColor: "#0000FF",
   linkUnderline: true,
   accents: { accent: "#00CCCC", soft: "#FF00FF", dark: "#FF8800" },
@@ -206,7 +206,7 @@ export const DEFAULT_IMAGE_TOKENS = { padding: 0 };
 export const DEFAULT_CODE_TOKENS: CodeTokens = {
   textStyle: "code",
   theme: HIGHLIGHT_THEME.GITHUB_DARK,
-  padding: 0.25,
+  padding: 24,
   background: {
     fill: "#1E1E1E",
     fillOpacity: 100,
@@ -224,7 +224,7 @@ export const DEFAULT_MERMAID_TOKENS: MermaidTokens = {
   surfaceBorder: "#666666",
   surfaceSubtle: "#FFFFFF",
   group: "#333333",
-  groupCornerRadius: 0.08,
+  groupCornerRadius: 8,
   accents: { accent: "#00CCCC", soft: "#FF00FF", dark: "#FF8800" },
   accentStyle: { opacity: 100, textColor: "#000000" },
   textStyle: "body",
@@ -237,8 +237,8 @@ export const DEFAULT_CARD_TOKENS: CardTokens = {
     fillOpacity: 100,
     cornerRadius: 0,
   },
-  padding: 0.25,
-  spacing: 0.125,
+  padding: 24,
+  spacing: 12,
   hAlign: HALIGN.CENTER,
   vAlign: VALIGN.TOP,
   title: {
@@ -268,7 +268,7 @@ export const DEFAULT_QUOTE_TOKENS: QuoteTokens = {
     width: 3,
     dashType: DASH_TYPE.SOLID,
   },
-  spacing: 0.125,
+  spacing: 12,
   quote: {
     style: "body",
     color: "#FFFFFF",
@@ -292,8 +292,8 @@ export const DEFAULT_TESTIMONIAL_TOKENS: TestimonialTokens = {
     fillOpacity: 100,
     cornerRadius: 0,
   },
-  padding: 0.5,
-  spacing: 0.25,
+  padding: 48,
+  spacing: 24,
   hAlign: HALIGN.CENTER,
   vAlign: VALIGN.MIDDLE,
   quote: {
@@ -363,14 +363,14 @@ export function mockRenderContext(theme?: Theme) {
 /**
  * Assert that a number is approximately equal to expected value.
  */
-export function approx(actual: number, expected: number, msg: string, tolerance = 0.01): void {
+export function approx(actual: number, expected: number, msg: string, tolerance = 1): void {
   assert.ok(Math.abs(actual - expected) < tolerance, `${msg}: expected ~${expected}, got ${actual}`);
 }
 
 /**
  * Assert that two numbers are approximately equal.
  */
-export function assertApprox(actual: number, expected: number, tolerance = 0.01): void {
+export function assertApprox(actual: number, expected: number, tolerance = 1): void {
   assert.ok(Math.abs(actual - expected) < tolerance, `expected ~${expected}, got ${actual}`);
 }
 

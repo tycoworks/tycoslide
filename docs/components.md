@@ -208,8 +208,8 @@ Content card with an optional image, title, and description. Renders as a rounde
 | Token | Type | Description |
 |-------|------|-------------|
 | `background` | ShapeTokens | Background shape (optional — omit to render without background) |
-| `padding` | number | Inner padding (inches) |
-| `spacing` | number | Spacing between title and description (inches) |
+| `padding` | number | Inner padding (pixels) |
+| `spacing` | number | Spacing between title and description (pixels) |
 | `hAlign` | HorizontalAlignment | Content horizontal alignment |
 | `vAlign` | VerticalAlignment | Content vertical alignment |
 | `title` | TextTokens | Title text tokens |
@@ -252,7 +252,7 @@ Quote text is required -- provide it either via the `quote` attribute or as body
 | Token | Type | Description |
 |-------|------|-------------|
 | `bar` | LineTokens | Accent bar style (color, width, dash type) |
-| `spacing` | number | Spacing between bar and text, and between quote and attribution (inches) |
+| `spacing` | number | Spacing between bar and text, and between quote and attribution (pixels) |
 | `quote` | TextTokens | Quote text tokens |
 | `attribution` | LabelTokens | Attribution text tokens |
 
@@ -285,14 +285,14 @@ Cell content supports formatting (`**bold**`, `*italic*`, `:accent[color]`).
 | `cellBackgroundOpacity` | number | Data cell background opacity (0–100) |
 | `cellTextStyle` | TextStyleName | Data cell text style |
 | `cellTextColor` | string | Data cell text color |
-| `cellPadding` | number | Cell padding (inches) |
+| `cellPadding` | number | Cell padding (pixels) |
 | `hAlign` | HorizontalAlignment | Horizontal text alignment |
 | `vAlign` | VerticalAlignment | Vertical text alignment |
 | `linkColor` | string | Hyperlink color in cells |
 | `linkUnderline` | boolean | Whether cell hyperlinks are underlined |
 | `accents` | Record\<string, string\> | Accent color map for `:accent[text]` in cells |
 | `background` | ShapeTokens | Card-effect background shape (optional — omit to render without background) |
-| `backgroundPadding` | number | Inset between the table and the background shape edge in inches (optional) |
+| `backgroundPadding` | number | Inset between the table and the background shape edge in pixels (optional) |
 
 `ShapeTokens` includes `fill`, `fillOpacity`, `cornerRadius`, and optional `border` (`Stroke`) and `shadow`.
 
@@ -385,7 +385,7 @@ A filled or outlined shape. Available in the TypeScript DSL only.
 | `fill` | string | Fill color (6-character hex with `#` prefix) |
 | `fillOpacity` | number | Fill opacity (0--100) |
 | `border` | Stroke | Border stroke (optional — omit for no border) |
-| `cornerRadius` | number | Corner radius in inches |
+| `cornerRadius` | number | Corner radius in pixels |
 | `shadow` | Shadow | Drop shadow (optional — omit for no shadow) |
 
 ### Examples
@@ -421,7 +421,7 @@ Embeds an image with optional alt text for accessibility.
 
 | Token | Type | Description |
 |-------|------|-------------|
-| `padding` | number | Inset padding around the image in inches (**required**) |
+| `padding` | number | Inset padding around the image in pixels (**required**) |
 | `shadow` | Shadow | Drop shadow (optional — omit for no shadow) |
 
 `ImageTokens` includes `padding` (required) and optional `shadow`. Components that embed images internally (card, code, mermaid, testimonial) declare an `image` token typed as `ImageTokens`.
@@ -462,12 +462,12 @@ Renders a Mermaid diagram to PNG and embeds it as an image. Theme colors are app
 | `surfaceBorder` | string | Node and subgraph border color |
 | `surfaceSubtle` | string | Edge label background color |
 | `group` | string | Subgraph fill color (tinted at `accentStyle.opacity` for flowcharts) |
-| `groupCornerRadius` | number | Subgraph corner radius in inches |
+| `groupCornerRadius` | number | Subgraph corner radius in pixels |
 | `accents` | Record\<string, string\> | Named accent colors (keys become class names) |
 | `accentStyle` | { opacity, textColor } | Fill opacity (0--100) and text color for accent nodes and subgraphs |
 | `textStyle` | TextStyleName | Font style for diagram text |
 | `background` | ShapeTokens | Background shape behind the diagram (optional — omit for bare image) |
-| `backgroundPadding` | number | Padding between background edge and diagram in inches (optional) |
+| `backgroundPadding` | number | Padding between background edge and diagram in pixels (optional) |
 | `image` | ImageTokens | Image styling tokens for the rendered diagram |
 
 Default nodes use `primary` fill with `primaryContrast` text. Accent-classed nodes use tinted fill at `accentStyle.opacity`, full-color stroke, and `accentStyle.textColor` text. Subgraphs are filled at `accentStyle.opacity` with rounded corners. Class names apply to `flowchart` and `graph` diagrams only — all other diagram types (sequence, state, ER) are themed through the color tokens.
@@ -514,7 +514,7 @@ The content is the source code. In markdown, this is the content between the fen
 |-------|------|-------------|
 | `textStyle` | TextStyleName | Code font style (font family, size, line height) |
 | `theme` | HighlightThemeName | Syntax highlighting theme (e.g. `github-dark`, `dracula`, `nord`) |
-| `padding` | number | Inner padding (inches) |
+| `padding` | number | Inner padding (pixels) |
 | `background` | ShapeTokens | Background shape (fill, border, corner radius, optional shadow) |
 | `image` | ImageTokens | Image styling tokens for the rendered code image |
 
@@ -553,8 +553,8 @@ Quote text is required -- provide it either via the `quote` attribute or as body
 | Token | Type | Description |
 |-------|------|-------------|
 | `background` | ShapeTokens | Background shape (optional — omit to render without background) |
-| `padding` | number | Inner padding (inches) |
-| `spacing` | number | Spacing between content sections (inches) |
+| `padding` | number | Inner padding (pixels) |
+| `spacing` | number | Spacing between content sections (pixels) |
 | `hAlign` | HorizontalAlignment | Content horizontal alignment |
 | `vAlign` | VerticalAlignment | Content vertical alignment |
 | `quote` | TextTokens | Quote text tokens |
@@ -591,11 +591,11 @@ Horizontal flex container. Children are arranged side by side.
 
 | Param | Type | Description |
 |-------|------|-------------|
-| `spacing` | number | Spacing between children in inches (**required**) |
+| `spacing` | number | Spacing between children in pixels (**required**) |
 | `spacingMode` | `between` \| `around` | `between` (default): spacing between children only. `around`: spacing between children and on main-axis edges |
 | `vAlign` | `top` \| `middle` \| `bottom` | Vertical alignment of children |
 | `hAlign` | `left` \| `center` \| `right` | Horizontal alignment |
-| `padding` | number | Internal padding (inches) |
+| `padding` | number | Internal padding (pixels) |
 | `width` | `fill` \| `hug` | Width sizing (default: `fill`) |
 | `height` | `fill` \| `hug` | Height sizing (default: `hug`) |
 
@@ -656,7 +656,7 @@ Equal-column grid. Children are laid out in rows of N columns with equal widths.
 | Param | Type | Description |
 |-------|------|-------------|
 | `columns` | number | Number of columns (**required**) |
-| `spacing` | number | Spacing between cells in inches (**required**) |
+| `spacing` | number | Spacing between cells in pixels (**required**) |
 | `height` | SizeValue \| number | `SIZE.FILL` (default) distributes available height; `SIZE.HUG` sizes to content |
 
 ### Example

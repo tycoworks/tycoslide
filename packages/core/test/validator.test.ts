@@ -46,16 +46,16 @@ function containerNode(): ElementNode {
 }
 
 describe("Layout Validation", () => {
-  const slideBounds = { width: 10, height: 7.5 };
+  const slideBounds = { width: 960, height: 540 };
 
   describe("LayoutValidator", () => {
     it("should not throw when content is within bounds", () => {
       const positioned: PositionedNode = {
         node: textNode("Hello"),
-        x: 0.5,
-        y: 0.5,
-        width: 4,
-        height: 0.5,
+        x: 48,
+        y: 48,
+        width: 384,
+        height: 48,
       };
 
       const validator = new LayoutValidator(slideBounds);
@@ -65,10 +65,10 @@ describe("Layout Validation", () => {
     it("should detect overflow beyond slide right edge", () => {
       const positioned: PositionedNode = {
         node: textNode("test"),
-        x: 8,
-        y: 1,
-        width: 5, // extends to x=13, beyond slide width=10
-        height: 1,
+        x: 768,
+        y: 96,
+        width: 480, // extends to x=1248, beyond slide width=960
+        height: 96,
       };
 
       const validator = new LayoutValidator(slideBounds);
@@ -81,10 +81,10 @@ describe("Layout Validation", () => {
     it("should detect overflow beyond slide bottom edge", () => {
       const positioned: PositionedNode = {
         node: textNode("test"),
-        x: 1,
-        y: 6,
-        width: 2,
-        height: 3, // extends to y=9, beyond slide height=7.5
+        x: 96,
+        y: 400,
+        width: 192,
+        height: 288, // extends to y=688, beyond slide height=540
       };
 
       const validator = new LayoutValidator(slideBounds);
@@ -97,10 +97,10 @@ describe("Layout Validation", () => {
     it("should throw LayoutOverflowError with slide index", () => {
       const positioned: PositionedNode = {
         node: textNode("test"),
-        x: 8,
-        y: 1,
-        width: 5,
-        height: 1,
+        x: 768,
+        y: 96,
+        width: 480,
+        height: 96,
       };
 
       const validator = new LayoutValidator(slideBounds);
@@ -117,10 +117,10 @@ describe("Layout Validation", () => {
     it("should return true for valid layout", () => {
       const positioned: PositionedNode = {
         node: textNode("test"),
-        x: 1,
-        y: 1,
-        width: 2,
-        height: 2,
+        x: 96,
+        y: 96,
+        width: 192,
+        height: 192,
       };
 
       const validator = new LayoutValidator(slideBounds);
@@ -130,10 +130,10 @@ describe("Layout Validation", () => {
     it("should return false for invalid layout", () => {
       const positioned: PositionedNode = {
         node: textNode("test"),
-        x: 8,
-        y: 1,
-        width: 5, // overflows
-        height: 1,
+        x: 768,
+        y: 96,
+        width: 480, // overflows
+        height: 96,
       };
 
       const validator = new LayoutValidator(slideBounds);
@@ -143,10 +143,10 @@ describe("Layout Validation", () => {
     it("should include slideName in LayoutOverflowError message", () => {
       const positioned: PositionedNode = {
         node: textNode("test"),
-        x: 8,
-        y: 1,
-        width: 5,
-        height: 1,
+        x: 768,
+        y: 96,
+        width: 480,
+        height: 96,
       };
       const validator = new LayoutValidator(slideBounds);
       try {
@@ -162,10 +162,10 @@ describe("Layout Validation", () => {
     it("should omit parentheses when slideName is not provided", () => {
       const positioned: PositionedNode = {
         node: textNode("test"),
-        x: 8,
-        y: 1,
-        width: 5,
-        height: 1,
+        x: 768,
+        y: 96,
+        width: 480,
+        height: 96,
       };
       const validator = new LayoutValidator(slideBounds);
       try {
@@ -180,17 +180,17 @@ describe("Layout Validation", () => {
     it("should include slideName in LayoutBoundsError message", () => {
       const positioned: PositionedNode = {
         node: containerNode(),
-        x: 1,
-        y: 2,
-        width: 4,
-        height: 3,
+        x: 96,
+        y: 192,
+        width: 384,
+        height: 288,
         children: [
           {
             node: textNode("test"),
-            x: 1,
-            y: 1,
-            width: 4,
-            height: 1,
+            x: 96,
+            y: 96,
+            width: 384,
+            height: 96,
           },
         ],
       };

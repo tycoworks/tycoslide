@@ -224,7 +224,7 @@ Use `tycoslide build deck.md --force` to write the PPTX anyway and inspect visua
 
 ```
 Slide 4 (template: body, title: Key Points): Content extends beyond slide bounds:
-  text at (0.50, 0.42) overflows 0.23" bottom
+  text at (48, 40) overflows 22px bottom
 ```
 
 **Cause:** A measured element is taller or wider than the available slide area.
@@ -242,7 +242,7 @@ Slide 4 (template: body, title: Key Points): Content extends beyond slide bounds
 
 ```
 Slide 2 (template: body, title: Overview): Unintentional content overlap detected:
-  text[0] overlaps text[1] by 0.50"x0.12" in container
+  text[0] overlaps text[1] by 48x12px in container
 ```
 
 **Cause:** Two sibling elements are overlapping — typically because elements are too large for their container.

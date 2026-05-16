@@ -24,7 +24,7 @@ Each format is a `ThemeFormat`:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `slide` | `{ width: number; height: number }` | Slide dimensions in inches |
+| `slide` | `{ width: number; height: number }` | Slide dimensions in pixels (96 DPI) |
 | `textStyles` | `Record<string, TextStyle>` | Named text styles (h1, h2, body, etc.) |
 | `templates` | `Template[]` | Slide templates available in this format |
 
@@ -103,7 +103,7 @@ All color values are hex strings with a `#` prefix (e.g., `#7C3AED`).
 
 ## Format
 
-A `Format` defines per-format spatial configuration. Spatial values are in inches, strokes in points, font sizes in points.
+A `Format` defines per-format spatial configuration. Spatial values (spacing, padding, radius) are in pixels at 96 DPI. Strokes, font sizes, and shadow blur/offset are in points.
 
 ```typescript
 import type { Format } from '@tycoslide/sdk';
@@ -111,9 +111,9 @@ import { SlideFormat, TEXT_STYLE } from '@tycoslide/sdk';
 
 const presentationFormat: Format = {
   slide: SlideFormat.s16x9,
-  spacing: { base: 0.25, tight: 0.125 },
-  padding: 0.25,
-  radius: 0.08,
+  spacing: { base: 24, tight: 12 },
+  padding: 24,
+  radius: 9,
   strokes: { hairline: 0.5, thin: 0.75, base: 1, thick: 2 },
   shadow: { type: SHADOW_TYPE.OUTER, opacity: 12, blur: 6, offset: 2, angle: 180 },
   hAlign: HALIGN.LEFT,
@@ -132,16 +132,16 @@ Use `SlideFormat` presets from `@tycoslide/sdk` or specify custom dimensions:
 
 | Preset | Dimensions |
 |--------|-----------|
-| `SlideFormat.s16x9` | 10" × 5.625" |
-| `SlideFormat.s16x10` | 10" × 6.25" |
-| `SlideFormat.s4x3` | 10" × 7.5" |
-| `SlideFormat.letterPortrait` | 8.5" × 11" |
-| `SlideFormat.a4Portrait` | 8.27" × 11.69" |
+| `SlideFormat.s16x9` | 960 × 540 |
+| `SlideFormat.s16x10` | 960 × 600 |
+| `SlideFormat.s4x3` | 960 × 720 |
+| `SlideFormat.letterPortrait` | 816 × 1056 |
+| `SlideFormat.a4Portrait` | 794 × 1123 |
 
 Custom dimensions:
 
 ```typescript
-slide: { width: 10, height: 7.5 },
+slide: { width: 960, height: 720 },
 ```
 
 ### Text Style Names
@@ -324,7 +324,7 @@ import { body, title, section } from '../layouts.js';
 export function buildPresentationFormat(palette: Palette): ThemeFormat {
   const config: Format = {
     slide: SlideFormat.s16x9,
-    spacing: { base: 0.25, tight: 0.125 },
+    spacing: { base: 24, tight: 12 },
     // ... spatial values
     textStyles: { /* ... */ },
   };
@@ -338,7 +338,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       defineTemplate({
         name: 'title',
         description: 'Opening slide with large title.',
-        layout: withMarginChrome(title, { margin: 0.5 }),
+        layout: withMarginChrome(title, { margin: 48 }),
         background: t.surfaces.elevated,
         tokens: {
           title: { ...t.onLight.headings.h1, hAlign: HALIGN.CENTER },
