@@ -2,14 +2,9 @@
 // Simple pull quote with left accent bar, quote text, and optional attribution.
 // Renders to: row(line(bar), column(quote, attribution?))
 
-import {
-  component,
-  extractSource,
-  SIZE,
-  SYNTAX,
-} from "@tycoslide/core";
-import { defineComponent, type InferParams, param, schema } from "../authoring/index.js";
+import { component, extractSource, SIZE, SYNTAX } from "@tycoslide/core";
 import type { RootContent } from "mdast";
+import { defineComponent, type InferParams, param, schema } from "../authoring/index.js";
 import { Component } from "../presets/names.js";
 import { column, row } from "./containers.js";
 import { type LabelTokens, label } from "./label.js";
@@ -59,7 +54,7 @@ export const quoteComponent = defineComponent({
   name: Component.Quote,
   content: schema.string().optional(),
   params: quoteParams,
-  mdast: {
+  syntax: {
     nodeTypes: [SYNTAX.BLOCKQUOTE],
     compile: (node: RootContent, source: string) => {
       const raw = extractSource(node, source);

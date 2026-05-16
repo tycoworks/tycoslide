@@ -16,13 +16,7 @@
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import type { Canvas, TextStyleName } from "@tycoslide/core";
-import {
-  type ComponentNode,
-  component,
-  inToPx,
-  type RenderContext,
-  SHAPE,
-} from "@tycoslide/core";
+import { type ComponentNode, component, inToPx, type RenderContext, SHAPE } from "@tycoslide/core";
 import { defineComponent, schema } from "../authoring/index.js";
 import { Component } from "../presets/names.js";
 import { column, stack } from "./containers.js";

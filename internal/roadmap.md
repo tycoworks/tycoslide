@@ -7,6 +7,7 @@ Now / Next / Later.
 ## Now
 
 - [ ] Move to pixels
+- Remove slide naming
 - [ ] Create & Edit Skill (AI authoring in markdown dialect)
 
 ---

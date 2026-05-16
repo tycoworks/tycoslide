@@ -2,7 +2,6 @@
 // Runtime types for the component and rendering system.
 // Pure data — no global singletons.
 
-import type { RootContent } from "mdast";
 import type { ComponentNode, ElementNode, SlideNode } from "../model/nodes.js";
 import type { SyntaxType } from "../model/syntax.js";
 import type { Theme } from "../model/types.js";
@@ -35,14 +34,14 @@ export interface RenderContext {
 }
 
 /**
- * Declares which bare MDAST node types a component can compile.
- * Registered via the `mdast` field on `define()`.
+ * Declares which syntax node types a component can compile from bare markdown.
+ * Registered via the `syntax` field on `define()`.
  */
-export interface MdastHandler {
-  /** MDAST node types this component handles (e.g., SYNTAX.PARAGRAPH, SYNTAX.LIST) */
+export interface SyntaxHandler {
+  /** Syntax node types this component handles (e.g., SYNTAX.PARAGRAPH, SYNTAX.LIST) */
   nodeTypes: SyntaxType[];
-  /** Transform an MDAST node into a ComponentNode. Return null to skip. */
-  compile: (node: RootContent, source: string) => ComponentNode | null;
+  /** Transform a syntax node into a ComponentNode. Return null to skip. */
+  compile: (node: any, source: string) => ComponentNode | null;
 }
 
 /**
@@ -65,6 +64,6 @@ export interface ComponentDefinition<TParams = unknown, TContent = unknown, TTok
   ) => SlideNode | Promise<SlideNode>;
   /** Deserialize a :::name directive into a ComponentNode. Auto-generated for content components. */
   deserialize?: (attributes: Record<string, string | null | undefined>, body: string) => ComponentNode;
-  /** MDAST handler — declares which bare markdown node types this component compiles. */
-  mdast?: MdastHandler;
+  /** Syntax handler — declares which bare markdown node types this component compiles. */
+  syntax?: SyntaxHandler;
 }

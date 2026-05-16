@@ -78,8 +78,8 @@ export {
   type Canvas,
   type ComponentDefinition,
   type ComponentNode,
-  type MdastHandler,
   type RenderContext,
+  type SyntaxHandler,
   validateThemeFonts,
 } from "./core/rendering/definitions.js";
 // Core

@@ -98,8 +98,8 @@ export const testComponents: ComponentDefinition<any, any, any>[] = [
 ];
 
 /** Find a component that handles a specific MDAST node type. */
-export function findMdastHandler(nodeType: string): ComponentDefinition<any, any, any> | undefined {
-  return testComponents.find((def) => def.mdast?.nodeTypes.includes(nodeType as any));
+export function findSyntaxHandler(nodeType: string): ComponentDefinition<any, any, any> | undefined {
+  return testComponents.find((def) => def.syntax?.nodeTypes.includes(nodeType as any));
 }
 
 // ============================================

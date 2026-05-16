@@ -22,8 +22,8 @@ import {
   SYNTAX,
   type TextNode,
 } from "@tycoslide/core";
-import { defineComponent, schema } from "../authoring/index.js";
 import type { RootContent } from "mdast";
+import { defineComponent, schema } from "../authoring/index.js";
 
 import { Component } from "../presets/names.js";
 import { inlineParse, transformInline } from "./utils/inline.js";
@@ -103,7 +103,7 @@ export const textComponent = defineComponent({
   name: Component.Text,
   content: schema.string(),
   directive: false,
-  mdast: {
+  syntax: {
     nodeTypes: [SYNTAX.PARAGRAPH],
     compile: (node: RootContent, source: string): ComponentNode | null => {
       return component(Component.Text, {}, extractSource(node, source));

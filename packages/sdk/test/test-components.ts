@@ -45,7 +45,7 @@ export const textComponent = defineComponent({
     vAlign: param.optional(schema.string()),
     content: param.optional(schema.string()),
   },
-  mdast: {
+  syntax: {
     nodeTypes: [SYNTAX.PARAGRAPH, SYNTAX.LIST],
     compile: (node: RootContent, source: string): ComponentNode | null => {
       if (node.type === SYNTAX.PARAGRAPH) {
@@ -142,7 +142,7 @@ export const labelComponent = defineComponent({
   name: C.Label,
   content: schema.string(),
   directive: false,
-  mdast: {
+  syntax: {
     nodeTypes: [SYNTAX.HEADING],
     compile: (node: RootContent, source: string): ComponentNode => {
       const heading = node as Heading;
@@ -173,7 +173,7 @@ export const lineComponent = defineComponent({
 export const tableComponent = defineComponent({
   name: C.Table,
   content: schema.string(),
-  mdast: {
+  syntax: {
     nodeTypes: [SYNTAX.TABLE],
     compile: (node: RootContent, source: string): ComponentNode | null => {
       const tableNode = node as unknown as MdastTable;

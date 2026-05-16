@@ -4,9 +4,9 @@
 // Zero theme-specific concepts — no "hero", "eyebrow", "stat", "section heading".
 
 import { DASH_TYPE, VALIGN } from "@tycoslide/core";
-import type { LabelTokens } from "./components/label.js";
-import type { ListTokens } from "./components/list.js";
-import type { TextTokens } from "./components/text.js";
+import type { LabelTokens } from "../components/label.js";
+import type { ListTokens } from "../components/list.js";
+import type { TextTokens } from "../components/text.js";
 import type { Format, Palette } from "./format.js";
 import { TEXT_STYLE } from "./format.js";
 

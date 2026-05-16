@@ -11,8 +11,8 @@ import {
   SIZE,
   SYNTAX,
 } from "@tycoslide/core";
-import { defineComponent, type InferParams, param, schema } from "../authoring/index.js";
 import type { Image, RootContent } from "mdast";
+import { defineComponent, type InferParams, param, schema } from "../authoring/index.js";
 import { Component } from "../presets/names.js";
 import { column } from "./containers.js";
 
@@ -93,7 +93,7 @@ export const imageComponent = defineComponent({
   content: schema.string(),
   params: imageParamShape,
 
-  mdast: {
+  syntax: {
     nodeTypes: [SYNTAX.IMAGE],
     compile: (node: RootContent): ComponentNode | null => {
       const img = node as Image;

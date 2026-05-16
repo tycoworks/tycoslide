@@ -1,7 +1,7 @@
 // Template DSL: defineTemplate()
 
 import type { Background, SlideNode } from "@tycoslide/core";
-import { defineLayout, type LayoutConfig, type ScalarShape } from "./authoring/index.js";
+import { defineLayout, type LayoutConfig, type ScalarShape } from "../authoring/index.js";
 
 // ============================================
 // TYPES

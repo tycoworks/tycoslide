@@ -195,9 +195,9 @@ function compileBareNode(
   }
 
   // Dispatch to registered MDAST handler
-  const handler = components.find((c) => c.mdast?.nodeTypes.includes(node.type as any));
-  if (handler?.mdast) {
-    return handler.mdast.compile(node, source);
+  const handler = components.find((c) => c.syntax?.nodeTypes.includes(node.type as any));
+  if (handler?.syntax) {
+    return handler.syntax.compile(node, source);
   }
 
   // Unknown → error

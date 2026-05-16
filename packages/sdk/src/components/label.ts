@@ -16,8 +16,8 @@ import {
   SYNTAX,
   type TextNode,
 } from "@tycoslide/core";
-import { defineComponent, schema } from "../authoring/index.js";
 import type { Heading, RootContent } from "mdast";
+import { defineComponent, schema } from "../authoring/index.js";
 import { Component } from "../presets/names.js";
 
 // ============================================
@@ -85,7 +85,7 @@ export const labelComponent = defineComponent({
   name: Component.Label,
   content: schema.string(),
   directive: false,
-  mdast: {
+  syntax: {
     nodeTypes: [SYNTAX.HEADING],
     compile: (node: RootContent, source: string): ComponentNode => {
       const heading = node as Heading;

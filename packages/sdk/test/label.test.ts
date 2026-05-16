@@ -61,7 +61,7 @@ describe("Label Component", () => {
         const headingNode = makeHeading(depth, text);
         const source = headingSource(depth, text);
 
-        const result = labelComponent.mdast!.compile(headingNode, source);
+        const result = labelComponent.syntax!.compile(headingNode, source);
         assert.ok(result !== null, `compile() returned null for h${depth}`);
         assert.strictEqual(result!.componentName, Component.Label);
         assert.strictEqual((result!.params as any).headingDepth, depth);
@@ -79,7 +79,7 @@ describe("Label Component", () => {
       const headingNode = makeHeading(2, "Hello World");
       const source = headingSource(2, "Hello World");
 
-      const result = labelComponent.mdast!.compile(headingNode, source);
+      const result = labelComponent.syntax!.compile(headingNode, source);
       assert.ok(result !== null);
       assert.strictEqual(result!.content, "Hello World");
       assert.notStrictEqual(result!.content, "## Hello World");

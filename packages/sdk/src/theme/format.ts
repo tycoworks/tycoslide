@@ -10,7 +10,7 @@ import type {
   TextStyleConfig,
   VerticalAlignment,
 } from "@tycoslide/core";
-import type { HighlightThemeName } from "./presets/highlighting.js";
+import type { HighlightThemeName } from "../presets/highlighting.js";
 
 // ── SDK-friendly input types ─────────────────────────────────────────────────
 

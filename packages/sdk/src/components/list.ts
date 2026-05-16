@@ -20,8 +20,8 @@ import {
   SYNTAX,
   type TextNode,
 } from "@tycoslide/core";
-import { defineComponent, type InferParams, param, schema } from "../authoring/index.js";
 import type { ListItem, List as MdastList, RootContent } from "mdast";
+import { defineComponent, type InferParams, param, schema } from "../authoring/index.js";
 import { Component } from "../presets/names.js";
 import { inlineParse, transformInline } from "./utils/inline.js";
 
@@ -129,7 +129,7 @@ export const listComponent = defineComponent({
   content: schema.array(schema.string()),
   params: listParamShape,
   directive: false,
-  mdast: {
+  syntax: {
     nodeTypes: [SYNTAX.LIST],
     compile: (node: RootContent, source: string): ComponentNode | null => {
       const listNode = node as unknown as MdastList;

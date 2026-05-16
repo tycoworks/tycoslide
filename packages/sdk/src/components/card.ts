@@ -1,13 +1,7 @@
 // Card Component
 // Implements card as a component using primitives: stack, column, shape, text, image
 
-import {
-  component,
-  type HorizontalAlignment,
-  SHAPE,
-  SIZE,
-  type VerticalAlignment,
-} from "@tycoslide/core";
+import { component, type HorizontalAlignment, SHAPE, SIZE, type VerticalAlignment } from "@tycoslide/core";
 import { defineComponent, type InferParams, param, schema } from "../authoring/index.js";
 import { Component } from "../presets/names.js";
 import { column, stack } from "./containers.js";

@@ -2,9 +2,8 @@
 // Factory for creating component definitions.
 // Moved from core — defineComponent is authoring-time, not runtime.
 
-import type { ComponentDefinition, MdastHandler, RenderContext, SlideNode } from "@tycoslide/core";
+import type { ComponentDefinition, RenderContext, SlideNode, SyntaxHandler } from "@tycoslide/core";
 import { type ComponentNode, component } from "@tycoslide/core";
-import type { RootContent } from "mdast";
 import { z } from "zod";
 import type { ParamShape } from "./param.js";
 
@@ -99,7 +98,7 @@ export function defineComponent<
   content: TContent;
   params?: TParams;
   directive?: boolean;
-  mdast?: MdastHandler;
+  syntax?: SyntaxHandler;
   render: (
     params: z.infer<z.ZodObject<TParams>>,
     content: z.infer<TContent>,
@@ -137,7 +136,7 @@ export function defineComponent<
   name: string;
   params?: TParams;
   directive?: boolean;
-  mdast?: MdastHandler;
+  syntax?: SyntaxHandler;
   render: (
     params: z.infer<z.ZodObject<TParams>>,
     content: undefined,
@@ -153,14 +152,14 @@ export function defineComponent(def: any): ComponentDefinition<any, any, any> & 
   const paramsSchema = Object.keys(paramsShape).length > 0 ? z.object(paramsShape) : null;
   const isContainer: boolean = def.children === true;
 
-  const mdast: MdastHandler | undefined = def.mdast;
+  const syntax: SyntaxHandler | undefined = def.syntax;
 
   const result: ComponentDefinition & { schema?: z.ZodTypeAny; paramsSchema?: z.ZodObject<any> } = {
     name: def.name as string,
     render: def.render as ComponentDefinition["render"],
     params: def.params,
     children: isContainer || undefined,
-    mdast,
+    syntax,
   };
 
   if (isContainer) {

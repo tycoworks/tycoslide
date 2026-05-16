@@ -2,13 +2,7 @@
 // Card with optional image, quote text, and attribution.
 // Renders to: stack(shape(background), column(image?, quote, attribution))
 
-import {
-  component,
-  type HorizontalAlignment,
-  SHAPE,
-  SIZE,
-  type VerticalAlignment,
-} from "@tycoslide/core";
+import { component, type HorizontalAlignment, SHAPE, SIZE, type VerticalAlignment } from "@tycoslide/core";
 import { defineComponent, type InferParams, param, schema } from "../authoring/index.js";
 import { Component } from "../presets/names.js";
 import { column, row, stack } from "./containers.js";

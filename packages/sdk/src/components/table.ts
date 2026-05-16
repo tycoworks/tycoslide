@@ -18,8 +18,8 @@ import {
   type TextStyleName,
   type VerticalAlignment,
 } from "@tycoslide/core";
-import { defineComponent, schema } from "../authoring/index.js";
 import type { Table as MdastTable, RootContent } from "mdast";
+import { defineComponent, schema } from "../authoring/index.js";
 import { parseMarkdown } from "../markdown/parser.js";
 import { Component } from "../presets/names.js";
 import { column, stack } from "./containers.js";
@@ -92,7 +92,7 @@ function parseGfmTable(body: string): string[][] {
 export const tableComponent = defineComponent({
   name: Component.Table,
   content: schema.string().optional(),
-  mdast: {
+  syntax: {
     nodeTypes: [SYNTAX.TABLE],
     compile: (node: RootContent, source: string): ComponentNode | null => {
       const tableNode = node as unknown as MdastTable;
