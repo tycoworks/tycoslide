@@ -3,22 +3,34 @@
 // Each layout is a self-contained section: token interface, ASCII diagram, Layout object.
 // Templates are defined per-format using defineTemplate() with these layouts.
 
-import type { CardTokens, HorizontalAlignment, ImageTokens, LabelTokens, Layout, LineTokens, ListTokens, ScalarShape, SlideNode, TextTokens, VerticalAlignment } from "@tycoslide/sdk";
+import type {
+  CardTokens,
+  HorizontalAlignment,
+  ImageTokens,
+  LabelTokens,
+  Layout,
+  LineTokens,
+  ListTokens,
+  ScalarShape,
+  SlideNode,
+  TextTokens,
+  VerticalAlignment,
+} from "@tycoslide/sdk";
 import {
-  component,
   Component,
-  param,
-  schema,
-  SIZE,
-  SPACING_MODE,
   cardComponent,
   column,
+  component,
   grid,
   image,
   imageComponent,
   label,
   line,
+  param,
   row,
+  SIZE,
+  SPACING_MODE,
+  schema,
   stack,
   text,
   textComponent,

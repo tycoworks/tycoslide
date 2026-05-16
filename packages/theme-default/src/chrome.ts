@@ -3,7 +3,7 @@
 // Replaces the old MasterDefinition concept — chrome is now part of the layout tree.
 
 import type { ImageTokens, LabelTokens, Layout, SlideNumberTokens } from "@tycoslide/sdk";
-import { column, HALIGN, image, Insets, label, LAYER, row, SIZE, slideNumber, VALIGN } from "@tycoslide/sdk";
+import { column, HALIGN, Insets, image, LAYER, label, row, SIZE, slideNumber, VALIGN } from "@tycoslide/sdk";
 
 // ============================================
 // CHROME TOKEN INTERFACES

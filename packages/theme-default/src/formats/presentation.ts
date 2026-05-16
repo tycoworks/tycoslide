@@ -1,5 +1,14 @@
 import type { Format, LabelTokens, Layout, Palette, ThemeFormat } from "@tycoslide/sdk";
-import { defineTemplate, deriveTokens, GRID_STYLE, HALIGN, SHADOW_TYPE, SlideFormat, TEXT_STYLE, VALIGN } from "@tycoslide/sdk";
+import {
+  defineTemplate,
+  deriveTokens,
+  GRID_STYLE,
+  HALIGN,
+  SHADOW_TYPE,
+  SlideFormat,
+  TEXT_STYLE,
+  VALIGN,
+} from "@tycoslide/sdk";
 import { assets } from "../assets.js";
 import { type FooterChromeTokens, type MarginChromeTokens, withFooterChrome, withMarginChrome } from "../chrome.js";
 import { TEMPLATE } from "../index.js";
