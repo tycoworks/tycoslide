@@ -2,9 +2,8 @@
 // Higher-order layout wrappers that add slide chrome (footer, top bar, margins).
 // Replaces the old MasterDefinition concept — chrome is now part of the layout tree.
 
-import { HALIGN, Insets, LAYER, SIZE, VALIGN } from "@tycoslide/core";
 import type { ImageTokens, LabelTokens, Layout, SlideNumberTokens } from "@tycoslide/sdk";
-import { column, image, label, row, slideNumber } from "@tycoslide/sdk";
+import { column, HALIGN, image, Insets, label, LAYER, row, SIZE, slideNumber, VALIGN } from "@tycoslide/sdk";
 
 // ============================================
 // CHROME TOKEN INTERFACES

@@ -142,6 +142,29 @@ export { defineTemplate, type Layout, type Template } from "./template.js";
 
 export { deriveTokens, type VisualTokens } from "./visualTokens.js";
 
+// ── Layout Primitives (re-exported from core for theme authors) ──────────
+
+export {
+  GRID_STYLE,
+  HALIGN,
+  Insets,
+  LAYER,
+  SHADOW_TYPE,
+  SIZE,
+  SPACING_MODE,
+  VALIGN,
+} from "@tycoslide/core";
+export type {
+  HorizontalAlignment,
+  ScalarShape,
+  SlideNode,
+  VerticalAlignment,
+} from "@tycoslide/core";
+// Param helpers (schema type builders + param declaration wrappers)
+export { param, schema } from "@tycoslide/core";
+// Component node factory (for layouts that instantiate components dynamically)
+export { component } from "@tycoslide/core";
+
 // ── Markdown Compilation ──────────────────────────────────────────────────
 
 // Document compiler (markdown source → Presentation)
