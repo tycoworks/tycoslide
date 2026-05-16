@@ -198,6 +198,15 @@ export {
   type SlideLayout,
 } from "@tycoslide/core";
 
+// ── Skill Compiler ──────────────────────────────────────────────────────────
+
+export {
+  compileSkill,
+  type CompileSkillOptions,
+  type CompileSkillResult,
+} from "./skill/index.js";
+export { introspectParams, PARAM_TYPE, type ParamInfo, type ParamType } from "./skill/index.js";
+
 // ── Markdown Compilation ──────────────────────────────────────────────────
 
 // Document compiler (markdown source → Presentation)
