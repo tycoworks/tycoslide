@@ -4,7 +4,6 @@
 import * as assert from "node:assert";
 import { createRequire } from "node:module";
 import type {
-  ComponentDefinition,
   ComponentNode,
   ElementNode,
   FontFamilyConfig,
@@ -15,6 +14,7 @@ import type {
   Theme,
 } from "@tycoslide/core";
 import { DASH_TYPE, GRID_STYLE, HALIGN, isComponentNode, isLayoutNode, VALIGN } from "@tycoslide/core";
+import type { ComponentConfig } from "../src/authoring/component.js";
 import type {
   CardTokens,
   CodeTokens,
@@ -77,7 +77,7 @@ const require = createRequire(import.meta.url);
 // ============================================
 
 /** All standard SDK components for testing. */
-export const testComponents: ComponentDefinition<any, any, any>[] = [
+export const testComponents: ComponentConfig[] = [
   textComponent,
   imageComponent,
   cardComponent,
@@ -98,7 +98,7 @@ export const testComponents: ComponentDefinition<any, any, any>[] = [
 ];
 
 /** Find a component that handles a specific MDAST node type. */
-export function findSyntaxHandler(nodeType: string): ComponentDefinition<any, any, any> | undefined {
+export function findSyntaxHandler(nodeType: string): ComponentConfig | undefined {
   return testComponents.find((def) => def.syntax?.nodeTypes.includes(nodeType as any));
 }
 

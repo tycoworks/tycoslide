@@ -2,7 +2,7 @@
 // Factory for creating component definitions.
 // Moved from core — defineComponent is authoring-time, not runtime.
 
-import type { ComponentDefinition, RenderContext, SlideNode, SyntaxHandler } from "@tycoslide/core";
+import type { ComponentDefinition, RenderContext, SlideNode, SyntaxType } from "@tycoslide/core";
 import { type ComponentNode, component } from "@tycoslide/core";
 import { z } from "zod";
 import type { ParamShape } from "./param.js";
@@ -11,19 +11,36 @@ import type { ParamShape } from "./param.js";
 export type { ComponentNode } from "@tycoslide/core";
 
 // ============================================
+// SYNTAX HANDLER (authoring-only, not needed by core runtime)
+// ============================================
+
+/**
+ * Declares which syntax node types a component can compile from bare markdown.
+ * Registered via the `syntax` field on defineComponent().
+ * Core never reads this — only SDK's slotCompiler consumes it.
+ */
+export interface SyntaxHandler {
+  /** Syntax node types this component handles (e.g., SYNTAX.PARAGRAPH, SYNTAX.LIST) */
+  nodeTypes: SyntaxType[];
+  /** Transform a syntax node into a ComponentNode. Return null to skip. */
+  compile: (node: any, source: string) => ComponentNode | null;
+}
+
+// ============================================
 // SCALAR COMPONENT DEFINITION
 // ============================================
 
 /** A scalar component definition — has .schema for YAML validation and layout params. */
-export type ScalarComponentDefinition<
+export type ContentComponentConfig<
   TSchema extends z.ZodTypeAny = z.ZodTypeAny,
   TTokens = undefined,
-> = ComponentDefinition<any, any, TTokens> & {
-  /** Content schema. Use in schema.array() or layout params (e.g., param.required(textComponent.schema)). */
-  schema: TSchema;
-  /** Params ZodObject schema (when component has both content and params). */
-  paramsSchema?: z.ZodObject<any>;
-};
+> = ComponentDefinition<any, any, TTokens> &
+  AuthoringFields & {
+    /** Content schema. Use in schema.array() or layout params (e.g., param.required(textComponent.schema)). */
+    schema: TSchema;
+    /** Params ZodObject schema (when component has both content and params). */
+    paramsSchema?: z.ZodObject<any>;
+  };
 
 // ============================================
 // DIRECTIVE DESERIALIZATION
@@ -84,6 +101,19 @@ function buildDeserializer(componentName: string, paramsSchema: z.ZodObject<Para
 // DEFINE COMPONENT (standalone)
 // ============================================
 
+/** Authoring-only fields added by defineComponent — not part of core's runtime contract. */
+export interface AuthoringFields {
+  params?: Record<string, unknown>;
+  children?: boolean;
+  deserialize?: DirectiveDeserializer;
+  syntax?: SyntaxHandler;
+  schema?: z.ZodTypeAny;
+  paramsSchema?: z.ZodObject<any>;
+}
+
+/** A component definition with authoring fields — what defineComponent() returns and slotCompiler consumes. */
+export type ComponentConfig = ComponentDefinition<any, any, any> & AuthoringFields;
+
 /**
  * Define a content component — has a `content` schema (primary content) and optional params.
  * Returns a definition with `.schema` (= content type) for use in layout params.
@@ -105,7 +135,7 @@ export function defineComponent<
     context: RenderContext,
     tokens: TTokens,
   ) => SlideNode | Promise<SlideNode>;
-}): ScalarComponentDefinition<TContent, TTokens>;
+}): ContentComponentConfig<TContent, TTokens>;
 
 /**
  * Define a container component — accepts children (SlideNode[]) as content.
@@ -122,7 +152,7 @@ export function defineComponent<TParams, TTokens extends object = Record<string,
     context: RenderContext,
     tokens: TTokens,
   ) => SlideNode | Promise<SlideNode>;
-}): ComponentDefinition<TParams, SlideNode[], TTokens>;
+}): ComponentDefinition<TParams, SlideNode[], TTokens> & AuthoringFields;
 
 /**
  * Define a params-only component (no content, no children).
@@ -143,7 +173,7 @@ export function defineComponent<
     context: RenderContext,
     tokens: TTokens,
   ) => SlideNode | Promise<SlideNode>;
-}): ScalarComponentDefinition<z.ZodObject<TParams>, TTokens>;
+}): ContentComponentConfig<z.ZodObject<TParams>, TTokens>;
 
 // Implementation
 export function defineComponent(def: any): ComponentDefinition<any, any, any> & { schema?: z.ZodTypeAny } {
@@ -154,7 +184,7 @@ export function defineComponent(def: any): ComponentDefinition<any, any, any> & 
 
   const syntax: SyntaxHandler | undefined = def.syntax;
 
-  const result: ComponentDefinition & { schema?: z.ZodTypeAny; paramsSchema?: z.ZodObject<any> } = {
+  const result: ComponentDefinition & AuthoringFields = {
     name: def.name as string,
     render: def.render as ComponentDefinition["render"],
     params: def.params,

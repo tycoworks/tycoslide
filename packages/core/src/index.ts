@@ -79,7 +79,6 @@ export {
   type ComponentDefinition,
   type ComponentNode,
   type RenderContext,
-  type SyntaxHandler,
   validateThemeFonts,
 } from "./core/rendering/definitions.js";
 // Core

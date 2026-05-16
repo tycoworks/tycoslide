@@ -3,9 +3,9 @@ import { createRequire } from "node:module";
 import { describe, it } from "node:test";
 import type { Background } from "@tycoslide/core";
 import type { FontFamily, TextStyle } from "../src/theme/format.js";
-import { defineTemplate } from "../src/theme/template.js";
 import type { ThemeDefinition, ThemeFormat } from "../src/theme/index.js";
 import { defineTheme, resolveThemeFormat } from "../src/theme/index.js";
+import { defineTemplate } from "../src/theme/template.js";
 
 const require = createRequire(import.meta.url);
 

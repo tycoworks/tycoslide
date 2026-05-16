@@ -150,19 +150,17 @@ export type {
   ComponentDefinition,
   ComponentNode,
   RenderContext,
-  SyntaxHandler,
 } from "@tycoslide/core";
 // Component node factory (for layouts that instantiate components dynamically)
 export { component } from "@tycoslide/core";
 export type {
-  DirectiveDeserializer,
+  ComponentConfig,
   InferParams,
   InferTokens,
   LayoutConfig,
   ParamShape,
-  ScalarComponentDefinition,
-  ScalarParam,
   ScalarShape,
+  SyntaxHandler,
   TokenDescriptor,
   TokenShape,
 } from "./authoring/index.js";
