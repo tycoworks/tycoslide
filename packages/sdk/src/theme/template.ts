@@ -7,14 +7,23 @@ import { defineLayout, type LayoutConfig, type ScalarShape } from "../authoring/
 // TYPES
 // ============================================
 
-/** Documentation metadata for a template — used by the skill compiler. */
-export interface TemplateDocumentation {
+/** Documentation metadata for templates and assets — used by the skill compiler. */
+export interface Documentation {
   description: string;
   whenToUse?: string;
   whenNotToUse?: string;
   limits?: string[];
   gotchas?: string[];
 }
+
+/** A documented asset reference for the skill compiler. */
+export interface AssetEntry {
+  path: string;
+  documentation: Documentation;
+}
+
+/** Asset catalog: category → name → documented entry. */
+export type AssetCatalog = Record<string, Record<string, AssetEntry>>;
 
 /**
  * A reusable structural blueprint — params + slots + render function.
@@ -41,7 +50,7 @@ export interface Layout<
  * No master indirection — chrome is composed into the layout.
  */
 export interface Template {
-  documentation: TemplateDocumentation;
+  documentation: Documentation;
   layout: LayoutConfig;
   background: Background;
   tokens: Record<string, unknown>;
@@ -67,7 +76,7 @@ export function defineTemplate<
   const TSlots extends readonly string[] = readonly [],
 >(def: {
   name: string;
-  documentation: TemplateDocumentation;
+  documentation: Documentation;
   layout: Layout<TTokens, TParams, TSlots>;
   background: Background;
   tokens: Record<string, unknown>;

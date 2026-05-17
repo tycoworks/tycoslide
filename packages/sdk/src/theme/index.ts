@@ -6,7 +6,7 @@ import type { TemplateConfig, TextStyleConfig, Theme } from "@tycoslide/core";
 import { validateThemeFonts } from "@tycoslide/core";
 import type { FontFamily, TextStyle } from "./format.js";
 import { resolveFontFamily, resolveTextStyle } from "./format.js";
-import type { Template } from "./template.js";
+import type { AssetCatalog, Template } from "./template.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -21,6 +21,7 @@ export interface ThemeFormat {
 export interface ThemeDefinition {
   fonts: FontFamily[];
   formats: Record<string, ThemeFormat>;
+  assets?: AssetCatalog;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────────

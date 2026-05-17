@@ -464,6 +464,56 @@ const tokens = token.shape({
 
 ---
 
+## Assets
+
+Themes bundle image assets (icons, logos, backgrounds) that deck authors reference via `$category.name` syntax. Each asset carries a `Documentation` object describing when and how to use it.
+
+### Asset Catalog
+
+```typescript
+import type { AssetCatalog } from "@tycoslide/sdk";
+
+export const assetCatalog: AssetCatalog = {
+  icons: {
+    shield: {
+      path: icon("verified_user.png"),
+      documentation: {
+        description: "Shield/checkmark icon for security or trust topics",
+        whenToUse: "Security features, compliance, trust signals",
+      },
+    },
+  },
+  brand: {
+    logo: {
+      path: brand("logo.png"),
+      documentation: { description: "Full wordmark, dark variant" },
+    },
+  },
+};
+```
+
+Each entry has a `path` and a `documentation` object:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `description` | Yes | One-line description of the asset |
+| `whenToUse` | No | When this asset is the right choice |
+| `whenNotToUse` | No | When to avoid this asset |
+
+Pass the catalog to `defineTheme`:
+
+```typescript
+export const theme = defineTheme({
+  fonts: brandFonts(brand),
+  formats: { presentation: buildPresentationFormat(palette) },
+  assets: assetCatalog,
+});
+```
+
+`build-theme` includes the catalog descriptions in the generated manifest. Deck authors reference assets in frontmatter as `$category.name` (e.g., `image: $icons.shield`).
+
+---
+
 ## Building a Theme Package
 
 `build-theme` compiles TypeScript, generates an AI authoring skill from template metadata, and copies documentation references into the package.

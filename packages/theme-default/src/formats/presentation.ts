@@ -9,8 +9,9 @@ import {
   TEXT_STYLE,
   VALIGN,
 } from "@tycoslide/sdk";
-import { assets } from "../assets.js";
+import { assetPaths } from "../assets.js";
 import { type FooterChromeTokens, type MarginChromeTokens, withFooterChrome, withMarginChrome } from "../chrome.js";
+import { fonts } from "../fonts.js";
 import { TEMPLATE } from "../index.js";
 import { agenda, body, cards, section, statement, title, transform } from "../layouts.js";
 
@@ -33,47 +34,47 @@ const presentationFormat: Format = {
   vAlign: VALIGN.MIDDLE,
   textStyles: {
     [TEXT_STYLE.QUOTE]: {
-      fontFamily: assets.fonts.inter,
+      fontFamily: fonts.inter,
       fontSize: 56,
       lineHeight: 1.4,
     },
     [TEXT_STYLE.H1]: {
-      fontFamily: assets.fonts.interLight,
+      fontFamily: fonts.interLight,
       fontSize: 44,
       lineHeight: 1.4,
     },
     [TEXT_STYLE.H2]: {
-      fontFamily: assets.fonts.interLight,
+      fontFamily: fonts.interLight,
       fontSize: 32,
       lineHeight: 1.4,
     },
     [TEXT_STYLE.H3]: {
-      fontFamily: assets.fonts.interLight,
+      fontFamily: fonts.interLight,
       fontSize: 24,
       lineHeight: 1.4,
     },
     [TEXT_STYLE.H4]: {
-      fontFamily: assets.fonts.interLight,
+      fontFamily: fonts.interLight,
       fontSize: 18,
       lineHeight: 1.4,
     },
     [TEXT_STYLE.BODY]: {
-      fontFamily: assets.fonts.interLight,
+      fontFamily: fonts.interLight,
       fontSize: 14,
       lineHeight: 1.4,
     },
     [TEXT_STYLE.CAPTION]: {
-      fontFamily: assets.fonts.interLight,
+      fontFamily: fonts.interLight,
       fontSize: 12,
       lineHeight: 1.4,
     },
     [TEXT_STYLE.FOOTER]: {
-      fontFamily: assets.fonts.interLight,
+      fontFamily: fonts.interLight,
       fontSize: 8,
       lineHeight: 1.2,
     },
     [TEXT_STYLE.CODE]: {
-      fontFamily: assets.fonts.firaCode,
+      fontFamily: fonts.firaCode,
       fontSize: 11,
       lineHeight: 1.6,
     },
@@ -104,7 +105,7 @@ function buildChromeTokens(palette: Palette, config: Format, chrome: ChromeConfi
     margin,
     footerHeight,
     bottomPadding: margin / 2,
-    footerLogo: assets.tycoslide.logo,
+    footerLogo: assetPaths.tycoslide.logo,
     footerText: "tycoslide",
     footerSpacing: spacingTight,
     slideNumber: { ...labelFooter, hAlign: HALIGN.RIGHT, vAlign: VALIGN.MIDDLE },
@@ -296,7 +297,12 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       // ── Title (light) ─────────────────────────────────────────────────
       defineTemplate({
         name: TEMPLATE.TITLE,
-        documentation: { description: "Opening slide with large title and optional subtitle." },
+        documentation: {
+          description: "Opening slide with large title and optional subtitle.",
+          whenToUse: "First slide of any deck. Sets the topic and tone.",
+          whenNotToUse: "Mid-deck content slides. Use section for mid-deck dividers.",
+          limits: ["Title and subtitle only — no body content."],
+        },
         layout: margin(title),
         background: t.surfaces.elevated,
         tokens: {
@@ -317,7 +323,12 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       // ── End (dark, uses title layout) ─────────────────────────────────
       defineTemplate({
         name: TEMPLATE.TITLE_DARK,
-        documentation: { description: "Closing slide. Dark variant of the title layout." },
+        documentation: {
+          description: "Closing slide. Dark variant of the title layout.",
+          whenToUse: "Last slide of the deck. Call to action, contact info, or closing statement.",
+          whenNotToUse: "Opening or mid-deck slides.",
+          limits: ["Title and subtitle only — no body content."],
+        },
         layout: margin(title),
         background: t.surfaces.emphasis,
         tokens: {
@@ -332,7 +343,13 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       // ── Section (dark) ────────────────────────────────────────────────
       defineTemplate({
         name: TEMPLATE.SECTION,
-        documentation: { description: "Section divider with centered title." },
+        documentation: {
+          description: "Section divider with centered title.",
+          whenToUse:
+            "Between groups of related slides to signal a new topic. Decks over 5 slides benefit from section dividers.",
+          whenNotToUse: "Decks under 4 slides or as the opening/closing slide.",
+          limits: ["Title only — no body content, no subtitle."],
+        },
         layout: margin(section),
         background: t.surfaces.emphasis,
         tokens: {
@@ -344,7 +361,22 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       // ── Body (light, top-aligned) ─────────────────────────────────────
       defineTemplate({
         name: TEMPLATE.BODY,
-        documentation: { description: "Markdown body with optional title. Default layout." },
+        documentation: {
+          description: "Markdown body with optional title. Default layout.",
+          whenToUse:
+            "General-purpose content: paragraphs, bullet lists, tables, code blocks, diagrams. The workhorse template.",
+          whenNotToUse:
+            "When content fits a more specific template (cards, transform, statement). Don't use body for everything.",
+          limits: [
+            "Max 4-7 bullet items, 1-2 lines each.",
+            "Max 3-5 short paragraphs.",
+            "Max 2 levels of nested lists.",
+            "Tables: 5-7 rows, 3-5 columns.",
+            "Code blocks: 5-15 lines.",
+            "Mermaid diagrams: 5-10 nodes.",
+          ],
+          gotchas: ["Content is top-aligned. Use body-centered if you want vertical centering."],
+        },
         layout: footer(body),
         background: t.surfaces.elevated,
         tokens: { ...bodyBase, vAlign: VALIGN.TOP },
@@ -353,7 +385,16 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       // ── Body centered (light) ─────────────────────────────────────────
       defineTemplate({
         name: TEMPLATE.BODY_CENTERED,
-        documentation: { description: "Centered markdown body with optional title." },
+        documentation: {
+          description: "Centered markdown body with optional title.",
+          whenToUse:
+            "Same content as body but vertically centered. Good for shorter content, pricing tables, or investment asks.",
+          whenNotToUse: "Long-form content that needs top-alignment to avoid overflow.",
+          limits: [
+            "Same density limits as body — but less forgiving because centering amplifies overflow.",
+            "Tables: max 5 rows for comfortable centering.",
+          ],
+        },
         layout: footer(body),
         background: t.surfaces.elevated,
         tokens: { ...bodyBase, vAlign: VALIGN.MIDDLE },
@@ -364,6 +405,12 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
         name: TEMPLATE.STATEMENT,
         documentation: {
           description: "Centered body text with optional caption. Use for value props and big statements.",
+          whenToUse: "A single bold claim, key metric, or value proposition that deserves its own slide.",
+          whenNotToUse: "Multiple ideas or detailed content. If you need bullets or tables, use body.",
+          limits: [
+            "1-2 sentences in the body param, 1 short caption. Both are frontmatter params, not markdown body slots.",
+          ],
+          gotchas: ["Body text is set large (H2). Keep it punchy — long sentences will overflow."],
         },
         layout: margin(statement),
         background: t.surfaces.elevated,
@@ -378,7 +425,13 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       // ── Agenda (light) ────────────────────────────────────────────────
       defineTemplate({
         name: TEMPLATE.AGENDA,
-        documentation: { description: "Eyebrow, title, and numbered item list with divider lines." },
+        documentation: {
+          description: "Eyebrow, title, and numbered item list with divider lines.",
+          whenToUse: "Ordered lists of 3-5 key points, agenda items, or sequential steps.",
+          whenNotToUse: "Unstructured content or more than 5 items. Use body with a bullet list instead.",
+          limits: ["3-5 items. Each item: 1-2 lines. Items are numbered automatically."],
+          gotchas: ["Items are frontmatter params (YAML array), not markdown body content."],
+        },
         layout: footer(agenda),
         background: t.surfaces.elevated,
         tokens: {
@@ -397,7 +450,14 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       // ── Cards (light) ─────────────────────────────────────────────────
       defineTemplate({
         name: TEMPLATE.CARDS,
-        documentation: { description: "Card grid with intro text and optional caption." },
+        documentation: {
+          description: "Card grid with intro text and optional caption.",
+          whenToUse:
+            "Feature lists, team members, product tiers, or any set of parallel items with title + description.",
+          whenNotToUse: "Sequential/ordered content (use agenda). Detailed comparisons (use transform).",
+          limits: ["2-4 cards. Each card: short title + 1-2 sentence description. More than 4 will overflow."],
+          gotchas: ["Cards are frontmatter params (YAML array), not markdown body content."],
+        },
         layout: footer(cards),
         background: t.surfaces.elevated,
         tokens: {
@@ -414,7 +474,19 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       // ── Transform (light) ─────────────────────────────────────────────
       defineTemplate({
         name: TEMPLATE.TRANSFORM,
-        documentation: { description: "Side-by-side comparison layout with optional overlay." },
+        documentation: {
+          description: "Side-by-side comparison layout with optional overlay.",
+          whenToUse: "Before/after, pros/cons, current vs. proposed, or any two-column comparison.",
+          whenNotToUse: "Content that isn't a comparison. Use body or cards instead.",
+          limits: [
+            "Two columns (left and right slots). Keep each column to 3-5 bullets or a short table.",
+            "Overlay text: 1 short line (it floats between the columns).",
+          ],
+          gotchas: [
+            "The overlay slot is optional but recommended for comparisons — use a short label like 'vs', 'to', or an arrow.",
+            "Left and right are markdown body slots, not frontmatter params.",
+          ],
+        },
         layout: footer(transform),
         background: t.surfaces.elevated,
         tokens: {

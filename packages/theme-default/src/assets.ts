@@ -1,56 +1,80 @@
 // Default Theme Assets
-// Fonts via @fontsource, icons as PNG (converted from @material-design-icons/svg)
+// Icons as PNG (converted from @material-design-icons/svg), brand images.
 
-import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 
-const require = createRequire(import.meta.url);
 const icon = (name: string) => fileURLToPath(new URL(`../assets/icons/${name}`, import.meta.url));
 const tycoslide = (name: string) => fileURLToPath(new URL(`../assets/tycoslide/${name}`, import.meta.url));
 
-export const assets = {
-  fonts: {
-    inter: {
-      name: "Inter",
-      regular: { path: require.resolve("@fontsource/inter/files/inter-latin-400-normal.woff2"), weight: 400 },
-      italic: { path: require.resolve("@fontsource/inter/files/inter-latin-400-italic.woff2"), weight: 400 },
-      bold: { path: require.resolve("@fontsource/inter/files/inter-latin-700-normal.woff2"), weight: 700 },
-      boldItalic: { path: require.resolve("@fontsource/inter/files/inter-latin-700-italic.woff2"), weight: 700 },
-    },
-    interLight: {
-      name: "Inter Light",
-      regular: { path: require.resolve("@fontsource/inter/files/inter-latin-300-normal.woff2"), weight: 300 },
-      italic: { path: require.resolve("@fontsource/inter/files/inter-latin-300-italic.woff2"), weight: 300 },
-      bold: {
-        path: require.resolve("@fontsource/inter/files/inter-latin-700-normal.woff2"),
-        weight: 700,
-        name: "Inter",
-      },
-      boldItalic: {
-        path: require.resolve("@fontsource/inter/files/inter-latin-700-italic.woff2"),
-        weight: 700,
-        name: "Inter",
-      },
-    },
-    firaCode: {
-      name: "Fira Code",
-      regular: { path: require.resolve("@fontsource/fira-code/files/fira-code-latin-400-normal.woff2"), weight: 400 },
-      bold: { path: require.resolve("@fontsource/fira-code/files/fira-code-latin-700-normal.woff2"), weight: 700 },
-    },
-  },
+import type { AssetCatalog } from "@tycoslide/sdk";
+
+/** Documented asset catalog for the skill compiler (manifest.json). */
+export const assetCatalog: AssetCatalog = {
   icons: {
-    description: icon("description.png"),
-    palette: icon("palette.png"),
-    shield: icon("verified_user.png"),
-    redo: icon("redo.png"),
+    description: {
+      path: icon("description.png"),
+      documentation: { description: "Document/page icon for content-heavy slides" },
+    },
+    palette: {
+      path: icon("palette.png"),
+      documentation: { description: "Color palette icon for design/branding topics" },
+    },
+    shield: {
+      path: icon("verified_user.png"),
+      documentation: {
+        description: "Shield/checkmark icon for security or trust topics",
+        whenToUse: "Security features, compliance, trust signals",
+      },
+    },
+    redo: {
+      path: icon("redo.png"),
+      documentation: { description: "Circular arrow icon for iteration or refresh concepts" },
+    },
   },
   tycoslide: {
-    logo: tycoslide("logo.png"),
-    logoWhite: tycoslide("logo-white.png"),
-    logomark: tycoslide("logomark.png"),
-    logomarkWhite: tycoslide("logomark-white.png"),
-    background: tycoslide("background.png"),
+    logo: {
+      path: tycoslide("logo.png"),
+      documentation: {
+        description: "Full tycoslide wordmark, dark variant",
+        whenToUse: "Title slides and footers on light backgrounds",
+      },
+    },
+    logoWhite: {
+      path: tycoslide("logo-white.png"),
+      documentation: {
+        description: "Full tycoslide wordmark, white variant",
+        whenToUse: "Footers and branding on dark backgrounds",
+      },
+    },
+    logomark: {
+      path: tycoslide("logomark.png"),
+      documentation: { description: "tycoslide icon mark (no text), dark variant" },
+    },
+    logomarkWhite: {
+      path: tycoslide("logomark-white.png"),
+      documentation: { description: "tycoslide icon mark (no text), white variant" },
+    },
+    background: {
+      path: tycoslide("background.png"),
+      documentation: {
+        description: "Full-bleed branded background image",
+        whenToUse: "Title slides for visual impact",
+      },
+    },
   },
 };
 
-export type Assets = typeof assets;
+/** Extract plain paths from a catalog category. */
+function extractPaths(entries: Record<string, { path: string }>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [name, entry] of Object.entries(entries)) {
+    out[name] = entry.path;
+  }
+  return out;
+}
+
+/** Runtime asset paths — derived from catalog for consumption by format files and chrome. */
+export const assetPaths = {
+  icons: extractPaths(assetCatalog.icons),
+  tycoslide: extractPaths(assetCatalog.tycoslide),
+};

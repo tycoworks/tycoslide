@@ -3,7 +3,7 @@
 
 import type { Brand, Palette } from "@tycoslide/sdk";
 import { HIGHLIGHT_THEME } from "@tycoslide/sdk";
-import { assets } from "./assets.js";
+import { fonts } from "./fonts.js";
 
 const light: Palette = {
   heading: "#1A1A2E",
@@ -16,7 +16,7 @@ const light: Palette = {
   surface: "#F5F5F5",
   divider: "#E5E5E5",
   shadow: "#1A1A2E",
-  highlightTheme: HIGHLIGHT_THEME.GITHUB_DARK,
+  highlightTheme: HIGHLIGHT_THEME.GITHUB_LIGHT,
 };
 
 const dark: Palette = {
@@ -36,8 +36,8 @@ const dark: Palette = {
 export const brand: Brand = {
   colors: { light, dark },
   fonts: {
-    heading: assets.fonts.inter,
-    body: assets.fonts.interLight,
-    code: assets.fonts.firaCode,
+    heading: fonts.inter,
+    body: fonts.interLight,
+    code: fonts.firaCode,
   },
 };

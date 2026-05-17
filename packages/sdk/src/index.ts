@@ -136,7 +136,14 @@ export { defineTheme, resolveThemeFormat } from "./theme/index.js";
 
 // ── Templates ────────────────────────────────────────────────────────────────
 
-export { defineTemplate, type Layout, type Template } from "./theme/template.js";
+export {
+  type AssetCatalog,
+  type AssetEntry,
+  type Documentation,
+  defineTemplate,
+  type Layout,
+  type Template,
+} from "./theme/template.js";
 
 // ── Token Derivation ────────────────────────────────────────────────────────
 
@@ -198,18 +205,18 @@ export {
   type SlideLayout,
 } from "@tycoslide/core";
 
-// ── Skill Compiler ──────────────────────────────────────────────────────────
+// ── Plugin Compiler ─────────────────────────────────────────────────────────
 
 export {
-  type CompileSkillOptions,
-  type CompileSkillResult,
-  compileSkill,
+  type CompilePluginOptions,
+  type CompilePluginResult,
+  compilePlugin,
   introspectParams,
   PARAM_TYPE,
   type ParamInfo,
   type ParamType,
-  SKILL_PATHS,
-} from "./skill/index.js";
+  PLUGIN_PATHS,
+} from "./plugin/index.js";
 
 // ── Markdown Compilation ──────────────────────────────────────────────────
 
