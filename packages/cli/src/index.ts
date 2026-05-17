@@ -34,10 +34,11 @@ program
 program
   .command("build-theme")
   .description("Build a distributable theme package")
+  .requiredOption("--docs-dir <path>", "path to tycoslide docs/ directory")
   .option("--dir <path>", "theme directory (default: cwd)")
   .option("--no-tsc", "skip TypeScript compilation (use pre-built dist/)")
-  .action(async (opts: { dir?: string; tsc?: boolean }) => {
-    await buildTheme({ dir: opts.dir, noTsc: opts.tsc === false });
+  .action(async (opts: { docsDir: string; dir?: string; tsc?: boolean }) => {
+    await buildTheme({ docsDir: opts.docsDir, dir: opts.dir, noTsc: opts.tsc === false });
   });
 
 program.parse();

@@ -18,7 +18,7 @@
     ".claude-plugin/"
   ],
   "scripts": {
-    "build": "tycoslide build-theme",
+    "build": "tycoslide build-theme --docs-dir ../../docs",
     "clean": "rm -rf dist skills .claude-plugin",
     "prepublishOnly": "npm run build"
   },

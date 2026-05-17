@@ -32,7 +32,7 @@ export interface ParamInfo {
 // INTROSPECTION
 // ============================================
 
-/** Unwrap ZodOptional / ZodDefault to get the inner type. */
+/** Unwrap ZodOptional / ZodDefault / ZodNullable to get the inner type. */
 function unwrap(schema: z.ZodTypeAny): { inner: z.ZodTypeAny; required: boolean } {
   if (schema instanceof z.ZodOptional) {
     return { inner: schema.unwrap() as z.ZodTypeAny, required: false };
@@ -54,7 +54,8 @@ function classifyType(schema: z.ZodTypeAny): ParamType {
   if (schema instanceof z.ZodEnum) return PARAM_TYPE.ENUM;
   if (schema instanceof z.ZodArray) return PARAM_TYPE.ARRAY;
   if (schema instanceof z.ZodObject) return PARAM_TYPE.OBJECT;
-  return PARAM_TYPE.STRING; // fallback for unknown types
+  console.warn(`[compilePlugin] Unknown Zod type "${schema.constructor.name}" — defaulting to "string" in manifest.`);
+  return PARAM_TYPE.STRING;
 }
 
 /** Introspect a single Zod type into a ParamInfo (without name). */

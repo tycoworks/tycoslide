@@ -475,7 +475,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       defineTemplate({
         name: TEMPLATE.TRANSFORM,
         documentation: {
-          description: "Side-by-side comparison layout with optional overlay.",
+          description: "Side-by-side comparison layout with overlay label between columns.",
           whenToUse: "Before/after, pros/cons, current vs. proposed, or any two-column comparison.",
           whenNotToUse: "Content that isn't a comparison. Use body or cards instead.",
           limits: [
@@ -483,7 +483,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
             "Overlay text: 1 short line (it floats between the columns).",
           ],
           gotchas: [
-            "The overlay slot is optional but recommended for comparisons — use a short label like 'vs', 'to', or an arrow.",
+            "All three slots (left, right, overlay) are required. Overlay is a short label like 'vs', 'to', or '→'.",
             "Left and right are markdown body slots, not frontmatter params.",
           ],
         },

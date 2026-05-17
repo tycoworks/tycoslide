@@ -1,7 +1,7 @@
 import * as assert from "node:assert";
 import { describe, it } from "node:test";
 import { param, schema } from "../src/authoring/param.js";
-import { introspectParams } from "../src/skill/introspect.js";
+import { introspectParams } from "../src/plugin/introspect.js";
 
 describe("introspectParams()", () => {
   it("classifies required string param", () => {
