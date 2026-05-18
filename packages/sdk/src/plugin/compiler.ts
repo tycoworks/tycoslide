@@ -7,7 +7,7 @@ import { introspectParams } from "./introspect.js";
 // CONSTANTS
 // ============================================
 
-/** Output paths for generated skill files (relative to theme root). */
+/** Output paths for generated plugin files (relative to theme root). */
 export const PLUGIN_PATHS = {
   SKILLS_ROOT: "skills",
   SKILL_DIR: "skills/build",
@@ -16,6 +16,12 @@ export const PLUGIN_PATHS = {
   MANIFEST_JSON: "skills/build/manifest.json",
   PLUGIN_CONFIG_DIR: ".claude-plugin",
   PLUGIN_JSON: ".claude-plugin/plugin.json",
+  HOOKS_DIR: "hooks",
+  HOOKS_JSON: "hooks/hooks.json",
+  BIN_DIR: "bin",
+  BIN_TYCOSLIDE: "bin/tycoslide",
+  RUNTIME_PACKAGE_JSON: "runtime-package.json",
+  THEME_TGZ: "theme.tgz",
 } as const;
 
 // ============================================
@@ -29,6 +35,8 @@ export interface CompilePluginOptions {
   description: string;
   /** Package version (semver). */
   version: string;
+  /** Theme's package.json dependencies (used to derive runtime deps). */
+  dependencies?: Record<string, string>;
 }
 
 export interface CompilePluginResult {
@@ -106,6 +114,80 @@ function generateManifest(definition: ThemeDefinition, options: CompilePluginOpt
   return `${JSON.stringify(manifest, null, 2)}\n`;
 }
 
+/** Generate hooks/hooks.json — SessionStart hook that auto-installs runtime deps. */
+function generateHooksJson(): string {
+  // Pattern from Claude Code plugin docs: compare bundled runtime-package.json against cached
+  // copy in CLAUDE_PLUGIN_DATA. On first run or change: copy, npm install, install theme tarball,
+  // install Playwright Chromium. On failure: remove cached package.json so next session retries.
+  const installCmd = [
+    'diff -q "${CLAUDE_PLUGIN_ROOT}/runtime-package.json" "${CLAUDE_PLUGIN_DATA}/package.json" >/dev/null 2>&1',
+    "||",
+    "(",
+    'cp "${CLAUDE_PLUGIN_ROOT}/runtime-package.json" "${CLAUDE_PLUGIN_DATA}/package.json"',
+    '&& cd "${CLAUDE_PLUGIN_DATA}"',
+    "&& npm install",
+    '&& npm install "${CLAUDE_PLUGIN_ROOT}/theme.tgz"',
+    "&& npx playwright-core install chromium",
+    ")",
+    '|| rm -f "${CLAUDE_PLUGIN_DATA}/package.json"',
+  ].join(" ");
+
+  const hooks = {
+    hooks: {
+      SessionStart: [
+        {
+          hooks: [
+            {
+              type: "command",
+              command: installCmd,
+            },
+          ],
+        },
+      ],
+    },
+  };
+  return `${JSON.stringify(hooks, null, 2)}\n`;
+}
+
+/** Generate bin/tycoslide — shell wrapper that resolves CLI from plugin data dir. */
+function generateBinTycoslide(): string {
+  return [
+    "#!/usr/bin/env bash",
+    'export NODE_PATH="${CLAUDE_PLUGIN_DATA}/node_modules"',
+    'exec node "${CLAUDE_PLUGIN_DATA}/node_modules/@tycoslide/cli/dist/index.js" "$@"',
+    "",
+  ].join("\n");
+}
+
+/** Generate runtime-package.json — lists public tycoslide deps for npm install in CLAUDE_PLUGIN_DATA. */
+function generateRuntimePackageJson(options: CompilePluginOptions): string {
+  const pluginName = stripScope(options.name);
+  const deps: Record<string, string> = {};
+
+  // Extract @tycoslide/* dependencies from theme's package.json
+  if (options.dependencies) {
+    for (const [pkg, version] of Object.entries(options.dependencies)) {
+      if (pkg.startsWith("@tycoslide/")) {
+        deps[pkg] = version;
+      }
+    }
+  }
+
+  // Ensure @tycoslide/cli is included (the bin wrapper needs it)
+  if (!deps["@tycoslide/cli"]) {
+    const coreVersion = deps["@tycoslide/core"] ?? deps["@tycoslide/sdk"] ?? `^${options.version}`;
+    deps["@tycoslide/cli"] = coreVersion;
+  }
+
+  const runtimePkg = {
+    name: `${pluginName}-runtime`,
+    version: options.version,
+    private: true,
+    dependencies: deps,
+  };
+  return `${JSON.stringify(runtimePkg, null, 2)}\n`;
+}
+
 // ============================================
 // PUBLIC API
 // ============================================
@@ -134,6 +216,9 @@ export function compilePlugin(definition: ThemeDefinition, options: CompilePlugi
   const files: Record<string, string> = {
     [PLUGIN_PATHS.MANIFEST_JSON]: generateManifest(definition, options),
     [PLUGIN_PATHS.PLUGIN_JSON]: `${JSON.stringify(pluginMeta, null, 2)}\n`,
+    [PLUGIN_PATHS.HOOKS_JSON]: generateHooksJson(),
+    [PLUGIN_PATHS.BIN_TYCOSLIDE]: generateBinTycoslide(),
+    [PLUGIN_PATHS.RUNTIME_PACKAGE_JSON]: generateRuntimePackageJson(options),
   };
 
   return { files, plugin: pluginMeta };

@@ -75,10 +75,13 @@ describe("compilePlugin()", () => {
     version: "1.0.0",
   });
 
-  it("returns manifest.json and plugin.json at correct paths", () => {
+  it("returns all plugin files at correct paths", () => {
     assert.ok(result.files[PLUGIN_PATHS.MANIFEST_JSON]);
     assert.ok(result.files[PLUGIN_PATHS.PLUGIN_JSON]);
-    assert.strictEqual(Object.keys(result.files).length, 2);
+    assert.ok(result.files[PLUGIN_PATHS.HOOKS_JSON]);
+    assert.ok(result.files[PLUGIN_PATHS.BIN_TYCOSLIDE]);
+    assert.ok(result.files[PLUGIN_PATHS.RUNTIME_PACKAGE_JSON]);
+    assert.strictEqual(Object.keys(result.files).length, 5);
   });
 
   it("result.plugin has correct metadata", () => {

@@ -73,11 +73,12 @@ export async function buildTheme(opts: BuildThemeOptions): Promise<void> {
     throw new Error(`Theme package must export 'theme' with a 'formats' object (ThemeDefinition). Check ${distEntry}`);
   }
 
-  // Step 3: Compile plugin (manifest.json + plugin.json)
+  // Step 3: Compile plugin (manifest.json + plugin.json + hooks + bin + runtime-package.json)
   const result = compilePlugin(mod.theme, {
     name: pkg.name,
     description: pkg.description,
     version: pkg.version,
+    dependencies: pkg.dependencies,
   });
 
   // Step 4: Clean skills/ to remove stale directories from previous builds, then write all generated files.
@@ -91,6 +92,20 @@ export async function buildTheme(opts: BuildThemeOptions): Promise<void> {
     fs.mkdirSync(path.dirname(fullPath), { recursive: true });
     fs.writeFileSync(fullPath, content);
   }
+
+  // Step 4b: Make bin/tycoslide executable
+  const binPath = path.join(themeDir, PLUGIN_PATHS.BIN_TYCOSLIDE);
+  if (fs.existsSync(binPath)) {
+    fs.chmodSync(binPath, 0o755);
+  }
+
+  // Step 4c: Bundle theme as tarball (npm pack) for inclusion in plugin zip
+  console.log("Packing theme tarball...");
+  const packOutput = execSync("npm pack --pack-destination .", { cwd: themeDir, encoding: "utf-8" }).trim();
+  const tgzFilename = packOutput.split("\n").pop()!;
+  const tgzPath = path.join(themeDir, tgzFilename);
+  const themeTgzDest = path.join(themeDir, PLUGIN_PATHS.THEME_TGZ);
+  fs.renameSync(tgzPath, themeTgzDest);
 
   // Step 5a: Copy SKILL.md to skill directory
   const skillMdDest = path.join(themeDir, PLUGIN_PATHS.SKILL_MD);
@@ -137,6 +152,10 @@ export async function buildTheme(opts: BuildThemeOptions): Promise<void> {
     zip.pipe(output);
     zip.directory(path.join(themeDir, PLUGIN_PATHS.PLUGIN_CONFIG_DIR), PLUGIN_PATHS.PLUGIN_CONFIG_DIR);
     zip.directory(path.join(themeDir, PLUGIN_PATHS.SKILLS_ROOT), PLUGIN_PATHS.SKILLS_ROOT);
+    zip.directory(path.join(themeDir, PLUGIN_PATHS.BIN_DIR), PLUGIN_PATHS.BIN_DIR);
+    zip.directory(path.join(themeDir, PLUGIN_PATHS.HOOKS_DIR), PLUGIN_PATHS.HOOKS_DIR);
+    zip.file(path.join(themeDir, PLUGIN_PATHS.RUNTIME_PACKAGE_JSON), { name: PLUGIN_PATHS.RUNTIME_PACKAGE_JSON });
+    zip.file(themeTgzDest, { name: PLUGIN_PATHS.THEME_TGZ });
     zip.finalize();
   });
 
@@ -146,6 +165,10 @@ export async function buildTheme(opts: BuildThemeOptions): Promise<void> {
   console.log(`  ${PLUGIN_PATHS.MANIFEST_JSON}`);
   console.log(`  ${PLUGIN_PATHS.REFERENCES_DIR}/ (${Object.keys(REFERENCE_FILES).length} docs)`);
   console.log(`  ${PLUGIN_PATHS.PLUGIN_JSON}`);
+  console.log(`  ${PLUGIN_PATHS.HOOKS_JSON}`);
+  console.log(`  ${PLUGIN_PATHS.BIN_TYCOSLIDE}`);
+  console.log(`  ${PLUGIN_PATHS.RUNTIME_PACKAGE_JSON}`);
+  console.log(`  ${PLUGIN_PATHS.THEME_TGZ}`);
   if (fs.existsSync(zipPath)) {
     console.log(`  ${zipName} (distributable plugin archive)`);
   }

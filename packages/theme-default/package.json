@@ -13,13 +13,11 @@
   },
   "files": [
     "dist/",
-    "assets/",
-    "skills/",
-    ".claude-plugin/"
+    "assets/"
   ],
   "scripts": {
     "build": "tycoslide build-theme --docs-dir ../../docs",
-    "clean": "rm -rf dist skills .claude-plugin",
+    "clean": "rm -rf dist skills .claude-plugin hooks bin runtime-package.json theme.tgz *.zip",
     "prepublishOnly": "npm run build"
   },
   "type": "module",

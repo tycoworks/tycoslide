@@ -161,14 +161,6 @@ See [cli.md](references/cli.md) for all flags.
 
 ## Dependencies
 
-tycoslide requires Node.js and two npm packages plus a browser for layout measurement:
+Dependencies are installed automatically when this plugin loads (via SessionStart hook). No manual install steps needed.
 
-```bash
-# Install the CLI and the theme (replace with your theme package name)
-npm install @tycoslide/cli <theme-package>
-
-# Required: Playwright's Chromium for HTML layout measurement
-npx playwright-core install chromium
-```
-
-These are project-level dependencies (installed into `node_modules/`, not global). The Playwright Chromium install is required -- tycoslide measures slide layouts via headless browser and will fail without it.
+If you need to reinstall manually, run `tycoslide` from the command line — it's available on your PATH when this plugin is active.
