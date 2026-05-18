@@ -1,13 +1,17 @@
 #!/usr/bin/env node
 // tycoslide CLI
 
+import { createRequire } from "node:module";
 import { Command } from "commander";
 import { build } from "./build.js";
 import { buildTheme } from "./compileTheme.js";
 
+const require = createRequire(import.meta.url);
+const { version } = require("../package.json") as { version: string };
+
 const program = new Command();
 
-program.name("tycoslide").description("Build editable PowerPoint presentations from markdown").version("0.2.0");
+program.name("tycoslide").description("Build editable PowerPoint presentations from markdown").version(version);
 
 program
   .command("build")
