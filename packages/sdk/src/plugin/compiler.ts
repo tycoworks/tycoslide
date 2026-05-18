@@ -9,9 +9,10 @@ import { introspectParams } from "./introspect.js";
 
 /** Output paths for generated skill files (relative to theme root). */
 export const PLUGIN_PATHS = {
-  SKILL_DIR: "skills/tycoslide",
-  REFERENCES_DIR: "skills/tycoslide/references",
-  MANIFEST_JSON: "skills/tycoslide/manifest.json",
+  SKILL_DIR: "skills/build",
+  SKILL_MD: "skills/build/SKILL.md",
+  REFERENCES_DIR: "skills/build/references",
+  MANIFEST_JSON: "skills/build/manifest.json",
   PLUGIN_JSON: ".claude-plugin/plugin.json",
 } as const;
 
@@ -33,6 +34,11 @@ export interface CompilePluginResult {
   files: Record<string, string>;
   /** Plugin manifest metadata. */
   plugin: { name: string; description: string; version: string };
+}
+
+/** Strip npm scope from a package name (e.g., "@tycoslide/theme-default" → "tycoslide-theme-default"). */
+export function stripScope(name: string): string {
+  return name.replace(/^@/, "").replace(/\//g, "-");
 }
 
 // ============================================
@@ -103,10 +109,11 @@ function generateManifest(definition: ThemeDefinition, options: CompilePluginOpt
 // ============================================
 
 /**
- * Compile a ThemeDefinition into skill files for distribution as a Claude Code plugin.
+ * Compile a ThemeDefinition into machine-readable plugin artifacts (manifest.json + plugin.json).
  *
  * Returns a map of relative file paths → content. The caller is responsible for
- * writing them to disk (the CLI command handles that).
+ * writing them to disk and assembling SKILL.md (frontmatter + static body) and
+ * copying reference docs. See the CLI `buildTheme()` for the full pipeline.
  */
 export function compilePlugin(definition: ThemeDefinition, options: CompilePluginOptions): CompilePluginResult {
   if (!options.name) {
@@ -119,7 +126,8 @@ export function compilePlugin(definition: ThemeDefinition, options: CompilePlugi
     throw new Error("compilePlugin: ThemeDefinition must have at least one format.");
   }
 
-  const pluginMeta = { name: options.name, description: options.description, version: options.version };
+  const pluginName = stripScope(options.name);
+  const pluginMeta = { name: pluginName, description: options.description, version: options.version };
 
   const files: Record<string, string> = {
     [PLUGIN_PATHS.MANIFEST_JSON]: generateManifest(definition, options),

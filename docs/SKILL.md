@@ -1,5 +1,5 @@
 ---
-name: tycoslide
+name: build
 description: >
   Use this skill any time the user wants to create branded slides, presentations, pitch decks,
   fact sheets, battle cards, one-pagers, or any formatted marketing collateral from markdown.

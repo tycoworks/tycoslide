@@ -4,14 +4,9 @@ import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { compilePlugin, PLUGIN_PATHS } from "@tycoslide/sdk";
+import { compilePlugin, PLUGIN_PATHS, stripScope } from "@tycoslide/sdk";
 
-/** Static skill files to copy to skills/tycoslide/. */
-const SKILL_FILES: Record<string, string> = {
-  "SKILL.md": "SKILL.md",
-};
-
-/** Reference docs to copy to skills/tycoslide/references/. */
+/** Reference docs to copy to skills/build/references/. */
 const REFERENCE_FILES: Record<string, string> = {
   "markdown-syntax.md": "markdown-syntax.md",
   "cli.md": "cli.md",
@@ -85,26 +80,29 @@ export async function buildTheme(opts: BuildThemeOptions): Promise<void> {
     version: pkg.version,
   });
 
-  // Step 4: Write generated files
+  // Step 4: Clean skills/ to remove stale directories from previous builds, then write all generated files.
+  const skillsRoot = path.join(themeDir, PLUGIN_PATHS.SKILL_DIR.split("/")[0]);
+  if (fs.existsSync(skillsRoot)) {
+    fs.rmSync(skillsRoot, { recursive: true });
+  }
+
   for (const [filePath, content] of Object.entries(result.files)) {
     const fullPath = path.join(themeDir, filePath);
     fs.mkdirSync(path.dirname(fullPath), { recursive: true });
     fs.writeFileSync(fullPath, content);
   }
 
-  // Step 5a: Copy skill files to skills/tycoslide/
-  const skillDir = path.join(themeDir, PLUGIN_PATHS.SKILL_DIR);
-  fs.mkdirSync(skillDir, { recursive: true });
+  // Step 5a: Copy SKILL.md to skill directory
+  const skillMdDest = path.join(themeDir, PLUGIN_PATHS.SKILL_MD);
+  fs.mkdirSync(path.dirname(skillMdDest), { recursive: true });
 
-  for (const [src, dest] of Object.entries(SKILL_FILES)) {
-    const srcPath = path.join(docsDir, src);
-    if (!fs.existsSync(srcPath)) {
-      throw new Error(`Required doc file not found: ${srcPath}`);
-    }
-    fs.copyFileSync(srcPath, path.join(skillDir, dest));
+  const skillSrcPath = path.join(docsDir, path.basename(PLUGIN_PATHS.SKILL_MD));
+  if (!fs.existsSync(skillSrcPath)) {
+    throw new Error(`Required doc file not found: ${skillSrcPath}`);
   }
+  fs.copyFileSync(skillSrcPath, skillMdDest);
 
-  // Step 5b: Copy reference docs to skills/tycoslide/references/
+  // Step 5b: Copy reference docs to skills/build/references/
   const refsDir = path.join(themeDir, PLUGIN_PATHS.REFERENCES_DIR);
   fs.mkdirSync(refsDir, { recursive: true });
 
@@ -116,10 +114,32 @@ export async function buildTheme(opts: BuildThemeOptions): Promise<void> {
     fs.copyFileSync(srcPath, path.join(refsDir, dest));
   }
 
-  console.log(`Built theme ${pkg.name}:`);
+  // Step 6: Validate plugin structure
+  console.log("Validating plugin...");
+  try {
+    execSync("claude plugin validate .", { cwd: themeDir, stdio: "inherit" });
+  } catch {
+    throw new Error("Plugin validation failed. Check the errors above.");
+  }
+
+  // Step 7: Package as .zip for distribution (usable with claude --plugin-dir)
+  const zipName = `${stripScope(pkg.name)}.zip`;
+  const zipPath = path.join(themeDir, zipName);
+  try {
+    const pluginConfigDir = path.dirname(PLUGIN_PATHS.PLUGIN_JSON);
+    const skillsDir = PLUGIN_PATHS.SKILL_DIR.split("/")[0];
+    execSync(`zip -r "${zipPath}" ${pluginConfigDir}/ ${skillsDir}/`, { cwd: themeDir, stdio: "pipe" });
+  } catch {
+    console.warn("Warning: Could not create zip (zip command not found). Skipping packaging step.");
+  }
+
+  console.log(`\nBuilt theme ${pkg.name}:`);
   console.log(`  dist/`);
-  console.log(`  ${PLUGIN_PATHS.SKILL_DIR}/SKILL.md`);
+  console.log(`  ${PLUGIN_PATHS.SKILL_MD}`);
   console.log(`  ${PLUGIN_PATHS.MANIFEST_JSON}`);
   console.log(`  ${PLUGIN_PATHS.REFERENCES_DIR}/ (${Object.keys(REFERENCE_FILES).length} docs)`);
   console.log(`  ${PLUGIN_PATHS.PLUGIN_JSON}`);
+  if (fs.existsSync(zipPath)) {
+    console.log(`  ${zipName} (distributable plugin archive)`);
+  }
 }

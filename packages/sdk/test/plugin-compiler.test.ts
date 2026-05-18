@@ -82,7 +82,7 @@ describe("compilePlugin()", () => {
   });
 
   it("result.plugin has correct metadata", () => {
-    assert.strictEqual(result.plugin.name, "@tycoslide/theme-default");
+    assert.strictEqual(result.plugin.name, "tycoslide-theme-default");
     assert.strictEqual(result.plugin.description, "Default theme with Inter font.");
     assert.strictEqual(result.plugin.version, "1.0.0");
   });
@@ -101,7 +101,7 @@ describe("compilePlugin() manifest.json", () => {
 
   it("manifest.json is in result.files at the correct path", () => {
     assert.ok(result.files[PLUGIN_PATHS.MANIFEST_JSON]);
-    assert.strictEqual(PLUGIN_PATHS.MANIFEST_JSON, "skills/tycoslide/manifest.json");
+    assert.strictEqual(PLUGIN_PATHS.MANIFEST_JSON, "skills/build/manifest.json");
   });
 
   it("manifest contains theme metadata (name, description, version)", () => {

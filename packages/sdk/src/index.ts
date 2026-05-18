@@ -216,6 +216,7 @@ export {
   type ParamInfo,
   type ParamType,
   PLUGIN_PATHS,
+  stripScope,
 } from "./plugin/index.js";
 
 // ── Markdown Compilation ──────────────────────────────────────────────────
