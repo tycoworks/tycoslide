@@ -9,10 +9,12 @@ import { introspectParams } from "./introspect.js";
 
 /** Output paths for generated skill files (relative to theme root). */
 export const PLUGIN_PATHS = {
+  SKILLS_ROOT: "skills",
   SKILL_DIR: "skills/build",
   SKILL_MD: "skills/build/SKILL.md",
   REFERENCES_DIR: "skills/build/references",
   MANIFEST_JSON: "skills/build/manifest.json",
+  PLUGIN_CONFIG_DIR: ".claude-plugin",
   PLUGIN_JSON: ".claude-plugin/plugin.json",
 } as const;
 

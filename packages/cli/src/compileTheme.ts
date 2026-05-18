@@ -1,6 +1,7 @@
 // build-theme command: compiles TypeScript and generates Claude Code skill files.
 
 import { execSync } from "node:child_process";
+import { createWriteStream } from "node:fs";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -125,13 +126,21 @@ export async function buildTheme(opts: BuildThemeOptions): Promise<void> {
   // Step 7: Package as .zip for distribution (usable with claude --plugin-dir)
   const zipName = `${stripScope(pkg.name)}.zip`;
   const zipPath = path.join(themeDir, zipName);
-  try {
-    const pluginConfigDir = path.dirname(PLUGIN_PATHS.PLUGIN_JSON);
-    const skillsDir = PLUGIN_PATHS.SKILL_DIR.split("/")[0];
-    execSync(`zip -r "${zipPath}" ${pluginConfigDir}/ ${skillsDir}/`, { cwd: themeDir, stdio: "pipe" });
-  } catch {
-    console.warn("Warning: Could not create zip (zip command not found). Skipping packaging step.");
-  }
+  const pluginConfigDir = path.dirname(PLUGIN_PATHS.PLUGIN_JSON);
+  const skillsDir = PLUGIN_PATHS.SKILL_DIR.split("/")[0];
+
+  // archiver v7+ uses named ESM exports; @types/archiver lags behind.
+  const { ZipArchive } = (await import("archiver")) as any;
+  await new Promise<void>((resolve, reject) => {
+    const output = createWriteStream(zipPath);
+    const zip = new ZipArchive({ zlib: { level: 9 } });
+    output.on("close", resolve);
+    zip.on("error", reject);
+    zip.pipe(output);
+    zip.directory(path.join(themeDir, pluginConfigDir), pluginConfigDir);
+    zip.directory(path.join(themeDir, skillsDir), skillsDir);
+    zip.finalize();
+  });
 
   console.log(`\nBuilt theme ${pkg.name}:`);
   console.log(`  dist/`);
