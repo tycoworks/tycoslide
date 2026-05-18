@@ -30,7 +30,7 @@ These are one-time setup steps. Verify before your first publish; skip on subseq
 
 - **npm org**: `@tycoslide` org exists on npm
 - **npm login**: Run `npm login` and verify access to the org
-- **`files` field**: All four package.json files have `"files": ["dist/"]"`
+- **`files` field**: All four package.json files have a `"files"` array (core/sdk/cli: `["dist/"]`, theme-default: `["dist/", "assets/"]`)
 - **`engines` field**: All four have `"engines": { "node": ">=18.0.0" }`
 - **Lifecycle scripts**: CLI has `prepublishOnly` (not `prepare` or `postinstall`)
 - **CLI shebang**: `packages/cli/src/index.ts` line 1 has `#!/usr/bin/env node`
@@ -81,23 +81,11 @@ npm publish --workspace=packages/cli --access public
 npm publish --workspace=packages/theme-default --access public
 ```
 
-Order matters: components and CLI depend on core, theme depends on core and components. `npm publish --workspaces` does not guarantee topological order.
+Order matters: SDK and CLI depend on core, theme depends on core and SDK. `npm publish --workspaces` does not guarantee topological order.
 
 (`--access public` is required for the first publish of each scoped package. Harmless on subsequent publishes.)
 
-### 5. Deprecate old package names
-
-On the first release under the new scope, deprecate the old `@tycoworks` packages:
-
-```bash
-npm deprecate @tycoworks/tycoslide "Moved to @tycoslide/core and @tycoslide/cli"
-npm deprecate @tycoworks/tycoslide-components "Moved to @tycoslide/sdk"
-npm deprecate @tycoworks/tycoslide-theme "Moved to @tycoslide/theme-default"
-```
-
-This is a one-time step. Skip on subsequent releases.
-
-### 6. Commit, tag, push
+### 5. Commit, tag, push
 
 ```bash
 git add -A
@@ -106,7 +94,19 @@ git tag vX.Y.Z
 git push --follow-tags
 ```
 
-### 7. Clean-room verification
+### 7. GitHub release
+
+```bash
+gh release create vX.Y.Z --title "vX.Y.Z" --generate-notes
+```
+
+Review the auto-generated notes and edit if needed. Attach the theme plugin zip if applicable:
+
+```bash
+gh release upload vX.Y.Z packages/theme-default/tycoslide-theme-default.zip
+```
+
+### 8. Clean-room verification
 
 ```bash
 mkdir /tmp/tycoslide-test && cd /tmp/tycoslide-test
