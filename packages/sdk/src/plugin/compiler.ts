@@ -22,6 +22,8 @@ export const PLUGIN_PATHS = {
   BIN_TYCOSLIDE: "bin/tycoslide",
   RUNTIME_PACKAGE_JSON: "runtime-package.json",
   THEME_TGZ: "theme.tgz",
+  /** Node.js entry point for the tycoslide CLI, resolved from node_modules. */
+  CLI_ENTRY: "@tycoslide/cli/dist/index.js",
 } as const;
 
 // ============================================
@@ -118,18 +120,26 @@ function generateManifest(definition: ThemeDefinition, options: CompilePluginOpt
 function generateHooksJson(): string {
   // Pattern from Claude Code plugin docs: compare bundled runtime-package.json against cached
   // copy in CLAUDE_PLUGIN_DATA. On first run or change: copy, npm install, install theme tarball,
-  // install Playwright Chromium. On failure: remove cached package.json so next session retries.
+  // install Playwright Chromium. On failure: surface npm errors to stdout, remove cached
+  // package.json so next session retries, and exit non-zero so Claude Code knows it failed.
+  const errorLog = '"${CLAUDE_PLUGIN_DATA}/npm-error.log"';
   const installCmd = [
     'diff -q "${CLAUDE_PLUGIN_ROOT}/runtime-package.json" "${CLAUDE_PLUGIN_DATA}/package.json" >/dev/null 2>&1',
     "||",
     "(",
     'cp "${CLAUDE_PLUGIN_ROOT}/runtime-package.json" "${CLAUDE_PLUGIN_DATA}/package.json"',
     '&& cd "${CLAUDE_PLUGIN_DATA}"',
-    "&& npm install",
-    '&& npm install "${CLAUDE_PLUGIN_ROOT}/theme.tgz"',
-    "&& npx playwright-core install chromium",
+    `&& npm install 2>${errorLog}`,
+    `&& npm install "\${CLAUDE_PLUGIN_ROOT}/theme.tgz" 2>>${errorLog}`,
+    `&& npx playwright-core install chromium 2>>${errorLog}`,
     ")",
-    '|| rm -f "${CLAUDE_PLUGIN_DATA}/package.json"',
+    "||",
+    "(",
+    'echo "tycoslide plugin install failed:";',
+    `cat ${errorLog} 2>/dev/null;`,
+    'rm -f "${CLAUDE_PLUGIN_DATA}/package.json";',
+    "exit 1",
+    ")",
   ].join(" ");
 
   const hooks = {
@@ -154,7 +164,7 @@ function generateBinTycoslide(): string {
   return [
     "#!/usr/bin/env bash",
     'export NODE_PATH="${CLAUDE_PLUGIN_DATA}/node_modules"',
-    'exec node "${CLAUDE_PLUGIN_DATA}/node_modules/@tycoslide/cli/dist/index.js" "$@"',
+    `exec node "\${CLAUDE_PLUGIN_DATA}/node_modules/${PLUGIN_PATHS.CLI_ENTRY}" "$@"`,
     "",
   ].join("\n");
 }

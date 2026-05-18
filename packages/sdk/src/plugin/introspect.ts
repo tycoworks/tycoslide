@@ -54,8 +54,9 @@ function classifyType(schema: z.ZodTypeAny): ParamType {
   if (schema instanceof z.ZodEnum) return PARAM_TYPE.ENUM;
   if (schema instanceof z.ZodArray) return PARAM_TYPE.ARRAY;
   if (schema instanceof z.ZodObject) return PARAM_TYPE.OBJECT;
-  console.warn(`[compilePlugin] Unknown Zod type "${schema.constructor.name}" — defaulting to "string" in manifest.`);
-  return PARAM_TYPE.STRING;
+  throw new Error(
+    `[compilePlugin] Unknown Zod type "${schema.constructor.name}" — add support for this type in introspect.ts.`,
+  );
 }
 
 /** Introspect a single Zod type into a ParamInfo (without name). */

@@ -7,13 +7,13 @@ import { pathToFileURL } from "node:url";
 import { compilePlugin, PLUGIN_PATHS, stripScope } from "@tycoslide/sdk";
 
 /** Reference docs to copy to skills/build/references/. */
-const REFERENCE_FILES: Record<string, string> = {
-  "markdown-syntax.md": "markdown-syntax.md",
-  "cli.md": "cli.md",
-  "troubleshooting.md": "troubleshooting.md",
-  "authoring-guide.md": "authoring-guide.md",
-  "components.md": "components.md",
-};
+const REFERENCE_FILES: string[] = [
+  "markdown-syntax.md",
+  "cli.md",
+  "troubleshooting.md",
+  "authoring-guide.md",
+  "components.md",
+];
 
 export interface BuildThemeOptions {
   dir?: string;
@@ -81,10 +81,10 @@ export async function buildTheme(opts: BuildThemeOptions): Promise<void> {
     dependencies: pkg.dependencies,
   });
 
-  // Step 4: Clean skills/ to remove stale directories from previous builds, then write all generated files.
-  const skillsRoot = path.join(themeDir, PLUGIN_PATHS.SKILLS_ROOT);
-  if (fs.existsSync(skillsRoot)) {
-    fs.rmSync(skillsRoot, { recursive: true });
+  // Step 4: Clean skills/build/ to remove stale generated files from previous builds, then write all.
+  const skillBuildDir = path.join(themeDir, PLUGIN_PATHS.SKILL_DIR);
+  if (fs.existsSync(skillBuildDir)) {
+    fs.rmSync(skillBuildDir, { recursive: true });
   }
 
   for (const [filePath, content] of Object.entries(result.files)) {
@@ -102,7 +102,10 @@ export async function buildTheme(opts: BuildThemeOptions): Promise<void> {
   // Step 4c: Bundle theme as tarball (npm pack) for inclusion in plugin zip
   console.log("Packing theme tarball...");
   const packOutput = execSync("npm pack --pack-destination .", { cwd: themeDir, encoding: "utf-8" }).trim();
-  const tgzFilename = packOutput.split("\n").pop()!;
+  const tgzFilename = packOutput.split("\n").pop();
+  if (!tgzFilename) {
+    throw new Error("npm pack produced no output — could not determine tarball filename.");
+  }
   const tgzPath = path.join(themeDir, tgzFilename);
   const themeTgzDest = path.join(themeDir, PLUGIN_PATHS.THEME_TGZ);
   fs.renameSync(tgzPath, themeTgzDest);
@@ -121,20 +124,32 @@ export async function buildTheme(opts: BuildThemeOptions): Promise<void> {
   const refsDir = path.join(themeDir, PLUGIN_PATHS.REFERENCES_DIR);
   fs.mkdirSync(refsDir, { recursive: true });
 
-  for (const [src, dest] of Object.entries(REFERENCE_FILES)) {
-    const srcPath = path.join(docsDir, src);
+  for (const filename of REFERENCE_FILES) {
+    const srcPath = path.join(docsDir, filename);
     if (!fs.existsSync(srcPath)) {
       throw new Error(`Required doc file not found: ${srcPath}`);
     }
-    fs.copyFileSync(srcPath, path.join(refsDir, dest));
+    fs.copyFileSync(srcPath, path.join(refsDir, filename));
   }
 
-  // Step 6: Validate plugin structure
-  console.log("Validating plugin...");
+  // Step 6: Validate plugin structure (skip gracefully if claude CLI is not installed)
+  let claudeOnPath = false;
   try {
-    execSync("claude plugin validate .", { cwd: themeDir, stdio: "inherit" });
+    execSync("claude --version", { stdio: "ignore" });
+    claudeOnPath = true;
   } catch {
-    throw new Error("Plugin validation failed. Check the errors above.");
+    // claude not found
+  }
+
+  if (!claudeOnPath) {
+    console.warn("Skipping plugin validation: 'claude' CLI not found.");
+  } else {
+    console.log("Validating plugin...");
+    try {
+      execSync("claude plugin validate .", { cwd: themeDir, stdio: "inherit" });
+    } catch {
+      throw new Error("Plugin validation failed. Check the errors above.");
+    }
   }
 
   // Step 7: Package as .zip for distribution (usable with claude --plugin-dir)
@@ -163,7 +178,7 @@ export async function buildTheme(opts: BuildThemeOptions): Promise<void> {
   console.log(`  dist/`);
   console.log(`  ${PLUGIN_PATHS.SKILL_MD}`);
   console.log(`  ${PLUGIN_PATHS.MANIFEST_JSON}`);
-  console.log(`  ${PLUGIN_PATHS.REFERENCES_DIR}/ (${Object.keys(REFERENCE_FILES).length} docs)`);
+  console.log(`  ${PLUGIN_PATHS.REFERENCES_DIR}/ (${REFERENCE_FILES.length} docs)`);
   console.log(`  ${PLUGIN_PATHS.PLUGIN_JSON}`);
   console.log(`  ${PLUGIN_PATHS.HOOKS_JSON}`);
   console.log(`  ${PLUGIN_PATHS.BIN_TYCOSLIDE}`);
