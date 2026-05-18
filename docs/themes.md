@@ -464,6 +464,96 @@ const tokens = token.shape({
 
 ---
 
+## Assets
+
+Themes bundle image assets (icons, logos, backgrounds) that deck authors reference via `$category.name` syntax. Each asset carries a `Documentation` object describing when and how to use it.
+
+### Asset Catalog
+
+```typescript
+import type { AssetCatalog } from "@tycoslide/sdk";
+
+export const assetCatalog: AssetCatalog = {
+  icons: {
+    shield: {
+      path: icon("verified_user.png"),
+      documentation: {
+        description: "Shield/checkmark icon for security or trust topics",
+        whenToUse: "Security features, compliance, trust signals",
+      },
+    },
+  },
+  brand: {
+    logo: {
+      path: brand("logo.png"),
+      documentation: { description: "Full wordmark, dark variant" },
+    },
+  },
+};
+```
+
+Each entry has a `path` and a `documentation` object:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `description` | Yes | One-line description of the asset |
+| `whenToUse` | No | When this asset is the right choice |
+| `whenNotToUse` | No | When to avoid this asset |
+
+Pass the catalog to `defineTheme`:
+
+```typescript
+export const theme = defineTheme({
+  fonts: brandFonts(brand),
+  formats: { presentation: buildPresentationFormat(palette) },
+  assets: assetCatalog,
+});
+```
+
+`build-theme` includes the catalog descriptions in the generated manifest. Deck authors reference assets in frontmatter as `$category.name` (e.g., `image: $icons.shield`).
+
+---
+
+## Building a Theme Package
+
+`build-theme` compiles TypeScript, generates an AI authoring skill from template metadata, and copies documentation references into the package.
+
+```bash
+npx tycoslide build-theme
+```
+
+Output:
+
+```bash
+my-theme/
+  dist/           # Compiled JS + types
+  skills/         # AI authoring skill (generated)
+  .claude-plugin/ # Plugin manifest (generated)
+```
+
+Add `skills/` and `.claude-plugin/` to `.gitignore`. Both directories are generated output that ships in the npm tarball — the published package works as both a runtime theme and an AI authoring plugin.
+
+### Options
+
+| Flag | Description |
+|------|-------------|
+| `--dir <path>` | Theme directory (default: cwd) |
+| `--no-tsc` | Skip TypeScript compilation (use pre-built `dist/`) |
+
+### Package Configuration
+
+```json
+{
+  "scripts": {
+    "build": "tycoslide build-theme",
+    "clean": "rm -rf dist skills .claude-plugin"
+  },
+  "files": ["dist/", "assets/", "skills/", ".claude-plugin/"]
+}
+```
+
+---
+
 ## Testing a Theme
 
 Test with all built-in components to verify every token is correct:

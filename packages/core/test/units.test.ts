@@ -2,7 +2,7 @@
 
 import * as assert from "node:assert";
 import { describe, it } from "node:test";
-import { pxToIn, ptToPx } from "../src/utils/units.js";
+import { ptToPx, pxToIn } from "../src/utils/units.js";
 
 describe("pxToIn()", () => {
   it("converts pixels to inches at 96 DPI", () => {

@@ -23,6 +23,7 @@ import {
   testimonialComponent,
   textComponent,
 } from "@tycoslide/sdk";
+import { assetCatalog } from "./assets.js";
 import { brand } from "./brand.js";
 import { buildPresentationFormat } from "./formats/presentation.js";
 
@@ -49,8 +50,8 @@ export const components: ComponentConfig[] = [
 
 // Re-export component DSL functions for theme consumers
 export * from "@tycoslide/sdk";
-export type { Assets } from "./assets.js";
-export { assets } from "./assets.js";
+export { assetCatalog, assetPaths } from "./assets.js";
+export { fonts } from "./fonts.js";
 
 export const TEMPLATE = {
   TITLE: "title",
@@ -69,4 +70,5 @@ export const theme = defineTheme({
   formats: {
     presentation: buildPresentationFormat(brand.colors.light),
   },
+  assets: assetCatalog,
 });

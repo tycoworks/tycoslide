@@ -9,14 +9,14 @@ const testLayouts = new Map<string, LayoutConfig>();
 // ── defineTemplate() ─────────────────────────────────────────────────────────
 
 describe("defineTemplate()", () => {
-  it("returns a Template with description, layout, background, and tokens", () => {
+  it("returns a Template with documentation, layout, background, and tokens", () => {
     const templateName = "test-tmpl-layout-1";
 
     const mockBackground: Background = { color: "#FFF" };
 
     const template = defineTemplate({
       name: templateName,
-      description: "Test template",
+      documentation: { description: "Test template" },
       layout: {
         params: {},
         render: (_params: any, _slots: any, _tokens: any) =>
@@ -26,7 +26,7 @@ describe("defineTemplate()", () => {
       tokens: { title: "hello" },
     });
 
-    assert.strictEqual(template.description, "Test template");
+    assert.deepStrictEqual(template.documentation, { description: "Test template" });
     assert.strictEqual(template.layout.name, templateName);
     assert.deepStrictEqual(template.background, { color: "#FFF" });
     assert.deepStrictEqual(template.tokens, { title: "hello" });
@@ -38,7 +38,7 @@ describe("defineTemplate()", () => {
 
     const template = defineTemplate({
       name: templateName,
-      description: "Token passthrough test",
+      documentation: { description: "Token passthrough test" },
       layout: {
         params: {},
         render: (_params: any, _slots: any, tokens: any) => {
@@ -66,7 +66,7 @@ describe("defineTemplate()", () => {
 
     const template = defineTemplate({
       name: templateName,
-      description: "SlideNode return test",
+      documentation: { description: "SlideNode return test" },
       layout: {
         params: {},
         render: (_params: any, _slots: any, _tokens: any) =>
