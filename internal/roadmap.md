@@ -7,7 +7,7 @@ Now / Next / Later.
 ## Now
 
 - [ ] Change positioning / remove slide naming
-- [ ] Create & Edit Skill (AI authoring in markdown dialect) — design doc: `internal/skill-authoring.md`
+- [x] Create & Edit Skill (AI authoring in markdown dialect) — design doc: `internal/skill-authoring.md`
 
 ---
 
@@ -45,7 +45,12 @@ DSL → pipeline → geometric assertions.
 
 ## Bugs
 
+- [ ] Page numbers render as "999" placeholder instead of actual slide index
 - [ ] Right-aligned bullet points (pptxgenjs)
 - [ ] Showcase title jumping
 - [ ] PptxGenJS shape rendering (stack + shape missing)
+
+## Feature Gaps
+
+- [ ] Asset resolution: `$icons.x` refs in manifest are advertise-only — CLI build has no runtime wiring to resolve them to file paths
 

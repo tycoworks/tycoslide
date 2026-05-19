@@ -75,13 +75,15 @@ describe("compilePlugin()", () => {
     version: "1.0.0",
   });
 
-  it("returns all plugin files at correct paths", () => {
+  it("returns manifest and plugin files at correct paths", () => {
     assert.ok(result.files[PLUGIN_PATHS.MANIFEST_JSON]);
     assert.ok(result.files[PLUGIN_PATHS.PLUGIN_JSON]);
-    assert.ok(result.files[PLUGIN_PATHS.HOOKS_JSON]);
-    assert.ok(result.files[PLUGIN_PATHS.BIN_TYCOSLIDE]);
-    assert.ok(result.files[PLUGIN_PATHS.RUNTIME_PACKAGE_JSON]);
-    assert.strictEqual(Object.keys(result.files).length, 5);
+    assert.strictEqual(Object.keys(result.files).length, 2);
+  });
+
+  it("skill directory is skills/tycoslide", () => {
+    assert.strictEqual(PLUGIN_PATHS.SKILL_DIR, "skills/tycoslide");
+    assert.strictEqual(PLUGIN_PATHS.MANIFEST_JSON, "skills/tycoslide/manifest.json");
   });
 
   it("result.plugin has correct metadata", () => {
@@ -104,7 +106,7 @@ describe("compilePlugin() manifest.json", () => {
 
   it("manifest.json is in result.files at the correct path", () => {
     assert.ok(result.files[PLUGIN_PATHS.MANIFEST_JSON]);
-    assert.strictEqual(PLUGIN_PATHS.MANIFEST_JSON, "skills/build/manifest.json");
+    assert.strictEqual(PLUGIN_PATHS.MANIFEST_JSON, "skills/tycoslide/manifest.json");
   });
 
   it("manifest contains theme metadata (name, description, version)", () => {
@@ -355,91 +357,6 @@ describe("compilePlugin() edge cases", () => {
     assert.ok(sizeParam);
     assert.strictEqual(sizeParam.required, false);
     assert.deepStrictEqual(sizeParam.enumValues, ["small", "large"]);
-  });
-});
-
-// ── Content tests ────────────────────────────────────────────────────────────
-
-describe("compilePlugin() hooks.json content", () => {
-  const result = compilePlugin(testTheme, {
-    name: "@tycoslide/theme-default",
-    description: "Default theme with Inter font.",
-    version: "1.0.0",
-  });
-
-  const hooks = JSON.parse(result.files[PLUGIN_PATHS.HOOKS_JSON]);
-
-  it("hooks.json has SessionStart array", () => {
-    assert.ok(hooks.hooks);
-    assert.ok(Array.isArray(hooks.hooks.SessionStart));
-    assert.ok(hooks.hooks.SessionStart.length > 0);
-  });
-
-  it("hooks.json SessionStart command includes npm-error.log redirection", () => {
-    const command: string = hooks.hooks.SessionStart[0].hooks[0].command;
-    assert.ok(command.includes("npm-error.log"), `Expected npm-error.log in command, got: ${command}`);
-  });
-
-  it("hooks.json SessionStart command includes exit 1 on failure", () => {
-    const command: string = hooks.hooks.SessionStart[0].hooks[0].command;
-    assert.ok(command.includes("exit 1"), `Expected 'exit 1' in command, got: ${command}`);
-  });
-});
-
-describe("compilePlugin() bin/tycoslide content", () => {
-  const result = compilePlugin(testTheme, {
-    name: "@tycoslide/theme-default",
-    description: "Default theme with Inter font.",
-    version: "1.0.0",
-  });
-
-  const binContent: string = result.files[PLUGIN_PATHS.BIN_TYCOSLIDE];
-
-  it("bin/tycoslide has shebang line", () => {
-    assert.ok(binContent.startsWith("#!/usr/bin/env bash"), `Expected shebang, got: ${binContent.slice(0, 30)}`);
-  });
-
-  it("bin/tycoslide references PLUGIN_PATHS.CLI_ENTRY", () => {
-    assert.ok(
-      binContent.includes(PLUGIN_PATHS.CLI_ENTRY),
-      `Expected CLI_ENTRY path "${PLUGIN_PATHS.CLI_ENTRY}" in bin, got: ${binContent}`,
-    );
-  });
-
-  it("bin/tycoslide exports NODE_PATH", () => {
-    assert.ok(binContent.includes("NODE_PATH"), `Expected NODE_PATH export in bin, got: ${binContent}`);
-  });
-});
-
-describe("compilePlugin() runtime-package.json content", () => {
-  it("runtime-package.json has dependencies with @tycoslide/cli", () => {
-    const result = compilePlugin(testTheme, {
-      name: "@tycoslide/theme-default",
-      description: "Default theme with Inter font.",
-      version: "1.0.0",
-    });
-    const runtimePkg = JSON.parse(result.files[PLUGIN_PATHS.RUNTIME_PACKAGE_JSON]);
-    assert.ok(runtimePkg.dependencies, "Expected dependencies field");
-    assert.ok(runtimePkg.dependencies["@tycoslide/cli"], "Expected @tycoslide/cli in dependencies");
-  });
-
-  it("runtime-package.json carries through theme dependencies", () => {
-    const result = compilePlugin(testTheme, {
-      name: "@tycoslide/theme-default",
-      description: "Default theme with Inter font.",
-      version: "1.0.0",
-      dependencies: {
-        "@tycoslide/sdk": "^1.0.0",
-        "some-other-dep": "^2.0.0",
-      },
-    });
-    const runtimePkg = JSON.parse(result.files[PLUGIN_PATHS.RUNTIME_PACKAGE_JSON]);
-    assert.ok(runtimePkg.dependencies["@tycoslide/sdk"], "Expected @tycoslide/sdk carried through");
-    assert.strictEqual(
-      runtimePkg.dependencies["some-other-dep"],
-      undefined,
-      "Non-tycoslide deps should not be carried through",
-    );
   });
 });
 

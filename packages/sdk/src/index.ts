@@ -211,6 +211,7 @@ export {
   type CompilePluginOptions,
   type CompilePluginResult,
   compilePlugin,
+  generateManifest,
   introspectParams,
   PARAM_TYPE,
   type ParamInfo,

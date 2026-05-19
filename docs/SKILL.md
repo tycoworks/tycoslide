@@ -1,5 +1,5 @@
 ---
-name: build
+name: tycoslide
 description: >
   Use this skill any time the user wants to create branded slides, presentations, pitch decks,
   fact sheets, battle cards, one-pagers, or any formatted marketing collateral from markdown.
@@ -161,6 +161,11 @@ See [cli.md](references/cli.md) for all flags.
 
 ## Dependencies
 
-Dependencies are installed automatically when this plugin loads (via SessionStart hook). No manual install steps needed.
+**Install these before building slides.** If `npx tycoslide` fails with `MODULE_NOT_FOUND`, run these commands:
 
-If you need to reinstall manually, run `tycoslide` from the command line — it's available on your PATH when this plugin is active.
+```bash
+npm install @tycoslide/cli @tycoslide/theme-default
+npx playwright-core install chromium
+```
+
+These install the tycoslide CLI, the default theme, and the Chromium browser used for layout measurement.

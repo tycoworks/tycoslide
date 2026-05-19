@@ -4,7 +4,6 @@
 import { createRequire } from "node:module";
 import { Command } from "commander";
 import { build } from "./build.js";
-import { buildTheme } from "./compileTheme.js";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json") as { version: string };
@@ -34,15 +33,5 @@ program
       await build(input, { ...opts, renderScale });
     },
   );
-
-program
-  .command("build-theme")
-  .description("Build a distributable theme package")
-  .requiredOption("--docs-dir <path>", "path to tycoslide docs/ directory")
-  .option("--dir <path>", "theme directory (default: cwd)")
-  .option("--no-tsc", "skip TypeScript compilation (use pre-built dist/)")
-  .action(async (opts: { docsDir: string; dir?: string; tsc?: boolean }) => {
-    await buildTheme({ docsDir: opts.docsDir, dir: opts.dir, noTsc: opts.tsc === false });
-  });
 
 program.parse();

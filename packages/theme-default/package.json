@@ -13,12 +13,17 @@
   },
   "files": [
     "dist/",
-    "assets/"
+    "assets/",
+    "skills/",
+    ".claude-plugin/"
   ],
   "scripts": {
-    "build": "tycoslide build-theme --docs-dir ../../docs",
-    "clean": "rm -rf dist skills .claude-plugin hooks bin runtime-package.json theme.tgz *.zip",
-    "prepublishOnly": "npm run build"
+    "build": "tsc --build",
+    "plugin": "tycoslide-generate-plugin && mkdir -p skills/tycoslide/references && cp ../../docs/SKILL.md skills/tycoslide/SKILL.md && cp ../../docs/{markdown-syntax,cli,troubleshooting,authoring-guide,components}.md skills/tycoslide/references/",
+    "validate": "command -v claude >/dev/null && claude plugin validate . || echo 'Skipping plugin validation (claude CLI not found)'",
+    "prepack": "npm run build && npm run plugin && npm run validate",
+    "postpack": "zip -r $(node -p \"require('./package.json').name.replace(/^@/,'').replace(/\\\\//,'-')+'-'+require('./package.json').version\").zip .claude-plugin/ skills/ *.tgz",
+    "clean": "rm -rf dist skills .claude-plugin *.tgz *.zip"
   },
   "type": "module",
   "license": "MIT",

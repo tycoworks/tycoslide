@@ -510,16 +510,18 @@ export const theme = defineTheme({
 });
 ```
 
-`build-theme` includes the catalog descriptions in the generated manifest. Deck authors reference assets in frontmatter as `$category.name` (e.g., `image: $icons.shield`).
+The `plugin` build step includes the catalog descriptions in the generated manifest. Deck authors reference assets in frontmatter as `$category.name` (e.g., `image: $icons.shield`).
 
 ---
 
 ## Building a Theme Package
 
-`build-theme` compiles TypeScript, generates an AI authoring skill from template metadata, and copies documentation references into the package.
+The theme build uses standard npm lifecycle scripts. `tsc --build` compiles TypeScript, then a small script generates the AI authoring skill from template metadata, and `cp` copies documentation references into the package.
 
 ```bash
-npx tycoslide build-theme
+npm run build    # tsc --build
+npm run plugin   # generate manifest + copy docs
+npm pack         # produces .tgz + .zip (via prepack/postpack hooks)
 ```
 
 Output:
@@ -531,22 +533,18 @@ my-theme/
   .claude-plugin/ # Plugin manifest (generated)
 ```
 
-Add `skills/` and `.claude-plugin/` to `.gitignore`. Both directories are generated output that ships in the npm tarball — the published package works as both a runtime theme and an AI authoring plugin.
-
-### Options
-
-| Flag | Description |
-|------|-------------|
-| `--dir <path>` | Theme directory (default: cwd) |
-| `--no-tsc` | Skip TypeScript compilation (use pre-built `dist/`) |
+Add `skills/`, `.claude-plugin/`, `*.tgz`, and `*.zip` to `.gitignore`. The generated directories ship in the npm tarball — the published package works as both a runtime theme and an AI authoring plugin. The `.zip` bundles the plugin files with the `.tgz` for uploading to Claude co-work.
 
 ### Package Configuration
 
 ```json
 {
   "scripts": {
-    "build": "tycoslide build-theme",
-    "clean": "rm -rf dist skills .claude-plugin"
+    "build": "tsc --build",
+    "plugin": "node scripts/generate-manifest.mjs && cp docs...",
+    "prepack": "npm run build && npm run plugin",
+    "postpack": "zip -r <name>.zip .claude-plugin/ skills/ *.tgz",
+    "clean": "rm -rf dist skills .claude-plugin *.tgz *.zip"
   },
   "files": ["dist/", "assets/", "skills/", ".claude-plugin/"]
 }
