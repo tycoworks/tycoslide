@@ -163,6 +163,23 @@ describe("Text", () => {
       assert.ok(runs.some((r: any) => r.color !== undefined));
     });
 
+    it("should treat bare colon-word as literal text, not a directive", async () => {
+      const node = text("5:47 a.m.", DEFAULT_TEXT_TOKENS);
+      const result = (await renderTree(node, makeContext())) as any;
+      const runs = result.content as any[];
+      const joined = runs.map((r: any) => r.text).join("");
+      assert.ok(joined.includes(":47"), `Expected literal ':47' in "${joined}"`);
+      assert.ok(runs.every((r: any) => r.color === undefined));
+    });
+
+    it("should treat bare known accent name without brackets as literal text", async () => {
+      const node = text(":accent", DEFAULT_TEXT_TOKENS);
+      const result = (await renderTree(node, makeContext())) as any;
+      const runs = result.content as any[];
+      const joined = runs.map((r: any) => r.text).join("");
+      assert.ok(joined.includes(":accent"), `Expected literal ':accent' in "${joined}"`);
+    });
+
     it("should handle numbered text without creating ordered list", async () => {
       const node = text("1. Problem statement", DEFAULT_TEXT_TOKENS);
       const result = (await renderTree(node, makeContext())) as any;

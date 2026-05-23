@@ -109,6 +109,12 @@ export function transformInline(
         break;
       case SYNTAX.TEXT_DIRECTIVE: {
         const directive = node as unknown as TextDirective;
+        // Bare `:word` without brackets is not an accent — treat as literal text.
+        // Only `:name[content]` (with children) is accent syntax.
+        if (!directive.children?.length) {
+          runs.push({ text: `:${directive.name}`, ...defaults });
+          break;
+        }
         const accentColor = accents[directive.name];
         if (!accentColor) {
           const available = Object.keys(accents).join(", ");
