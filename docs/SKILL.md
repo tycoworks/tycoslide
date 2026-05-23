@@ -164,8 +164,9 @@ See [cli.md](references/cli.md) for all flags.
 **Install these before building slides.** If `npx tycoslide` fails with `MODULE_NOT_FOUND`, run these commands:
 
 ```bash
-npm install @tycoslide/cli @tycoslide/theme-default
+npm install @tycoslide/cli
+npm install ./*.tgz
 npx playwright-core install chromium
 ```
 
-These install the tycoslide CLI, the default theme, and the Chromium browser used for layout measurement.
+The `.tgz` file bundled with this plugin is the theme package. These commands install the tycoslide CLI, the theme, and the Chromium browser used for layout measurement.
