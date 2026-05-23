@@ -14,7 +14,7 @@ import type {
   Theme,
 } from "@tycoslide/core";
 import { DASH_TYPE, GRID_STYLE, HALIGN, isComponentNode, isLayoutNode, VALIGN } from "@tycoslide/core";
-import type { ComponentConfig } from "../src/authoring/component.js";
+import type { ComponentSpec } from "../src/authoring/component.js";
 import type {
   CardTokens,
   CodeTokens,
@@ -77,7 +77,7 @@ const require = createRequire(import.meta.url);
 // ============================================
 
 /** All standard SDK components for testing. */
-export const testComponents: ComponentConfig[] = [
+export const testComponents: ComponentSpec[] = [
   textComponent,
   imageComponent,
   cardComponent,
@@ -98,7 +98,7 @@ export const testComponents: ComponentConfig[] = [
 ];
 
 /** Find a component that handles a specific MDAST node type. */
-export function findSyntaxHandler(nodeType: string): ComponentConfig | undefined {
+export function findSyntaxHandler(nodeType: string): ComponentSpec | undefined {
   return testComponents.find((def) => def.syntax?.nodeTypes.includes(nodeType as any));
 }
 

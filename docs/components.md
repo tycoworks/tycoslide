@@ -964,7 +964,7 @@ render: (params, content, context, tokens) => {
 **Parameters:**
 - `params` — Validated directive attributes, typed by the `params` shape.
 - `content` — Primary content: a scalar value for content components, `SlideNode[]` for container components, `undefined` for params-only components.
-- `context` — Render context: `{ theme, assets?, canvas }`
+- `context` — Render context: `{ theme, canvas }`
 - `tokens` — Token values provided by the caller (layout render function or DSL user). `undefined` if the component declared no tokens.
 
 **Return:** A `SlideNode` — either a primitive node (text, image, shape, container) or another component node for composition. Component nodes are further rendered by the registry.

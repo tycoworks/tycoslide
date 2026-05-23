@@ -455,12 +455,12 @@ Core is a pure, stateless function — no global singletons. Single entry point 
 ```typescript
 interface PresentationConfig {
   theme: Theme;
-  assets?: Record<string, unknown>;
   components: ComponentDefinition[];
 }
 
 function createPresentation(config: PresentationConfig): Presentation;
 // Masters derived from theme.layouts in the Presentation constructor (object identity dedup)
+// Assets resolved at compile time in documentCompiler, not passed to core.
 ```
 
 #### Design Decisions

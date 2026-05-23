@@ -13,7 +13,7 @@ const meta = { name: pkg.name, description: pkg.description, version: pkg.versio
 const distEntry = pathToFileURL("dist/index.js").href;
 const mod = await import(distEntry);
 if (!mod.theme || typeof mod.theme !== "object" || !mod.theme.formats) {
-  throw new Error("Theme package must export 'theme' with a 'formats' object (ThemeDefinition).");
+  throw new Error("Theme package must export 'theme' with a 'formats' object (Theme).");
 }
 
 const result = compilePlugin(mod.theme, meta);

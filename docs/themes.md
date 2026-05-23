@@ -466,7 +466,7 @@ const tokens = token.shape({
 
 ## Assets
 
-Themes bundle image assets (icons, logos, backgrounds) that deck authors reference via `$category.name` syntax. Each asset carries a `Documentation` object describing when and how to use it.
+Themes bundle image assets (icons, logos, backgrounds) that deck authors reference via `$category.name` syntax in frontmatter. Each entry carries a relative file path and documentation. The compiler resolves paths to absolute disk locations via npm resolution — any file type (PNG, SVG, JPG) is supported.
 
 ### Asset Catalog
 
@@ -476,7 +476,7 @@ import type { AssetCatalog } from "@tycoslide/sdk";
 export const assetCatalog: AssetCatalog = {
   icons: {
     shield: {
-      path: icon("verified_user.png"),
+      path: "assets/icons/shield.png",
       documentation: {
         description: "Shield/checkmark icon for security or trust topics",
         whenToUse: "Security features, compliance, trust signals",
@@ -485,20 +485,19 @@ export const assetCatalog: AssetCatalog = {
   },
   brand: {
     logo: {
-      path: brand("logo.png"),
+      path: "assets/brand/logo.svg",
       documentation: { description: "Full wordmark, dark variant" },
     },
   },
 };
 ```
 
-Each entry has a `path` and a `documentation` object:
+Each entry has two fields:
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `description` | Yes | One-line description of the asset |
-| `whenToUse` | No | When this asset is the right choice |
-| `whenNotToUse` | No | When to avoid this asset |
+| `path` | Yes | Relative path from the package root to the asset file (e.g., `assets/icons/shield.png`) |
+| `documentation` | Yes | Documentation object — `description` (**required**), `whenToUse`, `whenNotToUse` |
 
 Pass the catalog to `defineTheme`:
 
@@ -510,7 +509,18 @@ export const theme = defineTheme({
 });
 ```
 
-The `plugin` build step includes the catalog descriptions in the generated manifest. Deck authors reference assets in frontmatter as `$category.name` (e.g., `image: $icons.shield`).
+The theme's `package.json` must export the assets directory for npm resolution:
+
+```json
+{
+  "exports": {
+    ".": { "import": "./dist/index.js" },
+    "./assets/*": "./assets/*"
+  }
+}
+```
+
+The `plugin` build step includes catalog descriptions in the generated manifest. Deck authors reference assets as `$category.name` (e.g., `image: $icons.shield`). The `$` prefix only triggers resolution for values matching the exact `$category.name` pattern — strings like `$100` pass through unchanged.
 
 ---
 

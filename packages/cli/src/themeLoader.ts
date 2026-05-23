@@ -4,36 +4,35 @@
 import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import type { ComponentDefinition, Theme } from "@tycoslide/core";
+import type { ComponentDefinition } from "@tycoslide/core";
+import type { CompileOptions, Theme } from "@tycoslide/sdk";
 import { type LayoutConfig, resolveThemeFormat } from "@tycoslide/sdk";
 
-export interface LoadedTheme {
+/** Shape of the dynamic import from a theme package. */
+interface ThemeModule {
   theme: Theme;
-  assets?: Record<string, unknown>;
   components: ComponentDefinition<any, any, any>[];
-  layouts: LayoutConfig[];
 }
 
 /**
  * Load a theme package by name, resolving the given format to a flat Theme.
  *
  * The theme package must export:
- *   - theme: ThemeDefinition (required)
+ *   - theme: Theme (required) — may include theme.assets: AssetCatalog
  *   - components: ComponentDefinition[] (required)
- *   - assets: Record<string, unknown> (optional)
  *
  * Layouts are discovered from templates across all formats.
  */
-export async function loadTheme(name: string, format: string | undefined): Promise<LoadedTheme> {
+export async function loadTheme(name: string, format: string | undefined): Promise<CompileOptions> {
   const packageName = name;
 
   // Resolve from the user's working directory, not from tycoslide's install location
   const require = createRequire(path.join(process.cwd(), "package.json"));
 
-  let mod: any;
+  let raw: Record<string, unknown>;
   try {
     const resolved = require.resolve(packageName);
-    mod = await import(pathToFileURL(resolved).href);
+    raw = (await import(pathToFileURL(resolved).href)) as Record<string, unknown>;
   } catch (err: any) {
     if (err.code === "ERR_MODULE_NOT_FOUND" || err.code === "MODULE_NOT_FOUND") {
       throw new Error(
@@ -43,21 +42,22 @@ export async function loadTheme(name: string, format: string | undefined): Promi
     throw err;
   }
 
-  if (!mod.theme) {
+  if (!raw.theme) {
     throw new Error(`Theme package '${packageName}' does not export 'theme'.`);
   }
 
-  if (!mod.components) {
+  if (!raw.components) {
     throw new Error(`Theme package '${packageName}' does not export 'components'.`);
   }
 
-  const components: ComponentDefinition<any, any, any>[] = mod.components;
+  const mod = raw as unknown as ThemeModule;
+  const components = mod.components;
 
   // Discover layouts from templates across all formats
   const layouts: LayoutConfig[] = [];
   const layoutsSeen = new Set<string>();
 
-  for (const fmt of Object.values(mod.theme.formats) as any[]) {
+  for (const fmt of Object.values(mod.theme.formats)) {
     if (fmt.templates) {
       for (const t of fmt.templates) {
         if (t.layout && !layoutsSeen.has(t.layout.name)) {
@@ -77,7 +77,7 @@ export async function loadTheme(name: string, format: string | undefined): Promi
 
   return {
     theme,
-    assets: mod.assets,
+    assets: mod.theme.assets,
     components,
     layouts,
   };

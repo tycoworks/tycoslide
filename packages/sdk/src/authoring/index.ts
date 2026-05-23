@@ -4,8 +4,8 @@
 
 export type {
   AuthoringFields,
-  ComponentConfig,
-  ContentComponentConfig,
+  ComponentSpec,
+  ContentComponentSpec,
   DirectiveDeserializer,
   SyntaxHandler,
 } from "./component.js";

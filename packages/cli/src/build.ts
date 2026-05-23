@@ -41,16 +41,8 @@ export async function build(inputPath: string, options: BuildOptions): Promise<v
   // Extract format from global frontmatter
   const format = typeof parsed.global.format === "string" ? parsed.global.format : undefined;
 
-  // Load theme package and resolve format
-  const loaded = await loadTheme(themeName, format);
-
-  // Compile markdown to presentation
-  const pres = compileDocument(source, {
-    theme: loaded.theme,
-    assets: loaded.assets,
-    components: loaded.components,
-    layouts: loaded.layouts,
-  });
+  // Load theme package, resolve format, and compile markdown to presentation
+  const pres = compileDocument(source, await loadTheme(themeName, format));
 
   const basename = path.basename(resolved, path.extname(resolved));
   const outputDir = path.resolve(`${basename}-build`);

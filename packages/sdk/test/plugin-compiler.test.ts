@@ -1,13 +1,15 @@
 import * as assert from "node:assert";
 import { describe, it } from "node:test";
+import { pathToFileURL } from "node:url";
 import { z } from "zod";
 import { compilePlugin, PLUGIN_PATHS, stripScope } from "../src/plugin/compiler.js";
-import type { ThemeDefinition } from "../src/theme/index.js";
-import { defineTemplate } from "../src/theme/template.js";
+import type { Theme } from "../src/theme/index.js";
+import { AssetCatalog, defineTemplate } from "../src/theme/template.js";
 
 // ── Test theme fixture ──────────────────────────────────────────────────────
 
 const mockFont = { name: "Inter", regular: { path: "inter.woff2", weight: 400 } };
+const emptyAssets = new AssetCatalog(import.meta.url, {});
 
 const stubRender = () => ({ type: "component", componentName: "column", params: {}, content: undefined }) as any;
 
@@ -55,7 +57,7 @@ const cardsTemplate = defineTemplate({
   tokens: {},
 });
 
-const testTheme: ThemeDefinition = {
+const testTheme: Theme = {
   fonts: [mockFont],
   formats: {
     presentation: {
@@ -64,6 +66,7 @@ const testTheme: ThemeDefinition = {
       templates: [bodyTemplate, statTemplate, cardsTemplate],
     },
   },
+  assets: emptyAssets,
 };
 
 // ── Tests ───────────────────────────────────────────────────────────────────
@@ -197,7 +200,7 @@ describe("compilePlugin() manifest.json", () => {
   });
 
   it("assets from theme definition appear in manifest with $ref syntax", () => {
-    const themeWithAssets: ThemeDefinition = {
+    const themeWithAssets: Theme = {
       fonts: [mockFont],
       formats: {
         presentation: {
@@ -206,18 +209,18 @@ describe("compilePlugin() manifest.json", () => {
           templates: [bodyTemplate],
         },
       },
-      assets: {
+      assets: new AssetCatalog(pathToFileURL("/mock/pkg/src/index.js").href, {
         icons: {
-          star: { path: "/path/to/star.png", documentation: { description: "Star icon" } },
+          star: { path: "assets/icons/star.png", documentation: { description: "Star icon" } },
           heart: {
-            path: "/path/to/heart.png",
+            path: "assets/icons/heart.png",
             documentation: { description: "Heart icon", whenToUse: "Favorites" },
           },
         },
         logos: {
-          brand: { path: "/path/to/brand.png", documentation: { description: "Brand logo" } },
+          brand: { path: "assets/logos/brand.png", documentation: { description: "Brand logo" } },
         },
-      },
+      }),
     };
     const assetResult = compilePlugin(themeWithAssets, {
       name: "asset-theme",
@@ -244,7 +247,7 @@ describe("compilePlugin() manifest.json", () => {
 });
 
 describe("compilePlugin() manifest.json multi-format", () => {
-  const multiFormatTheme: ThemeDefinition = {
+  const multiFormatTheme: Theme = {
     fonts: [mockFont],
     formats: {
       presentation: {
@@ -258,6 +261,7 @@ describe("compilePlugin() manifest.json multi-format", () => {
         templates: [statTemplate],
       },
     },
+    assets: emptyAssets,
   };
 
   const result = compilePlugin(multiFormatTheme, {
@@ -292,7 +296,7 @@ describe("compilePlugin() manifest.json multi-format", () => {
 
 describe("compilePlugin() edge cases", () => {
   it("handles format with no templates", () => {
-    const emptyFormatTheme: ThemeDefinition = {
+    const emptyFormatTheme: Theme = {
       fonts: [mockFont],
       formats: {
         presentation: {
@@ -301,6 +305,7 @@ describe("compilePlugin() edge cases", () => {
           templates: [],
         },
       },
+      assets: emptyAssets,
     };
     const result = compilePlugin(emptyFormatTheme, {
       name: "empty-theme",
@@ -310,8 +315,8 @@ describe("compilePlugin() edge cases", () => {
     assert.ok(result.files[PLUGIN_PATHS.MANIFEST_JSON]);
   });
 
-  it("throws if ThemeDefinition has no formats", () => {
-    const noFormats = { fonts: [mockFont], formats: {} } as ThemeDefinition;
+  it("throws if Theme has no formats", () => {
+    const noFormats = { fonts: [mockFont], formats: {}, assets: emptyAssets } as Theme;
     assert.throws(
       () => compilePlugin(noFormats, { name: "test", description: "test", version: "1.0.0" }),
       /at least one format/,
@@ -343,11 +348,12 @@ describe("compilePlugin() edge cases", () => {
       background: { color: "#000" },
       tokens: {},
     });
-    const theme: ThemeDefinition = {
+    const theme: Theme = {
       fonts: [mockFont],
       formats: {
         presentation: { slide: { width: 960, height: 540 }, textStyles: {}, templates: [defaultTemplate] },
       },
+      assets: emptyAssets,
     };
     const result = compilePlugin(theme, { name: "test", description: "test", version: "1.0.0" });
     const manifest = JSON.parse(result.files[PLUGIN_PATHS.MANIFEST_JSON]);

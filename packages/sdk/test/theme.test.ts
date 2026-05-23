@@ -3,11 +3,13 @@ import { createRequire } from "node:module";
 import { describe, it } from "node:test";
 import type { Background } from "@tycoslide/core";
 import type { FontFamily, TextStyle } from "../src/theme/format.js";
-import type { ThemeDefinition, ThemeFormat } from "../src/theme/index.js";
+import type { Theme, ThemeFormat } from "../src/theme/index.js";
 import { defineTheme, resolveThemeFormat } from "../src/theme/index.js";
-import { defineTemplate } from "../src/theme/template.js";
+import { AssetCatalog, defineTemplate } from "../src/theme/template.js";
 
 const require = createRequire(import.meta.url);
+
+const emptyAssets = new AssetCatalog(import.meta.url, {});
 
 // ── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -37,12 +39,13 @@ function makeFormat(overrides?: Partial<ThemeFormat>): ThemeFormat {
   };
 }
 
-function makeDefinition(overrides?: Partial<ThemeDefinition>): ThemeDefinition {
+function makeDefinition(overrides?: Partial<Theme>): Theme {
   return {
     fonts: [validFont],
     formats: {
       presentation: makeFormat(),
     },
+    assets: emptyAssets,
     ...overrides,
   };
 }
@@ -58,7 +61,7 @@ describe("defineTheme()", () => {
 
   it("throws when formats is empty (zero formats)", () => {
     const def = makeDefinition({ formats: {} });
-    assert.throws(() => defineTheme(def), /ThemeDefinition must have at least one format/);
+    assert.throws(() => defineTheme(def), /Theme must have at least one format/);
   });
 
   it("validates fonts across all formats — throws when second format has invalid fonts", () => {
@@ -74,7 +77,7 @@ describe("defineTheme()", () => {
       bulletIndentPt: 18,
     };
 
-    const def: ThemeDefinition = {
+    const def: Theme = {
       // Only validFont is registered — foreignFont is NOT
       fonts: [validFont],
       formats: {
@@ -85,6 +88,7 @@ describe("defineTheme()", () => {
           textStyles: { body: badTextStyle },
         }),
       },
+      assets: emptyAssets,
     };
 
     assert.throws(() => defineTheme(def), /Roboto.*not listed in theme\.fonts/);
@@ -132,12 +136,13 @@ describe("resolveThemeFormat()", () => {
     const wideSlide = { width: 16, height: 9 };
     const narrowSlide = { width: 8.5, height: 11 };
 
-    const def: ThemeDefinition = {
+    const def: Theme = {
       fonts: [validFont],
       formats: {
         presentation: makeFormat({ slide: wideSlide }),
         factsheet: makeFormat({ slide: narrowSlide }),
       },
+      assets: emptyAssets,
     };
 
     const presentation = resolveThemeFormat(def, "presentation");
@@ -161,9 +166,10 @@ describe("resolveThemeFormat()", () => {
       tokens: { titleColor: "#FFF" },
     });
 
-    const def: ThemeDefinition = {
+    const def: Theme = {
       fonts: [validFont],
       formats: { presentation: { ...makeFormat(), templates: [template] } },
+      assets: emptyAssets,
     };
     const theme = resolveThemeFormat(def, "presentation");
     assert.strictEqual(theme.layouts.hero.background.color, "#FFFFFF");

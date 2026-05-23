@@ -1,8 +1,8 @@
 // Multi-format theme types, definition, and resolution.
-// A ThemeDefinition maps format names to ThemeFormats.
-// resolveThemeFormat() flattens a ThemeDefinition + format name into a core Theme.
+// A Theme maps format names to ThemeFormats.
+// resolveThemeFormat() flattens a Theme + format name into a core Theme.
 
-import type { TemplateConfig, TextStyleConfig, Theme } from "@tycoslide/core";
+import type { Theme as ResolvedTheme, TemplateConfig, TextStyleConfig } from "@tycoslide/core";
 import { validateThemeFonts } from "@tycoslide/core";
 import type { FontFamily, TextStyle } from "./format.js";
 import { resolveFontFamily, resolveTextStyle } from "./format.js";
@@ -10,7 +10,7 @@ import type { AssetCatalog, Template } from "./template.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-/** Per-format configuration within a ThemeDefinition. */
+/** Per-format configuration within a Theme. */
 export interface ThemeFormat {
   slide: { width: number; height: number };
   textStyles: Record<string, TextStyle>;
@@ -18,10 +18,10 @@ export interface ThemeFormat {
 }
 
 /** Multi-format theme declaration. Theme packages export this. */
-export interface ThemeDefinition {
+export interface Theme {
   fonts: FontFamily[];
   formats: Record<string, ThemeFormat>;
-  assets?: AssetCatalog;
+  assets: AssetCatalog;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────────
@@ -53,10 +53,10 @@ function resolveTextStyles(styles: Record<string, TextStyle>): Record<string, Te
  * Define a multi-format theme. Validates font configuration across all formats
  * and returns the definition.
  */
-export function defineTheme(definition: ThemeDefinition): ThemeDefinition {
+export function defineTheme(definition: Theme): Theme {
   const formatNames = Object.keys(definition.formats);
   if (formatNames.length === 0) {
-    throw new Error("ThemeDefinition must have at least one format.");
+    throw new Error("Theme must have at least one format.");
   }
 
   // Validate fonts against each format (resolve to core types for validation)
@@ -76,11 +76,11 @@ export function defineTheme(definition: ThemeDefinition): ThemeDefinition {
 // ── resolveThemeFormat ──────────────────────────────────────────────────────────
 
 /**
- * Resolve a ThemeDefinition to a flat Theme for a specific format.
+ * Resolve a Theme to a flat Theme for a specific format.
  * Background is embedded in each TemplateConfig — no separate master layer.
  * Throws with available format names if the format is missing or unknown.
  */
-export function resolveThemeFormat(definition: ThemeDefinition, format: string | undefined): Theme {
+export function resolveThemeFormat(definition: Theme, format: string | undefined): ResolvedTheme {
   const available = Object.keys(definition.formats);
 
   if (!format) {

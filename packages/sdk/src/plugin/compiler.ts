@@ -1,6 +1,6 @@
-// Plugin compiler: generates manifest.json from a ThemeDefinition.
+// Plugin compiler: generates manifest.json from a Theme.
 
-import type { ThemeDefinition } from "../theme/index.js";
+import type { Theme } from "../theme/index.js";
 import { introspectParams } from "./introspect.js";
 
 // ============================================
@@ -47,8 +47,8 @@ export function stripScope(name: string): string {
 // GENERATION HELPERS
 // ============================================
 
-/** Build the manifest JSON structure from a ThemeDefinition and package metadata. */
-export function generateManifest(definition: ThemeDefinition, options: CompilePluginOptions): string {
+/** Build the manifest JSON structure from a Theme and package metadata. */
+export function generateManifest(definition: Theme, options: CompilePluginOptions): string {
   const formatsOut: Record<string, unknown> = {};
 
   for (const [formatName, format] of Object.entries(definition.formats)) {
@@ -83,15 +83,13 @@ export function generateManifest(definition: ThemeDefinition, options: CompilePl
 
   // Build asset catalog for manifest
   const assetsOut: Record<string, unknown[]> = {};
-  if (definition.assets) {
-    for (const [category, entries] of Object.entries(definition.assets)) {
-      assetsOut[category] = Object.entries(entries).map(([name, entry]) => ({
-        name,
-        ref: `$${category}.${name}`,
-        description: entry.documentation.description,
-        ...(entry.documentation.whenToUse ? { whenToUse: entry.documentation.whenToUse } : {}),
-      }));
-    }
+  for (const [category, entries] of Object.entries(definition.assets.entries)) {
+    assetsOut[category] = Object.entries(entries).map(([name, entry]) => ({
+      name,
+      ref: `$${category}.${name}`,
+      description: entry.documentation.description,
+      ...(entry.documentation.whenToUse ? { whenToUse: entry.documentation.whenToUse } : {}),
+    }));
   }
 
   const manifest = {
@@ -112,13 +110,13 @@ export function generateManifest(definition: ThemeDefinition, options: CompilePl
 // ============================================
 
 /**
- * Compile a ThemeDefinition into machine-readable plugin artifacts (manifest.json + plugin.json).
+ * Compile a Theme into machine-readable plugin artifacts (manifest.json + plugin.json).
  *
  * Returns a map of relative file paths → content. The caller is responsible for
  * writing them to disk and assembling SKILL.md (frontmatter + static body) and
  * copying reference docs. See theme-default's npm scripts for the full pipeline.
  */
-export function compilePlugin(definition: ThemeDefinition, options: CompilePluginOptions): CompilePluginResult {
+export function compilePlugin(definition: Theme, options: CompilePluginOptions): CompilePluginResult {
   if (!options.name) {
     throw new Error("compilePlugin: options.name is required.");
   }
@@ -126,7 +124,7 @@ export function compilePlugin(definition: ThemeDefinition, options: CompilePlugi
     throw new Error("compilePlugin: options.version is required.");
   }
   if (!definition.formats || Object.keys(definition.formats).length === 0) {
-    throw new Error("compilePlugin: ThemeDefinition must have at least one format.");
+    throw new Error("compilePlugin: Theme must have at least one format.");
   }
 
   const pluginName = stripScope(options.name);
