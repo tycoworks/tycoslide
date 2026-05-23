@@ -1,7 +1,7 @@
 {
   "name": "@tycoslide/theme-default",
   "version": "0.5.1",
-  "description": "Default reference theme for tycoslide — Inter font, purple/navy palette, 14 layouts",
+  "description": "Default reference theme for tycoslide — Inter font, purple/navy palette",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -23,7 +23,7 @@
     "plugin": "tycoslide-generate-plugin && mkdir -p skills/tycoslide/references && cp ../../docs/SKILL.md skills/tycoslide/SKILL.md && cp ../../docs/{markdown-syntax,cli,troubleshooting,authoring-guide,components}.md skills/tycoslide/references/",
     "validate": "command -v claude >/dev/null && claude plugin validate . || echo 'Skipping plugin validation (claude CLI not found)'",
     "prepack": "npm run build && npm run plugin && npm run validate",
-    "zip": "npm pack && zip -r $(node -p \"require('./package.json').name.replace(/^@/,'').replace(/\\\\//,'-')+'-'+require('./package.json').version\").zip .claude-plugin/ skills/ *.tgz && rm *.tgz",
+    "zip": "npm pack && mv *.tgz skills/tycoslide/ && zip -r $(node -p \"require('./package.json').name.replace(/^@/,'').replace(/\\\\//,'-')+'-'+require('./package.json').version\").zip .claude-plugin/ skills/ && rm skills/tycoslide/*.tgz",
     "clean": "rm -rf dist skills .claude-plugin *.tgz *.zip"
   },
   "type": "module",

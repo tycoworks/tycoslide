@@ -118,6 +118,17 @@ Read error output carefully. Common errors and fixes:
 
 **Do not declare success until you've completed at least one build-fix cycle.**
 
+### Visual Check
+
+After a clean build, inspect the generated PNGs in the build output directory (`{basename}-build/`). Read each slide image and check for:
+
+- **Word wrapping** — text that breaks mid-word or overflows its container
+- **Cramped text** — content too dense for the slide area
+- **Misaligned elements** — images, cards, or columns that look off-balance
+- **Cut-off content** — text or images clipped at slide edges
+
+If you spot visual issues, reduce content, switch templates, or split into multiple slides. Rebuild and re-check.
+
 ### Content Review (Use Subagents)
 
 **Use subagents for review** -- even for short decks. You've been staring at the content and will see what you expect, not what's there. Subagents have fresh eyes.
@@ -165,8 +176,8 @@ See [cli.md](references/cli.md) for all flags.
 
 ```bash
 npm install @tycoslide/cli
-npm install ./*.tgz
+npm install <path-to-this-skill-directory>/*.tgz
 npx playwright-core install chromium
 ```
 
-The `.tgz` file bundled with this plugin is the theme package. These commands install the tycoslide CLI, the theme, and the Chromium browser used for layout measurement.
+The theme `.tgz` package is in this skill's directory (alongside this file). Use the full path to the `.tgz` when installing. These commands install the tycoslide CLI, the theme, and the Chromium browser used for layout measurement.

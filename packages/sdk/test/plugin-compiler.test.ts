@@ -93,6 +93,7 @@ describe("compilePlugin()", () => {
     assert.strictEqual(result.plugin.name, "tycoslide-theme-default");
     assert.strictEqual(result.plugin.description, "Default theme with Inter font.");
     assert.strictEqual(result.plugin.version, "1.0.0");
+    assert.strictEqual(result.plugin.skills, "./skills");
   });
 });
 

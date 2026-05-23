@@ -35,7 +35,7 @@ export interface CompilePluginResult {
   /** Generated file contents. Keys are relative paths from the theme root. */
   files: Record<string, string>;
   /** Plugin manifest metadata. */
-  plugin: { name: string; description: string; version: string };
+  plugin: { name: string; description: string; version: string; skills: string };
 }
 
 /** Strip npm scope from a package name (e.g., "@tycoslide/theme-default" → "tycoslide-theme-default"). */
@@ -128,7 +128,7 @@ export function compilePlugin(definition: Theme, options: CompilePluginOptions):
   }
 
   const pluginName = stripScope(options.name);
-  const pluginMeta = { name: pluginName, description: options.description, version: options.version, skills: `./${PLUGIN_PATHS.SKILLS_ROOT}/` };
+  const pluginMeta = { name: pluginName, description: options.description, version: options.version, skills: `./${PLUGIN_PATHS.SKILLS_ROOT}` };
 
   const files: Record<string, string> = {
     [PLUGIN_PATHS.MANIFEST_JSON]: generateManifest(definition, options),
