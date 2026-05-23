@@ -67,6 +67,7 @@ describe("getFontForRun", () => {
       name: "NoBoldItalic",
       regular: { path: "/fonts/regular.woff", weight: 400 },
       bold: { path: "/fonts/bold.woff", weight: 700 },
+      normalRatio: 1.2,
     };
     const font = getFontForRun(noBoldItalic, true, true);
     assert.strictEqual(font.path, "/fonts/bold.woff");
@@ -89,6 +90,7 @@ const interLight: FontFamily = {
   regular: { path: "/fonts/inter-300.woff", weight: 300 },
   bold: { path: "/fonts/inter-700.woff", weight: 700, name: "Inter" },
   boldItalic: { path: "/fonts/inter-700-italic.woff", weight: 700, name: "Inter" },
+  normalRatio: 1.2,
 };
 
 describe("resolveFontFace", () => {
@@ -121,6 +123,7 @@ describe("resolveFontFace", () => {
       name: "Some Light",
       regular: { path: "/fonts/regular.woff", weight: 300 },
       italic: { path: "/fonts/italic.woff", weight: 300, name: "Some" },
+      normalRatio: 1.2,
     };
     assert.strictEqual(resolveFontFace(family, false, true), "Some");
   });
@@ -136,6 +139,7 @@ describe("getFontForRun fallback chain", () => {
       name: "ItalicOnly",
       regular: { path: "/fonts/regular.woff", weight: 400 },
       italic: { path: "/fonts/italic.woff", weight: 400 },
+      normalRatio: 1.2,
     };
     // boldItalic missing, bold missing → falls to regular (not italic)
     const font = getFontForRun(italicOnly, true, true);
@@ -216,6 +220,7 @@ describe("checkFontVariant", () => {
       name: "NoBoldItalic",
       regular: { path: "/fonts/regular.woff", weight: 400 },
       bold: { path: "/fonts/bold.woff", weight: 700 },
+      normalRatio: 1.2,
     };
     const v = checkFontVariant(noBoldItalic, true, true);
     assert.deepStrictEqual(v, { fontName: "NoBoldItalic", slot: FONT_SLOT.BOLD_ITALIC });

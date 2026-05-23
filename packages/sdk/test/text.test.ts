@@ -53,6 +53,7 @@ describe("Text", () => {
       const node = label("Hello world", DEFAULT_LABEL_TOKENS);
       const rendered = (await renderComponent(node, {
         theme,
+        slideNumber: 1,
         canvas: noopCanvas(),
         renderTree: async (n: any) => n,
       })) as any;
@@ -66,6 +67,7 @@ describe("Text", () => {
       const node = label("**not bold**", DEFAULT_LABEL_TOKENS);
       const rendered = (await renderComponent(node, {
         theme,
+        slideNumber: 1,
         canvas: noopCanvas(),
         renderTree: async (n: any) => n,
       })) as any;
@@ -79,6 +81,7 @@ describe("Text", () => {
       const node = label(":accent[not highlighted]", DEFAULT_LABEL_TOKENS);
       const rendered = (await renderComponent(node, {
         theme,
+        slideNumber: 1,
         canvas: noopCanvas(),
         renderTree: async (n: any) => n,
       })) as any;
@@ -98,6 +101,7 @@ describe("Text", () => {
       });
       const rendered = (await renderComponent(node, {
         theme,
+        slideNumber: 1,
         canvas: noopCanvas(),
         renderTree: async (n: any) => n,
       })) as any;
@@ -111,6 +115,7 @@ describe("Text", () => {
       const node = label("Label", DEFAULT_LABEL_TOKENS);
       const rendered = (await renderComponent(node, {
         theme,
+        slideNumber: 1,
         canvas: noopCanvas(),
         renderTree: async (n: any) => n,
       })) as any;
@@ -122,6 +127,7 @@ describe("Text", () => {
       const node = label("Label", DEFAULT_LABEL_TOKENS);
       const rendered = (await renderComponent(node, {
         theme,
+        slideNumber: 1,
         canvas: noopCanvas(),
         renderTree: async (n: any) => n,
       })) as any;
@@ -134,7 +140,7 @@ describe("Text", () => {
     const theme = themeWithAccents();
 
     function makeContext() {
-      return { theme, canvas: noopCanvas(), renderTree: async (n: any) => n };
+      return { theme, canvas: noopCanvas(), slideNumber: 1, renderTree: async (n: any) => n };
     }
 
     it("should create a text component node", () => {

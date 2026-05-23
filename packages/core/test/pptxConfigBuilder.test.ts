@@ -1036,6 +1036,7 @@ const baseSlideNumNode: SlideNumberNode = {
   color: "#999999",
   hAlign: HALIGN.RIGHT,
   vAlign: VALIGN.MIDDLE,
+  number: 1,
 };
 
 describe("buildSlideNumberOptions()", () => {
@@ -1101,6 +1102,7 @@ describe("buildSlideNumberOptions()", () => {
       name: "Inter Light",
       regular: { path: "/fonts/inter-light.woff", weight: 300 },
       bold: { path: "/fonts/inter-bold.woff", weight: 700 },
+      normalRatio: 1.2,
     };
     const customNode: SlideNumberNode = {
       ...baseSlideNumNode,

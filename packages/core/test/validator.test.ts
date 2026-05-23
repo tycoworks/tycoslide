@@ -16,7 +16,7 @@ function textNode(content: string): TextNode {
     vAlign: VALIGN.TOP,
     style: "body",
     resolvedStyle: {
-      fontFamily: { name: "Arial", regular: { path: "/fake/arial.woff", weight: 400 } },
+      fontFamily: { name: "Arial", regular: { path: "/fake/arial.woff", weight: 400 }, normalRatio: 1.2 },
       fontSize: 14,
       lineHeight: 1.0,
       bulletIndentPt: 21,

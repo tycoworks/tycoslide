@@ -14,7 +14,7 @@ import { Bounds } from "../model/bounds.js";
 import type { ElementNode, Layer, LayoutNode, PositionedNode, SlideNode } from "../model/nodes.js";
 import { getLayer, isComponentNode, isLayoutNode, LAYER } from "../model/nodes.js";
 import type { Slide, Theme } from "../model/types.js";
-import type { ComponentDefinition, RenderContext } from "./definitions.js";
+import type { Canvas, ComponentDefinition, RenderContext } from "./definitions.js";
 import { PptxRenderer } from "./pptxRenderer.js";
 
 // ============================================
@@ -232,13 +232,9 @@ export class Presentation {
       // Launch browser — also copies fonts into outputDir for @font-face CSS
       await pipeline.launch(this._theme);
 
-      // Build render context with canvas capability and renderTree
-      const renderContext: RenderContext = {
-        theme: this._theme,
-        canvas: {
-          renderHtml: (html, transparent) => pipeline.renderHtmlToImage(html, this._theme, transparent),
-        },
-        renderTree: (node) => this.renderTree(node, renderContext),
+      // Build base context (slideNumber set per-slide in the loop)
+      const baseCanvas: Canvas = {
+        renderHtml: (html, transparent) => pipeline.renderHtmlToImage(html, this._theme, transparent),
       };
 
       // Phase 1: Render slides (render each slide's component tree, collect measurements)
@@ -252,6 +248,13 @@ export class Presentation {
       for (const deferred of this.deferredSlides) {
         const { slide, slideIndex } = deferred;
         const layoutName = slide.layoutName;
+
+        const renderContext: RenderContext = {
+          theme: this._theme,
+          canvas: baseCanvas,
+          slideNumber: slideIndex + 1,
+          renderTree: (node) => this.renderTree(node, renderContext),
+        };
 
         // Render components at full slide bounds (chrome is part of the layout tree)
         let rendered: ElementNode;

@@ -102,6 +102,7 @@ describe("Label Component", () => {
       const rendered = (await renderComponent(node, {
         theme,
         canvas: noopCanvas(),
+        slideNumber: 1,
         renderTree: async (n: any) => n,
       })) as any;
 
@@ -127,6 +128,7 @@ describe("Label Component", () => {
       const rendered = (await renderComponent(node, {
         theme,
         canvas: noopCanvas(),
+        slideNumber: 1,
         renderTree: async (n: any) => n,
       })) as any;
 
@@ -143,7 +145,7 @@ describe("Label Component", () => {
       };
       const node = label("Bad style", tokens);
       await assert.rejects(
-        () => renderComponent(node, { theme, canvas: noopCanvas(), renderTree: async (n: any) => n }),
+        () => renderComponent(node, { theme, canvas: noopCanvas(), slideNumber: 1, renderTree: async (n: any) => n }),
         (err: unknown) => {
           assert.ok(err instanceof Error);
           assert.ok(err.message.includes("nonexistent_style"));
@@ -157,6 +159,7 @@ describe("Label Component", () => {
       const rendered = (await renderComponent(node, {
         theme,
         canvas: noopCanvas(),
+        slideNumber: 1,
         renderTree: async (n: any) => n,
       })) as any;
 

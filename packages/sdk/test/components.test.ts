@@ -48,7 +48,7 @@ const theme = createMockTheme();
 
 /** Expand a ComponentNode to its ElementNode form */
 async function render(node: any) {
-  const ctx: any = { theme, canvas: noopCanvas(), renderTree: (n: any) => renderTree(n, ctx) };
+  const ctx: any = { theme, canvas: noopCanvas(), slideNumber: 1, renderTree: (n: any) => renderTree(n, ctx) };
   return renderTree(node, ctx);
 }
 

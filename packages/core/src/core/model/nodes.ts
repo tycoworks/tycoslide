@@ -129,6 +129,7 @@ export interface SlideNumberNode {
   color: string;
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;
+  number: number; // 1-based slide number, stamped by Presentation
 }
 
 // ============================================

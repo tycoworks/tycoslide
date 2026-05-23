@@ -81,7 +81,6 @@ interface IdContext {
   counter: number;
 }
 
-const SLIDE_NUMBER_PLACEHOLDER = "999";
 
 // ============================================
 // PHASE 1: PURE STYLE COMPUTATION
@@ -649,7 +648,7 @@ function styleSlideNumber(node: SlideNumberNode, parent: ParentCtx, nodeId: stri
       ...flexSize(node.width, node.height, parent.direction),
     },
     children: [],
-    textContent: SLIDE_NUMBER_PLACEHOLDER,
+    textContent: String(node.number),
   };
 }
 

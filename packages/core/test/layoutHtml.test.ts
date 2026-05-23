@@ -174,6 +174,7 @@ function slideNumberNode(opts?: Partial<Omit<SlideNumberNode, "type">>): SlideNu
     color: "#666666",
     hAlign: HALIGN.RIGHT,
     vAlign: VALIGN.MIDDLE,
+    number: 1,
     ...opts,
   };
 }
@@ -215,7 +216,7 @@ function tableNode(rows: TableCellData[][], opts?: Partial<Omit<TableNode, "type
 
 /** Generate layout HTML from an element node tree */
 function genHTML(node: ElementNode, bounds: Bounds) {
-  return generateLayoutHTML([{ tree: node, bounds, background: {} }], mockTheme, ["test-slide"], new Map(), new Map());
+  return generateLayoutHTML([{ tree: node, bounds, background: {} }], mockTheme, ["test-slide"], new Map());
 }
 
 describe("HTML Measurement Generation", () => {
@@ -1062,10 +1063,10 @@ describe("HTML Measurement Generation", () => {
       assert.ok(html.includes("flex-shrink:0"), "SlideNumber should be content-sized (flexShrink:0 via flexSize)");
     });
 
-    test("slideNumber renders placeholder text", async () => {
-      const node = rowNode(slideNumberNode());
+    test("slideNumber renders its number", async () => {
+      const node = rowNode(slideNumberNode({ number: 3 }));
       const { html } = await genHTML(node, bounds);
-      assert.ok(html.includes("999"), "SlideNumber should render placeholder text 999");
+      assert.ok(html.includes(">3<"), "SlideNumber should render its number");
     });
   });
 
@@ -1396,7 +1397,6 @@ describe("HTML Measurement Generation", () => {
         mockTheme,
         ["test-slide"],
         new Map(),
-        new Map(),
       );
       assert.ok(html.includes("background-color:#120E22"), "Should render hex background color");
       assert.ok(!html.includes("#FFFFFF"), "Should not contain white fallback");
@@ -1409,7 +1409,6 @@ describe("HTML Measurement Generation", () => {
         mockTheme,
         ["test-slide"],
         new Map(),
-        new Map(),
       );
       assert.ok(html.includes("rgba(255, 0, 0, 0.5)"), "Should render rgba with 50% opacity");
     });
@@ -1421,7 +1420,6 @@ describe("HTML Measurement Generation", () => {
         mockTheme,
         ["test-slide"],
         new Map(),
-        new Map(),
       );
       assert.ok(html.includes("background-color:#0000FF"), "Should render hex at full opacity");
     });
@@ -1432,7 +1430,6 @@ describe("HTML Measurement Generation", () => {
         [{ tree: node, bounds, background: {} }],
         mockTheme,
         ["test-slide"],
-        new Map(),
         new Map(),
       );
       assert.ok(!html.includes("background-color:"), "Empty background should not set any background-color");

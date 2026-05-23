@@ -144,6 +144,7 @@ function renderSlideNumber(
     color: tokens.color,
     hAlign: tokens.hAlign,
     vAlign: tokens.vAlign,
+    number: context.slideNumber,
   };
 }
 

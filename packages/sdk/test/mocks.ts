@@ -351,6 +351,7 @@ export function mockRenderContext(theme?: Theme) {
   const ctx: any = {
     theme: t,
     canvas: noopCanvas(),
+    slideNumber: 1,
     renderTree: async (node: any) => node,
   };
   return ctx;

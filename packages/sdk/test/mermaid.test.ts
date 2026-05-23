@@ -270,6 +270,7 @@ describe("mermaid expansion", () => {
           return "mock://mermaid.png";
         },
       },
+      slideNumber: 1,
       renderTree: async (n: any) => n,
     });
 
@@ -287,6 +288,7 @@ describe("mermaid expansion", () => {
     const rendered = await renderComponent(m, {
       theme: mockTheme(),
       canvas: { renderHtml: async () => "mock://mermaid.png" },
+      slideNumber: 1,
       renderTree: async (n: any) => n,
     });
 
@@ -307,6 +309,7 @@ describe("mermaid expansion", () => {
     const rendered = await renderComponent(m, {
       theme: mockTheme(),
       canvas: { renderHtml: async () => "mock://mermaid.png" },
+      slideNumber: 1,
       renderTree: async (n: any) => n,
     });
 
@@ -322,6 +325,7 @@ describe("mermaid expansion", () => {
     const rendered = await renderComponent(m, {
       theme: mockTheme(),
       canvas: { renderHtml: async () => "mock://mermaid.png" },
+      slideNumber: 1,
       renderTree: async (n: any) => n,
     });
 
@@ -338,6 +342,7 @@ describe("mermaid expansion", () => {
     const rendered = await renderComponent(m, {
       theme: mockTheme(),
       canvas: { renderHtml: async () => "mock://mermaid.png" },
+      slideNumber: 1,
       renderTree: async (n: any) => n,
     });
 
