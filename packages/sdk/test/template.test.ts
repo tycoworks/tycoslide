@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import { pathToFileURL } from "node:url";
 import type { Background } from "@tycoslide/core";
 import type { LayoutConfig } from "@tycoslide/sdk";
-import { AssetCatalog, type AssetEntry, defineTemplate, isAssetRef } from "../src/theme/template.js";
+import { AssetCatalog, defineTemplate, isAssetRef } from "../src/theme/template.js";
 
 const testLayouts = new Map<string, LayoutConfig>();
 

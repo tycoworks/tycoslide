@@ -38,7 +38,7 @@ import type {
   HorizontalAlignment,
   NormalizedRun,
   SizeValue,
-  TextStyleConfig,
+  TextStyle,
   Theme,
   VerticalAlignment,
 } from "../model/types.js";
@@ -801,7 +801,7 @@ export function styleNode(
  *  Consecutive bullet lines are wrapped in a single <ul> with native disc markers. */
 function renderTextRunsToHTML(
   runs: NormalizedRun[],
-  style: TextStyleConfig,
+  style: TextStyle,
   bulletIndentPx: number,
   linkColor?: string,
   linkUnderline?: boolean,
@@ -865,12 +865,7 @@ function renderTextRunsToHTML(
 }
 
 /** Render a single run as an inline <span> HTML string. */
-function renderRunSpanHTML(
-  run: NormalizedRun,
-  style: TextStyleConfig,
-  linkColor?: string,
-  linkUnderline?: boolean,
-): string {
+function renderRunSpanHTML(run: NormalizedRun, style: TextStyle, linkColor?: string, linkUnderline?: boolean): string {
   const css: string[] = [];
   const family = style.fontFamily;
 
@@ -1225,7 +1220,7 @@ export async function measureFontNormalRatios(
     result.set(name, ratio);
   }
 
-  // Stamp normalRatio onto FontFamilyConfig objects so PPTX renderer can access them
+  // Stamp normalRatio onto FontFamily objects so PPTX renderer can access them
   for (const styleName of Object.keys(theme.textStyles)) {
     const ratio = result.get(theme.textStyles[styleName].fontFamily.name);
     if (ratio !== undefined) theme.textStyles[styleName].fontFamily.normalRatio = ratio;

@@ -3,11 +3,11 @@
 // Format is the per-format spatial configuration — all spatial values in pixels (96 DPI), strokes in pt.
 
 import type {
+  FontFamily as CoreFontFamily,
+  TextStyle as CoreTextStyle,
   Font,
-  FontFamilyConfig,
   HorizontalAlignment,
   ShadowType,
-  TextStyleConfig,
   VerticalAlignment,
 } from "@tycoslide/core";
 import type { HighlightThemeName } from "../presets/highlighting.js";
@@ -34,15 +34,15 @@ export interface TextStyle {
 
 // ── Resolution helpers ───────────────────────────────────────────────────────
 
-/** Resolve an SDK FontFamily to a core FontFamilyConfig. */
-export function resolveFontFamily(family: FontFamily): FontFamilyConfig {
-  return family as FontFamilyConfig;
+/** Resolve an SDK FontFamily to a core FontFamily. */
+export function resolveFontFamily(family: FontFamily): CoreFontFamily {
+  return family as CoreFontFamily;
 }
 
-/** Resolve an SDK TextStyle to a core TextStyleConfig (applies defaults). */
-export function resolveTextStyle(style: TextStyle): TextStyleConfig {
+/** Resolve an SDK TextStyle to a core TextStyle (applies defaults). */
+export function resolveTextStyle(style: TextStyle): CoreTextStyle {
   return {
-    fontFamily: style.fontFamily as FontFamilyConfig,
+    fontFamily: style.fontFamily as CoreFontFamily,
     fontSize: style.fontSize,
     lineHeight: style.lineHeight,
     bulletIndentPt: style.bulletIndentPt ?? style.fontSize * 1.5,

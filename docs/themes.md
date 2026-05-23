@@ -1,10 +1,10 @@
 # Themes
 
-Themes control all visual styling in tycoslide — typography, spacing, colors, backgrounds, and slide dimensions. A theme is a `ThemeDefinition` that maps format names to complete visual configurations.
+Themes control all visual styling in tycoslide — typography, spacing, colors, backgrounds, and slide dimensions. A theme is a `Theme` that maps format names to complete visual configurations.
 
 ## What a Theme Contains
 
-A `ThemeDefinition` has two top-level concerns:
+A `Theme` has two top-level concerns:
 
 - **Fonts** — every font family the theme uses (embedded in the output file)
 - **Formats** — named output shapes, each carrying slide dimensions, text styles, and templates

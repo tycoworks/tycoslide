@@ -18,7 +18,7 @@ import type {
   TableNode,
   TextNode,
 } from "../model/nodes.js";
-import type { DashType, StrikeType, TextContent, TextStyleConfig, UnderlineStyle } from "../model/types.js";
+import type { DashType, StrikeType, TextContent, TextStyle, UnderlineStyle } from "../model/types.js";
 import { DASH_TYPE, DIRECTION, GRID_STYLE, LINE_SHAPE, STRIKE_TYPE, UNDERLINE_STYLE } from "../model/types.js";
 
 /** Map CSS-compatible dash type names to pptxgenjs values. */
@@ -141,7 +141,7 @@ export class PptxConfigBuilder {
 
   buildTextFragments(
     content: TextContent,
-    style: TextStyleConfig,
+    style: TextStyle,
     color: string,
     linkColor?: string,
     linkUnderline?: boolean,

@@ -2,7 +2,7 @@
 // A Theme maps format names to ThemeFormats.
 // resolveThemeFormat() flattens a Theme + format name into a core Theme.
 
-import type { Theme as ResolvedTheme, TemplateConfig, TextStyleConfig } from "@tycoslide/core";
+import type { TextStyle as CoreTextStyle, Theme as CoreTheme, TemplateConfig } from "@tycoslide/core";
 import { validateThemeFonts } from "@tycoslide/core";
 import type { FontFamily, TextStyle } from "./format.js";
 import { resolveFontFamily, resolveTextStyle } from "./format.js";
@@ -38,9 +38,9 @@ function templatesToLayouts(templates: Template[]): Record<string, TemplateConfi
   return layouts;
 }
 
-/** Resolve all text styles in a record from SDK TextStyle to core TextStyleConfig. */
-function resolveTextStyles(styles: Record<string, TextStyle>): Record<string, TextStyleConfig> {
-  const resolved: Record<string, TextStyleConfig> = {};
+/** Resolve all text styles in a record from SDK TextStyle to core TextStyle. */
+function resolveTextStyles(styles: Record<string, TextStyle>): Record<string, CoreTextStyle> {
+  const resolved: Record<string, CoreTextStyle> = {};
   for (const [name, style] of Object.entries(styles)) {
     resolved[name] = resolveTextStyle(style);
   }
@@ -80,7 +80,7 @@ export function defineTheme(definition: Theme): Theme {
  * Background is embedded in each TemplateConfig — no separate master layer.
  * Throws with available format names if the format is missing or unknown.
  */
-export function resolveThemeFormat(definition: Theme, format: string | undefined): ResolvedTheme {
+export function resolveThemeFormat(definition: Theme, format: string | undefined): CoreTheme {
   const available = Object.keys(definition.formats);
 
   if (!format) {

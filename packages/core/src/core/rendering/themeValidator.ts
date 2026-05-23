@@ -2,20 +2,20 @@
 // Structural validation of theme font configuration.
 // Pure computation — no I/O, no file system access.
 
-import { FONT_FORMATS, isFontFamilyConfig } from "../../utils/font.js";
-import { FONT_SLOT, type FontFamilyConfig, type Theme } from "../model/types.js";
+import { FONT_FORMATS, isFontFamily } from "../../utils/font.js";
+import { FONT_SLOT, type FontFamily, type Theme } from "../model/types.js";
 
 /**
- * Walk a token object tree and invoke callback for every FontFamilyConfig value found.
+ * Walk a token object tree and invoke callback for every FontFamily value found.
  * Used to validate layout token font registration.
  */
 function walkTokensForFonts(
   tokens: Record<string, unknown>,
   tokenPath: string,
-  callback: (family: FontFamilyConfig, path: string, key: string) => void,
+  callback: (family: FontFamily, path: string, key: string) => void,
 ): void {
   for (const [key, value] of Object.entries(tokens)) {
-    if (isFontFamilyConfig(value)) {
+    if (isFontFamily(value)) {
       callback(value, tokenPath, key);
     } else if (typeof value === "object" && value !== null && !Array.isArray(value)) {
       walkTokensForFonts(value as Record<string, unknown>, `${tokenPath}.${key}`, callback);
@@ -68,8 +68,8 @@ export function validateThemeFonts(theme: Theme): void {
     }
   }
 
-  // Validate: layout tokens that contain FontFamilyConfig must be in theme.fonts
-  const validateTokenFonts = (family: FontFamilyConfig, tokenPath: string, key: string) => {
+  // Validate: layout tokens that contain FontFamily must be in theme.fonts
+  const validateTokenFonts = (family: FontFamily, tokenPath: string, key: string) => {
     for (const slot of Object.values(FONT_SLOT)) {
       const font = family[slot];
       if (font && !registeredPaths.has(font.path)) {

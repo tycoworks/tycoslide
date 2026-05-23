@@ -30,7 +30,7 @@ npx tycoslide build deck.md          # Build a single deck (outputs deck.pptx)
 tycoslide is an npm workspaces monorepo with four packages:
 
 - **`packages/core`** (npm: `@tycoslide/core`) — Format-agnostic engine: rendering, layout, model, markdown compilation. Knows only flat `Theme` type, node types, and token maps
-- **`packages/sdk`** (npm: `@tycoslide/sdk`) — Everything theme authors need: 16 standard components, presets (SlideFormat, Component names, highlighting), multi-format theme types (`ThemeDefinition`, `ThemeFormat`, `resolveThemeFormat`), and theme-authoring helpers
+- **`packages/sdk`** (npm: `@tycoslide/sdk`) — Everything theme authors need: 16 standard components, presets (SlideFormat, Component names, highlighting), multi-format theme types (`Theme`, `ThemeFormat`, `resolveThemeFormat`), and theme-authoring helpers
 - **`packages/cli`** (npm: `@tycoslide/cli`) — Terminal wiring: reads markdown, loads themes, calls SDK's format resolution, passes flat `Theme` to core
 - **`packages/theme-default`** (npm: `@tycoslide/theme-default`) — Default theme with Inter font and Material Design icons
 
@@ -52,7 +52,7 @@ npx tsc --build      # Rebuilds tycoslide (if changed) then the theme
 - `packages/core/src/utils/` — Font utils, image utils, units
 - `packages/sdk/src/components/` — All 16 component definitions
 - `packages/sdk/src/presets/` — SlideFormat, Component names, highlighting themes
-- `packages/sdk/src/theme.ts` — Multi-format theme types and resolution (ThemeDefinition, ThemeFormat, resolveThemeFormat)
+- `packages/sdk/src/theme/` — Multi-format theme types and resolution (Theme, ThemeFormat, resolveThemeFormat)
 - `packages/sdk/src/template.ts` — Template authoring (defineTemplate, Master, Layout, Template)
 - `packages/theme-default/src/` — Default theme (Inter font, Material Design icons)
 - `packages/core/test/` — Core tests (uses `node:test`, NOT vitest)
