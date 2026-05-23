@@ -1,6 +1,6 @@
 import * as assert from "node:assert";
 import { describe, it } from "node:test";
-import type { TextStyleConfig } from "@tycoslide/core";
+import type { TextStyle } from "@tycoslide/core";
 import { NODE_TYPE, SYNTAX } from "@tycoslide/core";
 import type { RootContent } from "mdast";
 import { type CodeTokens, code, renderCodeToHtml } from "../src/components/code.js";
@@ -233,7 +233,7 @@ describe("renderCodeToHtml()", () => {
     image: { padding: 0 },
   };
 
-  const codeStyle: TextStyleConfig = {
+  const codeStyle: TextStyle = {
     fontFamily: { name: "Fira Code", regular: { path: "/fake/fira-code.woff", weight: 400 }, normalRatio: 1.2 },
     fontSize: 12,
     lineHeight: 1.4,

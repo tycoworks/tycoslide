@@ -7,12 +7,20 @@
 
 import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
-
+import { pathToFileURL } from "node:url";
 import { type Background, NODE_TYPE, type SlideNode, type TemplateConfig } from "@tycoslide/core";
 import { param, schema } from "@tycoslide/sdk";
 import { buildSlideName, compileDocument } from "../src/markdown/documentCompiler.js";
+import { AssetCatalog } from "../src/theme/template.js";
 import { mockTheme } from "./mocks.js";
 import { testComponents } from "./test-components.js";
+
+/** Mock asset catalog with a single $icons.shield entry for testing. */
+const mockAssets = new AssetCatalog(pathToFileURL("/mock/assets/src/index.js").href, {
+  icons: {
+    shield: { path: "icons/shield.png", documentation: { description: "Shield icon" } },
+  },
+});
 
 // ============================================
 // TEST SETUP
@@ -38,9 +46,11 @@ function makeOptions() {
         slots: defaultConfig,
         strict: defaultConfig,
         default: defaultConfig,
+        array: defaultConfig,
       },
     }),
-    layouts: [simpleLayout, bodyLayout, slotLayout, strictLayout, defaultLayout],
+    assets: mockAssets,
+    layouts: [simpleLayout, bodyLayout, slotLayout, strictLayout, defaultLayout, arrayLayout],
     components: testComponents,
   };
 }
@@ -85,6 +95,16 @@ const defaultLayout = {
   name: "default",
   description: "Default layout with optional body",
   params: { title: param.optional(schema.string()), body: param.optional(schema.string()) },
+  render: (params: any, slots: any): SlideNode => mockContent({ ...params, ...slots }),
+};
+
+const arrayLayout = {
+  name: "array",
+  description: "Layout with array and nested-object params",
+  params: {
+    icons: param.optional(schema.array(schema.string())),
+    cards: param.optional(schema.array(schema.object({ icon: schema.string(), label: schema.string() }))),
+  },
   render: (params: any, slots: any): SlideNode => mockContent({ ...params, ...slots }),
 };
 
@@ -189,6 +209,7 @@ notes: These are speaker notes.
       const md = `${HEADER}---\ntemplate: simple\ntitle: Test\n---`;
       const pres = compileDocument(md, {
         theme,
+        assets: mockAssets,
         layouts: [simpleLayout, bodyLayout, slotLayout, strictLayout, defaultLayout],
         components: testComponents,
       });
@@ -200,7 +221,7 @@ notes: These are speaker notes.
       const theme = mockTheme({ layouts: {} });
       const md = `${HEADER}---\ntemplate: simple\ntitle: Test\n---`;
       assert.throws(
-        () => compileDocument(md, { theme, layouts: [simpleLayout], components: testComponents }),
+        () => compileDocument(md, { theme, assets: mockAssets, layouts: [simpleLayout], components: testComponents }),
         /theme has no config for template 'simple'/,
       );
     });
@@ -326,20 +347,118 @@ title: Has Title
   });
 
   describe("asset references", () => {
-    it("should pass asset references through as strings (resolved at expansion time)", () => {
+    it("should resolve $category.name asset references via resolver", () => {
       const md =
         HEADER +
         `---
 template: body
-title: $images.photo
+title: $icons.shield
 ---
 
 Some body text`;
-      const testAssets = { images: { photo: "/resolved/photo.png" } };
-      compileDocument(md, { ...makeOptions(), assets: testAssets });
+      compileDocument(md, {
+        ...makeOptions(),
+      });
       assert.strictEqual(receivedProps.length, 1);
-      // Asset refs in non-image fields pass through as raw strings
-      assert.strictEqual(receivedProps[0].title, "$images.photo");
+      assert.strictEqual(receivedProps[0].title, "/mock/assets/icons/shield.png");
+    });
+
+    it("should throw on unknown asset reference", () => {
+      const md =
+        HEADER +
+        `---
+template: body
+title: $icons.nonexistent
+---
+
+Some body text`;
+      assert.throws(() => compileDocument(md, makeOptions()), /Unknown asset reference.*nonexistent/);
+    });
+
+    it("should not treat $100 or $variable as asset references", () => {
+      const md =
+        HEADER +
+        `---
+template: body
+title: $100
+---
+
+Some body text`;
+      compileDocument(md, {
+        ...makeOptions(),
+      });
+      assert.strictEqual(receivedProps.length, 1);
+      assert.strictEqual(receivedProps[0].title, "$100");
+    });
+
+    it("should resolve $category.name asset references in slot content (directives)", () => {
+      const md =
+        HEADER +
+        `---
+template: body
+---
+
+:::image
+$icons.shield
+:::`;
+      compileDocument(md, {
+        ...makeOptions(),
+      });
+      assert.strictEqual(receivedProps.length, 1);
+      // The body slot compiles the :::image directive into a ComponentNode.
+      // resolveSlotAssetRefs should resolve the $icons.shield content to a disk path.
+      const bodySlot = receivedProps[0].body;
+      assert.ok(Array.isArray(bodySlot), "body slot should be an array of nodes");
+      const imageNode = bodySlot.find((n: any) => n.componentName === "image");
+      assert.ok(imageNode, "should have an image component node");
+      assert.strictEqual(imageNode.content, "/mock/assets/icons/shield.png");
+    });
+
+    it("should resolve asset references in string array params", () => {
+      const md =
+        HEADER +
+        `---
+template: array
+icons:
+  - $icons.shield
+  - plain-text.png
+---`;
+      compileDocument(md, makeOptions());
+      assert.strictEqual(receivedProps.length, 1);
+      assert.deepStrictEqual(receivedProps[0].icons, ["/mock/assets/icons/shield.png", "plain-text.png"]);
+    });
+
+    it("should resolve asset references in nested object array params", () => {
+      const md =
+        HEADER +
+        `---
+template: array
+cards:
+  - icon: $icons.shield
+    label: Security
+  - icon: logo.png
+    label: Brand
+---`;
+      compileDocument(md, makeOptions());
+      assert.strictEqual(receivedProps.length, 1);
+      assert.strictEqual(receivedProps[0].cards[0].icon, "/mock/assets/icons/shield.png");
+      assert.strictEqual(receivedProps[0].cards[1].icon, "logo.png");
+    });
+
+    it("should leave non-asset strings unchanged", () => {
+      const md =
+        HEADER +
+        `---
+template: body
+title: Just a normal title
+---
+
+Some body text`;
+      compileDocument(md, {
+        ...makeOptions(),
+      });
+      assert.strictEqual(receivedProps.length, 1);
+      assert.strictEqual(receivedProps[0].title, "Just a normal title");
     });
   });
 

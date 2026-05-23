@@ -1,5 +1,7 @@
 // Template DSL: defineTemplate()
 
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Background, SlideNode } from "@tycoslide/core";
 import { defineLayout, type LayoutConfig, type ScalarShape } from "../authoring/index.js";
 
@@ -16,14 +18,69 @@ export interface Documentation {
   gotchas?: string[];
 }
 
-/** A documented asset reference for the skill compiler. */
+/** A documented asset entry — path + documentation for the skill compiler manifest. */
 export interface AssetEntry {
+  /** Relative path from the package root to the asset file (e.g., "assets/icons/shield.png"). */
   path: string;
   documentation: Documentation;
 }
 
-/** Asset catalog: category → name → documented entry. */
-export type AssetCatalog = Record<string, Record<string, AssetEntry>>;
+/** Matches `$category.name` — word chars only, exactly two segments. */
+const ASSET_REF_PATTERN = /^\$([a-zA-Z]\w*)\.([a-zA-Z]\w*)$/;
+
+/** Test whether a string is a `$category.name` asset reference. */
+export function isAssetRef(value: string): boolean {
+  return ASSET_REF_PATTERN.test(value);
+}
+
+/** Raw catalog entries type — category → name → documented entry. */
+export type AssetCatalogEntries = Record<string, Record<string, AssetEntry>>;
+
+/**
+ * Asset catalog — holds asset entries and resolves them to absolute disk paths.
+ *
+ * Theme authors create one with `import.meta.url` and their catalog entries.
+ * The class derives the package root from the caller's location on disk.
+ *
+ * @example
+ * ```ts
+ * export const assets = new AssetCatalog(import.meta.url, {
+ *   icons: { shield: { path: "assets/icons/shield.png", documentation: { description: "..." } } },
+ * });
+ * ```
+ */
+export class AssetCatalog {
+  readonly entries: AssetCatalogEntries;
+  private readonly packageRoot: string;
+
+  constructor(importMetaUrl: string, entries: AssetCatalogEntries) {
+    this.packageRoot = path.resolve(path.dirname(fileURLToPath(importMetaUrl)), "..");
+    this.entries = entries;
+  }
+
+  /** Resolve an asset entry to an absolute disk path. */
+  resolve(entry: AssetEntry): string {
+    return path.join(this.packageRoot, entry.path);
+  }
+
+  /** Resolve a `$category.name` reference string to an absolute disk path. */
+  resolveRef(ref: string): string {
+    const match = ASSET_REF_PATTERN.exec(ref);
+    if (!match) {
+      throw new Error(`Asset reference '${ref}' must be in the form $category.name (e.g. $icons.shield).`);
+    }
+    const [, category, name] = match;
+    const entry = this.entries[category]?.[name];
+    if (!entry) {
+      const available = Object.keys(this.entries[category] ?? {}).join(", ");
+      throw new Error(
+        `Unknown asset reference '${ref}'. Category '${category}' has no entry '${name}'.` +
+          (available ? ` Available: ${available}` : ""),
+      );
+    }
+    return this.resolve(entry);
+  }
+}
 
 /**
  * A reusable structural blueprint — params + slots + render function.

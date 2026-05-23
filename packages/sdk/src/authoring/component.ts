@@ -31,7 +31,7 @@ export interface SyntaxHandler {
 // ============================================
 
 /** A scalar component definition — has .schema for YAML validation and layout params. */
-export type ContentComponentConfig<
+export type ContentComponentSpec<
   TSchema extends z.ZodTypeAny = z.ZodTypeAny,
   TTokens = undefined,
 > = ComponentDefinition<any, any, TTokens> &
@@ -112,7 +112,7 @@ export interface AuthoringFields {
 }
 
 /** A component definition with authoring fields — what defineComponent() returns and slotCompiler consumes. */
-export type ComponentConfig = ComponentDefinition<any, any, any> & AuthoringFields;
+export type ComponentSpec = ComponentDefinition<any, any, any> & AuthoringFields;
 
 /**
  * Define a content component — has a `content` schema (primary content) and optional params.
@@ -135,7 +135,7 @@ export function defineComponent<
     context: RenderContext,
     tokens: TTokens,
   ) => SlideNode | Promise<SlideNode>;
-}): ContentComponentConfig<TContent, TTokens>;
+}): ContentComponentSpec<TContent, TTokens>;
 
 /**
  * Define a container component — accepts children (SlideNode[]) as content.
@@ -173,7 +173,7 @@ export function defineComponent<
     context: RenderContext,
     tokens: TTokens,
   ) => SlideNode | Promise<SlideNode>;
-}): ContentComponentConfig<z.ZodObject<TParams>, TTokens>;
+}): ContentComponentSpec<z.ZodObject<TParams>, TTokens>;
 
 // Implementation
 export function defineComponent(def: any): ComponentDefinition<any, any, any> & { schema?: z.ZodTypeAny } {

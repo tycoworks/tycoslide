@@ -6,15 +6,15 @@ import { createRequire } from "node:module";
 import type {
   ComponentNode,
   ElementNode,
-  FontFamilyConfig,
+  FontFamily,
   LayoutNode,
   RenderContext,
   SlideNode,
-  TextStyleConfig,
+  TextStyle,
   Theme,
 } from "@tycoslide/core";
 import { DASH_TYPE, GRID_STYLE, HALIGN, isComponentNode, isLayoutNode, VALIGN } from "@tycoslide/core";
-import type { ComponentConfig } from "../src/authoring/component.js";
+import type { ComponentSpec } from "../src/authoring/component.js";
 import type {
   CardTokens,
   CodeTokens,
@@ -77,7 +77,7 @@ const require = createRequire(import.meta.url);
 // ============================================
 
 /** All standard SDK components for testing. */
-export const testComponents: ComponentConfig[] = [
+export const testComponents: ComponentSpec[] = [
   textComponent,
   imageComponent,
   cardComponent,
@@ -98,7 +98,7 @@ export const testComponents: ComponentConfig[] = [
 ];
 
 /** Find a component that handles a specific MDAST node type. */
-export function findSyntaxHandler(nodeType: string): ComponentConfig | undefined {
+export function findSyntaxHandler(nodeType: string): ComponentSpec | undefined {
   return testComponents.find((def) => def.syntax?.nodeTypes.includes(nodeType as any));
 }
 
@@ -106,14 +106,14 @@ export function findSyntaxHandler(nodeType: string): ComponentConfig | undefined
 // MOCK THEME
 // ============================================
 
-const mockFontFamily: FontFamilyConfig = {
+const mockFontFamily: FontFamily = {
   name: "Inter",
   regular: { path: require.resolve("@fontsource/inter/files/inter-latin-400-normal.woff"), weight: 400 },
   bold: { path: require.resolve("@fontsource/inter/files/inter-latin-700-normal.woff"), weight: 700 },
   normalRatio: 1.0,
 };
 
-const mockTextStyle: TextStyleConfig = {
+const mockTextStyle: TextStyle = {
   fontSize: 12,
   fontFamily: mockFontFamily,
   lineHeight: 1.0,
@@ -127,7 +127,7 @@ const mockTextStyle: TextStyleConfig = {
  */
 export function mockTheme(options?: {
   layouts?: Theme["layouts"];
-  textStyles?: Partial<Record<string, Partial<TextStyleConfig>>>;
+  textStyles?: Partial<Record<string, Partial<TextStyle>>>;
   slide?: Theme["slide"];
 }): Theme {
   return {

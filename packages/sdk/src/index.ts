@@ -130,17 +130,19 @@ export {
 
 // ── Theme ───────────────────────────────────────────────────────────────────
 
-export type { ThemeDefinition, ThemeFormat } from "./theme/index.js";
+export type { Theme, ThemeFormat } from "./theme/index.js";
 // Multi-format theme definition and resolution
 export { defineTheme, resolveThemeFormat } from "./theme/index.js";
 
 // ── Templates ────────────────────────────────────────────────────────────────
 
 export {
-  type AssetCatalog,
+  AssetCatalog,
+  type AssetCatalogEntries,
   type AssetEntry,
   type Documentation,
   defineTemplate,
+  isAssetRef,
   type Layout,
   type Template,
 } from "./theme/template.js";
@@ -161,7 +163,7 @@ export type {
 // Component node factory (for layouts that instantiate components dynamically)
 export { component } from "@tycoslide/core";
 export type {
-  ComponentConfig,
+  ComponentSpec,
   InferParams,
   InferTokens,
   LayoutConfig,
@@ -211,6 +213,7 @@ export {
   type CompilePluginOptions,
   type CompilePluginResult,
   compilePlugin,
+  generateManifest,
   introspectParams,
   PARAM_TYPE,
   type ParamInfo,

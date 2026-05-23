@@ -1,13 +1,15 @@
 import * as assert from "node:assert";
 import { describe, it } from "node:test";
+import { pathToFileURL } from "node:url";
 import { z } from "zod";
 import { compilePlugin, PLUGIN_PATHS, stripScope } from "../src/plugin/compiler.js";
-import type { ThemeDefinition } from "../src/theme/index.js";
-import { defineTemplate } from "../src/theme/template.js";
+import type { Theme } from "../src/theme/index.js";
+import { AssetCatalog, defineTemplate } from "../src/theme/template.js";
 
 // ── Test theme fixture ──────────────────────────────────────────────────────
 
 const mockFont = { name: "Inter", regular: { path: "inter.woff2", weight: 400 } };
+const emptyAssets = new AssetCatalog(import.meta.url, {});
 
 const stubRender = () => ({ type: "component", componentName: "column", params: {}, content: undefined }) as any;
 
@@ -55,7 +57,7 @@ const cardsTemplate = defineTemplate({
   tokens: {},
 });
 
-const testTheme: ThemeDefinition = {
+const testTheme: Theme = {
   fonts: [mockFont],
   formats: {
     presentation: {
@@ -64,6 +66,7 @@ const testTheme: ThemeDefinition = {
       templates: [bodyTemplate, statTemplate, cardsTemplate],
     },
   },
+  assets: emptyAssets,
 };
 
 // ── Tests ───────────────────────────────────────────────────────────────────
@@ -75,13 +78,15 @@ describe("compilePlugin()", () => {
     version: "1.0.0",
   });
 
-  it("returns all plugin files at correct paths", () => {
+  it("returns manifest and plugin files at correct paths", () => {
     assert.ok(result.files[PLUGIN_PATHS.MANIFEST_JSON]);
     assert.ok(result.files[PLUGIN_PATHS.PLUGIN_JSON]);
-    assert.ok(result.files[PLUGIN_PATHS.HOOKS_JSON]);
-    assert.ok(result.files[PLUGIN_PATHS.BIN_TYCOSLIDE]);
-    assert.ok(result.files[PLUGIN_PATHS.RUNTIME_PACKAGE_JSON]);
-    assert.strictEqual(Object.keys(result.files).length, 5);
+    assert.strictEqual(Object.keys(result.files).length, 2);
+  });
+
+  it("skill directory is skills/tycoslide", () => {
+    assert.strictEqual(PLUGIN_PATHS.SKILL_DIR, "skills/tycoslide");
+    assert.strictEqual(PLUGIN_PATHS.MANIFEST_JSON, "skills/tycoslide/manifest.json");
   });
 
   it("result.plugin has correct metadata", () => {
@@ -104,7 +109,7 @@ describe("compilePlugin() manifest.json", () => {
 
   it("manifest.json is in result.files at the correct path", () => {
     assert.ok(result.files[PLUGIN_PATHS.MANIFEST_JSON]);
-    assert.strictEqual(PLUGIN_PATHS.MANIFEST_JSON, "skills/build/manifest.json");
+    assert.strictEqual(PLUGIN_PATHS.MANIFEST_JSON, "skills/tycoslide/manifest.json");
   });
 
   it("manifest contains theme metadata (name, description, version)", () => {
@@ -195,7 +200,7 @@ describe("compilePlugin() manifest.json", () => {
   });
 
   it("assets from theme definition appear in manifest with $ref syntax", () => {
-    const themeWithAssets: ThemeDefinition = {
+    const themeWithAssets: Theme = {
       fonts: [mockFont],
       formats: {
         presentation: {
@@ -204,18 +209,18 @@ describe("compilePlugin() manifest.json", () => {
           templates: [bodyTemplate],
         },
       },
-      assets: {
+      assets: new AssetCatalog(pathToFileURL("/mock/pkg/src/index.js").href, {
         icons: {
-          star: { path: "/path/to/star.png", documentation: { description: "Star icon" } },
+          star: { path: "assets/icons/star.png", documentation: { description: "Star icon" } },
           heart: {
-            path: "/path/to/heart.png",
+            path: "assets/icons/heart.png",
             documentation: { description: "Heart icon", whenToUse: "Favorites" },
           },
         },
         logos: {
-          brand: { path: "/path/to/brand.png", documentation: { description: "Brand logo" } },
+          brand: { path: "assets/logos/brand.png", documentation: { description: "Brand logo" } },
         },
-      },
+      }),
     };
     const assetResult = compilePlugin(themeWithAssets, {
       name: "asset-theme",
@@ -242,7 +247,7 @@ describe("compilePlugin() manifest.json", () => {
 });
 
 describe("compilePlugin() manifest.json multi-format", () => {
-  const multiFormatTheme: ThemeDefinition = {
+  const multiFormatTheme: Theme = {
     fonts: [mockFont],
     formats: {
       presentation: {
@@ -256,6 +261,7 @@ describe("compilePlugin() manifest.json multi-format", () => {
         templates: [statTemplate],
       },
     },
+    assets: emptyAssets,
   };
 
   const result = compilePlugin(multiFormatTheme, {
@@ -290,7 +296,7 @@ describe("compilePlugin() manifest.json multi-format", () => {
 
 describe("compilePlugin() edge cases", () => {
   it("handles format with no templates", () => {
-    const emptyFormatTheme: ThemeDefinition = {
+    const emptyFormatTheme: Theme = {
       fonts: [mockFont],
       formats: {
         presentation: {
@@ -299,6 +305,7 @@ describe("compilePlugin() edge cases", () => {
           templates: [],
         },
       },
+      assets: emptyAssets,
     };
     const result = compilePlugin(emptyFormatTheme, {
       name: "empty-theme",
@@ -308,8 +315,8 @@ describe("compilePlugin() edge cases", () => {
     assert.ok(result.files[PLUGIN_PATHS.MANIFEST_JSON]);
   });
 
-  it("throws if ThemeDefinition has no formats", () => {
-    const noFormats = { fonts: [mockFont], formats: {} } as ThemeDefinition;
+  it("throws if Theme has no formats", () => {
+    const noFormats = { fonts: [mockFont], formats: {}, assets: emptyAssets } as Theme;
     assert.throws(
       () => compilePlugin(noFormats, { name: "test", description: "test", version: "1.0.0" }),
       /at least one format/,
@@ -341,11 +348,12 @@ describe("compilePlugin() edge cases", () => {
       background: { color: "#000" },
       tokens: {},
     });
-    const theme: ThemeDefinition = {
+    const theme: Theme = {
       fonts: [mockFont],
       formats: {
         presentation: { slide: { width: 960, height: 540 }, textStyles: {}, templates: [defaultTemplate] },
       },
+      assets: emptyAssets,
     };
     const result = compilePlugin(theme, { name: "test", description: "test", version: "1.0.0" });
     const manifest = JSON.parse(result.files[PLUGIN_PATHS.MANIFEST_JSON]);
@@ -355,91 +363,6 @@ describe("compilePlugin() edge cases", () => {
     assert.ok(sizeParam);
     assert.strictEqual(sizeParam.required, false);
     assert.deepStrictEqual(sizeParam.enumValues, ["small", "large"]);
-  });
-});
-
-// ── Content tests ────────────────────────────────────────────────────────────
-
-describe("compilePlugin() hooks.json content", () => {
-  const result = compilePlugin(testTheme, {
-    name: "@tycoslide/theme-default",
-    description: "Default theme with Inter font.",
-    version: "1.0.0",
-  });
-
-  const hooks = JSON.parse(result.files[PLUGIN_PATHS.HOOKS_JSON]);
-
-  it("hooks.json has SessionStart array", () => {
-    assert.ok(hooks.hooks);
-    assert.ok(Array.isArray(hooks.hooks.SessionStart));
-    assert.ok(hooks.hooks.SessionStart.length > 0);
-  });
-
-  it("hooks.json SessionStart command includes npm-error.log redirection", () => {
-    const command: string = hooks.hooks.SessionStart[0].hooks[0].command;
-    assert.ok(command.includes("npm-error.log"), `Expected npm-error.log in command, got: ${command}`);
-  });
-
-  it("hooks.json SessionStart command includes exit 1 on failure", () => {
-    const command: string = hooks.hooks.SessionStart[0].hooks[0].command;
-    assert.ok(command.includes("exit 1"), `Expected 'exit 1' in command, got: ${command}`);
-  });
-});
-
-describe("compilePlugin() bin/tycoslide content", () => {
-  const result = compilePlugin(testTheme, {
-    name: "@tycoslide/theme-default",
-    description: "Default theme with Inter font.",
-    version: "1.0.0",
-  });
-
-  const binContent: string = result.files[PLUGIN_PATHS.BIN_TYCOSLIDE];
-
-  it("bin/tycoslide has shebang line", () => {
-    assert.ok(binContent.startsWith("#!/usr/bin/env bash"), `Expected shebang, got: ${binContent.slice(0, 30)}`);
-  });
-
-  it("bin/tycoslide references PLUGIN_PATHS.CLI_ENTRY", () => {
-    assert.ok(
-      binContent.includes(PLUGIN_PATHS.CLI_ENTRY),
-      `Expected CLI_ENTRY path "${PLUGIN_PATHS.CLI_ENTRY}" in bin, got: ${binContent}`,
-    );
-  });
-
-  it("bin/tycoslide exports NODE_PATH", () => {
-    assert.ok(binContent.includes("NODE_PATH"), `Expected NODE_PATH export in bin, got: ${binContent}`);
-  });
-});
-
-describe("compilePlugin() runtime-package.json content", () => {
-  it("runtime-package.json has dependencies with @tycoslide/cli", () => {
-    const result = compilePlugin(testTheme, {
-      name: "@tycoslide/theme-default",
-      description: "Default theme with Inter font.",
-      version: "1.0.0",
-    });
-    const runtimePkg = JSON.parse(result.files[PLUGIN_PATHS.RUNTIME_PACKAGE_JSON]);
-    assert.ok(runtimePkg.dependencies, "Expected dependencies field");
-    assert.ok(runtimePkg.dependencies["@tycoslide/cli"], "Expected @tycoslide/cli in dependencies");
-  });
-
-  it("runtime-package.json carries through theme dependencies", () => {
-    const result = compilePlugin(testTheme, {
-      name: "@tycoslide/theme-default",
-      description: "Default theme with Inter font.",
-      version: "1.0.0",
-      dependencies: {
-        "@tycoslide/sdk": "^1.0.0",
-        "some-other-dep": "^2.0.0",
-      },
-    });
-    const runtimePkg = JSON.parse(result.files[PLUGIN_PATHS.RUNTIME_PACKAGE_JSON]);
-    assert.ok(runtimePkg.dependencies["@tycoslide/sdk"], "Expected @tycoslide/sdk carried through");
-    assert.strictEqual(
-      runtimePkg.dependencies["some-other-dep"],
-      undefined,
-      "Non-tycoslide deps should not be carried through",
-    );
   });
 });
 

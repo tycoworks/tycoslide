@@ -77,83 +77,8 @@ describe("image()", () => {
     assert.strictEqual(node.src, "test.png");
   });
 
-  // Asset path resolution (tested through image expansion)
-
-  test("resolves $dot.path to string value", async () => {
-    const assets = { icons: { rocket: "/path/to/rocket.svg" } };
-    const node = (await renderTree(image("$icons.rocket", DEFAULT_IMAGE_TOKENS), {
-      theme,
-      assets,
-      canvas: noopCanvas(),
-      renderTree: async (n: any) => n,
-    })) as ImageNode;
-    assert.strictEqual(node.src, "/path/to/rocket.svg");
-  });
-
-  test("resolves deeply nested asset path", async () => {
-    const assets = { images: { heroes: { landing: "/hero.png" } } };
-    const node = (await renderTree(image("$images.heroes.landing", DEFAULT_IMAGE_TOKENS), {
-      theme,
-      assets,
-      canvas: noopCanvas(),
-      renderTree: async (n: any) => n,
-    })) as ImageNode;
-    assert.strictEqual(node.src, "/hero.png");
-  });
-
-  test("throws when assets not provided for asset reference", async () => {
-    await assert.rejects(
-      () =>
-        renderTree(image("$icons.rocket", DEFAULT_IMAGE_TOKENS), {
-          theme,
-          canvas: noopCanvas(),
-          renderTree: async (n: any) => n,
-        }),
-      /asset reference.*no assets provided/,
-    );
-  });
-
-  test("throws when asset key not found", async () => {
-    const assets = { icons: { star: "/star.svg" } };
-    await assert.rejects(
-      () =>
-        renderTree(image("$icons.rocket", DEFAULT_IMAGE_TOKENS), {
-          theme,
-          assets,
-          canvas: noopCanvas(),
-          renderTree: async (n: any) => n,
-        }),
-      /could not be resolved/,
-    );
-  });
-
-  test("throws when asset path resolves to object (with suggestions)", async () => {
-    const assets = { icons: { rocket: "/rocket.svg", star: "/star.svg" } };
-    await assert.rejects(
-      () =>
-        renderTree(image("$icons", DEFAULT_IMAGE_TOKENS), {
-          theme,
-          assets,
-          canvas: noopCanvas(),
-          renderTree: async (n: any) => n,
-        }),
-      /resolved to an object.*Did you mean/,
-    );
-  });
-
-  test("throws when traversal hits non-object mid-path", async () => {
-    const assets = { icons: { rocket: "/rocket.svg" } };
-    await assert.rejects(
-      () =>
-        renderTree(image("$icons.rocket.size", DEFAULT_IMAGE_TOKENS), {
-          theme,
-          assets,
-          canvas: noopCanvas(),
-          renderTree: async (n: any) => n,
-        }),
-      /is not an object/,
-    );
-  });
+  // Asset path resolution is tested in documentCompiler — the compiler resolves
+  // $dot.path references at compile time before the image component sees them.
 
   test("passes through non-asset paths unchanged", async () => {
     const node = (await render(image("https://example.com/photo.jpg", DEFAULT_IMAGE_TOKENS))) as ImageNode;

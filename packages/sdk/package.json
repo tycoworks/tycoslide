@@ -10,6 +10,9 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "bin": {
+    "tycoslide-generate-plugin": "./dist/plugin/generate-plugin-cli.js"
+  },
   "files": [
     "dist/"
   ],

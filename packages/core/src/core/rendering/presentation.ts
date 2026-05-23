@@ -115,7 +115,6 @@ export interface SlideLayout {
 /** Configuration for creating a presentation. */
 export interface PresentationConfig {
   theme: Theme;
-  assets?: Record<string, unknown>;
   components: ComponentDefinition<any, any, any>[];
 }
 
@@ -127,7 +126,6 @@ export function createPresentation(config: PresentationConfig): Presentation {
 export class Presentation {
   private renderer: PptxRenderer;
   private _theme: Theme;
-  private _assets?: Record<string, unknown>;
   private componentDefs: Map<string, ComponentDefinition<any, any, any>>;
   private slideBounds: Bounds;
   private slideCount = 0;
@@ -135,7 +133,6 @@ export class Presentation {
 
   constructor(config: PresentationConfig) {
     this._theme = config.theme;
-    this._assets = config.assets;
     this.renderer = new PptxRenderer(config.theme);
     this.componentDefs = new Map(config.components.map((c) => [c.name, c]));
 
@@ -238,7 +235,6 @@ export class Presentation {
       // Build render context with canvas capability and renderTree
       const renderContext: RenderContext = {
         theme: this._theme,
-        assets: this._assets,
         canvas: {
           renderHtml: (html, transparent) => pipeline.renderHtmlToImage(html, this._theme, transparent),
         },

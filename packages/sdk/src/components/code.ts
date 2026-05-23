@@ -11,7 +11,7 @@ import {
   SHAPE,
   SIZE,
   SYNTAX,
-  type TextStyleConfig,
+  type TextStyle,
   type TextStyleName,
   VALIGN,
 } from "@tycoslide/core";
@@ -57,7 +57,7 @@ export async function renderCodeToHtml(
   code: string,
   language: string,
   tokens: CodeTokens,
-  style: TextStyleConfig,
+  style: TextStyle,
 ): Promise<string> {
   const highlighted = await codeToHtml(code, {
     lang: language,

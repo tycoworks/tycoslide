@@ -17,9 +17,10 @@ import {
   type Theme,
 } from "@tycoslide/core";
 import { z } from "zod";
-import type { ComponentConfig } from "../authoring/component.js";
+import type { ComponentSpec } from "../authoring/component.js";
 import type { LayoutConfig } from "../authoring/index.js";
 import type { HeadingDepth } from "../components/label.js";
+import { type AssetCatalog, isAssetRef } from "../theme/template.js";
 import { parseSlideDocument, type RawSlide } from "./slideParser.js";
 import { compileSlot } from "./slotCompiler.js";
 
@@ -52,12 +53,56 @@ export function buildSlideName(raw: RawSlide): string {
 export interface CompileOptions {
   /** Theme to apply to the presentation. */
   theme: Theme;
-  /** Nested assets object for resolving `$dot.path` references in frontmatter. */
-  assets?: Record<string, unknown>;
+  /** Asset catalog for resolving `$category.name` references to absolute disk paths. */
+  assets: AssetCatalog;
   /** Layout definitions (looked up by template name). */
   layouts: LayoutConfig[];
   /** Component definitions (for slot compilation and rendering). */
-  components: ComponentConfig[];
+  components: ComponentSpec[];
+}
+
+// ============================================
+// ASSET RESOLUTION
+// ============================================
+
+/**
+ * Resolve $category.name asset references in a flat params record. Mutates in place.
+ * Handles top-level strings and strings inside arrays (including array-of-objects).
+ */
+function resolveParamAssetRefs(params: Record<string, unknown>, assets: AssetCatalog): void {
+  for (const [key, value] of Object.entries(params)) {
+    if (typeof value === "string" && isAssetRef(value)) {
+      params[key] = assets.resolveRef(value);
+    } else if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; i++) {
+        const item = value[i];
+        if (typeof item === "string" && isAssetRef(item)) {
+          value[i] = assets.resolveRef(item);
+        } else if (item && typeof item === "object") {
+          // One level into array-of-objects (e.g., cards: [{image: $icons.shield}])
+          for (const [k, v] of Object.entries(item as Record<string, unknown>)) {
+            if (typeof v === "string" && isAssetRef(v)) {
+              (item as Record<string, unknown>)[k] = assets.resolveRef(v);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/** Walk slot-compiled nodes and resolve asset references in ComponentNode content. */
+function resolveSlotAssetRefs(nodes: SlideNode[], assets: AssetCatalog): void {
+  for (const node of nodes) {
+    if (isComponentNode(node)) {
+      const cn = node as ComponentNode;
+      if (typeof cn.content === "string" && isAssetRef(cn.content)) {
+        cn.content = assets.resolveRef(cn.content);
+      } else if (Array.isArray(cn.content)) {
+        resolveSlotAssetRefs(cn.content as SlideNode[], assets);
+      }
+    }
+  }
 }
 
 // ============================================
@@ -73,7 +118,7 @@ export function validateLayout(
   layout: LayoutConfig,
   rawParams: Record<string, unknown>,
   rawSlots: Record<string, unknown>,
-  components: ComponentConfig[],
+  components: ComponentSpec[],
 ): any {
   const paramsResult = z.object(layout.params).strict().safeParse(rawParams);
   if (!paramsResult.success) {
@@ -135,7 +180,6 @@ export function compileDocument(source: string, options: CompileOptions): Presen
   const parsed = parseSlideDocument(source);
   const presentation = createPresentation({
     theme: options.theme,
-    assets: options.assets,
     components: options.components,
   });
 
@@ -185,7 +229,10 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
     delete params[key];
   }
 
-  // 5. Build SLOTS — from ::name:: markers and body content
+  // 5. Resolve $category.name asset references in params (before validation)
+  resolveParamAssetRefs(params, options.assets);
+
+  // 6. Build SLOTS — from ::name:: markers and body content
   const slots: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(raw.slots)) {
     slots[key] = value;
@@ -204,10 +251,18 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
     }
   }
 
-  // 6. Validate params and slots
+  // 7. Validate params and slots
   const validated = validateLayout(layout, params, slots, options.components);
 
-  // 7. Inject tokens into slot-compiled ComponentNodes
+  // 8. Resolve $category.name asset references in slot-compiled nodes
+  for (const slotName of Object.keys(validated.slots)) {
+    const slotNodes = validated.slots[slotName];
+    if (Array.isArray(slotNodes)) {
+      resolveSlotAssetRefs(slotNodes as SlideNode[], options.assets);
+    }
+  }
+
+  // 9. Inject tokens into slot-compiled ComponentNodes
   const { tokens } = layoutConfig;
   if (layout.slots?.length && tokens) {
     for (const slotName of layout.slots) {
@@ -218,17 +273,17 @@ function compileLayoutSlide(raw: RawSlide, options: CompileOptions): Slide {
     }
   }
 
-  // 8. Render layout — returns content only (SlideNode)
+  // 10. Render layout — returns content only (SlideNode)
   const content = layout.render(validated.params, validated.slots, tokens);
 
-  // 9. Assemble Slide — background from template config, layoutName for master dedup
+  // 11. Assemble Slide — background from template config, layoutName for master dedup
   const slide: Slide = {
     layoutName,
     background: layoutConfig.background,
     content,
   };
 
-  // 10. Attach speaker notes from frontmatter
+  // 12. Attach speaker notes from frontmatter
   if (notes) {
     slide.notes = notes;
   }

@@ -26,7 +26,6 @@ export interface Canvas {
  */
 export interface RenderContext {
   theme: Theme;
-  assets?: Record<string, unknown>;
   canvas: Canvas;
   /** Recursively render a component tree to primitives. Components call this for nested content. */
   renderTree: (node: SlideNode) => Promise<ElementNode>;

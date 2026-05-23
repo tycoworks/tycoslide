@@ -7,7 +7,7 @@ import { generateFontFaceCSS } from "../src/core/layout/layoutHtml.js";
 import { Insets } from "../src/core/model/bounds.js";
 import type { ContainerNode, ElementNode, TextNode } from "../src/core/model/nodes.js";
 import { NODE_TYPE } from "../src/core/model/nodes.js";
-import type { Background, FontFamilyConfig } from "../src/core/model/types.js";
+import type { Background, FontFamily } from "../src/core/model/types.js";
 import { DASH_TYPE, GRID_STYLE, HALIGN, SIZE, SPACING_MODE, VALIGN } from "../src/core/model/types.js";
 import { validateThemeFonts } from "../src/core/rendering/themeValidator.js";
 import { validateFontVariants } from "../src/utils/font.js";
@@ -115,7 +115,7 @@ describe("validateThemeFonts", () => {
       assert.doesNotThrow(() => validateThemeFonts(theme));
     });
 
-    it("accepts FontFamilyConfig with italic and boldItalic slots", () => {
+    it("accepts FontFamily with italic and boldItalic slots", () => {
       const theme = mockTheme();
       const fullFamily = {
         name: "Full",
@@ -134,7 +134,7 @@ describe("validateThemeFonts", () => {
   });
 
   describe("layout token validation", () => {
-    it("throws when layout FontFamilyConfig token is not in theme.fonts", () => {
+    it("throws when layout FontFamily token is not in theme.fonts", () => {
       const unregisteredFamily = {
         name: "Unknown Mono",
         regular: { path: "/fake/unknown-mono.woff", weight: 400 },
@@ -231,7 +231,7 @@ describe("generateFontFaceCSS", () => {
     assert.ok(boldItalicBlock!.includes("font-style: italic"), "boldItalic block should have font-style: italic");
   });
 
-  it("emits font-weight from Font.weight for light FontFamilyConfig", () => {
+  it("emits font-weight from Font.weight for light FontFamily", () => {
     const theme = mockTheme();
     const interLight = {
       name: "Inter Light",
@@ -294,7 +294,7 @@ describe("generateFontFaceCSS", () => {
     assert.ok(!result.css.includes("System Mono"), "should skip fonts with empty path");
   });
 
-  it("generates exactly one @font-face rule for regular-only FontFamilyConfig", () => {
+  it("generates exactly one @font-face rule for regular-only FontFamily", () => {
     const theme = mockTheme();
     // Replace fonts with a single regular-only family
     const mono = { name: "Mono", regular: { path: "/fake/mono-400.woff", weight: 400 }, normalRatio: 1.2 };
@@ -335,13 +335,13 @@ describe("generateFontFaceCSS", () => {
 // validateFontVariants() TESTS
 // ============================================
 
-const regularOnly: FontFamilyConfig = {
+const regularOnly: FontFamily = {
   name: "RegularOnly",
   regular: { path: "/fake/regular.woff", weight: 400 },
   normalRatio: 1.2,
 };
 
-const fullFamily: FontFamilyConfig = {
+const fullFamily: FontFamily = {
   name: "Full",
   regular: { path: "/fake/regular.woff", weight: 400 },
   italic: { path: "/fake/italic.woff", weight: 400 },
@@ -350,7 +350,7 @@ const fullFamily: FontFamilyConfig = {
   normalRatio: 1.2,
 };
 
-function makeTextNode(content: TextNode["content"], fontFamily: FontFamilyConfig): TextNode {
+function makeTextNode(content: TextNode["content"], fontFamily: FontFamily): TextNode {
   return {
     type: NODE_TYPE.TEXT,
     width: SIZE.FILL,
@@ -416,7 +416,7 @@ describe("validateFontVariants", () => {
   });
 
   it("detects missing boldItalic variant", () => {
-    const noBoldItalic: FontFamilyConfig = {
+    const noBoldItalic: FontFamily = {
       name: "NoBoldItalic",
       regular: { path: "/fake/regular.woff", weight: 400 },
       bold: { path: "/fake/bold.woff", weight: 700 },

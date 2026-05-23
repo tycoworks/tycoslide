@@ -146,7 +146,7 @@ export interface Font {
  *
  * Use `getFontForRun()` to resolve bold/italic flags to the correct `Font`.
  */
-export interface FontFamilyConfig {
+export interface FontFamily {
   name: string; // CSS font-family, PPTX fontFace
   regular: Font; // required — the default face
   italic?: Font; // optional — algorithmic italic if missing
@@ -168,8 +168,8 @@ export type FontSlot = (typeof FONT_SLOT)[keyof typeof FONT_SLOT];
 /** A text style name defined in a theme's `textStyles` map. */
 export type TextStyleName = string & {};
 
-export interface TextStyleConfig {
-  fontFamily: FontFamilyConfig;
+export interface TextStyle {
+  fontFamily: FontFamily;
   fontSize: number;
   lineHeight: number; // CSS-semantic: multiplier of fontSize
   bulletIndentPt: number; // required — resolved in SDK (default: fontSize * 1.5)
@@ -258,8 +258,8 @@ export interface Theme {
   slide: { width: number; height: number };
   /** Explicit font manifest. Every font the theme uses must be listed here.
    *  `generateFontFaceCSS()` reads exclusively from this list. */
-  fonts: FontFamilyConfig[];
-  textStyles: Record<string, TextStyleConfig>;
+  fonts: FontFamily[];
+  textStyles: Record<string, TextStyle>;
   /** Layout config. Each template name maps to its background and layout tokens. */
   layouts: Record<string, TemplateConfig>;
 }

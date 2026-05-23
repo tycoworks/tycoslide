@@ -1,6 +1,6 @@
-// Plugin compiler: generates manifest.json from a ThemeDefinition.
+// Plugin compiler: generates manifest.json from a Theme.
 
-import type { ThemeDefinition } from "../theme/index.js";
+import type { Theme } from "../theme/index.js";
 import { introspectParams } from "./introspect.js";
 
 // ============================================
@@ -10,20 +10,12 @@ import { introspectParams } from "./introspect.js";
 /** Output paths for generated plugin files (relative to theme root). */
 export const PLUGIN_PATHS = {
   SKILLS_ROOT: "skills",
-  SKILL_DIR: "skills/build",
-  SKILL_MD: "skills/build/SKILL.md",
-  REFERENCES_DIR: "skills/build/references",
-  MANIFEST_JSON: "skills/build/manifest.json",
+  SKILL_DIR: "skills/tycoslide",
+  SKILL_MD: "skills/tycoslide/SKILL.md",
+  REFERENCES_DIR: "skills/tycoslide/references",
+  MANIFEST_JSON: "skills/tycoslide/manifest.json",
   PLUGIN_CONFIG_DIR: ".claude-plugin",
   PLUGIN_JSON: ".claude-plugin/plugin.json",
-  HOOKS_DIR: "hooks",
-  HOOKS_JSON: "hooks/hooks.json",
-  BIN_DIR: "bin",
-  BIN_TYCOSLIDE: "bin/tycoslide",
-  RUNTIME_PACKAGE_JSON: "runtime-package.json",
-  THEME_TGZ: "theme.tgz",
-  /** Node.js entry point for the tycoslide CLI, resolved from node_modules. */
-  CLI_ENTRY: "@tycoslide/cli/dist/index.js",
 } as const;
 
 // ============================================
@@ -37,8 +29,6 @@ export interface CompilePluginOptions {
   description: string;
   /** Package version (semver). */
   version: string;
-  /** Theme's package.json dependencies (used to derive runtime deps). */
-  dependencies?: Record<string, string>;
 }
 
 export interface CompilePluginResult {
@@ -57,8 +47,8 @@ export function stripScope(name: string): string {
 // GENERATION HELPERS
 // ============================================
 
-/** Build the manifest JSON structure from a ThemeDefinition and options. */
-function generateManifest(definition: ThemeDefinition, options: CompilePluginOptions): string {
+/** Build the manifest JSON structure from a Theme and package metadata. */
+export function generateManifest(definition: Theme, options: CompilePluginOptions): string {
   const formatsOut: Record<string, unknown> = {};
 
   for (const [formatName, format] of Object.entries(definition.formats)) {
@@ -70,6 +60,7 @@ function generateManifest(definition: ThemeDefinition, options: CompilePluginOpt
         required: p.required,
         ...(p.enumValues ? { enumValues: p.enumValues } : {}),
         ...(p.itemType ? { itemType: p.itemType } : {}),
+        ...(p.objectShape ? { objectShape: p.objectShape } : {}),
       }));
 
       return {
@@ -92,15 +83,13 @@ function generateManifest(definition: ThemeDefinition, options: CompilePluginOpt
 
   // Build asset catalog for manifest
   const assetsOut: Record<string, unknown[]> = {};
-  if (definition.assets) {
-    for (const [category, entries] of Object.entries(definition.assets)) {
-      assetsOut[category] = Object.entries(entries).map(([name, entry]) => ({
-        name,
-        ref: `$${category}.${name}`,
-        description: entry.documentation.description,
-        ...(entry.documentation.whenToUse ? { whenToUse: entry.documentation.whenToUse } : {}),
-      }));
-    }
+  for (const [category, entries] of Object.entries(definition.assets.entries)) {
+    assetsOut[category] = Object.entries(entries).map(([name, entry]) => ({
+      name,
+      ref: `$${category}.${name}`,
+      description: entry.documentation.description,
+      ...(entry.documentation.whenToUse ? { whenToUse: entry.documentation.whenToUse } : {}),
+    }));
   }
 
   const manifest = {
@@ -116,100 +105,18 @@ function generateManifest(definition: ThemeDefinition, options: CompilePluginOpt
   return `${JSON.stringify(manifest, null, 2)}\n`;
 }
 
-/** Generate hooks/hooks.json — SessionStart hook that auto-installs runtime deps. */
-function generateHooksJson(): string {
-  // Pattern from Claude Code plugin docs: compare bundled runtime-package.json against cached
-  // copy in CLAUDE_PLUGIN_DATA. On first run or change: copy, npm install, install theme tarball,
-  // install Playwright Chromium. On failure: surface npm errors to stdout, remove cached
-  // package.json so next session retries, and exit non-zero so Claude Code knows it failed.
-  const errorLog = '"${CLAUDE_PLUGIN_DATA}/npm-error.log"';
-  const installCmd = [
-    'diff -q "${CLAUDE_PLUGIN_ROOT}/runtime-package.json" "${CLAUDE_PLUGIN_DATA}/package.json" >/dev/null 2>&1',
-    "||",
-    "(",
-    'cp "${CLAUDE_PLUGIN_ROOT}/runtime-package.json" "${CLAUDE_PLUGIN_DATA}/package.json"',
-    '&& cd "${CLAUDE_PLUGIN_DATA}"',
-    `&& npm install 2>${errorLog}`,
-    `&& npm install "\${CLAUDE_PLUGIN_ROOT}/theme.tgz" 2>>${errorLog}`,
-    `&& npx playwright-core install chromium 2>>${errorLog}`,
-    ")",
-    "||",
-    "(",
-    'echo "tycoslide plugin install failed:";',
-    `cat ${errorLog} 2>/dev/null;`,
-    'rm -f "${CLAUDE_PLUGIN_DATA}/package.json";',
-    "exit 1",
-    ")",
-  ].join(" ");
-
-  const hooks = {
-    hooks: {
-      SessionStart: [
-        {
-          hooks: [
-            {
-              type: "command",
-              command: installCmd,
-            },
-          ],
-        },
-      ],
-    },
-  };
-  return `${JSON.stringify(hooks, null, 2)}\n`;
-}
-
-/** Generate bin/tycoslide — shell wrapper that resolves CLI from plugin data dir. */
-function generateBinTycoslide(): string {
-  return [
-    "#!/usr/bin/env bash",
-    'export NODE_PATH="${CLAUDE_PLUGIN_DATA}/node_modules"',
-    `exec node "\${CLAUDE_PLUGIN_DATA}/node_modules/${PLUGIN_PATHS.CLI_ENTRY}" "$@"`,
-    "",
-  ].join("\n");
-}
-
-/** Generate runtime-package.json — lists public tycoslide deps for npm install in CLAUDE_PLUGIN_DATA. */
-function generateRuntimePackageJson(options: CompilePluginOptions): string {
-  const pluginName = stripScope(options.name);
-  const deps: Record<string, string> = {};
-
-  // Extract @tycoslide/* dependencies from theme's package.json
-  if (options.dependencies) {
-    for (const [pkg, version] of Object.entries(options.dependencies)) {
-      if (pkg.startsWith("@tycoslide/")) {
-        deps[pkg] = version;
-      }
-    }
-  }
-
-  // Ensure @tycoslide/cli is included (the bin wrapper needs it)
-  if (!deps["@tycoslide/cli"]) {
-    const coreVersion = deps["@tycoslide/core"] ?? deps["@tycoslide/sdk"] ?? `^${options.version}`;
-    deps["@tycoslide/cli"] = coreVersion;
-  }
-
-  const runtimePkg = {
-    name: `${pluginName}-runtime`,
-    version: options.version,
-    private: true,
-    dependencies: deps,
-  };
-  return `${JSON.stringify(runtimePkg, null, 2)}\n`;
-}
-
 // ============================================
 // PUBLIC API
 // ============================================
 
 /**
- * Compile a ThemeDefinition into machine-readable plugin artifacts (manifest.json + plugin.json).
+ * Compile a Theme into machine-readable plugin artifacts (manifest.json + plugin.json).
  *
  * Returns a map of relative file paths → content. The caller is responsible for
  * writing them to disk and assembling SKILL.md (frontmatter + static body) and
- * copying reference docs. See the CLI `buildTheme()` for the full pipeline.
+ * copying reference docs. See theme-default's npm scripts for the full pipeline.
  */
-export function compilePlugin(definition: ThemeDefinition, options: CompilePluginOptions): CompilePluginResult {
+export function compilePlugin(definition: Theme, options: CompilePluginOptions): CompilePluginResult {
   if (!options.name) {
     throw new Error("compilePlugin: options.name is required.");
   }
@@ -217,7 +124,7 @@ export function compilePlugin(definition: ThemeDefinition, options: CompilePlugi
     throw new Error("compilePlugin: options.version is required.");
   }
   if (!definition.formats || Object.keys(definition.formats).length === 0) {
-    throw new Error("compilePlugin: ThemeDefinition must have at least one format.");
+    throw new Error("compilePlugin: Theme must have at least one format.");
   }
 
   const pluginName = stripScope(options.name);
@@ -226,9 +133,6 @@ export function compilePlugin(definition: ThemeDefinition, options: CompilePlugi
   const files: Record<string, string> = {
     [PLUGIN_PATHS.MANIFEST_JSON]: generateManifest(definition, options),
     [PLUGIN_PATHS.PLUGIN_JSON]: `${JSON.stringify(pluginMeta, null, 2)}\n`,
-    [PLUGIN_PATHS.HOOKS_JSON]: generateHooksJson(),
-    [PLUGIN_PATHS.BIN_TYCOSLIDE]: generateBinTycoslide(),
-    [PLUGIN_PATHS.RUNTIME_PACKAGE_JSON]: generateRuntimePackageJson(options),
   };
 
   return { files, plugin: pluginMeta };

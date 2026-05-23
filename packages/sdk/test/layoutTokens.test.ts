@@ -4,22 +4,26 @@
 
 import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
+import { pathToFileURL } from "node:url";
 import { type Background, isComponentNode, NODE_TYPE, type SlideNode, type Theme } from "@tycoslide/core";
 import { defineLayout, type LayoutConfig, param, schema } from "@tycoslide/sdk";
 import type { CompileOptions } from "../src/markdown/documentCompiler.js";
 import { compileDocument } from "../src/markdown/documentCompiler.js";
+import { AssetCatalog } from "../src/theme/template.js";
 import { mockTheme } from "./mocks.js";
 import { C, testComponents } from "./test-components.js";
 
 /** Mock background for tests */
 const mockBackground: Background = { color: "#FFFFFF" };
 
+const emptyAssets = new AssetCatalog(pathToFileURL("/mock/pkg/src/index.js").href, {});
+
 /** All layouts collected for test options */
 const allLayouts: LayoutConfig[] = [];
 
 /** Build CompileOptions from a theme, using all registered test layouts */
 function opts(theme: Theme): CompileOptions {
-  return { theme, layouts: allLayouts, components: testComponents };
+  return { theme, assets: emptyAssets, layouts: allLayouts, components: testComponents };
 }
 
 // ============================================

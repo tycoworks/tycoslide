@@ -7,7 +7,7 @@
 
 import { type ComponentNode, type ContainerDirective, extractSource, type SlideNode, SYNTAX } from "@tycoslide/core";
 import type { Paragraph, Root, RootContent } from "mdast";
-import type { ComponentConfig } from "../authoring/component.js";
+import type { ComponentSpec } from "../authoring/component.js";
 import { parseMarkdown } from "./parser.js";
 
 const THEMATIC_BREAK_ERROR =
@@ -43,7 +43,7 @@ function extractDirectiveBody(directive: ContainerDirective, source: string): st
  * - :::directives → dispatched through the component definitions
  * - Bare MDAST → compiled via registered MDAST handlers
  */
-export function compileSlot(markdownStr: string, components: ComponentConfig[]): SlideNode[] {
+export function compileSlot(markdownStr: string, components: ComponentSpec[]): SlideNode[] {
   const tree = parseMarkdown(markdownStr) as Root;
   return compileChildren(tree.children, markdownStr, "slot", components);
 }
@@ -63,7 +63,7 @@ function compileChildren(
   children: RootContent[],
   source: string,
   errorPrefix: string,
-  components: ComponentConfig[],
+  components: ComponentSpec[],
 ): SlideNode[] {
   const nodes: SlideNode[] = [];
   let bareStart: RootContent | null = null;
@@ -121,7 +121,7 @@ function dispatchDirective(
   directive: ContainerDirective,
   source: string,
   errorPrefix: string,
-  components: ComponentConfig[],
+  components: ComponentSpec[],
 ): ComponentNode {
   const handler = components.find((c) => c.deserialize && c.name === directive.name);
   if (!handler) {
@@ -149,7 +149,7 @@ function dispatchDirective(
  * Callers insert these directly into their parent container, whose gap
  * (set by the layout with theme access) controls inter-block spacing.
  */
-function compileBareMarkdown(source: string, components: ComponentConfig[]): SlideNode[] {
+function compileBareMarkdown(source: string, components: ComponentSpec[]): SlideNode[] {
   const tree = parseMarkdown(source) as Root;
   const nodes: SlideNode[] = [];
 
@@ -165,7 +165,7 @@ function compileBareMarkdown(source: string, components: ComponentConfig[]): Sli
  * Compile a single MDAST block node into a SlideNode.
  * Dispatches to registered MDAST handlers on the component definitions.
  */
-function compileBareNode(node: RootContent, source: string, components: ComponentConfig[]): SlideNode | null {
+function compileBareNode(node: RootContent, source: string, components: ComponentSpec[]): SlideNode | null {
   // Container directives → shared dispatch
   if (node.type === SYNTAX.CONTAINER_DIRECTIVE) {
     return dispatchDirective(node as unknown as ContainerDirective, source, "document", components);

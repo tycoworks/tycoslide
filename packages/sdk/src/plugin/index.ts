@@ -4,6 +4,7 @@ export {
   type CompilePluginOptions,
   type CompilePluginResult,
   compilePlugin,
+  generateManifest,
   PLUGIN_PATHS,
   stripScope,
 } from "./compiler.js";

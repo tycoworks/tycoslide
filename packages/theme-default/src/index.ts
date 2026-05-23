@@ -3,7 +3,7 @@
 
 import {
   brandFonts,
-  type ComponentConfig,
+  type ComponentSpec,
   cardComponent,
   codeComponent,
   columnComponent,
@@ -23,12 +23,12 @@ import {
   testimonialComponent,
   textComponent,
 } from "@tycoslide/sdk";
-import { assetCatalog } from "./assets.js";
+import { assets } from "./assets.js";
 import { brand } from "./brand.js";
 import { buildPresentationFormat } from "./formats/presentation.js";
 
 // Explicit component list — themes declare what they use
-export const components: ComponentConfig[] = [
+export const components: ComponentSpec[] = [
   textComponent,
   labelComponent,
   imageComponent,
@@ -50,7 +50,7 @@ export const components: ComponentConfig[] = [
 
 // Re-export component DSL functions for theme consumers
 export * from "@tycoslide/sdk";
-export { assetCatalog, assetPaths } from "./assets.js";
+export { assets } from "./assets.js";
 export { fonts } from "./fonts.js";
 
 export const TEMPLATE = {
@@ -70,5 +70,5 @@ export const theme = defineTheme({
   formats: {
     presentation: buildPresentationFormat(brand.colors.light),
   },
-  assets: assetCatalog,
+  assets,
 });

@@ -1,10 +1,10 @@
 # Themes
 
-Themes control all visual styling in tycoslide — typography, spacing, colors, backgrounds, and slide dimensions. A theme is a `ThemeDefinition` that maps format names to complete visual configurations.
+Themes control all visual styling in tycoslide — typography, spacing, colors, backgrounds, and slide dimensions. A theme is a `Theme` that maps format names to complete visual configurations.
 
 ## What a Theme Contains
 
-A `ThemeDefinition` has two top-level concerns:
+A `Theme` has two top-level concerns:
 
 - **Fonts** — every font family the theme uses (embedded in the output file)
 - **Formats** — named output shapes, each carrying slide dimensions, text styles, and templates
@@ -466,17 +466,19 @@ const tokens = token.shape({
 
 ## Assets
 
-Themes bundle image assets (icons, logos, backgrounds) that deck authors reference via `$category.name` syntax. Each asset carries a `Documentation` object describing when and how to use it.
+Themes bundle image assets (icons, logos, backgrounds) that deck authors reference via `$category.name` syntax in frontmatter. Each entry carries a relative file path and documentation. The compiler resolves paths to absolute disk locations via npm resolution — any file type (PNG, SVG, JPG) is supported.
 
 ### Asset Catalog
 
-```typescript
-import type { AssetCatalog } from "@tycoslide/sdk";
+`AssetCatalog` is a class that resolves relative asset paths to absolute disk locations. The constructor takes the module URL (for path resolution) and a category map of asset entries:
 
-export const assetCatalog: AssetCatalog = {
+```typescript
+import { AssetCatalog } from "@tycoslide/sdk";
+
+export const assets = new AssetCatalog(import.meta.url, {
   icons: {
     shield: {
-      path: icon("verified_user.png"),
+      path: "assets/icons/shield.png",
       documentation: {
         description: "Shield/checkmark icon for security or trust topics",
         whenToUse: "Security features, compliance, trust signals",
@@ -485,41 +487,53 @@ export const assetCatalog: AssetCatalog = {
   },
   brand: {
     logo: {
-      path: brand("logo.png"),
+      path: "assets/brand/logo.svg",
       documentation: { description: "Full wordmark, dark variant" },
     },
   },
-};
+});
 ```
 
-Each entry has a `path` and a `documentation` object:
+Each entry has two fields:
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `description` | Yes | One-line description of the asset |
-| `whenToUse` | No | When this asset is the right choice |
-| `whenNotToUse` | No | When to avoid this asset |
+| `path` | Yes | Relative path from the package root to the asset file (e.g., `assets/icons/shield.png`) |
+| `documentation` | Yes | Documentation object — `description` (**required**), `whenToUse`, `whenNotToUse` |
 
-Pass the catalog to `defineTheme`:
+Theme code resolves assets via the typed API — `assets.resolve(assets.entries.icons.shield)`. Pass the catalog to `defineTheme`:
 
 ```typescript
 export const theme = defineTheme({
   fonts: brandFonts(brand),
   formats: { presentation: buildPresentationFormat(palette) },
-  assets: assetCatalog,
+  assets,
 });
 ```
 
-`build-theme` includes the catalog descriptions in the generated manifest. Deck authors reference assets in frontmatter as `$category.name` (e.g., `image: $icons.shield`).
+The theme's `package.json` must export the assets directory for npm resolution:
+
+```json
+{
+  "exports": {
+    ".": { "import": "./dist/index.js" },
+    "./assets/*": "./assets/*"
+  }
+}
+```
+
+The `plugin` build step includes catalog descriptions in the generated manifest. Deck authors reference assets as `$category.name` (e.g., `image: $icons.shield`). The `$` prefix only triggers resolution for values matching the exact `$category.name` pattern — strings like `$100` pass through unchanged.
 
 ---
 
 ## Building a Theme Package
 
-`build-theme` compiles TypeScript, generates an AI authoring skill from template metadata, and copies documentation references into the package.
+The theme build uses standard npm lifecycle scripts. `tsc --build` compiles TypeScript, then a small script generates the AI authoring skill from template metadata, and `cp` copies documentation references into the package.
 
 ```bash
-npx tycoslide build-theme
+npm run build    # tsc --build
+npm run plugin   # generate manifest + copy docs
+npm pack         # produces .tgz + .zip (via prepack/postpack hooks)
 ```
 
 Output:
@@ -531,22 +545,18 @@ my-theme/
   .claude-plugin/ # Plugin manifest (generated)
 ```
 
-Add `skills/` and `.claude-plugin/` to `.gitignore`. Both directories are generated output that ships in the npm tarball — the published package works as both a runtime theme and an AI authoring plugin.
-
-### Options
-
-| Flag | Description |
-|------|-------------|
-| `--dir <path>` | Theme directory (default: cwd) |
-| `--no-tsc` | Skip TypeScript compilation (use pre-built `dist/`) |
+Add `skills/`, `.claude-plugin/`, `*.tgz`, and `*.zip` to `.gitignore`. The generated directories ship in the npm tarball — the published package works as both a runtime theme and an AI authoring plugin. The `.zip` bundles the plugin files with the `.tgz` for uploading to Claude co-work.
 
 ### Package Configuration
 
 ```json
 {
   "scripts": {
-    "build": "tycoslide build-theme",
-    "clean": "rm -rf dist skills .claude-plugin"
+    "build": "tsc --build",
+    "plugin": "node scripts/generate-manifest.mjs && cp docs...",
+    "prepack": "npm run build && npm run plugin",
+    "postpack": "zip -r <name>.zip .claude-plugin/ skills/ *.tgz",
+    "clean": "rm -rf dist skills .claude-plugin *.tgz *.zip"
   },
   "files": ["dist/", "assets/", "skills/", ".claude-plugin/"]
 }

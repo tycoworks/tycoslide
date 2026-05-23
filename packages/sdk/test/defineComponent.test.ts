@@ -2,12 +2,12 @@
 
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
-import type { TextStyleConfig } from "@tycoslide/core";
+import type { TextStyle } from "@tycoslide/core";
 import { DIRECTION, HALIGN, Insets, NODE_TYPE, SIZE, SPACING_MODE, VALIGN } from "@tycoslide/core";
 import { defineComponent, param, schema } from "@tycoslide/sdk";
 import { z } from "zod";
 
-const stubStyle: TextStyleConfig = {
+const stubStyle: TextStyle = {
   fontSize: 12,
   fontFamily: { name: "Test", regular: { path: "/fake/test.woff", weight: 400 }, normalRatio: 1.2 },
   lineHeight: 1.0,

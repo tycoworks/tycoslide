@@ -1,8 +1,9 @@
 import * as assert from "node:assert";
 import { describe, it } from "node:test";
+import { pathToFileURL } from "node:url";
 import type { Background } from "@tycoslide/core";
 import type { LayoutConfig } from "@tycoslide/sdk";
-import { defineTemplate } from "../src/theme/template.js";
+import { AssetCatalog, defineTemplate, isAssetRef } from "../src/theme/template.js";
 
 const testLayouts = new Map<string, LayoutConfig>();
 
@@ -83,5 +84,55 @@ describe("defineTemplate()", () => {
     const result = layout!.render({}, {}, {});
     // Result is a SlideNode (ComponentNode), not a Slide
     assert.strictEqual((result as any).componentName, "text");
+  });
+});
+
+// ── isAssetRef() ──────────────────────────────────────────────────────────────
+
+describe("isAssetRef()", () => {
+  it("matches valid $category.name references", () => {
+    assert.strictEqual(isAssetRef("$icons.shield"), true);
+    assert.strictEqual(isAssetRef("$tycoslide.logo"), true);
+    assert.strictEqual(isAssetRef("$brand.logoWhite"), true);
+  });
+
+  it("rejects non-reference strings", () => {
+    assert.strictEqual(isAssetRef("icons.shield"), false);
+    assert.strictEqual(isAssetRef("$icons"), false);
+    assert.strictEqual(isAssetRef("$icons.shield.extra"), false);
+    assert.strictEqual(isAssetRef("plain text"), false);
+    assert.strictEqual(isAssetRef(""), false);
+  });
+});
+
+// ── AssetCatalog ─────────────────────────────────────────────────────────────
+
+describe("AssetCatalog", () => {
+  // Fake import.meta.url pointing to a "src/" subdirectory so ../ resolves to the mock root
+  const fakeImportMetaUrl = pathToFileURL("/mock/package/src/assets.js").href;
+  const catalog = new AssetCatalog(fakeImportMetaUrl, {
+    icons: {
+      shield: { path: "assets/icons/shield.png", documentation: { description: "Shield icon" } },
+    },
+  });
+
+  it("resolves an entry to an absolute disk path", () => {
+    assert.strictEqual(catalog.resolve(catalog.entries.icons.shield), "/mock/package/assets/icons/shield.png");
+  });
+
+  it("resolves a valid $category.name reference via resolveRef", () => {
+    assert.strictEqual(catalog.resolveRef("$icons.shield"), "/mock/package/assets/icons/shield.png");
+  });
+
+  it("throws on malformed reference", () => {
+    assert.throws(() => catalog.resolveRef("not-a-ref"), /must be in the form \$category\.name/);
+  });
+
+  it("throws on unknown asset name with available list", () => {
+    assert.throws(() => catalog.resolveRef("$icons.missing"), /Unknown asset reference.*Available: shield/);
+  });
+
+  it("throws on unknown category", () => {
+    assert.throws(() => catalog.resolveRef("$fake.thing"), /Unknown asset reference.*\$fake\.thing/);
   });
 });

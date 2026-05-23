@@ -9,7 +9,7 @@ import {
   TEXT_STYLE,
   VALIGN,
 } from "@tycoslide/sdk";
-import { assetPaths } from "../assets.js";
+import { assets } from "../assets.js";
 import { type FooterChromeTokens, type MarginChromeTokens, withFooterChrome, withMarginChrome } from "../chrome.js";
 import { fonts } from "../fonts.js";
 import { TEMPLATE } from "../index.js";
@@ -105,7 +105,7 @@ function buildChromeTokens(palette: Palette, config: Format, chrome: ChromeConfi
     margin,
     footerHeight,
     bottomPadding: margin / 2,
-    footerLogo: assetPaths.tycoslide.logo,
+    footerLogo: assets.resolve(assets.entries.tycoslide.logo),
     footerText: "tycoslide",
     footerSpacing: spacingTight,
     slideNumber: { ...labelFooter, hAlign: HALIGN.RIGHT, vAlign: VALIGN.MIDDLE },

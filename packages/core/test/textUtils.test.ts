@@ -3,14 +3,14 @@
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import { FONT_SLOT, type FontFamilyConfig } from "../src/core/model/types.js";
+import { FONT_SLOT, type FontFamily } from "../src/core/model/types.js";
 import { checkFontVariant, getFontForRun, isFontFamily, resolveFontFace } from "../src/utils/font.js";
 
 // ============================================
 // TEST DATA
 // ============================================
 
-const mockFontFamily: FontFamilyConfig = {
+const mockFontFamily: FontFamily = {
   name: "Test",
   regular: { path: "/fonts/test-regular.woff", weight: 400 },
   italic: { path: "/fonts/test-italic.woff", weight: 400 },
@@ -19,7 +19,7 @@ const mockFontFamily: FontFamilyConfig = {
   normalRatio: 1.2,
 };
 
-const minimalFontFamily: FontFamilyConfig = {
+const minimalFontFamily: FontFamily = {
   name: "Minimal",
   regular: { path: "/fonts/minimal.woff", weight: 400 },
   normalRatio: 1.2,
