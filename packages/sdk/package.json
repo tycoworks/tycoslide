@@ -1,6 +1,6 @@
 {
   "name": "@tycoslide/sdk",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "SDK for tycoslide — components, presets, and theme-authoring helpers",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
