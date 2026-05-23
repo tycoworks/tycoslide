@@ -470,10 +470,12 @@ Themes bundle image assets (icons, logos, backgrounds) that deck authors referen
 
 ### Asset Catalog
 
-```typescript
-import type { AssetCatalog } from "@tycoslide/sdk";
+`AssetCatalog` is a class that resolves relative asset paths to absolute disk locations. The constructor takes the module URL (for path resolution) and a category map of asset entries:
 
-export const assetCatalog: AssetCatalog = {
+```typescript
+import { AssetCatalog } from "@tycoslide/sdk";
+
+export const assets = new AssetCatalog(import.meta.url, {
   icons: {
     shield: {
       path: "assets/icons/shield.png",
@@ -489,7 +491,7 @@ export const assetCatalog: AssetCatalog = {
       documentation: { description: "Full wordmark, dark variant" },
     },
   },
-};
+});
 ```
 
 Each entry has two fields:
@@ -499,13 +501,13 @@ Each entry has two fields:
 | `path` | Yes | Relative path from the package root to the asset file (e.g., `assets/icons/shield.png`) |
 | `documentation` | Yes | Documentation object — `description` (**required**), `whenToUse`, `whenNotToUse` |
 
-Pass the catalog to `defineTheme`:
+Theme code resolves assets via the typed API — `assets.resolve(assets.entries.icons.shield)`. Pass the catalog to `defineTheme`:
 
 ```typescript
 export const theme = defineTheme({
   fonts: brandFonts(brand),
   formats: { presentation: buildPresentationFormat(palette) },
-  assets: assetCatalog,
+  assets,
 });
 ```
 
