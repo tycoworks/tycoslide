@@ -52,11 +52,29 @@ Then update inter-workspace dependency ranges to match:
 - `packages/cli/package.json` — `"@tycoslide/core": "^X.Y.0"`
 - `packages/theme-default/package.json` — `"@tycoslide/core": "^X.Y.0"`, `"@tycoslide/sdk": "^X.Y.0"`
 
-### 2. Build and test
+### 2. Clean install, build, and test
+
+After bumping versions and updating cross-deps, do a clean install to force npm to re-resolve workspace links:
+
+```bash
+rm -rf packages/*/node_modules
+npm install
+```
+
+**Why this matters:** npm workspaces hoists cross-workspace dependencies as symlinks in the root `node_modules/`. But if a published version on the npm registry satisfies the old version range (e.g., `^0.4.0` when 0.4.0 is published), npm may install a real copy from the registry into `packages/sdk/node_modules/@tycoslide/core` instead of using the local workspace. These stale copies shadow the root symlinks and cause TypeScript to resolve the old published types instead of local source. Deleting per-package `node_modules/` and reinstalling fixes this.
+
+Then build and test:
 
 ```bash
 npm run build
 npm test
+```
+
+Also delete any stale `tsconfig.tsbuildinfo` files if the build reports missing exports that clearly exist in source:
+
+```bash
+find . -name 'tsconfig.tsbuildinfo' -not -path './node_modules/*' -delete
+npm run build
 ```
 
 ### 3. Dry-run verification

@@ -19,6 +19,22 @@ npm test             # Run tests
 npm run typecheck    # Type-check including test files
 ```
 
+**Workspace dependency gotcha:** After bumping versions or changing cross-package exports, always clean per-package `node_modules/` before building. npm may cache stale registry copies that shadow workspace symlinks:
+
+```bash
+rm -rf packages/*/node_modules
+npm install
+npm run build
+```
+
+If builds report missing exports that exist in source, also delete stale `tsconfig.tsbuildinfo` files:
+
+```bash
+find . -name 'tsconfig.tsbuildinfo' -not -path './node_modules/*' -delete
+```
+
+See `internal/npm-publishing.md` for the full release workflow.
+
 **Building slides from markdown:**
 
 ```bash
