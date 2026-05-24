@@ -37,7 +37,12 @@ describe("Quote Component (Pull Quote)", () => {
   describe("expansion", () => {
     it("should render to row with line (bar) and content column", async () => {
       const node = quote({ quote: "Test" }, DEFAULT_QUOTE_TOKENS);
-      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), slideNumber: 1, renderTree: async (n: any) => n });
+      const rendered = await renderTree(node, {
+        theme,
+        canvas: noopCanvas(),
+        slideNumber: 1,
+        renderTree: async (n: any) => n,
+      });
 
       // row(line, column(text))
       assert.strictEqual(rendered.type, NODE_TYPE.CONTAINER);
@@ -52,7 +57,12 @@ describe("Quote Component (Pull Quote)", () => {
 
     it("should apply bar tokens to the line node", async () => {
       const node = quote({ quote: "Test" }, DEFAULT_QUOTE_TOKENS);
-      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), slideNumber: 1, renderTree: async (n: any) => n });
+      const rendered = await renderTree(node, {
+        theme,
+        canvas: noopCanvas(),
+        slideNumber: 1,
+        renderTree: async (n: any) => n,
+      });
 
       assert.strictEqual(rendered.type, NODE_TYPE.CONTAINER);
       if (rendered.type === NODE_TYPE.CONTAINER) {
@@ -67,7 +77,12 @@ describe("Quote Component (Pull Quote)", () => {
 
     it("should include quote text as RICH content", async () => {
       const node = quote({ quote: "A wise saying" }, DEFAULT_QUOTE_TOKENS);
-      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), slideNumber: 1, renderTree: async (n: any) => n });
+      const rendered = await renderTree(node, {
+        theme,
+        canvas: noopCanvas(),
+        slideNumber: 1,
+        renderTree: async (n: any) => n,
+      });
 
       assert.strictEqual(rendered.type, NODE_TYPE.CONTAINER);
       if (rendered.type === NODE_TYPE.CONTAINER) {
@@ -87,7 +102,12 @@ describe("Quote Component (Pull Quote)", () => {
 
     it("should include attribution with LEFT alignment when provided", async () => {
       const node = quote({ quote: "Quote text", attribution: "— Jane Smith" }, DEFAULT_QUOTE_TOKENS);
-      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), slideNumber: 1, renderTree: async (n: any) => n });
+      const rendered = await renderTree(node, {
+        theme,
+        canvas: noopCanvas(),
+        slideNumber: 1,
+        renderTree: async (n: any) => n,
+      });
 
       assert.strictEqual(rendered.type, NODE_TYPE.CONTAINER);
       if (rendered.type === NODE_TYPE.CONTAINER) {
@@ -109,7 +129,12 @@ describe("Quote Component (Pull Quote)", () => {
 
     it("should have only quote text when no attribution", async () => {
       const node = quote({ quote: "Just a quote" }, DEFAULT_QUOTE_TOKENS);
-      const rendered = await renderTree(node, { theme, canvas: noopCanvas(), slideNumber: 1, renderTree: async (n: any) => n });
+      const rendered = await renderTree(node, {
+        theme,
+        canvas: noopCanvas(),
+        slideNumber: 1,
+        renderTree: async (n: any) => n,
+      });
 
       assert.strictEqual(rendered.type, NODE_TYPE.CONTAINER);
       if (rendered.type === NODE_TYPE.CONTAINER) {
