@@ -51,6 +51,7 @@ function parseContainerArgs<TParams>(args: any[]): { params: TParams; children: 
 export type RowParams = {
   width?: number | SizeValue; // pixels, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
   height?: number | SizeValue; // pixels, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
+  weight?: number; // flex-grow weight (main axis). Default: 1. Only meaningful when main-axis size is FILL.
   spacing?: number; // pixels — space between children. Default: 0
   spacingMode?: SpacingMode;
   vAlign?: VerticalAlignment;
@@ -69,6 +70,7 @@ export const rowComponent = defineComponent({
     children,
     width: params.width ?? SIZE.FILL,
     height: params.height ?? SIZE.HUG,
+    weight: params.weight ?? 1,
     spacing: params.spacing ?? 0,
     spacingMode: params.spacingMode ?? SPACING_MODE.BETWEEN,
     vAlign: params.vAlign ?? VALIGN.TOP, // Explicit default: pure alignment (not CSS stretch)
@@ -88,6 +90,7 @@ export function row(params: RowParams, ...children: SlideNode[]): ComponentNode 
 export type ColumnParams = {
   width?: number | SizeValue; // pixels, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: FILL
   height?: number | SizeValue; // pixels, SIZE.FILL (share/stretch), or SIZE.HUG (content-sized). Default: HUG
+  weight?: number; // flex-grow weight (main axis). Default: 1. Only meaningful when main-axis size is FILL.
   spacing?: number; // pixels — space between children. Default: 0
   spacingMode?: SpacingMode;
   vAlign?: VerticalAlignment;
@@ -106,6 +109,7 @@ export const columnComponent = defineComponent({
     children,
     width: params.width ?? SIZE.FILL,
     height: params.height ?? SIZE.HUG,
+    weight: params.weight ?? 1,
     spacing: params.spacing ?? 0,
     spacingMode: params.spacingMode ?? SPACING_MODE.BETWEEN,
     vAlign: params.vAlign ?? VALIGN.TOP, // Explicit default for consistent measurement

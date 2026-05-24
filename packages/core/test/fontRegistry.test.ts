@@ -375,6 +375,7 @@ function wrapInContainer(...children: ElementNode[]): ContainerNode {
     children,
     width: 960,
     height: 480,
+    weight: 1,
     spacing: 24,
     spacingMode: SPACING_MODE.BETWEEN,
     padding: new Insets(0),

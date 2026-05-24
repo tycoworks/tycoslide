@@ -147,6 +147,7 @@ describe("defineComponent", () => {
         children,
         width: SIZE.FILL,
         height: SIZE.HUG,
+        weight: 1,
         spacing: 0,
         spacingMode: SPACING_MODE.BETWEEN,
         padding: new Insets(0),

@@ -37,6 +37,7 @@ function containerNode(): ElementNode {
     direction: DIRECTION.ROW,
     width: SIZE.FILL,
     height: SIZE.HUG,
+    weight: 1,
     spacing: 0,
     spacingMode: SPACING_MODE.BETWEEN,
     padding: new Insets(0),
