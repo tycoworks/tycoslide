@@ -29,7 +29,6 @@ type ImageParams = InferParams<typeof imageParamShape>;
 export interface ImageTokens {
   shadow?: Shadow;
   padding?: number;
-  maxHeight?: number;
 }
 
 // ============================================
@@ -56,9 +55,6 @@ export const imageComponent = defineComponent({
     }
     if (tokens?.shadow) {
       node.shadow = tokens.shadow;
-    }
-    if (tokens?.maxHeight) {
-      node.maxHeight = tokens.maxHeight;
     }
     if (tokens?.padding) {
       return column({ padding: tokens.padding, height: SIZE.FILL }, node);

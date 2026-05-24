@@ -79,7 +79,6 @@ export interface ImageNode {
   src: string;
   alt?: string;
   shadow?: Shadow;
-  maxHeight?: number; // pixels — display height cap, width follows from aspect ratio
 }
 
 export interface LineNode {
@@ -202,6 +201,7 @@ export interface ContainerNode<C extends SlideNode = ElementNode> {
   children: C[]; // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
   width: number | SizeValue; // pixels (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
   height: number | SizeValue; // pixels (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
+  weight: number; // flex-grow weight (main axis). SDK defaults to 1.
   spacing: number; // pixels — space between children (and edges when spacingMode is AROUND)
   spacingMode: SpacingMode; // BETWEEN: between children only; AROUND: between + edges
   vAlign: VerticalAlignment;
