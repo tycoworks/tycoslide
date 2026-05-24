@@ -125,7 +125,7 @@ function colNode(...args: any[]): ContainerNode {
 
 /** Image node */
 function imageNode(src: string): ImageNode {
-  return { type: NODE_TYPE.IMAGE, width: SIZE.FILL, height: SIZE.FILL, src };
+  return { type: NODE_TYPE.IMAGE, src };
 }
 
 /** Line node (token values baked in from mockTheme) */
@@ -443,8 +443,6 @@ describe("HTML Measurement Generation", () => {
     test("image with alt text renders alt attribute", async () => {
       const node = colNode({
         type: NODE_TYPE.IMAGE,
-        width: SIZE.FILL,
-        height: SIZE.FILL,
         src: testImage,
         alt: "Diagram of build pipeline",
       });

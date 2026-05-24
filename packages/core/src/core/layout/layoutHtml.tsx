@@ -431,12 +431,12 @@ function styleText(node: TextNode, parent: ParentCtx, nodeId: string): StyledNod
  * Column, constrained     → height=FILL (grow into available height budget)
  * Column, unconstrained   → height=HUG (render at aspect-ratio-derived height)
  */
-function resolveImageSizing(node: ImageNode, parent: ParentCtx): { width: SizeValue; height: SizeValue } {
+function resolveImageSizing(parent: ParentCtx): { width: SizeValue; height: SizeValue } {
   const isRow = parent.direction === DIRECTION.ROW;
 
   return {
-    width: isRow && parent.hasDefiniteCrossSize ? SIZE.HUG : node.width,
-    height: isRow || parent.heightIsConstrained ? node.height : SIZE.HUG,
+    width: isRow && parent.hasDefiniteCrossSize ? SIZE.HUG : SIZE.FILL,
+    height: isRow || parent.heightIsConstrained ? SIZE.FILL : SIZE.HUG,
   };
 }
 
@@ -447,7 +447,7 @@ function styleImage(node: ImageNode, parent: ParentCtx, nodeId: string, imagePat
   }
 
   // 1. Resolve effective sizing (aspect-ratio-aware)
-  const { width: effWidth, height: effHeight } = resolveImageSizing(node, parent);
+  const { width: effWidth, height: effHeight } = resolveImageSizing(parent);
 
   // 2. Start from standard flex sizing (shrinkable: min-width/min-height handled by flexSize)
   const styles: Record<string, string | number> = {
@@ -455,16 +455,24 @@ function styleImage(node: ImageNode, parent: ParentCtx, nodeId: string, imagePat
     aspectRatio: `${dims.aspectRatio}`,
   };
 
-  // 3. Natural pixel caps — HUG axes only. FILL grows beyond natural size.
+  // 3. Height cap: tightest of author maxHeight and natural image height.
+  const heightCap = node.maxHeight && dims.height ? Math.min(node.maxHeight, dims.height) : (node.maxHeight ?? dims.height);
+
+  // 4. FILL + maxHeight: cap applies regardless of parent direction.
+  if (effHeight === SIZE.FILL && node.maxHeight) {
+    styles.maxHeight = `${node.maxHeight}px`;
+  }
+
+  // 5. Direction-specific pixel caps.
   if (parent.direction === DIRECTION.ROW) {
     if (effWidth === SIZE.HUG && dims.width) styles.maxWidth = `${dims.width}px`;
-    if (effHeight === SIZE.HUG && dims.height) styles.maxHeight = `${dims.height}px`;
+    if (effHeight === SIZE.HUG && heightCap) styles.maxHeight = `${heightCap}px`;
   } else {
     // Column cross-axis: HUG width caps at natural pixels (enables centering via align-items).
     // Uses min(100%, Npx) instead of width:100% + max-width to avoid a container-query
     // interaction that defeats align-items:center (container-type:inline-size on parent).
     // No symmetric height case needed: effHeight is never HUG in a row
-    // (resolveImageSizing always keeps declaredHeight when isRow), and in columns
+    // (resolveImageSizing returns FILL for height when isRow), and in columns
     // height is the main axis handled by flexSize, not a CSS dimension.
     if (effWidth === SIZE.HUG && dims.width) {
       styles.width = `min(100%, ${dims.width}px)`;
@@ -472,9 +480,9 @@ function styleImage(node: ImageNode, parent: ParentCtx, nodeId: string, imagePat
     // Proportional height cap via container query units — always needed for
     // layout correctness (Chromium aspect-ratio-in-flex, CSSWG #11690).
     const proportionalCap = `calc(100cqw / ${dims.aspectRatio})`;
-    if (effHeight === SIZE.HUG && dims.height) {
-      styles.maxHeight = `min(${dims.height}px, ${proportionalCap})`;
-    } else {
+    if (effHeight === SIZE.HUG) {
+      styles.maxHeight = heightCap ? `min(${heightCap}px, ${proportionalCap})` : proportionalCap;
+    } else if (!node.maxHeight) {
       styles.maxHeight = proportionalCap;
     }
   }

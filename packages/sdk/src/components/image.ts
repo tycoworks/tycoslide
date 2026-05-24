@@ -29,6 +29,7 @@ type ImageParams = InferParams<typeof imageParamShape>;
 export interface ImageTokens {
   shadow?: Shadow;
   padding?: number;
+  maxHeight?: number;
 }
 
 // ============================================
@@ -49,12 +50,15 @@ export const imageComponent = defineComponent({
   },
 
   render: (params: ImageParams, content: string, _context: RenderContext, tokens: ImageTokens): SlideNode => {
-    const node: ImageNode = { type: NODE_TYPE.IMAGE, width: SIZE.FILL, height: SIZE.FILL, src: content };
+    const node: ImageNode = { type: NODE_TYPE.IMAGE, src: content };
     if (params.alt) {
       node.alt = params.alt;
     }
     if (tokens?.shadow) {
       node.shadow = tokens.shadow;
+    }
+    if (tokens?.maxHeight) {
+      node.maxHeight = tokens.maxHeight;
     }
     if (tokens?.padding) {
       return column({ padding: tokens.padding, height: SIZE.FILL }, node);

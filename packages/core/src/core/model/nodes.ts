@@ -76,11 +76,10 @@ export interface TextNode {
 
 export interface ImageNode {
   type: typeof NODE_TYPE.IMAGE;
-  width: SizeValue;
-  height: SizeValue;
   src: string;
   alt?: string;
   shadow?: Shadow;
+  maxHeight?: number; // pixels — display height cap, width follows from aspect ratio
 }
 
 export interface LineNode {

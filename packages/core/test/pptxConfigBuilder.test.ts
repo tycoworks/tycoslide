@@ -598,8 +598,6 @@ describe("buildShapeConfig() — area shapes", () => {
   test("translates shadow on image", () => {
     const imageNode: ImageNode = {
       type: NODE_TYPE.IMAGE,
-      width: SIZE.FILL,
-      height: SIZE.FILL,
       src: "test.png",
       shadow: { type: "outer", color: "#FF0000", opacity: 50, blur: 4, offset: 1, angle: 180 },
     };
@@ -617,8 +615,6 @@ describe("buildShapeConfig() — area shapes", () => {
   test("translates alt text on image", () => {
     const imageNode: ImageNode = {
       type: NODE_TYPE.IMAGE,
-      width: SIZE.FILL,
-      height: SIZE.FILL,
       src: "test.png",
       alt: "A test image description",
     };
@@ -633,8 +629,6 @@ describe("buildShapeConfig() — area shapes", () => {
   test("omits altText when alt is not set", () => {
     const imageNode: ImageNode = {
       type: NODE_TYPE.IMAGE,
-      width: SIZE.FILL,
-      height: SIZE.FILL,
       src: "test.png",
     };
     const pos = positioned(imageNode, 1, 2, 5, 3);
