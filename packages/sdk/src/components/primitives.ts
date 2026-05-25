@@ -3,8 +3,8 @@
 import {
   type ComponentNode,
   component,
-  DASH_TYPE,
-  type DashType,
+  DASH,
+  type Dash,
   DIRECTION,
   DIRECTION_VALUES,
   type Direction,
@@ -13,7 +13,7 @@ import {
   NODE_TYPE,
   type RenderContext,
   SHAPE_VALUES,
-  type Shadow,
+  type ShadowEffect,
   type ShapeNode,
   SIZE,
   type SlideNumberNode,
@@ -27,8 +27,8 @@ import { Component } from "../presets/names.js";
 export interface LineTokens {
   color: string;
   width: number;
-  dashType?: DashType;
-  shadow?: Shadow;
+  dashType?: Dash;
+  shadow?: ShadowEffect;
 }
 
 export interface SlideNumberTokens {
@@ -43,7 +43,7 @@ export interface ShapeTokens {
   fillOpacity?: number;
   border?: Stroke;
   cornerRadius?: number;
-  shadow?: Shadow;
+  shadow?: ShadowEffect;
 }
 
 // ============================================
@@ -59,7 +59,7 @@ function renderLine(params: LineParams, _content: undefined, _context: RenderCon
   const node: LineNode = {
     type: NODE_TYPE.LINE,
     direction: params.direction ?? DIRECTION.ROW,
-    stroke: { color: tokens.color, width: tokens.width, dashType: tokens.dashType ?? DASH_TYPE.SOLID },
+    stroke: { color: tokens.color, width: tokens.width, dashType: tokens.dashType ?? DASH.SOLID },
   };
   if (tokens.shadow) {
     node.shadow = tokens.shadow;

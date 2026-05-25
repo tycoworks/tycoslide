@@ -36,20 +36,20 @@ export const SIZE = {
   HUG: "hug",
 } as const;
 
-export type SizeValue = (typeof SIZE)[keyof typeof SIZE];
+export type Size = (typeof SIZE)[keyof typeof SIZE];
 
-export const SPACING_MODE = {
+export const SPACING = {
   BETWEEN: "between",
   AROUND: "around",
 } as const;
 
-export type SpacingMode = (typeof SPACING_MODE)[keyof typeof SPACING_MODE];
+export type Spacing = (typeof SPACING)[keyof typeof SPACING];
 
-export const SHADOW_TYPE = {
+export const SHADOW = {
   OUTER: "outer",
 } as const;
 
-export type ShadowType = (typeof SHADOW_TYPE)[keyof typeof SHADOW_TYPE];
+export type Shadow = (typeof SHADOW)[keyof typeof SHADOW];
 
 export const GRID_STYLE = {
   HORIZONTAL: "horizontal",
@@ -72,36 +72,36 @@ export const SHAPE = {
   DIAMOND: "diamond",
 } as const;
 
-export type ShapeName = (typeof SHAPE)[keyof typeof SHAPE];
+export type Shape = (typeof SHAPE)[keyof typeof SHAPE];
 
 /** All SHAPE values as a tuple — useful for Zod enum schemas */
-export const SHAPE_VALUES = Object.values(SHAPE) as [ShapeName, ...ShapeName[]];
+export const SHAPE_VALUES = Object.values(SHAPE) as [Shape, ...Shape[]];
 
 /** pptxgenjs line shape name — used internally by buildLineConfig */
 export const LINE_SHAPE = "line" as const;
 
-export const DASH_TYPE = {
+export const DASH = {
   SOLID: "solid",
   DASHED: "dashed",
   DOTTED: "dotted",
 } as const;
 
-export type DashType = (typeof DASH_TYPE)[keyof typeof DASH_TYPE];
+export type Dash = (typeof DASH)[keyof typeof DASH];
 
 /** pptxgenjs strikethrough styles (OpenXML a:strike values) */
-export const STRIKE_TYPE = {
+export const STRIKE = {
   SINGLE: "sngStrike",
   DOUBLE: "dblStrike",
 } as const;
 
-export type StrikeType = (typeof STRIKE_TYPE)[keyof typeof STRIKE_TYPE];
+export type Strike = (typeof STRIKE)[keyof typeof STRIKE];
 
 /** pptxgenjs underline styles (OpenXML a:uFill values) */
-export const UNDERLINE_STYLE = {
+export const UNDERLINE = {
   SINGLE: "sng",
 } as const;
 
-export type UnderlineStyle = (typeof UNDERLINE_STYLE)[keyof typeof UNDERLINE_STYLE];
+export type Underline = (typeof UNDERLINE)[keyof typeof UNDERLINE];
 
 // ============================================
 // STYLING TYPES

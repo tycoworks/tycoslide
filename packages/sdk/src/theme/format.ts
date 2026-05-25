@@ -7,7 +7,7 @@ import type {
   TextStyle as CoreTextStyle,
   Font,
   HorizontalAlignment,
-  ShadowType,
+  Shadow,
   VerticalAlignment,
 } from "@tycoslide/core";
 import type { HighlightThemeName } from "../presets/highlighting.js";
@@ -110,7 +110,7 @@ export interface Format {
     thick: number; // pt — accent bars, strong emphasis
   };
   shadow: {
-    type: ShadowType;
+    type: Shadow;
     opacity: number; // 0–100
     blur: number; // pt
     offset: number; // pt

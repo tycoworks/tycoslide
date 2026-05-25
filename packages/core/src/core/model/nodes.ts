@@ -4,14 +4,14 @@
 import type { Insets } from "./bounds.js";
 
 import type {
-  DashType,
+  Dash,
   Direction,
   GridStyle,
   HorizontalAlignment,
-  ShadowType,
-  ShapeName,
-  SizeValue,
-  SpacingMode,
+  Shadow,
+  Shape,
+  Size,
+  Spacing,
   TextContent,
   TextStyle,
   TextStyleName,
@@ -58,8 +58,8 @@ export type Layer = (typeof LAYER)[keyof typeof LAYER];
 
 export interface TextNode {
   type: typeof NODE_TYPE.TEXT;
-  width: SizeValue;
-  height: SizeValue;
+  width: Size;
+  height: Size;
   content: TextContent;
   style: TextStyleName;
   resolvedStyle: TextStyle; // pre-resolved from theme.textStyles[style]
@@ -71,21 +71,21 @@ export interface TextNode {
   linkColor: string; // token-driven hyperlink color (render-time)
   linkUnderline: boolean; // token-driven hyperlink underline (render-time)
   border?: Stroke;
-  shadow?: Shadow;
+  shadow?: ShadowEffect;
 }
 
 export interface ImageNode {
   type: typeof NODE_TYPE.IMAGE;
   src: string;
   alt?: string;
-  shadow?: Shadow;
+  shadow?: ShadowEffect;
 }
 
 export interface LineNode {
   type: typeof NODE_TYPE.LINE;
   direction: Direction;
   stroke: Stroke;
-  shadow?: Shadow;
+  shadow?: ShadowEffect;
 }
 
 /** Stroke configuration — shared by lines and shape borders.
@@ -93,12 +93,12 @@ export interface LineNode {
 export interface Stroke {
   color: string;
   width: number;
-  dashType: DashType;
+  dashType: Dash;
 }
 
 /** Shadow configuration — shared across shapes, images, and text boxes */
-export interface Shadow {
-  type: ShadowType;
+export interface ShadowEffect {
+  type: Shadow;
   color: string;
   opacity: number;
   blur: number;
@@ -109,19 +109,19 @@ export interface Shadow {
 /** Area shape node: fill, border, cornerRadius (rectangles, ellipses, triangles, etc.) */
 export interface ShapeNode {
   type: typeof NODE_TYPE.SHAPE;
-  width: SizeValue;
-  height: SizeValue;
-  shape: ShapeName;
+  width: Size;
+  height: Size;
+  shape: Shape;
   fill: { color: string; opacity: number };
   border?: Stroke;
   cornerRadius: number;
-  shadow?: Shadow;
+  shadow?: ShadowEffect;
 }
 
 export interface SlideNumberNode {
   type: typeof NODE_TYPE.SLIDE_NUMBER;
-  width: SizeValue;
-  height: SizeValue;
+  width: Size;
+  height: Size;
   style: TextStyleName;
   resolvedStyle: TextStyle; // pre-resolved from theme.textStyles[style]
   color: string;
@@ -150,8 +150,8 @@ export interface TableCellInput {
 /** Fully-resolved table cell data — all fields pre-resolved by component render */
 export interface TableCellData {
   content: TextContent;
-  width: SizeValue;
-  height: SizeValue;
+  width: Size;
+  height: Size;
   color: string; // pre-resolved: cell → token
   textStyle: TextStyleName; // pre-resolved: cell → header/cell default from table tokens
   resolvedStyle: TextStyle; // pre-resolved from theme.textStyles[textStyle]
@@ -176,8 +176,8 @@ export interface TableHeaderStyle {
 /** Native table element - renders directly via slide.addTable() */
 export interface TableNode {
   type: typeof NODE_TYPE.TABLE;
-  width: SizeValue;
-  height: SizeValue;
+  width: Size;
+  height: Size;
   rows: TableCellData[][];
   // Style properties (resolved from theme tokens by component render)
   border?: Stroke; // outer border (same as shapes — present = has border)
@@ -199,11 +199,11 @@ export interface ContainerNode<C extends SlideNode = ElementNode> {
   type: typeof NODE_TYPE.CONTAINER;
   direction: Direction; // 'row' or 'column' — determines flex-direction
   children: C[]; // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
-  width: SizeValue; // SIZE.FILL (share space) or SIZE.HUG (content-sized)
-  height: SizeValue; // SIZE.FILL (share space) or SIZE.HUG (content-sized)
+  width: Size; // SIZE.FILL (share space) or SIZE.HUG (content-sized)
+  height: Size; // SIZE.FILL (share space) or SIZE.HUG (content-sized)
   weight: number; // flex-grow weight (main axis). SDK defaults to 1.
   spacing: number; // pixels — space between children (and edges when spacingMode is AROUND)
-  spacingMode: SpacingMode; // BETWEEN: between children only; AROUND: between + edges
+  spacingMode: Spacing; // BETWEEN: between children only; AROUND: between + edges
   vAlign: VerticalAlignment;
   hAlign: HorizontalAlignment;
   padding: Insets; // pixels - per-side internal padding (normalized at construction)
@@ -214,8 +214,8 @@ export interface ContainerNode<C extends SlideNode = ElementNode> {
 export interface StackNode<C extends SlideNode = ElementNode> {
   type: typeof NODE_TYPE.STACK;
   children: C[]; // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
-  width: SizeValue; // SIZE.FILL or SIZE.HUG
-  height: SizeValue; // SIZE.FILL or SIZE.HUG
+  width: Size; // SIZE.FILL or SIZE.HUG
+  height: Size; // SIZE.FILL or SIZE.HUG
   layer?: Layer; // render target: master (shared/deduped) or content (per-slide)
 }
 
@@ -225,8 +225,8 @@ export interface GridNode<C extends SlideNode = ElementNode> {
   children: C[]; // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
   columns: number; // number of equal-width columns
   spacing: number; // pixels — gap between cells
-  width: SizeValue; // SIZE.FILL or SIZE.HUG
-  height: SizeValue; // SIZE.FILL or SIZE.HUG
+  width: Size; // SIZE.FILL or SIZE.HUG
+  height: Size; // SIZE.FILL or SIZE.HUG
   layer?: Layer; // render target: master (shared/deduped) or content (per-slide)
 }
 

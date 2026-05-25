@@ -15,14 +15,14 @@ import {
   type TextNode,
 } from "../src/core/model/nodes.js";
 import {
-  DASH_TYPE,
+  DASH,
   DIRECTION,
   GRID_STYLE,
   HALIGN,
   SHAPE,
   SIZE,
-  STRIKE_TYPE,
-  UNDERLINE_STYLE,
+  STRIKE,
+  UNDERLINE,
   VALIGN,
 } from "../src/core/model/types.js";
 import { PptxConfigBuilder } from "../src/core/rendering/pptxConfigBuilder.js";
@@ -62,14 +62,14 @@ function positioned(node: any, x: number, y: number, width: number, height: numb
 const baseLineNode: LineNode = {
   type: NODE_TYPE.LINE,
   direction: DIRECTION.ROW,
-  stroke: { color: "#E7E0EC", width: 0.75, dashType: DASH_TYPE.SOLID },
+  stroke: { color: "#E7E0EC", width: 0.75, dashType: DASH.SOLID },
 };
 
 describe("buildLineConfig()", () => {
   test("places dashType inside line sub-object", () => {
     const lineNode: LineNode = {
       ...baseLineNode,
-      stroke: { ...baseLineNode.stroke, dashType: DASH_TYPE.DASHED },
+      stroke: { ...baseLineNode.stroke, dashType: DASH.DASHED },
     };
     const pos = positioned(lineNode, 1, 2, 5, 0);
 
@@ -82,7 +82,7 @@ describe("buildLineConfig()", () => {
   test("maps DOTTED to pptxgenjs sysDot", () => {
     const lineNode: LineNode = {
       ...baseLineNode,
-      stroke: { ...baseLineNode.stroke, dashType: DASH_TYPE.DOTTED },
+      stroke: { ...baseLineNode.stroke, dashType: DASH.DOTTED },
     };
     const pos = positioned(lineNode, 1, 2, 5, 0);
     const result = builder.buildLineConfig(lineNode, pos);
@@ -113,7 +113,7 @@ describe("buildLineConfig()", () => {
   test("applies color and width from stroke", () => {
     const lineNode: LineNode = {
       ...baseLineNode,
-      stroke: { color: "#FF0000", width: 3, dashType: DASH_TYPE.SOLID },
+      stroke: { color: "#FF0000", width: 3, dashType: DASH.SOLID },
     };
     const pos = positioned(lineNode, 1, 2, 5, 0);
 
@@ -135,9 +135,9 @@ const baseTableNode: TableNode = {
   width: SIZE.FILL,
   height: SIZE.HUG,
   rows: [],
-  border: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
+  border: { color: "#333333", width: 1, dashType: DASH.SOLID },
   gridStyle: GRID_STYLE.BOTH,
-  gridStroke: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
+  gridStroke: { color: "#333333", width: 1, dashType: DASH.SOLID },
   cellBackground: "#FFFFFF",
   cellBackgroundOpacity: 0,
   cellPadding: 0.1 * IN,
@@ -334,7 +334,7 @@ describe("buildCellBorder()", () => {
       ...baseTableNode,
       border: undefined,
       gridStyle: GRID_STYLE.BOTH,
-      gridStroke: { color: "#000000", width: 1, dashType: DASH_TYPE.SOLID },
+      gridStroke: { color: "#000000", width: 1, dashType: DASH.SOLID },
     };
 
     const border = builder.buildCellBorder(tableNode, 0, 0, 3, 3);
@@ -353,7 +353,7 @@ describe("buildCellBorder()", () => {
       ...baseTableNode,
       border: undefined,
       gridStyle: GRID_STYLE.BOTH,
-      gridStroke: { color: "#000000", width: 1, dashType: DASH_TYPE.SOLID },
+      gridStroke: { color: "#000000", width: 1, dashType: DASH.SOLID },
     };
 
     const border = builder.buildCellBorder(tableNode, 1, 1, 3, 3);
@@ -372,7 +372,7 @@ describe("buildCellBorder()", () => {
       ...baseTableNode,
       border: undefined,
       gridStyle: GRID_STYLE.BOTH,
-      gridStroke: { color: "#000000", width: 1, dashType: DASH_TYPE.SOLID },
+      gridStroke: { color: "#000000", width: 1, dashType: DASH.SOLID },
     };
 
     const border = builder.buildCellBorder(tableNode, 2, 2, 3, 3);
@@ -389,9 +389,9 @@ describe("buildCellBorder()", () => {
   test("GRID_STYLE.BOTH with outer border - all borders solid for middle cell", () => {
     const tableNode: TableNode = {
       ...baseTableNode,
-      border: { color: "#000000", width: 1, dashType: DASH_TYPE.SOLID },
+      border: { color: "#000000", width: 1, dashType: DASH.SOLID },
       gridStyle: GRID_STYLE.BOTH,
-      gridStroke: { color: "#000000", width: 1, dashType: DASH_TYPE.SOLID },
+      gridStroke: { color: "#000000", width: 1, dashType: DASH.SOLID },
     };
 
     const border = builder.buildCellBorder(tableNode, 1, 1, 3, 3);
@@ -409,7 +409,7 @@ describe("buildCellBorder()", () => {
       ...baseTableNode,
       border: undefined,
       gridStyle: GRID_STYLE.HORIZONTAL,
-      gridStroke: { color: "#000000", width: 1, dashType: DASH_TYPE.SOLID },
+      gridStroke: { color: "#000000", width: 1, dashType: DASH.SOLID },
     };
 
     const border = builder.buildCellBorder(tableNode, 1, 1, 3, 3);
@@ -427,7 +427,7 @@ describe("buildCellBorder()", () => {
       ...baseTableNode,
       border: undefined,
       gridStyle: GRID_STYLE.VERTICAL,
-      gridStroke: { color: "#000000", width: 1, dashType: DASH_TYPE.SOLID },
+      gridStroke: { color: "#000000", width: 1, dashType: DASH.SOLID },
     };
 
     const border = builder.buildCellBorder(tableNode, 1, 1, 3, 3);
@@ -456,7 +456,7 @@ describe("buildCellBorder()", () => {
   test("outer border width and color applied correctly", () => {
     const tableNode: TableNode = {
       ...baseTableNode,
-      border: { color: "#FF0000", width: 2.5, dashType: DASH_TYPE.SOLID },
+      border: { color: "#FF0000", width: 2.5, dashType: DASH.SOLID },
       gridStyle: GRID_STYLE.NONE,
       gridStroke: undefined,
     };
@@ -504,7 +504,7 @@ const baseShapeNode: ShapeNode = {
   height: SIZE.FILL,
   shape: SHAPE.RECTANGLE,
   fill: { color: "#EEEEEE", opacity: 100 },
-  border: { color: "#E7E0EC", width: 0.75, dashType: DASH_TYPE.SOLID },
+  border: { color: "#E7E0EC", width: 0.75, dashType: DASH.SOLID },
   cornerRadius: 0,
 };
 
@@ -546,7 +546,7 @@ describe("buildShapeConfig() — area shapes", () => {
   test("applies border when all sides enabled", () => {
     const shapeNode: ShapeNode = {
       ...baseShapeNode,
-      border: { color: "#000000", width: 2, dashType: DASH_TYPE.SOLID },
+      border: { color: "#000000", width: 2, dashType: DASH.SOLID },
     };
     const pos = positioned(shapeNode, 1, 2, 5, 3);
 
@@ -643,7 +643,7 @@ describe("buildShapeConfig() — area shapes", () => {
     const lineNode: LineNode = {
       type: NODE_TYPE.LINE,
       direction: DIRECTION.ROW,
-      stroke: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
+      stroke: { color: "#333333", width: 1, dashType: DASH.SOLID },
       shadow: { type: "outer", color: "#000000", opacity: 30, blur: 6, offset: 2, angle: 270 },
     };
     const pos = positioned(lineNode, 0, 0, 10, 0);
@@ -855,18 +855,18 @@ describe("buildTextFragments()", () => {
     assert.deepStrictEqual(fragments[0].options?.bullet, { indent: 18 });
   });
 
-  test("applies strikethrough as STRIKE_TYPE.SINGLE", () => {
+  test("applies strikethrough as STRIKE.SINGLE", () => {
     const fragments = builder.buildTextFragments([{ text: "Struck", strikethrough: true }], mockTextStyle, "#000000");
 
     assert.strictEqual(fragments.length, 1);
-    assert.strictEqual(fragments[0].options?.strike, STRIKE_TYPE.SINGLE);
+    assert.strictEqual(fragments[0].options?.strike, STRIKE.SINGLE);
   });
 
-  test("applies underline as UNDERLINE_STYLE.SINGLE", () => {
+  test("applies underline as UNDERLINE.SINGLE", () => {
     const fragments = builder.buildTextFragments([{ text: "Underlined", underline: true }], mockTextStyle, "#000000");
 
     assert.strictEqual(fragments.length, 1);
-    assert.deepStrictEqual(fragments[0].options?.underline, { style: UNDERLINE_STYLE.SINGLE });
+    assert.deepStrictEqual(fragments[0].options?.underline, { style: UNDERLINE.SINGLE });
   });
 
   test("applies hyperlink with link token color and underline", () => {
@@ -881,7 +881,7 @@ describe("buildTextFragments()", () => {
     assert.strictEqual(fragments.length, 1);
     assert.deepStrictEqual(fragments[0].options?.hyperlink, { url: "https://example.com" });
     assert.strictEqual(fragments[0].options?.color, "FF00FF");
-    assert.deepStrictEqual(fragments[0].options?.underline, { style: UNDERLINE_STYLE.SINGLE });
+    assert.deepStrictEqual(fragments[0].options?.underline, { style: UNDERLINE.SINGLE });
   });
 
   test("hyperlink: explicit run.color wins over linkColor token", () => {
@@ -906,7 +906,7 @@ describe("buildTextFragments()", () => {
     );
 
     // underline should be set exactly once (from run.underline, not duplicated by token)
-    assert.deepStrictEqual(fragments[0].options?.underline, { style: UNDERLINE_STYLE.SINGLE });
+    assert.deepStrictEqual(fragments[0].options?.underline, { style: UNDERLINE.SINGLE });
   });
 
   test("shifts paragraphBreak to previous fragment for pptxgenjs", () => {

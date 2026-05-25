@@ -16,7 +16,7 @@ import {
   type ElementNode,
   extractSource,
   NODE_TYPE,
-  type Shadow,
+  type ShadowEffect,
   SIZE,
   type Stroke,
   SYNTAX,
@@ -37,7 +37,7 @@ export interface TextTokens {
   vAlign: VerticalAlignment;
   accents: Record<string, string>;
   border?: Stroke;
-  shadow?: Shadow;
+  shadow?: ShadowEffect;
 }
 
 // ============================================

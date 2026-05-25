@@ -13,7 +13,7 @@ import type {
   TextStyle,
   Theme,
 } from "@tycoslide/core";
-import { DASH_TYPE, GRID_STYLE, HALIGN, isComponentNode, isLayoutNode, VALIGN } from "@tycoslide/core";
+import { DASH, GRID_STYLE, HALIGN, isComponentNode, isLayoutNode, VALIGN } from "@tycoslide/core";
 import type { ComponentSpec } from "../src/authoring/component.js";
 import type {
   CardTokens,
@@ -192,9 +192,9 @@ export const DEFAULT_TABLE_TOKENS: TableTokens = {
   cellBackgroundOpacity: 100,
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.MIDDLE,
-  border: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
+  border: { color: "#333333", width: 1, dashType: DASH.SOLID },
   gridStyle: GRID_STYLE.BOTH,
-  gridStroke: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
+  gridStroke: { color: "#333333", width: 1, dashType: DASH.SOLID },
   cellPadding: 10,
   linkColor: "#0000FF",
   linkUnderline: true,
@@ -266,7 +266,7 @@ export const DEFAULT_QUOTE_TOKENS: QuoteTokens = {
   bar: {
     color: "#FF0000",
     width: 3,
-    dashType: DASH_TYPE.SOLID,
+    dashType: DASH.SOLID,
   },
   spacing: 12,
   quote: {
@@ -317,7 +317,7 @@ export const DEFAULT_TESTIMONIAL_TOKENS: TestimonialTokens = {
 export const DEFAULT_LINE_TOKENS: LineTokens = {
   color: "#333333",
   width: 1,
-  dashType: DASH_TYPE.SOLID,
+  dashType: DASH.SOLID,
 };
 
 export const DEFAULT_SHAPE_TOKENS: ShapeTokens = {

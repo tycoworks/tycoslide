@@ -10,7 +10,7 @@ import type {
   ImageNode,
   LineNode,
   PositionedNode,
-  Shadow,
+  ShadowEffect,
   ShapeNode,
   SlideNumberNode,
   Stroke,
@@ -18,17 +18,17 @@ import type {
   TableNode,
   TextNode,
 } from "../model/nodes.js";
-import type { DashType, StrikeType, TextContent, TextStyle, UnderlineStyle } from "../model/types.js";
-import { DASH_TYPE, DIRECTION, GRID_STYLE, LINE_SHAPE, STRIKE_TYPE, UNDERLINE_STYLE } from "../model/types.js";
+import type { Dash, Strike, TextContent, TextStyle, Underline } from "../model/types.js";
+import { DASH, DIRECTION, GRID_STYLE, LINE_SHAPE, STRIKE, UNDERLINE } from "../model/types.js";
 
 /** Map CSS-compatible dash type names to pptxgenjs values. */
-function pptxDashType(dt: DashType): string {
+function pptxDash(dt: Dash): string {
   switch (dt) {
-    case DASH_TYPE.SOLID:
+    case DASH.SOLID:
       return "solid";
-    case DASH_TYPE.DASHED:
+    case DASH.DASHED:
       return "dash";
-    case DASH_TYPE.DOTTED:
+    case DASH.DOTTED:
       return "sysDot";
     default:
       throw new Error(`Unknown dash type: '${dt as string}'`);
@@ -49,8 +49,8 @@ export interface TextFragmentOptions {
   bullet?: boolean | { type?: string; indent?: number };
   bold?: boolean;
   italic?: boolean;
-  strike?: StrikeType;
-  underline?: { style: UnderlineStyle; color?: string };
+  strike?: Strike;
+  underline?: { style: Underline; color?: string };
   hyperlink?: { url: string };
   paraSpaceBefore?: number;
   paraSpaceAfter?: number;
@@ -70,12 +70,12 @@ function buildLineOptions(stroke: Stroke): Record<string, unknown> {
   return {
     color: stripHash(stroke.color),
     width: stroke.width,
-    dashType: pptxDashType(stroke.dashType),
+    dashType: pptxDash(stroke.dashType),
   };
 }
 
-/** Convert tycoslide Shadow to pptxgenjs ShadowProps. */
-function buildShadowOptions(shadow: Shadow): Record<string, unknown> {
+/** Convert tycoslide ShadowEffect to pptxgenjs ShadowProps. */
+function buildShadowOptions(shadow: ShadowEffect): Record<string, unknown> {
   return {
     type: shadow.type,
     color: stripHash(shadow.color),
@@ -159,13 +159,13 @@ export class PptxConfigBuilder {
       // Pass through paragraph-level options
       if (run.bold) options.bold = true;
       if (run.italic) options.italic = true;
-      if (run.strikethrough) options.strike = STRIKE_TYPE.SINGLE;
-      if (run.underline) options.underline = { style: UNDERLINE_STYLE.SINGLE };
+      if (run.strikethrough) options.strike = STRIKE.SINGLE;
+      if (run.underline) options.underline = { style: UNDERLINE.SINGLE };
       if (run.hyperlink) {
         options.hyperlink = { url: run.hyperlink };
         // Apply link token styling unless run has explicit overrides
         if (!run.color && linkColor) options.color = stripHash(linkColor);
-        if (!run.underline && linkUnderline) options.underline = { style: UNDERLINE_STYLE.SINGLE };
+        if (!run.underline && linkUnderline) options.underline = { style: UNDERLINE.SINGLE };
       }
       // Record break-before for post-processing shift
       if (run.paragraphBreak && !run.bullet) breakBeforeIndices.add(i);

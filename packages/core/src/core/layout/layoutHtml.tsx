@@ -22,7 +22,7 @@ import type {
   ImageNode,
   LayoutNode,
   LineNode,
-  Shadow,
+  ShadowEffect,
   ShapeNode,
   SlideNumberNode,
   StackNode,
@@ -33,26 +33,16 @@ import type {
 import { NODE_TYPE } from "../model/nodes.js";
 import type {
   Background,
-  DashType,
+  Dash,
   Direction,
   HorizontalAlignment,
   NormalizedRun,
-  SizeValue,
+  Size,
   TextStyle,
   Theme,
   VerticalAlignment,
 } from "../model/types.js";
-import {
-  DASH_TYPE,
-  DIRECTION,
-  FONT_SLOT,
-  GRID_STYLE,
-  HALIGN,
-  SHAPE,
-  SIZE,
-  SPACING_MODE,
-  VALIGN,
-} from "../model/types.js";
+import { DASH, DIRECTION, FONT_SLOT, GRID_STYLE, HALIGN, SHAPE, SIZE, SPACING, VALIGN } from "../model/types.js";
 
 // ============================================
 // TYPES
@@ -100,8 +90,8 @@ export type FontNormalRatios = Map<string, number>;
  *  When true: HUG emits flex:0 1 auto (can shrink) instead of flex-shrink:0 (rigid),
  *  and min-width/min-height:0 overrides are applied so flex can actually compress the item. */
 export function flexSize(
-  width: SizeValue,
-  height: SizeValue,
+  width: Size,
+  height: Size,
   parentDir: Direction,
   opts?: { shrinkable?: boolean; weight?: number },
 ): Record<string, string | number> {
@@ -254,7 +244,7 @@ function styleContainer(
   let bottomPx = p.bottom;
   let leftPx = p.left;
   // AROUND mode adds spacing to main-axis start/end edges
-  if (node.spacingMode === SPACING_MODE.AROUND) {
+  if (node.spacingMode === SPACING.AROUND) {
     if (isRow) {
       leftPx += spacingPx;
       rightPx += spacingPx;
@@ -418,7 +408,7 @@ function styleText(node: TextNode, parent: ParentCtx, nodeId: string): StyledNod
  * Column, constrained     → height=FILL (grow into available height budget)
  * Column, unconstrained   → height=HUG (render at aspect-ratio-derived height)
  */
-function resolveImageSizing(parent: ParentCtx): { width: SizeValue; height: SizeValue } {
+function resolveImageSizing(parent: ParentCtx): { width: Size; height: Size } {
   const isRow = parent.direction === DIRECTION.ROW;
 
   return {
@@ -486,13 +476,13 @@ function styleImage(node: ImageNode, parent: ParentCtx, nodeId: string, imagePat
 }
 
 /** Dash patterns as multiples of stroke width. */
-function dashTypeMultipliers(dt: DashType): number[] | undefined {
+function dashTypeMultipliers(dt: Dash): number[] | undefined {
   switch (dt) {
-    case DASH_TYPE.SOLID:
+    case DASH.SOLID:
       return undefined;
-    case DASH_TYPE.DASHED:
+    case DASH.DASHED:
       return [4, 3];
-    case DASH_TYPE.DOTTED:
+    case DASH.DOTTED:
       return [1, 1];
     default:
       return undefined;
@@ -534,8 +524,8 @@ function styleLine(node: LineNode, parent: ParentCtx, nodeId: string): StyledNod
   return { nodeId, styles, children: [], innerHTML: svg };
 }
 
-/** Compute shadow x/y offsets and rgba color from a Shadow config. */
-function shadowOffsets(shadow: Shadow): { x: number; y: number; rgba: string } {
+/** Compute shadow x/y offsets and rgba color from a ShadowEffect config. */
+function shadowOffsets(shadow: ShadowEffect): { x: number; y: number; rgba: string } {
   const rad = (shadow.angle * Math.PI) / 180;
   return {
     x: shadow.offset * Math.sin(rad),
@@ -544,8 +534,8 @@ function shadowOffsets(shadow: Shadow): { x: number; y: number; rgba: string } {
   };
 }
 
-/** Apply box-shadow CSS from a Shadow config. Mutates styles in place. */
-function applyShadowCSS(shadow: Shadow | undefined, styles: Record<string, string | number>): void {
+/** Apply box-shadow CSS from a ShadowEffect config. Mutates styles in place. */
+function applyShadowCSS(shadow: ShadowEffect | undefined, styles: Record<string, string | number>): void {
   if (!shadow) return;
   const { x, y, rgba } = shadowOffsets(shadow);
   styles.boxShadow = `${ptToPx(x)}px ${ptToPx(y)}px ${ptToPx(shadow.blur)}px ${rgba}`;

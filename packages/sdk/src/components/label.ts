@@ -10,7 +10,7 @@ import {
   component,
   extractSource,
   NODE_TYPE,
-  type Shadow,
+  type ShadowEffect,
   SIZE,
   type Stroke,
   SYNTAX,
@@ -37,7 +37,7 @@ export interface LabelTokens {
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;
   border?: Stroke;
-  shadow?: Shadow;
+  shadow?: ShadowEffect;
 }
 
 // ============================================

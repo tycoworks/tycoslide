@@ -4,7 +4,7 @@ import {
   deriveTokens,
   GRID_STYLE,
   HALIGN,
-  SHADOW_TYPE,
+  SHADOW,
   SlideFormat,
   TEXT_STYLE,
   VALIGN,
@@ -29,7 +29,7 @@ const presentationFormat: Format = {
   padding: unit * 8,
   radius: unit * 3,
   strokes: { hairline: 0.5, thin: 0.75, base: 1, thick: 2 },
-  shadow: { type: SHADOW_TYPE.OUTER, opacity: 12, blur: 6, offset: 2, angle: 180 },
+  shadow: { type: SHADOW.OUTER, opacity: 12, blur: 6, offset: 2, angle: 180 },
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.MIDDLE,
   textStyles: {

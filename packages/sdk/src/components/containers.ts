@@ -10,10 +10,10 @@ import {
   NODE_TYPE,
   type RenderContext,
   SIZE,
-  type SizeValue,
+  type Size,
   type SlideNode,
-  SPACING_MODE,
-  type SpacingMode,
+  SPACING,
+  type Spacing,
   VALIGN,
   type VerticalAlignment,
 } from "@tycoslide/core";
@@ -49,11 +49,11 @@ function parseContainerArgs<TParams>(args: any[]): { params: TParams; children: 
 // ============================================
 
 export type RowParams = {
-  width?: SizeValue; // SIZE.FILL (share/stretch) or SIZE.HUG (content-sized). Default: FILL
-  height?: SizeValue; // SIZE.FILL (share/stretch) or SIZE.HUG (content-sized). Default: HUG
+  width?: Size; // SIZE.FILL (share/stretch) or SIZE.HUG (content-sized). Default: FILL
+  height?: Size; // SIZE.FILL (share/stretch) or SIZE.HUG (content-sized). Default: HUG
   weight?: number; // flex-grow weight (main axis). Default: 1. Only meaningful when main-axis size is FILL.
   spacing?: number; // pixels — space between children. Default: 0
-  spacingMode?: SpacingMode;
+  spacingMode?: Spacing;
   vAlign?: VerticalAlignment;
   hAlign?: HorizontalAlignment; // justify-content: left (flex-start), center, right (flex-end)
   padding?: number | Insets; // pixels - uniform or per-side internal padding
@@ -72,7 +72,7 @@ export const rowComponent = defineComponent({
     height: params.height ?? SIZE.HUG,
     weight: params.weight ?? 1,
     spacing: params.spacing ?? 0,
-    spacingMode: params.spacingMode ?? SPACING_MODE.BETWEEN,
+    spacingMode: params.spacingMode ?? SPACING.BETWEEN,
     vAlign: params.vAlign ?? VALIGN.TOP, // Explicit default: pure alignment (not CSS stretch)
     hAlign: params.hAlign ?? HALIGN.LEFT, // Explicit default for consistent measurement
     padding: params.padding instanceof Insets ? params.padding : new Insets(params.padding ?? 0),
@@ -88,11 +88,11 @@ export function row(params: RowParams, ...children: SlideNode[]): ComponentNode 
 // ============================================
 
 export type ColumnParams = {
-  width?: SizeValue; // SIZE.FILL (share/stretch) or SIZE.HUG (content-sized). Default: FILL
-  height?: SizeValue; // SIZE.FILL (share/stretch) or SIZE.HUG (content-sized). Default: HUG
+  width?: Size; // SIZE.FILL (share/stretch) or SIZE.HUG (content-sized). Default: FILL
+  height?: Size; // SIZE.FILL (share/stretch) or SIZE.HUG (content-sized). Default: HUG
   weight?: number; // flex-grow weight (main axis). Default: 1. Only meaningful when main-axis size is FILL.
   spacing?: number; // pixels — space between children. Default: 0
-  spacingMode?: SpacingMode;
+  spacingMode?: Spacing;
   vAlign?: VerticalAlignment;
   hAlign?: HorizontalAlignment;
   padding?: number | Insets; // pixels - uniform or per-side internal padding
@@ -111,7 +111,7 @@ export const columnComponent = defineComponent({
     height: params.height ?? SIZE.HUG,
     weight: params.weight ?? 1,
     spacing: params.spacing ?? 0,
-    spacingMode: params.spacingMode ?? SPACING_MODE.BETWEEN,
+    spacingMode: params.spacingMode ?? SPACING.BETWEEN,
     vAlign: params.vAlign ?? VALIGN.TOP, // Explicit default for consistent measurement
     hAlign: params.hAlign ?? HALIGN.LEFT, // Explicit default for consistent measurement
     padding: params.padding instanceof Insets ? params.padding : new Insets(params.padding ?? 0),
@@ -127,8 +127,8 @@ export function column(params: ColumnParams, ...children: SlideNode[]): Componen
 // ============================================
 
 export type StackParams = {
-  width?: SizeValue; // SIZE.FILL (share/stretch) or SIZE.HUG (content-sized). Default: FILL
-  height?: SizeValue; // SIZE.FILL (share/stretch) or SIZE.HUG (content-sized). Default: HUG
+  width?: Size; // SIZE.FILL (share/stretch) or SIZE.HUG (content-sized). Default: FILL
+  height?: Size; // SIZE.FILL (share/stretch) or SIZE.HUG (content-sized). Default: HUG
 };
 
 export const stackComponent = defineComponent({
@@ -170,7 +170,7 @@ export function stack(...args: any[]): ComponentNode {
 export type GridParams = {
   columns: number;
   spacing?: number; // pixels — gap between cells. Default: 0
-  height?: SizeValue; // SIZE.FILL (equal rows) or SIZE.HUG (content-sized rows). Default: FILL
+  height?: Size; // SIZE.FILL (equal rows) or SIZE.HUG (content-sized rows). Default: FILL
 };
 
 export const gridComponent = defineComponent({
@@ -185,7 +185,7 @@ export const gridComponent = defineComponent({
       children,
       columns,
       spacing,
-      width: SIZE.FILL as SizeValue,
+      width: SIZE.FILL as Size,
       height,
     };
   },
