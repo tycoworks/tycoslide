@@ -31,7 +31,6 @@ import {
   SIZE,
   SPACING_MODE,
   schema,
-  stack,
   text,
   textComponent,
 } from "@tycoslide/sdk";
@@ -307,72 +306,6 @@ export const cards: Layout<CardsLayoutTokens> = {
         grid({ columns: perRow, spacing: tokens.gridSpacing }, ...built),
         ...(caption ? [text(caption, tokens.caption)] : []),
       ),
-    );
-  },
-};
-
-// --- transform ---
-
-interface TransformLayoutTokens {
-  title: LabelTokens;
-  eyebrow: LabelTokens;
-  text: TextTokens;
-  list: ListTokens;
-  vAlign: VerticalAlignment;
-  hAlign: HorizontalAlignment;
-  overlayVAlign: VerticalAlignment;
-  overlayHAlign: HorizontalAlignment;
-  spacing: number;
-  contentSpacing: number;
-  headerSpacing: number;
-  overlaySize: number;
-}
-
-// +----------------------------+
-// | ::left::     ::right::     |
-// |       ::overlay::          |
-// +----------------------------+
-export const transform: Layout<TransformLayoutTokens, ScalarShape, readonly ["left", "right", "overlay"]> = {
-  params: {
-    title: param.optional(textComponent.schema),
-    eyebrow: param.optional(textComponent.schema),
-  },
-  slots: ["left", "right", "overlay"] as const,
-  render: (params, slots, tokens) => {
-    const titleText = params.title as string | undefined;
-    const eyebrow = params.eyebrow as string | undefined;
-    const colProps = {
-      vAlign: tokens.vAlign,
-      hAlign: tokens.hAlign,
-      spacing: tokens.contentSpacing,
-      height: SIZE.FILL,
-    };
-    const layers: SlideNode[] = [
-      row(
-        { spacing: tokens.spacing, height: SIZE.HUG },
-        column(colProps, ...slots.left),
-        column(colProps, ...slots.right),
-      ),
-    ];
-    if (slots.overlay.length > 0) {
-      layers.push(
-        column(
-          {
-            width: tokens.overlaySize,
-            height: tokens.overlaySize,
-            spacing: 0,
-            vAlign: tokens.overlayVAlign,
-            hAlign: tokens.overlayHAlign,
-          },
-          ...slots.overlay,
-        ),
-      );
-    }
-    const content = layers.length === 1 ? layers[0] : stack({ height: SIZE.FILL }, ...layers);
-    return column(
-      { vAlign: tokens.vAlign, height: SIZE.FILL, spacing: tokens.spacing },
-      ...(titleText ? [headerBlock(titleText, tokens, eyebrow)] : []),
-      content,
     );
   },
 };

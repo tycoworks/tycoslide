@@ -11,7 +11,7 @@ import { column, HALIGN, Insets, image, LAYER, label, row, SIZE, slideNumber, VA
 
 export interface FooterChromeTokens {
   margin: number;
-  footerHeight: number;
+  footerWeight: number;
   footerLogo: string;
   footerText: string;
   footerSpacing: number;
@@ -43,27 +43,22 @@ export function withFooterChrome<
     slots: innerLayout.slots,
     render: (params, slots, tokens) => {
       const content = innerLayout.render(params, slots, tokens);
-      // Footer row: original footerHeight, horizontally inset by margin
       const footerRow = row(
         {
-          height: chrome.footerHeight,
+          height: SIZE.FILL,
+          weight: chrome.footerWeight,
           vAlign: VALIGN.MIDDLE,
           hAlign: HALIGN.CENTER,
+          padding: new Insets(0, chrome.margin, 0, chrome.margin),
+          spacing: chrome.footerSpacing,
         },
-        column({ width: chrome.margin }),
         image(chrome.footerLogo, chrome.footerImage),
-        column({ width: chrome.footerSpacing }),
         label(chrome.footerText, chrome.footer),
-        column({ width: chrome.footerSpacing }),
         slideNumber(chrome.slideNumber),
-        column({ width: chrome.margin }),
       );
       footerRow.layer = LAYER.MASTER;
-      // Bottom breathing (matches old master's margin/4 padding)
-      const bottomSpacer = column({ height: chrome.bottomPadding });
-      bottomSpacer.layer = LAYER.MASTER;
       return column(
-        { height: SIZE.FILL },
+        { height: SIZE.FILL, padding: new Insets(0, 0, chrome.bottomPadding, 0) },
         column(
           {
             height: SIZE.FILL,
@@ -72,7 +67,6 @@ export function withFooterChrome<
           content,
         ),
         footerRow,
-        bottomSpacer,
       );
     },
   };

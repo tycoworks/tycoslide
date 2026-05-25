@@ -199,8 +199,8 @@ export interface ContainerNode<C extends SlideNode = ElementNode> {
   type: typeof NODE_TYPE.CONTAINER;
   direction: Direction; // 'row' or 'column' — determines flex-direction
   children: C[]; // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
-  width: number | SizeValue; // pixels (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
-  height: number | SizeValue; // pixels (number), SIZE.FILL (share space), or SIZE.HUG (content-sized)
+  width: SizeValue; // SIZE.FILL (share space) or SIZE.HUG (content-sized)
+  height: SizeValue; // SIZE.FILL (share space) or SIZE.HUG (content-sized)
   weight: number; // flex-grow weight (main axis). SDK defaults to 1.
   spacing: number; // pixels — space between children (and edges when spacingMode is AROUND)
   spacingMode: SpacingMode; // BETWEEN: between children only; AROUND: between + edges
@@ -214,8 +214,8 @@ export interface ContainerNode<C extends SlideNode = ElementNode> {
 export interface StackNode<C extends SlideNode = ElementNode> {
   type: typeof NODE_TYPE.STACK;
   children: C[]; // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
-  width: number | SizeValue; // pixels, SIZE.FILL, or SIZE.HUG
-  height: number | SizeValue; // pixels, SIZE.FILL, or SIZE.HUG
+  width: SizeValue; // SIZE.FILL or SIZE.HUG
+  height: SizeValue; // SIZE.FILL or SIZE.HUG
   layer?: Layer; // render target: master (shared/deduped) or content (per-slide)
 }
 
@@ -225,8 +225,8 @@ export interface GridNode<C extends SlideNode = ElementNode> {
   children: C[]; // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
   columns: number; // number of equal-width columns
   spacing: number; // pixels — gap between cells
-  width: number | SizeValue; // pixels, SIZE.FILL, or SIZE.HUG
-  height: number | SizeValue; // pixels, SIZE.FILL, or SIZE.HUG
+  width: SizeValue; // SIZE.FILL or SIZE.HUG
+  height: SizeValue; // SIZE.FILL or SIZE.HUG
   layer?: Layer; // render target: master (shared/deduped) or content (per-slide)
 }
 

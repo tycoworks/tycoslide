@@ -317,9 +317,9 @@ describe("row()", () => {
   });
 
   test("applies height prop", async () => {
-    const node = row({ spacing: 0, height: 2.5 }, child1);
+    const node = row({ spacing: 0, height: SIZE.FILL }, child1);
     const rendered = (await render(node)) as ContainerNode;
-    assert.strictEqual(rendered.height, 2.5);
+    assert.strictEqual(rendered.height, SIZE.FILL);
   });
 
   test("distinguishes props from children", async () => {
@@ -422,9 +422,9 @@ describe("column()", () => {
   });
 
   test("applies width prop", async () => {
-    const node = column({ spacing: 0, width: 3.0 }, child1);
+    const node = column({ spacing: 0, width: SIZE.HUG }, child1);
     const rendered = (await render(node)) as ContainerNode;
-    assert.strictEqual(rendered.width, 3.0);
+    assert.strictEqual(rendered.width, SIZE.HUG);
   });
 
   test("applies spacing prop", async () => {
@@ -439,10 +439,10 @@ describe("column()", () => {
     assert.deepStrictEqual(rendered.padding, new Insets(0.25));
   });
 
-  test("applies numeric height", async () => {
-    const node = column({ spacing: 0, height: 2.5 }, text("A", DEFAULT_TEXT_TOKENS));
+  test("applies SizeValue height", async () => {
+    const node = column({ spacing: 0, height: SIZE.FILL }, text("A", DEFAULT_TEXT_TOKENS));
     const rendered = (await render(node)) as ContainerNode;
-    assert.strictEqual(rendered.height, 2.5);
+    assert.strictEqual(rendered.height, SIZE.FILL);
   });
 
   test("distinguishes props from children", async () => {
@@ -517,19 +517,19 @@ describe("stack()", () => {
   });
 
   test("passes width prop", async () => {
-    const node = (await render(stack({ width: 5 }, child1))) as StackNode;
-    assert.strictEqual(node.width, 5);
+    const node = (await render(stack({ width: SIZE.HUG }, child1))) as StackNode;
+    assert.strictEqual(node.width, SIZE.HUG);
   });
 
   test("passes height prop", async () => {
-    const node = (await render(stack({ height: 3 }, child1))) as StackNode;
-    assert.strictEqual(node.height, 3);
+    const node = (await render(stack({ height: SIZE.HUG }, child1))) as StackNode;
+    assert.strictEqual(node.height, SIZE.HUG);
   });
 
   test("passes width and height together", async () => {
-    const node = (await render(stack({ width: 5, height: 3 }, child1, child2))) as StackNode;
-    assert.strictEqual(node.width, 5);
-    assert.strictEqual(node.height, 3);
+    const node = (await render(stack({ width: SIZE.HUG, height: SIZE.HUG }, child1, child2))) as StackNode;
+    assert.strictEqual(node.width, SIZE.HUG);
+    assert.strictEqual(node.height, SIZE.HUG);
     assert.strictEqual(node.children.length, 2);
   });
 

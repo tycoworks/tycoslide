@@ -13,12 +13,12 @@ import { assets } from "../assets.js";
 import { type FooterChromeTokens, type MarginChromeTokens, withFooterChrome, withMarginChrome } from "../chrome.js";
 import { fonts } from "../fonts.js";
 import { TEMPLATE } from "../index.js";
-import { agenda, body, cards, section, statement, title, transform } from "../layouts.js";
+import { agenda, body, cards, section, statement, title } from "../layouts.js";
 
 /** Chrome-specific spatial config (not token-relevant). */
 interface ChromeConfig {
   margin: number;
-  footerHeight: number;
+  footerWeight: number;
 }
 
 const unit = 3;
@@ -83,7 +83,7 @@ const presentationFormat: Format = {
 
 const presentationChrome: ChromeConfig = {
   margin: unit * 16,
-  footerHeight: unit * 8,
+  footerWeight: 0.05,
 };
 
 // ============================================
@@ -92,7 +92,7 @@ const presentationChrome: ChromeConfig = {
 
 /** Build chrome token sets for a format. */
 function buildChromeTokens(palette: Palette, config: Format, chrome: ChromeConfig) {
-  const { margin, footerHeight } = chrome;
+  const { margin, footerWeight } = chrome;
   const spacingTight = config.spacing.tight;
   const labelFooter: LabelTokens = {
     style: TEXT_STYLE.FOOTER,
@@ -103,7 +103,7 @@ function buildChromeTokens(palette: Palette, config: Format, chrome: ChromeConfi
 
   const footer: FooterChromeTokens = {
     margin,
-    footerHeight,
+    footerWeight,
     bottomPadding: margin / 2,
     footerLogo: assets.resolve(assets.entries.tycoslide.logo),
     footerText: "tycoslide",
@@ -141,7 +141,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
   const centered = { hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } as const;
   const richText = { linkColor: palette.accent, accents: t.primitives.accents, linkUnderline: true };
 
-  // ── Header tokens (shared by body, cards, agenda, transform) ────────────
+  // ── Header tokens (shared by body, cards, agenda) ──────────────────────
   const headerTokens = {
     title: t.onLight.headings.h3,
     eyebrow: {
@@ -165,7 +165,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
 
   const quoteText = { ...t.onLight.headings.h2, ...richText };
 
-  // ── Card tokens (used by cards + transform templates) ───────────────────
+  // ── Card tokens ────────────────────────────────────────────────────────
   const cardTitle = {
     ...richText,
     hAlign: HALIGN.LEFT,
@@ -365,8 +365,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
           description: "Markdown body with optional title. Default layout.",
           whenToUse:
             "General-purpose content: paragraphs, bullet lists, tables, code blocks, diagrams. The workhorse template.",
-          whenNotToUse:
-            "When content fits a more specific template (cards, transform, statement). Don't use body for everything.",
+          whenNotToUse: "When content fits a more specific template (cards, statement). Don't use body for everything.",
           limits: [
             "Max 4-7 bullet items, 1-2 lines each.",
             "Max 3-5 short paragraphs.",
@@ -454,7 +453,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
           description: "Card grid with intro text and optional caption.",
           whenToUse:
             "Feature lists, team members, product tiers, or any set of parallel items with title + description.",
-          whenNotToUse: "Sequential/ordered content (use agenda). Detailed comparisons (use transform).",
+          whenNotToUse: "Sequential/ordered content (use agenda).",
           limits: ["2-4 cards. Each card: short title + 1-2 sentence description. More than 4 will overflow."],
           gotchas: ["Cards are frontmatter params (YAML array), not markdown body content."],
         },
@@ -468,46 +467,6 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
           spacing,
           gridSpacing: spacing,
           card: { ...cardBase, padding: unit * 11, vAlign: VALIGN.TOP, background: t.surfaces.card },
-        },
-      }),
-
-      // ── Transform (light) ─────────────────────────────────────────────
-      defineTemplate({
-        name: TEMPLATE.TRANSFORM,
-        documentation: {
-          description: "Side-by-side comparison layout with overlay label between columns.",
-          whenToUse: "Before/after, pros/cons, current vs. proposed, or any two-column comparison.",
-          whenNotToUse: "Content that isn't a comparison. Use body or cards instead.",
-          limits: [
-            "Two columns (left and right slots). Keep each column to 3-5 bullets or a short table.",
-            "Overlay text: 1 short line (it floats between the columns).",
-          ],
-          gotchas: [
-            "All three slots (left, right, overlay) are required. Overlay is a short label like 'vs', 'to', or '→'.",
-            "Left and right are markdown body slots, not frontmatter params.",
-          ],
-        },
-        layout: footer(transform),
-        background: t.surfaces.elevated,
-        tokens: {
-          ...headerTokens,
-          text: cardDescription,
-          list: t.onLight.list,
-          vAlign: VALIGN.MIDDLE,
-          hAlign: HALIGN.LEFT,
-          overlayVAlign: VALIGN.MIDDLE,
-          overlayHAlign: HALIGN.CENTER,
-          spacing,
-          contentSpacing: 0,
-          overlaySize: 0.9,
-          ...componentTokens,
-          card: {
-            ...cardBase,
-            ...centered,
-            title: { ...cardTitle, hAlign: HALIGN.CENTER },
-            description: { ...cardDescription, hAlign: HALIGN.CENTER },
-            background: { ...t.surfaces.card, shadow: t.primitives.shadow },
-          },
         },
       }),
     ],

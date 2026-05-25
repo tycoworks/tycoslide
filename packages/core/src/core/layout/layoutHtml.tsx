@@ -100,8 +100,8 @@ export type FontNormalRatios = Map<string, number>;
  *  When true: HUG emits flex:0 1 auto (can shrink) instead of flex-shrink:0 (rigid),
  *  and min-width/min-height:0 overrides are applied so flex can actually compress the item. */
 export function flexSize(
-  width: number | SizeValue,
-  height: number | SizeValue,
+  width: SizeValue,
+  height: SizeValue,
   parentDir: Direction,
   opts?: { shrinkable?: boolean; weight?: number },
 ): Record<string, string | number> {
@@ -111,14 +111,9 @@ export function flexSize(
   const crossSize = isInRow ? height : width;
 
   // Main axis → flex property
-  if (typeof mainSize === "number") {
-    styles.flex = `0 0 ${mainSize}px`;
-  } else if (mainSize === SIZE.FILL) {
+  if (mainSize === SIZE.FILL) {
     const w = opts?.weight ?? 1;
     styles.flex = `${w} 1 0`;
-    // min-width:0 (rows) lets FILL items shrink below content width to share space.
-    // min-height:0 (columns) is only safe for shrinkable items (images) — text can't
-    // reflow vertically, so shrinking below content height causes overlap.
     if (isInRow) {
       styles.minWidth = 0;
     } else if (opts?.shrinkable) {
@@ -128,8 +123,6 @@ export function flexSize(
     // SIZE.HUG: content-sized. Rigid by default, shrinkable for images.
     if (opts?.shrinkable) {
       styles.flex = "0 1 auto";
-      // Shrinkable HUG items need min-width/min-height:0 to compress below
-      // their aspect-ratio-derived size under pressure.
       if (isInRow) styles.minWidth = 0;
       else styles.minHeight = 0;
     } else {
@@ -138,13 +131,7 @@ export function flexSize(
   }
 
   // Cross axis → explicit CSS dimension
-  if (typeof crossSize === "number") {
-    if (isInRow) {
-      styles.height = `${crossSize}px`;
-    } else {
-      styles.width = `${crossSize}px`;
-    }
-  } else if (crossSize === SIZE.FILL) {
+  if (crossSize === SIZE.FILL) {
     if (isInRow) {
       styles.height = "100%";
     } else {
