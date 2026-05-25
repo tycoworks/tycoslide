@@ -144,7 +144,6 @@ export const stackComponent = defineComponent({
     children,
     width: params.width ?? SIZE.FILL,
     height: params.height ?? SIZE.HUG,
-    layer: LAYER.CONTENT,
   }),
 });
 

@@ -263,7 +263,7 @@ describe("Layout Validation", () => {
 
     it("should not report overlap for Stack nodes (intentional)", () => {
       const positioned: PositionedNode = {
-        node: { type: NODE_TYPE.STACK, children: [], width: SIZE.FILL, height: SIZE.HUG, layer: LAYER.CONTENT },
+        node: { type: NODE_TYPE.STACK, children: [], width: SIZE.FILL, height: SIZE.HUG },
         x: 1,
         y: 1,
         width: 4,

@@ -210,13 +210,13 @@ export interface ContainerNode<C extends SlideNode = ElementNode> {
   layer: Layer; // render target: master (shared/deduped) or content (per-slide)
 }
 
-/** Stack is a z-order container: all children occupy the same bounds, rendered in order */
+/** Stack is a z-order composition primitive: all children occupy the same bounds, rendered in order.
+ *  Unlike spatial containers (Row/Column/Grid), Stack has no layer — it inherits from its parent. */
 export interface StackNode<C extends SlideNode = ElementNode> {
   type: typeof NODE_TYPE.STACK;
   children: C[]; // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
   width: Size; // SIZE.FILL or SIZE.HUG
   height: Size; // SIZE.FILL or SIZE.HUG
-  layer: Layer; // render target: master (shared/deduped) or content (per-slide)
 }
 
 /** Grid is a CSS Grid container: equal-width columns with cross-sibling height coordination */
@@ -259,7 +259,11 @@ export interface ComponentNode<TParams = unknown, TContent = unknown> {
 // ============================================
 
 /** Container nodes that hold children — used for layout dispatch and recursion */
-export type LayoutNode = ContainerNode | StackNode | GridNode;
+/** Spatial containers that partition space and participate in layer splitting. */
+export type LayeredNode = ContainerNode | GridNode;
+
+/** All nodes with children — spatial containers + z-order composition. */
+export type LayoutNode = LayeredNode | StackNode;
 
 /** Primitive layout nodes - what layout/render systems work with */
 export type ElementNode = TextNode | ImageNode | LineNode | ShapeNode | SlideNumberNode | TableNode | LayoutNode;
@@ -304,9 +308,9 @@ export function isLayoutNode(node: ElementNode): node is LayoutNode {
   return node.type === NODE_TYPE.CONTAINER || node.type === NODE_TYPE.STACK || node.type === NODE_TYPE.GRID;
 }
 
-/** Get the render layer of an element node (only layout nodes can have a layer). */
-export function getLayer(node: ElementNode): Layer | undefined {
-  return isLayoutNode(node) ? node.layer : undefined;
+/** Type guard for spatial containers that have a layer (Container, Grid — not Stack). */
+export function isLayeredNode(node: ElementNode): node is LayeredNode {
+  return node.type === NODE_TYPE.CONTAINER || node.type === NODE_TYPE.GRID;
 }
 
 /**

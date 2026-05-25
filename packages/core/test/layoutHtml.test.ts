@@ -142,7 +142,6 @@ function stackNode(...args: any[]): StackNode {
     children,
     width: opts.width ?? SIZE.FILL,
     height: opts.height ?? SIZE.HUG,
-    layer: LAYER.CONTENT,
   };
 }
 
