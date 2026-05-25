@@ -22,7 +22,7 @@ import type {
   ImageNode,
   LayoutNode,
   LineNode,
-  Shadow,
+  ShadowEffect,
   ShapeNode,
   SlideNumberNode,
   StackNode,
@@ -33,26 +33,16 @@ import type {
 import { NODE_TYPE } from "../model/nodes.js";
 import type {
   Background,
-  DashType,
+  Dash,
   Direction,
   HorizontalAlignment,
   NormalizedRun,
-  SizeValue,
+  Size,
   TextStyle,
   Theme,
   VerticalAlignment,
 } from "../model/types.js";
-import {
-  DASH_TYPE,
-  DIRECTION,
-  FONT_SLOT,
-  GRID_STYLE,
-  HALIGN,
-  SHAPE,
-  SIZE,
-  SPACING_MODE,
-  VALIGN,
-} from "../model/types.js";
+import { DASH, DIRECTION, FONT_SLOT, GRID_STYLE, HALIGN, SHAPE, SIZE, SPACING, VALIGN } from "../model/types.js";
 
 // ============================================
 // TYPES
@@ -81,7 +71,6 @@ interface IdContext {
   counter: number;
 }
 
-
 // ============================================
 // PHASE 1: PURE STYLE COMPUTATION
 // ============================================
@@ -101,10 +90,10 @@ export type FontNormalRatios = Map<string, number>;
  *  When true: HUG emits flex:0 1 auto (can shrink) instead of flex-shrink:0 (rigid),
  *  and min-width/min-height:0 overrides are applied so flex can actually compress the item. */
 export function flexSize(
-  width: number | SizeValue,
-  height: number | SizeValue,
+  width: Size,
+  height: Size,
   parentDir: Direction,
-  opts?: { shrinkable?: boolean },
+  opts?: { shrinkable?: boolean; weight?: number },
 ): Record<string, string | number> {
   const styles: Record<string, string | number> = {};
   const isInRow = parentDir === DIRECTION.ROW;
@@ -112,13 +101,9 @@ export function flexSize(
   const crossSize = isInRow ? height : width;
 
   // Main axis → flex property
-  if (typeof mainSize === "number") {
-    styles.flex = `0 0 ${mainSize}px`;
-  } else if (mainSize === SIZE.FILL) {
-    styles.flex = "1 1 0";
-    // min-width:0 (rows) lets FILL items shrink below content width to share space.
-    // min-height:0 (columns) is only safe for shrinkable items (images) — text can't
-    // reflow vertically, so shrinking below content height causes overlap.
+  if (mainSize === SIZE.FILL) {
+    const w = opts?.weight ?? 1;
+    styles.flex = `${w} 1 0`;
     if (isInRow) {
       styles.minWidth = 0;
     } else if (opts?.shrinkable) {
@@ -128,8 +113,6 @@ export function flexSize(
     // SIZE.HUG: content-sized. Rigid by default, shrinkable for images.
     if (opts?.shrinkable) {
       styles.flex = "0 1 auto";
-      // Shrinkable HUG items need min-width/min-height:0 to compress below
-      // their aspect-ratio-derived size under pressure.
       if (isInRow) styles.minWidth = 0;
       else styles.minHeight = 0;
     } else {
@@ -138,13 +121,7 @@ export function flexSize(
   }
 
   // Cross axis → explicit CSS dimension
-  if (typeof crossSize === "number") {
-    if (isInRow) {
-      styles.height = `${crossSize}px`;
-    } else {
-      styles.width = `${crossSize}px`;
-    }
-  } else if (crossSize === SIZE.FILL) {
+  if (crossSize === SIZE.FILL) {
     if (isInRow) {
       styles.height = "100%";
     } else {
@@ -267,7 +244,7 @@ function styleContainer(
   let bottomPx = p.bottom;
   let leftPx = p.left;
   // AROUND mode adds spacing to main-axis start/end edges
-  if (node.spacingMode === SPACING_MODE.AROUND) {
+  if (node.spacingMode === SPACING.AROUND) {
     if (isRow) {
       leftPx += spacingPx;
       rightPx += spacingPx;
@@ -286,7 +263,7 @@ function styleContainer(
     gap: `${spacingPx}px`, // CSS gap property
     justifyContent,
     alignItems,
-    ...flexSize(node.width, node.height, parent.direction),
+    ...flexSize(node.width, node.height, parent.direction, { weight: node.weight }),
     // Containment requires definite inline size. HUG columns are content-sized —
     // containment would zero their intrinsic width, collapsing the column.
     ...(!isRow && node.width !== SIZE.HUG ? { containerType: "inline-size" } : {}),
@@ -431,12 +408,12 @@ function styleText(node: TextNode, parent: ParentCtx, nodeId: string): StyledNod
  * Column, constrained     → height=FILL (grow into available height budget)
  * Column, unconstrained   → height=HUG (render at aspect-ratio-derived height)
  */
-function resolveImageSizing(node: ImageNode, parent: ParentCtx): { width: SizeValue; height: SizeValue } {
+function resolveImageSizing(parent: ParentCtx): { width: Size; height: Size } {
   const isRow = parent.direction === DIRECTION.ROW;
 
   return {
-    width: isRow && parent.hasDefiniteCrossSize ? SIZE.HUG : node.width,
-    height: isRow || parent.heightIsConstrained ? node.height : SIZE.HUG,
+    width: isRow && parent.hasDefiniteCrossSize ? SIZE.HUG : SIZE.FILL,
+    height: isRow || parent.heightIsConstrained ? SIZE.FILL : SIZE.HUG,
   };
 }
 
@@ -447,7 +424,7 @@ function styleImage(node: ImageNode, parent: ParentCtx, nodeId: string, imagePat
   }
 
   // 1. Resolve effective sizing (aspect-ratio-aware)
-  const { width: effWidth, height: effHeight } = resolveImageSizing(node, parent);
+  const { width: effWidth, height: effHeight } = resolveImageSizing(parent);
 
   // 2. Start from standard flex sizing (shrinkable: min-width/min-height handled by flexSize)
   const styles: Record<string, string | number> = {
@@ -455,7 +432,7 @@ function styleImage(node: ImageNode, parent: ParentCtx, nodeId: string, imagePat
     aspectRatio: `${dims.aspectRatio}`,
   };
 
-  // 3. Natural pixel caps — HUG axes only. FILL grows beyond natural size.
+  // 3. Direction-specific natural-pixel caps.
   if (parent.direction === DIRECTION.ROW) {
     if (effWidth === SIZE.HUG && dims.width) styles.maxWidth = `${dims.width}px`;
     if (effHeight === SIZE.HUG && dims.height) styles.maxHeight = `${dims.height}px`;
@@ -463,17 +440,14 @@ function styleImage(node: ImageNode, parent: ParentCtx, nodeId: string, imagePat
     // Column cross-axis: HUG width caps at natural pixels (enables centering via align-items).
     // Uses min(100%, Npx) instead of width:100% + max-width to avoid a container-query
     // interaction that defeats align-items:center (container-type:inline-size on parent).
-    // No symmetric height case needed: effHeight is never HUG in a row
-    // (resolveImageSizing always keeps declaredHeight when isRow), and in columns
-    // height is the main axis handled by flexSize, not a CSS dimension.
     if (effWidth === SIZE.HUG && dims.width) {
       styles.width = `min(100%, ${dims.width}px)`;
     }
     // Proportional height cap via container query units — always needed for
     // layout correctness (Chromium aspect-ratio-in-flex, CSSWG #11690).
     const proportionalCap = `calc(100cqw / ${dims.aspectRatio})`;
-    if (effHeight === SIZE.HUG && dims.height) {
-      styles.maxHeight = `min(${dims.height}px, ${proportionalCap})`;
+    if (effHeight === SIZE.HUG) {
+      styles.maxHeight = dims.height ? `min(${dims.height}px, ${proportionalCap})` : proportionalCap;
     } else {
       styles.maxHeight = proportionalCap;
     }
@@ -502,13 +476,13 @@ function styleImage(node: ImageNode, parent: ParentCtx, nodeId: string, imagePat
 }
 
 /** Dash patterns as multiples of stroke width. */
-function dashTypeMultipliers(dt: DashType): number[] | undefined {
+function dashTypeMultipliers(dt: Dash): number[] | undefined {
   switch (dt) {
-    case DASH_TYPE.SOLID:
+    case DASH.SOLID:
       return undefined;
-    case DASH_TYPE.DASHED:
+    case DASH.DASHED:
       return [4, 3];
-    case DASH_TYPE.DOTTED:
+    case DASH.DOTTED:
       return [1, 1];
     default:
       return undefined;
@@ -550,8 +524,8 @@ function styleLine(node: LineNode, parent: ParentCtx, nodeId: string): StyledNod
   return { nodeId, styles, children: [], innerHTML: svg };
 }
 
-/** Compute shadow x/y offsets and rgba color from a Shadow config. */
-function shadowOffsets(shadow: Shadow): { x: number; y: number; rgba: string } {
+/** Compute shadow x/y offsets and rgba color from a ShadowEffect config. */
+function shadowOffsets(shadow: ShadowEffect): { x: number; y: number; rgba: string } {
   const rad = (shadow.angle * Math.PI) / 180;
   return {
     x: shadow.offset * Math.sin(rad),
@@ -560,8 +534,8 @@ function shadowOffsets(shadow: Shadow): { x: number; y: number; rgba: string } {
   };
 }
 
-/** Apply box-shadow CSS from a Shadow config. Mutates styles in place. */
-function applyShadowCSS(shadow: Shadow | undefined, styles: Record<string, string | number>): void {
+/** Apply box-shadow CSS from a ShadowEffect config. Mutates styles in place. */
+function applyShadowCSS(shadow: ShadowEffect | undefined, styles: Record<string, string | number>): void {
   if (!shadow) return;
   const { x, y, rgba } = shadowOffsets(shadow);
   styles.boxShadow = `${ptToPx(x)}px ${ptToPx(y)}px ${ptToPx(shadow.blur)}px ${rgba}`;

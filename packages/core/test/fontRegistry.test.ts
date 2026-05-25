@@ -6,9 +6,9 @@ import { describe, it } from "node:test";
 import { generateFontFaceCSS } from "../src/core/layout/layoutHtml.js";
 import { Insets } from "../src/core/model/bounds.js";
 import type { ContainerNode, ElementNode, TextNode } from "../src/core/model/nodes.js";
-import { NODE_TYPE } from "../src/core/model/nodes.js";
+import { LAYER, NODE_TYPE } from "../src/core/model/nodes.js";
 import type { Background, FontFamily } from "../src/core/model/types.js";
-import { DASH_TYPE, GRID_STYLE, HALIGN, SIZE, SPACING_MODE, VALIGN } from "../src/core/model/types.js";
+import { DASH, GRID_STYLE, HALIGN, SIZE, SPACING, VALIGN } from "../src/core/model/types.js";
 import { validateThemeFonts } from "../src/core/rendering/themeValidator.js";
 import { validateFontVariants } from "../src/utils/font.js";
 import { mockTextStyle, mockTheme } from "./mocks.js";
@@ -373,13 +373,15 @@ function wrapInContainer(...children: ElementNode[]): ContainerNode {
     type: NODE_TYPE.CONTAINER,
     direction: "column",
     children,
-    width: 960,
-    height: 480,
+    width: SIZE.FILL,
+    height: SIZE.FILL,
+    weight: 1,
     spacing: 24,
-    spacingMode: SPACING_MODE.BETWEEN,
+    spacingMode: SPACING.BETWEEN,
     padding: new Insets(0),
     vAlign: "top",
     hAlign: "left",
+    layer: LAYER.CONTENT,
   };
 }
 
@@ -479,9 +481,9 @@ describe("validateFontVariants", () => {
           },
         ],
       ],
-      border: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
+      border: { color: "#333333", width: 1, dashType: DASH.SOLID },
       gridStyle: GRID_STYLE.BOTH,
-      gridStroke: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
+      gridStroke: { color: "#333333", width: 1, dashType: DASH.SOLID },
       headerRow: { textStyle: "body", textColor: "#000", background: "#EEE", backgroundOpacity: 1 },
       cellBackground: "#FFF",
       cellBackgroundOpacity: 1,

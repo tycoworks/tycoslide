@@ -28,38 +28,6 @@ notes: Positioning one-liner. Four anchors in one sentence.
 ---
 
 ---
-template: transform
-notes: Side-by-side showing markdown input on the left and the resulting slide output on the right.
----
-
-::left::
-
-review.md
-
-```markdown
----
-template: body
----
-
-# Q3 Infrastructure Review
-
-The new pipeline *increased*
-throughput by **40%** with
-:accent[zero downtime].
-```
-
-::right::
-
-review.pptx
-
-:::card{title="Q3 Infrastructure Review" description="The new pipeline *increased* throughput by **40%** with :accent[zero downtime]."}
-:::
-
-::overlay::
-
-![redo]($icons.redo)
-
----
 template: cards
 title: Capabilities
 cards:

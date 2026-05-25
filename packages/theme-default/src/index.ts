@@ -62,7 +62,6 @@ export const TEMPLATE = {
   STATEMENT: "statement",
   AGENDA: "agenda",
   CARDS: "cards",
-  TRANSFORM: "transform",
 } as const;
 
 export const theme = defineTheme({

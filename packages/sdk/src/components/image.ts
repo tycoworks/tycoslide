@@ -7,7 +7,7 @@ import {
   type ImageNode,
   NODE_TYPE,
   type RenderContext,
-  type Shadow,
+  type ShadowEffect,
   SIZE,
   SYNTAX,
 } from "@tycoslide/core";
@@ -27,7 +27,7 @@ const imageParamShape = param.shape({
 type ImageParams = InferParams<typeof imageParamShape>;
 
 export interface ImageTokens {
-  shadow?: Shadow;
+  shadow?: ShadowEffect;
   padding?: number;
 }
 
@@ -49,7 +49,7 @@ export const imageComponent = defineComponent({
   },
 
   render: (params: ImageParams, content: string, _context: RenderContext, tokens: ImageTokens): SlideNode => {
-    const node: ImageNode = { type: NODE_TYPE.IMAGE, width: SIZE.FILL, height: SIZE.FILL, src: content };
+    const node: ImageNode = { type: NODE_TYPE.IMAGE, src: content };
     if (params.alt) {
       node.alt = params.alt;
     }

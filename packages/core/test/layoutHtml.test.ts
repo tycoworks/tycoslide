@@ -20,19 +20,9 @@ import type {
   TableNode,
   TextNode,
 } from "../src/core/model/nodes.js";
-import { NODE_TYPE } from "../src/core/model/nodes.js";
+import { LAYER, NODE_TYPE } from "../src/core/model/nodes.js";
 import type { Direction, NormalizedRun } from "../src/core/model/types.js";
-import {
-  DASH_TYPE,
-  DIRECTION,
-  GRID_STYLE,
-  HALIGN,
-  SHADOW_TYPE,
-  SHAPE,
-  SIZE,
-  SPACING_MODE,
-  VALIGN,
-} from "../src/core/model/types.js";
+import { DASH, DIRECTION, GRID_STYLE, HALIGN, SHADOW, SHAPE, SIZE, SPACING, VALIGN } from "../src/core/model/types.js";
 import { mockTheme as createMockTheme } from "./mocks.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -95,11 +85,13 @@ function rowNode(...args: any[]): ContainerNode {
     children,
     width: opts.width ?? SIZE.FILL,
     height: opts.height ?? SIZE.HUG,
+    weight: opts.weight ?? 1,
     vAlign: opts.vAlign ?? VALIGN.TOP,
     hAlign: opts.hAlign ?? HALIGN.LEFT,
     spacing: opts.spacing ?? 0,
-    spacingMode: opts.spacingMode ?? SPACING_MODE.BETWEEN,
+    spacingMode: opts.spacingMode ?? SPACING.BETWEEN,
     padding: opts.padding instanceof Insets ? opts.padding : new Insets(opts.padding ?? 0),
+    layer: LAYER.CONTENT,
   };
 }
 
@@ -115,17 +107,19 @@ function colNode(...args: any[]): ContainerNode {
     children,
     width: opts.width ?? SIZE.FILL,
     height: opts.height ?? SIZE.HUG,
+    weight: opts.weight ?? 1,
     vAlign: opts.vAlign ?? VALIGN.TOP,
     hAlign: opts.hAlign ?? HALIGN.LEFT,
     spacing: opts.spacing ?? 0,
-    spacingMode: opts.spacingMode ?? SPACING_MODE.BETWEEN,
+    spacingMode: opts.spacingMode ?? SPACING.BETWEEN,
     padding: opts.padding instanceof Insets ? opts.padding : new Insets(opts.padding ?? 0),
+    layer: LAYER.CONTENT,
   };
 }
 
 /** Image node */
 function imageNode(src: string): ImageNode {
-  return { type: NODE_TYPE.IMAGE, width: SIZE.FILL, height: SIZE.FILL, src };
+  return { type: NODE_TYPE.IMAGE, src };
 }
 
 /** Line node (token values baked in from mockTheme) */
@@ -133,7 +127,7 @@ function lineNode(direction: Direction = DIRECTION.ROW): LineNode {
   return {
     type: NODE_TYPE.LINE,
     direction,
-    stroke: { color: "#666666", width: 1, dashType: DASH_TYPE.SOLID },
+    stroke: { color: "#666666", width: 1, dashType: DASH.SOLID },
   };
 }
 
@@ -203,9 +197,9 @@ function tableNode(rows: TableCellData[][], opts?: Partial<Omit<TableNode, "type
     width: SIZE.FILL,
     height: SIZE.HUG,
     rows,
-    border: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
+    border: { color: "#333333", width: 1, dashType: DASH.SOLID },
     gridStyle: GRID_STYLE.BOTH,
-    gridStroke: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
+    gridStroke: { color: "#333333", width: 1, dashType: DASH.SOLID },
     headerRow: { textStyle: "body" as any, textColor: "#000000", background: "#AAAAAA", backgroundOpacity: 100 },
     cellBackground: "#EEEEEE",
     cellBackgroundOpacity: 0,
@@ -443,8 +437,6 @@ describe("HTML Measurement Generation", () => {
     test("image with alt text renders alt attribute", async () => {
       const node = colNode({
         type: NODE_TYPE.IMAGE,
-        width: SIZE.FILL,
-        height: SIZE.FILL,
         src: testImage,
         alt: "Diagram of build pipeline",
       });
@@ -956,7 +948,7 @@ describe("HTML Measurement Generation", () => {
         height: SIZE.FILL,
         shape: SHAPE.RECTANGLE,
         fill: { color: "#333333", opacity: 100 },
-        border: { color: "#AABBCC", width: 2, dashType: DASH_TYPE.SOLID },
+        border: { color: "#AABBCC", width: 2, dashType: DASH.SOLID },
         cornerRadius: 0,
       };
       const node = colNode(stackNode(shape, colNode(textNode("Bordered"))));
@@ -1005,7 +997,7 @@ describe("HTML Measurement Generation", () => {
         height: SIZE.FILL,
         shape: SHAPE.DIAMOND,
         fill: { color: "#79C0FF", opacity: 100 },
-        border: { color: "#1A1A2E", width: 2, dashType: DASH_TYPE.SOLID },
+        border: { color: "#1A1A2E", width: 2, dashType: DASH.SOLID },
         cornerRadius: 0,
       };
       const node = colNode(stackNode(shape, colNode(textNode("Bordered"))));
@@ -1023,7 +1015,7 @@ describe("HTML Measurement Generation", () => {
         shape: SHAPE.TRIANGLE,
         fill: { color: "#FF0000", opacity: 100 },
         cornerRadius: 0,
-        shadow: { type: SHADOW_TYPE.OUTER, color: "#000000", opacity: 25, blur: 8, offset: 3, angle: 180 },
+        shadow: { type: SHADOW.OUTER, color: "#000000", opacity: 25, blur: 8, offset: 3, angle: 180 },
       };
       const node = colNode(stackNode(shape, colNode(textNode("Shadow"))));
       const { html } = await genHTML(node, bounds);
@@ -1084,7 +1076,7 @@ describe("HTML Measurement Generation", () => {
 
     test("table with outer border renders outline", async () => {
       const rows = [[cell("A"), cell("B")]];
-      const node = colNode(tableNode(rows, { border: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID } }));
+      const node = colNode(tableNode(rows, { border: { color: "#333333", width: 1, dashType: DASH.SOLID } }));
       const { html } = await genHTML(node, bounds);
       assert.ok(html.includes("outline:"), "outer border should use outline");
     });
@@ -1102,7 +1094,7 @@ describe("HTML Measurement Generation", () => {
         tableNode(rows, {
           border: undefined,
           gridStyle: GRID_STYLE.HORIZONTAL,
-          gridStroke: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
+          gridStroke: { color: "#333333", width: 1, dashType: DASH.SOLID },
         }),
       );
       const { html } = await genHTML(node, bounds);
@@ -1230,7 +1222,7 @@ describe("HTML Measurement Generation", () => {
       const line: LineNode = {
         type: NODE_TYPE.LINE,
         direction: DIRECTION.ROW,
-        stroke: { color: "#666666", width: 1, dashType: DASH_TYPE.DASHED },
+        stroke: { color: "#666666", width: 1, dashType: DASH.DASHED },
       };
       const node = colNode(line);
       const { html } = await genHTML(node, bounds);
@@ -1243,7 +1235,7 @@ describe("HTML Measurement Generation", () => {
       const line: LineNode = {
         type: NODE_TYPE.LINE,
         direction: DIRECTION.ROW,
-        stroke: { color: "#666666", width: 1, dashType: DASH_TYPE.DOTTED },
+        stroke: { color: "#666666", width: 1, dashType: DASH.DOTTED },
       };
       const node = colNode(line);
       const { html } = await genHTML(node, bounds);
@@ -1255,7 +1247,7 @@ describe("HTML Measurement Generation", () => {
       const line: LineNode = {
         type: NODE_TYPE.LINE,
         direction: DIRECTION.ROW,
-        stroke: { color: "#FF0000", width: 2, dashType: DASH_TYPE.DASHED },
+        stroke: { color: "#FF0000", width: 2, dashType: DASH.DASHED },
       };
       const node = rowNode(textNode("Left"), line, textNode("Right"));
       const { html } = await genHTML(node, bounds);

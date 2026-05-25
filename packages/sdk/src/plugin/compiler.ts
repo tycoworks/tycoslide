@@ -128,7 +128,12 @@ export function compilePlugin(definition: Theme, options: CompilePluginOptions):
   }
 
   const pluginName = stripScope(options.name);
-  const pluginMeta = { name: pluginName, description: options.description, version: options.version, skills: `./${PLUGIN_PATHS.SKILLS_ROOT}` };
+  const pluginMeta = {
+    name: pluginName,
+    description: options.description,
+    version: options.version,
+    skills: `./${PLUGIN_PATHS.SKILLS_ROOT}`,
+  };
 
   const files: Record<string, string> = {
     [PLUGIN_PATHS.MANIFEST_JSON]: generateManifest(definition, options),

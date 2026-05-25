@@ -12,7 +12,7 @@ import type { SlideValidationResult, ValidationResult } from "../layout/validato
 import { LayoutValidationError, LayoutValidator } from "../layout/validator.js";
 import { Bounds } from "../model/bounds.js";
 import type { ElementNode, Layer, LayoutNode, PositionedNode, SlideNode } from "../model/nodes.js";
-import { getLayer, isComponentNode, isLayoutNode, LAYER } from "../model/nodes.js";
+import { isComponentNode, isLayeredNode, isLayoutNode, LAYER } from "../model/nodes.js";
 import type { Slide, Theme } from "../model/types.js";
 import type { Canvas, ComponentDefinition, RenderContext } from "./definitions.js";
 import { PptxRenderer } from "./pptxRenderer.js";
@@ -56,8 +56,7 @@ function collectByLayer(
   master: PositionedNode[],
   content: PositionedNode[],
 ): void {
-  const declared = getLayer(node.node);
-  const effective = declared ?? inherited;
+  const effective = isLayeredNode(node.node) ? node.node.layer : inherited;
 
   // Leaf node or container with no children — route by effective layer
   if (!node.children || !isLayoutNode(node.node)) {
@@ -153,9 +152,8 @@ export class Presentation {
       }
       const rendered = await def.render(node.params, node.content, context, node.tokens as any);
       const resolved = await this.renderTree(rendered, context);
-      // Propagate layer from component to resolved element
-      if (node.layer && isLayoutNode(resolved)) {
-        (resolved as LayoutNode).layer = node.layer;
+      if (node.layer && isLayeredNode(resolved)) {
+        resolved.layer = node.layer;
       }
       return resolved;
     }

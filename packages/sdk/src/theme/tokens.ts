@@ -3,7 +3,7 @@
 // role-based surfaces, and visual primitives.
 // Zero theme-specific concepts — no "hero", "eyebrow", "stat", "section heading".
 
-import { DASH_TYPE, VALIGN } from "@tycoslide/core";
+import { DASH, VALIGN } from "@tycoslide/core";
 import type { LabelTokens } from "../components/label.js";
 import type { ListTokens } from "../components/list.js";
 import type { TextTokens } from "../components/text.js";
@@ -26,7 +26,7 @@ export function deriveTokens(palette: Palette, format: Format) {
     soft: palette.accentSoft,
     dark: palette.heading,
   };
-  const subtleBorder = { color: palette.divider, width: format.strokes.thin, dashType: DASH_TYPE.SOLID };
+  const subtleBorder = { color: palette.divider, width: format.strokes.thin, dashType: DASH.SOLID };
   const shadow = {
     type: format.shadow.type,
     color: palette.shadow,

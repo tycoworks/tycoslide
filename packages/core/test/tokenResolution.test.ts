@@ -57,6 +57,7 @@ describe("Token Resolution Engine", () => {
       const rendered = (await renderTree(node, [tokenTestComponent], {
         theme,
         canvas: noopCanvas(),
+        slideNumber: 1,
         renderTree: async (n: any) => n,
       })) as any;
       assert.strictEqual(rendered._tokens.alpha, "AAA");
@@ -74,6 +75,7 @@ describe("Token Resolution Engine", () => {
       const rendered = (await renderTree(node, [tokenTestComponent], {
         theme,
         canvas: noopCanvas(),
+        slideNumber: 1,
         renderTree: async (n: any) => n,
       })) as any;
       assert.strictEqual(rendered._tokens.alpha, "CUSTOM");
@@ -92,6 +94,7 @@ describe("Token Resolution Engine", () => {
       const rendered = (await renderTree(node, [tokenTestComponent], {
         theme,
         canvas: noopCanvas(),
+        slideNumber: 1,
         renderTree: async (n: any) => n,
       })) as any;
       // tokens.alpha should be the object, not the string
@@ -110,6 +113,7 @@ describe("Token Resolution Engine", () => {
       const rendered = await renderTree(node, [tokenTestComponent], {
         theme,
         canvas: noopCanvas(),
+        slideNumber: 1,
         renderTree: async (n: any) => n,
       });
       assert.strictEqual(rendered.type, NODE_TYPE.TEXT);
@@ -132,6 +136,7 @@ describe("Token Resolution Engine", () => {
       const rendered = await renderTree(node, [noTokenComp], {
         theme,
         canvas: noopCanvas(),
+        slideNumber: 1,
         renderTree: async (n: any) => n,
       });
       assert.strictEqual(rendered.type, NODE_TYPE.TEXT);

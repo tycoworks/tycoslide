@@ -29,9 +29,8 @@ import {
   param,
   row,
   SIZE,
-  SPACING_MODE,
+  SPACING,
   schema,
-  stack,
   text,
   textComponent,
 } from "@tycoslide/sdk";
@@ -202,6 +201,7 @@ interface AgendaLayoutTokens {
   itemNumber: LabelTokens;
   itemVAlign: VerticalAlignment;
   itemSpacing: number;
+  numberWeight: number;
   spacing: number;
   image: ImageTokens;
 }
@@ -232,12 +232,15 @@ export const agenda: Layout<AgendaLayoutTokens> = {
       ...(i > 0 ? [line(tokens.divider)] : []),
       row(
         { vAlign: tokens.itemVAlign, spacing: tokens.itemSpacing },
-        column({ width: SIZE.HUG, vAlign: tokens.itemVAlign }, label(String(i + 1), tokens.itemNumber)),
+        column(
+          { width: SIZE.FILL, weight: tokens.numberWeight, vAlign: tokens.itemVAlign },
+          label(String(i + 1), tokens.itemNumber),
+        ),
         text(item, tokens.items),
       ),
     ]);
 
-    const itemsColumn = column({ spacing: tokens.spacing, vAlign: tokens.vAlign, height: SIZE.FILL }, ...itemRows);
+    const itemsColumn = column({ spacing: tokens.spacing, height: SIZE.FILL, vAlign: tokens.vAlign }, ...itemRows);
 
     return column(
       { height: SIZE.FILL },
@@ -301,78 +304,12 @@ export const cards: Layout<CardsLayoutTokens> = {
           vAlign: tokens.vAlign,
           hAlign: tokens.hAlign,
           spacing: tokens.spacing,
-          spacingMode: SPACING_MODE.AROUND,
+          spacingMode: SPACING.AROUND,
         },
         ...(intro ? [text(intro, tokens.intro)] : []),
         grid({ columns: perRow, spacing: tokens.gridSpacing }, ...built),
         ...(caption ? [text(caption, tokens.caption)] : []),
       ),
-    );
-  },
-};
-
-// --- transform ---
-
-interface TransformLayoutTokens {
-  title: LabelTokens;
-  eyebrow: LabelTokens;
-  text: TextTokens;
-  list: ListTokens;
-  vAlign: VerticalAlignment;
-  hAlign: HorizontalAlignment;
-  overlayVAlign: VerticalAlignment;
-  overlayHAlign: HorizontalAlignment;
-  spacing: number;
-  contentSpacing: number;
-  headerSpacing: number;
-  overlaySize: number;
-}
-
-// +----------------------------+
-// | ::left::     ::right::     |
-// |       ::overlay::          |
-// +----------------------------+
-export const transform: Layout<TransformLayoutTokens, ScalarShape, readonly ["left", "right", "overlay"]> = {
-  params: {
-    title: param.optional(textComponent.schema),
-    eyebrow: param.optional(textComponent.schema),
-  },
-  slots: ["left", "right", "overlay"] as const,
-  render: (params, slots, tokens) => {
-    const titleText = params.title as string | undefined;
-    const eyebrow = params.eyebrow as string | undefined;
-    const colProps = {
-      vAlign: tokens.vAlign,
-      hAlign: tokens.hAlign,
-      spacing: tokens.contentSpacing,
-      height: SIZE.FILL,
-    };
-    const layers: SlideNode[] = [
-      row(
-        { spacing: tokens.spacing, height: SIZE.HUG },
-        column(colProps, ...slots.left),
-        column(colProps, ...slots.right),
-      ),
-    ];
-    if (slots.overlay.length > 0) {
-      layers.push(
-        column(
-          {
-            width: tokens.overlaySize,
-            height: tokens.overlaySize,
-            spacing: 0,
-            vAlign: tokens.overlayVAlign,
-            hAlign: tokens.overlayHAlign,
-          },
-          ...slots.overlay,
-        ),
-      );
-    }
-    const content = layers.length === 1 ? layers[0] : stack({ height: SIZE.FILL }, ...layers);
-    return column(
-      { vAlign: tokens.vAlign, height: SIZE.FILL, spacing: tokens.spacing },
-      ...(titleText ? [headerBlock(titleText, tokens, eyebrow)] : []),
-      content,
     );
   },
 };

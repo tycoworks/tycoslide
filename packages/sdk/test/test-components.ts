@@ -11,6 +11,7 @@ import {
   DIRECTION,
   extractSource,
   HALIGN,
+  LAYER,
   NODE_TYPE,
   type RenderContext,
   SIZE,
@@ -89,10 +90,12 @@ export const rowComponent = defineComponent({
     children,
     width: params.width ?? SIZE.FILL,
     height: params.height ?? SIZE.HUG,
+    weight: params.weight ?? 1,
     spacing: params.spacing,
     vAlign: params.vAlign ?? VALIGN.TOP,
     hAlign: params.hAlign ?? HALIGN.LEFT,
     padding: params.padding,
+    layer: LAYER.CONTENT,
   }),
 });
 
@@ -110,10 +113,12 @@ export const columnComponent = defineComponent({
     children,
     width: params.width ?? SIZE.FILL,
     height: params.height ?? SIZE.HUG,
+    weight: params.weight ?? 1,
     spacing: params.spacing,
     vAlign: params.vAlign ?? VALIGN.TOP,
     hAlign: params.hAlign ?? HALIGN.LEFT,
     padding: params.padding,
+    layer: LAYER.CONTENT,
   }),
 });
 

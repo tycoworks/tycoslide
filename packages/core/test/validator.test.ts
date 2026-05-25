@@ -2,8 +2,8 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import { LayoutBoundsError, LayoutOverflowError, LayoutValidator } from "../src/core/layout/validator.js";
 import { Insets } from "../src/core/model/bounds.js";
-import { type ElementNode, NODE_TYPE, type PositionedNode, type TextNode } from "../src/core/model/nodes.js";
-import { DIRECTION, HALIGN, SIZE, SPACING_MODE, VALIGN } from "../src/core/model/types.js";
+import { type ElementNode, LAYER, NODE_TYPE, type PositionedNode, type TextNode } from "../src/core/model/nodes.js";
+import { DIRECTION, HALIGN, SIZE, SPACING, VALIGN } from "../src/core/model/types.js";
 
 /** Minimal text node for validator tests (validator only checks geometry, not content) */
 function textNode(content: string): TextNode {
@@ -37,11 +37,13 @@ function containerNode(): ElementNode {
     direction: DIRECTION.ROW,
     width: SIZE.FILL,
     height: SIZE.HUG,
+    weight: 1,
     spacing: 0,
-    spacingMode: SPACING_MODE.BETWEEN,
+    spacingMode: SPACING.BETWEEN,
     padding: new Insets(0),
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.TOP,
+    layer: LAYER.CONTENT,
   } as ElementNode;
 }
 

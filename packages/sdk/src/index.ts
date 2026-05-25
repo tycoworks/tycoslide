@@ -191,10 +191,10 @@ export {
   HALIGN,
   Insets,
   LAYER,
-  SHADOW_TYPE,
+  SHADOW,
   SHAPE,
   SIZE,
-  SPACING_MODE,
+  SPACING,
   VALIGN,
 } from "@tycoslide/core";
 

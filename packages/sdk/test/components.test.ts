@@ -14,7 +14,7 @@ import type {
   StackNode,
   TableNode,
 } from "@tycoslide/core";
-import { DASH_TYPE, DIRECTION, HALIGN, Insets, NODE_TYPE, SHADOW_TYPE, SHAPE, SIZE, VALIGN } from "@tycoslide/core";
+import { DASH, DIRECTION, HALIGN, Insets, NODE_TYPE, SHADOW, SHAPE, SIZE, VALIGN } from "@tycoslide/core";
 import { card } from "../src/components/card.js";
 import {
   column,
@@ -106,7 +106,7 @@ describe("line()", () => {
     const node = (await render(line(DEFAULT_LINE_TOKENS))) as LineNode;
     assert.strictEqual(node.stroke.color, DEFAULT_LINE_TOKENS.color);
     assert.strictEqual(node.stroke.width, DEFAULT_LINE_TOKENS.width);
-    assert.strictEqual(node.stroke.dashType, DASH_TYPE.SOLID);
+    assert.strictEqual(node.stroke.dashType, DASH.SOLID);
   });
 });
 
@@ -149,7 +149,7 @@ describe("shape()", () => {
   test("passes border properties from tokens", async () => {
     const tokens: ShapeTokens = {
       ...DEFAULT_SHAPE_TOKENS,
-      border: { color: "#0000FF", width: 2, dashType: DASH_TYPE.SOLID },
+      border: { color: "#0000FF", width: 2, dashType: DASH.SOLID },
     };
     const node = (await render(shape(tokens, { shape: SHAPE.RECTANGLE }))) as ShapeNode;
     assert.strictEqual(node.border?.color, "#0000FF");
@@ -173,7 +173,7 @@ describe("shape()", () => {
     const tokens: ShapeTokens = {
       fill: "#EEEEEE",
       fillOpacity: 80,
-      border: { color: "#333333", width: 1, dashType: DASH_TYPE.SOLID },
+      border: { color: "#333333", width: 1, dashType: DASH.SOLID },
       cornerRadius: 0.25,
     };
     const node = (await render(shape(tokens, { shape: SHAPE.ELLIPSE }))) as ShapeNode;
@@ -192,11 +192,11 @@ describe("shape()", () => {
   test("passes shadow from tokens when present", async () => {
     const tokens: ShapeTokens = {
       ...DEFAULT_SHAPE_TOKENS,
-      shadow: { type: SHADOW_TYPE.OUTER, color: "#000000", opacity: 25, blur: 8, offset: 3, angle: 315 },
+      shadow: { type: SHADOW.OUTER, color: "#000000", opacity: 25, blur: 8, offset: 3, angle: 315 },
     };
     const node = (await render(shape(tokens, { shape: SHAPE.RECTANGLE }))) as ShapeNode;
     assert.ok(node.shadow);
-    assert.strictEqual(node.shadow.type, SHADOW_TYPE.OUTER);
+    assert.strictEqual(node.shadow.type, SHADOW.OUTER);
     assert.strictEqual(node.shadow.color, "#000000");
     assert.strictEqual(node.shadow.opacity, 25);
     assert.strictEqual(node.shadow.blur, 8);
@@ -317,9 +317,9 @@ describe("row()", () => {
   });
 
   test("applies height prop", async () => {
-    const node = row({ spacing: 0, height: 2.5 }, child1);
+    const node = row({ spacing: 0, height: SIZE.FILL }, child1);
     const rendered = (await render(node)) as ContainerNode;
-    assert.strictEqual(rendered.height, 2.5);
+    assert.strictEqual(rendered.height, SIZE.FILL);
   });
 
   test("distinguishes props from children", async () => {
@@ -422,9 +422,9 @@ describe("column()", () => {
   });
 
   test("applies width prop", async () => {
-    const node = column({ spacing: 0, width: 3.0 }, child1);
+    const node = column({ spacing: 0, width: SIZE.HUG }, child1);
     const rendered = (await render(node)) as ContainerNode;
-    assert.strictEqual(rendered.width, 3.0);
+    assert.strictEqual(rendered.width, SIZE.HUG);
   });
 
   test("applies spacing prop", async () => {
@@ -439,10 +439,10 @@ describe("column()", () => {
     assert.deepStrictEqual(rendered.padding, new Insets(0.25));
   });
 
-  test("applies numeric height", async () => {
-    const node = column({ spacing: 0, height: 2.5 }, text("A", DEFAULT_TEXT_TOKENS));
+  test("applies Size height", async () => {
+    const node = column({ spacing: 0, height: SIZE.FILL }, text("A", DEFAULT_TEXT_TOKENS));
     const rendered = (await render(node)) as ContainerNode;
-    assert.strictEqual(rendered.height, 2.5);
+    assert.strictEqual(rendered.height, SIZE.FILL);
   });
 
   test("distinguishes props from children", async () => {
@@ -517,19 +517,19 @@ describe("stack()", () => {
   });
 
   test("passes width prop", async () => {
-    const node = (await render(stack({ width: 5 }, child1))) as StackNode;
-    assert.strictEqual(node.width, 5);
+    const node = (await render(stack({ width: SIZE.HUG }, child1))) as StackNode;
+    assert.strictEqual(node.width, SIZE.HUG);
   });
 
   test("passes height prop", async () => {
-    const node = (await render(stack({ height: 3 }, child1))) as StackNode;
-    assert.strictEqual(node.height, 3);
+    const node = (await render(stack({ height: SIZE.HUG }, child1))) as StackNode;
+    assert.strictEqual(node.height, SIZE.HUG);
   });
 
   test("passes width and height together", async () => {
-    const node = (await render(stack({ width: 5, height: 3 }, child1, child2))) as StackNode;
-    assert.strictEqual(node.width, 5);
-    assert.strictEqual(node.height, 3);
+    const node = (await render(stack({ width: SIZE.HUG, height: SIZE.HUG }, child1, child2))) as StackNode;
+    assert.strictEqual(node.width, SIZE.HUG);
+    assert.strictEqual(node.height, SIZE.HUG);
     assert.strictEqual(node.children.length, 2);
   });
 

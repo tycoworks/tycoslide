@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import type { TextStyle } from "@tycoslide/core";
-import { DIRECTION, HALIGN, Insets, NODE_TYPE, SIZE, SPACING_MODE, VALIGN } from "@tycoslide/core";
+import { DIRECTION, HALIGN, Insets, LAYER, NODE_TYPE, SIZE, SPACING, VALIGN } from "@tycoslide/core";
 import { defineComponent, param, schema } from "@tycoslide/sdk";
 import { z } from "zod";
 
@@ -147,11 +147,13 @@ describe("defineComponent", () => {
         children,
         width: SIZE.FILL,
         height: SIZE.HUG,
+        weight: 1,
         spacing: 0,
-        spacingMode: SPACING_MODE.BETWEEN,
+        spacingMode: SPACING.BETWEEN,
         padding: new Insets(0),
         hAlign: HALIGN.LEFT,
         vAlign: VALIGN.TOP,
+        layer: LAYER.CONTENT,
       }),
     });
 
