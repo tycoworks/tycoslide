@@ -347,7 +347,7 @@ A horizontal or vertical rule. Renders as a separator between content blocks. Av
 |-------|------|-------------|
 | `color` | string | Line color |
 | `width` | number | Line width in points |
-| `dashType` | DashType | Dash pattern — `DASH_TYPE.SOLID`, `DASH_TYPE.DASHED`, or `DASH_TYPE.DOTTED` |
+| `dashType` | Dash | Dash pattern — `DASH.SOLID`, `DASH.DASHED`, or `DASH.DOTTED` |
 | `shadow` | Shadow | Drop shadow (optional — omit for no shadow) |
 
 ### Examples
@@ -376,7 +376,7 @@ A filled or outlined shape. Available in the TypeScript DSL only.
 
 | Param | Type | Description |
 |-------|------|-------------|
-| `shape` | ShapeName | Shape type (**required**) -- `roundRect`, `ellipse`, `triangle`, `diamond` |
+| `shape` | Shape | Shape type (**required**) -- `roundRect`, `ellipse`, `triangle`, `diamond` |
 
 ### Tokens
 
@@ -583,6 +583,12 @@ This changed everything for us.
 
 Layout components are TypeScript DSL only — they control structure and arrangement in theme layout render functions.
 
+### Sizing
+
+Containers size along each axis using `fill` or `hug`. `fill` distributes available space among siblings — equal shares by default, or proportional shares when `weight` is set. A child with `weight: 2` receives twice the space of a `weight: 1` sibling. `hug` sizes to content — the container takes only as much space as its children need.
+
+Spacing is subtracted before space is distributed. Padding reduces the content area inside a container.
+
 ## row
 
 Horizontal flex container. Children are arranged side by side.
@@ -598,13 +604,23 @@ Horizontal flex container. Children are arranged side by side.
 | `padding` | number | Internal padding (pixels) |
 | `width` | `fill` \| `hug` | Width sizing (default: `fill`) |
 | `height` | `fill` \| `hug` | Height sizing (default: `hug`) |
+| `weight` | number | Proportional share of available space (default: `1`). Only applies when main-axis size is `fill`. |
 
-### Example
+### Examples
 
 ```typescript
 row({ spacing: tokens.spacing, vAlign: VALIGN.TOP },
   card({ title: 'Left', description: 'Left content.' }, tokens.card),
   card({ title: 'Right', description: 'Right content.' }, tokens.card),
+)
+```
+
+60/40 proportional split:
+
+```typescript
+row({ spacing: tokens.spacing },
+  column({ weight: 3 }, ...mainContent),
+  column({ weight: 2 }, ...sidebar),
 )
 ```
 
@@ -657,7 +673,7 @@ Equal-column grid. Children are laid out in rows of N columns with equal widths.
 |-------|------|-------------|
 | `columns` | number | Number of columns (**required**) |
 | `spacing` | number | Spacing between cells in pixels (**required**) |
-| `height` | SizeValue \| number | `SIZE.FILL` (default) distributes available height; `SIZE.HUG` sizes to content |
+| `height` | Size | `SIZE.FILL` (default) distributes available height; `SIZE.HUG` sizes to content |
 
 ### Example
 
@@ -907,7 +923,7 @@ DSL functions are how you use components from TypeScript. All built-in DSL funct
 import { text, label, list, card, quote, testimonial, table, image, mermaid, code } from '@tycoslide/sdk';
 import { row, column, stack, grid } from '@tycoslide/sdk';
 import { line, shape, slideNumber } from '@tycoslide/sdk';
-import { SIZE, SHAPE, HALIGN, VALIGN, SPACING_MODE } from '@tycoslide/sdk';
+import { SIZE, SHAPE, HALIGN, VALIGN, SPACING } from '@tycoslide/sdk';
 const TEXT_STYLE = { H1: "h1", H2: "h2", H3: "h3", H4: "h4", BODY: "body", SMALL: "small", EYEBROW: "eyebrow", FOOTER: "footer", CODE: "code" } as const;
 
 // Lists

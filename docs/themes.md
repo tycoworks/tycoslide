@@ -115,7 +115,7 @@ const presentationFormat: Format = {
   padding: 24,
   radius: 9,
   strokes: { hairline: 0.5, thin: 0.75, base: 1, thick: 2 },
-  shadow: { type: SHADOW_TYPE.OUTER, opacity: 12, blur: 6, offset: 2, angle: 180 },
+  shadow: { type: SHADOW.OUTER, opacity: 12, blur: 6, offset: 2, angle: 180 },
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.MIDDLE,
   textStyles: {
