@@ -441,6 +441,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
           itemNumber: { style: TEXT_STYLE.H2, color: palette.accentSoft, ...centered },
           itemVAlign: VALIGN.MIDDLE,
           itemSpacing: spacing,
+          numberWeight: 0.1,
           spacing: spacingTight,
           image: {},
         },

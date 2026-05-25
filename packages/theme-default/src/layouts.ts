@@ -201,6 +201,7 @@ interface AgendaLayoutTokens {
   itemNumber: LabelTokens;
   itemVAlign: VerticalAlignment;
   itemSpacing: number;
+  numberWeight: number;
   spacing: number;
   image: ImageTokens;
 }
@@ -231,12 +232,15 @@ export const agenda: Layout<AgendaLayoutTokens> = {
       ...(i > 0 ? [line(tokens.divider)] : []),
       row(
         { vAlign: tokens.itemVAlign, spacing: tokens.itemSpacing },
-        column({ width: SIZE.HUG, vAlign: tokens.itemVAlign }, label(String(i + 1), tokens.itemNumber)),
+        column(
+          { width: SIZE.FILL, weight: tokens.numberWeight, vAlign: tokens.itemVAlign },
+          label(String(i + 1), tokens.itemNumber),
+        ),
         text(item, tokens.items),
       ),
     ]);
 
-    const itemsColumn = column({ spacing: tokens.spacing, vAlign: tokens.vAlign, height: SIZE.FILL }, ...itemRows);
+    const itemsColumn = column({ spacing: tokens.spacing, height: SIZE.FILL, vAlign: tokens.vAlign }, ...itemRows);
 
     return column(
       { height: SIZE.FILL },
