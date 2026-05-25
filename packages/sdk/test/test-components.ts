@@ -11,6 +11,7 @@ import {
   DIRECTION,
   extractSource,
   HALIGN,
+  LAYER,
   NODE_TYPE,
   type RenderContext,
   SIZE,
@@ -94,6 +95,7 @@ export const rowComponent = defineComponent({
     vAlign: params.vAlign ?? VALIGN.TOP,
     hAlign: params.hAlign ?? HALIGN.LEFT,
     padding: params.padding,
+    layer: LAYER.CONTENT,
   }),
 });
 
@@ -116,6 +118,7 @@ export const columnComponent = defineComponent({
     vAlign: params.vAlign ?? VALIGN.TOP,
     hAlign: params.hAlign ?? HALIGN.LEFT,
     padding: params.padding,
+    layer: LAYER.CONTENT,
   }),
 });
 

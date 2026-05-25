@@ -20,7 +20,7 @@ import type {
   TableNode,
   TextNode,
 } from "../src/core/model/nodes.js";
-import { NODE_TYPE } from "../src/core/model/nodes.js";
+import { LAYER, NODE_TYPE } from "../src/core/model/nodes.js";
 import type { Direction, NormalizedRun } from "../src/core/model/types.js";
 import { DASH, DIRECTION, GRID_STYLE, HALIGN, SHADOW, SHAPE, SIZE, SPACING, VALIGN } from "../src/core/model/types.js";
 import { mockTheme as createMockTheme } from "./mocks.js";
@@ -91,6 +91,7 @@ function rowNode(...args: any[]): ContainerNode {
     spacing: opts.spacing ?? 0,
     spacingMode: opts.spacingMode ?? SPACING.BETWEEN,
     padding: opts.padding instanceof Insets ? opts.padding : new Insets(opts.padding ?? 0),
+    layer: LAYER.CONTENT,
   };
 }
 
@@ -112,6 +113,7 @@ function colNode(...args: any[]): ContainerNode {
     spacing: opts.spacing ?? 0,
     spacingMode: opts.spacingMode ?? SPACING.BETWEEN,
     padding: opts.padding instanceof Insets ? opts.padding : new Insets(opts.padding ?? 0),
+    layer: LAYER.CONTENT,
   };
 }
 
@@ -140,6 +142,7 @@ function stackNode(...args: any[]): StackNode {
     children,
     width: opts.width ?? SIZE.FILL,
     height: opts.height ?? SIZE.HUG,
+    layer: LAYER.CONTENT,
   };
 }
 

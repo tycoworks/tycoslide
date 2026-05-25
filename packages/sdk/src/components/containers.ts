@@ -7,6 +7,7 @@ import {
   HALIGN,
   type HorizontalAlignment,
   Insets,
+  LAYER,
   NODE_TYPE,
   type RenderContext,
   SIZE,
@@ -76,6 +77,7 @@ export const rowComponent = defineComponent({
     vAlign: params.vAlign ?? VALIGN.TOP, // Explicit default: pure alignment (not CSS stretch)
     hAlign: params.hAlign ?? HALIGN.LEFT, // Explicit default for consistent measurement
     padding: params.padding instanceof Insets ? params.padding : new Insets(params.padding ?? 0),
+    layer: LAYER.CONTENT,
   }),
 });
 
@@ -115,6 +117,7 @@ export const columnComponent = defineComponent({
     vAlign: params.vAlign ?? VALIGN.TOP, // Explicit default for consistent measurement
     hAlign: params.hAlign ?? HALIGN.LEFT, // Explicit default for consistent measurement
     padding: params.padding instanceof Insets ? params.padding : new Insets(params.padding ?? 0),
+    layer: LAYER.CONTENT,
   }),
 });
 
@@ -141,6 +144,7 @@ export const stackComponent = defineComponent({
     children,
     width: params.width ?? SIZE.FILL,
     height: params.height ?? SIZE.HUG,
+    layer: LAYER.CONTENT,
   }),
 });
 
@@ -187,6 +191,7 @@ export const gridComponent = defineComponent({
       spacing,
       width: SIZE.FILL as Size,
       height,
+      layer: LAYER.CONTENT,
     };
   },
 });

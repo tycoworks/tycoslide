@@ -6,7 +6,7 @@ import { describe, it } from "node:test";
 import { generateFontFaceCSS } from "../src/core/layout/layoutHtml.js";
 import { Insets } from "../src/core/model/bounds.js";
 import type { ContainerNode, ElementNode, TextNode } from "../src/core/model/nodes.js";
-import { NODE_TYPE } from "../src/core/model/nodes.js";
+import { LAYER, NODE_TYPE } from "../src/core/model/nodes.js";
 import type { Background, FontFamily } from "../src/core/model/types.js";
 import { DASH, GRID_STYLE, HALIGN, SIZE, SPACING, VALIGN } from "../src/core/model/types.js";
 import { validateThemeFonts } from "../src/core/rendering/themeValidator.js";
@@ -381,6 +381,7 @@ function wrapInContainer(...children: ElementNode[]): ContainerNode {
     padding: new Insets(0),
     vAlign: "top",
     hAlign: "left",
+    layer: LAYER.CONTENT,
   };
 }
 

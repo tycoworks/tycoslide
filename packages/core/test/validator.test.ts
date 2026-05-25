@@ -2,7 +2,7 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import { LayoutBoundsError, LayoutOverflowError, LayoutValidator } from "../src/core/layout/validator.js";
 import { Insets } from "../src/core/model/bounds.js";
-import { type ElementNode, NODE_TYPE, type PositionedNode, type TextNode } from "../src/core/model/nodes.js";
+import { type ElementNode, LAYER, NODE_TYPE, type PositionedNode, type TextNode } from "../src/core/model/nodes.js";
 import { DIRECTION, HALIGN, SIZE, SPACING, VALIGN } from "../src/core/model/types.js";
 
 /** Minimal text node for validator tests (validator only checks geometry, not content) */
@@ -43,6 +43,7 @@ function containerNode(): ElementNode {
     padding: new Insets(0),
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.TOP,
+    layer: LAYER.CONTENT,
   } as ElementNode;
 }
 
@@ -262,7 +263,7 @@ describe("Layout Validation", () => {
 
     it("should not report overlap for Stack nodes (intentional)", () => {
       const positioned: PositionedNode = {
-        node: { type: NODE_TYPE.STACK, children: [], width: SIZE.FILL, height: SIZE.HUG },
+        node: { type: NODE_TYPE.STACK, children: [], width: SIZE.FILL, height: SIZE.HUG, layer: LAYER.CONTENT },
         x: 1,
         y: 1,
         width: 4,

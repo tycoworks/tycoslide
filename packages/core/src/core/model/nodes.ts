@@ -207,7 +207,7 @@ export interface ContainerNode<C extends SlideNode = ElementNode> {
   vAlign: VerticalAlignment;
   hAlign: HorizontalAlignment;
   padding: Insets; // pixels - per-side internal padding (normalized at construction)
-  layer?: Layer; // render target: master (shared/deduped) or content (per-slide)
+  layer: Layer; // render target: master (shared/deduped) or content (per-slide)
 }
 
 /** Stack is a z-order container: all children occupy the same bounds, rendered in order */
@@ -216,7 +216,7 @@ export interface StackNode<C extends SlideNode = ElementNode> {
   children: C[]; // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
   width: Size; // SIZE.FILL or SIZE.HUG
   height: Size; // SIZE.FILL or SIZE.HUG
-  layer?: Layer; // render target: master (shared/deduped) or content (per-slide)
+  layer: Layer; // render target: master (shared/deduped) or content (per-slide)
 }
 
 /** Grid is a CSS Grid container: equal-width columns with cross-sibling height coordination */
@@ -227,7 +227,7 @@ export interface GridNode<C extends SlideNode = ElementNode> {
   spacing: number; // pixels — gap between cells
   width: Size; // SIZE.FILL or SIZE.HUG
   height: Size; // SIZE.FILL or SIZE.HUG
-  layer?: Layer; // render target: master (shared/deduped) or content (per-slide)
+  layer: Layer; // render target: master (shared/deduped) or content (per-slide)
 }
 
 // ============================================
