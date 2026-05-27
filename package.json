@@ -12,5 +12,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.6"
+  },
+  "dependencies": {
+    "@tycoworks/pptxgenjs": "^4.0.4"
   }
 }

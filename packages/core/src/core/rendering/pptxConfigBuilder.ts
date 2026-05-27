@@ -4,7 +4,6 @@
 
 import { stripHash } from "../../utils/color.js";
 import { getParagraphGapRatio, normalizeContent, resolveFontFace } from "../../utils/font.js";
-import { containFit, readImageDimensions } from "../../utils/image.js";
 import { pxToIn } from "../../utils/units.js";
 import type {
   ImageNode,
@@ -19,7 +18,7 @@ import type {
   TextNode,
 } from "../model/nodes.js";
 import type { Dash, Strike, TextContent, TextStyle, Underline } from "../model/types.js";
-import { DASH, DIRECTION, GRID_STYLE, LINE_SHAPE, STRIKE, UNDERLINE } from "../model/types.js";
+import { DASH, DIRECTION, GRID_STYLE, IMAGE_SIZING, LINE_SHAPE, STRIKE, UNDERLINE } from "../model/types.js";
 
 /** Map CSS-compatible dash type names to pptxgenjs values. */
 function pptxDash(dt: Dash): string {
@@ -195,20 +194,15 @@ export class PptxConfigBuilder {
   }
 
   buildImageConfig(imageNode: ImageNode, positioned: PositionedNode): Record<string, unknown> {
-    // Compute contain placement ourselves.
-    // pptxgenjs sizing: { type: 'contain' } is broken — it uses the placement
-    // dimensions as both imgSize and boxDim, making it a no-op.
-    const dims = readImageDimensions(imageNode.src);
-    const fitted = dims
-      ? containFit(positioned.x, positioned.y, positioned.width, positioned.height, dims.aspectRatio)
-      : { x: positioned.x, y: positioned.y, w: positioned.width, h: positioned.height };
+    const x = pxToIn(positioned.x);
+    const y = pxToIn(positioned.y);
+    const w = pxToIn(positioned.width);
+    const h = pxToIn(positioned.height);
 
     const result: Record<string, unknown> = {
       path: imageNode.src,
-      x: pxToIn(fitted.x),
-      y: pxToIn(fitted.y),
-      w: pxToIn(fitted.w),
-      h: pxToIn(fitted.h),
+      x, y, w, h,
+      sizing: { type: IMAGE_SIZING.CONTAIN, w, h },
     };
     if (imageNode.alt) {
       result.altText = imageNode.alt;
