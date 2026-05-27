@@ -599,6 +599,7 @@ describe("buildShapeConfig() — area shapes", () => {
     const imageNode: ImageNode = {
       type: NODE_TYPE.IMAGE,
       src: "test.png",
+      fit: "contain",
       shadow: { type: "outer", color: "#FF0000", opacity: 50, blur: 4, offset: 1, angle: 180 },
     };
     const pos = positioned(imageNode, 1, 2, 5, 3);
@@ -616,6 +617,7 @@ describe("buildShapeConfig() — area shapes", () => {
     const imageNode: ImageNode = {
       type: NODE_TYPE.IMAGE,
       src: "test.png",
+      fit: "contain",
       alt: "A test image description",
     };
     const pos = positioned(imageNode, 1, 2, 5, 3);
@@ -630,6 +632,7 @@ describe("buildShapeConfig() — area shapes", () => {
     const imageNode: ImageNode = {
       type: NODE_TYPE.IMAGE,
       src: "test.png",
+      fit: "contain",
     };
     const pos = positioned(imageNode, 1, 2, 5, 3);
 

@@ -42,7 +42,15 @@ import type {
   Theme,
   VerticalAlignment,
 } from "../model/types.js";
-import { DASH, DIRECTION, FONT_SLOT, GRID_STYLE, HALIGN, SHAPE, SIZE, SPACING, VALIGN } from "../model/types.js";
+import type { Fit } from "../model/types.js";
+import { DASH, DIRECTION, FIT, FONT_SLOT, GRID_STYLE, HALIGN, SHAPE, SIZE, SPACING, VALIGN } from "../model/types.js";
+
+/** Map domain Fit to CSS object-fit values. */
+const FIT_TO_CSS: Record<Fit, string> = {
+  [FIT.CONTAIN]: "contain",
+  [FIT.COVER]: "cover",
+  [FIT.STRETCH]: "fill",
+};
 
 // ============================================
 // TYPES
@@ -459,7 +467,7 @@ function styleImage(node: ImageNode, parent: ParentCtx, nodeId: string, imagePat
   styles.position = "relative";
   styles.overflow = node.shadow ? "visible" : "hidden";
 
-  let imgStyle = "position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block";
+  let imgStyle = `position:absolute;inset:0;width:100%;height:100%;object-fit:${FIT_TO_CSS[node.fit]};display:block`;
   if (node.shadow) {
     // Use drop-shadow (not box-shadow) so the shadow follows the PNG's
     // alpha channel — e.g. rounded corners from code blocks.

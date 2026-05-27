@@ -119,7 +119,7 @@ function colNode(...args: any[]): ContainerNode {
 
 /** Image node */
 function imageNode(src: string): ImageNode {
-  return { type: NODE_TYPE.IMAGE, src };
+  return { type: NODE_TYPE.IMAGE, src, fit: "contain" };
 }
 
 /** Line node (token values baked in from mockTheme) */
@@ -438,6 +438,7 @@ describe("HTML Measurement Generation", () => {
       const node = colNode({
         type: NODE_TYPE.IMAGE,
         src: testImage,
+        fit: "contain",
         alt: "Diagram of build pipeline",
       });
       const { html } = await genHTML(node, bounds);

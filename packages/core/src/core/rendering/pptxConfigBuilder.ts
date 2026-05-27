@@ -18,7 +18,7 @@ import type {
   TextNode,
 } from "../model/nodes.js";
 import type { Dash, Strike, TextContent, TextStyle, Underline } from "../model/types.js";
-import { DASH, DIRECTION, GRID_STYLE, IMAGE_SIZING, LINE_SHAPE, STRIKE, UNDERLINE } from "../model/types.js";
+import { DASH, DIRECTION, FIT, GRID_STYLE, LINE_SHAPE, STRIKE, UNDERLINE } from "../model/types.js";
 
 /** Map CSS-compatible dash type names to pptxgenjs values. */
 function pptxDash(dt: Dash): string {
@@ -202,7 +202,7 @@ export class PptxConfigBuilder {
     const result: Record<string, unknown> = {
       path: imageNode.src,
       x, y, w, h,
-      sizing: { type: IMAGE_SIZING.CONTAIN, w, h },
+      ...(imageNode.fit !== FIT.STRETCH && { sizing: { type: imageNode.fit, w, h } }),
     };
     if (imageNode.alt) {
       result.altText = imageNode.alt;

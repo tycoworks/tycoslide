@@ -181,12 +181,15 @@ export { defineComponent, defineLayout, param, schema, token } from "./authoring
 // ── Layout Primitives (re-exported from core for theme authors) ──────────
 
 export type {
+  Fit,
   HorizontalAlignment,
   SlideNode,
   TextStyleName,
   VerticalAlignment,
 } from "@tycoslide/core";
 export {
+  FIT,
+  FIT_VALUES,
   GRID_STYLE,
   HALIGN,
   Insets,

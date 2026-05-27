@@ -80,15 +80,17 @@ export const SHAPE_VALUES = Object.values(SHAPE) as [Shape, ...Shape[]];
 /** pptxgenjs line shape name — used internally by buildLineConfig */
 export const LINE_SHAPE = "line" as const;
 
-/** pptxgenjs image sizing modes */
-export const IMAGE_SIZING = {
+/** Image fit mode — contain preserves aspect ratio with letterboxing, cover fills and clips */
+export const FIT = {
   CONTAIN: "contain",
   COVER: "cover",
-  CROP: "crop",
   STRETCH: "stretch",
 } as const;
 
-export type ImageSizing = (typeof IMAGE_SIZING)[keyof typeof IMAGE_SIZING];
+export type Fit = (typeof FIT)[keyof typeof FIT];
+
+/** All FIT values as a tuple — useful for schema enum validation */
+export const FIT_VALUES = Object.values(FIT) as [Fit, ...Fit[]];
 
 export const DASH = {
   SOLID: "solid",

@@ -6,6 +6,7 @@ import type { Insets } from "./bounds.js";
 import type {
   Dash,
   Direction,
+  Fit,
   GridStyle,
   HorizontalAlignment,
   Shadow,
@@ -77,6 +78,7 @@ export interface TextNode {
 export interface ImageNode {
   type: typeof NODE_TYPE.IMAGE;
   src: string;
+  fit: Fit;
   alt?: string;
   shadow?: ShadowEffect;
 }
