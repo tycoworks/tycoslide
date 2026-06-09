@@ -30,6 +30,7 @@ type ImageParams = InferParams<typeof imageParamShape>;
 
 export interface ImageTokens {
   fit?: Fit;
+  tint?: string;
   shadow?: ShadowEffect;
   padding?: number;
 }
@@ -58,6 +59,9 @@ export const imageComponent = defineComponent({
     }
     if (tokens?.shadow) {
       node.shadow = tokens.shadow;
+    }
+    if (tokens?.tint) {
+      node.tint = tokens.tint;
     }
     if (tokens?.padding) {
       return column({ padding: tokens.padding, height: SIZE.FILL }, node);

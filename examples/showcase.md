@@ -33,13 +33,13 @@ title: Capabilities
 cards:
   - title: Editable PowerPoint Slides
     description: Native PowerPoint slides that can be edited in any presentation software.
-    image: $icons.description
+    image: $icons.edit_document
   - title: Pure TypeScript Themes
     description: Pure TypeScript for design tokens, components, and layouts — no CSS needed.
-    image: $icons.palette
+    image: $icons.code
   - title: Build-Time Validation
     description: Catches layout overflows, missing tokens, and invalid parameters at build time.
-    image: $icons.shield
+    image: $icons.verified
 notes: Three pillars from positioning framework. Each maps to one supporting argument.
 ---
 

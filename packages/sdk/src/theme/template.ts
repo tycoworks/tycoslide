@@ -60,7 +60,7 @@ export class AssetCatalog {
 
   /** Resolve an asset entry to an absolute disk path. */
   resolve(entry: AssetEntry): string {
-    return path.join(this.packageRoot, entry.path);
+    return path.isAbsolute(entry.path) ? entry.path : path.join(this.packageRoot, entry.path);
   }
 
   /** Resolve a `$category.name` reference string to an absolute disk path. */

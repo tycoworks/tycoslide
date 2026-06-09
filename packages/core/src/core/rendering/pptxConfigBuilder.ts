@@ -210,6 +210,9 @@ export class PptxConfigBuilder {
     if (imageNode.shadow) {
       result.shadow = buildShadowOptions(imageNode.shadow);
     }
+    if (imageNode.tint) {
+      result.tint = stripHash(imageNode.tint);
+    }
     return result;
   }
 

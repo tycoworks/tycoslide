@@ -642,6 +642,35 @@ describe("buildShapeConfig() — area shapes", () => {
     assert.strictEqual(result.altText, undefined);
   });
 
+  test("passes tint when tint is set", () => {
+    const imageNode: ImageNode = {
+      type: NODE_TYPE.IMAGE,
+      src: "icon.png",
+      fit: "contain",
+      tint: "#FF6600",
+    };
+    const pos = positioned(imageNode, 1, 2, 5, 3);
+
+    const result = builder.buildImageConfig(imageNode, pos);
+
+    assert.ok(result);
+    assert.strictEqual(result.tint, "FF6600");
+  });
+
+  test("omits tint when tint is not set", () => {
+    const imageNode: ImageNode = {
+      type: NODE_TYPE.IMAGE,
+      src: "photo.jpg",
+      fit: "contain",
+    };
+    const pos = positioned(imageNode, 1, 2, 5, 3);
+
+    const result = builder.buildImageConfig(imageNode, pos);
+
+    assert.ok(result);
+    assert.strictEqual(result.tint, undefined);
+  });
+
   test("translates shadow on line", () => {
     const lineNode: LineNode = {
       type: NODE_TYPE.LINE,

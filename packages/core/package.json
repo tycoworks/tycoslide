@@ -42,7 +42,7 @@
     "hono": "^4.11.9",
     "image-size": "^1.1.1",
     "playwright-core": "^1.58.2",
-    "@tycoworks/pptxgenjs": "^4.0.1",
+    "@tycoworks/pptxgenjs": "^4.0.5",
     "zod": "^4.3.6",
     "@types/mdast": "^4.0.0"
   },

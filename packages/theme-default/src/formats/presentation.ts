@@ -182,7 +182,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
   };
   const cardBase = {
     padding,
-    image: { padding: spacingTight },
+    image: { padding: spacingTight, tint: palette.accent },
     spacing: spacingTight,
     hAlign: HALIGN.LEFT,
     title: cardTitle,

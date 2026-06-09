@@ -1,28 +1,24 @@
 // Default Theme Assets
-// Icons as PNG (converted from @material-design-icons/svg), brand images.
+// Icons from @material-symbols/svg-400 (outlined variant), brand images.
 
+import { createRequire } from "node:module";
 import { AssetCatalog } from "@tycoslide/sdk";
+
+const require = createRequire(import.meta.url);
 
 export const assets = new AssetCatalog(import.meta.url, {
   icons: {
-    description: {
-      path: "assets/icons/description.png",
-      documentation: { description: "Document/page icon for content-heavy slides" },
+    edit_document: {
+      path: require.resolve("@material-symbols/svg-400/outlined/edit_document.svg"),
+      documentation: { description: "Pencil on document — editable output, content authoring" },
     },
-    palette: {
-      path: "assets/icons/palette.png",
-      documentation: { description: "Color palette icon for design/branding topics" },
+    code: {
+      path: require.resolve("@material-symbols/svg-400/outlined/code.svg"),
+      documentation: { description: "Angle brackets — code, developer tools, design as code" },
     },
-    shield: {
-      path: "assets/icons/shield.png",
-      documentation: {
-        description: "Shield/checkmark icon for security or trust topics",
-        whenToUse: "Security features, compliance, trust signals",
-      },
-    },
-    redo: {
-      path: "assets/icons/redo.png",
-      documentation: { description: "Circular arrow icon for iteration or refresh concepts" },
+    verified: {
+      path: require.resolve("@material-symbols/svg-400/outlined/verified.svg"),
+      documentation: { description: "Checkmark badge — build safety, validation, trust" },
     },
   },
   tycoslide: {

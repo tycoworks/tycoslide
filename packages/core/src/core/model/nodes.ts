@@ -81,6 +81,7 @@ export interface ImageNode {
   fit: Fit;
   alt?: string;
   shadow?: ShadowEffect;
+  tint?: string;
 }
 
 export interface LineNode {
