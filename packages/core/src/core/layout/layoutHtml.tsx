@@ -467,12 +467,37 @@ function styleImage(node: ImageNode, parent: ParentCtx, nodeId: string, imagePat
   styles.position = "relative";
   styles.overflow = node.shadow ? "visible" : "hidden";
 
-  let imgStyle = `position:absolute;inset:0;width:100%;height:100%;object-fit:${FIT_TO_CSS[node.fit]};display:block`;
+  let shadowFilter = "";
   if (node.shadow) {
-    // Use drop-shadow (not box-shadow) so the shadow follows the PNG's
-    // alpha channel — e.g. rounded corners from code blocks.
     const { x, y, rgba } = shadowOffsets(node.shadow);
-    imgStyle += `;filter:drop-shadow(${ptToPx(x)}px ${ptToPx(y)}px ${ptToPx(node.shadow.blur)}px ${rgba})`;
+    shadowFilter = `filter:drop-shadow(${ptToPx(x)}px ${ptToPx(y)}px ${ptToPx(node.shadow.blur)}px ${rgba})`;
+  }
+
+  if (node.tint) {
+    const filterId = `tint-${nodeId}`;
+    const svgFilter =
+      `<svg style="position:absolute;width:0;height:0;overflow:hidden">` +
+      `<filter id="${filterId}">` +
+      `<feFlood flood-color="${escapeHtml(node.tint)}" result="color"/>` +
+      `<feComposite in="color" in2="SourceAlpha" operator="in"/>` +
+      `</filter></svg>`;
+
+    const shadowDrop = node.shadow
+      ? ` drop-shadow(${ptToPx(shadowOffsets(node.shadow).x)}px ${ptToPx(shadowOffsets(node.shadow).y)}px ${ptToPx(node.shadow.blur)}px ${shadowOffsets(node.shadow).rgba})`
+      : "";
+    const imgStyle = `position:absolute;inset:0;width:100%;height:100%;object-fit:${FIT_TO_CSS[node.fit]};display:block;filter:url(#${filterId})${shadowDrop}`;
+
+    return {
+      nodeId,
+      styles,
+      children: [],
+      innerHTML: `${svgFilter}<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(node.alt ?? "")}" style="${imgStyle}" />`,
+    };
+  }
+
+  let imgStyle = `position:absolute;inset:0;width:100%;height:100%;object-fit:${FIT_TO_CSS[node.fit]};display:block`;
+  if (shadowFilter) {
+    imgStyle += `;${shadowFilter}`;
   }
 
   return {
