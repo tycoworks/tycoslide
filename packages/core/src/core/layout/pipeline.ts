@@ -112,11 +112,7 @@ export class LayoutPipeline {
     }
 
     // Copy images into output directory and build path map for relative references
-    const imagePathMap = await copyImages(
-      this.slides,
-      this.outputDir,
-      (html) => this.renderer.renderHtmlToImage(html, theme, true),
-    );
+    const imagePathMap = copyImages(this.slides, this.outputDir);
 
     // Measure ALL slides in a single browser round-trip
     const { measurements, slideFragments, labels } = await this.measurer.measureLayout(

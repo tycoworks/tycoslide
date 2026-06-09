@@ -35,6 +35,7 @@ import type {
   Background,
   Dash,
   Direction,
+  Fit,
   HorizontalAlignment,
   NormalizedRun,
   Size,
@@ -42,7 +43,6 @@ import type {
   Theme,
   VerticalAlignment,
 } from "../model/types.js";
-import type { Fit } from "../model/types.js";
 import { DASH, DIRECTION, FIT, FONT_SLOT, GRID_STYLE, HALIGN, SHAPE, SIZE, SPACING, VALIGN } from "../model/types.js";
 
 /** Map domain Fit to CSS object-fit values. */
@@ -998,12 +998,6 @@ export function generateLayoutHTML(
     };
     if (bg.color) {
       rootStyles.backgroundColor = bgColor(bg.color, bg.opacity ?? 100);
-    }
-    if (bg.path) {
-      const resolvedBg = path.resolve(bg.path);
-      const bgSrc = imagePathMap.get(resolvedBg) ?? resolvedBg;
-      rootStyles.backgroundImage = `url('${bgSrc.replace(/'/g, "\\'")}')`;
-      rootStyles.backgroundSize = "cover";
     }
 
     return (

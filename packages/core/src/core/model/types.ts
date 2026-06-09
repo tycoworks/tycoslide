@@ -235,14 +235,13 @@ import type { SlideNode } from "./nodes.js";
 // ============================================
 
 /**
- * Slide background. All fields optional — set color, path, or both.
+ * Slide background. All fields optional.
  * Opacity uses the same convention as ShapeNode.fill (0 = invisible, 100 = opaque).
  * The renderer inverts to pptxgenjs's transparency at the rendering boundary.
  */
 export interface Background {
   color?: string;
   opacity?: number;
-  path?: string;
 }
 
 // ============================================

@@ -87,7 +87,6 @@ export class PptxRenderer {
       background: {
         ...(background.color != null && { color: stripHash(background.color) }),
         ...(background.opacity != null && { transparency: 100 - background.opacity }),
-        ...(background.path != null && { path: background.path }),
       },
       ...(objects.length > 0 && { objects }),
       ...(slideNumber && { slideNumber }),
@@ -105,7 +104,6 @@ export class PptxRenderer {
       pptxSlide.background = {
         ...(background.color != null && { color: stripHash(background.color) }),
         ...(background.opacity != null && { transparency: 100 - background.opacity }),
-        ...(background.path != null && { path: background.path }),
       };
     }
 

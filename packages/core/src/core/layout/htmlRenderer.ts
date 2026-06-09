@@ -9,9 +9,12 @@ import type { Theme } from "../model/types.js";
 import type { HeadlessBrowser } from "./browser.js";
 import { generateFontFaceCSS, preloadFonts } from "./layoutHtml.js";
 
+const DEVICE_SCALE_FACTOR = 3;
+
 export class HtmlRenderer {
   private page: Page | null = null;
   private renderCount = 0;
+  private renderLock: Promise<void> = Promise.resolve();
 
   constructor(
     private browser: HeadlessBrowser,
@@ -19,11 +22,27 @@ export class HtmlRenderer {
   ) {}
 
   async renderHtmlToImage(html: string, theme: Theme, transparent?: boolean): Promise<string> {
+    let releaseLock: () => void;
+    const acquired = new Promise<void>((resolve) => {
+      releaseLock = resolve;
+    });
+    const waiting = this.renderLock;
+    this.renderLock = acquired;
+    await waiting;
+
+    try {
+      return await this.renderHtmlToImageImpl(html, theme, transparent);
+    } finally {
+      releaseLock!();
+    }
+  }
+
+  private async renderHtmlToImageImpl(html: string, theme: Theme, transparent?: boolean): Promise<string> {
     if (!this.page) {
       this.page = await this.browser.newPage({
         width: Math.round(theme.slide.width),
         height: Math.round(theme.slide.height),
-        deviceScaleFactor: 3,
+        deviceScaleFactor: DEVICE_SCALE_FACTOR,
       });
       this.page.on("pageerror", (err) => {
         throw new Error(`Render page error: ${err.message}`);

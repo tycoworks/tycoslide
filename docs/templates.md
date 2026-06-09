@@ -29,6 +29,19 @@ defineTemplate({
 });
 ```
 
+### Background
+
+Slide background color and opacity. Both fields are optional — omit `background` entirely for a transparent slide.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `color` | `string` | 6-character hex color (e.g., `'#1A1A2E'`) |
+| `opacity` | `number` | 0 (invisible) to 100 (opaque). Default: 100 |
+
+```typescript
+background: { color: '#1A1A2E', opacity: 100 },
+```
+
 ---
 
 ## Layouts

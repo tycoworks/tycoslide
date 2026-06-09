@@ -160,10 +160,8 @@ export class Presentation {
 
     if (isLayoutNode(node as ElementNode)) {
       const layout = node as LayoutNode;
-      return {
-        ...layout,
-        children: await Promise.all(layout.children.map((c) => this.renderTree(c, context))),
-      } as LayoutNode;
+      const children = await Promise.all(layout.children.map((c) => this.renderTree(c, context)));
+      return { ...layout, children } as LayoutNode;
     }
 
     return node as ElementNode;
