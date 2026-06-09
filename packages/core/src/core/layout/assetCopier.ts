@@ -10,6 +10,9 @@ import { NODE_TYPE } from "../model/nodes.js";
 import type { Background } from "../model/types.js";
 import { FONT_SLOT, type Theme } from "../model/types.js";
 
+/** Renders an HTML string to a PNG image file. Returns the absolute path to the output PNG. */
+export type RasterizeHtml = (html: string) => Promise<string>;
+
 /**
  * Copy theme fonts into outputDir/fonts/.
  * Call once before any HTML generation.
@@ -35,15 +38,20 @@ export function copyFonts(theme: Theme, outputDir: string): void {
 
 /**
  * Walk node trees and backgrounds, copy images to outputDir/images/.
+ * When rasterize is provided, SVG images are rasterized to PNG inline
+ * (PowerPoint SVG support is unreliable). The rasterized PNG replaces the
+ * original SVG path on the ImageNode so downstream code sees only PNGs.
  * Returns Map<absoluteSourcePath, relativePath> for use in HTML generation.
  */
-export function copyImages(
+export async function copyImages(
   slides: Array<{ tree: ElementNode; background: Background }>,
   outputDir: string,
-): Map<string, string> {
+  rasterize?: RasterizeHtml,
+): Promise<Map<string, string>> {
   const imagesDir = path.join(outputDir, "images");
   fs.mkdirSync(imagesDir, { recursive: true });
   const pathMap = new Map<string, string>();
+  const svgCache = new Map<string, string>();
 
   function addImage(absPath: string): void {
     if (pathMap.has(absPath)) return;
@@ -62,17 +70,33 @@ export function copyImages(
     pathMap.set(absPath, `images/${outputName}`);
   }
 
-  function walkTree(node: ElementNode): void {
+  async function walkTree(node: ElementNode): Promise<void> {
     if (node.type === NODE_TYPE.IMAGE) {
-      addImage(path.resolve((node as ImageNode).src));
+      const img = node as ImageNode;
+      const absPath = path.resolve(img.src);
+
+      if (rasterize && path.extname(absPath).toLowerCase() === ".svg") {
+        const cached = svgCache.get(absPath);
+        if (cached) {
+          img.src = cached;
+        } else {
+          const svgContent = fs.readFileSync(absPath, "utf-8");
+          const html = `<div style="display:inline-block">${svgContent}</div>`;
+          const pngPath = await rasterize(html);
+          svgCache.set(absPath, pngPath);
+          img.src = pngPath;
+        }
+      }
+
+      addImage(path.resolve(img.src));
     }
     if ("children" in node && Array.isArray((node as any).children)) {
-      for (const child of (node as any).children) walkTree(child);
+      for (const child of (node as any).children) await walkTree(child);
     }
   }
 
   for (const slide of slides) {
-    walkTree(slide.tree);
+    await walkTree(slide.tree);
     if (slide.background.path) addImage(path.resolve(slide.background.path));
   }
 
