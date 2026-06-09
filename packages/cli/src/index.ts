@@ -20,17 +20,12 @@ program
   .option("-f, --force", "write PPTX despite layout or missing font errors")
   .option("-d, --debug", "enable verbose logging")
   .option("--no-notes", "exclude speaker notes from output")
-  .option("--render-scale <factor>", "pixel density multiplier for rendered diagrams and code (default: 2)")
   .action(
     async (
       input: string,
-      opts: { preview?: boolean; force?: boolean; debug?: boolean; notes: boolean; renderScale?: string },
+      opts: { preview?: boolean; force?: boolean; debug?: boolean; notes: boolean },
     ) => {
-      const renderScale = opts.renderScale ? parseFloat(opts.renderScale) : undefined;
-      if (renderScale !== undefined && (!Number.isFinite(renderScale) || renderScale < 1)) {
-        throw new Error(`--render-scale must be a positive number, got: ${opts.renderScale}`);
-      }
-      await build(input, { ...opts, renderScale });
+      await build(input, opts);
     },
   );
 

@@ -62,9 +62,9 @@ export class LayoutPipeline {
   private labels: string[] = [];
   private outputDir: string;
 
-  constructor(options: { deviceScaleFactor?: number; outputDir: string }) {
+  constructor(options: { outputDir: string }) {
     this.outputDir = options.outputDir;
-    this.renderer = new HtmlRenderer(this.browser, options.outputDir, { deviceScaleFactor: options.deviceScaleFactor });
+    this.renderer = new HtmlRenderer(this.browser, options.outputDir);
   }
 
   /**

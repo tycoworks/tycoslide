@@ -189,7 +189,7 @@ export class Presentation {
    */
   async writeFile(
     fileName: string,
-    options: { includeNotes?: boolean; force?: boolean; outputDir: string; renderScale?: number },
+    options: { includeNotes?: boolean; force?: boolean; outputDir: string },
   ): Promise<WriteResult> {
     const resolvedPath = path.resolve(fileName);
     log.pptx._("writing to: %s", resolvedPath);
@@ -199,7 +199,6 @@ export class Presentation {
     if (this.deferredSlides.length > 0) {
       const result = await this.processDeferredSlides({
         outputDir: options.outputDir,
-        renderScale: options.renderScale,
         force: options.force,
       });
       validationErrors = result.validationErrors;
@@ -220,11 +219,10 @@ export class Presentation {
    */
   private async processDeferredSlides(options: {
     outputDir: string;
-    renderScale?: number;
     preview?: boolean;
     force?: boolean;
   }): Promise<{ slides: SlideLayout[]; validationErrors: SlideValidationResult[]; outputFiles: string[] }> {
-    const pipeline = new LayoutPipeline({ deviceScaleFactor: options?.renderScale, outputDir: options.outputDir });
+    const pipeline = new LayoutPipeline({ outputDir: options.outputDir });
 
     try {
       // Launch browser — also copies fonts into outputDir for @font-face CSS
@@ -385,12 +383,10 @@ export class Presentation {
    */
   async preview(options: {
     outputDir: string;
-    renderScale?: number;
     force?: boolean;
   }): Promise<{ slides: SlideLayout[]; validationErrors: SlideValidationResult[]; outputFiles: string[] }> {
     return this.processDeferredSlides({
       outputDir: options.outputDir,
-      renderScale: options.renderScale,
       preview: true,
       force: options.force,
     });

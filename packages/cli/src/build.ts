@@ -14,7 +14,6 @@ export interface BuildOptions {
   force?: boolean;
   debug?: boolean;
   notes: boolean;
-  renderScale?: number;
 }
 
 export async function build(inputPath: string, options: BuildOptions): Promise<void> {
@@ -51,7 +50,7 @@ export async function build(inputPath: string, options: BuildOptions): Promise<v
   if (options.preview) {
     // Preview mode: HTML only, skip PPTX
     try {
-      const result = await pres.preview({ outputDir, renderScale: options.renderScale, force: options.force });
+      const result = await pres.preview({ outputDir, force: options.force });
 
       if (result.validationErrors.length > 0) {
         console.warn(`${result.validationErrors.length} validation warning(s)`);
@@ -79,7 +78,6 @@ export async function build(inputPath: string, options: BuildOptions): Promise<v
         force: options.force,
         outputDir,
         includeNotes: options.notes,
-        renderScale: options.renderScale,
       });
       console.log(`Slides:  ${outputPath}`);
       console.log(`Preview: ${path.join(outputDir, "slide-1.html")}`);

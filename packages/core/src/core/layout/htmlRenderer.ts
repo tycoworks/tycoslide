@@ -16,17 +16,14 @@ export class HtmlRenderer {
   constructor(
     private browser: HeadlessBrowser,
     private outputDir: string,
-    private options?: { deviceScaleFactor?: number },
   ) {}
 
   async renderHtmlToImage(html: string, theme: Theme, transparent?: boolean): Promise<string> {
-    // Create dedicated render page on first use, sized to slide dimensions.
-    // deviceScaleFactor controls PNG pixel density (default 2x for Retina quality).
     if (!this.page) {
       this.page = await this.browser.newPage({
         width: Math.round(theme.slide.width),
         height: Math.round(theme.slide.height),
-        deviceScaleFactor: this.options?.deviceScaleFactor ?? 2,
+        deviceScaleFactor: 3,
       });
       this.page.on("pageerror", (err) => {
         throw new Error(`Render page error: ${err.message}`);
