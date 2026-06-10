@@ -108,8 +108,8 @@ const chromed = withFooterChrome(body, {
   footerLogo: assets.logo,
   footerText: 'My Company',
   footerSpacing: 12,
-  slideNumber: { style: TEXT_STYLE.FOOTER, color: palette.secondary, hAlign: HALIGN.RIGHT, vAlign: VALIGN.MIDDLE },
-  footer: { style: TEXT_STYLE.FOOTER, color: palette.secondary, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
+  slideNumber: { style: TEXT_STYLE.FOOTER, color: palette.text.description, hAlign: HALIGN.RIGHT, vAlign: VALIGN.MIDDLE },
+  footer: { style: TEXT_STYLE.FOOTER, color: palette.text.description, hAlign: HALIGN.LEFT, vAlign: VALIGN.MIDDLE },
   footerImage: {},
 });
 ```

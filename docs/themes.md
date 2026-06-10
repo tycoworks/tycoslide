@@ -81,21 +81,21 @@ const brand: Brand = {
 
 ### Palette
 
-A `Palette` defines semantic color roles for a single appearance mode (light or dark):
+A `Palette` defines semantic color roles for a single appearance mode (light or dark), organized into three groups:
 
-| Role | Purpose |
-|------|---------|
-| `heading` | Primary heading text |
-| `body` | Body text |
-| `secondary` | Descriptions, captions |
-| `muted` | Table headers, attribution |
-| `accent` | Brand/interactive — links, accent bars |
-| `accentSoft` | Tonal variant — agenda numbers |
-| `background` | Page/area background |
-| `surface` | Elevated fills (cards, containers) |
-| `divider` | Borders and separators |
-| `shadow` | Shadow color |
-| `highlightTheme` | Syntax highlighting theme for code blocks |
+| Group | Role | Purpose |
+|-------|------|---------|
+| `text` | `heading` | Primary heading text |
+| | `body` | Body text |
+| | `description` | Descriptions, captions |
+| | `subtle` | Table headers, attribution |
+| `brand` | `primary` | Brand/interactive — links, accent bars |
+| | `soft` | Tonal variant — agenda numbers |
+| `fill` | `background` | Page/area background |
+| | `surface` | Elevated fills (cards, containers) |
+| | `divider` | Borders and separators |
+| | `shadow` | Shadow color |
+| | `highlightTheme` | Syntax highlighting theme for code blocks |
 
 All color values are hex strings with a `#` prefix (e.g., `#7C3AED`).
 
@@ -288,16 +288,9 @@ import type { Brand, Palette } from '@tycoslide/sdk';
 import { HIGHLIGHT_THEME } from '@tycoslide/sdk';
 
 const light: Palette = {
-  heading: '#1A1A2E',
-  body: '#1A1A2E',
-  secondary: '#4A4A5A',
-  muted: '#696878',
-  accent: '#0066CC',
-  accentSoft: '#4285F4',
-  background: '#FFFFFF',
-  surface: '#F5F5F5',
-  divider: '#E5E5E5',
-  shadow: '#1A1A2E',
+  text: { heading: '#1A1A2E', body: '#1A1A2E', description: '#4A4A5A', subtle: '#696878' },
+  brand: { primary: '#0066CC', soft: '#4285F4' },
+  fill: { background: '#FFFFFF', surface: '#F5F5F5', divider: '#E5E5E5', shadow: '#1A1A2E' },
   highlightTheme: HIGHLIGHT_THEME.GITHUB_DARK,
 };
 
