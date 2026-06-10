@@ -13,6 +13,7 @@ import remarkParse from "remark-parse";
 import type { Processor } from "unified";
 import { unified } from "unified";
 import type { Parent } from "unist";
+import remarkMark from "./remarkMark.js";
 
 // ============================================
 // PARSER PLUGINS
@@ -48,13 +49,14 @@ function remarkStrikethrough(this: Processor): void {
   (data.fromMarkdownExtensions ??= []).push(gfmStrikethroughFromMarkdown());
 }
 
-/** Inline-only processor — block constructs disabled, strikethrough + underline enabled.
+/** Inline-only processor — block constructs disabled, strikethrough + underline + mark enabled.
  *  Uses runSync(parse(...)) because remark-ins is a transform plugin requiring the run phase. */
 const processor = unified()
   .use(remarkParse)
   .use(remarkStrikethrough)
   .use(remarkDirective)
   .use(remarkIns)
+  .use(remarkMark)
   .use(remarkDisableBlocks);
 
 /** Parse inline markdown to an MDAST tree. */
@@ -105,6 +107,12 @@ export function transformInline(
         transformInline((node as unknown as Parent).children as PhrasingContent[], accents, runs, {
           ...defaults,
           underline: true,
+        });
+        break;
+      case SYNTAX.MARK as string:
+        transformInline((node as unknown as Parent).children as PhrasingContent[], accents, runs, {
+          ...defaults,
+          color: accents.accent,
         });
         break;
       case SYNTAX.TEXT_DIRECTIVE: {

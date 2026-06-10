@@ -23,7 +23,7 @@ notes: "Agenda layout — numbered items with divider lines."
 
 ---
 template: statement
-body: "tycoslide is a :accent[**presentation build tool**] that generates :accent[**editable PowerPoint slides from markdown**], with :accent[**TypeScript-based themes**] and :accent[**build-time validation**]."
+body: "tycoslide is a ==**presentation build tool**== that generates ==**editable PowerPoint slides from markdown**==, with ==**TypeScript-based themes**== and ==**build-time validation**==."
 notes: Positioning one-liner. Four anchors in one sentence.
 ---
 

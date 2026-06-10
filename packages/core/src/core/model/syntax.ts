@@ -24,6 +24,7 @@ export const SYNTAX = {
   BREAK: "break",
   DELETE: "delete",
   INS: "insert",
+  MARK: "mark",
   TEXT_DIRECTIVE: "textDirective",
 } as const;
 
