@@ -96,7 +96,7 @@ function buildChromeTokens(palette: Palette, config: Format, chrome: ChromeConfi
   const spacingTight = config.spacing.tight;
   const labelFooter: LabelTokens = {
     style: TEXT_STYLE.FOOTER,
-    color: palette.secondary,
+    color: palette.text.description,
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.MIDDLE,
   };
@@ -139,14 +139,14 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
 
   // ── Composition atoms ───────────────────────────────────────────────────
   const centered = { hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } as const;
-  const richText = { linkColor: palette.accent, accents: t.primitives.accents, linkUnderline: true };
+  const richText = { linkColor: palette.brand.primary, accents: t.primitives.accents, linkUnderline: true };
 
   // ── Header tokens (shared by body, cards, agenda) ──────────────────────
   const headerTokens = {
     title: t.onLight.headings.h3,
     eyebrow: {
       style: TEXT_STYLE.CAPTION,
-      color: palette.accent,
+      color: palette.brand.primary,
       hAlign: HALIGN.LEFT,
       vAlign: VALIGN.MIDDLE,
     } as LabelTokens,
@@ -158,7 +158,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
 
   const labelMutedSmall: LabelTokens = {
     style: TEXT_STYLE.CAPTION,
-    color: palette.secondary,
+    color: palette.text.description,
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.MIDDLE,
   };
@@ -171,18 +171,18 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.MIDDLE,
     style: TEXT_STYLE.H4,
-    color: palette.accent,
+    color: palette.brand.primary,
   };
   const cardDescription = {
     ...richText,
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.MIDDLE,
     style: TEXT_STYLE.CAPTION,
-    color: palette.secondary,
+    color: palette.text.description,
   };
   const cardBase = {
     padding,
-    image: { padding: spacingTight, tint: palette.accent },
+    image: { padding: spacingTight, tint: palette.brand.primary },
     spacing: spacingTight,
     hAlign: HALIGN.LEFT,
     title: cardTitle,
@@ -193,29 +193,29 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
     table: {
       headerRow: {
         textStyle: TEXT_STYLE.CAPTION,
-        textColor: palette.muted,
-        background: palette.divider,
+        textColor: palette.text.subtle,
+        background: palette.fill.divider,
         hAlign: HALIGN.CENTER,
       },
       headerCol: {
         textStyle: TEXT_STYLE.CAPTION,
-        textColor: palette.muted,
-        background: palette.background,
+        textColor: palette.text.subtle,
+        background: palette.fill.background,
         hAlign: HALIGN.LEFT,
       },
       cellTextStyle: TEXT_STYLE.CAPTION,
-      cellTextColor: palette.body,
-      cellBackground: palette.surface,
+      cellTextColor: palette.text.body,
+      cellBackground: palette.fill.surface,
       hAlign: HALIGN.CENTER,
       vAlign: VALIGN.MIDDLE,
       gridStyle: GRID_STYLE.HORIZONTAL,
       gridStroke: t.primitives.border,
       cellPadding: spacingTight,
-      linkColor: palette.accent,
+      linkColor: palette.brand.primary,
       linkUnderline: true,
       accents: t.primitives.accents,
       background: {
-        fill: palette.background,
+        fill: palette.fill.background,
         border: t.primitives.border,
         cornerRadius: config.radius,
         shadow: t.primitives.shadow,
@@ -227,36 +227,36 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       theme: palette.highlightTheme,
       padding,
       background: {
-        fill: palette.heading,
+        fill: palette.text.heading,
         cornerRadius: config.radius,
         shadow: t.primitives.shadow,
       },
       image: imageTokens,
     },
     mermaid: {
-      primary: palette.background,
-      primaryContrast: palette.heading,
-      text: palette.heading,
-      line: palette.accent,
-      surface: palette.surface,
-      surfaceBorder: palette.divider,
-      surfaceSubtle: palette.surface,
-      group: palette.surface,
+      primary: palette.fill.background,
+      primaryContrast: palette.text.heading,
+      text: palette.text.heading,
+      line: palette.brand.primary,
+      surface: palette.fill.surface,
+      surfaceBorder: palette.fill.divider,
+      surfaceSubtle: palette.fill.surface,
+      group: palette.fill.surface,
       groupCornerRadius: config.radius,
       accents: t.primitives.accents,
-      accentStyle: { opacity: config.shadow.opacity, textColor: palette.accent },
+      accentStyle: { opacity: config.shadow.opacity, textColor: palette.brand.primary },
       textStyle: TEXT_STYLE.BODY,
       image: imageTokens,
     },
     quote: {
-      bar: { color: palette.accent, width: config.strokes.thick },
+      bar: { color: palette.brand.primary, width: config.strokes.thick },
       spacing,
       quote: quoteText,
       attribution: labelMutedSmall,
     },
     testimonial: {
       background: {
-        fill: palette.surface,
+        fill: palette.fill.surface,
         border: t.primitives.border,
         cornerRadius: config.radius,
       },
@@ -312,7 +312,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
             ...centered,
             ...richText,
             linkUnderline: false,
-            color: palette.secondary,
+            color: palette.text.description,
           },
           ...centered,
           spacing: spacingTight,
@@ -436,9 +436,9 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
         tokens: {
           ...headerTokens,
           vAlign: VALIGN.MIDDLE,
-          items: { ...t.onLight.text, style: TEXT_STYLE.H4, color: palette.heading },
+          items: { ...t.onLight.text, style: TEXT_STYLE.H4, color: palette.text.heading },
           divider: t.primitives.border,
-          itemNumber: { style: TEXT_STYLE.H2, color: palette.accentSoft, ...centered },
+          itemNumber: { style: TEXT_STYLE.H2, color: palette.brand.soft, ...centered },
           itemVAlign: VALIGN.MIDDLE,
           itemSpacing: spacing,
           numberWeight: 0.1,

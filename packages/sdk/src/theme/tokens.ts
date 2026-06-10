@@ -22,21 +22,21 @@ export function deriveTokens(palette: Palette, format: Format) {
   // ── Palette-derived visual primitives ──────────────────────────────────
 
   const accents: Record<string, string> = {
-    accent: palette.accent,
-    soft: palette.accentSoft,
-    dark: palette.heading,
+    accent: palette.brand.primary,
+    soft: palette.brand.soft,
+    dark: palette.text.heading,
   };
-  const subtleBorder = { color: palette.divider, width: format.strokes.thin, dashType: DASH.SOLID };
+  const subtleBorder = { color: palette.fill.divider, width: format.strokes.thin, dashType: DASH.SOLID };
   const shadow = {
     type: format.shadow.type,
-    color: palette.shadow,
+    color: palette.fill.shadow,
     opacity: format.shadow.opacity,
     blur: format.shadow.blur,
     offset: format.shadow.offset,
     angle: format.shadow.angle,
   };
   const richTextBase = {
-    linkColor: palette.accent,
+    linkColor: palette.brand.primary,
     linkUnderline: true,
     hAlign: format.hAlign,
     vAlign: format.vAlign,
@@ -45,19 +45,19 @@ export function deriveTokens(palette: Palette, format: Format) {
 
   // ── onLight text tokens (for light/neutral backgrounds) ──────────────
 
-  const bodyText: TextTokens = { ...richTextBase, style: TEXT_STYLE.BODY, color: palette.body };
+  const bodyText: TextTokens = { ...richTextBase, style: TEXT_STYLE.BODY, color: palette.text.body };
   const bodyList: ListTokens = { ...bodyText, vAlign: VALIGN.TOP };
   const captionText: TextTokens = {
     ...richTextBase,
     style: TEXT_STYLE.CAPTION,
-    color: palette.secondary,
+    color: palette.text.description,
   };
 
   const lightHeadings = {
-    h1: { color: palette.heading, style: TEXT_STYLE.H1, hAlign: format.hAlign, vAlign: format.vAlign } as LabelTokens,
-    h2: { color: palette.heading, style: TEXT_STYLE.H2, hAlign: format.hAlign, vAlign: format.vAlign } as LabelTokens,
-    h3: { color: palette.heading, style: TEXT_STYLE.H3, hAlign: format.hAlign, vAlign: format.vAlign } as LabelTokens,
-    h4: { color: palette.heading, style: TEXT_STYLE.H4, hAlign: format.hAlign, vAlign: format.vAlign } as LabelTokens,
+    h1: { color: palette.text.heading, style: TEXT_STYLE.H1, hAlign: format.hAlign, vAlign: format.vAlign } as LabelTokens,
+    h2: { color: palette.text.heading, style: TEXT_STYLE.H2, hAlign: format.hAlign, vAlign: format.vAlign } as LabelTokens,
+    h3: { color: palette.text.heading, style: TEXT_STYLE.H3, hAlign: format.hAlign, vAlign: format.vAlign } as LabelTokens,
+    h4: { color: palette.text.heading, style: TEXT_STYLE.H4, hAlign: format.hAlign, vAlign: format.vAlign } as LabelTokens,
   };
 
   const onLight = {
@@ -69,35 +69,35 @@ export function deriveTokens(palette: Palette, format: Format) {
 
   // ── onDark text tokens (for emphasis/dark backgrounds) ────────────────
 
-  const darkText: TextTokens = { ...richTextBase, style: TEXT_STYLE.BODY, color: palette.background };
+  const darkText: TextTokens = { ...richTextBase, style: TEXT_STYLE.BODY, color: palette.fill.background };
   const darkList: ListTokens = { ...darkText, vAlign: VALIGN.TOP };
   const darkCaption: TextTokens = {
     ...richTextBase,
     style: TEXT_STYLE.CAPTION,
-    color: palette.background,
+    color: palette.fill.background,
   };
 
   const darkHeadings = {
     h1: {
-      color: palette.background,
+      color: palette.fill.background,
       style: TEXT_STYLE.H1,
       hAlign: format.hAlign,
       vAlign: format.vAlign,
     } as LabelTokens,
     h2: {
-      color: palette.background,
+      color: palette.fill.background,
       style: TEXT_STYLE.H2,
       hAlign: format.hAlign,
       vAlign: format.vAlign,
     } as LabelTokens,
     h3: {
-      color: palette.background,
+      color: palette.fill.background,
       style: TEXT_STYLE.H3,
       hAlign: format.hAlign,
       vAlign: format.vAlign,
     } as LabelTokens,
     h4: {
-      color: palette.background,
+      color: palette.fill.background,
       style: TEXT_STYLE.H4,
       hAlign: format.hAlign,
       vAlign: format.vAlign,
@@ -114,10 +114,10 @@ export function deriveTokens(palette: Palette, format: Format) {
   // ── Surfaces ─────────────────────────────────────────────────────────
 
   const surfaces = {
-    page: { color: palette.background },
-    elevated: { color: palette.surface },
-    emphasis: { color: palette.heading },
-    card: { fill: palette.background, border: subtleBorder, cornerRadius: format.radius },
+    page: { color: palette.fill.background },
+    elevated: { color: palette.fill.surface },
+    emphasis: { color: palette.text.heading },
+    card: { fill: palette.fill.background, border: subtleBorder, cornerRadius: format.radius },
   };
 
   // ── Primitives ───────────────────────────────────────────────────────

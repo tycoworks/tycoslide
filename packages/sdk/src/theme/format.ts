@@ -58,24 +58,28 @@ export type Hex = `#${string}`;
 /**
  * Semantic color roles for a single appearance mode (light or dark).
  *
- * Names follow industry conventions:
- * - heading / body / secondary / muted — text hierarchy (Apple: label cascade, Carbon: text-primary/secondary)
- * - accent / accentSoft — brand/interactive color (M3: primary / primary-container)
- * - surface — elevated fills (M3: surface-container, Apple: secondarySystemBackground)
- * - divider — borders and separators (M3: outline-variant, Apple: separator)
- * - shadow — shadow color (M3: shadow)
+ * Organized into three groups:
+ * - text — typographic hierarchy (heading → body → secondary → subtle)
+ * - brand — brand/interactive colors (primary + soft tonal variant)
+ * - fill — backgrounds, surfaces, borders, shadows
  */
 export interface Palette {
-  heading: Hex; // primary heading text
-  body: Hex; // body text
-  secondary: Hex; // descriptions, captions, stat labels
-  muted: Hex; // table headers, attribution
-  accent: Hex; // brand/interactive — links, accent bars, stat values
-  accentSoft: Hex; // tonal variant — agenda numbers, quote bars on dark
-  background: Hex; // page/area background — M3: background, Apple: systemBackground
-  surface: Hex; // elevated fills — M3: surface-container, Apple: secondarySystemBackground
-  divider: Hex; // borders and separators
-  shadow: Hex; // shadow color
+  text: {
+    heading: Hex; // primary heading text
+    body: Hex; // body text
+    description: Hex; // descriptions, captions, stat labels
+    subtle: Hex; // table headers, attribution
+  };
+  brand: {
+    primary: Hex; // brand/interactive — links, accent bars, stat values
+    soft: Hex; // tonal variant — agenda numbers, quote bars
+  };
+  fill: {
+    background: Hex; // page/area background
+    surface: Hex; // elevated fills — cards, panels
+    divider: Hex; // borders and separators
+    shadow: Hex; // shadow color
+  };
   /** Syntax highlight theme for code blocks in this scheme. */
   highlightTheme: HighlightThemeName;
 }
