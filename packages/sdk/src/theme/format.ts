@@ -67,20 +67,22 @@ export interface Palette {
   text: {
     heading: Hex; // primary heading text
     body: Hex; // body text
-    description: Hex; // descriptions, captions, stat labels
+    secondary: Hex; // captions, subtitles, card descriptions
     subtle: Hex; // table headers, attribution
-    highlight: Hex; // ==highlighted text== color
   };
   brand: {
-    primary: Hex; // brand/interactive — links, accent bars, stat values
+    primary: Hex; // brand/interactive — links, accent bars, highlights, stat values
     soft: Hex; // tonal variant — agenda numbers, quote bars
   };
   fill: {
     background: Hex; // page/area background
     surface: Hex; // elevated fills — cards, panels
+    emphasis: Hex; // dark/prominent backgrounds — sections, code blocks
     divider: Hex; // borders and separators
     shadow: Hex; // shadow color
   };
+  /** Ordered accent colors for diagrams and charts. Declaration order = series order. */
+  accents: Hex[];
   /** Syntax highlight theme for code blocks in this scheme. */
   highlightTheme: HighlightThemeName;
 }

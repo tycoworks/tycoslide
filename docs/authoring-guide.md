@@ -274,7 +274,7 @@ flowchart LR
     A[Client] --> B[API Gateway]
     B --> C[(Database)]
     B --> D[Cache]
-    class B purple
+    class B accent1
 :::
 ```
 
@@ -290,7 +290,7 @@ flowchart LR
 
 ### Class names and subgraphs (flowcharts only)
 
-Apply theme accent colors to nodes with the `class` keyword. Available names come from the theme's accent map. Subgraphs get themed fill and rounded corners automatically.
+Apply theme accent colors to nodes with the `class` keyword. Available names are positional (`accent1`, `accent2`, etc.) plus `primary`. Subgraphs get themed fill and rounded corners automatically.
 
 ```markdown
 :::mermaid
@@ -300,7 +300,7 @@ flowchart LR
         API[API] --> DB[(Database)]
     end
     Client --> Backend
-    class API purple
+    class API accent1
 :::
 ```
 

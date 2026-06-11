@@ -477,7 +477,7 @@ Apply theme colors to flowchart nodes using Mermaid's `class` keyword:
 - **`primary`** — full-opacity `primary` fill with `primaryContrast` text.
 - **Any key from `accents`** — tinted fill at `accentStyle.opacity`, full-color stroke, `accentStyle.textColor` text.
 
-Class names are defined by the theme's `accents` token map. The default theme provides `blue`, `green`, `red`, `yellow`, and `purple` — but themes can add or change them.
+Class names are positional — `accent1`, `accent2`, `accent3`, etc. — plus `primary`. The number of available accents depends on the theme.
 
 ### Example
 
@@ -486,7 +486,7 @@ Class names are defined by the theme's `accents` token map. The default theme pr
 flowchart LR
     A[Client] --> B[API]
     B --> C[(Database)]
-    class B purple
+    class B accent1
 :::
 ```
 

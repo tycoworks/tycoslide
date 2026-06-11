@@ -21,11 +21,10 @@ import { TEXT_STYLE } from "./format.js";
 export function deriveTokens(palette: Palette, format: Format) {
   // ── Palette-derived visual primitives ──────────────────────────────────
 
-  const accents: Record<string, string> = {
-    accent: palette.brand.primary,
-    soft: palette.brand.soft,
-    dark: palette.text.heading,
-  };
+  const accents: Record<string, string> = { primary: palette.brand.primary };
+  for (let i = 0; i < palette.accents.length; i++) {
+    accents[`accent${i + 1}`] = palette.accents[i];
+  }
   const subtleBorder = { color: palette.fill.divider, width: format.strokes.thin, dashType: DASH.SOLID };
   const shadow = {
     type: format.shadow.type,
@@ -40,7 +39,7 @@ export function deriveTokens(palette: Palette, format: Format) {
     linkUnderline: true,
     hAlign: format.hAlign,
     vAlign: format.vAlign,
-    highlightColor: palette.text.highlight,
+    highlightColor: palette.brand.primary,
   };
 
   // ── onLight text tokens (for light/neutral backgrounds) ──────────────
@@ -50,7 +49,7 @@ export function deriveTokens(palette: Palette, format: Format) {
   const captionText: TextTokens = {
     ...richTextBase,
     style: TEXT_STYLE.CAPTION,
-    color: palette.text.description,
+    color: palette.text.secondary,
   };
 
   const lightHeadings = {
@@ -136,7 +135,7 @@ export function deriveTokens(palette: Palette, format: Format) {
   const surfaces = {
     page: { color: palette.fill.background },
     elevated: { color: palette.fill.surface },
-    emphasis: { color: palette.text.heading },
+    emphasis: { color: palette.fill.emphasis },
     card: { fill: palette.fill.background, border: subtleBorder, cornerRadius: format.radius },
   };
 

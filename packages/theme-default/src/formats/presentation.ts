@@ -96,7 +96,7 @@ function buildChromeTokens(palette: Palette, config: Format, chrome: ChromeConfi
   const spacingTight = config.spacing.tight;
   const labelFooter: LabelTokens = {
     style: TEXT_STYLE.FOOTER,
-    color: palette.text.description,
+    color: palette.text.secondary,
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.MIDDLE,
   };
@@ -139,7 +139,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
 
   // ── Composition atoms ───────────────────────────────────────────────────
   const centered = { hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } as const;
-  const richText = { linkColor: palette.brand.primary, highlightColor: palette.text.highlight, linkUnderline: true };
+  const richText = { linkColor: palette.brand.primary, highlightColor: palette.brand.primary, linkUnderline: true };
 
   // ── Header tokens (shared by body, cards, agenda) ──────────────────────
   const headerTokens = {
@@ -158,7 +158,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
 
   const labelMutedSmall: LabelTokens = {
     style: TEXT_STYLE.CAPTION,
-    color: palette.text.description,
+    color: palette.text.secondary,
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.MIDDLE,
   };
@@ -178,7 +178,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.MIDDLE,
     style: TEXT_STYLE.CAPTION,
-    color: palette.text.description,
+    color: palette.text.secondary,
   };
   const cardBase = {
     padding,
@@ -213,7 +213,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       cellPadding: spacingTight,
       linkColor: palette.brand.primary,
       linkUnderline: true,
-      highlightColor: palette.text.highlight,
+      highlightColor: palette.brand.primary,
       background: {
         fill: palette.fill.background,
         border: t.primitives.border,
@@ -227,7 +227,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       theme: palette.highlightTheme,
       padding,
       background: {
-        fill: palette.text.heading,
+        fill: palette.fill.emphasis,
         cornerRadius: config.radius,
         shadow: t.primitives.shadow,
       },
@@ -312,7 +312,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
             ...centered,
             ...richText,
             linkUnderline: false,
-            color: palette.text.description,
+            color: palette.text.secondary,
           },
           ...centered,
           spacing: spacingTight,

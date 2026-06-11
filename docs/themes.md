@@ -87,16 +87,17 @@ A `Palette` defines semantic color roles for a single appearance mode (light or 
 |-------|------|---------|
 | `text` | `heading` | Primary heading text |
 | | `body` | Body text |
-| | `description` | Descriptions, captions |
+| | `secondary` | Captions, subtitles, secondary text |
 | | `subtle` | Table headers, attribution |
-| | `highlight` | Highlight color for `==text==` marks |
-| `brand` | `primary` | Brand/interactive — links, accent bars |
+| `brand` | `primary` | Brand/interactive — links, accent bars, highlights |
 | | `soft` | Tonal variant — agenda numbers |
 | `fill` | `background` | Page/area background |
 | | `surface` | Elevated fills (cards, containers) |
+| | `emphasis` | Dark/prominent backgrounds — sections, code blocks |
 | | `divider` | Borders and separators |
 | | `shadow` | Shadow color |
-| | `highlightTheme` | Syntax highlighting theme for code blocks |
+| `accents` | | Accent color array — mapped to `accent1`, `accent2`, etc. by `deriveTokens` |
+| `highlightTheme` | | Syntax highlighting theme for code blocks |
 
 All color values are hex strings with a `#` prefix (e.g., `#7C3AED`).
 
@@ -289,10 +290,11 @@ import type { Brand, Palette } from '@tycoslide/sdk';
 import { HIGHLIGHT_THEME } from '@tycoslide/sdk';
 
 const light: Palette = {
-  text: { heading: '#1A1A2E', body: '#1A1A2E', description: '#4A4A5A', subtle: '#696878' },
+  text: { heading: '#1A1A2E', body: '#1A1A2E', secondary: '#4A4A5A', subtle: '#696878' },
   brand: { primary: '#0066CC', soft: '#4285F4' },
-  fill: { background: '#FFFFFF', surface: '#F5F5F5', divider: '#E5E5E5', shadow: '#1A1A2E' },
-  highlightTheme: HIGHLIGHT_THEME.GITHUB_DARK,
+  fill: { background: '#FFFFFF', surface: '#F5F5F5', emphasis: '#1A1A2E', divider: '#E5E5E5', shadow: '#1A1A2E' },
+  accents: ['#0066CC', '#E5762F', '#059669'],
+  highlightTheme: HIGHLIGHT_THEME.GITHUB_LIGHT,
 };
 
 export const brand: Brand = {
