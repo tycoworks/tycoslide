@@ -701,10 +701,10 @@ describe("table()", () => {
     const tokens = {
       ...DEFAULT_TABLE_TOKENS,
       headerCol: {
-        textStyle: "body",
-        textColor: "#000000",
-        background: "#EEEEEE",
-        backgroundOpacity: 100,
+        style: "body",
+        color: "#000000",
+        fill: "#EEEEEE",
+        fillOpacity: 100,
       },
     };
     const tNode = table([["a", "b"]], tokens);
@@ -726,16 +726,16 @@ describe("table()", () => {
     const tokens = {
       ...DEFAULT_TABLE_TOKENS,
       headerRow: {
-        textStyle: "h1",
-        textColor: "#FF0000",
-        background: "#AAAAAA",
-        backgroundOpacity: 100,
+        style: "h1",
+        color: "#FF0000",
+        fill: "#AAAAAA",
+        fillOpacity: 100,
       },
       headerCol: {
-        textStyle: "h2",
-        textColor: "#00FF00",
-        background: "#BBBBBB",
-        backgroundOpacity: 100,
+        style: "h2",
+        color: "#00FF00",
+        fill: "#BBBBBB",
+        fillOpacity: 100,
       },
     };
     const tNode = table(
@@ -756,10 +756,10 @@ describe("table()", () => {
     const tokens = {
       ...noHeaderRow,
       headerCol: {
-        textStyle: "h3",
-        textColor: "#PURPLE",
-        background: "#CCCCCC",
-        backgroundOpacity: 100,
+        style: "h3",
+        color: "#PURPLE",
+        fill: "#CCCCCC",
+        fillOpacity: 100,
       },
     };
     const tNode = table(
@@ -776,7 +776,7 @@ describe("table()", () => {
     const dataCell = node.rows[0][1];
     assert.strictEqual(
       dataCell.textStyle,
-      DEFAULT_TABLE_TOKENS.cellTextStyle,
+      DEFAULT_TABLE_TOKENS.cellStyle,
       "non-header cell should use cell defaults",
     );
   });
@@ -785,10 +785,10 @@ describe("table()", () => {
     const tokens = {
       ...DEFAULT_TABLE_TOKENS,
       headerRow: {
-        textStyle: "body",
-        textColor: "#000000",
-        background: "#FFFFFF",
-        backgroundOpacity: 100,
+        style: "body",
+        color: "#000000",
+        fill: "#FFFFFF",
+        fillOpacity: 100,
         hAlign: HALIGN.CENTER,
       },
     };
@@ -802,10 +802,10 @@ describe("table()", () => {
     const tokens = {
       ...DEFAULT_TABLE_TOKENS,
       headerRow: {
-        textStyle: "body",
-        textColor: "#000000",
-        background: "#FFFFFF",
-        backgroundOpacity: 100,
+        style: "body",
+        color: "#000000",
+        fill: "#FFFFFF",
+        fillOpacity: 100,
         // hAlign intentionally omitted
       },
     };

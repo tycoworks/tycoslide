@@ -181,15 +181,15 @@ export const DEFAULT_LIST_TOKENS: ListTokens = {
 
 export const DEFAULT_TABLE_TOKENS: TableTokens = {
   headerRow: {
-    textStyle: "body",
-    textColor: "#000000",
-    background: "#FFFFFF",
-    backgroundOpacity: 100,
+    style: "body",
+    color: "#000000",
+    fill: "#FFFFFF",
+    fillOpacity: 100,
   },
-  cellTextStyle: "body",
-  cellTextColor: "#000000",
-  cellBackground: "#FFFFFF",
-  cellBackgroundOpacity: 100,
+  cellStyle: "body",
+  cellColor: "#000000",
+  cellFill: "#FFFFFF",
+  cellFillOpacity: 100,
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.MIDDLE,
   border: { color: "#333333", width: 1, dashType: DASH.SOLID },
@@ -204,7 +204,7 @@ export const DEFAULT_TABLE_TOKENS: TableTokens = {
 export const DEFAULT_IMAGE_TOKENS = { padding: 0 };
 
 export const DEFAULT_CODE_TOKENS: CodeTokens = {
-  textStyle: "code",
+  style: "code",
   theme: HIGHLIGHT_THEME.GITHUB_DARK,
   padding: 24,
   background: {
@@ -228,7 +228,7 @@ export const DEFAULT_MERMAID_TOKENS: MermaidTokens = {
   accents: ["#00CCCC", "#FF00FF", "#FF8800"],
   accentOpacity: 100,
   accentTextColor: "#000000",
-  textStyle: "body",
+  style: "body",
   image: DEFAULT_IMAGE_TOKENS,
 };
 

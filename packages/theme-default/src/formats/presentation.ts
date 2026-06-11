@@ -192,20 +192,20 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
   const componentTokens = {
     table: {
       headerRow: {
-        textStyle: TEXT_STYLE.CAPTION,
-        textColor: palette.text.subtle,
-        background: palette.fill.divider,
+        style: TEXT_STYLE.CAPTION,
+        color: palette.text.subtle,
+        fill: palette.fill.divider,
         hAlign: HALIGN.CENTER,
       },
       headerCol: {
-        textStyle: TEXT_STYLE.CAPTION,
-        textColor: palette.text.subtle,
-        background: palette.fill.background,
+        style: TEXT_STYLE.CAPTION,
+        color: palette.text.subtle,
+        fill: palette.fill.background,
         hAlign: HALIGN.LEFT,
       },
-      cellTextStyle: TEXT_STYLE.CAPTION,
-      cellTextColor: palette.text.body,
-      cellBackground: palette.fill.surface,
+      cellStyle: TEXT_STYLE.CAPTION,
+      cellColor: palette.text.body,
+      cellFill: palette.fill.surface,
       hAlign: HALIGN.CENTER,
       vAlign: VALIGN.MIDDLE,
       gridStyle: GRID_STYLE.HORIZONTAL,
@@ -223,7 +223,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       backgroundPadding: spacingTight,
     },
     code: {
-      textStyle: TEXT_STYLE.CODE,
+      style: TEXT_STYLE.CODE,
       theme: palette.highlightTheme,
       padding,
       background: {
@@ -246,7 +246,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       accents: t.primitives.accents,
       accentOpacity: config.shadow.opacity,
       accentTextColor: palette.text.body,
-      textStyle: TEXT_STYLE.BODY,
+      style: TEXT_STYLE.BODY,
       image: imageTokens,
     },
     quote: {

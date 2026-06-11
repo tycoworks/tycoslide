@@ -32,7 +32,7 @@ const SUPPORTED_LANGUAGES = new Set<string>(LANGUAGE_VALUES);
 // ============================================
 
 export interface CodeTokens {
-  textStyle: TextStyleName;
+  style: TextStyleName;
   theme: HighlightThemeName;
   padding: number;
   background: ShapeTokens;
@@ -116,7 +116,7 @@ async function renderCode(
     throw new Error("Code block is empty");
   }
 
-  const codeStyle = context.theme.textStyles[tokens.textStyle];
+  const codeStyle = context.theme.textStyles[tokens.style];
   const html = await renderCodeToHtml(code, params.language, tokens, codeStyle);
   const pngPath = await context.canvas.renderHtml(html, true);
 

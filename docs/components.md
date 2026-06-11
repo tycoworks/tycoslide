@@ -277,10 +277,10 @@ Cell content supports formatting (`**bold**`, `*italic*`, `==highlights==`).
 | `gridStroke` | Stroke | Stroke for grid lines (optional — omit for no grid lines) |
 | `headerRow` | TableHeaderStyle | Header row zone style (omit to disable header row styling) |
 | `headerCol` | TableHeaderStyle | Header column zone style (omit to disable header column styling) |
-| `cellBackground` | string | Data cell background color |
-| `cellBackgroundOpacity` | number | Data cell background opacity (0–100) |
-| `cellTextStyle` | TextStyleName | Data cell text style |
-| `cellTextColor` | string | Data cell text color |
+| `cellFill` | string | Data cell background color |
+| `cellFillOpacity` | number | Data cell background opacity (0–100) |
+| `cellStyle` | TextStyleName | Data cell text style |
+| `cellColor` | string | Data cell text color |
 | `cellPadding` | number | Cell padding (pixels) |
 | `hAlign` | HorizontalAlignment | Horizontal text alignment |
 | `vAlign` | VerticalAlignment | Vertical text alignment |
@@ -292,7 +292,7 @@ Cell content supports formatting (`**bold**`, `*italic*`, `==highlights==`).
 
 `ShapeTokens` includes `fill`, `fillOpacity`, `cornerRadius`, and optional `border` (`Stroke`) and `shadow`.
 
-`TableHeaderStyle` includes `textStyle`, `textColor`, `background`, `backgroundOpacity`, and optional `hAlign`. Header zones are enabled by presence — omit the token to leave that zone unstyled.
+`TableHeaderStyle` includes `style`, `color`, `fill`, `fillOpacity`, and optional `hAlign`. Header zones are enabled by presence — omit the token to leave that zone unstyled.
 
 ### Grid Styles
 
@@ -461,7 +461,7 @@ Renders a Mermaid diagram to PNG and embeds it as an image. Theme colors are app
 | `groupCornerRadius` | number | Subgraph corner radius in pixels |
 | `accents` | Record\<string, string\> | Named accent colors (keys become class names) |
 | `accentStyle` | { opacity, textColor } | Fill opacity (0--100) and text color for accent nodes and subgraphs |
-| `textStyle` | TextStyleName | Font style for diagram text |
+| `style` | TextStyleName | Font style for diagram text |
 | `background` | ShapeTokens | Background shape behind the diagram (optional — omit for bare image) |
 | `backgroundPadding` | number | Padding between background edge and diagram in pixels (optional) |
 | `image` | ImageTokens | Image styling tokens for the rendered diagram |
@@ -505,7 +505,7 @@ The content is the source code. In markdown, this is the content between the fen
 
 | Token | Type | Description |
 |-------|------|-------------|
-| `textStyle` | TextStyleName | Code font style (font family, size, line height) |
+| `style` | TextStyleName | Code font style (font family, size, line height) |
 | `theme` | HighlightThemeName | Syntax highlighting theme (e.g. `github-dark`, `dracula`, `nord`) |
 | `padding` | number | Inner padding (pixels) |
 | `background` | ShapeTokens | Background shape (fill, border, corner radius, optional shadow) |

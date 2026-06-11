@@ -30,12 +30,12 @@ import type { TextTokens } from "./text.js";
 // TABLE TOKENS
 // ============================================
 
-/** SDK-side header style — backgroundOpacity optional (defaults to 0 = transparent). */
+/** SDK-side header style — fillOpacity optional (defaults to 0 = transparent). */
 export interface TableHeaderTokens {
-  textStyle: TextStyleName;
-  textColor: string;
-  background: string;
-  backgroundOpacity?: number;
+  style: TextStyleName;
+  color: string;
+  fill: string;
+  fillOpacity?: number;
   hAlign?: HorizontalAlignment;
 }
 
@@ -44,10 +44,10 @@ export interface TableTokens {
   headerRow?: TableHeaderTokens;
   headerCol?: TableHeaderTokens;
   // Data cell zone
-  cellTextStyle: TextStyleName;
-  cellTextColor: string;
-  cellBackground: string;
-  cellBackgroundOpacity?: number;
+  cellStyle: TextStyleName;
+  cellColor: string;
+  cellFill: string;
+  cellFillOpacity?: number;
   // Shared defaults
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;
@@ -132,8 +132,8 @@ export const tableComponent = defineComponent({
 
     // Derive text tokens from table tokens for child text components.
     const textTokens: TextTokens = {
-      color: tokens.cellTextColor,
-      style: tokens.cellTextStyle,
+      color: tokens.cellColor,
+      style: tokens.cellStyle,
       linkColor: tokens.linkColor,
       linkUnderline: tokens.linkUnderline,
       hAlign: tokens.hAlign,
@@ -194,16 +194,16 @@ export const tableComponent = defineComponent({
             let color: string;
             let hAlign: HorizontalAlignment;
             if (isHeaderRow && tokens.headerRow) {
-              textStyle = partialTextStyle ?? tokens.headerRow.textStyle;
-              color = partialColor ?? tokens.headerRow.textColor;
+              textStyle = partialTextStyle ?? tokens.headerRow.style;
+              color = partialColor ?? tokens.headerRow.color;
               hAlign = partialHAlign ?? tokens.headerRow.hAlign ?? tokens.hAlign;
             } else if (isHeaderCol && tokens.headerCol) {
-              textStyle = partialTextStyle ?? tokens.headerCol.textStyle;
-              color = partialColor ?? tokens.headerCol.textColor;
+              textStyle = partialTextStyle ?? tokens.headerCol.style;
+              color = partialColor ?? tokens.headerCol.color;
               hAlign = partialHAlign ?? tokens.headerCol.hAlign ?? tokens.hAlign;
             } else {
-              textStyle = partialTextStyle ?? tokens.cellTextStyle;
-              color = partialColor ?? tokens.cellTextColor;
+              textStyle = partialTextStyle ?? tokens.cellStyle;
+              color = partialColor ?? tokens.cellColor;
               hAlign = partialHAlign ?? tokens.hAlign;
             }
 
@@ -241,24 +241,24 @@ export const tableComponent = defineComponent({
       ...(tokens.gridStroke && { gridStroke: tokens.gridStroke }),
       ...(tokens.headerRow && {
         headerRow: {
-          textStyle: tokens.headerRow.textStyle,
-          textColor: tokens.headerRow.textColor,
-          background: tokens.headerRow.background,
-          backgroundOpacity: tokens.headerRow.backgroundOpacity ?? 0,
+          textStyle: tokens.headerRow.style,
+          textColor: tokens.headerRow.color,
+          background: tokens.headerRow.fill,
+          backgroundOpacity: tokens.headerRow.fillOpacity ?? 0,
           ...(tokens.headerRow.hAlign != null && { hAlign: tokens.headerRow.hAlign }),
         },
       }),
       ...(tokens.headerCol && {
         headerCol: {
-          textStyle: tokens.headerCol.textStyle,
-          textColor: tokens.headerCol.textColor,
-          background: tokens.headerCol.background,
-          backgroundOpacity: tokens.headerCol.backgroundOpacity ?? 0,
+          textStyle: tokens.headerCol.style,
+          textColor: tokens.headerCol.color,
+          background: tokens.headerCol.fill,
+          backgroundOpacity: tokens.headerCol.fillOpacity ?? 0,
           ...(tokens.headerCol.hAlign != null && { hAlign: tokens.headerCol.hAlign }),
         },
       }),
-      cellBackground: tokens.cellBackground,
-      cellBackgroundOpacity: tokens.cellBackgroundOpacity ?? 0,
+      cellBackground: tokens.cellFill,
+      cellBackgroundOpacity: tokens.cellFillOpacity ?? 0,
       cellPadding: tokens.cellPadding,
     };
 

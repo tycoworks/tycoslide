@@ -145,7 +145,7 @@ const testTokens: MermaidTokens = {
   accents: ["#00CCCC", "#FF00FF", "#FF8800"],
   accentOpacity: 20,
   accentTextColor: "#000000",
-  textStyle: "body",
+  style: "body",
   image: { padding: 0 },
 };
 

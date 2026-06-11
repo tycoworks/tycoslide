@@ -226,7 +226,7 @@ describe("code MDAST compile handler", () => {
 
 describe("renderCodeToHtml()", () => {
   const tokens: CodeTokens = {
-    textStyle: "code",
+    style: "code",
     theme: HIGHLIGHT_THEME.GITHUB_DARK,
     padding: 0.25,
     background: { fill: "#1E1E1E", fillOpacity: 100, cornerRadius: 0.1 },

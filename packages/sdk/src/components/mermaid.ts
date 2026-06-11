@@ -45,7 +45,7 @@ export interface MermaidTokens {
   accentTextColor: string; // Text color inside accent-classed nodes
 
   // --- Typography ---
-  textStyle: TextStyleName; // Font style for text measurement
+  style: TextStyleName; // Font style for text measurement
 
   // --- Background (optional, like table) ---
   background?: ShapeTokens; // Background shape (fill, border, cornerRadius, shadow)
@@ -319,7 +319,7 @@ async function renderMermaid(
   if (!definition.trim()) {
     throw new Error("Mermaid definition is empty");
   }
-  const textStyleConfig = context.theme.textStyles[tokens.textStyle];
+  const textStyleConfig = context.theme.textStyles[tokens.style];
   const fontFamily = textStyleConfig.fontFamily.name;
   const pngPath = await renderMermaidToPng(definition, tokens, fontFamily, context.canvas);
   const mermaidImage = image(pngPath, tokens.image, definition);
