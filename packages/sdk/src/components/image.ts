@@ -17,6 +17,7 @@ import {
 } from "@tycoslide/core";
 import type { Image, RootContent } from "mdast";
 import { defineComponent, type InferParams, param, schema } from "../authoring/index.js";
+import type { Hex } from "../theme/format.js";
 import { Component } from "../presets/names.js";
 import { column } from "./containers.js";
 
@@ -34,7 +35,7 @@ type ImageParams = InferParams<typeof imageParamShape>;
 
 export interface ImageTokens {
   fit?: Fit;
-  tint?: string;
+  tint?: Hex;
   shadow?: ShadowEffect;
   padding?: number;
 }

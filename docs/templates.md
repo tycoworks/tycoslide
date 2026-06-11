@@ -35,7 +35,7 @@ Slide background color and opacity. Both fields are optional — omit `backgroun
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `color` | `string` | 6-character hex color (e.g., `'#1A1A2E'`) |
+| `color` | `Hex` | Slide background color (e.g., `'#1A1A2E'`) |
 | `opacity` | `number` | 0 (invisible) to 100 (opaque). Default: 100 |
 
 ```typescript

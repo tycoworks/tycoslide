@@ -21,6 +21,7 @@ import {
 import type { Table as MdastTable, RootContent } from "mdast";
 import { defineComponent, schema } from "../authoring/index.js";
 import { parseMarkdown } from "../markdown/parser.js";
+import type { Hex } from "../theme/format.js";
 import { Component } from "../presets/names.js";
 import { column, stack } from "./containers.js";
 import { type ShapeTokens, shape } from "./primitives.js";
@@ -33,8 +34,8 @@ import type { TextTokens } from "./text.js";
 /** SDK-side header style — fillOpacity optional (defaults to 0 = transparent). */
 export interface TableHeaderTokens {
   style: TextStyleName;
-  color: string;
-  fill: string;
+  color: Hex;
+  fill: Hex;
   fillOpacity?: number;
   hAlign?: HorizontalAlignment;
 }
@@ -45,8 +46,8 @@ export interface TableTokens {
   headerCol?: TableHeaderTokens;
   // Data cell zone
   cellStyle: TextStyleName;
-  cellColor: string;
-  cellFill: string;
+  cellColor: Hex;
+  cellFill: Hex;
   cellFillOpacity?: number;
   // Shared defaults
   hAlign: HorizontalAlignment;
@@ -55,9 +56,9 @@ export interface TableTokens {
   gridStyle: GridStyle;
   gridStroke?: Stroke;
   cellPadding: number;
-  linkColor: string;
+  linkColor: Hex;
   linkUnderline: boolean;
-  highlightColor: string;
+  highlightColor: Hex;
   background?: ShapeTokens;
   backgroundPadding?: number;
 }

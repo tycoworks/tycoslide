@@ -88,13 +88,13 @@ A single paragraph of formatted content: bold, italic, strikethrough, underline,
 
 | Token | Type | Description |
 |-------|------|-------------|
-| `color` | string | Default text color |
+| `color` | `Hex` | Default text color |
 | `style` | TextStyleName | Default text style |
-| `linkColor` | string | Hyperlink text color (6-character hex) |
+| `linkColor` | `Hex` | Hyperlink text color |
 | `linkUnderline` | boolean | Whether hyperlinks are underlined |
 | `hAlign` | HorizontalAlignment | Default horizontal alignment |
 | `vAlign` | VerticalAlignment | Default vertical alignment |
-| `highlightColor` | string | Color for `==highlighted==` text |
+| `highlightColor` | `Hex` | Color for `==highlighted==` text |
 | `border` | Stroke | Border stroke (optional — omit for no border) |
 | `shadow` | Shadow | Drop shadow (optional — omit for no shadow) |
 
@@ -126,7 +126,7 @@ Text for titles, captions, and attribution lines with optional heading style sup
 | Token | Type | Description |
 |-------|------|-------------|
 | `style` | TextStyleName | Text style |
-| `color` | string | Text color |
+| `color` | `Hex` | Text color |
 | `hAlign` | HorizontalAlignment | Horizontal alignment |
 | `vAlign` | VerticalAlignment | Vertical alignment |
 | `headingStyles` | HeadingStyleMap | Optional heading style overrides (h1–h4) |
@@ -175,13 +175,13 @@ list(['Step one', 'Step two'], tokens.list, true)
 
 | Token | Type | Description |
 |-------|------|-------------|
-| `color` | string | Default text color |
+| `color` | `Hex` | Default text color |
 | `style` | TextStyleName | Default text style |
-| `linkColor` | string | Hyperlink text color (6-character hex) |
+| `linkColor` | `Hex` | Hyperlink text color |
 | `linkUnderline` | boolean | Whether hyperlinks are underlined |
 | `hAlign` | HorizontalAlignment | Default horizontal alignment |
 | `vAlign` | VerticalAlignment | Default vertical alignment |
-| `highlightColor` | string | Color for `==highlighted==` text |
+| `highlightColor` | `Hex` | Color for `==highlighted==` text |
 | `border` | Stroke | Border stroke (optional — omit for no border) |
 | `shadow` | Shadow | Drop shadow (optional — omit for no shadow) |
 
@@ -277,16 +277,16 @@ Cell content supports formatting (`**bold**`, `*italic*`, `==highlights==`).
 | `gridStroke` | Stroke | Stroke for grid lines (optional — omit for no grid lines) |
 | `headerRow` | TableHeaderStyle | Header row zone style (omit to disable header row styling) |
 | `headerCol` | TableHeaderStyle | Header column zone style (omit to disable header column styling) |
-| `cellFill` | string | Data cell background color |
+| `cellFill` | `Hex` | Data cell background color |
 | `cellFillOpacity` | number | Data cell background opacity (0–100) |
 | `cellStyle` | TextStyleName | Data cell text style |
-| `cellColor` | string | Data cell text color |
+| `cellColor` | `Hex` | Data cell text color |
 | `cellPadding` | number | Cell padding (pixels) |
 | `hAlign` | HorizontalAlignment | Horizontal text alignment |
 | `vAlign` | VerticalAlignment | Vertical text alignment |
-| `linkColor` | string | Hyperlink color in cells |
+| `linkColor` | `Hex` | Hyperlink color in cells |
 | `linkUnderline` | boolean | Whether cell hyperlinks are underlined |
-| `highlightColor` | string | Color for `==highlighted==` text in cells |
+| `highlightColor` | `Hex` | Color for `==highlighted==` text in cells |
 | `background` | ShapeTokens | Card-effect background shape (optional — omit to render without background) |
 | `backgroundPadding` | number | Inset between the table and the background shape edge in pixels (optional) |
 
@@ -341,7 +341,7 @@ A horizontal or vertical rule. Renders as a separator between content blocks. Av
 
 | Token | Type | Description |
 |-------|------|-------------|
-| `color` | string | Line color |
+| `color` | `Hex` | Line color |
 | `width` | number | Line width in points |
 | `dashType` | Dash | Dash pattern — `DASH.SOLID`, `DASH.DASHED`, or `DASH.DOTTED` |
 | `shadow` | Shadow | Drop shadow (optional — omit for no shadow) |
@@ -378,7 +378,7 @@ A filled or outlined shape. Available in the TypeScript DSL only.
 
 | Token | Type | Description |
 |-------|------|-------------|
-| `fill` | string | Fill color (6-character hex with `#` prefix) |
+| `fill` | `Hex` | Fill color |
 | `fillOpacity` | number | Fill opacity (0--100) |
 | `border` | Stroke | Border stroke (optional — omit for no border) |
 | `cornerRadius` | number | Corner radius in pixels |
@@ -450,23 +450,24 @@ Renders a Mermaid diagram to PNG and embeds it as an image. Theme colors are app
 
 | Token | Type | Description |
 |-------|------|-------------|
-| `primary` | string | Default node fill color |
-| `primaryContrast` | string | Default node text color |
-| `text` | string | All diagram text (labels, titles, edge text) |
-| `line` | string | Arrow/edge color |
-| `surface` | string | Secondary/tertiary node fills |
-| `surfaceBorder` | string | Node and subgraph border color |
-| `surfaceSubtle` | string | Edge label background color |
-| `group` | string | Subgraph fill color (tinted at `accentStyle.opacity` for flowcharts) |
+| `primary` | `Hex` | Default node fill color |
+| `primaryContrast` | `Hex` | Default node text color |
+| `text` | `Hex` | All diagram text (labels, titles, edge text) |
+| `line` | `Hex` | Arrow/edge color |
+| `surface` | `Hex` | Secondary/tertiary node fills |
+| `surfaceBorder` | `Hex` | Node and subgraph border color |
+| `surfaceSubtle` | `Hex` | Edge label background color |
+| `group` | `Hex` | Subgraph fill color (tinted at `accentOpacity` for flowcharts) |
 | `groupCornerRadius` | number | Subgraph corner radius in pixels |
-| `accents` | Record\<string, string\> | Named accent colors (keys become class names) |
-| `accentStyle` | { opacity, textColor } | Fill opacity (0--100) and text color for accent nodes and subgraphs |
+| `accents` | `Hex[]` | Accent color array — assigned to semantic class groups in round-robin order |
+| `accentOpacity` | number | Fill opacity (0--100) for accent nodes and subgraphs |
+| `accentTextColor` | `Hex` | Text color for accent-classed nodes |
 | `style` | TextStyleName | Font style for diagram text |
 | `background` | ShapeTokens | Background shape behind the diagram (optional — omit for bare image) |
 | `backgroundPadding` | number | Padding between background edge and diagram in pixels (optional) |
 | `image` | ImageTokens | Image styling tokens for the rendered diagram |
 
-Default nodes use `primary` fill with `primaryContrast` text. Accent-classed nodes use tinted fill at `accentStyle.opacity`, full-color stroke, and `accentStyle.textColor` text. Subgraphs are filled at `accentStyle.opacity` with rounded corners. Class names apply to `flowchart` and `graph` diagrams only — all other diagram types (sequence, state, ER) are themed through the color tokens.
+Default nodes use `primary` fill with `primaryContrast` text. Accent-classed nodes use tinted fill at `accentOpacity`, full-color stroke, and `accentTextColor` text. Subgraphs are filled at `accentOpacity` with rounded corners. Class names apply to `flowchart` and `graph` diagrams only — all other diagram types (sequence, state, ER) are themed through the color tokens.
 
 When `background` is set, the diagram renders inside a background shape with fill, border, corner radius, and optional shadow. `backgroundPadding` adds space between the background edge and the diagram image.
 

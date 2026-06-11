@@ -18,6 +18,7 @@ import { createRequire } from "node:module";
 import type { Canvas, TextStyleName } from "@tycoslide/core";
 import { type ComponentNode, component, type RenderContext, SHAPE } from "@tycoslide/core";
 import { defineComponent, schema } from "../authoring/index.js";
+import type { Hex } from "../theme/format.js";
 import { Component } from "../presets/names.js";
 import { column, stack } from "./containers.js";
 import { type ImageTokens, image } from "./image.js";
@@ -29,20 +30,20 @@ import { type ShapeTokens, shape } from "./primitives.js";
 
 export interface MermaidTokens {
   // --- Semantic color scheme ---
-  primary: string; // Default node fill
-  primaryContrast: string; // Default node text color
-  text: string; // All diagram text (labels, titles, edge text)
-  line: string; // Arrow/edge color
-  surface: string; // Secondary/tertiary fills (alt nodes)
-  surfaceBorder: string; // Node and subgraph border color
-  surfaceSubtle: string; // Edge label background
-  group: string; // Subgraph fill (tinted at accentOpacity)
+  primary: Hex; // Default node fill
+  primaryContrast: Hex; // Default node text color
+  text: Hex; // All diagram text (labels, titles, edge text)
+  line: Hex; // Arrow/edge color
+  surface: Hex; // Secondary/tertiary fills (alt nodes)
+  surfaceBorder: Hex; // Node and subgraph border color
+  surfaceSubtle: Hex; // Edge label background
+  group: Hex; // Subgraph fill (tinted at accentOpacity)
   groupCornerRadius: number; // Subgraph corner radius (pixels)
 
   // --- Accent classes (injected classDefs for flowcharts) ---
-  accents: string[]; // Accent color pool for round-robin class assignment
+  accents: Hex[]; // Accent color pool for round-robin class assignment
   accentOpacity: number; // Fill opacity (0-100) for accent nodes and subgraphs
-  accentTextColor: string; // Text color inside accent-classed nodes
+  accentTextColor: Hex; // Text color inside accent-classed nodes
 
   // --- Typography ---
   style: TextStyleName; // Font style for text measurement

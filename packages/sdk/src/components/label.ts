@@ -18,6 +18,7 @@ import {
 } from "@tycoslide/core";
 import type { Heading, RootContent } from "mdast";
 import { defineComponent, schema } from "../authoring/index.js";
+import type { Hex } from "../theme/format.js";
 import { Component } from "../presets/names.js";
 
 // ============================================
@@ -32,7 +33,7 @@ export type HeadingDepth = 1 | 2 | 3 | 4 | 5 | 6;
 // ============================================
 
 export interface LabelTokens {
-  color: string;
+  color: Hex;
   style: TextStyleName;
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;

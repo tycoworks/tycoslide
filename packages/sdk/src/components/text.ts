@@ -24,18 +24,19 @@ import {
 } from "@tycoslide/core";
 import type { RootContent } from "mdast";
 import { defineComponent, schema } from "../authoring/index.js";
+import type { Hex } from "../theme/format.js";
 
 import { Component } from "../presets/names.js";
 import { inlineParse, transformInline } from "./utils/inline.js";
 
 export interface TextTokens {
-  color: string;
+  color: Hex;
   style: TextStyleName;
-  linkColor: string;
+  linkColor: Hex;
   linkUnderline: boolean;
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;
-  highlightColor: string;
+  highlightColor: Hex;
   border?: Stroke;
   shadow?: ShadowEffect;
 }

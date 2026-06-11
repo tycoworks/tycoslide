@@ -29,6 +29,7 @@ import {
   table,
   text,
 } from "../src/index.js";
+import type { TableHeaderTokens } from "../src/components/table.js";
 import { Component } from "../src/presets/names.js";
 import {
   mockTheme as createMockTheme,
@@ -205,7 +206,7 @@ describe("shape()", () => {
   });
 
   test("shadow absent when not provided in tokens", async () => {
-    const tokens = { fill: "#FF0000", fillOpacity: 100, cornerRadius: 0 };
+    const tokens: ShapeTokens = { fill: "#FF0000", fillOpacity: 100, cornerRadius: 0 };
     const node = (await render(shape(tokens, { shape: SHAPE.RECTANGLE }))) as ShapeNode;
     assert.deepStrictEqual(node.fill, { color: "#FF0000", opacity: 100 });
     assert.strictEqual(node.border, undefined);
@@ -684,7 +685,7 @@ describe("table()", () => {
     const node = (await render(tNode)) as TableNode;
     const cell = node.rows[0][0];
     assert.deepStrictEqual(cell.content, [{ text: "plain string" }]);
-    assert.strictEqual(cell.color, "#000000"); // resolved from table token cellTextColor
+    assert.strictEqual(cell.color, "#000000");
     assert.strictEqual(cell.textStyle, "body"); // resolved from table token
     assert.ok(cell.resolvedStyle);
     assert.strictEqual(cell.resolvedStyle.fontSize, 12); // from mockTextStyle
@@ -705,7 +706,7 @@ describe("table()", () => {
         color: "#000000",
         fill: "#EEEEEE",
         fillOpacity: 100,
-      },
+      } satisfies TableHeaderTokens,
     };
     const tNode = table([["a", "b"]], tokens);
     const node = (await render(tNode)) as TableNode;
@@ -730,13 +731,13 @@ describe("table()", () => {
         color: "#FF0000",
         fill: "#AAAAAA",
         fillOpacity: 100,
-      },
+      } satisfies TableHeaderTokens,
       headerCol: {
         style: "h2",
         color: "#00FF00",
         fill: "#BBBBBB",
         fillOpacity: 100,
-      },
+      } satisfies TableHeaderTokens,
     };
     const tNode = table(
       [
@@ -760,7 +761,7 @@ describe("table()", () => {
         color: "#PURPLE",
         fill: "#CCCCCC",
         fillOpacity: 100,
-      },
+      } satisfies TableHeaderTokens,
     };
     const tNode = table(
       [
@@ -790,7 +791,7 @@ describe("table()", () => {
         fill: "#FFFFFF",
         fillOpacity: 100,
         hAlign: HALIGN.CENTER,
-      },
+      } satisfies TableHeaderTokens,
     };
     const tNode = table([["header"], ["data"]], tokens);
     const node = (await render(tNode)) as TableNode;
@@ -807,7 +808,7 @@ describe("table()", () => {
         fill: "#FFFFFF",
         fillOpacity: 100,
         // hAlign intentionally omitted
-      },
+      } satisfies TableHeaderTokens,
     };
     const tNode = table([["header"], ["data"]], tokens);
     const node = (await render(tNode)) as TableNode;

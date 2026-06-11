@@ -7,7 +7,7 @@ import { DASH, VALIGN } from "@tycoslide/core";
 import type { LabelTokens } from "../components/label.js";
 import type { ListTokens } from "../components/list.js";
 import type { TextTokens } from "../components/text.js";
-import type { Format, Palette } from "./format.js";
+import type { Format, Hex, Palette } from "./format.js";
 import { TEXT_STYLE } from "./format.js";
 
 /**
@@ -21,7 +21,7 @@ import { TEXT_STYLE } from "./format.js";
 export function deriveTokens(palette: Palette, format: Format) {
   // ── Palette-derived visual primitives ──────────────────────────────────
 
-  const accents: string[] = [palette.brand.primary, ...palette.accents];
+  const accents: Hex[] = [palette.brand.primary, ...palette.accents];
   const subtleBorder = { color: palette.fill.divider, width: format.strokes.thin, dashType: DASH.SOLID };
   const shadow = {
     type: format.shadow.type,

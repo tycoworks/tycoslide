@@ -22,10 +22,11 @@ import {
   type VerticalAlignment,
 } from "@tycoslide/core";
 import { defineComponent, type InferParams, param, schema } from "../authoring/index.js";
+import type { Hex } from "../theme/format.js";
 import { Component } from "../presets/names.js";
 
 export interface LineTokens {
-  color: string;
+  color: Hex;
   width: number;
   dashType?: Dash;
   shadow?: ShadowEffect;
@@ -33,13 +34,13 @@ export interface LineTokens {
 
 export interface SlideNumberTokens {
   style: TextStyleName;
-  color: string;
+  color: Hex;
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;
 }
 
 export interface ShapeTokens {
-  fill: string;
+  fill: Hex;
   fillOpacity?: number;
   border?: Stroke;
   cornerRadius?: number;
