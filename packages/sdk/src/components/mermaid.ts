@@ -5,8 +5,8 @@
 // Theming strategy:
 //   - Default nodes: styled via mermaid's themeVariables (primaryColor, primaryTextColor, etc.)
 //   - Accent nodes: styled via injected classDef directives — fill at accentOpacity,
-//     full-color stroke, and accentTextColor for text. Apply with `class NodeId purple`.
-//   - Primary class: full-opacity primaryColor fill with primaryTextColor text.
+//     full-color stroke, and accentTextColor for text. Group names are round-robin
+//     assigned to the theme's accent color pool.
 //   - Subgraphs: filled at accentOpacity with rounded corners (groupCornerRadius, pixels).
 //   - Non-flowchart diagrams (sequence, state, ER): themed via themeVariables only (no classDef).
 //
@@ -36,12 +36,13 @@ export interface MermaidTokens {
   surface: string; // Secondary/tertiary fills (alt nodes)
   surfaceBorder: string; // Node and subgraph border color
   surfaceSubtle: string; // Edge label background
-  group: string; // Subgraph fill (tinted at accentStyle.opacity)
+  group: string; // Subgraph fill (tinted at accentOpacity)
   groupCornerRadius: number; // Subgraph corner radius (pixels)
 
   // --- Accent classes (injected classDefs for flowcharts) ---
-  accents: Record<string, string>; // Named accent colors (e.g. { purple: "#7C3AED" })
-  accentStyle: { opacity: number; textColor: string }; // Fill opacity (0-100) and text color for accent nodes
+  accents: string[]; // Accent color pool for round-robin class assignment
+  accentOpacity: number; // Fill opacity (0-100) for accent nodes and subgraphs
+  accentTextColor: string; // Text color inside accent-classed nodes
 
   // --- Typography ---
   textStyle: TextStyleName; // Font style for text measurement
@@ -73,7 +74,7 @@ export function validateMermaidDefinition(definition: string): string {
   if (forbidden.length > 0) {
     throw new Error(
       `Mermaid: found ${forbidden.length} forbidden style directive(s). ` +
-        `Use theme classes instead (e.g. "class NodeId primary"):\n` +
+        `Use theme classes instead (e.g. "class NodeId backend"):\n` +
         forbidden.map((s) => `  - ${s}`).join("\n"),
     );
   }
@@ -83,11 +84,6 @@ export function validateMermaidDefinition(definition: string): string {
 // ============================================
 // THEME INTEGRATION
 // ============================================
-
-/** The subset of theme data that mermaid rendering actually needs (beyond tokens). */
-export interface MermaidRenderContext {
-  accents: Record<string, string>;
-}
 
 export function buildMermaidConfig(tokens: MermaidTokens, fontFamily: string): object {
   return {
@@ -118,21 +114,51 @@ export function buildMermaidConfig(tokens: MermaidTokens, fontFamily: string): o
 }
 
 /**
- * Build classDef directives for flowchart accent classes.
- * Each accent gets: tinted fill (color at accentOpacity), full-color stroke, accentTextColor text.
- * The `primary` class gets full-opacity primaryColor fill with primaryTextColor for contrast.
+ * Extract unique class group names from a mermaid definition in encounter order.
+ * Handles both `class NodeId groupName` statements and `NodeId:::groupName` inline syntax.
  */
-export function buildClassDefs(tokens: MermaidTokens, accents: Record<string, string>): string {
-  const alpha = Math.round((tokens.accentStyle.opacity / 100) * 255)
+export function extractGroups(definition: string): string[] {
+  const seen = new Set<string>();
+  const groups: string[] = [];
+
+  const classPattern = /^\s*class\s+[\w,]+\s+(\w+)/gm;
+  let match: RegExpExecArray | null = null;
+  while ((match = classPattern.exec(definition)) !== null) {
+    const name = match[1];
+    if (!seen.has(name)) {
+      seen.add(name);
+      groups.push(name);
+    }
+  }
+
+  const inlinePattern = /:::(\w+)/g;
+  while ((match = inlinePattern.exec(definition)) !== null) {
+    const name = match[1];
+    if (!seen.has(name)) {
+      seen.add(name);
+      groups.push(name);
+    }
+  }
+
+  return groups;
+}
+
+/**
+ * Build classDef directives for flowchart accent classes.
+ * Group names are round-robin assigned to the accent color pool.
+ */
+export function buildClassDefs(tokens: MermaidTokens, groups: string[]): string {
+  if (groups.length === 0 || tokens.accents.length === 0) return "";
+  const alpha = Math.round((tokens.accentOpacity / 100) * 255)
     .toString(16)
     .padStart(2, "0");
 
-  const defs = Object.entries(accents).map(([name, color]) => {
-    return `classDef ${name} fill:${color}${alpha},stroke:${color},color:${tokens.accentStyle.textColor}`;
-  });
-  // Primary gets full opacity with themed text color for contrast
-  defs.push(`classDef primary fill:${tokens.primary},color:${tokens.primaryContrast}`);
-  return defs.join("\n");
+  return groups
+    .map((name, i) => {
+      const color = tokens.accents[i % tokens.accents.length];
+      return `classDef ${name} fill:${color}${alpha},stroke:${color},color:${tokens.accentTextColor}`;
+    })
+    .join("\n");
 }
 
 /**
@@ -141,7 +167,7 @@ export function buildClassDefs(tokens: MermaidTokens, accents: Record<string, st
  * Only emitted for flowchart/graph diagrams where `subgraph ID` declarations are found.
  */
 function buildSubgraphStyles(definition: string, tokens: MermaidTokens): string {
-  const alpha = Math.round((tokens.accentStyle.opacity / 100) * 255)
+  const alpha = Math.round((tokens.accentOpacity / 100) * 255)
     .toString(16)
     .padStart(2, "0");
   const fillColor = `${tokens.group}${alpha}`;
@@ -159,10 +185,7 @@ function buildSubgraphStyles(definition: string, tokens: MermaidTokens): string 
   return ids.map((id) => `style ${id} fill:${fillColor}${radiusPart}`).join("\n");
 }
 
-export function injectClassDefs(definition: string, tokens: MermaidTokens, accents: Record<string, string>): string {
-  // classDef and style directives are flowchart/graph-only syntax.
-  // For other diagram types (sequence, state, ER, etc.), skip injection —
-  // they are themed via buildMermaidConfig's themeVariables instead.
+export function injectClassDefs(definition: string, tokens: MermaidTokens): string {
   const flowchartPattern = /^(\s*(?:flowchart|graph)\s+\w*\s*\n)/m;
   const match = definition.match(flowchartPattern);
 
@@ -170,11 +193,12 @@ export function injectClassDefs(definition: string, tokens: MermaidTokens, accen
     return definition;
   }
 
-  const classDefs = buildClassDefs(tokens, accents);
+  const groups = extractGroups(definition);
+  const classDefs = buildClassDefs(tokens, groups);
   const subgraphStyles = buildSubgraphStyles(definition, tokens);
 
   const [fullMatch] = match;
-  let result = definition.replace(fullMatch, `${fullMatch}${classDefs}\n`);
+  let result = classDefs ? definition.replace(fullMatch, `${fullMatch}${classDefs}\n`) : definition;
   if (subgraphStyles) {
     result = `${result.trimEnd()}\n${subgraphStyles}`;
   }
@@ -209,11 +233,10 @@ async function renderMermaidToPng(
   definition: string,
   tokens: MermaidTokens,
   fontFamily: string,
-  ctx: MermaidRenderContext,
   canvas: Canvas,
 ): Promise<string> {
   const config = buildMermaidConfig(tokens, fontFamily);
-  const processed = injectClassDefs(definition, tokens, ctx.accents);
+  const processed = injectClassDefs(definition, tokens);
   const bundle = await getMermaidBundle();
 
   // Use JSON script blocks to safely pass data without escaping issues.
@@ -298,10 +321,7 @@ async function renderMermaid(
   }
   const textStyleConfig = context.theme.textStyles[tokens.textStyle];
   const fontFamily = textStyleConfig.fontFamily.name;
-  const renderCtx: MermaidRenderContext = {
-    accents: tokens.accents,
-  };
-  const pngPath = await renderMermaidToPng(definition, tokens, fontFamily, renderCtx, context.canvas);
+  const pngPath = await renderMermaidToPng(definition, tokens, fontFamily, context.canvas);
   const mermaidImage = image(pngPath, tokens.image, definition);
 
   if (tokens.background) {
@@ -329,9 +349,9 @@ export const mermaidComponent = defineComponent({
  * Style directives (style, linkStyle, classDef, %%{init}) are forbidden
  * and will fail the build — theme-based styling is injected automatically.
  *
- * Use `class NodeId <accent>` to apply themed accent colors (e.g. `class B purple`).
- * Use `class NodeId primary` for full-opacity primary fill.
- * Available accent names come from the theme's `accents` token map.
+ * Use `class NodeId groupName` to color nodes. Group names are arbitrary —
+ * the system round-robin assigns accent colors from the theme's color pool.
+ * Nodes sharing a group name share a color.
  *
  * @example
  * ```typescript
@@ -339,9 +359,8 @@ export const mermaidComponent = defineComponent({
  *   flowchart LR
  *     A[Client] --> B[Server]
  *     B --> C[(Database)]
- *     class B purple
+ *     class B,C backend
  * `, tokens.mermaid);
- * pres.add(contentSlide('Architecture', diagram));
  * ```
  */
 export function mermaid(definition: string, tokens: MermaidTokens): ComponentNode {

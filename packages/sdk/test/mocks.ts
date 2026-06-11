@@ -225,8 +225,9 @@ export const DEFAULT_MERMAID_TOKENS: MermaidTokens = {
   surfaceSubtle: "#FFFFFF",
   group: "#333333",
   groupCornerRadius: 8,
-  accents: { accent: "#00CCCC", soft: "#FF00FF", dark: "#FF8800" },
-  accentStyle: { opacity: 100, textColor: "#000000" },
+  accents: ["#00CCCC", "#FF00FF", "#FF8800"],
+  accentOpacity: 100,
+  accentTextColor: "#000000",
   textStyle: "body",
   image: DEFAULT_IMAGE_TOKENS,
 };

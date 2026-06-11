@@ -50,8 +50,8 @@ export {
 } from "./components/list.js";
 // Mermaid diagram (I/O component — shared browser rendering)
 export {
-  type MermaidRenderContext,
   type MermaidTokens,
+  extractGroups,
   mermaid,
   mermaidComponent,
 } from "./components/mermaid.js";

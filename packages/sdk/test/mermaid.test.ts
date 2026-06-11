@@ -7,6 +7,7 @@ import { NODE_TYPE } from "@tycoslide/core";
 import {
   buildClassDefs,
   buildMermaidConfig,
+  extractGroups,
   injectClassDefs,
   type MermaidTokens,
   mermaid,
@@ -122,7 +123,7 @@ flowchart LR
       assert.fail("should have thrown");
     } catch (e: any) {
       assert.ok(e.message.includes("style A fill:#ff0000"), "error should include the offending line");
-      assert.ok(e.message.includes("class NodeId primary"), "error should suggest the fix");
+      assert.ok(e.message.includes("class NodeId backend"), "error should suggest the fix");
     }
   });
 });
@@ -141,8 +142,9 @@ const testTokens: MermaidTokens = {
   surfaceSubtle: "#FFFFFF",
   group: "#AABBCC",
   groupCornerRadius: 0.08,
-  accents: { teal: "#00CCCC", pink: "#FF00FF", orange: "#FF8800" },
-  accentStyle: { opacity: 20, textColor: "#000000" },
+  accents: ["#00CCCC", "#FF00FF", "#FF8800"],
+  accentOpacity: 20,
+  accentTextColor: "#000000",
   textStyle: "body",
   image: { padding: 0 },
 };
@@ -194,63 +196,89 @@ describe("buildMermaidConfig", () => {
   });
 });
 
+describe("extractGroups", () => {
+  it("extracts class statement group names in order", () => {
+    const def = "flowchart LR\n  A --> B\n  class A backend\n  class B frontend";
+    assert.deepStrictEqual(extractGroups(def), ["backend", "frontend"]);
+  });
+
+  it("deduplicates group names", () => {
+    const def = "flowchart LR\n  class A svc\n  class B svc\n  class C other";
+    assert.deepStrictEqual(extractGroups(def), ["svc", "other"]);
+  });
+
+  it("extracts inline :::groupName syntax", () => {
+    const def = "flowchart LR\n  A:::backend --> B:::frontend";
+    assert.deepStrictEqual(extractGroups(def), ["backend", "frontend"]);
+  });
+
+  it("merges class statements and inline syntax", () => {
+    const def = "flowchart LR\n  A:::svc --> B\n  class B svc\n  class C other";
+    assert.deepStrictEqual(extractGroups(def), ["svc", "other"]);
+  });
+
+  it("returns empty for no classes", () => {
+    const def = "flowchart LR\n  A --> B";
+    assert.deepStrictEqual(extractGroups(def), []);
+  });
+});
+
 describe("buildClassDefs", () => {
-  it("generates classDef for each accent with hex alpha", () => {
-    const accents = { teal: "#00CCCC", pink: "#FF00FF" };
-    const result = buildClassDefs(testTokens, accents);
-    // 20% of 255 = 51 → hex '33'
-    assert.ok(result.includes("classDef teal fill:#00CCCC33"));
-    assert.ok(result.includes("classDef pink fill:#FF00FF33"));
+  it("round-robin assigns accent colors to groups", () => {
+    const result = buildClassDefs(testTokens, ["backend", "frontend"]);
+    // testTokens.accents = ["#00CCCC", "#FF00FF", "#FF8800"], opacity 20 → 33
+    assert.ok(result.includes("classDef backend fill:#00CCCC33,stroke:#00CCCC"));
+    assert.ok(result.includes("classDef frontend fill:#FF00FF33,stroke:#FF00FF"));
   });
 
-  it("generates primary classDef at full opacity with text color", () => {
-    const result = buildClassDefs(testTokens, {});
-    assert.ok(result.includes("classDef primary fill:#FF0000,color:#FFFFFF"));
+  it("wraps around when more groups than colors", () => {
+    const result = buildClassDefs(testTokens, ["a", "b", "c", "d"]);
+    // 4th group wraps to first color
+    assert.ok(result.includes("classDef d fill:#00CCCC33"));
   });
 
-  it("primary classDef has no alpha suffix", () => {
-    const result = buildClassDefs(testTokens, {});
-    // Should NOT have hex alpha appended to primary fill
-    assert.ok(!result.includes("classDef primary fill:#FF000033"));
+  it("returns empty string for no groups", () => {
+    assert.strictEqual(buildClassDefs(testTokens, []), "");
   });
 });
 
 describe("injectClassDefs", () => {
-  const accents = { teal: "#00CCCC" };
-
-  it("injects classDefs after flowchart declaration", () => {
-    const def = "flowchart LR\n  A --> B";
-    const result = injectClassDefs(def, testTokens, accents);
+  it("injects classDefs for groups found in definition", () => {
+    const def = "flowchart LR\n  A --> B\n  class B backend";
+    const result = injectClassDefs(def, testTokens);
     assert.ok(result.startsWith("flowchart LR\n"));
-    assert.ok(result.includes("classDef teal"));
-    assert.ok(result.includes("classDef primary"));
-    // Original content preserved
+    assert.ok(result.includes("classDef backend"));
     assert.ok(result.includes("A --> B"));
   });
 
   it("injects after graph declaration too", () => {
-    const def = "graph TD\n  A --> B";
-    const result = injectClassDefs(def, testTokens, accents);
-    assert.ok(result.includes("classDef teal"));
+    const def = "graph TD\n  A --> B\n  class B svc";
+    const result = injectClassDefs(def, testTokens);
+    assert.ok(result.includes("classDef svc"));
   });
 
   it("skips injection for non-flowchart diagrams", () => {
     const def = "sequenceDiagram\n  Alice->>Bob: Hello";
-    const result = injectClassDefs(def, testTokens, accents);
+    const result = injectClassDefs(def, testTokens);
     assert.strictEqual(result, def);
   });
 
   it("adds subgraph style directives when subgraphs present", () => {
     const def = "flowchart LR\n  subgraph Sources\n    A[Node]\n  end";
-    const result = injectClassDefs(def, testTokens, accents);
-    // Subgraph style uses cluster color + accentStyle.opacity hex alpha
-    assert.ok(result.includes("style Sources fill:#AABBCC33"));
+    const result = injectClassDefs(def, testTokens);
+    assert.ok(result.includes("style Sources fill:#AABBCC"));
   });
 
-  it("skips subgraph styles when no subgraphs", () => {
+  it("styles subgraphs with bracket labels by ID", () => {
+    const def = 'flowchart LR\n  subgraph infra ["Infrastructure"]\n    A[Node]\n  end';
+    const result = injectClassDefs(def, testTokens);
+    assert.ok(result.includes("style infra fill:#AABBCC"));
+  });
+
+  it("skips classDef injection when no classes in definition", () => {
     const def = "flowchart LR\n  A --> B";
-    const result = injectClassDefs(def, testTokens, accents);
-    assert.ok(!result.includes("style "));
+    const result = injectClassDefs(def, testTokens);
+    assert.ok(!result.includes("classDef"));
   });
 });
 

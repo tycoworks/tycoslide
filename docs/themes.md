@@ -96,7 +96,7 @@ A `Palette` defines semantic color roles for a single appearance mode (light or 
 | | `emphasis` | Dark/prominent backgrounds — sections, code blocks |
 | | `divider` | Borders and separators |
 | | `shadow` | Shadow color |
-| `accents` | | Accent color array — mapped to `accent1`, `accent2`, etc. by `deriveTokens` |
+| `accents` | | Accent color array — assigned to semantic class groups in round-robin order |
 | `highlightTheme` | | Syntax highlighting theme for code blocks |
 
 All color values are hex strings with a `#` prefix (e.g., `#7C3AED`).

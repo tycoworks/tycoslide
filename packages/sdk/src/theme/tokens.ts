@@ -21,10 +21,7 @@ import { TEXT_STYLE } from "./format.js";
 export function deriveTokens(palette: Palette, format: Format) {
   // ── Palette-derived visual primitives ──────────────────────────────────
 
-  const accents: Record<string, string> = { primary: palette.brand.primary };
-  for (let i = 0; i < palette.accents.length; i++) {
-    accents[`accent${i + 1}`] = palette.accents[i];
-  }
+  const accents: string[] = [palette.brand.primary, ...palette.accents];
   const subtleBorder = { color: palette.fill.divider, width: format.strokes.thin, dashType: DASH.SOLID };
   const shadow = {
     type: format.shadow.type,

@@ -474,10 +474,7 @@ When `background` is set, the diagram renders inside a background shape with fil
 
 Apply theme colors to flowchart nodes using Mermaid's `class` keyword:
 
-- **`primary`** — full-opacity `primary` fill with `primaryContrast` text.
-- **Any key from `accents`** — tinted fill at `accentStyle.opacity`, full-color stroke, `accentStyle.textColor` text.
-
-Class names are positional — `accent1`, `accent2`, `accent3`, etc. — plus `primary`. The number of available accents depends on the theme.
+Class names are arbitrary semantic labels. Nodes sharing a class name share a color. Colors are assigned automatically from the theme's accent pool in round-robin order. Use names that describe the role — `backend`, `frontend`, `storage` — not positional names.
 
 ### Example
 
@@ -486,7 +483,7 @@ Class names are positional — `accent1`, `accent2`, `accent3`, etc. — plus `p
 flowchart LR
     A[Client] --> B[API]
     B --> C[(Database)]
-    class B accent1
+    class B,C backend
 :::
 ```
 
