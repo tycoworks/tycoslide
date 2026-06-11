@@ -1,11 +1,11 @@
 // remark-mark — ==text== highlight syntax for remark.
 // Ported from remark-ins (++text++ → insert) with == delimiters and mark node type.
 
+import { u } from "unist-builder";
 import { findAfter } from "unist-util-find-after";
 import { findAllAfter } from "unist-util-find-all-after";
 import { findAllBefore } from "unist-util-find-all-before";
 import { findAllBetween } from "unist-util-find-between-all";
-import { u } from "unist-builder";
 import { visit } from "unist-util-visit";
 
 const REGEX = /==(?![\s=])([\s\S]*?)(?<![\s=])==/;

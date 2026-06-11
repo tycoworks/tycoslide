@@ -32,7 +32,7 @@ export interface ListTokens {
   linkUnderline: boolean;
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;
-  accents: Record<string, string>;
+  highlightColor: string;
   border?: Stroke;
   shadow?: ShadowEffect;
 }
@@ -63,7 +63,7 @@ function renderList(params: ListParams, content: string[], context: RenderContex
     const itemRuns: NormalizedRun[] = [];
     for (const child of tree.children) {
       if (child.type === SYNTAX.PARAGRAPH) {
-        transformInline(child.children, tokens.accents, itemRuns, {});
+        transformInline(child.children, tokens.highlightColor, itemRuns, {});
       }
     }
     if (itemRuns.length > 0) {

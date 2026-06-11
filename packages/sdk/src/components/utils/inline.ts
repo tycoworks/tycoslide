@@ -4,10 +4,8 @@
 import type { NormalizedRun } from "@tycoslide/core";
 import { SYNTAX } from "@tycoslide/core";
 import type { Link, PhrasingContent, Root } from "mdast";
-import type { TextDirective } from "mdast-util-directive";
 import { gfmStrikethroughFromMarkdown } from "mdast-util-gfm-strikethrough";
 import { gfmStrikethrough } from "micromark-extension-gfm-strikethrough";
-import remarkDirective from "remark-directive";
 import remarkIns from "remark-ins";
 import remarkParse from "remark-parse";
 import type { Processor } from "unified";
@@ -54,7 +52,6 @@ function remarkStrikethrough(this: Processor): void {
 const processor = unified()
   .use(remarkParse)
   .use(remarkStrikethrough)
-  .use(remarkDirective)
   .use(remarkIns)
   .use(remarkMark)
   .use(remarkDisableBlocks);
@@ -70,11 +67,11 @@ export function inlineParse(input: string): Root {
 
 /**
  * Transform inline/phrasing content into NormalizedRun[].
- * Recurses for strong, emphasis, strikethrough, underline, hyperlink, and textDirective nodes.
+ * Recurses for strong, emphasis, strikethrough, underline, hyperlink, and mark nodes.
  */
 export function transformInline(
   nodes: PhrasingContent[],
-  accents: Record<string, string>,
+  highlightColor: string,
   runs: NormalizedRun[],
   defaults: Partial<NormalizedRun>,
 ): void {
@@ -84,61 +81,43 @@ export function transformInline(
         runs.push({ text: node.value, ...defaults });
         break;
       case SYNTAX.STRONG:
-        transformInline(node.children, accents, runs, { ...defaults, bold: true });
+        transformInline(node.children, highlightColor, runs, { ...defaults, bold: true });
         break;
       case SYNTAX.EMPHASIS:
-        transformInline(node.children, accents, runs, { ...defaults, italic: true });
+        transformInline(node.children, highlightColor, runs, { ...defaults, italic: true });
         break;
       case SYNTAX.LINK: {
         const link = node as unknown as Link;
-        transformInline(link.children as PhrasingContent[], accents, runs, {
+        transformInline(link.children as PhrasingContent[], highlightColor, runs, {
           ...defaults,
           hyperlink: link.url,
         });
         break;
       }
       case SYNTAX.DELETE:
-        transformInline((node as unknown as Parent).children as PhrasingContent[], accents, runs, {
+        transformInline((node as unknown as Parent).children as PhrasingContent[], highlightColor, runs, {
           ...defaults,
           strikethrough: true,
         });
         break;
       case SYNTAX.INS:
-        transformInline((node as unknown as Parent).children as PhrasingContent[], accents, runs, {
+        transformInline((node as unknown as Parent).children as PhrasingContent[], highlightColor, runs, {
           ...defaults,
           underline: true,
         });
         break;
       case SYNTAX.MARK as string:
-        transformInline((node as unknown as Parent).children as PhrasingContent[], accents, runs, {
+        transformInline((node as unknown as Parent).children as PhrasingContent[], highlightColor, runs, {
           ...defaults,
-          color: accents.accent,
+          color: highlightColor,
         });
         break;
-      case SYNTAX.TEXT_DIRECTIVE: {
-        const directive = node as unknown as TextDirective;
-        // Bare `:word` without brackets is not an accent — treat as literal text.
-        // Only `:name[content]` (with children) is accent syntax.
-        if (!directive.children?.length) {
-          runs.push({ text: `:${directive.name}`, ...defaults });
-          break;
-        }
-        const accentColor = accents[directive.name];
-        if (!accentColor) {
-          const available = Object.keys(accents).join(", ");
-          throw new Error(`Unknown accent '${directive.name}'. Available: ${available}`);
-        }
-        transformInline(directive.children as PhrasingContent[], accents, runs, { ...defaults, color: accentColor });
-        break;
-      }
       case SYNTAX.BREAK:
         runs.push({ text: "", softBreak: true, ...defaults });
         break;
       default:
-        // Graceful degradation: recurse into children or extract value.
-        // Handles: inlineCode, html, image, footnoteReference, etc.
         if ("children" in node && Array.isArray((node as any).children)) {
-          transformInline((node as any).children as PhrasingContent[], accents, runs, defaults);
+          transformInline((node as any).children as PhrasingContent[], highlightColor, runs, defaults);
         } else if ("value" in node && typeof (node as any).value === "string") {
           runs.push({ text: (node as any).value, ...defaults });
         }

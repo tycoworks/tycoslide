@@ -201,7 +201,10 @@ export class PptxConfigBuilder {
 
     const result: Record<string, unknown> = {
       path: imageNode.src,
-      x, y, w, h,
+      x,
+      y,
+      w,
+      h,
       ...(imageNode.fit !== FIT.STRETCH && { sizing: { type: imageNode.fit, w, h } }),
     };
     if (imageNode.alt) {

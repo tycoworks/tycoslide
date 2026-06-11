@@ -69,6 +69,7 @@ export interface Palette {
     body: Hex; // body text
     description: Hex; // descriptions, captions, stat labels
     subtle: Hex; // table headers, attribution
+    highlight: Hex; // ==highlighted text== color
   };
   brand: {
     primary: Hex; // brand/interactive — links, accent bars, stat values

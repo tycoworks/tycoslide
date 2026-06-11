@@ -72,17 +72,13 @@ _Italic text_
 [Link text](https://example.com)
 ```
 
-### Inline Accents
+### Highlights
 
-Use named accents to highlight text:
+Wrap text in `==` to apply the theme's highlight color:
 
 ```markdown
-This is :accent[highlighted with accent].
-This is :soft[styled with soft accent].
-This is :dark[styled with dark accent].
+This is ==highlighted text==.
 ```
-
-Accent names are defined by your theme as an open set — any key in the theme's `accents` map is valid.
 
 ### Headings
 
@@ -203,7 +199,7 @@ notes: Demo each formatting style
 
 You can use **bold**, _italic_, **_bold italic_**, ~~strikethrough~~, and ++underlined++ text.
 
-Highlight with :accent[accent colors] from your theme.
+Use ==highlights== for emphasis with the theme's highlight color.
 
 Add [clickable links](https://example.com) to any slide.
 

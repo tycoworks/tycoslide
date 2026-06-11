@@ -35,7 +35,7 @@ export interface TextTokens {
   linkUnderline: boolean;
   hAlign: HorizontalAlignment;
   vAlign: VerticalAlignment;
-  accents: Record<string, string>;
+  highlightColor: string;
   border?: Stroke;
   shadow?: ShadowEffect;
 }
@@ -67,7 +67,7 @@ function renderText(_params: {}, content: string, context: RenderContext, tokens
   const runs: NormalizedRun[] = [];
   for (const child of tree.children) {
     if (child.type === SYNTAX.PARAGRAPH) {
-      transformInline(child.children, tokens.accents, runs, {});
+      transformInline(child.children, tokens.highlightColor, runs, {});
     }
   }
 
@@ -121,7 +121,7 @@ export const textComponent = defineComponent({
  *
  * @example
  * ```typescript
- * text("**Bold** and :accent[highlighted]", tokens.text)
+ * text("**Bold** and ==highlighted==", tokens.text)
  * ```
  */
 export function text(body: string, tokens: TextTokens): ComponentNode {

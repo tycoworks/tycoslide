@@ -6,7 +6,7 @@ format: presentation
 ---
 template: title
 title: "**tycoslide**"
-subtitle: "Build slides like software.:accent[▌]"
+subtitle: "Build slides like software.==▌=="
 notes: Opening slide. Clean centered title with cursor.
 ---
 
@@ -50,13 +50,13 @@ notes: Comparison table with tycoslide column highlighted. The audience sees "No
 ---
 
 :::table
-| | :accent[**tycoslide**] | Slidev | Marp | Reveal.js |
+| | ==**tycoslide**== | Slidev | Marp | Reveal.js |
 |---|---|---|---|---|
-| Output | :accent[.pptx (editable)] | HTML, PDF, .pptx (images) | PDF, HTML, .pptx (images) | HTML, PDF |
-| Components | :accent[TypeScript] | Vue | Markdown-It | JavaScript |
-| Design tokens | :accent[TypeScript] | CSS | CSS | CSS |
-| Validation | :accent[Build-time] | None | None | None |
-| Preview | :accent[Static] | Live | Live | Live |
+| Output | ==.pptx (editable)== | HTML, PDF, .pptx (images) | PDF, HTML, .pptx (images) | HTML, PDF |
+| Components | ==TypeScript== | Vue | Markdown-It | JavaScript |
+| Design tokens | ==TypeScript== | CSS | CSS | CSS |
+| Validation | ==Build-time== | None | None | None |
+| Preview | ==Static== | Live | Live | Live |
 :::
 
 ---

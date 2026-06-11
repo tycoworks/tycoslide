@@ -25,7 +25,6 @@ export const SYNTAX = {
   DELETE: "delete",
   INS: "insert",
   MARK: "mark",
-  TEXT_DIRECTIVE: "textDirective",
 } as const;
 
 /** Union of all SYNTAX values — use for typed MDAST node type references. */

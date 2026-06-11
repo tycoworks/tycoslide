@@ -40,7 +40,7 @@ export function deriveTokens(palette: Palette, format: Format) {
     linkUnderline: true,
     hAlign: format.hAlign,
     vAlign: format.vAlign,
-    accents,
+    highlightColor: palette.text.highlight,
   };
 
   // ── onLight text tokens (for light/neutral backgrounds) ──────────────
@@ -54,10 +54,30 @@ export function deriveTokens(palette: Palette, format: Format) {
   };
 
   const lightHeadings = {
-    h1: { color: palette.text.heading, style: TEXT_STYLE.H1, hAlign: format.hAlign, vAlign: format.vAlign } as LabelTokens,
-    h2: { color: palette.text.heading, style: TEXT_STYLE.H2, hAlign: format.hAlign, vAlign: format.vAlign } as LabelTokens,
-    h3: { color: palette.text.heading, style: TEXT_STYLE.H3, hAlign: format.hAlign, vAlign: format.vAlign } as LabelTokens,
-    h4: { color: palette.text.heading, style: TEXT_STYLE.H4, hAlign: format.hAlign, vAlign: format.vAlign } as LabelTokens,
+    h1: {
+      color: palette.text.heading,
+      style: TEXT_STYLE.H1,
+      hAlign: format.hAlign,
+      vAlign: format.vAlign,
+    } as LabelTokens,
+    h2: {
+      color: palette.text.heading,
+      style: TEXT_STYLE.H2,
+      hAlign: format.hAlign,
+      vAlign: format.vAlign,
+    } as LabelTokens,
+    h3: {
+      color: palette.text.heading,
+      style: TEXT_STYLE.H3,
+      hAlign: format.hAlign,
+      vAlign: format.vAlign,
+    } as LabelTokens,
+    h4: {
+      color: palette.text.heading,
+      style: TEXT_STYLE.H4,
+      hAlign: format.hAlign,
+      vAlign: format.vAlign,
+    } as LabelTokens,
   };
 
   const onLight = {

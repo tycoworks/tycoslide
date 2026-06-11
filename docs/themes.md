@@ -89,6 +89,7 @@ A `Palette` defines semantic color roles for a single appearance mode (light or 
 | | `body` | Body text |
 | | `description` | Descriptions, captions |
 | | `subtle` | Table headers, attribution |
+| | `highlight` | Highlight color for `==text==` marks |
 | `brand` | `primary` | Brand/interactive — links, accent bars |
 | | `soft` | Tonal variant — agenda numbers |
 | `fill` | `background` | Page/area background |

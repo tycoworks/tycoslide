@@ -57,7 +57,7 @@ export interface TableTokens {
   cellPadding: number;
   linkColor: string;
   linkUnderline: boolean;
-  accents: Record<string, string>;
+  highlightColor: string;
   background?: ShapeTokens;
   backgroundPadding?: number;
 }
@@ -138,11 +138,11 @@ export const tableComponent = defineComponent({
       linkUnderline: tokens.linkUnderline,
       hAlign: tokens.hAlign,
       vAlign: tokens.vAlign,
-      accents: tokens.accents,
+      highlightColor: tokens.highlightColor,
     };
 
     // Resolve string content through the markdown component to support
-    // rich text (**bold**, *italic*, :accent[highlights]) in table cells.
+    // rich text (**bold**, *italic*, ==highlights==) in table cells.
     const resolveContent = async (content: TextContent): Promise<TextContent> => {
       if (typeof content === "string") {
         const rendered = await context.renderTree(component(Component.Text, {}, content, textTokens));

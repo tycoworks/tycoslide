@@ -82,7 +82,7 @@ Structural containers that arrange content. TypeScript DSL only.
 
 ## text
 
-A single paragraph of formatted content: bold, italic, strikethrough, underline, hyperlinks, and accent colors. Headings in markdown (`# Heading`) also become text with the appropriate heading style (H1–H4). Use `text()` in layouts for content that includes formatting — for example, a card description where the author might write `**bold**` or `:accent[highlighted]`. No `:::text` directive — use `text()` in TypeScript.
+A single paragraph of formatted content: bold, italic, strikethrough, underline, hyperlinks, and highlights. Headings in markdown (`# Heading`) also become text with the appropriate heading style (H1–H4). Use `text()` in layouts for content that includes formatting — for example, a card description where the author might write `**bold**` or `==highlighted==`. No `:::text` directive — use `text()` in TypeScript.
 
 ### Tokens
 
@@ -94,26 +94,22 @@ A single paragraph of formatted content: bold, italic, strikethrough, underline,
 | `linkUnderline` | boolean | Whether hyperlinks are underlined |
 | `hAlign` | HorizontalAlignment | Default horizontal alignment |
 | `vAlign` | VerticalAlignment | Default vertical alignment |
-| `accents` | Record\<string, string\> | Accent color map (name → hex) |
+| `highlightColor` | string | Color for `==highlighted==` text |
 | `border` | Stroke | Border stroke (optional — omit for no border) |
 | `shadow` | Shadow | Drop shadow (optional — omit for no shadow) |
 
 ### Formatting
 
-Supports `**bold**`, `*italic*`, `[hyperlinks](url)`, `~~strikethrough~~`, `++underline++`, and `:accent[colored text]`.
-
-Use the `:name[text]` syntax to apply accent colors inline:
+Supports `**bold**`, `*italic*`, `[hyperlinks](url)`, `~~strikethrough~~`, `++underline++`, and `==highlights==`.
 
 ```markdown
-Normal text with :accent[accent highlight] and :soft[soft highlight].
+Normal text with ==highlighted phrase==.
 ```
-
-The default theme provides `accent`, `soft`, and `dark`. Custom themes can define any accent names. See [Themes](./themes.md) for details.
 
 ### Examples
 
 ```typescript
-text("**Bold** and :blue[highlighted]", tokens.body)
+text("**Bold** and ==highlighted==", tokens.body)
 text("Section heading", tokens.h3)
 ```
 
@@ -121,7 +117,7 @@ text("Section heading", tokens.h3)
 
 ## label
 
-Text for titles, captions, and attribution lines with optional heading style support. Unlike `text()`, which parses bold, italic, links, and accent colors, `label()` takes a string and renders it exactly as written. Use it for eyebrow labels, captions, and attribution lines — content that comes from a fixed string or frontmatter parameter. Available in the TypeScript DSL only.
+Text for titles, captions, and attribution lines with optional heading style support. Unlike `text()`, which parses bold, italic, links, and highlights, `label()` takes a string and renders it exactly as written. Use it for eyebrow labels, captions, and attribution lines — content that comes from a fixed string or frontmatter parameter. Available in the TypeScript DSL only.
 
 `label()` supports heading styles (h1–h4) via the `headingStyles` token, allowing visual hierarchy without markdown parsing.
 
@@ -154,7 +150,7 @@ Renders bullet or numbered lists with support for formatting. No `:::list` direc
 
 ```markdown
 - First item with **bold** text
-- Second item with :accent[accent color]
+- Second item with ==accent color==
 - Third item
 ```
 
@@ -185,7 +181,7 @@ list(['Step one', 'Step two'], tokens.list, true)
 | `linkUnderline` | boolean | Whether hyperlinks are underlined |
 | `hAlign` | HorizontalAlignment | Default horizontal alignment |
 | `vAlign` | VerticalAlignment | Default vertical alignment |
-| `accents` | Record\<string, string\> | Accent color map (name → hex) |
+| `highlightColor` | string | Color for `==highlighted==` text |
 | `border` | Stroke | Border stroke (optional — omit for no border) |
 | `shadow` | Shadow | Drop shadow (optional — omit for no shadow) |
 
@@ -270,7 +266,7 @@ Consistent formatting saved us hours of manual review.
 
 Native PowerPoint table with borders, cell merging, and text wrapping.
 
-Cell content supports formatting (`**bold**`, `*italic*`, `:accent[color]`).
+Cell content supports formatting (`**bold**`, `*italic*`, `==highlights==`).
 
 ### Tokens
 
@@ -290,7 +286,7 @@ Cell content supports formatting (`**bold**`, `*italic*`, `:accent[color]`).
 | `vAlign` | VerticalAlignment | Vertical text alignment |
 | `linkColor` | string | Hyperlink color in cells |
 | `linkUnderline` | boolean | Whether cell hyperlinks are underlined |
-| `accents` | Record\<string, string\> | Accent color map for `:accent[text]` in cells |
+| `highlightColor` | string | Color for `==highlighted==` text in cells |
 | `background` | ShapeTokens | Card-effect background shape (optional — omit to render without background) |
 | `backgroundPadding` | number | Inset between the table and the background shape edge in pixels (optional) |
 

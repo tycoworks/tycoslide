@@ -139,7 +139,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
 
   // ── Composition atoms ───────────────────────────────────────────────────
   const centered = { hAlign: HALIGN.CENTER, vAlign: VALIGN.MIDDLE } as const;
-  const richText = { linkColor: palette.brand.primary, accents: t.primitives.accents, linkUnderline: true };
+  const richText = { linkColor: palette.brand.primary, highlightColor: palette.text.highlight, linkUnderline: true };
 
   // ── Header tokens (shared by body, cards, agenda) ──────────────────────
   const headerTokens = {
@@ -213,7 +213,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
       cellPadding: spacingTight,
       linkColor: palette.brand.primary,
       linkUnderline: true,
-      accents: t.primitives.accents,
+      highlightColor: palette.text.highlight,
       background: {
         fill: palette.fill.background,
         border: t.primitives.border,

@@ -20,13 +20,8 @@ program
   .option("-f, --force", "write PPTX despite layout or missing font errors")
   .option("-d, --debug", "enable verbose logging")
   .option("--no-notes", "exclude speaker notes from output")
-  .action(
-    async (
-      input: string,
-      opts: { preview?: boolean; force?: boolean; debug?: boolean; notes: boolean },
-    ) => {
-      await build(input, opts);
-    },
-  );
+  .action(async (input: string, opts: { preview?: boolean; force?: boolean; debug?: boolean; notes: boolean }) => {
+    await build(input, opts);
+  });
 
 program.parse();

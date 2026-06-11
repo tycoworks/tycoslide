@@ -250,7 +250,7 @@ Until `doc` fields ship, the skill hardcodes content limits:
 |----------|--------|
 | body | 5-8 bullets max |
 | cards | 3 is sweet spot. Descriptions under 80 chars. Grid: 2=1row, 3=1row, 4=2x2, 5-6=2x3 |
-| statement | 1-2 sentences. Use `:accent[**bold**]` for key phrases |
+| statement | 1-2 sentences. Use `==**bold**==` for key phrases |
 | quote | 2-3 sentences max |
 | agenda | Items auto-numbered. Don't prefix with numbers |
 | section | 2-5 words for title |

@@ -37,8 +37,8 @@ title: My Slide
 ```
 
 ```markdown
-<!-- RIGHT: use theme accents -->
-:accent[**Important**]
+<!-- RIGHT: use theme highlights -->
+==**Important**==
 ```
 
 ---
@@ -146,7 +146,7 @@ We deliver results through **focused execution** and _continuous iteration_.
 
 ## Key Principle
 
-Every decision ties back to :accent[**customer outcomes**].
+Every decision ties back to ==**customer outcomes**==.
 ```
 
 ### Formatting reference
@@ -164,13 +164,12 @@ Every decision ties back to :accent[**customer outcomes**].
 
 Use `##` and `###` inside slide body to create sub-sections within a slide.
 
-### Accent colors
+### Highlights
 
-Use `:name[text]` to apply named accent colors inline. Names come from the theme's `accents` map -- any key is valid. Combine with bold for maximum emphasis: `:accent[**key phrase**]`.
+Wrap text in `==` to apply the theme's highlight color. Combine with bold for maximum emphasis: `==**key phrase**==`.
 
 ```markdown
-This is :accent[highlighted with accent].
-This is :soft[styled with soft accent].
+This is ==highlighted text==.
 ```
 
 ---
@@ -387,7 +386,7 @@ Add presenter-only notes via the `notes:` frontmatter param (YAML `|` block scal
 | Leading `[` or `{` | Yes | `title: "[Draft] Proposal"` |
 | Leading `*`, `&`, `!` | Yes | `title: "*Important* Update"` |
 | Inline markdown | No (usually) | `title: My **Bold** Title` |
-| `:accent[...]` syntax | Yes | `body: ":accent[**key**] insight"` |
+| `==...==` syntax | No | `body: ==**key**== insight` |
 | Hash `#` | Yes | `title: "Issue #42"` |
 
 When in doubt, quote. Quotes never hurt valid YAML but missing quotes cause parse errors.

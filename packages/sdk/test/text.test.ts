@@ -77,8 +77,8 @@ describe("Text", () => {
       assert.strictEqual(runs[0].bold, undefined);
     });
 
-    it("should NOT parse directives — stays literal", async () => {
-      const node = label(":accent[not highlighted]", DEFAULT_LABEL_TOKENS);
+    it("should NOT parse mark syntax — stays literal", async () => {
+      const node = label("==not highlighted==", DEFAULT_LABEL_TOKENS);
       const rendered = (await renderComponent(node, {
         theme,
         slideNumber: 1,
@@ -87,8 +87,7 @@ describe("Text", () => {
       })) as any;
       const runs = rendered.content as NormalizedRun[];
       assert.strictEqual(runs.length, 1);
-      assert.strictEqual(runs[0].text, ":accent[not highlighted]");
-      assert.strictEqual(runs[0].highlight, undefined);
+      assert.strictEqual(runs[0].text, "==not highlighted==");
     });
 
     it("should apply style, color, and alignment", async () => {
@@ -162,28 +161,11 @@ describe("Text", () => {
       assert.ok(runs.some((r: any) => r.italic === true));
     });
 
-    it("should parse color directives", async () => {
-      const node = text(":accent[highlighted]", DEFAULT_TEXT_TOKENS);
+    it("should parse highlight marks", async () => {
+      const node = text("==highlighted==", DEFAULT_TEXT_TOKENS);
       const result = (await renderTree(node, makeContext())) as any;
       const runs = result.content as any[];
-      assert.ok(runs.some((r: any) => r.color !== undefined));
-    });
-
-    it("should treat bare colon-word as literal text, not a directive", async () => {
-      const node = text("5:47 a.m.", DEFAULT_TEXT_TOKENS);
-      const result = (await renderTree(node, makeContext())) as any;
-      const runs = result.content as any[];
-      const joined = runs.map((r: any) => r.text).join("");
-      assert.ok(joined.includes(":47"), `Expected literal ':47' in "${joined}"`);
-      assert.ok(runs.every((r: any) => r.color === undefined));
-    });
-
-    it("should treat bare known accent name without brackets as literal text", async () => {
-      const node = text(":accent", DEFAULT_TEXT_TOKENS);
-      const result = (await renderTree(node, makeContext())) as any;
-      const runs = result.content as any[];
-      const joined = runs.map((r: any) => r.text).join("");
-      assert.ok(joined.includes(":accent"), `Expected literal ':accent' in "${joined}"`);
+      assert.ok(runs.some((r: any) => r.color === DEFAULT_TEXT_TOKENS.highlightColor));
     });
 
     it("should handle numbered text without creating ordered list", async () => {

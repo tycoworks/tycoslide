@@ -159,7 +159,7 @@ export const DEFAULT_TEXT_TOKENS: TextTokens = {
   linkUnderline: true,
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.TOP,
-  accents: { accent: "#00CCCC", soft: "#FF00FF", dark: "#FF8800" },
+  highlightColor: "#00CCCC",
 };
 
 export const DEFAULT_LABEL_TOKENS: LabelTokens = {
@@ -176,7 +176,7 @@ export const DEFAULT_LIST_TOKENS: ListTokens = {
   linkUnderline: true,
   hAlign: HALIGN.LEFT,
   vAlign: VALIGN.TOP,
-  accents: { accent: "#00CCCC", soft: "#FF00FF", dark: "#FF8800" },
+  highlightColor: "#00CCCC",
 };
 
 export const DEFAULT_TABLE_TOKENS: TableTokens = {
@@ -198,7 +198,7 @@ export const DEFAULT_TABLE_TOKENS: TableTokens = {
   cellPadding: 10,
   linkColor: "#0000FF",
   linkUnderline: true,
-  accents: { accent: "#00CCCC", soft: "#FF00FF", dark: "#FF8800" },
+  highlightColor: "#00CCCC",
 };
 
 export const DEFAULT_IMAGE_TOKENS = { padding: 0 };
@@ -248,7 +248,7 @@ export const DEFAULT_CARD_TOKENS: CardTokens = {
     linkUnderline: true,
     hAlign: HALIGN.CENTER,
     vAlign: VALIGN.TOP,
-    accents: { accent: "#00CCCC", soft: "#FF00FF", dark: "#FF8800" },
+    highlightColor: "#00CCCC",
   },
   description: {
     style: "small",
@@ -257,7 +257,7 @@ export const DEFAULT_CARD_TOKENS: CardTokens = {
     linkUnderline: true,
     hAlign: HALIGN.CENTER,
     vAlign: VALIGN.TOP,
-    accents: { accent: "#00CCCC", soft: "#FF00FF", dark: "#FF8800" },
+    highlightColor: "#00CCCC",
   },
   image: DEFAULT_IMAGE_TOKENS,
 };
@@ -276,7 +276,7 @@ export const DEFAULT_QUOTE_TOKENS: QuoteTokens = {
     linkUnderline: true,
     hAlign: HALIGN.LEFT,
     vAlign: VALIGN.TOP,
-    accents: { accent: "#00CCCC", soft: "#FF00FF", dark: "#FF8800" },
+    highlightColor: "#00CCCC",
   },
   attribution: {
     style: "small",
@@ -303,7 +303,7 @@ export const DEFAULT_TESTIMONIAL_TOKENS: TestimonialTokens = {
     linkUnderline: true,
     hAlign: HALIGN.CENTER,
     vAlign: VALIGN.TOP,
-    accents: { accent: "#00CCCC", soft: "#FF00FF", dark: "#FF8800" },
+    highlightColor: "#00CCCC",
   },
   attribution: {
     style: "small",
