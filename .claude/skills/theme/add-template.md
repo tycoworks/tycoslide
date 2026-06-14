@@ -1,11 +1,6 @@
----
-name: add-template
-description: Add a new slide template to an existing tycoslide theme. Use when the user wants to implement a new slide design from a reference PPTX or PDF, add a template to their theme, or convert a PowerPoint slide layout into tycoslide code. Triggers on phrases like "add a template", "new slide type", "implement this slide", "convert this layout", or when the user provides a PPTX/PDF reference and wants to reproduce a slide design.
----
+# Add Template to Existing Theme
 
-# Add Template to Theme
-
-Convert a reference slide design (from PPTX, PDF, or Figma) into a tycoslide template definition.
+Add a single template to a theme that already has `brand.ts`, `fonts.ts`, `chrome.ts`, and format files in place.
 
 **Core principle: measure first, model second, code third.** Never eyeball positions — extract exact measurements from the source format.
 
@@ -18,14 +13,14 @@ Convert a reference slide design (from PPTX, PDF, or Figma) into a tycoslide tem
    - `src/layouts.ts` — existing layout blueprints
    - `src/chrome.ts` — existing chrome wrappers (footer, margin, background)
    - `src/formats/*.ts` — format files where templates are defined with `defineTemplate()`
-   - `src/brand.ts` or `src/palette.ts` — color palette
+   - `src/brand.ts` — color palette
    - `src/assets.ts` — asset catalog (logos, backgrounds, icons)
 
 3. **Identify the format.** Templates belong to a format (e.g., `presentation`, `factsheet`). Confirm which format file the new template goes into.
 
 ## Phase 1: Extract Measurements
 
-**Goal:** Build a complete manifest of every element on the reference slide with exact positions, dimensions, and text properties.
+Build a complete manifest of every element on the reference slide with exact positions, dimensions, and text properties.
 
 ### From PPTX (preferred — exact measurements)
 
@@ -42,7 +37,7 @@ Convert a reference slide design (from PPTX, PDF, or Figma) into a tycoslide tem
    ```
 5. **Extract all properties** for each element using the reference guide. For every element, capture position, size, and — for text elements — font, color, anchor, alignment, line spacing, bullet character, and box insets. See `references/pptx-extraction.md` for XML paths and conversion formulas.
 
-6. **Build the manifest table.** One row per element. Example:
+6. **Build the manifest table.** One row per element. See [pptx-extraction.md](references/pptx-extraction.md) § "Building the Manifest" for the full field list. Example (abbreviated):
 
 ```
 | Element       | Source | Role    | X (in) | Y (in) | W (in) | H (in) | Font        | Size | Color   | Anchor | Align | Line Sp | Bullet |
@@ -69,7 +64,7 @@ After building the manifest, present it and ask:
 
 ## Phase 2: Classify and Model
 
-**Goal:** Decide how to represent this slide in tycoslide's layout system. Steps are ordered — each constrains the next.
+Decide how to represent this slide in tycoslide's layout system. Steps are ordered — each constrains the next.
 
 ### Step 1: Establish the Margin Envelope
 
@@ -184,8 +179,6 @@ This is the contract between Phase 2 and Phase 3. If you cannot write it clearly
 
 ## Phase 3: Implement
 
-**Goal:** Write the template definition and wire it into the theme.
-
 ### Step 1: Add the template name
 
 In `src/index.ts`, add the template name to the `TEMPLATE` const (kebab-case).
@@ -208,7 +201,7 @@ defineTemplate({
     limits: ["Content constraints."],
   },
   layout: footer(body),
-  background: t.surfaces.page,
+  background: t.onLight.surfaces.page,
   tokens: { /* manifest → tokens */ },
 })
 ```
@@ -229,7 +222,7 @@ In `examples/test-*.md`, add a slide using the new template. Use text from the r
 
 ## Phase 4: Verify
 
-**Goal:** Confirm the output matches the reference. Every property in the manifest should be reproducible in the output.
+Every property in the manifest should be reproducible in the output.
 
 ### Step 1: Build and extract
 
