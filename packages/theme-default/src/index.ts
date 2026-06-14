@@ -67,7 +67,7 @@ export const TEMPLATE = {
 export const theme = defineTheme({
   fonts: brandFonts(brand),
   formats: {
-    presentation: buildPresentationFormat(brand.colors.light),
+    presentation: buildPresentationFormat(brand),
   },
   assets,
 });

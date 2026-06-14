@@ -1,14 +1,5 @@
-import type { Format, LabelTokens, Layout, Palette, ThemeFormat } from "@tycoslide/sdk";
-import {
-  defineTemplate,
-  deriveTokens,
-  GRID_STYLE,
-  HALIGN,
-  SHADOW,
-  SlideFormat,
-  TEXT_STYLE,
-  VALIGN,
-} from "@tycoslide/sdk";
+import type { Brand, Format, LabelTokens, Layout, Palette, ThemeFormat } from "@tycoslide/sdk";
+import { defineTemplate, deriveTokens, HALIGN, SHADOW, SlideFormat, TEXT_STYLE, VALIGN } from "@tycoslide/sdk";
 import { assets } from "../assets.js";
 import { type FooterChromeTokens, type MarginChromeTokens, withFooterChrome, withMarginChrome } from "../chrome.js";
 import { fonts } from "../fonts.js";
@@ -122,13 +113,13 @@ function buildChromeTokens(palette: Palette, config: Format, chrome: ChromeConfi
 // PRESENTATION FORMAT
 // ============================================
 
-export function buildPresentationFormat(palette: Palette): ThemeFormat {
+export function buildPresentationFormat(brand: Brand): ThemeFormat {
   const config = presentationFormat;
+  const palette = brand.colors.light;
   const spacing = config.spacing.base;
   const spacingTight = config.spacing.tight;
-  const { padding } = config;
 
-  const t = deriveTokens(palette, config);
+  const t = deriveTokens(brand, config);
   const c = buildChromeTokens(palette, config, presentationChrome);
 
   // ── Chrome wrapper helpers ──────────────────────────────────────────────
@@ -153,131 +144,6 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
     headerSpacing: spacingTight,
   };
 
-  // ── Component tokens (body slots can contain any of these) ──────────────
-  const imageTokens = {};
-
-  const labelMutedSmall: LabelTokens = {
-    style: TEXT_STYLE.CAPTION,
-    color: palette.text.secondary,
-    hAlign: HALIGN.LEFT,
-    vAlign: VALIGN.MIDDLE,
-  };
-
-  const quoteText = { ...t.onLight.headings.h2, ...richText };
-
-  // ── Card tokens ────────────────────────────────────────────────────────
-  const cardTitle = {
-    ...richText,
-    hAlign: HALIGN.LEFT,
-    vAlign: VALIGN.MIDDLE,
-    style: TEXT_STYLE.H4,
-    color: palette.brand.primary,
-  };
-  const cardDescription = {
-    ...richText,
-    hAlign: HALIGN.LEFT,
-    vAlign: VALIGN.MIDDLE,
-    style: TEXT_STYLE.CAPTION,
-    color: palette.text.secondary,
-  };
-  const cardBase = {
-    padding,
-    image: { padding: spacingTight, tint: palette.brand.primary },
-    spacing: spacingTight,
-    hAlign: HALIGN.LEFT,
-    title: cardTitle,
-    description: cardDescription,
-  };
-
-  const componentTokens = {
-    table: {
-      headerRow: {
-        style: TEXT_STYLE.CAPTION,
-        color: palette.text.subtle,
-        fill: palette.fill.divider,
-        hAlign: HALIGN.CENTER,
-      },
-      headerCol: {
-        style: TEXT_STYLE.CAPTION,
-        color: palette.text.subtle,
-        fill: palette.fill.background,
-        hAlign: HALIGN.LEFT,
-      },
-      cellStyle: TEXT_STYLE.CAPTION,
-      cellColor: palette.text.body,
-      cellFill: palette.fill.surface,
-      hAlign: HALIGN.CENTER,
-      vAlign: VALIGN.MIDDLE,
-      gridStyle: GRID_STYLE.HORIZONTAL,
-      gridStroke: t.primitives.border,
-      cellPadding: spacingTight,
-      linkColor: palette.brand.primary,
-      linkUnderline: true,
-      highlightColor: palette.brand.primary,
-      background: {
-        fill: palette.fill.background,
-        border: t.primitives.border,
-        cornerRadius: config.radius,
-        shadow: t.primitives.shadow,
-      },
-      backgroundPadding: spacingTight,
-    },
-    code: {
-      style: TEXT_STYLE.CODE,
-      theme: palette.highlightTheme,
-      padding,
-      background: {
-        fill: palette.fill.emphasis,
-        cornerRadius: config.radius,
-        shadow: t.primitives.shadow,
-      },
-      image: imageTokens,
-    },
-    mermaid: {
-      primary: palette.fill.background,
-      primaryContrast: palette.text.heading,
-      text: palette.text.heading,
-      line: palette.brand.primary,
-      surface: palette.fill.surface,
-      surfaceBorder: palette.fill.divider,
-      surfaceSubtle: palette.fill.surface,
-      group: palette.fill.surface,
-      groupCornerRadius: config.radius,
-      accents: t.primitives.accents,
-      accentOpacity: config.shadow.opacity,
-      accentTextColor: palette.text.body,
-      style: TEXT_STYLE.BODY,
-      image: imageTokens,
-    },
-    quote: {
-      bar: { color: palette.brand.primary, width: config.strokes.thick },
-      spacing,
-      quote: quoteText,
-      attribution: labelMutedSmall,
-    },
-    testimonial: {
-      background: {
-        fill: palette.fill.surface,
-        border: t.primitives.border,
-        cornerRadius: config.radius,
-      },
-      padding,
-      spacing: spacingTight,
-      ...centered,
-      quote: quoteText,
-      attribution: labelMutedSmall,
-      image: imageTokens,
-    },
-    card: { ...cardBase, vAlign: VALIGN.MIDDLE, background: { ...t.surfaces.card, shadow: t.primitives.shadow } },
-    image: imageTokens,
-    label: {
-      1: t.onLight.headings.h1,
-      2: t.onLight.headings.h2,
-      3: t.onLight.headings.h3,
-      4: t.onLight.headings.h4,
-    },
-  };
-
   // ── Shared body spread ──────────────────────────────────────────────────
   const bodyBase = {
     ...headerTokens,
@@ -285,7 +151,10 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
     list: t.onLight.list,
     hAlign: HALIGN.LEFT,
     spacing,
-    ...componentTokens,
+    ...t.onLight.components,
+    table: { ...t.onLight.components.table, hAlign: HALIGN.CENTER },
+    testimonial: { ...t.onLight.components.testimonial, ...centered },
+    quote: { ...t.onLight.components.quote, quote: { ...t.onLight.components.quote.quote, style: TEXT_STYLE.H2 } },
   };
 
   // ── Muted caption (used by statement, cards) ────────────────────────────
@@ -305,7 +174,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
           limits: ["Title and subtitle only — no body content."],
         },
         layout: margin(title),
-        background: t.surfaces.elevated,
+        background: t.onLight.surfaces.elevated,
         tokens: {
           title: { ...t.onLight.headings.h1, ...centered, ...richText, linkUnderline: false, style: TEXT_STYLE.QUOTE },
           subtitle: {
@@ -331,7 +200,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
           limits: ["Title and subtitle only — no body content."],
         },
         layout: margin(title),
-        background: t.surfaces.emphasis,
+        background: t.onLight.surfaces.emphasis,
         tokens: {
           title: { ...t.onDark.headings.h1, ...centered, ...richText, linkUnderline: false, style: TEXT_STYLE.QUOTE },
           subtitle: { ...t.onDark.headings.h3, ...centered, ...richText, linkUnderline: false },
@@ -352,7 +221,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
           limits: ["Title only — no body content, no subtitle."],
         },
         layout: margin(section),
-        background: t.surfaces.emphasis,
+        background: t.onLight.surfaces.emphasis,
         tokens: {
           title: { ...t.onDark.headings.h2, hAlign: HALIGN.CENTER },
           ...centered,
@@ -378,7 +247,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
           gotchas: ["Content is top-aligned. Use body-centered if you want vertical centering."],
         },
         layout: footer(body),
-        background: t.surfaces.elevated,
+        background: t.onLight.surfaces.elevated,
         tokens: { ...bodyBase, vAlign: VALIGN.TOP },
       }),
 
@@ -396,7 +265,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
           ],
         },
         layout: footer(body),
-        background: t.surfaces.elevated,
+        background: t.onLight.surfaces.elevated,
         tokens: { ...bodyBase, vAlign: VALIGN.MIDDLE },
       }),
 
@@ -413,7 +282,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
           gotchas: ["Body text is set large (H2). Keep it punchy — long sentences will overflow."],
         },
         layout: margin(statement),
-        background: t.surfaces.elevated,
+        background: t.onLight.surfaces.elevated,
         tokens: {
           caption: mutedCaption,
           ...centered,
@@ -433,12 +302,12 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
           gotchas: ["Items are frontmatter params (YAML array), not markdown body content."],
         },
         layout: footer(agenda),
-        background: t.surfaces.elevated,
+        background: t.onLight.surfaces.elevated,
         tokens: {
           ...headerTokens,
           vAlign: VALIGN.MIDDLE,
           items: { ...t.onLight.text, style: TEXT_STYLE.H4, color: palette.text.heading },
-          divider: t.primitives.border,
+          divider: t.onLight.primitives.border,
           itemNumber: { style: TEXT_STYLE.H2, color: palette.brand.soft, ...centered },
           itemVAlign: VALIGN.MIDDLE,
           itemSpacing: spacing,
@@ -460,7 +329,7 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
           gotchas: ["Cards are frontmatter params (YAML array), not markdown body content."],
         },
         layout: footer(cards),
-        background: t.surfaces.elevated,
+        background: t.onLight.surfaces.elevated,
         tokens: {
           ...headerTokens,
           intro: t.onLight.text,
@@ -468,7 +337,12 @@ export function buildPresentationFormat(palette: Palette): ThemeFormat {
           ...centered,
           spacing,
           gridSpacing: spacing,
-          card: { ...cardBase, padding: unit * 11, vAlign: VALIGN.TOP, background: t.surfaces.card },
+          card: {
+            ...t.onLight.components.card,
+            padding: unit * 11,
+            vAlign: VALIGN.TOP,
+            background: t.onLight.surfaces.card,
+          },
         },
       }),
     ],
