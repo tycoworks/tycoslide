@@ -109,7 +109,9 @@ export function flexSize(
   const crossSize = isInRow ? height : width;
 
   // Main axis → flex property
-  if (mainSize === SIZE.FILL) {
+  if (mainSize === SIZE.FIXED) {
+    styles.flex = `0 0 ${opts?.weight ?? 0}px`;
+  } else if (mainSize === SIZE.FILL) {
     const w = opts?.weight ?? 1;
     styles.flex = `${w} 1 0`;
     if (isInRow) {
@@ -129,7 +131,14 @@ export function flexSize(
   }
 
   // Cross axis → explicit CSS dimension
-  if (crossSize === SIZE.FILL) {
+  if (crossSize === SIZE.FIXED) {
+    const px = opts?.weight ?? 0;
+    if (isInRow) {
+      styles.height = `${px}px`;
+    } else {
+      styles.width = `${px}px`;
+    }
+  } else if (crossSize === SIZE.FILL) {
     if (isInRow) {
       styles.height = "100%";
     } else {
@@ -142,10 +151,10 @@ export function flexSize(
 }
 
 /** Compute child context for Container, Stack, or Grid nodes.
- *  heightIsConstrained propagation: number→true, HUG→false, FILL→inherit. */
+ *  heightIsConstrained propagation: FIXED→true, HUG→false, FILL→inherit. */
 export function childContext(node: LayoutNode, parent: ParentCtx): ParentCtx {
   const heightIsConstrained =
-    typeof node.height === "number" ? true : node.height === SIZE.HUG ? false : parent.heightIsConstrained;
+    node.height === SIZE.FIXED ? true : node.height === SIZE.HUG ? false : parent.heightIsConstrained;
 
   switch (node.type) {
     case NODE_TYPE.CONTAINER: {
@@ -357,7 +366,7 @@ function styleGrid(
 
   // When the grid has definite height (FILL or fixed pixels), distribute rows equally.
   // Without this, rows hug content and empty space pools at the bottom.
-  if (node.height === SIZE.FILL || typeof node.height === "number") {
+  if (node.height === SIZE.FILL || node.height === SIZE.FIXED) {
     styles.gridAutoRows = "1fr";
   }
 

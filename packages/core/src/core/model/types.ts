@@ -34,6 +34,7 @@ export const DIRECTION_VALUES = Object.values(DIRECTION) as [Direction, ...Direc
 export const SIZE = {
   FILL: "fill",
   HUG: "hug",
+  FIXED: "fixed",
 } as const;
 
 export type Size = (typeof SIZE)[keyof typeof SIZE];

@@ -371,20 +371,16 @@ describe("HTML Measurement Generation", () => {
   });
 
   describe("Direction-aware flex item sizing", () => {
-    test("row with explicit height in column uses flex: 0 0 (fixed main axis)", async () => {
-      // This is the title-slide logo bug: row({ height: 0.33 }) inside a column
-      // should NOT get flex: 1 1 0 which would override the explicit height
-      const node = colNode(rowNode({ height: 0.33 }, textNode("Logo")));
+    test("row with FIXED height in column uses flex: 0 0 (fixed main axis)", async () => {
+      const node = colNode(rowNode({ height: SIZE.FIXED, weight: 32 }, textNode("Logo")));
       const { html } = await genHTML(node, bounds);
-      // 0.33 inches * 96 DPI = 31.68px
-      assert.ok(html.includes("flex:0 0 31.68px"), "Row with explicit height in column should get flex:0 0 <height>px");
+      assert.ok(html.includes("flex:0 0 32px"), "Row with FIXED height in column should get flex:0 0 <weight>px");
     });
 
-    test("column with explicit width in row uses flex: 0 0 (fixed main axis)", async () => {
-      const node = rowNode(colNode({ width: 3 }, textNode("Left")), textNode("Right"));
+    test("column with FIXED width in row uses flex: 0 0 (fixed main axis)", async () => {
+      const node = rowNode(colNode({ width: SIZE.FIXED, weight: 288 }, textNode("Left")), textNode("Right"));
       const { html } = await genHTML(node, bounds);
-      // 3 inches * 96 DPI = 288px
-      assert.ok(html.includes("flex:0 0 288px"), "Column with explicit width in row should get flex:0 0 <width>px");
+      assert.ok(html.includes("flex:0 0 288px"), "Column with FIXED width in row should get flex:0 0 <weight>px");
     });
 
     test("row with default HUG height in column uses flex-shrink:0 (content-sized)", async () => {
@@ -404,20 +400,16 @@ describe("HTML Measurement Generation", () => {
       assert.ok(html.includes("flex:1 1 0"), "Row with SIZE.FILL height should fill");
     });
 
-    test("column with explicit height in column uses flex: 0 0 (cross-axis explicit)", async () => {
-      // A column inside another column with fixed height
-      const node = colNode(colNode({ height: 2 }, textNode("Fixed")), textNode("Below"));
+    test("column with FIXED height in column uses flex: 0 0 (fixed main axis)", async () => {
+      const node = colNode(colNode({ height: SIZE.FIXED, weight: 192 }, textNode("Fixed")), textNode("Below"));
       const { html } = await genHTML(node, bounds);
-      // 2 inches * 96 = 192px
-      assert.ok(html.includes("flex:0 0 192px"), "Nested column with explicit height should use flex:0 0");
+      assert.ok(html.includes("flex:0 0 192px"), "Nested column with FIXED height should use flex:0 0");
     });
 
-    test("row with explicit height also sets cross-axis height when in row parent", async () => {
-      // A row inside another row - height is cross-axis, should use explicit height CSS
-      const node = rowNode(rowNode({ height: 1 }, textNode("Inner")));
+    test("row with FIXED height sets cross-axis height when in row parent", async () => {
+      const node = rowNode(rowNode({ height: SIZE.FIXED, weight: 96 }, textNode("Inner")));
       const { html } = await genHTML(node, bounds);
-      // height is cross-axis in a row parent, so should be explicit CSS height
-      assert.ok(html.includes("height:96px"), "Row with height in row parent should set explicit height CSS");
+      assert.ok(html.includes("height:96px"), "Row with FIXED height in row parent should set explicit height CSS");
     });
   });
 
@@ -705,7 +697,7 @@ describe("HTML Measurement Generation", () => {
     test("image in definite-height row uses natural aspect-ratio width (flex: 0 1 auto)", async () => {
       // Row with explicit height: height: 100% resolves, aspect-ratio derives width.
       // Image should NOT grow to fill — it should be naturally sized.
-      const node = rowNode({ height: 0.33 }, imageNode(testImage));
+      const node = rowNode({ height: SIZE.FIXED, weight: 32 }, imageNode(testImage));
       const { html } = await genHTML(node, bounds);
       const imageMatch = html.match(/data-node-id="node-2"[^>]*style="([^"]*)"/);
       assert.ok(imageMatch, "Should find the image div");
@@ -792,7 +784,7 @@ describe("HTML Measurement Generation", () => {
       // Slide root (constrained) → HUG column (breaks) → fixed column (restarts) → FILL column → image
       // node-1: outer HUG column, node-2: fixed column, node-3: inner FILL column, node-4: image
       const node = colNode(
-        colNode({ height: 2 }, colNode({ height: SIZE.FILL }, imageNode("./test/fixtures/test.png"))),
+        colNode({ height: SIZE.FIXED, weight: 192 }, colNode({ height: SIZE.FILL }, imageNode("./test/fixtures/test.png"))),
       );
       const { html } = await genHTML(node, bounds);
       const imageMatch = html.match(/data-node-id="node-4"[^>]*style="([^"]*)"/);

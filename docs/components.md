@@ -596,9 +596,9 @@ Horizontal flex container. Children are arranged side by side.
 | `vAlign` | `top` \| `middle` \| `bottom` | Vertical alignment of children |
 | `hAlign` | `left` \| `center` \| `right` | Horizontal alignment |
 | `padding` | number | Internal padding (pixels) |
-| `width` | `fill` \| `hug` | Width sizing (default: `fill`) |
-| `height` | `fill` \| `hug` | Height sizing (default: `hug`) |
-| `weight` | number | Proportional share of available space (default: `1`). Only applies when main-axis size is `fill`. |
+| `width` | `fill` \| `hug` \| `fixed` | Width sizing (default: `fill`) |
+| `height` | `fill` \| `hug` \| `fixed` | Height sizing (default: `hug`) |
+| `weight` | number | When size is `fill`: proportional share of available space (default: `1`). When size is `fixed`: the dimension in pixels (**required**). |
 
 ### Examples
 
@@ -615,6 +615,16 @@ row({ spacing: tokens.spacing, vAlign: VALIGN.TOP },
 row({ spacing: tokens.spacing },
   column({ weight: 3 }, ...mainContent),
   column({ weight: 2 }, ...sidebar),
+)
+```
+
+Mixed fixed and flexible children:
+
+```typescript
+row({},
+  column({ width: SIZE.FIXED, weight: 21 }, logo),
+  column({ width: SIZE.FILL }),
+  column({ width: SIZE.FIXED, weight: 29 }, pageNumber),
 )
 ```
 
@@ -643,8 +653,8 @@ Z-order overlay container. All children occupy the same bounds; the first child 
 
 | Param | Type | Description |
 |-------|------|-------------|
-| `width` | `fill` \| `hug` | Width sizing (default: `fill`) |
-| `height` | `fill` \| `hug` | Height sizing (default: `hug`) |
+| `width` | `fill` \| `hug` \| `fixed` | Width sizing (default: `fill`) |
+| `height` | `fill` \| `hug` \| `fixed` | Height sizing (default: `hug`) |
 
 ### Example
 
@@ -667,7 +677,7 @@ Equal-column grid. Children are laid out in rows of N columns with equal widths.
 |-------|------|-------------|
 | `columns` | number | Number of columns (**required**) |
 | `spacing` | number | Spacing between cells in pixels (**required**) |
-| `height` | Size | `SIZE.FILL` (default) distributes available height; `SIZE.HUG` sizes to content |
+| `height` | Size | `SIZE.FILL` (default) distributes available height; `SIZE.HUG` sizes to content; `SIZE.FIXED` uses `weight` as pixel height |
 
 ### Example
 

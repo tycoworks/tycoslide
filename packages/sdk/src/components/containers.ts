@@ -45,6 +45,12 @@ function parseContainerArgs<TParams>(args: any[]): { params: TParams; children: 
   };
 }
 
+function validateFixedSize(name: string, params: { width?: Size; height?: Size; weight?: number }): void {
+  if ((params.width === SIZE.FIXED || params.height === SIZE.FIXED) && params.weight == null) {
+    throw new Error(`${name}(): SIZE.FIXED requires an explicit weight (pixel size)`);
+  }
+}
+
 // ============================================
 // ROW
 // ============================================
@@ -65,20 +71,23 @@ export const rowComponent = defineComponent({
   children: true,
   directive: false,
 
-  render: (params: RowParams, children: SlideNode[], _context: RenderContext) => ({
-    type: NODE_TYPE.CONTAINER,
-    direction: DIRECTION.ROW,
-    children,
-    width: params.width ?? SIZE.FILL,
-    height: params.height ?? SIZE.HUG,
-    weight: params.weight ?? 1,
-    spacing: params.spacing ?? 0,
-    spacingMode: params.spacingMode ?? SPACING.BETWEEN,
-    vAlign: params.vAlign ?? VALIGN.TOP, // Explicit default: pure alignment (not CSS stretch)
-    hAlign: params.hAlign ?? HALIGN.LEFT, // Explicit default for consistent measurement
-    padding: params.padding instanceof Insets ? params.padding : new Insets(params.padding ?? 0),
-    layer: LAYER.CONTENT,
-  }),
+  render: (params: RowParams, children: SlideNode[], _context: RenderContext) => {
+    validateFixedSize("row", params);
+    return {
+      type: NODE_TYPE.CONTAINER,
+      direction: DIRECTION.ROW,
+      children,
+      width: params.width ?? SIZE.FILL,
+      height: params.height ?? SIZE.HUG,
+      weight: params.weight ?? 1,
+      spacing: params.spacing ?? 0,
+      spacingMode: params.spacingMode ?? SPACING.BETWEEN,
+      vAlign: params.vAlign ?? VALIGN.TOP,
+      hAlign: params.hAlign ?? HALIGN.LEFT,
+      padding: params.padding instanceof Insets ? params.padding : new Insets(params.padding ?? 0),
+      layer: LAYER.CONTENT,
+    };
+  },
 });
 
 export function row(params: RowParams, ...children: SlideNode[]): ComponentNode {
@@ -105,20 +114,23 @@ export const columnComponent = defineComponent({
   children: true,
   directive: false,
 
-  render: (params: ColumnParams, children: SlideNode[], _context: RenderContext) => ({
-    type: NODE_TYPE.CONTAINER,
-    direction: DIRECTION.COLUMN,
-    children,
-    width: params.width ?? SIZE.FILL,
-    height: params.height ?? SIZE.HUG,
-    weight: params.weight ?? 1,
-    spacing: params.spacing ?? 0,
-    spacingMode: params.spacingMode ?? SPACING.BETWEEN,
-    vAlign: params.vAlign ?? VALIGN.TOP, // Explicit default for consistent measurement
-    hAlign: params.hAlign ?? HALIGN.LEFT, // Explicit default for consistent measurement
-    padding: params.padding instanceof Insets ? params.padding : new Insets(params.padding ?? 0),
-    layer: LAYER.CONTENT,
-  }),
+  render: (params: ColumnParams, children: SlideNode[], _context: RenderContext) => {
+    validateFixedSize("column", params);
+    return {
+      type: NODE_TYPE.CONTAINER,
+      direction: DIRECTION.COLUMN,
+      children,
+      width: params.width ?? SIZE.FILL,
+      height: params.height ?? SIZE.HUG,
+      weight: params.weight ?? 1,
+      spacing: params.spacing ?? 0,
+      spacingMode: params.spacingMode ?? SPACING.BETWEEN,
+      vAlign: params.vAlign ?? VALIGN.TOP,
+      hAlign: params.hAlign ?? HALIGN.LEFT,
+      padding: params.padding instanceof Insets ? params.padding : new Insets(params.padding ?? 0),
+      layer: LAYER.CONTENT,
+    };
+  },
 });
 
 export function column(params: ColumnParams, ...children: SlideNode[]): ComponentNode {

@@ -202,9 +202,9 @@ export interface ContainerNode<C extends SlideNode = ElementNode> {
   type: typeof NODE_TYPE.CONTAINER;
   direction: Direction; // 'row' or 'column' — determines flex-direction
   children: C[]; // Pre-expansion: SlideNode[]; post-expansion: ElementNode[]
-  width: Size; // SIZE.FILL (share space) or SIZE.HUG (content-sized)
-  height: Size; // SIZE.FILL (share space) or SIZE.HUG (content-sized)
-  weight: number; // flex-grow weight (main axis). SDK defaults to 1.
+  width: Size; // SIZE.FILL (share space), SIZE.HUG (content-sized), or SIZE.FIXED (pixel-sized via weight)
+  height: Size; // SIZE.FILL (share space), SIZE.HUG (content-sized), or SIZE.FIXED (pixel-sized via weight)
+  weight: number; // When FILL: flex-grow proportion (default 1). When FIXED: dimension in pixels (required).
   spacing: number; // pixels — space between children (and edges when spacingMode is AROUND)
   spacingMode: Spacing; // BETWEEN: between children only; AROUND: between + edges
   vAlign: VerticalAlignment;
