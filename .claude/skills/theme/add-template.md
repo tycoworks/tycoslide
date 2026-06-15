@@ -37,7 +37,7 @@ Build a complete manifest of every element on the reference slide with exact pos
    ```
 5. **Extract all properties** for each element using the reference guide. For every element, capture position, size, and — for text elements — font, color, anchor, alignment, line spacing, bullet character, and box insets. See `references/pptx-extraction.md` for XML paths and conversion formulas.
 
-6. **Build the manifest table.** One row per element. See [pptx-extraction.md](references/pptx-extraction.md) § "Building the Manifest" for the full field list. Example (abbreviated):
+6. **Build the manifest table.** One row per element. Example:
 
 ```
 | Element       | Source | Role    | X (in) | Y (in) | W (in) | H (in) | Font        | Size | Color   | Anchor | Align | Line Sp | Bullet |

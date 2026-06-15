@@ -233,6 +233,100 @@ For each element on the slide, extract:
 | Box insets | `a:bodyPr lIns/tIns/rIns/bIns` | non-default only |
 | Notes | Anything unusual | "rotated 90°", "grouped" |
 
+## Inheritance Resolution
+
+PPTX elements inherit properties through a three-level chain: **slide → slideLayout → slideMaster**. If a property is not specified at one level, check the next.
+
+### Lookup chain
+
+1. Check the slide XML (`ppt/slides/slideN.xml`)
+2. If not found, check the layout XML (`ppt/slideLayouts/slideLayoutN.xml`) — find which layout via the slide's `.rels` file
+3. If not found, check the master XML (`ppt/slideMasters/slideMaster1.xml`) — find which master via the layout's `.rels` file
+
+### What inherits
+
+| Property | Common inheritance pattern |
+|----------|---------------------------|
+| Font family | Often set on master or layout placeholders, overridden on slide |
+| Font size | Usually set on layout placeholders |
+| Colors | Mix — scheme colors on master, overrides on slide |
+| Position/size | Usually set on layout placeholders, rarely overridden |
+| Background | Cascades: slide → layout → master |
+| Bullets | Often set on layout placeholders |
+
+### Placeholder inheritance
+
+Placeholders (`<p:ph type="title" idx="0"/>`) are the primary inheritance mechanism. A slide placeholder with `idx="0"` inherits from the layout placeholder with the same `idx`, which inherits from the master. Match by `idx` attribute, not by element name.
+
+## Strokes and Borders
+
+Shape outlines are defined with `<a:ln>` inside `<p:spPr>`:
+
+```xml
+<p:spPr>
+  <a:ln w="28575">
+    <a:solidFill><a:srgbClr val="7F4EFF"/></a:solidFill>
+  </a:ln>
+</p:spPr>
+```
+
+- `w` = stroke width in EMU. Common values: `9525` (0.75pt/1px hairline), `12700` (1pt), `28575` (2.25pt)
+- Convert: `w / 12700` = points, or `w / 9525` = pixels
+- `<a:noFill/>` inside `<a:ln>` = no visible border
+- No `<a:ln>` element = no border (or inherited)
+
+## Corner Radius
+
+Rounded rectangles use `<a:prstGeom prst="roundRect">` with an adjustment list:
+
+```xml
+<a:prstGeom prst="roundRect">
+  <a:avLst>
+    <a:gd name="adj" fmla="val 16667"/>
+  </a:avLst>
+</a:prstGeom>
+```
+
+- `adj` value is in 1/100000ths of the shorter side. `16667` = 16.667% of the shorter dimension.
+- To get radius in inches: `adj / 100000 * min(width, height)` where width/height are in inches.
+- Default `roundRect` with no `<a:avLst>` uses `adj = 16667`.
+- Regular rectangles use `prst="rect"` and have no radius.
+
+## Shape Fills
+
+Shape background fills are on `<p:spPr>`:
+
+```xml
+<p:spPr>
+  <a:solidFill><a:srgbClr val="BDB0E0"/></a:solidFill>
+</p:spPr>
+```
+
+- `<a:solidFill>` with `<a:srgbClr>` = solid hex color
+- `<a:solidFill>` with `<a:schemeClr>` = theme color reference (resolve via theme1.xml)
+- `<a:noFill/>` = transparent
+- No fill element = inherited or transparent
+
+## Shadows
+
+Drop shadows use `<a:outerShdw>` inside `<a:effectLst>`:
+
+```xml
+<p:spPr>
+  <a:effectLst>
+    <a:outerShdw blurRad="50800" dist="38100" dir="5400000" algn="t" rotWithShape="0">
+      <a:srgbClr val="000000"><a:alpha val="40000"/></a:srgbClr>
+    </a:outerShdw>
+  </a:effectLst>
+</p:spPr>
+```
+
+- `blurRad` = blur radius in EMU (`50800` = 4pt)
+- `dist` = shadow offset distance in EMU (`38100` = 3pt)
+- `dir` = shadow direction in 60000ths of a degree (`5400000` = 90° = straight down)
+- `<a:alpha val="40000"/>` = 40% opacity
+- No `<a:effectLst>` = no shadow
+
 ## Quick Reference: Common Gotchas
 
 - **EMU are huge numbers.** `457200` looks wrong but is just 0.5 inches.

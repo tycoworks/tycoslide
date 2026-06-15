@@ -4,16 +4,19 @@ Bootstrap a complete tycoslide theme from a reference PowerPoint deck. This mode
 
 **Why foundations first:** A theme's palette, type scale, and chrome are shared across all templates. Defining them per-slide leads to inconsistencies — the same color mapped to different palette roles, font sizes that don't align with the TEXT_STYLE ladder. Extract the foundations from the full corpus, then templates fall into place.
 
+**Two artifacts, two phases.** Extraction produces two markdown files in the theme's `reference/` directory:
+- **`manifest.md`** — Raw catalog of every slide with exact measurements. No interpretation. This is the permanent record of what the PPTX contains.
+- **`foundations.md`** — Synthesized analysis: palette, type scale, spatial constants, chrome, layout families. This is the designer's intent, backed out from the raw data. It drives implementation.
+
+The manifest is Phase 1. The foundations are Phase 2. Both are committed to the theme repo (the PPTX/PDF source files are gitignored as proprietary binaries).
+
 ## Before You Start
 
-1. **Read the reference guide.** Open `references/pptx-extraction.md` in this skill directory for PPTX XML format, coordinate systems, and property extraction.
+1. **Read the reference guide.** Open `references/pptx-extraction.md` in this skill directory for PPTX XML format, coordinate systems, property extraction, and inheritance resolution.
 
-2. **Get the reference PPTX.** The user provides a `.pptx` file. Unzip it:
-   ```bash
-   unzip -o reference.pptx -d /tmp/pptx-extracted
-   ```
+2. **Get the reference PPTX.** The user provides a `.pptx` file. Unzip it per the reference guide (§ "Extracting Slides").
 
-3. **Ask which slides to catalog.** A 70-slide corporate deck has many duplicates. Ask the user to identify a representative sample (typically 5-15 slides covering all distinct layouts). If unsure, catalog the first 10 slides — they usually cover the major layouts.
+3. **Catalog everything.** Do not ask for a representative sample. Extract ALL slides — the manifest must be complete. Deduplication happens in Phase 2, not Phase 1. Use the layout-first strategy described below to make this efficient.
 
 ## Phase 1: Catalog
 
@@ -21,9 +24,11 @@ Extract measurements from every slide in the sample. Build one flat manifest cov
 
 ### Step 1: Map the deck structure
 
-Before measuring individual elements, understand the deck's organization:
+Before measuring individual elements, confirm dimensions and understand the deck's organization:
 
-1. **Read slide-to-layout mappings.** For each slide, check its `.rels` file to find which slideLayout it uses:
+1. **Read slide dimensions.** Check `ppt/presentation.xml` for `<p:sldSz cx="..." cy="..."/>` and convert to inches. Standard 16:9 is 10.0 x 5.625". All margin calculations depend on this.
+
+2. **Read slide-to-layout mappings.** For each slide, check its `.rels` file to find which slideLayout it uses:
    ```bash
    for f in /tmp/pptx-extracted/ppt/slides/_rels/*.rels; do
      slide=$(basename "$f" .xml.rels)
@@ -32,7 +37,7 @@ Before measuring individual elements, understand the deck's organization:
    done
    ```
 
-2. **Read layout-to-master mappings.** For each slideLayout, find its slideMaster:
+3. **Read layout-to-master mappings.** For each slideLayout, find its slideMaster:
    ```bash
    for f in /tmp/pptx-extracted/ppt/slideLayouts/_rels/*.rels; do
      layout=$(basename "$f" .xml.rels)
@@ -41,7 +46,7 @@ Before measuring individual elements, understand the deck's organization:
    done
    ```
 
-3. **Build the deck map.** Present it to the user:
+4. **Build the deck map.** Present it to the user:
    ```
    slideMaster1
    ├── slideLayout1 ("Title") → slides 1
@@ -54,38 +59,57 @@ Before measuring individual elements, understand the deck's organization:
 
    Layout names come from the `<p:cSld name="...">` attribute in each slideLayout XML.
 
-4. **Identify distinct templates.** Each slideLayout is a candidate template. Slides sharing a layout differ only in content. The user confirms which layouts to implement.
+5. **Identify distinct templates.** Each slideLayout is a candidate template. Slides sharing a layout differ only in content. The user confirms which layouts to implement.
 
 ### Step 2: Extract per-slide manifests
 
-For each slide in the sample, extract every element into the manifest table format defined in [pptx-extraction.md](references/pptx-extraction.md) § "Building the Manifest". Record:
+Read XML directly — no script needed. The AI reads each file with the Read tool and extracts measurements by hand, using the reference guide for XML paths and conversions.
+
+**Layout-first strategy:** Most 50-75 slide decks use 8-15 unique layouts. Read exhaustively in this order:
+1. **Master** (1 file) — establishes palette, fonts, defaults
+2. **All unique layouts** (8-15 files) — these ARE the templates; most properties live here
+3. **All slides** — to capture per-slide content and overrides
+
+For each slide, extract every element into the manifest table format defined in [pptx-extraction.md](references/pptx-extraction.md) § "Building the Manifest". Record:
 
 - **Slide index and layout** — which slide and which slideLayout it uses
 - **Element source** — master, layout, or slide (determines chrome vs content)
-- **All properties** — position, size, font, color, anchor, alignment, line spacing, bullet char, box insets
+- **All properties** — per the manifest table in [pptx-extraction.md](references/pptx-extraction.md) § "Building the Manifest"
 
 Also extract each slide's **background** (solid color hex or image reference).
 
-### Step 3: Read the theme color scheme
+**Inheritance resolution:** If an element is visible on a slide but not in its XML, check the layout XML, then the master XML. See [pptx-extraction.md](references/pptx-extraction.md) § "Inheritance Resolution" for the lookup chain.
 
-Extract the PPTX's built-in color scheme — it provides a starting point for palette construction:
+**Batching strategy:** For slides sharing a layout, extract ONE slide in full detail and spot-check 1-2 others for overrides. Most per-slide variation is text replacement, not structural difference.
+
+### Step 3: Read the theme color scheme (for reference only)
+
+Extract the PPTX color scheme so you can resolve `schemeClr` references:
 
 ```bash
 grep -A 20 'clrScheme' /tmp/pptx-extracted/ppt/theme/theme1.xml
 ```
 
-Record the named colors (dk1, lt1, dk2, lt2, accent1-6). These map loosely to tycoslide palette roles.
+Record the named colors (dk1, lt1, dk2, lt2, accent1-6). The ONLY purpose of this step is to know what hex value a `schemeClr val="dk1"` reference resolves to. Do NOT use the scheme to assign palette roles — that happens in Phase 2a based on what's actually on the slides.
 
-### Step 4: Present the catalog
+### Step 4: Write manifest.md
 
-Show the user the complete catalog: deck map, per-slide manifests, and color scheme. Ask:
-- Are any slides missing from the sample?
+Combine all extracted data into `reference/manifest.md` in the theme directory. Structure:
+
+1. **Header sections** — color scheme, fonts, font sizes, deck map, chrome summary
+2. **Per-slide manifests** — one section per slide with element tables and text content previews
+
+This is the raw record. Do not interpret or deduplicate — that happens in Phase 2.
+
+Present the manifest to the user and ask:
 - Are any elements decorative-only?
 - Anything surprising in the measurements?
 
 ## Phase 2: Derive Foundations
 
-Analyze the full catalog to extract shared theme properties. Each subsection produces one theme file.
+Analyze the full manifest to extract shared theme properties. Write the results to `reference/foundations.md` in the theme directory. This document captures the designer's intent — palette roles, type scale rationale, spatial constants, chrome spec, and layout family deduplication.
+
+Each subsection below produces one section of foundations.md AND one theme file.
 
 ### 2a. Color Palette
 
@@ -125,10 +149,9 @@ Analyze the full catalog to extract shared theme properties. Each subsection pro
    | `fill.shadow` | Typically heading color (light context) or black (dark context). |
    | `accents[]` | Remaining chromatic colors (saturation >15%) used as fills or emphasis. `brand.primary` is first. Order by frequency. |
 
-4. **Cross-check with PPTX color scheme.** The `clrScheme` in `theme1.xml` often maps directly:
-   - `dk1` → `text.heading` (light context) or `fill.emphasis` (dark context)
-   - `lt1` → `fill.background` (light context) or `text.heading` (dark context)
-   - `accent1` → `brand.primary`
+4. **Resolve `schemeClr` references.** Some text runs use `schemeClr val="dk1"` instead of a direct hex. Use the color scheme from Phase 1 Step 3 to convert these to hex values, then count them alongside direct hex values. The scheme is a lookup table, not a source of palette roles — frequency on actual slides determines the role assignment.
+
+   **Composited fills.** Shapes often use a hex color with an `<a:alpha>` opacity (e.g., `#BDB0E0` at 20%). For palette values, pre-composite against the background: blend the color at the given opacity onto the slide's background color to get the effective hex.
 
 5. **Present the proposed palettes to the user.** Show a table with role, hex, and evidence. Automated heuristics will get some roles wrong — the user confirms.
 
@@ -142,30 +165,41 @@ Analyze the full catalog to extract shared theme properties. Each subsection pro
    - Heading font: used at ≥20pt sizes
    - Body font: used at 10-18pt sizes (often a lighter weight of the heading font)
    - Code font: monospace (if present); default to Fira Code if none found
-4. **Ask the user** for font file paths or `@fontsource` package names.
+4. **Check for embedded fonts.** Look in `ppt/fonts/` for `.fntdata` files — many corporate decks embed their fonts. If present, these can be extracted directly.
+5. **Ask the user** for font file paths or `@fontsource` package names.
 
 **Output:** `fonts.ts` with `FontFamily` definitions.
 
 ### 2c. Type Scale
 
-1. **Collect all unique `(fontSize, lineHeight)` pairs** from the catalog.
-2. **Sort font sizes descending.** Map to the TEXT_STYLE ladder:
+**Map sizes to visual roles first, then to TEXT_STYLE slots.** Do NOT just sort sizes descending and assign — that ignores which layouts use which sizes.
 
-   | Slot | How to identify |
-   |------|-----------------|
-   | QUOTE | Largest text size, used on quote/statement slides |
-   | H1 | Largest title text (cover/title slides) |
-   | H2 | Second-level headings or section divider titles |
-   | H3 | Content slide titles (most common heading size) |
-   | H4 | Subheadings, card titles |
-   | BODY | Most frequently used paragraph/list size |
-   | CAPTION | Small text for labels, metadata |
-   | FOOTER | Smallest text (copyright, page numbers, typically 6-8pt) |
-   | CODE | Monospace font size (if present) |
+1. **Collect all unique font sizes** from the manifest. For each size, record:
+   - Which **layout(s)** use it (by layout name, e.g. "TITLE", "SECTION_HEADER", "TITLE_AND_BODY")
+   - Which **placeholder type** (`ctrTitle`, `title`, `body`, `sldNum`, or freeform shape)
+   - Whether it comes from the **master default**, a **layout override**, or a **slide override**
 
-3. **When sizes outnumber slots:** Extra sizes are template-specific overrides. The template uses the closest TEXT_STYLE and overrides `style` in its tokens.
+   Master defaults are fallbacks — layouts and slides frequently override them upward. A master title default of 28pt does NOT mean H1=28pt if the cover layout overrides it to 40pt.
 
-4. **When sizes are fewer than slots:** Interpolate missing values. A deck using only 32pt, 16pt, 10pt, 8pt maps to H1=32, H2=24, H3=20, H4=16, BODY=16, CAPTION=10, FOOTER=8.
+2. **Assign visual roles.** Look at WHERE each size appears, not just its magnitude:
+
+   | Visual role | How to identify | TEXT_STYLE slot |
+   |-------------|-----------------|-----------------|
+   | Cover title | `ctrTitle` placeholder on the TITLE/cover layout | H1 |
+   | Section header | `title` placeholder on SECTION_HEADER layouts | H2 |
+   | Content title | `title` placeholder on standard content layouts (TITLE_AND_BODY, TWO_COLUMNS, etc.) — often the master default | H3 |
+   | Subtitle / card title | Smaller heading text on content slides, often a different font weight | H4 |
+   | Body text | `body` placeholder default on content layouts | BODY |
+   | Hero stat | Large numbers on BIG_NUMBER/stat layouts (often 50-100pt) | QUOTE (or template override) |
+   | Caption | Small text for labels, metadata (typically 8pt) | CAPTION |
+   | Footer | Copyright, page numbers (typically 6-7pt) | FOOTER |
+   | Code | Monospace font (if present) | CODE |
+
+3. **Cross-check against the manifest.** Read back through the per-layout sections in manifest.md. Verify that each TEXT_STYLE slot matches the size actually rendered on that layout type. The manifest has the ground truth.
+
+4. **When sizes outnumber slots:** Extra sizes are template-specific overrides. The template uses the closest TEXT_STYLE and overrides `style` in its tokens.
+
+5. **When sizes are fewer than slots:** Interpolate missing values. A deck using only 32pt, 16pt, 10pt, 8pt maps to H1=32, H2=24, H3=20, H4=16, BODY=16, CAPTION=10, FOOTER=8.
 
 5. **Line height conversion:** PPTX `spcPct` (e.g., `200000` = 200%) uses a "normal" baseline that varies by font. tycoslide uses CSS `lineHeight` semantics. For an approximate conversion, divide by the font's normal ratio (~1.2 for most sans-serif fonts): `pptxPct / 100000 / 1.2`. Flag that the first build will likely need line-height tuning.
 
@@ -194,16 +228,7 @@ Analyze the full catalog to extract shared theme properties. Each subsection pro
 3. **Find global chrome.** Elements that appear on every layout (or nearly every layout) from the same master — typically a footer row with logo, copyright, and page number.
 4. **Find layout-specific chrome.** Elements on specific layouts only — like a background image on dark slides or a top color bar.
 
-**Map to chrome wrappers.** See [add-template.md](add-template.md) Phase 2 Step 2 for geometric detection heuristics and deduplication checks. Common patterns:
-- Footer row (logo + text + page number) → `withFooterChrome()`
-- Margin only → `withMarginChrome()`
-- Novel patterns → create new wrappers in `chrome.ts` only if used by multiple templates
-
-**Extract chrome token values:**
-- `margin` — content area offset from slide edges
-- `footerHeight` or `footerWeight` — footer band dimensions
-- `bottomPadding` — gap between footer and content
-- Footer text content, logo media reference, spacing between footer elements
+5. **Record chrome measurements** — margin values, footer band position/height, footer element positions, logo media reference. These become the inputs for chrome wrapper implementation in Phase 4 (via [add-template.md](add-template.md) Phase 2 Step 2).
 
 **Output:** `chrome.ts` with wrapper functions and token interfaces.
 
@@ -239,30 +264,9 @@ theme-{name}/
 6. **`formats/presentation.ts`** — The `Format` object, `deriveTokens(brand, config)` call, chrome token builders, and all `defineTemplate()` calls. Wrap everything in a builder function: `export function buildPresentationFormat(brand: Brand): ThemeFormat`.
 7. **`index.ts`** — `TEMPLATE` const, component list, `defineTheme()` call.
 
-### `deriveTokens` return shape
+### `deriveTokens` usage
 
-`deriveTokens(brand, config)` returns `{ onLight, onDark }`. Each context contains:
-
-| Path | Type | Use for |
-|------|------|---------|
-| `headings.h1` … `headings.h4` | `LabelTokens` | Title/heading text |
-| `text` | `TextTokens` | Body paragraphs |
-| `list` | `ListTokens` | Bullet/numbered lists |
-| `caption` | `TextTokens` | Secondary/muted text |
-| `components.table` | `TableTokens` | Table slot injection |
-| `components.code` | `CodeTokens` | Code block slot injection |
-| `components.card` | `CardTokens` | Card slot injection |
-| `components.quote` | `QuoteTokens` | Blockquote slot injection |
-| `components.mermaid` | `MermaidTokens` | Diagram slot injection |
-| `components.testimonial` | `TestimonialTokens` | Testimonial slot injection |
-| `components.image` | `ImageTokens` | Image defaults |
-| `surfaces.page` | color | Default slide background |
-| `surfaces.elevated` | color | Slightly offset background |
-| `surfaces.emphasis` | color | Opposite-context background (dark on light, light on dark) |
-| `surfaces.card` | color | Card/panel fill |
-| `primitives.accents` | color[] | Accent color pool |
-| `primitives.border` | border tokens | Divider lines |
-| `primitives.shadow` | shadow tokens | Drop shadows |
+`deriveTokens(brand, config)` returns `{ onLight, onDark }` with text tokens, component tokens, surfaces, and primitives for each context. See the `ThemeTokens` type in the SDK for the full shape.
 
 Use `t.onLight.*` for light-background templates, `t.onDark.*` for dark-background templates. The `background` field on `defineTemplate()` determines the visual context.
 
@@ -281,11 +285,6 @@ For each slideLayout identified in Phase 1, add a template. Follow the process i
 3. Implement the template definition ([add-template.md](add-template.md) Phase 3)
 
 The manifest data from Phase 1 replaces add-template's Phase 1 — measurements are already extracted.
-
-When converting manifest colors and sizes to tokens, always reference the foundations:
-- Colors → `palette.text.heading`, `t.onDark.components.table`, etc.
-- Font sizes → `TEXT_STYLE.H3`, `TEXT_STYLE.BODY`, etc.
-- Spacing → `spacing`, `spacingTight`, `unit * N`
 
 ## Phase 5: Verify
 
