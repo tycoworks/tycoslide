@@ -114,7 +114,13 @@ Paragraph-level properties on `<a:pPr>` control spacing and alignment:
 - `<a:spcBef>` / `<a:spcAft>` = space before/after paragraph in points (÷ 100)
 - `<a:buChar char="●"/>` = bullet character (default `•` U+2022, corporate templates often use `●` U+25CF)
 - `<a:buFont>` = font for the bullet character (often different from body text)
+- `<a:buClr>` = bullet color independent of text color. Contains `<a:srgbClr>` or `<a:schemeClr>`
+- `<a:buSzPct val="100000"/>` = bullet size as % of text (÷ 100000). `<a:buSzPts val="1200"/>` = absolute 12pt (÷ 100)
+- `<a:buAutoNum type="arabicPeriod"/>` = numbered list. Types: `arabicPeriod` (1.), `arabicParenR` (1)), `alphaLcPeriod` (a.)
 - `<a:buNone/>` = explicitly no bullet
+- `lvl` = nesting level (0-based). `marL` = left margin in EMU. `indent` = first-line indent (negative = hanging bullet)
+- Bullet `lvl` is 0-based but `<a:lstStyle>` children are 1-based (`<a:lvl1pPr>` = level 0). Off-by-one trap.
+- `spcBef`/`spcAft` on adjacent paragraphs **stack** (not collapse like CSS margins)
 
 ### Text Box Properties
 
@@ -146,16 +152,20 @@ Colors can be specified several ways:
 </a:solidFill>
 ```
 
-To resolve theme colors, check `ppt/theme/theme1.xml` for the `<a:clrScheme>`:
+To resolve `schemeClr`, look up the slot in `ppt/theme/theme1.xml` → `<a:clrScheme>`. The scheme is a lookup table only — slides may or may not reference it. Always prioritize what's actually on slides over scheme slot names.
 
-```xml
-<a:clrScheme name="Custom">
-  <a:dk1><a:srgbClr val="1B1535"/></a:dk1>
-  <a:lt1><a:srgbClr val="FFFFFF"/></a:lt1>
-  <a:accent1><a:srgbClr val="7B61FF"/></a:accent1>
-  <!-- etc -->
-</a:clrScheme>
-```
+Other color forms: `<a:sysClr val="windowText" lastClr="000000"/>` (use `lastClr`), `<a:prstClr val="black"/>` (named colors, rare).
+
+#### Color transforms
+
+Colors can have child transforms: `<a:alpha val="20000"/>` (20% opacity), `<a:tint val="50000"/>` (blend toward white), `<a:shade val="80000"/>` (blend toward black), `<a:lumMod val="75000"/>` + `<a:lumOff val="25000"/>` (scale then offset luminance), `<a:satMod val="120000"/>` (scale saturation). All values ÷ 100000.
+
+#### Compositing semi-transparent fills
+
+When a fill has alpha < 100%, pre-composite against the background for palette values:
+`composited = fill_rgb * alpha + bg_rgb * (1 - alpha)`
+
+Example: `#BDB0E0` at 20% on `#100C21` → `#332D47`. Record both raw fill+alpha and composited result per background context.
 
 ### Images
 
