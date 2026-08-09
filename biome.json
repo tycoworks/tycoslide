@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.6/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.1/schema.json",
   "assist": {
     "actions": {
       "source": {
@@ -23,7 +23,7 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "suspicious": {
         "noExplicitAny": "off",
         "noAssignInExpressions": "off"
@@ -33,13 +33,10 @@
       },
       "complexity": {
         "noBannedTypes": "off"
-      },
-      "a11y": {
-        "useHtmlLang": "off"
       }
     }
   },
   "files": {
-    "includes": ["packages/*/src/**", "packages/*/test/**"]
+    "includes": ["src/**"]
   }
 }

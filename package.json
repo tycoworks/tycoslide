@@ -1,16 +1,41 @@
 {
-  "private": true,
-  "workspaces": [
-    "packages/*"
+  "name": "@tycoworks/tycoslide",
+  "version": "0.3.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "tycoslide": "bin/tycoslide.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "SKILL.md",
+    "syntax.md"
   ],
   "scripts": {
-    "build": "npm run build --workspaces",
-    "test": "npm test --workspaces --if-present",
+    "build": "tsc --build",
+    "test": "tsc --build && node --test --experimental-transform-types test/**/*.test.ts",
+    "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write ."
   },
+  "dependencies": {
+    "commander": "^15.0.0",
+    "image-size": "^2.0.2",
+    "pptx-automizer": "^0.8.2",
+    "remark-gfm": "^4.0.1",
+    "remark-ins": "^1.2.5",
+    "remark-parse": "^11.0.0",
+    "shiki": "^4.3.0",
+    "unified": "^11.0.0",
+    "yaml": "^2.0.0"
+  },
   "devDependencies": {
-    "@biomejs/biome": "2.4.6"
+    "@biomejs/biome": "^2.5.1",
+    "@types/node": "^22.20.0",
+    "@xmldom/xmldom": "^0.9.10",
+    "typescript": "^5.8.0"
   }
 }

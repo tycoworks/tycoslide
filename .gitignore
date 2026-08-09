@@ -1,28 +1,5 @@
-# Dependencies
 node_modules/
-
-# Build output
 dist/
-
-# macOS
-.DS_Store
-
-# Editor directories and files
-.vscode/
-.idea/
-# Claude Code (ignore personal state, allow project config)
-.claude/*
-!.claude/skills/
-!.claude/agents/
-!.claude/CLAUDE.md
-*.swp
-*.swo
-*~
-
-# oh-my-claudecode
+*.tsbuildinfo
+.claude/
 .omc/
-
-# Generated presentations
-*.pptx
-*-build/
-tsconfig.tsbuildinfo

@@ -1,95 +1,73 @@
-<p align="center">
-  <img src="assets/logo.png" alt="tycoslide — Build slides like software." width="600" />
-</p>
+# tycoslide
 
-Create editable PowerPoint slides from markdown, with TypeScript-based themes and build-time validation.
+Generate slides from markdown using your real PowerPoint templates.
 
-> **Early release** — tycoslide is under active development. The API may change between minor versions.
+> **Early release** — tycoslide is under active development.
 
-**Why tycoslide?**
-- **Editable PowerPoint slides**: Native .pptx files that open in PowerPoint, Keynote, or Google Slides
-- **Pure TypeScript themes**: Design tokens, layouts, and components defined in TypeScript — no CSS needed
-- **Build-time validation**: Catches missing tokens, invalid layouts, and content overflow as build errors
+## Why tycoslide?
 
-**[About tycoslide →](./docs/about.md)** — how it works, how it compares, and FAQs.
+AI can write great slide content, but it can never get things on-brand. No matter what you try, fonts, logos, and colors end up slightly wrong, and you spend hours fixing it by hand.
 
-<p align="center">
-  <img src="assets/demo.gif" alt="tycoslide demo — markdown to PowerPoint in one command" width="700" />
-</p>
+tycoslide helps AI agents build presentations using your real slide templates, so they're always on-brand. You define a theme with your .pptx files, layouts and design assets, from which agents can quickly build new presentations using markdown.
 
 ## Quick Start
 
-Create a new project and install tycoslide:
-
 ```bash
-mkdir my-slides && cd my-slides
-npm init -y
-npm install @tycoslide/cli @tycoslide/theme-default
-npx playwright-core install chromium
+npm install @tycoworks/tycoslide
 ```
 
-Create `slides.md`:
+Create `deck.md`:
 
 ```markdown
 ---
-theme: "@tycoslide/theme-default"
-format: presentation
+theme: ./theme.json
 ---
 
 ---
-template: title
-title: My Presentation
-subtitle: Built with tycoslide
+layout: Title
+title: Quarterly Review
+name: Jane Doe
+jobTitle: Engineering
 ---
 
 ---
-template: body
-title: First Slide
-eyebrow: INTRODUCTION
+layout: Body
+title: Highlights
 ---
 
-Your content goes here.
+- Revenue up 12% quarter-over-quarter
+- Three major product launches completed
 ```
 
-Build your presentation:
+Build:
 
 ```bash
-npx tycoslide build slides.md
+tycoslide build deck.md                   # → deck.pptx
 ```
 
-Output: `slides.pptx` and a `slides-build/` directory with per-slide HTML previews.
+## CLI
 
-**[Full quick start guide →](./docs/quick-start.md)**
+```bash
+tycoslide build deck.md       # markdown → PPTX (theme resolved from deck frontmatter)
+tycoslide smoke               # one slide per layout → smoke-all.pptx
+tycoslide plugin              # generate AI agent plugin package
+tycoslide manifest            # print layout + asset catalog to stdout
+```
 
-## Examples
+## Theme Structure
 
-See [examples/showcase.md](./examples/showcase.md) for the full deck with cards, tables, mermaid diagrams, and more.
+A theme packages a PPTX template, design assets, and a config file into one directory.
 
-<table>
-<tr>
-<td><img src="assets/slide-1.png" alt="Title slide" /></td>
-<td><img src="assets/slide-2.png" alt="Agenda slide" /></td>
-<td><img src="assets/slide-3.png" alt="Statement slide" /></td>
-<td><img src="assets/slide-4.png" alt="Transform slide" /></td>
-</tr>
-<tr>
-<td><img src="assets/slide-5.png" alt="Cards slide" /></td>
-<td><img src="assets/slide-6.png" alt="Comparison table slide" /></td>
-<td><img src="assets/slide-7.png" alt="Mermaid diagram slide" /></td>
-<td><img src="assets/slide-8.png" alt="End slide" /></td>
-</tr>
-</table>
+```
+my-theme/
+  template/corp-template.pptx
+  assets/logos/
+  assets/icons/
+  theme.json
+  package.json
+```
 
-## Documentation
-
-**[Read the documentation →](./docs/)**
-
-Covers markdown syntax, components, layouts, themes, CLI usage, and troubleshooting.
-
-## Community
-
-**[Join the Discord →](https://discord.gg/r5qCW8aBEy)**
-
-## License
-
-[MIT](./LICENSE)
+**Template** — the PPTX file with named shapes that tycoslide fills.
+**Layout** — a slide pattern in the template (Title, Body, Quote, etc.).
+**Theme** — the directory that bundles a template, assets, and config.
+**Manifest** — a machine-readable catalog of layouts and assets for AI agents.

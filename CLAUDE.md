@@ -1,113 +1,49 @@
 # tycoslide
 
-See [README.md](README.md) for what this project is.
+Layout-driven collateral engine. Fills designer-made PPTX templates with structured content and assets.
 
-## About
-
-For design principles and FAQ, see [`docs/about.md`](docs/about.md).
+For the user-facing model (layouts, slot types, syntax), see [SKILL.md](SKILL.md) and [syntax.md](syntax.md).
 
 ## Build & Test
 
 ```bash
-# From repo root:
-npm run build        # Build all workspaces
-npm test             # Run core test suite (node:test, NOT vitest)
-
-# From packages/core/:
-npm run build        # Build core only
-npm test             # Run tests
-npm run typecheck    # Type-check including test files
+npm run typecheck    # Type-check (tsc --build)
+npm test             # Run tests (node:test)
+npm run lint         # Biome check
 ```
 
-**Workspace dependency gotcha:** After bumping versions or changing cross-package exports, always clean per-package `node_modules/` before building. npm may cache stale registry copies that shadow workspace symlinks:
+TypeScript runs natively via Node's `--experimental-strip-types`. `tsc --build` emits `.d.ts` declarations only.
 
-```bash
-rm -rf packages/*/node_modules
-npm install
-npm run build
-```
+## Product Principle
 
-If builds report missing exports that exist in source, also delete stale `tsconfig.tsbuildinfo` files:
+**The designer's `.pptx` is inviolate — you never add anything to it and never clean anything up. tycoslide conforms to whatever the designer made; all tycoslide behavior, and all accommodation for real-world mess, lives in the manifest.**
 
-```bash
-find . -name 'tsconfig.tsbuildinfo' -not -path './node_modules/*' -delete
-```
+Two facets of the one rule:
 
-See `internal/npm-publishing.md` for the full release workflow.
+1. **Nothing tycoslide-specific goes into the `.pptx`.** A designer sees a normal template — no syntax to learn, no tokens, no plugins. Slot mappings, placeholder patterns, fit rules — everything tycoslide-flavored lives in the manifest. The template's job is to look right; the manifest's job is to say what fills where. This is the differentiator vs engines that make the designer touch syntax (Handlebars in Word, Templafy tokens, `{{...}}` placeholders).
 
-**Building slides from markdown:**
+2. **Real PowerPoint is messy, and tycoslide absorbs the mess.** Real files scatter a single line across many runs for no semantic reason, style inconsistently, and name shapes oddly. tycoslide must work with them as-is — never require the designer to reformat, tidy, or re-author their file. Any workaround lives in tycoslide's fill logic and the manifest (e.g. tycoslide coalesces adjacent same-style runs when filling, rather than demanding tidy runs).
 
-```bash
-npx tycoslide build deck.md          # Build a single deck (outputs deck.pptx)
-```
-
-## Monorepo Structure
-
-tycoslide is an npm workspaces monorepo with four packages:
-
-- **`packages/core`** (npm: `@tycoslide/core`) — Format-agnostic engine: rendering, layout, model, markdown compilation. Knows only flat `Theme` type, node types, and token maps
-- **`packages/sdk`** (npm: `@tycoslide/sdk`) — Everything theme authors need: 16 standard components, presets (SlideFormat, Component names, highlighting), multi-format theme types (`Theme`, `ThemeFormat`, `resolveThemeFormat`), and theme-authoring helpers
-- **`packages/cli`** (npm: `@tycoslide/cli`) — Terminal wiring: reads markdown, loads themes, calls SDK's format resolution, passes flat `Theme` to core
-- **`packages/theme-default`** (npm: `@tycoslide/theme-default`) — Default theme with Inter font and Material Design icons
-
-When consuming tycoslide from another project (e.g., a theme), `package.json` points `main` at `dist/index.js`. Always rebuild before running slides.
-
-**Cross-project builds:** Themes use TypeScript project references. From a theme directory:
-
-```bash
-npx tsc --build      # Rebuilds tycoslide (if changed) then the theme
-```
-
-## Key Paths
-
-- `packages/core/src/core/model/` — Types, schema, nodes, syntax constants
-- `packages/core/src/core/rendering/` — Component registry, PPTX renderer, presentation
-- `packages/sdk/src/markdown/` — Document compiler, slot compiler, slide parser
-- `packages/core/src/core/layout/` — HTML measurement via Playwright, flex layout pipeline
-- `packages/cli/src/` — CLI entry point, build command, theme loader
-- `packages/core/src/utils/` — Font utils, image utils, units
-- `packages/sdk/src/components/` — All 16 component definitions
-- `packages/sdk/src/presets/` — SlideFormat, Component names, highlighting themes
-- `packages/sdk/src/theme/` — Multi-format theme types and resolution (Theme, ThemeFormat, resolveThemeFormat)
-- `packages/sdk/src/template.ts` — Template authoring (defineTemplate, Master, Layout, Template)
-- `packages/theme-default/src/` — Default theme (Inter font, Material Design icons)
-- `packages/core/test/` — Core tests (uses `node:test`, NOT vitest)
-- `packages/sdk/test/` — SDK + markdown compilation tests (uses `node:test`, NOT vitest)
+If a decision would put tycoslide markup in the `.pptx`, or would require the designer to change their file, move it into the manifest / tycoslide instead.
 
 ## Architecture
 
-```
-Markdown + TypeScript DSL
-    ↓
-Component tree (ComponentNodes)
-    ↓ Presentation.renderTree() — resolves tokens, renders to primitives
-Primitive node tree (TextNode, ImageNode, ShapeNode, etc.)
-    ↓ measurement.ts / pipeline.ts — generates HTML, measures via Playwright
-Measured + positioned nodes
-    ↓ pptxRenderer — generates native PowerPoint objects
-.pptx file
-```
+Two layers with a hard boundary:
 
-## Component System
+- **`src/markdown/`** — compiler. Owns markdown parsing, code highlighting (Shiki), mermaid rendering (mermaid-cli), the theme's asset catalog, and everything else "markdown-flavored." Normalizes the deck spec so the engine only sees text runs, tables, and resolved image paths.
+- **`src/engine/`** — engine. Four fill primitives — `fillTemplate`, `fillText`, `fillTable`, `fillImage` — each wrapped as a `Filler` strategy in the `FILLERS` registry (`engine/fillers/filler.ts`, keyed by `SlotType`), plus a `generate` orchestrator (`engine/generate.ts`). Each fill and its value-discriminator (`fillX` + `isXFill`) live together in `engine/fillers/{template,text,table,image}.ts`; shared shape/DOM primitives and the paragraph-rebuild machinery live in `engine/dom.ts` (fillers never import each other). Deliberately ignorant of markdown, code fences, mermaid, or theme asset catalogs. Only knows PPTX shapes, runs, paragraphs, tables, and image files at resolved paths.
 
-Two registries handle component and layout registration:
+The compiler advertises a layout's author-facing inputs as two lists — `parameters` (frontmatter values, types `template`/`image`) and `slots` (body regions, types `text`/`table`/`code`/`mermaid`). That split is a compiler/manifest concern only. At the engine boundary (`toEngineLayout` in `src/index.ts`) both lists collapse into one flat `Layout.slots`, and every value flows through one unified channel: `DeckStep.content: Record<string, TextFill | TableFill | ImageFill | TemplateFill>` — the four `*Fill` shapes read as one family. Each engine slot declares a `SlotType` (`Template | Text | Table | Image`) that selects the matching `Filler`; compiler-only `code`/`mermaid` resolve to `text`/`image` before the engine sees them.
 
-- **`defineComponent()`** + **`componentRegistry.register()`** — All components (content and container). `defineComponent()` is a pure factory with three patterns:
-  - Content: `{ name, content: schema.string(), tokens, render }` — auto-generates directive deserializer
-  - Content + params: `{ name, content, params: param.shape({...}), tokens, render }` — content plus extra attributes
-  - Children: `{ name, children: true, tokens, render }` — body compiled as ComponentNode[]
-- **`defineLayout()`** + **`layoutRegistry.register()`** — Slide layouts. Declares params schema and a render function.
+`src/index.ts` exposes the public API including `buildDeck(deck, config)` — the primary programmatic entry. `src/cli.ts` is the CLI wrapper.
 
-Each component declares:
-- A **name** — built-in names from `Component.*` const objects (`packages/sdk/src/presets/names.ts`), or any string for custom components
-- A **params schema** via `param.shape({...})` (validated at compile time)
-- **Token shape** via `token.shape({...})` — delivered via `node.tokens` (set by DSL helpers or slot injection from parent layouts)
-- A **render function** `(params, content, context, tokens) => SlideNode` that returns a primitive node tree
+## Coding Standards
 
-## Spec-Driven Development
-
-Design docs in `internal/` define features with phased implementation plans. When implementing against a design doc:
-
-1. **Read the spec first** — understand the phase requirements, decisions, and constraints before writing code
-2. **Execute against the spec** — implement what the doc says, not more
-3. **Verify automatically** — after completing implementation, always verify the result against the spec
+- TypeScript, strict mode, native TS execution via Node
+- Const objects for enums, not string literal unions: `SlotType.Text` not `'text'`
+- No `Omit<>` on type definitions — declare explicitly, wrap don't shave
+- No `as unknown as X` casts — single-hop casts only, or fix the types properly
+- No silent defaults — if required config is missing, throw with a specific error naming the layout + slot
+- No product name in engine/compiler source code — types are generic (`Config`, `Layout`, etc.)
+- `node:test` for tests (not vitest)
+- No comments unless the WHY is non-obvious

@@ -1,0 +1,1004 @@
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { DOMParser, XMLSerializer } from "@xmldom/xmldom";
+import { coalesceSameStyleRuns, fillTemplate } from "../dist/engine/fillers/template.js";
+import { fillText } from "../dist/engine/fillers/text.js";
+import { fillTable } from "../dist/engine/fillers/table.js";
+import { setRichRuns } from "../dist/engine/dom.js";
+import { validateContentSlots } from "../dist/engine/generate.js";
+import { parseProseLine } from "../dist/markdown/parsers.js";
+import { isCodeBlock } from "../dist/markdown/resolvers/code.js";
+import type { Slot, StyledParagraph, TableFill, TemplateSegment, TemplateFill } from "../dist/engine/types.js";
+import { SlotType } from "../dist/engine/types.js";
+import type { CodeFence } from "../dist/markdown/types.js";
+import { FenceType } from "../dist/markdown/types.js";
+
+// ── Test Helpers ───────────────────────────────────────────────────────────────
+
+const NS_A = "http://schemas.openxmlformats.org/drawingml/2006/main";
+const NS_P = "http://schemas.openxmlformats.org/presentationml/2006/main";
+
+function parseXml(xml: string) {
+  return new DOMParser().parseFromString(xml, "text/xml");
+}
+
+function makeTextBody(paragraphsXml: string): any {
+  const xml = `<p:txBody xmlns:a="${NS_A}" xmlns:p="${NS_P}"><a:bodyPr/><a:lstStyle/>${paragraphsXml}</p:txBody>`;
+  return parseXml(xml).documentElement;
+}
+
+function makeParagraph(text: string, extra = ""): string {
+  return `<a:p${extra}><a:r><a:rPr/><a:t>${text}</a:t></a:r></a:p>`;
+}
+
+function makeBulletParagraph(text: string, level = 0, char = "•"): string {
+  const lvlAttr = level > 0 ? ` lvl="${level}"` : "";
+  return `<a:p><a:pPr${lvlAttr}><a:buChar char="${char}"/></a:pPr><a:r><a:rPr/><a:t>${text}</a:t></a:r></a:p>`;
+}
+
+function allTexts(el: any): string[] {
+  const ts = el.getElementsByTagName("a:t");
+  const out: string[] = [];
+  for (let i = 0; i < ts.length; i++) out.push(ts[i].textContent || "");
+  return out;
+}
+
+function paraCount(el: any): number {
+  return el.getElementsByTagName("a:p").length;
+}
+
+function paraAt(el: any, i: number): any {
+  return el.getElementsByTagName("a:p")[i];
+}
+
+function runCount(el: any): number {
+  return el.getElementsByTagName("a:r").length;
+}
+
+/** StyledParagraph shorthand for tests. */
+const plain = (text: string): StyledParagraph => ({ runs: [{ text }] });
+const bullet = (text: string, level = 0): StyledParagraph => ({ runs: [{ text }], bullet: { level } });
+
+/** TableFill shorthand for tests. */
+function cell(text: string): StyledParagraph {
+  return { runs: [{ text }] };
+}
+function cells(...values: string[]): StyledParagraph[] {
+  return values.map(cell);
+}
+
+/** isTableData guard replacement — checks the new TableFill shape. */
+function isTableFill(v: unknown): v is TableFill {
+  return (
+    typeof v === "object" &&
+    v !== null &&
+    !Array.isArray(v) &&
+    "headers" in v &&
+    "rows" in v &&
+    Array.isArray((v as any).headers) &&
+    Array.isArray((v as any).rows)
+  );
+}
+
+// ============================================
+// parseProseLine (lives in markdown/parsers)
+// ============================================
+
+describe("parseProseLine", () => {
+  it("plain text returns non-bullet, level 0", () => {
+    assert.deepEqual(parseProseLine("Hello world"), { text: "Hello world", bullet: false, level: 0 });
+  });
+
+  it("dash bullet returns bullet with level 0", () => {
+    assert.deepEqual(parseProseLine("- First item"), { text: "First item", bullet: true, level: 0 });
+  });
+
+  it("asterisk bullet returns bullet with level 0", () => {
+    assert.deepEqual(parseProseLine("* Star item"), { text: "Star item", bullet: true, level: 0 });
+  });
+
+  it("2-space indent gives level 1", () => {
+    assert.deepEqual(parseProseLine("  - Nested"), { text: "Nested", bullet: true, level: 1 });
+  });
+
+  it("4-space indent gives level 2", () => {
+    assert.deepEqual(parseProseLine("    - Deep nested"), { text: "Deep nested", bullet: true, level: 2 });
+  });
+
+  it("odd indent floors the level", () => {
+    assert.deepEqual(parseProseLine("   - Three spaces"), { text: "Three spaces", bullet: true, level: 1 });
+  });
+
+  it("leading whitespace on non-bullet is stripped", () => {
+    assert.deepEqual(parseProseLine("   Indented text"), { text: "Indented text", bullet: false, level: 0 });
+  });
+
+  it("dash without space is not a bullet", () => {
+    assert.deepEqual(parseProseLine("-NoSpace"), { text: "-NoSpace", bullet: false, level: 0 });
+  });
+
+  it("empty string is plain text", () => {
+    assert.deepEqual(parseProseLine(""), { text: "", bullet: false, level: 0 });
+  });
+
+  it("bullet with extra spaces after marker", () => {
+    assert.deepEqual(parseProseLine("-   Lots of space"), { text: "Lots of space", bullet: true, level: 0 });
+  });
+});
+
+// ============================================
+// setRichRuns (internal helper, still exported for tests)
+// ============================================
+
+describe("setRichRuns", () => {
+  it("creates multiple runs from template", () => {
+    const body = makeTextBody(makeParagraph("Template"));
+    const para = paraAt(body, 0);
+    setRichRuns(para, [{ text: "Hello " }, { text: "world" }]);
+    assert.deepEqual(allTexts(para), ["Hello ", "world"]);
+    assert.equal(runCount(para), 2);
+  });
+
+  it("applies bold attribute", () => {
+    const body = makeTextBody(makeParagraph("Template"));
+    const para = paraAt(body, 0);
+    setRichRuns(para, [{ text: "Bold", bold: true }]);
+    const rPr = para.getElementsByTagName("a:rPr")[0];
+    assert.equal(rPr.getAttribute("b"), "1");
+  });
+
+  it("applies italic attribute", () => {
+    const body = makeTextBody(makeParagraph("Template"));
+    const para = paraAt(body, 0);
+    setRichRuns(para, [{ text: "Italic", italic: true }]);
+    const rPr = para.getElementsByTagName("a:rPr")[0];
+    assert.equal(rPr.getAttribute("i"), "1");
+  });
+
+  it("applies both bold and italic", () => {
+    const body = makeTextBody(makeParagraph("Template"));
+    const para = paraAt(body, 0);
+    setRichRuns(para, [{ text: "BoldItalic", bold: true, italic: true }]);
+    const rPr = para.getElementsByTagName("a:rPr")[0];
+    assert.equal(rPr.getAttribute("b"), "1");
+    assert.equal(rPr.getAttribute("i"), "1");
+  });
+
+  it("applies strikethrough attribute", () => {
+    const body = makeTextBody(makeParagraph("Template"));
+    const para = paraAt(body, 0);
+    setRichRuns(para, [{ text: "Struck", strikethrough: true }]);
+    const rPr = para.getElementsByTagName("a:rPr")[0];
+    assert.equal(rPr.getAttribute("strike"), "sngStrike");
+  });
+
+  it("applies underline attribute", () => {
+    const body = makeTextBody(makeParagraph("Template"));
+    const para = paraAt(body, 0);
+    setRichRuns(para, [{ text: "Underlined", underline: true }]);
+    const rPr = para.getElementsByTagName("a:rPr")[0];
+    assert.equal(rPr.getAttribute("u"), "sng");
+  });
+
+  it("inserts before a:endParaRPr when present", () => {
+    const body = makeTextBody(`<a:p><a:r><a:rPr/><a:t>Tpl</a:t></a:r><a:endParaRPr/></a:p>`);
+    const para = paraAt(body, 0);
+    setRichRuns(para, [{ text: "Before end" }]);
+
+    const children = para.childNodes;
+    let runIdx = -1;
+    let endIdx = -1;
+    for (let i = 0; i < children.length; i++) {
+      if (children[i].nodeName === "a:r") runIdx = i;
+      if (children[i].nodeName === "a:endParaRPr") endIdx = i;
+    }
+    assert.ok(runIdx < endIdx, "Run should be before endParaRPr");
+  });
+
+  it("does nothing when paragraph has no runs", () => {
+    const body = makeTextBody(`<a:p><a:pPr/></a:p>`);
+    const para = paraAt(body, 0);
+    setRichRuns(para, [{ text: "Ignored" }]);
+    assert.equal(runCount(para), 0);
+  });
+
+  it("creates a:rPr when template run lacks one", () => {
+    const body = makeTextBody(`<a:p><a:r><a:t>NoProps</a:t></a:r></a:p>`);
+    const para = paraAt(body, 0);
+    setRichRuns(para, [{ text: "Styled", bold: true }]);
+    const rPr = para.getElementsByTagName("a:rPr")[0];
+    assert.ok(rPr, "a:rPr should be created");
+    assert.equal(rPr.getAttribute("b"), "1");
+  });
+
+  it("unstyled runs do not add formatting attributes", () => {
+    const body = makeTextBody(makeParagraph("Template"));
+    const para = paraAt(body, 0);
+    setRichRuns(para, [{ text: "Plain" }]);
+    const rPr = para.getElementsByTagName("a:rPr")[0];
+    assert.equal(rPr.getAttribute("b"), null);
+    assert.equal(rPr.getAttribute("i"), null);
+    assert.equal(rPr.getAttribute("strike"), null);
+    assert.equal(rPr.getAttribute("u"), null);
+  });
+
+  it("applies hyperlink with relationship entry", () => {
+    const body = makeTextBody(makeParagraph("Template"));
+    const para = paraAt(body, 0);
+    const relDoc = parseXml(`<Relationships><Relationship Id="rId1" Type="existing" Target="slide1.xml"/></Relationships>`);
+    const relation = relDoc.documentElement;
+    setRichRuns(para, [{ text: "Click here", link: "https://example.com" }], relation);
+    const hlink = para.getElementsByTagName("a:hlinkClick")[0];
+    assert.ok(hlink, "a:hlinkClick should be created");
+    assert.equal(hlink.getAttribute("r:id"), "rId2");
+    const rels = relation.getElementsByTagName("Relationship");
+    assert.equal(rels.length, 2);
+    assert.equal(rels[1].getAttribute("Target"), "https://example.com");
+    assert.equal(rels[1].getAttribute("TargetMode"), "External");
+  });
+
+  it("skips hyperlink when no relation is provided", () => {
+    const body = makeTextBody(makeParagraph("Template"));
+    const para = paraAt(body, 0);
+    setRichRuns(para, [{ text: "No link applied", link: "https://example.com" }]);
+    const hlink = para.getElementsByTagName("a:hlinkClick")[0];
+    assert.equal(hlink, undefined, "a:hlinkClick should not be created without relation");
+  });
+});
+
+// ============================================
+// fillText — rebuild paragraphs from harvested specimen styles
+// ============================================
+
+describe("fillText", () => {
+  it("plain text lines replace paragraphs", () => {
+    const body = makeTextBody(makeParagraph("Placeholder 1") + makeParagraph("Placeholder 2"));
+    fillText(body, { paragraphs: [plain("First line"), plain("Second line")] });
+    assert.equal(paraCount(body), 2);
+    assert.deepEqual(allTexts(body), ["First line", "Second line"]);
+  });
+
+  it("bullet lines clone the bullet template", () => {
+    const body = makeTextBody(makeParagraph("Plain") + makeBulletParagraph("Bullet tpl"));
+    fillText(body, { paragraphs: [bullet("Item A"), bullet("Item B")] });
+    assert.equal(paraCount(body), 2);
+    for (let i = 0; i < 2; i++) {
+      const p = paraAt(body, i);
+      assert.ok(p.getElementsByTagName("a:buChar").length > 0, `Paragraph ${i} should have bullet`);
+    }
+    assert.deepEqual(allTexts(body), ["Item A", "Item B"]);
+  });
+
+  it("nested bullets use level-appropriate templates", () => {
+    const body = makeTextBody(makeParagraph("Plain") + makeBulletParagraph("L0", 0) + makeBulletParagraph("L1", 1));
+    fillText(body, { paragraphs: [bullet("Top", 0), bullet("Nested", 1)] });
+    assert.equal(paraCount(body), 2);
+    const pPr0 = paraAt(body, 0).getElementsByTagName("a:pPr")[0];
+    const lvl0 = pPr0?.getAttribute("lvl");
+    assert.ok(!lvl0 || lvl0 === "0", "First bullet should be level 0");
+    const pPr1 = paraAt(body, 1).getElementsByTagName("a:pPr")[0];
+    assert.equal(pPr1?.getAttribute("lvl"), "1");
+  });
+
+  it("rich text creates multiple styled runs", () => {
+    const body = makeTextBody(makeParagraph("Template"));
+    const richLine: StyledParagraph = {
+      runs: [{ text: "Normal " }, { text: "bold", bold: true }, { text: " text" }],
+    };
+    fillText(body, { paragraphs: [richLine] });
+    assert.equal(paraCount(body), 1);
+    assert.equal(runCount(paraAt(body, 0)), 3);
+    assert.deepEqual(allTexts(body), ["Normal ", "bold", " text"]);
+  });
+
+  it("empty runs are skipped", () => {
+    const body = makeTextBody(makeParagraph("Tpl"));
+    fillText(body, { paragraphs: [plain("Line 1"), { runs: [] }, { runs: [{ text: "" }] }, plain("Line 2")] });
+    assert.equal(paraCount(body), 2);
+    assert.deepEqual(allTexts(body), ["Line 1", "Line 2"]);
+  });
+
+  it("mixed plain + bullet content", () => {
+    const body = makeTextBody(makeParagraph("Plain tpl") + makeBulletParagraph("Bullet tpl"));
+    fillText(body, { paragraphs: [plain("Intro text"), bullet("Bullet one"), bullet("Bullet two"), plain("Closing text")] });
+    assert.equal(paraCount(body), 4);
+    assert.deepEqual(allTexts(body), ["Intro text", "Bullet one", "Bullet two", "Closing text"]);
+    assert.equal(paraAt(body, 0).getElementsByTagName("a:buChar").length, 0);
+    assert.ok(paraAt(body, 1).getElementsByTagName("a:buChar").length > 0);
+    assert.ok(paraAt(body, 2).getElementsByTagName("a:buChar").length > 0);
+    assert.equal(paraAt(body, 3).getElementsByTagName("a:buChar").length, 0);
+  });
+
+  it("preserves styling from template (font attributes survive cloning)", () => {
+    const body = makeTextBody(
+      `<a:p><a:r><a:rPr lang="en-US" sz="1800" dirty="0"><a:solidFill><a:srgbClr val="FF0000"/></a:solidFill></a:rPr><a:t>Styled</a:t></a:r></a:p>`,
+    );
+    fillText(body, { paragraphs: [plain("New text")] });
+    const rPr = paraAt(body, 0).getElementsByTagName("a:rPr")[0];
+    assert.equal(rPr.getAttribute("sz"), "1800");
+    assert.equal(rPr.getAttribute("lang"), "en-US");
+    const fills = rPr.getElementsByTagName("a:solidFill");
+    assert.ok(fills.length > 0);
+  });
+
+  it("preserves bullet char from template", () => {
+    const body = makeTextBody(makeBulletParagraph("Tpl", 0, "→"));
+    fillText(body, { paragraphs: [bullet("Arrow bullet")] });
+    const buChar = paraAt(body, 0).getElementsByTagName("a:buChar")[0];
+    assert.equal(buChar.getAttribute("char"), "→");
+  });
+
+  it("startAt skips leading paragraphs", () => {
+    const body = makeTextBody(makeParagraph("Keep me") + makeParagraph("Replace 1") + makeParagraph("Replace 2"));
+    fillText(body, { paragraphs: [plain("New 1"), plain("New 2")] }, { startAt: 1 });
+    assert.equal(paraCount(body), 3);
+    assert.equal(paraAt(body, 0).getElementsByTagName("a:t")[0].textContent, "Keep me");
+    assert.equal(paraAt(body, 1).getElementsByTagName("a:t")[0].textContent, "New 1");
+    assert.equal(paraAt(body, 2).getElementsByTagName("a:t")[0].textContent, "New 2");
+  });
+
+  it("throws when the element has no paragraphs to rebuild from", () => {
+    const body = makeTextBody("");
+    assert.throws(() => fillText(body, { paragraphs: [plain("Some text")] }), /no paragraphs to rebuild from/);
+  });
+
+  it("clamps bullet level to max available template level", () => {
+    const body = makeTextBody(makeParagraph("Plain") + makeBulletParagraph("L0", 0) + makeBulletParagraph("L1", 1));
+    fillText(body, { paragraphs: [bullet("Deep nested", 3)] });
+    assert.equal(paraCount(body), 1);
+    const pPr = paraAt(body, 0).getElementsByTagName("a:pPr")[0];
+    assert.equal(pPr.getAttribute("lvl"), "1");
+  });
+
+  it("when no bullet template exists, falls back to plain template", () => {
+    const body = makeTextBody(makeParagraph("Only plain"));
+    fillText(body, { paragraphs: [bullet("Bullet without template")] });
+    assert.equal(paraCount(body), 1);
+    assert.deepEqual(allTexts(body), ["Bullet without template"]);
+  });
+
+  it("rich bullet line uses bullet template", () => {
+    const body = makeTextBody(makeParagraph("Plain") + makeBulletParagraph("Bullet tpl"));
+    const richLine: StyledParagraph = {
+      runs: [{ text: "Rich " }, { text: "bullet", bold: true }],
+      bullet: { level: 0 },
+    };
+    fillText(body, { paragraphs: [richLine] });
+    assert.equal(paraCount(body), 1);
+    assert.ok(paraAt(body, 0).getElementsByTagName("a:buChar").length > 0);
+    assert.deepEqual(allTexts(body), ["Rich ", "bullet"]);
+  });
+
+  it("applies bullet transition spacing to body after bullets", () => {
+    const body = makeTextBody(
+      `<a:p><a:pPr/><a:r><a:rPr/><a:t>Plain</a:t></a:r></a:p>` +
+      `<a:p><a:pPr><a:buChar char="•"/><a:spcBef><a:spcPts val="1200"/></a:spcBef></a:pPr><a:r><a:rPr/><a:t>Bullet</a:t></a:r></a:p>`,
+    );
+    fillText(body, { paragraphs: [plain("Opening prose"), bullet("A bullet"), plain("Closing prose")] });
+    assert.equal(paraCount(body), 3);
+    const closing = paraAt(body, 2);
+    const spcBef = closing.getElementsByTagName("a:spcBef")[0];
+    assert.ok(spcBef, "Prose after bullet should have spcBef");
+    const pts = spcBef.getElementsByTagName("a:spcPts")[0];
+    assert.equal(pts.getAttribute("val"), "1200");
+  });
+
+  it("does not apply transition spacing to body after body", () => {
+    const body = makeTextBody(
+      `<a:p><a:pPr/><a:r><a:rPr/><a:t>Plain</a:t></a:r></a:p>` +
+      `<a:p><a:pPr><a:buChar char="•"/><a:spcBef><a:spcPts val="1200"/></a:spcBef></a:pPr><a:r><a:rPr/><a:t>Bullet</a:t></a:r></a:p>`,
+    );
+    fillText(body, { paragraphs: [plain("First prose"), plain("Second prose")] });
+    assert.equal(paraCount(body), 2);
+    const second = paraAt(body, 1);
+    const spcBef = second.getElementsByTagName("a:spcBef")[0];
+    assert.equal(spcBef, undefined);
+  });
+
+  it("applies transition spacing to rich paragraph after bullets", () => {
+    const body = makeTextBody(
+      `<a:p><a:pPr/><a:r><a:rPr/><a:t>Plain</a:t></a:r></a:p>` +
+      `<a:p><a:pPr><a:buChar char="•"/><a:spcBef><a:spcPts val="1200"/></a:spcBef></a:pPr><a:r><a:rPr/><a:t>Bullet</a:t></a:r></a:p>`,
+    );
+    const richLine: StyledParagraph = { runs: [{ text: "After bullets" }] };
+    fillText(body, { paragraphs: [bullet("A bullet"), richLine] });
+    assert.equal(paraCount(body), 2);
+    const prose = paraAt(body, 1);
+    const spcBef = prose.getElementsByTagName("a:spcBef")[0];
+    assert.ok(spcBef);
+    assert.equal(spcBef.getElementsByTagName("a:spcPts")[0].getAttribute("val"), "1200");
+  });
+
+  it("handles no bullet templates gracefully (no spacing change)", () => {
+    const body = makeTextBody(makeParagraph("Plain only"));
+    fillText(body, { paragraphs: [plain("First"), bullet("Dash line"), plain("After")] });
+    assert.equal(paraCount(body), 3);
+    const after = paraAt(body, 2);
+    const spcBef = after.getElementsByTagName("a:spcBef")[0];
+    assert.equal(spcBef, undefined);
+  });
+});
+
+// ============================================
+// fillTemplate prefix preservation (regex behavior)
+// ============================================
+
+describe("fillTemplate prefix preservation", () => {
+  it("prefix regex extracts non-alphanumeric prefix", () => {
+    const orig = "→ Original text";
+    const prefix = (orig.match(/^[^\p{L}\p{N}]*/u) || [""])[0];
+    assert.equal(prefix, "→ ");
+  });
+
+  it("no prefix when text starts with letter", () => {
+    const orig = "Hello world";
+    const prefix = (orig.match(/^[^\p{L}\p{N}]*/u) || [""])[0];
+    assert.equal(prefix, "");
+  });
+
+  it("dash-space prefix preserved", () => {
+    const orig = "- Item";
+    const prefix = (orig.match(/^[^\p{L}\p{N}]*/u) || [""])[0];
+    assert.equal(prefix, "- ");
+  });
+});
+
+// ============================================
+// fillText startAt: leading specimen paragraphs untouched, tail rebuilt
+// ============================================
+
+describe("fillText startAt tail replacement", () => {
+  it("leaves leading paragraphs untouched and fills the rest", () => {
+    const body = makeTextBody(makeParagraph("Title") + makeParagraph("Body 1") + makeParagraph("Body 2"));
+    fillText(body, { paragraphs: [plain("New body A"), plain("New body B")] }, { startAt: 1 });
+    assert.equal(paraCount(body), 3);
+    assert.equal(paraAt(body, 0).getElementsByTagName("a:t")[0].textContent, "Title");
+    assert.equal(paraAt(body, 1).getElementsByTagName("a:t")[0].textContent, "New body A");
+    assert.equal(paraAt(body, 2).getElementsByTagName("a:t")[0].textContent, "New body B");
+  });
+
+  it("rest can produce more paragraphs than the template had", () => {
+    const body = makeTextBody(makeParagraph("Title") + makeParagraph("Single body"));
+    fillText(body, { paragraphs: [plain("Line 1"), plain("Line 2"), plain("Line 3")] }, { startAt: 1 });
+    assert.equal(paraCount(body), 4);
+    assert.deepEqual(allTexts(body), ["Title", "Line 1", "Line 2", "Line 3"]);
+  });
+
+  it("rest can produce fewer paragraphs than the template had", () => {
+    const body = makeTextBody(
+      makeParagraph("Title") + makeParagraph("Body 1") + makeParagraph("Body 2") + makeParagraph("Body 3"),
+    );
+    fillText(body, { paragraphs: [plain("Only one")] }, { startAt: 1 });
+    assert.equal(paraCount(body), 2);
+    assert.deepEqual(allTexts(body), ["Title", "Only one"]);
+  });
+});
+
+// ============================================
+// validateContentSlots (required-only checker + fillTemplate coverage)
+// ============================================
+
+describe("validateContentSlots", () => {
+  const slotDefs: Slot[] = [
+    { key: "title", shapeName: "s1", type: SlotType.Template },
+    { key: "body", shapeName: "s2", type: SlotType.Text },
+  ];
+
+  it("passes when all slots have content", () => {
+    assert.doesNotThrow(() =>
+      validateContentSlots({ layout: "test", content: { title: "Hello", body: "World" } }, { slots: slotDefs }),
+    );
+  });
+
+  it("throws when a slot is missing", () => {
+    assert.throws(
+      () => validateContentSlots({ layout: "test", content: { title: "Hello" } }, { slots: slotDefs }),
+      (err: Error) => {
+        assert.ok(err.message.includes("body"));
+        assert.ok(err.message.includes('Layout "test"'));
+        return true;
+      },
+    );
+  });
+
+  it("throws listing all missing slots", () => {
+    assert.throws(
+      () => validateContentSlots({ layout: "test", content: {} }, { slots: slotDefs }),
+      (err: Error) => {
+        assert.ok(err.message.includes("title"));
+        assert.ok(err.message.includes("body"));
+        return true;
+      },
+    );
+  });
+
+  it("throws when content is undefined", () => {
+    assert.throws(
+      () => validateContentSlots({ layout: "test" }, { slots: slotDefs }),
+      (err: Error) => {
+        assert.ok(err.message.includes("title"));
+        return true;
+      },
+    );
+  });
+
+  // fillTemplate: per-paragraph in-place fill. Template line i fills shape paragraph
+  // i; same-style runs are coalesced first (internal/text-template-fill.md).
+  const lit = (text: string): TemplateSegment => ({ kind: "literal", text });
+  const vr = (key: string, value: string): TemplateSegment => ({ kind: "variable", key, value });
+  const fill = (...lines: TemplateSegment[][]): TemplateFill => ({ lines });
+  const litFill = (...lines: string[]): TemplateFill => ({ lines: lines.map((t) => [lit(t)]) });
+
+  it("fillTemplate fills one template line per paragraph", () => {
+    const body = makeTextBody(makeParagraph("a") + makeParagraph("b"));
+    fillTemplate(body, litFill("X", "Y"));
+    assert.deepEqual(allTexts(body), ["X", "Y"]);
+  });
+
+  it("fillTemplate replaces the whole line, no prefix preserved", () => {
+    const body = makeTextBody(`<a:p><a:r><a:rPr/><a:t>→ Old</a:t></a:r></a:p>`);
+    fillTemplate(body, litFill("→ New"));
+    assert.equal(allTexts(body)[0], "→ New");
+  });
+
+  it("fillTemplate throws when template has more lines than the shape's visual lines", () => {
+    const body = makeTextBody(makeParagraph("a"));
+    assert.throws(() => fillTemplate(body, litFill("X", "Y"), "oneLine"), /oneLine/);
+  });
+
+  it("fillTemplate leaves untouched paragraphs when fewer template lines", () => {
+    const body = makeTextBody(makeParagraph("a") + makeParagraph("b"));
+    fillTemplate(body, litFill("X"));
+    assert.deepEqual(allTexts(body), ["X", "b"]);
+  });
+
+  it("fillTemplate fills multiple variables + literals on a uniform line", () => {
+    const body = makeTextBody(makeParagraph("Placeholder"));
+    fillTemplate(body, fill([vr("last", "Chen"), lit(", "), vr("first", "Maya")]));
+    assert.deepEqual(allTexts(body), ["Chen, Maya"]);
+  });
+
+  // Regression: the real corp-template scatters one title line across several
+  // same-style runs. fillTemplate must coalesce them and not leak the leftovers.
+  it("fillTemplate coalesces same-style split runs into the value (title regression)", () => {
+    const body = makeTextBody(
+      "<a:p>" +
+        '<a:r><a:rPr lang="en"/><a:t>Sufficiently</a:t></a:r>' +
+        '<a:r><a:rPr lang="en"/><a:t> i</a:t></a:r>' +
+        '<a:r><a:rPr lang="en"/><a:t>nteresting title </a:t></a:r>' +
+        "</a:p>",
+    );
+    fillTemplate(body, litFill("The Problem"));
+    assert.deepEqual(allTexts(body), ["The Problem"]);
+    assert.equal(runCount(body), 1);
+  });
+
+  it("fillTemplate aligns variables to their styled runs (bold name, normal title)", () => {
+    // sample: bold "Alice" + normal " — Bob"; template "{name} — {title}".
+    const body = makeTextBody(
+      '<a:p><a:r><a:rPr b="1"/><a:t>Alice</a:t></a:r><a:r><a:rPr/><a:t> — Bob</a:t></a:r></a:p>',
+    );
+    fillTemplate(body, fill([vr("name", "X"), lit(" — "), vr("title", "Y")]), "credits");
+    // Value split across the two runs, each keeping its own style.
+    assert.deepEqual(allTexts(body), ["X", " — Y"]);
+    assert.equal(runCount(body), 2);
+  });
+
+  it("fillTemplate splits a literal that straddles a run boundary", () => {
+    // sample: bold "X -" + normal " Y"; the literal " - " spans both runs.
+    const body = makeTextBody(
+      '<a:p><a:r><a:rPr b="1"/><a:t>X -</a:t></a:r><a:r><a:rPr/><a:t> Y</a:t></a:r></a:p>',
+    );
+    fillTemplate(body, fill([vr("a", "A"), lit(" - "), vr("b", "B")]), "s");
+    assert.deepEqual(allTexts(body), ["A -", " B"]);
+  });
+
+  // A single variable whose matched span crosses run boundaries no longer throws:
+  // its value collapses into the span's FIRST run (that run's style wins), and the
+  // now-empty spanned runs are detached so the span becomes one run.
+  it("fillTemplate collapses a single variable over a two-style sample to the first style", () => {
+    // sample: "Big"(sz=3200) + "small"(blank); template single variable {title}.
+    const body = makeTextBody(
+      '<a:p><a:r><a:rPr sz="3200"/><a:t>Big</a:t></a:r><a:r><a:rPr/><a:t>small</a:t></a:r></a:p>',
+    );
+    fillTemplate(body, fill([vr("title", "Hello")]), "s");
+    assert.deepEqual(allTexts(body), ["Hello"]);
+    assert.equal(runCount(body), 1);
+    const runs = body.getElementsByTagName("a:r");
+    // The single surviving run carries the FIRST run's style (sz=3200); the
+    // default-styled run is gone.
+    assert.equal(runs[0].getElementsByTagName("a:rPr")[0].getAttribute("sz"), "3200");
+  });
+
+  // Google Shape;546-shaped: the real corp template scatters a title across cruft
+  // runs of alternating style, including trailing subtitle text. A single {title}
+  // variable spans all of them and must collapse to the first run's style.
+  it("fillTemplate collapses a cruft+subtitle sample (546-shaped) to the first style", () => {
+    const body = makeTextBody(
+      "<a:p>" +
+        '<a:r><a:rPr sz="3200"/><a:t>Section </a:t></a:r>' +
+        '<a:r><a:rPr/><a:t>t</a:t></a:r>' +
+        '<a:r><a:rPr sz="3200"/><a:t>itle</a:t></a:r>' +
+        '<a:r><a:rPr/><a:t> with subtitle</a:t></a:r>' +
+        "</a:p>",
+    );
+    fillTemplate(body, fill([vr("title", "My Title")]), "s");
+    assert.deepEqual(allTexts(body), ["My Title"]);
+    assert.equal(runCount(body), 1);
+    const runs = body.getElementsByTagName("a:r");
+    assert.equal(runs[0].getElementsByTagName("a:rPr")[0].getAttribute("sz"), "3200");
+  });
+
+  it("fillTemplate throws when the styled sample doesn't fit the template literals", () => {
+    // two styles, template needs a ", " the sample doesn't contain.
+    const body = makeTextBody(
+      '<a:p><a:r><a:rPr b="1"/><a:t>Foo</a:t></a:r><a:r><a:rPr/><a:t>Bar</a:t></a:r></a:p>',
+    );
+    assert.throws(() => fillTemplate(body, fill([vr("a", "X"), lit(", "), vr("b", "Y")]), "s"), /does not fit the template/);
+  });
+
+  it("fillTemplate throws on adjacent variables with no separator on a multi-run line", () => {
+    const body = makeTextBody(
+      '<a:p><a:r><a:rPr b="1"/><a:t>Foo</a:t></a:r><a:r><a:rPr/><a:t>Bar</a:t></a:r></a:p>',
+    );
+    assert.throws(() => fillTemplate(body, fill([vr("a", "X"), vr("b", "Y")]), "s"), /adjacent with no separator/);
+  });
+
+  // ── Visual lines: <a:br/> is a line boundary (text-fill-redesign.md) ──────────
+
+  // BUG-1 regression: a name-over-title-in-one-paragraph shape splits its two
+  // lines with <a:br/>, not two <a:p>. Template line i must map to visual line i,
+  // each keeping its own run style.
+  it("fillTemplate treats <a:br/> as a visual line boundary, preserving each run's style", () => {
+    const body = makeTextBody(
+      "<a:p>" +
+        "<a:r><a:rPr/><a:t>— Firstname Lastname</a:t></a:r>" +
+        "<a:br/>" +
+        '<a:r><a:rPr sz="800"/><a:t>Job Title</a:t></a:r>' +
+        "</a:p>",
+    );
+    fillTemplate(
+      body,
+      fill([vr("attributionName", "Ada Lovelace")], [vr("attributionTitle", "Engineer")]),
+      "attribution",
+    );
+    assert.deepEqual(allTexts(body), ["Ada Lovelace", "Engineer"]);
+    const runs = body.getElementsByTagName("a:r");
+    // Run 0 keeps its blank style; run 1 keeps sz="800".
+    assert.equal(runs[0].getElementsByTagName("a:rPr")[0].getAttribute("sz"), null);
+    assert.equal(runs[1].getElementsByTagName("a:rPr")[0].getAttribute("sz"), "800");
+  });
+
+  it("fillTemplate fills separate paragraphs 1:1, preserving each paragraph's style", () => {
+    const body = makeTextBody(
+      '<a:p><a:r><a:rPr b="1"/><a:t>Name here</a:t></a:r></a:p>' +
+        '<a:p><a:r><a:rPr sz="800"/><a:t>Title here</a:t></a:r></a:p>',
+    );
+    fillTemplate(body, fill([vr("n", "Ada")], [vr("t", "Engineer")]), "s");
+    assert.deepEqual(allTexts(body), ["Ada", "Engineer"]);
+    const runs = body.getElementsByTagName("a:r");
+    assert.equal(runs[0].getElementsByTagName("a:rPr")[0].getAttribute("b"), "1");
+    assert.equal(runs[1].getElementsByTagName("a:rPr")[0].getAttribute("sz"), "800");
+  });
+
+  it("fillTemplate throws when template has 3 lines but the shape has 2 visual lines", () => {
+    // One <a:p> with a single <a:br/> → two visual lines.
+    const body = makeTextBody(
+      "<a:p><a:r><a:rPr/><a:t>Line one</a:t></a:r><a:br/><a:r><a:rPr/><a:t>Line two</a:t></a:r></a:p>",
+    );
+    assert.throws(() => fillTemplate(body, litFill("A", "B", "C"), "twoLineShape"), /twoLineShape/);
+  });
+
+  // The <a:br/> guards the two runs against coalescing: same-style runs on
+  // opposite sides of a break are DIFFERENT visual lines, so coalescing (scoped
+  // per visual line) must not merge them into one. A paragraph-scoped coalesce
+  // would collapse them and misalign the fill — this test would fail.
+  it("fillTemplate does not coalesce same-style runs across a line break", () => {
+    const body = makeTextBody(
+      "<a:p><a:r><a:rPr/><a:t>Line one</a:t></a:r><a:br/><a:r><a:rPr/><a:t>Line two</a:t></a:r></a:p>",
+    );
+    fillTemplate(body, litFill("First", "Second"), "s");
+    // Each visual line filled independently.
+    assert.deepEqual(allTexts(body), ["First", "Second"]);
+    // Both same-style runs survive — the break kept them apart.
+    assert.equal(runCount(body), 2);
+    assert.equal(body.getElementsByTagName("a:br").length, 1);
+  });
+});
+
+// ============================================
+// coalesceSameStyleRuns
+// ============================================
+
+describe("coalesceSameStyleRuns", () => {
+  const para = (inner: string) => paraAt(makeTextBody(`<a:p>${inner}</a:p>`), 0);
+
+  it("merges adjacent identical-style runs, concatenating text", () => {
+    const p = para('<a:r><a:rPr lang="en"/><a:t>Su</a:t></a:r><a:r><a:rPr lang="en"/><a:t>ff</a:t></a:r>');
+    coalesceSameStyleRuns(p);
+    assert.deepEqual(allTexts(p), ["Suff"]);
+  });
+
+  it("treats a missing rPr and an empty rPr as the same default style", () => {
+    const p = para("<a:r><a:t>a</a:t></a:r><a:r><a:rPr/><a:t>b</a:t></a:r>");
+    coalesceSameStyleRuns(p);
+    assert.deepEqual(allTexts(p), ["ab"]);
+  });
+
+  it("is insensitive to attribute order", () => {
+    const p = para('<a:r><a:rPr b="1" i="1"/><a:t>a</a:t></a:r><a:r><a:rPr i="1" b="1"/><a:t>b</a:t></a:r>');
+    coalesceSameStyleRuns(p);
+    assert.deepEqual(allTexts(p), ["ab"]);
+  });
+
+  it("does NOT merge runs of different style", () => {
+    const p = para('<a:r><a:rPr b="1"/><a:t>a</a:t></a:r><a:r><a:rPr/><a:t>b</a:t></a:r>');
+    coalesceSameStyleRuns(p);
+    assert.deepEqual(allTexts(p), ["a", "b"]);
+  });
+
+  it("compares nested style children (e.g. differing color) — not merged", () => {
+    const red = "<a:rPr><a:solidFill><a:srgbClr val=\"FF0000\"/></a:solidFill></a:rPr>";
+    const blue = "<a:rPr><a:solidFill><a:srgbClr val=\"0000FF\"/></a:solidFill></a:rPr>";
+    const p = para(`<a:r>${red}<a:t>a</a:t></a:r><a:r>${blue}<a:t>b</a:t></a:r>`);
+    coalesceSameStyleRuns(p);
+    assert.deepEqual(allTexts(p), ["a", "b"]);
+  });
+});
+
+// Guard (per design note): fillText rebuilds fresh paragraphs, so a specimen
+// whose text is split across same-style runs must still fill correctly — it
+// never needs coalescing because it samples the first run's (representative) rPr.
+describe("fillText with split-run specimen", () => {
+  it("rebuilds correctly from a same-style split specimen", () => {
+    const body = makeTextBody(
+      "<a:p>" +
+        '<a:r><a:rPr lang="en"/><a:t>Spec</a:t></a:r>' +
+        '<a:r><a:rPr lang="en"/><a:t>imen</a:t></a:r>' +
+        "</a:p>",
+    );
+    fillText(body, { paragraphs: [plain("First line"), plain("Second line")] });
+    assert.deepEqual(allTexts(body), ["First line", "Second line"]);
+  });
+});
+
+// ============================================
+// isTableFill discriminator
+// ============================================
+
+describe("isTableFill", () => {
+  it("returns true for TableFill objects", () => {
+    const td: TableFill = { headers: [cell("A")], rows: [[cell("1")]] };
+    assert.equal(isTableFill(td), true);
+  });
+
+  it("returns false for strings", () => {
+    assert.equal(isTableFill("hello"), false);
+  });
+
+  it("returns false for arrays", () => {
+    assert.equal(isTableFill(["a", "b"]), false);
+  });
+
+  it("returns false for StyledParagraph arrays", () => {
+    const lines: StyledParagraph[] = [{ runs: [{ text: "hi" }] }];
+    assert.equal(isTableFill(lines), false);
+  });
+});
+
+// ============================================
+// fillTable — TableFill input shape
+// ============================================
+
+function makeTableXml(rows: string[][]): string {
+  const trs = rows
+    .map(
+      (cells) =>
+        `<a:tr h="100000">${cells.map((c) => `<a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr/><a:t>${c}</a:t></a:r></a:p></a:txBody><a:tcPr/></a:tc>`).join("")}</a:tr>`,
+    )
+    .join("");
+  return `<p:graphicFrame xmlns:a="${NS_A}" xmlns:p="${NS_P}"><a:tbl>${trs}</a:tbl></p:graphicFrame>`;
+}
+
+describe("fillTable", () => {
+  it("fills header and data rows from TableFill", () => {
+    const el = parseXml(
+      makeTableXml([
+        ["H1", "H2", "H3"],
+        ["D1", "D2", "D3"],
+      ]),
+    ).documentElement;
+
+    const td: TableFill = {
+      headers: cells("Name", "Price", "Qty"),
+      rows: [cells("Widget", "$10", "100"), cells("Gadget", "$20", "50")],
+    };
+    fillTable(el, td);
+
+    const trs = el.getElementsByTagName("a:tr");
+    assert.equal(trs.length, 3);
+    assert.deepEqual(allTexts(trs[0]), ["Name", "Price", "Qty"]);
+    assert.deepEqual(allTexts(trs[1]), ["Widget", "$10", "100"]);
+    assert.deepEqual(allTexts(trs[2]), ["Gadget", "$20", "50"]);
+  });
+
+  it("alternates row styles when template has two data rows", () => {
+    const el = parseXml(
+      makeTableXml([
+        ["H1", "H2"],
+        ["even", "even"],
+        ["odd", "odd"],
+      ]),
+    ).documentElement;
+
+    const td: TableFill = {
+      headers: cells("A", "B"),
+      rows: [
+        cells("r0c0", "r0c1"),
+        cells("r1c0", "r1c1"),
+        cells("r2c0", "r2c1"),
+        cells("r3c0", "r3c1"),
+      ],
+    };
+    fillTable(el, td);
+
+    const trs = el.getElementsByTagName("a:tr");
+    assert.equal(trs.length, 5);
+  });
+
+  it("throws when element has no a:tbl", () => {
+    const el = parseXml(`<p:sp xmlns:a="${NS_A}" xmlns:p="${NS_P}"><a:p><a:r><a:t>hi</a:t></a:r></a:p></p:sp>`).documentElement;
+    const td: TableFill = { headers: [cell("A")], rows: [[cell("1")]] };
+    assert.throws(() => fillTable(el, td), /has no <a:tbl> element/);
+  });
+
+  it("handles fewer data columns than template cells", () => {
+    const el = parseXml(
+      makeTableXml([
+        ["H1", "H2", "H3"],
+        ["D1", "D2", "D3"],
+      ]),
+    ).documentElement;
+
+    const td: TableFill = { headers: [cell("Only1")], rows: [[cell("Val1")]] };
+    fillTable(el, td);
+
+    const trs = el.getElementsByTagName("a:tr");
+    assert.equal(trs.length, 2);
+    assert.equal(trs[0].getElementsByTagName("a:t")[0].textContent, "Only1");
+    assert.equal(trs[1].getElementsByTagName("a:t")[0].textContent, "Val1");
+  });
+
+  it("handles more data columns than template cells (truncates)", () => {
+    const el = parseXml(
+      makeTableXml([
+        ["H1", "H2"],
+        ["D1", "D2"],
+      ]),
+    ).documentElement;
+
+    const td: TableFill = { headers: cells("A", "B", "C", "D"), rows: [cells("1", "2", "3", "4")] };
+    fillTable(el, td);
+
+    const trs = el.getElementsByTagName("a:tr");
+    assert.equal(trs.length, 2);
+    assert.deepEqual(allTexts(trs[0]), ["A", "B"]);
+    assert.deepEqual(allTexts(trs[1]), ["1", "2"]);
+  });
+
+  it("handles empty rows array (headers only)", () => {
+    const el = parseXml(
+      makeTableXml([
+        ["H1", "H2"],
+        ["D1", "D2"],
+      ]),
+    ).documentElement;
+
+    const td: TableFill = { headers: cells("Name", "Value"), rows: [] };
+    fillTable(el, td);
+
+    const trs = el.getElementsByTagName("a:tr");
+    assert.equal(trs.length, 1);
+    assert.deepEqual(allTexts(trs[0]), ["Name", "Value"]);
+  });
+});
+
+// ============================================
+// setRichRuns — color support
+// ============================================
+
+describe("setRichRuns color", () => {
+  it("applies solidFill with srgbClr for colored runs", () => {
+    const body = makeTextBody(makeParagraph("Template"));
+    const para = paraAt(body, 0);
+    setRichRuns(para, [{ text: "red token", color: "FF0000" }]);
+    const solidFill = para.getElementsByTagName("a:solidFill")[0];
+    assert.ok(solidFill);
+    const srgbClr = solidFill.getElementsByTagName("a:srgbClr")[0];
+    assert.ok(srgbClr);
+    assert.equal(srgbClr.getAttribute("val"), "FF0000");
+  });
+
+  it("replaces existing solidFill from template", () => {
+    const body = makeTextBody(
+      `<a:p><a:r><a:rPr><a:solidFill><a:srgbClr val="00FF00"/></a:solidFill></a:rPr><a:t>Green</a:t></a:r></a:p>`,
+    );
+    const para = paraAt(body, 0);
+    setRichRuns(para, [{ text: "now red", color: "FF0000" }]);
+    const fills = para.getElementsByTagName("a:solidFill");
+    assert.equal(fills.length, 1);
+    assert.equal(fills[0].getElementsByTagName("a:srgbClr")[0].getAttribute("val"), "FF0000");
+  });
+
+  it("does not add solidFill when color is absent", () => {
+    const body = makeTextBody(makeParagraph("Template"));
+    const para = paraAt(body, 0);
+    setRichRuns(para, [{ text: "no color" }]);
+    const fills = para.getElementsByTagName("a:solidFill");
+    assert.equal(fills.length, 0);
+  });
+
+  it("multiple runs with different colors", () => {
+    const body = makeTextBody(makeParagraph("Template"));
+    const para = paraAt(body, 0);
+    setRichRuns(para, [
+      { text: "SELECT ", color: "FF7B72" },
+      { text: "name", color: "79C0FF" },
+      { text: " FROM ", color: "FF7B72" },
+      { text: "users", color: "79C0FF" },
+    ]);
+    assert.equal(runCount(para), 4);
+    const runs = para.getElementsByTagName("a:r");
+    assert.equal(runs[0].getElementsByTagName("a:srgbClr")[0].getAttribute("val"), "FF7B72");
+    assert.equal(runs[1].getElementsByTagName("a:srgbClr")[0].getAttribute("val"), "79C0FF");
+  });
+
+  it("creates rPr when template run lacks one and color is set", () => {
+    const body = makeTextBody(`<a:p><a:r><a:t>NoProps</a:t></a:r></a:p>`);
+    const para = paraAt(body, 0);
+    setRichRuns(para, [{ text: "colored", color: "AABBCC" }]);
+    const rPr = para.getElementsByTagName("a:rPr")[0];
+    assert.ok(rPr);
+    const srgbClr = rPr.getElementsByTagName("a:srgbClr")[0];
+    assert.equal(srgbClr.getAttribute("val"), "AABBCC");
+  });
+
+  it("color works alongside bold and italic", () => {
+    const body = makeTextBody(makeParagraph("Template"));
+    const para = paraAt(body, 0);
+    setRichRuns(para, [{ text: "styled", bold: true, italic: true, color: "112233" }]);
+    const rPr = para.getElementsByTagName("a:rPr")[0];
+    assert.equal(rPr.getAttribute("b"), "1");
+    assert.equal(rPr.getAttribute("i"), "1");
+    assert.equal(rPr.getElementsByTagName("a:srgbClr")[0].getAttribute("val"), "112233");
+  });
+});
+
+// ============================================
+// isCodeBlock (compiler-internal type guard)
+// ============================================
+
+describe("isCodeBlock", () => {
+  it("returns true for CodeFence objects", () => {
+    const cb: CodeFence = { type: FenceType.Code, language: "sql", source: "SELECT 1" };
+    assert.equal(isCodeBlock(cb), true);
+  });
+
+  it("returns false for strings", () => {
+    assert.equal(isCodeBlock("hello"), false);
+  });
+
+  it("returns false for arrays", () => {
+    assert.equal(isCodeBlock(["a", "b"]), false);
+  });
+
+  it("returns false for TableFill", () => {
+    const td: TableFill = { headers: [cell("A")], rows: [[cell("1")]] };
+    assert.equal(isCodeBlock(td), false);
+  });
+
+  it("returns false for StyledParagraph arrays", () => {
+    const lines: StyledParagraph[] = [{ runs: [{ text: "hi" }] }];
+    assert.equal(isCodeBlock(lines), false);
+  });
+});
