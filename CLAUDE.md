@@ -14,17 +14,21 @@ npm run lint         # Biome check
 
 TypeScript runs natively via Node's `--experimental-strip-types`. `tsc --build` emits `.d.ts` declarations only.
 
+## Releasing
+
+`@tycoworks/tycoslide` is a single npm package (no workspaces). The published tarball ships only `dist/`, `bin/`, `SKILL.md`, `syntax.md` (the `files` array); the `bin/tycoslide.js` shebang and `@tycoworks` publish access are assumed set up.
+
+1. **Clean-build + test** on the release branch: `npm ci && npm run build && npm test && npm run lint`. If the build reports missing exports that exist in source, `find . -name 'tsconfig.tsbuildinfo' -not -path './node_modules/*' -delete && npm run build`.
+2. **Bump**: `npm version <patch|minor|major> --no-git-tag-version` (updates `package.json` + lockfile; no commit/tag).
+3. **Verify the tarball**: `npm pack --dry-run` — confirm only `dist/`, `bin/tycoslide.js` (with shebang), `SKILL.md`, `syntax.md`, `package.json`, `README.md`, `LICENSE`; no `src/`, `test/`, configs, or fixtures.
+4. **Publish**: `npm publish --access public` (`--access public` required on first publish, harmless after).
+5. **Commit, tag, push**: `git commit -am "release vX.Y.Z" && git tag vX.Y.Z && git push --follow-tags`.
+6. **GitHub release**: `gh release create vX.Y.Z --title "vX.Y.Z" --generate-notes`.
+7. **Clean-room check**: in an empty dir, `npm install @tycoworks/tycoslide && npx tycoslide --version`, then build a minimal deck against a theme to confirm it renders a `.pptx`.
+
 ## Product Principle
 
-**The designer's `.pptx` is inviolate — you never add anything to it and never clean anything up. tycoslide conforms to whatever the designer made; all tycoslide behavior, and all accommodation for real-world mess, lives in the manifest.**
-
-Two facets of the one rule:
-
-1. **Nothing tycoslide-specific goes into the `.pptx`.** A designer sees a normal template — no syntax to learn, no tokens, no plugins. Slot mappings, placeholder patterns, fit rules — everything tycoslide-flavored lives in the manifest. The template's job is to look right; the manifest's job is to say what fills where. This is the differentiator vs engines that make the designer touch syntax (Handlebars in Word, Templafy tokens, `{{...}}` placeholders).
-
-2. **Real PowerPoint is messy, and tycoslide absorbs the mess.** Real files scatter a single line across many runs for no semantic reason, style inconsistently, and name shapes oddly. tycoslide must work with them as-is — never require the designer to reformat, tidy, or re-author their file. Any workaround lives in tycoslide's fill logic and the manifest (e.g. tycoslide coalesces adjacent same-style runs when filling, rather than demanding tidy runs).
-
-If a decision would put tycoslide markup in the `.pptx`, or would require the designer to change their file, move it into the manifest / tycoslide instead.
+**Users should never have to change their `.pptx`.** tycoslide works with the template as-is — no tycoslide syntax, tokens, or placeholders added to it, and no asking anyone to clean it up or re-author it. Everything tycoslide needs, and everything that copes with messy real-world files (a line split across many runs, inconsistent styling, odd shape names), lives in the manifest and the fill logic instead. If a decision would force the user to edit their file, move it into the manifest / tycoslide instead.
 
 ## Architecture
 
