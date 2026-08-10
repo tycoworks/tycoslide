@@ -9,7 +9,7 @@ function config(layouts: CompilerLayout[]): CompilerConfig {
   return { layouts, assets: {}, template: "t.pptx", rootDir: "" };
 }
 
-const OPTIONS = { build: { command: "npx bon build deck.md" } };
+const OPTIONS = { build: { command: "npx tycoslide build deck.md" } };
 
 /** Parse the manifest JSON and return the sole layout's parameter list. */
 function manifestParams(layouts: CompilerLayout[]) {
