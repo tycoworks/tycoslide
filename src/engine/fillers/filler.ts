@@ -46,12 +46,7 @@ export const FILLERS: Record<SlotType, Filler<any>> = {
   [SlotType.Table]: {
     matches: isTableFill,
     label: "TableFill",
-    fill: (slide, slot, v, { layoutName }) => {
-      if (slot.columns !== undefined && v.headers.length !== slot.columns) {
-        throw new Error(
-          `Layout "${layoutName}" slot "${slot.key}": table has ${v.headers.length} columns, template expects ${slot.columns}`,
-        );
-      }
+    fill: (slide, slot, v) => {
       slide.modifyElement(slot.shapeName, [(el: any) => fillTable(el, v, slot.shapeName)]);
     },
   },

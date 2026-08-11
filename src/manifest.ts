@@ -24,7 +24,6 @@ type ManifestSlot = {
   type: CompilerSlot["type"];
   required?: true;
   limit?: ManifestLimit;
-  columns?: number;
   codeTheme?: string;
   mermaidVariant?: string;
 };
@@ -94,10 +93,8 @@ function stripSlot(slot: CompilerSlot): ManifestSlot {
   if (slot.limit) result.limit = slot.limit;
   switch (slot.type) {
     case CompilerSlotType.Text:
-      // startAt is a fill hint, not a manifest surface concern.
-      break;
     case CompilerSlotType.Table:
-      if (slot.columns !== undefined) result.columns = slot.columns;
+      // No fields beyond the shared key/type/required/limit.
       break;
     case CompilerSlotType.Code:
       result.codeTheme = slot.codeTheme;

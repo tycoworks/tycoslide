@@ -36,6 +36,8 @@ export const Tag = {
   HLINK_CLICK: "a:hlinkClick",
   RELATIONSHIP: "Relationship",
   TABLE: "a:tbl",
+  TABLE_GRID: "a:tblGrid",
+  GRID_COL: "a:gridCol",
   TABLE_ROW: "a:tr",
   TABLE_CELL: "a:tc",
   TX_BODY: "a:txBody",
@@ -73,6 +75,8 @@ export const Attr = {
   Y: "y",
   CX: "cx",
   CY: "cy",
+  // table grid column width
+  WIDTH: "w",
   // srcRect edges
   LEFT: "l",
   TOP: "t",
