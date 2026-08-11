@@ -4,6 +4,7 @@ import { DOMParser, XMLSerializer } from "@xmldom/xmldom";
 import { coalesceSameStyleRuns, fillTemplate } from "../dist/engine/fillers/template.js";
 import { fillText } from "../dist/engine/fillers/text.js";
 import { fillTable } from "../dist/engine/fillers/table.js";
+import { FILLERS } from "../dist/engine/fillers/filler.js";
 import { setRichRuns } from "../dist/engine/dom.js";
 import { validateContentSlots } from "../dist/engine/generate.js";
 import { parseProseLine } from "../dist/markdown/parsers.js";
@@ -790,14 +791,30 @@ describe("isTableFill", () => {
 // fillTable — TableFill input shape
 // ============================================
 
-function makeTableXml(rows: string[][]): string {
+function makeTableXml(rows: string[][], colWidths?: number[]): string {
+  const nCols = rows[0].length;
+  const widths = colWidths ?? Array.from({ length: nCols }, () => 1000000);
+  const grid = `<a:tblGrid>${widths.map((w) => `<a:gridCol w="${w}"/>`).join("")}</a:tblGrid>`;
   const trs = rows
     .map(
       (cells) =>
         `<a:tr h="100000">${cells.map((c) => `<a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr/><a:t>${c}</a:t></a:r></a:p></a:txBody><a:tcPr/></a:tc>`).join("")}</a:tr>`,
     )
     .join("");
-  return `<p:graphicFrame xmlns:a="${NS_A}" xmlns:p="${NS_P}"><a:tbl>${trs}</a:tbl></p:graphicFrame>`;
+  return `<p:graphicFrame xmlns:a="${NS_A}" xmlns:p="${NS_P}"><a:tbl>${grid}${trs}</a:tbl></p:graphicFrame>`;
+}
+
+/** Column widths from a filled table's <a:tblGrid>, in document order. */
+function gridWidths(el: any): number[] {
+  const cols = el.getElementsByTagName("a:gridCol");
+  const out: number[] = [];
+  for (let i = 0; i < cols.length; i++) out.push(Number(cols[i].getAttribute("w")));
+  return out;
+}
+
+/** Cell count of a given row (0 = header). */
+function rowCellCount(el: any, rowIndex: number): number {
+  return el.getElementsByTagName("a:tr")[rowIndex].getElementsByTagName("a:tc").length;
 }
 
 describe("fillTable", () => {
@@ -852,7 +869,7 @@ describe("fillTable", () => {
     assert.throws(() => fillTable(el, td), /has no <a:tbl> element/);
   });
 
-  it("handles fewer data columns than template cells", () => {
+  it("trims columns to match data when data has fewer than the template", () => {
     const el = parseXml(
       makeTableXml([
         ["H1", "H2", "H3"],
@@ -865,11 +882,15 @@ describe("fillTable", () => {
 
     const trs = el.getElementsByTagName("a:tr");
     assert.equal(trs.length, 2);
-    assert.equal(trs[0].getElementsByTagName("a:t")[0].textContent, "Only1");
-    assert.equal(trs[1].getElementsByTagName("a:t")[0].textContent, "Val1");
+    assert.deepEqual(allTexts(trs[0]), ["Only1"]);
+    assert.deepEqual(allTexts(trs[1]), ["Val1"]);
+    // Rows and grid are trimmed to the data's column count — no stale specimen cells survive.
+    assert.equal(rowCellCount(el, 0), 1);
+    assert.equal(rowCellCount(el, 1), 1);
+    assert.equal(gridWidths(el).length, 1);
   });
 
-  it("handles more data columns than template cells (truncates)", () => {
+  it("expands columns to match data when data has more than the template", () => {
     const el = parseXml(
       makeTableXml([
         ["H1", "H2"],
@@ -882,8 +903,132 @@ describe("fillTable", () => {
 
     const trs = el.getElementsByTagName("a:tr");
     assert.equal(trs.length, 2);
-    assert.deepEqual(allTexts(trs[0]), ["A", "B"]);
-    assert.deepEqual(allTexts(trs[1]), ["1", "2"]);
+    assert.deepEqual(allTexts(trs[0]), ["A", "B", "C", "D"]);
+    assert.deepEqual(allTexts(trs[1]), ["1", "2", "3", "4"]);
+    // Rows and grid grow to the data's column count.
+    assert.equal(rowCellCount(el, 0), 4);
+    assert.equal(rowCellCount(el, 1), 4);
+    assert.equal(gridWidths(el).length, 4);
+  });
+
+  it("conserves total table width when expanding columns", () => {
+    const el = parseXml(
+      makeTableXml(
+        [
+          ["H1", "H2"],
+          ["D1", "D2"],
+        ],
+        [900000, 300000],
+      ),
+    ).documentElement;
+    const total = gridWidths(el).reduce((a, b) => a + b, 0);
+
+    const td: TableFill = { headers: cells("A", "B", "C"), rows: [cells("1", "2", "3")] };
+    fillTable(el, td);
+
+    const after = gridWidths(el);
+    assert.equal(after.length, 3);
+    assert.equal(
+      after.reduce((a, b) => a + b, 0),
+      total,
+    );
+  });
+
+  it("conserves total table width when trimming columns", () => {
+    const el = parseXml(
+      makeTableXml(
+        [
+          ["H1", "H2", "H3"],
+          ["D1", "D2", "D3"],
+        ],
+        [400000, 400000, 400000],
+      ),
+    ).documentElement;
+    const total = gridWidths(el).reduce((a, b) => a + b, 0);
+
+    const td: TableFill = { headers: cells("A", "B"), rows: [cells("1", "2")] };
+    fillTable(el, td);
+
+    const after = gridWidths(el);
+    assert.equal(after.length, 2);
+    assert.equal(
+      after.reduce((a, b) => a + b, 0),
+      total,
+    );
+  });
+
+  it("clones the last cell's styling for added columns", () => {
+    const grid = `<a:tblGrid><a:gridCol w="1000000"/><a:gridCol w="1000000"/></a:tblGrid>`;
+    const tc = (t: string, anchor?: string) =>
+      `<a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr/><a:t>${t}</a:t></a:r></a:p></a:txBody><a:tcPr${anchor ? ` anchor="${anchor}"` : ""}/></a:tc>`;
+    const row = (a: string, b: string) => `<a:tr h="100000">${tc(a)}${tc(b, "ctr")}</a:tr>`;
+    const xml = `<p:graphicFrame xmlns:a="${NS_A}" xmlns:p="${NS_P}"><a:tbl>${grid}${row("H1", "H2")}${row("D1", "D2")}</a:tbl></p:graphicFrame>`;
+    const el = parseXml(xml).documentElement;
+
+    const td: TableFill = { headers: cells("A", "B", "C", "D"), rows: [cells("1", "2", "3", "4")] };
+    fillTable(el, td);
+
+    const headerCells = el.getElementsByTagName("a:tr")[0].getElementsByTagName("a:tc");
+    assert.equal(headerCells.length, 4);
+    // Added columns clone the last specimen cell, which carried anchor="ctr".
+    assert.equal(headerCells[2].getElementsByTagName("a:tcPr")[0].getAttribute("anchor"), "ctr");
+    assert.equal(headerCells[3].getElementsByTagName("a:tcPr")[0].getAttribute("anchor"), "ctr");
+    // The original first cell is untouched (no anchor).
+    assert.equal(headerCells[0].getElementsByTagName("a:tcPr")[0].getAttribute("anchor"), null);
+  });
+
+  it("gives the rounding remainder to the last column when width is not divisible", () => {
+    const el = parseXml(
+      makeTableXml(
+        [
+          ["H1", "H2"],
+          ["D1", "D2"],
+        ],
+        [500000, 500000],
+      ),
+    ).documentElement;
+    const total = gridWidths(el).reduce((a, b) => a + b, 0); // 1_000_000, not divisible by 3
+
+    const td: TableFill = { headers: cells("A", "B", "C"), rows: [cells("1", "2", "3")] };
+    fillTable(el, td);
+
+    const after = gridWidths(el);
+    const each = Math.round(total / 3); // 333_333
+    // First n-1 columns get the even share; the last absorbs the remainder so the total is exact.
+    assert.deepEqual(after, [each, each, total - each * 2]); // [333333, 333333, 333334]
+    assert.equal(
+      after.reduce((a, b) => a + b, 0),
+      total,
+    );
+  });
+
+  it("pads short data rows and truncates long ones to the header column count", () => {
+    const el = parseXml(
+      makeTableXml([
+        ["H1", "H2", "H3"],
+        ["D1", "D2", "D3"],
+      ]),
+    ).documentElement;
+
+    const td: TableFill = {
+      headers: cells("A", "B", "C"),
+      rows: [
+        cells("1"), // short: 1 value for 3 columns
+        cells("x", "y", "z", "w"), // long: 4 values for 3 columns
+      ],
+    };
+    fillTable(el, td);
+
+    const trs = el.getElementsByTagName("a:tr");
+    assert.equal(trs.length, 3);
+    // Short row: padded to 3 cells; first carries the value, no stale specimen text (D2/D3) survives.
+    assert.equal(rowCellCount(el, 1), 3);
+    assert.equal(trs[1].getElementsByTagName("a:tc")[0].getElementsByTagName("a:t")[0].textContent, "1");
+    assert.ok(!allTexts(trs[1]).includes("D2"));
+    assert.ok(!allTexts(trs[1]).includes("D3"));
+    // Long row: truncated to 3 cells; the 4th value is dropped.
+    assert.equal(rowCellCount(el, 2), 3);
+    assert.deepEqual(allTexts(trs[2]), ["x", "y", "z"]);
   });
 
   it("handles empty rows array (headers only)", () => {
@@ -900,6 +1045,30 @@ describe("fillTable", () => {
     const trs = el.getElementsByTagName("a:tr");
     assert.equal(trs.length, 1);
     assert.deepEqual(allTexts(trs[0]), ["Name", "Value"]);
+  });
+});
+
+// ============================================
+// Table filler — always adapts to the data (no fixed-column guard)
+// ============================================
+
+describe("Table filler", () => {
+  const tableSlot = (): Slot => ({ key: "pricing", shapeName: "S", type: SlotType.Table });
+  // A slide stub whose modifyElement records the call but never invokes the
+  // callback — isolates the filler wrapper from fillTable's DOM work.
+  const stubSlide = () => {
+    let filled = false;
+    return { slide: { modifyElement: () => (filled = true) }, wasFilled: () => filled };
+  };
+  const ctx = { layoutName: "L" };
+
+  it("delegates to fillTable for any column count — no column-count guard", () => {
+    for (const headers of [cells("A"), cells("A", "B", "C"), cells("A", "B", "C", "D", "E", "F")]) {
+      const { slide, wasFilled } = stubSlide();
+      const value: TableFill = { headers, rows: [] };
+      assert.doesNotThrow(() => FILLERS[SlotType.Table].fill(slide, tableSlot(), value, ctx));
+      assert.equal(wasFilled(), true);
+    }
   });
 });
 

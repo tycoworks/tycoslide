@@ -93,8 +93,6 @@ export type Slot = {
   type: SlotType;
   /** Leave the first N specimen paragraphs untouched (fillText only). */
   startAt?: number;
-  /** Enforced column count for table slots. */
-  columns?: number;
 };
 
 export type Layout = {

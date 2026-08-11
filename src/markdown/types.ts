@@ -219,8 +219,6 @@ export type CompilerTextSlot = CompilerSlotBase & {
 /** Table shape backed by an `<a:tbl>` with header + data specimen rows. */
 export type CompilerTableSlot = CompilerSlotBase & {
   type: typeof CompilerSlotType.Table;
-  /** Enforced column count. */
-  columns?: number;
 };
 
 /**

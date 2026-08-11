@@ -101,11 +101,8 @@ function toEngineSlot(slot: CompilerParameter | CompilerSlot): Slot {
       if (slot.startAt !== undefined) result.startAt = slot.startAt;
       return result;
     }
-    case CompilerSlotType.Table: {
-      const result: Slot = { key: slot.key, shapeName: slot.shapeName, type: SlotType.Table };
-      if (slot.columns !== undefined) result.columns = slot.columns;
-      return result;
-    }
+    case CompilerSlotType.Table:
+      return { key: slot.key, shapeName: slot.shapeName, type: SlotType.Table };
     case CompilerSlotType.Code:
       // Highlighter resolves the code fence into StyledParagraph[]; engine
       // fills it via fillText.
