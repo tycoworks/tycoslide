@@ -154,7 +154,8 @@ export function buildParagraph(doc: any, clonePPr: any | null, run: any): any {
 
 export const HYPERLINK_REL_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink";
 
-export function addRelationship(relation: any, url: string): string {
+/** Next unused `rIdN` (max existing id + 1) among a rels container's `<Relationship>` children. */
+export function nextFreeRId(relation: any): string {
   const existing = collectElements(relation, Tag.RELATIONSHIP);
   let maxId = 0;
   for (const rel of existing) {
@@ -162,7 +163,11 @@ export function addRelationship(relation: any, url: string): string {
     const num = id ? parseInt(id.replace("rId", ""), 10) : 0;
     if (num > maxId) maxId = num;
   }
-  const rId = `rId${maxId + 1}`;
+  return `rId${maxId + 1}`;
+}
+
+export function addRelationship(relation: any, url: string): string {
+  const rId = nextFreeRId(relation);
   const rel = relation.ownerDocument.createElement(Tag.RELATIONSHIP);
   rel.setAttribute(Attr.ID, rId);
   rel.setAttribute(Attr.TYPE, HYPERLINK_REL_TYPE);

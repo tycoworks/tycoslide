@@ -101,6 +101,7 @@ subtitle: This Quarter
 - `layout` is required and consumed by the compiler (not forwarded as content).
 - All other frontmatter keys fill parameters: `title` fills the `title` template parameter, `subtitle` fills the `subtitle` parameter, `hero` fills the `hero` image parameter, etc. A multi-line text shape surfaces as several keys (e.g. `name` + `jobTitle`); fill each as its own scalar line.
 - Slots (`text`, `table`, `code`, `mermaid`) are filled by body regions, not frontmatter -- see below.
+- A slide may also carry a `notes:` block in frontmatter -- plain-text speaker notes for the slide's notes page (see [syntax.md](syntax.md#speaker-notes)). It is slide-level metadata, not a parameter or slot.
 
 ### Body content, slots, and formatting
 

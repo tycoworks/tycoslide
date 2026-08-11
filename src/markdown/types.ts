@@ -114,6 +114,8 @@ export type MarkdownBlock = TextFill | TableFill | CodeFence | MermaidFence | Im
 export type CompilerDeckStep = {
   layout: string;
   content?: Record<string, MarkdownBlock>;
+  /** Slide-level speaker notes, stripped from frontmatter. Plain text. */
+  notes?: string;
 };
 
 /**
@@ -134,6 +136,8 @@ export type CompilerDeck = {
 export type ResolvedCompilerDeckStep = {
   layout: string;
   content?: Record<string, TextFill | TableFill | ImageFill | TemplateFill>;
+  /** Slide-level speaker notes, threaded through to the engine. Plain text. */
+  notes?: string;
 };
 
 /**

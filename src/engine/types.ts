@@ -109,6 +109,8 @@ export type Layout = {
 export type DeckStep = {
   layout: string;
   content?: Record<string, TextFill | TableFill | ImageFill | TemplateFill>;
+  /** Slide-level speaker notes — plain text, one paragraph per line. Not a slot. */
+  notes?: string;
 };
 
 export type Deck = {

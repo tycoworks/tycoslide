@@ -43,6 +43,7 @@ export const RESERVED_KEY = {
   BODY: "body",
   OUTPUT: "output",
   THEME: "theme",
+  NOTES: "notes",
 } as const;
 
 const CODE_FENCE_RE = /^```(\w+)\n([\s\S]*?)```\s*$/;
@@ -181,6 +182,13 @@ function compileStep(slide: RawSlide, layouts: CompilerLayout[], rootDir: string
     throw new Error(`Slide ${index}: missing required "${RESERVED_KEY.LAYOUT}" in frontmatter`);
   }
 
+  // Speaker notes are slide-level metadata, stripped from frontmatter before
+  // slot/param resolution — exactly like `layout`. Coerce to string if present.
+  // An empty `notes:` key parses as YAML null; treat it as absent (loose `==`)
+  // so it doesn't write the literal string "null".
+  const notesRaw = frontmatter[RESERVED_KEY.NOTES];
+  const notes = notesRaw == null ? undefined : String(notesRaw);
+
   const layoutName = String(layout);
   const layoutDef = layouts.find((l) => l.name === layoutName);
   if (!layoutDef) {
@@ -211,7 +219,7 @@ function compileStep(slide: RawSlide, layouts: CompilerLayout[], rootDir: string
   // (gathered per parameter, expanded together once every line is read).
   const valuesByTemplateParam = new Map<CompilerTemplateParameter, Map<string, string>>();
   for (const [key, value] of Object.entries(frontmatter)) {
-    if (key === RESERVED_KEY.LAYOUT) continue;
+    if (key === RESERVED_KEY.LAYOUT || key === RESERVED_KEY.NOTES) continue;
 
     const image = imageByKey.get(key);
     if (image) {
@@ -298,7 +306,9 @@ function compileStep(slide: RawSlide, layouts: CompilerLayout[], rootDir: string
   // CompilerDeckStep.content values are MarkdownBlock — CodeFence and
   // MermaidFence are legal in transit until the resolvers narrow them into
   // StyledParagraph[] / ImageFill before the engine sees the deck.
-  return { layout: layoutName, content };
+  const step: CompilerDeckStep = { layout: layoutName, content };
+  if (notes !== undefined) step.notes = notes;
+  return step;
 }
 
 const KNOWN_GLOBAL_KEYS: Set<string> = new Set([RESERVED_KEY.THEME, RESERVED_KEY.OUTPUT]);

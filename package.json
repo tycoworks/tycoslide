@@ -22,6 +22,7 @@
     "format": "biome format --write ."
   },
   "dependencies": {
+    "@xmldom/xmldom": "^0.9.10",
     "commander": "^15.0.0",
     "image-size": "^2.0.2",
     "pptx-automizer": "^0.8.2",
@@ -35,7 +36,6 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",
     "@types/node": "^22.20.0",
-    "@xmldom/xmldom": "^0.9.10",
     "typescript": "^5.8.0"
   }
 }

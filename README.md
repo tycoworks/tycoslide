@@ -49,6 +49,7 @@ tycoslide build deck.md                   # → deck.pptx
 
 ```bash
 tycoslide build deck.md       # markdown → PPTX (theme resolved from deck frontmatter)
+tycoslide build deck.md --no-notes   # omit speaker notes from the output
 tycoslide smoke               # one slide per layout → smoke-all.pptx
 tycoslide plugin              # generate AI agent plugin package
 tycoslide manifest            # print layout + asset catalog to stdout

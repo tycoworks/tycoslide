@@ -3,6 +3,7 @@ export { fillImage } from "./fillers/image.js";
 export { fillTable, isTableFill } from "./fillers/table.js";
 export { fillTemplate } from "./fillers/template.js";
 export { fillText, isTextFill } from "./fillers/text.js";
+export type { GenerateOptions } from "./generate.js";
 export { generate } from "./generate.js";
 export type {
   Config,

@@ -1,5 +1,6 @@
 import {
   type Config,
+  type GenerateOptions,
   generate,
   type ImageFill,
   type Layout,
@@ -69,6 +70,7 @@ export async function resolveDeck(deck: CompilerDeck, config: CompilerConfig): P
     steps: deck.steps.map((step) => {
       const resolvedStep: ResolvedCompilerDeck["steps"][number] = { layout: step.layout };
       if (step.content) resolvedStep.content = narrowContent(step.content);
+      if (step.notes !== undefined) resolvedStep.notes = step.notes;
       return resolvedStep;
     }),
   };
@@ -164,15 +166,20 @@ export function toEngineConfig(config: CompilerConfig): Config {
  * Mermaid PNGs are cached under `<outputDir>/.tycoslide-cache/mermaid/` so no
  * post-write cleanup is needed.
  */
-export async function buildDeck(deck: CompilerDeck, config: CompilerConfig): Promise<void> {
+export async function buildDeck(
+  deck: CompilerDeck,
+  config: CompilerConfig,
+  options: GenerateOptions = {},
+): Promise<void> {
   const resolved = await resolveDeck(deck, config);
-  await generate(resolved, toEngineConfig(config));
+  await generate(resolved, toEngineConfig(config), options);
 }
 
 export type {
   Config,
   Deck,
   DeckStep,
+  GenerateOptions,
   ImageFill,
   Layout,
   Slot,

@@ -222,6 +222,26 @@ Each layout also declares a `slideNumber` pointing at the physical slide in the 
 
 ---
 
+## Speaker notes
+
+Any slide may carry a `notes:` key in its frontmatter -- a plain-text speaker-notes block attached to that slide's notes page. It is slide-level metadata, not a parameter or a slot: it is never routed to a shape and never appears on the slide face, only in the presenter/notes view.
+
+Write multiple lines with a YAML block scalar (`|`); each line becomes one notes paragraph. Blank template notes on the underlying slide are always stripped, so only what you author here shows up.
+
+```yaml
+---
+layout: Body
+title: Key Achievements
+notes: |
+  Open by thanking the regional teams.
+  Land the 23% number, then pause before the churn stat.
+---
+```
+
+To build with all speaker notes omitted, pass `--no-notes` to `tycoslide build` (see [README](README.md#cli)).
+
+---
+
 ## Slides with no body
 
 Slides that have all their content in frontmatter (common for title slides, section dividers) need no body:
