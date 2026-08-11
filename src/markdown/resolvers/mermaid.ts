@@ -1,4 +1,3 @@
-import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -21,19 +20,6 @@ export function isMermaidBlock(v: unknown): v is MermaidFence {
   );
 }
 
-function findMmdc(): string {
-  try {
-    const resolved = execFileSync("npx", ["--no-install", "which", "mmdc"], {
-      encoding: "utf-8",
-      stdio: ["pipe", "pipe", "pipe"],
-    }).trim();
-    if (resolved) return resolved;
-  } catch {
-    // fall through
-  }
-  throw new Error("mermaid-cli is required for mermaid diagrams. Install it: npm i -D @mermaid-js/mermaid-cli");
-}
-
 function hashKey(definition: string, variantName: string): string {
   return createHash("sha256").update(variantName).update("\n").update(definition).digest("hex").slice(0, 16);
 }
@@ -44,13 +30,12 @@ function ensureCacheDir(config: CompilerConfig): string {
   return base;
 }
 
-function renderOne(
+async function renderOne(
   definition: string,
   variantName: string,
   variant: MermaidVariant,
   cacheDir: string,
-  mmdcPath: string,
-): string {
+): Promise<string> {
   const validated = validateMermaidDefinition(definition);
 
   const processed = injectClassDefs(
@@ -67,22 +52,25 @@ function renderOne(
   if (existsSync(outputPath)) return outputPath;
 
   const config = buildMermaidRenderConfig(variant);
-  const scratch = tmpdir();
-  const configPath = join(scratch, `tycoslide-mermaid-config-${key}.json`);
-  const inputPath = join(scratch, `tycoslide-mermaid-${key}.mmd`);
-
-  writeFileSync(configPath, JSON.stringify(config));
+  const inputPath = join(tmpdir(), `tycoslide-mermaid-${key}.mmd`);
   writeFileSync(inputPath, processed);
 
+  // mermaid-cli's programmatic API (lazy-imported so puppeteer only loads when a
+  // deck actually renders mermaid). Mirrors the old CLI flags: --configFile →
+  // mermaidConfig, -b transparent → backgroundColor, -s 2 → deviceScaleFactor.
+  const { run } = await import("@mermaid-js/mermaid-cli");
   try {
-    execFileSync(
-      mmdcPath,
-      ["-i", inputPath, "-o", outputPath, "--configFile", configPath, "-b", "transparent", "-s", "2"],
-      { stdio: ["pipe", "pipe", "pipe"], timeout: 30_000 },
-    );
+    await run(inputPath, outputPath as `${string}.png`, {
+      quiet: true,
+      outputFormat: "png",
+      parseMMDOptions: {
+        mermaidConfig: config,
+        backgroundColor: "transparent",
+        viewport: { width: 800, height: 600, deviceScaleFactor: 2 },
+      },
+    });
   } catch (e: any) {
-    const stderr = e.stderr?.toString() ?? e.message;
-    throw new Error(`Mermaid render failed:\n${stderr}`);
+    throw new Error(`Mermaid render failed:\n${e?.message ?? e}`);
   }
 
   return outputPath;
@@ -124,9 +112,8 @@ export const MermaidResolver: Resolver<MermaidFence> = {
       );
     }
 
-    const mmdcPath = findMmdc();
     const cacheDir = ensureCacheDir(config);
-    const pngPath = renderOne(fence.definition, variantName, variant, cacheDir, mmdcPath);
+    const pngPath = await renderOne(fence.definition, variantName, variant, cacheDir);
     return { type: SlotType.Image, path: pngPath, fit: FitMode.Contain };
   },
 };
