@@ -235,8 +235,8 @@ feature is tested without a template on disk (`test/notes.test.ts`), driven by a
 - Compiler: `notes:` frontmatter → `step.notes`; absent → `undefined`; a YAML
   block scalar → multi-line string; `notes` never appears in `content`/params.
 
-The buffer-aware adapter (`toNotesArchive`) is exercised by the real end-to-end
-smoke build (unit tests use the Map fake, which has no buffer to fight).
+The buffer-aware adapter (`toNotesArchive`) is exercised by a real end-to-end
+deck build (unit tests use the Map fake, which has no buffer to fight).
 
 ## 7. Implementation anchors
 
