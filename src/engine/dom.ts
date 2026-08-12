@@ -377,10 +377,21 @@ export function rebuildParagraphs(
     const isBullet = para.bullet !== undefined;
     const inLevel = para.bullet?.level ?? 0;
 
-    const { bucket, effectiveLvl } = isBullet ? pickBullet(inLevel) : { bucket: plainBucket, effectiveLvl: 0 };
-
     // Skip fully-empty text (matches previous fillText behavior).
     if (para.runs.length === 1 && !para.runs[0].text) continue;
+
+    // Bulleted content needs a bulleted specimen to model on. A plain-only shape
+    // (e.g. a designer "description" line, buNone) accepts plain text only, so
+    // bulleting it is an authoring error — fail fast rather than emit a run with
+    // no modelled style (which renders in the app default colour, e.g. black on
+    // a dark slide whose real text colour lives only in the specimen's rPr).
+    if (isBullet && bullets.size === 0) {
+      throw new Error(
+        `Shape "${shapeName}": received bulleted content, but its specimen has no bulleted paragraph to model — this slot accepts plain text only.`,
+      );
+    }
+
+    const { bucket, effectiveLvl } = isBullet ? pickBullet(inLevel) : { bucket: plainBucket, effectiveLvl: 0 };
 
     const seedRun = buildRun(doc, bucket?.rPr ?? null, "");
     const newPara = buildParagraph(doc, bucket?.pPr ?? null, seedRun);

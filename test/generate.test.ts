@@ -352,11 +352,16 @@ describe("fillText", () => {
     assert.equal(pPr.getAttribute("lvl"), "1");
   });
 
-  it("when no bullet template exists, falls back to plain template", () => {
+  // A plain-only specimen (no bulleted paragraph) models plain text; bulleting it
+  // is an authoring error. Fail fast rather than emit a style-less run — the real
+  // trigger of the dark-slide black-text bug, where the run's colour lived only
+  // in the specimen rPr and a null-bucket rebuild dropped it.
+  it("throws when bulleted content is given to a plain-only specimen", () => {
     const body = makeTextBody(makeParagraph("Only plain"));
-    fillText(body, { paragraphs: [bullet("Bullet without template")] });
-    assert.equal(paraCount(body), 1);
-    assert.deepEqual(allTexts(body), ["Bullet without template"]);
+    assert.throws(
+      () => fillText(body, { paragraphs: [bullet("Bullet without template")] }, { shapeName: "descLine" }),
+      /descLine.*plain text only/s,
+    );
   });
 
   it("rich bullet line uses bullet template", () => {
@@ -411,13 +416,12 @@ describe("fillText", () => {
     assert.equal(spcBef.getElementsByTagName("a:spcPts")[0].getAttribute("val"), "1200");
   });
 
-  it("handles no bullet templates gracefully (no spacing change)", () => {
+  it("a single bullet among plain lines still fails fast on a plain-only specimen", () => {
     const body = makeTextBody(makeParagraph("Plain only"));
-    fillText(body, { paragraphs: [plain("First"), bullet("Dash line"), plain("After")] });
-    assert.equal(paraCount(body), 3);
-    const after = paraAt(body, 2);
-    const spcBef = after.getElementsByTagName("a:spcBef")[0];
-    assert.equal(spcBef, undefined);
+    assert.throws(
+      () => fillText(body, { paragraphs: [plain("First"), bullet("Dash line"), plain("After")] }, { shapeName: "descLine" }),
+      /descLine.*plain text only/s,
+    );
   });
 });
 
