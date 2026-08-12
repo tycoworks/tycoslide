@@ -1099,7 +1099,7 @@ describe("computeGeometry", () => {
     assert.equal(geometry.placement, "fit");
     if (geometry.placement !== "fit") return;
     assert.equal(geometry.cx, 1_000_000); // fills — image may upscale
-    assert.ok(warnings.some((w) => /PPI/.test(w)));
+    assert.ok(warnings.some((w) => /enlarged/.test(w)));
   });
 
   it("image downscales to fit a smaller frame with no warning", () => {

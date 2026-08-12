@@ -91,7 +91,7 @@ A layout advertises two kinds of author-facing input, split by one rule: **a par
   "parameters": [
     { "key": "title",    "type": "template" },
     { "key": "subtitle", "type": "template" },
-    { "key": "logo",     "type": "image", "fit": "contain", "required": true }
+    { "key": "logo",     "type": "image", "required": true }
   ],
   "slots": [
     { "key": "body", "type": "text" },
@@ -114,7 +114,7 @@ Fill a parameter by putting a value under its key in the slide's frontmatter.
   jobTitle: CEO, Acme Corp
   ```
   The engine substitutes each value into the run that carries its style, so if the designer made the name bold and the job title grey, the filled name stays bold and the filled title stays grey.
-- **`image`** -- a picture placeholder. Set it in frontmatter with the image path (from an asset catalog entry, or an absolute path). The parameter declares a `fit`: `contain` shows the whole image, `cover` fills the frame and center-crops overflow.
+- **`image`** -- a picture placeholder. Set it in frontmatter with the image path (from an asset catalog entry, or an absolute path). How it is scaled and cropped is set by the **asset's `type`** in the catalog (`icon` never enlarges past native and never crops; `image` fits the whole picture without cropping; `background` fills the frame and center-crops).
   ```yaml
   hero: assets/diagrams/architecture.png
   ```
@@ -136,13 +136,13 @@ Fill a slot by writing a region in the body: the default (unmarked) region maps 
   ```
   ````
   The language tag (e.g. `sql`, `python`, `typescript`) is required -- it drives syntax highlighting. Colors are applied as native text runs in the output, not images.
-- **`mermaid`** -- a mermaid diagram rendered as a themed PNG (see below). Written as a fenced `mermaid` region; the resulting PNG fills the slot with `contain` fit.
+- **`mermaid`** -- a mermaid diagram rendered as a themed PNG (see below). Written as a fenced `mermaid` region; the resulting PNG is shown contained (in its entirety).
 
 ---
 
 ## Mermaid diagrams
 
-Mermaid diagrams are rendered as themed PNGs and delivered to any slot declared with `type: mermaid`. Write a fenced code block with the `mermaid` language tag in a named slot whose layout declares that slot as `type: mermaid` (with a `mermaidVariant` naming the theme's color variant). The resulting PNG behaves like any other image in the slot -- always shown in its entirety (`contain` fit).
+Mermaid diagrams are rendered as themed PNGs and delivered to any slot declared with `type: mermaid`. Write a fenced code block with the `mermaid` language tag in a named slot whose layout declares that slot as `type: mermaid` (with a `mermaidVariant` naming the theme's color variant). The resulting PNG behaves like any other image in the slot -- always shown in its entirety.
 
 To let the same physical slide accept either an image or a diagram, the theme author declares two layouts with the same `slideNumber` -- one exposing the fill as an `image` parameter (frontmatter path), one as a `mermaid` slot (a fenced region). Authors pick between them by naming the layout in frontmatter; the compiler routes content based on the layout's declaration, so there is no ambiguity.
 
@@ -214,7 +214,7 @@ hero: assets/diagrams/architecture.png
 Each parameter or slot in the layout definition may declare:
 - **`type`** (required) -- parameters: `template`, `image`; slots: `text`, `table`, `code`, `mermaid`.
 - **`required: true`** -- the slide has no usable default and the build fails if the parameter/slot has no value (e.g. team-member photos, icon-grid icons, the quote logo). If you don't have a suitable image, ask the user for one.
-- **`fit`** -- image parameters only (required): `contain` shows the whole image inside the frame (letterboxed); `cover` fills the frame and center-crops overflow. Fit is a layout-designer decision baked into the parameter -- callers never override it per slide. Mermaid slots don't declare `fit`; mermaid always renders contained.
+- **image sizing** -- each catalog asset declares a `type` (`icon` | `image` | `background`) that determines how it is scaled and cropped: `icon` never enlarges past native and never crops; `image` fits the whole picture (no crop, may scale); `background` fills and center-crops. Mermaid renders as `image` (contained).
 - **`codeTheme`** -- code slots only (required): the Shiki theme id used to syntax-highlight fenced code that lands in this slot (e.g. `"github-dark"`).
 - **`mermaidVariant`** -- mermaid slots only (required): names the color variant from `theme.mermaid` (e.g. `"dark"`). See [Mermaid diagrams](#mermaid-diagrams) above.
 

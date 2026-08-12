@@ -37,6 +37,8 @@ const NATIVE_EMU_PER_PX = EMU_PER_INCH / PX_PER_INCH;
 const SRC_RECT_FULL = 100000;
 /** Warn once the cropped-away or empty area exceeds this fraction of the frame. */
 const SEVERE_MISMATCH_FRACTION = 0.5;
+/** Warn once the image renders below this fraction of its native pixel size. */
+const MIN_SCALE = 0.2;
 
 /**
  * Size a picture shape from its `ImageConstraints` (via `computeGeometry`):
@@ -97,9 +99,11 @@ export function computeGeometry(frame: Frame, imgW: number, imgH: number, fit: I
   if (fit === ImageFit.ScaleDown) scale = Math.min(scale, NATIVE_EMU_PER_PX); // never enlarge past native
 
   const warnings: string[] = [];
-  if (scale > NATIVE_EMU_PER_PX) {
-    // upscaling drops effective resolution below the native (96 PPI) density.
-    warnings.push(`renders at ~${Math.round(EMU_PER_INCH / scale)} PPI (upscaled) — supply a larger image`);
+  const scaleRatio = scale / NATIVE_EMU_PER_PX; // rendered size vs the image's native pixels
+  if (scaleRatio > 1) {
+    warnings.push(`enlarged to ${Math.round(scaleRatio * 100)}% of native — will look soft; supply a larger image`);
+  } else if (scaleRatio < MIN_SCALE) {
+    warnings.push(`shrunk to ${Math.round(scaleRatio * 100)}% of native — the slot is far smaller than the image`);
   }
 
   const shownW = imgW * scale;
