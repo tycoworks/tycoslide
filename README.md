@@ -1,6 +1,6 @@
 # tycoslide
 
-Let AI agents build slides from existing PowerPoint (`.pptx`) templates.
+Let AI agents build slides from existing PowerPoint (`.pptx`) files.
 
 > **Early release** — tycoslide is under active development.
 
