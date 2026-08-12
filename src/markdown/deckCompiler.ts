@@ -1,10 +1,12 @@
 import { resolve } from "node:path";
-import { FILLERS, FitMode, type ImageFill, SlotType, type TextFill } from "../engine/index.js";
+import { FILLERS, type ImageFill, ImageFit, SlotType, type TextFill } from "../engine/index.js";
 import { parseGfmTable, parseStyledParagraph } from "./parsers.js";
 import { RESOLVERS } from "./resolvers/resolver.js";
 import type { ParsedDocument, RawSlide } from "./slideParser.js";
 import { templateKeys, templateToSegments } from "./textTemplate.js";
 import {
+  type AssetCatalog,
+  AssetType,
   type CodeFence,
   type CompilerDeck,
   type CompilerDeckStep,
@@ -21,16 +23,19 @@ import {
 } from "./types.js";
 
 /**
- * Wrap a resolved image path as an ImageFill using the parameter's declared
- * fit. `param` is narrowed to `CompilerImageParameter` — only image parameters
- * carry a raw path. Mermaid slots never reach here (their content flows as
- * fences through MermaidResolver, which wraps the rendered PNG directly).
- *
- * `path` must be absolute. Callers are responsible for resolution (see
- * `resolve(rootDir, ...)` in the compiler / cli.ts).
+ * Wrap an absolute image path as an ImageFill, expanding the resolved asset
+ * `type` into the engine's scaling constraints. Callers resolve the path (see
+ * `resolveImagePath`) and the type (from the catalog) first.
  */
-export function toImageFill(param: CompilerImageParameter, path: string): ImageFill {
-  return { type: SlotType.Image, path, fit: param.fit };
+/** Map each semantic asset type to the engine's object-fit directive. */
+const FIT_FOR: Record<AssetType, ImageFit> = {
+  [AssetType.Icon]: ImageFit.ScaleDown,
+  [AssetType.Image]: ImageFit.Contain,
+  [AssetType.Background]: ImageFit.Cover,
+};
+
+export function toImageFill(path: string, type: AssetType): ImageFill {
+  return { type: SlotType.Image, path, fit: FIT_FOR[type] };
 }
 
 /**
@@ -174,7 +179,12 @@ function validateLayout(layout: CompilerLayout): void {
   }
 }
 
-function compileStep(slide: RawSlide, layouts: CompilerLayout[], rootDir: string): CompilerDeckStep {
+function compileStep(
+  slide: RawSlide,
+  layouts: CompilerLayout[],
+  rootDir: string,
+  assetTypeByPath: Map<string, AssetType>,
+): CompilerDeckStep {
   const { frontmatter, body, slots, index } = slide;
 
   const layout = frontmatter[RESERVED_KEY.LAYOUT];
@@ -223,7 +233,15 @@ function compileStep(slide: RawSlide, layouts: CompilerLayout[], rootDir: string
 
     const image = imageByKey.get(key);
     if (image) {
-      content[image.key] = toImageFill(image, resolveImagePath(rootDir, String(value)));
+      const imgPath = resolveImagePath(rootDir, String(value));
+      const assetType = assetTypeByPath.get(imgPath);
+      if (assetType === undefined) {
+        throw new Error(
+          `Slide image "${image.key}": "${value}" has no asset-catalog entry, so no type. ` +
+            `Add it to the theme's assets with a type (icon | image | background).`,
+        );
+      }
+      content[image.key] = toImageFill(imgPath, assetType);
       continue;
     }
 
@@ -323,7 +341,12 @@ const KNOWN_GLOBAL_KEYS: Set<string> = new Set([RESERVED_KEY.THEME, RESERVED_KEY
  * can rely on the pass-through. When provided, relative paths are resolved
  * to absolute via `path.resolve(rootDir, path)`; absolute paths pass through.
  */
-export function compileDeck(doc: ParsedDocument, layouts: CompilerLayout[], rootDir = ""): CompilerDeck {
+export function compileDeck(
+  doc: ParsedDocument,
+  layouts: CompilerLayout[],
+  rootDir = "",
+  assets: AssetCatalog = {},
+): CompilerDeck {
   const theme = doc.global[RESERVED_KEY.THEME];
   if (theme === undefined) {
     throw new Error(`Missing required "${RESERVED_KEY.THEME}" in global frontmatter`);
@@ -340,9 +363,18 @@ export function compileDeck(doc: ParsedDocument, layouts: CompilerLayout[], root
   // theme fails fast regardless of which layouts this deck's slides use.
   for (const layout of layouts) validateLayout(layout);
 
+  // Index each catalog asset's resolved path → its declared type, so an image
+  // filled by path inherits the scaling tolerance intrinsic to its pixels.
+  const assetTypeByPath = new Map<string, AssetType>();
+  for (const group of Object.values(assets)) {
+    for (const entry of Object.values(group)) {
+      assetTypeByPath.set(resolveImagePath(rootDir, entry.path), entry.type);
+    }
+  }
+
   const deck: CompilerDeck = {
     theme: String(theme),
-    steps: doc.slides.map((slide) => compileStep(slide, layouts, rootDir)),
+    steps: doc.slides.map((slide) => compileStep(slide, layouts, rootDir, assetTypeByPath)),
   };
 
   const output = doc.global[RESERVED_KEY.OUTPUT];
@@ -352,7 +384,3 @@ export function compileDeck(doc: ParsedDocument, layouts: CompilerLayout[], root
 
   return deck;
 }
-
-// Re-export FitMode so callers that build ImageFills by hand can import it
-// through the compiler surface without reaching into the engine.
-export { FitMode };

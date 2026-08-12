@@ -20,4 +20,4 @@ export type {
   TextRun,
   ThemeConfig,
 } from "./types.js";
-export { FitMode, SlotType } from "./types.js";
+export { ImageFit, SlotType } from "./types.js";

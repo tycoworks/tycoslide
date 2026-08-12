@@ -1,6 +1,5 @@
-import type { FitMode } from "./engine/index.js";
 import { templateKeys } from "./markdown/textTemplate.js";
-import type { CompilerConfig, CompilerParameter, CompilerSlot } from "./markdown/types.js";
+import type { AssetType, CompilerConfig, CompilerParameter, CompilerSlot } from "./markdown/types.js";
 import { CompilerSlotType, ParameterType } from "./markdown/types.js";
 
 export type ManifestOptions = {
@@ -15,7 +14,6 @@ type ManifestParameter = {
   type: CompilerParameter["type"];
   required?: true;
   limit?: ManifestLimit;
-  fit?: FitMode;
 };
 
 /** A body region (text, table, code, mermaid) as advertised to AI authors. */
@@ -46,6 +44,7 @@ type ManifestLayout = {
 
 type ManifestAssetEntry = {
   path: string;
+  type: AssetType;
   description: string;
   whenToUse?: string;
 };
@@ -79,7 +78,7 @@ function stripParameter(param: CompilerParameter): ManifestParameter[] {
         return result;
       });
     case ParameterType.Image: {
-      const result: ManifestParameter = { key: param.key, type: param.type, fit: param.fit };
+      const result: ManifestParameter = { key: param.key, type: param.type };
       if (param.required) result.required = true;
       if (param.limit) result.limit = param.limit;
       return [result];
@@ -123,6 +122,7 @@ export function generateManifest(config: CompilerConfig, options: ManifestOption
     for (const [name, entry] of Object.entries(entries)) {
       const manifestEntry: ManifestAssetEntry = {
         path: entry.path,
+        type: entry.type,
         description: entry.description,
       };
       if (entry.whenToUse) manifestEntry.whenToUse = entry.whenToUse;

@@ -3,11 +3,13 @@ import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Command } from "commander";
 import type { DeckStep, ImageFill, StyledParagraph, TableFill, TemplateFill, TextFill } from "./engine/index.js";
-import { FitMode, generate, SlotType } from "./engine/index.js";
+import { generate } from "./engine/index.js";
 import { buildDeck, toEngineConfig } from "./index.js";
 import { generateManifest } from "./manifest.js";
 import { toImageFill } from "./markdown/deckCompiler.js";
 import {
+  AssetType,
+  type AssetEntry,
   type CompilerConfig,
   CompilerSlotType,
   type CompilerThemeConfig,
@@ -44,24 +46,28 @@ const SMOKE_PROSE: StyledParagraph[] = [
   bulletLine("Second point"),
 ];
 
-function pickFirstAsset(config: CompilerConfig): string | undefined {
-  for (const group of Object.values(config.assets)) {
-    for (const entry of Object.values(group)) return entry.path;
-  }
-  return undefined;
+/** Pick a representative asset for the smoke — prefer a fillable one so slots
+ * look natural; the fill is always sized by the asset's own declared type. */
+function pickAsset(config: CompilerConfig): AssetEntry | undefined {
+  const entries = Object.values(config.assets).flatMap((group) => Object.values(group));
+  return (
+    entries.find((e) => e.type === AssetType.Background) ??
+    entries.find((e) => e.type === AssetType.Image) ??
+    entries[0]
+  );
 }
 
 function smokeSteps(config: CompilerConfig): DeckStep[] {
-  const firstAsset = pickFirstAsset(config);
-  const absAsset = firstAsset ? resolve(config.rootDir, firstAsset) : undefined;
+  const asset = pickAsset(config);
+  const absAsset = asset ? resolve(config.rootDir, asset.path) : undefined;
   return config.layouts.map((layout): DeckStep => {
     const content: Record<string, TextFill | TableFill | ImageFill | TemplateFill> = {};
     // Parameters (frontmatter): text → a placeholder-filled template, image → the first asset.
     for (const p of layout.parameters) {
       switch (p.type) {
         case ParameterType.Image: {
-          if (!absAsset) continue;
-          content[p.key] = toImageFill(p, absAsset);
+          if (!asset || !absAsset) continue;
+          content[p.key] = toImageFill(absAsset, asset.type);
           break;
         }
         case ParameterType.Template: {
@@ -86,7 +92,7 @@ function smokeSteps(config: CompilerConfig): DeckStep[] {
           // contained ImageFill so the projected engine slot (Image, contain)
           // stays consistent with the real renderer's output.
           if (!absAsset) continue;
-          content[s.key] = { type: SlotType.Image, path: absAsset, fit: FitMode.Contain };
+          content[s.key] = toImageFill(absAsset, AssetType.Image);
           break;
         }
         case CompilerSlotType.Text:
@@ -155,7 +161,7 @@ program
       throw new Error(`${basename(deckPath)}: missing required "${RESERVED_KEY.THEME}" in global frontmatter`);
     }
     const config = loadConfig(absConfigPath);
-    const deck = compileDeck(doc, config.layouts, config.rootDir);
+    const deck = compileDeck(doc, config.layouts, config.rootDir, config.assets);
     if (!deck.output) deck.output = basename(deckPath).replace(/\.md$/, ".pptx");
     await buildDeck(deck, config, { excludeNotes: !opts.notes });
   });

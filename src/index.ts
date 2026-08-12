@@ -187,7 +187,7 @@ export type {
   ThemeConfig,
 } from "./engine/index.js";
 // Engine — primitives-only public surface.
-export { FitMode, fillImage, fillTable, fillTemplate, fillText, generate, SlotType } from "./engine/index.js";
+export { fillImage, fillTable, fillTemplate, fillText, generate, SlotType } from "./engine/index.js";
 
 // Authoring
 export type { ManifestOptions } from "./manifest.js";

@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { ImageFill } from "../../engine/index.js";
-import { FitMode, SlotType } from "../../engine/index.js";
+import { ImageFit, SlotType } from "../../engine/index.js";
 import { type CompilerConfig, CompilerSlotType, FenceType, type MermaidFence } from "../types.js";
 import {
   buildMermaidRenderConfig,
@@ -114,6 +114,6 @@ export const MermaidResolver: Resolver<MermaidFence> = {
 
     const cacheDir = ensureCacheDir(config);
     const pngPath = await renderOne(fence.definition, variantName, variant, cacheDir);
-    return { type: SlotType.Image, path: pngPath, fit: FitMode.Contain };
+    return { type: SlotType.Image, path: pngPath, fit: ImageFit.Contain };
   },
 };

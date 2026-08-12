@@ -5,7 +5,8 @@ import { compileDeck } from "../dist/markdown/deckCompiler.js";
 import { compileMarkdownDeck } from "../dist/markdown/index.js";
 import { templateKeys, templateToSegments } from "../dist/markdown/textTemplate.js";
 import type { TextFill, ImageFill, StyledParagraph } from "../dist/engine/types.js";
-import { FitMode, SlotType } from "../dist/engine/types.js";
+import { ImageFit, SlotType } from "../dist/engine/types.js";
+import { AssetType } from "../dist/markdown/types.js";
 import type { CompilerLayout, CompilerParameter, CompilerSlot } from "../dist/markdown/types.js";
 import { CompilerSlotType, FenceType, ParameterType } from "../dist/markdown/types.js";
 
@@ -243,7 +244,6 @@ function imageParam(key: string, extras: Partial<CompilerParameter> = {}): Compi
     key,
     shapeName: `s_${key}`,
     type: ParameterType.Image,
-    fit: FitMode.Contain,
     ...extras,
   };
 }
@@ -370,8 +370,8 @@ describe("compileDeck", () => {
         whenToUse: "",
         whenNotToUse: "",
         parameters: [
-          { key: "hero", shapeName: "s1", type: ParameterType.Image, fit: FitMode.Cover },
-          { key: "logo", shapeName: "s2", type: ParameterType.Image, fit: FitMode.Contain },
+          { key: "hero", shapeName: "s1", type: ParameterType.Image },
+          { key: "logo", shapeName: "s2", type: ParameterType.Image },
         ],
         slots: [],
       },
@@ -393,10 +393,25 @@ describe("compileDeck", () => {
         ],
       },
       layouts,
+      "",
+      {
+        imgs: {
+          hero: { path: "images/hero.png", type: AssetType.Background, description: "" },
+          logo: { path: "images/logo.svg", type: AssetType.Icon, description: "" },
+        },
+      },
     );
 
-    const heroBlock: ImageFill = { type: SlotType.Image, path: "images/hero.png", fit: FitMode.Cover };
-    const logoBlock: ImageFill = { type: SlotType.Image, path: "images/logo.svg", fit: FitMode.Contain };
+    const heroBlock: ImageFill = {
+      type: SlotType.Image,
+      path: "images/hero.png",
+      fit: ImageFit.Cover,
+    };
+    const logoBlock: ImageFill = {
+      type: SlotType.Image,
+      path: "images/logo.svg",
+      fit: ImageFit.ScaleDown,
+    };
     assert.deepEqual(deck.steps[0].content!["hero"], heroBlock);
     assert.deepEqual(deck.steps[0].content!["logo"], logoBlock);
   });
@@ -826,7 +841,9 @@ headline: Questions?
 bg: images/closing-bg.png
 ---`;
 
-    const deck = compileMarkdownDeck(source, e2eLayouts);
+    const deck = compileMarkdownDeck(source, e2eLayouts, "", {
+      imgs: { closingBg: { path: "images/closing-bg.png", type: AssetType.Image, description: "" } },
+    });
 
     assert.equal(deck.output, "quarterly-review.pptx");
     assert.equal(deck.steps.length, 3);
@@ -844,7 +861,11 @@ bg: images/closing-bg.png
 
     assert.equal(deck.steps[2].layout, "closing");
     assert.deepEqual(deck.steps[2].content!["headline"], tvar("headline", "Questions?"));
-    const closingBg: ImageFill = { type: SlotType.Image, path: "images/closing-bg.png", fit: FitMode.Contain };
+    const closingBg: ImageFill = {
+      type: SlotType.Image,
+      path: "images/closing-bg.png",
+      fit: ImageFit.Contain,
+    };
     assert.deepEqual(deck.steps[2].content!["bg"], closingBg);
     assert.equal(deck.steps[2].content!["body"], undefined);
   });

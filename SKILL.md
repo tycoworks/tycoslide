@@ -39,7 +39,7 @@ For brand voice and naming guidelines, read `brand.md` if it exists alongside th
 
 Before writing anything, read `manifest.json`. It contains:
 
-- **layouts** -- for each: `name`, `description`, `parameters` (frontmatter inputs) and `slots` (body regions), each with `type` and optionally `required`, `fit`, `limit`, `codeTheme`, `mermaidVariant`, plus documentation (`whenToUse`, `whenNotToUse`)
+- **layouts** -- for each: `name`, `description`, `parameters` (frontmatter inputs) and `slots` (body regions), each with `type` and optionally `required`, `limit`, `codeTheme`, `mermaidVariant` (plus, for assets, a `type` of `icon`/`image`/`background`), plus documentation (`whenToUse`, `whenNotToUse`)
 - **assets** -- brand logos, client logos, illustrations, and icons (`description`, `whenToUse`)
 
 A layout's inputs split two ways (see [syntax.md](syntax.md) for details):

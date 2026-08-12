@@ -1,10 +1,15 @@
 import { compileDeck } from "./deckCompiler.js";
 import { parseSlideDocument } from "./slideParser.js";
-import type { CompilerDeck, CompilerLayout } from "./types.js";
+import type { AssetCatalog, CompilerDeck, CompilerLayout } from "./types.js";
 
-export function compileMarkdownDeck(source: string, layouts: CompilerLayout[], rootDir = ""): CompilerDeck {
+export function compileMarkdownDeck(
+  source: string,
+  layouts: CompilerLayout[],
+  rootDir = "",
+  assets: AssetCatalog = {},
+): CompilerDeck {
   const doc = parseSlideDocument(source);
-  return compileDeck(doc, layouts, rootDir);
+  return compileDeck(doc, layouts, rootDir, assets);
 }
 
 export { compileDeck, RESERVED_KEY } from "./deckCompiler.js";
@@ -38,4 +43,4 @@ export type {
   ResolvedCompilerDeck,
   ResolvedCompilerDeckStep,
 } from "./types.js";
-export { CompilerSlotType, FenceType, ParameterType } from "./types.js";
+export { AssetType, CompilerSlotType, FenceType, ParameterType } from "./types.js";
