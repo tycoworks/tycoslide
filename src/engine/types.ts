@@ -1,12 +1,3 @@
-/** How the engine should scale an image inside its picture frame. */
-export const FitMode = {
-  /** Shrink the picture frame to the image's aspect ratio, centered. */
-  Contain: "contain",
-  /** Fill the frame; center-crop overflow via srcRect. */
-  Cover: "cover",
-} as const;
-export type FitMode = (typeof FitMode)[keyof typeof FitMode];
-
 /**
  * Fill-strategy discriminator carried on every Slot. Required — there is no
  * silent default. The engine dispatches to fillTemplate / fillText / fillTable /
@@ -75,15 +66,27 @@ export type TableFill = {
 };
 
 /**
- * Input to fillImage — a resolved image path plus its fit mode. `path` must
- * be an absolute filesystem path; the compiler is responsible for resolution
- * before an ImageFill reaches the engine. Relative paths fail loudly at
- * `readFileSync` / `imageSize` in the engine.
+ * How a picture is scaled into its frame — the engine's image-sizing directive,
+ * mirroring CSS `object-fit`. `contain`: fit the whole image, scale both ways,
+ * letterbox. `cover`: fill the frame, centre-crop the overflow. `scale-down`:
+ * like contain but never enlarge past native (a small image sits at native size).
+ */
+export const ImageFit = {
+  Contain: "contain",
+  Cover: "cover",
+  ScaleDown: "scale-down",
+} as const;
+export type ImageFit = (typeof ImageFit)[keyof typeof ImageFit];
+
+/**
+ * Input to fillImage — a resolved image path plus its object-fit directive.
+ * `path` must be absolute; the compiler resolves it (and maps the asset's
+ * semantic type to a `fit`) before the ImageFill reaches the engine.
  */
 export type ImageFill = {
   type: typeof SlotType.Image;
   path: string;
-  fit: FitMode;
+  fit: ImageFit;
 };
 
 export type Slot = {

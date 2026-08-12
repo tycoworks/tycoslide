@@ -1,7 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { generateManifest } from "../dist/manifest.js";
-import { FitMode } from "../dist/engine/types.js";
 import type { CompilerConfig, CompilerLayout } from "../dist/markdown/types.js";
 import { ParameterType } from "../dist/markdown/types.js";
 
@@ -56,10 +55,10 @@ describe("generateManifest parameter flattening", () => {
     assert.deepEqual(params, [{ key: "a", type: ParameterType.Template }]);
   });
 
-  it("keeps an image parameter as a single keyed entry with its fit", () => {
+  it("keeps an image parameter as a single keyed entry", () => {
     const params = manifestParams([
-      layout("img", [{ key: "logo", shapeName: "logoPic", type: ParameterType.Image, fit: FitMode.Contain }]),
+      layout("img", [{ key: "logo", shapeName: "logoPic", type: ParameterType.Image }]),
     ]);
-    assert.deepEqual(params, [{ key: "logo", type: ParameterType.Image, fit: FitMode.Contain }]);
+    assert.deepEqual(params, [{ key: "logo", type: ParameterType.Image }]);
   });
 });

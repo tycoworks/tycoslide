@@ -1,14 +1,19 @@
-import {
-  type FitMode,
-  type ImageFill,
-  SlotType,
-  type TableFill,
-  type TemplateFill,
-  type TextFill,
-} from "../engine/index.js";
+import { type ImageFill, SlotType, type TableFill, type TemplateFill, type TextFill } from "../engine/index.js";
 import type { MermaidConfig } from "./resolvers/mermaidTheme.js";
 
 // ── Asset catalog (compiler / theme-metadata only) ───────────────────────────
+
+/**
+ * An asset's scaling/cropping tolerance, declared in the theme catalog. The
+ * compiler maps it to the engine's object-fit `fit`. `icon`: never enlarge,
+ * never crop. `image`: never crop, may scale. `background`: crop and scale freely.
+ */
+export const AssetType = {
+  Icon: "icon",
+  Image: "image",
+  Background: "background",
+} as const;
+export type AssetType = (typeof AssetType)[keyof typeof AssetType];
 
 /**
  * A theme's declaration of a reusable image asset. Purely compiler-facing —
@@ -18,6 +23,8 @@ import type { MermaidConfig } from "./resolvers/mermaidTheme.js";
  */
 export type AssetEntry = {
   path: string;
+  /** Required — a missing type is a fail-fast error. */
+  type: AssetType;
   description: string;
   whenToUse?: string;
 };
@@ -194,11 +201,10 @@ export type CompilerTemplateParameter = CompilerShapeBase & {
   template: string;
 };
 
-/** Image parameter: one frontmatter path filled by fillImage. */
+/** Image parameter: one frontmatter path filled by fillImage. Sizing/crop
+ * behaviour comes from the resolved asset's `type`, not the slot. */
 export type CompilerImageParameter = CompilerSlotBase & {
   type: typeof ParameterType.Image;
-  /** How the picture scales inside its frame (required — no silent default). */
-  fit: FitMode;
 };
 
 /**

@@ -5,12 +5,13 @@ import { coalesceSameStyleRuns, fillTemplate } from "../dist/engine/fillers/temp
 import { fillText } from "../dist/engine/fillers/text.js";
 import { fillTable } from "../dist/engine/fillers/table.js";
 import { FILLERS } from "../dist/engine/fillers/filler.js";
+import { computeGeometry } from "../dist/engine/fillers/image.js";
 import { setRichRuns } from "../dist/engine/dom.js";
 import { validateContentSlots } from "../dist/engine/generate.js";
 import { parseProseLine } from "../dist/markdown/parsers.js";
 import { isCodeBlock } from "../dist/markdown/resolvers/code.js";
 import type { Slot, StyledParagraph, TableFill, TemplateSegment, TemplateFill } from "../dist/engine/types.js";
-import { SlotType } from "../dist/engine/types.js";
+import { ImageFit, SlotType } from "../dist/engine/types.js";
 import type { CodeFence } from "../dist/markdown/types.js";
 import { FenceType } from "../dist/markdown/types.js";
 
@@ -1069,6 +1070,61 @@ describe("Table filler", () => {
       assert.doesNotThrow(() => FILLERS[SlotType.Table].fill(slide, tableSlot(), value, ctx));
       assert.equal(wasFilled(), true);
     }
+  });
+});
+
+// ============================================
+// computeGeometry — image scaling/crop constraints
+// ============================================
+
+const PX = 9525; // NATIVE_EMU_PER_PX (1:1 at 96 dpi)
+const ICON = ImageFit.ScaleDown;
+const IMAGE = ImageFit.Contain;
+const BACKGROUND = ImageFit.Cover;
+const frame = (x: number, y: number, w: number, h: number) => ({ x, y, w, h });
+
+describe("computeGeometry", () => {
+  it("icon never upscales — renders at native size, centred (letterbox)", () => {
+    // 100px icon in a frame ~105px wide: contain would enlarge, but maxUpscale 1 caps it.
+    const { geometry } = computeGeometry(frame(0, 0, 1_000_000, 1_000_000), 100, 100, ICON);
+    assert.equal(geometry.placement, "fit");
+    if (geometry.placement !== "fit") return;
+    assert.equal(geometry.cx, 100 * PX); // 952500 — native, not stretched to the frame
+    assert.equal(geometry.cy, 100 * PX);
+    assert.equal(geometry.x, Math.round((1_000_000 - 100 * PX) / 2));
+  });
+
+  it("image scales up to fit (contain) but warns when it drops below the PPI floor", () => {
+    const { geometry, warnings } = computeGeometry(frame(0, 0, 1_000_000, 1_000_000), 100, 100, IMAGE);
+    assert.equal(geometry.placement, "fit");
+    if (geometry.placement !== "fit") return;
+    assert.equal(geometry.cx, 1_000_000); // fills — image may upscale
+    assert.ok(warnings.some((w) => /PPI/.test(w)));
+  });
+
+  it("image downscales to fit a smaller frame with no warning", () => {
+    const { geometry, warnings } = computeGeometry(frame(0, 0, 500_000, 500_000), 200, 200, IMAGE);
+    assert.equal(geometry.placement, "fit");
+    if (geometry.placement !== "fit") return;
+    assert.equal(geometry.cx, 500_000);
+    assert.equal(warnings.length, 0);
+  });
+
+  it("background fills the frame and crops the overflow", () => {
+    // landscape 200x100 into a square frame → cover crops the sides.
+    const { geometry } = computeGeometry(frame(0, 0, 1_000_000, 1_000_000), 200, 100, BACKGROUND);
+    assert.equal(geometry.placement, "crop");
+    if (geometry.placement !== "crop") return;
+    assert.equal(geometry.left, 25000); // (1 - 1e6/2e6)/2 = 0.25 → 25000 (1/100,000%)
+    assert.equal(geometry.top, 0);
+  });
+
+  it("warns on a severe aspect mismatch (landscape image, portrait frame, contain)", () => {
+    const { geometry, warnings } = computeGeometry(frame(0, 0, 500_000, 1_000_000), 200, 100, IMAGE);
+    assert.equal(geometry.placement, "fit");
+    if (geometry.placement !== "fit") return;
+    assert.equal(geometry.cy, 250_000); // letterboxed to width, 75% empty
+    assert.ok(warnings.some((w) => /empty/.test(w)));
   });
 });
 
