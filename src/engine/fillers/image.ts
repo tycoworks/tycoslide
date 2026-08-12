@@ -2,7 +2,7 @@
  * Image fill — element-level picture geometry only. The media swap (pointing the
  * blip relationship at the new file) is a slide-level modifier in the ImageFiller
  * (`fillers/filler.ts`); this module resolves the frame geometry from the image's
- * `ImageConstraints` (crop/scale envelope) and the source's true pixel size.
+ * `ImageFit` (contain/cover/scale-down) and the source's true pixel size.
  */
 
 import { readFileSync } from "node:fs";
@@ -41,9 +41,9 @@ const SEVERE_MISMATCH_FRACTION = 0.5;
 const MIN_SCALE = 0.2;
 
 /**
- * Size a picture shape from its `ImageConstraints` (via `computeGeometry`):
- * either write `<a:srcRect>` insets to fill-and-crop, or shrink the frame to the
- * image's aspect ratio and re-centre (fit/letterbox). Advisory warnings from the
+ * Size a picture shape from its `ImageFit` (via `computeGeometry`): either write
+ * `<a:srcRect>` insets to fill-and-crop, or shrink the frame to the image's
+ * aspect ratio and re-centre (fit/letterbox). Advisory warnings from the
  * geometry pass go to `console.warn`.
  *
  * `image.path` is assumed absolute — the compiler / caller resolves it before the
@@ -85,11 +85,12 @@ export function fillImage(shape: any, image: ImageFill, shapeName = ""): void {
 
 /**
  * Pure fit geometry — no DOM, so it is trivially unit-testable in isolation.
- * `allowCrop` picks fill (scale to the larger axis ratio, center-crop overflow)
- * vs fit (scale to the smaller ratio, letterbox); `maxUpscale` caps enlargement
- * relative to native pixels (1 = never enlarge → the image sits at native size,
- * centred). Emits advisory warnings for low effective resolution and for a
- * severe aspect mismatch; the caller decides how to surface them.
+ * `fit` picks the strategy: `cover` scales to the larger axis ratio and
+ * center-crops the overflow; `contain` scales to the smaller ratio and
+ * letterboxes; `scale-down` is `contain` capped at native size (never enlarge →
+ * the image sits at native size, centred). Emits advisory warnings for scaling
+ * far from native and for a severe aspect mismatch; the caller decides how to
+ * surface them.
  */
 export function computeGeometry(frame: Frame, imgW: number, imgH: number, fit: ImageFit): GeometryResult {
   const fitX = frame.w / imgW;
