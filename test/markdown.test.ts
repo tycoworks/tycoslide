@@ -416,6 +416,40 @@ describe("compileDeck", () => {
     assert.deepEqual(deck.steps[0].content!["logo"], logoBlock);
   });
 
+  it("image with no catalog entry (so no type) throws fail-fast", () => {
+    const layouts: CompilerLayout[] = [
+      {
+        name: "hero",
+        slideNumber: 1,
+        description: "",
+        whenToUse: "",
+        whenNotToUse: "",
+        parameters: [{ key: "hero", shapeName: "s1", type: ParameterType.Image }],
+        slots: [],
+      },
+    ];
+    assert.throws(
+      () =>
+        compileDeck(
+          {
+            global: { theme: "./theme.json" },
+            slides: [
+              { index: 0, frontmatter: { layout: "hero", hero: "images/uncatalogued.png" }, body: "", slots: {} },
+            ],
+          },
+          layouts,
+          "",
+          {}, // empty catalog — the filled path has no declared type
+        ),
+      (err: Error) => {
+        assert.ok(err.message.includes("hero"));
+        assert.ok(err.message.includes("no asset-catalog entry"));
+        assert.ok(err.message.includes("icon | image | background"));
+        return true;
+      },
+    );
+  });
+
   it("global theme maps to Deck.theme", () => {
     const deck = compileDeck({
       global: { theme: "./custom/theme.json" },

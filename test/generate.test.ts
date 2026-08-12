@@ -1126,6 +1126,19 @@ describe("computeGeometry", () => {
     assert.equal(geometry.cy, 250_000); // letterboxed to width, 75% empty
     assert.ok(warnings.some((w) => /empty/.test(w)));
   });
+
+  it("background warns when cover crops more than half the image", () => {
+    // 800x200 landscape into a square frame. cover scale = 1e6/200 = 5000
+    // (scaleRatio 0.525 — no enlarge/shrink noise); shownW = 4e6 overflows,
+    // cropping 1 - 1e6/4e6 = 75% of the picture.
+    const { geometry, warnings } = computeGeometry(frame(0, 0, 1_000_000, 1_000_000), 800, 200, BACKGROUND);
+    assert.equal(geometry.placement, "crop");
+    if (geometry.placement !== "crop") return;
+    assert.equal(geometry.left, 37500); // (1 - 1e6/4e6)/2 = 0.375 → 37500
+    assert.equal(geometry.top, 0);
+    assert.ok(warnings.some((w) => /cropping 75%/.test(w)));
+    assert.ok(!warnings.some((w) => /enlarged|shrunk/.test(w)));
+  });
 });
 
 // ============================================
