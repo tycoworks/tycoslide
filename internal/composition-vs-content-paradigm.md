@@ -358,9 +358,158 @@ per the project principle (throw naming layout + slot). First cases, in order:
    `tycoslide build`, open the `.pptx`, confirm table-in-text-column + mermaid-in-image render.
    Keep `npm run typecheck && npm test && npm run lint` green throughout.
 
+### First slice — IMPLEMENTED (branch `sampled-composition`, uncommitted working tree)
+
+> **Model superseded by §4 (Slice-1b).** The account below is the first cut. Two things
+> changed in review: (a) the slot now **owns its `frame`** (data, not read from the zip) —
+> so `jszip`, `readBaseFrames`/`frameFromDoc`, and the "exactly one base block per slot" rule
+> are all **deleted**; (b) an error-capture bug was fixed. Read §4 for the current shape;
+> `Slot = { key, frame, accepts }`, `Block = { type, sourceSlide, shapeName, startAt? }`.
+
+All four next-steps above are done and proven end-to-end. Summary + the design forks
+resolved (this section is now the source of truth over the sketch in §2):
+
+**Data model (`src/engine/types.ts`).** Added `Block = { type: SlotType; sourceSlide:
+number; shapeName: string }`. `Slot` is now `{ key, accepts: Block[], startAt? }` — no
+longer welded to one shape+type. `Layout.slideNumber` was **renamed to `baseSlide`**
+(the slide cloned for chrome; a block whose `sourceSlide === baseSlide` fills in place).
+Today's single-shape slot is the one-element-`accepts` case (`toEngineSlot` in
+`src/index.ts` emits one base block per compiler slot) — 255 pre-existing tests stayed
+green, confirming byte-for-byte backward compatibility. `DeckStep.content` unchanged.
+
+**Filler refactor (`src/engine/fillers/filler.ts`).** `Filler.fill(slide, slot, …)`
+became `Filler.callbacks(value, target): ShapeCallback[]` returning the element-level
+`(element, relation)` callbacks. This is the **transplant-then-fill crux resolution**:
+pptx-automizer's `append()` runs an added shape's callbacks against the *imported element
+itself* (`shapes/generic.ts` + `shapes/image.ts` → `applyCallbacks(cbs, this.targetElement,
+relation)`), so the *same* callbacks that `modifyElement` uses to fill an in-place shape
+also refill a transplanted one — no name re-lookup, no dependence on whatever name
+automizer assigns the appended shape. (We never re-`modifyElement` a transplant by name.)
+
+**Engine dispatch (`src/engine/generate.ts`, exported `fillSlide`).** Per slot: determine
+the requested type from the `*Fill` value via the `isXFill` discriminators (`fillTypeOf`),
+pick the `Block` in `accepts` whose type matches (**none → throw**, naming layout + slot +
+requested + available), then either `modifyElement` in place (base block) or `addElement`
+the block's shape + fill via the reused callbacks, then `removeElement` the superseded base
+shape. `fillSlide` reads as pseudocode over three named helpers — `resolveBlock` (WHICH
+shape), `FILLERS[block.type].callbacks` (WHAT to write), `applyBlock` (WHERE/HOW to place
+it) — with `assertNoUnknownSlots` guarding step content up front and `targetOf` building the
+fill target. `fillSlide` is exported and unit-tested with a recording stub slide (8 new tests,
+edge cases 1–5 + no-base-block + multi-type selection).
+
+**Design forks resolved (deviations/refinements vs the earlier sketch):**
+1. **Transplant positioning source.** The spec left "setPosition it" without saying *to
+   what*. Decision: a transplant is positioned to the **frame of the slot's base block**
+   (the shape on the base slide the transplant supersedes) — a real observed frame, no
+   computed geometry. Every slot therefore **must** have exactly one base block
+   (`sourceSlide === baseSlide`); missing → throw. This honours §3's "each Block carries
+   its own real coords / no per-slot canonical box": the box is *read*, not stored.
+2. **Reading that frame.** Base-block `<a:off>/<a:ext>` are read once up front from the
+   template zip (`readBaseFrames`, using **jszip** — added to `package.json` deps; already a
+   transitive dep of pptx-automizer). Chosen over capturing geometry via a `modifyElement`
+   callback because automizer **merges** a `modify` and a `remove` on the same shape name
+   (dedup by selector hash, mode-blind — `has-shapes.js:254`), which would silently drop the
+   remove. A missing slide/shape frame is skipped (transplant keeps its own coords) rather
+   than throwing — the frame is an optimisation, not a correctness gate.
+3. **Empty slot (edge case 5).** A slot the deck leaves empty is **left untouched** — the
+   cloned base slide keeps whatever shape it had. Simplest, matches pre-composition behaviour.
+4. **Unknown slot key (edge case 4).** A deck supplying content for a key the layout doesn't
+   declare now **throws** (was a silent no-op). Unknown *layout* name still throws in
+   `resolveLayout` as before.
+
+**Proof (engine-level, not compiler).** The multi-block `accepts` model is only expressible
+at the engine layer today (the markdown compiler's `theme.json` format still emits
+single-base-block slots — a wider authoring surface is deferred). So the proof hand-builds an
+engine `Config`/`Deck` and calls `generate()` directly (`scratchpad/proof.mjs`): base slide
+10 "Single column dark", a `body` slot accepting **text@10** (base) **and table@52**
+(`Google Shape;998;p107`). Step 1 fills `body` with a `TableFill` → the pricing table is
+transplanted into the body region, refilled with deck data, positioned to the body frame,
+and the base text shape removed. Step 2 fills the *same* slot with a `TextFill` → in-place
+prose+bullets. Rendered via `soffice → pdf → pdftoppm`: slide 1 shows the filled table where
+the base slide shows text (no text bleed-through — `removeElement` worked); slide 2 shows the
+in-place text path. Both correct. This closes the two increments Stage 0 left open: refilling
+a transplanted shape and `removeElement` on a superseded base shape.
+
+**Deferred / needs human eyes:** the authoring surface (letting a hand-written/​sampled
+`theme.json` declare multi-block `accepts` through the compiler) is not built — transplants
+are engine-only for now. Table grid-width rescale, font autofit, and clustering remain out of
+scope per the ladder. The transplant positions the specimen at its native width at the base
+frame's x/y (no width fit) — acceptable per "no computed geometry", revisit with the
+pixel-nudge/box-canonicalisation work.
+
 ### Reusable spike (evidence for Stage 0)
 The throwaway transplant spike was `scratchpad/transplant-spike.mjs` (session scratch, not in
 repo). To reproduce: load `corp-template.pptx`, `addSlide("source", 2, …)`, then
 `slide.addElement("source", 52, "Google Shape;998;p107", [modify.setPosition({x,y})])` for the
 table and `slide.addElement("source", 16, "Google Shape;614;p71", …)` for the picture; write and
 rasterize. Run node scripts from **inside the repo** (module resolution) — not `/tmp`.
+
+## 4. Slice-1b — review cleanup (done)
+
+An architect reviewed slice 1. Two outcomes: a real bug, and a decision to drop the
+backward-compat scaffolding in favour of the clean shape. All done on branch
+`sampled-composition` (uncommitted). Final model:
+
+```
+type Frame  = { x; y; cx; cy };                                   // EMU
+type Block  = { type: SlotType; sourceSlide: number; shapeName: string; startAt? };
+type Slot   = { key: string; frame: Frame; accepts: Block[] };
+type Layout = { name; baseSlide; slots: Slot[] };
+```
+
+**A. Error-capture bug (fixed).** `captureFillErrors` wrapped only `slide.modifyElement`.
+The transplant path fills via `slide.addElement`, whose callbacks pptx-automizer also runs
+(and swallows throws from) during `write()` — so a fail-fast throw from a filler on a
+*transplanted* shape was silently swallowed, yielding a broken slide reported as success.
+Fix: a shared `wrapCallbacks` now wraps **both** `modifyElement` and `addElement`
+(generate.ts). Regression test: `test/composition.e2e.test.ts` transplants a picture as a
+`table` block so `fillTable` throws inside the `addElement` callback, and asserts
+`generate()` **rejects** and leaves no output file. (Before the fix this test would pass-as-success.)
+
+**B. Backward-compat scaffolding removed (slot owns its frame).**
+- `Slot` is now `{ key, frame, accepts }`. The slot **owns** its frame as data.
+- **Deleted:** the whole read-geometry-from-the-zip mechanism (`readBaseFrames`,
+  `frameFromDoc`, `frameKey`, the `Frame`/`FillSlideContext` indirection), the `jszip`
+  runtime dependency (removed from `package.json` deps; re-added under **devDependencies**
+  only, used by the e2e test to unzip and assert output), the "exactly one base block per
+  slot" rule and its throw, the bare-string fallback in `fillSlide` (a bare string now falls
+  through to the "unrecognized value → throw" path), and the dead `FillContext` type and
+  `Filler.label` field (+ its four assignments).
+- **Moved:** `startAt` off `Slot` onto the text `Block` (it's a text-specimen concern,
+  meaningless on a multi-type slot).
+- **Added:** `assertSlotsWellFormed(layout)` — rejects a slot whose `accepts` lists two
+  blocks of the same type (the value→block lookup would silently take the first). Called
+  once per layout at build start.
+- Fill logic per slot (`fillSlide`, now `(slide, layout, step, sourceAlias)`): pick the block
+  whose `type` matches the value; base-slide block (`sourceSlide === baseSlide`) →
+  `modifyElement`; else `addElement(sourceAlias, block.sourceSlide, block.shapeName,
+  [setPosition(slot.frame), ...callbacks])`, then `removeElement` the base-slide block it
+  supersedes (if the slot has one — a slot need not).
+- **Compiler projection unchanged in spirit:** `toEngineSlot` still emits single-base-block
+  slots (the markdown `theme.json` has no geometry), giving them a zero `NO_FRAME` that is
+  never read because they never transplant. Multi-block + real frames are for
+  sampled/hand-authored themes.
+
+**C. Re-proven end-to-end.**
+- **Committed tests** (`test/composition.e2e.test.ts`, against a tiny committed synthetic
+  fixture `test/fixtures/template/composition.pptx` generated with pptxgenjs — not a real
+  theme): (1) table transplanted into a text slot → output slide contains `<a:tbl>`, the
+  refilled deck data, the in-place title, and **not** the removed base text; (2) picture
+  transplanted + **media-relationship swapped** → output picture's rels target the swapped
+  `swap.png`; (3) the error-capture regression above.
+- **Hand-authored render proof** (`scratchpad/proof.mjs`, real `mz-slides/corp-template.pptx`):
+  base slide 10, a `body` slot with a hand-authored EMU `frame` and `accepts: [text@10 (base),
+  table@52]`. Filled with a `TableFill` → the pricing table transplants into the body frame,
+  refilled, base text removed; second step fills the same slot in place as text. Rendered
+  soffice→pdf→pdftoppm: both correct.
+- Final: `npm run typecheck` clean, `npm test` **269 pass / 0 fail**, `npm run lint` clean.
+
+## 5. Total roadmap from here
+
+1. **Slice 1b (this pass):** error-capture fix + BC removal (slot owns frame), dead-code deletion, re-prove. ← now
+2. **Broaden the hand-authored proof + committed tests:** 2–3 real mz-slides layouts, multiple slots, all block types (text/table/image-transplant+media/mermaid-into-image). Shake out edge cases.
+3. **Manifest advertises `accepts`:** the manifest/authoring surface tells an agent which content types each slot allows (this is needed even though per-slide `whenToUse`/purpose stays deferred).
+4. **The sampler (revive the parked theme-packager, reshaped):** automate deriving `theme.json` from a `.pptx` — extract shapes+geometry → cluster slides into layouts by region signature → per layout derive slots (recurring positions) + each slot's `accepts` (content types observed there) + the slot `frame` → emit `theme.json`. This is the automation that makes the whole thing usable; hand-authoring is only the bootstrap.
+5. **Equivalence / pixel-nudge handling:** cluster near-identical region positions within tolerance; canonicalize the slot frame.
+6. **Agent-guidance layer (was descoped):** structural layout descriptions ("two-column", "full-bleed") to help agents choose — revisit whether/how.
+7. **Theme-packager UX + productionization:** the interactive "turn your pptx into a theme" flow reshaped for the sampled model; plus deferred engine gaps (limits, notes, etc.).

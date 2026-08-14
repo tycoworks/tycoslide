@@ -18,19 +18,23 @@
  *     file (registered by generate(), swapped by the ImageFiller) and adjusts
  *     geometry for the chosen fit. See fillers/image.ts.
  *
- * generate() loads the template, registers media, and for each DeckStep walks
- * the unified `layout.slots`. Each value in `step.content` is dispatched by the
- * slot's type via `FILLERS[slot.type]` (required, no default).
+ * generate() loads the template, registers media, and for each DeckStep clones
+ * the layout's base slide and calls `fillSlide`. Each value in `step.content`
+ * selects, by its own shape, the `Block` in the slot's `accepts` whose type it
+ * matches: a base-slide block fills in place; any other block is transplanted
+ * from its source slide onto the clone, then filled with the same callbacks.
+ *
+ * `generate()` is first below; its helpers follow (function declarations hoist).
  */
 
 import { existsSync, rmSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import { DOMParser, XMLSerializer } from "@xmldom/xmldom";
 import { Automizer, modify } from "pptx-automizer";
-import { FILLERS } from "./fillers/filler.js";
+import { FILLERS, type FillTarget } from "./fillers/filler.js";
 import { isImageFill } from "./fillers/image.js";
 import { applyNotesToSlide, type NotesArchive, sweepOrphanNotes } from "./notes.js";
-import type { Config, Deck, DeckStep, Layout, Slot } from "./types.js";
+import type { Block, Config, Deck, DeckStep, Layout, Slot, SlotType } from "./types.js";
 
 /** Options for `generate` / `buildDeck`. */
 export type GenerateOptions = {
@@ -50,9 +54,9 @@ export type GenerateOptions = {
  *   1. Load the template; register it twice (as root and under an alias).
  *   2. Pre-register every image's media buffer with pptx-automizer, walking
  *      the unified `step.content` for ImageFill values.
- *   3. For each deck step, clone the layout's source slide, then within the
- *      addSlide callback walk `layout.slots` once and dispatch by slot.type
- *      via `FILLERS[slot.type]`.
+ *   3. For each deck step, clone the layout's base slide, then within the
+ *      addSlide callback call `fillSlide` to dispatch each content value to the
+ *      matching `Block` (fill in place, or transplant + fill).
  *   4. Write the output PPTX.
  */
 export async function generate(deck: Deck, config: Config, options: GenerateOptions = {}): Promise<void> {
@@ -79,73 +83,36 @@ export async function generate(deck: Deck, config: Config, options: GenerateOpti
     return match;
   };
 
-  // Register the media for every image slot. Each file is validated (absolute
-  // paths are the caller's responsibility; a stray relative path trips the
-  // existsSync guard here or readFileSync in fillImage) and handed to
-  // pptx-automizer once per distinct filename.
-  const registeredMedia = new Set<string>();
-  for (const step of deck.steps) {
-    for (const value of Object.values(step.content ?? {})) {
-      if (!isImageFill(value)) continue;
-      if (!existsSync(value.path)) {
-        throw new Error(`Layout "${step.layout}" image "${value.path}": file not found`);
-      }
-      const file = basename(value.path);
-      if (registeredMedia.has(file)) continue;
-      registeredMedia.add(file);
-      pres.loadMedia(file, dirname(value.path));
-    }
-  }
+  registerMedia(pres, deck);
+  assertLayoutsWellFormed(layouts);
 
-  // pptx-automizer runs modifyElement callbacks during write() and SWALLOWS any
-  // error they throw (it logs a stack trace but keeps going, producing a broken
-  // slide). A fill primitive's fail-fast throw would therefore never fail the
-  // build. Collect those errors and re-surface them after write().
+  // pptx-automizer runs fill callbacks during write() and SWALLOWS any error they
+  // throw (it logs a stack trace but keeps going, producing a broken slide). A
+  // fill primitive's fail-fast throw would therefore never fail the build. This
+  // wraps BOTH fill entry points — `modifyElement` (in-place) and `addElement`
+  // (transplant) — so a throw on a transplanted shape fails the build too.
   const fillErrors: Error[] = [];
+  const wrapCallbacks = (callbacks: unknown): unknown => {
+    const arr = Array.isArray(callbacks) ? callbacks : callbacks === undefined ? [] : [callbacks];
+    return arr.map((cb: unknown) =>
+      typeof cb === "function"
+        ? (...args: unknown[]) => {
+            try {
+              return (cb as (...a: unknown[]) => unknown)(...args);
+            } catch (err) {
+              fillErrors.push(err instanceof Error ? err : new Error(String(err)));
+              throw err;
+            }
+          }
+        : cb,
+    );
+  };
   const captureFillErrors = (slide: any): void => {
     const modifyElement = slide.modifyElement.bind(slide);
-    slide.modifyElement = (shapeName: string, callbacks: any[]) =>
-      modifyElement(
-        shapeName,
-        callbacks.map((cb: unknown) =>
-          typeof cb === "function"
-            ? (...args: unknown[]) => {
-                try {
-                  return (cb as (...a: unknown[]) => unknown)(...args);
-                } catch (err) {
-                  fillErrors.push(err instanceof Error ? err : new Error(String(err)));
-                  throw err;
-                }
-              }
-            : cb,
-        ),
-      );
-  };
-
-  // Populate one cloned slide: for each declared slot that the step supplies a
-  // value for, hand the value to the filler registered for the slot's type.
-  const fillSlide = (slide: any, layout: Layout, step: DeckStep): void => {
-    captureFillErrors(slide);
-    for (const slot of layout.slots) {
-      const value = step.content?.[slot.key];
-      if (value === undefined) continue;
-
-      if (typeof value === "string") {
-        // Fallback: bare string. Compiler normally normalizes to
-        // StyledParagraph[] / ImageFill; this branch only fires when
-        // callers construct decks by hand.
-        slide.modifyElement(slot.shapeName, [modify.setText(value)]);
-        continue;
-      }
-
-      const filler = FILLERS[slot.type];
-      if (!filler.matches(value)) {
-        throw new Error(
-          `Layout "${step.layout}" slot "${slot.key}" (type "${slot.type}"): expected ${filler.label}, got ${describeValue(value)}`,
-        );
-      }
-      filler.fill(slide, slot, value, { layoutName: step.layout });
-    }
+    slide.modifyElement = (shapeName: string, callbacks: unknown) => modifyElement(shapeName, wrapCallbacks(callbacks));
+    const addElement = slide.addElement.bind(slide);
+    slide.addElement = (presName: string, slideNumber: number, selector: unknown, callbacks: unknown) =>
+      addElement(presName, slideNumber, selector, wrapCallbacks(callbacks));
   };
 
   // Default: write authored notes and strip any template notes automizer clones
@@ -155,8 +122,9 @@ export async function generate(deck: Deck, config: Config, options: GenerateOpti
 
   for (const step of deck.steps) {
     const layout = resolveLayout(step.layout);
-    pres.addSlide(sourceAlias, layout.slideNumber, (slide: any) => {
-      fillSlide(slide, layout, step);
+    pres.addSlide(sourceAlias, layout.baseSlide, (slide: any) => {
+      captureFillErrors(slide);
+      fillSlide(slide, layout, step, sourceAlias);
       // In-band notes pass: automizer runs this during write() and hands us the
       // OUTPUT archive (parent.targetArchive) and the real output slide number
       // (parent.targetNumber), so notes map 1:1 with no slide-number mapping.
@@ -194,6 +162,35 @@ export async function generate(deck: Deck, config: Config, options: GenerateOpti
   console.log(`tycoslide: built ${deck.steps.length} slide(s) → ${resolve(outDir, outFile)}`);
 }
 
+// ── generate() helpers ───────────────────────────────────────────────────────
+
+/**
+ * Register the media for every image slot. Each file is validated (absolute
+ * paths are the caller's responsibility; a stray relative path trips the
+ * existsSync guard here or readFileSync in fillImage) and handed to
+ * pptx-automizer once per distinct filename.
+ */
+function registerMedia(pres: any, deck: Deck): void {
+  const registeredMedia = new Set<string>();
+  for (const step of deck.steps) {
+    for (const value of Object.values(step.content ?? {})) {
+      if (!isImageFill(value)) continue;
+      if (!existsSync(value.path)) {
+        throw new Error(`Layout "${step.layout}" image "${value.path}": file not found`);
+      }
+      const file = basename(value.path);
+      if (registeredMedia.has(file)) continue;
+      registeredMedia.add(file);
+      pres.loadMedia(file, dirname(value.path));
+    }
+  }
+}
+
+// Validate every layout once, up front (see assertSlotsWellFormed).
+function assertLayoutsWellFormed(layouts: Layout[]): void {
+  for (const layout of layouts) assertSlotsWellFormed(layout);
+}
+
 function describeValue(v: unknown): string {
   if (v === null) return "null";
   if (Array.isArray(v)) return "array";
@@ -202,6 +199,122 @@ function describeValue(v: unknown): string {
     return typeof t === "string" ? `object (type="${t}")` : "object";
   }
   return typeof v;
+}
+
+// ── Slot fill dispatch (composition-aware) ───────────────────────────────────
+
+/**
+ * Fill one cloned slide. Per slot the step supplies a value for: resolve WHICH
+ * shape realizes it (`resolveBlock`), build WHAT to write (`FILLERS[…].callbacks`),
+ * and place it WHERE/HOW (`applyBlock`). Every ambiguity fails fast, naming layout
+ * + slot.
+ *
+ * Exported for tests; `generate()` calls it inside the `addSlide` callback.
+ */
+export function fillSlide(slide: any, layout: Layout, step: DeckStep, sourceAlias: string): void {
+  assertNoUnknownSlots(step, layout);
+
+  for (const slot of layout.slots) {
+    const value = step.content?.[slot.key];
+    if (value === undefined) continue; // Empty slot: leave the base slide's shape untouched.
+
+    const block = resolveBlock(step, slot, value);
+    const callbacks = FILLERS[block.type].callbacks(value, targetOf(block));
+    applyBlock(slide, sourceAlias, layout.baseSlide, slot, block, callbacks);
+  }
+}
+
+/** The SlotType a resolved `*Fill` value maps to, via the filler discriminators. */
+function fillTypeOf(value: object): SlotType | undefined {
+  for (const type of Object.keys(FILLERS) as SlotType[]) {
+    if (FILLERS[type].matches(value)) return type;
+  }
+  return undefined;
+}
+
+/**
+ * Reject a slot whose `accepts` lists two blocks of the same type — the
+ * value→block lookup would silently pick the first. Called once per layout at
+ * build start.
+ */
+export function assertSlotsWellFormed(layout: Layout): void {
+  for (const slot of layout.slots) {
+    const seen = new Set<SlotType>();
+    for (const block of slot.accepts) {
+      if (seen.has(block.type)) {
+        throw new Error(
+          `Layout "${layout.name}" slot "${slot.key}": accepts two ${block.type} blocks; each content type may appear once.`,
+        );
+      }
+      seen.add(block.type);
+    }
+  }
+}
+
+/**
+ * A deck supplying content for a slot the layout doesn't declare is an authoring
+ * mistake, not a silent no-op. Runs per step, over `step.content`'s keys.
+ */
+function assertNoUnknownSlots(step: DeckStep, layout: Layout): void {
+  const keys = new Set(layout.slots.map((s) => s.key));
+  for (const key of Object.keys(step.content ?? {})) {
+    if (!keys.has(key)) {
+      const declared = layout.slots.map((s) => s.key).join(", ") || "none";
+      throw new Error(`Layout "${step.layout}" has no slot "${key}" (declared slots: ${declared}).`);
+    }
+  }
+}
+
+/**
+ * WHICH shape: pick the `Block` in `slot.accepts` whose type matches the value's
+ * shape. Fails fast — first on an unrecognized value, then on a value no block
+ * accepts (order matters; both messages are asserted).
+ */
+function resolveBlock(step: DeckStep, slot: Slot, value: object): Block {
+  const requestedType = fillTypeOf(value);
+  if (requestedType === undefined) {
+    throw new Error(`Layout "${step.layout}" slot "${slot.key}": unrecognized content value ${describeValue(value)}.`);
+  }
+  const block = slot.accepts.find((b) => b.type === requestedType);
+  if (!block) {
+    const available = slot.accepts.map((b) => b.type).join(", ") || "none";
+    throw new Error(
+      `Layout "${step.layout}" slot "${slot.key}": no block accepts ${requestedType} content (this slot accepts: ${available}).`,
+    );
+  }
+  return block;
+}
+
+/** The shape a filler targets, plus `startAt` when the (text) block declares it. */
+function targetOf(block: Block): FillTarget {
+  const target: FillTarget = { shapeName: block.shapeName };
+  if (block.startAt !== undefined) target.startAt = block.startAt;
+  return target;
+}
+
+/**
+ * WHERE/HOW: place the (already-built) fill callbacks. A base-slide block is
+ * already on the cloned slide → fill in place. Any other block is transplanted:
+ * pptx-automizer runs an appended shape's callbacks against the imported element
+ * itself, so the same callbacks refill it — position it to the slot's frame,
+ * then remove the base shape it supersedes (a base block, if this slot has one —
+ * a slot need not).
+ */
+function applyBlock(
+  slide: any,
+  sourceAlias: string,
+  baseSlide: number,
+  slot: Slot,
+  block: Block,
+  callbacks: unknown[],
+): void {
+  if (block.sourceSlide === baseSlide) {
+    slide.modifyElement(block.shapeName, callbacks);
+    return;
+  }
+  slide.addElement(sourceAlias, block.sourceSlide, block.shapeName, [modify.setPosition(slot.frame), ...callbacks]);
+  const baseBlock = slot.accepts.find((b) => b.sourceSlide === baseSlide);
+  if (baseBlock && baseBlock.shapeName !== block.shapeName) slide.removeElement(baseBlock.shapeName);
 }
 
 // ── Notes archive adapter (automizer-buffer glue) ────────────────────────────
@@ -274,23 +387,4 @@ function toNotesArchive(target: AutomizerArchive): NotesArchive {
       return target.folder(dir);
     },
   };
-}
-
-// ── Content-slot validation (test-visible helper) ────────────────────────────
-
-/**
- * Validate that every required slot on a layout is supplied. Type/shape
- * validation happens in the compiler now — this is a thin required-only
- * checker kept for tests and defensive callers.
- *
- * Exported for tests; not part of the public engine surface (index.ts).
- */
-export function validateContentSlots(
-  step: { layout: string; content?: Record<string, unknown> },
-  tpl: { slots: Slot[] },
-): void {
-  const missing = tpl.slots.filter((s) => step.content?.[s.key] === undefined).map((s) => s.key);
-  if (missing.length > 0) {
-    throw new Error(`Layout "${step.layout}": missing content for slot(s): ${missing.join(", ")}`);
-  }
 }

@@ -1,62 +1,60 @@
 /**
  * The `Filler` strategy registry — one plain-object strategy per SlotType, each
- * pairing a value discriminator with a slide-level fill. The record key IS the
- * slot type, so a strategy carries no redundant `type` field. `generate()`
- * consults `FILLERS[slot.type]` once per (slot, value): `matches` validates the
- * value shape, then `fill` applies it to the slide.
+ * pairing a value discriminator with the element-level modify callbacks that
+ * apply it. The record key IS the slot type, so a strategy carries no redundant
+ * `type` field.
  *
- * Element-level geometry lives in the `fillX` primitives; slide-level concerns
- * (media pre-swap for images, relation access for body hyperlinks, column
- * validation for tables) live in the strategy wrappers here.
+ * `callbacks(value, target)` returns the `(element, relation)` callbacks that
+ * fill one shape. They are deliberately shape-name-agnostic beyond the `target`
+ * so they can be applied two ways: `slide.modifyElement(name, callbacks)` for a
+ * shape already on the cloned base slide, or `slide.addElement(alias, n, name,
+ * callbacks)` for a shape transplanted from another slide — pptx-automizer runs
+ * an appended shape's callbacks against the imported element itself, so the same
+ * callbacks refill a transplant.
+ *
+ * Element-level geometry lives in the `fillX` primitives; cross-shape concerns
+ * (media pre-swap for images) live in the callbacks here.
  */
 
 import { basename } from "node:path";
 import { ModifyImageHelper } from "pptx-automizer";
-import { type Slot, SlotType } from "../types.js";
+import { SlotType } from "../types.js";
 import { fillImage, isImageFill } from "./image.js";
 import { fillTable, isTableFill } from "./table.js";
 import { fillTemplate, isTemplateFill } from "./template.js";
 import { fillText, isTextFill } from "./text.js";
 
-export type FillContext = { layoutName: string };
+/** The shape a filler targets, plus its slot-level options (startAt for text). */
+export type FillTarget = { shapeName: string; startAt?: number };
+
+/** A pptx-automizer element-modify callback: `(element, relation) => void`. */
+export type ShapeCallback = (element: any, relation: any) => unknown;
 
 export interface Filler<T> {
   matches(v: unknown): v is T;
-  /** Human name for the mismatch error — no magic string at the throw site. */
-  label: string;
-  fill(slide: any, slot: Slot, value: T, ctx: FillContext): void;
+  callbacks(value: T, target: FillTarget): ShapeCallback[];
 }
 
 export const FILLERS: Record<SlotType, Filler<any>> = {
   [SlotType.Template]: {
     matches: isTemplateFill,
-    label: "TemplateFill",
-    fill: (slide, slot, v) => slide.modifyElement(slot.shapeName, [(el: any) => fillTemplate(el, v, slot.shapeName)]),
+    callbacks: (v, t) => [(el: any) => fillTemplate(el, v, t.shapeName)],
   },
   [SlotType.Text]: {
     matches: isTextFill,
-    label: "TextFill",
-    fill: (slide, slot, v) => {
-      const startAt = slot.startAt ?? 0;
-      slide.modifyElement(slot.shapeName, [
-        (el: any, relation: any) => fillText(el, v, { startAt, relation, shapeName: slot.shapeName }),
-      ]);
-    },
+    callbacks: (v, t) => [
+      (el: any, relation: any) => fillText(el, v, { startAt: t.startAt ?? 0, relation, shapeName: t.shapeName }),
+    ],
   },
   [SlotType.Table]: {
     matches: isTableFill,
-    label: "TableFill",
-    fill: (slide, slot, v) => {
-      slide.modifyElement(slot.shapeName, [(el: any) => fillTable(el, v, slot.shapeName)]);
-    },
+    callbacks: (v, t) => [(el: any) => fillTable(el, v, t.shapeName)],
   },
   [SlotType.Image]: {
     matches: isImageFill,
-    label: "ImageFill",
-    fill: (slide, slot, v) =>
-      slide.modifyElement(slot.shapeName, [
-        ModifyImageHelper.setRelationTarget(basename(v.path)),
-        (el: any) => fillImage(el, v, slot.shapeName),
-      ]),
+    callbacks: (v, t) => [
+      ModifyImageHelper.setRelationTarget(basename(v.path)),
+      (el: any) => fillImage(el, v, t.shapeName),
+    ],
   },
 };

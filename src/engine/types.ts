@@ -89,21 +89,48 @@ export type ImageFill = {
   fit: ImageFit;
 };
 
+/** A shape's absolute position and size, in EMU — the slot's frame. */
+export type Frame = { x: number; y: number; cx: number; cy: number };
+
+/**
+ * A kind of content a slot accepts, and the real template shape that realizes
+ * it. `type` is the fill-strategy discriminator; `shapeName` names the shape on
+ * `sourceSlide` that carries the specimen styling. When `sourceSlide` equals the
+ * layout's `baseSlide` the shape is already on the cloned slide (fill in place);
+ * otherwise the shape is transplanted from `sourceSlide` into the slot's frame.
+ * `startAt` is a text-specimen concern (leave the first N specimen paragraphs
+ * untouched) and only meaningful on a text block.
+ *
+ * Named `Block` — a kind of content (image / table / text) the way an author
+ * thinks of it. Distinct from the compiler's `MarkdownBlock` (a parsed markdown
+ * block); different layer, kept separate on purpose.
+ */
+export type Block = {
+  type: SlotType;
+  sourceSlide: number;
+  shapeName: string;
+  startAt?: number;
+};
+
+/**
+ * An author-facing fill region. Not welded to one shape+type: a slot owns its
+ * `frame` and `accepts` a set of `Block`s; the supplied value's shape selects
+ * which block fills. A block whose `sourceSlide === baseSlide` fills in place;
+ * any other block is transplanted into the slot's `frame`.
+ */
 export type Slot = {
   key: string;
-  shapeName: string;
-  /** Fill strategy discriminator — required, no silent default. */
-  type: SlotType;
-  /** Leave the first N specimen paragraphs untouched (fillText only). */
-  startAt?: number;
+  frame: Frame;
+  accepts: Block[];
 };
 
 export type Layout = {
   name: string;
-  slideNumber: number;
-  description: string;
-  whenToUse: string;
-  whenNotToUse: string;
+  /**
+   * The template slide cloned for chrome/background. A block whose `sourceSlide`
+   * equals this is filled in place; any other block is transplanted onto the clone.
+   */
+  baseSlide: number;
   slots: Slot[];
 };
 
