@@ -7,10 +7,20 @@ import { fillTable } from "../dist/engine/fillers/table.js";
 import { FILLERS } from "../dist/engine/fillers/filler.js";
 import { computeGeometry } from "../dist/engine/fillers/image.js";
 import { setRichRuns } from "../dist/engine/dom.js";
-import { validateContentSlots } from "../dist/engine/generate.js";
+import { assertSlotsWellFormed, fillSlide } from "../dist/engine/generate.js";
 import { parseProseLine } from "../dist/markdown/parsers.js";
 import { isCodeBlock } from "../dist/markdown/resolvers/code.js";
-import type { Slot, StyledParagraph, TableFill, TemplateSegment, TemplateFill } from "../dist/engine/types.js";
+import type {
+  DeckStep,
+  ImageFill,
+  Layout,
+  Slot,
+  StyledParagraph,
+  TableFill,
+  TemplateSegment,
+  TemplateFill,
+  TextFill,
+} from "../dist/engine/types.js";
 import { ImageFit, SlotType } from "../dist/engine/types.js";
 import type { CodeFence } from "../dist/markdown/types.js";
 import { FenceType } from "../dist/markdown/types.js";
@@ -481,53 +491,10 @@ describe("fillText startAt tail replacement", () => {
 });
 
 // ============================================
-// validateContentSlots (required-only checker + fillTemplate coverage)
+// fillTemplate — per-paragraph in-place fill coverage
 // ============================================
 
-describe("validateContentSlots", () => {
-  const slotDefs: Slot[] = [
-    { key: "title", shapeName: "s1", type: SlotType.Template },
-    { key: "body", shapeName: "s2", type: SlotType.Text },
-  ];
-
-  it("passes when all slots have content", () => {
-    assert.doesNotThrow(() =>
-      validateContentSlots({ layout: "test", content: { title: "Hello", body: "World" } }, { slots: slotDefs }),
-    );
-  });
-
-  it("throws when a slot is missing", () => {
-    assert.throws(
-      () => validateContentSlots({ layout: "test", content: { title: "Hello" } }, { slots: slotDefs }),
-      (err: Error) => {
-        assert.ok(err.message.includes("body"));
-        assert.ok(err.message.includes('Layout "test"'));
-        return true;
-      },
-    );
-  });
-
-  it("throws listing all missing slots", () => {
-    assert.throws(
-      () => validateContentSlots({ layout: "test", content: {} }, { slots: slotDefs }),
-      (err: Error) => {
-        assert.ok(err.message.includes("title"));
-        assert.ok(err.message.includes("body"));
-        return true;
-      },
-    );
-  });
-
-  it("throws when content is undefined", () => {
-    assert.throws(
-      () => validateContentSlots({ layout: "test" }, { slots: slotDefs }),
-      (err: Error) => {
-        assert.ok(err.message.includes("title"));
-        return true;
-      },
-    );
-  });
-
+describe("fillTemplate coverage", () => {
   // fillTemplate: per-paragraph in-place fill. Template line i fills shape paragraph
   // i; same-style runs are coalesced first (internal/text-template-fill.md).
   const lit = (text: string): TemplateSegment => ({ kind: "literal", text });
@@ -1058,21 +1025,12 @@ describe("fillTable", () => {
 // ============================================
 
 describe("Table filler", () => {
-  const tableSlot = (): Slot => ({ key: "pricing", shapeName: "S", type: SlotType.Table });
-  // A slide stub whose modifyElement records the call but never invokes the
-  // callback — isolates the filler wrapper from fillTable's DOM work.
-  const stubSlide = () => {
-    let filled = false;
-    return { slide: { modifyElement: () => (filled = true) }, wasFilled: () => filled };
-  };
-  const ctx = { layoutName: "L" };
-
-  it("delegates to fillTable for any column count — no column-count guard", () => {
+  it("returns one fill callback for any column count — no column-count guard", () => {
     for (const headers of [cells("A"), cells("A", "B", "C"), cells("A", "B", "C", "D", "E", "F")]) {
-      const { slide, wasFilled } = stubSlide();
       const value: TableFill = { headers, rows: [] };
-      assert.doesNotThrow(() => FILLERS[SlotType.Table].fill(slide, tableSlot(), value, ctx));
-      assert.equal(wasFilled(), true);
+      const cbs = FILLERS[SlotType.Table].callbacks(value, { shapeName: "S" });
+      assert.equal(cbs.length, 1);
+      assert.equal(typeof cbs[0], "function");
     }
   });
 });
@@ -1242,5 +1200,216 @@ describe("isCodeBlock", () => {
   it("returns false for StyledParagraph arrays", () => {
     const lines: StyledParagraph[] = [{ runs: [{ text: "hi" }] }];
     assert.equal(isCodeBlock(lines), false);
+  });
+});
+
+// ============================================
+// fillSlide — composition-aware slot dispatch (accepts: Block[])
+// ============================================
+
+describe("fillSlide dispatch", () => {
+  const BASE = 1;
+
+  type Call = { op: "modify" | "add" | "remove"; name: string; extra?: unknown };
+  const recordingSlide = () => {
+    const calls: Call[] = [];
+    return {
+      calls,
+      slide: {
+        modifyElement(name: string, cbs: unknown) {
+          calls.push({ op: "modify", name, extra: cbs });
+        },
+        addElement(_alias: string, n: number, name: string, cbs: unknown[]) {
+          calls.push({ op: "add", name, extra: { sourceSlide: n, cbs } });
+        },
+        removeElement(name: string) {
+          calls.push({ op: "remove", name });
+        },
+      },
+    };
+  };
+
+  const FRAME = { x: 10, y: 20, cx: 300, cy: 400 };
+  const layout = (slots: Slot[]): Layout => ({ name: "L", baseSlide: BASE, slots });
+  const slot = (key: string, accepts: Slot["accepts"]): Slot => ({ key, frame: FRAME, accepts });
+
+  const textVal: TextFill = { paragraphs: [plain("hello")] };
+  const tableVal: TableFill = { headers: cells("A", "B"), rows: [] };
+  const imageVal: ImageFill = { type: SlotType.Image, path: "/abs/pic.png", fit: ImageFit.Contain };
+
+  const step = (content: DeckStep["content"]): DeckStep => ({ layout: "L", content });
+
+  // Edge case 1 — no block accepts the requested type → throw naming everything.
+  it("throws when no block accepts the requested content type", () => {
+    const l = layout([slot("left", [{ type: SlotType.Text, sourceSlide: BASE, shapeName: "s2" }])]);
+    const { slide, calls } = recordingSlide();
+    assert.throws(
+      () => fillSlide(slide, l, step({ left: tableVal }), "source"),
+      (err: Error) => {
+        assert.ok(err.message.includes('Layout "L"'));
+        assert.ok(err.message.includes('slot "left"'));
+        assert.ok(err.message.includes("table")); // requested type
+        assert.ok(err.message.includes("text")); // available type
+        return true;
+      },
+    );
+    assert.equal(calls.length, 0);
+  });
+
+  // Edge case 2 — the base slide already has that type there → fill in place.
+  it("fills in place when the base block matches (no transplant)", () => {
+    const l = layout([slot("body", [{ type: SlotType.Text, sourceSlide: BASE, shapeName: "s2" }])]);
+    const { slide, calls } = recordingSlide();
+    fillSlide(slide, l, step({ body: textVal }), "source");
+    assert.deepEqual(
+      calls.map((c) => ({ op: c.op, name: c.name })),
+      [{ op: "modify", name: "s2" }],
+    );
+  });
+
+  // Edge case 3 — type only available via transplant → addElement + position + remove base.
+  it("transplants, positions to the slot frame, and removes the superseded base shape", () => {
+    const l = layout([
+      slot("left", [
+        { type: SlotType.Text, sourceSlide: BASE, shapeName: "textbox" },
+        { type: SlotType.Table, sourceSlide: 5, shapeName: "specimenTable" },
+      ]),
+    ]);
+    const { slide, calls } = recordingSlide();
+    fillSlide(slide, l, step({ left: tableVal }), "source");
+
+    assert.equal(calls.length, 2);
+    const add = calls[0];
+    assert.equal(add.op, "add");
+    assert.equal(add.name, "specimenTable");
+    assert.equal((add.extra as { sourceSlide: number }).sourceSlide, 5);
+    // setPosition(slot.frame) is prepended before the fill callback(s).
+    const cbs = (add.extra as { cbs: unknown[] }).cbs;
+    assert.equal(cbs.length, 2);
+    assert.equal(typeof cbs[0], "function");
+    // The base text shape it supersedes is removed.
+    assert.deepEqual(calls[1], { op: "remove", name: "textbox" });
+  });
+
+  it("transplants without removing anything when the slot has no base block", () => {
+    const l = layout([slot("left", [{ type: SlotType.Table, sourceSlide: 5, shapeName: "t" }])]);
+    const { slide, calls } = recordingSlide();
+    fillSlide(slide, l, step({ left: tableVal }), "source");
+    assert.deepEqual(
+      calls.map((c) => ({ op: c.op, name: c.name })),
+      [{ op: "add", name: "t" }],
+    );
+  });
+
+  // Edge case 4 — content for a slot the layout doesn't declare → throw.
+  it("throws when the deck supplies content for an unknown slot key", () => {
+    const l = layout([slot("body", [{ type: SlotType.Text, sourceSlide: BASE, shapeName: "s2" }])]);
+    const { slide } = recordingSlide();
+    assert.throws(
+      () => fillSlide(slide, l, step({ nope: textVal }), "source"),
+      (err: Error) => {
+        assert.ok(err.message.includes('has no slot "nope"'));
+        assert.ok(err.message.includes("body")); // lists declared slots
+        return true;
+      },
+    );
+  });
+
+  // Edge case 5 — a slot left empty leaves the base slide's shape untouched.
+  it("does nothing for a slot the deck leaves empty", () => {
+    const l = layout([
+      slot("a", [{ type: SlotType.Text, sourceSlide: BASE, shapeName: "sa" }]),
+      slot("b", [{ type: SlotType.Text, sourceSlide: BASE, shapeName: "sb" }]),
+    ]);
+    const { slide, calls } = recordingSlide();
+    fillSlide(slide, l, step({ a: textVal }), "source");
+    assert.deepEqual(
+      calls.map((c) => c.name),
+      ["sa"],
+    );
+  });
+
+  it("throws on an unrecognized content value (e.g. a bare string)", () => {
+    const l = layout([slot("body", [{ type: SlotType.Text, sourceSlide: BASE, shapeName: "s2" }])]);
+    const { slide } = recordingSlide();
+    assert.throws(
+      () => fillSlide(slide, l, step({ body: "just a string" } as unknown as DeckStep["content"]), "source"),
+      (err: Error) => {
+        assert.ok(err.message.includes("unrecognized content value"));
+        return true;
+      },
+    );
+  });
+
+  it("selects the image block when an ImageFill is supplied to a multi-type slot", () => {
+    const l = layout([
+      slot("hero", [
+        { type: SlotType.Image, sourceSlide: BASE, shapeName: "pic" },
+        { type: SlotType.Table, sourceSlide: 5, shapeName: "tbl" },
+      ]),
+    ]);
+    const { slide, calls } = recordingSlide();
+    fillSlide(slide, l, step({ hero: imageVal }), "source");
+    assert.deepEqual(
+      calls.map((c) => ({ op: c.op, name: c.name })),
+      [{ op: "modify", name: "pic" }],
+    );
+  });
+
+  it("carries a text block's startAt onto the fill target", () => {
+    // Two blocks, distinct types; the text block declares startAt. We only assert
+    // it dispatches to the text shape in place (startAt is consumed downstream).
+    const l = layout([slot("body", [{ type: SlotType.Text, sourceSlide: BASE, shapeName: "s2", startAt: 2 }])]);
+    const { slide, calls } = recordingSlide();
+    fillSlide(slide, l, step({ body: textVal }), "source");
+    assert.deepEqual(
+      calls.map((c) => c.name),
+      ["s2"],
+    );
+  });
+});
+
+describe("assertSlotsWellFormed", () => {
+  it("throws when a slot accepts two blocks of the same type", () => {
+    const l: Layout = {
+      name: "L",
+      baseSlide: 1,
+      slots: [
+        {
+          key: "left",
+          frame: { x: 0, y: 0, cx: 1, cy: 1 },
+          accepts: [
+            { type: SlotType.Table, sourceSlide: 1, shapeName: "t1" },
+            { type: SlotType.Table, sourceSlide: 5, shapeName: "t2" },
+          ],
+        },
+      ],
+    };
+    assert.throws(
+      () => assertSlotsWellFormed(l),
+      (err: Error) => {
+        assert.ok(err.message.includes('slot "left"'));
+        assert.ok(err.message.includes("table"));
+        return true;
+      },
+    );
+  });
+
+  it("accepts distinct block types", () => {
+    const l: Layout = {
+      name: "L",
+      baseSlide: 1,
+      slots: [
+        {
+          key: "left",
+          frame: { x: 0, y: 0, cx: 1, cy: 1 },
+          accepts: [
+            { type: SlotType.Text, sourceSlide: 1, shapeName: "s" },
+            { type: SlotType.Table, sourceSlide: 5, shapeName: "t" },
+          ],
+        },
+      ],
+    };
+    assert.doesNotThrow(() => assertSlotsWellFormed(l));
   });
 });

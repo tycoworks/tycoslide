@@ -37,6 +37,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",
     "@types/node": "^22.20.0",
+    "jszip": "^3.10.1",
     "typescript": "^5.8.0"
   }
 }

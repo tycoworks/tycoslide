@@ -1,5 +1,7 @@
 import {
+  type Block,
   type Config,
+  type Frame,
   type GenerateOptions,
   generate,
   type ImageFill,
@@ -83,45 +85,51 @@ export async function resolveDeck(deck: CompilerDeck, config: CompilerConfig): P
  * StyledParagraph[] / ImageFill content is filled by the corresponding engine
  * primitive once the compiler is done.
  *
- * The discriminated unions narrow per-variant fields, so the projection is a
- * straight switch over all six type values — no runtime "wrong field on wrong
- * type" checks; TypeScript enforces the invariants at authoring time.
+ * Every compiler slot is authored against one physical shape on the layout's own
+ * slide, so it projects to an engine `Slot` accepting a single base `Block`
+ * (`sourceSlide === baseSlide`). Multi-block slots (transplants) come from
+ * hand-authored / sampled themes, not the markdown compiler.
  */
-function toEngineSlot(slot: CompilerParameter | CompilerSlot): Slot {
+// Compiler-projected slots are always a single base block (`sourceSlide ===
+// baseSlide`), so they never transplant and their `frame` is never read. The
+// markdown theme.json carries no geometry; real frames only matter for the
+// sampled / hand-authored multi-block themes that drive transplants.
+const NO_FRAME: Frame = { x: 0, y: 0, cx: 0, cy: 0 };
+
+function toEngineSlot(slot: CompilerParameter | CompilerSlot, baseSlide: number): Slot {
+  const block = (type: SlotType): Block => ({ type, sourceSlide: baseSlide, shapeName: slot.shapeName });
   switch (slot.type) {
     case ParameterType.Template:
       // A text shape carries no top-level key — its template placeholders are the keys. The
       // compiler emits its expanded content under shapeName, so the engine slot
       // is keyed by shapeName too.
-      return { key: slot.shapeName, shapeName: slot.shapeName, type: SlotType.Template };
+      return { key: slot.shapeName, frame: NO_FRAME, accepts: [block(SlotType.Template)] };
     case ParameterType.Image:
-      return { key: slot.key, shapeName: slot.shapeName, type: SlotType.Image };
+      return { key: slot.key, frame: NO_FRAME, accepts: [block(SlotType.Image)] };
     case CompilerSlotType.Text: {
-      const result: Slot = { key: slot.key, shapeName: slot.shapeName, type: SlotType.Text };
-      if (slot.startAt !== undefined) result.startAt = slot.startAt;
-      return result;
+      const textBlock = block(SlotType.Text);
+      if (slot.startAt !== undefined) textBlock.startAt = slot.startAt;
+      return { key: slot.key, frame: NO_FRAME, accepts: [textBlock] };
     }
     case CompilerSlotType.Table:
-      return { key: slot.key, shapeName: slot.shapeName, type: SlotType.Table };
+      return { key: slot.key, frame: NO_FRAME, accepts: [block(SlotType.Table)] };
     case CompilerSlotType.Code:
       // Highlighter resolves the code fence into StyledParagraph[]; engine
       // fills it via fillText.
-      return { key: slot.key, shapeName: slot.shapeName, type: SlotType.Text };
+      return { key: slot.key, frame: NO_FRAME, accepts: [block(SlotType.Text)] };
     case CompilerSlotType.Mermaid:
       // Mermaid renderer produces a PNG (ImageFill); engine fills it via
       // fillImage. The fit lives on the ImageFill, not the engine Slot.
-      return { key: slot.key, shapeName: slot.shapeName, type: SlotType.Image };
+      return { key: slot.key, frame: NO_FRAME, accepts: [block(SlotType.Image)] };
   }
 }
 
 function toEngineLayout(layout: CompilerLayout): Layout {
+  const base = layout.slideNumber;
   return {
     name: layout.name,
-    slideNumber: layout.slideNumber,
-    description: layout.description,
-    whenToUse: layout.whenToUse,
-    whenNotToUse: layout.whenNotToUse,
-    slots: [...layout.parameters.map(toEngineSlot), ...layout.slots.map(toEngineSlot)],
+    baseSlide: base,
+    slots: [...layout.parameters.map((p) => toEngineSlot(p, base)), ...layout.slots.map((s) => toEngineSlot(s, base))],
   };
 }
 

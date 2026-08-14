@@ -6,9 +6,11 @@ export { fillText, isTextFill } from "./fillers/text.js";
 export type { GenerateOptions } from "./generate.js";
 export { generate } from "./generate.js";
 export type {
+  Block,
   Config,
   Deck,
   DeckStep,
+  Frame,
   ImageFill,
   Layout,
   Slot,
