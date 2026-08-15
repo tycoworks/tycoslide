@@ -640,3 +640,85 @@ clean.
    with *different* `codeTheme`s (github-dark / github-light) and per-slot `mermaidVariant`. The
    one-style-per-theme move means that theme must be reconciled when it's rewired (out of scope
    here — no tycoslide test depends on it).
+
+## 8. Option A — body-slot images via `$category.name` (fixed target for the A build)
+
+> **Partly superseded by the MDAST migration (§9).** The `$category.name` resolution, the `assets`
+> catalog, and the accepts/frame model below all STAND. But the *recognition mechanism* described
+> here — the regex `IMAGE_BLOCK_RE` / `CODE_FENCE_RE` chain in `parseSlotContent` — is replaced by
+> full MDAST block parsing. See `internal/mdast-migration.md`. `resolveAssetRef` survives verbatim,
+> now fed by an mdast `image` node's `url` instead of a regex capture.
+
+Slice 2 let a `theme.json` slot `accept` `image`, and the engine transplants + fills an image
+specimen. But the **compiler can't yet route a body/`::name::` region to that image accept** —
+`parseSlotContent` only recognizes a code fence, a GFM table, or prose (fence → table → text),
+and `acceptTypeOf` ends in a silent `return AcceptType.Text` catch-all. Option A closes both: a
+standalone markdown image in a body region becomes an `ImageFill`, and `acceptTypeOf` becomes
+exhaustive. This is the last piece that makes a table/image/text tri-accept slot fully authorable
+from markdown.
+
+### Decisions (approved — this is A's fixed target; the builder must not deviate)
+1. **Syntax: a standalone markdown image is the image block.** A body or `::name::` region whose
+   trimmed text is exactly one markdown image — `![alt](ref)` and nothing else — folds to an
+   `image` block. `alt` is ignored (author-facing label only). An image embedded inside prose is
+   **not** a body-image (inline images unsupported); the whole region must be the image.
+2. **`ref` MUST be a `$category.name` catalog reference** — never a raw path. This is the
+   deliberate product choice: body content references the theme's *named, curated* assets (the
+   "design system" surface an agent picks from), not arbitrary filesystem paths. It reuses the
+   two-level `assets` catalog already in the theme (`{ category: { name: { path, type } } }`).
+3. **Resolution mirrors the pre-swap `resolveRef`** (git `8fcf889^:packages/sdk/src/theme/template.ts`):
+   - Anchored whole-field regex `/^\$([a-zA-Z]\w*)\.([a-zA-Z]\w*)$/`. Anchored ⇒ no escaping
+     concerns; the whole `ref` is the reference or it is nothing.
+   - Malformed ⇒ fail fast: *"…must be in the form `$category.name`"*.
+   - Not in catalog ⇒ fail fast, listing what's available: *"Unknown asset reference `$x.y`.
+     Available: …"*.
+   - Found ⇒ resolve `entry.path` via `resolveImagePath(rootDir, …)` and wrap via the existing
+     `toImageFill(path, entry.type)` — so a body image inherits the same `type → ImageFit`
+     mapping (`icon`/`image`/`background`) as a frontmatter image. One wrapping path, no
+     second fit story.
+4. **`acceptTypeOf` becomes exhaustive — no catch-all.** Order: code → mermaid → table → image →
+   `FILLERS[SlotType.Text].matches` → **throw** on anything unclassifiable. This kills the
+   "sneaky default" (`return AcceptType.Text`) so a future block shape can't silently masquerade
+   as text.
+
+### Build (test-first; small and bounded)
+- Thread a `resolveAssetRef(ref): ImageFill` closure (built once in `compileDeck`, capturing
+  `assets` + `rootDir`) into `compileStep` → `parseSlotContent`, the same way `assetTypeByPath`
+  is built once and threaded. `parseSlotContent` gains an image branch **before** the table
+  branch (an image line is unambiguous — `![` can't start a table or a fence).
+- `acceptTypeOf`: add the `image` case for `ImageFill` (already present at line 90), replace the
+  trailing `return AcceptType.Text` with an explicit `FILLERS[SlotType.Text].matches` check +
+  a throw naming the unclassifiable block.
+- **No change to frontmatter image params in A.** They still take a raw path. *(Known tension:
+  frontmatter path vs body `$category.name` are two asset-reference mechanisms. Deliberately left
+  for a follow-up — unifying frontmatter onto `$category.name` touches existing fixtures/tests and
+  is out of A's scope. Flag at review.)*
+
+### Proof (committed tests)
+- **Compiler e2e:** extend `test/fixtures/composition-theme.json` with an `assets` catalog entry
+  and an `image` accept on a slot whose base shows text; a markdown deck writes `![logo]($x.y)`
+  into that slot; built end-to-end, the output slide carries the transplanted+positioned image
+  (drawing relationship / `<a:blip>`), base text removed.
+- **Fail-fast units:** malformed ref (`![](logo.png)`, `![]($bad)`) throws "form `$category.name`";
+  unknown ref (`![]($x.missing)`) throws "Unknown asset reference … Available: …"; an image into a
+  slot that doesn't `accept` image throws via the existing `assertSlotRegion` path.
+- `npm run typecheck` / `npm test` / `npm run lint` all green.
+
+### Deliberately OUT
+Frontmatter `$category.name` migration; inline images in prose; the sampler (roadmap step 4).
+
+## 9. MDAST migration (branched off the Option-A review)
+
+Reviewing Option A surfaced that slot-content recognition was two hardcoded regex chains
+(`parseSlotContent` + `acceptTypeOf`) — not MECE/DRY, and re-deriving a type the parser already knew.
+The old (pre-swap) tycoslide did this right: parse each region to a real MDAST tree and dispatch
+block nodes through a handler registry. Decision (approved): bring that back properly. Key facts —
+inline formatting is ALREADY full MDAST today (`remark-parse`+`remark-gfm`+`remark-ins`, underline via
+remark-ins); only the block level is regex; no new dependency. This replaces the §8 recognition
+mechanism while keeping `$category.name`/accepts/frame.
+
+- **Full design + build steps + resolved decisions:** `internal/mdast-migration.md`.
+- **Fresh-session entry point:** `internal/mdast-migration-handover.md` (context was maxed; work
+  handed off to a new session).
+- **Status:** designed, not yet built. Compiler-only; engine untouched. Folds in / partly supersedes
+  the still-uncommitted Option A on branch `sampled-composition`.
