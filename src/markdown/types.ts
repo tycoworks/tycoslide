@@ -1,4 +1,11 @@
-import { type ImageFill, SlotType, type TableFill, type TemplateFill, type TextFill } from "../engine/index.js";
+import {
+  type Frame,
+  type ImageFill,
+  SlotType,
+  type TableFill,
+  type TemplateFill,
+  type TextFill,
+} from "../engine/index.js";
 import type { MermaidConfig } from "./resolvers/mermaidTheme.js";
 
 // ── Asset catalog (compiler / theme-metadata only) ───────────────────────────
@@ -62,23 +69,23 @@ export const ParameterType = {
 } as const;
 export type ParameterType = (typeof ParameterType)[keyof typeof ParameterType];
 
-// ── CompilerSlotType discriminator (body region, multi-line) ──────────────────
+// ── AcceptType discriminator (what a slot accepts) ────────────────────────────
 
 /**
- * Compiler-facing slot type for a layout's *slots* — multi-line body regions
- * (the default body region, or a `::name::` region). Narrowed to four kinds;
- * `Template` and `Image` left this list to become parameters. `Code` and `Mermaid`
- * are compiler-only, resolved (syntax highlighting, mermaid PNG rendering)
- * before the engine sees the deck. Required on every CompilerSlot — no silent
- * default.
+ * The engine content types a slot may `accept`. A subset of the engine's
+ * `SlotType`: `Template` is parameter-only, never a body block. There is no
+ * `code` / `mermaid` accept type — a code fence folds into a `Text`-accepting
+ * slot (syntax highlighting → TextFill) and a mermaid fence into an
+ * `Image`-accepting slot (PNG render → ImageFill), the same fold the engine
+ * already performs. The author's markdown shape selects which accepted type a
+ * region routes to.
  */
-export const CompilerSlotType = {
+export const AcceptType = {
   Text: SlotType.Text,
   Table: SlotType.Table,
-  Code: FenceType.Code,
-  Mermaid: FenceType.Mermaid,
+  Image: SlotType.Image,
 } as const;
-export type CompilerSlotType = (typeof CompilerSlotType)[keyof typeof CompilerSlotType];
+export type AcceptType = (typeof AcceptType)[keyof typeof AcceptType];
 
 // ── Compiler-internal block shapes ────────────────────────────────────────────
 
@@ -215,61 +222,57 @@ export type CompilerParameter = CompilerTemplateParameter | CompilerImageParamet
 
 // ── Slots (body regions, multi-line) ──────────────────────────────────────────
 
-/** Multi-paragraph body filled by fillText (specimen-style rebuild). */
-export type CompilerTextSlot = CompilerSlotBase & {
-  type: typeof CompilerSlotType.Text;
-  /** Leave the first N specimen paragraphs untouched. */
+/**
+ * A kind of content a slot accepts, and the real template shape that realizes
+ * it — the compiler mirror of the engine's `Block`. `type` is an engine content
+ * type (`text` | `table` | `image`); `shapeName` names the shape on
+ * `sourceSlide` carrying the specimen styling. When `sourceSlide` equals the
+ * layout's `slideNumber` the shape is already on the cloned slide (fill in
+ * place); otherwise it is transplanted into the slot's `frame`. `startAt` is a
+ * text-specimen concern (leave the first N specimen paragraphs untouched), only
+ * meaningful on a text block. Named `CompilerBlock` to stay distinct from the
+ * engine's `Block` and the compiler's `MarkdownBlock`.
+ */
+export type CompilerBlock = {
+  type: AcceptType;
+  sourceSlide: number;
+  shapeName: string;
   startAt?: number;
 };
 
-/** Table shape backed by an `<a:tbl>` with header + data specimen rows. */
-export type CompilerTableSlot = CompilerSlotBase & {
-  type: typeof CompilerSlotType.Table;
-};
-
 /**
- * Text slot that consumes a fenced code block. The resolver (`CodeResolver`)
- * uses `codeTheme` to Shiki-highlight the source into StyledParagraph[]; the
- * engine sees the projected Text slot.
+ * Compiler-facing slot. A layout's body region (the default region, or a
+ * `::name::` region), no longer welded to one shape+type: it `accepts` a set of
+ * `CompilerBlock`s and owns a `frame` (real observed EMU coordinates, never
+ * computed). The author's markdown shape selects which accepted block a region
+ * routes to; a type the slot does not accept fails fast. `frame` is required
+ * only when a slot has a transplant block (a block whose `sourceSlide` differs
+ * from the layout's `slideNumber`); a base-only slot fills in place and needs
+ * none. Adds markdown-flavored `limit` hints on top of the engine's minimal
+ * Slot; per-slot `codeTheme` / `mermaidVariant` moved to the theme level.
  */
-export type CompilerCodeSlot = CompilerSlotBase & {
-  type: typeof CompilerSlotType.Code;
-  /** Shiki theme id (required — no silent default). */
-  codeTheme: string;
+export type CompilerSlot = {
+  key: string;
+  accepts: CompilerBlock[];
+  frame?: Frame;
+  limit?: { maxChars?: number; maxLines?: number; maxItems?: number };
+  /**
+   * Whether the slot may be omitted from a slide. Optional (defaults to false):
+   * a required slot with no content throws with layout + key names.
+   */
+  required?: boolean;
 };
-
-/**
- * Slot that consumes a mermaid code fence. The resolver (`MermaidResolver`)
- * uses `mermaidVariant` to select colors and renders a PNG; the engine sees the
- * projected Image slot with `contain` fit. Mermaid slots do NOT declare `fit` —
- * mermaid diagrams are always contained.
- */
-export type CompilerMermaidSlot = CompilerSlotBase & {
-  type: typeof CompilerSlotType.Mermaid;
-  /** Name of the mermaid variant (required — no silent default). */
-  mermaidVariant: string;
-};
-
-/**
- * Compiler-facing slot. Discriminated union on `type` — each variant declares
- * ONLY the fields legal for that slot type. A layout's body regions (the
- * default region, or a `::name::` region), resolved against the layout's
- * `slots` list. Adds markdown-flavored concepts (limit hints, code-fence theme
- * selection, mermaid variant naming) on top of the engine's minimal Slot.
- * Compiler-only types (Code, Mermaid) are projected down to engine types (Text,
- * Image) at the engine boundary before the engine sees the layout.
- */
-export type CompilerSlot = CompilerTextSlot | CompilerTableSlot | CompilerCodeSlot | CompilerMermaidSlot;
 
 export type CompilerLayout = {
   name: string;
   slideNumber: number;
-  description: string;
-  whenToUse: string;
-  whenNotToUse: string;
+  /** Optional prose — a layout is a shape, not a purpose (agent-guidance descoped). */
+  description?: string;
+  whenToUse?: string;
+  whenNotToUse?: string;
   /** Frontmatter inputs (template, image) — one value per `key: value` line. */
   parameters: CompilerParameter[];
-  /** Body regions (text, table, code, mermaid) — the body or `::name::` regions. */
+  /** Body regions — the default body or `::name::` regions; each `accepts` blocks. */
   slots: CompilerSlot[];
 };
 
@@ -287,6 +290,14 @@ export type CompilerThemeConfig = {
   template: string;
   outputDir?: string;
   mermaid?: MermaidConfig;
+  /**
+   * Theme-level defaults for the two content types the compiler resolves before
+   * the engine sees them. One code style and one mermaid style per theme (the
+   * design-system framing) — they can't sit on a multi-type slot. `codeTheme` is
+   * a Shiki theme id; `mermaidVariant` names an entry in `mermaid`.
+   */
+  codeTheme?: string;
+  mermaidVariant?: string;
 };
 
 export type CompilerConfig = CompilerThemeConfig & {

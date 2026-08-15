@@ -1,7 +1,8 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { generateManifest } from "../dist/manifest.js";
-import type { CompilerConfig, CompilerLayout } from "../dist/markdown/types.js";
+import { SlotType } from "../dist/engine/types.js";
+import type { CompilerConfig, CompilerLayout, CompilerSlot } from "../dist/markdown/types.js";
 import { ParameterType } from "../dist/markdown/types.js";
 
 function config(layouts: CompilerLayout[]): CompilerConfig {
@@ -60,5 +61,60 @@ describe("generateManifest parameter flattening", () => {
       layout("img", [{ key: "logo", shapeName: "logoPic", type: ParameterType.Image }]),
     ]);
     assert.deepEqual(params, [{ key: "logo", type: ParameterType.Image }]);
+  });
+});
+
+// A layout with the given slots (no parameters). description/whenToUse/whenNotToUse
+// are omitted to exercise their optionality.
+function slotLayout(name: string, slots: CompilerSlot[]): CompilerLayout {
+  return { name, slideNumber: 1, parameters: [], slots };
+}
+
+function manifestSlots(slots: CompilerSlot[]) {
+  const manifest = JSON.parse(generateManifest(config([slotLayout("L", slots)]), OPTIONS));
+  return manifest.layouts[0].slots;
+}
+
+describe("generateManifest slot accepts advertising", () => {
+  it("advertises a single-type slot's accepted engine type", () => {
+    const slots = manifestSlots([
+      { key: "body", accepts: [{ type: SlotType.Text, sourceSlide: 1, shapeName: "s" }] },
+    ]);
+    assert.deepEqual(slots, [{ key: "body", accepts: ["text"] }]);
+  });
+
+  it("advertises every accepted type of a multi-block (transplant) slot in order", () => {
+    const slots = manifestSlots([
+      {
+        key: "body",
+        frame: { x: 1, y: 2, cx: 3, cy: 4 },
+        accepts: [
+          { type: SlotType.Text, sourceSlide: 1, shapeName: "s0" },
+          { type: SlotType.Table, sourceSlide: 5, shapeName: "s1" },
+          { type: SlotType.Image, sourceSlide: 6, shapeName: "s2" },
+        ],
+      },
+    ]);
+    assert.deepEqual(slots, [{ key: "body", accepts: ["text", "table", "image"] }]);
+  });
+
+  it("marks a required slot and carries its limit, dropping shape/frame internals", () => {
+    const slots = manifestSlots([
+      {
+        key: "table",
+        required: true,
+        limit: { maxItems: 5 },
+        accepts: [{ type: SlotType.Table, sourceSlide: 1, shapeName: "s" }],
+      },
+    ]);
+    assert.deepEqual(slots, [{ key: "table", accepts: ["table"], required: true, limit: { maxItems: 5 } }]);
+  });
+
+  it("omits optional layout prose (description/whenToUse) when not declared", () => {
+    const manifest = JSON.parse(generateManifest(config([slotLayout("L", [])]), OPTIONS));
+    const l = manifest.layouts[0];
+    assert.equal("description" in l, false);
+    assert.equal("whenToUse" in l, false);
+    assert.equal("whenNotToUse" in l, false);
   });
 });

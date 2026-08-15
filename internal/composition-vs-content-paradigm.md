@@ -513,3 +513,130 @@ Fix: a shared `wrapCallbacks` now wraps **both** `modifyElement` and `addElement
 5. **Equivalence / pixel-nudge handling:** cluster near-identical region positions within tolerance; canonicalize the slot frame.
 6. **Agent-guidance layer (was descoped):** structural layout descriptions ("two-column", "full-bleed") to help agents choose — revisit whether/how.
 7. **Theme-packager UX + productionization:** the interactive "turn your pptx into a theme" flow reshaped for the sampled model; plus deferred engine gaps (limits, notes, etc.).
+
+## 6. Compiler-side format (APPROVED design — fixed target for step 2 build)
+
+The engine already supports multi-`accepts` slots + transplant (slice 1). But the compiler
+still projects every `theme.json` slot to a single base block (`toEngineSlot`, `src/index.ts:99`,
+`NO_FRAME`), so **a `theme.json` file + markdown deck cannot yet express the new capability** —
+only a hand-built engine `Config` can. Step 2 = expose the model through the compiler. This
+section is the fixed target; the executor must NOT deviate or invent beyond it.
+
+### Decisions (approved)
+1. **Flexibility lives on body `slots` only.** `parameters` (frontmatter `template`/`image`) stay
+   single-shape, single-type — a template param is styled text with `{key}` placeholders; frontmatter
+   scalars are not blocks. Unchanged.
+2. **A `slot` gains `accepts: Block[]` + `frame`.** `Block = { type, sourceSlide, shapeName }`.
+   `frame` = the slot's real region in EMU (`{x,y,cx,cy}`), needed only when a slot has a transplant
+   block; the base block (`sourceSlide === layout.slideNumber`) is already in place. Frames are real
+   observed coordinates — **never computed** (the no-extrapolation principle).
+3. **`accepts` uses engine content types: `text` | `table` | `image`.** Code folds into a
+   text-accepting slot, mermaid into an image-accepting slot (same projection the engine already does:
+   `Code→Text`, `Mermaid→Image`). Do NOT add `code`/`mermaid` as distinct accept types.
+4. **`codeTheme` / `mermaidVariant` become theme-level defaults** (one code style, one mermaid style
+   per theme), not per-slot — they can't sit on a multi-type slot, and one-style-per-theme fits the
+   design-system framing.
+5. **`description` / `whenToUse` become optional** on a layout (a layout is a shape, not a purpose;
+   agent-guidance is descoped — roadmap step 6).
+6. **Markdown authoring: NO new syntax.** The author writes an image / GFM table / mermaid fence /
+   prose into `::name::` (or the default body); the content's shape selects the matching block; a type
+   the slot doesn't accept **fails fast**. Already works in the engine — we only let `theme.json`
+   express it.
+
+### Worked example (a content layout whose body accepts text, a table, or an image)
+```json
+{ "name": "Content", "slideNumber": 20,
+  "slots": [
+    { "key": "body",
+      "frame": { "x": 457200, "y": 1371600, "cx": 8229600, "cy": 2743200 },
+      "accepts": [
+        { "type": "text",  "sourceSlide": 20, "shapeName": "Google Shape;491;p57" },
+        { "type": "table", "sourceSlide": 52, "shapeName": "Google Shape;998;p107" },
+        { "type": "image", "sourceSlide": 16, "shapeName": "Google Shape;614;p71" }
+      ] } ] }
+```
+
+### Build (test-first; small and bounded)
+- `CompilerSlot` type + `theme.json` loader carry `accepts: Block[]` + optional `frame`; move
+  `codeTheme`/`mermaidVariant` to theme-level (`CompilerThemeConfig`).
+- `toEngineSlot` (`src/index.ts:99`) projects the slot's real `accepts` to engine `Block[]` and passes
+  `frame` through, instead of wrapping one base block. Compiler-only `code`/`mermaid` still fold to
+  `text`/`image` per accept.
+- Keep the fail-fast well-formedness checks (`assertSlotsWellFormed`: no duplicate engine-type in one
+  slot's `accepts`). Decide + test: a slot with no base block (all-transplant) — allowed (the engine's
+  `applyBlock` already tolerates it), so validate `frame` is present whenever any block transplants.
+- Manifest lists each slot's accepted types (roadmap step 3 — folds in here).
+- E2e proof: a real `theme.json` FILE + a markdown deck (not a hand-built engine `Config`) that puts a
+  table where the base slide shows text, built end-to-end to `.pptx`.
+
+### Deliberately OUT
+`parameters` flexibility; computed/derived geometry; `whenToUse`/purpose; the sampler (step 4) — this
+step is hand-authored `theme.json` as the bootstrap.
+
+## 7. Slice-2 — compiler exposes sampled composition (DONE)
+
+Step 2 is built and proven end-to-end on branch `sampled-composition` (uncommitted). A
+`theme.json` FILE + a markdown deck can now express multi-`accepts` slots + transplant through
+the public compiler; previously only a hand-built engine `Config` could. The engine internals
+(slice 1) were untouched.
+
+### New `theme.json` slot shape
+A body `slot` is no longer welded to one shape+type. It `accepts` a set of blocks and owns an
+optional `frame` (real observed EMU, never computed). `parameters` (frontmatter template/image)
+are unchanged — still single-shape, single-type. `accepts` uses only engine content types
+`text | table | image`: a code fence folds into a `text`-accepting slot, a mermaid fence into an
+`image`-accepting slot (the same fold the engine already does). There is no `code`/`mermaid`
+accept type.
+
+```json
+{ "name": "Content", "slideNumber": 20, "parameters": [],
+  "slots": [
+    { "key": "body",
+      "frame": { "x": 457200, "y": 1371600, "cx": 8229600, "cy": 2743200 },
+      "accepts": [
+        { "type": "text",  "sourceSlide": 20, "shapeName": "Google Shape;491;p57" },
+        { "type": "table", "sourceSlide": 52, "shapeName": "Google Shape;998;p107" },
+        { "type": "image", "sourceSlide": 16, "shapeName": "Google Shape;614;p71" }
+      ] } ] }
+```
+- The base block has `sourceSlide === slideNumber` (in place); any other block transplants into
+  `frame`. `frame` is **required** whenever any block transplants (validated at the
+  compiler→engine boundary, `assertSlotFrames` in `src/index.ts`); a base-only slot needs none.
+- `startAt?` is allowed on a text block (preserves the old per-text-slot capability); optional.
+- `description` / `whenToUse` / `whenNotToUse` are now **optional** on a layout.
+
+### Theme-level code/mermaid config
+`codeTheme` and `mermaidVariant` moved off the slot onto `CompilerThemeConfig` (theme-level,
+one style per theme). `codeTheme` is a Shiki theme id; `mermaidVariant` names an entry in the
+existing `mermaid` variants map. The resolvers (`code.ts`, `mermaid.ts`) read `ctx.config.*`;
+`ResolveContext` no longer carries a slot. A deck using code/mermaid with the theme-level field
+missing fails fast, naming the layout + slot carrying the fence.
+
+### Manifest
+`ManifestSlot` now advertises `accepts: ("text"|"table"|"image")[]` (roadmap step 3 folded in)
+instead of `type` + `codeTheme`/`mermaidVariant`. Optional layout prose is omitted when absent.
+
+### Proof
+`test/composition.compiler.e2e.test.ts`: a real `theme.json` file
+(`test/fixtures/composition-theme.json`) + a markdown deck routes a GFM table into a slot whose
+base shows text, built through `compileMarkdownDeck` + `buildDeck` to `.pptx`. The output slide
+contains `<a:tbl>`, the refilled deck data (`Pro`/`$9`), no base text (`superseded on transplant`
+removed), and the table positioned/sized to the theme frame. Two fail-fast tests: a type a slot
+doesn't `accept` throws through the compiler path; a transplant block with no `frame` throws
+naming layout + slot. `npm run typecheck` clean, `npm test` **272 pass / 0 fail**, `npm run lint`
+clean.
+
+### Ambiguities resolved during the build (called out)
+1. **`mermaidVariant` type.** §6 hinted `MermaidVariant`, but the existing `mermaid` map is
+   `Record<name, MermaidVariant>`. Kept `mermaidVariant?: string` (a **name** indexing that map)
+   — smallest change, preserves the "variant not found" error and the map structure.
+2. **`startAt`.** §6's compiler `Block` was `{ type, sourceSlide, shapeName }`; kept an optional
+   `startAt?` on it so the old per-text-slot `startAt` capability survives. Harmless (optional,
+   text-only).
+3. **`CompilerSlotType` removed.** The old four-variant slot discriminator is gone (single path,
+   per §6); `AcceptType` (`text|table|image`) is the new const-object enum. Public export
+   `CompilerSlotType` → `AcceptType`; `CompilerBlock` added.
+4. **Real-world note (not a blocker):** `mz-slides/theme.json` currently has two code layouts
+   with *different* `codeTheme`s (github-dark / github-light) and per-slot `mermaidVariant`. The
+   one-style-per-theme move means that theme must be reconciled when it's rewired (out of scope
+   here — no tycoslide test depends on it).

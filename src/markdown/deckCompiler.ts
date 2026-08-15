@@ -5,6 +5,7 @@ import { RESOLVERS } from "./resolvers/resolver.js";
 import type { ParsedDocument, RawSlide } from "./slideParser.js";
 import { templateKeys, templateToSegments } from "./textTemplate.js";
 import {
+  AcceptType,
   type AssetCatalog,
   AssetType,
   type CodeFence,
@@ -14,7 +15,6 @@ import {
   type CompilerLayout,
   type CompilerParameter,
   type CompilerSlot,
-  CompilerSlotType,
   type CompilerTemplateParameter,
   FenceType,
   type MarkdownBlock,
@@ -77,27 +77,40 @@ function parseSlotContent(text: string): MarkdownBlock {
 }
 
 /**
- * Matcher for each CompilerSlotType, composed from the engine's `FILLERS` (text,
- * table) and the compiler's `RESOLVERS` (code, mermaid) — no raw guards imported
- * here, so a slot's expected shape always tracks whatever those registries say a
- * fill/fence looks like.
+ * Fold a parsed region block down to the single engine content type it fills.
+ * A code fence highlights into text; a mermaid fence renders into an image; a
+ * GFM table is a table; everything else (prose) is text. Composed from the
+ * compiler's `RESOLVERS` (code, mermaid) and the engine's `FILLERS` (table) so
+ * the classification tracks whatever those registries say a block looks like.
  */
-const REGION_MATCHERS: Record<CompilerSlotType, (block: MarkdownBlock) => boolean> = {
-  [CompilerSlotType.Text]: FILLERS[SlotType.Text].matches,
-  [CompilerSlotType.Table]: FILLERS[SlotType.Table].matches,
-  [CompilerSlotType.Code]: RESOLVERS[FenceType.Code].matches,
-  [CompilerSlotType.Mermaid]: RESOLVERS[FenceType.Mermaid].matches,
-};
+function acceptTypeOf(block: MarkdownBlock): AcceptType {
+  if (RESOLVERS[FenceType.Code].matches(block)) return AcceptType.Text;
+  if (RESOLVERS[FenceType.Mermaid].matches(block)) return AcceptType.Image;
+  if (FILLERS[SlotType.Table].matches(block)) return AcceptType.Table;
+  if (FILLERS[SlotType.Image].matches(block)) return AcceptType.Image;
+  return AcceptType.Text;
+}
 
 /**
- * Assert that a region's parsed block matches the slot's declared type. Called
+ * Assert that a region's parsed block folds to a type the slot `accepts`. Called
  * after `parseSlotContent` narrows a body/`::name::` region into a MarkdownBlock.
- * Keys off the CompilerSlotType discriminator via `REGION_MATCHERS`.
+ * A slot may accept several types (text/table/image); the author's markdown
+ * shape selects one. A block whose folded type is not accepted fails fast,
+ * naming the layout, slot, the type it got, and the types the slot accepts.
  */
-function assertSlotRegion(slot: CompilerSlot, block: MarkdownBlock, slideIdx: number, source: string): void {
-  if (!REGION_MATCHERS[slot.type](block)) {
+function assertSlotRegion(
+  slot: CompilerSlot,
+  block: MarkdownBlock,
+  layoutName: string,
+  slideIdx: number,
+  source: string,
+): void {
+  const got = acceptTypeOf(block);
+  if (!slot.accepts.some((b) => b.type === got)) {
+    const accepted = slot.accepts.map((b) => b.type).join(", ");
     throw new Error(
-      `Slide ${slideIdx}: slot "${slot.key}" (type "${slot.type}") got wrong content shape from ${source}.`,
+      `Slide ${slideIdx}: layout "${layoutName}" slot "${slot.key}" does not accept ${got} content ` +
+        `(from ${source}); it accepts: ${accepted}.`,
     );
   }
 }
@@ -289,7 +302,7 @@ function compileStep(
       );
     }
     const parsedBody = parseSlotContent(body);
-    assertSlotRegion(bodySlot, parsedBody, index, "body content");
+    assertSlotRegion(bodySlot, parsedBody, layoutName, index, "body content");
     content[RESERVED_KEY.BODY] = parsedBody;
   }
 
@@ -303,7 +316,7 @@ function compileStep(
       );
     }
     const block = parseSlotContent(text);
-    assertSlotRegion(slot, block, index, `::${name}::`);
+    assertSlotRegion(slot, block, layoutName, index, `::${name}::`);
     content[name] = block;
   }
 

@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { ImageFill } from "../../engine/index.js";
 import { ImageFit, SlotType } from "../../engine/index.js";
-import { type CompilerConfig, CompilerSlotType, FenceType, type MermaidFence } from "../types.js";
+import { type CompilerConfig, FenceType, type MermaidFence } from "../types.js";
 import {
   buildMermaidRenderConfig,
   injectClassDefs,
@@ -96,11 +96,11 @@ export const MermaidResolver: Resolver<MermaidFence> = {
       );
     }
 
-    const variantName = ctx.slot.type === CompilerSlotType.Mermaid ? ctx.slot.mermaidVariant : undefined;
+    const variantName = config.mermaidVariant;
     if (variantName === undefined) {
       throw new Error(
-        `Layout "${ctx.layout.name}": mermaid slot "${ctx.key}" has no "mermaidVariant" declared. ` +
-          "Every slot with type=mermaid must declare its variant explicitly.",
+        `Layout "${ctx.layout.name}" slot "${ctx.key}": deck contains a mermaid diagram but the theme ` +
+          'declares no "mermaidVariant". Add a theme-level "mermaidVariant" naming a "mermaid" entry to theme.json.',
       );
     }
 

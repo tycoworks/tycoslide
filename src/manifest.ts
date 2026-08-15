@@ -1,6 +1,6 @@
 import { templateKeys } from "./markdown/textTemplate.js";
-import type { AssetType, CompilerConfig, CompilerParameter, CompilerSlot } from "./markdown/types.js";
-import { CompilerSlotType, ParameterType } from "./markdown/types.js";
+import type { AcceptType, AssetType, CompilerConfig, CompilerParameter, CompilerSlot } from "./markdown/types.js";
+import { ParameterType } from "./markdown/types.js";
 
 export type ManifestOptions = {
   build: { command: string };
@@ -16,14 +16,17 @@ type ManifestParameter = {
   limit?: ManifestLimit;
 };
 
-/** A body region (text, table, code, mermaid) as advertised to AI authors. */
+/**
+ * A body region as advertised to AI authors. `accepts` lists the engine content
+ * types the slot allows (`text` | `table` | `image`) — the author routes a
+ * matching markdown block (prose/code → text, GFM table → table, mermaid →
+ * image) to it; a type not listed fails fast at compile time.
+ */
 type ManifestSlot = {
   key: string;
-  type: CompilerSlot["type"];
+  accepts: AcceptType[];
   required?: true;
   limit?: ManifestLimit;
-  codeTheme?: string;
-  mermaidVariant?: string;
 };
 
 type ManifestLayout = {
@@ -35,9 +38,9 @@ type ManifestLayout = {
    * pick between them by layout name.
    */
   slideNumber: number;
-  description: string;
-  whenToUse: string;
-  whenNotToUse: string;
+  description?: string;
+  whenToUse?: string;
+  whenNotToUse?: string;
   parameters: ManifestParameter[];
   slots: ManifestSlot[];
 };
@@ -87,34 +90,25 @@ function stripParameter(param: CompilerParameter): ManifestParameter[] {
 }
 
 function stripSlot(slot: CompilerSlot): ManifestSlot {
-  const result: ManifestSlot = { key: slot.key, type: slot.type };
+  const result: ManifestSlot = { key: slot.key, accepts: slot.accepts.map((b) => b.type) };
   if (slot.required) result.required = true;
   if (slot.limit) result.limit = slot.limit;
-  switch (slot.type) {
-    case CompilerSlotType.Text:
-    case CompilerSlotType.Table:
-      // No fields beyond the shared key/type/required/limit.
-      break;
-    case CompilerSlotType.Code:
-      result.codeTheme = slot.codeTheme;
-      break;
-    case CompilerSlotType.Mermaid:
-      result.mermaidVariant = slot.mermaidVariant;
-      break;
-  }
   return result;
 }
 
 export function generateManifest(config: CompilerConfig, options: ManifestOptions): string {
-  const layouts: ManifestLayout[] = config.layouts.map((layout) => ({
-    name: layout.name,
-    slideNumber: layout.slideNumber,
-    description: layout.description,
-    whenToUse: layout.whenToUse,
-    whenNotToUse: layout.whenNotToUse,
-    parameters: layout.parameters.flatMap(stripParameter),
-    slots: layout.slots.map(stripSlot),
-  }));
+  const layouts: ManifestLayout[] = config.layouts.map((layout) => {
+    const ml: ManifestLayout = {
+      name: layout.name,
+      slideNumber: layout.slideNumber,
+      parameters: layout.parameters.flatMap(stripParameter),
+      slots: layout.slots.map(stripSlot),
+    };
+    if (layout.description !== undefined) ml.description = layout.description;
+    if (layout.whenToUse !== undefined) ml.whenToUse = layout.whenToUse;
+    if (layout.whenNotToUse !== undefined) ml.whenNotToUse = layout.whenNotToUse;
+    return ml;
+  });
 
   const assets: Record<string, Record<string, ManifestAssetEntry>> = {};
   for (const [category, entries] of Object.entries(config.assets)) {

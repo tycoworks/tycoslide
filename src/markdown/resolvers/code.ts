@@ -1,6 +1,6 @@
 import type { BundledLanguage, BundledTheme } from "shiki";
 import type { StyledParagraph, TextFill, TextRun } from "../../engine/index.js";
-import { type CodeFence, CompilerSlotType, FenceType } from "../types.js";
+import { type CodeFence, FenceType } from "../types.js";
 import type { Resolver } from "./resolver.js";
 
 /** Discriminator for CodeFence values. Doubles as `CodeResolver.matches`. */
@@ -35,18 +35,19 @@ export async function highlightCode(code: string, language: string, theme: strin
 
 /**
  * Resolve one CodeFence into a TextFill by Shiki-highlighting its source.
- * Theme resolution is strict: the fence's slot MUST declare `codeTheme`. There
- * is no theme-wide fallback — a code-capable slot with no theme throws with the
- * offending slot and layout names.
+ * Theme resolution is strict: the theme MUST declare a `codeTheme`. It is one
+ * style per theme (design-system framing) — a deck with code fences but no
+ * theme-level `codeTheme` throws, naming the layout + slot that carries the
+ * offending fence.
  */
 export const CodeResolver: Resolver<CodeFence> = {
   matches: isCodeBlock,
   async resolve(fence, ctx): Promise<TextFill> {
-    const theme = ctx.slot.type === CompilerSlotType.Code ? ctx.slot.codeTheme : undefined;
+    const theme = ctx.config.codeTheme;
     if (!theme) {
       throw new Error(
-        `Slide layout "${ctx.layout.name}" slot "${ctx.key}": no "codeTheme" declared on the slot. ` +
-          "Every code-capable slot must declare its own theme (CompilerContentSlot.codeTheme).",
+        `Layout "${ctx.layout.name}" slot "${ctx.key}": deck contains a code fence but the theme ` +
+          'declares no "codeTheme". Add a theme-level "codeTheme" (a Shiki theme id) to theme.json.',
       );
     }
     const paragraphs = await highlightCode(fence.source, fence.language, theme);
