@@ -846,17 +846,44 @@ describe("validateLayout (key-space collisions)", () => {
   });
 });
 
+describe("assertUniqueSlideNumbers (cross-layout slideNumber collisions)", () => {
+  const emptyDoc = { global: { theme: "./theme.json" }, slides: [] };
+
+  it("throws when two layouts share a slideNumber", async () => {
+    const a: CompilerLayout = { ...testLayout("Full bleed image with title dark"), slideNumber: 30 };
+    const b: CompilerLayout = { ...testLayout("Full bleed image with title dark (mermaid)"), slideNumber: 30 };
+    await assert.rejects(compileDeck(emptyDoc, [a, b]), (err: Error) => {
+      assert.ok(err.message.includes('"Full bleed image with title dark"'), err.message);
+      assert.ok(err.message.includes('"Full bleed image with title dark (mermaid)"'), err.message);
+      assert.ok(err.message.includes("slideNumber 30"), err.message);
+      return true;
+    });
+  });
+
+  it("does not throw when slideNumbers are unique but a sourceSlide is reused across layouts", async () => {
+    // Both layouts' body slot samples the same specimen (sourceSlide: 1, via
+    // textSlot) even though the layouts themselves sample distinct base slides
+    // (slideNumber 1 and 2) — sourceSlide reuse across layouts is legitimate and
+    // must not be constrained by this check.
+    const a: CompilerLayout = { ...testLayout("A", ["body"]), slideNumber: 1 };
+    const b: CompilerLayout = { ...testLayout("B", ["body"]), slideNumber: 2 };
+    await assert.doesNotReject(compileDeck(emptyDoc, [a, b]));
+  });
+});
+
 // ============================================
 // Integration: compileMarkdownDeck
 // ============================================
 
 describe("compileMarkdownDeck", () => {
-  const closingBase = testLayout("closing", ["headline"]);
+  // Three distinct layouts used together in one deck, so each samples a distinct
+  // base slide (slideNumber 1/2/3) per assertUniqueSlideNumbers.
+  const closingBase = { ...testLayout("closing", ["headline"]), slideNumber: 3 };
   const e2eLayouts: CompilerLayout[] = [
-    testLayout("title", ["headline", "subtitle"]),
+    { ...testLayout("title", ["headline", "subtitle"]), slideNumber: 1 },
     {
       name: "two-column",
-      slideNumber: 1,
+      slideNumber: 2,
       description: "",
       whenToUse: "",
       whenNotToUse: "",
