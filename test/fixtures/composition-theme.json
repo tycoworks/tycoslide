@@ -28,12 +28,12 @@
     },
     {
       "name": "TextOnly",
-      "slideNumber": 1,
+      "slideNumber": 4,
       "parameters": [],
       "slots": [
         {
           "key": "body",
-          "accepts": [{ "type": "text", "sourceSlide": 1, "shapeName": "Text 1" }]
+          "accepts": [{ "type": "text", "sourceSlide": 4, "shapeName": "Text 1" }]
         }
       ]
     }

@@ -99,6 +99,29 @@ function resolveImagePath(rootDir: string, path: string): string {
 }
 
 /**
+ * Assert no two layouts sample the same base slide. In the sampled-composition
+ * model one layout is one sampled base slide's region-arrangement, so a shared
+ * `slideNumber` means the old single-content-type welding leaked through — two
+ * layouts on one physical slide that should be one multi-`accepts` layout.
+ * `sourceSlide` inside a slot's `accepts` block is a distinct concept (a
+ * specimen source for one content type) and is legitimately reused across
+ * layouts, so it is deliberately not checked here.
+ */
+function assertUniqueSlideNumbers(layouts: CompilerLayout[]): void {
+  const layoutNameBySlideNumber = new Map<number, string>();
+  for (const layout of layouts) {
+    const existing = layoutNameBySlideNumber.get(layout.slideNumber);
+    if (existing !== undefined) {
+      throw new Error(
+        `Layouts "${existing}" and "${layout.name}" share slideNumber ${layout.slideNumber}; ` +
+          "each layout must sample a distinct base slide (one layout = one slide, with slots that accept multiple content types).",
+      );
+    }
+    layoutNameBySlideNumber.set(layout.slideNumber, layout.name);
+  }
+}
+
+/**
  * Validate a layout's key spaces once, independent of any slide, so every later
  * frontmatter lookup and content-map write is unambiguous. Two spaces must each
  * be collision-free — otherwise a fill silently clobbers or throws a misleading
@@ -345,8 +368,10 @@ export async function compileDeck(doc: ParsedDocument, config: CompilerConfig): 
     );
   }
 
-  // Validate every layout's key spaces up front (once per layout), so a broken
-  // theme fails fast regardless of which layouts this deck's slides use.
+  // Validate the layout list as a whole (one pass), then each layout's key
+  // spaces up front (once per layout), so a broken theme fails fast regardless
+  // of which layouts this deck's slides use.
+  assertUniqueSlideNumbers(layouts);
   for (const layout of layouts) validateLayout(layout);
 
   // Index each catalog asset's resolved path → its declared type, so an image
