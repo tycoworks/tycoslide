@@ -8,7 +8,7 @@ import {
   buildMermaidRenderConfig,
   injectClassDefs,
   type MermaidVariant,
-} from "../src/markdown/resolvers/mermaidTheme.ts";
+} from "../src/markdown/blocks/mermaidTheme.ts";
 
 // ── validateMermaidDefinition ──
 

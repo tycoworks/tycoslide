@@ -8,8 +8,6 @@ import { FILLERS } from "../dist/engine/fillers/filler.js";
 import { computeGeometry } from "../dist/engine/fillers/image.js";
 import { setRichRuns } from "../dist/engine/dom.js";
 import { assertSlotsWellFormed, fillSlide } from "../dist/engine/generate.js";
-import { parseProseLine } from "../dist/markdown/parsers.js";
-import { isCodeBlock } from "../dist/markdown/resolvers/code.js";
 import type {
   DeckStep,
   ImageFill,
@@ -22,8 +20,6 @@ import type {
   TextFill,
 } from "../dist/engine/types.js";
 import { ImageFit, SlotType } from "../dist/engine/types.js";
-import type { CodeFence } from "../dist/markdown/types.js";
-import { FenceType } from "../dist/markdown/types.js";
 
 // ── Test Helpers ───────────────────────────────────────────────────────────────
 
@@ -92,51 +88,6 @@ function isTableFill(v: unknown): v is TableFill {
   );
 }
 
-// ============================================
-// parseProseLine (lives in markdown/parsers)
-// ============================================
-
-describe("parseProseLine", () => {
-  it("plain text returns non-bullet, level 0", () => {
-    assert.deepEqual(parseProseLine("Hello world"), { text: "Hello world", bullet: false, level: 0 });
-  });
-
-  it("dash bullet returns bullet with level 0", () => {
-    assert.deepEqual(parseProseLine("- First item"), { text: "First item", bullet: true, level: 0 });
-  });
-
-  it("asterisk bullet returns bullet with level 0", () => {
-    assert.deepEqual(parseProseLine("* Star item"), { text: "Star item", bullet: true, level: 0 });
-  });
-
-  it("2-space indent gives level 1", () => {
-    assert.deepEqual(parseProseLine("  - Nested"), { text: "Nested", bullet: true, level: 1 });
-  });
-
-  it("4-space indent gives level 2", () => {
-    assert.deepEqual(parseProseLine("    - Deep nested"), { text: "Deep nested", bullet: true, level: 2 });
-  });
-
-  it("odd indent floors the level", () => {
-    assert.deepEqual(parseProseLine("   - Three spaces"), { text: "Three spaces", bullet: true, level: 1 });
-  });
-
-  it("leading whitespace on non-bullet is stripped", () => {
-    assert.deepEqual(parseProseLine("   Indented text"), { text: "Indented text", bullet: false, level: 0 });
-  });
-
-  it("dash without space is not a bullet", () => {
-    assert.deepEqual(parseProseLine("-NoSpace"), { text: "-NoSpace", bullet: false, level: 0 });
-  });
-
-  it("empty string is plain text", () => {
-    assert.deepEqual(parseProseLine(""), { text: "", bullet: false, level: 0 });
-  });
-
-  it("bullet with extra spaces after marker", () => {
-    assert.deepEqual(parseProseLine("-   Lots of space"), { text: "Lots of space", bullet: true, level: 0 });
-  });
-});
 
 // ============================================
 // setRichRuns (internal helper, still exported for tests)
@@ -1171,35 +1122,6 @@ describe("setRichRuns color", () => {
     assert.equal(rPr.getAttribute("b"), "1");
     assert.equal(rPr.getAttribute("i"), "1");
     assert.equal(rPr.getElementsByTagName("a:srgbClr")[0].getAttribute("val"), "112233");
-  });
-});
-
-// ============================================
-// isCodeBlock (compiler-internal type guard)
-// ============================================
-
-describe("isCodeBlock", () => {
-  it("returns true for CodeFence objects", () => {
-    const cb: CodeFence = { type: FenceType.Code, language: "sql", source: "SELECT 1" };
-    assert.equal(isCodeBlock(cb), true);
-  });
-
-  it("returns false for strings", () => {
-    assert.equal(isCodeBlock("hello"), false);
-  });
-
-  it("returns false for arrays", () => {
-    assert.equal(isCodeBlock(["a", "b"]), false);
-  });
-
-  it("returns false for TableFill", () => {
-    const td: TableFill = { headers: [cell("A")], rows: [[cell("1")]] };
-    assert.equal(isCodeBlock(td), false);
-  });
-
-  it("returns false for StyledParagraph arrays", () => {
-    const lines: StyledParagraph[] = [{ runs: [{ text: "hi" }] }];
-    assert.equal(isCodeBlock(lines), false);
   });
 });
 

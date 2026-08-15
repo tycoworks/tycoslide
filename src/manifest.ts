@@ -83,7 +83,6 @@ function stripParameter(param: CompilerParameter): ManifestParameter[] {
     case ParameterType.Image: {
       const result: ManifestParameter = { key: param.key, type: param.type };
       if (param.required) result.required = true;
-      if (param.limit) result.limit = param.limit;
       return [result];
     }
   }

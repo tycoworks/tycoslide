@@ -2,23 +2,66 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import type { Code } from "mdast";
 import type { ImageFill } from "../../engine/index.js";
 import { ImageFit, SlotType } from "../../engine/index.js";
-import { type CompilerConfig, FenceType, type MermaidFence } from "../types.js";
+import { MdastType } from "../mdast.js";
+import { AcceptType, type BlockHandler, type CompilerConfig } from "../types.js";
 import {
   buildMermaidRenderConfig,
   injectClassDefs,
   type MermaidVariant,
   validateMermaidDefinition,
 } from "./mermaidTheme.js";
-import type { Resolver } from "./resolver.js";
 
-/** Discriminator for MermaidFence values. Doubles as `MermaidResolver.matches`. */
-export function isMermaidBlock(v: unknown): v is MermaidFence {
-  return (
-    typeof v === "object" && v !== null && !Array.isArray(v) && (v as { type?: unknown }).type === FenceType.Mermaid
-  );
-}
+/** The markdown code-fence *language* that selects mermaid rendering. The CODE
+ * handler reuses this to exclude mermaid so the two fence kinds match disjointly
+ * on `lang`. */
+export const MERMAID_LANG = "mermaid";
+
+/**
+ * Recognize a ```mermaid fenced block at a region's top level, folding it to an
+ * Image fill, and compile it by rendering the definition to a PNG (cached under
+ * `<outputDir>/.tycoslide-cache/mermaid/<hash>.png`) and wrapping it as an
+ * ImageFill. Fit is always `contain` — mermaid diagrams are shown in their
+ * entirety. Resolution is strict: the theme MUST carry a `mermaid` block, MUST
+ * declare a `mermaidVariant`, and that variant MUST exist — each missing piece
+ * throws by name.
+ */
+export const MERMAID: BlockHandler = {
+  match: (node) => node.type === MdastType.Code && (node as Code).lang === MERMAID_LANG,
+  acceptType: AcceptType.Image,
+  compile: async (node, ctx): Promise<ImageFill> => {
+    const definition = (node as Code).value;
+    const { config } = ctx;
+    if (!config.mermaid) {
+      throw new Error(
+        'Deck contains mermaid diagrams, but theme has no "mermaid" block. ' +
+          "Add mermaid color configuration to theme.json.",
+      );
+    }
+
+    const variantName = config.mermaidVariant;
+    if (variantName === undefined) {
+      throw new Error(
+        `Layout "${ctx.layoutName}" slot content (from ${ctx.source}): deck contains a mermaid diagram but the theme ` +
+          'declares no "mermaidVariant". Add a theme-level "mermaidVariant" naming a "mermaid" entry to theme.json.',
+      );
+    }
+
+    const variant = config.mermaid[variantName];
+    if (!variant) {
+      throw new Error(
+        `Slide layout "${ctx.layoutName}": mermaid variant "${variantName}" not found in theme. ` +
+          `Available variants: ${Object.keys(config.mermaid).join(", ")}`,
+      );
+    }
+
+    const cacheDir = ensureCacheDir(config);
+    const pngPath = await renderOne(definition, variantName, variant, cacheDir);
+    return { type: SlotType.Image, path: pngPath, fit: ImageFit.Contain };
+  },
+};
 
 function hashKey(definition: string, variantName: string): string {
   return createHash("sha256").update(variantName).update("\n").update(definition).digest("hex").slice(0, 16);
@@ -75,45 +118,3 @@ async function renderOne(
 
   return outputPath;
 }
-
-/**
- * Resolve one MermaidFence into an ImageFill by rendering it to a PNG (cached
- * under `<outputDir>/.tycoslide-cache/mermaid/<hash>.png`). Fit is always `contain` —
- * mermaid diagrams are shown in their entirety.
- *
- * Resolution is strict: the deck's theme MUST carry a `mermaid` block, the
- * fence's slot MUST declare `mermaidVariant`, and that variant MUST exist in
- * the theme — each missing piece throws by name.
- */
-export const MermaidResolver: Resolver<MermaidFence> = {
-  matches: isMermaidBlock,
-  async resolve(fence, ctx): Promise<ImageFill> {
-    const { config } = ctx;
-    if (!config.mermaid) {
-      throw new Error(
-        'Deck contains mermaid diagrams, but theme has no "mermaid" block. ' +
-          "Add mermaid color configuration to theme.json.",
-      );
-    }
-
-    const variantName = config.mermaidVariant;
-    if (variantName === undefined) {
-      throw new Error(
-        `Layout "${ctx.layout.name}" slot "${ctx.key}": deck contains a mermaid diagram but the theme ` +
-          'declares no "mermaidVariant". Add a theme-level "mermaidVariant" naming a "mermaid" entry to theme.json.',
-      );
-    }
-
-    const variant = config.mermaid[variantName];
-    if (!variant) {
-      throw new Error(
-        `Slide layout "${ctx.layout.name}": mermaid variant "${variantName}" not found in theme. ` +
-          `Available variants: ${Object.keys(config.mermaid).join(", ")}`,
-      );
-    }
-
-    const cacheDir = ensureCacheDir(config);
-    const pngPath = await renderOne(fence.definition, variantName, variant, cacheDir);
-    return { type: SlotType.Image, path: pngPath, fit: ImageFit.Contain };
-  },
-};

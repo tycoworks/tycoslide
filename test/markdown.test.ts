@@ -1,21 +1,49 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { parseSlideDocument } from "../dist/markdown/slideParser.js";
-import { compileDeck } from "../dist/markdown/deckCompiler.js";
-import { compileMarkdownDeck } from "../dist/markdown/index.js";
+import { compileDeck as compileDeckRaw } from "../dist/markdown/deckCompiler.js";
+import { compileMarkdownDeck as compileMarkdownDeckRaw } from "../dist/markdown/index.js";
 import { templateKeys, templateToSegments } from "../dist/markdown/textTemplate.js";
 import type { TextFill, ImageFill, StyledParagraph } from "../dist/engine/types.js";
 import { ImageFit, SlotType } from "../dist/engine/types.js";
 import { AssetType } from "../dist/markdown/types.js";
-import type { CompilerLayout, CompilerParameter, CompilerSlot } from "../dist/markdown/types.js";
-import { FenceType, ParameterType } from "../dist/markdown/types.js";
+import type { AssetCatalog, CompilerConfig, CompilerLayout, CompilerParameter, CompilerSlot } from "../dist/markdown/types.js";
+import { ParameterType } from "../dist/markdown/types.js";
+
+// `compileDeck` / `compileMarkdownDeck` now take a single `CompilerConfig` and
+// are async. These positional shims keep the many call sites terse: they build a
+// throwaway config (its `template` is unread by the compile path) from the old
+// (layouts, rootDir, assets) arguments, plus an `extra` slot for theme-level
+// code/mermaid style. Callers `await` the result.
+type CompileExtra = Partial<Pick<CompilerConfig, "codeTheme" | "mermaid" | "mermaidVariant" | "outputDir">>;
+const cfg = (layouts: CompilerLayout[], rootDir = "", assets: AssetCatalog = {}, extra: CompileExtra = {}): CompilerConfig => ({
+  layouts,
+  assets,
+  template: "",
+  rootDir,
+  ...extra,
+});
+const compileDeck = (
+  doc: Parameters<typeof compileDeckRaw>[0],
+  layouts: CompilerLayout[],
+  rootDir = "",
+  assets: AssetCatalog = {},
+  extra: CompileExtra = {},
+) => compileDeckRaw(doc, cfg(layouts, rootDir, assets, extra));
+const compileMarkdownDeck = (
+  source: string,
+  layouts: CompilerLayout[],
+  rootDir = "",
+  assets: AssetCatalog = {},
+  extra: CompileExtra = {},
+) => compileMarkdownDeckRaw(source, cfg(layouts, rootDir, assets, extra));
 
 // ============================================
 // slideParser
 // ============================================
 
 describe("parseSlideDocument", () => {
-  it("single slide with frontmatter after global", () => {
+  it("single slide with frontmatter after global", async () => {
     const doc = parseSlideDocument(`---
 output: deck.pptx
 ---
@@ -34,7 +62,7 @@ Some body text`);
     assert.equal(doc.slides[0].body, "Some body text");
   });
 
-  it("single slide when file starts with slide separator", () => {
+  it("single slide when file starts with slide separator", async () => {
     const doc = parseSlideDocument(`---
 layout: title
 headline: Welcome
@@ -47,7 +75,7 @@ Some body text`);
     assert.equal(doc.slides[0].body, "Some body text");
   });
 
-  it("multiple slides split on ---", () => {
+  it("multiple slides split on ---", async () => {
     const doc = parseSlideDocument(`---
 output: deck.pptx
 ---
@@ -67,7 +95,7 @@ Second slide body`);
     assert.equal(doc.slides[1].body, "Second slide body");
   });
 
-  it("global frontmatter extracted separately from slides", () => {
+  it("global frontmatter extracted separately from slides", async () => {
     const doc = parseSlideDocument(`---
 output: quarterly-review.pptx
 ---
@@ -83,7 +111,7 @@ Hello`);
     assert.equal(doc.slides[0].frontmatter["output"], undefined);
   });
 
-  it("::name:: slot markers split body into named slots", () => {
+  it("::name:: slot markers split body into named slots", async () => {
     const doc = parseSlideDocument(`---
 output: deck.pptx
 ---
@@ -102,7 +130,7 @@ Right column content`);
     assert.equal(doc.slides[0].slots["right"], "Right column content");
   });
 
-  it("--- inside code fences is NOT a slide separator", () => {
+  it("--- inside code fences is NOT a slide separator", async () => {
     const doc = parseSlideDocument(`---
 output: deck.pptx
 ---
@@ -124,7 +152,7 @@ After the fence`);
     assert.ok(doc.slides[0].body.includes("After the fence"));
   });
 
-  it("::name:: inside code fences is NOT a slot marker", () => {
+  it("::name:: inside code fences is NOT a slot marker", async () => {
     const doc = parseSlideDocument(`---
 output: deck.pptx
 ---
@@ -144,7 +172,7 @@ After code`);
     assert.ok(doc.slides[0].body.includes("After code"));
   });
 
-  it("empty body with frontmatter only", () => {
+  it("empty body with frontmatter only", async () => {
     const doc = parseSlideDocument(`---
 output: deck.pptx
 ---
@@ -159,7 +187,7 @@ headline: Section Break
     assert.equal(doc.slides[0].body, "");
   });
 
-  it("body-only slide without frontmatter", () => {
+  it("body-only slide without frontmatter", async () => {
     const doc = parseSlideDocument(`Just some body text without any frontmatter`);
 
     assert.equal(doc.slides.length, 1);
@@ -167,7 +195,7 @@ headline: Section Break
     assert.equal(doc.slides[0].body, "Just some body text without any frontmatter");
   });
 
-  it("slide indices are sequential", () => {
+  it("slide indices are sequential", async () => {
     const doc = parseSlideDocument(`---
 output: deck.pptx
 ---
@@ -187,7 +215,7 @@ layout: c
     assert.equal(doc.slides[2].index, 2);
   });
 
-  it("tilde code fences are also protected", () => {
+  it("tilde code fences are also protected", async () => {
     const doc = parseSlideDocument(`---
 output: deck.pptx
 ---
@@ -204,13 +232,13 @@ After fence`);
     assert.ok(doc.slides[0].body.includes("After fence"));
   });
 
-  it("empty global frontmatter produces empty object", () => {
+  it("empty global frontmatter produces empty object", async () => {
     const doc = parseSlideDocument(`No frontmatter here at all`);
 
     assert.deepEqual(doc.global, {});
   });
 
-  it("multiple slots without default body", () => {
+  it("multiple slots without default body", async () => {
     const doc = parseSlideDocument(`---
 output: deck.pptx
 ---
@@ -290,8 +318,8 @@ const cellPara = line;
 const paras = (...ps: StyledParagraph[]): TextFill => ({ paragraphs: ps });
 
 describe("compileDeck", () => {
-  it("minimal deck with single slide", () => {
-    const deck = compileDeck({
+  it("minimal deck with single slide", async () => {
+    const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
         { index: 0, frontmatter: { layout: "title" }, body: "", slots: {} },
@@ -302,8 +330,8 @@ describe("compileDeck", () => {
     assert.equal(deck.steps[0].layout, "title");
   });
 
-  it("global output maps to Deck.output", () => {
-    const deck = compileDeck({
+  it("global output maps to Deck.output", async () => {
+    const deck = await compileDeck({
       global: { theme: "./theme.json", output: "my-deck.pptx" },
       slides: [
         { index: 0, frontmatter: { layout: "title" }, body: "", slots: {} },
@@ -313,8 +341,8 @@ describe("compileDeck", () => {
     assert.equal(deck.output, "my-deck.pptx");
   });
 
-  it("non-layout frontmatter keys become content entries", () => {
-    const deck = compileDeck({
+  it("non-layout frontmatter keys become content entries", async () => {
+    const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
         {
@@ -331,8 +359,8 @@ describe("compileDeck", () => {
     assert.equal(deck.steps[0].content!["layout"], undefined);
   });
 
-  it("body text becomes content.body as a TextFill", () => {
-    const deck = compileDeck({
+  it("body text becomes content.body as a TextFill", async () => {
+    const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
         {
@@ -347,8 +375,8 @@ describe("compileDeck", () => {
     assert.deepEqual(deck.steps[0].content!["body"], paras(line("Line one"), line("Line two"), line("Line three")));
   });
 
-  it("named slots become content entries as TextFills", () => {
-    const deck = compileDeck({
+  it("named slots become content entries as TextFills", async () => {
+    const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
         {
@@ -364,7 +392,7 @@ describe("compileDeck", () => {
     assert.deepEqual(deck.steps[0].content!["right"], paras(line("Right content")));
   });
 
-  it("frontmatter keys matching image parameters become ImageFills in content", () => {
+  it("frontmatter keys matching image parameters become ImageFills in content", async () => {
     const layouts: CompilerLayout[] = [
       {
         name: "hero",
@@ -379,7 +407,7 @@ describe("compileDeck", () => {
         slots: [],
       },
     ];
-    const deck = compileDeck(
+    const deck = await compileDeck(
       {
         global: { theme: "./theme.json" },
         slides: [
@@ -419,7 +447,7 @@ describe("compileDeck", () => {
     assert.deepEqual(deck.steps[0].content!["logo"], logoBlock);
   });
 
-  it("image with no catalog entry (so no type) throws fail-fast", () => {
+  it("image with no catalog entry (so no type) throws fail-fast", async () => {
     const layouts: CompilerLayout[] = [
       {
         name: "hero",
@@ -431,8 +459,7 @@ describe("compileDeck", () => {
         slots: [],
       },
     ];
-    assert.throws(
-      () =>
+    await assert.rejects(
         compileDeck(
           {
             global: { theme: "./theme.json" },
@@ -453,8 +480,8 @@ describe("compileDeck", () => {
     );
   });
 
-  it("global theme maps to Deck.theme", () => {
-    const deck = compileDeck({
+  it("global theme maps to Deck.theme", async () => {
+    const deck = await compileDeck({
       global: { theme: "./custom/theme.json" },
       slides: [
         { index: 0, frontmatter: { layout: "title" }, body: "", slots: {} },
@@ -464,9 +491,8 @@ describe("compileDeck", () => {
     assert.equal(deck.theme, "./custom/theme.json");
   });
 
-  it("missing theme throws", () => {
-    assert.throws(
-      () =>
+  it("missing theme throws", async () => {
+    await assert.rejects(
         compileDeck({
           global: {},
           slides: [
@@ -480,9 +506,8 @@ describe("compileDeck", () => {
     );
   });
 
-  it("missing layout throws", () => {
-    assert.throws(
-      () =>
+  it("missing layout throws", async () => {
+    await assert.rejects(
         compileDeck({
           global: { theme: "./theme.json" },
           slides: [
@@ -496,9 +521,8 @@ describe("compileDeck", () => {
     );
   });
 
-  it("unknown layout throws", () => {
-    assert.throws(
-      () =>
+  it("unknown layout throws", async () => {
+    await assert.rejects(
         compileDeck({
           global: { theme: "./theme.json" },
           slides: [
@@ -513,9 +537,8 @@ describe("compileDeck", () => {
     );
   });
 
-  it("unknown frontmatter key throws", () => {
-    assert.throws(
-      () =>
+  it("unknown frontmatter key throws", async () => {
+    await assert.rejects(
         compileDeck({
           global: { theme: "./theme.json" },
           slides: [
@@ -535,9 +558,8 @@ describe("compileDeck", () => {
     );
   });
 
-  it("unknown named slot throws", () => {
-    assert.throws(
-      () =>
+  it("unknown named slot throws", async () => {
+    await assert.rejects(
         compileDeck({
           global: { theme: "./theme.json" },
           slides: [
@@ -557,14 +579,13 @@ describe("compileDeck", () => {
     );
   });
 
-  it("missing required image parameter throws", () => {
+  it("missing required image parameter throws", async () => {
     const base = testLayout("hero", ["title"]);
     const layouts: CompilerLayout[] = [{
       ...base,
       parameters: [...base.parameters, imageParam("bg", { required: true })],
     }];
-    assert.throws(
-      () =>
+    await assert.rejects(
         compileDeck({
           global: { theme: "./theme.json" },
           slides: [
@@ -579,9 +600,8 @@ describe("compileDeck", () => {
     );
   });
 
-  it("body content on layout without body slot throws", () => {
-    assert.throws(
-      () =>
+  it("body content on layout without body slot throws", async () => {
+    await assert.rejects(
         compileDeck({
           global: { theme: "./theme.json" },
           slides: [
@@ -600,12 +620,11 @@ describe("compileDeck", () => {
     );
   });
 
-  it("body written as a frontmatter key throws (body is a slot, not a parameter)", () => {
+  it("body written as a frontmatter key throws (body is a slot, not a parameter)", async () => {
     // Wrong-channel: `body` is a slot (a body region), never a frontmatter
     // parameter. The frontmatter loop validates against parameters only, so a
     // `body:` line is an unknown parameter — no dual-definition guard needed.
-    assert.throws(
-      () =>
+    await assert.rejects(
         compileDeck({
           global: { theme: "./theme.json" },
           slides: [
@@ -625,9 +644,8 @@ describe("compileDeck", () => {
     );
   });
 
-  it("unknown global frontmatter key throws", () => {
-    assert.throws(
-      () =>
+  it("unknown global frontmatter key throws", async () => {
+    await assert.rejects(
         compileDeck({
           global: { theme: "./theme.json", bogus: "value" },
           slides: [
@@ -642,8 +660,8 @@ describe("compileDeck", () => {
     );
   });
 
-  it("empty body produces no body key in content", () => {
-    const deck = compileDeck({
+  it("empty body produces no body key in content", async () => {
+    const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
         {
@@ -659,8 +677,8 @@ describe("compileDeck", () => {
     assert.deepEqual(deck.steps[0].content!["headline"], tvar("headline", "Break"));
   });
 
-  it("whitespace-only body produces no body key", () => {
-    const deck = compileDeck({
+  it("whitespace-only body produces no body key", async () => {
+    const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
         {
@@ -675,8 +693,8 @@ describe("compileDeck", () => {
     assert.equal(deck.steps[0].content!["body"], undefined);
   });
 
-  it("steps with no supplied content produce an empty content object", () => {
-    const deck = compileDeck({
+  it("steps with no supplied content produce an empty content object", async () => {
+    const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
         { index: 0, frontmatter: { layout: "title" }, body: "", slots: {} },
@@ -710,15 +728,15 @@ function compileOne(layout: CompilerLayout, frontmatter: Record<string, unknown>
 }
 
 describe("templateKeys", () => {
-  it("collects keys in first-seen order, de-duped", () => {
+  it("collects keys in first-seen order, de-duped", async () => {
     assert.deepEqual(templateKeys("{a} {b}{a}{c}"), ["a", "b", "c"]);
   });
 
-  it("ignores escaped braces", () => {
+  it("ignores escaped braces", async () => {
     assert.deepEqual(templateKeys("{{a}} {b}"), ["b"]);
   });
 
-  it("empty for a literal-only template", () => {
+  it("empty for a literal-only template", async () => {
     assert.deepEqual(templateKeys(" - "), []);
   });
 });
@@ -729,102 +747,102 @@ const V = (key: string, value: string) => ({ kind: "variable", key, value });
 const tvar = (key: string, value: string) => ({ lines: [[V(key, value)]] });
 
 describe("templateToSegments", () => {
-  it("parses a line into ordered literal/variable segments", () => {
+  it("parses a line into ordered literal/variable segments", async () => {
     assert.deepEqual(templateToSegments("{a}-{b}", new Map([["a", "1"], ["b", "2"]]), "s"), [
       [V("a", "1"), L("-"), V("b", "2")],
     ]);
   });
 
-  it("splits newlines into separate lines", () => {
+  it("splits newlines into separate lines", async () => {
     assert.deepEqual(templateToSegments("{name}\n{jobTitle}", new Map([["name", "Maya"], ["jobTitle", "Founder"]]), "s"), [
       [V("name", "Maya")],
       [V("jobTitle", "Founder")],
     ]);
   });
 
-  it("collapses {{ and }} escapes into a literal", () => {
+  it("collapses {{ and }} escapes into a literal", async () => {
     assert.deepEqual(templateToSegments("{{ and }}", new Map(), "s"), [[L("{ and }")]]);
   });
 
-  it("a literal-only line is one literal segment", () => {
+  it("a literal-only line is one literal segment", async () => {
     assert.deepEqual(templateToSegments(" - ", new Map(), "s"), [[L(" - ")]]);
   });
 
-  it("throws naming the shape and key on a missing value", () => {
+  it("throws naming the shape and key on a missing value", async () => {
     assert.throws(() => templateToSegments("{a}", new Map(), "welcomeBar"), /welcomeBar.*"a"/);
   });
 });
 
 describe("compileDeck text templating", () => {
-  it("compiles a line into a TemplateFill of segments keyed by shapeName", () => {
+  it("compiles a line into a TemplateFill of segments keyed by shapeName", async () => {
     const layout = templateLayout("welcome", [templateParam("welcomeBar", "{lastname}, {firstname} - {company}")]);
-    const deck = compileOne(layout, { lastname: "Chen", firstname: "Maya", company: "Acme" });
+    const deck = await compileOne(layout, { lastname: "Chen", firstname: "Maya", company: "Acme" });
     assert.deepEqual(deck.steps[0].content!["welcomeBar"], {
       lines: [[V("lastname", "Chen"), L(", "), V("firstname", "Maya"), L(" - "), V("company", "Acme")]],
     });
   });
 
-  it("splits a newline template into one segment line per paragraph", () => {
+  it("splits a newline template into one segment line per paragraph", async () => {
     const layout = templateLayout("nc", [templateParam("bar", "{name}\n - \n{company}")]);
-    const deck = compileOne(layout, { name: "Maya", company: "Acme" });
+    const deck = await compileOne(layout, { name: "Maya", company: "Acme" });
     assert.deepEqual(deck.steps[0].content!["bar"], {
       lines: [[V("name", "Maya")], [L(" - ")], [V("company", "Acme")]],
     });
   });
 
-  it("emits one segment line per template line (multi-line credits)", () => {
+  it("emits one segment line per template line (multi-line credits)", async () => {
     const layout = templateLayout("credits", [templateParam("card", "{name}\n{jobTitle}")]);
-    const deck = compileOne(layout, { name: "Maya", jobTitle: "Founder" });
+    const deck = await compileOne(layout, { name: "Maya", jobTitle: "Founder" });
     assert.deepEqual(deck.steps[0].content!["card"], { lines: [[V("name", "Maya")], [V("jobTitle", "Founder")]] });
   });
 
-  it("unescapes {{ }} into surrounding literal segments", () => {
+  it("unescapes {{ }} into surrounding literal segments", async () => {
     const layout = templateLayout("esc", [templateParam("bar", "{{{name}}}")]);
-    const deck = compileOne(layout, { name: "Maya" });
+    const deck = await compileOne(layout, { name: "Maya" });
     assert.deepEqual(deck.steps[0].content!["bar"], { lines: [[L("{"), V("name", "Maya"), L("}")]] });
   });
 
-  it("leaves a parameter unfilled when none of its keys are supplied", () => {
+  it("leaves a parameter unfilled when none of its keys are supplied", async () => {
     const layout = templateLayout("welcome", [templateParam("welcomeBar", "{lastname}, {firstname}")]);
-    const deck = compileOne(layout, {});
+    const deck = await compileOne(layout, {});
     assert.equal(deck.steps[0].content!["welcomeBar"], undefined);
   });
 
-  it("throws when a parameter is partially filled (a key has no value)", () => {
+  it("throws when a parameter is partially filled (a key has no value)", async () => {
     const layout = templateLayout("welcome", [templateParam("welcomeBar", "{lastname}, {firstname} - {company}")]);
-    assert.throws(() => compileOne(layout, { lastname: "Chen", firstname: "Maya" }), /welcomeBar.*"company"/);
+    await assert.rejects(compileOne(layout, { lastname: "Chen", firstname: "Maya" }), /welcomeBar.*"company"/);
   });
 
-  it("throws on a frontmatter key matching no template key or image parameter", () => {
+  it("throws on a frontmatter key matching no template key or image parameter", async () => {
     const layout = templateLayout("welcome", [templateParam("welcomeBar", "{lastname}")]);
-    assert.throws(() => compileOne(layout, { lastname: "Chen", nope: "x" }), /unknown key "nope".*lastname/);
+    await assert.rejects(compileOne(layout, { lastname: "Chen", nope: "x" }), /unknown key "nope".*lastname/);
   });
 
-  it("throws when a required parameter is not filled", () => {
+  it("throws when a required parameter is not filled", async () => {
     const layout = templateLayout("welcome", [templateParam("welcomeBar", "{title}", true)]);
-    assert.throws(() => compileOne(layout, {}), /requires template parameter "welcomeBar"/);
+    await assert.rejects(compileOne(layout, {}), /requires template parameter "welcomeBar"/);
   });
 });
 
 describe("validateLayout (key-space collisions)", () => {
-  it("throws when one key is declared by two template parameters", () => {
+  it("throws when one key is declared by two template parameters", async () => {
     const layout = templateLayout("dup", [templateParam("a", "{name}"), templateParam("b", "{name}")]);
-    assert.throws(() => compileOne(layout, {}), /key "name".*declared twice/);
+    await assert.rejects(compileOne(layout, {}), /key "name".*declared twice/);
   });
 
-  it("throws when a template key collides with an image parameter key", () => {
+  it("throws when a template key collides with an image parameter key", async () => {
     const layout = templateLayout("clash", [templateParam("bar", "{logo}"), imageParam("logo")]);
-    assert.throws(() => compileOne(layout, {}), /key "logo".*declared twice/);
+    await assert.rejects(compileOne(layout, {}), /key "logo".*declared twice/);
   });
 
-  it("throws when a template parameter's shapeName collides with a slot key", () => {
+  it("throws when a template parameter's shapeName collides with a slot key", async () => {
     const layout = templateLayout("clash", [templateParam("body", "{title}")], [textSlot("body")]);
-    assert.throws(() => compileOne(layout, {}), /name "body".*collides/);
+    await assert.rejects(compileOne(layout, {}), /name "body".*collides/);
   });
 
-  it("throws when a required template parameter has no keys to fill", () => {
+  it("throws when a required template parameter has no keys to fill", async () => {
     const layout = templateLayout("lit", [templateParam("bar", "static text", true)]);
-    assert.throws(() => compileOne(layout, {}), /required but its template has no keys/);
+    await assert.rejects(compileOne(layout, {}), /required but its template has no keys/);
   });
 });
 
@@ -851,7 +869,7 @@ describe("compileMarkdownDeck", () => {
     },
   ];
 
-  it("full example end-to-end", () => {
+  it("full example end-to-end", async () => {
     const source = `---
 theme: ./theme.json
 output: quarterly-review.pptx
@@ -878,7 +896,7 @@ headline: Questions?
 bg: images/closing-bg.png
 ---`;
 
-    const deck = compileMarkdownDeck(source, e2eLayouts, "", {
+    const deck = await compileMarkdownDeck(source, e2eLayouts, "", {
       imgs: { closingBg: { path: "images/closing-bg.png", type: AssetType.Image, description: "" } },
     });
 
@@ -907,7 +925,7 @@ bg: images/closing-bg.png
     assert.equal(deck.steps[2].content!["body"], undefined);
   });
 
-  it("single slide with global frontmatter", () => {
+  it("single slide with global frontmatter", async () => {
     const source = `---
 theme: ./theme.json
 output: my-deck.pptx
@@ -918,7 +936,7 @@ headline: Just One Slide
 ---
 Single slide content`;
 
-    const deck = compileMarkdownDeck(source, [testLayout("standalone", ["headline", "body"])]);
+    const deck = await compileMarkdownDeck(source, [testLayout("standalone", ["headline", "body"])]);
 
     assert.equal(deck.output, "my-deck.pptx");
     assert.equal(deck.steps.length, 1);
@@ -927,7 +945,7 @@ Single slide content`;
     assert.deepEqual(deck.steps[0].content!["body"], paras(line("Single slide content")));
   });
 
-  it("deck without output in global frontmatter", () => {
+  it("deck without output in global frontmatter", async () => {
     const source = `---
 theme: corporate
 ---
@@ -936,7 +954,7 @@ layout: title
 headline: No output key
 ---`;
 
-    const deck = compileMarkdownDeck(source, [testLayout("title", ["headline"])]);
+    const deck = await compileMarkdownDeck(source, [testLayout("title", ["headline"])]);
 
     assert.equal(deck.output, undefined);
     assert.equal(deck.steps.length, 1);
@@ -950,8 +968,8 @@ headline: No output key
 // ============================================
 
 describe("compileDeck GFM table support", () => {
-  it("body containing a GFM table is parsed as TableFill", () => {
-    const deck = compileDeck({
+  it("body containing a GFM table is parsed as TableFill", async () => {
+    const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
         {
@@ -972,8 +990,8 @@ describe("compileDeck GFM table support", () => {
     });
   });
 
-  it("named slot containing a GFM table is parsed as TableFill", () => {
-    const deck = compileDeck({
+  it("named slot containing a GFM table is parsed as TableFill", async () => {
+    const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
         {
@@ -999,8 +1017,8 @@ describe("compileDeck GFM table support", () => {
     });
   });
 
-  it("non-table body is still parsed as a TextFill", () => {
-    const deck = compileDeck({
+  it("non-table body is still parsed as a TextFill", async () => {
+    const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
         {
@@ -1023,48 +1041,43 @@ describe("compileDeck GFM table support", () => {
 // ============================================
 
 describe("compileDeck code fence support", () => {
-  it("body containing a code fence is parsed as CodeFence", () => {
-    const deck = compileDeck({
+  // A code fence now compiles straight to a highlighted TextFill (no intermediate
+  // fence). `asSource` reassembles the highlighted paragraphs back to source text
+  // — one line per StyledParagraph, runs joined in order — proving the fence was
+  // Shiki-tokenized into runs. Every code test supplies a theme-level codeTheme.
+  const asSource = (fill: any): string =>
+    fill.paragraphs.map((p: any) => p.runs.map((r: any) => r.text).join("")).join("\n");
+  const DARK = { codeTheme: "github-dark" };
+
+  it("body code fence is highlighted into a TextFill", async () => {
+    const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
-        {
-          index: 0,
-          frontmatter: { layout: "code-dark" },
-          body: "```sql\nSELECT * FROM users;\n```",
-          slots: {},
-        },
+        { index: 0, frontmatter: { layout: "code-dark" }, body: "```sql\nSELECT * FROM users;\n```", slots: {} },
       ],
-    }, [makeLayout("code-dark", [codeSlot("body")])]);
+    }, [makeLayout("code-dark", [codeSlot("body")])], "", {}, DARK);
 
     const body = deck.steps[0].content!["body"] as any;
-    assert.equal(body.type, FenceType.Code);
-    assert.equal(body.language, "sql");
-    assert.equal(body.source, "SELECT * FROM users;");
+    assert.ok(Array.isArray(body.paragraphs), "highlighted to a TextFill");
+    assert.equal(asSource(body), "SELECT * FROM users;");
+    assert.ok(body.paragraphs.some((p: any) => p.runs.some((r: any) => r.color)), "carries per-token colors");
   });
 
-  it("named slot containing a code fence is parsed as CodeFence", () => {
-    const deck = compileDeck({
+  it("named-slot code fence is highlighted into a TextFill", async () => {
+    const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
-        {
-          index: 0,
-          frontmatter: { layout: "code-dark" },
-          body: "",
-          slots: {
-            code: "```python\nprint('hello')\n```",
-          },
-        },
+        { index: 0, frontmatter: { layout: "code-dark" }, body: "", slots: { code: "```python\nprint('hello')\n```" } },
       ],
-    }, [makeLayout("code-dark", [codeSlot("code")])]);
+    }, [makeLayout("code-dark", [codeSlot("code")])], "", {}, DARK);
 
     const code = deck.steps[0].content!["code"] as any;
-    assert.equal(code.type, FenceType.Code);
-    assert.equal(code.language, "python");
-    assert.equal(code.source, "print('hello')");
+    assert.ok(Array.isArray(code.paragraphs));
+    assert.equal(asSource(code), "print('hello')");
   });
 
-  it("multi-line code fence preserves all lines", () => {
-    const deck = compileDeck({
+  it("multi-line code fence highlights all lines", async () => {
+    const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
         {
@@ -1074,24 +1087,30 @@ describe("compileDeck code fence support", () => {
           slots: {},
         },
       ],
-    }, [makeLayout("code-dark", [codeSlot("body")])]);
+    }, [makeLayout("code-dark", [codeSlot("body")])], "", {}, DARK);
 
     const body = deck.steps[0].content!["body"] as any;
-    assert.equal(body.type, FenceType.Code);
-    assert.equal(body.language, "typescript");
-    assert.equal(body.source, "const x = 1;\nconst y = 2;\nreturn x + y;");
+    assert.ok(Array.isArray(body.paragraphs));
+    assert.equal(asSource(body), "const x = 1;\nconst y = 2;\nreturn x + y;");
   });
 
-  it("non-fence body is still parsed as a TextFill", () => {
-    const deck = compileDeck({
+  it("a code fence with no theme-level codeTheme throws", async () => {
+    await assert.rejects(
+      compileDeck({
+        global: { theme: "./theme.json" },
+        slides: [
+          { index: 0, frontmatter: { layout: "code-dark" }, body: "```sql\nSELECT 1\n```", slots: {} },
+        ],
+      }, [makeLayout("code-dark", [codeSlot("body")])]),
+      /declares no "codeTheme"/,
+    );
+  });
+
+  it("non-fence body is still parsed as a TextFill", async () => {
+    const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
-        {
-          index: 0,
-          frontmatter: { layout: "body" },
-          body: "Just some prose",
-          slots: {},
-        },
+        { index: 0, frontmatter: { layout: "body" }, body: "Just some prose", slots: {} },
       ],
     }, [testLayout("body", ["body"])]);
 
@@ -1118,38 +1137,37 @@ describe("compileDeck mermaid support", () => {
     return layout;
   }
 
-  it("mermaid fence in named slot targeting mermaid slot", () => {
-    const deck = compileDeck({
-      global: { theme: "./theme.json" },
-      slides: [
-        {
-          index: 0,
-          frontmatter: { layout: "arch" },
-          body: "",
-          slots: {
-            diagram: "```mermaid\nflowchart LR\n  A --> B\n```",
+  it("a mermaid fence routes to the image slot, then fails fast without a mermaid config (no render)", async () => {
+    // The fence folds to `image` (accepted by the mermaid slot), so it reaches
+    // the mermaid compile — which, absent a theme-level "mermaid" block, throws
+    // before any render (no puppeteer). Proves routing without spinning up a
+    // renderer in a unit test.
+    await assert.rejects(
+      compileDeck({
+        global: { theme: "./theme.json" },
+        slides: [
+          {
+            index: 0,
+            frontmatter: { layout: "arch" },
+            body: "",
+            slots: { diagram: "```mermaid\nflowchart LR\n  A --> B\n```" },
           },
-        },
-      ],
-    }, [mermaidLayout("arch", [], "diagram")]);
-
-    const diagram = deck.steps[0].content!["diagram"] as any;
-    assert.equal(diagram.type, FenceType.Mermaid);
-    assert.equal(diagram.definition, "flowchart LR\n  A --> B");
+        ],
+      }, [mermaidLayout("arch", [], "diagram")]),
+      /theme has no "mermaid" block/,
+    );
   });
 
-  it("mermaid fence in a non-mermaid slot throws", () => {
-    assert.throws(
-      () => compileDeck({
+  it("mermaid fence in a non-mermaid slot throws", async () => {
+    await assert.rejects(
+      compileDeck({
         global: { theme: "./theme.json" },
         slides: [
           {
             index: 0,
             frontmatter: { layout: "body" },
             body: "",
-            slots: {
-              body: "```mermaid\nflowchart LR\n  A --> B\n```",
-            },
+            slots: { body: "```mermaid\nflowchart LR\n  A --> B\n```" },
           },
         ],
       }, [testLayout("body", ["body"])]),
@@ -1157,18 +1175,16 @@ describe("compileDeck mermaid support", () => {
     );
   });
 
-  it("non-mermaid content in mermaid slot throws", () => {
-    assert.throws(
-      () => compileDeck({
+  it("non-mermaid content in mermaid slot throws", async () => {
+    await assert.rejects(
+      compileDeck({
         global: { theme: "./theme.json" },
         slides: [
           {
             index: 0,
             frontmatter: { layout: "arch" },
             body: "",
-            slots: {
-              diagram: "Just some text",
-            },
+            slots: { diagram: "Just some text" },
           },
         ],
       }, [mermaidLayout("arch", [], "diagram")]),
@@ -1176,9 +1192,9 @@ describe("compileDeck mermaid support", () => {
     );
   });
 
-  it("mermaid fence in body throws", () => {
-    assert.throws(
-      () => compileDeck({
+  it("mermaid fence in body throws", async () => {
+    await assert.rejects(
+      compileDeck({
         global: { theme: "./theme.json" },
         slides: [
           {
@@ -1193,23 +1209,17 @@ describe("compileDeck mermaid support", () => {
     );
   });
 
-  it("layout with both content slots and mermaid asset slot", () => {
-    const deck = compileDeck({
+  it("layout with a content slot beside a mermaid asset slot (no diagram supplied)", async () => {
+    // Exercises a layout that pairs a filled content slot with an (optional)
+    // mermaid asset slot; with no diagram supplied nothing renders.
+    const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
-        {
-          index: 0,
-          frontmatter: { layout: "arch", title: "System" },
-          body: "",
-          slots: {
-            diagram: "```mermaid\nflowchart LR\n  A --> B\n```",
-          },
-        },
+        { index: 0, frontmatter: { layout: "arch", title: "System" }, body: "", slots: {} },
       ],
     }, [mermaidLayout("arch", ["title"], "diagram")]);
 
     assert.deepEqual(deck.steps[0].content!["title"], tvar("title", "System"));
-    const diagram = deck.steps[0].content!["diagram"] as any;
-    assert.equal(diagram.type, FenceType.Mermaid);
+    assert.equal(deck.steps[0].content!["diagram"], undefined);
   });
 });

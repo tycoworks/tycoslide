@@ -64,7 +64,7 @@ program
       throw new Error(`${basename(deckPath)}: missing required "${RESERVED_KEY.THEME}" in global frontmatter`);
     }
     const config = loadConfig(absConfigPath);
-    const deck = compileDeck(doc, config.layouts, config.rootDir, config.assets);
+    const deck = await compileDeck(doc, config);
     if (!deck.output) deck.output = basename(deckPath).replace(/\.md$/, ".pptx");
     await buildDeck(deck, config, { excludeNotes: !opts.notes });
   });

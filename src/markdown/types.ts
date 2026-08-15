@@ -1,3 +1,4 @@
+import type { RootContent } from "mdast";
 import {
   type Frame,
   type ImageFill,
@@ -6,7 +7,7 @@ import {
   type TemplateFill,
   type TextFill,
 } from "../engine/index.js";
-import type { MermaidConfig } from "./resolvers/mermaidTheme.js";
+import type { MermaidConfig } from "./blocks/mermaidTheme.js";
 
 // ── Asset catalog (compiler / theme-metadata only) ───────────────────────────
 
@@ -38,21 +39,6 @@ export type AssetEntry = {
 
 /** Two-level catalog: `{ category: { name: AssetEntry } }`. */
 export type AssetCatalog = Record<string, Record<string, AssetEntry>>;
-
-// ── FenceType discriminator ───────────────────────────────────────────────────
-
-/**
- * Discriminator strings for the compiler-internal fence shapes produced by
- * deckCompiler.ts. `Code` and `Mermaid` are resolved away entirely (syntax
- * highlighting → TextFill, PNG rendering → ImageFill), so neither reaches the
- * engine. Prose has no FenceType: it becomes a `TextFill` (`{ paragraphs }`),
- * one of the engine's own fill shapes.
- */
-export const FenceType = {
-  Code: "code",
-  Mermaid: "mermaid",
-} as const;
-export type FenceType = (typeof FenceType)[keyof typeof FenceType];
 
 // ── ParameterType discriminator (frontmatter, one value) ──────────────────────
 
@@ -87,54 +73,79 @@ export const AcceptType = {
 } as const;
 export type AcceptType = (typeof AcceptType)[keyof typeof AcceptType];
 
-// ── Compiler-internal block shapes ────────────────────────────────────────────
+// ── Engine fill union + block-handler strategy ────────────────────────────────
 
 /**
- * A fenced code block awaiting syntax highlighting. Produced by deckCompiler,
- * consumed by CodeResolver. Never crosses the engine boundary.
+ * The four engine content shapes a slot's compiled content can be — the value
+ * `compile` produces and the engine fills. ImageFill carries a `.type`
+ * discriminator; the other three — TextFill, TableFill, TemplateFill — are
+ * identified structurally by their signature field.
  */
-export type CodeFence = {
-  type: typeof FenceType.Code;
-  language: string;
+export type EngineFill = TextFill | TableFill | ImageFill | TemplateFill;
+
+/**
+ * The three engine content shapes a block handler can produce. A subset of
+ * `EngineFill` — `TemplateFill` is parameter-only (`AcceptType` excludes
+ * `Template`), so no block handler ever compiles one.
+ */
+export type BlockFill = TextFill | TableFill | ImageFill;
+
+/**
+ * Everything a block handler needs to compile a node into its engine fill: the
+ * asset resolver, the diagnostic context to name the offending layout/slide/slot
+ * when a region's markdown shape is illegal (a stray standalone block mixed into
+ * prose), and the theme-level `config` — from which code/mermaid compile read
+ * their one-per-theme style (`codeTheme`, `mermaid`, `mermaidVariant`,
+ * `outputDir`), not the slot.
+ *
+ * Lives in types.ts (not in `blocks/registry.ts`, which re-exports it) so a
+ * per-kind block file can import it without importing the registry — the registry
+ * imports the per-kind handlers, so the reverse would cycle.
+ */
+export type BlockContext = {
+  resolveAssetRef: (ref: string) => ImageFill;
+  layoutName: string;
+  slideIdx: number;
   source: string;
+  config: CompilerConfig;
 };
 
 /**
- * A mermaid code fence awaiting rendering. Produced by deckCompiler, consumed
- * by MermaidResolver — the resulting PNG is wrapped as an ImageFill in
- * step.content, so the engine never learns mermaid exists.
+ * A block handler recognizes one content kind at the region's top level, folds
+ * it to the engine `AcceptType` it fills, and compiles the node straight into the
+ * matching engine fill — highlighting a code fence to a TextFill, rendering a
+ * mermaid fence to an ImageFill. Recognition (`match`), type (`acceptType`), and
+ * build (`compile`) live together — a new content kind is one file, one registry
+ * row. Non-generic like the engine's `Filler`: the array can't correlate a
+ * per-element type guard with `compile`'s param, so each handler narrows the node
+ * internally with a single-hop cast. Mirrors the old sdk's `SyntaxHandler`.
  */
-export type MermaidFence = {
-  type: typeof FenceType.Mermaid;
-  definition: string;
+export type BlockHandler = {
+  match(node: RootContent): boolean;
+  acceptType: AcceptType;
+  compile(node: RootContent, ctx: BlockContext): Promise<BlockFill>;
 };
-
-/**
- * The full set of value shapes a slot may hold during compilation, before code
- * fences are highlighted (→ TextFill) and mermaid fences are rendered
- * (→ ImageFill). CodeFence, MermaidFence, and ImageFill carry a `.type`
- * discriminator; the three engine fills without one — TextFill, TableFill,
- * TemplateFill — are identified structurally by their signature field.
- */
-export type MarkdownBlock = TextFill | TableFill | CodeFence | MermaidFence | ImageFill | TemplateFill;
 
 // ── Compiler-facing deck shape ───────────────────────────────────────────────
 
 /**
- * A DeckStep as compileDeck produces it — content values may still be
- * unresolved (CodeFence, MermaidFence) at this point. `resolveFences` narrows
- * these into StyledParagraph[] / ImageFill before the engine sees the deck.
+ * A DeckStep as the compiler produces it. Content is already engine-shaped —
+ * code fences highlighted to TextFill and mermaid fences rendered to ImageFill
+ * during `compile` — so this is structurally equivalent to the engine's DeckStep
+ * and needs no further resolution.
  */
 export type CompilerDeckStep = {
   layout: string;
-  content?: Record<string, MarkdownBlock>;
+  content?: Record<string, EngineFill>;
   /** Slide-level speaker notes, stripped from frontmatter. Plain text. */
   notes?: string;
 };
 
 /**
- * The intermediate deck shape produced by compileDeck. buildDeck runs the
- * resolvers and hands the resulting engine-shaped Deck to generate().
+ * The deck shape the compiler produces. `output` may be unset until a caller
+ * (the CLI, or a programmatic caller) assigns one; `buildDeck` fails fast if it
+ * is still missing. Once `output` is present this is structurally equivalent to
+ * the engine's Deck, so `generate` consumes it without any cast.
  */
 export type CompilerDeck = {
   theme: string;
@@ -142,55 +153,15 @@ export type CompilerDeck = {
   steps: CompilerDeckStep[];
 };
 
-/**
- * A DeckStep whose content values have been narrowed post-resolution — no
- * CodeFence or MermaidFence remains, only shapes the engine understands.
- * Structurally equivalent to the engine's DeckStep.
- */
-export type ResolvedCompilerDeckStep = {
-  layout: string;
-  content?: Record<string, TextFill | TableFill | ImageFill | TemplateFill>;
-  /** Slide-level speaker notes, threaded through to the engine. Plain text. */
-  notes?: string;
-};
-
-/**
- * A CompilerDeck whose steps have been passed through the resolvers via
- * `resolveFences`. Structurally equivalent to the engine's Deck — deck
- * resolution returns this shape so `generate` can consume it without any cast.
- */
-export type ResolvedCompilerDeck = {
-  theme: string;
-  output: string;
-  steps: ResolvedCompilerDeckStep[];
-};
-
 // ── Compiler-facing slot / layout extensions ─────────────────────────────────
 
 /**
- * Fields common to every text shape, image parameter, and slot. A text shape is
- * addressed by `shapeName` and owns a `template` (its placeholders are the
- * fillable keys); image parameters and slots additionally carry a single `key`.
+ * Markdown-flavored measurement hints on a slot or template parameter: caps on
+ * expanded run text, line count, or list items. All optional — a missing cap is
+ * "no limit." Advisory metadata surfaced in the manifest; the fill never enforces
+ * it.
  */
-type CompilerShapeBase = {
-  shapeName: string;
-  limit?: { maxChars?: number; maxLines?: number; maxItems?: number };
-  /**
-   * Whether the parameter/slot may be omitted from a slide. Optional (defaults
-   * to false): a required one with no value causes the compiler to throw with
-   * layout + key names.
-   */
-  required?: boolean;
-};
-
-/**
- * Shape base plus a single `key` — the addressing model for image parameters
- * and every slot. Template parameters do NOT extend this: their fillable keys are
- * the placeholders in their `template`, not a single top-level key.
- */
-type CompilerSlotBase = CompilerShapeBase & {
-  key: string;
-};
+export type Limit = { maxChars?: number; maxLines?: number; maxItems?: number };
 
 // ── Parameters (frontmatter, one value) ───────────────────────────────────────
 
@@ -202,15 +173,32 @@ type CompilerSlotBase = CompilerShapeBase & {
  * placeholders in its template. The shape carries no top-level `key`; its
  * placeholders are the keys the author fills in frontmatter.
  */
-export type CompilerTemplateParameter = CompilerShapeBase & {
+export type CompilerTemplateParameter = {
+  shapeName: string;
+  limit?: Limit;
+  /**
+   * Whether the parameter may be omitted from a slide. Optional (defaults to
+   * false): a required one with no value causes the compiler to throw with
+   * layout + key names.
+   */
+  required?: boolean;
   type: typeof ParameterType.Template;
   /** The shape's text as one template with `{key}` placeholders; newlines are line breaks. */
   template: string;
 };
 
 /** Image parameter: one frontmatter path filled by fillImage. Sizing/crop
- * behaviour comes from the resolved asset's `type`, not the slot. */
-export type CompilerImageParameter = CompilerSlotBase & {
+ * behaviour comes from the resolved asset's `type`, not the slot. Carries no
+ * `limit` — measuring an image path against char/line caps is meaningless. */
+export type CompilerImageParameter = {
+  shapeName: string;
+  /**
+   * Whether the parameter may be omitted from a slide. Optional (defaults to
+   * false): a required one with no value causes the compiler to throw with
+   * layout + key names.
+   */
+  required?: boolean;
+  key: string;
   type: typeof ParameterType.Image;
 };
 
@@ -231,7 +219,7 @@ export type CompilerParameter = CompilerTemplateParameter | CompilerImageParamet
  * place); otherwise it is transplanted into the slot's `frame`. `startAt` is a
  * text-specimen concern (leave the first N specimen paragraphs untouched), only
  * meaningful on a text block. Named `CompilerBlock` to stay distinct from the
- * engine's `Block` and the compiler's `MarkdownBlock`.
+ * engine's `Block` and the compiler's `BlockHandler`.
  */
 export type CompilerBlock = {
   type: AcceptType;
@@ -255,7 +243,7 @@ export type CompilerSlot = {
   key: string;
   accepts: CompilerBlock[];
   frame?: Frame;
-  limit?: { maxChars?: number; maxLines?: number; maxItems?: number };
+  limit?: Limit;
   /**
    * Whether the slot may be omitted from a slide. Optional (defaults to false):
    * a required slot with no content throws with layout + key names.
