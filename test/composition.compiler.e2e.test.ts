@@ -1,0 +1,143 @@
+import assert from "node:assert/strict";
+import { mkdtempSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { describe, it } from "node:test";
+import JSZip from "jszip";
+import { buildDeck, compileMarkdownDeck, toEngineThemeConfig } from "../dist/index.js";
+import type { CompilerConfig, CompilerThemeConfig } from "../dist/markdown/types.js";
+
+// End-to-end coverage of the COMPILER path exposing sampled-composition: a real
+// theme.json FILE + a markdown deck routes a GFM table into a slot whose base
+// shows text, transplanting the table specimen and removing the base text —
+// exercised through the public compiler (compileMarkdownDeck + buildDeck), NOT a
+// hand-built engine Config. Fixture: test/fixtures/template/composition.pptx
+// (slide 1 base has "Text 0"/"Text 1"; slide 2 has "Table 0").
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const FIXTURES = resolve(HERE, "fixtures");
+const THEME_PATH = join(FIXTURES, "composition-theme.json");
+
+const BODY_FRAME = { x: 457200, y: 1371600, cx: 8229600, cy: 2743200 };
+
+// Mirror cli.ts loadConfig: parse theme.json + attach rootDir. Then point the
+// output at a fresh temp dir so tests never collide.
+function loadThemeConfig(): CompilerConfig {
+  const raw = JSON.parse(readFileSync(THEME_PATH, "utf-8")) as CompilerThemeConfig;
+  return { ...raw, rootDir: FIXTURES, outputDir: mkdtempSync(join(tmpdir(), "tycoslide-compiler-e2e-")) };
+}
+
+async function outputZip(cfg: CompilerConfig, output: string): Promise<JSZip> {
+  const buf = readFileSync(join(cfg.outputDir as string, output));
+  return JSZip.loadAsync(buf);
+}
+
+async function concatMatching(zip: JSZip, re: RegExp): Promise<string> {
+  const parts = await Promise.all(
+    Object.keys(zip.files)
+      .filter((f) => re.test(f))
+      .map((f) => zip.file(f)?.async("string") ?? Promise.resolve("")),
+  );
+  return parts.join("\n");
+}
+const slideXml = (zip: JSZip) => concatMatching(zip, /ppt\/slides\/slide\d+\.xml$/);
+
+describe("compiler end-to-end: theme.json file + markdown deck → transplant", () => {
+  it("routes a GFM table into a text-base slot, transplants it, and removes the base text", async () => {
+    const config = loadThemeConfig();
+    const source = `---
+theme: ./composition-theme.json
+output: compiled.pptx
+---
+---
+layout: Composed
+---
+| Plan | Price |
+|------|-------|
+| Pro  | $9    |`;
+
+    const deck = compileMarkdownDeck(source, config.layouts, config.rootDir, config.assets);
+    deck.output = "compiled.pptx";
+    await buildDeck(deck, config);
+
+    const zip = await outputZip(config, "compiled.pptx");
+    const slide = await slideXml(zip);
+
+    assert.ok(slide.includes("<a:tbl"), "transplanted table should be present");
+    assert.ok(slide.includes("Pro") && slide.includes("$9"), "table refilled with deck data");
+    assert.ok(
+      !slide.includes("superseded on transplant"),
+      "base body text shape (Text 1) removed on transplant",
+    );
+    assert.ok(
+      slide.includes(`<a:off x="${BODY_FRAME.x}" y="${BODY_FRAME.y}"/>`),
+      "table positioned to the theme's slot frame (a:off)",
+    );
+    assert.ok(
+      slide.includes(`<a:ext cx="${BODY_FRAME.cx}" cy="${BODY_FRAME.cy}"/>`),
+      "table sized to the theme's slot frame (a:ext)",
+    );
+  });
+
+  it("fails fast when the deck routes a content type the slot does not accept", async () => {
+    // "TextOnly" accepts only text; a GFM table folds to `table` → rejected at
+    // compile time, through the public compiler path.
+    const config = loadThemeConfig();
+    const source = `---
+theme: ./composition-theme.json
+output: bad.pptx
+---
+---
+layout: TextOnly
+---
+| Plan | Price |
+|------|-------|
+| Pro  | $9    |`;
+
+    assert.throws(
+      () => compileMarkdownDeck(source, config.layouts, config.rootDir, config.assets),
+      (err: Error) => {
+        assert.ok(/does not accept table content/.test(err.message), err.message);
+        assert.ok(err.message.includes("TextOnly"), "names the layout");
+        assert.ok(err.message.includes("body"), "names the slot");
+        return true;
+      },
+    );
+  });
+
+  it("fails fast when a slot has a transplant block but no frame", () => {
+    // A table block on sourceSlide 2 transplants (≠ slideNumber 1), so a `frame`
+    // is mandatory. Missing → throw at the compiler→engine boundary.
+    const bad: CompilerThemeConfig = {
+      template: "template/composition.pptx",
+      assets: {},
+      layouts: [
+        {
+          name: "NoFrame",
+          slideNumber: 1,
+          parameters: [],
+          slots: [
+            {
+              key: "body",
+              accepts: [
+                { type: "text", sourceSlide: 1, shapeName: "Text 1" },
+                { type: "table", sourceSlide: 2, shapeName: "Table 0" },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    assert.throws(
+      () => toEngineThemeConfig(bad),
+      (err: Error) => {
+        assert.ok(/requires a "frame"/.test(err.message), err.message);
+        assert.ok(err.message.includes("NoFrame"), "names the layout");
+        assert.ok(err.message.includes("body"), "names the slot");
+        return true;
+      },
+    );
+  });
+});

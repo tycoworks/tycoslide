@@ -4,7 +4,6 @@ import {
   type CompilerConfig,
   type CompilerDeck,
   type CompilerLayout,
-  type CompilerSlot,
   FenceType,
   type MarkdownBlock,
   type MermaidFence,
@@ -14,13 +13,13 @@ import { MermaidResolver } from "./mermaid.js";
 
 /**
  * Everything a resolver needs to turn one fence into a fill: the step's layout
- * (its name feeds diagnostics), the slot the fence fills (carries the per-slot
- * config a resolver reads — `codeTheme` / `mermaidVariant`), the slot key (error
- * messages), and the theme-level config (mermaid variants, output dir).
+ * and slot key (both feed diagnostics), and the theme-level config — which now
+ * carries the code/mermaid style defaults (`codeTheme`, `mermaidVariant`,
+ * `mermaid` variants, output dir). The style is one-per-theme, so a resolver
+ * reads it from `config`, not from the slot.
  */
 export type ResolveContext = {
   layout: CompilerLayout;
-  slot: CompilerSlot;
   key: string;
   config: CompilerConfig;
 };
@@ -60,19 +59,12 @@ function layoutByName(config: CompilerConfig, name: string): CompilerLayout {
   return layout;
 }
 
-/** Find a slot by key within a layout; throws if absent (a fence always has one). */
-function slotByKey(layout: CompilerLayout, key: string): CompilerSlot {
-  const slot = layout.slots.find((s) => s.key === key);
-  if (!slot) throw new Error(`resolveFences: layout "${layout.name}" has no slot "${key}".`);
-  return slot;
-}
-
 /**
  * The single walk that replaces the two bespoke fence walkers. For each step,
  * resolve every fence in `step.content` in place: dispatch on the fence's `type`
- * to its resolver, hand it the fence plus its slot config, and swap the resolved
- * fill back into `step.content[key]`. Traversal lives here; each resolver owns
- * only its transform.
+ * to its resolver, hand it the fence plus the theme-level config, and swap the
+ * resolved fill back into `step.content[key]`. Traversal lives here; each
+ * resolver owns only its transform.
  */
 export async function resolveFences(deck: CompilerDeck, config: CompilerConfig): Promise<void> {
   for (const step of deck.steps) {
@@ -81,8 +73,7 @@ export async function resolveFences(deck: CompilerDeck, config: CompilerConfig):
     for (const [key, value] of Object.entries(step.content)) {
       if (!isFence(value)) continue;
       const resolver = RESOLVERS[value.type];
-      const slot = slotByKey(layout, key);
-      step.content[key] = await resolver.resolve(value, { layout, slot, key, config });
+      step.content[key] = await resolver.resolve(value, { layout, key, config });
     }
   }
 }

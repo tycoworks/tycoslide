@@ -20,7 +20,6 @@ import {
   type CompilerLayout,
   type CompilerParameter,
   type CompilerSlot,
-  CompilerSlotType,
   type CompilerThemeConfig,
   type MarkdownBlock,
   ParameterType,
@@ -79,57 +78,69 @@ export async function resolveDeck(deck: CompilerDeck, config: CompilerConfig): P
 }
 
 /**
- * Project a CompilerParameter or CompilerSlot down to the engine's flat Slot.
- * Parameters (Template, Image) map straight to their engine equivalent; compiler-
- * only slot types (Code, Mermaid) map to Text / Image since their resolved
- * StyledParagraph[] / ImageFill content is filled by the corresponding engine
- * primitive once the compiler is done.
- *
- * Every compiler slot is authored against one physical shape on the layout's own
- * slide, so it projects to an engine `Slot` accepting a single base `Block`
- * (`sourceSlide === baseSlide`). Multi-block slots (transplants) come from
- * hand-authored / sampled themes, not the markdown compiler.
+ * A frontmatter parameter always fills one physical shape on the layout's own
+ * slide, so it projects to a single base `Block` (`sourceSlide === baseSlide`)
+ * and never transplants — its `frame` is never read. `NO_FRAME` is that unread
+ * placeholder; only body slots with a transplant block carry a real frame.
  */
-// Compiler-projected slots are always a single base block (`sourceSlide ===
-// baseSlide`), so they never transplant and their `frame` is never read. The
-// markdown theme.json carries no geometry; real frames only matter for the
-// sampled / hand-authored multi-block themes that drive transplants.
 const NO_FRAME: Frame = { x: 0, y: 0, cx: 0, cy: 0 };
 
-function toEngineSlot(slot: CompilerParameter | CompilerSlot, baseSlide: number): Slot {
-  const block = (type: SlotType): Block => ({ type, sourceSlide: baseSlide, shapeName: slot.shapeName });
-  switch (slot.type) {
+function paramToEngineSlot(param: CompilerParameter, baseSlide: number): Slot {
+  const block = (type: SlotType): Block => ({ type, sourceSlide: baseSlide, shapeName: param.shapeName });
+  switch (param.type) {
     case ParameterType.Template:
       // A text shape carries no top-level key — its template placeholders are the keys. The
       // compiler emits its expanded content under shapeName, so the engine slot
       // is keyed by shapeName too.
-      return { key: slot.shapeName, frame: NO_FRAME, accepts: [block(SlotType.Template)] };
+      return { key: param.shapeName, frame: NO_FRAME, accepts: [block(SlotType.Template)] };
     case ParameterType.Image:
-      return { key: slot.key, frame: NO_FRAME, accepts: [block(SlotType.Image)] };
-    case CompilerSlotType.Text: {
-      const textBlock = block(SlotType.Text);
-      if (slot.startAt !== undefined) textBlock.startAt = slot.startAt;
-      return { key: slot.key, frame: NO_FRAME, accepts: [textBlock] };
+      return { key: param.key, frame: NO_FRAME, accepts: [block(SlotType.Image)] };
+  }
+}
+
+/**
+ * Project a body slot's real `accepts` to engine `Block[]` and pass its `frame`
+ * through. The compiler `accepts` already carry engine content types
+ * (text/table/image) — code folded to text and mermaid to image at authoring —
+ * so projection is 1:1. A slot with no declared `frame` (a base-only slot that
+ * never transplants) gets `NO_FRAME`, which the engine never reads.
+ */
+function slotToEngineSlot(slot: CompilerSlot): Slot {
+  const accepts: Block[] = slot.accepts.map((b) => {
+    const eb: Block = { type: b.type, sourceSlide: b.sourceSlide, shapeName: b.shapeName };
+    if (b.startAt !== undefined) eb.startAt = b.startAt;
+    return eb;
+  });
+  return { key: slot.key, frame: slot.frame ?? NO_FRAME, accepts };
+}
+
+/**
+ * Compiler→engine boundary check: a slot with a transplant block (any block
+ * whose `sourceSlide` differs from the layout's base slide) must declare a
+ * `frame` — the real region the transplant is positioned into. A base-only slot
+ * (all blocks in place) needs none. Missing → fail fast, naming layout + slot.
+ * (The engine's `assertSlotsWellFormed` separately rejects duplicate accept
+ * types.)
+ */
+function assertSlotFrames(layout: CompilerLayout): void {
+  for (const slot of layout.slots) {
+    const transplants = slot.accepts.some((b) => b.sourceSlide !== layout.slideNumber);
+    if (transplants && slot.frame === undefined) {
+      throw new Error(
+        `Layout "${layout.name}" slot "${slot.key}": a transplant block (sourceSlide ≠ ${layout.slideNumber}) ` +
+          'requires a "frame" (the region to position it into), but none is declared.',
+      );
     }
-    case CompilerSlotType.Table:
-      return { key: slot.key, frame: NO_FRAME, accepts: [block(SlotType.Table)] };
-    case CompilerSlotType.Code:
-      // Highlighter resolves the code fence into StyledParagraph[]; engine
-      // fills it via fillText.
-      return { key: slot.key, frame: NO_FRAME, accepts: [block(SlotType.Text)] };
-    case CompilerSlotType.Mermaid:
-      // Mermaid renderer produces a PNG (ImageFill); engine fills it via
-      // fillImage. The fit lives on the ImageFill, not the engine Slot.
-      return { key: slot.key, frame: NO_FRAME, accepts: [block(SlotType.Image)] };
   }
 }
 
 function toEngineLayout(layout: CompilerLayout): Layout {
+  assertSlotFrames(layout);
   const base = layout.slideNumber;
   return {
     name: layout.name,
     baseSlide: base,
-    slots: [...layout.parameters.map((p) => toEngineSlot(p, base)), ...layout.slots.map((s) => toEngineSlot(s, base))],
+    slots: [...layout.parameters.map((p) => paramToEngineSlot(p, base)), ...layout.slots.map(slotToEngineSlot)],
   };
 }
 
@@ -204,6 +215,7 @@ export type {
   AssetCatalog,
   AssetEntry,
   CodeFence,
+  CompilerBlock,
   CompilerConfig,
   CompilerDeck,
   CompilerDeckStep,
@@ -219,4 +231,4 @@ export type {
   RawSlide,
 } from "./markdown/index.js";
 // Markdown / Compiler
-export { CompilerSlotType, compileMarkdownDeck, FenceType, ParameterType, resolveFences } from "./markdown/index.js";
+export { AcceptType, compileMarkdownDeck, FenceType, ParameterType, resolveFences } from "./markdown/index.js";

@@ -8,7 +8,7 @@ import type { TextFill, ImageFill, StyledParagraph } from "../dist/engine/types.
 import { ImageFit, SlotType } from "../dist/engine/types.js";
 import { AssetType } from "../dist/markdown/types.js";
 import type { CompilerLayout, CompilerParameter, CompilerSlot } from "../dist/markdown/types.js";
-import { CompilerSlotType, FenceType, ParameterType } from "../dist/markdown/types.js";
+import { FenceType, ParameterType } from "../dist/markdown/types.js";
 
 // ============================================
 // slideParser
@@ -248,20 +248,23 @@ function imageParam(key: string, extras: Partial<CompilerParameter> = {}): Compi
   };
 }
 
+// Every slot is a single base block on slide 1 (sourceSlide === slideNumber), so
+// nothing transplants and no `frame` is needed. A code slot accepts `text` (code
+// folds to text); a mermaid slot accepts `image` (mermaid folds to image).
 function textSlot(key: string): CompilerSlot {
-  return { key, shapeName: `s_${key}`, type: CompilerSlotType.Text };
+  return { key, accepts: [{ type: SlotType.Text, sourceSlide: 1, shapeName: `s_${key}` }] };
 }
 
 function tableSlot(key: string): CompilerSlot {
-  return { key, shapeName: `s_${key}`, type: CompilerSlotType.Table };
+  return { key, accepts: [{ type: SlotType.Table, sourceSlide: 1, shapeName: `s_${key}` }] };
 }
 
 function codeSlot(key: string): CompilerSlot {
-  return { key, shapeName: `s_${key}`, type: CompilerSlotType.Code };
+  return { key, accepts: [{ type: SlotType.Text, sourceSlide: 1, shapeName: `s_${key}` }] };
 }
 
 function makeLayout(name: string, slots: CompilerSlot[]): CompilerLayout {
-  return { name, slideNumber: 1, description: "", whenToUse: "", whenNotToUse: "", parameters: [], slots };
+  return { name, slideNumber: 1, parameters: [], slots };
 }
 
 /**
@@ -1106,14 +1109,10 @@ describe("compileDeck mermaid support", () => {
   function mermaidLayout(name: string, contentKeys: string[] = [], mermaidKey?: string): CompilerLayout {
     const layout = testLayout(name, contentKeys);
     if (mermaidKey) {
+      // A mermaid slot accepts `image` — the fence folds to an ImageFill.
       layout.slots = [
         ...layout.slots,
-        {
-          key: mermaidKey,
-          shapeName: `s_${mermaidKey}`,
-          type: CompilerSlotType.Mermaid,
-          mermaidVariant: "dark",
-        },
+        { key: mermaidKey, accepts: [{ type: SlotType.Image, sourceSlide: 1, shapeName: `s_${mermaidKey}` }] },
       ];
     }
     return layout;
@@ -1154,7 +1153,7 @@ describe("compileDeck mermaid support", () => {
           },
         ],
       }, [testLayout("body", ["body"])]),
-      /slot "body" \(type "text"\) got wrong content shape from ::body::/,
+      /slot "body" does not accept image content \(from ::body::\); it accepts: text/,
     );
   });
 
@@ -1173,7 +1172,7 @@ describe("compileDeck mermaid support", () => {
           },
         ],
       }, [mermaidLayout("arch", [], "diagram")]),
-      /slot "diagram" \(type "mermaid"\) got wrong content shape from ::diagram::/,
+      /slot "diagram" does not accept text content \(from ::diagram::\); it accepts: image/,
     );
   });
 
@@ -1190,7 +1189,7 @@ describe("compileDeck mermaid support", () => {
           },
         ],
       }, [testLayout("body", ["body"])]),
-      /slot "body" \(type "text"\) got wrong content shape from body content/,
+      /slot "body" does not accept image content \(from body content\); it accepts: text/,
     );
   });
 
