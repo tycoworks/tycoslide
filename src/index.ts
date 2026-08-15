@@ -1,19 +1,15 @@
 import {
   type Block,
   type Config,
+  type Deck,
   type Frame,
   type GenerateOptions,
   generate,
-  type ImageFill,
   type Layout,
   type Slot,
   SlotType,
-  type TableFill,
-  type TemplateFill,
-  type TextFill,
   type ThemeConfig,
 } from "./engine/index.js";
-import { isFence, resolveFences } from "./markdown/resolvers/resolver.js";
 import {
   type CompilerConfig,
   type CompilerDeck,
@@ -21,61 +17,8 @@ import {
   type CompilerParameter,
   type CompilerSlot,
   type CompilerThemeConfig,
-  type MarkdownBlock,
   ParameterType,
-  type ResolvedCompilerDeck,
 } from "./markdown/types.js";
-
-type ResolvedContent = Record<string, TextFill | TableFill | ImageFill | TemplateFill>;
-
-/**
- * Narrow a resolved content map to the engine-shaped value union. Runs after
- * `resolveFences`, so no CodeFence or MermaidFence should remain — a leftover is
- * a resolver bug and throws. Every surviving value is already an engine fill
- * (TextFill / TableFill / ImageFill / TemplateFill), so no unwrapping is needed.
- */
-function narrowContent(content: Record<string, MarkdownBlock>): ResolvedContent {
-  const out: ResolvedContent = {};
-  for (const [key, value] of Object.entries(content)) {
-    if (isFence(value)) {
-      throw new Error(
-        `resolveDeck: slot "${key}" still holds an unresolved ${value.type} block ` +
-          "after resolvers ran. This is a resolver bug.",
-      );
-    }
-    out[key] = value;
-  }
-  return out;
-}
-
-/**
- * Run every compiler-owned resolver over `deck` (highlight code fences,
- * render mermaid PNGs) and return a `ResolvedCompilerDeck` whose content
- * values are narrowed to the engine's `TextFill | TableFill | ImageFill |
- * TemplateFill` union. Structurally equivalent to the engine's `Deck` — a
- * caller passes the returned value straight to `generate()` with no cast.
- *
- * Fails fast if `deck.output` is missing: downstream `generate()` requires it,
- * and the CLI populates it before calling `buildDeck`; a programmatic caller
- * that forgot to set it hits the error here instead of a confusing engine-side
- * failure.
- */
-export async function resolveDeck(deck: CompilerDeck, config: CompilerConfig): Promise<ResolvedCompilerDeck> {
-  await resolveFences(deck, config);
-  if (deck.output === undefined) {
-    throw new Error('resolveDeck: deck.output is not set. Set it (e.g. "deck.pptx") before calling buildDeck.');
-  }
-  return {
-    theme: deck.theme,
-    output: deck.output,
-    steps: deck.steps.map((step) => {
-      const resolvedStep: ResolvedCompilerDeck["steps"][number] = { layout: step.layout };
-      if (step.content) resolvedStep.content = narrowContent(step.content);
-      if (step.notes !== undefined) resolvedStep.notes = step.notes;
-      return resolvedStep;
-    }),
-  };
-}
 
 /**
  * A frontmatter parameter always fills one physical shape on the layout's own
@@ -173,11 +116,15 @@ export function toEngineConfig(config: CompilerConfig): Config {
 }
 
 /**
- * End-to-end build: run compiler-owned resolvers (syntax highlighting, mermaid
- * PNG rendering) over the deck via `resolveDeck`, which returns a narrowed
- * `ResolvedCompilerDeck` — structurally equivalent to the engine's `Deck` —
- * then hand it to the engine's primitives-only `generate()`. No cast required:
- * the narrowing happens at the type level via `resolveDeck`.
+ * End-to-end build: `compileDeck` already produced engine-shaped content (code
+ * highlighted, mermaid rendered), so `buildDeck` only asserts an `output` is set
+ * and hands the deck to the engine's primitives-only `generate()`. The deck is
+ * structurally equivalent to the engine's `Deck` once `output` is present, so no
+ * cast is required.
+ *
+ * Fails fast if `deck.output` is missing: `generate()` requires it, and the CLI
+ * populates it before calling `buildDeck`; a programmatic caller that forgot to
+ * set it hits this error instead of a confusing engine-side failure.
  *
  * Mermaid PNGs are cached under `<outputDir>/.tycoslide-cache/mermaid/` so no
  * post-write cleanup is needed.
@@ -187,8 +134,11 @@ export async function buildDeck(
   config: CompilerConfig,
   options: GenerateOptions = {},
 ): Promise<void> {
-  const resolved = await resolveDeck(deck, config);
-  await generate(resolved, toEngineConfig(config), options);
+  if (deck.output === undefined) {
+    throw new Error('buildDeck: deck.output is not set. Set it (e.g. "deck.pptx") before calling buildDeck.');
+  }
+  const engineDeck: Deck = { theme: deck.theme, output: deck.output, steps: deck.steps };
+  await generate(engineDeck, toEngineConfig(config), options);
 }
 
 export type {
@@ -214,7 +164,6 @@ export { generateManifest } from "./manifest.js";
 export type {
   AssetCatalog,
   AssetEntry,
-  CodeFence,
   CompilerBlock,
   CompilerConfig,
   CompilerDeck,
@@ -223,12 +172,12 @@ export type {
   CompilerParameter,
   CompilerSlot,
   CompilerThemeConfig,
-  MarkdownBlock,
+  EngineFill,
+  Limit,
   MermaidConfig,
-  MermaidFence,
   MermaidVariant,
   ParsedDocument,
   RawSlide,
 } from "./markdown/index.js";
 // Markdown / Compiler
-export { AcceptType, compileMarkdownDeck, FenceType, ParameterType, resolveFences } from "./markdown/index.js";
+export { AcceptType, compileMarkdownDeck, ParameterType } from "./markdown/index.js";

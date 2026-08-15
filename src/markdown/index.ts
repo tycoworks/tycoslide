@@ -1,30 +1,23 @@
 import { compileDeck } from "./deckCompiler.js";
 import { parseSlideDocument } from "./slideParser.js";
-import type { AssetCatalog, CompilerDeck, CompilerLayout } from "./types.js";
+import type { CompilerConfig, CompilerDeck } from "./types.js";
 
-export function compileMarkdownDeck(
-  source: string,
-  layouts: CompilerLayout[],
-  rootDir = "",
-  assets: AssetCatalog = {},
-): CompilerDeck {
+export function compileMarkdownDeck(source: string, config: CompilerConfig): Promise<CompilerDeck> {
   const doc = parseSlideDocument(source);
-  return compileDeck(doc, layouts, rootDir, assets);
+  return compileDeck(doc, config);
 }
 
+export { highlightCode } from "./blocks/code.js";
+export type { MermaidConfig, MermaidVariant } from "./blocks/mermaidTheme.js";
+export { type BlockContext, type BlockHandler, parseSlotContent } from "./blocks/registry.js";
 export { compileDeck, RESERVED_KEY } from "./deckCompiler.js";
-export { parseGfmTable, parseInlineRuns, parseProseLine, parseStyledParagraph } from "./parsers.js";
-export { CodeResolver, highlightCode, isCodeBlock } from "./resolvers/code.js";
-export { isMermaidBlock, MermaidResolver } from "./resolvers/mermaid.js";
-export type { MermaidConfig, MermaidVariant } from "./resolvers/mermaidTheme.js";
-export type { ResolveContext, Resolver } from "./resolvers/resolver.js";
-export { isFence, RESOLVERS, resolveFences } from "./resolvers/resolver.js";
+export { parseInlineRuns } from "./inline.js";
+export { parseRegion } from "./mdast.js";
 export type { ParsedDocument, RawSlide } from "./slideParser.js";
 export { parseSlideDocument } from "./slideParser.js";
 export type {
   AssetCatalog,
   AssetEntry,
-  CodeFence,
   CompilerBlock,
   CompilerConfig,
   CompilerDeck,
@@ -35,9 +28,7 @@ export type {
   CompilerSlot,
   CompilerTemplateParameter,
   CompilerThemeConfig,
-  MarkdownBlock,
-  MermaidFence,
-  ResolvedCompilerDeck,
-  ResolvedCompilerDeckStep,
+  EngineFill,
+  Limit,
 } from "./types.js";
-export { AcceptType, AssetType, FenceType, ParameterType } from "./types.js";
+export { AcceptType, AssetType, ParameterType } from "./types.js";

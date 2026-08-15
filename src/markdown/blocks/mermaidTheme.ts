@@ -2,7 +2,7 @@
  * Mermaid theme types and definition-processing utilities.
  *
  * Owner of MermaidVariant / MermaidConfig — these types are compiler-facing
- * (the engine has no idea mermaid exists). `resolvers/mermaid.ts` consumes
+ * (the engine has no idea mermaid exists). `blocks/mermaid.ts` consumes
  * them to build --configFile input for `mmdc`.
  */
 

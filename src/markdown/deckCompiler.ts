@@ -1,14 +1,12 @@
 import { resolve } from "node:path";
-import { FILLERS, type ImageFill, ImageFit, SlotType, type TextFill } from "../engine/index.js";
-import { parseGfmTable, parseStyledParagraph } from "./parsers.js";
-import { RESOLVERS } from "./resolvers/resolver.js";
+import { type ImageFill, ImageFit, SlotType } from "../engine/index.js";
+import { parseSlotContent } from "./blocks/registry.js";
 import type { ParsedDocument, RawSlide } from "./slideParser.js";
 import { templateKeys, templateToSegments } from "./textTemplate.js";
 import {
-  AcceptType,
-  type AssetCatalog,
+  type AcceptType,
   AssetType,
-  type CodeFence,
+  type CompilerConfig,
   type CompilerDeck,
   type CompilerDeckStep,
   type CompilerImageParameter,
@@ -16,17 +14,10 @@ import {
   type CompilerParameter,
   type CompilerSlot,
   type CompilerTemplateParameter,
-  FenceType,
-  type MarkdownBlock,
-  type MermaidFence,
+  type EngineFill,
   ParameterType,
 } from "./types.js";
 
-/**
- * Wrap an absolute image path as an ImageFill, expanding the resolved asset
- * `type` into the engine's scaling constraints. Callers resolve the path (see
- * `resolveImagePath`) and the type (from the catalog) first.
- */
 /** Map each semantic asset type to the engine's object-fit directive. */
 const FIT_FOR: Record<AssetType, ImageFit> = {
   [AssetType.Icon]: ImageFit.ScaleDown,
@@ -34,6 +25,11 @@ const FIT_FOR: Record<AssetType, ImageFit> = {
   [AssetType.Background]: ImageFit.Cover,
 };
 
+/**
+ * Wrap an absolute image path as an ImageFill, expanding the resolved asset
+ * `type` into the engine's scaling constraints. Callers resolve the path (see
+ * `resolveImagePath`) and the type (from the catalog) first.
+ */
 export function toImageFill(path: string, type: AssetType): ImageFill {
   return { type: SlotType.Image, path, fit: FIT_FOR[type] };
 }
@@ -51,61 +47,29 @@ export const RESERVED_KEY = {
   NOTES: "notes",
 } as const;
 
-const CODE_FENCE_RE = /^```(\w+)\n([\s\S]*?)```\s*$/;
+const KNOWN_GLOBAL_KEYS: Set<string> = new Set([RESERVED_KEY.THEME, RESERVED_KEY.OUTPUT]);
 
-function toTextFill(text: string): TextFill {
-  const paragraphs = text
-    .split(/\r?\n/)
-    .filter((line) => line.trim() !== "")
-    .map(parseStyledParagraph);
-  return { paragraphs };
-}
+// Anchored whole-field reference: the entire value is `$category.name` or it is
+// not a reference at all. Anchored ⇒ no escaping concerns.
+const ASSET_REF_RE = /^\$([a-zA-Z]\w*)\.([a-zA-Z]\w*)$/;
 
-function parseSlotContent(text: string): MarkdownBlock {
-  const fence = CODE_FENCE_RE.exec(text.trim());
-  if (fence) {
-    if (fence[1] === FenceType.Mermaid) {
-      const block: MermaidFence = { type: FenceType.Mermaid, definition: fence[2].replace(/\n$/, "") };
-      return block;
-    }
-    const block: CodeFence = { type: FenceType.Code, language: fence[1], source: fence[2].replace(/\n$/, "") };
-    return block;
-  }
-  const table = parseGfmTable(text);
-  if (table) return table;
-  return toTextFill(text);
-}
+/** Resolve a `$category.name` catalog reference to an ImageFill. */
+type ResolveAssetRef = (ref: string) => ImageFill;
 
 /**
- * Fold a parsed region block down to the single engine content type it fills.
- * A code fence highlights into text; a mermaid fence renders into an image; a
- * GFM table is a table; everything else (prose) is text. Composed from the
- * compiler's `RESOLVERS` (code, mermaid) and the engine's `FILLERS` (table) so
- * the classification tracks whatever those registries say a block looks like.
- */
-function acceptTypeOf(block: MarkdownBlock): AcceptType {
-  if (RESOLVERS[FenceType.Code].matches(block)) return AcceptType.Text;
-  if (RESOLVERS[FenceType.Mermaid].matches(block)) return AcceptType.Image;
-  if (FILLERS[SlotType.Table].matches(block)) return AcceptType.Table;
-  if (FILLERS[SlotType.Image].matches(block)) return AcceptType.Image;
-  return AcceptType.Text;
-}
-
-/**
- * Assert that a region's parsed block folds to a type the slot `accepts`. Called
- * after `parseSlotContent` narrows a body/`::name::` region into a MarkdownBlock.
- * A slot may accept several types (text/table/image); the author's markdown
- * shape selects one. A block whose folded type is not accepted fails fast,
- * naming the layout, slot, the type it got, and the types the slot accepts.
+ * Assert that a region's parsed block folds to a type the slot `accepts`. The
+ * folded type comes straight from `parseSlotContent` (which returns it beside
+ * the block — no re-probe). A slot may accept several types (text/table/image);
+ * the author's markdown shape selects one. A type the slot does not accept fails
+ * fast, naming the layout, slot, the type it got, and the types the slot accepts.
  */
 function assertSlotRegion(
   slot: CompilerSlot,
-  block: MarkdownBlock,
+  got: AcceptType,
   layoutName: string,
   slideIdx: number,
   source: string,
 ): void {
-  const got = acceptTypeOf(block);
   if (!slot.accepts.some((b) => b.type === got)) {
     const accepted = slot.accepts.map((b) => b.type).join(", ");
     throw new Error(
@@ -192,12 +156,13 @@ function validateLayout(layout: CompilerLayout): void {
   }
 }
 
-function compileStep(
+async function compileStep(
   slide: RawSlide,
-  layouts: CompilerLayout[],
-  rootDir: string,
+  config: CompilerConfig,
   assetTypeByPath: Map<string, AssetType>,
-): CompilerDeckStep {
+  resolveAssetRef: ResolveAssetRef,
+): Promise<CompilerDeckStep> {
+  const { layouts, rootDir } = config;
   const { frontmatter, body, slots, index } = slide;
 
   const layout = frontmatter[RESERVED_KEY.LAYOUT];
@@ -236,7 +201,7 @@ function compileStep(
 
   const slotsByKey = new Map(layoutDef.slots.map((s) => [s.key, s]));
 
-  const content: Record<string, MarkdownBlock> = {};
+  const content: Record<string, EngineFill> = {};
 
   // Frontmatter lines fill image parameters (by key) or template-parameter keys
   // (gathered per parameter, expanded together once every line is read).
@@ -301,9 +266,18 @@ function compileStep(
         `Slide ${index}: layout "${layoutName}" does not accept body content. Valid slots: ${[...slotsByKey.keys()].join(", ")}`,
       );
     }
-    const parsedBody = parseSlotContent(body);
-    assertSlotRegion(bodySlot, parsedBody, layoutName, index, "body content");
-    content[RESERVED_KEY.BODY] = parsedBody;
+    const parsedBody = parseSlotContent(body, {
+      resolveAssetRef,
+      layoutName,
+      slideIdx: index,
+      source: "body content",
+      config,
+    });
+    // Validate the slot accepts this region's type BEFORE running the (possibly
+    // expensive — Shiki, puppeteer) fill: a mismatched region fails fast without
+    // spinning up a renderer.
+    assertSlotRegion(bodySlot, parsedBody.acceptType, layoutName, index, "body content");
+    content[RESERVED_KEY.BODY] = await parsedBody.fill();
   }
 
   // `::name::` regions resolve against the layout's slots.
@@ -315,9 +289,10 @@ function compileStep(
           `Valid slots: ${[...slotsByKey.keys()].join(", ")}`,
       );
     }
-    const block = parseSlotContent(text);
-    assertSlotRegion(slot, block, layoutName, index, `::${name}::`);
-    content[name] = block;
+    const source = `::${name}::`;
+    const parsed = parseSlotContent(text, { resolveAssetRef, layoutName, slideIdx: index, source, config });
+    assertSlotRegion(slot, parsed.acceptType, layoutName, index, source);
+    content[name] = await parsed.fill();
   }
 
   // Required image parameters (missing frontmatter key) and required slots
@@ -334,32 +309,30 @@ function compileStep(
     }
   }
 
-  // CompilerDeckStep.content values are MarkdownBlock — CodeFence and
-  // MermaidFence are legal in transit until the resolvers narrow them into
-  // StyledParagraph[] / ImageFill before the engine sees the deck.
+  // Content values are already engine fills — code fences highlighted to TextFill
+  // and mermaid fences rendered to ImageFill by their handler's `compile`.
   const step: CompilerDeckStep = { layout: layoutName, content };
   if (notes !== undefined) step.notes = notes;
   return step;
 }
 
-const KNOWN_GLOBAL_KEYS: Set<string> = new Set([RESERVED_KEY.THEME, RESERVED_KEY.OUTPUT]);
-
 /**
- * Compile a parsed deck document against a set of layouts.
+ * Compile a parsed deck document against a theme `config`. Each slide's content
+ * is compiled straight into engine fills — prose/tables/images plus highlighted
+ * code (Shiki) and rendered mermaid (PNG) — so the returned deck is
+ * engine-shaped, ready for `buildDeck`.
  *
- * `rootDir` (optional) is the base directory for resolving relative image
- * paths declared in the deck's frontmatter or named slots. When omitted (or
- * empty), image paths are returned unchanged — callers that already produce
- * absolute paths (or callers that don't need resolution, e.g. unit tests)
- * can rely on the pass-through. When provided, relative paths are resolved
- * to absolute via `path.resolve(rootDir, path)`; absolute paths pass through.
+ * `config.rootDir` is the base directory for resolving relative image paths
+ * declared in the deck's frontmatter or named slots. When empty, image paths are
+ * returned unchanged — callers that already produce absolute paths (or don't need
+ * resolution, e.g. unit tests) rely on the pass-through. When set, relative paths
+ * are resolved to absolute via `path.resolve(rootDir, path)`; absolute paths pass
+ * through. `config.codeTheme` / `config.mermaid` / `config.mermaidVariant` /
+ * `config.outputDir` feed the code and mermaid compiles.
  */
-export function compileDeck(
-  doc: ParsedDocument,
-  layouts: CompilerLayout[],
-  rootDir = "",
-  assets: AssetCatalog = {},
-): CompilerDeck {
+export async function compileDeck(doc: ParsedDocument, config: CompilerConfig): Promise<CompilerDeck> {
+  const { layouts, rootDir, assets } = config;
+
   const theme = doc.global[RESERVED_KEY.THEME];
   if (theme === undefined) {
     throw new Error(`Missing required "${RESERVED_KEY.THEME}" in global frontmatter`);
@@ -385,10 +358,33 @@ export function compileDeck(
     }
   }
 
-  const deck: CompilerDeck = {
-    theme: String(theme),
-    steps: doc.slides.map((slide) => compileStep(slide, layouts, rootDir, assetTypeByPath)),
+  // Resolve a body/`::name::` `$category.name` reference against the theme's
+  // curated asset catalog. Anchored ⇒ the whole ref is the reference or it is
+  // nothing; a found entry wraps through the same path→ImageFit mapping as a
+  // frontmatter image (`toImageFill`), so a body image has no second fit story.
+  const resolveAssetRef: ResolveAssetRef = (ref) => {
+    const match = ASSET_REF_RE.exec(ref);
+    if (!match) {
+      throw new Error(`Asset reference "${ref}" must be in the form $category.name (e.g. $logos.primary).`);
+    }
+    const [, category, name] = match;
+    const entry = assets[category]?.[name];
+    if (!entry) {
+      const available = Object.entries(assets)
+        .flatMap(([cat, group]) => Object.keys(group).map((n) => `$${cat}.${n}`))
+        .join(", ");
+      throw new Error(`Unknown asset reference "${ref}". Available: ${available}`);
+    }
+    return toImageFill(resolveImagePath(rootDir, entry.path), entry.type);
   };
+
+  // Slides compile in order: a slide's structural errors (unknown layout/key,
+  // bad asset ref, accept-type mismatch) fire before its own content is rendered.
+  const steps: CompilerDeckStep[] = [];
+  for (const slide of doc.slides) {
+    steps.push(await compileStep(slide, config, assetTypeByPath, resolveAssetRef));
+  }
+  const deck: CompilerDeck = { theme: String(theme), steps };
 
   const output = doc.global[RESERVED_KEY.OUTPUT];
   if (output !== undefined) {

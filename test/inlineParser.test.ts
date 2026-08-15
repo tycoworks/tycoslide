@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { parseInlineRuns, parseStyledParagraph } from "../dist/markdown/parsers.js";
+import { parseInlineRuns } from "../dist/markdown/inline.js";
 
 // ============================================
 // parseInlineRuns
@@ -102,57 +102,5 @@ describe("parseInlineRuns", () => {
     assert.deepEqual(runs, [
       { text: "both", bold: true, strikethrough: true },
     ]);
-  });
-});
-
-// ============================================
-// parseStyledParagraph
-// ============================================
-
-describe("parseStyledParagraph", () => {
-  it("bullet with bold", () => {
-    const result = parseStyledParagraph("- **bold** bullet");
-    assert.deepEqual(result, {
-      runs: [{ text: "bold", bold: true }, { text: " bullet" }],
-      bullet: { level: 0 },
-    });
-  });
-
-  it("nested bullet with italic", () => {
-    const result = parseStyledParagraph("  - nested *italic*");
-    assert.deepEqual(result, {
-      runs: [{ text: "nested " }, { text: "italic", italic: true }],
-      bullet: { level: 1 },
-    });
-  });
-
-  it("plain paragraph with emphasis", () => {
-    const result = parseStyledParagraph("just a paragraph with **emphasis**");
-    assert.deepEqual(result, {
-      runs: [{ text: "just a paragraph with " }, { text: "emphasis", bold: true }],
-    });
-  });
-
-  it("deeply nested bullet", () => {
-    const result = parseStyledParagraph("    - deep item");
-    assert.deepEqual(result, {
-      runs: [{ text: "deep item" }],
-      bullet: { level: 2 },
-    });
-  });
-
-  it("star bullet marker", () => {
-    const result = parseStyledParagraph("* star bullet");
-    assert.deepEqual(result, {
-      runs: [{ text: "star bullet" }],
-      bullet: { level: 0 },
-    });
-  });
-
-  it("plain text without bullets", () => {
-    const result = parseStyledParagraph("no bullet here");
-    assert.deepEqual(result, {
-      runs: [{ text: "no bullet here" }],
-    });
   });
 });

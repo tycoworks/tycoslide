@@ -2,9 +2,14 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { DOMParser } from "@xmldom/xmldom";
 import { applyNotesToSlide, buildNotesSlideXml, nextFreeRId, sweepOrphanNotes } from "../dist/engine/notes.js";
-import { compileDeck } from "../dist/markdown/deckCompiler.js";
+import { compileDeck as compileDeckRaw } from "../dist/markdown/deckCompiler.js";
 import { parseSlideDocument } from "../dist/markdown/slideParser.js";
 import type { CompilerLayout } from "../dist/markdown/types.js";
+
+// `compileDeck` now takes a single async `CompilerConfig`; this positional shim
+// builds a throwaway config from the layouts so these notes tests stay terse.
+const compileDeck = (doc: Parameters<typeof compileDeckRaw>[0], layouts: CompilerLayout[]) =>
+  compileDeckRaw(doc, { layouts, assets: {}, template: "", rootDir: "" });
 
 // ── XML helpers ──────────────────────────────────────────────────────────────
 
@@ -145,32 +150,32 @@ function assertNoDoubleXmlDecl(archive: { files: Map<string, string> }): void {
 // ── buildNotesSlideXml ───────────────────────────────────────────────────────
 
 describe("buildNotesSlideXml", () => {
-  it("single line produces exactly one <a:p>", () => {
+  it("single line produces exactly one <a:p>", async () => {
     const doc = parseXml(buildNotesSlideXml("Only one line"));
     assert.equal(doc.getElementsByTagName("a:p").length, 1);
     assert.deepEqual(texts(doc, "a:t"), ["Only one line"]);
   });
 
-  it("three lines produce three <a:p>", () => {
+  it("three lines produce three <a:p>", async () => {
     const doc = parseXml(buildNotesSlideXml("Line 1\nLine 2\nLine 3"));
     assert.equal(doc.getElementsByTagName("a:p").length, 3);
     assert.deepEqual(texts(doc, "a:t"), ["Line 1", "Line 2", "Line 3"]);
   });
 
-  it("carries a body placeholder (type=body idx=1)", () => {
+  it("carries a body placeholder (type=body idx=1)", async () => {
     const doc = parseXml(buildNotesSlideXml("x"));
     const ph = doc.getElementsByTagName("p:ph")[0];
     assert.equal(ph.getAttribute("type"), "body");
     assert.equal(ph.getAttribute("idx"), "1");
   });
 
-  it("a trailing newline does not add an empty paragraph", () => {
+  it("a trailing newline does not add an empty paragraph", async () => {
     const doc = parseXml(buildNotesSlideXml("Line 1\nLine 2\n"));
     assert.equal(doc.getElementsByTagName("a:p").length, 2);
     assert.deepEqual(texts(doc, "a:t"), ["Line 1", "Line 2"]);
   });
 
-  it("preserves leading whitespace via xml:space on <a:t>", () => {
+  it("preserves leading whitespace via xml:space on <a:t>", async () => {
     const raw = buildNotesSlideXml("  indented");
     const t = parseXml(raw).getElementsByTagName("a:t")[0];
     assert.equal(t.getAttribute("xml:space"), "preserve");
@@ -179,7 +184,7 @@ describe("buildNotesSlideXml", () => {
     assert.deepEqual(texts(parseXml(raw), "a:t"), ["  indented"]);
   });
 
-  it('escapes special characters & < > "', () => {
+  it('escapes special characters & < > "', async () => {
     const raw = buildNotesSlideXml('A & B < C > D "quoted"');
     // Serialized form is escaped...
     assert.ok(raw.includes("&amp;"), "ampersand escaped");
@@ -193,7 +198,7 @@ describe("buildNotesSlideXml", () => {
 // ── nextFreeRId ──────────────────────────────────────────────────────────────
 
 describe("nextFreeRId", () => {
-  it("returns rId4 for a .rels with rId1..rId3", () => {
+  it("returns rId4 for a .rels with rId1..rId3", async () => {
     const xml =
       `<Relationships xmlns="${REL_NS}">` +
       '<Relationship Id="rId1" Type="t" Target="a"/>' +
@@ -203,7 +208,7 @@ describe("nextFreeRId", () => {
     assert.equal(nextFreeRId(xml), "rId4");
   });
 
-  it("returns rId1 for an empty .rels", () => {
+  it("returns rId1 for an empty .rels", async () => {
     assert.equal(nextFreeRId(`<Relationships xmlns="${REL_NS}"></Relationships>`), "rId1");
   });
 });
@@ -465,8 +470,8 @@ const titleLayout: CompilerLayout = {
 };
 
 describe("compileStep notes", () => {
-  it("notes frontmatter becomes step.notes and never lands in content", () => {
-    const deck = compileDeck(
+  it("notes frontmatter becomes step.notes and never lands in content", async () => {
+    const deck = await compileDeck(
       {
         global: { theme: "./theme.json" },
         slides: [{ index: 0, frontmatter: { layout: "title", notes: "Speak slowly" }, body: "", slots: {} }],
@@ -477,8 +482,8 @@ describe("compileStep notes", () => {
     assert.equal(deck.steps[0].content?.["notes"], undefined);
   });
 
-  it("absent notes leaves step.notes undefined", () => {
-    const deck = compileDeck(
+  it("absent notes leaves step.notes undefined", async () => {
+    const deck = await compileDeck(
       {
         global: { theme: "./theme.json" },
         slides: [{ index: 0, frontmatter: { layout: "title" }, body: "", slots: {} }],
@@ -488,7 +493,7 @@ describe("compileStep notes", () => {
     assert.equal(deck.steps[0].notes, undefined);
   });
 
-  it("an empty notes: key (YAML null) yields step.notes undefined, not \"null\"", () => {
+  it("an empty notes: key (YAML null) yields step.notes undefined, not \"null\"", async () => {
     const doc = parseSlideDocument(`---
 theme: ./theme.json
 ---
@@ -497,11 +502,11 @@ layout: title
 notes:
 ---
 `);
-    const deck = compileDeck(doc, [titleLayout]);
+    const deck = await compileDeck(doc, [titleLayout]);
     assert.equal(deck.steps[0].notes, undefined);
   });
 
-  it("a YAML block scalar becomes a multi-line step.notes", () => {
+  it("a YAML block scalar becomes a multi-line step.notes", async () => {
     const doc = parseSlideDocument(`---
 theme: ./theme.json
 ---
@@ -512,7 +517,7 @@ notes: |
   Second line of notes.
 ---
 `);
-    const deck = compileDeck(doc, [titleLayout]);
+    const deck = await compileDeck(doc, [titleLayout]);
     const lines = (deck.steps[0].notes ?? "").split(/\n/).filter((l) => l.trim() !== "");
     assert.deepEqual(lines, ["First line of notes.", "Second line of notes."]);
   });
