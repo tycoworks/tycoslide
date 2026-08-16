@@ -1,6 +1,7 @@
 import { resolve } from "node:path";
 import { type ImageFill, ImageFit, SlotType } from "../engine/index.js";
 import { parseSlotContent } from "./blocks/registry.js";
+import { validateSlideFrontmatter } from "./deckSchema.js";
 import type { ParsedDocument, RawSlide } from "./slideParser.js";
 import { templateKeys, templateToSegments } from "./textTemplate.js";
 import {
@@ -79,11 +80,11 @@ function assertSlotRegion(
   }
 }
 
-function isImageParameter(param: CompilerParameter): param is CompilerImageParameter {
+export function isImageParameter(param: CompilerParameter): param is CompilerImageParameter {
   return param.type === ParameterType.Image;
 }
 
-function isTemplateParameter(param: CompilerParameter): param is CompilerTemplateParameter {
+export function isTemplateParameter(param: CompilerParameter): param is CompilerTemplateParameter {
   return param.type === ParameterType.Template;
 }
 
@@ -207,6 +208,11 @@ async function compileStep(
     throw new Error(`Slide ${index}: unknown layout "${layoutName}". Available layouts: ${known}`);
   }
 
+  // Reject any frontmatter key not declared by this layout's parameters (reserved
+  // layout/notes stripped first). The per-layout strict schema IS the unknown-key
+  // check — it fires before the resolution loop, so that loop only sees valid keys.
+  validateSlideFrontmatter(frontmatter, layoutDef, index);
+
   // Map each author-facing key to its owning parameter: template keys → the template
   // parameter that declares them, image keys → the image parameter. validateLayout
   // (run once per layout in compileDeck) has already proven these key spaces are
@@ -254,11 +260,9 @@ async function compileStep(
         valuesByTemplateParam.set(templateParam, bucket);
       }
       bucket.set(key, String(value));
-      continue;
     }
-
-    const validKeys = [...templateParamByKey.keys(), ...imageByKey.keys()].join(", ");
-    throw new Error(`Slide ${index}: unknown key "${key}" in layout "${layoutName}". Valid parameters: ${validKeys}`);
+    // Unreachable: validateSlideFrontmatter (above) already rejected any key that is
+    // neither an image key nor a template key, so every key here routes to a parameter.
   }
 
   // Expand each template parameter whose keys were supplied. Filling any key fills the

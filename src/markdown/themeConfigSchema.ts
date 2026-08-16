@@ -28,7 +28,7 @@ import { AcceptType, AssetType, type CompilerConfig, type CompilerThemeConfig, P
  * issues; returning `undefined` falls back to Zod's default message for every
  * other issue code.
  */
-function strict<T extends z.ZodRawShape>(shape: T) {
+export function strict<T extends z.ZodRawShape>(shape: T) {
   return z.strictObject(shape, {
     error: (issue) => {
       if (issue.code === "unrecognized_keys") {

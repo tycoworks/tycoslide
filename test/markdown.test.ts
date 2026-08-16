@@ -551,7 +551,7 @@ describe("compileDeck", () => {
           ],
         }, [testLayout("title", ["title"])]),
       (err: Error) => {
-        assert.ok(err.message.includes("unknown key"));
+        assert.ok(err.message.includes("Unknown key"));
         assert.ok(err.message.includes("titel"));
         return true;
       },
@@ -637,7 +637,7 @@ describe("compileDeck", () => {
           ],
         }, [testLayout("content", ["body"])]),
       (err: Error) => {
-        assert.ok(err.message.includes("unknown key"));
+        assert.ok(err.message.includes("Unknown key"));
         assert.ok(err.message.includes("body"));
         return true;
       },
@@ -815,12 +815,35 @@ describe("compileDeck text templating", () => {
 
   it("throws on a frontmatter key matching no template key or image parameter", async () => {
     const layout = templateLayout("welcome", [templateParam("welcomeBar", "{lastname}")]);
-    await assert.rejects(compileOne(layout, { lastname: "Chen", nope: "x" }), /unknown key "nope".*lastname/);
+    await assert.rejects(compileOne(layout, { lastname: "Chen", nope: "x" }), /Unknown key\(s\): nope.*lastname/);
   });
 
   it("throws when a required parameter is not filled", async () => {
     const layout = templateLayout("welcome", [templateParam("welcomeBar", "{title}", true)]);
     await assert.rejects(compileOne(layout, {}), /requires template parameter "welcomeBar"/);
+  });
+});
+
+describe("slide frontmatter validation", () => {
+  // Pins SHARP EDGE #1: values are String()-coerced today, so a YAML number for a
+  // valid key must still fill. The per-layout schema uses z.coerce.string(); a plain
+  // z.string() would REGRESS this. Do not tighten without a value-typing decision.
+  it("a YAML number value for a valid key passes (coerced to string, not rejected)", async () => {
+    const layout = templateLayout("year", [templateParam("bar", "{year}")]);
+    const deck = await compileOne(layout, { year: 2026 });
+    assert.deepEqual(deck.steps[0].content!["bar"], { lines: [[V("year", "2026")]] });
+  });
+
+  it("an optional (unsupplied) param omitted from frontmatter passes", async () => {
+    const layout = templateLayout("opt", [templateParam("bar", "{name}")]);
+    const deck = await compileOne(layout, {});
+    assert.equal(deck.steps[0].content!["bar"], undefined);
+  });
+
+  it("a valid slide (all keys declared) passes and compiles", async () => {
+    const layout = templateLayout("welcome", [templateParam("bar", "{first} {last}")]);
+    const deck = await compileOne(layout, { first: "Maya", last: "Chen" });
+    assert.deepEqual(deck.steps[0].content!["bar"], { lines: [[V("first", "Maya"), L(" "), V("last", "Chen")]] });
   });
 });
 
