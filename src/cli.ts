@@ -4,13 +4,7 @@ import { fileURLToPath } from "node:url";
 import { Command } from "commander";
 import { buildDeck } from "./index.js";
 import { generateManifest } from "./manifest.js";
-import {
-  type CompilerConfig,
-  type CompilerThemeConfig,
-  compileDeck,
-  parseSlideDocument,
-  RESERVED_KEY,
-} from "./markdown/index.js";
+import { compileDeck, loadThemeConfig, parseSlideDocument, RESERVED_KEY } from "./markdown/index.js";
 
 const DEFAULT_CONFIG = "theme.json";
 const SKILL_DIR = "skills/slides";
@@ -24,16 +18,6 @@ const BUILD_COMMAND = "npx tycoslide build";
 const sdkDir = dirname(fileURLToPath(import.meta.url));
 const skillMdPath = resolve(sdkDir, "..", SKILL_FILE);
 const syntaxMdPath = resolve(sdkDir, "..", SYNTAX_FILE);
-
-function loadConfig(absPath: string): CompilerConfig {
-  let raw: CompilerThemeConfig;
-  try {
-    raw = JSON.parse(readFileSync(absPath, "utf-8")) as CompilerThemeConfig;
-  } catch {
-    throw new Error(`Config file not found or invalid JSON: ${absPath}`);
-  }
-  return { ...raw, rootDir: dirname(absPath) };
-}
 
 const pkg = JSON.parse(readFileSync(resolve(sdkDir, "..", "package.json"), "utf-8"));
 const program = new Command().name("tycoslide").description("PPTX template engine CLI").version(pkg.version);
@@ -63,7 +47,7 @@ program
     if (!absConfigPath) {
       throw new Error(`${basename(deckPath)}: missing required "${RESERVED_KEY.THEME}" in global frontmatter`);
     }
-    const config = loadConfig(absConfigPath);
+    const config = loadThemeConfig(absConfigPath);
     const deck = await compileDeck(doc, config);
     if (!deck.output) deck.output = basename(deckPath).replace(/\.md$/, ".pptx");
     await buildDeck(deck, config, { excludeNotes: !opts.notes });
@@ -75,7 +59,7 @@ program
   .option(`-c, --config <path>`, "path to theme config file", DEFAULT_CONFIG)
   .option(`-o, --out <file>`, "write to file instead of stdout")
   .action(async (opts: { config: string; out?: string }) => {
-    const config = loadConfig(resolve(process.cwd(), opts.config));
+    const config = loadThemeConfig(resolve(process.cwd(), opts.config));
     const json = generateManifest(config, { build: { command: BUILD_COMMAND } });
     if (opts.out) {
       writeFileSync(resolve(process.cwd(), opts.out), `${json}\n`);
@@ -90,7 +74,7 @@ program
   .description("Generate plugin package (plugin.json, manifest.json, SKILL.md, syntax.md) for AI agents")
   .option(`-c, --config <path>`, "path to theme config file", DEFAULT_CONFIG)
   .action(async (opts: { config: string }) => {
-    const config = loadConfig(resolve(process.cwd(), opts.config));
+    const config = loadThemeConfig(resolve(process.cwd(), opts.config));
     const cwd = process.cwd();
 
     const pkg = JSON.parse(readFileSync(resolve(cwd, "package.json"), "utf-8"));

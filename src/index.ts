@@ -120,7 +120,10 @@ export function toEngineConfig(config: CompilerConfig): Config {
  * highlighted, mermaid rendered), so `buildDeck` only asserts an `output` is set
  * and hands the deck to the engine's primitives-only `generate()`. The deck is
  * structurally equivalent to the engine's `Deck` once `output` is present, so no
- * cast is required.
+ * cast is required. `buildDeck` does not itself validate `config` — a
+ * programmatic caller assembling a `CompilerConfig` by hand should load it
+ * through `loadThemeConfig` (or `parseThemeConfig`) first to get the same
+ * fail-fast structural checks the CLI gets.
  *
  * Fails fast if `deck.output` is missing: `generate()` requires it, and the CLI
  * populates it before calling `buildDeck`; a programmatic caller that forgot to
@@ -180,4 +183,4 @@ export type {
   RawSlide,
 } from "./markdown/index.js";
 // Markdown / Compiler
-export { AcceptType, compileMarkdownDeck, ParameterType } from "./markdown/index.js";
+export { AcceptType, compileMarkdownDeck, loadThemeConfig, ParameterType, parseThemeConfig } from "./markdown/index.js";

@@ -15,6 +15,7 @@ export { parseInlineRuns } from "./inline.js";
 export { parseRegion } from "./mdast.js";
 export type { ParsedDocument, RawSlide } from "./slideParser.js";
 export { parseSlideDocument } from "./slideParser.js";
+export { loadThemeConfig, parseThemeConfig, ThemeConfigSchema } from "./themeConfigSchema.js";
 export type {
   AssetCatalog,
   AssetEntry,
