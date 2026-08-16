@@ -267,6 +267,23 @@ export type CompilerLayout = {
 // ── Compiler-facing theme + config ───────────────────────────────────────────
 
 /**
+ * A brand font the theme hands the compiler for HTML-based rendering (currently
+ * mermaid). Purely compiler-facing — the engine fills PPTX shapes, whose fonts
+ * live in the template, and never sees this. `path` is a module specifier
+ * (`@fontsource/inter/files/inter-latin-400-normal.woff2`) resolved from the
+ * theme's directory, or a `./`- / `/`-prefixed filesystem path resolved against
+ * `rootDir`; `family` is the CSS `font-family` name the mermaid variant's
+ * `fontFamily` must match. Register weight 400 + 700 to avoid synthetic bold on
+ * node labels. The mechanism is generic — the theme names its own fonts.
+ */
+export type ThemeFont = {
+  family: string;
+  path: string;
+  /** OpenType weight (default 400). */
+  weight?: number;
+};
+
+/**
  * Compiler-facing theme configuration. Mirrors the engine's ThemeConfig but
  * carries markdown-flavored fields (mermaid variants) that live outside the
  * engine's awareness. Fields are declared explicitly rather than
@@ -278,6 +295,12 @@ export type CompilerThemeConfig = {
   template: string;
   outputDir?: string;
   mermaid?: MermaidConfig;
+  /**
+   * Brand fonts injected as `@font-face` when rendering mermaid, so diagram text
+   * uses the theme font instead of a Chromium fallback. Optional — with none
+   * declared, mermaid renders in whatever the OS substitutes.
+   */
+  fonts?: ThemeFont[];
   /**
    * Theme-level defaults for the two content types the compiler resolves before
    * the engine sees them. One code style and one mermaid style per theme (the

@@ -22,10 +22,11 @@
     "format": "biome format --write ."
   },
   "dependencies": {
-    "@mermaid-js/mermaid-cli": "^11.15.0",
     "@xmldom/xmldom": "^0.9.10",
     "commander": "^15.0.0",
     "image-size": "^2.0.2",
+    "mermaid": "^11.16.1",
+    "playwright": "^1.58.2",
     "pptx-automizer": "^0.8.2",
     "remark-gfm": "^4.0.1",
     "remark-ins": "^1.2.5",

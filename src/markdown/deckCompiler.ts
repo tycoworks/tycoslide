@@ -297,7 +297,7 @@ async function compileStep(
       config,
     });
     // Validate the slot accepts this region's type BEFORE running the (possibly
-    // expensive — Shiki, puppeteer) fill: a mismatched region fails fast without
+    // expensive — Shiki, Playwright) fill: a mismatched region fails fast without
     // spinning up a renderer.
     assertSlotRegion(bodySlot, parsedBody.acceptType, layoutName, index, "body content");
     content[RESERVED_KEY.BODY] = await parsedBody.fill();

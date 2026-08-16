@@ -27,7 +27,7 @@ const BLOCKS: BlockHandler[] = [MERMAID, CODE, IMAGE, TABLE];
  * `AcceptType` it folds to, plus a lazy `fill` that compiles it to the engine
  * fill. The split is deliberate: `acceptType` is available synchronously so the
  * caller can validate a region against its slot BEFORE running the (possibly
- * expensive — Shiki, puppeteer) `fill`. A region that is exactly one
+ * expensive — Shiki, Playwright) `fill`. A region that is exactly one
  * `mermaid`/`code`/`image`/`table` node folds to that kind; anything else
  * aggregates to one TextFill (prose + lists + headings). The paragraph-unwrap
  * mirrors remark wrapping a lone `![alt](src)` in a paragraph.
