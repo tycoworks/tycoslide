@@ -1,8 +1,8 @@
 import * as z from "zod";
-import { isImageParameter, isTemplateParameter, RESERVED_KEY } from "./deckCompiler.js";
-import { templateKeys } from "./textTemplate.js";
-import { strict } from "./themeConfigSchema.js";
-import type { CompilerLayout } from "./types.js";
+import { templateKeys } from "../textTemplate.js";
+import type { CompilerLayout } from "../types.js";
+import { ParameterType, RESERVED_KEY } from "../types.js";
+import { strict } from "./strict.js";
 
 /**
  * Per-layout frontmatter validation for a deck `.md`. The old tycoslide validated
@@ -25,12 +25,15 @@ import type { CompilerLayout } from "./types.js";
 export function deckFrontmatterSchema(layout: CompilerLayout) {
   const shape: Record<string, z.ZodType> = {};
   for (const param of layout.parameters) {
-    if (isImageParameter(param)) {
-      shape[param.key] = z.coerce.string().optional();
-    } else if (isTemplateParameter(param)) {
-      for (const key of templateKeys(param.template)) {
-        shape[key] = z.coerce.string().optional();
-      }
+    switch (param.type) {
+      case ParameterType.Image:
+        shape[param.key] = z.coerce.string().optional();
+        break;
+      case ParameterType.Template:
+        for (const key of templateKeys(param.template)) {
+          shape[key] = z.coerce.string().optional();
+        }
+        break;
     }
   }
   return strict(shape);

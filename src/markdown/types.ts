@@ -208,6 +208,19 @@ export type CompilerImageParameter = {
  */
 export type CompilerParameter = CompilerTemplateParameter | CompilerImageParameter;
 
+/**
+ * Reserved keys in a deck's frontmatter — global (theme, output) and per-slide
+ * (layout, body). Exported so callers (e.g. cli.ts) reference the constants
+ * instead of literal strings.
+ */
+export const RESERVED_KEY = {
+  LAYOUT: "layout",
+  BODY: "body",
+  OUTPUT: "output",
+  THEME: "theme",
+  NOTES: "notes",
+} as const;
+
 // ── Slots (body regions, multi-line) ──────────────────────────────────────────
 
 /**

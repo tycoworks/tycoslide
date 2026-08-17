@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { basename, dirname } from "node:path";
 import * as z from "zod";
-import { AcceptType, AssetType, type CompilerConfig, type CompilerThemeConfig, ParameterType } from "./types.js";
+import { AcceptType, AssetType, type CompilerConfig, type CompilerThemeConfig, ParameterType } from "../types.js";
+import { strict } from "./strict.js";
 
 /**
  * Fail-fast runtime validation for a `theme.json`. The hand-written types in
@@ -20,24 +21,6 @@ import { AcceptType, AssetType, type CompilerConfig, type CompilerThemeConfig, P
  * records, whose keys are user-defined category/asset/variant names (a
  * `z.record`, open by design); strictness lands on their leaf entries.
  */
-
-/**
- * A strict object whose unrecognized-key error also lists the valid key set,
- * matching the deck frontmatter validators' "Valid keys: …" style
- * (`deckCompiler.ts`). The `error` callback only rewrites `unrecognized_keys`
- * issues; returning `undefined` falls back to Zod's default message for every
- * other issue code.
- */
-export function strict<T extends z.ZodRawShape>(shape: T) {
-  return z.strictObject(shape, {
-    error: (issue) => {
-      if (issue.code === "unrecognized_keys") {
-        return `Unknown key(s): ${issue.keys.join(", ")}. Valid keys: ${Object.keys(shape).join(", ")}`;
-      }
-      return undefined;
-    },
-  });
-}
 
 // Reuse the const-object enums as runtime values — no third copy of the literals.
 const acceptTypeSchema = z.enum(Object.values(AcceptType) as [AcceptType, ...AcceptType[]]);

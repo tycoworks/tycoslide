@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import { type ImageFill, ImageFit, SlotType } from "../engine/index.js";
 import { parseSlotContent } from "./blocks/registry.js";
-import { validateSlideFrontmatter } from "./deckSchema.js";
+import { validateSlideFrontmatter } from "./schema/deckSchema.js";
 import type { ParsedDocument, RawSlide } from "./slideParser.js";
 import { templateKeys, templateToSegments } from "./textTemplate.js";
 import {
@@ -12,11 +12,11 @@ import {
   type CompilerDeckStep,
   type CompilerImageParameter,
   type CompilerLayout,
-  type CompilerParameter,
   type CompilerSlot,
   type CompilerTemplateParameter,
   type EngineFill,
   ParameterType,
+  RESERVED_KEY,
 } from "./types.js";
 
 /** Map each semantic asset type to the engine's object-fit directive. */
@@ -34,19 +34,6 @@ const FIT_FOR: Record<AssetType, ImageFit> = {
 export function toImageFill(path: string, type: AssetType): ImageFill {
   return { type: SlotType.Image, path, fit: FIT_FOR[type] };
 }
-
-/**
- * Reserved keys in a deck's frontmatter — global (theme, output) and per-slide
- * (layout, body). Exported so callers (e.g. cli.ts) reference the constants
- * instead of literal strings.
- */
-export const RESERVED_KEY = {
-  LAYOUT: "layout",
-  BODY: "body",
-  OUTPUT: "output",
-  THEME: "theme",
-  NOTES: "notes",
-} as const;
 
 const KNOWN_GLOBAL_KEYS: Set<string> = new Set([RESERVED_KEY.THEME, RESERVED_KEY.OUTPUT]);
 
@@ -78,14 +65,6 @@ function assertSlotRegion(
         `(from ${source}); it accepts: ${accepted}.`,
     );
   }
-}
-
-export function isImageParameter(param: CompilerParameter): param is CompilerImageParameter {
-  return param.type === ParameterType.Image;
-}
-
-export function isTemplateParameter(param: CompilerParameter): param is CompilerTemplateParameter {
-  return param.type === ParameterType.Template;
 }
 
 /**
@@ -161,18 +140,22 @@ function validateLayout(layout: CompilerLayout): void {
   };
 
   for (const param of layout.parameters) {
-    if (isImageParameter(param)) {
-      claimAuthorKey(param.key, "image parameter");
-      claimContentKey(param.key, "image parameter");
-    } else {
-      const keys = templateKeys(param.template);
-      if (param.required && keys.length === 0) {
-        throw new Error(
-          `Layout "${layout.name}": template parameter "${param.shapeName}" is marked required but its template has no keys to fill.`,
-        );
+    switch (param.type) {
+      case ParameterType.Image:
+        claimAuthorKey(param.key, "image parameter");
+        claimContentKey(param.key, "image parameter");
+        break;
+      case ParameterType.Template: {
+        const keys = templateKeys(param.template);
+        if (param.required && keys.length === 0) {
+          throw new Error(
+            `Layout "${layout.name}": template parameter "${param.shapeName}" is marked required but its template has no keys to fill.`,
+          );
+        }
+        for (const key of keys) claimAuthorKey(key, `template parameter "${param.shapeName}"`);
+        claimContentKey(param.shapeName, "template parameter");
+        break;
       }
-      for (const key of keys) claimAuthorKey(key, `template parameter "${param.shapeName}"`);
-      claimContentKey(param.shapeName, "template parameter");
     }
   }
   for (const slot of layout.slots) {
@@ -217,14 +200,18 @@ async function compileStep(
   // parameter that declares them, image keys → the image parameter. validateLayout
   // (run once per layout in compileDeck) has already proven these key spaces are
   // collision-free, so a later lookup is unambiguous.
-  const templateParams = layoutDef.parameters.filter(isTemplateParameter);
+  const templateParams: CompilerTemplateParameter[] = [];
   const imageByKey = new Map<string, CompilerImageParameter>();
   const templateParamByKey = new Map<string, CompilerTemplateParameter>();
   for (const param of layoutDef.parameters) {
-    if (isImageParameter(param)) {
-      imageByKey.set(param.key, param);
-    } else {
-      for (const key of templateKeys(param.template)) templateParamByKey.set(key, param);
+    switch (param.type) {
+      case ParameterType.Image:
+        imageByKey.set(param.key, param);
+        break;
+      case ParameterType.Template:
+        templateParams.push(param);
+        for (const key of templateKeys(param.template)) templateParamByKey.set(key, param);
+        break;
     }
   }
 

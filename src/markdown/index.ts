@@ -10,12 +10,12 @@ export function compileMarkdownDeck(source: string, config: CompilerConfig): Pro
 export { highlightCode } from "./blocks/code.js";
 export type { MermaidConfig, MermaidVariant } from "./blocks/mermaidTheme.js";
 export { type BlockContext, type BlockHandler, parseSlotContent } from "./blocks/registry.js";
-export { compileDeck, RESERVED_KEY } from "./deckCompiler.js";
+export { compileDeck } from "./deckCompiler.js";
 export { parseInlineRuns } from "./inline.js";
 export { parseRegion } from "./mdast.js";
+export { loadThemeConfig, parseThemeConfig, ThemeConfigSchema } from "./schema/themeConfigSchema.js";
 export type { ParsedDocument, RawSlide } from "./slideParser.js";
 export { parseSlideDocument } from "./slideParser.js";
-export { loadThemeConfig, parseThemeConfig, ThemeConfigSchema } from "./themeConfigSchema.js";
 export type {
   AssetCatalog,
   AssetEntry,
@@ -32,4 +32,4 @@ export type {
   EngineFill,
   Limit,
 } from "./types.js";
-export { AcceptType, AssetType, ParameterType } from "./types.js";
+export { AcceptType, AssetType, ParameterType, RESERVED_KEY } from "./types.js";
