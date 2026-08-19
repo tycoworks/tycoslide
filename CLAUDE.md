@@ -30,6 +30,8 @@ TypeScript runs natively via Node's `--experimental-strip-types`. `tsc --build` 
 
 **Users should never have to change their `.pptx`.** tycoslide works with the template as-is — no tycoslide syntax, tokens, or placeholders added to it, and no asking anyone to clean it up or re-author it. Everything tycoslide needs, and everything that copes with messy real-world files (a line split across many runs, inconsistent styling, odd shape names), lives in the manifest and the fill logic instead. If a decision would force the user to edit their file, move it into the manifest / tycoslide instead.
 
+**tycoslide fills; it does not design.** The design — layout, type, color, spacing, chrome — lives in the designer's `.pptx` and is never generated, critiqued, or "improved." tycoslide is not a slide *generator* (Gamma, Tome, generic markdown-to-deck tools invent generic design); it reproduces a real brand system exactly. The agent's job is **composition within a fixed design system** — mapping content into the right slots of a real branded template — never design. Helping an agent *understand and compose within* the theme (which layout fits, what a slot accepts, a few general composition principles) is in scope; helping it invent, choose, or judge *design* is out, on purpose — that "out" is the product. Quality comes from the theme, not the prompt: a great template makes every deck great. (Composition still has taste — a valid fill can be a weak one — so a handful of general composition principles live in the agent skill; per-layout design guidance does not.)
+
 ## Architecture
 
 Two layers with a hard boundary:
