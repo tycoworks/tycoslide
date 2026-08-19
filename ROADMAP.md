@@ -37,4 +37,6 @@ Overlaps with the "vector mermaid diagrams" item — if we build a serious PPTX 
 
 ## Parameter type safety
 
-Parameters today are typed only as `template` or `image`. A richer per-layout parameter schema — enums, bounded numbers, typed asset references — validated before render, would sharpen author feedback: the compiler could reject unknown or malformed frontmatter keys, and fail fast on violation with layout + key context. tycoslide's `template | image` is the right non-over-engineered choice for now, but this is a natural extension — a manifest could declare a parameter as an enum (`variant: "dark" | "light"`), a bounded number, or a typed asset reference. Would let the manifest express designer intent the current two-kind split can't. Revisit if authors start needing constrained non-template/image inputs.
+**Done (v0.9.0):** slide frontmatter is validated against a per-layout strict schema — unknown or malformed keys fail fast with layout + key context (`schema/deckSchema.ts`), matching the theme-side strict schema (`schema/themeConfigSchema.ts`).
+
+**Remaining:** a richer per-layout parameter *value* schema — enums, bounded numbers, typed asset references — validated before render. `template | image` is the right non-over-engineered split for now, but a manifest could later declare a parameter as an enum (`variant: "dark" | "light"`), a bounded number, or a typed asset reference — expressing designer intent the two-kind split can't. Revisit if authors start needing constrained non-template/image inputs.
