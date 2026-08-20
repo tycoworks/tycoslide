@@ -52,22 +52,6 @@ program
   });
 
 program
-  .command("manifest")
-  .description("Generate manifest.json from theme config")
-  .option(`-c, --config <path>`, "path to theme config file", DEFAULT_CONFIG)
-  .option(`-o, --out <file>`, "write to file instead of stdout")
-  .action(async (opts: { config: string; out?: string }) => {
-    const config = loadThemeConfig(resolve(process.cwd(), opts.config));
-    const json = generateManifest(config, { build: { command: BUILD_COMMAND } });
-    if (opts.out) {
-      writeFileSync(resolve(process.cwd(), opts.out), `${json}\n`);
-      console.log(`WROTE ${opts.out}`);
-    } else {
-      process.stdout.write(`${json}\n`);
-    }
-  });
-
-program
   .command("package")
   .description("Generate the Agent Skill (manifest.json, SKILL.md, syntax.md) for AI agents")
   .option(`-c, --config <path>`, "path to theme config file", DEFAULT_CONFIG)
