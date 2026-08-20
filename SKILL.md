@@ -1,10 +1,8 @@
 ---
 name: slides
 description: >
-  Use this skill any time the user wants to create branded slides, presentations,
-  pitch decks, or sales collateral as a .pptx. Trigger whenever the user mentions "deck," "slides,"
-  "presentation," "pitch," or .pptx output. Also trigger when the user says "build me a deck,"
-  "make slides about X," or "turn this into a presentation."
+  Build branded slides, presentations, pitch decks, or sales collateral as a .pptx.
+  Trigger on "deck," "slides," "presentation," "pitch," ".pptx," or "build me a deck."
 ---
 
 # slides
@@ -39,7 +37,7 @@ For brand voice and naming guidelines, read `brand.md` if it exists alongside th
 
 Before writing anything, read `manifest.json`. It contains:
 
-- **layouts** -- for each: `name`, `parameters` (frontmatter inputs) and `slots` (body regions), each with `type` and optionally `required`, `limit`, `codeTheme`, `mermaidVariant` (plus, for assets, a `type` of `icon`/`image`/`background`). A layout is a shape, not a purpose: its `slots` and the content types they accept are what tell you what it holds. Any `description`/`whenToUse` prose a manifest carries is supplementary, not a rulebook.
+- **layouts** -- for each: `name`, `parameters` (frontmatter inputs) and `slots` (body regions). Each slot lists the content types it accepts, plus optional `required` and `limit`. Read a layout's `slots` and the types they accept to see what content it holds.
 - **assets** -- brand logos, client logos, illustrations, and icons (`description`)
 
 A layout's inputs split two ways (see [syntax.md](syntax.md) for details):
