@@ -50,7 +50,7 @@ tycoslide build deck.md                   # → deck.pptx
 ```bash
 tycoslide build deck.md       # markdown → PPTX (theme resolved from deck frontmatter)
 tycoslide build deck.md --no-notes   # omit speaker notes from the output
-tycoslide plugin              # generate AI agent plugin package
+tycoslide package             # generate the Agent Skill (SKILL.md + manifest.json)
 tycoslide manifest            # print layout + asset catalog to stdout
 ```
 
