@@ -8,8 +8,6 @@ import { compileDeck, loadThemeConfig, parseSlideDocument, RESERVED_KEY } from "
 
 const DEFAULT_CONFIG = "theme.json";
 const SKILL_DIR = "skills/slides";
-const PLUGIN_DIR = ".claude-plugin";
-const PLUGIN_FILE = "plugin.json";
 const MANIFEST_FILE = "manifest.json";
 const SKILL_FILE = "SKILL.md";
 const SYNTAX_FILE = "syntax.md";
@@ -70,27 +68,12 @@ program
   });
 
 program
-  .command("plugin")
-  .description("Generate plugin package (plugin.json, manifest.json, SKILL.md, syntax.md) for AI agents")
+  .command("package")
+  .description("Generate the Agent Skill (manifest.json, SKILL.md, syntax.md) for AI agents")
   .option(`-c, --config <path>`, "path to theme config file", DEFAULT_CONFIG)
   .action(async (opts: { config: string }) => {
     const config = loadThemeConfig(resolve(process.cwd(), opts.config));
-    const cwd = process.cwd();
-
-    const pkg = JSON.parse(readFileSync(resolve(cwd, "package.json"), "utf-8"));
-    const pluginMeta: Record<string, unknown> = {
-      name: pkg.name,
-      version: pkg.version,
-      description: pkg.description ?? "",
-      skills: "./skills",
-    };
-    if (pkg.author) pluginMeta.author = pkg.author;
-    const pluginDir = resolve(cwd, PLUGIN_DIR);
-    mkdirSync(pluginDir, { recursive: true });
-    writeFileSync(resolve(pluginDir, PLUGIN_FILE), `${JSON.stringify(pluginMeta, null, 2)}\n`);
-    console.log(`WROTE ${PLUGIN_DIR}/${PLUGIN_FILE}`);
-
-    const skillDir = resolve(cwd, SKILL_DIR);
+    const skillDir = resolve(process.cwd(), SKILL_DIR);
     mkdirSync(skillDir, { recursive: true });
     const json = generateManifest(config, { build: { command: BUILD_COMMAND } });
     writeFileSync(resolve(skillDir, MANIFEST_FILE), `${json}\n`);
