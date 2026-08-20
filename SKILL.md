@@ -9,7 +9,7 @@ description: >
 
 ## Setup
 
-Before first use, install dependencies from the plugin root:
+Before first use, install dependencies from the theme root:
 
 ```bash
 npm install
