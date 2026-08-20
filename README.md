@@ -1,14 +1,14 @@
 # tycoslide
 
-Let AI agents build slides from existing PowerPoint (`.pptx`) files.
+Create editable, on-brand PowerPoint slides from markdown.
 
 > **Early release** — tycoslide is under active development.
 
 ## How it works
 
-1. **tycoslide wraps your PowerPoint file as an agent skill.**
-2. **Your agents use the skill to write slides in markdown.**
-3. **tycoslide builds a finished PowerPoint file from the markdown.**
+1. **tycoslide wraps existing PowerPoint files as reusable templates.**
+2. **You (or an agent) write slides in markdown.**
+3. **tycoslide builds new PowerPoint files.**
 
 ## Quick Start
 
