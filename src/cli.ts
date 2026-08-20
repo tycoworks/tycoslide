@@ -1,20 +1,22 @@
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Command } from "commander";
 import { buildDeck } from "./index.js";
 import { generateManifest } from "./manifest.js";
 import { compileDeck, loadThemeConfig, parseSlideDocument, RESERVED_KEY } from "./markdown/index.js";
+import { renameSkill, zipSkill } from "./skillZip.js";
 
 const DEFAULT_CONFIG = "theme.json";
-const SKILL_DIR = "skills/slides";
 const MANIFEST_FILE = "manifest.json";
-const SKILL_FILE = "SKILL.md";
+// The theme skill is written as lowercase skill.md (copied from tycoslide's own
+// SKILL.md), so the skill folder can live at the theme repo root.
+const SKILL_FILE = "skill.md";
 const SYNTAX_FILE = "syntax.md";
 const BUILD_COMMAND = "npx tycoslide build";
 
 const sdkDir = dirname(fileURLToPath(import.meta.url));
-const skillMdPath = resolve(sdkDir, "..", SKILL_FILE);
+const skillMdPath = resolve(sdkDir, "..", "SKILL.md");
 const syntaxMdPath = resolve(sdkDir, "..", SYNTAX_FILE);
 
 const pkg = JSON.parse(readFileSync(resolve(sdkDir, "..", "package.json"), "utf-8"));
@@ -57,15 +59,39 @@ program
   .option(`-c, --config <path>`, "path to theme config file", DEFAULT_CONFIG)
   .action(async (opts: { config: string }) => {
     const config = loadThemeConfig(resolve(process.cwd(), opts.config));
-    const skillDir = resolve(process.cwd(), SKILL_DIR);
-    mkdirSync(skillDir, { recursive: true });
-    const json = generateManifest(config, { build: { command: BUILD_COMMAND } });
-    writeFileSync(resolve(skillDir, MANIFEST_FILE), `${json}\n`);
-    console.log(`WROTE ${SKILL_DIR}/${MANIFEST_FILE}`);
-    copyFileSync(skillMdPath, resolve(skillDir, SKILL_FILE));
-    console.log(`WROTE ${SKILL_DIR}/${SKILL_FILE}`);
-    copyFileSync(syntaxMdPath, resolve(skillDir, SYNTAX_FILE));
-    console.log(`WROTE ${SKILL_DIR}/${SYNTAX_FILE}`);
+
+    const themePkg = JSON.parse(readFileSync(resolve(process.cwd(), "package.json"), "utf-8"));
+    if (!themePkg.name) {
+      throw new Error('Cannot name the skill: the theme\'s package.json has no "name" field.');
+    }
+    // basename drops any npm scope, e.g. "@acme/mz-slides" -> "mz-slides".
+    const skillName = basename(themePkg.name);
+
+    const manifestJson = `${generateManifest(config, { build: { command: BUILD_COMMAND } })}\n`;
+    writeFileSync(resolve(process.cwd(), MANIFEST_FILE), manifestJson);
+    console.log(`WROTE ${MANIFEST_FILE}`);
+
+    let skillMd: string;
+    try {
+      skillMd = renameSkill(readFileSync(skillMdPath, "utf-8"), skillName);
+    } catch (err) {
+      throw new Error(`${skillMdPath}: ${(err as Error).message}`);
+    }
+    writeFileSync(resolve(process.cwd(), SKILL_FILE), skillMd);
+    console.log(`WROTE ${SKILL_FILE}`);
+
+    const syntaxMd = readFileSync(syntaxMdPath, "utf-8");
+    writeFileSync(resolve(process.cwd(), SYNTAX_FILE), syntaxMd);
+    console.log(`WROTE ${SYNTAX_FILE}`);
+
+    const zipFile = `${skillName}.zip`;
+    const zipBuf = await zipSkill(skillName, [
+      { name: SKILL_FILE, content: skillMd },
+      { name: SYNTAX_FILE, content: syntaxMd },
+      { name: MANIFEST_FILE, content: manifestJson },
+    ]);
+    writeFileSync(resolve(process.cwd(), zipFile), zipBuf);
+    console.log(`WROTE ${zipFile}`);
   });
 
 await program.parseAsync(process.argv);
