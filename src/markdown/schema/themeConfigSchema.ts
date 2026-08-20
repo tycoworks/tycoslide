@@ -1,7 +1,14 @@
 import { readFileSync } from "node:fs";
 import { basename, dirname } from "node:path";
 import * as z from "zod";
-import { AcceptType, AssetType, type CompilerConfig, type CompilerThemeConfig, ParameterType } from "../types.js";
+import {
+  AcceptType,
+  AssetType,
+  type CompilerConfig,
+  type CompilerThemeConfig,
+  ParameterType,
+  Variant,
+} from "../types.js";
 import { strict } from "./strict.js";
 
 /**
@@ -25,6 +32,7 @@ import { strict } from "./strict.js";
 // Reuse the const-object enums as runtime values — no third copy of the literals.
 const acceptTypeSchema = z.enum(Object.values(AcceptType) as [AcceptType, ...AcceptType[]]);
 const assetTypeSchema = z.enum(Object.values(AssetType) as [AssetType, ...AssetType[]]);
+const variantSchema = z.enum(Object.values(Variant) as [Variant, ...Variant[]]);
 
 // Re-declared here (not imported from the engine) so the schema layer never
 // depends on the engine — mirrors engine `Frame`, guarded by `_drift`.
@@ -113,6 +121,7 @@ const LayoutSchema = strict({
   description: z.string().optional(),
   whenToUse: z.string().optional(),
   whenNotToUse: z.string().optional(),
+  variant: variantSchema.optional(),
   parameters: z.array(ParameterSchema),
   slots: z.array(SlotSchema),
 });
@@ -124,7 +133,7 @@ export const ThemeConfigSchema = strict({
   outputDir: z.string().optional(),
   mermaid: MermaidConfigSchema.optional(),
   fonts: z.array(ThemeFontSchema).optional(),
-  codeTheme: z.string().optional(),
+  codeTheme: z.union([z.string(), strict({ light: z.string().min(1), dark: z.string().min(1) })]).optional(),
   mermaidVariant: z.string().optional(),
 });
 

@@ -286,6 +286,7 @@ async function compileStep(
       slideIdx: index,
       source: "body content",
       config,
+      layoutVariant: layoutDef.variant,
     });
     // Validate the slot accepts this region's type BEFORE running the (possibly
     // expensive — Shiki, Playwright) fill: a mismatched region fails fast without
@@ -304,7 +305,14 @@ async function compileStep(
       );
     }
     const source = `::${name}::`;
-    const parsed = parseSlotContent(text, { resolveAssetRef, layoutName, slideIdx: index, source, config });
+    const parsed = parseSlotContent(text, {
+      resolveAssetRef,
+      layoutName,
+      slideIdx: index,
+      source,
+      config,
+      layoutVariant: layoutDef.variant,
+    });
     assertSlotRegion(slot, parsed.acceptType, layoutName, index, source);
     content[name] = await parsed.fill();
   }

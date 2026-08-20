@@ -1171,6 +1171,67 @@ describe("compileDeck code fence support", () => {
 });
 
 // ============================================
+// codeTheme light/dark pair resolved by layout variant
+// ============================================
+
+describe("compileDeck code theme light/dark variant", () => {
+  // Flatten a highlighted TextFill's per-token colors (in order) to one string,
+  // so two fills highlighted with different Shiki themes compare unequal.
+  const colorsOf = (fill: any): string =>
+    fill.paragraphs.map((p: any) => p.runs.map((r: any) => r.color ?? "").join("|")).join("\n");
+
+  // A `{ light, dark }` codeTheme pair — the two arms are distinct Shiki ids, so
+  // the same code tokenizes to different foreground colors under each.
+  const PAIR = { codeTheme: { dark: "github-dark", light: "github-light" } };
+  const SRC = "```typescript\nconst x = 1;\n```";
+  const slide = (layout: string) => ({
+    global: { theme: "./theme.json" },
+    slides: [{ index: 0, frontmatter: { layout }, body: SRC, slots: {} }],
+  });
+
+  const codeVariantLayout = (name: string, variant?: "light" | "dark"): CompilerLayout => {
+    const layout = makeLayout(name, [codeSlot("body")]);
+    if (variant) layout.variant = variant;
+    return layout;
+  };
+
+  it('a variant:"light" layout highlights with the light arm of the pair', async () => {
+    const lightDeck = await compileDeck(slide("code-light"), [codeVariantLayout("code-light", "light")], "", {}, PAIR);
+    const darkDeck = await compileDeck(slide("code-dark"), [codeVariantLayout("code-dark", "dark")], "", {}, PAIR);
+    // Reference: the same source highlighted with the light theme as a plain string.
+    const lightRef = await compileDeck(slide("code-light"), [codeVariantLayout("code-light", "light")], "", {}, { codeTheme: "github-light" });
+
+    const lightColors = colorsOf(lightDeck.steps[0].content!["body"]);
+    assert.notEqual(lightColors, colorsOf(darkDeck.steps[0].content!["body"]), "light and dark arms differ");
+    assert.equal(
+      lightColors,
+      colorsOf(lightRef.steps[0].content!["body"]),
+      'the light arm resolves to the light theme itself, not merely "not dark"',
+    );
+  });
+
+  it("an untagged layout with a pair codeTheme fails fast (no default)", async () => {
+    await assert.rejects(
+      () => compileDeck(slide("code-default"), [codeVariantLayout("code-default")], "", {}, PAIR),
+      /Layout "code-default".*declares no "variant"/s,
+    );
+  });
+
+  it("a string codeTheme still highlights regardless of a layout's variant (back-compat)", async () => {
+    const stringDeck = await compileDeck(
+      slide("code-light"),
+      [codeVariantLayout("code-light", "light")],
+      "",
+      {},
+      { codeTheme: "github-dark" },
+    );
+    const body = stringDeck.steps[0].content!["body"] as any;
+    assert.ok(Array.isArray(body.paragraphs), "highlighted to a TextFill");
+    assert.ok(body.paragraphs.some((p: any) => p.runs.some((r: any) => r.color)), "carries per-token colors");
+  });
+});
+
+// ============================================
 // Mermaid fence detection in compileDeck
 // ============================================
 

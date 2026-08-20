@@ -73,6 +73,20 @@ export const AcceptType = {
 } as const;
 export type AcceptType = (typeof AcceptType)[keyof typeof AcceptType];
 
+// ── Variant discriminator (a layout's light/dark surface) ─────────────────────
+
+/**
+ * The tonal surface a layout sits on. A code layout on a light panel needs a
+ * light Shiki theme (dark syntax would wash out); one on a dark panel needs a
+ * dark theme. A layout declares its `variant`; the code compile resolves a
+ * `{ light, dark }` `codeTheme` pair against it (a pair with no `variant` throws).
+ */
+export const Variant = {
+  Light: "light",
+  Dark: "dark",
+} as const;
+export type Variant = (typeof Variant)[keyof typeof Variant];
+
 // ── Engine fill union + block-handler strategy ────────────────────────────────
 
 /**
@@ -108,6 +122,12 @@ export type BlockContext = {
   slideIdx: number;
   source: string;
   config: CompilerConfig;
+  /**
+   * The current layout's tonal surface, threaded from its `variant`. The code
+   * compile reads it to pick the arm of a `{ light, dark }` `codeTheme` pair;
+   * a pair with no `variant` throws (no default).
+   */
+  layoutVariant?: Variant;
 };
 
 /**
@@ -271,6 +291,11 @@ export type CompilerLayout = {
   description?: string;
   whenToUse?: string;
   whenNotToUse?: string;
+  /**
+   * The layout's tonal surface. Selects the arm of a `{ light, dark }` `codeTheme`
+   * pair for code fences on this layout. Required when `codeTheme` is a pair.
+   */
+  variant?: Variant;
   /** Frontmatter inputs (template, image) — one value per `key: value` line. */
   parameters: CompilerParameter[];
   /** Body regions — the default body or `::name::` regions; each `accepts` blocks. */
@@ -318,9 +343,11 @@ export type CompilerThemeConfig = {
    * Theme-level defaults for the two content types the compiler resolves before
    * the engine sees them. One code style and one mermaid style per theme (the
    * design-system framing) — they can't sit on a multi-type slot. `codeTheme` is
-   * a Shiki theme id; `mermaidVariant` names an entry in `mermaid`.
+   * a Shiki theme id, or a `{ light, dark }` pair when the theme has both light
+   * and dark code layouts (each layout's `variant` picks the arm);
+   * `mermaidVariant` names an entry in `mermaid`.
    */
-  codeTheme?: string;
+  codeTheme?: string | { light: string; dark: string };
   mermaidVariant?: string;
 };
 

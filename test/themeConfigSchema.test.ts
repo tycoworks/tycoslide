@@ -51,6 +51,7 @@ function fullTheme(): CompilerThemeConfig {
         description: "A titled layout",
         whenToUse: "For a title-and-body slide",
         whenNotToUse: "For a slide with no title",
+        variant: "dark",
         parameters: [
           { type: "template", shapeName: "Title 1", template: "{title}", required: true, limit: { maxChars: 50 } },
           { type: "image", shapeName: "Logo 0", key: "logo", required: false },
@@ -82,6 +83,45 @@ describe("parseThemeConfig", () => {
     assert.equal(cfg.fonts?.[0].family, "Inter");
     assert.equal(cfg.mermaid?.brand.accents.length, 2);
     assert.equal(cfg.codeTheme, "github-dark");
+    assert.equal(cfg.layouts[0].variant, "dark");
+  });
+
+  it("accepts a { light, dark } codeTheme pair and a layout variant", () => {
+    const raw = fullTheme();
+    raw.codeTheme = { light: "github-light", dark: "github-dark" };
+    raw.layouts[0].variant = "light";
+    const cfg = parseThemeConfig(raw, "pair.json");
+    assert.deepEqual(cfg.codeTheme, { light: "github-light", dark: "github-dark" });
+    assert.equal(cfg.layouts[0].variant, "light");
+  });
+
+  it("rejects an unknown key inside a codeTheme pair", () => {
+    const bad = fullTheme();
+    // A pair with an extra arm must be caught by the strict object, not dropped.
+    // Inside a z.union the error is reported generically at `codeTheme` (Zod does
+    // not surface the offending arm's key name), but it IS rejected — the strict
+    // pair refuses the extra key rather than silently dropping it.
+    (bad as { codeTheme: unknown }).codeTheme = { light: "github-light", dark: "github-dark", dim: "github-dimmed" };
+    assert.throws(
+      () => parseThemeConfig(bad, "/path/to/theme.json"),
+      (err: Error) => {
+        assert.match(err.message, /invalid theme config/);
+        assert.match(err.message, /codeTheme/);
+        return true;
+      },
+    );
+  });
+
+  it("rejects an invalid layout variant value", () => {
+    const bad = fullTheme();
+    (bad.layouts[0] as { variant: unknown }).variant = "sepia";
+    assert.throws(
+      () => parseThemeConfig(bad, "/path/to/theme.json"),
+      (err: Error) => {
+        assert.match(err.message, /invalid theme config/);
+        return true;
+      },
+    );
   });
 
   it("rejects an unknown TOP-LEVEL key and names it", () => {
