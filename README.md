@@ -42,16 +42,16 @@ title: Highlights
 Build:
 
 ```bash
-tycoslide build deck.md                   # → deck.pptx
+npx tycoslide build deck.md               # → deck.pptx
 ```
 
 ## CLI
 
 ```bash
-tycoslide build deck.md       # markdown → PPTX (theme resolved from deck frontmatter)
-tycoslide build deck.md --no-notes   # omit speaker notes from the output
-tycoslide package             # generate the Agent Skill (SKILL.md + manifest.json)
-tycoslide manifest            # print layout + asset catalog to stdout
+npx tycoslide build deck.md       # markdown → PPTX (theme resolved from deck frontmatter)
+npx tycoslide build deck.md --no-notes   # omit speaker notes from the output
+npx tycoslide package             # generate the Agent Skill (SKILL.md + manifest.json)
+npx tycoslide manifest            # print layout + asset catalog to stdout
 ```
 
 ## Theme Structure

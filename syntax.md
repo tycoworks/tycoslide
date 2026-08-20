@@ -238,7 +238,7 @@ notes: |
 ---
 ```
 
-To build with all speaker notes omitted, pass `--no-notes` to `tycoslide build` (see [README](README.md#cli)).
+To build with all speaker notes omitted, pass `--no-notes` to `npx tycoslide build` (see [README](README.md#cli)).
 
 ---
 
