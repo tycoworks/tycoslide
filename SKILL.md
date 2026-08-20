@@ -37,8 +37,8 @@ For brand voice and naming guidelines, read `brand.md` if it exists alongside th
 
 Before writing anything, read `manifest.json`. It contains:
 
-- **layouts** -- for each: `name`, `parameters` (frontmatter inputs) and `slots` (body regions). Each slot lists the content types it accepts, plus optional `required` and `limit`. Read a layout's `slots` and the types they accept to see what content it holds.
-- **assets** -- brand logos, client logos, illustrations, and icons (`description`)
+- **layouts** -- for each: `name`, `description`, `parameters` (frontmatter inputs) and `slots` (body regions), each with `type` and optionally `required`, `limit`, `codeTheme`, `mermaidVariant` (plus, for assets, a `type` of `icon`/`image`/`background`), plus documentation (`whenToUse`, `whenNotToUse`)
+- **assets** -- brand logos, client logos, illustrations, and icons (`description`, `whenToUse`)
 
 A layout's inputs split two ways (see [syntax.md](syntax.md) for details):
 - **parameters** -- one value on a frontmatter line. Types: `template`, `image`. Fill by putting a value under the parameter's key in the slide frontmatter.
@@ -46,7 +46,7 @@ A layout's inputs split two ways (see [syntax.md](syntax.md) for details):
 
 A single physical slide may back multiple layouts. When two manifest entries share the same `slideNumber`, they render into the same underlying PPTX shapes but declare their fill differently -- e.g. one layout exposing the fill as an `image` parameter and a sibling exposing it as a `mermaid` slot. Pick between them by naming the layout you want in frontmatter (`layout: Full bleed diagram` vs `layout: Full bleed image`); the declaration is unambiguous per layout, so the compiler always knows how to interpret the content you provide.
 
-Match each slide's content to a layout whose structure fits it — read the `slots`, the types they accept, and each slot's `limit`. You are deciding *where content goes*, never *how it looks*: the design is the theme's.
+Study each layout's `slots` and `limit`s before writing any slides.
 
 ---
 
@@ -117,28 +117,34 @@ The deck is written to your current working directory (not inside the skill).
 
 ---
 
-## Placing Content
+## Layout Selection
 
-The deck's story and its slide-by-slide breakdown are decided *before* tycoslide — you are handed the content. Your job is to realize each slide in the template: map its content to a fitting layout from the manifest and fill it. **tycoslide fills; it does not design.** Layout, type, color, spacing, and chrome are the theme's — never yours to invent, improve, or critique.
+**Don't create boring decks.** Repeating the same layout on every slide makes a forgettable presentation. Use variety and match content shape to layout purpose.
 
-### A few composition principles
+### Before Starting
 
-General and taste-light — the theme carries the quality, not these rules:
+1. **Read the manifest thoroughly.** Each layout has `whenToUse`, `whenNotToUse`, and `limit`s. Respect all three.
+2. **Match content shape to layout purpose.** A comparison belongs in a two/three-column layout, quantified proof belongs in stat blocks, a customer voice belongs in a quote or testimonial layout. Don't force content into the wrong layout.
+3. **Plan narrative arc first.** Decide the sequence of ideas before picking layouts. Then assign each idea to its best-fit layout from the manifest. Keep one variant (all dark or all light) across the deck.
 
-- **One idea per slide.** If a slide needs more than ~5 bullets or ~3 paragraphs, split it in two.
-- **Don't overload a slide.** If it looks cramped or busy when you render it, there is too much on it — cut or split. A slide that technically fits can still be too dense to read.
-- **Lead with the point.** Put the takeaway in the slide's title/headline, then support it.
-- **Vary layouts.** Avoid the same layout on consecutive slides; contrast between adjacent slides keeps a deck legible.
-- **Match the shape of the content to the shape of the layout.** A comparison goes where a layout has two or three parallel regions; a number goes in a stat slot; a quote in a quote/testimonial slot. Nothing more clever than that.
-- **Pick assets that suit the slot.** A small slot wants a simple icon or a clean image, not a dense, detailed illustration that turns to mush when shrunk. If the build warns that an image was shrunk to a small percentage of its native size, it is the wrong asset for that slot — choose a simpler one.
+### For Each Slide
 
-### Hard constraints (these break the build or the brand — not stylistic)
+**Every slide communicates one idea.** If you're writing more than 5 bullets or 3 paragraphs, split into two slides. Put the takeaway in the headline, then support it.
 
-- **Respect each slot's `limit`.** If a slot takes at most 4 stats, use 4 or fewer; overflow splits across slides.
-- **Never restyle a layout.** The theme owns all design; you only fill slots.
-- **Never invent layout or asset names.** Use only what the manifest declares.
-- **Never leave a required parameter or slot empty**, and don't leave a placeholder logo or dummy text in an image you care about.
-- **Keep one variant.** If layouts come in dark and light, stay in one across the deck.
+Check each layout's `limit` in the manifest for content density constraints. When content overflows, split across slides.
+
+### Avoid (Common Mistakes)
+
+- **Don't repeat the same layout** -- vary layouts for visual rhythm
+- **Don't dump all content on one slide** -- two clear slides beat one crowded slide
+- **Don't ignore layout limits** -- if a slot says max 4 stats, use 4 or fewer
+- **Don't open with a body/content layout** -- use the Title layout for impact
+- **Don't skip section dividers** -- for decks over 5 slides, use Section title layouts to group sections
+- **Don't restyle the layout** -- the theme owns all design; you only fill slots
+- **Don't use an image that's wrong for the slot** -- a small slot wants a simple icon, not a dense illustration; if the build warns an image shrank to a small %, swap it for a simpler one
+- **Don't invent layout or asset names** -- only use what exists in the manifest
+- **Don't leave required parameters or slots empty** -- and don't leave a placeholder logo or dummy text in an image parameter you care about
+- **Don't mix dark and light** -- keep one variant across the deck
 
 ---
 
@@ -206,16 +212,19 @@ After a successful build, spawn a subagent:
 ```
 Review this deck. Assume there are issues -- find them.
 
-Check for (fill quality only -- the story and slide order are fixed upstream, not your concern):
-- Slides that are too dense (>7 bullets, >5 paragraphs, too many stats/rows) or that overflow a slot's `limit`
-- Content placed in a slot that doesn't fit it (a table crammed into a text region, a paragraph in a stat slot)
-- Text that wraps mid-word, clips at the slide edge, or is cramped
+Check for:
+- Slides that are too dense (>7 bullets, >5 paragraphs, too many stats/rows)
+- Same layout repeated multiple times with no variety
+- Content that doesn't match layout purpose (check whenToUse in manifest.json)
+- Narrative that doesn't flow logically
+- Missing opening (Title) or closing (Thank you) slide
+- Slides that are too sparse (a single bullet doesn't need its own slide)
 - Leftover placeholder logos or dummy text in the rendered images
 
 For each issue, suggest a specific fix.
 
 Read: /path/to/deck.md and the rendered PNGs in the working directory
-Also read: manifest.json (for each layout's slots and limits)
+Also read: manifest.json (for layout documentation)
 ```
 
 If the subagent finds issues, fix them and rebuild.
