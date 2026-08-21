@@ -9,11 +9,10 @@ function config(layouts: CompilerLayout[]): CompilerConfig {
   return { layouts, assets: {}, template: "t.pptx", rootDir: "" };
 }
 
-const OPTIONS = { build: { command: "npx tycoslide build deck.md" } };
 
 /** Parse the manifest JSON and return the sole layout's parameter list. */
 function manifestParams(layouts: CompilerLayout[]) {
-  const manifest = JSON.parse(generateManifest(config(layouts), OPTIONS));
+  const manifest = JSON.parse(generateManifest(config(layouts)));
   return manifest.layouts[0].parameters;
 }
 
@@ -71,7 +70,7 @@ function slotLayout(name: string, slots: CompilerSlot[]): CompilerLayout {
 }
 
 function manifestSlots(slots: CompilerSlot[]) {
-  const manifest = JSON.parse(generateManifest(config([slotLayout("L", slots)]), OPTIONS));
+  const manifest = JSON.parse(generateManifest(config([slotLayout("L", slots)])));
   return manifest.layouts[0].slots;
 }
 
@@ -111,7 +110,7 @@ describe("generateManifest slot accepts advertising", () => {
   });
 
   it("omits optional layout prose (description) when not declared", () => {
-    const manifest = JSON.parse(generateManifest(config([slotLayout("L", [])]), OPTIONS));
+    const manifest = JSON.parse(generateManifest(config([slotLayout("L", [])])));
     const l = manifest.layouts[0];
     assert.equal("description" in l, false);
   });

@@ -2,10 +2,6 @@ import { templateKeys } from "./markdown/textTemplate.js";
 import type { AcceptType, AssetType, CompilerConfig, CompilerParameter, CompilerSlot } from "./markdown/types.js";
 import { ParameterType } from "./markdown/types.js";
 
-export type ManifestOptions = {
-  build: { command: string };
-};
-
 type ManifestLimit = { maxChars?: number; maxLines?: number; maxItems?: number };
 
 /** A frontmatter parameter (template, image) as advertised to AI authors. */
@@ -53,9 +49,6 @@ type Manifest = {
   version: 1;
   layouts: ManifestLayout[];
   assets: Record<string, Record<string, ManifestAssetEntry>>;
-  build: {
-    command: string;
-  };
 };
 
 /**
@@ -92,7 +85,7 @@ function stripSlot(slot: CompilerSlot): ManifestSlot {
   return result;
 }
 
-export function generateManifest(config: CompilerConfig, options: ManifestOptions): string {
+export function generateManifest(config: CompilerConfig): string {
   const layouts: ManifestLayout[] = config.layouts.map((layout) => {
     const ml: ManifestLayout = {
       name: layout.name,
@@ -121,9 +114,6 @@ export function generateManifest(config: CompilerConfig, options: ManifestOption
     version: 1,
     layouts,
     assets,
-    build: {
-      command: options.build.command,
-    },
   };
 
   return JSON.stringify(manifest, null, 2);

@@ -13,7 +13,6 @@ const MANIFEST_FILE = "manifest.json";
 // SKILL.md), so the skill folder can live at the theme repo root.
 const SKILL_FILE = "skill.md";
 const SYNTAX_FILE = "syntax.md";
-const BUILD_COMMAND = "npx tycoslide build";
 
 const sdkDir = dirname(fileURLToPath(import.meta.url));
 const skillMdPath = resolve(sdkDir, "..", "SKILL.md");
@@ -67,7 +66,7 @@ program
     // basename drops any npm scope, e.g. "@acme/mz-slides" -> "mz-slides".
     const skillName = basename(themePkg.name);
 
-    const manifestJson = `${generateManifest(config, { build: { command: BUILD_COMMAND } })}\n`;
+    const manifestJson = `${generateManifest(config)}\n`;
     writeFileSync(resolve(process.cwd(), MANIFEST_FILE), manifestJson);
     console.log(`WROTE ${MANIFEST_FILE}`);
 

@@ -109,10 +109,10 @@ See [syntax.md](syntax.md) for the full syntax reference: body content (paragrap
 
 ### Build
 
-Run the command from `manifest.json`'s `build.command`:
+Build the deck (replace `<deck.md>` with your deck file):
 
 ```bash
-# e.g.: npx tycoslide build deck.md
+npx tycoslide build <deck.md>
 ```
 
 The deck is written to your current working directory (not inside the skill).
@@ -153,15 +153,7 @@ Check each layout's `limit` in the manifest for content density constraints. Whe
 
 Your first draft almost never comes out clean. Approach QA as a debugging session, not a confirmation step. If you haven't run at least one build-fix cycle, you're not done.
 
-### Build
-
-Run the command from `manifest.json`'s `build.command`:
-
-```bash
-# e.g.: npx tycoslide build deck.md
-```
-
-Read output carefully. Common errors and fixes:
+Build the deck again ([Build](#build)) and read the output carefully. Common errors and fixes:
 
 | Error | Fix |
 |-------|-----|
@@ -230,16 +222,3 @@ If the subagent finds issues, fix them and rebuild.
 ## Full Example
 
 See [syntax.md](syntax.md#full-example) for a complete multi-slide deck example.
-
----
-
-## Core Commands
-
-```bash
-# Build a deck (use command from manifest.json's build.command)
-# e.g.: npx tycoslide build deck.md
-
-# Render to images for visual QA
-soffice --headless --convert-to pdf --outdir . <deck>.pptx
-pdftoppm -png -r 96 <deck>.pdf <name>
-```
