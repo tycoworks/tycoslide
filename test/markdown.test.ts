@@ -304,8 +304,6 @@ function testLayout(name: string, contentKeys: string[] = [], assetKeys: string[
     name,
     slideNumber: 1,
     description: "",
-    whenToUse: "",
-    whenNotToUse: "",
     parameters: [...contentKeys.filter((k) => k !== "body").map(keyedTemplateParam), ...assetKeys.map((k) => imageParam(k))],
     slots: contentKeys.filter((k) => k === "body").map(textSlot),
   };
@@ -398,8 +396,6 @@ describe("compileDeck", () => {
         name: "hero",
         slideNumber: 1,
         description: "",
-        whenToUse: "",
-        whenNotToUse: "",
         parameters: [
           { key: "hero", shapeName: "s1", type: ParameterType.Image },
           { key: "logo", shapeName: "s2", type: ParameterType.Image },
@@ -453,8 +449,6 @@ describe("compileDeck", () => {
         name: "hero",
         slideNumber: 1,
         description: "",
-        whenToUse: "",
-        whenNotToUse: "",
         parameters: [{ key: "hero", shapeName: "s1", type: ParameterType.Image }],
         slots: [],
       },
@@ -717,7 +711,7 @@ function templateParam(shapeName: string, template: string, required = false): C
 }
 
 function templateLayout(name: string, params: CompilerParameter[], slots: CompilerSlot[] = []): CompilerLayout {
-  return { name, slideNumber: 1, description: "", whenToUse: "", whenNotToUse: "", parameters: params, slots };
+  return { name, slideNumber: 1, description: "", parameters: params, slots };
 }
 
 function compileOne(layout: CompilerLayout, frontmatter: Record<string, unknown>) {
@@ -908,8 +902,6 @@ describe("compileMarkdownDeck", () => {
       name: "two-column",
       slideNumber: 2,
       description: "",
-      whenToUse: "",
-      whenNotToUse: "",
       parameters: [keyedTemplateParam("headline")],
       slots: [textSlot("body"), textSlot("left"), textSlot("right")],
     },

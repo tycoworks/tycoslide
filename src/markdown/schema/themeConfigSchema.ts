@@ -53,7 +53,6 @@ const AssetEntrySchema = strict({
   path: z.string(),
   type: assetTypeSchema,
   description: z.string(),
-  whenToUse: z.string().optional(),
 });
 
 // AssetCatalog: `{ category: { name: AssetEntry } }`. The two record levels are
@@ -119,8 +118,6 @@ const LayoutSchema = strict({
   name: z.string(),
   slideNumber: z.number(),
   description: z.string().optional(),
-  whenToUse: z.string().optional(),
-  whenNotToUse: z.string().optional(),
   variant: variantSchema.optional(),
   parameters: z.array(ParameterSchema),
   slots: z.array(SlotSchema),

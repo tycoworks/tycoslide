@@ -11,8 +11,8 @@ const fixturePath = resolve(here, "fixtures", "composition-theme.json");
 
 // A minimal-but-full valid theme populating every optional field at every
 // nesting level (top-level: fonts, mermaid, codeTheme, mermaidVariant,
-// outputDir; layout: whenToUse/whenNotToUse; parameter: limit/required;
-// slot: required; block: startAt; asset: whenToUse). This is the runtime
+// outputDir; layout: description/variant; parameter: limit/required;
+// slot: required; block: startAt). This is the runtime
 // backstop for the `_drift` guard's blind spot (see the comment above
 // `ThemeConfigSchema` in themeConfigSchema.ts): every field here is a real key
 // on a `strictObject`, so a schema that forgot to declare one of them rejects
@@ -25,7 +25,7 @@ function fullTheme(): CompilerThemeConfig {
     mermaidVariant: "brand",
     assets: {
       logos: {
-        primary: { path: "logo.png", type: "image", description: "Primary logo", whenToUse: "headers" },
+        primary: { path: "logo.png", type: "image", description: "Primary logo" },
       },
     },
     fonts: [{ family: "Inter", path: "@fontsource/inter/x.woff2", weight: 400 }],
@@ -49,8 +49,6 @@ function fullTheme(): CompilerThemeConfig {
         name: "Titled",
         slideNumber: 1,
         description: "A titled layout",
-        whenToUse: "For a title-and-body slide",
-        whenNotToUse: "For a slide with no title",
         variant: "dark",
         parameters: [
           { type: "template", shapeName: "Title 1", template: "{title}", required: true, limit: { maxChars: 50 } },

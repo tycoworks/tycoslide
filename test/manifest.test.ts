@@ -18,7 +18,7 @@ function manifestParams(layouts: CompilerLayout[]) {
 }
 
 function layout(name: string, parameters: CompilerLayout["parameters"]): CompilerLayout {
-  return { name, slideNumber: 1, description: "", whenToUse: "", whenNotToUse: "", parameters, slots: [] };
+  return { name, slideNumber: 1, description: "", parameters, slots: [] };
 }
 
 describe("generateManifest parameter flattening", () => {
@@ -64,8 +64,8 @@ describe("generateManifest parameter flattening", () => {
   });
 });
 
-// A layout with the given slots (no parameters). description/whenToUse/whenNotToUse
-// are omitted to exercise their optionality.
+// A layout with the given slots (no parameters). description is omitted to
+// exercise its optionality.
 function slotLayout(name: string, slots: CompilerSlot[]): CompilerLayout {
   return { name, slideNumber: 1, parameters: [], slots };
 }
@@ -110,11 +110,9 @@ describe("generateManifest slot accepts advertising", () => {
     assert.deepEqual(slots, [{ key: "table", accepts: ["table"], required: true, limit: { maxItems: 5 } }]);
   });
 
-  it("omits optional layout prose (description/whenToUse) when not declared", () => {
+  it("omits optional layout prose (description) when not declared", () => {
     const manifest = JSON.parse(generateManifest(config([slotLayout("L", [])]), OPTIONS));
     const l = manifest.layouts[0];
     assert.equal("description" in l, false);
-    assert.equal("whenToUse" in l, false);
-    assert.equal("whenNotToUse" in l, false);
   });
 });

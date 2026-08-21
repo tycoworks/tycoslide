@@ -39,8 +39,6 @@ type ManifestLayout = {
    */
   slideNumber: number;
   description?: string;
-  whenToUse?: string;
-  whenNotToUse?: string;
   parameters: ManifestParameter[];
   slots: ManifestSlot[];
 };
@@ -49,7 +47,6 @@ type ManifestAssetEntry = {
   path: string;
   type: AssetType;
   description: string;
-  whenToUse?: string;
 };
 
 type Manifest = {
@@ -104,8 +101,6 @@ export function generateManifest(config: CompilerConfig, options: ManifestOption
       slots: layout.slots.map(stripSlot),
     };
     if (layout.description !== undefined) ml.description = layout.description;
-    if (layout.whenToUse !== undefined) ml.whenToUse = layout.whenToUse;
-    if (layout.whenNotToUse !== undefined) ml.whenNotToUse = layout.whenNotToUse;
     return ml;
   });
 
@@ -118,7 +113,6 @@ export function generateManifest(config: CompilerConfig, options: ManifestOption
         type: entry.type,
         description: entry.description,
       };
-      if (entry.whenToUse) manifestEntry.whenToUse = entry.whenToUse;
       assets[category][name] = manifestEntry;
     }
   }

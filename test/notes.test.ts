@@ -463,8 +463,6 @@ const titleLayout: CompilerLayout = {
   name: "title",
   slideNumber: 1,
   description: "",
-  whenToUse: "",
-  whenNotToUse: "",
   parameters: [],
   slots: [],
 };

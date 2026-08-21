@@ -34,7 +34,6 @@ export type AssetEntry = {
   /** Required — a missing type is a fail-fast error. */
   type: AssetType;
   description: string;
-  whenToUse?: string;
 };
 
 /** Two-level catalog: `{ category: { name: AssetEntry } }`. */
@@ -287,10 +286,8 @@ export type CompilerSlot = {
 export type CompilerLayout = {
   name: string;
   slideNumber: number;
-  /** Optional prose — a layout is a shape, not a purpose (agent-guidance descoped). */
+  /** Optional prose — a neutral description of the arrangement (a layout is a shape, not a purpose). */
   description?: string;
-  whenToUse?: string;
-  whenNotToUse?: string;
   /**
    * The layout's tonal surface. Selects the arm of a `{ light, dark }` `codeTheme`
    * pair for code fences on this layout. Required when `codeTheme` is a pair.
