@@ -37,8 +37,8 @@ For brand voice and naming guidelines, read `brand.md` if it exists alongside th
 
 Before writing anything, read `manifest.json`. It contains:
 
-- **layouts** -- for each: `name`, `description`, `parameters` (frontmatter inputs) and `slots` (body regions), each with `type` and optionally `required`, `limit`, `codeTheme`, `mermaidVariant` (plus, for assets, a `type` of `icon`/`image`/`background`), plus documentation (`whenToUse`, `whenNotToUse`)
-- **assets** -- brand logos, client logos, illustrations, and icons (`description`, `whenToUse`)
+- **layouts** -- for each: `name`, `description`, `parameters` (frontmatter inputs) and `slots` (body regions), each with `type` and optionally `required`, `limit`, `codeTheme`, `mermaidVariant` (plus, for assets, a `type` of `icon`/`image`/`background`)
+- **assets** -- brand logos, client logos, illustrations, and icons (`description`)
 
 A layout's inputs split two ways (see [syntax.md](syntax.md) for details):
 - **parameters** -- one value on a frontmatter line. Types: `template`, `image`. Fill by putting a value under the parameter's key in the slide frontmatter.
@@ -121,12 +121,12 @@ The deck is written to your current working directory (not inside the skill).
 
 ## Layout Selection
 
-**Don't create boring decks.** Repeating the same layout on every slide makes a forgettable presentation. Use variety and match content shape to layout purpose.
+**Don't create boring decks.** Repeating the same layout on every slide makes a forgettable presentation. Use variety and match content shape to the layout's slots.
 
 ### Before Starting
 
-1. **Read the manifest thoroughly.** Each layout has `whenToUse`, `whenNotToUse`, and `limit`s. Respect all three.
-2. **Match content shape to layout purpose.** A comparison belongs in a two/three-column layout, quantified proof belongs in stat blocks, a customer voice belongs in a quote or testimonial layout. Don't force content into the wrong layout.
+1. **Read the manifest thoroughly.** Each layout declares its `slots` (and the `accepts` types each one takes) and `limit`s -- the shape of what it can hold. Respect them.
+2. **Match content shape to the layout's slots.** A comparison fits a layout with two or three text columns; quantified proof fits one with stat slots; a customer voice fits a quote slot. The slots tell you what fits -- don't force content into the wrong shape.
 3. **Plan narrative arc first.** Decide the sequence of ideas before picking layouts. Then assign each idea to its best-fit layout from the manifest. Keep one variant (all dark or all light) across the deck.
 
 ### For Each Slide
@@ -217,7 +217,7 @@ Review this deck. Assume there are issues -- find them.
 Check for:
 - Slides that are too dense (>7 bullets, >5 paragraphs, too many stats/rows)
 - Same layout repeated multiple times with no variety
-- Content that doesn't match layout purpose (check whenToUse in manifest.json)
+- Content that doesn't match the layout's slots (check `accepts`/`limit`s in manifest.json)
 - Narrative that doesn't flow logically
 - Missing opening (Title) or closing (Thank you) slide
 - Slides that are too sparse (a single bullet doesn't need its own slide)
