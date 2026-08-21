@@ -174,7 +174,7 @@ Read output carefully. Common errors and fixes:
 | YAML parse error | Fix the YAML syntax in the slide's frontmatter |
 | `Skipped setting relation target` | The asset image couldn't be placed; check the path and file |
 | `forbidden style directive` | Remove `style`, `classDef`, `linkStyle`, or `%%{init}` from your mermaid block -- use `class` for grouping instead |
-| `mermaid-cli is required` | Install mermaid-cli: `npm i -D @mermaid-js/mermaid-cli` |
+| `Mermaid render failed` | The engine renders diagrams with Playwright's Chromium; install it once with `npx playwright install chromium` |
 | `no "mermaid" block` | The theme has no mermaid color config -- add a `mermaid` section to theme.json |
 
 ### Verification Loop
