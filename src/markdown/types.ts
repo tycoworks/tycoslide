@@ -108,8 +108,8 @@ export type BlockFill = TextFill | TableFill | ImageFill;
  * asset resolver, the diagnostic context to name the offending layout/slide/slot
  * when a region's markdown shape is illegal (a stray standalone block mixed into
  * prose), and the theme-level `config` — from which code/mermaid compile read
- * their one-per-theme style (`codeTheme`, `mermaid`, `mermaidVariant`,
- * `outputDir`), not the slot.
+ * their one-per-theme style (`codeTheme`, `mermaid`, `mermaidVariant`), not the
+ * slot.
  *
  * Lives in types.ts (not in `blocks/registry.ts`, which re-exports it) so a
  * per-kind block file can import it without importing the registry — the registry
@@ -168,6 +168,7 @@ export type CompilerDeckStep = {
  */
 export type CompilerDeck = {
   theme: string;
+  /** Output path, set by the caller (the CLI, or a programmatic `buildDeck`), not from frontmatter. */
   output?: string;
   steps: CompilerDeckStep[];
 };
@@ -228,14 +229,13 @@ export type CompilerImageParameter = {
 export type CompilerParameter = CompilerTemplateParameter | CompilerImageParameter;
 
 /**
- * Reserved keys in a deck's frontmatter — global (theme, output) and per-slide
+ * Reserved keys in a deck's frontmatter — global (theme) and per-slide
  * (layout, body). Exported so callers (e.g. cli.ts) reference the constants
  * instead of literal strings.
  */
 export const RESERVED_KEY = {
   LAYOUT: "layout",
   BODY: "body",
-  OUTPUT: "output",
   THEME: "theme",
   NOTES: "notes",
 } as const;
@@ -328,7 +328,6 @@ export type CompilerThemeConfig = {
   layouts: CompilerLayout[];
   assets: AssetCatalog;
   template: string;
-  outputDir?: string;
   mermaid?: MermaidConfig;
   /**
    * Brand fonts injected as `@font-face` when rendering mermaid, so diagram text

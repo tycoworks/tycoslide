@@ -21,15 +21,19 @@ const THEME_PATH = join(FIXTURES, "composition-theme.json");
 
 const BODY_FRAME = { x: 457200, y: 1371600, cx: 8229600, cy: 2743200 };
 
-// Mirror cli.ts loadConfig: parse theme.json + attach rootDir. Then point the
-// output at a fresh temp dir so tests never collide.
+// Output lands at deck.output (an absolute path); tests bake a fresh temp dir
+// into it via outPath() so they never collide.
+const OUTDIR = mkdtempSync(join(tmpdir(), "tycoslide-compiler-e2e-"));
+const outPath = (name: string): string => join(OUTDIR, name);
+
+// Mirror cli.ts loadConfig: parse theme.json + attach rootDir.
 function loadThemeConfig(): CompilerConfig {
   const raw = JSON.parse(readFileSync(THEME_PATH, "utf-8")) as CompilerThemeConfig;
-  return { ...raw, rootDir: FIXTURES, outputDir: mkdtempSync(join(tmpdir(), "tycoslide-compiler-e2e-")) };
+  return { ...raw, rootDir: FIXTURES };
 }
 
-async function outputZip(cfg: CompilerConfig, output: string): Promise<JSZip> {
-  const buf = readFileSync(join(cfg.outputDir as string, output));
+async function outputZip(path: string): Promise<JSZip> {
+  const buf = readFileSync(path);
   return JSZip.loadAsync(buf);
 }
 
@@ -48,7 +52,6 @@ describe("compiler end-to-end: theme.json file + markdown deck → transplant", 
     const config = loadThemeConfig();
     const source = `---
 theme: ./composition-theme.json
-output: compiled.pptx
 ---
 ---
 layout: Composed
@@ -58,10 +61,10 @@ layout: Composed
 | Pro  | $9    |`;
 
     const deck = await compileMarkdownDeck(source, config);
-    deck.output = "compiled.pptx";
+    deck.output = outPath("compiled.pptx");
     await buildDeck(deck, config);
 
-    const zip = await outputZip(config, "compiled.pptx");
+    const zip = await outputZip(deck.output);
     const slide = await slideXml(zip);
 
     assert.ok(slide.includes("<a:tbl"), "transplanted table should be present");
@@ -84,7 +87,6 @@ layout: Composed
     const config = loadThemeConfig();
     const source = `---
 theme: ./composition-theme.json
-output: image.pptx
 ---
 ---
 layout: Composed
@@ -92,10 +94,10 @@ layout: Composed
 ![logo]($logos.primary)`;
 
     const deck = await compileMarkdownDeck(source, config);
-    deck.output = "image.pptx";
+    deck.output = outPath("image.pptx");
     await buildDeck(deck, config);
 
-    const zip = await outputZip(config, "image.pptx");
+    const zip = await outputZip(deck.output);
     const slide = await slideXml(zip);
 
     assert.ok(slide.includes("<a:blip"), "transplanted image should carry a drawing blip");
@@ -210,7 +212,6 @@ layout: TextOnly
     const config = loadThemeConfig();
     const source = `---
 theme: ./composition-theme.json
-output: bad.pptx
 ---
 ---
 layout: TextOnly

@@ -60,9 +60,11 @@ export type GenerateOptions = {
  *   4. Write the output PPTX.
  */
 export async function generate(deck: Deck, config: Config, options: GenerateOptions = {}): Promise<void> {
-  const { layouts, rootDir, template, outputDir } = config;
-  const outFile = deck.output;
-  const outDir = outputDir ?? process.cwd();
+  const { layouts, rootDir, template } = config;
+  // deck.output is the absolute output path; automizer takes a dir + a bare
+  // filename, so split it. The CLI resolves it next to the deck file.
+  const outDir = dirname(deck.output);
+  const outFile = basename(deck.output);
 
   const automizer = new Automizer({
     templateDir: resolve(rootDir, "template"),

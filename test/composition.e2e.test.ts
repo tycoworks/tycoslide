@@ -24,15 +24,19 @@ const cell = (text: string): StyledParagraph => ({ runs: [{ text }] });
 // Body region frame (EMU) of the fixture's "Text 1" — hand-read from the fixture.
 const BODY_FRAME = { x: 457200, y: 1371600, cx: 8229600, cy: 2743200 };
 
+// Output now lands at deck.output (an absolute path); tests write into a temp dir
+// by baking it into deck.output via outPath().
+const OUTDIR = mkdtempSync(join(tmpdir(), "tycoslide-e2e-"));
+const outPath = (name: string): string => join(OUTDIR, name);
+
 const config = (layouts: Layout[]): Config => ({
   rootDir: FIXTURES,
   template: "composition.pptx",
-  outputDir: mkdtempSync(join(tmpdir(), "tycoslide-e2e-")),
   layouts,
 });
 
-async function outputZip(cfg: Config, output: string): Promise<JSZip> {
-  const buf = readFileSync(join(cfg.outputDir as string, output));
+async function outputZip(path: string): Promise<JSZip> {
+  const buf = readFileSync(path);
   return JSZip.loadAsync(buf);
 }
 
@@ -70,7 +74,7 @@ describe("end-to-end transplant (real addElement + refill)", () => {
     ]);
     const deck: Deck = {
       theme: "t",
-      output: "table.pptx",
+      output: outPath("table.pptx"),
       steps: [
         {
           layout: "Composed",
@@ -83,7 +87,7 @@ describe("end-to-end transplant (real addElement + refill)", () => {
     };
 
     await generate(deck, cfg);
-    const zip = await outputZip(cfg, "table.pptx");
+    const zip = await outputZip(deck.output);
     const slide = await slideXml(zip);
 
     assert.ok(slide.includes("<a:tbl"), "transplanted table should be present");
@@ -120,7 +124,7 @@ describe("end-to-end transplant (real addElement + refill)", () => {
     ]);
     const deck: Deck = {
       theme: "t",
-      output: "pic.pptx",
+      output: outPath("pic.pptx"),
       steps: [
         {
           layout: "Pic",
@@ -130,7 +134,7 @@ describe("end-to-end transplant (real addElement + refill)", () => {
     };
 
     await generate(deck, cfg);
-    const zip = await outputZip(cfg, "pic.pptx");
+    const zip = await outputZip(deck.output);
     const slide = await slideXml(zip);
     const rels = await slideRels(zip);
 
@@ -152,7 +156,7 @@ describe("end-to-end transplant (real addElement + refill)", () => {
     ]);
     const deck: Deck = {
       theme: "t",
-      output: "boom.pptx",
+      output: outPath("boom.pptx"),
       steps: [{ layout: "Boom", content: { x: { headers: [cell("A")], rows: [] } } }],
     };
 
@@ -164,6 +168,6 @@ describe("end-to-end transplant (real addElement + refill)", () => {
       },
     );
     // The broken artifact must not be left behind.
-    assert.throws(() => readFileSync(join(cfg.outputDir as string, "boom.pptx")));
+    assert.throws(() => readFileSync(deck.output));
   });
 });

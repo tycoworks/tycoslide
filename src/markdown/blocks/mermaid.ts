@@ -23,7 +23,7 @@ export const MERMAID_LANG = "mermaid";
 /**
  * Recognize a ```mermaid fenced block at a region's top level, folding it to an
  * Image fill, and compile it by rendering the definition to a PNG (cached under
- * `<outputDir>/.tycoslide-cache/mermaid/<hash>.png`) and wrapping it as an
+ * `<rootDir>/.tycoslide-cache/mermaid/<hash>.png`, in the theme directory) and wrapping it as an
  * ImageFill. Fit is always `contain` — mermaid diagrams are shown in their
  * entirety. Resolution is strict: the theme MUST carry a `mermaid` block, MUST
  * declare a `mermaidVariant`, and that variant MUST exist — each missing piece
@@ -93,7 +93,7 @@ function hashKey(definition: string, variantName: string, renderConfig: object, 
 }
 
 function ensureCacheDir(config: CompilerConfig): string {
-  const base = resolve(config.outputDir ?? process.cwd(), ".tycoslide-cache", "mermaid");
+  const base = resolve(config.rootDir, ".tycoslide-cache", "mermaid");
   mkdirSync(base, { recursive: true });
   return base;
 }

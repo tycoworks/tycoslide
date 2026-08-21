@@ -143,7 +143,7 @@ export type DeckStep = {
 
 export type Deck = {
   theme: string;
-  /** Output filename. Required — no silent default. */
+  /** Absolute output path for the .pptx. Required — no silent default. */
   output: string;
   steps: DeckStep[];
 };
@@ -151,7 +151,6 @@ export type Deck = {
 export type ThemeConfig = {
   layouts: Layout[];
   template: string;
-  outputDir?: string;
 };
 
 export type Config = ThemeConfig & {

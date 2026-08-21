@@ -35,7 +35,7 @@ export function toImageFill(path: string, type: AssetType): ImageFill {
   return { type: SlotType.Image, path, fit: FIT_FOR[type] };
 }
 
-const KNOWN_GLOBAL_KEYS: Set<string> = new Set([RESERVED_KEY.THEME, RESERVED_KEY.OUTPUT]);
+const KNOWN_GLOBAL_KEYS: Set<string> = new Set([RESERVED_KEY.THEME]);
 
 // Anchored whole-field reference: the entire value is `$category.name` or it is
 // not a reference at all. Anchored ⇒ no escaping concerns.
@@ -349,8 +349,8 @@ async function compileStep(
  * returned unchanged — callers that already produce absolute paths (or don't need
  * resolution, e.g. unit tests) rely on the pass-through. When set, relative paths
  * are resolved to absolute via `path.resolve(rootDir, path)`; absolute paths pass
- * through. `config.codeTheme` / `config.mermaid` / `config.mermaidVariant` /
- * `config.outputDir` feed the code and mermaid compiles.
+ * through. `config.codeTheme` / `config.mermaid` / `config.mermaidVariant` feed
+ * the code and mermaid compiles.
  */
 export async function compileDeck(doc: ParsedDocument, config: CompilerConfig): Promise<CompilerDeck> {
   const { layouts, rootDir, assets } = config;
@@ -408,12 +408,5 @@ export async function compileDeck(doc: ParsedDocument, config: CompilerConfig): 
   for (const slide of doc.slides) {
     steps.push(await compileStep(slide, config, assetTypeByPath, resolveAssetRef));
   }
-  const deck: CompilerDeck = { theme: String(theme), steps };
-
-  const output = doc.global[RESERVED_KEY.OUTPUT];
-  if (output !== undefined) {
-    deck.output = String(output);
-  }
-
-  return deck;
+  return { theme: String(theme), steps };
 }

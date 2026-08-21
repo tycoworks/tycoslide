@@ -10,8 +10,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const fixturePath = resolve(here, "fixtures", "composition-theme.json");
 
 // A minimal-but-full valid theme populating every optional field at every
-// nesting level (top-level: fonts, mermaid, codeTheme, mermaidVariant,
-// outputDir; layout: description/variant; parameter: limit/required;
+// nesting level (top-level: fonts, mermaid, codeTheme, mermaidVariant;
+// layout: description/variant; parameter: limit/required;
 // slot: required; block: startAt). This is the runtime
 // backstop for the `_drift` guard's blind spot (see the comment above
 // `ThemeConfigSchema` in themeConfigSchema.ts): every field here is a real key
@@ -20,7 +20,6 @@ const fixturePath = resolve(here, "fixtures", "composition-theme.json");
 function fullTheme(): CompilerThemeConfig {
   return {
     template: "deck.pptx",
-    outputDir: "out",
     codeTheme: "github-dark",
     mermaidVariant: "brand",
     assets: {

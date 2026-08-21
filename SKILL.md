@@ -82,7 +82,7 @@ A text shape that holds several lines (e.g. an attribution with a name over a ti
 
 A deck file has three parts:
 
-1. **Global frontmatter** (required) -- the first `---`-delimited block. Must contain `theme:` pointing to the theme config file. May also contain `output:` to set the filename (defaults to `deck.md` → `deck.pptx`).
+1. **Global frontmatter** (required) -- the first `---`-delimited block. Must contain `theme:` pointing to the theme config file. The output `.pptx` is written next to the deck, named after it (`deck.md` → `deck.pptx`).
 2. **Slides** -- each begins with a `---` separator. A slide's frontmatter sits between `---` delimiters. Body content follows the closing `---`.
 3. **Slide separators** -- a `---` on its own line separates slides.
 
@@ -115,7 +115,7 @@ Build the deck (replace `<deck.md>` with your deck file):
 npx tycoslide build <deck.md>
 ```
 
-The deck is written to your current working directory (not inside the skill).
+The `.pptx` is written next to your deck file (same directory as `<deck.md>`).
 
 ---
 

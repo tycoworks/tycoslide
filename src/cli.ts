@@ -48,7 +48,9 @@ program
     }
     const config = loadThemeConfig(absConfigPath);
     const deck = await compileDeck(doc, config);
-    if (!deck.output) deck.output = basename(deckPath).replace(/\.md$/, ".pptx");
+    // Always write the .pptx next to the input deck, named after it.
+    const outName = basename(deckPath).replace(/\.md$/, ".pptx");
+    deck.output = resolve(dirname(absDeckPath), outName);
     await buildDeck(deck, config, { excludeNotes: !opts.notes });
   });
 

@@ -100,7 +100,6 @@ export function toEngineThemeConfig(config: CompilerThemeConfig): ThemeConfig {
     layouts: config.layouts.map(toEngineLayout),
     template: config.template,
   };
-  if (config.outputDir !== undefined) result.outputDir = config.outputDir;
   return result;
 }
 
@@ -129,8 +128,8 @@ export function toEngineConfig(config: CompilerConfig): Config {
  * populates it before calling `buildDeck`; a programmatic caller that forgot to
  * set it hits this error instead of a confusing engine-side failure.
  *
- * Mermaid PNGs are cached under `<outputDir>/.tycoslide-cache/mermaid/` so no
- * post-write cleanup is needed.
+ * Mermaid PNGs are cached under `<rootDir>/.tycoslide-cache/mermaid/` (the theme
+ * directory) so no post-write cleanup is needed.
  */
 export async function buildDeck(
   deck: CompilerDeck,

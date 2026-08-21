@@ -127,7 +127,6 @@ export const ThemeConfigSchema = strict({
   layouts: z.array(LayoutSchema),
   assets: AssetCatalogSchema,
   template: z.string(),
-  outputDir: z.string().optional(),
   mermaid: MermaidConfigSchema.optional(),
   fonts: z.array(ThemeFontSchema).optional(),
   codeTheme: z.union([z.string(), strict({ light: z.string().min(1), dark: z.string().min(1) })]).optional(),

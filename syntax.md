@@ -13,12 +13,12 @@ Every deck file starts with a global frontmatter block declaring the theme:
 ```markdown
 ---
 theme: ./theme.json
-output: my-deck.pptx
 ---
 ```
 
 - **`theme`** (required) -- path to the theme config file, relative to the deck file.
-- **`output`** -- output filename. Defaults to the deck filename with a `.pptx` extension.
+
+The output `.pptx` is written next to the deck file, named after it (`deck.md` → `deck.pptx`).
 
 ---
 

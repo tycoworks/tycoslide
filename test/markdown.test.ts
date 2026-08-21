@@ -15,7 +15,7 @@ import { ParameterType } from "../dist/markdown/types.js";
 // throwaway config (its `template` is unread by the compile path) from the old
 // (layouts, rootDir, assets) arguments, plus an `extra` slot for theme-level
 // code/mermaid style. Callers `await` the result.
-type CompileExtra = Partial<Pick<CompilerConfig, "codeTheme" | "mermaid" | "mermaidVariant" | "outputDir">>;
+type CompileExtra = Partial<Pick<CompilerConfig, "codeTheme" | "mermaid" | "mermaidVariant">>;
 const cfg = (layouts: CompilerLayout[], rootDir = "", assets: AssetCatalog = {}, extra: CompileExtra = {}): CompilerConfig => ({
   layouts,
   assets,
@@ -328,15 +328,20 @@ describe("compileDeck", () => {
     assert.equal(deck.steps[0].layout, "title");
   });
 
-  it("global output maps to Deck.output", async () => {
-    const deck = await compileDeck({
-      global: { theme: "./theme.json", output: "my-deck.pptx" },
-      slides: [
-        { index: 0, frontmatter: { layout: "title" }, body: "", slots: {} },
-      ],
-    }, [testLayout("title")]);
-
-    assert.equal(deck.output, "my-deck.pptx");
+  it("rejects an output key in global frontmatter (no longer supported)", async () => {
+    await assert.rejects(
+      compileDeck({
+        global: { theme: "./theme.json", output: "my-deck.pptx" },
+        slides: [
+          { index: 0, frontmatter: { layout: "title" }, body: "", slots: {} },
+        ],
+      }, [testLayout("title")]),
+      (err: Error) => {
+        assert.ok(err.message.includes("Unknown key(s) in global frontmatter"), err.message);
+        assert.ok(err.message.includes("output"), "names the offending key");
+        return true;
+      },
+    );
   });
 
   it("non-layout frontmatter keys become content entries", async () => {
@@ -914,7 +919,6 @@ describe("compileMarkdownDeck", () => {
   it("full example end-to-end", async () => {
     const source = `---
 theme: ./theme.json
-output: quarterly-review.pptx
 ---
 ---
 layout: title
@@ -942,7 +946,6 @@ bg: images/closing-bg.png
       imgs: { closingBg: { path: "images/closing-bg.png", type: AssetType.Image, description: "" } },
     });
 
-    assert.equal(deck.output, "quarterly-review.pptx");
     assert.equal(deck.steps.length, 3);
 
     assert.equal(deck.steps[0].layout, "title");
@@ -970,7 +973,6 @@ bg: images/closing-bg.png
   it("single slide with global frontmatter", async () => {
     const source = `---
 theme: ./theme.json
-output: my-deck.pptx
 ---
 ---
 layout: standalone
@@ -980,7 +982,6 @@ Single slide content`;
 
     const deck = await compileMarkdownDeck(source, [testLayout("standalone", ["headline", "body"])]);
 
-    assert.equal(deck.output, "my-deck.pptx");
     assert.equal(deck.steps.length, 1);
     assert.equal(deck.steps[0].layout, "standalone");
     assert.deepEqual(deck.steps[0].content!["headline"], tvar("headline", "Just One Slide"));
