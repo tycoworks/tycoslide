@@ -24,8 +24,12 @@ import { fillTable, isTableFill } from "./table.js";
 import { fillTemplate, isTemplateFill } from "./template.js";
 import { fillText, isTextFill } from "./text.js";
 
-/** The shape a filler targets, plus its slot-level options (startAt for text). */
-export type FillTarget = { shapeName: string; startAt?: number };
+/**
+ * The shape a filler targets, plus its slot-level options (startAt for text) and
+ * a human `label` for diagnostics — the author-facing "slide N, layout …, slot …"
+ * a filler prints in advisory warnings instead of the raw PPTX shape id.
+ */
+export type FillTarget = { shapeName: string; startAt?: number; label: string };
 
 /** A pptx-automizer element-modify callback: `(element, relation) => void`. */
 export type ShapeCallback = (element: any, relation: any) => unknown;
@@ -54,7 +58,7 @@ export const FILLERS: Record<SlotType, Filler<any>> = {
     matches: isImageFill,
     callbacks: (v, t) => [
       ModifyImageHelper.setRelationTarget(basename(v.path)),
-      (el: any) => fillImage(el, v, t.shapeName),
+      (el: any) => fillImage(el, v, t.shapeName, t.label),
     ],
   },
 };

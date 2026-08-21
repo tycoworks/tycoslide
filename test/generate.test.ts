@@ -1166,7 +1166,7 @@ describe("fillSlide dispatch", () => {
     const l = layout([slot("left", [{ type: SlotType.Text, sourceSlide: BASE, shapeName: "s2" }])]);
     const { slide, calls } = recordingSlide();
     assert.throws(
-      () => fillSlide(slide, l, step({ left: tableVal }), "source"),
+      () => fillSlide(slide, l, step({ left: tableVal }), "source", BASE),
       (err: Error) => {
         assert.ok(err.message.includes('Layout "L"'));
         assert.ok(err.message.includes('slot "left"'));
@@ -1182,7 +1182,7 @@ describe("fillSlide dispatch", () => {
   it("fills in place when the base block matches (no transplant)", () => {
     const l = layout([slot("body", [{ type: SlotType.Text, sourceSlide: BASE, shapeName: "s2" }])]);
     const { slide, calls } = recordingSlide();
-    fillSlide(slide, l, step({ body: textVal }), "source");
+    fillSlide(slide, l, step({ body: textVal }), "source", BASE);
     assert.deepEqual(
       calls.map((c) => ({ op: c.op, name: c.name })),
       [{ op: "modify", name: "s2" }],
@@ -1198,7 +1198,7 @@ describe("fillSlide dispatch", () => {
       ]),
     ]);
     const { slide, calls } = recordingSlide();
-    fillSlide(slide, l, step({ left: tableVal }), "source");
+    fillSlide(slide, l, step({ left: tableVal }), "source", BASE);
 
     assert.equal(calls.length, 2);
     const add = calls[0];
@@ -1216,7 +1216,7 @@ describe("fillSlide dispatch", () => {
   it("transplants without removing anything when the slot has no base block", () => {
     const l = layout([slot("left", [{ type: SlotType.Table, sourceSlide: 5, shapeName: "t" }])]);
     const { slide, calls } = recordingSlide();
-    fillSlide(slide, l, step({ left: tableVal }), "source");
+    fillSlide(slide, l, step({ left: tableVal }), "source", BASE);
     assert.deepEqual(
       calls.map((c) => ({ op: c.op, name: c.name })),
       [{ op: "add", name: "t" }],
@@ -1228,7 +1228,7 @@ describe("fillSlide dispatch", () => {
     const l = layout([slot("body", [{ type: SlotType.Text, sourceSlide: BASE, shapeName: "s2" }])]);
     const { slide } = recordingSlide();
     assert.throws(
-      () => fillSlide(slide, l, step({ nope: textVal }), "source"),
+      () => fillSlide(slide, l, step({ nope: textVal }), "source", BASE),
       (err: Error) => {
         assert.ok(err.message.includes('has no slot "nope"'));
         assert.ok(err.message.includes("body")); // lists declared slots
@@ -1244,7 +1244,7 @@ describe("fillSlide dispatch", () => {
       slot("b", [{ type: SlotType.Text, sourceSlide: BASE, shapeName: "sb" }]),
     ]);
     const { slide, calls } = recordingSlide();
-    fillSlide(slide, l, step({ a: textVal }), "source");
+    fillSlide(slide, l, step({ a: textVal }), "source", BASE);
     assert.deepEqual(
       calls.map((c) => c.name),
       ["sa"],
@@ -1255,7 +1255,7 @@ describe("fillSlide dispatch", () => {
     const l = layout([slot("body", [{ type: SlotType.Text, sourceSlide: BASE, shapeName: "s2" }])]);
     const { slide } = recordingSlide();
     assert.throws(
-      () => fillSlide(slide, l, step({ body: "just a string" } as unknown as DeckStep["content"]), "source"),
+      () => fillSlide(slide, l, step({ body: "just a string" } as unknown as DeckStep["content"]), "source", BASE),
       (err: Error) => {
         assert.ok(err.message.includes("unrecognized content value"));
         return true;
@@ -1271,7 +1271,7 @@ describe("fillSlide dispatch", () => {
       ]),
     ]);
     const { slide, calls } = recordingSlide();
-    fillSlide(slide, l, step({ hero: imageVal }), "source");
+    fillSlide(slide, l, step({ hero: imageVal }), "source", BASE);
     assert.deepEqual(
       calls.map((c) => ({ op: c.op, name: c.name })),
       [{ op: "modify", name: "pic" }],
@@ -1283,7 +1283,7 @@ describe("fillSlide dispatch", () => {
     // it dispatches to the text shape in place (startAt is consumed downstream).
     const l = layout([slot("body", [{ type: SlotType.Text, sourceSlide: BASE, shapeName: "s2", startAt: 2 }])]);
     const { slide, calls } = recordingSlide();
-    fillSlide(slide, l, step({ body: textVal }), "source");
+    fillSlide(slide, l, step({ body: textVal }), "source", BASE);
     assert.deepEqual(
       calls.map((c) => c.name),
       ["s2"],

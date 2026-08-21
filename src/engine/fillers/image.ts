@@ -49,7 +49,7 @@ const MIN_SCALE = 0.2;
  * `image.path` is assumed absolute — the compiler / caller resolves it before the
  * ImageFill reaches the engine.
  */
-export function fillImage(shape: any, image: ImageFill, shapeName = ""): void {
+export function fillImage(shape: any, image: ImageFill, shapeName: string, label: string): void {
   const dims = imageSize(new Uint8Array(readFileSync(image.path)));
   if (!dims.width || !dims.height) {
     throw new Error(`Image shape "${shapeName}": could not read image dimensions from "${image.path}".`);
@@ -68,7 +68,7 @@ export function fillImage(shape: any, image: ImageFill, shapeName = ""): void {
     h: Number(ext.getAttribute(Attr.CY)),
   };
   const { geometry, warnings } = computeGeometry(frame, dims.width, dims.height, image.fit);
-  for (const w of warnings) console.warn(`Image "${shapeName}": ${w}`);
+  for (const w of warnings) console.warn(`Image ${label}: ${w}`);
 
   if (geometry.placement === Placement.Crop) {
     // fill: symmetric crop on the overflowing axis, written as srcRect insets.

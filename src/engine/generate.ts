@@ -120,11 +120,12 @@ export async function generate(deck: Deck, config: Config, options: GenerateOpti
   // stripped — the deck is guaranteed notes-free.
   const excludeNotes = options.excludeNotes ?? false;
 
-  for (const step of deck.steps) {
+  for (const [index, step] of deck.steps.entries()) {
     const layout = resolveLayout(step.layout);
+    const slideNumber = index + 1;
     pres.addSlide(sourceAlias, layout.baseSlide, (slide: any) => {
       captureFillErrors(slide);
-      fillSlide(slide, layout, step, sourceAlias);
+      fillSlide(slide, layout, step, sourceAlias, slideNumber);
       // In-band notes pass: automizer runs this during write() and hands us the
       // OUTPUT archive (parent.targetArchive) and the real output slide number
       // (parent.targetNumber), so notes map 1:1 with no slide-number mapping.
@@ -211,7 +212,7 @@ function describeValue(v: unknown): string {
  *
  * Exported for tests; `generate()` calls it inside the `addSlide` callback.
  */
-export function fillSlide(slide: any, layout: Layout, step: DeckStep, sourceAlias: string): void {
+export function fillSlide(slide: any, layout: Layout, step: DeckStep, sourceAlias: string, slideNumber: number): void {
   assertNoUnknownSlots(step, layout);
 
   for (const slot of layout.slots) {
@@ -219,9 +220,19 @@ export function fillSlide(slide: any, layout: Layout, step: DeckStep, sourceAlia
     if (value === undefined) continue; // Empty slot: leave the base slide's shape untouched.
 
     const block = resolveBlock(step, slot, value);
-    const callbacks = FILLERS[block.type].callbacks(value, targetOf(block));
+    const target = targetOf(block, slotLabel(slideNumber, layout, slot));
+    const callbacks = FILLERS[block.type].callbacks(value, target);
     applyBlock(slide, sourceAlias, layout.baseSlide, slot, block, callbacks);
   }
+}
+
+/**
+ * The author-facing descriptor a filler prints in advisory warnings, so a
+ * message points at `slide 3, layout "Body", slot "photo"` rather than the raw
+ * PPTX shape id.
+ */
+function slotLabel(slideNumber: number, layout: Layout, slot: Slot): string {
+  return `slide ${slideNumber}, layout "${layout.name}", slot "${slot.key}"`;
 }
 
 /** The SlotType a resolved `*Fill` value maps to, via the filler discriminators. */
@@ -285,9 +296,9 @@ function resolveBlock(step: DeckStep, slot: Slot, value: object): Block {
   return block;
 }
 
-/** The shape a filler targets, plus `startAt` when the (text) block declares it. */
-function targetOf(block: Block): FillTarget {
-  const target: FillTarget = { shapeName: block.shapeName };
+/** The shape a filler targets, plus its diagnostic `label` and `startAt` when the (text) block declares it. */
+function targetOf(block: Block, label: string): FillTarget {
+  const target: FillTarget = { shapeName: block.shapeName, label };
   if (block.startAt !== undefined) target.startAt = block.startAt;
   return target;
 }
