@@ -72,12 +72,11 @@ function listParagraphs(list: List, level: number): StyledParagraph[] {
 }
 
 /**
- * Split a paragraph's runs on newlines into one `TextRun[]` per source line —
- * preserving the pre-mdast "one source line = one StyledParagraph" behavior.
- * Both a soft break (`\n` inside a text run) and a markdown hard break (a
- * `break` node the inline walk emits as a `"\n"` run in block context) split
- * here. Empty segments (a style boundary landing on a line edge) are dropped,
- * and empty lines produce no paragraph, matching the old blank-line filter.
+ * Split a paragraph's runs on newlines into one `TextRun[]` per source line, so
+ * one source line becomes one StyledParagraph. Both a soft break (`\n` inside a
+ * text run) and a markdown hard break (a `break` node the inline walk emits as a
+ * `"\n"` run in block context) split here. Empty segments (a style boundary
+ * landing on a line edge) are dropped, and empty lines produce no paragraph.
  */
 function splitRunsIntoParagraphs(runs: TextRun[]): TextRun[][] {
   const lines: TextRun[][] = [];

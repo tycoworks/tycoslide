@@ -259,7 +259,7 @@ ${fontFaceCss(fonts)}
 
   // Serve the page from a real file:// URL, not setContent — an about:blank
   // origin can't fetch the file:// font resources (@font-face silently fails),
-  // whereas a file://-origin document loads them. Mirrors the old harness.
+  // whereas a file://-origin document loads them.
   const htmlPath = `${outputPath}.html`;
   const { chromium } = await import("playwright");
   let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;

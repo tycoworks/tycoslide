@@ -21,7 +21,7 @@ function compileTable(node: Table): TableFill {
 }
 
 /** One table cell → a StyledParagraph. An empty cell keeps a single empty run so
- * downstream code sees a run to style, matching the old `parseInlineRuns("")`. */
+ * downstream code always sees a run to style. */
 function cellParagraph(cell: TableCell): StyledParagraph {
   const runs = walkPhrasingChildren(cell.children, {});
   return { runs: runs.length > 0 ? runs : [{ text: "" }] };

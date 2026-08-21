@@ -51,6 +51,7 @@ output: deck.pptx
 layout: title
 headline: Welcome
 ---
+::body::
 Some body text`);
 
     assert.equal(doc.global["output"], "deck.pptx");
@@ -59,7 +60,7 @@ Some body text`);
       layout: "title",
       headline: "Welcome",
     });
-    assert.equal(doc.slides[0].body, "Some body text");
+    assert.equal(doc.slides[0].slots["body"], "Some body text");
   });
 
   it("single slide when file starts with slide separator", async () => {
@@ -67,12 +68,13 @@ Some body text`);
 layout: title
 headline: Welcome
 ---
+::body::
 Some body text`);
 
     assert.equal(doc.global["layout"], "title");
     assert.equal(doc.global["headline"], "Welcome");
     assert.equal(doc.slides.length, 1);
-    assert.equal(doc.slides[0].body, "Some body text");
+    assert.equal(doc.slides[0].slots["body"], "Some body text");
   });
 
   it("multiple slides split on ---", async () => {
@@ -82,17 +84,19 @@ output: deck.pptx
 ---
 layout: title
 ---
+::body::
 First slide body
 ---
 layout: content
 ---
+::body::
 Second slide body`);
 
     assert.equal(doc.slides.length, 2);
     assert.equal(doc.slides[0].frontmatter["layout"], "title");
-    assert.equal(doc.slides[0].body, "First slide body");
+    assert.equal(doc.slides[0].slots["body"], "First slide body");
     assert.equal(doc.slides[1].frontmatter["layout"], "content");
-    assert.equal(doc.slides[1].body, "Second slide body");
+    assert.equal(doc.slides[1].slots["body"], "Second slide body");
   });
 
   it("global frontmatter extracted separately from slides", async () => {
@@ -102,12 +106,13 @@ output: quarterly-review.pptx
 ---
 layout: title
 ---
+::body::
 Hello`);
 
     assert.equal(doc.global["output"], "quarterly-review.pptx");
     assert.equal(doc.slides.length, 1);
     assert.equal(doc.slides[0].frontmatter["layout"], "title");
-    assert.equal(doc.slides[0].body, "Hello");
+    assert.equal(doc.slides[0].slots["body"], "Hello");
     assert.equal(doc.slides[0].frontmatter["output"], undefined);
   });
 
@@ -118,6 +123,7 @@ output: deck.pptx
 ---
 layout: two-column
 ---
+::body::
 Default body text
 ::left::
 Left column content
@@ -125,7 +131,7 @@ Left column content
 Right column content`);
 
     assert.equal(doc.slides.length, 1);
-    assert.equal(doc.slides[0].body, "Default body text");
+    assert.equal(doc.slides[0].slots["body"], "Default body text");
     assert.equal(doc.slides[0].slots["left"], "Left column content");
     assert.equal(doc.slides[0].slots["right"], "Right column content");
   });
@@ -137,6 +143,7 @@ output: deck.pptx
 ---
 layout: code
 ---
+::body::
 Here is some code:
 \`\`\`yaml
 key: value
@@ -147,9 +154,9 @@ After the fence`);
 
     assert.equal(doc.slides.length, 1);
     assert.equal(doc.slides[0].frontmatter["layout"], "code");
-    assert.ok(doc.slides[0].body.includes("---"));
-    assert.ok(doc.slides[0].body.includes("another: section"));
-    assert.ok(doc.slides[0].body.includes("After the fence"));
+    assert.ok(doc.slides[0].slots["body"].includes("---"));
+    assert.ok(doc.slides[0].slots["body"].includes("another: section"));
+    assert.ok(doc.slides[0].slots["body"].includes("After the fence"));
   });
 
   it("::name:: inside code fences is NOT a slot marker", async () => {
@@ -159,6 +166,7 @@ output: deck.pptx
 ---
 layout: demo
 ---
+::body::
 Before code
 \`\`\`markdown
 ::left::
@@ -168,8 +176,8 @@ After code`);
 
     assert.equal(doc.slides.length, 1);
     assert.equal(doc.slides[0].slots["left"], undefined);
-    assert.ok(doc.slides[0].body.includes("::left::"));
-    assert.ok(doc.slides[0].body.includes("After code"));
+    assert.ok(doc.slides[0].slots["body"].includes("::left::"));
+    assert.ok(doc.slides[0].slots["body"].includes("After code"));
   });
 
   it("empty body with frontmatter only", async () => {
@@ -184,15 +192,16 @@ headline: Section Break
     assert.equal(doc.slides.length, 1);
     assert.equal(doc.slides[0].frontmatter["layout"], "divider");
     assert.equal(doc.slides[0].frontmatter["headline"], "Section Break");
-    assert.equal(doc.slides[0].body, "");
+    assert.deepEqual(doc.slides[0].slots, {});
   });
 
   it("body-only slide without frontmatter", async () => {
-    const doc = parseSlideDocument(`Just some body text without any frontmatter`);
+    const doc = parseSlideDocument(`::body::
+Just some body text without any frontmatter`);
 
     assert.equal(doc.slides.length, 1);
     assert.deepEqual(doc.slides[0].frontmatter, {});
-    assert.equal(doc.slides[0].body, "Just some body text without any frontmatter");
+    assert.equal(doc.slides[0].slots["body"], "Just some body text without any frontmatter");
   });
 
   it("slide indices are sequential", async () => {
@@ -222,18 +231,20 @@ output: deck.pptx
 ---
 layout: demo
 ---
+::body::
 ~~~
 ---
 ~~~
 After fence`);
 
     assert.equal(doc.slides.length, 1);
-    assert.ok(doc.slides[0].body.includes("---"));
-    assert.ok(doc.slides[0].body.includes("After fence"));
+    assert.ok(doc.slides[0].slots["body"].includes("---"));
+    assert.ok(doc.slides[0].slots["body"].includes("After fence"));
   });
 
   it("empty global frontmatter produces empty object", async () => {
-    const doc = parseSlideDocument(`No frontmatter here at all`);
+    const doc = parseSlideDocument(`::body::
+No frontmatter here at all`);
 
     assert.deepEqual(doc.global, {});
   });
@@ -250,9 +261,21 @@ Left content
 ::right::
 Right content`);
 
-    assert.equal(doc.slides[0].body, "");
     assert.equal(doc.slides[0].slots["left"], "Left content");
     assert.equal(doc.slides[0].slots["right"], "Right content");
+  });
+
+  it("marker-free content throws", () => {
+    assert.throws(
+      () => parseSlideDocument(`---
+theme: x
+---
+---
+layout: title
+---
+Some loose text`),
+      /text found outside a ::slot:: marker/,
+    );
   });
 });
 
@@ -297,7 +320,7 @@ function makeLayout(name: string, slots: CompilerSlot[]): CompilerLayout {
 
 /**
  * Build a layout from bare key lists. `contentKeys` become template parameters,
- * except "body" which becomes a body slot; `assetKeys` become image parameters.
+ * except "body" which becomes a text slot; `assetKeys` become image parameters.
  */
 function testLayout(name: string, contentKeys: string[] = [], assetKeys: string[] = []): CompilerLayout {
   return {
@@ -320,7 +343,7 @@ describe("compileDeck", () => {
     const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
-        { index: 0, frontmatter: { layout: "title" }, body: "", slots: {} },
+        { index: 0, frontmatter: { layout: "title" }, slots: {} },
       ],
     }, [testLayout("title")]);
 
@@ -333,7 +356,7 @@ describe("compileDeck", () => {
       compileDeck({
         global: { theme: "./theme.json", output: "my-deck.pptx" },
         slides: [
-          { index: 0, frontmatter: { layout: "title" }, body: "", slots: {} },
+          { index: 0, frontmatter: { layout: "title" }, slots: {} },
         ],
       }, [testLayout("title")]),
       (err: Error) => {
@@ -351,7 +374,6 @@ describe("compileDeck", () => {
         {
           index: 0,
           frontmatter: { layout: "hero", headline: "Big Title", subtitle: "Sub" },
-          body: "",
           slots: {},
         },
       ],
@@ -362,22 +384,6 @@ describe("compileDeck", () => {
     assert.equal(deck.steps[0].content!["layout"], undefined);
   });
 
-  it("body text becomes content.body as a TextFill", async () => {
-    const deck = await compileDeck({
-      global: { theme: "./theme.json" },
-      slides: [
-        {
-          index: 0,
-          frontmatter: { layout: "content" },
-          body: "Line one\nLine two\nLine three",
-          slots: {},
-        },
-      ],
-    }, [testLayout("content", ["body"])]);
-
-    assert.deepEqual(deck.steps[0].content!["body"], paras(line("Line one"), line("Line two"), line("Line three")));
-  });
-
   it("named slots become content entries as TextFills", async () => {
     const deck = await compileDeck({
       global: { theme: "./theme.json" },
@@ -385,7 +391,6 @@ describe("compileDeck", () => {
         {
           index: 0,
           frontmatter: { layout: "two-col" },
-          body: "",
           slots: { left: "Left line 1\nLeft line 2", right: "Right content" },
         },
       ],
@@ -419,7 +424,6 @@ describe("compileDeck", () => {
               hero: "images/hero.png",
               logo: "images/logo.svg",
             },
-            body: "",
             slots: {},
           },
         ],
@@ -463,7 +467,7 @@ describe("compileDeck", () => {
           {
             global: { theme: "./theme.json" },
             slides: [
-              { index: 0, frontmatter: { layout: "hero", hero: "images/uncatalogued.png" }, body: "", slots: {} },
+              { index: 0, frontmatter: { layout: "hero", hero: "images/uncatalogued.png" }, slots: {} },
             ],
           },
           layouts,
@@ -483,7 +487,7 @@ describe("compileDeck", () => {
     const deck = await compileDeck({
       global: { theme: "./custom/theme.json" },
       slides: [
-        { index: 0, frontmatter: { layout: "title" }, body: "", slots: {} },
+        { index: 0, frontmatter: { layout: "title" }, slots: {} },
       ],
     }, [testLayout("title")]);
 
@@ -495,7 +499,7 @@ describe("compileDeck", () => {
         compileDeck({
           global: {},
           slides: [
-            { index: 0, frontmatter: { layout: "title" }, body: "", slots: {} },
+            { index: 0, frontmatter: { layout: "title" }, slots: {} },
           ],
         }, []),
       (err: Error) => {
@@ -510,7 +514,7 @@ describe("compileDeck", () => {
         compileDeck({
           global: { theme: "./theme.json" },
           slides: [
-            { index: 0, frontmatter: {}, body: "No layout here", slots: {} },
+            { index: 0, frontmatter: {}, slots: { body: "No layout here" } },
           ],
         }, []),
       (err: Error) => {
@@ -525,7 +529,7 @@ describe("compileDeck", () => {
         compileDeck({
           global: { theme: "./theme.json" },
           slides: [
-            { index: 0, frontmatter: { layout: "nonexistent" }, body: "", slots: {} },
+            { index: 0, frontmatter: { layout: "nonexistent" }, slots: {} },
           ],
         }, [testLayout("title")]),
       (err: Error) => {
@@ -544,7 +548,6 @@ describe("compileDeck", () => {
             {
               index: 0,
               frontmatter: { layout: "title", titel: "Typo" },
-              body: "",
               slots: {},
             },
           ],
@@ -565,7 +568,6 @@ describe("compileDeck", () => {
             {
               index: 0,
               frontmatter: { layout: "two-col" },
-              body: "",
               slots: { bogus: "Content" },
             },
           ],
@@ -588,7 +590,7 @@ describe("compileDeck", () => {
         compileDeck({
           global: { theme: "./theme.json" },
           slides: [
-            { index: 0, frontmatter: { layout: "hero", title: "Hello" }, body: "", slots: {} },
+            { index: 0, frontmatter: { layout: "hero", title: "Hello" }, slots: {} },
           ],
         }, layouts),
       (err: Error) => {
@@ -599,56 +601,12 @@ describe("compileDeck", () => {
     );
   });
 
-  it("body content on layout without body slot throws", async () => {
-    await assert.rejects(
-        compileDeck({
-          global: { theme: "./theme.json" },
-          slides: [
-            {
-              index: 0,
-              frontmatter: { layout: "title", headline: "Hi" },
-              body: "This layout has no body slot",
-              slots: {},
-            },
-          ],
-        }, [testLayout("title", ["headline"])]),
-      (err: Error) => {
-        assert.ok(err.message.includes("does not accept body content"));
-        return true;
-      },
-    );
-  });
-
-  it("body written as a frontmatter key throws (body is a slot, not a parameter)", async () => {
-    // Wrong-channel: `body` is a slot (a body region), never a frontmatter
-    // parameter. The frontmatter loop validates against parameters only, so a
-    // `body:` line is an unknown parameter — no dual-definition guard needed.
-    await assert.rejects(
-        compileDeck({
-          global: { theme: "./theme.json" },
-          slides: [
-            {
-              index: 0,
-              frontmatter: { layout: "content", body: "From frontmatter" },
-              body: "",
-              slots: {},
-            },
-          ],
-        }, [testLayout("content", ["body"])]),
-      (err: Error) => {
-        assert.ok(err.message.includes("Unknown key"));
-        assert.ok(err.message.includes("body"));
-        return true;
-      },
-    );
-  });
-
   it("unknown global frontmatter key throws", async () => {
     await assert.rejects(
         compileDeck({
           global: { theme: "./theme.json", bogus: "value" },
           slides: [
-            { index: 0, frontmatter: { layout: "title" }, body: "", slots: {} },
+            { index: 0, frontmatter: { layout: "title" }, slots: {} },
           ],
         }, [testLayout("title")]),
       (err: Error) => {
@@ -659,44 +617,11 @@ describe("compileDeck", () => {
     );
   });
 
-  it("empty body produces no body key in content", async () => {
-    const deck = await compileDeck({
-      global: { theme: "./theme.json" },
-      slides: [
-        {
-          index: 0,
-          frontmatter: { layout: "divider", headline: "Break" },
-          body: "",
-          slots: {},
-        },
-      ],
-    }, [testLayout("divider", ["headline"])]);
-
-    assert.equal(deck.steps[0].content!["body"], undefined);
-    assert.deepEqual(deck.steps[0].content!["headline"], tvar("headline", "Break"));
-  });
-
-  it("whitespace-only body produces no body key", async () => {
-    const deck = await compileDeck({
-      global: { theme: "./theme.json" },
-      slides: [
-        {
-          index: 0,
-          frontmatter: { layout: "spacer" },
-          body: "   \n  \n   ",
-          slots: {},
-        },
-      ],
-    }, [testLayout("spacer")]);
-
-    assert.equal(deck.steps[0].content!["body"], undefined);
-  });
-
   it("steps with no supplied content produce an empty content object", async () => {
     const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
-        { index: 0, frontmatter: { layout: "title" }, body: "", slots: {} },
+        { index: 0, frontmatter: { layout: "title" }, slots: {} },
       ],
     }, [testLayout("title")]);
 
@@ -721,7 +646,7 @@ function templateLayout(name: string, params: CompilerParameter[], slots: Compil
 
 function compileOne(layout: CompilerLayout, frontmatter: Record<string, unknown>) {
   return compileDeck(
-    { global: { theme: "t" }, slides: [{ index: 0, frontmatter: { layout: layout.name, ...frontmatter }, body: "", slots: {} }] },
+    { global: { theme: "t" }, slides: [{ index: 0, frontmatter: { layout: layout.name, ...frontmatter }, slots: {} }] },
     [layout],
   );
 }
@@ -929,6 +854,7 @@ subtitle: Engineering Team
 layout: two-column
 headline: Key Metrics
 ---
+::body::
 Revenue grew 25% YoY
 ::left::
 Metric A improved
@@ -978,6 +904,7 @@ theme: ./theme.json
 layout: standalone
 headline: Just One Slide
 ---
+::body::
 Single slide content`;
 
     const deck = await compileMarkdownDeck(source, [testLayout("standalone", ["headline", "body"])]);
@@ -1011,36 +938,13 @@ headline: No output key
 // ============================================
 
 describe("compileDeck GFM table support", () => {
-  it("body containing a GFM table is parsed as TableFill", async () => {
+  it("a GFM table in a slot is parsed as TableFill", async () => {
     const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
         {
           index: 0,
           frontmatter: { layout: "pricing" },
-          body: "| Feature | Price |\n|---------|-------|\n| Widget  | $10   |",
-          slots: {},
-        },
-      ],
-    }, [makeLayout("pricing", [tableSlot("body")])]);
-
-    const body = deck.steps[0].content!["body"];
-    assert.ok(!Array.isArray(body));
-    assert.ok(typeof body === "object" && "headers" in body);
-    assert.deepEqual(body, {
-      headers: [cellPara("Feature"), cellPara("Price")],
-      rows: [[cellPara("Widget"), cellPara("$10")]],
-    });
-  });
-
-  it("named slot containing a GFM table is parsed as TableFill", async () => {
-    const deck = await compileDeck({
-      global: { theme: "./theme.json" },
-      slides: [
-        {
-          index: 0,
-          frontmatter: { layout: "pricing" },
-          body: "",
           slots: {
             pricing: "| Plan | Cost |\n|------|------|\n| Free | $0   |\n| Pro  | $99  |",
           },
@@ -1067,8 +971,7 @@ describe("compileDeck GFM table support", () => {
         {
           index: 0,
           frontmatter: { layout: "body" },
-          body: "Just some prose\n- A bullet",
-          slots: {},
+          slots: { body: "Just some prose\n- A bullet" },
         },
       ],
     }, [testLayout("body", ["body"])]);
@@ -1096,7 +999,7 @@ describe("compileDeck code fence support", () => {
     const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
-        { index: 0, frontmatter: { layout: "code-dark" }, body: "```sql\nSELECT * FROM users;\n```", slots: {} },
+        { index: 0, frontmatter: { layout: "code-dark" }, slots: { body: "```sql\nSELECT * FROM users;\n```" } },
       ],
     }, [makeLayout("code-dark", [codeSlot("body")])], "", {}, DARK);
 
@@ -1110,7 +1013,7 @@ describe("compileDeck code fence support", () => {
     const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
-        { index: 0, frontmatter: { layout: "code-dark" }, body: "", slots: { code: "```python\nprint('hello')\n```" } },
+        { index: 0, frontmatter: { layout: "code-dark" }, slots: { code: "```python\nprint('hello')\n```" } },
       ],
     }, [makeLayout("code-dark", [codeSlot("code")])], "", {}, DARK);
 
@@ -1126,8 +1029,7 @@ describe("compileDeck code fence support", () => {
         {
           index: 0,
           frontmatter: { layout: "code-dark" },
-          body: "```typescript\nconst x = 1;\nconst y = 2;\nreturn x + y;\n```",
-          slots: {},
+          slots: { body: "```typescript\nconst x = 1;\nconst y = 2;\nreturn x + y;\n```" },
         },
       ],
     }, [makeLayout("code-dark", [codeSlot("body")])], "", {}, DARK);
@@ -1142,7 +1044,7 @@ describe("compileDeck code fence support", () => {
       compileDeck({
         global: { theme: "./theme.json" },
         slides: [
-          { index: 0, frontmatter: { layout: "code-dark" }, body: "```sql\nSELECT 1\n```", slots: {} },
+          { index: 0, frontmatter: { layout: "code-dark" }, slots: { body: "```sql\nSELECT 1\n```" } },
         ],
       }, [makeLayout("code-dark", [codeSlot("body")])]),
       /declares no "codeTheme"/,
@@ -1153,7 +1055,7 @@ describe("compileDeck code fence support", () => {
     const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
-        { index: 0, frontmatter: { layout: "body" }, body: "Just some prose", slots: {} },
+        { index: 0, frontmatter: { layout: "body" }, slots: { body: "Just some prose" } },
       ],
     }, [testLayout("body", ["body"])]);
 
@@ -1179,7 +1081,7 @@ describe("compileDeck code theme light/dark variant", () => {
   const SRC = "```typescript\nconst x = 1;\n```";
   const slide = (layout: string) => ({
     global: { theme: "./theme.json" },
-    slides: [{ index: 0, frontmatter: { layout }, body: SRC, slots: {} }],
+    slides: [{ index: 0, frontmatter: { layout }, slots: { body: SRC } }],
   });
 
   const codeVariantLayout = (name: string, variant?: "light" | "dark"): CompilerLayout => {
@@ -1253,7 +1155,6 @@ describe("compileDeck mermaid support", () => {
           {
             index: 0,
             frontmatter: { layout: "arch" },
-            body: "",
             slots: { diagram: "```mermaid\nflowchart LR\n  A --> B\n```" },
           },
         ],
@@ -1270,7 +1171,6 @@ describe("compileDeck mermaid support", () => {
           {
             index: 0,
             frontmatter: { layout: "body" },
-            body: "",
             slots: { body: "```mermaid\nflowchart LR\n  A --> B\n```" },
           },
         ],
@@ -1287,29 +1187,11 @@ describe("compileDeck mermaid support", () => {
           {
             index: 0,
             frontmatter: { layout: "arch" },
-            body: "",
             slots: { diagram: "Just some text" },
           },
         ],
       }, [mermaidLayout("arch", [], "diagram")]),
       /slot "diagram" does not accept text content \(from ::diagram::\); it accepts: image/,
-    );
-  });
-
-  it("mermaid fence in body throws", async () => {
-    await assert.rejects(
-      compileDeck({
-        global: { theme: "./theme.json" },
-        slides: [
-          {
-            index: 0,
-            frontmatter: { layout: "body" },
-            body: "```mermaid\nflowchart LR\n  A --> B\n```",
-            slots: {},
-          },
-        ],
-      }, [testLayout("body", ["body"])]),
-      /slot "body" does not accept image content \(from body content\); it accepts: text/,
     );
   });
 
@@ -1319,7 +1201,7 @@ describe("compileDeck mermaid support", () => {
     const deck = await compileDeck({
       global: { theme: "./theme.json" },
       slides: [
-        { index: 0, frontmatter: { layout: "arch", title: "System" }, body: "", slots: {} },
+        { index: 0, frontmatter: { layout: "arch", title: "System" }, slots: {} },
       ],
     }, [mermaidLayout("arch", ["title"], "diagram")]);
 

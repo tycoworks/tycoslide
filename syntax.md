@@ -22,15 +22,17 @@ The output `.pptx` is written next to the deck file, named after it (`deck.md` ‚
 
 ---
 
-## Body content (body slots)
+## Body content
 
-Everything after a slide's closing `---` and before the next slide separator is body content. It maps to the `body` slot as a string array.
+A slide's body is split into named regions with `::name::` markers. Each region fills the slot whose key matches the marker name.
 
 ```markdown
 ---
 layout: Body            # ‚Üê placeholder; use a real layout from your manifest.json
 title: Key Achievements
 ---
+
+::body::
 
 We exceeded targets across all metrics.
 
@@ -39,9 +41,9 @@ We exceeded targets across all metrics.
 - Three major product launches completed
 ```
 
-Write body content as paragraphs and bullets:
+Write each region as paragraphs and bullets:
 - `- ` starts a **bullet**; indent **2 spaces per level** to nest (`  - ` = level 1).
-- A line with no marker is a **paragraph** (a lead-in / prose line).
+- A line without a `- ` bullet is a **paragraph** (a lead-in / prose line).
 - Blank lines are ignored (they're visual separators, not content).
 - Do NOT put headings in body content -- the heading is the slide's `title` slot, and a subheading is the `subtitle` slot. Body is paragraphs + bullets only.
 
@@ -79,13 +81,13 @@ title: Before & After
 - Zero-downtime deploys
 ```
 
-Content before the first `::name::` marker goes to the `body` slot. Content after a marker goes to the slot matching that name. The marker names must match the layout's slot keys.
+Content after a marker goes to the slot matching that name. The marker names must match the layout's slot keys.
 
 ---
 
 ## Parameters and slots (in `manifest.json`)
 
-A layout advertises two kinds of author-facing input, split by one rule: **a parameter is one value on a frontmatter line; a slot is a multi-line region in the body** (the default region, or a `::name::` region). In `manifest.json` each layout carries two lists, `parameters` and `slots`:
+A layout advertises two kinds of author-facing input, split by one rule: **a parameter is one value on a frontmatter line; a slot is a multi-line region in the body** (a `::name::` region). In `manifest.json` each layout carries two lists, `parameters` and `slots`:
 
 ```jsonc
 {
@@ -123,9 +125,9 @@ Fill a parameter by putting a value under its key in the slide's frontmatter.
 
 ### Slot types (body regions)
 
-Fill a slot by writing a region in the body: the default (unmarked) region maps to the `body` slot; a `::name::` marker maps to the slot of that name.
+Fill a slot by writing a `::name::` region in the body; the marker maps to the slot of that name.
 
-- **`text`** -- a body block, written as markdown paragraphs and bullets. Paragraphs are rebuilt from the template's specimen paragraph styles. Set it as body content after the closing `---`, or as a named slot with `::name::` markers.
+- **`text`** -- a body block, written as markdown paragraphs and bullets. Paragraphs are rebuilt from the template's specimen paragraph styles. Set it in a `::name::` region.
 - **`table`** -- a GFM table. Write it in the slot region between `|`-delimited headers and rows; cells inherit inline formatting (bold, italic, links).
 - **`code`** -- a syntax-highlighted code block. Write a fenced code block with a language tag in the slot region:
   ````markdown
@@ -275,6 +277,8 @@ subtitle: Welcome to the team
 layout: Body
 title: Your First Week
 ---
+
+::body::
 
 Here is what to expect in your first week.
 

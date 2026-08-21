@@ -7,7 +7,6 @@ import { parse as parseYaml } from "yaml";
 export interface RawSlide {
   index: number;
   frontmatter: Record<string, unknown>;
-  body: string;
   slots: Record<string, string>;
 }
 
@@ -164,8 +163,11 @@ function splitIntoSlides(text: string): SplitSlide[] {
 
 function buildSlide(index: number, fmString: string, rawContent: string): RawSlide {
   const frontmatter = parseFrontmatter(fmString, index);
-  const { defaultSlot, slots } = extractSlots(rawContent);
-  return { index, frontmatter, body: defaultSlot, slots };
+  const { leading, slots } = extractSlots(rawContent);
+  if (leading.trim()) {
+    throw new Error(`Slide ${index + 1}: text found outside a ::slot:: marker`);
+  }
+  return { index, frontmatter, slots };
 }
 
 export class FrontmatterParseError extends Error {
@@ -198,7 +200,7 @@ function parseFrontmatter(yaml: string, slideIndex: number): Record<string, unkn
 
 const SLOT_LINE_RE = /^::(\w+)::[ \t]*$/;
 
-function extractSlots(content: string): { defaultSlot: string; slots: Record<string, string> } {
+function extractSlots(content: string): { leading: string; slots: Record<string, string> } {
   const lines = content.split(/\r?\n/);
   let currentSlot: string | null = null;
   const slotLines: Map<string | null, string[]> = new Map([[null, []]]);
@@ -233,7 +235,7 @@ function extractSlots(content: string): { defaultSlot: string; slots: Record<str
     }
   }
 
-  const defaultSlot = slotLines.get(null)!.join("\n").trim();
+  const leading = slotLines.get(null)!.join("\n").trim();
   const slots: Record<string, string> = {};
   for (const [name, sLines] of slotLines) {
     if (name !== null) {
@@ -241,5 +243,5 @@ function extractSlots(content: string): { defaultSlot: string; slots: Record<str
     }
   }
 
-  return { defaultSlot, slots };
+  return { leading, slots };
 }

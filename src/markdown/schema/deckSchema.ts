@@ -19,8 +19,8 @@ import { strict } from "./strict.js";
  *   and `.optional()` (`required` is per-parameter, enforced in `compileStep`, not
  *   "all a template's keys present"). Value-typing and required-encoding are deliberate
  *   later commits.
- * The strict object IS the unknown-key check that used to be imperative in
- * `compileStep`; a stray frontmatter key throws instead of being silently ignored.
+ * The strict object IS the unknown-key check: a stray frontmatter key throws
+ * instead of being silently ignored.
  */
 export function deckFrontmatterSchema(layout: CompilerLayout) {
   const shape: Record<string, z.ZodType> = {};

@@ -81,8 +81,8 @@ function resolveImagePath(rootDir: string, path: string): string {
 /**
  * Assert no two layouts sample the same base slide. In the sampled-composition
  * model one layout is one sampled base slide's region-arrangement, so a shared
- * `slideNumber` means the old single-content-type welding leaked through — two
- * layouts on one physical slide that should be one multi-`accepts` layout.
+ * `slideNumber` means two layouts on one physical slide that should be one
+ * multi-`accepts` layout.
  * `sourceSlide` inside a slot's `accepts` block is a distinct concept (a
  * specimen source for one content type) and is legitimately reused across
  * layouts, so it is deliberately not checked here.
@@ -170,7 +170,7 @@ async function compileStep(
   resolveAssetRef: ResolveAssetRef,
 ): Promise<CompilerDeckStep> {
   const { layouts, rootDir } = config;
-  const { frontmatter, body, slots, index } = slide;
+  const { frontmatter, slots, index } = slide;
 
   const layout = frontmatter[RESERVED_KEY.LAYOUT];
   if (layout === undefined) {
@@ -270,29 +270,6 @@ async function compileStep(
     content[templateParam.shapeName] = {
       lines: templateToSegments(templateParam.template, supplied, templateParam.shapeName),
     };
-  }
-
-  // The default body region resolves against the layout's body slot.
-  if (body.trim()) {
-    const bodySlot = slotsByKey.get(RESERVED_KEY.BODY);
-    if (!bodySlot) {
-      throw new Error(
-        `Slide ${index}: layout "${layoutName}" does not accept body content. Valid slots: ${[...slotsByKey.keys()].join(", ")}`,
-      );
-    }
-    const parsedBody = parseSlotContent(body, {
-      resolveAssetRef,
-      layoutName,
-      slideIdx: index,
-      source: "body content",
-      config,
-      layoutVariant: layoutDef.variant,
-    });
-    // Validate the slot accepts this region's type BEFORE running the (possibly
-    // expensive — Shiki, Playwright) fill: a mismatched region fails fast without
-    // spinning up a renderer.
-    assertSlotRegion(bodySlot, parsedBody.acceptType, layoutName, index, "body content");
-    content[RESERVED_KEY.BODY] = await parsedBody.fill();
   }
 
   // `::name::` regions resolve against the layout's slots.

@@ -56,6 +56,7 @@ theme: ./composition-theme.json
 ---
 layout: Composed
 ---
+::body::
 | Plan | Price |
 |------|-------|
 | Pro  | $9    |`;
@@ -91,6 +92,7 @@ theme: ./composition-theme.json
 ---
 layout: Composed
 ---
+::body::
 ![logo]($logos.primary)`;
 
     const deck = await compileMarkdownDeck(source, config);
@@ -134,6 +136,7 @@ theme: ./composition-theme.json
 ---
 layout: Composed
 ---
+::body::
 ![logo](logo.png)`;
 
     await assert.rejects(
@@ -151,6 +154,7 @@ theme: ./composition-theme.json
 ---
 layout: Composed
 ---
+::body::
 ![logo]($bad)`;
 
     await assert.rejects(
@@ -171,6 +175,7 @@ theme: ./composition-theme.json
 ---
 layout: Composed
 ---
+::body::
 ![logo]($logos.missing)`;
 
     await assert.rejects(
@@ -193,6 +198,7 @@ theme: ./composition-theme.json
 ---
 layout: TextOnly
 ---
+::body::
 ![logo]($logos.primary)`;
 
     await assert.rejects(
@@ -216,6 +222,7 @@ theme: ./composition-theme.json
 ---
 layout: TextOnly
 ---
+::body::
 | Plan | Price |
 |------|-------|
 | Pro  | $9    |`;

@@ -137,7 +137,7 @@ export type BlockContext = {
  * build (`compile`) live together — a new content kind is one file, one registry
  * row. Non-generic like the engine's `Filler`: the array can't correlate a
  * per-element type guard with `compile`'s param, so each handler narrows the node
- * internally with a single-hop cast. Mirrors the old sdk's `SyntaxHandler`.
+ * internally with a single-hop cast.
  */
 export type BlockHandler = {
   match(node: RootContent): boolean;
@@ -230,12 +230,11 @@ export type CompilerParameter = CompilerTemplateParameter | CompilerImageParamet
 
 /**
  * Reserved keys in a deck's frontmatter — global (theme) and per-slide
- * (layout, body). Exported so callers (e.g. cli.ts) reference the constants
+ * (layout). Exported so callers (e.g. cli.ts) reference the constants
  * instead of literal strings.
  */
 export const RESERVED_KEY = {
   LAYOUT: "layout",
-  BODY: "body",
   THEME: "theme",
   NOTES: "notes",
 } as const;
@@ -261,9 +260,8 @@ export type CompilerBlock = {
 };
 
 /**
- * Compiler-facing slot. A layout's body region (the default region, or a
- * `::name::` region), no longer welded to one shape+type: it `accepts` a set of
- * `CompilerBlock`s and owns a `frame` (real observed EMU coordinates, never
+ * Compiler-facing slot. A layout's body region (a `::name::` region): it
+ * `accepts` a set of `CompilerBlock`s and owns a `frame` (real observed EMU coordinates, never
  * computed). The author's markdown shape selects which accepted block a region
  * routes to; a type the slot does not accept fails fast. `frame` is required
  * only when a slot has a transplant block (a block whose `sourceSlide` differs
@@ -295,7 +293,7 @@ export type CompilerLayout = {
   variant?: Variant;
   /** Frontmatter inputs (template, image) — one value per `key: value` line. */
   parameters: CompilerParameter[];
-  /** Body regions — the default body or `::name::` regions; each `accepts` blocks. */
+  /** Body regions — `::name::` regions; each `accepts` blocks. */
   slots: CompilerSlot[];
 };
 

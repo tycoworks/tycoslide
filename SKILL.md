@@ -42,7 +42,7 @@ Before writing anything, read `manifest.json`. It contains:
 
 A layout's inputs split two ways (see [syntax.md](syntax.md) for details):
 - **parameters** -- one value on a frontmatter line. Types: `template`, `image`. Fill by putting a value under the parameter's key in the slide frontmatter.
-- **slots** -- a multi-line region in the body. Types: `text`, `table`, `code`, `mermaid`. Fill as the default body region (after the closing `---`) or a `::name::` region.
+- **slots** -- a multi-line region in the body. Types: `text`, `table`, `code`, `mermaid`. Fill as a `::name::` region.
 
 A single physical slide may back multiple layouts. When two manifest entries share the same `slideNumber`, they render into the same underlying PPTX shapes but declare their fill differently -- e.g. one layout exposing the fill as an `image` parameter and a sibling exposing it as a `mermaid` slot. Pick between them by naming the layout you want in frontmatter (`layout: Full bleed diagram` vs `layout: Full bleed image`); the declaration is unambiguous per layout, so the compiler always knows how to interpret the content you provide.
 
