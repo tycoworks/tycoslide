@@ -127,21 +127,18 @@ The deck is written to your current working directory (not inside the skill).
 
 1. **Read the manifest thoroughly.** Each layout declares its `slots` (and the `accepts` types each one takes) and `limit`s -- the shape of what it can hold. Respect them.
 2. **Match content shape to the layout's slots.** A comparison fits a layout with two or three text columns; quantified proof fits one with stat slots; a customer voice fits a quote slot. The slots tell you what fits -- don't force content into the wrong shape.
-3. **Plan narrative arc first.** Decide the sequence of ideas before picking layouts. Then assign each idea to its best-fit layout from the manifest. Keep one variant (all dark or all light) across the deck.
+3. **Assign each idea to its best-fit layout** from the manifest. Keep one variant (all dark or all light) across the deck.
 
 ### For Each Slide
 
-**Every slide communicates one idea.** If you're writing more than 5 bullets or 3 paragraphs, split into two slides. Put the takeaway in the headline, then support it.
+**Every slide communicates one idea.** Put the takeaway in the headline, then support it.
 
 Check each layout's `limit` in the manifest for content density constraints. When content overflows, split across slides.
 
 ### Avoid (Common Mistakes)
 
 - **Don't repeat the same layout** -- vary layouts for visual rhythm
-- **Don't dump all content on one slide** -- two clear slides beat one crowded slide
 - **Don't ignore layout limits** -- if a slot says max 4 stats, use 4 or fewer
-- **Don't open with a body/content layout** -- use the Title layout for impact
-- **Don't skip section dividers** -- for decks over 5 slides, use Section title layouts to group sections
 - **Don't restyle the layout** -- the theme owns all design; you only fill slots
 - **Don't use an image that's wrong for the slot** -- a small slot wants a simple icon, not a dense illustration; if the build warns an image shrank to a small %, swap it for a simpler one
 - **Don't invent layout or asset names** -- only use what exists in the manifest
@@ -215,12 +212,9 @@ After a successful build, spawn a subagent:
 Review this deck. Assume there are issues -- find them.
 
 Check for:
-- Slides that are too dense (>7 bullets, >5 paragraphs, too many stats/rows)
+- Slides that overflow a layout's `limit`s (more bullets/stats/rows than the slot holds)
 - Same layout repeated multiple times with no variety
 - Content that doesn't match the layout's slots (check `accepts`/`limit`s in manifest.json)
-- Narrative that doesn't flow logically
-- Missing opening (Title) or closing (Thank you) slide
-- Slides that are too sparse (a single bullet doesn't need its own slide)
 - Leftover placeholder logos or dummy text in the rendered images
 
 For each issue, suggest a specific fix.
