@@ -14,7 +14,7 @@ No guided process for turning a PPTX into a tycoslide theme. Today you manually 
 
 ## Vector mermaid diagrams
 
-Mermaid diagrams currently render as PNG images — the only non-editable output tycoslide produces. Everything else (text, code, tables) lands as native editable PowerPoint. Vectorizing mermaid via SVG → DrawingML conversion would close this gap: mermaid-cli can emit SVG directly (PNG is just a rasterization of it), and both SVG and DrawingML describe the same vector primitives (rectangles, paths, text, lines). The result would be a shape group in the slide that PowerPoint treats like any other editable diagram.
+Mermaid diagrams currently render as PNG images — the only non-editable output tycoslide produces. Everything else (text, code, tables) lands as native editable PowerPoint. Vectorizing mermaid via SVG → DrawingML conversion would close this gap: mermaid already produces SVG in the browser — tycoslide's Playwright renderer screenshots that SVG to PNG, so the vector source is already in hand (PNG is just a rasterization of it) — and both SVG and DrawingML describe the same vector primitives (rectangles, paths, text, lines). The result would be a shape group in the slide that PowerPoint treats like any other editable diagram.
 
 Approach: convert mermaid's SVG output to a DrawingML shape group and insert as the asset (in place of the current `<a:blip>` image). No off-the-shelf converter exists; options are extracting PPT Master's (github.com/hugohe3/ppt-master) SVG→DrawingML machinery, using a bridge library, or writing a mermaid-scoped converter for the constrained SVG subset mermaid actually emits.
 
