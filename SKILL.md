@@ -52,6 +52,8 @@ Study each layout's `slots` and `limit`s before writing any slides.
 
 ## Creating Slides
 
+> **Every layout, parameter, and slot name in the examples below is a placeholder.** Your theme's real names live in `manifest.json` — read it first, and never assume a name shown in an example exists in your theme.
+
 Write a deck file in markdown. The file starts with a global frontmatter block declaring the theme, followed by slides separated by `---`.
 
 ```markdown
@@ -60,8 +62,8 @@ theme: ./theme.json
 ---
 
 ---
-layout: Title
-title: Q2 Business Review
+layout: Title             # ← a layout from your manifest.json
+title: Q2 Business Review # ← a parameter that layout declares
 subtitle: Engineering Division
 ---
 

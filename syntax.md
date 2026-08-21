@@ -2,6 +2,8 @@
 
 This document covers the detailed syntax for writing slide content in tycoslide deck files. For an overview of how to create slides, see [SKILL.md](SKILL.md).
 
+> **Every layout, parameter, and slot name in the examples below is a placeholder.** Your theme's real names live in `manifest.json` — read it first, and never assume a name shown here (`Body`, `TwoColumn`, `hero`, `::left::`, etc.) exists in your theme.
+
 ---
 
 ## Global frontmatter
@@ -26,7 +28,7 @@ Everything after a slide's closing `---` and before the next slide separator is 
 
 ```markdown
 ---
-layout: Body
+layout: Body            # ← placeholder; use a real layout from your manifest.json
 title: Key Achievements
 ---
 
