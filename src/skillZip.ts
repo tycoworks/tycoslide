@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { extname, join, relative, sep } from "node:path";
 import JSZip from "jszip";
 
 const FRONTMATTER = /^---\n([\s\S]*?)\n---/;
@@ -16,24 +18,45 @@ export function renameSkill(md: string, name: string): string {
   return md.replace(block[0], block[0].replace(NAME_LINE, `name: ${name}`));
 }
 
-/**
- * Build an uploadable Agent Skill zip whose entries live under a single root
- * folder (e.g. `mz-slides/skill.md`), matching Anthropic's custom-skill format.
- * Each entry is written from an explicit in-memory list rather than a directory
- * scan, so the zip contains exactly the files the caller passes — nothing else.
- */
-export async function zipSkill(
-  folderName: string,
-  files: { name: string; content: string | Buffer }[],
-): Promise<Buffer> {
-  if (files.length === 0) throw new Error(`No files to zip for skill folder: ${folderName}`);
+// Never packaged: dependencies (npm install rebuilds them) and hidden entries
+// (name starting with "." — covers VCS, tooling, caches, secrets like .env/.npmrc).
+const EXCLUDE_DIRS = new Set(["node_modules"]);
+// Build artifacts, dropped ONLY at the repo root: decks build to cwd
+// (showcase.pptx, deck.pptx, the output .zip), while the template .pptx lives
+// under template/ and must be kept — so these extensions are pruned top-level only.
+const ROOT_ARTIFACT_EXTS = new Set([".pptx", ".pdf", ".zip"]);
 
+/**
+ * Zip an entire theme directory into an uploadable Agent Skill archive whose
+ * entries all live under a single root folder (e.g. `mz-slides/theme.json`),
+ * matching Anthropic's custom-skill format. Recursively includes every file
+ * except node_modules, hidden entries (any name starting with `.`), and
+ * top-level build artifacts (.pptx/.pdf/.zip at the repo root; the template
+ * .pptx under template/ is kept). Subdirectory structure is preserved with
+ * POSIX slashes. Fails fast if nothing is left to zip.
+ */
+export async function zipDir(rootDir: string, folderName: string): Promise<Buffer> {
   const zip = new JSZip();
   const folder = zip.folder(folderName);
   if (!folder) throw new Error(`Failed to create zip folder: ${folderName}`);
 
-  for (const file of files) {
-    folder.file(file.name, file.content);
-  }
+  let count = 0;
+  const walk = (dir: string): void => {
+    const atRoot = dir === rootDir;
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name.startsWith(".")) continue;
+      const abs = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (!EXCLUDE_DIRS.has(entry.name)) walk(abs);
+      } else if (entry.isFile()) {
+        if (atRoot && ROOT_ARTIFACT_EXTS.has(extname(entry.name))) continue;
+        folder.file(relative(rootDir, abs).split(sep).join("/"), readFileSync(abs));
+        count++;
+      }
+    }
+  };
+  walk(rootDir);
+
+  if (count === 0) throw new Error(`No files to zip in directory: ${rootDir}`);
   return zip.generateAsync({ type: "nodebuffer" });
 }

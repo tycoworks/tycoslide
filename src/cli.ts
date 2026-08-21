@@ -5,7 +5,7 @@ import { Command } from "commander";
 import { buildDeck } from "./index.js";
 import { generateManifest } from "./manifest.js";
 import { compileDeck, loadThemeConfig, parseSlideDocument, RESERVED_KEY } from "./markdown/index.js";
-import { renameSkill, zipSkill } from "./skillZip.js";
+import { renameSkill, zipDir } from "./skillZip.js";
 
 const DEFAULT_CONFIG = "theme.json";
 const MANIFEST_FILE = "manifest.json";
@@ -84,13 +84,10 @@ program
     writeFileSync(resolve(process.cwd(), SYNTAX_FILE), syntaxMd);
     console.log(`WROTE ${SYNTAX_FILE}`);
 
+    // Bundle the WHOLE theme so the skill is self-contained: unzip ->
+    // `npm install` (pulls the engine + its deps) -> `npx tycoslide build`.
     const zipFile = `${skillName}.zip`;
-    const zipBuf = await zipSkill(skillName, [
-      { name: SKILL_FILE, content: skillMd },
-      { name: SYNTAX_FILE, content: syntaxMd },
-      { name: MANIFEST_FILE, content: manifestJson },
-    ]);
-    writeFileSync(resolve(process.cwd(), zipFile), zipBuf);
+    writeFileSync(resolve(process.cwd(), zipFile), await zipDir(process.cwd(), skillName));
     console.log(`WROTE ${zipFile}`);
   });
 

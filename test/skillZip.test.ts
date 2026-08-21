@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, it } from "node:test";
 import JSZip from "jszip";
-import { renameSkill, zipSkill } from "../dist/skillZip.js";
+import { renameSkill, zipDir } from "../dist/skillZip.js";
 
 describe("renameSkill", () => {
   const source = "---\nname: slides\ndescription: >\n  Build decks.\n---\n\n# slides\n\nBody with name: not-a-header line.\n";
@@ -19,23 +22,46 @@ describe("renameSkill", () => {
   });
 });
 
-describe("zipSkill", () => {
-  it("packs the given files under a single root folder with round-tripping contents", async () => {
-    const skillContent = "# Slides skill\n";
-    const buf = await zipSkill("slides", [
-      { name: "skill.md", content: skillContent },
-      { name: "syntax.md", content: "syntax\n" },
-      { name: "manifest.json", content: '{"ok":true}\n' },
-    ]);
-    const zip = await JSZip.loadAsync(buf);
+describe("zipDir", () => {
+  it("zips the whole dir under one folder, skipping deps, hidden entries, and build artifacts", async () => {
+    const root = mkdtempSync(join(tmpdir(), "skillzip-"));
+    try {
+      writeFileSync(join(root, "theme.json"), '{"ok":true}\n');
+      writeFileSync(join(root, "package.json"), "{}\n");
+      mkdirSync(join(root, "assets", "logos"), { recursive: true });
+      writeFileSync(join(root, "assets", "logos", "a.png"), "PNG");
+      mkdirSync(join(root, "template"));
+      writeFileSync(join(root, "template", "corp.pptx"), "TEMPLATE"); // nested .pptx must be KEPT
+      // should be excluded:
+      mkdirSync(join(root, "node_modules"));
+      writeFileSync(join(root, "node_modules", "junk.js"), "x");
+      writeFileSync(join(root, ".env"), "SECRET=1");
+      writeFileSync(join(root, "showcase.pptx"), "PPTX"); // root build output
+      writeFileSync(join(root, "old.zip"), "ZIP");
 
-    for (const name of ["slides/skill.md", "slides/syntax.md", "slides/manifest.json"]) {
-      assert.ok(zip.file(name), `expected zip entry ${name}`);
+      const zip = await JSZip.loadAsync(await zipDir(root, "mz-slides"));
+
+      assert.ok(zip.file("mz-slides/theme.json"), "theme.json included");
+      assert.ok(zip.file("mz-slides/package.json"), "package.json included");
+      assert.ok(zip.file("mz-slides/assets/logos/a.png"), "nested asset included with its path");
+      assert.ok(zip.file("mz-slides/template/corp.pptx"), "template .pptx (nested) kept");
+      assert.equal(await zip.file("mz-slides/theme.json")?.async("string"), '{"ok":true}\n');
+
+      assert.ok(!zip.file("mz-slides/node_modules/junk.js"), "node_modules excluded");
+      assert.ok(!zip.file("mz-slides/.env"), "hidden file excluded");
+      assert.ok(!zip.file("mz-slides/showcase.pptx"), "root .pptx build output excluded");
+      assert.ok(!zip.file("mz-slides/old.zip"), "root .zip excluded");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
     }
-    assert.equal(await zip.file("slides/skill.md")?.async("string"), skillContent);
   });
 
-  it("throws when the file list is empty", async () => {
-    await assert.rejects(zipSkill("slides", []), /No files to zip/);
+  it("throws when the directory has nothing to zip", async () => {
+    const root = mkdtempSync(join(tmpdir(), "skillzip-empty-"));
+    try {
+      await assert.rejects(zipDir(root, "x"), /No files to zip/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });
