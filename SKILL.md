@@ -37,14 +37,14 @@ For brand voice and naming guidelines, read `brand.md` if it exists alongside th
 
 Before writing anything, read `manifest.json`. It contains:
 
-- **layouts** -- for each: `name`, `description`, `parameters` (frontmatter inputs) and `slots` (body regions), each with `type` and optionally `required`, `limit`, `codeTheme`, `mermaidVariant` (plus, for assets, a `type` of `icon`/`image`/`background`)
+- **layouts** -- for each: `name`, `description`, `parameters` (frontmatter inputs) and `slots` (body regions), each with `accepts` and optionally `required`, `limit` (plus, for assets, a `type` of `icon`/`image`/`background`)
 - **assets** -- brand logos, client logos, illustrations, and icons (`description`)
 
 A layout's inputs split two ways (see [syntax.md](syntax.md) for details):
 - **parameters** -- one value on a frontmatter line. Types: `template`, `image`. Fill by putting a value under the parameter's key in the slide frontmatter.
-- **slots** -- a multi-line region in the body. Types: `text`, `table`, `code`, `mermaid`. Fill as a `::name::` region.
+- **slots** -- a multi-line region in the body. Accept types: `text`, `table`, `image`. Fill as a `::name::` region; a fenced code block routes to a `text` slot, a fenced mermaid block to an `image` slot.
 
-A single physical slide may back multiple layouts. When two manifest entries share the same `slideNumber`, they render into the same underlying PPTX shapes but declare their fill differently -- e.g. one layout exposing the fill as an `image` parameter and a sibling exposing it as a `mermaid` slot. Pick between them by naming the layout you want in frontmatter (`layout: Full bleed diagram` vs `layout: Full bleed image`); the declaration is unambiguous per layout, so the compiler always knows how to interpret the content you provide.
+A slot may accept more than one content type -- the manifest lists each slot's `accepts`, and the shape of the content you write selects which one.
 
 Study each layout's `slots` and `limit`s before writing any slides.
 
@@ -100,12 +100,12 @@ subtitle: This Quarter
 
 - `layout` is required and consumed by the compiler (not forwarded as content).
 - All other frontmatter keys fill parameters: `title` fills the `title` template parameter, `subtitle` fills the `subtitle` parameter, `hero` fills the `hero` image parameter, etc. A multi-line text shape surfaces as several keys (e.g. `name` + `jobTitle`); fill each as its own scalar line.
-- Slots (`text`, `table`, `code`, `mermaid`) are filled by body regions, not frontmatter -- see below.
+- Slots (accepting `text`, `table`, `image`) are filled by body regions, not frontmatter -- see below.
 - A slide may also carry a `notes:` block in frontmatter -- plain-text speaker notes for the slide's notes page (see [syntax.md](syntax.md#speaker-notes)). It is slide-level metadata, not a parameter or slot.
 
 ### Body content, slots, and formatting
 
-See [syntax.md](syntax.md) for the full syntax reference: body content (paragraphs, bullets, nesting), inline formatting (bold, italic, strikethrough, underline, hyperlinks), named slots (`::name::` markers), the parameter/slot split (parameters: template, image; slots: text, table, code, mermaid), and image parameters.
+See [syntax.md](syntax.md) for the full syntax reference: body content (paragraphs, bullets, nesting), inline formatting (bold, italic, strikethrough, underline, hyperlinks), named slots (`::name::` markers), the parameter/slot split (parameters: template, image; slots accept: text, table, image), and image parameters.
 
 ### Build
 

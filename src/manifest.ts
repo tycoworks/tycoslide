@@ -27,12 +27,7 @@ type ManifestSlot = {
 
 type ManifestLayout = {
   name: string;
-  /**
-   * Physical slide index in the theme's template. Two manifest layouts may
-   * share a slideNumber when they back the same physical slide with different
-   * slot-type intents (e.g. an image variant and a mermaid variant); authors
-   * pick between them by layout name.
-   */
+  /** Physical slide index in the theme's template. Unique per layout. */
   slideNumber: number;
   description?: string;
   parameters: ManifestParameter[];

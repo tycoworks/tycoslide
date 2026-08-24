@@ -35,6 +35,8 @@ layout: Body
 title: Highlights
 ---
 
+::body::
+
 - Revenue up 12% quarter-over-quarter
 - Three major product launches completed
 ```

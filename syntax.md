@@ -98,8 +98,8 @@ A layout advertises two kinds of author-facing input, split by one rule: **a par
     { "key": "logo",     "type": "image", "required": true }
   ],
   "slots": [
-    { "key": "body", "type": "text" },
-    { "key": "code", "type": "code", "codeTheme": "github-dark" }
+    { "key": "body", "accepts": ["text"] },
+    { "key": "diagram", "accepts": ["image"] }
   ]
 }
 ```
@@ -123,13 +123,11 @@ Fill a parameter by putting a value under its key in the slide's frontmatter.
   hero: assets/diagrams/architecture.png
   ```
 
-### Slot types (body regions)
+### Body content shapes
 
-Fill a slot by writing a `::name::` region in the body; the marker maps to the slot of that name.
+Fill a slot by writing a `::name::` region in the body; the marker maps to the slot of that name. A slot's manifest entry lists which content types it `accepts` (`text`, `table`, `image`) -- write content whose shape matches one of them:
 
-- **`text`** -- a body block, written as markdown paragraphs and bullets. Paragraphs are rebuilt from the template's specimen paragraph styles. Set it in a `::name::` region.
-- **`table`** -- a GFM table. Write it in the slot region between `|`-delimited headers and rows; cells inherit inline formatting (bold, italic, links).
-- **`code`** -- a syntax-highlighted code block. Write a fenced code block with a language tag in the slot region:
+- **text** (slots that accept `text`) -- markdown paragraphs and bullets, rebuilt from the template's specimen paragraph styles. A fenced code block also routes here:
   ````markdown
   ::code::
 
@@ -139,16 +137,15 @@ Fill a slot by writing a `::name::` region in the body; the marker maps to the s
   WHERE created_at > now() - INTERVAL '5 minutes';
   ```
   ````
-  The language tag (e.g. `sql`, `python`, `typescript`) is required -- it drives syntax highlighting. Colors are applied as native text runs in the output, not images.
-- **`mermaid`** -- a mermaid diagram rendered as a themed PNG (see below). Written as a fenced `mermaid` region; the resulting PNG is shown contained (in its entirety).
+  The language tag (e.g. `sql`, `python`, `typescript`) is required -- it drives syntax highlighting, using the theme's `codeTheme` (set once in `theme.json`, not per slot). Colors are applied as native text runs in the output, not images.
+- **table** (slots that accept `table`) -- a GFM table. Write it in the slot region between `|`-delimited headers and rows; cells inherit inline formatting (bold, italic, links).
+- **image** (slots that accept `image`) -- a picture. A fenced `mermaid` block renders to a themed PNG and fills it (see below).
 
 ---
 
 ## Mermaid diagrams
 
-Mermaid diagrams are rendered as themed PNGs and delivered to any slot declared with `type: mermaid`. Write a fenced code block with the `mermaid` language tag in a named slot whose layout declares that slot as `type: mermaid` (with a `mermaidVariant` naming the theme's color variant). The resulting PNG behaves like any other image in the slot -- always shown in its entirety.
-
-To let the same physical slide accept either an image or a diagram, the theme author declares two layouts with the same `slideNumber` -- one exposing the fill as an `image` parameter (frontmatter path), one as a `mermaid` slot (a fenced region). Authors pick between them by naming the layout in frontmatter; the compiler routes content based on the layout's declaration, so there is no ambiguity.
+Write a fenced code block with the `mermaid` language tag in a named slot that accepts `image`. It renders to a themed PNG and behaves like any other image in the slot -- always shown in its entirety. The color variant comes from the theme's `mermaidVariant` (set once in `theme.json`, not per slot).
 
 ````markdown
 ---
@@ -216,13 +213,12 @@ hero: assets/diagrams/architecture.png
 ```
 
 Each parameter or slot in the layout definition may declare:
-- **`type`** (required) -- parameters: `template`, `image`; slots: `text`, `table`, `code`, `mermaid`.
+- **`type`** (parameters, required) -- `template` or `image`.
+- **`accepts`** (slots, required) -- an array of `text`, `table`, `image`.
 - **`required: true`** -- the slide has no usable default and the build fails if the parameter/slot has no value (e.g. team-member photos, icon-grid icons, the quote logo). If you don't have a suitable image, ask the user for one.
 - **image sizing** -- each catalog asset declares a `type` (`icon` | `image` | `background`) that determines how it is scaled and cropped: `icon` never enlarges past native and never crops; `image` fits the whole picture (no crop, may scale); `background` fills and center-crops. Mermaid renders as `image` (contained).
-- **`codeTheme`** -- code slots only (required): the Shiki theme id used to syntax-highlight fenced code that lands in this slot (e.g. `"github-dark"`).
-- **`mermaidVariant`** -- mermaid slots only (required): names the color variant from `theme.mermaid` (e.g. `"dark"`). See [Mermaid diagrams](#mermaid-diagrams) above.
 
-Each layout also declares a `slideNumber` pointing at the physical slide in the theme's template. **`slideNumber` may repeat across layouts**: two (or more) manifest entries with the same `slideNumber` back a single physical slide, distinguished only by which parameter/slot types they declare -- e.g. an "image" variant and a "mermaid" variant on the same full-bleed slide. The compiler enforces that shared-`slideNumber` layouts agree on keys and shape names; the only allowed cross-type variation is `{image, mermaid}` on the same key.
+Each layout also declares a `slideNumber` pointing at the physical slide in the theme's template -- unique per layout (one layout maps to one physical slide).
 
 ---
 
