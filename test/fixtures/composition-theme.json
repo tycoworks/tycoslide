@@ -20,7 +20,7 @@
           "frame": { "x": 457200, "y": 1371600, "cx": 8229600, "cy": 2743200 },
           "accepts": [
             { "type": "text", "sourceSlide": 1, "shapeName": "Text 1" },
-            { "type": "table", "sourceSlide": 2, "shapeName": "Table 0" },
+            { "type": "table", "sourceSlide": 2, "shapeName": "Table 0", "rows": ["header", "body"] },
             { "type": "image", "sourceSlide": 3, "shapeName": "Image 0" }
           ]
         }

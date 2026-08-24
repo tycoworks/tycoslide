@@ -7,7 +7,7 @@ import { describe, it } from "node:test";
 import JSZip from "jszip";
 import { generate } from "../dist/engine/generate.js";
 import type { Config, Deck, Layout, StyledParagraph } from "../dist/engine/types.js";
-import { SlotType } from "../dist/engine/types.js";
+import { RowRole, SlotType } from "../dist/engine/types.js";
 
 // Real end-to-end coverage of the transplant path (addElement + refill), against
 // a tiny committed synthetic fixture (generated with pptxgenjs; NOT a real theme).
@@ -66,7 +66,7 @@ describe("end-to-end transplant (real addElement + refill)", () => {
             frame: BODY_FRAME,
             accepts: [
               { type: SlotType.Text, sourceSlide: 1, shapeName: "Text 1" },
-              { type: SlotType.Table, sourceSlide: 2, shapeName: "Table 0" },
+              { type: SlotType.Table, sourceSlide: 2, shapeName: "Table 0", rows: [RowRole.Header, RowRole.Body] },
             ],
           },
         ],
@@ -151,7 +151,15 @@ describe("end-to-end transplant (real addElement + refill)", () => {
       {
         name: "Boom",
         baseSlide: 1,
-        slots: [{ key: "x", frame: BODY_FRAME, accepts: [{ type: SlotType.Table, sourceSlide: 3, shapeName: "Image 0" }] }],
+        slots: [
+          {
+            key: "x",
+            frame: BODY_FRAME,
+            accepts: [
+              { type: SlotType.Table, sourceSlide: 3, shapeName: "Image 0", rows: [RowRole.Header, RowRole.Body] },
+            ],
+          },
+        ],
       },
     ]);
     const deck: Deck = {

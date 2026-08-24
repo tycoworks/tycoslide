@@ -1,13 +1,19 @@
 /**
- * Table fill — clones the template's specimen rows in `<a:tbl>` (row 0 header,
- * row 1 data, optional row 2 zebra) and fills each cell's first paragraph with
- * the corresponding StyledParagraph. Cells and `<a:gridCol>` entries are cloned
- * or trimmed to the header count, sharing the template's total width. Row, cell,
- * and grid cloning stay engine-side because they need pptx-automizer DOM access.
+ * Table fill — composes a variable number of output rows from a fixed table
+ * specimen in `<a:tbl>` by following explicit per-row role labels, then fills each
+ * cell's first paragraph with the corresponding StyledParagraph. The specimen's
+ * `rows: RowRole[]` (one role per specimen row) drive which specimen row backs each
+ * output row: the `header` row styles the header, an optional `first` row styles the
+ * row directly under it (used once, never looped), and `body` rows cycle to fill the
+ * middle. `<a:tcPr>` (fill, borders, margins) is preserved per row — only the cell
+ * text is rebuilt. Cells and
+ * `<a:gridCol>` entries
+ * are cloned or trimmed to the header count, sharing the template's total width. Row,
+ * cell, and grid cloning stay engine-side because they need pptx-automizer DOM access.
  */
 
 import { Attr, collectElements, isPlainObject, rebuildParagraphs, Tag } from "../dom.js";
-import type { StyledParagraph, TableFill } from "../types.js";
+import { RowRole, type StyledParagraph, type TableFill } from "../types.js";
 
 const EMPTY_CELL: StyledParagraph = { runs: [{ text: "" }] };
 
@@ -50,33 +56,89 @@ function reconcileGrid(tbl: any, n: number): void {
   }
 }
 
+/** Indices of `role` within `roles`, in order. */
+function indicesOf(roles: RowRole[], role: RowRole): number[] {
+  const out: number[] = [];
+  for (let i = 0; i < roles.length; i++) if (roles[i] === role) out.push(i);
+  return out;
+}
+
 /**
- * Fill a table shape by cloning specimen rows.
- *
- * Row layout in the template's `<a:tbl>`:
- *   - Row 0: header specimen
- *   - Row 1: data specimen
- *   - Row 2 (optional): alternating-data specimen (zebra striping)
- *
- * Each cell's first paragraph is rebuilt from the corresponding
- * StyledParagraph, so tables inherit rich-run/bullet support for free.
+ * Validate a specimen's row roles against its actual row count `R`, then compose the
+ * `K` specimen-row picks that back the deck's `K` data rows. Throws (naming the
+ * shape) when the labels are malformed: count mismatch, not exactly one header, no
+ * body, or a repeated first. `first` is used once at the top and never looped
+ * (looping the under-header row erases the divider above interior rows); `body`
+ * roles cycle to fill the rest.
  */
-export function fillTable(shape: any, table: TableFill, shapeName = ""): void {
+export function resolveRowPlan(
+  roles: RowRole[],
+  R: number,
+  K: number,
+  shapeName: string,
+): { headerIdx: number; picks: number[] } {
+  if (roles.length !== R) {
+    throw new Error(
+      `Table shape "${shapeName}": rows has ${roles.length} label(s) but the specimen <a:tbl> has ${R} row(s); they must match.`,
+    );
+  }
+
+  const headerIdxs = indicesOf(roles, RowRole.Header);
+  const firstIdxs = indicesOf(roles, RowRole.First);
+  const bodyIdxs = indicesOf(roles, RowRole.Body);
+
+  // Exactly one header: a GFM table always carries a header row, so the deck
+  // always supplies `headers` that need a specimen to style them — zero headers
+  // leaves them nowhere to land; two would split one deck header across two
+  // specimen styles.
+  if (headerIdxs.length !== 1) {
+    throw new Error(
+      `Table shape "${shapeName}": rows must label exactly one "${RowRole.Header}" (found ${headerIdxs.length}).`,
+    );
+  }
+  if (bodyIdxs.length === 0) {
+    throw new Error(`Table shape "${shapeName}": rows must label at least one "${RowRole.Body}" (found none).`);
+  }
+  if (firstIdxs.length > 1) {
+    throw new Error(
+      `Table shape "${shapeName}": rows may label at most one "${RowRole.First}" (found ${firstIdxs.length}).`,
+    );
+  }
+
+  const firstIdx = firstIdxs.length === 1 ? firstIdxs[0] : -1;
+
+  const useFirst = firstIdx >= 0 && K >= 1;
+  const middle = K - (useFirst ? 1 : 0); // always >= 0
+
+  const picks: number[] = [];
+  if (useFirst) picks.push(firstIdx);
+  for (let i = 0; i < middle; i++) picks.push(bodyIdxs[i % bodyIdxs.length]);
+
+  return { headerIdx: headerIdxs[0], picks };
+}
+
+/**
+ * Fill a table shape by composing its specimen rows per the role plan (see
+ * `resolveRowPlan`). Each output cell's first paragraph is rebuilt from the
+ * corresponding StyledParagraph, so tables inherit rich-run/bullet support for
+ * free; the specimen row's `<a:tcPr>` is carried over untouched.
+ */
+export function fillTable(shape: any, table: TableFill, shapeName: string, rows: RowRole[]): void {
   const tbl = shape.getElementsByTagName(Tag.TABLE)[0];
   if (!tbl) {
     throw new Error(`Table shape "${shapeName}": has no <a:tbl> element (is it actually a table?).`);
   }
 
-  const rows = collectElements(tbl, Tag.TABLE_ROW);
-  if (rows.length < 2) {
-    throw new Error(`fillTable: template table has ${rows.length} row(s), need at least 2 (header + data specimen)`);
+  const specimenRows = collectElements(tbl, Tag.TABLE_ROW);
+  const R = specimenRows.length;
+  if (R < 2) {
+    throw new Error(`fillTable: template table has ${R} row(s), need at least 2 (header + data specimen)`);
+  }
+  if (rows.length === 0) {
+    throw new Error(`Table shape "${shapeName}": no row roles supplied; a table specimen must label each <a:tbl> row.`);
   }
 
-  const headerTpl = rows[0];
-  // Only rows 0-2 are specimens (header, data, optional zebra); any further
-  // template rows are intentionally dropped — the specimen rows are re-cloned
-  // per data row below.
-  const dataTpls = rows.length > 2 ? [rows[1], rows[2]] : [rows[1]];
+  const { headerIdx, picks } = resolveRowPlan(rows, R, table.rows.length, shapeName);
 
   // Headers are the source of truth for column count; every row is normalized to
   // it, and short/long data rows are padded/truncated to match.
@@ -94,16 +156,16 @@ export function fillTable(shape: any, table: TableFill, shapeName = ""): void {
   };
 
   const built: any[] = [];
-  built.push(fillRow(headerTpl, table.headers));
-  for (let r = 0; r < table.rows.length; r++) {
-    built.push(fillRow(dataTpls[r % dataTpls.length], table.rows[r]));
+  built.push(fillRow(specimenRows[headerIdx], table.headers));
+  for (let r = 0; r < picks.length; r++) {
+    built.push(fillRow(specimenRows[picks[r]], table.rows[r]));
   }
 
   // Column invariant: grid `<a:gridCol>` count must equal every row's `<a:tc>`
   // count (both == n). `normalizeCellCount` (in fillRow) holds the per-row half;
   // `reconcileGrid` holds the grid half. Run the grid half once, table-global.
   reconcileGrid(tbl, n);
-  for (const row of rows) tbl.removeChild(row);
+  for (const row of specimenRows) tbl.removeChild(row);
   for (const row of built) tbl.appendChild(row);
 }
 

@@ -7,6 +7,7 @@ import {
   type CompilerConfig,
   type CompilerThemeConfig,
   ParameterType,
+  RowRole,
   Variant,
 } from "../types.js";
 import { strict } from "./strict.js";
@@ -30,9 +31,9 @@ import { strict } from "./strict.js";
  */
 
 // Reuse the const-object enums as runtime values — no third copy of the literals.
-const acceptTypeSchema = z.enum(Object.values(AcceptType) as [AcceptType, ...AcceptType[]]);
 const assetTypeSchema = z.enum(Object.values(AssetType) as [AssetType, ...AssetType[]]);
 const variantSchema = z.enum(Object.values(Variant) as [Variant, ...Variant[]]);
+const rowRoleSchema = z.enum(Object.values(RowRole) as [RowRole, ...RowRole[]]);
 
 // Re-declared here (not imported from the engine) so the schema layer never
 // depends on the engine — mirrors engine `Frame`, guarded by `_drift`.
@@ -99,12 +100,28 @@ const ImageParamSchema = strict({
 
 const ParameterSchema = z.discriminatedUnion("type", [TemplateParamSchema, ImageParamSchema]);
 
-const BlockSchema = strict({
-  type: acceptTypeSchema,
+// One arm per accept type, discriminated by `type`, mirroring `CompilerBlock`:
+// `startAt` lives only on the text arm, and a non-empty `rows` only on the table
+// arm (a table block MUST label each `<a:tbl>` row; text/image arms have no
+// `rows` field, so a stray one is an unknown key the `strict` arm rejects).
+const TextBlockSchema = strict({
+  type: z.literal(AcceptType.Text),
   sourceSlide: z.number(),
   shapeName: z.string(),
   startAt: z.number().optional(),
 });
+const TableBlockSchema = strict({
+  type: z.literal(AcceptType.Table),
+  sourceSlide: z.number(),
+  shapeName: z.string(),
+  rows: z.array(rowRoleSchema).min(1),
+});
+const ImageBlockSchema = strict({
+  type: z.literal(AcceptType.Image),
+  sourceSlide: z.number(),
+  shapeName: z.string(),
+});
+const BlockSchema = z.discriminatedUnion("type", [TextBlockSchema, TableBlockSchema, ImageBlockSchema]);
 
 const SlotSchema = strict({
   key: z.string(),

@@ -15,6 +15,20 @@ export const SlotType = {
 } as const;
 export type SlotType = (typeof SlotType)[keyof typeof SlotType];
 
+/**
+ * The role a specimen table row plays, labelled per row on a table `Block`. The
+ * fill composer maps the deck's data rows onto specimen rows by role rather than
+ * cloning positionally: `Header` styles the header, `First` styles the single row
+ * under it (used once, never looped — looping the under-header row erases the
+ * divider above interior rows), and `Body` rows cycle to fill the middle.
+ */
+export const RowRole = {
+  Header: "header",
+  First: "first",
+  Body: "body",
+} as const;
+export type RowRole = (typeof RowRole)[keyof typeof RowRole];
+
 /** A single styled span of text within a paragraph. */
 export type TextRun = {
   text: string;
@@ -94,23 +108,25 @@ export type Frame = { x: number; y: number; cx: number; cy: number };
 
 /**
  * A kind of content a slot accepts, and the real template shape that realizes
- * it. `type` is the fill-strategy discriminator; `shapeName` names the shape on
- * `sourceSlide` that carries the specimen styling. When `sourceSlide` equals the
- * layout's `baseSlide` the shape is already on the cloned slide (fill in place);
- * otherwise the shape is transplanted from `sourceSlide` into the slot's frame.
- * `startAt` is a text-specimen concern (leave the first N specimen paragraphs
- * untouched) and only meaningful on a text block.
+ * it — a union discriminated by `type` (the fill-strategy selector), so each
+ * variant carries only its own specimen options. `shapeName` names the shape on
+ * `sourceSlide` that carries the specimen styling; when `sourceSlide` equals the
+ * layout's `baseSlide` the shape is already on the cloned slide (fill in place),
+ * otherwise it is transplanted from `sourceSlide` into the slot's frame. A text
+ * block may pin `startAt` (leave the first N specimen paragraphs untouched); a
+ * table block MUST label each `<a:tbl>` specimen row with a `RowRole` (required);
+ * a template or image block carries neither. `Template` reaches the engine only
+ * via a frontmatter parameter (`paramToEngineSlot`), never as an author body block.
  *
- * Named `Block` — a kind of content (image / table / text) the way an author
- * thinks of it. Distinct from the compiler's `MarkdownBlock` (a parsed markdown
- * block); different layer, kept separate on purpose.
+ * Named `Block` — a kind of content the way an author thinks of it. Distinct
+ * from the compiler's `MarkdownBlock` (a parsed markdown block); different layer,
+ * kept separate on purpose.
  */
-export type Block = {
-  type: SlotType;
-  sourceSlide: number;
-  shapeName: string;
-  startAt?: number;
-};
+export type TemplateBlock = { type: typeof SlotType.Template; sourceSlide: number; shapeName: string };
+export type TextBlock = { type: typeof SlotType.Text; sourceSlide: number; shapeName: string; startAt?: number };
+export type TableBlock = { type: typeof SlotType.Table; sourceSlide: number; shapeName: string; rows: RowRole[] };
+export type ImageBlock = { type: typeof SlotType.Image; sourceSlide: number; shapeName: string };
+export type Block = TemplateBlock | TextBlock | TableBlock | ImageBlock;
 
 /**
  * An author-facing fill region. Not welded to one shape+type: a slot owns its

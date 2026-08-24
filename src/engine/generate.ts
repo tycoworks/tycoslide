@@ -34,7 +34,7 @@ import { Automizer, modify } from "pptx-automizer";
 import { FILLERS, type FillTarget } from "./fillers/filler.js";
 import { isImageFill } from "./fillers/image.js";
 import { applyNotesToSlide, type NotesArchive, sweepOrphanNotes } from "./notes.js";
-import type { Block, Config, Deck, DeckStep, Layout, Slot, SlotType } from "./types.js";
+import { type Block, type Config, type Deck, type DeckStep, type Layout, type Slot, SlotType } from "./types.js";
 
 /** Options for `generate` / `buildDeck`. */
 export type GenerateOptions = {
@@ -298,11 +298,25 @@ function resolveBlock(step: DeckStep, slot: Slot, value: object): Block {
   return block;
 }
 
-/** The shape a filler targets, plus its diagnostic `label` and `startAt` when the (text) block declares it. */
+/**
+ * The shape a filler targets, plus its diagnostic `label` and the intra-specimen
+ * options a block declares: `startAt` (text) and the required `rows` (table).
+ * The block's `type` selects the matching target variant, so each filler's
+ * callback sees only its own options.
+ */
 function targetOf(block: Block, label: string): FillTarget {
-  const target: FillTarget = { shapeName: block.shapeName, label };
-  if (block.startAt !== undefined) target.startAt = block.startAt;
-  return target;
+  switch (block.type) {
+    case SlotType.Template:
+      return { type: SlotType.Template, shapeName: block.shapeName, label };
+    case SlotType.Text:
+      return block.startAt !== undefined
+        ? { type: SlotType.Text, shapeName: block.shapeName, label, startAt: block.startAt }
+        : { type: SlotType.Text, shapeName: block.shapeName, label };
+    case SlotType.Table:
+      return { type: SlotType.Table, shapeName: block.shapeName, label, rows: block.rows };
+    case SlotType.Image:
+      return { type: SlotType.Image, shapeName: block.shapeName, label };
+  }
 }
 
 /**

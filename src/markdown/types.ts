@@ -2,12 +2,17 @@ import type { RootContent } from "mdast";
 import {
   type Frame,
   type ImageFill,
+  RowRole,
   SlotType,
   type TableFill,
   type TemplateFill,
   type TextFill,
 } from "../engine/index.js";
 import type { MermaidConfig } from "./blocks/mermaidTheme.js";
+
+// Re-export the engine's table row-role enum so the compiler layer (and the theme
+// schema) reference one definition, mirroring how AcceptType derives from SlotType.
+export { RowRole };
 
 // ── Asset catalog (compiler / theme-metadata only) ───────────────────────────
 
@@ -243,21 +248,36 @@ export const RESERVED_KEY = {
 
 /**
  * A kind of content a slot accepts, and the real template shape that realizes
- * it — the compiler mirror of the engine's `Block`. `type` is an engine content
- * type (`text` | `table` | `image`); `shapeName` names the shape on
- * `sourceSlide` carrying the specimen styling. When `sourceSlide` equals the
+ * it — the compiler mirror of the engine's `Block`, a union discriminated by
+ * `type` (an engine content type: `text` | `table` | `image`) so each variant
+ * carries only its own specimen options. `shapeName` names the shape on
+ * `sourceSlide` carrying the specimen styling; when `sourceSlide` equals the
  * layout's `slideNumber` the shape is already on the cloned slide (fill in
- * place); otherwise it is transplanted into the slot's `frame`. `startAt` is a
- * text-specimen concern (leave the first N specimen paragraphs untouched), only
- * meaningful on a text block. Named `CompilerBlock` to stay distinct from the
- * engine's `Block` and the compiler's `BlockHandler`.
+ * place), otherwise it is transplanted into the slot's `frame`. A text block may
+ * pin `startAt` (leave the first N specimen paragraphs untouched); a table block
+ * MUST label each `<a:tbl>` specimen row with a `RowRole` (required); an image
+ * block carries neither. There is no `Template` variant — `AcceptType` excludes
+ * it (a parameter, not a body block). Named `CompilerBlock` to stay distinct from
+ * the engine's `Block` and the compiler's `BlockHandler`.
  */
-export type CompilerBlock = {
-  type: AcceptType;
+export type CompilerTextBlock = {
+  type: typeof AcceptType.Text;
   sourceSlide: number;
   shapeName: string;
   startAt?: number;
 };
+export type CompilerTableBlock = {
+  type: typeof AcceptType.Table;
+  sourceSlide: number;
+  shapeName: string;
+  rows: RowRole[];
+};
+export type CompilerImageBlock = {
+  type: typeof AcceptType.Image;
+  sourceSlide: number;
+  shapeName: string;
+};
+export type CompilerBlock = CompilerTextBlock | CompilerTableBlock | CompilerImageBlock;
 
 /**
  * Compiler-facing slot. A layout's body region (a `::name::` region): it

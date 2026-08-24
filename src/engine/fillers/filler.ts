@@ -18,47 +18,67 @@
 
 import { basename } from "node:path";
 import { ModifyImageHelper } from "pptx-automizer";
-import { SlotType } from "../types.js";
+import { type ImageFill, type RowRole, SlotType, type TableFill, type TemplateFill, type TextFill } from "../types.js";
 import { fillImage, isImageFill } from "./image.js";
 import { fillTable, isTableFill } from "./table.js";
 import { fillTemplate, isTemplateFill } from "./template.js";
 import { fillText, isTextFill } from "./text.js";
 
 /**
- * The shape a filler targets, plus its slot-level options (startAt for text) and
- * a human `label` for diagnostics — the author-facing "slide N, layout …, slot …"
- * a filler prints in advisory warnings instead of the raw PPTX shape id.
+ * The shape a filler targets — a union discriminated by `type` (mirroring the
+ * `Block` variants), so each filler's callback sees only its own specimen
+ * options. Every target carries a `shapeName` and a human `label` for
+ * diagnostics (the author-facing "slide N, layout …, slot …" a filler prints in
+ * advisory warnings instead of the raw PPTX shape id); a text target may carry
+ * `startAt`, and a table target carries its required per-row `rows`.
  */
-export type FillTarget = { shapeName: string; startAt?: number; label: string };
+export type TemplateFillTarget = { type: typeof SlotType.Template; shapeName: string; label: string };
+export type TextFillTarget = { type: typeof SlotType.Text; shapeName: string; label: string; startAt?: number };
+export type TableFillTarget = { type: typeof SlotType.Table; shapeName: string; label: string; rows: RowRole[] };
+export type ImageFillTarget = { type: typeof SlotType.Image; shapeName: string; label: string };
+export type FillTarget = TemplateFillTarget | TextFillTarget | TableFillTarget | ImageFillTarget;
 
 /** A pptx-automizer element-modify callback: `(element, relation) => void`. */
 export type ShapeCallback = (element: any, relation: any) => unknown;
 
-export interface Filler<T> {
+export interface Filler<T, Tgt extends FillTarget = FillTarget> {
   matches(v: unknown): v is T;
-  callbacks(value: T, target: FillTarget): ShapeCallback[];
+  callbacks(value: T, target: Tgt): ShapeCallback[];
 }
 
+const templateFiller: Filler<TemplateFill, TemplateFillTarget> = {
+  matches: isTemplateFill,
+  callbacks: (v, t) => [(el: any) => fillTemplate(el, v, t.shapeName)],
+};
+
+const textFiller: Filler<TextFill, TextFillTarget> = {
+  matches: isTextFill,
+  callbacks: (v, t) => [
+    (el: any, relation: any) => fillText(el, v, { startAt: t.startAt ?? 0, relation, shapeName: t.shapeName }),
+  ],
+};
+
+// `t` is a TableFillTarget, so `t.rows` is a guaranteed `RowRole[]` — the type
+// carries what a defensive runtime `rows`-presence check used to. `targetOf`
+// builds this target from a `TableBlock`, whose `rows` is required, and the Zod
+// theme schema rejects a table block without a non-empty `rows`; a table filler
+// therefore cannot be reached without roles.
+const tableFiller: Filler<TableFill, TableFillTarget> = {
+  matches: isTableFill,
+  callbacks: (v, t) => [(el: any) => fillTable(el, v, t.shapeName, t.rows)],
+};
+
+const imageFiller: Filler<ImageFill, ImageFillTarget> = {
+  matches: isImageFill,
+  callbacks: (v, t) => [
+    ModifyImageHelper.setRelationTarget(basename(v.path)),
+    (el: any) => fillImage(el, v, t.shapeName, t.label),
+  ],
+};
+
 export const FILLERS: Record<SlotType, Filler<any>> = {
-  [SlotType.Template]: {
-    matches: isTemplateFill,
-    callbacks: (v, t) => [(el: any) => fillTemplate(el, v, t.shapeName)],
-  },
-  [SlotType.Text]: {
-    matches: isTextFill,
-    callbacks: (v, t) => [
-      (el: any, relation: any) => fillText(el, v, { startAt: t.startAt ?? 0, relation, shapeName: t.shapeName }),
-    ],
-  },
-  [SlotType.Table]: {
-    matches: isTableFill,
-    callbacks: (v, t) => [(el: any) => fillTable(el, v, t.shapeName)],
-  },
-  [SlotType.Image]: {
-    matches: isImageFill,
-    callbacks: (v, t) => [
-      ModifyImageHelper.setRelationTarget(basename(v.path)),
-      (el: any) => fillImage(el, v, t.shapeName, t.label),
-    ],
-  },
+  [SlotType.Template]: templateFiller,
+  [SlotType.Text]: textFiller,
+  [SlotType.Table]: tableFiller,
+  [SlotType.Image]: imageFiller,
 };

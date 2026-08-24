@@ -19,7 +19,7 @@ import type {
   TemplateFill,
   TextFill,
 } from "../dist/engine/types.js";
-import { ImageFit, SlotType } from "../dist/engine/types.js";
+import { ImageFit, RowRole, SlotType } from "../dist/engine/types.js";
 
 // ── Test Helpers ───────────────────────────────────────────────────────────────
 
@@ -753,7 +753,7 @@ describe("fillTable", () => {
       headers: cells("Name", "Price", "Qty"),
       rows: [cells("Widget", "$10", "100"), cells("Gadget", "$20", "50")],
     };
-    fillTable(el, td);
+    fillTable(el, td, "t", [RowRole.Header, RowRole.Body]);
 
     const trs = el.getElementsByTagName("a:tr");
     assert.equal(trs.length, 3);
@@ -762,34 +762,10 @@ describe("fillTable", () => {
     assert.deepEqual(allTexts(trs[2]), ["Gadget", "$20", "50"]);
   });
 
-  it("alternates row styles when template has two data rows", () => {
-    const el = parseXml(
-      makeTableXml([
-        ["H1", "H2"],
-        ["even", "even"],
-        ["odd", "odd"],
-      ]),
-    ).documentElement;
-
-    const td: TableFill = {
-      headers: cells("A", "B"),
-      rows: [
-        cells("r0c0", "r0c1"),
-        cells("r1c0", "r1c1"),
-        cells("r2c0", "r2c1"),
-        cells("r3c0", "r3c1"),
-      ],
-    };
-    fillTable(el, td);
-
-    const trs = el.getElementsByTagName("a:tr");
-    assert.equal(trs.length, 5);
-  });
-
   it("throws when element has no a:tbl", () => {
     const el = parseXml(`<p:sp xmlns:a="${NS_A}" xmlns:p="${NS_P}"><a:p><a:r><a:t>hi</a:t></a:r></a:p></p:sp>`).documentElement;
     const td: TableFill = { headers: [cell("A")], rows: [[cell("1")]] };
-    assert.throws(() => fillTable(el, td), /has no <a:tbl> element/);
+    assert.throws(() => fillTable(el, td, "t", [RowRole.Header, RowRole.Body]), /has no <a:tbl> element/);
   });
 
   it("trims columns to match data when data has fewer than the template", () => {
@@ -801,7 +777,7 @@ describe("fillTable", () => {
     ).documentElement;
 
     const td: TableFill = { headers: [cell("Only1")], rows: [[cell("Val1")]] };
-    fillTable(el, td);
+    fillTable(el, td, "t", [RowRole.Header, RowRole.Body]);
 
     const trs = el.getElementsByTagName("a:tr");
     assert.equal(trs.length, 2);
@@ -822,7 +798,7 @@ describe("fillTable", () => {
     ).documentElement;
 
     const td: TableFill = { headers: cells("A", "B", "C", "D"), rows: [cells("1", "2", "3", "4")] };
-    fillTable(el, td);
+    fillTable(el, td, "t", [RowRole.Header, RowRole.Body]);
 
     const trs = el.getElementsByTagName("a:tr");
     assert.equal(trs.length, 2);
@@ -847,7 +823,7 @@ describe("fillTable", () => {
     const total = gridWidths(el).reduce((a, b) => a + b, 0);
 
     const td: TableFill = { headers: cells("A", "B", "C"), rows: [cells("1", "2", "3")] };
-    fillTable(el, td);
+    fillTable(el, td, "t", [RowRole.Header, RowRole.Body]);
 
     const after = gridWidths(el);
     assert.equal(after.length, 3);
@@ -870,7 +846,7 @@ describe("fillTable", () => {
     const total = gridWidths(el).reduce((a, b) => a + b, 0);
 
     const td: TableFill = { headers: cells("A", "B"), rows: [cells("1", "2")] };
-    fillTable(el, td);
+    fillTable(el, td, "t", [RowRole.Header, RowRole.Body]);
 
     const after = gridWidths(el);
     assert.equal(after.length, 2);
@@ -889,7 +865,7 @@ describe("fillTable", () => {
     const el = parseXml(xml).documentElement;
 
     const td: TableFill = { headers: cells("A", "B", "C", "D"), rows: [cells("1", "2", "3", "4")] };
-    fillTable(el, td);
+    fillTable(el, td, "t", [RowRole.Header, RowRole.Body]);
 
     const headerCells = el.getElementsByTagName("a:tr")[0].getElementsByTagName("a:tc");
     assert.equal(headerCells.length, 4);
@@ -913,7 +889,7 @@ describe("fillTable", () => {
     const total = gridWidths(el).reduce((a, b) => a + b, 0); // 1_000_000, not divisible by 3
 
     const td: TableFill = { headers: cells("A", "B", "C"), rows: [cells("1", "2", "3")] };
-    fillTable(el, td);
+    fillTable(el, td, "t", [RowRole.Header, RowRole.Body]);
 
     const after = gridWidths(el);
     const each = Math.round(total / 3); // 333_333
@@ -940,7 +916,7 @@ describe("fillTable", () => {
         cells("x", "y", "z", "w"), // long: 4 values for 3 columns
       ],
     };
-    fillTable(el, td);
+    fillTable(el, td, "t", [RowRole.Header, RowRole.Body]);
 
     const trs = el.getElementsByTagName("a:tr");
     assert.equal(trs.length, 3);
@@ -963,11 +939,154 @@ describe("fillTable", () => {
     ).documentElement;
 
     const td: TableFill = { headers: cells("Name", "Value"), rows: [] };
-    fillTable(el, td);
+    fillTable(el, td, "t", [RowRole.Header, RowRole.Body]);
 
     const trs = el.getElementsByTagName("a:tr");
     assert.equal(trs.length, 1);
     assert.deepEqual(allTexts(trs[0]), ["Name", "Value"]);
+  });
+});
+
+// ============================================
+// fillTable — role-driven row composition
+// ============================================
+
+// Each specimen row carries a unique <a:tcPr> marker color ("m0", "m1", …).
+// fillTable preserves tcPr and rebuilds only the cell text, so reading each output
+// row's marker back proves which specimen row backed it.
+function markedTableXml(nRows: number, nCols = 2): string {
+  const grid = `<a:tblGrid>${Array.from({ length: nCols }, () => `<a:gridCol w="1000000"/>`).join("")}</a:tblGrid>`;
+  const trs = Array.from({ length: nRows }, (_, r) => {
+    const tcs = Array.from(
+      { length: nCols },
+      (_, c) =>
+        `<a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr/><a:t>r${r}c${c}</a:t></a:r></a:p></a:txBody>` +
+        `<a:tcPr><a:solidFill><a:srgbClr val="m${r}"/></a:solidFill></a:tcPr></a:tc>`,
+    ).join("");
+    return `<a:tr h="100000">${tcs}</a:tr>`;
+  }).join("");
+  return `<p:graphicFrame xmlns:a="${NS_A}" xmlns:p="${NS_P}"><a:tbl>${grid}${trs}</a:tbl></p:graphicFrame>`;
+}
+
+/** The per-row specimen marker ("m0"…) of every output row, header first. */
+function rowMarkers(el: any): string[] {
+  const trs = el.getElementsByTagName("a:tr");
+  const out: string[] = [];
+  for (let i = 0; i < trs.length; i++) {
+    const tcPr = trs[i].getElementsByTagName("a:tcPr")[0];
+    out.push(tcPr.getElementsByTagName("a:srgbClr")[0].getAttribute("val"));
+  }
+  return out;
+}
+
+/** TableFill with `k` two-column data rows and a two-column header. */
+function tableData(k: number): TableFill {
+  return { headers: cells("H1", "H2"), rows: Array.from({ length: k }, (_, i) => cells(`d${i}0`, `d${i}1`)) };
+}
+
+const FULL_ROLES: RowRole[] = [
+  RowRole.Header,
+  RowRole.First,
+  RowRole.Body,
+  RowRole.Body,
+  RowRole.Body,
+  RowRole.Body,
+  RowRole.Body,
+];
+
+describe("fillTable row roles", () => {
+  it("composes 1:1 when K == R (first + body)", () => {
+    const el = parseXml(markedTableXml(7)).documentElement;
+    fillTable(el, tableData(6), "pricing", FULL_ROLES);
+    // header, then first(1), body 2..6 — the designer's exact table.
+    assert.deepEqual(rowMarkers(el), ["m0", "m1", "m2", "m3", "m4", "m5", "m6"]);
+  });
+
+  it("loops only body rows for K > R; first once at top", () => {
+    const el = parseXml(markedTableXml(7)).documentElement;
+    fillTable(el, tableData(10), "pricing", FULL_ROLES);
+    // first(1), body cycles 2,3,4,5,6,2,3,4,5.
+    assert.deepEqual(rowMarkers(el), ["m0", "m1", "m2", "m3", "m4", "m5", "m6", "m2", "m3", "m4", "m5"]);
+  });
+
+  it("shrinks the middle for K < R, keeping first", () => {
+    const el = parseXml(markedTableXml(7)).documentElement;
+    fillTable(el, tableData(3), "pricing", FULL_ROLES);
+    // first(1), body(2), body(3).
+    assert.deepEqual(rowMarkers(el), ["m0", "m1", "m2", "m3"]);
+  });
+
+  // Divider-gap regression: the `first` specimen (m1) hides its top border, so it
+  // must never land in an interior position for large K — only once, at the top.
+  it("never places the first specimen in an interior position (divider-gap regression)", () => {
+    const el = parseXml(markedTableXml(7)).documentElement;
+    fillTable(el, tableData(10), "pricing", FULL_ROLES);
+    const markers = rowMarkers(el);
+    // m1 appears exactly once, and only as the first data row (index 1).
+    assert.equal(markers.filter((m) => m === "m1").length, 1);
+    assert.equal(markers.indexOf("m1"), 1);
+    // The looped middle draws only from the body specimens (m2..m6).
+    assert.ok(markers.slice(2).every((m) => m !== "m1"));
+  });
+
+  it("alternates body specimens (zebra: [header, body, body])", () => {
+    const el = parseXml(markedTableXml(3)).documentElement;
+    fillTable(el, tableData(4), "zebra", [RowRole.Header, RowRole.Body, RowRole.Body]);
+    assert.deepEqual(rowMarkers(el), ["m0", "m1", "m2", "m1", "m2"]);
+  });
+
+  it("uses first for a lone data row (K == 1)", () => {
+    const el = parseXml(markedTableXml(7)).documentElement;
+    fillTable(el, tableData(1), "pricing", FULL_ROLES);
+    // A lone data row sits under the header → `first`.
+    assert.deepEqual(rowMarkers(el), ["m0", "m1"]);
+  });
+
+  it("uses first then a single body for K == 2", () => {
+    const el = parseXml(markedTableXml(7)).documentElement;
+    fillTable(el, tableData(2), "pricing", FULL_ROLES);
+    // K==2: first(1) at top, then one body(2).
+    assert.deepEqual(rowMarkers(el), ["m0", "m1", "m2"]);
+  });
+
+  it("throws when two rows are labelled first", () => {
+    const el = parseXml(markedTableXml(4)).documentElement;
+    assert.throws(
+      () => fillTable(el, tableData(2), "S", [RowRole.Header, RowRole.First, RowRole.First, RowRole.Body]),
+      /S.*at most one "first"/s,
+    );
+  });
+
+  it("throws when rows length does not match the specimen row count", () => {
+    const el = parseXml(markedTableXml(3)).documentElement;
+    assert.throws(
+      () => fillTable(el, tableData(2), "S", [RowRole.Header, RowRole.Body]),
+      /S.*2 label\(s\).*3 row\(s\)/s,
+    );
+  });
+
+  it("throws when no row is labelled header", () => {
+    const el = parseXml(markedTableXml(3)).documentElement;
+    assert.throws(
+      () => fillTable(el, tableData(2), "S", [RowRole.Body, RowRole.Body, RowRole.Body]),
+      /S.*exactly one "header"/s,
+    );
+  });
+
+  it("throws when two rows are labelled header", () => {
+    const el = parseXml(markedTableXml(3)).documentElement;
+    assert.throws(
+      () => fillTable(el, tableData(2), "S", [RowRole.Header, RowRole.Header, RowRole.Body]),
+      /S.*exactly one "header"/s,
+    );
+  });
+
+  it("throws when no row is labelled body", () => {
+    const el = parseXml(markedTableXml(3)).documentElement;
+    assert.throws(
+      () => fillTable(el, tableData(2), "S", [RowRole.Header, RowRole.First, RowRole.First]),
+      /S.*at least one "body"/s,
+    );
   });
 });
 
@@ -979,7 +1098,11 @@ describe("Table filler", () => {
   it("returns one fill callback for any column count — no column-count guard", () => {
     for (const headers of [cells("A"), cells("A", "B", "C"), cells("A", "B", "C", "D", "E", "F")]) {
       const value: TableFill = { headers, rows: [] };
-      const cbs = FILLERS[SlotType.Table].callbacks(value, { shapeName: "S" });
+      const cbs = FILLERS[SlotType.Table].callbacks(value, {
+        shapeName: "S",
+        label: "S",
+        rows: [RowRole.Header, RowRole.Body],
+      });
       assert.equal(cbs.length, 1);
       assert.equal(typeof cbs[0], "function");
     }
@@ -1194,7 +1317,7 @@ describe("fillSlide dispatch", () => {
     const l = layout([
       slot("left", [
         { type: SlotType.Text, sourceSlide: BASE, shapeName: "textbox" },
-        { type: SlotType.Table, sourceSlide: 5, shapeName: "specimenTable" },
+        { type: SlotType.Table, sourceSlide: 5, shapeName: "specimenTable", rows: [RowRole.Header, RowRole.Body] },
       ]),
     ]);
     const { slide, calls } = recordingSlide();
@@ -1214,7 +1337,9 @@ describe("fillSlide dispatch", () => {
   });
 
   it("transplants without removing anything when the slot has no base block", () => {
-    const l = layout([slot("left", [{ type: SlotType.Table, sourceSlide: 5, shapeName: "t" }])]);
+    const l = layout([
+      slot("left", [{ type: SlotType.Table, sourceSlide: 5, shapeName: "t", rows: [RowRole.Header, RowRole.Body] }]),
+    ]);
     const { slide, calls } = recordingSlide();
     fillSlide(slide, l, step({ left: tableVal }), "source", BASE);
     assert.deepEqual(

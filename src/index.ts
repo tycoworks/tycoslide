@@ -11,6 +11,8 @@ import {
   type ThemeConfig,
 } from "./engine/index.js";
 import {
+  AcceptType,
+  type CompilerBlock,
   type CompilerConfig,
   type CompilerDeck,
   type CompilerLayout,
@@ -29,15 +31,22 @@ import {
 const NO_FRAME: Frame = { x: 0, y: 0, cx: 0, cy: 0 };
 
 function paramToEngineSlot(param: CompilerParameter, baseSlide: number): Slot {
-  const block = (type: SlotType): Block => ({ type, sourceSlide: baseSlide, shapeName: param.shapeName });
   switch (param.type) {
     case ParameterType.Template:
       // A text shape carries no top-level key — its template placeholders are the keys. The
       // compiler emits its expanded content under shapeName, so the engine slot
       // is keyed by shapeName too.
-      return { key: param.shapeName, frame: NO_FRAME, accepts: [block(SlotType.Template)] };
+      return {
+        key: param.shapeName,
+        frame: NO_FRAME,
+        accepts: [{ type: SlotType.Template, sourceSlide: baseSlide, shapeName: param.shapeName }],
+      };
     case ParameterType.Image:
-      return { key: param.key, frame: NO_FRAME, accepts: [block(SlotType.Image)] };
+      return {
+        key: param.key,
+        frame: NO_FRAME,
+        accepts: [{ type: SlotType.Image, sourceSlide: baseSlide, shapeName: param.shapeName }],
+      };
   }
 }
 
@@ -48,13 +57,22 @@ function paramToEngineSlot(param: CompilerParameter, baseSlide: number): Slot {
  * so projection is 1:1. A slot with no declared `frame` (a base-only slot that
  * never transplants) gets `NO_FRAME`, which the engine never reads.
  */
+/** Project one CompilerBlock variant onto its matching engine `Block` variant. */
+function compilerBlockToEngineBlock(b: CompilerBlock): Block {
+  switch (b.type) {
+    case AcceptType.Text:
+      return b.startAt !== undefined
+        ? { type: SlotType.Text, sourceSlide: b.sourceSlide, shapeName: b.shapeName, startAt: b.startAt }
+        : { type: SlotType.Text, sourceSlide: b.sourceSlide, shapeName: b.shapeName };
+    case AcceptType.Table:
+      return { type: SlotType.Table, sourceSlide: b.sourceSlide, shapeName: b.shapeName, rows: b.rows };
+    case AcceptType.Image:
+      return { type: SlotType.Image, sourceSlide: b.sourceSlide, shapeName: b.shapeName };
+  }
+}
+
 function slotToEngineSlot(slot: CompilerSlot): Slot {
-  const accepts: Block[] = slot.accepts.map((b) => {
-    const eb: Block = { type: b.type, sourceSlide: b.sourceSlide, shapeName: b.shapeName };
-    if (b.startAt !== undefined) eb.startAt = b.startAt;
-    return eb;
-  });
-  return { key: slot.key, frame: slot.frame ?? NO_FRAME, accepts };
+  return { key: slot.key, frame: slot.frame ?? NO_FRAME, accepts: slot.accepts.map(compilerBlockToEngineBlock) };
 }
 
 /**

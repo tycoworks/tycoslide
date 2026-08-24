@@ -156,6 +156,61 @@ describe("parseThemeConfig", () => {
     assert.throws(() => parseThemeConfig(bad, "theme.json"), /shapename/);
   });
 
+  // ── Discriminated accept-block schema (table ⇒ rows, text ⇒ no rows) ──────────
+
+  it("accepts a valid table block carrying a non-empty rows array", () => {
+    const ok = fullTheme();
+    // biome-ignore lint/suspicious/noExplicitAny: swapping the accept block for a table variant
+    (ok.layouts[0].slots[0].accepts as any) = [
+      { type: "table", sourceSlide: 2, shapeName: "Table 0", rows: ["header", "body"] },
+    ];
+    const cfg = parseThemeConfig(ok, "table.json");
+    assert.equal(cfg.layouts[0].slots[0].accepts.length, 1);
+  });
+
+  it("rejects a table block missing its required rows", () => {
+    const bad = fullTheme();
+    // biome-ignore lint/suspicious/noExplicitAny: table block without the required rows
+    (bad.layouts[0].slots[0].accepts as any) = [{ type: "table", sourceSlide: 2, shapeName: "Table 0" }];
+    assert.throws(
+      () => parseThemeConfig(bad, "theme.json"),
+      (err: Error) => {
+        assert.match(err.message, /invalid theme config/);
+        assert.match(err.message, /rows/);
+        return true;
+      },
+    );
+  });
+
+  it("rejects a table block with an empty rows array", () => {
+    const bad = fullTheme();
+    // biome-ignore lint/suspicious/noExplicitAny: table block with an empty rows array
+    (bad.layouts[0].slots[0].accepts as any) = [{ type: "table", sourceSlide: 2, shapeName: "Table 0", rows: [] }];
+    assert.throws(
+      () => parseThemeConfig(bad, "theme.json"),
+      (err: Error) => {
+        assert.match(err.message, /invalid theme config/);
+        assert.match(err.message, /rows/);
+        return true;
+      },
+    );
+  });
+
+  it("rejects a text block carrying rows (rows is a table-only field)", () => {
+    const bad = fullTheme();
+    // biome-ignore lint/suspicious/noExplicitAny: text block with a stray table-only rows key
+    (bad.layouts[0].slots[0].accepts as any) = [
+      { type: "text", sourceSlide: 1, shapeName: "Text 1", rows: ["header", "body"] },
+    ];
+    assert.throws(
+      () => parseThemeConfig(bad, "theme.json"),
+      (err: Error) => {
+        assert.match(err.message, /rows/);
+        return true;
+      },
+    );
+  });
+
   it("rejects a parameter with a bad discriminator type", () => {
     const bad = fullTheme();
     // biome-ignore lint/suspicious/noExplicitAny: intentionally invalid discriminator

@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { generateManifest } from "../dist/manifest.js";
-import { SlotType } from "../dist/engine/types.js";
+import { RowRole, SlotType } from "../dist/engine/types.js";
 import type { CompilerConfig, CompilerLayout, CompilerSlot } from "../dist/markdown/types.js";
 import { ParameterType } from "../dist/markdown/types.js";
 
@@ -89,7 +89,7 @@ describe("generateManifest slot accepts advertising", () => {
         frame: { x: 1, y: 2, cx: 3, cy: 4 },
         accepts: [
           { type: SlotType.Text, sourceSlide: 1, shapeName: "s0" },
-          { type: SlotType.Table, sourceSlide: 5, shapeName: "s1" },
+          { type: SlotType.Table, sourceSlide: 5, shapeName: "s1", rows: [RowRole.Header, RowRole.Body] },
           { type: SlotType.Image, sourceSlide: 6, shapeName: "s2" },
         ],
       },
@@ -103,7 +103,7 @@ describe("generateManifest slot accepts advertising", () => {
         key: "table",
         required: true,
         limit: { maxItems: 5 },
-        accepts: [{ type: SlotType.Table, sourceSlide: 1, shapeName: "s" }],
+        accepts: [{ type: SlotType.Table, sourceSlide: 1, shapeName: "s", rows: [RowRole.Header, RowRole.Body] }],
       },
     ]);
     assert.deepEqual(slots, [{ key: "table", accepts: ["table"], required: true, limit: { maxItems: 5 } }]);
