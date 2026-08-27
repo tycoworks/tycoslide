@@ -21,8 +21,6 @@ This installs the tycoslide engine and its dependencies. You only need to do thi
 
 This skill builds on-brand decks from a markdown deck file. The theme provides slide layouts that control design. Your job: pick the right layouts, fill them with content, and build. You never restyle the layout; the engine clones the real slides, so brand, layout, fonts, and chrome come for free.
 
-For brand voice and naming guidelines, read `brand.md` if it exists alongside this skill.
-
 ## Quick Reference
 
 | Task | Guide |
@@ -127,7 +125,7 @@ The `.pptx` is written next to your deck file (same directory as `<deck.md>`).
 
 1. **Read the manifest thoroughly.** Each layout declares its `slots` (and the `accepts` types each one takes) -- the shape of what it can hold. Respect them.
 2. **Match content shape to the layout's slots.** A comparison fits a layout with two or three text columns; quantified proof fits one with stat slots; a customer voice fits a quote slot. The slots tell you what fits -- don't force content into the wrong shape.
-3. **Assign each idea to its best-fit layout** from the manifest. Keep one variant (all dark or all light) across the deck.
+3. **Assign each idea to its best-fit layout** from the manifest. Some layouts come in more than one variant (e.g. a dark and a light version, shown in the name) — consider which suits the deck.
 
 ### For Each Slide
 
@@ -143,7 +141,6 @@ Keep each slot's content to what its region comfortably holds. When content over
 - **Don't use an image that's wrong for the slot** -- a small slot wants a simple icon, not a dense illustration; if the build warns an image shrank to a small %, swap it for a simpler one
 - **Don't invent layout or asset names** -- only use what exists in the manifest
 - **Don't leave required parameters or slots empty** -- and don't leave a placeholder logo or dummy text in an image parameter you care about
-- **Don't mix dark and light** -- keep one variant across the deck
 
 ---
 
