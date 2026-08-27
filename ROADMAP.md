@@ -46,3 +46,16 @@ Overlaps with the "vector mermaid diagrams" item — if we build a serious PPTX 
 Slots advertise `accepts` at the engine fill-type granularity: `text`, `table`, `image`. That is too coarse to constrain design: a prose paragraph and a fenced code block are **both** `text`, and a photo and a mermaid diagram are **both** `image`. So a `text` slot the designer styled for prose silently accepts a code block too — it gets highlighted but rebuilt with the prose slot's paragraph styling, which can look wrong — and there is no way for the theme to reject it. Same for prose landing in a code-styled slot, or a photo where a diagram was intended.
 
 Let the theme constrain the **content shape** a slot accepts — `prose` / `code` / `table` / `image` / `mermaid` — so a designer can say "prose only, no code here." The compiler already detects the shape (it's how it decides to highlight a code fence vs render prose), so `assertSlotRegion` would compare the detected shape against the slot's allowed shapes and fail fast on a disallowed one; engine fill types stay `text` / `image`. Unlike a mere manifest hint this adds real validation behavior, and it fits "the theme controls design" + fail-fast. Revisit when a theme has a slot whose styling genuinely breaks for the wrong content shape.
+
+## Open painter / component SDK (north-star, likely over-engineering for now)
+
+The old tyco had an open component SDK — every component (text/table/image) was
+implemented against a public interface, so anyone could add custom components used
+from markdown. The current engine collapsed that to 4 built-in `FILLERS`. If theme
+painting keeps growing bespoke (see the summary-row saga), the seam to reopen is:
+(1) promote `Filler` to a public `(specimenDOM, content, config) → mutate`
+interface; (2) let a theme register painters by key and reference them per slot in
+the manifest; (3) carry each painter's config schema in the manifest so the
+agent/author knows what to write — layer 3 is the expensive, open-ended part.
+YAGNI for a single-theme, scratch-an-itch project: only worth it when a SECOND
+theme (or a paying custom-theme customer) needs a painter the engine can't express.
