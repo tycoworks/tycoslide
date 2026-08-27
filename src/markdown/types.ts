@@ -1,8 +1,8 @@
 import type { RootContent } from "mdast";
 import {
+  type BodyRows,
   type Frame,
   type ImageFill,
-  RowRole,
   SlotType,
   type TableFill,
   type TemplateFill,
@@ -10,9 +10,10 @@ import {
 } from "../engine/index.js";
 import type { MermaidConfig } from "./blocks/mermaidTheme.js";
 
-// Re-export the engine's table row-role enum so the compiler layer (and the theme
-// schema) reference one definition, mirroring how AcceptType derives from SlotType.
-export { RowRole };
+// Re-export the engine's table body-range type so the compiler layer (and the
+// theme schema) reference one definition, mirroring how AcceptType derives from
+// SlotType.
+export type { BodyRows };
 
 // ── Asset catalog (compiler / theme-metadata only) ───────────────────────────
 
@@ -255,8 +256,8 @@ export const RESERVED_KEY = {
  * layout's `slideNumber` the shape is already on the cloned slide (fill in
  * place), otherwise it is transplanted into the slot's `frame`. A text block may
  * pin `startAt` (leave the first N specimen paragraphs untouched); a table block
- * MUST label each `<a:tbl>` specimen row with a `RowRole` (required); an image
- * block carries neither. There is no `Template` variant — `AcceptType` excludes
+ * MUST declare its `bodyRows` range (the repeatable `<a:tbl>` specimen rows); an
+ * image block carries neither. There is no `Template` variant — `AcceptType` excludes
  * it (a parameter, not a body block). Named `CompilerBlock` to stay distinct from
  * the engine's `Block` and the compiler's `BlockHandler`.
  */
@@ -270,7 +271,7 @@ export type CompilerTableBlock = {
   type: typeof AcceptType.Table;
   sourceSlide: number;
   shapeName: string;
-  rows: RowRole[];
+  bodyRows: BodyRows;
 };
 export type CompilerImageBlock = {
   type: typeof AcceptType.Image;

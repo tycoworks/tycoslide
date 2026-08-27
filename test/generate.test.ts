@@ -19,7 +19,7 @@ import type {
   TemplateFill,
   TextFill,
 } from "../dist/engine/types.js";
-import { ImageFit, RowRole, SlotType } from "../dist/engine/types.js";
+import { ImageFit, SlotType } from "../dist/engine/types.js";
 
 // ── Test Helpers ───────────────────────────────────────────────────────────────
 
@@ -753,7 +753,7 @@ describe("fillTable", () => {
       headers: cells("Name", "Price", "Qty"),
       rows: [cells("Widget", "$10", "100"), cells("Gadget", "$20", "50")],
     };
-    fillTable(el, td, "t", [RowRole.Header, RowRole.Body]);
+    fillTable(el, td, "t", [1, 1]);
 
     const trs = el.getElementsByTagName("a:tr");
     assert.equal(trs.length, 3);
@@ -765,7 +765,7 @@ describe("fillTable", () => {
   it("throws when element has no a:tbl", () => {
     const el = parseXml(`<p:sp xmlns:a="${NS_A}" xmlns:p="${NS_P}"><a:p><a:r><a:t>hi</a:t></a:r></a:p></p:sp>`).documentElement;
     const td: TableFill = { headers: [cell("A")], rows: [[cell("1")]] };
-    assert.throws(() => fillTable(el, td, "t", [RowRole.Header, RowRole.Body]), /has no <a:tbl> element/);
+    assert.throws(() => fillTable(el, td, "t", [1, 1]), /has no <a:tbl> element/);
   });
 
   it("trims columns to match data when data has fewer than the template", () => {
@@ -777,7 +777,7 @@ describe("fillTable", () => {
     ).documentElement;
 
     const td: TableFill = { headers: [cell("Only1")], rows: [[cell("Val1")]] };
-    fillTable(el, td, "t", [RowRole.Header, RowRole.Body]);
+    fillTable(el, td, "t", [1, 1]);
 
     const trs = el.getElementsByTagName("a:tr");
     assert.equal(trs.length, 2);
@@ -798,7 +798,7 @@ describe("fillTable", () => {
     ).documentElement;
 
     const td: TableFill = { headers: cells("A", "B", "C", "D"), rows: [cells("1", "2", "3", "4")] };
-    fillTable(el, td, "t", [RowRole.Header, RowRole.Body]);
+    fillTable(el, td, "t", [1, 1]);
 
     const trs = el.getElementsByTagName("a:tr");
     assert.equal(trs.length, 2);
@@ -823,7 +823,7 @@ describe("fillTable", () => {
     const total = gridWidths(el).reduce((a, b) => a + b, 0);
 
     const td: TableFill = { headers: cells("A", "B", "C"), rows: [cells("1", "2", "3")] };
-    fillTable(el, td, "t", [RowRole.Header, RowRole.Body]);
+    fillTable(el, td, "t", [1, 1]);
 
     const after = gridWidths(el);
     assert.equal(after.length, 3);
@@ -846,7 +846,7 @@ describe("fillTable", () => {
     const total = gridWidths(el).reduce((a, b) => a + b, 0);
 
     const td: TableFill = { headers: cells("A", "B"), rows: [cells("1", "2")] };
-    fillTable(el, td, "t", [RowRole.Header, RowRole.Body]);
+    fillTable(el, td, "t", [1, 1]);
 
     const after = gridWidths(el);
     assert.equal(after.length, 2);
@@ -865,7 +865,7 @@ describe("fillTable", () => {
     const el = parseXml(xml).documentElement;
 
     const td: TableFill = { headers: cells("A", "B", "C", "D"), rows: [cells("1", "2", "3", "4")] };
-    fillTable(el, td, "t", [RowRole.Header, RowRole.Body]);
+    fillTable(el, td, "t", [1, 1]);
 
     const headerCells = el.getElementsByTagName("a:tr")[0].getElementsByTagName("a:tc");
     assert.equal(headerCells.length, 4);
@@ -889,7 +889,7 @@ describe("fillTable", () => {
     const total = gridWidths(el).reduce((a, b) => a + b, 0); // 1_000_000, not divisible by 3
 
     const td: TableFill = { headers: cells("A", "B", "C"), rows: [cells("1", "2", "3")] };
-    fillTable(el, td, "t", [RowRole.Header, RowRole.Body]);
+    fillTable(el, td, "t", [1, 1]);
 
     const after = gridWidths(el);
     const each = Math.round(total / 3); // 333_333
@@ -916,7 +916,7 @@ describe("fillTable", () => {
         cells("x", "y", "z", "w"), // long: 4 values for 3 columns
       ],
     };
-    fillTable(el, td, "t", [RowRole.Header, RowRole.Body]);
+    fillTable(el, td, "t", [1, 1]);
 
     const trs = el.getElementsByTagName("a:tr");
     assert.equal(trs.length, 3);
@@ -939,7 +939,7 @@ describe("fillTable", () => {
     ).documentElement;
 
     const td: TableFill = { headers: cells("Name", "Value"), rows: [] };
-    fillTable(el, td, "t", [RowRole.Header, RowRole.Body]);
+    fillTable(el, td, "t", [1, 1]);
 
     const trs = el.getElementsByTagName("a:tr");
     assert.equal(trs.length, 1);
@@ -948,7 +948,7 @@ describe("fillTable", () => {
 });
 
 // ============================================
-// fillTable — role-driven row composition
+// fillTable — body-range row composition
 // ============================================
 
 // Each specimen row carries a unique <a:tcPr> marker color ("m0", "m1", …).
@@ -984,109 +984,89 @@ function tableData(k: number): TableFill {
   return { headers: cells("H1", "H2"), rows: Array.from({ length: k }, (_, i) => cells(`d${i}0`, `d${i}1`)) };
 }
 
-const FULL_ROLES: RowRole[] = [
-  RowRole.Header,
-  RowRole.First,
-  RowRole.Body,
-  RowRole.Body,
-  RowRole.Body,
-  RowRole.Body,
-  RowRole.Body,
-];
+// The pricing specimen: 7 rows. Row 0 = header, row 1 = a top-fixed under-header
+// row, rows 2..5 = the repeatable body, row 6 = a bottom-fixed total row.
+const PRICING: [number, number] = [2, 5];
 
-describe("fillTable row roles", () => {
-  it("composes 1:1 when K == R (first + body)", () => {
+describe("fillTable body range", () => {
+  it("composes 1:1 when K == R-1 (fixed rows + one body cycle)", () => {
     const el = parseXml(markedTableXml(7)).documentElement;
-    fillTable(el, tableData(6), "pricing", FULL_ROLES);
-    // header, then first(1), body 2..6 — the designer's exact table.
+    fillTable(el, tableData(6), "pricing", PRICING);
+    // header, top-fixed(1), body 2..5, bottom-fixed(6) — the designer's exact table.
     assert.deepEqual(rowMarkers(el), ["m0", "m1", "m2", "m3", "m4", "m5", "m6"]);
   });
 
-  it("loops only body rows for K > R; first once at top", () => {
+  it("loops only the body range for large K; fixed rows once", () => {
     const el = parseXml(markedTableXml(7)).documentElement;
-    fillTable(el, tableData(10), "pricing", FULL_ROLES);
-    // first(1), body cycles 2,3,4,5,6,2,3,4,5.
-    assert.deepEqual(rowMarkers(el), ["m0", "m1", "m2", "m3", "m4", "m5", "m6", "m2", "m3", "m4", "m5"]);
+    fillTable(el, tableData(10), "pricing", PRICING);
+    // top-fixed(1), body cycles 2,3,4,5,2,3,4,5, bottom-fixed(6) always last.
+    assert.deepEqual(rowMarkers(el), ["m0", "m1", "m2", "m3", "m4", "m5", "m2", "m3", "m4", "m5", "m6"]);
   });
 
-  it("shrinks the middle for K < R, keeping first", () => {
+  it("truncates the body for small K, keeping both fixed rows", () => {
     const el = parseXml(markedTableXml(7)).documentElement;
-    fillTable(el, tableData(3), "pricing", FULL_ROLES);
-    // first(1), body(2), body(3).
-    assert.deepEqual(rowMarkers(el), ["m0", "m1", "m2", "m3"]);
+    fillTable(el, tableData(3), "pricing", PRICING);
+    // top-fixed(1), one body(2), bottom-fixed(6).
+    assert.deepEqual(rowMarkers(el), ["m0", "m1", "m2", "m6"]);
   });
 
-  // Divider-gap regression: the `first` specimen (m1) hides its top border, so it
-  // must never land in an interior position for large K — only once, at the top.
-  it("never places the first specimen in an interior position (divider-gap regression)", () => {
+  it("emits zero body rows when K == top + bottom fixed count", () => {
     const el = parseXml(markedTableXml(7)).documentElement;
-    fillTable(el, tableData(10), "pricing", FULL_ROLES);
+    fillTable(el, tableData(2), "pricing", PRICING);
+    // K == P + S == 2: top-fixed(1) and bottom-fixed(6), no body.
+    assert.deepEqual(rowMarkers(el), ["m0", "m1", "m6"]);
+  });
+
+  // Divider-gap regression: the top-fixed specimen (m1) hides its top border, so
+  // it must never land in an interior position for large K — only once, at the top.
+  it("never places the top-fixed specimen in an interior position (divider-gap regression)", () => {
+    const el = parseXml(markedTableXml(7)).documentElement;
+    fillTable(el, tableData(10), "pricing", PRICING);
     const markers = rowMarkers(el);
     // m1 appears exactly once, and only as the first data row (index 1).
     assert.equal(markers.filter((m) => m === "m1").length, 1);
     assert.equal(markers.indexOf("m1"), 1);
-    // The looped middle draws only from the body specimens (m2..m6).
+    // The looped middle draws only from the body specimens (m2..m5).
     assert.ok(markers.slice(2).every((m) => m !== "m1"));
   });
 
-  it("alternates body specimens (zebra: [header, body, body])", () => {
+  // The bottom-fixed (Total) row is rendered once and consumes the LAST data row:
+  // with tableData(6), data row 5 (d50/d51) lands in the m6 total row.
+  it("backs the bottom-fixed row with the specimen's last row and the deck's last data row", () => {
+    const el = parseXml(markedTableXml(7)).documentElement;
+    fillTable(el, tableData(6), "pricing", PRICING);
+    const trs = el.getElementsByTagName("a:tr");
+    const total = trs[trs.length - 1];
+    assert.equal(total.getElementsByTagName("a:tcPr")[0].getElementsByTagName("a:srgbClr")[0].getAttribute("val"), "m6");
+    assert.deepEqual(allTexts(total), ["d50", "d51"]);
+  });
+
+  it("alternates a 2-row body range (zebra)", () => {
+    // 3-row specimen, body = rows 1..2, no fixed rows → pure zebra.
     const el = parseXml(markedTableXml(3)).documentElement;
-    fillTable(el, tableData(4), "zebra", [RowRole.Header, RowRole.Body, RowRole.Body]);
+    fillTable(el, tableData(4), "zebra", [1, 2]);
     assert.deepEqual(rowMarkers(el), ["m0", "m1", "m2", "m1", "m2"]);
   });
 
-  it("uses first for a lone data row (K == 1)", () => {
+  it("throws when the deck supplies fewer rows than the fixed rows need", () => {
     const el = parseXml(markedTableXml(7)).documentElement;
-    fillTable(el, tableData(1), "pricing", FULL_ROLES);
-    // A lone data row sits under the header → `first`.
-    assert.deepEqual(rowMarkers(el), ["m0", "m1"]);
+    // K == 1 < P + S == 2.
+    assert.throws(() => fillTable(el, tableData(1), "S", PRICING), /S.*1 data row\(s\).*at least 2/s);
   });
 
-  it("uses first then a single body for K == 2", () => {
+  it("throws when start < 1 (row 0 is the header)", () => {
     const el = parseXml(markedTableXml(7)).documentElement;
-    fillTable(el, tableData(2), "pricing", FULL_ROLES);
-    // K==2: first(1) at top, then one body(2).
-    assert.deepEqual(rowMarkers(el), ["m0", "m1", "m2"]);
+    assert.throws(() => fillTable(el, tableData(3), "S", [0, 5]), /S.*out of range/s);
   });
 
-  it("throws when two rows are labelled first", () => {
-    const el = parseXml(markedTableXml(4)).documentElement;
-    assert.throws(
-      () => fillTable(el, tableData(2), "S", [RowRole.Header, RowRole.First, RowRole.First, RowRole.Body]),
-      /S.*at most one "first"/s,
-    );
+  it("throws when end exceeds the specimen's last row", () => {
+    const el = parseXml(markedTableXml(7)).documentElement;
+    assert.throws(() => fillTable(el, tableData(3), "S", [2, 7]), /S.*out of range/s);
   });
 
-  it("throws when rows length does not match the specimen row count", () => {
-    const el = parseXml(markedTableXml(3)).documentElement;
-    assert.throws(
-      () => fillTable(el, tableData(2), "S", [RowRole.Header, RowRole.Body]),
-      /S.*2 label\(s\).*3 row\(s\)/s,
-    );
-  });
-
-  it("throws when no row is labelled header", () => {
-    const el = parseXml(markedTableXml(3)).documentElement;
-    assert.throws(
-      () => fillTable(el, tableData(2), "S", [RowRole.Body, RowRole.Body, RowRole.Body]),
-      /S.*exactly one "header"/s,
-    );
-  });
-
-  it("throws when two rows are labelled header", () => {
-    const el = parseXml(markedTableXml(3)).documentElement;
-    assert.throws(
-      () => fillTable(el, tableData(2), "S", [RowRole.Header, RowRole.Header, RowRole.Body]),
-      /S.*exactly one "header"/s,
-    );
-  });
-
-  it("throws when no row is labelled body", () => {
-    const el = parseXml(markedTableXml(3)).documentElement;
-    assert.throws(
-      () => fillTable(el, tableData(2), "S", [RowRole.Header, RowRole.First, RowRole.First]),
-      /S.*at least one "body"/s,
-    );
+  it("throws when start > end", () => {
+    const el = parseXml(markedTableXml(7)).documentElement;
+    assert.throws(() => fillTable(el, tableData(3), "S", [5, 2]), /S.*out of range/s);
   });
 });
 
@@ -1101,7 +1081,7 @@ describe("Table filler", () => {
       const cbs = FILLERS[SlotType.Table].callbacks(value, {
         shapeName: "S",
         label: "S",
-        rows: [RowRole.Header, RowRole.Body],
+        bodyRows: [1, 1],
       });
       assert.equal(cbs.length, 1);
       assert.equal(typeof cbs[0], "function");
@@ -1317,7 +1297,7 @@ describe("fillSlide dispatch", () => {
     const l = layout([
       slot("left", [
         { type: SlotType.Text, sourceSlide: BASE, shapeName: "textbox" },
-        { type: SlotType.Table, sourceSlide: 5, shapeName: "specimenTable", rows: [RowRole.Header, RowRole.Body] },
+        { type: SlotType.Table, sourceSlide: 5, shapeName: "specimenTable", bodyRows: [1, 1] },
       ]),
     ]);
     const { slide, calls } = recordingSlide();
@@ -1338,7 +1318,7 @@ describe("fillSlide dispatch", () => {
 
   it("transplants without removing anything when the slot has no base block", () => {
     const l = layout([
-      slot("left", [{ type: SlotType.Table, sourceSlide: 5, shapeName: "t", rows: [RowRole.Header, RowRole.Body] }]),
+      slot("left", [{ type: SlotType.Table, sourceSlide: 5, shapeName: "t", bodyRows: [1, 1] }]),
     ]);
     const { slide, calls } = recordingSlide();
     fillSlide(slide, l, step({ left: tableVal }), "source", BASE);

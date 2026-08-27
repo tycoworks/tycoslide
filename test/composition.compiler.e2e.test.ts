@@ -7,7 +7,6 @@ import { describe, it } from "node:test";
 import JSZip from "jszip";
 import { buildDeck, compileMarkdownDeck, toEngineThemeConfig } from "../dist/index.js";
 import type { CompilerConfig, CompilerThemeConfig } from "../dist/markdown/types.js";
-import { RowRole } from "../dist/markdown/types.js";
 
 // End-to-end coverage of the COMPILER path exposing sampled-composition: a real
 // theme.json FILE + a markdown deck routes a GFM table into a slot whose base
@@ -255,7 +254,7 @@ layout: TextOnly
               key: "body",
               accepts: [
                 { type: "text", sourceSlide: 1, shapeName: "Text 1" },
-                { type: "table", sourceSlide: 2, shapeName: "Table 0", rows: [RowRole.Header, RowRole.Body] },
+                { type: "table", sourceSlide: 2, shapeName: "Table 0", bodyRows: [1, 1] },
               ],
             },
           ],

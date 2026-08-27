@@ -16,18 +16,14 @@ export const SlotType = {
 export type SlotType = (typeof SlotType)[keyof typeof SlotType];
 
 /**
- * The role a specimen table row plays, labelled per row on a table `Block`. The
- * fill composer maps the deck's data rows onto specimen rows by role rather than
- * cloning positionally: `Header` styles the header, `First` styles the single row
- * under it (used once, never looped — looping the under-header row erases the
- * divider above interior rows), and `Body` rows cycle to fill the middle.
+ * The contiguous range of a table specimen's rows that repeat, as `[start, end]`
+ * (0-based, inclusive). Row 0 is always the header; rows `[1, start-1]` are top
+ * fixed rows rendered once (e.g. a distinctly-styled under-header row); rows
+ * `[start, end]` are the repeatable body, cycled to fill the deck's data; rows
+ * `[end+1, R-1]` are bottom fixed rows rendered once (e.g. a decorated total row).
+ * Only the body range repeats; every row outside it is rendered once, in place.
  */
-export const RowRole = {
-  Header: "header",
-  First: "first",
-  Body: "body",
-} as const;
-export type RowRole = (typeof RowRole)[keyof typeof RowRole];
+export type BodyRows = [number, number];
 
 /** A single styled span of text within a paragraph. */
 export type TextRun = {
@@ -114,7 +110,7 @@ export type Frame = { x: number; y: number; cx: number; cy: number };
  * layout's `baseSlide` the shape is already on the cloned slide (fill in place),
  * otherwise it is transplanted from `sourceSlide` into the slot's frame. A text
  * block may pin `startAt` (leave the first N specimen paragraphs untouched); a
- * table block MUST label each `<a:tbl>` specimen row with a `RowRole` (required);
+ * table block MUST declare its `bodyRows` range (the repeatable specimen rows);
  * a template or image block carries neither. `Template` reaches the engine only
  * via a frontmatter parameter (`paramToEngineSlot`), never as an author body block.
  *
@@ -124,7 +120,7 @@ export type Frame = { x: number; y: number; cx: number; cy: number };
  */
 export type TemplateBlock = { type: typeof SlotType.Template; sourceSlide: number; shapeName: string };
 export type TextBlock = { type: typeof SlotType.Text; sourceSlide: number; shapeName: string; startAt?: number };
-export type TableBlock = { type: typeof SlotType.Table; sourceSlide: number; shapeName: string; rows: RowRole[] };
+export type TableBlock = { type: typeof SlotType.Table; sourceSlide: number; shapeName: string; bodyRows: BodyRows };
 export type ImageBlock = { type: typeof SlotType.Image; sourceSlide: number; shapeName: string };
 export type Block = TemplateBlock | TextBlock | TableBlock | ImageBlock;
 

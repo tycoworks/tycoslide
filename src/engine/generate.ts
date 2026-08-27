@@ -300,7 +300,7 @@ function resolveBlock(step: DeckStep, slot: Slot, value: object): Block {
 
 /**
  * The shape a filler targets, plus its diagnostic `label` and the intra-specimen
- * options a block declares: `startAt` (text) and the required `rows` (table).
+ * options a block declares: `startAt` (text) and the required `bodyRows` (table).
  * The block's `type` selects the matching target variant, so each filler's
  * callback sees only its own options.
  */
@@ -313,7 +313,7 @@ function targetOf(block: Block, label: string): FillTarget {
         ? { type: SlotType.Text, shapeName: block.shapeName, label, startAt: block.startAt }
         : { type: SlotType.Text, shapeName: block.shapeName, label };
     case SlotType.Table:
-      return { type: SlotType.Table, shapeName: block.shapeName, label, rows: block.rows };
+      return { type: SlotType.Table, shapeName: block.shapeName, label, bodyRows: block.bodyRows };
     case SlotType.Image:
       return { type: SlotType.Image, shapeName: block.shapeName, label };
   }

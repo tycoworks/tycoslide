@@ -7,7 +7,6 @@ import {
   type CompilerConfig,
   type CompilerThemeConfig,
   ParameterType,
-  RowRole,
   Variant,
 } from "../types.js";
 import { strict } from "./strict.js";
@@ -33,7 +32,10 @@ import { strict } from "./strict.js";
 // Reuse the const-object enums as runtime values — no third copy of the literals.
 const assetTypeSchema = z.enum(Object.values(AssetType) as [AssetType, ...AssetType[]]);
 const variantSchema = z.enum(Object.values(Variant) as [Variant, ...Variant[]]);
-const rowRoleSchema = z.enum(Object.values(RowRole) as [RowRole, ...RowRole[]]);
+// A table specimen's repeatable row range: `[start, end]`, 0-based inclusive,
+// non-negative integers. The range is validated against the specimen's actual row
+// count at fill time, where the row count is known.
+const bodyRowsSchema = z.tuple([z.number().int().nonnegative(), z.number().int().nonnegative()]);
 
 // Re-declared here (not imported from the engine) so the schema layer never
 // depends on the engine — mirrors engine `Frame`, guarded by `_drift`.
@@ -101,9 +103,9 @@ const ImageParamSchema = strict({
 const ParameterSchema = z.discriminatedUnion("type", [TemplateParamSchema, ImageParamSchema]);
 
 // One arm per accept type, discriminated by `type`, mirroring `CompilerBlock`:
-// `startAt` lives only on the text arm, and a non-empty `rows` only on the table
-// arm (a table block MUST label each `<a:tbl>` row; text/image arms have no
-// `rows` field, so a stray one is an unknown key the `strict` arm rejects).
+// `startAt` lives only on the text arm, and `bodyRows` only on the table arm (a
+// table block MUST declare its repeatable-row range; text/image arms have no
+// `bodyRows` field, so a stray one is an unknown key the `strict` arm rejects).
 const TextBlockSchema = strict({
   type: z.literal(AcceptType.Text),
   sourceSlide: z.number(),
@@ -114,7 +116,7 @@ const TableBlockSchema = strict({
   type: z.literal(AcceptType.Table),
   sourceSlide: z.number(),
   shapeName: z.string(),
-  rows: z.array(rowRoleSchema).min(1),
+  bodyRows: bodyRowsSchema,
 });
 const ImageBlockSchema = strict({
   type: z.literal(AcceptType.Image),

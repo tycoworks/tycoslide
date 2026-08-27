@@ -7,6 +7,7 @@ export type { GenerateOptions } from "./generate.js";
 export { generate } from "./generate.js";
 export type {
   Block,
+  BodyRows,
   Config,
   Deck,
   DeckStep,
@@ -22,4 +23,4 @@ export type {
   TextRun,
   ThemeConfig,
 } from "./types.js";
-export { ImageFit, RowRole, SlotType } from "./types.js";
+export { ImageFit, SlotType } from "./types.js";

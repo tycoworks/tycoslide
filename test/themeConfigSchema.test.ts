@@ -156,56 +156,71 @@ describe("parseThemeConfig", () => {
     assert.throws(() => parseThemeConfig(bad, "theme.json"), /shapename/);
   });
 
-  // ── Discriminated accept-block schema (table ⇒ rows, text ⇒ no rows) ──────────
+  // ── Discriminated accept-block schema (table ⇒ bodyRows, text ⇒ no bodyRows) ──
 
-  it("accepts a valid table block carrying a non-empty rows array", () => {
+  it("accepts a valid table block carrying a bodyRows range", () => {
     const ok = fullTheme();
     // biome-ignore lint/suspicious/noExplicitAny: swapping the accept block for a table variant
     (ok.layouts[0].slots[0].accepts as any) = [
-      { type: "table", sourceSlide: 2, shapeName: "Table 0", rows: ["header", "body"] },
+      { type: "table", sourceSlide: 2, shapeName: "Table 0", bodyRows: [1, 1] },
     ];
     const cfg = parseThemeConfig(ok, "table.json");
     assert.equal(cfg.layouts[0].slots[0].accepts.length, 1);
   });
 
-  it("rejects a table block missing its required rows", () => {
+  it("rejects a table block missing its required bodyRows", () => {
     const bad = fullTheme();
-    // biome-ignore lint/suspicious/noExplicitAny: table block without the required rows
+    // biome-ignore lint/suspicious/noExplicitAny: table block without the required bodyRows
     (bad.layouts[0].slots[0].accepts as any) = [{ type: "table", sourceSlide: 2, shapeName: "Table 0" }];
     assert.throws(
       () => parseThemeConfig(bad, "theme.json"),
       (err: Error) => {
         assert.match(err.message, /invalid theme config/);
-        assert.match(err.message, /rows/);
+        assert.match(err.message, /bodyRows/);
         return true;
       },
     );
   });
 
-  it("rejects a table block with an empty rows array", () => {
+  it("rejects a table block whose bodyRows is not a 2-tuple", () => {
     const bad = fullTheme();
-    // biome-ignore lint/suspicious/noExplicitAny: table block with an empty rows array
-    (bad.layouts[0].slots[0].accepts as any) = [{ type: "table", sourceSlide: 2, shapeName: "Table 0", rows: [] }];
+    // biome-ignore lint/suspicious/noExplicitAny: table block with a malformed bodyRows tuple
+    (bad.layouts[0].slots[0].accepts as any) = [{ type: "table", sourceSlide: 2, shapeName: "Table 0", bodyRows: [1] }];
     assert.throws(
       () => parseThemeConfig(bad, "theme.json"),
       (err: Error) => {
         assert.match(err.message, /invalid theme config/);
-        assert.match(err.message, /rows/);
+        assert.match(err.message, /bodyRows/);
         return true;
       },
     );
   });
 
-  it("rejects a text block carrying rows (rows is a table-only field)", () => {
+  it("rejects a table block whose bodyRows holds a non-integer", () => {
     const bad = fullTheme();
-    // biome-ignore lint/suspicious/noExplicitAny: text block with a stray table-only rows key
+    // biome-ignore lint/suspicious/noExplicitAny: table block with a fractional bodyRows index
     (bad.layouts[0].slots[0].accepts as any) = [
-      { type: "text", sourceSlide: 1, shapeName: "Text 1", rows: ["header", "body"] },
+      { type: "table", sourceSlide: 2, shapeName: "Table 0", bodyRows: [1, 2.5] },
     ];
     assert.throws(
       () => parseThemeConfig(bad, "theme.json"),
       (err: Error) => {
-        assert.match(err.message, /rows/);
+        assert.match(err.message, /bodyRows/);
+        return true;
+      },
+    );
+  });
+
+  it("rejects a text block carrying bodyRows (bodyRows is a table-only field)", () => {
+    const bad = fullTheme();
+    // biome-ignore lint/suspicious/noExplicitAny: text block with a stray table-only bodyRows key
+    (bad.layouts[0].slots[0].accepts as any) = [
+      { type: "text", sourceSlide: 1, shapeName: "Text 1", bodyRows: [1, 1] },
+    ];
+    assert.throws(
+      () => parseThemeConfig(bad, "theme.json"),
+      (err: Error) => {
+        assert.match(err.message, /bodyRows/);
         return true;
       },
     );

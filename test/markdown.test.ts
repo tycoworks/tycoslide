@@ -5,7 +5,7 @@ import { compileDeck as compileDeckRaw } from "../dist/markdown/deckCompiler.js"
 import { compileMarkdownDeck as compileMarkdownDeckRaw } from "../dist/markdown/index.js";
 import { templateKeys, templateToSegments } from "../dist/markdown/textTemplate.js";
 import type { TextFill, ImageFill, StyledParagraph } from "../dist/engine/types.js";
-import { ImageFit, RowRole, SlotType } from "../dist/engine/types.js";
+import { ImageFit, SlotType } from "../dist/engine/types.js";
 import { AssetType } from "../dist/markdown/types.js";
 import type { AssetCatalog, CompilerConfig, CompilerLayout, CompilerParameter, CompilerSlot } from "../dist/markdown/types.js";
 import { ParameterType } from "../dist/markdown/types.js";
@@ -309,7 +309,7 @@ function textSlot(key: string): CompilerSlot {
 function tableSlot(key: string): CompilerSlot {
   return {
     key,
-    accepts: [{ type: SlotType.Table, sourceSlide: 1, shapeName: `s_${key}`, rows: [RowRole.Header, RowRole.Body] }],
+    accepts: [{ type: SlotType.Table, sourceSlide: 1, shapeName: `s_${key}`, bodyRows: [1, 1] }],
   };
 }
 

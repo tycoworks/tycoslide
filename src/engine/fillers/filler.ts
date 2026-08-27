@@ -18,7 +18,7 @@
 
 import { basename } from "node:path";
 import { ModifyImageHelper } from "pptx-automizer";
-import { type ImageFill, type RowRole, SlotType, type TableFill, type TemplateFill, type TextFill } from "../types.js";
+import { type BodyRows, type ImageFill, SlotType, type TableFill, type TemplateFill, type TextFill } from "../types.js";
 import { fillImage, isImageFill } from "./image.js";
 import { fillTable, isTableFill } from "./table.js";
 import { fillTemplate, isTemplateFill } from "./template.js";
@@ -30,11 +30,11 @@ import { fillText, isTextFill } from "./text.js";
  * options. Every target carries a `shapeName` and a human `label` for
  * diagnostics (the author-facing "slide N, layout …, slot …" a filler prints in
  * advisory warnings instead of the raw PPTX shape id); a text target may carry
- * `startAt`, and a table target carries its required per-row `rows`.
+ * `startAt`, and a table target carries its required `bodyRows` range.
  */
 export type TemplateFillTarget = { type: typeof SlotType.Template; shapeName: string; label: string };
 export type TextFillTarget = { type: typeof SlotType.Text; shapeName: string; label: string; startAt?: number };
-export type TableFillTarget = { type: typeof SlotType.Table; shapeName: string; label: string; rows: RowRole[] };
+export type TableFillTarget = { type: typeof SlotType.Table; shapeName: string; label: string; bodyRows: BodyRows };
 export type ImageFillTarget = { type: typeof SlotType.Image; shapeName: string; label: string };
 export type FillTarget = TemplateFillTarget | TextFillTarget | TableFillTarget | ImageFillTarget;
 
@@ -58,14 +58,13 @@ const textFiller: Filler<TextFill, TextFillTarget> = {
   ],
 };
 
-// `t` is a TableFillTarget, so `t.rows` is a guaranteed `RowRole[]` — the type
-// carries what a defensive runtime `rows`-presence check used to. `targetOf`
-// builds this target from a `TableBlock`, whose `rows` is required, and the Zod
-// theme schema rejects a table block without a non-empty `rows`; a table filler
-// therefore cannot be reached without roles.
+// `t` is a TableFillTarget, so `t.bodyRows` is a guaranteed `BodyRows` tuple.
+// `targetOf` builds this target from a `TableBlock`, whose `bodyRows` is required,
+// and the Zod theme schema rejects a table block without a `bodyRows` range; a
+// table filler therefore cannot be reached without one.
 const tableFiller: Filler<TableFill, TableFillTarget> = {
   matches: isTableFill,
-  callbacks: (v, t) => [(el: any) => fillTable(el, v, t.shapeName, t.rows)],
+  callbacks: (v, t) => [(el: any) => fillTable(el, v, t.shapeName, t.bodyRows)],
 };
 
 const imageFiller: Filler<ImageFill, ImageFillTarget> = {

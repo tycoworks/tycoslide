@@ -1,19 +1,20 @@
 /**
  * Table fill — composes a variable number of output rows from a fixed table
- * specimen in `<a:tbl>` by following explicit per-row role labels, then fills each
- * cell's first paragraph with the corresponding StyledParagraph. The specimen's
- * `rows: RowRole[]` (one role per specimen row) drive which specimen row backs each
- * output row: the `header` row styles the header, an optional `first` row styles the
- * row directly under it (used once, never looped), and `body` rows cycle to fill the
- * middle. `<a:tcPr>` (fill, borders, margins) is preserved per row — only the cell
- * text is rebuilt. Cells and
- * `<a:gridCol>` entries
- * are cloned or trimmed to the header count, sharing the template's total width. Row,
- * cell, and grid cloning stay engine-side because they need pptx-automizer DOM access.
+ * specimen in `<a:tbl>` by cloning specimen rows around one contiguous `bodyRows`
+ * range, then fills each cell's first paragraph with the corresponding
+ * StyledParagraph. Row 0 styles the header; the rows before the range are top
+ * fixed rows (rendered once — the under-header row lives here, never looped, so
+ * its divider survives); the `[start, end]` range is the repeatable body, cycled
+ * to fill the deck's data; the rows after it are bottom fixed rows (rendered once
+ * — a decorated total row lives here). `<a:tcPr>` (fill, borders, margins) is
+ * preserved per row — only the cell text is rebuilt. Cells and `<a:gridCol>`
+ * entries are cloned or trimmed to the header count, sharing the template's total
+ * width. Row, cell, and grid cloning stay engine-side because they need
+ * pptx-automizer DOM access.
  */
 
 import { Attr, collectElements, isPlainObject, rebuildParagraphs, Tag } from "../dom.js";
-import { RowRole, type StyledParagraph, type TableFill } from "../types.js";
+import type { BodyRows, StyledParagraph, TableFill } from "../types.js";
 
 const EMPTY_CELL: StyledParagraph = { runs: [{ text: "" }] };
 
@@ -56,74 +57,61 @@ function reconcileGrid(tbl: any, n: number): void {
   }
 }
 
-/** Indices of `role` within `roles`, in order. */
-function indicesOf(roles: RowRole[], role: RowRole): number[] {
-  const out: number[] = [];
-  for (let i = 0; i < roles.length; i++) if (roles[i] === role) out.push(i);
-  return out;
-}
-
 /**
- * Validate a specimen's row roles against its actual row count `R`, then compose the
- * `K` specimen-row picks that back the deck's `K` data rows. Throws (naming the
- * shape) when the labels are malformed: count mismatch, not exactly one header, no
- * body, or a repeated first. `first` is used once at the top and never looped
- * (looping the under-header row erases the divider above interior rows); `body`
- * roles cycle to fill the rest.
+ * Validate a `bodyRows = [start, end]` range against a specimen's actual row
+ * count `R`, then compose the `K` specimen-row picks that back the deck's `K` data
+ * rows (row 0 always styles the header, so it is not a pick). Everything outside
+ * the range is a fixed row rendered once: rows `[1, start-1]` (top — the
+ * under-header row, never looped, so its divider survives) back the first data
+ * rows; the `[start, end]` range cycles to fill the middle; rows `[end+1, R-1]`
+ * (bottom — a decorated total row) back the last data rows. Throws (naming the
+ * shape) when the range is out of bounds or the deck supplies too few rows to fill
+ * the fixed rows.
  */
 export function resolveRowPlan(
-  roles: RowRole[],
+  bodyRows: BodyRows,
   R: number,
   K: number,
   shapeName: string,
 ): { headerIdx: number; picks: number[] } {
-  if (roles.length !== R) {
+  const [start, end] = bodyRows;
+
+  // Row 0 is the header, so the body must start at 1 or later; the range must be
+  // non-empty and stay within the specimen's rows.
+  if (!(start >= 1 && start <= end && end <= R - 1)) {
     throw new Error(
-      `Table shape "${shapeName}": rows has ${roles.length} label(s) but the specimen <a:tbl> has ${R} row(s); they must match.`,
+      `Table shape "${shapeName}": bodyRows [${start}, ${end}] is out of range; require 1 <= start <= end <= ${R - 1} (row 0 is the header).`,
     );
   }
 
-  const headerIdxs = indicesOf(roles, RowRole.Header);
-  const firstIdxs = indicesOf(roles, RowRole.First);
-  const bodyIdxs = indicesOf(roles, RowRole.Body);
+  const topFixed = start - 1; // rows [1, start-1]
+  const bottomFixed = R - 1 - end; // rows [end+1, R-1]
+  const bodyCount = K - topFixed - bottomFixed;
+  const span = end - start + 1;
 
-  // Exactly one header: a GFM table always carries a header row, so the deck
-  // always supplies `headers` that need a specimen to style them — zero headers
-  // leaves them nowhere to land; two would split one deck header across two
-  // specimen styles.
-  if (headerIdxs.length !== 1) {
+  // The deck must supply enough data rows to back every fixed row (top + bottom);
+  // below that there is nothing to cycle the body over and the total row goes unfilled.
+  if (bodyCount < 0) {
     throw new Error(
-      `Table shape "${shapeName}": rows must label exactly one "${RowRole.Header}" (found ${headerIdxs.length}).`,
+      `Table shape "${shapeName}": deck supplies ${K} data row(s) but the specimen's fixed rows need at least ${topFixed + bottomFixed}.`,
     );
   }
-  if (bodyIdxs.length === 0) {
-    throw new Error(`Table shape "${shapeName}": rows must label at least one "${RowRole.Body}" (found none).`);
-  }
-  if (firstIdxs.length > 1) {
-    throw new Error(
-      `Table shape "${shapeName}": rows may label at most one "${RowRole.First}" (found ${firstIdxs.length}).`,
-    );
-  }
-
-  const firstIdx = firstIdxs.length === 1 ? firstIdxs[0] : -1;
-
-  const useFirst = firstIdx >= 0 && K >= 1;
-  const middle = K - (useFirst ? 1 : 0); // always >= 0
 
   const picks: number[] = [];
-  if (useFirst) picks.push(firstIdx);
-  for (let i = 0; i < middle; i++) picks.push(bodyIdxs[i % bodyIdxs.length]);
+  for (let r = 1; r <= start - 1; r++) picks.push(r); // top fixed
+  for (let i = 0; i < bodyCount; i++) picks.push(start + (i % span)); // body, cycled
+  for (let r = end + 1; r <= R - 1; r++) picks.push(r); // bottom fixed
 
-  return { headerIdx: headerIdxs[0], picks };
+  return { headerIdx: 0, picks };
 }
 
 /**
- * Fill a table shape by composing its specimen rows per the role plan (see
+ * Fill a table shape by composing its specimen rows per the body-range plan (see
  * `resolveRowPlan`). Each output cell's first paragraph is rebuilt from the
  * corresponding StyledParagraph, so tables inherit rich-run/bullet support for
  * free; the specimen row's `<a:tcPr>` is carried over untouched.
  */
-export function fillTable(shape: any, table: TableFill, shapeName: string, rows: RowRole[]): void {
+export function fillTable(shape: any, table: TableFill, shapeName: string, bodyRows: BodyRows): void {
   const tbl = shape.getElementsByTagName(Tag.TABLE)[0];
   if (!tbl) {
     throw new Error(`Table shape "${shapeName}": has no <a:tbl> element (is it actually a table?).`);
@@ -134,11 +122,8 @@ export function fillTable(shape: any, table: TableFill, shapeName: string, rows:
   if (R < 2) {
     throw new Error(`fillTable: template table has ${R} row(s), need at least 2 (header + data specimen)`);
   }
-  if (rows.length === 0) {
-    throw new Error(`Table shape "${shapeName}": no row roles supplied; a table specimen must label each <a:tbl> row.`);
-  }
 
-  const { headerIdx, picks } = resolveRowPlan(rows, R, table.rows.length, shapeName);
+  const { headerIdx, picks } = resolveRowPlan(bodyRows, R, table.rows.length, shapeName);
 
   // Headers are the source of truth for column count; every row is normalized to
   // it, and short/long data rows are padded/truncated to match.
