@@ -1342,8 +1342,9 @@ describe("fillSlide dispatch", () => {
     );
   });
 
-  // Edge case 5 — a slot left empty leaves the base slide's shape untouched.
-  it("does nothing for a slot the deck leaves empty", () => {
+  // Edge case 5 — a slot left empty has its base-slide shape removed, so an
+  // unfilled numbered slot renders nothing rather than its specimen.
+  it("removes the base shape for a slot the deck leaves empty", () => {
     const l = layout([
       slot("a", [{ type: SlotType.Text, sourceSlide: BASE, shapeName: "sa" }]),
       slot("b", [{ type: SlotType.Text, sourceSlide: BASE, shapeName: "sb" }]),
@@ -1351,9 +1352,21 @@ describe("fillSlide dispatch", () => {
     const { slide, calls } = recordingSlide();
     fillSlide(slide, l, step({ a: textVal }), "source", BASE);
     assert.deepEqual(
-      calls.map((c) => c.name),
-      ["sa"],
+      calls.map((c) => ({ op: c.op, name: c.name })),
+      [
+        { op: "modify", name: "sa" },
+        { op: "remove", name: "sb" },
+      ],
     );
+  });
+
+  // Edge case 5b — an empty slot with only transplant blocks placed no shape on
+  // the clone, so there is nothing to remove.
+  it("removes nothing for an empty slot whose blocks are all transplants", () => {
+    const l = layout([slot("t", [{ type: SlotType.Table, sourceSlide: 5, shapeName: "specimen", bodyRows: [1, 1] }])]);
+    const { slide, calls } = recordingSlide();
+    fillSlide(slide, l, step({}), "source", BASE);
+    assert.equal(calls.length, 0);
   });
 
   it("throws on an unrecognized content value (e.g. a bare string)", () => {

@@ -44,6 +44,8 @@ A layout's inputs split two ways (see [syntax.md](syntax.md) for details):
 
 A slot may accept more than one content type -- the manifest lists each slot's `accepts`, and the shape of the content you write selects which one.
 
+Parameters and slots you leave unfilled are dropped from the slide, so a layout with numbered slots (several sections, stats, columns) renders only the ones you fill -- fill as many as you have.
+
 Study each layout's `slots` before writing any slides.
 
 ---

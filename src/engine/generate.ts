@@ -209,8 +209,9 @@ function describeValue(v: unknown): string {
 /**
  * Fill one cloned slide. Per slot the step supplies a value for: resolve WHICH
  * shape realizes it (`resolveBlock`), build WHAT to write (`FILLERS[…].callbacks`),
- * and place it WHERE/HOW (`applyBlock`). Every ambiguity fails fast, naming layout
- * + slot.
+ * and place it WHERE/HOW (`applyBlock`). A slot the step leaves unfilled has its
+ * base-slide shape removed, so a layout with numbered slots renders exactly the
+ * ones supplied. Every ambiguity fails fast, naming layout + slot.
  *
  * Exported for tests; `generate()` calls it inside the `addSlide` callback.
  */
@@ -219,7 +220,14 @@ export function fillSlide(slide: any, layout: Layout, step: DeckStep, sourceAlia
 
   for (const slot of layout.slots) {
     const value = step.content?.[slot.key];
-    if (value === undefined) continue; // Empty slot: leave the base slide's shape untouched.
+    if (value === undefined) {
+      // An unfilled slot places no content — remove its base-slide shape (if it
+      // has one) so the clone carries nothing there. A transplant-only slot never
+      // placed a shape on the clone, so there is nothing to remove.
+      const baseBlock = slot.accepts.find((b) => b.sourceSlide === layout.baseSlide);
+      if (baseBlock) slide.removeElement(baseBlock.shapeName);
+      continue;
+    }
 
     const block = resolveBlock(step, slot, value);
     const target = targetOf(block, slotLabel(slideNumber, layout, slot));

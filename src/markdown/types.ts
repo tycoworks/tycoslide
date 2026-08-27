@@ -194,7 +194,8 @@ export type CompilerTemplateParameter = {
   /**
    * Whether the parameter may be omitted from a slide. Optional (defaults to
    * false): a required one with no value causes the compiler to throw with
-   * layout + key names.
+   * layout + key names; an optional one left unfilled has its shape removed
+   * from the slide.
    */
   required?: boolean;
   type: typeof ParameterType.Template;
@@ -209,7 +210,8 @@ export type CompilerImageParameter = {
   /**
    * Whether the parameter may be omitted from a slide. Optional (defaults to
    * false): a required one with no value causes the compiler to throw with
-   * layout + key names.
+   * layout + key names; an optional one left unfilled has its shape removed
+   * from the slide.
    */
   required?: boolean;
   key: string;
@@ -283,7 +285,8 @@ export type CompilerSlot = {
   frame?: Frame;
   /**
    * Whether the slot may be omitted from a slide. Optional (defaults to false):
-   * a required slot with no content throws with layout + key names.
+   * a required slot with no content throws with layout + key names; an optional
+   * slot left unfilled has its shape removed from the slide.
    */
   required?: boolean;
 };

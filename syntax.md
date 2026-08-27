@@ -216,6 +216,7 @@ Each parameter or slot in the layout definition may declare:
 - **`type`** (parameters, required) -- `template` or `image`.
 - **`accepts`** (slots, required) -- an array of `text`, `table`, `image`.
 - **`required: true`** -- the slide has no usable default and the build fails if the parameter/slot has no value (e.g. team-member photos, icon-grid icons, the quote logo). If you don't have a suitable image, ask the user for one.
+- **optional (the default)** -- a parameter or slot you leave unfilled is dropped from the slide (its shape is removed), so a layout with numbered slots (e.g. up to six sections, up to four stats) renders only the ones you fill.
 - **image sizing** -- each catalog asset declares a `type` (`icon` | `image` | `background`) that determines how it is scaled and cropped: `icon` never enlarges past native and never crops; `image` fits the whole picture (no crop, may scale); `background` fills and center-crops. Mermaid renders as `image` (contained).
 
 Each layout also declares a `slideNumber` pointing at the physical slide in the theme's template -- unique per layout (one layout maps to one physical slide).
