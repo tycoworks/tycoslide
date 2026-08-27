@@ -11,7 +11,7 @@ const fixturePath = resolve(here, "fixtures", "composition-theme.json");
 
 // A minimal-but-full valid theme populating every optional field at every
 // nesting level (top-level: fonts, mermaid, codeTheme, mermaidVariant;
-// layout: description/variant; parameter: limit/required;
+// layout: description/variant; parameter: required;
 // slot: required; block: startAt). This is the runtime
 // backstop for the `_drift` guard's blind spot (see the comment above
 // `ThemeConfigSchema` in themeConfigSchema.ts): every field here is a real key
@@ -50,14 +50,13 @@ function fullTheme(): CompilerThemeConfig {
         description: "A titled layout",
         variant: "dark",
         parameters: [
-          { type: "template", shapeName: "Title 1", template: "{title}", required: true, limit: { maxChars: 50 } },
+          { type: "template", shapeName: "Title 1", template: "{title}", required: true },
           { type: "image", shapeName: "Logo 0", key: "logo", required: false },
         ],
         slots: [
           {
             key: "body",
             frame: { x: 1, y: 2, cx: 3, cy: 4 },
-            limit: { maxChars: 100, maxLines: 5, maxItems: 3 },
             required: false,
             accepts: [{ type: "text", sourceSlide: 1, shapeName: "Text 1", startAt: 0 }],
           },

@@ -179,16 +179,6 @@ export type CompilerDeck = {
   steps: CompilerDeckStep[];
 };
 
-// ── Compiler-facing slot / layout extensions ─────────────────────────────────
-
-/**
- * Markdown-flavored measurement hints on a slot or template parameter: caps on
- * expanded run text, line count, or list items. All optional — a missing cap is
- * "no limit." Advisory metadata surfaced in the manifest; the fill never enforces
- * it.
- */
-export type Limit = { maxChars?: number; maxLines?: number; maxItems?: number };
-
 // ── Parameters (frontmatter, one value) ───────────────────────────────────────
 
 /**
@@ -201,7 +191,6 @@ export type Limit = { maxChars?: number; maxLines?: number; maxItems?: number };
  */
 export type CompilerTemplateParameter = {
   shapeName: string;
-  limit?: Limit;
   /**
    * Whether the parameter may be omitted from a slide. Optional (defaults to
    * false): a required one with no value causes the compiler to throw with
@@ -214,8 +203,7 @@ export type CompilerTemplateParameter = {
 };
 
 /** Image parameter: one frontmatter path filled by fillImage. Sizing/crop
- * behaviour comes from the resolved asset's `type`, not the slot. Carries no
- * `limit` — measuring an image path against char/line caps is meaningless. */
+ * behaviour comes from the resolved asset's `type`, not the slot. */
 export type CompilerImageParameter = {
   shapeName: string;
   /**
@@ -287,14 +275,12 @@ export type CompilerBlock = CompilerTextBlock | CompilerTableBlock | CompilerIma
  * routes to; a type the slot does not accept fails fast. `frame` is required
  * only when a slot has a transplant block (a block whose `sourceSlide` differs
  * from the layout's `slideNumber`); a base-only slot fills in place and needs
- * none. Adds markdown-flavored `limit` hints on top of the engine's minimal
- * Slot; per-slot `codeTheme` / `mermaidVariant` moved to the theme level.
+ * none.
  */
 export type CompilerSlot = {
   key: string;
   accepts: CompilerBlock[];
   frame?: Frame;
-  limit?: Limit;
   /**
    * Whether the slot may be omitted from a slide. Optional (defaults to false):
    * a required slot with no content throws with layout + key names.

@@ -37,7 +37,7 @@ For brand voice and naming guidelines, read `brand.md` if it exists alongside th
 
 Before writing anything, read `manifest.json`. It contains:
 
-- **layouts** -- for each: `name`, `description`, `parameters` (frontmatter inputs) and `slots` (body regions), each with `accepts` and optionally `required`, `limit` (plus, for assets, a `type` of `icon`/`image`/`background`)
+- **layouts** -- for each: `name`, `description`, `parameters` (frontmatter inputs) and `slots` (body regions), each with `accepts` and optionally `required` (plus, for assets, a `type` of `icon`/`image`/`background`)
 - **assets** -- brand logos, client logos, illustrations, and icons (`description`)
 
 A layout's inputs split two ways (see [syntax.md](syntax.md) for details):
@@ -46,7 +46,7 @@ A layout's inputs split two ways (see [syntax.md](syntax.md) for details):
 
 A slot may accept more than one content type -- the manifest lists each slot's `accepts`, and the shape of the content you write selects which one.
 
-Study each layout's `slots` and `limit`s before writing any slides.
+Study each layout's `slots` before writing any slides.
 
 ---
 
@@ -125,7 +125,7 @@ The `.pptx` is written next to your deck file (same directory as `<deck.md>`).
 
 ### Before Starting
 
-1. **Read the manifest thoroughly.** Each layout declares its `slots` (and the `accepts` types each one takes) and `limit`s -- the shape of what it can hold. Respect them.
+1. **Read the manifest thoroughly.** Each layout declares its `slots` (and the `accepts` types each one takes) -- the shape of what it can hold. Respect them.
 2. **Match content shape to the layout's slots.** A comparison fits a layout with two or three text columns; quantified proof fits one with stat slots; a customer voice fits a quote slot. The slots tell you what fits -- don't force content into the wrong shape.
 3. **Assign each idea to its best-fit layout** from the manifest. Keep one variant (all dark or all light) across the deck.
 
@@ -133,12 +133,12 @@ The `.pptx` is written next to your deck file (same directory as `<deck.md>`).
 
 **Every slide communicates one idea.** Put the takeaway in the headline, then support it.
 
-Check each layout's `limit` in the manifest for content density constraints. When content overflows, split across slides.
+Keep each slot's content to what its region comfortably holds. When content overflows, split it across slides.
 
 ### Avoid (Common Mistakes)
 
 - **Don't repeat the same layout** -- vary layouts for visual rhythm
-- **Don't ignore layout limits** -- if a slot says max 4 stats, use 4 or fewer
+- **Don't overstuff a slot** -- keep content to what its region comfortably holds; split across slides when there's too much
 - **Don't restyle the layout** -- the theme owns all design; you only fill slots
 - **Don't use an image that's wrong for the slot** -- a small slot wants a simple icon, not a dense illustration; if the build warns an image shrank to a small %, swap it for a simpler one
 - **Don't invent layout or asset names** -- only use what exists in the manifest
@@ -204,9 +204,9 @@ After a successful build, spawn a subagent:
 Review this deck. Assume there are issues -- find them.
 
 Check for:
-- Slides that overflow a layout's `limit`s (more bullets/stats/rows than the slot holds)
+- Slides where content overflows its slot (more bullets/stats/rows than the region holds)
 - Same layout repeated multiple times with no variety
-- Content that doesn't match the layout's slots (check `accepts`/`limit`s in manifest.json)
+- Content that doesn't match the layout's slots (check `accepts` in manifest.json)
 - Leftover placeholder logos or dummy text in the rendered images
 
 For each issue, suggest a specific fix.

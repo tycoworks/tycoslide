@@ -192,7 +192,6 @@ export type {
   CompilerSlot,
   CompilerThemeConfig,
   EngineFill,
-  Limit,
   MermaidConfig,
   MermaidVariant,
   ParsedDocument,

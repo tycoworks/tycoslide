@@ -48,13 +48,6 @@ describe("generateManifest parameter flattening", () => {
     ]);
   });
 
-  it("does NOT surface a text parameter's limit per key (parameter-level, deferred to Phase 2)", () => {
-    const params = manifestParams([
-      layout("lim", [{ shapeName: "s", template: "{a}", type: ParameterType.Template, limit: { maxChars: 40 } }]),
-    ]);
-    assert.deepEqual(params, [{ key: "a", type: ParameterType.Template }]);
-  });
-
   it("keeps an image parameter as a single keyed entry", () => {
     const params = manifestParams([
       layout("img", [{ key: "logo", shapeName: "logoPic", type: ParameterType.Image }]),
@@ -97,16 +90,15 @@ describe("generateManifest slot accepts advertising", () => {
     assert.deepEqual(slots, [{ key: "body", accepts: ["text", "table", "image"] }]);
   });
 
-  it("marks a required slot and carries its limit, dropping shape/frame internals", () => {
+  it("marks a required slot, dropping shape/frame internals", () => {
     const slots = manifestSlots([
       {
         key: "table",
         required: true,
-        limit: { maxItems: 5 },
         accepts: [{ type: SlotType.Table, sourceSlide: 1, shapeName: "s", bodyRows: [1, 1] }],
       },
     ]);
-    assert.deepEqual(slots, [{ key: "table", accepts: ["table"], required: true, limit: { maxItems: 5 } }]);
+    assert.deepEqual(slots, [{ key: "table", accepts: ["table"], required: true }]);
   });
 
   it("omits optional layout prose (description) when not declared", () => {

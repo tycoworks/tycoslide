@@ -2,14 +2,11 @@ import { templateKeys } from "./markdown/textTemplate.js";
 import type { AcceptType, AssetType, CompilerConfig, CompilerParameter, CompilerSlot } from "./markdown/types.js";
 import { ParameterType } from "./markdown/types.js";
 
-type ManifestLimit = { maxChars?: number; maxLines?: number; maxItems?: number };
-
 /** A frontmatter parameter (template, image) as advertised to AI authors. */
 type ManifestParameter = {
   key: string;
   type: CompilerParameter["type"];
   required?: true;
-  limit?: ManifestLimit;
 };
 
 /**
@@ -22,7 +19,6 @@ type ManifestSlot = {
   key: string;
   accepts: AcceptType[];
   required?: true;
-  limit?: ManifestLimit;
 };
 
 type ManifestLayout = {
@@ -51,11 +47,6 @@ type Manifest = {
  * A template parameter has no top-level key — its template's keys are the keys, so it
  * flattens to one entry per key (shapeName/template stay manifest-internal). An
  * image parameter is a single key.
- *
- * A template parameter's `limit` is deliberately NOT projected here: it measures the
- * expanded run text (parameter-level), so surfacing it per key would misrepresent
- * it as per-key. How to advertise a parameter-level limit is a Phase 2 decision;
- * until then it stays manifest-internal.
  */
 function stripParameter(param: CompilerParameter): ManifestParameter[] {
   switch (param.type) {
@@ -76,7 +67,6 @@ function stripParameter(param: CompilerParameter): ManifestParameter[] {
 function stripSlot(slot: CompilerSlot): ManifestSlot {
   const result: ManifestSlot = { key: slot.key, accepts: slot.accepts.map((b) => b.type) };
   if (slot.required) result.required = true;
-  if (slot.limit) result.limit = slot.limit;
   return result;
 }
 

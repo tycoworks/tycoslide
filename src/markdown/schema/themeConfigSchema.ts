@@ -46,12 +46,6 @@ const FrameSchema = strict({
   cy: z.number(),
 });
 
-const LimitSchema = strict({
-  maxChars: z.number().optional(),
-  maxLines: z.number().optional(),
-  maxItems: z.number().optional(),
-});
-
 const AssetEntrySchema = strict({
   path: z.string(),
   type: assetTypeSchema,
@@ -87,7 +81,6 @@ const ThemeFontSchema = strict({
 
 const TemplateParamSchema = strict({
   shapeName: z.string(),
-  limit: LimitSchema.optional(),
   required: z.boolean().optional(),
   type: z.literal(ParameterType.Template),
   template: z.string(),
@@ -129,7 +122,6 @@ const SlotSchema = strict({
   key: z.string(),
   accepts: z.array(BlockSchema),
   frame: FrameSchema.optional(),
-  limit: LimitSchema.optional(),
   required: z.boolean().optional(),
 });
 

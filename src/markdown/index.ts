@@ -30,6 +30,5 @@ export type {
   CompilerTemplateParameter,
   CompilerThemeConfig,
   EngineFill,
-  Limit,
 } from "./types.js";
 export { AcceptType, AssetType, ParameterType, RESERVED_KEY } from "./types.js";
