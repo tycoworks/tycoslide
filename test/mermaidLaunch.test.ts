@@ -29,8 +29,8 @@ describe("launchChromium", () => {
     assert.equal(await launchChromium(chromium as never), "browser");
     assert.deepEqual(
       calls.map((c) => c.channel),
-      ["chrome", "msedge", undefined],
-      "Chrome, then Edge, then the bare launch",
+      ["chrome", undefined],
+      "system Chrome first, bare launch second",
     );
   });
 

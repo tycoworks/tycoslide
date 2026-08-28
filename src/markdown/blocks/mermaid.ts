@@ -226,7 +226,6 @@ export async function launchChromium(
         ]
       : []),
     { label: "system Chrome", launch: () => chromium.launch({ ...LAUNCH_ARGS, channel: "chrome" }) },
-    { label: "system Edge", launch: () => chromium.launch({ ...LAUNCH_ARGS, channel: "msedge" }) },
     { label: "Playwright's downloaded browser", launch: () => chromium.launch(LAUNCH_ARGS) },
   ];
 

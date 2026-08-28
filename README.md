@@ -54,7 +54,7 @@ npx tycoslide build deck.md               # → deck.pptx
 ```bash
 npx tycoslide build deck.md       # markdown → PPTX (theme resolved from deck frontmatter)
 npx tycoslide build deck.md --no-notes   # omit speaker notes from the output
-npx tycoslide package             # regenerate skill.md/syntax.md/manifest.json + zip the whole theme into a self-contained <package-name>.zip
+npx tycoslide package             # regenerate skill.md/syntax.md/manifest.json + zip the theme into a self-contained <package-name>.zip
 ```
 
 ## Theme Structure

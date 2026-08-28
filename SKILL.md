@@ -17,6 +17,7 @@ npm install
 
 This installs the tycoslide engine and its dependencies. You only need to do this once.
 
+
 ## Overview
 
 This skill builds on-brand decks from a markdown deck file. The theme provides slide layouts that control design. Your job: pick the right layouts, fill them with content, and build. You never restyle the layout; the engine clones the real slides, so brand, layout, fonts, and chrome come for free.
@@ -35,12 +36,12 @@ This skill builds on-brand decks from a markdown deck file. The theme provides s
 
 Before writing anything, read `manifest.json`. It contains:
 
-- **layouts** -- for each: `name`, `description`, `parameters` (frontmatter inputs) and `slots` (body regions), each with `accepts` and optionally `required` (plus, for assets, a `type` of `icon`/`image`/`background`)
+- **layouts** -- for each: `name`, `description`, `parameters` (frontmatter inputs) and `slots` (body regions). A layout is identified by its `name`; every parameter and slot by its `key`. Parameters carry a `type`, slots carry `accepts`, and either may be `required`
 - **assets** -- brand logos, client logos, illustrations, and icons (`description`)
 
 A layout's inputs split two ways (see [syntax.md](syntax.md) for details):
 - **parameters** -- one value on a frontmatter line. Types: `template`, `image`. Fill by putting a value under the parameter's key in the slide frontmatter.
-- **slots** -- a multi-line region in the body. Accept types: `text`, `table`, `image`. Fill as a `::name::` region; a fenced code block routes to a `text` slot, a fenced mermaid block to an `image` slot.
+- **slots** -- a multi-line region in the body. Accept types: `text`, `table`, `image`. Fill as a `::key::` region, using the slot's `key` from the manifest; a fenced code block routes to a `text` slot, a fenced mermaid block to an `image` slot.
 
 A slot may accept more than one content type -- the manifest lists each slot's `accepts`, and the shape of the content you write selects which one.
 
@@ -105,7 +106,7 @@ subtitle: This Quarter
 
 ### Body content, slots, and formatting
 
-See [syntax.md](syntax.md) for the full syntax reference: body content (paragraphs, bullets, nesting), inline formatting (bold, italic, strikethrough, underline, hyperlinks), named slots (`::name::` markers), the parameter/slot split (parameters: template, image; slots accept: text, table, image), and image parameters.
+See [syntax.md](syntax.md) for the full syntax reference: body content (paragraphs, bullets, nesting), inline formatting (bold, italic, strikethrough, underline, hyperlinks), named slots (`::key::` markers), the parameter/slot split (parameters: template, image; slots accept: text, table, image), and image parameters.
 
 ### Build
 
@@ -140,7 +141,7 @@ Keep each slot's content to what its region comfortably holds. When content over
 - **Don't repeat the same layout** -- vary layouts for visual rhythm
 - **Don't overstuff a slot** -- keep content to what its region comfortably holds; split across slides when there's too much
 - **Don't restyle the layout** -- the theme owns all design; you only fill slots
-- **Don't use an image that's wrong for the slot** -- a small slot wants a simple icon, not a dense illustration. If you get a `shrank to X%` warning, look at the rendered slide: if the image is now too small to make out, use a simpler one.
+- **Don't use an image that's wrong for the slot** -- a small slot wants a simple icon, not a dense illustration. If you get a `shrunk to X%` warning, look at the rendered slide: if the image is now too small to make out, use a simpler one.
 - **Don't invent layout or asset names** -- only use what exists in the manifest
 - **Don't leave required parameters or slots empty** -- and don't leave a placeholder logo or dummy text in an image parameter you care about
 
@@ -156,7 +157,7 @@ Build the deck again ([Build](#build)) and read the output carefully. Common err
 
 | Error | Fix |
 |-------|-----|
-| `Unknown layout: 'xyz'` | Check layout names in `manifest.json` |
+| `unknown layout "xyz"` | Check layout names in `manifest.json` |
 | A parameter or slot didn't fill | Use the key names the layout declares -- parameters in frontmatter, slots as body regions |
 | An image didn't swap / placeholder remains | Use the image parameter's key name in frontmatter, and an asset path that exists in `manifest.json` |
 | YAML parse error | Fix the YAML syntax in the slide's frontmatter |

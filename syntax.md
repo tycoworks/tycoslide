@@ -24,7 +24,7 @@ The output `.pptx` is written next to the deck file, named after it (`deck.md` â
 
 ## Body content
 
-A slide's body is split into named regions with `::name::` markers. Each region fills the slot whose key matches the marker name.
+A slide's body is split into regions with `::key::` markers. Each region fills the slot whose `key` matches the marker.
 
 ```markdown
 ---
@@ -58,9 +58,9 @@ Inline formatting is supported in body content:
 
 ---
 
-## Named slots with `::name::` markers
+## Named slots with `::key::` markers
 
-For layouts with multiple content regions (e.g., two-column layouts), use `::name::` markers to split body content into named slots.
+For layouts with multiple content regions (e.g., two-column layouts), use `::key::` markers to split body content into named slots.
 
 ```markdown
 ---
@@ -87,7 +87,7 @@ Content after a marker goes to the slot matching that name. The marker names mus
 
 ## Parameters and slots (in `manifest.json`)
 
-A layout advertises two kinds of author-facing input, split by one rule: **a parameter is one value on a frontmatter line; a slot is a multi-line region in the body** (a `::name::` region). In `manifest.json` each layout carries two lists, `parameters` and `slots`:
+A layout advertises two kinds of author-facing input, split by one rule: **a parameter is one value on a frontmatter line; a slot is a multi-line region in the body** (a `::key::` region). In `manifest.json` each layout carries two lists, `parameters` and `slots`:
 
 ```jsonc
 {
@@ -125,7 +125,7 @@ Fill a parameter by putting a value under its key in the slide's frontmatter.
 
 ### Body content shapes
 
-Fill a slot by writing a `::name::` region in the body; the marker maps to the slot of that name. A slot's manifest entry lists which content types it `accepts` (`text`, `table`, `image`) -- write content whose shape matches one of them:
+Fill a slot by writing a `::key::` region in the body; the marker maps to the slot with that `key`. A slot's manifest entry lists which content types it `accepts` (`text`, `table`, `image`) -- write content whose shape matches one of them:
 
 - **text** (slots that accept `text`) -- markdown paragraphs and bullets, rebuilt from the template's specimen paragraph styles. A fenced code block also routes here:
   ````markdown
@@ -227,7 +227,7 @@ Each layout also declares a `slideNumber` pointing at the physical slide in the 
 
 Any slide may carry a `notes:` key in its frontmatter -- a plain-text speaker-notes block attached to that slide's notes page. It is slide-level metadata, not a parameter or a slot: it is never routed to a shape and never appears on the slide face, only in the presenter/notes view.
 
-Write multiple lines with a YAML block scalar (`|`); each line becomes one notes paragraph. Blank template notes on the underlying slide are always stripped, so only what you author here shows up.
+Write multiple lines with a YAML block scalar (`|`); each line becomes one notes paragraph. Template notes on the underlying slide are always stripped, so only what you author here shows up.
 
 ```yaml
 ---
@@ -239,7 +239,7 @@ notes: |
 ---
 ```
 
-To build with all speaker notes omitted, pass `--no-notes` to `npx tycoslide build` (see [README](README.md#cli)).
+To build with all speaker notes omitted, pass `--no-notes` to `npx tycoslide build`.
 
 ---
 
