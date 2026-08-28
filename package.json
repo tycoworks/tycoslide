@@ -1,6 +1,6 @@
 {
   "name": "@tycoworks/tycoslide",
-  "version": "0.11.2",
+  "version": "0.11.3",
   "description": "Create editable, on-brand PowerPoint slides from markdown.",
   "type": "module",
   "main": "dist/index.js",
