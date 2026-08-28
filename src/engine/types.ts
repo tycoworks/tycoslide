@@ -1,4 +1,11 @@
 /**
+ * Theme subdirectory holding the source `.pptx` template. Fixed by convention:
+ * `theme.json` names only the file, so the engine resolves the template under
+ * this directory and packaging reads it from the same place.
+ */
+export const TEMPLATE_DIR = "template";
+
+/**
  * Fill-strategy discriminator carried on every Slot. Required — there is no
  * silent default. The engine dispatches to fillTemplate / fillText / fillTable /
  * fillImage based on this value.

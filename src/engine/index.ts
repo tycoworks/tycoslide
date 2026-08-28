@@ -23,4 +23,4 @@ export type {
   TextRun,
   ThemeConfig,
 } from "./types.js";
-export { ImageFit, SlotType } from "./types.js";
+export { ImageFit, SlotType, TEMPLATE_DIR } from "./types.js";

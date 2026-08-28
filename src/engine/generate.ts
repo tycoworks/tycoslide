@@ -34,7 +34,16 @@ import { Automizer, modify } from "pptx-automizer";
 import { FILLERS, type FillTarget } from "./fillers/filler.js";
 import { isImageFill } from "./fillers/image.js";
 import { applyNotesToSlide, type NotesArchive, sweepOrphanNotes } from "./notes.js";
-import { type Block, type Config, type Deck, type DeckStep, type Layout, type Slot, SlotType } from "./types.js";
+import {
+  type Block,
+  type Config,
+  type Deck,
+  type DeckStep,
+  type Layout,
+  type Slot,
+  SlotType,
+  TEMPLATE_DIR,
+} from "./types.js";
 
 /** Options for `generate` / `buildDeck`. */
 export type GenerateOptions = {
@@ -67,7 +76,7 @@ export async function generate(deck: Deck, config: Config, options: GenerateOpti
   const outFile = basename(deck.output);
 
   const automizer = new Automizer({
-    templateDir: resolve(rootDir, "template"),
+    templateDir: resolve(rootDir, TEMPLATE_DIR),
     outputDir: outDir,
     removeExistingSlides: true,
     autoImportSlideMasters: true,

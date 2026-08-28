@@ -1,6 +1,8 @@
-import { readdirSync, readFileSync } from "node:fs";
-import { extname, join, relative, sep } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import JSZip from "jszip";
+import { TEMPLATE_DIR } from "./engine/index.js";
+import type { CompilerThemeConfig } from "./markdown/types.js";
 
 const FRONTMATTER = /^---\n([\s\S]*?)\n---/;
 const NAME_LINE = /^name:[ \t]*.*$/m;
@@ -18,44 +20,56 @@ export function renameSkill(md: string, name: string): string {
   return md.replace(block[0], block[0].replace(NAME_LINE, `name: ${name}`));
 }
 
-// Never packaged: dependencies (npm install rebuilds them) and hidden entries
-// (name starting with "." — covers VCS, tooling, caches, secrets like .env/.npmrc).
-const EXCLUDE_DIRS = new Set(["node_modules"]);
-// Build artifacts, dropped ONLY at the repo root: decks build to cwd
-// (showcase.pptx, deck.pptx, the output .zip), while the template .pptx lives
-// under template/ and must be kept — so these extensions are pruned top-level only.
-const ROOT_ARTIFACT_EXTS = new Set([".pptx", ".pdf", ".zip"]);
+/**
+ * Files a packaged skill needs beyond the theme's own declarations. `package.json`
+ * matters most: the unzip flow is `npm install` -> `npx tycoslide build`, so it
+ * restores the engine and any npm-resolved brand fonts. The lockfile is taken
+ * when present so that install is reproducible.
+ */
+const SUPPORT_FILES = ["package.json", "package-lock.json"];
 
 /**
- * Zip an entire theme directory into an uploadable Agent Skill archive whose
- * entries all live under a single root folder (e.g. `mz-slides/theme.json`),
- * matching Anthropic's custom-skill format. Recursively includes every file
- * except node_modules, hidden entries (any name starting with `.`), and
- * top-level build artifacts (.pptx/.pdf/.zip at the repo root; the template
- * .pptx under template/ is kept). Subdirectory structure is preserved with
- * POSIX slashes. Fails fast if nothing is left to zip.
+ * Every path a packaged theme needs, relative to `rootDir` and POSIX-separated.
+ *
+ * Derived from the theme config rather than filtered out of a directory walk:
+ * the config already declares its template and its whole asset catalog, so an
+ * allowlist stays correct no matter what else sits in the working directory --
+ * built decks, PDFs, slide PNGs, scratch files. Font paths are deliberately
+ * absent: they resolve from node_modules, which `npm install` restores.
  */
-export async function zipDir(rootDir: string, folderName: string): Promise<Buffer> {
+function skillPaths(config: CompilerThemeConfig, generated: string[]): string[] {
+  const assets = Object.values(config.assets).flatMap((category) => Object.values(category).map((entry) => entry.path));
+  return [...SUPPORT_FILES, ...generated, `${TEMPLATE_DIR}/${config.template}`, ...assets];
+}
+
+/**
+ * Zip a theme into an uploadable Agent Skill archive whose entries all live
+ * under a single root folder (e.g. `mz-slides/theme.json`), matching Anthropic's
+ * custom-skill format. `generated` names the files the caller just wrote (the
+ * config, manifest, skill.md, syntax.md). Optional support files are skipped
+ * when absent; anything the config declares but that is missing is an error.
+ */
+export async function zipDir(
+  rootDir: string,
+  folderName: string,
+  config: CompilerThemeConfig,
+  generated: string[],
+): Promise<Buffer> {
   const zip = new JSZip();
   const folder = zip.folder(folderName);
   if (!folder) throw new Error(`Failed to create zip folder: ${folderName}`);
 
+  const optional = new Set(SUPPORT_FILES);
   let count = 0;
-  const walk = (dir: string): void => {
-    const atRoot = dir === rootDir;
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (entry.name.startsWith(".")) continue;
-      const abs = join(dir, entry.name);
-      if (entry.isDirectory()) {
-        if (!EXCLUDE_DIRS.has(entry.name)) walk(abs);
-      } else if (entry.isFile()) {
-        if (atRoot && ROOT_ARTIFACT_EXTS.has(extname(entry.name))) continue;
-        folder.file(relative(rootDir, abs).split(sep).join("/"), readFileSync(abs));
-        count++;
-      }
+  for (const rel of skillPaths(config, generated)) {
+    const abs = join(rootDir, ...rel.split("/"));
+    if (!existsSync(abs)) {
+      if (optional.has(rel)) continue;
+      throw new Error(`Theme declares "${rel}", but no such file exists`);
     }
-  };
-  walk(rootDir);
+    folder.file(rel, readFileSync(abs));
+    count++;
+  }
 
   if (count === 0) throw new Error(`No files to zip in directory: ${rootDir}`);
   return zip.generateAsync({ type: "nodebuffer" });

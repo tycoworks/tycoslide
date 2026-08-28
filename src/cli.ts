@@ -88,7 +88,8 @@ program
     // Bundle the WHOLE theme so the skill is self-contained: unzip ->
     // `npm install` (pulls the engine + its deps) -> `npx tycoslide build`.
     const zipFile = `${skillName}.zip`;
-    writeFileSync(resolve(process.cwd(), zipFile), await zipDir(process.cwd(), skillName));
+    const generated = [opts.config, MANIFEST_FILE, SKILL_FILE, SYNTAX_FILE];
+    writeFileSync(resolve(process.cwd(), zipFile), await zipDir(process.cwd(), skillName, config, generated));
     console.log(`WROTE ${zipFile}`);
   });
 
