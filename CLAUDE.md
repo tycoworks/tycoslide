@@ -18,11 +18,13 @@ TypeScript runs natively via Node's `--experimental-strip-types`. `tsc --build` 
 
 `@tycoworks/tycoslide` is a single npm package (no workspaces). The published tarball ships only `dist/`, `bin/`, `SKILL.md`, `syntax.md` (the `files` array); the `bin/tycoslide.js` shebang and `@tycoworks` publish access are assumed set up.
 
+Commit and tag the bump **before** publishing. A publish that fails leaves a tag for a version not yet on npm, which the retry resolves; a publish that succeeds before the commit leaves npm carrying a version with no commit behind it, and the number can never be reused. Publishing requires a one-time password, so step 5 is run by hand.
+
 1. **Clean-build + test** on the release branch: `npm ci && npm run build && npm test && npm run lint`. If the build reports missing exports that exist in source, `find . -name 'tsconfig.tsbuildinfo' -not -path './node_modules/*' -delete && npm run build`.
 2. **Bump**: `npm version <patch|minor|major> --no-git-tag-version` (updates `package.json` + lockfile; no commit/tag).
 3. **Verify the tarball**: `npm pack --dry-run` — confirm only `dist/`, `bin/tycoslide.js` (with shebang), `SKILL.md`, `syntax.md`, `package.json`, `README.md`, `LICENSE`; no `src/`, `test/`, configs, or fixtures.
-4. **Publish**: `npm publish --access public` (`--access public` required on first publish, harmless after).
-5. **Commit, tag, push**: `git commit -am "release vX.Y.Z" && git tag -a vX.Y.Z -m "vX.Y.Z" && git push --follow-tags`.
+4. **Commit, tag, push**: `git commit -am "release vX.Y.Z" && git tag -a vX.Y.Z -m "vX.Y.Z" && git push --follow-tags`. The tag must be annotated: `--follow-tags` ignores lightweight ones and the tag silently stays local.
+5. **Publish**: `npm publish --access public` (`--access public` required on first publish, harmless after).
 6. **GitHub release**: `gh release create vX.Y.Z --title "vX.Y.Z" --generate-notes`.
 7. **Clean-room check**: in an empty dir, `npm install @tycoworks/tycoslide && npx tycoslide --version`, then build a minimal deck against a theme to confirm it renders a `.pptx`.
 
