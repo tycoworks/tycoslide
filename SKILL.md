@@ -140,7 +140,7 @@ Keep each slot's content to what its region comfortably holds. When content over
 - **Don't repeat the same layout** -- vary layouts for visual rhythm
 - **Don't overstuff a slot** -- keep content to what its region comfortably holds; split across slides when there's too much
 - **Don't restyle the layout** -- the theme owns all design; you only fill slots
-- **Don't use an image that's wrong for the slot** -- a small slot wants a simple icon, not a dense illustration; if the build warns an image shrank to a small %, swap it for a simpler one
+- **Don't use an image that's wrong for the slot** -- a small slot wants a simple icon, not a dense illustration. If you get a `shrank to X%` warning, look at the rendered slide: if the image is now too small to make out, use a simpler one.
 - **Don't invent layout or asset names** -- only use what exists in the manifest
 - **Don't leave required parameters or slots empty** -- and don't leave a placeholder logo or dummy text in an image parameter you care about
 
