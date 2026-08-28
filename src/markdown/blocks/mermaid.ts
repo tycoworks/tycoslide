@@ -172,7 +172,7 @@ async function renderOne(
   const outputPath = join(cacheDir, `${key}.png`);
   if (existsSync(outputPath)) return outputPath;
 
-  await renderMermaidToPng(processed, renderConfig, fonts, outputPath);
+  await renderMermaidToPng(processed, renderConfig, fonts, outputPath, compilerConfig.browserPath);
   return outputPath;
 }
 
@@ -196,6 +196,55 @@ function fontFaceCss(fonts: ResolvedFont[]): string {
     .join("\n");
 }
 
+type Chromium = typeof import("playwright-core")["chromium"];
+
+const LAUNCH_ARGS = { headless: true, args: ["--no-sandbox"] };
+
+/**
+ * Find a browser rather than ship one. tycoslide never downloads Chromium: the
+ * binary comes from a CDN rather than the npm registry, so bundling it breaks
+ * installs anywhere egress is restricted to the registry, and pins the build to
+ * one revision that a machine's existing browser will rarely match.
+ *
+ * Three ways in, most explicit first: `--browser-path` names an executable
+ * outright (any build, the revision is not checked), `channel: "chrome"` picks
+ * up a system Chrome install, and the bare launch falls back to whatever `npx
+ * playwright install` put in Playwright's own cache. If none work, the error
+ * names every remedy a caller can act on.
+ */
+export async function launchChromium(
+  chromium: Chromium,
+  browserPath?: string,
+): Promise<Awaited<ReturnType<Chromium["launch"]>>> {
+  const attempts: { label: string; launch: () => ReturnType<Chromium["launch"]> }[] = [
+    ...(browserPath
+      ? [
+          {
+            label: `--browser-path ${browserPath}`,
+            launch: () => chromium.launch({ ...LAUNCH_ARGS, executablePath: browserPath }),
+          },
+        ]
+      : []),
+    { label: "system Chrome", launch: () => chromium.launch({ ...LAUNCH_ARGS, channel: "chrome" }) },
+    { label: "system Edge", launch: () => chromium.launch({ ...LAUNCH_ARGS, channel: "msedge" }) },
+    { label: "Playwright's downloaded browser", launch: () => chromium.launch(LAUNCH_ARGS) },
+  ];
+
+  const failures: string[] = [];
+  for (const attempt of attempts) {
+    try {
+      return await attempt.launch();
+    } catch (e) {
+      failures.push(`  ${attempt.label}: ${e instanceof Error ? e.message.split("\n")[0] : String(e)}`);
+    }
+  }
+  throw new Error(
+    `No Chromium available to render mermaid. Tried:\n${failures.join("\n")}\n` +
+      "Fix by any one of: pass --browser-path, install Google Chrome, " +
+      "or run `npx playwright install chromium-headless-shell`.",
+  );
+}
+
 /**
  * Render a mermaid definition to a transparent PNG via a headless Chromium
  * (Playwright — the proven old driver, stronger headless font fidelity). The
@@ -210,6 +259,7 @@ async function renderMermaidToPng(
   renderConfig: object,
   fonts: ResolvedFont[],
   outputPath: string,
+  browserPath?: string,
 ): Promise<void> {
   const bundle = getMermaidBundle();
   // JSON script blocks pass data without escaping issues; escape `</` so a value
@@ -261,12 +311,12 @@ ${fontFaceCss(fonts)}
   // origin can't fetch the file:// font resources (@font-face silently fails),
   // whereas a file://-origin document loads them.
   const htmlPath = `${outputPath}.html`;
-  const { chromium } = await import("playwright");
+  const { chromium } = await import("playwright-core");
   let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
   try {
     // Written inside the try so the finally always cleans it up, even if launch throws.
     writeFileSync(htmlPath, html);
-    browser = await chromium.launch({ headless: true, args: ["--no-sandbox"] });
+    browser = await launchChromium(chromium, browserPath);
     const page = await browser.newPage({ viewport: { width: 800, height: 600 }, deviceScaleFactor: 2 });
     await page.goto(pathToFileURL(htmlPath).href, { waitUntil: "load" });
     await page.waitForSelector(`#output[${RENDER_SIGNAL_ATTR}="${RenderSignal.Done}"]`, { timeout: 30000 });

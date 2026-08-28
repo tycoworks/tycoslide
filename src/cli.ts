@@ -27,7 +27,8 @@ program
   .argument("<deck>", "path to deck markdown file")
   .option(`-c, --config <path>`, "override theme config path (default: read from frontmatter)")
   .option("--no-notes", "omit speaker notes from the output (also strips any inherited template notes)")
-  .action(async (deckPath: string, opts: { config?: string; notes: boolean }) => {
+  .option("--browser-path <path>", "Chrome executable to render diagrams with (default: auto-detect)")
+  .action(async (deckPath: string, opts: { config?: string; notes: boolean; browserPath?: string }) => {
     const absDeckPath = resolve(process.cwd(), deckPath);
     let source: string;
     try {
@@ -46,7 +47,7 @@ program
     if (!absConfigPath) {
       throw new Error(`${basename(deckPath)}: missing required "${RESERVED_KEY.THEME}" in global frontmatter`);
     }
-    const config = loadThemeConfig(absConfigPath);
+    const config = { ...loadThemeConfig(absConfigPath), browserPath: opts.browserPath };
     const deck = await compileDeck(doc, config);
     // Always write the .pptx next to the input deck, named after it.
     const outName = basename(deckPath).replace(/\.md$/, ".pptx");

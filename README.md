@@ -16,7 +16,7 @@ Create editable, on-brand PowerPoint slides from markdown.
 npm install @tycoworks/tycoslide
 ```
 
-Installing also downloads Chromium (~554MB), via `@playwright/browser-chromium`, which tycoslide uses to render mermaid diagrams. If you install with `--ignore-scripts`, run `npx playwright install chromium-headless-shell` before building a deck with diagrams.
+Mermaid diagrams need Chrome on the machine. See [Diagrams](#diagrams).
 
 Create `deck.md`:
 
@@ -78,3 +78,14 @@ my-theme/
 **Layout** — a slide pattern in the template (Title, Body, Quote, etc.).
 **Theme** — the directory that bundles a template, assets, and config.
 **Manifest** — a machine-readable catalog of layouts and assets for AI agents.
+
+## Diagrams
+
+Mermaid blocks are rendered with a headless Chrome. tycoslide does not download one.
+It uses a browser you already have, in this order:
+
+1. `--browser-path <path>`
+2. A system Chrome install
+3. `npx playwright install chromium-headless-shell`
+
+Decks without diagrams need no browser.

@@ -357,4 +357,10 @@ export type CompilerThemeConfig = {
 
 export type CompilerConfig = CompilerThemeConfig & {
   rootDir: string;
+  /**
+   * Browser executable to render mermaid with, from `--browser-path`. Added
+   * after load like `rootDir`: it is a per-invocation choice, not a theme's.
+   * Unset means discover one (see `launchChromium`).
+   */
+  browserPath?: string;
 };
