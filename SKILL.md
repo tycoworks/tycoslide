@@ -168,7 +168,7 @@ Build the deck again ([Build](#build)) and read the output carefully. Common err
 ### Verification Loop
 
 1. Write the deck file &rarr; Build
-2. **Read every error** -- fix all of them
+2. **Fix the error** -- the build stops at the first one, so expect several rounds
 3. Rebuild
 4. **If content overflows**: reduce content or split into two slides
 5. Repeat until the build exits cleanly

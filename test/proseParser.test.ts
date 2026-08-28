@@ -15,7 +15,7 @@ const ctx = {
     throw new Error("no asset resolver expected in prose tests");
   },
   layoutName: "L",
-  slideIdx: 0,
+  slideNo: 1,
   source: "body content",
   config: { layouts: [], assets: {}, template: "", rootDir: "" },
 };

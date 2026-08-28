@@ -55,13 +55,13 @@ function assertSlotRegion(
   slot: CompilerSlot,
   got: AcceptType,
   layoutName: string,
-  slideIdx: number,
+  slideNo: number,
   source: string,
 ): void {
   if (!slot.accepts.some((b) => b.type === got)) {
     const accepted = slot.accepts.map((b) => b.type).join(", ");
     throw new Error(
-      `Slide ${slideIdx}: layout "${layoutName}" slot "${slot.key}" does not accept ${got} content ` +
+      `Slide ${slideNo}: layout "${layoutName}" slot "${slot.key}" does not accept ${got} content ` +
         `(from ${source}); it accepts: ${accepted}.`,
     );
   }
@@ -171,10 +171,14 @@ async function compileStep(
 ): Promise<CompilerDeckStep> {
   const { layouts, rootDir } = config;
   const { frontmatter, slots, index } = slide;
+  // Slide numbers in errors are 1-based, matching how an author counts slides in
+  // the deck file. Derive it once: every message below, and the parse-time errors
+  // in slideParser, must agree or the author looks at the wrong slide.
+  const slideNo = index + 1;
 
   const layout = frontmatter[RESERVED_KEY.LAYOUT];
   if (layout === undefined) {
-    throw new Error(`Slide ${index}: missing required "${RESERVED_KEY.LAYOUT}" in frontmatter`);
+    throw new Error(`Slide ${slideNo}: missing required "${RESERVED_KEY.LAYOUT}" in frontmatter`);
   }
 
   // Speaker notes are slide-level metadata, stripped from frontmatter before
@@ -188,13 +192,13 @@ async function compileStep(
   const layoutDef = layouts.find((l) => l.name === layoutName);
   if (!layoutDef) {
     const known = layouts.map((l) => l.name).join(", ");
-    throw new Error(`Slide ${index}: unknown layout "${layoutName}". Available layouts: ${known}`);
+    throw new Error(`Slide ${slideNo}: unknown layout "${layoutName}". Available layouts: ${known}`);
   }
 
   // Reject any frontmatter key not declared by this layout's parameters (reserved
   // layout/notes stripped first). The per-layout strict schema IS the unknown-key
   // check — it fires before the resolution loop, so that loop only sees valid keys.
-  validateSlideFrontmatter(frontmatter, layoutDef, index);
+  validateSlideFrontmatter(frontmatter, layoutDef, slideNo);
 
   // Map each author-facing key to its owning parameter: template keys → the template
   // parameter that declares them, image keys → the image parameter. validateLayout
@@ -261,7 +265,7 @@ async function compileStep(
     if (!supplied) {
       if (templateParam.required) {
         throw new Error(
-          `Slide ${index}: layout "${layoutName}" requires template parameter "${templateParam.shapeName}" ` +
+          `Slide ${slideNo}: layout "${layoutName}" requires template parameter "${templateParam.shapeName}" ` +
             `(keys: ${templateKeys(templateParam.template).join(", ")}); none provided`,
         );
       }
@@ -277,7 +281,7 @@ async function compileStep(
     const slot = slotsByKey.get(name);
     if (!slot) {
       throw new Error(
-        `Slide ${index}: unknown slot "::${name}::" in layout "${layoutName}". ` +
+        `Slide ${slideNo}: unknown slot "::${name}::" in layout "${layoutName}". ` +
           `Valid slots: ${[...slotsByKey.keys()].join(", ")}`,
       );
     }
@@ -285,7 +289,7 @@ async function compileStep(
     const parsed = parseSlotContent(text, {
       resolveAssetRef,
       layoutName,
-      slideIdx: index,
+      slideNo: slideNo,
       source,
       config,
       layoutVariant: layoutDef.variant,
@@ -299,12 +303,12 @@ async function compileStep(
   // enforced during expansion above.
   for (const image of imageByKey.values()) {
     if (image.required && content[image.key] === undefined) {
-      throw new Error(`Slide ${index}: layout "${layoutName}" requires parameter "${image.key}"; none provided`);
+      throw new Error(`Slide ${slideNo}: layout "${layoutName}" requires parameter "${image.key}"; none provided`);
     }
   }
   for (const slot of layoutDef.slots) {
     if (slot.required && content[slot.key] === undefined) {
-      throw new Error(`Slide ${index}: layout "${layoutName}" requires slot "${slot.key}"; none provided`);
+      throw new Error(`Slide ${slideNo}: layout "${layoutName}" requires slot "${slot.key}"; none provided`);
     }
   }
 

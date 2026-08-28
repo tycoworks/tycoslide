@@ -82,7 +82,7 @@ that needs a render-and-look before it is called done.
 
 Owner: mz-slides `theme.json`. The engine is behaving as configured.
 
-## 2. Engine defects (tycoslide)
+## 2. Engine defects (tycoslide) — all closed
 
 Ordered by how many users hit them.
 
@@ -97,23 +97,30 @@ Ordered by how many users hit them.
    warning as an instruction to swap the image, which for a catalogued asset in its own slot
    leaves nothing to swap to. SKILL.md now says to look at the rendered slide and act only
    if detail is genuinely lost. The engine threshold is unchanged.
-2. **No text-overflow detection.** A slide whose body ran into the footer logo built
-   silently. Only the mandated PNG review pass caught it. Overflow is detectable at build
-   time and is exactly the class of error the QA loop exists to compensate for.
-3. **Errors surface as raw uncaught stack traces.** The message content is good — one
-   reporter singled out `Unknown key(s): col1_body. Valid keys: title, col1_icon...` as
-   genuinely helpful — but it arrives wrapped in a Node stack dump. Catch at the CLI
-   boundary and print clean.
-4. **Slide numbering disagrees between error paths.** Reproduced: a bad frontmatter key on
-   the **4th** slide reports `Slide 3` (0-indexed, `deckSchema`), while stray text on the
-   **3rd** slide also reports `Slide 3` (1-indexed, `slideParser`). Two different slides,
-   one number.
-5. **The compiler stops at the first error**, but SKILL.md instructs the author to "read
-   every error — fix all of them." Reproduced: a deck with a bad key on two separate slides
-   reports only the first. Either collect and report all, or stop promising it.
-6. **A missing `---` between slides reports as `text found outside a ::slot:: marker`,**
-   which sends the author hunting through slot markers instead of looking for a separator.
-   Detect the likelier cause and name it.
+2. **No text-overflow detection — WON'T FIX.** A slide whose body ran into the footer logo
+   built silently; the mandated PNG review pass caught it. Detecting it at build time means
+   measuring text the way PowerPoint will, which tycoslide does not do and would have to
+   approximate. The visual check already covers it, so the QA loop stays the mitigation.
+3. **Errors surfaced as raw uncaught stack traces — FIXED.** The message content was
+   already good — one reporter singled out `Unknown key(s): col1_body. Valid keys: title,
+   col1_icon...` as genuinely helpful — but it arrived wrapped in a Node stack dump. The CLI
+   now catches at the boundary, prints the message alone, and exits 1.
+4. **Slide numbering disagreed between error paths — FIXED.** Reproduced first: a bad key
+   on the **4th** slide reported `Slide 3` (0-indexed, `deckSchema`) while stray text on the
+   **3rd** reported `Slide 3` too (1-indexed, `slideParser`). The compiler now derives one
+   1-based `slideNo` and every message uses it; the context field was renamed from
+   `slideIdx` so it cannot be read as an index again.
+5. **The compiler stops at the first error — FIXED (guidance).** SKILL.md instructed the
+   author to "read every error — fix all of them"; a deck with a bad key on two slides
+   reports only the first. Accumulating errors through the compile is a larger change than
+   the promise is worth, so SKILL.md now states the build stops at the first one and to
+   expect several rounds.
+6. **A missing `---` between slides reports as `text found outside a ::slot:: marker` —
+   WON'T FIX.** A slide that loses its opening fence is still a *valid* file: `layout: Title`
+   is legal markdown and legal YAML, so nothing is malformed and no parser can flag it. A
+   check was built and removed — recognising it meant special-casing the reserved `layout`
+   key, which is pattern-matching one confusable arrangement rather than finding an error.
+   The build still fails, with a message that points one step away from the cause.
 
 ## 3. Docs and packaging defects — FIXED
 
@@ -211,10 +218,11 @@ Not tycoslide's to fix, recorded so they are not lost. All measured.
 
 1. Ship the browser work — closes both remaining blockers at once.
 2. Table styling (§1.3) — the only defect that ships a broken slide silently.
-3. The error-reporting cluster (§2 items 3–6) — cheap, and every author hits them.
-4. Text-overflow detection (§2 item 2). Warning calibration is closed: no threshold works,
-   and the guidance is fixed.
-5. Theme work (§5) — image inset first, since it gates diagrams. The icon set is out of scope.
+3. Theme work (§5) — image inset first, since it gates diagrams.
+
+Everything else in §2 and §3 is closed: the error-reporting fixes are in, and warning
+calibration, text-overflow detection and the missing-separator message are all won't-fix
+for the reasons given above. Out of scope entirely: the icon set.
 
 ## 7. What this run actually proved
 

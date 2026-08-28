@@ -48,11 +48,11 @@ export function deckFrontmatterSchema(layout: CompilerLayout) {
 export function validateSlideFrontmatter(
   frontmatter: Record<string, unknown>,
   layout: CompilerLayout,
-  slideIdx: number,
+  slideNo: number,
 ): void {
   const { [RESERVED_KEY.LAYOUT]: _layout, [RESERVED_KEY.NOTES]: _notes, ...params } = frontmatter;
   const result = deckFrontmatterSchema(layout).safeParse(params);
   if (!result.success) {
-    throw new Error(`Slide ${slideIdx}: ${z.prettifyError(result.error)}`);
+    throw new Error(`Slide ${slideNo}: ${z.prettifyError(result.error)}`);
   }
 }

@@ -94,4 +94,12 @@ program
     console.log(`WROTE ${zipFile}`);
   });
 
-await program.parseAsync(process.argv);
+// Everything below the CLI throws plain Errors carrying a written-for-humans
+// message. Print that message and stop; a Node stack trace tells a deck author
+// nothing about their deck, and buries the part that does.
+try {
+  await program.parseAsync(process.argv);
+} catch (e) {
+  console.error(e instanceof Error ? e.message : String(e));
+  process.exit(1);
+}

@@ -23,7 +23,7 @@ export const CODE: BlockHandler = {
     // so fail fast naming the slot rather than attempt a language-less highlight.
     if (!code.lang) {
       throw new Error(
-        `Slide ${ctx.slideIdx}: layout "${ctx.layoutName}" slot content (from ${ctx.source}) has a code fence ` +
+        `Slide ${ctx.slideNo}: layout "${ctx.layoutName}" slot content (from ${ctx.source}) has a code fence ` +
           "with no language; add one after the opening ``` (e.g. ```sql).",
       );
     }

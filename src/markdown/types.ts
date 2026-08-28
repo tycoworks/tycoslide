@@ -124,7 +124,7 @@ export type BlockFill = TextFill | TableFill | ImageFill;
 export type BlockContext = {
   resolveAssetRef: (ref: string) => ImageFill;
   layoutName: string;
-  slideIdx: number;
+  slideNo: number;
   source: string;
   config: CompilerConfig;
   /**
