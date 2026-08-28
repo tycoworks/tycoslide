@@ -22,7 +22,7 @@ TypeScript runs natively via Node's `--experimental-strip-types`. `tsc --build` 
 2. **Bump**: `npm version <patch|minor|major> --no-git-tag-version` (updates `package.json` + lockfile; no commit/tag).
 3. **Verify the tarball**: `npm pack --dry-run` — confirm only `dist/`, `bin/tycoslide.js` (with shebang), `SKILL.md`, `syntax.md`, `package.json`, `README.md`, `LICENSE`; no `src/`, `test/`, configs, or fixtures.
 4. **Publish**: `npm publish --access public` (`--access public` required on first publish, harmless after).
-5. **Commit, tag, push**: `git commit -am "release vX.Y.Z" && git tag vX.Y.Z && git push --follow-tags`.
+5. **Commit, tag, push**: `git commit -am "release vX.Y.Z" && git tag -a vX.Y.Z -m "vX.Y.Z" && git push --follow-tags`.
 6. **GitHub release**: `gh release create vX.Y.Z --title "vX.Y.Z" --generate-notes`.
 7. **Clean-room check**: in an empty dir, `npm install @tycoworks/tycoslide && npx tycoslide --version`, then build a minimal deck against a theme to confirm it renders a `.pptx`.
 

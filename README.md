@@ -16,6 +16,8 @@ Create editable, on-brand PowerPoint slides from markdown.
 npm install @tycoworks/tycoslide
 ```
 
+Installing also downloads Chromium (~554MB), via `@playwright/browser-chromium`, which tycoslide uses to render mermaid diagrams. If you install with `--ignore-scripts`, run `npx playwright install chromium-headless-shell` before building a deck with diagrams.
+
 Create `deck.md`:
 
 ```markdown
