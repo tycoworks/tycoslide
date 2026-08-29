@@ -45,21 +45,6 @@ export type AssetEntry = {
 /** Two-level catalog: `{ category: { name: AssetEntry } }`. */
 export type AssetCatalog = Record<string, Record<string, AssetEntry>>;
 
-// ── ParameterType discriminator (frontmatter, one value) ──────────────────────
-
-/**
- * Discriminator for a layout's frontmatter *parameters* — inputs the author
- * writes as a single `key: value` line. Two kinds: `Template` (fills a styled
- * shape's runs via fillTemplate) and `Image` (a filesystem path filled via
- * fillImage). Both share their value with the engine's `SlotType`, since a
- * parameter maps straight to an engine slot with no resolution step.
- */
-export const ParameterType = {
-  Template: SlotType.Template,
-  Image: SlotType.Image,
-} as const;
-export type ParameterType = (typeof ParameterType)[keyof typeof ParameterType];
-
 // ── AcceptType discriminator (what a slot accepts) ────────────────────────────
 
 /**
@@ -182,14 +167,14 @@ export type CompilerDeck = {
 // ── Parameters (frontmatter, one value) ───────────────────────────────────────
 
 /**
- * Template parameter: a styled text shape filled by expanding a `template` into the
+ * Parameter: a styled text shape filled by expanding a `template` into the
  * shape's paragraphs via fillTemplate. The template is one string with `{key}`
  * placeholders and newlines for line breaks (`"{lastname}, {firstname} -
  * {company}"`, or `"{name}\n{jobTitle}"`); a shape's fillable keys are the
  * placeholders in its template. The shape carries no top-level `key`; its
  * placeholders are the keys the author fills in frontmatter.
  */
-export type CompilerTemplateParameter = {
+export type CompilerParameter = {
   shapeName: string;
   /**
    * Whether the parameter may be omitted from a slide. Optional (defaults to
@@ -198,31 +183,9 @@ export type CompilerTemplateParameter = {
    * from the slide.
    */
   required?: boolean;
-  type: typeof ParameterType.Template;
   /** The shape's text as one template with `{key}` placeholders; newlines are line breaks. */
   template: string;
 };
-
-/** Image parameter: one frontmatter path filled by fillImage. Sizing/crop
- * behaviour comes from the resolved asset's `type`, not the slot. */
-export type CompilerImageParameter = {
-  shapeName: string;
-  /**
-   * Whether the parameter may be omitted from a slide. Optional (defaults to
-   * false): a required one with no value causes the compiler to throw with
-   * layout + key names; an optional one left unfilled has its shape removed
-   * from the slide.
-   */
-  required?: boolean;
-  key: string;
-  type: typeof ParameterType.Image;
-};
-
-/**
- * Compiler-facing parameter. A layout's frontmatter inputs — each written as a
- * single `key: value` line, resolved against the layout's `parameters` list.
- */
-export type CompilerParameter = CompilerTemplateParameter | CompilerImageParameter;
 
 /**
  * Reserved keys in a deck's frontmatter — global (theme) and per-slide

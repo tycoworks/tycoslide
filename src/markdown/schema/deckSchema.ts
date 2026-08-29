@@ -1,39 +1,27 @@
 import * as z from "zod";
 import { templateKeys } from "../textTemplate.js";
 import type { CompilerLayout } from "../types.js";
-import { ParameterType, RESERVED_KEY } from "../types.js";
+import { RESERVED_KEY } from "../types.js";
 import { strict } from "./strict.js";
 
 /**
- * Per-layout frontmatter validation for a deck `.md`. The old tycoslide validated
- * every slide's frontmatter against a Zod schema carried by the layout program;
- * current layouts are JSON DATA, so the schema is BUILT dynamically from a layout's
- * declared `parameters` using the same key-derivation the compiler already uses
- * (`deckCompiler.ts`): an image parameter contributes its `key`; a template
- * parameter contributes one field per `{key}` placeholder in its template (NOT its
- * `shapeName`, which addresses `step.content`, not frontmatter).
+ * Per-layout frontmatter validation for a deck `.md`. Layouts are JSON data, so
+ * the schema is built dynamically from a layout's `parameters` using the same
+ * key-derivation the compiler uses (`deckCompiler.ts`): a parameter contributes
+ * one field per `{key}` placeholder in its template, never its `shapeName`,
+ * which addresses `step.content` rather than frontmatter.
  *
- * Commit-1 scope is unknown-key detection ONLY — zero behavior change:
- * - Every field is `z.coerce.string()` (values are `String()`-coerced today, so a
- *   YAML number like `year: 2026` must still pass — plain `z.string()` would regress)
- *   and `.optional()` (`required` is per-parameter, enforced in `compileStep`, not
- *   "all a template's keys present"). Value-typing and required-encoding are deliberate
- *   later commits.
- * The strict object IS the unknown-key check: a stray frontmatter key throws
- * instead of being silently ignored.
+ * Every field is `z.coerce.string()` so a YAML number like `year: 2026` passes
+ * (values are `String()`-coerced downstream), and `.optional()` because
+ * `required` is per-parameter and enforced in `compileStep`, not "all a
+ * template's keys present". The strict object is the point: a stray frontmatter
+ * key throws instead of being silently ignored.
  */
 export function deckFrontmatterSchema(layout: CompilerLayout) {
   const shape: Record<string, z.ZodType> = {};
   for (const param of layout.parameters) {
-    switch (param.type) {
-      case ParameterType.Image:
-        shape[param.key] = z.coerce.string().optional();
-        break;
-      case ParameterType.Template:
-        for (const key of templateKeys(param.template)) {
-          shape[key] = z.coerce.string().optional();
-        }
-        break;
+    for (const key of templateKeys(param.template)) {
+      shape[key] = z.coerce.string().optional();
     }
   }
   return strict(shape);

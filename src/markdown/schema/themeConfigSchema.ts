@@ -1,14 +1,7 @@
 import { readFileSync } from "node:fs";
 import { basename, dirname } from "node:path";
 import * as z from "zod";
-import {
-  AcceptType,
-  AssetType,
-  type CompilerConfig,
-  type CompilerThemeConfig,
-  ParameterType,
-  Variant,
-} from "../types.js";
+import { AcceptType, AssetType, type CompilerConfig, type CompilerThemeConfig, Variant } from "../types.js";
 import { strict } from "./strict.js";
 
 /**
@@ -79,21 +72,11 @@ const ThemeFontSchema = strict({
   weight: z.number().optional(),
 });
 
-const TemplateParamSchema = strict({
+const ParameterSchema = strict({
   shapeName: z.string(),
   required: z.boolean().optional(),
-  type: z.literal(ParameterType.Template),
   template: z.string(),
 });
-
-const ImageParamSchema = strict({
-  shapeName: z.string(),
-  required: z.boolean().optional(),
-  key: z.string(),
-  type: z.literal(ParameterType.Image),
-});
-
-const ParameterSchema = z.discriminatedUnion("type", [TemplateParamSchema, ImageParamSchema]);
 
 // One arm per accept type, discriminated by `type`, mirroring `CompilerBlock`:
 // `startAt` lives only on the text arm, and `bodyRows` only on the table arm (a

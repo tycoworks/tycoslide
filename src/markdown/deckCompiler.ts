@@ -10,12 +10,10 @@ import {
   type CompilerConfig,
   type CompilerDeck,
   type CompilerDeckStep,
-  type CompilerImageParameter,
   type CompilerLayout,
+  type CompilerParameter,
   type CompilerSlot,
-  type CompilerTemplateParameter,
   type EngineFill,
-  ParameterType,
   RESERVED_KEY,
 } from "./types.js";
 
@@ -68,7 +66,7 @@ function assertSlotRegion(
 }
 
 /**
- * Resolve a user-supplied image path against the deck's root directory.
+ * Resolve a catalog image path against the deck's root directory.
  * When `rootDir` is empty, the path is returned unchanged so callers that
  * already produce absolute paths (or callers that don't care about
  * resolution) can opt out. Absolute paths always pass through.
@@ -107,12 +105,11 @@ function assertUniqueSlideNumbers(layouts: CompilerLayout[]): void {
  * be collision-free — otherwise a fill silently clobbers or throws a misleading
  * error:
  *
- * - **Author keys** — what a frontmatter line addresses: every template-parameter key
- *   and every image-parameter key must be distinct, so a line routes to exactly
- *   one parameter.
- * - **Content keys** — what `step.content` is addressed by: every image key, every
- *   template parameter's `shapeName`, and every slot key must be distinct, so no two
- *   overwrite each other in the content map.
+ * - **Author keys** — what a frontmatter line addresses: every parameter's placeholder
+ *   keys must be distinct across the layout, so a line routes to exactly one parameter.
+ * - **Content keys** — what `step.content` is addressed by: every parameter's
+ *   `shapeName` and every slot key must be distinct, so no two overwrite each other in
+ *   the content map.
  *
  * Also rejects a required template parameter whose template has no keys — it declares
  * no way to be filled, so `required` on it is unsatisfiable.
@@ -133,30 +130,21 @@ function validateLayout(layout: CompilerLayout): void {
     if (contentKeys.has(key)) {
       throw new Error(
         `Layout "${layout.name}": name "${key}" (${owner}) collides with another parameter or slot; ` +
-          "each template parameter's shape, image key, and slot key must be distinct.",
+          "each parameter's shape and each slot key must be distinct.",
       );
     }
     contentKeys.add(key);
   };
 
   for (const param of layout.parameters) {
-    switch (param.type) {
-      case ParameterType.Image:
-        claimAuthorKey(param.key, "image parameter");
-        claimContentKey(param.key, "image parameter");
-        break;
-      case ParameterType.Template: {
-        const keys = templateKeys(param.template);
-        if (param.required && keys.length === 0) {
-          throw new Error(
-            `Layout "${layout.name}": template parameter "${param.shapeName}" is marked required but its template has no keys to fill.`,
-          );
-        }
-        for (const key of keys) claimAuthorKey(key, `template parameter "${param.shapeName}"`);
-        claimContentKey(param.shapeName, "template parameter");
-        break;
-      }
+    const keys = templateKeys(param.template);
+    if (param.required && keys.length === 0) {
+      throw new Error(
+        `Layout "${layout.name}": parameter "${param.shapeName}" is marked required but its template has no keys to fill.`,
+      );
     }
+    for (const key of keys) claimAuthorKey(key, `parameter "${param.shapeName}"`);
+    claimContentKey(param.shapeName, "parameter");
   }
   for (const slot of layout.slots) {
     claimContentKey(slot.key, "slot");
@@ -166,10 +154,9 @@ function validateLayout(layout: CompilerLayout): void {
 async function compileStep(
   slide: RawSlide,
   config: CompilerConfig,
-  assetTypeByPath: Map<string, AssetType>,
   resolveAssetRef: ResolveAssetRef,
 ): Promise<CompilerDeckStep> {
-  const { layouts, rootDir } = config;
+  const { layouts } = config;
   const { frontmatter, slots, index } = slide;
   // Slide numbers in errors are 1-based, matching how an author counts slides in
   // the deck file. Derive it once: every message below, and the parse-time errors
@@ -200,48 +187,23 @@ async function compileStep(
   // check — it fires before the resolution loop, so that loop only sees valid keys.
   validateSlideFrontmatter(frontmatter, layoutDef, slideNo);
 
-  // Map each author-facing key to its owning parameter: template keys → the template
-  // parameter that declares them, image keys → the image parameter. validateLayout
-  // (run once per layout in compileDeck) has already proven these key spaces are
+  // Map each author-facing key to the parameter that declares it. validateLayout
+  // (run once per layout in compileDeck) has already proven these keys are
   // collision-free, so a later lookup is unambiguous.
-  const templateParams: CompilerTemplateParameter[] = [];
-  const imageByKey = new Map<string, CompilerImageParameter>();
-  const templateParamByKey = new Map<string, CompilerTemplateParameter>();
+  const templateParamByKey = new Map<string, CompilerParameter>();
   for (const param of layoutDef.parameters) {
-    switch (param.type) {
-      case ParameterType.Image:
-        imageByKey.set(param.key, param);
-        break;
-      case ParameterType.Template:
-        templateParams.push(param);
-        for (const key of templateKeys(param.template)) templateParamByKey.set(key, param);
-        break;
-    }
+    for (const key of templateKeys(param.template)) templateParamByKey.set(key, param);
   }
 
   const slotsByKey = new Map(layoutDef.slots.map((s) => [s.key, s]));
 
   const content: Record<string, EngineFill> = {};
 
-  // Frontmatter lines fill image parameters (by key) or template-parameter keys
-  // (gathered per parameter, expanded together once every line is read).
-  const valuesByTemplateParam = new Map<CompilerTemplateParameter, Map<string, string>>();
+  // Frontmatter lines fill template-parameter keys, gathered per parameter and
+  // expanded together once every line is read.
+  const valuesByTemplateParam = new Map<CompilerParameter, Map<string, string>>();
   for (const [key, value] of Object.entries(frontmatter)) {
     if (key === RESERVED_KEY.LAYOUT || key === RESERVED_KEY.NOTES) continue;
-
-    const image = imageByKey.get(key);
-    if (image) {
-      const imgPath = resolveImagePath(rootDir, String(value));
-      const assetType = assetTypeByPath.get(imgPath);
-      if (assetType === undefined) {
-        throw new Error(
-          `Slide image "${image.key}": "${value}" has no asset-catalog entry, so no type. ` +
-            `Add it to the theme's assets with a type (icon | image | background).`,
-        );
-      }
-      content[image.key] = toImageFill(imgPath, assetType);
-      continue;
-    }
 
     const templateParam = templateParamByKey.get(key);
     if (templateParam) {
@@ -253,19 +215,19 @@ async function compileStep(
       bucket.set(key, String(value));
     }
     // Unreachable: validateSlideFrontmatter (above) already rejected any key that is
-    // neither an image key nor a template key, so every key here routes to a parameter.
+    // not a reserved key, so every key here routes to a parameter.
   }
 
   // Expand each template parameter whose keys were supplied. Filling any key fills the
   // parameter as a whole — a missing key throws (fail-fast in templateToSegments). A
   // parameter with no supplied keys stays designer-sample unless required. Content
   // is keyed by shapeName: one parameter → one entry, regardless of key count.
-  for (const templateParam of templateParams) {
+  for (const templateParam of layoutDef.parameters) {
     const supplied = valuesByTemplateParam.get(templateParam);
     if (!supplied) {
       if (templateParam.required) {
         throw new Error(
-          `Slide ${slideNo}: layout "${layoutName}" requires template parameter "${templateParam.shapeName}" ` +
+          `Slide ${slideNo}: layout "${layoutName}" requires parameter "${templateParam.shapeName}" ` +
             `(keys: ${templateKeys(templateParam.template).join(", ")}); none provided`,
         );
       }
@@ -294,18 +256,12 @@ async function compileStep(
       config,
       layoutVariant: layoutDef.variant,
     });
-    assertSlotRegion(slot, parsed.acceptType, layoutName, index, source);
+    assertSlotRegion(slot, parsed.acceptType, layoutName, slideNo, source);
     content[name] = await parsed.fill();
   }
 
-  // Required image parameters (missing frontmatter key) and required slots
-  // (missing region) throw with layout + key context. Required template parameters are
-  // enforced during expansion above.
-  for (const image of imageByKey.values()) {
-    if (image.required && content[image.key] === undefined) {
-      throw new Error(`Slide ${slideNo}: layout "${layoutName}" requires parameter "${image.key}"; none provided`);
-    }
-  }
+  // A required slot with no region throws with layout + key context. Required
+  // parameters are enforced during template expansion above.
   for (const slot of layoutDef.slots) {
     if (slot.required && content[slot.key] === undefined) {
       throw new Error(`Slide ${slideNo}: layout "${layoutName}" requires slot "${slot.key}"; none provided`);
@@ -354,19 +310,10 @@ export async function compileDeck(doc: ParsedDocument, config: CompilerConfig): 
   assertUniqueSlideNumbers(layouts);
   for (const layout of layouts) validateLayout(layout);
 
-  // Index each catalog asset's resolved path → its declared type, so an image
-  // filled by path inherits the scaling tolerance intrinsic to its pixels.
-  const assetTypeByPath = new Map<string, AssetType>();
-  for (const group of Object.values(assets)) {
-    for (const entry of Object.values(group)) {
-      assetTypeByPath.set(resolveImagePath(rootDir, entry.path), entry.type);
-    }
-  }
-
-  // Resolve a body/`::name::` `$category.name` reference against the theme's
-  // curated asset catalog. Anchored ⇒ the whole ref is the reference or it is
-  // nothing; a found entry wraps through the same path→ImageFit mapping as a
-  // frontmatter image (`toImageFill`), so a body image has no second fit story.
+  // Resolve a `$category.name` reference against the theme's curated asset
+  // catalog. Anchored ⇒ the whole ref is the reference or it is nothing; a found
+  // entry wraps through `toImageFill`, which maps the asset's declared type to
+  // its ImageFit.
   const resolveAssetRef: ResolveAssetRef = (ref) => {
     const match = ASSET_REF_RE.exec(ref);
     if (!match) {
@@ -375,9 +322,17 @@ export async function compileDeck(doc: ParsedDocument, config: CompilerConfig): 
     const [, category, name] = match;
     const entry = assets[category]?.[name];
     if (!entry) {
-      const available = Object.entries(assets)
-        .flatMap(([cat, group]) => Object.keys(group).map((n) => `$${cat}.${n}`))
-        .join(", ");
+      // Every asset in the catalog is far too many to read (mz-slides has 126).
+      // A known category narrows it to that category's names, which is what the
+      // author is choosing between; an unknown one lists the categories instead.
+      const group = assets[category];
+      const available = group
+        ? Object.keys(group)
+            .map((n) => `$${category}.${n}`)
+            .join(", ")
+        : Object.keys(assets)
+            .map((c) => `$${c}.*`)
+            .join(", ");
       throw new Error(`Unknown asset reference "${ref}". Available: ${available}`);
     }
     return toImageFill(resolveImagePath(rootDir, entry.path), entry.type);
@@ -387,7 +342,7 @@ export async function compileDeck(doc: ParsedDocument, config: CompilerConfig): 
   // bad asset ref, accept-type mismatch) fire before its own content is rendered.
   const steps: CompilerDeckStep[] = [];
   for (const slide of doc.slides) {
-    steps.push(await compileStep(slide, config, assetTypeByPath, resolveAssetRef));
+    steps.push(await compileStep(slide, config, resolveAssetRef));
   }
   return { theme: String(theme), steps };
 }

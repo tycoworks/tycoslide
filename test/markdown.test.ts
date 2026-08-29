@@ -8,7 +8,6 @@ import type { TextFill, ImageFill, StyledParagraph } from "../dist/engine/types.
 import { ImageFit, SlotType } from "../dist/engine/types.js";
 import { AssetType } from "../dist/markdown/types.js";
 import type { AssetCatalog, CompilerConfig, CompilerLayout, CompilerParameter, CompilerSlot } from "../dist/markdown/types.js";
-import { ParameterType } from "../dist/markdown/types.js";
 
 // `compileDeck` / `compileMarkdownDeck` now take a single `CompilerConfig` and
 // are async. These positional shims keep the many call sites terse: they build a
@@ -289,14 +288,13 @@ Some loose text`),
 // its expanded content lands under `content[key]` — keeping key-addressed
 // assertions readable. Multi-key behavior is exercised separately below.
 function keyedTemplateParam(key: string): CompilerParameter {
-  return { shapeName: key, template: `{${key}}`, type: ParameterType.Template };
+  return { shapeName: key, template: `{${key}}` };
 }
 
-function imageParam(key: string, extras: Partial<CompilerParameter> = {}): CompilerParameter {
+function imageSlot(key: string, extras: Partial<CompilerSlot> = {}): CompilerSlot {
   return {
     key,
-    shapeName: `s_${key}`,
-    type: ParameterType.Image,
+    accepts: [{ type: SlotType.Image, sourceSlide: 1, shapeName: `s_${key}` }],
     ...extras,
   };
 }
@@ -324,16 +322,16 @@ function makeLayout(name: string, slots: CompilerSlot[]): CompilerLayout {
 }
 
 /**
- * Build a layout from bare key lists. `contentKeys` become template parameters,
- * except "body" which becomes a text slot; `assetKeys` become image parameters.
+ * Build a layout from bare key lists. `contentKeys` become parameters, except
+ * "body" which becomes a text slot; `assetKeys` become image slots.
  */
 function testLayout(name: string, contentKeys: string[] = [], assetKeys: string[] = []): CompilerLayout {
   return {
     name,
     slideNumber: 1,
     description: "",
-    parameters: [...contentKeys.filter((k) => k !== "body").map(keyedTemplateParam), ...assetKeys.map((k) => imageParam(k))],
-    slots: contentKeys.filter((k) => k === "body").map(textSlot),
+    parameters: contentKeys.filter((k) => k !== "body").map(keyedTemplateParam),
+    slots: [...contentKeys.filter((k) => k === "body").map(textSlot), ...assetKeys.map((k) => imageSlot(k))],
   };
 }
 
@@ -405,88 +403,7 @@ describe("compileDeck", () => {
     assert.deepEqual(deck.steps[0].content!["right"], paras(line("Right content")));
   });
 
-  it("frontmatter keys matching image parameters become ImageFills in content", async () => {
-    const layouts: CompilerLayout[] = [
-      {
-        name: "hero",
-        slideNumber: 1,
-        description: "",
-        parameters: [
-          { key: "hero", shapeName: "s1", type: ParameterType.Image },
-          { key: "logo", shapeName: "s2", type: ParameterType.Image },
-        ],
-        slots: [],
-      },
-    ];
-    const deck = await compileDeck(
-      {
-        global: { theme: "./theme.json" },
-        slides: [
-          {
-            index: 0,
-            frontmatter: {
-              layout: "hero",
-              hero: "images/hero.png",
-              logo: "images/logo.svg",
-            },
-            slots: {},
-          },
-        ],
-      },
-      layouts,
-      "",
-      {
-        imgs: {
-          hero: { path: "images/hero.png", type: AssetType.Background, description: "" },
-          logo: { path: "images/logo.svg", type: AssetType.Icon, description: "" },
-        },
-      },
-    );
 
-    const heroBlock: ImageFill = {
-      type: SlotType.Image,
-      path: "images/hero.png",
-      fit: ImageFit.Cover,
-    };
-    const logoBlock: ImageFill = {
-      type: SlotType.Image,
-      path: "images/logo.svg",
-      fit: ImageFit.ScaleDown,
-    };
-    assert.deepEqual(deck.steps[0].content!["hero"], heroBlock);
-    assert.deepEqual(deck.steps[0].content!["logo"], logoBlock);
-  });
-
-  it("image with no catalog entry (so no type) throws fail-fast", async () => {
-    const layouts: CompilerLayout[] = [
-      {
-        name: "hero",
-        slideNumber: 1,
-        description: "",
-        parameters: [{ key: "hero", shapeName: "s1", type: ParameterType.Image }],
-        slots: [],
-      },
-    ];
-    await assert.rejects(
-        compileDeck(
-          {
-            global: { theme: "./theme.json" },
-            slides: [
-              { index: 0, frontmatter: { layout: "hero", hero: "images/uncatalogued.png" }, slots: {} },
-            ],
-          },
-          layouts,
-          "",
-          {}, // empty catalog — the filled path has no declared type
-        ),
-      (err: Error) => {
-        assert.ok(err.message.includes("hero"));
-        assert.ok(err.message.includes("no asset-catalog entry"));
-        assert.ok(err.message.includes("icon | image | background"));
-        return true;
-      },
-    );
-  });
 
   it("global theme maps to Deck.theme", async () => {
     const deck = await compileDeck({
@@ -585,11 +502,12 @@ describe("compileDeck", () => {
     );
   });
 
-  it("missing required image parameter throws", async () => {
+  it("missing required image slot throws", async () => {
     const base = testLayout("hero", ["title"]);
     const layouts: CompilerLayout[] = [{
       ...base,
-      parameters: [...base.parameters, imageParam("bg", { required: true })],
+      parameters: base.parameters,
+      slots: [...base.slots, imageSlot("bg", { required: true })],
     }];
     await assert.rejects(
         compileDeck({
@@ -599,7 +517,7 @@ describe("compileDeck", () => {
           ],
         }, layouts),
       (err: Error) => {
-        assert.ok(err.message.includes("requires parameter"));
+        assert.ok(err.message.includes("requires slot"));
         assert.ok(err.message.includes("bg"));
         return true;
       },
@@ -640,7 +558,7 @@ describe("compileDeck", () => {
 
 /** A template parameter (no top-level key) with an explicit template string. */
 function templateParam(shapeName: string, template: string, required = false): CompilerParameter {
-  const param: CompilerParameter = { shapeName, template, type: ParameterType.Template };
+  const param: CompilerParameter = { shapeName, template };
   if (required) param.required = true;
   return param;
 }
@@ -749,7 +667,7 @@ describe("compileDeck text templating", () => {
 
   it("throws when a required parameter is not filled", async () => {
     const layout = templateLayout("welcome", [templateParam("welcomeBar", "{title}", true)]);
-    await assert.rejects(compileOne(layout, {}), /requires template parameter "welcomeBar"/);
+    await assert.rejects(compileOne(layout, {}), /requires parameter "welcomeBar"/);
   });
 });
 
@@ -780,11 +698,6 @@ describe("validateLayout (key-space collisions)", () => {
   it("throws when one key is declared by two template parameters", async () => {
     const layout = templateLayout("dup", [templateParam("a", "{name}"), templateParam("b", "{name}")]);
     await assert.rejects(compileOne(layout, {}), /key "name".*declared twice/);
-  });
-
-  it("throws when a template key collides with an image parameter key", async () => {
-    const layout = templateLayout("clash", [templateParam("bar", "{logo}"), imageParam("logo")]);
-    await assert.rejects(compileOne(layout, {}), /key "logo".*declared twice/);
   });
 
   it("throws when a template parameter's shapeName collides with a slot key", async () => {
@@ -842,7 +755,8 @@ describe("compileMarkdownDeck", () => {
     },
     {
       ...closingBase,
-      parameters: [...closingBase.parameters, imageParam("bg")],
+      parameters: closingBase.parameters,
+      slots: [...closingBase.slots, imageSlot("bg")],
     },
   ];
 
@@ -870,8 +784,12 @@ Metric D declined
 ---
 layout: closing
 headline: Questions?
-bg: images/closing-bg.png
----`;
+---
+
+::bg::
+
+![]($imgs.closingBg)
+`;
 
     const deck = await compileMarkdownDeck(source, e2eLayouts, "", {
       imgs: { closingBg: { path: "images/closing-bg.png", type: AssetType.Image, description: "" } },

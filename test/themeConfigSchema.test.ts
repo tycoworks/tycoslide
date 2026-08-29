@@ -50,8 +50,7 @@ function fullTheme(): CompilerThemeConfig {
         description: "A titled layout",
         variant: "dark",
         parameters: [
-          { type: "template", shapeName: "Title 1", template: "{title}", required: true },
-          { type: "image", shapeName: "Logo 0", key: "logo", required: false },
+          { shapeName: "Title 1", template: "{title}", required: true },
         ],
         slots: [
           {
@@ -225,17 +224,10 @@ describe("parseThemeConfig", () => {
     );
   });
 
-  it("rejects a parameter with a bad discriminator type", () => {
-    const bad = fullTheme();
-    // biome-ignore lint/suspicious/noExplicitAny: intentionally invalid discriminator
-    (bad.layouts[0].parameters as any[])[0] = { type: "textt", shapeName: "X", template: "{a}" };
-    assert.throws(() => parseThemeConfig(bad, "theme.json"));
-  });
-
   it("rejects a template parameter missing its required `template` field", () => {
     const bad = fullTheme();
     // biome-ignore lint/suspicious/noExplicitAny: dropping a required union-member field
-    (bad.layouts[0].parameters as any[])[0] = { type: "template", shapeName: "X" };
+    (bad.layouts[0].parameters as any[])[0] = { shapeName: "X" };
     assert.throws(
       () => parseThemeConfig(bad, "theme.json"),
       (err: Error) => {
@@ -250,24 +242,10 @@ describe("parseThemeConfig", () => {
   // branch's own `strictObject` enforces the unknown-key check. This is the
   // exact regression a loose (non-strict) member schema caused — an image
   // parameter silently accepted `fit`, a key nothing reads.
-  it("rejects an IMAGE parameter carrying an unknown key and names it", () => {
-    const bad = fullTheme();
-    // biome-ignore lint/suspicious/noExplicitAny: intentionally injecting an unknown key
-    (bad.layouts[0].parameters as any[])[1] = { type: "image", shapeName: "Logo 0", key: "logo", fit: "contain" };
-    assert.throws(
-      () => parseThemeConfig(bad, "theme.json"),
-      (err: Error) => {
-        assert.match(err.message, /fit/);
-        return true;
-      },
-    );
-  });
-
   it("rejects a TEMPLATE parameter carrying an unknown key", () => {
     const bad = fullTheme();
     // biome-ignore lint/suspicious/noExplicitAny: intentionally injecting an unknown key
     (bad.layouts[0].parameters as any[])[0] = {
-      type: "template",
       shapeName: "Title 1",
       template: "{title}",
       bogus: true,

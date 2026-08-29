@@ -19,7 +19,6 @@ import {
   type CompilerParameter,
   type CompilerSlot,
   type CompilerThemeConfig,
-  ParameterType,
 } from "./markdown/types.js";
 
 /**
@@ -30,24 +29,15 @@ import {
  */
 const NO_FRAME: Frame = { x: 0, y: 0, cx: 0, cy: 0 };
 
+// A text shape carries no top-level key — its template placeholders are the keys.
+// The compiler emits its expanded content under shapeName, so the engine slot is
+// keyed by shapeName too.
 function paramToEngineSlot(param: CompilerParameter, baseSlide: number): Slot {
-  switch (param.type) {
-    case ParameterType.Template:
-      // A text shape carries no top-level key — its template placeholders are the keys. The
-      // compiler emits its expanded content under shapeName, so the engine slot
-      // is keyed by shapeName too.
-      return {
-        key: param.shapeName,
-        frame: NO_FRAME,
-        accepts: [{ type: SlotType.Template, sourceSlide: baseSlide, shapeName: param.shapeName }],
-      };
-    case ParameterType.Image:
-      return {
-        key: param.key,
-        frame: NO_FRAME,
-        accepts: [{ type: SlotType.Image, sourceSlide: baseSlide, shapeName: param.shapeName }],
-      };
-  }
+  return {
+    key: param.shapeName,
+    frame: NO_FRAME,
+    accepts: [{ type: SlotType.Template, sourceSlide: baseSlide, shapeName: param.shapeName }],
+  };
 }
 
 /**
@@ -198,4 +188,4 @@ export type {
   RawSlide,
 } from "./markdown/index.js";
 // Markdown / Compiler
-export { AcceptType, compileMarkdownDeck, loadThemeConfig, ParameterType, parseThemeConfig } from "./markdown/index.js";
+export { AcceptType, compileMarkdownDeck, loadThemeConfig, parseThemeConfig } from "./markdown/index.js";

@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import { generateManifest } from "../dist/manifest.js";
 import { SlotType } from "../dist/engine/types.js";
 import type { CompilerConfig, CompilerLayout, CompilerSlot } from "../dist/markdown/types.js";
-import { ParameterType } from "../dist/markdown/types.js";
 
 function config(layouts: CompilerLayout[]): CompilerConfig {
   return { layouts, assets: {}, template: "t.pptx", rootDir: "" };
@@ -23,37 +22,31 @@ function layout(name: string, parameters: CompilerLayout["parameters"]): Compile
 describe("generateManifest parameter flattening", () => {
   it("flattens a text parameter's template keys into one entry per key", () => {
     const params = manifestParams([
-      layout("welcome", [{ shapeName: "welcomeBar", template: "{lastname}, {firstname}", type: ParameterType.Template }]),
+      layout("welcome", [{ shapeName: "welcomeBar", template: "{lastname}, {firstname}" }]),
     ]);
     assert.deepEqual(params, [
-      { key: "lastname", type: ParameterType.Template },
-      { key: "firstname", type: ParameterType.Template },
+      { key: "lastname" },
+      { key: "firstname" },
     ]);
   });
 
   it("de-dupes a repeated template key to a single entry", () => {
     const params = manifestParams([
-      layout("dup", [{ shapeName: "s", template: "{name}\n— {name}", type: ParameterType.Template }]),
+      layout("dup", [{ shapeName: "s", template: "{name}\n— {name}" }]),
     ]);
-    assert.deepEqual(params, [{ key: "name", type: ParameterType.Template }]);
+    assert.deepEqual(params, [{ key: "name" }]);
   });
 
   it("marks every flattened key required when the parameter is required", () => {
     const params = manifestParams([
-      layout("req", [{ shapeName: "s", template: "{a}{b}", type: ParameterType.Template, required: true }]),
+      layout("req", [{ shapeName: "s", template: "{a}{b}", required: true }]),
     ]);
     assert.deepEqual(params, [
-      { key: "a", type: ParameterType.Template, required: true },
-      { key: "b", type: ParameterType.Template, required: true },
+      { key: "a", required: true },
+      { key: "b", required: true },
     ]);
   });
 
-  it("keeps an image parameter as a single keyed entry", () => {
-    const params = manifestParams([
-      layout("img", [{ key: "logo", shapeName: "logoPic", type: ParameterType.Image }]),
-    ]);
-    assert.deepEqual(params, [{ key: "logo", type: ParameterType.Image }]);
-  });
 });
 
 // A layout with the given slots (no parameters). description is omitted to

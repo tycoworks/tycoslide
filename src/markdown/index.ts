@@ -23,12 +23,10 @@ export type {
   CompilerConfig,
   CompilerDeck,
   CompilerDeckStep,
-  CompilerImageParameter,
   CompilerLayout,
   CompilerParameter,
   CompilerSlot,
-  CompilerTemplateParameter,
   CompilerThemeConfig,
   EngineFill,
 } from "./types.js";
-export { AcceptType, AssetType, ParameterType, RESERVED_KEY } from "./types.js";
+export { AcceptType, AssetType, RESERVED_KEY } from "./types.js";

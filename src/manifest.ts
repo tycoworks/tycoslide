@@ -1,11 +1,9 @@
 import { templateKeys } from "./markdown/textTemplate.js";
 import type { AcceptType, AssetType, CompilerConfig, CompilerParameter, CompilerSlot } from "./markdown/types.js";
-import { ParameterType } from "./markdown/types.js";
 
-/** A frontmatter parameter (template, image) as advertised to AI authors. */
+/** A frontmatter parameter as advertised to AI authors. */
 type ManifestParameter = {
   key: string;
-  type: CompilerParameter["type"];
   required?: true;
 };
 
@@ -37,31 +35,22 @@ type ManifestAssetEntry = {
 };
 
 type Manifest = {
-  version: 1;
+  version: 2;
   layouts: ManifestLayout[];
   assets: Record<string, Record<string, ManifestAssetEntry>>;
 };
 
 /**
  * Flatten a compiler parameter to the manifest entries advertised to AI authors.
- * A template parameter has no top-level key — its template's keys are the keys, so it
- * flattens to one entry per key (shapeName/template stay manifest-internal). An
- * image parameter is a single key.
+ * A parameter has no top-level key — its template's placeholders are the keys, so
+ * it flattens to one entry per key (shapeName/template stay manifest-internal).
  */
 function stripParameter(param: CompilerParameter): ManifestParameter[] {
-  switch (param.type) {
-    case ParameterType.Template:
-      return templateKeys(param.template).map((key) => {
-        const result: ManifestParameter = { key, type: param.type };
-        if (param.required) result.required = true;
-        return result;
-      });
-    case ParameterType.Image: {
-      const result: ManifestParameter = { key: param.key, type: param.type };
-      if (param.required) result.required = true;
-      return [result];
-    }
-  }
+  return templateKeys(param.template).map((key) => {
+    const result: ManifestParameter = { key };
+    if (param.required) result.required = true;
+    return result;
+  });
 }
 
 function stripSlot(slot: CompilerSlot): ManifestSlot {
@@ -96,7 +85,7 @@ export function generateManifest(config: CompilerConfig): string {
   }
 
   const manifest: Manifest = {
-    version: 1,
+    version: 2,
     layouts,
     assets,
   };
