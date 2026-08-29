@@ -40,7 +40,7 @@ Before writing anything, read `manifest.json`. It contains:
 - **assets** -- brand logos, client logos, illustrations, and icons (`description`)
 
 A layout's inputs split two ways (see [syntax.md](syntax.md) for details):
-- **parameters** -- one value on a frontmatter line. Types: `template`, `image`. Fill by putting a value under the parameter's key in the slide frontmatter.
+- **parameters** -- one value on a frontmatter line. Fill by putting a value under the parameter's key in the slide frontmatter.
 - **slots** -- a multi-line region in the body. Accept types: `text`, `table`, `image`. Fill as a `::key::` region, using the slot's `key` from the manifest; a fenced code block routes to a `text` slot, a fenced mermaid block to an `image` slot.
 
 A slot may accept more than one content type -- the manifest lists each slot's `accepts`, and the shape of the content you write selects which one.
@@ -89,7 +89,7 @@ A deck file has three parts:
 
 ### Slide frontmatter
 
-Every slide must have a `layout:` key. All other frontmatter keys map 1:1 to the layout's **parameters** (template and image inputs).
+Every slide must have a `layout:` key. All other frontmatter keys map 1:1 to the layout's **parameters**.
 
 ```yaml
 ---
@@ -100,13 +100,13 @@ subtitle: This Quarter
 ```
 
 - `layout` is required and consumed by the compiler (not forwarded as content).
-- All other frontmatter keys fill parameters: `title` fills the `title` template parameter, `subtitle` fills the `subtitle` parameter, `hero` fills the `hero` image parameter, etc. A multi-line text shape surfaces as several keys (e.g. `name` + `jobTitle`); fill each as its own scalar line.
+- All other frontmatter keys fill parameters: `title` fills the `title` parameter, `subtitle` fills the `subtitle` parameter, etc. A multi-line text shape surfaces as several keys (e.g. `name` + `jobTitle`); fill each as its own scalar line.
 - Slots (accepting `text`, `table`, `image`) are filled by body regions, not frontmatter -- see below.
 - A slide may also carry a `notes:` block in frontmatter -- plain-text speaker notes for the slide's notes page (see [syntax.md](syntax.md#speaker-notes)). It is slide-level metadata, not a parameter or slot.
 
 ### Body content, slots, and formatting
 
-See [syntax.md](syntax.md) for the full syntax reference: body content (paragraphs, bullets, nesting), inline formatting (bold, italic, strikethrough, underline, hyperlinks), named slots (`::key::` markers), the parameter/slot split (parameters: template, image; slots accept: text, table, image), and image parameters.
+See [syntax.md](syntax.md) for the full syntax reference: body content (paragraphs, bullets, nesting), inline formatting (bold, italic, strikethrough, underline, hyperlinks), named slots (`::key::` markers), and the parameter/slot split (slots accept: text, table, image).
 
 ### Build
 
@@ -143,7 +143,7 @@ Keep each slot's content to what its region comfortably holds. When content over
 - **Don't restyle the layout** -- the theme owns all design; you only fill slots
 - **Don't use an image that's wrong for the slot** -- a small slot wants a simple icon, not a dense illustration. If you get a `shrunk to X%` warning, look at the rendered slide: if the image is now too small to make out, use a simpler one.
 - **Don't invent layout or asset names** -- only use what exists in the manifest
-- **Don't leave required parameters or slots empty** -- and don't leave a placeholder logo or dummy text in an image parameter you care about
+- **Don't leave required parameters or slots empty** -- and don't leave a placeholder logo or dummy text in an image slot you care about
 
 ---
 
@@ -159,7 +159,7 @@ Build the deck again ([Build](#build)) and read the output carefully. Common err
 |-------|-----|
 | `unknown layout "xyz"` | Check layout names in `manifest.json` |
 | A parameter or slot didn't fill | Use the key names the layout declares -- parameters in frontmatter, slots as body regions |
-| An image didn't swap / placeholder remains | Use the image parameter's key name in frontmatter, and an asset path that exists in `manifest.json` |
+| An image didn't swap / placeholder remains | Write a `::key::` region using the image slot's key, containing `![]($category.name)` from `manifest.json` |
 | YAML parse error | Fix the YAML syntax in the slide's frontmatter |
 | `Skipped setting relation target` | The asset image couldn't be placed; check the path and file |
 | `forbidden style directive` | Remove `style`, `classDef`, `linkStyle`, or `%%{init}` from your mermaid block -- use `class` for grouping instead |

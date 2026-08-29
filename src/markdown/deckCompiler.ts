@@ -281,13 +281,12 @@ async function compileStep(
  * code (Shiki) and rendered mermaid (PNG) — so the returned deck is
  * engine-shaped, ready for `buildDeck`.
  *
- * `config.rootDir` is the base directory for resolving relative image paths
- * declared in the deck's frontmatter or named slots. When empty, image paths are
- * returned unchanged — callers that already produce absolute paths (or don't need
- * resolution, e.g. unit tests) rely on the pass-through. When set, relative paths
- * are resolved to absolute via `path.resolve(rootDir, path)`; absolute paths pass
- * through. `config.codeTheme` / `config.mermaid` / `config.mermaidVariant` feed
- * the code and mermaid compiles.
+ * `config.rootDir` is the base directory for resolving the asset catalog's
+ * relative image paths. When empty, image paths are returned unchanged — callers
+ * that already produce absolute paths (or don't need resolution, e.g. unit tests)
+ * rely on the pass-through. When set, relative paths are resolved to absolute via
+ * `path.resolve(rootDir, path)`; absolute paths pass through. `config.codeTheme` /
+ * `config.mermaid` / `config.mermaidVariant` feed the code and mermaid compiles.
  */
 export async function compileDeck(doc: ParsedDocument, config: CompilerConfig): Promise<CompilerDeck> {
   const { layouts, rootDir, assets } = config;

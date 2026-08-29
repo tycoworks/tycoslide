@@ -660,7 +660,7 @@ describe("compileDeck text templating", () => {
     await assert.rejects(compileOne(layout, { lastname: "Chen", firstname: "Maya" }), /welcomeBar.*"company"/);
   });
 
-  it("throws on a frontmatter key matching no template key or image parameter", async () => {
+  it("throws on a frontmatter key matching no parameter key", async () => {
     const layout = templateLayout("welcome", [templateParam("welcomeBar", "{lastname}")]);
     await assert.rejects(compileOne(layout, { lastname: "Chen", nope: "x" }), /Unknown key\(s\): nope.*lastname/);
   });

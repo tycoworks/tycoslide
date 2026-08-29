@@ -118,11 +118,6 @@ Fill a parameter by putting a value under its key in the slide's frontmatter.
   jobTitle: CEO, Acme Corp
   ```
   The engine substitutes each value into the run that carries its style, so if the designer made the name bold and the job title grey, the filled name stays bold and the filled title stays grey.
-- **`image`** -- a picture placeholder. Set it in frontmatter with the image path (from an asset catalog entry, or an absolute path). How it is scaled and cropped is set by the **asset's `type`** in the catalog (`icon` never enlarges past native and never crops; `image` fits the whole picture without cropping; `background` fills the frame and center-crops).
-  ```yaml
-  hero: assets/diagrams/architecture.png
-  ```
-
 ### Body content shapes
 
 Fill a slot by writing a `::key::` region in the body; the marker maps to the slot with that `key`. A slot's manifest entry lists which content types it `accepts` (`text`, `table`, `image`) -- write content whose shape matches one of them:
@@ -139,7 +134,13 @@ Fill a slot by writing a `::key::` region in the body; the marker maps to the sl
   ````
   The language tag (e.g. `sql`, `python`, `typescript`) is required -- it drives syntax highlighting, using the theme's `codeTheme` (set once in `theme.json`, not per slot). Colors are applied as native text runs in the output, not images.
 - **table** (slots that accept `table`) -- a GFM table. Write it in the slot region between `|`-delimited headers and rows; cells inherit inline formatting (bold, italic, links).
-- **image** (slots that accept `image`) -- a picture. A fenced `mermaid` block renders to a themed PNG and fills it (see below).
+- **image** (slots that accept `image`) -- a picture from the theme's asset catalog, written as `![]($category.name)`:
+  ```markdown
+  ::logo::
+
+  ![]($brand.primaryDarkWordmark)
+  ```
+  The categories and names are listed in `manifest.json`. How the picture is scaled and cropped comes from the **asset's `type`** in the catalog: `icon` never enlarges past native and never crops, `image` fits the whole picture without cropping, `background` fills the frame and center-crops. A fenced `mermaid` block also fills an image slot, rendering to a themed PNG (see below).
 
 ---
 
@@ -200,20 +201,9 @@ The theme owns all styling. These directives are rejected at build time:
 
 ---
 
-## Image parameters
-
-An image is a **parameter** -- one value (a path) on a frontmatter line. Reference it using the parameter key directly:
-
-```yaml
----
-layout: ImageSlide
-title: Architecture Diagram
-hero: assets/diagrams/architecture.png
----
-```
+## Layout declarations
 
 Each parameter or slot in the layout definition may declare:
-- **`type`** (parameters, required) -- `template` or `image`.
 - **`accepts`** (slots, required) -- an array of `text`, `table`, `image`.
 - **`required: true`** -- the slide has no usable default and the build fails if the parameter/slot has no value (e.g. team-member photos, icon-grid icons, the quote logo). If you don't have a suitable image, ask the user for one.
 - **optional (the default)** -- a parameter or slot you leave unfilled is dropped from the slide (its shape is removed), so a layout with numbered slots (e.g. up to six sections, up to four stats) renders only the ones you fill.
@@ -309,6 +299,9 @@ Infrastructure:
 ---
 layout: ImageSlide
 title: Office Map
-hero: assets/images/office-floor-plan.png
 ---
+
+::hero::
+
+![]($images.officeFloorPlan)
 ```
