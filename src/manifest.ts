@@ -35,7 +35,6 @@ type ManifestAssetEntry = {
 };
 
 type Manifest = {
-  version: 2;
   layouts: ManifestLayout[];
   assets: Record<string, Record<string, ManifestAssetEntry>>;
 };
@@ -84,11 +83,7 @@ export function generateManifest(config: CompilerConfig): string {
     }
   }
 
-  const manifest: Manifest = {
-    version: 2,
-    layouts,
-    assets,
-  };
+  const manifest: Manifest = { layouts, assets };
 
   return JSON.stringify(manifest, null, 2);
 }
