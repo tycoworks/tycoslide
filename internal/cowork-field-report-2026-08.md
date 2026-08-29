@@ -18,7 +18,7 @@ content — not the paradigm.
 
 ## 1. Blockers
 
-### 1.1 `npm install` failed outright — FIXED, unreleased
+### 1.1 `npm install` failed outright — FIXED, released in 0.11.4
 
 The container allowlists `registry.npmjs.org` and nothing else. `@playwright/browser-chromium`
 fetches its browser from `cdn.playwright.dev`, got a 403, and — as a hard dependency —
@@ -37,7 +37,7 @@ The reporter's suggested `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` is no longer neede
 > not. Its suggested fix — set `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` "in your postinstall"
 > — also could not have worked: tycoslide has no postinstall.
 
-### 1.2 Mermaid could not render — FIXED, unreleased
+### 1.2 Mermaid could not render — FIXED, released in 0.11.4
 
 Playwright resolves browsers by **exact build revision**, looking for a literal
 `chromium_headless_shell-<rev>` directory. Its Playwright wanted **1234**; the container
@@ -53,7 +53,7 @@ to call that a hack no real run would do.
 > — would not have fixed it. That variable only changes *where* Playwright looks; it still
 > demands the exact revision, which is why they had to symlink.
 
-### 1.3 Every table renders illegibly — OPEN, mz-slides
+### 1.3 Every table renders illegibly — FIXED, unverified visually
 
 The worst defect in the set, and the only one that silently produces a broken slide
 rather than an error.
@@ -71,16 +71,28 @@ All three table paths are affected, which is the tell:
 | `Pricing table with highlights dark` | 52 | `[2, 5]` |
 | `Single column dark` (table accept) | 52 | `[2, 5]` |
 
-Every path points at a **pricing** table in the template, and row 5 of that specimen is
-the CTA row. The theme has no plain-table specimen at all, so there is no way to get a
-legible ordinary table out of it.
+Every path points at a **pricing** table in the template. Both specimens carried seven
+rows: a violet header, five uniform body rows, and a decorated `Total / $1,000` row at
+the end. That last row is the cause, and the engine was doing as told — rows past the
+`bodyRows` range are *fixed rows* backing the **last** data rows, and the code comment
+says as much: "a decorated total row lives here". So `bodyRows: [2, 5]` over a
+seven-row specimen left row 6 backing whatever landed last, whatever it held.
 
-**Likely fix:** narrow `bodyRows` to `[2, 4]` so the CTA row is never a candidate, or
-point the accepts at a plain table slide if the template has one. Both variants build;
-the styling difference was **not** visually confirmed, so treat this as a hypothesis
-that needs a render-and-look before it is called done.
+Narrowing the range does not help: `[2, 4]` leaves *two* trailing fixed rows, and
+`[2, 6]` folds the total row into the cycled body so its styling reappears every fifth
+row. The specimen itself had to lose the row.
 
-Owner: mz-slides `theme.json`. The engine is behaving as configured.
+**Fixed** by deleting the Total row from slides 52 and 53 of the template, editing the
+XML directly since the file is a zip. Six rows now, so `bodyRows: [2, 5]` leaves zero
+trailing fixed rows and no data row can inherit total styling. A one-row table also
+works for the first time, the fixed row having previously demanded two. Only the two
+slide parts changed: 638 zip entries before and after, all 24 embedded font parts
+intact, every other entry byte-identical.
+
+This is the one place the change went against the product principle that a user should
+never have to edit their `.pptx` — the engine has no way to say "ignore the trailing
+row", and it is the theme's own template. **Nobody has yet looked at a rendered table**;
+the mechanism is proven, the pixels are not.
 
 ## 2. Engine defects (tycoslide) — all closed
 
@@ -190,14 +202,22 @@ a working diagram. Marp and Slidev both take that trade.
 
 ## 5. Theme defects (mz-slides)
 
-Not tycoslide's to fix, recorded so they are not lost. All measured.
+Recorded so they are not lost. All measured. The first turned out to be an engine
+defect wearing a theme's clothes; the rest are genuinely the theme's.
 
-- **The image slot has no inset.** `Full bleed image with title dark` is the only layout
-  with an image slot — 19 layouts take an image *parameter*, but a mermaid diagram renders
-  into a slot, so this is the only home for one. Its frame is **10.00 × 5.13 inches on a
-  10 × 5.63 inch slide**, starting at x≈0, y=0: full width, zero margin, beginning at the
-  title. Wide diagrams clip at both edges; tall ones render behind the title. Diagrams need
-  a layout with margins.
+- **The image slot has no inset — FIXED, and it was not a theme defect.** `Full bleed image
+  with title dark` was the only layout with an image *slot*: its frame is **10.00 × 5.13
+  inches on a 10 × 5.63 inch slide**, starting at x≈0, y=0, so a diagram began at the title
+  and ran to both edges. Nineteen other layouts had a perfectly good image area — including
+  a **4.91 × 4.63in** inset on each two-column layout — but declared it as a *parameter*,
+  and a mermaid fence is a block, so it can only fill a slot. The declaration decided the
+  capability.
+
+  The fix was in the engine, not the theme: a parameter is a template fill now and every
+  other shape is a slot, so nothing declares a channel and no shape can be made
+  diagram-proof by accident. All 19 image shapes are slots, each carrying its observed
+  frame. See `internal/parameters-are-template-fills.md`. Diagrams now have an inset home
+  for the first time; nobody has yet looked at one rendered.
 - **Three illustrations are unusable in card slots.** `integrate.png`, `serve.png` and
   `transform.png` are **0.0% transparent** at 3840×2160; the other eleven run 8.8% to 87.7%
   transparent. They are also the only three at that size. In a card slot they read as grey
@@ -214,15 +234,20 @@ Not tycoslide's to fix, recorded so they are not lost. All measured.
   sections give 3+1 rather than 2+2. `Three columns with icons dark` says the icon sits
   "above" the text; they saw it inline to the left. Both need a rendered slide to confirm.
 
-## 6. Suggested order
+## 6. What is left
 
-1. Ship the browser work — closes both remaining blockers at once.
-2. Table styling (§1.3) — the only defect that ships a broken slide silently.
-3. Theme work (§5) — image inset first, since it gates diagrams.
+1. **Look at `showcase.pptx`.** The table fix and the newly reachable inset frame are both
+   proven structurally, and neither has been seen rendered. This is the only item that can
+   invalidate work already called done.
+2. **The three opaque illustrations** (§5) — fix the assets or describe them honestly, so
+   an agent stops picking them for card slots.
+3. **The two suspect layout descriptions** (§5) — confirm against a render, then correct
+   or leave them.
 
-Everything else in §2 and §3 is closed: the error-reporting fixes are in, and warning
-calibration, text-overflow detection and the missing-separator message are all won't-fix
-for the reasons given above. Out of scope entirely: the icon set.
+Everything else is closed. Both browser blockers shipped in 0.11.4; the table specimen,
+the image-inset capability, the error-reporting cluster and the docs are all fixed and
+await a release. Won't-fix, with reasons above: warning calibration, text-overflow
+detection, the missing-separator message, and the icon set.
 
 ## 7. What this run actually proved
 
