@@ -218,11 +218,14 @@ defect wearing a theme's clothes; the rest are genuinely the theme's.
   diagram-proof by accident. All 19 image shapes are slots, each carrying its observed
   frame. See `internal/parameters-are-template-fills.md`. Diagrams now have an inset home
   for the first time; nobody has yet looked at one rendered.
-- **Three illustrations are unusable in card slots.** `integrate.png`, `serve.png` and
-  `transform.png` are **0.0% transparent** at 3840×2160; the other eleven run 8.8% to 87.7%
-  transparent. They are also the only three at that size. In a card slot they read as grey
-  boxes with hard edges, and the catalog describes all fourteen identically, so there is no
-  way to tell without opening the files. Fix is either the assets or their descriptions.
+- **Three illustrations are unusable in card slots — WON'T FIX.** `integrate.png`,
+  `serve.png` and `transform.png` are **0.0% transparent** at 3840×2160; the other eleven
+  run 8.8% to 87.7% transparent. They carry a baked `#120e22` backdrop against a `#1A1528`
+  slide, so in a small card they letterbox and the rectangle shows as a band with visible
+  edges. Retyping them `background` hides it by filling the frame, but that crops a 16:9
+  illustration into a square card and applies everywhere the asset is used, so artwork is
+  lost to hide a rectangle. Three assets, one slot type, caught by the render pass; not
+  worth the trade.
 - **The icon set does not cover deck needs — WON'T FIX.** Confirmed: 86 icons, all from
   Google Material's *communication* set, and **zero** matching check, arrow, chart,
   lightbulb, gear, or clock. `col*_icon` is `required: true` on six layouts, so an author
@@ -236,18 +239,16 @@ defect wearing a theme's clothes; the rest are genuinely the theme's.
 
 ## 6. What is left
 
-1. **Look at `showcase.pptx`.** The table fix and the newly reachable inset frame are both
-   proven structurally, and neither has been seen rendered. This is the only item that can
-   invalidate work already called done.
-2. **The three opaque illustrations** (§5) — fix the assets or describe them honestly, so
-   an agent stops picking them for card slots.
-3. **The two suspect layout descriptions** (§5) — confirm against a render, then correct
-   or leave them.
+One item: **the two suspect layout descriptions** (§5). `Two column agenda dark` claims
+"six numbered sections" where the reporter saw none and a column-major fill; `Three
+columns with icons dark` says the icon sits above the text where they saw it inline to
+the left. Both need a rendered slide to confirm before correcting.
 
 Everything else is closed. Both browser blockers shipped in 0.11.4; the table specimen,
-the image-inset capability, the error-reporting cluster and the docs are all fixed and
-await a release. Won't-fix, with reasons above: warning calibration, text-overflow
-detection, the missing-separator message, and the icon set.
+the image-inset capability, the error-reporting cluster and the docs shipped in 0.12.0,
+and `showcase.pptx` was opened and checked. Won't-fix, with reasons above: warning
+calibration, text-overflow detection, the missing-separator message, the icon set, and
+the three opaque illustrations.
 
 ## 7. What this run actually proved
 
