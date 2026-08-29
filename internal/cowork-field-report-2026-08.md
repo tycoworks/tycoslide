@@ -232,23 +232,22 @@ defect wearing a theme's clothes; the rest are genuinely the theme's.
   must pick something; the reporter shipped a slashed-out water droplet labelled "Moisture"
   as the nearest match. This is the set the designer supplied and it is not being changed.
   Recorded so the constraint is known rather than rediscovered.
-- **Two descriptions contradict what renders — UNVERIFIED.** `Two column agenda dark` claims
-  "six numbered sections"; the reporter saw no numbers and column-major fill, so four
-  sections give 3+1 rather than 2+2. `Three columns with icons dark` says the icon sits
-  "above" the text; they saw it inline to the left. Both need a rendered slide to confirm.
+- **Two descriptions contradict what renders — FIXED.** Both confirmed against the
+  template's shape geometry. `Two column agenda dark` promised *numbered* sections and
+  nothing numbers them; it also fills column-major (sections one to three at x=0.50, four
+  to six at x=5.09), so four sections give 3+1. `Three columns with icons dark` said the
+  icon sits above the text, but each icon is at y=1.31 with its body at y=1.36 and 0.42in
+  to its right: same line, icon to the left.
 
 ## 6. What is left
 
-One item: **the two suspect layout descriptions** (§5). `Two column agenda dark` claims
-"six numbered sections" where the reporter saw none and a column-major fill; `Three
-columns with icons dark` says the icon sits above the text where they saw it inline to
-the left. Both need a rendered slide to confirm before correcting.
+Nothing. Both browser blockers shipped in 0.11.4; the table specimen, the image-inset
+capability, the error-reporting cluster and the docs shipped in 0.12.0; `showcase.pptx`
+was opened and checked; and the two suspect layout descriptions were verified against the
+template and corrected.
 
-Everything else is closed. Both browser blockers shipped in 0.11.4; the table specimen,
-the image-inset capability, the error-reporting cluster and the docs shipped in 0.12.0,
-and `showcase.pptx` was opened and checked. Won't-fix, with reasons above: warning
-calibration, text-overflow detection, the missing-separator message, the icon set, and
-the three opaque illustrations.
+Won't-fix, with reasons above: warning calibration, text-overflow detection, the
+missing-separator message, the icon set, and the three opaque illustrations.
 
 ## 7. What this run actually proved
 
