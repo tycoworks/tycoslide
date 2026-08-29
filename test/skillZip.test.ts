@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { describe, it } from "node:test";
 import JSZip from "jszip";
 import { renameSkill, zipDir } from "../dist/skillZip.js";
+import { AssetType } from "../dist/markdown/types.js";
 
 describe("renameSkill", () => {
   const source = "---\nname: slides\ndescription: >\n  Build decks.\n---\n\n# slides\n\nBody with name: not-a-header line.\n";
@@ -26,7 +27,7 @@ describe("zipDir", () => {
   const config = {
     layouts: [],
     template: "corp.pptx",
-    assets: { logos: { a: { path: "assets/logos/a.png", type: "icon", description: "A logo" } } },
+    assets: { logos: { a: { path: "assets/logos/a.png", type: AssetType.Icon, description: "A logo" } } },
   };
   const generated = ["theme.json", "manifest.json", "skill.md", "syntax.md"];
 

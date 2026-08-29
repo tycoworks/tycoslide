@@ -472,7 +472,7 @@ describe("compileStep notes", () => {
     const deck = await compileDeck(
       {
         global: { theme: "./theme.json" },
-        slides: [{ index: 0, frontmatter: { layout: "title", notes: "Speak slowly" }, body: "", slots: {} }],
+        slides: [{ index: 0, frontmatter: { layout: "title", notes: "Speak slowly" }, slots: {} }],
       },
       [titleLayout],
     );
@@ -484,7 +484,7 @@ describe("compileStep notes", () => {
     const deck = await compileDeck(
       {
         global: { theme: "./theme.json" },
-        slides: [{ index: 0, frontmatter: { layout: "title" }, body: "", slots: {} }],
+        slides: [{ index: 0, frontmatter: { layout: "title" }, slots: {} }],
       },
       [titleLayout],
     );

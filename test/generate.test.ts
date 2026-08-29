@@ -32,7 +32,7 @@ function parseXml(xml: string) {
 
 function makeTextBody(paragraphsXml: string): any {
   const xml = `<p:txBody xmlns:a="${NS_A}" xmlns:p="${NS_P}"><a:bodyPr/><a:lstStyle/>${paragraphsXml}</p:txBody>`;
-  return parseXml(xml).documentElement;
+  return parseXml(xml).documentElement!;
 }
 
 function makeParagraph(text: string, extra = ""): string {
@@ -189,7 +189,7 @@ describe("setRichRuns", () => {
     const body = makeTextBody(makeParagraph("Template"));
     const para = paraAt(body, 0);
     const relDoc = parseXml(`<Relationships><Relationship Id="rId1" Type="existing" Target="slide1.xml"/></Relationships>`);
-    const relation = relDoc.documentElement;
+    const relation = relDoc.documentElement!;
     setRichRuns(para, [{ text: "Click here", link: "https://example.com" }], relation);
     const hlink = para.getElementsByTagName("a:hlinkClick")[0];
     assert.ok(hlink, "a:hlinkClick should be created");
@@ -747,7 +747,7 @@ describe("fillTable", () => {
         ["H1", "H2", "H3"],
         ["D1", "D2", "D3"],
       ]),
-    ).documentElement;
+    ).documentElement!;
 
     const td: TableFill = {
       headers: cells("Name", "Price", "Qty"),
@@ -763,7 +763,7 @@ describe("fillTable", () => {
   });
 
   it("throws when element has no a:tbl", () => {
-    const el = parseXml(`<p:sp xmlns:a="${NS_A}" xmlns:p="${NS_P}"><a:p><a:r><a:t>hi</a:t></a:r></a:p></p:sp>`).documentElement;
+    const el = parseXml(`<p:sp xmlns:a="${NS_A}" xmlns:p="${NS_P}"><a:p><a:r><a:t>hi</a:t></a:r></a:p></p:sp>`).documentElement!;
     const td: TableFill = { headers: [cell("A")], rows: [[cell("1")]] };
     assert.throws(() => fillTable(el, td, "t", [1, 1]), /has no <a:tbl> element/);
   });
@@ -774,7 +774,7 @@ describe("fillTable", () => {
         ["H1", "H2", "H3"],
         ["D1", "D2", "D3"],
       ]),
-    ).documentElement;
+    ).documentElement!;
 
     const td: TableFill = { headers: [cell("Only1")], rows: [[cell("Val1")]] };
     fillTable(el, td, "t", [1, 1]);
@@ -795,7 +795,7 @@ describe("fillTable", () => {
         ["H1", "H2"],
         ["D1", "D2"],
       ]),
-    ).documentElement;
+    ).documentElement!;
 
     const td: TableFill = { headers: cells("A", "B", "C", "D"), rows: [cells("1", "2", "3", "4")] };
     fillTable(el, td, "t", [1, 1]);
@@ -819,7 +819,7 @@ describe("fillTable", () => {
         ],
         [900000, 300000],
       ),
-    ).documentElement;
+    ).documentElement!;
     const total = gridWidths(el).reduce((a, b) => a + b, 0);
 
     const td: TableFill = { headers: cells("A", "B", "C"), rows: [cells("1", "2", "3")] };
@@ -842,7 +842,7 @@ describe("fillTable", () => {
         ],
         [400000, 400000, 400000],
       ),
-    ).documentElement;
+    ).documentElement!;
     const total = gridWidths(el).reduce((a, b) => a + b, 0);
 
     const td: TableFill = { headers: cells("A", "B"), rows: [cells("1", "2")] };
@@ -862,7 +862,7 @@ describe("fillTable", () => {
       `<a:tc><a:txBody><a:bodyPr/><a:p><a:r><a:rPr/><a:t>${t}</a:t></a:r></a:p></a:txBody><a:tcPr${anchor ? ` anchor="${anchor}"` : ""}/></a:tc>`;
     const row = (a: string, b: string) => `<a:tr h="100000">${tc(a)}${tc(b, "ctr")}</a:tr>`;
     const xml = `<p:graphicFrame xmlns:a="${NS_A}" xmlns:p="${NS_P}"><a:tbl>${grid}${row("H1", "H2")}${row("D1", "D2")}</a:tbl></p:graphicFrame>`;
-    const el = parseXml(xml).documentElement;
+    const el = parseXml(xml).documentElement!;
 
     const td: TableFill = { headers: cells("A", "B", "C", "D"), rows: [cells("1", "2", "3", "4")] };
     fillTable(el, td, "t", [1, 1]);
@@ -885,7 +885,7 @@ describe("fillTable", () => {
         ],
         [500000, 500000],
       ),
-    ).documentElement;
+    ).documentElement!;
     const total = gridWidths(el).reduce((a, b) => a + b, 0); // 1_000_000, not divisible by 3
 
     const td: TableFill = { headers: cells("A", "B", "C"), rows: [cells("1", "2", "3")] };
@@ -907,7 +907,7 @@ describe("fillTable", () => {
         ["H1", "H2", "H3"],
         ["D1", "D2", "D3"],
       ]),
-    ).documentElement;
+    ).documentElement!;
 
     const td: TableFill = {
       headers: cells("A", "B", "C"),
@@ -936,7 +936,7 @@ describe("fillTable", () => {
         ["H1", "H2"],
         ["D1", "D2"],
       ]),
-    ).documentElement;
+    ).documentElement!;
 
     const td: TableFill = { headers: cells("Name", "Value"), rows: [] };
     fillTable(el, td, "t", [1, 1]);
@@ -990,28 +990,28 @@ const PRICING: [number, number] = [2, 5];
 
 describe("fillTable body range", () => {
   it("composes 1:1 when K == R-1 (fixed rows + one body cycle)", () => {
-    const el = parseXml(markedTableXml(7)).documentElement;
+    const el = parseXml(markedTableXml(7)).documentElement!;
     fillTable(el, tableData(6), "pricing", PRICING);
     // header, top-fixed(1), body 2..5, bottom-fixed(6) — the designer's exact table.
     assert.deepEqual(rowMarkers(el), ["m0", "m1", "m2", "m3", "m4", "m5", "m6"]);
   });
 
   it("loops only the body range for large K; fixed rows once", () => {
-    const el = parseXml(markedTableXml(7)).documentElement;
+    const el = parseXml(markedTableXml(7)).documentElement!;
     fillTable(el, tableData(10), "pricing", PRICING);
     // top-fixed(1), body cycles 2,3,4,5,2,3,4,5, bottom-fixed(6) always last.
     assert.deepEqual(rowMarkers(el), ["m0", "m1", "m2", "m3", "m4", "m5", "m2", "m3", "m4", "m5", "m6"]);
   });
 
   it("truncates the body for small K, keeping both fixed rows", () => {
-    const el = parseXml(markedTableXml(7)).documentElement;
+    const el = parseXml(markedTableXml(7)).documentElement!;
     fillTable(el, tableData(3), "pricing", PRICING);
     // top-fixed(1), one body(2), bottom-fixed(6).
     assert.deepEqual(rowMarkers(el), ["m0", "m1", "m2", "m6"]);
   });
 
   it("emits zero body rows when K == top + bottom fixed count", () => {
-    const el = parseXml(markedTableXml(7)).documentElement;
+    const el = parseXml(markedTableXml(7)).documentElement!;
     fillTable(el, tableData(2), "pricing", PRICING);
     // K == P + S == 2: top-fixed(1) and bottom-fixed(6), no body.
     assert.deepEqual(rowMarkers(el), ["m0", "m1", "m6"]);
@@ -1020,7 +1020,7 @@ describe("fillTable body range", () => {
   // Divider-gap regression: the top-fixed specimen (m1) hides its top border, so
   // it must never land in an interior position for large K — only once, at the top.
   it("never places the top-fixed specimen in an interior position (divider-gap regression)", () => {
-    const el = parseXml(markedTableXml(7)).documentElement;
+    const el = parseXml(markedTableXml(7)).documentElement!;
     fillTable(el, tableData(10), "pricing", PRICING);
     const markers = rowMarkers(el);
     // m1 appears exactly once, and only as the first data row (index 1).
@@ -1033,7 +1033,7 @@ describe("fillTable body range", () => {
   // The bottom-fixed (Total) row is rendered once and consumes the LAST data row:
   // with tableData(6), data row 5 (d50/d51) lands in the m6 total row.
   it("backs the bottom-fixed row with the specimen's last row and the deck's last data row", () => {
-    const el = parseXml(markedTableXml(7)).documentElement;
+    const el = parseXml(markedTableXml(7)).documentElement!;
     fillTable(el, tableData(6), "pricing", PRICING);
     const trs = el.getElementsByTagName("a:tr");
     const total = trs[trs.length - 1];
@@ -1043,29 +1043,29 @@ describe("fillTable body range", () => {
 
   it("alternates a 2-row body range (zebra)", () => {
     // 3-row specimen, body = rows 1..2, no fixed rows → pure zebra.
-    const el = parseXml(markedTableXml(3)).documentElement;
+    const el = parseXml(markedTableXml(3)).documentElement!;
     fillTable(el, tableData(4), "zebra", [1, 2]);
     assert.deepEqual(rowMarkers(el), ["m0", "m1", "m2", "m1", "m2"]);
   });
 
   it("throws when the deck supplies fewer rows than the fixed rows need", () => {
-    const el = parseXml(markedTableXml(7)).documentElement;
+    const el = parseXml(markedTableXml(7)).documentElement!;
     // K == 1 < P + S == 2.
     assert.throws(() => fillTable(el, tableData(1), "S", PRICING), /S.*1 data row\(s\).*at least 2/s);
   });
 
   it("throws when start < 1 (row 0 is the header)", () => {
-    const el = parseXml(markedTableXml(7)).documentElement;
+    const el = parseXml(markedTableXml(7)).documentElement!;
     assert.throws(() => fillTable(el, tableData(3), "S", [0, 5]), /S.*out of range/s);
   });
 
   it("throws when end exceeds the specimen's last row", () => {
-    const el = parseXml(markedTableXml(7)).documentElement;
+    const el = parseXml(markedTableXml(7)).documentElement!;
     assert.throws(() => fillTable(el, tableData(3), "S", [2, 7]), /S.*out of range/s);
   });
 
   it("throws when start > end", () => {
-    const el = parseXml(markedTableXml(7)).documentElement;
+    const el = parseXml(markedTableXml(7)).documentElement!;
     assert.throws(() => fillTable(el, tableData(3), "S", [5, 2]), /S.*out of range/s);
   });
 });
@@ -1079,6 +1079,7 @@ describe("Table filler", () => {
     for (const headers of [cells("A"), cells("A", "B", "C"), cells("A", "B", "C", "D", "E", "F")]) {
       const value: TableFill = { headers, rows: [] };
       const cbs = FILLERS[SlotType.Table].callbacks(value, {
+        type: SlotType.Table,
         shapeName: "S",
         label: "S",
         bodyRows: [1, 1],
@@ -1385,7 +1386,7 @@ describe("fillSlide dispatch", () => {
     const l = layout([
       slot("hero", [
         { type: SlotType.Image, sourceSlide: BASE, shapeName: "pic" },
-        { type: SlotType.Table, sourceSlide: 5, shapeName: "tbl" },
+        { type: SlotType.Table, sourceSlide: 5, shapeName: "tbl", bodyRows: [1, 1] },
       ]),
     ]);
     const { slide, calls } = recordingSlide();
@@ -1419,8 +1420,8 @@ describe("assertSlotsWellFormed", () => {
           key: "left",
           frame: { x: 0, y: 0, cx: 1, cy: 1 },
           accepts: [
-            { type: SlotType.Table, sourceSlide: 1, shapeName: "t1" },
-            { type: SlotType.Table, sourceSlide: 5, shapeName: "t2" },
+            { type: SlotType.Table, sourceSlide: 1, shapeName: "t1", bodyRows: [1, 1] },
+            { type: SlotType.Table, sourceSlide: 5, shapeName: "t2", bodyRows: [1, 1] },
           ],
         },
       ],
@@ -1445,7 +1446,7 @@ describe("assertSlotsWellFormed", () => {
           frame: { x: 0, y: 0, cx: 1, cy: 1 },
           accepts: [
             { type: SlotType.Text, sourceSlide: 1, shapeName: "s" },
-            { type: SlotType.Table, sourceSlide: 5, shapeName: "t" },
+            { type: SlotType.Table, sourceSlide: 5, shapeName: "t", bodyRows: [1, 1] },
           ],
         },
       ],

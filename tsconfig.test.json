@@ -1,0 +1,12 @@
+{
+  // Tests import the built declarations from `dist/`, so they are checked by their
+  // own config: `composite`/`rootDir` are the source build's concern, and the test
+  // runner strips types rather than checking them. Run after `tsc --build`.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "composite": false,
+    "rootDir": "."
+  },
+  "include": ["test/**/*.ts"]
+}
