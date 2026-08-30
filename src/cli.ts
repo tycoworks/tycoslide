@@ -5,7 +5,7 @@ import { Command } from "commander";
 import { buildDeck } from "./index.js";
 import { generateManifest } from "./manifest.js";
 import { compileDeck, loadThemeConfig, parseSlideDocument, RESERVED_KEY } from "./markdown/index.js";
-import { renameSkill, zipDir } from "./skillZip.js";
+import { renameSkill, skillPackageJson, zipDir } from "./skillZip.js";
 
 const DEFAULT_CONFIG = "theme.json";
 const MANIFEST_FILE = "manifest.json";
@@ -90,7 +90,8 @@ program
     // `npm install` (pulls the engine + its deps) -> `npx tycoslide build`.
     const zipFile = `${skillName}.zip`;
     const generated = [opts.config, MANIFEST_FILE, SKILL_FILE, SYNTAX_FILE];
-    writeFileSync(resolve(process.cwd(), zipFile), await zipDir(process.cwd(), skillName, config, generated));
+    const skillPkg = skillPackageJson(themePkg, { name: pkg.name, version: pkg.version });
+    writeFileSync(resolve(process.cwd(), zipFile), await zipDir(process.cwd(), skillName, config, generated, skillPkg));
     console.log(`WROTE ${zipFile}`);
   });
 
