@@ -34,10 +34,25 @@ type ManifestAssetEntry = {
   description: string;
 };
 
+/**
+ * What an agent reads WHOLE, every session: the layouts it composes into. Nothing
+ * open-ended belongs here — a manifest that grows with the theme's picture count
+ * spends the agent's context before it has read a single layout.
+ */
 type Manifest = {
   layouts: ManifestLayout[];
-  assets: Record<string, Record<string, ManifestAssetEntry>>;
+  /** Where the pictures are. The catalog is a separate document, to be searched. */
+  assets: string;
 };
+
+/**
+ * What an agent SEARCHES: every picture the theme offers, by category and name.
+ * Split out of the manifest because it is the half that grows without bound — a
+ * theme's icon set can run to thousands, and 135 bytes each is a manifest nobody
+ * can afford to read. Kept as its own file rather than trimmed, so the catalog
+ * stays complete and the cost of it stays opt-in.
+ */
+type AssetCatalog = Record<string, Record<string, ManifestAssetEntry>>;
 
 /**
  * Flatten a compiler parameter to the manifest entries advertised to AI authors.
@@ -58,6 +73,10 @@ function stripSlot(slot: CompilerSlot): ManifestSlot {
   return result;
 }
 
+/** Filename of the searchable asset catalog, named by the manifest that points at it. */
+export const ASSETS_FILE = "assets.json";
+
+/** The layouts document: read whole, so it carries no open-ended list. */
 export function generateManifest(config: CompilerConfig): string {
   const layouts: ManifestLayout[] = config.layouts.map((layout) => {
     const ml: ManifestLayout = {
@@ -70,20 +89,18 @@ export function generateManifest(config: CompilerConfig): string {
     return ml;
   });
 
-  const assets: Record<string, Record<string, ManifestAssetEntry>> = {};
+  const manifest: Manifest = { layouts, assets: ASSETS_FILE };
+  return JSON.stringify(manifest, null, 2);
+}
+
+/** The catalog document: searched by name, never read whole. */
+export function generateAssetCatalog(config: CompilerConfig): string {
+  const assets: AssetCatalog = {};
   for (const [category, entries] of Object.entries(config.assets)) {
     assets[category] = {};
     for (const [name, entry] of Object.entries(entries)) {
-      const manifestEntry: ManifestAssetEntry = {
-        path: entry.path,
-        type: entry.type,
-        description: entry.description,
-      };
-      assets[category][name] = manifestEntry;
+      assets[category][name] = { path: entry.path, type: entry.type, description: entry.description };
     }
   }
-
-  const manifest: Manifest = { layouts, assets };
-
-  return JSON.stringify(manifest, null, 2);
+  return JSON.stringify(assets, null, 2);
 }

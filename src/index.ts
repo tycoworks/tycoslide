@@ -169,7 +169,7 @@ export type {
 export { fillImage, fillTable, fillTemplate, fillText, generate, SlotType } from "./engine/index.js";
 
 // Authoring
-export { generateManifest } from "./manifest.js";
+export { ASSETS_FILE, generateAssetCatalog, generateManifest } from "./manifest.js";
 export type {
   AssetCatalog,
   AssetEntry,

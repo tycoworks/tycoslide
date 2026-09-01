@@ -3,9 +3,9 @@ import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Command } from "commander";
 import { buildDeck } from "./index.js";
-import { generateManifest } from "./manifest.js";
+import { ASSETS_FILE, generateAssetCatalog, generateManifest } from "./manifest.js";
 import { compileDeck, loadThemeConfig, parseSlideDocument, RESERVED_KEY } from "./markdown/index.js";
-import { renameSkill, zipDir } from "./skillZip.js";
+import { renameSkill, skillPackageJson, zipDir } from "./skillZip.js";
 
 const DEFAULT_CONFIG = "theme.json";
 const MANIFEST_FILE = "manifest.json";
@@ -66,12 +66,14 @@ program
     if (!themePkg.name) {
       throw new Error('Cannot name the skill: the theme\'s package.json has no "name" field.');
     }
-    // basename drops any npm scope, e.g. "@acme/mz-slides" -> "mz-slides".
+    // basename drops any npm scope, e.g. "@acme/acme-slides" -> "acme-slides".
     const skillName = basename(themePkg.name);
 
-    const manifestJson = `${generateManifest(config)}\n`;
-    writeFileSync(resolve(process.cwd(), MANIFEST_FILE), manifestJson);
+    writeFileSync(resolve(process.cwd(), MANIFEST_FILE), `${generateManifest(config)}\n`);
     console.log(`WROTE ${MANIFEST_FILE}`);
+
+    writeFileSync(resolve(process.cwd(), ASSETS_FILE), `${generateAssetCatalog(config)}\n`);
+    console.log(`WROTE ${ASSETS_FILE}`);
 
     let skillMd: string;
     try {
@@ -89,8 +91,9 @@ program
     // Bundle the WHOLE theme so the skill is self-contained: unzip ->
     // `npm install` (pulls the engine + its deps) -> `npx tycoslide build`.
     const zipFile = `${skillName}.zip`;
-    const generated = [opts.config, MANIFEST_FILE, SKILL_FILE, SYNTAX_FILE];
-    writeFileSync(resolve(process.cwd(), zipFile), await zipDir(process.cwd(), skillName, config, generated));
+    const generated = [opts.config, MANIFEST_FILE, ASSETS_FILE, SKILL_FILE, SYNTAX_FILE];
+    const skillPkg = skillPackageJson(themePkg, { name: pkg.name, version: pkg.version });
+    writeFileSync(resolve(process.cwd(), zipFile), await zipDir(process.cwd(), skillName, config, generated, skillPkg));
     console.log(`WROTE ${zipFile}`);
   });
 

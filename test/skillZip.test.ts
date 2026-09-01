@@ -4,22 +4,70 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, it } from "node:test";
 import JSZip from "jszip";
-import { renameSkill, zipDir } from "../dist/skillZip.js";
+import { renameSkill, skillPackageJson, zipDir } from "../dist/skillZip.js";
+
+/** Stand-in for the authored manifest; `skillPackageJson` is tested on its own below. */
+const PKG_JSON = '{"name":"acme-slides"}\n';
 import { AssetType } from "../dist/markdown/types.js";
 
 describe("renameSkill", () => {
   const source = "---\nname: slides\ndescription: >\n  Build decks.\n---\n\n# slides\n\nBody with name: not-a-header line.\n";
 
   it("rewrites the frontmatter name and leaves the body untouched", () => {
-    const out = renameSkill(source, "mz-slides");
-    assert.match(out, /^---\nname: mz-slides\n/);
+    const out = renameSkill(source, "acme-slides");
+    assert.match(out, /^---\nname: acme-slides\n/);
     assert.ok(out.includes("Body with name: not-a-header line."));
     assert.ok(!out.includes("name: slides"));
   });
 
   it("throws when the frontmatter has no name: line", () => {
     const noName = "---\ndescription: >\n  Build decks.\n---\n\n# body\n";
-    assert.throws(() => renameSkill(noName, "mz-slides"), /no "name:" line/);
+    assert.throws(() => renameSkill(noName, "acme-slides"), /no "name:" line/);
+  });
+});
+
+describe("skillPackageJson", () => {
+  // A theme repo's package.json is a DEVELOPMENT document. Shipping it verbatim
+  // fails a consumer's install two ways, both reproduced against a real zip:
+  // `npm install` re-runs the build script inside their container, and
+  // `--omit=dev` never installs the engine the script (and the build) needs.
+  const theme = {
+    name: "acme-slides",
+    version: "0.6.0",
+    description: "Branded slide decks.",
+    private: true,
+    scripts: { postinstall: "tycoslide package" },
+    devDependencies: { "@tycoworks/tycoslide": "^0.12.0" },
+    dependencies: { "@fontsource/inter": "^5.3.0" },
+  };
+  const engine = { name: "@tycoworks/tycoslide", version: "0.13.0" };
+  const authored = () => JSON.parse(skillPackageJson(theme, engine));
+
+  it("ships no scripts, so nothing of ours runs during someone else's install", () => {
+    assert.equal(authored().scripts, undefined);
+  });
+
+  it("declares the engine as a runtime dependency, at the version that packaged the skill", () => {
+    // "^0.13.0" is the packaging engine's version, NOT the theme's devDependency
+    // range -- a skill installs the engine that generated it.
+    assert.equal(authored().dependencies["@tycoworks/tycoslide"], "^0.13.0");
+    assert.equal(authored().devDependencies, undefined);
+  });
+
+  it("carries the theme's own dependencies through", () => {
+    assert.equal(authored().dependencies["@fontsource/inter"], "^5.3.0");
+  });
+
+  it("keeps the theme's identity and stays private", () => {
+    const pkg = authored();
+    assert.equal(pkg.name, "acme-slides");
+    assert.equal(pkg.version, "0.6.0");
+    assert.equal(pkg.private, true);
+  });
+
+  it("emits dependencies in a stable order, so a regenerated skill has no spurious diff", () => {
+    const keys = Object.keys(authored().dependencies);
+    assert.deepEqual(keys, [...keys].sort());
   });
 });
 
@@ -45,16 +93,19 @@ describe("zipDir", () => {
     try {
       seedTheme(root);
 
-      const zip = await JSZip.loadAsync(await zipDir(root, "mz-slides", config, generated));
+      const zip = await JSZip.loadAsync(await zipDir(root, "acme-slides", config, generated, PKG_JSON));
 
-      assert.ok(zip.file("mz-slides/theme.json"), "config included");
-      assert.ok(zip.file("mz-slides/manifest.json"), "manifest included");
-      assert.ok(zip.file("mz-slides/skill.md"), "skill.md included");
-      assert.ok(zip.file("mz-slides/syntax.md"), "syntax.md included");
-      assert.ok(zip.file("mz-slides/package.json"), "package.json included");
-      assert.ok(zip.file("mz-slides/assets/logos/a.png"), "declared asset included with its path");
-      assert.ok(zip.file("mz-slides/template/corp.pptx"), "source template kept");
-      assert.equal(await zip.file("mz-slides/theme.json")?.async("string"), "theme.json\n");
+      assert.ok(zip.file("acme-slides/theme.json"), "config included");
+      assert.ok(zip.file("acme-slides/manifest.json"), "manifest included");
+      assert.ok(zip.file("acme-slides/skill.md"), "skill.md included");
+      assert.ok(zip.file("acme-slides/syntax.md"), "syntax.md included");
+      // The theme dir holds `{}`; the zip must carry the AUTHORED manifest instead.
+      // This is the regression guard for the copied-package.json bug: a copy would
+      // ship the theme's postinstall and devDependency into a consumer's install.
+      assert.equal(await zip.file("acme-slides/package.json")?.async("string"), PKG_JSON);
+      assert.ok(zip.file("acme-slides/assets/logos/a.png"), "declared asset included with its path");
+      assert.ok(zip.file("acme-slides/template/corp.pptx"), "source template kept");
+      assert.equal(await zip.file("acme-slides/theme.json")?.async("string"), "theme.json\n");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -77,16 +128,16 @@ describe("zipDir", () => {
       mkdirSync(join(root, "node_modules"));
       writeFileSync(join(root, "node_modules", "junk.js"), "x");
 
-      const zip = await JSZip.loadAsync(await zipDir(root, "mz-slides", config, generated));
+      const zip = await JSZip.loadAsync(await zipDir(root, "acme-slides", config, generated, PKG_JSON));
 
-      assert.ok(!zip.file("mz-slides/decks/demo.pptx"), "built deck excluded");
-      assert.ok(!zip.file("mz-slides/decks/demo.pdf"), "exported pdf excluded");
-      assert.ok(!zip.file("mz-slides/decks/slide-01.png"), "slide png excluded");
-      assert.ok(!zip.file("mz-slides/decks/demo.md"), "working deck source excluded");
-      assert.ok(!zip.file("mz-slides/showcase.pptx"), "root build output excluded");
-      assert.ok(!zip.file("mz-slides/old.zip"), "stray zip excluded");
-      assert.ok(!zip.file("mz-slides/.env"), "secrets excluded");
-      assert.ok(!zip.file("mz-slides/node_modules/junk.js"), "node_modules excluded");
+      assert.ok(!zip.file("acme-slides/decks/demo.pptx"), "built deck excluded");
+      assert.ok(!zip.file("acme-slides/decks/demo.pdf"), "exported pdf excluded");
+      assert.ok(!zip.file("acme-slides/decks/slide-01.png"), "slide png excluded");
+      assert.ok(!zip.file("acme-slides/decks/demo.md"), "working deck source excluded");
+      assert.ok(!zip.file("acme-slides/showcase.pptx"), "root build output excluded");
+      assert.ok(!zip.file("acme-slides/old.zip"), "stray zip excluded");
+      assert.ok(!zip.file("acme-slides/.env"), "secrets excluded");
+      assert.ok(!zip.file("acme-slides/node_modules/junk.js"), "node_modules excluded");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -97,8 +148,8 @@ describe("zipDir", () => {
     try {
       seedTheme(root);
       writeFileSync(join(root, "package-lock.json"), "{}\n");
-      const zip = await JSZip.loadAsync(await zipDir(root, "mz-slides", config, generated));
-      assert.ok(zip.file("mz-slides/package-lock.json"), "lockfile included");
+      const zip = await JSZip.loadAsync(await zipDir(root, "acme-slides", config, generated, PKG_JSON));
+      assert.ok(zip.file("acme-slides/package-lock.json"), "lockfile included");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -110,7 +161,7 @@ describe("zipDir", () => {
       seedTheme(root);
       rmSync(join(root, "assets", "logos", "a.png"));
       await assert.rejects(
-        zipDir(root, "mz-slides", config, generated),
+        zipDir(root, "acme-slides", config, generated, PKG_JSON),
         /assets\/logos\/a\.png.*no such file/,
       );
     } finally {

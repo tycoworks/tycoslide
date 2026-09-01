@@ -140,7 +140,7 @@ Fill a slot by writing a `::key::` region in the body; the marker maps to the sl
 
   ![]($brand.primaryDarkWordmark)
   ```
-  The categories and names are listed in `manifest.json`. How the picture is scaled and cropped comes from the **asset's `type`** in the catalog: `icon` never enlarges past native and never crops, `image` fits the whole picture without cropping, `background` fills the frame and center-crops. A fenced `mermaid` block also fills an image slot, rendering to a themed PNG (see below).
+  The categories and names are catalogued in `assets.json`. How the picture is scaled and cropped comes from the **asset's `type`** in the catalog: `icon` never enlarges past native and never crops, `image` fits the whole picture without cropping, `background` fills the frame and center-crops. A fenced `mermaid` block also fills an image slot, rendering to a themed PNG (see below).
 
 ---
 
