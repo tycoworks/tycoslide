@@ -9,9 +9,9 @@ import { renameSkill, skillPackageJson, zipDir } from "./skillZip.js";
 
 const DEFAULT_CONFIG = "theme.json";
 const MANIFEST_FILE = "manifest.json";
-// The theme skill is written as lowercase skill.md (copied from tycoslide's own
-// SKILL.md), so the skill folder can live at the theme repo root.
-const SKILL_FILE = "skill.md";
+// SKILL.md, uppercase: the Agent Skills format requires that exact filename at the
+// root of a skill folder, and a case-sensitive filesystem will not find any other.
+const SKILL_FILE = "SKILL.md";
 const SYNTAX_FILE = "syntax.md";
 
 const sdkDir = dirname(fileURLToPath(import.meta.url));

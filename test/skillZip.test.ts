@@ -77,7 +77,7 @@ describe("zipDir", () => {
     template: "corp.pptx",
     assets: { logos: { a: { path: "assets/logos/a.png", type: AssetType.Icon, description: "A logo" } } },
   };
-  const generated = ["theme.json", "manifest.json", "skill.md", "syntax.md"];
+  const generated = ["theme.json", "manifest.json", "SKILL.md", "syntax.md"];
 
   const seedTheme = (root: string): void => {
     for (const f of generated) writeFileSync(join(root, f), `${f}\n`);
@@ -97,7 +97,7 @@ describe("zipDir", () => {
 
       assert.ok(zip.file("acme-slides/theme.json"), "config included");
       assert.ok(zip.file("acme-slides/manifest.json"), "manifest included");
-      assert.ok(zip.file("acme-slides/skill.md"), "skill.md included");
+      assert.ok(zip.file("acme-slides/SKILL.md"), "SKILL.md included");
       assert.ok(zip.file("acme-slides/syntax.md"), "syntax.md included");
       // The theme dir holds `{}`; the zip must carry the AUTHORED manifest instead.
       // This is the regression guard for the copied-package.json bug: a copy would

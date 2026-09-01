@@ -8,15 +8,15 @@ const FRONTMATTER = /^---\n([\s\S]*?)\n---/;
 const NAME_LINE = /^name:[ \t]*.*$/m;
 
 /**
- * Rewrite the `name:` value in a skill.md's leading YAML frontmatter so the
+ * Rewrite the `name:` value in a SKILL.md's leading YAML frontmatter so the
  * packaged skill is named after the consuming theme, not the source template.
  * Only the leading `---`…`---` block is touched; the body is left byte-for-byte.
  * Throws if there is no frontmatter or no `name:` line — the caller names the file.
  */
 export function renameSkill(md: string, name: string): string {
   const block = md.match(FRONTMATTER);
-  if (!block) throw new Error("skill.md has no YAML frontmatter block");
-  if (!NAME_LINE.test(block[1])) throw new Error('skill.md frontmatter has no "name:" line');
+  if (!block) throw new Error("SKILL.md has no YAML frontmatter block");
+  if (!NAME_LINE.test(block[1])) throw new Error('SKILL.md frontmatter has no "name:" line');
   return md.replace(block[0], block[0].replace(NAME_LINE, `name: ${name}`));
 }
 
@@ -77,7 +77,7 @@ function skillPaths(config: CompilerThemeConfig, generated: string[]): string[] 
  * Zip a theme into an uploadable Agent Skill archive whose entries all live
  * under a single root folder (e.g. `acme-slides/theme.json`), matching Anthropic's
  * custom-skill format. `generated` names the files the caller just wrote (the
- * config, manifest, skill.md, syntax.md); `packageJson` is the authored manifest
+ * config, manifest, SKILL.md, syntax.md); `packageJson` is the authored manifest
  * from `skillPackageJson`. Optional support files are skipped when absent;
  * anything the config declares but that is missing is an error.
  */
