@@ -37,7 +37,7 @@ This skill builds on-brand decks from a markdown deck file. The theme provides s
 
 Before writing anything, read `manifest.json`. It lists the theme's **layouts** -- for each: `name`, `description`, `parameters` (frontmatter inputs) and `slots` (body regions). A layout is identified by its `name`; every parameter and slot by its `key`. Parameters carry a `type`, slots carry `accepts`, and either may be `required`.
 
-Pictures live in `assets.json`: every logo, illustration and icon the theme offers, keyed by category and name. **Search it, do not read it whole** -- an icon set alone can run to thousands of entries. Grep for the concept you want (`grep -i "arrow" assets.json`) and use the `$category.name` you find.
+Pictures live in `assets.json`: every logo, illustration and icon the theme offers, keyed by category and name. **Search it, do not read it whole** -- an icon set alone can run to thousands of entries. Grep for it and use the `$category.name` you find -- but **search for what the icon depicts, not what you mean by it**: a catalog is indexed by picture, so "freshness" finds nothing while `grep -i "clock" assets.json` and `grep -i "bolt"` find the icon you wanted.
 
 A layout's inputs split two ways (see [syntax.md](syntax.md) for details):
 - **parameters** -- one value on a frontmatter line. Fill by putting a value under the parameter's key in the slide frontmatter.
@@ -89,7 +89,7 @@ A deck file has three parts:
 
 ### Slide frontmatter
 
-Every slide must have a `layout:` key. All other frontmatter keys map 1:1 to the layout's **parameters**.
+Every slide must have a `layout:` key. All other frontmatter keys map 1:1 to the layout's **parameters**. A value containing a colon-then-space must be quoted -- `title: "The change: compute on the difference"` -- or YAML reads it as a second key and the build fails.
 
 ```yaml
 ---
@@ -141,7 +141,7 @@ Keep each slot's content to what its region comfortably holds. When content over
 - **Don't repeat the same layout** -- vary layouts for visual rhythm
 - **Don't overstuff a slot** -- keep content to what its region comfortably holds; split across slides when there's too much
 - **Don't restyle the layout** -- the theme owns all design; you only fill slots
-- **Don't use an image that's wrong for the slot** -- a small slot wants a simple icon, not a dense illustration. If you get a `shrunk to X%` warning, look at the rendered slide: if the image is now too small to make out, use a simpler one.
+- **Don't use an image that's wrong for the slot** -- a small slot wants a simple icon, not a dense illustration. If you get a `shrunk to X%` warning, look at the rendered slide: if the image is now too small to make out, use a simpler one. A `leaves X% of the frame empty` warning is the opposite: the image is a different shape from the slot. Neither fails the build -- judge both from the rendered slide.
 - **Don't invent layout or asset names** -- only use layouts from `manifest.json` and assets from `assets.json`
 - **Don't leave required parameters or slots empty** -- and don't leave a placeholder logo or dummy text in an image slot you care about
 
