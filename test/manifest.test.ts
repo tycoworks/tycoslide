@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { generateManifest } from "../dist/manifest.js";
+import { ASSETS_FILE, generateAssetCatalog, generateManifest } from "../dist/manifest.js";
 import { SlotType } from "../dist/engine/types.js";
 import type { CompilerConfig, CompilerLayout, CompilerSlot } from "../dist/markdown/types.js";
 
@@ -59,6 +59,49 @@ function manifestSlots(slots: CompilerSlot[]) {
   const manifest = JSON.parse(generateManifest(config([slotLayout("L", slots)])));
   return manifest.layouts[0].slots;
 }
+
+describe("manifest / asset catalog split", () => {
+  // The manifest is read WHOLE every session; the catalog grows with the theme's
+  // picture count. Keeping them in one file spends the agent's context on pictures
+  // before it has read a layout, which is what splitting them buys back.
+  const withAssets = (): CompilerConfig => ({
+    layouts: [layout("Title", [])],
+    assets: {
+      logos: { primary: { path: "assets/logos/p.png", type: "image", description: "Primary logo" } },
+      icons: { check: { path: "assets/icons/check.png", type: "icon", description: "Check" } },
+    },
+    template: "t.pptx",
+    rootDir: "",
+  });
+
+  it("keeps the catalog out of the manifest, leaving only a pointer to it", () => {
+    const manifest = JSON.parse(generateManifest(withAssets()));
+    assert.equal(manifest.assets, ASSETS_FILE);
+    assert.equal(manifest.layouts.length, 1);
+  });
+
+  it("writes every category and entry to the catalog, unabridged", () => {
+    const catalog = JSON.parse(generateAssetCatalog(withAssets()));
+    assert.deepEqual(Object.keys(catalog).sort(), ["icons", "logos"]);
+    assert.deepEqual(catalog.icons.check, {
+      path: "assets/icons/check.png",
+      type: "icon",
+      description: "Check",
+    });
+  });
+
+  it("does not grow the manifest as the catalog grows", () => {
+    const many = withAssets();
+    for (let i = 0; i < 500; i++) {
+      many.assets.icons[`icon_${i}`] = { path: `assets/icons/${i}.png`, type: "icon", description: `Icon ${i}` };
+    }
+    assert.equal(generateManifest(many).length, generateManifest(withAssets()).length);
+  });
+
+  it("writes an empty catalog rather than nothing when a theme declares no assets", () => {
+    assert.deepEqual(JSON.parse(generateAssetCatalog(config([]))), {});
+  });
+});
 
 describe("generateManifest slot accepts advertising", () => {
   it("advertises a single-type slot's accepted engine type", () => {

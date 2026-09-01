@@ -26,7 +26,8 @@ This skill builds on-brand decks from a markdown deck file. The theme provides s
 
 | Task | Guide |
 |------|-------|
-| Discover layouts and assets | Read `manifest.json` |
+| Discover layouts | Read `manifest.json` |
+| Find a logo, illustration or icon | Search `assets.json` |
 | Write a deck (structure, slots, assets) | See [Creating Slides](#creating-slides) below |
 | Fix build errors | See [QA](#qa-required) below |
 
@@ -34,10 +35,9 @@ This skill builds on-brand decks from a markdown deck file. The theme provides s
 
 ## Layout Discovery
 
-Before writing anything, read `manifest.json`. It contains:
+Before writing anything, read `manifest.json`. It lists the theme's **layouts** -- for each: `name`, `description`, `parameters` (frontmatter inputs) and `slots` (body regions). A layout is identified by its `name`; every parameter and slot by its `key`. Parameters carry a `type`, slots carry `accepts`, and either may be `required`.
 
-- **layouts** -- for each: `name`, `description`, `parameters` (frontmatter inputs) and `slots` (body regions). A layout is identified by its `name`; every parameter and slot by its `key`. Parameters carry a `type`, slots carry `accepts`, and either may be `required`
-- **assets** -- brand logos, client logos, illustrations, and icons (`description`)
+Pictures live in `assets.json`: every logo, illustration and icon the theme offers, keyed by category and name. **Search it, do not read it whole** -- an icon set alone can run to thousands of entries. Grep for the concept you want (`grep -i "arrow" assets.json`) and use the `$category.name` you find.
 
 A layout's inputs split two ways (see [syntax.md](syntax.md) for details):
 - **parameters** -- one value on a frontmatter line. Fill by putting a value under the parameter's key in the slide frontmatter.
@@ -142,7 +142,7 @@ Keep each slot's content to what its region comfortably holds. When content over
 - **Don't overstuff a slot** -- keep content to what its region comfortably holds; split across slides when there's too much
 - **Don't restyle the layout** -- the theme owns all design; you only fill slots
 - **Don't use an image that's wrong for the slot** -- a small slot wants a simple icon, not a dense illustration. If you get a `shrunk to X%` warning, look at the rendered slide: if the image is now too small to make out, use a simpler one.
-- **Don't invent layout or asset names** -- only use what exists in the manifest
+- **Don't invent layout or asset names** -- only use layouts from `manifest.json` and assets from `assets.json`
 - **Don't leave required parameters or slots empty** -- and don't leave a placeholder logo or dummy text in an image slot you care about
 
 ---
@@ -159,7 +159,7 @@ Build the deck again ([Build](#build)) and read the output carefully. Common err
 |-------|-----|
 | `unknown layout "xyz"` | Check layout names in `manifest.json` |
 | A parameter or slot didn't fill | Use the key names the layout declares -- parameters in frontmatter, slots as body regions |
-| An image didn't swap / placeholder remains | Write a `::key::` region using the image slot's key, containing `![]($category.name)` from `manifest.json` |
+| An image didn't swap / placeholder remains | Write a `::key::` region using the image slot's key, containing `![]($category.name)` from `assets.json` |
 | YAML parse error | Fix the YAML syntax in the slide's frontmatter |
 | `Skipped setting relation target` | The asset image couldn't be placed; check the path and file |
 | `forbidden style directive` | Remove `style`, `classDef`, `linkStyle`, or `%%{init}` from your mermaid block -- use `class` for grouping instead |
@@ -211,7 +211,7 @@ Check for:
 For each issue, suggest a specific fix.
 
 Read: /path/to/deck.md and the rendered PNGs in the working directory
-Also read: manifest.json (for layout documentation)
+Also read: manifest.json (for layout documentation); search assets.json for pictures
 ```
 
 If the subagent finds issues, fix them and rebuild.
