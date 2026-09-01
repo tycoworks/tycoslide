@@ -1,7 +1,7 @@
 # Cowork field report: first outside use of a packaged skill
 
 > Status: **triage (28 Aug 2026).** An agent in Cowork's cloud container built a
-> 10-slide deck from the packaged `mz-slides` skill — the first time tycoslide has
+> 10-slide deck from a packaged theme skill — the first time tycoslide has
 > been driven by someone other than its author, in an environment nobody designed
 > for. It worked, and the output was judged to look like real collateral, but the
 > run surfaced three blockers and a long tail of engine and theme defects.
@@ -99,7 +99,7 @@ the mechanism is proven, the pixels are not.
 Ordered by how many users hit them.
 
 1. **Image-fit warnings are noise — FIXED (guidance only).** `shrunk to X% of native`
-   fires on **7 of the 11** distinct images in mz-slides' showcase, including an
+   fires on **7 of the 11** distinct images in the theme's showcase, including an
    illustration that renders **4.91 inches wide** on a 10-inch slide. The trigger compares
    the render against the *source's* pixel size, so it fires hardest on the highest-quality
    assets while a 96×96 icon at 0.30in passes.
@@ -200,7 +200,7 @@ Side effect: ~554MB leaves every install.
 **The trade:** a machine with no browser and no network now gets a clear error instead of
 a working diagram. Marp and Slidev both take that trade.
 
-## 5. Theme defects (mz-slides)
+## 5. Theme defects
 
 Recorded so they are not lost. All measured. The first turned out to be an engine
 defect wearing a theme's clothes; the rest are genuinely the theme's.
@@ -253,5 +253,5 @@ missing-separator message, the icon set, and the three opaque illustrations.
 
 Worth separating from the defect list. An agent with no prior exposure, in a hostile
 environment, produced a deck that its own reviewer called "genuinely good-looking" and
-"like real Materialize collateral, with no fiddling," across ten different layouts. The
+"like real branded collateral, with no fiddling," across ten different layouts. The
 composition model works. What failed was everything around it, and all of it is fixable.

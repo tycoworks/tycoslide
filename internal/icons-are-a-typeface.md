@@ -9,7 +9,7 @@
 
 ## The problem
 
-mz-slides ships 86 PNGs in `assets/icons/`. They are not a curated set: they are the
+The reference theme ships 86 PNGs in `assets/icons/`. They are not a curated set: they are the
 entire **Communication** category of Google Material Icons, exported at 96×96. All 50
 icons in `material-design-icons@3.0.1`'s communication category are present, plus 36 more
 that Google added to the same category after 2016.
@@ -64,7 +64,7 @@ a `defaultIconSet` is additive later, exactly as `mermaid` + `mermaidVariant` is
 today.
 
 `color` takes `string | { light, dark }`, mirroring `codeTheme` (`blocks/code.ts:39-49`).
-mz-slides ships the single string: only **2 of its 33 layouts** declare a `variant`, so a
+The reference theme ships the single string: only **2 of its 33 layouts** declare a `variant`, so a
 `{ light, dark }` pair would throw on the other 31.
 
 `size` defaults to 96, which reproduces today's pixels exactly.
@@ -135,7 +135,7 @@ dependency. Reject it anyway.
 
 `playwright-core` is imported lazily *inside* the render path (`mermaid.ts:313`), so a
 deck with no diagrams needs no browser at all. That is the trade 0.12.0 deliberately made:
-no browser means a clear error instead of a working diagram. Six mz-slides layouts have
+no browser means a clear error instead of a working diagram. Six of the reference theme's layouts have
 `required: true` icon slots, so routing icons through Chromium would make a browser
 mandatory for nearly every deck, turning that trade into *no browser means no deck*. It
 would undo the fix that closed the field report's first blocker.
@@ -213,7 +213,7 @@ one without the other; the manifest block (`manifest.ts:37-40,73-84`); `icons.tx
 `themeConfigSchema.test.ts` `fullTheme()` fixture must gain the block or its runtime
 backstop goes stale.
 
-**mz-slides.** Delete 86 catalog entries and 86 PNGs (344 KB); add one dependency and one
+**The theme.** Delete 86 catalog entries and 86 PNGs (344 KB); add one dependency and one
 `icons` block. Rewrite **10 references** in `showcase.md` — the payoff rather than the
 cost, since 8 of the 10 (`importExport`, `screenShare`, `swapCalls`, `rssFeed`, `moreTime`,
 `vpnKey`) are communication-category filler standing in for concepts they do not mean.
@@ -317,9 +317,9 @@ what actually went wrong when an installed package hides its own `package.json` 
 
 **Known gap:** `iconDir`'s bare-specifier branch has no positive unit test — a fixture
 package would need a `node_modules` directory inside `test/fixtures`. It is covered in
-reality by the mz-slides build.
+reality by the reference theme's build.
 
-Verified end to end against mz-slides: `showcase.pptx` builds, the eight unique icons
+Verified end to end against the reference theme: `showcase.pptx` builds, the eight unique icons
 rasterise to 96×96 PNGs whose opaque pixels are exactly `(189,176,224)`, no icon slot
 raises a `shrunk to X%` warning, and the rendered slides show the icons at the right size
 and colour. The set install is 13 MB.

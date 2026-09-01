@@ -6,8 +6,8 @@
 
 ## The decision
 
-**Icons stay plain catalog assets. tycoslide gains no icon mechanism.** mz-slides expands
-from 86 bundled PNGs to the whole Material set, rasterised at package time and catalogued
+**Icons stay plain catalog assets. tycoslide gains no icon mechanism.** The reference theme
+expands from 86 bundled PNGs to the whole Material set, rasterised at package time and catalogued
 exactly as logos and illustrations already are.
 
 What makes that affordable is one change, and it is not about icons: **split the asset
@@ -55,7 +55,7 @@ it, written by the same command.
 
 Each is independently verifiable. Do not start the next until the previous is green.
 
-**0 — Revert mz-slides.** Restore the 86 icons, `theme.json`, `showcase.md`, `package.json`
+**0 — Revert the theme.** Restore the 86 icons, `theme.json`, `showcase.md`, `package.json`
 to their committed state. *Verify: `showcase.md` builds, 34 slides.*
 
 **1 — Author the skill's `package.json`.** *(Written, on branch `skill-package-json`, tests
@@ -76,7 +76,7 @@ learn whether the lockfile stays in the zip or goes.
 (layouts) and `assets.json` (the catalog). `cli.ts` writes both, `skillPaths` ships both,
 `SKILL.md` says which is read and which is grepped. ~20 lines. It changes the agent contract
 — `manifest.json` loses its `assets` key — so it is a minor version bump. Useful on its own:
-the 40 non-icon assets benefit too. *Verify: tests, regenerate the mz-slides skill, check
+the 40 non-icon assets benefit too. *Verify: tests, regenerate the reference skill, check
 both file sizes.*
 
 **3 — Expand the icons.** A committed script rasterises the chosen set at 96px in `#BDB0E0`

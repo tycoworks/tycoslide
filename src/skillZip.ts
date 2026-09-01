@@ -75,7 +75,7 @@ function skillPaths(config: CompilerThemeConfig, generated: string[]): string[] 
 
 /**
  * Zip a theme into an uploadable Agent Skill archive whose entries all live
- * under a single root folder (e.g. `mz-slides/theme.json`), matching Anthropic's
+ * under a single root folder (e.g. `acme-slides/theme.json`), matching Anthropic's
  * custom-skill format. `generated` names the files the caller just wrote (the
  * config, manifest, skill.md, syntax.md); `packageJson` is the authored manifest
  * from `skillPackageJson`. Optional support files are skipped when absent;

@@ -321,7 +321,8 @@ export async function compileDeck(doc: ParsedDocument, config: CompilerConfig): 
     const [, category, name] = match;
     const entry = assets[category]?.[name];
     if (!entry) {
-      // Every asset in the catalog is far too many to read (mz-slides has 126).
+      // Every asset in the catalog is far too many to read: a theme's icon set
+      // alone can run to thousands.
       // A known category narrows it to that category's names, which is what the
       // author is choosing between; an unknown one lists the categories instead.
       const group = assets[category];

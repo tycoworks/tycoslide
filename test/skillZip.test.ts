@@ -7,22 +7,22 @@ import JSZip from "jszip";
 import { renameSkill, skillPackageJson, zipDir } from "../dist/skillZip.js";
 
 /** Stand-in for the authored manifest; `skillPackageJson` is tested on its own below. */
-const PKG_JSON = '{"name":"mz-slides"}\n';
+const PKG_JSON = '{"name":"acme-slides"}\n';
 import { AssetType } from "../dist/markdown/types.js";
 
 describe("renameSkill", () => {
   const source = "---\nname: slides\ndescription: >\n  Build decks.\n---\n\n# slides\n\nBody with name: not-a-header line.\n";
 
   it("rewrites the frontmatter name and leaves the body untouched", () => {
-    const out = renameSkill(source, "mz-slides");
-    assert.match(out, /^---\nname: mz-slides\n/);
+    const out = renameSkill(source, "acme-slides");
+    assert.match(out, /^---\nname: acme-slides\n/);
     assert.ok(out.includes("Body with name: not-a-header line."));
     assert.ok(!out.includes("name: slides"));
   });
 
   it("throws when the frontmatter has no name: line", () => {
     const noName = "---\ndescription: >\n  Build decks.\n---\n\n# body\n";
-    assert.throws(() => renameSkill(noName, "mz-slides"), /no "name:" line/);
+    assert.throws(() => renameSkill(noName, "acme-slides"), /no "name:" line/);
   });
 });
 
@@ -32,7 +32,7 @@ describe("skillPackageJson", () => {
   // `npm install` re-runs the build script inside their container, and
   // `--omit=dev` never installs the engine the script (and the build) needs.
   const theme = {
-    name: "mz-slides",
+    name: "acme-slides",
     version: "0.6.0",
     description: "Branded slide decks.",
     private: true,
@@ -60,7 +60,7 @@ describe("skillPackageJson", () => {
 
   it("keeps the theme's identity and stays private", () => {
     const pkg = authored();
-    assert.equal(pkg.name, "mz-slides");
+    assert.equal(pkg.name, "acme-slides");
     assert.equal(pkg.version, "0.6.0");
     assert.equal(pkg.private, true);
   });
@@ -93,19 +93,19 @@ describe("zipDir", () => {
     try {
       seedTheme(root);
 
-      const zip = await JSZip.loadAsync(await zipDir(root, "mz-slides", config, generated, PKG_JSON));
+      const zip = await JSZip.loadAsync(await zipDir(root, "acme-slides", config, generated, PKG_JSON));
 
-      assert.ok(zip.file("mz-slides/theme.json"), "config included");
-      assert.ok(zip.file("mz-slides/manifest.json"), "manifest included");
-      assert.ok(zip.file("mz-slides/skill.md"), "skill.md included");
-      assert.ok(zip.file("mz-slides/syntax.md"), "syntax.md included");
+      assert.ok(zip.file("acme-slides/theme.json"), "config included");
+      assert.ok(zip.file("acme-slides/manifest.json"), "manifest included");
+      assert.ok(zip.file("acme-slides/skill.md"), "skill.md included");
+      assert.ok(zip.file("acme-slides/syntax.md"), "syntax.md included");
       // The theme dir holds `{}`; the zip must carry the AUTHORED manifest instead.
       // This is the regression guard for the copied-package.json bug: a copy would
       // ship the theme's postinstall and devDependency into a consumer's install.
-      assert.equal(await zip.file("mz-slides/package.json")?.async("string"), PKG_JSON);
-      assert.ok(zip.file("mz-slides/assets/logos/a.png"), "declared asset included with its path");
-      assert.ok(zip.file("mz-slides/template/corp.pptx"), "source template kept");
-      assert.equal(await zip.file("mz-slides/theme.json")?.async("string"), "theme.json\n");
+      assert.equal(await zip.file("acme-slides/package.json")?.async("string"), PKG_JSON);
+      assert.ok(zip.file("acme-slides/assets/logos/a.png"), "declared asset included with its path");
+      assert.ok(zip.file("acme-slides/template/corp.pptx"), "source template kept");
+      assert.equal(await zip.file("acme-slides/theme.json")?.async("string"), "theme.json\n");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -128,16 +128,16 @@ describe("zipDir", () => {
       mkdirSync(join(root, "node_modules"));
       writeFileSync(join(root, "node_modules", "junk.js"), "x");
 
-      const zip = await JSZip.loadAsync(await zipDir(root, "mz-slides", config, generated, PKG_JSON));
+      const zip = await JSZip.loadAsync(await zipDir(root, "acme-slides", config, generated, PKG_JSON));
 
-      assert.ok(!zip.file("mz-slides/decks/demo.pptx"), "built deck excluded");
-      assert.ok(!zip.file("mz-slides/decks/demo.pdf"), "exported pdf excluded");
-      assert.ok(!zip.file("mz-slides/decks/slide-01.png"), "slide png excluded");
-      assert.ok(!zip.file("mz-slides/decks/demo.md"), "working deck source excluded");
-      assert.ok(!zip.file("mz-slides/showcase.pptx"), "root build output excluded");
-      assert.ok(!zip.file("mz-slides/old.zip"), "stray zip excluded");
-      assert.ok(!zip.file("mz-slides/.env"), "secrets excluded");
-      assert.ok(!zip.file("mz-slides/node_modules/junk.js"), "node_modules excluded");
+      assert.ok(!zip.file("acme-slides/decks/demo.pptx"), "built deck excluded");
+      assert.ok(!zip.file("acme-slides/decks/demo.pdf"), "exported pdf excluded");
+      assert.ok(!zip.file("acme-slides/decks/slide-01.png"), "slide png excluded");
+      assert.ok(!zip.file("acme-slides/decks/demo.md"), "working deck source excluded");
+      assert.ok(!zip.file("acme-slides/showcase.pptx"), "root build output excluded");
+      assert.ok(!zip.file("acme-slides/old.zip"), "stray zip excluded");
+      assert.ok(!zip.file("acme-slides/.env"), "secrets excluded");
+      assert.ok(!zip.file("acme-slides/node_modules/junk.js"), "node_modules excluded");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -148,8 +148,8 @@ describe("zipDir", () => {
     try {
       seedTheme(root);
       writeFileSync(join(root, "package-lock.json"), "{}\n");
-      const zip = await JSZip.loadAsync(await zipDir(root, "mz-slides", config, generated, PKG_JSON));
-      assert.ok(zip.file("mz-slides/package-lock.json"), "lockfile included");
+      const zip = await JSZip.loadAsync(await zipDir(root, "acme-slides", config, generated, PKG_JSON));
+      assert.ok(zip.file("acme-slides/package-lock.json"), "lockfile included");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -161,7 +161,7 @@ describe("zipDir", () => {
       seedTheme(root);
       rmSync(join(root, "assets", "logos", "a.png"));
       await assert.rejects(
-        zipDir(root, "mz-slides", config, generated, PKG_JSON),
+        zipDir(root, "acme-slides", config, generated, PKG_JSON),
         /assets\/logos\/a\.png.*no such file/,
       );
     } finally {

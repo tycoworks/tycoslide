@@ -66,7 +66,7 @@ program
     if (!themePkg.name) {
       throw new Error('Cannot name the skill: the theme\'s package.json has no "name" field.');
     }
-    // basename drops any npm scope, e.g. "@acme/mz-slides" -> "mz-slides".
+    // basename drops any npm scope, e.g. "@acme/acme-slides" -> "acme-slides".
     const skillName = basename(themePkg.name);
 
     writeFileSync(resolve(process.cwd(), MANIFEST_FILE), `${generateManifest(config)}\n`);
