@@ -1,3 +1,4 @@
+import { ASSETS_FILE } from "./files.js";
 import { templateKeys } from "./markdown/textTemplate.js";
 import type { AcceptType, AssetType, CompilerConfig, CompilerParameter, CompilerSlot } from "./markdown/types.js";
 
@@ -72,9 +73,6 @@ function stripSlot(slot: CompilerSlot): ManifestSlot {
   if (slot.required) result.required = true;
   return result;
 }
-
-/** Filename of the searchable asset catalog, named by the manifest that points at it. */
-export const ASSETS_FILE = "assets.json";
 
 /** The layouts document: read whole, so it carries no open-ended list. */
 export function generateManifest(config: CompilerConfig): string {

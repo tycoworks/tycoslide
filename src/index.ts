@@ -20,6 +20,7 @@ import {
   type CompilerSlot,
   type CompilerThemeConfig,
 } from "./markdown/types.js";
+import { expandAssets } from "./skillZip.js";
 
 /**
  * A frontmatter parameter always fills one physical shape on the layout's own
@@ -147,6 +148,11 @@ export async function buildDeck(
   if (deck.output === undefined) {
     throw new Error('buildDeck: deck.output is not set. Set it (e.g. "deck.pptx") before calling buildDeck.');
   }
+  // A packaged theme ships its assets as one archive, because hosts cap how many
+  // files a skill may contain. Expand it here rather than at compile: the catalog
+  // is what an author reads, and only filling needs the bytes.
+  await expandAssets(config.rootDir);
+
   const engineDeck: Deck = { theme: deck.theme, output: deck.output, steps: deck.steps };
   await generate(engineDeck, toEngineConfig(config), options);
 }
@@ -167,9 +173,9 @@ export type {
 } from "./engine/index.js";
 // Engine — primitives-only public surface.
 export { fillImage, fillTable, fillTemplate, fillText, generate, SlotType } from "./engine/index.js";
-
+export { ASSETS_ARCHIVE, ASSETS_FILE } from "./files.js";
 // Authoring
-export { ASSETS_FILE, generateAssetCatalog, generateManifest } from "./manifest.js";
+export { generateAssetCatalog, generateManifest } from "./manifest.js";
 export type {
   AssetCatalog,
   AssetEntry,
@@ -189,3 +195,4 @@ export type {
 } from "./markdown/index.js";
 // Markdown / Compiler
 export { AcceptType, compileMarkdownDeck, loadThemeConfig, parseThemeConfig } from "./markdown/index.js";
+export { expandAssets } from "./skillZip.js";

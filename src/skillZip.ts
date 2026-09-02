@@ -1,8 +1,62 @@
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import JSZip from "jszip";
 import { TEMPLATE_DIR } from "./engine/index.js";
+import { ASSETS_ARCHIVE, PACKAGE_JSON } from "./files.js";
 import type { CompilerThemeConfig } from "./markdown/types.js";
+
+/** Entries are stored, not deflated: assets are already-compressed images. */
+const NO_COMPRESSION = { type: "nodebuffer", compression: "STORE" } as const;
+
+/**
+ * Pack `paths` (theme-relative, POSIX) into one archive, reading each through
+ * `read`. Entries keep their declared paths, so expanding reproduces the layout
+ * `theme.json` already refers to.
+ */
+export async function packAssets(paths: string[], read: (rel: string) => Buffer): Promise<Buffer> {
+  const archive = new JSZip();
+  for (const rel of paths) archive.file(rel, read(rel));
+  return archive.generateAsync(NO_COMPRESSION);
+}
+
+/**
+ * Expand a packaged theme's archive into its directory, so the files the catalog
+ * names are on disk before anything fills with them. Idempotent per file; loose
+ * files win, so a stale archive never overwrites a theme's real assets; the
+ * archive itself stays put. A theme with no archive -- every theme under
+ * development -- returns immediately.
+ */
+export async function expandAssets(rootDir: string): Promise<void> {
+  // An empty rootDir is a supported value elsewhere ("resolve nothing"), and it
+  // would expand into the process working directory. Refuse rather than guess.
+  if (!rootDir) return;
+
+  const archivePath = join(rootDir, ASSETS_ARCHIVE);
+  if (!existsSync(archivePath)) return;
+
+  const archive = await JSZip.loadAsync(readFileSync(archivePath));
+  for (const [rel, entry] of Object.entries(archive.files)) {
+    if (entry.dir) continue;
+    // JSZip collapses `..` and a leading `/` on load, but a backslash survives
+    // verbatim and traverses on Windows. We wrote this archive, so an entry that
+    // is not a plain theme-relative path means it was tampered with.
+    if (rel.includes("\\")) {
+      throw new Error(`${ASSETS_ARCHIVE} entry "${rel}" is not a theme-relative path`);
+    }
+
+    const abs = join(rootDir, ...rel.split("/"));
+    if (existsSync(abs)) continue;
+    mkdirSync(dirname(abs), { recursive: true });
+
+    // Write-then-rename. A plain write is not atomic: a build killed partway
+    // through 2,000 icons leaves a truncated file that `existsSync` then skips
+    // forever. Rename is atomic within a filesystem, so a reader sees a whole
+    // file or none, which also makes two concurrent builds in one directory safe.
+    const partial = `${abs}.${process.pid}.tmp`;
+    writeFileSync(partial, await entry.async("nodebuffer"));
+    renameSync(partial, abs);
+  }
+}
 
 const FRONTMATTER = /^---\n([\s\S]*?)\n---/;
 const NAME_LINE = /^name:[ \t]*.*$/m;
@@ -19,9 +73,6 @@ export function renameSkill(md: string, name: string): string {
   if (!NAME_LINE.test(block[1])) throw new Error('SKILL.md frontmatter has no "name:" line');
   return md.replace(block[0], block[0].replace(NAME_LINE, `name: ${name}`));
 }
-
-/** The manifest a packaged skill installs from, authored rather than copied. */
-const PACKAGE_JSON = "package.json";
 
 /**
  * Files a packaged skill needs beyond the theme's own declarations. Only the
@@ -60,17 +111,31 @@ export function skillPackageJson(theme: Record<string, unknown>, engine: { name:
 }
 
 /**
- * Every path a packaged theme needs, relative to `rootDir` and POSIX-separated.
+ * Every path a packaged theme needs, relative to `rootDir` and POSIX-separated,
+ * split by how it ships.
  *
  * Derived from the theme config rather than filtered out of a directory walk:
  * the config already declares its template and its whole asset catalog, so an
  * allowlist stays correct no matter what else sits in the working directory --
  * built decks, PDFs, slide PNGs, scratch files. Font paths are deliberately
- * absent: they resolve from node_modules, which `npm install` restores.
+ * absent when they name a package -- those resolve from node_modules, which
+ * `npm install` restores -- but a `./`- or `/`-prefixed font path is a file the
+ * theme owns, and mermaid reads it during COMPILE, before any archive is
+ * expanded. Those ship plain.
+ *
+ * `archived` is the asset catalog, which collapses to one archive because hosts
+ * cap how many FILES a skill may contain. `plain` is everything read before or
+ * without an expansion, including the catalog itself.
  */
-function skillPaths(config: CompilerThemeConfig, generated: string[]): string[] {
-  const assets = Object.values(config.assets).flatMap((category) => Object.values(category).map((entry) => entry.path));
-  return [...SUPPORT_FILES, ...generated, `${TEMPLATE_DIR}/${config.template}`, ...assets];
+function skillPaths(config: CompilerThemeConfig, generated: string[]): { plain: string[]; archived: string[] } {
+  const archived = Object.values(config.assets).flatMap((category) =>
+    Object.values(category).map((entry) => entry.path),
+  );
+  const localFonts = (config.fonts ?? []).map((f) => f.path).filter((p) => p.startsWith(".") || p.startsWith("/"));
+  return {
+    plain: [...SUPPORT_FILES, ...generated, `${TEMPLATE_DIR}/${config.template}`, ...localFonts],
+    archived,
+  };
 }
 
 /**
@@ -94,18 +159,35 @@ export async function zipDir(
 
   folder.file(PACKAGE_JSON, packageJson);
 
+  const { plain, archived } = skillPaths(config, generated);
   const optional = new Set(SUPPORT_FILES);
   let count = 1;
-  for (const rel of skillPaths(config, generated)) {
+
+  // `optional` is a plain-bucket concept (a lockfile a theme may not have). An
+  // asset the catalog declares is never optional, so the archived loop calls
+  // `required` and a missing one throws rather than silently vanishing.
+  const required = (rel: string): Buffer => {
     const abs = join(rootDir, ...rel.split("/"));
-    if (!existsSync(abs)) {
-      if (optional.has(rel)) continue;
-      throw new Error(`Theme declares "${rel}", but no such file exists`);
-    }
-    folder.file(rel, readFileSync(abs));
+    if (existsSync(abs)) return readFileSync(abs);
+    throw new Error(`Theme declares "${rel}", but no such file exists`);
+  };
+  const read = (rel: string): Buffer | null => {
+    if (optional.has(rel) && !existsSync(join(rootDir, ...rel.split("/")))) return null;
+    return required(rel);
+  };
+
+  for (const rel of plain) {
+    const content = read(rel);
+    if (content === null) continue;
+    folder.file(rel, content);
+    count++;
+  }
+
+  if (archived.length > 0) {
+    folder.file(ASSETS_ARCHIVE, await packAssets(archived, required));
     count++;
   }
 
   if (count === 0) throw new Error(`No files to zip in directory: ${rootDir}`);
-  return zip.generateAsync({ type: "nodebuffer" });
+  return zip.generateAsync({ type: "nodebuffer", compression: "STORE" });
 }

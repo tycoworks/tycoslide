@@ -2,20 +2,14 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Command } from "commander";
+import { ASSETS_FILE, MANIFEST_FILE, SKILL_FILE, SYNTAX_FILE, THEME_CONFIG } from "./files.js";
 import { buildDeck } from "./index.js";
-import { ASSETS_FILE, generateAssetCatalog, generateManifest } from "./manifest.js";
+import { generateAssetCatalog, generateManifest } from "./manifest.js";
 import { compileDeck, loadThemeConfig, parseSlideDocument, RESERVED_KEY } from "./markdown/index.js";
 import { renameSkill, skillPackageJson, zipDir } from "./skillZip.js";
 
-const DEFAULT_CONFIG = "theme.json";
-const MANIFEST_FILE = "manifest.json";
-// SKILL.md, uppercase: the Agent Skills format requires that exact filename at the
-// root of a skill folder, and a case-sensitive filesystem will not find any other.
-const SKILL_FILE = "SKILL.md";
-const SYNTAX_FILE = "syntax.md";
-
 const sdkDir = dirname(fileURLToPath(import.meta.url));
-const skillMdPath = resolve(sdkDir, "..", "SKILL.md");
+const skillMdPath = resolve(sdkDir, "..", SKILL_FILE);
 const syntaxMdPath = resolve(sdkDir, "..", SYNTAX_FILE);
 
 const pkg = JSON.parse(readFileSync(resolve(sdkDir, "..", "package.json"), "utf-8"));
@@ -58,7 +52,7 @@ program
 program
   .command("package")
   .description("Generate the Agent Skill (manifest.json, SKILL.md, syntax.md) for AI agents")
-  .option(`-c, --config <path>`, "path to theme config file", DEFAULT_CONFIG)
+  .option(`-c, --config <path>`, "path to theme config file", THEME_CONFIG)
   .action(async (opts: { config: string }) => {
     const config = loadThemeConfig(resolve(process.cwd(), opts.config));
 

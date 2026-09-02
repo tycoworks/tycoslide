@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
 import JSZip from "jszip";
-import { buildDeck, compileMarkdownDeck, toEngineThemeConfig } from "../dist/index.js";
+import { ASSETS_ARCHIVE, buildDeck, compileMarkdownDeck, toEngineThemeConfig } from "../dist/index.js";
 import type { CompilerConfig, CompilerThemeConfig } from "../dist/markdown/types.js";
 
 // End-to-end coverage of the COMPILER path exposing sampled-composition: a real
@@ -125,6 +125,41 @@ layout: Composed
     assert.ok(
       x + cx <= BODY_FRAME.x + BODY_FRAME.cx && y + cy <= BODY_FRAME.y + BODY_FRAME.cy,
       "image box fits within the slot frame",
+    );
+  });
+
+  it("expands a packaged theme's asset archive during the build", async () => {
+    // The wiring test for `buildDeck -> expandAssets`. A packaged skill has no
+    // loose assets, only assets.zip, so removing that call breaks every image in
+    // every deck -- and nothing else here would notice.
+    const packaged = mkdtempSync(join(tmpdir(), "packaged-theme-"));
+    const archive = new JSZip();
+    archive.file("swap.png", readFileSync(join(FIXTURES, "swap.png")));
+    writeFileSync(join(packaged, ASSETS_ARCHIVE), await archive.generateAsync({ type: "nodebuffer" }));
+    copyFileSync(join(FIXTURES, "composition-theme.json"), join(packaged, "composition-theme.json"));
+    mkdirSync(join(packaged, "template"));
+    copyFileSync(join(FIXTURES, "template", "composition.pptx"), join(packaged, "template", "composition.pptx"));
+    assert.ok(!existsSync(join(packaged, "swap.png")), "the asset starts out archived, not on disk");
+
+    const config = { ...loadThemeConfig(), rootDir: packaged };
+    const source = `---
+theme: ./composition-theme.json
+---
+---
+layout: Composed
+---
+::body::
+![logo]($logos.primary)`;
+
+    const deck = await compileMarkdownDeck(source, config);
+    deck.output = outPath("packaged.pptx");
+    await buildDeck(deck, config);
+
+    assert.ok(existsSync(join(packaged, "swap.png")), "the archive was expanded");
+    const zip = await outputZip(deck.output);
+    assert.ok(
+      Object.keys(zip.files).some((f) => /ppt\/media\/.+\.\w+$/.test(f)),
+      "the expanded asset reached the output",
     );
   });
 
