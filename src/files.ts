@@ -15,9 +15,11 @@ export const ASSETS_FILE = "assets.json";
 /**
  * The one archive a packaged theme's declared assets ship inside. Entries are
  * stored at theme-relative POSIX paths and never rewritten: packaging writes
- * them, building expands them.
+ * them, building expands them. Zip format, deliberately NOT named .zip: the
+ * upload host rejects nested .zip entries by extension while accepting .pptx,
+ * which is also a zip -- so the archive travels under a neutral name.
  */
-export const ASSETS_ARCHIVE = "assets.zip";
+export const ASSETS_ARCHIVE = "assets.dat";
 
 // SKILL.md, uppercase: the Agent Skills format requires that exact filename at
 // the root of a skill folder, and a case-sensitive filesystem will not find any

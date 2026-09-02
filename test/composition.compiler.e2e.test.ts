@@ -130,7 +130,7 @@ layout: Composed
 
   it("expands a packaged theme's asset archive during the build", async () => {
     // The wiring test for `buildDeck -> expandAssets`. A packaged skill has no
-    // loose assets, only assets.zip, so removing that call breaks every image in
+    // loose assets, only the assets archive, so removing that call breaks every image in
     // every deck -- and nothing else here would notice.
     const packaged = mkdtempSync(join(tmpdir(), "packaged-theme-"));
     const archive = new JSZip();
