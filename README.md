@@ -7,7 +7,7 @@ Create editable, on-brand PowerPoint slides from markdown.
 ## How it works
 
 1. **tycoslide wraps existing PowerPoint files as reusable templates.**
-2. **You (or an agent) write slides in markdown.**
+2. **A person (or an agent) writes slides in markdown.**
 3. **tycoslide builds new PowerPoint files.**
 
 ## Quick Start
@@ -87,7 +87,7 @@ A packaged skill ships its assets as one `assets.dat` archive. `tycoslide build`
 ## Diagrams
 
 Mermaid blocks are rendered with a headless Chrome. tycoslide does not download one.
-It uses a browser you already have, in this order:
+It uses a browser already on the machine, in this order:
 
 1. `--browser-path <path>`
 2. A system Chrome install
