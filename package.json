@@ -16,7 +16,7 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "test": "tsc --build && tsc -p tsconfig.test.json && node --test --experimental-transform-types test/**/*.test.ts",
+    "test": "tsc --build && tsc -p tsconfig.test.json && node --test test/**/*.test.ts",
     "typecheck": "tsc --build && tsc -p tsconfig.test.json",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
