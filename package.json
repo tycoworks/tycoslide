@@ -14,6 +14,9 @@
     "SKILL.md",
     "syntax.md"
   ],
+  "engines": {
+    "node": ">=23.6"
+  },
   "scripts": {
     "build": "tsc --build",
     "test": "tsc --build && tsc -p tsconfig.test.json && node --test test/**/*.test.ts",
