@@ -1,12 +1,12 @@
 # tycoslide
 
-tycoslide wraps existing .pptx files with a markdown layer, so you can create editable, on-brand decks from the command line or agent skills.
+Create editable, on-brand PowerPoint slides from markdown, using your existing .pptx templates.
 
 > **Early release.** tycoslide is under active development.
 
 ## Getting started
 
-1. **Create a tycoslide theme.** Install the [create-theme](skills/create-theme) skill (`npx skills add tycoworks/tycoslide`) and give the agent your `.pptx`. You'll get back an npm package of mapped layouts, colors, and visual assets, like the [tycoworks-theme](https://github.com/tycoworks/tycoworks-theme).
+1. **Create a tycoslide theme.** Install the [create-theme](skills/create-theme) skill (`npx skills add tycoworks/tycoslide`) and give an agent such as Claude Code or Codex your `.pptx`. You'll get back an npm package of mapped layouts, colors, and visual assets, like the [tycoworks-theme](https://github.com/tycoworks/tycoworks-theme).
 2. **Write slides in markdown.** Bullets, tables, images, speaker notes, syntax-highlighted code and mermaid diagrams are all supported. Every theme comes with an agent skill, so an agent can write the markdown for you.
 3. **Build.** `npx tycoslide build deck.md` compiles the markdown into an editable PowerPoint file.
 

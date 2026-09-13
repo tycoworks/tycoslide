@@ -1,7 +1,7 @@
 {
   "name": "@tycoworks/tycoslide",
   "version": "0.13.3",
-  "description": "Wraps existing .pptx files with a markdown layer: editable, on-brand decks from the CLI or agent skills.",
+  "description": "Create editable, on-brand PowerPoint slides from markdown, using your existing .pptx templates.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
