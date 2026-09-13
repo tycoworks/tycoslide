@@ -84,6 +84,12 @@ my-theme/
 
 A packaged skill ships its assets as one `assets.dat` archive. `tycoslide build` expands it automatically before filling; the catalog stays a plain file.
 
+## Creating a theme
+
+A theme is a directory: your PowerPoint template, a `theme.json` that maps its slides, and any pictures decks may use. [tycoworks-theme](https://github.com/tycoworks/tycoworks-theme) is a complete one to clone.
+
+The `create-theme` skill does the work. Give an agent a branded `.pptx`, correct what it proposes, and it packages the result. Install it with `npx skills add tycoworks/tycoslide`, copy [skills/create-theme](skills/create-theme) into `~/.claude/skills/`, or upload it as a zip to claude.ai under Settings, Features.
+
 ## Diagrams
 
 Mermaid blocks are rendered with a headless Chrome. tycoslide does not download one.

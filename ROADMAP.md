@@ -6,7 +6,7 @@ A theme should support multiple PPTX template files for different formats (e.g.,
 
 ## Theme creation
 
-No guided process for turning a PPTX into a tycoslide theme. Today you manually write `theme.json` by inspecting the template's slide numbers and shape names. A `tycoslide init` command or skill that automates this would lower the barrier significantly.
+The `create-theme` skill (`skills/create-theme/`) turns a PowerPoint into a theme: it inventories the template with a Python script, drafts `theme.json`, renders every layout, and packages the skill. The inventory belongs in the engine as `tycoslide inspect <pptx>`, so the skill needs no Python and the frames it reports are computed by the same code that fills them.
 
 ## Vector mermaid diagrams
 

@@ -2,15 +2,15 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Command } from "commander";
-import { ASSETS_FILE, MANIFEST_FILE, SKILL_FILE, SYNTAX_FILE, THEME_CONFIG } from "./files.js";
+import { ASSETS_FILE, MANIFEST_FILE, SKILL_FILE, SYNTAX_FILE, THEME_CONFIG, THEME_PACKAGE_DIR } from "./files.js";
 import { buildDeck } from "./index.js";
 import { generateAssetCatalog, generateManifest } from "./manifest.js";
 import { compileDeck, loadThemeConfig, parseSlideDocument, RESERVED_KEY } from "./markdown/index.js";
 import { renameSkill, skillPackageJson, zipDir } from "./skillZip.js";
 
 const sdkDir = dirname(fileURLToPath(import.meta.url));
-const skillMdPath = resolve(sdkDir, "..", SKILL_FILE);
-const syntaxMdPath = resolve(sdkDir, "..", SYNTAX_FILE);
+const skillMdPath = resolve(sdkDir, "..", THEME_PACKAGE_DIR, SKILL_FILE);
+const syntaxMdPath = resolve(sdkDir, "..", THEME_PACKAGE_DIR, SYNTAX_FILE);
 
 const pkg = JSON.parse(readFileSync(resolve(sdkDir, "..", "package.json"), "utf-8"));
 const program = new Command().name("tycoslide").description("PPTX template engine CLI").version(pkg.version);
