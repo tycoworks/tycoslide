@@ -31,3 +31,7 @@ A slot's `accepts` says what kind of content fits, never how much room there is 
 ## README video
 
 Thirty seconds showing the process rather than the output, since the output's quality is the designer's: open the template in PowerPoint, show the markdown, run the build, open the result and edit a line of text. The last beat is the point, because editability is what generators cannot show. GitHub plays an `.mp4` dropped into the README, so no hosting is needed.
+
+## Dangling relationships in built decks
+
+pptx-automizer's `cleanup` deletes media parts nothing embeds any more, and `removeExistingSlides` drops the template's original slide parts, but neither touches the `.rels` files that named them. A filled picture slot leaves two dead entries (the placeholder image and automizer's copy of it) and every removed template slide leaves an orphan rels file; the showcase carries 20 of the first and 18 of the second. Invalid by the OOXML spec, but LibreOffice ignores it and PowerPoint has never shown the repair dialog on a built deck, so it is unfixed. If it ever does: automizer has no hook after cleanup, so do it the way `notes.ts` does, inside the callbacks that run before cleanup. Per slide, drop image relationships no shape references by `r:embed`; at presentation level, drop rels files for slides absent from `sldIdLst`, which is exactly what `sweepOrphanNotes` computes for notes.
