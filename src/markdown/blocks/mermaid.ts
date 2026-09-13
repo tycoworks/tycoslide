@@ -200,6 +200,9 @@ type Chromium = typeof import("playwright-core")["chromium"];
 
 const LAUNCH_ARGS = { headless: true, args: ["--no-sandbox"] };
 
+/** Device pixels per CSS pixel when rasterising a diagram. Sized for print density. */
+const MERMAID_RASTER_SCALE = 6;
+
 /**
  * Find a browser rather than ship one. tycoslide never downloads Chromium: the
  * binary comes from a CDN rather than the npm registry, so bundling it breaks
@@ -316,7 +319,13 @@ ${fontFaceCss(fonts)}
     // Written inside the try so the finally always cleans it up, even if launch throws.
     writeFileSync(htmlPath, html);
     browser = await launchChromium(chromium, browserPath);
-    const page = await browser.newPage({ viewport: { width: 800, height: 600 }, deviceScaleFactor: 2 });
+    // Diagrams land in slide-sized frames, so they are rasterised well above CSS
+    // scale: a typical flowchart is ~270 CSS px wide against a slot wanting
+    // ~1400 px at print density. 2x left them visibly pixelated.
+    const page = await browser.newPage({
+      viewport: { width: 800, height: 600 },
+      deviceScaleFactor: MERMAID_RASTER_SCALE,
+    });
     await page.goto(pathToFileURL(htmlPath).href, { waitUntil: "load" });
     await page.waitForSelector(`#output[${RENDER_SIGNAL_ATTR}="${RenderSignal.Done}"]`, { timeout: 30000 });
     const error = await page.getAttribute("#output", RENDER_ERROR_ATTR);
