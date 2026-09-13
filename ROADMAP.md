@@ -27,3 +27,7 @@ The old tyco had an open component SDK — every component (text/table/image) wa
 ## Slot dimensions in the manifest
 
 A slot's `accepts` says what kind of content fits, never how much room there is — so a half-inch icon well and a five-inch illustration frame look identical to an authoring agent, which is how a diagram ends up in an icon well. The only feedback is the `shrunk to X%` advisory, which fires after the deck is built. Emit each slot's rendered size (converted from its `frame`, in inches) alongside `accepts`, so size is visible while the agent is choosing a slot rather than after it has filled one. No engine or theme change: `stripSlot` already holds the slot, and every slot carries a real observed frame. Note this makes the mistake visible, not impossible — a slot that should refuse a diagram outright is the content-shape constraint above, not a size hint.
+
+## README video
+
+Thirty seconds showing the process rather than the output, since the output's quality is the designer's: open the template in PowerPoint, show the markdown, run the build, open the result and edit a line of text. The last beat is the point, because editability is what generators cannot show. GitHub plays an `.mp4` dropped into the README, so no hosting is needed.
