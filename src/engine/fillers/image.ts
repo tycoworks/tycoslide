@@ -103,7 +103,9 @@ export function computeGeometry(frame: Frame, imgW: number, imgH: number, fit: I
   const scaleRatio = scale / NATIVE_EMU_PER_PX; // rendered size vs the image's native pixels
   if (scaleRatio > 1) {
     warnings.push(`enlarged to ${Math.round(scaleRatio * 100)}% of native — will look soft; supply a larger image`);
-  } else if (scaleRatio < MIN_SCALE) {
+  } else if (scaleRatio < MIN_SCALE && fit !== ImageFit.ScaleDown) {
+    // An icon's contract is "never enlarge"; landing small in an icon well is
+    // its normal use, so only image and background warn about shrinking.
     warnings.push(`shrunk to ${Math.round(scaleRatio * 100)}% of native — the slot is far smaller than the image`);
   }
 

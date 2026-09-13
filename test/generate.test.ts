@@ -254,11 +254,13 @@ describe("fillText", () => {
     assert.deepEqual(allTexts(body), ["Normal ", "bold", " text"]);
   });
 
-  it("empty runs are skipped", () => {
+  it("a paragraph with no runs is skipped, but a single empty run is a blank line and stays", () => {
+    // A code fence's blank lines compile to paragraphs with one empty run; the
+    // author wrote them and the slide must show them.
     const body = makeTextBody(makeParagraph("Tpl"));
     fillText(body, { paragraphs: [plain("Line 1"), { runs: [] }, { runs: [{ text: "" }] }, plain("Line 2")] });
-    assert.equal(paraCount(body), 2);
-    assert.deepEqual(allTexts(body), ["Line 1", "Line 2"]);
+    assert.equal(paraCount(body), 3);
+    assert.deepEqual(allTexts(body), ["Line 1", "", "Line 2"]);
   });
 
   it("mixed plain + bullet content", () => {
@@ -1109,6 +1111,14 @@ describe("computeGeometry", () => {
     assert.equal(geometry.cx, 100 * PX); // 952500 — native, not stretched to the frame
     assert.equal(geometry.cy, 100 * PX);
     assert.equal(geometry.x, Math.round((1_000_000 - 100 * PX) / 2));
+  });
+
+  it("icon shrinks into a small slot without a warning — never enlarging is the icon contract, shrinking is normal", () => {
+    // A 2048px brand mark in a 0.3in icon well: 1.5% of native. For an image that
+    // would mean the wrong picture; for an icon it is the intended use.
+    const { geometry, warnings } = computeGeometry(frame(0, 0, 280_000, 280_000), 2048, 2048, ICON);
+    assert.equal(geometry.placement, "fit");
+    assert.equal(warnings.length, 0);
   });
 
   it("image scales up to fit (contain) but warns when it drops below the PPI floor", () => {

@@ -377,9 +377,6 @@ export function rebuildParagraphs(
     const isBullet = para.bullet !== undefined;
     const inLevel = para.bullet?.level ?? 0;
 
-    // Skip fully-empty text (matches previous fillText behavior).
-    if (para.runs.length === 1 && !para.runs[0].text) continue;
-
     // Bulleted content needs a bulleted specimen to model on. A plain-only shape
     // (e.g. a designer "description" line, buNone) accepts plain text only, so
     // bulleting it is an authoring error — fail fast rather than emit a run with
