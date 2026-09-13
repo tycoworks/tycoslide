@@ -23,16 +23,15 @@ my-theme/
 ## The three steps
 
 1. **Map.** Read the template, render every slide, and draft `theme.json`. You do this alone. Nothing is decided yet: every layout, name and field is a proposal.
-2. **Decide.** Build one test slide per layout, render it, fix what is wrong, and repeat until every layout renders cleanly. Then show the user every rendered layout with its proposed name and fields, and ask what to change. This is the only time you need them.
+2. **Decide.** Build one test slide per layout, render it, fix what is wrong, and repeat until every layout renders cleanly. Nothing is asked of the user.
 3. **Pack.** Check the pictures, declare fonts and diagram colours, and run one command that turns the directory into an installable skill.
 
 ## Ground rules
 
 - **Never edit the template.** Everything tycoslide needs lives in `theme.json`. If a mapping problem seems to need a change to the `.pptx`, the fix is in the map.
-- **Infer, then ask for corrections.** The template already holds most answers: slide names, which slides are duplicates, which are dark, what the fonts and colours are. Propose everything, show it rendered, and ask only what to change. Never ask about one shape at a time.
+- **Infer everything; never ask.** The template already holds the answers: slide names, which slides are duplicates, which are dark, what the fonts and colours are, which images are the brand's. The defaults are one layout per distinct slide, only headlines required, and only the template's own images. Whatever the user wants different, they change afterwards, and the hand-off tells them how.
 - **The render is the test.** A mapping is right when the rendered PNG looks right. Assume the first build fails.
 - **Names are permanent.** Layout names and field keys are what every future deck author types. Treat them like an API.
-- **If the user says "just do it", finish without asking.** Keep one layout per distinct slide, make only headlines required, ship only the template's own images, and state those defaults in the hand-off.
 
 ## Before starting
 
@@ -116,9 +115,9 @@ Then read the draft back against the pictures. A shape the picture shows as a su
 
 ## 2. Decide
 
-**Goal:** every layout renders cleanly, and the user has approved the names.
+**Goal:** every layout renders cleanly.
 
-### 2.1 Render every layout
+### Render every layout
 
 Write `smoke.md` with one slide per layout, filling every parameter and slot with content of realistic length. `syntax.md` in the theme directory is the markdown reference. The reference theme's `showcase.md` shows what a whole deck looks like, but its layout and key names are not yours. Then:
 
@@ -134,19 +133,13 @@ Test with realistic lengths. A slot that looks right with one line can misbehave
 
 Two things that look like failures are not. A warning that an image `shrunk` or `leaves the frame empty` means the picture is a different size or shape from its slot; judge it from the PNG. A mermaid fence needs Chrome, which tycoslide finds on its own; if the build says it found no browser, install Chrome or pass `--browser-path`.
 
-### 2.2 The review
-
-Show the user every layout, one block each: the rendered PNG, the layout name, its parameters and slots with which are required, and its description. After the layouts, list the slides you dropped, then the images that will ship, which so far are the ones pulled from the template. Then ask two questions. What should change: renames, fields to add or remove, slides to bring back, things to make optional. And which other images should ship: folders of logos, icons or photos to add, or pictures to leave out, since client logos need their owner's consent.
-
-Apply the corrections, rebuild, rerender only the layouts that changed, and show those again. Copy any images the user names under `assets/`, one subfolder per category, and catalog them. Silence on a layout is approval.
-
 ## 3. Pack
 
 **Goal:** a self-contained skill.
 
 ### 3.1 Assets
 
-The catalog is written and the user has said what ships. Now check it. Every description names what the picture shows, because deck authors grep the catalog for it, and byte-identical duplicates are dropped.
+The catalog is written. Check it: every description names what the picture shows, because deck authors grep the catalog for it, and byte-identical duplicates are dropped.
 
 ### 3.2 Fonts, code and diagrams
 
@@ -164,4 +157,4 @@ That writes `manifest.json`, `assets.json`, `SKILL.md` and `syntax.md`, and zips
 
 ### Hand-off
 
-Tell the user, in this order: where the theme is; the layouts, one line each; what was dropped; the assets that ship; the fonts and colours you inferred; and how to install the zip. Claude Code: unzip it into `~/.claude/skills/` and run `npm install` inside the new folder. claude.ai: upload the zip under Settings, Features. From then on, "write me a deck" in a chat produces an editable `.pptx` in the exact brand.
+Open the render folder so the user can see every layout (`open render/` on macOS, `xdg-open render/` on Linux). Then tell them, in this order: where the theme is; the layouts, one line each with its PNG's path; what was dropped; the assets that ship; the fonts and colours you inferred; how to change any of it, which is to rename a layout or key in `theme.json`, drop extra pictures under `assets/` and catalog them, then run `npx tycoslide package` again; and how to install the zip: it is an Agent Skill, so it goes wherever their agent keeps skills, unzipped with `npm install` run once inside it for a local agent, or uploaded as-is to a hosted one. From then on, "write me a deck" in a chat produces an editable `.pptx` in the exact brand.
