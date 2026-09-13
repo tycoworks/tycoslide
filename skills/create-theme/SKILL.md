@@ -136,9 +136,9 @@ Two things that look like failures are not. A warning that an image `shrunk` or 
 
 ### 2.2 The review
 
-Show the user every layout, one block each: the rendered PNG, the layout name, its parameters and slots with which are required, and its description. After the layouts, list the slides you dropped. Then ask one question: what should change? Renames, fields to add or remove, slides to bring back, things to make optional.
+Show the user every layout, one block each: the rendered PNG, the layout name, its parameters and slots with which are required, and its description. After the layouts, list the slides you dropped, then the images that will ship, which so far are the ones pulled from the template. Then ask two questions. What should change: renames, fields to add or remove, slides to bring back, things to make optional. And which other images should ship: folders of logos, icons or photos to add, or pictures to leave out, since client logos need their owner's consent.
 
-Apply the corrections, rebuild, rerender only the layouts that changed, and show those again. Silence on a layout is approval.
+Apply the corrections, rebuild, rerender only the layouts that changed, and show those again. Copy any images the user names under `assets/`, one subfolder per category, and catalog them. Silence on a layout is approval.
 
 ## 3. Pack
 
@@ -146,7 +146,7 @@ Apply the corrections, rebuild, rerender only the layouts that changed, and show
 
 ### 3.1 Assets
 
-The catalog is already written. Now check it. Every description names what the picture shows, because deck authors grep the catalog for it. Byte-identical duplicates are dropped. And only the template's own images ship unless the user says otherwise: client logos and any other picture need their say-so.
+The catalog is written and the user has said what ships. Now check it. Every description names what the picture shows, because deck authors grep the catalog for it, and byte-identical duplicates are dropped.
 
 ### 3.2 Fonts, code and diagrams
 
@@ -164,4 +164,4 @@ That writes `manifest.json`, `assets.json`, `SKILL.md` and `syntax.md`, and zips
 
 ### Hand-off
 
-Tell the user, in this order: where the theme is; the layouts, one line each; what was dropped; the assets that ship and the rule that nothing else does; the fonts and colours you inferred; and how to install the zip. Claude Code: unzip it into `~/.claude/skills/` and run `npm install` inside the new folder. claude.ai: upload the zip under Settings, Features. From then on, "write me a deck" in a chat produces an editable `.pptx` in the exact brand.
+Tell the user, in this order: where the theme is; the layouts, one line each; what was dropped; the assets that ship; the fonts and colours you inferred; and how to install the zip. Claude Code: unzip it into `~/.claude/skills/` and run `npm install` inside the new folder. claude.ai: upload the zip under Settings, Features. From then on, "write me a deck" in a chat produces an editable `.pptx` in the exact brand.

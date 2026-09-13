@@ -1,8 +1,6 @@
 # tycoslide
 
-Layout-driven collateral engine. Fills designer-made PPTX templates with structured content and assets.
-
-For the user-facing model (layouts, slot types, syntax), see [SKILL.md](theme-package/SKILL.md) and [syntax.md](theme-package/syntax.md).
+Read [README.md](README.md) first for what tycoslide is and how it is used. For the authoring model (layouts, slot types, syntax), see [SKILL.md](theme-package/SKILL.md) and [syntax.md](theme-package/syntax.md). This file is only about working on the code.
 
 ## Build & Test
 
