@@ -70,7 +70,7 @@ A two-level catalog, `category` then `name`, giving `$category.name` references 
 |---|---|---|---|
 | `path` | File path relative to the theme root. Required. | Files you placed under `assets/`. | `Layout "X" image "path": file not found` at build; `Theme declares "path", but no such file exists` at package. |
 | `type` | How the picture is fitted. Required. | See the table below. | Schema error; a missing type fails the load. |
-| `description` | Searchable prose for the author. Required. | Describe subject, colour and intended surface. | None. |
+| `description` | Searchable prose for the author. Required. | Describe subject, color and intended surface. | None. |
 
 | `type` | Fit rule |
 |---|---|
@@ -96,23 +96,23 @@ Optional. A Shiki theme id such as `"github-light"`, or a pair `{ "light": "..."
 
 ## `mermaid`
 
-Optional record of named colour variants. The record keys are free; every variant must carry all eleven fields. Colours are hex strings.
+Optional record of named color variants. The record keys are free; every variant must carry all eleven fields. Colors are hex strings.
 
 | Key | Meaning |
 |---|---|
-| `primary` | Node fill colour. |
-| `primaryContrast` | Text colour on `primary` nodes. |
-| `text` | Default text, title and node label colour. |
-| `line` | Edge and arrow colour. |
+| `primary` | Node fill color. |
+| `primaryContrast` | Text color on `primary` nodes. |
+| `text` | Default text, title and node label color. |
+| `line` | Edge and arrow color. |
 | `surface` | Subgraph, secondary node and edge-label background. |
-| `surfaceBorder` | Border colour for nodes and subgraphs. |
+| `surfaceBorder` | Border color for nodes and subgraphs. |
 | `fontFamily` | CSS family name; match a `fonts` entry. |
-| `accents` | Array of colours assigned in order to `class` groups in a flowchart. |
+| `accents` | Array of colors assigned in order to `class` groups in a flowchart. |
 | `accentOpacity` | Percent, 0 to 100, applied to accent and subgraph fills. |
-| `accentTextColor` | Text colour inside accent-classed nodes. |
+| `accentTextColor` | Text color inside accent-classed nodes. |
 | `groupCornerRadius` | Subgraph corner radius in pixels; 0 for square. |
 
-Take the values from the inventory header's colour scheme, reading the hex values rather than trusting the slot names, since a scheme can be inverted with `dk1` white. `text` is the colour body text has on the diagram's surface, `primary` is that surface, `line` and `accents` come from the accent slots, and `surfaceBorder` is a darker step of `surface`. A missing block fails with `theme has no "mermaid" block`.
+Take the values from the inventory header's color scheme, reading the hex values rather than trusting the slot names, since a scheme can be inverted with `dk1` white. `text` is the color body text has on the diagram's surface, `primary` is that surface, `line` and `accents` come from the accent slots, and `surfaceBorder` is a darker step of `surface`. A missing block fails with `theme has no "mermaid" block`.
 
 ## `mermaidVariant`
 

@@ -85,7 +85,7 @@ export type TableFill = {
 /**
  * How a picture is scaled into its frame — the engine's image-sizing directive,
  * mirroring CSS `object-fit`. `contain`: fit the whole image, scale both ways,
- * letterbox. `cover`: fill the frame, centre-crop the overflow. `scale-down`:
+ * letterbox. `cover`: fill the frame, center-crop the overflow. `scale-down`:
  * like contain but never enlarge past native (a small image sits at native size).
  */
 export const ImageFit = {

@@ -200,7 +200,7 @@ type Chromium = typeof import("playwright-core")["chromium"];
 
 const LAUNCH_ARGS = { headless: true, args: ["--no-sandbox"] };
 
-/** Device pixels per CSS pixel when rasterising a diagram. Sized for print density. */
+/** Device pixels per CSS pixel when rasterizing a diagram. Sized for print density. */
 const MERMAID_RASTER_SCALE = 6;
 
 /**
@@ -319,7 +319,7 @@ ${fontFaceCss(fonts)}
     // Written inside the try so the finally always cleans it up, even if launch throws.
     writeFileSync(htmlPath, html);
     browser = await launchChromium(chromium, browserPath);
-    // Diagrams land in slide-sized frames, so they are rasterised well above CSS
+    // Diagrams land in slide-sized frames, so they are rasterized well above CSS
     // scale: a typical flowchart is ~270 CSS px wide against a slot wanting
     // ~1400 px at print density. 2x left them visibly pixelated.
     const page = await browser.newPage({

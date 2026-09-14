@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Inventory a PowerPoint template for writing a tycoslide theme.json.
 
-Prints the slide size, the colour and font scheme, embedded fonts, then every
+Prints the slide size, the color and font scheme, embedded fonts, then every
 shape on every slide (name, kind, frame) and which slides share geometry.
 
 Slides are keyed by the number in the part name ppt/slides/slideN.xml, which
@@ -161,7 +161,7 @@ def embedded_fonts(pkg):
 
 
 # --------------------------------------------------------------------------
-# Colours
+# Colors
 # --------------------------------------------------------------------------
 
 PRESET_COLORS = {"white": (255, 255, 255), "black": (0, 0, 0)}
@@ -187,7 +187,7 @@ def resolve_color(el, scheme, mapping, placeholder=None):
     """Return (r, g, b) for an a:srgbClr / a:schemeClr / a:sysClr / a:prstClr, or None.
 
     Scheme slots are looked up as named (schemes can be deliberately inverted);
-    only bg1/tx1/bg2/tx2 go through the colour map because they are not slots.
+    only bg1/tx1/bg2/tx2 go through the color map because they are not slots.
     """
     tag = el.tag
     if tag == A + "srgbClr":
@@ -534,7 +534,7 @@ def print_header(result):
     cx, cy = result["slideSize"]["cx"], result["slideSize"]["cy"]
     print(f"Slide size: {inches(cx)} x {inches(cy)} in  ({cx} x {cy} EMU)")
     cs = result["colorScheme"]
-    print(f"Colour scheme \"{cs['name']}\" ({result['themePart']}, via {result['masterPart']}):")
+    print(f"Color scheme \"{cs['name']}\" ({result['themePart']}, via {result['masterPart']}):")
     print("  " + "  ".join(f"{slot}={cs[slot] or '?'}" for slot in SCHEME_SLOTS[:4]))
     print("  " + "  ".join(f"{slot}={cs[slot] or '?'}" for slot in SCHEME_SLOTS[4:10]))
     print("  " + "  ".join(f"{slot}={cs[slot] or '?'}" for slot in SCHEME_SLOTS[10:]))
@@ -601,7 +601,7 @@ def build_inventory(pkg):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="List slide size, theme colours/fonts, and every shape (name, kind, frame) "
+        description="List slide size, theme colors/fonts, and every shape (name, kind, frame) "
                     "in a PowerPoint template, keyed by slideN.xml number for theme.json.")
     parser.add_argument("template", help="path to the .pptx template")
     parser.add_argument("--json", action="store_true", help="emit JSON (frames in EMU) instead of text")

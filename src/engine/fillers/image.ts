@@ -21,7 +21,7 @@ interface Frame {
 /** The two ways a picture is placed: crop the source (`<a:srcRect>`) or resize the frame. */
 const Placement = { Crop: "crop", Fit: "fit" } as const;
 
-/** Either a symmetric `<a:srcRect>` crop (fill/cover) or a resized+re-centred frame (fit/contain). */
+/** Either a symmetric `<a:srcRect>` crop (fill/cover) or a resized+re-centerd frame (fit/contain). */
 type FitGeometry =
   | { placement: typeof Placement.Crop; left: number; top: number }
   | { placement: typeof Placement.Fit; x: number; y: number; cx: number; cy: number };
@@ -43,7 +43,7 @@ const MIN_SCALE = 0.2;
 /**
  * Size a picture shape from its `ImageFit` (via `computeGeometry`): either write
  * `<a:srcRect>` insets to fill-and-crop, or shrink the frame to the image's
- * aspect ratio and re-centre (fit/letterbox). Advisory warnings from the
+ * aspect ratio and re-center (fit/letterbox). Advisory warnings from the
  * geometry pass go to `console.warn`.
  *
  * `image.path` is assumed absolute — the compiler / caller resolves it before the

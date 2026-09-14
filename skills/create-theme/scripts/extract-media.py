@@ -68,7 +68,7 @@ def collect_references(pkg):
 
 
 def image_dimensions(data):
-    """(width, height) from PNG, JPEG or GIF headers; None when unrecognised."""
+    """(width, height) from PNG, JPEG or GIF headers; None when unrecognized."""
     if data[:8] == b"\x89PNG\r\n\x1a\n":
         return struct.unpack(">II", data[16:24])
     if data[:2] == b"\xff\xd8":

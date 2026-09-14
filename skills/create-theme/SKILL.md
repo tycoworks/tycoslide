@@ -24,12 +24,12 @@ my-theme/
 
 1. **Map.** Read the template, render every slide, and draft `theme.json`. You do this alone. Nothing is decided yet: every layout, name and field is a proposal.
 2. **Decide.** Build one test slide per layout, render it, fix what is wrong, and repeat until every layout renders cleanly. Nothing is asked of the user.
-3. **Pack.** Check the pictures, declare fonts and diagram colours, and run one command that turns the directory into an installable skill.
+3. **Pack.** Check the pictures, declare fonts and diagram colors, and run one command that turns the directory into an installable skill.
 
 ## Ground rules
 
 - **Never edit the template.** Everything tycoslide needs lives in `theme.json`. If a mapping problem seems to need a change to the `.pptx`, the fix is in the map.
-- **Infer everything; never ask.** The template already holds the answers: slide names, which slides are duplicates, which are dark, what the fonts and colours are, which images are the brand's. The defaults are one layout per distinct slide, only headlines required, and only the template's own images. Whatever the user wants different, they change afterwards, and the hand-off tells them how.
+- **Infer everything; never ask.** The template already holds the answers: slide names, which slides are duplicates, which are dark, what the fonts and colors are, which images are the brand's. The defaults are one layout per distinct slide, only headlines required, and only the template's own images. Whatever the user wants different, they change afterwards, and the hand-off tells them how.
 - **The render is the test.** A mapping is right when the rendered PNG looks right. Assume the first build fails.
 - **Names are permanent.** Layout names and field keys are what every future deck author types. Treat them like an API.
 
@@ -87,7 +87,7 @@ python3 scripts/inventory.py template/brand.pptx
 python3 scripts/extract-media.py template/brand.pptx assets/brand
 ```
 
-The first prints the slide size, the colour scheme and the fonts, then every slide by file number: its position, its layout name, whether its background is light, dark or a picture, and each shape with its kind, position, size, table rows and placeholder text. It ends with the slides that share identical geometry. Sizes print in inches so they read at a glance; `theme.json` wants EMU, so run it again with `--json` when you copy a `frame`, and never convert by hand. Text shows paragraph breaks as ¶ and line breaks as ↵, which is where `\n` goes in a parameter template.
+The first prints the slide size, the color scheme and the fonts, then every slide by file number: its position, its layout name, whether its background is light, dark or a picture, and each shape with its kind, position, size, table rows and placeholder text. It ends with the slides that share identical geometry. Sizes print in inches so they read at a glance; `theme.json` wants EMU, so run it again with `--json` when you copy a `frame`, and never convert by hand. Text shows paragraph breaks as ¶ and line breaks as ↵, which is where `\n` goes in a parameter template.
 
 The second copies every image the masters and layouts reference, the logos, marks and backdrops, into `assets/brand`. Pictures placed on individual slides are sample content and stay out, unless the PNG shows one is a brand mark. If the user has a folder of brand assets outside the template, such as logos, icons or product shots, copy it under `assets/` with one subfolder per category and treat it the same way from here on.
 
@@ -95,7 +95,7 @@ Shape names mean nothing. They are whatever the designer's tool produced, `Googl
 
 ### 1.4 Draft `theme.json`
 
-One layout per slide worth keeping. Drop, for now: geometry duplicates, keeping the first; slides with no fillable shapes; and reference slides such as colour palettes, logo sheets and font specimens. Record what you dropped and why, so the user can bring one back. The list is often empty.
+One layout per slide worth keeping. Drop, for now: geometry duplicates, keeping the first; slides with no fillable shapes; and reference slides such as color palettes, logo sheets and font specimens. Record what you dropped and why, so the user can bring one back. The list is often empty.
 
 For each kept slide:
 
@@ -145,7 +145,7 @@ The catalog is written. Check it: every description names what the picture shows
 
 - **`fonts`** only affect diagrams. PowerPoint uses the template's own fonts. Declare the body font as a package such as `@fontsource/inter`, listed in `dependencies`, so mermaid text matches. If the body font has no fontsource package, use the heading font or the nearest one that does.
 - **`codeTheme`** is a Shiki theme name, or a `{ "light": ..., "dark": ... }` pair when layouts of both variants can hold code.
-- **`mermaid`** holds one entry per variant with all eleven keys, and **`mermaidVariant`** names the default. Keep the reference theme's block and change the hexes to the template's colour scheme. Read the hex values rather than trusting the slot names, since a scheme can be inverted with `dk1` white, and diagram text must be the colour body text has on that surface.
+- **`mermaid`** holds one entry per variant with all eleven keys, and **`mermaidVariant`** names the default. Keep the reference theme's block and change the hexes to the template's color scheme. Read the hex values rather than trusting the slot names, since a scheme can be inverted with `dk1` white, and diagram text must be the color body text has on that surface.
 
 ### 3.3 Package
 
@@ -157,4 +157,4 @@ That writes `manifest.json`, `assets.json`, `SKILL.md` and `syntax.md`, and zips
 
 ### Hand-off
 
-Open the render folder so the user can see every layout (`open render/` on macOS, `xdg-open render/` on Linux). Then tell them, in this order: where the theme is; the layouts, one line each with its PNG's path; what was dropped; the assets that ship; the fonts and colours you inferred; how to change any of it, which is to rename a layout or key in `theme.json`, drop extra pictures under `assets/` and catalog them, then run `npx tycoslide package` again; and how to install the zip: it is an Agent Skill, so it goes wherever their agent keeps skills, unzipped with `npm install` run once inside it for a local agent, or uploaded as-is to a hosted one. From then on, "write me a deck" in a chat produces an editable `.pptx` in the exact brand.
+Open the render folder so the user can see every layout (`open render/` on macOS, `xdg-open render/` on Linux). Then tell them, in this order: where the theme is; the layouts, one line each with its PNG's path; what was dropped; the assets that ship; the fonts and colors you inferred; how to change any of it, which is to rename a layout or key in `theme.json`, drop extra pictures under `assets/` and catalog them, then run `npx tycoslide package` again; and how to install the zip: it is an Agent Skill, so it goes wherever their agent keeps skills, unzipped with `npm install` run once inside it for a local agent, or uploaded as-is to a hosted one. From then on, "write me a deck" in a chat produces an editable `.pptx` in the exact brand.
