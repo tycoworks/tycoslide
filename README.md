@@ -7,62 +7,29 @@ Create editable, on-brand PowerPoint slides from markdown, using your existing .
 ## Getting started
 
 1. **Create a tycoslide theme.** Install the [create-theme](skills/create-theme) skill (`npx skills add tycoworks/tycoslide`) and give an agent such as Claude Code or Codex your `.pptx`. You'll get back an npm package of mapped layouts, colors, and visual assets, like the [tycoworks-theme](https://github.com/tycoworks/tycoworks-theme).
-2. **Write slides in markdown.** Bullets, tables, images, speaker notes, syntax-highlighted code and mermaid diagrams are all supported. Every theme comes with an agent skill, so an agent can write the markdown for you.
+2. **Write slides in markdown.** GitHub-flavored markdown is supported; see [Markdown support](#markdown-support) below. tycoslide themes also include an agent skill, so an agent can write the slides for you.
 3. **Build.** `npx tycoslide build deck.md` compiles the markdown into an editable PowerPoint file.
 
-## Example
+## See it working
 
-[tycoworks-theme](https://github.com/tycoworks/tycoworks-theme) is a finished theme wrapping `template/tycoworks-demo.pptx`. Clone it and build its showcase deck, 21 slides covering all 18 layouts:
+[how-it-works.md](https://github.com/tycoworks/tycoworks-theme/blob/main/how-it-works.md) is a deck about tycoslide, written against the [tycoworks-theme](https://github.com/tycoworks/tycoworks-theme). Clone the theme and build it:
 
 ```bash
 git clone https://github.com/tycoworks/tycoworks-theme && cd tycoworks-theme
 npm install
-npx tycoslide build showcase.md
+npx tycoslide build how-it-works.md
 ```
 
-A deck file against that theme looks like this (full syntax in [syntax.md](theme-package/syntax.md)):
+## Markdown support
 
-````markdown
----
-theme: ./theme.json
----
+- Paragraphs, bullets and numbered lists, with bold, italic and links
+- Tables
+- Code, with [Shiki](https://shiki.style) syntax highlighting
+- [Mermaid](https://mermaid.js.org) diagrams
+- Images from the theme's asset catalog
+- Speaker notes
 
----
-layout: Title
-title: Quarterly Review
-name: Jane Doe
-jobTitle: Engineering
----
-
----
-layout: Image right
-title: How requests flow
----
-
-::body::
-
-- Every request is checked before it reaches the model
-- Rejected requests never leave the gateway
-
-::image::
-
-```mermaid
-flowchart TD
-  A[Client] --> B[Gateway] --> C[Model]
-```
-
----
-layout: Code
-title: Calling the API
----
-
-::code::
-
-```python
-client = Client(api_key)
-deck = client.build("deck.md")
-```
-````
+Full syntax in [syntax.md](theme-package/syntax.md).
 
 ## Requirements
 
