@@ -18,6 +18,8 @@ npm install
 npx tycoslide build how-it-works.md
 ```
 
+https://github.com/user-attachments/assets/f31c11d8-3fe6-464f-8f02-56645b4ce3a6
+
 ## Markdown support
 
 - Paragraphs, bullets and numbered lists, with bold, italic and links
