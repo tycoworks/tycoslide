@@ -73,8 +73,11 @@ layout: Quote dark
 quote: Great products are built by great teams.
 attributionName: Jane Smith
 attributionTitle: CEO, Acme Corp
-logo: assets/clients/acme.png
 ---
+
+::logo::
+
+![]($logos.acme)          # ← an image slot: a catalog asset, or a file path relative to the deck
 ```
 
 A text shape that holds several lines (e.g. an attribution with a name over a title) surfaces as one key per line -- fill each as its own scalar (`attributionName`, `attributionTitle` above), never as a YAML list.
@@ -159,7 +162,7 @@ Build the deck again ([Build](#build)) and read the output carefully. Common err
 |-------|-----|
 | `unknown layout "xyz"` | Check layout names in `manifest.json` |
 | A parameter or slot didn't fill | Use the key names the layout declares -- parameters in frontmatter, slots as body regions |
-| An image didn't swap / placeholder remains | Write a `::key::` region using the image slot's key, containing `![]($category.name)` from `assets.json` |
+| An image didn't swap / placeholder remains | Write a `::key::` region using the image slot's key, containing `![]($category.name)` from `assets.json` or `![](path)` relative to the deck |
 | YAML parse error | Fix the YAML syntax in the slide's frontmatter |
 | `Skipped setting relation target` | The asset image couldn't be placed; check the path and file |
 | `forbidden style directive` | Remove `style`, `classDef`, `linkStyle`, or `%%{init}` from your mermaid block -- use `class` for grouping instead |
