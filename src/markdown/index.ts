@@ -28,5 +28,6 @@ export type {
   CompilerSlot,
   CompilerThemeConfig,
   EngineFill,
+  LoadedTheme,
 } from "./types.js";
 export { AcceptType, AssetType, RESERVED_KEY } from "./types.js";

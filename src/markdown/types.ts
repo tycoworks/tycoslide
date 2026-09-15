@@ -318,8 +318,26 @@ export type CompilerThemeConfig = {
   mermaidVariant?: string;
 };
 
-export type CompilerConfig = CompilerThemeConfig & {
+/**
+ * A theme as loaded from disk: its validated config plus the directory it
+ * lives in, which the catalog's relative asset paths resolve against.
+ */
+export type LoadedTheme = CompilerThemeConfig & {
   rootDir: string;
+};
+
+/**
+ * Everything one build needs: the loaded theme plus what this particular deck
+ * brings. Neither addition is a theme.json field; both are attached per
+ * invocation, the way `rootDir` is attached after load.
+ */
+export type CompilerConfig = LoadedTheme & {
+  /**
+   * The deck file's directory, which a body image written as a file path
+   * resolves against. The CLI takes it from the deck's location; a
+   * programmatic caller that compiles from a string supplies it.
+   */
+  deckDir: string;
   /**
    * Browser executable to render mermaid with, from `--browser-path`. Added
    * after load like `rootDir`: it is a per-invocation choice, not a theme's.

@@ -134,13 +134,13 @@ Fill a slot by writing a `::key::` region in the body; the marker maps to the sl
   ````
   The language tag (e.g. `sql`, `python`, `typescript`) is required -- it drives syntax highlighting, using the theme's `codeTheme` (set once in `theme.json`, not per slot). Colors are applied as native text runs in the output, not images.
 - **table** (slots that accept `table`) -- a GFM table. Write it in the slot region between `|`-delimited headers and rows; cells inherit inline formatting (bold, italic, links).
-- **image** (slots that accept `image`) -- a picture from the theme's asset catalog, written as `![]($category.name)`:
+- **image** (slots that accept `image`) -- a picture, written as `![]($category.name)` for one from the theme's asset catalog, or `![](path/to/file.png)` for a file relative to the deck:
   ```markdown
   ::logo::
 
   ![]($brand.primaryDarkWordmark)
   ```
-  The categories and names are cataloged in `assets.json`. How the picture is scaled and cropped comes from the **asset's `type`** in the catalog: `icon` never enlarges past native and never crops, `image` fits the whole picture without cropping, `background` fills the frame and center-crops. A fenced `mermaid` block also fills an image slot, rendering to a themed PNG (see below).
+  The categories and names are cataloged in `assets.json`. How the picture is scaled and cropped comes from the **asset's `type`** in the catalog: `icon` never enlarges past native and never crops, `image` fits the whole picture without cropping, `background` fills the frame and center-crops. A file path has no catalog entry, so it is always fitted as `image`; put a picture in the catalog when it needs another fit or when agents should be able to find it. A fenced `mermaid` block also fills an image slot, rendering to a themed PNG (see below).
 
 ---
 

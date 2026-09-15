@@ -17,7 +17,7 @@ const ctx = {
   layoutName: "L",
   slideNo: 1,
   source: "body content",
-  config: { layouts: [], assets: {}, template: "", rootDir: "" },
+  config: { layouts: [], assets: {}, template: "", rootDir: "", deckDir: "" },
 };
 const parse = (text: string) => parseSlotContent(text, ctx);
 const textFill = async (text: string) => {

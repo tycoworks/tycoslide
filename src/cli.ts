@@ -41,7 +41,7 @@ program
     if (!absConfigPath) {
       throw new Error(`${basename(deckPath)}: missing required "${RESERVED_KEY.THEME}" in global frontmatter`);
     }
-    const config = { ...loadThemeConfig(absConfigPath), browserPath: opts.browserPath };
+    const config = { ...loadThemeConfig(absConfigPath), browserPath: opts.browserPath, deckDir: dirname(absDeckPath) };
     const deck = await compileDeck(doc, config);
     // Always write the .pptx next to the input deck, named after it.
     const outName = basename(deckPath).replace(/\.md$/, ".pptx");

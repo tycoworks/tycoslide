@@ -6,7 +6,7 @@ import { SlotType } from "../dist/engine/types.js";
 import type { CompilerConfig, CompilerLayout, CompilerSlot } from "../dist/markdown/types.js";
 
 function config(layouts: CompilerLayout[]): CompilerConfig {
-  return { layouts, assets: {}, template: "t.pptx", rootDir: "" };
+  return { layouts, assets: {}, template: "t.pptx", rootDir: "", deckDir: "" };
 }
 
 
@@ -72,7 +72,7 @@ describe("manifest / asset catalog split", () => {
       icons: { check: { path: "assets/icons/check.png", type: "icon", description: "Check" } },
     },
     template: "t.pptx",
-    rootDir: "",
+    rootDir: "", deckDir: "",
   });
 
   it("keeps the catalog out of the manifest, leaving only a pointer to it", () => {

@@ -129,9 +129,9 @@ export function toEngineConfig(config: CompilerConfig): Config {
  * and hands the deck to the engine's primitives-only `generate()`. The deck is
  * structurally equivalent to the engine's `Deck` once `output` is present, so no
  * cast is required. `buildDeck` does not itself validate `config` — a
- * programmatic caller assembling a `CompilerConfig` by hand should load it
- * through `loadThemeConfig` (or `parseThemeConfig`) first to get the same
- * fail-fast structural checks the CLI gets.
+ * programmatic caller assembling a `CompilerConfig` by hand should load the
+ * theme through `loadThemeConfig` (or `parseThemeConfig`) first to get the same
+ * fail-fast structural checks the CLI gets, then add the deck's `deckDir`.
  *
  * Fails fast if `deck.output` is missing: `generate()` requires it, and the CLI
  * populates it before calling `buildDeck`; a programmatic caller that forgot to
@@ -188,6 +188,7 @@ export type {
   CompilerSlot,
   CompilerThemeConfig,
   EngineFill,
+  LoadedTheme,
   MermaidConfig,
   MermaidVariant,
   ParsedDocument,

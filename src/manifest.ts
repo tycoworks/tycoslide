@@ -1,6 +1,6 @@
 import { ASSETS_FILE } from "./files.js";
 import { templateKeys } from "./markdown/textTemplate.js";
-import type { AcceptType, AssetType, CompilerConfig, CompilerParameter, CompilerSlot } from "./markdown/types.js";
+import type { AcceptType, AssetType, CompilerParameter, CompilerSlot, CompilerThemeConfig } from "./markdown/types.js";
 
 /** A frontmatter parameter as advertised to AI authors. */
 type ManifestParameter = {
@@ -75,7 +75,7 @@ function stripSlot(slot: CompilerSlot): ManifestSlot {
 }
 
 /** The layouts document: read whole, so it carries no open-ended list. */
-export function generateManifest(config: CompilerConfig): string {
+export function generateManifest(config: CompilerThemeConfig): string {
   const layouts: ManifestLayout[] = config.layouts.map((layout) => {
     const ml: ManifestLayout = {
       name: layout.name,
@@ -92,7 +92,7 @@ export function generateManifest(config: CompilerConfig): string {
 }
 
 /** The catalog document: searched by name, never read whole. */
-export function generateAssetCatalog(config: CompilerConfig): string {
+export function generateAssetCatalog(config: CompilerThemeConfig): string {
   const assets: AssetCatalog = {};
   for (const [category, entries] of Object.entries(config.assets)) {
     assets[category] = {};

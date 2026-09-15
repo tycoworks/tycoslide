@@ -309,11 +309,12 @@ export async function compileDeck(doc: ParsedDocument, config: CompilerConfig): 
   assertUniqueSlideNumbers(layouts);
   for (const layout of layouts) validateLayout(layout);
 
-  // Resolve a `$category.name` reference against the theme's curated asset
-  // catalog. Anchored ⇒ the whole ref is the reference or it is nothing; a found
-  // entry wraps through `toImageFill`, which maps the asset's declared type to
-  // its ImageFit.
-  const resolveAssetRef: ResolveAssetRef = (ref) => {
+  // A body image names a picture one of two ways, and both end as an absolute
+  // path plus a fit: `$category.name` looks the picture up in the theme's
+  // catalog (which carries its declared type), while anything else is a file
+  // path relative to the deck (typed `image`, since nothing declares it). Only
+  // the lookup differs; the wrapping is shared.
+  const fromCatalog = (ref: string): { path: string; type: AssetType } => {
     const match = ASSET_REF_RE.exec(ref);
     if (!match) {
       throw new Error(`Asset reference "${ref}" must be in the form $category.name (e.g. $logos.primary).`);
@@ -335,7 +336,15 @@ export async function compileDeck(doc: ParsedDocument, config: CompilerConfig): 
             .join(", ");
       throw new Error(`Unknown asset reference "${ref}". Available: ${available}`);
     }
-    return toImageFill(resolveImagePath(rootDir, entry.path), entry.type);
+    return { path: resolveImagePath(rootDir, entry.path), type: entry.type };
+  };
+  const fromDeck = (ref: string): { path: string; type: AssetType } => ({
+    path: resolveImagePath(config.deckDir, ref),
+    type: AssetType.Image,
+  });
+  const resolveAssetRef: ResolveAssetRef = (ref) => {
+    const { path, type } = ref.startsWith("$") ? fromCatalog(ref) : fromDeck(ref);
+    return toImageFill(path, type);
   };
 
   // Slides compile in order: a slide's structural errors (unknown layout/key,

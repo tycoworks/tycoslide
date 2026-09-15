@@ -20,6 +20,7 @@ const cfg = (layouts: CompilerLayout[], rootDir = "", assets: AssetCatalog = {},
   assets,
   template: "",
   rootDir,
+  deckDir: rootDir,
   ...extra,
 });
 const compileDeck = (

@@ -2,8 +2,6 @@
 
 Create editable, on-brand PowerPoint slides from markdown, using your existing .pptx templates.
 
-> **Early release.** tycoslide is under active development.
-
 ## Getting started
 
 1. **Create a tycoslide theme.** Install the [create-theme](skills/create-theme) skill (`npx skills add tycoworks/tycoslide`) and give an agent such as Claude Code or Codex your `.pptx`. You'll get back an npm package of mapped layouts, colors, and visual assets, like the [tycoworks-theme](https://github.com/tycoworks/tycoworks-theme).
@@ -26,7 +24,7 @@ npx tycoslide build how-it-works.md
 - Tables
 - Code, with [Shiki](https://shiki.style) syntax highlighting
 - [Mermaid](https://mermaid.js.org) diagrams
-- Images from the theme's asset catalog
+- Images, from the theme's asset catalog or a file path
 - Speaker notes
 
 Full syntax in [syntax.md](theme-package/syntax.md).

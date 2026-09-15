@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { basename, dirname } from "node:path";
 import * as z from "zod";
-import { AcceptType, AssetType, type CompilerConfig, type CompilerThemeConfig, Variant } from "../types.js";
+import { AcceptType, AssetType, type CompilerThemeConfig, type LoadedTheme, Variant } from "../types.js";
 import { strict } from "./strict.js";
 
 /**
@@ -156,13 +156,13 @@ export function parseThemeConfig(raw: unknown, sourcePath: string): CompilerThem
 }
 
 /**
- * Read, validate, and root a `theme.json` at `absPath` into a `CompilerConfig`.
+ * Read, validate, and root a `theme.json` at `absPath` into a `LoadedTheme`.
  * The single loader the CLI and programmatic callers share: file read/JSON
  * failures fail fast with the path; structural failures go through
  * `parseThemeConfig`. `rootDir` (the config's directory) is attached AFTER
  * validation — it is not a JSON field.
  */
-export function loadThemeConfig(absPath: string): CompilerConfig {
+export function loadThemeConfig(absPath: string): LoadedTheme {
   let raw: unknown;
   try {
     raw = JSON.parse(readFileSync(absPath, "utf-8"));

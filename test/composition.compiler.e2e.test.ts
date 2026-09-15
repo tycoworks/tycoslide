@@ -5,7 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
 import JSZip from "jszip";
-import { ASSETS_ARCHIVE, buildDeck, compileMarkdownDeck, toEngineThemeConfig } from "../dist/index.js";
+import { ASSETS_ARCHIVE, buildDeck, compileMarkdownDeck, type ImageFill, toEngineThemeConfig } from "../dist/index.js";
 import type { CompilerConfig, CompilerThemeConfig } from "../dist/markdown/types.js";
 
 // End-to-end coverage of the COMPILER path exposing sampled-composition: a real
@@ -29,7 +29,7 @@ const outPath = (name: string): string => join(OUTDIR, name);
 // Mirror cli.ts loadConfig: parse theme.json + attach rootDir.
 function loadThemeConfig(): CompilerConfig {
   const raw = JSON.parse(readFileSync(THEME_PATH, "utf-8")) as CompilerThemeConfig;
-  return { ...raw, rootDir: FIXTURES };
+  return { ...raw, rootDir: FIXTURES, deckDir: FIXTURES };
 }
 
 async function outputZip(path: string): Promise<JSZip> {
@@ -163,26 +163,37 @@ layout: Composed
     );
   });
 
-  it("fails fast on a malformed body-image reference (raw path, not $category.name)", async () => {
-    const config = loadThemeConfig();
-    const rawPath = `---
+  it("routes a deck-relative image path into the slot, resolved against config.deckDir", async () => {
+    // A path is the other way to name a picture: not from the catalog, so it
+    // gets the `image` fit, and it resolves against the DECK's directory, not
+    // the theme's. Same slot, same transplant, same wrapping as a catalog ref.
+    const deckDir = mkdtempSync(join(tmpdir(), "tycoslide-deckdir-"));
+    mkdirSync(join(deckDir, "pics"));
+    copyFileSync(join(FIXTURES, "swap.png"), join(deckDir, "pics", "logo.png"));
+    const config = { ...loadThemeConfig(), deckDir };
+    const source = `---
 theme: ./composition-theme.json
 ---
 ---
 layout: Composed
 ---
 ::body::
-![logo](logo.png)`;
+![logo](pics/logo.png)`;
 
-    await assert.rejects(
-      compileMarkdownDeck(rawPath, config),
-      (err: Error) => {
-        assert.ok(/must be in the form/.test(err.message), err.message);
-        assert.ok(err.message.includes("$category.name"), "names the required form");
-        return true;
-      },
-    );
+    const deck = await compileMarkdownDeck(source, config);
+    const body = deck.steps[0].content?.body as ImageFill;
+    assert.equal(body.type, "image");
+    assert.equal(body.path, join(deckDir, "pics", "logo.png"));
+    assert.equal(body.fit, "contain");
 
+    deck.output = outPath("path-image.pptx");
+    await buildDeck(deck, config);
+    const slide = await slideXml(await outputZip(deck.output));
+    assert.ok(slide.includes("<a:blip"), "the path-referenced picture was transplanted");
+  });
+
+  it("fails fast on a malformed catalog reference ($ without category.name)", async () => {
+    const config = loadThemeConfig();
     const badRef = `---
 theme: ./composition-theme.json
 ---
@@ -192,14 +203,11 @@ layout: Composed
 ::body::
 ![logo]($bad)`;
 
-    await assert.rejects(
-      compileMarkdownDeck(badRef, config),
-      (err: Error) => {
-        assert.ok(/must be in the form/.test(err.message), err.message);
-        assert.ok(err.message.includes("$category.name"), "names the required form");
-        return true;
-      },
-    );
+    await assert.rejects(compileMarkdownDeck(badRef, config), (err: Error) => {
+      assert.ok(/must be in the form/.test(err.message), err.message);
+      assert.ok(err.message.includes("$category.name"), "names the required form");
+      return true;
+    });
   });
 
   it("fails fast on an unknown body-image reference, listing available assets", async () => {

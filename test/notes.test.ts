@@ -9,7 +9,7 @@ import type { CompilerLayout } from "../dist/markdown/types.js";
 // `compileDeck` now takes a single async `CompilerConfig`; this positional shim
 // builds a throwaway config from the layouts so these notes tests stay terse.
 const compileDeck = (doc: Parameters<typeof compileDeckRaw>[0], layouts: CompilerLayout[]) =>
-  compileDeckRaw(doc, { layouts, assets: {}, template: "", rootDir: "" });
+  compileDeckRaw(doc, { layouts, assets: {}, template: "", rootDir: "", deckDir: "" });
 
 // ── XML helpers ──────────────────────────────────────────────────────────────
 
