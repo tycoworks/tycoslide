@@ -16,7 +16,7 @@ TypeScript runs natively via Node's `--experimental-strip-types`. `tsc --build` 
 
 `@tycoworks/tycoslide` is a single npm package (no workspaces). The published tarball ships only `dist/`, `bin/`, `theme-package/` (the `files` array); the `bin/tycoslide.js` shebang and `@tycoworks` publish access are assumed set up.
 
-Commit and tag the bump **before** publishing. A publish that fails leaves a tag for a version not yet on npm, which the retry resolves; a publish that succeeds before the commit leaves npm carrying a version with no commit behind it, and the number can never be reused. Publishing requires a one-time password, so step 5 is run by hand.
+Commit and tag the bump **before** publishing. A publish that fails leaves a tag for a version not yet on npm, which the retry resolves; a publish that succeeds before the commit leaves npm carrying a version with no commit behind it, and the number can never be reused. Publishing requires a one-time password, so step 6 is run by hand.
 
 1. **Check what ships is right, not just present.** `theme-package/` goes into every packaged theme, so a known-wrong line there (an example that no longer builds, a stale path form) is a release blocker, not a todo item. Read ROADMAP.md and any open notes for anything touching a shipped file before bumping.
 2. **Clean-build + test** on the release branch: `npm ci && npm run build && npm test && npm run lint`. If the build reports missing exports that exist in source, `find . -name 'tsconfig.tsbuildinfo' -not -path './node_modules/*' -delete && npm run build`.
