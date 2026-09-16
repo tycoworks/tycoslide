@@ -1,7 +1,7 @@
 {
   "name": "@tycoworks/tycoslide",
   "version": "0.15.1",
-  "description": "Create editable, on-brand PowerPoint slides from markdown, using your existing .pptx templates.",
+  "description": "Create editable PowerPoint slides from markdown, using your existing .pptx templates.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

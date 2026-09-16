@@ -20,7 +20,7 @@ This installs the tycoslide engine and its dependencies. You only need to do thi
 
 ## Overview
 
-This skill builds on-brand decks from a markdown deck file. The theme provides slide layouts that control design. Your job: pick the right layouts, fill them with content, and build. You never restyle the layout; the engine clones the real slides, so brand, layout, fonts, and chrome come for free.
+This skill builds decks from a markdown deck file. The theme provides slide layouts that control design. Your job: pick the right layouts, fill them with content, and build. You never restyle the layout; the engine clones the real slides, so brand, layout, fonts, and chrome come for free.
 
 ## Quick Reference
 

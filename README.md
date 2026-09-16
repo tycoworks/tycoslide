@@ -1,6 +1,6 @@
 # tycoslide
 
-Create editable, on-brand PowerPoint slides from markdown, using your existing .pptx templates.
+Create editable PowerPoint slides from markdown, using your existing .pptx templates.
 
 ## Getting started
 
