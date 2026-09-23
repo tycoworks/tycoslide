@@ -5,6 +5,7 @@ import { loadThemeConfig } from "../index.js";
 import { loadAssetCatalog } from "./catalog.js";
 import {
   ASSETS_FILE,
+  DOCS_DIR,
   MANIFEST_FILE,
   PACKAGE_JSON,
   SKILL_FILE,
@@ -22,7 +23,7 @@ export type ToolPackage = { root: string; name: string; version: string };
 /** Register the agent layer's commands on the CLI program. */
 export function registerAgentCommands(program: Command, tool: ToolPackage): void {
   const skillMdPath = resolve(tool.root, THEME_PACKAGE_DIR, SKILL_FILE);
-  const syntaxMdPath = resolve(tool.root, THEME_PACKAGE_DIR, SYNTAX_FILE);
+  const syntaxMdPath = resolve(tool.root, DOCS_DIR, SYNTAX_FILE);
 
   program
     .command("package")

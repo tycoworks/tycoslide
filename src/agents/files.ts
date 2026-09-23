@@ -32,6 +32,9 @@ export const SYNTAX_FILE = "syntax.md";
 // out of the repo root so skill installers do not mistake it for this repo's own skill.
 export const THEME_PACKAGE_DIR = "theme-package";
 
+/** Where tycoslide ships its deck language reference, which each skill carries a copy of. */
+export const DOCS_DIR = "docs";
+
 /**
  * npm's package manifest: the theme's, which names the skill, and the packaged
  * skill's own, which it installs from (authored rather than copied).

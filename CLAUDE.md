@@ -1,6 +1,6 @@
 # tycoslide
 
-Read [README.md](README.md) first for what tycoslide is and how it is used. For the authoring model (layouts, slot types, syntax), see [SKILL.md](theme-package/SKILL.md) and [syntax.md](theme-package/syntax.md). This file is only about working on the code.
+Read [README.md](README.md) first for what tycoslide is and how it is used. For the authoring model (layouts, slot types, syntax), see [SKILL.md](theme-package/SKILL.md) and [syntax.md](docs/syntax.md). This file is only about working on the code.
 
 ## Build & Test
 
@@ -14,14 +14,14 @@ TypeScript runs natively via Node's `--experimental-strip-types`. `tsc --build` 
 
 ## Releasing
 
-`@tycoworks/tycoslide` is a single npm package (no workspaces). The published tarball ships only `dist/`, `bin/`, `theme-package/` (the `files` array); the `bin/tycoslide.js` shebang and `@tycoworks` publish access are assumed set up.
+`@tycoworks/tycoslide` is a single npm package (no workspaces). The published tarball ships only `dist/`, `bin/`, `docs/`, `theme-package/` (the `files` array); the `bin/tycoslide.js` shebang and `@tycoworks` publish access are assumed set up.
 
 Commit and tag the bump **before** publishing. A publish that fails leaves a tag for a version not yet on npm, which the retry resolves; a publish that succeeds before the commit leaves npm carrying a version with no commit behind it, and the number can never be reused. Publishing requires a one-time password, so step 6 is run by hand.
 
-1. **Check what ships is right, not just present.** `theme-package/` goes into every packaged theme, so a known-wrong line there (an example that no longer builds, a stale path form) is a release blocker, not a todo item. Read ROADMAP.md and any open notes for anything touching a shipped file before bumping.
+1. **Check what ships is right, not just present.** `theme-package/SKILL.md` and `docs/syntax.md` go into every packaged theme, so a known-wrong line there (an example that no longer builds, a stale path form) is a release blocker, not a todo item. Read ROADMAP.md and any open notes for anything touching a shipped file before bumping.
 2. **Clean-build + test** on the release branch: `npm ci && npm run build && npm test && npm run lint`. If the build reports missing exports that exist in source, `find . -name 'tsconfig.tsbuildinfo' -not -path './node_modules/*' -delete && npm run build`.
 3. **Bump**: `npm version <patch|minor|major> --no-git-tag-version` (updates `package.json` + lockfile; no commit/tag).
-4. **Verify the tarball**: `npm pack --dry-run` — confirm only `dist/`, `bin/tycoslide.js` (with shebang), `theme-package/`, `package.json`, `README.md`, `LICENSE`; no `src/`, `test/`, configs, or fixtures.
+4. **Verify the tarball**: `npm pack --dry-run` — confirm only `dist/`, `bin/tycoslide.js` (with shebang), `docs/`, `theme-package/`, `package.json`, `README.md`, `LICENSE`; no `src/`, `test/`, configs, or fixtures.
 5. **Commit, tag, push**: `git commit -am "release vX.Y.Z" && git tag -a vX.Y.Z -m "vX.Y.Z" && git push --follow-tags`. The tag must be annotated: `--follow-tags` ignores lightweight ones and the tag silently stays local.
 6. **Publish**: `npm publish --access public` (`--access public` required on first publish, harmless after).
 7. **GitHub release**: `gh release create vX.Y.Z --title "vX.Y.Z" --generate-notes`.
@@ -35,15 +35,18 @@ Commit and tag the bump **before** publishing. A publish that fails leaves a tag
 
 ## Architecture
 
-Two layers with a hard boundary:
+Three layers with hard boundaries. The compiler and the engine are the **core**: markdown deck + theme → `.pptx`. The agent layer sits on top.
 
-- **`src/markdown/`** — compiler. Owns markdown parsing, code highlighting (Shiki), mermaid rendering (mermaid-cli), the theme's asset catalog, and everything else "markdown-flavored." Normalizes the deck spec so the engine only sees text runs, tables, and resolved image paths.
-- **`src/engine/`** — engine. Four fill primitives — `fillTemplate`, `fillText`, `fillTable`, `fillImage` — each wrapped as a `Filler` strategy in the `FILLERS` registry (`engine/fillers/filler.ts`, keyed by `SlotType`), plus a `generate` orchestrator (`engine/generate.ts`). Each fill and its value-discriminator (`fillX` + `isXFill`) live together in `engine/fillers/{template,text,table,image}.ts`; shared shape/DOM primitives and the paragraph-rebuild machinery live in `engine/dom.ts` (fillers never import each other). Deliberately ignorant of markdown, code fences, mermaid, or theme asset catalogs. Only knows PPTX shapes, runs, paragraphs, tables, and image files at resolved paths.
-- **`skills/create-theme/`** — the theme-authoring Agent Skill (SKILL.md, scripts, references). **`theme-package/`** — the deck-authoring SKILL.md that `tycoslide package` copies into every theme.
+- **`src/markdown/`** — compiler. Owns markdown parsing, code highlighting (Shiki), mermaid rendering (mermaid-cli), and everything else "markdown-flavored." Normalizes the deck spec so the engine only sees text runs, tables, and resolved image paths (a deck names every picture by a path relative to itself).
+- **`src/engine/`** — engine. Four fill primitives — `fillTemplate`, `fillText`, `fillTable`, `fillImage` — each wrapped as a `Filler` strategy in the `FILLERS` registry (`engine/fillers/filler.ts`, keyed by `SlotType`), plus a `generate` orchestrator (`engine/generate.ts`). Each fill and its value-discriminator (`fillX` + `isXFill`) live together in `engine/fillers/{template,text,table,image}.ts`; shared shape/DOM primitives and the paragraph-rebuild machinery live in `engine/dom.ts` (fillers never import each other). Deliberately ignorant of markdown, code fences, mermaid, or agents. Only knows PPTX shapes, runs, paragraphs, tables, and image files at resolved paths.
+- **`src/agents/`** — agent layer: everything that exists because an AI agent writes the decks. The manifest (`manifest.json`, the layouts an agent reads whole), the picture catalog (`assets.json`, authored with the theme, which an agent searches and copies pictures from), the packaged skill zip with its `assets.dat` picture archive, and the `package` command. The core never reads any of it.
+- **`skills/create-theme/`** — the theme-authoring Agent Skill (SKILL.md, scripts, references). **`theme-package/`** — the deck-authoring SKILL.md that `tycoslide package` copies into every theme. **`docs/syntax.md`** — the deck language reference, which `package` copies too.
+
+The boundaries are import rules, enforced by Biome's `noRestrictedImports` in `biome.json`, so a wrong-way import fails `npm run lint`: the engine imports neither the compiler nor the agent layer; the compiler and `src/index.ts` (the core's public entry) never import the agent layer; the agent layer imports the core only through `src/index.ts`. `src/cli.ts` is the one module that wires both: `build` from the core, and the agent layer's commands via `registerAgentCommands`.
 
 The compiler advertises a layout's author-facing inputs as two lists — `parameters` (a frontmatter line per `{key}` placeholder in a styled shape) and `slots` (body regions, types `text`/`table`/`code`/`mermaid`). A parameter substitutes into runs that already exist; a slot replaces a shape's content. That split is a compiler/manifest concern only. At the engine boundary (`toEngineLayout` in `src/index.ts`) both lists collapse into one flat `Layout.slots`, and every value flows through one unified channel: `DeckStep.content: Record<string, TextFill | TableFill | ImageFill | TemplateFill>` — the four `*Fill` shapes read as one family. Each engine slot declares a `SlotType` (`Template | Text | Table | Image`) that selects the matching `Filler`; compiler-only `code`/`mermaid` resolve to `text`/`image` before the engine sees them.
 
-`src/index.ts` exposes the public API including `buildDeck(deck, config)` — the primary programmatic entry. `src/cli.ts` is the CLI wrapper.
+`src/index.ts` exposes the core's public API, including `buildDeck(deck, config)` — the primary programmatic entry. `src/cli.ts` is the CLI wrapper.
 
 ## Coding Standards
 

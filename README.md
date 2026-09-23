@@ -29,7 +29,7 @@ https://github.com/user-attachments/assets/f31c11d8-3fe6-464f-8f02-56645b4ce3a6
 - Images, from the theme's asset catalog or a file path
 - Speaker notes
 
-Full syntax in [syntax.md](theme-package/syntax.md).
+Full syntax in [syntax.md](docs/syntax.md).
 
 ## Requirements
 

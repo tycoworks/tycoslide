@@ -338,7 +338,10 @@ looking at it.
 
 *4c. `syntax.md` moves to `docs/`*
 - Move `theme-package/syntax.md` to `docs/syntax.md`; `package.json` `files` adds `docs`;
-  `package` copies it from there.
+  `package` copies it from there (`DOCS_DIR` in `files.ts`).
+- The links the move breaks (`README.md` 32, `CLAUDE.md` 3), and `CLAUDE.md`'s Releasing and
+  Architecture sections, brought forward from phase 7: `CLAUDE.md` guides work on this repo,
+  so it describes the three layers and the import rules as soon as they exist.
 
 **Phase 5: the create-theme scripts become commands**, in two commits. Both scripts use
 only Python's standard library (`zipfile`, `ElementTree`), so they port to TypeScript on
@@ -425,7 +428,7 @@ Also shipped, and also a release blocker.
 | Where | Change |
 |---|---|
 | 29 | "Images, from the theme's asset catalog or a file path" → "Images by file path, with alt text and an optional fit" |
-| 32 | The syntax link: `theme-package/syntax.md` → `docs/syntax.md` |
+| 32 | The syntax link: `theme-package/syntax.md` → `docs/syntax.md`. **Done in 4c.** |
 
 ### create-theme skill: `skills/create-theme/`
 
@@ -449,9 +452,9 @@ It builds the catalog, so it is where the fit judgement is recorded.
 
 | Where | Change |
 |---|---|
-| 3 | The syntax link: `theme-package/syntax.md` → `docs/syntax.md` |
-| 17, 21, 24, Releasing | The tarball ships `dist/`, `bin/`, `docs/`, `theme-package/`. Step 1 names both `docs/syntax.md` and `theme-package/SKILL.md` as shipped files. |
-| 38–42, Architecture | Three layers, not two: add the agents bullet (`src/agents/`: manifest, catalog, skill zip, the `package` command; imports the core only through `src/index.ts`), drop "the theme's asset catalog" from what the compiler owns, and state the import rules and that Biome enforces them. |
+| 3 | The syntax link: `theme-package/syntax.md` → `docs/syntax.md`. **Done in 4c.** |
+| 17, 21, 24, Releasing | The tarball ships `dist/`, `bin/`, `docs/`, `theme-package/`. Step 1 names both `docs/syntax.md` and `theme-package/SKILL.md` as shipped files. **Done in 4c.** |
+| 38–49, Architecture | Three layers, not two: add the agents bullet (`src/agents/`: manifest, catalog, skill zip, the `package` command; imports the core only through `src/index.ts`), drop "the theme's asset catalog" from what the compiler owns, and state the import rules and that Biome enforces them. **Done in 4c.** |
 
 Checked and unchanged: `ROADMAP.md` (its slot-size item still stands),
 `internal/positioning.md` and `internal/product-direction.md`.
