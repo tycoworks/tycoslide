@@ -1,10 +1,11 @@
-# Images by path: alt text, per-image fit, no `$` references
+# Images by path, and the agent layer out of the core
 
 > Status: **in progress (23 Sep 2026)** on branch `image-alt-and-fit`. Phases 0–2 are
-> committed (this doc, alt text, fit from the title). This revision adds what those phases
-> were building toward: **removing `$category.name` references from the deck language.**
-> After it, the core knows one way to name a picture, a path relative to the deck.
-> Finding and copying theme pictures is the agent skill's job.
+> committed (this doc, alt text, fit from the title). This revision finishes what those
+> phases were building toward, in two steps: **remove `$category.name` references from the
+> deck language**, then **move everything agent-shaped out of the core** into a third
+> layer, `src/agents/`. After it, the core knows one way to name a picture, a path
+> relative to the deck, and nothing about catalogs, skills or agent hosts.
 
 ## BLUF
 
@@ -18,12 +19,16 @@
 - **alt** (`Request flow…`) → the picture's alt text in the `.pptx` (`<p:cNvPr descr>`).
 - **title** (`"fit: contain"`) → a YAML mapping of image options, validated strictly.
   Fit is **title → `contain`**. Nothing else picks a fit.
-- **The theme's pictures are an agent concern.** `theme.json`'s `assets` catalog survives
-  only as packaging input: `tycoslide package` turns it into `assets.json`, an index that
-  records each picture's path, recommended `fit` and description. A deck-writing agent
-  searches it, **copies the picture into the deck's folder at the same relative path**,
-  and writes `![alt](path "fit: …")`. A new `tycoslide unpack` puts a packaged theme's
-  pictures on disk so there is something to copy.
+- **Three layers in one package**: `src/engine/`, `src/markdown/` (together, the core) and
+  a new `src/agents/`. The agent layer depends on the core through its public entry; the
+  core never imports the agent layer. Biome enforces both directions.
+- **The picture catalog is an agent-layer file.** It leaves `theme.json` and becomes
+  `assets.json`, authored directly (path, recommended `fit`, description per picture). The
+  core never reads it. `tycoslide package` ships it with the skill and archives its
+  pictures into `assets.dat`.
+- **Getting a picture into a deck is the agent's job**, done with ordinary tools: unzip the
+  archive once, copy the picture into the deck's folder at the same relative path, write
+  `![alt](path "fit: …")`. No core command does this.
 
 ## Why
 
@@ -50,6 +55,27 @@ What it costs, accepted:
   agent re-copies it. The pictures a rebrand touches (your own brand marks) mostly live in
   the template's master, which the rebuild does swap.
 - **Duplicate copies** of a logo across deck folders. Harmless.
+
+### The agent layer leaks into the core
+
+Removing `$` showed how much agent-shaped code the core carries, and how easily more gets
+added:
+- A compiler error for a missing image suggested copying it from the theme's
+  `assets.json`: the core assuming an agent wrote the deck. (`blocks/image.ts` imported
+  `ASSETS_FILE` from `src/files.ts` to say so.)
+- `theme.json`'s `assets` catalog, about 90% of the tycoworks `theme.json` by size, is
+  validated by the core's theme schema on every build, and the build never uses it. Only
+  `package` reads it.
+- A `tycoslide unpack` command was proposed (and drafted) to extract `assets.dat`: agent-host
+  archive handling going back into the core CLI.
+- The core's public entry (`src/index.ts`) exports agent functions: `generateManifest`,
+  `generateAssetCatalog`, `expandAssets`, `ASSETS_FILE`, `ASSETS_ARCHIVE`.
+- `manifest.ts` reaches into a compiler internal (`markdown/textTemplate.js`) rather than
+  the public entry.
+
+None of this is wrong in isolation; together it means the boundary is held by memory. The
+fix is a third layer with its own folder and a lint rule, so a wrong-way import fails
+`npm run lint`. See Alternatives for why this is a folder and not a second package.
 
 ### Fit belongs to the image, chosen per use
 
@@ -138,7 +164,7 @@ required config, which this is not.
 | `"{fit: cover, width: 2in}"` | error: unknown key `width` |
 | `"{fit: [a}"` | error: YAML syntax, with the `yaml` package's message |
 | `""` (empty title) | treated as no options |
-| a path to a missing file | error at **compile**, naming the region and the resolved path, with the hint: "copy the picture into the deck's folder; theme pictures are listed in the theme's `assets.json`". This replaces the engine's later `file not found`, which stays as a backstop. |
+| a path to a missing file | error at **compile**, naming the region, the path as written and the resolved path, and nothing else: `image "pics/team.png" not found at /abs/deck/pics/team.png`. The core states the fact; it doesn't guess why (a typo is as likely as a missing copy). Advice about theme pictures lives in the deck-writing skill's QA table. The engine's later `file not found` stays as a backstop. |
 
 Implemented in phase 2 as `parseImageTitle` in `blocks/image.ts`, over a strict Zod schema,
 so unknown keys throw by construction and adding a key later is one line. The title is
@@ -168,15 +194,51 @@ placeholder's stale `title`, as every filled picture does). See Open questions.
 ("white wordmark for dark slides"), not for a reader of the slide. The agent writes alt
 text for the slide it is on.
 
-## The theme's pictures, after `$`
+## Three layers
 
-### What stays, and who reads it
+### Layout and import rules
 
-`theme.json` keeps its `assets` catalog, with the same shape except that `type` becomes
-`fit`:
+| Layer | Folder | Knows about | May import |
+|---|---|---|---|
+| Engine | `src/engine/` | PPTX shapes, runs, tables, image files at resolved paths | nothing else in `src/` |
+| Compiler | `src/markdown/` | the deck language, the theme's layouts, code and mermaid | `src/engine/` |
+| Agents | `src/agents/` | skills, the manifest, the picture catalog, the skill zip and `assets.dat` | the core's public entry, `src/index.ts`, only |
+
+- `src/index.ts` is the **core's** public entry and imports no agent code.
+- `src/cli.ts` is the one place both meet: it defines `build` and registers the agent
+  layer's commands (`registerAgentCommands(program)`).
+- Enforced with Biome `noRestrictedImports` overrides in `biome.json`: `src/engine/**` may
+  not import `markdown`, `agents` or `index`; `src/markdown/**` and `src/index.ts` may not
+  import `agents`; `src/agents/**` may not import `engine/**` or `markdown/**` directly. Check
+  the pattern syntax against Biome 2.5.1 when writing it, and prove each rule fires with a
+  deliberate bad import before removing it.
+- Importing the core only through `src/index.ts` keeps a later split into a second package
+  (Alternatives, option C) a mechanical move.
+
+### What moves
+
+- **Into `src/agents/`**: `manifest.ts`, `skillZip.ts` (without `expandAssets`, which is
+  deleted), `files.ts` (every constant in it is a packaged-skill file name), a new
+  `catalog.ts` (the `assets.json` types and strict schema), and a new `commands.ts` holding
+  the `package` command.
+- **`theme-package/`** stays where it is, now plainly the agent layer's template folder: it
+  holds only the deck-writing `SKILL.md`. (Kept out of the repo root so skill installers do
+  not mistake it for this repo's own skill.)
+- **`syntax.md`** moves from `theme-package/` to `docs/syntax.md`. It is the core's deck
+  language reference (the README links it); `package` copies it into each skill from there.
+  `package.json` `files` gains `docs`.
+- **`src/index.ts`** drops the agent exports and adds what the agent layer needs from the
+  core: `templateKeys`, `TEMPLATE_DIR`, `ImageFit` (and the compiler types it already
+  exports).
+- **`jszip`** stays a dependency; after the move only `src/agents/` uses it.
+
+### The picture catalog: `assets.json`
+
+The catalog leaves `theme.json`. A theme ships `assets.json` beside it, **authored**, not
+generated: the file the create-theme skill writes is the file an agent searches.
 
 ```json
-"assets": {
+{
   "brand": {
     "lockup": { "path": "assets/brand/tycoworks-lockup.png", "fit": "contain",
                 "description": "tycoworks logo lockup, purple cat mark beside the tycoworks wordmark" }
@@ -184,31 +246,31 @@ text for the slide it is on.
 }
 ```
 
-The **compiler never reads it.** Only `tycoslide package` does, to:
-1. write `assets.json` (same shape: `path`, `fit`, `description` per entry), the index a
-   deck-writing agent searches, and
-2. decide which files go into the skill's `assets.dat` archive (unchanged: hosts cap how
-   many files a skill may contain).
+- Same two-level shape as before (`category` then `name`), with `type` replaced by `fit`.
+  `fit` is the value an agent copies straight into an image title, so it is already a title
+  value. The mapping from the old types is mechanical: `icon` → `scale-down`, `image` →
+  `contain`, `background` → `cover`.
+- **Required, may be `{}`**, like `assets` was. `package` fails if it is missing.
+- **Validated by the agent layer only** (`src/agents/catalog.ts`): a strict schema whose
+  `fit` is `z.enum(ImageFit)`, with `ImageFit` imported from the core's public entry. No
+  literal fit values anywhere.
+- The **core never reads it**. `theme.json`'s schema drops `assets`; `CompilerThemeConfig`,
+  `AssetEntry` and `AssetCatalog` leave the compiler.
+- `tycoslide package` validates it, ships it plain in the skill (the manifest keeps pointing
+  at it), and archives the pictures it lists into `assets.dat`, as before (hosts cap how
+  many files a skill may contain).
 
-`type` → `fit` rather than keeping `type`: the agent copies the value straight into a
-title, so it should already be a title value. The mapping is mechanical: `icon` →
-`scale-down`, `image` → `contain`, `background` → `cover`.
+### Getting pictures out of the archive
 
-### Getting a picture on disk: `tycoslide unpack`
+In a packaged skill the pictures sit inside `assets.dat`, a plain zip. The core doesn't
+expand it, at build time or on command. The deck-writing skill does it with `unzip`:
 
-In a packaged skill the pictures sit inside `assets.dat`. Today `buildDeck` expands the
-archive into the theme directory on every build, because `$` references resolve there.
-After this change, a build never reads the theme's pictures, but an agent needs them on
-disk *before* writing the deck, to copy them. So:
+- **Setup**, once: `unzip -nq assets.dat`. `-n` never overwrites, so loose files win, which
+  is exactly what `expandAssets` did.
+- Or **per picture**, straight into the deck's folder at the same relative path:
+  `unzip -nq <theme dir>/assets.dat assets/icons/hub.png -d <deck dir>`.
 
-- `buildDeck` stops calling `expandAssets`.
-- New CLI command **`tycoslide unpack`**, run from the theme root (or `-c <theme.json>`):
-  calls the existing `expandAssets` on the theme directory. It's idempotent, loose files
-  win, and it does nothing in a theme repo, which has no archive. It writes into the theme
-  directory, which the build already did, so no new permission is assumed.
-- The per-theme skill's **Setup** runs it once, right after `npm install`.
-
-`packAssets`, `expandAssets` and `skillPaths` are otherwise unchanged.
+A theme repo has no archive; its pictures are already loose.
 
 ### The copy convention
 
@@ -226,55 +288,54 @@ looking at it.
 
 ## Code changes
 
-Phases 1–2 (committed) built alt text and title parsing. They are recorded here briefly;
-the phase 3 list is the new work.
-
 **Done in phases 1–2**
 - Engine: `ImageFill.alt: string` (required; empty clears), `fillImage` writes or clears
   `descr` and removes `title` on `<p:cNvPr>`, with `dom.ts` constants. Mermaid passes `""`.
 - Compiler: `blocks/image.ts` reads `alt` and `title`; `parseImageTitle` + strict schema;
-  `BlockContext.region` for error prefixes; shared `ResolveAssetRef` type;
-  `toImageFill(path, fit, alt)`; interim precedence title → catalog `type` → `contain`.
+  `BlockContext.region` for error prefixes; `toImageFill(path, fit, alt)`; interim
+  precedence title → catalog `type` → `contain`.
 
-**Phase 3: remove `$` references**
-- `markdown/deckCompiler.ts`: delete `FIT_FOR`, `ASSET_REF_RE`, `fromCatalog`, `fromDeck` and
-  the `AssetType` import. The resolver becomes: resolve the path against `config.deckDir`,
-  check it exists (the compile-time error in Validation), return
-  `toImageFill(abs, options.fit ?? ImageFit.Contain, alt)`. Rename `ResolveAssetRef` /
-  `resolveAssetRef` to `ResolveImage` / `resolveImage` (in `types.ts`, `BlockContext`,
-  `blocks/image.ts`), since there's no asset ref any more. Update the `resolveImagePath`
-  doc comment ("a catalog image path against the deck's root directory" → "an image path
-  against the deck's directory"), and drop the `$category.name` comments in
-  `blocks/image.ts`, `types.ts` and `deckCompiler.ts` (around line 312).
-- `markdown/types.ts`: delete `AssetType`. `AssetEntry` becomes
-  `{ path: string; fit: ImageFit; description: string }`, and its doc comment says the
-  compiler never reads it and it's packaging input for `assets.json`.
-  `CompilerThemeConfig.assets` stays (loaded with the theme, read only by `package`).
-- `markdown/schema/themeConfigSchema.ts`: `assetTypeSchema` → a fit enum declared from the
-  three literals (the schema layer doesn't import the engine; the `_drift` guard binds it
-  to `AssetEntry.fit`, as it does for `FrameSchema`). `AssetEntrySchema` field `type` →
-  `fit`. Update the header comment's `AssetCatalog` mention only if it names `type`.
-- `markdown/index.ts`: stop exporting `AssetType`.
-- `manifest.ts`: `ManifestAssetEntry.type` → `fit: ImageFit`. `generateAssetCatalog` copies
-  `fit`. Doc comments: the catalog is what an agent searches and copies from.
-- `index.ts`: remove the `expandAssets` call and its comment from `buildDeck`. Keep exporting
-  `expandAssets`.
-- `cli.ts`: add `unpack` (`-c, --config <path>`, default `theme.json`): resolve the theme
-  directory from the config path, call `expandAssets`, and print what it did, e.g.
-  `UNPACKED 2127 files` or `nothing to unpack`. That needs `expandAssets` to return a
-  count; it returns `void` today, so change it to return the number of files written.
-- `skillZip.ts`: the `expandAssets` doc comment ("so the files the catalog names are on disk
-  before anything fills with them") → "so the pictures `assets.json` lists are on disk for
-  an agent to copy into a deck". No logic change beyond the returned count.
+**Phase 3: images are paths (compiler)**
+- `markdown/deckCompiler.ts`: delete `FIT_FOR`, `ASSET_REF_RE`, `fromCatalog`, `fromDeck`,
+  `toImageFill`, `resolveImagePath`, the resolver closure and the `AssetType` import.
+- `blocks/image.ts` does the whole job itself, as `blocks/mermaid.ts` does:
+  `path.resolve(ctx.config.deckDir, url)` (absolute paths pass through), check it exists
+  (the factual error in Validation), and build the `ImageFill` with
+  `options.fit ?? DEFAULT_FIT`. With no catalog, a resolver on `BlockContext` would only
+  close over `deckDir`, which `ctx.config` already carries, so `ResolveAssetRef` and
+  `BlockContext.resolveAssetRef` are deleted.
+- `index.ts`: `buildDeck` stops calling `expandAssets`.
+- The theme schema and `package` are untouched in this phase: `assets` (with `type`) stays in
+  `theme.json` until phase 4 moves it out. The compiler no longer reads it.
 
-**Phase 4: fail on unknown inline nodes.** `inline.ts`: `walkPhrasing`'s `default` branch
+**Phase 4: three layers**
+- Create `src/agents/` and move files as in "What moves". Fix every import; the agent layer
+  imports the core only from `../index.js`.
+- `src/agents/catalog.ts`: `AssetEntry` `{ path, fit: ImageFit, description }`,
+  `AssetCatalog`, the strict schema, and `loadAssetCatalog(themeDir)`.
+- `src/markdown/types.ts` and `schema/themeConfigSchema.ts`: delete `AssetType`,
+  `AssetEntry`, `AssetCatalog` and the `assets` field. `markdown/index.ts` stops exporting
+  them.
+- `manifest.ts`: delete `generateAssetCatalog` (nothing to generate); `generateManifest`
+  keeps its `assets: ASSETS_FILE` pointer.
+- `skillZip.ts`: `skillPaths` takes the loaded catalog to list the archived pictures;
+  `assets.json` joins the plain files. Delete `expandAssets`.
+- `commands.ts`: `package` loads `theme.json` through the core and `assets.json` through
+  `catalog.ts`, then writes `manifest.json`, `SKILL.md`, `syntax.md` (from `docs/`) and the
+  zip. It no longer writes `assets.json`.
+- `cli.ts`: `build` plus `registerAgentCommands(program)`.
+- `index.ts`: drop agent exports; export `templateKeys`, `TEMPLATE_DIR`, `ImageFit`.
+- `biome.json`: the import rules.
+- Move `theme-package/syntax.md` to `docs/syntax.md`; `package.json` `files` adds `docs`.
+
+**Phase 5: fail on unknown inline nodes.** `inline.ts`: `walkPhrasing`'s `default` branch
 throws on a phrasing node it doesn't know, instead of returning `[]`. The parser survey
 found it silently drops any node a plugin introduces. It's a separate commit so it can be
 reverted alone.
 
-**No change**: the engine beyond phase 1, `packAssets`, `skillPaths`, `zipDir`,
-`skillPackageJson`, and the create-theme scripts `inventory.py` / `extract-media.py` (they
-read the template, never deck markdown).
+**No change**: the engine beyond phase 1, `packAssets`, `zipDir`, `skillPackageJson`, and
+the create-theme scripts `inventory.py` / `extract-media.py` (they read the template, never
+deck markdown).
 
 ## Skill and documentation changes
 
@@ -291,14 +352,15 @@ so it carries the whole copy convention.
 
 | Where | Now | Becomes |
 |---|---|---|
-| Setup, 12–18 | `npm install`, once | Add a second command in the same block: `npx tycoslide unpack`, with one sentence: "This puts the theme's pictures on disk so you can copy them into decks. Run both once." |
+| Setup, 12–18 | `npm install`, once | Add to the same block: `unzip -nq assets.dat`, with one sentence: "This puts the theme's pictures on disk so you can copy them into decks. Run both once; skip the unzip if there is no `assets.dat`." |
 | Quick Reference, 30 | "Find a logo, illustration or icon \| Search `assets.json`" | "Find a logo, illustration or icon \| Search `assets.json`, then copy it next to the deck (see [Pictures](#pictures))" |
+| Layout Discovery, 38 | "Parameters carry a `type`, slots carry `accepts`, and either may be `required`." | "Slots carry `accepts`, and parameters and slots may be `required`." Parameters carry only `key` and `required` (`ManifestParameter`); the current line is already wrong. |
 | Layout Discovery, 40 | The `assets.json` paragraph ending "use the `$category.name` you find…" | Move it under a new `### Pictures` subsection at the end of Layout Discovery, rewritten as below. |
 | Creating Slides example, 78–80 | `![]($logos.acme)          # ← an image slot: a catalog asset, or a file path relative to the deck` | `![Acme Corp logo](assets/logos/acme.png "fit: contain")   # ← an image slot: alt text, a path relative to the deck, options` |
 | Avoid list, 147 | "wrong image for the slot" bullet | Keep it, and add after it: **Don't skip alt text:** describe what a meaningful picture shows and why it's there (not "image of"); leave it empty only for pure decoration such as backgrounds and icons beside a heading. **Don't crop what can't be cropped:** copy the `fit` from `assets.json`; for your own pictures, never `fit: cover` a diagram, chart, screenshot or logo. |
 | Avoid list, 148 | "Don't invent layout or asset names -- only use layouts from `manifest.json` and assets from `assets.json`" | "Don't invent layout names or picture paths -- layouts come from `manifest.json`; theme pictures from `assets.json`, copied next to the deck" |
 | QA table, 165 | "An image didn't swap… containing `![]($category.name)` from `assets.json` or `![](path)` relative to the deck" | "…containing `![alt](path "fit: …")`, with the path relative to the deck" |
-| QA table, 167 | "`Skipped setting relation target` \| The asset image couldn't be placed; check the path and file" | Keep, and add two rows above it: "`image file not found` \| Copy the picture into the deck's folder at the path you wrote (theme pictures: `assets.json`; did you run `npx tycoslide unpack`?)" and "`is not a set of options` \| The image title holds options like `"fit: contain"`; move a description into the alt text" |
+| QA table, 167 | "`Skipped setting relation target` \| The asset image couldn't be placed; check the path and file" | Keep, and add two rows above it: "`image … not found at …` \| Check the path for typos. For a theme picture, copy it into the deck's folder at the path you wrote (search `assets.json`; did you unzip `assets.dat`?)" and "`is not a set of options` \| The image title holds options like `"fit: contain"`; move a description into the alt text" |
 
 New `### Pictures` subsection (replaces line 40):
 
@@ -323,13 +385,13 @@ New `### Pictures` subsection (replaces line 40):
 > it (`contain` unless it is full-bleed art that may crop). The alt text is yours to write
 > for this slide: describe what the picture shows here, not the catalog description.
 
-### Syntax reference: `theme-package/syntax.md`
+### Syntax reference: `docs/syntax.md` (moved from `theme-package/`)
 
 Also shipped, and also a release blocker.
 
 | Where | Change |
 |---|---|
-| 137–143, the **image** bullet | Replace the whole bullet with: an image slot takes `![alt](path "options")`. The path is relative to the deck. alt becomes the picture's alt text in PowerPoint (empty for decoration). The title optionally holds options as YAML: `fit: contain` (default: whole picture, never cropped), `fit: cover` (fills the frame, center-crops), `fit: scale-down` (whole picture, never enlarged). Several options go in braces; anything else in the title fails the build. Theme pictures: see the skill's Pictures section (copy from `assets.json`). Example: `::logo::` / `![Acme Corp logo](assets/logos/acme.png "fit: contain")`. Keep the closing mermaid sentence. |
+| 137–143, the **image** bullet | Replace the whole bullet with: an image slot takes `![alt](path "options")`. The path is relative to the deck. alt becomes the picture's alt text in PowerPoint (empty for decoration). The title optionally holds options as YAML: `fit: contain` (default: whole picture, never cropped), `fit: cover` (fills the frame, center-crops), `fit: scale-down` (whole picture, never enlarged). Several options go in braces; anything else in the title fails the build. Example: `::logo::` / `![Acme Corp logo](assets/logos/acme.png "fit: contain")`. Keep the closing mermaid sentence. No mention of catalogs or skills: this is the core's language reference. |
 | 210, **image sizing** bullet under Layout declarations | Replace with: "**image fit** -- chosen per image in its title (`fit: contain` \| `cover` \| `scale-down`), `contain` when omitted. Mermaid renders contained." |
 | 306, full example | `![]($images.officeFloorPlan)` → `![Office floor plan with meeting rooms marked](assets/images/office-floor-plan.png "fit: contain")` |
 
@@ -338,47 +400,50 @@ Also shipped, and also a release blocker.
 | Where | Change |
 |---|---|
 | 29 | "Images, from the theme's asset catalog or a file path" → "Images by file path, with alt text and an optional fit" |
+| 32 | The syntax link: `theme-package/syntax.md` → `docs/syntax.md` |
 
 ### create-theme skill: `skills/create-theme/`
 
 Installed separately (`npx skills add`), but the same known-wrong-line standard applies.
-It builds the catalog, so it is where the fit judgement is now recorded.
+It builds the catalog, so it is where the fit judgement is recorded.
 
 | File, where | Change |
 |---|---|
-| `SKILL.md` 110, cataloging | "each with a `path`, a `type` and a one-line `description`. The type is `icon` for marks that must never be enlarged, `image` for pictures that may scale but not crop, and `background` for full-bleed art that may crop." → "each with a `path`, a `fit` and a one-line `description`. The fit is what a deck author copies into the image: `scale-down` for icons and marks that must never be enlarged, `contain` for pictures that may scale but must not crop (logos, diagrams, screenshots), and `cover` only for full-bleed art that may crop. Look at the picture to decide." |
+| `SKILL.md` 59–67, scaffold | The Python snippet stops setting `t['assets']`; add `echo '{}' > assets.json` to the block. |
+| `SKILL.md` 110, cataloging | "Then catalog the images … under `assets` in `theme.json`, each with a `path`, a `type` and a one-line `description`. The type is `icon` for marks that must never be enlarged, `image` for pictures that may scale but not crop, and `background` for full-bleed art that may crop." → "Then catalog the images … in `assets.json`, each with a `path`, a `fit` and a one-line `description`. The fit is what a deck author copies into the image: `scale-down` for icons and marks that must never be enlarged, `contain` for pictures that may scale but must not crop (logos, diagrams, screenshots), and `cover` only for full-bleed art that may crop. Look at the picture to decide." |
 | `SKILL.md` 120, `smoke.md` | Add after "filling every parameter and slot with content of realistic length": "Write images as `![alt](path "fit: …")` using catalog paths, which resolve as they are because `smoke.md` sits in the theme directory, and give each one alt text." |
 | `SKILL.md` 142, 3.1 Assets | "every description names what the picture shows, because deck authors grep the catalog for it" → add: "and every `fit` is the one an author should copy, since nothing else will choose it" |
-| `SKILL.md` 156, 3.3 Package | No change. `package` still writes `assets.json`. |
-| `SKILL.md` 160, Hand-off | "unzipped with `npm install` run once inside it for a local agent" → "unzipped with `npm install` and `npx tycoslide unpack` run once inside it for a local agent" |
-| `references/theme-json.md` 67, `assets` intro | "A two-level catalog, `category` then `name`, giving `$category.name` references for authors." → "A two-level catalog, `category` then `name`, that `tycoslide package` turns into `assets.json`: the index deck-writing agents search, copy pictures from, and take each picture's fit from. The compiler never reads it; decks name pictures by path." (Keep "Required, may be `{}`…".) |
-| `references/theme-json.md` 71, `path` row | Error column: drop "`Layout "X" image "path": file not found` at build;", keeping the package-time error. |
-| `references/theme-json.md` 72, `type` row | → `fit` \| The fit a deck author copies into the image's title. Required. \| See the table below. \| Schema error naming the invalid value. |
-| `references/theme-json.md` 75–79, fit table | Header `type` \| Fit rule → `fit` \| Use for. Rows: `scale-down` never enlarged, never cropped (icons, small marks); `contain` whole picture, may scale, never cropped (logos, diagrams, screenshots); `cover` fills the frame, center-crops (full-bleed backdrops only). |
-| `references/theme-json.md` 81 | Delete "Authors see `Unknown asset reference "$x.y"`…". The error no longer exists. |
-| `references/theme-json.md` 128, example | `"type": "image"` → `"fit": "contain"` |
-| `references/theme-json.md` 167 | "and all three asset types" → "and all three fits" |
+| `SKILL.md` 156, 3.3 Package | "That writes `manifest.json`, `assets.json`, `SKILL.md` and `syntax.md`" → "That writes `manifest.json`, `SKILL.md` and `syntax.md`, checks `assets.json`" |
+| `SKILL.md` 160, Hand-off | "unzipped with `npm install` run once inside it for a local agent" → "unzipped with `npm install` and `unzip -nq assets.dat` run once inside it for a local agent" |
+| `references/theme-json.md` 67–81 | Remove the `assets` section from the `theme.json` reference, and move it to a new `references/assets-json.md`: the two-level shape, the `path` / `fit` / `description` fields (Required, may be `{}`), and the fit table (`scale-down` never enlarged, never cropped: icons, small marks; `contain` whole picture, may scale, never cropped: logos, diagrams, screenshots; `cover` fills the frame, center-crops: full-bleed backdrops only). Drop the "`Unknown asset reference "$x.y"`" and build-time `file not found` error lines. |
+| `references/theme-json.md` 128, example | Drop the `assets` block from the example. |
+| `references/theme-json.md` 167 | "and all three asset types" → move to `assets-json.md` as "and all three fits" |
+| `references/theme-json.md` 173, `.gitignore` | Drop `assets.json` from the list of generated files: it is authored now. |
 
 ### `CLAUDE.md` (tycoslide)
 
 | Where | Change |
 |---|---|
-| 40, compiler bullet | Drop "the theme's asset catalog," from what the compiler owns. It now owns nothing about the catalog; `manifest.ts` and `skillZip.ts` read it at packaging. |
+| 3 | The syntax link: `theme-package/syntax.md` → `docs/syntax.md` |
+| 17, 21, 24, Releasing | The tarball ships `dist/`, `bin/`, `docs/`, `theme-package/`. Step 1 names both `docs/syntax.md` and `theme-package/SKILL.md` as shipped files. |
+| 38–42, Architecture | Three layers, not two: add the agents bullet (`src/agents/`: manifest, catalog, skill zip, the `package` command; imports the core only through `src/index.ts`), drop "the theme's asset catalog" from what the compiler owns, and state the import rules and that Biome enforces them. |
 
 Checked and unchanged: `ROADMAP.md` (its slot-size item still stands),
 `internal/positioning.md` and `internal/product-direction.md`.
 
 ### tycoworks-theme
 
-The only theme. `SKILL.md`, `syntax.md`, `manifest.json` and `assets.json` in its root are
-generated by `tycoslide package` on `npm install` and are gitignored, so they update by
-reinstalling, not by editing. Already committed on its branch: `2f0fe47`, clearing stale
-placeholder alt-text titles from the template.
+The only theme. `SKILL.md`, `syntax.md` and `manifest.json` in its root are generated by
+`tycoslide package` on `npm install` and are gitignored. `assets.json` stops being
+generated and becomes a tracked source file. Already committed on its branch: `2f0fe47`,
+clearing stale placeholder alt-text titles from the template.
 
 | File | Change |
 |---|---|
 | `package.json` + lockfile | `"@tycoworks/tycoslide": "^0.15.1"` → `"^0.16.0"`. On 0.x a caret stops at the next minor, so without this bump the theme keeps resolving 0.15. |
-| `theme.json` | Every asset entry's `type` → `fit`, mechanically: `icon` → `scale-down` (2,122 icons), `image` → `contain` (4 brand marks), `background` → `cover` (low-poly). Do it with a script, not by hand, then review the diff for count only. No other change. |
+| `assets.json` (new, tracked) | Written by a script from `theme.json`'s `assets`, each entry's `type` → `fit` mechanically: `icon` → `scale-down` (2,122 icons), `image` → `contain` (4 brand marks), `background` → `cover` (low-poly). Review the diff for count only. |
+| `theme.json` | Remove `assets` (same script). No other change. |
+| `.gitignore` | Remove `/assets.json` from the generated-skill block. |
 | `showcase.md` 75 | `![]($icons.hub)` → `![](assets/icons/hub.png "fit: scale-down")` (decoration beside a heading: empty alt) |
 | `showcase.md` 86 | `![]($icons.insights)` → `![](assets/icons/insights.png "fit: scale-down")` |
 | `showcase.md` 130 | `![]($backgrounds.lowPoly)` → `![](assets/backgrounds/low-poly.png "fit: cover")` (backdrop: empty alt) |
@@ -397,11 +462,10 @@ any of the following:
 - **No `$` handling at all.** No deprecation warning, no special "`$` references were
   removed" error, no migration hint that names the old syntax. A `$…` URL is an ordinary
   path and fails as a missing file.
-- **No `type` alongside `fit`.** The schema accepts `fit` only; `type` is an unknown key
-  and fails the load like any other.
-- **No fallback fit from the catalog.** The compiler never reads `assets`.
-- **No expansion during builds** kept "for old packaged skills". `buildDeck` stops calling
-  `expandAssets`, full stop.
+- **No `assets` in `theme.json`.** The core schema doesn't know the key, so a theme that
+  still has it fails to load like any other unknown key. It is not tolerated or ignored.
+- **No `type` in `assets.json`.** Its schema accepts `fit` only.
+- **No expansion by the core**, during builds or on command, "for old packaged skills".
 - **No transition release.** 0.16.0 ships the new behaviour only, and the tycoworks theme
   moves to it in one commit.
 - **No compatibility tests** for the old forms. Delete the tests that exercised them (listed
@@ -422,33 +486,37 @@ Branch `image-alt-and-fit` in **both** repos. Each phase is one commit that pass
 the go-ahead.
 
 **tycoslide**
-- 0–2. **Done:** the design doc (`ab4d950`), alt text (`90ef827`), fit from the title
-  (`411866e`). The deletion of `internal/assets-from-package.md` is still unstaged. Commit
-  it with this revision of the doc, as "Update the image design: remove `$` references".
-3. **Remove `$` references.** Everything under "Phase 3" in Code changes, plus its tests
-   and the test fixture. After this commit the shipped docs are stale until phase 5, which
-   is fine on a branch.
-4. **Fail on unknown inline nodes.** `inline.ts` + test.
-5. **Shipped docs.** `theme-package/SKILL.md`, `theme-package/syntax.md`, `README.md`,
-   `CLAUDE.md`, exactly as tabled.
-6. **create-theme skill.** `skills/create-theme/SKILL.md`,
-   `skills/create-theme/references/theme-json.md`, exactly as tabled.
-7. **Release v0.16.0** per the runbook. Breaking (`$` removed, `type` → `fit`), which a 0.x
-   minor allows. Merge to `main`, clean build and test, bump, `npm pack --dry-run`, commit
-   and annotated tag, then `npm publish` (by hand, OTP), GitHub release, clean-room check.
-   The clean-room check now also runs `npx tycoslide unpack` in an unzipped packaged theme
-   and builds a deck that copies one picture.
+- 0–2. **Done:** the design doc (`ab4d950`, revised `14f28e3`), alt text (`90ef827`), fit
+  from the title (`411866e`). This revision of the doc is committed on its own before
+  phase 3, as "Update the image design: three layers".
+3. **Images are paths.** The compiler half of `$` removal, plus `buildDeck` stops
+   expanding. Tests as listed.
+4. **Three layers.** `src/agents/`, the catalog out of `theme.json` into `assets.json`,
+   `expandAssets` deleted, `syntax.md` to `docs/`, the Biome import rules. After this the
+   shipped docs are stale until phase 6, which is fine on a branch.
+5. **Fail on unknown inline nodes.** `inline.ts` + test.
+6. **Shipped docs.** `theme-package/SKILL.md`, `docs/syntax.md`, `README.md`, `CLAUDE.md`,
+   exactly as tabled.
+7. **create-theme skill.** `skills/create-theme/SKILL.md`,
+   `skills/create-theme/references/theme-json.md`, the new `references/assets-json.md`,
+   exactly as tabled.
+8. **Release v0.16.0** per the runbook. Breaking (`$` removed, catalog moved out of
+   `theme.json`), which a 0.x minor allows. Merge to `main`, clean build and test, bump,
+   `npm pack --dry-run` (now also expecting `docs/`), commit and annotated tag, then
+   `npm publish` (by hand, OTP), GitHub release, clean-room check. The clean-room check
+   unzips a packaged theme, runs `npm install && unzip -nq assets.dat`, and builds a deck
+   that copies one picture.
 
-**tycoworks-theme** (after phase 7: its bump needs 0.16.0 on npm)
+**tycoworks-theme** (after phase 8: its bump needs 0.16.0 on npm)
 - **Done:** `2f0fe47`, template placeholder titles cleared.
-8. **Adopt 0.16.** Bump the devDependency, migrate `theme.json` (`type` → `fit`, scripted),
-   `npm install` (regenerates the skill files), edit `showcase.md` and `how-it-works.md`.
-   Build both decks, render with LibreOffice, compare against the 0.15 renders (geometry
-   must match), and check the lockup's alt text in PowerPoint. Then run `npx tycoslide
-   package`, unzip the result into a scratch directory, `npm install && npx tycoslide
-   unpack`, and build a one-slide deck **outside** that directory that copies
-   `assets/brand/tycoworks-lockup.png` in. That proves the copy convention end to end. One
-   commit, then merge to `main`.
+9. **Adopt 0.16.** Bump the devDependency, write `assets.json` and drop `assets` from
+   `theme.json` (scripted), un-ignore `assets.json`, `npm install` (regenerates the skill
+   files), edit `showcase.md` and `how-it-works.md`. Build both decks, render with
+   LibreOffice, compare against the 0.15 renders (geometry must match), and check the
+   lockup's alt text in PowerPoint. Then run `npx tycoslide package`, unzip the result into
+   a scratch directory, `npm install && unzip -nq assets.dat`, and build a one-slide deck
+   **outside** that directory that copies `assets/brand/tycoworks-lockup.png` in. That
+   proves the copy convention end to end. One commit, then merge to `main`.
 
 To check the theme before publishing, point it at the local engine temporarily
 (`npm install ../tycoslide`) and restore the `^0.16.0` range before committing.
@@ -456,40 +524,43 @@ To check the theme before publishing, point it at the local engine temporarily
 ## Tests
 
 `node:test`, alongside the existing suites. Phases 1–2 added the alt-text and
-title-parsing tests. Phase 3 changes:
+title-parsing tests.
 
+**Phase 3**
 - **`test/markdown.test.ts`**
-  - The fit table (~915–936): delete the two catalog rows ("a catalog ref with no title
-    takes its type's fit", "a catalog ref's title overrides…") and the `assets` fixture
-    they use. The table's paths (`/theme/pics/team.png`…) are
-    fictional, and the new existence check rejects them: point the helper's `rootDir`
-    (which it also uses as `deckDir`) at a temp directory holding those files, created
-    once in a `before` hook.
-  - ~793: `![]($imgs.closingBg)` with its inline catalog → a deck-relative path (a real
-    fixture file, since the compiler now checks existence).
-  - The `cfg` / `compileMarkdownDeck` helpers (~16–40) keep their `assets` parameter
-    (`CompilerThemeConfig` still has it), but no test passes a non-empty one.
+  - The fit table: delete the two catalog rows and the `assets` fixture they use. Point the
+    table at real files in a temp deck directory (the compiler now checks existence), via a
+    small `deckDirWith(...paths)` helper. Add a row for an absolute path.
+  - `![]($imgs.closingBg)` with its inline catalog → a deck-relative path to a real file.
 - **`test/composition.compiler.e2e.test.ts`**
-  - The `$logos.primary` cases (96, 153, 229, 288): switch to deck-relative paths, using
-    the pattern the file's own path test already uses (~170): a `mkdtempSync` deck
-    directory with `swap.png` copied in as `pics/logo.png`, passed as `deckDir`.
-  - Delete "fails fast on a malformed body-image reference" (`$bad`, ~240–255) and "fails
-    fast on an unknown body-image reference" (`$logos.missing`, ~257–275). Replace them
-    with one test: a missing image path fails at compile with the region prefix and the
-    copy hint.
-- **`test/fixtures/composition-theme.json`**: the asset entry's `"type": "image"` →
-  `"fit": "contain"`.
-- **`test/manifest.test.ts`**: `generateAssetCatalog` emits `fit`, not `type`.
-- **`test/themeConfigSchema.test.ts`**: its `fullTheme()` fixture's assets use `fit`; a
-  `type` key is now rejected as unknown, and a bad `fit` value is a schema error.
-- **`test/skillZip.test.ts`**: `expandAssets` returns the number of files it wrote (0 when
-  there's no archive, and on a second run).
-- **Build no longer expands:** a `buildDeck` test against a theme dir holding only
-  `assets.dat` builds a path-only deck without writing any asset into the theme dir.
-- **CLI `unpack`**: by hand in phase 7's clean-room check (the CLI has no test harness
-  today; don't add one for this).
-- **Unknown inline node** (phase 4): a node type the walker doesn't handle throws, naming
-  the type.
+  - The `$logos.primary` cases: `![logo](swap.png)`; `loadThemeConfig()` already sets
+    `deckDir` to the fixtures folder, which holds `swap.png`.
+  - Delete "fails fast on a malformed catalog reference" (`$bad`) and "fails fast on an
+    unknown body-image reference" (`$logos.missing`). Replace them with one test: a missing
+    image path fails at compile with the region prefix, the path as written and the
+    resolved path.
+  - Replace "expands a packaged theme's asset archive during the build" with: a build
+    against a theme dir holding only `assets.dat` writes no asset into the theme dir.
+- **`test/proseParser.test.ts`, `test/tableParser.test.ts`**: their hand-built
+  `BlockContext`s lose `resolveAssetRef`.
+
+**Phase 4**
+- **`test/fixtures/composition-theme.json`**: drop `assets`. The fixtures folder gains an
+  `assets.json` for the packaging tests that need one.
+- **`test/themeConfigSchema.test.ts`**: `fullTheme()` drops `assets`.
+- **New catalog tests** (agent layer): a valid `assets.json` loads; a bad `fit` value and an
+  unknown key in an entry are rejected (a neutral key, not `type`); a missing file fails
+  `package`.
+- **`test/manifest.test.ts`**: delete the `generateAssetCatalog` tests; keep the manifest's
+  pointer to `assets.json`.
+- **`test/skillZip.test.ts`**: delete the `expandAssets` tests; `skillPaths` archives the
+  catalog's pictures and ships `assets.json` plain.
+- **Import rules**: prove each Biome rule fires once with a deliberate bad import, by hand;
+  no test.
+- Update test imports for the moved files.
+
+**Phase 5**
+- A phrasing node type the walker doesn't handle throws, naming the type.
 
 ## Alternatives considered
 
@@ -525,7 +596,18 @@ splits slides with a line scanner too.
 | Absolute path into the installed skill | rejected | The deck builds on one machine only. |
 | A theme-relative path form (e.g. `theme:assets/…`) | rejected | `$` under another name: a second path scheme in the core. |
 | Keep `$` in the core, add title fit on top | rejected | The shortcut and a fit system stay in the core, which is what this change removes. |
-| A `tycoslide asset <path> --to <dir>` command that copies one picture straight out of the archive | rejected for now | It saves the one-time `unpack` step, but it's a new command that knows the catalog's layout, where `cp` already does the job. Revisit if agents fumble the copy. |
+| A core `tycoslide unpack` (or `asset --to`) command | rejected | Agent-host archive handling in the core CLI. `assets.dat` is a plain zip, and `unzip -n` already does the job, whole or per picture. |
+
+### Where the agent layer lives
+
+Put to three independent reviews on 23 Sep with the same facts; all three chose A.
+
+| Option | Verdict | Why |
+|---|---|---|
+| **A. Third layer in the same package: `src/agents/`, Biome-enforced imports (this doc)** | chosen | Fixes every leak found, all of which were wrong-way imports inside one package. No duplicated parsing, one version (so the shipped `SKILL.md` and `syntax.md` always match the core the skill pins), and the theme repo's `postinstall: tycoslide package` keeps working. Costs a few file moves and one config block. |
+| B. Agent layer as Python skill scripts, core drops `package` | rejected | Generating the manifest would reimplement the core's reading of `theme.json` (template keys, slots, accepts) in a second language, and drift. Breaks the theme's `postinstall`. Skills from GitHub HEAD against a core from npm can drift in version. Against ROADMAP's direction of removing Python. |
+| C. Same repo, second npm package (workspaces) | later | The strongest boundary short of D, and the likely end state. Doubles the release runbook (two publishes, each needing an OTP); on 0.x every core minor forces an agent release, and changes like this branch's become coordinated releases. Revisit with an outside user or a second theme. A's import rule keeps the move mechanical. |
+| D. Separate repo and package | rejected | All of C's cost plus cross-repo pull requests and `npm link` to test against an unpublished core. The worst fit for early research where both sides change together. |
 
 ## Non-goals (v1)
 
@@ -534,13 +616,15 @@ splits slides with a line scanner too.
   extension under `<p:cNvPr>`; verify the exact XML against a PowerPoint-saved file before
   building), `width` / size overrides (probably never: size is the template's design).
 - **Alt text on template chrome.** We only touch pictures we fill.
-- **Moving the catalog out of `theme.json`.** It could live in its own file, but it's
-  authored with the theme and read by `package`, so it stays.
+- **A separate agent package** (option C). See Alternatives.
 
 ## Open questions
 
 - **Mermaid alt text.** The source is text, so a description is possible: a `%% alt: …`
   comment line in the fence, or the fence's info string. Decide when a real deck needs it.
+- **Hosts without `unzip`.** Every Linux sandbox tried has it; Windows has `tar -xf`, which
+  reads zips but overwrites by default. Add a fallback line to the skill only if an agent
+  host turns out to lack `unzip`.
 - **Blog:** post 2's asset-catalog section describes `$brand.mark` and fit from asset types.
   After this change the mechanism is: the agent searches `assets.json`, copies the picture
   next to the deck, and writes its path, alt text and fit. The on-brand point survives
