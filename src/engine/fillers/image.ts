@@ -1,8 +1,9 @@
 /**
- * Image fill — element-level picture geometry only. The media swap (pointing the
- * blip relationship at the new file) is a slide-level modifier in the ImageFiller
- * (`fillers/filler.ts`); this module resolves the frame geometry from the image's
- * `ImageFit` (contain/cover/scale-down) and the source's true pixel size.
+ * Image fill — element-level picture geometry and alt text. The media swap
+ * (pointing the blip relationship at the new file) is a slide-level modifier in
+ * the ImageFiller (`fillers/filler.ts`); this module resolves the frame geometry
+ * from the image's `ImageFit` (contain/cover/scale-down) and the source's true
+ * pixel size, and rewrites the picture's alt text for the new image.
  */
 
 import { readFileSync } from "node:fs";
@@ -44,7 +45,7 @@ const MIN_SCALE = 0.2;
  * Size a picture shape from its `ImageFit` (via `computeGeometry`): either write
  * `<a:srcRect>` insets to fill-and-crop, or shrink the frame to the image's
  * aspect ratio and re-center (fit/letterbox). Advisory warnings from the
- * geometry pass go to `console.warn`.
+ * geometry pass go to `console.warn`. Also sets its alt text (`setAltText`).
  *
  * `image.path` is assumed absolute — the compiler / caller resolves it before the
  * ImageFill reaches the engine.
@@ -57,9 +58,13 @@ export function fillImage(shape: any, image: ImageFill, shapeName: string, label
   const off = shape.getElementsByTagName(Tag.OFFSET)[0];
   const ext = shape.getElementsByTagName(Tag.EXTENT)[0];
   const blipFill = shape.getElementsByTagName(Tag.BLIP_FILL)[0];
-  if (!off || !ext || !blipFill) {
-    throw new Error(`Image shape "${shapeName}": is not a picture (missing <a:off>, <a:ext>, or <p:blipFill>).`);
+  const nvProps = shape.getElementsByTagName(Tag.NON_VISUAL_PROPS)[0];
+  if (!off || !ext || !blipFill || !nvProps) {
+    throw new Error(
+      `Image shape "${shapeName}": is not a picture (missing <a:off>, <a:ext>, <p:blipFill>, or <p:cNvPr>).`,
+    );
   }
+  setAltText(nvProps, image.alt);
 
   const frame: Frame = {
     x: Number(off.getAttribute(Attr.X)),
@@ -162,6 +167,19 @@ function applySrcRect(shape: any, blipFill: any, l: number, t: number, r: number
   srcRect.setAttribute(Attr.TOP, String(t));
   srcRect.setAttribute(Attr.RIGHT, String(r));
   srcRect.setAttribute(Attr.BOTTOM, String(b));
+}
+
+/**
+ * Describe the new picture on its `<p:cNvPr>`: `descr` carries the alt text, or
+ * is removed when it is empty, since any description the placeholder carried
+ * was for a different image. The legacy `title` is always removed: on a
+ * template placeholder it is a stale label (often the source filename), and
+ * `descr` alone is what PowerPoint shows and reads.
+ */
+function setAltText(nvProps: any, alt: string): void {
+  nvProps.removeAttribute(Attr.TITLE);
+  if (alt) nvProps.setAttribute(Attr.DESCR, alt);
+  else nvProps.removeAttribute(Attr.DESCR);
 }
 
 /** Discriminator for ImageFill values. */

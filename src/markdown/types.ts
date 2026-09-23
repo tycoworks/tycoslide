@@ -95,6 +95,12 @@ export type EngineFill = TextFill | TableFill | ImageFill | TemplateFill;
 export type BlockFill = TextFill | TableFill | ImageFill;
 
 /**
+ * Resolve an image reference (a `$category.name` catalog ref or a deck-relative
+ * path) to an ImageFill carrying `alt`, the picture's alt text ("" for none).
+ */
+export type ResolveAssetRef = (ref: string, alt: string) => ImageFill;
+
+/**
  * Everything a block handler needs to compile a node into its engine fill: the
  * asset resolver, the diagnostic context to name the offending layout/slide/slot
  * when a region's markdown shape is illegal (a stray standalone block mixed into
@@ -107,7 +113,7 @@ export type BlockFill = TextFill | TableFill | ImageFill;
  * imports the per-kind handlers, so the reverse would cycle.
  */
 export type BlockContext = {
-  resolveAssetRef: (ref: string) => ImageFill;
+  resolveAssetRef: ResolveAssetRef;
   layoutName: string;
   slideNo: number;
   source: string;

@@ -25,7 +25,7 @@ export const MERMAID_LANG = "mermaid";
  * Image fill, and compile it by rendering the definition to a PNG (cached under
  * `<rootDir>/.tycoslide-cache/mermaid/<hash>.png`, in the theme directory) and wrapping it as an
  * ImageFill. Fit is always `contain` — mermaid diagrams are shown in their
- * entirety. Resolution is strict: the theme MUST carry a `mermaid` block, MUST
+ * entirety — and a fence carries no alt text. Resolution is strict: the theme MUST carry a `mermaid` block, MUST
  * declare a `mermaidVariant`, and that variant MUST exist — each missing piece
  * throws by name.
  */
@@ -60,7 +60,7 @@ export const MERMAID: BlockHandler = {
 
     const cacheDir = ensureCacheDir(config);
     const pngPath = await renderOne(definition, variantName, variant, cacheDir, config);
-    return { type: SlotType.Image, path: pngPath, fit: ImageFit.Contain };
+    return { type: SlotType.Image, path: pngPath, fit: ImageFit.Contain, alt: "" };
   },
 };
 

@@ -15,6 +15,7 @@ import {
   type CompilerSlot,
   type EngineFill,
   RESERVED_KEY,
+  type ResolveAssetRef,
 } from "./types.js";
 
 /** Map each semantic asset type to the engine's object-fit directive. */
@@ -27,10 +28,11 @@ const FIT_FOR: Record<AssetType, ImageFit> = {
 /**
  * Wrap an absolute image path as an ImageFill, expanding the resolved asset
  * `type` into the engine's scaling constraints. Callers resolve the path (see
- * `resolveImagePath`) and the type (from the catalog) first.
+ * `resolveImagePath`) and the type (from the catalog) first; `alt` passes
+ * through untouched.
  */
-export function toImageFill(path: string, type: AssetType): ImageFill {
-  return { type: SlotType.Image, path, fit: FIT_FOR[type] };
+export function toImageFill(path: string, type: AssetType, alt: string): ImageFill {
+  return { type: SlotType.Image, path, fit: FIT_FOR[type], alt };
 }
 
 const KNOWN_GLOBAL_KEYS: Set<string> = new Set([RESERVED_KEY.THEME]);
@@ -38,9 +40,6 @@ const KNOWN_GLOBAL_KEYS: Set<string> = new Set([RESERVED_KEY.THEME]);
 // Anchored whole-field reference: the entire value is `$category.name` or it is
 // not a reference at all. Anchored ⇒ no escaping concerns.
 const ASSET_REF_RE = /^\$([a-zA-Z]\w*)\.([a-zA-Z]\w*)$/;
-
-/** Resolve a `$category.name` catalog reference to an ImageFill. */
-type ResolveAssetRef = (ref: string) => ImageFill;
 
 /**
  * Assert that a region's parsed block folds to a type the slot `accepts`. The
@@ -342,9 +341,9 @@ export async function compileDeck(doc: ParsedDocument, config: CompilerConfig): 
     path: resolveImagePath(config.deckDir, ref),
     type: AssetType.Image,
   });
-  const resolveAssetRef: ResolveAssetRef = (ref) => {
+  const resolveAssetRef: ResolveAssetRef = (ref, alt) => {
     const { path, type } = ref.startsWith("$") ? fromCatalog(ref) : fromDeck(ref);
-    return toImageFill(path, type);
+    return toImageFill(path, type, alt);
   };
 
   // Slides compile in order: a slide's structural errors (unknown layout/key,

@@ -103,6 +103,7 @@ layout: Composed
     const slide = await slideXml(zip);
 
     assert.ok(slide.includes("<a:blip"), "transplanted image should carry a drawing blip");
+    assert.ok(slide.includes('descr="logo"'), "the markdown alt text is the picture's alt text");
     assert.ok(
       !slide.includes("superseded on transplant"),
       "base body text shape (Text 1) removed on transplant",
@@ -185,6 +186,7 @@ layout: Composed
     assert.equal(body.type, "image");
     assert.equal(body.path, join(deckDir, "pics", "logo.png"));
     assert.equal(body.fit, "contain");
+    assert.equal(body.alt, "logo");
 
     deck.output = outPath("path-image.pptx");
     await buildDeck(deck, config);

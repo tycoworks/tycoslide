@@ -128,7 +128,7 @@ describe("end-to-end transplant (real addElement + refill)", () => {
       steps: [
         {
           layout: "Pic",
-          content: { hero: { type: SlotType.Image, path: SWAP_PNG, fit: "contain" } },
+          content: { hero: { type: SlotType.Image, path: SWAP_PNG, fit: "contain", alt: "Q&A <chart>" } },
         },
       ],
     };
@@ -141,6 +141,9 @@ describe("end-to-end transplant (real addElement + refill)", () => {
     assert.ok(slide.includes("<p:pic"), "transplanted picture should be present");
     assert.ok(rels.includes("swap.png"), "picture blip relationship should target the swapped media");
     assert.ok(!slide.includes("superseded on transplant"), "base text shape removed");
+    // The fixture picture's stale descr is replaced by the (escaped) alt text.
+    assert.ok(slide.includes('descr="Q&amp;A &lt;chart&gt;"'), "transplanted picture carries the alt text");
+    assert.ok(!slide.includes("preencoded.png"), "stale placeholder descr removed");
   });
 
   it("fails the build when a fill callback on a TRANSPLANTED shape throws", async () => {

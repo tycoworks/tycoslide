@@ -815,6 +815,7 @@ headline: Questions?
       type: SlotType.Image,
       path: "images/closing-bg.png",
       fit: ImageFit.Contain,
+      alt: "",
     };
     assert.deepEqual(deck.steps[2].content!["bg"], closingBg);
     assert.equal(deck.steps[2].content!["body"], undefined);

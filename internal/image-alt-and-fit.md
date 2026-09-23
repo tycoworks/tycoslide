@@ -158,17 +158,21 @@ from the deck or not at all.
 ## Code changes
 
 **Engine** (`src/engine/`). It stays ignorant of markdown, and fit stays the same.
-- `types.ts`: `ImageFill` gains `alt?: string` (documented: the picture's accessibility
-  description; absent or empty clears it).
+- `types.ts`: `ImageFill` gains a required `alt: string` (documented: the picture's
+  accessibility description; empty means none and clears it). Required, like `fit`:
+  an `ImageFill` is fully resolved, and alt is optional only in the markdown.
 - `fillers/image.ts`: `fillImage` writes or clears `descr` and removes `title` on the
   picture's `<p:cNvPr>` (inside `<p:nvPicPr>`). Add `Tag` / `Attr` constants in `dom.ts` for
   `cNvPr`, `descr`, `title` rather than string literals. Missing `<p:cNvPr>` throws, like the
   existing missing-`<a:off>` check.
-- `isImageFill` accepts the optional string `alt`.
+- `isImageFill`: unchanged. Like the other fill guards it discriminates by shape, it
+  doesn't validate fields.
 
 **Compiler** (`src/markdown/`)
-- `blocks/image.ts`: read `node.alt` and `node.title` and pass them to `resolveAssetRef`.
-  Drop the "`alt` is ignored" comment.
+- `blocks/image.ts`: read `node.alt` (`""` when absent) and `node.title` and pass them to
+  `resolveAssetRef`. Drop the "`alt` is ignored" comment.
+- `types.ts`: one shared `ResolveAssetRef` type, used by `BlockContext` and
+  `deckCompiler.ts`.
 - `deckCompiler.ts`: `resolveAssetRef(ref, options)` → `ImageFill`, where
   - `options` = `parseImageTitle(title, where)` → `{ fit?: ImageFit }` (new, small, next to
     the schema code; takes the slide/layout/slot label for errors)
@@ -176,11 +180,12 @@ from the deck or not at all.
     `image` for a path
   - `alt` is passed through untouched
 - `toImageFill(path, type)` becomes `toImageFill(path, fit, alt)`. The type→fit lookup
-  moves into the precedence line above.
+  moves into the precedence line above. (Phase 1 makes it `toImageFill(path, type, alt)`;
+  phase 2 swaps `type` for `fit`.)
 - `inline.ts`: `walkPhrasing`'s `default` branch throws on a phrasing node it doesn't know
   instead of returning `[]`. Not required by this change, but the parser survey found it
   silently drops any node a plugin introduces. It gets its own commit.
-- `blocks/mermaid.ts`: unchanged (fit `contain`, no alt).
+- `blocks/mermaid.ts`: fit `contain` and `alt: ""` (a fence has no alt text).
 
 **No change**: `manifest.ts` and `skillZip.ts` (neither describes markdown syntax, and
 `assets.json` keeps its shape), the asset archive, `cli.ts`, and the create-theme scripts
@@ -244,13 +249,13 @@ Branch `image-alt-and-fit` in **both** repos. Each phase is one commit that pass
 the go-ahead.
 
 **tycoslide**
-1. **Engine: write alt text, clear stale metadata.** `dom.ts` constants, `ImageFill.alt`,
-   `fillImage` writes or clears `descr` and removes `title`, `isImageFill`. Engine tests.
-   Nothing supplies `alt` yet, so the only visible effect is that the stale `title`
-   disappears.
-2. **Compiler: alt and fit from the markdown.** `parseImageTitle` + strict Zod schema, and
-   thread `alt` and options through `blocks/image.ts` → `resolveAssetRef` → `toImageFill`.
-   Title-parsing, precedence and e2e tests.
+1. **Alt text, markdown to PowerPoint.** `dom.ts` constants, required `ImageFill.alt`,
+   `fillImage` writes or clears `descr` and removes `title`. The compiler threads `node.alt`
+   through `blocks/image.ts` → `resolveAssetRef` → `toImageFill`, and mermaid passes `""`.
+   Engine tests, and the e2e `descr` assertion.
+2. **Compiler: fit from the markdown title.** `parseImageTitle` + strict Zod schema, and
+   thread the options through `resolveAssetRef` → `toImageFill`. Title-parsing, precedence
+   and e2e tests.
 3. **Fail on unknown inline nodes.** The `inline.ts` default branch, plus a test. Separate,
    so it can be reverted alone if it turns up a legitimate node type.
 4. **Shipped docs.** `theme-package/syntax.md`, `theme-package/SKILL.md`, `README.md`,
