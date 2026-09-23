@@ -16,6 +16,7 @@ export { parseRegion } from "./mdast.js";
 export { loadThemeConfig, parseThemeConfig, ThemeConfigSchema } from "./schema/themeConfigSchema.js";
 export type { ParsedDocument, RawSlide } from "./slideParser.js";
 export { parseSlideDocument } from "./slideParser.js";
+export { templateKeys } from "./textTemplate.js";
 export type {
   AssetCatalog,
   AssetEntry,

@@ -1,6 +1,12 @@
+import {
+  type AcceptType,
+  type AssetType,
+  type CompilerParameter,
+  type CompilerSlot,
+  type CompilerThemeConfig,
+  templateKeys,
+} from "../index.js";
 import { ASSETS_FILE } from "./files.js";
-import { templateKeys } from "./markdown/textTemplate.js";
-import type { AcceptType, AssetType, CompilerParameter, CompilerSlot, CompilerThemeConfig } from "./markdown/types.js";
 
 /** A frontmatter parameter as advertised to AI authors. */
 type ManifestParameter = {

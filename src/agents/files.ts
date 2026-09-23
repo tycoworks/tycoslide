@@ -32,5 +32,11 @@ export const SYNTAX_FILE = "syntax.md";
 // out of the repo root so skill installers do not mistake it for this repo's own skill.
 export const THEME_PACKAGE_DIR = "theme-package";
 
-/** The manifest a packaged skill installs from, authored rather than copied. */
+/**
+ * npm's package manifest: the theme's, which names the skill, and the packaged
+ * skill's own, which it installs from (authored rather than copied).
+ */
 export const PACKAGE_JSON = "package.json";
+
+/** The packaged skill is one zip, named `<skill name>.zip`. */
+export const SKILL_ZIP_EXT = ".zip";

@@ -5,7 +5,8 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
 import JSZip from "jszip";
-import { ASSETS_ARCHIVE, buildDeck, compileMarkdownDeck, type ImageFill, toEngineThemeConfig } from "../dist/index.js";
+import { ASSETS_ARCHIVE } from "../dist/agents/files.js";
+import { buildDeck, compileMarkdownDeck, type ImageFill, toEngineThemeConfig } from "../dist/index.js";
 import type { CompilerConfig, CompilerThemeConfig } from "../dist/markdown/types.js";
 
 // End-to-end coverage of the COMPILER path exposing sampled-composition: a real

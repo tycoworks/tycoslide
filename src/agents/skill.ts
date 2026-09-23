@@ -1,9 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import JSZip from "jszip";
-import { TEMPLATE_DIR } from "./engine/index.js";
+import { type CompilerThemeConfig, TEMPLATE_DIR } from "../index.js";
 import { ASSETS_ARCHIVE, PACKAGE_JSON } from "./files.js";
-import type { CompilerThemeConfig } from "./markdown/types.js";
 
 /** Entries are stored, not deflated: assets are already-compressed images. */
 const NO_COMPRESSION = { type: "nodebuffer", compression: "STORE" } as const;

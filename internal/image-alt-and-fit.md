@@ -217,7 +217,7 @@ text for the slide it is on.
 
 ### What moves
 
-- **Into `src/agents/`**: `manifest.ts`, `skillZip.ts` (without `expandAssets`, which is
+- **Into `src/agents/`**: `manifest.ts`, `skill.ts` (without `expandAssets`, which is
   deleted), `files.ts` (every constant in it is a packaged-skill file name), a new
   `catalog.ts` (the `assets.json` types and strict schema), and a new `commands.ts` holding
   the `package` command.
@@ -308,9 +308,20 @@ looking at it.
 - The theme schema and `package` are untouched in this phase: `assets` (with `type`) stays in
   `theme.json` until phase 4 moves it out. The compiler no longer reads it.
 
-**Phase 4: three layers**
-- Create `src/agents/` and move files as in "What moves". Fix every import; the agent layer
-  imports the core only from `../index.js`.
+**Phase 4: three layers**, in three commits.
+
+*4a. Move the agent code, no behaviour change*
+- Create `src/agents/` and move `manifest.ts`, `skill.ts` and `files.ts` into it. The
+  agent layer imports the core only from `../index.js`.
+- `commands.ts`: `registerAgentCommands(program, tool)`, holding the `package` command,
+  where `tool` is the installed tycoslide package (`root`, `name`, `version`) that `cli.ts`
+  already reads. `cli.ts`: `build` plus that call.
+- `index.ts`: drop agent exports (`generateManifest`, `generateAssetCatalog`,
+  `expandAssets`, `ASSETS_*`); export `templateKeys`, `TEMPLATE_DIR`, `ImageFit` (and
+  `AssetType` until 4b).
+- `biome.json`: the import rules.
+
+*4b. The catalog moves to `assets.json`*
 - `src/agents/catalog.ts`: `AssetEntry` `{ path, fit: ImageFit, description }`,
   `AssetCatalog`, the strict schema, and `loadAssetCatalog(themeDir)`.
 - `src/markdown/types.ts` and `schema/themeConfigSchema.ts`: delete `AssetType`,
@@ -318,24 +329,38 @@ looking at it.
   them.
 - `manifest.ts`: delete `generateAssetCatalog` (nothing to generate); `generateManifest`
   keeps its `assets: ASSETS_FILE` pointer.
-- `skillZip.ts`: `skillPaths` takes the loaded catalog to list the archived pictures;
+- `skill.ts`: `skillPaths` takes the loaded catalog to list the archived pictures;
   `assets.json` joins the plain files. Delete `expandAssets`.
 - `commands.ts`: `package` loads `theme.json` through the core and `assets.json` through
-  `catalog.ts`, then writes `manifest.json`, `SKILL.md`, `syntax.md` (from `docs/`) and the
-  zip. It no longer writes `assets.json`.
-- `cli.ts`: `build` plus `registerAgentCommands(program)`.
-- `index.ts`: drop agent exports; export `templateKeys`, `TEMPLATE_DIR`, `ImageFit`.
-- `biome.json`: the import rules.
-- Move `theme-package/syntax.md` to `docs/syntax.md`; `package.json` `files` adds `docs`.
+  `catalog.ts`, then writes `manifest.json`, `SKILL.md`, `syntax.md` and the zip. It no
+  longer writes `assets.json`.
+- `index.ts`: stop exporting `AssetType`.
 
-**Phase 5: fail on unknown inline nodes.** `inline.ts`: `walkPhrasing`'s `default` branch
+*4c. `syntax.md` moves to `docs/`*
+- Move `theme-package/syntax.md` to `docs/syntax.md`; `package.json` `files` adds `docs`;
+  `package` copies it from there.
+
+**Phase 5: the create-theme scripts become commands**, in two commits. Both scripts use
+only Python's standard library (`zipfile`, `ElementTree`), so they port to TypeScript on
+the dependencies the core already has (JSZip, `@xmldom/xmldom`). They go in the **core**,
+not `src/agents/`: they read a template in `theme.json`'s own terms and serve anyone
+writing a theme, human or agent. ROADMAP already places the inventory there, "so the skill
+needs no Python and the frames it reports are computed by the same code that fills them".
+- *5a.* `extract-media.py` → `tycoslide extract-media <pptx> <outdir>`: copy every image
+  referenced from a slide master or layout, under its original media filename.
+- *5b.* `inventory.py` → `tycoslide inspect <pptx>`: slide size, colour and font scheme,
+  embedded fonts, every shape with its kind and frame, and which slides share geometry.
+  Where the engine already computes something the inventory reports (frames), reuse it
+  rather than port a second copy.
+- Neither script has tests today. Each port lands with tests against a fixture `.pptx`,
+  checked against the Python's output on the same file before the script is deleted.
+
+**Phase 6: fail on unknown inline nodes.** `inline.ts`: `walkPhrasing`'s `default` branch
 throws on a phrasing node it doesn't know, instead of returning `[]`. The parser survey
 found it silently drops any node a plugin introduces. It's a separate commit so it can be
 reverted alone.
 
-**No change**: the engine beyond phase 1, `packAssets`, `zipDir`, `skillPackageJson`, and
-the create-theme scripts `inventory.py` / `extract-media.py` (they read the template, never
-deck markdown).
+**No change**: the engine beyond phase 1, `packAssets`, `zipDir`, `skillPackageJson`.
 
 ## Skill and documentation changes
 
@@ -491,25 +516,30 @@ the go-ahead.
   phase 3, as "Update the image design: three layers".
 3. **Images are paths.** The compiler half of `$` removal, plus `buildDeck` stops
    expanding. Tests as listed.
-4. **Three layers.** `src/agents/`, the catalog out of `theme.json` into `assets.json`,
-   `expandAssets` deleted, `syntax.md` to `docs/`, the Biome import rules. After this the
-   shipped docs are stale until phase 6, which is fine on a branch.
-5. **Fail on unknown inline nodes.** `inline.ts` + test.
-6. **Shipped docs.** `theme-package/SKILL.md`, `docs/syntax.md`, `README.md`, `CLAUDE.md`,
+4. **Three layers**, as three commits: 4a moves the agent code behind the Biome import rules;
+   4b moves the catalog out of `theme.json` into `assets.json` and deletes `expandAssets`;
+   4c moves `syntax.md` to `docs/`. After this the shipped docs are stale until phase 7,
+   which is fine on a branch.
+5. **The create-theme scripts become commands**, as two commits: 5a `tycoslide
+   extract-media`, 5b `tycoslide inspect`, each with tests; the Python scripts are deleted.
+6. **Fail on unknown inline nodes.** `inline.ts` + test.
+7. **Shipped docs.** `theme-package/SKILL.md`, `docs/syntax.md`, `README.md`, `CLAUDE.md`,
    exactly as tabled.
-7. **create-theme skill.** `skills/create-theme/SKILL.md`,
+8. **create-theme skill.** `skills/create-theme/SKILL.md`,
    `skills/create-theme/references/theme-json.md`, the new `references/assets-json.md`,
-   exactly as tabled.
-8. **Release v0.16.0** per the runbook. Breaking (`$` removed, catalog moved out of
+   exactly as tabled, plus: the inventory and media steps run `npx tycoslide inspect` and
+   `npx tycoslide extract-media`, and the scaffold's Python snippet that edits `theme.json`
+   becomes Node, so the skill needs no Python.
+9. **Release v0.16.0** per the runbook. Breaking (`$` removed, catalog moved out of
    `theme.json`), which a 0.x minor allows. Merge to `main`, clean build and test, bump,
    `npm pack --dry-run` (now also expecting `docs/`), commit and annotated tag, then
    `npm publish` (by hand, OTP), GitHub release, clean-room check. The clean-room check
    unzips a packaged theme, runs `npm install && unzip -nq assets.dat`, and builds a deck
    that copies one picture.
 
-**tycoworks-theme** (after phase 8: its bump needs 0.16.0 on npm)
+**tycoworks-theme** (after phase 9: its bump needs 0.16.0 on npm)
 - **Done:** `2f0fe47`, template placeholder titles cleared.
-9. **Adopt 0.16.** Bump the devDependency, write `assets.json` and drop `assets` from
+10. **Adopt 0.16.** Bump the devDependency, write `assets.json` and drop `assets` from
    `theme.json` (scripted), un-ignore `assets.json`, `npm install` (regenerates the skill
    files), edit `showcase.md` and `how-it-works.md`. Build both decks, render with
    LibreOffice, compare against the 0.15 renders (geometry must match), and check the
@@ -544,7 +574,7 @@ title-parsing tests.
 - **`test/proseParser.test.ts`, `test/tableParser.test.ts`**: their hand-built
   `BlockContext`s lose `resolveAssetRef`.
 
-**Phase 4**
+**Phase 4** (4a only updates test imports for the moved files; the rest is 4b)
 - **`test/fixtures/composition-theme.json`**: drop `assets`. The fixtures folder gains an
   `assets.json` for the packaging tests that need one.
 - **`test/themeConfigSchema.test.ts`**: `fullTheme()` drops `assets`.
@@ -553,13 +583,16 @@ title-parsing tests.
   `package`.
 - **`test/manifest.test.ts`**: delete the `generateAssetCatalog` tests; keep the manifest's
   pointer to `assets.json`.
-- **`test/skillZip.test.ts`**: delete the `expandAssets` tests; `skillPaths` archives the
+- **`test/skill.test.ts`**: delete the `expandAssets` tests; `skillPaths` archives the
   catalog's pictures and ships `assets.json` plain.
 - **Import rules**: prove each Biome rule fires once with a deliberate bad import, by hand;
   no test.
-- Update test imports for the moved files.
 
 **Phase 5**
+- Each command against a fixture `.pptx`: its output matches what the Python script printed
+  or copied for the same file.
+
+**Phase 6**
 - A phrasing node type the walker doesn't handle throws, naming the type.
 
 ## Alternatives considered

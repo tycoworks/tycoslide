@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { ASSETS_FILE } from "../dist/files.js";
-import { generateAssetCatalog, generateManifest } from "../dist/manifest.js";
+import { ASSETS_FILE } from "../dist/agents/files.js";
+import { generateAssetCatalog, generateManifest } from "../dist/agents/manifest.js";
 import { SlotType } from "../dist/engine/types.js";
 import type { CompilerConfig, CompilerLayout, CompilerSlot } from "../dist/markdown/types.js";
 

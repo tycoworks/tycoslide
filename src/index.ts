@@ -164,10 +164,16 @@ export type {
   ThemeConfig,
 } from "./engine/index.js";
 // Engine — primitives-only public surface.
-export { fillImage, fillTable, fillTemplate, fillText, generate, SlotType } from "./engine/index.js";
-export { ASSETS_ARCHIVE, ASSETS_FILE } from "./files.js";
-// Authoring
-export { generateAssetCatalog, generateManifest } from "./manifest.js";
+export {
+  fillImage,
+  fillTable,
+  fillTemplate,
+  fillText,
+  generate,
+  ImageFit,
+  SlotType,
+  TEMPLATE_DIR,
+} from "./engine/index.js";
 export type {
   AssetCatalog,
   AssetEntry,
@@ -187,5 +193,11 @@ export type {
   RawSlide,
 } from "./markdown/index.js";
 // Markdown / Compiler
-export { AcceptType, compileMarkdownDeck, loadThemeConfig, parseThemeConfig } from "./markdown/index.js";
-export { expandAssets } from "./skillZip.js";
+export {
+  AcceptType,
+  AssetType,
+  compileMarkdownDeck,
+  loadThemeConfig,
+  parseThemeConfig,
+  templateKeys,
+} from "./markdown/index.js";

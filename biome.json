@@ -38,5 +38,67 @@
   },
   "files": {
     "includes": ["src/**"]
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["src/engine/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["**/markdown/**", "**/agents/**"],
+                    "message": "The engine knows nothing of markdown or agents."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/markdown/**", "src/index.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["**/agents/**"],
+                    "message": "The core never imports the agent layer."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/agents/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["**/engine/**", "**/markdown/**"],
+                    "message": "The agent layer imports the core only through src/index.ts."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
 }

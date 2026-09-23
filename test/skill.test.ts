@@ -5,9 +5,9 @@ import { join } from "node:path";
 import { describe, it } from "node:test";
 import JSZip from "jszip";
 import { AssetType } from "../dist/markdown/types.js";
-import { ASSETS_ARCHIVE } from "../dist/files.js";
-import { expandAssets } from "../dist/skillZip.js";
-import { renameSkill, skillPackageJson, zipDir } from "../dist/skillZip.js";
+import { ASSETS_ARCHIVE } from "../dist/agents/files.js";
+import { expandAssets } from "../dist/agents/skill.js";
+import { renameSkill, skillPackageJson, zipDir } from "../dist/agents/skill.js";
 
 /** Stand-in for the authored manifest; `skillPackageJson` is tested on its own below. */
 const PKG_JSON = '{"name":"acme-slides"}\n';
@@ -92,7 +92,7 @@ describe("skillPackageJson", () => {
 
 describe("zipDir", () => {
   it("packages exactly what the theme declares, under one folder", async () => {
-    const root = mkdtempSync(join(tmpdir(), "skillzip-"));
+    const root = mkdtempSync(join(tmpdir(), "skill-"));
     try {
       seedTheme(root);
 
@@ -118,7 +118,7 @@ describe("zipDir", () => {
   });
 
   it("leaves out anything the theme does not declare, at any depth", async () => {
-    const root = mkdtempSync(join(tmpdir(), "skillzip-extra-"));
+    const root = mkdtempSync(join(tmpdir(), "skill-extra-"));
     try {
       seedTheme(root);
       // Working files that share the directory. Built decks land next to their
@@ -150,7 +150,7 @@ describe("zipDir", () => {
   });
 
   it("takes the lockfile when present so the install is reproducible", async () => {
-    const root = mkdtempSync(join(tmpdir(), "skillzip-lock-"));
+    const root = mkdtempSync(join(tmpdir(), "skill-lock-"));
     try {
       seedTheme(root);
       writeFileSync(join(root, "package-lock.json"), "{}\n");
@@ -162,7 +162,7 @@ describe("zipDir", () => {
   });
 
   it("throws naming the file when the theme declares something that is missing", async () => {
-    const root = mkdtempSync(join(tmpdir(), "skillzip-missing-"));
+    const root = mkdtempSync(join(tmpdir(), "skill-missing-"));
     try {
       seedTheme(root);
       rmSync(join(root, "assets", "logos", "a.png"));
@@ -188,7 +188,7 @@ describe("assets archive", () => {
   };
 
   it("collapses every declared asset into a single skill entry", async () => {
-    const root = mkdtempSync(join(tmpdir(), "skillzip-archive-"));
+    const root = mkdtempSync(join(tmpdir(), "skill-archive-"));
     try {
       seedTheme(root);
       const zip = await JSZip.loadAsync(await zipDir(root, "acme-slides", config, generated, PKG_JSON));
@@ -200,7 +200,7 @@ describe("assets archive", () => {
   });
 
   it("stores each asset at its declared path, so nothing is rewritten on either side", async () => {
-    const root = mkdtempSync(join(tmpdir(), "skillzip-archive-paths-"));
+    const root = mkdtempSync(join(tmpdir(), "skill-archive-paths-"));
     try {
       seedTheme(root);
       const assets = await archiveOf(root);
@@ -257,7 +257,7 @@ describe("assets archive", () => {
   });
 
   it("stores archive entries rather than deflating them", async () => {
-    const root = mkdtempSync(join(tmpdir(), "skillzip-store-"));
+    const root = mkdtempSync(join(tmpdir(), "skill-store-"));
     try {
       seedTheme(root);
       // Highly compressible, so DEFLATE would be obvious in the byte count.
@@ -289,7 +289,7 @@ describe("assets archive", () => {
   });
 
   it("packages a theme that declares no assets at all, with no archive", async () => {
-    const root = mkdtempSync(join(tmpdir(), "skillzip-noassets-"));
+    const root = mkdtempSync(join(tmpdir(), "skill-noassets-"));
     try {
       seedTheme(root);
       const bare = { ...config, assets: {} };
