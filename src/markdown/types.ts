@@ -8,6 +8,7 @@ import {
   type TemplateFill,
   type TextFill,
 } from "../engine/index.js";
+import type { ImageOptions } from "./blocks/image.js";
 import type { MermaidConfig } from "./blocks/mermaidTheme.js";
 
 // Re-export the engine's table body-range type so the compiler layer (and the
@@ -96,9 +97,10 @@ export type BlockFill = TextFill | TableFill | ImageFill;
 
 /**
  * Resolve an image reference (a `$category.name` catalog ref or a deck-relative
- * path) to an ImageFill carrying `alt`, the picture's alt text ("" for none).
+ * path) to an ImageFill carrying `alt`, the picture's alt text ("" for none), and
+ * the fit from `options` when the image's title gives one.
  */
-export type ResolveAssetRef = (ref: string, alt: string) => ImageFill;
+export type ResolveAssetRef = (ref: string, alt: string, options: ImageOptions) => ImageFill;
 
 /**
  * Everything a block handler needs to compile a node into its engine fill: the
@@ -117,6 +119,8 @@ export type BlockContext = {
   layoutName: string;
   slideNo: number;
   source: string;
+  /** Where the region sits, for the author: the prefix block handlers put on their errors. */
+  region: string;
   config: CompilerConfig;
   /**
    * The current layout's tonal surface, threaded from its `variant`. The code

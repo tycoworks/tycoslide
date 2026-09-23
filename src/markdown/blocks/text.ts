@@ -39,12 +39,11 @@ export function compileTextAggregate(nodes: RootContent[], ctx: BlockContext): T
  * (table/image/code) mixed into prose — both name the layout/slide/slot + type.
  */
 function reject(nodeCount: number, nodeType: string, ctx: BlockContext): string {
-  const where = `Slide ${ctx.slideNo}: layout "${ctx.layoutName}" slot content (from ${ctx.source})`;
   if (nodeCount === 1) {
-    return `${where} is a standalone "${nodeType}" block, which is not a supported content kind.`;
+    return `${ctx.region} is a standalone "${nodeType}" block, which is not a supported content kind.`;
   }
   return (
-    `${where} mixes a "${nodeType}" block with other content; ` +
+    `${ctx.region} mixes a "${nodeType}" block with other content; ` +
     "a table, image, or code block must be the region's only content."
   );
 }

@@ -26,13 +26,12 @@ const FIT_FOR: Record<AssetType, ImageFit> = {
 };
 
 /**
- * Wrap an absolute image path as an ImageFill, expanding the resolved asset
- * `type` into the engine's scaling constraints. Callers resolve the path (see
- * `resolveImagePath`) and the type (from the catalog) first; `alt` passes
+ * Wrap an absolute image path as an ImageFill. Callers resolve the path (see
+ * `resolveImagePath`) and the fit (see `resolveAssetRef`) first; `alt` passes
  * through untouched.
  */
-export function toImageFill(path: string, type: AssetType, alt: string): ImageFill {
-  return { type: SlotType.Image, path, fit: FIT_FOR[type], alt };
+export function toImageFill(path: string, fit: ImageFit, alt: string): ImageFill {
+  return { type: SlotType.Image, path, fit, alt };
 }
 
 const KNOWN_GLOBAL_KEYS: Set<string> = new Set([RESERVED_KEY.THEME]);
@@ -252,6 +251,7 @@ async function compileStep(
       layoutName,
       slideNo: slideNo,
       source,
+      region: `Slide ${slideNo}: layout "${layoutName}" slot content (from ${source})`,
       config,
       layoutVariant: layoutDef.variant,
     });
@@ -341,9 +341,10 @@ export async function compileDeck(doc: ParsedDocument, config: CompilerConfig): 
     path: resolveImagePath(config.deckDir, ref),
     type: AssetType.Image,
   });
-  const resolveAssetRef: ResolveAssetRef = (ref, alt) => {
+  // Fit precedence: the image's title, then the asset's type (a path is an `image`).
+  const resolveAssetRef: ResolveAssetRef = (ref, alt, options) => {
     const { path, type } = ref.startsWith("$") ? fromCatalog(ref) : fromDeck(ref);
-    return toImageFill(path, type, alt);
+    return toImageFill(path, options.fit ?? FIT_FOR[type], alt);
   };
 
   // Slides compile in order: a slide's structural errors (unknown layout/key,

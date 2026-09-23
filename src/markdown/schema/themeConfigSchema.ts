@@ -23,8 +23,8 @@ import { strict } from "./strict.js";
  */
 
 // Reuse the const-object enums as runtime values — no third copy of the literals.
-const assetTypeSchema = z.enum(Object.values(AssetType) as [AssetType, ...AssetType[]]);
-const variantSchema = z.enum(Object.values(Variant) as [Variant, ...Variant[]]);
+const assetTypeSchema = z.enum(AssetType);
+const variantSchema = z.enum(Variant);
 // A table specimen's repeatable row range: `[start, end]`, 0-based inclusive,
 // non-negative integers. The range is validated against the specimen's actual row
 // count at fill time, where the row count is known.

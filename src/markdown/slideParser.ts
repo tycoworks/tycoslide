@@ -37,14 +37,19 @@ export function parseSlideDocument(source: string): ParsedDocument {
 
 const GLOBAL_FM_RE = /^---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/;
 
+/** True for a parsed YAML document that is a mapping (`key: value` pairs). */
+export function isYamlMapping(parsed: unknown): parsed is Record<string, unknown> {
+  return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed);
+}
+
 function extractGlobalFrontmatter(source: string): { global: Record<string, unknown>; rest: string } {
   const match = source.match(GLOBAL_FM_RE);
   if (!match) return { global: {}, rest: source };
 
   const parsed = parseYaml(match[1]);
-  if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+  if (isYamlMapping(parsed)) {
     return {
-      global: parsed as Record<string, unknown>,
+      global: parsed,
       rest: source.slice(match[0].length),
     };
   }
@@ -183,9 +188,7 @@ function parseFrontmatter(yaml: string, slideIndex: number): Record<string, unkn
   if (!yaml) return {};
   try {
     const result = parseYaml(yaml);
-    if (result && typeof result === "object" && !Array.isArray(result)) {
-      return result as Record<string, unknown>;
-    }
+    if (isYamlMapping(result)) return result;
   } catch (err) {
     throw new FrontmatterParseError(slideIndex, yaml, err);
   }

@@ -194,6 +194,47 @@ layout: Composed
     assert.ok(slide.includes("<a:blip"), "the path-referenced picture was transplanted");
   });
 
+  it("crops a picture whose title asks for fit: cover", async () => {
+    // swap.png is square and the body frame is 3:1, so cover crops a third off
+    // the top and bottom: srcRect insets of 33333 (1/100,000ths) each.
+    const deckDir = mkdtempSync(join(tmpdir(), "tycoslide-deckdir-"));
+    copyFileSync(join(FIXTURES, "swap.png"), join(deckDir, "photo.png"));
+    const config = { ...loadThemeConfig(), deckDir };
+    const source = `---
+theme: ./composition-theme.json
+---
+---
+layout: Composed
+---
+::body::
+![Team photo](photo.png "fit: cover")`;
+
+    const deck = await compileMarkdownDeck(source, config);
+    deck.output = outPath("cover.pptx");
+    await buildDeck(deck, config);
+    const slide = await slideXml(await outputZip(deck.output));
+    assert.ok(slide.includes('<a:srcRect l="0" t="33333" r="0" b="33333"/>'), "cropped top and bottom");
+    assert.ok(slide.includes('descr="Team photo"'), "alt text written alongside");
+  });
+
+  it("fails fast on an image title that is not options", async () => {
+    const config = loadThemeConfig();
+    const source = `---
+theme: ./composition-theme.json
+---
+---
+layout: Composed
+---
+::body::
+![]($logos.primary "Our logo")`;
+
+    await assert.rejects(compileMarkdownDeck(source, config), (err: Error) => {
+      assert.ok(err.message.includes('layout "Composed" slot content (from ::body::)'), err.message);
+      assert.ok(err.message.includes("![Our logo](…)"), "suggests moving the text into the alt");
+      return true;
+    });
+  });
+
   it("fails fast on a malformed catalog reference ($ without category.name)", async () => {
     const config = loadThemeConfig();
     const badRef = `---

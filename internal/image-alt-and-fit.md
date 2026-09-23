@@ -172,10 +172,14 @@ from the deck or not at all.
 - `blocks/image.ts`: read `node.alt` (`""` when absent) and `node.title` and pass them to
   `resolveAssetRef`. Drop the "`alt` is ignored" comment.
 - `types.ts`: one shared `ResolveAssetRef` type, used by `BlockContext` and
-  `deckCompiler.ts`.
-- `deckCompiler.ts`: `resolveAssetRef(ref, options)` → `ImageFill`, where
-  - `options` = `parseImageTitle(title, where)` → `{ fit?: ImageFit }` (new, small, next to
-    the schema code; takes the slide/layout/slot label for errors)
+  `deckCompiler.ts`, and a `region` field on `BlockContext`: the slide/layout/slot
+  error prefix the text and code handlers already wrote by hand, built once in
+  `compileStep`.
+- `deckCompiler.ts`: `resolveAssetRef(ref, alt, options)` → `ImageFill`, where
+  - `options` = `parseImageTitle(title, ctx.region)` → `{ fit?: ImageFit }` (new,
+    in `blocks/image.ts`, its only caller, built on `schema/strict.ts`; outside `schema/`
+    because that layer never imports the engine, and the fit values are the engine's
+    `ImageFit`)
   - `fit = options.fit ?? FIT_FOR[type]`, where `type` is still the catalog type, or
     `image` for a path
   - `alt` is passed through untouched

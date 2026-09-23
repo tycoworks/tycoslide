@@ -4,6 +4,7 @@ import { parseSlideDocument } from "../dist/markdown/slideParser.js";
 import { compileDeck as compileDeckRaw } from "../dist/markdown/deckCompiler.js";
 import { compileMarkdownDeck as compileMarkdownDeckRaw } from "../dist/markdown/index.js";
 import { templateKeys, templateToSegments } from "../dist/markdown/textTemplate.js";
+import { type ImageOptions, parseImageTitle } from "../dist/markdown/blocks/image.js";
 import type { TextFill, ImageFill, StyledParagraph } from "../dist/engine/types.js";
 import { ImageFit, SlotType } from "../dist/engine/types.js";
 import { AssetType } from "../dist/markdown/types.js";
@@ -861,6 +862,93 @@ headline: No output key
 // ============================================
 // GFM table detection in compileDeck
 // ============================================
+
+const WHERE = 'Slide 3: layout "L" slot content (from ::hero::)';
+
+describe("parseImageTitle", () => {
+  const ok: { title: string | null | undefined; expected: ImageOptions }[] = [
+    { title: undefined, expected: {} },
+    { title: null, expected: {} },
+    { title: "", expected: {} },
+    { title: "   ", expected: {} },
+    { title: "fit: contain", expected: { fit: ImageFit.Contain } },
+    { title: "fit: scale-down", expected: { fit: ImageFit.ScaleDown } },
+    { title: "{fit: cover}", expected: { fit: ImageFit.Cover } },
+  ];
+  for (const { title, expected } of ok) {
+    it(`accepts ${JSON.stringify(title)}`, () => {
+      assert.deepEqual(parseImageTitle(title, WHERE), expected);
+    });
+  }
+
+  const errors: { title: string; message: RegExp }[] = [
+    { title: "Our architecture", message: /not a set of options.*alt text instead: !\[Our architecture\]/ },
+    { title: "fit:contain", message: /not a set of options: put a space after the colon, as in "fit: contain"\.$/ },
+    { title: "- contain", message: /not a set of options/ },
+    { title: "fit: Contain", message: /"contain"\|"cover"\|"scale-down"/ },
+    { title: "fit: crop", message: /"contain"\|"cover"\|"scale-down"/ },
+    { title: "fit:", message: /"contain"\|"cover"\|"scale-down"/ },
+    { title: "{fit: cover, width: 2in}", message: /Unknown key\(s\): width\. Valid keys: fit/ },
+    { title: "{fit: [a}", message: /is not valid YAML \(Flow sequence/ },
+    { title: "fit: contain, focus: top", message: /is not valid YAML \(Nested mappings .* column 6\)\. Several options go in braces/ },
+  ];
+  for (const { title, message } of errors) {
+    it(`rejects ${JSON.stringify(title)}, naming where and the title`, () => {
+      assert.throws(
+        () => parseImageTitle(title, WHERE),
+        (err: Error) => {
+          assert.ok(err.message.startsWith(`${WHERE}: image title "${title}"`), err.message);
+          assert.match(err.message, message);
+          return true;
+        },
+      );
+    });
+  }
+
+  it("suggests the alt text only when the title doesn't look like an option", () => {
+    assert.throws(() => parseImageTitle("Our architecture", WHERE), (err: Error) => !/colon/.test(err.message));
+    assert.throws(() => parseImageTitle("fit:contain", WHERE), (err: Error) => !/alt text/.test(err.message));
+  });
+});
+
+describe("compileMarkdownDeck image alt and title", () => {
+  const layouts = [makeLayout("pic", [imageSlot("hero")])];
+  const assets: AssetCatalog = {
+    icons: { star: { path: "icons/star.png", type: AssetType.Icon, description: "" } },
+    photos: { team: { path: "photos/team.png", type: AssetType.Background, description: "" } },
+  };
+  const hero = async (image: string): Promise<ImageFill> => {
+    const source = `---\ntheme: ./theme.json\n---\n---\nlayout: pic\n---\n::hero::\n${image}\n`;
+    const deck = await compileMarkdownDeck(source, layouts, "/theme", assets);
+    return deck.steps[0].content!["hero"] as ImageFill;
+  };
+
+  const cases: { name: string; image: string; path: string; fit: ImageFit; alt: string }[] = [
+    { name: "a path with no title is contain", image: "![Team](pics/team.png)", path: "/theme/pics/team.png", fit: ImageFit.Contain, alt: "Team" },
+    { name: "a path's title overrides contain", image: '![Team](pics/team.png "fit: cover")', path: "/theme/pics/team.png", fit: ImageFit.Cover, alt: "Team" },
+    { name: "a catalog ref with no title takes its type's fit", image: "![]($icons.star)", path: "/theme/icons/star.png", fit: ImageFit.ScaleDown, alt: "" },
+    { name: "a catalog ref's title overrides its type's fit", image: '![Team]($photos.team "fit: contain")', path: "/theme/photos/team.png", fit: ImageFit.Contain, alt: "Team" },
+    { name: "a single-quoted title", image: "![a](pics/team.png 'fit: cover')", path: "/theme/pics/team.png", fit: ImageFit.Cover, alt: "a" },
+    { name: "a parenthesized title", image: "![a](pics/team.png (fit: cover))", path: "/theme/pics/team.png", fit: ImageFit.Cover, alt: "a" },
+    { name: "an angle-bracket URL with spaces", image: '![a](<pics/team photo.png> "fit: cover")', path: "/theme/pics/team photo.png", fit: ImageFit.Cover, alt: "a" },
+    { name: "an empty title", image: '![a](pics/team.png "")', path: "/theme/pics/team.png", fit: ImageFit.Contain, alt: "a" },
+  ];
+  for (const c of cases) {
+    it(c.name, async () => {
+      assert.deepEqual(await hero(c.image), { type: SlotType.Image, path: c.path, fit: c.fit, alt: c.alt });
+    });
+  }
+
+  it("fails a bad title naming the slide, layout and slot", async () => {
+    await assert.rejects(hero('![](pics/team.png "Our team")'), (err: Error) => {
+      assert.ok(
+        err.message.startsWith('Slide 1: layout "pic" slot content (from ::hero::): image title "Our team"'),
+        err.message,
+      );
+      return true;
+    });
+  });
+});
 
 describe("compileDeck GFM table support", () => {
   it("a GFM table in a slot is parsed as TableFill", async () => {
