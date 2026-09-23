@@ -14,19 +14,22 @@
  * are excluded) — so the designer's template notes never leak into the output.
  */
 
-import { DOMParser, XMLSerializer } from "@xmldom/xmldom";
+import { XMLSerializer } from "@xmldom/xmldom";
 import { Attr, buildParagraph, buildRun, nextFreeRId as nextFreeRIdForDoc, Tag } from "./dom.js";
+import {
+  PRESENTATION_PART,
+  PRESENTATION_RELS_PART,
+  parseXml,
+  RelTypeSuffix,
+  relsPathFor,
+  resolveTarget,
+} from "./ooxml.js";
 
-// Package-level OOXML names not covered by dom.ts's `Tag`/`Attr` (which name
-// slide-XML tokens): `[Content_Types].xml` Override entries and the tail
-// segments of relationship-type URLs.
+// `[Content_Types].xml` Override entries: package-level names not covered by
+// dom.ts's `Tag`/`Attr` (which name slide-XML tokens).
 const CT_OVERRIDE = "Override";
 const CT_PART_NAME = "PartName";
 const CT_CONTENT_TYPE = "ContentType";
-const REL_TYPE_SUFFIX = {
-  NotesSlide: "/notesSlide",
-  NotesMaster: "/notesMaster",
-} as const;
 
 const NS_A = "http://schemas.openxmlformats.org/drawingml/2006/main";
 const NS_P = "http://schemas.openxmlformats.org/presentationml/2006/main";
@@ -45,8 +48,6 @@ const NOTES_SLIDE_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.
 const XML_DECL = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n';
 
 const CONTENT_TYPES_PART = "[Content_Types].xml";
-
-const PRESENTATION_RELS_PART = "ppt/_rels/presentation.xml.rels";
 
 const NOTES_SKELETON =
   `<p:notes xmlns:a="${NS_A}" xmlns:r="${NS_R}" xmlns:p="${NS_P}"><p:cSld><p:spTree>` +
@@ -82,7 +83,7 @@ export type NotesArchive = {
  * is handled by the serializer.
  */
 export function buildNotesSlideXml(notes: string): string {
-  const doc = new DOMParser().parseFromString(NOTES_SKELETON, "text/xml");
+  const doc = parseXml(NOTES_SKELETON);
   const txBody = doc.getElementsByTagName("p:txBody")[0];
   for (const line of notes.replace(/\r?\n+$/, "").split(/\r?\n/)) {
     // Reuse the engine's run/paragraph builders — they set xml:space="preserve"
@@ -95,7 +96,7 @@ export function buildNotesSlideXml(notes: string): string {
 
 /** Next unused `rIdN` in a `.rels` XML string (max existing id + 1). */
 export function nextFreeRId(relsXml: string): string {
-  return nextFreeRIdForDoc(new DOMParser().parseFromString(relsXml, "text/xml"));
+  return nextFreeRIdForDoc(parseXml(relsXml));
 }
 
 function serialize(doc: any): string {
@@ -104,10 +105,6 @@ function serialize(doc: any): string {
   // Strip any leading declaration, then prepend exactly one canonical XML_DECL.
   const body = new XMLSerializer().serializeToString(doc).replace(/^<\?xml[^>]*\?>\s*/, "");
   return XML_DECL + body;
-}
-
-function parse(xml: string): any {
-  return new DOMParser().parseFromString(xml, "text/xml");
 }
 
 async function readString(archive: NotesArchive, file: string): Promise<string> {
@@ -154,10 +151,10 @@ function notesRelsXml(slideNumber: number, masterTarget: string): string {
  */
 async function findNotesMaster(archive: NotesArchive): Promise<string | undefined> {
   if (!archive.fileExists(PRESENTATION_RELS_PART)) return undefined;
-  const relsDoc = parse(await readString(archive, PRESENTATION_RELS_PART));
+  const relsDoc = parseXml(await readString(archive, PRESENTATION_RELS_PART));
   const rels = relsDoc.getElementsByTagName(Tag.RELATIONSHIP);
   for (let i = 0; i < rels.length; i++) {
-    if (rels[i].getAttribute(Attr.TYPE)?.endsWith(REL_TYPE_SUFFIX.NotesMaster)) {
+    if (rels[i].getAttribute(Attr.TYPE)?.endsWith(RelTypeSuffix.NotesMaster)) {
       return `../${rels[i].getAttribute(Attr.TARGET)}`;
     }
   }
@@ -173,7 +170,7 @@ function findOverride(ctDoc: any, partName: string): any {
 }
 
 async function addContentTypeOverride(archive: NotesArchive, partName: string): Promise<void> {
-  const ctDoc = parse(await readString(archive, CONTENT_TYPES_PART));
+  const ctDoc = parseXml(await readString(archive, CONTENT_TYPES_PART));
   if (findOverride(ctDoc, partName)) return;
   const override = ctDoc.createElementNS(NS_CT, CT_OVERRIDE);
   override.setAttribute(CT_PART_NAME, partName);
@@ -191,25 +188,12 @@ function removeOverrideFromDoc(ctDoc: any, partName: string): boolean {
 }
 
 async function removeContentTypeOverride(archive: NotesArchive, partName: string): Promise<void> {
-  const ctDoc = parse(await readString(archive, CONTENT_TYPES_PART));
+  const ctDoc = parseXml(await readString(archive, CONTENT_TYPES_PART));
   if (!removeOverrideFromDoc(ctDoc, partName)) return;
   await archive.write(CONTENT_TYPES_PART, serialize(ctDoc));
 }
 
-/** Resolve `target` (from a rels file) against `baseDir`, collapsing `.`/`..`. */
-function resolveRelative(baseDir: string, target: string): string {
-  const parts = baseDir.split("/").filter(Boolean);
-  for (const seg of target.split("/")) {
-    if (seg === "" || seg === ".") continue;
-    if (seg === "..") parts.pop();
-    else parts.push(seg);
-  }
-  return parts.join("/");
-}
-
 const NOTES_SLIDE_PART = /^ppt\/notesSlides\/notesSlide\d+\.xml$/;
-
-const PRESENTATION_PART = "ppt/presentation.xml";
 
 /**
  * The slide parts a deck actually presents, in `<p:sldIdLst>` order, resolved via
@@ -223,7 +207,7 @@ const PRESENTATION_PART = "ppt/presentation.xml";
  * referenced. Only slides reachable from `presentation.xml` are live.
  */
 async function liveSlideParts(archive: NotesArchive): Promise<string[]> {
-  const pres = parse(await readString(archive, PRESENTATION_PART));
+  const pres = parseXml(await readString(archive, PRESENTATION_PART));
   const sldIds = pres.getElementsByTagName("p:sldId");
   const rIds: string[] = [];
   for (let i = 0; i < sldIds.length; i++) {
@@ -231,7 +215,7 @@ async function liveSlideParts(archive: NotesArchive): Promise<string[]> {
     if (rid) rIds.push(rid);
   }
 
-  const relsDoc = parse(await readString(archive, PRESENTATION_RELS_PART));
+  const relsDoc = parseXml(await readString(archive, PRESENTATION_RELS_PART));
   const rels = relsDoc.getElementsByTagName(Tag.RELATIONSHIP);
   const targetById = new Map<string, string>();
   for (let i = 0; i < rels.length; i++) {
@@ -243,14 +227,9 @@ async function liveSlideParts(archive: NotesArchive): Promise<string[]> {
   const parts: string[] = [];
   for (const rid of rIds) {
     const target = targetById.get(rid);
-    if (target) parts.push(resolveRelative("ppt", target));
+    if (target) parts.push(resolveTarget(PRESENTATION_PART, target));
   }
   return parts;
-}
-
-/** The `_rels` path for an archive part (`ppt/slides/slide1.xml` → `ppt/slides/_rels/slide1.xml.rels`). */
-function relsPathFor(part: string): string {
-  return part.replace(/\/([^/]+)$/, "/_rels/$1.rels");
 }
 
 /**
@@ -275,11 +254,11 @@ export async function sweepOrphanNotes(archive: NotesArchive): Promise<void> {
   for (const slidePart of await liveSlideParts(archive)) {
     const relsPath = relsPathFor(slidePart);
     if (!archive.fileExists(relsPath)) continue;
-    const rels = parse(await readString(archive, relsPath)).getElementsByTagName(Tag.RELATIONSHIP);
+    const rels = parseXml(await readString(archive, relsPath)).getElementsByTagName(Tag.RELATIONSHIP);
     for (let i = 0; i < rels.length; i++) {
       const target = rels[i].getAttribute(Attr.TARGET);
-      if (target && rels[i].getAttribute(Attr.TYPE)?.endsWith(REL_TYPE_SUFFIX.NotesSlide)) {
-        referenced.add(resolveRelative("ppt/slides", target));
+      if (target && rels[i].getAttribute(Attr.TYPE)?.endsWith(RelTypeSuffix.NotesSlide)) {
+        referenced.add(resolveTarget(slidePart, target));
       }
     }
   }
@@ -287,7 +266,7 @@ export async function sweepOrphanNotes(archive: NotesArchive): Promise<void> {
   const orphans = notesParts.filter((part) => !referenced.has(part));
   if (orphans.length === 0) return;
 
-  const ctDoc = parse(await readString(archive, CONTENT_TYPES_PART));
+  const ctDoc = parseXml(await readString(archive, CONTENT_TYPES_PART));
   let ctChanged = false;
   for (const part of orphans) {
     await archive.remove(part);
@@ -346,7 +325,7 @@ export async function applyNotesToSlide(
     await archive.write(notesPath, buildNotesSlideXml(notes));
     await archive.write(notesRelsPath, notesRelsXml(slideNumber, masterTarget));
 
-    const relsDoc = parse(await readString(archive, slideRelsPath));
+    const relsDoc = parseXml(await readString(archive, slideRelsPath));
     appendRel(relsDoc, nextFreeRIdForDoc(relsDoc), REL_TYPE.NotesSlide, `../notesSlides/notesSlide${slideNumber}.xml`);
     await archive.write(slideRelsPath, serialize(relsDoc));
 
@@ -359,7 +338,7 @@ export async function applyNotesToSlide(
   await archive.remove(notesPath);
   if (archive.fileExists(notesRelsPath)) await archive.remove(notesRelsPath);
 
-  const relsDoc = parse(await readString(archive, slideRelsPath));
+  const relsDoc = parseXml(await readString(archive, slideRelsPath));
   if (removeNotesRel(relsDoc)) await archive.write(slideRelsPath, serialize(relsDoc));
 
   await removeContentTypeOverride(archive, `/${notesPath}`);
