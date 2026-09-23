@@ -372,6 +372,32 @@ pictures, assets, fit, crop, alt, icons, backgrounds and logos. This is the comp
 Edits are surgical: only the passages named here change. Line numbers are as of `main` on
 23 Sep.
 
+### One source per fact: `syntax.md` is the language, `SKILL.md` is the agent's workflow
+
+`theme-package/SKILL.md` restates much of the deck language that `syntax.md` defines (file
+structure, frontmatter rules, quoting a value that holds `: `, one key per line of a
+multi-line shape, `notes:`). Two copies drift. Phase 7 splits them by who needs what, and
+nothing is written twice:
+
+| Content | Lives in | Why |
+|---|---|---|
+| Deck file structure, frontmatter rules, slots, formatting, images, mermaid, notes, the full example | `docs/syntax.md` | The core's language: true for anyone writing a deck, human or agent |
+| Build command, the build-error → fix table (errors are the core's), rendering to PNGs to check the result | `docs/syntax.md`, a new "Build and troubleshoot" section | Also the core's: the same for everyone |
+| Setup (`npm install`, `unzip -nq assets.dat`), reading `manifest.json`, searching `assets.json`, the copy convention, layout selection and the Avoid list, the verification loop, subagent review | `theme-package/SKILL.md` | Exists because an agent does the work; `manifest.json` and `assets.json` are agent-layer files, and CLAUDE.md puts the composition principles in the skill |
+
+- `SKILL.md` links to `syntax.md` sections instead of restating them. Where it adds agent
+  advice to a core error (e.g. "search `assets.json`; did you unzip `assets.dat`?" for a
+  missing image), it names the error and adds only the advice; the error's meaning is
+  `syntax.md`'s.
+- The per-passage tables below still apply, to wherever the passage lands after the split:
+  e.g. the image example (`SKILL.md` 78–80) moves into `syntax.md`'s image bullet, and the
+  QA table rows move to `syntax.md`'s troubleshooting table with the agent-only hints left
+  in `SKILL.md`.
+- Check before committing phase 7: no sentence of `syntax.md` reappears in `SKILL.md`.
+- `SKILL.md`'s links to `syntax.md` target the packaged layout, where `package` puts the two
+  side by side. Since 4c they don't resolve when browsing the repo (`theme-package/` vs
+  `docs/`); that is expected, not a broken link.
+
 ### Per-theme skill: `theme-package/SKILL.md`
 
 It ships in the npm tarball and is copied into every packaged theme, so a stale line is a
@@ -527,7 +553,9 @@ the go-ahead.
    extract-media`, 5b `tycoslide inspect`, each with tests; the Python scripts are deleted.
 6. **Fail on unknown inline nodes.** `inline.ts` + test.
 7. **Shipped docs.** `theme-package/SKILL.md`, `docs/syntax.md`, `README.md`, `CLAUDE.md`,
-   exactly as tabled.
+   exactly as tabled, with the one-source-per-fact split between `syntax.md` and
+   `SKILL.md`. Could land as two commits: the split (moving text, no new content), then
+   the image changes.
 8. **create-theme skill.** `skills/create-theme/SKILL.md`,
    `skills/create-theme/references/theme-json.md`, the new `references/assets-json.md`,
    exactly as tabled, plus: the inventory and media steps run `npx tycoslide inspect` and
