@@ -1,12 +1,9 @@
-import { resolve } from "node:path";
-import { type ImageFill, ImageFit, SlotType } from "../engine/index.js";
 import { parseSlotContent } from "./blocks/registry.js";
 import { validateSlideFrontmatter } from "./schema/deckSchema.js";
 import type { ParsedDocument, RawSlide } from "./slideParser.js";
 import { templateKeys, templateToSegments } from "./textTemplate.js";
 import {
   type AcceptType,
-  AssetType,
   type CompilerConfig,
   type CompilerDeck,
   type CompilerDeckStep,
@@ -15,30 +12,9 @@ import {
   type CompilerSlot,
   type EngineFill,
   RESERVED_KEY,
-  type ResolveAssetRef,
 } from "./types.js";
 
-/** Map each semantic asset type to the engine's object-fit directive. */
-const FIT_FOR: Record<AssetType, ImageFit> = {
-  [AssetType.Icon]: ImageFit.ScaleDown,
-  [AssetType.Image]: ImageFit.Contain,
-  [AssetType.Background]: ImageFit.Cover,
-};
-
-/**
- * Wrap an absolute image path as an ImageFill. Callers resolve the path (see
- * `resolveImagePath`) and the fit (see `resolveAssetRef`) first; `alt` passes
- * through untouched.
- */
-export function toImageFill(path: string, fit: ImageFit, alt: string): ImageFill {
-  return { type: SlotType.Image, path, fit, alt };
-}
-
 const KNOWN_GLOBAL_KEYS: Set<string> = new Set([RESERVED_KEY.THEME]);
-
-// Anchored whole-field reference: the entire value is `$category.name` or it is
-// not a reference at all. Anchored ⇒ no escaping concerns.
-const ASSET_REF_RE = /^\$([a-zA-Z]\w*)\.([a-zA-Z]\w*)$/;
 
 /**
  * Assert that a region's parsed block folds to a type the slot `accepts`. The
@@ -61,17 +37,6 @@ function assertSlotRegion(
         `(from ${source}); it accepts: ${accepted}.`,
     );
   }
-}
-
-/**
- * Resolve a catalog image path against the deck's root directory.
- * When `rootDir` is empty, the path is returned unchanged so callers that
- * already produce absolute paths (or callers that don't care about
- * resolution) can opt out. Absolute paths always pass through.
- */
-function resolveImagePath(rootDir: string, path: string): string {
-  if (!rootDir || path.startsWith("/")) return path;
-  return resolve(rootDir, path);
 }
 
 /**
@@ -149,11 +114,7 @@ function validateLayout(layout: CompilerLayout): void {
   }
 }
 
-async function compileStep(
-  slide: RawSlide,
-  config: CompilerConfig,
-  resolveAssetRef: ResolveAssetRef,
-): Promise<CompilerDeckStep> {
+async function compileStep(slide: RawSlide, config: CompilerConfig): Promise<CompilerDeckStep> {
   const { layouts } = config;
   const { frontmatter, slots, index } = slide;
   // Slide numbers in errors are 1-based, matching how an author counts slides in
@@ -247,7 +208,6 @@ async function compileStep(
     }
     const source = `::${name}::`;
     const parsed = parseSlotContent(text, {
-      resolveAssetRef,
       layoutName,
       slideNo: slideNo,
       source,
@@ -280,15 +240,11 @@ async function compileStep(
  * code (Shiki) and rendered mermaid (PNG) — so the returned deck is
  * engine-shaped, ready for `buildDeck`.
  *
- * `config.rootDir` is the base directory for resolving the asset catalog's
- * relative image paths. When empty, image paths are returned unchanged — callers
- * that already produce absolute paths (or don't need resolution, e.g. unit tests)
- * rely on the pass-through. When set, relative paths are resolved to absolute via
- * `path.resolve(rootDir, path)`; absolute paths pass through. `config.codeTheme` /
+ * Image paths resolve against `config.deckDir`. `config.codeTheme` /
  * `config.mermaid` / `config.mermaidVariant` feed the code and mermaid compiles.
  */
 export async function compileDeck(doc: ParsedDocument, config: CompilerConfig): Promise<CompilerDeck> {
-  const { layouts, rootDir, assets } = config;
+  const { layouts } = config;
 
   const theme = doc.global[RESERVED_KEY.THEME];
   if (theme === undefined) {
@@ -308,50 +264,11 @@ export async function compileDeck(doc: ParsedDocument, config: CompilerConfig): 
   assertUniqueSlideNumbers(layouts);
   for (const layout of layouts) validateLayout(layout);
 
-  // A body image names a picture one of two ways, and both end as an absolute
-  // path plus a fit: `$category.name` looks the picture up in the theme's
-  // catalog (which carries its declared type), while anything else is a file
-  // path relative to the deck (typed `image`, since nothing declares it). Only
-  // the lookup differs; the wrapping is shared.
-  const fromCatalog = (ref: string): { path: string; type: AssetType } => {
-    const match = ASSET_REF_RE.exec(ref);
-    if (!match) {
-      throw new Error(`Asset reference "${ref}" must be in the form $category.name (e.g. $logos.primary).`);
-    }
-    const [, category, name] = match;
-    const entry = assets[category]?.[name];
-    if (!entry) {
-      // Every asset in the catalog is far too many to read: a theme's icon set
-      // alone can run to thousands.
-      // A known category narrows it to that category's names, which is what the
-      // author is choosing between; an unknown one lists the categories instead.
-      const group = assets[category];
-      const available = group
-        ? Object.keys(group)
-            .map((n) => `$${category}.${n}`)
-            .join(", ")
-        : Object.keys(assets)
-            .map((c) => `$${c}.*`)
-            .join(", ");
-      throw new Error(`Unknown asset reference "${ref}". Available: ${available}`);
-    }
-    return { path: resolveImagePath(rootDir, entry.path), type: entry.type };
-  };
-  const fromDeck = (ref: string): { path: string; type: AssetType } => ({
-    path: resolveImagePath(config.deckDir, ref),
-    type: AssetType.Image,
-  });
-  // Fit precedence: the image's title, then the asset's type (a path is an `image`).
-  const resolveAssetRef: ResolveAssetRef = (ref, alt, options) => {
-    const { path, type } = ref.startsWith("$") ? fromCatalog(ref) : fromDeck(ref);
-    return toImageFill(path, options.fit ?? FIT_FOR[type], alt);
-  };
-
   // Slides compile in order: a slide's structural errors (unknown layout/key,
-  // bad asset ref, accept-type mismatch) fire before its own content is rendered.
+  // accept-type mismatch) fire before its own content is rendered.
   const steps: CompilerDeckStep[] = [];
   for (const slide of doc.slides) {
-    steps.push(await compileStep(slide, config, resolveAssetRef));
+    steps.push(await compileStep(slide, config));
   }
   return { theme: String(theme), steps };
 }

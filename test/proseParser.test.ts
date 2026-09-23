@@ -11,9 +11,6 @@ import { AcceptType } from "../dist/markdown/types.js";
 // paragraph's runs on soft line breaks.
 
 const ctx = {
-  resolveAssetRef: () => {
-    throw new Error("no asset resolver expected in prose tests");
-  },
   layoutName: "L",
   slideNo: 1,
   source: "body content",

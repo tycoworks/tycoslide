@@ -1,22 +1,31 @@
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import type { Image } from "mdast";
 import { parse as parseYaml } from "yaml";
 import * as z from "zod";
-import { type ImageFill, ImageFit } from "../../engine/index.js";
+import { type ImageFill, ImageFit, SlotType } from "../../engine/index.js";
 import { MdastType } from "../mdast.js";
 import { strict } from "../schema/strict.js";
 import { isYamlMapping } from "../slideParser.js";
 import { AcceptType, type BlockHandler } from "../types.js";
 
+/** The fit when the title gives none: the whole picture, never cropped. */
+const DEFAULT_FIT = ImageFit.Contain;
+
 export const IMAGE: BlockHandler = {
   match: (node) => node.type === MdastType.Image,
   acceptType: AcceptType.Image,
-  // `url` is the raw `$category.name` ref or deck-relative path; `resolveAssetRef`
-  // validates and resolves it (fail-fast on a malformed or unknown reference).
-  // `alt` is the picture's alt text; the parser flattens it to plain text, and
-  // an image written without any is "". `title` carries the image's options.
+  // `url` is a path relative to the deck. `alt` is the picture's alt text; the
+  // parser flattens it to plain text, and an image written without any is "".
+  // `title` carries the image's options.
   compile: async (node, ctx): Promise<ImageFill> => {
     const { url, alt, title } = node as Image;
-    return ctx.resolveAssetRef(url, alt ?? "", parseImageTitle(title, ctx.region));
+    const options = parseImageTitle(title, ctx.region);
+    const path = resolve(ctx.config.deckDir, url);
+    if (!existsSync(path)) {
+      throw new Error(`${ctx.region}: image "${url}" not found at ${path}`);
+    }
+    return { type: SlotType.Image, path, fit: options.fit ?? DEFAULT_FIT, alt: alt ?? "" };
   },
 };
 

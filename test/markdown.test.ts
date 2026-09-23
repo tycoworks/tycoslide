@@ -1,5 +1,8 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 import { parseSlideDocument } from "../dist/markdown/slideParser.js";
 import { compileDeck as compileDeckRaw } from "../dist/markdown/deckCompiler.js";
 import { compileMarkdownDeck as compileMarkdownDeckRaw } from "../dist/markdown/index.js";
@@ -7,7 +10,6 @@ import { templateKeys, templateToSegments } from "../dist/markdown/textTemplate.
 import { type ImageOptions, parseImageTitle } from "../dist/markdown/blocks/image.js";
 import type { TextFill, ImageFill, StyledParagraph } from "../dist/engine/types.js";
 import { ImageFit, SlotType } from "../dist/engine/types.js";
-import { AssetType } from "../dist/markdown/types.js";
 import type { AssetCatalog, CompilerConfig, CompilerLayout, CompilerParameter, CompilerSlot } from "../dist/markdown/types.js";
 
 // `compileDeck` / `compileMarkdownDeck` now take a single `CompilerConfig` and
@@ -289,6 +291,16 @@ Some loose text`),
 // A degenerate one-key text shape whose shapeName equals its single key, so
 // its expanded content lands under `content[key]` — keeping key-addressed
 // assertions readable. Multi-key behavior is exercised separately below.
+/** A temp deck directory holding `paths` as empty files: the compiler checks that images exist. */
+function deckDirWith(...paths: string[]): string {
+  const dir = mkdtempSync(join(tmpdir(), "tycoslide-deck-"));
+  for (const path of paths) {
+    mkdirSync(dirname(join(dir, path)), { recursive: true });
+    writeFileSync(join(dir, path), "");
+  }
+  return dir;
+}
+
 function keyedTemplateParam(key: string): CompilerParameter {
   return { shapeName: key, template: `{${key}}` };
 }
@@ -790,12 +802,11 @@ headline: Questions?
 
 ::bg::
 
-![]($imgs.closingBg)
+![](images/closing-bg.png)
 `;
 
-    const deck = await compileMarkdownDeck(source, e2eLayouts, "", {
-      imgs: { closingBg: { path: "images/closing-bg.png", type: AssetType.Image, description: "" } },
-    });
+    const deckDir = deckDirWith("images/closing-bg.png");
+    const deck = await compileMarkdownDeck(source, e2eLayouts, deckDir);
 
     assert.equal(deck.steps.length, 3);
 
@@ -814,7 +825,7 @@ headline: Questions?
     assert.deepEqual(deck.steps[2].content!["headline"], tvar("headline", "Questions?"));
     const closingBg: ImageFill = {
       type: SlotType.Image,
-      path: "images/closing-bg.png",
+      path: join(deckDir, "images/closing-bg.png"),
       fit: ImageFit.Contain,
       alt: "",
     };
@@ -913,25 +924,22 @@ describe("parseImageTitle", () => {
 
 describe("compileMarkdownDeck image alt and title", () => {
   const layouts = [makeLayout("pic", [imageSlot("hero")])];
-  const assets: AssetCatalog = {
-    icons: { star: { path: "icons/star.png", type: AssetType.Icon, description: "" } },
-    photos: { team: { path: "photos/team.png", type: AssetType.Background, description: "" } },
-  };
+  const deckDir = deckDirWith("pics/team.png", "pics/team photo.png");
+  const team = join(deckDir, "pics/team.png");
   const hero = async (image: string): Promise<ImageFill> => {
     const source = `---\ntheme: ./theme.json\n---\n---\nlayout: pic\n---\n::hero::\n${image}\n`;
-    const deck = await compileMarkdownDeck(source, layouts, "/theme", assets);
+    const deck = await compileMarkdownDeck(source, layouts, deckDir);
     return deck.steps[0].content!["hero"] as ImageFill;
   };
 
   const cases: { name: string; image: string; path: string; fit: ImageFit; alt: string }[] = [
-    { name: "a path with no title is contain", image: "![Team](pics/team.png)", path: "/theme/pics/team.png", fit: ImageFit.Contain, alt: "Team" },
-    { name: "a path's title overrides contain", image: '![Team](pics/team.png "fit: cover")', path: "/theme/pics/team.png", fit: ImageFit.Cover, alt: "Team" },
-    { name: "a catalog ref with no title takes its type's fit", image: "![]($icons.star)", path: "/theme/icons/star.png", fit: ImageFit.ScaleDown, alt: "" },
-    { name: "a catalog ref's title overrides its type's fit", image: '![Team]($photos.team "fit: contain")', path: "/theme/photos/team.png", fit: ImageFit.Contain, alt: "Team" },
-    { name: "a single-quoted title", image: "![a](pics/team.png 'fit: cover')", path: "/theme/pics/team.png", fit: ImageFit.Cover, alt: "a" },
-    { name: "a parenthesized title", image: "![a](pics/team.png (fit: cover))", path: "/theme/pics/team.png", fit: ImageFit.Cover, alt: "a" },
-    { name: "an angle-bracket URL with spaces", image: '![a](<pics/team photo.png> "fit: cover")', path: "/theme/pics/team photo.png", fit: ImageFit.Cover, alt: "a" },
-    { name: "an empty title", image: '![a](pics/team.png "")', path: "/theme/pics/team.png", fit: ImageFit.Contain, alt: "a" },
+    { name: "no title is contain", image: "![Team](pics/team.png)", path: team, fit: ImageFit.Contain, alt: "Team" },
+    { name: "the title's fit wins", image: '![Team](pics/team.png "fit: cover")', path: team, fit: ImageFit.Cover, alt: "Team" },
+    { name: "an absolute path passes through", image: `![a](${team})`, path: team, fit: ImageFit.Contain, alt: "a" },
+    { name: "a single-quoted title", image: "![a](pics/team.png 'fit: cover')", path: team, fit: ImageFit.Cover, alt: "a" },
+    { name: "a parenthesized title", image: "![a](pics/team.png (fit: cover))", path: team, fit: ImageFit.Cover, alt: "a" },
+    { name: "an angle-bracket URL with spaces", image: '![a](<pics/team photo.png> "fit: cover")', path: join(deckDir, "pics/team photo.png"), fit: ImageFit.Cover, alt: "a" },
+    { name: "an empty title", image: '![a](pics/team.png "")', path: team, fit: ImageFit.Contain, alt: "a" },
   ];
   for (const c of cases) {
     it(c.name, async () => {

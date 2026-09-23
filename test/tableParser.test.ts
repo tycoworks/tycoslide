@@ -11,9 +11,6 @@ import { AcceptType } from "../dist/markdown/types.js";
 const cell = (text: string) => ({ runs: [{ text }] });
 
 const ctx = {
-  resolveAssetRef: () => {
-    throw new Error("no asset resolver expected in table tests");
-  },
   layoutName: "L",
   slideNo: 1,
   source: "body content",

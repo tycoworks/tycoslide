@@ -8,7 +8,6 @@ import {
   type TemplateFill,
   type TextFill,
 } from "../engine/index.js";
-import type { ImageOptions } from "./blocks/image.js";
 import type { MermaidConfig } from "./blocks/mermaidTheme.js";
 
 // Re-export the engine's table body-range type so the compiler layer (and the
@@ -16,12 +15,12 @@ import type { MermaidConfig } from "./blocks/mermaidTheme.js";
 // SlotType.
 export type { BodyRows };
 
-// ── Asset catalog (compiler / theme-metadata only) ───────────────────────────
+// ── Asset catalog (packaging only) ───────────────────────────────────────────
 
 /**
- * An asset's scaling/cropping tolerance, declared in the theme catalog. The
- * compiler maps it to the engine's object-fit `fit`. `icon`: never enlarge,
- * never crop. `image`: never crop, may scale. `background`: crop and scale freely.
+ * An asset's scaling/cropping tolerance, declared in the theme catalog for deck
+ * authors. `icon`: never enlarge, never crop. `image`: never crop, may scale.
+ * `background`: crop and scale freely.
  */
 export const AssetType = {
   Icon: "icon",
@@ -31,10 +30,8 @@ export const AssetType = {
 export type AssetType = (typeof AssetType)[keyof typeof AssetType];
 
 /**
- * A theme's declaration of a reusable image asset. Purely compiler-facing —
- * the engine never sees this type; the compiler resolves an entry's `path`
- * to a fully-qualified filesystem path and wraps it as an ImageFill before
- * handing the deck to the engine.
+ * A picture the theme offers deck authors. The compiler never reads it: it is
+ * packaging input, which `tycoslide package` writes out as `assets.json`.
  */
 export type AssetEntry = {
   path: string;
@@ -96,15 +93,8 @@ export type EngineFill = TextFill | TableFill | ImageFill | TemplateFill;
 export type BlockFill = TextFill | TableFill | ImageFill;
 
 /**
- * Resolve an image reference (a `$category.name` catalog ref or a deck-relative
- * path) to an ImageFill carrying `alt`, the picture's alt text ("" for none), and
- * the fit from `options` when the image's title gives one.
- */
-export type ResolveAssetRef = (ref: string, alt: string, options: ImageOptions) => ImageFill;
-
-/**
  * Everything a block handler needs to compile a node into its engine fill: the
- * asset resolver, the diagnostic context to name the offending layout/slide/slot
+ * diagnostic context to name the offending layout/slide/slot
  * when a region's markdown shape is illegal (a stray standalone block mixed into
  * prose), and the theme-level `config` — from which code/mermaid compile read
  * their one-per-theme style (`codeTheme`, `mermaid`, `mermaidVariant`), not the
@@ -115,7 +105,6 @@ export type ResolveAssetRef = (ref: string, alt: string, options: ImageOptions) 
  * imports the per-kind handlers, so the reverse would cycle.
  */
 export type BlockContext = {
-  resolveAssetRef: ResolveAssetRef;
   layoutName: string;
   slideNo: number;
   source: string;
@@ -330,7 +319,7 @@ export type CompilerThemeConfig = {
 
 /**
  * A theme as loaded from disk: its validated config plus the directory it
- * lives in, which the catalog's relative asset paths resolve against.
+ * lives in, which its relative paths (template, fonts, catalog) resolve against.
  */
 export type LoadedTheme = CompilerThemeConfig & {
   rootDir: string;

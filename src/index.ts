@@ -20,7 +20,6 @@ import {
   type CompilerSlot,
   type CompilerThemeConfig,
 } from "./markdown/types.js";
-import { expandAssets } from "./skillZip.js";
 
 /**
  * A frontmatter parameter always fills one physical shape on the layout's own
@@ -99,10 +98,8 @@ function toEngineLayout(layout: CompilerLayout): Layout {
 /**
  * Project a CompilerThemeConfig down to the engine's ThemeConfig shape.
  * Fields are copied cell-by-cell so the boundary is explicit — no casts.
- * The compiler's `assets` catalog is intentionally NOT forwarded: the engine
- * is ignorant of theme-level asset metadata; the compiler resolves any asset
- * reference to a filesystem path and wraps it as an ImageFill in
- * `step.content` before this projection runs.
+ * The `assets` catalog is intentionally NOT forwarded: it is packaging input
+ * for `assets.json`, and a deck names each picture by path.
  */
 export function toEngineThemeConfig(config: CompilerThemeConfig): ThemeConfig {
   const result: ThemeConfig = {
@@ -148,11 +145,6 @@ export async function buildDeck(
   if (deck.output === undefined) {
     throw new Error('buildDeck: deck.output is not set. Set it (e.g. "deck.pptx") before calling buildDeck.');
   }
-  // A packaged theme ships its assets as one archive, because hosts cap how many
-  // files a skill may contain. Expand it here rather than at compile: the catalog
-  // is what an author reads, and only filling needs the bytes.
-  await expandAssets(config.rootDir);
-
   const engineDeck: Deck = { theme: deck.theme, output: deck.output, steps: deck.steps };
   await generate(engineDeck, toEngineConfig(config), options);
 }
