@@ -13,13 +13,12 @@ export { type BlockContext, type BlockHandler, parseSlotContent } from "./blocks
 export { compileDeck } from "./deckCompiler.js";
 export { parseInlineRuns } from "./inline.js";
 export { parseRegion } from "./mdast.js";
+export { strict } from "./schema/strict.js";
 export { loadThemeConfig, parseThemeConfig, ThemeConfigSchema } from "./schema/themeConfigSchema.js";
 export type { ParsedDocument, RawSlide } from "./slideParser.js";
 export { parseSlideDocument } from "./slideParser.js";
 export { templateKeys } from "./textTemplate.js";
 export type {
-  AssetCatalog,
-  AssetEntry,
   CompilerBlock,
   CompilerConfig,
   CompilerDeck,
@@ -31,4 +30,4 @@ export type {
   EngineFill,
   LoadedTheme,
 } from "./types.js";
-export { AcceptType, AssetType, RESERVED_KEY } from "./types.js";
+export { AcceptType, RESERVED_KEY } from "./types.js";

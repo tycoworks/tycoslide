@@ -15,7 +15,7 @@ export const ASSETS_FILE = "assets.json";
 /**
  * The one archive a packaged theme's declared assets ship inside. Entries are
  * stored at theme-relative POSIX paths and never rewritten: packaging writes
- * them, building expands them. Zip format, deliberately NOT named .zip: the
+ * them, and an agent unzips them. Zip format, deliberately NOT named .zip: the
  * upload host rejects nested .zip entries by extension while accepting .pptx,
  * which is also a zip -- so the archive travels under a neutral name.
  */

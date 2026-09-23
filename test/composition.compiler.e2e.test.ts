@@ -305,7 +305,6 @@ layout: TextOnly
     // is mandatory. Missing → throw at the compiler→engine boundary.
     const bad: CompilerThemeConfig = {
       template: "template/composition.pptx",
-      assets: {},
       layouts: [
         {
           name: "NoFrame",

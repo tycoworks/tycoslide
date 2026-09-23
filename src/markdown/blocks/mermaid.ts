@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { extname, join, resolve } from "node:path";
+import { extname, join, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { Code } from "mdast";
 import type { ImageFill } from "../../engine/index.js";
@@ -105,7 +105,9 @@ function ensureCacheDir(config: CompilerConfig): string {
  * naming the family + path — never a silent skip.
  */
 function resolveFonts(rootDir: string, fonts: ThemeFont[]): ResolvedFont[] {
-  const require = createRequire(join(rootDir, "package.json"));
+  // `createRequire` treats a path ending in a separator as a directory, so package
+  // names resolve from the theme's folder (its node_modules).
+  const require = createRequire(join(rootDir, sep));
   return fonts.map((font) => {
     const isFsPath = font.path.startsWith(".") || font.path.startsWith("/");
     let absPath: string;

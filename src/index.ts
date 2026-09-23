@@ -98,8 +98,6 @@ function toEngineLayout(layout: CompilerLayout): Layout {
 /**
  * Project a CompilerThemeConfig down to the engine's ThemeConfig shape.
  * Fields are copied cell-by-cell so the boundary is explicit — no casts.
- * The `assets` catalog is intentionally NOT forwarded: it is packaging input
- * for `assets.json`, and a deck names each picture by path.
  */
 export function toEngineThemeConfig(config: CompilerThemeConfig): ThemeConfig {
   const result: ThemeConfig = {
@@ -175,8 +173,6 @@ export {
   TEMPLATE_DIR,
 } from "./engine/index.js";
 export type {
-  AssetCatalog,
-  AssetEntry,
   CompilerBlock,
   CompilerConfig,
   CompilerDeck,
@@ -195,9 +191,9 @@ export type {
 // Markdown / Compiler
 export {
   AcceptType,
-  AssetType,
   compileMarkdownDeck,
   loadThemeConfig,
   parseThemeConfig,
+  strict,
   templateKeys,
 } from "./markdown/index.js";

@@ -10,17 +10,16 @@ import { templateKeys, templateToSegments } from "../dist/markdown/textTemplate.
 import { type ImageOptions, parseImageTitle } from "../dist/markdown/blocks/image.js";
 import type { TextFill, ImageFill, StyledParagraph } from "../dist/engine/types.js";
 import { ImageFit, SlotType } from "../dist/engine/types.js";
-import type { AssetCatalog, CompilerConfig, CompilerLayout, CompilerParameter, CompilerSlot } from "../dist/markdown/types.js";
+import type { CompilerConfig, CompilerLayout, CompilerParameter, CompilerSlot } from "../dist/markdown/types.js";
 
 // `compileDeck` / `compileMarkdownDeck` now take a single `CompilerConfig` and
 // are async. These positional shims keep the many call sites terse: they build a
-// throwaway config (its `template` is unread by the compile path) from the old
-// (layouts, rootDir, assets) arguments, plus an `extra` slot for theme-level
+// throwaway config (its `template` is unread by the compile path) from
+// (layouts, rootDir) arguments, plus an `extra` slot for theme-level
 // code/mermaid style. Callers `await` the result.
 type CompileExtra = Partial<Pick<CompilerConfig, "codeTheme" | "mermaid" | "mermaidVariant">>;
-const cfg = (layouts: CompilerLayout[], rootDir = "", assets: AssetCatalog = {}, extra: CompileExtra = {}): CompilerConfig => ({
+const cfg = (layouts: CompilerLayout[], rootDir = "", extra: CompileExtra = {}): CompilerConfig => ({
   layouts,
-  assets,
   template: "",
   rootDir,
   deckDir: rootDir,
@@ -30,16 +29,14 @@ const compileDeck = (
   doc: Parameters<typeof compileDeckRaw>[0],
   layouts: CompilerLayout[],
   rootDir = "",
-  assets: AssetCatalog = {},
   extra: CompileExtra = {},
-) => compileDeckRaw(doc, cfg(layouts, rootDir, assets, extra));
+) => compileDeckRaw(doc, cfg(layouts, rootDir, extra));
 const compileMarkdownDeck = (
   source: string,
   layouts: CompilerLayout[],
   rootDir = "",
-  assets: AssetCatalog = {},
   extra: CompileExtra = {},
-) => compileMarkdownDeckRaw(source, cfg(layouts, rootDir, assets, extra));
+) => compileMarkdownDeckRaw(source, cfg(layouts, rootDir, extra));
 
 // ============================================
 // slideParser
@@ -1022,7 +1019,7 @@ describe("compileDeck code fence support", () => {
       slides: [
         { index: 0, frontmatter: { layout: "code-dark" }, slots: { body: "```sql\nSELECT * FROM users;\n```" } },
       ],
-    }, [makeLayout("code-dark", [codeSlot("body")])], "", {}, DARK);
+    }, [makeLayout("code-dark", [codeSlot("body")])], "", DARK);
 
     const body = deck.steps[0].content!["body"] as any;
     assert.ok(Array.isArray(body.paragraphs), "highlighted to a TextFill");
@@ -1036,7 +1033,7 @@ describe("compileDeck code fence support", () => {
       slides: [
         { index: 0, frontmatter: { layout: "code-dark" }, slots: { code: "```python\nprint('hello')\n```" } },
       ],
-    }, [makeLayout("code-dark", [codeSlot("code")])], "", {}, DARK);
+    }, [makeLayout("code-dark", [codeSlot("code")])], "", DARK);
 
     const code = deck.steps[0].content!["code"] as any;
     assert.ok(Array.isArray(code.paragraphs));
@@ -1053,7 +1050,7 @@ describe("compileDeck code fence support", () => {
           slots: { body: "```typescript\nconst x = 1;\nconst y = 2;\nreturn x + y;\n```" },
         },
       ],
-    }, [makeLayout("code-dark", [codeSlot("body")])], "", {}, DARK);
+    }, [makeLayout("code-dark", [codeSlot("body")])], "", DARK);
 
     const body = deck.steps[0].content!["body"] as any;
     assert.ok(Array.isArray(body.paragraphs));
@@ -1112,10 +1109,10 @@ describe("compileDeck code theme light/dark variant", () => {
   };
 
   it('a variant:"light" layout highlights with the light arm of the pair', async () => {
-    const lightDeck = await compileDeck(slide("code-light"), [codeVariantLayout("code-light", "light")], "", {}, PAIR);
-    const darkDeck = await compileDeck(slide("code-dark"), [codeVariantLayout("code-dark", "dark")], "", {}, PAIR);
+    const lightDeck = await compileDeck(slide("code-light"), [codeVariantLayout("code-light", "light")], "", PAIR);
+    const darkDeck = await compileDeck(slide("code-dark"), [codeVariantLayout("code-dark", "dark")], "", PAIR);
     // Reference: the same source highlighted with the light theme as a plain string.
-    const lightRef = await compileDeck(slide("code-light"), [codeVariantLayout("code-light", "light")], "", {}, { codeTheme: "github-light" });
+    const lightRef = await compileDeck(slide("code-light"), [codeVariantLayout("code-light", "light")], "", { codeTheme: "github-light" });
 
     const lightColors = colorsOf(lightDeck.steps[0].content!["body"]);
     assert.notEqual(lightColors, colorsOf(darkDeck.steps[0].content!["body"]), "light and dark arms differ");
@@ -1128,7 +1125,7 @@ describe("compileDeck code theme light/dark variant", () => {
 
   it("an untagged layout with a pair codeTheme fails fast (no default)", async () => {
     await assert.rejects(
-      () => compileDeck(slide("code-default"), [codeVariantLayout("code-default")], "", {}, PAIR),
+      () => compileDeck(slide("code-default"), [codeVariantLayout("code-default")], "", PAIR),
       /Layout "code-default".*declares no "variant"/s,
     );
   });
@@ -1138,7 +1135,6 @@ describe("compileDeck code theme light/dark variant", () => {
       slide("code-light"),
       [codeVariantLayout("code-light", "light")],
       "",
-      {},
       { codeTheme: "github-dark" },
     );
     const body = stringDeck.steps[0].content!["body"] as any;

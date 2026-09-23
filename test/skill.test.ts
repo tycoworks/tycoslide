@@ -4,23 +4,22 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, it } from "node:test";
 import JSZip from "jszip";
-import { AssetType } from "../dist/markdown/types.js";
+import type { AssetCatalog } from "../dist/agents/catalog.js";
 import { ASSETS_ARCHIVE } from "../dist/agents/files.js";
-import { expandAssets } from "../dist/agents/skill.js";
 import { renameSkill, skillPackageJson, zipDir } from "../dist/agents/skill.js";
+import { ImageFit } from "../dist/engine/types.js";
 
 /** Stand-in for the authored manifest; `skillPackageJson` is tested on its own below. */
 const PKG_JSON = '{"name":"acme-slides"}\n';
 
-const config = {
-  layouts: [],
-  template: "corp.pptx",
-  assets: { logos: { a: { path: "assets/logos/a.png", type: AssetType.Icon, description: "A logo" } } },
+const config = { layouts: [], template: "corp.pptx" };
+const catalog: AssetCatalog = {
+  logos: { a: { path: "assets/logos/a.png", fit: ImageFit.ScaleDown, description: "A logo" } },
 };
-const generated = ["theme.json", "manifest.json", "SKILL.md", "syntax.md"];
+const shipped = ["theme.json", "assets.json", "manifest.json", "SKILL.md", "syntax.md"];
 
 const seedTheme = (root: string): void => {
-  for (const f of generated) writeFileSync(join(root, f), `${f}\n`);
+  for (const f of shipped) writeFileSync(join(root, f), `${f}\n`);
   writeFileSync(join(root, "package.json"), "{}\n");
   mkdirSync(join(root, "assets", "logos"), { recursive: true });
   writeFileSync(join(root, "assets", "logos", "a.png"), "PNG");
@@ -96,9 +95,10 @@ describe("zipDir", () => {
     try {
       seedTheme(root);
 
-      const zip = await JSZip.loadAsync(await zipDir(root, "acme-slides", config, generated, PKG_JSON));
+      const zip = await JSZip.loadAsync(await zipDir(root, "acme-slides", config, catalog, shipped, PKG_JSON));
 
       assert.ok(zip.file("acme-slides/theme.json"), "config included");
+      assert.ok(zip.file("acme-slides/assets.json"), "picture catalog included");
       assert.ok(zip.file("acme-slides/manifest.json"), "manifest included");
       assert.ok(zip.file("acme-slides/SKILL.md"), "SKILL.md included");
       assert.ok(zip.file("acme-slides/syntax.md"), "syntax.md included");
@@ -134,7 +134,7 @@ describe("zipDir", () => {
       mkdirSync(join(root, "node_modules"));
       writeFileSync(join(root, "node_modules", "junk.js"), "x");
 
-      const zip = await JSZip.loadAsync(await zipDir(root, "acme-slides", config, generated, PKG_JSON));
+      const zip = await JSZip.loadAsync(await zipDir(root, "acme-slides", config, catalog, shipped, PKG_JSON));
 
       assert.ok(!zip.file("acme-slides/decks/demo.pptx"), "built deck excluded");
       assert.ok(!zip.file("acme-slides/decks/demo.pdf"), "exported pdf excluded");
@@ -154,7 +154,7 @@ describe("zipDir", () => {
     try {
       seedTheme(root);
       writeFileSync(join(root, "package-lock.json"), "{}\n");
-      const zip = await JSZip.loadAsync(await zipDir(root, "acme-slides", config, generated, PKG_JSON));
+      const zip = await JSZip.loadAsync(await zipDir(root, "acme-slides", config, catalog, shipped, PKG_JSON));
       assert.ok(zip.file("acme-slides/package-lock.json"), "lockfile included");
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -167,7 +167,7 @@ describe("zipDir", () => {
       seedTheme(root);
       rmSync(join(root, "assets", "logos", "a.png"));
       await assert.rejects(
-        zipDir(root, "acme-slides", config, generated, PKG_JSON),
+        zipDir(root, "acme-slides", config, catalog, shipped, PKG_JSON),
         /assets\/logos\/a\.png.*no such file/,
       );
     } finally {
@@ -179,9 +179,9 @@ describe("zipDir", () => {
 describe("assets archive", () => {
   // A host caps a skill at a number of FILES. A brand library is unbounded -- an
   // icon set alone runs to thousands -- so every declared asset ships inside one
-  // archive, and `buildDeck` expands it before anything fills with it.
+  // archive, which an agent unzips to copy pictures into decks.
   const archiveOf = async (root: string): Promise<JSZip> => {
-    const zip = await JSZip.loadAsync(await zipDir(root, "acme-slides", config, generated, PKG_JSON));
+    const zip = await JSZip.loadAsync(await zipDir(root, "acme-slides", config, catalog, shipped, PKG_JSON));
     const entry = zip.file(`acme-slides/${ASSETS_ARCHIVE}`);
     assert.ok(entry, "skill carries an assets archive");
     return JSZip.loadAsync(await entry.async("nodebuffer"));
@@ -191,7 +191,7 @@ describe("assets archive", () => {
     const root = mkdtempSync(join(tmpdir(), "skill-archive-"));
     try {
       seedTheme(root);
-      const zip = await JSZip.loadAsync(await zipDir(root, "acme-slides", config, generated, PKG_JSON));
+      const zip = await JSZip.loadAsync(await zipDir(root, "acme-slides", config, catalog, shipped, PKG_JSON));
       const loose = Object.keys(zip.files).filter((f) => f.includes("/assets/"));
       assert.deepEqual(loose, [], "no asset is a loose entry");
     } finally {
@@ -206,51 +206,6 @@ describe("assets archive", () => {
       const assets = await archiveOf(root);
       assert.ok(assets.file("assets/logos/a.png"), "the path theme.json declares");
       assert.equal(await assets.file("assets/logos/a.png")?.async("string"), "PNG");
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
-  });
-
-  it("expands to the paths the catalog names", async () => {
-    const root = mkdtempSync(join(tmpdir(), "expand-"));
-    const target = mkdtempSync(join(tmpdir(), "expand-target-"));
-    try {
-      seedTheme(root);
-      const assets = await archiveOf(root);
-      writeFileSync(join(target, ASSETS_ARCHIVE), await assets.generateAsync({ type: "nodebuffer" }));
-
-      await expandAssets(target);
-      assert.equal(readFileSync(join(target, "assets", "logos", "a.png"), "utf-8"), "PNG");
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-      rmSync(target, { recursive: true, force: true });
-    }
-  });
-
-  it("never overwrites a file already on disk, so a stale archive cannot clobber a theme", async () => {
-    const root = mkdtempSync(join(tmpdir(), "expand-loose-"));
-    const target = mkdtempSync(join(tmpdir(), "expand-loose-target-"));
-    try {
-      seedTheme(root);
-      const assets = await archiveOf(root);
-      writeFileSync(join(target, ASSETS_ARCHIVE), await assets.generateAsync({ type: "nodebuffer" }));
-      mkdirSync(join(target, "assets", "logos"), { recursive: true });
-      writeFileSync(join(target, "assets", "logos", "a.png"), "NEWER");
-
-      await expandAssets(target);
-      assert.equal(readFileSync(join(target, "assets", "logos", "a.png"), "utf-8"), "NEWER");
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-      rmSync(target, { recursive: true, force: true });
-    }
-  });
-
-  it("is a no-op in a theme under development, which has no archive", async () => {
-    const root = mkdtempSync(join(tmpdir(), "expand-none-"));
-    try {
-      seedTheme(root);
-      await expandAssets(root);
-      assert.equal(readFileSync(join(root, "assets", "logos", "a.png"), "utf-8"), "PNG");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -271,29 +226,11 @@ describe("assets archive", () => {
     }
   });
 
-  it("refuses an entry that is not a theme-relative path", async () => {
-    const target = mkdtempSync(join(tmpdir(), "expand-traversal-"));
-    try {
-      const hostile = new JSZip();
-      // JSZip collapses `..` on load; a backslash survives and traverses on Windows.
-      hostile.file("..\\escaped.png", "X");
-      writeFileSync(join(target, ASSETS_ARCHIVE), await hostile.generateAsync({ type: "nodebuffer" }));
-      await assert.rejects(expandAssets(target), /not a theme-relative path/);
-    } finally {
-      rmSync(target, { recursive: true, force: true });
-    }
-  });
-
-  it("does nothing when given no root, rather than expanding into the working directory", async () => {
-    await expandAssets("");
-  });
-
   it("packages a theme that declares no assets at all, with no archive", async () => {
     const root = mkdtempSync(join(tmpdir(), "skill-noassets-"));
     try {
       seedTheme(root);
-      const bare = { ...config, assets: {} };
-      const zip = await JSZip.loadAsync(await zipDir(root, "acme-slides", bare, generated, PKG_JSON));
+      const zip = await JSZip.loadAsync(await zipDir(root, "acme-slides", config, {}, shipped, PKG_JSON));
       assert.equal(zip.file(`acme-slides/${ASSETS_ARCHIVE}`), null, "no archive when there is nothing to archive");
       assert.ok(zip.file("acme-slides/template/corp.pptx"), "the rest still packages");
     } finally {

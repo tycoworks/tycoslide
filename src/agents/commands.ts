@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { basename, resolve } from "node:path";
 import type { Command } from "commander";
 import { loadThemeConfig } from "../index.js";
+import { loadAssetCatalog } from "./catalog.js";
 import {
   ASSETS_FILE,
   MANIFEST_FILE,
@@ -12,7 +13,7 @@ import {
   THEME_CONFIG,
   THEME_PACKAGE_DIR,
 } from "./files.js";
-import { generateAssetCatalog, generateManifest } from "./manifest.js";
+import { generateManifest } from "./manifest.js";
 import { renameSkill, skillPackageJson, zipDir } from "./skill.js";
 
 /** The installed tycoslide package: where its shipped files live, and what a skill pins. */
@@ -29,6 +30,7 @@ export function registerAgentCommands(program: Command, tool: ToolPackage): void
     .option(`-c, --config <path>`, "path to theme config file", THEME_CONFIG)
     .action(async (opts: { config: string }) => {
       const config = loadThemeConfig(resolve(process.cwd(), opts.config));
+      const catalog = loadAssetCatalog(config.rootDir);
       const write = (file: string, content: string | Buffer): void => {
         writeFileSync(resolve(process.cwd(), file), content);
         console.log(`WROTE ${file}`);
@@ -42,7 +44,6 @@ export function registerAgentCommands(program: Command, tool: ToolPackage): void
       const skillName = basename(themePkg.name);
 
       write(MANIFEST_FILE, `${generateManifest(config)}\n`);
-      write(ASSETS_FILE, `${generateAssetCatalog(config)}\n`);
 
       let skillMd: string;
       try {
@@ -55,8 +56,8 @@ export function registerAgentCommands(program: Command, tool: ToolPackage): void
 
       // Bundle the WHOLE theme so the skill is self-contained: unzip ->
       // `npm install` (pulls the engine + its deps) -> `npx tycoslide build`.
-      const generated = [opts.config, MANIFEST_FILE, ASSETS_FILE, SKILL_FILE, SYNTAX_FILE];
+      const shipped = [opts.config, ASSETS_FILE, MANIFEST_FILE, SKILL_FILE, SYNTAX_FILE];
       const skillPkg = skillPackageJson(themePkg, tool);
-      write(`${skillName}${SKILL_ZIP_EXT}`, await zipDir(process.cwd(), skillName, config, generated, skillPkg));
+      write(`${skillName}${SKILL_ZIP_EXT}`, await zipDir(process.cwd(), skillName, config, catalog, shipped, skillPkg));
     });
 }

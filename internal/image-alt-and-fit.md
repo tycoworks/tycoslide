@@ -360,7 +360,7 @@ throws on a phrasing node it doesn't know, instead of returning `[]`. The parser
 found it silently drops any node a plugin introduces. It's a separate commit so it can be
 reverted alone.
 
-**No change**: the engine beyond phase 1, `packAssets`, `zipDir`, `skillPackageJson`.
+**No change**: the engine beyond phase 1, `packAssets`, `skillPackageJson`.
 
 ## Skill and documentation changes
 
@@ -575,8 +575,8 @@ title-parsing tests.
   `BlockContext`s lose `resolveAssetRef`.
 
 **Phase 4** (4a only updates test imports for the moved files; the rest is 4b)
-- **`test/fixtures/composition-theme.json`**: drop `assets`. The fixtures folder gains an
-  `assets.json` for the packaging tests that need one.
+- **`test/fixtures/composition-theme.json`**: drop `assets`. Packaging tests pass a catalog
+  object to `zipDir`; catalog tests write their `assets.json` to a temp dir.
 - **`test/themeConfigSchema.test.ts`**: `fullTheme()` drops `assets`.
 - **New catalog tests** (agent layer): a valid `assets.json` loads; a bad `fit` value and an
   unknown key in an entry are rejected (a neutral key, not `type`); a missing file fails

@@ -1,7 +1,8 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import JSZip from "jszip";
 import { type CompilerThemeConfig, TEMPLATE_DIR } from "../index.js";
+import type { AssetCatalog } from "./catalog.js";
 import { ASSETS_ARCHIVE, PACKAGE_JSON } from "./files.js";
 
 /** Entries are stored, not deflated: assets are already-compressed images. */
@@ -16,45 +17,6 @@ export async function packAssets(paths: string[], read: (rel: string) => Buffer)
   const archive = new JSZip();
   for (const rel of paths) archive.file(rel, read(rel));
   return archive.generateAsync(NO_COMPRESSION);
-}
-
-/**
- * Expand a packaged theme's archive into its directory, so the files the catalog
- * names are on disk before anything fills with them. Idempotent per file; loose
- * files win, so a stale archive never overwrites a theme's real assets; the
- * archive itself stays put. A theme with no archive -- every theme under
- * development -- returns immediately.
- */
-export async function expandAssets(rootDir: string): Promise<void> {
-  // An empty rootDir is a supported value elsewhere ("resolve nothing"), and it
-  // would expand into the process working directory. Refuse rather than guess.
-  if (!rootDir) return;
-
-  const archivePath = join(rootDir, ASSETS_ARCHIVE);
-  if (!existsSync(archivePath)) return;
-
-  const archive = await JSZip.loadAsync(readFileSync(archivePath));
-  for (const [rel, entry] of Object.entries(archive.files)) {
-    if (entry.dir) continue;
-    // JSZip collapses `..` and a leading `/` on load, but a backslash survives
-    // verbatim and traverses on Windows. We wrote this archive, so an entry that
-    // is not a plain theme-relative path means it was tampered with.
-    if (rel.includes("\\")) {
-      throw new Error(`${ASSETS_ARCHIVE} entry "${rel}" is not a theme-relative path`);
-    }
-
-    const abs = join(rootDir, ...rel.split("/"));
-    if (existsSync(abs)) continue;
-    mkdirSync(dirname(abs), { recursive: true });
-
-    // Write-then-rename. A plain write is not atomic: a build killed partway
-    // through 2,000 icons leaves a truncated file that `existsSync` then skips
-    // forever. Rename is atomic within a filesystem, so a reader sees a whole
-    // file or none, which also makes two concurrent builds in one directory safe.
-    const partial = `${abs}.${process.pid}.tmp`;
-    writeFileSync(partial, await entry.async("nodebuffer"));
-    renameSync(partial, abs);
-  }
 }
 
 const FRONTMATTER = /^---\n([\s\S]*?)\n---/;
@@ -113,26 +75,28 @@ export function skillPackageJson(theme: Record<string, unknown>, engine: { name:
  * Every path a packaged theme needs, relative to `rootDir` and POSIX-separated,
  * split by how it ships.
  *
- * Derived from the theme config rather than filtered out of a directory walk:
- * the config already declares its template and its whole asset catalog, so an
- * allowlist stays correct no matter what else sits in the working directory --
+ * Derived from the theme config and its picture catalog rather than filtered out
+ * of a directory walk: together they declare the template and every picture, so
+ * an allowlist stays correct no matter what else sits in the working directory --
  * built decks, PDFs, slide PNGs, scratch files. Font paths are deliberately
  * absent when they name a package -- those resolve from node_modules, which
  * `npm install` restores -- but a `./`- or `/`-prefixed font path is a file the
- * theme owns, and mermaid reads it during COMPILE, before any archive is
- * expanded. Those ship plain.
+ * theme owns, and mermaid reads it during a build, which never expands the
+ * archive. Those ship plain.
  *
- * `archived` is the asset catalog, which collapses to one archive because hosts
- * cap how many FILES a skill may contain. `plain` is everything read before or
- * without an expansion, including the catalog itself.
+ * `archived` is the catalog's pictures, which collapse to one archive because
+ * hosts cap how many FILES a skill may contain. `plain` is everything else,
+ * including the catalog itself.
  */
-function skillPaths(config: CompilerThemeConfig, generated: string[]): { plain: string[]; archived: string[] } {
-  const archived = Object.values(config.assets).flatMap((category) =>
-    Object.values(category).map((entry) => entry.path),
-  );
+function skillPaths(
+  config: CompilerThemeConfig,
+  catalog: AssetCatalog,
+  shipped: string[],
+): { plain: string[]; archived: string[] } {
+  const archived = Object.values(catalog).flatMap((category) => Object.values(category).map((entry) => entry.path));
   const localFonts = (config.fonts ?? []).map((f) => f.path).filter((p) => p.startsWith(".") || p.startsWith("/"));
   return {
-    plain: [...SUPPORT_FILES, ...generated, `${TEMPLATE_DIR}/${config.template}`, ...localFonts],
+    plain: [...SUPPORT_FILES, ...shipped, `${TEMPLATE_DIR}/${config.template}`, ...localFonts],
     archived,
   };
 }
@@ -140,16 +104,18 @@ function skillPaths(config: CompilerThemeConfig, generated: string[]): { plain: 
 /**
  * Zip a theme into an uploadable Agent Skill archive whose entries all live
  * under a single root folder (e.g. `acme-slides/theme.json`), matching Anthropic's
- * custom-skill format. `generated` names the files the caller just wrote (the
- * config, manifest, SKILL.md, syntax.md); `packageJson` is the authored manifest
- * from `skillPackageJson`. Optional support files are skipped when absent;
- * anything the config declares but that is missing is an error.
+ * custom-skill format. `shipped` names the theme's top-level files that go in as
+ * they are (the config, the catalog, and what `package` just wrote);
+ * `packageJson` is the authored manifest from `skillPackageJson`. Optional
+ * support files are skipped when absent; anything the config or catalog declares
+ * but that is missing is an error.
  */
 export async function zipDir(
   rootDir: string,
   folderName: string,
   config: CompilerThemeConfig,
-  generated: string[],
+  catalog: AssetCatalog,
+  shipped: string[],
   packageJson: string,
 ): Promise<Buffer> {
   const zip = new JSZip();
@@ -158,7 +124,7 @@ export async function zipDir(
 
   folder.file(PACKAGE_JSON, packageJson);
 
-  const { plain, archived } = skillPaths(config, generated);
+  const { plain, archived } = skillPaths(config, catalog, shipped);
   const optional = new Set(SUPPORT_FILES);
   let count = 1;
 

@@ -15,7 +15,7 @@ const ctx = {
   slideNo: 1,
   source: "body content",
   region: 'Slide 1: layout "L" slot content (from body content)',
-  config: { layouts: [], assets: {}, template: "", rootDir: "", deckDir: "" },
+  config: { layouts: [], template: "", rootDir: "", deckDir: "" },
 };
 const parse = (text: string) => parseSlotContent(text, ctx);
 

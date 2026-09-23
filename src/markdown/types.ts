@@ -15,34 +15,6 @@ import type { MermaidConfig } from "./blocks/mermaidTheme.js";
 // SlotType.
 export type { BodyRows };
 
-// ── Asset catalog (packaging only) ───────────────────────────────────────────
-
-/**
- * An asset's scaling/cropping tolerance, declared in the theme catalog for deck
- * authors. `icon`: never enlarge, never crop. `image`: never crop, may scale.
- * `background`: crop and scale freely.
- */
-export const AssetType = {
-  Icon: "icon",
-  Image: "image",
-  Background: "background",
-} as const;
-export type AssetType = (typeof AssetType)[keyof typeof AssetType];
-
-/**
- * A picture the theme offers deck authors. The compiler never reads it: it is
- * packaging input, which `tycoslide package` writes out as `assets.json`.
- */
-export type AssetEntry = {
-  path: string;
-  /** Required — a missing type is a fail-fast error. */
-  type: AssetType;
-  description: string;
-};
-
-/** Two-level catalog: `{ category: { name: AssetEntry } }`. */
-export type AssetCatalog = Record<string, Record<string, AssetEntry>>;
-
 // ── AcceptType discriminator (what a slot accepts) ────────────────────────────
 
 /**
@@ -296,7 +268,6 @@ export type ThemeFont = {
  */
 export type CompilerThemeConfig = {
   layouts: CompilerLayout[];
-  assets: AssetCatalog;
   template: string;
   mermaid?: MermaidConfig;
   /**
@@ -319,7 +290,7 @@ export type CompilerThemeConfig = {
 
 /**
  * A theme as loaded from disk: its validated config plus the directory it
- * lives in, which its relative paths (template, fonts, catalog) resolve against.
+ * lives in, which its relative paths (template, fonts) resolve against.
  */
 export type LoadedTheme = CompilerThemeConfig & {
   rootDir: string;
