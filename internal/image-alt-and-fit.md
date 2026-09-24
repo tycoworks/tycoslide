@@ -395,7 +395,13 @@ the agent layer looks for stay in the agent layer.
   checked against the Python's output on the same file before the script is deleted.
 
 **Phase 6: fail on unknown inline nodes.** `inline.ts`: `walkPhrasing`'s `default` branch
-throws on a phrasing node it doesn't know, instead of returning `[]`. The parser survey
+throws on a phrasing node it doesn't know, instead of returning `[]`. Probed on 24 Sep: the
+drop that can actually happen is an image inside a sentence, bullet or table cell
+(`Our logo ![Acme](logo.png) here` lost the image). Reference links, reference images and
+footnote markers only become nodes when their definition is in the same region, and a
+definition there already fails as a mixed-in block. Inline HTML keeps its `value` and still
+shows as text. The error names the region, carried down the walk as `InlineState.region`
+from the text and table handlers. The parser survey
 found it silently drops any node a plugin introduces. It's a separate commit so it can be
 reverted alone.
 

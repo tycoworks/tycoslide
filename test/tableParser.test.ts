@@ -166,3 +166,13 @@ Widget | $10`;
     );
   });
 });
+
+describe("inline elements with no text of their own, in a table cell", () => {
+  it("fails on an image inside a cell, naming the region", async () => {
+    const input = "| Brand | Logo |\n|---|---|\n| Acme | See ![Acme](logo.png) |";
+    await assert.rejects(parse(input).fill(), (err: Error) => {
+      assert.equal(err.message, `${ctx.region}: "image" inside text isn't supported.`);
+      return true;
+    });
+  });
+});

@@ -46,6 +46,8 @@ export interface InlineState {
   underline?: boolean;
   link?: string;
   breakAsNewline?: boolean;
+  /** Where the text sits (the slot region), to name in an error. */
+  region?: string;
 }
 
 function makeRun(text: string, state: InlineState): TextRun {
@@ -97,12 +99,13 @@ function walkPhrasing(node: PhrasingContent, state: InlineState): TextRun[] {
       return [makeRun(state.breakAsNewline ? "\n" : " ", state)];
 
     default:
-      // Any other phrasing node with a literal `value` (footnote references,
-      // etc.) — emit its text if it has one, otherwise nothing.
+      // Any other phrasing node with a literal `value` (inline HTML) is emitted as
+      // that text. One without (an image inside a sentence) has nothing to show,
+      // so it fails rather than vanish from the slide.
       if ("value" in node && typeof (node as { value: unknown }).value === "string") {
         return [makeRun((node as { value: string }).value, state)];
       }
-      return [];
+      throw new Error(`${state.region ? `${state.region}: ` : ""}"${node.type}" inside text isn't supported.`);
   }
 }
 

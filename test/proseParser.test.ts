@@ -78,3 +78,25 @@ describe("prose via parseSlotContent", () => {
     assert.deepEqual(paragraphs, [{ runs: [{ text: "a" }] }, { runs: [{ text: "b" }] }]);
   });
 });
+
+describe("inline elements with no text of their own", () => {
+  // An image inside a sentence has nothing to show as text, so it would vanish
+  // from the slide.
+  const unsupported: [name: string, markdown: string, type: string][] = [
+    ["an image inside a sentence", "Our logo ![Acme](logo.png) sits here", "image"],
+    ["an image inside a bullet", "- Our logo ![Acme](logo.png)", "image"],
+  ];
+  for (const [name, markdown, type] of unsupported) {
+    it(`fails on ${name}, naming the region and the element`, async () => {
+      await assert.rejects(textFill(markdown), (err: Error) => {
+        assert.equal(err.message, `${ctx.region}: "${type}" inside text isn't supported.`);
+        return true;
+      });
+    });
+  }
+
+  it("keeps inline HTML as the text it is", async () => {
+    const { paragraphs } = await textFill("Line one<br>line two");
+    assert.deepEqual(paragraphs, [{ runs: [{ text: "Line one" }, { text: "<br>" }, { text: "line two" }] }]);
+  });
+});
