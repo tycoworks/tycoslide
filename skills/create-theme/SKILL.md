@@ -108,7 +108,7 @@ For each kept slide:
 
 Then catalog the images `extract` copied, under `assets` in `theme.json`, each with a `path`, a `type` and a one-line `description`. The type is `icon` for marks that must never be enlarged, `image` for pictures that may scale but not crop, and `background` for full-bleed art that may crop.
 
-Every field, where its value comes from, and the error you get when it is wrong are in [references/theme-json.md](references/theme-json.md). Two rules fail late and are worth stating here: a table block must declare `bodyRows`, and a slot that borrows a shape from another slide must declare `frame`.
+Every field and the error you get when it is wrong are in `node_modules/@tycoworks/tycoslide/docs/theme.md`, and where each value comes from is in [references/theme-json.md](references/theme-json.md). Two rules fail late and are worth stating here: a table block must declare `bodyRows`, and a slot that borrows a shape from another slide must declare `frame`.
 
 Then read the draft back against the pictures. A shape the picture shows as a subtitle but the draft calls a body is the kind of mistake to catch now.
 

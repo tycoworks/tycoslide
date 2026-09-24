@@ -518,6 +518,15 @@ them) and the drafting judgement. The `assets` section goes to the skill's
 `references/assets-json.md`, as planned, since `assets.json` is an agent-layer file. One
 source per fact: the skill links to the doc rather than restating a field.
 
+**Done in 7c.** The four-column tables were split by column, keeping every cell's wording:
+Field / Meaning / Error went to `docs/theme.md`, Field / Source stayed in
+`references/theme-json.md` under the same headings, with the mermaid drafting paragraph.
+The `assets` section and "Files around it" stay in the skill untouched for phase 8. The
+move fixed four stale lines: the minimal example's `assets` block (it no longer loaded:
+`Unknown key(s): assets`), "all three asset types", the removed inventory script, and the
+image-block error, which gained `<p:cNvPr>` in phase 1. The skill's "Inventory column"
+Source cells are left for phase 8's rewrite.
+
 ### `README.md` (tycoslide)
 
 | Where | Change |
