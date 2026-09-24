@@ -518,6 +518,14 @@ them) and the drafting judgement. The `assets` section goes to the skill's
 `references/assets-json.md`, as planned, since `assets.json` is an agent-layer file. One
 source per fact: the skill links to the doc rather than restating a field.
 
+**Done in 7d.** `docs/syntax.md` is renamed `docs/markdown.md` ("syntax" was ambiguous), in
+the package, the packaged skill (`MARKDOWN_DOC_FILE`) and every link. Not `deck.md`, which
+reads better beside `theme.md` but is the name people give their decks: the README's own
+example is `npx tycoslide build deck.md`, and the packaged copy sits in the theme folder
+where an agent's `deck.md` would overwrite it. Tests now load `theme.md`'s minimal
+example and compile `markdown.md`'s full example, so either drifting fails `npm test`.
+Earlier mentions of `syntax.md` in this doc are history.
+
 **Done in 7c.** The four-column tables were split by column, keeping every cell's wording:
 Field / Meaning / Error went to `docs/theme.md`, Field / Source stayed in
 `references/theme-json.md` under the same headings, with the mermaid drafting paragraph.
@@ -575,7 +583,7 @@ clearing stale placeholder alt-text titles from the template.
 | `package.json` + lockfile | `"@tycoworks/tycoslide": "^0.15.1"` → `"^0.16.0"`. On 0.x a caret stops at the next minor, so without this bump the theme keeps resolving 0.15. |
 | `assets.json` (new, tracked) | Written by a script from `theme.json`'s `assets`, each entry's `type` → `fit` mechanically: `icon` → `scale-down` (2,122 icons), `image` → `contain` (4 brand marks), `background` → `cover` (low-poly). Review the diff for count only. |
 | `theme.json` | Remove `assets` (same script). No other change. |
-| `.gitignore` | Remove `/assets.json` from the generated-skill block; add `/template.json`, which `tycoslide extract` writes and can always regenerate. |
+| `.gitignore` | Remove `/assets.json` from the generated-skill block; add `/template.json`, which `tycoslide extract` writes and can always regenerate; `/syntax.md` becomes `/markdown.md`. |
 | `showcase.md` 75 | `![]($icons.hub)` → `![](assets/icons/hub.png "fit: scale-down")` (decoration beside a heading: empty alt) |
 | `showcase.md` 86 | `![]($icons.insights)` → `![](assets/icons/insights.png "fit: scale-down")` |
 | `showcase.md` 130 | `![]($backgrounds.lowPoly)` → `![](assets/backgrounds/low-poly.png "fit: cover")` (backdrop: empty alt) |

@@ -82,4 +82,4 @@ Authors see `Unknown asset reference "$x.y"` when they name an asset that is not
 
 A theme is an npm package. Its `package.json` sets `"private": true`, runs `"postinstall": "tycoslide package"`, lists `@tycoworks/tycoslide` in `devDependencies`, and lists font packages such as `@fontsource/inter` in `dependencies`. Commit `theme.json`, `template/*.pptx`, `assets/`, and `package.json`.
 
-Packaging generates files that should not be committed. Add to `.gitignore`: `SKILL.md`, `syntax.md`, `manifest.json`, `assets.json`, `assets.dat`, `*.zip`, `*.pptx`, and then `!template/*.pptx` so the template survives the pptx rule.
+Packaging generates files that should not be committed. Add to `.gitignore`: `SKILL.md`, `markdown.md`, `manifest.json`, `assets.json`, `assets.dat`, `*.zip`, `*.pptx`, and then `!template/*.pptx` so the template survives the pptx rule.

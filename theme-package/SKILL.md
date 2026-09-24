@@ -38,7 +38,7 @@ This skill builds decks from a markdown deck file. The theme provides slide layo
 
 Before writing anything, read `manifest.json`. It lists the theme's **layouts** -- for each: `name`, `description`, `parameters` (frontmatter inputs) and `slots` (body regions). A layout is identified by its `name`; every parameter and slot by its `key`. Slots carry `accepts`, and either may be `required`.
 
-A layout's inputs split two ways, parameters and slots; see [syntax.md](syntax.md#parameters-and-slots) for how to fill each. Unfilled ones are dropped, so fill as many of a layout's numbered slots (sections, stats, columns) as you have content for.
+A layout's inputs split two ways, parameters and slots; see [markdown.md](markdown.md#parameters-and-slots) for how to fill each. Unfilled ones are dropped, so fill as many of a layout's numbered slots (sections, stats, columns) as you have content for.
 
 Study each layout's `slots` before writing any slides.
 
@@ -62,7 +62,7 @@ If your deck is in the theme folder, the file is already there, so skip the copy
 
 ## Creating Slides
 
-Write a deck file in markdown, as [syntax.md](syntax.md) describes (see its [full example](syntax.md#full-example)), and build it as its [Build](syntax.md#build) section shows.
+Write a deck file in markdown, as [markdown.md](markdown.md) describes (see its [full example](markdown.md#full-example)), and build it as its [Build](markdown.md#build) section shows.
 
 ---
 
@@ -101,7 +101,7 @@ Keep each slot's content to what its region comfortably holds. When content over
 
 Your first draft almost never comes out clean. Approach QA as a debugging session, not a confirmation step. If you haven't run at least one build-fix cycle, you're not done.
 
-Build the deck again ([Build](syntax.md#build)) and read the output carefully. Common errors and fixes are in [syntax.md](syntax.md#build), and layout names are in `manifest.json`. Also:
+Build the deck again ([Build](markdown.md#build)) and read the output carefully. Common errors and fixes are in [markdown.md](markdown.md#build), and layout names are in `manifest.json`. Also:
 
 | Error | Fix |
 |-------|-----|

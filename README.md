@@ -27,7 +27,7 @@ https://github.com/user-attachments/assets/f31c11d8-3fe6-464f-8f02-56645b4ce3a6
 - Code, with [Shiki](https://shiki.style) syntax highlighting
 - [Mermaid](https://mermaid.js.org) diagrams
 
-Full syntax in [syntax.md](docs/syntax.md).
+Full syntax in [markdown.md](docs/markdown.md).
 
 ## Requirements
 

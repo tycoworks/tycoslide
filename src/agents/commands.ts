@@ -9,10 +9,10 @@ import {
   ASSETS_FILE,
   DOCS_DIR,
   MANIFEST_FILE,
+  MARKDOWN_DOC_FILE,
   PACKAGE_JSON,
   SKILL_FILE,
   SKILL_ZIP_EXT,
-  SYNTAX_FILE,
   TEMPLATE_FILE,
   THEME_CONFIG,
   THEME_PACKAGE_DIR,
@@ -31,11 +31,11 @@ function wrote(target: string, detail?: string): void {
 /** Register the agent layer's commands on the CLI program. */
 export function registerAgentCommands(program: Command, tool: ToolPackage): void {
   const skillMdPath = resolve(tool.root, THEME_PACKAGE_DIR, SKILL_FILE);
-  const syntaxMdPath = resolve(tool.root, DOCS_DIR, SYNTAX_FILE);
+  const markdownDocPath = resolve(tool.root, DOCS_DIR, MARKDOWN_DOC_FILE);
 
   program
     .command("package")
-    .description(`Generate the Agent Skill (${MANIFEST_FILE}, ${SKILL_FILE}, ${SYNTAX_FILE}) for AI agents`)
+    .description(`Generate the Agent Skill (${MANIFEST_FILE}, ${SKILL_FILE}, ${MARKDOWN_DOC_FILE}) for AI agents`)
     .option(`-c, --config <path>`, "path to theme config file", THEME_CONFIG)
     .action(async (opts: { config: string }) => {
       const config = loadThemeConfig(resolve(process.cwd(), opts.config));
@@ -61,11 +61,11 @@ export function registerAgentCommands(program: Command, tool: ToolPackage): void
         throw new Error(`${skillMdPath}: ${(err as Error).message}`);
       }
       write(SKILL_FILE, skillMd);
-      write(SYNTAX_FILE, readFileSync(syntaxMdPath, "utf-8"));
+      write(MARKDOWN_DOC_FILE, readFileSync(markdownDocPath, "utf-8"));
 
       // Bundle the WHOLE theme so the skill is self-contained: unzip ->
       // `npm install` (pulls the engine + its deps) -> `npx tycoslide build`.
-      const shipped = [opts.config, ASSETS_FILE, MANIFEST_FILE, SKILL_FILE, SYNTAX_FILE];
+      const shipped = [opts.config, ASSETS_FILE, MANIFEST_FILE, SKILL_FILE, MARKDOWN_DOC_FILE];
       const skillPkg = skillPackageJson(themePkg, tool);
       write(`${skillName}${SKILL_ZIP_EXT}`, await zipDir(process.cwd(), skillName, config, catalog, shipped, skillPkg));
     });

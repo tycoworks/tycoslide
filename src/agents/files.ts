@@ -26,7 +26,7 @@ export const ASSETS_ARCHIVE = "assets.dat";
 // other.
 export const SKILL_FILE = "SKILL.md";
 
-export const SYNTAX_FILE = "syntax.md";
+export const MARKDOWN_DOC_FILE = "markdown.md";
 
 // The folder holding the SKILL.md template copied into each packaged theme, kept
 // out of the repo root so skill installers do not mistake it for this repo's own skill.
