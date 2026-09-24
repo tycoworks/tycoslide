@@ -6,15 +6,11 @@
  */
 
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { imageSize } from "image-size";
-import JSZip from "jszip";
-import { PRESENTATION_PART, RelTypeSuffix, readRelationships, relsPathFor, resolveTarget } from "../index.js";
+import { MEDIA_DIR, Part, type Presentation, RelType } from "./pptx.js";
 
-const MASTER_PART = /^ppt\/slideMasters\/slideMaster(\d+)\.xml$/;
-const LAYOUT_PART = /^ppt\/slideLayouts\/slideLayout(\d+)\.xml$/;
-const MEDIA_DIR = "ppt/media/";
 const XML_EXT = ".xml";
 /** Separates the columns of a report line. */
 const COLUMN = "  ";
@@ -63,26 +59,23 @@ export type MediaResult = {
 };
 
 /**
- * Copy every image referenced from `templatePath`'s slide masters and layouts into
- * `outDir` (created if missing). Never overwrites: an image whose filename is
- * already there is left as it is. Fails with a plain explanation when the file is
- * missing or is not a .pptx.
+ * Copy every image referenced from the presentation's slide masters and layouts
+ * into `outDir` (created if missing). Never overwrites: an image whose filename is
+ * already there is left as it is.
  */
-export async function extractMedia(templatePath: string, outDir: string): Promise<MediaResult> {
-  const pkg = await openPresentation(templatePath);
+export async function extractMedia(presentation: Presentation, outDir: string): Promise<MediaResult> {
   mkdirSync(outDir, { recursive: true });
 
-  const references = await chromeImageReferences(pkg);
+  const references = await chromeImageReferences(presentation);
   const images: MediaImage[] = [];
   const firstByContent = new Map<string, string>();
   for (const [media, usedBy] of references) {
     const file = posix.basename(media);
-    const entry = pkg.file(media);
-    if (!entry) {
+    if (!presentation.has(media)) {
       images.push({ file, usedBy, outcome: MediaOutcome.Missing });
       continue;
     }
-    const data = await entry.async("nodebuffer");
+    const data = await presentation.bytes(media);
     const size = pixelSize(data);
     const digest = createHash("sha256").update(data).digest("hex");
     const duplicateOf = firstByContent.get(digest);
@@ -100,9 +93,7 @@ export async function extractMedia(templatePath: string, outDir: string): Promis
     images.push({ file, usedBy, outcome: MediaOutcome.Copied, size });
   }
 
-  const slideOnly = Object.keys(pkg.files).filter(
-    (name) => name.startsWith(MEDIA_DIR) && !pkg.files[name].dir && !references.has(name),
-  ).length;
+  const slideOnly = presentation.parts.filter((part) => part.startsWith(MEDIA_DIR) && !references.has(part)).length;
   return { images, slideOnly };
 }
 
@@ -125,43 +116,13 @@ export function describeMedia(result: MediaResult, outDirLabel: string): string[
   return [...lines, summary];
 }
 
-async function openPresentation(path: string): Promise<JSZip> {
-  if (!existsSync(path) || !statSync(path).isFile()) {
-    throw new Error(`${path} does not exist or is not a file.`);
-  }
-  let pkg: JSZip;
-  try {
-    pkg = await JSZip.loadAsync(readFileSync(path));
-  } catch {
-    throw new Error(`${path} is not a .pptx file (it is not a zip archive).`);
-  }
-  if (!pkg.file(PRESENTATION_PART)) {
-    throw new Error(`${path} is not a .pptx file (no ${PRESENTATION_PART} inside; a .docx or .xlsx perhaps?).`);
-  }
-  return pkg;
-}
-
-/** Master and layout parts: masters first, each set in number order. */
-function chromeParts(pkg: JSZip): string[] {
-  const numbered = (pattern: RegExp) =>
-    Object.keys(pkg.files)
-      .map((name) => ({ name, match: pattern.exec(name) }))
-      .filter((part) => part.match)
-      .sort((a, b) => Number(a.match?.[1]) - Number(b.match?.[1]))
-      .map((part) => part.name);
-  return [...numbered(MASTER_PART), ...numbered(LAYOUT_PART)];
-}
-
 /** Media part → the masters and layouts that use it, in first-use order. */
-async function chromeImageReferences(pkg: JSZip): Promise<Map<string, string[]>> {
+async function chromeImageReferences(presentation: Presentation): Promise<Map<string, string[]>> {
   const references = new Map<string, string[]>();
-  for (const part of chromeParts(pkg)) {
-    const rels = pkg.file(relsPathFor(part));
-    if (!rels) continue;
+  const chrome = [...presentation.numbered(Part.Master), ...presentation.numbered(Part.Layout)];
+  for (const part of chrome) {
     const user = posix.basename(part, XML_EXT);
-    for (const rel of readRelationships(await rels.async("string"))) {
-      if (rel.external || !rel.type.endsWith(RelTypeSuffix.Image)) continue;
-      const media = resolveTarget(part, rel.target);
+    for (const media of await presentation.related(part, RelType.Image)) {
       const users = references.get(media) ?? [];
       if (!users.includes(user)) users.push(user);
       references.set(media, users);

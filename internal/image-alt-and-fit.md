@@ -360,10 +360,35 @@ layer calls them, which is the dependency direction the import rules allow.
   a new `readRelationships` (also adopted by `notes.ts`, so there is one way to read them)
   and uses `image-size` for pixel sizes. The create-theme skill's two mentions of the script
   switch to the command in the same commit, so no step points at a deleted file.
-- *5b.* `inventory.py` → `tycoslide inspect <pptx>`: slide size, colour and font scheme,
-  embedded fonts, every shape with its kind and frame, and which slides share geometry.
-  Same placement as 5a. Where the engine already computes something the inventory reports
-  (frames), export that from the core rather than port a second copy.
+- *5b.* `inventory.py` → **`tycoslide extract <template>`**, one command that replaces
+  both 5a's `extract-media` and the inventory, since the skill always runs them together.
+  Run from the theme folder, it writes two things and prints a one-line summary of each:
+  - `template.json`: slide size, colour and font schemes, embedded typefaces, then each
+    slide (number, position, layout name, light/dark/image background, and shapes with
+    kind, text preview, table size and frame in EMU exactly as `theme.json` wants it,
+    marked when inherited from the layout or master), the duplicate-geometry groups, and
+    the extracted images. One format, read by the agent, so no text report and no
+    `--json` mode. Gitignored in a theme: it can always be regenerated.
+  - the master and layout images, straight into `assets/` (never overwriting). Sorting
+    them into catalog categories is the author's job afterwards: an extractor can't know
+    whether an image is a logo, a backdrop or an icon.
+  Embedded fonts are listed, not extracted: PowerPoint stores them as Embedded OpenType
+  with MicroType Express compression, which needs a decompressor we'd have to own, and a
+  font's embedding permission rarely allows reuse outside the document. The theme keeps
+  declaring fonts as npm packages; the listed typefaces say which.
+  - The agent layer reads the package through a shared `Presentation` (`agents/pptx.ts`:
+    open, parse once, follow relationships). The core exports only generic helpers it
+    already has (`parseXml`, `childrenByTag`, `collectElements`, `readRelationships`,
+    `resolveTarget`, `relsPathFor`); the element names and relationship types the agent
+    layer looks for live in the agent layer (`RelTypeSuffix.Image` moves out of the core).
+  - Two commits: the shared reader plus the theme-level inventory (schemes, fonts,
+    backgrounds), then shapes, frames and duplicates with the `extract` command, which
+    removes `extract-media`, `describeMedia` and `inventory.py`.
+  - Tests: the inventory of the committed `composition.pptx` fixture, and of a synthetic
+    template built in `test/helpers/syntheticTemplate.ts` that covers the cases no real
+    fixture has (every way a background is declared, colour maps and modifiers, a slide
+    not in the show; shape cases added in the second commit). Expected values were
+    checked against `inventory.py` before it was deleted.
 - Neither script has tests today. Each port lands with tests against a fixture `.pptx`,
   checked against the Python's output on the same file before the script is deleted.
 

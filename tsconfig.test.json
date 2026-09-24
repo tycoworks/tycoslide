@@ -5,6 +5,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": true,
+    // Shared test helpers are imported as .ts files, which Node runs directly.
+    "allowImportingTsExtensions": true,
     "composite": false,
     "rootDir": "."
   },

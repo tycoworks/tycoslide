@@ -5,7 +5,10 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
 import JSZip from "jszip";
-import { describeMedia, extractMedia, MediaOutcome } from "../dist/agents/media.js";
+import { describeMedia, extractMedia as extractFrom, MediaOutcome } from "../dist/agents/media.js";
+import { Presentation } from "../dist/agents/pptx.js";
+
+const extractMedia = async (template: string, out: string) => extractFrom(await Presentation.open(template), out);
 
 const SWAP_PNG = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "fixtures", "swap.png")); // 2x2
 const UNREADABLE = Buffer.from("not an image");
@@ -102,31 +105,6 @@ describe("extractMedia", () => {
     assert.equal(readFileSync(join(out, "logo.png"), "utf-8"), "MINE");
   });
 
-  const invalid: { name: string; write: (path: string) => Promise<void>; message: RegExp }[] = [
-    { name: "a missing file", write: async () => {}, message: /does not exist or is not a file/ },
-    {
-      name: "a file that isn't a zip",
-      write: async (path) => writeFileSync(path, "hello"),
-      message: /not a \.pptx file \(it is not a zip archive\)/,
-    },
-    {
-      name: "a zip with no presentation part",
-      write: async (path) => {
-        const zip = new JSZip();
-        zip.file("word/document.xml", "<w:document/>");
-        writeFileSync(path, await zip.generateAsync({ type: "nodebuffer" }));
-      },
-      message: /no ppt\/presentation\.xml inside; a \.docx or \.xlsx perhaps\?/,
-    },
-  ];
-  for (const { name, write, message } of invalid) {
-    it(`rejects ${name}`, async () => {
-      const dir = scratch();
-      const path = join(dir, "input.pptx");
-      await write(path);
-      await assert.rejects(extractMedia(path, join(dir, "out")), message);
-    });
-  }
 });
 
 describe("describeMedia", () => {

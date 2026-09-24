@@ -164,6 +164,8 @@ export type {
 } from "./engine/index.js";
 // Engine — primitives-only public surface.
 export {
+  childrenByTag,
+  collectElements,
   fillImage,
   fillTable,
   fillTemplate,
@@ -171,7 +173,7 @@ export {
   generate,
   ImageFit,
   PRESENTATION_PART,
-  RelTypeSuffix,
+  parseXml,
   readRelationships,
   relsPathFor,
   resolveTarget,

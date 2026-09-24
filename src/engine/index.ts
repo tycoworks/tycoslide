@@ -1,3 +1,4 @@
+export { childrenByTag, collectElements } from "./dom.js";
 export { FILLERS } from "./fillers/filler.js";
 export { fillImage } from "./fillers/image.js";
 export { fillTable, isTableFill } from "./fillers/table.js";
@@ -6,7 +7,7 @@ export { fillText, isTextFill } from "./fillers/text.js";
 export type { GenerateOptions } from "./generate.js";
 export { generate } from "./generate.js";
 export type { Relationship } from "./ooxml.js";
-export { PRESENTATION_PART, RelTypeSuffix, readRelationships, relsPathFor, resolveTarget } from "./ooxml.js";
+export { PRESENTATION_PART, parseXml, readRelationships, relsPathFor, resolveTarget } from "./ooxml.js";
 export type {
   Block,
   BodyRows,

@@ -16,6 +16,7 @@ import {
 } from "./files.js";
 import { generateManifest } from "./manifest.js";
 import { describeMedia, extractMedia } from "./media.js";
+import { Presentation } from "./pptx.js";
 import { renameSkill, skillPackageJson, zipDir } from "./skill.js";
 
 /** The installed tycoslide package: where its shipped files live, and what a skill pins. */
@@ -69,7 +70,8 @@ export function registerAgentCommands(program: Command, tool: ToolPackage): void
     .argument("<template>", "path to the .pptx template")
     .argument("<outdir>", "folder to copy the images into (created if missing)")
     .action(async (template: string, outDir: string) => {
-      const result = await extractMedia(resolve(process.cwd(), template), resolve(process.cwd(), outDir));
+      const presentation = await Presentation.open(resolve(process.cwd(), template));
+      const result = await extractMedia(presentation, resolve(process.cwd(), outDir));
       for (const line of describeMedia(result, outDir)) console.log(line);
     });
 }

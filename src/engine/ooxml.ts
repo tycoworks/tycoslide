@@ -1,7 +1,8 @@
 /**
  * Package-level OOXML: where a .pptx keeps its parts and how they point at each
- * other. Used by speaker notes, and exported from the core's public entry for the
- * agent layer's template reading. Slide-XML tokens live in `dom.ts`'s `Tag` / `Attr`.
+ * other. Used by speaker notes; the generic helpers are exported from the core's
+ * public entry for the agent layer's template reading. Slide-XML tokens live in
+ * `dom.ts`'s `Tag` / `Attr`.
  */
 
 import { posix } from "node:path";
@@ -21,7 +22,6 @@ export const PRESENTATION_RELS_PART = "ppt/_rels/presentation.xml.rels";
 export const RelTypeSuffix = {
   NotesSlide: "/notesSlide",
   NotesMaster: "/notesMaster",
-  Image: "/image",
 } as const;
 
 export function parseXml(xml: string): any {
