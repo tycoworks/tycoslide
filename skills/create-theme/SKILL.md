@@ -67,7 +67,7 @@ json.dump(t, open('theme.json', 'w'), indent=2)
 PY
 ```
 
-In `package.json`, set `name` to the theme's name, which becomes the skill's name, and `description`. Then run `npm install`. It also writes `markdown.md`, the markdown reference you will write the test deck against.
+In `package.json`, set `name` to the theme's name, which becomes the skill's name, and `description`. Then run `npm install`.
 
 ### 1.2 Render the template
 
@@ -118,7 +118,7 @@ Then read the draft back against the pictures. A shape the picture shows as a su
 
 ### Render every layout
 
-Write `smoke.md` with one slide per layout, filling every parameter and slot with content of realistic length. `markdown.md` in the theme directory is the markdown reference. The reference theme's `showcase.md` shows what a whole deck looks like, but its layout and key names are not yours. Then:
+Write `smoke.md` with one slide per layout, filling every parameter and slot with content of realistic length. `node_modules/@tycoworks/tycoslide/docs/markdown.md` is the markdown reference. The reference theme's `showcase.md` shows what a whole deck looks like, but its layout and key names are not yours. Then:
 
 ```bash
 npx tycoslide build smoke.md
@@ -152,7 +152,7 @@ The catalog is written. Check it: every description names what the picture shows
 npx tycoslide package
 ```
 
-That writes `manifest.json`, `assets.json`, `SKILL.md` and `markdown.md`, and zips the theme into `<name>.zip`. Build `smoke.md` once more to prove the packaged files work.
+That zips the theme into `<name>.zip`.
 
 ### Hand-off
 

@@ -3,7 +3,7 @@ import { join } from "node:path";
 import JSZip from "jszip";
 import { type CompilerThemeConfig, TEMPLATE_DIR } from "../index.js";
 import type { AssetCatalog } from "./catalog.js";
-import { ASSETS_ARCHIVE, jsonFile, PACKAGE_JSON } from "./files.js";
+import { ASSETS_ARCHIVE, jsonFile } from "./files.js";
 
 /** Entries are stored, not deflated: assets are already-compressed images. */
 const NO_COMPRESSION = { type: "nodebuffer", compression: "STORE" } as const;
@@ -44,14 +44,14 @@ const SUPPORT_FILES = ["package-lock.json"];
 
 /**
  * The `package.json` a packaged skill installs from — deliberately NOT the theme's
- * own. A theme repo's manifest is a development document: it carries the script
- * that regenerates the skill, and lists the engine as a devDependency because the
- * repo builds with it rather than shipping it.
+ * own. A theme repo's manifest is a development document: it may carry scripts,
+ * and lists the engine as a devDependency because the repo builds with it rather
+ * than shipping it.
  *
- * Copying that verbatim breaks the consumer twice. The build script runs as a
- * postinstall inside their container, so anything it touches that is read-only
- * fails their whole `npm install`. And under `--omit=dev` the engine is never
- * installed, so neither the postinstall nor `npx tycoslide build` can find it.
+ * Copying that verbatim breaks the consumer twice. An install script runs inside
+ * their container, so anything it touches that is read-only fails their whole
+ * `npm install`. And under `--omit=dev` the engine is never installed, so
+ * `npx tycoslide build` cannot find it.
  *
  * What ships instead declares only what the skill needs to RUN: the theme's own
  * dependencies plus the engine, as runtime dependencies, and no scripts at all.
@@ -91,12 +91,12 @@ export function skillPackageJson(theme: Record<string, unknown>, engine: { name:
 function skillPaths(
   config: CompilerThemeConfig,
   catalog: AssetCatalog,
-  shipped: string[],
+  themeFiles: string[],
 ): { plain: string[]; archived: string[] } {
   const archived = Object.values(catalog).flatMap((category) => Object.values(category).map((entry) => entry.path));
   const localFonts = (config.fonts ?? []).map((f) => f.path).filter((p) => p.startsWith(".") || p.startsWith("/"));
   return {
-    plain: [...SUPPORT_FILES, ...shipped, `${TEMPLATE_DIR}/${config.template}`, ...localFonts],
+    plain: [...SUPPORT_FILES, ...themeFiles, `${TEMPLATE_DIR}/${config.template}`, ...localFonts],
     archived,
   };
 }
@@ -104,29 +104,28 @@ function skillPaths(
 /**
  * Zip a theme into an uploadable Agent Skill archive whose entries all live
  * under a single root folder (e.g. `acme-slides/theme.json`), matching Anthropic's
- * custom-skill format. `shipped` names the theme's top-level files that go in as
- * they are (the config, the catalog, and what `package` just wrote);
- * `packageJson` is the authored manifest from `skillPackageJson`. Optional
- * support files are skipped when absent; anything the config or catalog declares
- * but that is missing is an error.
+ * custom-skill format. `themeFiles` names the theme's own top-level files that go
+ * in as they are (the config and the catalog); `generated` is the skill's files
+ * that exist only in the zip (its `package.json`, `SKILL.md` and manifest), by
+ * name. Optional support files are skipped when absent; anything the config or
+ * catalog declares but that is missing is an error.
  */
 export async function zipDir(
   rootDir: string,
   folderName: string,
   config: CompilerThemeConfig,
   catalog: AssetCatalog,
-  shipped: string[],
-  packageJson: string,
+  themeFiles: string[],
+  generated: Record<string, string>,
 ): Promise<Buffer> {
   const zip = new JSZip();
   const folder = zip.folder(folderName);
   if (!folder) throw new Error(`Failed to create zip folder: ${folderName}`);
 
-  folder.file(PACKAGE_JSON, packageJson);
+  for (const [name, content] of Object.entries(generated)) folder.file(name, content);
 
-  const { plain, archived } = skillPaths(config, catalog, shipped);
+  const { plain, archived } = skillPaths(config, catalog, themeFiles);
   const optional = new Set(SUPPORT_FILES);
-  let count = 1;
 
   // `optional` is a plain-bucket concept (a lockfile a theme may not have). An
   // asset the catalog declares is never optional, so the archived loop calls
@@ -143,16 +142,10 @@ export async function zipDir(
 
   for (const rel of plain) {
     const content = read(rel);
-    if (content === null) continue;
-    folder.file(rel, content);
-    count++;
+    if (content !== null) folder.file(rel, content);
   }
 
-  if (archived.length > 0) {
-    folder.file(ASSETS_ARCHIVE, await packAssets(archived, required));
-    count++;
-  }
+  if (archived.length > 0) folder.file(ASSETS_ARCHIVE, await packAssets(archived, required));
 
-  if (count === 0) throw new Error(`No files to zip in directory: ${rootDir}`);
-  return zip.generateAsync({ type: "nodebuffer", compression: "STORE" });
+  return zip.generateAsync(NO_COMPRESSION);
 }
