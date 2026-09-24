@@ -8,7 +8,7 @@ import { writeFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { ASSETS_DIR, jsonFile, TEMPLATE_FILE } from "./files.js";
 import { type Inventory, readInventory } from "./inventory.js";
-import { extractMedia, type MediaImage, MediaOutcome } from "./media.js";
+import { copyImages, type MediaImage, MediaOutcome } from "./media.js";
 import { Presentation } from "./pptx.js";
 
 export type TemplateImage = MediaImage & {
@@ -27,7 +27,7 @@ export type TemplateFacts = Inventory & {
 export async function extractTemplate(templatePath: string, themeDir: string): Promise<TemplateFacts> {
   const presentation = await Presentation.open(templatePath);
   const inventory = await readInventory(presentation);
-  const media = await extractMedia(presentation, join(themeDir, ASSETS_DIR));
+  const media = await copyImages(presentation, join(themeDir, ASSETS_DIR));
   const facts: TemplateFacts = {
     ...inventory,
     images: media.images.map((image) => {

@@ -5,10 +5,11 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
 import JSZip from "jszip";
-import { extractMedia as extractFrom, MediaOutcome } from "../dist/agents/media.js";
+import { copyImages, MediaOutcome } from "../dist/agents/media.js";
 import { Presentation } from "../dist/agents/pptx.js";
 
-const extractMedia = async (template: string, out: string) => extractFrom(await Presentation.open(template), out);
+/** Open the template at `path`, then copy its images into `out`. */
+const copyImagesFrom = async (path: string, out: string) => copyImages(await Presentation.open(path), out);
 
 const SWAP_PNG = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "fixtures", "swap.png")); // 2x2
 const UNREADABLE = Buffer.from("not an image");
@@ -59,11 +60,11 @@ async function writeTemplate(dir: string): Promise<string> {
 
 const scratch = () => mkdtempSync(join(tmpdir(), "tycoslide-media-"));
 
-describe("extractMedia", () => {
+describe("copyImages", () => {
   it("copies master and layout images, in first-use order, skipping external, non-image and slide-only", async () => {
     const dir = scratch();
     const out = join(dir, "brand", "nested");
-    const result = await extractMedia(await writeTemplate(dir), out);
+    const result = await copyImagesFrom(await writeTemplate(dir), out);
 
     assert.deepEqual(result, {
       images: [
@@ -93,10 +94,10 @@ describe("extractMedia", () => {
     const dir = scratch();
     const out = join(dir, "brand");
     const template = await writeTemplate(dir);
-    await extractMedia(template, out);
+    await copyImagesFrom(template, out);
     writeFileSync(join(out, "logo.png"), "MINE");
 
-    const again = await extractMedia(template, out);
+    const again = await copyImagesFrom(template, out);
     assert.deepEqual(
       again.images.map((image) => image.outcome),
       [MediaOutcome.Present, MediaOutcome.Present, MediaOutcome.Duplicate, MediaOutcome.Missing],

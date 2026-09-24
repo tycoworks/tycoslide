@@ -49,7 +49,7 @@ export type MediaResult = {
  * into `outDir` (created if missing). Never overwrites: an image whose filename is
  * already there is left as it is.
  */
-export async function extractMedia(presentation: Presentation, outDir: string): Promise<MediaResult> {
+export async function copyImages(presentation: Presentation, outDir: string): Promise<MediaResult> {
   mkdirSync(outDir, { recursive: true });
 
   const references = await chromeImageReferences(presentation);
