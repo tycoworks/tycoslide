@@ -15,6 +15,7 @@ import {
   THEME_PACKAGE_DIR,
 } from "./files.js";
 import { generateManifest } from "./manifest.js";
+import { describeMedia, extractMedia } from "./media.js";
 import { renameSkill, skillPackageJson, zipDir } from "./skill.js";
 
 /** The installed tycoslide package: where its shipped files live, and what a skill pins. */
@@ -60,5 +61,15 @@ export function registerAgentCommands(program: Command, tool: ToolPackage): void
       const shipped = [opts.config, ASSETS_FILE, MANIFEST_FILE, SKILL_FILE, SYNTAX_FILE];
       const skillPkg = skillPackageJson(themePkg, tool);
       write(`${skillName}${SKILL_ZIP_EXT}`, await zipDir(process.cwd(), skillName, config, catalog, shipped, skillPkg));
+    });
+
+  program
+    .command("extract-media")
+    .description("Copy the images a template's slide masters and layouts use (logos, backgrounds) into a folder")
+    .argument("<template>", "path to the .pptx template")
+    .argument("<outdir>", "folder to copy the images into (created if missing)")
+    .action(async (template: string, outDir: string) => {
+      const result = await extractMedia(resolve(process.cwd(), template), resolve(process.cwd(), outDir));
+      for (const line of describeMedia(result, outDir)) console.log(line);
     });
 }

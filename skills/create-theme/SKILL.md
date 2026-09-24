@@ -84,7 +84,7 @@ pdftoppm -png -r 60 render/brand.pdf render/slide
 
 ```bash
 python3 scripts/inventory.py template/brand.pptx
-python3 scripts/extract-media.py template/brand.pptx assets/brand
+npx tycoslide extract-media template/brand.pptx assets/brand
 ```
 
 The first prints the slide size, the color scheme and the fonts, then every slide by file number: its position, its layout name, whether its background is light, dark or a picture, and each shape with its kind, position, size, table rows and placeholder text. It ends with the slides that share identical geometry. Sizes print in inches so they read at a glance; `theme.json` wants EMU, so run it again with `--json` when you copy a `frame`, and never convert by hand. Text shows paragraph breaks as ¶ and line breaks as ↵, which is where `\n` goes in a parameter template.
@@ -107,7 +107,7 @@ For each kept slide:
 - **`required`** goes on each layout's headline: the title, or the quote or the number when the layout has no title. Nothing else.
 - **`description`** is one sentence for the agent that will write decks with this layout: the arrangement, and its capacity, like "holds four bullets comfortably".
 
-Then catalog the images `extract-media.py` copied, under `assets` in `theme.json`, each with a `path`, a `type` and a one-line `description`. The type is `icon` for marks that must never be enlarged, `image` for pictures that may scale but not crop, and `background` for full-bleed art that may crop.
+Then catalog the images `extract-media` copied, under `assets` in `theme.json`, each with a `path`, a `type` and a one-line `description`. The type is `icon` for marks that must never be enlarged, `image` for pictures that may scale but not crop, and `background` for full-bleed art that may crop.
 
 Every field, where its value comes from, and the error you get when it is wrong are in [references/theme-json.md](references/theme-json.md). Two rules fail late and are worth stating here: a table block must declare `bodyRows`, and a slot that borrows a shape from another slide must declare `frame`.
 

@@ -21,6 +21,7 @@ import {
   PRESENTATION_RELS_PART,
   parseXml,
   RelTypeSuffix,
+  readRelationships,
   relsPathFor,
   resolveTarget,
 } from "./ooxml.js";
@@ -151,14 +152,10 @@ function notesRelsXml(slideNumber: number, masterTarget: string): string {
  */
 async function findNotesMaster(archive: NotesArchive): Promise<string | undefined> {
   if (!archive.fileExists(PRESENTATION_RELS_PART)) return undefined;
-  const relsDoc = parseXml(await readString(archive, PRESENTATION_RELS_PART));
-  const rels = relsDoc.getElementsByTagName(Tag.RELATIONSHIP);
-  for (let i = 0; i < rels.length; i++) {
-    if (rels[i].getAttribute(Attr.TYPE)?.endsWith(RelTypeSuffix.NotesMaster)) {
-      return `../${rels[i].getAttribute(Attr.TARGET)}`;
-    }
-  }
-  return undefined;
+  const master = readRelationships(await readString(archive, PRESENTATION_RELS_PART)).find((rel) =>
+    rel.type.endsWith(RelTypeSuffix.NotesMaster),
+  );
+  return master && `../${master.target}`;
 }
 
 function findOverride(ctDoc: any, partName: string): any {
@@ -215,14 +212,8 @@ async function liveSlideParts(archive: NotesArchive): Promise<string[]> {
     if (rid) rIds.push(rid);
   }
 
-  const relsDoc = parseXml(await readString(archive, PRESENTATION_RELS_PART));
-  const rels = relsDoc.getElementsByTagName(Tag.RELATIONSHIP);
-  const targetById = new Map<string, string>();
-  for (let i = 0; i < rels.length; i++) {
-    const id = rels[i].getAttribute(Attr.ID);
-    const target = rels[i].getAttribute(Attr.TARGET);
-    if (id && target) targetById.set(id, target);
-  }
+  const rels = readRelationships(await readString(archive, PRESENTATION_RELS_PART));
+  const targetById = new Map(rels.map((rel) => [rel.id, rel.target]));
 
   const parts: string[] = [];
   for (const rid of rIds) {
@@ -254,12 +245,8 @@ export async function sweepOrphanNotes(archive: NotesArchive): Promise<void> {
   for (const slidePart of await liveSlideParts(archive)) {
     const relsPath = relsPathFor(slidePart);
     if (!archive.fileExists(relsPath)) continue;
-    const rels = parseXml(await readString(archive, relsPath)).getElementsByTagName(Tag.RELATIONSHIP);
-    for (let i = 0; i < rels.length; i++) {
-      const target = rels[i].getAttribute(Attr.TARGET);
-      if (target && rels[i].getAttribute(Attr.TYPE)?.endsWith(RelTypeSuffix.NotesSlide)) {
-        referenced.add(resolveTarget(slidePart, target));
-      }
+    for (const rel of readRelationships(await readString(archive, relsPath))) {
+      if (rel.type.endsWith(RelTypeSuffix.NotesSlide)) referenced.add(resolveTarget(slidePart, rel.target));
     }
   }
 

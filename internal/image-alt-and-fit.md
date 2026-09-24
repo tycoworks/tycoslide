@@ -345,16 +345,25 @@ looking at it.
 
 **Phase 5: the create-theme scripts become commands**, in two commits. Both scripts use
 only Python's standard library (`zipfile`, `ElementTree`), so they port to TypeScript on
-the dependencies the core already has (JSZip, `@xmldom/xmldom`). They go in the **core**,
-not `src/agents/`: they read a template in `theme.json`'s own terms and serve anyone
-writing a theme, human or agent. ROADMAP already places the inventory there, "so the skill
-needs no Python and the frames it reports are computed by the same code that fills them".
+the dependencies the package already has (JSZip, `@xmldom/xmldom`). They go in the **agent
+layer**, `src/agents/`, registered by `registerAgentCommands`: only the create-theme skill
+uses them, and building a deck never reads a template this way (the engine never opens a
+.pptx itself; pptx-automizer does). The core adds no feature for them. It exports the
+package helpers it already has (`engine/ooxml.ts`: `PRESENTATION_PART`, `RelTypeSuffix`,
+`relsPathFor`, `resolveTarget`, `readRelationships`) from `src/index.ts`, and the agent
+layer calls them, which is the dependency direction the import rules allow.
 - *5a.* `extract-media.py` → `tycoslide extract-media <pptx> <outdir>`: copy every image
-  referenced from a slide master or layout, under its original media filename.
+  referenced from a slide master or layout, under its original media filename. Two
+  commits: first the package helpers `notes.ts` kept privately (`relsPathFor`, target
+  resolution, XML parsing) move to `engine/ooxml.ts`, so the port shares them rather than
+  copying them; then the port (`agents/media.ts`), which reads relationships with
+  a new `readRelationships` (also adopted by `notes.ts`, so there is one way to read them)
+  and uses `image-size` for pixel sizes. The create-theme skill's two mentions of the script
+  switch to the command in the same commit, so no step points at a deleted file.
 - *5b.* `inventory.py` → `tycoslide inspect <pptx>`: slide size, colour and font scheme,
   embedded fonts, every shape with its kind and frame, and which slides share geometry.
-  Where the engine already computes something the inventory reports (frames), reuse it
-  rather than port a second copy.
+  Same placement as 5a. Where the engine already computes something the inventory reports
+  (frames), export that from the core rather than port a second copy.
 - Neither script has tests today. Each port lands with tests against a fixture `.pptx`,
   checked against the Python's output on the same file before the script is deleted.
 
@@ -560,7 +569,11 @@ the go-ahead.
    `skills/create-theme/references/theme-json.md`, the new `references/assets-json.md`,
    exactly as tabled, plus: the inventory and media steps run `npx tycoslide inspect` and
    `npx tycoslide extract-media`, and the scaffold's Python snippet that edits `theme.json`
-   becomes Node, so the skill needs no Python.
+   becomes Node, so the skill needs no Python. Its requirements then shrink accordingly:
+   drop `python3` from the `compatibility` frontmatter, the version check (41–44) and the
+   install line (47). Everything the scripts did is now an npm dependency the theme
+   already installs (JSZip, xmldom, image-size), so `npm install` covers it. LibreOffice,
+   poppler and (for mermaid) Chrome stay: they are programs, not npm packages.
 9. **Release v0.16.0** per the runbook. Breaking (`$` removed, catalog moved out of
    `theme.json`), which a 0.x minor allows. Merge to `main`, clean build and test, bump,
    `npm pack --dry-run` (now also expecting `docs/`), commit and annotated tag, then
@@ -686,6 +699,10 @@ Put to three independent reviews on 23 Sep with the same facts; all three chose 
 
 - **Mermaid alt text.** The source is text, so a description is possible: a `%% alt: …`
   comment line in the fence, or the fence's info string. Decide when a real deck needs it.
+- **poppler as an npm dependency.** `pdftoppm` only turns LibreOffice's PDF into PNGs for
+  review. An npm renderer (pdf.js-based, with prebuilt binaries) could replace it and drop
+  a system requirement from both skills. Evaluate separately; LibreOffice itself has no
+  npm replacement.
 - **Hosts without `unzip`.** Every Linux sandbox tried has it; Windows has `tar -xf`, which
   reads zips but overwrites by default. Add a fallback line to the skill only if an agent
   host turns out to lack `unzip`.
