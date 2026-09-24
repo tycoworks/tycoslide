@@ -1,15 +1,14 @@
 /**
- * Media: copy the images a template's slide masters and layouts use (logos,
- * marks, background fills) out of the .pptx, under their original media filenames,
- * as raw material for a theme's image catalog. Images referenced only by slides
- * are skipped: those are sample content, not the template's chrome.
+ * Media: copy the images a template uses, on its masters, layouts and slides, out
+ * of the .pptx under their original media filenames, as raw material for a theme's
+ * image catalog.
  */
 
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, posix } from "node:path";
 import { imageSize } from "image-size";
-import { MEDIA_DIR, Part, type Presentation, RelType } from "./pptx.js";
+import { Part, type Presentation, RelType } from "./pptx.js";
 
 const XML_EXT = ".xml";
 
@@ -28,7 +27,7 @@ export type MediaOutcome = (typeof MediaOutcome)[keyof typeof MediaOutcome];
 export type MediaImage = {
   /** The media filename, e.g. `image3.png`. */
   file: string;
-  /** The masters and layouts that use it, e.g. `slideMaster1`, `slideLayout4`. */
+  /** The masters, layouts and slides that use it, e.g. `slideMaster1`, `slideLayout4`, `slide3`. */
   usedBy: string[];
   outcome: MediaOutcome;
   /** Pixel size, when the format is readable. */
@@ -37,22 +36,16 @@ export type MediaImage = {
   duplicateOf?: string;
 };
 
-export type MediaResult = {
-  /** In first-use order: masters first, then layouts, each in number order. */
-  images: MediaImage[];
-  /** Media files that only slides reference, and which were skipped. */
-  slideOnly: number;
-};
-
 /**
- * Copy every image referenced from the presentation's slide masters and layouts
- * into `outDir` (created if missing). Never overwrites: an image whose filename is
- * already there is left as it is.
+ * Copy every image the presentation's masters, layouts and slides use into
+ * `outDir` (created if missing), and describe each in first-use order: masters
+ * first, then layouts, then slides, each in number order. Never overwrites: an
+ * image whose filename is already there is left as it is.
  */
-export async function copyImages(presentation: Presentation, outDir: string): Promise<MediaResult> {
+export async function copyImages(presentation: Presentation, outDir: string): Promise<MediaImage[]> {
   mkdirSync(outDir, { recursive: true });
 
-  const references = await chromeImageReferences(presentation);
+  const references = await imageReferences(presentation);
   const images: MediaImage[] = [];
   const firstByContent = new Map<string, string>();
   for (const [media, usedBy] of references) {
@@ -80,15 +73,14 @@ export async function copyImages(presentation: Presentation, outDir: string): Pr
     images.push({ ...read, outcome: MediaOutcome.Copied });
   }
 
-  const slideOnly = presentation.parts.filter((part) => part.startsWith(MEDIA_DIR) && !references.has(part)).length;
-  return { images, slideOnly };
+  return images;
 }
 
-/** Media part → the masters and layouts that use it, in first-use order. */
-async function chromeImageReferences(presentation: Presentation): Promise<Map<string, string[]>> {
+/** Media part → the masters, layouts and slides that use it, in first-use order. */
+async function imageReferences(presentation: Presentation): Promise<Map<string, string[]>> {
   const references = new Map<string, string[]>();
-  const chrome = [...presentation.numbered(Part.Master), ...presentation.numbered(Part.Layout)];
-  for (const part of chrome) {
+  const parts = [Part.Master, Part.Layout, Part.Slide].flatMap((pattern) => presentation.numbered(pattern));
+  for (const part of parts) {
     const user = posix.basename(part, XML_EXT);
     for (const media of await presentation.related(part, RelType.Image)) {
       const users = references.get(media) ?? [];

@@ -24,9 +24,6 @@ export const Part = {
   EmbeddedFont: /^ppt\/fonts\/.+\.fntdata$/,
 } as const;
 
-/** Where a package keeps its images. */
-export const MEDIA_DIR = "ppt/media/";
-
 /** Tail segments of the relationship types the agent layer follows. */
 export const RelType = {
   Image: "/image",

@@ -67,9 +67,7 @@ export function registerAgentCommands(program: Command, tool: ToolPackage): void
 
   program
     .command("extract")
-    .description(
-      `Read a template for a theme: write ${TEMPLATE_FILE}, and copy its master and layout images into ${ASSETS_DIR}/`,
-    )
+    .description(`Read a template for a theme: write ${TEMPLATE_FILE}, and copy its images into ${ASSETS_DIR}/`)
     .argument("<template>", "path to the .pptx template")
     .action(async (template: string) => {
       const summary = summarizeExtraction(await extractTemplate(resolve(process.cwd(), template), process.cwd()));

@@ -21,7 +21,6 @@ describe("extractTemplate", () => {
     assert.deepEqual(facts.images, [
       { file: "logo.png", usedBy: ["slideMaster1"], outcome: MediaOutcome.Copied, path: `${ASSETS_DIR}/logo.png` },
     ]);
-    assert.equal(facts.slideOnlyImages, 0);
     assert.equal(readFileSync(join(theme, ASSETS_DIR, "logo.png"), "utf-8"), MASTER_IMAGE);
   });
 
@@ -53,7 +52,7 @@ describe("summarizeExtraction", () => {
     });
   });
 
-  it("reports images already present, duplicates, missing and slide-only ones when there are any", () => {
+  it("reports images already present, duplicates and missing ones when there are any", () => {
     const base = { usedBy: ["slideLayout1"] };
     const facts = {
       slideSize: { cx: 1, cy: 1 },
@@ -68,12 +67,10 @@ describe("summarizeExtraction", () => {
         { ...base, file: "c.png", outcome: MediaOutcome.Duplicate, duplicateOf: "a.png" },
         { ...base, file: "d.png", outcome: MediaOutcome.Missing },
       ],
-      slideOnlyImages: 3,
     };
     assert.equal(
       summarizeExtraction(facts).images,
-      "0 images copied, 2 images already present, 1 identical image skipped, " +
-        "1 image missing from the template, 3 slide-only images left in the template",
+      "0 images copied, 2 images already present, 1 identical image skipped, 1 image missing from the template",
     );
   });
 });

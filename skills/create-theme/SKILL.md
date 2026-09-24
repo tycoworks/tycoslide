@@ -88,7 +88,7 @@ npx tycoslide extract template/brand.pptx
 
 This writes `template.json`: the slide size, the color scheme and the fonts, then every slide by file number with its position, its layout name, whether its background is light, dark or an image, and each shape with its kind, frame, table rows and placeholder text. It ends with `duplicates`, the slides that share identical geometry. Frames are in EMU, exactly as `theme.json` wants them, so copy them as they are and never convert by hand. Text shows paragraph breaks as ¶ and line breaks as ↵, which is where `\n` goes in a parameter template.
 
-It also copies every image the masters and layouts reference, the logos, marks and backdrops, into `assets/`, and lists them under `images` in `template.json`. Images placed on individual slides are sample content and stay out, unless the PNG shows one is a brand mark. If the user has a folder of brand assets outside the template, such as logos, icons or product shots, copy it into `assets/` as it is and treat it the same way from here on.
+It also copies every image the template uses into `assets/`, and lists them under `images` in `template.json` with the masters, layouts and slides that use each. If the user has a folder of brand assets outside the template, such as logos, icons or product shots, copy it into `assets/` as it is and treat it the same way from here on.
 
 Shape names mean nothing. They are whatever the designer's tool produced, `Google Shape;877;p95` is normal, and they are never renamed, only referenced. What matters is the placeholder text, because it says what the shape is for.
 
@@ -106,13 +106,13 @@ For each kept slide, working from its entry in `template.json`:
 - **`required`** goes on each layout's headline: the title, or the quote or the number when the layout has no title. Nothing else.
 - **`description`** is one sentence for the agent that will write decks with this layout: the arrangement, and its capacity, like "holds four bullets comfortably".
 
-Then catalog the images `extract` copied in `assets.json`, keyed by category and then name, each with a `path`, a `fit` and a one-line `description`:
+Then catalog the images decks should reuse, such as logos, icons and backdrops, in `assets.json`, keyed by category and then name, each with a `path`, a `fit` and a one-line `description`:
 
 ```json
 { "brand": { "logo": { "path": "assets/logo.png", "fit": "contain", "description": "Full-color wordmark, for light backgrounds" } } }
 ```
 
-The fit is what a deck author copies into the image: `scale-down` for icons and marks that must never be enlarged, `contain` for images that may scale but must not crop (logos, diagrams, screenshots), and `cover` only for full-bleed art that may crop. Look at the image to decide.
+Leave out sample content such as stock photos; only cataloged images ship. The fit is what a deck author copies into the image: `scale-down` for icons and marks that must never be enlarged, `contain` for images that may scale but must not crop (logos, diagrams, screenshots), and `cover` only for full-bleed art that may crop. Look at the image to decide.
 
 Every field and the error you get when it is wrong are in `node_modules/@tycoworks/tycoslide/docs/theme.md`. Two rules fail late and are worth stating here: a table block must declare `bodyRows`, and a slot that borrows a shape from another slide must declare `frame`. For a table of R `rows` with no total row, `bodyRows` is `[1, R-1]`, and the `frame` is copied from the shape the slot replaces on the layout's own slide, never computed or converted.
 

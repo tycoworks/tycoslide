@@ -1,7 +1,7 @@
 /**
  * Extract: read a template for a theme in one pass. Writes the inventory, with the
- * images it copied, to `template.json`, and copies the master and layout images
- * into `assets/`, both in the theme folder.
+ * images it copied, to `template.json`, and copies the template's images into
+ * `assets/`, both in the theme folder.
  */
 
 import { writeFileSync } from "node:fs";
@@ -19,22 +19,19 @@ export type TemplateImage = MediaImage & {
 /** The contents of `template.json`. */
 export type TemplateFacts = Inventory & {
   images: TemplateImage[];
-  /** Images only slides use: sample content, left in the template. */
-  slideOnlyImages: number;
 };
 
 /** Read `templatePath`, write `template.json` and copy the images into `themeDir`. */
 export async function extractTemplate(templatePath: string, themeDir: string): Promise<TemplateFacts> {
   const presentation = await Presentation.open(templatePath);
   const inventory = await readInventory(presentation);
-  const media = await copyImages(presentation, join(themeDir, ASSETS_DIR));
+  const images = await copyImages(presentation, join(themeDir, ASSETS_DIR));
   const facts: TemplateFacts = {
     ...inventory,
-    images: media.images.map((image) => {
+    images: images.map((image) => {
       const kept = image.outcome === MediaOutcome.Missing ? undefined : (image.duplicateOf ?? image.file);
       return kept ? { ...image, path: posix.join(ASSETS_DIR, kept) } : image;
     }),
-    slideOnlyImages: media.slideOnly,
   };
   writeFileSync(join(themeDir, TEMPLATE_FILE), jsonFile(facts));
   return facts;
@@ -54,7 +51,6 @@ export function summarizeExtraction(facts: TemplateFacts): { template: string; i
     [count(MediaOutcome.Present), "image", "already present", false],
     [count(MediaOutcome.Duplicate), "identical image", "skipped", false],
     [count(MediaOutcome.Missing), "image", "missing from the template", false],
-    [facts.slideOnlyImages, "slide-only image", "left in the template", false],
   ];
   return {
     template: template.join(LIST_SEPARATOR),

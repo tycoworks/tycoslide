@@ -371,9 +371,10 @@ the agent layer looks for stay in the agent layer.
     marked when inherited from the layout or master), the duplicate-geometry groups, and
     the extracted images. One format, read by the agent, so no text report and no
     `--json` mode. Gitignored in a theme: it can always be regenerated.
-  - the master and layout images, straight into `assets/` (never overwriting). Sorting
-    them into catalog categories is the author's job afterwards: an extractor can't know
-    whether an image is a logo, a backdrop or an icon.
+  - every image the masters, layouts and slides use, straight into `assets/` (never
+    overwriting). Choosing which to catalog and sorting them into categories is the
+    author's job afterwards: an extractor can't know whether an image is a logo, a
+    backdrop, an icon or sample content.
   Embedded fonts are listed, not extracted: PowerPoint stores them as Embedded OpenType
   with MicroType Express compression, which needs a decompressor we'd have to own, and a
   font's embedding permission rarely allows reuse outside the document. The theme keeps
