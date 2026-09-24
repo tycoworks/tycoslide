@@ -35,17 +35,11 @@ This skill builds decks from a markdown deck file. The theme provides slide layo
 
 ## Layout Discovery
 
-Before writing anything, read `manifest.json`. It lists the theme's **layouts** -- for each: `name`, `description`, `parameters` (frontmatter inputs) and `slots` (body regions). A layout is identified by its `name`; every parameter and slot by its `key`. Parameters carry a `type`, slots carry `accepts`, and either may be `required`.
+Before writing anything, read `manifest.json`. It lists the theme's **layouts** -- for each: `name`, `description`, `parameters` (frontmatter inputs) and `slots` (body regions). A layout is identified by its `name`; every parameter and slot by its `key`. Slots carry `accepts`, and either may be `required`.
 
 Pictures live in `assets.json`: every logo, illustration and icon the theme offers, keyed by category and name. **Search it, do not read it whole** -- an icon set alone can run to thousands of entries. Grep for it and use the `$category.name` you find -- but **search for what the icon depicts, not what you mean by it**: a catalog is indexed by picture, so "freshness" finds nothing while `grep -i "clock" assets.json` and `grep -i "bolt"` find the icon you wanted.
 
-A layout's inputs split two ways (see [syntax.md](syntax.md) for details):
-- **parameters** -- one value on a frontmatter line. Fill by putting a value under the parameter's key in the slide frontmatter.
-- **slots** -- a multi-line region in the body. Accept types: `text`, `table`, `image`. Fill as a `::key::` region, using the slot's `key` from the manifest; a fenced code block routes to a `text` slot, a fenced mermaid block to an `image` slot.
-
-A slot may accept more than one content type -- the manifest lists each slot's `accepts`, and the shape of the content you write selects which one.
-
-Parameters and slots you leave unfilled are dropped from the slide, so a layout with numbered slots (several sections, stats, columns) renders only the ones you fill -- fill as many as you have.
+A layout's inputs split two ways, parameters and slots; see [syntax.md](syntax.md#parameters-and-slots) for how to fill each. Unfilled ones are dropped, so fill as many of a layout's numbered slots (sections, stats, columns) as you have content for.
 
 Study each layout's `slots` before writing any slides.
 
@@ -53,73 +47,7 @@ Study each layout's `slots` before writing any slides.
 
 ## Creating Slides
 
-> **Every layout, parameter, and slot name in the examples below is a placeholder.** Your theme's real names live in `manifest.json` — read it first, and never assume a name shown in an example exists in your theme.
-
-Write a deck file in markdown. The file starts with a global frontmatter block declaring the theme, followed by slides separated by `---`.
-
-```markdown
----
-theme: ./theme.json
----
-
----
-layout: Title             # ← a layout from your manifest.json
-title: Q2 Business Review # ← a parameter that layout declares
-subtitle: Engineering Division
----
-
----
-layout: Quote dark
-quote: Great products are built by great teams.
-attributionName: Jane Smith
-attributionTitle: CEO, Acme Corp
----
-
-::logo::
-
-![]($logos.acme)          # ← an image slot: a catalog asset, or a file path relative to the deck
-```
-
-A text shape that holds several lines (e.g. an attribution with a name over a title) surfaces as one key per line -- fill each as its own scalar (`attributionName`, `attributionTitle` above), never as a YAML list.
-
-### File structure
-
-A deck file has three parts:
-
-1. **Global frontmatter** (required) -- the first `---`-delimited block. Must contain `theme:` pointing to the theme config file. The output `.pptx` is written next to the deck, named after it (`deck.md` → `deck.pptx`).
-2. **Slides** -- each begins with a `---` separator. A slide's frontmatter sits between `---` delimiters. Body content follows the closing `---`.
-3. **Slide separators** -- a `---` on its own line separates slides.
-
-### Slide frontmatter
-
-Every slide must have a `layout:` key. All other frontmatter keys map 1:1 to the layout's **parameters**. A value containing a colon-then-space must be quoted -- `title: "The change: compute on the difference"` -- or YAML reads it as a second key and the build fails.
-
-```yaml
----
-layout: Body
-title: Key Achievements
-subtitle: This Quarter
----
-```
-
-- `layout` is required and consumed by the compiler (not forwarded as content).
-- All other frontmatter keys fill parameters: `title` fills the `title` parameter, `subtitle` fills the `subtitle` parameter, etc. A multi-line text shape surfaces as several keys (e.g. `name` + `jobTitle`); fill each as its own scalar line.
-- Slots (accepting `text`, `table`, `image`) are filled by body regions, not frontmatter -- see below.
-- A slide may also carry a `notes:` block in frontmatter -- plain-text speaker notes for the slide's notes page (see [syntax.md](syntax.md#speaker-notes)). It is slide-level metadata, not a parameter or slot.
-
-### Body content, slots, and formatting
-
-See [syntax.md](syntax.md) for the full syntax reference: body content (paragraphs, bullets, nesting), inline formatting (bold, italic, strikethrough, underline, hyperlinks), named slots (`::key::` markers), and the parameter/slot split (slots accept: text, table, image).
-
-### Build
-
-Build the deck (replace `<deck.md>` with your deck file):
-
-```bash
-npx tycoslide build <deck.md>
-```
-
-The `.pptx` is written next to your deck file (same directory as `<deck.md>`).
+Write a deck file in markdown, as [syntax.md](syntax.md) describes, and build it as its [Build](syntax.md#build) section shows.
 
 ---
 
@@ -146,7 +74,7 @@ Keep each slot's content to what its region comfortably holds. When content over
 - **Don't restyle the layout** -- the theme owns all design; you only fill slots
 - **Don't use an image that's wrong for the slot** -- a small slot wants a simple icon, not a dense illustration. If you get a `shrunk to X%` warning, look at the rendered slide: if the image is now too small to make out, use a simpler one. A `leaves X% of the frame empty` warning is the opposite: the image is a different shape from the slot. Neither fails the build -- judge both from the rendered slide.
 - **Don't invent layout or asset names** -- only use layouts from `manifest.json` and assets from `assets.json`
-- **Don't leave required parameters or slots empty** -- and don't leave a placeholder logo or dummy text in an image slot you care about
+- **Don't leave required parameters or slots empty** -- and don't leave a placeholder logo or dummy text in an image slot you care about. If you don't have a suitable image, ask the user for one.
 
 ---
 
@@ -156,17 +84,11 @@ Keep each slot's content to what its region comfortably holds. When content over
 
 Your first draft almost never comes out clean. Approach QA as a debugging session, not a confirmation step. If you haven't run at least one build-fix cycle, you're not done.
 
-Build the deck again ([Build](#build)) and read the output carefully. Common errors and fixes:
+Build the deck again ([Build](syntax.md#build)) and read the output carefully. Common errors and fixes are in [syntax.md](syntax.md#build), and layout names are in `manifest.json`. Also:
 
 | Error | Fix |
 |-------|-----|
-| `unknown layout "xyz"` | Check layout names in `manifest.json` |
-| A parameter or slot didn't fill | Use the key names the layout declares -- parameters in frontmatter, slots as body regions |
 | An image didn't swap / placeholder remains | Write a `::key::` region using the image slot's key, containing `![]($category.name)` from `assets.json` or `![](path)` relative to the deck |
-| YAML parse error | Fix the YAML syntax in the slide's frontmatter |
-| `Skipped setting relation target` | The asset image couldn't be placed; check the path and file |
-| `forbidden style directive` | Remove `style`, `classDef`, `linkStyle`, or `%%{init}` from your mermaid block -- use `class` for grouping instead |
-| `no "mermaid" block` | The theme has no mermaid color config -- add a `mermaid` section to theme.json |
 
 ### Verification Loop
 
@@ -218,9 +140,3 @@ Also read: manifest.json (for layout documentation); search assets.json for pict
 ```
 
 If the subagent finds issues, fix them and rebuild.
-
----
-
-## Full Example
-
-See [syntax.md](syntax.md#full-example) for a complete multi-slide deck example.

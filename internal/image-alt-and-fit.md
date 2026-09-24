@@ -436,6 +436,13 @@ nothing is written twice:
   QA table rows move to `syntax.md`'s troubleshooting table with the agent-only hints left
   in `SKILL.md`.
 - Check before committing phase 7: no sentence of `syntax.md` reappears in `SKILL.md`.
+- **Done in 7a:** `syntax.md` is also agent-neutral now. It named `SKILL.md` and
+  `manifest.json` (agent-layer files) and showed a `manifest.json` example whose
+  parameters still had a `type` and an image parameter, neither of which exists; it now
+  describes layouts, parameters and slots in the theme's own terms, and the skill says
+  once that for an agent those names are in `manifest.json`. The stale "Parameters carry
+  a `type`" line (`SKILL.md` 38) went with it. Agent advice moved the other way: "ask
+  the user for an image" into the skill's Avoid list.
 - `SKILL.md`'s links to `syntax.md` target the packaged layout, where `package` puts the two
   side by side. Since 4c they don't resolve when browsing the repo (`theme-package/` vs
   `docs/`); that is expected, not a broken link.

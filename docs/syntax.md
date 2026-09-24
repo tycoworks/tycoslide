@@ -1,10 +1,18 @@
 # Markdown Syntax Reference
 
-This document covers the detailed syntax for writing slide content in tycoslide deck files. For an overview of how to create slides, see [SKILL.md](SKILL.md).
+This document covers the detailed syntax for writing slide content in tycoslide deck files.
 
-> **Every layout, parameter, and slot name in the examples below is a placeholder.** Your theme's real names live in `manifest.json` — read it first, and never assume a name shown here (`Body`, `TwoColumn`, `hero`, `::left::`, etc.) exists in your theme.
+> **Every layout, parameter, and slot name in the examples below is a placeholder.** Your theme's real names live in `theme.json` — read it first, and never assume a name shown here (`Body`, `TwoColumn`, `hero`, `::left::`, etc.) exists in your theme.
 
 ---
+
+## File structure
+
+A deck file has three parts:
+
+1. **Global frontmatter** (required) -- the first `---`-delimited block.
+2. **Slides** -- each begins with a `---` separator. A slide's frontmatter sits between `---` delimiters. Body content follows the closing `---`.
+3. **Slide separators** -- a `---` on its own line separates slides.
 
 ## Global frontmatter
 
@@ -20,6 +28,23 @@ theme: ./theme.json
 
 The output `.pptx` is written next to the deck file, named after it (`deck.md` → `deck.pptx`).
 
+## Slide frontmatter
+
+Every slide must have a `layout:` key. All other frontmatter keys map 1:1 to the layout's **parameters**. A value containing a colon-then-space must be quoted -- `title: "The change: compute on the difference"` -- or YAML reads it as a second key and the build fails.
+
+```yaml
+---
+layout: Body
+title: Key Achievements
+subtitle: This Quarter
+---
+```
+
+- `layout` is required and consumed by the compiler (not forwarded as content).
+- All other frontmatter keys fill parameters: `title` fills the `title` parameter, `subtitle` fills the `subtitle` parameter, etc.
+- Slots (accepting `text`, `table`, `image`) are filled by body regions, not frontmatter -- see below.
+- A slide may also carry a `notes:` block in frontmatter -- plain-text speaker notes for the slide's notes page (see [Speaker notes](#speaker-notes)). It is slide-level metadata, not a parameter or slot.
+
 ---
 
 ## Body content
@@ -28,7 +53,7 @@ A slide's body is split into regions with `::key::` markers. Each region fills t
 
 ```markdown
 ---
-layout: Body            # ← placeholder; use a real layout from your manifest.json
+layout: Body            # ← placeholder; use a real layout from your theme
 title: Key Achievements
 ---
 
@@ -85,30 +110,15 @@ Content after a marker goes to the slot matching that name. The marker names mus
 
 ---
 
-## Parameters and slots (in `manifest.json`)
+## Parameters and slots
 
-A layout advertises two kinds of author-facing input, split by one rule: **a parameter is one value on a frontmatter line; a slot is a multi-line region in the body** (a `::key::` region). In `manifest.json` each layout carries two lists, `parameters` and `slots`:
-
-```jsonc
-{
-  "name": "Feature with code",
-  "parameters": [
-    { "key": "title",    "type": "template" },
-    { "key": "subtitle", "type": "template" },
-    { "key": "logo",     "type": "image", "required": true }
-  ],
-  "slots": [
-    { "key": "body", "accepts": ["text"] },
-    { "key": "diagram", "accepts": ["image"] }
-  ]
-}
-```
+A layout advertises two kinds of author-facing input, split by one rule: **a parameter is one value on a frontmatter line; a slot is a multi-line region in the body** (a `::key::` region).
 
 ### Parameter types (frontmatter lines)
 
 Fill a parameter by putting a value under its key in the slide's frontmatter.
 
-- **`template`** -- a shape whose existing runs are walked and replaced in place, preserving each run's style. Behind the scenes each text shape carries one `template` string with `{key}` placeholders (e.g. `{title}`, or `{name}\n{jobTitle}` for a two-line credits shape), but you never see the template: the manifest advertises **one key per placeholder**, and you fill each key as a plain scalar in frontmatter. A single-placeholder title shape gives you one key:
+- **`template`** -- a shape whose existing runs are walked and replaced in place, preserving each run's style. Behind the scenes each text shape carries one `template` string with `{key}` placeholders (e.g. `{title}`, or `{name}\n{jobTitle}` for a two-line credits shape), but you never see the template: the layout advertises **one key per placeholder**, and you fill each key as a plain scalar in frontmatter. A single-placeholder title shape gives you one key:
   ```yaml
   title: Q3 Results
   ```
@@ -120,7 +130,7 @@ Fill a parameter by putting a value under its key in the slide's frontmatter.
   The engine substitutes each value into the run that carries its style, so if the designer made the name bold and the job title grey, the filled name stays bold and the filled title stays grey.
 ### Body content shapes
 
-Fill a slot by writing a `::key::` region in the body; the marker maps to the slot with that `key`. A slot's manifest entry lists which content types it `accepts` (`text`, `table`, `image`) -- write content whose shape matches one of them:
+Fill a slot by writing a `::key::` region in the body; the marker maps to the slot with that `key`. A slot lists which content types it `accepts` (`text`, `table`, `image`) -- write content whose shape matches one of them:
 
 - **text** (slots that accept `text`) -- markdown paragraphs and bullets, rebuilt from the template's specimen paragraph styles. A fenced code block also routes here:
   ````markdown
@@ -205,7 +215,7 @@ The theme owns all styling. These directives are rejected at build time:
 
 Each parameter or slot in the layout definition may declare:
 - **`accepts`** (slots, required) -- an array of `text`, `table`, `image`.
-- **`required: true`** -- the slide has no usable default and the build fails if the parameter/slot has no value (e.g. team-member photos, icon-grid icons, the quote logo). If you don't have a suitable image, ask the user for one.
+- **`required: true`** -- the slide has no usable default and the build fails if the parameter/slot has no value (e.g. team-member photos, icon-grid icons, the quote logo).
 - **optional (the default)** -- a parameter or slot you leave unfilled is dropped from the slide (its shape is removed), so a layout with numbered slots (e.g. up to six sections, up to four stats) renders only the ones you fill.
 - **image sizing** -- each catalog asset declares a `type` (`icon` | `image` | `background`) that determines how it is scaled and cropped: `icon` never enlarges past native and never crops; `image` fits the whole picture (no crop, may scale); `background` fills and center-crops. Mermaid renders as `image` (contained).
 
@@ -244,6 +254,27 @@ title: Part Two
 subtitle: Advanced Topics
 ---
 ```
+
+---
+
+## Build
+
+Build the deck (replace `<deck.md>` with your deck file):
+
+```bash
+npx tycoslide build <deck.md>
+```
+
+Common errors and fixes:
+
+| Error | Fix |
+|-------|-----|
+| `unknown layout "xyz"` | Check layout names in `theme.json` |
+| A parameter or slot didn't fill | Use the key names the layout declares -- parameters in frontmatter, slots as body regions |
+| YAML parse error | Fix the YAML syntax in the slide's frontmatter |
+| `Skipped setting relation target` | The asset image couldn't be placed; check the path and file |
+| `forbidden style directive` | Remove `style`, `classDef`, `linkStyle`, or `%%{init}` from your mermaid block -- use `class` for grouping instead |
+| `no "mermaid" block` | The theme has no mermaid color config -- add a `mermaid` section to theme.json |
 
 ---
 
