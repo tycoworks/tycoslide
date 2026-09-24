@@ -33,6 +33,8 @@ Commit and tag the bump **before** publishing. A publish that fails leaves a tag
 
 **tycoslide fills; it does not design.** The design — layout, type, color, spacing, chrome — lives in the designer's `.pptx` and is never generated, critiqued, or "improved." tycoslide is not a slide *generator* (Gamma, Tome, generic markdown-to-deck tools invent generic design); it reproduces a real brand system exactly. The agent's job is **composition within a fixed design system** — mapping content into the right slots of a real branded template — never design. Helping an agent *understand and compose within* the theme (which layout fits, what a slot accepts, a few general composition principles) is in scope; helping it invent, choose, or judge *design* is out, on purpose — that "out" is the product. Quality comes from the theme, not the prompt: a great template makes every deck great. (Composition still has taste — a valid fill can be a weak one — so a handful of general composition principles live in the agent skill; per-layout design guidance does not.)
 
+**tycoslide makes files; the skills describe how to work with them.** Everything tycoslide runs installs with `npm install`. A step that needs another program, such as rendering a deck to PNGs with LibreOffice so an agent can check it the way a person would open it in PowerPoint, belongs in a skill, which lists the program in its requirements. The one exception is mermaid, which needs a browser to make the diagram at all.
+
 ## Architecture
 
 Three layers with hard boundaries. The compiler and the engine are the **core**: markdown deck + theme → `.pptx`. The agent layer sits on top.
