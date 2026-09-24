@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
 import JSZip from "jszip";
-import { describeMedia, extractMedia as extractFrom, MediaOutcome } from "../dist/agents/media.js";
+import { extractMedia as extractFrom, MediaOutcome } from "../dist/agents/media.js";
 import { Presentation } from "../dist/agents/pptx.js";
 
 const extractMedia = async (template: string, out: string) => extractFrom(await Presentation.open(template), out);
@@ -73,12 +73,11 @@ describe("extractMedia", () => {
           outcome: MediaOutcome.Copied,
           size: { width: 2, height: 2 },
         },
-        { file: "bg.png", usedBy: ["slideLayout2"], outcome: MediaOutcome.Copied, size: undefined },
+        { file: "bg.png", usedBy: ["slideLayout2"], outcome: MediaOutcome.Copied },
         {
           file: "bg-copy.png",
           usedBy: ["slideLayout10"],
           outcome: MediaOutcome.Duplicate,
-          size: undefined,
           duplicateOf: "bg.png",
         },
         { file: "gone.png", usedBy: ["slideLayout10"], outcome: MediaOutcome.Missing },
@@ -105,30 +104,4 @@ describe("extractMedia", () => {
     assert.equal(readFileSync(join(out, "logo.png"), "utf-8"), "MINE");
   });
 
-});
-
-describe("describeMedia", () => {
-  it("prints one line per image and a summary", async () => {
-    const dir = scratch();
-    const result = await extractMedia(await writeTemplate(dir), join(dir, "out"));
-    assert.deepEqual(describeMedia(result, "assets/brand"), [
-      "logo.png  2x2  slideMaster1, slideLayout2",
-      "bg.png  ?  slideLayout2",
-      "bg-copy.png  ?  slideLayout10  (identical to bg.png, skipped)",
-      "gone.png  ?  slideLayout10  (missing from package)",
-      "2 image(s) copied to assets/brand; 1 media file(s) referenced only by slides were skipped",
-    ]);
-  });
-
-  it("counts files already present", async () => {
-    const dir = scratch();
-    const template = await writeTemplate(dir);
-    await extractMedia(template, join(dir, "out"));
-    const again = await extractMedia(template, join(dir, "out"));
-    assert.equal(
-      describeMedia(again, "out").at(-1),
-      "0 image(s) copied to out, 2 already present; 1 media file(s) referenced only by slides were skipped",
-    );
-    assert.match(describeMedia(again, "out")[0], /\(already present, left untouched\)$/);
-  });
 });

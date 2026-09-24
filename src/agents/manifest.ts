@@ -5,7 +5,7 @@ import {
   type CompilerThemeConfig,
   templateKeys,
 } from "../index.js";
-import { ASSETS_FILE } from "./files.js";
+import { ASSETS_FILE, jsonFile } from "./files.js";
 
 /** A frontmatter parameter as advertised to AI authors. */
 type ManifestParameter = {
@@ -82,5 +82,5 @@ export function generateManifest(config: CompilerThemeConfig): string {
   });
 
   const manifest: Manifest = { layouts, assets: ASSETS_FILE };
-  return JSON.stringify(manifest, null, 2);
+  return jsonFile(manifest);
 }

@@ -12,12 +12,6 @@ import { imageSize } from "image-size";
 import { MEDIA_DIR, Part, type Presentation, RelType } from "./pptx.js";
 
 const XML_EXT = ".xml";
-/** Separates the columns of a report line. */
-const COLUMN = "  ";
-/** Separates the parts that use an image. */
-const LIST_SEPARATOR = ", ";
-/** Shown for an image whose pixel size can't be read. */
-const UNKNOWN_SIZE = "?";
 
 /** What happened to one referenced image. */
 export const MediaOutcome = {
@@ -41,14 +35,6 @@ export type MediaImage = {
   size?: { width: number; height: number };
   /** For a duplicate: the file it is identical to. */
   duplicateOf?: string;
-};
-
-/** The note a report line ends with, by outcome; a copied image needs none. */
-const NOTE: Record<MediaOutcome, (image: MediaImage) => string | undefined> = {
-  [MediaOutcome.Copied]: () => undefined,
-  [MediaOutcome.Present]: () => "(already present, left untouched)",
-  [MediaOutcome.Duplicate]: (image) => `(identical to ${image.duplicateOf}, skipped)`,
-  [MediaOutcome.Missing]: () => "(missing from package)",
 };
 
 export type MediaResult = {
@@ -77,43 +63,25 @@ export async function extractMedia(presentation: Presentation, outDir: string): 
     }
     const data = await presentation.bytes(media);
     const size = pixelSize(data);
+    const read = { file, usedBy, ...(size && { size }) };
     const digest = createHash("sha256").update(data).digest("hex");
     const duplicateOf = firstByContent.get(digest);
     if (duplicateOf) {
-      images.push({ file, usedBy, outcome: MediaOutcome.Duplicate, size, duplicateOf });
+      images.push({ ...read, outcome: MediaOutcome.Duplicate, duplicateOf });
       continue;
     }
     firstByContent.set(digest, file);
     const dest = join(outDir, file);
     if (existsSync(dest)) {
-      images.push({ file, usedBy, outcome: MediaOutcome.Present, size });
+      images.push({ ...read, outcome: MediaOutcome.Present });
       continue;
     }
     writeFileSync(dest, data);
-    images.push({ file, usedBy, outcome: MediaOutcome.Copied, size });
+    images.push({ ...read, outcome: MediaOutcome.Copied });
   }
 
   const slideOnly = presentation.parts.filter((part) => part.startsWith(MEDIA_DIR) && !references.has(part)).length;
   return { images, slideOnly };
-}
-
-/**
- * One line per image, then a summary, for the CLI. `outDirLabel` is the folder as
- * the user wrote it.
- */
-export function describeMedia(result: MediaResult, outDirLabel: string): string[] {
-  const lines = result.images.map((image) => {
-    const size = image.size ? `${image.size.width}x${image.size.height}` : UNKNOWN_SIZE;
-    const note = NOTE[image.outcome](image);
-    return [image.file, size, image.usedBy.join(LIST_SEPARATOR), ...(note ? [note] : [])].join(COLUMN);
-  });
-
-  const count = (outcome: MediaOutcome) => result.images.filter((image) => image.outcome === outcome).length;
-  const present = count(MediaOutcome.Present);
-  let summary = `${count(MediaOutcome.Copied)} image(s) copied to ${outDirLabel}`;
-  if (present) summary += `, ${present} already present`;
-  if (result.slideOnly) summary += `; ${result.slideOnly} media file(s) referenced only by slides were skipped`;
-  return [...lines, summary];
 }
 
 /** Media part → the masters and layouts that use it, in first-use order. */

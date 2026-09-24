@@ -43,7 +43,7 @@ A slot is a body region. The author's markdown shape picks which accepted block 
 |---|---|---|---|
 | `key` | The `::key::` region name. Required, unique within the layout. | Your naming; `body`, `col1_body`, `image`, `code` are conventional. | `unknown slot "::x::" in layout "..."` at compile. |
 | `accepts` | The blocks this slot can become, at most one per `type`. Required. | See blocks below. | `accepts two text blocks; each content type may appear once.` |
-| `frame` | `{x, y, cx, cy}` in EMU: the region a transplanted shape is positioned into. Required when any block's `sourceSlide` differs from `slideNumber`, otherwise optional. | `inventory.py --json`, the `frame` of the shape on the layout's own slide that the transplant replaces, in EMU. Copy the numbers; never compute or convert them. | `Layout "X" slot "y": a transplant block (sourceSlide ≠ N) requires a "frame"`. |
+| `frame` | `{x, y, cx, cy}` in EMU: the region a transplanted shape is positioned into. Required when any block's `sourceSlide` differs from `slideNumber`, otherwise optional. | `template.json`, the `frame` of the shape on the layout's own slide that the transplant replaces, in EMU. Copy the numbers; never compute or convert them. | `Layout "X" slot "y": a transplant block (sourceSlide ≠ N) requires a "frame"`. |
 | `required` | Whether the author must fill the region. Optional, default `false`; an unfilled optional slot has its shape removed. | Your judgement: the layout's headline when it is a slot, such as the quote on a quote layout. | `layout "X" requires slot "y"; none provided`. |
 
 ### Blocks inside `accepts`
@@ -112,7 +112,7 @@ Optional record of named color variants. The record keys are free; every variant
 | `accentTextColor` | Text color inside accent-classed nodes. |
 | `groupCornerRadius` | Subgraph corner radius in pixels; 0 for square. |
 
-Take the values from the inventory header's color scheme, reading the hex values rather than trusting the slot names, since a scheme can be inverted with `dk1` white. `text` is the color body text has on the diagram's surface, `primary` is that surface, `line` and `accents` come from the accent slots, and `surfaceBorder` is a darker step of `surface`. A missing block fails with `theme has no "mermaid" block`.
+Take the values from the color scheme in `template.json`, reading the hex values rather than trusting the slot names, since a scheme can be inverted with `dk1` white. `text` is the color body text has on the diagram's surface, `primary` is that surface, `line` and `accents` come from the accent slots, and `surfaceBorder` is a darker step of `surface`. A missing block fails with `theme has no "mermaid" block`.
 
 ## `mermaidVariant`
 

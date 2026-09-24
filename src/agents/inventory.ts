@@ -1,10 +1,11 @@
 /**
  * Inventory: what a template holds, in the terms `theme.json` needs. The slide
- * size, the colour and font schemes, the embedded typefaces, and each slide's
- * position, layout and background tone.
+ * size, the colour and font schemes, the embedded typefaces; each slide's
+ * position, layout, background tone and shapes (with frames in EMU, as
+ * `theme.json` takes them); and which slides share the same geometry.
  */
 
-import { PRESENTATION_PART } from "../index.js";
+import { collectElements, type Frame, PRESENTATION_PART } from "../index.js";
 import { attributes, elementChildren, find, Part, type Presentation, partNumber, RelType } from "./pptx.js";
 
 /** The element and attribute names the inventory reads. */
@@ -46,7 +47,34 @@ const Tag = {
   LUMINANCE_OFF: "a:lumOff",
   TINT: "a:tint",
   SHADE: "a:shade",
+  SHAPE_TREE: "p:spTree",
+  SHAPE: "p:sp",
+  PICTURE: "p:pic",
+  GRAPHIC_FRAME: "p:graphicFrame",
+  GROUP: "p:grpSp",
+  CONNECTOR: "p:cxnSp",
+  SHAPE_PROPS: "p:spPr",
+  GROUP_PROPS: "p:grpSpPr",
+  TRANSFORM: "a:xfrm",
+  GRAPHIC_FRAME_TRANSFORM: "p:xfrm",
+  OFFSET: "a:off",
+  EXTENT: "a:ext",
+  TABLE: "a:tbl",
+  TABLE_ROW: "a:tr",
+  TABLE_GRID: "a:tblGrid",
+  GRID_COLUMN: "a:gridCol",
+  NON_VISUAL_PROPS: "p:cNvPr",
+  NON_VISUAL_SHAPE: "p:nvSpPr",
+  NON_VISUAL_SHAPE_PROPS: "p:cNvSpPr",
+  APP_PROPS: "p:nvPr",
+  PLACEHOLDER: "p:ph",
+  PARAGRAPH: "a:p",
+  LINE_BREAK: "a:br",
+  TEXT: "a:t",
 } as const;
+
+/** Every shape's non-visual properties element is named `p:nv…Pr`, whatever the shape. */
+const NON_VISUAL_PREFIX = "p:nv";
 
 /** A colour-scheme slot's element, e.g. `a:accent1`. */
 const schemeSlotElement = (slot: SchemeSlot) => `a:${slot}`;
@@ -60,6 +88,10 @@ const Attr = {
   VALUE: "val",
   LAST_COLOR: "lastClr",
   INDEX: "idx",
+  TYPE: "type",
+  X: "x",
+  Y: "y",
+  TEXT_BOX: "txBox",
 } as const;
 
 /** The twelve colour-scheme slots, in the order PowerPoint lists them. */
@@ -88,6 +120,29 @@ type SchemeColors = Partial<Record<SchemeSlot, string>>;
 export type ColorScheme = { name: string } & SchemeColors;
 export type FontScheme = { name: string; major?: string; minor?: string };
 
+export const ShapeKind = { Text: "text", Picture: "picture", Table: "table", Group: "group", Other: "other" } as const;
+export type ShapeKind = (typeof ShapeKind)[keyof typeof ShapeKind];
+
+/** Where a placeholder that doesn't position itself takes its frame from. */
+export const FrameSource = { Layout: "layout", Master: "master" } as const;
+export type FrameSource = (typeof FrameSource)[keyof typeof FrameSource];
+
+export type InventoryShape = {
+  /** The shape's name; a group's members are prefixed with the group's name and `/`. */
+  name: string;
+  kind: ShapeKind;
+  /** In EMU, as `theme.json` takes it. */
+  frame?: Frame;
+  frameFrom?: FrameSource;
+  rows?: number;
+  cols?: number;
+  /**
+   * The start of the shape's text, with `¶` between paragraphs and `↵` for line
+   * breaks: where a parameter template puts `\n`.
+   */
+  text: string;
+};
+
 export type InventorySlide = {
   /** The number in the part name, `ppt/slides/slideN.xml`: what `theme.json`'s `slideNumber` means. */
   slide: number;
@@ -95,6 +150,7 @@ export type InventorySlide = {
   position?: number;
   layout?: string;
   background: Background;
+  shapes: InventoryShape[];
 };
 
 export type Inventory = {
@@ -103,6 +159,8 @@ export type Inventory = {
   fontScheme: FontScheme;
   embeddedFonts: string[];
   slides: InventorySlide[];
+  /** Groups of slide numbers whose shapes have the same kinds and frames, to within a point. */
+  duplicates: number[][];
 };
 
 /** A scheme colour's placeholder value, `phClr`: the colour its reference supplies. */
@@ -153,11 +211,13 @@ export async function readInventory(presentation: Presentation): Promise<Invento
     const layout = (await presentation.related(part, RelType.SlideLayout))[0];
     const position = order.get(part);
     const layoutName = layout && find(await presentation.xml(layout), Tag.COMMON_SLIDE_DATA)?.getAttribute(Attr.NAME);
+    const parts = { slide: part, layout, master };
     slides.push({
       slide: partNumber(part, Part.Slide),
       ...(position !== undefined && { position }),
       ...(layoutName && { layout: layoutName }),
-      background: await classifyBackground(presentation, { slide: part, layout, master }, themeRoot, colorScheme),
+      background: await classifyBackground(presentation, parts, themeRoot, colorScheme),
+      shapes: await readShapes(presentation, parts),
     });
   }
 
@@ -170,6 +230,7 @@ export async function readInventory(presentation: Presentation): Promise<Invento
       find(font, Tag.FONT).getAttribute(Attr.TYPEFACE),
     ),
     slides,
+    duplicates: findDuplicates(slides),
   };
 }
 
@@ -292,6 +353,206 @@ function fillColor(fill: any, scheme: SchemeColors, map: ColorMap, placeholder?:
     if (stops.length) return [0, 1, 2].map((i) => stops.reduce((sum, rgb) => sum + rgb[i], 0) / stops.length) as Rgb;
   }
   return undefined;
+}
+
+// ── Shapes ────────────────────────────────────────────────────────────────────
+
+const SHAPE_ELEMENTS: ReadonlySet<string> = new Set([
+  Tag.SHAPE,
+  Tag.PICTURE,
+  Tag.GRAPHIC_FRAME,
+  Tag.GROUP,
+  Tag.CONNECTOR,
+]);
+const GROUP_SEPARATOR = "/";
+const PARAGRAPH_MARK = "¶";
+const LINE_BREAK_MARK = "↵";
+const TEXT_PREVIEW_CHARS = 80;
+const TEXT_BOX_ON = "1";
+/** A placeholder with no `type` is a body placeholder. */
+const DEFAULT_PLACEHOLDER_TYPE = "body";
+/** Placeholder types that stand in for one another when a layout or master is searched for a frame. */
+const EQUIVALENT_PLACEHOLDER: Record<string, string> = { ctrTitle: "title", subTitle: "body", obj: "body" };
+
+type PlaceholderFrame = { type: string; idx?: string; frame?: Frame };
+
+/** The slide's shapes in document order, groups' members after the group, placeholder frames inherited. */
+async function readShapes(presentation: Presentation, parts: Parts): Promise<InventoryShape[]> {
+  const tree = find(await presentation.xml(parts.slide), Tag.COMMON_SLIDE_DATA, Tag.SHAPE_TREE);
+  const found = walkShapes(tree, "");
+  const sources: [FrameSource, PlaceholderFrame[]][] = [
+    [FrameSource.Layout, parts.layout ? placeholderFrames(await presentation.xml(parts.layout)) : []],
+    [FrameSource.Master, placeholderFrames(await presentation.xml(parts.master))],
+  ];
+  for (const { shape, el } of found) {
+    const placeholder = el.tagName === Tag.SHAPE && placeholderOf(el);
+    if (shape.frame || !placeholder) continue;
+    for (const [source, frames] of sources) {
+      const frame = matchingFrame(placeholder, frames);
+      if (frame) {
+        shape.frame = frame;
+        shape.frameFrom = source;
+        break;
+      }
+    }
+  }
+  // Set fields only, in a fixed order, and the text cut to a preview.
+  return found.map(({ shape: { name, kind, frame, frameFrom, rows, cols, text } }) => ({
+    name,
+    kind,
+    ...(frame && { frame }),
+    ...(frameFrom && { frameFrom }),
+    ...(rows !== undefined && { rows, cols }),
+    text: Array.from(text).slice(0, TEXT_PREVIEW_CHARS).join(""),
+  }));
+}
+
+function walkShapes(container: any, prefix: string): { shape: InventoryShape; el: any }[] {
+  return elementChildren(container)
+    .filter((el) => SHAPE_ELEMENTS.has(el.tagName))
+    .flatMap((el) => {
+      const shape = describeShape(el, prefix);
+      const members = el.tagName === Tag.GROUP ? walkShapes(el, shape.name + GROUP_SEPARATOR) : [];
+      return [{ shape, el }, ...members];
+    });
+}
+
+function describeShape(el: any, prefix: string): InventoryShape {
+  const table = collectElements(el, Tag.TABLE)[0];
+  return {
+    name: prefix + (find(nonVisualProps(el), Tag.NON_VISUAL_PROPS)?.getAttribute(Attr.NAME) ?? ""),
+    kind: shapeKind(el, table),
+    frame: shapeFrame(el),
+    rows: table && elementChildren(table, Tag.TABLE_ROW).length,
+    cols: table && elementChildren(find(table, Tag.TABLE_GRID), Tag.GRID_COLUMN).length,
+    text: el.tagName === Tag.GROUP ? "" : shapeText(el),
+  };
+}
+
+function shapeKind(el: any, table: any): ShapeKind {
+  switch (el.tagName) {
+    case Tag.PICTURE:
+      return ShapeKind.Picture;
+    case Tag.GROUP:
+      return ShapeKind.Group;
+    case Tag.GRAPHIC_FRAME:
+      return table ? ShapeKind.Table : ShapeKind.Other;
+    case Tag.SHAPE: {
+      const isTextBox =
+        find(el, Tag.NON_VISUAL_SHAPE, Tag.NON_VISUAL_SHAPE_PROPS)?.getAttribute(Attr.TEXT_BOX) === TEXT_BOX_ON;
+      return placeholderOf(el) || isTextBox || shapeText(el) ? ShapeKind.Text : ShapeKind.Other;
+    }
+    default:
+      return ShapeKind.Other;
+  }
+}
+
+/** The shape's text, `¶` between paragraphs and `↵` for line breaks, whitespace collapsed. */
+function shapeText(el: any): string {
+  const paragraphs = collectElements(el, Tag.PARAGRAPH).map((paragraph) =>
+    elementChildren(paragraph)
+      .flatMap((child) =>
+        child.tagName === Tag.LINE_BREAK
+          ? [LINE_BREAK_MARK]
+          : collectElements(child, Tag.TEXT).map((text) => text.textContent ?? ""),
+      )
+      .join(" ")
+      .split(/\s+/)
+      .filter(Boolean)
+      .join(" "),
+  );
+  return paragraphs.filter(Boolean).join(` ${PARAGRAPH_MARK} `);
+}
+
+/** The shape's own frame, if it declares one. */
+function shapeFrame(el: any): Frame | undefined {
+  const transform =
+    (el.tagName === Tag.GRAPHIC_FRAME
+      ? find(el, Tag.GRAPHIC_FRAME_TRANSFORM)
+      : find(el, Tag.SHAPE_PROPS, Tag.TRANSFORM)) ?? find(el, Tag.GROUP_PROPS, Tag.TRANSFORM);
+  const offset = find(transform, Tag.OFFSET);
+  const extent = find(transform, Tag.EXTENT);
+  if (!offset || !extent) return undefined;
+  return {
+    x: Number(offset.getAttribute(Attr.X)),
+    y: Number(offset.getAttribute(Attr.Y)),
+    cx: Number(extent.getAttribute(Attr.CX)),
+    cy: Number(extent.getAttribute(Attr.CY)),
+  };
+}
+
+function nonVisualProps(el: any): any {
+  return elementChildren(el).find((child) => child.tagName.startsWith(NON_VISUAL_PREFIX));
+}
+
+function placeholderOf(el: any): any {
+  return find(nonVisualProps(el), Tag.APP_PROPS, Tag.PLACEHOLDER);
+}
+
+/** Every placeholder in a layout or master, with its type, index and frame. */
+function placeholderFrames(root: any): PlaceholderFrame[] {
+  return collectElements(root, Tag.SHAPE).flatMap((el) => {
+    const placeholder = placeholderOf(el);
+    if (!placeholder) return [];
+    const frame = shapeFrame(el);
+    return [{ type: placeholderType(placeholder), idx: placeholder.getAttribute(Attr.INDEX) ?? undefined, frame }];
+  });
+}
+
+/** The frame of the placeholder with the same index, or else of an equivalent type. */
+function matchingFrame(placeholder: any, frames: PlaceholderFrame[]): Frame | undefined {
+  const idx = placeholder.getAttribute(Attr.INDEX);
+  const type = equivalentType(placeholderType(placeholder));
+  return (
+    (idx ? frames.find((candidate) => candidate.idx === idx && candidate.frame)?.frame : undefined) ??
+    frames.find((candidate) => equivalentType(candidate.type) === type && candidate.frame)?.frame
+  );
+}
+
+function placeholderType(placeholder: any): string {
+  return placeholder.getAttribute(Attr.TYPE) || DEFAULT_PLACEHOLDER_TYPE;
+}
+
+function equivalentType(type: string): string {
+  return EQUIVALENT_PLACEHOLDER[type] ?? type;
+}
+
+// ── Duplicates ────────────────────────────────────────────────────────────────
+
+/** Frames closer than this (one point, in EMU) count as equal. */
+const GEOMETRY_TOLERANCE = 12700;
+
+type Geometry = { kind: ShapeKind; frame: Frame }[];
+
+/** Groups of slide numbers whose shapes have the same kinds and frames. */
+function findDuplicates(slides: InventorySlide[]): number[][] {
+  const groups: { geometry: Geometry; slides: number[] }[] = [];
+  for (const slide of slides) {
+    if (!slide.shapes.length) continue;
+    const geometry = slide.shapes.flatMap(({ kind, frame }) => (frame ? [{ kind, frame }] : []));
+    const group = groups.find((candidate) => sameGeometry(geometry, candidate.geometry));
+    if (group) group.slides.push(slide.slide);
+    else groups.push({ geometry, slides: [slide.slide] });
+  }
+  return groups.filter((group) => group.slides.length > 1).map((group) => group.slides);
+}
+
+/** True when the two sets of (kind, frame) match one for one, within the tolerance. */
+function sameGeometry(a: Geometry, b: Geometry): boolean {
+  if (a.length !== b.length) return false;
+  const remaining = [...b];
+  for (const { kind, frame } of a) {
+    const match = remaining.findIndex(
+      (other) =>
+        other.kind === kind &&
+        (Object.keys(frame) as (keyof Frame)[]).every(
+          (key) => Math.abs(frame[key] - other.frame[key]) <= GEOMETRY_TOLERANCE,
+        ),
+    );
+    if (match === -1) return false;
+    remaining.splice(match, 1);
+  }
+  return true;
 }
 
 // ── Colours ───────────────────────────────────────────────────────────────────

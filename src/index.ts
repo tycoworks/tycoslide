@@ -151,6 +151,7 @@ export type {
   Config,
   Deck,
   DeckStep,
+  Frame,
   GenerateOptions,
   ImageFill,
   Layout,

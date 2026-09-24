@@ -43,3 +43,16 @@ export const PACKAGE_JSON = "package.json";
 
 /** The packaged skill is one zip, named `<skill name>.zip`. */
 export const SKILL_ZIP_EXT = ".zip";
+
+/** What `tycoslide extract` learns about a template, written in the theme folder. */
+export const TEMPLATE_FILE = "template.json";
+
+/** Where a theme keeps its pictures, and where `tycoslide extract` copies a template's. */
+export const ASSETS_DIR = "assets";
+
+const JSON_INDENT = 2;
+
+/** `value` as the contents of a JSON file the agent layer writes: indented, with a final newline. */
+export function jsonFile(value: unknown): string {
+  return `${JSON.stringify(value, null, JSON_INDENT)}\n`;
+}

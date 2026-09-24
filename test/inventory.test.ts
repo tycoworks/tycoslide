@@ -5,13 +5,14 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
 import JSZip from "jszip";
-import { Background, readInventory } from "../dist/agents/inventory.js";
+import { Background, FrameSource, readInventory, ShapeKind } from "../dist/agents/inventory.js";
 import { Presentation } from "../dist/agents/pptx.js";
 import { writeSyntheticTemplate } from "./helpers/syntheticTemplate.ts";
 
 const FIXTURE = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "template", "composition.pptx");
 const scratch = () => mkdtempSync(join(tmpdir(), "tycoslide-inventory-"));
 const inventoryOf = async (path: string) => readInventory(await Presentation.open(path));
+const frame = (x: number, y: number, cx: number, cy: number) => ({ x, y, cx, cy });
 
 describe("readInventory", () => {
   it("reads the composition fixture's size, schemes and slides", async () => {
@@ -34,7 +35,29 @@ describe("readInventory", () => {
       },
       fontScheme: { name: "Office", major: "Calibri Light", minor: "Calibri" },
       embeddedFonts: [],
-      slides: [1, 2, 3].map((n) => ({ slide: n, position: n, layout: "DEFAULT", background: Background.Light })),
+      slides: [
+        [
+          { name: "Text 0", kind: ShapeKind.Text, frame: frame(457200, 274320, 8229600, 731520), text: "Base title" },
+          {
+            name: "Text 1",
+            kind: ShapeKind.Text,
+            frame: frame(457200, 1371600, 8229600, 2743200),
+            text: "Base body text (superseded on transplant)",
+          },
+        ],
+        [
+          {
+            name: "Table 0",
+            kind: ShapeKind.Table,
+            frame: frame(457200, 457200, 5486400, 1828800),
+            rows: 2,
+            cols: 2,
+            text: "H1 ¶ H2 ¶ a ¶ b",
+          },
+        ],
+        [{ name: "Image 0", kind: ShapeKind.Picture, frame: frame(914400, 914400, 2743200, 2743200), text: "" }],
+      ].map((shapes, i) => ({ slide: i + 1, position: i + 1, layout: "DEFAULT", background: Background.Light, shapes })),
+      duplicates: [],
     });
   });
 
@@ -65,7 +88,12 @@ describe("readInventory", () => {
   it("classifies every kind of background, and records presentation order", async () => {
     const { slides } = await inventoryOf(await writeSyntheticTemplate(scratch()));
     assert.deepEqual(
-      slides,
+      slides.map(({ slide, position, layout, background }) => ({
+        slide,
+        ...(position !== undefined && { position }),
+        layout,
+        background,
+      })),
       expected.map(([slide, position, layout, background]) => ({
         slide,
         ...(position !== undefined && { position }),
@@ -73,6 +101,62 @@ describe("readInventory", () => {
         background,
       })),
     );
+  });
+
+  it("reads every kind of shape, with text marks, table size and group names", async () => {
+    const { slides } = await inventoryOf(await writeSyntheticTemplate(scratch()));
+    assert.deepEqual(slides[0].shapes, [
+      { name: "Title", kind: ShapeKind.Text, frame: frame(0, 0, 9000000, 800000), text: "Quarterly review" },
+      {
+        name: "Body",
+        kind: ShapeKind.Text,
+        frame: frame(500, 1500000, 6000000, 3000000),
+        frameFrom: FrameSource.Layout,
+        text: "Inherits the layout's frame",
+      },
+      { name: "Notes", kind: ShapeKind.Text, frame: frame(0, 900000, 3000000, 500000), text: "Line one ↵ line two ¶ Second" },
+      { name: "Rectangle", kind: ShapeKind.Other, frame: frame(0, 1500000, 1000000, 1000000), text: "" },
+      { name: "Logo", kind: ShapeKind.Picture, frame: frame(8000000, 0, 500000, 500000), text: "" },
+      {
+        name: "Pricing",
+        kind: ShapeKind.Table,
+        frame: frame(0, 3000000, 4000000, 1000000),
+        rows: 2,
+        cols: 3,
+        text: "r1a ¶ r1b ¶ r1c ¶ r2a ¶ r2b ¶ r2c",
+      },
+      { name: "Chart", kind: ShapeKind.Other, frame: frame(0, 3000000, 4000000, 1000000), text: "" },
+      { name: "Badge", kind: ShapeKind.Group, frame: frame(6000000, 4000000, 2000000, 800000), text: "" },
+      { name: "Badge/Label", kind: ShapeKind.Text, frame: frame(6000000, 4000000, 1500000, 800000), text: "New" },
+      { name: "Badge/Icon", kind: ShapeKind.Picture, frame: frame(7500000, 4000000, 500000, 500000), text: "" },
+      { name: "Divider", kind: ShapeKind.Other, frame: frame(0, 2600000, 9000000, 0), text: "" },
+    ]);
+  });
+
+  it("takes a placeholder's frame from the master when the layout has none of that type", async () => {
+    const { slides } = await inventoryOf(await writeSyntheticTemplate(scratch()));
+    assert.deepEqual(slides[1].shapes[0], {
+      name: "Headline",
+      kind: ShapeKind.Text,
+      frame: frame(100, 200, 8000000, 900000),
+      frameFrom: FrameSource.Master,
+      text: "Takes the master's title frame",
+    });
+  });
+
+  it("leaves a placeholder frameless when neither layout nor master has a match", async () => {
+    const { slides } = await inventoryOf(await writeSyntheticTemplate(scratch()));
+    assert.deepEqual(slides[1].shapes[1], { name: "Photo", kind: ShapeKind.Text, text: "" });
+  });
+
+  it("cuts a shape's text to an 80-character preview", async () => {
+    const { slides } = await inventoryOf(await writeSyntheticTemplate(scratch()));
+    assert.equal(slides[1].shapes[2].text, "x".repeat(80));
+  });
+
+  it("groups slides whose shapes match to within a point, and no others", async () => {
+    const { duplicates } = await inventoryOf(await writeSyntheticTemplate(scratch()));
+    assert.deepEqual(duplicates, [[4, 5]]);
   });
 
   it("fails when the first master has no theme", async () => {

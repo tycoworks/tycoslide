@@ -78,18 +78,17 @@ mkdir -p render && soffice --headless --convert-to pdf --outdir render template/
 pdftoppm -png -r 60 render/brand.pdf render/slide
 ```
 
-`render/slide-01.png` is the first slide in **presentation order**. `theme.json` refers to slides by the number in their **file name**, `ppt/slides/slideN.xml`, and the two orders can differ. The inventory prints both, so use it to pair each picture with its file number.
+`render/slide-01.png` is the first slide in **presentation order**. `theme.json` refers to slides by the number in their **file name**, `ppt/slides/slideN.xml`, and the two orders can differ. `template.json` records both, so use it to pair each picture with its file number.
 
 ### 1.3 Inventory
 
 ```bash
-python3 scripts/inventory.py template/brand.pptx
-npx tycoslide extract-media template/brand.pptx assets/brand
+npx tycoslide extract template/brand.pptx
 ```
 
-The first prints the slide size, the color scheme and the fonts, then every slide by file number: its position, its layout name, whether its background is light, dark or a picture, and each shape with its kind, position, size, table rows and placeholder text. It ends with the slides that share identical geometry. Sizes print in inches so they read at a glance; `theme.json` wants EMU, so run it again with `--json` when you copy a `frame`, and never convert by hand. Text shows paragraph breaks as ¶ and line breaks as ↵, which is where `\n` goes in a parameter template.
+This writes `template.json`: the slide size, the color scheme and the fonts, then every slide by file number with its position, its layout name, whether its background is light, dark or a picture, and each shape with its kind, frame, table rows and placeholder text. It ends with `duplicates`, the slides that share identical geometry. Frames are in EMU, exactly as `theme.json` wants them, so copy them as they are and never convert by hand. Text shows paragraph breaks as ¶ and line breaks as ↵, which is where `\n` goes in a parameter template.
 
-The second copies every image the masters and layouts reference, the logos, marks and backdrops, into `assets/brand`. Pictures placed on individual slides are sample content and stay out, unless the PNG shows one is a brand mark. If the user has a folder of brand assets outside the template, such as logos, icons or product shots, copy it under `assets/` with one subfolder per category and treat it the same way from here on.
+It also copies every image the masters and layouts reference, the logos, marks and backdrops, into `assets/`, and lists them under `images` in `template.json`. Pictures placed on individual slides are sample content and stay out, unless the PNG shows one is a brand mark. If the user has a folder of brand assets outside the template, such as logos, icons or product shots, copy it under `assets/` with one subfolder per category and treat it the same way from here on.
 
 Shape names mean nothing. They are whatever the designer's tool produced, `Google Shape;877;p95` is normal, and they are never renamed, only referenced. What matters is the placeholder text, because it says what the shape is for.
 
@@ -103,11 +102,11 @@ For each kept slide:
 - **Short, single-purpose text** becomes a **parameter**: a title, a name, a label, a statistic. The `{key}` substitutes into the designer's own runs, so the styling survives. One shape can hold several: `"{name}\n{jobTitle}"`.
 - **Free-form regions** become **slots**: a text body, a table, a picture. Each slot lists what it accepts.
 - **Page chrome** such as `‹#›`, footers and fixed logos is left out.
-- **`variant`** is `light` or `dark`, on every layout, from the inventory's background column. When the column says the background is a picture, look at the slide's PNG from step 1.2 and judge.
+- **`variant`** is `light` or `dark`, on every layout, from each slide's `background` in `template.json`. When the column says the background is a picture, look at the slide's PNG from step 1.2 and judge.
 - **`required`** goes on each layout's headline: the title, or the quote or the number when the layout has no title. Nothing else.
 - **`description`** is one sentence for the agent that will write decks with this layout: the arrangement, and its capacity, like "holds four bullets comfortably".
 
-Then catalog the images `extract-media` copied, under `assets` in `theme.json`, each with a `path`, a `type` and a one-line `description`. The type is `icon` for marks that must never be enlarged, `image` for pictures that may scale but not crop, and `background` for full-bleed art that may crop.
+Then catalog the images `extract` copied, under `assets` in `theme.json`, each with a `path`, a `type` and a one-line `description`. The type is `icon` for marks that must never be enlarged, `image` for pictures that may scale but not crop, and `background` for full-bleed art that may crop.
 
 Every field, where its value comes from, and the error you get when it is wrong are in [references/theme-json.md](references/theme-json.md). Two rules fail late and are worth stating here: a table block must declare `bodyRows`, and a slot that borrows a shape from another slide must declare `frame`.
 

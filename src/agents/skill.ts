@@ -3,7 +3,7 @@ import { join } from "node:path";
 import JSZip from "jszip";
 import { type CompilerThemeConfig, TEMPLATE_DIR } from "../index.js";
 import type { AssetCatalog } from "./catalog.js";
-import { ASSETS_ARCHIVE, PACKAGE_JSON } from "./files.js";
+import { ASSETS_ARCHIVE, jsonFile, PACKAGE_JSON } from "./files.js";
 
 /** Entries are stored, not deflated: assets are already-compressed images. */
 const NO_COMPRESSION = { type: "nodebuffer", compression: "STORE" } as const;
@@ -68,7 +68,7 @@ export function skillPackageJson(theme: Record<string, unknown>, engine: { name:
     private: true,
     dependencies: Object.fromEntries(Object.entries(dependencies).sort(([a], [b]) => a.localeCompare(b))),
   };
-  return `${JSON.stringify(skill, null, 2)}\n`;
+  return jsonFile(skill);
 }
 
 /**

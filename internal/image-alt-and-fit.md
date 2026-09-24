@@ -348,10 +348,12 @@ only Python's standard library (`zipfile`, `ElementTree`), so they port to TypeS
 the dependencies the package already has (JSZip, `@xmldom/xmldom`). They go in the **agent
 layer**, `src/agents/`, registered by `registerAgentCommands`: only the create-theme skill
 uses them, and building a deck never reads a template this way (the engine never opens a
-.pptx itself; pptx-automizer does). The core adds no feature for them. It exports the
-package helpers it already has (`engine/ooxml.ts`: `PRESENTATION_PART`, `RelTypeSuffix`,
-`relsPathFor`, `resolveTarget`, `readRelationships`) from `src/index.ts`, and the agent
-layer calls them, which is the dependency direction the import rules allow.
+.pptx itself; pptx-automizer does). The core adds no feature for them. It exports generic
+helpers it already has (`engine/ooxml.ts`: `PRESENTATION_PART`, `parseXml`,
+`readRelationships`, `resolveTarget`, `relsPathFor`; `engine/dom.ts`: `childrenByTag`,
+`collectElements`) from `src/index.ts`, and the agent layer calls them, which is the
+dependency direction the import rules allow. The element names and relationship types
+the agent layer looks for stay in the agent layer.
 - *5a.* `extract-media.py` → `tycoslide extract-media <pptx> <outdir>`: copy every image
   referenced from a slide master or layout, under its original media filename. Two
   commits: first the package helpers `notes.ts` kept privately (`relsPathFor`, target
@@ -483,6 +485,17 @@ Also shipped, and also a release blocker.
 | 210, **image sizing** bullet under Layout declarations | Replace with: "**image fit** -- chosen per image in its title (`fit: contain` \| `cover` \| `scale-down`), `contain` when omitted. Mermaid renders contained." |
 | 306, full example | `![]($images.officeFloorPlan)` → `![Office floor plan with meeting rooms marked](assets/images/office-floor-plan.png "fit: contain")` |
 
+### `docs/theme.md` (new): the `theme.json` reference
+
+`theme.json` is the core's config format, as the deck language is, so its reference sits
+beside `syntax.md` and ships with the package. It takes the field-by-field part of
+`skills/create-theme/references/theme-json.md`: what each field means, its type, whether
+it's required, and the error when it's wrong. What stays in the skill is agent advice:
+the "where its value comes from" column (copy frames from `template.json`, never convert
+them) and the drafting judgement. The `assets` section goes to the skill's
+`references/assets-json.md`, as planned, since `assets.json` is an agent-layer file. One
+source per fact: the skill links to the doc rather than restating a field.
+
 ### `README.md` (tycoslide)
 
 | Where | Change |
@@ -531,7 +544,7 @@ clearing stale placeholder alt-text titles from the template.
 | `package.json` + lockfile | `"@tycoworks/tycoslide": "^0.15.1"` → `"^0.16.0"`. On 0.x a caret stops at the next minor, so without this bump the theme keeps resolving 0.15. |
 | `assets.json` (new, tracked) | Written by a script from `theme.json`'s `assets`, each entry's `type` → `fit` mechanically: `icon` → `scale-down` (2,122 icons), `image` → `contain` (4 brand marks), `background` → `cover` (low-poly). Review the diff for count only. |
 | `theme.json` | Remove `assets` (same script). No other change. |
-| `.gitignore` | Remove `/assets.json` from the generated-skill block. |
+| `.gitignore` | Remove `/assets.json` from the generated-skill block; add `/template.json`, which `tycoslide extract` writes and can always regenerate. |
 | `showcase.md` 75 | `![]($icons.hub)` → `![](assets/icons/hub.png "fit: scale-down")` (decoration beside a heading: empty alt) |
 | `showcase.md` 86 | `![]($icons.insights)` → `![](assets/icons/insights.png "fit: scale-down")` |
 | `showcase.md` 130 | `![]($backgrounds.lowPoly)` → `![](assets/backgrounds/low-poly.png "fit: cover")` (backdrop: empty alt) |
@@ -586,11 +599,16 @@ the go-ahead.
 5. **The create-theme scripts become commands**, as two commits: 5a `tycoslide
    extract-media`, 5b `tycoslide inspect`, each with tests; the Python scripts are deleted.
 6. **Fail on unknown inline nodes.** `inline.ts` + test.
-7. **Shipped docs.** `theme-package/SKILL.md`, `docs/syntax.md`, `README.md`, `CLAUDE.md`,
+7. **Shipped docs.** `theme-package/SKILL.md`, `docs/syntax.md`, a new `docs/theme.md`,
+   `README.md`, `CLAUDE.md`,
    exactly as tabled, with the one-source-per-fact split between `syntax.md` and
    `SKILL.md`. Could land as two commits: the split (moving text, no new content), then
    the image changes.
-8. **create-theme skill.** `skills/create-theme/SKILL.md`,
+8. **create-theme skill.** The field reference leaves `references/theme-json.md` for
+   `docs/theme.md` (phase 7), which the skill reads from
+   `node_modules/@tycoworks/tycoslide/docs/theme.md` (the theme has run `npm install` by
+   step 1.1, and an installed skill can't link outside its own folder); what stays in the
+   skill is its advice on where each value comes from. `skills/create-theme/SKILL.md`,
    `skills/create-theme/references/theme-json.md`, the new `references/assets-json.md`,
    exactly as tabled, plus: the inventory and media steps run `npx tycoslide inspect` and
    `npx tycoslide extract-media`, and the scaffold's Python snippet that edits `theme.json`
@@ -728,6 +746,11 @@ Put to three independent reviews on 23 Sep with the same facts; all three chose 
   review. An npm renderer (pdf.js-based, with prebuilt binaries) could replace it and drop
   a system requirement from both skills. Evaluate separately; LibreOffice itself has no
   npm replacement.
+- **A generated `theme.json` schema.** Zod 4 can emit JSON Schema from
+  `ThemeConfigSchema`. With field descriptions added there, a shipped
+  `docs/theme.schema.json` would give editors and agents validation and field help from
+  the one source, leaving `docs/theme.md` for the prose a schema can't carry (slide
+  number vs position, transplant frames, `bodyRows`).
 - **Hosts without `unzip`.** Every Linux sandbox tried has it; Windows has `tar -xf`, which
   reads zips but overwrites by default. Add a fallback line to the skill only if an agent
   host turns out to lack `unzip`.

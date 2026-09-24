@@ -1,9 +1,11 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { basename, resolve } from "node:path";
+import { basename, posix, resolve } from "node:path";
 import type { Command } from "commander";
 import { loadThemeConfig } from "../index.js";
 import { loadAssetCatalog } from "./catalog.js";
+import { extractTemplate, summarizeExtraction } from "./extract.js";
 import {
+  ASSETS_DIR,
   ASSETS_FILE,
   DOCS_DIR,
   MANIFEST_FILE,
@@ -11,16 +13,20 @@ import {
   SKILL_FILE,
   SKILL_ZIP_EXT,
   SYNTAX_FILE,
+  TEMPLATE_FILE,
   THEME_CONFIG,
   THEME_PACKAGE_DIR,
 } from "./files.js";
 import { generateManifest } from "./manifest.js";
-import { describeMedia, extractMedia } from "./media.js";
-import { Presentation } from "./pptx.js";
 import { renameSkill, skillPackageJson, zipDir } from "./skill.js";
 
 /** The installed tycoslide package: where its shipped files live, and what a skill pins. */
 export type ToolPackage = { root: string; name: string; version: string };
+
+/** The CLI's line for something written, with an optional note on what it holds. */
+function wrote(target: string, detail?: string): void {
+  console.log(detail ? `WROTE ${target}  ${detail}` : `WROTE ${target}`);
+}
 
 /** Register the agent layer's commands on the CLI program. */
 export function registerAgentCommands(program: Command, tool: ToolPackage): void {
@@ -36,7 +42,7 @@ export function registerAgentCommands(program: Command, tool: ToolPackage): void
       const catalog = loadAssetCatalog(config.rootDir);
       const write = (file: string, content: string | Buffer): void => {
         writeFileSync(resolve(process.cwd(), file), content);
-        console.log(`WROTE ${file}`);
+        wrote(file);
       };
 
       const themePkg = JSON.parse(readFileSync(resolve(process.cwd(), PACKAGE_JSON), "utf-8"));
@@ -46,7 +52,7 @@ export function registerAgentCommands(program: Command, tool: ToolPackage): void
       // basename drops any npm scope, e.g. "@acme/acme-slides" -> "acme-slides".
       const skillName = basename(themePkg.name);
 
-      write(MANIFEST_FILE, `${generateManifest(config)}\n`);
+      write(MANIFEST_FILE, generateManifest(config));
 
       let skillMd: string;
       try {
@@ -65,13 +71,14 @@ export function registerAgentCommands(program: Command, tool: ToolPackage): void
     });
 
   program
-    .command("extract-media")
-    .description("Copy the images a template's slide masters and layouts use (logos, backgrounds) into a folder")
+    .command("extract")
+    .description(
+      `Read a template for a theme: write ${TEMPLATE_FILE}, and copy its master and layout images into ${ASSETS_DIR}/`,
+    )
     .argument("<template>", "path to the .pptx template")
-    .argument("<outdir>", "folder to copy the images into (created if missing)")
-    .action(async (template: string, outDir: string) => {
-      const presentation = await Presentation.open(resolve(process.cwd(), template));
-      const result = await extractMedia(presentation, resolve(process.cwd(), outDir));
-      for (const line of describeMedia(result, outDir)) console.log(line);
+    .action(async (template: string) => {
+      const summary = summarizeExtraction(await extractTemplate(resolve(process.cwd(), template), process.cwd()));
+      wrote(TEMPLATE_FILE, summary.template);
+      wrote(ASSETS_DIR + posix.sep, summary.images);
     });
 }
