@@ -1,7 +1,7 @@
 /**
  * Media: copy the images a template's slide masters and layouts use (logos,
  * marks, background fills) out of the .pptx, under their original media filenames,
- * as raw material for a theme's picture catalog. Images referenced only by slides
+ * as raw material for a theme's image catalog. Images referenced only by slides
  * are skipped: those are sample content, not the template's chrome.
  */
 

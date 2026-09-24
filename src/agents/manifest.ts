@@ -36,13 +36,13 @@ type ManifestLayout = {
 
 /**
  * What an agent reads WHOLE, every session: the layouts it composes into. Nothing
- * open-ended belongs here — a manifest that grows with the theme's picture count
+ * open-ended belongs here — a manifest that grows with the theme's image count
  * spends the agent's context before it has read a single layout.
  */
 type Manifest = {
   layouts: ManifestLayout[];
   /**
-   * Where the pictures are: the catalog, a separate document to SEARCH. It is the
+   * Where the images are: the catalog, a separate document to SEARCH. It is the
    * half that grows without bound -- a theme's icon set can run to thousands --
    * so it stays complete in its own file and reading it stays opt-in.
    */

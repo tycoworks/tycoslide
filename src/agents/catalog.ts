@@ -5,7 +5,7 @@ import { ImageFit, strict } from "../index.js";
 import { ASSETS_FILE } from "./files.js";
 
 /**
- * One picture a theme offers deck authors. `fit` is the value an author copies
+ * One image a theme offers deck authors. `fit` is the value an author copies
  * into the image's title, so it is already a title value.
  */
 const AssetEntrySchema = strict({
@@ -22,9 +22,9 @@ export type AssetEntry = z.infer<typeof AssetEntrySchema>;
 export type AssetCatalog = z.infer<typeof AssetCatalogSchema>;
 
 /**
- * Read and validate a theme's picture catalog, `assets.json`: what a deck-writing
- * agent searches, copies pictures from, and takes each picture's fit from. It is
- * authored with the theme and required; a theme with no pictures has `{}`.
+ * Read and validate a theme's image catalog, `assets.json`: what a deck-writing
+ * agent searches, copies images from, and takes each image's fit from. It is
+ * authored with the theme and required; a theme with no images has `{}`.
  */
 export function loadAssetCatalog(themeDir: string): AssetCatalog {
   const path = join(themeDir, ASSETS_FILE);
@@ -32,11 +32,11 @@ export function loadAssetCatalog(themeDir: string): AssetCatalog {
   try {
     raw = JSON.parse(readFileSync(path, "utf-8"));
   } catch {
-    throw new Error(`Picture catalog not found or invalid JSON: ${path}`);
+    throw new Error(`Image catalog not found or invalid JSON: ${path}`);
   }
   const result = AssetCatalogSchema.safeParse(raw);
   if (!result.success) {
-    throw new Error(`${ASSETS_FILE}: invalid picture catalog\n${z.prettifyError(result.error)}`);
+    throw new Error(`${ASSETS_FILE}: invalid image catalog\n${z.prettifyError(result.error)}`);
   }
   return result.data;
 }

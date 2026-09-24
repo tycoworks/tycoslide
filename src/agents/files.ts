@@ -47,7 +47,7 @@ export const SKILL_ZIP_EXT = ".zip";
 /** What `tycoslide extract` learns about a template, written in the theme folder. */
 export const TEMPLATE_FILE = "template.json";
 
-/** Where a theme keeps its pictures, and where `tycoslide extract` copies a template's. */
+/** Where a theme keeps its images, and where `tycoslide extract` copies a template's. */
 export const ASSETS_DIR = "assets";
 
 const JSON_INDENT = 2;

@@ -75,8 +75,8 @@ export function skillPackageJson(theme: Record<string, unknown>, engine: { name:
  * Every path a packaged theme needs, relative to `rootDir` and POSIX-separated,
  * split by how it ships.
  *
- * Derived from the theme config and its picture catalog rather than filtered out
- * of a directory walk: together they declare the template and every picture, so
+ * Derived from the theme config and its image catalog rather than filtered out
+ * of a directory walk: together they declare the template and every image, so
  * an allowlist stays correct no matter what else sits in the working directory --
  * built decks, PDFs, slide PNGs, scratch files. Font paths are deliberately
  * absent when they name a package -- those resolve from node_modules, which
@@ -84,7 +84,7 @@ export function skillPackageJson(theme: Record<string, unknown>, engine: { name:
  * theme owns, and mermaid reads it during a build, which never expands the
  * archive. Those ship plain.
  *
- * `archived` is the catalog's pictures, which collapse to one archive because
+ * `archived` is the catalog's images, which collapse to one archive because
  * hosts cap how many FILES a skill may contain. `plain` is everything else,
  * including the catalog itself.
  */

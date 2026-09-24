@@ -22,7 +22,7 @@ describe("loadAssetCatalog", () => {
     assert.deepEqual(loadAssetCatalog(themeWith(catalogWith(entry))), { logos: { a: entry } });
   });
 
-  it("loads an empty catalog, for a theme with no pictures", () => {
+  it("loads an empty catalog, for a theme with no images", () => {
     assert.deepEqual(loadAssetCatalog(themeWith("{}")), {});
   });
 
@@ -30,7 +30,7 @@ describe("loadAssetCatalog", () => {
     {
       name: "a fit that isn't one of the engine's",
       content: catalogWith({ ...entry, fit: "stretch" }),
-      message: /invalid picture catalog[\s\S]*"contain"\|"cover"\|"scale-down"/,
+      message: /invalid image catalog[\s\S]*"contain"\|"cover"\|"scale-down"/,
     },
     {
       name: "an unknown key in an entry",
@@ -40,7 +40,7 @@ describe("loadAssetCatalog", () => {
     {
       name: "an entry missing its fit",
       content: catalogWith({ path: entry.path, description: entry.description }),
-      message: /invalid picture catalog[\s\S]*fit/,
+      message: /invalid image catalog[\s\S]*fit/,
     },
     { name: "invalid JSON", content: "{ logos:", message: /not found or invalid JSON/ },
   ];

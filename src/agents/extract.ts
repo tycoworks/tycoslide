@@ -19,7 +19,7 @@ export type TemplateImage = MediaImage & {
 /** The contents of `template.json`. */
 export type TemplateFacts = Inventory & {
   images: TemplateImage[];
-  /** Pictures only slides use: sample content, left in the template. */
+  /** Images only slides use: sample content, left in the template. */
   slideOnlyImages: number;
 };
 
