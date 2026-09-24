@@ -5,7 +5,7 @@
  * `theme.json` takes them); and which slides share the same geometry.
  */
 
-import { collectElements, type Frame, PRESENTATION_PART } from "../index.js";
+import { AcceptType, collectElements, type Frame, PRESENTATION_PART } from "../index.js";
 import { attributes, elementChildren, find, Part, type Presentation, partNumber, RelType } from "./pptx.js";
 
 /** The element and attribute names the inventory reads. */
@@ -120,7 +120,14 @@ type SchemeColors = Partial<Record<SchemeSlot, string>>;
 export type ColorScheme = { name: string } & SchemeColors;
 export type FontScheme = { name: string; major?: string; minor?: string };
 
-export const ShapeKind = { Text: "text", Picture: "picture", Table: "table", Group: "group", Other: "other" } as const;
+/** A shape's kind. A fillable shape's kind is the `theme.json` block type that fills it. */
+export const ShapeKind = {
+  Text: AcceptType.Text,
+  Image: AcceptType.Image,
+  Table: AcceptType.Table,
+  Group: "group",
+  Other: "other",
+} as const;
 export type ShapeKind = (typeof ShapeKind)[keyof typeof ShapeKind];
 
 /** Where a placeholder that doesn't position itself takes its frame from. */
@@ -432,7 +439,7 @@ function describeShape(el: any, prefix: string): InventoryShape {
 function shapeKind(el: any, table: any): ShapeKind {
   switch (el.tagName) {
     case Tag.PICTURE:
-      return ShapeKind.Picture;
+      return ShapeKind.Image;
     case Tag.GROUP:
       return ShapeKind.Group;
     case Tag.GRAPHIC_FRAME:

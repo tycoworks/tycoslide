@@ -55,7 +55,7 @@ describe("readInventory", () => {
             text: "H1 ¶ H2 ¶ a ¶ b",
           },
         ],
-        [{ name: "Image 0", kind: ShapeKind.Picture, frame: frame(914400, 914400, 2743200, 2743200), text: "" }],
+        [{ name: "Image 0", kind: ShapeKind.Image, frame: frame(914400, 914400, 2743200, 2743200), text: "" }],
       ].map((shapes, i) => ({ slide: i + 1, position: i + 1, layout: "DEFAULT", background: Background.Light, shapes })),
       duplicates: [],
     });
@@ -116,7 +116,7 @@ describe("readInventory", () => {
       },
       { name: "Notes", kind: ShapeKind.Text, frame: frame(0, 900000, 3000000, 500000), text: "Line one ↵ line two ¶ Second" },
       { name: "Rectangle", kind: ShapeKind.Other, frame: frame(0, 1500000, 1000000, 1000000), text: "" },
-      { name: "Logo", kind: ShapeKind.Picture, frame: frame(8000000, 0, 500000, 500000), text: "" },
+      { name: "Logo", kind: ShapeKind.Image, frame: frame(8000000, 0, 500000, 500000), text: "" },
       {
         name: "Pricing",
         kind: ShapeKind.Table,
@@ -128,7 +128,7 @@ describe("readInventory", () => {
       { name: "Chart", kind: ShapeKind.Other, frame: frame(0, 3000000, 4000000, 1000000), text: "" },
       { name: "Badge", kind: ShapeKind.Group, frame: frame(6000000, 4000000, 2000000, 800000), text: "" },
       { name: "Badge/Label", kind: ShapeKind.Text, frame: frame(6000000, 4000000, 1500000, 800000), text: "New" },
-      { name: "Badge/Icon", kind: ShapeKind.Picture, frame: frame(7500000, 4000000, 500000, 500000), text: "" },
+      { name: "Badge/Icon", kind: ShapeKind.Image, frame: frame(7500000, 4000000, 500000, 500000), text: "" },
       { name: "Divider", kind: ShapeKind.Other, frame: frame(0, 2600000, 9000000, 0), text: "" },
     ]);
   });
