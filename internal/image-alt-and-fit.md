@@ -569,6 +569,17 @@ It builds the catalog, so it is where the fit judgement is recorded.
 | `references/theme-json.md` 167 | "and all three asset types" → move to `assets-json.md` as "and all three fits" |
 | `references/theme-json.md` 173, `.gitignore` | Drop `assets.json` from the list of generated files: it is authored now. **Done in 7e**, with the other generated files and the `postinstall`. |
 
+**Done in 8**, as tabled except for the reference files. `references/theme-json.md` is
+folded into `SKILL.md` and deleted, not split into a second reference: its Source column
+becomes a clause on each step 1.4 bullet, naming the `template.json` field it comes from
+(the "Inventory column" wording is gone), and its fonts and mermaid rows join 3.2. The
+catalog's shape, fits and an example sit in step 1.4, and `test/docs.test.ts` loads the
+example. "Files around it" goes: the scaffold inherits a working `package.json` and
+`.gitignore`. The scaffold edits `theme.json` with `node -e`, so `python3` leaves the
+requirements, and it now also removes the reference theme's `how-it-works.md`. The
+inventory's `picture` kind is `image`, derived from `AcceptType`, so a fillable shape's
+`kind` is the block `type` that fills it. "Picture" becomes "image" throughout the skill.
+
 ### `CLAUDE.md` (tycoslide)
 
 | Where | Change |
@@ -795,8 +806,8 @@ Put to three independent reviews on 23 Sep with the same facts; all three chose 
   to render a deck to PNGs. One script shipped with each skill would do it exactly and
   remove the duplicate. Prefer a small Node script to `.sh`: the skills already need Node,
   and a shell script leaves out Windows hosts. `package` would ship it beside `SKILL.md`.
-  Decide in phase 8, when the create-theme skill is rewritten; the one-line image copy
-  stays inline.
+  Left open in phase 8. A `tycoslide render <deck.pptx>` command in the agent layer would
+  serve both skills with nothing to ship. The one-line image copy stays inline.
 - **poppler as an npm dependency.** `pdftoppm` only turns LibreOffice's PDF into PNGs for
   review. An npm renderer (pdf.js-based, with prebuilt binaries) could replace it and drop
   a system requirement from both skills. Evaluate separately; LibreOffice itself has no
