@@ -13,9 +13,10 @@ Before first use, install dependencies from the theme root:
 
 ```bash
 npm install
+unzip -nq assets.dat
 ```
 
-This installs the tycoslide engine and its dependencies. You only need to do this once.
+This installs the tycoslide engine and its dependencies, and unpacks the theme's images so you can copy them into decks. You only need to do this once. If there is no `assets.dat`, skip the unzip.
 
 
 ## Overview
@@ -27,7 +28,7 @@ This skill builds decks from a markdown deck file. The theme provides slide layo
 | Task | Guide |
 |------|-------|
 | Discover layouts | Read `manifest.json` |
-| Find a logo, illustration or icon | Search `assets.json` |
+| Find a logo, illustration or icon | Search `assets.json`, then copy it next to the deck (see [Images](#images)) |
 | Write a deck (structure, slots, assets) | See [Creating Slides](#creating-slides) below |
 | Fix build errors | See [QA](#qa-required) below |
 
@@ -37,17 +38,31 @@ This skill builds decks from a markdown deck file. The theme provides slide layo
 
 Before writing anything, read `manifest.json`. It lists the theme's **layouts** -- for each: `name`, `description`, `parameters` (frontmatter inputs) and `slots` (body regions). A layout is identified by its `name`; every parameter and slot by its `key`. Slots carry `accepts`, and either may be `required`.
 
-Pictures live in `assets.json`: every logo, illustration and icon the theme offers, keyed by category and name. **Search it, do not read it whole** -- an icon set alone can run to thousands of entries. Grep for it and use the `$category.name` you find -- but **search for what the icon depicts, not what you mean by it**: a catalog is indexed by picture, so "freshness" finds nothing while `grep -i "clock" assets.json` and `grep -i "bolt"` find the icon you wanted.
-
 A layout's inputs split two ways, parameters and slots; see [syntax.md](syntax.md#parameters-and-slots) for how to fill each. Unfilled ones are dropped, so fill as many of a layout's numbered slots (sections, stats, columns) as you have content for.
 
 Study each layout's `slots` before writing any slides.
+
+### Images
+
+Images live in `assets.json`: every logo, illustration and icon the theme offers, keyed by category and name, each with a `path`, a `fit` and a `description`. **Search it, do not read it whole** -- an icon set alone can run to thousands of entries. **Search for what the icon depicts, not what you mean by it**: a catalog is indexed by image, so "freshness" finds nothing while `grep -i "clock" assets.json` and `grep -i "bolt"` find the icon you wanted.
+
+To use an image, copy it into your deck's folder at the same relative path, then write its `path` and `fit` in the image:
+
+```bash
+mkdir -p <deck dir>/assets && cp <theme dir>/assets/hub.png <deck dir>/assets/
+```
+
+```markdown
+![Central hub connecting three services](assets/hub.png "fit: scale-down")
+```
+
+If your deck is in the theme folder, the file is already there, so skip the copy. An image the user gives you also goes in the deck's folder; choose its fit by looking at it (`contain` unless it is full-bleed art that may crop). Write alt text for this slide, describing what the image shows here rather than repeating the catalog description.
 
 ---
 
 ## Creating Slides
 
-Write a deck file in markdown, as [syntax.md](syntax.md) describes, and build it as its [Build](syntax.md#build) section shows.
+Write a deck file in markdown, as [syntax.md](syntax.md) describes (see its [full example](syntax.md#full-example)), and build it as its [Build](syntax.md#build) section shows.
 
 ---
 
@@ -73,7 +88,9 @@ Keep each slot's content to what its region comfortably holds. When content over
 - **Don't overstuff a slot** -- keep content to what its region comfortably holds; split across slides when there's too much
 - **Don't restyle the layout** -- the theme owns all design; you only fill slots
 - **Don't use an image that's wrong for the slot** -- a small slot wants a simple icon, not a dense illustration. If you get a `shrunk to X%` warning, look at the rendered slide: if the image is now too small to make out, use a simpler one. A `leaves X% of the frame empty` warning is the opposite: the image is a different shape from the slot. Neither fails the build -- judge both from the rendered slide.
-- **Don't invent layout or asset names** -- only use layouts from `manifest.json` and assets from `assets.json`
+- **Don't skip alt text** -- describe what a meaningful image shows and why it's there, not "image of". Leave it empty only for decoration, such as backgrounds and icons beside a heading.
+- **Don't crop what can't be cropped** -- copy the `fit` from `assets.json`. For your own images, never `fit: cover` a diagram, chart, screenshot or logo.
+- **Don't invent layout names or image paths** -- layouts come from `manifest.json`, and theme images from `assets.json`, copied next to the deck
 - **Don't leave required parameters or slots empty** -- and don't leave a placeholder logo or dummy text in an image slot you care about. If you don't have a suitable image, ask the user for one.
 
 ---
@@ -88,7 +105,8 @@ Build the deck again ([Build](syntax.md#build)) and read the output carefully. C
 
 | Error | Fix |
 |-------|-----|
-| An image didn't swap / placeholder remains | Write a `::key::` region using the image slot's key, containing `![]($category.name)` from `assets.json` or `![](path)` relative to the deck |
+| An image didn't swap / placeholder remains | Write a `::key::` region using the image slot's key, containing `![alt](path "fit: …")` with the path relative to the deck |
+| `image "…" not found at …` | For a theme image, copy it into the deck's folder at the path you wrote (search `assets.json`; did you unzip `assets.dat`?) |
 
 ### Verification Loop
 
@@ -136,7 +154,7 @@ Check for:
 For each issue, suggest a specific fix.
 
 Read: /path/to/deck.md and the rendered PNGs in the working directory
-Also read: manifest.json (for layout documentation); search assets.json for pictures
+Also read: manifest.json (for layout documentation); search assets.json for images
 ```
 
 If the subagent finds issues, fix them and rebuild.

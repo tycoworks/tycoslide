@@ -443,6 +443,15 @@ nothing is written twice:
   once that for an agent those names are in `manifest.json`. The stale "Parameters carry
   a `type`" line (`SKILL.md` 38) went with it. Agent advice moved the other way: "ask
   the user for an image" into the skill's Avoid list.
+- **Done in 7b**, with three changes from the tables below. `syntax.md`'s "image sizing"
+  bullet is removed rather than replaced: fit is chosen per image, so it is no longer
+  something a layout declares, and the image bullet covers it. The `is not a set of
+  options` row went to `syntax.md`'s error table, since it is a core error; the skill's
+  table has only the agent's advice for a missing theme picture. The full example's
+  picture has no title, since `contain` is the default. Checked by following the
+  Pictures section literally on the real theme (copy an icon next to a deck outside the
+  theme, write the image, build): it renders, alt text lands in `descr`, and both new
+  error rows match the real messages.
 - `SKILL.md`'s links to `syntax.md` target the packaged layout, where `package` puts the two
   side by side. Since 4c they don't resolve when browsing the repo (`theme-package/` vs
   `docs/`); that is expected, not a broken link.
@@ -513,7 +522,7 @@ source per fact: the skill links to the doc rather than restating a field.
 
 | Where | Change |
 |---|---|
-| 29 | "Images, from the theme's asset catalog or a file path" → "Images by file path, with alt text and an optional fit" |
+| 25–30 | "Tables", "Images…" and "Speaker notes" become one line, "Tables, images and speaker notes"; code and Mermaid keep their own lines. Image detail lives in `syntax.md`. Plus a "Thanks" section: inspired by pptx-automizer, used under the hood, and by Slidev. |
 | 32 | The syntax link: `theme-package/syntax.md` → `docs/syntax.md`. **Done in 4c.** |
 
 ### create-theme skill: `skills/create-theme/`
@@ -755,6 +764,12 @@ Put to three independent reviews on 23 Sep with the same facts; all three chose 
 
 - **Mermaid alt text.** The source is text, so a description is possible: a `%% alt: …`
   comment line in the fence, or the fence's info string. Decide when a real deck needs it.
+- **A bundled render script.** Both skills tell the agent to run `soffice` then `pdftoppm`
+  to render a deck to PNGs. One script shipped with each skill would do it exactly and
+  remove the duplicate. Prefer a small Node script to `.sh`: the skills already need Node,
+  and a shell script leaves out Windows hosts. `package` would ship it beside `SKILL.md`.
+  Decide in phase 8, when the create-theme skill is rewritten; the one-line image copy
+  stays inline.
 - **poppler as an npm dependency.** `pdftoppm` only turns LibreOffice's PDF into PNGs for
   review. An npm renderer (pdf.js-based, with prebuilt binaries) could replace it and drop
   a system requirement from both skills. Evaluate separately; LibreOffice itself has no

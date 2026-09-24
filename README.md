@@ -23,14 +23,16 @@ https://github.com/user-attachments/assets/f31c11d8-3fe6-464f-8f02-56645b4ce3a6
 ## Markdown support
 
 - Paragraphs, bullets and numbered lists, with bold, italic and links
-- Tables
+- Tables, images and speaker notes
 - Code, with [Shiki](https://shiki.style) syntax highlighting
 - [Mermaid](https://mermaid.js.org) diagrams
-- Images, from the theme's asset catalog or a file path
-- Speaker notes
 
 Full syntax in [syntax.md](docs/syntax.md).
 
 ## Requirements
 
 Node 23.6 or later. Mermaid diagrams need Chrome on the machine; tycoslide finds an installed one, or run `npx playwright install chromium-headless-shell`.
+
+## Thanks
+
+tycoslide was inspired by [pptx-automizer](https://github.com/singerla/pptx-automizer), which it uses under the hood, and by [Slidev](https://sli.dev) and its markdown slides.

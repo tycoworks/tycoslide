@@ -144,13 +144,13 @@ Fill a slot by writing a `::key::` region in the body; the marker maps to the sl
   ````
   The language tag (e.g. `sql`, `python`, `typescript`) is required -- it drives syntax highlighting, using the theme's `codeTheme` (set once in `theme.json`, not per slot). Colors are applied as native text runs in the output, not images.
 - **table** (slots that accept `table`) -- a GFM table. Write it in the slot region between `|`-delimited headers and rows; cells inherit inline formatting (bold, italic, links).
-- **image** (slots that accept `image`) -- a picture, written as `![]($category.name)` for one from the theme's asset catalog, or `![](path/to/file.png)` for a file relative to the deck:
+- **image** (slots that accept `image`) -- an image, written as `![alt](path "options")` with the path relative to the deck:
   ```markdown
   ::logo::
 
-  ![]($brand.primaryDarkWordmark)
+  ![Acme Corp logo](assets/acme-logo.png "fit: contain")
   ```
-  The categories and names are cataloged in `assets.json`. How the picture is scaled and cropped comes from the **asset's `type`** in the catalog: `icon` never enlarges past native and never crops, `image` fits the whole picture without cropping, `background` fills the frame and center-crops. A file path has no catalog entry, so it is always fitted as `image`; put a picture in the catalog when it needs another fit or when agents should be able to find it. A fenced `mermaid` block also fills an image slot, rendering to a themed PNG (see below).
+  The alt text becomes the image's alt text in PowerPoint; leave it empty for an image that is only decoration. The title is optional and holds image options as YAML. The only option is `fit`, one of `contain` (the default, which shows the whole image and never crops), `cover` (fills the frame and center-crops) or `scale-down` (shows the whole image and never enlarges it). Anything else in the title fails the build. A fenced `mermaid` block also fills an image slot, rendering to a themed PNG (see below).
 
 ---
 
@@ -217,7 +217,6 @@ Each parameter or slot in the layout definition may declare:
 - **`accepts`** (slots, required) -- an array of `text`, `table`, `image`.
 - **`required: true`** -- the slide has no usable default and the build fails if the parameter/slot has no value (e.g. team-member photos, icon-grid icons, the quote logo).
 - **optional (the default)** -- a parameter or slot you leave unfilled is dropped from the slide (its shape is removed), so a layout with numbered slots (e.g. up to six sections, up to four stats) renders only the ones you fill.
-- **image sizing** -- each catalog asset declares a `type` (`icon` | `image` | `background`) that determines how it is scaled and cropped: `icon` never enlarges past native and never crops; `image` fits the whole picture (no crop, may scale); `background` fills and center-crops. Mermaid renders as `image` (contained).
 
 Each layout also declares a `slideNumber` pointing at the physical slide in the theme's template -- unique per layout (one layout maps to one physical slide).
 
@@ -272,6 +271,8 @@ Common errors and fixes:
 | `unknown layout "xyz"` | Check layout names in `theme.json` |
 | A parameter or slot didn't fill | Use the key names the layout declares -- parameters in frontmatter, slots as body regions |
 | YAML parse error | Fix the YAML syntax in the slide's frontmatter |
+| `image "…" not found at …` | Check the path; it is relative to the deck file |
+| `is not a set of options` | The image title holds options like `"fit: contain"`; put a description in the alt text |
 | `Skipped setting relation target` | The asset image couldn't be placed; check the path and file |
 | `forbidden style directive` | Remove `style`, `classDef`, `linkStyle`, or `%%{init}` from your mermaid block -- use `class` for grouping instead |
 | `no "mermaid" block` | The theme has no mermaid color config -- add a `mermaid` section to theme.json |
@@ -334,5 +335,5 @@ title: Office Map
 
 ::hero::
 
-![]($images.officeFloorPlan)
+![Office floor plan with meeting rooms marked](assets/office-floor-plan.png)
 ```
