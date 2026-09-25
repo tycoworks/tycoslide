@@ -12,7 +12,7 @@
           "accepts": [
             { "type": "text", "sourceSlide": 1, "shapeName": "Text 1" },
             { "type": "table", "sourceSlide": 2, "shapeName": "Table 0", "bodyRows": [1, 1] },
-            { "type": "image", "sourceSlide": 3, "shapeName": "Image 0" }
+            { "type": "image", "sourceSlide": 3, "shapeName": "Image 0", "fit": "contain" }
           ]
         }
       ]

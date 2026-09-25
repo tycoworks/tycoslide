@@ -2,7 +2,7 @@
  * Image fill — element-level picture geometry and alt text. The media swap
  * (pointing the blip relationship at the new file) is a slide-level modifier in
  * the ImageFiller (`fillers/filler.ts`); this module resolves the frame geometry
- * from the image's `ImageFit` (contain/cover/scale-down) and the source's true
+ * from the slot's `ImageFit` (contain/cover/scale-down) and the source's true
  * pixel size, and rewrites the picture's alt text for the new image.
  */
 
@@ -42,7 +42,7 @@ const SEVERE_MISMATCH_FRACTION = 0.5;
 const MIN_SCALE = 0.2;
 
 /**
- * Size a picture shape from its `ImageFit` (via `computeGeometry`): either write
+ * Size a picture shape by its slot's `fit` (via `computeGeometry`): either write
  * `<a:srcRect>` insets to fill-and-crop, or shrink the frame to the image's
  * aspect ratio and re-center (fit/letterbox). Advisory warnings from the
  * geometry pass go to `console.warn`. Also sets its alt text (`setAltText`).
@@ -50,7 +50,7 @@ const MIN_SCALE = 0.2;
  * `image.path` is assumed absolute — the compiler / caller resolves it before the
  * ImageFill reaches the engine.
  */
-export function fillImage(shape: any, image: ImageFill, shapeName: string, label: string): void {
+export function fillImage(shape: any, image: ImageFill, shapeName: string, label: string, fit: ImageFit): void {
   const dims = imageSize(new Uint8Array(readFileSync(image.path)));
   if (!dims.width || !dims.height) {
     throw new Error(`Image shape "${shapeName}": could not read image dimensions from "${image.path}".`);
@@ -72,7 +72,7 @@ export function fillImage(shape: any, image: ImageFill, shapeName: string, label
     w: Number(ext.getAttribute(Attr.CX)),
     h: Number(ext.getAttribute(Attr.CY)),
   };
-  const { geometry, warnings } = computeGeometry(frame, dims.width, dims.height, image.fit);
+  const { geometry, warnings } = computeGeometry(frame, dims.width, dims.height, fit);
   for (const w of warnings) console.warn(`Image ${label}: ${w}`);
 
   if (geometry.placement === Placement.Crop) {

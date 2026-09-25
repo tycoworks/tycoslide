@@ -86,7 +86,7 @@ pdftoppm -png -r 60 render/brand.pdf render/slide
 npx tycoslide extract template/brand.pptx
 ```
 
-This writes `template.json`: the slide size, the color scheme and the fonts, then every slide by file number with its position, its layout name, whether its background is light, dark or an image, and each shape with its kind, frame, table rows and placeholder text. It ends with `duplicates`, the slides that share identical geometry. Frames are in EMU, exactly as `theme.json` wants them, so copy them as they are and never convert by hand. Text shows paragraph breaks as ¶ and line breaks as ↵, which is where `\n` goes in a parameter template.
+This writes `template.json`: the slide size, the color scheme and the fonts, then every slide by file number with its position, its layout name, whether its background is light, dark or an image, and each shape with its kind, frame, table rows and placeholder text. Then comes `duplicates`, the slides that share identical geometry. Frames are in EMU, exactly as `theme.json` wants them, so copy them as they are and never convert by hand. Text shows paragraph breaks as ¶ and line breaks as ↵, which is where `\n` goes in a parameter template.
 
 It also copies every image the template uses into `assets/`, and lists them under `images` in `template.json` with the masters, layouts and slides that use each. If the user has a folder of brand assets outside the template, such as logos, icons or product shots, copy it into `assets/` as it is and treat it the same way from here on.
 
@@ -100,19 +100,19 @@ For each kept slide, working from its entry in `template.json`:
 
 - **Name** it from its `layout` name and its content: `Title`, `Two column`, `Quote`. Short, capitalised like a heading, unique. Its `slideNumber` is the entry's `slide`, never its `position`.
 - **Short, single-purpose text** becomes a **parameter**: a title, a name, a label, a statistic. Its `template` is the shape's `text` with each sample value replaced by a `{key}`, which substitutes into the designer's own runs, so the styling survives. One shape can hold several: `"{name}\n{jobTitle}"`.
-- **Free-form regions** become **slots**: a text body, a table, an image. Each slot lists what it accepts, and each block's `type` is its shape's `kind`; a `group` or `other` shape cannot be filled. `body`, `col1_body`, `image` and `code` are conventional keys. A text block's `startAt` is the number of fixed heading paragraphs in the shape's `text`.
+- **Free-form regions** become **slots**: a text body, a table, an image. Each slot lists what it accepts, and each block's `type` is its shape's `kind`; a `group` or `other` shape cannot be filled. `body`, `col1_body`, `image` and `code` are conventional keys. A text block's `startAt` is the number of fixed heading paragraphs in the shape's `text`. An image block also declares a `fit`, which sets how every image placed in it fills the shape. Use `scale-down` for icon wells, so an icon is never enlarged; `contain` for logo frames and for areas meant for diagrams or screenshots, so the whole image shows; and `cover` for full-bleed areas meant for photos and art. Look at the slide's PNG to decide.
 - **Page chrome** such as `‹#›`, footers and fixed logos is left out.
 - **`variant`** is `light` or `dark`, on every layout, from each slide's `background` in `template.json`. When the background is `image` or `unknown`, look at the slide's PNG from step 1.2 and judge.
 - **`required`** goes on each layout's headline: the title, or the quote or the number when the layout has no title. Nothing else.
 - **`description`** is one sentence for the agent that will write decks with this layout: the arrangement, and its capacity, like "holds four bullets comfortably".
 
-Then catalog the images decks should reuse, such as logos, icons and backdrops, in `assets.json`, keyed by category and then name, each with a `path`, a `fit` and a one-line `description`:
+Then catalog the images decks should reuse, such as logos, icons and backdrops, in `assets.json`, keyed by category and then name, each with a `path` and a one-line `description`:
 
 ```json
-{ "brand": { "logo": { "path": "assets/logo.png", "fit": "contain", "description": "Full-color wordmark, for light backgrounds" } } }
+{ "brand": { "logo": { "path": "assets/logo.png", "description": "Full-color wordmark, for light backgrounds" } } }
 ```
 
-Leave out sample content such as stock photos; only cataloged images ship. The fit is what a deck author copies into the image: `scale-down` for icons and small marks that must never be enlarged, `contain` for logos, wordmarks, diagrams and screenshots that may scale but must not crop, and `cover` only for full-bleed art that may crop. Look at the image to decide.
+Leave out sample content such as stock photos; only cataloged images ship.
 
 Every field and the error you get when it is wrong are in `node_modules/@tycoworks/tycoslide/docs/theme.md`. Two rules fail late and are worth stating here: a table block must declare `bodyRows`, and a slot that borrows a shape from another slide must declare `frame`. For a table of R `rows` with no total row, `bodyRows` is `[1, R-1]`, and the `frame` is copied from the shape the slot replaces on the layout's own slide, never computed or converted.
 
@@ -124,7 +124,7 @@ Then read the draft back against the PNGs. A shape the PNG shows as a subtitle b
 
 ### Render every layout
 
-Write `smoke.md` with one slide per layout, filling every parameter and slot with content of realistic length. Write images as `![alt](path "fit: …")` using catalog paths, which resolve as they are because `smoke.md` sits in the theme directory, and give each one alt text, leaving it empty only for decoration such as icons beside a heading. If a layout takes an image, fill one image slot with a small mermaid flowchart whose nodes use two classes, so you see the diagram colors. `node_modules/@tycoworks/tycoslide/docs/markdown.md` is the markdown reference. The reference theme's `showcase.md` shows what a whole deck looks like, but its layout and key names are not yours. Then:
+Write `smoke.md` with one slide per layout, filling every parameter and slot with content of realistic length. Write images as `![alt](path)` using catalog paths, which resolve as they are because `smoke.md` sits in the theme directory, and give each one alt text, leaving it empty only for decoration such as icons beside a heading. If a layout has a `contain` image slot, fill one with a small mermaid flowchart whose nodes use two classes, so you see the diagram colors. `node_modules/@tycoworks/tycoslide/docs/markdown.md` is the markdown reference. The reference theme's `showcase.md` shows what a whole deck looks like, but its layout and key names are not yours. Then:
 
 ```bash
 npx tycoslide build smoke.md
@@ -136,7 +136,7 @@ Look at every PNG yourself before showing anyone. LibreOffice substitutes any fo
 
 Test with realistic lengths. A slot that looks right with one line can misbehave with six.
 
-Two things that look like failures are not. A warning that an image `shrunk` or `leaves the frame empty` means the image is a different size or shape from its slot; judge it from the PNG. A mermaid fence needs Chrome, which tycoslide finds on its own; if the build says it found no browser, install Chrome or pass `--browser-path`.
+Two things that look like failures are not. A warning that an image `shrunk` or `leaves X% of the frame empty` means the image is a different size or shape from its slot; judge it from the PNG. A mermaid fence needs Chrome, which tycoslide finds on its own; if the build says it found no browser, install Chrome or pass `--browser-path`.
 
 ## 3. Pack
 
@@ -144,7 +144,7 @@ Two things that look like failures are not. A warning that an image `shrunk` or 
 
 ### 3.1 Assets
 
-The catalog is written. Check it: every description names what the image shows, because deck authors grep the catalog for it, every `fit` is the one an author should copy, since nothing else will choose it, and byte-identical duplicates are dropped.
+The catalog is written. Check it: every description names what the image shows, because deck authors grep the catalog for it, and byte-identical duplicates are dropped.
 
 ### 3.2 Fonts, code and diagrams
 

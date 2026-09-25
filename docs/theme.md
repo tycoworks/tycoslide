@@ -48,7 +48,7 @@ A slot is a body region. The author's markdown shape picks which accepted block 
 
 ### Blocks inside `accepts`
 
-Each block is discriminated by `type` and carries only its own option. A `bodyRows` on a text block or a `startAt` on a table block is an unknown key and fails the load.
+Each block is discriminated by `type` and carries only its own option. A `bodyRows` on a text block, a `startAt` on a table block or a `fit` on either is an unknown key and fails the load.
 
 | Field | Meaning | Error when wrong |
 |---|---|---|
@@ -57,8 +57,9 @@ Each block is discriminated by `type` and carries only its own option. A `bodyRo
 | `shapeName` | Exact name of the specimen shape on `sourceSlide`. Required. | `Can't find element on slide N in source:` and the placeholder remains. |
 | `startAt` | Text only. Leave the first N specimen paragraphs untouched and rebuild from paragraph N. Optional, default 0. | `startAt 3 is past the last paragraph (shape has 2)`. |
 | `bodyRows` | Table only. `[start, end]`, 0-based inclusive: the rows that repeat for data. Required. Row 0 is always the header. Rows above `start` and below `end` render once, as fixed rows. | `bodyRows [s, e] is out of range; require 1 <= start <= end <= R-1 (row 0 is the header)`; `has no <a:tbl> element (is it actually a table?)`. |
+| `fit` | Image only. Sets how every image placed in the shape fills it. `"contain"` shows the whole image and never crops, `"cover"` fills the shape and center-crops, and `"scale-down"` shows the whole image and never enlarges it. Required. | Schema error listing the valid values. |
 
-For an image block the shape must be a real picture: `is not a picture (missing <a:off>, <a:ext>, <p:blipFill>, or <p:cNvPr>)`.
+For an image block the shape must be an image shape: `is not a picture (missing <a:off>, <a:ext>, <p:blipFill>, or <p:cNvPr>)`.
 
 Transplants: a block whose `sourceSlide` differs from the layout's `slideNumber` is copied from that other slide onto the cloned slide, positioned into the slot's `frame`. The shape the slot replaces on the base slide is removed. This is how one slot accepts both text and a table when the styled table lives on a different slide, as the worked example's `Content` layout does with a table from slide 15. The frame is the observed `<a:xfrm>` of the shape being replaced, so a text block in the same slot fills in place and the table lands exactly where the text was. The transplanted shape is positioned and sized to the frame, so its own size on the source slide does not matter.
 
@@ -69,7 +70,7 @@ Optional array of `@font-face` entries used only when rendering mermaid diagrams
 | Field | Meaning | Error when wrong |
 |---|---|---|
 | `family` | CSS family name; must equal the mermaid variant's `fontFamily`. Required. | Warning `fontFamily "X" matches none of the declared theme fonts`, then a substitute font. |
-| `path` | A package specifier such as `@fontsource/inter/files/inter-latin-400-normal.woff2`, or a `./` or `/` file path. Required. | `could not resolve "path" from <rootDir>`; `file not found at ...`; `unsupported format ".otf"`. Supported: woff2, woff, ttf. |
+| `path` | A package specifier such as `@fontsource/inter/files/inter-latin-400-normal.woff2`, or a `./` or `/` file path. Required. | `could not resolve "path" from <rootDir>`; `file not found at ...`; `unsupported format ".eot"`. Supported: woff2, woff, ttf, otf. |
 | `weight` | OpenType weight. Optional, default 400. | None. |
 
 ## `codeTheme`
@@ -120,7 +121,7 @@ Optional string naming a key of `mermaid`. Required as soon as any deck has a me
           "accepts": [
             { "type": "text", "sourceSlide": 1, "shapeName": "Text 1" },
             { "type": "table", "sourceSlide": 2, "shapeName": "Table 0", "bodyRows": [1, 1] },
-            { "type": "image", "sourceSlide": 3, "shapeName": "Image 0" }
+            { "type": "image", "sourceSlide": 3, "shapeName": "Image 0", "fit": "contain" }
           ]
         }
       ]

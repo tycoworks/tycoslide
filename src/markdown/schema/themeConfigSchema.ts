@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { basename, dirname } from "node:path";
 import * as z from "zod";
-import { AcceptType, type CompilerThemeConfig, type LoadedTheme, Variant } from "../types.js";
+import { AcceptType, type CompilerThemeConfig, ImageFit, type LoadedTheme, Variant } from "../types.js";
 import { strict } from "./strict.js";
 
 /**
@@ -68,9 +68,10 @@ const ParameterSchema = strict({
 });
 
 // One arm per accept type, discriminated by `type`, mirroring `CompilerBlock`:
-// `startAt` lives only on the text arm, and `bodyRows` only on the table arm (a
-// table block MUST declare its repeatable-row range; text/image arms have no
-// `bodyRows` field, so a stray one is an unknown key the `strict` arm rejects).
+// `startAt` lives only on the text arm, `bodyRows` only on the table arm and `fit`
+// only on the image arm (a table block MUST declare its repeatable-row range and
+// an image block its fit; an option on another arm is an unknown key the `strict`
+// arm rejects).
 const TextBlockSchema = strict({
   type: z.literal(AcceptType.Text),
   sourceSlide: z.number(),
@@ -87,6 +88,7 @@ const ImageBlockSchema = strict({
   type: z.literal(AcceptType.Image),
   sourceSlide: z.number(),
   shapeName: z.string(),
+  fit: z.enum(ImageFit),
 });
 const BlockSchema = z.discriminatedUnion("type", [TextBlockSchema, TableBlockSchema, ImageBlockSchema]);
 

@@ -7,7 +7,7 @@ import { describe, it } from "node:test";
 import JSZip from "jszip";
 import { generate } from "../dist/engine/generate.js";
 import type { Config, Deck, Layout, StyledParagraph } from "../dist/engine/types.js";
-import { SlotType } from "../dist/engine/types.js";
+import { ImageFit, SlotType } from "../dist/engine/types.js";
 
 // Real end-to-end coverage of the transplant path (addElement + refill), against
 // a tiny committed synthetic fixture (generated with pptxgenjs; NOT a real theme).
@@ -116,7 +116,7 @@ describe("end-to-end transplant (real addElement + refill)", () => {
             frame: BODY_FRAME,
             accepts: [
               { type: SlotType.Text, sourceSlide: 1, shapeName: "Text 1" },
-              { type: SlotType.Image, sourceSlide: 3, shapeName: "Image 0" },
+              { type: SlotType.Image, sourceSlide: 3, shapeName: "Image 0", fit: ImageFit.Contain },
             ],
           },
         ],
@@ -128,7 +128,7 @@ describe("end-to-end transplant (real addElement + refill)", () => {
       steps: [
         {
           layout: "Pic",
-          content: { hero: { type: SlotType.Image, path: SWAP_PNG, fit: "contain", alt: "Q&A <chart>" } },
+          content: { hero: { type: SlotType.Image, path: SWAP_PNG, alt: "Q&A <chart>" } },
         },
       ],
     };

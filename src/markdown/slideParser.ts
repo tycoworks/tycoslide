@@ -38,7 +38,7 @@ export function parseSlideDocument(source: string): ParsedDocument {
 const GLOBAL_FM_RE = /^---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/;
 
 /** True for a parsed YAML document that is a mapping (`key: value` pairs). */
-export function isYamlMapping(parsed: unknown): parsed is Record<string, unknown> {
+function isYamlMapping(parsed: unknown): parsed is Record<string, unknown> {
   return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed);
 }
 

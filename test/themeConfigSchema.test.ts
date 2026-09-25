@@ -219,6 +219,34 @@ describe("parseThemeConfig", () => {
     );
   });
 
+  it("accepts an image block carrying its fit", () => {
+    const ok = fullTheme();
+    // biome-ignore lint/suspicious/noExplicitAny: swapping the accept block for an image variant
+    (ok.layouts[0].slots[0].accepts as any) = [{ type: "image", sourceSlide: 3, shapeName: "Image 0", fit: "cover" }];
+    assert.equal(parseThemeConfig(ok, "theme.json").layouts[0].slots[0].accepts.length, 1);
+  });
+
+  it("rejects an image block missing its required fit", () => {
+    const bad = fullTheme();
+    // biome-ignore lint/suspicious/noExplicitAny: image block without the required fit
+    (bad.layouts[0].slots[0].accepts as any) = [{ type: "image", sourceSlide: 3, shapeName: "Image 0" }];
+    assert.throws(() => parseThemeConfig(bad, "theme.json"), /invalid theme config[\s\S]*fit/);
+  });
+
+  it("rejects an image fit that isn't one of the engine's, listing the valid ones", () => {
+    const bad = fullTheme();
+    // biome-ignore lint/suspicious/noExplicitAny: image block with an unknown fit
+    (bad.layouts[0].slots[0].accepts as any) = [{ type: "image", sourceSlide: 3, shapeName: "Image 0", fit: "stretch" }];
+    assert.throws(() => parseThemeConfig(bad, "theme.json"), /"contain"\|"cover"\|"scale-down"/);
+  });
+
+  it("rejects a text block carrying fit (fit is an image-only field)", () => {
+    const bad = fullTheme();
+    // biome-ignore lint/suspicious/noExplicitAny: text block with a stray image-only fit key
+    (bad.layouts[0].slots[0].accepts as any) = [{ type: "text", sourceSlide: 1, shapeName: "Text 1", fit: "cover" }];
+    assert.throws(() => parseThemeConfig(bad, "theme.json"), /Unknown key\(s\): fit/);
+  });
+
   it("rejects a template parameter missing its required `template` field", () => {
     const bad = fullTheme();
     // biome-ignore lint/suspicious/noExplicitAny: dropping a required union-member field
@@ -235,8 +263,8 @@ describe("parseThemeConfig", () => {
   // Union-member strictness is a separate Zod code path from a plain
   // strictObject's: `discriminatedUnion` picks a branch by `type`, then that
   // branch's own `strictObject` enforces the unknown-key check. This is the
-  // exact regression a loose (non-strict) member schema caused — an image
-  // parameter silently accepted `fit`, a key nothing reads.
+  // exact regression a loose (non-strict) member schema caused — a parameter
+  // silently accepted a key nothing reads.
   it("rejects a TEMPLATE parameter carrying an unknown key", () => {
     const bad = fullTheme();
     // biome-ignore lint/suspicious/noExplicitAny: intentionally injecting an unknown key

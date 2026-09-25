@@ -1,9 +1,41 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import JSZip from "jszip";
-import { type CompilerThemeConfig, TEMPLATE_DIR } from "../index.js";
-import type { AssetCatalog } from "./catalog.js";
-import { ASSETS_ARCHIVE, jsonFile } from "./files.js";
+import * as z from "zod";
+import { type CompilerThemeConfig, strict, TEMPLATE_DIR } from "../index.js";
+import { ASSETS_ARCHIVE, ASSETS_FILE, jsonFile } from "./files.js";
+
+/** One image a theme offers deck authors: where it is, and what it shows. */
+const AssetEntrySchema = strict({
+  path: z.string(),
+  description: z.string(),
+});
+
+// `{ category: { name: entry } }`. Both record levels are open (the names are the
+// theme's own); only the entry is strict.
+const AssetCatalogSchema = z.record(z.string(), z.record(z.string(), AssetEntrySchema));
+
+export type AssetCatalog = z.infer<typeof AssetCatalogSchema>;
+
+/**
+ * Read and validate a theme's image catalog, `assets.json`: what a deck-writing
+ * agent searches and copies images from, and what a packaged skill archives. It
+ * is authored with the theme and required; a theme with no images has `{}`.
+ */
+export function loadAssetCatalog(themeDir: string): AssetCatalog {
+  const path = join(themeDir, ASSETS_FILE);
+  let raw: unknown;
+  try {
+    raw = JSON.parse(readFileSync(path, "utf-8"));
+  } catch {
+    throw new Error(`Image catalog not found or invalid JSON: ${path}`);
+  }
+  const result = AssetCatalogSchema.safeParse(raw);
+  if (!result.success) {
+    throw new Error(`${ASSETS_FILE}: invalid image catalog\n${z.prettifyError(result.error)}`);
+  }
+  return result.data;
+}
 
 /** Entries are stored, not deflated: assets are already-compressed images. */
 const NO_COMPRESSION = { type: "nodebuffer", compression: "STORE" } as const;

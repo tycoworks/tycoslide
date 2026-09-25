@@ -2,7 +2,6 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { basename, posix, resolve } from "node:path";
 import type { Command } from "commander";
 import { loadThemeConfig } from "../index.js";
-import { loadAssetCatalog } from "./catalog.js";
 import { extractTemplate, summarizeExtraction } from "./extract.js";
 import {
   ASSETS_DIR,
@@ -17,7 +16,7 @@ import {
   THEME_PACKAGE_DIR,
 } from "./files.js";
 import { generateManifest } from "./manifest.js";
-import { renameSkill, skillPackageJson, zipDir } from "./skill.js";
+import { loadAssetCatalog, renameSkill, skillPackageJson, zipDir } from "./skill.js";
 
 /** The installed tycoslide package: where its shipped files live, and what a skill pins. */
 export type ToolPackage = { root: string; name: string; version: string };

@@ -1237,7 +1237,7 @@ describe("fillImage alt text", () => {
         `<p:blipFill><a:blip/></p:blipFill><p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="952500" cy="952500"/></a:xfrm></p:spPr></p:pic>`,
     ).documentElement!;
   const fill = (pic: any, alt: string) =>
-    fillImage(pic, { type: SlotType.Image, path: SWAP_PNG, fit: ImageFit.Contain, alt }, "Pic", "test");
+    fillImage(pic, { type: SlotType.Image, path: SWAP_PNG, alt }, "Pic", "test", ImageFit.Contain);
   const nvProps = (pic: any) => pic.getElementsByTagName("p:cNvPr")[0];
 
   const cases: { name: string; before: string; alt: string; descr: string | null }[] = [
@@ -1373,7 +1373,7 @@ describe("fillSlide dispatch", () => {
 
   const textVal: TextFill = { paragraphs: [plain("hello")] };
   const tableVal: TableFill = { headers: cells("A", "B"), rows: [] };
-  const imageVal: ImageFill = { type: SlotType.Image, path: "/abs/pic.png", fit: ImageFit.Contain, alt: "" };
+  const imageVal: ImageFill = { type: SlotType.Image, path: "/abs/pic.png", alt: "" };
 
   const step = (content: DeckStep["content"]): DeckStep => ({ layout: "L", content });
 
@@ -1497,7 +1497,7 @@ describe("fillSlide dispatch", () => {
   it("selects the image block when an ImageFill is supplied to a multi-type slot", () => {
     const l = layout([
       slot("hero", [
-        { type: SlotType.Image, sourceSlide: BASE, shapeName: "pic" },
+        { type: SlotType.Image, sourceSlide: BASE, shapeName: "pic", fit: ImageFit.Contain },
         { type: SlotType.Table, sourceSlide: 5, shapeName: "tbl", bodyRows: [1, 1] },
       ]),
     ]);

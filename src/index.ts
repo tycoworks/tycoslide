@@ -57,7 +57,7 @@ function compilerBlockToEngineBlock(b: CompilerBlock): Block {
     case AcceptType.Table:
       return { type: SlotType.Table, sourceSlide: b.sourceSlide, shapeName: b.shapeName, bodyRows: b.bodyRows };
     case AcceptType.Image:
-      return { type: SlotType.Image, sourceSlide: b.sourceSlide, shapeName: b.shapeName };
+      return { type: SlotType.Image, sourceSlide: b.sourceSlide, shapeName: b.shapeName, fit: b.fit };
   }
 }
 
