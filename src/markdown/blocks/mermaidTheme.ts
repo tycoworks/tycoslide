@@ -3,7 +3,7 @@
  *
  * Owner of MermaidVariant / MermaidConfig — these types are compiler-facing
  * (the engine has no idea mermaid exists). `blocks/mermaid.ts` consumes
- * them to build --configFile input for `mmdc`.
+ * them to build the render config.
  */
 
 export type MermaidVariant = {

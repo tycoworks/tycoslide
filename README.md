@@ -35,4 +35,4 @@ Node 23.6 or later. Mermaid diagrams need Chrome on the machine; tycoslide finds
 
 ## Thanks
 
-tycoslide was inspired by [pptx-automizer](https://github.com/singerla/pptx-automizer), which it uses under the hood, and by [Slidev](https://sli.dev) and its markdown slides.
+tycoslide was inspired by [pptx-automizer](https://github.com/singerla/pptx-automizer), which it uses under the hood, and by [Slidev](https://sli.dev)'s way of writing slides in markdown.
