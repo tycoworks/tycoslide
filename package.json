@@ -2,6 +2,7 @@
   "name": "@tycoworks/tycoslide",
   "version": "0.17.1",
   "description": "Create editable PowerPoint slides from markdown, using your existing .pptx templates.",
+  "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
