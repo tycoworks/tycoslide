@@ -3,6 +3,7 @@ name: slides
 description: >
   Build branded slides, presentations, pitch decks, or sales collateral as a .pptx.
   Trigger on "deck," "slides," "presentation," "pitch," ".pptx," or "build me a deck."
+compatibility: Needs Node 23.6+ and network access to npm on first use. LibreOffice (soffice) and poppler (pdftoppm) to preview slides. Chrome only if decks contain mermaid diagrams.
 ---
 
 # slides
@@ -16,7 +17,7 @@ npm install
 unzip -nq assets.dat
 ```
 
-This installs the tycoslide engine and its dependencies, and unpacks the theme's images so you can copy them into decks. You only need to do this once. If there is no `assets.dat`, skip the unzip.
+This installs the tycoslide engine and its dependencies, and unpacks the theme's images so you can copy them into decks. You only need to do this once. If there is no `assets.dat`, skip the unzip. Run every `npx tycoslide` command from this folder too, since that is where the engine is installed and npx finds it nowhere else.
 
 
 ## Overview
@@ -44,7 +45,7 @@ Study each layout's `slots` before writing any slides.
 
 ### Images
 
-Images live in `assets.json`: every logo, illustration and icon the theme offers, keyed by category and name, each with a `path`, a `fit` and a `description`. **Search it, do not read it whole** -- an icon set alone can run to thousands of entries. **Search for what the icon depicts, not what you mean by it**: a catalog is indexed by image, so "freshness" finds nothing while `grep -i "clock" assets.json` and `grep -i "bolt"` find the icon you wanted.
+Images live in `assets.json`: every logo, illustration and icon the theme offers, keyed by category and name, each with a `path`, a `fit` and a `description`. **Search it, do not read it whole** -- an icon set alone can run to thousands of entries. **Search for what the icon depicts, not what you mean by it**: a catalog is indexed by image, so "freshness" finds nothing while `grep -i -B2 "clock" assets.json` and `grep -i -B2 "bolt" assets.json` find the icon you wanted, with its path and fit on the lines above.
 
 To use an image, copy it into your deck's folder at the same relative path, then write its `path` and `fit` in the image:
 
@@ -127,7 +128,7 @@ soffice --headless --convert-to pdf --outdir . <deck>.pptx
 pdftoppm -png -r 96 <deck>.pdf <name>
 ```
 
-Read each slide image and check for:
+LibreOffice substitutes any font it can't find, so line breaks in the images can differ slightly from PowerPoint's. Read each slide image and check for:
 
 - **Word wrapping** -- text that breaks mid-word or overflows its container
 - **Cramped text** -- content too dense for the slide area

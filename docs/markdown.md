@@ -215,7 +215,7 @@ The theme owns all styling. These directives are rejected at build time:
 
 Each parameter or slot in the layout definition may declare:
 - **`accepts`** (slots, required) -- an array of `text`, `table`, `image`.
-- **`required: true`** -- the slide has no usable default and the build fails if the parameter/slot has no value (e.g. team-member photos, icon-grid icons, the quote logo).
+- **`required: true`** -- the slide has no usable default and the build fails if the parameter/slot has no value.
 - **optional (the default)** -- a parameter or slot you leave unfilled is dropped from the slide (its shape is removed), so a layout with numbered slots (e.g. up to six sections, up to four stats) renders only the ones you fill.
 
 Each layout also declares a `slideNumber` pointing at the physical slide in the theme's template -- unique per layout (one layout maps to one physical slide).
