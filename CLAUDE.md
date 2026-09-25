@@ -35,6 +35,8 @@ Commit and tag the bump **before** publishing. A publish that fails leaves a tag
 
 **tycoslide makes files; the skills describe how to work with them.** Everything tycoslide runs installs with `npm install`. A step that needs another program, such as rendering a deck to PNGs with LibreOffice so an agent can check it the way a person would open it in PowerPoint, belongs in a skill, which lists the program in its requirements. The one exception is mermaid, which needs a browser to make the diagram at all.
 
+**tycoslide gives the agent tools; the agent makes the choices.** A tool reads facts from a template or does mechanical work, as `extract` and `package` do. Anything two reasonable people could decide differently, such as which slides become layouts, what they are called, which images to catalog or which colors a diagram uses, is the agent's to decide by following its skill. No tool writes those decisions into `theme.json` or proposes them.
+
 ## Architecture
 
 Three layers with hard boundaries. The compiler and the engine are the **core**: markdown deck + theme → `.pptx`. The agent layer sits on top.
