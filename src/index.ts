@@ -20,7 +20,6 @@ import {
   type CompilerSlot,
   type CompilerThemeConfig,
 } from "./markdown/types.js";
-import { expandAssets } from "./skillZip.js";
 
 /**
  * A frontmatter parameter always fills one physical shape on the layout's own
@@ -99,10 +98,6 @@ function toEngineLayout(layout: CompilerLayout): Layout {
 /**
  * Project a CompilerThemeConfig down to the engine's ThemeConfig shape.
  * Fields are copied cell-by-cell so the boundary is explicit — no casts.
- * The compiler's `assets` catalog is intentionally NOT forwarded: the engine
- * is ignorant of theme-level asset metadata; the compiler resolves any asset
- * reference to a filesystem path and wraps it as an ImageFill in
- * `step.content` before this projection runs.
  */
 export function toEngineThemeConfig(config: CompilerThemeConfig): ThemeConfig {
   const result: ThemeConfig = {
@@ -148,11 +143,6 @@ export async function buildDeck(
   if (deck.output === undefined) {
     throw new Error('buildDeck: deck.output is not set. Set it (e.g. "deck.pptx") before calling buildDeck.');
   }
-  // A packaged theme ships its assets as one archive, because hosts cap how many
-  // files a skill may contain. Expand it here rather than at compile: the catalog
-  // is what an author reads, and only filling needs the bytes.
-  await expandAssets(config.rootDir);
-
   const engineDeck: Deck = { theme: deck.theme, output: deck.output, steps: deck.steps };
   await generate(engineDeck, toEngineConfig(config), options);
 }
@@ -161,9 +151,11 @@ export type {
   Config,
   Deck,
   DeckStep,
+  Frame,
   GenerateOptions,
   ImageFill,
   Layout,
+  Relationship,
   Slot,
   StyledParagraph,
   TableFill,
@@ -172,13 +164,24 @@ export type {
   ThemeConfig,
 } from "./engine/index.js";
 // Engine — primitives-only public surface.
-export { fillImage, fillTable, fillTemplate, fillText, generate, SlotType } from "./engine/index.js";
-export { ASSETS_ARCHIVE, ASSETS_FILE } from "./files.js";
-// Authoring
-export { generateAssetCatalog, generateManifest } from "./manifest.js";
+export {
+  childrenByTag,
+  collectElements,
+  fillImage,
+  fillTable,
+  fillTemplate,
+  fillText,
+  generate,
+  ImageFit,
+  PRESENTATION_PART,
+  parseXml,
+  readRelationships,
+  relsPathFor,
+  resolveTarget,
+  SlotType,
+  TEMPLATE_DIR,
+} from "./engine/index.js";
 export type {
-  AssetCatalog,
-  AssetEntry,
   CompilerBlock,
   CompilerConfig,
   CompilerDeck,
@@ -195,5 +198,11 @@ export type {
   RawSlide,
 } from "./markdown/index.js";
 // Markdown / Compiler
-export { AcceptType, compileMarkdownDeck, loadThemeConfig, parseThemeConfig } from "./markdown/index.js";
-export { expandAssets } from "./skillZip.js";
+export {
+  AcceptType,
+  compileMarkdownDeck,
+  loadThemeConfig,
+  parseThemeConfig,
+  strict,
+  templateKeys,
+} from "./markdown/index.js";

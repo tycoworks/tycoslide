@@ -1,6 +1,11 @@
-import { ASSETS_FILE } from "./files.js";
-import { templateKeys } from "./markdown/textTemplate.js";
-import type { AcceptType, AssetType, CompilerParameter, CompilerSlot, CompilerThemeConfig } from "./markdown/types.js";
+import {
+  type AcceptType,
+  type CompilerParameter,
+  type CompilerSlot,
+  type CompilerThemeConfig,
+  templateKeys,
+} from "../index.js";
+import { ASSETS_FILE, jsonFile } from "./files.js";
 
 /** A frontmatter parameter as advertised to AI authors. */
 type ManifestParameter = {
@@ -29,31 +34,20 @@ type ManifestLayout = {
   slots: ManifestSlot[];
 };
 
-type ManifestAssetEntry = {
-  path: string;
-  type: AssetType;
-  description: string;
-};
-
 /**
  * What an agent reads WHOLE, every session: the layouts it composes into. Nothing
- * open-ended belongs here — a manifest that grows with the theme's picture count
+ * open-ended belongs here — a manifest that grows with the theme's image count
  * spends the agent's context before it has read a single layout.
  */
 type Manifest = {
   layouts: ManifestLayout[];
-  /** Where the pictures are. The catalog is a separate document, to be searched. */
+  /**
+   * Where the images are: the catalog, a separate document to SEARCH. It is the
+   * half that grows without bound -- a theme's icon set can run to thousands --
+   * so it stays complete in its own file and reading it stays opt-in.
+   */
   assets: string;
 };
-
-/**
- * What an agent SEARCHES: every picture the theme offers, by category and name.
- * Split out of the manifest because it is the half that grows without bound — a
- * theme's icon set can run to thousands, and 135 bytes each is a manifest nobody
- * can afford to read. Kept as its own file rather than trimmed, so the catalog
- * stays complete and the cost of it stays opt-in.
- */
-type AssetCatalog = Record<string, Record<string, ManifestAssetEntry>>;
 
 /**
  * Flatten a compiler parameter to the manifest entries advertised to AI authors.
@@ -88,17 +82,5 @@ export function generateManifest(config: CompilerThemeConfig): string {
   });
 
   const manifest: Manifest = { layouts, assets: ASSETS_FILE };
-  return JSON.stringify(manifest, null, 2);
-}
-
-/** The catalog document: searched by name, never read whole. */
-export function generateAssetCatalog(config: CompilerThemeConfig): string {
-  const assets: AssetCatalog = {};
-  for (const [category, entries] of Object.entries(config.assets)) {
-    assets[category] = {};
-    for (const [name, entry] of Object.entries(entries)) {
-      assets[category][name] = { path: entry.path, type: entry.type, description: entry.description };
-    }
-  }
-  return JSON.stringify(assets, null, 2);
+  return jsonFile(manifest);
 }

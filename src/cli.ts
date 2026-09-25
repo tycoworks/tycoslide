@@ -1,18 +1,16 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Command } from "commander";
-import { ASSETS_FILE, MANIFEST_FILE, SKILL_FILE, SYNTAX_FILE, THEME_CONFIG, THEME_PACKAGE_DIR } from "./files.js";
+import { registerAgentCommands } from "./agents/commands.js";
+import { PACKAGE_JSON } from "./agents/files.js";
 import { buildDeck } from "./index.js";
-import { generateAssetCatalog, generateManifest } from "./manifest.js";
 import { compileDeck, loadThemeConfig, parseSlideDocument, RESERVED_KEY } from "./markdown/index.js";
-import { renameSkill, skillPackageJson, zipDir } from "./skillZip.js";
 
-const sdkDir = dirname(fileURLToPath(import.meta.url));
-const skillMdPath = resolve(sdkDir, "..", THEME_PACKAGE_DIR, SKILL_FILE);
-const syntaxMdPath = resolve(sdkDir, "..", THEME_PACKAGE_DIR, SYNTAX_FILE);
-
-const pkg = JSON.parse(readFileSync(resolve(sdkDir, "..", "package.json"), "utf-8"));
+// The CLI is the one module that wires both layers: `build` from the core, and
+// the agent layer's commands registered onto the same program.
+const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const pkg = JSON.parse(readFileSync(resolve(packageRoot, PACKAGE_JSON), "utf-8"));
 const program = new Command().name("tycoslide").description("PPTX template engine CLI").version(pkg.version);
 
 program
@@ -49,47 +47,7 @@ program
     await buildDeck(deck, config, { excludeNotes: !opts.notes });
   });
 
-program
-  .command("package")
-  .description("Generate the Agent Skill (manifest.json, SKILL.md, syntax.md) for AI agents")
-  .option(`-c, --config <path>`, "path to theme config file", THEME_CONFIG)
-  .action(async (opts: { config: string }) => {
-    const config = loadThemeConfig(resolve(process.cwd(), opts.config));
-
-    const themePkg = JSON.parse(readFileSync(resolve(process.cwd(), "package.json"), "utf-8"));
-    if (!themePkg.name) {
-      throw new Error('Cannot name the skill: the theme\'s package.json has no "name" field.');
-    }
-    // basename drops any npm scope, e.g. "@acme/acme-slides" -> "acme-slides".
-    const skillName = basename(themePkg.name);
-
-    writeFileSync(resolve(process.cwd(), MANIFEST_FILE), `${generateManifest(config)}\n`);
-    console.log(`WROTE ${MANIFEST_FILE}`);
-
-    writeFileSync(resolve(process.cwd(), ASSETS_FILE), `${generateAssetCatalog(config)}\n`);
-    console.log(`WROTE ${ASSETS_FILE}`);
-
-    let skillMd: string;
-    try {
-      skillMd = renameSkill(readFileSync(skillMdPath, "utf-8"), skillName);
-    } catch (err) {
-      throw new Error(`${skillMdPath}: ${(err as Error).message}`);
-    }
-    writeFileSync(resolve(process.cwd(), SKILL_FILE), skillMd);
-    console.log(`WROTE ${SKILL_FILE}`);
-
-    const syntaxMd = readFileSync(syntaxMdPath, "utf-8");
-    writeFileSync(resolve(process.cwd(), SYNTAX_FILE), syntaxMd);
-    console.log(`WROTE ${SYNTAX_FILE}`);
-
-    // Bundle the WHOLE theme so the skill is self-contained: unzip ->
-    // `npm install` (pulls the engine + its deps) -> `npx tycoslide build`.
-    const zipFile = `${skillName}.zip`;
-    const generated = [opts.config, MANIFEST_FILE, ASSETS_FILE, SKILL_FILE, SYNTAX_FILE];
-    const skillPkg = skillPackageJson(themePkg, { name: pkg.name, version: pkg.version });
-    writeFileSync(resolve(process.cwd(), zipFile), await zipDir(process.cwd(), skillName, config, generated, skillPkg));
-    console.log(`WROTE ${zipFile}`);
-  });
+registerAgentCommands(program, { root: packageRoot, name: pkg.name, version: pkg.version });
 
 // Everything below the CLI throws plain Errors carrying a written-for-humans
 // message. Print that message and stop; a Node stack trace tells a deck author

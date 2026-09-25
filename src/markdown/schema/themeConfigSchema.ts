@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { basename, dirname } from "node:path";
 import * as z from "zod";
-import { AcceptType, AssetType, type CompilerThemeConfig, type LoadedTheme, Variant } from "../types.js";
+import { AcceptType, type CompilerThemeConfig, type LoadedTheme, Variant } from "../types.js";
 import { strict } from "./strict.js";
 
 /**
@@ -17,14 +17,13 @@ import { strict } from "./strict.js";
  *
  * Every object is a `strictObject` so an unknown key throws instead of being
  * silently dropped — strictness does NOT propagate, so each nested object is
- * independently strict. The two exceptions are the `AssetCatalog` and `mermaid`
- * records, whose keys are user-defined category/asset/variant names (a
- * `z.record`, open by design); strictness lands on their leaf entries.
+ * independently strict. The exception is the `mermaid` record, whose keys are
+ * user-defined variant names (a `z.record`, open by design); strictness lands on
+ * its entries.
  */
 
-// Reuse the const-object enums as runtime values — no third copy of the literals.
-const assetTypeSchema = z.enum(Object.values(AssetType) as [AssetType, ...AssetType[]]);
-const variantSchema = z.enum(Object.values(Variant) as [Variant, ...Variant[]]);
+// Reuse the const-object enum as runtime values — no third copy of the literals.
+const variantSchema = z.enum(Variant);
 // A table specimen's repeatable row range: `[start, end]`, 0-based inclusive,
 // non-negative integers. The range is validated against the specimen's actual row
 // count at fill time, where the row count is known.
@@ -38,16 +37,6 @@ const FrameSchema = strict({
   cx: z.number(),
   cy: z.number(),
 });
-
-const AssetEntrySchema = strict({
-  path: z.string(),
-  type: assetTypeSchema,
-  description: z.string(),
-});
-
-// AssetCatalog: `{ category: { name: AssetEntry } }`. The two record levels are
-// OPEN (names are user-defined); only the leaf entry is strict.
-const AssetCatalogSchema = z.record(z.string(), z.record(z.string(), AssetEntrySchema));
 
 const MermaidVariantSchema = strict({
   primary: z.string(),
@@ -119,7 +108,6 @@ const LayoutSchema = strict({
 
 export const ThemeConfigSchema = strict({
   layouts: z.array(LayoutSchema),
-  assets: AssetCatalogSchema,
   template: z.string(),
   mermaid: MermaidConfigSchema.optional(),
   fonts: z.array(ThemeFontSchema).optional(),

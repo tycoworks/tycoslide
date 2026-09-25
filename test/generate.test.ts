@@ -1,11 +1,13 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { DOMParser, XMLSerializer } from "@xmldom/xmldom";
 import { coalesceSameStyleRuns, fillTemplate } from "../dist/engine/fillers/template.js";
 import { fillText } from "../dist/engine/fillers/text.js";
 import { fillTable } from "../dist/engine/fillers/table.js";
 import { FILLERS } from "../dist/engine/fillers/filler.js";
-import { computeGeometry } from "../dist/engine/fillers/image.js";
+import { computeGeometry, fillImage } from "../dist/engine/fillers/image.js";
 import { setRichRuns } from "../dist/engine/dom.js";
 import { assertSlotsWellFormed, fillSlide } from "../dist/engine/generate.js";
 import type {
@@ -1169,6 +1171,53 @@ describe("computeGeometry", () => {
 });
 
 // ============================================
+// fillImage — alt text on <p:cNvPr>
+// ============================================
+
+describe("fillImage alt text", () => {
+  const SWAP_PNG = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "swap.png");
+
+  /** A picture shape whose `<p:cNvPr>` carries `nvAttrs`; omit the element with `null`. */
+  const makePic = (nvAttrs: string | null): any =>
+    parseXml(
+      `<p:pic xmlns:a="${NS_A}" xmlns:p="${NS_P}"><p:nvPicPr>${nvAttrs === null ? "" : `<p:cNvPr id="4" name="Pic"${nvAttrs}/>`}</p:nvPicPr>` +
+        `<p:blipFill><a:blip/></p:blipFill><p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="952500" cy="952500"/></a:xfrm></p:spPr></p:pic>`,
+    ).documentElement!;
+  const fill = (pic: any, alt: string) =>
+    fillImage(pic, { type: SlotType.Image, path: SWAP_PNG, fit: ImageFit.Contain, alt }, "Pic", "test");
+  const nvProps = (pic: any) => pic.getElementsByTagName("p:cNvPr")[0];
+
+  const cases: { name: string; before: string; alt: string; descr: string | null }[] = [
+    { name: "writes alt text to descr", before: "", alt: "Request flow", descr: "Request flow" },
+    { name: "replaces a stale descr", before: ' descr="old.png"', alt: "Request flow", descr: "Request flow" },
+    { name: "removes a stale descr when alt is empty", before: ' descr="old.png"', alt: "", descr: null },
+    { name: "removes the legacy title even with alt", before: ' title="old.png"', alt: "Logo", descr: "Logo" },
+    { name: "removes the legacy title without alt", before: ' title="old.png"', alt: "", descr: null },
+  ];
+  for (const c of cases) {
+    it(c.name, () => {
+      const pic = makePic(c.before);
+      fill(pic, c.alt);
+      assert.equal(nvProps(pic).getAttribute("descr") || null, c.descr);
+      assert.equal(nvProps(pic).hasAttribute("title"), false);
+    });
+  }
+
+  it("escapes special characters and round-trips them", () => {
+    const alt = `Q&A: "<tags>" & 'quotes'`;
+    const pic = makePic("");
+    fill(pic, alt);
+    const xml = new XMLSerializer().serializeToString(pic);
+    assert.ok(!xml.includes("<tags>"), "raw < must be escaped");
+    assert.equal(nvProps(parseXml(xml).documentElement).getAttribute("descr"), alt);
+  });
+
+  it("throws when the picture has no <p:cNvPr>", () => {
+    assert.throws(() => fill(makePic(null), "x"), /Image shape "Pic".*<p:cNvPr>/);
+  });
+});
+
+// ============================================
 // setRichRuns — color support
 // ============================================
 
@@ -1271,7 +1320,7 @@ describe("fillSlide dispatch", () => {
 
   const textVal: TextFill = { paragraphs: [plain("hello")] };
   const tableVal: TableFill = { headers: cells("A", "B"), rows: [] };
-  const imageVal: ImageFill = { type: SlotType.Image, path: "/abs/pic.png", fit: ImageFit.Contain };
+  const imageVal: ImageFill = { type: SlotType.Image, path: "/abs/pic.png", fit: ImageFit.Contain, alt: "" };
 
   const step = (content: DeckStep["content"]): DeckStep => ({ layout: "L", content });
 

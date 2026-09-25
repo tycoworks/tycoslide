@@ -15,8 +15,8 @@
  *     fills each cell's first paragraph. See fillers/table.ts.
  *
  *   ImageFill → fillImage  Points the picture's blip relationship at a new media
- *     file (registered by generate(), swapped by the ImageFiller) and adjusts
- *     geometry for the chosen fit. See fillers/image.ts.
+ *     file (registered by generate(), swapped by the ImageFiller), adjusts
+ *     geometry for the chosen fit, and sets its alt text. See fillers/image.ts.
  *
  * generate() loads the template, registers media, and for each DeckStep clones
  * the layout's base slide and calls `fillSlide`. Each value in `step.content`

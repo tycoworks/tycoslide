@@ -15,7 +15,7 @@ export const ASSETS_FILE = "assets.json";
 /**
  * The one archive a packaged theme's declared assets ship inside. Entries are
  * stored at theme-relative POSIX paths and never rewritten: packaging writes
- * them, building expands them. Zip format, deliberately NOT named .zip: the
+ * them, and an agent unzips them. Zip format, deliberately NOT named .zip: the
  * upload host rejects nested .zip entries by extension while accepting .pptx,
  * which is also a zip -- so the archive travels under a neutral name.
  */
@@ -26,11 +26,28 @@ export const ASSETS_ARCHIVE = "assets.dat";
 // other.
 export const SKILL_FILE = "SKILL.md";
 
-export const SYNTAX_FILE = "syntax.md";
-
 // The folder holding the SKILL.md template copied into each packaged theme, kept
 // out of the repo root so skill installers do not mistake it for this repo's own skill.
 export const THEME_PACKAGE_DIR = "theme-package";
 
-/** The manifest a packaged skill installs from, authored rather than copied. */
+/**
+ * npm's package manifest: the theme's, which names the skill, and the packaged
+ * skill's own, which it installs from (authored rather than copied).
+ */
 export const PACKAGE_JSON = "package.json";
+
+/** The packaged skill is one zip, named `<skill name>.zip`. */
+export const SKILL_ZIP_EXT = ".zip";
+
+/** What `tycoslide extract` learns about a template, written in the theme folder. */
+export const TEMPLATE_FILE = "template.json";
+
+/** Where a theme keeps its images, and where `tycoslide extract` copies a template's. */
+export const ASSETS_DIR = "assets";
+
+const JSON_INDENT = 2;
+
+/** `value` as the contents of a JSON file the agent layer writes: indented, with a final newline. */
+export function jsonFile(value: unknown): string {
+  return `${JSON.stringify(value, null, JSON_INDENT)}\n`;
+}

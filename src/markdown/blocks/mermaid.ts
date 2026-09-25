@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { extname, join, resolve } from "node:path";
+import { extname, join, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { Code } from "mdast";
 import type { ImageFill } from "../../engine/index.js";
@@ -25,7 +25,7 @@ export const MERMAID_LANG = "mermaid";
  * Image fill, and compile it by rendering the definition to a PNG (cached under
  * `<rootDir>/.tycoslide-cache/mermaid/<hash>.png`, in the theme directory) and wrapping it as an
  * ImageFill. Fit is always `contain` — mermaid diagrams are shown in their
- * entirety. Resolution is strict: the theme MUST carry a `mermaid` block, MUST
+ * entirety — and a fence carries no alt text. Resolution is strict: the theme MUST carry a `mermaid` block, MUST
  * declare a `mermaidVariant`, and that variant MUST exist — each missing piece
  * throws by name.
  */
@@ -60,7 +60,7 @@ export const MERMAID: BlockHandler = {
 
     const cacheDir = ensureCacheDir(config);
     const pngPath = await renderOne(definition, variantName, variant, cacheDir, config);
-    return { type: SlotType.Image, path: pngPath, fit: ImageFit.Contain };
+    return { type: SlotType.Image, path: pngPath, fit: ImageFit.Contain, alt: "" };
   },
 };
 
@@ -105,7 +105,9 @@ function ensureCacheDir(config: CompilerConfig): string {
  * naming the family + path — never a silent skip.
  */
 function resolveFonts(rootDir: string, fonts: ThemeFont[]): ResolvedFont[] {
-  const require = createRequire(join(rootDir, "package.json"));
+  // `createRequire` treats a path ending in a separator as a directory, so package
+  // names resolve from the theme's folder (its node_modules).
+  const require = createRequire(join(rootDir, sep));
   return fonts.map((font) => {
     const isFsPath = font.path.startsWith(".") || font.path.startsWith("/");
     let absPath: string;

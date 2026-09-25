@@ -11,13 +11,11 @@ import { AcceptType } from "../dist/markdown/types.js";
 const cell = (text: string) => ({ runs: [{ text }] });
 
 const ctx = {
-  resolveAssetRef: () => {
-    throw new Error("no asset resolver expected in table tests");
-  },
   layoutName: "L",
   slideNo: 1,
   source: "body content",
-  config: { layouts: [], assets: {}, template: "", rootDir: "", deckDir: "" },
+  region: 'Slide 1: layout "L" slot content (from body content)',
+  config: { layouts: [], template: "", rootDir: "", deckDir: "" },
 };
 const parse = (text: string) => parseSlotContent(text, ctx);
 
@@ -166,5 +164,15 @@ Widget | $10`;
         return true;
       },
     );
+  });
+});
+
+describe("inline elements with no text of their own, in a table cell", () => {
+  it("fails on an image inside a cell, naming the region", async () => {
+    const input = "| Brand | Logo |\n|---|---|\n| Acme | See ![Acme](logo.png) |";
+    await assert.rejects(parse(input).fill(), (err: Error) => {
+      assert.equal(err.message, `${ctx.region}: "image" inside text isn't supported.`);
+      return true;
+    });
   });
 });

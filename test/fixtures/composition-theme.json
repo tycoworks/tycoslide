@@ -1,14 +1,5 @@
 {
   "template": "composition.pptx",
-  "assets": {
-    "logos": {
-      "primary": {
-        "path": "swap.png",
-        "type": "image",
-        "description": "Primary brand logo for body-slot image references."
-      }
-    }
-  },
   "layouts": [
     {
       "name": "Composed",

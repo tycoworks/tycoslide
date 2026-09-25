@@ -1,20 +1,21 @@
 ---
 name: create-theme
 description: Turn a branded PowerPoint template into a tycoslide theme, packaged as an Agent Skill that builds editable decks from markdown. Use when someone hands over a .pptx and wants repeatable decks from it, or says "make a theme", "create a theme", "tycoslide theme", or "turn this template into a theme".
-compatibility: Needs Node 23.6+, LibreOffice (soffice), poppler (pdftoppm) and python3. Chrome only if decks will contain mermaid diagrams.
+compatibility: Needs Node 23.6+, LibreOffice (soffice) and poppler (pdftoppm). Chrome only if decks will contain mermaid diagrams.
 ---
 
 # Create a theme
 
 ## What you are making
 
-tycoslide builds a deck by filling the shapes of a real PowerPoint template with content, then writes a new PowerPoint file that anyone can edit. To do that it needs a theme: a directory holding the template, a `theme.json` that maps the template's slides and shapes, and any pictures decks may use. Packaged, the theme is an Agent Skill. Once it is installed, "write me a board deck" in a chat produces an editable `.pptx`.
+tycoslide builds a deck by filling the shapes of a real PowerPoint template with content, then writes a new PowerPoint file that anyone can edit. To do that it needs a theme: a directory holding the template, a `theme.json` that maps the template's slides and shapes, and any images decks may use. Packaged, the theme is an Agent Skill. Once it is installed, "write me a board deck" in a chat produces an editable `.pptx`.
 
 ```
 my-theme/
   template/brand.pptx    the designer's file, never modified
-  theme.json             the map onto it, and the only file you author
-  assets/                pictures decks may use
+  theme.json             the map onto it
+  assets/                images decks may use
+  assets.json            the catalog of those images
   package.json           depends on @tycoworks/tycoslide
 ```
 
@@ -24,7 +25,7 @@ my-theme/
 
 1. **Map.** Read the template, render every slide, and draft `theme.json`. You do this alone. Nothing is decided yet: every layout, name and field is a proposal.
 2. **Decide.** Build one test slide per layout, render it, fix what is wrong, and repeat until every layout renders cleanly. Nothing is asked of the user.
-3. **Pack.** Check the pictures, declare fonts and diagram colors, and run one command that turns the directory into an installable skill.
+3. **Pack.** Check the images, declare fonts and diagram colors, and run one command that turns the directory into an installable skill.
 
 ## Ground rules
 
@@ -41,7 +42,6 @@ Check the tools once:
 node --version        # 23.6 or later
 soffice --version     # LibreOffice, renders a .pptx to PDF
 pdftoppm -v           # poppler, turns the PDF into PNGs
-python3 --version
 ```
 
 Install what is missing before going on. macOS: `brew install --cask libreoffice && brew install poppler`. Debian or Ubuntu: `apt-get install libreoffice-impress poppler-utils`.
@@ -56,40 +56,39 @@ Clone the reference theme and swap in the template. You inherit a working `packa
 
 ```bash
 git clone https://github.com/tycoworks/tycoworks-theme my-theme && cd my-theme
-rm -rf .git assets README.md showcase.md template/*.pptx && mkdir -p assets template
+rm -rf .git assets README.md showcase.md how-it-works.md template/*.pptx && mkdir -p assets template
 cp ~/wherever/brand.pptx template/
 echo render/ >> .gitignore
-python3 - <<'PY'
-import json
-t = json.load(open('theme.json'))
-t['template'], t['layouts'], t['assets'] = 'brand.pptx', [], {}
-json.dump(t, open('theme.json', 'w'), indent=2)
-PY
+echo '{}' > assets.json
+node -e '
+const fs = require("fs");
+const theme = JSON.parse(fs.readFileSync("theme.json", "utf8"));
+fs.writeFileSync("theme.json", JSON.stringify({ ...theme, template: "brand.pptx", layouts: [] }, null, 2) + "\n");
+'
 ```
 
-In `package.json`, set `name` to the theme's name, which becomes the skill's name, and `description`. Then run `npm install`. It also writes `syntax.md`, the markdown reference you will write the test deck against.
+In `package.json`, set `name` to the theme's name, which becomes the skill's name, and `description`. Then run `npm install`.
 
 ### 1.2 Render the template
 
-Render the template itself, once, so every later decision can be made by looking at a picture.
+Render the template itself, once, so every later decision can be made by looking at a PNG.
 
 ```bash
 mkdir -p render && soffice --headless --convert-to pdf --outdir render template/brand.pptx
 pdftoppm -png -r 60 render/brand.pdf render/slide
 ```
 
-`render/slide-01.png` is the first slide in **presentation order**. `theme.json` refers to slides by the number in their **file name**, `ppt/slides/slideN.xml`, and the two orders can differ. The inventory prints both, so use it to pair each picture with its file number.
+`render/slide-01.png` is the first slide in **presentation order**. `theme.json` refers to slides by the number in their **file name**, `ppt/slides/slideN.xml`, and the two orders can differ. `template.json` records both, so use it to pair each PNG with its file number.
 
 ### 1.3 Inventory
 
 ```bash
-python3 scripts/inventory.py template/brand.pptx
-python3 scripts/extract-media.py template/brand.pptx assets/brand
+npx tycoslide extract template/brand.pptx
 ```
 
-The first prints the slide size, the color scheme and the fonts, then every slide by file number: its position, its layout name, whether its background is light, dark or a picture, and each shape with its kind, position, size, table rows and placeholder text. It ends with the slides that share identical geometry. Sizes print in inches so they read at a glance; `theme.json` wants EMU, so run it again with `--json` when you copy a `frame`, and never convert by hand. Text shows paragraph breaks as ¶ and line breaks as ↵, which is where `\n` goes in a parameter template.
+This writes `template.json`: the slide size, the color scheme and the fonts, then every slide by file number with its position, its layout name, whether its background is light, dark or an image, and each shape with its kind, frame, table rows and placeholder text. It ends with `duplicates`, the slides that share identical geometry. Frames are in EMU, exactly as `theme.json` wants them, so copy them as they are and never convert by hand. Text shows paragraph breaks as ¶ and line breaks as ↵, which is where `\n` goes in a parameter template.
 
-The second copies every image the masters and layouts reference, the logos, marks and backdrops, into `assets/brand`. Pictures placed on individual slides are sample content and stay out, unless the PNG shows one is a brand mark. If the user has a folder of brand assets outside the template, such as logos, icons or product shots, copy it under `assets/` with one subfolder per category and treat it the same way from here on.
+It also copies every image the template uses into `assets/`, and lists them under `images` in `template.json` with the masters, layouts and slides that use each. If the user has a folder of brand assets outside the template, such as logos, icons or product shots, copy it into `assets/` as it is and treat it the same way from here on.
 
 Shape names mean nothing. They are whatever the designer's tool produced, `Google Shape;877;p95` is normal, and they are never renamed, only referenced. What matters is the placeholder text, because it says what the shape is for.
 
@@ -97,21 +96,27 @@ Shape names mean nothing. They are whatever the designer's tool produced, `Googl
 
 One layout per slide worth keeping. Drop, for now: geometry duplicates, keeping the first; slides with no fillable shapes; and reference slides such as color palettes, logo sheets and font specimens. Record what you dropped and why, so the user can bring one back. The list is often empty.
 
-For each kept slide:
+For each kept slide, working from its entry in `template.json`:
 
-- **Name** it from its layout name and its content: `Title`, `Two column`, `Quote`. Short, capitalised like a heading, unique.
-- **Short, single-purpose text** becomes a **parameter**: a title, a name, a label, a statistic. The `{key}` substitutes into the designer's own runs, so the styling survives. One shape can hold several: `"{name}\n{jobTitle}"`.
-- **Free-form regions** become **slots**: a text body, a table, a picture. Each slot lists what it accepts.
+- **Name** it from its `layout` name and its content: `Title`, `Two column`, `Quote`. Short, capitalised like a heading, unique. Its `slideNumber` is the entry's `slide`, never its `position`.
+- **Short, single-purpose text** becomes a **parameter**: a title, a name, a label, a statistic. Its `template` is the shape's `text` with each sample value replaced by a `{key}`, which substitutes into the designer's own runs, so the styling survives. One shape can hold several: `"{name}\n{jobTitle}"`.
+- **Free-form regions** become **slots**: a text body, a table, an image. Each slot lists what it accepts, and each block's `type` is its shape's `kind`; a `group` or `other` shape cannot be filled. `body`, `col1_body`, `image` and `code` are conventional keys. A text block's `startAt` is the number of fixed heading paragraphs in the shape's `text`.
 - **Page chrome** such as `‹#›`, footers and fixed logos is left out.
-- **`variant`** is `light` or `dark`, on every layout, from the inventory's background column. When the column says the background is a picture, look at the slide's PNG from step 1.2 and judge.
+- **`variant`** is `light` or `dark`, on every layout, from each slide's `background` in `template.json`. When the background is `image` or `unknown`, look at the slide's PNG from step 1.2 and judge.
 - **`required`** goes on each layout's headline: the title, or the quote or the number when the layout has no title. Nothing else.
 - **`description`** is one sentence for the agent that will write decks with this layout: the arrangement, and its capacity, like "holds four bullets comfortably".
 
-Then catalog the images `extract-media.py` copied, under `assets` in `theme.json`, each with a `path`, a `type` and a one-line `description`. The type is `icon` for marks that must never be enlarged, `image` for pictures that may scale but not crop, and `background` for full-bleed art that may crop.
+Then catalog the images decks should reuse, such as logos, icons and backdrops, in `assets.json`, keyed by category and then name, each with a `path`, a `fit` and a one-line `description`:
 
-Every field, where its value comes from, and the error you get when it is wrong are in [references/theme-json.md](references/theme-json.md). Two rules fail late and are worth stating here: a table block must declare `bodyRows`, and a slot that borrows a shape from another slide must declare `frame`.
+```json
+{ "brand": { "logo": { "path": "assets/logo.png", "fit": "contain", "description": "Full-color wordmark, for light backgrounds" } } }
+```
 
-Then read the draft back against the pictures. A shape the picture shows as a subtitle but the draft calls a body is the kind of mistake to catch now.
+Leave out sample content such as stock photos; only cataloged images ship. The fit is what a deck author copies into the image: `scale-down` for icons and marks that must never be enlarged, `contain` for images that may scale but must not crop (logos, diagrams, screenshots), and `cover` only for full-bleed art that may crop. Look at the image to decide.
+
+Every field and the error you get when it is wrong are in `node_modules/@tycoworks/tycoslide/docs/theme.md`. Two rules fail late and are worth stating here: a table block must declare `bodyRows`, and a slot that borrows a shape from another slide must declare `frame`. For a table of R `rows` with no total row, `bodyRows` is `[1, R-1]`, and the `frame` is copied from the shape the slot replaces on the layout's own slide, never computed or converted.
+
+Then read the draft back against the PNGs. A shape the PNG shows as a subtitle but the draft calls a body is the kind of mistake to catch now.
 
 ## 2. Decide
 
@@ -119,7 +124,7 @@ Then read the draft back against the pictures. A shape the picture shows as a su
 
 ### Render every layout
 
-Write `smoke.md` with one slide per layout, filling every parameter and slot with content of realistic length. `syntax.md` in the theme directory is the markdown reference. The reference theme's `showcase.md` shows what a whole deck looks like, but its layout and key names are not yours. Then:
+Write `smoke.md` with one slide per layout, filling every parameter and slot with content of realistic length. Write images as `![alt](path "fit: …")` using catalog paths, which resolve as they are because `smoke.md` sits in the theme directory, and give each one alt text. If a layout takes an image, fill one with a small mermaid flowchart whose nodes use two classes, so you see the diagram colors. `node_modules/@tycoworks/tycoslide/docs/markdown.md` is the markdown reference. The reference theme's `showcase.md` shows what a whole deck looks like, but its layout and key names are not yours. Then:
 
 ```bash
 npx tycoslide build smoke.md
@@ -127,11 +132,11 @@ soffice --headless --convert-to pdf --outdir render smoke.pptx
 pdftoppm -png -r 96 render/smoke.pdf render/smoke
 ```
 
-Look at every PNG yourself before showing anyone. Check each for text wrapping mid-word or overflowing its box, leftover placeholder text such as "Lorem ipsum" or "Firstname Lastname", a value landing in the wrong shape, a picture stretched or squashed, and text invisible against its background. A build error names the layout and key. Fix the map, not the content, rebuild, and repeat until clean.
+Look at every PNG yourself before showing anyone. Check each for text wrapping mid-word or overflowing its box, leftover placeholder text such as "Lorem ipsum" or "Firstname Lastname", a value landing in the wrong shape, an image stretched or squashed, and text invisible against its background. A build error names the layout and key. Fix the map, not the content, rebuild, and repeat until clean.
 
 Test with realistic lengths. A slot that looks right with one line can misbehave with six.
 
-Two things that look like failures are not. A warning that an image `shrunk` or `leaves the frame empty` means the picture is a different size or shape from its slot; judge it from the PNG. A mermaid fence needs Chrome, which tycoslide finds on its own; if the build says it found no browser, install Chrome or pass `--browser-path`.
+Two things that look like failures are not. A warning that an image `shrunk` or `leaves the frame empty` means the image is a different size or shape from its slot; judge it from the PNG. A mermaid fence needs Chrome, which tycoslide finds on its own; if the build says it found no browser, install Chrome or pass `--browser-path`.
 
 ## 3. Pack
 
@@ -139,13 +144,13 @@ Two things that look like failures are not. A warning that an image `shrunk` or 
 
 ### 3.1 Assets
 
-The catalog is written. Check it: every description names what the picture shows, because deck authors grep the catalog for it, and byte-identical duplicates are dropped.
+The catalog is written. Check it: every description names what the image shows, because deck authors grep the catalog for it, every `fit` is the one an author should copy, since nothing else will choose it, and byte-identical duplicates are dropped.
 
 ### 3.2 Fonts, code and diagrams
 
-- **`fonts`** only affect diagrams. PowerPoint uses the template's own fonts. Declare the body font as a package such as `@fontsource/inter`, listed in `dependencies`, so mermaid text matches. If the body font has no fontsource package, use the heading font or the nearest one that does.
+- **`fonts`** only affect diagrams. PowerPoint uses the template's own fonts. Declare the body font, `fontScheme.minor` in `template.json`, as a package such as `@fontsource/inter`, listed in `dependencies`, so mermaid text matches. If the body font has no fontsource package, use the heading font or the nearest one that does.
 - **`codeTheme`** is a Shiki theme name, or a `{ "light": ..., "dark": ... }` pair when layouts of both variants can hold code.
-- **`mermaid`** holds one entry per variant with all eleven keys, and **`mermaidVariant`** names the default. Keep the reference theme's block and change the hexes to the template's color scheme. Read the hex values rather than trusting the slot names, since a scheme can be inverted with `dk1` white, and diagram text must be the color body text has on that surface.
+- **`mermaid`** holds one entry per variant with all eleven keys, and **`mermaidVariant`** names the default. Keep the reference theme's block and change the hexes to the template's color scheme. Read the hex values rather than trusting the slot names, since a scheme can be inverted with `dk1` white, and diagram text must be the color body text has on that surface. `line` and `accents` come from the accent slots, and `surfaceBorder` is a darker step of `surface`.
 
 ### 3.3 Package
 
@@ -153,8 +158,8 @@ The catalog is written. Check it: every description names what the picture shows
 npx tycoslide package
 ```
 
-That writes `manifest.json`, `assets.json`, `SKILL.md` and `syntax.md`, and zips the theme into `<name>.zip`. Build `smoke.md` once more to prove the packaged files work.
+That zips the theme into `<name>.zip`.
 
 ### Hand-off
 
-Open the render folder so the user can see every layout (`open render/` on macOS, `xdg-open render/` on Linux). Then tell them, in this order: where the theme is; the layouts, one line each with its PNG's path; what was dropped; the assets that ship; the fonts and colors you inferred; how to change any of it, which is to rename a layout or key in `theme.json`, drop extra pictures under `assets/` and catalog them, then run `npx tycoslide package` again; and how to install the zip: it is an Agent Skill, so it goes wherever their agent keeps skills, unzipped with `npm install` run once inside it for a local agent, or uploaded as-is to a hosted one. From then on, "write me a deck" in a chat produces an editable `.pptx` in the exact brand.
+Open the render folder so the user can see every layout (`open render/` on macOS, `xdg-open render/` on Linux). Then tell them, in this order: where the theme is; the layouts, one line each with its PNG's path; what was dropped; the assets that ship; the fonts and colors you inferred; how to change any of it, which is to rename a layout or key in `theme.json`, drop extra images under `assets/` and catalog them in `assets.json`, then run `npx tycoslide package` again; and how to install the zip: it is an Agent Skill, so it goes wherever their agent keeps skills, unzipped with `npm install` and `unzip -nq assets.dat` run once inside it for a local agent, or uploaded as-is to a hosted one. From then on, "write me a deck" in a chat produces an editable `.pptx` in the exact brand.

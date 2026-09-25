@@ -5,7 +5,8 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
 import JSZip from "jszip";
-import { ASSETS_ARCHIVE, buildDeck, compileMarkdownDeck, type ImageFill, toEngineThemeConfig } from "../dist/index.js";
+import { ASSETS_ARCHIVE } from "../dist/agents/files.js";
+import { buildDeck, compileMarkdownDeck, type ImageFill, toEngineThemeConfig } from "../dist/index.js";
 import type { CompilerConfig, CompilerThemeConfig } from "../dist/markdown/types.js";
 
 // End-to-end coverage of the COMPILER path exposing sampled-composition: a real
@@ -84,7 +85,7 @@ layout: Composed
     );
   });
 
-  it("routes a standalone markdown image ($category.name) into a text-base slot and transplants it", async () => {
+  it("routes a standalone markdown image into a text-base slot and transplants it", async () => {
     const config = loadThemeConfig();
     const source = `---
 theme: ./composition-theme.json
@@ -93,7 +94,7 @@ theme: ./composition-theme.json
 layout: Composed
 ---
 ::body::
-![logo]($logos.primary)`;
+![logo](swap.png)`;
 
     const deck = await compileMarkdownDeck(source, config);
     deck.output = outPath("image.pptx");
@@ -103,6 +104,7 @@ layout: Composed
     const slide = await slideXml(zip);
 
     assert.ok(slide.includes("<a:blip"), "transplanted image should carry a drawing blip");
+    assert.ok(slide.includes('descr="logo"'), "the markdown alt text is the picture's alt text");
     assert.ok(
       !slide.includes("superseded on transplant"),
       "base body text shape (Text 1) removed on transplant",
@@ -128,20 +130,19 @@ layout: Composed
     );
   });
 
-  it("expands a packaged theme's asset archive during the build", async () => {
-    // The wiring test for `buildDeck -> expandAssets`. A packaged skill has no
-    // loose assets, only the assets archive, so removing that call breaks every image in
-    // every deck -- and nothing else here would notice.
+  it("builds from a packaged theme without expanding its asset archive", async () => {
+    // Pictures reach a deck by being copied next to it, so a build never needs
+    // the theme's archived assets on disk and must not write them there.
     const packaged = mkdtempSync(join(tmpdir(), "packaged-theme-"));
     const archive = new JSZip();
     archive.file("swap.png", readFileSync(join(FIXTURES, "swap.png")));
     writeFileSync(join(packaged, ASSETS_ARCHIVE), await archive.generateAsync({ type: "nodebuffer" }));
-    copyFileSync(join(FIXTURES, "composition-theme.json"), join(packaged, "composition-theme.json"));
     mkdirSync(join(packaged, "template"));
     copyFileSync(join(FIXTURES, "template", "composition.pptx"), join(packaged, "template", "composition.pptx"));
-    assert.ok(!existsSync(join(packaged, "swap.png")), "the asset starts out archived, not on disk");
 
-    const config = { ...loadThemeConfig(), rootDir: packaged };
+    const deckDir = mkdtempSync(join(tmpdir(), "tycoslide-deckdir-"));
+    copyFileSync(join(FIXTURES, "swap.png"), join(deckDir, "logo.png"));
+    const config = { ...loadThemeConfig(), rootDir: packaged, deckDir };
     const source = `---
 theme: ./composition-theme.json
 ---
@@ -149,24 +150,18 @@ theme: ./composition-theme.json
 layout: Composed
 ---
 ::body::
-![logo]($logos.primary)`;
+![logo](logo.png)`;
 
     const deck = await compileMarkdownDeck(source, config);
     deck.output = outPath("packaged.pptx");
     await buildDeck(deck, config);
 
-    assert.ok(existsSync(join(packaged, "swap.png")), "the archive was expanded");
-    const zip = await outputZip(deck.output);
-    assert.ok(
-      Object.keys(zip.files).some((f) => /ppt\/media\/.+\.\w+$/.test(f)),
-      "the expanded asset reached the output",
-    );
+    assert.ok(!existsSync(join(packaged, "swap.png")), "the archive was not expanded");
+    const slide = await slideXml(await outputZip(deck.output));
+    assert.ok(slide.includes("<a:blip"), "the deck's own copy was placed");
   });
 
-  it("routes a deck-relative image path into the slot, resolved against config.deckDir", async () => {
-    // A path is the other way to name a picture: not from the catalog, so it
-    // gets the `image` fit, and it resolves against the DECK's directory, not
-    // the theme's. Same slot, same transplant, same wrapping as a catalog ref.
+  it("resolves an image path against the deck's directory, not the theme's", async () => {
     const deckDir = mkdtempSync(join(tmpdir(), "tycoslide-deckdir-"));
     mkdirSync(join(deckDir, "pics"));
     copyFileSync(join(FIXTURES, "swap.png"), join(deckDir, "pics", "logo.png"));
@@ -185,6 +180,7 @@ layout: Composed
     assert.equal(body.type, "image");
     assert.equal(body.path, join(deckDir, "pics", "logo.png"));
     assert.equal(body.fit, "contain");
+    assert.equal(body.alt, "logo");
 
     deck.output = outPath("path-image.pptx");
     await buildDeck(deck, config);
@@ -192,25 +188,30 @@ layout: Composed
     assert.ok(slide.includes("<a:blip"), "the path-referenced picture was transplanted");
   });
 
-  it("fails fast on a malformed catalog reference ($ without category.name)", async () => {
-    const config = loadThemeConfig();
-    const badRef = `---
+  it("crops a picture whose title asks for fit: cover", async () => {
+    // swap.png is square and the body frame is 3:1, so cover crops a third off
+    // the top and bottom: srcRect insets of 33333 (1/100,000ths) each.
+    const deckDir = mkdtempSync(join(tmpdir(), "tycoslide-deckdir-"));
+    copyFileSync(join(FIXTURES, "swap.png"), join(deckDir, "photo.png"));
+    const config = { ...loadThemeConfig(), deckDir };
+    const source = `---
 theme: ./composition-theme.json
 ---
 ---
 layout: Composed
 ---
 ::body::
-![logo]($bad)`;
+![Team photo](photo.png "fit: cover")`;
 
-    await assert.rejects(compileMarkdownDeck(badRef, config), (err: Error) => {
-      assert.ok(/must be in the form/.test(err.message), err.message);
-      assert.ok(err.message.includes("$category.name"), "names the required form");
-      return true;
-    });
+    const deck = await compileMarkdownDeck(source, config);
+    deck.output = outPath("cover.pptx");
+    await buildDeck(deck, config);
+    const slide = await slideXml(await outputZip(deck.output));
+    assert.ok(slide.includes('<a:srcRect l="0" t="33333" r="0" b="33333"/>'), "cropped top and bottom");
+    assert.ok(slide.includes('descr="Team photo"'), "alt text written alongside");
   });
 
-  it("fails fast on an unknown body-image reference, listing available assets", async () => {
+  it("fails fast on an image title that is not options", async () => {
     const config = loadThemeConfig();
     const source = `---
 theme: ./composition-theme.json
@@ -219,21 +220,39 @@ theme: ./composition-theme.json
 layout: Composed
 ---
 ::body::
-![logo]($logos.missing)`;
+![](swap.png "Our logo")`;
 
-    await assert.rejects(
-      compileMarkdownDeck(source, config),
-      (err: Error) => {
-        assert.ok(/Unknown asset reference/.test(err.message), err.message);
-        assert.ok(err.message.includes("$logos.primary"), "lists the available asset");
-        return true;
-      },
-    );
+    await assert.rejects(compileMarkdownDeck(source, config), (err: Error) => {
+      assert.ok(err.message.includes('layout "Composed" slot content (from ::body::)'), err.message);
+      assert.ok(err.message.includes("![Our logo](…)"), "suggests moving the text into the alt");
+      return true;
+    });
   });
 
-  it("fails fast when a resolvable body-image is routed into a slot that does not accept image", async () => {
-    // "TextOnly" accepts only text; a well-formed, resolvable image ref folds to
-    // `image` → rejected by assertSlotRegion, through the public compiler path.
+  it("fails fast on a missing image file, naming where and both paths", async () => {
+    const config = loadThemeConfig();
+    const source = `---
+theme: ./composition-theme.json
+---
+---
+layout: Composed
+---
+::body::
+![logo](pics/missing.png)`;
+
+    await assert.rejects(compileMarkdownDeck(source, config), (err: Error) => {
+      assert.ok(err.message.includes('layout "Composed" slot content (from ::body::)'), err.message);
+      assert.ok(
+        err.message.endsWith(`image "pics/missing.png" not found at ${join(FIXTURES, "pics", "missing.png")}`),
+        err.message,
+      );
+      return true;
+    });
+  });
+
+  it("fails fast when an image is routed into a slot that does not accept image", async () => {
+    // "TextOnly" accepts only text; an image that exists folds to `image` →
+    // rejected by assertSlotRegion, through the public compiler path.
     const config = loadThemeConfig();
     const source = `---
 theme: ./composition-theme.json
@@ -242,7 +261,7 @@ theme: ./composition-theme.json
 layout: TextOnly
 ---
 ::body::
-![logo]($logos.primary)`;
+![logo](swap.png)`;
 
     await assert.rejects(
       compileMarkdownDeck(source, config),
@@ -286,7 +305,6 @@ layout: TextOnly
     // is mandatory. Missing → throw at the compiler→engine boundary.
     const bad: CompilerThemeConfig = {
       template: "template/composition.pptx",
-      assets: {},
       layouts: [
         {
           name: "NoFrame",

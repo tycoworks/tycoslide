@@ -1,6 +1,6 @@
 import type { List, RootContent } from "mdast";
 import type { StyledParagraph, TextFill, TextRun } from "../../engine/index.js";
-import { walkPhrasingChildren } from "../inline.js";
+import { type InlineState, walkPhrasingChildren } from "../inline.js";
 import { MdastType } from "../mdast.js";
 import type { BlockContext } from "../types.js";
 
@@ -14,16 +14,18 @@ import type { BlockContext } from "../types.js";
  */
 export function compileTextAggregate(nodes: RootContent[], ctx: BlockContext): TextFill {
   const paragraphs: StyledParagraph[] = [];
+  // Hard breaks split paragraphs here, and inline errors name the region.
+  const state: InlineState = { breakAsNewline: true, region: ctx.region };
   for (const node of nodes) {
     switch (node.type) {
       case MdastType.Paragraph:
       case MdastType.Heading:
-        for (const runs of splitRunsIntoParagraphs(walkPhrasingChildren(node.children, { breakAsNewline: true }))) {
+        for (const runs of splitRunsIntoParagraphs(walkPhrasingChildren(node.children, state))) {
           paragraphs.push({ runs });
         }
         break;
       case MdastType.List:
-        paragraphs.push(...listParagraphs(node, 0));
+        paragraphs.push(...listParagraphs(node, 0, state));
         break;
       default:
         throw new Error(reject(nodes.length, node.type, ctx));
@@ -39,12 +41,11 @@ export function compileTextAggregate(nodes: RootContent[], ctx: BlockContext): T
  * (table/image/code) mixed into prose — both name the layout/slide/slot + type.
  */
 function reject(nodeCount: number, nodeType: string, ctx: BlockContext): string {
-  const where = `Slide ${ctx.slideNo}: layout "${ctx.layoutName}" slot content (from ${ctx.source})`;
   if (nodeCount === 1) {
-    return `${where} is a standalone "${nodeType}" block, which is not a supported content kind.`;
+    return `${ctx.region} is a standalone "${nodeType}" block, which is not a supported content kind.`;
   }
   return (
-    `${where} mixes a "${nodeType}" block with other content; ` +
+    `${ctx.region} mixes a "${nodeType}" block with other content; ` +
     "a table, image, or code block must be the region's only content."
   );
 }
@@ -55,14 +56,14 @@ function reject(nodeCount: number, nodeType: string, ctx: BlockContext): string 
  * `level + 1`. Ordered and unordered both yield plain bullets — the engine has
  * no ordered flag.
  */
-function listParagraphs(list: List, level: number): StyledParagraph[] {
+function listParagraphs(list: List, level: number, state: InlineState): StyledParagraph[] {
   const out: StyledParagraph[] = [];
   for (const item of list.children) {
     for (const child of item.children) {
       if (child.type === MdastType.List) {
-        out.push(...listParagraphs(child, level + 1));
+        out.push(...listParagraphs(child, level + 1, state));
       } else if (child.type === MdastType.Paragraph || child.type === MdastType.Heading) {
-        for (const runs of splitRunsIntoParagraphs(walkPhrasingChildren(child.children, { breakAsNewline: true }))) {
+        for (const runs of splitRunsIntoParagraphs(walkPhrasingChildren(child.children, state))) {
           out.push({ runs, bullet: { level } });
         }
       }

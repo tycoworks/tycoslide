@@ -22,11 +22,6 @@ function fullTheme(): CompilerThemeConfig {
     template: "deck.pptx",
     codeTheme: "github-dark",
     mermaidVariant: "brand",
-    assets: {
-      logos: {
-        primary: { path: "logo.png", type: "image", description: "Primary logo" },
-      },
-    },
     fonts: [{ family: "Inter", path: "@fontsource/inter/x.woff2", weight: 400 }],
     mermaid: {
       brand: {

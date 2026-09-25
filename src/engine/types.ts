@@ -99,11 +99,15 @@ export type ImageFit = (typeof ImageFit)[keyof typeof ImageFit];
  * Input to fillImage — a resolved image path plus its object-fit directive.
  * `path` must be absolute; the compiler resolves it (and maps the asset's
  * semantic type to a `fit`) before the ImageFill reaches the engine.
+ * `alt` is the picture's accessibility description (`descr` on its
+ * `<p:cNvPr>`); empty means none, and clears any description the placeholder
+ * carried.
  */
 export type ImageFill = {
   type: typeof SlotType.Image;
   path: string;
   fit: ImageFit;
+  alt: string;
 };
 
 /** A shape's absolute position and size, in EMU — the slot's frame. */

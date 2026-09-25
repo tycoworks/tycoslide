@@ -15,36 +15,6 @@ import type { MermaidConfig } from "./blocks/mermaidTheme.js";
 // SlotType.
 export type { BodyRows };
 
-// ── Asset catalog (compiler / theme-metadata only) ───────────────────────────
-
-/**
- * An asset's scaling/cropping tolerance, declared in the theme catalog. The
- * compiler maps it to the engine's object-fit `fit`. `icon`: never enlarge,
- * never crop. `image`: never crop, may scale. `background`: crop and scale freely.
- */
-export const AssetType = {
-  Icon: "icon",
-  Image: "image",
-  Background: "background",
-} as const;
-export type AssetType = (typeof AssetType)[keyof typeof AssetType];
-
-/**
- * A theme's declaration of a reusable image asset. Purely compiler-facing —
- * the engine never sees this type; the compiler resolves an entry's `path`
- * to a fully-qualified filesystem path and wraps it as an ImageFill before
- * handing the deck to the engine.
- */
-export type AssetEntry = {
-  path: string;
-  /** Required — a missing type is a fail-fast error. */
-  type: AssetType;
-  description: string;
-};
-
-/** Two-level catalog: `{ category: { name: AssetEntry } }`. */
-export type AssetCatalog = Record<string, Record<string, AssetEntry>>;
-
 // ── AcceptType discriminator (what a slot accepts) ────────────────────────────
 
 /**
@@ -96,7 +66,7 @@ export type BlockFill = TextFill | TableFill | ImageFill;
 
 /**
  * Everything a block handler needs to compile a node into its engine fill: the
- * asset resolver, the diagnostic context to name the offending layout/slide/slot
+ * diagnostic context to name the offending layout/slide/slot
  * when a region's markdown shape is illegal (a stray standalone block mixed into
  * prose), and the theme-level `config` — from which code/mermaid compile read
  * their one-per-theme style (`codeTheme`, `mermaid`, `mermaidVariant`), not the
@@ -107,10 +77,11 @@ export type BlockFill = TextFill | TableFill | ImageFill;
  * imports the per-kind handlers, so the reverse would cycle.
  */
 export type BlockContext = {
-  resolveAssetRef: (ref: string) => ImageFill;
   layoutName: string;
   slideNo: number;
   source: string;
+  /** Where the region sits, for the author: the prefix block handlers put on their errors. */
+  region: string;
   config: CompilerConfig;
   /**
    * The current layout's tonal surface, threaded from its `variant`. The code
@@ -297,7 +268,6 @@ export type ThemeFont = {
  */
 export type CompilerThemeConfig = {
   layouts: CompilerLayout[];
-  assets: AssetCatalog;
   template: string;
   mermaid?: MermaidConfig;
   /**
@@ -320,7 +290,7 @@ export type CompilerThemeConfig = {
 
 /**
  * A theme as loaded from disk: its validated config plus the directory it
- * lives in, which the catalog's relative asset paths resolve against.
+ * lives in, which its relative paths (template, fonts) resolve against.
  */
 export type LoadedTheme = CompilerThemeConfig & {
   rootDir: string;

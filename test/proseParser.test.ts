@@ -11,13 +11,11 @@ import { AcceptType } from "../dist/markdown/types.js";
 // paragraph's runs on soft line breaks.
 
 const ctx = {
-  resolveAssetRef: () => {
-    throw new Error("no asset resolver expected in prose tests");
-  },
   layoutName: "L",
   slideNo: 1,
   source: "body content",
-  config: { layouts: [], assets: {}, template: "", rootDir: "", deckDir: "" },
+  region: 'Slide 1: layout "L" slot content (from body content)',
+  config: { layouts: [], template: "", rootDir: "", deckDir: "" },
 };
 const parse = (text: string) => parseSlotContent(text, ctx);
 const textFill = async (text: string) => {
@@ -78,5 +76,27 @@ describe("prose via parseSlotContent", () => {
   it("a markdown hard break (trailing two spaces) splits into two StyledParagraphs", async () => {
     const { paragraphs } = await textFill("a  \nb");
     assert.deepEqual(paragraphs, [{ runs: [{ text: "a" }] }, { runs: [{ text: "b" }] }]);
+  });
+});
+
+describe("inline elements with no text of their own", () => {
+  // An image inside a sentence has nothing to show as text, so it would vanish
+  // from the slide.
+  const unsupported: [name: string, markdown: string, type: string][] = [
+    ["an image inside a sentence", "Our logo ![Acme](logo.png) sits here", "image"],
+    ["an image inside a bullet", "- Our logo ![Acme](logo.png)", "image"],
+  ];
+  for (const [name, markdown, type] of unsupported) {
+    it(`fails on ${name}, naming the region and the element`, async () => {
+      await assert.rejects(textFill(markdown), (err: Error) => {
+        assert.equal(err.message, `${ctx.region}: "${type}" inside text isn't supported.`);
+        return true;
+      });
+    });
+  }
+
+  it("keeps inline HTML as the text it is", async () => {
+    const { paragraphs } = await textFill("Line one<br>line two");
+    assert.deepEqual(paragraphs, [{ runs: [{ text: "Line one" }, { text: "<br>" }, { text: "line two" }] }]);
   });
 });

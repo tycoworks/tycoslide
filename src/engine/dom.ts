@@ -32,6 +32,7 @@ export const Tag = {
   BLIP: "a:blip",
   SRC_RECT: "a:srcRect",
   BLIP_FILL: "p:blipFill",
+  NON_VISUAL_PROPS: "p:cNvPr",
   SPACE_BEFORE: "a:spcBef",
   HLINK_CLICK: "a:hlinkClick",
   RELATIONSHIP: "Relationship",
@@ -82,6 +83,9 @@ export const Attr = {
   TOP: "t",
   RIGHT: "r",
   BOTTOM: "b",
+  // non-visual properties (alt text)
+  DESCR: "descr",
+  TITLE: "title",
   // whitespace preservation
   XML_SPACE: "xml:space",
   PRESERVE: "preserve",
