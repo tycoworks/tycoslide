@@ -124,7 +124,7 @@ Then read the draft back against the PNGs. A shape the PNG shows as a subtitle b
 
 ### Render every layout
 
-Write `smoke.md` with one slide per layout, filling every parameter and slot with content of realistic length. Write images as `![alt](path "fit: …")` using catalog paths, which resolve as they are because `smoke.md` sits in the theme directory, and give each one alt text. `node_modules/@tycoworks/tycoslide/docs/markdown.md` is the markdown reference. The reference theme's `showcase.md` shows what a whole deck looks like, but its layout and key names are not yours. Then:
+Write `smoke.md` with one slide per layout, filling every parameter and slot with content of realistic length. Write images as `![alt](path "fit: …")` using catalog paths, which resolve as they are because `smoke.md` sits in the theme directory, and give each one alt text. If a layout takes an image, fill one with a small mermaid flowchart whose nodes use two classes, so you see the diagram colors. `node_modules/@tycoworks/tycoslide/docs/markdown.md` is the markdown reference. The reference theme's `showcase.md` shows what a whole deck looks like, but its layout and key names are not yours. Then:
 
 ```bash
 npx tycoslide build smoke.md
