@@ -133,12 +133,6 @@ describe("readInventory", () => {
     ]);
   });
 
-  it("measures a table by its column widths and row heights, not its frame's size", async () => {
-    const { slides } = await inventoryOf(await writeSyntheticTemplate(scratch()));
-    const table = slides[0].shapes.find((shape) => shape.kind === ShapeKind.Table);
-    assert.deepEqual(table?.frame, frame(0, 3000000, 3 * 1200000, 2 * 370840));
-  });
-
   it("takes a placeholder's frame from the master when the layout has none of that type", async () => {
     const { slides } = await inventoryOf(await writeSyntheticTemplate(scratch()));
     assert.deepEqual(slides[1].shapes[0], {

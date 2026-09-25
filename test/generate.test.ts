@@ -229,13 +229,6 @@ describe("setRichRuns", () => {
     assert.equal(hlink, undefined, "a:hlinkClick should not be created without relation");
   });
 
-  // PowerPoint reports a run whose properties are out of schema order as needing repair.
-  it("writes a color after the run's outline and before its font, where the file format requires it", () => {
-    const body = makeTextBody(`<a:p><a:r><a:rPr><a:ln/><a:latin typeface="Fira Code"/></a:rPr><a:t>Tpl</a:t></a:r></a:p>`);
-    const para = paraAt(body, 0);
-    setRichRuns(para, [{ text: "def", color: "FF0000" }]);
-    assert.deepEqual(childTags(para.getElementsByTagName("a:rPr")[0]), ["a:ln", "a:solidFill", "a:latin"]);
-  });
 });
 
 // ============================================
@@ -406,6 +399,13 @@ describe("fillText", () => {
     const spcBef = prose.getElementsByTagName("a:spcBef")[0];
     assert.ok(spcBef);
     assert.equal(spcBef.getElementsByTagName("a:spcPts")[0].getAttribute("val"), "1200");
+  });
+
+  // PowerPoint reports a run whose properties are out of schema order as needing repair.
+  it("writes a color after the run's outline and before its font, where the file format requires it", () => {
+    const body = makeTextBody(`<a:p><a:r><a:rPr><a:ln/><a:latin typeface="Fira Code"/></a:rPr><a:t>Tpl</a:t></a:r></a:p>`);
+    fillText(body, { paragraphs: [{ runs: [{ text: "def", color: "FF0000" }] }] });
+    assert.deepEqual(childTags(body.getElementsByTagName("a:rPr")[0]), ["a:ln", "a:solidFill", "a:latin"]);
   });
 
   it("gives bullets that follow another bullet the spacing of the template's second bullet at that level", () => {
