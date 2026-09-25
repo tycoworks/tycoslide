@@ -26,9 +26,9 @@
     "format": "biome format --write ."
   },
   "dependencies": {
-    "@xmldom/xmldom": "^0.9.10",
+    "@xmldom/xmldom": "^0.9.12",
     "commander": "^15.0.0",
-    "image-size": "^2.0.2",
+    "image-size": "^2.0.4",
     "jszip": "^3.10.1",
     "mermaid": "^11.16.1",
     "playwright-core": "^1.62.1",

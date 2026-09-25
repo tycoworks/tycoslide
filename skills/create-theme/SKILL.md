@@ -132,7 +132,7 @@ soffice --headless --convert-to pdf --outdir render smoke.pptx
 pdftoppm -png -r 96 render/smoke.pdf render/smoke
 ```
 
-Look at every PNG yourself before showing anyone. Check each for text wrapping mid-word or overflowing its box, leftover placeholder text such as "Lorem ipsum" or "Firstname Lastname", a value landing in the wrong shape, an image stretched or squashed, and text invisible against its background. A build error names the layout and key. Fix the map, not the content, rebuild, and repeat until clean.
+Look at every PNG yourself before showing anyone. LibreOffice substitutes any font it can't find, so line breaks in the PNGs are close to PowerPoint's but not exact. Check each for text wrapping mid-word or overflowing its box, leftover placeholder text such as "Lorem ipsum" or "Firstname Lastname", a value landing in the wrong shape, an image stretched or squashed, and text invisible against its background. A build error names the layout and key. Fix the map, not the content, rebuild, and repeat until clean.
 
 Test with realistic lengths. A slot that looks right with one line can misbehave with six.
 
