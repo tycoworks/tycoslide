@@ -696,6 +696,9 @@ the go-ahead.
    **outside** that directory that copies `assets/brand/tycoworks-lockup.png` in. That
    proves the copy convention end to end. One commit, then merge to `main`.
 
+11. **Delete this doc** from tycoslide once phase 10 is merged. The code, the docs and the
+   commit history carry everything in it.
+
 To check the theme before publishing, point it at the local engine temporarily
 (`npm install ../tycoslide`) and restore the `^0.16.0` range before committing.
 

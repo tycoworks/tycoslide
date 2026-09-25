@@ -18,7 +18,7 @@ TypeScript runs natively via Node's `--experimental-strip-types`. `tsc --build` 
 
 Commit and tag the bump **before** publishing. A publish that fails leaves a tag for a version not yet on npm, which the retry resolves; a publish that succeeds before the commit leaves npm carrying a version with no commit behind it, and the number can never be reused. Publishing requires a one-time password, so step 6 is run by hand.
 
-1. **Check what ships is right, not just present.** `theme-package/SKILL.md` goes into every packaged theme, and both skills read `docs/` from the installed package, so a known-wrong line there (an example that no longer builds, a stale path form) is a release blocker, not a todo item. Read ROADMAP.md and any open notes for anything touching a shipped file before bumping.
+1. **Check what ships is right, not just present.** `theme-package/SKILL.md` goes into every packaged theme, and both skills read `docs/` from the installed package, so a known-wrong line there (an example that no longer builds, a stale path form) is a release blocker, not a todo item.
 2. **Clean-build + test** on the release branch: `npm ci && npm run build && npm test && npm run lint`. If the build reports missing exports that exist in source, `find . -name 'tsconfig.tsbuildinfo' -not -path './node_modules/*' -delete && npm run build`.
 3. **Bump**: `npm version <patch|minor|major> --no-git-tag-version` (updates `package.json` + lockfile; no commit/tag).
 4. **Verify the tarball**: `npm pack --dry-run` — confirm only `dist/`, `bin/tycoslide.js` (with shebang), `docs/`, `theme-package/`, `package.json`, `README.md`, `LICENSE`; no `src/`, `test/`, configs, or fixtures.
