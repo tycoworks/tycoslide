@@ -10,6 +10,7 @@ import {
   MANIFEST_FILE,
   PACKAGE_JSON,
   SKILL_FILE,
+  SKILL_TEMPLATE_FILE,
   SKILL_ZIP_EXT,
   TEMPLATE_FILE,
   THEME_CONFIG,
@@ -28,7 +29,7 @@ function wrote(target: string, detail?: string): void {
 
 /** Register the agent layer's commands on the CLI program. */
 export function registerAgentCommands(program: Command, tool: ToolPackage): void {
-  const skillMdPath = resolve(tool.root, THEME_PACKAGE_DIR, SKILL_FILE);
+  const skillMdPath = resolve(tool.root, THEME_PACKAGE_DIR, SKILL_TEMPLATE_FILE);
 
   program
     .command("package")

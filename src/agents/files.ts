@@ -26,9 +26,12 @@ export const ASSETS_ARCHIVE = "assets.dat";
 // other.
 export const SKILL_FILE = "SKILL.md";
 
-// The folder holding the SKILL.md template copied into each packaged theme, kept
-// out of the repo root so skill installers do not mistake it for this repo's own skill.
+// The folder holding the deck skill that `package` puts in each packaged theme.
 export const THEME_PACKAGE_DIR = "theme-package";
+
+// The deck skill as tycoslide ships it, named so skill installers scanning this
+// repo don't offer it as a skill of its own; `package` writes it as SKILL_FILE.
+export const SKILL_TEMPLATE_FILE = "SKILL.template.md";
 
 /**
  * npm's package manifest: the theme's, which names the skill, and the packaged
