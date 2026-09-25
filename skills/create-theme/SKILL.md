@@ -67,7 +67,7 @@ fs.writeFileSync("theme.json", JSON.stringify({ ...theme, template: "brand.pptx"
 '
 ```
 
-In `package.json`, set `name` to the theme's name, which becomes the skill's name, and `description`. Then run `npm install`.
+In `package.json`, set `name` to the theme's name, which becomes the skill's name, and `description` to one line naming the brand, which leads the skill's description so an agent can tell this theme from others. Then run `npm install`.
 
 ### 1.2 Render the template
 
@@ -78,7 +78,7 @@ mkdir -p render && soffice --headless --convert-to pdf --outdir render template/
 pdftoppm -png -r 60 render/brand.pdf render/slide
 ```
 
-`render/slide-01.png` is the first slide in **presentation order**. `theme.json` refers to slides by the number in their **file name**, `ppt/slides/slideN.xml`, and the two orders can differ. `template.json`, which step 1.3 writes, records both, so use it to pair each PNG with its file number.
+`render/slide-01.png` is the first slide in **presentation order** (`slide-1.png` when the template has fewer than ten slides). `theme.json` refers to slides by the number in their **file name**, `ppt/slides/slideN.xml`, and the two orders can differ. `template.json`, which step 1.3 writes, records both, so use it to pair each PNG with its file number.
 
 ### 1.3 Inventory
 
@@ -86,7 +86,7 @@ pdftoppm -png -r 60 render/brand.pdf render/slide
 npx tycoslide extract template/brand.pptx
 ```
 
-This writes `template.json`: the slide size, the color scheme and the fonts, then every slide by file number with its position, its layout name, whether its background is light, dark or an image, and each shape with its kind, frame, table rows and placeholder text. Then comes `duplicates`, the slides that share identical geometry. Frames are in EMU, exactly as `theme.json` wants them, so copy them as they are and never convert by hand. Text shows paragraph breaks as ¶ and line breaks as ↵, which is where `\n` goes in a parameter template.
+This writes `template.json`: the slide size, the color scheme and the fonts, then every slide by file number with its position, its layout name, whether its background is light, dark or an image, and each shape with its kind, frame, table rows and placeholder text. Then comes `duplicates`, the slides that share identical geometry. Frames are in EMU, exactly as `theme.json` wants them, so copy them as they are and never convert by hand. Text shows paragraph breaks as ¶ and line breaks as ↵, and a parameter template writes either as `\n`.
 
 It also copies every image the template uses into `assets/`, and lists them under `images` in `template.json` with the masters, layouts and slides that use each. If the user has a folder of brand assets outside the template, such as logos, icons or product shots, copy it into `assets/` as it is and treat it the same way from here on.
 

@@ -39,7 +39,7 @@ This skill builds decks from a markdown deck file. The theme provides slide layo
 
 Before writing anything, read `manifest.json`. It lists the theme's **layouts** -- for each: `name`, `description`, `parameters` (frontmatter inputs) and `slots` (body regions). A layout is identified by its `name`; every parameter and slot by its `key`. Slots carry `accepts`, and either may be `required`. A slot that accepts an image also shows its `fit`. A `cover` slot crops the image to fill the slot, a `contain` slot shows the whole image, and a `scale-down` slot shows the whole image without ever enlarging it.
 
-A layout's inputs split two ways, parameters and slots; see [markdown.md](node_modules/@tycoworks/tycoslide/docs/markdown.md#parameters-and-slots) for how to fill each. Unfilled ones are dropped, so fill as many of a layout's numbered slots (sections, stats, columns) as you have content for.
+A layout's inputs split two ways, parameters and slots; see [markdown.md](node_modules/@tycoworks/tycoslide/docs/markdown.md#parameters-and-slots) for how to fill each. Unfilled ones are dropped, so fill as many of a layout's numbered slots (sections, stats, columns) as you have content for. A card or panel drawn behind an unfilled one stays, so choose a layout with no more of them than you can fill.
 
 Study each layout's `slots` before writing any slides.
 
@@ -63,7 +63,7 @@ If your deck is in the theme folder, the file is already there, so skip the copy
 
 ## Creating Slides
 
-Write a deck file in markdown, as [markdown.md](node_modules/@tycoworks/tycoslide/docs/markdown.md) describes (see its [full example](node_modules/@tycoworks/tycoslide/docs/markdown.md#full-example)), and build it as its [Build](node_modules/@tycoworks/tycoslide/docs/markdown.md#build) section shows.
+Write a deck file in markdown, as [markdown.md](node_modules/@tycoworks/tycoslide/docs/markdown.md) describes (see its [full example](node_modules/@tycoworks/tycoslide/docs/markdown.md#full-example)), and build it as its [Build](node_modules/@tycoworks/tycoslide/docs/markdown.md#build) section shows. The deck's `theme:` is the path from the deck to this folder's `theme.json`: `./theme.json` when the deck sits in this folder, and the full path to it when the deck is anywhere else.
 
 ---
 

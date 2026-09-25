@@ -16,7 +16,7 @@ import {
   THEME_PACKAGE_DIR,
 } from "./files.js";
 import { generateManifest } from "./manifest.js";
-import { loadAssetCatalog, renameSkill, skillPackageJson, zipDir } from "./skill.js";
+import { loadAssetCatalog, personalizeSkill, skillPackageJson, zipDir } from "./skill.js";
 
 /** The installed tycoslide package: where its shipped files live, and what a skill pins. */
 export type ToolPackage = { root: string; name: string; version: string };
@@ -47,7 +47,7 @@ export function registerAgentCommands(program: Command, tool: ToolPackage): void
 
       let skillMd: string;
       try {
-        skillMd = renameSkill(readFileSync(skillMdPath, "utf-8"), skillName);
+        skillMd = personalizeSkill(readFileSync(skillMdPath, "utf-8"), skillName, themePkg.description);
       } catch (err) {
         throw new Error(`${skillMdPath}: ${(err as Error).message}`);
       }
