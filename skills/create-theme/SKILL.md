@@ -78,7 +78,7 @@ mkdir -p render && soffice --headless --convert-to pdf --outdir render template/
 pdftoppm -png -r 60 render/brand.pdf render/slide
 ```
 
-`render/slide-01.png` is the first slide in **presentation order**. `theme.json` refers to slides by the number in their **file name**, `ppt/slides/slideN.xml`, and the two orders can differ. `template.json` records both, so use it to pair each PNG with its file number.
+`render/slide-01.png` is the first slide in **presentation order**. `theme.json` refers to slides by the number in their **file name**, `ppt/slides/slideN.xml`, and the two orders can differ. `template.json`, which step 1.3 writes, records both, so use it to pair each PNG with its file number.
 
 ### 1.3 Inventory
 
@@ -112,7 +112,7 @@ Then catalog the images decks should reuse, such as logos, icons and backdrops, 
 { "brand": { "logo": { "path": "assets/logo.png", "fit": "contain", "description": "Full-color wordmark, for light backgrounds" } } }
 ```
 
-Leave out sample content such as stock photos; only cataloged images ship. The fit is what a deck author copies into the image: `scale-down` for icons and marks that must never be enlarged, `contain` for images that may scale but must not crop (logos, diagrams, screenshots), and `cover` only for full-bleed art that may crop. Look at the image to decide.
+Leave out sample content such as stock photos; only cataloged images ship. The fit is what a deck author copies into the image: `scale-down` for icons and small marks that must never be enlarged, `contain` for logos, wordmarks, diagrams and screenshots that may scale but must not crop, and `cover` only for full-bleed art that may crop. Look at the image to decide.
 
 Every field and the error you get when it is wrong are in `node_modules/@tycoworks/tycoslide/docs/theme.md`. Two rules fail late and are worth stating here: a table block must declare `bodyRows`, and a slot that borrows a shape from another slide must declare `frame`. For a table of R `rows` with no total row, `bodyRows` is `[1, R-1]`, and the `frame` is copied from the shape the slot replaces on the layout's own slide, never computed or converted.
 
@@ -124,7 +124,7 @@ Then read the draft back against the PNGs. A shape the PNG shows as a subtitle b
 
 ### Render every layout
 
-Write `smoke.md` with one slide per layout, filling every parameter and slot with content of realistic length. Write images as `![alt](path "fit: …")` using catalog paths, which resolve as they are because `smoke.md` sits in the theme directory, and give each one alt text. If a layout takes an image, fill one with a small mermaid flowchart whose nodes use two classes, so you see the diagram colors. `node_modules/@tycoworks/tycoslide/docs/markdown.md` is the markdown reference. The reference theme's `showcase.md` shows what a whole deck looks like, but its layout and key names are not yours. Then:
+Write `smoke.md` with one slide per layout, filling every parameter and slot with content of realistic length. Write images as `![alt](path "fit: …")` using catalog paths, which resolve as they are because `smoke.md` sits in the theme directory, and give each one alt text, leaving it empty only for decoration such as icons beside a heading. If a layout takes an image, fill one image slot with a small mermaid flowchart whose nodes use two classes, so you see the diagram colors. `node_modules/@tycoworks/tycoslide/docs/markdown.md` is the markdown reference. The reference theme's `showcase.md` shows what a whole deck looks like, but its layout and key names are not yours. Then:
 
 ```bash
 npx tycoslide build smoke.md
@@ -148,9 +148,9 @@ The catalog is written. Check it: every description names what the image shows, 
 
 ### 3.2 Fonts, code and diagrams
 
-- **`fonts`** only affect diagrams. PowerPoint uses the template's own fonts. Declare the body font, `fontScheme.minor` in `template.json`, as a package such as `@fontsource/inter`, listed in `dependencies`, so mermaid text matches. If the body font has no fontsource package, use the heading font or the nearest one that does.
+- **`fonts`** only affect diagrams. PowerPoint uses the template's own fonts. Declare the body font as a package such as `@fontsource/inter`, listed in `dependencies`, so mermaid text matches. The body font is the typeface the template's text uses. `embeddedFonts` in `template.json` lists it when the template embeds its fonts; otherwise `fontScheme.minor` names it, though some tools leave a default such as Arial there. If the body font has no fontsource package, use the heading font or the nearest one that does.
 - **`codeTheme`** is a Shiki theme name, or a `{ "light": ..., "dark": ... }` pair when layouts of both variants can hold code.
-- **`mermaid`** holds one entry per variant with all eleven keys, and **`mermaidVariant`** names the default. Keep the reference theme's block and change the hexes to the template's color scheme. Read the hex values rather than trusting the slot names, since a scheme can be inverted with `dk1` white, and diagram text must be the color body text has on that surface. `line` and `accents` come from the accent slots, and `surfaceBorder` is a darker step of `surface`.
+- **`mermaid`** holds one entry per variant with all eleven keys, and **`mermaidVariant`** names the default. Keep the reference theme's block and change the hexes to the template's color scheme. Read the hex values rather than trusting the slot names, since a scheme can be inverted with `dk1` white, and diagram text must be the color body text has on that surface. `line` and `accents` come from the accent slots, and `surfaceBorder` is a step from `surface` toward the text color.
 
 ### 3.3 Package
 

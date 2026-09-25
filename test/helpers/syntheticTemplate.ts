@@ -65,8 +65,9 @@ const graphicFrame = (name: string, graphic: string) =>
   `<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="1" name="${name}"/><p:cNvGraphicFramePr/><p:nvPr/></p:nvGraphicFramePr>` +
   `${xfrm(0, 3000000, 4000000, 1000000, "p:xfrm")}<a:graphic><a:graphicData>${graphic}</a:graphicData></a:graphic></p:graphicFrame>`;
 const cell = (text: string) => `<a:tc><a:txBody><a:bodyPr/>${paragraph(run(text))}</a:txBody></a:tc>`;
-const TABLE = `<a:tbl><a:tblGrid><a:gridCol w="1"/><a:gridCol w="1"/><a:gridCol w="1"/></a:tblGrid>${[1, 2]
-  .map((row) => `<a:tr h="1">${cell(`r${row}a`)}${cell(`r${row}b`)}${cell(`r${row}c`)}</a:tr>`)
+/** Drawn at its grid's size, 3 × 1200000 by 2 × 370840, not its frame's 4000000 × 1000000. */
+const TABLE = `<a:tbl><a:tblGrid><a:gridCol w="1200000"/><a:gridCol w="1200000"/><a:gridCol w="1200000"/></a:tblGrid>${[1, 2]
+  .map((row) => `<a:tr h="370840">${cell(`r${row}a`)}${cell(`r${row}b`)}${cell(`r${row}c`)}</a:tr>`)
   .join("")}</a:tbl>`;
 const group = (name: string, frame: string, members: string) =>
   `<p:grpSp><p:nvGrpSpPr><p:cNvPr id="1" name="${name}"/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr>${frame}</p:grpSpPr>${members}</p:grpSp>`;

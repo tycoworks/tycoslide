@@ -65,6 +65,25 @@ function runCount(el: any): number {
   return el.getElementsByTagName("a:r").length;
 }
 
+/** The tag names of an element's element children, in order. */
+function childTags(el: any): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < el.childNodes.length; i++) if (el.childNodes[i].nodeType === 1) out.push(el.childNodes[i].tagName);
+  return out;
+}
+
+/** A paragraph's space before in points × 100, or undefined when it has none. */
+function spaceBefore(para: any): string | undefined {
+  return para.getElementsByTagName("a:spcBef")[0]?.getElementsByTagName("a:spcPts")[0]?.getAttribute("val");
+}
+
+/** A bullet paragraph with `spcBef` (points × 100) when given. */
+function spacedBullet(text: string, spcBef?: number, level = 0): string {
+  const lvl = level > 0 ? ` lvl="${level}"` : "";
+  const spacing = spcBef === undefined ? "" : `<a:spcBef><a:spcPts val="${spcBef}"/></a:spcBef>`;
+  return `<a:p><a:pPr${lvl}>${spacing}<a:buChar char="•"/></a:pPr><a:r><a:rPr/><a:t>${text}</a:t></a:r></a:p>`;
+}
+
 /** StyledParagraph shorthand for tests. */
 const plain = (text: string): StyledParagraph => ({ runs: [{ text }] });
 const bullet = (text: string, level = 0): StyledParagraph => ({ runs: [{ text }], bullet: { level } });
@@ -208,6 +227,14 @@ describe("setRichRuns", () => {
     setRichRuns(para, [{ text: "No link applied", link: "https://example.com" }]);
     const hlink = para.getElementsByTagName("a:hlinkClick")[0];
     assert.equal(hlink, undefined, "a:hlinkClick should not be created without relation");
+  });
+
+  // PowerPoint reports a run whose properties are out of schema order as needing repair.
+  it("writes a color after the run's outline and before its font, where the file format requires it", () => {
+    const body = makeTextBody(`<a:p><a:r><a:rPr><a:ln/><a:latin typeface="Fira Code"/></a:rPr><a:t>Tpl</a:t></a:r></a:p>`);
+    const para = paraAt(body, 0);
+    setRichRuns(para, [{ text: "def", color: "FF0000" }]);
+    assert.deepEqual(childTags(para.getElementsByTagName("a:rPr")[0]), ["a:ln", "a:solidFill", "a:latin"]);
   });
 });
 
@@ -379,6 +406,32 @@ describe("fillText", () => {
     const spcBef = prose.getElementsByTagName("a:spcBef")[0];
     assert.ok(spcBef);
     assert.equal(spcBef.getElementsByTagName("a:spcPts")[0].getAttribute("val"), "1200");
+  });
+
+  it("gives bullets that follow another bullet the spacing of the template's second bullet at that level", () => {
+    const body = makeTextBody(
+      makeParagraph("Intro") + spacedBullet("First", 1200) + spacedBullet("Nested", 500, 1) + spacedBullet("Second", 500),
+    );
+    fillText(body, { paragraphs: [plain("Intro"), bullet("A"), bullet("B", 1), bullet("C")] });
+    assert.deepEqual([1, 2, 3].map((i) => spaceBefore(paraAt(body, i))), ["1200", "500", "500"]);
+  });
+
+  it("keeps the first bullet's spacing when the template has only one bullet at that level", () => {
+    const body = makeTextBody(makeParagraph("Intro") + spacedBullet("Only", 1200));
+    fillText(body, { paragraphs: [bullet("A"), bullet("B")] });
+    assert.deepEqual([0, 1].map((i) => spaceBefore(paraAt(body, i))), ["1200", "1200"]);
+  });
+
+  it("drops the space before when the template's second bullet has none", () => {
+    const body = makeTextBody(spacedBullet("First", 1200) + spacedBullet("Second"));
+    fillText(body, { paragraphs: [bullet("A"), bullet("B")] });
+    assert.deepEqual([0, 1].map((i) => spaceBefore(paraAt(body, i))), ["1200", undefined]);
+  });
+
+  it("puts transition spacing before the paragraph's bullet setting, where the file format requires it", () => {
+    const body = makeTextBody(`<a:p><a:pPr><a:buNone/></a:pPr><a:r><a:rPr/><a:t>Plain</a:t></a:r></a:p>` + spacedBullet("Bullet", 1200));
+    fillText(body, { paragraphs: [bullet("A bullet"), plain("After")] });
+    assert.deepEqual(childTags(paraAt(body, 1).getElementsByTagName("a:pPr")[0]), ["a:spcBef", "a:buNone"]);
   });
 
   it("a single bullet among plain lines still fails fast on a plain-only specimen", () => {

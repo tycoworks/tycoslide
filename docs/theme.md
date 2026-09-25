@@ -84,7 +84,7 @@ Optional record of named color variants. The record keys are free; every variant
 |---|---|
 | `primary` | Node fill color. |
 | `primaryContrast` | Text color on `primary` nodes. |
-| `text` | Default text, title and node label color. |
+| `text` | Default text and title color, including labels outside nodes. |
 | `line` | Edge and arrow color. |
 | `surface` | Subgraph, secondary node and edge-label background. |
 | `surfaceBorder` | Border color for nodes and subgraphs. |

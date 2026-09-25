@@ -126,7 +126,7 @@ export function buildMermaidRenderConfig(variant: MermaidVariant): object {
       tertiaryColor: variant.surface,
       textColor: variant.text,
       titleColor: variant.text,
-      nodeTextColor: variant.text,
+      nodeTextColor: variant.primaryContrast,
       clusterBkg: variant.surface,
       clusterBorder: variant.surfaceBorder,
       edgeLabelBackground: variant.surface,

@@ -120,7 +120,7 @@ describe("readInventory", () => {
       {
         name: "Pricing",
         kind: ShapeKind.Table,
-        frame: frame(0, 3000000, 4000000, 1000000),
+        frame: frame(0, 3000000, 3600000, 741680),
         rows: 2,
         cols: 3,
         text: "r1a ¶ r1b ¶ r1c ¶ r2a ¶ r2b ¶ r2c",
@@ -131,6 +131,12 @@ describe("readInventory", () => {
       { name: "Badge/Icon", kind: ShapeKind.Image, frame: frame(7500000, 4000000, 500000, 500000), text: "" },
       { name: "Divider", kind: ShapeKind.Other, frame: frame(0, 2600000, 9000000, 0), text: "" },
     ]);
+  });
+
+  it("measures a table by its column widths and row heights, not its frame's size", async () => {
+    const { slides } = await inventoryOf(await writeSyntheticTemplate(scratch()));
+    const table = slides[0].shapes.find((shape) => shape.kind === ShapeKind.Table);
+    assert.deepEqual(table?.frame, frame(0, 3000000, 3 * 1200000, 2 * 370840));
   });
 
   it("takes a placeholder's frame from the master when the layout has none of that type", async () => {
