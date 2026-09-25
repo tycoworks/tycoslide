@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { describe, it } from "node:test";
 import { extractTemplate, summarizeExtraction } from "../dist/agents/extract.js";
 import { ASSETS_DIR, TEMPLATE_FILE } from "../dist/agents/files.js";
+import { ShapeKind } from "../dist/agents/inventory.js";
 import { MediaOutcome } from "../dist/agents/media.js";
 import { MASTER_IMAGE, writeSyntheticTemplate } from "./helpers/syntheticTemplate.ts";
 
@@ -22,6 +23,12 @@ describe("extractTemplate", () => {
       { file: "logo.png", usedBy: ["slideMaster1"], outcome: MediaOutcome.Copied, path: `${ASSETS_DIR}/logo.png` },
     ]);
     assert.equal(readFileSync(join(theme, ASSETS_DIR, "logo.png"), "utf-8"), MASTER_IMAGE);
+  });
+
+  it("measures a table by its column widths and row heights, not its frame's size", async () => {
+    const facts = await extractTemplate(await writeSyntheticTemplate(scratch()), scratch());
+    const table = facts.slides[0].shapes.find((shape) => shape.kind === ShapeKind.Table);
+    assert.deepEqual(table?.frame, { x: 0, y: 3000000, cx: 3 * 1200000, cy: 2 * 370840 });
   });
 
   it("leaves images already in assets/ alone on a rerun", async () => {

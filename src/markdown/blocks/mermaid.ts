@@ -5,7 +5,7 @@ import { extname, join, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { Code } from "mdast";
 import type { ImageFill } from "../../engine/index.js";
-import { ImageFit, SlotType } from "../../engine/index.js";
+import { SlotType } from "../../engine/index.js";
 import { MdastType } from "../mdast.js";
 import { AcceptType, type BlockHandler, type CompilerConfig, type ThemeFont } from "../types.js";
 import {
@@ -24,8 +24,8 @@ export const MERMAID_LANG = "mermaid";
  * Recognize a ```mermaid fenced block at a region's top level, folding it to an
  * Image fill, and compile it by rendering the definition to a PNG (cached under
  * `<rootDir>/.tycoslide-cache/mermaid/<hash>.png`, in the theme directory) and wrapping it as an
- * ImageFill. Fit is always `contain` — mermaid diagrams are shown in their
- * entirety — and a fence carries no alt text. Resolution is strict: the theme MUST carry a `mermaid` block, MUST
+ * ImageFill, which fills the slot by the slot's fit like any image. A fence
+ * carries no alt text. Resolution is strict: the theme MUST carry a `mermaid` block, MUST
  * declare a `mermaidVariant`, and that variant MUST exist — each missing piece
  * throws by name.
  */
@@ -60,7 +60,7 @@ export const MERMAID: BlockHandler = {
 
     const cacheDir = ensureCacheDir(config);
     const pngPath = await renderOne(definition, variantName, variant, cacheDir, config);
-    return { type: SlotType.Image, path: pngPath, fit: ImageFit.Contain, alt: "" };
+    return { type: SlotType.Image, path: pngPath, alt: "" };
   },
 };
 
@@ -251,12 +251,12 @@ export async function launchChromium(
 
 /**
  * Render a mermaid definition to a transparent PNG via a headless Chromium
- * (Playwright — the proven old driver, stronger headless font fidelity). The
+ * (Playwright, for its headless font fidelity). The
  * theme fonts are injected as `@font-face` and every registered face is awaited
  * (`document.fonts.load()`) BEFORE `mermaid.render()` measures text — the only
  * cross-platform, zero-install way to make Chromium lay out labels in the brand
- * font instead of a substitute. mmdc's `--cssFile` injects too late (after layout)
- * to affect metrics, which is why this replaces its programmatic API.
+ * font instead of a substitute. A stylesheet injected after layout comes too
+ * late to affect the metrics.
  */
 async function renderMermaidToPng(
   processed: string,

@@ -6,7 +6,14 @@ import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
 import JSZip from "jszip";
 import { ASSETS_ARCHIVE } from "../dist/agents/files.js";
-import { buildDeck, compileMarkdownDeck, type ImageFill, toEngineThemeConfig } from "../dist/index.js";
+import {
+  AcceptType,
+  buildDeck,
+  compileMarkdownDeck,
+  type ImageFill,
+  ImageFit,
+  toEngineThemeConfig,
+} from "../dist/index.js";
 import type { CompilerConfig, CompilerThemeConfig } from "../dist/markdown/types.js";
 
 // End-to-end coverage of the COMPILER path exposing sampled-composition: a real
@@ -31,6 +38,21 @@ const outPath = (name: string): string => join(OUTDIR, name);
 function loadThemeConfig(): CompilerConfig {
   const raw = JSON.parse(readFileSync(THEME_PATH, "utf-8")) as CompilerThemeConfig;
   return { ...raw, rootDir: FIXTURES, deckDir: FIXTURES };
+}
+
+/** The fixture config with every image block set to `fit`. */
+function withImageFit(fit: ImageFit): CompilerConfig {
+  const config = loadThemeConfig();
+  return {
+    ...config,
+    layouts: config.layouts.map((layout) => ({
+      ...layout,
+      slots: layout.slots.map((slot) => ({
+        ...slot,
+        accepts: slot.accepts.map((block) => (block.type === AcceptType.Image ? { ...block, fit } : block)),
+      })),
+    })),
+  };
 }
 
 async function outputZip(path: string): Promise<JSZip> {
@@ -179,7 +201,6 @@ layout: Composed
     const body = deck.steps[0].content?.body as ImageFill;
     assert.equal(body.type, "image");
     assert.equal(body.path, join(deckDir, "pics", "logo.png"));
-    assert.equal(body.fit, "contain");
     assert.equal(body.alt, "logo");
 
     deck.output = outPath("path-image.pptx");
@@ -188,12 +209,12 @@ layout: Composed
     assert.ok(slide.includes("<a:blip"), "the path-referenced picture was transplanted");
   });
 
-  it("crops a picture whose title asks for fit: cover", async () => {
+  it("crops a picture in a slot whose fit is cover", async () => {
     // swap.png is square and the body frame is 3:1, so cover crops a third off
     // the top and bottom: srcRect insets of 33333 (1/100,000ths) each.
     const deckDir = mkdtempSync(join(tmpdir(), "tycoslide-deckdir-"));
     copyFileSync(join(FIXTURES, "swap.png"), join(deckDir, "photo.png"));
-    const config = { ...loadThemeConfig(), deckDir };
+    const config = { ...withImageFit(ImageFit.Cover), deckDir };
     const source = `---
 theme: ./composition-theme.json
 ---
@@ -201,7 +222,7 @@ theme: ./composition-theme.json
 layout: Composed
 ---
 ::body::
-![Team photo](photo.png "fit: cover")`;
+![Team photo](photo.png)`;
 
     const deck = await compileMarkdownDeck(source, config);
     deck.output = outPath("cover.pptx");
@@ -209,24 +230,6 @@ layout: Composed
     const slide = await slideXml(await outputZip(deck.output));
     assert.ok(slide.includes('<a:srcRect l="0" t="33333" r="0" b="33333"/>'), "cropped top and bottom");
     assert.ok(slide.includes('descr="Team photo"'), "alt text written alongside");
-  });
-
-  it("fails fast on an image title that is not options", async () => {
-    const config = loadThemeConfig();
-    const source = `---
-theme: ./composition-theme.json
----
----
-layout: Composed
----
-::body::
-![](swap.png "Our logo")`;
-
-    await assert.rejects(compileMarkdownDeck(source, config), (err: Error) => {
-      assert.ok(err.message.includes('layout "Composed" slot content (from ::body::)'), err.message);
-      assert.ok(err.message.includes("![Our logo](…)"), "suggests moving the text into the alt");
-      return true;
-    });
   });
 
   it("fails fast on a missing image file, naming where and both paths", async () => {

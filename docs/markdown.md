@@ -144,23 +144,23 @@ Fill a slot by writing a `::key::` region in the body; the marker maps to the sl
   ````
   The language tag (e.g. `sql`, `python`, `typescript`) is required -- it drives syntax highlighting, using the theme's `codeTheme` (set once in `theme.json`, not per slot). Colors are applied as native text runs in the output, not images.
 - **table** (slots that accept `table`) -- a GFM table. Write it in the slot region between `|`-delimited headers and rows; cells inherit inline formatting (bold, italic, links).
-- **image** (slots that accept `image`) -- an image, written as `![alt](path "options")` with the path relative to the deck:
+- **image** (slots that accept `image`) -- an image, written as `![alt](path)` with the path relative to the deck:
   ```markdown
   ::logo::
 
-  ![Acme Corp logo](assets/acme-logo.png "fit: contain")
+  ![Acme Corp logo](assets/acme-logo.png)
   ```
-  The alt text becomes the image's alt text in PowerPoint; leave it empty for an image that is only decoration. The title is optional and holds image options as YAML. The only option is `fit`, one of `contain` (the default, which shows the whole image and never crops), `cover` (fills the frame and center-crops) or `scale-down` (shows the whole image and never enlarges it). Anything else in the title fails the build. A fenced `mermaid` block also fills an image slot, rendering to a themed PNG (see below).
+  The alt text becomes the image's alt text in PowerPoint; leave it empty for an image that is only decoration. The slot's `fit`, set in the theme, decides how the image fills its shape. A fenced `mermaid` block also fills an image slot, rendering to a themed PNG (see below).
 
 ---
 
 ## Mermaid diagrams
 
-Write a fenced code block with the `mermaid` language tag in a named slot that accepts `image`. It renders to a themed PNG and behaves like any other image in the slot -- always shown in its entirety. The color variant comes from the theme's `mermaidVariant` (set once in `theme.json`, not per slot).
+Write a fenced code block with the `mermaid` language tag in a named slot that accepts `image`. It renders to a themed PNG and fills the slot like any other image, by the slot's `fit`. The color variant comes from the theme's `mermaidVariant` (set once in `theme.json`, not per slot).
 
 ````markdown
 ---
-layout: Full bleed image with title dark
+layout: Diagram
 title: System Architecture
 ---
 
@@ -272,7 +272,6 @@ Common errors and fixes:
 | A parameter or slot didn't fill | Use the key names the layout declares -- parameters in frontmatter, slots as body regions |
 | YAML parse error | Fix the YAML syntax in the slide's frontmatter |
 | `image "…" not found at …` | Check the path; it is relative to the deck file |
-| `is not a set of options` | The image title holds options like `"fit: contain"`; put a description in the alt text |
 | `Skipped setting relation target` | The asset image couldn't be placed; check the path and file |
 | `forbidden style directive` | Remove `style`, `classDef`, `linkStyle`, or `%%{init}` from your mermaid block -- use `class` for grouping instead |
 | `no "mermaid" block` | The theme has no mermaid color config -- add a `mermaid` section to theme.json |

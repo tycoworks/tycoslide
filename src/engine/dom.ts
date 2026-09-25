@@ -34,6 +34,8 @@ export const Tag = {
   BLIP_FILL: "p:blipFill",
   NON_VISUAL_PROPS: "p:cNvPr",
   SPACE_BEFORE: "a:spcBef",
+  LINE_SPACING: "a:lnSpc",
+  OUTLINE: "a:ln",
   HLINK_CLICK: "a:hlinkClick",
   RELATIONSHIP: "Relationship",
   TABLE: "a:tbl",
@@ -112,6 +114,17 @@ export function childrenByTag(parent: any, tagName: string): any[] {
     if (child && child.nodeType === 1 && child.tagName === tagName) out.push(child);
   }
   return out;
+}
+
+/**
+ * Insert `child` as `parent`'s first child, or right after a leading `leadingTag`
+ * child when there is one. The schema puts a run's fill after only its outline, and
+ * a paragraph's space before after only its line spacing; PowerPoint reports a file
+ * with either out of place as needing repair.
+ */
+function insertAfterLeading(parent: any, child: any, leadingTag: string): void {
+  const leading = childrenByTag(parent, leadingTag)[0];
+  parent.insertBefore(child, leading ? leading.nextSibling : parent.firstChild);
 }
 
 export function detach(node: any): void {
@@ -234,7 +247,7 @@ export function setRichRuns(para: any, runs: TextRun[], relation?: any): void {
       const srgbClr = para.ownerDocument.createElement(Tag.SRGB_CLR);
       srgbClr.setAttribute(Attr.VALUE, run.color);
       solidFill.appendChild(srgbClr);
-      rPr.appendChild(solidFill);
+      insertAfterLeading(rPr, solidFill, Tag.OUTLINE);
     }
 
     if (run.link && relation) {
@@ -284,12 +297,30 @@ function paragraphLevel(paragraph: any): number {
   return lvl ? Number(lvl) || 0 : 0;
 }
 
+/** A paragraph's `<a:spcBef>`, or null when it has none. */
+function spaceBefore(paragraph: any): any | null {
+  return paragraph.getElementsByTagName(Tag.PARA_PROPS)[0]?.getElementsByTagName(Tag.SPACE_BEFORE)[0] ?? null;
+}
+
+/** Give the paragraph a copy of `spacing` as its space before, or none when null. */
+function setSpaceBefore(paragraph: any, spacing: any | null): void {
+  const ppr = paragraph.getElementsByTagName(Tag.PARA_PROPS)[0];
+  if (!ppr) return;
+  for (const old of childrenByTag(ppr, Tag.SPACE_BEFORE)) ppr.removeChild(old);
+  if (spacing) insertAfterLeading(ppr, spacing.cloneNode(true), Tag.LINE_SPACING);
+}
+
 function harvestStyles(specimen: any[]): {
   bullets: Map<number, StyleBucket>;
   paras: StyleBucket | null;
+  followOn: Map<number, any | null>;
 } {
   const bullets = new Map<number, StyleBucket>();
   let paras: StyleBucket | null = null;
+  // Level → the space before a bullet that follows another, taken from the
+  // specimen's second bullet at that level. The first often carries extra space
+  // to set the list off from the text above it.
+  const followOn = new Map<number, any | null>();
 
   for (const p of specimen) {
     const kind = paragraphBulletKind(p);
@@ -301,12 +332,13 @@ function harvestStyles(specimen: any[]): {
     };
     if (kind === "bullet") {
       if (!bullets.has(lvl)) bullets.set(lvl, bucket);
+      else if (!followOn.has(lvl)) followOn.set(lvl, spaceBefore(p));
     } else {
       if (paras == null) paras = bucket;
     }
   }
 
-  return { bullets, paras };
+  return { bullets, paras, followOn };
 }
 
 function specimenBulletPara(specimen: any[], level: number): any | null {
@@ -346,7 +378,7 @@ export function rebuildParagraphs(
     );
   }
 
-  const { bullets, paras } = harvestStyles(specimen);
+  const { bullets, paras, followOn } = harvestStyles(specimen);
 
   const maxBulletLevel = bullets.size > 0 ? Math.max(...bullets.keys()) : -1;
   const pickBullet = (lvl: number): { bucket: StyleBucket | null; effectiveLvl: number } => {
@@ -359,17 +391,7 @@ export function rebuildParagraphs(
 
   const firstBulletKey = bullets.has(0) ? 0 : maxBulletLevel;
   const firstBullet = firstBulletKey >= 0 ? specimenBulletPara(specimen, firstBulletKey) : null;
-  const transitionSpcBef =
-    firstBullet?.getElementsByTagName(Tag.PARA_PROPS)[0]?.getElementsByTagName(Tag.SPACE_BEFORE)[0] ?? null;
-
-  const applyTransitionSpacing = (paragraph: any) => {
-    if (!transitionSpcBef) return;
-    const ppr = paragraph.getElementsByTagName(Tag.PARA_PROPS)[0];
-    if (!ppr) return;
-    const old = ppr.getElementsByTagName(Tag.SPACE_BEFORE)[0];
-    if (old) ppr.removeChild(old);
-    ppr.appendChild(transitionSpcBef.cloneNode(true));
-  };
+  const transitionSpcBef = firstBullet ? spaceBefore(firstBullet) : null;
 
   for (const p of specimen) detach(p);
 
@@ -397,7 +419,8 @@ export function rebuildParagraphs(
     const seedRun = buildRun(doc, bucket?.rPr ?? null, "");
     const newPara = buildParagraph(doc, bucket?.pPr ?? null, seedRun);
     maybeOverrideLevel(newPara, isBullet ? effectiveLvl : null);
-    if (!isBullet && prevWasBullet) applyTransitionSpacing(newPara);
+    if (!isBullet && prevWasBullet && transitionSpcBef) setSpaceBefore(newPara, transitionSpcBef);
+    if (isBullet && prevWasBullet && followOn.has(effectiveLvl)) setSpaceBefore(newPara, followOn.get(effectiveLvl));
     setRichRuns(newPara, para.runs, relation);
     txBody.appendChild(newPara);
     prevWasBullet = isBullet;

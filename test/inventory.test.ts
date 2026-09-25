@@ -120,7 +120,7 @@ describe("readInventory", () => {
       {
         name: "Pricing",
         kind: ShapeKind.Table,
-        frame: frame(0, 3000000, 4000000, 1000000),
+        frame: frame(0, 3000000, 3600000, 741680),
         rows: 2,
         cols: 3,
         text: "r1a ¶ r1b ¶ r1c ¶ r2a ¶ r2b ¶ r2c",

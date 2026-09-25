@@ -1,8 +1,9 @@
 import {
-  type AcceptType,
+  AcceptType,
   type CompilerParameter,
   type CompilerSlot,
   type CompilerThemeConfig,
+  type ImageFit,
   templateKeys,
 } from "../index.js";
 import { ASSETS_FILE, jsonFile } from "./files.js";
@@ -22,6 +23,8 @@ type ManifestParameter = {
 type ManifestSlot = {
   key: string;
   accepts: AcceptType[];
+  /** How an image placed in the slot fills it; present when the slot accepts an image. */
+  fit?: ImageFit;
   required?: true;
 };
 
@@ -64,6 +67,7 @@ function stripParameter(param: CompilerParameter): ManifestParameter[] {
 
 function stripSlot(slot: CompilerSlot): ManifestSlot {
   const result: ManifestSlot = { key: slot.key, accepts: slot.accepts.map((b) => b.type) };
+  for (const block of slot.accepts) if (block.type === AcceptType.Image) result.fit = block.fit;
   if (slot.required) result.required = true;
   return result;
 }

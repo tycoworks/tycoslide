@@ -2,7 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { ASSETS_FILE } from "../dist/agents/files.js";
 import { generateManifest } from "../dist/agents/manifest.js";
-import { SlotType } from "../dist/engine/types.js";
+import { ImageFit, SlotType } from "../dist/engine/types.js";
 import type { CompilerConfig, CompilerLayout, CompilerSlot } from "../dist/markdown/types.js";
 
 function config(layouts: CompilerLayout[]): CompilerConfig {
@@ -87,11 +87,18 @@ describe("generateManifest slot accepts advertising", () => {
         accepts: [
           { type: SlotType.Text, sourceSlide: 1, shapeName: "s0" },
           { type: SlotType.Table, sourceSlide: 5, shapeName: "s1", bodyRows: [1, 1] },
-          { type: SlotType.Image, sourceSlide: 6, shapeName: "s2" },
+          { type: SlotType.Image, sourceSlide: 6, shapeName: "s2", fit: ImageFit.Contain },
         ],
       },
     ]);
-    assert.deepEqual(slots, [{ key: "body", accepts: ["text", "table", "image"] }]);
+    assert.deepEqual(slots, [{ key: "body", accepts: ["text", "table", "image"], fit: ImageFit.Contain }]);
+  });
+
+  it("shows how an image slot fits its images, so an author can pick a slot for an image", () => {
+    const slots = manifestSlots([
+      { key: "hero", accepts: [{ type: SlotType.Image, sourceSlide: 1, shapeName: "s", fit: ImageFit.Cover }] },
+    ]);
+    assert.deepEqual(slots, [{ key: "hero", accepts: ["image"], fit: ImageFit.Cover }]);
   });
 
   it("marks a required slot, dropping shape/frame internals", () => {

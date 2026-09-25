@@ -96,17 +96,16 @@ export const ImageFit = {
 export type ImageFit = (typeof ImageFit)[keyof typeof ImageFit];
 
 /**
- * Input to fillImage — a resolved image path plus its object-fit directive.
- * `path` must be absolute; the compiler resolves it (and maps the asset's
- * semantic type to a `fit`) before the ImageFill reaches the engine.
- * `alt` is the picture's accessibility description (`descr` on its
+ * Input to fillImage — a resolved image path and its alt text. How the image
+ * fills its shape is the slot's, from its image block's `fit`.
+ * `path` must be absolute; the compiler resolves it before the ImageFill reaches
+ * the engine. `alt` is the picture's accessibility description (`descr` on its
  * `<p:cNvPr>`); empty means none, and clears any description the placeholder
  * carried.
  */
 export type ImageFill = {
   type: typeof SlotType.Image;
   path: string;
-  fit: ImageFit;
   alt: string;
 };
 
@@ -122,7 +121,7 @@ export type Frame = { x: number; y: number; cx: number; cy: number };
  * otherwise it is transplanted from `sourceSlide` into the slot's frame. A text
  * block may pin `startAt` (leave the first N specimen paragraphs untouched); a
  * table block MUST declare its `bodyRows` range (the repeatable specimen rows);
- * a template or image block carries neither. `Template` reaches the engine only
+ * an image block MUST declare its `fit`; a template block carries none of them. `Template` reaches the engine only
  * via a frontmatter parameter (`paramToEngineSlot`), never as an author body block.
  *
  * Named `Block` — a kind of content the way an author thinks of it. Distinct
@@ -132,7 +131,7 @@ export type Frame = { x: number; y: number; cx: number; cy: number };
 export type TemplateBlock = { type: typeof SlotType.Template; sourceSlide: number; shapeName: string };
 export type TextBlock = { type: typeof SlotType.Text; sourceSlide: number; shapeName: string; startAt?: number };
 export type TableBlock = { type: typeof SlotType.Table; sourceSlide: number; shapeName: string; bodyRows: BodyRows };
-export type ImageBlock = { type: typeof SlotType.Image; sourceSlide: number; shapeName: string };
+export type ImageBlock = { type: typeof SlotType.Image; sourceSlide: number; shapeName: string; fit: ImageFit };
 export type Block = TemplateBlock | TextBlock | TableBlock | ImageBlock;
 
 /**

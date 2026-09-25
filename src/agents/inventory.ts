@@ -92,6 +92,8 @@ const Attr = {
   X: "x",
   Y: "y",
   TEXT_BOX: "txBox",
+  WIDTH: "w",
+  HEIGHT: "h",
 } as const;
 
 /** The twelve colour-scheme slots, in the order PowerPoint lists them. */
@@ -429,7 +431,7 @@ function describeShape(el: any, prefix: string): InventoryShape {
   return {
     name: prefix + (find(nonVisualProps(el), Tag.NON_VISUAL_PROPS)?.getAttribute(Attr.NAME) ?? ""),
     kind: shapeKind(el, table),
-    frame: shapeFrame(el),
+    frame: table ? tableFrame(el, table) : shapeFrame(el),
     rows: table && elementChildren(table, Tag.TABLE_ROW).length,
     cols: table && elementChildren(find(table, Tag.TABLE_GRID), Tag.GRID_COLUMN).length,
     text: el.tagName === Tag.GROUP ? "" : shapeText(el),
@@ -485,6 +487,23 @@ function shapeFrame(el: any): Frame | undefined {
     y: Number(offset.getAttribute(Attr.Y)),
     cx: Number(extent.getAttribute(Attr.CX)),
     cy: Number(extent.getAttribute(Attr.CY)),
+  };
+}
+
+/**
+ * A table's frame: where its graphic frame puts it, at the size its column widths
+ * and row heights give it. PowerPoint draws a table at that size, rows growing
+ * taller when their text needs it, and some tools (Google Slides among them)
+ * write a placeholder size on the frame.
+ */
+function tableFrame(el: any, table: any): Frame | undefined {
+  const frame = shapeFrame(el);
+  if (!frame) return undefined;
+  const total = (els: any[], attr: string) => els.reduce((sum, e) => sum + Number(e.getAttribute(attr) || 0), 0);
+  return {
+    ...frame,
+    cx: total(elementChildren(find(table, Tag.TABLE_GRID), Tag.GRID_COLUMN), Attr.WIDTH) || frame.cx,
+    cy: total(elementChildren(table, Tag.TABLE_ROW), Attr.HEIGHT) || frame.cy,
   };
 }
 

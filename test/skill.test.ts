@@ -4,10 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, it } from "node:test";
 import JSZip from "jszip";
-import type { AssetCatalog } from "../dist/agents/catalog.js";
-import { ASSETS_ARCHIVE } from "../dist/agents/files.js";
-import { renameSkill, skillPackageJson, zipDir } from "../dist/agents/skill.js";
-import { ImageFit } from "../dist/engine/types.js";
+import { ASSETS_ARCHIVE, ASSETS_FILE } from "../dist/agents/files.js";
+import { type AssetCatalog, loadAssetCatalog, renameSkill, skillPackageJson, zipDir } from "../dist/agents/skill.js";
 
 /** Stand-ins for what `package` generates; `skillPackageJson` is tested on its own below. */
 const generated = {
@@ -18,7 +16,7 @@ const generated = {
 
 const config = { layouts: [], template: "corp.pptx" };
 const catalog: AssetCatalog = {
-  logos: { a: { path: "assets/logos/a.png", fit: ImageFit.ScaleDown, description: "A logo" } },
+  logos: { a: { path: "assets/logos/a.png", description: "A logo" } },
 };
 const themeFiles = ["theme.json", "assets.json"];
 
@@ -247,5 +245,49 @@ describe("assets archive", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
+  });
+});
+
+/** A theme directory whose `assets.json` holds `content` verbatim. */
+function themeWith(content: string): string {
+  const dir = mkdtempSync(join(tmpdir(), "tycoslide-catalog-"));
+  writeFileSync(join(dir, ASSETS_FILE), content);
+  return dir;
+}
+
+const entry = { path: "assets/logos/a.png", description: "A logo" };
+const catalogWith = (e: object) => JSON.stringify({ logos: { a: e } });
+
+describe("loadAssetCatalog", () => {
+  it("loads a valid catalog", () => {
+    assert.deepEqual(loadAssetCatalog(themeWith(catalogWith(entry))), { logos: { a: entry } });
+  });
+
+  it("loads an empty catalog, for a theme with no images", () => {
+    assert.deepEqual(loadAssetCatalog(themeWith("{}")), {});
+  });
+
+  const rejected: { name: string; content: string; message: RegExp }[] = [
+    {
+      name: "an unknown key in an entry",
+      content: catalogWith({ ...entry, size: "large" }),
+      message: /Unknown key\(s\): size\. Valid keys: path, description/,
+    },
+    {
+      name: "an entry missing its description",
+      content: catalogWith({ path: entry.path }),
+      message: /invalid image catalog[\s\S]*description/,
+    },
+    { name: "invalid JSON", content: "{ logos:", message: /not found or invalid JSON/ },
+  ];
+  for (const { name, content, message } of rejected) {
+    it(`rejects ${name}`, () => {
+      assert.throws(() => loadAssetCatalog(themeWith(content)), message);
+    });
+  }
+
+  it("fails when the theme has no catalog, naming the path", () => {
+    const dir = mkdtempSync(join(tmpdir(), "tycoslide-catalog-"));
+    assert.throws(() => loadAssetCatalog(dir), new RegExp(`not found or invalid JSON: ${join(dir, ASSETS_FILE)}`));
   });
 });

@@ -181,6 +181,12 @@ describe("buildMermaidRenderConfig", () => {
     assert.equal(config.themeVariables.fontFamily, "Inter");
     assert.equal(config.themeVariables.background, "transparent");
   });
+
+  it("labels nodes in the contrast color of their fill, not the general text color", () => {
+    const config = buildMermaidRenderConfig(variant) as any;
+    assert.equal(config.themeVariables.nodeTextColor, variant.primaryContrast);
+    assert.equal(config.themeVariables.textColor, variant.text);
+  });
 });
 
 // ── injectClassDefs ──

@@ -4,9 +4,9 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
-import { loadAssetCatalog } from "../dist/agents/catalog.js";
+import { loadAssetCatalog } from "../dist/agents/skill.js";
 import { ASSETS_FILE } from "../dist/agents/files.js";
-import { SlotType } from "../dist/engine/types.js";
+import { ImageFit, SlotType } from "../dist/engine/types.js";
 import { compileMarkdownDeck, parseThemeConfig } from "../dist/markdown/index.js";
 import type { CompilerConfig, CompilerLayout } from "../dist/markdown/types.js";
 
@@ -57,7 +57,7 @@ describe("docs/markdown.md", () => {
         layout("Body", 2, ["title"], [text("body", 2)]),
         layout("TwoColumn", 3, ["title"], [text("left", 3), text("right", 3)]),
         layout("ImageSlide", 4, ["title"], [
-          { key: "hero", accepts: [{ type: SlotType.Image, sourceSlide: 4, shapeName: "hero" }] },
+          { key: "hero", accepts: [{ type: SlotType.Image, sourceSlide: 4, shapeName: "hero", fit: ImageFit.Contain }] },
         ]),
       ],
     };

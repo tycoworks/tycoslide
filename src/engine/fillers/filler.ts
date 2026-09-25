@@ -18,7 +18,15 @@
 
 import { basename } from "node:path";
 import { ModifyImageHelper } from "pptx-automizer";
-import { type BodyRows, type ImageFill, SlotType, type TableFill, type TemplateFill, type TextFill } from "../types.js";
+import {
+  type BodyRows,
+  type ImageFill,
+  type ImageFit,
+  SlotType,
+  type TableFill,
+  type TemplateFill,
+  type TextFill,
+} from "../types.js";
 import { fillImage, isImageFill } from "./image.js";
 import { fillTable, isTableFill } from "./table.js";
 import { fillTemplate, isTemplateFill } from "./template.js";
@@ -30,12 +38,13 @@ import { fillText, isTextFill } from "./text.js";
  * options. Every target carries a `shapeName` and a human `label` for
  * diagnostics (the author-facing "slide N, layout …, slot …" a filler prints in
  * advisory warnings instead of the raw PPTX shape id); a text target may carry
- * `startAt`, and a table target carries its required `bodyRows` range.
+ * `startAt`, a table target carries its required `bodyRows` range, and an image
+ * target its required `fit`.
  */
 export type TemplateFillTarget = { type: typeof SlotType.Template; shapeName: string; label: string };
 export type TextFillTarget = { type: typeof SlotType.Text; shapeName: string; label: string; startAt?: number };
 export type TableFillTarget = { type: typeof SlotType.Table; shapeName: string; label: string; bodyRows: BodyRows };
-export type ImageFillTarget = { type: typeof SlotType.Image; shapeName: string; label: string };
+export type ImageFillTarget = { type: typeof SlotType.Image; shapeName: string; label: string; fit: ImageFit };
 export type FillTarget = TemplateFillTarget | TextFillTarget | TableFillTarget | ImageFillTarget;
 
 /** A pptx-automizer element-modify callback: `(element, relation) => void`. */
@@ -71,7 +80,7 @@ const imageFiller: Filler<ImageFill, ImageFillTarget> = {
   matches: isImageFill,
   callbacks: (v, t) => [
     ModifyImageHelper.setRelationTarget(basename(v.path)),
-    (el: any) => fillImage(el, v, t.shapeName, t.label),
+    (el: any) => fillImage(el, v, t.shapeName, t.label, t.fit),
   ],
 };
 

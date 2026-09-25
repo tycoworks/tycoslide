@@ -3,6 +3,7 @@ import {
   type BodyRows,
   type Frame,
   type ImageFill,
+  ImageFit,
   SlotType,
   type TableFill,
   type TemplateFill,
@@ -10,10 +11,11 @@ import {
 } from "../engine/index.js";
 import type { MermaidConfig } from "./blocks/mermaidTheme.js";
 
-// Re-export the engine's table body-range type so the compiler layer (and the
-// theme schema) reference one definition, mirroring how AcceptType derives from
-// SlotType.
+// Re-export the engine's table body-range type and image fits so the compiler layer
+// (and the theme schema) reference one definition, mirroring how AcceptType derives
+// from SlotType.
 export type { BodyRows };
+export { ImageFit };
 
 // ── AcceptType discriminator (what a slot accepts) ────────────────────────────
 
@@ -181,9 +183,10 @@ export const RESERVED_KEY = {
  * place), otherwise it is transplanted into the slot's `frame`. A text block may
  * pin `startAt` (leave the first N specimen paragraphs untouched); a table block
  * MUST declare its `bodyRows` range (the repeatable `<a:tbl>` specimen rows); an
- * image block carries neither. There is no `Template` variant — `AcceptType` excludes
- * it (a parameter, not a body block). Named `CompilerBlock` to stay distinct from
- * the engine's `Block` and the compiler's `BlockHandler`.
+ * image block MUST declare its `fit`, which sets how every image placed in it
+ * fills the shape. There is no `Template` variant — `AcceptType` excludes it (a
+ * parameter, not a body block). Named `CompilerBlock` to stay distinct from the
+ * engine's `Block` and the compiler's `BlockHandler`.
  */
 export type CompilerTextBlock = {
   type: typeof AcceptType.Text;
@@ -201,6 +204,7 @@ export type CompilerImageBlock = {
   type: typeof AcceptType.Image;
   sourceSlide: number;
   shapeName: string;
+  fit: ImageFit;
 };
 export type CompilerBlock = CompilerTextBlock | CompilerTableBlock | CompilerImageBlock;
 
