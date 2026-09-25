@@ -146,8 +146,8 @@ export type InventoryShape = {
   rows?: number;
   cols?: number;
   /**
-   * The start of the shape's text, with `¶` between paragraphs and `↵` for line
-   * breaks: where a parameter template puts `\n`.
+   * The shape's text, with `¶` between paragraphs and `↵` for line breaks,
+   * either of which a parameter template writes as `\n`.
    */
   text: string;
 };
@@ -376,7 +376,6 @@ const SHAPE_ELEMENTS: ReadonlySet<string> = new Set([
 const GROUP_SEPARATOR = "/";
 const PARAGRAPH_MARK = "¶";
 const LINE_BREAK_MARK = "↵";
-const TEXT_PREVIEW_CHARS = 80;
 const TEXT_BOX_ON = "1";
 /** A placeholder with no `type` is a body placeholder. */
 const DEFAULT_PLACEHOLDER_TYPE = "body";
@@ -405,14 +404,14 @@ async function readShapes(presentation: Presentation, parts: Parts): Promise<Inv
       }
     }
   }
-  // Set fields only, in a fixed order, and the text cut to a preview.
+  // Set fields only, in a fixed order.
   return found.map(({ shape: { name, kind, frame, frameFrom, rows, cols, text } }) => ({
     name,
     kind,
     ...(frame && { frame }),
     ...(frameFrom && { frameFrom }),
     ...(rows !== undefined && { rows, cols }),
-    text: Array.from(text).slice(0, TEXT_PREVIEW_CHARS).join(""),
+    text,
   }));
 }
 
@@ -456,16 +455,20 @@ function shapeKind(el: any, table: any): ShapeKind {
   }
 }
 
-/** The shape's text, `¶` between paragraphs and `↵` for line breaks, whitespace collapsed. */
+/**
+ * The shape's text, `¶` between paragraphs and `↵` for line breaks, whitespace
+ * collapsed. Runs join as PowerPoint shows them, with no space added between: a
+ * run is a stretch of one style, not a word.
+ */
 function shapeText(el: any): string {
   const paragraphs = collectElements(el, Tag.PARAGRAPH).map((paragraph) =>
     elementChildren(paragraph)
       .flatMap((child) =>
         child.tagName === Tag.LINE_BREAK
-          ? [LINE_BREAK_MARK]
+          ? [` ${LINE_BREAK_MARK} `]
           : collectElements(child, Tag.TEXT).map((text) => text.textContent ?? ""),
       )
-      .join(" ")
+      .join("")
       .split(/\s+/)
       .filter(Boolean)
       .join(" "),

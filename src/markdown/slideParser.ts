@@ -178,7 +178,7 @@ function buildSlide(index: number, fmString: string, rawContent: string): RawSli
 export class FrontmatterParseError extends Error {
   constructor(slideIndex: number, yamlSource: string, cause: unknown) {
     const preview = yamlSource.length > 80 ? `${yamlSource.slice(0, 80)}...` : yamlSource;
-    super(`Invalid YAML in slide ${slideIndex} frontmatter:\n${preview}`);
+    super(`Slide ${slideIndex + 1}: invalid YAML in frontmatter:\n${preview}`);
     this.name = "FrontmatterParseError";
     this.cause = cause;
   }

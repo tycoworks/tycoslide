@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { describe, it } from "node:test";
 import JSZip from "jszip";
 import { ASSETS_ARCHIVE, ASSETS_FILE } from "../dist/agents/files.js";
-import { type AssetCatalog, loadAssetCatalog, renameSkill, skillPackageJson, zipDir } from "../dist/agents/skill.js";
+import { type AssetCatalog, loadAssetCatalog, personalizeSkill, skillPackageJson, zipDir } from "../dist/agents/skill.js";
 
 /** Stand-ins for what `package` generates; `skillPackageJson` is tested on its own below. */
 const generated = {
@@ -30,19 +30,28 @@ const seedTheme = (root: string): void => {
 };
 
 
-describe("renameSkill", () => {
+describe("personalizeSkill", () => {
   const source = "---\nname: slides\ndescription: >\n  Build decks.\n---\n\n# slides\n\nBody with name: not-a-header line.\n";
 
-  it("rewrites the frontmatter name and leaves the body untouched", () => {
-    const out = renameSkill(source, "acme-slides");
+  it("names the frontmatter and the title heading after the theme, leaving the rest of the body untouched", () => {
+    const out = personalizeSkill(source, "acme-slides");
     assert.match(out, /^---\nname: acme-slides\n/);
+    assert.match(out, /\n# acme-slides\n/);
     assert.ok(out.includes("Body with name: not-a-header line."));
-    assert.ok(!out.includes("name: slides"));
+  });
+
+  it("leads the skill's description with the theme's own, so theme skills can be told apart", () => {
+    const out = personalizeSkill(source, "acme-slides", "Acme brand slides.");
+    assert.ok(out.includes("description: >\n  Acme brand slides.\n  Build decks.\n"), out);
+  });
+
+  it("leaves the description as it is when the theme has none", () => {
+    assert.ok(personalizeSkill(source, "acme-slides").includes("description: >\n  Build decks.\n"));
   });
 
   it("throws when the frontmatter has no name: line", () => {
     const noName = "---\ndescription: >\n  Build decks.\n---\n\n# body\n";
-    assert.throws(() => renameSkill(noName, "acme-slides"), /no "name:" line/);
+    assert.throws(() => personalizeSkill(noName, "acme-slides"), /no "name:" line/);
   });
 });
 

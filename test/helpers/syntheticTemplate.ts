@@ -88,7 +88,7 @@ const SHAPES: Record<number, string> = {
     sp("Notes", {
       textBox: true,
       frame: xfrm(0, 900000, 3000000, 500000),
-      text: paragraph(run("Line one"), BREAK, run("line two")) + paragraph(run("Second")),
+      text: paragraph(run("Line one"), BREAK, run("line two")) + paragraph(run("Sec"), run("ond")),
     }) +
     sp("Rectangle", { frame: xfrm(0, 1500000, 1000000, 1000000) }) +
     pic("Logo", xfrm(8000000, 0, 500000, 500000)) +

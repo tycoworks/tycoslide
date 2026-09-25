@@ -149,9 +149,14 @@ describe("readInventory", () => {
     assert.deepEqual(slides[1].shapes[1], { name: "Photo", kind: ShapeKind.Text, text: "" });
   });
 
-  it("cuts a shape's text to an 80-character preview", async () => {
+  it("keeps a shape's full text", async () => {
     const { slides } = await inventoryOf(await writeSyntheticTemplate(scratch()));
-    assert.equal(slides[1].shapes[2].text, "x".repeat(80));
+    assert.equal(slides[1].shapes[2].text, "x".repeat(100));
+  });
+
+  it("joins a word split across runs as PowerPoint shows it, with no space added", async () => {
+    const { slides } = await inventoryOf(await writeSyntheticTemplate(scratch()));
+    assert.equal(slides[0].shapes.find((shape) => shape.name === "Notes")?.text, "Line one ↵ line two ¶ Second");
   });
 
   it("groups slides whose shapes match to within a point, and no others", async () => {

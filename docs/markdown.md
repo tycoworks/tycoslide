@@ -2,7 +2,7 @@
 
 This document covers the detailed syntax for writing slide content in tycoslide deck files.
 
-> **Every layout, parameter, and slot name in the examples below is a placeholder.** Your theme's real names live in `theme.json` — read it first, and never assume a name shown here (`Body`, `TwoColumn`, `hero`, `::left::`, etc.) exists in your theme.
+> **Every layout, parameter, and slot name in the examples below is a placeholder.** Your theme's real names live in its `theme.json`, and in `manifest.json` when the theme is packaged as a skill — read it first, and never assume a name shown here (`Body`, `TwoColumn`, `hero`, `::left::`, etc.) exists in your theme.
 
 ---
 
@@ -216,7 +216,7 @@ The theme owns all styling. These directives are rejected at build time:
 Each parameter or slot in the layout definition may declare:
 - **`accepts`** (slots, required) -- an array of `text`, `table`, `image`.
 - **`required: true`** -- the slide has no usable default and the build fails if the parameter/slot has no value.
-- **optional (the default)** -- a parameter or slot you leave unfilled is dropped from the slide (its shape is removed), so a layout with numbered slots (e.g. up to six sections, up to four stats) renders only the ones you fill.
+- **optional (the default)** -- a parameter or slot you leave unfilled is dropped from the slide (its shape is removed), so a layout with numbered slots (e.g. up to six sections, up to four stats) renders only the ones you fill. A shape the theme doesn't map, such as a card drawn behind a stat, stays, so an unfilled one can leave an empty card.
 
 Each layout also declares a `slideNumber` pointing at the physical slide in the theme's template -- unique per layout (one layout maps to one physical slide).
 
@@ -268,7 +268,7 @@ Common errors and fixes:
 
 | Error | Fix |
 |-------|-----|
-| `unknown layout "xyz"` | Check layout names in `theme.json` |
+| `unknown layout "xyz"` | Check layout names in `theme.json` (or `manifest.json`) |
 | A parameter or slot didn't fill | Use the key names the layout declares -- parameters in frontmatter, slots as body regions |
 | YAML parse error | Fix the YAML syntax in the slide's frontmatter |
 | `image "…" not found at …` | Check the path; it is relative to the deck file |

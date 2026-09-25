@@ -426,6 +426,13 @@ describe("compileDeck", () => {
     assert.equal(deck.theme, "./custom/theme.json");
   });
 
+  it("numbers a slide with invalid frontmatter YAML from 1, like every other error", async () => {
+    const source = "---\ntheme: ./theme.json\n---\n---\nlayout: [unclosed\n---\nBody\n";
+    await assert.rejects(async () => compileMarkdownDeck(source, []), (err: Error) =>
+      err.message.startsWith("Slide 1: invalid YAML in frontmatter"),
+    );
+  });
+
   it("missing theme throws", async () => {
     await assert.rejects(
         compileDeck({

@@ -53,18 +53,34 @@ export async function packAssets(paths: string[], read: (rel: string) => Buffer)
 
 const FRONTMATTER = /^---\n([\s\S]*?)\n---/;
 const NAME_LINE = /^name:[ \t]*.*$/m;
+/** The folded `description: >` opener; the description's lines follow it, indented. */
+const FOLDED_DESCRIPTION_LINE = /^description:[ \t]*>[ \t]*$/m;
+const DESCRIPTION_INDENT = "  ";
+const TITLE_HEADING = /^# .*$/m;
 
 /**
- * Rewrite the `name:` value in a SKILL.md's leading YAML frontmatter so the
- * packaged skill is named after the consuming theme, not the source template.
- * Only the leading `---`…`---` block is touched; the body is left byte-for-byte.
- * Throws if there is no frontmatter or no `name:` line — the caller names the file.
+ * Make the skill template the theme's own: its frontmatter `name:` and its title
+ * heading become the theme's name, and the theme's `description`, when it has
+ * one, leads the skill's description, so an agent with several theme skills can
+ * tell them apart. The rest of the body is left byte-for-byte. Throws if there is
+ * no frontmatter, no `name:` line, or no folded description to lead — the caller
+ * names the file.
  */
-export function renameSkill(md: string, name: string): string {
+export function personalizeSkill(md: string, name: string, description?: string): string {
   const block = md.match(FRONTMATTER);
   if (!block) throw new Error("SKILL.md has no YAML frontmatter block");
   if (!NAME_LINE.test(block[1])) throw new Error('SKILL.md frontmatter has no "name:" line');
-  return md.replace(block[0], block[0].replace(NAME_LINE, `name: ${name}`));
+  let frontmatter = block[0].replace(NAME_LINE, `name: ${name}`);
+  if (description) {
+    if (!FOLDED_DESCRIPTION_LINE.test(frontmatter)) {
+      throw new Error('SKILL.md frontmatter has no folded "description: >" to lead');
+    }
+    frontmatter = frontmatter.replace(
+      FOLDED_DESCRIPTION_LINE,
+      (line) => `${line}\n${DESCRIPTION_INDENT}${description}`,
+    );
+  }
+  return frontmatter + md.slice(block[0].length).replace(TITLE_HEADING, `# ${name}`);
 }
 
 /**
