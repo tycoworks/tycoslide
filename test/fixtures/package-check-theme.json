@@ -1,0 +1,36 @@
+{
+  "template": "composition.pptx",
+  "mermaidVariant": "light",
+  "mermaid": {
+    "light": {
+      "primary": "#7C3AED",
+      "primaryContrast": "#FFFFFF",
+      "text": "#1A1A2E",
+      "line": "#7C3AED",
+      "surface": "#F5F5F5",
+      "surfaceBorder": "#E5E5E5",
+      "fontFamily": "sans-serif",
+      "accents": ["#7C3AED"],
+      "accentOpacity": 20,
+      "accentTextColor": "#1A1A2E",
+      "groupCornerRadius": 0
+    }
+  },
+  "layouts": [
+    {
+      "name": "Composed",
+      "slideNumber": 1,
+      "parameters": [],
+      "slots": [
+        {
+          "key": "body",
+          "frame": { "x": 457200, "y": 1371600, "cx": 8229600, "cy": 2743200 },
+          "accepts": [
+            { "type": "text", "sourceSlide": 1, "shapeName": "Text 1" },
+            { "type": "image", "sourceSlide": 3, "shapeName": "Image 0", "fit": "contain" }
+          ]
+        }
+      ]
+    }
+  ]
+}
