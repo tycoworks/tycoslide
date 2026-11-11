@@ -33,4 +33,4 @@ CI runs lint and the tests on Node 24 and 26 on every pull request, and checks t
 
 ## Releasing
 
-Releases follow semantic versioning. To release, set the version in `package.json`, merge it, and push a matching tag, such as `v0.18.0`. The release workflow checks the tag, publishes the package to npm, and drafts the GitHub release for you to edit and publish.
+Releases follow semantic versioning. To release, set the version in `package.json`, merge it, and push a matching tag, such as `v0.18.0`. The release workflow checks the tag, publishes the package to npm, and publishes the GitHub release, with notes listing the pull requests merged since the last one.
