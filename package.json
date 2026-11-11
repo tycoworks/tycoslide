@@ -1,6 +1,6 @@
 {
   "name": "@tycoworks/tycoslide",
-  "version": "0.17.4",
+  "version": "0.17.5",
   "description": "Create editable PowerPoint slides from markdown, using your existing .pptx templates.",
   "author": "tycoworks",
   "homepage": "https://github.com/tycoworks/tycoslide",
