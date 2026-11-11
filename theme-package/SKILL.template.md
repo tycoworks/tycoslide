@@ -3,7 +3,7 @@ name: slides
 description: >
   Build branded slides, presentations, pitch decks, or sales collateral as a .pptx.
   Trigger on "deck," "slides," "presentation," "pitch," ".pptx," or "build me a deck."
-compatibility: Needs Node 23.6+ and network access to npm on first use. LibreOffice (soffice) and poppler (pdftoppm) to preview slides. Chrome only if decks contain mermaid diagrams.
+compatibility: Needs Node 24+ and network access to npm on first use. LibreOffice (soffice) and poppler (pdftoppm) to preview slides. Chrome only if decks contain mermaid diagrams.
 ---
 
 # slides

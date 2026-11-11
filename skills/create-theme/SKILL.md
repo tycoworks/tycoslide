@@ -1,7 +1,7 @@
 ---
 name: create-theme
 description: Turn a branded PowerPoint template into a tycoslide theme, packaged as an Agent Skill that builds editable decks from markdown. Use when someone hands over a .pptx and wants repeatable decks from it, or says "make a theme", "create a theme", "tycoslide theme", or "turn this template into a theme".
-compatibility: Needs Node 23.6+, LibreOffice (soffice) and poppler (pdftoppm). Chrome only if decks will contain mermaid diagrams.
+compatibility: Needs Node 24+, LibreOffice (soffice) and poppler (pdftoppm). Chrome only if decks will contain mermaid diagrams.
 ---
 
 # Create a theme
@@ -39,7 +39,7 @@ my-theme/
 Check the tools once:
 
 ```bash
-node --version        # 23.6 or later
+node --version        # 24 or later
 soffice --version     # LibreOffice, renders a .pptx to PDF
 pdftoppm -v           # poppler, turns the PDF into PNGs
 ```
