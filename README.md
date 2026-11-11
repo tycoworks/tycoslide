@@ -12,7 +12,7 @@
   <a href="https://github.com/tycoworks/tycoslide#licence"><img src="https://img.shields.io/badge/licence-MIT%20or%20Apache%202.0-blue" alt="Licence: MIT or Apache 2.0"></a>
 </p>
 
-tycoslide creates slides from markdown using your existing .pptx files as templates. Like [Marp](https://marp.app) or [Slidev](https://sli.dev), but with editable output. It also turns your template into an agent skill, so anyone can build decks with it.
+tycoslide creates slides from markdown using your existing .pptx files as templates. Like [Marp](https://marp.app) or [Slidev](https://sli.dev), but with editable output. It also turns your template into an agent skill, so anyone can build on-brand decks with AI.
 
 ## Features
 
