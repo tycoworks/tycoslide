@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://github.com/tycoworks/tycoslide/actions/workflows/ci.yml"><img src="https://github.com/tycoworks/tycoslide/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://www.npmjs.com/package/@tycoworks/tycoslide"><img src="https://img.shields.io/npm/v/@tycoworks/tycoslide" alt="npm version"></a>
-  <a href="https://github.com/tycoworks/tycoslide/blob/main/LICENSE"><img src="https://img.shields.io/badge/licence-MIT-blue" alt="Licence: MIT"></a>
+  <a href="https://github.com/tycoworks/tycoslide#licence"><img src="https://img.shields.io/badge/licence-MIT%20or%20Apache%202.0-blue" alt="Licence: MIT or Apache 2.0"></a>
 </p>
 
 tycoslide creates slides from markdown using your existing .pptx templates, so you can keep your decks in Git. Like [Marp](https://marp.app) or [Slidev](https://sli.dev), but with editable output.
@@ -53,4 +53,4 @@ tycoslide was inspired by [pptx-automizer](https://github.com/singerla/pptx-auto
 
 ## Licence
 
-[MIT](LICENSE).
+Dual-licensed under [MIT](LICENSE-MIT) or [Apache 2.0](LICENSE-APACHE), at your option.

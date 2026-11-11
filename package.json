@@ -9,7 +9,7 @@
     "url": "git+https://github.com/tycoworks/tycoslide.git"
   },
   "bugs": "https://github.com/tycoworks/tycoslide/issues",
-  "license": "MIT",
+  "license": "MIT OR Apache-2.0",
   "keywords": [
     "markdown",
     "powerpoint",
@@ -30,7 +30,9 @@
     "dist",
     "bin",
     "docs",
-    "theme-package"
+    "theme-package",
+    "LICENSE-MIT",
+    "LICENSE-APACHE"
   ],
   "engines": {
     "node": ">=24"
