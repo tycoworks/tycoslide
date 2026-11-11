@@ -2,6 +2,13 @@
   "name": "@tycoworks/tycoslide",
   "version": "0.17.3",
   "description": "Create editable PowerPoint slides from markdown, using your existing .pptx templates.",
+  "author": "tycoworks",
+  "homepage": "https://github.com/tycoworks/tycoslide",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tycoworks/tycoslide.git"
+  },
+  "bugs": "https://github.com/tycoworks/tycoslide/issues",
   "license": "MIT",
   "keywords": [
     "markdown",
@@ -26,11 +33,11 @@
     "theme-package"
   ],
   "engines": {
-    "node": ">=23.6"
+    "node": ">=24"
   },
   "scripts": {
     "build": "tsc --build",
-    "test": "tsc --build && tsc -p tsconfig.test.json && node --test test/**/*.test.ts",
+    "test": "tsc --build && tsc -p tsconfig.test.json && node --test \"test/**/*.test.ts\"",
     "typecheck": "tsc --build && tsc -p tsconfig.test.json",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
@@ -54,7 +61,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",
-    "@types/node": "^22.20.0",
+    "@types/node": "^24.19.2",
     "typescript": "^5.8.0"
   }
 }

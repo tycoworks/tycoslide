@@ -33,7 +33,7 @@ Full syntax in [markdown.md](docs/markdown.md).
 
 ## Requirements
 
-Node 23.6 or later. Mermaid diagrams need Chrome on the machine; tycoslide finds an installed one, or run `npx playwright install chromium-headless-shell`.
+Node 24 or later. Mermaid diagrams need Chrome on the machine; tycoslide finds an installed one, or run `npx playwright install chromium-headless-shell`.
 
 ## Thanks
 

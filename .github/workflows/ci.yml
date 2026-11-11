@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    name: Lint, build and tests (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [24, 26]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      # Builds and type-checks first
+      - run: npm test
+
+  package:
+    name: Package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+      - name: Check what the package ships
+        run: |
+          diff <(npm pack --dry-run --json | jq -r '.[0].files[].path' | cut -d/ -f1 | sort -u) \
+               <(printf '%s\n' LICENSE README.md bin dist docs package.json theme-package)
+
+      - name: Install the package in an empty folder
+        working-directory: ${{ runner.temp }}
+        run: |
+          npm pack --pack-destination . "$GITHUB_WORKSPACE"
+          mkdir install && cd install
+          npm init -y > /dev/null
+          npm install --no-audit --no-fund ../tycoworks-tycoslide-*.tgz
+          npx tycoslide --version
+
+      # The runner's Chrome draws the diagram
+      - name: Build a deck with a mermaid diagram
+        working-directory: ${{ runner.temp }}/install
+        run: |
+          cp -R "$GITHUB_WORKSPACE"/test/fixtures/{template,package-check.md,package-check-theme.json} .
+          npx tycoslide build package-check.md
+          unzip -l package-check.pptx | grep 'ppt/media/.*\.png'

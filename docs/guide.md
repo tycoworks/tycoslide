@@ -6,7 +6,7 @@ This guide shows you how to use tycoslide to build editable PowerPoint slides fr
 
 - **Your template**, as a `.pptx` file. A Google Slides template downloaded as a `.pptx` works too.
 - **An AI agent that supports [agent skills](https://agentskills.io)**, such as [Claude Code](https://claude.com/product/claude-code), which this guide uses.
-- **[Node.js](https://nodejs.org) 23.6 or later, and [Git](https://git-scm.com).**
+- **[Node.js](https://nodejs.org) 24 or later, and [Git](https://git-scm.com).**
 - **[LibreOffice](https://www.libreoffice.org) and [poppler](https://poppler.freedesktop.org)**, which the agent installs if they're missing.
 
 ## Step 1: Create a theme

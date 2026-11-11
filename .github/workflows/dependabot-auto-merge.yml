@@ -1,0 +1,23 @@
+name: Dependabot auto-merge
+
+# Dependabot's grouped minor and patch updates merge themselves once CI passes.
+# Major updates, updates to 0.x packages and security updates wait for a person.
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    name: Auto-merge
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'tycoworks/tycoslide'
+    runs-on: ubuntu-latest
+    steps:
+      - id: metadata
+        uses: dependabot/fetch-metadata@v3
+      - if: steps.metadata.outputs.dependency-group != '' && steps.metadata.outputs.update-type != 'version-update:semver-major'
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
