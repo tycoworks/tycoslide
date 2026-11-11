@@ -73,7 +73,7 @@ function fakeArchive(seed: Record<string, string> = {}): {
   read(file: string, type: "string"): Promise<string>;
   write(file: string, data: string): Promise<void>;
   remove(file: string): Promise<void>;
-  fileExists(file: string): boolean;
+  fileExists(file: string): Promise<boolean>;
   folder(dir: string): Promise<{ name: string; relativePath: string }[]>;
   files: Map<string, string>;
 } {
@@ -91,7 +91,7 @@ function fakeArchive(seed: Record<string, string> = {}): {
     async remove(file: string): Promise<void> {
       files.delete(file);
     },
-    fileExists(file: string): boolean {
+    async fileExists(file: string): Promise<boolean> {
       return files.has(file);
     },
     // Mirrors IArchive.folder: top-level entries of `dir` only (nested dirs like
