@@ -51,7 +51,7 @@ jobs:
       - name: Check what the package ships
         run: |
           diff <(npm pack --dry-run --json | jq -r '.[0].files[].path' | cut -d/ -f1 | sort -u) \
-               <(printf '%s\n' LICENSE README.md bin dist docs package.json theme-package)
+               <(printf '%s\n' LICENSE-APACHE LICENSE-MIT README.md bin dist docs package.json theme-package)
 
       - name: Install the package in an empty folder
         working-directory: ${{ runner.temp }}
