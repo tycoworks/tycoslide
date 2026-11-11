@@ -1,0 +1,14 @@
+name: Feature request
+description: Something you'd like tycoslide to do
+labels: [enhancement]
+body:
+  - type: textarea
+    attributes:
+      label: What you want to do
+      description: What you're building, and what tycoslide can't do for it today.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: How it could work
+      description: An example deck or theme.json, if you have one in mind.

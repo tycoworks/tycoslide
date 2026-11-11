@@ -1,0 +1,32 @@
+name: Bug report
+description: Something in tycoslide doesn't work as the docs say
+labels: [bug]
+body:
+  - type: textarea
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead. Include the deck markdown, and any error.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: How to reproduce it
+      description: The smallest deck and theme.json that show the problem. Attach the .pptx template if you can share it, or say if you can't.
+  - type: input
+    attributes:
+      label: tycoslide version
+      description: From `npx tycoslide --version`.
+      placeholder: 0.17.4
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Node.js version and operating system
+      placeholder: Node v24.22.3 on macOS 26
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Output
+      description: What tycoslide printed around the problem.
+      render: text
