@@ -12,11 +12,11 @@ jobs:
     uses: ./.github/workflows/ci.yml
 
   release:
-    name: Publish to npm and draft the release
+    name: Publish to npm and GitHub
     needs: ci
     runs-on: ubuntu-latest
     permissions:
-      contents: write # to draft the release
+      contents: write # to publish the GitHub release
       id-token: write # for npm's trusted publishing, so no token is stored
     steps:
       - uses: actions/checkout@v7
@@ -47,7 +47,7 @@ jobs:
           fi
           npm publish --provenance --access public "${tag[@]}"
 
-      - name: Draft the release
+      - name: Publish the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -55,5 +55,5 @@ jobs:
           if [[ "$GITHUB_REF_NAME" == *-* ]]; then
             prerelease=(--prerelease)
           fi
-          gh release create "$GITHUB_REF_NAME" --draft --verify-tag \
+          gh release create "$GITHUB_REF_NAME" --verify-tag \
             --title "$GITHUB_REF_NAME" --generate-notes "${prerelease[@]}"

@@ -1,0 +1,10 @@
+# How GitHub groups the generated notes on each release: user-facing changes
+# first, then Dependabot's updates, which it labels dependencies.
+changelog:
+  categories:
+    - title: Changes
+      labels: ['*']
+      exclude:
+        labels: [dependencies]
+    - title: Dependencies
+      labels: [dependencies]
