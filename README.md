@@ -4,7 +4,7 @@
 
 <h1 align="center">tycoslide</h1>
 
-<p align="center">Create editable PowerPoint slides from markdown, using your existing .pptx templates.</p>
+<p align="center">Create editable PowerPoint slides from markdown, using your existing .pptx files as templates.</p>
 
 <p align="center">
   <a href="https://github.com/tycoworks/tycoslide/actions/workflows/ci.yml"><img src="https://github.com/tycoworks/tycoslide/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
@@ -12,7 +12,7 @@
   <a href="https://github.com/tycoworks/tycoslide#licence"><img src="https://img.shields.io/badge/licence-MIT%20or%20Apache%202.0-blue" alt="Licence: MIT or Apache 2.0"></a>
 </p>
 
-tycoslide creates slides from markdown using your existing .pptx templates, so you can keep your decks in Git. Like [Marp](https://marp.app) or [Slidev](https://sli.dev), but with editable output.
+tycoslide creates slides from markdown using your existing .pptx files as templates. Like [Marp](https://marp.app) or [Slidev](https://sli.dev), but with editable output. It also turns your template into an agent skill, so anyone can build decks with it.
 
 ## Features
 
