@@ -29,7 +29,6 @@
 
 import { existsSync, rmSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
-import { DOMParser, XMLSerializer } from "@xmldom/xmldom";
 import { Automizer, modify } from "pptx-automizer";
 import { FILLERS, type FillTarget } from "./fillers/filler.js";
 import { isImageFill } from "./fillers/image.js";
@@ -362,71 +361,51 @@ function applyBlock(
   if (baseBlock && baseBlock.shapeName !== block.shapeName) slide.removeElement(baseBlock.shapeName);
 }
 
-// ── Notes archive adapter (automizer-buffer glue) ────────────────────────────
-
-/** Installed pptx-automizer version this notes-buffer adapter is pinned to. */
-const PPTX_AUTOMIZER_VERSION = "0.8.2";
+// ── Notes archive adapter ────────────────────────────────────────────────────
 
 /**
- * The exact surface {@link toNotesArchive} consumes from pptx-automizer's OUTPUT
- * archive (`parent.targetArchive`, or the presentation-level `archive`). `buffer`
- * is automizer's internal cache of edited parts (`ArchivedFile[]`) — the load-
- * bearing assumption this adapter is pinned to.
+ * The public surface {@link toNotesArchive} uses from pptx-automizer's OUTPUT
+ * archive (`parent.targetArchive`, or the presentation-level `archive`).
  */
 type AutomizerArchive = {
-  buffer: { relativePath: string; content: any }[];
   read(file: string, type: "string"): Promise<string | Buffer>;
   write(file: string, data: string): Promise<unknown>;
   remove(file: string): Promise<void>;
   fileExists(file: string): boolean;
   folder(dir: string): Promise<{ name: string; relativePath: string }[]>;
+  flushXml(file: string): Promise<void>;
 };
 
 /**
- * Bridge pptx-automizer's OUTPUT archive (`parent.targetArchive`) to the minimal
- * {@link NotesArchive} surface, cooperating with automizer's XML buffer.
+ * Bridge pptx-automizer's OUTPUT archive to the minimal {@link NotesArchive}
+ * surface.
  *
- * automizer caches every part it edits via `readXml`/`writeXml` — for a cloned
+ * automizer keeps every part it edits via `readXml`/`writeXml` — for a cloned
  * slide's notes that means `slide{N}.xml.rels`, `notesSlide{N}.xml.rels`, and
- * `[Content_Types].xml` — as a parsed document, then re-serializes the cache over
- * the zip at write() time. A plain `write`/`remove` to those parts is therefore
- * silently reverted at the final flush. This adapter reads the buffered
- * (automizer-current) content and steers writes/removes back through the same
- * buffer, so `applyNotesToSlide` stays pure over string+xmldom while its edits
- * survive. The notes PART (`notesSlide{N}.xml`) is copied raw and never buffered,
- * so it round-trips as a plain zip entry. The buffer holds docs parsed by the one
- * installed `@xmldom/xmldom`, so our parser/serializer operate on them safely.
+ * `[Content_Types].xml` — as a parsed document, and writes those documents over
+ * the zip at write() time, so a plain `write`/`remove` of such a part would be
+ * silently reverted. Each call therefore flushes the part first: `flushXml`
+ * writes automizer's current document to the zip and drops it, so the plain zip
+ * operation that follows sees the current content and its result is final. If
+ * automizer reads the part again, it re-parses what this wrote.
  */
 function toNotesArchive(target: AutomizerArchive): NotesArchive {
-  // Fail loud if automizer's internals no longer expose the buffer array this
-  // adapter steers writes through: without it, every buffered write would be
-  // silently reverted at the final flush, corrupting the deck with no error.
-  if (!Array.isArray(target.buffer)) {
-    throw new Error(
-      "Speaker notes: expected the pptx-automizer archive to expose a `buffer` array " +
-        `(pinned to pptx-automizer ${PPTX_AUTOMIZER_VERSION}); its internals may have changed. ` +
-        "Re-verify the notes buffer adapter before relying on it.",
-    );
-  }
-  const buffer = target.buffer;
-  const buffered = (file: string) => buffer.find((entry) => entry.relativePath === file);
   return {
     async read(file: string, type: "string"): Promise<string | Buffer> {
-      const entry = buffered(file);
-      return entry ? new XMLSerializer().serializeToString(entry.content) : target.read(file, type);
+      await target.flushXml(file);
+      return target.read(file, type);
     },
     async write(file: string, data: string): Promise<unknown> {
-      const entry = buffered(file);
-      if (entry) entry.content = new DOMParser().parseFromString(data, "application/xml");
+      await target.flushXml(file);
       return target.write(file, data);
     },
     async remove(file: string): Promise<void> {
-      const index = buffer.findIndex((entry) => entry.relativePath === file);
-      if (index !== -1) buffer.splice(index, 1);
+      await target.flushXml(file);
       await target.remove(file);
     },
-    fileExists(file: string): boolean {
-      return buffered(file) !== undefined || target.fileExists(file);
+    async fileExists(file: string): Promise<boolean> {
+      await target.flushXml(file);
+      return target.fileExists(file);
     },
     async folder(dir: string): Promise<{ name: string; relativePath: string }[]> {
       return target.folder(dir);

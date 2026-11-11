@@ -59,17 +59,17 @@ const NOTES_SKELETON =
   `</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:notes>`;
 
 /**
- * The minimal archive surface `applyNotesToSlide` needs. pptx-automizer's
- * `IArchive` satisfies it structurally (so we never import its internal type), and
- * the test fake implements it over a `Map`. String-based `read`/`write` only —
- * XML is parsed/serialized with the engine's own `@xmldom/xmldom` instance, never
+ * The minimal archive surface `applyNotesToSlide` needs. `toNotesArchive` in
+ * `generate.ts` builds it over pptx-automizer's output archive, and the test fake
+ * implements it over a `Map`. String-based `read`/`write` only — XML is
+ * parsed/serialized with the engine's own `@xmldom/xmldom` instance, never
  * automizer's `readXml`/`writeXml` (mixing xmldom instances risks subtle bugs).
  */
 export type NotesArchive = {
   read(file: string, type: "string"): Promise<string | Buffer>;
   write(file: string, data: string): Promise<unknown>;
   remove(file: string): Promise<void>;
-  fileExists(file: string): boolean;
+  fileExists(file: string): Promise<boolean>;
   /**
    * Top-level entries of `dir` (nested `_rels` excluded). `name` is the FULL
    * archive path (e.g. `ppt/notesSlides/notesSlide1.xml`). pptx-automizer's
@@ -151,7 +151,7 @@ function notesRelsXml(slideNumber: number, masterTarget: string): string {
  * the presentation declares no notes master relationship.
  */
 async function findNotesMaster(archive: NotesArchive): Promise<string | undefined> {
-  if (!archive.fileExists(PRESENTATION_RELS_PART)) return undefined;
+  if (!(await archive.fileExists(PRESENTATION_RELS_PART))) return undefined;
   const master = readRelationships(await readString(archive, PRESENTATION_RELS_PART)).find((rel) =>
     rel.type.endsWith(RelTypeSuffix.NotesMaster),
   );
@@ -244,7 +244,7 @@ export async function sweepOrphanNotes(archive: NotesArchive): Promise<void> {
   const referenced = new Set<string>();
   for (const slidePart of await liveSlideParts(archive)) {
     const relsPath = relsPathFor(slidePart);
-    if (!archive.fileExists(relsPath)) continue;
+    if (!(await archive.fileExists(relsPath))) continue;
     for (const rel of readRelationships(await readString(archive, relsPath))) {
       if (rel.type.endsWith(RelTypeSuffix.NotesSlide)) referenced.add(resolveTarget(slidePart, rel.target));
     }
@@ -258,7 +258,7 @@ export async function sweepOrphanNotes(archive: NotesArchive): Promise<void> {
   for (const part of orphans) {
     await archive.remove(part);
     const relsPart = `ppt/notesSlides/_rels/${part.slice(part.lastIndexOf("/") + 1)}.rels`;
-    if (archive.fileExists(relsPart)) await archive.remove(relsPart);
+    if (await archive.fileExists(relsPart)) await archive.remove(relsPart);
     if (removeOverrideFromDoc(ctDoc, `/${part}`)) ctChanged = true;
   }
   if (ctChanged) await archive.write(CONTENT_TYPES_PART, serialize(ctDoc));
@@ -290,7 +290,7 @@ export async function applyNotesToSlide(
   const notesPath = `ppt/notesSlides/notesSlide${slideNumber}.xml`;
   const notesRelsPath = `ppt/notesSlides/_rels/notesSlide${slideNumber}.xml.rels`;
   const slideRelsPath = `ppt/slides/_rels/slide${slideNumber}.xml.rels`;
-  const notesExists = archive.fileExists(notesPath);
+  const notesExists = await archive.fileExists(notesPath);
   const shouldWrite = notes !== undefined && notes !== "" && !excludeNotes;
 
   if (shouldWrite) {
@@ -323,7 +323,7 @@ export async function applyNotesToSlide(
   if (!notesExists) return;
 
   await archive.remove(notesPath);
-  if (archive.fileExists(notesRelsPath)) await archive.remove(notesRelsPath);
+  if (await archive.fileExists(notesRelsPath)) await archive.remove(notesRelsPath);
 
   const relsDoc = parseXml(await readString(archive, slideRelsPath));
   if (removeNotesRel(relsDoc)) await archive.write(slideRelsPath, serialize(relsDoc));
