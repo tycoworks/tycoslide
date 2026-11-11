@@ -1,6 +1,27 @@
-# tycoslide
+<p align="center">
+  <img src="https://raw.githubusercontent.com/tycoworks/tycoslide/main/.github/assets/logo.svg" width="96" alt="">
+</p>
 
-Create editable PowerPoint slides from markdown, using your existing .pptx templates.
+<h1 align="center">tycoslide</h1>
+
+<p align="center">Create editable PowerPoint slides from markdown, using your existing .pptx templates.</p>
+
+<p align="center">
+  <a href="https://github.com/tycoworks/tycoslide/actions/workflows/ci.yml"><img src="https://github.com/tycoworks/tycoslide/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://www.npmjs.com/package/@tycoworks/tycoslide"><img src="https://img.shields.io/npm/v/@tycoworks/tycoslide" alt="npm version"></a>
+  <a href="https://github.com/tycoworks/tycoslide/blob/main/LICENSE"><img src="https://img.shields.io/badge/licence-MIT-blue" alt="Licence: MIT"></a>
+</p>
+
+tycoslide creates slides from markdown using your existing .pptx templates, so you can keep your decks in Git. Like [Marp](https://marp.app) or [Slidev](https://sli.dev), but with editable output.
+
+## Features
+
+- **Paragraphs, bullets and numbered lists**, with bold, italic and links
+- **Tables, images and speaker notes**
+- **Code**, with [Shiki](https://shiki.style) syntax highlighting
+- **[Mermaid](https://mermaid.js.org) diagrams**
+
+Full syntax in [markdown.md](docs/markdown.md).
 
 ## Getting started
 
@@ -22,15 +43,6 @@ npx tycoslide build how-it-works.md
 
 https://github.com/user-attachments/assets/f31c11d8-3fe6-464f-8f02-56645b4ce3a6
 
-## Markdown support
-
-- Paragraphs, bullets and numbered lists, with bold, italic and links
-- Tables, images and speaker notes
-- Code, with [Shiki](https://shiki.style) syntax highlighting
-- [Mermaid](https://mermaid.js.org) diagrams
-
-Full syntax in [markdown.md](docs/markdown.md).
-
 ## Requirements
 
 Node 24 or later. Mermaid diagrams need Chrome on the machine; tycoslide finds an installed one, or run `npx playwright install chromium-headless-shell`.
@@ -38,3 +50,7 @@ Node 24 or later. Mermaid diagrams need Chrome on the machine; tycoslide finds a
 ## Thanks
 
 tycoslide was inspired by [pptx-automizer](https://github.com/singerla/pptx-automizer), which it uses under the hood, and by [Slidev](https://sli.dev)'s way of writing slides in markdown. You can read more about the project's background [here](https://blog.tycoworks.com/p/marketing-collateral-from-source-files).
+
+## Licence
+
+[MIT](LICENSE).
