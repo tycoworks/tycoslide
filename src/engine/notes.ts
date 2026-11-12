@@ -86,13 +86,24 @@ export type NotesArchive = {
 export function buildNotesSlideXml(notes: string): string {
   const doc = parseXml(NOTES_SKELETON);
   const txBody = doc.getElementsByTagName("p:txBody")[0];
-  for (const line of notes.replace(/\r?\n+$/, "").split(/\r?\n/)) {
+  for (const line of trimTrailingLineBreaks(notes).split(/\r?\n/)) {
     // Reuse the engine's run/paragraph builders — they set xml:space="preserve"
     // for leading/trailing whitespace. The skeleton declares xmlns:a, so the
     // builders' "a:"-prefixed element creation serializes correctly on this doc.
     txBody.appendChild(buildParagraph(doc, null, buildRun(doc, null, line)));
   }
   return serialize(doc);
+}
+
+/**
+ * `notes` without its trailing line breaks, so they add no empty paragraphs. A loop
+ * rather than a regular expression, whose backtracking is quadratic in a long run
+ * of line breaks that is not at the end.
+ */
+function trimTrailingLineBreaks(notes: string): string {
+  let end = notes.length;
+  while (end > 0 && (notes[end - 1] === "\n" || notes[end - 1] === "\r")) end--;
+  return notes.slice(0, end);
 }
 
 /** Next unused `rIdN` in a `.rels` XML string (max existing id + 1). */
