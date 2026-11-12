@@ -175,6 +175,18 @@ describe("buildNotesSlideXml", () => {
     assert.deepEqual(texts(doc, "a:t"), ["Line 1", "Line 2"]);
   });
 
+  it("trailing blank lines add no empty paragraphs, with either line ending", async () => {
+    for (const notes of ["Line 1\nLine 2\n\n\n", "Line 1\r\nLine 2\r\n\r\n"]) {
+      const doc = parseXml(buildNotesSlideXml(notes));
+      assert.deepEqual(texts(doc, "a:t"), ["Line 1", "Line 2"], JSON.stringify(notes));
+    }
+  });
+
+  it("a blank line between lines stays an empty paragraph", async () => {
+    const doc = parseXml(buildNotesSlideXml("Line 1\n\nLine 2"));
+    assert.equal(doc.getElementsByTagName("a:p").length, 3);
+  });
+
   it("preserves leading whitespace via xml:space on <a:t>", async () => {
     const raw = buildNotesSlideXml("  indented");
     const t = parseXml(raw).getElementsByTagName("a:t")[0];
