@@ -1,10 +1,12 @@
 ---
 name: create-theme
-description: Turn a branded PowerPoint template into a tycoslide theme, packaged as an Agent Skill that builds editable decks from markdown. Use when someone hands over a .pptx and wants repeatable decks from it, or says "make a theme", "create a theme", "tycoslide theme", or "turn this template into a theme".
+description: Turns a .pptx the user already has into a tycoslide theme, checks that every layout renders, and packages the theme as an agent skill, so anyone can build on-brand decks with AI. Use when someone wants decks that match their existing PowerPoint files or brand, hands over a .pptx and wants repeatable decks from it, or says "make a theme", "create a theme", "tycoslide theme", or "turn this template into a theme".
 compatibility: Needs Node 24+, LibreOffice (soffice) and poppler (pdftoppm). Chrome only if decks will contain mermaid diagrams.
 ---
 
 # Create a theme
+
+[tycoslide](https://github.com/tycoworks/tycoslide) creates editable PowerPoint slides from markdown, using existing .pptx files as templates. This skill turns a .pptx into a tycoslide theme and an agent skill, so anyone can build on-brand decks with markdown and AI.
 
 ## What you are making
 
